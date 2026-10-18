@@ -3,8 +3,8 @@
 Generate 20 sweep configs: (qwen3_4b, qwen3_8b) x (v1, v2 reward) x 5 seeds.
 Run: .venv/bin/python experiments/tool_use_zvf_sweep/gen_configs.py
 """
+
 from pathlib import Path
-import textwrap
 
 # TODO: Track ERF (Effective-Rollout Fraction) alongside ZVF, as ZVF saturates at 1.0 for format-gated tool-use tasks.
 # TODO: Compare against open-source RL libraries (like TRL) to address the closed-source confound of Tinker API.

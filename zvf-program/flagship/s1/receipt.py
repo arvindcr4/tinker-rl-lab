@@ -106,7 +106,7 @@ def controller_fixtures():
             ("failure_confidence", [0.0, 0.0], 0, 1000),
             ("mastery_confidence", [1.0, 1.0], 1000, 1000),
         ]
-        for (case, rewards, successes, total), (action, size) in zip(cases, expected):
+        for (case, rewards, successes, total), (action, size) in zip(cases, expected, strict=False):
             rows.append(
                 {
                     "policy": policy,
@@ -160,7 +160,7 @@ def validate_controller_matrix(rows) -> bool:
     expected = controller_fixtures()
     if not isinstance(rows, list) or len(rows) != len(expected):
         return False
-    for actual, fixture in zip(rows, expected):
+    for actual, fixture in zip(rows, expected, strict=False):
         if not isinstance(actual, dict) or any(actual.get(k) != v for k, v in fixture.items()):
             return False
         size = fixture["expected_group_size"]

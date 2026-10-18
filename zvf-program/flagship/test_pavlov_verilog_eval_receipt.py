@@ -11,7 +11,7 @@ import sys
 from typing import Any, TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from . import pavlov_verilog_eval_receipt as validator  # noqa: F401
+    from . import pavlov_verilog_eval_receipt as validator
 else:
     try:
         from . import pavlov_verilog_eval_receipt as validator
@@ -31,7 +31,10 @@ def _sha256(value: str) -> str:
 
 
 def _task_ids() -> list[str]:
-    return sorted(hashlib.sha256(f"verilog-eval-task-{index}".encode("utf-8")).hexdigest() for index in (0, 1, 2))
+    return sorted(
+        hashlib.sha256(f"verilog-eval-task-{index}".encode("utf-8")).hexdigest()
+        for index in (0, 1, 2)
+    )
 
 
 def _split_aggregate(task_hashes: list[str]) -> str:
@@ -141,184 +144,201 @@ def _valid_manifest() -> dict[str, Any]:
 class VerilogEvalReceiptBoundaryTests(unittest.TestCase):
     def test_valid_receipt_builds_ready_and_disables_launch(self) -> None:
         report = validator.build_receipt_record(_valid_manifest())
-        self.assertEqual(report["status"], "BLOCKED")
-        self.assertFalse(report["receipt_ready"])
-        self.assertFalse(report["paid_launch_allowed"])
-        self.assertFalse(report["launch"]["allowed"])
-        self.assertIn("launch is intentionally disabled", report["launch"]["reasons"])
-        self.assertEqual(report["per_example_count"], 3)
-        self.assertEqual(report["per_example_category"], "code")
-        self.assertEqual(len(report["wandb_run_identity"]) if False else len(report["wandb"]["run_id"]), 13)
+        assert report["status"] == "BLOCKED"
+        assert not report["receipt_ready"]
+        assert not report["paid_launch_allowed"]
+        assert not report["launch"]["allowed"]
+        assert "launch is intentionally disabled" in report["launch"]["reasons"]
+        assert report["per_example_count"] == 3
+        assert report["per_example_category"] == "code"
+        assert (
+            len(report["wandb_run_identity"]) if False else len(report["wandb"]["run_id"])
+        ) == 13
 
     def test_primary_eval_suite_and_authoritative_source_required(self) -> None:
         manifest = _valid_manifest()
         manifest["suite_id"] = "swe_bench_pro_eval"
         blocked = validator.build_receipt_record(manifest)
-        self.assertEqual(blocked["status"], "BLOCKED")
-        self.assertTrue(any("suite_id must be 'verilog_eval'" in item for item in blocked["blockers"]))
+        assert blocked["status"] == "BLOCKED"
+        assert any("suite_id must be 'verilog_eval'" in item for item in blocked["blockers"])
 
         manifest = _valid_manifest()
         manifest["dataset"]["source"] = "https://github.com/Salesforce/xlam-function-calling-60k"
         blocked = validator.build_receipt_record(manifest)
-        self.assertEqual(blocked["status"], "BLOCKED")
-        self.assertTrue(any("authoritative" in item or "blocked source" in item for item in blocked["blockers"]))
+        assert blocked["status"] == "BLOCKED"
+        assert any(
+            "authoritative" in item or "blocked source" in item for item in blocked["blockers"]
+        )
 
     def test_adapter_manifest_and_dataset_pinning_is_required(self) -> None:
         manifest = _valid_manifest()
         manifest["adapter_manifest_digest"] = "latest"
         blocked = validator.build_receipt_record(manifest)
-        self.assertEqual(blocked["status"], "BLOCKED")
-        self.assertTrue(any("adapter_manifest_digest" in item for item in blocked["blockers"]))
+        assert blocked["status"] == "BLOCKED"
+        assert any("adapter_manifest_digest" in item for item in blocked["blockers"])
 
         manifest = _valid_manifest()
         manifest["dataset"]["revision"] = "main"
         blocked = validator.build_receipt_record(manifest)
-        self.assertEqual(blocked["status"], "BLOCKED")
-        self.assertTrue(any("dataset.revision" in item for item in blocked["blockers"]))
+        assert blocked["status"] == "BLOCKED"
+        assert any("dataset.revision" in item for item in blocked["blockers"])
 
     def test_rejects_xlam_and_glaive_substitution(self) -> None:
         manifest = _valid_manifest()
         manifest["verifier"]["identity"] = "glaive-function-calling-v2"
         blocked = validator.build_receipt_record(manifest)
-        self.assertEqual(blocked["status"], "BLOCKED")
-        self.assertTrue(any("blocked substitution" in item for item in blocked["blockers"]))
+        assert blocked["status"] == "BLOCKED"
+        assert any("blocked substitution" in item for item in blocked["blockers"])
 
         manifest = _valid_manifest()
         manifest["source"] = "https://github.com/Salesforce/xlam-function-calling-60k"
         blocked = validator.build_receipt_record(manifest)
-        self.assertEqual(blocked["status"], "BLOCKED")
-        self.assertTrue(any("authoritative verilog_eval source" in item for item in blocked["blockers"]))
+        assert blocked["status"] == "BLOCKED"
+        assert any("authoritative verilog_eval source" in item for item in blocked["blockers"])
 
     def test_strict_per_example_validation(self) -> None:
         manifest = _valid_manifest()
-        manifest["per_example"][0]["id"], manifest["per_example"][1]["id"] = manifest["per_example"][1]["id"], manifest["per_example"][0]["id"]
+        manifest["per_example"][0]["id"], manifest["per_example"][1]["id"] = (
+            manifest["per_example"][1]["id"],
+            manifest["per_example"][0]["id"],
+        )
         blocked = validator.build_receipt_record(manifest)
-        self.assertEqual(blocked["status"], "BLOCKED")
-        self.assertTrue(any("must be sorted" in item for item in blocked["blockers"]))
+        assert blocked["status"] == "BLOCKED"
+        assert any("must be sorted" in item for item in blocked["blockers"])
 
         manifest = _valid_manifest()
         manifest["per_example"][1]["category"] = "tool_use"
         blocked = validator.build_receipt_record(manifest)
-        self.assertEqual(blocked["status"], "BLOCKED")
-        self.assertTrue(any("category must be 'code'" in item for item in blocked["blockers"]))
+        assert blocked["status"] == "BLOCKED"
+        assert any("category must be 'code'" in item for item in blocked["blockers"])
 
         manifest = _valid_manifest()
         manifest["per_example"][1]["verdict"] = "unknown"
         blocked = validator.build_receipt_record(manifest)
-        self.assertEqual(blocked["status"], "BLOCKED")
-        self.assertTrue(any("pass|fail|error" in item for item in blocked["blockers"]))
+        assert blocked["status"] == "BLOCKED"
+        assert any("pass|fail|error" in item for item in blocked["blockers"])
 
         manifest = _valid_manifest()
         manifest["per_example"][1]["id"] = manifest["per_example"][0]["id"]
         blocked = validator.build_receipt_record(manifest)
-        self.assertEqual(blocked["status"], "BLOCKED")
-        self.assertTrue(any("duplicate ids" in item or "must cover exactly" in item for item in blocked["blockers"]))
+        assert blocked["status"] == "BLOCKED"
+        assert any(
+            "duplicate ids" in item or "must cover exactly" in item for item in blocked["blockers"]
+        )
 
     def test_wandb_tinker_hf_and_costs_receipts_are_required(self) -> None:
         manifest = _valid_manifest()
         manifest["wandb_run_identity"]["online"] = False
         blocked = validator.build_receipt_record(manifest)
-        self.assertEqual(blocked["status"], "BLOCKED")
-        self.assertTrue(any("online must be true" in item for item in blocked["blockers"]))
+        assert blocked["status"] == "BLOCKED"
+        assert any("online must be true" in item for item in blocked["blockers"])
 
         manifest = _valid_manifest()
         manifest["tinker_run_identity"]["cost_status"] = "pending"
         blocked = validator.build_receipt_record(manifest)
-        self.assertEqual(blocked["status"], "BLOCKED")
-        self.assertTrue(any("cost_status is invalid" in item for item in blocked["blockers"]))
+        assert blocked["status"] == "BLOCKED"
+        assert any("cost_status is invalid" in item for item in blocked["blockers"])
 
         manifest = _valid_manifest()
         manifest["hf_checkpoints"] = manifest["hf_checkpoints"][:2]
         blocked = validator.build_receipt_record(manifest)
-        self.assertEqual(blocked["status"], "BLOCKED")
-        self.assertTrue(any("missing required stage" in item for item in blocked["blockers"]))
+        assert blocked["status"] == "BLOCKED"
+        assert any("missing required stage" in item for item in blocked["blockers"])
 
         manifest = _valid_manifest()
         manifest["costs"]["total_usd"] = -1
         blocked = validator.build_receipt_record(manifest)
-        self.assertEqual(blocked["status"], "BLOCKED")
-        self.assertTrue(any("finite and non-negative" in item for item in blocked["blockers"]))
+        assert blocked["status"] == "BLOCKED"
+        assert any("finite and non-negative" in item for item in blocked["blockers"])
 
     def test_held_out_semantics_are_explicit(self) -> None:
         manifest = _valid_manifest()
         manifest["held_out"] = True
         manifest["scope"]["is_held_out"] = True
         blocked = validator.build_receipt_record(manifest)
-        self.assertEqual(blocked["status"], "BLOCKED")
-        self.assertTrue(any("held_out_receipt_ref is required" in item for item in blocked["blockers"]))
+        assert blocked["status"] == "BLOCKED"
+        assert any("held_out_receipt_ref is required" in item for item in blocked["blockers"])
 
         manifest = _valid_manifest()
         manifest["held_out"] = False
         manifest["held_out_receipt_ref"] = "sha256:" + ("a" * 64)
         blocked = validator.build_receipt_record(manifest)
-        self.assertEqual(blocked["status"], "BLOCKED")
-        self.assertTrue(any("forbidden when held_out is false" in item for item in blocked["blockers"]))
+        assert blocked["status"] == "BLOCKED"
+        assert any("forbidden when held_out is false" in item for item in blocked["blockers"])
 
         manifest = _valid_manifest()
         manifest["held_out"] = True
         manifest["scope"]["is_held_out"] = True
         manifest["held_out_receipt_ref"] = "sha256:" + ("a" * 64)
         report = validator.build_receipt_record(manifest)
-        self.assertEqual(report["status"], "BLOCKED")
-        self.assertTrue(report["held_out"])
-        self.assertTrue(report["held_out_receipt_proven"])
+        assert report["status"] == "BLOCKED"
+        assert report["held_out"]
+        assert report["held_out_receipt_proven"]
 
     def test_scope_must_be_explicit_non_portfolio(self) -> None:
         manifest = _valid_manifest()
         manifest["scope"]["is_portfolio"] = True
         blocked = validator.build_receipt_record(manifest)
-        self.assertEqual(blocked["status"], "BLOCKED")
-        self.assertTrue(any("scope.is_portfolio" in item for item in blocked["blockers"]))
+        assert blocked["status"] == "BLOCKED"
+        assert any("scope.is_portfolio" in item for item in blocked["blockers"])
 
         manifest = _valid_manifest()
         del manifest["scope"]
         blocked = validator.build_receipt_record(manifest)
-        self.assertEqual(blocked["status"], "BLOCKED")
-        self.assertTrue(any("scope must be an object" in item or "scope must include" in item for item in blocked["blockers"]))
+        assert blocked["status"] == "BLOCKED"
+        assert any(
+            "scope must be an object" in item or "scope must include" in item
+            for item in blocked["blockers"]
+        )
 
     def test_no_network_or_credentials(self) -> None:
         manifest = _valid_manifest()
         manifest["requires_network"] = True
         blocked = validator.build_receipt_record(manifest)
-        self.assertEqual(blocked["status"], "BLOCKED")
-        self.assertTrue(any("network is disallowed" in item for item in blocked["blockers"]))
+        assert blocked["status"] == "BLOCKED"
+        assert any("network is disallowed" in item for item in blocked["blockers"])
 
         manifest = _valid_manifest()
         manifest["credential_ref"] = "api-token"
         blocked = validator.build_receipt_record(manifest)
-        self.assertEqual(blocked["status"], "BLOCKED")
-        self.assertTrue(any("credential_ref is not allowed" in item for item in blocked["blockers"]))
+        assert blocked["status"] == "BLOCKED"
+        assert any("credential_ref is not allowed" in item for item in blocked["blockers"])
 
     def test_task_and_split_hashes_are_deterministic(self) -> None:
         first = validator.build_receipt_record(_valid_manifest())
         second = validator.build_receipt_record(copy.deepcopy(_valid_manifest()))
-        self.assertEqual(first["status"], "BLOCKED")
-        self.assertEqual(first["per_example_digest"], second["per_example_digest"])
-        self.assertEqual(first["receipt_identity_digest"], second["receipt_identity_digest"])
+        assert first["status"] == "BLOCKED"
+        assert first["per_example_digest"] == second["per_example_digest"]
+        assert first["receipt_identity_digest"] == second["receipt_identity_digest"]
 
         manifest = _valid_manifest()
         manifest["split"]["hash"] = "sha256:" + ("d" * 64)
         blocked = validator.build_receipt_record(manifest)
-        self.assertEqual(blocked["status"], "BLOCKED")
-        self.assertTrue(any("split.primary_eval aggregate hash does not match tasks" in item for item in blocked["blockers"]))
+        assert blocked["status"] == "BLOCKED"
+        assert any(
+            "split.primary_eval aggregate hash does not match tasks" in item
+            for item in blocked["blockers"]
+        )
 
     def test_validate_record_helper_matches_status(self) -> None:
         ready = validator.build_receipt_record(_valid_manifest())
-        self.assertIn("authenticated external", " ".join(validator.validate_verilog_eval_receipt_record(ready)))
+        assert "authenticated external" in " ".join(
+            validator.validate_verilog_eval_receipt_record(ready)
+        )
 
         blocked = validator.build_receipt_record({"suite_id": "x"})
-        self.assertNotEqual(validator.validate_verilog_eval_receipt_record(blocked), [])
+        assert validator.validate_verilog_eval_receipt_record(blocked) != []
 
     def test_main_reports_status(self) -> None:
         temporary = Path(__file__).resolve().parent / "_tmp_verilog_eval_receipt.json"
         try:
             manifest = _valid_manifest()
             temporary.write_text(json.dumps(manifest), encoding="utf-8")
-            self.assertEqual(validator.main(["--manifest", str(temporary)]), 1)
+            assert validator.main(["--manifest", str(temporary)]) == 1
 
             manifest["suite_id"] = "not-verilog"
             temporary.write_text(json.dumps(manifest), encoding="utf-8")
-            self.assertEqual(validator.main(["--manifest", str(temporary)]), 1)
+            assert validator.main(["--manifest", str(temporary)]) == 1
         finally:
             if temporary.exists():
                 temporary.unlink()

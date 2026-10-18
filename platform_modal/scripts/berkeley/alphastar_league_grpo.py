@@ -73,13 +73,21 @@ import csv, json, math, datetime, ast, re
 from pathlib import Path
 
 import sys
+
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from _paths import REPO_ROOT, RESULTS_DIR
-from _review01_contracts import OUTPUT_ROOT, evidence_metadata, require_inputs, spearman_or_none, write_artifact_metadata, json_ready
+from _review01_contracts import (
+    OUTPUT_ROOT,
+    evidence_metadata,
+    require_inputs,
+    spearman_or_none,
+    write_artifact_metadata,
+    json_ready,
+)
+
 ROOT = WORKTREE = REPO_ROOT
 RES = RESULTS = RESULTS_DIR
 OUT = OUTPUT_ROOT / "alphastar_league_grpo"
-
 
 
 def _read_tsv(path: Path) -> list[dict]:
@@ -120,32 +128,37 @@ def h1_league_law():
 
     # b is the slope in log10(G*)=a+b*log10(T) (pre-saturation only)
     pre = [p for p in points if not p["saturated"]]
-    b = None; a = None
+    b = None
+    a = None
     if len(pre) >= 2:
         log_T = [math.log10(p["T"]) for p in pre]
         log_G = [math.log10(p["Gstar"]) for p in pre]
         n = len(log_T)
-        sx = sum(log_T); sy = sum(log_G)
-        sxx = sum(x * x for x in log_T); sxy = sum(x * y for x, y in zip(log_T, log_G))
+        sx = sum(log_T)
+        sy = sum(log_G)
+        sxx = sum(x * x for x in log_T)
+        sxy = sum(x * y for x, y in zip(log_T, log_G, strict=False))
         b = (n * sxy - sx * sy) / (n * sxx - sx * sx)
         a = (sy - b * sx) / n
 
     rows = []
     for p in points:
-        rows.append({
-            "T": p["T"],
-            "Gstar_obs": p["Gstar"],
-            "Gstar_pred": f"{p['Gstar_pred']:.1f}",
-            "saturated": p["saturated"],
-            "log10_T": f"{math.log10(p['T']):.3f}",
-            "log10_Gstar": f"{math.log10(p['Gstar']):.3f}",
-        })
+        rows.append(
+            {
+                "T": p["T"],
+                "Gstar_obs": p["Gstar"],
+                "Gstar_pred": f"{p['Gstar_pred']:.1f}",
+                "saturated": p["saturated"],
+                "log10_T": f"{math.log10(p['T']):.3f}",
+                "log10_Gstar": f"{math.log10(p['Gstar']):.3f}",
+            }
+        )
 
     # DESCRIPTIVE_THRESHOLD if b in [0.40, 0.60] AND last 2 Ts saturated at G=32
     n_sat = sum(1 for p in points if p["saturated"])
-    b_in_range = (b is not None and 0.40 <= b <= 0.60)
+    b_in_range = b is not None and 0.40 <= b <= 0.60
     high = [p for p in points if p["T"] in {16_000_000, 64_000_000}]
-    saturated_at_32 = (len(high) == 2 and all(p["saturated"] and p["Gstar"] == 32 for p in high))
+    saturated_at_32 = len(high) == 2 and all(p["saturated"] and p["Gstar"] == 32 for p in high)
     complete = {p["T"] for p in points} == {1_000_000, 4_000_000, 16_000_000, 64_000_000}
     decisive = b_in_range and complete and saturated_at_32
     return rows, b, a, n_sat, decisive
@@ -195,15 +208,21 @@ def h2_bounded_cone():
 
     rows = []
     for d in deltas:
-        rows.append({
-            "T": d["T"],
-            "delta_G64_G32": f"{d['delta_G64_G32']:+.4f}",
-            "non_positive": "yes" if d["delta_G64_G32"] <= 0 else "no",
-            "alphastar_pluribus_predict": "untested analogy",
-            "status": "observed" if saturation_complete else "INCOMPLETE",
-        })
+        rows.append(
+            {
+                "T": d["T"],
+                "delta_G64_G32": f"{d['delta_G64_G32']:+.4f}",
+                "non_positive": "yes" if d["delta_G64_G32"] <= 0 else "no",
+                "alphastar_pluribus_predict": "untested analogy",
+                "status": "observed" if saturation_complete else "INCOMPLETE",
+            }
+        )
 
-    decisive = (n_nonpos == 4 and all_sat_32 and {int(float(d["T"])) for d in deltas} == {1_000_000, 4_000_000, 16_000_000, 64_000_000})
+    decisive = (
+        n_nonpos == 4
+        and all_sat_32
+        and {int(float(d["T"])) for d in deltas} == {1_000_000, 4_000_000, 16_000_000, 64_000_000}
+    )
     return rows, n_nonpos, all_sat_32, decisive
 
 
@@ -233,16 +252,18 @@ def h3_league_diversity_bonus():
         except (KeyError, ValueError):
             continue
         deltas.append(dd)
-        rows.append({
-            "G": G,
-            "delta_div_mean": f"{dd:+.4f}",
-            "delta_div_ci_low": f"{dd_lo:+.4f}",
-            "delta_div_ci_high": f"{dd_hi:+.4f}",
-            "zvf_emp": f"{zvf_e:.4f}",
-            "zvf_iid": f"{zvf_i:.4f}",
-            "direction": "below_iid_baseline" if dd < 0 else "at_or_above_iid_baseline",
-            "sign_stable_negative": "yes" if dd < 0 else "no",
-        })
+        rows.append(
+            {
+                "G": G,
+                "delta_div_mean": f"{dd:+.4f}",
+                "delta_div_ci_low": f"{dd_lo:+.4f}",
+                "delta_div_ci_high": f"{dd_hi:+.4f}",
+                "zvf_emp": f"{zvf_e:.4f}",
+                "zvf_iid": f"{zvf_i:.4f}",
+                "direction": "below_iid_baseline" if dd < 0 else "at_or_above_iid_baseline",
+                "sign_stable_negative": "yes" if dd < 0 else "no",
+            }
+        )
     n_neg = sum(1 for d in deltas if d < 0)
     mean_dd = sum(deltas) / len(deltas) if deltas else float("nan")
     n_stable = n_neg
@@ -279,16 +300,19 @@ def h4_complementarity():
     rho_isoT = spearman_or_none(Ts, isoT_values)
 
     rows = []
-    for g, v in zip(Gs, isoG_values):
-        rows.append({
-            "G": g,
-            "isoG_value": f"{v:.3f}",
-            "log10_G": f"{math.log10(g):.3f}",
-        })
+    for g, v in zip(Gs, isoG_values, strict=False):
+        rows.append(
+            {
+                "G": g,
+                "isoG_value": f"{v:.3f}",
+                "log10_G": f"{math.log10(g):.3f}",
+            }
+        )
 
     # amplification factor
     if len(Gs) >= 2:
-        v_lo = isoG_values[0]; v_hi = isoG_values[-1]
+        v_lo = isoG_values[0]
+        v_hi = isoG_values[-1]
         amp = v_hi / v_lo if v_lo > 0 else float("nan")
     else:
         amp = float("nan")
@@ -331,17 +355,17 @@ def h5_throughput_decay():
     per_rollout = {}
     for g in Gs:
         per_rollout[g] = rc_by_G[g] / g
-        rows.append({
-            "G": g,
-            "R_C_3window_mean": f"{rc_by_G[g]:.4f}",
-            "R_C_late_only": f"{rc_late_by_G[g]:.4f}",
-            "R_C_per_rollout_3window": f"{per_rollout[g]:.5f}",
-            "league_throughput_class": (
-                "high" if g <= 8
-                else "low (saturated)" if g >= 32
-                else "mid"
-            ),
-        })
+        rows.append(
+            {
+                "G": g,
+                "R_C_3window_mean": f"{rc_by_G[g]:.4f}",
+                "R_C_late_only": f"{rc_late_by_G[g]:.4f}",
+                "R_C_per_rollout_3window": f"{per_rollout[g]:.5f}",
+                "league_throughput_class": (
+                    "high" if g <= 8 else "low (saturated)" if g >= 32 else "mid"
+                ),
+            }
+        )
 
     # Per-rollout R_C should be DECREASING past the league-size optimum
     # (G=16). Test: R_C/G at G=64 < R_C/G at G=16.
@@ -378,7 +402,16 @@ def h5_throughput_decay():
 # Main
 # ---------------------------------------------------------------------------
 def main():
-    inputs = [RES / name for name in ["group_size_iter127_optimal_g.tsv", "group_size_iter127_bounded_cone.tsv", "group_size_deltadiv_decomp.tsv", "group_size_iter127_complementarity.tsv", "group_size_iter107_returns_to_compute.tsv"]]
+    inputs = [
+        RES / name
+        for name in [
+            "group_size_iter127_optimal_g.tsv",
+            "group_size_iter127_bounded_cone.tsv",
+            "group_size_deltadiv_decomp.tsv",
+            "group_size_iter127_complementarity.tsv",
+            "group_size_iter107_returns_to_compute.tsv",
+        ]
+    ]
     require_inputs(*inputs)
     metadata = evidence_metadata("retrospective_analogy_and_descriptive_thresholds", inputs)
     OUT.mkdir(parents=True, exist_ok=True)
@@ -388,37 +421,60 @@ def main():
     h1_rows, b, a, n_sat, h1_decisive = h1_league_law()
     h1_path = OUT / "alphastar_league_law.tsv"
     with h1_path.open("w", newline="") as fh:
-        w = csv.DictWriter(fh, fieldnames=list(h1_rows[0].keys()) if h1_rows else ["status"], delimiter="\t")
-        w.writeheader(); w.writerows(h1_rows)
+        w = csv.DictWriter(
+            fh, fieldnames=list(h1_rows[0].keys()) if h1_rows else ["status"], delimiter="\t"
+        )
+        w.writeheader()
+        w.writerows(h1_rows)
     print(f"[h1] league-size law: b={b}/decade, n_sat={n_sat}, decisive={h1_decisive}")
 
     h2_rows, n_nonpos, all_sat_32, h2_decisive = h2_bounded_cone()
     h2_path = OUT / "alphastar_league_bounded_cone.tsv"
     with h2_path.open("w", newline="") as fh:
-        w = csv.DictWriter(fh, fieldnames=list(h2_rows[0].keys()) if h2_rows else ["status"], delimiter="\t")
-        w.writeheader(); w.writerows(h2_rows)
-    print(f"[h2] bounded cone: n_nonpos={n_nonpos}/4, all_sat_32={all_sat_32}, decisive={h2_decisive}")
+        w = csv.DictWriter(
+            fh, fieldnames=list(h2_rows[0].keys()) if h2_rows else ["status"], delimiter="\t"
+        )
+        w.writeheader()
+        w.writerows(h2_rows)
+    print(
+        f"[h2] bounded cone: n_nonpos={n_nonpos}/4, all_sat_32={all_sat_32}, decisive={h2_decisive}"
+    )
 
     h3_rows, n_stable, mean_dd, h3_decisive = h3_league_diversity_bonus()
     h3_path = OUT / "alphastar_league_diversity_bonus.tsv"
     with h3_path.open("w", newline="") as fh:
-        w = csv.DictWriter(fh, fieldnames=list(h3_rows[0].keys()) if h3_rows else ["status"], delimiter="\t")
-        w.writeheader(); w.writerows(h3_rows)
-    print(f"[h3] diversity bonus: n_neg={n_stable}/4, mean_dd={mean_dd:.4f}, decisive={h3_decisive}")
+        w = csv.DictWriter(
+            fh, fieldnames=list(h3_rows[0].keys()) if h3_rows else ["status"], delimiter="\t"
+        )
+        w.writeheader()
+        w.writerows(h3_rows)
+    print(
+        f"[h3] diversity bonus: n_neg={n_stable}/4, mean_dd={mean_dd:.4f}, decisive={h3_decisive}"
+    )
 
     h4_rows, rho_isoG, rho_isoT, amp, h4_decisive = h4_complementarity()
     h4_path = OUT / "alphastar_league_complementarity.tsv"
     with h4_path.open("w", newline="") as fh:
-        w = csv.DictWriter(fh, fieldnames=list(h4_rows[0].keys()) if h4_rows else ["status"], delimiter="\t")
-        w.writeheader(); w.writerows(h4_rows)
+        w = csv.DictWriter(
+            fh, fieldnames=list(h4_rows[0].keys()) if h4_rows else ["status"], delimiter="\t"
+        )
+        w.writeheader()
+        w.writerows(h4_rows)
     print(f"[h4] complementarity: rho_isoG={rho_isoG}, amp={amp:.2f}x, decisive={h4_decisive}")
 
-    h5_rows, per_rollout, decay_holds, ratio, late_gain, cone_penalty, net_cost, h5_decisive = h5_throughput_decay()
+    h5_rows, per_rollout, decay_holds, ratio, late_gain, cone_penalty, net_cost, h5_decisive = (
+        h5_throughput_decay()
+    )
     h5_path = OUT / "alphastar_league_throughput.tsv"
     with h5_path.open("w", newline="") as fh:
-        w = csv.DictWriter(fh, fieldnames=list(h5_rows[0].keys()) if h5_rows else ["status"], delimiter="\t")
-        w.writeheader(); w.writerows(h5_rows)
-    print(f"[h5] per-rollout decay G=64<G=16: {decay_holds}, ratio={ratio:.3f}, net_cost={net_cost:.4f}, decisive={h5_decisive}")
+        w = csv.DictWriter(
+            fh, fieldnames=list(h5_rows[0].keys()) if h5_rows else ["status"], delimiter="\t"
+        )
+        w.writeheader()
+        w.writerows(h5_rows)
+    print(
+        f"[h5] per-rollout decay G=64<G=16: {decay_holds}, ratio={ratio:.3f}, net_cost={net_cost:.4f}, decisive={h5_decisive}"
+    )
 
     summary = {
         **metadata,
@@ -444,7 +500,11 @@ def main():
             "H2_bounded_cone_Gstar": {
                 "n_nonpositive_deltas": f"{n_nonpos}/4",
                 "all_Gstar_saturated_at_32": all_sat_32,
-                "verdict": "INCOMPLETE" if not h2_rows or any(r["status"] == "INCOMPLETE" for r in h2_rows) else "DESCRIPTIVE_THRESHOLD" if h2_decisive else "THRESHOLD_NOT_MET",
+                "verdict": "INCOMPLETE"
+                if not h2_rows or any(r["status"] == "INCOMPLETE" for r in h2_rows)
+                else "DESCRIPTIVE_THRESHOLD"
+                if h2_decisive
+                else "THRESHOLD_NOT_MET",
             },
             "H3_league_diversity_bonus": {
                 "n_negative_delta_div": f"{n_stable}/4",
@@ -469,7 +529,9 @@ def main():
             },
         },
         "verdict_counts": {
-            "DESCRIPTIVE_THRESHOLD": sum([h1_decisive, h2_decisive, h3_decisive, h4_decisive, h5_decisive]),
+            "DESCRIPTIVE_THRESHOLD": sum(
+                [h1_decisive, h2_decisive, h3_decisive, h4_decisive, h5_decisive]
+            ),
             "TOTAL": 5,
         },
         "outputs": {

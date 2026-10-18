@@ -39,10 +39,14 @@ def test_two_groups_one_uniform_one_mixed():
 def test_four_groups_fraction():
     # 3 uniform, 1 mixed -> ZVF = 3/4.
     rewards = [
-        1, 1,  # g0 uniform
-        0, 0,  # g1 uniform
-        1, 1,  # g2 uniform
-        1, 0,  # g3 mixed
+        1,
+        1,  # g0 uniform
+        0,
+        0,  # g1 uniform
+        1,
+        1,  # g2 uniform
+        1,
+        0,  # g3 mixed
     ]
     group_ids = [0, 0, 1, 1, 2, 2, 3, 3]
     assert core.zvf(rewards, group_ids) == pytest.approx(0.75)

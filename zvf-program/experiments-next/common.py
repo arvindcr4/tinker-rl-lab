@@ -82,7 +82,9 @@ def build_prompt(question: str) -> str:
     )
 
 
-def load_gsm8k(split: str, limit: int, seed: int, revision: str | None = None) -> list[tuple[str, str]]:
+def load_gsm8k(
+    split: str, limit: int, seed: int, revision: str | None = None
+) -> list[tuple[str, str]]:
     """Return [(prompt, answer)] from GSM8K. split: 'train' (pool) or 'test'
     (held-out pass@k). Shuffled with the given seed before truncation."""
     from datasets import load_dataset
@@ -100,7 +102,9 @@ def load_gsm8k(split: str, limit: int, seed: int, revision: str | None = None) -
     return examples[:limit] if limit else examples
 
 
-def make_sampler(model: str, sampler_path: str | None, lora_rank: int = 4, tokenizer_revision: str | None = None):
+def make_sampler(
+    model: str, sampler_path: str | None, lora_rank: int = 4, tokenizer_revision: str | None = None
+):
     """Return (sampling_client, tokenizer, sampler_path_used).
 
     If sampler_path is given (an existing tinker:// weights path from a prior
@@ -146,6 +150,7 @@ def load_pool(path: Path, *, allow_exploratory=False) -> dict:
             "analyze an incomplete pool (provenance rule)."
         )
     from analysis_contract import validate_full_pool, validate_rewards
+
     for row in pool.get("prompts", []):
         validate_rewards(row.get("rewards"))
     if not allow_exploratory:

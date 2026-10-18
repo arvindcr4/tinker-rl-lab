@@ -145,8 +145,7 @@ NESTED_RECEIPT_ALIASES = {
     "split": DIRECT_RECEIPT_ALIASES["split"] + ("split",),
     "task": DIRECT_RECEIPT_ALIASES["task"] + ("task", "tasks"),
     "container": DIRECT_RECEIPT_ALIASES["container"] + ("container",),
-    "decontamination": DIRECT_RECEIPT_ALIASES["decontamination"]
-    + ("decontamination",),
+    "decontamination": DIRECT_RECEIPT_ALIASES["decontamination"] + ("decontamination",),
 }
 RECEIPT_CONTAINER_KEYS = (
     "immutable_receipts",
@@ -256,9 +255,7 @@ def _canonical_json(value: Any) -> str:
     )
 
 
-def compute_receipt_digest(
-    suite_id: str, field: str, payload: Mapping[str, Any]
-) -> str:
+def compute_receipt_digest(suite_id: str, field: str, payload: Mapping[str, Any]) -> str:
     """Compute the digest required for one suite/field receipt record.
 
     The digest covers both the suite/field binding and the immutable payload.  It
@@ -296,9 +293,7 @@ def _validate_url(
     if parsed.scheme != "https" or not parsed.hostname or parsed.username or parsed.password:
         return False, "url_not_https_or_hosted"
     hostname = parsed.hostname.lower()
-    if hostname in {"example.com", "example.org", "example.net"} or hostname.endswith(
-        ".invalid"
-    ):
+    if hostname in {"example.com", "example.org", "example.net"} or hostname.endswith(".invalid"):
         return False, "url_placeholder_host"
     registered = suite.get("url")
     if key in {"url", "source_url", "receipt_url"}:
@@ -312,14 +307,10 @@ def _validate_url(
             return False, "registered_suite_url_invalid"
         if hostname != expected.hostname.lower():
             return False, "url_host_not_bound_to_suite"
-    elif key == "run_url" and not (
-        hostname == "wandb.ai"
-        or hostname.endswith(".wandb.ai")
-    ):
+    elif key == "run_url" and not (hostname == "wandb.ai" or hostname.endswith(".wandb.ai")):
         return False, "run_url_host_untrusted"
     elif key in {"repo_url", "checkpoint_url", "revision_url"} and not (
-        hostname == "huggingface.co"
-        or hostname.endswith(".huggingface.co")
+        hostname == "huggingface.co" or hostname.endswith(".huggingface.co")
     ):
         return False, "hf_url_host_untrusted"
     return True, "ok"
@@ -367,8 +358,7 @@ def _validate_receipt_payload(
             if not valid:
                 return False, reason
     if "visibility" in payload and (
-        type(payload["visibility"]) is not str
-        or payload["visibility"] not in {"public", "private"}
+        type(payload["visibility"]) is not str or payload["visibility"] not in {"public", "private"}
     ):
         return False, "payload_visibility_invalid"
     for key in ("public_artifact_safe", "contains_secrets", "contains_restricted_data"):
@@ -569,8 +559,11 @@ def _find_unqualified_holdout_claims(protocol_text: str) -> list[dict[str, Any]]
         line = raw_line.replace("*", " ")
         if not any(pattern.search(line) for pattern in HOLDOUT_CLAIM_PATTERNS):
             continue
-        context = " ".join(sentence for sentence in re.split(r"(?<=[.!?])\s+", line)
-                           if any(pattern.search(sentence) for pattern in HOLDOUT_CLAIM_PATTERNS))
+        context = " ".join(
+            sentence
+            for sentence in re.split(r"(?<=[.!?])\s+", line)
+            if any(pattern.search(sentence) for pattern in HOLDOUT_CLAIM_PATTERNS)
+        )
         if CONDITIONAL_HOLDOUT_RE.search(context):
             continue
         claims.append({"line": index + 1, "text": raw_line.strip()})
@@ -663,7 +656,11 @@ def _check_contract_structure(
                         blockers,
                         "suite_boolean_type_invalid",
                         "Train and primary_eval suite control fields must be exact booleans.",
-                        {"suite_id": suite_id, "field": boolean_field, "value": suite.get(boolean_field)},
+                        {
+                            "suite_id": suite_id,
+                            "field": boolean_field,
+                            "value": suite.get(boolean_field),
+                        },
                     )
     if malformed_suites:
         _add_blocker(
@@ -682,7 +679,9 @@ def _check_contract_structure(
             "domain_union": sorted(unions[role]),
             "missing_domains": missing,
             "extra_domains": extra,
-            "matches_declared_domains": not missing and not extra and len(domain_set) == EXPECTED_DOMAINS,
+            "matches_declared_domains": not missing
+            and not extra
+            and len(domain_set) == EXPECTED_DOMAINS,
         }
         if missing or extra or len(domain_set) != EXPECTED_DOMAINS:
             _add_blocker(
@@ -748,10 +747,7 @@ def _check_contract_structure(
         if (
             not isinstance(company_domains, list)
             or not company_domains
-            or any(
-                type(domain) is not str or not domain.strip()
-                for domain in company_domains
-            )
+            or any(type(domain) is not str or not domain.strip() for domain in company_domains)
         ):
             _add_blocker(
                 blockers,
@@ -851,7 +847,12 @@ def _check_contract_structure(
         revision = model.get("revision")
         valid_revision = _strict_hex(revision, 40)
         model_revision_checks.append(
-            {"index": index, "model_id": model.get("model_id"), "revision": revision, "valid": valid_revision}
+            {
+                "index": index,
+                "model_id": model.get("model_id"),
+                "revision": revision,
+                "valid": valid_revision,
+            }
         )
         if not valid_revision:
             _add_blocker(
@@ -872,12 +873,17 @@ def _check_contract_structure(
             "missing_train": missing_train,
             "missing_primary_eval": missing_eval,
             "unknown_domains": unknown_company_domains,
-            "complete": bool(companies) and not missing_train and not missing_eval and not unknown_company_domains,
+            "complete": bool(companies)
+            and not missing_train
+            and not missing_eval
+            and not unknown_company_domains,
         },
         "gsm8k": {
             "candidates": gsm_candidates,
             "role": explicit_gsm.get("role") if explicit_gsm else None,
-            "calibration_only": bool(explicit_gsm and explicit_gsm.get("role") == "calibration_only"),
+            "calibration_only": bool(
+                explicit_gsm and explicit_gsm.get("role") == "calibration_only"
+            ),
         },
         "model_revisions": model_revision_checks,
     }
@@ -1079,9 +1085,7 @@ def validate_bundle(
         )
 
     blocker_codes = [item["code"] for item in blockers]
-    protocol_blockers = [
-        item for item in blockers if item["code"] not in PAID_ONLY_BLOCKER_CODES
-    ]
+    protocol_blockers = [item for item in blockers if item["code"] not in PAID_ONLY_BLOCKER_CODES]
     protocol_ready = not protocol_blockers
     paid_launch_allowed = protocol_ready and not blockers
     return {

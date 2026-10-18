@@ -7,6 +7,7 @@ Panel (B): Length-bin conditional ZVF (L1=low length, L3=high length)
 Panel (C): Per-step trajectories showing len, zvf, reward co-evolution
            on one representative seed from each (task, algo) cell.
 """
+
 import json
 from pathlib import Path
 import numpy as np
@@ -29,10 +30,13 @@ def main():
     # ----------------------------------------------------------------
     rng = np.random.default_rng(42)
     rho_per_cell = {}  # (task, algo) -> list of per-run ρ(len, ZVF)
-    for src, task in ((drgrpo["runs"], "arithmetic_qwen2.5-0.5b"),
-                       (gsm["runs"], "gsm8k_cot_qwen2.5-1.5b")):
+    for src, task in (
+        (drgrpo["runs"], "arithmetic_qwen2.5-0.5b"),
+        (gsm["runs"], "gsm8k_cot_qwen2.5-1.5b"),
+    ):
         for r in src:
             from scipy.stats import spearmanr
+
             leng = np.array([e["mean_comp_len"] for e in r["step_log"]])
             zvf = np.array([e["zvf"] for e in r["step_log"]])
             rho, _ = spearmanr(leng, zvf)
@@ -57,13 +61,16 @@ def main():
     # ----------------------------------------------------------------
     bin_zvf = {}  # (task, algo, bin) -> list
     bin_order = ["L1", "L2", "L3"]
-    for src, task in ((drgrpo["runs"], "arithmetic_qwen2.5-0.5b"),
-                       (gsm["runs"], "gsm8k_cot_qwen2.5-1.5b")):
+    for src, task in (
+        (drgrpo["runs"], "arithmetic_qwen2.5-0.5b"),
+        (gsm["runs"], "gsm8k_cot_qwen2.5-1.5b"),
+    ):
         for r in src:
             leng = np.array([e["mean_comp_len"] for e in r["step_log"]])
             zvf = np.array([e["zvf"] for e in r["step_log"]])
             qs = np.quantile(leng, np.linspace(0, 1, 4))
-            qs[0] -= 1e-9; qs[-1] += 1e-9
+            qs[0] -= 1e-9
+            qs[-1] += 1e-9
             for i, lab in enumerate(bin_order):
                 mask = (leng >= qs[i]) & (leng < qs[i + 1])
                 if mask.any():
@@ -73,8 +80,10 @@ def main():
     # Representative trajectories — pick seed 42 (or first available)
     # ----------------------------------------------------------------
     rep_runs = {}
-    for src, task in ((drgrpo["runs"], "arithmetic_qwen2.5-0.5b"),
-                       (gsm["runs"], "gsm8k_cot_qwen2.5-1.5b")):
+    for src, task in (
+        (drgrpo["runs"], "arithmetic_qwen2.5-0.5b"),
+        (gsm["runs"], "gsm8k_cot_qwen2.5-1.5b"),
+    ):
         for r in src:
             seed = int(r["seed"])
             # Prefer seed 42 if exists, else first
@@ -99,16 +108,19 @@ def main():
     err_lo = np.array(means) - np.array(los)
     err_hi = np.array(his) - np.array(means)
     colors = ["#1f77b4" if "grpo" == c[1] else "#d62728" for c in cells]
-    ax.bar(x, means, yerr=[err_lo, err_hi], color=colors, capsize=4, edgecolor="black", linewidth=0.5)
+    ax.bar(
+        x, means, yerr=[err_lo, err_hi], color=colors, capsize=4, edgecolor="black", linewidth=0.5
+    )
     ax.axhline(0, color="k", linewidth=0.5, linestyle="--")
     ax.set_xticks(x)
     ax.set_xticklabels(labels, fontsize=8)
     ax.set_ylabel(r"$\rho(\mathrm{len}, \mathrm{ZVF})$", fontsize=10)
-    ax.set_title(r"(A) Length-ZVF joint Spearman" + "\n(per-run, with 95% bootstrap CI)", fontsize=10)
+    ax.set_title(
+        r"(A) Length-ZVF joint Spearman" + "\n(per-run, with 95% bootstrap CI)", fontsize=10
+    )
     # Add n labels
     for i, c in enumerate(cells):
-        ax.text(i, max(0, means[i]) + 0.05, f"n={len(rho_per_cell[c])}",
-                ha="center", fontsize=8)
+        ax.text(i, max(0, means[i]) + 0.05, f"n={len(rho_per_cell[c])}", ha="center", fontsize=8)
     ax.grid(True, axis="y", alpha=0.3)
 
     # Panel B: Length-bin conditional ZVF
@@ -120,10 +132,23 @@ def main():
     color_map = {"L1": "#2ca02c", "L2": "#ff7f0e", "L3": "#9467bd"}
     for k, lab in enumerate(bin_order):
         vals = [bin_zvf.get((c[0], c[1], lab), [np.nan])[0] for c in cells]
-        sds = [np.std(bin_zvf.get((c[0], c[1], lab), [np.nan])) if len(bin_zvf.get((c[0], c[1], lab), [])) > 1 else 0
-               for c in cells]
-        bars = ax.bar(x0 + (k - 1) * bar_w, vals, bar_w, yerr=sds, capsize=2,
-                      color=color_map[lab], edgecolor="black", linewidth=0.4, label=lab)
+        sds = [
+            np.std(bin_zvf.get((c[0], c[1], lab), [np.nan]))
+            if len(bin_zvf.get((c[0], c[1], lab), [])) > 1
+            else 0
+            for c in cells
+        ]
+        bars = ax.bar(
+            x0 + (k - 1) * bar_w,
+            vals,
+            bar_w,
+            yerr=sds,
+            capsize=2,
+            color=color_map[lab],
+            edgecolor="black",
+            linewidth=0.4,
+            label=lab,
+        )
     ax.set_xticks(x0)
     ax.set_xticklabels(labels, fontsize=8)
     ax.set_ylabel("Mean ZVF (per length bin)", fontsize=10)
@@ -134,15 +159,22 @@ def main():
     # Panel C: representative trajectory (len & ZVF co-evolution)
     ax = axes[2]
     # Show arithmetic GRPO seed 42
-    target = next(((t, a, r) for (t, a), r in rep_runs.items()
-                   if t == "arithmetic_qwen2.5-0.5b" and a == "grpo"), None)
+    target = next(
+        (
+            (t, a, r)
+            for (t, a), r in rep_runs.items()
+            if t == "arithmetic_qwen2.5-0.5b" and a == "grpo"
+        ),
+        None,
+    )
     if target is not None:
         t, a, r = target
         steps = [e["step"] for e in r["step_log"]]
         leng = [e["mean_comp_len"] for e in r["step_log"]]
         zvf = [e["zvf"] for e in r["step_log"]]
         # normalize length to [0,1]
-        l_arr = np.array(leng); z_arr = np.array(zvf)
+        l_arr = np.array(leng)
+        z_arr = np.array(zvf)
         l_norm = (l_arr - l_arr.min()) / (l_arr.max() - l_arr.min() + 1e-9)
         ax.plot(steps, l_norm, "-o", color="#1f77b4", label="mean_comp_len (norm)", markersize=3)
         ax.plot(steps, z_arr, "-s", color="#d62728", label="ZVF", markersize=3)

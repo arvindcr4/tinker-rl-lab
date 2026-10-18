@@ -13,10 +13,10 @@ USAGE
 -----
 python3 platform_modal/scripts/length_bias_iter96_fig.py
 """
+
 from __future__ import annotations
 
 import csv
-import json
 import os
 from collections import defaultdict
 
@@ -88,9 +88,18 @@ def panel_a_b(ax, rows, task: str, k_range=range(-3, 4)):
         m = ccf.mean(axis=0)
         s = ccf.std(axis=0)
         offset = (-width / 2) if j == 0 else (width / 2)
-        ax.bar(x + offset, m, yerr=s, width=width, color=col, alpha=0.85,
-               label=f"{algo} (n={len(recs)})", edgecolor="black", linewidth=0.4,
-               capsize=2)
+        ax.bar(
+            x + offset,
+            m,
+            yerr=s,
+            width=width,
+            color=col,
+            alpha=0.85,
+            label=f"{algo} (n={len(recs)})",
+            edgecolor="black",
+            linewidth=0.4,
+            capsize=2,
+        )
     ax.axhline(0, color="grey", linewidth=0.6, linestyle="--")
     ax.set_xticks(list(k_range))
     ax.set_xticklabels([f"{k:+d}" for k in k_range])
@@ -116,12 +125,28 @@ def panel_c(ax, rows):
     x = np.arange(len(common))
     gv = [seeds_grpo[s] for s in common]
     dv = [seeds_drgrpo[s] for s in common]
-    for i, s in enumerate(common):
+    for i, _s in enumerate(common):
         ax.plot([i, i], [gv[i], dv[i]], color="grey", linewidth=1, alpha=0.6)
-        ax.scatter([i], [gv[i]], color="#4c72b0", s=55, zorder=3, edgecolor="black",
-                   linewidth=0.4, label="GRPO" if i == 0 else None)
-        ax.scatter([i], [dv[i]], color="#c44e52", s=55, zorder=3, edgecolor="black",
-                   linewidth=0.4, label="Dr.GRPO" if i == 0 else None)
+        ax.scatter(
+            [i],
+            [gv[i]],
+            color="#4c72b0",
+            s=55,
+            zorder=3,
+            edgecolor="black",
+            linewidth=0.4,
+            label="GRPO" if i == 0 else None,
+        )
+        ax.scatter(
+            [i],
+            [dv[i]],
+            color="#c44e52",
+            s=55,
+            zorder=3,
+            edgecolor="black",
+            linewidth=0.4,
+            label="Dr.GRPO" if i == 0 else None,
+        )
     ax.axhline(0, color="black", linewidth=0.7, linestyle="-")
     ax.set_xticks(x)
     ax.set_xticklabels([str(s) for s in common])
@@ -144,17 +169,33 @@ def panel_d(ax, rows):
     for s in common:
         g = seeds_grpo[s]
         d = seeds_drgrpo[s]
-        ax.scatter([g["bwd"]], [g["fwd"]], color="#4c72b0", s=70,
-                   edgecolor="black", linewidth=0.5, alpha=0.85)
-        ax.scatter([d["bwd"]], [d["fwd"]], color="#c44e52", s=70,
-                   edgecolor="black", linewidth=0.5, alpha=0.85)
-        ax.annotate("", xy=(d["bwd"], d["fwd"]), xytext=(g["bwd"], g["fwd"]),
-                    arrowprops=dict(arrowstyle="->", color="black", lw=1.1,
-                                    alpha=0.75))
+        ax.scatter(
+            [g["bwd"]],
+            [g["fwd"]],
+            color="#4c72b0",
+            s=70,
+            edgecolor="black",
+            linewidth=0.5,
+            alpha=0.85,
+        )
+        ax.scatter(
+            [d["bwd"]],
+            [d["fwd"]],
+            color="#c44e52",
+            s=70,
+            edgecolor="black",
+            linewidth=0.5,
+            alpha=0.85,
+        )
+        ax.annotate(
+            "",
+            xy=(d["bwd"], d["fwd"]),
+            xytext=(g["bwd"], g["fwd"]),
+            arrowprops=dict(arrowstyle="->", color="black", lw=1.1, alpha=0.75),
+        )
     # Reference y=x line (forward = backward => AI = 0)
     lim_max = max([r["bwd"] for r in sub] + [r["fwd"] for r in sub]) * 1.05
-    ax.plot([0, lim_max], [0, lim_max], color="grey", linestyle="--",
-            linewidth=0.7, label="F = B")
+    ax.plot([0, lim_max], [0, lim_max], color="grey", linestyle="--", linewidth=0.7, label="F = B")
     ax.set_xlabel(r"Backward $|CCF|$ sum  (R leads L)")
     ax.set_ylabel(r"Forward $|CCF|$ sum  (L leads R)")
     ax.set_title("GSM8K CoT: F vs B (arrows: Dr.GRPO moves)")
@@ -174,8 +215,9 @@ def main() -> int:
     panel_d(axes[1, 1], rows)
     fig.suptitle(
         "Iter 96 — Innovation Cross-Correlation Asymmetry\n"
-        r"After marginal AR(1) filtering of $(L_t, R_t)$" +
-        "\n" + r"Dr.GRPO severs R$\to$L innovation feedback on GSM8K CoT",
+        r"After marginal AR(1) filtering of $(L_t, R_t)$"
+        + "\n"
+        + r"Dr.GRPO severs R$\to$L innovation feedback on GSM8K CoT",
         fontsize=11,
     )
     fig.tight_layout(rect=[0, 0, 1, 0.95])

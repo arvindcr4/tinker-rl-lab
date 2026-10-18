@@ -34,12 +34,12 @@ Outputs:
     platform_hybrid/experiments/results/zvf_summary.tsv            <-- headline
     figures/zvf_vs_failure.{pdf,png}
 """
+
 from __future__ import annotations
 
 import json
 import math
 import pathlib
-import sys
 
 import numpy as np
 
@@ -58,21 +58,23 @@ def load_groupsize_perstep():
         sl = r["step_log"]
         zvf = np.array([s["zvf"] for s in sl], dtype=float)
         rew = np.array([s["mean_reward"] for s in sl], dtype=float)
-        out.append(dict(
-            method=r["model"],
-            group_size=r["group_size"],
-            seed=r["seed"],
-            n_steps=r["n_steps"],
-            n_prompts=r["n_prompts"],
-            heldout_acc=r["heldout_acc"],
-            last10=r["last10_avg"],
-            mean_zvf=float(np.mean(zvf)),
-            std_zvf=float(np.std(zvf)),
-            lag1=float(np.corrcoef(zvf[:-1], zvf[1:])[0, 1]) if len(zvf) > 2 else float("nan"),
-            mean_reward=float(np.mean(rew)),
-            zvf=zvf,
-            rew=rew,
-        ))
+        out.append(
+            dict(
+                method=r["model"],
+                group_size=r["group_size"],
+                seed=r["seed"],
+                n_steps=r["n_steps"],
+                n_prompts=r["n_prompts"],
+                heldout_acc=r["heldout_acc"],
+                last10=r["last10_avg"],
+                mean_zvf=float(np.mean(zvf)),
+                std_zvf=float(np.std(zvf)),
+                lag1=float(np.corrcoef(zvf[:-1], zvf[1:])[0, 1]) if len(zvf) > 2 else float("nan"),
+                mean_reward=float(np.mean(rew)),
+                zvf=zvf,
+                rew=rew,
+            )
+        )
     return out
 
 
@@ -83,7 +85,7 @@ def load_iter90_recovery():
         header = f.readline().split()
         for line in f:
             fields = line.rstrip("\n").split("\t")
-            rows.append(dict(zip(header, fields)))
+            rows.append(dict(zip(header, fields, strict=False)))
     return rows
 
 
@@ -93,7 +95,7 @@ def load_iter90_post_episode():
         header = f.readline().split()
         for line in f:
             fields = line.rstrip("\n").split("\t")
-            rows.append(dict(zip(header, fields)))
+            rows.append(dict(zip(header, fields, strict=False)))
     return rows
 
 
@@ -103,7 +105,7 @@ def load_iter90_episodes():
         header = f.readline().split()
         for line in f:
             fields = line.rstrip("\n").split("\t")
-            rows.append(dict(zip(header, fields)))
+            rows.append(dict(zip(header, fields, strict=False)))
     return rows
 
 
@@ -113,7 +115,7 @@ def load_dynamics_summary():
         header = f.readline().split()
         for line in f:
             fields = line.rstrip("\n").split("\t")
-            rows.append(dict(zip(header, fields)))
+            rows.append(dict(zip(header, fields, strict=False)))
     return rows
 
 
@@ -125,21 +127,23 @@ def shuffle_null_perstep(perstep):
         G = r["group_size"]
         p = r["mean_reward"]
         # i.i.d. baseline: P(all-correct) + P(all-wrong)
-        zvf_iid = p ** G + (1 - p) ** G
+        zvf_iid = p**G + (1 - p) ** G
         # empirical mean ZVF
         zvf_emp = r["mean_zvf"]
         delta_div = zvf_emp - zvf_iid
-        out.append(dict(
-            model=r["method"],
-            G=G,
-            seed=r["seed"],
-            mean_p=round(p, 4),
-            zvf_iid=round(zvf_iid, 4),
-            zvf_emp=round(zvf_emp, 4),
-            delta_div=round(delta_div, 4),
-            abs_delta_div=round(abs(delta_div), 4),
-            last10_acc=round(r["last10"], 4),
-        ))
+        out.append(
+            dict(
+                model=r["method"],
+                G=G,
+                seed=r["seed"],
+                mean_p=round(p, 4),
+                zvf_iid=round(zvf_iid, 4),
+                zvf_emp=round(zvf_emp, 4),
+                delta_div=round(delta_div, 4),
+                abs_delta_div=round(abs(delta_div), 4),
+                last10_acc=round(r["last10"], 4),
+            )
+        )
     return out
 
 
@@ -151,8 +155,10 @@ def stability_scores(recovery, post, eps):
     Higher score = more stable (lower alarm + higher recovery + smaller
     post-recovery accuracy gap).
     """
-    alarm_rate = {r["method"]: 1 - int(r["n_never_alarmed_traces"]) / max(int(r["trajectory_count"]), 1)
-                  for r in recovery}
+    alarm_rate = {
+        r["method"]: 1 - int(r["n_never_alarmed_traces"]) / max(int(r["trajectory_count"]), 1)
+        for r in recovery
+    }
     recov = {r["method"]: float(r["recovery_rate"]) for r in recovery}
 
     # post-recovery delta per method: avg(ha_after_recovery) - avg(ha_after_sustained)
@@ -188,13 +194,15 @@ def stability_scores(recovery, post, eps):
         dh = delta_h.get(m, 0.0)
         # Stability = (1 - alarm_rate) * 60 + recovery_rate * 30 + max(0, 1 - |delta_h|) * 10
         score = (1 - ar) * 60 + rr * 30 + max(0.0, 1 - abs(dh)) * 10
-        out.append(dict(
-            method=m,
-            alarm_rate_proxy=round(ar, 4),
-            recovery_rate_K5=round(rr, 4),
-            post_recovery_delta=round(dh, 4),
-            stability_score=round(score, 2),
-        ))
+        out.append(
+            dict(
+                method=m,
+                alarm_rate_proxy=round(ar, 4),
+                recovery_rate_K5=round(rr, 4),
+                post_recovery_delta=round(dh, 4),
+                stability_score=round(score, 2),
+            )
+        )
     return out
 
 
@@ -221,11 +229,13 @@ def recovery_calibration(perstep):
         )
         rows.append(rec)
         if r["last10"] >= 0.90:
-            healthy_stats.append([r["mean_zvf"], r["std_zvf"], r["lag1"],
-                                  float(np.max(z)), float(np.min(z))])
+            healthy_stats.append(
+                [r["mean_zvf"], r["std_zvf"], r["lag1"], float(np.max(z)), float(np.min(z))]
+            )
         else:
-            atrisk_stats.append([r["mean_zvf"], r["std_zvf"], r["lag1"],
-                                 float(np.max(z)), float(np.min(z))])
+            atrisk_stats.append(
+                [r["mean_zvf"], r["std_zvf"], r["lag1"], float(np.max(z)), float(np.min(z))]
+            )
     summary = {
         "n_healthy": len(healthy_stats),
         "n_atrisk": len(atrisk_stats),
@@ -244,12 +254,14 @@ def zvf_vs_aero(stability):
             gap = 0.0
         else:
             gap = s["stability_score"] - a["stability_score"]
-        out.append(dict(
-            method=s["method"],
-            stability_score=s["stability_score"],
-            aero_gap=round(gap, 2),
-            beats_aero=gap > 0,
-        ))
+        out.append(
+            dict(
+                method=s["method"],
+                stability_score=s["stability_score"],
+                aero_gap=round(gap, 2),
+                beats_aero=gap > 0,
+            )
+        )
     return out
 
 
@@ -283,11 +295,20 @@ def write_summary_tsv(path, stability, zvfaero, calibration_summary, deltas, rec
         post_by_m.setdefault(m, {"recovery": [], "sustained": []})[cat_norm].append(ha)
 
     cols = [
-        "method", "alarm_rate", "recovery_rate_K5", "post_recovery_ha",
-        "post_sustained_ha", "delta_h_recovery_minus_sustained",
-        "stability_score", "aero_gap", "beats_aero",
-        "delta_div_at_mean_p_obs_G4_med", "n_episodes", "n_sustained",
-        "n_recovered", "iter90_recovery_rate",
+        "method",
+        "alarm_rate",
+        "recovery_rate_K5",
+        "post_recovery_ha",
+        "post_sustained_ha",
+        "delta_h_recovery_minus_sustained",
+        "stability_score",
+        "aero_gap",
+        "beats_aero",
+        "delta_div_at_mean_p_obs_G4_med",
+        "n_episodes",
+        "n_sustained",
+        "n_recovered",
+        "iter90_recovery_rate",
     ]
     rows = []
     for s in stability:
@@ -298,32 +319,45 @@ def write_summary_tsv(path, stability, zvfaero, calibration_summary, deltas, rec
         pra = float(np.mean(pra_vals)) if pra_vals else float("nan")
         psa = float(np.mean(psa_vals)) if psa_vals else float("nan")
         d_h = pra - psa if (not math.isnan(pra) and not math.isnan(psa)) else float("nan")
-        d4 = next((d["delta_div"] for d in deltas if d["G"] == 4 and d["model"] == "Qwen/Qwen2.5-0.5B"), float("nan"))
+        d4 = next(
+            (d["delta_div"] for d in deltas if d["G"] == 4 and d["model"] == "Qwen/Qwen2.5-0.5B"),
+            float("nan"),
+        )
         # median across G=2/4/8/16 across the 3 seeds:
-        d4_med = float(np.median([d["delta_div"] for d in deltas if d["G"] == 4])) if any(d["G"] == 4 for d in deltas) else float("nan")
+        d4_med = (
+            float(np.median([d["delta_div"] for d in deltas if d["G"] == 4]))
+            if any(d["G"] == 4 for d in deltas)
+            else float("nan")
+        )
         rec = by_m.get(m, {})
-        rows.append({
-            "method": m,
-            "alarm_rate": s["alarm_rate_proxy"],
-            "recovery_rate_K5": s["recovery_rate_K5"],
-            "post_recovery_ha": round(pra, 4),
-            "post_sustained_ha": round(psa, 4),
-            "delta_h_recovery_minus_sustained": round(d_h, 4),
-            "stability_score": s["stability_score"],
-            "aero_gap": s["stability_score"] - next(x["stability_score"] for x in stability if x["method"] == "aero"),
-            "beats_aero": s["stability_score"] > next(x["stability_score"] for x in stability if x["method"] == "aero"),
-            "delta_div_at_mean_p_obs_G4_med": round(d4_med, 4),
-            "n_episodes": rec.get("n_episodes", "0"),
-            "n_sustained": rec.get("n_sustained", "0"),
-            "n_recovered": rec.get("n_recovered", "0"),
-            "iter90_recovery_rate": rec.get("recovery_rate", "0.0"),
-        })
+        rows.append(
+            {
+                "method": m,
+                "alarm_rate": s["alarm_rate_proxy"],
+                "recovery_rate_K5": s["recovery_rate_K5"],
+                "post_recovery_ha": round(pra, 4),
+                "post_sustained_ha": round(psa, 4),
+                "delta_h_recovery_minus_sustained": round(d_h, 4),
+                "stability_score": s["stability_score"],
+                "aero_gap": s["stability_score"]
+                - next(x["stability_score"] for x in stability if x["method"] == "aero"),
+                "beats_aero": s["stability_score"]
+                > next(x["stability_score"] for x in stability if x["method"] == "aero"),
+                "delta_div_at_mean_p_obs_G4_med": round(d4_med, 4),
+                "n_episodes": rec.get("n_episodes", "0"),
+                "n_sustained": rec.get("n_sustained", "0"),
+                "n_recovered": rec.get("n_recovered", "0"),
+                "iter90_recovery_rate": rec.get("recovery_rate", "0.0"),
+            }
+        )
 
     with path.open("w") as f:
         f.write("# zvf_summary.tsv — Pillar 2 headline ZVF dashboard\n")
         f.write("# Aggregates iter90 recovery + iter90 post-episode + iter82 alarm rates\n")
         f.write("# + iter94 shuffle-null delta_div at G=4 + iter94 stability score.\n")
-        f.write("# stability_score = (1 - alarm_rate)*60 + recovery_rate*30 + max(0,1-|delta_h|)*10\n")
+        f.write(
+            "# stability_score = (1 - alarm_rate)*60 + recovery_rate*30 + max(0,1-|delta_h|)*10\n"
+        )
         f.write("# delta_div = empirical ZVF - i.i.d. baseline ZVF at mean prompt accuracy p\n")
         f.write("# aero_gap > 0: this method's stability_score exceeds AERO\n")
         f.write("\t".join(cols) + "\n")
@@ -333,6 +367,7 @@ def write_summary_tsv(path, stability, zvfaero, calibration_summary, deltas, rec
 
 def make_figure(stability, deltas, calibration_summary, recovery, zvfaero, out_pdf, out_png):
     import matplotlib
+
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
 
@@ -344,9 +379,17 @@ def make_figure(stability, deltas, calibration_summary, recovery, zvfaero, out_p
     scores = [s["stability_score"] for s in stability]
     order = np.argsort(scores)[::-1]
     colors = ["#d62728" if m == "aero" else "#1f77b4" for m in methods]
-    ax.bar([methods[i] for i in order], [scores[i] for i in order], color=[colors[i] for i in order])
-    ax.axhline(scores[methods.index("aero")] if "aero" in methods else 0,
-               ls="--", c="#d62728", lw=0.9, alpha=0.6, label="AERO score")
+    ax.bar(
+        [methods[i] for i in order], [scores[i] for i in order], color=[colors[i] for i in order]
+    )
+    ax.axhline(
+        scores[methods.index("aero")] if "aero" in methods else 0,
+        ls="--",
+        c="#d62728",
+        lw=0.9,
+        alpha=0.6,
+        label="AERO score",
+    )
     ax.set_ylabel("ZVF stability score [0, 100]")
     ax.set_title("(a) Cross-library ZVF stability score")
     ax.tick_params(axis="x", rotation=30)
@@ -454,14 +497,13 @@ def main():
     write_tsv(
         RES / "zvf_iter94_vs_aero.tsv",
         zvfaero,
-        header_comment=(
-            "zvf_iter94_vs_aero.tsv — signed gap to AERO on iter94 stability_score."
-        ),
+        header_comment=("zvf_iter94_vs_aero.tsv — signed gap to AERO on iter94 stability_score."),
     )
 
     # Headline dashboard
-    write_summary_tsv(RES / "zvf_summary.tsv", stability, zvfaero,
-                      cal_summary, deltas, recovery, post)
+    write_summary_tsv(
+        RES / "zvf_summary.tsv", stability, zvfaero, cal_summary, deltas, recovery, post
+    )
 
     # Figure
     out_pdf = FIG / "zvf_vs_failure.pdf"
@@ -478,14 +520,18 @@ def main():
     # Highlight: median delta_div by G
     for g in sorted({d["G"] for d in deltas}):
         vals = [d["delta_div"] for d in deltas if d["G"] == g]
-        print(f"[iter94]   median delta_div(G={g}) = {np.median(vals):+.4f}, "
-              f"min={min(vals):+.4f}, max={max(vals):+.4f}")
+        print(
+            f"[iter94]   median delta_div(G={g}) = {np.median(vals):+.4f}, "
+            f"min={min(vals):+.4f}, max={max(vals):+.4f}"
+        )
     # Stability winner
     winner = max(stability, key=lambda x: x["stability_score"])
-    print(f"[iter94] STABILITY WINNER: {winner['method']} "
-          f"(score={winner['stability_score']:.1f}, "
-          f"recovery={winner['recovery_rate_K5']:.3f}, "
-          f"alarm={winner['alarm_rate_proxy']:.3f})")
+    print(
+        f"[iter94] STABILITY WINNER: {winner['method']} "
+        f"(score={winner['stability_score']:.1f}, "
+        f"recovery={winner['recovery_rate_K5']:.3f}, "
+        f"alarm={winner['alarm_rate_proxy']:.3f})"
+    )
 
 
 if __name__ == "__main__":

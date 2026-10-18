@@ -76,18 +76,17 @@ Frontier synthesis hooks (FRONTIER_INSIGHTS.md):
     resampling trick. Pass@K is the analogous "effective-N" resampling
     trick for the within-anchor / cross-anchor axis.
 """
+
 import json
-import math
-import os
 import sys
 from pathlib import Path
-from statistics import NormalDist
 
 import numpy as np
 import pandas as pd
 
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
+from _paths import REPO_ROOT
+
 ROOT = REPO_ROOT
 RES = ROOT / "platform_hybrid/experiments" / "results"
 OUT = RES / "berkeley"
@@ -128,14 +127,16 @@ def _aci_proxy(row) -> float:
     """
     zf = float(row["zero_frac"])
     f50 = float(row["frac_above_0p5"])
-    c2 = max(min(f50, 1.0), 0.0)            # the empirical RQS-c2 component
+    c2 = max(min(f50, 1.0), 0.0)  # the empirical RQS-c2 component
     var = float(row["var_reward"])
-    var_inv = 1.0 - min(2.0 * var, 1.0)     # reward variance < 0.5 -> 1 - 2*var >= 0
-    factors = np.array([
-        max(1.0 - 2.0 * zf, 0.05),
-        max(c2, 0.05),
-        max(var_inv, 0.05),
-    ])
+    var_inv = 1.0 - min(2.0 * var, 1.0)  # reward variance < 0.5 -> 1 - 2*var >= 0
+    factors = np.array(
+        [
+            max(1.0 - 2.0 * zf, 0.05),
+            max(c2, 0.05),
+            max(var_inv, 0.05),
+        ]
+    )
     return float(np.exp(np.log(factors).mean()))
 
 
@@ -151,11 +152,13 @@ def _aci_proxy_from_rqs(row) -> float:
     f50 = float(row["frac_above_0p5"])
     r_var = float(row["r_var"])
     r_var_inv = 1.0 - min(2.0 * r_var, 1.0)
-    factors = np.array([
-        max(1.0 - 2.0 * zf, 0.05),
-        max(f50, 0.05),
-        max(r_var_inv, 0.05),
-    ])
+    factors = np.array(
+        [
+            max(1.0 - 2.0 * zf, 0.05),
+            max(f50, 0.05),
+            max(r_var_inv, 0.05),
+        ]
+    )
     return float(np.exp(np.log(factors).mean()))
 
 
@@ -183,9 +186,11 @@ def main():
         # clip the variance so the Bernoulli draws are in [0,1]
         sd_r = min(np.sqrt(max(var_r, 1e-6)), 0.5)
         traces = np.clip(
-            np.random.default_rng(int(r["params_B"] * 1000 + n_steps))
-            .normal(mean_r, sd_r, size=n_steps),
-            0.0, 1.0,
+            np.random.default_rng(int(r["params_B"] * 1000 + n_steps)).normal(
+                mean_r, sd_r, size=n_steps
+            ),
+            0.0,
+            1.0,
         )
         step_traces[r["model"]] = traces
 
@@ -204,20 +209,22 @@ def main():
             # Pass@K uses p_hat (point estimate) -- the wide-CI question
             # is on p_hat itself; we report both.
             passK = 1.0 - (1.0 - p_hat) ** K
-            rows.append({
-                "model": model,
-                "n_steps": n,
-                "params_B": r["params_B"],
-                "family": r["family"],
-                "R_max_2p": r["R_max_2p"],
-                "mean_reward": r["mean_reward"],
-                "p_hat_pass1": p_hat,
-                "p_lo95": p_lo,
-                "p_hi95": p_hi,
-                "ci_width95": p_hi - p_lo,
-                "K": K,
-                "pass_K": passK,
-            })
+            rows.append(
+                {
+                    "model": model,
+                    "n_steps": n,
+                    "params_B": r["params_B"],
+                    "family": r["family"],
+                    "R_max_2p": r["R_max_2p"],
+                    "mean_reward": r["mean_reward"],
+                    "p_hat_pass1": p_hat,
+                    "p_lo95": p_lo,
+                    "p_hi95": p_hi,
+                    "ci_width95": p_hi - p_lo,
+                    "K": K,
+                    "pass_K": passK,
+                }
+            )
     passk_per_anchor = pd.DataFrame(rows)
     passk_per_anchor.to_csv(OUT / "sweagent_passk_per_anchor.tsv", sep="\t", index=False)
 
@@ -238,31 +245,31 @@ def main():
             if j <= i:
                 continue
             gap = float(a["mean_reward"]) - float(b["mean_reward"])
-            straddling = bool(
-                (a["p_lo95"] <= b["p_hi95"]) and (b["p_lo95"] <= a["p_hi95"])
-            )
+            straddling = bool((a["p_lo95"] <= b["p_hi95"]) and (b["p_lo95"] <= a["p_hi95"]))
             same_class = a["tier"] == b["tier"]
-            pair_rows.append({
-                "anchor_a": a["model"],
-                "anchor_b": b["model"],
-                "tier_a": a["tier"],
-                "tier_b": b["tier"],
-                "mean_reward_a": float(a["mean_reward"]),
-                "mean_reward_b": float(b["mean_reward"]),
-                "R_max_2p_a": float(a["R_max_2p"]),
-                "R_max_2p_b": float(b["R_max_2p"]),
-                "R_max_gap": gap,
-                "ci_a_width": float(a["ci_width95"]),
-                "ci_b_width": float(b["ci_width95"]),
-                "p_hat_a": float(a["p_hat_pass1"]),
-                "p_hat_b": float(b["p_hat_pass1"]),
-                "ci_a_lo": float(a["p_lo95"]),
-                "ci_a_hi": float(a["p_hi95"]),
-                "ci_b_lo": float(b["p_lo95"]),
-                "ci_b_hi": float(b["p_hi95"]),
-                "ci_straddle": straddling,
-                "same_tier": same_class,
-            })
+            pair_rows.append(
+                {
+                    "anchor_a": a["model"],
+                    "anchor_b": b["model"],
+                    "tier_a": a["tier"],
+                    "tier_b": b["tier"],
+                    "mean_reward_a": float(a["mean_reward"]),
+                    "mean_reward_b": float(b["mean_reward"]),
+                    "R_max_2p_a": float(a["R_max_2p"]),
+                    "R_max_2p_b": float(b["R_max_2p"]),
+                    "R_max_gap": gap,
+                    "ci_a_width": float(a["ci_width95"]),
+                    "ci_b_width": float(b["ci_width95"]),
+                    "p_hat_a": float(a["p_hat_pass1"]),
+                    "p_hat_b": float(b["p_hat_pass1"]),
+                    "ci_a_lo": float(a["p_lo95"]),
+                    "ci_a_hi": float(a["p_hi95"]),
+                    "ci_b_lo": float(b["p_lo95"]),
+                    "ci_b_hi": float(b["p_hi95"]),
+                    "ci_straddle": straddling,
+                    "same_tier": same_class,
+                }
+            )
     pair_df = pd.DataFrame(pair_rows)
     pair_df.to_csv(OUT / "sweagent_passk_scaling.tsv", sep="\t", index=False)
 
@@ -305,18 +312,20 @@ def main():
         else:
             policy_share = float("nan")
             aci_share = float("nan")
-        ac_rows.append({
-            "model": model,
-            "params_B": r["params_B"],
-            "R_max_observed_2p": R_max_obs,
-            "RQS": RQS,
-            "ACI_proxy": ac_proxy,
-            "R_max_policy_decomp": R_max_policy,
-            "zero_frac": zero_frac,
-            "frac_above_0p5": f50,
-            "policy_share_2p": policy_share,
-            "aci_share_2p": aci_share,
-        })
+        ac_rows.append(
+            {
+                "model": model,
+                "params_B": r["params_B"],
+                "R_max_observed_2p": R_max_obs,
+                "RQS": RQS,
+                "ACI_proxy": ac_proxy,
+                "R_max_policy_decomp": R_max_policy,
+                "zero_frac": zero_frac,
+                "frac_above_0p5": f50,
+                "policy_share_2p": policy_share,
+                "aci_share_2p": aci_share,
+            }
+        )
     ac_df = pd.DataFrame(ac_rows).sort_values("R_max_policy_decomp", ascending=False)
     ac_df.to_csv(OUT / "sweagent_aci_decomp.tsv", sep="\t", index=False)
 
@@ -332,13 +341,15 @@ def main():
             label = "soft_floor (policy-bounded)"
         else:
             label = "reachable (ACI-bounded or ceiling)"
-        tier_rows.append({
-            "model": r["model"],
-            "params_B": r["params_B"],
-            "R_max_2p": R,
-            "mean_reward": float(r["mean_reward"]),
-            "agentless_tier": label,
-        })
+        tier_rows.append(
+            {
+                "model": r["model"],
+                "params_B": r["params_B"],
+                "R_max_2p": R,
+                "mean_reward": float(r["mean_reward"]),
+                "agentless_tier": label,
+            }
+        )
     tier_df = pd.DataFrame(tier_rows)
     tier_df.to_csv(OUT / "sweagent_agentless_tiers.tsv", sep="\t", index=False)
 
@@ -421,15 +432,21 @@ def main():
     print()
     print("Pass@K=1 95% CI widths (absolute, on R_max scale of [0,1]):")
     for _, r in passk_wide_K1.iterrows():
-        print(f"  {r['model']:<32}  n={int(r['n_steps']):>3}   CI95 width = {r['ci_width95']:.3f}   "
-              f"[{r['p_lo95']:.3f}, {r['p_hi95']:.3f}]")
+        print(
+            f"  {r['model']:<32}  n={int(r['n_steps']):>3}   CI95 width = {r['ci_width95']:.3f}   "
+            f"[{r['p_lo95']:.3f}, {r['p_hi95']:.3f}]"
+        )
     print()
     print("Pairwise CI-straddle test (capability-class gap resolves only if no straddle):")
     print(f"  within-class pairs    : {cross_pairs_within_class}, straddle = {within_straddle}")
     print(f"  cross-class pairs     : {cross_pairs_cross_class}, straddle = {cross_straddle}")
-    print(f"  Overall straddle rate : {(within_straddle + cross_straddle) / max(1, len(pair_df)):.1%}")
+    print(
+        f"  Overall straddle rate : {(within_straddle + cross_straddle) / max(1, len(pair_df)):.1%}"
+    )
     print()
-    print("Agentless-style tiers (R_max_2p < 0.3 = hard floor, 0.3-0.7 = soft floor, >0.7 reachable):")
+    print(
+        "Agentless-style tiers (R_max_2p < 0.3 = hard floor, 0.3-0.7 = soft floor, >0.7 reachable):"
+    )
     for _, r in tier_df.iterrows():
         print(f"  {r['model']:<32}  R_max_2p={r['R_max_2p']:.3f}  -> {r['agentless_tier']}")
     print()
@@ -437,8 +454,10 @@ def main():
     for _, r in ac_df.iterrows():
         rpl = f"{r['R_max_policy_decomp']:.3f}" if not pd.isna(r["R_max_policy_decomp"]) else "nan"
         ps = f"{r['policy_share_2p']:.3f}" if not pd.isna(r["policy_share_2p"]) else "nan"
-        print(f"  {r['model']:<32}  R_max2p={r['R_max_observed_2p']:.3f}  RQS={r['RQS']:.3f}  "
-              f"ACI_proxy={r['ACI_proxy']:.3f}  R_max_policy={rpl}  policy_share={ps}")
+        print(
+            f"  {r['model']:<32}  R_max2p={r['R_max_observed_2p']:.3f}  RQS={r['RQS']:.3f}  "
+            f"ACI_proxy={r['ACI_proxy']:.3f}  R_max_policy={rpl}  policy_share={ps}"
+        )
 
 
 if __name__ == "__main__":

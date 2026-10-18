@@ -25,14 +25,17 @@ from __future__ import annotations
 
 import sys as _sys
 from pathlib import Path as _Path
-_sys.path.insert(0, str(next(p for p in _Path(__file__).resolve().parents if (p / "platform_hybrid").is_dir())))
+
+_sys.path.insert(
+    0, str(next(p for p in _Path(__file__).resolve().parents if (p / "platform_hybrid").is_dir()))
+)
 from platform_hybrid.experiments.research_contracts import lagged_pairs, EvidenceUnavailable
 
 
 import json
 import math
 from pathlib import Path
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass
 from typing import Any
 
 import numpy as np
@@ -94,12 +97,14 @@ def extract_step_data(rec: dict) -> list[dict] | None:
         if math.isnan(zvf):
             continue
 
-        rows.append({
-            "step": int(step_num),
-            "reward": float(reward),
-            "zvf": float(zvf),
-            "gu": float(gu),
-        })
+        rows.append(
+            {
+                "step": int(step_num),
+                "reward": float(reward),
+                "zvf": float(zvf),
+                "gu": float(gu),
+            }
+        )
 
     if len(rows) < 5:
         return None
@@ -140,18 +145,24 @@ def load_runs() -> list[RunData]:
             # run_id, conservatively identify exact record content: copies in
             # master/consolidated files or multiple positions collapse while
             # explicit seed/config/attempt distinctions remain in the key.
-            key = ("run_id:" + run_id) if run_id else "record:" + json.dumps(rec, sort_keys=True, separators=(",", ":"))
+            key = (
+                ("run_id:" + run_id)
+                if run_id
+                else "record:" + json.dumps(rec, sort_keys=True, separators=(",", ":"))
+            )
 
             if key in seen:
                 continue
             seen.add(key)
 
-            runs.append(RunData(
-                key=key,
-                model=model,
-                task=task,
-                step_data=step_data,
-            ))
+            runs.append(
+                RunData(
+                    key=key,
+                    model=model,
+                    task=task,
+                    step_data=step_data,
+                )
+            )
 
     return runs
 
@@ -165,7 +176,7 @@ def ols_regression(X: np.ndarray, y: np.ndarray) -> dict:
     # Coefficients
     beta = np.linalg.lstsq(X, y, rcond=None)[0]
     residuals = y - X @ beta
-    sse = float(np.sum(residuals ** 2))
+    sse = float(np.sum(residuals**2))
     sst = float(np.sum((y - np.mean(y)) ** 2))
     r_squared = 1.0 - sse / sst if sst > 0 else 0.0
     adj_r_squared = 1.0 - (1 - r_squared) * (n - 1) / (n - k) if n > k else 0.0
@@ -182,8 +193,13 @@ def ols_regression(X: np.ndarray, y: np.ndarray) -> dict:
 
     # Two-tailed p-values using normal approximation (large sample)
     from scipy import stats as sp_stats
-    p_values = np.array([2.0 * (1.0 - sp_stats.t.cdf(abs(t), df=n - k)) if not np.isnan(t) else np.nan
-                         for t in t_stats])
+
+    p_values = np.array(
+        [
+            2.0 * (1.0 - sp_stats.t.cdf(abs(t), df=n - k)) if not np.isnan(t) else np.nan
+            for t in t_stats
+        ]
+    )
 
     # F-test for overall significance
     if k > 1 and sst > 0:
@@ -275,6 +291,7 @@ def cross_run_lagged_regression(runs: list[RunData], lag_k: int = 5) -> dict:
         sse_unrestricted = m2["sse"]
         q = 1  # one additional restriction
         from scipy import stats as sp_stats
+
         f_inc = ((sse_restricted - sse_unrestricted) / q) / (sse_unrestricted / (n - 3))
         f_inc_pvalue = 1.0 - sp_stats.f.cdf(f_inc, q, n - 3)
     else:
@@ -294,8 +311,12 @@ def cross_run_lagged_regression(runs: list[RunData], lag_k: int = 5) -> dict:
             "f_stat": float(f_inc),
             "p_value": float(f_inc_pvalue),
         },
-        "delta_r_squared": float(m2.get("r_squared", 0) - m1.get("r_squared", 0)) if not m2.get("error") and not m1.get("error") else np.nan,
-        "delta_adj_r_squared": float(m2.get("adj_r_squared", 0) - m1.get("adj_r_squared", 0)) if not m2.get("error") and not m1.get("error") else np.nan,
+        "delta_r_squared": float(m2.get("r_squared", 0) - m1.get("r_squared", 0))
+        if not m2.get("error") and not m1.get("error")
+        else np.nan,
+        "delta_adj_r_squared": float(m2.get("adj_r_squared", 0) - m1.get("adj_r_squared", 0))
+        if not m2.get("error") and not m1.get("error")
+        else np.nan,
     }
 
 
@@ -351,6 +372,7 @@ def within_run_lagged_regression(runs: list[RunData], lag_k: int = 5) -> dict:
 
     # One-sample t-test: is the mean ZVF coefficient significantly different from 0?
     from scipy import stats as sp_stats
+
     t_stat_zvf, p_value_zvf = sp_stats.ttest_1samp(coefs_zvf, 0)
 
     return {
@@ -451,7 +473,9 @@ def fmt(value: float | int | None, digits: int = 3) -> str:
 
 
 def main():
-    raise EvidenceUnavailable("Legacy lagged-inference report disabled: trajectory dependence requires held-out-run prediction/cluster uncertainty; use lagged_pairs for descriptive joins")
+    raise EvidenceUnavailable(
+        "Legacy lagged-inference report disabled: trajectory dependence requires held-out-run prediction/cluster uncertainty; use lagged_pairs for descriptive joins"
+    )
 
 
 def write_markdown_report(runs: list[RunData], results: dict) -> None:
@@ -498,17 +522,23 @@ def write_markdown_report(runs: list[RunData], results: dict) -> None:
         m2 = cross.get("model2_reward_plus_zvf", {})
         m3 = cross.get("model3_with_interaction", {})
 
-        lines.append(f"| Reward only | {fmt(m1.get('r_squared'))} | {fmt(m1.get('adj_r_squared'))} | — | — | — |")
+        lines.append(
+            f"| Reward only | {fmt(m1.get('r_squared'))} | {fmt(m1.get('adj_r_squared'))} | — | — | — |"
+        )
         if not m2.get("error"):
             zvf_coef = m2.get("beta", [0, 0, 0])[2]
             zvf_se = m2.get("se", [0, 0, 0])[2]
             zvf_pval = m2.get("p_values", [0, 0, 0])[2]
-            lines.append(f"| Reward + ZVF | {fmt(m2.get('r_squared'))} | {fmt(m2.get('adj_r_squared'))} | {fmt(zvf_coef)} | {fmt(zvf_se)} | {fmt(zvf_pval, 4)} |")
+            lines.append(
+                f"| Reward + ZVF | {fmt(m2.get('r_squared'))} | {fmt(m2.get('adj_r_squared'))} | {fmt(zvf_coef)} | {fmt(zvf_se)} | {fmt(zvf_pval, 4)} |"
+            )
         if not m3.get("error"):
             zvf_coef = m3.get("beta", [0, 0, 0, 0])[2]
             int_coef = m3.get("beta", [0, 0, 0, 0])[3]
             zvf_pval = m3.get("p_values", [0, 0, 0, 0])[2]
-            lines.append(f"| Reward + ZVF + Interaction | {fmt(m3.get('r_squared'))} | {fmt(m3.get('adj_r_squared'))} | {fmt(zvf_coef)} | — | {fmt(zvf_pval, 4)} |")
+            lines.append(
+                f"| Reward + ZVF + Interaction | {fmt(m3.get('r_squared'))} | {fmt(m3.get('adj_r_squared'))} | {fmt(zvf_coef)} | — | {fmt(zvf_pval, 4)} |"
+            )
 
         lines += [
             "",
@@ -547,27 +577,51 @@ def write_markdown_report(runs: list[RunData], results: dict) -> None:
     delta_r2 = lag5_cross.get("delta_r_squared", 0)
     inc_p = lag5_cross.get("incremental_f_test", {}).get("p_value", 1.0)
     within_p = lag5_within.get("p_value_zvf", 1.0)
-    partial_r = lag5_partial.get("partial", {}).get("zvf_vs_future_reward_controlling_current", {}).get("r", 0)
-    partial_p = lag5_partial.get("partial", {}).get("zvf_vs_future_reward_controlling_current", {}).get("p_value", 1.0)
+    partial_r = (
+        lag5_partial.get("partial", {})
+        .get("zvf_vs_future_reward_controlling_current", {})
+        .get("r", 0)
+    )
+    partial_p = (
+        lag5_partial.get("partial", {})
+        .get("zvf_vs_future_reward_controlling_current", {})
+        .get("p_value", 1.0)
+    )
 
     if delta_r2 > 0.01 and inc_p < 0.05:
-        lines.append("**ZVF provides statistically significant incremental predictive power** beyond current reward.")
-        lines.append(f"Adding ZVF to the model increases R² by {fmt(delta_r2)} (incremental F-test p = {fmt(inc_p, 4)}).")
+        lines.append(
+            "**ZVF provides statistically significant incremental predictive power** beyond current reward."
+        )
+        lines.append(
+            f"Adding ZVF to the model increases R² by {fmt(delta_r2)} (incremental F-test p = {fmt(inc_p, 4)})."
+        )
     else:
-        lines.append("**ZVF does NOT provide statistically significant incremental predictive power** beyond current reward in the cross-run pooled analysis.")
-        lines.append(f"Adding ZVF to the model increases R² by only {fmt(delta_r2)} (incremental F-test p = {fmt(inc_p, 4)}).")
+        lines.append(
+            "**ZVF does NOT provide statistically significant incremental predictive power** beyond current reward in the cross-run pooled analysis."
+        )
+        lines.append(
+            f"Adding ZVF to the model increases R² by only {fmt(delta_r2)} (incremental F-test p = {fmt(inc_p, 4)})."
+        )
 
     lines.append("")
     if within_p < 0.05:
-        lines.append(f"Within-run analysis confirms: mean ZVF coefficient is significantly non-zero (p = {fmt(within_p, 4)}), supporting ZVF as an independent early-warning signal within training trajectories.")
+        lines.append(
+            f"Within-run analysis confirms: mean ZVF coefficient is significantly non-zero (p = {fmt(within_p, 4)}), supporting ZVF as an independent early-warning signal within training trajectories."
+        )
     else:
-        lines.append(f"Within-run analysis: mean ZVF coefficient is NOT significantly non-zero (p = {fmt(within_p, 4)}), suggesting ZVF's predictive power may be driven by cross-run confounders rather than within-trajectory dynamics.")
+        lines.append(
+            f"Within-run analysis: mean ZVF coefficient is NOT significantly non-zero (p = {fmt(within_p, 4)}), suggesting ZVF's predictive power may be driven by cross-run confounders rather than within-trajectory dynamics."
+        )
 
     lines.append("")
     if abs(partial_r) > 0.1 and partial_p < 0.05:
-        lines.append(f"Partial correlation analysis: r(ZVF_t, R_{{t+5}} | R_t) = {fmt(partial_r)} (p = {fmt(partial_p, 4)}), confirming ZVF carries signal beyond current reward.")
+        lines.append(
+            f"Partial correlation analysis: r(ZVF_t, R_{{t+5}} | R_t) = {fmt(partial_r)} (p = {fmt(partial_p, 4)}), confirming ZVF carries signal beyond current reward."
+        )
     else:
-        lines.append(f"Partial correlation analysis: r(ZVF_t, R_{{t+5}} | R_t) = {fmt(partial_r)} (p = {fmt(partial_p, 4)}), suggesting ZVF's zero-order correlation with future reward is largely explained by current reward.")
+        lines.append(
+            f"Partial correlation analysis: r(ZVF_t, R_{{t+5}} | R_t) = {fmt(partial_r)} (p = {fmt(partial_p, 4)}), suggesting ZVF's zero-order correlation with future reward is largely explained by current reward."
+        )
 
     OUT_MD.write_text("\n".join(lines) + "\n")
 

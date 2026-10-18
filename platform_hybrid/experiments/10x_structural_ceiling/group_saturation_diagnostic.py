@@ -15,6 +15,7 @@ Metrics logged to W&B per step:
   - effective_groups: number of groups contributing non-zero gradient
   - gradient_utilization: effective_groups / total_groups
 """
+
 from __future__ import annotations
 
 import json
@@ -122,9 +123,20 @@ class SaturationTracker:
     def __init__(self) -> None:
         self.history: list[StepDiagnostic] = []
 
-    def record_step(self, step: int, group_rewards: list[list[float]], policy_entropy: float | None = None, advantage_variance: float | None = None) -> StepDiagnostic:
+    def record_step(
+        self,
+        step: int,
+        group_rewards: list[list[float]],
+        policy_entropy: float | None = None,
+        advantage_variance: float | None = None,
+    ) -> StepDiagnostic:
         groups = [GroupStats(rewards=r) for r in group_rewards]
-        diag = StepDiagnostic(step=step, groups=groups, policy_entropy=policy_entropy, advantage_variance=advantage_variance)
+        diag = StepDiagnostic(
+            step=step,
+            groups=groups,
+            policy_entropy=policy_entropy,
+            advantage_variance=advantage_variance,
+        )
         self.history.append(diag)
         return diag
 
@@ -162,16 +174,24 @@ def log_to_wandb(diag: StepDiagnostic) -> None:
     """Log saturation metrics to W&B if available."""
     try:
         import wandb
+
         try:
             import torch, wandb
-            if not getattr(wandb, '_vram_patched', False):
+
+            if not getattr(wandb, "_vram_patched", False):
                 _old_log = wandb.log
+
                 def _vram_log(data, *args, **kwargs):
                     if torch.cuda.is_available():
-                        data['system/vram_peak_allocated_gb'] = torch.cuda.max_memory_allocated() / (1024**3)
-                        data['system/vram_reserved_gb'] = torch.cuda.max_memory_reserved() / (1024**3)
+                        data["system/vram_peak_allocated_gb"] = (
+                            torch.cuda.max_memory_allocated() / (1024**3)
+                        )
+                        data["system/vram_reserved_gb"] = torch.cuda.max_memory_reserved() / (
+                            1024**3
+                        )
                         torch.cuda.reset_peak_memory_stats()
                     _old_log(data, *args, **kwargs)
+
                 wandb.log = _vram_log
                 wandb._vram_patched = True
         except ImportError:

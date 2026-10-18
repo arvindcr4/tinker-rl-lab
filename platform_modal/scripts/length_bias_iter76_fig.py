@@ -9,10 +9,11 @@ Panels:
   B. Damping ratio ζ per (algo, task).  ζ=1 horizontal reference.
   C. Phase-plane loop area ∮R dL per (algo, task).
 """
+
 from __future__ import annotations
-import json
 import os
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
@@ -65,10 +66,14 @@ def main():
             for t in tasks:
                 vals = d.get((t, a), [])
                 grp.append(float(np.mean(vals)) if vals else np.nan)
-            ax.bar(x + offset, grp, width, color=color[a],
-                   alpha=0.45 if cond == "dn" else 0.95,
-                   label=f"{algo_label[a]} ({'+' if cond=='up' else '−'}dR)"
-                   if j == 0 else None)
+            ax.bar(
+                x + offset,
+                grp,
+                width,
+                color=color[a],
+                alpha=0.45 if cond == "dn" else 0.95,
+                label=f"{algo_label[a]} ({'+' if cond == 'up' else '−'}dR)" if j == 0 else None,
+            )
     ax.set_xticks(x)
     ax.set_xticklabels([t.replace("_", " ") for t in tasks])
     ax.set_ylabel(r"Half-life $\tau$ (steps)")
@@ -85,8 +90,7 @@ def main():
         for t in tasks:
             vals = zt.get((t, a), [])
             grp.append(float(np.mean(vals)) if vals else np.nan)
-        ax.bar(x + (k - 0.5) * width, grp, width, color=color[a],
-               label=algo_label[a])
+        ax.bar(x + (k - 0.5) * width, grp, width, color=color[a], label=algo_label[a])
     ax.axhline(1.0, color="black", lw=1.2, ls="--", label=r"$\zeta = 1$ (crit.)")
     ax.axhline(0.0, color="black", lw=0.5)
     ax.set_xticks(x)
@@ -104,8 +108,7 @@ def main():
         for t in tasks:
             vals = lp.get((t, a), [])
             grp.append(float(np.mean(vals)) if vals else np.nan)
-        ax.bar(x + (k - 0.5) * width, grp, width, color=color[a],
-               label=algo_label[a])
+        ax.bar(x + (k - 0.5) * width, grp, width, color=color[a], label=algo_label[a])
     ax.axhline(0, color="black", lw=0.5)
     ax.set_xticks(x)
     ax.set_xticklabels([t.replace("_", " ") for t in tasks])
@@ -114,8 +117,8 @@ def main():
     ax.legend(fontsize=8)
 
     fig.suptitle(
-        "Iter 76 — Reward-shock mean-reversion & phase-plane dissipativity",
-        fontsize=12, y=1.02)
+        "Iter 76 — Reward-shock mean-reversion & phase-plane dissipativity", fontsize=12, y=1.02
+    )
     fig.tight_layout()
 
     out_pdf = os.path.join(FIG, "length_bias_iter76.pdf")
@@ -126,8 +129,10 @@ def main():
     print(f"wrote {out_png}")
 
     # mirror to paper/figures
-    for src, dst in [(out_pdf, os.path.join(PAPER_FIG, "length_bias_iter76.pdf")),
-                     (out_png, os.path.join(PAPER_FIG, "length_bias_iter76.png"))]:
+    for src, dst in [
+        (out_pdf, os.path.join(PAPER_FIG, "length_bias_iter76.pdf")),
+        (out_png, os.path.join(PAPER_FIG, "length_bias_iter76.png")),
+    ]:
         with open(src, "rb") as fin, open(dst, "wb") as fout:
             fout.write(fin.read())
         print(f"mirrored to {dst}")

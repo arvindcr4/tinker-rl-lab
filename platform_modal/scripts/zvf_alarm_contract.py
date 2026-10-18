@@ -27,7 +27,9 @@ def classify_trace(trace, tau, persistence, endpoint="accuracy_failure"):
     steps, values, flags = trace["step"], trace["zvf"], trace[endpoint]
     if not steps or len(steps) != len(values) or len(flags) != len(values):
         raise ValueError("aligned nonempty trace required")
-    if any(b != a + 1 for a, b in zip(steps, steps[1:])) or any(f not in (0, 1) for f in flags):
+    if any(b != a + 1 for a, b in zip(steps, steps[1:], strict=False)) or any(
+        f not in (0, 1) for f in flags
+    ):
         raise ValueError("consecutive steps and binary endpoint required")
     fi = next((i for i, f in enumerate(flags) if f), None)
     ai = first_alarm(values, tau, persistence)
@@ -42,10 +44,10 @@ def classify_trace(trace, tau, persistence, endpoint="accuracy_failure"):
 def at_risk_transitions(steps, flags):
     if len(steps) != len(flags) or any(f not in (0, 1) for f in flags):
         raise ValueError("aligned binary endpoint required")
-    if any(b <= a for a, b in zip(steps, steps[1:])):
+    if any(b <= a for a, b in zip(steps, steps[1:], strict=False)):
         raise ValueError("strictly increasing steps required")
-    failure = next((s for s, f in zip(steps, flags) if f), None)
-    for i, (step, nxt) in enumerate(zip(steps, steps[1:])):
+    failure = next((s for s, f in zip(steps, flags, strict=False) if f), None)
+    for i, (step, nxt) in enumerate(zip(steps, steps[1:], strict=False)):
         if failure is not None and step >= failure:
             break
         if nxt == step + 1:  # do not count an unobserved interval as a one-step risk

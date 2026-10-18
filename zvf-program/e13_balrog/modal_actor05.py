@@ -65,8 +65,10 @@ app = modal.App(APP_NAME)
 def generate(prompt: str, max_tokens: int = 512) -> str:
     """Modal-native generation entrypoint (bypasses the public HTTP proxy)."""
     import sys
+
     sys.path.insert(0, "/root")
     from hf_actor_server import generate_text
+
     return generate_text(prompt, max_tokens)
 
 
@@ -79,6 +81,7 @@ def smoke():
 @app.local_entrypoint()
 def bench(n: int = 256):
     import time
+
     t0 = time.time()
     out = generate.remote("Explain in one paragraph why the sky is blue.", n)
     dt = time.time() - t0
@@ -87,8 +90,13 @@ def bench(n: int = 256):
 
 
 @app.function(
-    image=actor_image, gpu="H200", cpu=4.0, memory=131072,
-    timeout=WALL_SECONDS, max_containers=1, scaledown_window=3600,
+    image=actor_image,
+    gpu="H200",
+    cpu=4.0,
+    memory=131072,
+    timeout=WALL_SECONDS,
+    max_containers=1,
+    scaledown_window=3600,
     secrets=[core_secret, auth_secret],
     volumes={"/root/.cache/huggingface": hf_cache_vol},
 )
@@ -96,6 +104,8 @@ def bench(n: int = 256):
 def serve():
     """Registered ASGI lifecycle; Modal owns startup and shutdown."""
     import sys
+
     sys.path.insert(0, "/root")
     from hf_actor_server import app as actor_app
+
     return actor_app

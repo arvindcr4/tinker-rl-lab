@@ -155,11 +155,11 @@ def mcnemar_discordant_counts(base: Iterable[Any], candidate: Iterable[Any]) -> 
     base_values, candidate_values = _paired_binary(base, candidate)
     base_fail_candidate_pass = sum(
         base_value == 0 and candidate_value == 1
-        for base_value, candidate_value in zip(base_values, candidate_values)
+        for base_value, candidate_value in zip(base_values, candidate_values, strict=False)
     )
     base_pass_candidate_fail = sum(
         base_value == 1 and candidate_value == 0
-        for base_value, candidate_value in zip(base_values, candidate_values)
+        for base_value, candidate_value in zip(base_values, candidate_values, strict=False)
     )
     return base_fail_candidate_pass, base_pass_candidate_fail
 
@@ -205,20 +205,24 @@ def newcombe_paired_risk_difference_interval(
         candidate_successes, trials, confidence=confidence
     )
     difference = candidate_proportion - base_proportion
-    joint = sum(b and c for b, c in zip(base_values, candidate_values)) / trials
-    denominator = math.sqrt(base_proportion * (1-base_proportion) * candidate_proportion * (1-candidate_proportion))
+    joint = sum(b and c for b, c in zip(base_values, candidate_values, strict=False)) / trials
+    denominator = math.sqrt(
+        base_proportion * (1 - base_proportion) * candidate_proportion * (1 - candidate_proportion)
+    )
     # Newcombe method 10 uses the continuity-corrected phi coefficient.
-    covariance = joint - base_proportion*candidate_proportion
-    corrected = max(0.0, abs(covariance) - .5/trials)
+    covariance = joint - base_proportion * candidate_proportion
+    corrected = max(0.0, abs(covariance) - 0.5 / trials)
     rho = math.copysign(corrected, covariance) / denominator if denominator else 0.0
     rho = min(1.0, max(-1.0, rho))
     lower = difference - math.sqrt(
-        (candidate_proportion - candidate_low) ** 2 + (base_high - base_proportion) ** 2
-        - 2*rho*(candidate_proportion-candidate_low)*(base_high-base_proportion)
+        (candidate_proportion - candidate_low) ** 2
+        + (base_high - base_proportion) ** 2
+        - 2 * rho * (candidate_proportion - candidate_low) * (base_high - base_proportion)
     )
     upper = difference + math.sqrt(
-        (candidate_high - candidate_proportion) ** 2 + (base_proportion - base_low) ** 2
-        - 2*rho*(candidate_high-candidate_proportion)*(base_proportion-base_low)
+        (candidate_high - candidate_proportion) ** 2
+        + (base_proportion - base_low) ** 2
+        - 2 * rho * (candidate_high - candidate_proportion) * (base_proportion - base_low)
     )
     return max(-1.0, lower), min(1.0, upper)
 
@@ -271,7 +275,7 @@ def paired_bootstrap_mean_difference(
     resamples = _integer("resamples", resamples, minimum=1)
     seed = _integer("seed", seed)
     differences_list: list[float] = []
-    for base_value, candidate_value in zip(base_values, candidate_values):
+    for base_value, candidate_value in zip(base_values, candidate_values, strict=False):
         difference = candidate_value - base_value
         if not math.isfinite(difference):
             raise StatisticsInputError("paired differences must be finite")

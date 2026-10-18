@@ -275,10 +275,17 @@ def run_unit(args: argparse.Namespace) -> dict[str, Any]:
         "runtime_packages": list(PACKAGE_PINS),
         "source_snapshots": snapshots,
     }
-    request = common.seal_request(request, decoder=common.DECODER_CONTRACT,
-        tracking={"hf_repo_prefix": args.hf_repo_prefix, "wandb_project": args.wandb_project,
-                  "wandb_entity": args.wandb_entity, "wandb_group": args.wandb_group},
-        source_files={p.name: common.sha256_file(p) for p in (REMOTE_SCRIPT, SAMPLER, TRL_ADAPTER)})
+    request = common.seal_request(
+        request,
+        decoder=common.DECODER_CONTRACT,
+        tracking={
+            "hf_repo_prefix": args.hf_repo_prefix,
+            "wandb_project": args.wandb_project,
+            "wandb_entity": args.wandb_entity,
+            "wandb_group": args.wandb_group,
+        },
+        source_files={p.name: common.sha256_file(p) for p in (REMOTE_SCRIPT, SAMPLER, TRL_ADAPTER)},
+    )
     stack_fingerprint = request["stack_fingerprint"]
     unit = f"{args.task}__{args.arm}__s{args.seed}"
     slug = f"next-preflight-{args.task}-{args.arm[:8]}-s{args.seed}-{request['fingerprint'][:8]}"
@@ -510,10 +517,19 @@ def run_unit(args: argparse.Namespace) -> dict[str, Any]:
         failed = {**base, "status": "failed", "error": str(exc)}
         helpers.atomic_json(result_path, failed)
         return {"status": "failed", "result_path": str(result_path), "kernel_url": kernel_url}
-    complete = common.completed_receipt(base, result=result, manifest=manifest,
-        verification=verification, return_code=0,
-        cleanup={"session_absent_verified": False, "compute_terminal_verified": True,
-                 "provider_observation": stage, "resource_id": kernel_id})
+    complete = common.completed_receipt(
+        base,
+        result=result,
+        manifest=manifest,
+        verification=verification,
+        return_code=0,
+        cleanup={
+            "session_absent_verified": False,
+            "compute_terminal_verified": True,
+            "provider_observation": stage,
+            "resource_id": kernel_id,
+        },
+    )
 
     helpers.atomic_json(
         request_path,

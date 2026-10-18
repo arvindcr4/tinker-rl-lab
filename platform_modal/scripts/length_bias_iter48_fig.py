@@ -8,11 +8,12 @@ figures/length_plateau_slopes.pdf with two panels:
 Bars carry 95% bootstrap CI whiskers from the paired diff columns. Headline
 annotation in panel (a) reports the diff + CI; panel (b) reports the same.
 """
+
 from __future__ import annotations
-import math
 from pathlib import Path
 
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from _analysis_common import read_tsv
@@ -32,15 +33,13 @@ def main() -> None:
     paired = read_tsv(PAIRED_TSV)
 
     # Panel A: arithmetic_easy plat_slope
-    a_plat = next(r for r in paired
-                  if r["task"] == "arithmetic_easy" and r["metric"] == "plat_slope")
-    a_sig = next(r for r in paired
-                 if r["task"] == "arithmetic_easy" and r["metric"] == "signature")
+    a_plat = next(
+        r for r in paired if r["task"] == "arithmetic_easy" and r["metric"] == "plat_slope"
+    )
+    a_sig = next(r for r in paired if r["task"] == "arithmetic_easy" and r["metric"] == "signature")
     # Panel B: gsm8k_cot rise_slope
-    b_rise = next(r for r in paired
-                  if r["task"] == "gsm8k_cot" and r["metric"] == "rise_slope")
-    b_sig = next(r for r in paired
-                 if r["task"] == "gsm8k_cot" and r["metric"] == "signature")
+    b_rise = next(r for r in paired if r["task"] == "gsm8k_cot" and r["metric"] == "rise_slope")
+    b_sig = next(r for r in paired if r["task"] == "gsm8k_cot" and r["metric"] == "signature")
 
     fig, axes = plt.subplots(1, 2, figsize=(8.5, 3.4))
 
@@ -65,8 +64,7 @@ def main() -> None:
         f"diff = {diff:+.4f}, 95% CI [{ci_lo:+.4f}, {ci_hi:+.4f}]"
     )
     for i, v in enumerate(vals):
-        ax.text(i, v + (err_hi if i == 1 else 0.0) + 0.0003,
-                f"{v:+.4f}", ha="center", fontsize=9)
+        ax.text(i, v + (err_hi if i == 1 else 0.0) + 0.0003, f"{v:+.4f}", ha="center", fontsize=9)
 
     # Panel B: rising-phase compression (the "Dr.GRPO stays longer" signature)
     ax = axes[1]
@@ -85,11 +83,11 @@ def main() -> None:
         f"diff = {diff:+.4f}, 95% CI [{ci_lo:+.4f}, {ci_hi:+.4f}]"
     )
     for i, v in enumerate(vals):
-        ax.text(i, v - (err_lo if i == 1 else 0.0) - 0.03,
-                f"{v:+.3f}", ha="center", fontsize=9)
+        ax.text(i, v - (err_lo if i == 1 else 0.0) - 0.03, f"{v:+.3f}", ha="center", fontsize=9)
 
-    fig.suptitle("Iter 48 — Plateau-Anchored Length-Bias Decomposition (Dr.GRPO vs GRPO)",
-                 fontsize=11)
+    fig.suptitle(
+        "Iter 48 — Plateau-Anchored Length-Bias Decomposition (Dr.GRPO vs GRPO)", fontsize=11
+    )
     fig.tight_layout(rect=(0, 0, 1, 0.95))
     fig.savefig(OUT_PDF)
     print(f"wrote {OUT_PDF}")

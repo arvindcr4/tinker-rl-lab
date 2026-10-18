@@ -77,9 +77,8 @@ from __future__ import annotations
 
 import csv
 import json
-import math
 from pathlib import Path
-from statistics import mean, pstdev
+from statistics import mean
 
 WORKTREE = Path(__file__).resolve().parents[2]
 RESULTS = WORKTREE / "experiments" / "results" / "berkeley"
@@ -136,8 +135,9 @@ def per_k_stats(reward_vectors, k):
         n_correct += int(best == 1.0)
         n_all_good += int(all(x == 1.0 for x in first_k))
         n_all_bad += int(all(x == 0.0 for x in first_k))
-        n_mixed += int((not all(x == 1.0 for x in first_k)) and
-                       (not all(x == 0.0 for x in first_k)))
+        n_mixed += int(
+            (not all(x == 1.0 for x in first_k)) and (not all(x == 0.0 for x in first_k))
+        )
     return {
         "n_problems": n_probs,
         "k": k,
@@ -203,11 +203,11 @@ def premise_order_recover(reward_vectors):
             # If mean=0 strictly, then genuinely 0 signal.  We treat
             # mean == 0 AND n_residual as a conservative floor.
             # (Real recovery is unobservable in our data; report floor.)
-            pass
     return n_residual, 0.0  # conservative floor; see writeup
 
 
 # ---------------- Main ----------------
+
 
 def main():
     # ---------- H1 + H2: best-of-k sweep ----------
@@ -226,16 +226,31 @@ def main():
     per_k_path = RESULTS / "cot_decoding_per_k.tsv"
     with per_k_path.open("w") as fh:
         w = csv.writer(fh, delimiter="\t")
-        w.writerow(["seed", "k", "accuracy", "zvf",
-                    "frac_all_good", "frac_all_bad", "frac_mixed",
-                    "n_problems"])
+        w.writerow(
+            [
+                "seed",
+                "k",
+                "accuracy",
+                "zvf",
+                "frac_all_good",
+                "frac_all_bad",
+                "frac_mixed",
+                "n_problems",
+            ]
+        )
         for r in rows_per_k:
-            w.writerow([r["seed"], r["k"],
-                        f"{r['accuracy']:.6f}", f"{r['zvf']:.6f}",
-                        f"{r['frac_all_good']:.6f}",
-                        f"{r['frac_all_bad']:.6f}",
-                        f"{r['frac_mixed']:.6f}",
-                        r["n_problems"]])
+            w.writerow(
+                [
+                    r["seed"],
+                    r["k"],
+                    f"{r['accuracy']:.6f}",
+                    f"{r['zvf']:.6f}",
+                    f"{r['frac_all_good']:.6f}",
+                    f"{r['frac_all_bad']:.6f}",
+                    f"{r['frac_mixed']:.6f}",
+                    r["n_problems"],
+                ]
+            )
 
     # ---------- H1 monotonicity + final/baseline ratio ----------
     h1_per_seed = {}
@@ -252,8 +267,7 @@ def main():
     h1_overall_mono = all(v["is_monotonic"] for v in h1_per_seed.values())
     h1_overall_ratio = mean(v["ratio_k8_over_k1"] for v in h1_per_seed.values())
     h1_decisive = h1_overall_mono and h1_overall_ratio >= 1.10
-    h1_verdict = "DECISIVE" if h1_decisive else (
-        "SUGGESTIVE" if h1_overall_mono else "NULL")
+    h1_verdict = "DECISIVE" if h1_decisive else ("SUGGESTIVE" if h1_overall_mono else "NULL")
 
     # ---------- H2 ZVF monotonicity ----------
     h2_per_seed = {}
@@ -269,14 +283,12 @@ def main():
     h2_overall_mono = all(v["is_monotonic"] for v in h2_per_seed.values())
     h2_overall_delta = mean(v["delta_k8_minus_k1"] for v in h2_per_seed.values())
     h2_decisive = h2_overall_mono and h2_overall_delta < 0.0
-    h2_verdict = "DECISIVE" if h2_decisive else (
-        "SUGGESTIVE" if h2_overall_mono else "NULL")
+    h2_verdict = "DECISIVE" if h2_decisive else ("SUGGESTIVE" if h2_overall_mono else "NULL")
 
     # ---------- H3 RL-substitution upper bound ----------
     h3_per_seed = {}
     for seed in SEEDS:
-        headroom = (h1_per_seed[seed]["acc_k8"]
-                    - h1_per_seed[seed]["acc_k1"])
+        headroom = h1_per_seed[seed]["acc_k8"] - h1_per_seed[seed]["acc_k1"]
         h3_per_seed[seed] = {
             "headroom": headroom,
             "exceeds_rl_gain_floor": headroom >= RL_GAIN_FLOOR,
@@ -309,8 +321,7 @@ def main():
             "n_all_wrong_at_k4": n_resid,
             "recovered_by_remaining_rollouts": frac_rec,
         }
-    h5_overall_frac = mean(
-        v["recovered_by_remaining_rollouts"] for v in h5_per_seed.values())
+    h5_overall_frac = mean(v["recovered_by_remaining_rollouts"] for v in h5_per_seed.values())
     h5_decisive_neg = h5_overall_frac <= 0.05
     h5_verdict = "DECISIVE-NEGATIVE" if h5_decisive_neg else "NULL"
 
@@ -318,37 +329,62 @@ def main():
     sub_path = RESULTS / "cot_decoding_substitution.tsv"
     with sub_path.open("w") as fh:
         w = csv.writer(fh, delimiter="\t")
-        w.writerow(["seed", "acc_k1", "acc_k8", "ratio_k8_over_k1",
-                    "headroom", "exceeds_rl_gain_floor_0p10",
-                    "zvf_k1", "zvf_k8", "zvf_delta"])
+        w.writerow(
+            [
+                "seed",
+                "acc_k1",
+                "acc_k8",
+                "ratio_k8_over_k1",
+                "headroom",
+                "exceeds_rl_gain_floor_0p10",
+                "zvf_k1",
+                "zvf_k8",
+                "zvf_delta",
+            ]
+        )
         for seed in SEEDS:
             v1 = h1_per_seed[seed]
             v2 = h2_per_seed[seed]
             v3 = h3_per_seed[seed]
-            w.writerow([seed,
-                        f"{v1['acc_k1']:.6f}", f"{v1['acc_k8']:.6f}",
-                        f"{v1['ratio_k8_over_k1']:.6f}",
-                        f"{v3['headroom']:.6f}",
-                        int(v3["exceeds_rl_gain_floor"]),
-                        f"{v2['zvf_k1']:.6f}", f"{v2['zvf_k8']:.6f}",
-                        f"{v2['delta_k8_minus_k1']:.6f}"])
+            w.writerow(
+                [
+                    seed,
+                    f"{v1['acc_k1']:.6f}",
+                    f"{v1['acc_k8']:.6f}",
+                    f"{v1['ratio_k8_over_k1']:.6f}",
+                    f"{v3['headroom']:.6f}",
+                    int(v3["exceeds_rl_gain_floor"]),
+                    f"{v2['zvf_k1']:.6f}",
+                    f"{v2['zvf_k8']:.6f}",
+                    f"{v2['delta_k8_minus_k1']:.6f}",
+                ]
+            )
 
     premise_path = RESULTS / "cot_decoding_premise_order.tsv"
     with premise_path.open("w") as fh:
         w = csv.writer(fh, delimiter="\t")
         w.writerow(["seed", "n_all_wrong_at_k8", "recoverable_fraction"])
         for seed in SEEDS:
-            w.writerow([seed, h4_per_seed[seed]["n_all_wrong_at_k8"],
-                        f"{h4_per_seed[seed]['recoverable_fraction']:.6f}"])
+            w.writerow(
+                [
+                    seed,
+                    h4_per_seed[seed]["n_all_wrong_at_k8"],
+                    f"{h4_per_seed[seed]['recoverable_fraction']:.6f}",
+                ]
+            )
 
     huang_path = RESULTS / "cot_decoding_huang_negctl.tsv"
     with huang_path.open("w") as fh:
         w = csv.writer(fh, delimiter="\t")
-        w.writerow(["seed", "n_all_wrong_at_k4",
-                    "recovered_by_remaining_rollouts"])
+        w.writerow(["seed", "n_all_wrong_at_k4", "recovered_by_remaining_rollouts"])
         for seed in SEEDS:
-            w.writerow([seed, h5_per_seed[seed]["n_all_wrong_at_k4"],
-                        f"{h5_per_seed[seed]['recovered_by_remaining_rollouts']:.6f}"])
+            w.writerow(
+                [
+                    seed,
+                    h5_per_seed[seed]["n_all_wrong_at_k4"],
+                    f"{h5_per_seed[seed]['recovered_by_remaining_rollouts']:.6f}",
+                ]
+            )
 
     summary = {
         "lecture": "F24 L1 — Denny Zhou (Google DeepMind)",
@@ -398,7 +434,7 @@ def main():
             "overall_recoverable_fraction": h4_overall_frac,
             "verdict": h4_verdict,
         },
-            "h5_huang_negative_control": {
+        "h5_huang_negative_control": {
             "per_seed": h5_per_seed,
             "overall_recovery_rate": h5_overall_frac,
             "verdict": h5_verdict,
@@ -416,48 +452,59 @@ def main():
     print(f"Seeds: {', '.join(SEEDS)};  G={G};  k ∈ {K_VALUES}")
     print()
     print("Per-seed best-of-k sweep (H1 + H2):")
-    print(f"  {'seed':<5} {'k':>2} {'acc':>8} {'zvf':>8} "
-          f"{'frac_all_good':>14} {'frac_all_bad':>14} {'frac_mixed':>12}")
+    print(
+        f"  {'seed':<5} {'k':>2} {'acc':>8} {'zvf':>8} "
+        f"{'frac_all_good':>14} {'frac_all_bad':>14} {'frac_mixed':>12}"
+    )
     for r in rows_per_k:
-        print(f"  {r['seed']:<5} {r['k']:>2} "
-              f"{r['accuracy']:>8.4f} {r['zvf']:>8.4f} "
-              f"{r['frac_all_good']:>14.4f} {r['frac_all_bad']:>14.4f} "
-              f"{r['frac_mixed']:>12.4f}")
+        print(
+            f"  {r['seed']:<5} {r['k']:>2} "
+            f"{r['accuracy']:>8.4f} {r['zvf']:>8.4f} "
+            f"{r['frac_all_good']:>14.4f} {r['frac_all_bad']:>14.4f} "
+            f"{r['frac_mixed']:>12.4f}"
+        )
     print()
-    print("H1 — Intrinsic-CoT acc monotonicity "
-          f"(Wang & Zhou 2024) → {h1_verdict}")
-    print(f"    All-seeds monotonic: {h1_overall_mono}; "
-          f"mean ratio k8/k1 = {h1_overall_ratio:.3f} "
-          f"(target ≥ 1.10 for DECISIVE).")
+    print(f"H1 — Intrinsic-CoT acc monotonicity (Wang & Zhou 2024) → {h1_verdict}")
+    print(
+        f"    All-seeds monotonic: {h1_overall_mono}; "
+        f"mean ratio k8/k1 = {h1_overall_ratio:.3f} "
+        f"(target ≥ 1.10 for DECISIVE)."
+    )
     print()
-    print("H2 — Intrinsic-CoT ZVF monotonicity "
-          f"(Wang & Zhou 2024 → Pillar-2 ZVF) → {h2_verdict}")
-    print(f"    All-seeds monotonic: {h2_overall_mono}; "
-          f"mean ZVF delta (k8 - k1) = {h2_overall_delta:+.4f} "
-          f"(target < 0 for DECISIVE).")
+    print(f"H2 — Intrinsic-CoT ZVF monotonicity (Wang & Zhou 2024 → Pillar-2 ZVF) → {h2_verdict}")
+    print(
+        f"    All-seeds monotonic: {h2_overall_mono}; "
+        f"mean ZVF delta (k8 - k1) = {h2_overall_delta:+.4f} "
+        f"(target < 0 for DECISIVE)."
+    )
     print()
-    print("H3 — RL-substitution upper bound "
-          f"(Wang & Zhou vs RL post-training) → {h3_verdict}")
-    print(f"    Mean acc headroom (best-of-8 minus best-of-1) "
-          f"= {h3_overall_headroom:+.4f} "
-          f"(target ≥ {RL_GAIN_FLOOR:.2f} for DECISIVE).")
+    print(f"H3 — RL-substitution upper bound (Wang & Zhou vs RL post-training) → {h3_verdict}")
+    print(
+        f"    Mean acc headroom (best-of-8 minus best-of-1) "
+        f"= {h3_overall_headroom:+.4f} "
+        f"(target ≥ {RL_GAIN_FLOOR:.2f} for DECISIVE)."
+    )
     print()
-    print("H4 — Premise-order proxy (Chen et al. 2024) → "
-          f"{h4_verdict}")
-    print(f"    Recoverable fraction = {h4_overall_frac:.4f}; "
-          "k=8 is the ceiling on the saved data, so "
-          "any further recovery is unobservable here.  "
-          "We flag UNDERTESTED rather than NULL because the test is "
-          "conservatively weak.")
+    print(f"H4 — Premise-order proxy (Chen et al. 2024) → {h4_verdict}")
+    print(
+        f"    Recoverable fraction = {h4_overall_frac:.4f}; "
+        "k=8 is the ceiling on the saved data, so "
+        "any further recovery is unobservable here.  "
+        "We flag UNDERTESTED rather than NULL because the test is "
+        "conservatively weak."
+    )
     print()
-    print("H5 — Huang et al. negative control "
-          f"(intrinsic self-correction) → {h5_verdict}")
-    print(f"    Recovery rate on remaining rollouts after k=4 all-wrong: "
-          f"{h5_overall_frac:.4f} "
-          f"(target ≤ 0.05 for DECISIVE-NEGATIVE).")
+    print(f"H5 — Huang et al. negative control (intrinsic self-correction) → {h5_verdict}")
+    print(
+        f"    Recovery rate on remaining rollouts after k=4 all-wrong: "
+        f"{h5_overall_frac:.4f} "
+        f"(target ≤ 0.05 for DECISIVE-NEGATIVE)."
+    )
     print()
-    print(f"Outputs: {per_k_path.name}, {sub_path.name}, "
-          f"{premise_path.name}, {huang_path.name}, {summary_path.name}")
+    print(
+        f"Outputs: {per_k_path.name}, {sub_path.name}, "
+        f"{premise_path.name}, {huang_path.name}, {summary_path.name}"
+    )
 
 
 if __name__ == "__main__":

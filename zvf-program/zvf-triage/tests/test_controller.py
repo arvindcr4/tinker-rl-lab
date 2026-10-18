@@ -86,14 +86,12 @@ def test_adaptive_monotonic_increasing_override():
     # pass adaptive_fn explicitly. This is the only way to override
     # the new bidirectional default; the default itself is no longer
     # monotonic.
-    c = ZVFController(adaptive_G=True, G0=8, Gmin=2, Gmax=32,
-                      adaptive_fn=lambda z: 1.0 + z)
+    c = ZVFController(adaptive_G=True, G0=8, Gmin=2, Gmax=32, adaptive_fn=lambda z: 1.0 + z)
     # ZVF=0 -> multiplier 1.0x -> G=8 (unchanged)
     rewards, gids = _mixed_batch()
     assert c.step(rewards, gids).group_size == 8
     # ZVF=1 -> multiplier 2.0x -> G=16 (doubled)
-    c2 = ZVFController(adaptive_G=True, G0=8, Gmin=2, Gmax=32,
-                       adaptive_fn=lambda z: 1.0 + z)
+    c2 = ZVFController(adaptive_G=True, G0=8, Gmin=2, Gmax=32, adaptive_fn=lambda z: 1.0 + z)
     rewards, gids = _uniform_batch(1.0)
     assert c2.step(rewards, gids).group_size == 16
 
@@ -151,16 +149,16 @@ def test_auto_stop_after_k_global_collapse():
 
 def test_auto_stop_streak_resets_on_non_collapse():
     c = ZVFController(stop_k=2)
-    c.step(*_uniform_batch(0.0))            # ZVF=1, streak=1
-    c.step(*_mixed_batch())                 # ZVF=0, streak reset
-    d = c.step(*_uniform_batch(0.0))        # ZVF=1, streak=1 again (not 2)
+    c.step(*_uniform_batch(0.0))  # ZVF=1, streak=1
+    c.step(*_mixed_batch())  # ZVF=0, streak reset
+    d = c.step(*_uniform_batch(0.0))  # ZVF=1, streak=1 again (not 2)
     assert not d.auto_stop
     assert not c.stopped
 
 
 def test_rolling_zvf_reported():
     c = ZVFController(window=2)
-    d1 = c.step(*_mixed_batch())       # zvf 0
+    d1 = c.step(*_mixed_batch())  # zvf 0
     d2 = c.step(*_uniform_batch(0.0))  # zvf 1
     assert d1.rolling_zvf == pytest.approx(0.0)
     assert d2.rolling_zvf == pytest.approx(0.5)  # mean(0,1)
@@ -182,7 +180,8 @@ def test_decision_as_dict_roundtrip():
     dd = d.as_dict()
     assert dd["regime"] == "exploitable_contrast"
     assert dd["step"] == 1
-    assert "zvf" in dd and "gu" in dd
+    assert "zvf" in dd
+    assert "gu" in dd
 
 
 def test_n_groups_counted():

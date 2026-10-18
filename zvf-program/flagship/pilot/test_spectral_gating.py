@@ -7,61 +7,42 @@ from dataclasses import replace
 from types import SimpleNamespace
 
 import torch
-import torch.nn.functional as F
 
 from pilot.entropic_gating import (
-    EntropicGatingError,
-    GivensEntropyGate,
     apply_givens_rotation_pair,
-    compute_attention_entropy,
     compute_entropy_density,
     eliminate_noise_components,
-    givens_rotation_angle,
 )
 from pilot.objective import (
     CONDITIONS,
-    Condition,
     ConditionTrace,
     GradientDiagnostic,
     ObjectiveContractError,
     condition_loss,
     condition_trace,
-    entropic_givens_grpo,
     gradient_diagnostic,
-    spectral_legendre_grpo,
 )
 from pilot.replay import (
     ACTIVE_FILTERED_ROWS,
     FILTERED_CANDIDATE_POOL_SIZE,
     GROUP_SIZE,
     ReplayCandidate,
-    ReplayContractError,
-    ReplayGroup,
     ReplayLedger,
     balanced_equal_length_group,
     canonical_fingerprint,
     filtered_variable_length_group,
     filtered_variable_length_pool,
-    length_cv,
 )
 from pilot.spectral_attention import (
-    LegendreSpectralRouting,
-    SpectralAttentionError,
-    compute_legendre_polynomials,
-    legendre_basis,
-    legendre_grid,
-    legendre_spectral_projection,
     spectral_pairwise_distance,
 )
 from pilot.training import (
     ReplayBatch,
     StepReceipt,
-    TrainingContractError,
-    _bounded_cosine,
-    _compare_gradients,
     completion_logps,
     run_replay_step,
 )
+import pytest
 
 
 class TinyLM(torch.nn.Module):
@@ -91,7 +72,9 @@ def make_objective_fixture(
 ) -> dict[str, torch.Tensor]:
     row_lengths = lengths if lengths is not None else [4, 6, 8, 8, 12, 16, 20, 24]
     row_rewards = rewards if rewards is not None else [1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0]
-    row_active = active if active is not None else [True, True, True, False, True, True, False, True]
+    row_active = (
+        active if active is not None else [True, True, True, False, True, True, False, True]
+    )
 
     width = max(row_lengths)
     mask = torch.zeros((8, width), dtype=torch.float64)
@@ -166,20 +149,20 @@ class SpectralGatingGradientReceiptTests(unittest.TestCase):
             condition="spectral_legendre",
             step=1,
         )
-        self.assertIsInstance(receipt, StepReceipt)
-        self.assertEqual(receipt.step, 1)
-        self.assertEqual(receipt.condition, "spectral_legendre")
-        self.assertEqual(receipt.active_rows, 6)
-        self.assertEqual(receipt.optimizer_update, "applied")
-        self.assertTrue(math.isfinite(receipt.selected_loss))
-        self.assertTrue(math.isfinite(receipt.intended_loss))
-        self.assertTrue(math.isfinite(receipt.native_loss))
-        self.assertGreater(receipt.selected_gradient_norm, 0.0)
-        self.assertGreater(receipt.intended_gradient_norm, 0.0)
-        self.assertGreater(receipt.native_gradient_norm, 0.0)
-        self.assertEqual(receipt.gradient_relation, "nonzero")
-        self.assertTrue(-1.0 <= receipt.gradient_cosine <= 1.0)
-        self.assertGreaterEqual(receipt.gradient_relative_l2, 0.0)
+        assert isinstance(receipt, StepReceipt)
+        assert receipt.step == 1
+        assert receipt.condition == "spectral_legendre"
+        assert receipt.active_rows == 6
+        assert receipt.optimizer_update == "applied"
+        assert math.isfinite(receipt.selected_loss)
+        assert math.isfinite(receipt.intended_loss)
+        assert math.isfinite(receipt.native_loss)
+        assert receipt.selected_gradient_norm > 0.0
+        assert receipt.intended_gradient_norm > 0.0
+        assert receipt.native_gradient_norm > 0.0
+        assert receipt.gradient_relation == "nonzero"
+        assert -1.0 <= receipt.gradient_cosine <= 1.0
+        assert receipt.gradient_relative_l2 >= 0.0
 
     def test_entropic_givens_receipt_structure_and_norms(self) -> None:
         optimizer = torch.optim.AdamW(self.model.parameters(), lr=1e-3)
@@ -191,51 +174,51 @@ class SpectralGatingGradientReceiptTests(unittest.TestCase):
             condition="entropic_givens",
             step=1,
         )
-        self.assertIsInstance(receipt, StepReceipt)
-        self.assertEqual(receipt.step, 1)
-        self.assertEqual(receipt.condition, "entropic_givens")
-        self.assertEqual(receipt.active_rows, 6)
-        self.assertEqual(receipt.optimizer_update, "applied")
-        self.assertTrue(math.isfinite(receipt.selected_loss))
-        self.assertGreater(receipt.selected_gradient_norm, 0.0)
-        self.assertEqual(receipt.selected_vs_intended_relation, "nonzero")
-        self.assertTrue(-1.0 <= receipt.selected_vs_intended_cosine <= 1.0)
-        self.assertGreaterEqual(receipt.selected_vs_intended_relative_l2, 0.0)
+        assert isinstance(receipt, StepReceipt)
+        assert receipt.step == 1
+        assert receipt.condition == "entropic_givens"
+        assert receipt.active_rows == 6
+        assert receipt.optimizer_update == "applied"
+        assert math.isfinite(receipt.selected_loss)
+        assert receipt.selected_gradient_norm > 0.0
+        assert receipt.selected_vs_intended_relation == "nonzero"
+        assert -1.0 <= receipt.selected_vs_intended_cosine <= 1.0
+        assert receipt.selected_vs_intended_relative_l2 >= 0.0
 
     def test_spectral_condition_trace_receipt_output(self) -> None:
         data = make_objective_fixture()
         trace = condition_trace(condition="spectral_legendre", **data)
-        self.assertIsInstance(trace, ConditionTrace)
-        self.assertEqual(trace.condition, "spectral_legendre")
-        self.assertEqual(len(trace.advantages), 8)
-        self.assertTrue(math.isfinite(trace.loss))
-        self.assertTrue(all(math.isfinite(val) for val in trace.advantages))
-        self.assertTrue(all(math.isfinite(val) for val in trace.gradient))
-        self.assertEqual(len(trace.active_rows), 6)
-        self.assertGreater(trace.active_tokens, 0)
+        assert isinstance(trace, ConditionTrace)
+        assert trace.condition == "spectral_legendre"
+        assert len(trace.advantages) == 8
+        assert math.isfinite(trace.loss)
+        assert all(math.isfinite(val) for val in trace.advantages)
+        assert all(math.isfinite(val) for val in trace.gradient)
+        assert len(trace.active_rows) == 6
+        assert trace.active_tokens > 0
 
     def test_entropic_givens_condition_trace_receipt_output(self) -> None:
         data = make_objective_fixture()
         trace = condition_trace(condition="entropic_givens", **data)
-        self.assertIsInstance(trace, ConditionTrace)
-        self.assertEqual(trace.condition, "entropic_givens")
-        self.assertEqual(len(trace.advantages), 8)
-        self.assertTrue(math.isfinite(trace.loss))
-        self.assertTrue(all(math.isfinite(val) for val in trace.advantages))
-        self.assertTrue(all(math.isfinite(val) for val in trace.gradient))
-        self.assertEqual(len(trace.active_rows), 6)
+        assert isinstance(trace, ConditionTrace)
+        assert trace.condition == "entropic_givens"
+        assert len(trace.advantages) == 8
+        assert math.isfinite(trace.loss)
+        assert all(math.isfinite(val) for val in trace.advantages)
+        assert all(math.isfinite(val) for val in trace.gradient)
+        assert len(trace.active_rows) == 6
 
     def test_gradient_diagnostics_receipt_comparison(self) -> None:
         data = make_objective_fixture()
         intended = condition_trace(condition="intended_full", **data)
         native = condition_trace(condition="native_trl", **data)
         diag = gradient_diagnostic(intended, native)
-        self.assertIsInstance(diag, GradientDiagnostic)
-        self.assertEqual(diag.relation, "nonzero")
-        self.assertTrue(-1.0 <= diag.cosine <= 1.0)
-        self.assertGreaterEqual(diag.relative_l2, 0.0)
-        self.assertGreater(diag.intended_gradient_norm, 0.0)
-        self.assertGreater(diag.native_gradient_norm, 0.0)
+        assert isinstance(diag, GradientDiagnostic)
+        assert diag.relation == "nonzero"
+        assert -1.0 <= diag.cosine <= 1.0
+        assert diag.relative_l2 >= 0.0
+        assert diag.intended_gradient_norm > 0.0
+        assert diag.native_gradient_norm > 0.0
 
     def test_all_six_conditions_executable_and_emit_receipts(self) -> None:
         initial = copy.deepcopy(self.model.state_dict())
@@ -254,9 +237,9 @@ class SpectralGatingGradientReceiptTests(unittest.TestCase):
             )
             receipts.append(receipt)
 
-        self.assertEqual(len(receipts), len(CONDITIONS))
-        self.assertEqual({r.condition for r in receipts}, set(CONDITIONS))
-        self.assertTrue(all(r.selected_gradient_norm > 0 for r in receipts))
+        assert len(receipts) == len(CONDITIONS)
+        assert {r.condition for r in receipts} == set(CONDITIONS)
+        assert all(r.selected_gradient_norm > 0 for r in receipts)
 
 
 class SpectralReplayHashingTests(unittest.TestCase):
@@ -271,9 +254,9 @@ class SpectralReplayHashingTests(unittest.TestCase):
         fp_b = canonical_fingerprint(payload_b)
         fp_c = canonical_fingerprint(payload_c)
 
-        self.assertEqual(len(fp_a), 64)
-        self.assertEqual(fp_a, fp_b)
-        self.assertNotEqual(fp_a, fp_c)
+        assert len(fp_a) == 64
+        assert fp_a == fp_b
+        assert fp_a != fp_c
 
     def test_replay_candidate_sha256_hashing(self) -> None:
         candidate = ReplayCandidate.from_tokens(
@@ -281,14 +264,14 @@ class SpectralReplayHashingTests(unittest.TestCase):
             token_ids=[10, 20, 30, 40],
             reward=0.95,
         )
-        self.assertEqual(candidate.candidate_id, "c-101")
-        self.assertEqual(len(candidate.completion_sha256), 64)
+        assert candidate.candidate_id == "c-101"
+        assert len(candidate.completion_sha256) == 64
         same_candidate = ReplayCandidate.from_tokens(
             candidate_id="c-101",
             token_ids=[10, 20, 30, 40],
             reward=0.95,
         )
-        self.assertEqual(candidate.completion_sha256, same_candidate.completion_sha256)
+        assert candidate.completion_sha256 == same_candidate.completion_sha256
 
     def test_balanced_group_deterministic_hashing(self) -> None:
         cand_list = [
@@ -301,10 +284,10 @@ class SpectralReplayHashingTests(unittest.TestCase):
         ]
         g1 = balanced_equal_length_group(cand_list, pad_token_id=0)
         g2 = balanced_equal_length_group(cand_list, pad_token_id=0)
-        self.assertEqual(g1.fingerprint, g2.fingerprint)
-        self.assertEqual(g1.source_pool_fingerprint, g2.source_pool_fingerprint)
-        self.assertEqual(len(g1.fingerprint), 64)
-        self.assertEqual(len(g1.active_indices), GROUP_SIZE)
+        assert g1.fingerprint == g2.fingerprint
+        assert g1.source_pool_fingerprint == g2.source_pool_fingerprint
+        assert len(g1.fingerprint) == 64
+        assert len(g1.active_indices) == GROUP_SIZE
 
     def test_filtered_group_deterministic_hashing_and_cv(self) -> None:
         cand_list = [
@@ -317,9 +300,9 @@ class SpectralReplayHashingTests(unittest.TestCase):
         ]
         g1 = filtered_variable_length_group(cand_list, pad_token_id=0)
         g2 = filtered_variable_length_group(cand_list, pad_token_id=0)
-        self.assertEqual(g1.fingerprint, g2.fingerprint)
-        self.assertEqual(len(g1.active_indices), ACTIVE_FILTERED_ROWS)
-        self.assertGreaterEqual(g1.selected_length_cv, 0.35)
+        assert g1.fingerprint == g2.fingerprint
+        assert len(g1.active_indices) == ACTIVE_FILTERED_ROWS
+        assert g1.selected_length_cv >= 0.35
 
     def test_filtered_pool_hashing_and_source_pool_fingerprint(self) -> None:
         pool_list = [
@@ -332,10 +315,10 @@ class SpectralReplayHashingTests(unittest.TestCase):
         ]
         g1 = filtered_variable_length_pool(pool_list, pad_token_id=0)
         g2 = filtered_variable_length_pool(pool_list, pad_token_id=0)
-        self.assertEqual(g1.fingerprint, g2.fingerprint)
-        self.assertEqual(g1.source_pool_fingerprint, g2.source_pool_fingerprint)
-        self.assertEqual(len(g1.candidates), GROUP_SIZE)
-        self.assertEqual(len(g1.active_indices), ACTIVE_FILTERED_ROWS)
+        assert g1.fingerprint == g2.fingerprint
+        assert g1.source_pool_fingerprint == g2.source_pool_fingerprint
+        assert len(g1.candidates) == GROUP_SIZE
+        assert len(g1.active_indices) == ACTIVE_FILTERED_ROWS
 
     def test_replay_ledger_fingerprint_and_token_accounting(self) -> None:
         cand_list = [
@@ -347,14 +330,20 @@ class SpectralReplayHashingTests(unittest.TestCase):
             for i in range(GROUP_SIZE)
         ]
         group = balanced_equal_length_group(cand_list, pad_token_id=0)
-        ledger_1 = ReplayLedger.build([group], rejected_generated_tokens=10, rejected_candidate_count=1)
-        ledger_2 = ReplayLedger.build([group], rejected_generated_tokens=10, rejected_candidate_count=1)
-        ledger_3 = ReplayLedger.build([group], rejected_generated_tokens=20, rejected_candidate_count=2)
+        ledger_1 = ReplayLedger.build(
+            [group], rejected_generated_tokens=10, rejected_candidate_count=1
+        )
+        ledger_2 = ReplayLedger.build(
+            [group], rejected_generated_tokens=10, rejected_candidate_count=1
+        )
+        ledger_3 = ReplayLedger.build(
+            [group], rejected_generated_tokens=20, rejected_candidate_count=2
+        )
 
-        self.assertEqual(ledger_1.fingerprint, ledger_2.fingerprint)
-        self.assertNotEqual(ledger_1.fingerprint, ledger_3.fingerprint)
-        self.assertEqual(ledger_1.charged_generated_tokens, 10 + 40)
-        self.assertEqual(ledger_3.charged_generated_tokens, 20 + 40)
+        assert ledger_1.fingerprint == ledger_2.fingerprint
+        assert ledger_1.fingerprint != ledger_3.fingerprint
+        assert ledger_1.charged_generated_tokens == 10 + 40
+        assert ledger_3.charged_generated_tokens == 20 + 40
 
 
 class SpectralErrorBoundsAndGRPOObjectiveTests(unittest.TestCase):
@@ -369,13 +358,13 @@ class SpectralErrorBoundsAndGRPOObjectiveTests(unittest.TestCase):
         base_loss, base_adv = condition_loss(condition="intended_full", **data)
         spec_loss, spec_adv = condition_loss(condition="spectral_legendre", **data)
 
-        self.assertTrue(torch.allclose(base_adv, torch.zeros(8, dtype=torch.float64)))
-        self.assertFalse(torch.allclose(spec_adv, torch.zeros(8, dtype=torch.float64)))
-        self.assertGreater(float(spec_adv.std()), 0.0)
+        assert torch.allclose(base_adv, torch.zeros(8, dtype=torch.float64))
+        assert not torch.allclose(spec_adv, torch.zeros(8, dtype=torch.float64))
+        assert float(spec_adv.std()) > 0.0
 
         trace = condition_trace(condition="spectral_legendre", **data)
         grad_norm = float(torch.linalg.vector_norm(torch.tensor(trace.gradient)))
-        self.assertGreater(grad_norm, 0.0)
+        assert grad_norm > 0.0
 
     def test_entropic_givens_objective_zero_scalar_reward_variance(self) -> None:
         data = make_objective_fixture(
@@ -386,25 +375,25 @@ class SpectralErrorBoundsAndGRPOObjectiveTests(unittest.TestCase):
         base_loss, base_adv = condition_loss(condition="intended_full", **data)
         givens_loss, givens_adv = condition_loss(condition="entropic_givens", **data)
 
-        self.assertTrue(torch.allclose(base_adv, torch.zeros(8, dtype=torch.float64)))
-        self.assertFalse(torch.allclose(givens_adv, torch.zeros(8, dtype=torch.float64)))
-        self.assertGreater(float(givens_adv.std()), 0.0)
+        assert torch.allclose(base_adv, torch.zeros(8, dtype=torch.float64))
+        assert not torch.allclose(givens_adv, torch.zeros(8, dtype=torch.float64))
+        assert float(givens_adv.std()) > 0.0
 
         trace = condition_trace(condition="entropic_givens", **data)
         grad_norm = float(torch.linalg.vector_norm(torch.tensor(trace.gradient)))
-        self.assertGreater(grad_norm, 0.0)
+        assert grad_norm > 0.0
 
     def test_legendre_spectral_projection_l2_error_bounds(self) -> None:
         c1 = torch.randn(4, 8, 16, dtype=torch.float64)
         c2 = torch.randn(4, 8, 16, dtype=torch.float64)
 
         d_self = spectral_pairwise_distance(c1, c1)
-        self.assertTrue(torch.allclose(d_self, torch.zeros(4, dtype=torch.float64), atol=1e-12))
+        assert torch.allclose(d_self, torch.zeros(4, dtype=torch.float64), atol=1e-12)
 
         d_12 = spectral_pairwise_distance(c1, c2)
         d_21 = spectral_pairwise_distance(c2, c1)
-        self.assertTrue(torch.allclose(d_12, d_21, atol=1e-12))
-        self.assertTrue((d_12 >= 0.0).all())
+        assert torch.allclose(d_12, d_21, atol=1e-12)
+        assert (d_12 >= 0.0).all()
 
         c3 = torch.randn(4, 8, 16, dtype=torch.float64)
         d_13 = spectral_pairwise_distance(c1, c3)
@@ -412,7 +401,7 @@ class SpectralErrorBoundsAndGRPOObjectiveTests(unittest.TestCase):
         sqrt_12 = torch.sqrt(d_12)
         sqrt_23 = torch.sqrt(d_23)
         sqrt_13 = torch.sqrt(d_13)
-        self.assertTrue((sqrt_13 <= sqrt_12 + sqrt_23 + 1e-10).all())
+        assert (sqrt_13 <= sqrt_12 + sqrt_23 + 1e-10).all()
 
     def test_givens_unitary_rotation_exact_norm_preservation(self) -> None:
         x = torch.randn(10, 16, dtype=torch.float64)
@@ -422,7 +411,7 @@ class SpectralErrorBoundsAndGRPOObjectiveTests(unittest.TestCase):
         x_rot = apply_givens_rotation_pair(x, i=2, j=5, theta=theta)
         norm_rot = torch.linalg.vector_norm(x_rot, dim=-1)
 
-        self.assertTrue(torch.allclose(norm_orig, norm_rot, atol=1e-12))
+        assert torch.allclose(norm_orig, norm_rot, atol=1e-12)
 
     def test_shannon_entropy_density_bounds(self) -> None:
         k = 16
@@ -439,28 +428,28 @@ class SpectralErrorBoundsAndGRPOObjectiveTests(unittest.TestCase):
         x = torch.randn(5, 12, dtype=torch.float64)
         x_proj, x_rot = eliminate_noise_components(x, n_noise_dims=2)
 
-        self.assertTrue(torch.allclose(x_proj[:, -2:], torch.zeros(5, 2, dtype=torch.float64)))
+        assert torch.allclose(x_proj[:, -2:], torch.zeros(5, 2, dtype=torch.float64))
 
         norm_orig = torch.linalg.vector_norm(x, dim=-1)
         norm_rot = torch.linalg.vector_norm(x_rot, dim=-1)
         norm_proj = torch.linalg.vector_norm(x_proj, dim=-1)
 
-        self.assertTrue(torch.allclose(norm_orig, norm_rot, atol=1e-12))
-        self.assertTrue((norm_proj <= norm_rot + 1e-12).all())
+        assert torch.allclose(norm_orig, norm_rot, atol=1e-12)
+        assert (norm_proj <= norm_rot + 1e-12).all()
 
     def test_objective_contract_error_bounds_and_invalid_inputs(self) -> None:
         data = make_objective_fixture()
 
         bad_rewards = data["rewards"].clone()
         bad_rewards[0] = float("nan")
-        with self.assertRaisesRegex(ObjectiveContractError, "must be finite"):
+        with pytest.raises(ObjectiveContractError, match="must be finite"):
             condition_loss(condition="spectral_legendre", **{**data, "rewards": bad_rewards})
 
         bad_rows = torch.tensor([True] * 4 + [False] * 4, dtype=torch.bool)
-        with self.assertRaisesRegex(ObjectiveContractError, "exactly six or eight rows"):
+        with pytest.raises(ObjectiveContractError, match="exactly six or eight rows"):
             condition_loss(condition="entropic_givens", **{**data, "active_rows": bad_rows})
 
-        with self.assertRaisesRegex(ObjectiveContractError, "unknown pilot condition"):
+        with pytest.raises(ObjectiveContractError, match="unknown pilot condition"):
             condition_loss(condition="invalid_condition", **data)
 
 

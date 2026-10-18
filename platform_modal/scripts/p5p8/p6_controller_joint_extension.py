@@ -12,9 +12,11 @@ import math
 from pathlib import Path
 
 import sys
+
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
 from review17_contract import validate_proposals
-from _paths import REPO_ROOT  # noqa: E402
+from _paths import REPO_ROOT
+
 ROOT = REPO_ROOT
 RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8"
 OUT = RES / "review17_v2"
@@ -63,23 +65,25 @@ def build_predictions():
             raise ValueError("Invalid rollout denominator/cost ratio")
         per_rollout_pt = net_saves / g_total
         # Bootstrap CI from iter-72 row 85 boot file
-        out.append({
-            "method": m,
-            "evidence_status": "COUNTERFACTUAL_PREDICTED",
-            "ci_method": None,
-            "uncertainty_status": "UNVERIFIED_NO_KEYED_BOOTSTRAP",
-            "trigger": "joint_dualformer_ddiv",
-            "threshold": t,
-            "n_contrast_prompts": n_contrast,
-            "n_fired_steps": n_fired,
-            "n_zvf_saved": n_zvf_saved,
-            "n_rollout_saves": n_rollout_saves,
-            "net_saves": net_saves,
-            "g_total": g_total,
-            "cost_ratio_pt": cost_ratio,
-            "savings_per_rollout_pt": per_rollout_pt,
-            "source_iter": "iter-72 row 85 joint controller",
-        })
+        out.append(
+            {
+                "method": m,
+                "evidence_status": "COUNTERFACTUAL_PREDICTED",
+                "ci_method": None,
+                "uncertainty_status": "UNVERIFIED_NO_KEYED_BOOTSTRAP",
+                "trigger": "joint_dualformer_ddiv",
+                "threshold": t,
+                "n_contrast_prompts": n_contrast,
+                "n_fired_steps": n_fired,
+                "n_zvf_saved": n_zvf_saved,
+                "n_rollout_saves": n_rollout_saves,
+                "net_saves": net_saves,
+                "g_total": g_total,
+                "cost_ratio_pt": cost_ratio,
+                "savings_per_rollout_pt": per_rollout_pt,
+                "source_iter": "iter-72 row 85 joint controller",
+            }
+        )
     # Sort by (method, tau)
     expected = {(m, t) for m in METHODS for t in TAUS}
     if seen != expected:
@@ -100,13 +104,23 @@ def main():
         keys = list(preds[0].keys())
         lines = ["\t".join(keys)]
         for p in preds:
-            lines.append("\t".join(f"{p[k]:.6g}" if isinstance(p[k], float) else str(p[k]) for k in keys))
+            lines.append(
+                "\t".join(f"{p[k]:.6g}" if isinstance(p[k], float) else str(p[k]) for k in keys)
+            )
         (OUT / "p6_joint_controller_extension.tsv").write_text("\n".join(lines) + "\n")
     (OUT / "p6_joint_controller_extension.json").write_text(
-        json.dumps({"n_predictions": len(preds), "predictions": preds,
-                    "panel": "n2_same_stack_40step_joint", "source_iter": "iter-72 row 85",
-                    "audit_source": "platform_modal/scripts/p5p8/p6_controller_joint_extension.py",
-                    "audit_date": "2026-07-05"}, indent=2, default=str)
+        json.dumps(
+            {
+                "n_predictions": len(preds),
+                "predictions": preds,
+                "panel": "n2_same_stack_40step_joint",
+                "source_iter": "iter-72 row 85",
+                "audit_source": "platform_modal/scripts/p5p8/p6_controller_joint_extension.py",
+                "audit_date": "2026-07-05",
+            },
+            indent=2,
+            default=str,
+        )
     )
 
     # Patch the 4 stack entries with `joint_controller_predictions` block
@@ -128,7 +142,9 @@ def main():
         }
         e["outcomes"] = out
         proposed[path.stem] = e
-        print(f"# proposed stack entry {path.name}: +joint_controller_predictions ({len(method_preds)} entries)")
+        print(
+            f"# proposed stack entry {path.name}: +joint_controller_predictions ({len(method_preds)} entries)"
+        )
 
     # Patch the 3 delta entries with a `joint_controller_cost_ratio_per_tau` field
     for m in ["aero", "areal", "gift"]:
@@ -151,11 +167,14 @@ def main():
         # Clean up any stray 'outcomes' field that may have been set incorrectly
         # Preserve unrelated existing fields.
         proposed[path.stem] = e
-        print(f"# proposed delta entry {path.name}: +joint_controller in controller_predicted_savings_per_rollout ({len(method_preds)} entries)")
+        print(
+            f"# proposed delta entry {path.name}: +joint_controller in controller_predicted_savings_per_rollout ({len(method_preds)} entries)"
+        )
 
     validate_proposals(proposed, REG / "schema.json")
     (OUT / "p6_joint_controller_proposed_entries.json").write_text(
-        json.dumps(proposed, indent=2, allow_nan=False) + "\n")
+        json.dumps(proposed, indent=2, allow_nan=False) + "\n"
+    )
     print("# === iter 76 JOB B / SYNTH complete ===")
 
 

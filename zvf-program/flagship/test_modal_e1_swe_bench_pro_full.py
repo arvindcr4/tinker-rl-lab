@@ -4,6 +4,7 @@ import json
 import tempfile
 import unittest
 from pathlib import Path
+import pytest
 
 try:
     from . import modal_e1_swe_bench_pro_full as runner
@@ -22,7 +23,6 @@ except ImportError:
     import modal_e1_swe_bench_pro_full as runner
     from e1_swe_bench_pro_full_eval import _load_image_map
     from modal_e1_swe_bench_pro_full import (
-        GENERATION_FIELDS,
         _build_prompt,
         _extract_diff,
         _generation_inputs,
@@ -43,8 +43,27 @@ index 7898192..6178079 100644
 """
 
 
-EXPECTED_PUBLIC_FIELDS = ("instance_id", "repo", "base_commit", "problem_statement", "requirements", "interface", "repo_language", "dockerhub_tag")
-FORBIDDEN_FIELDS = {key: "SENSITIVE_" + key for key in ("patch", "test_patch", "fail_to_pass", "pass_to_pass", "selected_test_files_to_run", "before_repo_set_cmd")}
+EXPECTED_PUBLIC_FIELDS = (
+    "instance_id",
+    "repo",
+    "base_commit",
+    "problem_statement",
+    "requirements",
+    "interface",
+    "repo_language",
+    "dockerhub_tag",
+)
+FORBIDDEN_FIELDS = {
+    key: "SENSITIVE_" + key
+    for key in (
+        "patch",
+        "test_patch",
+        "fail_to_pass",
+        "pass_to_pass",
+        "selected_test_files_to_run",
+        "before_repo_set_cmd",
+    )
+}
 
 
 def _row() -> dict[str, object]:
@@ -56,38 +75,47 @@ def _row() -> dict[str, object]:
 class E1FullRunnerTests(unittest.TestCase):
     def test_model_boundary_contains_only_allowlisted_fields(self) -> None:
         task = _sanitize_task(_row())
-        self.assertEqual(set(task), set(EXPECTED_PUBLIC_FIELDS))
+        assert set(task) == set(EXPECTED_PUBLIC_FIELDS)
         prompt = _build_prompt(task, {"src/a.py": "old = True\n"})
         for field, sentinel in FORBIDDEN_FIELDS.items():
-            self.assertNotIn(field, task)
-            self.assertNotIn(sentinel, prompt)
+            assert field not in task
+            assert sentinel not in prompt
 
     def test_extracts_valid_diff_before_trailing_prose(self) -> None:
         patch, reason = _extract_diff(VALID_PATCH + "I will explain the patch now.\n")
-        self.assertEqual(patch, VALID_PATCH)
-        self.assertEqual(reason, "valid unified diff")
+        assert patch == VALID_PATCH
+        assert reason == "valid unified diff"
 
     def test_rejects_placeholder_hunks(self) -> None:
         patch, reason = _extract_diff(VALID_PATCH.replace("@@ -1 +1 @@", "@@ ... @@"))
-        self.assertEqual(patch, "")
-        self.assertIn("concrete hunk", reason)
+        assert patch == ""
+        assert "concrete hunk" in reason
 
     def test_source_discovery_extracts_paths_and_identifiers(self) -> None:
         text = "Path: src/user/email.js. Call `getEmailForValidation` and db.mget(keys)."
-        self.assertIn("src/user/email.js", _path_candidates(text))
+        assert "src/user/email.js" in _path_candidates(text)
         terms = _search_terms(text)
-        self.assertIn("getEmailForValidation", terms)
-        self.assertIn("mget", terms)
+        assert "getEmailForValidation" in terms
+        assert "mget" in terms
 
     def test_digest_manifest_loader_rejects_uri_drift(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "images.json"
             path.write_text(
-                json.dumps({"images": [{"instance_id": "i", "digest": "sha256:" + "a" * 64,
-                    "immutable_uri": "repo@sha256:" + "b" * 64}]}),
+                json.dumps(
+                    {
+                        "images": [
+                            {
+                                "instance_id": "i",
+                                "digest": "sha256:" + "a" * 64,
+                                "immutable_uri": "repo@sha256:" + "b" * 64,
+                            }
+                        ]
+                    }
+                ),
                 encoding="utf-8",
             )
-            with self.assertRaisesRegex(RuntimeError, "URI/digest mismatch"):
+            with pytest.raises(RuntimeError, match="URI/digest mismatch"):
                 _load_image_map(path)
 
     def test_tinker_sampler_is_reused_within_container(self) -> None:
@@ -111,8 +139,8 @@ class E1FullRunnerTests(unittest.TestCase):
             runner._TINKER_SAMPLER = None
             first = _shared_tinker_sampler(fake_tinker, "run-one")
             second = _shared_tinker_sampler(fake_tinker, "run-two")
-            self.assertIs(first, second)
-            self.assertEqual(fake_tinker.service_count, 1)
+            assert first is second
+            assert fake_tinker.service_count == 1
         finally:
             runner._TINKER_SERVICE = original_service
             runner._TINKER_SAMPLER = original_sampler
@@ -148,18 +176,11 @@ class E1FullRunnerTests(unittest.TestCase):
                 temperature=0.2,
             )
 
-            self.assertEqual(len(pending), 1)
-            self.assertGreater(projected_total, 0.0)
-            self.assertEqual(
-                pending[0]["pre_sampling_recovery"]["wandb_run_id"], "retry-me"
-            )
-            self.assertFalse((task_dir / "generation.json").exists())
-            self.assertTrue(
-                (
-                    task_dir
-                    / "generation_attempts/pre_sampling_retry-me.json"
-                ).is_file()
-            )
+            assert len(pending) == 1
+            assert projected_total > 0.0
+            assert pending[0]["pre_sampling_recovery"]["wandb_run_id"] == "retry-me"
+            assert not (task_dir / "generation.json").exists()
+            assert (task_dir / "generation_attempts/pre_sampling_retry-me.json").is_file()
 
     def test_interrupted_gpu_attempt_preserves_backend_and_cost_metadata(self) -> None:
         task = _sanitize_task(_row())
@@ -197,13 +218,11 @@ class E1FullRunnerTests(unittest.TestCase):
 
                 runner._recover_interrupted_attempts([task], Path(directory))
 
-                receipt = json.loads(
-                    (task_dir / "generation.json").read_text(encoding="utf-8")
-                )
-                self.assertEqual(receipt["status"], "GENERATION_ARTIFACT_LOST")
-                self.assertEqual(receipt["generation_backend"], recovery["generation_backend"])
-                self.assertEqual(receipt["estimated_modal_gpu_usd"], 0.1)
-                self.assertFalse(receipt["additional_sampling_performed"])
+                receipt = json.loads((task_dir / "generation.json").read_text(encoding="utf-8"))
+                assert receipt["status"] == "GENERATION_ARTIFACT_LOST"
+                assert receipt["generation_backend"] == recovery["generation_backend"]
+                assert receipt["estimated_modal_gpu_usd"] == 0.1
+                assert not receipt["additional_sampling_performed"]
         finally:
             runner.INTERRUPTED_ATTEMPTS = original
 

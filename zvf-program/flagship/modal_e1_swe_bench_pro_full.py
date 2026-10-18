@@ -36,13 +36,9 @@ DOCKER_REPOSITORY = "jefzda/sweap-images"
 
 MODEL_ID = "Qwen/Qwen3.6-35B-A3B"
 MODEL_REVISION = "995ad96eacd98c81ed38be0c5b274b04031597b0"
-SAMPLER_PATH = (
-    "tinker://cf0ad8c1-1f1b-5ff3-8bd7-2a0bf232657b:train:0/"
-    "sampler_weights/seed809_final"
-)
+SAMPLER_PATH = "tinker://cf0ad8c1-1f1b-5ff3-8bd7-2a0bf232657b:train:0/sampler_weights/seed809_final"
 HF_REPO = (
-    "arvindcr4/pavlov-portfolio-qwen36-seed809-stepfinal-"
-    "tinker-cf0ad8c1-1f1b-5ff-9f777c4018b6"
+    "arvindcr4/pavlov-portfolio-qwen36-seed809-stepfinal-tinker-cf0ad8c1-1f1b-5ff-9f777c4018b6"
 )
 HF_REVISION = "checkpoint-seed809-stepfinal-9f777c4018b6"
 HF_COMMIT = "64444133c55d88c3f1bf0df8a2f5d7ac646125c8"
@@ -72,21 +68,13 @@ TERMINAL_GENERATION_STATUSES = {
 INTERRUPTED_ATTEMPTS = (
     {
         "index": 231,
-        "instance_id": (
-            "instance_protonmail__webclients-"
-            "6e165e106d258a442ae849cdf08260329cb92d39"
-        ),
+        "instance_id": ("instance_protonmail__webclients-6e165e106d258a442ae849cdf08260329cb92d39"),
         "wandb_run_id": "thw56nqq",
         "wandb_url": (
-            "https://wandb.ai/arvindcr4-pes-university/"
-            "tinker-rl-lab-pavlov/runs/thw56nqq"
+            "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/thw56nqq"
         ),
-        "source_sha256": (
-            "95641e5e10863ced8ca37f5a770477157bca815c09e0f26893cd50661001e51c"
-        ),
-        "prompt_sha256": (
-            "fd4f91383ee15ba1b5a0758256de3326c72de382a78f7458a3ddde096bf6c98d"
-        ),
+        "source_sha256": ("95641e5e10863ced8ca37f5a770477157bca815c09e0f26893cd50661001e51c"),
+        "prompt_sha256": ("fd4f91383ee15ba1b5a0758256de3326c72de382a78f7458a3ddde096bf6c98d"),
         "projected_tinker_usd": 0.02658012,
         "original_wandb_status": None,
         "original_candidate_patch_sha256": None,
@@ -106,15 +94,10 @@ INTERRUPTED_ATTEMPTS = (
         ),
         "wandb_run_id": "5rfa1b8x",
         "wandb_url": (
-            "https://wandb.ai/arvindcr4-pes-university/"
-            "tinker-rl-lab-pavlov/runs/5rfa1b8x"
+            "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/5rfa1b8x"
         ),
-        "source_sha256": (
-            "fda760be70c1b743b3a7ff5379b84229dc2597d1819029145820c7e95a1c0e1b"
-        ),
-        "prompt_sha256": (
-            "8ab6c7769e983caa0cd718b31886961ed9dc26aa5505f390fa4514e8205368d0"
-        ),
+        "source_sha256": ("fda760be70c1b743b3a7ff5379b84229dc2597d1819029145820c7e95a1c0e1b"),
+        "prompt_sha256": ("8ab6c7769e983caa0cd718b31886961ed9dc26aa5505f390fa4514e8205368d0"),
         "projected_tinker_usd": 0.0133809,
         "original_wandb_status": "GENERATED",
         "original_candidate_patch_sha256": (
@@ -130,20 +113,14 @@ INTERRUPTED_ATTEMPTS = (
     {
         "index": 237,
         "instance_id": (
-            "instance_element-hq__element-web-"
-            "459df4583e01e4744a52d45446e34183385442d6-vnan"
+            "instance_element-hq__element-web-459df4583e01e4744a52d45446e34183385442d6-vnan"
         ),
         "wandb_run_id": "0b2jh94x",
         "wandb_url": (
-            "https://wandb.ai/arvindcr4-pes-university/"
-            "tinker-rl-lab-pavlov/runs/0b2jh94x"
+            "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/0b2jh94x"
         ),
-        "source_sha256": (
-            "40d6de702c7a99406b75d842d671b9473d76f7c8c18ffcdbe7dfd2784c8aea22"
-        ),
-        "prompt_sha256": (
-            "d78dea315be5083a683fa1b7b2359a5d54847c7f3ab034e820f4dbfa613d2dfe"
-        ),
+        "source_sha256": ("40d6de702c7a99406b75d842d671b9473d76f7c8c18ffcdbe7dfd2784c8aea22"),
+        "prompt_sha256": ("d78dea315be5083a683fa1b7b2359a5d54847c7f3ab034e820f4dbfa613d2dfe"),
         "projected_tinker_usd": 0.0244077,
         "original_wandb_status": "GENERATED",
         "original_candidate_patch_sha256": (
@@ -159,20 +136,14 @@ INTERRUPTED_ATTEMPTS = (
     {
         "index": 524,
         "instance_id": (
-            "instance_element-hq__element-web-"
-            "b7fea97bb68c6628a644580076f840109132f074-vnan"
+            "instance_element-hq__element-web-b7fea97bb68c6628a644580076f840109132f074-vnan"
         ),
         "wandb_run_id": "b8sji586",
         "wandb_url": (
-            "https://wandb.ai/arvindcr4-pes-university/"
-            "tinker-rl-lab-pavlov/runs/b8sji586"
+            "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/b8sji586"
         ),
-        "source_sha256": (
-            "ae87a6a65cc138e80335ccc283dc2c1fe0b2fc42feecea818085421b1330ebc5"
-        ),
-        "prompt_sha256": (
-            "c519c966a2de1b20f0b693f73be6046d9facf347c1108777a3b329c4674acbd1"
-        ),
+        "source_sha256": ("ae87a6a65cc138e80335ccc283dc2c1fe0b2fc42feecea818085421b1330ebc5"),
+        "prompt_sha256": ("c519c966a2de1b20f0b693f73be6046d9facf347c1108777a3b329c4674acbd1"),
         "projected_tinker_usd": 0.0,
         "original_wandb_status": None,
         "original_candidate_patch_sha256": None,
@@ -235,7 +206,9 @@ def _require_enforced_budget() -> None:
     enforcement. This is intentionally not configurable through a bypass flag.
     Offline receipt construction and historical inspection remain available.
     """
-    raise RuntimeError("paid execution blocked: enforced reservation/settlement budget contract unavailable")
+    raise RuntimeError(
+        "paid execution blocked: enforced reservation/settlement budget contract unavailable"
+    )
 
 
 def _repo_root() -> Path:
@@ -389,16 +362,10 @@ def _validate_unified_diff(patch: str) -> tuple[bool, str]:
         return False, "patch must begin with a diff --git header"
     if "```" in patch:
         return False, "patch contains a Markdown fence"
-    blocks = [
-        block
-        for block in re.split(r"(?m)(?=^diff --git )", patch.rstrip("\n"))
-        if block
-    ]
+    blocks = [block for block in re.split(r"(?m)(?=^diff --git )", patch.rstrip("\n")) if block]
     if not blocks:
         return False, "patch contains no file diff"
-    concrete_hunk = re.compile(
-        r"(?m)^@@ -\d+(?:,\d+)? \+\d+(?:,\d+)? @@(?: .*)?$"
-    )
+    concrete_hunk = re.compile(r"(?m)^@@ -\d+(?:,\d+)? \+\d+(?:,\d+)? @@(?: .*)?$")
     for block in blocks:
         lines = block.splitlines()
         if not re.fullmatch(r"diff --git a/\S+ b/\S+", lines[0]):
@@ -477,22 +444,22 @@ def _build_prompt(task: dict[str, Any], sources: dict[str, str]) -> str:
     source_text = "\n\n".join(
         f"===== {path} =====\n{content}" for path, content in sorted(sources.items())
     )
-    return f"""Solve this frozen SWE-bench Pro task in repository {task['repo']}.
+    return f"""Solve this frozen SWE-bench Pro task in repository {task["repo"]}.
 
 Return only a valid unified git diff beginning with `diff --git`. Do not emit
 analysis, explanations, planning, ellipses, abbreviated context, or Markdown
 fences. Every hunk header must have concrete line ranges. Make the smallest
 complete production fix, preserve project style, and ensure the patch applies
-to base commit {task['base_commit']}.
+to base commit {task["base_commit"]}.
 
 PROBLEM STATEMENT
-{task['problem_statement']}
+{task["problem_statement"]}
 
 REQUIREMENTS
-{task['requirements']}
+{task["requirements"]}
 
 PUBLIC INTERFACE DESCRIPTION
-{task['interface']}
+{task["interface"]}
 
 FROZEN BASE-COMMIT SOURCE CONTEXT
 {source_text}
@@ -510,7 +477,7 @@ def _path_candidates(text: str) -> list[str]:
         path = match.group(1).strip("`'\".,:;()[]{} ")
         if path.startswith(("http://", "https://")) or ".." in Path(path).parts:
             continue
-        if path.startswith("a/") or path.startswith("b/"):
+        if path.startswith(("a/", "b/")):
             path = path[2:]
         if path and path not in result:
             result.append(path)
@@ -644,9 +611,7 @@ def _snapshot_task_sources(task: dict[str, Any], immutable_uri: str) -> dict[str
             grep_args: list[str] = []
             for term in terms[:8]:
                 grep_args.extend(["-e", term])
-            grep_process = sandbox.exec(
-                "git", "-C", "/app", "grep", "-I", "-l", *grep_args, "--"
-            )
+            grep_process = sandbox.exec("git", "-C", "/app", "grep", "-I", "-l", *grep_args, "--")
             grep_process.wait()
             if grep_process.returncode in {0, 1}:
                 for path in _read_stream(grep_process.stdout).splitlines():
@@ -705,9 +670,7 @@ def _docker_token() -> str:
             "scope": f"repository:{DOCKER_REPOSITORY}:pull",
         }
     )
-    with urllib.request.urlopen(
-        "https://auth.docker.io/token?" + query, timeout=30
-    ) as response:
+    with urllib.request.urlopen("https://auth.docker.io/token?" + query, timeout=30) as response:
         return str(json.load(response)["token"])
 
 
@@ -740,7 +703,11 @@ def _validate_image_manifest(manifest: dict[str, Any], tasks: list[dict[str, Any
     if manifest.get("schema_version") != "pavlov-e1-image-manifest-v1":
         raise RuntimeError("unsupported image manifest schema")
     images = manifest.get("images")
-    if not isinstance(images, list) or len(images) != len(tasks) or manifest.get("count") != len(tasks):
+    if (
+        not isinstance(images, list)
+        or len(images) != len(tasks)
+        or manifest.get("count") != len(tasks)
+    ):
         raise RuntimeError("saved image manifest is incomplete")
     if manifest.get("manifest_sha256") != _sha256_text(_stable_json(images)):
         raise RuntimeError("image manifest hash mismatch")
@@ -757,17 +724,17 @@ def _validate_image_manifest(manifest: dict[str, Any], tasks: list[dict[str, Any
         if not re.fullmatch(r"sha256:[0-9a-f]{64}", digest):
             raise RuntimeError("image digest is not immutable")
         task = expected[task_id]
-        if (image.get("tag") != task["dockerhub_tag"] or
-            image.get("tag_uri") != f"{DOCKER_REPOSITORY}:{task['dockerhub_tag']}" or
-            image.get("immutable_uri") != f"{DOCKER_REPOSITORY}@{digest}"):
+        if (
+            image.get("tag") != task["dockerhub_tag"]
+            or image.get("tag_uri") != f"{DOCKER_REPOSITORY}:{task['dockerhub_tag']}"
+            or image.get("immutable_uri") != f"{DOCKER_REPOSITORY}@{digest}"
+        ):
             raise RuntimeError("image binding mismatch")
         if task.get("docker_image") is not None and task["docker_image"] != image["immutable_uri"]:
             raise RuntimeError("saved task image binding mismatch")
 
 
-def _resolve_image_manifest(
-    tasks: list[dict[str, Any]], *, workers: int
-) -> dict[str, Any]:
+def _resolve_image_manifest(tasks: list[dict[str, Any]], *, workers: int) -> dict[str, Any]:
     token = _docker_token()
     records: dict[str, dict[str, str]] = {}
     with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as executor:
@@ -825,9 +792,7 @@ def _verified_tokenizer() -> Any:
     from huggingface_hub import HfApi
     from transformers import AutoTokenizer
 
-    info = HfApi(token=os.environ["HF_TOKEN"]).model_info(
-        HF_REPO, revision=HF_REVISION
-    )
+    info = HfApi(token=os.environ["HF_TOKEN"]).model_info(HF_REPO, revision=HF_REVISION)
     if info.sha != HF_COMMIT:
         raise RuntimeError(f"immutable HF checkpoint drift: {info.sha}")
     _TOKENIZER = AutoTokenizer.from_pretrained(MODEL_ID, revision=MODEL_REVISION)
@@ -847,9 +812,7 @@ def _shared_tinker_sampler(tinker_module: Any, wandb_run_id: str) -> Any:
                 "first_wandb_run_id": wandb_run_id,
             }
         )
-        _TINKER_SAMPLER = _TINKER_SERVICE.create_sampling_client(
-            model_path=SAMPLER_PATH
-        )
+        _TINKER_SAMPLER = _TINKER_SERVICE.create_sampling_client(model_path=SAMPLER_PATH)
     return _TINKER_SAMPLER
 
 
@@ -910,13 +873,11 @@ def generate_candidate(payload: dict[str, Any]) -> dict[str, Any]:
         )
         prompt_ids = tokenizer.encode(rendered, add_special_tokens=False)
         projected_usd = (
-            len(prompt_ids) / 1e6 * USD_PER_M_PREFILL
-            + max_tokens / 1e6 * USD_PER_M_SAMPLE
+            len(prompt_ids) / 1e6 * USD_PER_M_PREFILL + max_tokens / 1e6 * USD_PER_M_SAMPLE
         )
         if projected_usd > MAX_TASK_TINKER_USD:
             raise RuntimeError(
-                f"projected Tinker spend ${projected_usd:.6f} exceeds "
-                f"${MAX_TASK_TINKER_USD:.2f}"
+                f"projected Tinker spend ${projected_usd:.6f} exceeds ${MAX_TASK_TINKER_USD:.2f}"
             )
 
         import tinker
@@ -983,8 +944,7 @@ def generate_candidate(payload: dict[str, Any]) -> dict[str, Any]:
         response_text = tokenizer.decode(tokens, skip_special_tokens=True)
         patch, validation_reason = _extract_diff(response_text)
         estimated_usd = (
-            len(prompt_ids) / 1e6 * USD_PER_M_PREFILL
-            + len(tokens) / 1e6 * USD_PER_M_SAMPLE
+            len(prompt_ids) / 1e6 * USD_PER_M_PREFILL + len(tokens) / 1e6 * USD_PER_M_SAMPLE
         )
         status = "GENERATED" if patch else "GENERATION_FAILED"
         run.log(
@@ -1077,9 +1037,7 @@ def _load_exact_dataset(root: Path, raw_path: Path) -> list[dict[str, Any]]:
     raw_path.write_text(completed.stdout, encoding="utf-8")
     rows = [json.loads(line) for line in completed.stdout.splitlines() if line]
     if len(rows) != EXPECTED_TASK_COUNT:
-        raise RuntimeError(
-            f"expected {EXPECTED_TASK_COUNT} exact-suite tasks, found {len(rows)}"
-        )
+        raise RuntimeError(f"expected {EXPECTED_TASK_COUNT} exact-suite tasks, found {len(rows)}")
     instance_ids = [str(row["instance_id"]) for row in rows]
     if len(set(instance_ids)) != EXPECTED_TASK_COUNT:
         raise RuntimeError("exact dataset contains duplicate instance IDs")
@@ -1089,15 +1047,9 @@ def _load_exact_dataset(root: Path, raw_path: Path) -> list[dict[str, Any]]:
 def _validate_existing_dataset(
     raw_path: Path, sanitized_path: Path
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
-    rows = [
-        json.loads(line)
-        for line in raw_path.read_text(encoding="utf-8").splitlines()
-        if line
-    ]
+    rows = [json.loads(line) for line in raw_path.read_text(encoding="utf-8").splitlines() if line]
     tasks = [
-        json.loads(line)
-        for line in sanitized_path.read_text(encoding="utf-8").splitlines()
-        if line
+        json.loads(line) for line in sanitized_path.read_text(encoding="utf-8").splitlines() if line
     ]
     if len(rows) != EXPECTED_TASK_COUNT or len(tasks) != EXPECTED_TASK_COUNT:
         raise RuntimeError("saved dataset artifacts are not the exact 731-task split")
@@ -1148,9 +1100,7 @@ def _source_contexts(
                 print(f"captured {completed}/{len(pending)} source contexts")
 
 
-def _recover_interrupted_attempts(
-    tasks: list[dict[str, Any]], tasks_dir: Path
-) -> None:
+def _recover_interrupted_attempts(tasks: list[dict[str, Any]], tasks_dir: Path) -> None:
     """Record interrupted candidates as unresolved without resampling them."""
 
     for recovery in INTERRUPTED_ATTEMPTS:
@@ -1158,22 +1108,16 @@ def _recover_interrupted_attempts(
         task = tasks[index]
         instance_id = str(recovery["instance_id"])
         if str(task["instance_id"]) != instance_id:
-            raise RuntimeError(
-                f"interrupted recovery task-order drift at index {index}"
-            )
+            raise RuntimeError(f"interrupted recovery task-order drift at index {index}")
         task_dir = tasks_dir / instance_id
         generation_path = task_dir / "generation.json"
         if generation_path.is_file():
             saved = json.loads(generation_path.read_text(encoding="utf-8"))
             if saved.get("status") not in TERMINAL_GENERATION_STATUSES:
-                raise RuntimeError(
-                    f"nonterminal interrupted recovery for {instance_id}"
-                )
+                raise RuntimeError(f"nonterminal interrupted recovery for {instance_id}")
             continue
 
-        snapshot = json.loads(
-            (task_dir / "source_context.json").read_text(encoding="utf-8")
-        )
+        snapshot = json.loads((task_dir / "source_context.json").read_text(encoding="utf-8"))
         sources = dict(snapshot["files"])
         source_sha256 = _sha256_text(_stable_json(sources))
         prompt_sha256 = _sha256_text(_build_prompt(task, sources))
@@ -1201,9 +1145,7 @@ def _recover_interrupted_attempts(
             "wandb_run_id": recovery["wandb_run_id"],
             "wandb_url": recovery["wandb_url"],
             "original_wandb_status": recovery["original_wandb_status"],
-            "original_candidate_patch_sha256": recovery[
-                "original_candidate_patch_sha256"
-            ],
+            "original_candidate_patch_sha256": recovery["original_candidate_patch_sha256"],
             "failure_class": recovery["failure_class"],
             "additional_sampling_performed": False,
             "recovered_at": _utc_now(),
@@ -1237,9 +1179,7 @@ def _archive_pre_sampling_attempt(
     attempts_dir.mkdir(parents=True, exist_ok=True)
     archived_generation = attempts_dir / f"pre_sampling_{safe_run_id}.json"
     if archived_generation.exists():
-        raise RuntimeError(
-            f"pre-sampling archive already exists for {task_dir.name}: {run_id}"
-        )
+        raise RuntimeError(f"pre-sampling archive already exists for {task_dir.name}: {run_id}")
     response_path = task_dir / "generation_response.txt"
     if response_path.exists():
         archived_response = attempts_dir / f"pre_sampling_{safe_run_id}_response.txt"
@@ -1288,12 +1228,9 @@ def _generation_inputs(
                 )
             else:
                 raise RuntimeError(
-                    f"nonterminal saved generation for {task['instance_id']}: "
-                    f"{status}"
+                    f"nonterminal saved generation for {task['instance_id']}: {status}"
                 )
-        snapshot = json.loads(
-            (task_dir / "source_context.json").read_text(encoding="utf-8")
-        )
+        snapshot = json.loads((task_dir / "source_context.json").read_text(encoding="utf-8"))
         sources = dict(snapshot["files"])
         prompt = _build_prompt(task, sources)
         conservative_prompt_tokens = len(prompt) / 3.0
@@ -1321,18 +1258,14 @@ def _run_generation_map(pending: list[dict[str, Any]], tasks_dir: Path) -> None:
         return
     print(f"starting {len(pending)} pass@1 Tinker generations")
     completed = 0
-    for result in generate_candidate.map(
-        pending, order_outputs=False, return_exceptions=True
-    ):
+    for result in generate_candidate.map(pending, order_outputs=False, return_exceptions=True):
         if isinstance(result, BaseException):
             raise RuntimeError(f"Modal generation map failed without a task receipt: {result}")
         instance_id = str(result["instance_id"])
         task_dir = tasks_dir / instance_id
         task_dir.mkdir(parents=True, exist_ok=True)
         response_text = str(result.pop("response_text", "") or "")
-        (task_dir / "generation_response.txt").write_text(
-            response_text, encoding="utf-8"
-        )
+        (task_dir / "generation_response.txt").write_text(response_text, encoding="utf-8")
         _write_json(task_dir / "generation.json", result)
         completed += 1
         if completed % 10 == 0 or completed == len(pending):
@@ -1347,9 +1280,7 @@ def _build_candidates(
     apply_status: dict[str, dict[str, Any]] = {}
     for task in tasks:
         generation = json.loads(
-            (tasks_dir / str(task["instance_id"]) / "generation.json").read_text(
-                encoding="utf-8"
-            )
+            (tasks_dir / str(task["instance_id"]) / "generation.json").read_text(encoding="utf-8")
         )
         status = str(generation.get("status") or "")
         if status not in TERMINAL_GENERATION_STATUSES:
@@ -1451,28 +1382,24 @@ def _aggregate_receipt(
 ) -> dict[str, Any]:
     eval_results_path = run_dir / "evaluation/eval_results.json"
     eval_results: dict[str, bool] = (
-        json.loads(eval_results_path.read_text(encoding="utf-8"))
-        if candidates
-        else {}
+        json.loads(eval_results_path.read_text(encoding="utf-8")) if candidates else {}
     )
-    if not isinstance(eval_results, dict) or any(type(value) is not bool for value in eval_results.values()):
+    if not isinstance(eval_results, dict) or any(
+        type(value) is not bool for value in eval_results.values()
+    ):
         raise RuntimeError("evaluator results must be an object of boolean outcomes")
     candidate_ids = {str(item["instance_id"]) for item in candidates}
     if set(eval_results) != candidate_ids:
         missing = sorted(candidate_ids - set(eval_results))
         extra = sorted(set(eval_results) - candidate_ids)
-        raise RuntimeError(
-            f"evaluator coverage mismatch: missing={missing[:5]}, extra={extra[:5]}"
-        )
+        raise RuntimeError(f"evaluator coverage mismatch: missing={missing[:5]}, extra={extra[:5]}")
     generation_by_id = {str(item["instance_id"]): item for item in generations}
     full_results: dict[str, bool] = {}
     for task in tasks:
         instance_id = str(task["instance_id"])
         generation = generation_by_id[instance_id]
         full_results[instance_id] = (
-            eval_results[instance_id]
-            if generation["status"] == "GENERATED"
-            else False
+            eval_results[instance_id] if generation["status"] == "GENERATED" else False
         )
     if len(full_results) != EXPECTED_TASK_COUNT:
         raise RuntimeError("aggregate denominator is not the exact 731-task split")
@@ -1527,16 +1454,14 @@ def _aggregate_receipt(
                 item["status"] == "GENERATION_FAILED" for item in generations
             ),
             "generation_artifact_losses": sum(
-                item["status"] == "GENERATION_ARTIFACT_LOST"
-                for item in generations
+                item["status"] == "GENERATION_ARTIFACT_LOST" for item in generations
             ),
             "native_evaluations": len(eval_results),
             "raw_patches_git_apply_parse_ok": sum(
                 item["raw_git_apply_parse"]["ok"] is True for item in apply_status.values()
             ),
             "submitted_patches_git_apply_parse_ok": sum(
-                item["submitted_git_apply_parse"]["ok"] is True
-                for item in apply_status.values()
+                item["submitted_git_apply_parse"]["ok"] is True for item in apply_status.values()
             ),
             "patches_with_repaired_hunk_headers": sum(
                 item["hunk_headers_repaired"] > 0 for item in apply_status.values()
@@ -1572,14 +1497,10 @@ def _aggregate_receipt(
                 root / "zvf-program/flagship/e1_swe_bench_pro_full_eval.py"
             ),
             "network_blocked": True,
-            "image_manifest_path": str(
-                (run_dir / "image_manifest.json").relative_to(root)
-            ),
+            "image_manifest_path": str((run_dir / "image_manifest.json").relative_to(root)),
             "image_manifest_sha256": image_manifest["manifest_sha256"],
             "digest_pinned_image_count": image_manifest["count"],
-            "raw_results_path": str(
-                (run_dir / "evaluation/eval_results.json").relative_to(root)
-            ),
+            "raw_results_path": str((run_dir / "evaluation/eval_results.json").relative_to(root)),
             "full_results_path": str(full_results_path.relative_to(root)),
         },
         "model": {
@@ -1663,10 +1584,7 @@ def main(
         rows = _load_exact_dataset(root, raw_path)
         tasks = [_sanitize_task(row) for row in rows]
         sanitized_path.write_text(
-            "".join(
-                json.dumps(task, sort_keys=True, ensure_ascii=False) + "\n"
-                for task in tasks
-            ),
+            "".join(json.dumps(task, sort_keys=True, ensure_ascii=False) + "\n" for task in tasks),
             encoding="utf-8",
         )
 
@@ -1684,12 +1602,7 @@ def main(
         task["instance_id"]
         for task in tasks
         if not all(
-            (
-                evaluator_dir
-                / "run_scripts"
-                / str(task["instance_id"])
-                / filename
-            ).is_file()
+            (evaluator_dir / "run_scripts" / str(task["instance_id"]) / filename).is_file()
             for filename in ("run_script.sh", "parser.py")
         )
     ]
@@ -1706,15 +1619,12 @@ def main(
         image_manifest = _resolve_image_manifest(tasks, workers=digest_workers)
         _write_json(image_manifest_path, image_manifest)
     images_by_id = {
-        str(item["instance_id"]): str(item["immutable_uri"])
-        for item in image_manifest["images"]
+        str(item["instance_id"]): str(item["immutable_uri"]) for item in image_manifest["images"]
     }
     if set(images_by_id) != {str(task["instance_id"]) for task in tasks}:
         raise RuntimeError("image manifest task coverage mismatch")
 
-    _source_contexts(
-        tasks, images_by_id, tasks_dir, workers=max(1, source_workers)
-    )
+    _source_contexts(tasks, images_by_id, tasks_dir, workers=max(1, source_workers))
     if resume:
         _recover_interrupted_attempts(tasks, tasks_dir)
     pending, projected_total = _generation_inputs(
@@ -1747,10 +1657,7 @@ def main(
     }
     preflight["receipt_sha256"] = _sha256_text(_stable_json(preflight))
     if resume:
-        preflight_path = (
-            run_dir
-            / f"resume_preflight_{preflight['receipt_sha256'][:12]}.json"
-        )
+        preflight_path = run_dir / f"resume_preflight_{preflight['receipt_sha256'][:12]}.json"
     else:
         preflight_path = run_dir / "preflight_receipt.json"
     _write_json(preflight_path, preflight)

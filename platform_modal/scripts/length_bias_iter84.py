@@ -30,6 +30,7 @@ Outputs: length_bias_iter84_{perrun,coherence,granger,hurst}.tsv
          length_bias_iter84_meta.json
 Stdlib + numpy + scipy (signal, stats).
 """
+
 import json, os, math
 import numpy as np
 from scipy import signal as sps
@@ -37,12 +38,15 @@ from scipy import stats as scs
 
 import sys
 from pathlib import Path
+
 sys.path.append(str(Path(__file__).resolve().parent))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
+from _paths import REPO_ROOT
+
 W = str(REPO_ROOT)
 RES = os.path.join(W, "platform_hybrid/experiments", "results")
 B_BOOT = 2000
 RNG = np.random.default_rng(84)
+
 
 # --------------------------------------------------------------------- DFA ----
 def _dfa_one(x, scales):
@@ -58,7 +62,7 @@ def _dfa_one(x, scales):
         nw = n // s
         rms = []
         for k in range(nw):
-            seg = y[k * s:(k + 1) * s]
+            seg = y[k * s : (k + 1) * s]
             t = np.arange(s)
             a, b = np.polyfit(t, seg, 1)
             trend = a * t + b
@@ -82,7 +86,8 @@ def hurst_dfa(L, scales=None):
 # ----------------------------------------------------- spectral coherence ----
 def ms_coherence_bands(L, R, fs_bands):
     """Magnitude-squared coherence averaged in each frequency band."""
-    L = np.asarray(L, float); R = np.asarray(R, float)
+    L = np.asarray(L, float)
+    R = np.asarray(R, float)
     n = len(L)
     if n < 8:
         return [float("nan")] * len(fs_bands)
@@ -104,20 +109,24 @@ def granger_f(L, R, lag=2):
     """
     L = (np.asarray(L, float) - np.asarray(L, float).mean()) / (np.asarray(L, float).std() + 1e-9)
     R = (np.asarray(R, float) - np.asarray(R, float).mean()) / (np.asarray(R, float).std() + 1e-9)
-    n = len(L); T = n - lag
+    n = len(L)
+    T = n - lag
     if T <= lag + 2:
         return (float("nan"),) * 6
     YR = R[lag:]
     YL = L[lag:]
-    Xrest = np.column_stack([np.ones(T), R[lag - 1:n - 1], R[lag - 2:n - 2]])  # restricted
-    Xfull = np.column_stack([Xrest, L[lag - 1:n - 1], L[lag - 2:n - 2]])  # + L lags
+    Xrest = np.column_stack([np.ones(T), R[lag - 1 : n - 1], R[lag - 2 : n - 2]])  # restricted
+    Xfull = np.column_stack([Xrest, L[lag - 1 : n - 1], L[lag - 2 : n - 2]])  # + L lags
+
     def _ols(X, y):
         b, *_ = np.linalg.lstsq(X, y, rcond=None)
         resid = y - X @ b
         return resid, X.shape[1]
+
     rr, k_r = _ols(Xrest, YR)
     fr, k_f = _ols(Xfull, YR)
-    ss_r = float(rr @ rr); ss_f = float(fr @ fr)
+    ss_r = float(rr @ rr)
+    ss_f = float(fr @ fr)
     df_num = k_f - k_r
     df_den = T - k_f
     if ss_f <= 0 or df_den <= 0 or df_num <= 0:
@@ -127,7 +136,8 @@ def granger_f(L, R, lag=2):
     # reverse: predict L from R lags
     rl, _ = _ols(Xrest, YL)
     fl, _ = _ols(Xfull, YL)
-    ss_rl = float(rl @ rl); ss_fl = float(fl @ fl)
+    ss_rl = float(rl @ rl)
+    ss_fl = float(fl @ fl)
     F_rl = ((ss_rl - ss_fl) / df_num) / (ss_fl / df_den)
     p_rl = float(1 - scs.f.cdf(F_rl, df_num, df_den))
     r2_lr = 1 - ss_f / ss_r if ss_r > 0 else float("nan")
@@ -143,15 +153,31 @@ def load_runs():
         sl = r["step_log"]
         L = np.array([s["mean_comp_len"] for s in sl])
         R = np.array([s["mean_reward"] for s in sl])
-        out.append(dict(task="arithmetic", algo=r["algo"], seed=r["seed"], L=L, R=R,
-                        last10=r.get("last10_avg", float("nan"))))
+        out.append(
+            dict(
+                task="arithmetic",
+                algo=r["algo"],
+                seed=r["seed"],
+                L=L,
+                R=R,
+                last10=r.get("last10_avg", float("nan")),
+            )
+        )
     d2 = json.load(open(os.path.join(RES, "drgrpo_gsm8k_cot_full.json")))
     for r in d2["runs"]:
         sl = r["step_log"]
         L = np.array([s["mean_comp_len"] for s in sl])
         R = np.array([s["mean_reward"] for s in sl])
-        out.append(dict(task="gsm8k_cot", algo=r["algo"], seed=r["seed"], L=L, R=R,
-                        last10=r.get("last10_avg", float("nan"))))
+        out.append(
+            dict(
+                task="gsm8k_cot",
+                algo=r["algo"],
+                seed=r["seed"],
+                L=L,
+                R=R,
+                last10=r.get("last10_avg", float("nan")),
+            )
+        )
     return out
 
 
@@ -171,27 +197,83 @@ def analyse():
         F_lr, F_rl, p_lr, p_rl, r2_lr, r2_rl = granger_f(L, R, lag=2)
         # speed & level stats for context
         rho, p_rho = scs.spearmanr(L, R)
-        perrun.append(dict(
-            task=run["task"], algo=run["algo"], seed=run["seed"], n=int(len(L)),
-            hurst_L=H_L, hurst_R=H_R,
-            coh_vlow=cohs[0], coh_low=cohs[1], coh_mid=cohs[2], coh_high=cohs[3],
-            F_lr=F_lr, F_rl=F_rl, p_lr=p_lr, p_rl=p_rl,
-            r2_lr=r2_lr, r2_rl=r2_rl,
-            spearman_rho=float(rho), spearman_p=float(p_rho),
-            L_mean=float(L.mean()), L_std=float(L.std()),
-            R_mean=float(R.mean()), R_std=float(R.std()),
-            last10_acc=run["last10"],
-        ))
+        perrun.append(
+            dict(
+                task=run["task"],
+                algo=run["algo"],
+                seed=run["seed"],
+                n=int(len(L)),
+                hurst_L=H_L,
+                hurst_R=H_R,
+                coh_vlow=cohs[0],
+                coh_low=cohs[1],
+                coh_mid=cohs[2],
+                coh_high=cohs[3],
+                F_lr=F_lr,
+                F_rl=F_rl,
+                p_lr=p_lr,
+                p_rl=p_rl,
+                r2_lr=r2_lr,
+                r2_rl=r2_rl,
+                spearman_rho=float(rho),
+                spearman_p=float(p_rho),
+                L_mean=float(L.mean()),
+                L_std=float(L.std()),
+                R_mean=float(R.mean()),
+                R_std=float(R.std()),
+                last10_acc=run["last10"],
+            )
+        )
         for i, nm in enumerate(band_names):
-            coh.append(dict(task=run["task"], algo=run["algo"], seed=run["seed"],
-                            band=nm, lo=bands[i][0], hi=bands[i][1], coh=cohs[i]))
-        grg.append(dict(task=run["task"],algo=run["algo"], seed=run["seed"],
-                        direction="L_to_R", F=F_lr, p=p_lr, r2=r2_lr))
-        grg.append(dict(task=run["task"], algo=run["algo"], seed=run["seed"],
-                        direction="R_to_L", F=F_rl, p=p_rl, r2=r2_rl))
+            coh.append(
+                dict(
+                    task=run["task"],
+                    algo=run["algo"],
+                    seed=run["seed"],
+                    band=nm,
+                    lo=bands[i][0],
+                    hi=bands[i][1],
+                    coh=cohs[i],
+                )
+            )
+        grg.append(
+            dict(
+                task=run["task"],
+                algo=run["algo"],
+                seed=run["seed"],
+                direction="L_to_R",
+                F=F_lr,
+                p=p_lr,
+                r2=r2_lr,
+            )
+        )
+        grg.append(
+            dict(
+                task=run["task"],
+                algo=run["algo"],
+                seed=run["seed"],
+                direction="R_to_L",
+                F=F_rl,
+                p=p_rl,
+                r2=r2_rl,
+            )
+        )
     # aggregate per (task, algo) means
-    keys_h = ["hurst_L", "hurst_R", "coh_vlow", "coh_low", "coh_mid", "coh_high",
-              "F_lr", "F_rl", "spearman_rho", "L_mean", "L_std", "R_mean", "R_std"]
+    keys_h = [
+        "hurst_L",
+        "hurst_R",
+        "coh_vlow",
+        "coh_low",
+        "coh_mid",
+        "coh_high",
+        "F_lr",
+        "F_rl",
+        "spearman_rho",
+        "L_mean",
+        "L_std",
+        "R_mean",
+        "R_std",
+    ]
     for task in sorted({r["task"] for r in perrun}):
         for algo in sorted({r["algo"] for r in perrun}):
             sel = [r for r in perrun if r["task"] == task and r["algo"] == algo]
@@ -201,7 +283,9 @@ def analyse():
             for k in keys_h:
                 vals = [x[k] for x in sel if np.isfinite(x[k])]
                 row[k + "_mean"] = float(np.mean(vals)) if vals else float("nan")
-                row[k + "_se"] = float(np.std(vals, ddof=1) / np.sqrt(len(vals))) if len(vals) > 1 else 0.0
+                row[k + "_se"] = (
+                    float(np.std(vals, ddof=1) / np.sqrt(len(vals))) if len(vals) > 1 else 0.0
+                )
             hurst_summary.append(row)
     # seed-paired bootstrap: Dr.GRPO - GRPO per task on each measurement
     paired = []
@@ -211,8 +295,17 @@ def analyse():
         common = sorted(set(seeds_g) & set(seeds_d))
         if not common:
             continue
-        for k in ["hurst_L", "hurst_R", "coh_vlow", "coh_low", "coh_mid", "coh_high",
-                  "F_lr", "F_rl", "spearman_rho"]:
+        for k in [
+            "hurst_L",
+            "hurst_R",
+            "coh_vlow",
+            "coh_low",
+            "coh_mid",
+            "coh_high",
+            "F_lr",
+            "F_rl",
+            "spearman_rho",
+        ]:
             diffs = np.array([seeds_d[s][k] - seeds_g[s][k] for s in common])
             diffs = diffs[np.isfinite(diffs)]
             if len(diffs) < 2:
@@ -227,8 +320,17 @@ def analyse():
             lo, hi = np.percentile(boots, [2.5, 97.5])
             # two-sided p against H0: mean=0
             p = float(2 * min((boots <= 0).mean(), (boots >= 0).mean()))
-            paired.append(dict(task=task, key=k, n_pairs=int(n), mean_diff=obs,
-                               ci_lo=float(lo), ci_hi=float(hi), p=p))
+            paired.append(
+                dict(
+                    task=task,
+                    key=k,
+                    n_pairs=int(n),
+                    mean_diff=obs,
+                    ci_lo=float(lo),
+                    ci_hi=float(hi),
+                    p=p,
+                )
+            )
     return perrun, coh, grg, hurst_summary, paired
 
 
@@ -255,35 +357,98 @@ def _fmt(v):
 def main():
     perrun, coh, grg, summary, paired = analyse()
     base = os.path.join(RES, "length_bias_iter84_")
-    write_tsv(base + "perrun.tsv", perrun,
-              ["task", "algo", "seed", "n", "hurst_L", "hurst_R",
-               "coh_vlow", "coh_low", "coh_mid", "coh_high",
-               "F_lr", "F_rl", "p_lr", "p_rl", "r2_lr", "r2_rl",
-               "spearman_rho", "spearman_p", "L_mean", "L_std", "R_mean", "R_std",
-               "last10_acc"])
-    write_tsv(base + "coherence.tsv", coh,
-              ["task", "algo", "seed", "band", "lo", "hi", "coh"])
-    write_tsv(base + "granger.tsv", grg,
-              ["task", "algo", "seed", "direction", "F", "p", "r2"])
-    write_tsv(base + "summary.tsv", summary,
-              ["task", "algo", "n_seeds"] +
-              [k + "_mean" for k in
-               ["hurst_L", "hurst_R", "coh_vlow", "coh_low", "coh_mid", "coh_high",
-                "F_lr", "F_rl", "spearman_rho", "L_mean", "L_std", "R_mean", "R_std"]] +
-              [k + "_se" for k in
-               ["hurst_L", "hurst_R", "coh_vlow", "coh_low", "coh_mid", "coh_high",
-                "F_lr", "F_rl", "spearman_rho", "L_mean", "L_std", "R_mean", "R_std"]])
-    write_tsv(base + "paired.tsv", paired,
-              ["task", "key", "n_pairs", "mean_diff", "ci_lo", "ci_hi", "p"])
-    meta = dict(iteration=84, pillar="P4-LengthBias",
-                method="DFA-Hurst + magnitude-squared spectral coherence + VAR(2) Granger F",
-                inputs=["drgrpo_vs_grpo.json", "drgrpo_gsm8k_cot_full.json"],
-                n_runs=len(perrun),
-                n_per_task={t: sum(1 for r in perrun if r["task"] == t) for t in
-                            sorted({r["task"] for r in perrun})},
-                band_definitions={"vlow": "0.00-0.05 cyc/step", "low": "0.05-0.15",
-                                  "mid": "0.15-0.30", "high": "0.30-0.50"},
-                rng_seed=84)
+    write_tsv(
+        base + "perrun.tsv",
+        perrun,
+        [
+            "task",
+            "algo",
+            "seed",
+            "n",
+            "hurst_L",
+            "hurst_R",
+            "coh_vlow",
+            "coh_low",
+            "coh_mid",
+            "coh_high",
+            "F_lr",
+            "F_rl",
+            "p_lr",
+            "p_rl",
+            "r2_lr",
+            "r2_rl",
+            "spearman_rho",
+            "spearman_p",
+            "L_mean",
+            "L_std",
+            "R_mean",
+            "R_std",
+            "last10_acc",
+        ],
+    )
+    write_tsv(base + "coherence.tsv", coh, ["task", "algo", "seed", "band", "lo", "hi", "coh"])
+    write_tsv(base + "granger.tsv", grg, ["task", "algo", "seed", "direction", "F", "p", "r2"])
+    write_tsv(
+        base + "summary.tsv",
+        summary,
+        ["task", "algo", "n_seeds"]
+        + [
+            k + "_mean"
+            for k in [
+                "hurst_L",
+                "hurst_R",
+                "coh_vlow",
+                "coh_low",
+                "coh_mid",
+                "coh_high",
+                "F_lr",
+                "F_rl",
+                "spearman_rho",
+                "L_mean",
+                "L_std",
+                "R_mean",
+                "R_std",
+            ]
+        ]
+        + [
+            k + "_se"
+            for k in [
+                "hurst_L",
+                "hurst_R",
+                "coh_vlow",
+                "coh_low",
+                "coh_mid",
+                "coh_high",
+                "F_lr",
+                "F_rl",
+                "spearman_rho",
+                "L_mean",
+                "L_std",
+                "R_mean",
+                "R_std",
+            ]
+        ],
+    )
+    write_tsv(
+        base + "paired.tsv", paired, ["task", "key", "n_pairs", "mean_diff", "ci_lo", "ci_hi", "p"]
+    )
+    meta = dict(
+        iteration=84,
+        pillar="P4-LengthBias",
+        method="DFA-Hurst + magnitude-squared spectral coherence + VAR(2) Granger F",
+        inputs=["drgrpo_vs_grpo.json", "drgrpo_gsm8k_cot_full.json"],
+        n_runs=len(perrun),
+        n_per_task={
+            t: sum(1 for r in perrun if r["task"] == t) for t in sorted({r["task"] for r in perrun})
+        },
+        band_definitions={
+            "vlow": "0.00-0.05 cyc/step",
+            "low": "0.05-0.15",
+            "mid": "0.15-0.30",
+            "high": "0.30-0.50",
+        },
+        rng_seed=84,
+    )
     with open(base + "meta.json", "w") as f:
         json.dump(meta, f, indent=2)
     print("[iter84] wrote", len(perrun), "perrun,", len(summary), "summary,", len(paired), "paired")

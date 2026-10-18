@@ -47,6 +47,7 @@ platform_hybrid/experiments/results/p5p8/p7_multitrigger_seed_summary.json
 
 Stdlib only.
 """
+
 from __future__ import annotations
 
 import csv
@@ -56,12 +57,20 @@ import random
 import statistics
 
 import sys
-sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
+
+sys.path.append(
+    str(pathlib.Path(__file__).resolve().parents[1])
+)  # platform_modal/scripts, for _paths
 from _paths import REPO_ROOT
+
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 from p7_joint_controller import (
-    JOINT_RULE_ID, METRICS, bootstrap_controller_metrics, joint_controller,
+    JOINT_RULE_ID,
+    METRICS,
+    bootstrap_controller_metrics,
+    joint_controller,
 )
+
 WORK = REPO_ROOT
 N10 = WORK / "platform_hybrid/experiments" / "results" / "n10_seed_expansion"
 N2 = WORK / "platform_hybrid/experiments" / "results" / "n2_reward_tensor_resume"
@@ -76,7 +85,7 @@ OUT = WORK / "platform_hybrid/experiments" / "results" / "p5p8" / "corrected-rev
 TRIGGERS = ("T1_zvf", "T2_yobs", "T3_ddiv", "T_joint")
 # Per-axis τ grids (P7 controller family canonical operating range).
 TAU_GRID = {
-    "T1_zvf":  (0.50, 0.60, 0.70, 0.80, 0.90),
+    "T1_zvf": (0.50, 0.60, 0.70, 0.80, 0.90),
     "T2_yobs": (0.20, 0.30, 0.40, 0.50, 0.60),  # Y_obs thresholds
     "T3_ddiv": (0.03, 0.04, 0.05, 0.06, 0.07),  # δ_div thresholds
 }
@@ -90,6 +99,7 @@ SEED = 20260705
 # N10 multi-trigger seed-robustness
 # ---------------------------------------------------------------------------
 
+
 def load_n10_seeds():
     """Return list of dicts: seed, step_log with computed y_obs, y_iid, ddiv."""
     seeds = []
@@ -101,7 +111,7 @@ def load_n10_seeds():
             y_obs = 1.0 - zvf_t
             # iid collision: p_hat = reward, G = 8
             if 0.0 < reward_t < 1.0:
-                y_iid = 1.0 - (reward_t ** G_BASE + (1.0 - reward_t) ** G_BASE)
+                y_iid = 1.0 - (reward_t**G_BASE + (1.0 - reward_t) ** G_BASE)
             else:
                 y_iid = 1.0 - 1.0  # boundary => ZVF_iid = 1 => Y_iid = 0
                 y_iid = max(0.0, y_iid)
@@ -109,12 +119,14 @@ def load_n10_seeds():
             s["y_obs"] = y_obs
             s["y_iid"] = y_iid
             s["ddiv"] = ddiv
-        seeds.append({
-            "seed": int(d["seed"]),
-            "mean_zvf": float(d["mean_zvf"]),
-            "heldout_acc": float(d["heldout_acc"]),
-            "step_log": d["step_log"],
-        })
+        seeds.append(
+            {
+                "seed": int(d["seed"]),
+                "mean_zvf": float(d["mean_zvf"]),
+                "heldout_acc": float(d["heldout_acc"]),
+                "step_log": d["step_log"],
+            }
+        )
     return seeds
 
 
@@ -132,9 +144,9 @@ def fires_for_step(step, trigger, tau):
     if trigger == "T_joint":
         # any-axis fire at the trigger's canonical τ for this step
         return (
-            zvf >= TAU_GRID["T1_zvf"][2]   # 0.70
+            zvf >= TAU_GRID["T1_zvf"][2]  # 0.70
             or y_obs >= TAU_GRID["T2_yobs"][2]  # 0.40
-            or ddiv >= TAU_GRID["T3_ddiv"][2]   # 0.05
+            or ddiv >= TAU_GRID["T3_ddiv"][2]  # 0.05
         )
     raise ValueError(trigger)
 
@@ -149,11 +161,9 @@ def per_seed_fire_counts(seeds):
             else:
                 taus = TAU_GRID[trig]
             for tau in taus:
-                n_fire = sum(
-                    1 for s in sd["step_log"] if fires_for_step(s, trig, tau)
-                )
+                n_fire = sum(1 for s in sd["step_log"] if fires_for_step(s, trig, tau))
                 # headroom wrong fires: zvf > 0.99 means boundary saturation,
-# but for T2/T3 the "wrong" notion is opposite:
+                # but for T2/T3 the "wrong" notion is opposite:
                 #  - T1: fire AND zvf>0.99 means boundary step, fire is right
                 #    only if step is interior (zvf<1.0). For T1 we mark
                 #    headroom as n_fire when zvf==1.0 (boundary firing).
@@ -164,12 +174,12 @@ def per_seed_fire_counts(seeds):
                 # We compute all three signals per (trig, τ) and record
                 # them as diagnostic columns.
                 n_bdy_fire = sum(
-                    1 for s in sd["step_log"]
+                    1
+                    for s in sd["step_log"]
                     if fires_for_step(s, trig, tau) and abs(s["zvf"] - 1.0) < 1e-9
                 )
                 n_ddiv_neg = sum(
-                    1 for s in sd["step_log"]
-                    if fires_for_step(s, trig, tau) and s["ddiv"] < 0
+                    1 for s in sd["step_log"] if fires_for_step(s, trig, tau) and s["ddiv"] < 0
                 )
                 row = {
                     "seed": sd["seed"],
@@ -214,24 +224,28 @@ def seed_stability_summary(per_seed_rows):
         sd = statistics.pstdev(vals) if len(vals) > 1 else 0.0
         cv = sd / m if m > 0 else 0.0
         m_b, lo_b, hi_b = bootstrap_ci_mean(vals)
-        out.append({
-            "trigger": trig,
-            "tau": tau,
-            "n_seeds": len(vals),
-            "n_fire_mean": m,
-            "n_fire_sd": sd,
-            "n_fire_cv": cv,
-            "n_fire_ci_lo": lo_b,
-            "n_fire_ci_hi": hi_b,
-            "headroom_bdy_total": sum(
-                r["n_bdy_fire"] for r in per_seed_rows
-                if r["trigger"] == trig and r["tau"] == tau
-            ),
-            "ddiv_neg_fire_total": sum(
-                r["n_ddiv_neg_fire"] for r in per_seed_rows
-                if r["trigger"] == trig and r["tau"] == tau
-            ),
-        })
+        out.append(
+            {
+                "trigger": trig,
+                "tau": tau,
+                "n_seeds": len(vals),
+                "n_fire_mean": m,
+                "n_fire_sd": sd,
+                "n_fire_cv": cv,
+                "n_fire_ci_lo": lo_b,
+                "n_fire_ci_hi": hi_b,
+                "headroom_bdy_total": sum(
+                    r["n_bdy_fire"]
+                    for r in per_seed_rows
+                    if r["trigger"] == trig and r["tau"] == tau
+                ),
+                "ddiv_neg_fire_total": sum(
+                    r["n_ddiv_neg_fire"]
+                    for r in per_seed_rows
+                    if r["trigger"] == trig and r["tau"] == tau
+                ),
+            }
+        )
     return out
 
 
@@ -250,15 +264,17 @@ def rank_consistency(per_seed_rows):
     for (trig, tau), seed_pairs in sorted(by.items()):
         seed_pairs.sort(key=lambda x: -x[1])  # rank descending
         rank_map = {sp[0]: r for r, sp in enumerate(seed_pairs, 1)}
-        rows.append({
-            "trigger": trig,
-            "tau": tau,
-            "top_seed": seed_pairs[0][0],
-            "top_n_fire": seed_pairs[0][1],
-            "bottom_seed": seed_pairs[-1][0],
-            "bottom_n_fire": seed_pairs[-1][1],
-            "rank_spread": seed_pairs[0][1] - seed_pairs[-1][1],
-        })
+        rows.append(
+            {
+                "trigger": trig,
+                "tau": tau,
+                "top_seed": seed_pairs[0][0],
+                "top_n_fire": seed_pairs[0][1],
+                "bottom_seed": seed_pairs[-1][0],
+                "bottom_n_fire": seed_pairs[-1][1],
+                "rank_spread": seed_pairs[0][1] - seed_pairs[-1][1],
+            }
+        )
     return rows
 
 
@@ -275,7 +291,7 @@ G_DUALFORMER = 2
 def iid_zvf(p_hat, G):
     if p_hat <= 0.0 or p_hat >= 1.0:
         return 1.0
-    return p_hat ** G + (1.0 - p_hat) ** G
+    return p_hat**G + (1.0 - p_hat) ** G
 
 
 def load_n2_records():
@@ -303,19 +319,21 @@ def load_n2_records():
                     K = int(round(sum(grp)))
                     p_hat = K / G_BASE
                     zvf_actual = 1.0 if (K == 0 or K == G_BASE) else 0.0
-                    contrast = (K > 0 and K < G_BASE)
-                    boundary = (K == 0 or K == G_BASE)
+                    contrast = K > 0 and K < G_BASE
+                    boundary = K == 0 or K == G_BASE
                     zvf_iid_g8 = iid_zvf(p_hat, G_BASE)
                     zvf_iid_g16 = iid_zvf(p_hat, G_ESC)
-                    prompts.append({
-                        "K": K,
-                        "p_hat": p_hat,
-                        "zvf_actual": zvf_actual,
-                        "contrast": contrast,
-                        "boundary": boundary,
-                        "zvf_iid_g8": zvf_iid_g8,
-                        "zvf_iid_g16": zvf_iid_g16,
-                    })
+                    prompts.append(
+                        {
+                            "K": K,
+                            "p_hat": p_hat,
+                            "zvf_actual": zvf_actual,
+                            "contrast": contrast,
+                            "boundary": boundary,
+                            "zvf_iid_g8": zvf_iid_g8,
+                            "zvf_iid_g16": zvf_iid_g16,
+                        }
+                    )
                 zvf_obs_step = sum(p["zvf_actual"] for p in prompts) / len(prompts)
                 zvf_iid_step = sum(p["zvf_iid_g8"] for p in prompts) / len(prompts)
                 ddiv_step = zvf_iid_step - zvf_obs_step
@@ -340,11 +358,16 @@ def flatten_step_records(method_records):
     records = []
     for sr in method_records:
         for prompt_idx, p in enumerate(sr["prompts"]):
-            records.append({
-                **p, "step": sr["step"], "prompt_idx": prompt_idx,
-                "method": sr.get("method"), "step_delta_div": sr["ddiv_step"],
-                "zvf_actual": p["zvf_actual"],
-            })
+            records.append(
+                {
+                    **p,
+                    "step": sr["step"],
+                    "prompt_idx": prompt_idx,
+                    "method": sr.get("method"),
+                    "step_delta_div": sr["ddiv_step"],
+                    "zvf_actual": p["zvf_actual"],
+                }
+            )
     return records
 
 
@@ -356,9 +379,14 @@ def joint_controller_one_step(step_rec, ddiv_tau):
     these fields represents an observed intervention outcome.
     """
     result = joint_controller(flatten_step_records([step_rec]), ddiv_tau)
-    return (result["rollout_saves"], result["predicted_restored_prompts"],
-            result["net_rollouts_saved"], result["n_contrast"],
-            result["n_boundary_escalated"], result["cost_ratio"])
+    return (
+        result["rollout_saves"],
+        result["predicted_restored_prompts"],
+        result["net_rollouts_saved"],
+        result["n_contrast"],
+        result["n_boundary_escalated"],
+        result["cost_ratio"],
+    )
 
 
 def headline_for_method(method_records, ddiv_tau):
@@ -367,15 +395,20 @@ def headline_for_method(method_records, ddiv_tau):
 
 def bootstrap_ci_metrics(method_records, ddiv_tau, n_boot=N_BOOT_PROMPT, seed=SEED):
     """Step-cluster paired intervals using the exact headline policy."""
-    result = bootstrap_controller_metrics(flatten_step_records(method_records),
-                                          ddiv_tau, n_boot, seed)
-    return {f"{metric}_ci_{endpoint}": result[metric][endpoint]
-            for metric in METRICS for endpoint in ("lo", "hi")}
+    result = bootstrap_controller_metrics(
+        flatten_step_records(method_records), ddiv_tau, n_boot, seed
+    )
+    return {
+        f"{metric}_ci_{endpoint}": result[metric][endpoint]
+        for metric in METRICS
+        for endpoint in ("lo", "hi")
+    }
 
 
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
+
 
 def write_tsv(path, rows, fieldnames):
     with path.open("w", newline="") as fh:
@@ -397,27 +430,44 @@ def main():
         OUT / "p7_multitrigger_seed_per_seed.tsv",
         per_seed,
         fieldnames=[
-            "seed", "trigger", "tau", "n_fire", "n_steps",
-            "n_bdy_fire", "n_ddiv_neg_fire",
-            "mean_zvf_seed", "heldout_acc_seed",
+            "seed",
+            "trigger",
+            "tau",
+            "n_fire",
+            "n_steps",
+            "n_bdy_fire",
+            "n_ddiv_neg_fire",
+            "mean_zvf_seed",
+            "heldout_acc_seed",
         ],
     )
     write_tsv(
         OUT / "p7_multitrigger_seed_summary.tsv",
         summary,
         fieldnames=[
-            "trigger", "tau", "n_seeds",
-            "n_fire_mean", "n_fire_sd", "n_fire_cv",
-            "n_fire_ci_lo", "n_fire_ci_hi",
-            "headroom_bdy_total", "ddiv_neg_fire_total",
+            "trigger",
+            "tau",
+            "n_seeds",
+            "n_fire_mean",
+            "n_fire_sd",
+            "n_fire_cv",
+            "n_fire_ci_lo",
+            "n_fire_ci_hi",
+            "headroom_bdy_total",
+            "ddiv_neg_fire_total",
         ],
     )
     write_tsv(
         OUT / "p7_multitrigger_seed_rank.tsv",
         rank,
         fieldnames=[
-            "trigger", "tau", "top_seed", "top_n_fire",
-            "bottom_seed", "bottom_n_fire", "rank_spread",
+            "trigger",
+            "tau",
+            "top_seed",
+            "top_n_fire",
+            "bottom_seed",
+            "bottom_n_fire",
+            "rank_spread",
         ],
     )
 
@@ -428,39 +478,54 @@ def main():
         for m in METHODS:
             point = headline_for_method(n2[m], tau)
             ci = bootstrap_ci_metrics(n2[m], tau)
-            boot_rows.append({
-                "method": m,
-                "tau": f"{tau:.2f}",
-                "rule_id": JOINT_RULE_ID,
-                "n_fired_steps": point["n_fired_steps"],
-                "n_fired_prompts": point["n_fired_prompts"],
-                "n_boundary_escalated": point["n_boundary_escalated"],
-                "observed_restored_prompts": None,
-                "extra_rollouts": point["extra_rollouts"],
-                "rollout_saves": point["rollout_saves"],
-                "predicted_restored_prompts": point["predicted_restored_prompts"],
-                "net_rollouts_saved": point["net_rollouts_saved"],
-                "cost_ratio": f"{point['cost_ratio']:.6f}",
-                "net_rollouts_saved_ci_lo": ci["net_rollouts_saved_ci_lo"],
-                "net_rollouts_saved_ci_hi": ci["net_rollouts_saved_ci_hi"],
-                "rollout_saves_ci_lo": ci["rollout_saves_ci_lo"],
-                "rollout_saves_ci_hi": ci["rollout_saves_ci_hi"],
-                "predicted_restored_prompts_ci_lo": ci["predicted_restored_prompts_ci_lo"],
-                "predicted_restored_prompts_ci_hi": ci["predicted_restored_prompts_ci_hi"],
-                "cost_ratio_ci_lo": f"{ci['cost_ratio_ci_lo']:.6f}",
-                "cost_ratio_ci_hi": f"{ci['cost_ratio_ci_hi']:.6f}",
-            })
+            boot_rows.append(
+                {
+                    "method": m,
+                    "tau": f"{tau:.2f}",
+                    "rule_id": JOINT_RULE_ID,
+                    "n_fired_steps": point["n_fired_steps"],
+                    "n_fired_prompts": point["n_fired_prompts"],
+                    "n_boundary_escalated": point["n_boundary_escalated"],
+                    "observed_restored_prompts": None,
+                    "extra_rollouts": point["extra_rollouts"],
+                    "rollout_saves": point["rollout_saves"],
+                    "predicted_restored_prompts": point["predicted_restored_prompts"],
+                    "net_rollouts_saved": point["net_rollouts_saved"],
+                    "cost_ratio": f"{point['cost_ratio']:.6f}",
+                    "net_rollouts_saved_ci_lo": ci["net_rollouts_saved_ci_lo"],
+                    "net_rollouts_saved_ci_hi": ci["net_rollouts_saved_ci_hi"],
+                    "rollout_saves_ci_lo": ci["rollout_saves_ci_lo"],
+                    "rollout_saves_ci_hi": ci["rollout_saves_ci_hi"],
+                    "predicted_restored_prompts_ci_lo": ci["predicted_restored_prompts_ci_lo"],
+                    "predicted_restored_prompts_ci_hi": ci["predicted_restored_prompts_ci_hi"],
+                    "cost_ratio_ci_lo": f"{ci['cost_ratio_ci_lo']:.6f}",
+                    "cost_ratio_ci_hi": f"{ci['cost_ratio_ci_hi']:.6f}",
+                }
+            )
     write_tsv(
         OUT / "p7_joint_controller_ci.tsv",
         boot_rows,
         fieldnames=[
-            "method", "tau", "rule_id", "n_fired_steps", "n_fired_prompts",
-            "n_boundary_escalated", "observed_restored_prompts", "extra_rollouts",
-            "rollout_saves", "predicted_restored_prompts", "net_rollouts_saved", "cost_ratio",
-            "net_rollouts_saved_ci_lo", "net_rollouts_saved_ci_hi",
-            "rollout_saves_ci_lo", "rollout_saves_ci_hi",
-            "predicted_restored_prompts_ci_lo", "predicted_restored_prompts_ci_hi",
-            "cost_ratio_ci_lo", "cost_ratio_ci_hi",
+            "method",
+            "tau",
+            "rule_id",
+            "n_fired_steps",
+            "n_fired_prompts",
+            "n_boundary_escalated",
+            "observed_restored_prompts",
+            "extra_rollouts",
+            "rollout_saves",
+            "predicted_restored_prompts",
+            "net_rollouts_saved",
+            "cost_ratio",
+            "net_rollouts_saved_ci_lo",
+            "net_rollouts_saved_ci_hi",
+            "rollout_saves_ci_lo",
+            "rollout_saves_ci_hi",
+            "predicted_restored_prompts_ci_lo",
+            "predicted_restored_prompts_ci_hi",
+            "cost_ratio_ci_lo",
+            "cost_ratio_ci_hi",
         ],
     )
 
@@ -485,9 +550,9 @@ def main():
         "seed_rank": rank,
         "headline_metrics": {
             "n_seeds": len(seeds),
-            "best_trigger_by_seed_stability": sorted(
-                summary, key=lambda r: r["n_fire_cv"]
-            )[0]["trigger"],
+            "best_trigger_by_seed_stability": sorted(summary, key=lambda r: r["n_fire_cv"])[0][
+                "trigger"
+            ],
             "best_trigger_at_canonical_tau": sorted(
                 summary, key=lambda r: (r["trigger"], r["tau"])
             )[0]["trigger"],
@@ -497,28 +562,33 @@ def main():
             "H1_seed_cv_by_trigger": {
                 r["trigger"]: round(
                     statistics.mean(
-                        s["n_fire_cv"] for s in summary
-                        if s["trigger"] == r["trigger"]
-                    ), 4
+                        s["n_fire_cv"] for s in summary if s["trigger"] == r["trigger"]
+                    ),
+                    4,
                 )
                 for r in summary[:1]
             },
             "H2_joint_ci_width_at_tau_0_05": {
                 row["method"]: {
-                    "net_ci_width": row["net_rollouts_saved_ci_hi"] - row["net_rollouts_saved_ci_lo"],
+                    "net_ci_width": row["net_rollouts_saved_ci_hi"]
+                    - row["net_rollouts_saved_ci_lo"],
                     "cost_ratio_ci_width_pct": round(
-                        100 * (float(row["cost_ratio_ci_hi"]) - float(row["cost_ratio_ci_lo"]))
+                        100
+                        * (float(row["cost_ratio_ci_hi"]) - float(row["cost_ratio_ci_lo"]))
                         / float(row["cost_ratio"]),
                         2,
                     ),
                 }
-                for row in boot_rows if row["tau"] == "0.05"
+                for row in boot_rows
+                if row["tau"] == "0.05"
             },
             "H3_joint_ci_at_tau_0_07": {
                 row["method"]: {
-                    "net_ci_width": row["net_rollouts_saved_ci_hi"] - row["net_rollouts_saved_ci_lo"],
+                    "net_ci_width": row["net_rollouts_saved_ci_hi"]
+                    - row["net_rollouts_saved_ci_lo"],
                 }
-                for row in boot_rows if row["tau"] == "0.07"
+                for row in boot_rows
+                if row["tau"] == "0.07"
             },
         },
     }
@@ -538,13 +608,21 @@ def main():
     for row in boot_rows:
         if row["tau"] == "0.05":
             ci_w = row["net_rollouts_saved_ci_hi"] - row["net_rollouts_saved_ci_lo"]
-            cr_w = 100 * (float(row["cost_ratio_ci_hi"]) - float(row["cost_ratio_ci_lo"])) / float(row["cost_ratio"])
-            print(f"  {row['method']:6s}: net_rollouts_saved={row['net_rollouts_saved']:4d} [{row['net_rollouts_saved_ci_lo']:4d}, {row['net_rollouts_saved_ci_hi']:4d}] (CI width={ci_w}); cost_ratio={row['cost_ratio']} ±{cr_w:.2f}%")
+            cr_w = (
+                100
+                * (float(row["cost_ratio_ci_hi"]) - float(row["cost_ratio_ci_lo"]))
+                / float(row["cost_ratio"])
+            )
+            print(
+                f"  {row['method']:6s}: net_rollouts_saved={row['net_rollouts_saved']:4d} [{row['net_rollouts_saved_ci_lo']:4d}, {row['net_rollouts_saved_ci_hi']:4d}] (CI width={ci_w}); cost_ratio={row['cost_ratio']} ±{cr_w:.2f}%"
+            )
     print(f"\n=== Joint-controller CIs at τ=0.07 ===")
     for row in boot_rows:
         if row["tau"] == "0.07":
             ci_w = row["net_rollouts_saved_ci_hi"] - row["net_rollouts_saved_ci_lo"]
-            print(f"  {row['method']:6s}: net_rollouts_saved={row['net_rollouts_saved']:4d} [{row['net_rollouts_saved_ci_lo']:4d}, {row['net_rollouts_saved_ci_hi']:4d}] (CI width={ci_w})")
+            print(
+                f"  {row['method']:6s}: net_rollouts_saved={row['net_rollouts_saved']:4d} [{row['net_rollouts_saved_ci_lo']:4d}, {row['net_rollouts_saved_ci_hi']:4d}] (CI width={ci_w})"
+            )
     print(f"\nDONE — wrote outputs to {OUT}")
 
 

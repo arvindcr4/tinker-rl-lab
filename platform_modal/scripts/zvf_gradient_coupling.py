@@ -23,15 +23,15 @@ near-zero rewards and at near-one rewards, lowest at the learning
 frontier). The first two are textbook predictions; the third is the
 non-obvious one.
 """
+
 import csv
-import json
 import math
-import os
 import statistics
 from collections import defaultdict
 from pathlib import Path
 
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
@@ -69,7 +69,7 @@ def pearson(xs, ys):
         return float("nan"), float("nan"), float("nan")
     mx = sum(xs) / n
     my = sum(ys) / n
-    num = sum((x - mx) * (y - my) for x, y in zip(xs, ys))
+    num = sum((x - mx) * (y - my) for x, y in zip(xs, ys, strict=False))
     dx = math.sqrt(sum((x - mx) ** 2 for x in xs))
     dy = math.sqrt(sum((y - my) ** 2 for y in ys))
     if dx == 0 or dy == 0:
@@ -99,6 +99,7 @@ def per_seed_corr_for_G(rows, G, col):
 def block_bootstrap_ci(values, B=2000, seed=0):
     """Resample-with-replacement over the supplied list (per-seed correlations)."""
     import random
+
     random.seed(seed)
     n = len(values)
     if n < 2:
@@ -208,7 +209,16 @@ def write_tsv(path, rows, fieldnames):
 
 
 def tex_escape(value):
-    table = {"\\": r"\textbackslash{}", "_": r"\_", "%": r"\%", "&": r"\&", "#": r"\#", "$": r"\$", "{": r"\{", "}": r"\}"}
+    table = {
+        "\\": r"\textbackslash{}",
+        "_": r"\_",
+        "%": r"\%",
+        "&": r"\&",
+        "#": r"\#",
+        "$": r"\$",
+        "{": r"\{",
+        "}": r"\}",
+    }
     return "".join(table.get(char, char) for char in str(value))
 
 
@@ -226,9 +236,7 @@ def write_tex(out_path, per_g_pooled_rows, per_step_stats_rows, header=""):
     lines.append(r"\begin{table}[htbp]")
     lines.append(r"\centering")
     lines.append(r"\small")
-    lines.append(
-        r"\begin{tabular}{lrrrr}"
-    )
+    lines.append(r"\begin{tabular}{lrrrr}")
     lines.append(r"\toprule")
     lines.append(r"$G$ & proxy & $r_{\text{Pearson}}$ & 95\% boot.\ CI & $n$ \\")
     lines.append(r"\midrule")
@@ -262,10 +270,12 @@ def make_figure(rows, out_pdf):
     # Panel A: ZVF vs grad_norm scatter (per-G), per-step means
     ax = axes[0]
     for G in Gs:
-        pts = sorted(by_g_step.items(), key=lambda kv: (kv[0][1] if kv[0][0] == G else 0))
+        pts = sorted(by_g_step.items(), key=lambda kv: kv[0][1] if kv[0][0] == G else 0)
         ps = [
-            (statistics.mean([r["zvf"] for r in sub]),
-             statistics.mean([r["grad_norm"] for r in sub]))
+            (
+                statistics.mean([r["zvf"] for r in sub]),
+                statistics.mean([r["grad_norm"] for r in sub]),
+            )
             for (gg, _), sub in pts
             if gg == G
         ]
@@ -284,8 +294,10 @@ def make_figure(rows, out_pdf):
     for G in Gs:
         ps = sorted(
             [
-                (statistics.mean([r["zvf"] for r in sub]),
-                 statistics.mean([r["entropy"] for r in sub]))
+                (
+                    statistics.mean([r["zvf"] for r in sub]),
+                    statistics.mean([r["entropy"] for r in sub]),
+                )
                 for (gg, _), sub in by_g_step.items()
                 if gg == G
             ]
@@ -304,8 +316,10 @@ def make_figure(rows, out_pdf):
     for G in Gs:
         ps = sorted(
             [
-                (statistics.mean([r["zvf"] for r in sub]),
-                 statistics.mean([r["mean_reward"] for r in sub]))
+                (
+                    statistics.mean([r["zvf"] for r in sub]),
+                    statistics.mean([r["mean_reward"] for r in sub]),
+                )
                 for (gg, _), sub in by_g_step.items()
                 if gg == G
             ]

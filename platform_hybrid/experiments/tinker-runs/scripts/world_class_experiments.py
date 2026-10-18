@@ -1,13 +1,13 @@
 """World-Class Experiment Suite for NeurIPS/ICLR/ICML Submission.
 
 Runs GRPO experiments across the full Tinker model catalog:
-- Multi-model scaling: Qwen3-8B, Qwen3-32B, Qwen3-30B-A3B, Qwen3-235B-A22B, 
+- Multi-model scaling: Qwen3-8B, Qwen3-32B, Qwen3-30B-A3B, Qwen3-235B-A22B,
   Llama-3.1-8B, Llama-3.1-70B, Llama-3.3-70B, DeepSeek-V3.1, Nemotron-120B
 - Multi-task: GSM8K, MATH-500, Tool-Use, Code (HumanEval)
 - Loss function comparison: importance_sampling, ppo, cispo, dro
 - Cross-architecture: Dense vs MoE at matched active params
 
-Usage: 
+Usage:
   python world_class_experiments.py --experiment scaling   # Scale sweep
   python world_class_experiments.py --experiment loss_cmp  # Loss function comparison
   python world_class_experiments.py --experiment frontier   # Frontier models (235B, 70B)
@@ -15,22 +15,32 @@ Usage:
 
 import sys as _contract_sys
 from pathlib import Path as _ContractPath
+
 if len(_ContractPath(__file__).resolve().parents) > 4:
     _contract_sys.path.insert(0, str(_ContractPath(__file__).resolve().parents[4]))
-from platform_hybrid.experiments.framework_contracts import score_gsm8k, SCORER_ID, PROTOCOL_VERSION, aligned_datum, response_logprobs, group_zvf, stable_seed, experiment_spec, validate_resume, objective_identity, completion_receipt, require_completed, token_advantage
+from platform_hybrid.experiments.framework_contracts import (
+    score_gsm8k,
+    aligned_datum,
+    response_logprobs,
+    group_zvf,
+    stable_seed,
+)
 
 
 import atexit
+
 try:
     from codecarbon import EmissionsTracker
+
     _tracker = EmissionsTracker()
     _tracker.start()
     atexit.register(_tracker.stop)
 except ImportError:
     pass
 
-import os, json, re, warnings, random, argparse, time, traceback
+import os, json, re, warnings, random, argparse, traceback
 from datetime import datetime
+
 warnings.filterwarnings("ignore")
 
 API_KEY = os.environ.get("TINKER_API_KEY", "")
@@ -58,7 +68,7 @@ Respond with a JSON tool call: {"name": "tool_name", "arguments": {...}}"""
 MODELS = {
     # Dense models - scaling ladder
     "qwen3-8b": "Qwen/Qwen3-8B",
-    "qwen3-32b": "Qwen/Qwen3-32B", 
+    "qwen3-32b": "Qwen/Qwen3-32B",
     "qwen3.5-4b": "Qwen/Qwen3.5-4B",
     "qwen3.5-27b": "Qwen/Qwen3.5-27B",
     "llama-8b": "meta-llama/Llama-3.1-8B",
@@ -80,31 +90,58 @@ MODELS = {
     "kimi-k2": "moonshotai/Kimi-K2-Thinking",
 }
 
+
 # ── Dataset Loaders ──────────────────────────────────────────────────────
 def load_gsm8k():
     ds = load_dataset("openai/gsm8k", "main", split="train")
     examples = []
     for row in ds:
-        ans_match = re.search(r'####\s*([\-\d,\.]+)', row["answer"])
-        if not ans_match: continue
+        ans_match = re.search(r"####\s*([\-\d,\.]+)", row["answer"])
+        if not ans_match:
+            continue
         answer = ans_match.group(1).replace(",", "").strip()
         prompt = f"<|im_start|>system\n{SYSTEM_PROMPT_MATH}<|im_end|>\n<|im_start|>user\n{row['question']}<|im_end|>\n<|im_start|>assistant\n"
         examples.append((prompt, answer, "gsm8k"))
     return examples
+
 
 def load_tool_use():
     """Synthetic 5-tool task suite."""
     tool_tasks = [
         ("What is 234 * 567?", '{"name": "calculator", "arguments": {"expression": "234 * 567"}}'),
         ("What's the weather in Tokyo?", '{"name": "weather", "arguments": {"city": "Tokyo"}}'),
-        ("Search for recent advances in RLHF", '{"name": "search", "arguments": {"query": "recent advances in RLHF"}}'),
-        ("Remind me to submit the paper at 5pm", '{"name": "reminder", "arguments": {"message": "submit the paper", "time": "5pm"}}'),
-        ("Translate 'hello world' to French", '{"name": "translate", "arguments": {"text": "hello world", "target_lang": "French"}}'),
-        ("Calculate the square root of 144", '{"name": "calculator", "arguments": {"expression": "sqrt(144)"}}'),
-        ("What's the weather in New York?", '{"name": "weather", "arguments": {"city": "New York"}}'),
-        ("Search for NeurIPS 2026 submission deadline", '{"name": "search", "arguments": {"query": "NeurIPS 2026 submission deadline"}}'),
-        ("Remind me about the meeting tomorrow at 9am", '{"name": "reminder", "arguments": {"message": "meeting tomorrow", "time": "9am"}}'),
-        ("Translate 'good morning' to Japanese", '{"name": "translate", "arguments": {"text": "good morning", "target_lang": "Japanese"}}'),
+        (
+            "Search for recent advances in RLHF",
+            '{"name": "search", "arguments": {"query": "recent advances in RLHF"}}',
+        ),
+        (
+            "Remind me to submit the paper at 5pm",
+            '{"name": "reminder", "arguments": {"message": "submit the paper", "time": "5pm"}}',
+        ),
+        (
+            "Translate 'hello world' to French",
+            '{"name": "translate", "arguments": {"text": "hello world", "target_lang": "French"}}',
+        ),
+        (
+            "Calculate the square root of 144",
+            '{"name": "calculator", "arguments": {"expression": "sqrt(144)"}}',
+        ),
+        (
+            "What's the weather in New York?",
+            '{"name": "weather", "arguments": {"city": "New York"}}',
+        ),
+        (
+            "Search for NeurIPS 2026 submission deadline",
+            '{"name": "search", "arguments": {"query": "NeurIPS 2026 submission deadline"}}',
+        ),
+        (
+            "Remind me about the meeting tomorrow at 9am",
+            '{"name": "reminder", "arguments": {"message": "meeting tomorrow", "time": "9am"}}',
+        ),
+        (
+            "Translate 'good morning' to Japanese",
+            '{"name": "translate", "arguments": {"text": "good morning", "target_lang": "Japanese"}}',
+        ),
     ]
     examples = []
     for q, a in tool_tasks:
@@ -112,9 +149,11 @@ def load_tool_use():
         examples.append((prompt, a, "tool_use"))
     return examples
 
+
 # ── Reward Functions ─────────────────────────────────────────────────────
 def reward_math(response, answer):
     return score_gsm8k(response, answer)
+
 
 def reward_tool(response, expected):
     score = 0.0
@@ -122,27 +161,32 @@ def reward_tool(response, expected):
         parsed = json.loads(response.strip())
         score += 0.3  # Valid JSON
         exp = json.loads(expected)
-        if parsed.get("name") == exp.get("name"): score += 0.4
+        if parsed.get("name") == exp.get("name"):
+            score += 0.4
         if "arguments" in parsed:
             exp_keys = set(exp.get("arguments", {}).keys())
             got_keys = set(parsed.get("arguments", {}).keys())
-            if exp_keys and got_keys.issuperset(exp_keys): score += 0.3
-    except: pass
+            if exp_keys and got_keys.issuperset(exp_keys):
+                score += 0.3
+    except:
+        pass
     return score
 
+
 # ── GRPO Training Loop ───────────────────────────────────────────────────
-def run_grpo_experiment(model_name, model_id, task, seed=42, rank=32, lr=3e-5, 
-                         group=8, steps=200, batch=2, tag=""):
+def run_grpo_experiment(
+    model_name, model_id, task, seed=42, rank=32, lr=3e-5, group=8, steps=200, batch=2, tag=""
+):
     """Run a single GRPO experiment and save results."""
     rng = random.Random(seed)
     torch.manual_seed(seed)
-    
+
     exp_tag = tag or f"{task}_{model_name}_s{seed}"
-    print(f"\n{'='*70}")
+    print(f"\n{'=' * 70}")
     print(f"[{exp_tag}] Starting: model={model_id} task={task} seed={seed}")
     print(f"[{exp_tag}] Config: rank={rank} lr={lr} group={group} steps={steps}")
-    print(f"{'='*70}\n")
-    
+    print(f"{'=' * 70}\n")
+
     # Load data
     if task == "gsm8k":
         examples = load_gsm8k()
@@ -152,10 +196,10 @@ def run_grpo_experiment(model_name, model_id, task, seed=42, rank=32, lr=3e-5,
         reward_fn = reward_tool
     else:
         raise ValueError(f"Unknown task: {task}")
-    
+
     rng.shuffle(examples)
     print(f"[{exp_tag}] Loaded {len(examples)} examples")
-    
+
     # Connect to Tinker
     svc = tinker.ServiceClient()
     tc = svc.create_lora_training_client(base_model=model_id, rank=rank, seed=seed)
@@ -163,86 +207,102 @@ def run_grpo_experiment(model_name, model_id, task, seed=42, rank=32, lr=3e-5,
     w0 = tc.save_weights_for_sampler(name="s0").result()
     sc = tc.create_sampling_client(model_path=w0.path)
     print(f"[{exp_tag}] Connected. Run: {tc.model_id}")
-    
+
     # Training
     _adv = []
+
     def loss_fn(data, lp):
         losses = [(-_adv[i] * response_logprobs(data[i], lp[i]).sum()) for i in range(len(lp))]
         loss = torch.stack(losses).mean()
         return loss, {"loss": loss.item()}
-    
+
     step_rewards = []
     zero_loss_steps = 0
     zero_reward_steps = 0
     step_log = []
-    
+
     for step in range(steps):
         batch_examples = rng.sample(examples, min(batch, len(examples)))
         all_data, all_advs, batch_r = [], [], []
         reward_groups = []
-        
+
         for prompt_text, ans, _ in batch_examples:
             pid = tok.encode(prompt_text, add_special_tokens=False)
-            if len(pid) > 1024: pid = pid[:1024]
-            sp = T.SamplingParams(max_tokens=512, temperature=0.8, top_p=0.95, seed=stable_seed(seed, step, pid))
-            
+            if len(pid) > 1024:
+                pid = pid[:1024]
+            sp = T.SamplingParams(
+                max_tokens=512, temperature=0.8, top_p=0.95, seed=stable_seed(seed, step, pid)
+            )
+
             try:
-                resp = sc.sample(T.ModelInput.from_ints(pid), num_samples=group, sampling_params=sp).result()
+                resp = sc.sample(
+                    T.ModelInput.from_ints(pid), num_samples=group, sampling_params=sp
+                ).result()
             except Exception as e:
                 print(f"[{exp_tag}] Sample error at step {step}: {e}")
                 continue
-                
-            rews = [reward_fn(tok.decode(list(r.tokens), skip_special_tokens=True), ans) for r in resp.sequences]
+
+            rews = [
+                reward_fn(tok.decode(list(r.tokens), skip_special_tokens=True), ans)
+                for r in resp.sequences
+            ]
             mr = sum(rews) / len(rews)
             sr = (sum((r - mr) ** 2 for r in rews) / len(rews)) ** 0.5 + 1e-8
             advs = [(r - mr) / sr for r in rews]
             batch_r.extend(rews)
             reward_groups.append(rews)
-            
-            for r, a in zip(resp.sequences, advs):
+
+            for r, a in zip(resp.sequences, advs, strict=False):
                 rid = list(r.tokens)
                 fid = pid + rid
                 tid = fid[1:]
                 all_data.append(aligned_datum(T, pid, rid))
                 all_advs.append(a)
-        
-        if not all_data: continue
-        
+
+        if not all_data:
+            continue
+
         _adv = all_advs
         result = tc.forward_backward_custom(data=all_data, loss_fn=loss_fn).result()
         tc.optim_step(T.AdamParams(learning_rate=lr, beta1=0.9, beta2=0.95, eps=1e-8)).result()
-        
+
         avg = sum(batch_r) / len(batch_r)
         step_rewards.append(avg)
         loss_val = result.metrics.get("loss", 0)
-        if abs(loss_val) < 1e-6: zero_loss_steps += 1
-        if avg == 0: zero_reward_steps += 1
-        
+        if abs(loss_val) < 1e-6:
+            zero_loss_steps += 1
+        if avg == 0:
+            zero_reward_steps += 1
+
         # Compute ZVF
         zvf = group_zvf(reward_groups)
-        
-        step_log.append({
-            "step": step + 1,
-            "loss": loss_val,
-            "reward": avg,
-            "zvf": zvf,
-        })
-        
-        print(f"[{exp_tag}] {step+1:3d}/{steps} | loss={loss_val:.4f} | reward={avg:.3f} | acc={avg*100:.1f}%")
-        
+
+        step_log.append(
+            {
+                "step": step + 1,
+                "loss": loss_val,
+                "reward": avg,
+                "zvf": zvf,
+            }
+        )
+
+        print(
+            f"[{exp_tag}] {step + 1:3d}/{steps} | loss={loss_val:.4f} | reward={avg:.3f} | acc={avg * 100:.1f}%"
+        )
+
         # Save checkpoint periodically
         if True:  # v3: sampler refresh after every update
-            ckpt = tc.save_weights_for_sampler(name=f"s{step+1}").result()
+            ckpt = tc.save_weights_for_sampler(name=f"s{step + 1}").result()
             sc = tc.create_sampling_client(model_path=ckpt.path)
-    
+
     # Final save
     tc.save_state(name="final")
     final_ckpt = tc.save_weights_for_sampler(name="final").result()
-    
+
     # Compute summary stats
     last10 = step_rewards[-10:] if len(step_rewards) >= 10 else step_rewards
     first5 = step_rewards[:5] if len(step_rewards) >= 5 else step_rewards
-    
+
     result_summary = {
         "experiment": exp_tag,
         "model": model_id,
@@ -264,20 +324,21 @@ def run_grpo_experiment(model_name, model_id, task, seed=42, rank=32, lr=3e-5,
         "step_log": step_log,
         "timestamp": datetime.now().isoformat(),
     }
-    
+
     # Save results
     result_file = os.path.join(RESULTS_DIR, f"{exp_tag}.json")
     with open(result_file, "w") as f:
         json.dump(result_summary, f, indent=2)
-    
+
     print(f"\n[{exp_tag}] === FINAL REPORT ===")
-    print(f"[{exp_tag}] First-5 avg: {result_summary['first5_avg']*100:.1f}%")
-    print(f"[{exp_tag}] Last-10 avg: {result_summary['last10_avg']*100:.1f}%")
-    print(f"[{exp_tag}] Peak: {result_summary['peak']*100:.1f}%")
+    print(f"[{exp_tag}] First-5 avg: {result_summary['first5_avg'] * 100:.1f}%")
+    print(f"[{exp_tag}] Last-10 avg: {result_summary['last10_avg'] * 100:.1f}%")
+    print(f"[{exp_tag}] Peak: {result_summary['peak'] * 100:.1f}%")
     print(f"[{exp_tag}] Zero-loss: {result_summary['zero_loss_pct']:.0f}%")
     print(f"[{exp_tag}] Results saved to: {result_file}")
-    
+
     return result_summary
+
 
 # ── Experiment Suites ────────────────────────────────────────────────────
 def run_scaling_suite():
@@ -293,15 +354,25 @@ def run_scaling_suite():
     results = []
     for name, mid in models:
         try:
-            r = run_grpo_experiment(name, mid, "gsm8k", seed=42, rank=32, 
-                                     lr=3e-5, group=8, steps=200, batch=2,
-                                     tag=f"scale_gsm8k_{name}")
+            r = run_grpo_experiment(
+                name,
+                mid,
+                "gsm8k",
+                seed=42,
+                rank=32,
+                lr=3e-5,
+                group=8,
+                steps=200,
+                batch=2,
+                tag=f"scale_gsm8k_{name}",
+            )
             results.append(r)
         except Exception as e:
             print(f"ERROR on {name}: {e}")
             traceback.print_exc()
             results.append({"model": name, "error": str(e)})
     return results
+
 
 def run_frontier_suite():
     """Frontier models: largest available models on GSM8K."""
@@ -314,9 +385,18 @@ def run_frontier_suite():
     results = []
     for name, mid in models:
         try:
-            r = run_grpo_experiment(name, mid, "gsm8k", seed=42, rank=16,
-                                     lr=1e-5, group=4, steps=20, batch=1,
-                                     tag=f"frontier_gsm8k_{name}")
+            r = run_grpo_experiment(
+                name,
+                mid,
+                "gsm8k",
+                seed=42,
+                rank=16,
+                lr=1e-5,
+                group=4,
+                steps=20,
+                batch=1,
+                tag=f"frontier_gsm8k_{name}",
+            )
             results.append(r)
         except Exception as e:
             print(f"ERROR on {name}: {e}")
@@ -324,10 +404,11 @@ def run_frontier_suite():
             results.append({"model": name, "error": str(e)})
     return results
 
+
 def run_moe_comparison():
     """Dense vs MoE at matched active params."""
     experiments = [
-        # ~3B active: dense 4B vs MoE 30B-A3B  
+        # ~3B active: dense 4B vs MoE 30B-A3B
         ("qwen3.5-4b", "Qwen/Qwen3.5-4B", "Dense 4B"),
         ("qwen3-30b-moe", "Qwen/Qwen3-30B-A3B", "MoE 30B (3B active)"),
         ("qwen3-30b-moe-inst", "Qwen/Qwen3-30B-A3B-Instruct-2507", "MoE 30B Inst (3B active)"),
@@ -338,9 +419,18 @@ def run_moe_comparison():
     results = []
     for name, mid, desc in experiments:
         try:
-            r = run_grpo_experiment(name, mid, "gsm8k", seed=42, rank=32,
-                                     lr=3e-5, group=8, steps=200, batch=2,
-                                     tag=f"moe_cmp_{name}")
+            r = run_grpo_experiment(
+                name,
+                mid,
+                "gsm8k",
+                seed=42,
+                rank=32,
+                lr=3e-5,
+                group=8,
+                steps=200,
+                batch=2,
+                tag=f"moe_cmp_{name}",
+            )
             r["description"] = desc
             results.append(r)
         except Exception as e:
@@ -348,6 +438,7 @@ def run_moe_comparison():
             traceback.print_exc()
             results.append({"model": name, "error": str(e), "description": desc})
     return results
+
 
 def run_cross_task():
     """Same model across multiple tasks."""
@@ -361,9 +452,18 @@ def run_cross_task():
     for name, mid in models:
         for task in tasks:
             try:
-                r = run_grpo_experiment(name, mid, task, seed=42, rank=32,
-                                         lr=3e-5, group=8, steps=200, batch=2,
-                                         tag=f"cross_{task}_{name}")
+                r = run_grpo_experiment(
+                    name,
+                    mid,
+                    task,
+                    seed=42,
+                    rank=32,
+                    lr=3e-5,
+                    group=8,
+                    steps=200,
+                    batch=2,
+                    tag=f"cross_{task}_{name}",
+                )
                 results.append(r)
             except Exception as e:
                 print(f"ERROR {name}/{task}: {e}")
@@ -371,41 +471,47 @@ def run_cross_task():
                 results.append({"model": name, "task": task, "error": str(e)})
     return results
 
+
 # ── Main ─────────────────────────────────────────────────────────────────
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--experiment", choices=["scaling", "frontier", "moe", "cross_task", "all"],
-                        default="scaling")
+    parser.add_argument(
+        "--experiment",
+        choices=["scaling", "frontier", "moe", "cross_task", "all"],
+        default="scaling",
+    )
     args = parser.parse_args()
-    
+
     all_results = []
-    
+
     if args.experiment in ("scaling", "all"):
-        print("\n" + "="*70)
+        print("\n" + "=" * 70)
         print("RUNNING SCALING SUITE")
-        print("="*70)
+        print("=" * 70)
         all_results.extend(run_scaling_suite())
-    
+
     if args.experiment in ("frontier", "all"):
-        print("\n" + "="*70)
-        print("RUNNING FRONTIER SUITE") 
-        print("="*70)
+        print("\n" + "=" * 70)
+        print("RUNNING FRONTIER SUITE")
+        print("=" * 70)
         all_results.extend(run_frontier_suite())
-    
+
     if args.experiment in ("moe", "all"):
-        print("\n" + "="*70)
+        print("\n" + "=" * 70)
         print("RUNNING MOE COMPARISON SUITE")
-        print("="*70)
+        print("=" * 70)
         all_results.extend(run_moe_comparison())
-    
+
     if args.experiment in ("cross_task", "all"):
-        print("\n" + "="*70)
+        print("\n" + "=" * 70)
         print("RUNNING CROSS-TASK SUITE")
-        print("="*70)
+        print("=" * 70)
         all_results.extend(run_cross_task())
-    
+
     # Save combined results
-    combined_file = os.path.join(RESULTS_DIR, f"combined_{args.experiment}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json")
+    combined_file = os.path.join(
+        RESULTS_DIR, f"combined_{args.experiment}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+    )
     with open(combined_file, "w") as f:
         json.dump(all_results, f, indent=2)
     print(f"\nAll results saved to: {combined_file}")

@@ -55,10 +55,10 @@ Outputs
 - platform_hybrid/experiments/results/p5p8/p5_iter201_summary.json
   (H1-H5 verdicts + per-task findings + bootstrap CIs)
 """
+
 from __future__ import annotations
 import csv
 import json
-import math
 import random
 import statistics
 from collections import defaultdict
@@ -69,8 +69,10 @@ N_BOOT = 2000
 SEED = 20260706
 
 import sys
+
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
+from _paths import REPO_ROOT
+
 WORKTREE = REPO_ROOT
 CELLS_TSV = WORKTREE / "platform_hybrid/experiments/results/mega_20260704/cells.tsv"
 N2_METRICS = WORKTREE / "platform_hybrid/experiments/results/n2_reward_tensor_resume/metrics.tsv"
@@ -85,6 +87,7 @@ ALGO_AXIS = "method"  # grpo / aero / gift / areal
 
 from p5_review17_stats import json_safe
 
+
 def load_mega_cells() -> list[dict]:
     """Load 98 mega cells from cells.tsv."""
     rows = []
@@ -92,17 +95,19 @@ def load_mega_cells() -> list[dict]:
         rd = csv.DictReader(fh, delimiter="\t")
         for row in rd:
             try:
-                rows.append({
-                    "cell_id": row["cell_id"],
-                    "model_family": row["model_family"],
-                    "task_slice": row["task_slice"],
-                    "G": int(row["G"]),
-                    "temperature": float(row["temperature"]),
-                    "seed": int(row["seed"]),
-                    "zvf": float(row["zvf"]),
-                    "mean_reward": float(row["mean_reward"]),
-                    "mean_completion_len": float(row["mean_completion_len"]),
-                })
+                rows.append(
+                    {
+                        "cell_id": row["cell_id"],
+                        "model_family": row["model_family"],
+                        "task_slice": row["task_slice"],
+                        "G": int(row["G"]),
+                        "temperature": float(row["temperature"]),
+                        "seed": int(row["seed"]),
+                        "zvf": float(row["zvf"]),
+                        "mean_reward": float(row["mean_reward"]),
+                        "mean_completion_len": float(row["mean_completion_len"]),
+                    }
+                )
             except (KeyError, ValueError):
                 continue
     return rows
@@ -121,12 +126,14 @@ def load_n2_metrics() -> list[dict]:
                     for row in rd:
                         if "method" in row:
                             try:
-                                rows.append({
-                                    "method": row["method"],
-                                    "zvf": float(row.get("zvf", 0)),
-                                    "reward_mean": float(row["reward_mean"]),
-                                    "mean_completion_len": float(row["mean_len"]),
-                                })
+                                rows.append(
+                                    {
+                                        "method": row["method"],
+                                        "zvf": float(row.get("zvf", 0)),
+                                        "reward_mean": float(row["reward_mean"]),
+                                        "mean_completion_len": float(row["mean_len"]),
+                                    }
+                                )
                             except (ValueError, KeyError):
                                 continue
                 break
@@ -135,12 +142,14 @@ def load_n2_metrics() -> list[dict]:
             rd = csv.DictReader(fh, delimiter="\t")
             for row in rd:
                 try:
-                    rows.append({
-                        "method": row["method"],
-                        "zvf": float(row.get("zvf", 0)),
-                        "reward_mean": float(row["reward_mean"]),
-                                    "mean_completion_len": float(row["mean_len"]),
-                    })
+                    rows.append(
+                        {
+                            "method": row["method"],
+                            "zvf": float(row.get("zvf", 0)),
+                            "reward_mean": float(row["reward_mean"]),
+                            "mean_completion_len": float(row["mean_len"]),
+                        }
+                    )
                 except (ValueError, KeyError):
                     continue
     return rows
@@ -159,7 +168,7 @@ def eta_squared(groups: list[float], values: list[float]) -> float:
     if ss_total <= 0:
         return 0.0
     by_group = defaultdict(list)
-    for g, v in zip(groups, values):
+    for g, v in zip(groups, values, strict=False):
         by_group[g].append(v)
     ss_between = 0.0
     for g, vals in by_group.items():
@@ -169,8 +178,12 @@ def eta_squared(groups: list[float], values: list[float]) -> float:
 
 
 def stratified_bootstrap_ratio(
-    groups: list[str], values: list[float], algo_groups: list[str],
-    algo_values: list[float], n_boot: int = N_BOOT, seed: int = SEED,
+    groups: list[str],
+    values: list[float],
+    algo_groups: list[str],
+    algo_values: list[float],
+    n_boot: int = N_BOOT,
+    seed: int = SEED,
 ) -> dict:
     """Bootstrap the ratio eta^2_stack / eta^2_algo.
 
@@ -179,10 +192,10 @@ def stratified_bootstrap_ratio(
     """
     rng = random.Random(seed)
     by_stack_group = defaultdict(list)
-    for g, v in zip(groups, values):
+    for g, v in zip(groups, values, strict=False):
         by_stack_group[g].append(v)
     by_algo_group = defaultdict(list)
-    for g, v in zip(algo_groups, algo_values):
+    for g, v in zip(algo_groups, algo_values, strict=False):
         by_algo_group[g].append(v)
 
     point_stack = eta_squared(groups, values)
@@ -215,7 +228,8 @@ def stratified_bootstrap_ratio(
     boot_ratios.sort()
     if len(boot_ratios) != n_boot:
         return {
-            "n_valid": len(boot_ratios), "n_invalid": n_boot-len(boot_ratios),
+            "n_valid": len(boot_ratios),
+            "n_invalid": n_boot - len(boot_ratios),
             "status": "UNBOUNDED_OR_INVALID",
             "point_stack": point_stack,
             "point_algo": point_algo,
@@ -229,7 +243,9 @@ def stratified_bootstrap_ratio(
     hi = boot_ratios[int(0.975 * len(boot_ratios)) - 1]
     med = boot_ratios[len(boot_ratios) // 2]
     return {
-        "n_valid": len(boot_ratios), "n_invalid": 0, "status": "DESCRIPTIVE",
+        "n_valid": len(boot_ratios),
+        "n_invalid": 0,
+        "status": "DESCRIPTIVE",
         "point_stack": point_stack,
         "point_algo": point_algo,
         "point_ratio": point_ratio,
@@ -241,7 +257,9 @@ def stratified_bootstrap_ratio(
 
 
 def main():
-    print("Protocol review17-p5-v2: exploratory descriptive associations; no independent-run, causal, equivalence, or held-out prediction claim")
+    print(
+        "Protocol review17-p5-v2: exploratory descriptive associations; no independent-run, causal, equivalence, or held-out prediction claim"
+    )
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     mega = load_mega_cells()
     n2 = load_n2_metrics()
@@ -291,40 +309,44 @@ def main():
             # ratio on top axis
             groups = [str(c[top_axis]) for c in task_cells]
             vals = [c[ch] for c in task_cells]
-            boot = stratified_bootstrap_ratio(
-                groups, vals, algo_groups, algo_values
+            boot = stratified_bootstrap_ratio(groups, vals, algo_groups, algo_values)
+
+            per_task_results.append(
+                {
+                    "channel": ch,
+                    "task_slice": task,
+                    "top_axis": top_axis,
+                    "top_axis_eta2": f"{top_eta2:.6f}",
+                    "algo_eta2": f"{boot['point_algo']:.6f}",
+                    "point_ratio": f"{boot['point_ratio']:.4f}",
+                    "boot_lo": f"{boot['boot_lo']:.4f}",
+                    "boot_hi": f"{boot['boot_hi']:.4f}",
+                    "boot_median": f"{boot['boot_median']:.4f}",
+                    "ci_excludes_1": "yes" if boot["ci_excludes_1"] else "no",
+                    "n_task_cells": len(task_cells),
+                    "n_valid_ratio_draws": boot["n_valid"],
+                    "n_invalid_ratio_draws": boot["n_invalid"],
+                    "ratio_status": boot["status"],
+                }
+            )
+            dominant_axis_rows.append(
+                {
+                    "channel": ch,
+                    "task_slice": task,
+                    "model_family_eta2": f"{per_axis_eta2['model_family']:.6f}",
+                    "G_eta2": f"{per_axis_eta2['G']:.6f}",
+                    "temperature_eta2": f"{per_axis_eta2['temperature']:.6f}",
+                    "seed_eta2": f"{per_axis_eta2['seed']:.6f}",
+                    "top_axis": top_axis,
+                    "top_eta2": f"{top_eta2:.6f}",
+                }
             )
 
-            per_task_results.append({
-                "channel": ch,
-                "task_slice": task,
-                "top_axis": top_axis,
-                "top_axis_eta2": f"{top_eta2:.6f}",
-                "algo_eta2": f"{boot['point_algo']:.6f}",
-                "point_ratio": f"{boot['point_ratio']:.4f}",
-                "boot_lo": f"{boot['boot_lo']:.4f}",
-                "boot_hi": f"{boot['boot_hi']:.4f}",
-                "boot_median": f"{boot['boot_median']:.4f}",
-                "ci_excludes_1": "yes" if boot["ci_excludes_1"] else "no",
-                "n_task_cells": len(task_cells),
-                "n_valid_ratio_draws": boot["n_valid"],
-                "n_invalid_ratio_draws": boot["n_invalid"],
-                "ratio_status": boot["status"],
-            })
-            dominant_axis_rows.append({
-                "channel": ch,
-                "task_slice": task,
-                "model_family_eta2": f"{per_axis_eta2['model_family']:.6f}",
-                "G_eta2": f"{per_axis_eta2['G']:.6f}",
-                "temperature_eta2": f"{per_axis_eta2['temperature']:.6f}",
-                "seed_eta2": f"{per_axis_eta2['seed']:.6f}",
-                "top_axis": top_axis,
-                "top_eta2": f"{top_eta2:.6f}",
-            })
-
-            print(f"  {ch:20s} {task:18s} top={top_axis:14s} eta2={top_eta2:.4f} "
-                  f"algo={boot['point_algo']:.4f} ratio={boot['point_ratio']:.2f}x "
-                  f"CI=[{boot['boot_lo']:.2f}, {boot['boot_hi']:.2f}]")
+            print(
+                f"  {ch:20s} {task:18s} top={top_axis:14s} eta2={top_eta2:.4f} "
+                f"algo={boot['point_algo']:.4f} ratio={boot['point_ratio']:.2f}x "
+                f"CI=[{boot['boot_lo']:.2f}, {boot['boot_hi']:.2f}]"
+            )
 
     # write per-task TSV
     with (OUT_DIR / "p5_iter201_per_task_ratio.tsv").open("w") as fh:
@@ -337,7 +359,9 @@ def main():
         w.writerows(dominant_axis_rows)
 
     # H1: point ratio > 1 on every (channel, task_slice) cell
-    h1 = len(per_task_results) == len(CHANNELS) * len(TASK_SLICES) and all(float(r["point_ratio"]) > 1.0 for r in per_task_results)
+    h1 = len(per_task_results) == len(CHANNELS) * len(TASK_SLICES) and all(
+        float(r["point_ratio"]) > 1.0 for r in per_task_results
+    )
 
     # H2: bootstrap CI excludes 1 on >= 2/3 task_slices and 3/3 channels
     by_chan_task = defaultdict(list)
@@ -412,7 +436,9 @@ def main():
     print(f"H2 (CI excludes 1 >= 2/3 tasks per chan): {h2_per_chan} -> {'PASS' if h2 else 'FAIL'}")
     print(f"H3 (between-task variance > 0.5 per chan): {h3_per_chan} -> {'PASS' if h3 else 'FAIL'}")
     print(f"H4 (top axis consistent >= 2/3 per chan): {h4_per_chan} -> {'PASS' if h4 else 'FAIL'}")
-    print(f"H5 (zvf top axis varies): consistency={h5_consistency:.2f} -> {'PASS' if h5 else 'FAIL'}")
+    print(
+        f"H5 (zvf top axis varies): consistency={h5_consistency:.2f} -> {'PASS' if h5 else 'FAIL'}"
+    )
 
 
 if __name__ == "__main__":

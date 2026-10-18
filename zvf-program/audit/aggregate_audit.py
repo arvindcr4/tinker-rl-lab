@@ -94,8 +94,7 @@ def paired_bootstrap_ci(
     rng = random.Random(seed)
     n = len(differences)
     means = [
-        statistics.fmean(differences[rng.randrange(n)] for _ in range(n))
-        for _ in range(resamples)
+        statistics.fmean(differences[rng.randrange(n)] for _ in range(n)) for _ in range(resamples)
     ]
     alpha = 1.0 - confidence
     return percentile(means, alpha / 2.0), percentile(means, 1.0 - alpha / 2.0)
@@ -169,11 +168,15 @@ def _finite(value):
 
 def _integrate_unit_interval(function, tolerance=1e-11):
     from scipy.integrate import quad
-    return _finite(quad(function, 0, 1, epsabs=tolerance, points=[i/100 for i in range(1,100)])[0])
+
+    return _finite(
+        quad(function, 0, 1, epsabs=tolerance, points=[i / 100 for i in range(1, 100)])[0]
+    )
 
 
 def _chi_radius_expectation(degrees_freedom, function):
     from scipy.stats import chi
+
     if degrees_freedom < 1:
         raise ValueError("positive degrees of freedom required")
     return _finite(chi.expect(function, args=(degrees_freedom,)))
@@ -181,34 +184,41 @@ def _chi_radius_expectation(degrees_freedom, function):
 
 def _student_t_cdf(value, degrees_freedom):
     from scipy.stats import t
+
     return _finite(t.cdf(value, degrees_freedom))
 
 
 @functools.lru_cache(maxsize=None)
 def _student_t_critical(degrees_freedom, alpha):
     from scipy.stats import t
-    return _finite(t.ppf(1-alpha/2, degrees_freedom))
+
+    return _finite(t.ppf(1 - alpha / 2, degrees_freedom))
 
 
 def _paired_t_power_from_ncp(noncentrality, sample_size, alpha):
     from scipy.stats import nct
-    critical = _student_t_critical(sample_size-1, alpha)
-    return _finite(nct.cdf(-critical, sample_size-1, noncentrality)
-                   + nct.sf(critical, sample_size-1, noncentrality))
+
+    critical = _student_t_critical(sample_size - 1, alpha)
+    return _finite(
+        nct.cdf(-critical, sample_size - 1, noncentrality)
+        + nct.sf(critical, sample_size - 1, noncentrality)
+    )
 
 
 @functools.lru_cache(maxsize=None)
 def _student_t_critical_one_sided(degrees_freedom, alpha):
     from scipy.stats import t
-    return _finite(t.ppf(1-alpha, degrees_freedom))
+
+    return _finite(t.ppf(1 - alpha, degrees_freedom))
 
 
 def paired_t_power_one_sided(standardized_effect, sample_size, alpha):
     from scipy.stats import nct
+
     if type(sample_size) is not int or sample_size < 2 or not 0 < alpha < 1:
         raise ValueError("sample_size >= 2 and alpha in (0,1) required")
-    critical = _student_t_critical_one_sided(sample_size-1, alpha)
-    return _finite(nct.sf(critical, sample_size-1, standardized_effect*math.sqrt(sample_size)))
+    critical = _student_t_critical_one_sided(sample_size - 1, alpha)
+    return _finite(nct.sf(critical, sample_size - 1, standardized_effect * math.sqrt(sample_size)))
 
 
 def minimum_paired_t_sample_size(
@@ -219,18 +229,13 @@ def minimum_paired_t_sample_size(
 ) -> int:
     """Smallest n whose exact one-sided paired-t power reaches target_power."""
     for sample_size in range(2, maximum + 1):
-        if (
-            paired_t_power_one_sided(standardized_effect, sample_size, alpha)
-            >= target_power
-        ):
+        if paired_t_power_one_sided(standardized_effect, sample_size, alpha) >= target_power:
             return sample_size
     raise ValueError("no sample size up to the maximum reaches the target power")
 
 
 @functools.lru_cache(maxsize=None)
-def _standardized_paired_t_mde(
-    sample_size: int, alpha: float, target_power: float
-) -> float:
+def _standardized_paired_t_mde(sample_size: int, alpha: float, target_power: float) -> float:
     lower, upper = 0.0, 1.0
     while _paired_t_power_from_ncp(upper, sample_size, alpha) < target_power:
         upper *= 2.0
@@ -261,7 +266,9 @@ def paired_t_p_value(differences: list[float]) -> float:
     standard_deviation = statistics.stdev(differences)
     if standard_deviation == 0.0:
         return 1.0
-    statistic = abs(statistics.fmean(differences)) * math.sqrt(len(differences)) / standard_deviation
+    statistic = (
+        abs(statistics.fmean(differences)) * math.sqrt(len(differences)) / standard_deviation
+    )
     return min(1.0, 2.0 * (1.0 - _student_t_cdf(statistic, len(differences) - 1)))
 
 
@@ -321,7 +328,13 @@ def validate_records(
             errors.append(f"{path}: stack_fingerprint must be a non-empty string")
         else:
             fingerprints.add(record["stack_fingerprint"])
-        for field in ("heldout_score", "last10_reward", "mean_zvf", "mean_gu", "wall_clock_seconds"):
+        for field in (
+            "heldout_score",
+            "last10_reward",
+            "mean_zvf",
+            "mean_gu",
+            "wall_clock_seconds",
+        ):
             if not isinstance(record[field], (int, float)) or not math.isfinite(record[field]):
                 errors.append(f"{path}: {field} must be a finite number")
         if not isinstance(record["rollouts"], int) or record["rollouts"] < 0:
@@ -339,19 +352,21 @@ def validate_records(
             except AuditError as exc:
                 errors.append(str(exc))
             else:
-                errors.extend(f"{path}: {error}" for error in record_errors(
-                    record, manifest_record, heldout_n=heldout_n,
-                    expected_execution=execution_contract(core), expected_changes=expected_changes))
+                errors.extend(
+                    f"{path}: {error}"
+                    for error in record_errors(
+                        record,
+                        manifest_record,
+                        heldout_n=heldout_n,
+                        expected_execution=execution_contract(core),
+                        expected_changes=expected_changes,
+                    )
+                )
                 trace = manifest_record.get("heldout_trace")
                 if not isinstance(trace, list) or len(trace) != heldout_n:
-                    errors.append(
-                        f"{path}: manifest heldout_trace must contain {heldout_n} rows"
-                    )
+                    errors.append(f"{path}: manifest heldout_trace must contain {heldout_n} rows")
                 else:
-                    indices = [
-                        row.get("index") if isinstance(row, dict) else None
-                        for row in trace
-                    ]
+                    indices = [row.get("index") if isinstance(row, dict) else None for row in trace]
                     if indices != list(range(heldout_n)):
                         errors.append(f"{path}: manifest heldout indices are not contiguous")
                     hashes = [
@@ -359,17 +374,14 @@ def validate_records(
                         for row in trace
                     ]
                     valid_hashes = all(
-                        isinstance(value, str)
-                        and re.fullmatch(r"[0-9a-f]{64}", value)
+                        isinstance(value, str) and re.fullmatch(r"[0-9a-f]{64}", value)
                         for value in hashes
                     )
                     if not valid_hashes:
                         errors.append(f"{path}: manifest heldout rows lack valid completion hashes")
 
                     correct = sum(
-                        row.get("correct") is True
-                        for row in trace
-                        if isinstance(row, dict)
+                        row.get("correct") is True for row in trace if isinstance(row, dict)
                     )
                     if not math.isclose(
                         correct / heldout_n,
@@ -388,7 +400,9 @@ def validate_records(
     return indexed, errors
 
 
-def missing_units(prereg: dict[str, Any], indexed: dict[tuple[str, int], dict[str, Any]]) -> list[str]:
+def missing_units(
+    prereg: dict[str, Any], indexed: dict[tuple[str, int], dict[str, Any]]
+) -> list[str]:
     core = prereg["core_stratum"]
     return [
         f"{arm}/seed-{seed}"
@@ -423,7 +437,9 @@ def verdict(
     return "INCONCLUSIVE"
 
 
-def aggregate(prereg: dict[str, Any], indexed: dict[tuple[str, int], dict[str, Any]]) -> dict[str, Any]:
+def aggregate(
+    prereg: dict[str, Any], indexed: dict[tuple[str, int], dict[str, Any]]
+) -> dict[str, Any]:
     core = prereg["core_stratum"]
     baseline = core["baseline_arm"]
     seeds = core["seeds"]
@@ -434,8 +450,7 @@ def aggregate(prereg: dict[str, Any], indexed: dict[tuple[str, int], dict[str, A
         if arm == baseline:
             continue
         differences = [
-            indexed[(arm, seed)]["heldout_score"]
-            - indexed[(baseline, seed)]["heldout_score"]
+            indexed[(arm, seed)]["heldout_score"] - indexed[(baseline, seed)]["heldout_score"]
             for seed in seeds
         ]
         ci95 = paired_bootstrap_ci(differences, 0.95)

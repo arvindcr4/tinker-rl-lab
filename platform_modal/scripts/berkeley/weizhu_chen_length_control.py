@@ -37,16 +37,15 @@ from __future__ import annotations
 
 import csv
 import json
-import math
-import os
 from collections import defaultdict
 from pathlib import Path
-from statistics import median, mean, stdev
+from statistics import median, mean
 
 import sys
 
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
+from _paths import REPO_ROOT
+
 WORKTREE = REPO_ROOT
 sys.path.insert(0, str(WORKTREE))
 
@@ -55,7 +54,9 @@ OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 LENGTH_BIAS = WORKTREE / "platform_hybrid/experiments" / "results" / "length_bias.tsv"
 BFCLV4 = WORKTREE / "platform_hybrid/experiments" / "results" / "bfclv4_tool_use.tsv"
-LENGTH_PAIRED = WORKTREE / "platform_hybrid/experiments" / "results" / "length_bias_iter100_paired.tsv"
+LENGTH_PAIRED = (
+    WORKTREE / "platform_hybrid/experiments" / "results" / "length_bias_iter100_paired.tsv"
+)
 
 
 def _read_tsv(path: Path) -> list[dict]:
@@ -90,16 +91,18 @@ def h1_length_explosion_classifier(perrun: list[dict]) -> dict:
         zvf = float(r["mean_zvf"])
         last10_acc = float(r["last10_reward"])
         label = "Explosion" if lhd > 0 else "Controlled"
-        classified.append({
-            "task": r["task"],
-            "algo": r["algo"],
-            "seed": r["seed"],
-            "len_half_delta": lhd,
-            "rew_slope": rwd,
-            "mean_zvf": zvf,
-            "last10_reward": last10_acc,
-            "class": label,
-        })
+        classified.append(
+            {
+                "task": r["task"],
+                "algo": r["algo"],
+                "seed": r["seed"],
+                "len_half_delta": lhd,
+                "rew_slope": rwd,
+                "mean_zvf": zvf,
+                "last10_reward": last10_acc,
+                "class": label,
+            }
+        )
     n_exp = sum(1 for c in classified if c["class"] == "Explosion")
     n_ctl = sum(1 for c in classified if c["class"] == "Controlled")
     zvf_exp = [c["mean_zvf"] for c in classified if c["class"] == "Explosion"]
@@ -135,14 +138,16 @@ def h2_implied_beta(perrun: list[dict]) -> dict:
             # We back-solve for β such that the policy becomes length-neutral
             # i.e. dR/dstep_corr = 0 -> β*ls + rs = 0 -> β = -rs/ls.
             beta = -rs / ls
-        rows.append({
-            "task": r["task"],
-            "algo": r["algo"],
-            "seed": r["seed"],
-            "len_slope": ls,
-            "rew_slope": rs,
-            "beta_implied": beta,
-        })
+        rows.append(
+            {
+                "task": r["task"],
+                "algo": r["algo"],
+                "seed": r["seed"],
+                "len_slope": ls,
+                "rew_slope": rs,
+                "beta_implied": beta,
+            }
+        )
     betas = [r["beta_implied"] for r in rows if r["beta_implied"] is not None]
     return {
         "n_with_beta": len(betas),
@@ -185,20 +190,22 @@ def h3_rho1_projection(perrun: list[dict]) -> dict:
         eff_ratio = max(0.0, min(1.0, eff_ratio))
         expected_acc_after_cap = a10 * (1.0 - 0.30 * (1.0 - eff_ratio))
         length_saved_frac = 0.30  # by construction
-        rows.append({
-            "task": r["task"],
-            "algo": r["algo"],
-            "seed": r["seed"],
-            "last10_len": l10,
-            "last10_reward": a10,
-            "apt_10": apt_10,
-            "apt_5": apt_5,
-            "apt_median": apt_median,
-            "apt_efficiency_ratio": eff_ratio,
-            "expected_acc_after_30pct_cap": expected_acc_after_cap,
-            "expected_acc_drop": a10 - expected_acc_after_cap,
-            "length_saved_frac": length_saved_frac,
-        })
+        rows.append(
+            {
+                "task": r["task"],
+                "algo": r["algo"],
+                "seed": r["seed"],
+                "last10_len": l10,
+                "last10_reward": a10,
+                "apt_10": apt_10,
+                "apt_5": apt_5,
+                "apt_median": apt_median,
+                "apt_efficiency_ratio": eff_ratio,
+                "expected_acc_after_30pct_cap": expected_acc_after_cap,
+                "expected_acc_drop": a10 - expected_acc_after_cap,
+                "length_saved_frac": length_saved_frac,
+            }
+        )
     # Per-task aggregate: mean expected acc drop
     by_task: dict[str, list[float]] = defaultdict(list)
     for r in rows:
@@ -215,21 +222,25 @@ def h4_pareto(perrun: list[dict]) -> dict:
     """Pareto front: dominated if exists another with higher acc AND lower length."""
     pts = []
     for r in perrun:
-        pts.append({
-            "task": r["task"],
-            "algo": r["algo"],
-            "seed": r["seed"],
-            "acc": float(r["last10_reward"]),
-            "length": float(r["last10_len"]),
-        })
+        pts.append(
+            {
+                "task": r["task"],
+                "algo": r["algo"],
+                "seed": r["seed"],
+                "acc": float(r["last10_reward"]),
+                "length": float(r["last10_len"]),
+            }
+        )
     pareto = []
     for i, p in enumerate(pts):
         dominated = False
         for j, q in enumerate(pts):
             if i == j:
                 continue
-            if q["acc"] >= p["acc"] and q["length"] <= p["length"] and (
-                q["acc"] > p["acc"] or q["length"] < p["length"]
+            if (
+                q["acc"] >= p["acc"]
+                and q["length"] <= p["length"]
+                and (q["acc"] > p["acc"] or q["length"] < p["length"])
             ):
                 dominated = True
                 break
@@ -261,8 +272,11 @@ def h5_bfcl_sampling(bfcl: list[dict]) -> dict:
         "sparse_mean_reward": mean(sparse_means) if sparse_means else None,
         "dense_mean_reward": mean(dense_means) if dense_means else None,
         "delta_density": (dense_nonzero / len(dense) - sparse_nonzero / len(sparse))
-            if sparse and dense else None,
-        "delta_mean_reward": (mean(dense_means) - mean(sparse_means)) if sparse_means and dense_means else None,
+        if sparse and dense
+        else None,
+        "delta_mean_reward": (mean(dense_means) - mean(sparse_means))
+        if sparse_means and dense_means
+        else None,
         "sparse_mean_zvf": mean(sparse_zvf) if sparse_zvf else None,
         "dense_mean_zvf": mean(dense_zvf) if dense_zvf else None,
         "rows": bfcl,
@@ -283,22 +297,34 @@ def main() -> None:
     h4 = h4_pareto(perrun)
     h5 = h5_bfcl_sampling(bfcl)
 
-    print(f"[H1] Explosion: {h1['n_explosion']}/{h1['n_cells']}  "
-          f"Controlled: {h1['n_controlled']}/{h1['n_cells']}")
-    print(f"[H1] Δzvf (Controlled-Explosion) = {h1['delta_zvf']:.4f}  "
-          f"Δacc (Controlled-Explosion) = {h1['delta_acc']:.4f}")
-    print(f"[H2] β_implied mean={h2['beta_mean']:.4f}  median={h2['beta_median']:.4f}  "
-          f"pct_positive={h2['beta_pct_positive']:.3f}")
-    print(f"[H3] apt_median={h3['apt_median_overall']:.4f}  "
-          f"per-task mean acc drop: "
-          + ", ".join(f"{t}={v:.4f}" for t, v in h3["mean_acc_drop_per_task"].items()))
+    print(
+        f"[H1] Explosion: {h1['n_explosion']}/{h1['n_cells']}  "
+        f"Controlled: {h1['n_controlled']}/{h1['n_cells']}"
+    )
+    print(
+        f"[H1] Δzvf (Controlled-Explosion) = {h1['delta_zvf']:.4f}  "
+        f"Δacc (Controlled-Explosion) = {h1['delta_acc']:.4f}"
+    )
+    print(
+        f"[H2] β_implied mean={h2['beta_mean']:.4f}  median={h2['beta_median']:.4f}  "
+        f"pct_positive={h2['beta_pct_positive']:.3f}"
+    )
+    print(
+        f"[H3] apt_median={h3['apt_median_overall']:.4f}  "
+        f"per-task mean acc drop: "
+        + ", ".join(f"{t}={v:.4f}" for t, v in h3["mean_acc_drop_per_task"].items())
+    )
     print(f"[H4] Pareto: {h4['n_pareto']}/{h4['n_pts']}")
     for p in h4["pareto"]:
-        print(f"      {p['task']}/{p['algo']}/s{p['seed']}  acc={p['acc']:.4f}  len={p['length']:.4f}")
-    print(f"[H5] sparse_density={h5['sparse_density']:.3f}  dense_density={h5['dense_density']:.3f}  "
-          f"Δdensity={h5['delta_density']:.3f}  "
-          f"Δmean_reward={h5['delta_mean_reward']:.4f}  "
-          f"sparse_zvf={h5['sparse_mean_zvf']:.3f}  dense_zvf={h5['dense_mean_zvf']:.3f}")
+        print(
+            f"      {p['task']}/{p['algo']}/s{p['seed']}  acc={p['acc']:.4f}  len={p['length']:.4f}"
+        )
+    print(
+        f"[H5] sparse_density={h5['sparse_density']:.3f}  dense_density={h5['dense_density']:.3f}  "
+        f"Δdensity={h5['delta_density']:.3f}  "
+        f"Δmean_reward={h5['delta_mean_reward']:.4f}  "
+        f"sparse_zvf={h5['sparse_mean_zvf']:.3f}  dense_zvf={h5['dense_mean_zvf']:.3f}"
+    )
 
     # Verdicts
     verdicts: dict[str, str] = {}
@@ -344,9 +370,39 @@ def main() -> None:
 
     # Write outputs
     for name, data, cols in [
-        ("H1_length_explosion", h1, ["task", "algo", "seed", "len_half_delta", "rew_slope", "mean_zvf", "last10_reward", "class"]),
+        (
+            "H1_length_explosion",
+            h1,
+            [
+                "task",
+                "algo",
+                "seed",
+                "len_half_delta",
+                "rew_slope",
+                "mean_zvf",
+                "last10_reward",
+                "class",
+            ],
+        ),
         ("H2_implied_beta", h2, ["task", "algo", "seed", "len_slope", "rew_slope", "beta_implied"]),
-        ("H3_rho1_projection", h3, ["task", "algo", "seed", "last10_len", "last10_reward", "apt_10", "apt_5", "apt_median", "apt_efficiency_ratio", "expected_acc_after_30pct_cap", "expected_acc_drop", "length_saved_frac"]),
+        (
+            "H3_rho1_projection",
+            h3,
+            [
+                "task",
+                "algo",
+                "seed",
+                "last10_len",
+                "last10_reward",
+                "apt_10",
+                "apt_5",
+                "apt_median",
+                "apt_efficiency_ratio",
+                "expected_acc_after_30pct_cap",
+                "expected_acc_drop",
+                "length_saved_frac",
+            ],
+        ),
         ("H4_pareto", h4, ["task", "algo", "seed", "acc", "length"]),
     ]:
         path = OUT_DIR / f"weizhu_chen_{name}.tsv"
@@ -361,13 +417,18 @@ def main() -> None:
     with open(bfcl_path, "w") as f:
         f.write("step\treward_sparse\treward_dense\tzvf_sparse\tzvf_dense\n")
         for r in h5["rows"]:
-            f.write("\t".join([
-                str(r.get("step", "")),
-                str(r.get("reward_sparse", "")),
-                str(r.get("reward_dense", "")),
-                str(r.get("zvf_sparse", "")),
-                str(r.get("zvf_dense", "")),
-            ]) + "\n")
+            f.write(
+                "\t".join(
+                    [
+                        str(r.get("step", "")),
+                        str(r.get("reward_sparse", "")),
+                        str(r.get("reward_dense", "")),
+                        str(r.get("zvf_sparse", "")),
+                        str(r.get("zvf_dense", "")),
+                    ]
+                )
+                + "\n"
+            )
     print(f"  wrote {bfcl_path.relative_to(WORKTREE)}")
 
     summary = {

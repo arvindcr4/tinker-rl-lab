@@ -77,8 +77,7 @@ def locate_repo_root(explicit: Path | None) -> Path:
             return candidate
     searched = ", ".join(str(path) for path in candidates)
     raise SystemExit(
-        "could not locate repository evidence; pass --repo-root PATH. "
-        f"Searched: {searched}"
+        f"could not locate repository evidence; pass --repo-root PATH. Searched: {searched}"
     )
 
 
@@ -89,9 +88,7 @@ def homogeneous_probability(p: float, group_size: int) -> float:
         raise ValueError("group_size must be at least 2")
     if p in (0.0, 1.0):
         return 1.0
-    return math.exp(group_size * math.log(p)) + math.exp(
-        group_size * math.log1p(-p)
-    )
+    return math.exp(group_size * math.log(p)) + math.exp(group_size * math.log1p(-p))
 
 
 def informative_probability(p: float, group_size: int) -> float:
@@ -138,10 +135,15 @@ def sanity_check_math() -> dict[str, Any]:
             left = left_i / 100.0
             right = min(0.99, left + 0.01)
             midpoint = (left + right) / 2.0
-            assert homogeneous_probability(midpoint, group_size) <= (
-                homogeneous_probability(left, group_size)
-                + homogeneous_probability(right, group_size)
-            ) / 2.0 + 1e-15
+            assert (
+                homogeneous_probability(midpoint, group_size)
+                <= (
+                    homogeneous_probability(left, group_size)
+                    + homogeneous_probability(right, group_size)
+                )
+                / 2.0
+                + 1e-15
+            )
 
     for p in (1e-12, 0.001, 0.01, 0.1, 0.5, 0.9, 0.999, 1.0 - 1e-12):
         for group_size in (2, 8, 32):
@@ -227,14 +229,25 @@ def verify_s1(repo_root: Path) -> dict[str, Any]:
         assert receipt["status"] == "PASS"
         assert receipt["fixture_digest"] == freeze["fixture_digest"]
         assert len(receipt["intended_cases"]) == 14
-        assert all(case["verdict"] == "PASS" and case["conforms"] for case in receipt["intended_cases"])
+        assert all(
+            case["verdict"] == "PASS" and case["conforms"] for case in receipt["intended_cases"]
+        )
         assert len(receipt["controller_matrix"]) == 36
         assert {case["policy"] for case in receipt["controller_matrix"]} == {
-            "static_g8", "static_g16", "symmetric_zvf", "failure_only",
-            "boundary_aware", "full_triage",
+            "static_g8",
+            "static_g16",
+            "symmetric_zvf",
+            "failure_only",
+            "boundary_aware",
+            "full_triage",
         }
         assert {case["case"] for case in receipt["controller_matrix"]} == {
-            "all_wrong", "all_correct", "mixed", "noisy", "missing", "delayed"
+            "all_wrong",
+            "all_correct",
+            "mixed",
+            "noisy",
+            "missing",
+            "delayed",
         }
         verdict_counts = Counter(case["verdict"] for case in receipt["native_cases"])
         expected = (
@@ -243,7 +256,9 @@ def verify_s1(repo_root: Path) -> dict[str, Any]:
             else {"MATERIAL_DIFFERENCE": 1, "NOT_TESTED": 4}
         )
         assert dict(verdict_counts) == expected
-        assert [case["verdict"] for case in receipt["native_cases"]] == freeze["native_verdicts"][stack]
+        assert [case["verdict"] for case in receipt["native_cases"]] == freeze["native_verdicts"][
+            stack
+        ]
 
         for name, expected_hash in freeze["source_hashes"][stack].items():
             assert sha256(s1 / name) == expected_hash
@@ -313,8 +328,7 @@ def verify_campaign(repo_root: Path) -> dict[str, Any]:
         },
         "failed_validation": {"corpus__filtered_variable_length__s11"},
         "pending_quota_reset": {
-            f"fpilot__{condition}__balanced_equal_length__s37"
-            for condition in conditions
+            f"fpilot__{condition}__balanced_equal_length__s37" for condition in conditions
         },
         "descoped_contract_infeasible": {
             "corpus__filtered_variable_length__s23",
@@ -359,14 +373,11 @@ def verify_campaign(repo_root: Path) -> dict[str, Any]:
     assert python_constant(pilot_objective, "TRL_REWARD_EPSILON") == 1e-4
 
     expected_versions = {
-        item.split("==", 1)[0]: item.split("==", 1)[1]
-        for item in prereg["runtime"]["package_pins"]
+        item.split("==", 1)[0]: item.split("==", 1)[1] for item in prereg["runtime"]["package_pins"]
     }
     control_archive = repo_root / "zvf-program/flagship/pilot/provenance/r3-control-source.tar.gz"
     frozen_sources = archived_sha256(control_archive)
-    executed_objective_path = (
-        repo_root / "zvf-program/flagship/pilot/provenance/r4-2-objective.py"
-    )
+    executed_objective_path = repo_root / "zvf-program/flagship/pilot/provenance/r4-2-objective.py"
     assert sha256(executed_objective_path) == (
         "980a56a1651299a5adbe7a0927c13b12d42d9d7e1a36205500a24d5eeba9b61b"
     )
@@ -435,30 +446,39 @@ def verify_campaign(repo_root: Path) -> dict[str, Any]:
         assert ledger["charged_generated_tokens"] > 0
         assert ledger["total_active_tokens"] > 0
         assert ledger["total_padded_tokens"] >= ledger["total_active_tokens"]
-        assert all(ledger[name] > 0 for name in (
-            "policy_forward_flops", "diagnostic_backward_flops",
-            "optimizer_backward_flops", "replay_generation_flops",
-        ))
+        assert all(
+            ledger[name] > 0
+            for name in (
+                "policy_forward_flops",
+                "diagnostic_backward_flops",
+                "optimizer_backward_flops",
+                "replay_generation_flops",
+            )
+        )
         corpus_fingerprints[unit["seed"]].add(record["corpus_fingerprint"])
 
-        scientific.append({
-            "id": unit["id"],
-            "condition": unit["condition"],
-            "seed": unit["seed"],
-            "start_accuracy": evaluations[0]["accuracy"],
-            "final_accuracy": record["final_accuracy"],
-            "heldout_n": 128,
-            "charged_generated_tokens": ledger["charged_generated_tokens"],
-            "joint_zero": relations["joint_zero"],
-            "nonzero": relations["nonzero"],
-            "one_sided_zero": 0,
-            "registered_equivalent_steps": equivalent_steps,
-            "minimum_nonzero_cosine": min(item["gradient_cosine"] for item in nonzero),
-            "maximum_nonzero_relative_l2": max(item["gradient_relative_l2"] for item in nonzero),
-            "wandb_run_id": record["wandb_run_id"],
-            "hf_artifact_commit": record["hf_artifact_commit"],
-            "acceptance_sha256": sha256(path),
-        })
+        scientific.append(
+            {
+                "id": unit["id"],
+                "condition": unit["condition"],
+                "seed": unit["seed"],
+                "start_accuracy": evaluations[0]["accuracy"],
+                "final_accuracy": record["final_accuracy"],
+                "heldout_n": 128,
+                "charged_generated_tokens": ledger["charged_generated_tokens"],
+                "joint_zero": relations["joint_zero"],
+                "nonzero": relations["nonzero"],
+                "one_sided_zero": 0,
+                "registered_equivalent_steps": equivalent_steps,
+                "minimum_nonzero_cosine": min(item["gradient_cosine"] for item in nonzero),
+                "maximum_nonzero_relative_l2": max(
+                    item["gradient_relative_l2"] for item in nonzero
+                ),
+                "wandb_run_id": record["wandb_run_id"],
+                "hf_artifact_commit": record["hf_artifact_commit"],
+                "acceptance_sha256": sha256(path),
+            }
+        )
 
     assert {item["id"] for item in scientific} == expected_scientific_ids
     assert all(len(values) == 1 for values in corpus_fingerprints.values())
@@ -474,12 +494,47 @@ def verify_campaign(repo_root: Path) -> dict[str, Any]:
     assert intended_full["registered_equivalent_steps"] < 95
 
     expected_endpoints = {
-        "fpilot__epsilon_only__balanced_equal_length__s11": (20, 17, 62, 0.999858, 0.016844, 396672),
-        "fpilot__reduction_only__balanced_equal_length__s11": (20, 19, 62, 0.999844, 0.017681, 396672),
-        "fpilot__epsilon_only__balanced_equal_length__s23": (20, 17, 65, 0.999894, 0.014576, 400448),
-        "fpilot__intended_full__balanced_equal_length__s23": (20, 20, 65, 0.999881, 0.015440, 400448),
+        "fpilot__epsilon_only__balanced_equal_length__s11": (
+            20,
+            17,
+            62,
+            0.999858,
+            0.016844,
+            396672,
+        ),
+        "fpilot__reduction_only__balanced_equal_length__s11": (
+            20,
+            19,
+            62,
+            0.999844,
+            0.017681,
+            396672,
+        ),
+        "fpilot__epsilon_only__balanced_equal_length__s23": (
+            20,
+            17,
+            65,
+            0.999894,
+            0.014576,
+            400448,
+        ),
+        "fpilot__intended_full__balanced_equal_length__s23": (
+            20,
+            20,
+            65,
+            0.999881,
+            0.015440,
+            400448,
+        ),
         "fpilot__native_trl__balanced_equal_length__s23": (20, 17, 65, 0.999894, 0.014576, 400448),
-        "fpilot__reduction_only__balanced_equal_length__s23": (20, 20, 65, 0.999881, 0.015440, 400448),
+        "fpilot__reduction_only__balanced_equal_length__s23": (
+            20,
+            20,
+            65,
+            0.999881,
+            0.015440,
+            400448,
+        ),
     }
     for item in scientific:
         start, final, zeros, cosine, relative_l2, tokens = expected_endpoints[item["id"]]
@@ -494,7 +549,9 @@ def verify_campaign(repo_root: Path) -> dict[str, Any]:
         "status": "PASS",
         "campaign_state_sha256": sha256(campaign / "supervisor_state.json"),
         "launch_manifest_sha256": sha256(launch_manifest_path),
-        "preregistration_sha256": sha256(repo_root / "zvf-program/flagship/pilot_preregistration.json"),
+        "preregistration_sha256": sha256(
+            repo_root / "zvf-program/flagship/pilot_preregistration.json"
+        ),
         "campaign_status_counts": expected_statuses,
         "accepted_decomposition": {"corpora": 3, "preflight": 1, "scientific_units": 6},
         "verified_frozen_source_files": len(verified_source_paths),

@@ -18,28 +18,28 @@ Output: platform_hybrid/experiments/results/p5p8/p5_stack_conditioning_mega.tsv
         platform_hybrid/experiments/results/p5p8/p5_stack_conditioning_mega_boot.tsv
         platform_hybrid/experiments/results/p5p8/p5_stack_conditioning_mega_summary.json
 """
+
 from __future__ import annotations
 
 import csv
 import json
-import math
-import os
 import random
 import sys
 from collections import defaultdict
 from pathlib import Path
 
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
+from _paths import REPO_ROOT
+
 ROOT = REPO_ROOT
 CELLS = ROOT / "platform_hybrid/experiments/results/mega_20260704/cells.tsv"
 OUT = ROOT / "platform_hybrid/experiments/results/p5p8/review17_v2"
 
 
-
-from p5_review17_stats import additive_r2, ratio_interval
+from p5_review17_stats import additive_r2
 
 from p5_review17_stats import json_safe
+
 
 def read_cells() -> list[dict]:
     """Return list of dicts for every cell with key stack axes + outcome."""
@@ -77,7 +77,7 @@ def eta_squared(values: list[float], group_labels: list[str]) -> float:
     if ss_total == 0:
         return float("nan")
     by_group = defaultdict(list)
-    for v, g in zip(values, group_labels):
+    for v, g in zip(values, group_labels, strict=False):
         by_group[g].append(v)
     ss_between = 0.0
     for g, vs in by_group.items():
@@ -114,7 +114,9 @@ def bootstrap_ci(
 
 
 def main() -> None:
-    print("Protocol review17-p5-v2: exploratory descriptive associations; no independent-run, causal, equivalence, or held-out prediction claim")
+    print(
+        "Protocol review17-p5-v2: exploratory descriptive associations; no independent-run, causal, equivalence, or held-out prediction claim"
+    )
     OUT.mkdir(parents=True, exist_ok=True)
     cells = read_cells()
     if not cells:

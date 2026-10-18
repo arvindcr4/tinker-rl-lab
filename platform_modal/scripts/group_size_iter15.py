@@ -63,6 +63,7 @@ Outputs (real artifacts):
             reference lines.
         (C) TOST p-value heatmap over (G_a, G_b) and epsilon.
 """
+
 from __future__ import annotations
 
 import csv
@@ -70,13 +71,12 @@ import math
 import json
 from itertools import combinations
 from pathlib import Path
-from typing import Iterable
 
 import matplotlib
 
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt  # noqa: E402
-import numpy as np  # noqa: E402
+import matplotlib.pyplot as plt
+import numpy as np
 
 REPO = Path(__file__).resolve().parents[2] / "platform_hybrid"
 RESULTS = REPO / "experiments" / "results"
@@ -93,6 +93,7 @@ WU_RETENTION_CLAIM = 0.976  # Wu et al. (2025) arXiv 2510.00977
 # ---------------------------------------------------------------------------
 # Bootstrap helpers
 # ---------------------------------------------------------------------------
+
 
 def bootstrap_paired_t_ci(
     a: np.ndarray, b: np.ndarray, b_boot: int = BOOT_B, alpha: float = 0.05
@@ -134,9 +135,7 @@ def bootstrap_cohens_d_paired(
     return d, float(lo), float(hi)
 
 
-def tost_pvalue(
-    a: np.ndarray, b: np.ndarray, epsilon: float, b_boot: int = BOOT_B
-) -> float:
+def tost_pvalue(a: np.ndarray, b: np.ndarray, epsilon: float, b_boot: int = BOOT_B) -> float:
     """Two One-Sided Test p-value for equivalence within [-eps, eps].
 
     H0: |mu_a - mu_b| >= eps
@@ -151,11 +150,14 @@ def tost_pvalue(
     n = diff.size
     if n < 2:
         return float("nan")
-    se = diff.std(ddof=1)/math.sqrt(n)
-    if se==0:
-        return 0.0 if abs(diff.mean())<epsilon else 1.0
+    se = diff.std(ddof=1) / math.sqrt(n)
+    if se == 0:
+        return 0.0 if abs(diff.mean()) < epsilon else 1.0
     from scipy.stats import t
-    return float(max(t.sf((diff.mean()+epsilon)/se,n-1), t.cdf((diff.mean()-epsilon)/se,n-1)))
+
+    return float(
+        max(t.sf((diff.mean() + epsilon) / se, n - 1), t.cdf((diff.mean() - epsilon) / se, n - 1))
+    )
 
 
 def snr(values: np.ndarray) -> float:
@@ -173,6 +175,7 @@ def snr(values: np.ndarray) -> float:
 # Data loaders
 # ---------------------------------------------------------------------------
 
+
 def load_sweep() -> dict:
     with open(RESULTS / "groupsize_zvf_sweep.json") as f:
         return json.load(f)
@@ -181,7 +184,10 @@ def load_sweep() -> dict:
 def per_seed_last10_mean_reward(sweep: dict) -> dict[int, np.ndarray]:
     """Matched seed means in deterministic order; excludes incomplete seed sets."""
     from _review23_statistics import paired_seed_values
-    arrays,_=paired_seed_values(sweep["runs"],G_VALUES,lambda r: np.mean([v["mean_reward"] for v in r["step_log"][-10:]]))
+
+    arrays, _ = paired_seed_values(
+        sweep["runs"], G_VALUES, lambda r: np.mean([v["mean_reward"] for v in r["step_log"][-10:]])
+    )
     return arrays
 
 
@@ -211,6 +217,7 @@ def load_g4_vs_g32_tsv() -> list[dict]:
 # TSV writers
 # ---------------------------------------------------------------------------
 
+
 def write_equivalence_tsv(sweep: dict) -> Path:
     out_path = RESULTS / "group_size_iter15_equivalence_v2.tsv"
     seed_means = per_seed_last10_mean_reward(sweep)
@@ -224,23 +231,25 @@ def write_equivalence_tsv(sweep: dict) -> Path:
         d, dlo, dhi = bootstrap_cohens_d_paired(a, b)
         for eps in EPSILONS:
             p_tost = tost_pvalue(a, b, eps)
-            rows.append({
-                "G_a": ga,
-                "G_b": gb,
-                "mean_a": float(a.mean()),
-                "mean_b": float(b.mean()),
-                "mean_diff": mean_diff,
-                "diff_ci_low": lo,
-                "diff_ci_high": hi,
-                "cohens_d": d,
-                "cohens_d_ci_low": dlo,
-                "cohens_d_ci_high": dhi,
-                "epsilon": eps,
-                "tost_p_value": p_tost,
-                "tost_equivalent_at_alpha_0.05": (
-                    "yes" if (not np.isnan(p_tost) and p_tost < 0.05) else "no"
-                ),
-            })
+            rows.append(
+                {
+                    "G_a": ga,
+                    "G_b": gb,
+                    "mean_a": float(a.mean()),
+                    "mean_b": float(b.mean()),
+                    "mean_diff": mean_diff,
+                    "diff_ci_low": lo,
+                    "diff_ci_high": hi,
+                    "cohens_d": d,
+                    "cohens_d_ci_low": dlo,
+                    "cohens_d_ci_high": dhi,
+                    "epsilon": eps,
+                    "tost_p_value": p_tost,
+                    "tost_equivalent_at_alpha_0.05": (
+                        "yes" if (not np.isnan(p_tost) and p_tost < 0.05) else "no"
+                    ),
+                }
+            )
     with open(out_path, "w", newline="") as f:
         w = csv.DictWriter(
             f,
@@ -265,23 +274,23 @@ def write_snr_tsv(sweep: dict) -> Path:
         rng = np.random.default_rng(RNG_SEED)
         n = arr.size
         idx = rng.integers(0, n, size=(BOOT_B, n))
-        boot_snrs = np.array([
-            snr(arr[i]) for i in idx
-        ])
+        boot_snrs = np.array([snr(arr[i]) for i in idx])
         boot_snrs = boot_snrs[~np.isnan(boot_snrs)]
         if boot_snrs.size:
             lo, hi = np.quantile(boot_snrs, [0.025, 0.975])
         else:
             lo = hi = float("nan")
-        rows.append({
-            "G": g,
-            "n_per_step_points": int(arr.size),
-            "mean_advantage_variance": float(arr.mean()),
-            "std_advantage_variance": float(arr.std(ddof=1)),
-            "snr_advantage_variance": s,
-            "snr_ci_low": float(lo),
-            "snr_ci_high": float(hi),
-        })
+        rows.append(
+            {
+                "G": g,
+                "n_per_step_points": int(arr.size),
+                "mean_advantage_variance": float(arr.mean()),
+                "std_advantage_variance": float(arr.std(ddof=1)),
+                "snr_advantage_variance": s,
+                "snr_ci_low": float(lo),
+                "snr_ci_high": float(hi),
+            }
+        )
     with open(out_path, "w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=list(rows[0].keys()), delimiter="\t")
         w.writeheader()
@@ -305,19 +314,21 @@ def write_retained_dpo_tsv() -> Path:
         # If yes -> retention consistent with Wu 97.6%.
         # If CI crosses wu_lower -> cannot reject sub-97.6% retention.
         consistent = ci_lo >= wu_lower
-        rows.append({
-            "T_tokens": r["T_tokens"],
-            "G_a": r["G_a"],
-            "G_b": r["G_b"],
-            "acc_G_a": float(r["acc_G_a"]),
-            "acc_G_b": acc_g32,
-            "diff_a_minus_b": diff,
-            "diff_ci_low": ci_lo,
-            "diff_ci_high": ci_hi,
-            "wu_2025_lower_bound_diff": wu_lower,
-            "retention_pct": float(r["retention_pct_of_Gb"]),
-            "consistent_with_wu_claim": "yes" if consistent else "no",
-        })
+        rows.append(
+            {
+                "T_tokens": r["T_tokens"],
+                "G_a": r["G_a"],
+                "G_b": r["G_b"],
+                "acc_G_a": float(r["acc_G_a"]),
+                "acc_G_b": acc_g32,
+                "diff_a_minus_b": diff,
+                "diff_ci_low": ci_lo,
+                "diff_ci_high": ci_hi,
+                "wu_2025_lower_bound_diff": wu_lower,
+                "retention_pct": float(r["retention_pct_of_Gb"]),
+                "consistent_with_wu_claim": "yes" if consistent else "no",
+            }
+        )
     with open(out_path, "w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=list(rows[0].keys()), delimiter="\t")
         w.writeheader()
@@ -329,9 +340,8 @@ def write_retained_dpo_tsv() -> Path:
 # Figure
 # ---------------------------------------------------------------------------
 
-def build_figure(
-    sweep: dict, equiv_path: Path, snr_path: Path
-) -> Path:
+
+def build_figure(sweep: dict, equiv_path: Path, snr_path: Path) -> Path:
     fig, axes = plt.subplots(1, 3, figsize=(15.0, 4.6))
     seed_means = per_seed_last10_mean_reward(sweep)
     av = per_step_advantage_variance(sweep)
@@ -340,16 +350,38 @@ def build_figure(
     ax = axes[0]
     gs = list(G_VALUES)
     means = [float(seed_means[g].mean()) if seed_means[g].size else float("nan") for g in gs]
-    ses = [float(seed_means[g].std(ddof=1) / np.sqrt(max(1, seed_means[g].size)))
-           if seed_means[g].size > 1 else 0.0 for g in gs]
-    ax.errorbar(gs, means, yerr=ses, marker="o", lw=2.0, capsize=4,
-                color="#2c3e50", label="measured last-10 mean reward")
+    ses = [
+        float(seed_means[g].std(ddof=1) / np.sqrt(max(1, seed_means[g].size)))
+        if seed_means[g].size > 1
+        else 0.0
+        for g in gs
+    ]
+    ax.errorbar(
+        gs,
+        means,
+        yerr=ses,
+        marker="o",
+        lw=2.0,
+        capsize=4,
+        color="#2c3e50",
+        label="measured last-10 mean reward",
+    )
     # Equivalence band at epsilon=0.02 around the G=16 anchor
     anchor = means[-1]
-    ax.axhspan(anchor - 0.02, anchor + 0.02, alpha=0.18, color="#27ae60",
-               label=r"$\epsilon=0.02$ equivalence band")
-    ax.axhspan(anchor - 0.05, anchor + 0.05, alpha=0.10, color="#f39c12",
-               label=r"$\epsilon=0.05$ equivalence band")
+    ax.axhspan(
+        anchor - 0.02,
+        anchor + 0.02,
+        alpha=0.18,
+        color="#27ae60",
+        label=r"$\epsilon=0.02$ equivalence band",
+    )
+    ax.axhspan(
+        anchor - 0.05,
+        anchor + 0.05,
+        alpha=0.10,
+        color="#f39c12",
+        label=r"$\epsilon=0.05$ equivalence band",
+    )
     ax.set_xlabel("Group size G")
     ax.set_ylabel("Last-10-step mean reward (Qwen2.5-0.5B, arithmetic)")
     ax.set_xscale("log", base=2)
@@ -371,19 +403,34 @@ def build_figure(
             snrs.append(float(r["snr_advantage_variance"]))
             snr_lo.append(float(r["snr_ci_low"]))
             snr_hi.append(float(r["snr_ci_high"]))
-    yerr_lo = [max(0.0, s - lo) for s, lo in zip(snrs, snr_lo)]
-    yerr_hi = [max(0.0, hi - s) for s, hi in zip(snrs, snr_hi)]
-    ax.errorbar(gvals, snrs, yerr=[yerr_lo, yerr_hi], marker="s", lw=2.0,
-                capsize=4, color="#8e44ad", label="empirical SNR per G")
+    yerr_lo = [max(0.0, s - lo) for s, lo in zip(snrs, snr_lo, strict=False)]
+    yerr_hi = [max(0.0, hi - s) for s, hi in zip(snrs, snr_hi, strict=False)]
+    ax.errorbar(
+        gvals,
+        snrs,
+        yerr=[yerr_lo, yerr_hi],
+        marker="s",
+        lw=2.0,
+        capsize=4,
+        color="#8e44ad",
+        label="empirical SNR per G",
+    )
     # Flat reference at first SNR (DPO hypothesis)
     if snrs and not np.isnan(snrs[0]):
-        ax.axhline(snrs[0], color="#27ae60", ls="--", lw=1.6,
-                   label=f"flat (DPO-equiv): {snrs[0]:.3f}")
+        ax.axhline(
+            snrs[0], color="#27ae60", ls="--", lw=1.6, label=f"flat (DPO-equiv): {snrs[0]:.3f}"
+        )
     # sqrt(G) reference: normalized to first point
     if snrs and not np.isnan(snrs[0]) and gvals:
         ref = [snrs[0] * np.sqrt(g / gvals[0]) for g in gvals]
-        ax.plot(gvals, ref, color="#c0392b", ls=":", lw=1.6,
-                label=r"$\propto \sqrt{G}$ (variance reduction)")
+        ax.plot(
+            gvals,
+            ref,
+            color="#c0392b",
+            ls=":",
+            lw=1.6,
+            label=r"$\propto \sqrt{G}$ (variance reduction)",
+        )
     ax.set_xlabel("Group size G")
     ax.set_ylabel("SNR (per-step advantage_variance)")
     ax.set_xscale("log", base=2)
@@ -417,13 +464,19 @@ def build_figure(
             v = pmat[i, j]
             if np.isnan(v):
                 continue
-            ax.text(j, i, f"{v:.3f}", ha="center", va="center",
-                    color="black" if v > 0.25 else "white", fontsize=8)
+            ax.text(
+                j,
+                i,
+                f"{v:.3f}",
+                ha="center",
+                va="center",
+                color="black" if v > 0.25 else "white",
+                fontsize=8,
+            )
     ax.set_title("(C) TOST p-value: green = equivalent")
     plt.colorbar(im, ax=ax, fraction=0.046, pad=0.04, label="TOST p-value")
 
-    fig.suptitle("iter 15 — Pillar 3: sharp test of Wu 2025 DPO-equivalence",
-                 y=1.02, fontsize=11)
+    fig.suptitle("iter 15 — Pillar 3: sharp test of Wu 2025 DPO-equivalence", y=1.02, fontsize=11)
     fig.tight_layout()
     out_pdf = FIG / "group_size_iter15_v2.pdf"
     fig.savefig(out_pdf, bbox_inches="tight")
@@ -435,6 +488,7 @@ def build_figure(
 # ---------------------------------------------------------------------------
 # Driver
 # ---------------------------------------------------------------------------
+
 
 def main() -> None:
     sweep = load_sweep()

@@ -5,6 +5,7 @@ Input:  platform_hybrid/experiments/results/zvf_scaling_cross_pillar.tsv
 Output: platform_hybrid/paper/figures/zvf_scaling_cross_pillar.png
 Plot logic follows platform_modal/scripts/zvf_scaling_coupling.py (figure block only; that script also rewrites TSVs/sections).
 """
+
 import csv
 import pathlib
 
@@ -15,7 +16,12 @@ import matplotlib.pyplot as plt
 
 plt.rcParams["axes.unicode_minus"] = False
 ROOT = pathlib.Path(__file__).resolve().parents[2]
-rows = list(csv.DictReader(open(ROOT / "platform_hybrid/experiments/results/zvf_scaling_cross_pillar.tsv"), delimiter="\t"))
+rows = list(
+    csv.DictReader(
+        open(ROOT / "platform_hybrid/experiments/results/zvf_scaling_cross_pillar.tsv"),
+        delimiter="\t",
+    )
+)
 col = ["#d62728" if r["is_collapse"] == "True" else "#1f77b4" for r in rows]
 fig, axes = plt.subplots(1, 2, figsize=(10, 3.6))
 ax = axes[0]
@@ -27,8 +33,19 @@ ax = axes[1]
 for r, c in zip(rows, col):
     x, y = float(r["frac_below_0p1"]), float(r["late_minus_peak"])
     ax.scatter(x, y, s=120, c=c, edgecolors="black", linewidths=0.5)
-    off = {"Qwen3.5-4B": (8, 6), "Llama-3.1-8B-Instruct": (8, -4), "DeepSeek-V3.1": (8, -12), "Nemotron-120B": (-70, 8)}
-    ax.annotate(r["model"], (x, y), textcoords="offset points", xytext=off.get(r["model"], (8, 5)), fontsize=8)
+    off = {
+        "Qwen3.5-4B": (8, 6),
+        "Llama-3.1-8B-Instruct": (8, -4),
+        "DeepSeek-V3.1": (8, -12),
+        "Nemotron-120B": (-70, 8),
+    }
+    ax.annotate(
+        r["model"],
+        (x, y),
+        textcoords="offset points",
+        xytext=off.get(r["model"], (8, 5)),
+        fontsize=8,
+    )
 ax.set_xlabel("frac_below_0p1 (steps with held-out < 0.1)")
 ax.set_ylabel("late_minus_peak (negative = collapse)")
 ax.set_title("(B) ZVF-proxy vs collapse slope")

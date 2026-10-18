@@ -4,6 +4,7 @@ Version equality is necessary, not a claim of numerical/GPU compatibility. The
 lock remains candidate-not-gpu-validated until an explicitly reported GPU test.
 Importing this module neither imports training libraries nor installs packages.
 """
+
 from __future__ import annotations
 
 import hashlib
@@ -12,9 +13,15 @@ import json
 
 LOCK_ID = "samestack-v3-runtime-candidate-1"
 LOCK = {
-    "torch": "2.7.1", "transformers": "5.5.4", "peft": "0.19.1",
-    "accelerate": "1.13.0", "datasets": "4.8.4", "huggingface-hub": "1.11.0",
-    "numpy": "2.2.6", "safetensors": "0.8.0", "tokenizers": "0.22.2",
+    "torch": "2.7.1",
+    "transformers": "5.5.4",
+    "peft": "0.19.1",
+    "accelerate": "1.13.0",
+    "datasets": "4.8.4",
+    "huggingface-hub": "1.11.0",
+    "numpy": "2.2.6",
+    "safetensors": "0.8.0",
+    "tokenizers": "0.22.2",
 }
 IMPORT_NAMES = {name: name.replace("-", "_") for name in LOCK}
 REQUIREMENTS = tuple(f"{name}=={version}" for name, version in LOCK.items())
@@ -45,5 +52,12 @@ def verify_runtime(versions=None):
 
 
 def lock_manifest():
-    digest = hashlib.sha256(json.dumps(LOCK, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
-    return {"lock_id": LOCK_ID, "status": "candidate-not-gpu-validated", "versions": dict(LOCK), "hash": digest}
+    digest = hashlib.sha256(
+        json.dumps(LOCK, sort_keys=True, separators=(",", ":")).encode()
+    ).hexdigest()
+    return {
+        "lock_id": LOCK_ID,
+        "status": "candidate-not-gpu-validated",
+        "versions": dict(LOCK),
+        "hash": digest,
+    }

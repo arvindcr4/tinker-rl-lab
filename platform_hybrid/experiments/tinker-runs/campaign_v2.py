@@ -6,14 +6,26 @@ Uses forward_backward_custom() + optim_step() pattern.
 
 import sys as _contract_sys
 from pathlib import Path as _ContractPath
+
 if len(_ContractPath(__file__).resolve().parents) > 3:
     _contract_sys.path.insert(0, str(_ContractPath(__file__).resolve().parents[3]))
-from platform_hybrid.experiments.framework_contracts import score_gsm8k, SCORER_ID, PROTOCOL_VERSION, aligned_datum, response_logprobs, group_zvf, stable_seed, experiment_spec, validate_resume, objective_identity, completion_receipt, require_completed, token_advantage, validated_sample_sequences
+from platform_hybrid.experiments.framework_contracts import (
+    score_gsm8k,
+    SCORER_ID,
+    aligned_datum,
+    response_logprobs,
+    stable_seed,
+    experiment_spec,
+    completion_receipt,
+    validated_sample_sequences,
+)
 
 
 import atexit
+
 try:
     from codecarbon import EmissionsTracker
+
     _tracker = EmissionsTracker()
     _tracker.start()
     atexit.register(_tracker.stop)
@@ -43,7 +55,7 @@ print("Loading GSM8K dataset...", flush=True)
 _ds = load_dataset("openai/gsm8k", "main", split="train")
 GSM8K_EXAMPLES = []
 for row in _ds:
-    ans_match = re.search(r'####\s*([\-\d,\.]+)', row["answer"])
+    ans_match = re.search(r"####\s*([\-\d,\.]+)", row["answer"])
     if ans_match:
         answer = ans_match.group(1).replace(",", "").strip()
         GSM8K_EXAMPLES.append((row["question"], answer))
@@ -79,33 +91,86 @@ WAVE1 = [
     ("qwen3-30b-inst-2507", "Qwen/Qwen3-30B-A3B-Instruct-2507", "MEDIUM"),
 ]
 for tag, model, priority in WAVE1:
-    EXPERIMENTS.append({"tag": f"w1_{tag}", "model": model, "wave": "1-frontier",
-                        "priority": priority, "steps": 30, "group_size": 8, "lr": 1e-5, "seed": 42})
+    EXPERIMENTS.append(
+        {
+            "tag": f"w1_{tag}",
+            "model": model,
+            "wave": "1-frontier",
+            "priority": priority,
+            "steps": 30,
+            "group_size": 8,
+            "lr": 1e-5,
+            "seed": 42,
+        }
+    )
 
 # WAVE 2: Group Size Sweep
 for G in [2, 4, 16, 32]:
-    EXPERIMENTS.append({"tag": f"w2_qwen3-8b_G{G}", "model": "Qwen/Qwen3-8B", "wave": "2-groupsize",
-                        "priority": "HIGH", "steps": 30, "group_size": G, "lr": 1e-5, "seed": 42})
+    EXPERIMENTS.append(
+        {
+            "tag": f"w2_qwen3-8b_G{G}",
+            "model": "Qwen/Qwen3-8B",
+            "wave": "2-groupsize",
+            "priority": "HIGH",
+            "steps": 30,
+            "group_size": G,
+            "lr": 1e-5,
+            "seed": 42,
+        }
+    )
 
 # WAVE 3: Multi-Seed Frontier
-for tag, model in [("dsv31", "deepseek-ai/DeepSeek-V3.1"),
-                    ("nem120b", "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-BF16"),
-                    ("q235b", "Qwen/Qwen3-235B-A22B-Instruct-2507")]:
+for tag, model in [
+    ("dsv31", "deepseek-ai/DeepSeek-V3.1"),
+    ("nem120b", "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-BF16"),
+    ("q235b", "Qwen/Qwen3-235B-A22B-Instruct-2507"),
+]:
     for seed in [123, 456, 789]:
-        EXPERIMENTS.append({"tag": f"w3_{tag}_s{seed}", "model": model, "wave": "3-multiseed",
-                            "priority": "HIGH", "steps": 30, "group_size": 8, "lr": 1e-5, "seed": seed})
+        EXPERIMENTS.append(
+            {
+                "tag": f"w3_{tag}_s{seed}",
+                "model": model,
+                "wave": "3-multiseed",
+                "priority": "HIGH",
+                "steps": 30,
+                "group_size": 8,
+                "lr": 1e-5,
+                "seed": seed,
+            }
+        )
 
 # WAVE 4: LR Sweep
 for lr in [5e-6, 3e-5, 1e-4]:
-    EXPERIMENTS.append({"tag": f"w4_q8b_lr{lr}", "model": "Qwen/Qwen3-8B", "wave": "4-lr",
-                        "priority": "MEDIUM", "steps": 30, "group_size": 8, "lr": lr, "seed": 42})
+    EXPERIMENTS.append(
+        {
+            "tag": f"w4_q8b_lr{lr}",
+            "model": "Qwen/Qwen3-8B",
+            "wave": "4-lr",
+            "priority": "MEDIUM",
+            "steps": 30,
+            "group_size": 8,
+            "lr": lr,
+            "seed": 42,
+        }
+    )
 
 # WAVE 5: Long Training
-EXPERIMENTS.append({"tag": "w5_q8b_100s", "model": "Qwen/Qwen3-8B", "wave": "5-long",
-                    "priority": "HIGH", "steps": 100, "group_size": 8, "lr": 1e-5, "seed": 42})
+EXPERIMENTS.append(
+    {
+        "tag": "w5_q8b_100s",
+        "model": "Qwen/Qwen3-8B",
+        "wave": "5-long",
+        "priority": "HIGH",
+        "steps": 100,
+        "group_size": 8,
+        "lr": 1e-5,
+        "seed": 42,
+    }
+)
 
 print(f"\nTotal experiments: {len(EXPERIMENTS)}")
 from collections import Counter
+
 for w, c in sorted(Counter(e["wave"] for e in EXPERIMENTS).items()):
     print(f"  {w}: {c}")
 
@@ -119,7 +184,10 @@ def run_experiment(exp):
     lr = exp["lr"]
     seed = exp["seed"]
 
-    print(f"  >> [{tag}] Starting: {model} G={group_size} LR={lr} steps={steps} seed={seed}", flush=True)
+    print(
+        f"  >> [{tag}] Starting: {model} G={group_size} LR={lr} steps={steps} seed={seed}",
+        flush=True,
+    )
 
     try:
         rng = random.Random(seed)
@@ -133,13 +201,21 @@ def run_experiment(exp):
         wb_run = None
         try:
             import wandb
+
             # No process-global W&B log monkeypatch. Managed VRAM is unavailable.
             wandb.login(key=WANDB_KEY, relogin=True)
             wb_run = wandb.init(
                 project="tinker-rl-lab-world-class",
                 name=f"campaign_{tag}",
-                config={"model": model, "method": "grpo", "task": "gsm8k", "seed": seed,
-                        "group_size": group_size, "lr": lr, "steps": steps},
+                config={
+                    "model": model,
+                    "method": "grpo",
+                    "task": "gsm8k",
+                    "seed": seed,
+                    "group_size": group_size,
+                    "lr": lr,
+                    "steps": steps,
+                },
                 reinit="create_new",
             )
         except Exception as e:
@@ -172,25 +248,34 @@ def run_experiment(exp):
             batch_zvf_list = []
 
             for question, ans in batch:
-                prompt = (f"<|im_start|>system\n{SYSTEM_PROMPT}<|im_end|>\n"
-                          f"<|im_start|>user\n{question + QUESTION_SUFFIX}<|im_end|>\n"
-                          f"<|im_start|>assistant\n")
+                prompt = (
+                    f"<|im_start|>system\n{SYSTEM_PROMPT}<|im_end|>\n"
+                    f"<|im_start|>user\n{question + QUESTION_SUFFIX}<|im_end|>\n"
+                    f"<|im_start|>assistant\n"
+                )
                 pid = tok.encode(prompt, add_special_tokens=False)
                 if len(pid) > 1024:
                     pid = pid[:1024]
 
-                sp = T.SamplingParams(max_tokens=512, temperature=0.8, top_p=0.95, seed=stable_seed(seed, step, pid))
-                resp = sc.sample(T.ModelInput.from_ints(pid), num_samples=group_size, sampling_params=sp).result()
+                sp = T.SamplingParams(
+                    max_tokens=512, temperature=0.8, top_p=0.95, seed=stable_seed(seed, step, pid)
+                )
+                resp = sc.sample(
+                    T.ModelInput.from_ints(pid), num_samples=group_size, sampling_params=sp
+                ).result()
 
                 sequences = validated_sample_sequences(resp, group_size)
-                rews = [reward_fn(tok.decode(list(r.tokens), skip_special_tokens=True), ans) for r in sequences]
+                rews = [
+                    reward_fn(tok.decode(list(r.tokens), skip_special_tokens=True), ans)
+                    for r in sequences
+                ]
                 mr = sum(rews) / len(rews)
-                sr = (sum((r - mr)**2 for r in rews) / len(rews))**0.5 + 1e-8
+                sr = (sum((r - mr) ** 2 for r in rews) / len(rews)) ** 0.5 + 1e-8
                 advs = [(r - mr) / sr for r in rews]
                 batch_r.extend(rews)
                 batch_zvf_list.append(1.0 if all(abs(r - mr) < 1e-6 for r in rews) else 0.0)
 
-                for r_seq, adv in zip(sequences, advs):
+                for r_seq, adv in zip(sequences, advs, strict=False):
                     rid = list(r_seq.tokens)
                     fid = pid + rid
                     tid = fid[1:]
@@ -210,17 +295,17 @@ def run_experiment(exp):
             step_rewards.append(avg)
 
             if step % 5 == 0:
-                print(f"  [{tag}] step {step+1}/{steps} reward={avg:.3f}", flush=True)
+                print(f"  [{tag}] step {step + 1}/{steps} reward={avg:.3f}", flush=True)
 
             if wb_run:
                 try:
-                    wb_run.log({"train/reward": avg, "train/step": step+1, "zvf": avg_zvf})
+                    wb_run.log({"train/reward": avg, "train/step": step + 1, "zvf": avg_zvf})
                 except Exception as logging_error:
                     logging_errors.append(str(logging_error))
 
             # Refresh sampler every 10 steps
             if True:  # v3: sampler refresh after every update
-                ckpt = tc.save_weights_for_sampler(name=f"s{step+1}").result()
+                ckpt = tc.save_weights_for_sampler(name=f"s{step + 1}").result()
                 sc = tc.create_sampling_client(model_path=ckpt.path)
 
         final_ckpt = tc.save_weights_for_sampler(name="final").result()
@@ -231,15 +316,31 @@ def run_experiment(exp):
 
         result = {
             **completion_receipt(steps, len(step_rewards), run_id, final_ckpt.path),
-            **experiment_spec({**exp, "effective_steps": steps, "scorer_id": SCORER_ID, "sampler_refresh_every": 1}),
+            **experiment_spec(
+                {
+                    **exp,
+                    "effective_steps": steps,
+                    "scorer_id": SCORER_ID,
+                    "sampler_refresh_every": 1,
+                }
+            ),
             "logging_errors": logging_errors,
             "scorer_id": SCORER_ID,
             "objective_id": "group_standardized_pg_response_sum_v3",
             "sampler_refresh_every": 1,
-            "tag": tag, "model": model, "wave": exp["wave"],
-            "run_id": run_id, "seed": seed, "group_size": group_size, "lr": lr,
-            "steps": steps, "peak_reward": peak, "last10_avg": last10, "first5_avg": first5,
-            "reward_trace": step_rewards, "final_checkpoint": final_ckpt.path,
+            "tag": tag,
+            "model": model,
+            "wave": exp["wave"],
+            "run_id": run_id,
+            "seed": seed,
+            "group_size": group_size,
+            "lr": lr,
+            "steps": steps,
+            "peak_reward": peak,
+            "last10_avg": last10,
+            "first5_avg": first5,
+            "reward_trace": step_rewards,
+            "final_checkpoint": final_ckpt.path,
             "timestamp": datetime.utcnow().isoformat(),
         }
 
@@ -267,8 +368,14 @@ def run_experiment(exp):
                 wb_run.finish(exit_code=1)
         except:
             pass
-        return {"tag": tag, "model": model, "wave": exp["wave"], "status": "failed",
-                "error": str(e), "timestamp": datetime.utcnow().isoformat()}
+        return {
+            "tag": tag,
+            "model": model,
+            "wave": exp["wave"],
+            "status": "failed",
+            "error": str(e),
+            "timestamp": datetime.utcnow().isoformat(),
+        }
 
 
 def launch(max_parallel=6):
@@ -276,12 +383,14 @@ def launch(max_parallel=6):
     results_file = f"/home/user/workspace/tinker-rl-lab/experiments/tinker-runs/results/campaign_v2_{timestamp}.json"
 
     priority_order = {"CRITICAL": 0, "HIGH": 1, "MEDIUM": 2}
-    sorted_exps = sorted(EXPERIMENTS, key=lambda e: priority_order.get(e.get("priority", "MEDIUM"), 2))
+    sorted_exps = sorted(
+        EXPERIMENTS, key=lambda e: priority_order.get(e.get("priority", "MEDIUM"), 2)
+    )
 
-    print(f"\n{'='*70}")
+    print(f"\n{'=' * 70}")
     print(f"BITTER LESSON CAMPAIGN v2 — {len(EXPERIMENTS)} experiments")
     print(f"Max parallel: {max_parallel}")
-    print(f"{'='*70}\n")
+    print(f"{'=' * 70}\n")
 
     results = []
     with ProcessPoolExecutor(max_workers=max_parallel) as executor:
@@ -291,8 +400,17 @@ def launch(max_parallel=6):
                 result = future.result()
                 results.append(result)
                 with open(results_file, "w") as f:
-                    json.dump({"campaign": "bitter_lesson_v2", "timestamp": timestamp,
-                               "total": len(EXPERIMENTS), "completed": len(results), "results": results}, f, indent=2)
+                    json.dump(
+                        {
+                            "campaign": "bitter_lesson_v2",
+                            "timestamp": timestamp,
+                            "total": len(EXPERIMENTS),
+                            "completed": len(results),
+                            "results": results,
+                        },
+                        f,
+                        indent=2,
+                    )
                 c = len([r for r in results if r.get("status") == "completed"])
                 x = len([r for r in results if r.get("status") == "failed"])
                 print(f"  Progress: {len(results)}/{len(EXPERIMENTS)} (✓{c} ✗{x})\n", flush=True)
@@ -301,13 +419,16 @@ def launch(max_parallel=6):
 
     c = len([r for r in results if r.get("status") == "completed"])
     x = len([r for r in results if r.get("status") == "failed"])
-    print(f"\n{'='*70}")
+    print(f"\n{'=' * 70}")
     print(f"CAMPAIGN COMPLETE: ✓{c} ✗{x} / {len(EXPERIMENTS)}")
-    print(f"{'='*70}")
+    print(f"{'=' * 70}")
     if c > 0:
         print("\nTop results:")
-        for r in sorted([r for r in results if r.get("status")=="completed"],
-                        key=lambda x: x.get("last10_avg",0), reverse=True)[:10]:
+        for r in sorted(
+            [r for r in results if r.get("status") == "completed"],
+            key=lambda x: x.get("last10_avg", 0),
+            reverse=True,
+        )[:10]:
             print(f"  {r['tag']:35s} peak={r['peak_reward']:.3f} last10={r['last10_avg']:.3f}")
     print(f"\nSaved: {results_file}")
 
@@ -315,7 +436,7 @@ def launch(max_parallel=6):
 if __name__ == "__main__":
     if "--launch" in sys.argv:
         idx = sys.argv.index("--launch")
-        mp = int(sys.argv[idx+1]) if len(sys.argv) > idx+1 else 6
+        mp = int(sys.argv[idx + 1]) if len(sys.argv) > idx + 1 else 6
         launch(max_parallel=mp)
     else:
         print("\nDry run. Use --launch [N] to start.")

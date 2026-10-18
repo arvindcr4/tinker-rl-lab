@@ -64,8 +64,7 @@ DEFAULT_LANES = {
         "required_vcpu": 8.0,
         "tracked_request_id": "2eebd37d2a4447ceb81d0a45d1dffbe5fbVtQSM7",
         "purpose": (
-            "E9 MLDevBench runtime-image builder "
-            "(>=4 vCPU documented minimum; 8 requested)"
+            "E9 MLDevBench runtime-image builder (>=4 vCPU documented minimum; 8 requested)"
         ),
         "watcher": "zvf-program/e6e9/check_quota_status.py",
     },
@@ -93,13 +92,10 @@ def _aws(args: list[str]) -> dict:
         "--cli-read-timeout",
         "20",
     ]
-    proc = subprocess.run(  # noqa: S603 (fixed argv, no shell)
-        cmd, capture_output=True, text=True, timeout=60
-    )
+    proc = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
     if proc.returncode != 0:
         raise RuntimeError(
-            f"aws {' '.join(args)} failed (exit {proc.returncode}): "
-            f"{proc.stderr.strip()[:500]}"
+            f"aws {' '.join(args)} failed (exit {proc.returncode}): {proc.stderr.strip()[:500]}"
         )
     return json.loads(proc.stdout)
 
@@ -184,39 +180,27 @@ def check_lane(lane: str, cfg: dict) -> dict:
     tracked_status = None
     if tracked and tracked.get("status"):
         tracked_status = tracked["status"]
-    open_requests = [
-        e for e in history if e.get("status") in OPEN_REQUEST_STATUSES
-    ]
+    open_requests = [e for e in history if e.get("status") in OPEN_REQUEST_STATUSES]
     go = isinstance(value, (int, float)) and float(value) >= required
 
     notes = []
     if not go:
-        notes.append(
-            f"effective quota {value} vCPU < required {required:g} vCPU"
-        )
+        notes.append(f"effective quota {value} vCPU < required {required:g} vCPU")
     else:
         notes.append(f"effective quota {value} vCPU >= required {required:g} vCPU")
     if tracked_status in OPEN_REQUEST_STATUSES:
-        notes.append(
-            "tracked request still open; one-open-request rule blocks a new request"
-        )
+        notes.append("tracked request still open; one-open-request rule blocks a new request")
     elif tracked_status is not None:
         notes.append(f"tracked request is {tracked_status} (not open)")
-    other_open = [
-        e for e in open_requests if e.get("id") != cfg["tracked_request_id"]
-    ]
+    other_open = [e for e in open_requests if e.get("id") != cfg["tracked_request_id"]]
     if other_open:
         notes.append(
             "additional open L-1216C47A request(s) present: "
             + ", ".join(str(e.get("id")) for e in other_open)
         )
     if not open_requests and not go:
-        notes.append(
-            "no open request for this quota; a new increase request may be filed"
-        )
-    notes.append(
-        "quota GO does not prove AZ capacity, funding, or E6/E9 ledger gates"
-    )
+        notes.append("no open request for this quota; a new increase request may be filed")
+    notes.append("quota GO does not prove AZ capacity, funding, or E6/E9 ledger gates")
 
     return {
         "lane": lane,
@@ -242,9 +226,7 @@ def main(argv: list[str] | None = None) -> int:
             "Prints GO/NO-GO per lane. Never mutates AWS state."
         )
     )
-    parser.add_argument(
-        "--json", action="store_true", help="emit machine-readable JSON only"
-    )
+    parser.add_argument("--json", action="store_true", help="emit machine-readable JSON only")
     parser.add_argument(
         "--e6-required",
         type=float,
@@ -269,7 +251,7 @@ def main(argv: list[str] | None = None) -> int:
     for lane, cfg in lanes.items():
         try:
             results[lane] = check_lane(lane, cfg)
-        except Exception as exc:  # noqa: BLE001 (report and exit 2)
+        except Exception as exc:
             errors[lane] = f"{type(exc).__name__}: {exc}"
 
     report = {
@@ -283,9 +265,7 @@ def main(argv: list[str] | None = None) -> int:
         "errors": errors,
         "overall": (
             "GO"
-            if results and not errors and all(
-                r["decision"] == "GO" for r in results.values()
-            )
+            if results and not errors and all(r["decision"] == "GO" for r in results.values())
             else "NO-GO"
         ),
     }
@@ -307,10 +287,7 @@ def main(argv: list[str] | None = None) -> int:
                 f"{lane} [{r['region']}]: {r['decision']}  "
                 f"quota {r['effective_vcpu']} vCPU / need {r['required_vcpu']:g}"
             )
-            print(
-                f"    request {req_id}: {req_status}"
-                f" (desired {req.get('desired_value')})"
-            )
+            print(f"    request {req_id}: {req_status} (desired {req.get('desired_value')})")
             for note in r["notes"]:
                 print(f"    - {note}")
         if errors:

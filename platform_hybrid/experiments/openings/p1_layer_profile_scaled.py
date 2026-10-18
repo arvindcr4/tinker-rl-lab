@@ -20,7 +20,10 @@ Prints `RESULT: {json}` to stdout.
 
 import sys as _sys
 from pathlib import Path as _Path
-_sys.path.insert(0, str(next(p for p in _Path(__file__).resolve().parents if (p / "platform_hybrid").is_dir())))
+
+_sys.path.insert(
+    0, str(next(p for p in _Path(__file__).resolve().parents if (p / "platform_hybrid").is_dir()))
+)
 from platform_hybrid.experiments.research_contracts import topk_overlap, response_token_mask
 
 import subprocess
@@ -37,9 +40,7 @@ def _pip_install():
         "peft",
         "datasets",
     ]
-    subprocess.check_call(
-        [sys.executable, "-m", "pip", "install", "-q", "-U", *pkgs]
-    )
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "-q", "-U", *pkgs])
 
 
 # Fresh Colab VMs ship torchao 0.10, which imports fine but fails transformers'
@@ -60,7 +61,7 @@ MODEL_NAME = "Qwen/Qwen2.5-3B-Instruct"
 N_PROBLEMS = 24
 N_STEPS = 10
 SEEDS = [0, 1, 2, 3]
-GROUP_SIZE = 4          # rollouts per problem (GRPO group) — trimmed to fit L4 24GB
+GROUP_SIZE = 4  # rollouts per problem (GRPO group) — trimmed to fit L4 24GB
 MAX_NEW_TOKENS = 192
 LR = 1e-4
 
@@ -110,9 +111,7 @@ def load_problems(tokenizer):
             },
             {"role": "user", "content": ex["question"]},
         ]
-        prompt = tokenizer.apply_chat_template(
-            msgs, tokenize=False, add_generation_prompt=True
-        )
+        prompt = tokenizer.apply_chat_template(msgs, tokenize=False, add_generation_prompt=True)
         problems.append({"prompt": prompt, "gold": gold_answer(ex["answer"])})
     return problems
 
@@ -137,7 +136,7 @@ def per_layer_grad_norms(model, n_layers):
         if li is None or li >= n_layers:
             continue
         norms[li] += p.grad.detach().float().norm().item() ** 2
-    return [n ** 0.5 for n in norms]
+    return [n**0.5 for n in norms]
 
 
 # ----------------------------------------------------------------------------
@@ -177,19 +176,23 @@ def grpo_step(model, tokenizer, problem):
     model.train()
     attn = torch.ones_like(seqs)
     for j in range(len(seqs)):
-        attn[j, prompt_len:] = torch.tensor(response_token_mask(seqs[j, prompt_len:].tolist(), tokenizer.eos_token_id), device=seqs.device)
+        attn[j, prompt_len:] = torch.tensor(
+            response_token_mask(seqs[j, prompt_len:].tolist(), tokenizer.eos_token_id),
+            device=seqs.device,
+        )
     out = model(input_ids=seqs, attention_mask=attn)
     logits = out.logits[:, :-1, :]
     targets = seqs[:, 1:]
     # Memory-efficient token log-prob (the L4 OOM culprit was log_softmax(logits.float())
     # which materializes a full-vocab float32 tensor). log p(t) = logit_t - logsumexp(logits),
     # computed in the model dtype without a (G, L, V) float32 intermediate.
-    tok_logp = (logits.gather(-1, targets.unsqueeze(-1)).squeeze(-1)
-                - torch.logsumexp(logits, dim=-1))
+    tok_logp = logits.gather(-1, targets.unsqueeze(-1)).squeeze(-1) - torch.logsumexp(
+        logits, dim=-1
+    )
 
     # Mask to completion tokens only.
     comp_mask = torch.zeros_like(targets, dtype=torch.float32)
-    comp_mask[:, prompt_len - 1:] = 1.0
+    comp_mask[:, prompt_len - 1 :] = 1.0
     comp_mask = comp_mask * attn[:, 1:].float()
 
     seq_logp = (tok_logp * comp_mask).sum(dim=-1) / comp_mask.sum(dim=-1).clamp(min=1)
@@ -206,9 +209,7 @@ def run_seed(seed, problems, tokenizer):
     if DEVICE == "cuda":
         torch.cuda.manual_seed_all(seed)
 
-    model = AutoModelForCausalLM.from_pretrained(
-        MODEL_NAME, torch_dtype=DTYPE
-    ).to(DEVICE)
+    model = AutoModelForCausalLM.from_pretrained(MODEL_NAME, torch_dtype=DTYPE).to(DEVICE)
     lcfg = LoraConfig(
         r=8,
         lora_alpha=16,
@@ -218,9 +219,7 @@ def run_seed(seed, problems, tokenizer):
     )
     model = get_peft_model(model, lcfg)
     n_layers = model.config.num_hidden_layers
-    opt = torch.optim.SGD(
-        [p for p in model.parameters() if p.requires_grad], lr=LR
-    )
+    opt = torch.optim.SGD([p for p in model.parameters() if p.requires_grad], lr=LR)
 
     step_norms = []  # per-step per-layer grad norms
     for step in range(N_STEPS):
@@ -239,7 +238,11 @@ def run_seed(seed, problems, tokenizer):
     total = [sum(step_norms[s][l] for s in range(1, N_STEPS)) for l in range(n_layers)]
 
     top1 = set(sorted(range(n_layers), key=lambda l: step1[l], reverse=True)[:k])
-    topF = set(sorted(range(n_layers), key=lambda l: total[l], reverse=True)[:k]) if any(total) else set()
+    topF = (
+        set(sorted(range(n_layers), key=lambda l: total[l], reverse=True)[:k])
+        if any(total)
+        else set()
+    )
     overlap = topk_overlap(step1, total, k)
 
     tot_sum = sum(total) or 1.0
@@ -272,7 +275,11 @@ def main():
 
     per_seed = [run_seed(s, problems, tokenizer) for s in SEEDS]
 
-    overlaps = [r["step1_predicts_final_topk_overlap"] for r in per_seed if r["step1_predicts_final_topk_overlap"] is not None]
+    overlaps = [
+        r["step1_predicts_final_topk_overlap"]
+        for r in per_seed
+        if r["step1_predicts_final_topk_overlap"] is not None
+    ]
     concs = [r["concentration_top25pct_share"] for r in per_seed]
 
     def _std(xs):
@@ -286,7 +293,9 @@ def main():
         "group_size": GROUP_SIZE,
         "seeds": SEEDS,
         "n_layers": per_seed[0]["n_layers"],
-        "step1_predicts_final_topk_overlap_mean": round(statistics.mean(overlaps), 4) if overlaps else None,
+        "step1_predicts_final_topk_overlap_mean": round(statistics.mean(overlaps), 4)
+        if overlaps
+        else None,
         "step1_predicts_final_topk_overlap_std": round(_std(overlaps), 4) if overlaps else None,
         "concentration_top25pct_share_mean": round(statistics.mean(concs), 4),
         "concentration_top25pct_share_std": round(_std(concs), 4),

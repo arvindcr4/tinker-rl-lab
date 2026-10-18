@@ -74,11 +74,15 @@ def bootstrap(pairs: dict, b: int = B, seed: int = SEED) -> tuple:
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     ap.add_argument("--receipt", type=Path, default=RECEIPT)
     ap.add_argument("--replicates", type=int, default=B)
     ap.add_argument("--seed", type=int, default=SEED)
-    ap.add_argument("--out", type=Path, default=None, help="Write method, counts and paired verdicts as JSON")
+    ap.add_argument(
+        "--out", type=Path, default=None, help="Write method, counts and paired verdicts as JSON"
+    )
     args = ap.parse_args()
 
     if args.receipt.exists():
@@ -102,7 +106,9 @@ def main() -> int:
     passes = sum(a + c for a, c in pairs.values())
     lo, hi = bootstrap(pairs, args.replicates, args.seed)
 
-    print(f"designs={len(pairs)} prompts={2 * len(pairs)} passes={passes} pass@1={passes / (2 * len(pairs)):.7f}")
+    print(
+        f"designs={len(pairs)} prompts={2 * len(pairs)} passes={passes} pass@1={passes / (2 * len(pairs)):.7f}"
+    )
     print(f"pairs: {counts}")
     print(f"B={args.replicates} seed={args.seed} 95% cluster-bootstrap CI = [{lo:.7f}, {hi:.7f}]")
 

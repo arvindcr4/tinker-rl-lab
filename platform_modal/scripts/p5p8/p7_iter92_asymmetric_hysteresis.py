@@ -24,6 +24,7 @@ Outputs:
   platform_hybrid/experiments/results/p5p8/p7_iter92_asymm_summary.json
   platform_hybrid/experiments/results/p5p8/p7_iter92_asymm_boot.tsv
 """
+
 import json
 import random
 from collections import defaultdict
@@ -31,8 +32,10 @@ from math import isfinite
 from pathlib import Path
 
 import sys
+
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
 from _paths import REPO_ROOT
+
 WORK = REPO_ROOT
 N2_DIR = WORK / "platform_hybrid/experiments/results/n2_reward_tensor_resume"
 OUT = WORK / "platform_hybrid/experiments/results/p5p8/corrected-review20-v2"
@@ -44,7 +47,7 @@ N_PROMPTS = 16
 
 
 def yield_iid(p, G):
-    return 1.0 - (p ** G + (1.0 - p) ** G)
+    return 1.0 - (p**G + (1.0 - p) ** G)
 
 
 def load_step_zvf():
@@ -135,8 +138,8 @@ def bootstrap_retention_from_yields(base, raw, controlled, B=4000, seed=20260705
         raise ValueError("aligned nonempty yields and positive B required")
     if not all(isfinite(x) for seq in (base, raw, controlled) for x in seq):
         raise ValueError("yield values must be finite")
-    raw_gain = [r - b for r, b in zip(raw, base)]
-    ctrl_gain = [c - b for c, b in zip(controlled, base)]
+    raw_gain = [r - b for r, b in zip(raw, base, strict=False)]
+    ctrl_gain = [c - b for c, b in zip(controlled, base, strict=False)]
     point_raw, point_ctrl = sum(raw_gain), sum(ctrl_gain)
     rng = random.Random(seed)
     ratios, differences = [], []
@@ -152,20 +155,32 @@ def bootstrap_retention_from_yields(base, raw, controlled, B=4000, seed=20260705
         if not values:
             return None, None, None
         values = sorted(values)
-        return (values[len(values)//2], values[int(.025*len(values))],
-                values[min(len(values)-1, int(.975*len(values)))])
+        return (
+            values[len(values) // 2],
+            values[int(0.025 * len(values))],
+            values[min(len(values) - 1, int(0.975 * len(values)))],
+        )
 
     median, lo, hi = interval(ratios)
     _, diff_lo, diff_hi = interval(differences)
     return {
         "yield_retention_point": point_ctrl / point_raw if point_raw > 0 else None,
-        "yield_retention_median": median, "ci_lo": lo, "ci_hi": hi,
+        "yield_retention_median": median,
+        "ci_lo": lo,
+        "ci_hi": hi,
         "ci_excludes_1.0": lo > 1 or hi < 1 if lo is not None else None,
-        "n_valid_ratio_boot": len(ratios), "n_undefined_ratio_boot": B-len(ratios),
-        "ratio_status": ("unavailable_nonpositive_raw_gain" if point_raw <= 0 else
-                         "conditional_on_positive_raw_gain" if len(ratios) < B else "defined"),
+        "n_valid_ratio_boot": len(ratios),
+        "n_undefined_ratio_boot": B - len(ratios),
+        "ratio_status": (
+            "unavailable_nonpositive_raw_gain"
+            if point_raw <= 0
+            else "conditional_on_positive_raw_gain"
+            if len(ratios) < B
+            else "defined"
+        ),
         "gain_difference": point_ctrl - point_raw,
-        "gain_difference_ci_lo": diff_lo, "gain_difference_ci_hi": diff_hi,
+        "gain_difference_ci_lo": diff_lo,
+        "gain_difference_ci_hi": diff_hi,
         "bootstrap_unit": "paired_step_conditional_on_recorded_actions",
     }
 
@@ -178,18 +193,18 @@ def main():
 
     # 12 configurations: raw + 4 symmetric + 4 asymmetric + 3 gift-specific
     CONFIGS = [
-        ("C_raw_tau_0.70",        0.70, 1, 1),
-        ("C_sym_0.70_2_2",        0.70, 2, 2),  # iter-87 default
-        ("C_sym_0.70_3_3",        0.70, 3, 3),
-        ("C_sym_0.75_2_2",        0.75, 2, 2),
-        ("C_asym_0.70_1_4",       0.70, 1, 4),  # gift-targeted
-        ("C_asym_0.70_1_3",       0.70, 1, 3),  # moderate
-        ("C_asym_0.70_2_4",       0.70, 2, 4),
-        ("C_asym_0.75_1_4",       0.75, 1, 4),
-        ("C_asym_0.75_1_3",       0.75, 1, 3),
-        ("C_asym_0.80_1_4",       0.80, 1, 4),
-        ("C_asym_0.80_1_3",       0.80, 1, 3),
-        ("C_asym_0.70_1_5",       0.70, 1, 5),  # very persistent
+        ("C_raw_tau_0.70", 0.70, 1, 1),
+        ("C_sym_0.70_2_2", 0.70, 2, 2),  # iter-87 default
+        ("C_sym_0.70_3_3", 0.70, 3, 3),
+        ("C_sym_0.75_2_2", 0.75, 2, 2),
+        ("C_asym_0.70_1_4", 0.70, 1, 4),  # gift-targeted
+        ("C_asym_0.70_1_3", 0.70, 1, 3),  # moderate
+        ("C_asym_0.70_2_4", 0.70, 2, 4),
+        ("C_asym_0.75_1_4", 0.75, 1, 4),
+        ("C_asym_0.75_1_3", 0.75, 1, 3),
+        ("C_asym_0.80_1_4", 0.80, 1, 4),
+        ("C_asym_0.80_1_3", 0.80, 1, 3),
+        ("C_asym_0.70_1_5", 0.70, 1, 5),  # very persistent
     ]
 
     per_method_rows = []
@@ -204,7 +219,8 @@ def main():
             mean_dwell_escalated = (
                 sum(c for s, c in dwell_segments if s == "escalated")
                 / max(1, sum(1 for s, _ in dwell_segments if s == "escalated"))
-                if any(s == "escalated" for s, _ in dwell_segments) else 0.0
+                if any(s == "escalated" for s, _ in dwell_segments)
+                else 0.0
             )
             total_rollouts = sum(applied) * N_PROMPTS
             baseline_rollouts = N_STEPS * N_PROMPTS * G_BASE
@@ -213,28 +229,38 @@ def main():
             extra = total_rollouts - baseline_rollouts
             yp1k = dy / (extra / 1000.0) if extra > 0 else float("inf")
 
-            per_method_rows.append({
-                "method": m, "config": cfg_name, "tau": tau,
-                "k_up": k_up, "k_dn": k_dn,
-                "n_fires": fires, "n_flips": flips,
-                "flip_rate_per_fire": round(flips / fires, 3) if fires > 0 else "n/a",
-                "mean_dwell_escalated": round(mean_dwell_escalated, 2),
-                "total_rollouts": total_rollouts,
-                "baseline_rollouts": baseline_rollouts,
-                "cost_ratio": round(cost_ratio, 4),
-                "total_yield_base": round(y_base, 4),
-                "total_yield_ctrl": round(y_ctrl, 4),
-                "delta_yield": round(dy, 4),
-                "yield_per_1000_extra": round(yp1k, 3) if yp1k != float("inf") else "inf",
-            })
+            per_method_rows.append(
+                {
+                    "method": m,
+                    "config": cfg_name,
+                    "tau": tau,
+                    "k_up": k_up,
+                    "k_dn": k_dn,
+                    "n_fires": fires,
+                    "n_flips": flips,
+                    "flip_rate_per_fire": round(flips / fires, 3) if fires > 0 else "n/a",
+                    "mean_dwell_escalated": round(mean_dwell_escalated, 2),
+                    "total_rollouts": total_rollouts,
+                    "baseline_rollouts": baseline_rollouts,
+                    "cost_ratio": round(cost_ratio, 4),
+                    "total_yield_base": round(y_base, 4),
+                    "total_yield_ctrl": round(y_ctrl, 4),
+                    "delta_yield": round(dy, 4),
+                    "yield_per_1000_extra": round(yp1k, 3) if yp1k != float("inf") else "inf",
+                }
+            )
 
             for t in range(N_STEPS):
-                per_step_rows.append({
-                    "method": m, "config": cfg_name, "step": t,
-                    "zvf": round(zvf_seq[t], 4),
-                    "applied_G": applied[t],
-                    "fire_step": int(applied[t] != G_BASE),
-                })
+                per_step_rows.append(
+                    {
+                        "method": m,
+                        "config": cfg_name,
+                        "step": t,
+                        "zvf": round(zvf_seq[t], 4),
+                        "applied_G": applied[t],
+                        "fire_step": int(applied[t] != G_BASE),
+                    }
+                )
 
     cols_m = list(per_method_rows[0].keys())
     with open(OUT / "p7_iter92_asymm_per_method.tsv", "w") as f:
@@ -250,15 +276,19 @@ def main():
 
     print()
     print("=" * 110)
-    print(f"{'method':<8}{'config':<22}{'fires':>6}{'flips':>7}{'flip/fire':>10}"
-          f"{'cost':>8}{'dwell_esc':>10}{'deltaY':>10}{'Yp1k':>10}")
+    print(
+        f"{'method':<8}{'config':<22}{'fires':>6}{'flips':>7}{'flip/fire':>10}"
+        f"{'cost':>8}{'dwell_esc':>10}{'deltaY':>10}{'Yp1k':>10}"
+    )
     print("-" * 110)
     for r in per_method_rows:
         fr = r["flip_rate_per_fire"]
         fr_s = f"{fr:.2f}" if isinstance(fr, (int, float)) else fr
-        print(f"{r['method']:<8}{r['config']:<22}{r['n_fires']:>6}{r['n_flips']:>7}"
-              f"{fr_s:>10}{r['cost_ratio']:>8.3f}{r['mean_dwell_escalated']:>10.2f}"
-              f"{r['delta_yield']:>10.3f}{str(r['yield_per_1000_extra']):>10}")
+        print(
+            f"{r['method']:<8}{r['config']:<22}{r['n_fires']:>6}{r['n_flips']:>7}"
+            f"{fr_s:>10}{r['cost_ratio']:>8.3f}{r['mean_dwell_escalated']:>10.2f}"
+            f"{r['delta_yield']:>10.3f}{str(r['yield_per_1000_extra']):>10}"
+        )
     print("=" * 110)
 
     # Headline: yield retention vs raw for gift
@@ -266,13 +296,13 @@ def main():
     print("YIELD RETENTION vs raw zvf-triage@0.70")
     print(f"{'method':<8}{'config':<22}{'deltaY/rawY':>12}")
     for m in METHODS:
-        raw = next(r for r in per_method_rows
-                   if r["method"] == m and r["config"] == "C_raw_tau_0.70")
+        raw = next(
+            r for r in per_method_rows if r["method"] == m and r["config"] == "C_raw_tau_0.70"
+        )
         for cfg_name, _, _, _ in CONFIGS:
             if cfg_name == "C_raw_tau_0.70":
                 continue
-            r = next(x for x in per_method_rows
-                     if x["method"] == m and x["config"] == cfg_name)
+            r = next(x for x in per_method_rows if x["method"] == m and x["config"] == cfg_name)
             ret = r["delta_yield"] / raw["delta_yield"] if raw["delta_yield"] > 0 else None
             print(f"{m:<8}{cfg_name:<22}{str(ret):>12}")
 
@@ -290,18 +320,30 @@ def main():
             raw_applied, _, _, _ = hysteresis_filter(zvf_seq, 0.70, 1, 1)
             ctrl_applied, _, _, _ = hysteresis_filter(zvf_seq, tau, k_up, k_dn)
             base = [sum(yield_iid(k / G_BASE, G_BASE) for k in ks) for ks in ks_seq]
-            raw = [sum(yield_iid(k / G_BASE, g) for k in ks)
-                   for ks, g in zip(ks_seq, raw_applied)]
-            controlled = [sum(yield_iid(k / G_BASE, g) for k in ks)
-                          for ks, g in zip(ks_seq, ctrl_applied)]
+            raw = [
+                sum(yield_iid(k / G_BASE, g) for k in ks)
+                for ks, g in zip(ks_seq, raw_applied, strict=False)
+            ]
+            controlled = [
+                sum(yield_iid(k / G_BASE, g) for k in ks)
+                for ks, g in zip(ks_seq, ctrl_applied, strict=False)
+            ]
             result = bootstrap_retention_from_yields(base, raw, controlled, B=B)
-            boot_rows.append({
-                "method": m, "config": cfg_name, "tau": tau,
-                "k_up": k_up, "k_dn": k_dn, **result,
-            })
-            print(f"  {m:<8} {cfg_name:<22} retention={result['yield_retention_point']} "
-                  f"CI=[{result['ci_lo']},{result['ci_hi']}] "
-                  f"status={result['ratio_status']}")
+            boot_rows.append(
+                {
+                    "method": m,
+                    "config": cfg_name,
+                    "tau": tau,
+                    "k_up": k_up,
+                    "k_dn": k_dn,
+                    **result,
+                }
+            )
+            print(
+                f"  {m:<8} {cfg_name:<22} retention={result['yield_retention_point']} "
+                f"CI=[{result['ci_lo']},{result['ci_hi']}] "
+                f"status={result['ratio_status']}"
+            )
 
     cols_b = list(boot_rows[0].keys())
     with open(OUT / "p7_iter92_asymm_boot.tsv", "w") as f:

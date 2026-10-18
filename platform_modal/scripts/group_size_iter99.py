@@ -138,9 +138,7 @@ def write_snr(per_step: dict[int, dict[int, list[dict]]]) -> Path:
     avg_reward: dict[int, dict[int, float]] = {}
     for step in per_step:
         for G, cells in per_step[step].items():
-            avg_reward.setdefault(G, {})[step] = statistics.fmean(
-                c["mean_reward"] for c in cells
-            )
+            avg_reward.setdefault(G, {})[step] = statistics.fmean(c["mean_reward"] for c in cells)
     for G in gs_list:
         deltas = []
         sigma_A2_vals = []
@@ -149,9 +147,7 @@ def write_snr(per_step: dict[int, dict[int, list[dict]]]) -> Path:
             prev_step = step - 1
             if prev_step not in avg_reward.get(G, {}):
                 continue
-            deltas.append(
-                abs(avg_reward[G][step] - avg_reward[G][prev_step])
-            )
+            deltas.append(abs(avg_reward[G][step] - avg_reward[G][prev_step]))
             sigma_A2_vals.append(
                 statistics.fmean(c["advantage_variance"] for c in per_step[step][G])
             )
@@ -163,10 +159,7 @@ def write_snr(per_step: dict[int, dict[int, list[dict]]]) -> Path:
         # Implicit-DPO prediction: SNR ∝ sqrt(G) * |ΔR_underlying| / sigma_A.
         # We report SNR_pred = mean_dR / (sqrt(sigma_A2 / G)).
         snr = mean_dR / pred_mc_noise if pred_mc_noise > 0 else float("nan")
-        rows.append(
-            f"{G}\t{mean_dR:.6f}\t{mean_sigma_A2:.6f}\t"
-            f"{pred_mc_noise:.6f}\t{snr:.6f}\n"
-        )
+        rows.append(f"{G}\t{mean_dR:.6f}\t{mean_sigma_A2:.6f}\t{pred_mc_noise:.6f}\t{snr:.6f}\n")
     out.write_text("".join(rows))
     return out
 
@@ -225,7 +218,7 @@ def _curve_max_distance(curve_a: list[float], curve_b: list[float]) -> float:
     za = [(x - ma) / sa for x in curve_a]
     zb = [(x - mb) / sb for x in curve_b]
     # Per-step discrepancy
-    return max(abs(a - b) for a, b in zip(za, zb))
+    return max(abs(a - b) for a, b in zip(za, zb, strict=False))
 
 
 def _perm_pvalue_curves(
@@ -243,12 +236,13 @@ def _perm_pvalue_curves(
     max |z_a - z_b|.
     """
     import random
+
     rng = random.Random(seed)
     n = len(pool)
     if len(labels) != n or len(set(labels)) < 2 or not pool:
         raise ValueError("explicit group identity required for every trajectory")
     groups = sorted(set(labels))
-    obs_pairs = [(a,b) for a in groups for b in groups if a < b]
+    obs_pairs = [(a, b) for a in groups for b in groups if a < b]
     obs_stat = _between_group_stat(pool, labels, obs_pairs)
     cnt = 0
     for _ in range(n_perm):
@@ -266,7 +260,7 @@ def _between_group_stat(
     pairs: list[tuple[int, int]],
 ) -> float:
     by_label: dict[int, list[list[float]]] = {}
-    for curve, lab in zip(pool, labels):
+    for curve, lab in zip(pool, labels, strict=False):
         by_label.setdefault(lab, []).append(curve)
     stats = []
     for ga, gb in pairs:
@@ -276,19 +270,15 @@ def _between_group_stat(
         cb = by_label[gb]
         # average curve per group, then max step distance
         L = min(len(c) for c in ca + cb)
-        avg_a = [
-            statistics.fmean(c[i] for c in ca) for i in range(L)
-        ]
-        avg_b = [
-            statistics.fmean(c[i] for c in cb) for i in range(L)
-        ]
+        avg_a = [statistics.fmean(c[i] for c in ca) for i in range(L)]
+        avg_b = [statistics.fmean(c[i] for c in cb) for i in range(L)]
         # z-normalise averaged curves
         ma, mb = statistics.fmean(avg_a), statistics.fmean(avg_b)
         sa = statistics.pstdev(avg_a) or 1e-12
         sb = statistics.pstdev(avg_b) or 1e-12
         za = [(x - ma) / sa for x in avg_a]
         zb = [(x - mb) / sb for x in avg_b]
-        stats.append(max(abs(a - b) for a, b in zip(za, zb)))
+        stats.append(max(abs(a - b) for a, b in zip(za, zb, strict=False)))
     return statistics.fmean(stats) if stats else float("nan")
 
 
@@ -300,7 +290,7 @@ def write_trajectory_equiv(per_step: dict[int, dict[int, list[dict]]]) -> Path:
     for G in gs_list:
         runs_by_seed: dict[int, list[float]] = {}
         for step in sorted(per_step.keys()):
-            for cell in per_step[step].get(G, []):
+            for _cell in per_step[step].get(G, []):
                 # No run-id; use order. Different seeds re-appear across steps.
                 # We need to read seed from run-level; here just use lists in order
                 pass
@@ -331,12 +321,8 @@ def write_trajectory_equiv(per_step: dict[int, dict[int, list[dict]]]) -> Path:
             curves_a = traj_by_g[ga]
             curves_b = traj_by_g[gb]
             L = min(len(c) for c in curves_a + curves_b)
-            avg_a = [
-                statistics.fmean(c[i] for c in curves_a) for i in range(L)
-            ]
-            avg_b = [
-                statistics.fmean(c[i] for c in curves_b) for i in range(L)
-            ]
+            avg_a = [statistics.fmean(c[i] for c in curves_a) for i in range(L)]
+            avg_b = [statistics.fmean(c[i] for c in curves_b) for i in range(L)]
             d = _curve_max_distance(avg_a, avg_b)
             above = d > eps_implicit_dpo
             rows.append(

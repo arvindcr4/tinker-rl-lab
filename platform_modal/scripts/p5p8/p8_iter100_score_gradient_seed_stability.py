@@ -26,6 +26,7 @@ Outputs:
   platform_hybrid/experiments/results/p5p8/p8_iter100_score_gradient_seed_stability.json
   platform_hybrid/experiments/results/p5p8/p8_iter100_score_gradient_seed_stability.tsv
 """
+
 from __future__ import annotations
 
 import json
@@ -35,6 +36,7 @@ import numpy as np
 import xgboost as xgb
 
 import sys
+
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
 from _paths import REPO_ROOT
 from _p8_common import (
@@ -43,6 +45,7 @@ from _p8_common import (
     load,
     auc_p8 as auc,
 )
+
 ROOT = REPO_ROOT
 RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8" / "corrected-review20-v2"
 
@@ -57,22 +60,32 @@ W = 0.10  # canonical from iter-76 row 89
 
 def fit(Xtr, ytr, Xte, cols, seed):
     ci = [ALL24.index(c) for c in cols]
-    m = xgb.XGBClassifier(n_estimators=300, max_depth=5, learning_rate=0.1,
-                          subsample=0.8, colsample_bytree=0.8, eval_metric="logloss",
-                          random_state=seed, n_jobs=4)
+    m = xgb.XGBClassifier(
+        n_estimators=300,
+        max_depth=5,
+        learning_rate=0.1,
+        subsample=0.8,
+        colsample_bytree=0.8,
+        eval_metric="logloss",
+        random_state=seed,
+        n_jobs=4,
+    )
     m.fit(Xtr[:, ci], ytr)
     return m.predict_proba(Xte[:, ci])[:, 1]
 
 
 def pr_K(scores, y, k_pct):
-    n = len(y); k = max(1, int(round(k_pct / 100 * n)))
+    n = len(y)
+    k = max(1, int(round(k_pct / 100 * n)))
     top = np.argsort(-scores)[:k]
     tp = int(y[top].sum())
     return tp / k, tp / max(1, int(y.sum())), tp
 
 
 def boot_recall(scores, y, k_pct, B, seed):
-    rng = np.random.default_rng(seed); n = len(y); k = max(1, int(round(k_pct / 100 * n)))
+    rng = np.random.default_rng(seed)
+    n = len(y)
+    k = max(1, int(round(k_pct / 100 * n)))
     out = np.empty(B)
     for b in range(B):
         idx = rng.integers(0, n, n)
@@ -85,10 +98,14 @@ def boot_recall(scores, y, k_pct, B, seed):
 
 def apply_gradient(p_cheap, p_llm, g_thr, k_top):
     n = len(p_cheap)
-    order = np.argsort(-p_cheap); sorted_s = p_cheap[order]
-    grads = np.zeros(n); grads[1:] = sorted_s[:-1] - sorted_s[1:]
-    small = np.zeros(n, dtype=bool); small[order[1:]] = grads[1:] <= g_thr
-    top_k = np.zeros(n, dtype=bool); top_k[order[:k_top]] = True
+    order = np.argsort(-p_cheap)
+    sorted_s = p_cheap[order]
+    grads = np.zeros(n)
+    grads[1:] = sorted_s[:-1] - sorted_s[1:]
+    small = np.zeros(n, dtype=bool)
+    small[order[1:]] = grads[1:] <= g_thr
+    top_k = np.zeros(n, dtype=bool)
+    top_k[order[:k_top]] = True
     invoke = small & top_k
     comp = np.where(invoke, p_llm, p_cheap)
     return comp, int(invoke.sum())
@@ -118,11 +135,14 @@ def eval_rule(p_cheap, p_llm, y, rule, k_top, g_thr=None, w=None):
 
 
 def write_tsv(name, rows):
-    if not rows: return
+    if not rows:
+        return
     keys = list(rows[0].keys())
     lines = ["\t".join(keys)]
     for r in rows:
-        lines.append("\t".join(f"{r[k]:.6g}" if isinstance(r[k], float) else str(r[k]) for k in keys))
+        lines.append(
+            "\t".join(f"{r[k]:.6g}" if isinstance(r[k], float) else str(r[k]) for k in keys)
+        )
     (RES / name).write_text("\n".join(lines) + "\n")
 
 
@@ -131,7 +151,8 @@ def main():
     print("# === P8 score-gradient seed-stability check (JOB A iter 100) ===")
     Xtr, ytr = load(ROOT / "fraud_data.csv")
     Xte, yte = load(ROOT / "test_data.csv")
-    n_test = len(yte); k_top = max(1, int(round(K_PCT / 100 * n_test)))
+    n_test = len(yte)
+    k_top = max(1, int(round(K_PCT / 100 * n_test)))
     print(f"# train={Xtr.shape}, test={Xte.shape}, K_top={k_top}, base_rate={yte.mean():.4f}")
 
     # Explicit fixed full-feature surrogate for every backbone and seed.
@@ -148,46 +169,68 @@ def main():
     for backbone in ("XGB-20raw", "XGB-24full"):
         p_te_orig = predictions[(backbone, SEED_ORIG)]
         p_te_new = predictions[(backbone, SEED_NEW)]
-        auc_orig = auc(p_te_orig, yte); auc_new = auc(p_te_new, yte)
-        print(f"# {backbone} AUC: orig={auc_orig:.6f} new={auc_new:.6f} Δ={auc_new-auc_orig:+.6f}")
+        auc_orig = auc(p_te_orig, yte)
+        auc_new = auc(p_te_new, yte)
+        print(
+            f"# {backbone} AUC: orig={auc_orig:.6f} new={auc_new:.6f} Δ={auc_new - auc_orig:+.6f}"
+        )
         # Replay both rules at both seeds
         for rule in ("gradient-band", "absolute-band"):
             for seed_label, p_cheap in [(SEED_ORIG, p_te_orig), (SEED_NEW, p_te_new)]:
                 res = eval_rule(p_cheap, p_llm, yte, rule, k_top, g_thr=G_THR, w=W)
-                rows.append({
-                    "backbone": backbone, "rule": rule, "seed": seed_label,
-                    "auc_comp": res["auc"], "recall_at_K2": res["recall_at_K2"],
-                    "precision_at_K2": res["precision_at_K2"],
-                    "n_caught_at_K2": res["n_caught_at_K2"], "n_llm_calls": res["n_llm_calls"],
-                    "cost_per_decision": res["cost_per_decision"],
-                    "cost_per_fraud_caught": res["cost_per_fraud_caught"],
-                })
+                rows.append(
+                    {
+                        "backbone": backbone,
+                        "rule": rule,
+                        "seed": seed_label,
+                        "auc_comp": res["auc"],
+                        "recall_at_K2": res["recall_at_K2"],
+                        "precision_at_K2": res["precision_at_K2"],
+                        "n_caught_at_K2": res["n_caught_at_K2"],
+                        "n_llm_calls": res["n_llm_calls"],
+                        "cost_per_decision": res["cost_per_decision"],
+                        "cost_per_fraud_caught": res["cost_per_fraud_caught"],
+                    }
+                )
             # paired bootstrap CI on recall_at_K2 (orig vs new), same backbone, same rule
-            comp_orig, n_llm_orig = (apply_gradient(p_te_orig, p_llm, G_THR, k_top)
-                                     if rule == "gradient-band"
-                                     else apply_absolute(p_te_orig, p_llm, W))
-            comp_new, n_llm_new = (apply_gradient(p_te_new, p_llm, G_THR, k_top)
-                                   if rule == "gradient-band"
-                                   else apply_absolute(p_te_new, p_llm, W))
+            comp_orig, n_llm_orig = (
+                apply_gradient(p_te_orig, p_llm, G_THR, k_top)
+                if rule == "gradient-band"
+                else apply_absolute(p_te_orig, p_llm, W)
+            )
+            comp_new, n_llm_new = (
+                apply_gradient(p_te_new, p_llm, G_THR, k_top)
+                if rule == "gradient-band"
+                else apply_absolute(p_te_new, p_llm, W)
+            )
             b_orig = boot_recall(comp_orig, yte, K_PCT, B=N_BOOT, seed=SEED_ORIG)
-            b_new = boot_recall(comp_new, yte, K_PCT, B=N_BOOT, seed=SEED_ORIG)  # identical row draws
+            b_new = boot_recall(
+                comp_new, yte, K_PCT, B=N_BOOT, seed=SEED_ORIG
+            )  # identical row draws
             b_diff = b_new - b_orig
             boot_data[(backbone, rule)] = {
-                "b_orig": b_orig, "b_new": b_new, "b_diff": b_diff,
+                "b_orig": b_orig,
+                "b_new": b_new,
+                "b_diff": b_diff,
                 "recall_orig": pr_K(comp_orig, yte, K_PCT)[1],
                 "recall_new": pr_K(comp_new, yte, K_PCT)[1],
-                "n_llm_orig": n_llm_orig, "n_llm_new": n_llm_new,
+                "n_llm_orig": n_llm_orig,
+                "n_llm_new": n_llm_new,
             }
 
     write_tsv("p8_iter100_score_gradient_seed42_per_rule.tsv", rows)
 
     # Headline checks
-    headline_grad_20_orig = next(r for r in rows
-                                 if r["backbone"] == "XGB-20raw" and r["rule"] == "gradient-band"
-                                 and r["seed"] == SEED_ORIG)
-    headline_grad_20_new = next(r for r in rows
-                                if r["backbone"] == "XGB-20raw" and r["rule"] == "gradient-band"
-                                and r["seed"] == SEED_NEW)
+    headline_grad_20_orig = next(
+        r
+        for r in rows
+        if r["backbone"] == "XGB-20raw" and r["rule"] == "gradient-band" and r["seed"] == SEED_ORIG
+    )
+    headline_grad_20_new = next(
+        r
+        for r in rows
+        if r["backbone"] == "XGB-20raw" and r["rule"] == "gradient-band" and r["seed"] == SEED_NEW
+    )
     # Headline: the iter-80 row 94 headline is "141 of 144 caught with 9 LLM
     # calls". A seed-stable rule must (a) catch >=141 positives at K=2%, AND
     # (b) keep LLM-call count under the same canonical bound (~12 calls) at
@@ -201,25 +244,31 @@ def main():
 
     boot_rows = []
     for (backbone, rule), d in boot_data.items():
-        boot_rows.append({
-            "backbone": backbone, "rule": rule,
-            "recall_orig": d["recall_orig"],
-            "recall_orig_ci_lo": float(np.nanpercentile(d["b_orig"], 2.5)),
-            "recall_orig_ci_hi": float(np.nanpercentile(d["b_orig"], 97.5)),
-            "recall_new": d["recall_new"],
-            "recall_new_ci_lo": float(np.nanpercentile(d["b_new"], 2.5)),
-            "recall_new_ci_hi": float(np.nanpercentile(d["b_new"], 97.5)),
-            "delta_recall": d["recall_new"] - d["recall_orig"],
-            "delta_recall_ci_lo": float(np.nanpercentile(d["b_diff"], 2.5)),
-            "delta_recall_ci_hi": float(np.nanpercentile(d["b_diff"], 97.5)),
-            "n_llm_orig": d["n_llm_orig"], "n_llm_new": d["n_llm_new"],
-            "delta_n_llm": d["n_llm_new"] - d["n_llm_orig"],
-            "valid_paired_bootstrap_replicates": int(np.isfinite(d["b_diff"]).sum()),
-        })
+        boot_rows.append(
+            {
+                "backbone": backbone,
+                "rule": rule,
+                "recall_orig": d["recall_orig"],
+                "recall_orig_ci_lo": float(np.nanpercentile(d["b_orig"], 2.5)),
+                "recall_orig_ci_hi": float(np.nanpercentile(d["b_orig"], 97.5)),
+                "recall_new": d["recall_new"],
+                "recall_new_ci_lo": float(np.nanpercentile(d["b_new"], 2.5)),
+                "recall_new_ci_hi": float(np.nanpercentile(d["b_new"], 97.5)),
+                "delta_recall": d["recall_new"] - d["recall_orig"],
+                "delta_recall_ci_lo": float(np.nanpercentile(d["b_diff"], 2.5)),
+                "delta_recall_ci_hi": float(np.nanpercentile(d["b_diff"], 97.5)),
+                "n_llm_orig": d["n_llm_orig"],
+                "n_llm_new": d["n_llm_new"],
+                "delta_n_llm": d["n_llm_new"] - d["n_llm_orig"],
+                "valid_paired_bootstrap_replicates": int(np.isfinite(d["b_diff"]).sum()),
+            }
+        )
     write_tsv("p8_iter100_score_gradient_seed_stability.tsv", boot_rows)
 
     summary = {
-        "n_test": int(n_test), "k_top": k_top, "k_pct": K_PCT,
+        "n_test": int(n_test),
+        "k_top": k_top,
+        "k_pct": K_PCT,
         "seeds_compared": [SEED_ORIG, SEED_NEW],
         "n_boot": N_BOOT,
         "headline_gradient_band_xgb20raw_orig": {
@@ -234,16 +283,23 @@ def main():
         },
         "headline_seed_pass": bool(headline_pass),
         "max_abs_delta_recall_across_backbones_rules": float(
-            max(abs(r["delta_recall"]) for r in boot_rows)),
+            max(abs(r["delta_recall"]) for r in boot_rows)
+        ),
         "max_abs_delta_n_llm_across_backbones_rules": int(
-            max(abs(r["delta_n_llm"]) for r in boot_rows)),
+            max(abs(r["delta_n_llm"]) for r in boot_rows)
+        ),
         "n_rule_backbone_cells": len(rows),
-        "verdict": ("HISTORICAL COUNT BOUNDS PASSED FOR TWO SEEDS" if headline_pass
-                    else "HISTORICAL COUNT BOUNDS FAILED"),
+        "verdict": (
+            "HISTORICAL COUNT BOUNDS PASSED FOR TWO SEEDS"
+            if headline_pass
+            else "HISTORICAL COUNT BOUNDS FAILED"
+        ),
         "second_stage": "fixed XGB-24full surrogate at original seed; not measured LLM",
-        "cost_model": {"status": "assumed per-stage prices, not measured billing",
-                       "screening_usd_per_row": COST_XGB,
-                       "second_stage_usd_per_invocation": COST_LLM},
+        "cost_model": {
+            "status": "assumed per-stage prices, not measured billing",
+            "screening_usd_per_row": COST_XGB,
+            "second_stage_usd_per_invocation": COST_LLM,
+        },
         "uncertainty_scope": "paired held-out row bootstrap conditional on two fitted seeds",
         "key_finding": (
             f"Gradient-band XGB-20raw: seed {SEED_ORIG} caught "
@@ -256,7 +312,8 @@ def main():
         ),
     }
     (RES / "p8_iter100_score_gradient_seed_stability.json").write_text(
-        json.dumps(summary, indent=2, default=str))
+        json.dumps(summary, indent=2, default=str)
+    )
     print(json.dumps(summary, indent=2, default=str))
 
 

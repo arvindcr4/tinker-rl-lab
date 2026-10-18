@@ -14,6 +14,7 @@ that flags:
 
 Output: platform_hybrid/experiments/results/p5p8/p6_iter118_strict_audit.json
 """
+
 import json
 import hashlib
 from datetime import datetime, timezone
@@ -25,9 +26,15 @@ PROJECT_ROOT = WORKTREE / "platform_hybrid"
 REGISTRY = PROJECT_ROOT / "registry"
 RESULTS = PROJECT_ROOT / "experiments" / "results" / "p5p8" / "review17_v2"
 
-MIN_REPORT_ITEMS = ["loss_form", "reference_kl", "sampler_backend",
-                    "telemetry", "group_size_schedule", "heldout_split",
-                    "decontamination"]
+MIN_REPORT_ITEMS = [
+    "loss_form",
+    "reference_kl",
+    "sampler_backend",
+    "telemetry",
+    "group_size_schedule",
+    "heldout_split",
+    "decontamination",
+]
 
 
 def leaves(d):
@@ -70,6 +77,7 @@ def main(argv=None):
         args.output = RESULTS / "p6_iter118_strict_audit.json"
     sys.path.insert(0, str(WORKTREE / "platform_hybrid" / "registry"))
     from query import registry_input_manifest, registry_manifest_sha256, VALIDATOR_VERSION, load
+
     try:
         validated_records = load(registry=REGISTRY)
     except (ValueError, OSError) as exc:
@@ -80,8 +88,11 @@ def main(argv=None):
     if args.input_sha256 is not None and args.input_sha256 != digest:
         print("registry input manifest mismatch", file=sys.stderr)
         return 1
-    deltas = {record_id for record_id, rec in validated_records.items()
-              if rec["record_type"] == "variant_delta"}
+    deltas = {
+        record_id
+        for record_id, rec in validated_records.items()
+        if rec["record_type"] == "variant_delta"
+    }
 
     findings = []
     if not validated_records:
@@ -89,12 +100,20 @@ def main(argv=None):
     for rid, rec in validated_records.items():
         for claim in rec.get("expected_effects", []):
             rationale = claim.get("rationale")
-            if not isinstance(rationale, str) or rationale.strip().lower() in {"", "todo", "tbd", "unknown", "n/a"}:
+            if not isinstance(rationale, str) or rationale.strip().lower() in {
+                "",
+                "todo",
+                "tbd",
+                "unknown",
+                "n/a",
+            }:
                 findings.append({"kind": "missing_rationale", "entry": rid, "severity": "error"})
         for measurement in rec.get("measured", []):
             convention = measurement.get("sign_convention")
             if convention is not None and convention != "variant_minus_baseline":
-                findings.append({"kind": "sign_convention_drift", "entry": rid, "severity": "error"})
+                findings.append(
+                    {"kind": "sign_convention_drift", "entry": rid, "severity": "error"}
+                )
 
     # === orphan delta_id references ===
     for p in sorted((REGISTRY / "entries").glob("*.json")):
@@ -104,13 +123,15 @@ def main(argv=None):
         for vda in rec.get("variant_deltas_applied", []):
             did = vda.get("delta_id")
             if did and did not in deltas:
-                findings.append({
-                    "kind": "orphan_delta_id",
-                    "entry": p.stem,
-                    "delta_id": did,
-                    "severity": "error",
-                    "fix": f"create entries/{did}.json or correct the reference",
-                })
+                findings.append(
+                    {
+                        "kind": "orphan_delta_id",
+                        "entry": p.stem,
+                        "delta_id": did,
+                        "severity": "error",
+                        "fix": f"create entries/{did}.json or correct the reference",
+                    }
+                )
 
     # === fully-unknown MIN-REPORT items ===
     for p in sorted((REGISTRY / "entries").glob("*.json")):
@@ -120,22 +141,26 @@ def main(argv=None):
         mr = rec.get("min_report", {})
         for it in MIN_REPORT_ITEMS:
             if it not in mr:
-                findings.append({
-                    "kind": "missing_min_report_item",
-                    "entry": p.stem,
-                    "item": it,
-                    "severity": "warn",
-                    "fix": f"add min_report.{it}",
-                })
+                findings.append(
+                    {
+                        "kind": "missing_min_report_item",
+                        "entry": p.stem,
+                        "item": it,
+                        "severity": "warn",
+                        "fix": f"add min_report.{it}",
+                    }
+                )
                 continue
             if fully_unknown(mr[it]):
-                findings.append({
-                    "kind": "fully_unknown_item",
-                    "entry": p.stem,
-                    "item": it,
-                    "severity": "info",
-                    "fix": f"populate at least one leaf of min_report.{it}",
-                })
+                findings.append(
+                    {
+                        "kind": "fully_unknown_item",
+                        "entry": p.stem,
+                        "item": it,
+                        "severity": "info",
+                        "fix": f"populate at least one leaf of min_report.{it}",
+                    }
+                )
 
     # === sign convention drift ===
     # Variant-delta entries store measured.delta as (variant - base).
@@ -151,13 +176,15 @@ def main(argv=None):
         for m in rec.get("measured", []):
             src = m.get("source")
             if src and not source_exists(src):
-                findings.append({
-                    "kind": "missing_source",
-                    "entry": p.stem,
-                    "source": src,
-                    "severity": "error",
-                    "fix": "recreate the source artifact or update the path",
-                })
+                findings.append(
+                    {
+                        "kind": "missing_source",
+                        "entry": p.stem,
+                        "source": src,
+                        "severity": "error",
+                        "fix": "recreate the source artifact or update the path",
+                    }
+                )
 
     # === citation resolution ===
     for p in sorted((REGISTRY / "entries").glob("delta_*.json")):
@@ -166,19 +193,23 @@ def main(argv=None):
         arxiv = cit.get("arxiv")
         bibkey = cit.get("bibkey")
         if arxiv and not isinstance(arxiv, str):
-            findings.append({
-                "kind": "bad_arxiv_id",
-                "entry": p.stem,
-                "severity": "error",
-                "fix": "arxiv must be a string like 2509.21880",
-            })
+            findings.append(
+                {
+                    "kind": "bad_arxiv_id",
+                    "entry": p.stem,
+                    "severity": "error",
+                    "fix": "arxiv must be a string like 2509.21880",
+                }
+            )
         if bibkey and not isinstance(bibkey, str):
-            findings.append({
-                "kind": "bad_bibkey",
-                "entry": p.stem,
-                "severity": "error",
-                "fix": "bibkey must be a string",
-            })
+            findings.append(
+                {
+                    "kind": "bad_bibkey",
+                    "entry": p.stem,
+                    "severity": "error",
+                    "fix": "bibkey must be a string",
+                }
+            )
 
     out_json = {
         "validator_version": VALIDATOR_VERSION,
@@ -189,8 +220,10 @@ def main(argv=None):
         "findings": findings,
         "n_deltas": len(deltas),
         "n_stack_entries": sum(
-            1 for p in (REGISTRY / "entries").glob("*.json")
-            if json.loads(p.read_text()).get("record_type") == "stack"),
+            1
+            for p in (REGISTRY / "entries").glob("*.json")
+            if json.loads(p.read_text()).get("record_type") == "stack"
+        ),
         "audit_date": datetime.now(timezone.utc).isoformat(),
         "audit_source": "platform_modal/scripts/p5p8/p6_iter118_strict_validator.py",
     }
@@ -205,8 +238,10 @@ def main(argv=None):
     for f in findings:
         by_kind.setdefault(f["kind"], 0)
         by_kind[f["kind"]] += 1
-    print(f"# strict audit: {len(findings)} findings across "
-          f"{out_json['n_stack_entries']} stacks / {len(deltas)} deltas")
+    print(
+        f"# strict audit: {len(findings)} findings across "
+        f"{out_json['n_stack_entries']} stacks / {len(deltas)} deltas"
+    )
     for k, n in sorted(by_kind.items()):
         print(f"  {k:30s} {n}")
     print(f"  wrote {out_path}")

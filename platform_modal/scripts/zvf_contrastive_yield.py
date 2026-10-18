@@ -49,6 +49,7 @@ Outputs:
         {2,4,8,16} with measured (p, Y) scatter overlaid; (right)
         iso-G sizing curve G(p) for Y_target in {0.6, 0.8, 0.95}.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -58,7 +59,7 @@ import math
 import statistics
 import sys
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Sequence, Tuple
+from typing import Any, Dict, List, Optional
 from _analysis_common import maybe_matplotlib as _maybe_matplotlib
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -76,12 +77,13 @@ def per_problem_zvf_iid(p: float, G: int) -> float:
     if G <= 0:
         return float("nan")
     p = min(max(p, 0.0), 1.0)
-    return p ** G + (1.0 - p) ** G
+    return p**G + (1.0 - p) ** G
 
 
 def iso_g(p: float, Y_target: float):
     """Exact IID contrast-yield solver (review27-v2); inf means infeasible."""
     from _review27_contracts import exact_iso_g
+
     return exact_iso_g(p, Y_target)
 
 
@@ -95,7 +97,9 @@ def load_tinker_per_problem() -> List[Dict[str, Any]]:
         for p in data["per_problem"]:
             rewards = list(p["rewards"])
             assert len(rewards) == G, (seed, len(rewards), G)
-            if not all(isinstance(r, (int,float)) and math.isfinite(r) and r in (0,1) for r in rewards):
+            if not all(
+                isinstance(r, (int, float)) and math.isfinite(r) and r in (0, 1) for r in rewards
+            ):
                 raise ValueError("binary rewards required; cannot coerce fractional rewards")
             k = sum(rewards)
             p_x = k / G
@@ -175,9 +179,7 @@ def load_groupsize_sweep_per_step() -> List[Dict[str, Any]]:
 # ---------------------------------------------------------------------------
 
 
-def write_contrastive_yield(
-    rows: List[Dict[str, Any]], out_path: Path
-) -> Dict[str, Any]:
+def write_contrastive_yield(rows: List[Dict[str, Any]], out_path: Path) -> Dict[str, Any]:
     out_path.parent.mkdir(parents=True, exist_ok=True)
     with out_path.open("w") as fh:
         fh.write(
@@ -241,9 +243,7 @@ def write_contrastive_yield(
     return {"per_source": agg, "n_rows": len(rows)}
 
 
-def write_iso_yield_sizing(
-    rows: List[Dict[str, Any]], out_path: Path
-) -> Dict[str, Any]:
+def write_iso_yield_sizing(rows: List[Dict[str, Any]], out_path: Path) -> Dict[str, Any]:
     """Required G(p) under three Y_target settings + per-quintile summary."""
     out_path.parent.mkdir(parents=True, exist_ok=True)
     with out_path.open("w") as fh:
@@ -283,10 +283,7 @@ def write_iso_yield_sizing(
             static_g8 = statistics.fmean(r["Y_obs"] for r in slice_)
             iso_g_vals = [iso_g(r["p_x"], 0.8) for r in slice_]
             mean_iso_g = statistics.fmean(iso_g_vals)
-            iso_yields = [
-                1.0 - per_problem_zvf_iid(r["p_x"], iso_g(r["p_x"], 0.8))
-                for r in slice_
-            ]
+            iso_yields = [1.0 - per_problem_zvf_iid(r["p_x"], iso_g(r["p_x"], 0.8)) for r in slice_]
             mean_iso_yield = statistics.fmean(iso_yields)
             quintile_rows.append(
                 {
@@ -302,9 +299,7 @@ def write_iso_yield_sizing(
     return {"quintiles": quintile_rows, "n_tinker": len(tinker)}
 
 
-def write_yield_vs_static(
-    rows: List[Dict[str, Any]], out_path: Path
-) -> Dict[str, Any]:
+def write_yield_vs_static(rows: List[Dict[str, Any]], out_path: Path) -> Dict[str, Any]:
     """Static G=8 vs Iso-G expected-yield comparison on the GSM8K slice."""
     out_path.parent.mkdir(parents=True, exist_ok=True)
     tinker = [r for r in rows if r["source"] == "tinker_gsm8k"]
@@ -312,12 +307,9 @@ def write_yield_vs_static(
     Y_targets = (0.6, 0.8, 0.95)
     out_rows: List[Dict[str, Any]] = []
     for Y_target in Y_targets:
-        Y_static = statistics.fmean(
-            1.0 - per_problem_zvf_iid(r["p_x"], static_g) for r in tinker
-        )
+        Y_static = statistics.fmean(1.0 - per_problem_zvf_iid(r["p_x"], static_g) for r in tinker)
         Y_iso = statistics.fmean(
-            1.0 - per_problem_zvf_iid(r["p_x"], iso_g(r["p_x"], Y_target))
-            for r in tinker
+            1.0 - per_problem_zvf_iid(r["p_x"], iso_g(r["p_x"], Y_target)) for r in tinker
         )
         G_iso_mean = statistics.fmean(iso_g(r["p_x"], Y_target) for r in tinker)
         G_iso_max = max(iso_g(r["p_x"], Y_target) for r in tinker)
@@ -402,8 +394,7 @@ def write_figure(
     # Overlay measured (p, Y_obs) jittered for G=8 (tinker_gsm8k)
     tinker = [r for r in rows if r["source"] == "tinker_gsm8k"]
     if tinker:
-        x = [r["p_x"] + (hash((r["seed"], r["problem_id"])) % 7 - 3) * 0.012
-             for r in tinker]
+        x = [r["p_x"] + (hash((r["seed"], r["problem_id"])) % 7 - 3) * 0.012 for r in tinker]
         y = [r["Y_obs"] for r in tinker]
         axL.scatter(
             x,
@@ -460,8 +451,7 @@ def write_figure(
     axR.legend(loc="upper center", fontsize=8, frameon=False, ncol=2)
 
     fig.suptitle(
-        "Contrastive Yield decomposition and Iso-Yield sizing "
-        "(frontier-synthesis elev. of ZVF)",
+        "Contrastive Yield decomposition and Iso-Yield sizing (frontier-synthesis elev. of ZVF)",
         y=1.02,
     )
     fig.tight_layout()
@@ -482,16 +472,15 @@ def main() -> int:
     args = parser.parse_args()
 
     if args.self_test:
-        assert iso_g(.5,.6)==3
-        assert math.isinf(iso_g(0,.6))
-        assert per_problem_zvf_iid(.5,2)==.5
+        assert iso_g(0.5, 0.6) == 3
+        assert math.isinf(iso_g(0, 0.6))
+        assert per_problem_zvf_iid(0.5, 2) == 0.5
         print("synthetic numerical self-test passed; no artifacts written")
         return 0
 
     tinker = load_tinker_per_problem()
     sweep = load_groupsize_sweep_per_step()
     rows = tinker + sweep
-
 
     cy = write_contrastive_yield(rows, RESULTS / "zvf_contrastive_yield_v2.tsv")
     iso = write_iso_yield_sizing(rows, RESULTS / "zvf_iso_yield_sizing.tsv")

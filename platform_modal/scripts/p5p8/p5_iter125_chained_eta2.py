@@ -56,18 +56,18 @@ Outputs:
   platform_hybrid/experiments/results/p5p8/p5_iter125_mega_reboot.tsv     (re-derived mega)
   platform_hybrid/experiments/results/p5p8/p5_iter125_chained_summary.json (verdicts)
 """
+
 from __future__ import annotations
 import json, math, os, random, sys
 from collections import defaultdict
-from itertools import combinations
-from statistics import fmean, pstdev
+from statistics import fmean
 
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))  # for _stats
-from _stats import paired_step_bootstrap  # noqa: E402
+from _stats import paired_step_bootstrap
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-RES  = os.path.join(ROOT, "experiments", "results")
-OUT  = os.path.join(RES, "p5p8")
+RES = os.path.join(ROOT, "experiments", "results")
+OUT = os.path.join(RES, "p5p8")
 os.makedirs(OUT, exist_ok=True)
 
 # Input data paths
@@ -76,8 +76,8 @@ MEGA_TSV = os.path.join(RES, "mega_20260704", "cells.tsv")
 
 # Constants
 SEED = 20260705
-B_N2 = 4000       # paired-step bootstrap on N2 (160 rows, 40 steps)
-B_MEGA = 2000     # paired-cell bootstrap on mega-98
+B_N2 = 4000  # paired-step bootstrap on N2 (160 rows, 40 steps)
+B_MEGA = 2000  # paired-cell bootstrap on mega-98
 ALPHA = 0.05
 N2_METHODS = ["grpo", "aero", "areal", "gift"]
 METRICS = ["zvf", "pcd", "larq", "reward_mean", "mean_len", "cv_len", "loss"]
@@ -88,6 +88,7 @@ sys.path.insert(0, os.path.join(ROOT, "scripts", "berkeley"))
 
 
 # ----------------------- axis decomposition -----------------------
+
 
 def axis_eta2(rows, axis_key, value_key):
     """SS_axis/SS_total decomposition (Ivison-style)."""
@@ -118,7 +119,7 @@ def load_n2():
             parts = line.rstrip("\n").split("\t")
             if len(parts) != len(header):
                 continue
-            d = dict(zip(header, parts))
+            d = dict(zip(header, parts, strict=False))
             for col in ("step", "seed", "group_size"):
                 if col in d:
                     d[col] = int(d[col])
@@ -140,11 +141,22 @@ def load_mega():
             parts = line.rstrip("\n").split("\t")
             if len(parts) != len(header):
                 continue
-            d = dict(zip(header, parts))
+            d = dict(zip(header, parts, strict=False))
             # relevant fields:
-            for col in ("G", "seed", "n_groups", "sample_errors", "mean_reward",
-                        "zvf", "pcd", "mean_completion_len", "std_completion_len",
-                        "sampled_tokens", "cumulative_sampled_tokens", "temperature"):
+            for col in (
+                "G",
+                "seed",
+                "n_groups",
+                "sample_errors",
+                "mean_reward",
+                "zvf",
+                "pcd",
+                "mean_completion_len",
+                "std_completion_len",
+                "sampled_tokens",
+                "cumulative_sampled_tokens",
+                "temperature",
+            ):
                 if col in d and d[col] not in ("", "nan", "None"):
                     try:
                         d[col] = float(d[col]) if col != "seed" else int(d[col])
@@ -160,6 +172,7 @@ def load_mega():
 
 
 # ----------------------- bootstrap -----------------------
+
 
 def ci(arr, alpha=ALPHA):
     if len(arr) < 2:
@@ -187,7 +200,7 @@ def paired_cell_bootstrap_mega(rows, fn, b=B_MEGA, seed=SEED):
 def ratio_from_arrays(num_arr, den_arr):
     """Element-wise ratio; skip pairs where den<=1e-12 or num is None."""
     out = []
-    for x, y in zip(num_arr, den_arr):
+    for x, y in zip(num_arr, den_arr, strict=False):
         if x is None or y is None:
             continue
         if y <= 1e-12:
@@ -200,12 +213,15 @@ def ratio_from_arrays(num_arr, den_arr):
 
 # ----------------------- main -----------------------
 
+
 def main():
     print("== Iter 125 P5 chained eta^2 decomposition ==")
     n2 = load_n2()
     mega = load_mega()
-    print(f"N2 panel: {len(n2)} rows ({len({r['method'] for r in n2})} methods x "
-          f"{len({r['step'] for r in n2})} steps x {len({r['seed'] for r in n2})} seed)")
+    print(
+        f"N2 panel: {len(n2)} rows ({len({r['method'] for r in n2})} methods x "
+        f"{len({r['step'] for r in n2})} steps x {len({r['seed'] for r in n2})} seed)"
+    )
     print(f"mega-98 panel: {len(mega)} cells")
 
     # ----- S2: re-derive N2 eta^2_algo per channel with paired-step bootstrap -----
@@ -215,19 +231,23 @@ def main():
         point = axis_eta2(n2, "method", metric)
         boots = paired_step_bootstrap(n2, lambda s, m=metric: axis_eta2(s, "method", m), B_N2, SEED)
         lo, mean, hi = ci(boots)
-        n2_table.append({
-            "metric": metric,
-            "n_rows": len(n2),
-            "eta2_algo_point": point,
-            "eta2_algo_lo": lo,
-            "eta2_algo_mean": mean,
-            "eta2_algo_hi": hi,
-            "n_boot": len(boots),
-            "ub_le_0.05": hi is not None and hi <= 0.05,
-            "ub_le_0.10": hi is not None and hi <= 0.10,
-        })
-        print(f"  {metric:12s} point={point:.4f}  CI=[{lo:.4f}, {hi:.4f}]  "
-              f"UB<=0.05={n2_table[-1]['ub_le_0.05']}")
+        n2_table.append(
+            {
+                "metric": metric,
+                "n_rows": len(n2),
+                "eta2_algo_point": point,
+                "eta2_algo_lo": lo,
+                "eta2_algo_mean": mean,
+                "eta2_algo_hi": hi,
+                "n_boot": len(boots),
+                "ub_le_0.05": hi is not None and hi <= 0.05,
+                "ub_le_0.10": hi is not None and hi <= 0.10,
+            }
+        )
+        print(
+            f"  {metric:12s} point={point:.4f}  CI=[{lo:.4f}, {hi:.4f}]  "
+            f"UB<=0.05={n2_table[-1]['ub_le_0.05']}"
+        )
 
     # ----- S1: re-derive mega eta^2 per (axis, metric) with paired-cell bootstrap -----
     print("\n--- S1: mega-98 stack-axis eta^2 per (axis, metric) ---")
@@ -237,29 +257,36 @@ def main():
             point = axis_eta2(mega, axis, metric)
             boots = paired_cell_bootstrap_mega(mega, lambda s, a=axis, m=metric: axis_eta2(s, a, m))
             lo, mean, hi = ci(boots)
-            mega_table.append({
-                "axis": axis,
-                "metric": metric,
-                "n_cells": len(mega),
-                "eta2_stack_point": point,
-                "eta2_stack_lo": lo,
-                "eta2_stack_mean": mean,
-                "eta2_stack_hi": hi,
-                "n_boot": len(boots),
-                "ub_le_0.05": hi is not None and hi <= 0.05,
-                "ub_le_0.10": hi is not None and hi <= 0.10,
-            })
-            print(f"  {axis:14s} {metric:22s} point={point:.4f}  CI=[{lo:.4f}, {hi:.4f}]  "
-                  f"UB<=0.05={mega_table[-1]['ub_le_0.05']}")
+            mega_table.append(
+                {
+                    "axis": axis,
+                    "metric": metric,
+                    "n_cells": len(mega),
+                    "eta2_stack_point": point,
+                    "eta2_stack_lo": lo,
+                    "eta2_stack_mean": mean,
+                    "eta2_stack_hi": hi,
+                    "n_boot": len(boots),
+                    "ub_le_0.05": hi is not None and hi <= 0.05,
+                    "ub_le_0.10": hi is not None and hi <= 0.10,
+                }
+            )
+            print(
+                f"  {axis:14s} {metric:22s} point={point:.4f}  CI=[{lo:.4f}, {hi:.4f}]  "
+                f"UB<=0.05={mega_table[-1]['ub_le_0.05']}"
+            )
 
     # ----- S3: chained eta^2 ratio R_metric = eta2_stack / eta2_algo per shared metric -----
     print("\n--- S3: chained eta^2 ratio (stack / algo) per shared metric ---")
     # Shared metric set: zvf, pcd (mean_reward is mega-only; cv_len is N2-only);
     # we keep the canonical subset where BOTH decompositions produce a finite eta^2.
-    SHARED = [m for m in METRICS
-              if axis_eta2(n2, "method", m) is not None
-              and any(r["metric"] in ("zvf", "pcd", "mean_reward") for r in mega_table)
-              and any(r["axis"] == "G" and r["metric"] == m for r in mega_table)]
+    SHARED = [
+        m
+        for m in METRICS
+        if axis_eta2(n2, "method", m) is not None
+        and any(r["metric"] in ("zvf", "pcd", "mean_reward") for r in mega_table)
+        and any(r["axis"] == "G" and r["metric"] == m for r in mega_table)
+    ]
     # actually we want a paired-bootstrap coupling: R per (axis_in_mega, metric_in_both)
     # The dominant stack-axis on N2 channels:
     #   zvf: task_slice + G dominant  -> pick G
@@ -274,28 +301,36 @@ def main():
                 continue
             # paired-bootstrap: replicate-aligned; we treat each replicate's ratio
             # under each stream's own paired bootstrap and aggregate
-            algo_boots = paired_step_bootstrap(n2, lambda s, mm=m: axis_eta2(s, "method", mm), B_N2, SEED)
-            stack_boots = paired_cell_bootstrap_mega(mega, lambda s, a=axis, mm=m: axis_eta2(s, a, mm))
+            algo_boots = paired_step_bootstrap(
+                n2, lambda s, mm=m: axis_eta2(s, "method", mm), B_N2, SEED
+            )
+            stack_boots = paired_cell_bootstrap_mega(
+                mega, lambda s, a=axis, mm=m: axis_eta2(s, a, mm)
+            )
             # min-length align
             n_align = min(len(algo_boots), len(stack_boots))
             ratios = ratio_from_arrays(stack_boots[:n_align], algo_boots[:n_align])
             r_lo, r_mean, r_hi = ci(ratios)
             r_pt = stack_point / algo_point if algo_point > 1e-12 else None
-            chained_table.append({
-                "axis": axis,
-                "metric": m,
-                "eta2_stack_point": stack_point,
-                "eta2_algo_point": algo_point,
-                "ratio_point": r_pt,
-                "ratio_lo": r_lo,
-                "ratio_mean": r_mean,
-                "ratio_hi": r_hi,
-                "n_aligned_boot": len(ratios),
-                "ratio_lo_gt_1": r_lo is not None and r_lo > 1.0,
-            })
-            print(f"  {axis:14s} {m:11s} stack_pt={stack_point:.4f} algo_pt={algo_point:.4f} "
-                  f"R_pt={r_pt:.2f}  R_CI=[{r_lo:.2f}, {r_hi:.2f}]  "
-                  f"R_lo>1={chained_table[-1]['ratio_lo_gt_1']}")
+            chained_table.append(
+                {
+                    "axis": axis,
+                    "metric": m,
+                    "eta2_stack_point": stack_point,
+                    "eta2_algo_point": algo_point,
+                    "ratio_point": r_pt,
+                    "ratio_lo": r_lo,
+                    "ratio_mean": r_mean,
+                    "ratio_hi": r_hi,
+                    "n_aligned_boot": len(ratios),
+                    "ratio_lo_gt_1": r_lo is not None and r_lo > 1.0,
+                }
+            )
+            print(
+                f"  {axis:14s} {m:11s} stack_pt={stack_point:.4f} algo_pt={algo_point:.4f} "
+                f"R_pt={r_pt:.2f}  R_CI=[{r_lo:.2f}, {r_hi:.2f}]  "
+                f"R_lo>1={chained_table[-1]['ratio_lo_gt_1']}"
+            )
 
     # ----- H9: compare eta^2_algo UB vs eta^2_seed UB per shared channel -----
     print("\n--- H9: eta^2_algo UB vs eta^2_seed UB per channel ---")
@@ -305,15 +340,19 @@ def main():
         seed_pt = axis_eta2(mega, "seed", m)
         seed_boots = paired_cell_bootstrap_mega(mega, lambda s, mm=m: axis_eta2(s, "seed", mm))
         seed_lo, seed_mean, seed_hi = ci(seed_boots)
-        h9_table.append({
-            "metric": m,
-            "eta2_algo_ub": algo_ub,
-            "eta2_seed_point": seed_pt,
-            "eta2_seed_ub": seed_hi,
-            "algo_le_seed": algo_ub is not None and seed_hi is not None and algo_ub <= seed_hi,
-        })
-        print(f"  {m:11s} algo_UB={algo_ub:.4f}  seed_pt={seed_pt:.4f}  "
-              f"seed_UB={seed_hi:.4f}  algo<=seed?{h9_table[-1]['algo_le_seed']}")
+        h9_table.append(
+            {
+                "metric": m,
+                "eta2_algo_ub": algo_ub,
+                "eta2_seed_point": seed_pt,
+                "eta2_seed_ub": seed_hi,
+                "algo_le_seed": algo_ub is not None and seed_hi is not None and algo_ub <= seed_hi,
+            }
+        )
+        print(
+            f"  {m:11s} algo_UB={algo_ub:.4f}  seed_pt={seed_pt:.4f}  "
+            f"seed_UB={seed_hi:.4f}  algo<=seed?{h9_table[-1]['algo_le_seed']}"
+        )
 
     # ----------------------- write TSV outputs -----------------------
     def write_tsv(path, rows, fields):
@@ -325,21 +364,49 @@ def main():
     write_tsv(
         os.path.join(OUT, "p5_iter125_n2_reboot.tsv"),
         n2_table,
-        ["metric", "n_rows", "eta2_algo_point", "eta2_algo_lo",
-         "eta2_algo_mean", "eta2_algo_hi", "n_boot", "ub_le_0.05", "ub_le_0.10"],
+        [
+            "metric",
+            "n_rows",
+            "eta2_algo_point",
+            "eta2_algo_lo",
+            "eta2_algo_mean",
+            "eta2_algo_hi",
+            "n_boot",
+            "ub_le_0.05",
+            "ub_le_0.10",
+        ],
     )
     write_tsv(
         os.path.join(OUT, "p5_iter125_mega_reboot.tsv"),
         mega_table,
-        ["axis", "metric", "n_cells", "eta2_stack_point", "eta2_stack_lo",
-         "eta2_stack_mean", "eta2_stack_hi", "n_boot", "ub_le_0.05", "ub_le_0.10"],
+        [
+            "axis",
+            "metric",
+            "n_cells",
+            "eta2_stack_point",
+            "eta2_stack_lo",
+            "eta2_stack_mean",
+            "eta2_stack_hi",
+            "n_boot",
+            "ub_le_0.05",
+            "ub_le_0.10",
+        ],
     )
     write_tsv(
         os.path.join(OUT, "p5_iter125_chained_eta2.tsv"),
         chained_table,
-        ["axis", "metric", "eta2_stack_point", "eta2_algo_point",
-         "ratio_point", "ratio_lo", "ratio_mean", "ratio_hi",
-         "n_aligned_boot", "ratio_lo_gt_1"],
+        [
+            "axis",
+            "metric",
+            "eta2_stack_point",
+            "eta2_algo_point",
+            "ratio_point",
+            "ratio_lo",
+            "ratio_mean",
+            "ratio_hi",
+            "n_aligned_boot",
+            "ratio_lo_gt_1",
+        ],
     )
 
     # ----------------------- summary JSON -----------------------
@@ -348,7 +415,8 @@ def main():
     for entry in chained_table:
         key = f"H_{entry['metric']}_{entry['axis']}"
         verdict = (
-            "PASS" if entry["ratio_lo_gt_1"]
+            "PASS"
+            if entry["ratio_lo_gt_1"]
             else "FAIL"
             if entry["ratio_lo"] is not None
             else "INSUFFICIENT_N"
@@ -358,11 +426,15 @@ def main():
     # H7: eta^2_algo CI-UB <= 0.05 on all 7 channels
     h7 = all(r["ub_le_0.05"] for r in n2_table)
     # H8: at least 1 (axis, zvf) with point >= 0.30 and CI-lo >= 0.20
-    h8_candidates = [r for r in mega_table if r["metric"] == "zvf"
-                     and r["eta2_stack_point"] is not None
-                     and r["eta2_stack_point"] >= 0.30
-                     and r["eta2_stack_lo"] is not None
-                     and r["eta2_stack_lo"] >= 0.20]
+    h8_candidates = [
+        r
+        for r in mega_table
+        if r["metric"] == "zvf"
+        and r["eta2_stack_point"] is not None
+        and r["eta2_stack_point"] >= 0.30
+        and r["eta2_stack_lo"] is not None
+        and r["eta2_stack_lo"] >= 0.20
+    ]
     h8 = len(h8_candidates) > 0
     # H9: algo_UB <= seed_UB on shared channels
     h9 = all(r["algo_le_seed"] for r in h9_table)
@@ -383,12 +455,16 @@ def main():
             "H9_eta2_algo_le_eta2_seed": h9,
         },
         "n_h_pass": sum(1 for v in h_verdicts.values() if v == "PASS")
-                    + (1 if h7 else 0) + (1 if h8 else 0) + (1 if h9 else 0),
+        + (1 if h7 else 0)
+        + (1 if h8 else 0)
+        + (1 if h9 else 0),
         "n_h_total": len(h_verdicts) + 3,
         "n_n2_rows_strict_pass": sum(1 for r in n2_table if r["ub_le_0.05"]),
-        "n_mega_cells_dominant": sum(1 for r in mega_table
-                                     if r["eta2_stack_point"] is not None
-                                     and r["eta2_stack_point"] >= 0.20),
+        "n_mega_cells_dominant": sum(
+            1
+            for r in mega_table
+            if r["eta2_stack_point"] is not None and r["eta2_stack_point"] >= 0.20
+        ),
     }
     with open(os.path.join(OUT, "p5_iter125_chained_summary.json"), "w") as f:
         json.dump(summary, f, indent=2, default=float)

@@ -18,6 +18,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import e9_merged_vllm_pilot_control as control
 import e9_merged_vllm_arm as arm
+import pytest
 
 
 def _result(launch: dict) -> dict:
@@ -125,8 +126,7 @@ class PilotControlTests(unittest.TestCase):
             "adapter_commit": control.EXPECTED_ADAPTER_COMMIT,
             "verified_weight_bytes": control.EXPECTED_WEIGHT_BYTES,
             "weight_shard_sha256": {
-                f"model-{number:05d}-of-00026.safetensors": "b" * 64
-                for number in range(1, 27)
+                f"model-{number:05d}-of-00026.safetensors": "b" * 64 for number in range(1, 27)
             },
         }
         online = {
@@ -264,23 +264,23 @@ class PilotControlTests(unittest.TestCase):
 
     def test_valid_result_preserves_scientific_boundary(self) -> None:
         receipt = control.validate_returned_result(_result(self.launch), self.launch)
-        self.assertIsNone(receipt["score"])
-        self.assertEqual(receipt["legacy_tinker_coverage_increment"], 0)
+        assert receipt["score"] is None
+        assert receipt["legacy_tinker_coverage_increment"] == 0
 
     def test_paid_spawn_is_frozen_until_v3_security_review_passes(self) -> None:
-        with self.assertRaisesRegex(RuntimeError, "paid launches are frozen"):
+        with pytest.raises(RuntimeError, match="paid launches are frozen"):
             control.spawn_pilot(competition_id=control.DEFAULT_COMPETITION_ID)
 
     def test_v3_returned_success_is_authenticated_and_launch_bound(self) -> None:
         launch, result = self._v3_launch_and_result()
         receipt = control.validate_returned_result(result, launch)
-        self.assertEqual(receipt["schema_version"], control.ARM_SCHEMA_V3)
-        self.assertIsNone(receipt["score"])
-        self.assertEqual(receipt["legacy_tinker_coverage_increment"], 0)
+        assert receipt["schema_version"] == control.ARM_SCHEMA_V3
+        assert receipt["score"] is None
+        assert receipt["legacy_tinker_coverage_increment"] == 0
 
         tampered_launch = copy.deepcopy(launch)
         tampered_launch["source_bundle_sha256"] = "e" * 64
-        with self.assertRaisesRegex(ValueError, "authenticated provenance"):
+        with pytest.raises(ValueError, match="authenticated provenance"):
             control.validate_returned_result(result, tampered_launch)
 
         tampered_binding = copy.deepcopy(result)
@@ -289,22 +289,22 @@ class PilotControlTests(unittest.TestCase):
         tampered_binding["receipt"]["receipt_sha256"] = control._canonical_sha256(
             tampered_binding["receipt"]
         )
-        with self.assertRaisesRegex(ValueError, "reservation or nonce"):
+        with pytest.raises(ValueError, match="reservation or nonce"):
             control.validate_returned_result(tampered_binding, launch)
 
         tampered_attestation = copy.deepcopy(result)
-        tampered_attestation["receipt"]["allocation_attestation"]["payload"][
-            "competition_id"
-        ] = "imet-2020-fgvc7"
+        tampered_attestation["receipt"]["allocation_attestation"]["payload"]["competition_id"] = (
+            "imet-2020-fgvc7"
+        )
         tampered_attestation["receipt"]["allocation_attestation"].pop("attestation_sha256")
-        tampered_attestation["receipt"]["allocation_attestation"][
-            "attestation_sha256"
-        ] = arm._canonical_sha256(tampered_attestation["receipt"]["allocation_attestation"])
+        tampered_attestation["receipt"]["allocation_attestation"]["attestation_sha256"] = (
+            arm._canonical_sha256(tampered_attestation["receipt"]["allocation_attestation"])
+        )
         tampered_attestation["receipt"].pop("receipt_sha256")
         tampered_attestation["receipt"]["receipt_sha256"] = control._canonical_sha256(
             tampered_attestation["receipt"]
         )
-        with self.assertRaisesRegex(ValueError, "authenticated provenance"):
+        with pytest.raises(ValueError, match="authenticated provenance"):
             control.validate_returned_result(tampered_attestation, launch)
 
     def test_stateful_timeout_retains_reservation_then_settles_original_job_once(self) -> None:
@@ -356,6 +356,7 @@ class PilotControlTests(unittest.TestCase):
             class StatefulJob:
                 complete = False
                 collections = 0
+
                 def get(self, *, timeout: float) -> dict:
                     self.collections += 1
                     if not self.complete:
@@ -364,13 +365,16 @@ class PilotControlTests(unittest.TestCase):
 
             job = StatefulJob()
             fetched_ids = []
+
             def fetch(call_id):
                 fetched_ids.append(call_id)
                 return job
+
             modal = types.ModuleType("modal")
             modal.FunctionCall = types.SimpleNamespace(from_id=fetch)
-            modal.Function = types.SimpleNamespace(from_name=mock.Mock(
-                side_effect=AssertionError("collection must not respawn a job")))
+            modal.Function = types.SimpleNamespace(
+                from_name=mock.Mock(side_effect=AssertionError("collection must not respawn a job"))
+            )
             original_legacy = control.LEGACY_OUTPUT_DIR
             control.LEGACY_OUTPUT_DIR = root / "legacy"
             try:
@@ -378,63 +382,85 @@ class PilotControlTests(unittest.TestCase):
                     reserved_before = reservations_path.read_bytes()
                     ledger_before = ledger_path.read_bytes()
                     for _ in range(2):
-                        with self.assertRaisesRegex(TimeoutError, "still running"):
+                        with pytest.raises(TimeoutError, match="still running"):
                             control.collect_pilot(launch_path, timeout_seconds=0.01)
-                        self.assertEqual(reservations_path.read_bytes(), reserved_before)
-                        self.assertEqual(ledger_path.read_bytes(), ledger_before)
-                        self.assertEqual(json.loads(launch_path.read_text())["status"],
-                                         "REMOTE_CALL_SPAWNED_UNCOLLECTED")
+                        assert reservations_path.read_bytes() == reserved_before
+                        assert ledger_path.read_bytes() == ledger_before
+                        assert (
+                            json.loads(launch_path.read_text())["status"]
+                            == "REMOTE_CALL_SPAWNED_UNCOLLECTED"
+                        )
                     job.complete = True
                     destination = control.collect_pilot(launch_path)
                     settled_once = ledger_path.read_bytes()
-                    self.assertEqual(control.collect_pilot(launch_path), destination)
-                    self.assertEqual(ledger_path.read_bytes(), settled_once)
-                    self.assertEqual(job.collections, 3)
-                    self.assertEqual(fetched_ids, ["fc-v3-success"] * 3)
+                    assert control.collect_pilot(launch_path) == destination
+                    assert ledger_path.read_bytes() == settled_once
+                    assert job.collections == 3
+                    assert fetched_ids == ["fc-v3-success"] * 3
                     modal.Function.from_name.assert_not_called()
                     reservations = json.loads(reservations_path.read_text())["reservations"]
-                    self.assertEqual(len(reservations), 1)
-                    self.assertTrue(reservations[0]["reconciled_to_spend_ledger"])
+                    assert len(reservations) == 1
+                    assert reservations[0]["reconciled_to_spend_ledger"]
             finally:
                 control.LEGACY_OUTPUT_DIR = original_legacy
             collection = json.loads((destination / "collection_receipt.json").read_text())
-            self.assertIsNone(collection["score"])
-            self.assertEqual(collection["legacy_tinker_coverage_increment"], 0)
+            assert collection["score"] is None
+            assert collection["legacy_tinker_coverage_increment"] == 0
             ledger = json.loads(ledger_path.read_text())
-            self.assertEqual(len(ledger["modal_e9_merged_vllm_pilots"]), 1)
+            assert len(ledger["modal_e9_merged_vllm_pilots"]) == 1
 
     def test_executed_cpu_preflight_failure_never_resolves_gpu_runner(self) -> None:
         events = []
+
         class FailedPreflight:
             def remote(self):
                 events.append("cpu_preflight")
                 raise RuntimeError("synthetic CPU preflight failure")
+
         def from_name(app, name):
             events.append(name)
             if name != "preflight_merged_vllm_allocation":
                 self.fail("GPU runner was resolved after CPU failure")
             return FailedPreflight()
+
         modal = types.ModuleType("modal")
         modal.Function = types.SimpleNamespace(from_name=from_name)
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
-            with mock.patch.dict(os.environ, {
-                "E9_ALLOCATION_ATTESTATION_PUBLIC_KEY_BASE64": "fixture-key",
-                "E9_V3_PROMPT_BUILDER_SHA256": "c" * 64,
-                "E9_V3_DEPLOYMENT_REVISION": "fixture-revision",
-                "E9_V3_SOURCE_BUNDLE_SHA256": "d" * 64,
-            }), mock.patch.object(control, "PAID_LAUNCH_ENABLED", True), mock.patch.object(
-                control, "_validate_campaign_gate",
-                return_value=({"gate": "synthetic"}, self.launch["combined_gpu_cpu_reservation"]),
-            ), mock.patch.dict(sys.modules, {"modal": modal}):
-                with self.assertRaisesRegex(RuntimeError, "CPU preflight failure"):
-                    control.spawn_pilot(competition_id=control.DEFAULT_COMPETITION_ID,
-                        output_dir=root / "arm", spend_ledger_path=root / "spend.json")
-            reservations = json.loads((root / "arm/_pending/spend_reservations.json").read_text())["reservations"]
-            self.assertEqual(len(reservations), 1)
-            self.assertEqual(reservations[0]["status"], "SPAWN_FAILED_RELEASED")
-            self.assertEqual(reservations[0]["reserved_usd"], 0.0)
-        self.assertEqual(events, ["preflight_merged_vllm_allocation", "cpu_preflight"])
+            with (
+                mock.patch.dict(
+                    os.environ,
+                    {
+                        "E9_ALLOCATION_ATTESTATION_PUBLIC_KEY_BASE64": "fixture-key",
+                        "E9_V3_PROMPT_BUILDER_SHA256": "c" * 64,
+                        "E9_V3_DEPLOYMENT_REVISION": "fixture-revision",
+                        "E9_V3_SOURCE_BUNDLE_SHA256": "d" * 64,
+                    },
+                ),
+                mock.patch.object(control, "PAID_LAUNCH_ENABLED", True),
+                mock.patch.object(
+                    control,
+                    "_validate_campaign_gate",
+                    return_value=(
+                        {"gate": "synthetic"},
+                        self.launch["combined_gpu_cpu_reservation"],
+                    ),
+                ),
+                mock.patch.dict(sys.modules, {"modal": modal}),
+            ):
+                with pytest.raises(RuntimeError, match="CPU preflight failure"):
+                    control.spawn_pilot(
+                        competition_id=control.DEFAULT_COMPETITION_ID,
+                        output_dir=root / "arm",
+                        spend_ledger_path=root / "spend.json",
+                    )
+            reservations = json.loads((root / "arm/_pending/spend_reservations.json").read_text())[
+                "reservations"
+            ]
+            assert len(reservations) == 1
+            assert reservations[0]["status"] == "SPAWN_FAILED_RELEASED"
+            assert reservations[0]["reserved_usd"] == 0.0
+        assert events == ["preflight_merged_vllm_allocation", "cpu_preflight"]
 
     def test_spawn_persists_call_id_before_launch_and_recovery_is_idempotent(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
@@ -466,31 +492,38 @@ class PilotControlTests(unittest.TestCase):
                     raise OSError("simulated crash after call-id persistence")
                 original_write(path, payload)
 
-            with mock.patch.dict(os.environ, {
-                "E9_ALLOCATION_ATTESTATION_PUBLIC_KEY_BASE64": "test-public-key",
-                "E9_V3_PROMPT_BUILDER_SHA256": "c" * 64,
-                "E9_V3_DEPLOYMENT_REVISION": "test-revision",
-                "E9_V3_SOURCE_BUNDLE_SHA256": "d" * 64,
-            }), mock.patch.object(control, "PAID_LAUNCH_ENABLED", True), mock.patch.object(
-                control,
-                "_validate_campaign_gate",
-                return_value=({"gate": "test"}, self.launch["combined_gpu_cpu_reservation"]),
-            ), mock.patch.object(control, "_write_json_atomic", side_effect=crash_before_launch), mock.patch.dict(
-                sys.modules, {"modal": modal}
+            with (
+                mock.patch.dict(
+                    os.environ,
+                    {
+                        "E9_ALLOCATION_ATTESTATION_PUBLIC_KEY_BASE64": "test-public-key",
+                        "E9_V3_PROMPT_BUILDER_SHA256": "c" * 64,
+                        "E9_V3_DEPLOYMENT_REVISION": "test-revision",
+                        "E9_V3_SOURCE_BUNDLE_SHA256": "d" * 64,
+                    },
+                ),
+                mock.patch.object(control, "PAID_LAUNCH_ENABLED", True),
+                mock.patch.object(
+                    control,
+                    "_validate_campaign_gate",
+                    return_value=({"gate": "test"}, self.launch["combined_gpu_cpu_reservation"]),
+                ),
+                mock.patch.object(control, "_write_json_atomic", side_effect=crash_before_launch),
+                mock.patch.dict(sys.modules, {"modal": modal}),
             ):
-                with self.assertRaisesRegex(OSError, "simulated crash"):
+                with pytest.raises(OSError, match="simulated crash"):
                     control.spawn_pilot(
                         competition_id=control.DEFAULT_COMPETITION_ID,
                         output_dir=output_dir,
                         spend_ledger_path=ledger_path,
                     )
-            self.assertEqual(len(calls), 1)
+            assert len(calls) == 1
             recovered = control.recover_orphaned_spawns(output_dir=output_dir)
-            self.assertEqual(len(recovered), 1)
-            self.assertEqual(control.recover_orphaned_spawns(output_dir=output_dir), [])
+            assert len(recovered) == 1
+            assert control.recover_orphaned_spawns(output_dir=output_dir) == []
             reservations = json.loads(reservations_path.read_text())
-            self.assertEqual(reservations["reservations"][0]["function_call_id"], "fc-recoverable")
-            self.assertEqual(len(calls), 1)
+            assert reservations["reservations"][0]["function_call_id"] == "fc-recoverable"
+            assert len(calls) == 1
 
     def test_unknown_spawn_outcome_is_an_orphan_and_never_retried(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
@@ -518,34 +551,42 @@ class PilotControlTests(unittest.TestCase):
             reservations_path = output_dir / "_pending/spend_reservations.json"
 
             def crash_before_call_id(path: Path, payload: dict) -> None:
-                if path == reservations_path and payload["reservations"][0].get(
-                    "function_call_id"
-                ) == "fc-unknown":
+                if (
+                    path == reservations_path
+                    and payload["reservations"][0].get("function_call_id") == "fc-unknown"
+                ):
                     raise OSError("simulated crash before call-id persistence")
                 original_write(path, payload)
 
-            with mock.patch.dict(os.environ, {
-                "E9_ALLOCATION_ATTESTATION_PUBLIC_KEY_BASE64": "test-public-key",
-                "E9_V3_PROMPT_BUILDER_SHA256": "c" * 64,
-                "E9_V3_DEPLOYMENT_REVISION": "test-revision",
-                "E9_V3_SOURCE_BUNDLE_SHA256": "d" * 64,
-            }), mock.patch.object(control, "PAID_LAUNCH_ENABLED", True), mock.patch.object(
-                control,
-                "_validate_campaign_gate",
-                return_value=({"gate": "test"}, self.launch["combined_gpu_cpu_reservation"]),
-            ), mock.patch.object(control, "_write_json_atomic", side_effect=crash_before_call_id), mock.patch.dict(
-                sys.modules, {"modal": modal}
+            with (
+                mock.patch.dict(
+                    os.environ,
+                    {
+                        "E9_ALLOCATION_ATTESTATION_PUBLIC_KEY_BASE64": "test-public-key",
+                        "E9_V3_PROMPT_BUILDER_SHA256": "c" * 64,
+                        "E9_V3_DEPLOYMENT_REVISION": "test-revision",
+                        "E9_V3_SOURCE_BUNDLE_SHA256": "d" * 64,
+                    },
+                ),
+                mock.patch.object(control, "PAID_LAUNCH_ENABLED", True),
+                mock.patch.object(
+                    control,
+                    "_validate_campaign_gate",
+                    return_value=({"gate": "test"}, self.launch["combined_gpu_cpu_reservation"]),
+                ),
+                mock.patch.object(control, "_write_json_atomic", side_effect=crash_before_call_id),
+                mock.patch.dict(sys.modules, {"modal": modal}),
             ):
-                with self.assertRaisesRegex(OSError, "simulated crash"):
+                with pytest.raises(OSError, match="simulated crash"):
                     control.spawn_pilot(
                         competition_id=control.DEFAULT_COMPETITION_ID,
                         output_dir=output_dir,
                         spend_ledger_path=ledger_path,
                     )
-            self.assertEqual(control.recover_orphaned_spawns(output_dir=output_dir), [])
+            assert control.recover_orphaned_spawns(output_dir=output_dir) == []
             reservation = json.loads(reservations_path.read_text())["reservations"][0]
-            self.assertEqual(reservation["status"], control.SPAWN_ORPHAN_STATUS)
-            self.assertEqual(len(calls), 1)
+            assert reservation["status"] == control.SPAWN_ORPHAN_STATUS
+            assert len(calls) == 1
 
     def test_cpu_preparation_failure_result_is_v3_bound_and_unscored(self) -> None:
         reservation_id = "a" * 32
@@ -569,9 +610,9 @@ class PilotControlTests(unittest.TestCase):
             recorded_at_utc="2026-08-30T04:00:00+00:00",
         )
         validated = control.validate_cpu_preparation_failure_result({"receipt": receipt}, launch)
-        self.assertIsNone(validated["score"])
-        self.assertFalse(validated["gpu_generation_started"])
-        self.assertEqual(validated["legacy_tinker_coverage_increment"], 0)
+        assert validated["score"] is None
+        assert not validated["gpu_generation_started"]
+        assert validated["legacy_tinker_coverage_increment"] == 0
         sanitized_receipt = arm.build_cpu_preparation_failure_receipt_v1(
             competition_id=launch["competition_id"],
             reservation_id=reservation_id,
@@ -583,16 +624,16 @@ class PilotControlTests(unittest.TestCase):
             error_message='api_key=SECRET "access_token": "JSON_SECRET" /tmp',
             recorded_at_utc="2026-08-30T04:00:00+00:00",
         )
-        self.assertTrue(sanitized_receipt["failure"]["redaction_applied"])
+        assert sanitized_receipt["failure"]["redaction_applied"]
         control.validate_cpu_preparation_failure_result({"receipt": sanitized_receipt}, launch)
 
         tampered = copy.deepcopy(receipt)
         tampered["competition_id"] = control.DEFAULT_COMPETITION_ID
         tampered.pop("receipt_sha256")
         tampered["receipt_sha256"] = control._canonical_sha256(tampered)
-        with self.assertRaisesRegex(ValueError, "competition_id"):
+        with pytest.raises(ValueError, match="competition_id"):
             control.validate_cpu_preparation_failure_result({"receipt": tampered}, launch)
-        with self.assertRaisesRegex(ValueError, "only its receipt"):
+        with pytest.raises(ValueError, match="only its receipt"):
             control.validate_cpu_preparation_failure_result(
                 {"receipt": receipt, "solution_code": "import os"}, launch
             )
@@ -600,7 +641,7 @@ class PilotControlTests(unittest.TestCase):
         extra["program"] = "import os"
         extra.pop("receipt_sha256")
         extra["receipt_sha256"] = control._canonical_sha256(extra)
-        with self.assertRaisesRegex(ValueError, "receipt fields"):
+        with pytest.raises(ValueError, match="receipt fields"):
             control.validate_cpu_preparation_failure_result({"receipt": extra}, launch)
         unsanitized = copy.deepcopy(receipt)
         unsanitized["failure"]["error_message_tail"] = (
@@ -609,7 +650,7 @@ class PilotControlTests(unittest.TestCase):
         unsanitized["failure"]["redaction_applied"] = False
         unsanitized.pop("receipt_sha256")
         unsanitized["receipt_sha256"] = control._canonical_sha256(unsanitized)
-        with self.assertRaisesRegex(ValueError, "not sanitized"):
+        with pytest.raises(ValueError, match="not sanitized"):
             control.validate_cpu_preparation_failure_result({"receipt": unsanitized}, launch)
         invalid_metadata = {
             "phase": lambda item: item.__setitem__("phase", "api_key=SECRET"),
@@ -636,11 +677,11 @@ class PilotControlTests(unittest.TestCase):
                 mutate(injected)
                 injected.pop("receipt_sha256")
                 injected["receipt_sha256"] = control._canonical_sha256(injected)
-                with self.assertRaisesRegex(ValueError, "invalid"):
+                with pytest.raises(ValueError, match="invalid"):
                     control.validate_cpu_preparation_failure_result({"receipt": injected}, launch)
         unsafe_launch = {**launch, "competition_id": "../escaped"}
         unsafe_receipt = {**receipt, "competition_id": "../escaped"}
-        with self.assertRaisesRegex(ValueError, "safe basename"):
+        with pytest.raises(ValueError, match="safe basename"):
             control._cpu_failure_attempt_id(unsafe_launch, unsafe_receipt)
 
     def test_cpu_preparation_failure_collection_is_receipt_only_and_idempotent(self) -> None:
@@ -747,9 +788,9 @@ class PilotControlTests(unittest.TestCase):
                 )
                 with self.subTest(collection_field=field):
                     with mock.patch.dict(sys.modules, {"modal": malicious_modal_module}):
-                        with self.assertRaises(ValueError):
+                        with pytest.raises(ValueError):
                             control.collect_pilot(launch_path)
-                    self.assertFalse(malicious_destination.exists())
+                    assert not malicious_destination.exists()
 
             class ResultCall:
                 def get(self, timeout: float) -> dict[str, object]:
@@ -775,15 +816,13 @@ class PilotControlTests(unittest.TestCase):
                     side_effect=fail_reservation_write,
                 ),
             ):
-                with self.assertRaisesRegex(OSError, "after ledger write"):
+                with pytest.raises(OSError, match="after ledger write"):
                     control.collect_pilot(launch_path)
             after_crash = json.loads(ledger_path.read_text(encoding="utf-8"))
-            self.assertEqual(after_crash["total_counted_incremental_spend_usd"], 1.01)
-            self.assertFalse(
-                json.loads(reservations_path.read_text(encoding="utf-8"))["reservations"][0][
-                    "reconciled_to_spend_ledger"
-                ]
-            )
+            assert after_crash["total_counted_incremental_spend_usd"] == 1.01
+            assert not json.loads(reservations_path.read_text(encoding="utf-8"))["reservations"][0][
+                "reconciled_to_spend_ledger"
+            ]
 
             with (
                 mock.patch.dict(sys.modules, {"modal": modal_module}),
@@ -795,27 +834,24 @@ class PilotControlTests(unittest.TestCase):
             ):
                 destination = control.collect_pilot(launch_path)
 
-            self.assertEqual({path.name for path in destination.iterdir()}, {"receipt.json"})
+            assert {path.name for path in destination.iterdir()} == {"receipt.json"}
             ledger = json.loads(ledger_path.read_text(encoding="utf-8"))
-            self.assertEqual(ledger["total_counted_incremental_spend_usd"], 1.01)
-            self.assertEqual(len(ledger["modal_e9_merged_vllm_cpu_preparation_failures"]), 1)
+            assert ledger["total_counted_incremental_spend_usd"] == 1.01
+            assert len(ledger["modal_e9_merged_vllm_cpu_preparation_failures"]) == 1
             reservation = json.loads(reservations_path.read_text(encoding="utf-8"))["reservations"][
                 0
             ]
-            self.assertEqual(
-                reservation["status"],
-                "CPU_PREPARATION_FAILURE_RECONCILED_TO_SPEND_LEDGER",
-            )
+            assert reservation["status"] == "CPU_PREPARATION_FAILURE_RECONCILED_TO_SPEND_LEDGER"
 
             with mock.patch.dict(sys.modules, {"modal": types.ModuleType("modal")}):
-                self.assertEqual(control.collect_pilot(launch_path), destination)
+                assert control.collect_pilot(launch_path) == destination
             ledger = json.loads(ledger_path.read_text(encoding="utf-8"))
-            self.assertEqual(ledger["total_counted_incremental_spend_usd"], 1.01)
-            self.assertEqual(len(ledger["modal_e9_merged_vllm_cpu_preparation_failures"]), 1)
+            assert ledger["total_counted_incremental_spend_usd"] == 1.01
+            assert len(ledger["modal_e9_merged_vllm_cpu_preparation_failures"]) == 1
 
             (destination / "solution.py").write_text("raise RuntimeError\n", encoding="utf-8")
             with mock.patch.dict(sys.modules, {"modal": types.ModuleType("modal")}):
-                with self.assertRaisesRegex(ValueError, "model evidence"):
+                with pytest.raises(ValueError, match="model evidence"):
                     control.collect_pilot(launch_path)
 
     def test_second_prospective_competition_binds_to_its_launch(self) -> None:
@@ -825,7 +861,7 @@ class PilotControlTests(unittest.TestCase):
             "prompt_template_version": control.PROMPT_TEMPLATE_VERSION,
         }
         receipt = control.validate_returned_result(_result(launch), launch)
-        self.assertEqual(receipt["competition_id"], "imet-2020-fgvc7")
+        assert receipt["competition_id"] == "imet-2020-fgvc7"
 
     def test_recursive_tabular_competition_binds_to_its_launch(self) -> None:
         launch = {
@@ -834,7 +870,7 @@ class PilotControlTests(unittest.TestCase):
             "prompt_template_version": control.PROMPT_TEMPLATE_VERSION,
         }
         receipt = control.validate_returned_result(_result(launch), launch)
-        self.assertEqual(receipt["competition_id"], "predict-volcanic-eruptions-ingv-oe")
+        assert receipt["competition_id"] == "predict-volcanic-eruptions-ingv-oe"
 
     def test_directory_label_competition_binds_to_its_launch(self) -> None:
         launch = {
@@ -843,7 +879,7 @@ class PilotControlTests(unittest.TestCase):
             "prompt_template_version": control.PROMPT_TEMPLATE_VERSION,
         }
         receipt = control.validate_returned_result(_result(launch), launch)
-        self.assertEqual(receipt["competition_id"], "alaska2-image-steganalysis")
+        assert receipt["competition_id"] == "alaska2-image-steganalysis"
 
     def test_structured_submission_competition_binds_to_its_launch(self) -> None:
         launch = {
@@ -852,7 +888,7 @@ class PilotControlTests(unittest.TestCase):
             "prompt_template_version": control.PROMPT_TEMPLATE_VERSION,
         }
         receipt = control.validate_returned_result(_result(launch), launch)
-        self.assertEqual(receipt["competition_id"], "hubmap-kidney-segmentation")
+        assert receipt["competition_id"] == "hubmap-kidney-segmentation"
 
     def test_large_structured_submission_competition_binds_to_its_launch(self) -> None:
         launch = {
@@ -861,7 +897,7 @@ class PilotControlTests(unittest.TestCase):
             "prompt_template_version": control.PROMPT_TEMPLATE_VERSION,
         }
         receipt = control.validate_returned_result(_result(launch), launch)
-        self.assertEqual(receipt["competition_id"], "vesuvius-challenge-ink-detection")
+        assert receipt["competition_id"] == "vesuvius-challenge-ink-detection"
 
     def test_recommendation_competition_binds_to_its_launch(self) -> None:
         launch = {
@@ -870,15 +906,12 @@ class PilotControlTests(unittest.TestCase):
             "prompt_template_version": control.PROMPT_TEMPLATE_VERSION,
         }
         receipt = control.validate_returned_result(_result(launch), launch)
-        self.assertEqual(
-            receipt["competition_id"],
-            "h-and-m-personalized-fashion-recommendations",
-        )
+        assert receipt["competition_id"] == "h-and-m-personalized-fashion-recommendations"
 
     def test_rejects_self_hash_drift(self) -> None:
         result = _result(self.launch)
         result["receipt"]["competition_score"] = 0.2
-        with self.assertRaisesRegex(ValueError, "self-hash"):
+        with pytest.raises(ValueError, match="self-hash"):
             control.validate_returned_result(result, self.launch)
 
     def test_rejects_legacy_coverage_increment(self) -> None:
@@ -886,7 +919,7 @@ class PilotControlTests(unittest.TestCase):
         result["receipt"]["legacy_tinker_coverage_increment"] = 1
         result["receipt"].pop("receipt_sha256")
         result["receipt"]["receipt_sha256"] = control._canonical_sha256(result["receipt"])
-        with self.assertRaisesRegex(ValueError, "scientific boundary"):
+        with pytest.raises(ValueError, match="scientific boundary"):
             control.validate_returned_result(result, self.launch)
 
     def test_rejects_native_grade_payload_drift(self) -> None:
@@ -895,7 +928,7 @@ class PilotControlTests(unittest.TestCase):
             **result["native_grade_json"],
             "score": 0.2,
         }
-        with self.assertRaisesRegex(ValueError, "native grade.*receipt payload"):
+        with pytest.raises(ValueError, match="native grade.*receipt payload"):
             control.validate_returned_result(result, self.launch)
 
     def test_rejects_native_grade_status_and_score_inconsistency(self) -> None:
@@ -908,7 +941,7 @@ class PilotControlTests(unittest.TestCase):
         ).hexdigest()
         result["receipt"].pop("receipt_sha256")
         result["receipt"]["receipt_sha256"] = control._canonical_sha256(result["receipt"])
-        with self.assertRaisesRegex(ValueError, "status does not match"):
+        with pytest.raises(ValueError, match="status does not match"):
             control.validate_returned_result(result, self.launch)
 
     def test_rejects_native_grade_competition_score_inconsistency(self) -> None:
@@ -916,7 +949,7 @@ class PilotControlTests(unittest.TestCase):
         result["receipt"]["competition_score"] = 0.2
         result["receipt"].pop("receipt_sha256")
         result["receipt"]["receipt_sha256"] = control._canonical_sha256(result["receipt"])
-        with self.assertRaisesRegex(ValueError, "competition score does not match"):
+        with pytest.raises(ValueError, match="competition score does not match"):
             control.validate_returned_result(result, self.launch)
 
     def test_v2_result_rejects_tampered_or_missing_allocation_gate(self) -> None:
@@ -924,7 +957,7 @@ class PilotControlTests(unittest.TestCase):
         result["receipt"]["allocation_gate"]["status"] = "tampered"
         result["receipt"].pop("receipt_sha256")
         result["receipt"]["receipt_sha256"] = control._canonical_sha256(result["receipt"])
-        with self.assertRaisesRegex(Exception, "self-hash"):
+        with pytest.raises(Exception, match="self-hash"):
             control.validate_returned_result(result, self.launch)
 
     def test_v1_launch_and_receipt_remain_supported_without_a_gate(self) -> None:
@@ -936,17 +969,17 @@ class PilotControlTests(unittest.TestCase):
         result["receipt"].pop("receipt_sha256")
         result["receipt"]["receipt_sha256"] = control._canonical_sha256(result["receipt"])
         receipt = control.validate_returned_result(result, launch)
-        self.assertEqual(receipt["schema_version"], control.ARM_SCHEMA_V1)
+        assert receipt["schema_version"] == control.ARM_SCHEMA_V1
 
     def test_materialization_is_idempotent_and_fail_closed(self) -> None:
         result = _result(self.launch)
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             first = control._materialize(result, root)
-            self.assertEqual(control._materialize(result, root), first)
+            assert control._materialize(result, root) == first
             changed = copy.deepcopy(result)
             changed["solution_code"] = "raise RuntimeError"
-            with self.assertRaisesRegex(ValueError, "differs"):
+            with pytest.raises(ValueError, match="differs"):
                 control._materialize(changed, root)
 
     def test_spend_reconciliation_is_idempotent(self) -> None:
@@ -998,8 +1031,8 @@ class PilotControlTests(unittest.TestCase):
             second = control._reconcile_spend(
                 launch=launch, receipt=receipt, destination=destination
             )
-            self.assertEqual(first["total_counted_incremental_spend_usd"], 1.5)
-            self.assertEqual(second["total_counted_incremental_spend_usd"], 1.5)
+            assert first["total_counted_incremental_spend_usd"] == 1.5
+            assert second["total_counted_incremental_spend_usd"] == 1.5
 
     def test_spend_reconciliation_recovers_after_ledger_write_crash(self) -> None:
         result = _result(self.launch)
@@ -1054,17 +1087,17 @@ class PilotControlTests(unittest.TestCase):
             with mock.patch.object(
                 control, "_write_json_atomic", side_effect=fail_reservation_write
             ):
-                with self.assertRaisesRegex(OSError, "simulated crash"):
+                with pytest.raises(OSError, match="simulated crash"):
                     control._reconcile_spend(
                         launch=launch, receipt=receipt, destination=destination
                     )
             after_crash = json.loads(ledger_path.read_text(encoding="utf-8"))
-            self.assertEqual(after_crash["total_counted_incremental_spend_usd"], 1.5)
+            assert after_crash["total_counted_incremental_spend_usd"] == 1.5
             recovered = control._reconcile_spend(
                 launch=launch, receipt=receipt, destination=destination
             )
-            self.assertEqual(recovered["total_counted_incremental_spend_usd"], 1.5)
-            self.assertEqual(len(recovered["modal_e9_merged_vllm_pilots"]), 1)
+            assert recovered["total_counted_incremental_spend_usd"] == 1.5
+            assert len(recovered["modal_e9_merged_vllm_pilots"]) == 1
 
     def _materialized_launch(
         self,
@@ -1185,7 +1218,7 @@ class PilotControlTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary:
             launch_path, destination = self._materialized_launch(Path(temporary))
             with mock.patch.dict(sys.modules, {"modal": types.ModuleType("modal")}):
-                self.assertEqual(control.collect_pilot(launch_path), destination)
+                assert control.collect_pilot(launch_path) == destination
 
     def test_already_materialized_collection_accepts_historical_invalid_override_status(
         self,
@@ -1197,7 +1230,7 @@ class PilotControlTests(unittest.TestCase):
                 terminal_status="MERGED_VLLM_SEPARATE_ARM_TERMINAL_INVALID",
             )
             with mock.patch.dict(sys.modules, {"modal": types.ModuleType("modal")}):
-                self.assertEqual(control.collect_pilot(launch_path), destination)
+                assert control.collect_pilot(launch_path) == destination
 
     def test_already_materialized_collection_rejects_tampered_ledger_evidence(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
@@ -1208,7 +1241,7 @@ class PilotControlTests(unittest.TestCase):
             ledger["modal_e9_merged_vllm_pilots"][0]["estimated_actual_compute_usd"] = 0.6
             control._write_json_atomic(ledger_path, ledger)
             with mock.patch.dict(sys.modules, {"modal": types.ModuleType("modal")}):
-                with self.assertRaisesRegex(ValueError, "spend ledger"):
+                with pytest.raises(ValueError, match="spend ledger"):
                     control.collect_pilot(launch_path)
 
     def test_already_materialized_collection_accepts_exact_historical_ledger_entry(
@@ -1222,7 +1255,7 @@ class PilotControlTests(unittest.TestCase):
             ledger["modal_e9_merged_vllm_pilots"][0].pop("reconciliation_id")
             control._write_json_atomic(ledger_path, ledger)
             with mock.patch.dict(sys.modules, {"modal": types.ModuleType("modal")}):
-                self.assertEqual(control.collect_pilot(launch_path), destination)
+                assert control.collect_pilot(launch_path) == destination
 
     def test_already_materialized_collection_rejects_mismatched_historical_ledger_entry(
         self,
@@ -1237,7 +1270,7 @@ class PilotControlTests(unittest.TestCase):
             entry["estimated_actual_compute_usd"] = 0.6
             control._write_json_atomic(ledger_path, ledger)
             with mock.patch.dict(sys.modules, {"modal": types.ModuleType("modal")}):
-                with self.assertRaisesRegex(ValueError, "spend ledger"):
+                with pytest.raises(ValueError, match="spend ledger"):
                     control.collect_pilot(launch_path)
 
     def test_already_materialized_collection_rejects_ambiguous_historical_ledger_entries(
@@ -1253,7 +1286,7 @@ class PilotControlTests(unittest.TestCase):
             ledger["modal_e9_merged_vllm_pilots"].append(copy.deepcopy(entry))
             control._write_json_atomic(ledger_path, ledger)
             with mock.patch.dict(sys.modules, {"modal": types.ModuleType("modal")}):
-                with self.assertRaisesRegex(ValueError, "spend ledger"):
+                with pytest.raises(ValueError, match="spend ledger"):
                     control.collect_pilot(launch_path)
 
     def test_already_materialized_collection_rejects_invalid_spend_snapshot(self) -> None:
@@ -1264,7 +1297,7 @@ class PilotControlTests(unittest.TestCase):
             collection["remaining_authorized_incremental_spend_usd"] = -0.01
             control._write_json_atomic(collection_path, collection)
             with mock.patch.dict(sys.modules, {"modal": types.ModuleType("modal")}):
-                with self.assertRaisesRegex(ValueError, "spend snapshot"):
+                with pytest.raises(ValueError, match="spend snapshot"):
                     control.collect_pilot(launch_path)
 
     def test_already_materialized_collection_rejects_tampered_override(self) -> None:
@@ -1280,7 +1313,7 @@ class PilotControlTests(unittest.TestCase):
             terminal["receipt_sha256"] = control._canonical_sha256(terminal)
             control._write_json_atomic(terminal_path, terminal)
             with mock.patch.dict(sys.modules, {"modal": types.ModuleType("modal")}):
-                with self.assertRaisesRegex(ValueError, "terminal override"):
+                with pytest.raises(ValueError, match="terminal override"):
                     control.collect_pilot(launch_path)
 
     def test_terminal_override_is_self_hashed_and_unscored(self) -> None:
@@ -1294,9 +1327,9 @@ class PilotControlTests(unittest.TestCase):
                 terminal_path = control.write_legacy_terminal_override(receipt_path)
                 terminal = json.loads(terminal_path.read_text(encoding="utf-8"))
                 stored_hash = terminal.pop("receipt_sha256")
-                self.assertEqual(stored_hash, control._canonical_sha256(terminal))
-                self.assertIsNone(terminal["score"])
-                self.assertFalse(terminal["relaunch_allowed"])
+                assert stored_hash == control._canonical_sha256(terminal)
+                assert terminal["score"] is None
+                assert not terminal["relaunch_allowed"]
             finally:
                 control.LEGACY_OUTPUT_DIR = original_output
 

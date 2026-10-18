@@ -30,6 +30,7 @@ Outputs:
 
 Stdlib + matplotlib only. <=300 lines.
 """
+
 import csv
 import json
 import math
@@ -37,6 +38,7 @@ from collections import defaultdict
 from pathlib import Path
 
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
@@ -120,7 +122,7 @@ def compute_item_freqs_and_H(minreport):
     item_counts = {k: defaultdict(int) for k, _ in ITEMS}
     item_total = {k: 0 for k, _ in ITEMS}
     n_cells = len(minreport)
-    for cid, vals in minreport.items():
+    for _cid, vals in minreport.items():
         for k, _ in ITEMS:
             v = vals.get(k, "")
             if v == "":
@@ -185,7 +187,7 @@ def pearson(xs, ys):
     mx, my = sum(xs) / n, sum(ys) / n
     sxx = sum((x - mx) ** 2 for x in xs)
     syy = sum((y - my) ** 2 for y in ys)
-    sxy = sum((x - mx) * (y - my) for x, y in zip(xs, ys))
+    sxy = sum((x - mx) * (y - my) for x, y in zip(xs, ys, strict=False))
     if sxx <= 0 or syy <= 0:
         return float("nan"), float("nan"), float("nan")
     r = sxy / math.sqrt(sxx * syy)
@@ -261,55 +263,105 @@ def main():
         A = A_map.get(cid, float("nan"))
         B = per_cell_B(model, task, delta_bucket)
         C = per_cell_C(vals, item_freqs, item_H)
-        rows.append({
-            "cell_id": cid,
-            "model": model,
-            "task_slice": task,
-            "A_axis_score": A,
-            "B_axis_match_rate": B,
-            "C_axis_discriminative_H": C,
-            "profile": classify_cell(A, B, C),
-        })
+        rows.append(
+            {
+                "cell_id": cid,
+                "model": model,
+                "task_slice": task,
+                "A_axis_score": A,
+                "B_axis_match_rate": B,
+                "C_axis_discriminative_H": C,
+                "profile": classify_cell(A, B, C),
+            }
+        )
     out_tsv = OUT / "p5_3axis_triangulation_per_cell.tsv"
     with open(out_tsv, "w") as f:
-        f.write("cell_id\tmodel\ttask_slice\tA_axis_score\tB_axis_match_rate\t"
-                "C_axis_discriminative_H\tprofile\n")
+        f.write(
+            "cell_id\tmodel\ttask_slice\tA_axis_score\tB_axis_match_rate\t"
+            "C_axis_discriminative_H\tprofile\n"
+        )
         for r in rows:
+
             def fmt(v):
                 return f"{v:.4f}" if not math.isnan(v) else ""
-            f.write("\t".join([
-                r["cell_id"], r["model"], r["task_slice"],
-                fmt(r["A_axis_score"]),
-                fmt(r["B_axis_match_rate"]),
-                fmt(r["C_axis_discriminative_H"]),
-                r["profile"],
-            ]) + "\n")
+
+            f.write(
+                "\t".join(
+                    [
+                        r["cell_id"],
+                        r["model"],
+                        r["task_slice"],
+                        fmt(r["A_axis_score"]),
+                        fmt(r["B_axis_match_rate"]),
+                        fmt(r["C_axis_discriminative_H"]),
+                        r["profile"],
+                    ]
+                )
+                + "\n"
+            )
     print(f"Wrote {out_tsv} ({len(rows)} cells)")
     profiles = defaultdict(int)
     for r in rows:
         profiles[r["profile"]] += 1
     print(f"\nProfile distribution (n={len(rows)} cells):")
     for p, c in sorted(profiles.items(), key=lambda kv: -kv[1]):
-        print(f"  {p:30s}  {c:3d}  ({100*c/len(rows):.1f}%)")
+        print(f"  {p:30s}  {c:3d}  ({100 * c / len(rows):.1f}%)")
     # Joint correlations
     pairs_data = {
-        "A_vs_B": ([r["A_axis_score"] for r in rows if not math.isnan(r["A_axis_score"]) and not math.isnan(r["B_axis_match_rate"])],
-                   [r["B_axis_match_rate"] for r in rows if not math.isnan(r["A_axis_score"]) and not math.isnan(r["B_axis_match_rate"])]),
-        "A_vs_C": ([r["A_axis_score"] for r in rows if not math.isnan(r["A_axis_score"]) and not math.isnan(r["C_axis_discriminative_H"])],
-                   [r["C_axis_discriminative_H"] for r in rows if not math.isnan(r["A_axis_score"]) and not math.isnan(r["C_axis_discriminative_H"])]),
-        "B_vs_C": ([r["B_axis_match_rate"] for r in rows if not math.isnan(r["B_axis_match_rate"]) and not math.isnan(r["C_axis_discriminative_H"])],
-                   [r["C_axis_discriminative_H"] for r in rows if not math.isnan(r["B_axis_match_rate"]) and not math.isnan(r["C_axis_discriminative_H"])]),
+        "A_vs_B": (
+            [
+                r["A_axis_score"]
+                for r in rows
+                if not math.isnan(r["A_axis_score"]) and not math.isnan(r["B_axis_match_rate"])
+            ],
+            [
+                r["B_axis_match_rate"]
+                for r in rows
+                if not math.isnan(r["A_axis_score"]) and not math.isnan(r["B_axis_match_rate"])
+            ],
+        ),
+        "A_vs_C": (
+            [
+                r["A_axis_score"]
+                for r in rows
+                if not math.isnan(r["A_axis_score"])
+                and not math.isnan(r["C_axis_discriminative_H"])
+            ],
+            [
+                r["C_axis_discriminative_H"]
+                for r in rows
+                if not math.isnan(r["A_axis_score"])
+                and not math.isnan(r["C_axis_discriminative_H"])
+            ],
+        ),
+        "B_vs_C": (
+            [
+                r["B_axis_match_rate"]
+                for r in rows
+                if not math.isnan(r["B_axis_match_rate"])
+                and not math.isnan(r["C_axis_discriminative_H"])
+            ],
+            [
+                r["C_axis_discriminative_H"]
+                for r in rows
+                if not math.isnan(r["B_axis_match_rate"])
+                and not math.isnan(r["C_axis_discriminative_H"])
+            ],
+        ),
     }
     boot_rows = []
     for name, (xs, ys) in pairs_data.items():
         r_val, lo, hi = pearson(xs, ys)
-        boot_rows.append({
-            "pair": name, "n_cells": len(xs),
-            "pearson_r": "" if math.isnan(r_val) else f"{r_val:.4f}",
-            "ci_low": "" if math.isnan(lo) else f"{lo:.4f}",
-            "ci_high": "" if math.isnan(hi) else f"{hi:.4f}",
-            "excludes_zero": (not math.isnan(lo)) and (lo > 0 or hi < 0),
-        })
+        boot_rows.append(
+            {
+                "pair": name,
+                "n_cells": len(xs),
+                "pearson_r": "" if math.isnan(r_val) else f"{r_val:.4f}",
+                "ci_low": "" if math.isnan(lo) else f"{lo:.4f}",
+                "ci_high": "" if math.isnan(hi) else f"{hi:.4f}",
+                "excludes_zero": (not math.isnan(lo)) and (lo > 0 or hi < 0),
+            }
+        )
     boot_tsv = OUT / "p5_3axis_triangulation_per_cell_boot.tsv"
     with open(boot_tsv, "w") as f:
         f.write("pair\tn_cells\tpearson_r\tci_low\tci_high\texcludes_zero\tdegenerate_reason\n")
@@ -319,20 +371,24 @@ def main():
             if len(xs) < 3:
                 degenerate_reasons.append("n_too_small")
                 continue
-            x_var = sum((x - sum(xs)/len(xs))**2 for x in xs)
-            y_var = sum((y - sum(ys)/len(ys))**2 for y in ys)
+            x_var = sum((x - sum(xs) / len(xs)) ** 2 for x in xs)
+            y_var = sum((y - sum(ys) / len(ys)) ** 2 for y in ys)
             if x_var == 0:
                 degenerate_reasons.append("x_constant")
             elif y_var == 0:
                 degenerate_reasons.append("y_constant")
             else:
                 degenerate_reasons.append("")
-        for r, reason in zip(boot_rows, degenerate_reasons):
-            f.write(f"{r['pair']}\t{r['n_cells']}\t{r['pearson_r']}\t{r['ci_low']}\t{r['ci_high']}\t{r['excludes_zero']}\t{reason}\n")
+        for r, reason in zip(boot_rows, degenerate_reasons, strict=False):
+            f.write(
+                f"{r['pair']}\t{r['n_cells']}\t{r['pearson_r']}\t{r['ci_low']}\t{r['ci_high']}\t{r['excludes_zero']}\t{reason}\n"
+            )
     print(f"Wrote {boot_tsv}")
     print(f"\nJoint correlations:")
-    for r, reason in zip(boot_rows, degenerate_reasons):
-        print(f"  {r['pair']:10s}  n={r['n_cells']:3d}  r={r['pearson_r']!s:8s}  CI=[{r['ci_low']!s:8s}, {r['ci_high']!s:8s}]  excl0={r['excludes_zero']}  ({reason})")
+    for r, reason in zip(boot_rows, degenerate_reasons, strict=False):
+        print(
+            f"  {r['pair']:10s}  n={r['n_cells']:3d}  r={r['pearson_r']!s:8s}  CI=[{r['ci_low']!s:8s}, {r['ci_high']!s:8s}]  excl0={r['excludes_zero']}  ({reason})"
+        )
     # Plot
     fig, axes = plt.subplots(1, 3, figsize=(14, 4.5))
     colors = {
@@ -347,27 +403,38 @@ def main():
         f"A vs C (per-cell discriminative entropy)  r={boot_rows[1]['pearson_r']!s}",
         f"B vs C  r={boot_rows[2]['pearson_r']!s}",
     ]
-    keys_for_plot = [("A_axis_score", "B_axis_match_rate"), ("A_axis_score", "C_axis_discriminative_H"),
-                     ("B_axis_match_rate", "C_axis_discriminative_H")]
-    for ax, title, (xk, yk) in zip(axes, titles, keys_for_plot):
+    keys_for_plot = [
+        ("A_axis_score", "B_axis_match_rate"),
+        ("A_axis_score", "C_axis_discriminative_H"),
+        ("B_axis_match_rate", "C_axis_discriminative_H"),
+    ]
+    for ax, title, (xk, yk) in zip(axes, titles, keys_for_plot, strict=False):
         for r in rows:
             x, y = r[xk], r[yk]
             if math.isnan(x) or math.isnan(y):
                 continue
-            ax.scatter(x, y, c=colors.get(r["profile"], "#7f7f7f"),
-                       s=30, alpha=0.75, edgecolor="black", linewidth=0.3)
+            ax.scatter(
+                x,
+                y,
+                c=colors.get(r["profile"], "#7f7f7f"),
+                s=30,
+                alpha=0.75,
+                edgecolor="black",
+                linewidth=0.3,
+            )
         ax.set_title(title, fontsize=10)
         ax.grid(True, alpha=0.3)
         ax.set_xlabel(xk)
         ax.set_ylabel(yk)
     from matplotlib.patches import Patch
+
     handles = [Patch(color=colors[k], label=f"{k} (n={profiles.get(k, 0)})") for k in colors]
     fig.legend(handles=handles, loc="lower center", ncol=4, fontsize=9, bbox_to_anchor=(0.5, -0.02))
     plt.tight_layout(rect=[0, 0.06, 1, 1])
     plt.savefig(FIG / "p5_3axis_per_cell.png", dpi=150, bbox_inches="tight")
     plt.savefig(FIG / "p5_3axis_per_cell.pdf", bbox_inches="tight")
     plt.close()
-    print(f"Wrote {FIG/'p5_3axis_per_cell.png'}")
+    print(f"Wrote {FIG / 'p5_3axis_per_cell.png'}")
     summary = {
         "n_cells": len(rows),
         "n_with_A": sum(1 for r in rows if not math.isnan(r["A_axis_score"])),
@@ -375,18 +442,45 @@ def main():
         "n_with_C": sum(1 for r in rows if not math.isnan(r["C_axis_discriminative_H"])),
         "profile_counts": dict(profiles),
         "joint_correlations": {
-            "A_vs_B": dict(zip(["r", "ci_low", "ci_high", "excludes_zero", "n"],
-                               [boot_rows[0]["pearson_r"], boot_rows[0]["ci_low"],
-                                boot_rows[0]["ci_high"], boot_rows[0]["excludes_zero"],
-                                boot_rows[0]["n_cells"]])),
-            "A_vs_C": dict(zip(["r", "ci_low", "ci_high", "excludes_zero", "n"],
-                               [boot_rows[1]["pearson_r"], boot_rows[1]["ci_low"],
-                                boot_rows[1]["ci_high"], boot_rows[1]["excludes_zero"],
-                                boot_rows[1]["n_cells"]])),
-            "B_vs_C": dict(zip(["r", "ci_low", "ci_high", "excludes_zero", "n"],
-                               [boot_rows[2]["pearson_r"], boot_rows[2]["ci_low"],
-                                boot_rows[2]["ci_high"], boot_rows[2]["excludes_zero"],
-                                boot_rows[2]["n_cells"]])),
+            "A_vs_B": dict(
+                zip(
+                    ["r", "ci_low", "ci_high", "excludes_zero", "n"],
+                    [
+                        boot_rows[0]["pearson_r"],
+                        boot_rows[0]["ci_low"],
+                        boot_rows[0]["ci_high"],
+                        boot_rows[0]["excludes_zero"],
+                        boot_rows[0]["n_cells"],
+                    ],
+                    strict=False,
+                )
+            ),
+            "A_vs_C": dict(
+                zip(
+                    ["r", "ci_low", "ci_high", "excludes_zero", "n"],
+                    [
+                        boot_rows[1]["pearson_r"],
+                        boot_rows[1]["ci_low"],
+                        boot_rows[1]["ci_high"],
+                        boot_rows[1]["excludes_zero"],
+                        boot_rows[1]["n_cells"],
+                    ],
+                    strict=False,
+                )
+            ),
+            "B_vs_C": dict(
+                zip(
+                    ["r", "ci_low", "ci_high", "excludes_zero", "n"],
+                    [
+                        boot_rows[2]["pearson_r"],
+                        boot_rows[2]["ci_low"],
+                        boot_rows[2]["ci_high"],
+                        boot_rows[2]["excludes_zero"],
+                        boot_rows[2]["n_cells"],
+                    ],
+                    strict=False,
+                )
+            ),
         },
         "item_normalised_H": {k: round(item_H[k], 4) for k, _ in ITEMS},
         "headline": {
@@ -402,8 +496,12 @@ def main():
     print(f"\n=== Headline ===")
     print(f"  Cells passing A (truthfulness >= 90): {summary['n_with_A']}/{len(rows)}")
     print(f"  Cells with B available: {summary['n_with_B']}/{len(rows)}")
-    print(f"  Cells with C >= 0.5 (informative): {sum(1 for r in rows if not math.isnan(r['C_axis_discriminative_H']) and r['C_axis_discriminative_H'] >= 0.5)}/{len(rows)}")
-    print(f"  Honest-but-vacuous profile: {profiles.get('honest_but_vacuous', 0)}/{len(rows)} ({100*profiles.get('honest_but_vacuous', 0)/len(rows):.1f}%)")
+    print(
+        f"  Cells with C >= 0.5 (informative): {sum(1 for r in rows if not math.isnan(r['C_axis_discriminative_H']) and r['C_axis_discriminative_H'] >= 0.5)}/{len(rows)}"
+    )
+    print(
+        f"  Honest-but-vacuous profile: {profiles.get('honest_but_vacuous', 0)}/{len(rows)} ({100 * profiles.get('honest_but_vacuous', 0) / len(rows):.1f}%)"
+    )
 
 
 if __name__ == "__main__":

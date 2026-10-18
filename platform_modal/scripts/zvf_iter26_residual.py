@@ -11,6 +11,7 @@ Outputs:
     platform_hybrid/experiments/results/zvf_iter26_residual_review28_v2.tsv
         per-library slice: n, naive r, r(reward,last10), residual r.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -32,7 +33,7 @@ def _pearson(xs, ys):
     my = statistics.fmean(ys)
     sxx = sum((x - mx) ** 2 for x in xs)
     syy = sum((y - my) ** 2 for y in ys)
-    sxy = sum((x - mx) * (y - my) for x, y in zip(xs, ys))
+    sxy = sum((x - mx) * (y - my) for x, y in zip(xs, ys, strict=False))
     if sxx == 0 or syy == 0:
         return float("nan")
     return sxy / math.sqrt(sxx * syy)
@@ -40,6 +41,7 @@ def _pearson(xs, ys):
 
 def _bootstrap(xs, ys, metric, B=2000, seed=0):
     import random
+
     rng = random.Random(seed)
     n = len(xs)
     if n < 3:
@@ -72,7 +74,7 @@ def load_summary(path: Path):
                 continue
             if len(parts) < len(header):
                 continue
-            r = dict(zip(header, parts))
+            r = dict(zip(header, parts, strict=False))
             # Parse numerics; skip NA
             try:
                 r["mean_zvf"] = float(r["mean_zvf"])
@@ -111,9 +113,17 @@ def analyse_slice(slice_rows, label, B=2000, seed=0):
     n = len(slice_rows)
     out = {"label": label, "n_pooled": n}
     if n < 5:
-        out.update({"naive_r": "NA", "reward_r": "NA", "residual_r": "NA",
-                    "naive_lo": "NA", "naive_hi": "NA",
-                    "residual_lo": "NA", "residual_hi": "NA"})
+        out.update(
+            {
+                "naive_r": "NA",
+                "reward_r": "NA",
+                "residual_r": "NA",
+                "naive_lo": "NA",
+                "naive_hi": "NA",
+                "residual_lo": "NA",
+                "residual_hi": "NA",
+            }
+        )
         return out
     zvfs = [r["mean_zvf"] for r in slice_rows]
     lasts = [r["last10"] for r in slice_rows]
@@ -122,7 +132,8 @@ def analyse_slice(slice_rows, label, B=2000, seed=0):
     naive = _bootstrap(zvfs, lasts, _pearson, B=B, seed=seed)
     reward = _bootstrap(rewards, lasts, _pearson, B=B, seed=seed + 1)
     from _review28_statistics import partial_correlation_bootstrap
-    residual = partial_correlation_bootstrap(zvfs, lasts, rewards, B=B, seed=seed+2)
+
+    residual = partial_correlation_bootstrap(zvfs, lasts, rewards, B=B, seed=seed + 2)
 
     out.update(
         {
@@ -141,28 +152,37 @@ def analyse_slice(slice_rows, label, B=2000, seed=0):
 def _library_level_pool(rows):
     """Average per-seed sorted last-ten outcomes, equally weighting independent runs."""
     path = RESULTS / "variance_mitigation.tsv"
-    if not path.exists(): return []
+    if not path.exists():
+        return []
     runs = {}
     with path.open() as fh:
         for row in csv.DictReader(fh, delimiter="\t"):
             runs.setdefault((row["method"], row["seed"]), []).append(row)
     methods = {}
-    for (method,seed), records in runs.items():
-        records.sort(key=lambda row:float(row["step"]))
+    for (method, _seed), records in runs.items():
+        records.sort(key=lambda row: float(row["step"]))
         zs = [float(row["zvf"]) for row in records]
         rs = [float(row["reward_mean"]) for row in records]
         last = [float(row["heldout_acc"]) for row in records[-10:]]
-        methods.setdefault(method, []).append((statistics.fmean(zs),statistics.fmean(last),statistics.fmean(rs),len(records)))
-    return [dict(method=method,mean_zvf=statistics.fmean(v[0] for v in values),
-                 last10=statistics.fmean(v[1] for v in values),mean_reward=statistics.fmean(v[2] for v in values),
-                 n_steps=sum(v[3] for v in values),n_seeds=len(values)) for method,values in sorted(methods.items())]
+        methods.setdefault(method, []).append(
+            (statistics.fmean(zs), statistics.fmean(last), statistics.fmean(rs), len(records))
+        )
+    return [
+        dict(
+            method=method,
+            mean_zvf=statistics.fmean(v[0] for v in values),
+            last10=statistics.fmean(v[1] for v in values),
+            mean_reward=statistics.fmean(v[2] for v in values),
+            n_steps=sum(v[3] for v in values),
+            n_seeds=len(values),
+        )
+        for method, values in sorted(methods.items())
+    ]
 
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--out", type=Path, default=RESULTS / "zvf_iter26_residual_review28_v2.tsv"
-    )
+    parser.add_argument("--out", type=Path, default=RESULTS / "zvf_iter26_residual_review28_v2.tsv")
     parser.add_argument("--B", type=int, default=2000)
     args = parser.parse_args()
 
@@ -175,7 +195,9 @@ def main():
 
     method_pool = _library_level_pool(rows)
     # Non-drift slice excludes MCGRPO/GIFT/AREAL/ES (each has 1/5 drift rows).
-    no_drift_methods = [m for m in method_pool if m["method"] not in ("mcgrpo", "gift", "areal", "es")]
+    no_drift_methods = [
+        m for m in method_pool if m["method"] not in ("mcgrpo", "gift", "areal", "es")
+    ]
 
     # Define analysis slices.
     slices = [
@@ -249,4 +271,5 @@ def main():
 
 if __name__ == "__main__":
     import sys
+
     sys.exit(main())

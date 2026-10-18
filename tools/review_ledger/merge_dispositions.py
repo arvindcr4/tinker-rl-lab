@@ -6,6 +6,7 @@ Dispositions (.jsonl): per finding id keep the strongest status; on a tie keep
 the incoming branch's entry (fix agents carry verified evidence). Ledgers
 (.tsv): union of rows, ours first, header once.
 """
+
 import json
 import subprocess
 import sys
@@ -14,7 +15,9 @@ RANK = ["fixed", "already-fixed", "unsourced-removed", "refuted", "needs-compute
 
 
 def stage(path, n):
-    return subprocess.run(["git", "show", f":{n}:{path}"], capture_output=True, text=True, check=True).stdout
+    return subprocess.run(
+        ["git", "show", f":{n}:{path}"], capture_output=True, text=True, check=True
+    ).stdout
 
 
 def merge_jsonl(ours, theirs):

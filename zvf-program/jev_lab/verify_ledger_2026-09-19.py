@@ -37,14 +37,12 @@ ok = abs(d["score"] - 2 / 731) < 1e-15 and d["status"] == "SCORED"
 check(
     "E1_receipt_score_equals_2_of_731",
     ok,
-    f"score={d['score']!r} status={d['status']} 2/731={2/731!r}",
+    f"score={d['score']!r} status={d['status']} 2/731={2 / 731!r}",
 )
 
 # 2. E9 — arms reconcile with the Sep-5 prose ------------------------------
 rows = list(
-    csv.DictReader(
-        (REPO / "outputs/e1_e14_results_2026-09-05/e9_competition_receipts.csv").open()
-    )
+    csv.DictReader((REPO / "outputs/e1_e14_results_2026-09-05/e9_competition_receipts.csv").open())
 )
 ms = [r for r in rows if r["arm"] == "modal_streaming" and is_graded(r["status"])]
 mv = [r for r in rows if r["arm"] == "merged_vllm" and is_graded(r["status"])]
@@ -61,9 +59,7 @@ check(
 )
 
 # 3. E11 — canonical raw 129/312, sensitivity 129/311 retained -------------
-d = json.loads(
-    (REPO / "outputs/modal_e1_e14/2026-08-16/e11_full_receipt.json").read_text()
-)
+d = json.loads((REPO / "outputs/modal_e1_e14/2026-08-16/e11_full_receipt.json").read_text())
 pa = d["pass_at_1"]
 ok = (
     pa["raw"]["passes"] == 129
@@ -87,9 +83,7 @@ check(
 )
 
 # 4. E14 — recheck reproduces accepted/skipped and official accuracy --------
-d = json.loads(
-    (REPO / "outputs/PES_Phase2_Review_2026-09-12/e14_scoring_recheck.json").read_text()
-)
+d = json.loads((REPO / "outputs/PES_Phase2_Review_2026-09-12/e14_scoring_recheck.json").read_text())
 ok = (
     d["attempted"] == 4428
     and d["accepted"] == 4426
@@ -109,8 +103,7 @@ check(
 d = json.loads((REPO / "outputs/PES_Phase2_Review_2026-09-12/results.json").read_text())
 cats = d["labbench_complete_categories"]
 all_complete = all(
-    c["evaluated"] == c["expected_total"] and c["status"] == "COMPLETE"
-    for c in cats.values()
+    c["evaluated"] == c["expected_total"] and c["status"] == "COMPLETE" for c in cats.values()
 )
 total = sum(c["evaluated"] for c in cats.values())
 check(

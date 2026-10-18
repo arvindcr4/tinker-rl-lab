@@ -1,4 +1,5 @@
 """Inventory integrity only; historical rows never imply publication acceptance."""
+
 import argparse
 import hashlib
 from pathlib import Path
@@ -33,23 +34,50 @@ def verify(directory, trusted_key=None):
         if mode == "historical_inventory":
             # Pin bytes for inventory drift detection, not authenticity or scientific validity.
             for artifact, key in [(record, "sha256")] + (
-                [(Path(str(record) + ".sig"), "signature_sha256")] if row["signature_required"] else []
+                [(Path(str(record) + ".sig"), "signature_sha256")]
+                if row["signature_required"]
+                else []
             ):
                 strict_json_loads(artifact.read_text())
                 if hashlib.sha256(artifact.read_bytes()).hexdigest() != row[key]:
                     raise ValueError("historical inventory digest mismatch")
         elif mode == "publication":
             if trusted_key is None:
-                raise ValueError("publication inventory requires an independently trusted public key")
-            subprocess.run([sys.executable, str(directory / "minreport.py"), "verify", str(record),
-                            "--strict", "--trusted-key", str(trusted_key)], check=True)
+                raise ValueError(
+                    "publication inventory requires an independently trusted public key"
+                )
+            subprocess.run(
+                [
+                    sys.executable,
+                    str(directory / "minreport.py"),
+                    "verify",
+                    str(record),
+                    "--strict",
+                    "--trusted-key",
+                    str(trusted_key),
+                ],
+                check=True,
+            )
             if row["signature_required"]:
-                subprocess.run([sys.executable, str(directory / "sign.py"), "verify", str(record),
-                                "--trusted-key", str(trusted_key)], check=True)
+                subprocess.run(
+                    [
+                        sys.executable,
+                        str(directory / "sign.py"),
+                        "verify",
+                        str(record),
+                        "--trusted-key",
+                        str(trusted_key),
+                    ],
+                    check=True,
+                )
         else:
             raise ValueError("unknown inventory verification mode")
-    return {"inventory_valid": True, "publication_accepted": all(
-        row.get("verification_mode", "publication") == "publication" for row in rows)}
+    return {
+        "inventory_valid": True,
+        "publication_accepted": all(
+            row.get("verification_mode", "publication") == "publication" for row in rows
+        ),
+    }
 
 
 if __name__ == "__main__":

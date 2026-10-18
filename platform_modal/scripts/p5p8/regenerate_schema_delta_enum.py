@@ -17,6 +17,7 @@ Side effects:
 
 Stdlib only.
 """
+
 from __future__ import annotations
 
 import json
@@ -43,11 +44,15 @@ def main():
         sys.exit(2)
     # Locate the variant_deltas_applied.items.properties.delta_id node
     try:
-        node = schema["$defs"]["stack_record"]["properties"][
-            "variant_deltas_applied"]["items"]["properties"]["delta_id"]
+        node = schema["$defs"]["stack_record"]["properties"]["variant_deltas_applied"]["items"][
+            "properties"
+        ]["delta_id"]
     except (KeyError, TypeError) as e:
-        print("ERROR: could not locate variant_deltas_applied[].delta_id "
-              "in schema:", e, file=sys.stderr)
+        print(
+            "ERROR: could not locate variant_deltas_applied[].delta_id in schema:",
+            e,
+            file=sys.stderr,
+        )
         sys.exit(3)
     node["enum"] = delta_ids
     node["description"] = (
@@ -69,10 +74,11 @@ def main():
             except jsonschema.ValidationError as e:
                 n_fail += 1
                 print(f"  FAIL {p.stem}: {e.message[:120]}", file=sys.stderr)
-        print(f"validation: {n_ok}/{n_ok+n_fail} entries PASS after enum regen")
+        print(f"validation: {n_ok}/{n_ok + n_fail} entries PASS after enum regen")
         if n_fail:
             sys.exit(4)
     import os, tempfile
+
     fd, temp_name = tempfile.mkstemp(prefix=SCH.name + ".", dir=SCH.parent)
     try:
         with os.fdopen(fd, "w") as stream:
@@ -81,7 +87,8 @@ def main():
             os.fsync(stream.fileno())
         os.replace(temp_name, SCH)
     finally:
-        if os.path.exists(temp_name): os.unlink(temp_name)
+        if os.path.exists(temp_name):
+            os.unlink(temp_name)
 
 
 if __name__ == "__main__":

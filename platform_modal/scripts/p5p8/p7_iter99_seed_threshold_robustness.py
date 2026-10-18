@@ -25,6 +25,7 @@ Outputs:
 
 Stdlib only. ≤300 LoC.
 """
+
 import json
 import csv
 import math
@@ -33,12 +34,14 @@ from pathlib import Path
 from statistics import mean, stdev
 
 import sys
+
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
 from _paths import REPO_ROOT
+
 WORK = REPO_ROOT
-N2_DIR = WORK / 'platform_hybrid/experiments/results/n2_reward_tensor_resume'
-N10_DIR = WORK / 'platform_hybrid/experiments/results/n10_seed_expansion'
-OUT_DIR = WORK / 'platform_hybrid/experiments/results/p5p8/corrected-review20-v2'
+N2_DIR = WORK / "platform_hybrid/experiments/results/n2_reward_tensor_resume"
+N10_DIR = WORK / "platform_hybrid/experiments/results/n10_seed_expansion"
+OUT_DIR = WORK / "platform_hybrid/experiments/results/p5p8/corrected-review20-v2"
 
 G_BASE = 8
 G_DES = 4  # Dualformer-Auto simplification (de-escalation only)
@@ -48,7 +51,7 @@ TAU_GRID = [0.30, 0.35, 0.40, 0.45, 0.50, 0.55, 0.60, 0.65, 0.70, 0.75, 0.80]
 BOOT_B = 2000
 HEADROOM = 0.99
 SEEDS = [42, 179, 316, 453, 590]
-METHODS = ['grpo', 'aero', 'gift', 'areal']
+METHODS = ["grpo", "aero", "gift", "areal"]
 
 
 THRESHOLD_RULE_ID = "step_zvf_deescalation_headroom_v2"
@@ -56,8 +59,9 @@ THRESHOLD_RULE_ID = "step_zvf_deescalation_headroom_v2"
 
 def per_prompt_zvf(reward_tensor):
     """Observed all-equal indicator, used only to compute a step fraction."""
-    if not reward_tensor or any(len(group) != G_BASE or any(v not in (0, 1) for v in group)
-                                for group in reward_tensor):
+    if not reward_tensor or any(
+        len(group) != G_BASE or any(v not in (0, 1) for v in group) for group in reward_tensor
+    ):
         raise ValueError("expected nonempty binary G=8 prompt groups")
     return [float(sum(group) in (0, len(group))) for group in reward_tensor]
 
@@ -75,7 +79,7 @@ def subsample_contrast_probability(rewards, size):
     if not n or any(v not in (0, 1) for v in rewards) or not 1 <= size <= n:
         raise ValueError("valid binary group and subset size required")
     k = int(k)
-    return 1.0 - (math.comb(k, size) + math.comb(n-k, size)) / math.comb(n, size)
+    return 1.0 - (math.comb(k, size) + math.comb(n - k, size)) / math.comb(n, size)
 
 
 def replay_n2(tau, method_tensors):
@@ -86,42 +90,49 @@ def replay_n2(tau, method_tensors):
     """
     rows = []
     for step_idx, step in enumerate(method_tensors):
-        groups = step['rewards']
+        groups = step["rewards"]
         ppz = per_prompt_zvf(groups)
         step_zvf = mean(ppz)
         fire = deescalates(step_zvf, tau)
         group_size = G_DES if fire else G_BASE
         total_G = group_size * len(groups)
         baseline_G = G_BASE * len(groups)
-        contrast_expected = sum(subsample_contrast_probability(group, group_size) for group in groups)
-        baseline_contrast = sum(1-z for z in ppz)
-        rows.append({
-            'rule_id': THRESHOLD_RULE_ID,
-            'method': step['method'], 'step': step.get('step', step_idx), 'tau': tau,
-            'zvf': step_zvf,
-            'total_G_prompts': total_G, 'baseline_G_prompts': baseline_G,
-            'savings': (baseline_G-total_G) / baseline_G,
-            'expected_contrast_prompts': contrast_expected,
-            'baseline_contrast_prompts': baseline_contrast,
-            'delta_expected_contrast_prompts': contrast_expected-baseline_contrast,
-            'fires_des': len(groups) if fire else 0,
-            'fired_step': int(fire),
-            'headroom_bad': int(fire and step_zvf >= HEADROOM),
-            'outcome_status': 'recorded_group_subsampling_expectation',
-            'budget_status': 'retrospective_allocation_excludes_pilot_cost',
-        })
+        contrast_expected = sum(
+            subsample_contrast_probability(group, group_size) for group in groups
+        )
+        baseline_contrast = sum(1 - z for z in ppz)
+        rows.append(
+            {
+                "rule_id": THRESHOLD_RULE_ID,
+                "method": step["method"],
+                "step": step.get("step", step_idx),
+                "tau": tau,
+                "zvf": step_zvf,
+                "total_G_prompts": total_G,
+                "baseline_G_prompts": baseline_G,
+                "savings": (baseline_G - total_G) / baseline_G,
+                "expected_contrast_prompts": contrast_expected,
+                "baseline_contrast_prompts": baseline_contrast,
+                "delta_expected_contrast_prompts": contrast_expected - baseline_contrast,
+                "fires_des": len(groups) if fire else 0,
+                "fired_step": int(fire),
+                "headroom_bad": int(fire and step_zvf >= HEADROOM),
+                "outcome_status": "recorded_group_subsampling_expectation",
+                "budget_status": "retrospective_allocation_excludes_pilot_cost",
+            }
+        )
     return rows
 
 
 def replay_n10(tau, seed_data):
     """Replay on N10 5-seed panel: per-seed total_G and savings over 15 steps."""
-    sl = seed_data['step_log']
+    sl = seed_data["step_log"]
     total_G = 0
     fires_des = 0
     headroom_bad = 0
     zvs = []
     for step in sl:
-        z = step['zvf']
+        z = step["zvf"]
         zvs.append(z)
         if deescalates(z, tau):
             total_G += G_DES
@@ -133,18 +144,18 @@ def replay_n10(tau, seed_data):
     baseline_G = G_BASE * len(sl)
     savings = (baseline_G - total_G) / baseline_G if baseline_G > 0 else 0.0
     return {
-        'rule_id': THRESHOLD_RULE_ID,
-        'tau': tau,
-        'seed': seed_data['seed'],
-        'total_G': total_G,
-        'baseline_G': baseline_G,
-        'savings': savings,
-        'fire_rate': fires_des / len(sl) if sl else 0.0,
-        'escalations': 0,
-        'deescalations': fires_des,
-        'headroom_bad': headroom_bad,
-        'mean_zvf': mean(zvs) if zvs else None,
-        'heldout_acc': seed_data.get('heldout_acc', float('nan')),
+        "rule_id": THRESHOLD_RULE_ID,
+        "tau": tau,
+        "seed": seed_data["seed"],
+        "total_G": total_G,
+        "baseline_G": baseline_G,
+        "savings": savings,
+        "fire_rate": fires_des / len(sl) if sl else 0.0,
+        "escalations": 0,
+        "deescalations": fires_des,
+        "headroom_bad": headroom_bad,
+        "mean_zvf": mean(zvs) if zvs else None,
+        "heldout_acc": seed_data.get("heldout_acc", float("nan")),
     }
 
 
@@ -153,7 +164,7 @@ def bootstrap_ci(values, B=BOOT_B, alpha=0.05, seed=42):
     rng = random.Random(seed)
     n = len(values)
     if n == 0:
-        return float('nan'), float('nan'), float('nan')
+        return float("nan"), float("nan"), float("nan")
     means = []
     for _ in range(B):
         sample = [values[rng.randrange(n)] for _ in range(n)]
@@ -166,10 +177,10 @@ def bootstrap_ci(values, B=BOOT_B, alpha=0.05, seed=42):
 
 def cv(xs):
     if len(xs) < 2:
-        return float('nan')
+        return float("nan")
     m = mean(xs)
     if m == 0:
-        return float('nan')
+        return float("nan")
     return stdev(xs) / abs(m)
 
 
@@ -178,18 +189,18 @@ def main():
     # Load N2 four-method tensors
     n2_data = {}
     for m in METHODS:
-        fn = N2_DIR / f'{m}_s0_tensors.jsonl'
+        fn = N2_DIR / f"{m}_s0_tensors.jsonl"
         with open(fn) as f:
             n2_data[m] = [json.loads(l) for l in f]
-    print(f'[OK] Loaded N2 four-method tensors: {[(m, len(v)) for m, v in n2_data.items()]}')
+    print(f"[OK] Loaded N2 four-method tensors: {[(m, len(v)) for m, v in n2_data.items()]}")
 
     # Load N10 5-seed panel
     n10_data = {}
     for s in SEEDS:
-        fn = N10_DIR / f'n10_grpo_s{s}.json'
+        fn = N10_DIR / f"n10_grpo_s{s}.json"
         with open(fn) as f:
             n10_data[s] = json.load(f)
-    print(f'[OK] Loaded N10 5-seed panel: seeds={list(n10_data.keys())}')
+    print(f"[OK] Loaded N10 5-seed panel: seeds={list(n10_data.keys())}")
 
     # 1) Per-step N2 replay × all τ
     n2_per_step = []
@@ -197,7 +208,9 @@ def main():
         for m in METHODS:
             rows = replay_n2(tau, n2_data[m])
             n2_per_step.extend(rows)
-    print(f'[OK] N2 per-step rows: {len(n2_per_step)} ({len(TAU_GRID)} τ × {len(METHODS)} methods × 40 steps)')
+    print(
+        f"[OK] N2 per-step rows: {len(n2_per_step)} ({len(TAU_GRID)} τ × {len(METHODS)} methods × 40 steps)"
+    )
 
     # 2) Per-seed N10 replay × all τ
     n10_per_seed = []
@@ -205,30 +218,30 @@ def main():
         for s in SEEDS:
             r = replay_n10(tau, n10_data[s])
             n10_per_seed.append(r)
-    print(f'[OK] N10 per-seed rows: {len(n10_per_seed)} ({len(TAU_GRID)} τ × {len(SEEDS)} seeds)')
+    print(f"[OK] N10 per-seed rows: {len(n10_per_seed)} ({len(TAU_GRID)} τ × {len(SEEDS)} seeds)")
 
     # 3) Aggregate summary: per-τ across N10 + N2
     summary = []
     ci_rows = []
     for tau in TAU_GRID:
         # N10 aggregates
-        n10_for_tau = [r for r in n10_per_seed if r['tau'] == tau]
-        n10_savings = [r['savings'] for r in n10_for_tau]
-        n10_totalG = [r['total_G'] for r in n10_for_tau]
-        n10_hr_bad = sum(r['headroom_bad'] for r in n10_for_tau)
+        n10_for_tau = [r for r in n10_per_seed if r["tau"] == tau]
+        n10_savings = [r["savings"] for r in n10_for_tau]
+        n10_totalG = [r["total_G"] for r in n10_for_tau]
+        n10_hr_bad = sum(r["headroom_bad"] for r in n10_for_tau)
         n10_mean_sav = mean(n10_savings)
         n10_cv_sav = cv(n10_savings)
         n10_cv_totalG = cv(n10_totalG)
         n10_mu, n10_lo, n10_hi = bootstrap_ci(n10_savings)
 
         # N2 aggregates (across methods × steps)
-        n2_for_tau = [r for r in n2_per_step if r['tau'] == tau]
-        n2_savings = [r['savings'] for r in n2_for_tau]
-        n2_contrast = [r['expected_contrast_prompts'] for r in n2_for_tau]
+        n2_for_tau = [r for r in n2_per_step if r["tau"] == tau]
+        n2_savings = [r["savings"] for r in n2_for_tau]
+        n2_contrast = [r["expected_contrast_prompts"] for r in n2_for_tau]
         n2_per_method_mean = {}
         for m in METHODS:
-            ms = [r['savings'] for r in n2_for_tau if r['method'] == m]
-            n2_per_method_mean[m] = mean(ms) if ms else float('nan')
+            ms = [r["savings"] for r in n2_for_tau if r["method"] == m]
+            n2_per_method_mean[m] = mean(ms) if ms else float("nan")
         n2_mean_sav = mean(n2_savings)
         n2_cv_sav = cv(n2_savings)
         n2_mean_contrast = mean(n2_contrast)
@@ -237,128 +250,154 @@ def main():
         n2_method_savs = list(n2_per_method_mean.values())
         n2_method_cv = cv(n2_method_savs)
 
-        summary.append({
-            'tau': tau,
-            'n10_mean_savings': n10_mean_sav,
-            'n10_cv_savings': n10_cv_sav,
-            'n10_cv_totalG': n10_cv_totalG,
-            'n10_headroom_bad': n10_hr_bad,
-            'n2_mean_savings': n2_mean_sav,
-            'n2_cv_savings': n2_cv_sav,
-            'n2_method_cv': n2_method_cv,
-            'n2_mean_expected_contrast_prompts': n2_mean_contrast,
-            'n2_grpo_savings': n2_per_method_mean['grpo'],
-            'n2_aero_savings': n2_per_method_mean['aero'],
-            'n2_gift_savings': n2_per_method_mean['gift'],
-            'n2_areal_savings': n2_per_method_mean['areal'],
-            'n10_bootstrap_mean': n10_mu,
-            'n10_bootstrap_lo': n10_lo,
-            'n10_bootstrap_hi': n10_hi,
-        })
-        ci_rows.append({
-            'tau': tau,
-            'n10_mean_savings': n10_mu,
-            'n10_ci_lo': n10_lo,
-            'n10_ci_hi': n10_hi,
-            'n10_ci_width': n10_hi - n10_lo,
-            'n10_excludes_zero': (n10_lo > 0),
-            'n10_cv_savings': n10_cv_sav,
-            'n2_method_cv': n2_method_cv,
-        })
+        summary.append(
+            {
+                "tau": tau,
+                "n10_mean_savings": n10_mean_sav,
+                "n10_cv_savings": n10_cv_sav,
+                "n10_cv_totalG": n10_cv_totalG,
+                "n10_headroom_bad": n10_hr_bad,
+                "n2_mean_savings": n2_mean_sav,
+                "n2_cv_savings": n2_cv_sav,
+                "n2_method_cv": n2_method_cv,
+                "n2_mean_expected_contrast_prompts": n2_mean_contrast,
+                "n2_grpo_savings": n2_per_method_mean["grpo"],
+                "n2_aero_savings": n2_per_method_mean["aero"],
+                "n2_gift_savings": n2_per_method_mean["gift"],
+                "n2_areal_savings": n2_per_method_mean["areal"],
+                "n10_bootstrap_mean": n10_mu,
+                "n10_bootstrap_lo": n10_lo,
+                "n10_bootstrap_hi": n10_hi,
+            }
+        )
+        ci_rows.append(
+            {
+                "tau": tau,
+                "n10_mean_savings": n10_mu,
+                "n10_ci_lo": n10_lo,
+                "n10_ci_hi": n10_hi,
+                "n10_ci_width": n10_hi - n10_lo,
+                "n10_excludes_zero": (n10_lo > 0),
+                "n10_cv_savings": n10_cv_sav,
+                "n2_method_cv": n2_method_cv,
+            }
+        )
 
     # 4) Calibrated τ: among τ with n10_excludes_zero=True and headroom_bad=0, pick lowest CV(savings)
-    valid = [r for r in ci_rows if r['n10_excludes_zero'] and
-             math.isfinite(r['n10_cv_savings']) and math.isfinite(r['n2_method_cv']) and
-             next(s['n10_headroom_bad'] for s in summary if s['tau'] == r['tau']) == 0]
+    valid = [
+        r
+        for r in ci_rows
+        if r["n10_excludes_zero"]
+        and math.isfinite(r["n10_cv_savings"])
+        and math.isfinite(r["n2_method_cv"])
+        and next(s["n10_headroom_bad"] for s in summary if s["tau"] == r["tau"]) == 0
+    ]
     if valid:
-        calibrated = min(valid, key=lambda r: (r['n10_cv_savings'], r['n2_method_cv']))
-        calibrated_tau = calibrated['tau']
+        calibrated = min(valid, key=lambda r: (r["n10_cv_savings"], r["n2_method_cv"]))
+        calibrated_tau = calibrated["tau"]
     else:
         calibrated = None
         calibrated_tau = None
-    print(f'[OK] Calibrated τ = {calibrated_tau}; status='
-          f'{"selected" if calibrated is not None else "no_feasible_threshold"}')
+    print(
+        f"[OK] Calibrated τ = {calibrated_tau}; status="
+        f"{'selected' if calibrated is not None else 'no_feasible_threshold'}"
+    )
 
     # 5) Write outputs
-    with open(OUT_DIR / 'p7_iter99_seed_threshold_robustness_per_step_n2.tsv', 'w', newline='') as f:
-        w = csv.DictWriter(f, fieldnames=list(n2_per_step[0].keys()), delimiter='\t')
+    with open(
+        OUT_DIR / "p7_iter99_seed_threshold_robustness_per_step_n2.tsv", "w", newline=""
+    ) as f:
+        w = csv.DictWriter(f, fieldnames=list(n2_per_step[0].keys()), delimiter="\t")
         w.writeheader()
         w.writerows(n2_per_step)
-    with open(OUT_DIR / 'p7_iter99_seed_threshold_robustness_per_seed_n10.tsv', 'w', newline='') as f:
-        w = csv.DictWriter(f, fieldnames=list(n10_per_seed[0].keys()), delimiter='\t')
+    with open(
+        OUT_DIR / "p7_iter99_seed_threshold_robustness_per_seed_n10.tsv", "w", newline=""
+    ) as f:
+        w = csv.DictWriter(f, fieldnames=list(n10_per_seed[0].keys()), delimiter="\t")
         w.writeheader()
         w.writerows(n10_per_seed)
-    with open(OUT_DIR / 'p7_iter99_seed_threshold_robustness_summary.tsv', 'w', newline='') as f:
-        w = csv.DictWriter(f, fieldnames=list(summary[0].keys()), delimiter='\t')
+    with open(OUT_DIR / "p7_iter99_seed_threshold_robustness_summary.tsv", "w", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=list(summary[0].keys()), delimiter="\t")
         w.writeheader()
         w.writerows(summary)
-    with open(OUT_DIR / 'p7_iter99_seed_threshold_robustness_ci.tsv', 'w', newline='') as f:
-        w = csv.DictWriter(f, fieldnames=list(ci_rows[0].keys()), delimiter='\t')
+    with open(OUT_DIR / "p7_iter99_seed_threshold_robustness_ci.tsv", "w", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=list(ci_rows[0].keys()), delimiter="\t")
         w.writeheader()
         w.writerows(ci_rows)
 
     # 6) JSON summary
     summary_json = {
-        'iteration': 99,
-        'pillar': 'P7',
-        'vein': 'iter-99 seed-robustness of trigger threshold + bootstrap CIs',
-        'panels': {
-            'n2_four_method': {m: len(n2_data[m]) for m in METHODS},
-            'n10_5_seeds': list(n10_data.keys()),
+        "iteration": 99,
+        "pillar": "P7",
+        "vein": "iter-99 seed-robustness of trigger threshold + bootstrap CIs",
+        "panels": {
+            "n2_four_method": {m: len(n2_data[m]) for m in METHODS},
+            "n10_5_seeds": list(n10_data.keys()),
         },
-        'tau_grid': TAU_GRID,
-        'boot_B': BOOT_B,
-        'G_base': G_BASE,
-        'G_des': G_DES,
-        'rows': {
-            'per_step_n2': len(n2_per_step),
-            'per_seed_n10': len(n10_per_seed),
-            'summary': len(summary),
+        "tau_grid": TAU_GRID,
+        "boot_B": BOOT_B,
+        "G_base": G_BASE,
+        "G_des": G_DES,
+        "rows": {
+            "per_step_n2": len(n2_per_step),
+            "per_seed_n10": len(n10_per_seed),
+            "summary": len(summary),
         },
-        'rule_id': THRESHOLD_RULE_ID,
-        'calibration_status': 'selected' if calibrated is not None else 'no_feasible_threshold',
-        'budget_status': 'retrospective_allocation_excludes_pilot_cost',
-        'calibrated_tau': calibrated_tau,
-        'calibrated_point': calibrated,
-        'headroom_threshold': HEADROOM,
-        'all_taus_have_headroom_bad_zero': all(
-            next(s['n10_headroom_bad'] for s in summary if s['tau'] == r['tau']) == 0
+        "rule_id": THRESHOLD_RULE_ID,
+        "calibration_status": "selected" if calibrated is not None else "no_feasible_threshold",
+        "budget_status": "retrospective_allocation_excludes_pilot_cost",
+        "calibrated_tau": calibrated_tau,
+        "calibrated_point": calibrated,
+        "headroom_threshold": HEADROOM,
+        "all_taus_have_headroom_bad_zero": all(
+            next(s["n10_headroom_bad"] for s in summary if s["tau"] == r["tau"]) == 0
             for r in ci_rows
         ),
-        'ci_excludes_zero_count': sum(1 for r in ci_rows if r['n10_excludes_zero']),
-        'best_n2_method_savings_spread': max(s['n2_gift_savings'] for s in summary) -
-                                          min(s['n2_gift_savings'] for s in summary)
-                                          if False else
-                                          (max(s['n2_grpo_savings'] for s in summary) -
-                                           min(s['n2_grpo_savings'] for s in summary)),
+        "ci_excludes_zero_count": sum(1 for r in ci_rows if r["n10_excludes_zero"]),
+        "best_n2_method_savings_spread": max(s["n2_gift_savings"] for s in summary)
+        - min(s["n2_gift_savings"] for s in summary)
+        if False
+        else (
+            max(s["n2_grpo_savings"] for s in summary) - min(s["n2_grpo_savings"] for s in summary)
+        ),
     }
-    with open(OUT_DIR / 'p7_iter99_seed_threshold_robustness_summary.json', 'w') as f:
+    with open(OUT_DIR / "p7_iter99_seed_threshold_robustness_summary.json", "w") as f:
         json.dump(summary_json, f, indent=2)
 
     # 7) Print headline
-    print('\n=== HEADLINE (calibrated point) ===')
+    print("\n=== HEADLINE (calibrated point) ===")
     if calibrated is not None:
-        print(f'  τ       = {calibrated_tau}')
-        print(f'  N10 mean savings = {calibrated["n10_mean_savings"]:.4f}')
-        print(f'  N10 95% CI       = [{calibrated["n10_ci_lo"]:.4f}, {calibrated["n10_ci_hi"]:.4f}]')
-        print(f'  N10 CV(savings)  = {calibrated["n10_cv_savings"]:.4f}')
-        print(f'  N2 method CV     = {calibrated["n2_method_cv"]:.4f}')
-        print(f'  N2 mean savings  = {next(s["n2_mean_savings"] for s in summary if s["tau"] == calibrated_tau):.4f}')
-        print(f'  Headroom-bad     = {next(s["n10_headroom_bad"] for s in summary if s["tau"] == calibrated_tau)}')
+        print(f"  τ       = {calibrated_tau}")
+        print(f"  N10 mean savings = {calibrated['n10_mean_savings']:.4f}")
+        print(
+            f"  N10 95% CI       = [{calibrated['n10_ci_lo']:.4f}, {calibrated['n10_ci_hi']:.4f}]"
+        )
+        print(f"  N10 CV(savings)  = {calibrated['n10_cv_savings']:.4f}")
+        print(f"  N2 method CV     = {calibrated['n2_method_cv']:.4f}")
+        print(
+            f"  N2 mean savings  = {next(s['n2_mean_savings'] for s in summary if s['tau'] == calibrated_tau):.4f}"
+        )
+        print(
+            f"  Headroom-bad     = {next(s['n10_headroom_bad'] for s in summary if s['tau'] == calibrated_tau)}"
+        )
 
     # Print headline table
-    print('\n=== Full τ sweep (N10 + N2 four-method) ===')
-    print(f'{"τ":>6} {"N10_mean":>10} {"N10_CI_lo":>10} {"N10_CI_hi":>10} {"N10_CV":>8} '
-          f'{"N2_method_CV":>14} {"hr_bad":>7} {"excl_0":>7}')
+    print("\n=== Full τ sweep (N10 + N2 four-method) ===")
+    print(
+        f"{'τ':>6} {'N10_mean':>10} {'N10_CI_lo':>10} {'N10_CI_hi':>10} {'N10_CV':>8} "
+        f"{'N2_method_CV':>14} {'hr_bad':>7} {'excl_0':>7}"
+    )
     for r in ci_rows:
-        s = next(x for x in summary if x['tau'] == r['tau'])
-        print(f'{r["tau"]:>6.2f} {r["n10_mean_savings"]:>10.4f} {r["n10_ci_lo"]:>10.4f} '
-              f'{r["n10_ci_hi"]:>10.4f} {r["n10_cv_savings"]:>8.4f} '
-              f'{r["n2_method_cv"]:>14.4f} {s["n10_headroom_bad"]:>7} '
-              f'{str(r["n10_excludes_zero"]):>7}')
+        s = next(x for x in summary if x["tau"] == r["tau"])
+        print(
+            f"{r['tau']:>6.2f} {r['n10_mean_savings']:>10.4f} {r['n10_ci_lo']:>10.4f} "
+            f"{r['n10_ci_hi']:>10.4f} {r['n10_cv_savings']:>8.4f} "
+            f"{r['n2_method_cv']:>14.4f} {s['n10_headroom_bad']:>7} "
+            f"{str(r['n10_excludes_zero']):>7}"
+        )
 
-    print(f'\n[OK] Wrote 5 outputs to {OUT_DIR}/p7_iter99_seed_threshold_robustness_*')
+    print(f"\n[OK] Wrote 5 outputs to {OUT_DIR}/p7_iter99_seed_threshold_robustness_*")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

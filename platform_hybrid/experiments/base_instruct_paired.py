@@ -14,18 +14,24 @@ Usage:
     python experiments/base_instruct_paired.py            # write TSV + print LaTeX
     python experiments/base_instruct_paired.py --quiet    # write TSV only
 """
+
 from __future__ import annotations
 
 import argparse
 import json
 import math
-import os
 import sys
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
-sys.path.insert(0, str(next(p for p in Path(__file__).resolve().parents if (p / "platform_hybrid").is_dir())))
-from platform_hybrid.experiments.research_contracts import require_empirical, inherit_evidence, EvidenceUnavailable
+sys.path.insert(
+    0, str(next(p for p in Path(__file__).resolve().parents if (p / "platform_hybrid").is_dir()))
+)
+from platform_hybrid.experiments.research_contracts import (
+    require_empirical,
+    inherit_evidence,
+    EvidenceUnavailable,
+)
 
 REPO = Path(__file__).resolve().parents[1]
 MASTER = REPO / "experiments" / "master_results.json"
@@ -41,10 +47,10 @@ OUT_TSV = REPO / "experiments" / "results" / "base_instruct_paired.tsv"
 # We should replicate these runs on fully open-source frameworks to isolate algorithmic gains.
 MODELS: List[Tuple[str, str, str]] = [
     # (family, base_model_id, instruct_model_id)
-    ("Qwen3-8B",    "Qwen/Qwen3-8B-Base",   "Qwen/Qwen3-8B"),
-    ("Qwen3-1.7B",  "Qwen/Qwen3-1.7B-Base", "Qwen/Qwen3-1.7B-Instruct"),
-    ("Qwen3-0.6B",  "Qwen/Qwen3-0.6B-Base", "Qwen/Qwen3-0.6B-Instruct"),
-    ("Llama-3.1-8B","meta-llama/Llama-3.1-8B", "meta-llama/Llama-3.1-8B-Instruct"),
+    ("Qwen3-8B", "Qwen/Qwen3-8B-Base", "Qwen/Qwen3-8B"),
+    ("Qwen3-1.7B", "Qwen/Qwen3-1.7B-Base", "Qwen/Qwen3-1.7B-Instruct"),
+    ("Qwen3-0.6B", "Qwen/Qwen3-0.6B-Base", "Qwen/Qwen3-0.6B-Instruct"),
+    ("Llama-3.1-8B", "meta-llama/Llama-3.1-8B", "meta-llama/Llama-3.1-8B-Instruct"),
 ]
 
 
@@ -52,12 +58,13 @@ MODELS: List[Tuple[str, str, str]] = [
 # Source loaders with graceful degradation
 # ---------------------------------------------------------------------------
 
+
 def _safe_json(path: Path) -> Optional[Any]:
     try:
         return json.loads(path.read_text())
     except FileNotFoundError:
         return None
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         print(f"[warn] could not parse {path}: {exc}", file=sys.stderr)
         return None
 
@@ -94,6 +101,7 @@ def load_heldout_5seed() -> List[Dict[str, Any]]:
 # ---------------------------------------------------------------------------
 # Feature extractors
 # ---------------------------------------------------------------------------
+
 
 def _match_model(row: Dict[str, Any], model_id: str) -> bool:
     mid = row.get("model") or row.get("model_source") or row.get("config", {}).get("model") or ""
@@ -190,7 +198,8 @@ def heldout_base_metric(
     _ = base_control  # intentionally unused for the base pre-RL (see note above)
     # Post-RL base: held-out top-10 contains Qwen3-8B-Base rows.
     matches = [
-        r for r in heldout_top10
+        r
+        for r in heldout_top10
         if r.get("model", "").lower() == base_id.lower()
         and _eligible(r)
         and _accuracy(r.get("heldout_accuracy")) is not None
@@ -246,6 +255,7 @@ def zvf_at_100(measured_at_100=None, unused_training_reward=None):
 # Statistics
 # ---------------------------------------------------------------------------
 
+
 def _mean(xs: List[float]) -> float:
     return sum(xs) / len(xs) if xs else float("nan")
 
@@ -293,8 +303,11 @@ def _betai(a: float, b: float, x: float) -> float:
     if x >= 1.0:
         return 1.0
     bt = math.exp(
-        math.lgamma(a + b) - math.lgamma(a) - math.lgamma(b)
-        + a * math.log(x) + b * math.log(1.0 - x)
+        math.lgamma(a + b)
+        - math.lgamma(a)
+        - math.lgamma(b)
+        + a * math.log(x)
+        + b * math.log(1.0 - x)
     )
     if x < (a + 1.0) / (a + b + 2.0):
         return bt * _betacf(a, b, x) / a
@@ -344,6 +357,7 @@ def bh_correct(pvals: List[float]) -> List[float]:
 # Orchestration
 # ---------------------------------------------------------------------------
 
+
 def build_rows() -> List[Dict[str, Any]]:
     master = _eligible_unique(load_master())
     heldout_top10 = _eligible_unique(load_heldout_top10())
@@ -376,7 +390,7 @@ def build_rows() -> List[Dict[str, Any]]:
             "heldout_post_rl": ho_base["post_rl"],
             "zvf_at_100": zvf_at_100(tm_base["zvf_tail_mean"], tm_base["train_post_rl"]),
             "n_seeds": max(ho_base["n_seeds"], len(tm_base["seeds"])),
-            # LIMITATION (review): Beware of "Single-Seed Extrapolations". Ensure N > 1 
+            # LIMITATION (review): Beware of "Single-Seed Extrapolations". Ensure N > 1
             # for all configurations to properly account for RL variance and initialization dependence.
             "raw_seeds": tm_base["seeds"],
             "heldout_per_seed": [],
@@ -423,7 +437,7 @@ def build_rows() -> List[Dict[str, Any]]:
         pvals_raw.append(r["paired_p"])
 
     pvals_bh = bh_correct(pvals_raw)
-    for r, p_adj in zip(rows, pvals_bh):
+    for r, p_adj in zip(rows, pvals_bh, strict=False):
         r["paired_p_bh"] = p_adj
     return rows
 
@@ -431,12 +445,23 @@ def build_rows() -> List[Dict[str, Any]]:
 def write_tsv(rows: List[Dict[str, Any]]) -> None:
     OUT_TSV.parent.mkdir(parents=True, exist_ok=True)
     cols = [
-        "family", "ckpt", "model_id",
-        "train_pre_rl", "train_post_rl", "delta_train",
-        "heldout_pre_rl", "heldout_post_rl", "delta_heldout",
-        "zvf_at_100", "n_seeds", "paired_t", "paired_p", "paired_p_bh",
+        "family",
+        "ckpt",
+        "model_id",
+        "train_pre_rl",
+        "train_post_rl",
+        "delta_train",
+        "heldout_pre_rl",
+        "heldout_post_rl",
+        "delta_heldout",
+        "zvf_at_100",
+        "n_seeds",
+        "paired_t",
+        "paired_p",
+        "paired_p_bh",
         "source_status",
     ]
+
     def fmt(v: Any) -> str:
         if v is None:
             return "NA"
@@ -445,6 +470,7 @@ def write_tsv(rows: List[Dict[str, Any]]) -> None:
                 return "NA"
             return f"{v:.4f}"
         return str(v)
+
     with OUT_TSV.open("w") as fh:
         fh.write("\t".join(cols) + "\n")
         for r in rows:
@@ -454,13 +480,18 @@ def write_tsv(rows: List[Dict[str, Any]]) -> None:
 
 def print_latex(rows: List[Dict[str, Any]]) -> None:
     print("% Auto-generated by experiments/base_instruct_paired.py")
-    print(r"\begin{tabular}{@{}l l l S[table-format=1.3] S[table-format=1.3] "
-          r"S[table-format=1.3] S[table-format=1.3] S[table-format=1.2] c@{}}")
+    print(
+        r"\begin{tabular}{@{}l l l S[table-format=1.3] S[table-format=1.3] "
+        r"S[table-format=1.3] S[table-format=1.3] S[table-format=1.2] c@{}}"
+    )
     print(r"\toprule")
-    print(r"\textbf{Model} & \textbf{Ckpt} & \textbf{Tag} & "
-          r"{train pre-RL} & {train post-RL} & "
-          r"{HO pre-RL} & {HO post-RL} & {ZVF@100} & $n_{\text{seeds}}$ \\")
+    print(
+        r"\textbf{Model} & \textbf{Ckpt} & \textbf{Tag} & "
+        r"{train pre-RL} & {train post-RL} & "
+        r"{HO pre-RL} & {HO post-RL} & {ZVF@100} & $n_{\text{seeds}}$ \\"
+    )
     print(r"\midrule")
+
     def cell(v: Any) -> str:
         if v is None:
             return "{---}"
@@ -469,17 +500,25 @@ def print_latex(rows: List[Dict[str, Any]]) -> None:
         if isinstance(v, float):
             return f"{v:.3f}"
         return str(v)
+
     for r in rows:
         tag = "d.o."  # descriptive observations; seed count alone supplies no CI
-        print(" & ".join([
-            r["family"], r["ckpt"], tag,
-            cell(r["train_pre_rl"]),
-            cell(r["train_post_rl"]),
-            cell(r["heldout_pre_rl"]),
-            cell(r["heldout_post_rl"]),
-            cell(r["zvf_at_100"]),
-            str(r["n_seeds"]),
-        ]) + r" \\")
+        print(
+            " & ".join(
+                [
+                    r["family"],
+                    r["ckpt"],
+                    tag,
+                    cell(r["train_pre_rl"]),
+                    cell(r["train_post_rl"]),
+                    cell(r["heldout_pre_rl"]),
+                    cell(r["heldout_post_rl"]),
+                    cell(r["zvf_at_100"]),
+                    str(r["n_seeds"]),
+                ]
+            )
+            + r" \\"
+        )
     print(r"\bottomrule")
     print(r"\end{tabular}")
 

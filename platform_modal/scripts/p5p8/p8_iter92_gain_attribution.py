@@ -61,8 +61,10 @@ import xgboost as xgb
 from sklearn.metrics import roc_auc_score
 
 import sys
+
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
+from _paths import REPO_ROOT
+
 ROOT = REPO_ROOT
 RESULTS = ROOT / "platform_hybrid/experiments/results/p5p8"
 RESULTS.mkdir(parents=True, exist_ok=True)
@@ -203,9 +205,7 @@ def main():
     n_test = len(y_test)
     # Pre-sample bootstrap row indices once (B = N_BOOT draws of n_test indices)
     rng_global = random.Random(SEED)
-    boot_indices = [
-        [rng_global.randrange(n_test) for _ in range(n_test)] for _ in range(N_BOOT)
-    ]
+    boot_indices = [[rng_global.randrange(n_test) for _ in range(n_test)] for _ in range(N_BOOT)]
     for k in range(1, len(ALL_FEATURES) + 1):
         feats_k = rank_order[:k]
         idx = [ALL_FEATURES.index(f) for f in feats_k]
@@ -219,7 +219,7 @@ def main():
             if d is not None:
                 diffs.append(d)
         if diffs:
-            ci_lo, ci_hi = np.quantile(diffs, [.025, .975])
+            ci_lo, ci_hi = np.quantile(diffs, [0.025, 0.975])
         else:
             ci_lo, ci_hi = 0.0, 0.0
         curve_rows.append(
@@ -303,13 +303,16 @@ def main():
         for stratum in sorted(set(strata)):
             mask = strata == stratum
             gain_c = cohort_permutation_importance(
-                model_c, X_test[mask], y_test[mask], ALL_FEATURES, SEED + int(stratum))
+                model_c, X_test[mask], y_test[mask], ALL_FEATURES, SEED + int(stratum)
+            )
             rank_order_c = sorted(gain_c, key=lambda f: -gain_c[f])
             n_strat = int(mask.sum())
             n_pos = int(test_df["Class"].values[mask].sum())
             # AUC of the cohort-stratified model
             try:
-                auc_strat = roc_auc_score(test_df["Class"].values[mask], model_c.predict_proba(X_test[mask])[:, 1])
+                auc_strat = roc_auc_score(
+                    test_df["Class"].values[mask], model_c.predict_proba(X_test[mask])[:, 1]
+                )
             except ValueError:
                 auc_strat = float("nan")
             for rank, f in enumerate(rank_order_c, start=1):

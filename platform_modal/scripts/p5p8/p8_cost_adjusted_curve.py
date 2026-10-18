@@ -70,8 +70,8 @@ V20 = [f"V{i}" for i in range(1, 21)]
 V_AGG = ["V_mean", "V_std", "V_max", "V_min"]
 
 # Cost model (USD)
-COST_XGB_PER_ROW = 0.0001   # 10_000 inference ~ $1 batch
-COST_LLM_PER_ROW = 0.0035   # async sensor, Qwen3.5-4B SFT, ~125 tokens
+COST_XGB_PER_ROW = 0.0001  # 10_000 inference ~ $1 batch
+COST_LLM_PER_ROW = 0.0035  # async sensor, Qwen3.5-4B SFT, ~125 tokens
 COST_REVIEW_PER_ROW = 0.50  # fraud analyst unit cost
 
 # Review budgets as fractions of stream
@@ -140,8 +140,12 @@ def op_point(scores: np.ndarray, y: np.ndarray, top_frac: float) -> dict:
     cost_model = n * COST_XGB_PER_ROW
     return {
         "n_reviewed": k,
-        "tp": tp, "fp": fp, "fn": fn, "tn": tn,
-        "precision": precision, "recall": recall,
+        "tp": tp,
+        "fp": fp,
+        "fn": fn,
+        "tn": tn,
+        "precision": precision,
+        "recall": recall,
         "cost_review_usd": cost_review,
         "cost_model_usd": cost_model,
         "cost_total_usd": cost_review + cost_model,
@@ -150,8 +154,11 @@ def op_point(scores: np.ndarray, y: np.ndarray, top_frac: float) -> dict:
 
 
 def hybrid_op_point(
-    scores_base: np.ndarray, scores_full: np.ndarray, y: np.ndarray,
-    top_frac: float, llm_coverage: float,
+    scores_base: np.ndarray,
+    scores_full: np.ndarray,
+    y: np.ndarray,
+    top_frac: float,
+    llm_coverage: float,
 ) -> dict:
     """M3/M4 hybrid: bottom (1-llm_coverage) scored by base tree only,
     top llm_coverage scored by full tree (LLM sensor paid)."""
@@ -179,8 +186,12 @@ def hybrid_op_point(
     return {
         "n_reviewed": k_review,
         "n_llm_scored": k_llm,
-        "tp": tp, "fp": fp, "fn": fn, "tn": tn,
-        "precision": precision, "recall": recall,
+        "tp": tp,
+        "fp": fp,
+        "fn": fn,
+        "tn": tn,
+        "precision": precision,
+        "recall": recall,
         "cost_review_usd": cost_review,
         "cost_model_usd": cost_model,
         "cost_llm_usd": cost_llm,
@@ -224,28 +235,28 @@ def main() -> None:
 
     rows = []
     # M1: XGB-20raw baseline
-    for b, blab in zip(BUDGETS, BUDGET_LABELS):
+    for b, blab in zip(BUDGETS, BUDGET_LABELS, strict=False):
         op = op_point(scores["XGB-20raw"], y, b)
         op["mode"] = "M1_XGB-20raw"
         op["budget_label"] = blab
         op["budget"] = b
         rows.append(op)
     # M2: XGB-24full (oracle LLM-as-sensor)
-    for b, blab in zip(BUDGETS, BUDGET_LABELS):
+    for b, blab in zip(BUDGETS, BUDGET_LABELS, strict=False):
         op = op_point(scores["XGB-24full"], y, b)
         op["mode"] = "M2_XGB-24full_oracle"
         op["budget_label"] = blab
         op["budget"] = b
         rows.append(op)
     # M3: Hybrid with LLM coverage = 10%
-    for b, blab in zip(BUDGETS, BUDGET_LABELS):
+    for b, blab in zip(BUDGETS, BUDGET_LABELS, strict=False):
         op = hybrid_op_point(scores["XGB-20raw"], scores["XGB-24full"], y, b, llm_coverage=0.10)
         op["mode"] = "M3_Hybrid10"
         op["budget_label"] = blab
         op["budget"] = b
         rows.append(op)
     # M4: Hybrid with LLM coverage = 1%
-    for b, blab in zip(BUDGETS, BUDGET_LABELS):
+    for b, blab in zip(BUDGETS, BUDGET_LABELS, strict=False):
         op = hybrid_op_point(scores["XGB-20raw"], scores["XGB-24full"], y, b, llm_coverage=0.01)
         op["mode"] = "M4_Hybrid01"
         op["budget_label"] = blab
@@ -258,64 +269,106 @@ def main() -> None:
 
     # Bootstrap CIs on TP/$ deltas
     boot_rows = []
-    for b, blab in zip(BUDGETS, BUDGET_LABELS):
+    for b, blab in zip(BUDGETS, BUDGET_LABELS, strict=False):
         # M2 - M1
         fn_full = lambda idx, s=scores["XGB-24full"]: s[idx]
         fn_base = lambda idx, s=scores["XGB-20raw"]: s[idx]
         mean_d, lo, hi, base_mean, base_std = bootstrap_ci_delta_tp_per_dollar(
-            y, fn_full, fn_base, b, n_boot=N_BOOT, seed=BOOT_SEED,
+            y,
+            fn_full,
+            fn_base,
+            b,
+            n_boot=N_BOOT,
+            seed=BOOT_SEED,
         )
-        boot_rows.append({
-            "comparison": "M2_minus_M1",
-            "budget": b, "budget_label": blab,
-            "delta_tp_per_dollar_mean": mean_d,
-            "ci_lo": lo, "ci_hi": hi,
-            "base_tp_per_dollar_mean": base_mean,
-            "base_tp_per_dollar_std": base_std,
-            "excl_zero": "yes" if (lo > 0 or hi < 0) else "no",
-        })
+        boot_rows.append(
+            {
+                "comparison": "M2_minus_M1",
+                "budget": b,
+                "budget_label": blab,
+                "delta_tp_per_dollar_mean": mean_d,
+                "ci_lo": lo,
+                "ci_hi": hi,
+                "base_tp_per_dollar_mean": base_mean,
+                "base_tp_per_dollar_std": base_std,
+                "excl_zero": "yes" if (lo > 0 or hi < 0) else "no",
+            }
+        )
+
         # M3 - M1
         # Hybrid's TP/$ is on a different cost base; compare TP directly
         # but on a TP-per-total-cost basis. We replicate the same bootstrap
         # on the hybrid op_point.
         def hybrid_op(idx, _s_base=scores["XGB-20raw"], _s_full=scores["XGB-24full"], _b=b):
-            return hybrid_op_point(_s_base[idx], _s_full[idx], y[idx], _b, llm_coverage=0.10)["tp_per_dollar"]
+            return hybrid_op_point(_s_base[idx], _s_full[idx], y[idx], _b, llm_coverage=0.10)[
+                "tp_per_dollar"
+            ]
+
         def base_op(idx, _s=scores["XGB-20raw"], _b=b):
             return op_point(_s[idx], y[idx], _b)["tp_per_dollar"]
+
         rng = np.random.default_rng(BOOT_SEED)
         n = len(y)
         deltas = np.empty(N_BOOT)
         for k in range(N_BOOT):
             idx = rng.integers(0, n, size=n)
             deltas[k] = hybrid_op(idx) - base_op(idx)
-        m, lo3, hi3 = float(deltas.mean()), float(np.percentile(deltas, 2.5)), float(np.percentile(deltas, 97.5))
-        boot_rows.append({
-            "comparison": "M3_minus_M1",
-            "budget": b, "budget_label": blab,
-            "delta_tp_per_dollar_mean": m,
-            "ci_lo": lo3, "ci_hi": hi3,
-            "base_tp_per_dollar_mean": float(np.mean([base_op(np.array([i])) for i in range(min(n, 200))])),
-            "base_tp_per_dollar_std": float(np.std([base_op(np.array([i])) for i in range(min(n, 200))])),
-            "excl_zero": "yes" if (lo3 > 0 or hi3 < 0) else "no",
-        })
+        m, lo3, hi3 = (
+            float(deltas.mean()),
+            float(np.percentile(deltas, 2.5)),
+            float(np.percentile(deltas, 97.5)),
+        )
+        boot_rows.append(
+            {
+                "comparison": "M3_minus_M1",
+                "budget": b,
+                "budget_label": blab,
+                "delta_tp_per_dollar_mean": m,
+                "ci_lo": lo3,
+                "ci_hi": hi3,
+                "base_tp_per_dollar_mean": float(
+                    np.mean([base_op(np.array([i])) for i in range(min(n, 200))])
+                ),
+                "base_tp_per_dollar_std": float(
+                    np.std([base_op(np.array([i])) for i in range(min(n, 200))])
+                ),
+                "excl_zero": "yes" if (lo3 > 0 or hi3 < 0) else "no",
+            }
+        )
+
         # M4 - M1
         def hybrid_op1(idx, _s_base=scores["XGB-20raw"], _s_full=scores["XGB-24full"], _b=b):
-            return hybrid_op_point(_s_base[idx], _s_full[idx], y[idx], _b, llm_coverage=0.01)["tp_per_dollar"]
+            return hybrid_op_point(_s_base[idx], _s_full[idx], y[idx], _b, llm_coverage=0.01)[
+                "tp_per_dollar"
+            ]
+
         rng = np.random.default_rng(BOOT_SEED + 1)
         deltas = np.empty(N_BOOT)
         for k in range(N_BOOT):
             idx = rng.integers(0, n, size=n)
             deltas[k] = hybrid_op1(idx) - base_op(idx)
-        m4, lo4, hi4 = float(deltas.mean()), float(np.percentile(deltas, 2.5)), float(np.percentile(deltas, 97.5))
-        boot_rows.append({
-            "comparison": "M4_minus_M1",
-            "budget": b, "budget_label": blab,
-            "delta_tp_per_dollar_mean": m4,
-            "ci_lo": lo4, "ci_hi": hi4,
-            "base_tp_per_dollar_mean": float(np.mean([base_op(np.array([i])) for i in range(min(n, 200))])),
-            "base_tp_per_dollar_std": float(np.std([base_op(np.array([i])) for i in range(min(n, 200))])),
-            "excl_zero": "yes" if (lo4 > 0 or hi4 < 0) else "no",
-        })
+        m4, lo4, hi4 = (
+            float(deltas.mean()),
+            float(np.percentile(deltas, 2.5)),
+            float(np.percentile(deltas, 97.5)),
+        )
+        boot_rows.append(
+            {
+                "comparison": "M4_minus_M1",
+                "budget": b,
+                "budget_label": blab,
+                "delta_tp_per_dollar_mean": m4,
+                "ci_lo": lo4,
+                "ci_hi": hi4,
+                "base_tp_per_dollar_mean": float(
+                    np.mean([base_op(np.array([i])) for i in range(min(n, 200))])
+                ),
+                "base_tp_per_dollar_std": float(
+                    np.std([base_op(np.array([i])) for i in range(min(n, 200))])
+                ),
+                "excl_zero": "yes" if (lo4 > 0 or hi4 < 0) else "no",
+            }
+        )
     dfb = pd.DataFrame(boot_rows)
     dfb.to_csv(OUT_DIR / "p8_cost_adjusted_boot.tsv", sep="\t", index=False)
     print(f"[p8_cost_adjusted] wrote {len(dfb)} bootstrap rows -> p8_cost_adjusted_boot.tsv")
@@ -332,13 +385,20 @@ def main() -> None:
         "by_mode_budget": [],
     }
     for _, r in df.iterrows():
-        summary["by_mode_budget"].append({
-            "mode": r["mode"], "budget_label": r["budget_label"], "budget": float(r["budget"]),
-            "tp": int(r["tp"]), "fp": int(r["fp"]), "fn": int(r["fn"]),
-            "precision": float(r["precision"]), "recall": float(r["recall"]),
-            "cost_total_usd": float(r["cost_total_usd"]),
-            "tp_per_dollar": float(r["tp_per_dollar"]),
-        })
+        summary["by_mode_budget"].append(
+            {
+                "mode": r["mode"],
+                "budget_label": r["budget_label"],
+                "budget": float(r["budget"]),
+                "tp": int(r["tp"]),
+                "fp": int(r["fp"]),
+                "fn": int(r["fn"]),
+                "precision": float(r["precision"]),
+                "recall": float(r["recall"]),
+                "cost_total_usd": float(r["cost_total_usd"]),
+                "tp_per_dollar": float(r["tp_per_dollar"]),
+            }
+        )
     with (OUT_DIR / "p8_cost_adjusted_summary.json").open("w") as f:
         json.dump(summary, f, indent=2)
     print(f"[p8_cost_adjusted] wrote summary -> p8_cost_adjusted_summary.json")

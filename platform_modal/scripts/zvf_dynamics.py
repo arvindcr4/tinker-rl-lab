@@ -35,6 +35,7 @@ Outputs:
   platform_hybrid/experiments/results/zvf_dynamics_review28_v2.json
       All aggregates also in JSON for downstream figure scripts.
 """
+
 from __future__ import annotations
 
 import csv
@@ -81,8 +82,7 @@ def _phase(xs, n_phases=3):
         return [float("nan")] * n_phases
     cuts = [n * k // n_phases for k in range(n_phases + 1)]
     return [
-        (sum(xs[cuts[i]:cuts[i + 1]]) / max(1, cuts[i + 1] - cuts[i]))
-        for i in range(n_phases)
+        (sum(xs[cuts[i] : cuts[i + 1]]) / max(1, cuts[i + 1] - cuts[i])) for i in range(n_phases)
     ]
 
 
@@ -94,19 +94,21 @@ def _load_groupsize_zvf_runs():
         steps = r["step_log"]
         zvfs = [s["zvf"] for s in steps]
         rews = [s["mean_reward"] for s in steps]
-        runs.append({
-            "kind": "groupsize_zvf_sweep",
-            "method": f"grpo_G{int(r['group_size'])}",
-            "seed": int(r["seed"]),
-            "group_size": int(r["group_size"]),
-            "n_steps": len(steps),
-            "zvf_series": zvfs,
-            "reward_series": rews,
-            "collapse_series": [0] * len(steps),
-            "mean_zvf": r["mean_zvf"],
-            "heldout_acc": r.get("heldout_acc", float("nan")),
-            "last10_avg": r.get("last10_avg", float("nan")),
-        })
+        runs.append(
+            {
+                "kind": "groupsize_zvf_sweep",
+                "method": f"grpo_G{int(r['group_size'])}",
+                "seed": int(r["seed"]),
+                "group_size": int(r["group_size"]),
+                "n_steps": len(steps),
+                "zvf_series": zvfs,
+                "reward_series": rews,
+                "collapse_series": [0] * len(steps),
+                "mean_zvf": r["mean_zvf"],
+                "heldout_acc": r.get("heldout_acc", float("nan")),
+                "last10_avg": r.get("last10_avg", float("nan")),
+            }
+        )
     return runs
 
 
@@ -123,21 +125,23 @@ def _load_variance_mitigation_runs():
         zvfs = [float(r["zvf"]) for r in rs]
         rews = [float(r["reward_mean"]) for r in rs]
         coll = [int(r["collapse"]) for r in rs]
-        runs.append({
-            "kind": "variance_mitigation",
-            "method": method,
-            "seed": int(seed),
-            "group_size": 8,
-            "n_steps": len(rs),
-            "zvf_series": zvfs,
-            "reward_series": rews,
-            "collapse_series": coll,
-            "mean_zvf": sum(zvfs) / max(1, len(zvfs)),
-            "heldout_acc": float(rs[-1]["heldout_acc"]),
-            "accuracy_series": [float(row["heldout_acc"]) for row in rs],
-            "step_series": [int(row["step"]) for row in rs],
-            "last10_avg": sum(float(r["heldout_acc"]) for r in rs[-10:]) / min(10, len(rs)),
-        })
+        runs.append(
+            {
+                "kind": "variance_mitigation",
+                "method": method,
+                "seed": int(seed),
+                "group_size": 8,
+                "n_steps": len(rs),
+                "zvf_series": zvfs,
+                "reward_series": rews,
+                "collapse_series": coll,
+                "mean_zvf": sum(zvfs) / max(1, len(zvfs)),
+                "heldout_acc": float(rs[-1]["heldout_acc"]),
+                "accuracy_series": [float(row["heldout_acc"]) for row in rs],
+                "step_series": [int(row["step"]) for row in rs],
+                "last10_avg": sum(float(r["heldout_acc"]) for r in rs[-10:]) / min(10, len(rs)),
+            }
+        )
     return runs
 
 
@@ -155,19 +159,21 @@ def _load_tinker_prompt_zvf():
         data = json.load(open(path))
         zvfs = [float(p["zvf"]) for p in data["per_problem"]]
         rews = [float(p["mean_reward"]) for p in data["per_problem"]]
-        out.append({
-            "kind": "tinker_prompt_zvf",
-            "method": "qwen3_8b_gsm8k",
-            "seed": data["seed"],
-            "group_size": data["group_size"],
-            "n_steps": len(zvfs),
-            "zvf_series": zvfs,
-            "reward_series": rews,
-            "collapse_series": [0] * len(zvfs),
-            "mean_zvf": data["overall_zvf"],
-            "heldout_acc": data["overall_accuracy"],
-            "last10_avg": sum(rews[-10:]) / 10.0,
-        })
+        out.append(
+            {
+                "kind": "tinker_prompt_zvf",
+                "method": "qwen3_8b_gsm8k",
+                "seed": data["seed"],
+                "group_size": data["group_size"],
+                "n_steps": len(zvfs),
+                "zvf_series": zvfs,
+                "reward_series": rews,
+                "collapse_series": [0] * len(zvfs),
+                "mean_zvf": data["overall_zvf"],
+                "heldout_acc": data["overall_accuracy"],
+                "last10_avg": sum(rews[-10:]) / 10.0,
+            }
+        )
     return out
 
 
@@ -188,7 +194,9 @@ def _summarize_run(run, thetas=(0.5, 0.7, 0.9)):
         "reward_lag1": _autocorr_lag1(r),
         "zvf_std": (statistics.pstdev(z) if len(z) >= 2 else float("nan")),
         "reward_zvf_corr": (
-            statistics.correlation(z, r) if len(z) >= 4 and statistics.pstdev(z) > 0 and statistics.pstdev(r) > 0 else float("nan")
+            statistics.correlation(z, r)
+            if len(z) >= 4 and statistics.pstdev(z) > 0 and statistics.pstdev(r) > 0
+            else float("nan")
         ),
     }
     for th in thetas:
@@ -204,22 +212,37 @@ def _lead_time(run):
     """First onset and first alarm, retaining missed/late/false/censored status."""
     z, c = run["zvf_series"], run["collapse_series"]
     n = min(len(z), len(c))
-    if not n: return None
+    if not n:
+        return None
     steps = run.get("step_series", list(range(n)))
     onset = next((i for i in range(n) if c[i] == 1), None)
-    theta = .7
-    alarm = next((i for i in range(n) if z[i] >= theta and (i == 0 or z[i-1] < theta)), None)
-    status = ("censored" if onset is None and alarm is None else
-              "false_or_censored_alarm" if onset is None else
-              "missed" if alarm is None else "early" if alarm < onset else "late")
-    return {"theta": theta, "first_pass_step": steps[alarm] if alarm is not None else -1,
-            "first_collapse_step": steps[onset] if onset is not None else -1,
-            "lead_steps": steps[onset]-steps[alarm] if onset is not None and alarm is not None else float("nan"),
-            "status": status}
+    theta = 0.7
+    alarm = next((i for i in range(n) if z[i] >= theta and (i == 0 or z[i - 1] < theta)), None)
+    status = (
+        "censored"
+        if onset is None and alarm is None
+        else "false_or_censored_alarm"
+        if onset is None
+        else "missed"
+        if alarm is None
+        else "early"
+        if alarm < onset
+        else "late"
+    )
+    return {
+        "theta": theta,
+        "first_pass_step": steps[alarm] if alarm is not None else -1,
+        "first_collapse_step": steps[onset] if onset is not None else -1,
+        "lead_steps": steps[onset] - steps[alarm]
+        if onset is not None and alarm is not None
+        else float("nan"),
+        "status": status,
+    }
 
 
 def _write_tsv(path, rows):
     from _review28_io import write_table
+
     write_table(path, rows, comment="review28_v2; empty tables contain a header, no stale records")
 
 
@@ -239,14 +262,16 @@ def main():
         summary_rows.append(s)
         lead = _lead_time(r)
         if lead is not None:
-            lead_rows.append({
-                "kind": r["kind"],
-                "method": r["method"],
-                "seed": r["seed"],
-                "n_steps": r["n_steps"],
-                "mean_zvf": r["mean_zvf"],
-                **lead,
-            })
+            lead_rows.append(
+                {
+                    "kind": r["kind"],
+                    "method": r["method"],
+                    "seed": r["seed"],
+                    "n_steps": r["n_steps"],
+                    "mean_zvf": r["mean_zvf"],
+                    **lead,
+                }
+            )
 
     summary_path = os.path.join(RESULTS_DIR, "zvf_dynamics_summary_review28_v2.tsv")
     lead_path = os.path.join(RESULTS_DIR, "zvf_dynamics_leadtime_review28_v2.tsv")
@@ -263,21 +288,35 @@ def main():
         ac1 = [r["zvf_lag1"] for r in rs if not math.isnan(r["zvf_lag1"])]
         mean_zvf = [r["mean_zvf"] for r in rs]
         std_zvf = [r["zvf_std"] for r in rs]
-        pool_rows.append({
-            "kind": kind,
-            "method": method,
-            "n_runs": n,
-            "mean_zvf_pool": sum(mean_zvf) / n,
-            "mean_zvf_std_pool": sum(std_zvf) / n,
-            "zvf_lag1_mean": (sum(ac1) / len(ac1)) if ac1 else float("nan"),
-            "zvf_phase1_mean": sum(r["zvf_phase1_mean"] for r in rs if not math.isnan(r["zvf_phase1_mean"])) / n,
-            "zvf_phase2_mean": sum(r["zvf_phase2_mean"] for r in rs if not math.isnan(r["zvf_phase2_mean"])) / n,
-            "zvf_phase3_mean": sum(r["zvf_phase3_mean"] for r in rs if not math.isnan(r["zvf_phase3_mean"])) / n,
-            "auc_above_zvf05": sum(r["auc_above_zvf05"] for r in rs) / n,
-            "auc_above_zvf07": sum(r["auc_above_zvf07"] for r in rs) / n,
-            "auc_above_zvf09": sum(r["auc_above_zvf09"] for r in rs) / n,
-            "reward_zvf_corr": sum(r["reward_zvf_corr"] for r in rs if not math.isnan(r["reward_zvf_corr"])) / max(1, sum(1 for r in rs if not math.isnan(r["reward_zvf_corr"]))),
-        })
+        pool_rows.append(
+            {
+                "kind": kind,
+                "method": method,
+                "n_runs": n,
+                "mean_zvf_pool": sum(mean_zvf) / n,
+                "mean_zvf_std_pool": sum(std_zvf) / n,
+                "zvf_lag1_mean": (sum(ac1) / len(ac1)) if ac1 else float("nan"),
+                "zvf_phase1_mean": sum(
+                    r["zvf_phase1_mean"] for r in rs if not math.isnan(r["zvf_phase1_mean"])
+                )
+                / n,
+                "zvf_phase2_mean": sum(
+                    r["zvf_phase2_mean"] for r in rs if not math.isnan(r["zvf_phase2_mean"])
+                )
+                / n,
+                "zvf_phase3_mean": sum(
+                    r["zvf_phase3_mean"] for r in rs if not math.isnan(r["zvf_phase3_mean"])
+                )
+                / n,
+                "auc_above_zvf05": sum(r["auc_above_zvf05"] for r in rs) / n,
+                "auc_above_zvf07": sum(r["auc_above_zvf07"] for r in rs) / n,
+                "auc_above_zvf09": sum(r["auc_above_zvf09"] for r in rs) / n,
+                "reward_zvf_corr": sum(
+                    r["reward_zvf_corr"] for r in rs if not math.isnan(r["reward_zvf_corr"])
+                )
+                / max(1, sum(1 for r in rs if not math.isnan(r["reward_zvf_corr"]))),
+            }
+        )
     pool_path = os.path.join(RESULTS_DIR, "zvf_dynamics_phase_review28_v2.tsv")
     _write_tsv(pool_path, pool_rows)
 
@@ -294,7 +333,9 @@ def main():
         default=str,
     )
 
-    print(f"ZVF dynamics: {len(runs)} runs across {len(set((r['kind'], r['method']) for r in runs))} (kind,method) groups")
+    print(
+        f"ZVF dynamics: {len(runs)} runs across {len(set((r['kind'], r['method']) for r in runs))} (kind,method) groups"
+    )
     print(f"  -> {summary_path}")
     print(f"  -> {lead_path}  ({len(lead_rows)} lead events)")
     print(f"  -> {pool_path}")

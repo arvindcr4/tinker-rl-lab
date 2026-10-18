@@ -29,6 +29,7 @@ Outputs (all in platform_hybrid/experiments/results/p5p8/):
 
 Stdlib + numpy + xgboost + sklearn (already in venv).
 """
+
 from __future__ import annotations
 import json
 import sys
@@ -37,8 +38,8 @@ from pathlib import Path
 import numpy as np
 
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
-from _p8_common import (  # noqa: E402
+from _paths import REPO_ROOT
+from _p8_common import (
     RAW20,
     AGG4,
     ALL24,
@@ -47,34 +48,42 @@ from _p8_common import (  # noqa: E402
     load_v2 as load,
     fit_xgb,
 )
+
 ROOT = REPO_ROOT
 RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8"
 RES.mkdir(parents=True, exist_ok=True)
 
 
 FEATURE_SETS = {
-    "20raw":   RAW20,
-    "24full":  ALL24,
-    "4sensor": AGG4,    # LLM-as-sensor aggregate block
+    "20raw": RAW20,
+    "24full": ALL24,
+    "4sensor": AGG4,  # LLM-as-sensor aggregate block
 }
 K_BUDGETS_PCT = [1.0, 2.0, 5.0, 10.0]
-SEEDS = [42, 179, 316, 453, 590]    # 5 seeds for stability
+SEEDS = [42, 179, 316, 453, 590]  # 5 seeds for stability
 N_BOOT = 2000
 
 
 def metrics_at_threshold(y, p, thr):
     from sklearn.metrics import (
-        roc_auc_score, brier_score_loss, accuracy_score,
-        precision_score, recall_score, f1_score)
+        roc_auc_score,
+        brier_score_loss,
+        accuracy_score,
+        precision_score,
+        recall_score,
+        f1_score,
+    )
+
     yhat = (p >= thr).astype(int)
     return {
-        "auc":      float(roc_auc_score(y, p)) if y.sum() > 0 else float("nan"),
-        "brier":    float(brier_score_loss(y, p)),
+        "auc": float(roc_auc_score(y, p)) if y.sum() > 0 else float("nan"),
+        "brier": float(brier_score_loss(y, p)),
         "accuracy": float(accuracy_score(y, yhat)),
         "precision": float(precision_score(y, yhat, zero_division=0)),
-        "recall":    float(recall_score(y, yhat, zero_division=0)),
-        "f1":        float(f1_score(y, yhat, zero_division=0)),
+        "recall": float(recall_score(y, yhat, zero_division=0)),
+        "f1": float(f1_score(y, yhat, zero_division=0)),
     }
+
 
 def ece_within_budget(y, p, k_pct):
     """Within-budget ECE: bucket the top-k_pct% predicted-positive rows
@@ -97,6 +106,7 @@ def ece_within_budget(y, p, k_pct):
         ece += mask.sum() * abs(ys[mask].mean() - ps[mask].mean())
     return float(ece / max(1, len(ps)))
 
+
 def precision_at_k(y, p, k_pct):
     n = len(y)
     k = max(1, int(round(k_pct / 100.0 * n)))
@@ -104,16 +114,21 @@ def precision_at_k(y, p, k_pct):
     sel = order[:k]
     return float(y[sel].mean())
 
+
 def auc_metric(y, p):
     """Compute AUC ignoring ties in label order (de facto roc_auc_score)."""
     from sklearn.metrics import roc_auc_score
+
     if y.sum() == 0 or y.sum() == len(y):
         return float("nan")
     return float(roc_auc_score(y, p))
 
+
 def brier_metric(y, p):
     from sklearn.metrics import brier_score_loss
+
     return float(brier_score_loss(y, p))
+
 
 def paired_bootstrap_metric_diff(metric_fn, y, p_hi, p_lo, n_boot=N_BOOT, seed=20260705):
     """Paired bootstrap CI on metric_fn(y, p_hi) - metric_fn(y, p_lo).
@@ -128,12 +143,15 @@ def paired_bootstrap_metric_diff(metric_fn, y, p_hi, p_lo, n_boot=N_BOOT, seed=2
     boots.sort()
     return float(pt), float(boots[int(0.025 * n_boot)]), float(boots[int(0.975 * n_boot) - 1])
 
+
 def main():
     print("[p8-iter176] reading data", file=sys.stderr)
     Xtr, ytr = load(TRAIN)
     Xte, yte = load(TEST)
-    print(f"[p8-iter176] train={len(Xtr)} pos={int(ytr.sum())} test={len(Xte)} pos={int(yte.sum())}",
-          file=sys.stderr)
+    print(
+        f"[p8-iter176] train={len(Xtr)} pos={int(ytr.sum())} test={len(Xte)} pos={int(yte.sum())}",
+        file=sys.stderr,
+    )
 
     cal_rows = []
     wb_rows = []
@@ -144,16 +162,26 @@ def main():
             p = fit_xgb(Xtr, ytr, Xte, feats, s)
             preds_seeds.append(p)
         # threshold = top-K=1% (canonical fraud-ops)
-        for s, p in zip(SEEDS, preds_seeds):
+        for s, p in zip(SEEDS, preds_seeds, strict=False):
             thr = np.sort(p)[-max(1, int(round(0.01 * len(p))))]
             m = metrics_at_threshold(yte, p, thr)
-            cal_rows.append([fset_name, s, len(yte), int(yte.sum()),
-                             round(m["auc"], 4), round(m["brier"], 4),
-                             round(m["accuracy"], 4), round(m["precision"], 4),
-                             round(m["recall"], 4), round(m["f1"], 4)])
+            cal_rows.append(
+                [
+                    fset_name,
+                    s,
+                    len(yte),
+                    int(yte.sum()),
+                    round(m["auc"], 4),
+                    round(m["brier"], 4),
+                    round(m["accuracy"], 4),
+                    round(m["precision"], 4),
+                    round(m["recall"], 4),
+                    round(m["f1"], 4),
+                ]
+            )
         # within-budget ECE per K
         for K in K_BUDGETS_PCT:
-            for s, p in zip(SEEDS, preds_seeds):
+            for s, p in zip(SEEDS, preds_seeds, strict=False):
                 ece_k = ece_within_budget(yte, p, K)
                 p_k = precision_at_k(yte, p, K)
                 wb_rows.append([fset_name, K, s, round(ece_k, 4), round(p_k, 4)])
@@ -170,13 +198,21 @@ def main():
                 ece_m = ece_within_budget(yte, p_minus, 2.0)
                 p1_b = precision_at_k(yte, base_p, 1.0)
                 p1_m = precision_at_k(yte, p_minus, 1.0)
-                abl_rows.append([f"drop_{drop}", 23,
-                                 round(m_b["auc"], 4), round(m_m["auc"], 4),
-                                 round(m_b["auc"] - m_m["auc"], 4),
-round(ece_b, 4), round(ece_m, 4),
-                                 round(ece_b - ece_m, 4),
-                                 round(p1_b, 4), round(p1_m, 4),
-                                 round(p1_b - p1_m, 4)])
+                abl_rows.append(
+                    [
+                        f"drop_{drop}",
+                        23,
+                        round(m_b["auc"], 4),
+                        round(m_m["auc"], 4),
+                        round(m_b["auc"] - m_m["auc"], 4),
+                        round(ece_b, 4),
+                        round(ece_m, 4),
+                        round(ece_b - ece_m, 4),
+                        round(p1_b, 4),
+                        round(p1_m, 4),
+                        round(p1_b - p1_m, 4),
+                    ]
+                )
     # Write per-fset calibration table
     out_cal = RES / "p8_iter176_calib_per_fset.tsv"
     with out_cal.open("w") as f:
@@ -194,27 +230,54 @@ round(ece_b, 4), round(ece_m, 4),
     # Ablation
     out_abl = RES / "p8_iter176_vstat_ablation.tsv"
     with out_abl.open("w") as f:
-        f.write("variant\tn_feat\tauc_base\tauc_minus\tdelta_auc\tece_base\tece_minus\tdelta_ece\tp1_base\tp1_minus\tdelta_p1\n")
+        f.write(
+            "variant\tn_feat\tauc_base\tauc_minus\tdelta_auc\tece_base\tece_minus\tdelta_ece\tp1_base\tp1_minus\tdelta_p1\n"
+        )
         for r in abl_rows:
             f.write("\t".join(str(c) for c in r) + "\n")
     print(f"[p8-iter176] wrote {out_abl}", file=sys.stderr)
 
     # Pairwise deltas with bootstrap CI
     # Use seed=42 only for the delta computation (saves runtime vs all 5 seeds)
-    p20  = fit_xgb(Xtr, ytr, Xte, FEATURE_SETS["20raw"],  SEEDS[0])
-    p24  = fit_xgb(Xtr, ytr, Xte, FEATURE_SETS["24full"], SEEDS[0])
-    p4s  = fit_xgb(Xtr, ytr, Xte, FEATURE_SETS["4sensor"], SEEDS[0])
+    p20 = fit_xgb(Xtr, ytr, Xte, FEATURE_SETS["20raw"], SEEDS[0])
+    p24 = fit_xgb(Xtr, ytr, Xte, FEATURE_SETS["24full"], SEEDS[0])
+    p4s = fit_xgb(Xtr, ytr, Xte, FEATURE_SETS["4sensor"], SEEDS[0])
     pair_rows = []
-    pair_rows.append(["auc_24_vs_20",       *paired_bootstrap_metric_diff(auc_metric, yte, p24, p20),
-                      "AUC: 24full over 20raw (sensor contribution)"])
-    pair_rows.append(["auc_24_vs_4sensor",  *paired_bootstrap_metric_diff(auc_metric, yte, p24, p4s),
-                      "AUC: 24full over 4sensor (sensor-vs-full LLM surrogate)"])
-    pair_rows.append(["auc_20_vs_4sensor",  *paired_bootstrap_metric_diff(auc_metric, yte, p20, p4s),
-                      "AUC: 20raw over 4sensor (raw-only vs LLM surrogate)"])
-    pair_rows.append(["brier_24_vs_20",     *paired_bootstrap_metric_diff(brier_metric, yte, p24, p20),
-                      "Brier: 24full over 20raw (positive=24full has higher Brier; less=better)"])
-    pair_rows.append(["brier_24_vs_4sensor",*paired_bootstrap_metric_diff(brier_metric, yte, p24, p4s),
-                      "Brier: 24full over 4sensor"])
+    pair_rows.append(
+        [
+            "auc_24_vs_20",
+            *paired_bootstrap_metric_diff(auc_metric, yte, p24, p20),
+            "AUC: 24full over 20raw (sensor contribution)",
+        ]
+    )
+    pair_rows.append(
+        [
+            "auc_24_vs_4sensor",
+            *paired_bootstrap_metric_diff(auc_metric, yte, p24, p4s),
+            "AUC: 24full over 4sensor (sensor-vs-full LLM surrogate)",
+        ]
+    )
+    pair_rows.append(
+        [
+            "auc_20_vs_4sensor",
+            *paired_bootstrap_metric_diff(auc_metric, yte, p20, p4s),
+            "AUC: 20raw over 4sensor (raw-only vs LLM surrogate)",
+        ]
+    )
+    pair_rows.append(
+        [
+            "brier_24_vs_20",
+            *paired_bootstrap_metric_diff(brier_metric, yte, p24, p20),
+            "Brier: 24full over 20raw (positive=24full has higher Brier; less=better)",
+        ]
+    )
+    pair_rows.append(
+        [
+            "brier_24_vs_4sensor",
+            *paired_bootstrap_metric_diff(brier_metric, yte, p24, p4s),
+            "Brier: 24full over 4sensor",
+        ]
+    )
     out_ci = RES / "p8_iter176_headline_cis.tsv"
     with out_ci.open("w") as f:
         f.write("comparison\tpoint\tci_lo\tci_hi\tnote\n")
@@ -224,21 +287,30 @@ round(ece_b, 4), round(ece_m, 4),
 
     # Cost-per-decision accounting (operational; non-bootstrap)
     cost_rows = [
-        ["XGB-20raw (scorer)",
-         10_000, 0.020, 0,    "$0.020 / 10k decisions (serverless CPU)"],
-        ["XGB-24full (scorer)",
-         10_000, 0.022, 0,    "+10% CPU over 20raw (4 extra features)"],
-        ["XGB-4sensor (LLM surrogate)",
-         10_000, 0.018, 0,    "smaller tree, marginally cheaper"],
-        ["LLM-as-scribe (Qwen3.5-4B SFT, async)",
-         1, 0.0035, 120,
-         "per-row cost; never invoked synchronously in this paper"],
-        ["Hybrid: XGB-24full + selective-LLM@w=0.1",
-         10_000, 0.022 + 10_000 * 0.001 * 0.0035, 12,
-         "0.1% rows invoke LLM (12 in 10k); total $0.057 / 10k"],
-        ["Always-LLM scorer (Qwen3.5-4B)",
-         10_000, 10_000 * 0.0035, 1_200_000,
-         "$35 / 10k decisions; 1.2M tokens; not viable"],
+        ["XGB-20raw (scorer)", 10_000, 0.020, 0, "$0.020 / 10k decisions (serverless CPU)"],
+        ["XGB-24full (scorer)", 10_000, 0.022, 0, "+10% CPU over 20raw (4 extra features)"],
+        ["XGB-4sensor (LLM surrogate)", 10_000, 0.018, 0, "smaller tree, marginally cheaper"],
+        [
+            "LLM-as-scribe (Qwen3.5-4B SFT, async)",
+            1,
+            0.0035,
+            120,
+            "per-row cost; never invoked synchronously in this paper",
+        ],
+        [
+            "Hybrid: XGB-24full + selective-LLM@w=0.1",
+            10_000,
+            0.022 + 10_000 * 0.001 * 0.0035,
+            12,
+            "0.1% rows invoke LLM (12 in 10k); total $0.057 / 10k",
+        ],
+        [
+            "Always-LLM scorer (Qwen3.5-4B)",
+            10_000,
+            10_000 * 0.0035,
+            1_200_000,
+            "$35 / 10k decisions; 1.2M tokens; not viable",
+        ],
     ]
     out_cost = RES / "p8_iter176_cost_per_decision.tsv"
     with out_cost.open("w") as f:
@@ -278,13 +350,15 @@ round(ece_b, 4), round(ece_m, 4),
         "job": "P8 sensor/scribe/scorer 3-way + ablations + cost",
         "n_seeds": len(SEEDS),
         "n_boot": N_BOOT,
-        "n_train": int(len(Xtr)), "n_test": int(len(Xte)),
-        "pos_train": int(ytr.sum()), "pos_test": int(yte.sum()),
+        "n_train": int(len(Xtr)),
+        "n_test": int(len(Xte)),
+        "pos_train": int(ytr.sum()),
+        "pos_test": int(yte.sum()),
         "ece_wb_means_K2": ece_wb_means,
         "p1_means": p1_means,
         "pair_deltas": [
-            {"comparison": r[0], "point": r[1], "lo": r[2], "hi": r[3],
-             "note": r[4]} for r in pair_rows
+            {"comparison": r[0], "point": r[1], "lo": r[2], "hi": r[3], "note": r[4]}
+            for r in pair_rows
         ],
         "hypotheses": {
             "H1_24full_over_20raw_AUC": h1,
@@ -299,6 +373,7 @@ round(ece_b, 4), round(ece_m, 4),
     out_sum.write_text(json.dumps(summary, indent=2))
     print(f"[p8-iter176] wrote {out_sum}", file=sys.stderr)
     print(json.dumps(summary["hypotheses"], indent=2))
+
 
 if __name__ == "__main__":
     main()

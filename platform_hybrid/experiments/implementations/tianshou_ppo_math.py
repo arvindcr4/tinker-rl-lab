@@ -9,10 +9,10 @@ Features: vectorized environments, flexible policy networks.
 
 import os
 import sys
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 import numpy as np
 import torch
-from torch import nn
 
 import gymnasium as gym
 from gymnasium import spaces
@@ -26,6 +26,7 @@ from tianshou.utils.net.discrete import Actor, Critic
 from utils.seed import set_global_seed, get_seed_from_args
 import wandb
 from huggingface_hub import HfApi
+
 
 def push_to_hub(repo_id: str, filename: str, filepath: str):
     """Push model to HuggingFace Hub."""
@@ -53,9 +54,7 @@ class ArithmeticEnv(gym.Env):
         self.max_num = max_num
         self.max_answer = max_num * 2
 
-        self.observation_space = spaces.Box(
-            low=0, high=1, shape=(2,), dtype=np.float32
-        )
+        self.observation_space = spaces.Box(low=0, high=1, shape=(2,), dtype=np.float32)
         self.action_space = spaces.Discrete(self.max_answer + 1)
 
         self.current_nums = None
@@ -76,8 +75,10 @@ class ArithmeticEnv(gym.Env):
 
 def make_env(max_num: int = 99):
     """Environment factory for Tianshou."""
+
     def _make():
         return ArithmeticEnv(max_num=max_num)
+
     return _make
 
 

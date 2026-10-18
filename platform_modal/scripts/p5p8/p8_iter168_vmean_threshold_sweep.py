@@ -31,6 +31,7 @@ H4 -- breakeven rate monotone non-decreasing in tau on >= 50% of
 
 Stdlib + numpy + xgboost.  <= 300 lines.
 """
+
 from __future__ import annotations
 import csv
 import json
@@ -40,14 +41,16 @@ import numpy as np
 import xgboost as xgb
 
 import sys
+
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
-from _p8_common import (  # noqa: E402
+from _paths import REPO_ROOT
+from _p8_common import (
     RAW20,
     ALL24,
     load,
     downsample_positives,
 )
+
 ROOT = REPO_ROOT
 RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8/corrected-review21-v2"
 RES.mkdir(parents=True, exist_ok=True)
@@ -58,18 +61,18 @@ VALUE_PER_CATCH = 50.0
 
 LLM_PRICE_TIERS = [
     ("cheap_heuristic", 0.0001),
-    ("small_open",      0.0006),
+    ("small_open", 0.0006),
     ("iter120_default", 0.0010),
-    ("mid_tier",        0.0050),
-    ("frontier_gpt4",   0.0300),
+    ("mid_tier", 0.0050),
+    ("frontier_gpt4", 0.0300),
 ]
 RATES_PCT = [1.44, 1.00, 0.50, 0.10, 0.05]
 
 FEATURE_SETS = {
-    "24full":       ALL24,
-    "20raw":        RAW20,
+    "24full": ALL24,
+    "20raw": RAW20,
     "20raw+minmax": RAW20 + ["V_min", "V_max"],
-    "20raw+stat":   RAW20 + ["V_mean", "V_std"],
+    "20raw+stat": RAW20 + ["V_mean", "V_std"],
 }
 
 TAUS = [0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0]
@@ -83,11 +86,15 @@ def fit_predict(Xtr, ytr, Xte, feats, seed):
     n_neg = max(1, len(ytr) - n_pos)
     spw = n_neg / n_pos
     m = xgb.XGBClassifier(
-        n_estimators=180, max_depth=5, learning_rate=0.1,
-        subsample=0.8, colsample_bytree=0.8,
+        n_estimators=180,
+        max_depth=5,
+        learning_rate=0.1,
+        subsample=0.8,
+        colsample_bytree=0.8,
         scale_pos_weight=spw,
         eval_metric="auc",
-        random_state=seed, n_jobs=4,
+        random_state=seed,
+        n_jobs=4,
     )
     m.fit(Xtr_s, ytr)
     return m.predict_proba(Xte_s)[:, 1]
@@ -125,11 +132,13 @@ def main():
     print(f"[iter168] loading train/test ...")
     Xtr_full, ytr_full = load(ROOT / "train_data.csv")
     Xte_full, yte_full = load(ROOT / "test_data.csv")
-    print(f"[iter168] Xtr={Xtr_full.shape} ytr_pos={ytr_full.sum()} | "
-          f"Xte={Xte_full.shape} yte_pos={yte_full.sum()}")
+    print(
+        f"[iter168] Xtr={Xtr_full.shape} ytr_pos={ytr_full.sum()} | "
+        f"Xte={Xte_full.shape} yte_pos={yte_full.sum()}"
+    )
 
     matrix_rows = []  # per-(seed, rate, fset, tau, tier)
-    h3_rows = []      # per-(rate, fset, tau) monotonicity verdicts
+    h3_rows = []  # per-(rate, fset, tau) monotonicity verdicts
     pareto_rows = []  # Pareto-frontier cells
 
     for seed in SEEDS:
@@ -157,28 +166,34 @@ def main():
                         n_llm_only = c["n_llm_only"]
                         value_rate = n_lift / max(1, c["n_xgb_missed_pos"])
                         esc_prec = n_lift / max(1, n_lift + n_waste)
-                        esc_cost = (n_lift + n_waste) * cost_llm / n_lift if n_lift else float("inf")
+                        esc_cost = (
+                            (n_lift + n_waste) * cost_llm / n_lift if n_lift else float("inf")
+                        )
                         esc_value = n_lift * VALUE_PER_CATCH
-                        breakeven = n_lift > 0 and n_lift * VALUE_PER_CATCH >= (n_lift + n_waste) * cost_llm
-                        matrix_rows.append({
-                            "seed": seed,
-                            "rate_pct": rate_pct,
-                            "fset": fset_name,
-                            "tau_vmean": tau,
-                            "tier": tier_name,
-                            "cost_llm_per_call": cost_llm,
-                            "n_test": c["n_test"],
-                            "n_pos": c["n_pos"],
-                            "n_xgb_pos": c["n_xgb_pos"],
-                            "n_lift": n_lift,
-                            "n_waste": n_waste,
-                            "n_llm_only": n_llm_only,
-                            "value_rate": value_rate,
-                            "esc_prec": esc_prec,
-                            "esc_cost_per_lift": esc_cost,
-                            "esc_value": esc_value,
-                            "breakeven": breakeven,
-                        })
+                        breakeven = (
+                            n_lift > 0 and n_lift * VALUE_PER_CATCH >= (n_lift + n_waste) * cost_llm
+                        )
+                        matrix_rows.append(
+                            {
+                                "seed": seed,
+                                "rate_pct": rate_pct,
+                                "fset": fset_name,
+                                "tau_vmean": tau,
+                                "tier": tier_name,
+                                "cost_llm_per_call": cost_llm,
+                                "n_test": c["n_test"],
+                                "n_pos": c["n_pos"],
+                                "n_xgb_pos": c["n_xgb_pos"],
+                                "n_lift": n_lift,
+                                "n_waste": n_waste,
+                                "n_llm_only": n_llm_only,
+                                "value_rate": value_rate,
+                                "esc_prec": esc_prec,
+                                "esc_cost_per_lift": esc_cost,
+                                "esc_value": esc_value,
+                                "breakeven": breakeven,
+                            }
+                        )
 
                 # Pareto frontier at tau × cheap tier (the canonical value lens)
                 for tau in TAUS:
@@ -189,17 +204,19 @@ def main():
                     esc_prec = n_lift / max(1, n_lift + n_waste)
                     # Pareto candidate: esc_prec >= 0.10 AND value_rate >= 0.30
                     pareto_ok = (esc_prec >= 0.10) and (value_rate >= 0.30)
-                    pareto_rows.append({
-                        "seed": seed,
-                        "rate_pct": rate_pct,
-                        "fset": fset_name,
-                        "tau_vmean": tau,
-                        "value_rate": value_rate,
-                        "esc_prec": esc_prec,
-                        "n_lift": n_lift,
-                        "n_waste": n_waste,
-                        "pareto_ok": pareto_ok,
-                    })
+                    pareto_rows.append(
+                        {
+                            "seed": seed,
+                            "rate_pct": rate_pct,
+                            "fset": fset_name,
+                            "tau_vmean": tau,
+                            "value_rate": value_rate,
+                            "esc_prec": esc_prec,
+                            "n_lift": n_lift,
+                            "n_waste": n_waste,
+                            "pareto_ok": pareto_ok,
+                        }
+                    )
 
         # ----------------------------------------------------------------
         # H3: value_rate monotone non-increasing in tau across the 7 levels
@@ -210,38 +227,50 @@ def main():
             for fset_name in FEATURE_SETS:
                 per_tau_vr = []
                 for tau in TAUS:
-                    vr_at_tau = [r["value_rate"] for r in matrix_rows
-                                 if r["seed"] == seed
-                                 and r["rate_pct"] == rate_pct
-                                 and r["fset"] == fset_name
-                                 and r["tau_vmean"] == tau]
+                    vr_at_tau = [
+                        r["value_rate"]
+                        for r in matrix_rows
+                        if r["seed"] == seed
+                        and r["rate_pct"] == rate_pct
+                        and r["fset"] == fset_name
+                        and r["tau_vmean"] == tau
+                    ]
                     if vr_at_tau:
                         per_tau_vr.append(float(np.mean(vr_at_tau)))
                 if len(per_tau_vr) == len(TAUS):
-                    mono = all(per_tau_vr[i] >= per_tau_vr[i+1] for i in range(len(per_tau_vr)-1))
-                    h3_rows.append({
-                        "seed": seed, "rate_pct": rate_pct, "fset": fset_name,
-                        "tau0_vr": per_tau_vr[0],
-                        "tau3_vr": per_tau_vr[-1],
-                        "monotone_non_increasing": mono,
-                        "ratio_tau0_over_tau3": per_tau_vr[0] / max(1e-9, per_tau_vr[-1]),
-                    })
+                    mono = all(
+                        per_tau_vr[i] >= per_tau_vr[i + 1] for i in range(len(per_tau_vr) - 1)
+                    )
+                    h3_rows.append(
+                        {
+                            "seed": seed,
+                            "rate_pct": rate_pct,
+                            "fset": fset_name,
+                            "tau0_vr": per_tau_vr[0],
+                            "tau3_vr": per_tau_vr[-1],
+                            "monotone_non_increasing": mono,
+                            "ratio_tau0_over_tau3": per_tau_vr[0] / max(1e-9, per_tau_vr[-1]),
+                        }
+                    )
 
     # ----------------------------------------------------------------
     # H1: esc_prec >= 0.10 on >= 50% of (seed x rate x fset x tau >= 1.0) cells
     # at the cheap tier (canonical value lens).
     # ----------------------------------------------------------------
-    cheap_tau_pass = sum(1 for r in matrix_rows
-                         if r["tier"] == "cheap_heuristic"
-                         and r["tau_vmean"] >= 1.0
-                         and r["esc_prec"] >= 0.10)
-    cheap_tau_total = sum(1 for r in matrix_rows
-                          if r["tier"] == "cheap_heuristic"
-                          and r["tau_vmean"] >= 1.0)
+    cheap_tau_pass = sum(
+        1
+        for r in matrix_rows
+        if r["tier"] == "cheap_heuristic" and r["tau_vmean"] >= 1.0 and r["esc_prec"] >= 0.10
+    )
+    cheap_tau_total = sum(
+        1 for r in matrix_rows if r["tier"] == "cheap_heuristic" and r["tau_vmean"] >= 1.0
+    )
     h1_pass_rate = cheap_tau_pass / max(1, cheap_tau_total)
     h1_pass = h1_pass_rate >= 0.50
-    print(f"[iter168] H1: {cheap_tau_pass}/{cheap_tau_total} = {h1_pass_rate:.3f} "
-          f"esc_prec >= 0.10 at cheap_tau>=1.0; PASS={h1_pass}")
+    print(
+        f"[iter168] H1: {cheap_tau_pass}/{cheap_tau_total} = {h1_pass_rate:.3f} "
+        f"esc_prec >= 0.10 at cheap_tau>=1.0; PASS={h1_pass}"
+    )
 
     # ----------------------------------------------------------------
     # H2: Pareto frontier exists -- some cell with esc_prec >= 0.10 AND
@@ -249,33 +278,40 @@ def main():
     # ----------------------------------------------------------------
     n_pareto = sum(1 for p in pareto_rows if p["pareto_ok"])
     h2_pass = n_pareto >= 1
-    print(f"[iter168] H2: {n_pareto}/{len(pareto_rows)} pareto_ok cells; "
-          f"PASS={h2_pass}")
+    print(f"[iter168] H2: {n_pareto}/{len(pareto_rows)} pareto_ok cells; PASS={h2_pass}")
 
     # Best Pareto cell
     if n_pareto >= 1:
-        best = max((p for p in pareto_rows if p["pareto_ok"]),
-                   key=lambda p: p["value_rate"])
-        print(f"[iter168] H2 best Pareto cell: seed={best['seed']} rate={best['rate_pct']} "
-              f"fset={best['fset']} tau={best['tau_vmean']} vr={best['value_rate']:.4f} "
-              f"prec={best['esc_prec']:.4f} n_lift={best['n_lift']}")
+        best = max((p for p in pareto_rows if p["pareto_ok"]), key=lambda p: p["value_rate"])
+        print(
+            f"[iter168] H2 best Pareto cell: seed={best['seed']} rate={best['rate_pct']} "
+            f"fset={best['fset']} tau={best['tau_vmean']} vr={best['value_rate']:.4f} "
+            f"prec={best['esc_prec']:.4f} n_lift={best['n_lift']}"
+        )
     else:
         # Find the closest-to-Pareto cell (max esc_prec subject to value_rate >= 0.30)
-        closest = max((p for p in pareto_rows if p["value_rate"] >= 0.30),
-                      key=lambda p: p["esc_prec"], default=None)
+        closest = max(
+            (p for p in pareto_rows if p["value_rate"] >= 0.30),
+            key=lambda p: p["esc_prec"],
+            default=None,
+        )
         if closest is not None:
-            print(f"[iter168] H2 closest-to-Pareto (no strict winner): "
-                  f"seed={closest['seed']} rate={closest['rate_pct']} "
-                  f"fset={closest['fset']} tau={closest['tau_vmean']} "
-                  f"vr={closest['value_rate']:.4f} prec={closest['esc_prec']:.4f}")
+            print(
+                f"[iter168] H2 closest-to-Pareto (no strict winner): "
+                f"seed={closest['seed']} rate={closest['rate_pct']} "
+                f"fset={closest['fset']} tau={closest['tau_vmean']} "
+                f"vr={closest['value_rate']:.4f} prec={closest['esc_prec']:.4f}"
+            )
 
     # ----------------------------------------------------------------
     # H3: value_rate monotone non-increasing in tau on >= 80% of cells
     # ----------------------------------------------------------------
     h3_pass_rate = sum(1 for r in h3_rows if r["monotone_non_increasing"]) / max(1, len(h3_rows))
     h3_pass = h3_pass_rate >= 0.80
-    print(f"[iter168] H3: {sum(1 for r in h3_rows if r['monotone_non_increasing'])}/{len(h3_rows)} "
-          f"= {h3_pass_rate:.3f} cells monotone_non_increasing; PASS={h3_pass}")
+    print(
+        f"[iter168] H3: {sum(1 for r in h3_rows if r['monotone_non_increasing'])}/{len(h3_rows)} "
+        f"= {h3_pass_rate:.3f} cells monotone_non_increasing; PASS={h3_pass}"
+    )
 
     # ----------------------------------------------------------------
     # H4: breakeven rate (cheap tier) monotone non-decreasing in tau on >= 50% of cells
@@ -286,26 +322,37 @@ def main():
             for seed in SEEDS:
                 per_tau_be = []
                 for tau in TAUS:
-                    rows = [r["breakeven"] for r in matrix_rows
-                            if r["seed"] == seed
-                            and r["rate_pct"] == rate_pct
-                            and r["fset"] == fset_name
-                            and r["tier"] == "cheap_heuristic"
-                            and r["tau_vmean"] == tau]
+                    rows = [
+                        r["breakeven"]
+                        for r in matrix_rows
+                        if r["seed"] == seed
+                        and r["rate_pct"] == rate_pct
+                        and r["fset"] == fset_name
+                        and r["tier"] == "cheap_heuristic"
+                        and r["tau_vmean"] == tau
+                    ]
                     if rows:
                         per_tau_be.append(float(np.mean(rows)))
                 if len(per_tau_be) == len(TAUS):
-                    mono = all(per_tau_be[i] <= per_tau_be[i+1] for i in range(len(per_tau_be)-1))
-                    h4_rows.append({
-                        "seed": seed, "rate_pct": rate_pct, "fset": fset_name,
-                        "tau0_be": per_tau_be[0],
-"tau3_be": per_tau_be[-1],
-                        "monotone_non_decreasing": mono,
-                    })
+                    mono = all(
+                        per_tau_be[i] <= per_tau_be[i + 1] for i in range(len(per_tau_be) - 1)
+                    )
+                    h4_rows.append(
+                        {
+                            "seed": seed,
+                            "rate_pct": rate_pct,
+                            "fset": fset_name,
+                            "tau0_be": per_tau_be[0],
+                            "tau3_be": per_tau_be[-1],
+                            "monotone_non_decreasing": mono,
+                        }
+                    )
     h4_pass_rate = sum(1 for r in h4_rows if r["monotone_non_decreasing"]) / max(1, len(h4_rows))
     h4_pass = h4_pass_rate >= 0.50
-    print(f"[iter168] H4: {sum(1 for r in h4_rows if r['monotone_non_decreasing'])}/{len(h4_rows)} "
-          f"= {h4_pass_rate:.3f} cells breakeven monotone_non_decreasing in tau; PASS={h4_pass}")
+    print(
+        f"[iter168] H4: {sum(1 for r in h4_rows if r['monotone_non_decreasing'])}/{len(h4_rows)} "
+        f"= {h4_pass_rate:.3f} cells breakeven monotone_non_decreasing in tau; PASS={h4_pass}"
+    )
 
     # ----------------------------------------------------------------
     # Outputs

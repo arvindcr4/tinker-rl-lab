@@ -33,6 +33,7 @@ Outputs (5 files):
 
 Stdlib only. <=290 lines.
 """
+
 from __future__ import annotations
 
 import csv
@@ -45,9 +46,11 @@ from pathlib import Path
 from _p5p7_common import spearman_v1 as spearman
 
 import sys
+
 sys.path.append(str(Path(__file__).resolve().parents[1]))
 from _review02_contracts import finite_json
 from _paths import REPO_ROOT
+
 ROOT = REPO_ROOT / "platform_hybrid"
 CELLS = ROOT / "experiments" / "results" / "mega_20260704" / "cells.tsv"
 MANIFEST_DIR = ROOT / "experiments" / "results" / "mega_20260704" / "manifests"
@@ -57,11 +60,16 @@ RNG = random.Random(20260705)
 N_BOOT = 2000
 N_PAIRS = 2000
 ITEM13_WEIGHT = 20.0
-V1_ITEMS = ["loss_form", "ref_policy_kl", "sampler_backend_precision",
-            "per_step_zvf_path", "group_size_schedule", "heldout_split",
-            "decontamination_notes"]
-V2_STACK = [("model_family", 10), ("task_slice", 10), ("G", 5),
-            ("temperature", 5), ("seed", 5)]
+V1_ITEMS = [
+    "loss_form",
+    "ref_policy_kl",
+    "sampler_backend_precision",
+    "per_step_zvf_path",
+    "group_size_schedule",
+    "heldout_split",
+    "decontamination_notes",
+]
+V2_STACK = [("model_family", 10), ("task_slice", 10), ("G", 5), ("temperature", 5), ("seed", 5)]
 
 
 def load_cells():
@@ -108,29 +116,34 @@ def shannon(values):
 
 
 def hamming(a, b):
-    return sum(1 for x, y in zip(a, b) if x != y)
+    return sum(1 for x, y in zip(a, b, strict=False) if x != y)
 
 
-def delta_div(c, reward_unit='percent'):
+def delta_div(c, reward_unit="percent"):
     """Observed telemetry minus homogeneous pooled Bernoulli null.
 
     Legacy corpus declares percent reward units. Override explicitly for a
     fraction corpus; never infer units, replace missing reward with zero, or
     clamp invalid data. This residual also captures prompt heterogeneity.
     """
-    reward, zvf_obs = c.get('mean_reward'), c.get('zvf')
+    reward, zvf_obs = c.get("mean_reward"), c.get("zvf")
     if reward is None or zvf_obs is None:
         return None
-    unit = c.get('reward_unit', reward_unit)
-    if unit not in {'percent', 'fraction'}:
-        raise ValueError('explicit reward unit percent or fraction required')
-    p = float(reward) / (100 if unit == 'percent' else 1)
-    G = c['G']
-    if not math.isfinite(p) or not 0 <= p <= 1 or not math.isfinite(zvf_obs) or not 0 <= zvf_obs <= 1:
-        raise ValueError('invalid reward/ZVF units or missingness')
+    unit = c.get("reward_unit", reward_unit)
+    if unit not in {"percent", "fraction"}:
+        raise ValueError("explicit reward unit percent or fraction required")
+    p = float(reward) / (100 if unit == "percent" else 1)
+    G = c["G"]
+    if (
+        not math.isfinite(p)
+        or not 0 <= p <= 1
+        or not math.isfinite(zvf_obs)
+        or not 0 <= zvf_obs <= 1
+    ):
+        raise ValueError("invalid reward/ZVF units or missingness")
     if isinstance(G, bool) or int(G) != G or G < 1:
-        raise ValueError('positive integer group size required')
-    return float(zvf_obs - (p**G + (1-p)**G))
+        raise ValueError("positive integer group size required")
+    return float(zvf_obs - (p**G + (1 - p) ** G))
 
 
 def main():
@@ -154,24 +167,37 @@ def main():
         vals = [str(manifests.get(c["cell_id"], {}).get(item, "MISSING")) for c in cells]
         n_unique = len(set(vals))
         h = shannon(vals)
-        per_item.append({"item": item, "axis": "v1", "n_unique": n_unique, "H_bits": h, "weight": 10})
+        per_item.append(
+            {"item": item, "axis": "v1", "n_unique": n_unique, "H_bits": h, "weight": 10}
+        )
     for axis, w in V2_STACK:
         vals = [str(c.get(axis, "MISSING")) for c in cells]
         n_unique = len(set(vals))
         h = shannon(vals)
-        per_item.append({"item": axis, "axis": "v2_stack", "n_unique": n_unique, "H_bits": h, "weight": w})
+        per_item.append(
+            {"item": axis, "axis": "v2_stack", "n_unique": n_unique, "H_bits": h, "weight": w}
+        )
     # Item 13
     vals13 = [round(v, 4) if not math.isnan(v) else "NaN" for v in item13_vals]
     n_unique13 = len(set(vals13))
     h13 = shannon([str(v) for v in vals13])
-    per_item.append({"item": "zvf_yield_residual", "axis": "v2.1_yield", "n_unique": n_unique13,
-                     "H_bits": h13, "weight": ITEM13_WEIGHT})
+    per_item.append(
+        {
+            "item": "zvf_yield_residual",
+            "axis": "v2.1_yield",
+            "n_unique": n_unique13,
+            "H_bits": h13,
+            "weight": ITEM13_WEIGHT,
+        }
+    )
 
     h_v1 = sum(p["H_bits"] for p in per_item if p["axis"] == "v1")
     h_v2_stack = sum(p["H_bits"] for p in per_item if p["axis"] == "v2_stack")
     h_v2_total = h_v1 + h_v2_stack
     h_v21_total = h_v2_total + h13
-    print(f"# H_bits: v1={h_v1:.4f} + v2_stack={h_v2_stack:.4f} = v2_total={h_v2_total:.4f}; +Item13={h13:.4f} -> v2.1={h_v21_total:.4f}")
+    print(
+        f"# H_bits: v1={h_v1:.4f} + v2_stack={h_v2_stack:.4f} = v2_total={h_v2_total:.4f}; +Item13={h13:.4f} -> v2.1={h_v21_total:.4f}"
+    )
 
     # --- Build fingerprints (H2) ---
     def build_fingerprint(c, axis_set):
@@ -197,7 +223,8 @@ def main():
                 all_pairs.append((i, j))
         sampled = random.Random(20260705).sample(all_pairs, min(N_PAIRS, len(all_pairs)))
         for i, j in sampled:
-            z_i = cells[i].get("zvf"); z_j = cells[j].get("zvf")
+            z_i = cells[i].get("zvf")
+            z_j = cells[j].get("zvf")
             if z_i is None or z_j is None:
                 continue
             d_zvf.append(abs(z_i - z_j))
@@ -210,18 +237,29 @@ def main():
     rho_v1, n_v1 = rho_for_axis_set({"v1"})
     rho_v2_stack, n_v2 = rho_for_axis_set({"v1", "v2_stack"})
     rho_v21, n_v21 = rho_for_axis_set({"v1", "v2_stack", "v2.1_yield"})
-    print(f"# Spearman(Hamming, |dzvf|): v1={rho_v1:.4f} (n={n_v1}); v2_stack={rho_v2_stack:.4f} (n={n_v2}); v2.1={rho_v21:.4f} (n={n_v21})")
+    print(
+        f"# Spearman(Hamming, |dzvf|): v1={rho_v1:.4f} (n={n_v1}); v2_stack={rho_v2_stack:.4f} (n={n_v2}); v2.1={rho_v21:.4f} (n={n_v21})"
+    )
 
     # Fixed-campaign census, with outcome-derived descriptors. No population
     # entropy/correlation intervals or predictive claims are identifiable here.
     diffs = [rho_v21 - rho_v2_stack]
-    diff_lo = diff_hi = h_diff_lo = h_diff_hi = float('nan')
-    boot = [dict(metric=metric, point=float(point), ci_lo=float('nan'), ci_hi=float('nan'),
-                 **{'ci_p2.5': float('nan'), 'ci_p97.5': float('nan')})
-            for metric, point in [('H_bits_item13', h13),
-                                  ('delta_rho_v21_minus_v2stack', diffs[0]),
-                                  ('H_bits_uplift_v2.1_minus_v2', h13),
-                                  ('badge_uplift_per_cell_item13', ITEM13_WEIGHT)]]
+    diff_lo = diff_hi = h_diff_lo = h_diff_hi = float("nan")
+    boot = [
+        dict(
+            metric=metric,
+            point=float(point),
+            ci_lo=float("nan"),
+            ci_hi=float("nan"),
+            **{"ci_p2.5": float("nan"), "ci_p97.5": float("nan")},
+        )
+        for metric, point in [
+            ("H_bits_item13", h13),
+            ("delta_rho_v21_minus_v2stack", diffs[0]),
+            ("H_bits_uplift_v2.1_minus_v2", h13),
+            ("badge_uplift_per_cell_item13", ITEM13_WEIGHT),
+        ]
+    ]
 
     # --- Save outputs ---
     tsv_path = OUT / "p5_delta_div_minreport.tsv"
@@ -237,15 +275,19 @@ def main():
         for b in boot:
             f.write("\t".join(str(b[k]) for k in keys) + "\n")
     summary = {
-        "n_cells": n, "n_item13_present": n13_present,
+        "n_cells": n,
+        "n_item13_present": n13_present,
         "statistic_version": "pro-review-02-v2",
         "entropy_estimand": "sum_of_marginal_entropies; descriptive diversity only",
         "construct_warning": "delta_div contains observed ZVF. Association with differences in the same ZVF is outcome leakage, not independent predictive validation. Pooled homogeneous Bernoulli null does not adjust for prompt difficulty.",
         "inference_status": "fixed_campaign_descriptive_only",
-        "H_bits_v1": h_v1, "H_bits_v2_stack": h_v2_stack,
-        "H_bits_v2_total": h_v2_total, "H_bits_item13": h13,
+        "H_bits_v1": h_v1,
+        "H_bits_v2_stack": h_v2_stack,
+        "H_bits_v2_total": h_v2_total,
+        "H_bits_item13": h13,
         "H_bits_v21_total": h_v21_total,
-        "spearman_rho_v1": rho_v1, "spearman_rho_v2_stack": rho_v2_stack,
+        "spearman_rho_v1": rho_v1,
+        "spearman_rho_v2_stack": rho_v2_stack,
         "spearman_rho_v21": rho_v21,
         "delta_rho_v21_minus_v2stack_pt": float(sum(diffs) / len(diffs)),
         "delta_rho_v21_minus_v2stack_ci_lo": float(diff_lo),
@@ -253,11 +295,15 @@ def main():
         "item13_n_unique": n_unique13,
         "item13_per_cell_uplift_weight": ITEM13_WEIGHT,
         "verdict": ("VARYING_DESCRIPTIVE" if h13 > 0 else "CONSTANT_DESCRIPTIVE"),
-        "key_finding": (f"Item 13 contributes +{h13:.4f} bits to the v2.0 fingerprint; "
-                        f"Spearman coupling to |dzvf| changes by "
-                        f"{sum(diffs) / len(diffs):+.4f} (descriptive; no inferential interval).")
+        "key_finding": (
+            f"Item 13 contributes +{h13:.4f} bits to the v2.0 fingerprint; "
+            f"Spearman coupling to |dzvf| changes by "
+            f"{sum(diffs) / len(diffs):+.4f} (descriptive; no inferential interval)."
+        ),
     }
-    (OUT / "p5_delta_div_minreport_summary.json").write_text(json.dumps(finite_json(summary), indent=2, default=str, allow_nan=False))
+    (OUT / "p5_delta_div_minreport_summary.json").write_text(
+        json.dumps(finite_json(summary), indent=2, default=str, allow_nan=False)
+    )
     print("# summary:", json.dumps(finite_json(summary), indent=2, default=str, allow_nan=False))
     print("# === iter 80 JOB B complete; outputs in platform_hybrid/experiments/results/p5p8/ ===")
 

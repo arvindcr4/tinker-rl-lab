@@ -9,6 +9,7 @@ Two-panel figure:
 
 Saves to ``figures/length_bias_iter100_var.pdf`` and PNG.
 """
+
 from __future__ import annotations
 
 import os
@@ -43,10 +44,20 @@ def main() -> None:
         for r in ib100.analyze_runs(runs_t):
             algo = r["algo"]
             per_task_metrics.setdefault(task, {}).setdefault(algo, {})
-            for k in ("phi_LL", "phi_LR", "phi_RL", "phi_RR",
-                      "cumul_impulse_L_to_R", "cumul_impulse_R_to_L",
-                      "fevd_R_from_L_h1", "fevd_R_from_L_h4", "fevd_R_from_L_h8",
-                      "fevd_L_from_R_h1", "fevd_L_from_R_h4", "fevd_L_from_R_h8"):
+            for k in (
+                "phi_LL",
+                "phi_LR",
+                "phi_RL",
+                "phi_RR",
+                "cumul_impulse_L_to_R",
+                "cumul_impulse_R_to_L",
+                "fevd_R_from_L_h1",
+                "fevd_R_from_L_h4",
+                "fevd_R_from_L_h8",
+                "fevd_L_from_R_h1",
+                "fevd_L_from_R_h4",
+                "fevd_L_from_R_h8",
+            ):
                 per_task_metrics[task][algo].setdefault(k, []).append(float(r[k]))
 
     # --- Panel A: per-task VAR coefficient matrix ----------
@@ -59,11 +70,20 @@ def main() -> None:
         width = 0.35
         for j, algo in enumerate(["grpo", "dr_grpo"]):
             ys = [np.mean(per_task_metrics[task][algo][t]) for t in titles]
-            errs = [1.96 * np.std(per_task_metrics[task][algo][t]) /
-                    max(np.sqrt(len(per_task_metrics[task][algo][t])), 1)
-                    for t in titles]
-            ax.bar(x + (j - 0.5) * width, ys, width, yerr=errs,
-                   label={"grpo": "GRPO", "dr_grpo": "Dr.GRPO"}[algo], capsize=2)
+            errs = [
+                1.96
+                * np.std(per_task_metrics[task][algo][t])
+                / max(np.sqrt(len(per_task_metrics[task][algo][t])), 1)
+                for t in titles
+            ]
+            ax.bar(
+                x + (j - 0.5) * width,
+                ys,
+                width,
+                yerr=errs,
+                label={"grpo": "GRPO", "dr_grpo": "Dr.GRPO"}[algo],
+                capsize=2,
+            )
         ax.set_xticks(x)
         ax.set_xticklabels(titles, rotation=0, fontsize=8)
         ax.set_title(f"{task}  K coefficients", fontsize=10)

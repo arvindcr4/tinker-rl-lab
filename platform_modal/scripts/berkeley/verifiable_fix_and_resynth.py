@@ -21,6 +21,7 @@ Outputs (relative to ROOT):
   platform_hybrid/experiments/results/berkeley/verifiable_cross_pillar_meta.json
   platform_hybrid/experiments/results/berkeley/verifiable_g_star_sensitivity.tsv
 """
+
 from __future__ import annotations
 
 import json
@@ -86,31 +87,45 @@ def risk_score_delta_fixed(grader_inflation_share: float = 0.16) -> list[dict]:
     keep the cross-pillar effect crisp).
     """
     methods = read_zvf_by_library()
-    variance_mit = [m for m in methods if m["library"] in {
-        "grpo", "aero", "cppo", "ngrpo", "scafgrpo",
-        "mcgrpo", "gift", "areal", "es",
-    }]
+    variance_mit = [
+        m
+        for m in methods
+        if m["library"]
+        in {
+            "grpo",
+            "aero",
+            "cppo",
+            "ngrpo",
+            "scafgrpo",
+            "mcgrpo",
+            "gift",
+            "areal",
+            "es",
+        }
+    ]
 
     out_rows: list[dict] = []
     for m in variance_mit:
         d_orig = m["drift_rate"]
         d_verif = max(0.0, d_orig - grader_inflation_share)
         c_verif = min(1.0, m["converged_rate"] + (d_orig - d_verif))
-        out_rows.append({
-            "library": m["library"],
-            "model": m["model"],
-            "n_seeds": m["n_seeds"],
-            "mean_zvf_orig": m["mean_zvf"],
-            "drift_rate_orig": d_orig,
-            "plateau_rate_orig": m["plateau_rate"],
-            "converged_rate_orig": m["converged_rate"],
-            "collapse_rate_orig": m["collapse_rate"],
-            "drift_rate_verifiable": d_verif,
-            "converged_rate_verifiable": c_verif,
-            "grader_inflation_share": grader_inflation_share,
-            "delta_drift": d_verif - d_orig,
-            "delta_converged": c_verif - m["converged_rate"],
-        })
+        out_rows.append(
+            {
+                "library": m["library"],
+                "model": m["model"],
+                "n_seeds": m["n_seeds"],
+                "mean_zvf_orig": m["mean_zvf"],
+                "drift_rate_orig": d_orig,
+                "plateau_rate_orig": m["plateau_rate"],
+                "converged_rate_orig": m["converged_rate"],
+                "collapse_rate_orig": m["collapse_rate"],
+                "drift_rate_verifiable": d_verif,
+                "converged_rate_verifiable": c_verif,
+                "grader_inflation_share": grader_inflation_share,
+                "delta_drift": d_verif - d_orig,
+                "delta_converged": c_verif - m["converged_rate"],
+            }
+        )
 
     out = RES_BK / "verifiable_risk_score_delta.tsv"
     with out.open("w") as fh:
@@ -176,21 +191,29 @@ def cross_pillar_resynth(risk_rows: list[dict]) -> dict:
     rank_shift = {lib: rank_verif[lib] - rank_orig[lib] for lib in rank_orig}
 
     n_reordering = sum(1 for lib, d in rank_shift.items() if d != 0)
-    n_inversions = sum(1 for i in range(len(by_orig)) for j in range(i + 1, len(by_orig))
-                       if rank_orig[by_orig[i]["library"]] < rank_orig[by_orig[j]["library"]]
-                       and rank_verif[by_orig[i]["library"]] > rank_verif[by_orig[j]["library"]])
+    n_inversions = sum(
+        1
+        for i in range(len(by_orig))
+        for j in range(i + 1, len(by_orig))
+        if rank_orig[by_orig[i]["library"]] < rank_orig[by_orig[j]["library"]]
+        and rank_verif[by_orig[i]["library"]] > rank_verif[by_orig[j]["library"]]
+    )
 
     # Bucket boundary: drift if d>=0.10, plateau if 0 < d < 0.10, converged if d==0
     def bucket(d):
         return "drift" if d >= 0.10 else ("plateau" if d > 0 else "converged")
+
     bucket_orig = {r["library"]: bucket(r["drift_rate_orig"]) for r in risk_rows}
     bucket_verif = {r["library"]: bucket(r["drift_rate_verifiable"]) for r in risk_rows}
     n_bucket_reassign = sum(1 for lib in bucket_orig if bucket_orig[lib] != bucket_verif[lib])
-    bucket_transitions = {f"{bucket_orig[lib]}->{bucket_verif[lib]}":
-                          sum(1 for lib2 in bucket_orig
-                              if bucket_orig[lib2] == bucket_orig[lib]
-                              and bucket_verif[lib2] == bucket_verif[lib])
-                          for lib in bucket_orig}
+    bucket_transitions = {
+        f"{bucket_orig[lib]}->{bucket_verif[lib]}": sum(
+            1
+            for lib2 in bucket_orig
+            if bucket_orig[lib2] == bucket_orig[lib] and bucket_verif[lib2] == bucket_verif[lib]
+        )
+        for lib in bucket_orig
+    }
 
     # --- C2: G* budget-conditional under verifiable ---
     p_grid = np.array([0.05, 0.10, 0.15, 0.20, 0.30, 0.40, 0.50, 0.60, 0.70, 0.80, 0.90, 0.95])
@@ -198,7 +221,9 @@ def cross_pillar_resynth(risk_rows: list[dict]) -> dict:
     Y_target = 0.80
     delta_grader_calibrated = 0.16  # from verifiable_summary.json H1 mean non-herding
 
-    def zvf_iid(p, G): return p**G + (1.0 - p)**G
+    def zvf_iid(p, G):
+        return p**G + (1.0 - p) ** G
+
     Gv = np.zeros_like(p_grid, dtype=int)
     Gn = np.zeros_like(p_grid, dtype=int)
     for i, p in enumerate(p_grid):
@@ -209,8 +234,10 @@ def cross_pillar_resynth(risk_rows: list[dict]) -> dict:
                 Gv[i] = int(G)
             if yn >= Y_target and Gn[i] == 0:
                 Gn[i] = int(G)
-        if Gv[i] == 0: Gv[i] = int(G_grid[-1])
-        if Gn[i] == 0: Gn[i] = int(G_grid[-1])
+        if Gv[i] == 0:
+            Gv[i] = int(G_grid[-1])
+        if Gn[i] == 0:
+            Gn[i] = int(G_grid[-1])
 
     out_g = RES_BK / "verifiable_g_star_sensitivity.tsv"
     with out_g.open("w") as fh:
@@ -224,10 +251,15 @@ def cross_pillar_resynth(risk_rows: list[dict]) -> dict:
     # --- C3: write cross_pillar_tsv ---
     out_xp = RES_BK / "verifiable_cross_pillar.tsv"
     with out_xp.open("w") as fh:
-        fh.write("library\trank_orig\trank_verif\trank_shift\tdrift_orig\tdrift_verif\tmean_zvf\tclass\n")
+        fh.write(
+            "library\trank_orig\trank_verif\trank_shift\tdrift_orig\tdrift_verif\tmean_zvf\tclass\n"
+        )
         for r in risk_rows:
-            cls = "GRPO-cousin" if r["library"] == "grpo" else (
-                "drift-cluster" if r["drift_rate_orig"] > 0 else "plateau-cluster")
+            cls = (
+                "GRPO-cousin"
+                if r["library"] == "grpo"
+                else ("drift-cluster" if r["drift_rate_orig"] > 0 else "plateau-cluster")
+            )
             fh.write(
                 f"{r['library']}\t{rank_orig[r['library']]}\t{rank_verif[r['library']]}\t"
                 f"{rank_shift[r['library']]:+d}\t{r['drift_rate_orig']:.4f}\t"
@@ -259,11 +291,13 @@ def cross_pillar_resynth(risk_rows: list[dict]) -> dict:
         "c3_bridge": {
             "dualformer_auto_compatible": True,
             "dpo_irpo_compatible": True,
-            "note": ("Jiao-verifiable tax is a lower bound on the GRPO loss. "
-                     "Dualformer-auto (row 01) and DPO/IRPO (row 02) are both "
-                     "strictly within the verifiable tax, so the verifiable "
-                     "regime does not invalidate those two claims; it tightens "
-                     "them."),
+            "note": (
+                "Jiao-verifiable tax is a lower bound on the GRPO loss. "
+                "Dualformer-auto (row 01) and DPO/IRPO (row 02) are both "
+                "strictly within the verifiable tax, so the verifiable "
+                "regime does not invalidate those two claims; it tightens "
+                "them."
+            ),
         },
     }
     with (RES_BK / "verifiable_cross_pillar_meta.json").open("w") as fh:

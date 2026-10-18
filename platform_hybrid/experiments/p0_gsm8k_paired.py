@@ -22,14 +22,19 @@ import sys
 from collections import Counter
 from pathlib import Path
 
-sys.path.insert(0, str(next(p for p in Path(__file__).resolve().parents if (p / "platform_hybrid").is_dir())))
-from platform_hybrid.experiments.research_contracts import require_empirical, EvidenceUnavailable, PROTOCOL_VERSION
+sys.path.insert(
+    0, str(next(p for p in Path(__file__).resolve().parents if (p / "platform_hybrid").is_dir()))
+)
+from platform_hybrid.experiments.research_contracts import (
+    require_empirical,
+    EvidenceUnavailable,
+    PROTOCOL_VERSION,
+)
 
 ROOT = Path(__file__).resolve().parents[1]
 BASE_FILE = ROOT / "reports/final/gsm8k_base_control_200.json"
 SEED_FILES = [
-    ROOT / f"reports/final/gsm8k_heldout_seed{s}.json"
-    for s in ("042", "137", "256", "512", "999")
+    ROOT / f"reports/final/gsm8k_heldout_seed{s}.json" for s in ("042", "137", "256", "512", "999")
 ]
 OUT_DIR = ROOT / "experiments/results"
 OUT_JSON = OUT_DIR / "p0_gsm8k_paired.json"
@@ -58,9 +63,11 @@ def load_passfail(path: Path) -> PassFailObservations:
         # Only explicit grader outcomes are accuracy measurements. Service and
         # evaluation failures remain missing, never incorrect answers.
         correct = {"correct": 1, "incorrect": 0, "wrong": 0}.get(status)
-        if (ex.get("measured", True) is not True
-                or ex.get("claim_eligible", True) is not True
-                or ex.get("execution_kind", "empirical") != "empirical"):
+        if (
+            ex.get("measured", True) is not True
+            or ex.get("claim_eligible", True) is not True
+            or ex.get("execution_kind", "empirical") != "empirical"
+        ):
             correct = None
         statuses[idx] = status
         out.append((idx, correct))
@@ -75,10 +82,15 @@ def align(base, grpo, prompt_order=None):
         if set(bmap) != set(gmap):
             raise ValueError("Prompt sets differ; declare a common prompt_order across all seeds")
         prompt_order = sorted(bmap)
-    if len(set(prompt_order)) != len(prompt_order) or any(i not in bmap or i not in gmap for i in prompt_order):
+    if len(set(prompt_order)) != len(prompt_order) or any(
+        i not in bmap or i not in gmap for i in prompt_order
+    ):
         raise ValueError("Invalid common prompt order")
-    if any(type(values[i]) is not int or values[i] not in (0, 1)
-           for values in (bmap, gmap) for i in prompt_order):
+    if any(
+        type(values[i]) is not int or values[i] not in (0, 1)
+        for values in (bmap, gmap)
+        for i in prompt_order
+    ):
         raise ValueError("Unmeasured or invalid outcome in common prompt order")
     return [bmap[i] for i in prompt_order], [gmap[i] for i in prompt_order]
 
@@ -88,8 +100,10 @@ def mcnemar_exact(b01, b10):
     if n == 0:
         return 1.0
     k = min(b01, b10)
+
     def pmf(n, k):
-        return math.comb(n, k) * (0.5 ** n)
+        return math.comb(n, k) * (0.5**n)
+
     p_low = sum(pmf(n, i) for i in range(k + 1))
     p_hi = sum(pmf(n, i) for i in range(n - k, n + 1))
     p = p_low + p_hi
@@ -122,7 +136,7 @@ def paired_bootstrap_ci(b, g, reps=10000, seed=20260422):
 
 
 def contingency(b, g):
-    c = Counter(zip(b, g))
+    c = Counter(zip(b, g, strict=False))
     return {
         "both_correct": c[(1, 1)],
         "base_correct_grpo_wrong": c[(1, 0)],
@@ -186,12 +200,20 @@ def main():
     all_ids = set.union(*(set(dict(data)) for _, data in arms))
     excluded_ids = sorted(all_ids - set(prompt_order))
     measurement_exclusions = {
-        str(path): {str(idx): {
-            "status": data.statuses.get(idx, "missing_prompt"),
-            "measured": dict(data).get(idx) is not None,
-            "reason": ("unmeasured_outcome" if idx in data.statuses and dict(data).get(idx) is None
-                       else "missing_prompt" if idx not in data.statuses else "excluded_in_another_arm"),
-        } for idx in excluded_ids}
+        str(path): {
+            str(idx): {
+                "status": data.statuses.get(idx, "missing_prompt"),
+                "measured": dict(data).get(idx) is not None,
+                "reason": (
+                    "unmeasured_outcome"
+                    if idx in data.statuses and dict(data).get(idx) is None
+                    else "missing_prompt"
+                    if idx not in data.statuses
+                    else "excluded_in_another_arm"
+                ),
+            }
+            for idx in excluded_ids
+        }
         for path, data in arms
     }
     for sf, grpo in loaded:
@@ -219,11 +241,15 @@ def main():
         "protocol_version": PROTOCOL_VERSION,
         "base_file": str(BASE_FILE),
         "seed_files": [str(s) for s in SEED_FILES],
-        "evaluation_receipts": [{k: data.receipt[k] for k in ("run_id", "receipt_id")} for _, data in arms],
+        "evaluation_receipts": [
+            {k: data.receipt[k] for k in ("run_id", "receipt_id")} for _, data in arms
+        ],
         "per_seed": seed_results,
         "prompt_order": prompt_order,
         "excluded_base_prompt_ids": sorted(set(dict(base)) - set(prompt_order)),
-        "excluded_seed_prompt_ids": {sf.stem: sorted(set(dict(g)) - set(prompt_order)) for sf, g in loaded},
+        "excluded_seed_prompt_ids": {
+            sf.stem: sorted(set(dict(g)) - set(prompt_order)) for sf, g in loaded
+        },
         "measurement_exclusions": measurement_exclusions,
         "majority_correct_indicator": mv_result,
         "continuous_mean_indicator_paired_t": {

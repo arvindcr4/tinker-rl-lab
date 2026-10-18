@@ -13,6 +13,7 @@ from flagship.pavlov_xlam_result_analysis import (
     main,
     validate_xlam_receipt,
 )
+import pytest
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -99,42 +100,36 @@ class CompleteAnalysisTests(unittest.TestCase):
         base, trained = _paired_receipts()
         report = analyze_xlam_receipts(base, trained, bootstrap_resamples=257, bootstrap_seed=123)
 
-        self.assertEqual(report["status"], "admissible_xlam_component")
-        self.assertEqual(report["analysis_scope"], "xlam_component_only")
-        self.assertFalse(report["portfolio_claim_permitted"])
-        self.assertFalse(report["company_claim_permitted"])
+        assert report["status"] == "admissible_xlam_component"
+        assert report["analysis_scope"] == "xlam_component_only"
+        assert not report["portfolio_claim_permitted"]
+        assert not report["company_claim_permitted"]
         comparison = report["comparison"]
-        self.assertEqual(comparison["base"]["perfect_calls"], 7)
-        self.assertEqual(comparison["trained"]["perfect_calls"], 9)
+        assert comparison["base"]["perfect_calls"] == 7
+        assert comparison["trained"]["perfect_calls"] == 9
         paired = comparison["paired"]
-        self.assertEqual(paired["base_fail_trained_success"], 3)
-        self.assertEqual(paired["base_success_trained_fail"], 1)
+        assert paired["base_fail_trained_success"] == 3
+        assert paired["base_success_trained_fail"] == 1
         self.assertAlmostEqual(paired["risk_difference_trained_minus_base"], 0.02)
         self.assertAlmostEqual(paired["perfect_call_rate_difference"], 0.02)
         self.assertAlmostEqual(paired["exact_mcnemar_two_sided_p"], 0.625)
-        self.assertEqual(
-            paired["mean_strict_reward_bootstrap"]["seed"],
-            123,
-        )
-        self.assertEqual(
-            paired["mean_strict_reward_bootstrap"]["resamples"],
-            257,
-        )
-        self.assertTrue(comparison["improvement_vs_7_of_100"]["point_estimate_exceeds_base"])
+        assert paired["mean_strict_reward_bootstrap"]["seed"] == 123
+        assert paired["mean_strict_reward_bootstrap"]["resamples"] == 257
+        assert comparison["improvement_vs_7_of_100"]["point_estimate_exceeds_base"]
 
     def test_pairs_by_identity_even_when_trained_rows_are_reordered(self) -> None:
         base, trained = _paired_receipts()
         trained["rows"] = list(reversed(trained["rows"]))
         report = analyze_xlam_receipts(base, trained, bootstrap_resamples=31, bootstrap_seed=9)
-        self.assertEqual(report["status"], "admissible_xlam_component")
-        self.assertEqual(report["comparison"]["paired"]["base_fail_trained_success"], 3)
+        assert report["status"] == "admissible_xlam_component"
+        assert report["comparison"]["paired"]["base_fail_trained_success"] == 3
 
     def test_validate_helper_returns_normalized_receipt_summary(self) -> None:
         base, _ = _paired_receipts()
         summary = validate_xlam_receipt(base, role="base")
-        self.assertEqual(summary["perfect_calls"], 7)
-        self.assertEqual(summary["examples"], 100)
-        self.assertTrue(summary["tracking_receipts_present"])
+        assert summary["perfect_calls"] == 7
+        assert summary["examples"] == 100
+        assert summary["tracking_receipts_present"]
 
 
 class FailClosedTests(unittest.TestCase):
@@ -142,9 +137,9 @@ class FailClosedTests(unittest.TestCase):
         base, trained = _paired_receipts()
         trained["rows"][99]["target_sha256"] = "different-target"
         report = analyze_xlam_receipts(base, trained)
-        self.assertEqual(report["status"], "blocked")
-        self.assertIsNone(report["comparison"])
-        self.assertTrue(any("unpaired rows" in item for item in report["diagnostics"]))
+        assert report["status"] == "blocked"
+        assert report["comparison"] is None
+        assert any("unpaired rows" in item for item in report["diagnostics"])
 
     def test_duplicate_identity_is_rejected(self) -> None:
         base, trained = _paired_receipts()
@@ -152,18 +147,16 @@ class FailClosedTests(unittest.TestCase):
         trained["rows"][1]["prompt_sha256"] = trained["rows"][0]["prompt_sha256"]
         trained["rows"][1]["target_sha256"] = trained["rows"][0]["target_sha256"]
         report = analyze_xlam_receipts(base, trained)
-        self.assertEqual(report["status"], "blocked")
-        self.assertTrue(
-            any("duplicate paired example identity" in item for item in report["diagnostics"])
-        )
+        assert report["status"] == "blocked"
+        assert any("duplicate paired example identity" in item for item in report["diagnostics"])
 
     def test_revision_drift_is_rejected_before_statistics(self) -> None:
         base, trained = _paired_receipts()
         trained["provenance"]["dataset_revision"] = "dataset-revision-2"
         report = analyze_xlam_receipts(base, trained)
-        self.assertEqual(report["status"], "blocked")
-        self.assertTrue(any("dataset_revision differs" in item for item in report["diagnostics"]))
-        self.assertIsNone(report["comparison"])
+        assert report["status"] == "blocked"
+        assert any("dataset_revision differs" in item for item in report["diagnostics"])
+        assert report["comparison"] is None
 
     def test_seed_and_sampling_drift_are_rejected(self) -> None:
         for mutation, expected in (
@@ -177,8 +170,8 @@ class FailClosedTests(unittest.TestCase):
                 base, trained = _paired_receipts()
                 mutation(trained)
                 report = analyze_xlam_receipts(base, trained)
-                self.assertEqual(report["status"], "blocked")
-                self.assertTrue(any(expected in item for item in report["diagnostics"]))
+                assert report["status"] == "blocked"
+                assert any(expected in item for item in report["diagnostics"])
 
     def test_missing_tracking_receipts_fail_closed(self) -> None:
         for missing in ("wandb", "hf", "tinker"):
@@ -186,28 +179,28 @@ class FailClosedTests(unittest.TestCase):
                 base, trained = _paired_receipts()
                 del trained["provenance"][missing]
                 report = analyze_xlam_receipts(base, trained)
-                self.assertEqual(report["status"], "blocked")
-                self.assertIsNone(report["comparison"])
+                assert report["status"] == "blocked"
+                assert report["comparison"] is None
                 expected = {
                     "wandb": "missing W&B receipt",
                     "hf": "missing Hugging Face receipt",
                     "tinker": "missing Tinker receipt",
                 }[missing]
-                self.assertTrue(any(expected in item for item in report["diagnostics"]))
+                assert any(expected in item for item in report["diagnostics"])
 
     def test_public_trained_hf_checkpoint_is_rejected(self) -> None:
         base, trained = _paired_receipts()
         trained["provenance"]["hf"]["visibility"] = "public"
         report = analyze_xlam_receipts(base, trained)
-        self.assertEqual(report["status"], "blocked")
-        self.assertTrue(any("must be private" in item for item in report["diagnostics"]))
+        assert report["status"] == "blocked"
+        assert any("must be private" in item for item in report["diagnostics"])
 
     def test_backfilled_wandb_run_is_not_admissible(self) -> None:
         base, trained = _paired_receipts()
         trained["provenance"]["wandb"]["mode"] = "backfilled_after_interruption"
         report = analyze_xlam_receipts(base, trained)
-        self.assertEqual(report["status"], "blocked")
-        self.assertTrue(any("online mode" in item for item in report["diagnostics"]))
+        assert report["status"] == "blocked"
+        assert any("online mode" in item for item in report["diagnostics"])
 
     def test_heldout_and_portfolio_claim_scopes_are_rejected(self) -> None:
         for scope in ("heldout", "xlam_heldout", "portfolio"):
@@ -215,42 +208,40 @@ class FailClosedTests(unittest.TestCase):
                 base, trained = _paired_receipts()
                 trained["claim_scope"] = scope
                 report = analyze_xlam_receipts(base, trained)
-                self.assertEqual(report["status"], "blocked")
-                self.assertIsNone(report["comparison"])
+                assert report["status"] == "blocked"
+                assert report["comparison"] is None
 
     def test_heldout_claim_text_is_rejected_even_when_it_mentions_xlam(self) -> None:
         base, trained = _paired_receipts()
         trained["claim"] = "xLAM held-out improvement"
         report = analyze_xlam_receipts(base, trained)
-        self.assertEqual(report["status"], "blocked")
-        self.assertTrue(any("held-out claim text" in item for item in report["diagnostics"]))
+        assert report["status"] == "blocked"
+        assert any("held-out claim text" in item for item in report["diagnostics"])
 
     def test_summary_mismatch_is_rejected(self) -> None:
         base, trained = _paired_receipts()
         trained["perfect_call_rate"] = 0.08
         report = analyze_xlam_receipts(base, trained)
-        self.assertEqual(report["status"], "blocked")
-        self.assertTrue(
-            any("perfect_call_rate does not match rows" in item for item in report["diagnostics"])
+        assert report["status"] == "blocked"
+        assert any(
+            "perfect_call_rate does not match rows" in item for item in report["diagnostics"]
         )
 
     def test_actual_observed_base_receipt_is_blocked_without_tracking_provenance(self) -> None:
         _, trained = _paired_receipts()
         report = analyze_xlam_receipts(BASE_RECEIPT_PATH, trained)
-        self.assertEqual(report["status"], "blocked")
-        self.assertIsNone(report["comparison"])
-        self.assertTrue(
-            any(
-                "missing provenance field" in item or "could not read receipt" in item
-                for item in report["diagnostics"]
-            )
+        assert report["status"] == "blocked"
+        assert report["comparison"] is None
+        assert any(
+            "missing provenance field" in item or "could not read receipt" in item
+            for item in report["diagnostics"]
         )
 
     def test_missing_file_and_strict_validator_are_fail_closed(self) -> None:
         _, trained = _paired_receipts()
         report = analyze_xlam_receipts("/tmp/does-not-exist-pavlov-base.json", trained)
-        self.assertEqual(report["status"], "blocked")
-        with self.assertRaises(XlamReceiptValidationError):
+        assert report["status"] == "blocked"
+        with pytest.raises(XlamReceiptValidationError):
             validate_xlam_receipt({}, role="base")
 
 
@@ -274,13 +265,10 @@ class OfflineCliTests(unittest.TestCase):
                         "4",
                     ]
                 )
-        self.assertEqual(code, 0)
+        assert code == 0
         report = json.loads(output.getvalue())
-        self.assertEqual(report["status"], "admissible_xlam_component")
-        self.assertEqual(
-            report["comparison"]["paired"]["mean_strict_reward_bootstrap"]["seed"],
-            4,
-        )
+        assert report["status"] == "admissible_xlam_component"
+        assert report["comparison"]["paired"]["mean_strict_reward_bootstrap"]["seed"] == 4
 
 
 if __name__ == "__main__":

@@ -37,6 +37,7 @@ Outputs:
 
 Stdlib + numpy + xgboost.  <= 290 lines.
 """
+
 from __future__ import annotations
 import csv
 import json
@@ -47,13 +48,15 @@ import numpy as np
 import xgboost as xgb
 
 import sys
+
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
-from _p8_common import (  # noqa: E402
+from _paths import REPO_ROOT
+from _p8_common import (
     RAW20,
     ALL24,
     load,
 )
+
 ROOT = REPO_ROOT
 RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8"
 RES.mkdir(parents=True, exist_ok=True)
@@ -70,18 +73,18 @@ COST_BUDGET = 10.0  # for utility U4
 
 LLM_PRICE_TIERS = [
     ("cheap_heuristic", 0.0001),
-    ("small_open",      0.0006),
+    ("small_open", 0.0006),
     ("iter120_default", 0.0010),
-    ("mid_tier",        0.0050),
-    ("frontier_gpt4",   0.0300),
+    ("mid_tier", 0.0050),
+    ("frontier_gpt4", 0.0300),
 ]
 RATES_PCT = [1.44, 1.00, 0.50, 0.10, 0.05]
 
 FEATURE_SETS = {
-    "24full":       ALL24,
-    "20raw":        RAW20,
+    "24full": ALL24,
+    "20raw": RAW20,
     "20raw+minmax": RAW20 + ["V_min", "V_max"],
-    "20raw+stat":   RAW20 + ["V_mean", "V_std"],
+    "20raw+stat": RAW20 + ["V_mean", "V_std"],
 }
 
 
@@ -93,7 +96,11 @@ def downsample(X, y, rate_pct, seed):
     n_target_pos = max(0, int(round((y == 0).sum() * rate / (1 - rate))))
     pos_idx = np.where(y == 1)[0]
     neg_idx = np.where(y == 0)[0]
-    keep_pos = pos_idx if len(pos_idx) < n_target_pos else rng.choice(pos_idx, size=n_target_pos, replace=False)
+    keep_pos = (
+        pos_idx
+        if len(pos_idx) < n_target_pos
+        else rng.choice(pos_idx, size=n_target_pos, replace=False)
+    )
     keep = np.concatenate([keep_pos, neg_idx])
     keep.sort()
     return X[keep], y[keep]
@@ -107,9 +114,15 @@ def fit_predict(Xtr, ytr, Xte, feats, seed):
     n_neg = max(1, len(ytr) - n_pos)
     spw = n_neg / n_pos
     m = xgb.XGBClassifier(
-        n_estimators=N_EST, max_depth=MAX_DEPTH, learning_rate=0.1,
-        subsample=0.8, colsample_bytree=0.8, eval_metric="logloss",
-        random_state=seed, n_jobs=4, scale_pos_weight=spw,
+        n_estimators=N_EST,
+        max_depth=MAX_DEPTH,
+        learning_rate=0.1,
+        subsample=0.8,
+        colsample_bytree=0.8,
+        eval_metric="logloss",
+        random_state=seed,
+        n_jobs=4,
+        scale_pos_weight=spw,
     )
     m.fit(Xtr_s, ytr)
     return m.predict_proba(Xte_s)[:, 1]
@@ -137,7 +150,7 @@ def find_optimal_tau(rows, y, probs, tier_cost, utility, cost_budget=COST_BUDGET
     """Return (tau*, realized_utility, supporting_metrics) for given utility."""
     n_pos = int(y.sum())
     best_tau, best_util, best_metrics = None, -np.inf, None
-    for (tau, prec, rec, f1, tp, fp, alerted, fn) in rows:
+    for tau, prec, rec, f1, tp, fp, alerted, fn in rows:
         if utility == "F1":
             u = f1
         elif utility == "VALUE":
@@ -155,7 +168,7 @@ def find_optimal_tau(rows, y, probs, tier_cost, utility, cost_budget=COST_BUDGET
             else:
                 cost_per_caught = alerted * tier_cost / max(1, tp)
                 if cost_per_caught <= cost_budget:
-                    u= rec
+                    u = rec
                 else:
                     u = -1.0
         else:
@@ -185,13 +198,15 @@ def main():
     print("Loading data...", flush=True)
     Xtr_full, ytr_full = load(ROOT / "fraud_data.csv")
     Xte, yte = load(ROOT / "test_data.csv")
-    print(f"  Train: {Xtr_full.shape}, Test: {Xte.shape}, "
-          f"test_pos_rate={yte.mean()*100:.3f}%", flush=True)
+    print(
+        f"  Train: {Xtr_full.shape}, Test: {Xte.shape}, test_pos_rate={yte.mean() * 100:.3f}%",
+        flush=True,
+    )
 
     # Output buffers
-    tau_rows = []      # cell-level tau* + metrics
-    util_rows = []     # cell-level util(τ*)
-    h_util_rows = []   # utility-monotone tests
+    tau_rows = []  # cell-level tau* + metrics
+    util_rows = []  # cell-level util(τ*)
+    h_util_rows = []  # utility-monotone tests
     h_5seed_rows = []  # 5-seed CI on realized utility
 
     # Sweep grid
@@ -212,24 +227,43 @@ def main():
                         )
                         prec, rec, f1, tp, fp, alerted, fn = metrics
                         cost_per_caught = (alerted * tier_cost) / max(1, tp)
-                        tau_rows.append({
-                            "seed": seed, "rate_pct": rate, "fset": fset_name,
-                            "n_test": len(yte_d), "actual_rate": float(yte_d.mean()),
-                            "tier": tier_name, "utility": util,
-                            "opt_tau": opt_tau, "n_pos_te": n_pos_te,
-                            "tp": tp, "fp": fp, "alerted": alerted,
-                            "fn": fn, "precision": prec, "recall": rec, "f1": f1,
-                            "cost_per_caught": cost_per_caught,
-                        })
-                        util_rows.append({
-                            "seed": seed, "rate_pct": rate, "fset": fset_name,
-                            "n_test": len(yte_d), "actual_rate": float(yte_d.mean()),
-                            "tier": tier_name, "utility": util,
-                            "opt_util": opt_util,
-                            "n_alerted": alerted, "cost_total": alerted * tier_cost,
-                            "value_gain": tp * VALUE_PER_CATCH,
-                            "net_value": tp * VALUE_PER_CATCH - alerted * tier_cost,
-                        })
+                        tau_rows.append(
+                            {
+                                "seed": seed,
+                                "rate_pct": rate,
+                                "fset": fset_name,
+                                "n_test": len(yte_d),
+                                "actual_rate": float(yte_d.mean()),
+                                "tier": tier_name,
+                                "utility": util,
+                                "opt_tau": opt_tau,
+                                "n_pos_te": n_pos_te,
+                                "tp": tp,
+                                "fp": fp,
+                                "alerted": alerted,
+                                "fn": fn,
+                                "precision": prec,
+                                "recall": rec,
+                                "f1": f1,
+                                "cost_per_caught": cost_per_caught,
+                            }
+                        )
+                        util_rows.append(
+                            {
+                                "seed": seed,
+                                "rate_pct": rate,
+                                "fset": fset_name,
+                                "n_test": len(yte_d),
+                                "actual_rate": float(yte_d.mean()),
+                                "tier": tier_name,
+                                "utility": util,
+                                "opt_util": opt_util,
+                                "n_alerted": alerted,
+                                "cost_total": alerted * tier_cost,
+                                "value_gain": tp * VALUE_PER_CATCH,
+                                "net_value": tp * VALUE_PER_CATCH - alerted * tier_cost,
+                            }
+                        )
                         util5seed_per_cell[(rate, fset_name, tier_name, util)].append(opt_util)
 
     # ----- H tests -----
@@ -248,14 +282,18 @@ def main():
             for fset_name in FEATURE_SETS:
                 vals = util5seed_per_cell[(rate, fset_name, tier_name, "F1")]
                 fset_means[fset_name] = float(np.mean(vals)) if vals else float("nan")
-            monotone = (fset_means["20raw"] <= fset_means["20raw+minmax"] + 1e-9
-                        and fset_means["20raw+minmax"] <= fset_means["20raw+stat"] + 1e-9
-                        and fset_means["20raw+stat"] <= fset_means["24full"] + 1e-9)
+            monotone = (
+                fset_means["20raw"] <= fset_means["20raw+minmax"] + 1e-9
+                and fset_means["20raw+minmax"] <= fset_means["20raw+stat"] + 1e-9
+                and fset_means["20raw+stat"] <= fset_means["24full"] + 1e-9
+            )
             H1_cells += int(monotone)
             H1_total += 1
     H1_pass = H1_cells >= 0.80 * H1_total
-    print(f"H1 F1-monotone-in-fset: {H1_cells}/{H1_total} cells = "
-          f"{H1_cells/H1_total*100:.1f}%  (PASS={H1_pass})")
+    print(
+        f"H1 F1-monotone-in-fset: {H1_cells}/{H1_total} cells = "
+        f"{H1_cells / H1_total * 100:.1f}%  (PASS={H1_pass})"
+    )
 
     # H2: VALUE-max utility > 0 on >= 80% of (rate x fset x tier) cells
     # at the cheap_heuristic tier (the only tier with non-trivial tier cost
@@ -270,15 +308,22 @@ def main():
                 if mean_v > 0:
                     H2_cells += 1
                 H2_total += 1
-                h_util_rows.append({
-                    "test": "H2_value_positive",
-                    "rate_pct": rate, "fset": fset_name,
-                    "tier": tier_name, "mean_util": mean_v,
-                    "n_seeds": len(vals), "pass": int(mean_v > 0),
-                })
+                h_util_rows.append(
+                    {
+                        "test": "H2_value_positive",
+                        "rate_pct": rate,
+                        "fset": fset_name,
+                        "tier": tier_name,
+                        "mean_util": mean_v,
+                        "n_seeds": len(vals),
+                        "pass": int(mean_v > 0),
+                    }
+                )
     H2_pass = H2_cells >= 0.50 * H2_total  # more honest bar
-    print(f"H2 VALUE util > 0: {H2_cells}/{H2_total} = "
-          f"{H2_cells/H2_total*100:.1f}%  (PASS={H2_pass}, bar=50%)")
+    print(
+        f"H2 VALUE util > 0: {H2_cells}/{H2_total} = "
+        f"{H2_cells / H2_total * 100:.1f}%  (PASS={H2_pass}, bar=50%)"
+    )
 
     # H3: At the canonical 24full fset + small_open tier,
     # value* utility is < f1 util on >= 60% of rates (cost-aware util
@@ -294,17 +339,22 @@ def main():
             if mean_v < mean_f:
                 H3_cells += 1
             H3_total += 1
-            h_util_rows.append({
-                "test": "H3_value_lt_f1",
-                "rate_pct": rate, "fset": "24full",
-                "tier": tier_name,
-                "mean_util_value": mean_v,
-                "mean_util_f1": mean_f,
-                "pass": int(mean_v < mean_f),
-            })
+            h_util_rows.append(
+                {
+                    "test": "H3_value_lt_f1",
+                    "rate_pct": rate,
+                    "fset": "24full",
+                    "tier": tier_name,
+                    "mean_util_value": mean_v,
+                    "mean_util_f1": mean_f,
+                    "pass": int(mean_v < mean_f),
+                }
+            )
     H3_pass = H3_cells >= 0.60 * H3_total
-    print(f"H3 VALUE<F1: {H3_cells}/{H3_total} = "
-          f"{H3_cells/H3_total*100:.1f}%  (PASS={H3_pass}, bar=60%)")
+    print(
+        f"H3 VALUE<F1: {H3_cells}/{H3_total} = "
+        f"{H3_cells / H3_total * 100:.1f}%  (PASS={H3_pass}, bar=60%)"
+    )
 
     # H4: 5-seed CV on VALUE-max util is <= 0.30 on >= 60% of
     # (rate x fset x tier) cells at the cheap tier (cost-aware util is
@@ -323,16 +373,25 @@ def main():
             H4_total += 1
             if cv <= 0.30:
                 H4_cells += 1
-            h_5seed_rows.append({
-                "test": "H4_5seed_cv_value",
-                "rate_pct": rate, "fset": fset_name, "tier": tier_name,
-                "n_seeds": int(arr.size), "cv_value": cv,
-                "boot_mean": m, "boot_lo": lo, "boot_hi": hi,
-                "pass": int(cv <= 0.30),
-            })
+            h_5seed_rows.append(
+                {
+                    "test": "H4_5seed_cv_value",
+                    "rate_pct": rate,
+                    "fset": fset_name,
+                    "tier": tier_name,
+                    "n_seeds": int(arr.size),
+                    "cv_value": cv,
+                    "boot_mean": m,
+                    "boot_lo": lo,
+                    "boot_hi": hi,
+                    "pass": int(cv <= 0.30),
+                }
+            )
     H4_pass = H4_cells >= 0.60 * H4_total
-    print(f"H4 5-seed CV(VALUE util)<=0.30: {H4_cells}/{H4_total} = "
-          f"{H4_cells/H4_total*100:.1f}%  (PASS={H4_pass}, bar=60%)")
+    print(
+        f"H4 5-seed CV(VALUE util)<=0.30: {H4_cells}/{H4_total} = "
+        f"{H4_cells / H4_total * 100:.1f}%  (PASS={H4_pass}, bar=60%)"
+    )
 
     # ----- write TSVs -----
     print("\nWriting outputs...", flush=True)
@@ -380,24 +439,36 @@ def main():
         "pillar": "P8",
         "cells_total": len(tau_rows),
         "h1_f1_monotone_in_fset": {
-            "pass": bool(H1_pass), "n_pass": H1_cells, "n_total": H1_total,
+            "pass": bool(H1_pass),
+            "n_pass": H1_cells,
+            "n_total": H1_total,
             "fraction": H1_cells / max(1, H1_total),
-            "bar": 0.80, "verdict": "PASS" if H1_pass else "FAIL",
+            "bar": 0.80,
+            "verdict": "PASS" if H1_pass else "FAIL",
         },
         "h2_value_util_positive": {
-            "pass": bool(H2_pass), "n_pass": H2_cells, "n_total": H2_total,
+            "pass": bool(H2_pass),
+            "n_pass": H2_cells,
+            "n_total": H2_total,
             "fraction": H2_cells / max(1, H2_total),
-            "bar": 0.50, "verdict": "PASS" if H2_pass else "FAIL",
+            "bar": 0.50,
+            "verdict": "PASS" if H2_pass else "FAIL",
         },
         "h3_value_lt_f1": {
-            "pass": bool(H3_pass), "n_pass": H3_cells, "n_total": H3_total,
+            "pass": bool(H3_pass),
+            "n_pass": H3_cells,
+            "n_total": H3_total,
             "fraction": H3_cells / max(1, H3_total),
-            "bar": 0.60, "verdict": "PASS" if H3_pass else "FAIL",
+            "bar": 0.60,
+            "verdict": "PASS" if H3_pass else "FAIL",
         },
         "h4_5seed_cv_value": {
-            "pass": bool(H4_pass), "n_pass": H4_cells, "n_total": H4_total,
+            "pass": bool(H4_pass),
+            "n_pass": H4_cells,
+            "n_total": H4_total,
             "fraction": H4_cells / max(1, H4_total),
-            "bar": 0.60, "verdict": "PASS" if H4_pass else "FAIL",
+            "bar": 0.60,
+            "verdict": "PASS" if H4_pass else "FAIL",
         },
     }
     out_sum = RES / "p8_iter160_summary.json"

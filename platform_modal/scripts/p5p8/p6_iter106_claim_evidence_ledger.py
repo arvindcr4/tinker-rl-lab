@@ -49,17 +49,19 @@ Outputs:
       PATCHED with new measured[] + claim_validation[] rows (provenance:
       n2_metrics.tsv last-10 paired bootstrap, B=2000 seed 20260705).
 """
+
 import json
 import math
 import pathlib
 import random
-import statistics
 from collections import Counter, defaultdict
 
 import sys
+
 sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))
 from _paths import REPO_ROOT
-from review17_contract import paired_result, keyed_rows, upsert
+from review17_contract import paired_result, upsert
+
 ROOT = REPO_ROOT
 ENT = ROOT / "platform_hybrid/registry/entries"
 OUT = ROOT / "platform_hybrid/experiments/results/p5p8/review17_v2"
@@ -82,6 +84,7 @@ def bootstrap_paired_diff(values_a, values_b, B=B, seed=SEED):
 
 def load_n2_last10(metric):
     import csv
+
     by_method = defaultdict(dict)
     with N2.open() as f:
         for row in csv.DictReader(f, delimiter="\t"):
@@ -115,7 +118,8 @@ def compute_n2_delta(variant, metric, B=B):
         "ci_low": round(lo, 6),
         "ci_high": round(hi, 6),
         "n": len(by_method[variant]),
-        "n_steps": len(by_method[variant]), "n_independent_runs": 1,
+        "n_steps": len(by_method[variant]),
+        "n_independent_runs": 1,
         "inference_scope": "conditional_within_run_descriptive",
         "significant": bool(lo > 0 or hi < 0),
         "ci_method": {
@@ -250,7 +254,7 @@ def main():
 
     # Job 4: walk every entry's expected_effects x measured x claim_validation triangulation
     ledger_rows = []  # list of dicts for the tsv
-    gap_rows = []     # list of dicts for the audit gaps tsv
+    gap_rows = []  # list of dicts for the audit gaps tsv
     corpus_summary = {
         "n_delta_entries": len(entries),
         "n_claim_validation_rows": 0,
@@ -279,8 +283,12 @@ def main():
         # Ledger rows: union of (claimed U measured) so every (metric, panel) appears once
         all_pairs = sorted(measured_pairs | claimed_pairs | cv_pairs)
         for metric, panel in all_pairs:
-            m_row = next((m for m in measured if m["metric"] == metric and m["panel"] == panel), None)
-            e_row = next((e for e in claimed if e["metric"] == metric and e["panel"] == panel), None)
+            m_row = next(
+                (m for m in measured if m["metric"] == metric and m["panel"] == panel), None
+            )
+            e_row = next(
+                (e for e in claimed if e["metric"] == metric and e["panel"] == panel), None
+            )
             c_row = next((v for v in cv if v["metric"] == metric and v["panel"] == panel), None)
 
             # Recompute machine verdict if measured exists
@@ -315,7 +323,9 @@ def main():
                     "consistent": (
                         c_row["verdict"] == mv if c_row is not None and mv is not None else None
                     ),
-                    "claim_layer": "expected_effects" if e_row else ("none" if c_row is None and m_row is None else "missing"),
+                    "claim_layer": "expected_effects"
+                    if e_row
+                    else ("none" if c_row is None and m_row is None else "missing"),
                     "measured_layer": "measured[]" if m_row else "missing",
                     "audit_layer": "claim_validation[]" if c_row else "missing",
                 }
@@ -345,7 +355,7 @@ def main():
         if n_pairs_claimed == 0 and n_pairs_measured == 0 and n_pairs_cv == 0:
             gap_rows.append(
                 {
-"delta_id": delta_id,
+                    "delta_id": delta_id,
                     "gap_class": "E",
                     "severity": "INFO",
                     "description": (
@@ -475,10 +485,21 @@ def main():
     ledger_path = OUT / "p6_iter106_claim_evidence_ledger.tsv"
     with ledger_path.open("w") as f:
         cols = [
-            "delta_id", "metric", "panel",
-            "predicted_sign", "observed_delta", "ci_low", "ci_high", "n", "significant",
-            "stored_verdict", "machine_verdict", "consistent",
-            "claim_layer", "measured_layer", "audit_layer",
+            "delta_id",
+            "metric",
+            "panel",
+            "predicted_sign",
+            "observed_delta",
+            "ci_low",
+            "ci_high",
+            "n",
+            "significant",
+            "stored_verdict",
+            "machine_verdict",
+            "consistent",
+            "claim_layer",
+            "measured_layer",
+            "audit_layer",
         ]
         f.write("\t".join(cols) + "\n")
         for r in ledger_rows:
@@ -486,11 +507,20 @@ def main():
 
     gaps_path = OUT / "p6_iter106_audit_gaps.tsv"
     with gaps_path.open("w") as f:
-        cols = ["delta_id", "gap_class", "severity", "description", "missing_pair_count", "remediation"]
+        cols = [
+            "delta_id",
+            "gap_class",
+            "severity",
+            "description",
+            "missing_pair_count",
+            "remediation",
+        ]
         f.write("\t".join(cols) + "\n")
         # Sort by severity then by delta_id
         sev_rank = {"HIGH": 0, "MEDIUM": 1, "LOW": 2, "INFO": 3}
-        for r in sorted(gap_rows, key=lambda x: (sev_rank.get(x["severity"], 9), x["delta_id"], x["gap_class"])):
+        for r in sorted(
+            gap_rows, key=lambda x: (sev_rank.get(x["severity"], 9), x["delta_id"], x["gap_class"])
+        ):
             f.write("\t".join(str(r[c]) for c in cols) + "\n")
 
     # Convert Counters to dicts for json
@@ -519,8 +549,14 @@ def main():
     print(f"WROTE: {gaps_path} ({len(gap_rows)} rows)")
     print(f"WROTE: {summary_path}")
     print(f"PATCHED: {len(n2_extensions)} delta entries: {sorted(patched_entries.keys())}")
-    print("Verdict distribution (machine recompute):", dict(corpus_summary["verdict_distribution_post"]))
-    print("Verdict distribution (stored):            ", dict(corpus_summary["verdict_distribution_pre"]))
+    print(
+        "Verdict distribution (machine recompute):",
+        dict(corpus_summary["verdict_distribution_post"]),
+    )
+    print(
+        "Verdict distribution (stored):            ",
+        dict(corpus_summary["verdict_distribution_pre"]),
+    )
     print("Gap counts:", dict(corpus_summary["gap_counts"]))
 
 

@@ -39,20 +39,23 @@ Outputs (worktree-relative):
 
 Stdlib only.
 """
+
 from __future__ import annotations
 
 import csv
 import json
-import math
 import pathlib
 import random
 import statistics
-from typing import Iterable
 
 import sys
-sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
-from _stats import bootstrap_ci_rng  # noqa: E402
+
+sys.path.append(
+    str(pathlib.Path(__file__).resolve().parents[1])
+)  # platform_modal/scripts, for _paths
+from _paths import REPO_ROOT
+from _stats import bootstrap_ci_rng
+
 ROOT = REPO_ROOT
 N10_DIR = ROOT / "platform_hybrid/experiments" / "results" / "n10_seed_expansion"
 N2_DIR = ROOT / "platform_hybrid/experiments" / "results" / "n2_reward_tensor_resume"
@@ -60,20 +63,20 @@ OUT = ROOT / "platform_hybrid/experiments" / "results" / "p5p8/corrected-review1
 OUT.mkdir(parents=True, exist_ok=True)
 
 # Stack-conditional constants used by the controller family.
-G_BASE = 8          # always-G baseline
-G_ESC = 16          # escalation (restore contrast)
-G_DES = 4           # de-escalation (compute-saving regime)
+G_BASE = 8  # always-G baseline
+G_ESC = 16  # escalation (restore contrast)
+G_DES = 4  # de-escalation (compute-saving regime)
 N_STEPS_N10 = 15
-N_PROMPTS_PER_STEP_N2 = 16   # n2 n_prompts=16, G=8 -> 128 rollouts/step
+N_PROMPTS_PER_STEP_N2 = 16  # n2 n_prompts=16, G=8 -> 128 rollouts/step
 G_N2 = 8
 N_BOOT = 2000
 RNG_SEED = 51511
 
 # ============================================================================
 # tau grid for tau_esc (escalation lower bound)
-TAU_ESC_GRID = [round(0.50 + 0.05 * i, 2) for i in range(8)]   # 0.50..0.85
+TAU_ESC_GRID = [round(0.50 + 0.05 * i, 2) for i in range(8)]  # 0.50..0.85
 # tau_des relative to tau_esc: 1-5 steps higher in 0.05 increments
-DELTA_GRID = [round(0.05 * k, 2) for k in range(1, 6)]          # 0.05..0.25
+DELTA_GRID = [round(0.05 * k, 2) for k in range(1, 6)]  # 0.05..0.25
 # Filter points where tau_des > 1.0 OR tau_esc >= tau_des discarded
 MAX_TAU_DES = 1.00
 
@@ -81,6 +84,7 @@ MAX_TAU_DES = 1.00
 # ============================================================================
 # Data loading
 # ----------------------------------------------------------------------------
+
 
 def load_n10_seeds():
     """Return list of dicts with seed, zvf trajectory (length 15)."""
@@ -90,10 +94,12 @@ def load_n10_seeds():
         sl = d.get("step_log", [])
         if len(sl) < N_STEPS_N10:
             continue
-        out.append({
-            "seed": int(d["seed"]),
-            "zvfs": [float(s["zvf"]) for s in sl[:N_STEPS_N10]],
-        })
+        out.append(
+            {
+                "seed": int(d["seed"]),
+                "zvfs": [float(s["zvf"]) for s in sl[:N_STEPS_N10]],
+            }
+        )
     return out
 
 
@@ -114,12 +120,14 @@ def load_n2_tensors(methods=("grpo", "aero", "gift", "areal")):
                 v = sum(g)
                 p_zvf = (1.0 if v == 0 else 0.0) + (1.0 if v == len(g) else 0.0)
                 per_prompt_zvf.append(p_zvf)
-            steps.append({
-                "step": int(r["step"]),
-                "zvf_step": float(r["zvf"]),       # mean over 16 prompts
-                "per_prompt_zvf": per_prompt_zvf,  # list of 16 floats in [0,2] for G=8
-                "per_prompt_k": [int(sum(g)) for g in r["rewards"]],
-            })
+            steps.append(
+                {
+                    "step": int(r["step"]),
+                    "zvf_step": float(r["zvf"]),  # mean over 16 prompts
+                    "per_prompt_zvf": per_prompt_zvf,  # list of 16 floats in [0,2] for G=8
+                    "per_prompt_k": [int(sum(g)) for g in r["rewards"]],
+                }
+            )
         out[m] = steps
     return out
 
@@ -127,6 +135,7 @@ def load_n2_tensors(methods=("grpo", "aero", "gift", "areal")):
 # ============================================================================
 # Controller
 # ----------------------------------------------------------------------------
+
 
 def replay_unified(zvfs: list[float], tau_esc: float, tau_des: float) -> list[int]:
     """Per-step G_t decisions: de-escalate / escalate / baseline."""
@@ -145,6 +154,7 @@ def replay_unified(zvfs: list[float], tau_esc: float, tau_des: float) -> list[in
 # Metrics
 # ----------------------------------------------------------------------------
 
+
 def n10_per_seed_metrics(zvfs: list[float], tau_esc: float, tau_des: float) -> dict:
     n = len(zvfs)
     G_t = replay_unified(zvfs, tau_esc, tau_des)
@@ -153,7 +163,7 @@ def n10_per_seed_metrics(zvfs: list[float], tau_esc: float, tau_des: float) -> d
     escalations = sum(1 for g in G_t if g == G_ESC)
     deescalations = sum(1 for g in G_t if g == G_DES)
     # Headroom-bad: escalation above baseline on z_t >= 0.99 (saturated proxy)
-    headroom_bad = sum(1 for g, zt in zip(G_t, zvfs) if g > G_BASE and zt >= 0.99)
+    headroom_bad = sum(1 for g, zt in zip(G_t, zvfs, strict=False) if g > G_BASE and zt >= 0.99)
     return {
         "total_G": total,
         "savings": (G_BASE * n - total) / (G_BASE * n),
@@ -223,6 +233,7 @@ def all_theta_points():
 # Main
 # ----------------------------------------------------------------------------
 
+
 def main() -> None:
     rng = random.Random(RNG_SEED)
     n10 = load_n10_seeds()
@@ -236,12 +247,14 @@ def main() -> None:
     for tau_esc, tau_des in all_theta_points():
         for s in n10:
             m = n10_per_seed_metrics(s["zvfs"], tau_esc, tau_des)
-            per_seed_rows.append({
-                "tau_esc": tau_esc,
-                "tau_des": tau_des,
-                "seed": s["seed"],
-                **m,
-            })
+            per_seed_rows.append(
+                {
+                    "tau_esc": tau_esc,
+                    "tau_des": tau_des,
+                    "seed": s["seed"],
+                    **m,
+                }
+            )
 
     # 2) Per-prompt N2 replay (4 methods × 40 steps × 16 prompts) for every
     #    (tau_esc, tau_des). Use per-prompt zvf as the binary boundary
@@ -252,62 +265,70 @@ def main() -> None:
         for method in n2_methods:
             for step in n2[method]:
                 m = n2_per_prompt_metrics(step, tau_esc, tau_des)
-                per_step_n2_rows.append({
-                    "tau_esc": tau_esc,
-                    "tau_des": tau_des,
-                    "method": method,
-                    "step": step["step"],
-                    **m,
-                })
+                per_step_n2_rows.append(
+                    {
+                        "tau_esc": tau_esc,
+                        "tau_des": tau_des,
+                        "method": method,
+                        "step": step["step"],
+                        **m,
+                    }
+                )
 
     # 3) Aggregate per (tau_esc, tau_des): N10 summary + bootstrap CI;
     #    N2 summary.
     summary = []
     for tau_esc, tau_des in all_theta_points():
-        rows = [r for r in per_seed_rows
-                if r["tau_esc"] == tau_esc and r["tau_des"] == tau_des]
+        rows = [r for r in per_seed_rows if r["tau_esc"] == tau_esc and r["tau_des"] == tau_des]
         savings_list = [r["savings"] for r in rows]
         total_list = [r["total_G"] for r in rows]
         headroom_bad = sum(r["headroom_bad"] for r in rows) / len(rows)
         mean_savings, lo, hi = bootstrap_ci_rng(savings_list, N_BOOT, 0.05, rng)
-        seed_cv = (statistics.pstdev(total_list) / (statistics.mean(total_list) or 1.0))
-        n2_rows = [r for r in per_step_n2_rows
-                   if r["tau_esc"] == tau_esc and r["tau_des"] == tau_des]
+        seed_cv = statistics.pstdev(total_list) / (statistics.mean(total_list) or 1.0)
+        n2_rows = [
+            r for r in per_step_n2_rows if r["tau_esc"] == tau_esc and r["tau_des"] == tau_des
+        ]
         if n2_rows:
             n2_mean_savings = sum(r["savings"] for r in n2_rows) / len(n2_rows)
             n2_mean_contrast_intent = sum(r["contrast_intent"] for r in n2_rows) / len(n2_rows)
         else:
             n2_mean_savings = float("nan")
             n2_mean_contrast_intent = float("nan")
-        summary.append({
-            "tau_esc": tau_esc,
-            "tau_des": tau_des,
-            "delta": round(tau_des - tau_esc, 2),
-            "n10_n_seeds": n_seeds,
-            "mean_savings_n10": round(mean_savings, 4),
-            "savings_ci_lo": round(lo, 4),
-            "savings_ci_hi": round(hi, 4),
-            "seed_cv_total_G": round(seed_cv, 4),
-            "mean_headroom_bad": round(headroom_bad, 4),
-            "mean_escalations_per_seed": round(
-                sum(r["escalations"] for r in rows) / len(rows), 4),
-            "mean_deescalations_per_seed": round(
-                sum(r["deescalations"] for r in rows) / len(rows), 4),
-            "mean_savings_n2": round(n2_mean_savings, 4),
-            "mean_contrast_intent_n2": round(n2_mean_contrast_intent, 4),
-            "n2_methods": ",".join(n2_methods),
-        })
+        summary.append(
+            {
+                "tau_esc": tau_esc,
+                "tau_des": tau_des,
+                "delta": round(tau_des - tau_esc, 2),
+                "n10_n_seeds": n_seeds,
+                "mean_savings_n10": round(mean_savings, 4),
+                "savings_ci_lo": round(lo, 4),
+                "savings_ci_hi": round(hi, 4),
+                "seed_cv_total_G": round(seed_cv, 4),
+                "mean_headroom_bad": round(headroom_bad, 4),
+                "mean_escalations_per_seed": round(
+                    sum(r["escalations"] for r in rows) / len(rows), 4
+                ),
+                "mean_deescalations_per_seed": round(
+                    sum(r["deescalations"] for r in rows) / len(rows), 4
+                ),
+                "mean_savings_n2": round(n2_mean_savings, 4),
+                "mean_contrast_intent_n2": round(n2_mean_contrast_intent, 4),
+                "n2_methods": ",".join(n2_methods),
+            }
+        )
 
     # 4) Pareto-frontier selection on (mean_savings_n10, seed_cv_total_G,
     #    headroom_bad=0). Among headroom-clean points pick the one with
     #    stat-detect savings (CI excludes zero) AND lowest seed-CV; break
     #    ties by the highest mean_savings_n2 (transfer to N2 evidence).
-    candidates = [s for s in summary
-                  if abs(s["mean_headroom_bad"]) < 1e-9
-                  and s["savings_ci_lo"] > 0]
+    candidates = [
+        s for s in summary if abs(s["mean_headroom_bad"]) < 1e-9 and s["savings_ci_lo"] > 0
+    ]
     if candidates:
-        best = min(candidates, key=lambda s: (
-            s["seed_cv_total_G"], -s["mean_savings_n10"], -s["mean_savings_n2"]))
+        best = min(
+            candidates,
+            key=lambda s: (s["seed_cv_total_G"], -s["mean_savings_n10"], -s["mean_savings_n2"]),
+        )
     else:
         best = max(summary, key=lambda s: s["mean_savings_n10"])
     best_row = {
@@ -331,14 +352,14 @@ def main() -> None:
     legacy = {
         "zvf_triage@0.70": (0.70, 0.70),
         "zvf_triage@0.50": (0.50, 0.50),
-        "dualformer_auto@0.50": (0.50, 0.50),   # G_DES if z>=0.50; collapse = same
-                                               # single threshold -> zvf_triage@0.50
-                                               # (the family at tau_esc=tau_des
-                                               # only emits G_ESC above τ; to
-                                               # recover Dualformer-Auto (G_DES)
-                                               # we use the limiting point at
-                                               # tau_esc=tau_des MAX with
-                                               # G_ESC->G_DES substitution).
+        "dualformer_auto@0.50": (0.50, 0.50),  # G_DES if z>=0.50; collapse = same
+        # single threshold -> zvf_triage@0.50
+        # (the family at tau_esc=tau_des
+        # only emits G_ESC above τ; to
+        # recover Dualformer-Auto (G_DES)
+        # we use the limiting point at
+        # tau_esc=tau_des MAX with
+        # G_ESC->G_DES substitution).
         "hybrid@0.65": (0.55, 0.65),
     }
 
@@ -350,43 +371,76 @@ def main() -> None:
             for r in rows:
                 w.writerow({k: r.get(k, "") for k in fields})
 
-    per_seed_fields = ["tau_esc", "tau_des", "seed",
-                       "total_G", "savings", "fire_rate",
-                       "escalations", "deescalations", "headroom_bad"]
+    per_seed_fields = [
+        "tau_esc",
+        "tau_des",
+        "seed",
+        "total_G",
+        "savings",
+        "fire_rate",
+        "escalations",
+        "deescalations",
+        "headroom_bad",
+    ]
     write_tsv(OUT / "p7_unified_controller_per_seed.tsv", per_seed_rows, per_seed_fields)
 
-    per_step_n2_fields = ["tau_esc", "tau_des", "method", "step",
-                          "total_G_prompts", "savings",
-                          "contrast_intent", "fires_esc", "fires_des"]
-    write_tsv(OUT / "p7_unified_controller_per_step_n2.tsv",
-              per_step_n2_rows, per_step_n2_fields)
+    per_step_n2_fields = [
+        "tau_esc",
+        "tau_des",
+        "method",
+        "step",
+        "total_G_prompts",
+        "savings",
+        "contrast_intent",
+        "fires_esc",
+        "fires_des",
+    ]
+    write_tsv(OUT / "p7_unified_controller_per_step_n2.tsv", per_step_n2_rows, per_step_n2_fields)
 
-    summary_fields = ["tau_esc", "tau_des", "delta",
-                      "n10_n_seeds",
-                      "mean_savings_n10", "savings_ci_lo", "savings_ci_hi",
-                      "seed_cv_total_G",
-                      "mean_headroom_bad",
-                      "mean_escalations_per_seed", "mean_deescalations_per_seed",
-                      "mean_savings_n2", "mean_contrast_intent_n2",
-                      "n2_methods"]
+    summary_fields = [
+        "tau_esc",
+        "tau_des",
+        "delta",
+        "n10_n_seeds",
+        "mean_savings_n10",
+        "savings_ci_lo",
+        "savings_ci_hi",
+        "seed_cv_total_G",
+        "mean_headroom_bad",
+        "mean_escalations_per_seed",
+        "mean_deescalations_per_seed",
+        "mean_savings_n2",
+        "mean_contrast_intent_n2",
+        "n2_methods",
+    ]
     write_tsv(OUT / "p7_unified_controller_summary.tsv", summary, summary_fields)
 
     # Pareto-efficient subset (CV<=0.10, headroom-bad=0)
-    pareto = [s for s in summary
-              if s["seed_cv_total_G"] <= 0.10 and abs(s["mean_headroom_bad"]) < 1e-9]
+    pareto = [
+        s for s in summary if s["seed_cv_total_G"] <= 0.10 and abs(s["mean_headroom_bad"]) < 1e-9
+    ]
     pareto.sort(key=lambda s: (-s["mean_savings_n10"], s["seed_cv_total_G"]))
     pareto_fields = ["rank_in_pareto"] + summary_fields
     for i, s in enumerate(pareto, start=1):
         s_out = {"rank_in_pareto": i}
         s_out.update(s)
-    write_tsv(OUT / "p7_unified_controller_pareto.tsv",
-              [{"rank_in_pareto": i, **s} for i, s in enumerate(pareto, start=1)],
-              pareto_fields)
+    write_tsv(
+        OUT / "p7_unified_controller_pareto.tsv",
+        [{"rank_in_pareto": i, **s} for i, s in enumerate(pareto, start=1)],
+        pareto_fields,
+    )
 
     # CI table (one row per theta) — same as summary but trimmed
-    ci_fields = ["tau_esc", "tau_des", "delta", "mean_savings_n10",
-                 "savings_ci_lo", "savings_ci_hi", "seed_cv_total_G",
-                 "mean_headroom_bad"]
+    ci_fields = [
+        "tau_esc",
+        "tau_des",
+        "delta",
+        "mean_savings_n10",
+        "savings_ci_lo",
+        "savings_ci_hi",
+        "seed_cv_total_G",
+        "mean_headroom_bad",
+    ]
     write_tsv(OUT / "p7_unified_controller_ci.tsv", summary, ci_fields)
 
     out_json = {
@@ -398,9 +452,7 @@ def main() -> None:
         },
         "panel_n2": {
             "methods": list(n2_methods),
-            "n_steps_per_method": (
-                len(n2[n2_methods[0]]) if n2_methods else 0
-            ),
+            "n_steps_per_method": (len(n2[n2_methods[0]]) if n2_methods else 0),
             "n_prompts_per_step": N_PROMPTS_PER_STEP_N2,
             "G_per_step": G_N2,
         },
@@ -418,7 +470,7 @@ def main() -> None:
         "boundary_collapses": {
             "zvf_triage": "tau_esc==tau_des single-band -> G_ESC if z>=tau",
             "dualformer_auto": "tau_des -> G_DES branch dominates the operational"
-                              " point (single band covered by G_DES rule)",
+            " point (single band covered by G_DES rule)",
             "hybrid": "full (tau_esc < tau_des) two independent bands",
         },
         "headline": (
@@ -431,22 +483,19 @@ def main() -> None:
             f"seed_CV={best_row['seed_cv_total_G']:.4f}."
         ),
     }
-    (OUT / "p7_unified_controller_summary.json").write_text(
-        json.dumps(out_json, indent=2))
+    (OUT / "p7_unified_controller_summary.json").write_text(json.dumps(out_json, indent=2))
 
     print(out_json["headline"])
     print(f"\nWrote:")
-    print(f"  per_seed -> {OUT/'p7_unified_controller_per_seed.tsv'}"
-          f" ({len(per_seed_rows)} rows)")
-    print(f"  per_step_n2 -> {OUT/'p7_unified_controller_per_step_n2.tsv'}"
-          f" ({len(per_step_n2_rows)} rows)")
-    print(f"  summary -> {OUT/'p7_unified_controller_summary.tsv'}"
-          f" ({len(summary)} rows)")
-    print(f"  pareto -> {OUT/'p7_unified_controller_pareto.tsv'}"
-          f" ({len(pareto)} rows)")
-    print(f"  ci -> {OUT/'p7_unified_controller_ci.tsv'}"
-          f" ({len(summary)} rows)")
-    print(f"  json -> {OUT/'p7_unified_controller_summary.json'}")
+    print(f"  per_seed -> {OUT / 'p7_unified_controller_per_seed.tsv'} ({len(per_seed_rows)} rows)")
+    print(
+        f"  per_step_n2 -> {OUT / 'p7_unified_controller_per_step_n2.tsv'}"
+        f" ({len(per_step_n2_rows)} rows)"
+    )
+    print(f"  summary -> {OUT / 'p7_unified_controller_summary.tsv'} ({len(summary)} rows)")
+    print(f"  pareto -> {OUT / 'p7_unified_controller_pareto.tsv'} ({len(pareto)} rows)")
+    print(f"  ci -> {OUT / 'p7_unified_controller_ci.tsv'} ({len(summary)} rows)")
+    print(f"  json -> {OUT / 'p7_unified_controller_summary.json'}")
 
 
 if __name__ == "__main__":

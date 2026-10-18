@@ -29,6 +29,7 @@ platform_hybrid/experiments/results/p5p8/p5p6_audit_triangulation_summary.json
 
 Stdlib + pandas. <=200 lines.
 """
+
 import json
 from pathlib import Path
 
@@ -59,7 +60,9 @@ def main():
         .rename(columns={"verdict": "B_match_rate"})
     )
     n_audit = (
-        dmc.groupby("entry_id")["verdict"].count().reset_index()
+        dmc.groupby("entry_id")["verdict"]
+        .count()
+        .reset_index()
         .rename(columns={"verdict": "n_audited_B"})
     )
     n_mismatch = (
@@ -96,24 +99,24 @@ def main():
     for _, r in entry_match.iterrows():
         eid = r["entry_id"]
         info = entry_to_stack.get(eid, {})
-        rows.append({
-            "entry_id": eid,
-            "B_match_rate": r["B_match_rate"],
-            "n_audited_B": r["n_audited_B"],
-            "n_mismatch": r["n_mismatch"],
-            "n_surrogate": r["n_surrogate"],
-            "model_family": info.get("model_family"),
-            "task_slice": info.get("task_slice"),
-        })
+        rows.append(
+            {
+                "entry_id": eid,
+                "B_match_rate": r["B_match_rate"],
+                "n_audited_B": r["n_audited_B"],
+                "n_mismatch": r["n_mismatch"],
+                "n_surrogate": r["n_surrogate"],
+                "model_family": info.get("model_family"),
+                "task_slice": info.get("task_slice"),
+            }
+        )
 
     df = pd.DataFrame(rows).sort_values("B_match_rate", ascending=False)
     df.to_csv(OUT / "p5p6_audit_triangulation.tsv", sep="\t", index=False)
 
     # Joint metric: B_match_rate vs n_audited_B
     if df["B_match_rate"].std() > 0 and df["n_audited_B"].std() > 0:
-        corr_match_vs_audited = float(
-            df["B_match_rate"].corr(df["n_audited_B"])
-        )
+        corr_match_vs_audited = float(df["B_match_rate"].corr(df["n_audited_B"]))
     else:
         corr_match_vs_audited = float("nan")
 
@@ -153,23 +156,28 @@ def main():
             ),
             "A_ceiling": bool(a_ceiling),
             "joint_corr_significant": bool(
-                np.quantile(boot, 0.025) > 0.0
-                or np.quantile(boot, 0.975) < 0.0
+                np.quantile(boot, 0.025) > 0.0 or np.quantile(boot, 0.975) < 0.0
             ),
         },
     }
     with open(OUT / "p5p6_audit_triangulation_summary.json", "w") as fp:
         json.dump(summary, fp, indent=2)
 
-    print(f"\nB_match_rate: mean={df['B_match_rate'].mean():.3f}, "
-          f"min={df['B_match_rate'].min():.3f}, max={df['B_match_rate'].max():.3f}")
-    print(f"A_mean_score: overall={cl['score'].mean():.3f} "
-          f"(unique values={a_unique}, ceiling={a_ceiling})")
-    print(f"Joint correlation B_match vs n_audited: "
-          f"corr={corr_match_vs_audited:+.4f}, "
-          f"CI=[{np.quantile(boot, 0.025):+.4f}, "
-          f"{np.quantile(boot, 0.975):+.4f}] excl0="
-          f"{summary['joint_corr_excludes_zero']}")
+    print(
+        f"\nB_match_rate: mean={df['B_match_rate'].mean():.3f}, "
+        f"min={df['B_match_rate'].min():.3f}, max={df['B_match_rate'].max():.3f}"
+    )
+    print(
+        f"A_mean_score: overall={cl['score'].mean():.3f} "
+        f"(unique values={a_unique}, ceiling={a_ceiling})"
+    )
+    print(
+        f"Joint correlation B_match vs n_audited: "
+        f"corr={corr_match_vs_audited:+.4f}, "
+        f"CI=[{np.quantile(boot, 0.025):+.4f}, "
+        f"{np.quantile(boot, 0.975):+.4f}] excl0="
+        f"{summary['joint_corr_excludes_zero']}"
+    )
     print(f"\nHeadline: {summary['headline']}")
 
 

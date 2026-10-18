@@ -69,6 +69,7 @@ USAGE
 -----
 python3 platform_modal/scripts/length_bias_iter100.py [--B 2000] [--h-max 8]
 """
+
 from __future__ import annotations
 
 import argparse
@@ -87,6 +88,7 @@ DRGRPO_GSM8K_PATH = "platform_hybrid/experiments/results/drgrpo_gsm8k_cot_full.j
 # Loaders
 # ---------------------------------------------------------------------------
 
+
 def load_step_log(path: str) -> list[dict[str, Any]]:
     """Load runs from a Dr.GRPO JSON file with (L, R) per-step series."""
     with open(path) as fh:
@@ -98,13 +100,15 @@ def load_step_log(path: str) -> list[dict[str, Any]]:
             continue
         L = np.array([float(s["mean_comp_len"]) for s in step_log], dtype=np.float64)
         R = np.array([float(s["mean_reward"]) for s in step_log], dtype=np.float64)
-        out.append({
-            "algo": r["algo"],
-            "seed": r["seed"],
-            "n": int(len(step_log)),
-            "L": L,
-            "R": R,
-        })
+        out.append(
+            {
+                "algo": r["algo"],
+                "seed": r["seed"],
+                "n": int(len(step_log)),
+                "L": L,
+                "R": R,
+            }
+        )
     return out
 
 
@@ -115,6 +119,7 @@ def pair_by_seed(arun: dict[str, Any], brun: dict[str, Any]) -> bool:
 # ---------------------------------------------------------------------------
 # Bivariate VAR(1) (OLS) with intercept
 # ---------------------------------------------------------------------------
+
 
 def fit_var1(L: np.ndarray, R: np.ndarray) -> dict[str, Any]:
     """Fit the bivariate VAR(1)
@@ -154,14 +159,14 @@ def fit_var1(L: np.ndarray, R: np.ndarray) -> dict[str, Any]:
     # Standard Cholesky-ordered FEVD with order (L, R): shock to L first, then R.
     P = np.linalg.cholesky(Sigma + 1e-12 * np.eye(2)) if rho < 1.0 else None
     hmax = 8
-    fevd_R_from_L = [float("nan")]*hmax if P is None else []
-    fevd_L_from_R = [float("nan")]*hmax if P is None else []
+    fevd_R_from_L = [float("nan")] * hmax if P is None else []
+    fevd_L_from_R = [float("nan")] * hmax if P is None else []
     cum_R_from_L = 0.0
     cum_L_from_R = 0.0
     cum_R_total = 0.0
     cum_L_total = 0.0
     if P is not None:
-        for h in range(0, hmax):
+        for h in range(hmax):
             Psi = np.linalg.matrix_power(K, h)
             # Forecast error at h+1 has variance (Psi @ Sigma @ Psi^T)
             if h == 0:
@@ -178,8 +183,12 @@ def fit_var1(L: np.ndarray, R: np.ndarray) -> dict[str, Any]:
                 cont_RR = float(P[1, 1] ** 2)
                 cont_LL = float(P[0, 0] ** 2)
                 cont_LR = float(P[0, 1] ** 2)
-                share_R_from_L_h0 = cont_RL / (cont_RL + cont_RR) if (cont_RL + cont_RR) > 0 else np.nan
-                share_L_from_R_h0 = cont_LR / (cont_LL + cont_LR) if (cont_LL + cont_LR) > 0 else np.nan
+                share_R_from_L_h0 = (
+                    cont_RL / (cont_RL + cont_RR) if (cont_RL + cont_RR) > 0 else np.nan
+                )
+                share_L_from_R_h0 = (
+                    cont_LR / (cont_LL + cont_LR) if (cont_LL + cont_LR) > 0 else np.nan
+                )
             else:
                 share_R_from_L_h0 = None  # placeholder
             # Accumulate step-by-step MSE decomposition (Lutkepohl-style)
@@ -188,7 +197,7 @@ def fit_var1(L: np.ndarray, R: np.ndarray) -> dict[str, Any]:
             num_R_from_R = 0.0
             num_L_from_L = 0.0
             num_L_from_R = 0.0
-            for s in range(0, h + 1):
+            for s in range(h + 1):
                 Psi_s = np.linalg.matrix_power(K, s)
                 A = Psi_s @ P  # 2x2
                 num_R_from_L += float(A[1, 0] ** 2)  # row R, column L
@@ -205,8 +214,12 @@ def fit_var1(L: np.ndarray, R: np.ndarray) -> dict[str, Any]:
         cum_R_from_L = float(fevd_R_from_L[-1])
         cum_L_from_R = float(fevd_L_from_R[-1])
     return {
-        "phi_LL": phi_LL, "phi_LR": phi_LR, "phi_RL": phi_RL, "phi_RR": phi_RR,
-        "rho": rho, "C": C,
+        "phi_LL": phi_LL,
+        "phi_LR": phi_LR,
+        "phi_RL": phi_RL,
+        "phi_RR": phi_RR,
+        "rho": rho,
+        "C": C,
         "cumul_impulse_L_to_R": float(C[1, 0]) if not np.isnan(C).any() else np.nan,
         "cumul_impulse_R_to_L": float(C[0, 1]) if not np.isnan(C).any() else np.nan,
         "cumul_diag_self_L": float(C[0, 0]) if not np.isnan(C).any() else np.nan,
@@ -229,6 +242,7 @@ def fit_var1(L: np.ndarray, R: np.ndarray) -> dict[str, Any]:
 # ---------------------------------------------------------------------------
 # Per-run analysis + pairing + bootstrap
 # ---------------------------------------------------------------------------
+
 
 def analyze_runs(runs: list[dict[str, Any]]) -> list[dict[str, Any]]:
     rows = []
@@ -253,7 +267,12 @@ def pair_algos(perrun_rows: list[dict[str, Any]]) -> list[tuple[dict[str, Any], 
     return pairs
 
 
-def paired_bootstrap(keys: list[str], pairs: list[tuple[dict[str, Any], dict[str, Any]]], B: int = 2000, seed: int = 0) -> list[dict[str, Any]]:
+def paired_bootstrap(
+    keys: list[str],
+    pairs: list[tuple[dict[str, Any], dict[str, Any]]],
+    B: int = 2000,
+    seed: int = 0,
+) -> list[dict[str, Any]]:
     """For each key, compute seed-paired differences (dr_grpo - grpo),
     the median, 95% percentile-bootstrap CI, and a paired sign-flip
     permutation p-value: under H0 ("Dr.GRPO has no effect") sign-flipping
@@ -278,20 +297,25 @@ def paired_bootstrap(keys: list[str], pairs: list[tuple[dict[str, Any], dict[str
             flips = rng.choice([-1.0, 1.0], size=n_pairs)
             null_med[b] = float(np.median(d * flips))
         p_perm = float(np.mean(np.abs(null_med) >= np.abs(med_obs)))
-        out.append({
-            "key": k, "n_pairs": n_pairs,
-            "median_diff": med_obs,
-            "ci95_low": ci_lo, "ci95_high": ci_hi,
-            "p_perm": p_perm,
-            "median_grpo": float(np.median([float(gr[k]) for gr, _ in pairs])),
-            "median_drgrpo": float(np.median([float(dr[k]) for _, dr in pairs])),
-        })
+        out.append(
+            {
+                "key": k,
+                "n_pairs": n_pairs,
+                "median_diff": med_obs,
+                "ci95_low": ci_lo,
+                "ci95_high": ci_hi,
+                "p_perm": p_perm,
+                "median_grpo": float(np.median([float(gr[k]) for gr, _ in pairs])),
+                "median_drgrpo": float(np.median([float(dr[k]) for _, dr in pairs])),
+            }
+        )
     return out
 
 
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
+
 
 def main() -> None:
     ap = argparse.ArgumentParser()
@@ -314,14 +338,26 @@ def main() -> None:
     paired_rows: list[dict[str, Any]] = []
 
     keys = [
-        "phi_LL", "phi_LR", "phi_RL", "phi_RR",
+        "phi_LL",
+        "phi_LR",
+        "phi_RL",
+        "phi_RR",
         "rho",
-        "cumul_impulse_L_to_R", "cumul_impulse_R_to_L",
-        "cumul_diag_self_L", "cumul_diag_self_R",
-        "fevd_R_from_L_h1", "fevd_R_from_L_h4", "fevd_R_from_L_h8",
-        "fevd_L_from_R_h1", "fevd_L_from_R_h4", "fevd_L_from_R_h8",
-        "cumul_fevd_R_from_L", "cumul_fevd_L_from_R",
-        "Sigma_LL", "Sigma_RR", "Sigma_LR",
+        "cumul_impulse_L_to_R",
+        "cumul_impulse_R_to_L",
+        "cumul_diag_self_L",
+        "cumul_diag_self_R",
+        "fevd_R_from_L_h1",
+        "fevd_R_from_L_h4",
+        "fevd_R_from_L_h8",
+        "fevd_L_from_R_h1",
+        "fevd_L_from_R_h4",
+        "fevd_L_from_R_h8",
+        "cumul_fevd_R_from_L",
+        "cumul_fevd_L_from_R",
+        "Sigma_LL",
+        "Sigma_RR",
+        "Sigma_LR",
     ]
 
     for task, runs_t in by_task.items():
@@ -335,18 +371,28 @@ def main() -> None:
             continue
         paired = paired_bootstrap(keys, pairs, B=args.B, seed=42 + hash(task) % 9999)
         for p in paired:
-            summary_rows.append({
-                "task": task, "algo_grpo": "grpo", "algo_drgrpo": "dr_grpo",
-                "key": p["key"], "median_grpo": p["median_grpo"],
-                "median_drgrpo": p["median_drgrpo"],
-                "n_pairs": p["n_pairs"],
-            })
-            paired_rows.append({
-                "task": task, "key": p["key"], "n_pairs": p["n_pairs"],
-                "median_diff": p["median_diff"],
-                "ci95_low": p["ci95_low"], "ci95_high": p["ci95_high"],
-                "p_perm": p["p_perm"],
-            })
+            summary_rows.append(
+                {
+                    "task": task,
+                    "algo_grpo": "grpo",
+                    "algo_drgrpo": "dr_grpo",
+                    "key": p["key"],
+                    "median_grpo": p["median_grpo"],
+                    "median_drgrpo": p["median_drgrpo"],
+                    "n_pairs": p["n_pairs"],
+                }
+            )
+            paired_rows.append(
+                {
+                    "task": task,
+                    "key": p["key"],
+                    "n_pairs": p["n_pairs"],
+                    "median_diff": p["median_diff"],
+                    "ci95_low": p["ci95_low"],
+                    "ci95_high": p["ci95_high"],
+                    "p_perm": p["p_perm"],
+                }
+            )
 
     out_dir = "platform_hybrid/experiments/results"
     os.makedirs(out_dir, exist_ok=True)
@@ -364,8 +410,16 @@ def main() -> None:
 
     perrun_cols = ["task", "algo", "seed", "n", "n_obs", *keys]
     _write_tsv(perrun_path, perrun_rows, perrun_cols)
-    _write_tsv(paired_path, paired_rows, ["task", "key", "n_pairs", "median_diff", "ci95_low", "ci95_high", "p_perm"])
-    _write_tsv(summary_path, summary_rows, ["task", "algo_grpo", "algo_drgrpo", "key", "median_grpo", "median_drgrpo", "n_pairs"])
+    _write_tsv(
+        paired_path,
+        paired_rows,
+        ["task", "key", "n_pairs", "median_diff", "ci95_low", "ci95_high", "p_perm"],
+    )
+    _write_tsv(
+        summary_path,
+        summary_rows,
+        ["task", "algo_grpo", "algo_drgrpo", "key", "median_grpo", "median_drgrpo", "n_pairs"],
+    )
 
     meta = {
         "iter": 100,
@@ -392,12 +446,16 @@ def main() -> None:
     print("GSM8K CoT paired Dr.GRPO - GRPO medians:")
     for r in g:
         sig = "*" if r["p_perm"] < 0.05 else " "
-        print(f"  {sig} {r['key']:>30s}  med={r['median_diff']:+.4f}  CI=[{r['ci95_low']:+.4f},{r['ci95_high']:+.4f}]  p_perm={r['p_perm']:.3f}")
+        print(
+            f"  {sig} {r['key']:>30s}  med={r['median_diff']:+.4f}  CI=[{r['ci95_low']:+.4f},{r['ci95_high']:+.4f}]  p_perm={r['p_perm']:.3f}"
+        )
     a = [r for r in paired_rows if r["task"] == "arithmetic_easy"]
     print("Arithmetic paired Dr.GRPO - GRPO medians:")
     for r in a:
         sig = "*" if r["p_perm"] < 0.05 else " "
-        print(f"  {sig} {r['key']:>30s}  med={r['median_diff']:+.4f}  CI=[{r['ci95_low']:+.4f},{r['ci95_high']:+.4f}]  p_perm={r['p_perm']:.3f}")
+        print(
+            f"  {sig} {r['key']:>30s}  med={r['median_diff']:+.4f}  CI=[{r['ci95_low']:+.4f},{r['ci95_high']:+.4f}]  p_perm={r['p_perm']:.3f}"
+        )
 
 
 if __name__ == "__main__":

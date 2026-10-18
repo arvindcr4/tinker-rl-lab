@@ -3,8 +3,8 @@
 Importing this module never reads credentials or mutates a remote repository.
 Legacy unverified results are refused rather than silently exported as v3.
 """
+
 from __future__ import annotations
-import argparse
 import json
 import os
 from pathlib import Path
@@ -14,7 +14,10 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 from platform_hybrid.experiments.framework_contracts import (
-    export_branch, export_identity, require_completed, content_hash,
+    export_branch,
+    export_identity,
+    require_completed,
+    content_hash,
 )
 
 REPO = "arvindcr4/zvf-h2h-qwen3.5-4b"
@@ -31,7 +34,7 @@ def file_hashes(info):
     for item in info.siblings or []:
         if item.rfilename in {"adapter_model.safetensors", "adapter_config.json"}:
             lfs = item.lfs
-            digest = (lfs.get("sha256") if isinstance(lfs, dict) else getattr(lfs, "sha256", None))
+            digest = lfs.get("sha256") if isinstance(lfs, dict) else getattr(lfs, "sha256", None)
             digest = digest or item.blob_id
             if not digest:
                 raise ValueError("Export file hash unavailable")
@@ -43,6 +46,7 @@ def file_hashes(info):
 
 def push(tag, record, *, api, repo=REPO, download=None):
     from huggingface_hub import hf_hub_download
+
     download = download or hf_hub_download
     require_completed(record)
     source = export_identity(record)
@@ -50,22 +54,52 @@ def push(tag, record, *, api, repo=REPO, download=None):
     branch = branch_of(tag + "-" + content_hash(source))
     try:
         info = api.model_info(repo, revision=branch, files_metadata=True)
-        receipt = json.loads(Path(download(repo, "export_receipt.json", revision=info.sha,
-                                           token=os.environ.get("HF_TOKEN"))).read_text())
+        receipt = json.loads(
+            Path(
+                download(
+                    repo, "export_receipt.json", revision=info.sha, token=os.environ.get("HF_TOKEN")
+                )
+            ).read_text()
+        )
         if receipt.get("source") == source and receipt.get("file_hashes") == file_hashes(info):
-            return {"branch": branch, "status": "verified", "revision": info.sha,
-                    "source": source, "file_hashes": receipt["file_hashes"]}
+            return {
+                "branch": branch,
+                "status": "verified",
+                "revision": info.sha,
+                "source": source,
+                "file_hashes": receipt["file_hashes"],
+            }
     except Exception:
         pass  # Missing or mismatched receipt is not an idempotent success.
     api.create_branch(repo, branch=branch, exist_ok=True)
-    subprocess.run([TINKER, "checkpoint", "push-hf", source["checkpoint"], "--repo", repo,
-                    "--revision", branch, "--no-model-card", "--commit-message", tag],
-                   env=os.environ, capture_output=True, text=True, check=True)
+    subprocess.run(
+        [
+            TINKER,
+            "checkpoint",
+            "push-hf",
+            source["checkpoint"],
+            "--repo",
+            repo,
+            "--revision",
+            branch,
+            "--no-model-card",
+            "--commit-message",
+            tag,
+        ],
+        env=os.environ,
+        capture_output=True,
+        text=True,
+        check=True,
+    )
     info = api.model_info(repo, revision=branch, files_metadata=True)
     receipt = {"source": source, "file_hashes": file_hashes(info), "weights_commit": info.sha}
-    commit = api.upload_file(path_or_fileobj=json.dumps(receipt, sort_keys=True).encode(),
-                             path_in_repo="export_receipt.json", repo_id=repo, revision=branch,
-                             commit_message="Record verified export source and file hashes")
+    commit = api.upload_file(
+        path_or_fileobj=json.dumps(receipt, sort_keys=True).encode(),
+        path_in_repo="export_receipt.json",
+        repo_id=repo,
+        revision=branch,
+        commit_message="Record verified export source and file hashes",
+    )
     verified = api.model_info(repo, revision=commit.oid, files_metadata=True)
     if verified.sha != commit.oid or file_hashes(verified) != receipt["file_hashes"]:
         raise ValueError("Destination hashes changed during export")
@@ -87,6 +121,7 @@ def load_cells(root=ROOT):
 
 def main(max_workers=5):
     from huggingface_hub import HfApi
+
     api = HfApi(token=os.environ["HF_TOKEN"])
     cells = load_cells()
     # Validate all source identities before creating any remote objects.
@@ -103,11 +138,21 @@ def main(max_workers=5):
             except Exception as exc:
                 failures.append({"tag": pending[future], "error": str(exc)})
     # Index only verified immutable revisions; failed destinations are not linked.
-    lines = ["# Verified adapter exports", "", "Methods are identified in source receipts; historical labels are not equivalence claims.", ""]
+    lines = [
+        "# Verified adapter exports",
+        "",
+        "Methods are identified in source receipts; historical labels are not equivalence claims.",
+        "",
+    ]
     for r in receipts:
         lines.append(f"- [{r['branch']}](https://huggingface.co/{REPO}/tree/{r['revision']})")
-    api.upload_file(path_or_fileobj="\n".join(lines).encode(), path_in_repo="README.md", repo_id=REPO,
-                    revision="main", commit_message="Index verified immutable exports")
+    api.upload_file(
+        path_or_fileobj="\n".join(lines).encode(),
+        path_in_repo="README.md",
+        repo_id=REPO,
+        revision="main",
+        commit_message="Index verified immutable exports",
+    )
     print(json.dumps({"verified": receipts, "failed": failures}, indent=2))
 
 

@@ -48,6 +48,7 @@ Outputs (worktree-relative paths):
   platform_hybrid/experiments/results/p5p8/p7_hybrid_n2_per_method.tsv
   platform_hybrid/experiments/results/p5p8/p7_hybrid_n2_summary.json
 """
+
 from __future__ import annotations
 import csv
 import math
@@ -66,13 +67,13 @@ N2_DIR = ROOT / "platform_hybrid/experiments/results/n2_reward_tensor_resume"
 OUT_DIR = ROOT / "platform_hybrid/experiments/results/p5p8/corrected-review19-v5"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
-TAU = 0.7           # primary zvf-triage threshold
-TAU_DELTA = 0.2     # Hybrid band width: z in [tau, tau+tau_delta) escalates
-G_BASE = 8          # N2 fixed group size
-G_ESC = 16          # escalation: 2x base
-G_DES = 4           # de-escalation: 0.5x base
-N_STEPS = 40        # N2 panel step count per method
-N_BOOT = 2000       # bootstrap replicates
+TAU = 0.7  # primary zvf-triage threshold
+TAU_DELTA = 0.2  # Hybrid band width: z in [tau, tau+tau_delta) escalates
+G_BASE = 8  # N2 fixed group size
+G_ESC = 16  # escalation: 2x base
+G_DES = 4  # de-escalation: 0.5x base
+N_STEPS = 40  # N2 panel step count per method
+N_BOOT = 2000  # bootstrap replicates
 RNG_SEED = 20260704
 SATURATION_THRESHOLD = 0.9  # saturation band: zvf >= tau+delta
 
@@ -126,8 +127,10 @@ def metrics(G_t: list[int], z: list[float]) -> dict:
     total = sum(G_t)
     n_fire = sum(1 for g in G_t if g != G_BASE)
     sel = n_fire / n
-    headroom_bad = sum(1 for g, zt in zip(G_t, z) if g > G_BASE and zt >= 0.99)
-    sat_band_fired = sum(1 for g, zt in zip(G_t, z) if g != G_BASE and zt >= SATURATION_THRESHOLD)
+    headroom_bad = sum(1 for g, zt in zip(G_t, z, strict=False) if g > G_BASE and zt >= 0.99)
+    sat_band_fired = sum(
+        1 for g, zt in zip(G_t, z, strict=False) if g != G_BASE and zt >= SATURATION_THRESHOLD
+    )
     return {
         "total_G": total,
         "n_fire": n_fire,
@@ -162,7 +165,9 @@ def boot_ci(values: list[float], n_boot: int = N_BOOT, seed: int = RNG_SEED) -> 
     }
 
 
-def paired_boot_ci_delta(a: list[float], b: list[float], n_boot: int = N_BOOT, seed: int = RNG_SEED) -> dict:
+def paired_boot_ci_delta(
+    a: list[float], b: list[float], n_boot: int = N_BOOT, seed: int = RNG_SEED
+) -> dict:
     """Paired bootstrap on the (a-b) total over the SAME 40 steps.
 
     Returns the bootstrap distribution of sum(a_sample) - sum(b_sample) where
@@ -199,7 +204,9 @@ def main() -> None:
         "C0_baseline": lambda z: c0(z),
         f"C1_zvf_triage@{TAU:.2f}": lambda z: c1_zvf_triage(z, TAU),
         f"C2_dualformer@{TAU:.2f}": lambda z: c2_dualformer(z, TAU),
-        f"C3_hybrid@{TAU:.2f}+{TAU_DELTA:.2f}": lambda z: c3_hybrid(z, TAU, TAU_DELTA, g_base=G_BASE, g_esc=G_ESC, g_des=G_DES),
+        f"C3_hybrid@{TAU:.2f}+{TAU_DELTA:.2f}": lambda z: c3_hybrid(
+            z, TAU, TAU_DELTA, g_base=G_BASE, g_esc=G_ESC, g_des=G_DES
+        ),
     }
     c1_key = f"C1_zvf_triage@{TAU:.2f}"
     c2_key = f"C2_dualformer@{TAU:.2f}"
@@ -210,16 +217,18 @@ def main() -> None:
     for m in methods:
         for ctrl_name, fn in controllers.items():
             G_t = fn(m["zvfs"])
-            for step_idx, (g, zt) in enumerate(zip(G_t, m["zvfs"])):
-                per_step_rows.append({
-                    "method": m["method"],
-                    "controller": ctrl_name,
-                    "step": step_idx,
-                    "zvf": zt,
-                    "G_t": g,
-                    "fired": int(g != G_BASE),
-                    "sat_band_fired": int(g != G_BASE and zt >= SATURATION_THRESHOLD),
-                })
+            for step_idx, (g, zt) in enumerate(zip(G_t, m["zvfs"], strict=False)):
+                per_step_rows.append(
+                    {
+                        "method": m["method"],
+                        "controller": ctrl_name,
+                        "step": step_idx,
+                        "zvf": zt,
+                        "G_t": g,
+                        "fired": int(g != G_BASE),
+                        "sat_band_fired": int(g != G_BASE and zt >= SATURATION_THRESHOLD),
+                    }
+                )
 
     out_step_tsv = OUT_DIR / "p7_hybrid_n2_per_step.tsv"
     with out_step_tsv.open("w", newline="") as fh:
@@ -234,10 +243,14 @@ def main() -> None:
     per_method_savings = {name: {} for name in controllers}
 
     for m in methods:
-        row = {"method": m["method"], "n_steps": N_STEPS,
-               "zvf_min": min(m["zvfs"]), "zvf_max": max(m["zvfs"]),
-               "zvf_mean": sum(m["zvfs"]) / N_STEPS,
-               "n_sat_band": sum(1 for zt in m["zvfs"] if zt >= SATURATION_THRESHOLD)}
+        row = {
+            "method": m["method"],
+            "n_steps": N_STEPS,
+            "zvf_min": min(m["zvfs"]),
+            "zvf_max": max(m["zvfs"]),
+            "zvf_mean": sum(m["zvfs"]) / N_STEPS,
+            "n_sat_band": sum(1 for zt in m["zvfs"] if zt >= SATURATION_THRESHOLD),
+        }
         base_total = None
         for ctrl_name, fn in controllers.items():
             G_t = fn(m["zvfs"])
@@ -282,10 +295,13 @@ def main() -> None:
             "tau": TAU,
             "tau_delta": TAU_DELTA,
             "saturation_threshold": SATURATION_THRESHOLD,
-            "G_base": G_BASE, "G_esc": G_ESC, "G_des": G_DES,
+            "G_base": G_BASE,
+            "G_esc": G_ESC,
+            "G_des": G_DES,
             "n_steps_per_method": N_STEPS,
             "n_methods": n_methods,
-            "n_boot": N_BOOT, "rng_seed": RNG_SEED,
+            "n_boot": N_BOOT,
+            "rng_seed": RNG_SEED,
         },
         "per_method_summaries": {},
         "per_controller_pooled": {},
@@ -300,7 +316,9 @@ def main() -> None:
         method = row["method"]
         ms = {
             "n_sat_band_steps": row["n_sat_band"],
-            "zvf_min": row["zvf_min"], "zvf_max": row["zvf_max"], "zvf_mean": row["zvf_mean"],
+            "zvf_min": row["zvf_min"],
+            "zvf_max": row["zvf_max"],
+            "zvf_mean": row["zvf_mean"],
             "controllers": {},
         }
         for ctrl_name in controllers:
@@ -326,7 +344,8 @@ def main() -> None:
         summary["per_controller_pooled"][ctrl_name] = {
             "n_step_units": len(pooled_per_step[ctrl_name]),
             "mean_G_t": ci["mean"],
-            "mean_G_t_lo": ci["lo"] / len(pooled_per_step[ctrl_name]),  # pooled mean uses actual sample count
+            "mean_G_t_lo": ci["lo"]
+            / len(pooled_per_step[ctrl_name]),  # pooled mean uses actual sample count
             "mean_G_t_hi": ci["hi"] / len(pooled_per_step[ctrl_name]),
             "total_G_pooled": ci["sum"],
             "total_G_pooled_lo": ci["lo"],
@@ -337,7 +356,7 @@ def main() -> None:
     for m in methods:
         method = m["method"]
         contrasts = {}
-        for (a_name, b_name, key) in [
+        for a_name, b_name, key in [
             (c3_key, c1_key, "C3_minus_C1"),
             (c3_key, c2_key, "C3_minus_C2"),
             (c2_key, c1_key, "C2_minus_C1"),
@@ -349,7 +368,7 @@ def main() -> None:
 
     # Pooled paired contrasts (160 paired step-units across all methods)
     contrasts_pooled = {}
-    for (a_name, b_name, key) in [
+    for a_name, b_name, key in [
         (c3_key, c1_key, "C3_minus_C1"),
         (c3_key, c2_key, "C3_minus_C2"),
         (c2_key, c1_key, "C2_minus_C1"),
@@ -388,7 +407,7 @@ def main() -> None:
         method = m["method"]
         c1_g = per_method_G_per_step[c1_key][method]
         c3_g = per_method_G_per_step[c3_key][method]
-        diffs = [a - b for a, b in zip(c3_g, c1_g)]
+        diffs = [a - b for a, b in zip(c3_g, c1_g, strict=False)]
         n_diff = sum(1 for d in diffs if d != 0)
         summary["panel_conditional_unification_test"]["c3_equals_c1_check"][method] = {
             "n_steps_where_C3_differs_from_C1": n_diff,
@@ -405,16 +424,20 @@ def main() -> None:
     print("=" * 76)
     print(f"\nPer-method summary (n_sat_band = steps with zvf >= {SATURATION_THRESHOLD}):")
     for row in per_method_rows:
-        print(f"  {row['method']:6s}  zvf=[{row['zvf_min']:.3f}, {row['zvf_max']:.3f}]  mean={row['zvf_mean']:.3f}  "
-              f"n_sat={row['n_sat_band']:2d}  C1_total={row[f'{c1_key}_total_G']}  "
-              f"C2_total={row[f'{c2_key}_total_G']}  C3_total={row[f'{c3_key}_total_G']}  "
-              f"C0_total={row['C0_baseline_total_G']}")
+        print(
+            f"  {row['method']:6s}  zvf=[{row['zvf_min']:.3f}, {row['zvf_max']:.3f}]  mean={row['zvf_mean']:.3f}  "
+            f"n_sat={row['n_sat_band']:2d}  C1_total={row[f'{c1_key}_total_G']}  "
+            f"C2_total={row[f'{c2_key}_total_G']}  C3_total={row[f'{c3_key}_total_G']}  "
+            f"C0_total={row['C0_baseline_total_G']}"
+        )
 
     print(f"\nPer-method savings vs C0 baseline (fraction of compute NOT spent):")
     for row in per_method_rows:
-        print(f"  {row['method']:6s}  C1={row[f'{c1_key}_savings']:+.4f}  C2={row[f'{c2_key}_savings']:+.4f}  "
-              f"C3={row[f'{c3_key}_savings']:+.4f}  "
-              f"  C3_sat_fired={row[f'{c3_key}_sat_band_fired']}")
+        print(
+            f"  {row['method']:6s}  C1={row[f'{c1_key}_savings']:+.4f}  C2={row[f'{c2_key}_savings']:+.4f}  "
+            f"C3={row[f'{c3_key}_savings']:+.4f}  "
+            f"  C3_sat_fired={row[f'{c3_key}_sat_band_fired']}"
+        )
 
     print(f"\nPer-method paired bootstrap contrasts on per-step G_t (n_boot={N_BOOT}):")
     for method, contrasts in summary["paired_contrasts_per_method"].items():
@@ -424,31 +447,43 @@ def main() -> None:
         sig3_1 = "***" if c3mc1["hi"] < 0 or c3mc1["lo"] > 0 else "n.s."
         sig3_2 = "***" if c3mc2["hi"] < 0 or c3mc2["lo"] > 0 else "n.s."
         sig2_1 = "***" if c2mc1["hi"] < 0 or c2mc1["lo"] > 0 else "n.s."
-        print(f"  {method:6s}  C3-C1 Δ={c3mc1['mean_diff_total']:+5.0f} [{c3mc1['lo']:+5.0f}, {c3mc1['hi']:+5.0f}] {sig3_1}  "
-              f"C3-C2 Δ={c3mc2['mean_diff_total']:+5.0f} [{c3mc2['lo']:+5.0f}, {c3mc2['hi']:+5.0f}] {sig3_2}  "
-              f"C2-C1 Δ={c2mc1['mean_diff_total']:+5.0f} [{c2mc1['lo']:+5.0f}, {c2mc1['hi']:+5.0f}] {sig2_1}")
+        print(
+            f"  {method:6s}  C3-C1 Δ={c3mc1['mean_diff_total']:+5.0f} [{c3mc1['lo']:+5.0f}, {c3mc1['hi']:+5.0f}] {sig3_1}  "
+            f"C3-C2 Δ={c3mc2['mean_diff_total']:+5.0f} [{c3mc2['lo']:+5.0f}, {c3mc2['hi']:+5.0f}] {sig3_2}  "
+            f"C2-C1 Δ={c2mc1['mean_diff_total']:+5.0f} [{c2mc1['lo']:+5.0f}, {c2mc1['hi']:+5.0f}] {sig2_1}"
+        )
 
     print(f"\nPooled (160 step-units) paired bootstrap contrasts:")
     for key, v in summary["paired_contrasts_pooled"].items():
         sig = "***" if v["lo"] > 0 or v["hi"] < 0 else "n.s."
-        print(f"  {key:12s}  Δ_total={v['mean_diff_total']:+6.0f}  "
-              f"95%CI=[{v['lo']:+6.0f}, {v['hi']:+6.0f}]  {sig}")
+        print(
+            f"  {key:12s}  Δ_total={v['mean_diff_total']:+6.0f}  "
+            f"95%CI=[{v['lo']:+6.0f}, {v['hi']:+6.0f}]  {sig}"
+        )
 
     print(f"\nPanel-conditional unification test:")
     pcut = summary["panel_conditional_unification_test"]
-    print(f"  saturation-band methods ({pcut['n_methods_with_saturation_band']}): {pcut['saturation_band_methods']}")
+    print(
+        f"  saturation-band methods ({pcut['n_methods_with_saturation_band']}): {pcut['saturation_band_methods']}"
+    )
     print(f"  interior-only methods: {pcut['interior_only_methods']}")
     for method, chk in pcut["c3_equals_c1_check"].items():
-        print(f"  {method:6s}  C3≡C1? {chk['is_bit_identical_to_C1']}  "
-              f"({chk['n_steps_where_C3_differs_from_C1']} steps differ)")
+        print(
+            f"  {method:6s}  C3≡C1? {chk['is_bit_identical_to_C1']}  "
+            f"({chk['n_steps_where_C3_differs_from_C1']} steps differ)"
+        )
 
     print(f"\nHeadroom-bad / sat-band fires (saturated, no escalation value):")
     for ctrl, d in summary["headroom_bad_per_controller"].items():
-        print(f"  {ctrl:35s}  headroom_bad={d['headroom_bad_total']}  "
-              f"sat_band_fired={d['sat_band_fired_total']}  / {d['n_sat_band_total']} sat-band steps")
+        print(
+            f"  {ctrl:35s}  headroom_bad={d['headroom_bad_total']}  "
+            f"sat_band_fired={d['sat_band_fired_total']}  / {d['n_sat_band_total']} sat-band steps"
+        )
 
-    print(f"\nOutputs:\n  {out_step_tsv.relative_to(ROOT)}\n  "
-          f"{out_method_tsv.relative_to(ROOT)}\n  {out_json.relative_to(ROOT)}")
+    print(
+        f"\nOutputs:\n  {out_step_tsv.relative_to(ROOT)}\n  "
+        f"{out_method_tsv.relative_to(ROOT)}\n  {out_json.relative_to(ROOT)}"
+    )
 
 
 if __name__ == "__main__":

@@ -7,9 +7,11 @@ Panel B: Dickey-Fuller stat per seed vs the 5% unit-root critical line -- shows
          GRPO sits closer to the unit-root boundary (weaker mean reversion) than
          Dr.GRPO on the hard CoT task, while both clear it decisively on arithmetic.
 """
+
 import json, os
 import numpy as np
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
@@ -35,7 +37,7 @@ def perrun():
     with open(os.path.join(RES, "length_bias_iter80_perrun.tsv")) as f:
         h = f.readline().rstrip("\n").split("\t")
         for line in f:
-            rows.append(dict(zip(h, line.rstrip("\n").split("\t"))))
+            rows.append(dict(zip(h, line.rstrip("\n").split("\t"), strict=False)))
     return rows
 
 
@@ -44,7 +46,7 @@ def summ():
     with open(os.path.join(RES, "length_bias_iter80_summary.tsv")) as f:
         h = f.readline().rstrip("\n").split("\t")
         for line in f:
-            r = dict(zip(h, line.rstrip("\n").split("\t")))
+            r = dict(zip(h, line.rstrip("\n").split("\t"), strict=False))
             rows[(r["task"], r["algo"])] = r
     return rows
 
@@ -81,32 +83,55 @@ def main():
         except ValueError:
             continue
         x = xpos[r["task"]] + off[r["algo"]]
-        axB.scatter(x, df, color=(CG if r["algo"] == "grpo" else CD),
-                    s=55, zorder=3, edgecolor="white", linewidth=0.6)
+        axB.scatter(
+            x,
+            df,
+            color=(CG if r["algo"] == "grpo" else CD),
+            s=55,
+            zorder=3,
+            edgecolor="white",
+            linewidth=0.6,
+        )
     # algo means
     for r in [S[(tk, al)] for tk in tasks for al in ("grpo", "dr_grpo")]:
         x = xpos[r["task"]] + off[r["algo"]]
-        axB.plot([x - 0.06, x + 0.06], [float(r["df_stat"])] * 2,
-                 color="black", lw=2.4, zorder=4)
+        axB.plot([x - 0.06, x + 0.06], [float(r["df_stat"])] * 2, color="black", lw=2.4, zorder=4)
     axB.axhline(CRIT5, color="darkgreen", ls="--", lw=1.4)
-    axB.text(1.32, CRIT5 + 0.05, "5% unit-root\ncritical line", color="darkgreen",
-             fontsize=8, va="bottom", ha="right")
-    axB.annotate("closer to unit root\n(weaker reversion)", xy=(1.0, -3.0),
-                 xytext=(0.35, -1.4), fontsize=8, color="dimgrey",
-                 arrowprops=dict(arrowstyle="->", color="dimgrey"))
+    axB.text(
+        1.32,
+        CRIT5 + 0.05,
+        "5% unit-root\ncritical line",
+        color="darkgreen",
+        fontsize=8,
+        va="bottom",
+        ha="right",
+    )
+    axB.annotate(
+        "closer to unit root\n(weaker reversion)",
+        xy=(1.0, -3.0),
+        xytext=(0.35, -1.4),
+        fontsize=8,
+        color="dimgrey",
+        arrowprops=dict(arrowstyle="->", color="dimgrey"),
+    )
     axB.set_xticks([0, 1])
     axB.set_xticklabels(["arithmetic\n(0.5B)", "GSM8K CoT\n(1.5B)"])
     axB.set_ylabel("Dickey-Fuller stat (lower = more stationary)")
     axB.set_title("B  Unit-root test on length level (per seed)")
     from matplotlib.lines import Line2D
-    axB.legend(handles=[Line2D([], [], marker="o", ls="", color=CG, label="GRPO"),
-                        Line2D([], [], marker="o", ls="", color=CD, label="Dr.GRPO")],
-               loc="lower left", fontsize=9)
+
+    axB.legend(
+        handles=[
+            Line2D([], [], marker="o", ls="", color=CG, label="GRPO"),
+            Line2D([], [], marker="o", ls="", color=CD, label="Dr.GRPO"),
+        ],
+        loc="lower left",
+        fontsize=9,
+    )
 
     fig.tight_layout()
     for ext in ("pdf", "png"):
-        fig.savefig(os.path.join(FIG, f"length_bias_iter80.{ext}"), dpi=140,
-                    bbox_inches="tight")
+        fig.savefig(os.path.join(FIG, f"length_bias_iter80.{ext}"), dpi=140, bbox_inches="tight")
     print("wrote figures/length_bias_iter80.pdf / .png")
 
 

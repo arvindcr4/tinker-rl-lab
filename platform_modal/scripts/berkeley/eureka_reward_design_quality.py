@@ -44,7 +44,6 @@ Outputs (Berkeley row 08):
 import csv
 import json
 import math
-import os
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -70,6 +69,7 @@ def _write_tsv(path, rows):
 # 1. RQS extraction per anchor
 # ---------------------------------------------------------------------------
 
+
 def per_anchor_rqs():
     """Compose a Reward-Design Quality Score per anchor from the 12-anchor
     table.  Components:
@@ -91,7 +91,7 @@ def per_anchor_rqs():
     header = rows[0]
     out = [header + ["c1", "c2", "c3", "c4", "RQS"]]
     for r in rows[1:]:
-        rec = dict(zip(header, r))
+        rec = dict(zip(header, r, strict=False))
         var_r = float(rec["r_var"])
         peak = float(rec["r_peak"])
         frac_above = float(rec["frac_above_0p5"])
@@ -121,6 +121,7 @@ def per_anchor_rqs():
 # ---------------------------------------------------------------------------
 # 2. AIC comparison: capability-only vs capability + RQS
 # ---------------------------------------------------------------------------
+
 
 def per_anchor_fits():
     rows = _read(RES / "scaling_law_iter137_aic_compare.tsv")
@@ -180,19 +181,31 @@ def _ranks(xs):
 def _fit_ols(xs, ys, has_intercept=True):
     """Separate predictor coefficients; k includes Gaussian residual variance."""
     import numpy as np
+
     x = np.asarray(xs, dtype=float)
     y = np.asarray(ys, dtype=float)
     if x.ndim == 1:
         x = x[:, None]
-    if x.ndim != 2 or y.shape != (len(x),) or not len(y) or not np.isfinite(x).all() or not np.isfinite(y).all():
+    if (
+        x.ndim != 2
+        or y.shape != (len(x),)
+        or not len(y)
+        or not np.isfinite(x).all()
+        or not np.isfinite(y).all()
+    ):
         raise ValueError("OLS requires finite aligned observations")
     X = np.column_stack([np.ones(len(y)), x]) if has_intercept else x
     beta, _, rank, _ = np.linalg.lstsq(X, y, rcond=None)
     pred = X @ beta
     slopes = beta[1:] if has_intercept else beta
-    return {"n": len(y), "intercept": float(beta[0]) if has_intercept else 0.0,
-            "slope": float(slopes[0]) if len(slopes) == 1 else slopes,
-            "predictions": pred, "rss": float(sum((y-pred)**2)), "k": int(rank)+1}
+    return {
+        "n": len(y),
+        "intercept": float(beta[0]) if has_intercept else 0.0,
+        "slope": float(slopes[0]) if len(slopes) == 1 else slopes,
+        "predictions": pred,
+        "rss": float(sum((y - pred) ** 2)),
+        "k": int(rank) + 1,
+    }
 
 
 def aic_compare_rqs():
@@ -213,7 +226,7 @@ def aic_compare_rqs():
     rqs_idx = {r[0]: r for r in rqs_rows[1:]}
     anchors = []
     for r in fits[1:]:
-        rec = dict(zip(fits[0], r))
+        rec = dict(zip(fits[0], r, strict=False))
         # merge RQS
         anchor = rec["model"]
         if anchor not in rqs_idx:
@@ -264,8 +277,13 @@ def aic_compare_rqs():
     # (skipped -- n too small for interaction)
 
     rows = [["model_id", "n_anchors", "rss", "k", "aicc", "delta_aicc_vs_best"]]
-    fits_d = {"M0_intercept_only": m0, "M1_logN": m1, "M2_capability": m2,
-              "M3_logN_plus_RQS": m3, "M4_capability_plus_RQS": m4}
+    fits_d = {
+        "M0_intercept_only": m0,
+        "M1_logN": m1,
+        "M2_capability": m2,
+        "M3_logN_plus_RQS": m3,
+        "M4_capability_plus_RQS": m4,
+    }
     summary = {}
     for label, fit in fits_d.items():
         rss = fit["rss"]
@@ -279,17 +297,20 @@ def aic_compare_rqs():
     # fill delta_AICc
     aiccs = [float(r[4]) for r in rows[1:]]
     best = min(aiccs)
-    for i, r in enumerate(rows[1:]):
+    for _i, r in enumerate(rows[1:]):
         r[5] = f"{float(r[4]) - best:.4f}"
     # add n_anchors in column 1 redundantly for readability (it's the same n)
     summary["n_anchors"] = n
-    summary["limitation"] = "Exploratory only: five anchors; AICc is not estimable when n <= k + 1 (reported as infinity). k includes noise variance."
+    summary["limitation"] = (
+        "Exploratory only: five anchors; AICc is not estimable when n <= k + 1 (reported as infinity). k includes noise variance."
+    )
     return rows, summary, anchors
 
 
 # ---------------------------------------------------------------------------
 # 3.  Residualization: does RQS control for the iter137 cross-pillar gap?
 # ---------------------------------------------------------------------------
+
 
 def residualization():
     """Inspect whether RQS predicts the residual of R_max | capable on the
@@ -303,9 +324,9 @@ def residualization():
     full = []
     rows = _read(RES / "scaling_law_extended_frontier.tsv")
     f_rqs = _read(OUT / "eureka_rqs_per_anchor.tsv")
-    rqs_idx = {r[0]: float(r[-1])for r in f_rqs[1:]}
+    rqs_idx = {r[0]: float(r[-1]) for r in f_rqs[1:]}
     for r in rows[1:]:
-        rec = dict(zip(rows[0], r))
+        rec = dict(zip(rows[0], r, strict=False))
         anchor = rec["model"]
         if anchor not in rqs_idx:
             continue
@@ -323,14 +344,25 @@ def residualization():
                 "logN": math.log10(float(rec["params_B"])),
                 "r_mean": r_mean,
                 "RQS": rqs_idx[anchor],
-                "capable": 1 if rec["family"] in ("qwen", "deepseek", "llama", "kimi", "gpt-oss") and float(rec["zero_frac"]) <= 0.5 else 0,
+                "capable": 1
+                if rec["family"] in ("qwen", "deepseek", "llama", "kimi", "gpt-oss")
+                and float(rec["zero_frac"]) <= 0.5
+                else 0,
             }
         )
     n = len(full)
     rows_out = [
-        ["model", "log10(N)", "RQS", "capable", "r_mean_obs",
-         "r_mean_pred_capable", "r_mean_pred_capable_RQS",
-         "resid_capable", "resid_capable_RQS"]
+        [
+            "model",
+            "log10(N)",
+            "RQS",
+            "capable",
+            "r_mean_obs",
+            "r_mean_pred_capable",
+            "r_mean_pred_capable_RQS",
+            "resid_capable",
+            "resid_capable_RQS",
+        ]
     ]
     xs_cap = [a["capable"] for a in full]
     xs_cap_rqs = [[a["capable"], a["RQS"]] for a in full]
@@ -358,8 +390,9 @@ def residualization():
         )
 
     # Compute correlations between the two residual sequences
-    resid_cap = [a["r_mean"] - (f_cap["intercept"] + f_cap["slope"] * xs_cap[i])
-                 for i, a in enumerate(full)]
+    resid_cap = [
+        a["r_mean"] - (f_cap["intercept"] + f_cap["slope"] * xs_cap[i]) for i, a in enumerate(full)
+    ]
     resid_cap_rqs = [a["r_mean"] - f_cap_rqs["predictions"][i] for i, a in enumerate(full)]
     rqs = [a["RQS"] for a in full]
     logN = [a["logN"] for a in full]
@@ -376,7 +409,8 @@ def residualization():
         "rss_cap_plus_RQS": f_cap_rqs["rss"],
         "delta_rss": f_cap["rss"] - f_cap_rqs["rss"],
         "delta_rss_pct": (f_cap["rss"] - f_cap_rqs["rss"]) / f_cap["rss"]
-        if f_cap["rss"] > 0 else 0,
+        if f_cap["rss"] > 0
+        else 0,
         "pearson_RQS_vs_resid_cap": r_rqs_p,
         "pearson_logN_vs_resid_cap": r_logN_p,
         "pearson_RQS_vs_resid_cap_RQS": r_rqs_p2,
@@ -392,6 +426,7 @@ def residualization():
 # ---------------------------------------------------------------------------
 # 4.  Cross-pillar: does RQS predict the iter127 P3 cross-link evidence?
 # ---------------------------------------------------------------------------
+
 
 def cross_pillar():
     """Cross-link RQS to the iter127 (G, T) cell grid via a NON-tautological
@@ -445,8 +480,16 @@ def cross_pillar():
         zvf_theory_by_G[int(r[0])] = float(r[7])
 
     rows_out = [
-        ["cell_id", "G", "T", "acc_emp", "acc_pred", "resid",
-         "zvf_theory_G", "richness_proxy_1_minus_zvf"]
+        [
+            "cell_id",
+            "G",
+            "T",
+            "acc_emp",
+            "acc_pred",
+            "resid",
+            "zvf_theory_G",
+            "richness_proxy_1_minus_zvf",
+        ]
     ]
     richness = []
     resid = []
@@ -509,9 +552,12 @@ def cross_pillar():
 # 5. Driver
 # ---------------------------------------------------------------------------
 
+
 def main():
-    print("== Eureka (Ma et al. 2023) reward-design quality as Pillar-1 "
-          "exogenous covariate (Berkeley F24 L9) ==")
+    print(
+        "== Eureka (Ma et al. 2023) reward-design quality as Pillar-1 "
+        "exogenous covariate (Berkeley F24 L9) =="
+    )
     print()
 
     # Step 1: per-anchor RQS
@@ -534,13 +580,15 @@ def main():
     p_anchor_evidence = OUT / "eureka_aic_anchors.tsv"
     rows = [["model", "log10(N)", "RQS", "capable", "R_max"]]
     for a in anchors:
-        rows.append([
-            a["model"],
-            f"{a['logN']:.4f}",
-            f"{a['RQS']:.4f}",
-            str(a["capable"]),
-            f"{a['R_max']:.4f}",
-        ])
+        rows.append(
+            [
+                a["model"],
+                f"{a['logN']:.4f}",
+                f"{a['RQS']:.4f}",
+                str(a["capable"]),
+                f"{a['R_max']:.4f}",
+            ]
+        )
     _write_tsv(p_anchor_evidence, rows)
     print(f"    wrote {p_anchor_evidence}")
     print()
@@ -550,11 +598,21 @@ def main():
     p_res = OUT / "eureka_residualization.tsv"
     _write_tsv(p_res, res_rows)
     print(f"[3] wrote {p_res}")
-    print(f"    Pearson rho(RQS, residual_cap_only) = {res_summary['pearson_RQS_vs_resid_cap']:.4f}")
-    print(f"    Pearson rho(log N, residual_cap_only) = {res_summary['pearson_logN_vs_resid_cap']:.4f}")
-    print(f"    Spearman rho(RQS, residual_cap_only) = {res_summary['spearman_RQS_vs_resid_cap']:.4f}")
-    print(f"    Spearman rho(log N, residual_cap_only) = {res_summary['spearman_logN_vs_resid_cap']:.4f}")
-    print(f"    delta_RSS = {res_summary['delta_rss']:.4f} ({res_summary['delta_rss_pct'] * 100:.1f}% reduction)")
+    print(
+        f"    Pearson rho(RQS, residual_cap_only) = {res_summary['pearson_RQS_vs_resid_cap']:.4f}"
+    )
+    print(
+        f"    Pearson rho(log N, residual_cap_only) = {res_summary['pearson_logN_vs_resid_cap']:.4f}"
+    )
+    print(
+        f"    Spearman rho(RQS, residual_cap_only) = {res_summary['spearman_RQS_vs_resid_cap']:.4f}"
+    )
+    print(
+        f"    Spearman rho(log N, residual_cap_only) = {res_summary['spearman_logN_vs_resid_cap']:.4f}"
+    )
+    print(
+        f"    delta_RSS = {res_summary['delta_rss']:.4f} ({res_summary['delta_rss_pct'] * 100:.1f}% reduction)"
+    )
     print()
 
     # Step 4: cross-pillar
@@ -563,8 +621,12 @@ def main():
     _write_tsv(p_cp, cp_rows)
     print(f"[4] wrote {p_cp}")
     print(f"    n_cells = {cp_summary['n_cells']}")
-    print(f"    richness_proxy ~ residual Pearson = {cp_summary['pearson_richness_vs_resid']:.4f} (p={cp_summary['p_value_pearson_richness_vs_resid']:.4f})")
-    print(f"    richness_proxy ~ residual Spearman = {cp_summary['spearman_richness_vs_resid']:.4f}")
+    print(
+        f"    richness_proxy ~ residual Pearson = {cp_summary['pearson_richness_vs_resid']:.4f} (p={cp_summary['p_value_pearson_richness_vs_resid']:.4f})"
+    )
+    print(
+        f"    richness_proxy ~ residual Spearman = {cp_summary['spearman_richness_vs_resid']:.4f}"
+    )
     print()
 
     # JSON summary

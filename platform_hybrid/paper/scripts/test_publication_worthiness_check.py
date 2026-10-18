@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Unit tests for publication_worthiness_check — P1–P12 roster."""
+
 from __future__ import annotations
 
 import tempfile
@@ -26,39 +27,41 @@ from publication_worthiness_check import (
 
 class TestPublicationWorthinessCheck(unittest.TestCase):
     def test_active_roster_is_p1_through_p12(self):
-        self.assertEqual(len(ACTIVE_ROSTER), 12)
-        self.assertEqual(set(ACTIVE_ROSTER), {f"P{i}" for i in range(1, 13)})
-        self.assertEqual(check_roster_partition(), [])
+        assert len(ACTIVE_ROSTER) == 12
+        assert set(ACTIVE_ROSTER) == {f"P{i}" for i in range(1, 13)}
+        assert check_roster_partition() == []
 
     def test_all_active_primary_sources_exist(self):
-        self.assertEqual(check_primary_sources_exist(), [])
+        assert check_primary_sources_exist() == []
 
     def test_every_paper_has_venue_tier(self):
         for pid in ACTIVE_ROSTER:
-            self.assertIn(pid, VENUE_TIER)
-            self.assertIn(
-                VENUE_TIER[pid],
-                {"workshop-short", "workshop-artifact", "position-artifact", "main-track"},
-            )
+            assert pid in VENUE_TIER
+            assert VENUE_TIER[pid] in {
+                "workshop-short",
+                "workshop-artifact",
+                "position-artifact",
+                "main-track",
+            }
 
     def test_absorbed_independent_roots_removed_from_live_paths(self):
-        self.assertEqual(check_live_paths_removed(), [])
+        assert check_live_paths_removed() == []
         root = Path(__file__).resolve().parents[3]
         for rel in FORBIDDEN_LIVE_PATHS:
-            self.assertFalse((root / rel).exists(), msg=f"still live: {rel}")
+            assert not (root / rel).exists(), f"still live: {rel}"
 
     def test_archives_present_for_all_absorbed(self):
-        self.assertEqual(len(ABSORBED_ARCHIVED), 6)
-        self.assertEqual(check_archives_present(), [])
+        assert len(ABSORBED_ARCHIVED) == 6
+        assert check_archives_present() == []
 
     def test_claim_boundaries_present(self):
         errors = check_claim_boundaries()
-        self.assertEqual(errors, [], msg=errors)
+        assert errors == [], errors
 
     def test_p8_is_workshop_not_fraud(self):
-        self.assertIn("workshop", ACTIVE_ROSTER["P8"])
-        self.assertNotIn("fraud", ACTIVE_ROSTER["P8"])
-        self.assertIn("P08_fraud", ABSORBED_ARCHIVED)
+        assert "workshop" in ACTIVE_ROSTER["P8"]
+        assert "fraud" not in ACTIVE_ROSTER["P8"]
+        assert "P08_fraud" in ABSORBED_ARCHIVED
 
     def test_parse_scores_and_rank_roundtrip(self):
         scores = """# scores
@@ -89,13 +92,13 @@ Archived satellites must not be double-counted.
             rp.write_text(rank)
             tiers = parse_scores_after(sp)
             for id_ in ACTIVE_ROSTER:
-                self.assertEqual(tiers[id_], "publication-worthy now")
-            self.assertEqual(parse_rank_after_count(rp), 12)
+                assert tiers[id_] == "publication-worthy now"
+            assert parse_rank_after_count(rp) == 12
             errors = run_all_checks(scores_path=sp, rank_path=rp)
-            self.assertEqual(errors, [], msg=errors)
+            assert errors == [], errors
 
     def test_main_cli_sources_only_pass(self):
-        self.assertEqual(main([]), 0)
+        assert main([]) == 0
 
 
 if __name__ == "__main__":

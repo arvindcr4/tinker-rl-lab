@@ -15,10 +15,9 @@ Inputs:
 Output:
     figures/zvf_iter38_review28_v2.pdf  (matplotlib fallback).
 """
+
 from __future__ import annotations
 
-import math
-import sys
 from pathlib import Path
 
 import matplotlib
@@ -52,9 +51,21 @@ def main() -> None:
     cls_rows = load_tsv(RESULTS / "zvf_iter38_classifier_review28_v2.tsv")
     # Filter out the confusion block (lines that don't start with a library name)
     LIB_NAMES = {
-        "grpo", "aero", "cppo", "ngrpo", "scafgrpo", "mcgrpo", "gift",
-        "areal", "es", "gsm8k_real", "arithmetic_groupsize", "tool_use",
-        "scaling_law", "drgrpo_vs_grpo", "samestack_ppo_grpo",
+        "grpo",
+        "aero",
+        "cppo",
+        "ngrpo",
+        "scafgrpo",
+        "mcgrpo",
+        "gift",
+        "areal",
+        "es",
+        "gsm8k_real",
+        "arithmetic_groupsize",
+        "tool_use",
+        "scaling_law",
+        "drgrpo_vs_grpo",
+        "samestack_ppo_grpo",
     }
     cls_data = [r for r in cls_rows if r[0] in LIB_NAMES]
     # Header: library, model, mean_zvf, mean_last10, mean_peak, true, pred, correct
@@ -78,6 +89,7 @@ def main() -> None:
         g_emp = []
         for y in y_grid:
             from zvf_iter38_crosslibrary import iso_yield_iid, iso_yield_empirical
+
             g_iid.append(iso_yield_iid(p, y))
             g_emp.append(iso_yield_empirical(p, delta_div, y))
         axes[0].plot(y_grid, g_iid, "--", alpha=0.5, lw=1)
@@ -126,9 +138,7 @@ def main() -> None:
     for i in range(len(classes)):
         for j in range(len(classes)):
             color = "white" if mat[i][j] > 5 else "black"
-            axes[2].text(
-                j, i, str(mat[i][j]), ha="center", va="center", color=color
-            )
+            axes[2].text(j, i, str(mat[i][j]), ha="center", va="center", color=color)
     plt.colorbar(im, ax=axes[2], fraction=0.04)
 
     plt.tight_layout()

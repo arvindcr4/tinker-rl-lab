@@ -52,6 +52,7 @@ Outputs: platform_hybrid/experiments/results/length_bias_iter88_{perrun,quantile
          paired,summary}.tsv + meta.json
 Stdlib + numpy + scipy.stats + scipy.optimize.
 """
+
 import json, os, math
 from collections import defaultdict
 import numpy as np
@@ -60,8 +61,10 @@ from scipy import optimize as sco
 
 import sys
 from pathlib import Path
+
 sys.path.append(str(Path(__file__).resolve().parent))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
+from _paths import REPO_ROOT
+
 W = str(REPO_ROOT)
 RES = os.path.join(W, "platform_hybrid/experiments", "results")
 FIG = os.path.join(W, "platform_hybrid/figures")
@@ -96,26 +99,25 @@ def quantreg_slope(R: np.ndarray, L: np.ndarray, q: float) -> float:
         r = residual - c
         return float(np.mean(np.maximum(q * r, (q - 1.0) * r)))
 
-    res = sco.minimize_scalar(loss, bounds=(rng_lo, rng_hi),
-                              method="bounded",
-                              options={"xatol": 1e-6})
+    res = sco.minimize_scalar(
+        loss, bounds=(rng_lo, rng_hi), method="bounded", options={"xatol": 1e-6}
+    )
     return float(res.x) if np.isfinite(res.x) else float("nan")
 
 
-def quantreg_profile(R: np.ndarray, L: np.ndarray,
-                     qs=QUANTILES) -> dict:
+def quantreg_profile(R: np.ndarray, L: np.ndarray, qs=QUANTILES) -> dict:
     """Return the full {q: beta_q} profile plus IQR / tail-ratio / monotonicity."""
     out = {q: quantreg_slope(R, L, q) for q in qs}
     arr = np.array([out[q] for q in qs], float)
     if not np.all(np.isfinite(arr)):
-        return {**out, "iqr": float("nan"), "tail_ratio": float("nan"),
-                "monotone": float("nan")}
+        return {**out, "iqr": float("nan"), "tail_ratio": float("nan"), "monotone": float("nan")}
     return {
         **out,
         "iqr": float(arr[3] - arr[1]),
         "tail_ratio": float(arr[4] / arr[2]) if abs(arr[2]) > 1e-6 else float("nan"),
         "monotone": float(scs.spearmanr(qs, arr).statistic)
-                       if np.isfinite(scs.spearmanr(qs, arr).statistic) else 0.0,
+        if np.isfinite(scs.spearmanr(qs, arr).statistic)
+        else 0.0,
     }
 
 
@@ -156,11 +158,19 @@ def load_runs() -> list:
         if len(sl) < 8:
             continue
         L = np.array([s["mean_comp_len"] for s in sl], float)
-        R = np.array([s["mean_reward"]  for s in sl], float)
+        R = np.array([s["mean_reward"] for s in sl], float)
         Z = np.array([s.get("zvf", 0.0) for s in sl], float)
-        runs.append({"task": "arithmetic_easy", "algo": r["algo"],
-                     "seed": r["seed"], "L": L, "R": R, "Z": Z,
-                     "last10_acc": r.get("last10_avg", float("nan"))})
+        runs.append(
+            {
+                "task": "arithmetic_easy",
+                "algo": r["algo"],
+                "seed": r["seed"],
+                "L": L,
+                "R": R,
+                "Z": Z,
+                "last10_acc": r.get("last10_avg", float("nan")),
+            }
+        )
 
     # gsm8k_cot
     d2 = json.load(open(os.path.join(RES, "drgrpo_gsm8k_cot_full.json")))
@@ -169,11 +179,19 @@ def load_runs() -> list:
         if len(sl) < 8:
             continue
         L = np.array([s["mean_comp_len"] for s in sl], float)
-        R = np.array([s["mean_reward"]  for s in sl], float)
+        R = np.array([s["mean_reward"] for s in sl], float)
         Z = np.array([s.get("zvf", 0.0) for s in sl], float)
-        runs.append({"task": "gsm8k_cot", "algo": r["algo"],
-                     "seed": r["seed"], "L": L, "R": R, "Z": Z,
-                     "last10_acc": r.get("last10_avg", float("nan"))})
+        runs.append(
+            {
+                "task": "gsm8k_cot",
+                "algo": r["algo"],
+                "seed": r["seed"],
+                "L": L,
+                "R": R,
+                "Z": Z,
+                "last10_acc": r.get("last10_avg", float("nan")),
+            }
+        )
     return runs
 
 
@@ -192,13 +210,17 @@ def analyse() -> dict:
             "n": int(len(L)),
             "last10_acc": r["last10_acc"],
             "L_mean": float(L.mean()),
-            "L_std":  float(L.std()),
+            "L_std": float(L.std()),
             "R_mean": float(R.mean()),
-            "R_std":  float(R.std()),
+            "R_std": float(R.std()),
             "partial_spear_rho": psp,
-            "q10": prof[0.10], "q25": prof[0.25],
-            "q50": prof[0.50], "q75": prof[0.75], "q90": prof[0.90],
-            "iqr_q": prof["iqr"], "tail_ratio": prof["tail_ratio"],
+            "q10": prof[0.10],
+            "q25": prof[0.25],
+            "q50": prof[0.50],
+            "q75": prof[0.75],
+            "q90": prof[0.90],
+            "iqr_q": prof["iqr"],
+            "tail_ratio": prof["tail_ratio"],
             "monotone_q": prof["monotone"],
         }
         perrun.append(row)
@@ -214,16 +236,22 @@ def paired_diff(perrun: list, task: str, key: str) -> dict:
             continue
         by_key[row["seed"]][row["algo"]] = row[key]
     pairs = []
-    for s, d in by_key.items():
+    for _s, d in by_key.items():
         if "grpo" in d and "dr_grpo" in d:
             a = d["dr_grpo"]
             b = d["grpo"]
             if not (math.isnan(a) or math.isnan(b)):
                 pairs.append((a, b))
     if len(pairs) < 2:
-        return {"task": task, "key": key, "n_pairs": len(pairs),
-                "mean_diff": float("nan"), "ci_lo": float("nan"),
-                "ci_hi": float("nan"), "p": float("nan")}
+        return {
+            "task": task,
+            "key": key,
+            "n_pairs": len(pairs),
+            "mean_diff": float("nan"),
+            "ci_lo": float("nan"),
+            "ci_hi": float("nan"),
+            "p": float("nan"),
+        }
     diffs = np.array([p[0] - p[1] for p in pairs], float)
     obs = float(diffs.mean())
     rng = np.random.default_rng(RNG_SEED)
@@ -242,8 +270,15 @@ def paired_diff(perrun: list, task: str, key: str) -> dict:
         p = float(2.0 * (1.0 - scs.t.cdf(abs(t), df=n - 1)))
     else:
         p = 1.0
-    return {"task": task, "key": key, "n_pairs": n,
-            "mean_diff": obs, "ci_lo": lo, "ci_hi": hi, "p": p}
+    return {
+        "task": task,
+        "key": key,
+        "n_pairs": n,
+        "mean_diff": obs,
+        "ci_lo": lo,
+        "ci_hi": hi,
+        "p": p,
+    }
 
 
 # ----------------------------------------------------- writers ----
@@ -267,17 +302,45 @@ def main():
     perrun = out["perrun"]
     base = os.path.join(RES, "length_bias_iter88_")
 
-    write_tsv(base + "perrun.tsv", perrun,
-              ["task", "algo", "seed", "n", "last10_acc", "L_mean", "L_std",
-               "R_mean", "R_std", "partial_spear_rho",
-               "q10", "q25", "q50", "q75", "q90",
-               "iqr_q", "tail_ratio", "monotone_q"])
+    write_tsv(
+        base + "perrun.tsv",
+        perrun,
+        [
+            "task",
+            "algo",
+            "seed",
+            "n",
+            "last10_acc",
+            "L_mean",
+            "L_std",
+            "R_mean",
+            "R_std",
+            "partial_spear_rho",
+            "q10",
+            "q25",
+            "q50",
+            "q75",
+            "q90",
+            "iqr_q",
+            "tail_ratio",
+            "monotone_q",
+        ],
+    )
 
     # per-task per-key paired diff
     paired_rows = []
     summary_rows = []
-    keys_for_paired = ["partial_spear_rho", "q10", "q25", "q50", "q75", "q90",
-                       "iqr_q", "tail_ratio", "monotone_q"]
+    keys_for_paired = [
+        "partial_spear_rho",
+        "q10",
+        "q25",
+        "q50",
+        "q75",
+        "q90",
+        "iqr_q",
+        "tail_ratio",
+        "monotone_q",
+    ]
     for task in {"arithmetic_easy", "gsm8k_cot"}:
         # collect means per algo for the summary tab
         for algo in ("grpo", "dr_grpo"):
@@ -288,26 +351,32 @@ def main():
                         if math.isfinite(r[k]):
                             vals_by_key[k].append(r[k])
             for k, vs in vals_by_key.items():
-                summary_rows.append({
-                    "task": task, "algo": algo, "key": k,
-                    "n_seeds": len(vs), "mean": float(np.mean(vs)),
-                    "std":  float(np.std(vs, ddof=1)) if len(vs) > 1 else 0.0,
-                })
+                summary_rows.append(
+                    {
+                        "task": task,
+                        "algo": algo,
+                        "key": k,
+                        "n_seeds": len(vs),
+                        "mean": float(np.mean(vs)),
+                        "std": float(np.std(vs, ddof=1)) if len(vs) > 1 else 0.0,
+                    }
+                )
         for k in keys_for_paired:
             d = paired_diff(perrun, task, k)
             paired_rows.append(d)
 
-    write_tsv(base + "paired.tsv", paired_rows,
-              ["task", "key", "n_pairs", "mean_diff", "ci_lo", "ci_hi", "p"])
-    write_tsv(base + "summary.tsv", summary_rows,
-              ["task", "algo", "key", "n_seeds", "mean", "std"])
+    write_tsv(
+        base + "paired.tsv",
+        paired_rows,
+        ["task", "key", "n_pairs", "mean_diff", "ci_lo", "ci_hi", "p"],
+    )
+    write_tsv(base + "summary.tsv", summary_rows, ["task", "algo", "key", "n_seeds", "mean", "std"])
 
     meta = {
         "iter": 88,
         "pillar": "P4-LengthBias",
         "task": "Pillar 4 (Length Bias / Dr.GRPO): Quantile-regression coupling decomposition",
-        "stats": ["quantile_slopes", "iqr_q", "tail_ratio",
-                  "partial_spear_rho", "monotone_q"],
+        "stats": ["quantile_slopes", "iqr_q", "tail_ratio", "partial_spear_rho", "monotone_q"],
         "quantiles": list(QUANTILES),
         "inputs": ["drgrpo_vs_grpo.json", "drgrpo_gsm8k_cot_full.json"],
         "n_runs": len(runs),
@@ -316,15 +385,16 @@ def main():
     with open(base + "meta.json", "w") as f:
         json.dump(meta, f, indent=2)
 
-    print(f"iter88 wrote {len(perrun)} per-run rows; "
-          f"{len(paired_rows)} paired-bootstrap tests")
+    print(f"iter88 wrote {len(perrun)} per-run rows; {len(paired_rows)} paired-bootstrap tests")
     # print the most diagnostic paired rows
     for d in paired_rows:
         if d["key"] in ("iqr_q", "tail_ratio", "partial_spear_rho", "q90"):
-            print(f"  {d['task']:>15s}  {d['key']:>18s}  "
-                  f"diff={d['mean_diff']:+.4f}  "
-                  f"CI=[{d['ci_lo']:+.4f},{d['ci_hi']:+.4f}]  "
-                  f"p={d['p']:.4f}  n={d['n_pairs']}")
+            print(
+                f"  {d['task']:>15s}  {d['key']:>18s}  "
+                f"diff={d['mean_diff']:+.4f}  "
+                f"CI=[{d['ci_lo']:+.4f},{d['ci_hi']:+.4f}]  "
+                f"p={d['p']:.4f}  n={d['n_pairs']}"
+            )
 
 
 if __name__ == "__main__":

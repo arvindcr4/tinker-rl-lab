@@ -47,16 +47,18 @@ Outputs
 - platform_hybrid/experiments/results/p5p8/p5_iter181_v25_v24_comparison.tsv (2 rows)
 - platform_hybrid/experiments/results/p5p8/p5_iter181_summary.json
 """
+
 from __future__ import annotations
 import csv
 import json
 import math
-import re
 from pathlib import Path
 
 import sys
+
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
+from _paths import REPO_ROOT
+
 ROOT = REPO_ROOT
 RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8"
 MEGA = ROOT / "platform_hybrid/experiments" / "results" / "mega_20260704"
@@ -64,29 +66,64 @@ RES.mkdir(parents=True, exist_ok=True)
 
 # v2.4 spec (8 required keys)
 V24_REQUIRED_KEYS = {
-    "cell_id", "loss_form", "ref_policy_kl", "sampler_backend_precision",
-    "per_step_zvf_path", "group_size_schedule", "heldout_split",
+    "cell_id",
+    "loss_form",
+    "ref_policy_kl",
+    "sampler_backend_precision",
+    "per_step_zvf_path",
+    "group_size_schedule",
+    "heldout_split",
     "decontamination_notes",
 }
 
 # v2.5 spec (13 NEW fields, derived from cells.tsv columns)
 V25_NEW_FIELDS = {
     # v2.5a MODEL IDENTITY
-    "model":              {"family": "identity",        "type": str,  "src": "cells.tsv"},
-    "task_slice":         {"family": "identity",        "type": str,  "src": "cells.tsv"},
-    "G":                  {"family": "identity",        "type": int,  "src": "cells.tsv"},
-    "temperature":        {"family": "identity",        "type": float,"src": "cells.tsv"},
-    "seed":               {"family": "identity",        "type": int,  "src": "cells.tsv"},
+    "model": {"family": "identity", "type": str, "src": "cells.tsv"},
+    "task_slice": {"family": "identity", "type": str, "src": "cells.tsv"},
+    "G": {"family": "identity", "type": int, "src": "cells.tsv"},
+    "temperature": {"family": "identity", "type": float, "src": "cells.tsv"},
+    "seed": {"family": "identity", "type": int, "src": "cells.tsv"},
     # v2.5b ROLLOUT OUTCOMES
-    "mean_reward":        {"family": "rollout_outcomes","type": float,"src": "cells.tsv", "range": (0.0, 1.0)},
-    "zvf":                {"family": "rollout_outcomes","type": float,"src": "cells.tsv", "range": (0.0, 1.0)},
-    "pcd":                {"family": "rollout_outcomes","type": float,"src": "cells.tsv", "range": (0.0, 1.0)},
-    "n_groups":           {"family": "rollout_outcomes","type": int,  "src": "cells.tsv", "range": (1, 10000)},
-    "sample_errors":      {"family": "rollout_outcomes","type": int,  "src": "cells.tsv", "range": (0, 100000)},
-    "mean_completion_len":{"family": "rollout_outcomes","type": float,"src": "cells.tsv", "range": (0.0, 10000.0)},
-    "std_completion_len": {"family": "rollout_outcomes","type": float,"src": "cells.tsv", "range": (0.0, 1000.0)},
+    "mean_reward": {
+        "family": "rollout_outcomes",
+        "type": float,
+        "src": "cells.tsv",
+        "range": (0.0, 1.0),
+    },
+    "zvf": {"family": "rollout_outcomes", "type": float, "src": "cells.tsv", "range": (0.0, 1.0)},
+    "pcd": {"family": "rollout_outcomes", "type": float, "src": "cells.tsv", "range": (0.0, 1.0)},
+    "n_groups": {
+        "family": "rollout_outcomes",
+        "type": int,
+        "src": "cells.tsv",
+        "range": (1, 10000),
+    },
+    "sample_errors": {
+        "family": "rollout_outcomes",
+        "type": int,
+        "src": "cells.tsv",
+        "range": (0, 100000),
+    },
+    "mean_completion_len": {
+        "family": "rollout_outcomes",
+        "type": float,
+        "src": "cells.tsv",
+        "range": (0.0, 10000.0),
+    },
+    "std_completion_len": {
+        "family": "rollout_outcomes",
+        "type": float,
+        "src": "cells.tsv",
+        "range": (0.0, 1000.0),
+    },
     # v2.5c OPERATIONAL COST
-    "sampled_tokens":     {"family": "operational",     "type": int,  "src": "cells.tsv", "range": (0, 10**9)},
+    "sampled_tokens": {
+        "family": "operational",
+        "type": int,
+        "src": "cells.tsv",
+        "range": (0, 10**9),
+    },
 }
 
 
@@ -106,6 +143,7 @@ def shannon_entropy_bits(values: list) -> float:
     if not values:
         return 0.0
     from collections import Counter
+
     n = len(values)
     counts = Counter(values)
     h = 0.0
@@ -182,9 +220,14 @@ def main():
     # v2.4 audit: key is present AND non-empty (n/a sentinels are legitimate
     # per iter-177 v25_na_sentinel_strict; empty-string / missing are the
     # only "absent" cases)
-    n_v24_required_present = sum(1 for cid, m in manifests.items() if all(
-        k in m and m[k] is not None and m[k] != "" and m[k] != "missing"
-        for k in V24_REQUIRED_KEYS))
+    n_v24_required_present = sum(
+        1
+        for cid, m in manifests.items()
+        if all(
+            k in m and m[k] is not None and m[k] != "" and m[k] != "missing"
+            for k in V24_REQUIRED_KEYS
+        )
+    )
     print(f"[iter181] matched {matched}/{n_manifests} manifest<->cells.tsv")
 
     # 4. Per-field fill-rate with Wilson 95% CI + per-field discriminative entropy
@@ -220,21 +263,23 @@ def main():
         h_bits = shannon_entropy_bits(vals)
         # number of distinct values
         n_unique = len(set(vals))
-        field_rows.append({
-            "field": fld,
-            "family": spec["family"],
-            "type": spec["type"].__name__,
-            "src": spec["src"],
-            "n_filled": k,
-            "n_valid": v,
-            "n_total": matched,
-            "fill_rate": f"{p:.4f}",
-            "fill_lo": f"{lo:.4f}",
-            "fill_hi": f"{hi:.4f}",
-            "valid_rate": f"{p_v:.4f}",
-            "h_bits": f"{h_bits:.4f}",
-            "n_unique": n_unique,
-        })
+        field_rows.append(
+            {
+                "field": fld,
+                "family": spec["family"],
+                "type": spec["type"].__name__,
+                "src": spec["src"],
+                "n_filled": k,
+                "n_valid": v,
+                "n_total": matched,
+                "fill_rate": f"{p:.4f}",
+                "fill_lo": f"{lo:.4f}",
+                "fill_hi": f"{hi:.4f}",
+                "valid_rate": f"{p_v:.4f}",
+                "h_bits": f"{h_bits:.4f}",
+                "n_unique": n_unique,
+            }
+        )
     out1 = RES / "p5_iter181_v25_field_fill_rate.tsv"
     with open(out1, "w", newline="") as fp:
         writer = csv.DictWriter(fp, fieldnames=field_rows[0].keys(), delimiter="\t")
@@ -251,17 +296,19 @@ def main():
         n_possible = len(fields_in_fam) * matched
         lo, p, hi = wilson(k, n_possible)
         _, p_v, hi_v = wilson(v, n_possible)
-        fam_rows.append({
-            "family": fam,
-            "n_fields": len(fields_in_fam),
-            "n_filled": k,
-            "n_valid": v,
-            "n_possible": n_possible,
-            "fill_rate": f"{p:.4f}",
-            "fill_lo": f"{lo:.4f}",
-            "fill_hi": f"{hi:.4f}",
-            "valid_rate": f"{p_v:.4f}",
-        })
+        fam_rows.append(
+            {
+                "family": fam,
+                "n_fields": len(fields_in_fam),
+                "n_filled": k,
+                "n_valid": v,
+                "n_possible": n_possible,
+                "fill_rate": f"{p:.4f}",
+                "fill_lo": f"{lo:.4f}",
+                "fill_hi": f"{hi:.4f}",
+                "valid_rate": f"{p_v:.4f}",
+            }
+        )
     out2 = RES / "p5_iter181_v25_per_family_fill.tsv"
     with open(out2, "w", newline="") as fp:
         writer = csv.DictWriter(fp, fieldnames=fam_rows[0].keys(), delimiter="\t")
@@ -273,13 +320,20 @@ def main():
     n_v25_new_fields = len(V25_NEW_FIELDS)
     n_v24_required = len(V24_REQUIRED_KEYS)
     comp_rows = [
-        {"spec": "v2.4", "n_required_keys": n_v24_required,
-         "n_manifests_pass": n_v24_required_present, "n_total_manifests": matched,
-         "pass_rate": f"{n_v24_required_present/matched:.4f}"},
-        {"spec": "v2.5", "n_required_keys": n_v24_required + n_v25_new_fields,
-         "n_manifests_pass": matched,  # all v2.5 fields are 100% fillable from cells.tsv
-         "n_total_manifests": matched,
-         "pass_rate": f"{matched/matched:.4f}"},
+        {
+            "spec": "v2.4",
+            "n_required_keys": n_v24_required,
+            "n_manifests_pass": n_v24_required_present,
+            "n_total_manifests": matched,
+            "pass_rate": f"{n_v24_required_present / matched:.4f}",
+        },
+        {
+            "spec": "v2.5",
+            "n_required_keys": n_v24_required + n_v25_new_fields,
+            "n_manifests_pass": matched,  # all v2.5 fields are 100% fillable from cells.tsv
+            "n_total_manifests": matched,
+            "pass_rate": f"{matched / matched:.4f}",
+        },
     ]
     out3 = RES / "p5_iter181_v25_v24_comparison.tsv"
     with open(out3, "w", newline="") as fp:
@@ -293,16 +347,18 @@ def main():
     for fld, spec in V25_NEW_FIELDS.items():
         k = per_field_valid[fld]
         lo, p, hi = wilson(k, matched)
-        val_rows.append({
-            "field": fld,
-            "family": spec["family"],
-            "type": spec["type"].__name__,
-            "range_or_none": str(spec.get("range", "")),
-            "n_valid": k,
-            "valid_rate": f"{p:.4f}",
-            "valid_lo": f"{lo:.4f}",
-            "valid_hi": f"{hi:.4f}",
-        })
+        val_rows.append(
+            {
+                "field": fld,
+                "family": spec["family"],
+                "type": spec["type"].__name__,
+                "range_or_none": str(spec.get("range", "")),
+                "n_valid": k,
+                "valid_rate": f"{p:.4f}",
+                "valid_lo": f"{lo:.4f}",
+                "valid_hi": f"{hi:.4f}",
+            }
+        )
     out4 = RES / "p5_iter181_v25_field_validity.tsv"
     with open(out4, "w", newline="") as fp:
         writer = csv.DictWriter(fp, fieldnames=val_rows[0].keys(), delimiter="\t")
@@ -314,32 +370,38 @@ def main():
     placebo_rows = []
     for r in field_rows:
         if float(r["h_bits"]) < 1.0:
-            placebo_rows.append({
-                "field": r["field"],
-                "family": r["family"],
-                "type": r["type"],
-                "h_bits": r["h_bits"],
-                "n_unique": r["n_unique"],
-                "verdict": "PLACEBO",
-            })
+            placebo_rows.append(
+                {
+                    "field": r["field"],
+                    "family": r["family"],
+                    "type": r["type"],
+                    "h_bits": r["h_bits"],
+                    "n_unique": r["n_unique"],
+                    "verdict": "PLACEBO",
+                }
+            )
         elif float(r["h_bits"]) < 2.0:
-            placebo_rows.append({
-                "field": r["field"],
-                "family": r["family"],
-                "type": r["type"],
-                "h_bits": r["h_bits"],
-                "n_unique": r["n_unique"],
-                "verdict": "WEAK",
-            })
+            placebo_rows.append(
+                {
+                    "field": r["field"],
+                    "family": r["family"],
+                    "type": r["type"],
+                    "h_bits": r["h_bits"],
+                    "n_unique": r["n_unique"],
+                    "verdict": "WEAK",
+                }
+            )
         else:
-            placebo_rows.append({
-                "field": r["field"],
-                "family": r["family"],
-                "type": r["type"],
-                "h_bits": r["h_bits"],
-                "n_unique": r["n_unique"],
-                "verdict": "STRONG",
-            })
+            placebo_rows.append(
+                {
+                    "field": r["field"],
+                    "family": r["family"],
+                    "type": r["type"],
+                    "h_bits": r["h_bits"],
+                    "n_unique": r["n_unique"],
+                    "verdict": "STRONG",
+                }
+            )
     out6 = RES / "p5_iter181_v25_placebo_table.tsv"
     with open(out6, "w", newline="") as fp:
         writer = csv.DictWriter(fp, fieldnames=placebo_rows[0].keys(), delimiter="\t")
@@ -348,8 +410,10 @@ def main():
     n_placebo = sum(1 for r in placebo_rows if r["verdict"] == "PLACEBO")
     n_weak = sum(1 for r in placebo_rows if r["verdict"] == "WEAK")
     n_strong = sum(1 for r in placebo_rows if r["verdict"] == "STRONG")
-    print(f"[iter181] wrote {out6} ({len(placebo_rows)} rows: "
-          f"{n_placebo} PLACEBO + {n_weak} WEAK + {n_strong} STRONG)")
+    print(
+        f"[iter181] wrote {out6} ({len(placebo_rows)} rows: "
+        f"{n_placebo} PLACEBO + {n_weak} WEAK + {n_strong} STRONG)"
+    )
 
     # 8. Hypotheses
     n_fields_at_least_95 = sum(1 for r in field_rows if float(r["fill_rate"]) >= 0.95)
@@ -367,6 +431,7 @@ def main():
     # under v2.4 but distinguishable under v2.5?
     v24_keys = sorted(V24_REQUIRED_KEYS)
     v25_keys = sorted(V24_REQUIRED_KEYS | set(V25_NEW_FIELDS.keys()))
+
     def cell_signature(cid: str, keys: list[str]) -> tuple:
         m = manifests.get(cid)
         if m is None:
@@ -382,6 +447,7 @@ def main():
                     v = None
                 out.append(v)
         return tuple(out)
+
     # only count manifests present in both
     common = [cid for cid in manifests if cid in cells]
     sigs_v24 = {cid: cell_signature(cid, v24_keys) for cid in common}
@@ -400,13 +466,17 @@ def main():
                 n_tied_pairs_v24 += 1
                 if sigs_v25[cids[i]] != sigs_v25[cids[j]]:
                     n_tied_pairs_resolved_by_v25 += 1
-    tie_resolution_rate = (n_tied_pairs_resolved_by_v25 / n_tied_pairs_v24
-                           if n_tied_pairs_v24 > 0 else 1.0)
+    tie_resolution_rate = (
+        n_tied_pairs_resolved_by_v25 / n_tied_pairs_v24 if n_tied_pairs_v24 > 0 else 1.0
+    )
 
     h1 = n_fields_at_least_95 >= 12
     h2 = n_fields_filled == n_v25_new_fields
-    h3 = (float(identity_fam["fill_rate"]) >= float(rollout_fam["fill_rate"]) >=
-           float(operational_fam["fill_rate"]))
+    h3 = (
+        float(identity_fam["fill_rate"])
+        >= float(rollout_fam["fill_rate"])
+        >= float(operational_fam["fill_rate"])
+    )
     h4 = float(identity_fill) == 1.0
     h5 = (n_v24_required + n_v25_new_fields) - n_v24_required >= 1
     # Sharper, more interesting hypotheses:
@@ -447,13 +517,19 @@ def main():
     out5 = RES / "p5_iter181_summary.json"
     out5.write_text(json.dumps(summary, indent=2))
     print(f"[iter181] wrote {out5}")
-    print(f"[iter181] H1={h1} H2={h2} H3={h3} H4={h4} H5={h5}  "
-          f"H6={h6} H7={h7} H8={h8}  "
-          f"({summary['h_count_pass']}/{summary['h_count_total']} PASS)")
-    print(f"[iter181] tie resolution: {n_tied_pairs_resolved_by_v25}/{n_tied_pairs_v24} "
-          f"= {tie_resolution_rate:.4f}")
-    print(f"[iter181] total H_bits: {total_h_bits:.2f}, "
-          f"n_discriminative: {n_fields_discriminative}/{n_v25_new_fields}")
+    print(
+        f"[iter181] H1={h1} H2={h2} H3={h3} H4={h4} H5={h5}  "
+        f"H6={h6} H7={h7} H8={h8}  "
+        f"({summary['h_count_pass']}/{summary['h_count_total']} PASS)"
+    )
+    print(
+        f"[iter181] tie resolution: {n_tied_pairs_resolved_by_v25}/{n_tied_pairs_v24} "
+        f"= {tie_resolution_rate:.4f}"
+    )
+    print(
+        f"[iter181] total H_bits: {total_h_bits:.2f}, "
+        f"n_discriminative: {n_fields_discriminative}/{n_v25_new_fields}"
+    )
 
 
 if __name__ == "__main__":

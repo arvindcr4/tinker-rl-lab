@@ -4,9 +4,11 @@
 The historical risk-index mean_zvf column is NOT interchangeable with mag_mean.
 No original registry entry is overwritten; missing source semantics fail closed.
 """
+
 import json
 from pathlib import Path
 import sys
+
 sys.path.append(str(Path(__file__).resolve().parents[1]))
 from review17_contract import validate_proposals
 from _paths import REPO_ROOT
@@ -34,12 +36,20 @@ def patch_entry(entry_id, per_seed):
     rec = json.loads((ENTRIES / f"{entry_id}.json").read_text())
     method = rec["name"].lower()
     result = paired_result(per_seed.get("grpo", {}), per_seed.get(method, {}), N_BOOT, SEED)
-    result.update(metric="mag_mean", panel="zvf130_5seed", base="grpo",
-                  source=str(SOURCE.relative_to(ROOT)), source_sha256=source_hash(SOURCE))
+    result.update(
+        metric="mag_mean",
+        panel="zvf130_5seed",
+        base="grpo",
+        source=str(SOURCE.relative_to(ROOT)),
+        source_sha256=source_hash(SOURCE),
+    )
     rows = rec.setdefault("measured", [])
-    indices = [i for i, row in enumerate(rows) if
-               (row.get("metric"), row.get("panel"), row.get("base", "grpo")) ==
-               ("mag_mean", "zvf130_5seed", "grpo")]
+    indices = [
+        i
+        for i, row in enumerate(rows)
+        if (row.get("metric"), row.get("panel"), row.get("base", "grpo"))
+        == ("mag_mean", "zvf130_5seed", "grpo")
+    ]
     if len(indices) > 1:
         raise ValueError("Duplicate measurement identity")
     if indices:
@@ -55,7 +65,8 @@ def main():
     validate_proposals(proposed, ROOT / "platform_hybrid/registry/schema.json")
     RES_OUT.mkdir(parents=True, exist_ok=True)
     (RES_OUT / "p6_iter130_proposed_entries.json").write_text(
-        json.dumps(proposed, indent=2, allow_nan=False) + "\n")
+        json.dumps(proposed, indent=2, allow_nan=False) + "\n"
+    )
 
 
 if __name__ == "__main__":

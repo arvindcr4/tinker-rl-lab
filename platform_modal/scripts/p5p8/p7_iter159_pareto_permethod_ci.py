@@ -37,16 +37,17 @@ from __future__ import annotations
 import csv
 import json
 import math
-import os
 import statistics
 from collections import defaultdict
 from functools import partial
 from pathlib import Path
 
 import sys
+
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
-from _p5p7_common import bernoulli_z, c_unified_c4, is_boundary  # noqa: E402
+from _paths import REPO_ROOT
+from _p5p7_common import bernoulli_z, c_unified_c4, is_boundary
+
 WORKTREE = REPO_ROOT
 TENSOR_DIR = WORKTREE / "platform_hybrid/experiments/results/n2_reward_tensor_resume"
 HELDOUT = WORKTREE / "platform_hybrid/experiments/results/n2_reward_tensor_resume/n2_metrics.tsv"
@@ -113,10 +114,10 @@ CONTROLLERS = [
 def lcg_boot_indices(n: int, rng_state: list[int]) -> list[int]:
     """Compatibility interface backed by a standard RNG, not LCG low bits."""
     import random
+
     if not isinstance(rng_state[0], random.Random):
         rng_state[0] = random.Random(rng_state[0])
     return [rng_state[0].randrange(n) for _ in range(n)]
-
 
 
 def mean(xs: list[float]) -> float:
@@ -135,7 +136,9 @@ def percentile(xs: list[float], q: float) -> float:
     return s[lo] + (s[hi] - s[lo]) * (idx - lo)
 
 
-def bootstrap_ci(values: list[float], B: int, seed: int, ci: float = 0.95) -> tuple[float, float, float]:
+def bootstrap_ci(
+    values: list[float], B: int, seed: int, ci: float = 0.95
+) -> tuple[float, float, float]:
     n = len(values)
     if n == 0:
         return (float("nan"), float("nan"), float("nan"))
@@ -148,7 +151,9 @@ def bootstrap_ci(values: list[float], B: int, seed: int, ci: float = 0.95) -> tu
     return (mean(values), percentile(means, half), percentile(means, 1.0 - half))
 
 
-def paired_bootstrap_ci(diff_values: list[float], B: int, seed: int, ci: float = 0.95) -> tuple[float, float, float]:
+def paired_bootstrap_ci(
+    diff_values: list[float], B: int, seed: int, ci: float = 0.95
+) -> tuple[float, float, float]:
     n = len(diff_values)
     if n == 0:
         return (float("nan"), float("nan"), float("nan"))
@@ -171,7 +176,7 @@ def bootstrap_corr(x: list[float], y: list[float], B: int, seed: int) -> tuple[f
         if len(xs) < 2:
             return 0.0
         mx, my = mean(xs), mean(ys)
-        num = sum((a - mx) * (b - my) for a, b in zip(xs, ys))
+        num = sum((a - mx) * (b - my) for a, b in zip(xs, ys, strict=False))
         dx = sum((a - mx) ** 2 for a in xs) ** 0.5
         dy = sum((b - my) ** 2 for b in ys) ** 0.5
         if dx == 0 or dy == 0:
@@ -250,11 +255,12 @@ def main():
             costs = [cells[i][f"cost_{cname}"] for i in idxs]
             cms = [cells[i][f"cm_{cname}"] for i in idxs]
             cm_base = [cells[i]["cm_base"] for i in idxs]
-            retention = [c / max(1e-9, b) for c, b in zip(cms, cm_base)]
-            mag_per_cost = [cm / max(1e-9, cost) for cm, cost in zip(cms, costs)]
+            retention = [c / max(1e-9, b) for c, b in zip(cms, cm_base, strict=False)]
+            mag_per_cost = [cm / max(1e-9, cost) for cm, cost in zip(cms, costs, strict=False)]
 
             cost_mu, cost_lo, cost_hi = bootstrap_ci(costs, B, SEED)
             from _review_replay import ratio_bootstrap
+
             ret_mu, ret_lo, ret_hi = ratio_bootstrap(cms, cm_base, B, SEED + 1)
             mpc_mu, mpc_lo, mpc_hi = bootstrap_ci(mag_per_cost, B, SEED + 2)
 
@@ -375,16 +381,18 @@ def main():
         cm_c4 = [cells[i]["cm_UNIFIED_C4"] for i in idxs]
         cost_c4 = [cells[i]["cost_UNIFIED_C4"] for i in idxs]
         cm_base = [cells[i]["cm_base"] for i in idxs]
-        ret_c4 = [c / max(1e-9, b) for c, b in zip(cm_c4, cm_base)]
+        ret_c4 = [c / max(1e-9, b) for c, b in zip(cm_c4, cm_base, strict=False)]
         for cname, _ in CONTROLLERS:
             if cname == "UNIFIED_C4":
                 continue
             cm_x = [cells[i][f"cm_{cname}"] for i in idxs]
             cost_x = [cells[i][f"cost_{cname}"] for i in idxs]
-            ret_x = [cx / max(1e-9, b) for cx, b in zip(cm_x, cm_base)]
-            d_ret = [a - b for a, b in zip(ret_c4, ret_x)]
-            d_cost = [a - b for a, b in zip(cost_c4, cost_x)]
-            ret_mu, ret_lo, ret_hi = ratio_bootstrap([a-b for a,b in zip(cm_c4, cm_x)], cm_base, B, SEED + 20)
+            ret_x = [cx / max(1e-9, b) for cx, b in zip(cm_x, cm_base, strict=False)]
+            d_ret = [a - b for a, b in zip(ret_c4, ret_x, strict=False)]
+            d_cost = [a - b for a, b in zip(cost_c4, cost_x, strict=False)]
+            ret_mu, ret_lo, ret_hi = ratio_bootstrap(
+                [a - b for a, b in zip(cm_c4, cm_x, strict=False)], cm_base, B, SEED + 20
+            )
             cost_mu, cost_lo, cost_hi = paired_bootstrap_ci(d_cost, B, SEED + 30)
             pb_rows.append(
                 {
@@ -449,7 +457,9 @@ def main():
     static_g16_pm = [r for r in pm_rows if r["controller"] == "STATIC_G16"]
 
     # H1: UNIFIED_C4 retention > STATIC_G8 retention across all 4 methods (paired by method)
-    h1_diffs = [a["mean_retention"] - b["mean_retention"] for a, b in zip(c4_pm, static_g8_pm)]
+    h1_diffs = [
+        a["mean_retention"] - b["mean_retention"] for a, b in zip(c4_pm, static_g8_pm, strict=False)
+    ]
     h1_mu, h1_lo, h1_hi = paired_bootstrap_ci(h1_diffs, B, SEED + 200)
     h1_pass = h1_lo > 0
 
@@ -568,7 +578,9 @@ def main():
     print(f"\n[i] hypothesis verdicts: {verdicts}")
     print(f"[i] {n_pass}/8 hypotheses PASS")
     print(f"[i] Pareto frontier controllers: {frontier_controllers}")
-    print(f"[i] C4 cross-method cost SD = {c4_sd:.6f} vs ORACLE = {oracle_sd:.6f} (ratio = {h6_ratio:.2f}x)")
+    print(
+        f"[i] C4 cross-method cost SD = {c4_sd:.6f} vs ORACLE = {oracle_sd:.6f} (ratio = {h6_ratio:.2f}x)"
+    )
 
 
 if __name__ == "__main__":

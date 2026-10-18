@@ -36,7 +36,7 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 REPO = HERE.parents[1]
-FIN = (REPO / "outputs/PES_Phase2_Review_2026-09-12/finish/e2_completion")
+FIN = REPO / "outputs/PES_Phase2_Review_2026-09-12/finish/e2_completion"
 
 SCHEMA = "e2-orchestration-driver-v1"
 
@@ -53,12 +53,17 @@ DELETE_ONSET_ALLOWANCE = 30
 ENVELOPE = {
     "target_hold_usd": 3,
     "helper_hold_usd": 1,
-    "target": {"machine": "n1-standard-4", "vcpus": 4, "memory_gib": 15,
-               "accelerator": "nvidia-tesla-t4", "accelerator_count": 1,
-               "boot_disk_gib": 50, "probe_disk_gib": 64,
-               "probe_cap_gib": 48},
-    "helper": {"machine": "n1-standard-1", "vcpus": 1, "memory_gib": 3.75,
-               "boot_disk_gib": 10},
+    "target": {
+        "machine": "n1-standard-4",
+        "vcpus": 4,
+        "memory_gib": 15,
+        "accelerator": "nvidia-tesla-t4",
+        "accelerator_count": 1,
+        "boot_disk_gib": 50,
+        "probe_disk_gib": 64,
+        "probe_cap_gib": 48,
+    },
+    "helper": {"machine": "n1-standard-1", "vcpus": 1, "memory_gib": 3.75, "boot_disk_gib": 10},
     "project": "electric-armor-388216",
     "zone": "us-central1-a",
 }
@@ -97,8 +102,7 @@ def sha_bytes(raw: bytes) -> str:
 
 
 def canonical(value) -> bytes:
-    return (json.dumps(value, indent=1, sort_keys=True, ensure_ascii=False)
-            + "\n").encode()
+    return (json.dumps(value, indent=1, sort_keys=True, ensure_ascii=False) + "\n").encode()
 
 
 def write_receipt(path: Path, value: dict) -> str:
@@ -117,6 +121,7 @@ def write_receipt(path: Path, value: dict) -> str:
 # Schedule (pure; no clock reads inside beyond the passed now for admission).
 # --------------------------------------------------------------------------
 
+
 def compute_schedule(helper_epoch_H: int, target_arm_epoch_A: int) -> dict:
     """Derive the fixed lifecycle schedule; raise unless A<=H+210."""
     H = int(helper_epoch_H)
@@ -124,7 +129,8 @@ def compute_schedule(helper_epoch_H: int, target_arm_epoch_A: int) -> dict:
     if not A <= H + A_LE_H_PLUS:
         raise ScheduleError(
             f"helper tail violated: A={A} > H+210={H + A_LE_H_PLUS} "
-            f"(A+1800+600 must precede helper termination)")
+            f"(A+1800+600 must precede helper termination)"
+        )
     return {
         "schema": SCHEMA,
         "helper_epoch_H": H,
@@ -145,6 +151,7 @@ def admission_open(schedule: dict, now_epoch: float) -> bool:
 # Provider seam. Real GCP implementation imports SDKs lazily and refuses
 # without a fresh owner IAM binding receipt (fail-closed, offline-safe).
 # --------------------------------------------------------------------------
+
 
 class ComputeProvider:
     """Minimal surface the driver needs; implemented by GCP or fakes."""
@@ -180,13 +187,11 @@ def check_iam_binding(receipt_path: str | Path) -> dict:
         binding = json.loads(path.read_text())
     except (OSError, ValueError) as exc:
         raise IamGateError(f"IAM binding receipt unreadable: {exc}")
-    missing = [p for p in REQUIRED_IAM_PERMISSIONS
-               if p not in binding.get("permissions", [])]
+    missing = [p for p in REQUIRED_IAM_PERMISSIONS if p not in binding.get("permissions", [])]
     if missing:
         raise IamGateError(f"IAM binding lacks permissions: {missing}")
     if binding.get("project") != ENVELOPE["project"]:
-        raise IamGateError(
-            f"IAM binding project mismatch: {binding.get('project')!r}")
+        raise IamGateError(f"IAM binding project mismatch: {binding.get('project')!r}")
     valid_until = binding.get("valid_until_epoch")
     if not isinstance(valid_until, (int, float)) or time.time() >= valid_until:
         raise IamGateError(f"IAM binding missing or expired: {valid_until!r}")
@@ -207,15 +212,17 @@ class GcpComputeProvider(ComputeProvider):
                 from google.cloud import compute_v1  # lazy: offline-safe
             except ImportError as exc:
                 raise DriverError(
-                    "google-cloud-compute not installed; cannot bind live "
-                    f"provider: {exc}")
+                    f"google-cloud-compute not installed; cannot bind live provider: {exc}"
+                )
             self._clients = compute_v1
         return self._clients
 
     def create_instance(self, name: str, spec: dict) -> dict:
         compute_v1 = self._sdk()
-        raise DriverError("live create not executed from this checkout without "
-                          "a sealed launch (sad path kept unimplemented)")
+        raise DriverError(
+            "live create not executed from this checkout without "
+            "a sealed launch (sad path kept unimplemented)"
+        )
 
     def get_instance(self, name: str) -> dict:
         self._sdk()
@@ -281,13 +288,13 @@ class FakeComputeProvider(ComputeProvider):
 # Watchdog: issues the exact early owned DELETEs at fixed epochs.
 # --------------------------------------------------------------------------
 
+
 class Watchdog:
     """Owned watchdog. due(now) lists DELETEs owed; fire() issues them with
     intent/result receipts. Separate from the supervision loop so tests can
     drive it on a fake clock."""
 
-    def __init__(self, schedule: dict, target_name: str, helper_name: str,
-                 receipts_dir: Path):
+    def __init__(self, schedule: dict, target_name: str, helper_name: str, receipts_dir: Path):
         self.schedule = schedule
         self.target_name = target_name
         self.helper_name = helper_name
@@ -296,34 +303,51 @@ class Watchdog:
 
     def due(self, now_epoch: float) -> list[str]:
         owed = []
-        if (now_epoch >= self.schedule["target_cutoff"]
-                and "target" not in self.fired):
+        if now_epoch >= self.schedule["target_cutoff"] and "target" not in self.fired:
             owed.append("target")
-        if (now_epoch >= self.schedule["helper_delete_at"]
-                and "helper" not in self.fired):
+        if now_epoch >= self.schedule["helper_delete_at"] and "helper" not in self.fired:
             owed.append("helper")
         return owed
 
     def fire(self, provider: ComputeProvider, which: str, now_epoch: float) -> dict:
         name = self.target_name if which == "target" else self.helper_name
-        intent = {"schema": SCHEMA, "event": "delete_intent", "which": which,
-                  "identity": name, "at_epoch": now_epoch,
-                  "fixed_offset_epoch": (self.schedule["target_cutoff"]
-                                         if which == "target"
-                                         else self.schedule["helper_delete_at"])}
+        intent = {
+            "schema": SCHEMA,
+            "event": "delete_intent",
+            "which": which,
+            "identity": name,
+            "at_epoch": now_epoch,
+            "fixed_offset_epoch": (
+                self.schedule["target_cutoff"]
+                if which == "target"
+                else self.schedule["helper_delete_at"]
+            ),
+        }
         write_receipt(self.receipts_dir / f"delete_intent_{which}.json", intent)
         try:
             result = provider.delete_instance(name)
         except UncertainMutation as exc:
-            write_receipt(self.receipts_dir / f"delete_result_{which}.json",
-                          {"schema": SCHEMA, "event": "delete_uncertain",
-                           "which": which, "identity": name,
-                           "detail": str(exc)})
+            write_receipt(
+                self.receipts_dir / f"delete_result_{which}.json",
+                {
+                    "schema": SCHEMA,
+                    "event": "delete_uncertain",
+                    "which": which,
+                    "identity": name,
+                    "detail": str(exc),
+                },
+            )
             raise
-        write_receipt(self.receipts_dir / f"delete_result_{which}.json",
-                      {"schema": SCHEMA, "event": "delete_accepted",
-                       "which": which, "identity": name,
-                       "accepted": bool(result.get("accepted"))})
+        write_receipt(
+            self.receipts_dir / f"delete_result_{which}.json",
+            {
+                "schema": SCHEMA,
+                "event": "delete_accepted",
+                "which": which,
+                "identity": name,
+                "accepted": bool(result.get("accepted")),
+            },
+        )
         self.fired.append(which)
         return result
 
@@ -335,36 +359,53 @@ class Watchdog:
 MISSION_END = max(TARGET_BUDGET_END_OFFSET, HELPER_BUDGET_END_OFFSET)
 
 
-def observe_absence(provider: ComputeProvider, schedule: dict,
-                    target_name: str, helper_name: str,
-                    target_disks: list[str], helper_disks: list[str],
-                    now_epoch: float) -> dict:
+def observe_absence(
+    provider: ComputeProvider,
+    schedule: dict,
+    target_name: str,
+    helper_name: str,
+    target_disks: list[str],
+    helper_disks: list[str],
+    now_epoch: float,
+) -> dict:
     """Separate GET observations per identity; only present False is absence."""
     obs: dict[str, dict] = {}
     for label, name in (("target_vm", target_name), ("helper_vm", helper_name)):
         try:
             seen = provider.get_instance(name)
-            obs[label] = {"identity": name, "present": bool(seen.get("present")),
-                          "at_epoch": now_epoch}
+            obs[label] = {
+                "identity": name,
+                "present": bool(seen.get("present")),
+                "at_epoch": now_epoch,
+            }
         except Exception as exc:  # observation failure is not absence
-            obs[label] = {"identity": name, "present": None,
-                          "observation_error": f"{type(exc).__name__}: {exc}",
-                          "at_epoch": now_epoch}
-    for label, name in ([(f"target_disk_{i}", d) for i, d in enumerate(target_disks)]
-                        + [(f"helper_disk_{i}", d) for i, d in enumerate(helper_disks)]):
+            obs[label] = {
+                "identity": name,
+                "present": None,
+                "observation_error": f"{type(exc).__name__}: {exc}",
+                "at_epoch": now_epoch,
+            }
+    for label, name in [(f"target_disk_{i}", d) for i, d in enumerate(target_disks)] + [
+        (f"helper_disk_{i}", d) for i, d in enumerate(helper_disks)
+    ]:
         try:
             seen = provider.get_disk(name)
-            obs[label] = {"identity": name, "present": bool(seen.get("present")),
-                          "at_epoch": now_epoch}
+            obs[label] = {
+                "identity": name,
+                "present": bool(seen.get("present")),
+                "at_epoch": now_epoch,
+            }
         except Exception as exc:
-            obs[label] = {"identity": name, "present": None,
-                          "observation_error": f"{type(exc).__name__}: {exc}",
-                          "at_epoch": now_epoch}
+            obs[label] = {
+                "identity": name,
+                "present": None,
+                "observation_error": f"{type(exc).__name__}: {exc}",
+                "at_epoch": now_epoch,
+            }
     return obs
 
 
-def classify_cleanup(obs: dict, budget_end_epoch: float,
-                     observed_epoch: float) -> str:
+def classify_cleanup(obs: dict, budget_end_epoch: float, observed_epoch: float) -> str:
     """CLEAN only if every identity observed absent within budget;
     CLEANUP_LATE if absence observed after budget end; else UNVERIFIED."""
     states = [v.get("present") for v in obs.values()]
@@ -375,11 +416,19 @@ def classify_cleanup(obs: dict, budget_end_epoch: float,
     return "CLEANUP_UNVERIFIED"
 
 
-def run_mission(provider: ComputeProvider, schedule: dict, clock,
-                receipts_dir: Path, target_name: str, helper_name: str,
-                target_disks: list[str], helper_disks: list[str],
-                capsule_runner=None, poll_s: float = 5.0,
-                mission_end_offset: float = MISSION_END) -> dict:
+def run_mission(
+    provider: ComputeProvider,
+    schedule: dict,
+    clock,
+    receipts_dir: Path,
+    target_name: str,
+    helper_name: str,
+    target_disks: list[str],
+    helper_disks: list[str],
+    capsule_runner=None,
+    poll_s: float = 5.0,
+    mission_end_offset: float = MISSION_END,
+) -> dict:
     """Bounded supervision. capsule_runner, if given, is called at most once
     per capsule and only while admission is open; it must be a callable
     (capsule_id) -> dict. Returns the terminal mission receipt (also written).
@@ -391,37 +440,48 @@ def run_mission(provider: ComputeProvider, schedule: dict, clock,
     receipts = Path(receipts_dir)
     watchdog = Watchdog(schedule, target_name, helper_name, receipts)
     end_epoch = schedule["target_arm_epoch_A"] + mission_end_offset
-    budget_end = max(schedule["target_budget_end"],
-                     schedule["helper_budget_end"])
+    budget_end = max(schedule["target_budget_end"], schedule["helper_budget_end"])
     events: list[dict] = []
 
     def record(event: str, **fields):
-        entry = {"schema": SCHEMA, "event": event,
-                 "at_epoch": clock(), **fields}
+        entry = {"schema": SCHEMA, "event": event, "at_epoch": clock(), **fields}
         events.append(entry)
         return entry
 
-    record("mission_start", schedule=schedule, target=target_name,
-           helper=helper_name)
+    record("mission_start", schedule=schedule, target=target_name, helper=helper_name)
 
     # Phase 1: create (intent receipt before each mutation).
-    for which, name, spec in (("target", target_name, ENVELOPE["target"]),
-                              ("helper", helper_name, ENVELOPE["helper"])):
-        write_receipt(receipts / f"create_intent_{which}.json",
-                      {"schema": SCHEMA, "event": "create_intent",
-                       "which": which, "identity": name, "spec": spec})
+    for which, name, spec in (
+        ("target", target_name, ENVELOPE["target"]),
+        ("helper", helper_name, ENVELOPE["helper"]),
+    ):
+        write_receipt(
+            receipts / f"create_intent_{which}.json",
+            {
+                "schema": SCHEMA,
+                "event": "create_intent",
+                "which": which,
+                "identity": name,
+                "spec": spec,
+            },
+        )
         try:
             created = provider.create_instance(name, spec)
         except UncertainMutation as exc:
             record("mission_stop_uncertain", op=exc.op, identity=exc.identity)
-            terminal = {"schema": SCHEMA, "status": "STOP_UNCERTAIN_NO_REPLAY",
-                        "events": events}
+            terminal = {"schema": SCHEMA, "status": "STOP_UNCERTAIN_NO_REPLAY", "events": events}
             write_receipt(receipts / "mission_terminal.json", terminal)
             return terminal
-        write_receipt(receipts / f"create_result_{which}.json",
-                      {"schema": SCHEMA, "event": "create_result",
-                       "which": which, "identity": name,
-                       "present": bool(created.get("present"))})
+        write_receipt(
+            receipts / f"create_result_{which}.json",
+            {
+                "schema": SCHEMA,
+                "event": "create_result",
+                "which": which,
+                "identity": name,
+                "present": bool(created.get("present")),
+            },
+        )
         record("created", which=which, identity=name)
 
     # Phase 2: bounded work admission (strictly before cutoff).
@@ -430,13 +490,13 @@ def run_mission(provider: ComputeProvider, schedule: dict, clock,
         for capsule_id in capsule_runner.capsules():
             now = clock()
             if not admission_open(schedule, now):
-                record("admission_refused_cutoff", capsule=capsule_id,
-                       cutoff=schedule["target_cutoff"])
+                record(
+                    "admission_refused_cutoff", capsule=capsule_id, cutoff=schedule["target_cutoff"]
+                )
                 break
             result = capsule_runner(capsule_id)
             admitted.append(capsule_id)
-            record("capsule_done", capsule=capsule_id,
-                   ok=bool(result.get("ok")))
+            record("capsule_done", capsule=capsule_id, ok=bool(result.get("ok")))
     else:
         record("no_capsule_runner_bound")
 
@@ -450,16 +510,17 @@ def run_mission(provider: ComputeProvider, schedule: dict, clock,
                 watchdog.fire(provider, which, now)
                 record("early_delete_issued", which=which)
             except UncertainMutation as exc:
-                record("mission_stop_uncertain", op=exc.op,
-                       identity=exc.identity)
-                terminal = {"schema": SCHEMA,
-                            "status": "STOP_UNCERTAIN_NO_REPLAY",
-                            "events": events}
+                record("mission_stop_uncertain", op=exc.op, identity=exc.identity)
+                terminal = {
+                    "schema": SCHEMA,
+                    "status": "STOP_UNCERTAIN_NO_REPLAY",
+                    "events": events,
+                }
                 write_receipt(receipts / "mission_terminal.json", terminal)
                 return terminal
-        last_obs = observe_absence(provider, schedule, target_name,
-                                   helper_name, target_disks, helper_disks,
-                                   now)
+        last_obs = observe_absence(
+            provider, schedule, target_name, helper_name, target_disks, helper_disks, now
+        )
         last_obs_epoch = now
         if all(v.get("present") is False for v in last_obs.values()):
             record("absence_observed", identities=sorted(last_obs))
@@ -467,19 +528,24 @@ def run_mission(provider: ComputeProvider, schedule: dict, clock,
         time.sleep(poll_s)
 
     verdict = classify_cleanup(last_obs, budget_end, last_obs_epoch)
-    write_receipt(receipts / "absence_observations.json",
-                  {"schema": SCHEMA, "observations": last_obs,
-                   "observed_epoch": last_obs_epoch})
+    write_receipt(
+        receipts / "absence_observations.json",
+        {"schema": SCHEMA, "observations": last_obs, "observed_epoch": last_obs_epoch},
+    )
     record("mission_end", verdict=verdict, admitted=admitted)
     if verdict != "CLEAN":
-        record("root_notified",
-               note="unknown/late cleanup requires separate root "
-                    "authorization for any intervention; no replay, "
-                    "no extension, no continued experiments")
-    terminal = {"schema": SCHEMA,
-                "status": ("COMPLETE_CLEAN" if verdict == "CLEAN"
-                           else "COMPLETE_" + verdict),
-                "verdict": verdict, "events": events}
+        record(
+            "root_notified",
+            note="unknown/late cleanup requires separate root "
+            "authorization for any intervention; no replay, "
+            "no extension, no continued experiments",
+        )
+    terminal = {
+        "schema": SCHEMA,
+        "status": ("COMPLETE_CLEAN" if verdict == "CLEAN" else "COMPLETE_" + verdict),
+        "verdict": verdict,
+        "events": events,
+    }
     write_receipt(receipts / "mission_terminal.json", terminal)
     return terminal
 
@@ -487,6 +553,7 @@ def run_mission(provider: ComputeProvider, schedule: dict, clock,
 # --------------------------------------------------------------------------
 # Validation (free) and CLI.
 # --------------------------------------------------------------------------
+
 
 def validate_offline() -> dict:
     """Zero-spend, zero-provider validation: amendment record + schedule math
@@ -515,8 +582,11 @@ def validate_offline() -> dict:
 
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--execute", action="store_true",
-                        help="lead-only: run the mission (requires --iam-binding, --request, --reservations)")
+    parser.add_argument(
+        "--execute",
+        action="store_true",
+        help="lead-only: run the mission (requires --iam-binding, --request, --reservations)",
+    )
     parser.add_argument("--iam-binding", default=None)
     parser.add_argument("--request", default=None)
     parser.add_argument("--helper-epoch", type=int, default=None)
@@ -529,12 +599,13 @@ def main(argv=None) -> int:
     if not report["ok"]:
         return 1
     if not args.execute:
-        print("validation only: no provider calls, no spend. "
-              "--execute is lead-only and needs --iam-binding + --request.")
+        print(
+            "validation only: no provider calls, no spend. "
+            "--execute is lead-only and needs --iam-binding + --request."
+        )
         return 0
     if not args.iam_binding or not args.request:
-        print("refusing: --execute requires --iam-binding and --request",
-              file=sys.stderr)
+        print("refusing: --execute requires --iam-binding and --request", file=sys.stderr)
         return 2
     try:
         check_iam_binding(args.iam_binding)
@@ -546,14 +617,17 @@ def main(argv=None) -> int:
     except (OSError, ValueError) as exc:
         print(f"refusing: sealed request unreadable: {exc}", file=sys.stderr)
         return 2
-    if not (request.get("status") == "SEALED_LAUNCH_AUTHORIZED"
-            and request.get("launch_authorized") is True):
-        print("refusing: request is not a lead-sealed launch authorization "
-              "(drafts and unallocated requests never authorize dispatch)",
-              file=sys.stderr)
+    if not (
+        request.get("status") == "SEALED_LAUNCH_AUTHORIZED"
+        and request.get("launch_authorized") is True
+    ):
+        print(
+            "refusing: request is not a lead-sealed launch authorization "
+            "(drafts and unallocated requests never authorize dispatch)",
+            file=sys.stderr,
+        )
         return 2
-    print("gates checked; live dispatch stays lead-operated from here.",
-          file=sys.stderr)
+    print("gates checked; live dispatch stays lead-operated from here.", file=sys.stderr)
     return 3
 
 

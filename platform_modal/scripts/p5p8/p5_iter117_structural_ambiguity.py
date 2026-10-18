@@ -45,18 +45,18 @@ Outputs:
 The companion registry-style schema-level audit reuses the live corpus
 verbatim — no new harvest, no Tinker runs.
 """
+
 from __future__ import annotations
 import csv
 import json
-import math
-import os
 import re
 import sys
 from pathlib import Path
 from typing import Any
 
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
+from _paths import REPO_ROOT
+
 ROOT = REPO_ROOT
 MANIFEST_DIR = ROOT / "platform_hybrid/experiments/results/mega_20260704/manifests"
 CELLS_TSV = ROOT / "platform_hybrid/experiments/results/mega_20260704/cells.tsv"
@@ -66,38 +66,59 @@ OUT_DIR = ROOT / "platform_hybrid/experiments/results/p5p8"
 # MIN-REPORT v2.2 items: (item_id, item_name, schema_status, declared_source)
 # schema_status from iter-113: live | live_NA | DERIVABLE | DERIVABLE_REJECTED | schema_only
 MIN_REPORT_V22 = [
-    ("Item01", "model_family",                "live",          "manifest_or_cells"),
-    ("Item02", "ref_policy_kl",               "live_NA",       "manifest"),
-    ("Item03", "reward_model_signature",      "schema_only",   "schema"),
-    ("Item04", "rollout_temperature",         "live",          "cells"),
-    ("Item05", "group_size",                  "live",          "manifest_or_cells"),
-    ("Item06", "heldout_split",               "live",          "manifest"),
-    ("Item07", "decontamination_notes",       "live",          "manifest"),
-    ("Item08", "loss_form",                   "live_NA",       "manifest"),
-    ("Item09", "sampler_backend_precision",   "live",          "manifest"),
-    ("Item10", "advantage_baseline",          "schema_only",   "schema"),
-    ("Item11", "token_mask",                  "schema_only",   "schema"),
-    ("Item12", "kl_beta",                     "schema_only",   "schema"),
-    ("Item13", "zvf_per_step",                "live",          "manifest"),
-    ("Item14", "K_variance_residual",         "DERIVABLE",     "tensor"),
-    ("Item15", "K_unique_count",              "DERIVABLE",     "tensor"),
-    ("Item16", "max_K_share_PLACEBO",         "DERIVABLE_REJECTED", "tensor"),
-    ("Item17", "prompt_p_hat_var",            "DERIVABLE",     "tensor"),
-    ("Item18", "zvf130_risk_residual",        "schema_only",   "schema"),
+    ("Item01", "model_family", "live", "manifest_or_cells"),
+    ("Item02", "ref_policy_kl", "live_NA", "manifest"),
+    ("Item03", "reward_model_signature", "schema_only", "schema"),
+    ("Item04", "rollout_temperature", "live", "cells"),
+    ("Item05", "group_size", "live", "manifest_or_cells"),
+    ("Item06", "heldout_split", "live", "manifest"),
+    ("Item07", "decontamination_notes", "live", "manifest"),
+    ("Item08", "loss_form", "live_NA", "manifest"),
+    ("Item09", "sampler_backend_precision", "live", "manifest"),
+    ("Item10", "advantage_baseline", "schema_only", "schema"),
+    ("Item11", "token_mask", "schema_only", "schema"),
+    ("Item12", "kl_beta", "schema_only", "schema"),
+    ("Item13", "zvf_per_step", "live", "manifest"),
+    ("Item14", "K_variance_residual", "DERIVABLE", "tensor"),
+    ("Item15", "K_unique_count", "DERIVABLE", "tensor"),
+    ("Item16", "max_K_share_PLACEBO", "DERIVABLE_REJECTED", "tensor"),
+    ("Item17", "prompt_p_hat_var", "DERIVABLE", "tensor"),
+    ("Item18", "zvf130_risk_residual", "schema_only", "schema"),
 ]
 
 # Manifest JSON keys actually emitted (per iter-117 inspection, n=98)
 LIVE_JSON_KEYS = {
-    "cell_id", "loss_form", "ref_policy_kl", "sampler_backend_precision",
-    "per_step_zvf_path", "group_size_schedule", "heldout_split", "decontamination_notes",
+    "cell_id",
+    "loss_form",
+    "ref_policy_kl",
+    "sampler_backend_precision",
+    "per_step_zvf_path",
+    "group_size_schedule",
+    "heldout_split",
+    "decontamination_notes",
 }
 
 # cells.tsv columns (per iter-93 row 109)
 CELLS_COLS = [
-    "cell_id", "model", "model_family", "task_slice", "G", "temperature", "seed",
-    "n_groups", "sample_errors", "mean_reward", "zvf", "pcd", "mean_completion_len",
-    "std_completion_len", "sampled_tokens", "cumulative_sampled_tokens",
-    "reward_vectors_json", "tensor_path", "manifest_path",
+    "cell_id",
+    "model",
+    "model_family",
+    "task_slice",
+    "G",
+    "temperature",
+    "seed",
+    "n_groups",
+    "sample_errors",
+    "mean_reward",
+    "zvf",
+    "pcd",
+    "mean_completion_len",
+    "std_completion_len",
+    "sampled_tokens",
+    "cumulative_sampled_tokens",
+    "reward_vectors_json",
+    "tensor_path",
+    "manifest_path",
 ]
 
 # Filename regex for implicit-via-cell_id axes
@@ -109,11 +130,11 @@ CELL_ID_RE = re.compile(
 
 # Map canonical item_name → regex-group name (item names vs regex names differ)
 ITEM_TO_REGEX_GROUP = {
-    "model_family":       "model_family",
-    "task_slice":         "task_slice",
-    "group_size":         "G",
-    "rollout_temperature":"temperature",
-    "seed":               "seed",
+    "model_family": "model_family",
+    "task_slice": "task_slice",
+    "group_size": "G",
+    "rollout_temperature": "temperature",
+    "seed": "seed",
 }
 
 
@@ -132,23 +153,29 @@ def load_corpus() -> tuple[list[dict[str, Any]], dict[str, dict[str, Any]]]:
     return manifests, cells_by_id
 
 
-def classify_encoding_mode(item_id: str, item_name: str,
-                            manifests: list[dict[str, Any]],
-                            cells_by_id: dict[str, dict[str, Any]]) -> dict[str, Any]:
+def classify_encoding_mode(
+    item_id: str,
+    item_name: str,
+    manifests: list[dict[str, Any]],
+    cells_by_id: dict[str, dict[str, Any]],
+) -> dict[str, Any]:
     """For one MIN-REPORT item, return encoding-mode classification + diagnostics."""
     n = len(manifests)
 
     # Direct JSON-key check (mapped to canonical item_name OR a known alias)
     KEY_ALIASES = {
-        "model_family":          ["model_family"],
-        "ref_policy_kl":         ["ref_policy_kl"],
-        "rollout_temperature":   ["temperature"],          # in cells.tsv
-        "group_size":            ["G", "group_size_schedule"],  # cells.tsv G; manifest has group_size_schedule (fixed-G=N)
-        "heldout_split":         ["heldout_split"],
+        "model_family": ["model_family"],
+        "ref_policy_kl": ["ref_policy_kl"],
+        "rollout_temperature": ["temperature"],  # in cells.tsv
+        "group_size": [
+            "G",
+            "group_size_schedule",
+        ],  # cells.tsv G; manifest has group_size_schedule (fixed-G=N)
+        "heldout_split": ["heldout_split"],
         "decontamination_notes": ["decontamination_notes"],
-        "loss_form":             ["loss_form"],
+        "loss_form": ["loss_form"],
         "sampler_backend_precision": ["sampler_backend_precision"],
-        "zvf_per_step":          ["per_step_zvf_path"],
+        "zvf_per_step": ["per_step_zvf_path"],
     }
 
     n_in_manifest_json = 0
@@ -202,7 +229,9 @@ def classify_encoding_mode(item_id: str, item_name: str,
     if n_in_manifest_json == n:
         mode = "explicit_json_key"
     elif n_in_filename == n and n_in_cells_tsv == n:
-        mode = "implicit_filename_AND_cells_tsv"  # split across filename + cells.tsv; manifest silent
+        mode = (
+            "implicit_filename_AND_cells_tsv"  # split across filename + cells.tsv; manifest silent
+        )
     elif n_in_filename == n:
         mode = "implicit_filename"
     elif n_in_cells_tsv == n:
@@ -219,17 +248,18 @@ def classify_encoding_mode(item_id: str, item_name: str,
         "item_name": item_name,
         "encoding_mode": mode,
         "n_in_manifest_json": n_in_manifest_json,
-        "n_in_cells_tsv":     n_in_cells_tsv,
-        "n_in_filename":      n_in_filename,
-        "n_na_sentinel":      n_na_sentinel,
+        "n_in_cells_tsv": n_in_cells_tsv,
+        "n_in_filename": n_in_filename,
+        "n_na_sentinel": n_na_sentinel,
         "n_tensor_derivable": n_tensor_derivable,
-        "rename_robust":      mode in {"explicit_json_key", "n/a_sentinel", "tensor_derivable"},
-        "n_cells":            n,
+        "rename_robust": mode in {"explicit_json_key", "n/a_sentinel", "tensor_derivable"},
+        "n_cells": n,
     }
 
 
-def rename_vulnerability_test(manifests: list[dict[str, Any]],
-                               cells_by_id: dict[str, dict[str, Any]]) -> list[dict[str, Any]]:
+def rename_vulnerability_test(
+    manifests: list[dict[str, Any]], cells_by_id: dict[str, dict[str, Any]]
+) -> list[dict[str, Any]]:
     """For 5 random cells × 3 perturbations: test what the JSON-body-only auditor sees.
 
     Three perturbation modes:
@@ -239,7 +269,9 @@ def rename_vulnerability_test(manifests: list[dict[str, Any]],
 
     The audit reveals which axes an auditor recovers in each mode.
     """
-    rng_path = sorted(manifests, key=lambda m: m["cell_id"])[:5]  # deterministic: first 5 alphabetically
+    rng_path = sorted(manifests, key=lambda m: m["cell_id"])[
+        :5
+    ]  # deterministic: first 5 alphabetically
 
     AXES = ["model_family", "task_slice", "G", "temperature", "seed"]
     rows = []
@@ -250,26 +282,28 @@ def rename_vulnerability_test(manifests: list[dict[str, Any]],
         rg = mm.groupdict() if mm else {}
 
         for mode_name, source_fn in [
-            ("json_body_alone",    lambda: {}),
+            ("json_body_alone", dict),
             ("json_plus_filename", lambda: dict(rg)),
             ("json_plus_cells_tsv", lambda: {k: c.get(k, "") for k in AXES}),
         ]:
             extras = source_fn()
             recovered = {
-                "model_family":   m.get("model_family",   extras.get("model_family", "")),
-                "task_slice":     m.get("task_slice",     extras.get("task_slice", "")),
-                "G":              m.get("G",              extras.get("G", "")),
-                "temperature":    m.get("temperature",    extras.get("temperature", "")),
-                "seed":           m.get("seed",           extras.get("seed", "")),
+                "model_family": m.get("model_family", extras.get("model_family", "")),
+                "task_slice": m.get("task_slice", extras.get("task_slice", "")),
+                "G": m.get("G", extras.get("G", "")),
+                "temperature": m.get("temperature", extras.get("temperature", "")),
+                "seed": m.get("seed", extras.get("seed", "")),
             }
             n_recovered = sum(1 for v in recovered.values() if v)
-            rows.append({
-                "perturbation":   mode_name,
-                "original_cid":   cid,
-                "n_axes_recovered": n_recovered,
-                "missing_axes":   ",".join(k for k, v in recovered.items() if not v),
-                "filename_match": "yes" if mm else "no",
-            })
+            rows.append(
+                {
+                    "perturbation": mode_name,
+                    "original_cid": cid,
+                    "n_axes_recovered": n_recovered,
+                    "missing_axes": ",".join(k for k, v in recovered.items() if not v),
+                    "filename_match": "yes" if mm else "no",
+                }
+            )
     return rows
 
 
@@ -300,20 +334,36 @@ def main() -> int:
     by_mode: dict[str, list[int]] = {}
     for r in rename_rows:
         by_mode.setdefault(r["perturbation"], []).append(r["n_axes_recovered"])
-    json_body_alone = sum(by_mode.get("json_body_alone", [0])) // max(1, len(by_mode.get("json_body_alone", [1])))
-    json_plus_filename = sum(by_mode.get("json_plus_filename", [0])) // max(1, len(by_mode.get("json_plus_filename", [1])))
-    json_plus_cells_tsv = sum(by_mode.get("json_plus_cells_tsv", [0])) // max(1, len(by_mode.get("json_plus_cells_tsv", [1])))
-    print(f"[iter-117] H2: JSON-body-alone recovery: {json_body_alone}/5 axes; "
-          f"+filename: {json_plus_filename}/5; +cells.tsv: {json_plus_cells_tsv}/5")
+    json_body_alone = sum(by_mode.get("json_body_alone", [0])) // max(
+        1, len(by_mode.get("json_body_alone", [1]))
+    )
+    json_plus_filename = sum(by_mode.get("json_plus_filename", [0])) // max(
+        1, len(by_mode.get("json_plus_filename", [1]))
+    )
+    json_plus_cells_tsv = sum(by_mode.get("json_plus_cells_tsv", [0])) // max(
+        1, len(by_mode.get("json_plus_cells_tsv", [1]))
+    )
+    print(
+        f"[iter-117] H2: JSON-body-alone recovery: {json_body_alone}/5 axes; "
+        f"+filename: {json_plus_filename}/5; +cells.tsv: {json_plus_cells_tsv}/5"
+    )
 
     # Write per-item TSV
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     enc_path = OUT_DIR / "p5_iter117_structural_ambiguity.tsv"
     cols = [
-        "item_id", "item_name", "schema_status", "declared_source",
-        "encoding_mode", "n_in_manifest_json", "n_in_cells_tsv",
-        "n_in_filename", "n_na_sentinel", "n_tensor_derivable",
-        "rename_robust", "n_cells",
+        "item_id",
+        "item_name",
+        "schema_status",
+        "declared_source",
+        "encoding_mode",
+        "n_in_manifest_json",
+        "n_in_cells_tsv",
+        "n_in_filename",
+        "n_na_sentinel",
+        "n_tensor_derivable",
+        "rename_robust",
+        "n_cells",
     ]
     with open(enc_path, "w", newline="") as fh:
         w = csv.DictWriter(fh, fieldnames=cols, delimiter="\t")
@@ -324,8 +374,7 @@ def main() -> int:
 
     # Write rename vulnerability TSV
     ren_path = OUT_DIR / "p5_iter117_rename_vulnerability.tsv"
-    rcols = ["perturbation", "original_cid", "n_axes_recovered",
-             "missing_axes", "filename_match"]
+    rcols = ["perturbation", "original_cid", "n_axes_recovered", "missing_axes", "filename_match"]
     with open(ren_path, "w", newline="") as fh:
         w = csv.DictWriter(fh, fieldnames=rcols, delimiter="\t")
         w.writeheader()
@@ -338,33 +387,46 @@ def main() -> int:
         "n_cells": n,
         "encoding_mode_distribution": {
             mode: sum(1 for r in rows if r["encoding_mode"] == mode)
-            for mode in {"explicit_json_key", "implicit_filename",
-                         "implicit_filename_AND_cells_tsv", "cells_tsv_only",
-                         "tensor_derivable", "n/a_sentinel", "absent_no_source"}
+            for mode in {
+                "explicit_json_key",
+                "implicit_filename",
+                "implicit_filename_AND_cells_tsv",
+                "cells_tsv_only",
+                "tensor_derivable",
+                "n/a_sentinel",
+                "absent_no_source",
+            }
         },
         "implicit_filename_items": [r["item_id"] for r in implicit],
         "rename_vulnerability": {
-            "n_perturbations":         len(rename_rows),
-            "json_body_alone_axes":    json_body_alone,
+            "n_perturbations": len(rename_rows),
+            "json_body_alone_axes": json_body_alone,
             "json_plus_filename_axes": json_plus_filename,
             "json_plus_cells_tsv_axes": json_plus_cells_tsv,
         },
         "hypotheses": {
-            "H1_split_schema":       sum(1 for r in rows
-                                        if r["encoding_mode"] in {"implicit_filename_AND_cells_tsv",
-                                                                  "cells_tsv_only"}) > 0,
-            "H2_json_body_silence":  json_body_alone == 0,
-            "H3_remediation_count":  sum(1 for r in rows
-                                        if r["encoding_mode"] in {"implicit_filename_AND_cells_tsv",
-                                                                  "absent_no_source"}),
+            "H1_split_schema": sum(
+                1
+                for r in rows
+                if r["encoding_mode"] in {"implicit_filename_AND_cells_tsv", "cells_tsv_only"}
+            )
+            > 0,
+            "H2_json_body_silence": json_body_alone == 0,
+            "H3_remediation_count": sum(
+                1
+                for r in rows
+                if r["encoding_mode"] in {"implicit_filename_AND_cells_tsv", "absent_no_source"}
+            ),
         },
     }
     summary_path = OUT_DIR / "p5_iter117_summary.json"
     with open(summary_path, "w") as fh:
         json.dump(summary, fh, indent=2)
     print(f"[iter-117] wrote {summary_path}")
-    print(f"[iter-117] H1 PASS={summary['hypotheses']['H1_split_schema']}, "
-          f"H2 PASS={summary['hypotheses']['H2_json_body_silence']}")
+    print(
+        f"[iter-117] H1 PASS={summary['hypotheses']['H1_split_schema']}, "
+        f"H2 PASS={summary['hypotheses']['H2_json_body_silence']}"
+    )
     return 0
 
 

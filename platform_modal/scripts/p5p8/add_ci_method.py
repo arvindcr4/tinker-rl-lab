@@ -15,6 +15,7 @@ paired bootstrap in `platform_modal/scripts/p5p8/registry_validate.py::bootstrap
 
 Stdlib + jsonschema only. Idempotent (safe to re-run).
 """
+
 import csv
 import glob
 import json
@@ -22,8 +23,10 @@ from pathlib import Path
 import jsonschema
 
 import sys
+
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
+from _paths import REPO_ROOT
+
 ROOT = REPO_ROOT
 SCHEMA = ROOT / "platform_hybrid/registry/schema.json"
 ENTRIES = sorted(glob.glob(str(ROOT / "platform_hybrid/registry/entries/*.json")))
@@ -31,9 +34,12 @@ OUT = ROOT / "platform_hybrid/experiments/results/p5p8"
 
 # entries whose outcomes came from the N2 same-stack four-method tensors
 N2_TINKER = {
-    "tinker_aero_qwen3.5-4b_gsm8k.json", "tinker_areal_qwen3.5-4b_gsm8k.json",
-    "tinker_dapo_qwen3.5-4b_gsm8k.json", "tinker_drgrpo_qwen3.5-4b_gsm8k.json",
-    "tinker_gift_qwen3.5-4b_gsm8k.json", "tinker_grpo_qwen3.5-4b_gsm8k.json",
+    "tinker_aero_qwen3.5-4b_gsm8k.json",
+    "tinker_areal_qwen3.5-4b_gsm8k.json",
+    "tinker_dapo_qwen3.5-4b_gsm8k.json",
+    "tinker_drgrpo_qwen3.5-4b_gsm8k.json",
+    "tinker_gift_qwen3.5-4b_gsm8k.json",
+    "tinker_grpo_qwen3.5-4b_gsm8k.json",
     "tinker_gspo_qwen3.5-4b_gsm8k.json",
 }
 CI_METHOD = {
@@ -41,8 +47,10 @@ CI_METHOD = {
     "n_boot": 2000,
     "seed": 0,
     "ci_level": 0.95,
-    "source": ("platform_modal/scripts/p5p8/registry_validate.py::bootstrap_paired_diff "
-               "(percentile 2.5/97.5 over aligned per-step N2 tensors)"),
+    "source": (
+        "platform_modal/scripts/p5p8/registry_validate.py::bootstrap_paired_diff "
+        "(percentile 2.5/97.5 over aligned per-step N2 tensors)"
+    ),
 }
 
 
@@ -52,9 +60,11 @@ def patch_schema():
     # 1. add reusable ci_method definition (idempotent)
     defs["ci_method"] = {
         "type": ["object", "null"],
-        "description": ("Optional self-reported provenance of the confidence "
-                        "interval on this entry's outcomes/deltas (added iter 28, "
-                        "backward-compatible optional field). null = unreported."),
+        "description": (
+            "Optional self-reported provenance of the confidence "
+            "interval on this entry's outcomes/deltas (added iter 28, "
+            "backward-compatible optional field). null = unreported."
+        ),
         "properties": {
             "method": {"$ref": "#/$defs/nullable_string"},
             "n_boot": {"$ref": "#/$defs/nullable_integer"},
@@ -99,9 +109,14 @@ def validate_all(schema):
         ok = not errs
         npass += ok
         has_ci = isinstance(e.get("outcomes"), dict) and e["outcomes"].get("ci_method") is not None
-        rows.append({"entry": name, "schema_pass": ok,
-                     "has_ci_method": has_ci,
-                     "first_error": (errs[0].message[:90] if errs else "")})
+        rows.append(
+            {
+                "entry": name,
+                "schema_pass": ok,
+                "has_ci_method": has_ci,
+                "first_error": (errs[0].message[:90] if errs else ""),
+            }
+        )
     return rows, npass
 
 
@@ -114,11 +129,17 @@ def main():
     OUT.mkdir(parents=True, exist_ok=True)
     with open(OUT / "registry_ci_method_coverage.tsv", "w", newline="") as fh:
         w = csv.DictWriter(fh, fieldnames=list(rows[0].keys()), delimiter="\t")
-        w.writeheader(); w.writerows(rows)
-    summary = {"n_entries": n, "n_schema_pass": npass,
-               "all_pass": npass == n, "n_self_report_ci_method": n_ci,
-               "ci_method_entries": [r["entry"] for r in rows if r["has_ci_method"]],
-               "touched_this_run": touched, "ci_method_value": CI_METHOD}
+        w.writeheader()
+        w.writerows(rows)
+    summary = {
+        "n_entries": n,
+        "n_schema_pass": npass,
+        "all_pass": npass == n,
+        "n_self_report_ci_method": n_ci,
+        "ci_method_entries": [r["entry"] for r in rows if r["has_ci_method"]],
+        "touched_this_run": touched,
+        "ci_method_value": CI_METHOD,
+    }
     with open(OUT / "registry_ci_method_summary.json", "w") as fh:
         json.dump(summary, fh, indent=2)
     print(f"[ci_method] schema PASS {npass}/{n}; ci_method self-reported by {n_ci}/{n} entries")

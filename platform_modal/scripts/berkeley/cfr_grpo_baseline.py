@@ -13,7 +13,14 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from _paths import REPO_ROOT, RESULTS_DIR
-from _review01_contracts import OUTPUT_ROOT, evidence_metadata, require_inputs, write_artifact_metadata, json_ready
+from _review01_contracts import (
+    OUTPUT_ROOT,
+    evidence_metadata,
+    require_inputs,
+    write_artifact_metadata,
+    json_ready,
+)
+
 ROOT = WORKTREE = REPO_ROOT
 RES = RESULTS = RESULTS_DIR
 OUT = OUTPUT_ROOT / "cfr_grpo_baseline"
@@ -34,11 +41,12 @@ def h1_iid_sanity_check(G_values, n_samples=10000, seeds=range(50)):
     rows = []
     for G in G_values:
         for p in [0.1, 0.3, 0.5, 0.7, 0.9]:
-            zvf_theory = p ** G + (1 - p) ** G
+            zvf_theory = p**G + (1 - p) ** G
             # Independent Bernoulli draws only; no comparative CFR update is implemented.
             zvf_mc = 0.0
             for s in seeds:
                 import random
+
                 rng = random.Random(s + G * 1000)
                 cnt = 0
                 for _ in range(n_samples):
@@ -49,14 +57,17 @@ def h1_iid_sanity_check(G_values, n_samples=10000, seeds=range(50)):
             zvf_mc /= len(seeds)
             # Population SD of a Bernoulli reward centered at its true mean.
             adv_std = math.sqrt(p * (1 - p))
-            rows.append({
-                "G": G, "p": p,
-                "zvf_analytic": f"{zvf_theory:.4f}",
-                "zvf_mc": f"{zvf_mc:.4f}",
-                "abs_diff": f"{abs(zvf_theory - zvf_mc):.4f}",
-                "advantage_std_analytic": f"{adv_std:.4f}",
-                "threshold_met": "yes" if abs(zvf_theory - zvf_mc) < 0.02 else "no",
-            })
+            rows.append(
+                {
+                    "G": G,
+                    "p": p,
+                    "zvf_analytic": f"{zvf_theory:.4f}",
+                    "zvf_mc": f"{zvf_mc:.4f}",
+                    "abs_diff": f"{abs(zvf_theory - zvf_mc):.4f}",
+                    "advantage_std_analytic": f"{adv_std:.4f}",
+                    "threshold_met": "yes" if abs(zvf_theory - zvf_mc) < 0.02 else "no",
+                }
+            )
     return rows
 
 
@@ -84,12 +95,14 @@ def h2_bounded_cone():
         except (IndexError, ValueError):
             continue
         delta_values.append(delta)
-        rows.append({
-            "headline": headline,
-            "delta_G32_G64": f"{delta:+.4f}",
-            "non_positive": "yes" if delta <= 0 else "no",
-            "pluribus_saturation": "predicted",
-        })
+        rows.append(
+            {
+                "headline": headline,
+                "delta_G32_G64": f"{delta:+.4f}",
+                "non_positive": "yes" if delta <= 0 else "no",
+                "pluribus_saturation": "predicted",
+            }
+        )
     n_nonpos = sum(1 for d in delta_values if d <= 0)
     return rows, n_nonpos, len(delta_values)
 
@@ -133,23 +146,27 @@ def h3_belief_state_compression():
             abs_d = abs(d)
             abs_deltas.append(abs_d)
             observed_Ts.append(T)
-            rows.append({
-                "T": T,
-                "acc_G32": f"{acc_G32[T]:.4f}",
-                "acc_G64": f"{acc_G64[T]:.4f}",
-                "delta_G32_G64": f"{d:+.4f}",
-                "abs_delta": f"{abs_d:.4f}",
-                "abs_delta_x_T_over_1e6": f"{abs_d * T / 1e6:.3f}",
-            })
+            rows.append(
+                {
+                    "T": T,
+                    "acc_G32": f"{acc_G32[T]:.4f}",
+                    "acc_G64": f"{acc_G64[T]:.4f}",
+                    "delta_G32_G64": f"{d:+.4f}",
+                    "abs_delta": f"{abs_d:.4f}",
+                    "abs_delta_x_T_over_1e6": f"{abs_d * T / 1e6:.3f}",
+                }
+            )
     # Fit the stated |delta|*T estimand at its actual observed budgets.
     # A slope <1 is descriptive sublinearity; complete budget coverage is required.
     if len(abs_deltas) >= 2 and all(d > 0 for d in abs_deltas):
         # Fit slope in log-log
         log_T = [math.log10(t) for t in observed_Ts]
-        log_d = [math.log10(d*t) for d, t in zip(abs_deltas, observed_Ts)]
+        log_d = [math.log10(d * t) for d, t in zip(abs_deltas, observed_Ts, strict=False)]
         n = len(log_T)
-        sx = sum(log_T); sy = sum(log_d)
-        sxx = sum(x * x for x in log_T); sxy = sum(x * y for x, y in zip(log_T, log_d))
+        sx = sum(log_T)
+        sy = sum(log_d)
+        sxx = sum(x * x for x in log_T)
+        sxy = sum(x * y for x, y in zip(log_T, log_d, strict=False))
         slope = (n * sxy - sx * sy) / (n * sxx - sx * sx)
         sublinear = len(observed_Ts) == len(Ts) and slope < 1.0
     else:
@@ -176,30 +193,35 @@ def h4_zvf_decay():
             except json.JSONDecodeError:
                 continue
             for row in t:
-                per_G.append({
-                    "G": row["G"],
-                    "mean_zvf": row["mean_zvf_mean"],
-                    "reward_mean": row["reward_mean"],
-                    "heldout_acc_mean": row["heldout_acc_mean"],
-                })
+                per_G.append(
+                    {
+                        "G": row["G"],
+                        "mean_zvf": row["mean_zvf_mean"],
+                        "reward_mean": row["reward_mean"],
+                        "heldout_acc_mean": row["heldout_acc_mean"],
+                    }
+                )
     per_G.sort(key=lambda r: r["G"])
     rows = []
     for i, r in enumerate(per_G):
         ratio = per_G[i]["mean_zvf"] / per_G[i]["reward_mean"] if per_G[i]["reward_mean"] > 0 else 0
-        rows.append({
-            "G": r["G"],
-            "mean_zvf": f"{r['mean_zvf']:.4f}",
-            "reward_mean": f"{r['reward_mean']:.4f}",
-            "zvf_per_reward": f"{ratio:.4f}",
-            "decreasing_from_G2": (
-                "yes" if i == 0
-                else "yes" if per_G[i]["mean_zvf"] < per_G[i - 1]["mean_zvf"]
-                else "no"
-            ),
-        })
+        rows.append(
+            {
+                "G": r["G"],
+                "mean_zvf": f"{r['mean_zvf']:.4f}",
+                "reward_mean": f"{r['reward_mean']:.4f}",
+                "zvf_per_reward": f"{ratio:.4f}",
+                "decreasing_from_G2": (
+                    "yes"
+                    if i == 0
+                    else "yes"
+                    if per_G[i]["mean_zvf"] < per_G[i - 1]["mean_zvf"]
+                    else "no"
+                ),
+            }
+        )
     monotonic = len(per_G) >= 2 and all(
-        per_G[i]["mean_zvf"] < per_G[i - 1]["mean_zvf"]
-        for i in range(1, len(per_G))
+        per_G[i]["mean_zvf"] < per_G[i - 1]["mean_zvf"] for i in range(1, len(per_G))
     )
     return rows, monotonic
 
@@ -242,16 +264,14 @@ def h5_cdh_bridge():
     for G, vals in sorted(per_G.items()):
         m = sum(vals) / len(vals)
         mean_abs_resid[G] = m
-        rows.append({
-            "G": G,
-            "n_points": len(vals),
-            "mean_abs_residual": f"{m:.4f}",
-            "cdh_signal_potential": (
-                "high" if G <= 4
-                else "low" if G >= 32
-                else "mid"
-            ),
-        })
+        rows.append(
+            {
+                "G": G,
+                "n_points": len(vals),
+                "mean_abs_residual": f"{m:.4f}",
+                "cdh_signal_potential": ("high" if G <= 4 else "low" if G >= 32 else "mid"),
+            }
+        )
     # CDH-prediction: mean_abs_residual should be *largest* at G=4
     # because that's where the joint-fit predicts the most value the
     # model can extract (= the value head's gain potential).
@@ -267,9 +287,20 @@ def h5_cdh_bridge():
 # Main
 # ---------------------------------------------------------------------------
 def main():
-    inputs = [RES / name for name in ["group_size_iter127_joint_fit.tsv", "group_size_iter127_bounded_cone.tsv", "group_size_effect.tsv"]]
+    inputs = [
+        RES / name
+        for name in [
+            "group_size_iter127_joint_fit.tsv",
+            "group_size_iter127_bounded_cone.tsv",
+            "group_size_effect.tsv",
+        ]
+    ]
     require_inputs(*inputs)
-    metadata = evidence_metadata("iid_synthetic_sanity_check_and_retrospective_group_size_descriptions", inputs, kind="mixed_synthetic_and_retrospective")
+    metadata = evidence_metadata(
+        "iid_synthetic_sanity_check_and_retrospective_group_size_descriptions",
+        inputs,
+        kind="mixed_synthetic_and_retrospective",
+    )
     OUT.mkdir(parents=True, exist_ok=True)
     t0 = datetime.datetime.now(datetime.timezone.utc).isoformat()
     print(f"[cfr_grpo] start {t0}")
@@ -279,7 +310,8 @@ def main():
     h1_path = OUT / "cfr_grpo_iid_sanity_check.tsv"
     with h1_path.open("w", newline="") as fh:
         w = csv.DictWriter(fh, fieldnames=list(h1[0].keys()), delimiter="\t")
-        w.writeheader(); w.writerows(h1)
+        w.writeheader()
+        w.writerows(h1)
     h1_decisive = sum(1 for r in h1 if r["threshold_met"] == "yes")
     h1_total = len(h1)
     print(f"[h1] iid Bernoulli probability sanity check: {h1_decisive}/{h1_total} decisive")
@@ -288,17 +320,23 @@ def main():
     h2_rows, n_nonpos, n_total = h2_bounded_cone()
     h2_path = OUT / "cfr_grpo_bounded_cone.tsv"
     with h2_path.open("w", newline="") as fh:
-        w = csv.DictWriter(fh, fieldnames=list(h2_rows[0].keys()) if h2_rows else ["status"], delimiter="\t")
-        w.writeheader(); w.writerows(h2_rows)
-    h2_decisive = (n_nonpos == n_total and n_total >= 3)
+        w = csv.DictWriter(
+            fh, fieldnames=list(h2_rows[0].keys()) if h2_rows else ["status"], delimiter="\t"
+        )
+        w.writeheader()
+        w.writerows(h2_rows)
+    h2_decisive = n_nonpos == n_total and n_total >= 3
     print(f"[h2] Pluribus bounded cone: {n_nonpos}/{n_total} non-positive")
 
     # ---- H3 ----
     h3_rows, slope, sublinear = h3_belief_state_compression()
     h3_path = OUT / "cfr_grpo_belief_state_compression.tsv"
     with h3_path.open("w", newline="") as fh:
-        w = csv.DictWriter(fh, fieldnames=list(h3_rows[0].keys()) if h3_rows else ["status"], delimiter="\t")
-        w.writeheader(); w.writerows(h3_rows)
+        w = csv.DictWriter(
+            fh, fieldnames=list(h3_rows[0].keys()) if h3_rows else ["status"], delimiter="\t"
+        )
+        w.writeheader()
+        w.writerows(h3_rows)
     h3_decisive = sublinear
     print(f"[h3] ReBeL belief-state compression: slope={slope:.3f} sublinear={sublinear}")
 
@@ -306,8 +344,11 @@ def main():
     h4_rows, monotonic = h4_zvf_decay()
     h4_path = OUT / "cfr_grpo_zvf_decay.tsv"
     with h4_path.open("w", newline="") as fh:
-        w = csv.DictWriter(fh, fieldnames=list(h4_rows[0].keys()) if h4_rows else ["status"], delimiter="\t")
-        w.writeheader(); w.writerows(h4_rows)
+        w = csv.DictWriter(
+            fh, fieldnames=list(h4_rows[0].keys()) if h4_rows else ["status"], delimiter="\t"
+        )
+        w.writeheader()
+        w.writerows(h4_rows)
     h4_decisive = monotonic and len(h4_rows) >= 3
     print(f"[h4] ZVF across group sizes: monotonic={monotonic}")
 
@@ -315,8 +356,11 @@ def main():
     h5_rows, cdh_consistent = h5_cdh_bridge()
     h5_path = OUT / "cfr_grpo_cdh_bridge.tsv"
     with h5_path.open("w", newline="") as fh:
-        w = csv.DictWriter(fh, fieldnames=list(h5_rows[0].keys()) if h5_rows else ["status"], delimiter="\t")
-        w.writeheader(); w.writerows(h5_rows)
+        w = csv.DictWriter(
+            fh, fieldnames=list(h5_rows[0].keys()) if h5_rows else ["status"], delimiter="\t"
+        )
+        w.writeheader()
+        w.writerows(h5_rows)
     h5_decisive = cdh_consistent
     print(f"[h5] CDH bridge (ReBeL value network): max-residual-at-G=4={cdh_consistent}")
 
@@ -337,18 +381,24 @@ def main():
         "all_verified_via": "export.arxiv.org/api/query + arxiv.org/abs/<id>",
         "hypotheses": {
             "H1_iid_Bernoulli_sanity_check": {
-                "rows": len(h1), "threshold_met": h1_decisive,
+                "rows": len(h1),
+                "threshold_met": h1_decisive,
                 "verdict": "DESCRIPTIVE_THRESHOLD" if h1_decisive == h1_total else "PARTIAL",
                 "max_abs_diff": max(float(r["abs_diff"]) for r in h1),
             },
             "H2_bounded_cone_Pluribus": {
-                "non_positive": n_nonpos, "total": n_total,
+                "non_positive": n_nonpos,
+                "total": n_total,
                 "verdict": "DESCRIPTIVE_THRESHOLD" if h2_decisive else "NULL",
             },
             "H3_belief_state_compression": {
                 "slope_log_abs_delta_times_T_vs_log_T": f"{slope:.4f}",
                 "sublinear": sublinear,
-                "verdict": "INCOMPLETE" if len(h3_rows) != 4 else "DESCRIPTIVE_THRESHOLD" if h3_decisive else "THRESHOLD_NOT_MET",
+                "verdict": "INCOMPLETE"
+                if len(h3_rows) != 4
+                else "DESCRIPTIVE_THRESHOLD"
+                if h3_decisive
+                else "THRESHOLD_NOT_MET",
             },
             "H4_descriptive_ZVF_across_group_sizes": {
                 "monotonic": monotonic,
@@ -362,8 +412,9 @@ def main():
             },
         },
         "verdict_counts": {
-            "DESCRIPTIVE_THRESHOLD": sum([h1_decisive == h1_total, h2_decisive,
-                             h3_decisive, h4_decisive, h5_decisive]),
+            "DESCRIPTIVE_THRESHOLD": sum(
+                [h1_decisive == h1_total, h2_decisive, h3_decisive, h4_decisive, h5_decisive]
+            ),
             "TOTAL": 5,
         },
         "outputs": {

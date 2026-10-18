@@ -3,11 +3,13 @@
 This explicit policy change can reject previously accepted malformed objects;
 no preservation of every V3 accepted object and no deployment are claimed.
 """
+
 import re
 from .parser_v3 import parse_answer as historical_parse
 
 PARSER_VERSION = 4
 PARSER_STATUS = "prospective_candidate_not_deployed"
+
 
 def parse_answer(text):
     if not isinstance(text, str):

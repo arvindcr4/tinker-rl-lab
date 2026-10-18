@@ -58,6 +58,7 @@ References (verified):
   - kaplan2020scaling: scale-axis baseline; motivates log-log regression.
   - hoerl1970ridge: implicit in the bootstrap-CI construction.
 """
+
 from __future__ import annotations
 import csv
 import json
@@ -67,9 +68,9 @@ from pathlib import Path
 import matplotlib
 
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt  # noqa: E402
-import numpy as np  # noqa: E402
-from scipy.optimize import curve_fit  # noqa: E402
+import matplotlib.pyplot as plt
+import numpy as np
+from scipy.optimize import curve_fit
 from _analysis_common import write_rows_tsv as _write_tsv, ols
 
 ROOT = Path(__file__).resolve().parents[2] / "platform_hybrid"
@@ -81,18 +82,18 @@ PAPER_FIG = ROOT / "paper" / "figures" / "review26_v2"
 # 12-anchor pool (matches iter101 / iter105)
 MODELS: dict[str, tuple[float, str, str]] = {
     # name: (params_B, file, family)
-    "Qwen3.5-4B":            (4.0,    "scale_gsm8k_qwen3.5-4b.json",     "dense"),
-    "Qwen3-8B":              (8.0,    "scale_gsm8k_qwen3-8b.json",       "dense"),
-    "Llama-3.1-8B-Instruct": (8.0,    "scale_gsm8k_llama-8b-inst.json",  "dense"),
-    "Qwen3-32B":             (32.0,   "scale_gsm8k_qwen3-32b.json",      "dense"),
-    "Qwen3.5-27B":           (27.0,   "scale_gsm8k_qwen3.5-27b.json",    "dense"),
-    "gpt-oss-20B":           (20.0,   "arch_gsm8k_gpt-oss-20b.json",     "moe"),
-    "Qwen3-30B-MoE":         (30.0,   "moe_gsm8k_qwen3-30b-moe.json",    "moe"),
-    "Qwen3-30B-MoE-Inst":    (30.0,   "moe_gsm8k_qwen3-30b-inst.json",   "moe"),
-    "DeepSeek-V3.1":         (685.0,  "frontier_gsm8k_deepseek-v3.1.json","moe"),
-    "Nemotron-120B":         (120.0,  "frontier_gsm8k_nemotron-120b.json","dense"),
-    "Qwen3-235B-MoE":        (235.0,  "frontier_gsm8k_qwen3-235b.json",  "moe"),
-    "Kimi-K2-Thinking":      (1000.0, "arch_gsm8k_kimi-k2.json",         "moe"),
+    "Qwen3.5-4B": (4.0, "scale_gsm8k_qwen3.5-4b.json", "dense"),
+    "Qwen3-8B": (8.0, "scale_gsm8k_qwen3-8b.json", "dense"),
+    "Llama-3.1-8B-Instruct": (8.0, "scale_gsm8k_llama-8b-inst.json", "dense"),
+    "Qwen3-32B": (32.0, "scale_gsm8k_qwen3-32b.json", "dense"),
+    "Qwen3.5-27B": (27.0, "scale_gsm8k_qwen3.5-27b.json", "dense"),
+    "gpt-oss-20B": (20.0, "arch_gsm8k_gpt-oss-20b.json", "moe"),
+    "Qwen3-30B-MoE": (30.0, "moe_gsm8k_qwen3-30b-moe.json", "moe"),
+    "Qwen3-30B-MoE-Inst": (30.0, "moe_gsm8k_qwen3-30b-inst.json", "moe"),
+    "DeepSeek-V3.1": (685.0, "frontier_gsm8k_deepseek-v3.1.json", "moe"),
+    "Nemotron-120B": (120.0, "frontier_gsm8k_nemotron-120b.json", "dense"),
+    "Qwen3-235B-MoE": (235.0, "frontier_gsm8k_qwen3-235b.json", "moe"),
+    "Kimi-K2-Thinking": (1000.0, "arch_gsm8k_kimi-k2.json", "moe"),
 }
 SEED = 1092026
 N_BOOT = 2000
@@ -123,7 +124,12 @@ def fit_sat_3p(t: np.ndarray, y: np.ndarray) -> dict:
     bounds = ([-1.5, 0.0, 1e-4], [1.5, 1.5, 50.0])
     try:
         popt, pcov = curve_fit(
-            f_sat_3p, t, y, p0=p0, bounds=bounds, maxfev=20000,
+            f_sat_3p,
+            t,
+            y,
+            p0=p0,
+            bounds=bounds,
+            maxfev=20000,
         )
         r0_hat, rinf_hat, lam_hat = map(float, popt)
         y_pred = f_sat_3p(t, *popt)
@@ -146,8 +152,12 @@ def fit_sat_3p(t: np.ndarray, y: np.ndarray) -> dict:
             y_bs = np.clip(y_pred + noise, -0.5, 1.5)
             try:
                 popt_bs, _ = curve_fit(
-                    f_sat_3p, t, y_bs,
-                    p0=popt, bounds=bounds, maxfev=5000,
+                    f_sat_3p,
+                    t,
+                    y_bs,
+                    p0=popt,
+                    bounds=bounds,
+                    maxfev=5000,
                 )
                 boot["r0"].append(float(popt_bs[0]))
                 boot["rinf"].append(float(popt_bs[1]))
@@ -166,21 +176,35 @@ def fit_sat_3p(t: np.ndarray, y: np.ndarray) -> dict:
                 "median": float(np.median(arr)),
             }
         else:
-            ci[k] = {"n": 0, "lo": float("nan"), "hi": float("nan"),
-                     "mean": float("nan"), "median": float("nan")}
+            ci[k] = {
+                "n": 0,
+                "lo": float("nan"),
+                "hi": float("nan"),
+                "mean": float("nan"),
+                "median": float("nan"),
+            }
 
     t_80 = float(-math.log(0.2) / lam_hat) if (lam_hat and lam_hat > 0) else float("nan")
     t_50 = float(-math.log(0.5) / lam_hat) if (lam_hat and lam_hat > 0) else float("nan")
     success_fraction = len(boot["lam"]) / N_BOOT if N_BOOT else 0.0
-    valid = bool(np.isfinite([r0_hat, rinf_hat, lam_hat, rmse]).all()
-                 and lam_hat > 0 and success_fraction >= 0.8)
+    valid = bool(
+        np.isfinite([r0_hat, rinf_hat, lam_hat, rmse]).all()
+        and lam_hat > 0
+        and success_fraction >= 0.8
+    )
     return {
-        "valid": valid, "bootstrap_success_fraction": success_fraction,
+        "valid": valid,
+        "bootstrap_success_fraction": success_fraction,
         "bootstrap_successes": len(boot["lam"]),
         "exclusion_reason": "" if valid else "nonfinite_fit_or_bootstrap_success_below_0.8",
-        "r0": r0_hat, "rinf": rinf_hat, "lam": lam_hat,
-        "rmse": rmse, "r2": r2, "ss_res": ss_res,
-        "t_50_3p": t_50, "t_80_3p": t_80,
+        "r0": r0_hat,
+        "rinf": rinf_hat,
+        "lam": lam_hat,
+        "rmse": rmse,
+        "r2": r2,
+        "ss_res": ss_res,
+        "t_50_3p": t_50,
+        "t_80_3p": t_80,
         "ci": ci,
     }
 
@@ -202,7 +226,8 @@ def time_to_fraction(t: np.ndarray, y: np.ndarray, fracs: list[float]) -> dict:
 
 
 def bootstrap_slope(x, y, n_boot=N_BOOT):
-    x = np.asarray(x, float); y = np.asarray(y, float)
+    x = np.asarray(x, float)
+    y = np.asarray(y, float)
     n = len(x)
     rng = np.random.default_rng(SEED)
     bs = []
@@ -231,31 +256,59 @@ def main() -> None:
     fits = {name: fit_sat_3p(t, y) for name, (t, y) in raw.items()}
 
     # ---- (A) 3-param saturation TSV ------------------------------------
-    cols = ["model", "params_B", "family", "n_steps", "r0", "r0_lo", "r0_hi",
-            "R_inf", "R_inf_lo", "R_inf_hi", "lambda", "lambda_lo", "lambda_hi",
-            "rmse", "r2", "ss_res", "t_50", "t_80",
-            "trace_file"]
+    cols = [
+        "model",
+        "params_B",
+        "family",
+        "n_steps",
+        "r0",
+        "r0_lo",
+        "r0_hi",
+        "R_inf",
+        "R_inf_lo",
+        "R_inf_hi",
+        "lambda",
+        "lambda_lo",
+        "lambda_hi",
+        "rmse",
+        "r2",
+        "ss_res",
+        "t_50",
+        "t_80",
+        "trace_file",
+    ]
     rows = []
     for name, fit in fits.items():
         params_b, fname, fam = MODELS[name]
         ci = fit["ci"]
-        rows.append([
-            name, params_b, fam, len(raw[name][1]),
-            round(fit["r0"], 4), round(ci["r0"]["lo"], 4), round(ci["r0"]["hi"], 4),
-            round(fit["rinf"], 4), round(ci["rinf"]["lo"], 4), round(ci["rinf"]["hi"], 4),
-            round(fit["lam"], 4), round(ci["lam"]["lo"], 4), round(ci["lam"]["hi"], 4),
-            round(fit["rmse"], 4), round(fit["r2"], 4),
-            round(fit["ss_res"], 4),
-            round(fit["t_50_3p"], 4) if not math.isnan(fit["t_50_3p"]) else "nan",
-            round(fit["t_80_3p"], 4) if not math.isnan(fit["t_80_3p"]) else "nan",
-            fname,
-        ])
+        rows.append(
+            [
+                name,
+                params_b,
+                fam,
+                len(raw[name][1]),
+                round(fit["r0"], 4),
+                round(ci["r0"]["lo"], 4),
+                round(ci["r0"]["hi"], 4),
+                round(fit["rinf"], 4),
+                round(ci["rinf"]["lo"], 4),
+                round(ci["rinf"]["hi"], 4),
+                round(fit["lam"], 4),
+                round(ci["lam"]["lo"], 4),
+                round(ci["lam"]["hi"], 4),
+                round(fit["rmse"], 4),
+                round(fit["r2"], 4),
+                round(fit["ss_res"], 4),
+                round(fit["t_50_3p"], 4) if not math.isnan(fit["t_50_3p"]) else "nan",
+                round(fit["t_80_3p"], 4) if not math.isnan(fit["t_80_3p"]) else "nan",
+                fname,
+            ]
+        )
     _write_tsv(RES / "scaling_law_iter109_saturation.tsv", cols, rows)
 
     # ---- (B) Time-to-saturation TSV ------------------------------------
     fracs = [0.5, 0.7, 0.8, 0.9]
-    cols2 = ["model", "params_B", "family", "fraction", "t_X_steps",
-             "peak", "t_X_reached"]
+    cols2 = ["model", "params_B", "family", "fraction", "t_X_steps", "peak", "t_X_reached"]
     rows2 = []
     for name, (t, y) in raw.items():
         params_b, _, fam = MODELS[name]
@@ -263,11 +316,17 @@ def main() -> None:
         tX = time_to_fraction(t, y, fracs)
         for f in fracs:
             reached = not math.isnan(tX[f])
-            rows2.append([
-                name, params_b, fam, f,
-                int(tX[f]) if reached else "nan",
-                round(peak, 4), int(reached),
-            ])
+            rows2.append(
+                [
+                    name,
+                    params_b,
+                    fam,
+                    f,
+                    int(tX[f]) if reached else "nan",
+                    round(peak, 4),
+                    int(reached),
+                ]
+            )
     _write_tsv(RES / "scaling_law_iter109_tX.tsv", cols2, rows2)
 
     # ---- (C) Lambda-vs-N regression ------------------------------------
@@ -308,26 +367,62 @@ def main() -> None:
     a_ri_f, b_ri_f, se_b_ri_f = ols(log_n_all[mask_ri], rinf_all[mask_ri])
     boot_ri_f = bootstrap_slope(log_n_all[mask_ri], rinf_all[mask_ri])
 
-    cols3 = ["regression", "n_anchors", "intercept", "slope_per_log10N",
-             "se_slope", "boot_slope_mean", "boot_slope_lo", "boot_slope_hi",
-             "rmse_filter_used"]
+    cols3 = [
+        "regression",
+        "n_anchors",
+        "intercept",
+        "slope_per_log10N",
+        "se_slope",
+        "boot_slope_mean",
+        "boot_slope_lo",
+        "boot_slope_hi",
+        "rmse_filter_used",
+    ]
     rows3 = [
-        ["log10(lambda) ~ log10(N), all anchors", len(log_n_all),
-         round(a_all, 4), round(b_all, 4), round(se_b_all, 4),
-         round(boot_all["mean"], 4), round(boot_all["lo"], 4),
-         round(boot_all["hi"], 4), round(rmse_median, 4)],
-        ["log10(lambda) ~ log10(N), filtered (RMSE<=median)", int(mask.sum()),
-         round(a_f, 4), round(b_f, 4), round(se_b_f, 4),
-         round(boot_f["mean"], 4), round(boot_f["lo"], 4),
-         round(boot_f["hi"], 4), round(rmse_median, 4)],
-        ["R_inf ~ log10(N), all anchors", len(log_n_all),
-         round(a_ri_all, 4), round(b_ri_all, 4), round(se_b_ri_all, 4),
-         round(boot_ri_all["mean"], 4), round(boot_ri_all["lo"], 4),
-         round(boot_ri_all["hi"], 4), round(rmse_median, 4)],
-        ["R_inf ~ log10(N), filtered (RMSE<=median)", int(mask_ri.sum()),
-         round(a_ri_f, 4), round(b_ri_f, 4), round(se_b_ri_f, 4),
-         round(boot_ri_f["mean"], 4), round(boot_ri_f["lo"], 4),
-         round(boot_ri_f["hi"], 4), round(rmse_median, 4)],
+        [
+            "log10(lambda) ~ log10(N), all anchors",
+            len(log_n_all),
+            round(a_all, 4),
+            round(b_all, 4),
+            round(se_b_all, 4),
+            round(boot_all["mean"], 4),
+            round(boot_all["lo"], 4),
+            round(boot_all["hi"], 4),
+            round(rmse_median, 4),
+        ],
+        [
+            "log10(lambda) ~ log10(N), filtered (RMSE<=median)",
+            int(mask.sum()),
+            round(a_f, 4),
+            round(b_f, 4),
+            round(se_b_f, 4),
+            round(boot_f["mean"], 4),
+            round(boot_f["lo"], 4),
+            round(boot_f["hi"], 4),
+            round(rmse_median, 4),
+        ],
+        [
+            "R_inf ~ log10(N), all anchors",
+            len(log_n_all),
+            round(a_ri_all, 4),
+            round(b_ri_all, 4),
+            round(se_b_ri_all, 4),
+            round(boot_ri_all["mean"], 4),
+            round(boot_ri_all["lo"], 4),
+            round(boot_ri_all["hi"], 4),
+            round(rmse_median, 4),
+        ],
+        [
+            "R_inf ~ log10(N), filtered (RMSE<=median)",
+            int(mask_ri.sum()),
+            round(a_ri_f, 4),
+            round(b_ri_f, 4),
+            round(se_b_ri_f, 4),
+            round(boot_ri_f["mean"], 4),
+            round(boot_ri_f["lo"], 4),
+            round(boot_ri_f["hi"], 4),
+            round(rmse_median, 4),
+        ],
     ]
     _write_tsv(RES / "scaling_law_iter109_lambdaN.tsv", cols3, rows3)
 
@@ -341,28 +436,51 @@ def main() -> None:
     early_mean = float(np.mean(nem_y[:late_window]))
     peak_v = float(np.max(nem_y))
     zero_frac = float(np.mean(nem_y == 0))
-    cols4 = ["model", "params_B", "family", "n_steps", "peak_R", "peak_step",
-             "early_mean", "late_mean", "delta_late_minus_early",
-             "zero_frac", "R_inf_3p", "lambda_3p", "lambda_3p_lo",
-             "lambda_3p_hi", "t_50_3p", "t_80_3p",
-             "recovery_ratio_peak_over_late", "rmse_3p", "nimmature_collapse"]
-    nimmature_collapse = (peak_v >= 0.4 and late_mean < 0.4 * peak_v)
-    rows4 = [[
-        nem_name, MODELS[nem_name][0], MODELS[nem_name][2],
-        len(nem_y), round(peak_v, 4), n_peak,
-        round(early_mean, 4), round(late_mean, 4),
-        round(late_mean - early_mean, 4),
-        round(zero_frac, 4),
-        round(nem_fit["rinf"], 4),
-        round(nem_fit["lam"], 4),
-        round(nem_fit["ci"]["lam"]["lo"], 4),
-        round(nem_fit["ci"]["lam"]["hi"], 4),
-        round(nem_fit["t_50_3p"], 4) if not math.isnan(nem_fit["t_50_3p"]) else "nan",
-        round(nem_fit["t_80_3p"], 4) if not math.isnan(nem_fit["t_80_3p"]) else "nan",
-        round(peak_v / max(late_mean, 1e-9), 4),
-        round(nem_fit["rmse"], 4),
-        int(nimmature_collapse),
-    ]]
+    cols4 = [
+        "model",
+        "params_B",
+        "family",
+        "n_steps",
+        "peak_R",
+        "peak_step",
+        "early_mean",
+        "late_mean",
+        "delta_late_minus_early",
+        "zero_frac",
+        "R_inf_3p",
+        "lambda_3p",
+        "lambda_3p_lo",
+        "lambda_3p_hi",
+        "t_50_3p",
+        "t_80_3p",
+        "recovery_ratio_peak_over_late",
+        "rmse_3p",
+        "nimmature_collapse",
+    ]
+    nimmature_collapse = peak_v >= 0.4 and late_mean < 0.4 * peak_v
+    rows4 = [
+        [
+            nem_name,
+            MODELS[nem_name][0],
+            MODELS[nem_name][2],
+            len(nem_y),
+            round(peak_v, 4),
+            n_peak,
+            round(early_mean, 4),
+            round(late_mean, 4),
+            round(late_mean - early_mean, 4),
+            round(zero_frac, 4),
+            round(nem_fit["rinf"], 4),
+            round(nem_fit["lam"], 4),
+            round(nem_fit["ci"]["lam"]["lo"], 4),
+            round(nem_fit["ci"]["lam"]["hi"], 4),
+            round(nem_fit["t_50_3p"], 4) if not math.isnan(nem_fit["t_50_3p"]) else "nan",
+            round(nem_fit["t_80_3p"], 4) if not math.isnan(nem_fit["t_80_3p"]) else "nan",
+            round(peak_v / max(late_mean, 1e-9), 4),
+            round(nem_fit["rmse"], 4),
+            int(nimmature_collapse),
+        ]
+    ]
     _write_tsv(RES / "scaling_law_iter109_nemotron.tsv", cols4, rows4)
 
     # ---- meta ----------------------------------------------------------
@@ -375,18 +493,22 @@ def main() -> None:
         "bootstrap_reps": N_BOOT,
         "boot_seed": SEED,
         "anchors": [
-            {"name": n, "params_B": MODELS[n][0], "family": MODELS[n][2],
-             "lambda_3p": round(fits[n]["lam"], 4),
-             "lambda_lo": round(fits[n]["ci"]["lam"]["lo"], 4),
-             "lambda_hi": round(fits[n]["ci"]["lam"]["hi"], 4),
-             "R_inf": round(fits[n]["rinf"], 4),
-             "R_inf_lo": round(fits[n]["ci"]["rinf"]["lo"], 4),
-             "R_inf_hi": round(fits[n]["ci"]["rinf"]["hi"], 4),
-             "rmse": round(fits[n]["rmse"], 4),
-             "valid": fits[n]["valid"],
-             "bootstrap_successes": fits[n]["bootstrap_successes"],
-             "bootstrap_success_fraction": fits[n]["bootstrap_success_fraction"],
-             "exclusion_reason": fits[n]["exclusion_reason"]}
+            {
+                "name": n,
+                "params_B": MODELS[n][0],
+                "family": MODELS[n][2],
+                "lambda_3p": round(fits[n]["lam"], 4),
+                "lambda_lo": round(fits[n]["ci"]["lam"]["lo"], 4),
+                "lambda_hi": round(fits[n]["ci"]["lam"]["hi"], 4),
+                "R_inf": round(fits[n]["rinf"], 4),
+                "R_inf_lo": round(fits[n]["ci"]["rinf"]["lo"], 4),
+                "R_inf_hi": round(fits[n]["ci"]["rinf"]["hi"], 4),
+                "rmse": round(fits[n]["rmse"], 4),
+                "valid": fits[n]["valid"],
+                "bootstrap_successes": fits[n]["bootstrap_successes"],
+                "bootstrap_success_fraction": fits[n]["bootstrap_success_fraction"],
+                "exclusion_reason": fits[n]["exclusion_reason"],
+            }
             for n in MODELS
         ],
         "lambda_vs_N": {
@@ -436,28 +558,40 @@ def main() -> None:
             "recovery_ratio": round(peak_v / max(late_mean, 1e-9), 4),
             "nimmature_collapse": bool(nimmature_collapse),
         },
-        "frontier_synthesis": ("The 3-param form unblocks the lambda-vs-N "
-                               "test that iter85/iter105 could not run with "
-                               "the bound-hitting 2-param canonical fit. "
-                               "The headline lambda-vs-N regression tests "
-                               "the 'law behind the scaling law' -- does "
-                               "the per-step learning rate scale with N? "
-                               "Combined with the time-to-saturation "
-                               "t_50/t_70/t_80/t_90 progression (Chinchilla-"
-                               "style onset curves) this gives a two-axis "
-                               "summary of GRPO post-training scaling that "
-                               "iter105's single-axis R_max*(N) fit could "
-                               "not provide."),
+        "frontier_synthesis": (
+            "The 3-param form unblocks the lambda-vs-N "
+            "test that iter85/iter105 could not run with "
+            "the bound-hitting 2-param canonical fit. "
+            "The headline lambda-vs-N regression tests "
+            "the 'law behind the scaling law' -- does "
+            "the per-step learning rate scale with N? "
+            "Combined with the time-to-saturation "
+            "t_50/t_70/t_80/t_90 progression (Chinchilla-"
+            "style onset curves) this gives a two-axis "
+            "summary of GRPO post-training scaling that "
+            "iter105's single-axis R_max*(N) fit could "
+            "not provide."
+        ),
     }
     (RES / "scaling_law_iter109_meta.json").write_text(json.dumps(meta, indent=2))
     print(f"wrote {RES / 'scaling_law_iter109_meta.json'}")
 
     # Headline log
-    print(f"lambda-vs-N  ALL  n={len(log_n_all)} slope/decade={b_all:+.3f} 95%CI=[{boot_all['lo']:+.3f}, {boot_all['hi']:+.3f}]")
-    print(f"lambda-vs-N  FILT n={int(mask.sum())} slope/decade={b_f:+.3f} 95%CI=[{boot_f['lo']:+.3f}, {boot_f['hi']:+.3f}]")
-    print(f"R_inf-vs-N    ALL n={len(log_n_all)} slope/decade={b_ri_all:+.3f} 95%CI=[{boot_ri_all['lo']:+.3f}, {boot_ri_all['hi']:+.3f}]")
-    print(f"R_inf-vs-N    FILT n={int(mask_ri.sum())} slope/decade={b_ri_f:+.3f} 95%CI=[{boot_ri_f['lo']:+.3f}, {boot_ri_f['hi']:+.3f}]")
-    print(f"Nemotron  peak={peak_v:.3f} late_mean={late_mean:.3f} lambda_3p={nem_fit['lam']:.3f} [{nem_fit['ci']['lam']['lo']:.3f}, {nem_fit['ci']['lam']['hi']:.3f}] recovery={peak_v/late_mean:.2f}x")
+    print(
+        f"lambda-vs-N  ALL  n={len(log_n_all)} slope/decade={b_all:+.3f} 95%CI=[{boot_all['lo']:+.3f}, {boot_all['hi']:+.3f}]"
+    )
+    print(
+        f"lambda-vs-N  FILT n={int(mask.sum())} slope/decade={b_f:+.3f} 95%CI=[{boot_f['lo']:+.3f}, {boot_f['hi']:+.3f}]"
+    )
+    print(
+        f"R_inf-vs-N    ALL n={len(log_n_all)} slope/decade={b_ri_all:+.3f} 95%CI=[{boot_ri_all['lo']:+.3f}, {boot_ri_all['hi']:+.3f}]"
+    )
+    print(
+        f"R_inf-vs-N    FILT n={int(mask_ri.sum())} slope/decade={b_ri_f:+.3f} 95%CI=[{boot_ri_f['lo']:+.3f}, {boot_ri_f['hi']:+.3f}]"
+    )
+    print(
+        f"Nemotron  peak={peak_v:.3f} late_mean={late_mean:.3f} lambda_3p={nem_fit['lam']:.3f} [{nem_fit['ci']['lam']['lo']:.3f}, {nem_fit['ci']['lam']['hi']:.3f}] recovery={peak_v / late_mean:.2f}x"
+    )
 
     # ---- figure ---------------------------------------------------------
     fig = plt.figure(figsize=(15, 11))
@@ -471,65 +605,107 @@ def main() -> None:
         t, y = raw[name]
         fit = fits[name]
         col = cmap(i / max(1, len(names) - 1))
-        ax_a.plot(t, y, "o", color=col, markersize=4, alpha=0.85,
-                  label=f"{name} ({MODELS[name][0]:.0f}B)")
+        ax_a.plot(
+            t, y, "o", color=col, markersize=4, alpha=0.85, label=f"{name} ({MODELS[name][0]:.0f}B)"
+        )
         # fitted curve
-        t_dense = np.linspace(t.min(), max(t.max(), fit["t_80_3p"] if not math.isnan(fit["t_80_3p"]) else t.max()), 100)
+        t_dense = np.linspace(
+            t.min(),
+            max(t.max(), fit["t_80_3p"] if not math.isnan(fit["t_80_3p"]) else t.max()),
+            100,
+        )
         yhat = f_sat_3p(t_dense, fit["r0"], fit["rinf"], fit["lam"])
         yhat = np.clip(yhat, -0.1, 1.5)
         ax_a.plot(t_dense, yhat, "-", color=col, lw=1.0, alpha=0.6)
         # 80% asymptote line
         ax_a.axhline(0.8 * fit["rinf"], ls=":", color=col, lw=0.7, alpha=0.5)
-    ax_a.set_xlabel("training step"); ax_a.set_ylabel("reward")
+    ax_a.set_xlabel("training step")
+    ax_a.set_ylabel("reward")
     ax_a.set_ylim(-0.05, 1.20)
     ax_a.set_title("(a) 12-anchor traces + 3-param saturation fits + 80% asymptote")
-    ax_a.grid(alpha=0.25); ax_a.legend(fontsize=6, loc="lower right", ncol=2)
+    ax_a.grid(alpha=0.25)
+    ax_a.legend(fontsize=6, loc="lower right", ncol=2)
 
     # (b) lambda-vs-N (log-log) with bootstrap-CI slope label
     ax_b = fig.add_subplot(gs[0, 1])
-    fam_color = {"dense":"tab:blue", "moe": "tab:red"}
+    fam_color = {"dense": "tab:blue", "moe": "tab:red"}
     for name, (params_b, _, fam) in MODELS.items():
         fit = fits[name]
         if fit["valid"]:
             col = fam_color[fam]
-            ax_b.scatter(math.log10(params_b), math.log10(fit["lam"]),
-                         color=col, edgecolor="k", s=70, zorder=3,
-                         alpha=0.85)
+            ax_b.scatter(
+                math.log10(params_b),
+                math.log10(fit["lam"]),
+                color=col,
+                edgecolor="k",
+                s=70,
+                zorder=3,
+                alpha=0.85,
+            )
             # CI error bar
             lo = fit["ci"]["lam"]["lo"]
             hi = fit["ci"]["lam"]["hi"]
             if lo > 0 and hi > 0:
-                ax_b.plot([math.log10(params_b), math.log10(params_b)],
-                          [math.log10(lo), math.log10(hi)],
-                          color=col, lw=1.0, alpha=0.6)
+                ax_b.plot(
+                    [math.log10(params_b), math.log10(params_b)],
+                    [math.log10(lo), math.log10(hi)],
+                    color=col,
+                    lw=1.0,
+                    alpha=0.6,
+                )
     xs = np.linspace(-0.1, 3.2, 50)
-    ax_b.plot(xs, a_all + b_all * xs, "k--", lw=1.2,
-              label=f"all: slope={b_all:+.2f}/dec")
-    ax_b.plot(xs, a_f + b_f * xs, "k:", lw=1.2,
-              label=f"filtered: slope={b_f:+.2f}/dec")
+    ax_b.plot(xs, a_all + b_all * xs, "k--", lw=1.2, label=f"all: slope={b_all:+.2f}/dec")
+    ax_b.plot(xs, a_f + b_f * xs, "k:", lw=1.2, label=f"filtered: slope={b_f:+.2f}/dec")
     # H0: slope == 0 reference (horizontal through median)
-    ax_b.axhline(np.median(log_lam_all), color="grey", lw=0.7, alpha=0.5,
-                 label="H0: slope=0 (median)")
+    ax_b.axhline(
+        np.median(log_lam_all), color="grey", lw=0.7, alpha=0.5, label="H0: slope=0 (median)"
+    )
     # annotate bootstrap CI band
-    ax_b.fill_between(xs,
-                      a_f + boot_f["lo"] * xs,
-                      a_f + boot_f["hi"] * xs,
-                      color="grey", alpha=0.18,
-                      label=f"boot 95% CI [{boot_f['lo']:+.2f}, {boot_f['hi']:+.2f}]")
+    ax_b.fill_between(
+        xs,
+        a_f + boot_f["lo"] * xs,
+        a_f + boot_f["hi"] * xs,
+        color="grey",
+        alpha=0.18,
+        label=f"boot 95% CI [{boot_f['lo']:+.2f}, {boot_f['hi']:+.2f}]",
+    )
     ax_b.set_xlabel(r"$\log_{10}$(params [B])")
     ax_b.set_ylabel(r"$\log_{10}(\lambda_{3p})$")
     ax_b.set_title("(b) Lambda-vs-N falsification (log-log)")
-    ax_b.grid(alpha=0.25); ax_b.legend(fontsize=7, loc="upper right")
+    ax_b.grid(alpha=0.25)
+    ax_b.legend(fontsize=7, loc="upper right")
     # family legend
     from matplotlib.lines import Line2D
-    fam_handles = [Line2D([0], [0], marker="o", color="w",
-                          markerfacecolor=fam_color[f], markeredgecolor="k",
-                          markersize=9, label=f) for f in ["dense", "moe"]]
-    ax_b.legend(handles=fam_handles + [
-        Line2D([0], [0], color="k", ls="--", label=f"all: slope={b_all:+.2f}/dec"),
-        Line2D([0], [0], color="k", ls=":", label=f"filt: slope={b_f:+.2f}/dec"),
-        Line2D([0], [0], color="grey", lw=0.7, label=f"boot CI [{boot_f['lo']:+.2f},{boot_f['hi']:+.2f}]"),
-    ], fontsize=7, loc="upper right")
+
+    fam_handles = [
+        Line2D(
+            [0],
+            [0],
+            marker="o",
+            color="w",
+            markerfacecolor=fam_color[f],
+            markeredgecolor="k",
+            markersize=9,
+            label=f,
+        )
+        for f in ["dense", "moe"]
+    ]
+    ax_b.legend(
+        handles=fam_handles
+        + [
+            Line2D([0], [0], color="k", ls="--", label=f"all: slope={b_all:+.2f}/dec"),
+            Line2D([0], [0], color="k", ls=":", label=f"filt: slope={b_f:+.2f}/dec"),
+            Line2D(
+                [0],
+                [0],
+                color="grey",
+                lw=0.7,
+                label=f"boot CI [{boot_f['lo']:+.2f},{boot_f['hi']:+.2f}]",
+            ),
+        ],
+        fontsize=7,
+        loc="upper right",
+    )
 
     # (c) time-to-X% saturation (per-anchor bars)
     ax_c = fig.add_subplot(gs[1, 0])
@@ -541,48 +717,65 @@ def main() -> None:
             t, y = raw[name]
             tX = time_to_fraction(t, y, [f])[f]
             vals.append(tX if not math.isnan(tX) else 0.0)
-        ax_c.bar(xpos + (j - 1.5) * width, vals, width=width,
-                 label=f"t_{int(f*100)}% of peak", alpha=0.85, edgecolor="k")
+        ax_c.bar(
+            xpos + (j - 1.5) * width,
+            vals,
+            width=width,
+            label=f"t_{int(f * 100)}% of peak",
+            alpha=0.85,
+            edgecolor="k",
+        )
     ax_c.set_xticks(xpos)
-    ax_c.set_xticklabels([n.replace("-Inst", "") for n in names],
-                         rotation=25, ha="right", fontsize=8)
+    ax_c.set_xticklabels(
+        [n.replace("-Inst", "") for n in names], rotation=25, ha="right", fontsize=8
+    )
     ax_c.set_ylabel("training step")
     ax_c.set_title("(c) Time-to-saturation onset (t_50/t_70/t_80/t_90 of peak)")
-    ax_c.grid(axis="y", alpha=0.25); ax_c.legend(fontsize=7)
+    ax_c.grid(axis="y", alpha=0.25)
+    ax_c.legend(fontsize=7)
 
     # (d) Nemotron collapse zoom: trace + 3-param fit + 80% line
     ax_d = fig.add_subplot(gs[1, 1])
     nt, ny = raw[nem_name]
     nfit = fits[nem_name]
-    ax_d.bar(nt, ny, color="tab:red", alpha=0.6, edgecolor="k",
-             label=f"trace (peak={peak_v:.2f})")
+    ax_d.bar(nt, ny, color="tab:red", alpha=0.6, edgecolor="k", label=f"trace (peak={peak_v:.2f})")
     t_dense = np.linspace(1, len(nt), 100)
     yhat_n = f_sat_3p(t_dense, nfit["r0"], nfit["rinf"], nfit["lam"])
-    ax_d.plot(t_dense, yhat_n, "k-", lw=1.4,
-              label=fr"3-param fit $\lambda$={nfit['lam']:.2f}")
-    ax_d.axhline(0.8 * nfit["rinf"], ls=":", color="tab:purple", lw=1.0,
-                 label=fr"$0.8 R_{{\infty}}={0.8*nfit['rinf']:.2f}$")
-    ax_d.axhline(late_mean, ls="--", color="tab:blue", lw=1.0,
-                 label=f"late mean={late_mean:.2f}")
+    ax_d.plot(t_dense, yhat_n, "k-", lw=1.4, label=rf"3-param fit $\lambda$={nfit['lam']:.2f}")
+    ax_d.axhline(
+        0.8 * nfit["rinf"],
+        ls=":",
+        color="tab:purple",
+        lw=1.0,
+        label=rf"$0.8 R_{{\infty}}={0.8 * nfit['rinf']:.2f}$",
+    )
+    ax_d.axhline(late_mean, ls="--", color="tab:blue", lw=1.0, label=f"late mean={late_mean:.2f}")
     pi = int(np.argmax(ny))
-    ax_d.annotate(f"peak {peak_v:.2f} @ step {pi+1}",
-                  xy=(pi + 1, peak_v), xytext=(pi + 1.5, peak_v + 0.06),
-                  arrowprops=dict(arrowstyle="->", lw=0.9), fontsize=8)
-    ax_d.set_xlabel("training step"); ax_d.set_ylabel("reward")
+    ax_d.annotate(
+        f"peak {peak_v:.2f} @ step {pi + 1}",
+        xy=(pi + 1, peak_v),
+        xytext=(pi + 1.5, peak_v + 0.06),
+        arrowprops=dict(arrowstyle="->", lw=0.9),
+        fontsize=8,
+    )
+    ax_d.set_xlabel("training step")
+    ax_d.set_ylabel("reward")
     ax_d.set_ylim(0, 1.05)
-    ax_d.set_title("(d) Nemotron-120B: peak 0.875 not retained, "
-                   "3-param fit admits slow lambda")
-    ax_d.legend(fontsize=7); ax_d.grid(alpha=0.25)
+    ax_d.set_title("(d) Nemotron-120B: peak 0.875 not retained, 3-param fit admits slow lambda")
+    ax_d.legend(fontsize=7)
+    ax_d.grid(alpha=0.25)
 
     fig.suptitle(
         f"Pillar 1 iter109 -- 3-param saturation R(t)=r0+(R_inf-r0)*(1-exp(-lambda t)) "
         f"+ lambda-vs-N falsification + time-to-saturation onset (n={len(MODELS)})",
         fontsize=11,
     )
-    for fpx in (FIG / "scaling_law_iter109.pdf",
-                FIG / "scaling_law_iter109.png",
-                PAPER_FIG / "scaling_law_iter109.pdf",
-                PAPER_FIG / "scaling_law_iter109.png"):
+    for fpx in (
+        FIG / "scaling_law_iter109.pdf",
+        FIG / "scaling_law_iter109.png",
+        PAPER_FIG / "scaling_law_iter109.pdf",
+        PAPER_FIG / "scaling_law_iter109.png",
+    ):
         fig.savefig(fpx, dpi=150 if fpx.suffix == ".png" else None)
     plt.close(fig)
     print("wrote figures/scaling_law_iter109.{pdf,png} and paper/figures/...")
@@ -597,8 +790,16 @@ def main() -> None:
             rdr = csv.reader(f, delimiter="\t")
             header = next(rdr)
             existing_rows = list(rdr)
-        new_cols = ["r0_3p", "rinf_3p", "lam_3p", "lam_3p_lo", "lam_3p_hi",
-                    "rmse_3p", "t_50_3p", "t_80_3p"]
+        new_cols = [
+            "r0_3p",
+            "rinf_3p",
+            "lam_3p",
+            "lam_3p_lo",
+            "lam_3p_hi",
+            "rmse_3p",
+            "t_50_3p",
+            "t_80_3p",
+        ]
         header_out = header + new_cols
         rows_out = []
         for row in existing_rows:
@@ -635,22 +836,29 @@ def main() -> None:
                 ]
                 # placeholder values matching the original 5-frontier schema
                 synth = [
-                    name, params_b, len(raw[name][1]),
+                    name,
+                    params_b,
+                    len(raw[name][1]),
                     round(float(np.mean(raw[name][1])), 4),
                     round(float(np.var(raw[name][1])), 4),
                     round(float(np.max(raw[name][1])), 4),
                     round(float(np.min(raw[name][1])), 4),
-                    round(float(np.mean(raw[name][1][:max(2,len(raw[name][1])//3)])), 4),
-                    round(float(np.mean(raw[name][1][-max(2,len(raw[name][1])//3):])), 4),
-                    "0.0", "0.0", "flat",
+                    round(float(np.mean(raw[name][1][: max(2, len(raw[name][1]) // 3)])), 4),
+                    round(float(np.mean(raw[name][1][-max(2, len(raw[name][1]) // 3) :])), 4),
+                    "0.0",
+                    "0.0",
+                    "flat",
                     round(float(np.mean(raw[name][1])), 4),
                     round(fit["lam"], 4),
-                    round(-math.log(0.2)/fit["lam"], 4) if fit["lam"] > 0 else "nan",
-                    "0.0", "0.0", "False",
+                    round(-math.log(0.2) / fit["lam"], 4) if fit["lam"] > 0 else "nan",
+                    "0.0",
+                    "0.0",
+                    "False",
                     round(float(raw[name][1][0]), 4),
                     round(fit["rinf"], 4),
                     round(fit["lam"], 4),
-                    "plateau", fname,
+                    "plateau",
+                    fname,
                 ]
                 rows_out.append(synth + [str(x) for x in extra])
         with canon_path.open("w", newline="") as f:

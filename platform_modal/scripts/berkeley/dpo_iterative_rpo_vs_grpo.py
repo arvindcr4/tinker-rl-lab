@@ -15,9 +15,17 @@ from _analysis_common import read_tsv_lines as _read_tsv
 
 import sys
 from pathlib import Path
+
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from _paths import REPO_ROOT, RESULTS_DIR
-from _review01_contracts import OUTPUT_ROOT, evidence_metadata, require_inputs, write_artifact_metadata, json_ready
+from _review01_contracts import (
+    OUTPUT_ROOT,
+    evidence_metadata,
+    require_inputs,
+    write_artifact_metadata,
+    json_ready,
+)
+
 ROOT = WORKTREE = REPO_ROOT
 RES = RESULTS = RESULTS_DIR
 OUT = OUTPUT_ROOT / "dpo_iterative_rpo_vs_grpo"
@@ -50,15 +58,17 @@ def load_zvflink():
         if len(r) < 7:
             continue
         try:
-            out.append({
-                "T": int(r[0]),
-                "acc_G4": _parse_float(r[1]),
-                "acc_G32": _parse_float(r[2]),
-                "retention": _parse_float(r[3]),
-                "GU_G4": _parse_float(r[4]),
-                "GU_G32": _parse_float(r[5]),
-                "GU_ratio": _parse_float(r[6]),
-            })
+            out.append(
+                {
+                    "T": int(r[0]),
+                    "acc_G4": _parse_float(r[1]),
+                    "acc_G32": _parse_float(r[2]),
+                    "retention": _parse_float(r[3]),
+                    "GU_G4": _parse_float(r[4]),
+                    "GU_G32": _parse_float(r[5]),
+                    "GU_ratio": _parse_float(r[6]),
+                }
+            )
         except (ValueError, IndexError):
             continue
     return out
@@ -81,8 +91,16 @@ def load_iso_reward():
 
 def load_snr_scaling():
     rows = _read_tsv(NOISE)
-    out = {"n_G": None, "slope": None, "ci_lo": None, "ci_hi": None,
-           "R2": None, "p": None, "theoretical": None, "at_G": {}}
+    out = {
+        "n_G": None,
+        "slope": None,
+        "ci_lo": None,
+        "ci_hi": None,
+        "R2": None,
+        "p": None,
+        "theoretical": None,
+        "at_G": {},
+    }
     for r in rows[1:]:
         if len(r) < 3:
             continue
@@ -90,11 +108,13 @@ def load_snr_scaling():
         if r[1] == "n_G":
             # headline is like 'SNR-at-G pool: n=4 G-values: [2, 4, 8, 16]'
             import re
+
             m = re.search(r"n=(\d+)", h)
             out["n_G"] = int(m.group(1)) if m else None
         elif r[1] == "ols_log10_snr_vs_log10_G":
             # headline: 'OLS log10(SNR) ~ log10(G): slope=+0.366/decade  95%CI [+0.148,+0.583]  R^2=0.844  p=8.11e-02'
             import re
+
             m = re.search(r"slope=([+-]?\d+\.\d+)", h)
             out["slope"] = float(m.group(1)) if m else None
             m = re.search(r"95%CI\s*\[([+-]?\d+\.\d+),\s*([+-]?\d+\.\d+)\]", h)
@@ -108,6 +128,7 @@ def load_snr_scaling():
         elif r[1] == "theoretical_pred_+0.5":
             # headline like 'Theoretical SNR~G^0.5 predicts slope=+0.500/decade; ...'
             import re
+
             m = re.search(r"slope=([+-]?\d+\.\d+)", h)
             out["theoretical"] = float(m.group(1)) if m else None
         elif r[1] == "pred_at_G":
@@ -142,6 +163,7 @@ def load_optimal_g():
             T = int(r[1].split("=")[1])
             # headline like 'T=1e+06: G*(T)=8, acc(G*)=0.480, G*(T)_pred=8.0'
             import re
+
             m = re.search(r"G\*\(T\)=(\d+)", r[2])
             if m:
                 out[T] = int(m.group(1))
@@ -171,22 +193,31 @@ def load_bounded():
     return out
 
 
-
 def dpo_implicit_reward_equivalence():
     """Report observed contrast yield; ratios cannot establish usable pair counts."""
-    return [{**row, "iterative_rpo_feasible_at_G4": None,
-             "iterative_rpo_feasible_at_G32": None,
-             "status": "unmeasured_hypothesis",
-             "note": "Actual usable-group or winner-loser-pair counts are required; yield ratio is not feasibility"}
-            for row in load_zvflink()]
+    return [
+        {
+            **row,
+            "iterative_rpo_feasible_at_G4": None,
+            "iterative_rpo_feasible_at_G32": None,
+            "status": "unmeasured_hypothesis",
+            "note": "Actual usable-group or winner-loser-pair counts are required; yield ratio is not feasibility",
+        }
+        for row in load_zvflink()
+    ]
 
 
 def snr_scaling_validation():
     """Reported GRPO slope diagnostics, with no inference about unmeasured IRPO."""
     source = load_snr_scaling()
     available = all(source[key] is not None for key in ["ci_lo", "ci_hi", "theoretical"])
-    return {**source, "slope_in_ci_of_theory": source["ci_lo"] <= source["theoretical"] <= source["ci_hi"] if available else None,
-            "interpretation": "Descriptive interval containment is not objective or algorithm equivalence"}
+    return {
+        **source,
+        "slope_in_ci_of_theory": source["ci_lo"] <= source["theoretical"] <= source["ci_hi"]
+        if available
+        else None,
+        "interpretation": "Descriptive interval containment is not objective or algorithm equivalence",
+    }
 
 
 def write_tsv(path, rows, header):
@@ -197,10 +228,16 @@ def write_tsv(path, rows, header):
 
 
 def irpo_optimal_g_vs_iter127():
-    return [{"T": budget, "GRPO_optimal_G": size, "Iterative_RPO_optimal_G": None,
-             "status": "unmeasured_hypothesis",
-             "rationale": "No IRPO training comparison was performed"}
-            for budget, size in load_optimal_g().items()]
+    return [
+        {
+            "T": budget,
+            "GRPO_optimal_G": size,
+            "Iterative_RPO_optimal_G": None,
+            "status": "unmeasured_hypothesis",
+            "rationale": "No IRPO training comparison was performed",
+        }
+        for budget, size in load_optimal_g().items()
+    ]
 
 
 def dpo_pair_gradient_scale(beta, log_ratio_difference):
@@ -208,39 +245,55 @@ def dpo_pair_gradient_scale(beta, log_ratio_difference):
     if beta <= 0:
         raise ValueError("beta must be positive")
     z = beta * log_ratio_difference
-    return beta * (math.exp(-z)/(1+math.exp(-z)) if z >= 0 else 1/(1+math.exp(z)))
+    return beta * (math.exp(-z) / (1 + math.exp(-z)) if z >= 0 else 1 / (1 + math.exp(z)))
 
 
 def dpo_loss_vs_grpo_loss():
-    return [{"setting": "one winner-loser pair; frozen reference snapshot equals current policy",
-             "GRPO_loss_form": "-D (unaveraged pair, population-SD advantages +1,-1)",
-             "DPO_loss_form": "-log sigmoid(beta * (D-D_ref))",
-             "gradient_scale_at_snapshot": "beta/2 relative to -D",
-             "general_gradient_scale": "beta * sigmoid(-beta*(D-D_ref))",
-             "match": "Aligned local update directions only, after scale and loss normalization",
-             "interpretation": "No trajectory or optimal group-size equivalence. Differentiably tied reference gives zero gradient. Unscaled gradient tends to zero as beta tends to zero."}]
+    return [
+        {
+            "setting": "one winner-loser pair; frozen reference snapshot equals current policy",
+            "GRPO_loss_form": "-D (unaveraged pair, population-SD advantages +1,-1)",
+            "DPO_loss_form": "-log sigmoid(beta * (D-D_ref))",
+            "gradient_scale_at_snapshot": "beta/2 relative to -D",
+            "general_gradient_scale": "beta * sigmoid(-beta*(D-D_ref))",
+            "match": "Aligned local update directions only, after scale and loss normalization",
+            "interpretation": "No trajectory or optimal group-size equivalence. Differentiably tied reference gives zero gradient. Unscaled gradient tends to zero as beta tends to zero.",
+        }
+    ]
 
 
 def main():
     inputs = [ZVFLINK, OPTG, NOISE]
     require_inputs(*inputs)
-    summary = {**evidence_metadata("frozen_reference_pair_gradient_identity_and_unmeasured_IRPO_hypotheses", inputs),
-               "contrast_yield": dpo_implicit_reward_equivalence(),
-               "optimal_group_sizes": irpo_optimal_g_vs_iter127(),
-               "loss_relationship": dpo_loss_vs_grpo_loss(),
-               "grpo_snr_source": snr_scaling_validation(),
-               "headline_claim": "A frozen equal reference aligns one-pair local directions up to beta/2 scaling; objective and trajectory equivalence are not established",
-               "IRPO_comparison_status": "unmeasured_hypothesis"}
+    summary = {
+        **evidence_metadata(
+            "frozen_reference_pair_gradient_identity_and_unmeasured_IRPO_hypotheses", inputs
+        ),
+        "contrast_yield": dpo_implicit_reward_equivalence(),
+        "optimal_group_sizes": irpo_optimal_g_vs_iter127(),
+        "loss_relationship": dpo_loss_vs_grpo_loss(),
+        "grpo_snr_source": snr_scaling_validation(),
+        "headline_claim": "A frozen equal reference aligns one-pair local directions up to beta/2 scaling; objective and trajectory equivalence are not established",
+        "IRPO_comparison_status": "unmeasured_hypothesis",
+    }
     OUT.mkdir(parents=True, exist_ok=True)
-    (OUT / "dpo_iterative_rpo_summary.json").write_text(json.dumps(json_ready(summary), indent=2, allow_nan=False) + "\n")
+    (OUT / "dpo_iterative_rpo_summary.json").write_text(
+        json.dumps(json_ready(summary), indent=2, allow_nan=False) + "\n"
+    )
     for name, rows in [
         ("dpo_iterative_rpo_grpo_equivalence.tsv", summary["contrast_yield"]),
         ("dpo_iterative_rpo_snr_scaling.tsv", [summary["grpo_snr_source"]]),
         ("dpo_iterative_rpo_optimal_g.tsv", summary["optimal_group_sizes"]),
         ("dpo_iterative_rpo_loss_equivalence.tsv", summary["loss_relationship"]),
     ]:
-        write_tsv(OUT/name, rows, list(rows[0]) if rows else ["status"])
-    write_artifact_metadata(OUT, {key: summary[key] for key in ["protocol", "evidence_type", "analysis_method", "inputs", "confirmatory"]})
+        write_tsv(OUT / name, rows, list(rows[0]) if rows else ["status"])
+    write_artifact_metadata(
+        OUT,
+        {
+            key: summary[key]
+            for key in ["protocol", "evidence_type", "analysis_method", "inputs", "confirmatory"]
+        },
+    )
     return summary
 
 

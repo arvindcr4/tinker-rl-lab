@@ -144,7 +144,9 @@ def save_checkpoint_bundle(
         adapter = staging / "adapter"
         model.save_pretrained(adapter, safe_serialization=True)
         torch.save(optimizer.state_dict(), staging / "optimizer.pt")
-        torch.save(scheduler.state_dict() if scheduler is not None else {}, staging / "scheduler.pt")
+        torch.save(
+            scheduler.state_dict() if scheduler is not None else {}, staging / "scheduler.pt"
+        )
         torch.save(capture_rng_state(), staging / "rng_state.pt")
         training_state = {
             "step": step,
@@ -162,7 +164,9 @@ def save_checkpoint_bundle(
         atomic_json(staging / "source_manifest.json", dict(sorted(source_hashes.items())))
         evaluation_steps = tuple(int(item["step"]) for item in evaluations)
         if set(evaluation_steps) != set(evaluation_files):
-            raise CheckpointContractError("evaluation summaries and files do not have the same steps")
+            raise CheckpointContractError(
+                "evaluation summaries and files do not have the same steps"
+            )
         for evaluation_step, source in evaluation_files.items():
             if not source.is_file():
                 raise CheckpointContractError(
@@ -244,7 +248,9 @@ def load_checkpoint_bundle(
             )
     else:
         adapter_loader(model, root / "adapter")
-    optimizer.load_state_dict(torch.load(root / "optimizer.pt", map_location="cpu", weights_only=True))
+    optimizer.load_state_dict(
+        torch.load(root / "optimizer.pt", map_location="cpu", weights_only=True)
+    )
     scheduler_state = torch.load(root / "scheduler.pt", map_location="cpu", weights_only=True)
     if scheduler is not None:
         scheduler.load_state_dict(scheduler_state)

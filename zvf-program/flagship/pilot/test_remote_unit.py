@@ -16,6 +16,7 @@ from pilot.remote_unit import (
     main,
     parse_args,
 )
+import pytest
 
 
 class PromptTokenTests(unittest.TestCase):
@@ -45,14 +46,14 @@ class PromptTokenTests(unittest.TestCase):
             question="1+1?",
             max_length=64,
         )
-        self.assertTrue(torch.equal(result, tensor))
+        assert torch.equal(result, tensor)
         list_result = _prompt_tokens(
             FakeTokenizer([[5, 6, 7, 8]]),
             regime="balanced_equal_length",
             question="1+1?",
             max_length=2,
         )
-        self.assertTrue(torch.equal(list_result, torch.tensor([[7, 8]])))
+        assert torch.equal(list_result, torch.tensor([[7, 8]]))
 
 
 class GenerateCandidateTests(unittest.TestCase):
@@ -114,10 +115,10 @@ class GenerateCandidateTests(unittest.TestCase):
             state_before = torch.random.get_rng_state()
             first = call()
             state_after = torch.random.get_rng_state()
-            self.assertNotIn("generator", recorded)
-            self.assertTrue(torch.equal(state_before, state_after))
-            self.assertEqual(first, call())
-        self.assertEqual(sdpa_calls, [[SDPBackend.MATH], [SDPBackend.MATH]])
+            assert "generator" not in recorded
+            assert torch.equal(state_before, state_after)
+            assert first == call()
+        assert sdpa_calls == [[SDPBackend.MATH], [SDPBackend.MATH]]
 
 
 class RemoteUnitSafetyTests(unittest.TestCase):
@@ -136,14 +137,14 @@ class RemoteUnitSafetyTests(unittest.TestCase):
     def test_describe_reports_authorized_protocol_without_side_effects(self) -> None:
         output = io.StringIO()
         with contextlib.redirect_stdout(output):
-            self.assertEqual(main(["describe"]), 0)
+            assert main(["describe"]) == 0
         record = json.loads(output.getvalue())
-        self.assertEqual(record["status"], "ready_to_run")
-        self.assertTrue(record["gpu_authorized"])
-        self.assertEqual(record["execution_blockers"], [])
+        assert record["status"] == "ready_to_run"
+        assert record["gpu_authorized"]
+        assert record["execution_blockers"] == []
 
     def test_build_corpus_refuses_before_credentials_or_heavy_remote_work(self) -> None:
-        with self.assertRaisesRegex(SystemExit, "allocation is forbidden"):
+        with pytest.raises(SystemExit, match="allocation is forbidden"):
             main(
                 [
                     "--protocol",
@@ -170,12 +171,12 @@ class RemoteUnitSafetyTests(unittest.TestCase):
                 "arvindcr4/tinker-rl-lab-flagship-pilot-corpus-filtered-s23",
             ]
         )
-        self.assertEqual(args.command, "build-corpus")
-        self.assertEqual(args.seed, 23)
-        self.assertEqual(args.regime, "filtered_variable_length")
+        assert args.command == "build-corpus"
+        assert args.seed == 23
+        assert args.regime == "filtered_variable_length"
 
     def test_train_unit_refuses_before_remote_writes_while_locked(self) -> None:
-        with self.assertRaisesRegex(SystemExit, "allocation is forbidden"):
+        with pytest.raises(SystemExit, match="allocation is forbidden"):
             main(
                 [
                     "--protocol",
@@ -191,7 +192,7 @@ class RemoteUnitSafetyTests(unittest.TestCase):
             )
 
     def test_smoke_refuses_while_locked(self) -> None:
-        with self.assertRaisesRegex(SystemExit, "allocation is forbidden"):
+        with pytest.raises(SystemExit, match="allocation is forbidden"):
             main(["--protocol", str(self.locked_protocol), "smoke"])
 
 
@@ -280,8 +281,8 @@ class CorpusCheckpointTests(unittest.TestCase):
             accelerator="NVIDIA A100-SXM4-40GB",
             sources=self.sources,
         )
-        self.assertEqual(restored["completed_groups"], 20)
-        self.assertEqual((destination / "groups/group-019.pt").read_bytes(), b"group-19")
+        assert restored["completed_groups"] == 20
+        assert (destination / "groups/group-019.pt").read_bytes() == b"group-19"
 
     def test_checkpoint_restore_rejects_tampered_file_and_train_order(self) -> None:
         manifest = self.manifest()
@@ -289,7 +290,7 @@ class CorpusCheckpointTests(unittest.TestCase):
         (snapshot / "resume/groups/group-019.pt").write_bytes(b"tampered")
         destination = Path(self.temporary.name) / "restored-tampered"
         destination.mkdir()
-        with self.assertRaisesRegex(RemoteContractError, "file hash mismatch"):
+        with pytest.raises(RemoteContractError, match="file hash mismatch"):
             _restore_corpus_checkpoint(
                 snapshot_root=snapshot,
                 destination=destination,
@@ -304,7 +305,7 @@ class CorpusCheckpointTests(unittest.TestCase):
         clean_snapshot = self.snapshot(manifest)
         destination = Path(self.temporary.name) / "restored-order"
         destination.mkdir()
-        with self.assertRaisesRegex(RemoteContractError, "train order diverges"):
+        with pytest.raises(RemoteContractError, match="train order diverges"):
             _restore_corpus_checkpoint(
                 snapshot_root=clean_snapshot,
                 destination=destination,

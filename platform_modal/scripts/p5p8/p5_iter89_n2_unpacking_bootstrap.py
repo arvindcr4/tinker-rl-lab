@@ -39,33 +39,35 @@ Outputs (≤300 LoC, stdlib only):
   - platform_hybrid/experiments/results/p5p8/p5_n2_unpacking_lomo.tsv (LOMO stability)
   - platform_hybrid/experiments/results/p5p8/p5_n2_unpacking_boot_summary.json (machine-readable)
 """
+
 from __future__ import annotations
 import json, math, os, random, sys
 from collections import defaultdict
 from itertools import combinations
-from statistics import fmean, pstdev
+from statistics import fmean
 
 from _p5p7_common import load_rows
 
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))  # for _stats
-from _stats import paired_step_bootstrap  # noqa: E402
+from _stats import paired_step_bootstrap
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
-RES  = os.path.join(ROOT, "platform_hybrid", "experiments", "results")
-N2   = os.path.join(RES, "n2_reward_tensor_resume", "n2_metrics.tsv")
-OUT  = os.path.join(RES, "p5p8/review17_v2")
+RES = os.path.join(ROOT, "platform_hybrid", "experiments", "results")
+N2 = os.path.join(RES, "n2_reward_tensor_resume", "n2_metrics.tsv")
+OUT = os.path.join(RES, "p5p8/review17_v2")
 
 
 METRICS = ["zvf", "pcd", "larq", "reward_mean", "mean_len", "cv_len", "loss"]
 METHODS = ["grpo", "aero", "areal", "gift"]
 SEED = 20260705
-B = 4000   # bootstrap resamples (paired-step)
+B = 4000  # bootstrap resamples (paired-step)
 ALPHA = 0.05
 
 
 # ----------------------- helpers -----------------------
 
 from p5_review17_stats import json_safe
+
 
 def axis_eta2(rows, axis_key, value_key):
     """Reuse the Berkeley unpacking machinery. Returns SS_axis/SS_total."""
@@ -91,6 +93,7 @@ def cohens_d(a, b):
         return float("nan")
     ma, mb = fmean(a), fmean(b)
     from statistics import stdev
+
     va, vb = stdev(a), stdev(b)
     pooled = math.sqrt(((len(a) - 1) * va * va + (len(b) - 1) * vb * vb) / (len(a) + len(b) - 2))
     if pooled <= 1e-12:
@@ -120,12 +123,17 @@ def reject_in_null(ci_lo, ci_hi, null_value, direction="two-sided"):
 
 # ----------------------- main -----------------------
 
+
 def main():
-    print("Protocol review17-p5-v2: exploratory descriptive associations; no independent-run, causal, equivalence, or held-out prediction claim")
+    print(
+        "Protocol review17-p5-v2: exploratory descriptive associations; no independent-run, causal, equivalence, or held-out prediction claim"
+    )
     os.makedirs(OUT, exist_ok=True)
     rows = load_rows(N2, METRICS)
     print(f"== Iter 89 P5 N2 unpacking bootstrap (B={B}, seed={SEED}) ==")
-    print(f"loaded {len(rows)} rows ({len(METHODS)} methods x {len({r['step'] for r in rows})} steps x 1 seed)")
+    print(
+        f"loaded {len(rows)} rows ({len(METHODS)} methods x {len({r['step'] for r in rows})} steps x 1 seed)"
+    )
 
     # ------------------- H1: bootstrap CI on algorithm-axis eta^2 per metric -------------------
     print("\n--- H1: bootstrap CI on algorithm-axis eta^2 per metric ---")
@@ -136,19 +144,23 @@ def main():
         lo, mu, hi = ci(boots)
         ub_lt_005 = hi is not None and hi <= 0.05
         ub_lt_010 = hi is not None and hi <= 0.10
-        h1_table.append({
-            "metric": metric,
-            "n_rows": len(rows),
-            "eta2_point": round(point, 4),
-            "eta2_boot_mean": round(mu, 4),
-            "eta2_boot_lo": round(lo, 4),
-            "eta2_boot_hi": round(hi, 4),
-            "ub_le_0p05": bool(ub_lt_005),
-            "ub_le_0p10": bool(ub_lt_010),
-            "H1_ub_le_0p05_pass": bool(ub_lt_005 and metric in ("zvf", "pcd", "larq", "reward_mean", "cv_len")),
-            "H1_ub_le_0p10_pass_strict_or_loose": bool(ub_lt_010),
-            "n_boot": len(boots),
-        })
+        h1_table.append(
+            {
+                "metric": metric,
+                "n_rows": len(rows),
+                "eta2_point": round(point, 4),
+                "eta2_boot_mean": round(mu, 4),
+                "eta2_boot_lo": round(lo, 4),
+                "eta2_boot_hi": round(hi, 4),
+                "ub_le_0p05": bool(ub_lt_005),
+                "ub_le_0p10": bool(ub_lt_010),
+                "H1_ub_le_0p05_pass": bool(
+                    ub_lt_005 and metric in ("zvf", "pcd", "larq", "reward_mean", "cv_len")
+                ),
+                "H1_ub_le_0p10_pass_strict_or_loose": bool(ub_lt_010),
+                "n_boot": len(boots),
+            }
+        )
         tag = "✓ ≤0.05 UB" if ub_lt_005 else ("· ≤0.10 UB" if ub_lt_010 else "✗ >0.10 UB")
         print(f"  {metric:11s}  pt={point:.4f}  boot=[{lo:.4f}, {hi:.4f}]  {tag}")
 
@@ -158,23 +170,27 @@ def main():
     pairs = list(combinations(METHODS, 2))
     h2_table = []
     for metric in strict_metrics:
-        for (a, b) in pairs:
+        for a, b in pairs:
             sub = [r for r in rows if r["method"] in (a, b)]
             if len({r["method"] for r in sub}) < 2:
                 continue
             point = axis_eta2(sub, "method", metric)
-            boots = paired_step_bootstrap(sub, lambda s, m=metric: axis_eta2(s, "method", m), B, SEED)
+            boots = paired_step_bootstrap(
+                sub, lambda s, m=metric: axis_eta2(s, "method", m), B, SEED
+            )
             lo, mu, hi = ci(boots)
             ub_lt_004 = hi is not None and hi <= 0.04
-            h2_table.append({
-                "metric": metric,
-                "pair": f"{a}_vs_{b}",
-                "eta2_pair_point": round(point, 4),
-                "eta2_pair_boot_lo": round(lo, 4),
-                "eta2_pair_boot_hi": round(hi, 4),
-                "ub_le_0p04": bool(ub_lt_004),
-                "n_boot": len(boots),
-            })
+            h2_table.append(
+                {
+                    "metric": metric,
+                    "pair": f"{a}_vs_{b}",
+                    "eta2_pair_point": round(point, 4),
+                    "eta2_pair_boot_lo": round(lo, 4),
+                    "eta2_pair_boot_hi": round(hi, 4),
+                    "ub_le_0p04": bool(ub_lt_004),
+                    "n_boot": len(boots),
+                }
+            )
     # H2 verdict: every strict-passing metric's 6 pairs have UB <= 0.04
     h2_pass = {}
     for metric in strict_metrics:
@@ -185,7 +201,9 @@ def main():
     print(f"  H2 verdict: pair-wise UB<=0.04 on every strict-passing metric = {h2_pass_all}")
     for metric in strict_metrics:
         max_ub = max(h["eta2_pair_boot_hi"] for h in h2_table if h["metric"] == metric)
-        print(f"    {metric:11s}  max UB over 6 pairs = {max_ub:.4f}  {'✓' if h2_pass[metric] else '✗'}")
+        print(
+            f"    {metric:11s}  max UB over 6 pairs = {max_ub:.4f}  {'✓' if h2_pass[metric] else '✗'}"
+        )
 
     # ------------------- H3: leave-one-method-out (LOMO) stability on `zvf` -------------------
     print("\n--- H3: LOMO stability on zvf (algorithm-axis eta^2 with one method removed) ---")
@@ -197,19 +215,25 @@ def main():
         point = axis_eta2(sub, "method", "zvf")
         boots = paired_step_bootstrap(sub, lambda s: axis_eta2(s, "method", "zvf"), B, SEED)
         lo, mu, hi = ci(boots)
-        h3_table.append({
-            "omit_method": omit,
-            "remaining_methods": ",".join(sorted({r["method"] for r in sub})),
-            "eta2_zvf_point": round(point, 4),
-            "eta2_zvf_boot_lo": round(lo, 4),
-            "eta2_zvf_boot_hi": round(hi, 4),
-            "in_band_0p025_0p075": bool(lo is not None and hi is not None and 0.025 <= lo and hi <= 0.075),
-        })
+        h3_table.append(
+            {
+                "omit_method": omit,
+                "remaining_methods": ",".join(sorted({r["method"] for r in sub})),
+                "eta2_zvf_point": round(point, 4),
+                "eta2_zvf_boot_lo": round(lo, 4),
+                "eta2_zvf_boot_hi": round(hi, 4),
+                "in_band_0p025_0p075": bool(
+                    lo is not None and hi is not None and 0.025 <= lo and hi <= 0.075
+                ),
+            }
+        )
     h3_in_band = [h for h in h3_table if h["in_band_0p025_0p075"]]
     h3_pass = len(h3_in_band) == len(h3_table)
     for h in h3_table:
         tag = "✓ in [0.025, 0.075]" if h["in_band_0p025_0p075"] else "✗ outside band"
-        print(f"  omit {h['omit_method']:6s}  pt={h['eta2_zvf_point']:.4f}  boot=[{h['eta2_zvf_boot_lo']:.4f}, {h['eta2_zvf_boot_hi']:.4f}]  {tag}")
+        print(
+            f"  omit {h['omit_method']:6s}  pt={h['eta2_zvf_point']:.4f}  boot=[{h['eta2_zvf_boot_lo']:.4f}, {h['eta2_zvf_boot_hi']:.4f}]  {tag}"
+        )
 
     # ------------------- H4: bootstrap CI on GIFT Cohen's d (last-10 step pooled) -------------------
     print("\n--- H4: bootstrap CI on GIFT vs others Cohen's d (last-10 step) ---")
@@ -241,16 +265,22 @@ def main():
         lo, mu, hi = ci(boots)
         ci_excludes_zero = lo is not None and hi is not None and (lo > 0 or hi < 0)
         ci_lower_ge_1 = lo is not None and lo >= 1.0
-        h4_table.append({
-            "metric": metric,
-            "cohens_d_point": round(d_point, 4),
-            "cohens_d_boot_lo": round(lo, 4),
-            "cohens_d_boot_hi": round(hi, 4),
-            "ci_excludes_zero": bool(ci_excludes_zero),
-            "ci_lower_ge_1p0": bool(ci_lower_ge_1),
-            "n_boot": len(boots),
-        })
-        tag = "✓ ≥1.0 LB" if ci_lower_ge_1 else ("✓ excludes 0" if ci_excludes_zero else "✗ includes 0")
+        h4_table.append(
+            {
+                "metric": metric,
+                "cohens_d_point": round(d_point, 4),
+                "cohens_d_boot_lo": round(lo, 4),
+                "cohens_d_boot_hi": round(hi, 4),
+                "ci_excludes_zero": bool(ci_excludes_zero),
+                "ci_lower_ge_1p0": bool(ci_lower_ge_1),
+                "n_boot": len(boots),
+            }
+        )
+        tag = (
+            "✓ ≥1.0 LB"
+            if ci_lower_ge_1
+            else ("✓ excludes 0" if ci_excludes_zero else "✗ includes 0")
+        )
         print(f"  {metric:11s}  d_pt={d_point:+.3f}  boot=[{lo:+.3f}, {hi:+.3f}]  {tag}")
     h4_zvf_pass = next((h["ci_lower_ge_1p0"] for h in h4_table if h["metric"] == "zvf"), False)
 
@@ -260,11 +290,20 @@ def main():
         "inference_scope": "exploratory descriptive; conditional on observed runs/configurations; no independent-run or prospective attribution claim",
         "iter": 89,
         "vein": "(b)+(c) Bootstrap CIs + leave-one-method-out stability on the N2 four-method same-stack panel",
-        "data": {"path": "platform_hybrid/experiments/results/n2_reward_tensor_resume/n2_metrics.tsv",
-                 "n_rows": len(rows), "n_methods": 4, "n_steps": 40, "n_seeds": 1,
-                 "methods": METHODS},
-        "bootstrap": {"B": B, "seed": SEED, "alpha": ALPHA,
-                       "method": "paired-step resample (sample 40 steps w/ replacement; keep all 4 methods at each resampled step)"},
+        "data": {
+            "path": "platform_hybrid/experiments/results/n2_reward_tensor_resume/n2_metrics.tsv",
+            "n_rows": len(rows),
+            "n_methods": 4,
+            "n_steps": 40,
+            "n_seeds": 1,
+            "methods": METHODS,
+        },
+        "bootstrap": {
+            "B": B,
+            "seed": SEED,
+            "alpha": ALPHA,
+            "method": "paired-step resample (sample 40 steps w/ replacement; keep all 4 methods at each resampled step)",
+        },
         "h1_pooled_algo_axis_eta2_with_boot_ci": h1_table,
         "h2_pairwise_eta2_with_boot_ci": h2_table,
         "h2_pass_all_pairs_ub_le_0p04": h2_pass_all,
@@ -277,22 +316,34 @@ def main():
     # ------------------- write outputs -------------------
     # 1) bootstrap CI per metric
     with open(os.path.join(OUT, "p5_n2_unpacking_boot.tsv"), "w") as f:
-        f.write("metric\tn_rows\teta2_point\teta2_boot_lo\teta2_boot_mean\teta2_boot_hi\tub_le_0p05\tub_le_0p10\tn_boot\n")
+        f.write(
+            "metric\tn_rows\teta2_point\teta2_boot_lo\teta2_boot_mean\teta2_boot_hi\tub_le_0p05\tub_le_0p10\tn_boot\n"
+        )
         for h in h1_table:
-            f.write(f"{h['metric']}\t{h['n_rows']}\t{h['eta2_point']}\t{h['eta2_boot_lo']}\t{h['eta2_boot_mean']}\t"
-                    f"{h['eta2_boot_hi']}\t{int(h['ub_le_0p05'])}\t{int(h['ub_le_0p10'])}\t{h['n_boot']}\n")
+            f.write(
+                f"{h['metric']}\t{h['n_rows']}\t{h['eta2_point']}\t{h['eta2_boot_lo']}\t{h['eta2_boot_mean']}\t"
+                f"{h['eta2_boot_hi']}\t{int(h['ub_le_0p05'])}\t{int(h['ub_le_0p10'])}\t{h['n_boot']}\n"
+            )
     # 2) pair-wise eta^2
     with open(os.path.join(OUT, "p5_n2_unpacking_pair.tsv"), "w") as f:
-        f.write("metric\tpair\teta2_pair_point\teta2_pair_boot_lo\teta2_pair_boot_hi\tub_le_0p04\tn_boot\n")
+        f.write(
+            "metric\tpair\teta2_pair_point\teta2_pair_boot_lo\teta2_pair_boot_hi\tub_le_0p04\tn_boot\n"
+        )
         for h in h2_table:
-            f.write(f"{h['metric']}\t{h['pair']}\t{h['eta2_pair_point']}\t{h['eta2_pair_boot_lo']}\t"
-                    f"{h['eta2_pair_boot_hi']}\t{int(h['ub_le_0p04'])}\t{h['n_boot']}\n")
+            f.write(
+                f"{h['metric']}\t{h['pair']}\t{h['eta2_pair_point']}\t{h['eta2_pair_boot_lo']}\t"
+                f"{h['eta2_pair_boot_hi']}\t{int(h['ub_le_0p04'])}\t{h['n_boot']}\n"
+            )
     # 3) LOMO
     with open(os.path.join(OUT, "p5_n2_unpacking_lomo.tsv"), "w") as f:
-        f.write("omit_method\tremaining_methods\teta2_zvf_point\teta2_zvf_boot_lo\teta2_zvf_boot_hi\tin_band_0p025_0p075\n")
+        f.write(
+            "omit_method\tremaining_methods\teta2_zvf_point\teta2_zvf_boot_lo\teta2_zvf_boot_hi\tin_band_0p025_0p075\n"
+        )
         for h in h3_table:
-            f.write(f"{h['omit_method']}\t{h['remaining_methods']}\t{h['eta2_zvf_point']}\t"
-                    f"{h['eta2_zvf_boot_lo']}\t{h['eta2_zvf_boot_hi']}\t{int(h['in_band_0p025_0p075'])}\n")
+            f.write(
+                f"{h['omit_method']}\t{h['remaining_methods']}\t{h['eta2_zvf_point']}\t"
+                f"{h['eta2_zvf_boot_lo']}\t{h['eta2_zvf_boot_hi']}\t{int(h['in_band_0p025_0p075'])}\n"
+            )
     # 4) summary json
     with open(os.path.join(OUT, "p5_n2_unpacking_boot_summary.json"), "w") as f:
         json.dump(json_safe(summary), f, indent=2)
@@ -303,7 +354,9 @@ def main():
     print(f"  {os.path.join(OUT, 'p5_n2_unpacking_lomo.tsv')}")
     print(f"  {os.path.join(OUT, 'p5_n2_unpacking_boot_summary.json')}")
     print()
-    print(f"H1 verdict: bootstrap UB <= 0.05 on zvf/pcd/larq/reward_mean/cv_len (strict channels) = {all(h['H1_ub_le_0p05_pass'] for h in h1_table if h['metric'] in ('zvf', 'pcd', 'larq', 'reward_mean', 'cv_len'))}")
+    print(
+        f"H1 verdict: bootstrap UB <= 0.05 on zvf/pcd/larq/reward_mean/cv_len (strict channels) = {all(h['H1_ub_le_0p05_pass'] for h in h1_table if h['metric'] in ('zvf', 'pcd', 'larq', 'reward_mean', 'cv_len'))}"
+    )
     print(f"H2 verdict: pair-wise UB <= 0.04 on every strict channel = {h2_pass_all}")
     print(f"H3 verdict: LOMO all in [0.025, 0.075] = {h3_pass}")
     print(f"H4 verdict: zvf CI lower bound >= 1.0 = {h4_zvf_pass}")

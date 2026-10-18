@@ -7,7 +7,6 @@ import tempfile
 import unittest
 from pathlib import Path
 
-import torch
 
 from pilot.benchmark_spectral_harness import (
     compute_theoretical_flops,
@@ -22,15 +21,15 @@ class SpectralBenchmarkHarnessTests(unittest.TestCase):
         G, L = 4, 128
         normal_data, zvf_data = generate_benchmark_fixture(G, L)
 
-        self.assertEqual(normal_data["rewards"].shape, (G,))
-        self.assertEqual(zvf_data["rewards"].shape, (G,))
-        self.assertEqual(normal_data["logps"].shape, (G, L))
-        self.assertEqual(zvf_data["logps"].shape, (G, L))
+        assert normal_data["rewards"].shape == (G,)
+        assert zvf_data["rewards"].shape == (G,)
+        assert normal_data["logps"].shape == (G, L)
+        assert zvf_data["logps"].shape == (G, L)
 
         # Normal rewards have non-zero variance
-        self.assertGreater(float(normal_data["rewards"].std()), 0.0)
+        assert float(normal_data["rewards"].std()) > 0.0
         # ZVF rewards have exactly zero variance
-        self.assertEqual(float(zvf_data["rewards"].std()), 0.0)
+        assert float(zvf_data["rewards"].std()) == 0.0
 
     def test_theoretical_flops_scaling(self) -> None:
         flops_std_4_512 = compute_theoretical_flops("standard_grpo", G=4, L=512)
@@ -39,10 +38,10 @@ class SpectralBenchmarkHarnessTests(unittest.TestCase):
         flops_givens_4_512 = compute_theoretical_flops("entropic_givens_grpo", G=4, L=512)
 
         # Standard FLOPs scale linearly with group size
-        self.assertEqual(flops_std_8_512, 2 * flops_std_4_512)
+        assert flops_std_8_512 == 2 * flops_std_4_512
         # Spectral and Givens FLOPs exceed standard FLOPs
-        self.assertGreater(flops_spec_4_512, flops_std_4_512)
-        self.assertGreater(flops_givens_4_512, flops_spec_4_512)
+        assert flops_spec_4_512 > flops_std_4_512
+        assert flops_givens_4_512 > flops_spec_4_512
 
     def test_trial_evaluation_zvf_starvation_recovery(self) -> None:
         G, L = 4, 256
@@ -59,18 +58,18 @@ class SpectralBenchmarkHarnessTests(unittest.TestCase):
         )
 
         # Standard GRPO under ZVF collapses to 0 advantage std and 0 gradient norm
-        self.assertEqual(std_metrics.std_advantages_zvf, 0.0)
-        self.assertEqual(std_metrics.gradient_norm_zvf, 0.0)
-        self.assertEqual(std_metrics.gradient_norm_retention, 0.0)
+        assert std_metrics.std_advantages_zvf == 0.0
+        assert std_metrics.gradient_norm_zvf == 0.0
+        assert std_metrics.gradient_norm_retention == 0.0
 
         # Spectral and Givens GRPO eliminate ZVF starvation
-        self.assertGreater(spec_metrics.std_advantages_zvf, 0.0)
-        self.assertGreater(spec_metrics.gradient_norm_zvf, 0.0)
-        self.assertGreater(spec_metrics.gradient_norm_retention, 0.0)
+        assert spec_metrics.std_advantages_zvf > 0.0
+        assert spec_metrics.gradient_norm_zvf > 0.0
+        assert spec_metrics.gradient_norm_retention > 0.0
 
-        self.assertGreater(givens_metrics.std_advantages_zvf, 0.0)
-        self.assertGreater(givens_metrics.gradient_norm_zvf, 0.0)
-        self.assertGreater(givens_metrics.gradient_norm_retention, 0.0)
+        assert givens_metrics.std_advantages_zvf > 0.0
+        assert givens_metrics.gradient_norm_zvf > 0.0
+        assert givens_metrics.gradient_norm_retention > 0.0
 
     def test_full_benchmark_harness_output_schema(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -83,21 +82,21 @@ class SpectralBenchmarkHarnessTests(unittest.TestCase):
                 num_runs=2,
             )
 
-            self.assertTrue(out_file.exists())
+            assert out_file.exists()
             with out_file.open("r", encoding="utf-8") as f:
                 data = json.load(f)
 
-            self.assertIn("metadata", data)
-            self.assertIn("summary", data)
-            self.assertIn("scaling_trials", data)
-            self.assertEqual(len(data["scaling_trials"]), 1)
+            assert "metadata" in data
+            assert "summary" in data
+            assert "scaling_trials" in data
+            assert len(data["scaling_trials"]) == 1
 
             trial = data["scaling_trials"][0]
-            self.assertEqual(trial["group_size"], 4)
-            self.assertEqual(trial["sequence_length"], 512)
-            self.assertIn("standard_grpo", trial["results"])
-            self.assertIn("spectral_legendre_grpo", trial["results"])
-            self.assertIn("entropic_givens_grpo", trial["results"])
+            assert trial["group_size"] == 4
+            assert trial["sequence_length"] == 512
+            assert "standard_grpo" in trial["results"]
+            assert "spectral_legendre_grpo" in trial["results"]
+            assert "entropic_givens_grpo" in trial["results"]
 
 
 if __name__ == "__main__":

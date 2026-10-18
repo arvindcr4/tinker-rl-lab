@@ -21,12 +21,11 @@ Outputs:
 
 Stdlib only. ~280 LoC.
 """
+
 import csv
 import json
-import math
 import pathlib
 import random
-import statistics
 
 HERE = pathlib.Path(__file__).resolve().parent
 ROOT = HERE.parent.parent
@@ -35,13 +34,13 @@ ENTRY_DIR = ROOT / "registry" / "entries"
 OUT_DIR = ROOT / "experiments" / "results" / "p5p8"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
-METHODS = ["grpo", "aero", "gift", "areal"]   # all same stack, seed 0, G=8
+METHODS = ["grpo", "aero", "gift", "areal"]  # all same stack, seed 0, G=8
 METRICS = ["zvf", "reward_mean", "mean_len", "cv_len"]
 WINDOWS = {
     "full40": (0, 40),
     "last20": (20, 40),
-    "last10": (30, 40),     # matches registry `n2_same_stack_last10` panel
-    "last5":  (35, 40),
+    "last10": (30, 40),  # matches registry `n2_same_stack_last10` panel
+    "last5": (35, 40),
     "early10": (0, 10),
 }
 SEED = 20260705
@@ -64,8 +63,9 @@ def per_step_metric(tensors: list, metric: str) -> list:
     return [float(t[metric]) for t in tensors]
 
 
-def paired_bootstrap_ci(diff: list, n_boot: int = N_BOOT, ci: float = 0.95,
-                         seed: int = SEED) -> tuple:
+def paired_bootstrap_ci(
+    diff: list, n_boot: int = N_BOOT, ci: float = 0.95, seed: int = SEED
+) -> tuple:
     """Return (mean, lo, hi) percentile CI of paired-difference vector."""
     if not diff:
         return (0.0, 0.0, 0.0)
@@ -88,14 +88,18 @@ def compute_window_deltas(tensors_by_method: dict) -> dict:
         grpo_full = per_step_metric(tensors_by_method["grpo"], metric)
         for win_name, (lo, hi) in WINDOWS.items():
             grpo_win = grpo_full[lo:hi]
-            row = {"metric": metric, "window": win_name,
-                   "n_steps": len(grpo_win), "grpo_mean": sum(grpo_win) / len(grpo_win)}
+            row = {
+                "metric": metric,
+                "window": win_name,
+                "n_steps": len(grpo_win),
+                "grpo_mean": sum(grpo_win) / len(grpo_win),
+            }
             for m in METHODS:
                 if m == "grpo":
                     continue
                 m_full = per_step_metric(tensors_by_method[m], metric)
                 m_win = m_full[lo:hi]
-                diff = [b - a for a, b in zip(grpo_win, m_win)]
+                diff = [b - a for a, b in zip(grpo_win, m_win, strict=False)]
                 mean, ci_lo, ci_hi = paired_bootstrap_ci(diff)
                 row[f"{m}_delta"] = mean
                 row[f"{m}_ci_lo"] = ci_lo
@@ -117,8 +121,13 @@ def registry_metric_panel_map(delta_id: str, panel: str) -> dict:
     out = {}
     for m in load_registry_measured(delta_id):
         if m.get("panel") == panel:
-            out[m["metric"]] = (m.get("delta"), m.get("ci_low"), m.get("ci_high"),
-                                m.get("n"), m.get("significant"))
+            out[m["metric"]] = (
+                m.get("delta"),
+                m.get("ci_low"),
+                m.get("ci_high"),
+                m.get("n"),
+                m.get("significant"),
+            )
     return out
 
 
@@ -156,13 +165,24 @@ def write_window_deltas_tsv(deltas: dict, path: pathlib.Path):
 def write_registry_vs_measured(deltas: dict, path: pathlib.Path):
     """For each (method, metric) compare registry-claimed Δ_last10
     vs freshly measured Δ_full40."""
-    fields = ["method", "metric", "registry_delta_last10",
-              "registry_ci_lo_last10", "registry_ci_hi_last10",
-              "registry_n", "registry_sig",
-              "fresh_delta_full40", "fresh_ci_lo_full40",
-              "fresh_ci_hi_full40", "fresh_n_full40", "fresh_sig_full40",
-              "registry_panel", "sign_agreement",
-              "ci_overlap", "stability_class"]
+    fields = [
+        "method",
+        "metric",
+        "registry_delta_last10",
+        "registry_ci_lo_last10",
+        "registry_ci_hi_last10",
+        "registry_n",
+        "registry_sig",
+        "fresh_delta_full40",
+        "fresh_ci_lo_full40",
+        "fresh_ci_hi_full40",
+        "fresh_n_full40",
+        "fresh_sig_full40",
+        "registry_panel",
+        "sign_agreement",
+        "ci_overlap",
+        "stability_class",
+    ]
     rows = []
     panel = "n2_same_stack_last10"
     for m in ["aero", "gift", "areal"]:
@@ -201,23 +221,26 @@ def write_registry_vs_measured(deltas: dict, path: pathlib.Path):
                     stab = "STABLE-DIRECTION-MAG-SHIFT"
             else:
                 stab = "FRAGILE-SIGN-FLIP"
-            rows.append({
-                "method": m, "metric": metric,
-                "registry_delta_last10": "" if reg_delta is None else f"{reg_delta:.6f}",
-                "registry_ci_lo_last10": "" if reg_lo is None else f"{reg_lo:.6f}",
-                "registry_ci_hi_last10": "" if reg_hi is None else f"{reg_hi:.6f}",
-                "registry_n": reg_n or "",
-                "registry_sig": reg_sig if reg_sig is not None else "",
-                "fresh_delta_full40": "" if fresh_d is None else f"{fresh_d:.6f}",
-                "fresh_ci_lo_full40": "" if fresh_lo is None else f"{fresh_lo:.6f}",
-                "fresh_ci_hi_full40": "" if fresh_hi is None else f"{fresh_hi:.6f}",
-                "fresh_n_full40": fresh_n or "",
-                "fresh_sig_full40": fresh_sig if fresh_sig is not None else "",
-                "registry_panel": panel,
-                "sign_agreement": agree,
-                "ci_overlap": overlap,
-                "stability_class": stab,
-            })
+            rows.append(
+                {
+                    "method": m,
+                    "metric": metric,
+                    "registry_delta_last10": "" if reg_delta is None else f"{reg_delta:.6f}",
+                    "registry_ci_lo_last10": "" if reg_lo is None else f"{reg_lo:.6f}",
+                    "registry_ci_hi_last10": "" if reg_hi is None else f"{reg_hi:.6f}",
+                    "registry_n": reg_n or "",
+                    "registry_sig": reg_sig if reg_sig is not None else "",
+                    "fresh_delta_full40": "" if fresh_d is None else f"{fresh_d:.6f}",
+                    "fresh_ci_lo_full40": "" if fresh_lo is None else f"{fresh_lo:.6f}",
+                    "fresh_ci_hi_full40": "" if fresh_hi is None else f"{fresh_hi:.6f}",
+                    "fresh_n_full40": fresh_n or "",
+                    "fresh_sig_full40": fresh_sig if fresh_sig is not None else "",
+                    "registry_panel": panel,
+                    "sign_agreement": agree,
+                    "ci_overlap": overlap,
+                    "stability_class": stab,
+                }
+            )
     with path.open("w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=fields, delimiter="\t")
         w.writeheader()
@@ -285,9 +308,11 @@ def main():
     # headline printout
     print("\n=== per-method headline ===")
     for m, s in summary["per_method"].items():
-        print(f"  {m:6s} agree={s['n_sign_agree']}/{s['n_metrics']}  "
-              f"CI-overlap={s['n_ci_overlap']}/{s['n_metrics']}  "
-              f"stable={s['n_stable']}  fragile={s['n_fragile_sign_flip']}")
+        print(
+            f"  {m:6s} agree={s['n_sign_agree']}/{s['n_metrics']}  "
+            f"CI-overlap={s['n_ci_overlap']}/{s['n_metrics']}  "
+            f"stable={s['n_stable']}  fragile={s['n_fragile_sign_flip']}"
+        )
     print("\n=== per-window significance (% of 12 method×metric cells) ===")
     for w, s in summary["per_window"].items():
         print(f"  {w:8s} sig={s['n_significant']}/{s['n_cells']} ({s['pct_significant']}%)")

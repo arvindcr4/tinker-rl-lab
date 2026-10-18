@@ -15,38 +15,42 @@ PATCH_LINES = [
     "            wandb.log = _vram_log",
     "            wandb._vram_patched = True",
     "    except ImportError:",
-    "        pass"
+    "        pass",
 ]
 
+
 def process_file(filepath):
-    with open(filepath, 'r') as f:
+    with open(filepath, "r") as f:
         lines = f.readlines()
 
     if any("wandb._vram_patched" in l for l in lines):
         return False
-        
+
     new_lines = []
     patched = False
-    
+
     for line in lines:
         new_lines.append(line)
         # Check if line imports wandb
-        if re.search(r'^(?:\s*)import .*wandb', line) or re.search(r'^(?:\s*)from wandb import', line):
-            indent = line[:len(line) - len(line.lstrip())]
+        if re.search(r"^(?:\s*)import .*wandb", line) or re.search(
+            r"^(?:\s*)from wandb import", line
+        ):
+            indent = line[: len(line) - len(line.lstrip())]
             for p_line in PATCH_LINES:
                 new_lines.append(indent + p_line[4:] + "\n")
             patched = True
-            
+
     if patched:
-        with open(filepath, 'w') as f:
+        with open(filepath, "w") as f:
             f.writelines(new_lines)
         print(f"Patched {filepath}")
         return True
     return False
 
-for root, dirs, files in os.walk('.'):
-    if '.git' in root or '.system_generated' in root:
+
+for root, _dirs, files in os.walk("."):
+    if ".git" in root or ".system_generated" in root:
         continue
     for f in files:
-        if f.endswith('.py') and f != "patch_wandb_imports.py":
+        if f.endswith(".py") and f != "patch_wandb_imports.py":
             process_file(os.path.join(root, f))

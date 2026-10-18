@@ -1,4 +1,5 @@
 """Versioned, platform-neutral execution helpers; importing never launches a run."""
+
 from __future__ import annotations
 
 import hashlib
@@ -13,10 +14,16 @@ PROTOCOL_ID = "samestack-gsm8k-cot-v4-policy-exact-eos-grouping"
 GRADING_SPEC_ID = "boxed-exact-rational-v2"
 ANALYSIS_PLAN_ID = "samestack-v3-seed-paired-analysis-v1"
 PROTOCOL_SPEC = {
-    "protocol_id": PROTOCOL_ID, "grading_spec_id": GRADING_SPEC_ID,
+    "protocol_id": PROTOCOL_ID,
+    "grading_spec_id": GRADING_SPEC_ID,
     "analysis_plan_id": ANALYSIS_PLAN_ID,
-    "generation": {"temperature": 1.0, "top_p": 1.0, "top_k": 0,
-                   "repetition_penalty": 1.0, "num_beams": 1},
+    "generation": {
+        "temperature": 1.0,
+        "top_p": 1.0,
+        "top_k": 0,
+        "repetition_penalty": 1.0,
+        "num_beams": 1,
+    },
     "generation_defaults": "fresh-configs-on-wrapper-and-underlying-model",
     "mask": "include-first-eos-exclude-after-first-eos-v1",
     "schedule": "seed-shared-step-prefix-independent-warmup-sha256-52bit-v1",
@@ -27,12 +34,15 @@ PROTOCOL_SPEC = {
 
 
 def canonical_hash(value):
-    return hashlib.sha256(json.dumps(value, sort_keys=True, separators=(",", ":"),
-                                     allow_nan=False).encode()).hexdigest()
+    return hashlib.sha256(
+        json.dumps(value, sort_keys=True, separators=(",", ":"), allow_nan=False).encode()
+    ).hexdigest()
 
 
 PROTOCOL_HASH = canonical_hash(PROTOCOL_SPEC)
-_NUMBER = re.compile(r"[+-]?(?:(?:\d+|\d{1,3}(?:,\d{3})+)(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?\Z", re.ASCII)
+_NUMBER = re.compile(
+    r"[+-]?(?:(?:\d+|\d{1,3}(?:,\d{3})+)(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?\Z", re.ASCII
+)
 _BOX = re.compile(r"\\boxed\s*\{")
 _LATEX_FRACTION = re.compile(r"([+-]?)\\(?:dfrac|tfrac|frac)\s*\{([^{}]+)\}\s*\{([^{}]+)\}\Z")
 
@@ -53,15 +63,15 @@ def exact_number(value):
         value = value[1:-1].strip()
         decorations += 1
     elif value.startswith((r"\$", "$")):
-        value = value[2 if value.startswith(r"\$") else 1:].strip()
+        value = value[2 if value.startswith(r"\$") else 1 :].strip()
         decorations += 1
     percent = re.search(r"(?:\\%|%)\s*\Z", value)
     if percent:
-        value = value[:percent.start()].strip()
+        value = value[: percent.start()].strip()
         decorations += 1
     unit = re.search(r"(?:\\text\{\s*(?:second|seconds)\s*\}|\s+(?:second|seconds))\s*\Z", value)
     if unit:
-        value = value[:unit.start()].strip()
+        value = value[: unit.start()].strip()
         decorations += 1
     if decorations > 1:
         return None
@@ -139,13 +149,24 @@ def resolved_token_ids(tokenizer, model):
 def generation_configs(eos_ids, pad_id, max_new_tokens):
     """Fresh configs: no inherited top-k, repetition or other logits processors."""
     from transformers import GenerationConfig
-    common = dict(PROTOCOL_SPEC["generation"], eos_token_id=list(eos_ids),
-                  pad_token_id=int(pad_id), max_new_tokens=int(max_new_tokens), use_cache=True,
-                  min_length=0, min_new_tokens=0, typical_p=1.0, epsilon_cutoff=0.0,
-                  eta_cutoff=0.0, no_repeat_ngram_size=0, num_return_sequences=1,
-                  renormalize_logits=False, remove_invalid_values=False)
-    return (GenerationConfig(**common, do_sample=True),
-            GenerationConfig(**common, do_sample=False))
+
+    common = dict(
+        PROTOCOL_SPEC["generation"],
+        eos_token_id=list(eos_ids),
+        pad_token_id=int(pad_id),
+        max_new_tokens=int(max_new_tokens),
+        use_cache=True,
+        min_length=0,
+        min_new_tokens=0,
+        typical_p=1.0,
+        epsilon_cutoff=0.0,
+        eta_cutoff=0.0,
+        no_repeat_ngram_size=0,
+        num_return_sequences=1,
+        renormalize_logits=False,
+        remove_invalid_values=False,
+    )
+    return (GenerationConfig(**common, do_sample=True), GenerationConfig(**common, do_sample=False))
 
 
 def clear_inherited_generation_defaults(model, train_config):
@@ -155,6 +176,7 @@ def clear_inherited_generation_defaults(model, train_config):
     as suppress_tokens/forced_eos cannot leak back in during generate().
     """
     import copy
+
     model.generation_config = copy.deepcopy(train_config)
     # PEFT delegates generate() to its underlying pretrained model. Set both
     # explicitly rather than relying on a wrapper's attribute-forwarding rules.
@@ -165,6 +187,7 @@ def clear_inherited_generation_defaults(model, train_config):
 def completion_mask(completion_ids, eos_ids):
     """Include first stop even for pad==EOS; exclude all subsequent padding."""
     import torch
+
     stop = torch.zeros_like(completion_ids, dtype=torch.bool)
     for eos in eos_ids:
         stop |= completion_ids.eq(eos)
@@ -196,6 +219,7 @@ def prompt_schedules(seed, train_size, n_steps, warm_batches, prompts_per_step, 
     """Shared per-seed policy step prefixes; independent warmup RNG and prompts."""
     if train_size < 1 or not 1 <= prompts_per_step <= max_prompts:
         raise ValueError("Invalid prompt schedule dimensions")
+
     def rows(stream, count, width):
         rng = random.Random(stream_seed(seed, stream))
         pool, cursor, result = [], 0, []
@@ -203,26 +227,34 @@ def prompt_schedules(seed, train_size, n_steps, warm_batches, prompts_per_step, 
             row = []
             for _ in range(width):
                 if cursor == len(pool):
-                    pool = list(range(train_size)); rng.shuffle(pool); cursor = 0
-                row.append(pool[cursor]); cursor += 1
+                    pool = list(range(train_size))
+                    rng.shuffle(pool)
+                    cursor = 0
+                row.append(pool[cursor])
+                cursor += 1
             result.append(row)
         return result
-    return {"policy": [row[:prompts_per_step] for row in rows("policy-prompts", n_steps, max_prompts)],
-            "critic_warmup": rows("critic-warmup-prompts", warm_batches, prompts_per_step),
-            "policy_sampling_seed": stream_seed(seed, "policy-sampling"),
-            "warmup_sampling_seed": stream_seed(seed, "critic-warmup-sampling")}
+
+    return {
+        "policy": [row[:prompts_per_step] for row in rows("policy-prompts", n_steps, max_prompts)],
+        "critic_warmup": rows("critic-warmup-prompts", warm_batches, prompts_per_step),
+        "policy_sampling_seed": stream_seed(seed, "policy-sampling"),
+        "warmup_sampling_seed": stream_seed(seed, "critic-warmup-sampling"),
+    }
 
 
 def budget_accounting(n_steps, n_gen, group, warm_batches):
     policy_prompts, warm_prompts = n_steps * (n_gen // group), warm_batches * (n_gen // group)
-    return {"policy_prompt_presentations": policy_prompts,
-            "critic_warmup_prompt_presentations": warm_prompts,
-            "total_prompt_presentations": policy_prompts + warm_prompts,
-            "policy_generations": n_steps * n_gen,
-            "critic_warmup_generations": warm_batches * n_gen,
-            "total_generations": (n_steps + warm_batches) * n_gen,
-            "total_exposure_matched": False,
-            "matching_scope": "grpo_g8 and ppo_8x8 policy-update prompt schedule only"}
+    return {
+        "policy_prompt_presentations": policy_prompts,
+        "critic_warmup_prompt_presentations": warm_prompts,
+        "total_prompt_presentations": policy_prompts + warm_prompts,
+        "policy_generations": n_steps * n_gen,
+        "critic_warmup_generations": warm_batches * n_gen,
+        "total_generations": (n_steps + warm_batches) * n_gen,
+        "total_exposure_matched": False,
+        "matching_scope": "grpo_g8 and ppo_8x8 policy-update prompt schedule only",
+    }
 
 
 def strict_json_dump(value, handle, **kwargs):

@@ -7,6 +7,7 @@ envelope is the IAF; the wasted-token ratio W(alpha, G) compares
 each G to the operationally-dominant G*(alpha).  Compares reachable
 G-ratio to the arXiv:2510.00977 two-octave structural-equivalence bound.
 """
+
 from __future__ import annotations
 
 import csv
@@ -15,6 +16,7 @@ import math
 from pathlib import Path
 
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
@@ -25,8 +27,9 @@ RES = REPO / "experiments" / "results"
 FIG = REPO / "figures"
 
 
-def solve_min_T_for_acc(target_acc: float, log_t_by_G: dict[int, list[float]],
-                        acc_by_G: dict[int, list[float]]) -> tuple[int | None, float | None]:
+def solve_min_T_for_acc(
+    target_acc: float, log_t_by_G: dict[int, list[float]], acc_by_G: dict[int, list[float]]
+) -> tuple[int | None, float | None]:
     """For each G, find the smallest log10(T) at which a linear segment
     in (log T, acc) space crosses target_acc.  Returns (best_G, best_log_T).
     """
@@ -34,6 +37,7 @@ def solve_min_T_for_acc(target_acc: float, log_t_by_G: dict[int, list[float]],
     best_log_T: float | None = None
     for G, log_t in log_t_by_G.items():
         from _review24_statistics import first_crossing
+
         log_T_at_cross = first_crossing(log_t, acc_by_G[G], target_acc)
         if log_T_at_cross is None:
             continue
@@ -70,15 +74,17 @@ def main() -> None:
     iaf_rows: list[dict] = []
     for alpha in targets:
         G_opt, log_T_opt = solve_min_T_for_acc(alpha, log_t_by_G, acc_by_G)
-        iaf_rows.append({
-            "target_acc": alpha,
-            "operationally_optimal_G": G_opt if G_opt is not None else "NA",
-            "iso_acc_token_budget_M": round(10 ** log_T_opt / 1e6, 4)
-            if log_T_opt is not None else "NA",
-            "iso_acc_log10_T": round(log_T_opt, 4)
-            if log_T_opt is not None else "NA",
-            "reached_by_observed": "yes" if G_opt is not None else "no",
-        })
+        iaf_rows.append(
+            {
+                "target_acc": alpha,
+                "operationally_optimal_G": G_opt if G_opt is not None else "NA",
+                "iso_acc_token_budget_M": round(10**log_T_opt / 1e6, 4)
+                if log_T_opt is not None
+                else "NA",
+                "iso_acc_log10_T": round(log_T_opt, 4) if log_T_opt is not None else "NA",
+                "reached_by_observed": "yes" if G_opt is not None else "no",
+            }
+        )
 
     ratio_rows: list[dict] = []
     for iaf in iaf_rows:
@@ -90,38 +96,57 @@ def main() -> None:
         for G_other in sorted(log_t_by_G):
             log_T_at_cross = T_at_cross(alpha, log_t_by_G[G_other], acc_by_G[G_other])
             base = {
-                "target_acc": alpha, "G_compare": G_other,
-                "G_is_optimal": "yes" if G_other == G_opt else "no"}
+                "target_acc": alpha,
+                "G_compare": G_other,
+                "G_is_optimal": "yes" if G_other == G_opt else "no",
+            }
             if log_T_at_cross is None:
-                ratio_rows.append({**base, "T_needed_M": "NA",
-                                   "waste_ratio_vs_optimal": "NA",
-                                   "log10_waste_ratio": "NA"})
+                ratio_rows.append(
+                    {
+                        **base,
+                        "T_needed_M": "NA",
+                        "waste_ratio_vs_optimal": "NA",
+                        "log10_waste_ratio": "NA",
+                    }
+                )
                 continue
-            T_needed_M = 10 ** log_T_at_cross / 1e6
+            T_needed_M = 10**log_T_at_cross / 1e6
             waste = T_needed_M / T_opt_M
-            ratio_rows.append({**base,
-                               "T_needed_M": round(T_needed_M, 4),
-                               "waste_ratio_vs_optimal": round(waste, 4),
-                               "log10_waste_ratio": round(math.log10(waste), 4)})
+            ratio_rows.append(
+                {
+                    **base,
+                    "T_needed_M": round(T_needed_M, 4),
+                    "waste_ratio_vs_optimal": round(waste, 4),
+                    "log10_waste_ratio": round(math.log10(waste), 4),
+                }
+            )
 
     se_rows: list[dict] = []
     for alpha in targets:
         reachable = sorted(G for G, accs in acc_by_G.items() if max(accs) >= alpha)
         if len(reachable) >= 2:
             G_ratio = reachable[-1] / reachable[0]
-            row = {"target_acc": alpha, "reachable_Gs": ",".join(map(str, reachable)),
-                   "G_min": reachable[0], "G_max": reachable[-1],
-                   "G_ratio_max": G_ratio, "log2_G_ratio": round(math.log2(G_ratio), 4),
-                   "literature_2octave_ratio": 8.0,
-                   "exceeds_literature_ratio": "yes" if G_ratio > 8.0 else "no"}
+            row = {
+                "target_acc": alpha,
+                "reachable_Gs": ",".join(map(str, reachable)),
+                "G_min": reachable[0],
+                "G_max": reachable[-1],
+                "G_ratio_max": G_ratio,
+                "log2_G_ratio": round(math.log2(G_ratio), 4),
+                "literature_2octave_ratio": 8.0,
+                "exceeds_literature_ratio": "yes" if G_ratio > 8.0 else "no",
+            }
         else:
-            row = {"target_acc": alpha, "reachable_Gs": ",".join(map(str, reachable)),
-                   "G_min": reachable[0] if reachable else "NA",
-                   "G_max": reachable[0] if reachable else "NA",
-                   "G_ratio_max": 1.0 if reachable else "NA",
-                   "log2_G_ratio": 0.0 if reachable else "NA",
-                   "literature_2octave_ratio": 8.0,
-                   "exceeds_literature_ratio": "no"}
+            row = {
+                "target_acc": alpha,
+                "reachable_Gs": ",".join(map(str, reachable)),
+                "G_min": reachable[0] if reachable else "NA",
+                "G_max": reachable[0] if reachable else "NA",
+                "G_ratio_max": 1.0 if reachable else "NA",
+                "log2_G_ratio": 0.0 if reachable else "NA",
+                "literature_2octave_ratio": 8.0,
+                "exceeds_literature_ratio": "no",
+            }
         se_rows.append(row)
 
     # Persist outputs
@@ -144,7 +169,8 @@ def main() -> None:
         "n_Gs": len(log_t_by_G),
         "G_range": f"{min(log_t_by_G)}..{max(log_t_by_G)}",
         "operationally_optimal_G_at_each_acc": ",".join(
-            str(r["operationally_optimal_G"]) for r in iaf_rows),
+            str(r["operationally_optimal_G"]) for r in iaf_rows
+        ),
         "literature_2octave_threshold_ratio": 8.0,
     }
     g32_over_g4_ratios: dict[float, float] = {}
@@ -162,9 +188,16 @@ def main() -> None:
         if r["G_compare"] != 4 or r["waste_ratio_vs_optimal"] == "NA":
             continue
         a = r["target_acc"]
-        g32_row = next((rr for rr in ratio_rows
-                        if rr["target_acc"] == a and rr["G_compare"] == 32
-                        and rr["waste_ratio_vs_optimal"] != "NA"), None)
+        g32_row = next(
+            (
+                rr
+                for rr in ratio_rows
+                if rr["target_acc"] == a
+                and rr["G_compare"] == 32
+                and rr["waste_ratio_vs_optimal"] != "NA"
+            ),
+            None,
+        )
         if g32_row is None:
             continue
         g4_w = float(r["waste_ratio_vs_optimal"])
@@ -174,19 +207,25 @@ def main() -> None:
     headline["max_waste_G4_vs_optimal"] = max(g4_wastes) if g4_wastes else "NA"
     headline["max_waste_G32_vs_optimal"] = max(g32_wastes) if g32_wastes else "NA"
     headline["max_G32_over_G4_efficiency_ratio"] = (
-        max(g32_over_g4_ratios.values()) if g32_over_g4_ratios else "NA")
+        max(g32_over_g4_ratios.values()) if g32_over_g4_ratios else "NA"
+    )
     headline["G32_over_G4_efficiency_ratio_by_acc"] = json.dumps(
-        {f"{a:.2f}": round(v, 4) for a, v in g32_over_g4_ratios.items()})
+        {f"{a:.2f}": round(v, 4) for a, v in g32_over_g4_ratios.items()}
+    )
     headline["max_observed_G_ratio_in_se_test"] = max(
-        (float(r["G_ratio_max"]) for r in se_rows
-         if isinstance(r["G_ratio_max"], (int, float))),
-        default="NA")
+        (float(r["G_ratio_max"]) for r in se_rows if isinstance(r["G_ratio_max"], (int, float))),
+        default="NA",
+    )
     headline["all_se_ratios_exceed_2octave_lit_threshold"] = all(
-        r["exceeds_literature_ratio"] == "yes" for r in se_rows
-        if isinstance(r["G_ratio_max"], (int, float)))
+        r["exceeds_literature_ratio"] == "yes"
+        for r in se_rows
+        if isinstance(r["G_ratio_max"], (int, float))
+    )
 
-    write_tsv(RES / "group_size_iter67_iaf_summary_v2.tsv",
-              [{"metric": k, "value": v} for k, v in headline.items()])
+    write_tsv(
+        RES / "group_size_iter67_iaf_summary_v2.tsv",
+        [{"metric": k, "value": v} for k, v in headline.items()],
+    )
 
     meta = {
         "iteration": 67,
@@ -203,13 +242,12 @@ def main() -> None:
             "figures/group_size_iter67_iaf_v2.png",
         ],
         "method": "Iso-Accuracy Frontier (IAF): for each target accuracy α, the "
-                  "minimum token budget at which each G ∈ {4, 8, 16, 32, 64} "
-                  "first reaches α.  Envelope is the IAF; comparison yields "
-                  "wasted-token ratios and a structural-equivalence half-width.",
-        "comparison_to_arXiv_2510.00977":
-            "ArXiv:2510.00977 reports G=2 ≈ G=16 (structural equivalence within "
-            "a 2-octave G span).  We test whether this ratio (G_max/G_min = 8) "
-            "still bounds the structurally-equivalent regime in our setup.",
+        "minimum token budget at which each G ∈ {4, 8, 16, 32, 64} "
+        "first reaches α.  Envelope is the IAF; comparison yields "
+        "wasted-token ratios and a structural-equivalence half-width.",
+        "comparison_to_arXiv_2510.00977": "ArXiv:2510.00977 reports G=2 ≈ G=16 (structural equivalence within "
+        "a 2-octave G span).  We test whether this ratio (G_max/G_min = 8) "
+        "still bounds the structurally-equivalent regime in our setup.",
         "headline_metrics": {k: v for k, v in headline.items()},
     }
     (RES / "group_size_iter67_iter_meta_v2.json").write_text(json.dumps(meta, indent=2))
@@ -218,17 +256,27 @@ def main() -> None:
     fig, ax = plt.subplots(1, 2, figsize=(11, 4.5))
     colors = {4: "#1f77b4", 8: "#ff7f0e", 16: "#2ca02c", 32: "#d62728", 64: "#9467bd"}
     for G in sorted(log_t_by_G):
-        ax[0].plot(log_t_by_G[G], acc_by_G[G], "o-",
-                   color=colors.get(G, "gray"), label=f"G={G}", alpha=0.85)
-        ax[0].fill_between(log_t_by_G[G], ci_lo_by_G[G], ci_hi_by_G[G],
-                           color=colors.get(G, "gray"), alpha=0.08)
+        ax[0].plot(
+            log_t_by_G[G],
+            acc_by_G[G],
+            "o-",
+            color=colors.get(G, "gray"),
+            label=f"G={G}",
+            alpha=0.85,
+        )
+        ax[0].fill_between(
+            log_t_by_G[G], ci_lo_by_G[G], ci_hi_by_G[G], color=colors.get(G, "gray"), alpha=0.08
+        )
     for iaf in iaf_rows:
         if iaf["reached_by_observed"] == "yes":
-            ax[0].axvline(float(iaf["iso_acc_log10_T"]),
-                          linestyle=":", color="gray", alpha=0.5)
-            ax[0].text(float(iaf["iso_acc_log10_T"]), float(iaf["target_acc"]) + 0.005,
-                       f"α={iaf['target_acc']:.2f}\nG*={iaf['operationally_optimal_G']}",
-                       fontsize=7, ha="center")
+            ax[0].axvline(float(iaf["iso_acc_log10_T"]), linestyle=":", color="gray", alpha=0.5)
+            ax[0].text(
+                float(iaf["iso_acc_log10_T"]),
+                float(iaf["target_acc"]) + 0.005,
+                f"α={iaf['target_acc']:.2f}\nG*={iaf['operationally_optimal_G']}",
+                fontsize=7,
+                ha="center",
+            )
     ax[0].set_xlabel(r"$\log_{10}(\mathrm{token\ budget\ T})$")
     ax[0].set_ylabel("held-out accuracy")
     ax[0].set_title("Iso-Accuracy Frontier (IAF)")
@@ -241,11 +289,11 @@ def main() -> None:
     for r in ratio_rows:
         if r["waste_ratio_vs_optimal"] == "NA":
             continue
-        grid[G_axis.index(int(r["G_compare"])),
-             alpha_axis.index(r["target_acc"])] = float(r["waste_ratio_vs_optimal"])
+        grid[G_axis.index(int(r["G_compare"])), alpha_axis.index(r["target_acc"])] = float(
+            r["waste_ratio_vs_optimal"]
+        )
     vmax = max(2.0, np.nanmax(grid))
-    im = ax[1].imshow(grid, aspect="auto", origin="lower",
-                      cmap="Reds", vmin=1.0, vmax=vmax)
+    im = ax[1].imshow(grid, aspect="auto", origin="lower", cmap="Reds", vmin=1.0, vmax=vmax)
     ax[1].set_xticks(range(len(alpha_axis)))
     ax[1].set_xticklabels([f"{a:.2f}" for a in alpha_axis], rotation=45)
     ax[1].set_yticks(range(len(G_axis)))

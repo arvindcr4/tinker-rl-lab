@@ -31,6 +31,7 @@ Outputs
 platform_hybrid/experiments/results/p5p8/p5_3axis_triangulation.tsv         (7 rows)
 platform_hybrid/experiments/results/p5p8/p5_3axis_triangulation_summary.json
 """
+
 from __future__ import annotations
 import json
 from pathlib import Path
@@ -49,7 +50,7 @@ BOOT_SEED = 20260704
 # "task" axis because the task-axis check is dominated by the
 # heldout_slice string.
 ITEM_AXIS = {
-    "item1": "loss_form",       # model-axis: not explicit; use model_pts proxy
+    "item1": "loss_form",  # model-axis: not explicit; use model_pts proxy
     "item2": "ref_policy_kl",
     "item3": "sampler_backend_precision",
     "item4": "per_step_zvf_path",
@@ -101,55 +102,60 @@ def main():
     # --- Audit B: per-item match rate on the registry surface -----------
     dmc = pd.read_csv(OUT / "delta_minreport_consistency.tsv", sep="\t")
     dmc["item_key"] = dmc["field"].apply(
-        lambda f: next((v for k, v in FIELD_TO_ITEM.items()
-                        if str(f).startswith(k)), "item_other"))
+        lambda f: next((v for k, v in FIELD_TO_ITEM.items() if str(f).startswith(k)), "item_other")
+    )
     b_rows = []
     for item_key in ITEM_AXIS:
         sub = dmc[dmc["item_key"] == item_key]
         if len(sub) == 0:
             b_rows.append({"item_key": item_key, "B_n": 0, "B_match_rate": float("nan")})
             continue
-        b_rows.append({
-            "item_key": item_key,
-            "B_n": int(len(sub)),
-            "B_match_rate": float((sub["verdict"] == "MATCH").mean()),
-            "B_n_mismatch": int((sub["verdict"] == "MISMATCH").sum()),
-            "B_n_surrogate": int((sub["verdict"] == "SURROGATE_OBS").sum()),
-            "B_n_not_applicable": int((sub["verdict"] == "NOT_APPLICABLE").sum()),
-        })
+        b_rows.append(
+            {
+                "item_key": item_key,
+                "B_n": int(len(sub)),
+                "B_match_rate": float((sub["verdict"] == "MATCH").mean()),
+                "B_n_mismatch": int((sub["verdict"] == "MISMATCH").sum()),
+                "B_n_surrogate": int((sub["verdict"] == "SURROGATE_OBS").sum()),
+                "B_n_not_applicable": int((sub["verdict"] == "NOT_APPLICABLE").sum()),
+            }
+        )
 
     # --- Audit C: per-item Shannon entropy on the standard ---------------
     de = pd.read_csv(OUT / "p5_field_discriminative_entropy.tsv", sep="\t")
-    c_per_item = de.set_index("item_key")[["normalised_H", "shannon_H_bits",
-                                          "classification"]].to_dict("index")
+    c_per_item = de.set_index("item_key")[
+        ["normalised_H", "shannon_H_bits", "classification"]
+    ].to_dict("index")
 
     # --- Triangulation: per-item (A, B, C) ------------------------------
     rows = []
     for item_key, item_label in ITEM_AXIS.items():
         a = a_per_axis.get(item_key, float("nan"))
-        b_match = next((r["B_match_rate"] for r in b_rows
-                        if r["item_key"] == item_key), float("nan"))
-        b_n = next((r["B_n"] for r in b_rows
-                    if r["item_key"] == item_key), 0)
+        b_match = next(
+            (r["B_match_rate"] for r in b_rows if r["item_key"] == item_key), float("nan")
+        )
+        b_n = next((r["B_n"] for r in b_rows if r["item_key"] == item_key), 0)
         c = c_per_item.get(item_key, {})
-        rows.append({
-            "item_key": item_key,
-            "item_label": item_label,
-            "A_axis_score": a,
-            "B_match_rate": b_match,
-            "B_n_audited": b_n,
-            "C_normalised_H": c.get("normalised_H", float("nan")),
-            "C_H_bits": c.get("shannon_H_bits", float("nan")),
-            "C_classification": c.get("classification", "UNKNOWN"),
-            "honest_A": bool(a == 16.67),  # full per-axis score
-            "honest_B": bool(b_match == 1.0) if b_n > 0 else False,
-            "informative_C": bool(c.get("classification") in {"MEDIUM", "HIGH"}),
-            "all_three_pass": bool(a == 16.67 and b_match == 1.0
-                                   and c.get("classification") in {"MEDIUM", "HIGH"}),
-        })
+        rows.append(
+            {
+                "item_key": item_key,
+                "item_label": item_label,
+                "A_axis_score": a,
+                "B_match_rate": b_match,
+                "B_n_audited": b_n,
+                "C_normalised_H": c.get("normalised_H", float("nan")),
+                "C_H_bits": c.get("shannon_H_bits", float("nan")),
+                "C_classification": c.get("classification", "UNKNOWN"),
+                "honest_A": bool(a == 16.67),  # full per-axis score
+                "honest_B": bool(b_match == 1.0) if b_n > 0 else False,
+                "informative_C": bool(c.get("classification") in {"MEDIUM", "HIGH"}),
+                "all_three_pass": bool(
+                    a == 16.67 and b_match == 1.0 and c.get("classification") in {"MEDIUM", "HIGH"}
+                ),
+            }
+        )
     df = pd.DataFrame(rows)
-    df.to_csv(OUT / "p5_3axis_triangulation.tsv", sep="\t", index=False,
-              float_format="%.4f")
+    df.to_csv(OUT / "p5_3axis_triangulation.tsv", sep="\t", index=False, float_format="%.4f")
 
     # --- Joint correlation: A vs C (per item, after dropping nans) -----
     a_arr = df["A_axis_score"].to_numpy()
@@ -199,25 +205,37 @@ def main():
         },
         "joint_corr_A_C": corr_A_C,
         "joint_corr_A_C_n": n_ac,
-        "joint_corr_A_C_ci025": float(np.quantile(boot_ac, 0.025)) if len(boot_ac) else float("nan"),
-        "joint_corr_A_C_ci975": float(np.quantile(boot_ac, 0.975)) if len(boot_ac) else float("nan"),
+        "joint_corr_A_C_ci025": float(np.quantile(boot_ac, 0.025))
+        if len(boot_ac)
+        else float("nan"),
+        "joint_corr_A_C_ci975": float(np.quantile(boot_ac, 0.975))
+        if len(boot_ac)
+        else float("nan"),
         "joint_corr_A_C_excludes_zero": bool(
-            len(boot_ac) and (np.quantile(boot_ac, 0.025) > 0.0
-                              or np.quantile(boot_ac, 0.975) < 0.0)),
+            len(boot_ac)
+            and (np.quantile(boot_ac, 0.025) > 0.0 or np.quantile(boot_ac, 0.975) < 0.0)
+        ),
         "joint_corr_B_C": corr_B_C,
         "joint_corr_B_C_n": n_bc,
-        "joint_corr_B_C_ci025": float(np.quantile(boot_bc, 0.025)) if len(boot_bc) else float("nan"),
-        "joint_corr_B_C_ci975": float(np.quantile(boot_bc, 0.975)) if len(boot_bc) else float("nan"),
+        "joint_corr_B_C_ci025": float(np.quantile(boot_bc, 0.025))
+        if len(boot_bc)
+        else float("nan"),
+        "joint_corr_B_C_ci975": float(np.quantile(boot_bc, 0.975))
+        if len(boot_bc)
+        else float("nan"),
         "joint_corr_B_C_excludes_zero": bool(
-            len(boot_bc) and (np.quantile(boot_bc, 0.025) > 0.0
-                              or np.quantile(boot_bc, 0.975) < 0.0)),
+            len(boot_bc)
+            and (np.quantile(boot_bc, 0.025) > 0.0 or np.quantile(boot_bc, 0.975) < 0.0)
+        ),
         "joint_corr_A_B": corr_A_B,
         "joint_corr_A_B_n": n_ab,
         "items_all_three_pass": int(df["all_three_pass"].sum()),
-        "items_A_pass_only": int(((df["honest_A"]) & (~df["honest_B"]) &
-                                   (~df["informative_C"])).sum()),
-        "items_C_fail_only": int(((~df["honest_A"]) & (~df["honest_B"]) &
-                                  (~df["informative_C"])).sum()),
+        "items_A_pass_only": int(
+            ((df["honest_A"]) & (~df["honest_B"]) & (~df["informative_C"])).sum()
+        ),
+        "items_C_fail_only": int(
+            ((~df["honest_A"]) & (~df["honest_B"]) & (~df["informative_C"])).sum()
+        ),
         "headline": {
             "falsifiable_claim": (
                 "The P5 MIN-REPORT honesty surface has THREE orthogonal "
@@ -249,19 +267,35 @@ def main():
         json.dump(summary, fp, indent=2)
 
     print("Per-item (A, B, C) triangulation:")
-    print(df[["item_key", "item_label", "A_axis_score", "B_match_rate",
-              "B_n_audited", "C_normalised_H", "C_classification",
-              "honest_A", "honest_B", "informative_C"]].to_string(index=False))
+    print(
+        df[
+            [
+                "item_key",
+                "item_label",
+                "A_axis_score",
+                "B_match_rate",
+                "B_n_audited",
+                "C_normalised_H",
+                "C_classification",
+                "honest_A",
+                "honest_B",
+                "informative_C",
+            ]
+        ].to_string(index=False)
+    )
     print(f"\n(A) overall score: {a_overall:.2f} (CEILING on 98/98 cells)")
     print(f"(B) per-item match rate, n_audited rows: {b_rows}")
-    print(f"\njoint corr A vs C: {corr_A_C:+.4f}, "
-          f"CI=[{np.quantile(boot_ac, 0.025):+.4f}, {np.quantile(boot_ac, 0.975):+.4f}] "
-          f"excl0={summary['joint_corr_A_C_excludes_zero']}")
-    print(f"joint corr B vs C: {corr_B_C:+.4f}, "
-          f"CI=[{np.quantile(boot_bc, 0.025):+.4f}, {np.quantile(boot_bc, 0.975):+.4f}] "
-          f"excl0={summary['joint_corr_B_C_excludes_zero']}")
-    print(f"\nitems where all three audits pass: "
-          f"{int(df['all_three_pass'].sum())}/7")
+    print(
+        f"\njoint corr A vs C: {corr_A_C:+.4f}, "
+        f"CI=[{np.quantile(boot_ac, 0.025):+.4f}, {np.quantile(boot_ac, 0.975):+.4f}] "
+        f"excl0={summary['joint_corr_A_C_excludes_zero']}"
+    )
+    print(
+        f"joint corr B vs C: {corr_B_C:+.4f}, "
+        f"CI=[{np.quantile(boot_bc, 0.025):+.4f}, {np.quantile(boot_bc, 0.975):+.4f}] "
+        f"excl0={summary['joint_corr_B_C_excludes_zero']}"
+    )
+    print(f"\nitems where all three audits pass: {int(df['all_three_pass'].sum())}/7")
 
 
 if __name__ == "__main__":

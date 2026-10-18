@@ -6,6 +6,7 @@ from pathlib import Path
 
 from pilot.remote_training import _verify_files
 from pilot.remote_core import RemoteContractError
+import pytest
 
 
 class RemoteTrainingSafetyTests(unittest.TestCase):
@@ -19,9 +20,9 @@ class RemoteTrainingSafetyTests(unittest.TestCase):
             digest = sha256_file(path)
             _verify_files(root, {"group.pt": digest}, label="corpus")
             path.write_bytes(b"tampered")
-            with self.assertRaisesRegex(RemoteContractError, "hash mismatch"):
+            with pytest.raises(RemoteContractError, match="hash mismatch"):
                 _verify_files(root, {"group.pt": digest}, label="corpus")
-            with self.assertRaisesRegex(RemoteContractError, "hash mismatch"):
+            with pytest.raises(RemoteContractError, match="hash mismatch"):
                 _verify_files(root, {"missing.pt": digest}, label="corpus")
 
 

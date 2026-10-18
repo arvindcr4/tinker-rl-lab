@@ -19,7 +19,9 @@ STAGE = ROOT / "platform_hybrid/experiments/results/samestack_gsm8k_v2s_colab"
 
 def colab(*args, check=True):
     if args and args[0] == "exec":
-        raise RuntimeError("Legacy driver is transfer/recovery-only; use drive_sessions.py for new runs")
+        raise RuntimeError(
+            "Legacy driver is transfer/recovery-only; use drive_sessions.py for new runs"
+        )
     return subprocess.run(
         ["colab", *args], check=check, timeout=10920 if args[0] == "exec" else 180
     )

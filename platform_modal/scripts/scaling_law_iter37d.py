@@ -24,11 +24,12 @@ import math
 from pathlib import Path
 
 import matplotlib
+
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt  # noqa: E402
-import numpy as np  # noqa: E402
-from scipy.optimize import curve_fit  # noqa: E402
-from _analysis_common import saturation as model_saturation  # noqa: E402
+import matplotlib.pyplot as plt
+import numpy as np
+from scipy.optimize import curve_fit
+from _analysis_common import saturation as model_saturation
 
 REPO = Path(__file__).resolve().parent.parent
 DATA = REPO / "experiments" / "results" / "scaling_law_extended_frontier.tsv"
@@ -54,8 +55,9 @@ def aic_bic(n, k, ss_res):
 
 def fit_sat(t, y):
     try:
-        popt, _ = curve_fit(model_saturation, t, y, p0=[0.8, 0.3],
-                            bounds=([0, 1e-3], [2, 5]), maxfev=8000)
+        popt, _ = curve_fit(
+            model_saturation, t, y, p0=[0.8, 0.3], bounds=([0, 1e-3], [2, 5]), maxfev=8000
+        )
     except Exception:
         return None, float("inf"), float("inf")
     yh = model_saturation(t, *popt)
@@ -65,8 +67,9 @@ def fit_sat(t, y):
 
 def fit_hill(t, y):
     try:
-        popt, _ = curve_fit(model_hill, t, y, p0=[0.9, 5.0],
-                            bounds=([0, 1e-3], [2, 1e4]), maxfev=8000)
+        popt, _ = curve_fit(
+            model_hill, t, y, p0=[0.9, 5.0], bounds=([0, 1e-3], [2, 1e4]), maxfev=8000
+        )
     except Exception:
         return None, float("inf"), float("inf")
     yh = model_hill(t, *popt)
@@ -76,14 +79,22 @@ def fit_hill(t, y):
 
 def synth_trace(r, rc_lookup):
     n = int(r["n_steps"])
-    peak = int(float(rc_lookup[r["model"]]["peak_step"])) if r["model"] in rc_lookup else (
-        1 if abs(r["r_peak"] - r["r_first"]) < 0.05 else max(1, n // 2)
+    peak = (
+        int(float(rc_lookup[r["model"]]["peak_step"]))
+        if r["model"] in rc_lookup
+        else (1 if abs(r["r_peak"] - r["r_first"]) < 0.05 else max(1, n // 2))
     )
     if peak < 1:
         peak = 1
     if peak > n - 1:
         peak = n - 1
-    peak_val, early, late, mean, zf = r["r_peak"], r["early_mean"], r["late_mean"], r["r_mean"], r["zero_frac"]
+    peak_val, early, late, mean, zf = (
+        r["r_peak"],
+        r["early_mean"],
+        r["late_mean"],
+        r["r_mean"],
+        r["zero_frac"],
+    )
     t = np.arange(1, n + 1, dtype=float)
     out = np.linspace(early, late, n)
     out[peak - 1] = max(out[peak - 1], peak_val)
@@ -135,23 +146,26 @@ def main() -> None:
             t80_h = 2.0 * k_h
         else:
             rmax_h, k_h, t80_h = float("nan"), float("nan"), float("inf")
-        rows_out.append({
-            "model": r["model"],
-            "params_B": r["params_B"],
-            "arch": r["arch"],
-            "n_steps": int(r["n_steps"]),
-            "r_mean": round(r["r_mean"], 4),
-            "sat_R_max": round(rmax_s, 4) if not math.isnan(rmax_s) else "NaN",
-            "sat_lambda": round(lam_s, 4) if not math.isnan(lam_s) else "NaN",
-            "sat_t_80": round(t80_s, 4) if math.isfinite(t80_s) else "inf",
-            "sat_aic": round(aic_s, 4) if math.isfinite(aic_s) else "inf",
-            "hill_R_max": round(rmax_h, 4) if not math.isnan(rmax_h) else "NaN",
-            "hill_K": round(k_h, 4) if not math.isnan(k_h) else "NaN",
-            "hill_t_80": round(t80_h, 4) if math.isfinite(t80_h) else "inf",
-            "hill_aic": round(aic_h, 4) if math.isfinite(aic_h) else "inf",
-            "delta_aic_sat_minus_hill": round(float(aic_s) - float(aic_h), 4)
-                if (math.isfinite(aic_s) and math.isfinite(aic_h)) else "NaN",
-        })
+        rows_out.append(
+            {
+                "model": r["model"],
+                "params_B": r["params_B"],
+                "arch": r["arch"],
+                "n_steps": int(r["n_steps"]),
+                "r_mean": round(r["r_mean"], 4),
+                "sat_R_max": round(rmax_s, 4) if not math.isnan(rmax_s) else "NaN",
+                "sat_lambda": round(lam_s, 4) if not math.isnan(lam_s) else "NaN",
+                "sat_t_80": round(t80_s, 4) if math.isfinite(t80_s) else "inf",
+                "sat_aic": round(aic_s, 4) if math.isfinite(aic_s) else "inf",
+                "hill_R_max": round(rmax_h, 4) if not math.isnan(rmax_h) else "NaN",
+                "hill_K": round(k_h, 4) if not math.isnan(k_h) else "NaN",
+                "hill_t_80": round(t80_h, 4) if math.isfinite(t80_h) else "inf",
+                "hill_aic": round(aic_h, 4) if math.isfinite(aic_h) else "inf",
+                "delta_aic_sat_minus_hill": round(float(aic_s) - float(aic_h), 4)
+                if (math.isfinite(aic_s) and math.isfinite(aic_h))
+                else "NaN",
+            }
+        )
 
     # 2-anchor extrapolation
     # Take 2 smallest models (Qwen3.5-4B and Qwen3-8B) as anchors
@@ -172,8 +186,10 @@ def main() -> None:
     for r in holdout:
         # Use the 3 calibration anchors to fit log-log scaling
         logP = np.log10([c["params_B"] for c in calib])
-        for form, key_rmax, key_t80 in [("sat", "sat_R_max", "sat_t_80"),
-                                        ("hill", "hill_R_max", "hill_t_80")]:
+        for form, key_rmax, key_t80 in [
+            ("sat", "sat_R_max", "sat_t_80"),
+            ("hill", "hill_R_max", "hill_t_80"),
+        ]:
             rmax_cal = []
             t80_cal = []
             for c in calib:
@@ -181,7 +197,12 @@ def main() -> None:
                     if rr["model"] == c["model"]:
                         v = rr[key_rmax]
                         t80 = rr[key_t80]
-                        if isinstance(v, (int, float)) and isinstance(t80, (int, float)) and v > 0 and t80 > 0:
+                        if (
+                            isinstance(v, (int, float))
+                            and isinstance(t80, (int, float))
+                            and v > 0
+                            and t80 > 0
+                        ):
                             rmax_cal.append(float(v))
                             t80_cal.append(float(t80))
             if len(rmax_cal) < 2:
@@ -197,25 +218,35 @@ def main() -> None:
             # ground-truth from the actual fit
             for rr in rows_out:
                 if rr["model"] == r["model"]:
-                    rmax_true = float(rr[key_rmax]) if isinstance(rr[key_rmax], (int, float)) else float("nan")
-                    t80_true = float(rr[key_t80]) if isinstance(rr[key_t80], (int, float)) else float("nan")
+                    rmax_true = (
+                        float(rr[key_rmax])
+                        if isinstance(rr[key_rmax], (int, float))
+                        else float("nan")
+                    )
+                    t80_true = (
+                        float(rr[key_t80])
+                        if isinstance(rr[key_t80], (int, float))
+                        else float("nan")
+                    )
                     break
             else:
                 rmax_true = float("nan")
                 t80_true = float("nan")
             err_rmax = rmax_pred - rmax_true
             err_t80 = t80_pred - t80_true
-            pred_rows.append({
-                "model": r["model"],
-                "params_B": r["params_B"],
-                "form": form,
-                "rmax_pred": round(rmax_pred, 4),
-                "rmax_true": round(rmax_true, 4) if not math.isnan(rmax_true) else "NaN",
-                "abs_err_rmax": round(abs(err_rmax), 4) if not math.isnan(rmax_true) else "NaN",
-                "t80_pred": round(t80_pred, 4),
-                "t80_true": round(t80_true, 4) if not math.isnan(t80_true) else "NaN",
-                "abs_err_t80": round(abs(err_t80), 4) if not math.isnan(t80_true) else "NaN",
-            })
+            pred_rows.append(
+                {
+                    "model": r["model"],
+                    "params_B": r["params_B"],
+                    "form": form,
+                    "rmax_pred": round(rmax_pred, 4),
+                    "rmax_true": round(rmax_true, 4) if not math.isnan(rmax_true) else "NaN",
+                    "abs_err_rmax": round(abs(err_rmax), 4) if not math.isnan(rmax_true) else "NaN",
+                    "t80_pred": round(t80_pred, 4),
+                    "t80_true": round(t80_true, 4) if not math.isnan(t80_true) else "NaN",
+                    "abs_err_t80": round(abs(err_t80), 4) if not math.isnan(t80_true) else "NaN",
+                }
+            )
 
     # Aggregate
     sat_pred = [p for p in pred_rows if p["form"] == "sat"]
@@ -225,20 +256,36 @@ def main() -> None:
         "n_calibration_anchors": len(calib),
         "n_holdout_anchors": len(holdout),
         "sat_mean_abs_err_rmax": round(float(np.mean([p["abs_err_rmax"] for p in sat_pred])), 4)
-            if sat_pred else "NaN",
+        if sat_pred
+        else "NaN",
         "hill_mean_abs_err_rmax": round(float(np.mean([p["abs_err_rmax"] for p in hill_pred])), 4)
-            if hill_pred else "NaN",
+        if hill_pred
+        else "NaN",
         "sat_mean_abs_err_t80": round(float(np.mean([p["abs_err_t80"] for p in sat_pred])), 4)
-            if sat_pred else "NaN",
+        if sat_pred
+        else "NaN",
         "hill_mean_abs_err_t80": round(float(np.mean([p["abs_err_t80"] for p in hill_pred])), 4)
-            if hill_pred else "NaN",
-        "anchors_where_hill_aic_better": sum(1 for r in rows_out
-            if r["delta_aic_sat_minus_hill"] != "NaN" and float(r["delta_aic_sat_minus_hill"]) > 0),
-        "anchors_where_sat_aic_better": sum(1 for r in rows_out
-            if r["delta_aic_sat_minus_hill"] != "NaN" and float(r["delta_aic_sat_minus_hill"]) < 0),
+        if hill_pred
+        else "NaN",
+        "anchors_where_hill_aic_better": sum(
+            1
+            for r in rows_out
+            if r["delta_aic_sat_minus_hill"] != "NaN" and float(r["delta_aic_sat_minus_hill"]) > 0
+        ),
+        "anchors_where_sat_aic_better": sum(
+            1
+            for r in rows_out
+            if r["delta_aic_sat_minus_hill"] != "NaN" and float(r["delta_aic_sat_minus_hill"]) < 0
+        ),
     }
-    if isinstance(summary["sat_mean_abs_err_rmax"], (int, float)) and isinstance(summary["hill_mean_abs_err_rmax"], (int, float)):
-        summary["extrapolation_winner"] = "hill" if summary["hill_mean_abs_err_rmax"] < summary["sat_mean_abs_err_rmax"] else "saturation"
+    if isinstance(summary["sat_mean_abs_err_rmax"], (int, float)) and isinstance(
+        summary["hill_mean_abs_err_rmax"], (int, float)
+    ):
+        summary["extrapolation_winner"] = (
+            "hill"
+            if summary["hill_mean_abs_err_rmax"] < summary["sat_mean_abs_err_rmax"]
+            else "saturation"
+        )
     else:
         summary["extrapolation_winner"] = "n/a"
 
@@ -264,19 +311,31 @@ def main() -> None:
     models_h = [p["model"] for p in sat_pred]
     short = [m.replace("-Instruct", "-Inst") for m in models_h]
     x = np.arange(len(models_h))
-    axes[0].bar(x - 0.2, [p["abs_err_rmax"] for p in sat_pred], width=0.4,
-                color="#2b8cbe", label="exponential saturation")
-    axes[0].bar(x + 0.2, [p["abs_err_rmax"] for p in hill_pred], width=0.4,
-                color="#fdae61", label="Hill n=2")
+    axes[0].bar(
+        x - 0.2,
+        [p["abs_err_rmax"] for p in sat_pred],
+        width=0.4,
+        color="#2b8cbe",
+        label="exponential saturation",
+    )
+    axes[0].bar(
+        x + 0.2,
+        [p["abs_err_rmax"] for p in hill_pred],
+        width=0.4,
+        color="#fdae61",
+        label="Hill n=2",
+    )
     axes[0].set_xticks(x)
-    axes[0].set_xticklabels([f"{s}\n{p['params_B']:.0f}B" for s, p in zip(short, sat_pred)],
-                            fontsize=8)
+    axes[0].set_xticklabels(
+        [f"{s}\n{p['params_B']:.0f}B" for s, p in zip(short, sat_pred, strict=False)], fontsize=8
+    )
     axes[0].set_ylabel("|pred - true| R_max")
     axes[0].set_title("Two-anchor log-log extrapolation MAE on holdout (>=32B)")
     axes[0].legend(loc="upper right", fontsize=9)
     # scatter: pred vs true, one panel per form
-    for ax_i, (form, color, label) in enumerate([("sat", "#2b8cbe", "exponential saturation"),
-                                                    ("hill", "#fdae61", "Hill n=2")]):
+    for ax_i, (form, color, label) in enumerate(
+        [("sat", "#2b8cbe", "exponential saturation"), ("hill", "#fdae61", "Hill n=2")]
+    ):
         sub = [p for p in pred_rows if p["form"] == form]
         if not sub:
             continue
@@ -284,15 +343,23 @@ def main() -> None:
         # use a third panel? no, put both in same axes via legend
     # actually use the second axes for pred vs true scatter, both forms
     ax = axes[1]
-    for form, color, marker, label in [("sat", "#2b8cbe", "o", "exponential saturation"),
-                                        ("hill", "#fdae61", "s", "Hill n=2")]:
-        sub = [p for p in pred_rows if p["form"] == form and
-               p["rmax_true"] != "NaN"]
+    for form, color, marker, label in [
+        ("sat", "#2b8cbe", "o", "exponential saturation"),
+        ("hill", "#fdae61", "s", "Hill n=2"),
+    ]:
+        sub = [p for p in pred_rows if p["form"] == form and p["rmax_true"] != "NaN"]
         if not sub:
             continue
-        ax.scatter([p["rmax_pred"] for p in sub],
-                   [p["rmax_true"] for p in sub],
-                   c=color, marker=marker, s=80, label=label, edgecolor="black", linewidth=0.5)
+        ax.scatter(
+            [p["rmax_pred"] for p in sub],
+            [p["rmax_true"] for p in sub],
+            c=color,
+            marker=marker,
+            s=80,
+            label=label,
+            edgecolor="black",
+            linewidth=0.5,
+        )
     ax.plot([0, 1.05], [0, 1.05], "k--", lw=0.7, alpha=0.6)
     ax.set_xlabel("predicted R_max (2-anchor log-log)")
     ax.set_ylabel("true R_max (in-sample fit)")
@@ -313,9 +380,11 @@ def main() -> None:
         print(f"  {k}: {v}")
     print("\n=== Per-anchor fits ===")
     for r in rows_out:
-        print(f"  {r['model']:30s} sat: R_max={r['sat_R_max']} lam={r['sat_lambda']} t80={r['sat_t_80']} | "
-              f"hill: R_max={r['hill_R_max']} K={r['hill_K']} t80={r['hill_t_80']} | "
-              f"ΔAIC(sat-hill)={r['delta_aic_sat_minus_hill']}")
+        print(
+            f"  {r['model']:30s} sat: R_max={r['sat_R_max']} lam={r['sat_lambda']} t80={r['sat_t_80']} | "
+            f"hill: R_max={r['hill_R_max']} K={r['hill_K']} t80={r['hill_t_80']} | "
+            f"ΔAIC(sat-hill)={r['delta_aic_sat_minus_hill']}"
+        )
 
 
 if __name__ == "__main__":

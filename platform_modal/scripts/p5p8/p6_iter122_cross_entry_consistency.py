@@ -27,14 +27,18 @@ The check surfaces three classes of inconsistency:
 Output: platform_hybrid/experiments/results/p5p8/p6_iter122_cross_entry_consistency.tsv
 (per (delta_id, component) row with N stacks, N statuses, verdict).
 """
+
 import argparse
 import json
 import pathlib
 import sys
 from collections import defaultdict
 
-sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
+sys.path.append(
+    str(pathlib.Path(__file__).resolve().parents[1])
+)  # platform_modal/scripts, for _paths
+from _paths import REPO_ROOT
+
 WORKTREE = REPO_ROOT
 REGISTRY = WORKTREE / "platform_hybrid/registry"
 RESULTS = WORKTREE / "platform_hybrid/experiments" / "results" / "p5p8"
@@ -54,8 +58,11 @@ def load():
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--write", action="store_true",
-                    help="Persist TSV to platform_hybrid/experiments/results/p5p8/")
+    ap.add_argument(
+        "--write",
+        action="store_true",
+        help="Persist TSV to platform_hybrid/experiments/results/p5p8/",
+    )
     args = ap.parse_args()
     stacks, deltas = load()
     # index of declared (delta_id, component) -> delta_name
@@ -68,7 +75,8 @@ def main():
     for sid, s in stacks.items():
         for vda in s.get("variant_deltas_applied", []):
             refs[(vda["delta_id"], vda["component"])].append(
-                (sid, vda["status"], vda.get("note", "")))
+                (sid, vda["status"], vda.get("note", ""))
+            )
     rows = []
     # Iterate declared (delta_id, component) pairs that have at least one
     # stack reference; this catches the common case where stack and delta
@@ -90,28 +98,38 @@ def main():
         statuses = sorted({st for _, st, _ in refs[(did, comp)]})
         stacks_list = ";".join(sorted(sid for sid, _, _ in refs[(did, comp)]))
         statuses_str = ";".join(statuses)
-        verdict = ("CONFLICT" if len(statuses) > 1 else "HOMOGENEOUS")
+        verdict = "CONFLICT" if len(statuses) > 1 else "HOMOGENEOUS"
         if verdict == "CONFLICT":
             n_conflict += 1
         else:
             n_homogeneous += 1
-        rows.append({
-            "delta_id": did,
-            "component": comp,
-            "n_stacks": len(refs[(did, comp)]),
-            "n_unique_statuses": len(statuses),
-            "statuses": statuses_str,
-            "stacks": stacks_list,
-            "delta_has_component": declared,
-            "verdict": verdict,
-        })
+        rows.append(
+            {
+                "delta_id": did,
+                "component": comp,
+                "n_stacks": len(refs[(did, comp)]),
+                "n_unique_statuses": len(statuses),
+                "statuses": statuses_str,
+                "stacks": stacks_list,
+                "delta_has_component": declared,
+                "verdict": verdict,
+            }
+        )
     # Write outputs
     if args.write:
         RESULTS.mkdir(parents=True, exist_ok=True)
         out = RESULTS / "p6_iter122_cross_entry_consistency.tsv"
         with out.open("w") as fh:
-            cols = ["delta_id", "component", "n_stacks", "n_unique_statuses",
-                    "statuses", "stacks", "delta_has_component", "verdict"]
+            cols = [
+                "delta_id",
+                "component",
+                "n_stacks",
+                "n_unique_statuses",
+                "statuses",
+                "stacks",
+                "delta_has_component",
+                "verdict",
+            ]
             fh.write("\t".join(cols) + "\n")
             for r in rows:
                 fh.write("\t".join(str(r[c]) for c in cols) + "\n")
@@ -124,14 +142,18 @@ def main():
         print(f"--- CONFLICTING (delta, component) ---")
         for r in rows:
             if r["verdict"] == "CONFLICT":
-                print(f"  {r['delta_id']}:{r['component']}: "
-                      f"{r['statuses']}  on stacks=[{r['stacks']}]")
+                print(
+                    f"  {r['delta_id']}:{r['component']}: "
+                    f"{r['statuses']}  on stacks=[{r['stacks']}]"
+                )
     if n_evidence_missing > 0:
         print(f"--- evidence_missing ---")
         for r in rows:
             if not r["delta_has_component"]:
-                print(f"  {r['delta_id']}:{r['component']}: "
-                      f"referenced by [{r['stacks']}] but delta entry does not declare this component")
+                print(
+                    f"  {r['delta_id']}:{r['component']}: "
+                    f"referenced by [{r['stacks']}] but delta entry does not declare this component"
+                )
     return 0
 
 

@@ -52,6 +52,7 @@ Important:
   - The K=1 degenerate group returns ZVF=1.0 by convention; the diagnostic is
     meaningless in that regime and the row is flagged accordingly.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -65,6 +66,7 @@ import numpy as np
 
 try:
     from scipy import stats as _scipy_stats  # type: ignore
+
     _HAS_SCIPY = True
 except Exception:  # pragma: no cover
     _scipy_stats = None
@@ -72,6 +74,7 @@ except Exception:  # pragma: no cover
 
 try:
     import pingouin as _pg  # type: ignore
+
     _HAS_PINGOUIN = True
 except Exception:  # pragma: no cover
     _pg = None
@@ -152,13 +155,15 @@ def _load_jsonl(path: Path) -> list[dict[str, Any]]:
                     break
             if hdr is None:
                 return rows
-            data_lines = lines[lines.index([l for l in lines if not l.strip().startswith("#")][0]) + 1:]
+            data_lines = lines[
+                lines.index([l for l in lines if not l.strip().startswith("#")][0]) + 1 :
+            ]
             for line in data_lines:
                 line = line.strip()
                 if not line or line.startswith("#"):
                     continue
                 vals = line.split("\t")
-                rows.append({h: v for h, v in zip(hdr, vals)})
+                rows.append({h: v for h, v in zip(hdr, vals, strict=False)})
         else:
             for line in path.read_text().splitlines():
                 line = line.strip()
@@ -175,6 +180,7 @@ def _load_jsonl(path: Path) -> list[dict[str, Any]]:
 
 def _extract_zvf_row(rec: dict[str, Any]) -> dict[str, Any] | None:
     """Project a heterogeneous log record into our canonical schema."""
+
     def g(*keys: str, default: Any = np.nan) -> Any:
         for k in keys:
             if k in rec and rec[k] is not None:
@@ -213,11 +219,15 @@ def _extract_zvf_row(rec: dict[str, Any]) -> dict[str, Any] | None:
     return {
         "step": int(step),
         "zvf": zvf,
-        "batch_reward_mean": _maybe_float(g("batch_reward_mean", "reward_mean", "env/all/correct", "reward_mean")),
+        "batch_reward_mean": _maybe_float(
+            g("batch_reward_mean", "reward_mean", "env/all/correct", "reward_mean")
+        ),
         "entropy": _maybe_float(g("entropy", "policy_entropy", default=np.nan)),
         "advantage_variance": _maybe_float(g("advantage_variance", "adv_var", default=np.nan)),
         "kl_drift": _maybe_float(g("kl_drift", "kl_to_ref", "approx_kl", default=np.nan)),
-        "final_reward": _maybe_float(g("final_reward", "heldout_accuracy", "heldout_acc", default=np.nan)),
+        "final_reward": _maybe_float(
+            g("final_reward", "heldout_accuracy", "heldout_acc", default=np.nan)
+        ),
         "group_size": int(g("group_size", "G", "K", default=0) or 0),
         "baseline_accuracy": _maybe_float(g("baseline_accuracy", default=np.nan)),
         "run_id": str(g("run_id", "name", default="")),
@@ -234,7 +244,9 @@ def _ols_residualize(y: np.ndarray, X: np.ndarray) -> np.ndarray:
     return y - Xa @ beta
 
 
-def _partial_corr_pearson(df: np.ndarray, x: int, y: int, controls: list[int]) -> tuple[float, float, float, float]:
+def _partial_corr_pearson(
+    df: np.ndarray, x: int, y: int, controls: list[int]
+) -> tuple[float, float, float, float]:
     """Return (r_partial, ci_low, ci_high, p_value) for a Pearson partial correlation.
 
     Bootstrap CIs refit the residualizations on each resampled row set so the
@@ -267,7 +279,9 @@ def _partial_corr_pearson(df: np.ndarray, x: int, y: int, controls: list[int]) -
         # rank-deficient design matrix would yield a numerically
         # unstable lstsq, polluting the bootstrap distribution
         # with non-exchangeable noise. Drop and count.
-        if Xb.size > 0 and np.linalg.matrix_rank(np.column_stack([np.ones(n), Xb])) < (1 + len(controls)):
+        if Xb.size > 0 and np.linalg.matrix_rank(np.column_stack([np.ones(n), Xb])) < (
+            1 + len(controls)
+        ):
             n_degenerate += 1
             continue
         rxb = _ols_residualize(xb, Xb)
@@ -325,12 +339,14 @@ def _normal_cdf(x: float) -> float:
     )
     k = 1.0 / (1.0 + 0.2316419 * abs(x))
     w = 1.0 - (1.0 / np.sqrt(2.0 * np.pi)) * np.exp(-0.5 * x * x) * (
-        a1 * k + a2 * k * k + a3 * k ** 3 + a4 * k ** 4 + a5 * k ** 5
+        a1 * k + a2 * k * k + a3 * k**3 + a4 * k**4 + a5 * k**5
     )
     return w if x >= 0 else 1.0 - w
 
 
-def _partial_corr_spearman(df: np.ndarray, x: int, y: int, controls: list[int]) -> tuple[float, float, float, float]:
+def _partial_corr_spearman(
+    df: np.ndarray, x: int, y: int, controls: list[int]
+) -> tuple[float, float, float, float]:
     """Spearman partial correlation: rank-transform then run Pearson on ranks.
 
     Returns (r_partial, ci_low, ci_high, p_value). p_value is from a permutation
@@ -534,18 +550,27 @@ def main(argv: list[str]) -> int:
         fallback_to_all = True
 
     arr_full = np.array(
-        [[r["zvf"], r["final_reward"], r["batch_reward_mean"], r["entropy"],
-          r["advantage_variance"], r["kl_drift"]] for r in keep],
+        [
+            [
+                r["zvf"],
+                r["final_reward"],
+                r["batch_reward_mean"],
+                r["entropy"],
+                r["advantage_variance"],
+                r["kl_drift"],
+            ]
+            for r in keep
+        ],
         dtype=float,
     )
 
     configs = [
-        ("(none; raw correlation)",   [],   [0, 1]),
-        ("batch mean reward",         [2],  [0, 1, 2]),
-        ("policy entropy",            [3],  [0, 1, 3]),
-        ("advantage variance",        [4],  [0, 1, 4]),
-        ("KL drift to ref",           [5],  [0, 1, 5]),
-        ("all four jointly",          [2, 3, 4, 5], [0, 1, 2, 3, 4, 5]),
+        ("(none; raw correlation)", [], [0, 1]),
+        ("batch mean reward", [2], [0, 1, 2]),
+        ("policy entropy", [3], [0, 1, 3]),
+        ("advantage variance", [4], [0, 1, 4]),
+        ("KL drift to ref", [5], [0, 1, 5]),
+        ("all four jointly", [2, 3, 4, 5], [0, 1, 2, 3, 4, 5]),
     ]
 
     # Compute per-config statistics
@@ -555,12 +580,18 @@ def main(argv: list[str]) -> int:
         sub = sub[np.isfinite(sub).all(axis=1)]
         n = sub.shape[0]
         if n < MIN_OBS:
-            computed.append({
-                "label": label,
-                "r": float("nan"), "lo": float("nan"), "hi": float("nan"),
-                "n": n, "p": float("nan"), "dr2": float("nan"),
-                "note": "insufficient data",
-            })
+            computed.append(
+                {
+                    "label": label,
+                    "r": float("nan"),
+                    "lo": float("nan"),
+                    "hi": float("nan"),
+                    "n": n,
+                    "p": float("nan"),
+                    "dr2": float("nan"),
+                    "note": "insufficient data",
+                }
+            )
             continue
         ctrl_mapped = [cols.index(c) for c in ctrl]
         if args.method == "spearman":
@@ -568,10 +599,18 @@ def main(argv: list[str]) -> int:
         else:
             r, lo, hi, p = _partial_corr_pearson(sub, 0, 1, ctrl_mapped)
         dr2 = _incremental_r2(sub, 0, 1, ctrl_mapped) if np.isfinite(r) else float("nan")
-        computed.append({
-            "label": label, "r": r, "lo": lo, "hi": hi, "n": n, "p": p, "dr2": dr2,
-            "note": "",
-        })
+        computed.append(
+            {
+                "label": label,
+                "r": r,
+                "lo": lo,
+                "hi": hi,
+                "n": n,
+                "p": p,
+                "dr2": dr2,
+                "note": "",
+            }
+        )
 
     # BH correction: applied across the 5 per-confounder conditional rows.
     # The (none; raw) row and the joint row are reported but not in the BH
@@ -602,25 +641,31 @@ def main(argv: list[str]) -> int:
     # Render
     lines = ["\t".join(header)]
     for c in computed:
+
         def _fmt(v: float) -> str:
             return f"{v:.3f}" if np.isfinite(v) else "NA"
+
         existing = c["note"]
         if np.isfinite(c["dr2"]) and c["dr2"] < 0:
             existing = (existing + " [negative dr2]").strip()
         if "fallback" in locals() and fallback_to_all:
             existing = (existing + " [fallback: full sample]").strip()
         c["note"] = existing
-        lines.append("\t".join([
-            c["label"],
-            _fmt(c["r"]),
-            _fmt(c["lo"]),
-            _fmt(c["hi"]),
-            str(c["n"]),
-            _fmt(c["p"]),
-            _fmt(c["p_bh"]),
-            _fmt(c["dr2"]),
-            c["note"],
-        ]))
+        lines.append(
+            "\t".join(
+                [
+                    c["label"],
+                    _fmt(c["r"]),
+                    _fmt(c["lo"]),
+                    _fmt(c["hi"]),
+                    str(c["n"]),
+                    _fmt(c["p"]),
+                    _fmt(c["p_bh"]),
+                    _fmt(c["dr2"]),
+                    c["note"],
+                ]
+            )
+        )
 
     out_path.write_text("\n".join(lines) + "\n")
     print(f"wrote {out_path}", file=sys.stderr)

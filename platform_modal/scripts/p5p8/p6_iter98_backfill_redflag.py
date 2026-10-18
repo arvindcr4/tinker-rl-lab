@@ -32,9 +32,9 @@ Outputs (3 files):
 - platform_hybrid/experiments/results/p5p8/p6_iter98_redflag_backfill.json
 - patched registry/entries/zvf130_*.json (5 entries)
 """
+
 import json
 import pathlib
-from collections import defaultdict
 
 HERE = pathlib.Path(__file__).resolve().parent
 ROOT = HERE.parent.parent
@@ -60,8 +60,7 @@ DECONTAMINATION_LEAVES = (
 ALL_9_LEAVES = LOSS_FORM_KL_LEAVES + DECONTAMINATION_LEAVES
 
 # All 5 zvf130_* stack records carry managed-by-tinker loss-form gaps
-TARGET_IDS = ("zvf130_cppo", "zvf130_es", "zvf130_mcgrpo",
-              "zvf130_ngrpo", "zvf130_scafgrpo")
+TARGET_IDS = ("zvf130_cppo", "zvf130_es", "zvf130_mcgrpo", "zvf130_ngrpo", "zvf130_scafgrpo")
 
 PROVENANCE_TAG = (
     "iter-98-redflag-backfill: 7 loss-form/KL leaves ("
@@ -92,32 +91,46 @@ def main():
         new_notes = old_notes.rstrip() + "\n\n" + PROVENANCE_TAG + "\n\n" + DECONTAMINATION_TAG
         rec["notes"] = new_notes
         p.write_text(json.dumps(rec, indent=2, ensure_ascii=False) + "\n")
-        rows.append({
-            "entry_id": entry_id,
-            "framework": rec.get("framework", {}).get("name", "?"),
-            "openness": rec.get("framework", {}).get("openness", "?"),
-            "loss_form_kl_leaves_count": len(LOSS_FORM_KL_LEAVES),
-            "decontamination_leaves_count": len(DECONTAMINATION_LEAVES),
-            "total_redflag_leaves": len(ALL_9_LEAVES),
-            "notes_chars_added": len(new_notes) - len(old_notes),
-        })
-        print(f"[p6-iter98] backfilled {entry_id} "
-              f"(notes +{len(new_notes) - len(old_notes)} chars)")
+        rows.append(
+            {
+                "entry_id": entry_id,
+                "framework": rec.get("framework", {}).get("name", "?"),
+                "openness": rec.get("framework", {}).get("openness", "?"),
+                "loss_form_kl_leaves_count": len(LOSS_FORM_KL_LEAVES),
+                "decontamination_leaves_count": len(DECONTAMINATION_LEAVES),
+                "total_redflag_leaves": len(ALL_9_LEAVES),
+                "notes_chars_added": len(new_notes) - len(old_notes),
+            }
+        )
+        print(f"[p6-iter98] backfilled {entry_id} (notes +{len(new_notes) - len(old_notes)} chars)")
 
     tsv = OUT / "p6_iter98_redflag_backfill.tsv"
-    cols = ["entry_id", "framework", "openness",
-            "loss_form_kl_leaves_count", "decontamination_leaves_count",
-            "total_redflag_leaves", "notes_chars_added"]
+    cols = [
+        "entry_id",
+        "framework",
+        "openness",
+        "loss_form_kl_leaves_count",
+        "decontamination_leaves_count",
+        "total_redflag_leaves",
+        "notes_chars_added",
+    ]
     with tsv.open("w") as f:
         f.write("\t".join(cols) + "\n")
         for r in rows:
-            f.write("\t".join([
-                r["entry_id"], r["framework"], r["openness"],
-                str(r["loss_form_kl_leaves_count"]),
-                str(r["decontamination_leaves_count"]),
-                str(r["total_redflag_leaves"]),
-                str(r["notes_chars_added"]),
-            ]) + "\n")
+            f.write(
+                "\t".join(
+                    [
+                        r["entry_id"],
+                        r["framework"],
+                        r["openness"],
+                        str(r["loss_form_kl_leaves_count"]),
+                        str(r["decontamination_leaves_count"]),
+                        str(r["total_redflag_leaves"]),
+                        str(r["notes_chars_added"]),
+                    ]
+                )
+                + "\n"
+            )
 
     summary = {
         "n_entries_backfilled": len(rows),
@@ -129,12 +142,12 @@ def main():
         "decontamination_tag": DECONTAMINATION_TAG,
     }
     (OUT / "p6_iter98_redflag_backfill.json").write_text(
-        json.dumps(summary, indent=2, ensure_ascii=False))
+        json.dumps(summary, indent=2, ensure_ascii=False)
+    )
 
     # Re-run iter-94 validator to confirm no HIGH-severity regressions
     print()
-    print(f"[p6-iter98] wrote {tsv.name}, "
-          f"p6_iter98_redflag_backfill.json; patched 5 entries")
+    print(f"[p6-iter98] wrote {tsv.name}, p6_iter98_redflag_backfill.json; patched 5 entries")
 
 
 if __name__ == "__main__":

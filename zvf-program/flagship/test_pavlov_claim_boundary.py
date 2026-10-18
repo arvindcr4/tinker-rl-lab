@@ -55,7 +55,9 @@ class PavlovClaimBoundaryTests(unittest.TestCase):
     def _heldout_claim(self) -> dict[str, object]:
         claim = self._coverage_claim()
         claim["claim_kind"] = "heldout_result"
-        claim["claim_text"] = "Receipt-proven held-out primary results are reported for the exact suites."
+        claim["claim_text"] = (
+            "Receipt-proven held-out primary results are reported for the exact suites."
+        )
         holdout_receipts: dict[str, dict[str, object]] = {}
         results: dict[str, dict[str, object]] = {}
         number = 100
@@ -77,7 +79,9 @@ class PavlovClaimBoundaryTests(unittest.TestCase):
                 {"subject": suite_id, "role": "primary_eval", "kind": "result"}, number
             )
             result_receipt["payload"]["artifact_digest"] = compute_result_digest(result)
-            result_receipt["digest"] = compute_receipt_digest(result_receipt["binding"], result_receipt["payload"])
+            result_receipt["digest"] = compute_receipt_digest(
+                result_receipt["binding"], result_receipt["payload"]
+            )
             result["receipt"] = result_receipt
             results[suite_id] = result
             number += 1
@@ -88,9 +92,9 @@ class PavlovClaimBoundaryTests(unittest.TestCase):
     def test_prose_alone_is_not_evidence(self) -> None:
         report = classify_claim_text("The portfolio is ready and all 14 suites are held out.")
 
-        self.assertEqual(report["status"], "BLOCKED")
-        self.assertIn("unstructured_claim_text", report["blocker_codes"])
-        self.assertIn("company_readiness_claim", report["blocker_codes"])
+        assert report["status"] == "BLOCKED"
+        assert "unstructured_claim_text" in report["blocker_codes"]
+        assert "company_readiness_claim" in report["blocker_codes"]
 
     def test_prospective_protocol_record_is_distinct_from_result_evidence(self) -> None:
         report = classify_claim(
@@ -102,8 +106,8 @@ class PavlovClaimBoundaryTests(unittest.TestCase):
             }
         )
 
-        self.assertEqual(report["status"], "ALLOWED")
-        self.assertEqual(report["scope"], "protocol_preflight")
+        assert report["status"] == "ALLOWED"
+        assert report["scope"] == "protocol_preflight"
 
     def test_protocol_result_text_is_blocked_even_with_prospective_flag(self) -> None:
         report = classify_claim(
@@ -115,8 +119,8 @@ class PavlovClaimBoundaryTests(unittest.TestCase):
             }
         )
 
-        self.assertEqual(report["status"], "BLOCKED")
-        self.assertIn("protocol_claim_contains_result", report["blocker_codes"])
+        assert report["status"] == "BLOCKED"
+        assert "protocol_claim_contains_result" in report["blocker_codes"]
 
     def test_protocol_evidence_must_be_an_object(self) -> None:
         report = classify_claim(
@@ -128,8 +132,8 @@ class PavlovClaimBoundaryTests(unittest.TestCase):
             }
         )
 
-        self.assertEqual(report["status"], "BLOCKED")
-        self.assertIn("protocol_evidence_not_structured", report["blocker_codes"])
+        assert report["status"] == "BLOCKED"
+        assert "protocol_evidence_not_structured" in report["blocker_codes"]
 
     def test_xlam_component_observation_can_pass_only_at_its_bounded_scope(self) -> None:
         report = classify_claim(
@@ -144,14 +148,18 @@ class PavlovClaimBoundaryTests(unittest.TestCase):
                     "successes": 7,
                 },
                 "receipt": self._receipt(
-                    {"subject": "xlam_baseline_observation", "role": "component", "kind": "observation"},
+                    {
+                        "subject": "xlam_baseline_observation",
+                        "role": "component",
+                        "kind": "observation",
+                    },
                     500,
                 ),
             }
         )
 
-        self.assertEqual(report["status"], "ALLOWED")
-        self.assertEqual(report["scope"], "component_evidence")
+        assert report["status"] == "ALLOWED"
+        assert report["scope"] == "component_evidence"
 
     def test_xlam_portfolio_promotion_is_blocked(self) -> None:
         claim = self._coverage_claim()
@@ -171,8 +179,8 @@ class PavlovClaimBoundaryTests(unittest.TestCase):
 
         report = classify_claim(claim)
 
-        self.assertEqual(report["status"], "BLOCKED")
-        self.assertIn("xlam_promotion_forbidden", report["blocker_codes"])
+        assert report["status"] == "BLOCKED"
+        assert "xlam_promotion_forbidden" in report["blocker_codes"]
 
     def test_gsm8k_calibration_is_not_a_portfolio_claim(self) -> None:
         report = classify_claim(
@@ -187,7 +195,7 @@ class PavlovClaimBoundaryTests(unittest.TestCase):
             }
         )
 
-        self.assertEqual(report["status"], "ALLOWED")
+        assert report["status"] == "ALLOWED"
 
     def test_gsm8k_promotion_is_blocked(self) -> None:
         report = classify_claim(
@@ -202,26 +210,28 @@ class PavlovClaimBoundaryTests(unittest.TestCase):
             }
         )
 
-        self.assertEqual(report["status"], "BLOCKED")
-        self.assertIn("gsm8k_promotion_forbidden", report["blocker_codes"])
+        assert report["status"] == "BLOCKED"
+        assert "gsm8k_promotion_forbidden" in report["blocker_codes"]
 
     def test_self_attested_strings_and_booleans_cannot_clear_claim(self) -> None:
         claim = self._coverage_claim()
         claim["verified"] = True
         claim["status"] = "complete"
-        claim["coverage_receipts"] = {suite_id: "verified" for suite_id in (*TRAIN_SUITE_IDS, *PRIMARY_EVAL_SUITE_IDS)}
+        claim["coverage_receipts"] = {
+            suite_id: "verified" for suite_id in (*TRAIN_SUITE_IDS, *PRIMARY_EVAL_SUITE_IDS)
+        }
 
         report = classify_claim(claim)
 
-        self.assertEqual(report["status"], "BLOCKED")
-        self.assertIn("self_attested_control", report["blocker_codes"])
-        self.assertIn("coverage_receipt_invalid", report["blocker_codes"])
+        assert report["status"] == "BLOCKED"
+        assert "self_attested_control" in report["blocker_codes"]
+        assert "coverage_receipt_invalid" in report["blocker_codes"]
 
     def test_exact_portfolio_coverage_passes_without_becoming_a_result_claim(self) -> None:
         report = classify_claim(self._coverage_claim())
 
-        self.assertEqual(report["status"], "ALLOWED")
-        self.assertEqual(report["scope"], "portfolio_evidence")
+        assert report["status"] == "ALLOWED"
+        assert report["scope"] == "portfolio_evidence"
 
     def test_related_benchmark_substitution_is_blocked(self) -> None:
         claim = self._coverage_claim()
@@ -229,8 +239,8 @@ class PavlovClaimBoundaryTests(unittest.TestCase):
 
         report = classify_claim(claim)
 
-        self.assertEqual(report["status"], "BLOCKED")
-        self.assertIn("related_benchmark_substitution", report["blocker_codes"])
+        assert report["status"] == "BLOCKED"
+        assert "related_benchmark_substitution" in report["blocker_codes"]
 
     def test_exact_suite_and_domain_sets_are_required(self) -> None:
         claim = self._coverage_claim()
@@ -239,15 +249,15 @@ class PavlovClaimBoundaryTests(unittest.TestCase):
 
         report = classify_claim(claim)
 
-        self.assertEqual(report["status"], "BLOCKED")
-        self.assertIn("primary_eval_suite_ids_not_exact", report["blocker_codes"])
-        self.assertIn("domain_union_not_exact", report["blocker_codes"])
+        assert report["status"] == "BLOCKED"
+        assert "primary_eval_suite_ids_not_exact" in report["blocker_codes"]
+        assert "domain_union_not_exact" in report["blocker_codes"]
 
     def test_receipt_proven_heldout_results_pass(self) -> None:
         report = classify_claim(self._heldout_claim())
 
-        self.assertEqual(report["status"], "ALLOWED")
-        self.assertEqual(report["scope"], "heldout_result")
+        assert report["status"] == "ALLOWED"
+        assert report["scope"] == "heldout_result"
 
     def test_missing_primary_holdout_receipt_blocks_all_14_claim(self) -> None:
         claim = self._heldout_claim()
@@ -255,8 +265,8 @@ class PavlovClaimBoundaryTests(unittest.TestCase):
 
         report = classify_claim(claim)
 
-        self.assertEqual(report["status"], "BLOCKED")
-        self.assertIn("holdout_receipt_invalid", report["blocker_codes"])
+        assert report["status"] == "BLOCKED"
+        assert "holdout_receipt_invalid" in report["blocker_codes"]
 
     def test_fabricated_heldout_boolean_and_result_string_block(self) -> None:
         claim = self._heldout_claim()
@@ -265,9 +275,9 @@ class PavlovClaimBoundaryTests(unittest.TestCase):
 
         report = classify_claim(claim)
 
-        self.assertEqual(report["status"], "BLOCKED")
-        self.assertIn("self_attested_control", report["blocker_codes"])
-        self.assertIn("heldout_result_invalid", report["blocker_codes"])
+        assert report["status"] == "BLOCKED"
+        assert "self_attested_control" in report["blocker_codes"]
+        assert "heldout_result_invalid" in report["blocker_codes"]
 
     def test_tampered_result_receipt_digest_blocks(self) -> None:
         claim = self._heldout_claim()
@@ -275,8 +285,8 @@ class PavlovClaimBoundaryTests(unittest.TestCase):
 
         report = classify_claim(claim)
 
-        self.assertEqual(report["status"], "BLOCKED")
-        self.assertIn("heldout_result_receipt_invalid", report["blocker_codes"])
+        assert report["status"] == "BLOCKED"
+        assert "heldout_result_receipt_invalid" in report["blocker_codes"]
 
     def test_result_receipt_cannot_be_replayed_for_a_changed_metric(self) -> None:
         claim = self._heldout_claim()
@@ -285,19 +295,19 @@ class PavlovClaimBoundaryTests(unittest.TestCase):
 
         report = classify_claim(claim)
 
-        self.assertEqual(report["status"], "BLOCKED")
-        self.assertIn("heldout_result_not_bound", report["blocker_codes"])
+        assert report["status"] == "BLOCKED"
+        assert "heldout_result_not_bound" in report["blocker_codes"]
 
     def test_unhashable_claim_kind_and_out_of_range_interval_fail_closed(self) -> None:
         report = classify_claim({"claim_kind": [], "prospective": True})
-        self.assertEqual(report["status"], "BLOCKED")
-        self.assertIn("claim_kind_invalid", report["blocker_codes"])
+        assert report["status"] == "BLOCKED"
+        assert "claim_kind_invalid" in report["blocker_codes"]
 
         claim = self._heldout_claim()
         claim["results"][PRIMARY_EVAL_SUITE_IDS[0]]["ci95"] = {"lower": -0.1, "upper": 1.1}
         report = classify_claim(claim)
-        self.assertEqual(report["status"], "BLOCKED")
-        self.assertIn("heldout_interval_invalid", report["blocker_codes"])
+        assert report["status"] == "BLOCKED"
+        assert "heldout_interval_invalid" in report["blocker_codes"]
 
     def test_company_readiness_is_not_implied_by_domain_coverage(self) -> None:
         claim = self._coverage_claim()
@@ -305,8 +315,8 @@ class PavlovClaimBoundaryTests(unittest.TestCase):
 
         report = classify_claim(claim)
 
-        self.assertEqual(report["status"], "BLOCKED")
-        self.assertIn("company_readiness_claim", report["blocker_codes"])
+        assert report["status"] == "BLOCKED"
+        assert "company_readiness_claim" in report["blocker_codes"]
 
     def test_fabricated_company_readiness_field_is_not_evidence(self) -> None:
         claim = self._coverage_claim()
@@ -314,8 +324,8 @@ class PavlovClaimBoundaryTests(unittest.TestCase):
 
         report = classify_claim(claim)
 
-        self.assertEqual(report["status"], "BLOCKED")
-        self.assertIn("self_attested_control", report["blocker_codes"])
+        assert report["status"] == "BLOCKED"
+        assert "self_attested_control" in report["blocker_codes"]
 
     def test_cli_emits_json_and_nonzero_for_unstructured_claim(self) -> None:
         script = Path(__file__).with_name("pavlov_claim_boundary.py")
@@ -330,9 +340,9 @@ class PavlovClaimBoundaryTests(unittest.TestCase):
             )
 
         report = json.loads(process.stdout)
-        self.assertEqual(process.returncode, 1)
-        self.assertEqual(report["status"], "BLOCKED")
-        self.assertNotIn("Traceback", process.stderr)
+        assert process.returncode == 1
+        assert report["status"] == "BLOCKED"
+        assert "Traceback" not in process.stderr
 
 
 if __name__ == "__main__":

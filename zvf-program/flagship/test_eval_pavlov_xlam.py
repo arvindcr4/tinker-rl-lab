@@ -10,6 +10,7 @@ from unittest.mock import patch
 
 from flagship import eval_pavlov_xlam as harness
 from flagship.eval_pavlov_xlam import maximum_eval_cost
+import pytest
 
 
 _VALID_PROVENANCE_ARGS = [
@@ -115,8 +116,11 @@ class _FakeWandb(types.ModuleType):
     Artifact = _FakeArtifact
 
 
-def _fake_runtime(events: list[tuple[str, object]], *, examples=None, responses=None) -> dict[str, types.ModuleType]:
+def _fake_runtime(
+    events: list[tuple[str, object]], *, examples=None, responses=None
+) -> dict[str, types.ModuleType]:
     response_iterator = iter(responses) if responses is not None else None
+
     class Example:
         prompt = "call the tool"
         target = {"name": "tool", "arguments": {"x": 1}}
@@ -137,13 +141,15 @@ def _fake_runtime(events: list[tuple[str, object]], *, examples=None, responses=
 
         def decode(self, tokens: list[int], *, skip_special_tokens: bool) -> str:
             del tokens, skip_special_tokens
-            return next(response_iterator) if response_iterator is not None else "raw model response must not be logged"
+            return (
+                next(response_iterator)
+                if response_iterator is not None
+                else "raw model response must not be logged"
+            )
 
     class Future:
         def result(self) -> types.SimpleNamespace:
-            return types.SimpleNamespace(
-                sequences=[types.SimpleNamespace(tokens=[4, 5])]
-            )
+            return types.SimpleNamespace(sequences=[types.SimpleNamespace(tokens=[4, 5])])
 
     class Sampler:
         def __init__(self, *, name_or_path: str, revision: str | None) -> None:
@@ -209,6 +215,7 @@ def _fake_runtime(events: list[tuple[str, object]], *, examples=None, responses=
     tinker_types.SamplingParams = SamplingParams
 
     transformers = types.ModuleType("transformers")
+
     def from_pretrained(*args: object, **kwargs: object) -> Tokenizer:
         model_name = str(args[0])
         revision = kwargs.get("revision")
@@ -223,6 +230,7 @@ def _fake_runtime(events: list[tuple[str, object]], *, examples=None, responses=
         (),
         {"score": lambda self, response, example: 1.0},
     )
+
     def make_xlam_dataset(*, seed: int, revision: str) -> Dataset:
         events.append(("dataset", {"seed": seed, "revision": revision}))
         return Dataset()
@@ -248,9 +256,7 @@ class PavlovXlamWandbTests(unittest.TestCase):
         extra_args: list[str] | None = None,
     ) -> list[str]:
         source_args = (
-            ["--sampler-path", "fake/adapter"]
-            if sampler_path
-            else ["--base-model", "fake/base"]
+            ["--sampler-path", "fake/adapter"] if sampler_path else ["--base-model", "fake/base"]
         )
         argv = [
             "eval_pavlov_xlam.py",
@@ -262,16 +268,20 @@ class PavlovXlamWandbTests(unittest.TestCase):
             "--out",
             str(out),
         ]
-        argv.extend(
-            _VALID_PROVENANCE_ARGS
-            if provenance_args is None
-            else provenance_args
-        )
+        argv.extend(_VALID_PROVENANCE_ARGS if provenance_args is None else provenance_args)
         if adapter_revision is not None:
             argv.extend(["--adapter-revision", adapter_revision])
         if extra_args:
             argv.extend(extra_args)
-        ids = [harness._sha256(json.dumps({"prompt": "call the tool", "target": {"name": "tool", "arguments": {"x": 1}}}, sort_keys=True, separators=(",", ":")))]
+        ids = [
+            harness._sha256(
+                json.dumps(
+                    {"prompt": "call the tool", "target": {"name": "tool", "arguments": {"x": 1}}},
+                    sort_keys=True,
+                    separators=(",", ":"),
+                )
+            )
+        ]
         manifest = out.with_suffix(".manifest.json")
         manifest.write_text(json.dumps(ids))
         argv.extend(["--evaluation-manifest", str(manifest)])
@@ -302,7 +312,7 @@ class PavlovXlamWandbTests(unittest.TestCase):
                 extra_args=extra_args,
             )
             with patch.dict(sys.modules, modules), patch.object(sys, "argv", argv):
-                self.assertEqual(harness.main(), 0)
+                assert harness.main() == 0
             # Keep the content available after TemporaryDirectory cleanup for
             # assertions by returning a copy into a second temporary location.
             kept = Path(tempfile.mkdtemp()) / "receipt.json"
@@ -311,14 +321,21 @@ class PavlovXlamWandbTests(unittest.TestCase):
 
     def test_real_component_grader_counts_mixed_calls(self) -> None:
         from platform_tinker.tinkerrl.grpo import StrictToolCallReward
+
         events = []
-        examples = [types.SimpleNamespace(prompt=f"synthetic tool task {i}",
-                    target={"name": "tool", "arguments": {"x": 1}}) for i in range(5)]
-        responses = ['{"name":"tool","arguments":{"x":1}}',
-                     '{"name":"wrong","arguments":{"x":1}}',
-                     '{"name":"tool","arguments":{"x":2}}',
-                     'not json',
-                     '[{"name":"tool","arguments":{"x":1}}, {"name":"extra","arguments":{}}]']
+        examples = [
+            types.SimpleNamespace(
+                prompt=f"synthetic tool task {i}", target={"name": "tool", "arguments": {"x": 1}}
+            )
+            for i in range(5)
+        ]
+        responses = [
+            '{"name":"tool","arguments":{"x":1}}',
+            '{"name":"wrong","arguments":{"x":1}}',
+            '{"name":"tool","arguments":{"x":2}}',
+            "not json",
+            '[{"name":"tool","arguments":{"x":1}}, {"name":"extra","arguments":{}}]',
+        ]
         modules = _fake_runtime(events, examples=examples, responses=responses)
         modules["platform_tinker.tinkerrl.grpo"].StrictToolCallReward = StrictToolCallReward
         modules["wandb"] = _FakeWandb(events)
@@ -326,19 +343,27 @@ class PavlovXlamWandbTests(unittest.TestCase):
             out = Path(directory) / "receipt.json"
             argv = self._build_argv(out)
             argv[argv.index("--limit") + 1] = "5"
-            ids = [harness._sha256(json.dumps({"prompt": example.prompt, "target": example.target},
-                         sort_keys=True, separators=(",", ":"))) for example in examples]
+            ids = [
+                harness._sha256(
+                    json.dumps(
+                        {"prompt": example.prompt, "target": example.target},
+                        sort_keys=True,
+                        separators=(",", ":"),
+                    )
+                )
+                for example in examples
+            ]
             Path(argv[argv.index("--evaluation-manifest") + 1]).write_text(json.dumps(ids))
             argv[argv.index("--task-id-sha256") + 1] = harness._sha256("\n".join(ids))
             with patch.dict(sys.modules, modules), patch.object(sys, "argv", argv):
-                self.assertEqual(harness.main(), 0)
+                assert harness.main() == 0
             receipt = json.loads(out.read_text())
         # This is the real custom component grader, including its partial-credit
         # semantics. It is explicitly not an official xLAM-equivalence oracle.
-        self.assertEqual(receipt["examples"], 5)
+        assert receipt["examples"] == 5
         self.assertAlmostEqual(receipt["mean_strict_reward"], 1.8 / 5)
-        self.assertEqual(receipt["perfect_call_rate"], 1 / 5)
-        self.assertEqual(len([event for event in events if event[0] == "sample"]), 5)
+        assert receipt["perfect_call_rate"] == 1 / 5
+        assert len([event for event in events if event[0] == "sample"]) == 5
 
     def test_online_wandb_precedes_tinker_and_logs_portfolio_receipt(self) -> None:
         events: list[tuple[str, object]] = []
@@ -350,88 +375,66 @@ class PavlovXlamWandbTests(unittest.TestCase):
         )
 
         event_names = [name for name, _ in events]
-        self.assertLess(event_names.index("init"), event_names.index("service"))
+        assert event_names.index("init") < event_names.index("service")
         init_kwargs = next(value for name, value in events if name == "init")
-        self.assertEqual(init_kwargs["mode"], "online")
-        self.assertEqual(init_kwargs["project"], harness.PAVLOV_WANDB_PROJECT)
-        self.assertEqual(init_kwargs["group"], harness.PAVLOV_WANDB_GROUP)
-        self.assertTrue(init_kwargs["config"]["config_immutable"])
-        self.assertEqual(
-            [value for name, value in events if name == "config_update"], [False]
-        )
-        self.assertEqual(init_kwargs["config"]["portfolio_suite_count"], 14)
-        self.assertEqual(len(init_kwargs["config"]["portfolio_suite_ids"]), 14)
-        self.assertEqual(
-            init_kwargs["config"]["portfolio_id"],
-            "pavlov-primary-eval-14-suite-v1",
-        )
-        self.assertEqual(init_kwargs["config"]["portfolio_role"], "primary_eval")
-        self.assertEqual(init_kwargs["config"]["stage"], "primary-evaluation")
-        self.assertEqual(init_kwargs["config"]["suite_id"], "xlam_component")
-        self.assertEqual(init_kwargs["config"]["domains"], ["tool_use"])
-        self.assertEqual(
-            init_kwargs["config"]["provenance"]["dataset_revision"], "a" * 40
-        )
-        self.assertEqual(
-            init_kwargs["config"]["provenance"]["split_manifest_sha256"], "b" * 64
-        )
-        self.assertEqual(
-            init_kwargs["config"]["provenance"]["container_digest"],
-            "sha256:" + "d" * 64,
-        )
-        self.assertEqual(
-            init_kwargs["config"]["provenance"]["decontamination_sha256"],
-            "7" * 64,
-        )
-        self.assertEqual(
-            init_kwargs["config"]["phase0_provenance_sha256"],
-            init_kwargs["config"]["provenance_sha256"],
+        assert init_kwargs["mode"] == "online"
+        assert init_kwargs["project"] == harness.PAVLOV_WANDB_PROJECT
+        assert init_kwargs["group"] == harness.PAVLOV_WANDB_GROUP
+        assert init_kwargs["config"]["config_immutable"]
+        assert [value for name, value in events if name == "config_update"] == [False]
+        assert init_kwargs["config"]["portfolio_suite_count"] == 14
+        assert len(init_kwargs["config"]["portfolio_suite_ids"]) == 14
+        assert init_kwargs["config"]["portfolio_id"] == "pavlov-primary-eval-14-suite-v1"
+        assert init_kwargs["config"]["portfolio_role"] == "primary_eval"
+        assert init_kwargs["config"]["stage"] == "primary-evaluation"
+        assert init_kwargs["config"]["suite_id"] == "xlam_component"
+        assert init_kwargs["config"]["domains"] == ["tool_use"]
+        assert init_kwargs["config"]["provenance"]["dataset_revision"] == "a" * 40
+        assert init_kwargs["config"]["provenance"]["split_manifest_sha256"] == "b" * 64
+        assert init_kwargs["config"]["provenance"]["container_digest"] == "sha256:" + "d" * 64
+        assert init_kwargs["config"]["provenance"]["decontamination_sha256"] == "7" * 64
+        assert (
+            init_kwargs["config"]["phase0_provenance_sha256"]
+            == init_kwargs["config"]["provenance_sha256"]
         )
 
         receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
-        self.assertEqual(receipt["suite_id"], "xlam_component")
-        self.assertEqual(receipt["domains"], ["tool_use"])
-        self.assertEqual(
-            receipt["provenance_schema_version"], "pavlov-phase0-provenance-v1"
-        )
-        self.assertEqual(receipt["provenance"]["adapter_revision"], None)
-        self.assertEqual(
-            receipt["phase0_provenance_sha256"], receipt["provenance_sha256"]
-        )
-        self.assertEqual(receipt["portfolio"]["suite_count"], 14)
-        self.assertTrue(receipt["portfolio"]["component_only"])
-        self.assertIn("does not cover all", receipt["portfolio"]["coverage_claim"])
-        self.assertEqual(len(receipt["portfolio"]["suite_ids"]), 14)
-        self.assertEqual(len(receipt["portfolio"]["suites"]), 14)
-        self.assertEqual(
-            receipt["portfolio"]["suites"][0],
-            {
-                "suite_id": "swe_bench_pro_eval",
-                "domains": ["code", "long_horizon"],
-                "role": "primary_eval",
-            },
-        )
-        self.assertNotIn("raw model response must not be logged", json.dumps(receipt))
+        assert receipt["suite_id"] == "xlam_component"
+        assert receipt["domains"] == ["tool_use"]
+        assert receipt["provenance_schema_version"] == "pavlov-phase0-provenance-v1"
+        assert receipt["provenance"]["adapter_revision"] == None
+        assert receipt["phase0_provenance_sha256"] == receipt["provenance_sha256"]
+        assert receipt["portfolio"]["suite_count"] == 14
+        assert receipt["portfolio"]["component_only"]
+        assert "does not cover all" in receipt["portfolio"]["coverage_claim"]
+        assert len(receipt["portfolio"]["suite_ids"]) == 14
+        assert len(receipt["portfolio"]["suites"]) == 14
+        assert receipt["portfolio"]["suites"][0] == {
+            "suite_id": "swe_bench_pro_eval",
+            "domains": ["code", "long_horizon"],
+            "role": "primary_eval",
+        }
+        assert "raw model response must not be logged" not in json.dumps(receipt)
 
         log_metrics = [value for name, value in events if name == "log"]
-        self.assertEqual(len(log_metrics), 1)
-        self.assertIn("prompt_tokens", log_metrics[0])
-        self.assertIn("sample_tokens", log_metrics[0])
-        self.assertIn("estimated_cost_usd", log_metrics[0])
+        assert len(log_metrics) == 1
+        assert "prompt_tokens" in log_metrics[0]
+        assert "sample_tokens" in log_metrics[0]
+        assert "estimated_cost_usd" in log_metrics[0]
         artifacts = [value for name, value in events if name == "artifact"]
-        self.assertEqual(len(artifacts), 1)
-        self.assertEqual(artifacts[0].type, "evaluation-receipt")
-        self.assertEqual(artifacts[0].files[0][1], "receipt.json")
-        self.assertTrue(wandb.run.artifact_acknowledged)
-        self.assertEqual([value for name, value in events if name == "finish"], [0])
+        assert len(artifacts) == 1
+        assert artifacts[0].type == "evaluation-receipt"
+        assert artifacts[0].files[0][1] == "receipt.json"
+        assert wandb.run.artifact_acknowledged
+        assert [value for name, value in events if name == "finish"] == [0]
 
         dataset_event = next(value for name, value in events if name == "dataset")
-        self.assertEqual(dataset_event["seed"], 809)
-        self.assertEqual(dataset_event["revision"], "a" * 40)
+        assert dataset_event["seed"] == 809
+        assert dataset_event["revision"] == "a" * 40
         tokenizer_event = next(value for name, value in events if name == "tokenizer")
-        self.assertEqual(tokenizer_event["revision"], "2" * 40)
+        assert tokenizer_event["revision"] == "2" * 40
         service_event = next(value for name, value in events if name == "service")
-        self.assertEqual(service_event["base_model_revision"], "1" * 40)
+        assert service_event["base_model_revision"] == "1" * 40
 
     def test_valid_sampler_path_preserves_order_and_records_adapter_revision(self) -> None:
         events: list[tuple[str, object]] = []
@@ -443,18 +446,13 @@ class PavlovXlamWandbTests(unittest.TestCase):
         )
 
         event_names = [name for name, _ in events]
-        self.assertLess(event_names.index("init"), event_names.index("service"))
-        self.assertLess(event_names.index("service"), event_names.index("sampling_client"))
-        sampling_kwargs = next(
-            value for name, value in events if name == "sampling_client"
-        )
-        self.assertEqual(
-            sampling_kwargs,
-            {"model_path": "fake/adapter", "revision": "3" * 40},
-        )
+        assert event_names.index("init") < event_names.index("service")
+        assert event_names.index("service") < event_names.index("sampling_client")
+        sampling_kwargs = next(value for name, value in events if name == "sampling_client")
+        assert sampling_kwargs == {"model_path": "fake/adapter", "revision": "3" * 40}
         receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
-        self.assertEqual(receipt["source_kind"], "sampler_path")
-        self.assertEqual(receipt["provenance"]["adapter_revision"], "3" * 40)
+        assert receipt["source_kind"] == "sampler_path"
+        assert receipt["provenance"]["adapter_revision"] == "3" * 40
 
     def test_phase0_missing_provenance_blocks_wandb_and_tinker(self) -> None:
         events: list[tuple[str, object]] = []
@@ -465,12 +463,12 @@ class PavlovXlamWandbTests(unittest.TestCase):
             out = Path(temp_dir) / "receipt.json"
             argv = self._build_argv(out, provenance_args=[])
             with patch.dict(sys.modules, modules), patch.object(sys, "argv", argv):
-                with self.assertRaises(SystemExit):
+                with pytest.raises(SystemExit):
                     harness.main()
         event_names = [name for name, _ in events]
-        self.assertNotIn("init", event_names)
-        self.assertNotIn("service", event_names)
-        self.assertNotIn("sample", event_names)
+        assert "init" not in event_names
+        assert "service" not in event_names
+        assert "sample" not in event_names
 
     def test_phase0_placeholder_provenance_blocks_wandb_and_tinker(self) -> None:
         events: list[tuple[str, object]] = []
@@ -478,19 +476,17 @@ class PavlovXlamWandbTests(unittest.TestCase):
         modules = _fake_runtime(events)
         modules["wandb"] = wandb
         placeholder_args = list(_VALID_PROVENANCE_ARGS)
-        placeholder_args[
-            placeholder_args.index("--split-manifest-sha256") + 1
-        ] = "PLACEHOLDER"
+        placeholder_args[placeholder_args.index("--split-manifest-sha256") + 1] = "PLACEHOLDER"
         with tempfile.TemporaryDirectory() as temp_dir:
             out = Path(temp_dir) / "receipt.json"
             argv = self._build_argv(out, provenance_args=placeholder_args)
             with patch.dict(sys.modules, modules), patch.object(sys, "argv", argv):
-                with self.assertRaises(SystemExit):
+                with pytest.raises(SystemExit):
                     harness.main()
         event_names = [name for name, _ in events]
-        self.assertNotIn("init", event_names)
-        self.assertNotIn("service", event_names)
-        self.assertNotIn("sample", event_names)
+        assert "init" not in event_names
+        assert "service" not in event_names
+        assert "sample" not in event_names
 
     def test_sampler_path_missing_adapter_revision_blocks_before_side_effects(self) -> None:
         events: list[tuple[str, object]] = []
@@ -501,12 +497,12 @@ class PavlovXlamWandbTests(unittest.TestCase):
             out = Path(temp_dir) / "receipt.json"
             argv = self._build_argv(out, sampler_path=True)
             with patch.dict(sys.modules, modules), patch.object(sys, "argv", argv):
-                with self.assertRaises(SystemExit):
+                with pytest.raises(SystemExit):
                     harness.main()
         event_names = [name for name, _ in events]
-        self.assertNotIn("init", event_names)
-        self.assertNotIn("service", event_names)
-        self.assertNotIn("sample", event_names)
+        assert "init" not in event_names
+        assert "service" not in event_names
+        assert "sample" not in event_names
 
     def test_wandb_initialization_failure_blocks_service_client(self) -> None:
         events: list[tuple[str, object]] = []
@@ -522,10 +518,10 @@ class PavlovXlamWandbTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp_dir:
             argv = self._build_argv(Path(temp_dir) / "receipt.json")
             with patch.dict(sys.modules, modules), patch.object(sys, "argv", argv):
-                with self.assertRaises(RuntimeError):
+                with pytest.raises(RuntimeError):
                     harness.main()
-        self.assertNotIn("service", [name for name, _ in events])
-        self.assertNotIn("sample", [name for name, _ in events])
+        assert "service" not in [name for name, _ in events]
+        assert "sample" not in [name for name, _ in events]
 
     def test_non_online_wandb_run_blocks_service_and_finishes_failed(self) -> None:
         events: list[tuple[str, object]] = []
@@ -542,11 +538,11 @@ class PavlovXlamWandbTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp_dir:
             argv = self._build_argv(Path(temp_dir) / "receipt.json")
             with patch.dict(sys.modules, modules), patch.object(sys, "argv", argv):
-                with self.assertRaises(RuntimeError):
+                with pytest.raises(RuntimeError):
                     harness.main()
-        self.assertEqual([value for name, value in events if name == "finish"], [1])
-        self.assertNotIn("service", [name for name, _ in events])
-        self.assertNotIn("sample", [name for name, _ in events])
+        assert [value for name, value in events if name == "finish"] == [1]
+        assert "service" not in [name for name, _ in events]
+        assert "sample" not in [name for name, _ in events]
 
     def test_metric_logging_failure_finishes_failed(self) -> None:
         events: list[tuple[str, object]] = []
@@ -556,10 +552,10 @@ class PavlovXlamWandbTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp_dir:
             argv = self._build_argv(Path(temp_dir) / "receipt.json")
             with patch.dict(sys.modules, modules), patch.object(sys, "argv", argv):
-                with self.assertRaises(RuntimeError):
+                with pytest.raises(RuntimeError):
                     harness.main()
-        self.assertEqual([value for name, value in events if name == "finish"], [1])
-        self.assertNotIn("artifact", [name for name, _ in events])
+        assert [value for name, value in events if name == "finish"] == [1]
+        assert "artifact" not in [name for name, _ in events]
 
     def test_revision_bound_fallback_loader_receives_dataset_revision(self) -> None:
         events: list[tuple[str, object]] = []
@@ -578,9 +574,7 @@ class PavlovXlamWandbTests(unittest.TestCase):
         }
         datasets = types.ModuleType("datasets")
 
-        def load_dataset(
-            dataset_id: str, *, split: str, revision: str
-        ) -> list[dict[str, str]]:
+        def load_dataset(dataset_id: str, *, split: str, revision: str) -> list[dict[str, str]]:
             events.append(
                 (
                     "load_dataset",
@@ -594,12 +588,12 @@ class PavlovXlamWandbTests(unittest.TestCase):
         with patch.dict(sys.modules, modules):
             dataset, binding = harness._load_xlam_dataset(seed=809, revision="a" * 40)
         load_event = next(value for name, value in events if name == "load_dataset")
-        self.assertEqual(load_event["dataset_id"], harness.XLAM_DATASET_ID)
-        self.assertEqual(load_event["split"], "train")
-        self.assertEqual(load_event["revision"], "a" * 40)
-        self.assertNotIn("unbound_dataset_loader", [name for name, _ in events])
-        self.assertEqual(binding["mode"], "local_revision_bound_loader")
-        self.assertEqual(len(dataset.test_examples()), 500)
+        assert load_event["dataset_id"] == harness.XLAM_DATASET_ID
+        assert load_event["split"] == "train"
+        assert load_event["revision"] == "a" * 40
+        assert "unbound_dataset_loader" not in [name for name, _ in events]
+        assert binding["mode"] == "local_revision_bound_loader"
+        assert len(dataset.test_examples()) == 500
 
     def test_non_positive_or_non_finite_limits_block_before_wandb_and_tinker(self) -> None:
         cases = (
@@ -623,13 +617,13 @@ class PavlovXlamWandbTests(unittest.TestCase):
                         argv.extend([option, value])
                     modules["wandb"] = wandb
                     with patch.dict(sys.modules, modules), patch.object(sys, "argv", argv):
-                        with self.assertRaises(SystemExit):
+                        with pytest.raises(SystemExit):
                             harness.main()
                 event_names = [name for name, _ in events]
-                self.assertNotIn("init", event_names)
-                self.assertNotIn("service", event_names)
-                self.assertNotIn("sampling_client", event_names)
-                self.assertNotIn("sample", event_names)
+                assert "init" not in event_names
+                assert "service" not in event_names
+                assert "sampling_client" not in event_names
+                assert "sample" not in event_names
 
     def test_empty_examples_fail_after_wandb_but_before_tinker(self) -> None:
         events: list[tuple[str, object]] = []
@@ -649,11 +643,11 @@ class PavlovXlamWandbTests(unittest.TestCase):
             argv = self._build_argv(Path(temp_dir) / "receipt.json")
             modules["wandb"] = wandb
             with patch.dict(sys.modules, modules), patch.object(sys, "argv", argv):
-                with self.assertRaises(RuntimeError):
+                with pytest.raises(RuntimeError):
                     harness.main()
-        self.assertEqual([value for name, value in events if name == "finish"], [1])
-        self.assertNotIn("service", [name for name, _ in events])
-        self.assertNotIn("sample", [name for name, _ in events])
+        assert [value for name, value in events if name == "finish"] == [1]
+        assert "service" not in [name for name, _ in events]
+        assert "sample" not in [name for name, _ in events]
 
     def test_primary_suite_and_unknown_domain_overrides_are_rejected(self) -> None:
         cases = (
@@ -670,9 +664,9 @@ class PavlovXlamWandbTests(unittest.TestCase):
                     argv.extend([option, value])
                     modules["wandb"] = wandb
                     with patch.dict(sys.modules, modules), patch.object(sys, "argv", argv):
-                        with self.assertRaises(SystemExit):
+                        with pytest.raises(SystemExit):
                             harness.main()
-                self.assertNotIn("init", [name for name, _ in events])
+                assert "init" not in [name for name, _ in events]
 
     def test_wandb_identity_config_and_artifact_ack_are_required(self) -> None:
         class MissingIdentityRun(_FakeRun):
@@ -721,14 +715,12 @@ class PavlovXlamWandbTests(unittest.TestCase):
                     argv = self._build_argv(Path(temp_dir) / "receipt.json")
                     modules["wandb"] = wandb
                     with patch.dict(sys.modules, modules), patch.object(sys, "argv", argv):
-                        with self.assertRaises(RuntimeError):
+                        with pytest.raises(RuntimeError):
                             harness.main()
-                self.assertEqual(
-                    [value for name, value in events if name == "finish"], [1]
-                )
+                assert [value for name, value in events if name == "finish"] == [1]
                 if wandb_class is not MissingAckWandb:
-                    self.assertNotIn("service", [name for name, _ in events])
-                    self.assertNotIn("sample", [name for name, _ in events])
+                    assert "service" not in [name for name, _ in events]
+                    assert "sample" not in [name for name, _ in events]
 
 
 if __name__ == "__main__":

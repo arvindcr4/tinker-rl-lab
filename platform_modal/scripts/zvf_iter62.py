@@ -46,7 +46,6 @@ from __future__ import annotations
 import csv
 import json
 import math
-import os
 import random
 import statistics
 from collections import defaultdict
@@ -68,14 +67,16 @@ def load_variance_mitigation() -> list[dict]:
     with VM.open() as fh:
         reader = csv.DictReader(fh, delimiter="\t")
         for r in reader:
-            rows.append({
-                "method": r["method"],
-                "seed": int(r["seed"]),
-                "step": int(r["step"]),
-                "zvf": float(r["zvf"]),
-                "acc": float(r["heldout_acc"]),
-                "collapse": int(r["collapse"]),
-            })
+            rows.append(
+                {
+                    "method": r["method"],
+                    "seed": int(r["seed"]),
+                    "step": int(r["step"]),
+                    "zvf": float(r["zvf"]),
+                    "acc": float(r["heldout_acc"]),
+                    "collapse": int(r["collapse"]),
+                }
+            )
     return rows
 
 
@@ -100,36 +101,46 @@ def stratified_zvf(rows: list[dict]) -> dict:
         accs = [r["acc"] for r in sub]
         bins = quintile_bin(accs, 5)
         per_bin: dict = defaultdict(list)
-        for r, b in zip(sub, bins):
+        for r, b in zip(sub, bins, strict=False):
             per_bin[b].append(r)
         method_out = []
         for b in range(5):
             bucket = per_bin[b]
             if not bucket:
-                method_out.append({
-                    "quintile": b, "n": 0, "mean_zvf": float("nan"),
-                    "mean_acc": float("nan"), "zvf_se": float("nan"),
-                    "n_collapse": 0,
-                })
+                method_out.append(
+                    {
+                        "quintile": b,
+                        "n": 0,
+                        "mean_zvf": float("nan"),
+                        "mean_acc": float("nan"),
+                        "zvf_se": float("nan"),
+                        "n_collapse": 0,
+                    }
+                )
                 continue
             zs = [r["zvf"] for r in bucket]
             acs = [r["acc"] for r in bucket]
-            method_out.append({
-                "quintile": b,
-                "n": len(bucket),
-                "mean_zvf": statistics.fmean(zs),
-                "mean_acc": statistics.fmean(acs),
-                "zvf_se": statistics.pstdev(zs) / math.sqrt(len(bucket)) if len(bucket) > 1 else 0.0,
-                "n_collapse": sum(r["collapse"] for r in bucket),
-            })
+            method_out.append(
+                {
+                    "quintile": b,
+                    "n": len(bucket),
+                    "mean_zvf": statistics.fmean(zs),
+                    "mean_acc": statistics.fmean(acs),
+                    "zvf_se": statistics.pstdev(zs) / math.sqrt(len(bucket))
+                    if len(bucket) > 1
+                    else 0.0,
+                    "n_collapse": sum(r["collapse"] for r in bucket),
+                }
+            )
         out[method] = method_out
     return out
 
 
 def bootstrap_diff(a, b, B=2000):
     """Descriptive step-weighted difference. No CI without independent run IDs."""
-    if not a or not b: return float("nan"),float("nan"),float("nan")
-    return statistics.fmean(a)-statistics.fmean(b),float("nan"),float("nan")
+    if not a or not b:
+        return float("nan"), float("nan"), float("nan")
+    return statistics.fmean(a) - statistics.fmean(b), float("nan"), float("nan")
 
 
 def per_method_per_quintile_zvf(rows: list[dict]) -> dict:
@@ -140,7 +151,7 @@ def per_method_per_quintile_zvf(rows: list[dict]) -> dict:
         accs = [r["acc"] for r in sub]
         bins = quintile_bin(accs, 5)
         d: dict = defaultdict(list)
-        for r, b in zip(sub, bins):
+        for r, b in zip(sub, bins, strict=False):
             d[b].append(r["zvf"])
         out[method] = d
     return out
@@ -162,8 +173,9 @@ def mann_whitney_auc(xs: list[float], ys: list[float]) -> float:
 
 def main() -> None:
     rows = load_variance_mitigation()
-    print(f"loaded {len(rows)} variance_mitigation rows; "
-          f"{len({r['method'] for r in rows})} methods")
+    print(
+        f"loaded {len(rows)} variance_mitigation rows; {len({r['method'] for r in rows})} methods"
+    )
 
     strat = stratified_zvf(rows)
     per_mq = per_method_per_quintile_zvf(rows)
@@ -178,7 +190,9 @@ def main() -> None:
         fh.write("# Equal-mass bins PER METHOD, so cross-method contrast is not\n")
         fh.write("# confounded by global accuracy shifts.\n")
         fh.write("# Source: platform_modal/scripts/zvf_iter62.py\n")
-        fh.write("method\tquintile\tacc_lo\tacc_hi\tn_steps\tmean_zvf\tzvf_se\tmean_acc\tn_collapse\n")
+        fh.write(
+            "method\tquintile\tacc_lo\tacc_hi\tn_steps\tmean_zvf\tzvf_se\tmean_acc\tn_collapse\n"
+        )
         for m in sorted(strat):
             quintiles = sorted(strat[m], key=lambda r: r["quintile"])
             for r in quintiles:
@@ -188,9 +202,11 @@ def main() -> None:
                 n = len(accs)
                 lo_rank = int(r["quintile"] * n / 5)
                 hi_rank = int((r["quintile"] + 1) * n / 5) - 1
-                fh.write(f"{m}\t{r['quintile']}\t{accs[lo_rank]:.4f}\t{accs[hi_rank]:.4f}\t"
-                         f"{r['n']}\t{r['mean_zvf']:.4f}\t{r['zvf_se']:.4f}\t"
-                         f"{r['mean_acc']:.4f}\t{r['n_collapse']}\n")
+                fh.write(
+                    f"{m}\t{r['quintile']}\t{accs[lo_rank]:.4f}\t{accs[hi_rank]:.4f}\t"
+                    f"{r['n']}\t{r['mean_zvf']:.4f}\t{r['zvf_se']:.4f}\t"
+                    f"{r['mean_acc']:.4f}\t{r['n_collapse']}\n"
+                )
     print(f"wrote {out1}")
 
     # 2. AERO - GRPO per-quintile ZVF delta
@@ -200,7 +216,9 @@ def main() -> None:
         fh.write("# Negative = AERO has LOWER ZVF (better signal availability)\n")
         fh.write("# 95% bootstrap CI from B=2000 step-level resamples\n")
         fh.write("# Source: platform_modal/scripts/zvf_iter62.py\n")
-        fh.write("quintile\taero_mean\tgrpo_mean\tdelta\tdelta_lo\tdelta_hi\tn_aero\tn_grpo\tinterpretation\n")
+        fh.write(
+            "quintile\taero_mean\tgrpo_mean\tdelta\tdelta_lo\tdelta_hi\tn_aero\tn_grpo\tinterpretation\n"
+        )
         for q in range(5):
             aero = per_mq.get("aero", {}).get(q, [])
             grpo = per_mq.get("grpo", {}).get(q, [])
@@ -213,9 +231,11 @@ def main() -> None:
                 interp = "GRPO better (CI excl 0)"
             else:
                 interp = "no significant diff"
-            fh.write(f"{q}\t{statistics.fmean(aero) if aero else float('nan'):.4f}\t"
-                     f"{statistics.fmean(grpo) if grpo else float('nan'):.4f}\t"
-                     f"{d:.4f}\t{lo:.4f}\t{hi:.4f}\t{len(aero)}\t{len(grpo)}\t{interp}\n")
+            fh.write(
+                f"{q}\t{statistics.fmean(aero) if aero else float('nan'):.4f}\t"
+                f"{statistics.fmean(grpo) if grpo else float('nan'):.4f}\t"
+                f"{d:.4f}\t{lo:.4f}\t{hi:.4f}\t{len(aero)}\t{len(grpo)}\t{interp}\n"
+            )
     print(f"wrote {out2}")
 
     # 3. Mann-Whitney separability per (method, quintile) of ZVF for collapse vs healthy
@@ -230,7 +250,7 @@ def main() -> None:
         sub = [r for r in rows if r["method"] == method]
         accs = [r["acc"] for r in sub]
         bins = quintile_bin(accs, 5)
-        for r, b in zip(sub, bins):
+        for r, b in zip(sub, bins, strict=False):
             if r["collapse"] == 1:
                 collapse_zvfs[method][b].append(r["zvf"])
             else:
@@ -240,7 +260,9 @@ def main() -> None:
         fh.write("# AUC > 0.5: collapsed runs have HIGHER ZVF; AUC < 0.5: lower\n")
         fh.write("# Note: many methods have 0 collapse steps; AUC = NaN there\n")
         fh.write("# Source: platform_modal/scripts/zvf_iter62.py\n")
-        fh.write("method\tquintile\tauc\tn_collapse\tn_healthy\tmean_zvf_collapse\tmean_zvf_healthy\n")
+        fh.write(
+            "method\tquintile\tauc\tn_collapse\tn_healthy\tmean_zvf_collapse\tmean_zvf_healthy\n"
+        )
         for m in sorted(collapse_zvfs):
             for q in range(5):
                 cs = collapse_zvfs[m][q]
@@ -249,21 +271,29 @@ def main() -> None:
                     auc = float("nan")
                 else:
                     auc = mann_whitney_auc(cs, hs)
-                fh.write(f"{m}\t{q}\t{auc:.4f}\t{len(cs)}\t{len(hs)}\t"
-                         f"{statistics.fmean(cs) if cs else float('nan'):.4f}\t"
-                         f"{statistics.fmean(hs) if hs else float('nan'):.4f}\n")
+                fh.write(
+                    f"{m}\t{q}\t{auc:.4f}\t{len(cs)}\t{len(hs)}\t"
+                    f"{statistics.fmean(cs) if cs else float('nan'):.4f}\t"
+                    f"{statistics.fmean(hs) if hs else float('nan'):.4f}\n"
+                )
     print(f"wrote {out3}")
 
     # 4. one-row-per-method summary
     out4 = RES / "zvf_iter62_summary_review28_v2.tsv"
     with out4.open("w") as fh:
         fh.write("# Pillar 2 Iter 62: per-method ZVF stratification summary\n")
-        fh.write("# mean_zvf_loq = mean ZVF in lowest acc quintile (low within-method held-out-accuracy ranks)\n")
-        fh.write("# mean_zvf_hiq = mean ZVF in highest acc quintile (high within-method held-out-accuracy ranks)\n")
+        fh.write(
+            "# mean_zvf_loq = mean ZVF in lowest acc quintile (low within-method held-out-accuracy ranks)\n"
+        )
+        fh.write(
+            "# mean_zvf_hiq = mean ZVF in highest acc quintile (high within-method held-out-accuracy ranks)\n"
+        )
         fh.write("# delta_hiq_loq = high - low (positive => ZVF grows with accuracy)\n")
         fh.write("# Source: platform_modal/scripts/zvf_iter62.py\n")
-        fh.write("method\tn_steps\tn_seeds\tmean_zvf_overall\tmean_zvf_loq\tmean_zvf_q2\t"
-                 "mean_zvf_q3\tmean_zvf_q4\tmean_zvf_hiq\tdelta_hiq_loq\tmean_acc_overall\tn_collapse_steps\n")
+        fh.write(
+            "method\tn_steps\tn_seeds\tmean_zvf_overall\tmean_zvf_loq\tmean_zvf_q2\t"
+            "mean_zvf_q3\tmean_zvf_q4\tmean_zvf_hiq\tdelta_hiq_loq\tmean_acc_overall\tn_collapse_steps\n"
+        )
         for m in sorted(strat):
             qs = {r["quintile"]: r for r in strat[m]}
             allsub = [r for r in rows if r["method"] == m]
@@ -277,23 +307,42 @@ def main() -> None:
             q3 = qs.get(2, {}).get("mean_zvf", float("nan"))
             q4 = qs.get(3, {}).get("mean_zvf", float("nan"))
             n_coll = sum(r["collapse"] for r in allsub)
-            fh.write(f"{m}\t{len(allsub)}\t{n_seeds}\t{overall_zvf:.4f}\t"
-                     f"{lo:.4f}\t{q2:.4f}\t{q3:.4f}\t{q4:.4f}\t{hi:.4f}\t"
-                     f"{d_hilo:.4f}\t{overall_acc:.4f}\t{n_coll}\n")
+            fh.write(
+                f"{m}\t{len(allsub)}\t{n_seeds}\t{overall_zvf:.4f}\t"
+                f"{lo:.4f}\t{q2:.4f}\t{q3:.4f}\t{q4:.4f}\t{hi:.4f}\t"
+                f"{d_hilo:.4f}\t{overall_acc:.4f}\t{n_coll}\n"
+            )
     print(f"wrote {out4}")
 
     # 5. figure
     try:
         import matplotlib
+
         matplotlib.use("Agg")
         import matplotlib.pyplot as plt
+
         fig, axes = plt.subplots(1, 2, figsize=(12, 4.6))
-        methods_ordered = ["grpo", "aero", "cppo", "ngrpo", "scafgrpo",
-                           "mcgrpo", "gift", "areal", "es"]
+        methods_ordered = [
+            "grpo",
+            "aero",
+            "cppo",
+            "ngrpo",
+            "scafgrpo",
+            "mcgrpo",
+            "gift",
+            "areal",
+            "es",
+        ]
         colors = {
-            "grpo": "#888888", "aero": "#d62728", "cppo": "#1f77b4",
-            "ngrpo": "#9467bd", "scafgrpo": "#2ca02c", "mcgrpo": "#ff7f0e",
-            "gift": "#17becf", "areal": "#bcbd22", "es": "#8c564b",
+            "grpo": "#888888",
+            "aero": "#d62728",
+            "cppo": "#1f77b4",
+            "ngrpo": "#9467bd",
+            "scafgrpo": "#2ca02c",
+            "mcgrpo": "#ff7f0e",
+            "gift": "#17becf",
+            "areal": "#bcbd22",
+            "es": "#8c564b",
         }
         ax = axes[0]
         for m in methods_ordered:
@@ -313,12 +362,16 @@ def main() -> None:
         labels = []
         with (RES / "zvf_iter62_aero_minus_grpo_review28_v2.tsv").open() as fh:
             rdr = csv.DictReader((l for l in fh if not l.startswith("#")), delimiter="\t")
-            for i, r in enumerate(rdr):
+            for _i, r in enumerate(rdr):
                 deltas.append(float(r["delta"]))
                 labels.append(f"q{r['quintile']}")
-        ax2.bar(labels, deltas,
-                color=["#d62728" if d < 0 else "#1ca02c" for d in deltas],
-                alpha=0.7, edgecolor="black")
+        ax2.bar(
+            labels,
+            deltas,
+            color=["#d62728" if d < 0 else "#1ca02c" for d in deltas],
+            alpha=0.7,
+            edgecolor="black",
+        )
         ax2.axhline(0, color="black", linewidth=1)
         ax2.set_xlabel("Heldout-acc quintile")
         ax2.set_ylabel("AERO - GRPO ZVF (per-step mean)")

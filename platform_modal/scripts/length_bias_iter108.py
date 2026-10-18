@@ -21,6 +21,7 @@ INPUTS : platform_hybrid/experiments/results/drgrpo_vs_grpo.json
 OUTPUTS: 6 TSVs + meta under platform_hybrid/experiments/results/length_bias_iter108_*
 USAGE  : python3 platform_modal/scripts/length_bias_iter108.py [--n_w 4 --n_q 5 --K 3 --B 10000]
 """
+
 from __future__ import annotations
 
 import argparse
@@ -55,8 +56,7 @@ def fit_ar1(x: np.ndarray) -> tuple[float, float, np.ndarray]:
 def write_tsv(name: str, rows: list[dict], keys: list[str]) -> str:
     out = os.path.join(RESULTS, name)
     with open(out, "w", newline="") as fh:
-        w = csv.DictWriter(fh, fieldnames=keys, delimiter="\t",
-                           extrasaction="ignore")
+        w = csv.DictWriter(fh, fieldnames=keys, delimiter="\t", extrasaction="ignore")
         w.writeheader()
         for r in rows:
             w.writerow(r)
@@ -75,18 +75,25 @@ def paired_seed_slices(by_algo: dict) -> tuple[list, dict, dict]:
 #   Progress-window ICCA
 # ===========================================================================
 
-def progress_window_icca(L: np.ndarray, R: np.ndarray, K: int,
-                         n_w: int) -> list[dict[str, Any]]:
+
+def progress_window_icca(L: np.ndarray, R: np.ndarray, K: int, n_w: int) -> list[dict[str, Any]]:
     """Slice into n_w equal-length windows, fit AR(1)+CCF within each."""
     n = len(L)
     edges = [int(np.floor(n * w / n_w)) for w in range(n_w + 1)]
     for w in range(1, n_w + 1):
         edges[w] = max(edges[w], edges[w - 1] + 4)
         edges[w] = min(edges[w], n)
-    empty = lambda w: {"window": w, "n_in_window": 0, "phi_L": 0.0,
-                       "phi_R": 0.0, "bwd": 0.0, "fwd": 0.0,
-                       "bwd_signed": 0.0, "fwd_signed": 0.0,
-                       "ccf": [0.0] * (2 * K + 1)}
+    empty = lambda w: {
+        "window": w,
+        "n_in_window": 0,
+        "phi_L": 0.0,
+        "phi_R": 0.0,
+        "bwd": 0.0,
+        "fwd": 0.0,
+        "bwd_signed": 0.0,
+        "fwd_signed": 0.0,
+        "ccf": [0.0] * (2 * K + 1),
+    }
     out = []
     for w in range(n_w):
         lo, hi = edges[w], edges[w + 1]
@@ -94,18 +101,22 @@ def progress_window_icca(L: np.ndarray, R: np.ndarray, K: int,
             out.append({**empty(w), "n_in_window": int(hi - lo)})
             continue
         L_w, R_w = L[lo:hi], R[lo:hi]
-        _, _, e_L = fit_ar1(L_w); _, _, e_R = fit_ar1(R_w)
+        _, _, e_L = fit_ar1(L_w)
+        _, _, e_R = fit_ar1(R_w)
         cc = ccf_at_lags(e_L, e_R, K=K)
-        out.append({
-            "window": w, "n_in_window": int(hi - lo),
-            "phi_L": float(fit_ar1(L_w)[0]),
-            "phi_R": float(fit_ar1(R_w)[0]),
-            "bwd": float(np.sum(np.abs(cc[:K]))),
-            "fwd": float(np.sum(np.abs(cc[K + 1:]))),
-            "bwd_signed": float(np.sum(cc[:K])),
-            "fwd_signed": float(np.sum(cc[K + 1:])),
-            "ccf": [float(cc[i]) for i in range(2 * K + 1)],
-        })
+        out.append(
+            {
+                "window": w,
+                "n_in_window": int(hi - lo),
+                "phi_L": float(fit_ar1(L_w)[0]),
+                "phi_R": float(fit_ar1(R_w)[0]),
+                "bwd": float(np.sum(np.abs(cc[:K]))),
+                "fwd": float(np.sum(np.abs(cc[K + 1 :]))),
+                "bwd_signed": float(np.sum(cc[:K])),
+                "fwd_signed": float(np.sum(cc[K + 1 :])),
+                "ccf": [float(cc[i]) for i in range(2 * K + 1)],
+            }
+        )
     return out
 
 
@@ -113,12 +124,16 @@ def progress_window_icca(L: np.ndarray, R: np.ndarray, K: int,
 #   Length-quantile ICCA (mirror of iter104)
 # ===========================================================================
 
-from _review24_statistics import conditional_ccf, stable_seed, paired_available as paired_bootstrap_delta
+from _review24_statistics import (
+    conditional_ccf,
+    paired_available as paired_bootstrap_delta,
+)
 
-def length_quantile_icca(L: np.ndarray, R: np.ndarray, K: int,
-                         n_q: int) -> dict[str, Any]:
+
+def length_quantile_icca(L: np.ndarray, R: np.ndarray, K: int, n_q: int) -> dict[str, Any]:
     """Mirror of iter104: bin time-steps by RANK of L (not R)."""
-    _, _, e_L = fit_ar1(L); _, _, e_R = fit_ar1(R)
+    _, _, e_L = fit_ar1(L)
+    _, _, e_R = fit_ar1(R)
     L_for_bin = L[1:]
     n = len(L_for_bin)
     if np.std(L_for_bin) < 1e-12:
@@ -135,11 +150,12 @@ def length_quantile_icca(L: np.ndarray, R: np.ndarray, K: int,
         n_in = int(mask.sum())
         cc, pair_counts = conditional_ccf(e_L, e_R, mask, K)
         out["q"][q_idx] = {
-            "size": n_in, "pair_counts": pair_counts,
+            "size": n_in,
+            "pair_counts": pair_counts,
             "bwd": float(np.sum(np.abs(cc[:K]))),
-            "fwd": float(np.sum(np.abs(cc[K + 1:]))),
+            "fwd": float(np.sum(np.abs(cc[K + 1 :]))),
             "bwd_signed": float(np.sum(cc[:K])),
-            "fwd_signed": float(np.sum(cc[K + 1:])),
+            "fwd_signed": float(np.sum(cc[K + 1 :])),
             "ccf": [float(cc[i]) for i in range(2 * K + 1)],
         }
     return out
@@ -148,6 +164,7 @@ def length_quantile_icca(L: np.ndarray, R: np.ndarray, K: int,
 # ===========================================================================
 #   Main
 # ===========================================================================
+
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Iter108 -- progress+length ICCA")
@@ -161,8 +178,9 @@ def main(argv: list[str] | None = None) -> int:
     n_w, n_q, K, B = int(args.n_w), int(args.n_q), int(args.K), int(args.B)
     seed_base = int(args.seed_base)
 
-    runs = ([(r, "arithmetic_easy") for r in load_step_log(DRGRPO_VS_GRPO_PATH)]
-            + [(r, "gsm8k_cot") for r in load_step_log(DRGRPO_GSM8K_PATH)])
+    runs = [(r, "arithmetic_easy") for r in load_step_log(DRGRPO_VS_GRPO_PATH)] + [
+        (r, "gsm8k_cot") for r in load_step_log(DRGRPO_GSM8K_PATH)
+    ]
 
     # ---------------------------------------------------------------------
     # Q1.  Progress-window ICCA
@@ -172,16 +190,37 @@ def main(argv: list[str] | None = None) -> int:
     for r, task in runs:
         recs = progress_window_icca(r["L"], r["R"], K=K, n_w=n_w)
         for wrec in recs:
-            progress_perrun.append({"task": task, "algo": r["algo"],
-                                    "seed": int(r["seed"]),
-"n_total": int(r["n"]), **wrec})
+            progress_perrun.append(
+                {
+                    "task": task,
+                    "algo": r["algo"],
+                    "seed": int(r["seed"]),
+                    "n_total": int(r["n"]),
+                    **wrec,
+                }
+            )
         progress_by_task.setdefault(task, {"grpo": [], "dr_grpo": []})[r["algo"]].append(
             {"seed": int(r["seed"]), "n": int(r["n"]), "windows": recs}
         )
 
-    write_tsv("length_bias_iter108_perrun_progress_v2.tsv", progress_perrun,
-              ["task", "algo", "seed", "n_total", "window", "n_in_window",
-               "phi_L", "phi_R", "bwd", "fwd", "bwd_signed", "fwd_signed"])
+    write_tsv(
+        "length_bias_iter108_perrun_progress_v2.tsv",
+        progress_perrun,
+        [
+            "task",
+            "algo",
+            "seed",
+            "n_total",
+            "window",
+            "n_in_window",
+            "phi_L",
+            "phi_R",
+            "bwd",
+            "fwd",
+            "bwd_signed",
+            "fwd_signed",
+        ],
+    )
 
     # paired Dr.GR - GR delta per (task, window, side)
     paired_prog_rows = []
@@ -192,11 +231,19 @@ def main(argv: list[str] | None = None) -> int:
             for side in sides:
                 g = [float(seeds_g[s]["windows"][w_idx][side]) for s in common]
                 d = [float(seeds_d[s]["windows"][w_idx][side]) for s in common]
-                paired_prog_rows.append({"task": task, "window": w_idx,
-                                          "side": side,
-                                          **paired_bootstrap_delta(g, d, B=B, seed=0x10C8)})
-    write_tsv("length_bias_iter108_paired_progress_v2.tsv", paired_prog_rows,
-              ["task", "window", "side", "delta", "ci_lo", "ci_hi", "p", "n", "n_excluded"])
+                paired_prog_rows.append(
+                    {
+                        "task": task,
+                        "window": w_idx,
+                        "side": side,
+                        **paired_bootstrap_delta(g, d, B=B, seed=0x10C8),
+                    }
+                )
+    write_tsv(
+        "length_bias_iter108_paired_progress_v2.tsv",
+        paired_prog_rows,
+        ["task", "window", "side", "delta", "ci_lo", "ci_hi", "p", "n", "n_excluded"],
+    )
 
     # trend (Spearman) of the per-window |CCF| delta across window index
     trend_prog_rows = []
@@ -204,32 +251,55 @@ def main(argv: list[str] | None = None) -> int:
     for task, by_algo in progress_by_task.items():
         common, seeds_g, seeds_d = paired_seed_slices(by_algo)
         for side in sides:
-            gr_vals = np.array([np.mean([seeds_g[s]["windows"][w][side]
-                                          for s in common]) for w in range(n_w)])
-            dr_vals = np.array([np.mean([seeds_d[s]["windows"][w][side]
-                                          for s in common]) for w in range(n_w)])
-            sp_d, sp_g, sp_r = (stats.spearmanr(win_idx, dr_vals - gr_vals),
-                                 stats.spearmanr(win_idx, gr_vals),
-                                 stats.spearmanr(win_idx, dr_vals))
-            trend_prog_rows.append({
-                "task": task, "side": side,
-                "vals_gr_q0": float(gr_vals[0]), "vals_gr_q_last": float(gr_vals[-1]),
-                "vals_dr_q0": float(dr_vals[0]), "vals_dr_q_last": float(dr_vals[-1]),
-                "delta_q0": float(dr_vals[0] - gr_vals[0]),
-                "delta_q_last": float(dr_vals[-1] - gr_vals[-1]),
-                "spearman_rho_delta_vs_window": float(sp_d.statistic),
-                "spearman_p_delta_vs_window": float(sp_d.pvalue),
-                "spearman_rho_grpo": float(sp_g.statistic),
-                "spearman_p_grpo": float(sp_g.pvalue),
-                "spearman_rho_drgrpo": float(sp_r.statistic),
-                "spearman_p_drgrpo": float(sp_r.pvalue),
-            })
-    write_tsv("length_bias_iter108_trend_progress_v2.tsv", trend_prog_rows,
-              ["task", "side", "vals_gr_q0", "vals_gr_q_last",
-               "vals_dr_q0", "vals_dr_q_last", "delta_q0", "delta_q_last",
-               "spearman_rho_delta_vs_window", "spearman_p_delta_vs_window",
-               "spearman_rho_grpo", "spearman_p_grpo",
-               "spearman_rho_drgrpo", "spearman_p_drgrpo"])
+            gr_vals = np.array(
+                [np.mean([seeds_g[s]["windows"][w][side] for s in common]) for w in range(n_w)]
+            )
+            dr_vals = np.array(
+                [np.mean([seeds_d[s]["windows"][w][side] for s in common]) for w in range(n_w)]
+            )
+            sp_d, sp_g, sp_r = (
+                stats.spearmanr(win_idx, dr_vals - gr_vals),
+                stats.spearmanr(win_idx, gr_vals),
+                stats.spearmanr(win_idx, dr_vals),
+            )
+            trend_prog_rows.append(
+                {
+                    "task": task,
+                    "side": side,
+                    "vals_gr_q0": float(gr_vals[0]),
+                    "vals_gr_q_last": float(gr_vals[-1]),
+                    "vals_dr_q0": float(dr_vals[0]),
+                    "vals_dr_q_last": float(dr_vals[-1]),
+                    "delta_q0": float(dr_vals[0] - gr_vals[0]),
+                    "delta_q_last": float(dr_vals[-1] - gr_vals[-1]),
+                    "spearman_rho_delta_vs_window": float(sp_d.statistic),
+                    "spearman_p_delta_vs_window": float(sp_d.pvalue),
+                    "spearman_rho_grpo": float(sp_g.statistic),
+                    "spearman_p_grpo": float(sp_g.pvalue),
+                    "spearman_rho_drgrpo": float(sp_r.statistic),
+                    "spearman_p_drgrpo": float(sp_r.pvalue),
+                }
+            )
+    write_tsv(
+        "length_bias_iter108_trend_progress_v2.tsv",
+        trend_prog_rows,
+        [
+            "task",
+            "side",
+            "vals_gr_q0",
+            "vals_gr_q_last",
+            "vals_dr_q0",
+            "vals_dr_q_last",
+            "delta_q0",
+            "delta_q_last",
+            "spearman_rho_delta_vs_window",
+            "spearman_p_delta_vs_window",
+            "spearman_rho_grpo",
+            "spearman_p_grpo",
+            "spearman_rho_drgrpo",
+            "spearman_p_drgrpo",
+        ],
+    )
 
     # ---------------------------------------------------------------------
     # Q2.  Length-quantile ICCA (mirror of iter104)
@@ -242,9 +312,11 @@ def main(argv: list[str] | None = None) -> int:
         length_perrun.append(rec)
         length_by_task.setdefault(task, {"grpo": [], "dr_grpo": []})[r["algo"]].append(rec)
 
-    len_keys = (["task", "algo", "seed", "n"]
-                + [f"q{q}_{f}" for q in range(n_q)
-                   for f in ("size", "pair_counts", "bwd", "fwd", "bwd_signed", "fwd_signed")])
+    len_keys = ["task", "algo", "seed", "n"] + [
+        f"q{q}_{f}"
+        for q in range(n_q)
+        for f in ("size", "pair_counts", "bwd", "fwd", "bwd_signed", "fwd_signed")
+    ]
     len_rows = []
     for rec in length_perrun:
         row = {k: rec.get(k, "") for k in len_keys}
@@ -263,39 +335,69 @@ def main(argv: list[str] | None = None) -> int:
             for side in ["bwd", "fwd", "bwd_signed", "fwd_signed"]:
                 g = [float(seeds_g[s]["q"][q][side]) for s in common]
                 d = [float(seeds_d[s]["q"][q][side]) for s in common]
-                paired_len_rows.append({"task": task, "q": q, "side": side,
-                                         **paired_bootstrap_delta(g, d, B=B, seed=0x10C8)})
-    write_tsv("length_bias_iter108_paired_length_v2.tsv", paired_len_rows,
-              ["task", "q", "side", "delta", "ci_lo", "ci_hi", "p", "n", "n_excluded"])
+                paired_len_rows.append(
+                    {
+                        "task": task,
+                        "q": q,
+                        "side": side,
+                        **paired_bootstrap_delta(g, d, B=B, seed=0x10C8),
+                    }
+                )
+    write_tsv(
+        "length_bias_iter108_paired_length_v2.tsv",
+        paired_len_rows,
+        ["task", "q", "side", "delta", "ci_lo", "ci_hi", "p", "n", "n_excluded"],
+    )
 
     # share ratios & log2(q=4/q=0)
     trend_len_rows = []
     eps = 1e-4
     for task, by_algo in length_by_task.items():
         for algo, recs in by_algo.items():
-            bwd_q = np.zeros(n_q); fwd_q = np.zeros(n_q)
+            bwd_q = np.zeros(n_q)
+            fwd_q = np.zeros(n_q)
             for rec in recs:
                 for q in range(n_q):
                     bwd_q[q] += rec["q"][q]["bwd"]
                     fwd_q[q] += rec["q"][q]["fwd"]
             tot_b, tot_f = bwd_q.sum() + 1e-300, fwd_q.sum() + 1e-300
-            trend_len_rows.append({
-                "task": task, "algo": algo,
-                "share_bwd_q0": float(bwd_q[0] / tot_b),
-                "share_bwd_q4": float(bwd_q[-1] / tot_b),
-                "share_fwd_q0": float(fwd_q[0] / tot_f),
-                "share_fwd_q4": float(fwd_q[-1] / tot_f),
-                "log2_bwd_q4_q0": float(np.log2((bwd_q[-1] + eps) / (bwd_q[0] + eps))),
-            })
-    write_tsv("length_bias_iter108_trend_length_v2.tsv", trend_len_rows,
-              ["task", "algo", "share_bwd_q0", "share_bwd_q4",
-               "share_fwd_q0", "share_fwd_q4", "log2_bwd_q4_q0"])
+            trend_len_rows.append(
+                {
+                    "task": task,
+                    "algo": algo,
+                    "share_bwd_q0": float(bwd_q[0] / tot_b),
+                    "share_bwd_q4": float(bwd_q[-1] / tot_b),
+                    "share_fwd_q0": float(fwd_q[0] / tot_f),
+                    "share_fwd_q4": float(fwd_q[-1] / tot_f),
+                    "log2_bwd_q4_q0": float(np.log2((bwd_q[-1] + eps) / (bwd_q[0] + eps))),
+                }
+            )
+    write_tsv(
+        "length_bias_iter108_trend_length_v2.tsv",
+        trend_len_rows,
+        [
+            "task",
+            "algo",
+            "share_bwd_q0",
+            "share_bwd_q4",
+            "share_fwd_q0",
+            "share_fwd_q4",
+            "log2_bwd_q4_q0",
+        ],
+    )
 
-    meta = {"iter": 108, "pillar": "P4-LengthBias",
-            "K": K, "n_w": n_w, "n_q": n_q, "B": B, "seed_base": seed_base,
-            "n_runs": len(runs),
-            "tasks": sorted(set(t for _, t in runs)),
-            "algos": sorted(set(r["algo"] for r, _ in runs))}
+    meta = {
+        "iter": 108,
+        "pillar": "P4-LengthBias",
+        "K": K,
+        "n_w": n_w,
+        "n_q": n_q,
+        "B": B,
+        "seed_base": seed_base,
+        "n_runs": len(runs),
+        "tasks": sorted(set(t for _, t in runs)),
+        "algos": sorted(set(r["algo"] for r, _ in runs)),
+    }
     out_path = os.path.join(RESULTS, "length_bias_iter108_meta_v2.json")
     with open(out_path, "w") as fh:
         json.dump(meta, fh, indent=2)
@@ -305,22 +407,31 @@ def main(argv: list[str] | None = None) -> int:
     def _head_paired(rows, label):
         print(f"\n[iter108 headline] {label}")
         for r in rows:
-            print(f"  {r['task']:14s}: delta={r['delta']:+.4f} "
-                  f"CI=[{r['ci_lo']:+.4f},{r['ci_hi']:+.4f}] "
-                  f"p={r['p']:.3f} n={r['n']}")
-    _head_paired([r for r in paired_prog_rows if r["side"] == "bwd"],
-                 "Progress-window bwd |CCF| (Dr.GRPO - GRPO)")
-    _head_paired([r for r in paired_len_rows if r["side"] == "bwd"],
-                 "Length-quantile bwd |CCF| Dr.GRPO - GRPO")
+            print(
+                f"  {r['task']:14s}: delta={r['delta']:+.4f} "
+                f"CI=[{r['ci_lo']:+.4f},{r['ci_hi']:+.4f}] "
+                f"p={r['p']:.3f} n={r['n']}"
+            )
+
+    _head_paired(
+        [r for r in paired_prog_rows if r["side"] == "bwd"],
+        "Progress-window bwd |CCF| (Dr.GRPO - GRPO)",
+    )
+    _head_paired(
+        [r for r in paired_len_rows if r["side"] == "bwd"],
+        "Length-quantile bwd |CCF| Dr.GRPO - GRPO",
+    )
     print("\n[iter108 headline] log2(bwd share q=4 / q=0) per task/algo (L-quantile)")
     for r in trend_len_rows:
         print(f"  {r['task']:14s} {r['algo']:7s}: log2(q4/q0)={r['log2_bwd_q4_q0']:+.3f}")
     print("\n[iter108 headline] Spearman rho(delta, window_index) for bwd")
     for r in trend_prog_rows:
         if r["side"] == "bwd":
-            print(f"  {r['task']:14s}: rho={r['spearman_rho_delta_vs_window']:+.3f} "
-                  f"p={r['spearman_p_delta_vs_window']:.3f} "
-                  f"delta[0]={r['delta_q0']:+.4f} delta[-1]={r['delta_q_last']:+.4f}")
+            print(
+                f"  {r['task']:14s}: rho={r['spearman_rho_delta_vs_window']:+.3f} "
+                f"p={r['spearman_p_delta_vs_window']:.3f} "
+                f"delta[0]={r['delta_q0']:+.4f} delta[-1]={r['delta_q_last']:+.4f}"
+            )
     return 0
 
 

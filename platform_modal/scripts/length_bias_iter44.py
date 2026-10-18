@@ -27,11 +27,11 @@ Outputs (5 TSVs + 1 fig driver):
 Implements an in-house pinball-loss quantile regression (no sklearn dep) on
 per-step (R, L) pairs pooled across seeds within (task, algo).
 """
+
 from __future__ import annotations
 import csv
 import json
 import math
-import os
 import random
 from pathlib import Path
 
@@ -57,21 +57,28 @@ def load_runs(path: Path, task: str) -> list[dict]:
         algo = r["algo"]
         seed = r["seed"]
         for s in r["step_log"]:
-            out.append({
-                "task": task,
-                "algo": algo,
-                "seed": seed,
-                "step": s["step"],
-                "R": float(s["mean_reward"]),
-                "L": float(s["mean_comp_len"]),
-                "zvf": float(s.get("zvf", float("nan"))),
-            })
+            out.append(
+                {
+                    "task": task,
+                    "algo": algo,
+                    "seed": seed,
+                    "step": s["step"],
+                    "R": float(s["mean_reward"]),
+                    "L": float(s["mean_comp_len"]),
+                    "zvf": float(s.get("zvf", float("nan"))),
+                }
+            )
     return out
 
 
-def pinball_fit(X: list[float], y: list[float], tau: float, lr: float = 1e-3,
-                n_iter: int = 4000, init: tuple[float, float] = (0.0, 0.0)
-                ) -> tuple[float, float]:
+def pinball_fit(
+    X: list[float],
+    y: list[float],
+    tau: float,
+    lr: float = 1e-3,
+    n_iter: int = 4000,
+    init: tuple[float, float] = (0.0, 0.0),
+) -> tuple[float, float]:
     """Linear quantile regression by SGD on pinball loss."""
     a, b = init
     n = len(X)
@@ -91,7 +98,7 @@ def pinball_fit(X: list[float], y: list[float], tau: float, lr: float = 1e-3,
             grad_b = -tau
         else:
             grad_a = (1 - tau) * xi
-            grad_b = (1 - tau)
+            grad_b = 1 - tau
         a -= lr * grad_a
         b -= lr * grad_b
     slope = a * ry / rx
@@ -117,8 +124,9 @@ def ols(X: list[float], y: list[float]) -> tuple[float, float, float]:
     return slope, intercept, r
 
 
-def std_within_bins(X: list[float], y: list[float], n_bins: int = 5
-                    ) -> list[tuple[float, float, float]]:
+def std_within_bins(
+    X: list[float], y: list[float], n_bins: int = 5
+) -> list[tuple[float, float, float]]:
     """Bin X into n_bins quantile-bins and compute std(y) per bin."""
     n = len(X)
     if n < 3:
@@ -127,14 +135,14 @@ def std_within_bins(X: list[float], y: list[float], n_bins: int = 5
     bins = []
     chunk = max(1, n // n_bins)
     for b in range(n_bins):
-        idx = order[b * chunk: (b + 1) * chunk] if b < n_bins - 1 else order[b * chunk:]
+        idx = order[b * chunk : (b + 1) * chunk] if b < n_bins - 1 else order[b * chunk :]
         if not idx:
             continue
         ys = [y[i] for i in idx]
         xs = [X[i] for i in idx]
         m = sum(ys) / len(ys)
         var = sum((yi - m) ** 2 for yi in ys) / max(1, len(ys) - 1)
-        bins.append((sum(xs) / len(xs), var ** 0.5, len(ys)))
+        bins.append((sum(xs) / len(xs), var**0.5, len(ys)))
     return bins
 
 
@@ -146,8 +154,9 @@ def zvf_bin(z: float) -> str:
     return "high"
 
 
-def bootstrap_paired_diff(values_a: list[float], values_b: list[float],
-                          n_boot: int = N_BOOT) -> tuple[float, float, float, float]:
+def bootstrap_paired_diff(
+    values_a: list[float], values_b: list[float], n_boot: int = N_BOOT
+) -> tuple[float, float, float, float]:
     """Return mean_diff, ci_lo, ci_hi, p(Delta<=0)."""
     n = len(values_a)
     assert n == len(values_b)
@@ -174,9 +183,10 @@ def main() -> None:
     quantile_rows = []
     for task in ("arithmetic_easy", "gsm8k_cot"):
         for algo in ("grpo", "dr_grpo"):
-            for seed in (SEEDS_ARITH if task == "arithmetic_easy" else SEEDS_GSM):
-                sub = [r for r in runs if r["task"] == task
-                       and r["algo"] == algo and r["seed"] == seed]
+            for seed in SEEDS_ARITH if task == "arithmetic_easy" else SEEDS_GSM:
+                sub = [
+                    r for r in runs if r["task"] == task and r["algo"] == algo and r["seed"] == seed
+                ]
                 if not sub:
                     continue
                 sub.sort(key=lambda r: r["step"])
@@ -185,53 +195,69 @@ def main() -> None:
                 mean_slope, mean_intercept, pearson_r = ols(L, R)
                 for tau in QUANTILES:
                     slope, intercept = pinball_fit(L, R, tau)
-                    quantile_rows.append({
-                        "task": task, "algo": algo, "seed": seed,
-                        "tau": tau, "slope": round(slope, 6),
-                        "intercept": round(intercept, 6),
-                        "ols_slope": round(mean_slope, 6),
-                        "ols_pearson_r": round(pearson_r, 4),
-                        "n_steps": len(sub),
-                    })
+                    quantile_rows.append(
+                        {
+                            "task": task,
+                            "algo": algo,
+                            "seed": seed,
+                            "tau": tau,
+                            "slope": round(slope, 6),
+                            "intercept": round(intercept, 6),
+                            "ols_slope": round(mean_slope, 6),
+                            "ols_pearson_r": round(pearson_r, 4),
+                            "n_steps": len(sub),
+                        }
+                    )
 
     # ---- 2. Conditional std(R|L) by L-bin ----
     condvar_rows = []
     for task in ("arithmetic_easy", "gsm8k_cot"):
         for algo in ("grpo", "dr_grpo"):
-            for seed in (SEEDS_ARITH if task == "arithmetic_easy" else SEEDS_GSM):
-                sub = [r for r in runs if r["task"] == task
-                       and r["algo"] == algo and r["seed"] == seed]
+            for seed in SEEDS_ARITH if task == "arithmetic_easy" else SEEDS_GSM:
+                sub = [
+                    r for r in runs if r["task"] == task and r["algo"] == algo and r["seed"] == seed
+                ]
                 if not sub:
                     continue
                 L = [r["L"] for r in sub]
                 R = [r["R"] for r in sub]
                 for lcent, std, npts in std_within_bins(L, R, n_bins=5):
-                    condvar_rows.append({
-                        "task": task, "algo": algo, "seed": seed,
-                        "L_bin_center": round(lcent, 3),
-                        "std_R_given_L": round(std, 6),
-                        "n_pts": npts,
-                    })
+                    condvar_rows.append(
+                        {
+                            "task": task,
+                            "algo": algo,
+                            "seed": seed,
+                            "L_bin_center": round(lcent, 3),
+                            "std_R_given_L": round(std, 6),
+                            "n_pts": npts,
+                        }
+                    )
 
     # ---- 3. Asymmetry score: slope_q90 - slope_q10 per (task, algo, seed) ----
     asym_rows = []
     for task in ("arithmetic_easy", "gsm8k_cot"):
         for algo in ("grpo", "dr_grpo"):
-            for seed in (SEEDS_ARITH if task == "arithmetic_easy" else SEEDS_GSM):
-                sub_q = [q for q in quantile_rows if q["task"] == task
-                         and q["algo"] == algo and q["seed"] == seed]
+            for seed in SEEDS_ARITH if task == "arithmetic_easy" else SEEDS_GSM:
+                sub_q = [
+                    q
+                    for q in quantile_rows
+                    if q["task"] == task and q["algo"] == algo and q["seed"] == seed
+                ]
                 if not sub_q:
                     continue
                 s10 = next(q["slope"] for q in sub_q if q["tau"] == 0.1)
                 s90 = next(q["slope"] for q in sub_q if q["tau"] == 0.9)
-                asym_rows.append({
-                    "task": task, "algo": algo, "seed": seed,
-                    "slope_q10": round(s10, 6),
-                    "slope_q50": round(next(q["slope"] for q in sub_q
-                                            if q["tau"] == 0.5), 6),
-                    "slope_q90": round(s90, 6),
-                    "asymmetry_delta": round(s90 - s10, 6),
-                })
+                asym_rows.append(
+                    {
+                        "task": task,
+                        "algo": algo,
+                        "seed": seed,
+                        "slope_q10": round(s10, 6),
+                        "slope_q50": round(next(q["slope"] for q in sub_q if q["tau"] == 0.5), 6),
+                        "slope_q90": round(s90, 6),
+                        "asymmetry_delta": round(s90 - s10, 6),
+                    }
+                )
 
     # ---- 4. Paired bootstrap: Dr.GRPO vs GRPO on asymmetry_delta ----
     paired_rows = []
@@ -239,41 +265,51 @@ def main() -> None:
         g = [a for a in asym_rows if a["task"] == task and a["algo"] == "grpo"]
         d = [a for a in asym_rows if a["task"] == task and a["algo"] == "dr_grpo"]
         # match by seed
-        for ga, da in zip(g, d):
+        for ga, da in zip(g, d, strict=False):
             assert ga["seed"] == da["seed"]
-        diffs_a = [da["asymmetry_delta"] - ga["asymmetry_delta"]
-                   for ga, da in zip(g, d)]
+        diffs_a = [
+            da["asymmetry_delta"] - ga["asymmetry_delta"] for ga, da in zip(g, d, strict=False)
+        ]
         mean_d, ci_lo, ci_hi, p_le0 = bootstrap_paired_diff(
-            [da["asymmetry_delta"] for da in d],
-            [ga["asymmetry_delta"] for ga in g])
-        paired_rows.append({
-            "task": task,
-            "metric": "asymmetry_delta = slope_q90 - slope_q10",
-            "n_pairs": len(g),
-            "mean_grpo": round(sum(a["asymmetry_delta"] for a in g) / len(g), 6),
-            "mean_drgrpo": round(sum(a["asymmetry_delta"] for a in d) / len(d), 6),
-            "mean_diff": round(mean_d, 6),
-            "ci_lo": round(ci_lo, 6),
-            "ci_hi": round(ci_hi, 6),
-            "p_le0": round(p_le0, 4),
-        })
+            [da["asymmetry_delta"] for da in d], [ga["asymmetry_delta"] for ga in g]
+        )
+        paired_rows.append(
+            {
+                "task": task,
+                "metric": "asymmetry_delta = slope_q90 - slope_q10",
+                "n_pairs": len(g),
+                "mean_grpo": round(sum(a["asymmetry_delta"] for a in g) / len(g), 6),
+                "mean_drgrpo": round(sum(a["asymmetry_delta"] for a in d) / len(d), 6),
+                "mean_diff": round(mean_d, 6),
+                "ci_lo": round(ci_lo, 6),
+                "ci_hi": round(ci_hi, 6),
+                "p_le0": round(p_le0, 4),
+            }
+        )
 
     # ---- 5. ZVF-binned asymmetry ----
     zvf_rows = []
     for task in ("arithmetic_easy", "gsm8k_cot"):
         for algo in ("grpo", "dr_grpo"):
             for zb in ZVF_BINS:
-                sub = [r for r in runs if r["task"] == task and r["algo"] == algo
-                       and zvf_bin(r["zvf"]) == zb]
+                sub = [
+                    r
+                    for r in runs
+                    if r["task"] == task and r["algo"] == algo and zvf_bin(r["zvf"]) == zb
+                ]
                 if len(sub) < 5:
-                    zvf_rows.append({
-                        "task": task, "algo": algo, "zvf_bin": zb,
-                        "n_steps": len(sub),
-                        "ols_slope": float("nan"),
-                        "asymmetry_delta": float("nan"),
-                        "median_L": float("nan"),
-                        "median_R": float("nan"),
-                    })
+                    zvf_rows.append(
+                        {
+                            "task": task,
+                            "algo": algo,
+                            "zvf_bin": zb,
+                            "n_steps": len(sub),
+                            "ols_slope": float("nan"),
+                            "asymmetry_delta": float("nan"),
+                            "median_L": float("nan"),
+                            "median_R": float("nan"),
+                        }
+                    )
                     continue
                 L = [r["L"] for r in sub]
                 R = [r["R"] for r in sub]
@@ -282,14 +318,18 @@ def main() -> None:
                 s90, _ = pinball_fit(L, R, 0.9)
                 medL = sorted(L)[len(L) // 2]
                 medR = sorted(R)[len(R) // 2]
-                zvf_rows.append({
-                    "task": task, "algo": algo, "zvf_bin": zb,
-                    "n_steps": len(sub),
-                    "ols_slope": round(slope, 6),
-                    "asymmetry_delta": round(s90 - s10, 6),
-                    "median_L": round(medL, 4),
-                    "median_R": round(medR, 6),
-                })
+                zvf_rows.append(
+                    {
+                        "task": task,
+                        "algo": algo,
+                        "zvf_bin": zb,
+                        "n_steps": len(sub),
+                        "ols_slope": round(slope, 6),
+                        "asymmetry_delta": round(s90 - s10, 6),
+                        "median_L": round(medL, 4),
+                        "median_R": round(medR, 6),
+                    }
+                )
 
     # ---- write outputs ----
     def w(path: Path, rows: list[dict]) -> None:
@@ -316,16 +356,19 @@ def main() -> None:
         summary_rows.append(pr)
     for vr in zvf_rows:
         if vr["n_steps"] >= 5:
-            summary_rows.append({
-                "task": vr["task"], "metric": f"zvf_bin={vr['zvf_bin']}",
-                "n_pairs": vr["n_steps"],
-                "mean_grpo": vr["ols_slope"] if vr["algo"] == "grpo" else float("nan"),
-                "mean_drgrpo": vr["ols_slope"] if vr["algo"] == "dr_grpo" else float("nan"),
-                "mean_diff": vr["asymmetry_delta"],
-                "ci_lo": float("nan"),
-                "ci_hi": float("nan"),
-                "p_le0": float("nan"),
-            })
+            summary_rows.append(
+                {
+                    "task": vr["task"],
+                    "metric": f"zvf_bin={vr['zvf_bin']}",
+                    "n_pairs": vr["n_steps"],
+                    "mean_grpo": vr["ols_slope"] if vr["algo"] == "grpo" else float("nan"),
+                    "mean_drgrpo": vr["ols_slope"] if vr["algo"] == "dr_grpo" else float("nan"),
+                    "mean_diff": vr["asymmetry_delta"],
+                    "ci_lo": float("nan"),
+                    "ci_hi": float("nan"),
+                    "p_le0": float("nan"),
+                }
+            )
     w(RES / "length_bias_iter44_summary.tsv", summary_rows)
     print("DONE")
 

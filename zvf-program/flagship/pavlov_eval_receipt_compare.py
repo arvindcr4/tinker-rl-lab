@@ -47,9 +47,7 @@ PAVLOV_PRIMARY_EVAL_SUITE_DOMAINS: tuple[tuple[str, tuple[str, ...]], ...] = (
     ("openreward_games_eval", ("games", "long_horizon", "tool_use")),
     ("frontiermath_eval", ("math",)),
 )
-PAVLOV_PRIMARY_EVAL_SUITE_IDS = tuple(
-    suite_id for suite_id, _ in PAVLOV_PRIMARY_EVAL_SUITE_DOMAINS
-)
+PAVLOV_PRIMARY_EVAL_SUITE_IDS = tuple(suite_id for suite_id, _ in PAVLOV_PRIMARY_EVAL_SUITE_DOMAINS)
 
 
 def _primary_eval_manifest() -> list[dict[str, Any]]:
@@ -57,6 +55,7 @@ def _primary_eval_manifest() -> list[dict[str, Any]]:
         {"suite_id": suite_id, "domains": list(domains), "role": "primary_eval"}
         for suite_id, domains in PAVLOV_PRIMARY_EVAL_SUITE_DOMAINS
     ]
+
 
 _SHA256_RE = re.compile(r"^[0-9a-fA-F]{64}$")
 _DIGEST_RE = re.compile(r"^sha256:[0-9a-fA-F]{64}$", re.IGNORECASE)
@@ -134,7 +133,11 @@ def _receipt_hash(receipt: Mapping[str, Any]) -> str:
 
 
 def _is_finite_number(value: Any) -> bool:
-    return isinstance(value, (int, float)) and not isinstance(value, bool) and math.isfinite(float(value))
+    return (
+        isinstance(value, (int, float))
+        and not isinstance(value, bool)
+        and math.isfinite(float(value))
+    )
 
 
 def wilson_uncertainty(
@@ -219,11 +222,17 @@ def _extract_rows(
             errors.append(f"{label}.rows[{position}] must be an object")
             continue
         raw_id = row.get("example_id", row.get("task_id", row.get("id")))
-        if raw_id is None and isinstance(row.get("index"), int) and not isinstance(
-            row.get("index"), bool
+        if (
+            raw_id is None
+            and isinstance(row.get("index"), int)
+            and not isinstance(row.get("index"), bool)
         ):
             raw_id = f"index:{row['index']}"
-        if not isinstance(raw_id, (str, int)) or isinstance(raw_id, bool) or not str(raw_id).strip():
+        if (
+            not isinstance(raw_id, (str, int))
+            or isinstance(raw_id, bool)
+            or not str(raw_id).strip()
+        ):
             errors.append(f"{label}.rows[{position}] lacks a stable example_id")
             continue
         example_id = str(raw_id)
@@ -303,8 +312,7 @@ def _validate_claim_boundary(
         if portfolio.get("component_domains") != list(DEFAULT_DOMAINS):
             errors.append(f"{label}.portfolio.component_domains must be tool_use only")
         claim = " ".join(
-            str(portfolio.get(key, ""))
-            for key in ("coverage_claim", "claim_boundary")
+            str(portfolio.get(key, "")) for key in ("coverage_claim", "claim_boundary")
         ).lower()
         if any(phrase in claim for phrase in _CLAIM_FORBIDDEN_PHRASES):
             errors.append(f"{label}.portfolio claim exceeds the xLAM component boundary")
@@ -347,7 +355,9 @@ def _validate_service_provenance(
         identities["hf"] = dict(hf)
     if source_kind == "sampler_path":
         provenance = receipt.get("provenance")
-        adapter_revision = provenance.get("adapter_revision") if isinstance(provenance, Mapping) else None
+        adapter_revision = (
+            provenance.get("adapter_revision") if isinstance(provenance, Mapping) else None
+        )
         if not isinstance(adapter_revision, str) or not _REVISION_RE.fullmatch(adapter_revision):
             errors.append(f"{label}.provenance.adapter_revision is required for sampler_path")
         elif hf is not None and isinstance(hf.get("revision", hf.get("commit")), str):
@@ -379,7 +389,9 @@ def _validate_receipt(
     expected_rate = successes / trials if trials else None
     if receipt.get("perfect_call_rate") != expected_rate:
         errors.append(f"{label}.perfect_call_rate does not match row successes exactly")
-    uncertainty = _validate_uncertainty(receipt, label, successes, trials, errors) if trials else None
+    uncertainty = (
+        _validate_uncertainty(receipt, label, successes, trials, errors) if trials else None
+    )
     provenance_obj = _mapping(receipt.get("provenance"), f"{label}.provenance", errors)
     provenance: dict[str, Any] = {}
     if provenance_obj is not None:
@@ -398,7 +410,9 @@ def _validate_receipt(
             not isinstance(adapter_revision, str) or not _REVISION_RE.fullmatch(adapter_revision)
         ):
             errors.append(f"{label}.provenance.adapter_revision must be immutable")
-        provenance["adapter_revision"] = adapter_revision.lower() if isinstance(adapter_revision, str) else adapter_revision
+        provenance["adapter_revision"] = (
+            adapter_revision.lower() if isinstance(adapter_revision, str) else adapter_revision
+        )
     dataset_id = receipt.get("dataset_id")
     dataset_split = receipt.get("dataset_split")
     if not isinstance(dataset_id, str) or not dataset_id.strip():
@@ -412,8 +426,7 @@ def _validate_receipt(
         "rows": rows,
         "example_ids": [row["example_id"] for row in rows],
         "row_identity": [
-            (row["example_id"], row["prompt_sha256"], row["target_sha256"])
-            for row in rows
+            (row["example_id"], row["prompt_sha256"], row["target_sha256"]) for row in rows
         ],
         "successes": successes,
         "trials": trials,
@@ -462,7 +475,9 @@ def _compare_provenance(
     base_hf = base.get("identities", {}).get("hf", {})
     trained_hf = trained.get("identities", {}).get("hf", {})
     trained_base_revision = trained_hf.get("base_model_revision")
-    if trained_base_revision is not None and trained_base_revision != base_provenance.get("base_model_revision"):
+    if trained_base_revision is not None and trained_base_revision != base_provenance.get(
+        "base_model_revision"
+    ):
         errors.append("trained HF base_model_revision does not match the frozen base")
     if base_hf.get("revision") != base_provenance.get("base_model_revision"):
         errors.append("base HF revision does not match base_model_revision")
@@ -476,7 +491,10 @@ def compare_receipts(
     base = _validate_receipt(base_receipt, "base", "base_model")
     trained = _validate_receipt(trained_receipt, "trained", "sampler_path")
     errors = [*base.get("errors", []), *trained.get("errors", [])]
-    if base.get("trials") != BASE_EXPECTED_EXAMPLES or base.get("successes") != BASE_EXPECTED_SUCCESSES:
+    if (
+        base.get("trials") != BASE_EXPECTED_EXAMPLES
+        or base.get("successes") != BASE_EXPECTED_SUCCESSES
+    ):
         errors.append("base receipt must be the frozen 7/100 evaluation")
     if base.get("example_ids") != trained.get("example_ids"):
         errors.append("paired example IDs/order differ")
@@ -488,7 +506,9 @@ def compare_receipts(
         errors.append("base receipt must not contain an adapter revision")
     trained_adapter = trained.get("provenance", {}).get("adapter_revision")
     if trained_adapter == base.get("provenance", {}).get("base_model_revision"):
-        errors.append("trained adapter revision must identify a trained adapter, not the base model")
+        errors.append(
+            "trained adapter revision must identify a trained adapter, not the base model"
+        )
     base_successes = int(base.get("successes", 0))
     trained_successes = int(trained.get("successes", 0))
     trials = min(int(base.get("trials", 0)), int(trained.get("trials", 0)))
@@ -498,29 +518,23 @@ def compare_receipts(
         "trained_successes": trained_successes,
         "trained_only_successes": sum(
             row["success"] and not base_row["success"]
-            for row, base_row in zip(trained.get("rows", []), base.get("rows", []))
+            for row, base_row in zip(trained.get("rows", []), base.get("rows", []), strict=False)
         ),
         "base_only_successes": sum(
             base_row["success"] and not row["success"]
-            for row, base_row in zip(trained.get("rows", []), base.get("rows", []))
+            for row, base_row in zip(trained.get("rows", []), base.get("rows", []), strict=False)
         ),
         "ties": sum(
             row["success"] == base_row["success"]
-            for row, base_row in zip(trained.get("rows", []), base.get("rows", []))
+            for row, base_row in zip(trained.get("rows", []), base.get("rows", []), strict=False)
         ),
         "delta_perfect_call_rate": (
             trained_successes / trials - base_successes / trials if trials else None
         ),
     }
-    base_rate = (
-        base_receipt.get("perfect_call_rate")
-        if isinstance(base_receipt, Mapping)
-        else None
-    )
+    base_rate = base_receipt.get("perfect_call_rate") if isinstance(base_receipt, Mapping) else None
     trained_rate = (
-        trained_receipt.get("perfect_call_rate")
-        if isinstance(trained_receipt, Mapping)
-        else None
+        trained_receipt.get("perfect_call_rate") if isinstance(trained_receipt, Mapping) else None
     )
     result = {
         "schema_version": "pavlov-xlam-paired-comparison-v1",
@@ -571,9 +585,7 @@ def load_receipt(path: Path) -> dict[str, Any]:
 
 def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument(
-        "base_receipt", type=Path, nargs="?", default=DEFAULT_BASE_RECEIPT
-    )
+    parser.add_argument("base_receipt", type=Path, nargs="?", default=DEFAULT_BASE_RECEIPT)
     parser.add_argument("trained_receipt", type=Path)
     parser.add_argument("--out", type=Path)
     args = parser.parse_args(argv)

@@ -105,8 +105,11 @@ def _record(
         "resolved_model": answer.get("model") or answer.get("model_id"),
         "resolved_model_verified": bool(answer.get("model") or answer.get("model_id")),
         "cli_path": shutil.which(_JEV),
-        "cli_sha256": (_sha256_bytes(Path(shutil.which(_JEV)).read_bytes())
-                       if shutil.which(_JEV) and Path(shutil.which(_JEV)).is_file() else None),
+        "cli_sha256": (
+            _sha256_bytes(Path(shutil.which(_JEV)).read_bytes())
+            if shutil.which(_JEV) and Path(shutil.which(_JEV)).is_file()
+            else None
+        ),
         "kind": kind,
         "label": label,
         "state_sha256": _sha256_bytes(raw),
@@ -185,8 +188,12 @@ def run_noul(
         state_path = _state_file(state, Path(td))
         answer = _call_jev(["noul", str(state_path), instructions])
     return _record(
-        kind="noul", label=label, state=state,
-        payload={"instructions": instructions}, answer=answer, receipt_dir=receipt_dir,
+        kind="noul",
+        label=label,
+        state=state,
+        payload={"instructions": instructions},
+        answer=answer,
+        receipt_dir=receipt_dir,
     )
 
 
@@ -202,8 +209,12 @@ def run_score(
         state_path = _state_file(state, Path(td))
         answer = _call_jev(["score", str(state_path), instructions])
     return _record(
-        kind="score", label=label, state=state,
-        payload={"instructions": instructions}, answer=answer, receipt_dir=receipt_dir,
+        kind="score",
+        label=label,
+        state=state,
+        payload={"instructions": instructions},
+        answer=answer,
+        receipt_dir=receipt_dir,
     )
 
 
@@ -222,9 +233,12 @@ def run_choice(
             ["choice", str(state_path), instructions, "--choices", ",".join(choices)]
         )
     return _record(
-        kind="choice", label=label, state=state,
+        kind="choice",
+        label=label,
+        state=state,
         payload={"instructions": instructions, "choices": choices},
-        answer=answer, receipt_dir=receipt_dir,
+        answer=answer,
+        receipt_dir=receipt_dir,
     )
 
 

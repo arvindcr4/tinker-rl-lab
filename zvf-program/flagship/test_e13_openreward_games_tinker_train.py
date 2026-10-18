@@ -15,6 +15,7 @@ import tempfile
 import unittest
 from pathlib import Path
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+import pytest
 
 try:  # package import
     from flagship.e13_openreward_games_local_runner import (
@@ -142,24 +143,24 @@ class SplitFirewallTests(unittest.TestCase):
                 bytes.fromhex("9d61b19deffd5a60ba844af492ec2cc44449c5697b326919703bac031cae7f60")
             ).sign(json.dumps(grant, sort_keys=True, separators=(",", ":")).encode())
         ).decode()
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             validate_provider_suite_grant(grant, fw.train, fw.evaluation)
-        self.assertEqual(
+        assert (
             validate_provider_suite_grant(grant, fw.train, fw.evaluation, trust_root=TEST_E13_ROOT)[
                 "grant_id"
-            ],
-            "g1",
+            ]
+            == "g1"
         )
         grant["heldout_manifest_sha256"] = "0" * 64
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             validate_provider_suite_grant(grant, fw.train, fw.evaluation, trust_root=TEST_E13_ROOT)
 
     def test_builds_over_separated_manifests(self):
         fw = firewall()
-        self.assertTrue(fw.proof.holds)
+        assert fw.proof.holds
 
     def test_refuses_to_build_over_overlapping_manifests(self):
-        with self.assertRaises(SplitLeakError):
+        with pytest.raises(SplitLeakError):
             SplitFirewall(
                 parse_split_manifest(manifest("train", offset=0)),
                 parse_split_manifest(manifest("test", offset=0)),
@@ -168,8 +169,8 @@ class SplitFirewallTests(unittest.TestCase):
     def test_admits_a_train_seed(self):
         fw = firewall()
         task = GameTaskSpec(id="Wordle-v0_seed0", env_id="Wordle-v0", seed=0, variant="Wordle-v0")
-        self.assertIs(fw.assert_train_seed(task), task)
-        self.assertIn(("Wordle-v0", 0), fw.admitted_train)
+        assert fw.assert_train_seed(task) is task
+        assert ("Wordle-v0", 0) in fw.admitted_train
 
     def test_rejects_holdout_seed_in_training(self):
         fw = firewall()
@@ -179,29 +180,29 @@ class SplitFirewallTests(unittest.TestCase):
             seed=HOLDOUT_SEED_BASE,
             variant="Wordle-v0",
         )
-        with self.assertRaises(SplitLeakError) as ctx:
+        with pytest.raises(SplitLeakError) as ctx:
             fw.assert_train_seed(task)
-        self.assertIn("held-out range", str(ctx.exception))
+        assert "held-out range" in str(ctx.value)
 
     def test_rejects_train_seed_in_evaluation(self):
         fw = firewall()
         task = GameTaskSpec(id="Wordle-v0_seed0", env_id="Wordle-v0", seed=0, variant="Wordle-v0")
-        with self.assertRaises(SplitLeakError) as ctx:
+        with pytest.raises(SplitLeakError) as ctx:
             fw.assert_eval_seed(task)
-        self.assertIn("train range", str(ctx.exception))
+        assert "train range" in str(ctx.value)
 
     def test_rejects_seed_absent_from_manifest(self):
         fw = firewall()
         ghost = GameTaskSpec(
             id="Wordle-v0_seed777", env_id="Wordle-v0", seed=777, variant="Wordle-v0"
         )
-        with self.assertRaises(SplitLeakError):
+        with pytest.raises(SplitLeakError):
             fw.assert_train_seed(ghost)
 
     def test_rejects_unknown_variant(self):
         fw = firewall()
         odd = GameTaskSpec(id="Wordle-v9_seed0", env_id="Wordle-v9", seed=0, variant="Wordle-v9")
-        with self.assertRaises(SplitLeakError):
+        with pytest.raises(SplitLeakError):
             fw.assert_train_seed(odd)
 
     def test_assert_no_leak_passes_when_disjoint(self):
@@ -218,7 +219,7 @@ class SplitFirewallTests(unittest.TestCase):
         fw = firewall()
         fw.admitted_train.add(("Wordle-v0", 3))
         fw.admitted_eval.add(("Wordle-v0", 3))
-        with self.assertRaises(SplitLeakError):
+        with pytest.raises(SplitLeakError):
             fw.assert_no_leak()
 
 
@@ -335,17 +336,17 @@ class E13SignedProviderResultTests(unittest.TestCase):
         collected = collect_e13_provider_signed_result(
             grant, request, result, fw.train, fw.evaluation, trust_root=TEST_E13_ROOT
         )
-        self.assertEqual(collected["status"], "COMPLETE")
-        self.assertEqual(collected["score"], 0.75)
-        self.assertTrue(collected["provider_signed"])
-        self.assertIsNone(request["score"])
-        self.assertEqual(request["spent_usd"], 0.0)
+        assert collected["status"] == "COMPLETE"
+        assert collected["score"] == 0.75
+        assert collected["provider_signed"]
+        assert request["score"] is None
+        assert request["spent_usd"] == 0.0
 
     def test_rejects_tampered_request_manifest_and_result_signature(self):
         fw, grant, request, result = self._valid_triplet()
         bad_request = copy.deepcopy(request)
         bad_request["spent_usd"] = 1.0
-        with self.assertRaisesRegex(ValueError, "exact validated"):
+        with pytest.raises(ValueError, match="exact validated"):
             collect_e13_provider_signed_result(
                 grant, bad_request, result, fw.train, fw.evaluation, trust_root=TEST_E13_ROOT
             )
@@ -353,14 +354,14 @@ class E13SignedProviderResultTests(unittest.TestCase):
         bad_manifest = copy.deepcopy(result)
         bad_manifest["heldout_manifest_sha256"] = hashlib.sha256(b"other manifest").hexdigest()
         bad_manifest = self._sign(bad_manifest)
-        with self.assertRaisesRegex(ValueError, "bindings"):
+        with pytest.raises(ValueError, match="bindings"):
             collect_e13_provider_signed_result(
                 grant, request, bad_manifest, fw.train, fw.evaluation, trust_root=TEST_E13_ROOT
             )
 
         bad_signature = copy.deepcopy(result)
         bad_signature["score"] = 0.9
-        with self.assertRaisesRegex(ValueError, "signature"):
+        with pytest.raises(ValueError, match="signature"):
             collect_e13_provider_signed_result(
                 grant, request, bad_signature, fw.train, fw.evaluation, trust_root=TEST_E13_ROOT
             )
@@ -370,7 +371,7 @@ class E13SignedProviderResultTests(unittest.TestCase):
         expired = copy.deepcopy(result)
         expired["expires_at"] = "2020-08-30T00:00:00Z"
         expired = self._sign(expired)
-        with self.assertRaisesRegex(ValueError, "signature"):
+        with pytest.raises(ValueError, match="signature"):
             collect_e13_provider_signed_result(
                 grant, request, expired, fw.train, fw.evaluation, trust_root=TEST_E13_ROOT
             )
@@ -379,7 +380,7 @@ class E13SignedProviderResultTests(unittest.TestCase):
                 missing = copy.deepcopy(result)
                 del missing["receipts"][receipt_name]
                 missing = self._sign(missing)
-                with self.assertRaisesRegex(ValueError, "result.receipts"):
+                with pytest.raises(ValueError, match="result.receipts"):
                     collect_e13_provider_signed_result(
                         grant, request, missing, fw.train, fw.evaluation, trust_root=TEST_E13_ROOT
                     )
@@ -391,7 +392,7 @@ class E13SignedProviderResultTests(unittest.TestCase):
                 mismatch = copy.deepcopy(result)
                 mismatch[field] = hashlib.sha256(field.encode()).hexdigest()
                 mismatch = self._sign(mismatch)
-                with self.assertRaisesRegex(ValueError, "bindings"):
+                with pytest.raises(ValueError, match="bindings"):
                     collect_e13_provider_signed_result(
                         grant, request, mismatch, fw.train, fw.evaluation, trust_root=TEST_E13_ROOT
                     )
@@ -419,7 +420,7 @@ class E13SignedProviderResultTests(unittest.TestCase):
             }
             for key, payload in payloads.items():
                 paths[key].write_text(json.dumps(payload), encoding="utf-8")
-            self.assertEqual(
+            assert (
                 e13_runner_main(
                     [
                         "--mode",
@@ -439,10 +440,10 @@ class E13SignedProviderResultTests(unittest.TestCase):
                         "--out",
                         str(paths["out"]),
                     ]
-                ),
-                0,
+                )
+                == 0
             )
-            self.assertEqual(json.loads(paths["out"].read_text())["status"], "COMPLETE")
+            assert json.loads(paths["out"].read_text())["status"] == "COMPLETE"
 
 
 class ModelPolicyTests(unittest.TestCase):
@@ -451,15 +452,15 @@ class ModelPolicyTests(unittest.TestCase):
             E13TrainConfig(model=model).validate()
 
     def test_served_but_unauthorized_model_is_refused(self):
-        with self.assertRaises(ModelPolicyError):
+        with pytest.raises(ModelPolicyError):
             E13TrainConfig(model="Qwen/Qwen3-8B").validate()
 
     def test_unserved_model_is_refused(self):
-        with self.assertRaises(ModelPolicyError):
+        with pytest.raises(ModelPolicyError):
             E13TrainConfig(model="gpt-4o").validate()
 
     def test_wandb_project_is_contractual(self):
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             E13TrainConfig(wandb_project="some-other-project").validate()
 
 
@@ -474,53 +475,53 @@ class RewardTests(unittest.TestCase):
         r, outcome = self.reward.score(
             EpisodeRecord(task=self.task, steps=3, finished=True, terminal_reward=1.0)
         )
-        self.assertEqual(r, 1.0)
-        self.assertTrue(outcome.accepted)
+        assert r == 1.0
+        assert outcome.accepted
 
     def test_unfinished_episode_yields_no_reward_not_a_guess(self):
         r, outcome = self.reward.score(
             EpisodeRecord(task=self.task, steps=6, finished=False, terminal_reward=None)
         )
-        self.assertIsNone(r)
-        self.assertFalse(outcome.accepted)
-        self.assertEqual(self.reward.rejected, 1)
+        assert r is None
+        assert not outcome.accepted
+        assert self.reward.rejected == 1
 
     def test_out_of_band_reward_is_rejected(self):
         r, _ = self.reward.score(
             EpisodeRecord(task=self.task, steps=1, finished=True, terminal_reward=42.0)
         )
-        self.assertIsNone(r)
+        assert r is None
 
     def test_group_normalization_centres_rewards(self):
         advs = normalize_group_rewards([1.0, 0.0, 0.0, 0.0])
         self.assertAlmostEqual(sum(advs), 0.0, places=6)
-        self.assertGreater(advs[0], 0)
+        assert advs[0] > 0
 
     def test_group_normalization_handles_all_equal(self):
-        self.assertEqual(normalize_group_rewards([0.5, 0.5, 0.5]), [0.0, 0.0, 0.0])
+        assert normalize_group_rewards([0.5, 0.5, 0.5]) == [0.0, 0.0, 0.0]
 
     def test_group_normalization_handles_all_rejected(self):
-        self.assertEqual(normalize_group_rewards([None, None]), [0.0, 0.0])
+        assert normalize_group_rewards([None, None]) == [0.0, 0.0]
 
 
 class LicenseTests(unittest.TestCase):
     def test_reports_absence_never_an_spdx(self):
         rec = license_record()
-        self.assertEqual(rec["observed_state"], "absent_at_pinned_revision")
-        self.assertIsNone(rec["claimed_spdx"])
-        self.assertIn("LICENSE_RISK_ACCEPTANCE", rec["proceeding_under"])
-        self.assertNotIn("MIT", json.dumps(rec))
+        assert rec["observed_state"] == "absent_at_pinned_revision"
+        assert rec["claimed_spdx"] is None
+        assert "LICENSE_RISK_ACCEPTANCE" in rec["proceeding_under"]
+        assert "MIT" not in json.dumps(rec)
 
     def test_fails_closed_when_the_record_is_missing(self):
         with tempfile.TemporaryDirectory() as tmp:
-            with self.assertRaises(LicenseRecordError):
+            with pytest.raises(LicenseRecordError):
                 license_record(Path(tmp) / "nope.md")
 
     def test_fails_closed_when_the_record_does_not_cover_envcommons(self):
         with tempfile.TemporaryDirectory() as tmp:
             p = Path(tmp) / "other.md"
             p.write_text("covers something else entirely", encoding="utf-8")
-            with self.assertRaises(LicenseRecordError):
+            with pytest.raises(LicenseRecordError):
                 license_record(p)
 
 
@@ -532,7 +533,7 @@ class CostTests(unittest.TestCase):
     def test_episode_token_profile_is_positive(self):
         per = project_episode_tokens(self.cfg)
         for key in ("prefill_tokens", "sample_tokens", "train_tokens"):
-            self.assertGreater(per[key], 0)
+            assert per[key] > 0
 
     def test_cost_scales_with_episode_count(self):
         one = project_cost(self.cfg, episodes_sampled=1, episodes_trained=1, budget=self.budget)
@@ -540,9 +541,9 @@ class CostTests(unittest.TestCase):
         self.assertAlmostEqual(ten["usd"]["total"], one["usd"]["total"] * 10, places=3)
 
     def test_pinned_prices_are_used(self):
-        self.assertEqual(self.budget["usd_per_million_tokens"]["prefill"], 0.54)
-        self.assertEqual(self.budget["usd_per_million_tokens"]["sample"], 1.335)
-        self.assertEqual(self.budget["usd_per_million_tokens"]["train"], 1.177)
+        assert self.budget["usd_per_million_tokens"]["prefill"] == 0.54
+        assert self.budget["usd_per_million_tokens"]["sample"] == 1.335
+        assert self.budget["usd_per_million_tokens"]["train"] == 1.177
 
     def test_cap_check_passes_for_a_small_run(self):
         proj = project_cost(self.cfg, episodes_sampled=10, episodes_trained=10, budget=self.budget)
@@ -552,14 +553,14 @@ class CostTests(unittest.TestCase):
         proj = project_cost(
             self.cfg, episodes_sampled=10_000_000, episodes_trained=10_000_000, budget=self.budget
         )
-        with self.assertRaises(BudgetError):
+        with pytest.raises(BudgetError):
             assert_within_cap(proj, budget=self.budget)
 
     def test_reserve_must_stay_unspent(self):
         """A projection that fits the cap but eats the reserve is refused."""
         spendable = self.budget["operational_cap_usd"] - self.budget["safety_reserve_usd"]
         proj = {"usd": {"total": spendable + 0.01}}
-        with self.assertRaises(BudgetError):
+        with pytest.raises(BudgetError):
             assert_within_cap(proj, budget=self.budget)
 
 
@@ -583,7 +584,7 @@ class WandbGuardTests(unittest.TestCase):
         old = os.environ.get("WANDB_MODE")
         os.environ["WANDB_MODE"] = "offline"
         try:
-            with self.assertRaises(RuntimeError):
+            with pytest.raises(RuntimeError):
                 start_wandb_online(E13TrainConfig())
         finally:
             os.environ.pop("WANDB_MODE", None)
@@ -595,7 +596,7 @@ class WandbGuardTests(unittest.TestCase):
 
         os.environ["WANDB_DISABLED"] = "1"
         try:
-            with self.assertRaises(RuntimeError):
+            with pytest.raises(RuntimeError):
                 start_wandb_online(E13TrainConfig())
         finally:
             os.environ.pop("WANDB_DISABLED", None)
@@ -609,7 +610,7 @@ class WandbGuardTests(unittest.TestCase):
         for metric in ("train/reward", "train/loss", "train/step", "eval/reward"):
             wandb_log(run, {metric: 1.0})
         keys = {k for entry in run.logged for k in entry}
-        self.assertEqual(keys, {"train/reward", "train/loss", "train/step", "eval/reward"})
+        assert keys == {"train/reward", "train/loss", "train/step", "eval/reward"}
 
     def test_rejected_log_is_fatal(self):
         try:
@@ -621,7 +622,7 @@ class WandbGuardTests(unittest.TestCase):
             def log(self, payload):
                 return False
 
-        with self.assertRaises(RuntimeError):
+        with pytest.raises(RuntimeError):
             wandb_log(Rejecting(), {"train/reward": 1.0})
 
 
@@ -631,9 +632,9 @@ class CheckpointExportTests(unittest.TestCase):
         rec = build_checkpoint_record(
             cfg=E13TrainConfig(), sampler_path="tinker://sampler/abc", step=10, firewall=fw
         )
-        self.assertFalse(rec["e11_transfer_probe"]["ready"])
-        self.assertIn("HF_TOKEN", rec["e11_transfer_probe"]["blocker"])
-        self.assertIsNone(rec["license"]["claimed_spdx"])
+        assert not rec["e11_transfer_probe"]["ready"]
+        assert "HF_TOKEN" in rec["e11_transfer_probe"]["blocker"]
+        assert rec["license"]["claimed_spdx"] is None
 
     def test_record_is_e11_ready_when_hf_fields_present(self):
         fw = firewall()
@@ -646,13 +647,13 @@ class CheckpointExportTests(unittest.TestCase):
             hf_revision="ckpt-10",
             hf_commit="a" * 40,
         )
-        self.assertTrue(rec["e11_transfer_probe"]["ready"])
+        assert rec["e11_transfer_probe"]["ready"]
         cmd = rec["e11_transfer_probe"]["command"]
         for flag in ("--sampler-path", "--hf-repo", "--hf-revision", "--hf-commit"):
-            self.assertIn(flag, cmd)
+            assert flag in cmd
 
     def test_rejects_non_hex_commit(self):
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             build_checkpoint_record(
                 cfg=E13TrainConfig(),
                 sampler_path="p",
@@ -667,24 +668,24 @@ class CheckpointExportTests(unittest.TestCase):
         fw = firewall()
         fw.admitted_train.add(("Wordle-v0", 2))
         fw.admitted_eval.add(("Wordle-v0", 2))
-        with self.assertRaises(SplitLeakError):
+        with pytest.raises(SplitLeakError):
             build_checkpoint_record(cfg=E13TrainConfig(), sampler_path="p", step=1, firewall=fw)
 
 
 class PlanTests(unittest.TestCase):
     def test_plan_spends_nothing_and_projects_three_numbers(self):
         result = plan(E13TrainConfig(), firewall())
-        self.assertEqual(result["spent_usd"], 0.0)
+        assert result["spent_usd"] == 0.0
         for key in ("one_smoke_episode", "short_pilot", "full_pass_200_train_tasks"):
-            self.assertIn(key, result["projections"])
-            self.assertGreater(result["projections"][key]["usd"]["total"], 0)
+            assert key in result["projections"]
+            assert result["projections"][key]["usd"]["total"] > 0
 
     def test_plan_never_claims_a_license(self):
-        self.assertNotIn('"MIT"', json.dumps(plan(E13TrainConfig(), firewall())))
+        assert '"MIT"' not in json.dumps(plan(E13TrainConfig(), firewall()))
 
     def test_plan_reports_separation_holding(self):
         result = plan(E13TrainConfig(), firewall())
-        self.assertTrue(result["split_firewall"]["separation_proof"]["holds"])
+        assert result["split_firewall"]["separation_proof"]["holds"]
 
 
 if __name__ == "__main__":  # pragma: no cover

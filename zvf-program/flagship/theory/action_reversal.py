@@ -79,9 +79,9 @@ def matched_primary_observation(construction: Construction) -> dict[str, object]
 def clean_hard_utilities(construction: Construction) -> RegimeUtilities:
     """Clean verifier: additional samples can reveal a rare correct completion."""
     validate(construction)
-    success_probability = 1.0 - (
-        1.0 - construction.clean_success_probability
-    ) ** construction.additional_samples
+    success_probability = (
+        1.0 - (1.0 - construction.clean_success_probability) ** construction.additional_samples
+    )
     retry = (
         construction.success_value * success_probability
         - construction.sample_cost * construction.additional_samples
@@ -141,7 +141,8 @@ def evaluate(construction: Construction) -> dict[str, object]:
         "construction": asdict(construction),
         "matched_primary_observation": matched_primary_observation(construction),
         "clean_hard": asdict(clean) | {"optimal_action": clean.optimal_action, "gap": clean.gap},
-        "broken_verifier": asdict(broken) | {"optimal_action": broken.optimal_action, "gap": broken.gap},
+        "broken_verifier": asdict(broken)
+        | {"optimal_action": broken.optimal_action, "gap": broken.gap},
         "minimax_retry_probability": minimax_retry_probability(construction),
         "minimax_outcome_only_regret": minimax_outcome_only_regret(construction),
         "reversal_margins": reversal_margins(construction),

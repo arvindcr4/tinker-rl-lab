@@ -442,16 +442,26 @@ def _extract_exclusion_hashes(
                 manifest_receipt = held_out.get("receipt_ref")
 
     if not candidates:
-        return [], manifest_receipt, [
-            "held-out BankerToolBench task hashes are required to prove disjointness"
-        ] + errors
+        return (
+            [],
+            manifest_receipt,
+            ["held-out BankerToolBench task hashes are required to prove disjointness"] + errors,
+        )
     first = list(candidates[0][1]) if _is_sequence(candidates[0][1]) else candidates[0][1]
     if not isinstance(first, list):
-        return [], manifest_receipt, ["excluded task hashes must be a list of SHA-256 digests"] + errors
+        return (
+            [],
+            manifest_receipt,
+            ["excluded task hashes must be a list of SHA-256 digests"] + errors,
+        )
     for name, value in candidates[1:]:
         other = list(value) if _is_sequence(value) else value
         comparable_first = sorted(first) if all(isinstance(item, str) for item in first) else first
-        comparable_other = sorted(other) if isinstance(other, list) and all(isinstance(item, str) for item in other) else other
+        comparable_other = (
+            sorted(other)
+            if isinstance(other, list) and all(isinstance(item, str) for item in other)
+            else other
+        )
         if comparable_other != comparable_first:
             errors.append(f"conflicting exclusion hash lists ({candidates[0][0]} and {name})")
     hashes, hash_errors = _normalise_hashes(first, label="excluded BankerToolBench task hashes")
@@ -503,7 +513,12 @@ def _validate_artifact(contract: Mapping[str, Any] | None) -> tuple[dict[str, An
     _assert_metadata_only(contract, "artifact")
     normalized = dict(contract)
     errors: list[str] = []
-    for key in ("required", "artifact_types", "artifact_receipt_ref", "side_effect_receipt_required"):
+    for key in (
+        "required",
+        "artifact_types",
+        "artifact_receipt_ref",
+        "side_effect_receipt_required",
+    ):
         if key not in contract or contract[key] in (None, "", []):
             errors.append(f"artifact contract is missing {key}")
     if contract.get("required") is not True:
@@ -569,7 +584,9 @@ def _validate_budget(budget_gate: Mapping[str, Any] | None) -> tuple[dict[str, A
         errors.append("budget gate status must be AUTHORIZED_TINKER_ONLY")
     if budget_gate.get("provider") != "Tinker":
         errors.append("budget gate provider must be Tinker")
-    authorized = budget_gate.get("budget_authorized", budget_gate.get("paid_jobs_may_launch")) is True
+    authorized = (
+        budget_gate.get("budget_authorized", budget_gate.get("paid_jobs_may_launch")) is True
+    )
     if not authorized:
         errors.append("budget gate must explicitly record budget_authorized")
     for key in ("maximum_usd", "operational_cap_usd", "safety_reserve_usd", "authorized_at"):
@@ -582,11 +599,19 @@ def _validate_budget(budget_gate: Mapping[str, Any] | None) -> tuple[dict[str, A
         errors.append("budget maximum_usd must be positive")
     elif maximum > 18.0:
         errors.append("budget maximum_usd exceeds the authorized 18.0 USD cap")
-    if not isinstance(operational, (int, float)) or isinstance(operational, bool) or operational < 0:
+    if (
+        not isinstance(operational, (int, float))
+        or isinstance(operational, bool)
+        or operational < 0
+    ):
         errors.append("budget operational_cap_usd must be non-negative")
     if not isinstance(reserve, (int, float)) or isinstance(reserve, bool) or reserve < 0:
         errors.append("budget safety_reserve_usd must be non-negative")
-    if isinstance(maximum, (int, float)) and isinstance(operational, (int, float)) and operational > maximum:
+    if (
+        isinstance(maximum, (int, float))
+        and isinstance(operational, (int, float))
+        and operational > maximum
+    ):
         errors.append("budget operational_cap_usd exceeds maximum_usd")
     if (
         isinstance(maximum, (int, float))
@@ -599,7 +624,11 @@ def _validate_budget(budget_gate: Mapping[str, Any] | None) -> tuple[dict[str, A
         errors.append("budget authorized_at is placeholder or unrecorded")
     for field in ("maximum_usd", "operational_cap_usd", "safety_reserve_usd"):
         amount = budget_gate.get(field)
-        if isinstance(amount, bool) or not isinstance(amount, (int, float)) or not math.isfinite(amount):
+        if (
+            isinstance(amount, bool)
+            or not isinstance(amount, (int, float))
+            or not math.isfinite(amount)
+        ):
             errors.append(f"budget {field} must be finite numeric")
     # Legacy input means campaign-owner budget permission, never adapter launch.
     normalized["budget_authorized"] = authorized
@@ -727,7 +756,10 @@ def _boundary_errors(boundary: Mapping[str, Any]) -> list[str]:
     revision = boundary.get("dataset_revision")
     if not isinstance(revision, str) or not _PINNED_REVISION.fullmatch(revision):
         errors.append("dataset_revision must be an immutable 40-character lower-case SHA")
-    if "dataset_revision_receipt_ref" in boundary and boundary.get("dataset_revision_receipt_ref") is not None:
+    if (
+        "dataset_revision_receipt_ref" in boundary
+        and boundary.get("dataset_revision_receipt_ref") is not None
+    ):
         if not _immutable_reference(boundary.get("dataset_revision_receipt_ref")):
             errors.append("dataset revision receipt_ref must be immutable and non-placeholder")
     license_info = boundary.get("license")
@@ -780,7 +812,9 @@ def _boundary_errors(boundary: Mapping[str, Any]) -> list[str]:
             errors.append("excluded BankerToolBench task hashes are required")
         else:
             excluded_hashes = [
-                value for value in raw_excluded if isinstance(value, str) and _DIGEST.fullmatch(value)
+                value
+                for value in raw_excluded
+                if isinstance(value, str) and _DIGEST.fullmatch(value)
             ]
             if len(excluded_hashes) != len(raw_excluded):
                 errors.append("excluded task hashes must contain lower-case SHA-256 digests")
@@ -804,7 +838,11 @@ def _boundary_errors(boundary: Mapping[str, Any]) -> list[str]:
             errors.append("held-out exclusion receipt_ref must be immutable and non-placeholder")
         if exclusion.get("receipt_proven") is not True:
             errors.append("BankerToolBench exclusion receipt is not proven")
-    if valid_task_hashes and excluded_hashes and set(valid_task_hashes).intersection(excluded_hashes):
+    if (
+        valid_task_hashes
+        and excluded_hashes
+        and set(valid_task_hashes).intersection(excluded_hashes)
+    ):
         errors.append("API-Bank train task hashes overlap BankerToolBench held-out task IDs")
     if boundary.get("excluded_task_id_hashes") != excluded_hashes:
         errors.append("excluded_task_id_hashes does not match exclusion_boundary")
@@ -817,7 +855,9 @@ def _boundary_errors(boundary: Mapping[str, Any]) -> list[str]:
         "dataset_id": EXCLUDED_DATASET_ID,
         "role": "primary_eval",
         "task_hashes_only": True,
-        "exclusion_receipt_ref": exclusion.get("receipt_ref") if isinstance(exclusion, Mapping) else None,
+        "exclusion_receipt_ref": exclusion.get("receipt_ref")
+        if isinstance(exclusion, Mapping)
+        else None,
     }
     if boundary.get("disjoint_from") != expected_disjoint:
         errors.append("disjoint_from metadata does not match BankerToolBench exclusion")
@@ -833,7 +873,10 @@ def _boundary_errors(boundary: Mapping[str, Any]) -> list[str]:
         errors.extend(contract_errors)
     budget, budget_errors = _validate_budget(boundary.get("budget_gate"))
     errors.extend(budget_errors)
-    if boundary.get("launch_authorized") is not False or boundary.get("launches_any_job") is not False:
+    if (
+        boundary.get("launch_authorized") is not False
+        or boundary.get("launches_any_job") is not False
+    ):
         errors.append("adapter must never authorize or launch a paid job")
     if boundary.get("budget_gate") != budget:
         # The builder adds the two explicit non-launch fields to the normalized
@@ -941,7 +984,9 @@ def build_api_bank_rlvr_train_boundary(
         )
     if task_ids is not None:
         if tasks is not None or task_id_hashes is not None:
-            raise ApiBankRLVRTrainBoundaryError("supply task_ids, tasks, or task_id_hashes, not multiple")
+            raise ApiBankRLVRTrainBoundaryError(
+                "supply task_ids, tasks, or task_id_hashes, not multiple"
+            )
         tasks = task_ids
 
     if banker_toolbench_manifest is not None:
@@ -1044,7 +1089,9 @@ def build_api_bank_rlvr_train_boundary(
         "task_hashes": task_hash_values,
         "task_id_aggregate_sha256": aggregate,
         "task_ids_sha256": aggregate,
-        "split_manifest_sha256": split_manifest_hash(task_hash_values) if task_hash_values else None,
+        "split_manifest_sha256": split_manifest_hash(task_hash_values)
+        if task_hash_values
+        else None,
         "exclusion_boundary": exclusion,
         "excluded_task_id_hashes": excluded_hashes,
         "excluded_task_ids_sha256": (
@@ -1159,7 +1206,9 @@ def main(argv: Sequence[str] | None = None) -> int:
         verifier = _read_json(args.verifier_contract) if args.verifier_contract else None
         budget = _read_json(args.budget_gate) if args.budget_gate else None
         results = _read_json(args.result_receipts) if args.result_receipts else None
-        exclusion_manifest = _read_json(args.exclusion_manifest) if args.exclusion_manifest else None
+        exclusion_manifest = (
+            _read_json(args.exclusion_manifest) if args.exclusion_manifest else None
+        )
         boundary = build_api_bank_rlvr_train_boundary(
             args.revision,
             args.license_id,

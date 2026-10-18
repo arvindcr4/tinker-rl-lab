@@ -62,6 +62,7 @@ Cross-paper coupling:
     risk-index it is dominant (this iter).  The "estimator equivalence"
     finding is y-axis-conditional, not universal.
 """
+
 from __future__ import annotations
 
 import json
@@ -81,22 +82,34 @@ TSV = os.path.join(RES, "zvf_iter130_risk_index.tsv")
 SEED = 20260705
 B = 4000
 ALPHA = 0.05
-N_PERM = 2000   # permutation replicates for H4
+N_PERM = 2000  # permutation replicates for H4
 
 METRICS = [
-    "zvf_risk", "mean_zvf", "lag1_zvf_rolling_w15", "slope",
-    "risk_mag", "risk_csd", "risk_drift",
+    "zvf_risk",
+    "mean_zvf",
+    "lag1_zvf_rolling_w15",
+    "slope",
+    "risk_mag",
+    "risk_csd",
+    "risk_drift",
 ]
 ALL_METHODS = [
-    "grpo", "aero", "areal", "gift",
-    "cppo", "ngrpo", "mcgrpo",
-    "es", "scafgrpo",
+    "grpo",
+    "aero",
+    "areal",
+    "gift",
+    "cppo",
+    "ngrpo",
+    "mcgrpo",
+    "es",
+    "scafgrpo",
 ]
 N2_SUBSET = ["grpo", "aero", "areal", "gift"]
 GRPO_FAMILY = ["grpo", "aero", "areal", "gift", "cppo", "ngrpo", "mcgrpo"]
 
 
 # ----------------------- loaders -----------------------
+
 
 def load_panel():
     with open(TSV) as f:
@@ -119,6 +132,7 @@ def load_panel():
 
 # ----------------------- eta^2 helper (Berkeley row 22) -----------------------
 
+
 def axis_eta2(rows, axis_key, value_key):
     grand, by_axis = [], defaultdict(list)
     for r in rows:
@@ -138,6 +152,7 @@ def axis_eta2(rows, axis_key, value_key):
 
 
 # ----------------------- LOMO-range CI (jackknife proxy) -----------------------
+
 
 def lomo_range_ci(rows, axis_key, value_key):
     """Compute eta^2 on the full panel and on every leave-one-axis-out panel;
@@ -160,6 +175,7 @@ def lomo_range_ci(rows, axis_key, value_key):
 
 # ----------------------- permutation test (method label shuffle) -----------------------
 
+
 def method_permutation_pvalue(rows, value_key, n_perm=N_PERM, seed=SEED):
     """Shuffle method labels (preserving seed structure); recompute eta^2;
     fraction of permuted eta^2 >= observed is the p-value."""
@@ -173,7 +189,7 @@ def method_permutation_pvalue(rows, value_key, n_perm=N_PERM, seed=SEED):
         permuted = list(method_pool)
         rng.shuffle(permuted)
         sample = []
-        for r, m in zip(rows, permuted):
+        for r, m in zip(rows, permuted, strict=False):
             sample.append({"method": m, value_key: r[value_key]})
         v = axis_eta2(sample, "method", value_key)
         if v is not None and not (isinstance(v, float) and math.isnan(v)):
@@ -184,6 +200,7 @@ def method_permutation_pvalue(rows, value_key, n_perm=N_PERM, seed=SEED):
 
 
 # ----------------------- CI -----------------------
+
 
 def ci(arr, alpha=ALPHA):
     if not arr:
@@ -197,21 +214,26 @@ def ci(arr, alpha=ALPHA):
 
 # ----------------------- table builders -----------------------
 
+
 def et2_table(rows, label):
     table = []
     for axis in ("method", "seed"):
         for metric in METRICS:
             point, lomo_min, lomo_max = lomo_range_ci(rows, axis, metric)
-            table.append({
-                "panel": label,
-                "axis": axis,
-                "metric": metric,
-                "n_rows": len(rows),
-                "eta2_point": round(point, 4) if point is not None else None,
-                "eta2_lomo_min": round(lomo_min, 4) if lomo_min is not None else None,
-                "eta2_lomo_max": round(lomo_max, 4) if lomo_max is not None else None,
-                "lomo_range": round(lomo_max - lomo_min, 4) if (lomo_min is not None and lomo_max is not None) else None,
-            })
+            table.append(
+                {
+                    "panel": label,
+                    "axis": axis,
+                    "metric": metric,
+                    "n_rows": len(rows),
+                    "eta2_point": round(point, 4) if point is not None else None,
+                    "eta2_lomo_min": round(lomo_min, 4) if lomo_min is not None else None,
+                    "eta2_lomo_max": round(lomo_max, 4) if lomo_max is not None else None,
+                    "lomo_range": round(lomo_max - lomo_min, 4)
+                    if (lomo_min is not None and lomo_max is not None)
+                    else None,
+                }
+            )
     return table
 
 
@@ -227,13 +249,15 @@ def lomo_table(rows):
                 rel_drop = None
             else:
                 rel_drop = (point_lomo - point_full) / max(point_full, 1e-12)
-            table.append({
-                "dropped_method": dropped,
-                "metric": metric,
-                "eta2_full": round(point_full, 4) if point_full is not None else None,
-                "eta2_lomo": round(point_lomo, 4) if point_lomo is not None else None,
-                "rel_drop": round(rel_drop, 4) if rel_drop is not None else None,
-            })
+            table.append(
+                {
+                    "dropped_method": dropped,
+                    "metric": metric,
+                    "eta2_full": round(point_full, 4) if point_full is not None else None,
+                    "eta2_lomo": round(point_lomo, 4) if point_lomo is not None else None,
+                    "rel_drop": round(rel_drop, 4) if rel_drop is not None else None,
+                }
+            )
     return table
 
 
@@ -249,12 +273,14 @@ def family_subset_table(rows):
     for label, panel in subsets.items():
         for metric in METRICS:
             point = axis_eta2(panel, "method", metric)
-            out.append({
-                "subset": label,
-                "n_methods": len({r["method"] for r in panel}),
-                "metric": metric,
-                "eta2_point": round(point, 4) if point is not None else None,
-            })
+            out.append(
+                {
+                    "subset": label,
+                    "n_methods": len({r["method"] for r in panel}),
+                    "metric": metric,
+                    "eta2_point": round(point, 4) if point is not None else None,
+                }
+            )
     return out
 
 
@@ -262,14 +288,16 @@ def permutation_table(rows, label):
     out = []
     for metric in METRICS:
         obs, p, null_mean = method_permutation_pvalue(rows, metric)
-        out.append({
-            "panel": label,
-            "metric": metric,
-            "eta2_observed": round(obs, 4) if obs is not None else None,
-            "null_mean": round(null_mean, 4) if null_mean is not None else None,
-            "p_value": round(p, 5) if p is not None else None,
-            "n_perm": N_PERM,
-        })
+        out.append(
+            {
+                "panel": label,
+                "metric": metric,
+                "eta2_observed": round(obs, 4) if obs is not None else None,
+                "null_mean": round(null_mean, 4) if null_mean is not None else None,
+                "p_value": round(p, 5) if p is not None else None,
+                "n_perm": N_PERM,
+            }
+        )
     return out
 
 
@@ -286,46 +314,59 @@ def main():
     print(f"loaded {len(rows)} rows ({len(ALL_METHODS)} methods x 5 seeds)")
     assert len(rows) == 45, f"expected 45, got {len(rows)}"
 
-    full_table   = et2_table(rows, "full9")
-    n2_table     = et2_table([r for r in rows if r["method"] in N2_SUBSET], "n2_subset")
-    lomo         = lomo_table(rows)
-    family       = family_subset_table(rows)
-    perm_full    = permutation_table(rows, "full9")
-    perm_n2      = permutation_table([r for r in rows if r["method"] in N2_SUBSET], "n2_subset")
+    full_table = et2_table(rows, "full9")
+    n2_table = et2_table([r for r in rows if r["method"] in N2_SUBSET], "n2_subset")
+    lomo = lomo_table(rows)
+    family = family_subset_table(rows)
+    perm_full = permutation_table(rows, "full9")
+    perm_n2 = permutation_table([r for r in rows if r["method"] in N2_SUBSET], "n2_subset")
 
     # ---- H1: full 9-method algo-axis zvf_risk is LARGE
     h1 = next(r for r in full_table if r["axis"] == "method" and r["metric"] == "zvf_risk")
     h1_large = (
-        h1["eta2_point"] is not None and h1["eta2_point"] >= 0.50
-        and h1["eta2_lomo_min"] is not None and h1["eta2_lomo_min"] >= 0.65
+        h1["eta2_point"] is not None
+        and h1["eta2_point"] >= 0.50
+        and h1["eta2_lomo_min"] is not None
+        and h1["eta2_lomo_min"] >= 0.65
     )
-    print(f"H1 (full 9 algo zvf_risk): point={h1['eta2_point']}, "
-          f"LOMO=[{h1['eta2_lomo_min']}, {h1['eta2_lomo_max']}], large={h1_large}")
+    print(
+        f"H1 (full 9 algo zvf_risk): point={h1['eta2_point']}, "
+        f"LOMO=[{h1['eta2_lomo_min']}, {h1['eta2_lomo_max']}], large={h1_large}"
+    )
 
     # ---- H2: 4-method N2 subset algo-axis zvf_risk is ALSO LARGE
     h2 = next(r for r in n2_table if r["axis"] == "method" and r["metric"] == "zvf_risk")
     h2_large = h2["eta2_point"] is not None and h2["eta2_point"] >= 0.50
-    print(f"H2 (4-method subset algo zvf_risk): point={h2['eta2_point']}, "
-          f"LOMO=[{h2['eta2_lomo_min']}, {h2['eta2_lomo_max']}], large={h2_large}")
+    print(
+        f"H2 (4-method subset algo zvf_risk): point={h2['eta2_point']}, "
+        f"LOMO=[{h2['eta2_lomo_min']}, {h2['eta2_lomo_max']}], large={h2_large}"
+    )
 
     # ---- H3: algo > seed on zvf_risk
     h3_seed = next(r for r in full_table if r["axis"] == "seed" and r["metric"] == "zvf_risk")
     h3_dominates = (
-        h1["eta2_point"] is not None and h3_seed["eta2_point"] is not None
+        h1["eta2_point"] is not None
+        and h3_seed["eta2_point"] is not None
         and h1["eta2_point"] > h3_seed["eta2_point"]
     )
-    print(f"H3 (algo > seed on zvf_risk): algo={h1['eta2_point']}, seed={h3_seed['eta2_point']}, "
-          f"dominates={h3_dominates}")
+    print(
+        f"H3 (algo > seed on zvf_risk): algo={h1['eta2_point']}, seed={h3_seed['eta2_point']}, "
+        f"dominates={h3_dominates}"
+    )
 
     # ---- H4: permutation p < 0.01 on BOTH panels
     h4 = next(r for r in perm_full if r["metric"] == "zvf_risk")
     h4_n2 = next(r for r in perm_n2 if r["metric"] == "zvf_risk")
     h4_sig = (
-        h4["p_value"] is not None and h4["p_value"] < 0.001
-        and h4_n2["p_value"] is not None and h4_n2["p_value"] < 0.01
+        h4["p_value"] is not None
+        and h4["p_value"] < 0.001
+        and h4_n2["p_value"] is not None
+        and h4_n2["p_value"] < 0.01
     )
-    print(f"H4 (permutation p on full 9 + n2_subset zvf_risk): "
-          f"p_full9={h4['p_value']}, p_n2={h4_n2['p_value']}, sig={h4_sig}")
+    print(
+        f"H4 (permutation p on full 9 + n2_subset zvf_risk): "
+        f"p_full9={h4['p_value']}, p_n2={h4_n2['p_value']}, sig={h4_sig}"
+    )
 
     # ---- H5: SCAFGRPO is the most-load-bearing method (largest |rel_drop|)
     zvf_lomo = [r for r in lomo if r["metric"] == "zvf_risk"]
@@ -334,33 +375,66 @@ def main():
         key=lambda r: abs(r["rel_drop"]) if r["rel_drop"] is not None else 0,
     )
     h5_scafgrpo = most_load_bearing["dropped_method"] == "scafgrpo"
-    print(f"H5 (SCAFGRPO most load-bearing): {most_load_bearing['dropped_method']} "
-          f"rel_drop={most_load_bearing['rel_drop']}, scafgrpo={h5_scafgrpo}")
+    print(
+        f"H5 (SCAFGRPO most load-bearing): {most_load_bearing['dropped_method']} "
+        f"rel_drop={most_load_bearing['rel_drop']}, scafgrpo={h5_scafgrpo}"
+    )
 
     # ---- H6: add ES to GRPO-family-7 doesn't increase eta^2 by > 0.10
-    h5_grp = next((r for r in family
-                   if r["subset"] == "grpo_family_7" and r["metric"] == "zvf_risk"), None)
-    h5_gres = next((r for r in family
-                    if r["subset"] == "grpo_family+es_8" and r["metric"] == "zvf_risk"), None)
+    h5_grp = next(
+        (r for r in family if r["subset"] == "grpo_family_7" and r["metric"] == "zvf_risk"), None
+    )
+    h5_gres = next(
+        (r for r in family if r["subset"] == "grpo_family+es_8" and r["metric"] == "zvf_risk"), None
+    )
     h6_delta = (h5_gres["eta2_point"] - h5_grp["eta2_point"]) if (h5_grp and h5_gres) else None
     h6_stable = h6_delta is not None and abs(h6_delta) <= 0.10
-    print(f"H6 (add ES to GRPO-family-7): grp7={h5_grp['eta2_point']}, "
-          f"grp7+es={h5_gres['eta2_point']}, delta={h6_delta}, stable={h6_stable}")
+    print(
+        f"H6 (add ES to GRPO-family-7): grp7={h5_grp['eta2_point']}, "
+        f"grp7+es={h5_gres['eta2_point']}, delta={h6_delta}, stable={h6_stable}"
+    )
 
     # ---- write outputs ----
     p1 = os.path.join(OUT, "p5_iter101_zvf130_eta2_full9.tsv")
-    write_tsv(p1, full_table, ["panel", "axis", "metric", "n_rows", "eta2_point",
-                                "eta2_lomo_min", "eta2_lomo_max", "lomo_range"])
+    write_tsv(
+        p1,
+        full_table,
+        [
+            "panel",
+            "axis",
+            "metric",
+            "n_rows",
+            "eta2_point",
+            "eta2_lomo_min",
+            "eta2_lomo_max",
+            "lomo_range",
+        ],
+    )
     p2 = os.path.join(OUT, "p5_iter101_zvf130_eta2_n2subset.tsv")
-    write_tsv(p2, n2_table, ["panel", "axis", "metric", "n_rows", "eta2_point",
-                             "eta2_lomo_min", "eta2_lomo_max", "lomo_range"])
+    write_tsv(
+        p2,
+        n2_table,
+        [
+            "panel",
+            "axis",
+            "metric",
+            "n_rows",
+            "eta2_point",
+            "eta2_lomo_min",
+            "eta2_lomo_max",
+            "lomo_range",
+        ],
+    )
     p3 = os.path.join(OUT, "p5_iter101_zvf130_lomo.tsv")
     write_tsv(p3, lomo, ["dropped_method", "metric", "eta2_full", "eta2_lomo", "rel_drop"])
     p4 = os.path.join(OUT, "p5_iter101_zvf130_family_subset.tsv")
     write_tsv(p4, family, ["subset", "n_methods", "metric", "eta2_point"])
     p5 = os.path.join(OUT, "p5_iter101_zvf130_permutation.tsv")
-    write_tsv(p5, perm_full + perm_n2,
-              ["panel", "metric", "eta2_observed", "null_mean", "p_value", "n_perm"])
+    write_tsv(
+        p5,
+        perm_full + perm_n2,
+        ["panel", "metric", "eta2_observed", "null_mean", "p_value", "n_perm"],
+    )
     print(f"\nwrote {p1}\n      {p2}\n      {p3}\n      {p4}\n      {p5}")
 
     summary = {
@@ -398,8 +472,11 @@ def main():
             "H6_delta": h6_delta,
         },
         "artifacts": {
-            "full9": p1, "n2subset": p2, "lomo": p3,
-            "family_subset": p4, "permutation": p5,
+            "full9": p1,
+            "n2subset": p2,
+            "lomo": p3,
+            "family_subset": p4,
+            "permutation": p5,
         },
     }
     sp = os.path.join(OUT, "p5_iter101_zvf130_summary.json")

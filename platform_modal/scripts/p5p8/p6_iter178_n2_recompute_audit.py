@@ -38,15 +38,15 @@ Hypotheses (falsifiable, with bars):
 Stdlib only (random + json + csv). B=2000 paired bootstrap on the 10 paired
 per-step differences; seed=20260704 (matches the stored seed where possible).
 """
+
 import csv
 import json
 import os
-import glob
 import sys
 from collections import defaultdict
 
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))  # for _stats
-from _stats import paired_boot_pct  # noqa: E402
+from _stats import paired_boot_pct
 
 REG_DIR = "registry/entries"
 N2_METRICS = "platform_hybrid/experiments/results/n2_reward_tensor_resume/n2_metrics.tsv"
@@ -88,8 +88,11 @@ def main():
     for variant in N2_VARIANTS:
         path = os.path.join(REG_DIR, f"delta_{variant}.json")
         entry = json.load(open(path))
-        measured = {m["metric"]: m for m in entry.get("measured", [])
-                    if m.get("panel") == "n2_same_stack_last10"}
+        measured = {
+            m["metric"]: m
+            for m in entry.get("measured", [])
+            if m.get("panel") == "n2_same_stack_last10"
+        }
         cv = {(c["metric"], c["panel"]): c for c in entry.get("claim_validation", [])}
         for metric in N2_METRICS_LIST:
             if metric not in measured:
@@ -97,8 +100,10 @@ def main():
             stored = measured[metric]
             v_steps = n2[metric][variant][-LAST_N:]
             g_steps = grpo[metric][-LAST_N:]
-            diff = [v - g for v, g in zip(v_steps, g_steps)]
-            fresh_delta, fresh_lo, fresh_hi, fresh_n = paired_boot_pct(v_steps, g_steps, N_BOOT, BOOT_SEED)
+            diff = [v - g for v, g in zip(v_steps, g_steps, strict=False)]
+            fresh_delta, fresh_lo, fresh_hi, fresh_n = paired_boot_pct(
+                v_steps, g_steps, N_BOOT, BOOT_SEED
+            )
             stored_delta = float(stored["delta"])
             stored_lo = float(stored["ci_low"])
             stored_hi = float(stored["ci_high"])
@@ -106,10 +111,16 @@ def main():
             fresh_width = fresh_hi - fresh_lo
             width_diff = abs(fresh_width - stored_width)
             width_rel_diff = width_diff / max(abs(fresh_width), 1e-9)
-            dir_stored = "covers_zero" if stored_lo <= 0 <= stored_hi else (
-                "positive" if stored_lo > 0 else "negative")
-            dir_fresh = "covers_zero" if fresh_lo <= 0 <= fresh_hi else (
-                "positive" if fresh_lo > 0 else "negative")
+            dir_stored = (
+                "covers_zero"
+                if stored_lo <= 0 <= stored_hi
+                else ("positive" if stored_lo > 0 else "negative")
+            )
+            dir_fresh = (
+                "covers_zero"
+                if fresh_lo <= 0 <= fresh_hi
+                else ("positive" if fresh_lo > 0 else "negative")
+            )
             point_match = abs(fresh_delta - stored_delta) <= ABS_TOL_POINT
             width_match = width_rel_diff <= REL_TOL_CI_WIDTH
             direction_match = dir_stored == dir_fresh
@@ -120,69 +131,79 @@ def main():
                 cvr = cv[cvkey]
                 obs_delta = float(cvr["observed_delta"])
                 obs_match = abs(obs_delta - stored_delta) <= ABS_TOL_POINT
-                cv_rows.append({
-                    "entry": variant,
-                    "metric": metric,
-                    "panel": "n2_same_stack_last10",
-                    "stored_measured_delta": stored_delta,
-                    "stored_cv_observed_delta": obs_delta,
-                    "abs_diff": abs(obs_delta - stored_delta),
-                    "match_within_1e-6": obs_match,
-                })
+                cv_rows.append(
+                    {
+                        "entry": variant,
+                        "metric": metric,
+                        "panel": "n2_same_stack_last10",
+                        "stored_measured_delta": stored_delta,
+                        "stored_cv_observed_delta": obs_delta,
+                        "abs_diff": abs(obs_delta - stored_delta),
+                        "match_within_1e-6": obs_match,
+                    }
+                )
             else:
-                cv_rows.append({
+                cv_rows.append(
+                    {
+                        "entry": variant,
+                        "metric": metric,
+                        "panel": "n2_same_stack_last10",
+                        "stored_measured_delta": stored_delta,
+                        "stored_cv_observed_delta": None,
+                        "abs_diff": None,
+                        "match_within_1e-6": None,
+                    }
+                )
+
+            per_row.append(
+                {
                     "entry": variant,
                     "metric": metric,
                     "panel": "n2_same_stack_last10",
-                    "stored_measured_delta": stored_delta,
-                    "stored_cv_observed_delta": None,
-                    "abs_diff": None,
-                    "match_within_1e-6": None,
-                })
-
-            per_row.append({
-                "entry": variant,
-                "metric": metric,
-                "panel": "n2_same_stack_last10",
-                "stored_delta": stored_delta,
-                "fresh_delta": fresh_delta,
-                "abs_diff_point": abs(fresh_delta - stored_delta),
-                "point_match_within_1e-6": point_match,
-                "stored_ci_low": stored_lo,
-                "stored_ci_high": stored_hi,
-                "fresh_ci_low": fresh_lo,
-                "fresh_ci_high": fresh_hi,
-                "stored_ci_width": stored_width,
-                "fresh_ci_width": fresh_width,
-                "width_abs_diff": width_diff,
-                "width_rel_diff": round(width_rel_diff, 6),
-                "ci_width_match_within_5pct": width_match,
-                "stored_direction": dir_stored,
-                "fresh_direction": dir_fresh,
-                "direction_match": direction_match,
-                "n_steps": LAST_N,
-                "boot_B": N_BOOT,
-                "boot_seed": BOOT_SEED,
-            })
-            ci_recompute_rows.append({
-                "entry": variant,
-                "metric": metric,
-                "stored_lo": stored_lo,
-                "stored_hi": stored_hi,
-                "fresh_lo": fresh_lo,
-                "fresh_hi": fresh_hi,
-                "stored_covers_zero": dir_stored == "covers_zero",
-                "fresh_covers_zero": dir_fresh == "covers_zero",
-                "cover_zero_match": dir_stored == dir_fresh,
-            })
-            per_entry_agg[variant].append({
-                "metric": metric,
-                "point_match": point_match,
-                "width_match": width_match,
-                "direction_match": direction_match,
-                "fresh_delta": fresh_delta,
-                "stored_delta": stored_delta,
-            })
+                    "stored_delta": stored_delta,
+                    "fresh_delta": fresh_delta,
+                    "abs_diff_point": abs(fresh_delta - stored_delta),
+                    "point_match_within_1e-6": point_match,
+                    "stored_ci_low": stored_lo,
+                    "stored_ci_high": stored_hi,
+                    "fresh_ci_low": fresh_lo,
+                    "fresh_ci_high": fresh_hi,
+                    "stored_ci_width": stored_width,
+                    "fresh_ci_width": fresh_width,
+                    "width_abs_diff": width_diff,
+                    "width_rel_diff": round(width_rel_diff, 6),
+                    "ci_width_match_within_5pct": width_match,
+                    "stored_direction": dir_stored,
+                    "fresh_direction": dir_fresh,
+                    "direction_match": direction_match,
+                    "n_steps": LAST_N,
+                    "boot_B": N_BOOT,
+                    "boot_seed": BOOT_SEED,
+                }
+            )
+            ci_recompute_rows.append(
+                {
+                    "entry": variant,
+                    "metric": metric,
+                    "stored_lo": stored_lo,
+                    "stored_hi": stored_hi,
+                    "fresh_lo": fresh_lo,
+                    "fresh_hi": fresh_hi,
+                    "stored_covers_zero": dir_stored == "covers_zero",
+                    "fresh_covers_zero": dir_fresh == "covers_zero",
+                    "cover_zero_match": dir_stored == dir_fresh,
+                }
+            )
+            per_entry_agg[variant].append(
+                {
+                    "metric": metric,
+                    "point_match": point_match,
+                    "width_match": width_match,
+                    "direction_match": direction_match,
+                    "fresh_delta": fresh_delta,
+                    "stored_delta": stored_delta,
+                }
+            )
 
     # ----- write outputs -----
     cols_row = list(per_row[0].keys())
@@ -212,16 +233,18 @@ def main():
         n_point = sum(1 for r in recs if r["point_match"])
         n_width = sum(1 for r in recs if r["width_match"])
         n_dir = sum(1 for r in recs if r["direction_match"])
-        per_entry.append({
-            "entry": variant,
-            "n_rows": n,
-            "n_point_match_1e-6": n_point,
-            "n_width_match_5pct": n_width,
-            "n_direction_match": n_dir,
-            "point_match_rate": round(n_point / n, 4),
-            "width_match_rate": round(n_width / n, 4),
-            "direction_match_rate": round(n_dir / n, 4),
-        })
+        per_entry.append(
+            {
+                "entry": variant,
+                "n_rows": n,
+                "n_point_match_1e-6": n_point,
+                "n_width_match_5pct": n_width,
+                "n_direction_match": n_dir,
+                "point_match_rate": round(n_point / n, 4),
+                "width_match_rate": round(n_width / n, 4),
+                "direction_match_rate": round(n_dir / n, 4),
+            }
+        )
 
     with open(os.path.join(OUT_DIR, "p6_iter178_n2_recompute_per_entry.tsv"), "w") as f:
         w = csv.DictWriter(f, fieldnames=list(per_entry[0].keys()), delimiter="\t")
@@ -249,7 +272,7 @@ def main():
     def sign_match(observed, predicted):
         if predicted is None:
             return "UNCLAIMED"
-        if predicted.startswith(">=") or predicted.startswith("<="):
+        if predicted.startswith((">=", "<=")):
             # at-least-parity / at-most-parity; treat both "covers 0" and "same side of 0" as ok
             return "NEUTRAL"
         if predicted == ">0" and observed > 0:
@@ -300,7 +323,9 @@ def main():
                 "claim": "claim_validation.observed_delta agrees with measured[].delta within 1e-6",
                 "bar": "12/12 exact",
                 "verdict": "PASS" if n_cv_obs_match == n_cv_total else "FAIL",
-                "evidence": f"{n_cv_obs_match}/{n_cv_total} = {n_cv_obs_match / n_cv_total:.4f}" if n_cv_total else "no claim_validation rows",
+                "evidence": f"{n_cv_obs_match}/{n_cv_total} = {n_cv_obs_match / n_cv_total:.4f}"
+                if n_cv_total
+                else "no claim_validation rows",
             },
             "H3": {
                 "claim": "stored CI width agrees with fresh paired-step bootstrap width within 5% relative",

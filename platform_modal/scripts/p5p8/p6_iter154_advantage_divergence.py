@@ -30,6 +30,7 @@ Outputs (platform_hybrid/experiments/results/p5p8/):
 
 Stdlib + numpy only.
 """
+
 import json
 import pathlib
 import statistics
@@ -107,8 +108,9 @@ def compute_per_step_div():
     rows = []
     arrays = {m: to_advantage_array(load_tensors(m)) for m in METHODS}
     n_steps = arrays["grpo"].shape[0]
-    assert all(arrays[m].shape[0] == n_steps for m in METHODS), \
+    assert all(arrays[m].shape[0] == n_steps for m in METHODS), (
         "all methods must have same step count"
+    )
 
     # Use a shared bin grid spanning the union of all advantage ranges
     all_advs = np.concatenate([arrays[m].reshape(-1) for m in METHODS], axis=0)
@@ -120,18 +122,21 @@ def compute_per_step_div():
         a_grpo = arrays["grpo"][s]
         for m in METHODS:
             if m == "grpo":
-                rows.append({
-                    "method": m, "step": s,
-                    "kl_to_grpo_bits": 0.0,
-                    "js_to_grpo_bits": 0.0,
-                    "wass1_to_grpo": 0.0,
-                    "adv_mean_diff": 0.0,
-                    "adv_var_ratio": 1.0,
-                    "n_advs_grpo": len(a_grpo),
-                    "n_advs_var": len(a_grpo),
-                    "adv_mean_grpo": float(a_grpo.mean()),
-                    "adv_mean_var": float(a_grpo.mean()),
-                })
+                rows.append(
+                    {
+                        "method": m,
+                        "step": s,
+                        "kl_to_grpo_bits": 0.0,
+                        "js_to_grpo_bits": 0.0,
+                        "wass1_to_grpo": 0.0,
+                        "adv_mean_diff": 0.0,
+                        "adv_var_ratio": 1.0,
+                        "n_advs_grpo": len(a_grpo),
+                        "n_advs_var": len(a_grpo),
+                        "adv_mean_grpo": float(a_grpo.mean()),
+                        "adv_mean_var": float(a_grpo.mean()),
+                    }
+                )
                 continue
             a_var = arrays[m][s]
             p_h = hist_binned(a_grpo, edges)
@@ -139,18 +144,21 @@ def compute_per_step_div():
             kl = kl_div(p_h, q_h)
             js = js_div(p_h, q_h)
             w1 = wasserstein_1(a_grpo, a_var)
-            rows.append({
-                "method": m, "step": s,
-                "kl_to_grpo_bits": kl,
-                "js_to_grpo_bits": js,
-                "wass1_to_grpo": w1,
-                "adv_mean_diff": float(a_var.mean() - a_grpo.mean()),
-                "adv_var_ratio": float(a_var.var() / max(a_grpo.var(), 1e-12)),
-                "n_advs_grpo": len(a_grpo),
-                "n_advs_var": len(a_var),
-                "adv_mean_grpo": float(a_grpo.mean()),
-                "adv_mean_var": float(a_var.mean()),
-            })
+            rows.append(
+                {
+                    "method": m,
+                    "step": s,
+                    "kl_to_grpo_bits": kl,
+                    "js_to_grpo_bits": js,
+                    "wass1_to_grpo": w1,
+                    "adv_mean_diff": float(a_var.mean() - a_grpo.mean()),
+                    "adv_var_ratio": float(a_var.var() / max(a_grpo.var(), 1e-12)),
+                    "n_advs_grpo": len(a_grpo),
+                    "n_advs_var": len(a_var),
+                    "adv_mean_grpo": float(a_grpo.mean()),
+                    "adv_mean_var": float(a_var.mean()),
+                }
+            )
     return rows
 
 
@@ -217,14 +225,16 @@ def load_registry_scalar_deltas() -> dict:
         rec = json.loads(p.read_text())
         d = {"measured_rows": []}
         for row in rec.get("measured", []):
-            d["measured_rows"].append({
-                "metric": row["metric"],
-                "panel": row["panel"],
-                "delta": row.get("delta"),
-                "significant": row.get("significant"),
-                "ci_low": row.get("ci_low"),
-                "ci_high": row.get("ci_high"),
-            })
+            d["measured_rows"].append(
+                {
+                    "metric": row["metric"],
+                    "panel": row["panel"],
+                    "delta": row.get("delta"),
+                    "significant": row.get("significant"),
+                    "ci_low": row.get("ci_low"),
+                    "ci_high": row.get("ci_high"),
+                }
+            )
         out[m] = d
     return out
 
@@ -242,28 +252,40 @@ def cross_check(per_step: list[dict], summary: dict, registry: dict) -> list[dic
         last10_var_ratio = float(np.mean([r["adv_var_ratio"] for r in last10]))
 
         # Pull registry's scalar deltas
-        scalar_zvf = next((r for r in registry[m]["measured_rows"]
-                           if r["metric"] == "zvf" and r["panel"] == "n2_same_stack_last10"),
-                          {})
-        scalar_rew = next((r for r in registry[m]["measured_rows"]
-                           if r["metric"] == "reward_mean" and r["panel"] == "n2_same_stack_last10"),
-                          {})
+        scalar_zvf = next(
+            (
+                r
+                for r in registry[m]["measured_rows"]
+                if r["metric"] == "zvf" and r["panel"] == "n2_same_stack_last10"
+            ),
+            {},
+        )
+        scalar_rew = next(
+            (
+                r
+                for r in registry[m]["measured_rows"]
+                if r["metric"] == "reward_mean" and r["panel"] == "n2_same_stack_last10"
+            ),
+            {},
+        )
 
-        rows.append({
-            "method": m,
-            "adv_kl_full40_mean": full_kl,
-            "adv_kl_last10_mean": last10_kl,
-            "adv_w1_last10_mean": last10_w1,
-            "adv_var_ratio_last10_mean": last10_var_ratio,
-            "registry_zvf_delta": scalar_zvf.get("delta"),
-            "registry_zvf_sig": scalar_zvf.get("significant"),
-            "registry_reward_mean_delta": scalar_rew.get("delta"),
-            "registry_reward_mean_sig": scalar_rew.get("significant"),
-            # Interpretation: adv divergence at this magnitude indicates
-            # whether the variant has any *distributional* effect on the same
-            # step (anything > 1e-3 bits is meaningful vs the bin noise floor)
-            "adv_div_inert_flag": last10_kl < 1e-3,
-        })
+        rows.append(
+            {
+                "method": m,
+                "adv_kl_full40_mean": full_kl,
+                "adv_kl_last10_mean": last10_kl,
+                "adv_w1_last10_mean": last10_w1,
+                "adv_var_ratio_last10_mean": last10_var_ratio,
+                "registry_zvf_delta": scalar_zvf.get("delta"),
+                "registry_zvf_sig": scalar_zvf.get("significant"),
+                "registry_reward_mean_delta": scalar_rew.get("delta"),
+                "registry_reward_mean_sig": scalar_rew.get("significant"),
+                # Interpretation: adv divergence at this magnitude indicates
+                # whether the variant has any *distributional* effect on the same
+                # step (anything > 1e-3 bits is meaningful vs the bin noise floor)
+                "adv_div_inert_flag": last10_kl < 1e-3,
+            }
+        )
     return rows
 
 
@@ -271,11 +293,19 @@ def cross_check(per_step: list[dict], summary: dict, registry: dict) -> list[dic
 # 6. Write outputs
 # -------------------------------------------------------------------------
 def write_per_step_tsv(rows: list[dict]) -> pathlib.Path:
-    cols = ["method", "step",
-            "kl_to_grpo_bits", "js_to_grpo_bits", "wass1_to_grpo",
-            "adv_mean_diff", "adv_var_ratio",
-            "n_advs_grpo", "n_advs_var",
-            "adv_mean_grpo", "adv_mean_var"]
+    cols = [
+        "method",
+        "step",
+        "kl_to_grpo_bits",
+        "js_to_grpo_bits",
+        "wass1_to_grpo",
+        "adv_mean_diff",
+        "adv_var_ratio",
+        "n_advs_grpo",
+        "n_advs_var",
+        "adv_mean_grpo",
+        "adv_mean_var",
+    ]
     p = OUT / "p6_iter154_adv_div_per_step.tsv"
     with p.open("w") as f:
         f.write("\t".join(cols) + "\n")
@@ -285,12 +315,18 @@ def write_per_step_tsv(rows: list[dict]) -> pathlib.Path:
 
 
 def write_vs_scalar_tsv(rows: list[dict]) -> pathlib.Path:
-    cols = ["method",
-            "adv_kl_full40_mean", "adv_kl_last10_mean", "adv_w1_last10_mean",
-            "adv_var_ratio_last10_mean",
-            "registry_zvf_delta", "registry_zvf_sig",
-            "registry_reward_mean_delta", "registry_reward_mean_sig",
-            "adv_div_inert_flag"]
+    cols = [
+        "method",
+        "adv_kl_full40_mean",
+        "adv_kl_last10_mean",
+        "adv_w1_last10_mean",
+        "adv_var_ratio_last10_mean",
+        "registry_zvf_delta",
+        "registry_zvf_sig",
+        "registry_reward_mean_delta",
+        "registry_reward_mean_sig",
+        "adv_div_inert_flag",
+    ]
     p = OUT / "p6_iter154_adv_div_vs_scalar.tsv"
     with p.open("w") as f:
         f.write("\t".join(cols) + "\n")
@@ -299,8 +335,7 @@ def write_vs_scalar_tsv(rows: list[dict]) -> pathlib.Path:
     return p
 
 
-def write_summary_json(per_step: list[dict], summary: dict,
-                       cross: list[dict]) -> pathlib.Path:
+def write_summary_json(per_step: list[dict], summary: dict, cross: list[dict]) -> pathlib.Path:
     p = OUT / "p6_iter154_adv_div_summary.json"
     obj = {
         "iter": 154,
@@ -313,26 +348,29 @@ def write_summary_json(per_step: list[dict], summary: dict,
         "per_method_summary": summary,
         "registry_vs_adv_div_cross": cross,
         "headline": {
-            "h1_no_adv_distribution_effect_on_same_stack":
-                all(c["adv_div_inert_flag"] for c in cross),
+            "h1_no_adv_distribution_effect_on_same_stack": all(
+                c["adv_div_inert_flag"] for c in cross
+            ),
             "mean_kl_bits_last10": {
-                m: round(summary[m]["mean_kl_bits"] / 10.0, 6) if False
-                else round(summary[m]["mean_kl_bits"], 6) if False
-                else float(round(
-                    statistics.mean(
-                        r["kl_to_grpo_bits"]
-                        for r in per_step
-                        if r["method"] == m
-                    ), 6))
+                m: round(summary[m]["mean_kl_bits"] / 10.0, 6)
+                if False
+                else round(summary[m]["mean_kl_bits"], 6)
+                if False
+                else float(
+                    round(
+                        statistics.mean(r["kl_to_grpo_bits"] for r in per_step if r["method"] == m),
+                        6,
+                    )
+                )
                 for m in ["aero", "gift", "areal"]
             },
             "mean_kl_bits_full40": {
-                m: float(round(
-                    statistics.mean(
-                        r["kl_to_grpo_bits"]
-                        for r in per_step
-                        if r["method"] == m
-                    ), 6))
+                m: float(
+                    round(
+                        statistics.mean(r["kl_to_grpo_bits"] for r in per_step if r["method"] == m),
+                        6,
+                    )
+                )
                 for m in ["aero", "gift", "areal"]
             },
         },
@@ -355,23 +393,25 @@ def main():
     p3 = write_summary_json(per_step, summary, cross)
 
     # Headline printout
-    print("\n=== iter-154 advantage-distribution divergence (last 10 steps) ===",
-          file=sys.stderr)
+    print("\n=== iter-154 advantage-distribution divergence (last 10 steps) ===", file=sys.stderr)
     for c in cross:
-        print(f"  {c['method']}: "
-              f"KL={c['adv_kl_last10_mean']:.5f} bits  "
-              f"W1={c['adv_w1_last10_mean']:.5f}  "
-              f"var-ratio={c['adv_var_ratio_last10_mean']:.4f}  "
-              f"inert={c['adv_div_inert_flag']}",
-              file=sys.stderr)
-    print("\nregistry scalar deltas vs grpo (n2_same_stack_last10):",
-          file=sys.stderr)
+        print(
+            f"  {c['method']}: "
+            f"KL={c['adv_kl_last10_mean']:.5f} bits  "
+            f"W1={c['adv_w1_last10_mean']:.5f}  "
+            f"var-ratio={c['adv_var_ratio_last10_mean']:.4f}  "
+            f"inert={c['adv_div_inert_flag']}",
+            file=sys.stderr,
+        )
+    print("\nregistry scalar deltas vs grpo (n2_same_stack_last10):", file=sys.stderr)
     for c in cross:
-        print(f"  {c['method']}: "
-              f"zvf Δ={c['registry_zvf_delta']} (sig={c['registry_zvf_sig']}); "
-              f"reward_mean Δ={c['registry_reward_mean_delta']} "
-              f"(sig={c['registry_reward_mean_sig']})",
-              file=sys.stderr)
+        print(
+            f"  {c['method']}: "
+            f"zvf Δ={c['registry_zvf_delta']} (sig={c['registry_zvf_sig']}); "
+            f"reward_mean Δ={c['registry_reward_mean_delta']} "
+            f"(sig={c['registry_reward_mean_sig']})",
+            file=sys.stderr,
+        )
 
     print(f"\n[iter154] wrote{p1}", file=sys.stderr)
     print(f"[iter154] wrote {p2}", file=sys.stderr)

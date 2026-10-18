@@ -136,7 +136,9 @@ def validate_receipt(
         validate_identity(receipt)
     except ValueError as exc:
         raise PreflightGateError(str(exc)) from exc
-    accepted_revisions = protocol.get("accepted_preflight_protocol_sha256", [sha256(DEFAULT_PROTOCOL)])
+    accepted_revisions = protocol.get(
+        "accepted_preflight_protocol_sha256", [sha256(DEFAULT_PROTOCOL)]
+    )
     require(receipt["protocol_sha256"] in accepted_revisions, "unaccepted protocol revision")
     require(
         receipt.get("schema_version") == "aiml-next-preflight-request-v1",
@@ -160,11 +162,13 @@ def validate_receipt(
     cleanup = receipt.get("cleanup")
     require(isinstance(cleanup, dict), f"{path.name}: cleanup receipt missing")
     require(
-        cleanup.get("session_absent_verified") is True or (
+        cleanup.get("session_absent_verified") is True
+        or (
             receipt.get("provider") in ("huggingface_jobs", "kaggle")
             and cleanup.get("compute_terminal_verified") is True
             and cleanup.get("resource_id")
-            and cleanup.get("provider_observation") in ("COMPLETE", "COMPLETED")),
+            and cleanup.get("provider_observation") in ("COMPLETE", "COMPLETED")
+        ),
         f"{path.name}: provider session absence was not verified",
     )
 
@@ -232,8 +236,13 @@ def validate_receipt(
     audit = _validate_audit(payload.get("audit_record"), task, arm, seed)
     try:
         applied_update = validate_counts(audit, arm, run_config)
-        common.validate_manifest(manifest, payload, receipt, protocol=protocol,
-                                 expected_source_files=manifest.get("source_files"))
+        common.validate_manifest(
+            manifest,
+            payload,
+            receipt,
+            protocol=protocol,
+            expected_source_files=manifest.get("source_files"),
+        )
     except (ValueError, RuntimeError, KeyError, TypeError) as exc:
         raise PreflightGateError(str(exc)) from exc
     require(audit == manifest.get("audit_record"), f"{path.name}: payload/manifest audit drift")
@@ -277,12 +286,12 @@ def validate_receipt(
         isinstance(source_files, dict) and isinstance(bindings, dict),
         f"{path.name}: source provenance missing",
     )
-    require(source_files == receipt["scientific_manifest"].get("source_files"),
-            "observed source differs from retained scientific stack")
+    require(
+        source_files == receipt["scientific_manifest"].get("source_files"),
+        "observed source differs from retained scientific stack",
+    )
     for filename, binding_keys in SOURCE_BINDINGS.items():
-        accepted = {
-            bindings[key] for key in binding_keys if isinstance(bindings.get(key), str)
-        }
+        accepted = {bindings[key] for key in binding_keys if isinstance(bindings.get(key), str)}
         require(
             source_files.get(filename) in accepted,
             f"{path.name}: {filename} differs from every frozen source binding",

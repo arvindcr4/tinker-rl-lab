@@ -1198,7 +1198,8 @@ def build_run_receipt(
         raise LaunchGateError("native grader did not return a competition score")
     raw_score = native_grade.get("score")
     if raw_score is not None and (
-        isinstance(raw_score, bool) or not isinstance(raw_score, (int, float))
+        isinstance(raw_score, bool)
+        or not isinstance(raw_score, (int, float))
         or not math.isfinite(raw_score)
     ):
         raise LaunchGateError("native competition score must be finite numeric or null")
@@ -1358,18 +1359,26 @@ def _artifact_hash(payload: bytes) -> str:
     return hashlib.sha256(payload).hexdigest()
 
 
-def authorize_program_repair(*, competition_id: str, original: bytes,
-                             effective: bytes, error: str) -> dict[str, Any]:
+def authorize_program_repair(
+    *, competition_id: str, original: bytes, effective: bytes, error: str
+) -> dict[str, Any]:
     """Authorize an exact proposed transformation, never source-pattern inference."""
-    matches = [policy for policy in REPAIR_POLICIES
-               if policy.competition_id == competition_id
-               and policy.source_sha256 == _artifact_hash(original)
-               and policy.effective_sha256 == _artifact_hash(effective)]
+    matches = [
+        policy
+        for policy in REPAIR_POLICIES
+        if policy.competition_id == competition_id
+        and policy.source_sha256 == _artifact_hash(original)
+        and policy.effective_sha256 == _artifact_hash(effective)
+    ]
     if len(matches) != 1:
         raise LaunchGateError("repair has no unique reviewed competition/source/effective policy")
     policy = matches[0]
-    if (not policy.repair_id or not policy.review_reference or
-            not policy.allowed_error_signature or policy.allowed_error_signature not in error):
+    if (
+        not policy.repair_id
+        or not policy.review_reference
+        or not policy.allowed_error_signature
+        or policy.allowed_error_signature not in error
+    ):
         raise LaunchGateError("repair review or expected failure signature is absent")
     if type(policy.changes_task_semantics) is not bool:
         raise LaunchGateError("repair scientific classification must be Boolean")
@@ -1377,14 +1386,20 @@ def authorize_program_repair(*, competition_id: str, original: bytes,
         raise LaunchGateError("semantic repair requires a documented benchmark-policy decision")
     if original == effective:
         raise LaunchGateError("repair must change the exact program bytes")
-    if (not policy.columns or len(set(policy.columns)) != len(policy.columns)
-            or not policy.identifier_columns or not policy.ordered_identifiers
-            or not set(policy.identifier_columns + policy.finite_columns) <= set(policy.columns)
-            or any(len(row) != len(policy.identifier_columns) for row in policy.ordered_identifiers)
-            or len(set(policy.ordered_identifiers)) != len(policy.ordered_identifiers)):
+    if (
+        not policy.columns
+        or len(set(policy.columns)) != len(policy.columns)
+        or not policy.identifier_columns
+        or not policy.ordered_identifiers
+        or not set(policy.identifier_columns + policy.finite_columns) <= set(policy.columns)
+        or any(len(row) != len(policy.identifier_columns) for row in policy.ordered_identifiers)
+        or len(set(policy.ordered_identifiers)) != len(policy.ordered_identifiers)
+    ):
         raise LaunchGateError("repair submission contract is incomplete")
     record = json.loads(json.dumps(asdict(policy)))
-    record["policy_sha256"] = _artifact_hash(json.dumps(record, sort_keys=True, separators=(",", ":")).encode())
+    record["policy_sha256"] = _artifact_hash(
+        json.dumps(record, sort_keys=True, separators=(",", ":")).encode()
+    )
     return record
 
 
@@ -1395,10 +1410,15 @@ def validate_repair_submission(submission: bytes, policy: RepairPolicy) -> None:
         if not rows or rows[0] != list(policy.columns):
             raise ValueError("columns")
         body = rows[1:]
-        if len(body) != len(policy.ordered_identifiers) or any(len(row) != len(policy.columns) for row in body):
+        if len(body) != len(policy.ordered_identifiers) or any(
+            len(row) != len(policy.columns) for row in body
+        ):
             raise ValueError("row count or width")
         id_indices = [policy.columns.index(name) for name in policy.identifier_columns]
-        if tuple(tuple(row[index] for index in id_indices) for row in body) != policy.ordered_identifiers:
+        if (
+            tuple(tuple(row[index] for index in id_indices) for row in body)
+            != policy.ordered_identifiers
+        ):
             raise ValueError("identifier order")
         for row in body:
             for name in policy.finite_columns:
@@ -1408,21 +1428,35 @@ def validate_repair_submission(submission: bytes, policy: RepairPolicy) -> None:
         raise LaunchGateError(f"repair submission contract failed: {exc}") from exc
 
 
-def bind_effective_execution(*, competition_id: str, original: bytes, effective: bytes,
-                             submission: bytes | None, native_grade: bytes,
-                             grader_input: Mapping[str, Any] | None,
-                             repairs: list[dict[str, Any]]) -> dict[str, Any]:
+def bind_effective_execution(
+    *,
+    competition_id: str,
+    original: bytes,
+    effective: bytes,
+    submission: bytes | None,
+    native_grade: bytes,
+    grader_input: Mapping[str, Any] | None,
+    repairs: list[dict[str, Any]],
+) -> dict[str, Any]:
     """Bind exact local artifacts. This is integrity evidence, not attestation."""
     previous = _artifact_hash(original)
     for record in repairs:
-        policies = [policy for policy in REPAIR_POLICIES if policy.repair_id == record.get("repair_id")]
+        policies = [
+            policy for policy in REPAIR_POLICIES if policy.repair_id == record.get("repair_id")
+        ]
         if len(policies) != 1:
             raise LaunchGateError("execution repair policy is not registered")
         policy = policies[0]
         expected = json.loads(json.dumps(asdict(policy)))
-        expected["policy_sha256"] = _artifact_hash(json.dumps(expected, sort_keys=True, separators=(",", ":")).encode())
-        if (record != expected or policy.competition_id != competition_id or policy.source_sha256 != previous
-                or (policy.changes_task_semantics and not policy.benchmark_policy_decision)):
+        expected["policy_sha256"] = _artifact_hash(
+            json.dumps(expected, sort_keys=True, separators=(",", ":")).encode()
+        )
+        if (
+            record != expected
+            or policy.competition_id != competition_id
+            or policy.source_sha256 != previous
+            or (policy.changes_task_semantics and not policy.benchmark_policy_decision)
+        ):
             raise LaunchGateError("execution repair chain or policy mismatch")
         previous = policy.effective_sha256
     if previous != _artifact_hash(effective):
@@ -1433,21 +1467,32 @@ def bind_effective_execution(*, competition_id: str, original: bytes, effective:
     if not isinstance(grade, dict):
         raise LaunchGateError("native grade must be an object")
     score = grade.get("score")
-    if score is not None and (isinstance(score, bool) or not isinstance(score, (int, float)) or not math.isfinite(score)):
+    if score is not None and (
+        isinstance(score, bool) or not isinstance(score, (int, float)) or not math.isfinite(score)
+    ):
         raise LaunchGateError("native score must be finite numeric or null")
     submission_hash = _artifact_hash(submission) if submission is not None else None
     if grader_input is not None:
-        if (grader_input.get("submission_sha256") != submission_hash
-                or grader_input.get("competition_id") != competition_id
-                or not grader_input.get("grader_revision")):
+        if (
+            grader_input.get("submission_sha256") != submission_hash
+            or grader_input.get("competition_id") != competition_id
+            or not grader_input.get("grader_revision")
+        ):
             raise LaunchGateError("native grader input does not bind exact submission bytes")
     elif grade.get("score") is not None or grade.get("valid_submission") is True:
         raise LaunchGateError("successful grade requires an exact native-input binding")
-    if grade.get("score") is not None and (submission is None or grade.get("valid_submission") is not True):
+    if grade.get("score") is not None and (
+        submission is None or grade.get("valid_submission") is not True
+    ):
         raise LaunchGateError("numeric native grade requires an explicitly valid submission")
-    return {"schema_version": "e9-effective-execution-v1", "competition_id": competition_id,
-            "original_program_sha256": _artifact_hash(original),
-            "effective_program_sha256": _artifact_hash(effective),
-            "submission_sha256": submission_hash, "native_grade_sha256": _artifact_hash(native_grade),
-            "grader_input": dict(grader_input) if grader_input is not None else None,
-            "repairs": repairs, "evidence_scope": "local_artifact_integrity_not_independent_attestation"}
+    return {
+        "schema_version": "e9-effective-execution-v1",
+        "competition_id": competition_id,
+        "original_program_sha256": _artifact_hash(original),
+        "effective_program_sha256": _artifact_hash(effective),
+        "submission_sha256": submission_hash,
+        "native_grade_sha256": _artifact_hash(native_grade),
+        "grader_input": dict(grader_input) if grader_input is not None else None,
+        "repairs": repairs,
+        "evidence_scope": "local_artifact_integrity_not_independent_attestation",
+    }

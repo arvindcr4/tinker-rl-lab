@@ -37,6 +37,7 @@ Registry patches (additive, idempotent, schema-bounded)
   new schema field). The cross-stack matrix is a *derived* aggregate, so
   it lives in the JSON summary rather than the per-stack entry.
 """
+
 import json
 import math
 import pathlib
@@ -45,12 +46,13 @@ import sys
 HERE = pathlib.Path(__file__).resolve().parent
 sys.path.append(str(HERE.parent))
 from _paths import REPO_ROOT
+
 WORKTREE = REPO_ROOT / "platform_hybrid"
 P5P8 = WORKTREE / "experiments" / "results" / "p5p8"
 OUTPUT = P5P8 / "review17_v2"
 
 METHODS = ["grpo", "aero", "areal", "gift"]
-PAIRS = [(a, b) for i, a in enumerate(METHODS) for b in METHODS[i + 1:]]
+PAIRS = [(a, b) for i, a in enumerate(METHODS) for b in METHODS[i + 1 :]]
 N_BOOT = 4000
 SEED = 20260705
 CI_LEVEL = 0.95
@@ -70,15 +72,17 @@ def read_per_step_tsv(path):
     with path.open() as fh:
         header = fh.readline().rstrip("\n").split("\t")
         for line in fh:
-            row = dict(zip(header, line.rstrip("\n").split("\t")))
+            row = dict(zip(header, line.rstrip("\n").split("\t"), strict=False))
             m = row["method"]
             if m in out:
-                out[m].append({
-                    "step": int(row["step"]),
-                    "delta_div": float(row["delta_div"]),
-                    "y_obs": float(row["y_obs"]),
-                    "zvf_obs": float(row["zvf_obs"]),
-                })
+                out[m].append(
+                    {
+                        "step": int(row["step"]),
+                        "delta_div": float(row["delta_div"]),
+                        "y_obs": float(row["y_obs"]),
+                        "zvf_obs": float(row["zvf_obs"]),
+                    }
+                )
     for m in out:
         out[m].sort(key=lambda r: r["step"])
     return out
@@ -91,11 +95,12 @@ def paired_step_bootstrap(values_a, values_b, n_boot, seed):
     p_two_sided, n.
     """
     import random
+
     rng = random.Random(seed)
     n = len(values_a)
     if n < 2 or len(values_b) != n or not all(math.isfinite(x) for x in values_a + values_b):
         raise ValueError("Invalid paired observations")
-    diffs = [a - b for a, b in zip(values_a, values_b)]
+    diffs = [a - b for a, b in zip(values_a, values_b, strict=False)]
     mean_a = sum(values_a) / n
     mean_b = sum(values_b) / n
     mean_diff = mean_a - mean_b
@@ -132,7 +137,7 @@ def load_summary():
     with SUMMARY_TSV.open() as fh:
         header = fh.readline().rstrip("\n").split("\t")
         for line in fh:
-            row = dict(zip(header, line.rstrip("\n").split("\t")))
+            row = dict(zip(header, line.rstrip("\n").split("\t"), strict=False))
             m = row["method"]
             out[m] = {
                 "zvf_obs_mean": float(row["zvf_obs_mean"]),
@@ -152,8 +157,7 @@ def rank_methods(summary):
     """Rank 4 methods by y_obs_mean descending (highest Contrastive Yield first).
     Returns ordered list of (method, y_obs_mean, rank).
     """
-    ordered = sorted(summary.items(),
-                     key=lambda kv: (-kv[1]["y_obs_mean"], kv[0]))
+    ordered = sorted(summary.items(), key=lambda kv: (-kv[1]["y_obs_mean"], kv[0]))
     return [(m, v["y_obs_mean"], i + 1) for i, (m, v) in enumerate(ordered)]
 
 
@@ -166,20 +170,22 @@ def main():
     rows = []
     matrix_records = []
     significant_pairs = {"delta_div": [], "y_obs": [], "zvf_obs": []}
-    for (a, b) in PAIRS:
+    for a, b in PAIRS:
         if a not in per_step or b not in per_step:
             raise ValueError("Missing required method")
         sa = per_step[a]
         sb = per_step[b]
-        if ([r["step"] for r in sa] != [r["step"] for r in sb]
-                or len({r["step"] for r in sa}) != len(sa)):
+        if [r["step"] for r in sa] != [r["step"] for r in sb] or len(
+            {r["step"] for r in sa}
+        ) != len(sa):
             raise ValueError("Incomplete or duplicate step pairing")
         record = {"a": a, "b": b, "n_steps": len(sa)}
         for axis in ("delta_div", "y_obs", "zvf_obs"):
             res = paired_step_bootstrap(
                 [r[axis] for r in sa],
                 [r[axis] for r in sb],
-                n_boot=N_BOOT, seed=SEED,
+                n_boot=N_BOOT,
+                seed=SEED,
             )
             record[f"{axis}_diff"] = round(res["mean_diff"], 6)
             record[f"{axis}_mean_a"] = round(res["mean_a"], 6)
@@ -206,7 +212,8 @@ def main():
             "significant": summary[m]["significant"],
             "p_two_sided": summary[m]["p_two_sided"],
         }
-        for m in METHODS if m != "grpo"
+        for m in METHODS
+        if m != "grpo"
     }
 
     # Audit per-pair verdict by axis
@@ -260,10 +267,7 @@ def main():
             "4B / GSM8K / G=8 / 40 steps), does any GRPO-family pair produce a "
             "contrast-preservation gap that survives the paired-step bootstrap?"
         ),
-        "rankings": [
-            {"method": m, "y_obs_mean": y, "rank": r}
-            for (m, y, r) in rankings
-        ],
+        "rankings": [{"method": m, "y_obs_mean": y, "rank": r} for (m, y, r) in rankings],
         "per_method_summary": summary,
         "variant_vs_grpo": variant_vs_grpo_summary,
         "matrix_records": matrix_records,
@@ -280,40 +284,48 @@ def main():
     OUTPUT_JSON.write_text(json.dumps(summary_json, indent=2))
 
     # Ranking summary (machine-readable per-method rank + per-pair verdict)
-    RANK_JSON.write_text(json.dumps({
-        "audit_date": AUDIT_DATE,
-        "audit_source": AUDIT_SOURCE,
-        "n_methods": len(METHODS),
-        "n_pairs": n_total_pairs,
-        "rankings": [
-            {"method": m, "y_obs_mean": round(y, 6), "rank": r}
-            for (m, y, r) in rankings
-        ],
-        "rank_by_method": rank_by_method,
-        "headlines": summary_json["headlines"],
-        "interpretation": (
-            "n_significant_x = number of (a, b) pairs whose CI on the named "
-            "axis excludes zero under the paired-step bootstrap. A zero in this "
-            "column means every cross-stack delta on this axis is within noise; "
-            "the iter-66 row 77 single-delta_vs_grpo claim is therefore NOT a "
-            "rank-stability claim -- all 4 same-stack variants produce contrast-"
-            "preservation values that overlap at 95%."
-        ),
-    }, indent=2))
+    RANK_JSON.write_text(
+        json.dumps(
+            {
+                "audit_date": AUDIT_DATE,
+                "audit_source": AUDIT_SOURCE,
+                "n_methods": len(METHODS),
+                "n_pairs": n_total_pairs,
+                "rankings": [
+                    {"method": m, "y_obs_mean": round(y, 6), "rank": r} for (m, y, r) in rankings
+                ],
+                "rank_by_method": rank_by_method,
+                "headlines": summary_json["headlines"],
+                "interpretation": (
+                    "n_significant_x = number of (a, b) pairs whose CI on the named "
+                    "axis excludes zero under the paired-step bootstrap. A zero in this "
+                    "column means every cross-stack delta on this axis is within noise; "
+                    "the iter-66 row 77 single-delta_vs_grpo claim is therefore NOT a "
+                    "rank-stability claim -- all 4 same-stack variants produce contrast-"
+                    "preservation values that overlap at 95%."
+                ),
+            },
+            indent=2,
+        )
+    )
 
     # Console output
     print("Per-method ranking by y_obs_mean (Contrastive Yield):")
-    for (m, y, r) in rankings:
+    for m, y, r in rankings:
         print(f"  #{r} {m:6s} y_obs={y:.4f} delta_div={summary[m]['delta_div_mean']:.4f}")
     print()
     print("Per-pair 6x3 matrix (a-b):")
-    print(f"  {'pair':<14s} {'d_dd':>8s} {'lo':>8s} {'hi':>8s} {'sig':>5s} {'d_y':>8s} {'sig':>5s} {'d_z':>8s} {'sig':>5s}")
+    print(
+        f"  {'pair':<14s} {'d_dd':>8s} {'lo':>8s} {'hi':>8s} {'sig':>5s} {'d_y':>8s} {'sig':>5s} {'d_z':>8s} {'sig':>5s}"
+    )
     for r in rows:
-        print(f"  {r['a']+'-'+r['b']:<14s} {r['delta_div_diff']:+8.4f} "
-              f"{r['delta_div_lo']:+8.4f} {r['delta_div_hi']:+8.4f} "
-              f"{'SIG' if r['delta_div_sig'] else 'NS':>5s} "
-              f"{r['y_obs_diff']:+8.4f} {'SIG' if r['y_obs_sig'] else 'NS':>5s} "
-              f"{r['zvf_obs_diff']:+8.4f} {'SIG' if r['zvf_obs_sig'] else 'NS':>5s}")
+        print(
+            f"  {r['a'] + '-' + r['b']:<14s} {r['delta_div_diff']:+8.4f} "
+            f"{r['delta_div_lo']:+8.4f} {r['delta_div_hi']:+8.4f} "
+            f"{'SIG' if r['delta_div_sig'] else 'NS':>5s} "
+            f"{r['y_obs_diff']:+8.4f} {'SIG' if r['y_obs_sig'] else 'NS':>5s} "
+            f"{r['zvf_obs_diff']:+8.4f} {'SIG' if r['zvf_obs_sig'] else 'NS':>5s}"
+        )
     print()
     print(f"  n_pairs total: {n_total_pairs}")
     print(f"  n_sig(delta_div): {n_sig_delta_div}/{n_total_pairs}")

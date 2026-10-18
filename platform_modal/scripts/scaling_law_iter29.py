@@ -32,6 +32,7 @@ Outputs:
   platform_hybrid/experiments/results/scaling_law_iter29_stack_compare.tsv
   figures/scaling_law_iter29.{pdf,png}
 """
+
 from __future__ import annotations
 
 import csv
@@ -43,10 +44,10 @@ from pathlib import Path
 import matplotlib
 
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt  # noqa: E402
-import numpy as np  # noqa: E402
-from scipy.optimize import curve_fit  # noqa: E402
-from scipy.stats import ttest_ind  # noqa: E402
+import matplotlib.pyplot as plt
+import numpy as np
+from scipy.optimize import curve_fit
+from scipy.stats import ttest_ind
 
 REPO = Path(__file__).resolve().parent.parent
 DATA = REPO / "experiments" / "results" / "samestack_ppo_grpo.json"
@@ -291,13 +292,21 @@ def main():
                 "n_lam_at_bound": per_stack["n_lam_at_bound"],
                 "frac_lam_at_bound": round(per_stack["n_lam_at_bound"] / per_stack["n_traces"], 3),
                 "n_sat_supported": per_stack["n_sat_supported"],
-                "frac_sat_supported": round(per_stack["n_sat_supported"] / per_stack["n_traces"], 3),
+                "frac_sat_supported": round(
+                    per_stack["n_sat_supported"] / per_stack["n_traces"], 3
+                ),
                 "n_aicc_best_sat": per_stack["n_aicc_best_sat"],
-                "frac_aicc_best_sat": round(per_stack["n_aicc_best_sat"] / per_stack["n_traces"], 3),
+                "frac_aicc_best_sat": round(
+                    per_stack["n_aicc_best_sat"] / per_stack["n_traces"], 3
+                ),
                 "n_aicc_best_const": per_stack["n_aicc_best_const"],
-                "frac_aicc_best_const": round(per_stack["n_aicc_best_const"] / per_stack["n_traces"], 3),
+                "frac_aicc_best_const": round(
+                    per_stack["n_aicc_best_const"] / per_stack["n_traces"], 3
+                ),
                 "median_lambda": round(float(np.median(per_stack["lam_values"])), 4),
-                "median_t80": round(float(np.median([t for t in per_stack["t80_values"] if math.isfinite(t)])), 4)
+                "median_t80": round(
+                    float(np.median([t for t in per_stack["t80_values"] if math.isfinite(t)])), 4
+                )
                 if any(math.isfinite(t) for t in per_stack["t80_values"])
                 else "inf",
                 "median_n_eff": float(np.median(per_stack["n_eff_values"])),
@@ -305,9 +314,24 @@ def main():
                 "T_star_detectability": round(t_star, 1),
                 "median_n_steps_actual": n_t_med,
                 "T_star_over_steps": round(t_star / n_t_med, 2),
-                "median_resid_sat_vs_heldout": round(float(np.median(per_stack["resid_explained_sat"])), 4),
-                "median_resid_lin_vs_heldout": round(float(np.median(per_stack["resid_explained_lin"])), 4),
-                "median_resid_const_vs_heldout": round(float(np.median([abs(r["heldout_acc"] - r["final_const"]) for r in per_trace_rows if r["algo"] == algo])), 4),
+                "median_resid_sat_vs_heldout": round(
+                    float(np.median(per_stack["resid_explained_sat"])), 4
+                ),
+                "median_resid_lin_vs_heldout": round(
+                    float(np.median(per_stack["resid_explained_lin"])), 4
+                ),
+                "median_resid_const_vs_heldout": round(
+                    float(
+                        np.median(
+                            [
+                                abs(r["heldout_acc"] - r["final_const"])
+                                for r in per_trace_rows
+                                if r["algo"] == algo
+                            ]
+                        )
+                    ),
+                    4,
+                ),
                 "stack_mean_heldout": round(summary[algo]["heldout_mean"], 4),
                 "stack_se_heldout": round(summary[algo]["heldout_se"], 4),
             }
@@ -332,6 +356,7 @@ def main():
         n = a + b + c + d
         r1, r2 = a + b, c + d
         k1, k2 = a + c, b + d
+
         # hypergeometric pmf
         def pmf(x):
             if x < 0 or x > r1 or (k1 - x) < 0 or (k1 - x) > r2:
@@ -340,7 +365,7 @@ def main():
 
         obs = pmf(a)
         tail = 0.0
-        for x in range(0, r1 + 1):
+        for x in range(r1 + 1):
             px = pmf(x)
             if px <= obs + 1e-12:
                 tail += px
@@ -389,7 +414,9 @@ def main():
             "grpo": f"{grpo_ci_excl}/{n_g}",
             "ppo": f"{ppo_ci_excl}/{n_p}",
             "p_value": "n/a",
-            "eep_status": "shared_failure" if grpo_ci_excl == 0 and ppo_ci_excl == 0 else "divergent",
+            "eep_status": "shared_failure"
+            if grpo_ci_excl == 0 and ppo_ci_excl == 0
+            else "divergent",
         },
         {
             "prediction": "F2_paired_heldout_p",
@@ -420,7 +447,7 @@ def main():
     fig, axes = plt.subplots(1, 2, figsize=(10, 4.2), sharey=True)
     palette = {"grpo": "#1f77b4", "ppo": "#d62728"}
     algo_label = {"grpo": "GRPO (same-stack)", "ppo": "PPO (same-stack)"}
-    for ax, algo in zip(axes, ("grpo", "ppo")):
+    for ax, algo in zip(axes, ("grpo", "ppo"), strict=False):
         for r in [x for x in runs if x["algo"] == algo]:
             t = np.array([s["step"] for s in r["step_log"]], dtype=float)
             mr = np.array([s["mean_reward"] for s in r["step_log"]], dtype=float)
@@ -441,12 +468,22 @@ def main():
     # annotate stack-level identifiability
     grpo_bound_str = f"{grpo_bound}/{n_g} lam-at-bound"
     ppo_bound_str = f"{ppo_bound}/{n_p} lam-at-bound"
-    axes[0].annotate(grpo_bound_str, xy=(0.05, 0.92), xycoords="axes fraction",
-                     fontsize=9, color=palette["grpo"],
-                     bbox=dict(boxstyle="round,pad=0.3", fc="white", ec=palette["grpo"], alpha=0.8))
-    axes[1].annotate(ppo_bound_str, xy=(0.05, 0.92), xycoords="axes fraction",
-                     fontsize=9, color=palette["ppo"],
-                     bbox=dict(boxstyle="round,pad=0.3", fc="white", ec=palette["ppo"], alpha=0.8))
+    axes[0].annotate(
+        grpo_bound_str,
+        xy=(0.05, 0.92),
+        xycoords="axes fraction",
+        fontsize=9,
+        color=palette["grpo"],
+        bbox=dict(boxstyle="round,pad=0.3", fc="white", ec=palette["grpo"], alpha=0.8),
+    )
+    axes[1].annotate(
+        ppo_bound_str,
+        xy=(0.05, 0.92),
+        xycoords="axes fraction",
+        fontsize=9,
+        color=palette["ppo"],
+        bbox=dict(boxstyle="round,pad=0.3", fc="white", ec=palette["ppo"], alpha=0.8),
+    )
     fig.suptitle(
         f"Cross-stack saturation identifiability (GSM8K, Qwen2.5-0.5B, 40 steps)\n"
         f"EEP test: Fisher p={p_e1:.3f} (lam-at-bound); "
@@ -461,12 +498,16 @@ def main():
 
     # ---- console rollup ----
     print("=== iter29 cross-stack identifiability ===")
-    print(f"PPO:   {ppo_bound}/{n_p} lambda-at-bound, "
-          f"{ppo_sat}/{n_p} AICc-best-sat, "
-          f"median resid_sat_vs_heldout={np.median(ppo_resid):.4f}")
-    print(f"GRPO:  {grpo_bound}/{n_g} lambda-at-bound, "
-          f"{grpo_sat}/{n_g} AICc-best-sat, "
-          f"median resid_sat_vs_heldout={np.median(grpo_resid):.4f}")
+    print(
+        f"PPO:   {ppo_bound}/{n_p} lambda-at-bound, "
+        f"{ppo_sat}/{n_p} AICc-best-sat, "
+        f"median resid_sat_vs_heldout={np.median(ppo_resid):.4f}"
+    )
+    print(
+        f"GRPO:  {grpo_bound}/{n_g} lambda-at-bound, "
+        f"{grpo_sat}/{n_g} AICc-best-sat, "
+        f"median resid_sat_vs_heldout={np.median(grpo_resid):.4f}"
+    )
     print(f"EEP tests:")
     print(f"  E1 (lam-at-bound rate)         Fisher p={p_e1:.4f}")
     print(f"  E2 (AICc-best sat rate)        Fisher p={p_e2:.4f}")

@@ -13,7 +13,6 @@ Outputs: summary table and suggested paper text
 """
 
 import json
-import os
 import random
 from pathlib import Path
 
@@ -43,46 +42,46 @@ def main():
     results = {}
 
     # GRPO seeds
-    for seed in ['042', '137', '256', '512', '999']:
-        path = result_dir / f'gsm8k_test_grpo_s{seed}_100.json'
+    for seed in ["042", "137", "256", "512", "999"]:
+        path = result_dir / f"gsm8k_test_grpo_s{seed}_100.json"
         if path.exists():
             d = load_result(str(path))
-            s = d['summary']
-            ci = bootstrap_ci(s['correct'], s['attempted'])
-            results[f'GRPO s{seed}'] = {
-                'correct': s['correct'],
-                'total': s['attempted'],
-                'accuracy': s['accuracy'],
-                'ci_lower': ci[0],
-                'ci_upper': ci[1],
+            s = d["summary"]
+            ci = bootstrap_ci(s["correct"], s["attempted"])
+            results[f"GRPO s{seed}"] = {
+                "correct": s["correct"],
+                "total": s["attempted"],
+                "accuracy": s["accuracy"],
+                "ci_lower": ci[0],
+                "ci_upper": ci[1],
             }
 
     # Base model
-    base_path = result_dir / 'gsm8k_test_base_100.json'
+    base_path = result_dir / "gsm8k_test_base_100.json"
     if base_path.exists():
         d = load_result(str(base_path))
-        s = d['summary']
-        ci = bootstrap_ci(s['correct'], s['attempted'])
-        results['Base Qwen3-8B'] = {
-            'correct': s['correct'],
-            'total': s['attempted'],
-            'accuracy': s['accuracy'],
-            'ci_lower': ci[0],
-            'ci_upper': ci[1],
+        s = d["summary"]
+        ci = bootstrap_ci(s["correct"], s["attempted"])
+        results["Base Qwen3-8B"] = {
+            "correct": s["correct"],
+            "total": s["attempted"],
+            "accuracy": s["accuracy"],
+            "ci_lower": ci[0],
+            "ci_upper": ci[1],
         }
 
     # 4B model
-    path_4b = result_dir / 'gsm8k_test_grpo_4B_100.json'
+    path_4b = result_dir / "gsm8k_test_grpo_4B_100.json"
     if path_4b.exists():
         d = load_result(str(path_4b))
-        s = d['summary']
-        ci = bootstrap_ci(s['correct'], s['attempted'])
-        results['GRPO 4B'] = {
-            'correct': s['correct'],
-            'total': s['attempted'],
-            'accuracy': s['accuracy'],
-            'ci_lower': ci[0],
-            'ci_upper': ci[1],
+        s = d["summary"]
+        ci = bootstrap_ci(s["correct"], s["attempted"])
+        results["GRPO 4B"] = {
+            "correct": s["correct"],
+            "total": s["attempted"],
+            "accuracy": s["accuracy"],
+            "ci_lower": ci[0],
+            "ci_upper": ci[1],
         }
 
     if not results:
@@ -98,18 +97,21 @@ def main():
 
     grpo_accs = []
     for name, r in sorted(results.items()):
-        print(f"{name:<20} {r['correct']:>8} {r['total']:>6} {r['accuracy']:>9.1%} [{r['ci_lower']:.1%}, {r['ci_upper']:.1%}]")
-        if name.startswith('GRPO s'):
-            grpo_accs.append(r['accuracy'])
+        print(
+            f"{name:<20} {r['correct']:>8} {r['total']:>6} {r['accuracy']:>9.1%} [{r['ci_lower']:.1%}, {r['ci_upper']:.1%}]"
+        )
+        if name.startswith("GRPO s"):
+            grpo_accs.append(r["accuracy"])
 
     if grpo_accs:
         import statistics
+
         mean_acc = statistics.mean(grpo_accs)
         std_acc = statistics.stdev(grpo_accs) if len(grpo_accs) > 1 else 0
         print("-" * 70)
         print(f"{'GRPO mean (seeds)':<20} {'':>8} {'':>6} {mean_acc:>9.1%} SD={std_acc:.1%}")
 
-    base_acc = results.get('Base Qwen3-8B', {}).get('accuracy')
+    base_acc = results.get("Base Qwen3-8B", {}).get("accuracy")
     if base_acc is not None and grpo_accs:
         delta = mean_acc - base_acc
         print(f"{'Delta (GRPO-Base)':<20} {'':>8} {'':>6} {delta:>+9.1%}")
@@ -137,5 +139,5 @@ def main():
     print(r"\end{table}")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

@@ -219,7 +219,10 @@ def _extract_revision(manifest: Mapping[str, Any]) -> str:
     ]
     if not values:
         raise PortfolioSplitRegistryError("suite manifest is missing an immutable revision")
-    if any(not isinstance(value, str) for value in values) or len({str(value) for value in values}) != 1:
+    if (
+        any(not isinstance(value, str) for value in values)
+        or len({str(value) for value in values}) != 1
+    ):
         raise PortfolioSplitRegistryError("suite manifest has conflicting revision inputs")
     revision = values[0]
     if not isinstance(revision, str) or not PINNED_REVISION.fullmatch(revision):
@@ -303,7 +306,9 @@ def _extract_receipts(manifest: Mapping[str, Any]) -> tuple[dict[str, str], list
             # ``held_out`` is a boolean assertion at the top level, while a
             # receipt mapping may legitimately use the same short key.  Never
             # mistake ``held_out: true`` for a receipt reference.
-            manifest_keys = keys if name != "held_out" else tuple(key for key in keys if key != "held_out")
+            manifest_keys = (
+                keys if name != "held_out" else tuple(key for key in keys if key != "held_out")
+            )
             value = _first_value(manifest, manifest_keys)
         if value is None:
             if name in _RECEIPT_KEYS:
@@ -359,7 +364,11 @@ def _extract_task_hashes(manifest: Mapping[str, Any], role: str) -> tuple[list[s
     value = manifest.get("task_hashes")
     hashes: Any = None
     if isinstance(value, Mapping):
-        for key in (role, "test" if role == PRIMARY_EVAL_ROLE else "train", "primary_eval" if role == PRIMARY_EVAL_ROLE else ""):
+        for key in (
+            role,
+            "test" if role == PRIMARY_EVAL_ROLE else "train",
+            "primary_eval" if role == PRIMARY_EVAL_ROLE else "",
+        ):
             if key and key in value:
                 hashes = value[key]
                 break
@@ -399,7 +408,9 @@ def _extract_task_hashes(manifest: Mapping[str, Any], role: str) -> tuple[list[s
     return result, errors
 
 
-def _extract_aggregate(manifest: Mapping[str, Any], role: str, hashes: Sequence[str]) -> tuple[str, list[str]]:
+def _extract_aggregate(
+    manifest: Mapping[str, Any], role: str, hashes: Sequence[str]
+) -> tuple[str, list[str]]:
     value = manifest.get("aggregate_hashes")
     declared: Any = None
     if isinstance(value, Mapping):
@@ -412,7 +423,12 @@ def _extract_aggregate(manifest: Mapping[str, Any], role: str, hashes: Sequence[
     if declared is None:
         declared = _first_value(
             manifest,
-            ("aggregate_sha256", "task_hash_aggregate", "aggregate_task_hash", f"{role}_aggregate_sha256"),
+            (
+                "aggregate_sha256",
+                "task_hash_aggregate",
+                "aggregate_task_hash",
+                f"{role}_aggregate_sha256",
+            ),
         )
     computed = aggregate_task_hashes(hashes)
     if declared is None:
@@ -542,7 +558,10 @@ def _company_requirements(contract: Mapping[str, Any]) -> list[tuple[str, list[s
     companies = contract.get("companies", contract.get("company_requirements", ()))
     result: list[tuple[str, list[str]]] = []
     if isinstance(companies, Mapping):
-        iterable = [{"name": name, **(entry if isinstance(entry, Mapping) else {"domains": entry})} for name, entry in companies.items()]
+        iterable = [
+            {"name": name, **(entry if isinstance(entry, Mapping) else {"domains": entry})}
+            for name, entry in companies.items()
+        ]
     elif _is_sequence(companies):
         iterable = list(companies)
     else:
@@ -660,7 +679,10 @@ def _portfolio_errors(
 ) -> tuple[list[str], dict[str, Any]]:
     errors: list[str] = []
     by_role = {role: [item for item in normalized if item.get("role") == role] for role in ROLES}
-    unions = {role: sorted({domain for item in by_role[role] for domain in item.get("domains", [])}) for role in ROLES}
+    unions = {
+        role: sorted({domain for item in by_role[role] for domain in item.get("domains", [])})
+        for role in ROLES
+    }
     for role in ROLES:
         missing = sorted(set(declared_domains) - set(unions[role]))
         if missing:
@@ -676,7 +698,9 @@ def _portfolio_errors(
         roles = sorted({role for _, role in item_owners})
         if len(suite_ids) > 1:
             kind = "cross_role" if len(roles) > 1 else "cross_suite"
-            overlaps.append({"kind": kind, "task_hash": digest, "suite_ids": suite_ids, "roles": roles})
+            overlaps.append(
+                {"kind": kind, "task_hash": digest, "suite_ids": suite_ids, "roles": roles}
+            )
             errors.append(f"{kind} task-hash overlap for {digest}")
     overlaps.sort(key=lambda item: (item["kind"], item["task_hash"]))
 
@@ -723,9 +747,7 @@ def validate_portfolio(
         if xlam_preflight is not None:
             try:
                 portfolio_hashes = {
-                    digest
-                    for item in normalized
-                    for digest in item.get("task_hashes", [])
+                    digest for item in normalized for digest in item.get("task_hashes", [])
                 }
                 component = _xlam_preflight(xlam_preflight, portfolio_hashes=portfolio_hashes)
                 all_errors.extend(f"xLAM: {blocker}" for blocker in component.get("blockers", []))
@@ -806,18 +828,26 @@ def _xlam_preflight(
     role_hashes: dict[str, list[str]] = {}
     task_hashes = value.get("task_hashes")
     if isinstance(task_hashes, Mapping):
-        for role_key, aliases in ((TRAIN_ROLE, ("train",)), (PRIMARY_EVAL_ROLE, ("primary_eval", "test"))):
+        for role_key, aliases in (
+            (TRAIN_ROLE, ("train",)),
+            (PRIMARY_EVAL_ROLE, ("primary_eval", "test")),
+        ):
             source = next((task_hashes[key] for key in aliases if key in task_hashes), None)
             if source is not None:
                 role_hashes[role_key] = list(source) if _is_sequence(source) else []
-    for role_key, aliases in ((TRAIN_ROLE, ("train_task_hashes",)), (PRIMARY_EVAL_ROLE, ("test_task_hashes", "primary_eval_task_hashes"))):
+    for role_key, aliases in (
+        (TRAIN_ROLE, ("train_task_hashes",)),
+        (PRIMARY_EVAL_ROLE, ("test_task_hashes", "primary_eval_task_hashes")),
+    ):
         if role_key not in role_hashes:
             source = _first_value(value, aliases)
             if source is not None and _is_sequence(source):
                 role_hashes[role_key] = list(source)
     aggregate_hashes: dict[str, str] = {}
     for role, hashes in role_hashes.items():
-        if not hashes or any(not isinstance(item, str) or not TASK_DIGEST.fullmatch(item) for item in hashes):
+        if not hashes or any(
+            not isinstance(item, str) or not TASK_DIGEST.fullmatch(item) for item in hashes
+        ):
             blockers.append(f"xLAM {role} task hashes are not ordered SHA-256 digests")
             continue
         if len(set(hashes)) != len(hashes):
@@ -877,11 +907,7 @@ def build_registry(
     all_errors = errors + role_errors
     if all_errors:
         raise PortfolioSplitRegistryError("; ".join(dict.fromkeys(all_errors)))
-    portfolio_hashes = {
-        digest
-        for item in normalized
-        for digest in item.get("task_hashes", [])
-    }
+    portfolio_hashes = {digest for item in normalized for digest in item.get("task_hashes", [])}
     component = _xlam_preflight(xlam_preflight, portfolio_hashes=portfolio_hashes)
     contract_gate = _contract_gate(contract)
     held_out = sorted(
@@ -897,7 +923,10 @@ def build_registry(
         "status": status,
         "launch_authorized": False,
         "launches_any_job": False,
-        "suite_counts": {TRAIN_ROLE: len(expected[TRAIN_ROLE]), PRIMARY_EVAL_ROLE: len(expected[PRIMARY_EVAL_ROLE])},
+        "suite_counts": {
+            TRAIN_ROLE: len(expected[TRAIN_ROLE]),
+            PRIMARY_EVAL_ROLE: len(expected[PRIMARY_EVAL_ROLE]),
+        },
         "suite_ids": {role: list(expected[role]) for role in ROLES},
         "declared_domains": list(declared),
         "domain_unions": metadata["domain_unions"],
@@ -905,7 +934,10 @@ def build_registry(
         "held_out_proven_suite_ids": held_out,
         "held_out_proven_count": len(held_out),
         "suites": suites,
-        "cross_suite_overlap": {"overlap_count": len(metadata["overlaps"]), "overlaps": metadata["overlaps"]},
+        "cross_suite_overlap": {
+            "overlap_count": len(metadata["overlaps"]),
+            "overlaps": metadata["overlaps"],
+        },
         "contract_gate": contract_gate,
         "xlam_component_preflight": component,
         "blockers": sorted(set(blockers)),
@@ -941,7 +973,11 @@ def validate_registry(
         if expected_revisions:
             for suite_id, revision in expected_revisions.items():
                 for suite in suites:
-                    if isinstance(suite, Mapping) and suite.get("suite_id") == suite_id and suite.get("revision") != revision:
+                    if (
+                        isinstance(suite, Mapping)
+                        and suite.get("suite_id") == suite_id
+                        and suite.get("revision") != revision
+                    ):
                         return [f"revision drift for suite {suite_id}"]
         rebuilt = build_registry(
             suites,
@@ -985,13 +1021,17 @@ def _load_manifest_files(paths: Sequence[Path]) -> list[Mapping[str, Any]]:
         value = _read_json(path)
         if isinstance(value, Mapping) and _is_sequence(value.get("suites")):
             if any(not isinstance(item, Mapping) for item in value["suites"]):
-                raise PortfolioSplitRegistryError(f"manifest file {path} contains a non-object suite")
+                raise PortfolioSplitRegistryError(
+                    f"manifest file {path} contains a non-object suite"
+                )
             loaded.extend(value["suites"])
         elif isinstance(value, Mapping):
             loaded.append(value)
         elif _is_sequence(value):
             if any(not isinstance(item, Mapping) for item in value):
-                raise PortfolioSplitRegistryError(f"manifest file {path} contains a non-object suite")
+                raise PortfolioSplitRegistryError(
+                    f"manifest file {path} contains a non-object suite"
+                )
             loaded.extend(value)
         else:
             raise PortfolioSplitRegistryError(f"manifest file {path} is not a JSON object/list")
@@ -1043,7 +1083,9 @@ def main(argv: Sequence[str] | None = None) -> int:
         verify_registry(registry, contract=contract)
         return 0
     except PortfolioSplitRegistryError as exc:
-        print(json.dumps({"status": "INVALID", "errors": [str(exc)]}, sort_keys=True), file=sys.stderr)
+        print(
+            json.dumps({"status": "INVALID", "errors": [str(exc)]}, sort_keys=True), file=sys.stderr
+        )
         return 2
 
 

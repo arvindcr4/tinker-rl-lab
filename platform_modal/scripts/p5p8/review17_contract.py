@@ -1,4 +1,5 @@
 """Prospective review17-v2 measurement contract; never infer missing provenance."""
+
 import csv
 import hashlib
 import math
@@ -42,7 +43,7 @@ def bootstrap(values, n_boot, seed):
         raise ValueError("At least two bootstrap draws required")
     rng = np.random.default_rng(seed)
     draws = values[rng.integers(0, len(values), (n_boot, len(values)))].mean(axis=1)
-    lo, hi = np.quantile(draws, [.025, .975])
+    lo, hi = np.quantile(draws, [0.025, 0.975])
     return float(values.mean()), float(lo), float(hi)
 
 
@@ -53,16 +54,32 @@ def paired_result(base, method, n_boot=2000, seed=20260705):
         raise ValueError("Incomplete seed pairing")
     ids = sorted(base)
     delta, lo, hi = bootstrap([method[s] - base[s] for s in ids], n_boot, seed)
-    return {"delta": delta, "ci_low": lo, "ci_high": hi, "n": len(ids),
-            "sample_ids": ids, "significant": lo > 0 or hi < 0,
-            "analysis_version": VERSION,
-            "ci_method": {"method": "paired_seed_percentile_bootstrap", "n_boot": n_boot,
-                          "seed": seed, "ci_level": .95, "rng": "numpy.default_rng"}}
+    return {
+        "delta": delta,
+        "ci_low": lo,
+        "ci_high": hi,
+        "n": len(ids),
+        "sample_ids": ids,
+        "significant": lo > 0 or hi < 0,
+        "analysis_version": VERSION,
+        "ci_method": {
+            "method": "paired_seed_percentile_bootstrap",
+            "n_boot": n_boot,
+            "seed": seed,
+            "ci_level": 0.95,
+            "rng": "numpy.default_rng",
+        },
+    }
 
 
 def validate_interval(lo, hi):
-    return (isinstance(lo, (int, float)) and isinstance(hi, (int, float))
-            and math.isfinite(lo) and math.isfinite(hi) and lo <= hi)
+    return (
+        isinstance(lo, (int, float))
+        and isinstance(hi, (int, float))
+        and math.isfinite(lo)
+        and math.isfinite(hi)
+        and lo <= hi
+    )
 
 
 def source_hash(path):
@@ -96,6 +113,7 @@ def validate_proposals(records, schema_path):
     """Validate the complete staged snapshot before publishing any proposal."""
     import json
     import jsonschema
+
     schema = json.loads(Path(schema_path).read_text())
     if not records:
         raise ValueError("Empty proposal set")

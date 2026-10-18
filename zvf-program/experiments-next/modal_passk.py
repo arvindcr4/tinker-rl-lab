@@ -338,7 +338,7 @@ def evaluate(
             if lora_request
             else llm.generate(prompts, sp)
         )
-        for (_, answer), output in zip(chunk, outs):
+        for (_, answer), output in zip(chunk, outs, strict=False):
             cs.append(sum(int(reward(item.text, answer)) for item in output.outputs))
             for item in output.outputs:
                 total_outs += 1

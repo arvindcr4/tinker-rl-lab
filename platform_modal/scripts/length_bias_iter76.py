@@ -15,13 +15,13 @@ Outputs:
   length_bias_iter76_meta.json
 Headline: GSM8K CoT (3 seeds × 30 steps) and arithmetic-easy (5 × 40) NC.
 """
+
 from __future__ import annotations
 
 import json
 import math
 import os
 import random
-from collections import defaultdict
 from typing import Dict, List, Tuple
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -43,8 +43,7 @@ def load_runs(path: str, task: str) -> List[dict]:
     for r in d["runs"]:
         L = [s["mean_comp_len"] for s in r["step_log"]]
         R = [s["mean_reward"] for s in r["step_log"]]
-        out.append({"task": task, "algo": r["algo"], "seed": r["seed"],
-                    "L": L, "R": R})
+        out.append({"task": task, "algo": r["algo"], "seed": r["seed"], "L": L, "R": R})
     return out
 
 
@@ -55,8 +54,14 @@ def diffs(series: List[float]) -> List[float]:
 def half_life_post_shock(L, dR, H=H_HALFLIFE):
     """Fit |L_{t+h} - L_baseline| = A exp(-ln2 h/τ) for each shock step."""
     if len(L) < H + 5:
-        return {"tau_all": math.nan, "tau_up": math.nan, "tau_dn": math.nan,
-                "n_shocks": 0, "n_up": 0, "n_dn": 0}
+        return {
+            "tau_all": math.nan,
+            "tau_up": math.nan,
+            "tau_dn": math.nan,
+            "n_shocks": 0,
+            "n_up": 0,
+            "n_dn": 0,
+        }
     abs_dr = [abs(x) for x in dR]
     sorted_abs = sorted(abs_dr)
     n = len(sorted_abs)
@@ -69,7 +74,7 @@ def half_life_post_shock(L, dR, H=H_HALFLIFE):
             continue
         if t + H >= len(L):
             break
-        window = L[t + 1: t + H + 1]
+        window = L[t + 1 : t + H + 1]
         baseline = sum(window) / len(window)
         devs = [abs(window[h] - baseline) for h in range(H)]
         A0 = max(devs[0], 1e-6)
@@ -89,7 +94,7 @@ def half_life_post_shock(L, dR, H=H_HALFLIFE):
         sx = sum(xs)
         sy = sum(ys)
         sxx = sum(x * x for x in xs)
-        sxy = sum(x * y for x, y in zip(xs, ys))
+        sxy = sum(x * y for x, y in zip(xs, ys, strict=False))
         denom = n_pts * sxx - sx * sx
         if abs(denom) < 1e-9:
             continue
@@ -112,16 +117,27 @@ def half_life_post_shock(L, dR, H=H_HALFLIFE):
     def m(xs):
         return sum(xs) / len(xs) if xs else math.nan
 
-    return {"tau_all": m(taus_all), "tau_up": m(taus_up),
-            "tau_dn": m(taus_dn), "n_shocks": len(taus_all),
-            "n_up": n_up, "n_dn": n_dn}
+    return {
+        "tau_all": m(taus_all),
+        "tau_up": m(taus_up),
+        "tau_dn": m(taus_dn),
+        "n_shocks": len(taus_all),
+        "n_up": n_up,
+        "n_dn": n_dn,
+    }
 
 
 def damping_ratio(L, dR, H=H_OSC):
     """Fit 2nd-order AR to post-shock L; derive ζ from root discriminant."""
     if len(L) < H + 5:
-        return {"zeta_all": math.nan, "zeta_up": math.nan,
-                "zeta_dn": math.nan, "n_shocks": 0, "n_up": 0, "n_dn": 0}
+        return {
+            "zeta_all": math.nan,
+            "zeta_up": math.nan,
+            "zeta_dn": math.nan,
+            "n_shocks": 0,
+            "n_up": 0,
+            "n_dn": 0,
+        }
     abs_dr = [abs(x) for x in dR]
     threshold = sorted(abs_dr)[int(Q_SHOCK * len(abs_dr))]
     zs_up, zs_dn, zs_all = [], [], []
@@ -129,7 +145,7 @@ def damping_ratio(L, dR, H=H_OSC):
     for t in range(len(dR) - H):
         if abs_dr[t] < threshold or t + H >= len(L):
             continue
-        centred = [L[t + h] - sum(L[t + 1: t + H + 1]) / H for h in range(H + 1)]
+        centred = [L[t + h] - sum(L[t + 1 : t + H + 1]) / H for h in range(H + 1)]
         if len(centred) < 5:
             continue
         A00 = A01 = A11 = b0 = b1 = 0.0
@@ -160,16 +176,23 @@ def damping_ratio(L, dR, H=H_OSC):
             continue
         zs_all.append(zeta)
         if dR[t] > 0:
-            zs_up.append(zeta); n_up += 1
+            zs_up.append(zeta)
+            n_up += 1
         elif dR[t] < 0:
-            zs_dn.append(zeta); n_dn += 1
+            zs_dn.append(zeta)
+            n_dn += 1
 
     def m(xs):
         return sum(xs) / len(xs) if xs else math.nan
 
-    return {"zeta_all": m(zs_all), "zeta_up": m(zs_up),
-            "zeta_dn": m(zs_dn), "n_shocks": len(zs_all),
-            "n_up": n_up, "n_dn": n_dn}
+    return {
+        "zeta_all": m(zs_all),
+        "zeta_up": m(zs_up),
+        "zeta_dn": m(zs_dn),
+        "n_shocks": len(zs_all),
+        "n_up": n_up,
+        "n_dn": n_dn,
+    }
 
 
 def loop_area(L: List[float], R: List[float]) -> float:
@@ -177,7 +200,7 @@ def loop_area(L: List[float], R: List[float]) -> float:
     pairs closed back to the starting point."""
     if len(L) < 3:
         return 0.0
-    pts = list(zip(L, R))
+    pts = list(zip(L, R, strict=False))
     area = 0.0
     for i in range(len(pts)):
         x1, y1 = pts[i]
@@ -186,14 +209,17 @@ def loop_area(L: List[float], R: List[float]) -> float:
     return area / 2.0
 
 
-def paired_bootstrap(values_a: List[float], values_b: List[float],
-                     statistic, B: int = B_BOOT, seed: int = SEED_BOOT
-                     ) -> Tuple[float, float, float, float, float]:
+def paired_bootstrap(
+    values_a: List[float], values_b: List[float], statistic, B: int = B_BOOT, seed: int = SEED_BOOT
+) -> Tuple[float, float, float, float, float]:
     """Paired bootstrap on statistic(diff). Returns (mean_diff, ci_lo, ci_hi,
     p_two_sided, n_eff)."""
     rng = random.Random(seed)
-    pairs = [(a, b) for a, b in zip(values_a, values_b)
-             if not (math.isnan(a) or math.isnan(b))]
+    pairs = [
+        (a, b)
+        for a, b in zip(values_a, values_b, strict=False)
+        if not (math.isnan(a) or math.isnan(b))
+    ]
     if len(pairs) < 2:
         return (math.nan, math.nan, math.nan, math.nan, len(pairs))
     obs = statistic([b - a for a, b in pairs])
@@ -228,42 +254,72 @@ def main() -> None:
         dm = damping_ratio(r["L"], dR)
         area = loop_area(r["L"], r["R"])
         by_key[(r["task"], r["algo"], r["seed"])] = {
-            "task": r["task"], "algo": r["algo"], "seed": r["seed"],
-            "tau_all": hl["tau_all"], "tau_up": hl["tau_up"],
-            "tau_dn": hl["tau_dn"], "n_shocks_hl": hl["n_shocks"],
-            "n_up_hl": hl["n_up"], "n_dn_hl": hl["n_dn"],
-            "zeta_all": dm["zeta_all"], "zeta_up": dm["zeta_up"],
-            "zeta_dn": dm["zeta_dn"], "n_shocks_dm": dm["n_shocks"],
-            "n_up_dm": dm["n_up"], "n_dn_dm": dm["n_dn"],
+            "task": r["task"],
+            "algo": r["algo"],
+            "seed": r["seed"],
+            "tau_all": hl["tau_all"],
+            "tau_up": hl["tau_up"],
+            "tau_dn": hl["tau_dn"],
+            "n_shocks_hl": hl["n_shocks"],
+            "n_up_hl": hl["n_up"],
+            "n_dn_hl": hl["n_dn"],
+            "zeta_all": dm["zeta_all"],
+            "zeta_up": dm["zeta_up"],
+            "zeta_dn": dm["zeta_dn"],
+            "n_shocks_dm": dm["n_shocks"],
+            "n_up_dm": dm["n_up"],
+            "n_dn_dm": dm["n_dn"],
             "loop_area": area,
         }
 
     # per-seed wide TSV
     wide_path = os.path.join(OUT_DIR, "length_bias_iter76_halflife.tsv")
     with open(wide_path, "w") as f:
-        cols = ["task", "algo", "seed", "tau_all", "tau_up", "tau_dn",
-                "n_shocks", "n_up", "n_dn"]
+        cols = ["task", "algo", "seed", "tau_all", "tau_up", "tau_dn", "n_shocks", "n_up", "n_dn"]
         f.write("\t".join(cols) + "\n")
         for k in sorted(by_key):
             v = by_key[k]
-            row = [v["task"], v["algo"], str(v["seed"]),
-                   f"{v['tau_all']:.4f}", f"{v['tau_up']:.4f}",
-                   f"{v['tau_dn']:.4f}", str(v["n_shocks_hl"]),
-                   str(v["n_up_hl"]), str(v["n_dn_hl"])]
+            row = [
+                v["task"],
+                v["algo"],
+                str(v["seed"]),
+                f"{v['tau_all']:.4f}",
+                f"{v['tau_up']:.4f}",
+                f"{v['tau_dn']:.4f}",
+                str(v["n_shocks_hl"]),
+                str(v["n_up_hl"]),
+                str(v["n_dn_hl"]),
+            ]
             f.write("\t".join(row) + "\n")
     print(f"wrote {wide_path}", flush=True)
 
     damp_path = os.path.join(OUT_DIR, "length_bias_iter76_damping.tsv")
     with open(damp_path, "w") as f:
-        cols = ["task", "algo", "seed", "zeta_all", "zeta_up", "zeta_dn",
-                "n_shocks", "n_up", "n_dn"]
+        cols = [
+            "task",
+            "algo",
+            "seed",
+            "zeta_all",
+            "zeta_up",
+            "zeta_dn",
+            "n_shocks",
+            "n_up",
+            "n_dn",
+        ]
         f.write("\t".join(cols) + "\n")
         for k in sorted(by_key):
             v = by_key[k]
-            row = [v["task"], v["algo"], str(v["seed"]),
-                   f"{v['zeta_all']:.4f}", f"{v['zeta_up']:.4f}",
-                   f"{v['zeta_dn']:.4f}", str(v["n_shocks_dm"]),
-                   str(v["n_up_dm"]), str(v["n_dn_dm"])]
+            row = [
+                v["task"],
+                v["algo"],
+                str(v["seed"]),
+                f"{v['zeta_all']:.4f}",
+                f"{v['zeta_up']:.4f}",
+                f"{v['zeta_dn']:.4f}",
+                str(v["n_shocks_dm"]),
+                str(v["n_up_dm"]),
+                str(v["n_dn_dm"]),
+            ]
             f.write("\t".join(row) + "\n")
     print(f"wrote {damp_path}", flush=True)
 
@@ -273,49 +329,70 @@ def main() -> None:
         f.write("\t".join(cols) + "\n")
         for k in sorted(by_key):
             v = by_key[k]
-            row = [v["task"], v["algo"], str(v["seed"]),
-                   f"{v['loop_area']:.4f}"]
+            row = [v["task"], v["algo"], str(v["seed"]), f"{v['loop_area']:.4f}"]
             f.write("\t".join(row) + "\n")
     print(f"wrote {loop_path}", flush=True)
 
     # summary: paired bootstrap Dr.GRPO - GRPO per task and statistic
     summary_rows = []
     for task in ("gsm8k_cot", "arith_easy"):
-        seeds_g = sorted({k[2] for k in by_key
-                          if k[0] == task and k[1] == "grpo"})
-        seeds_d = sorted({k[2] for k in by_key
-                          if k[0] == task and k[1] == "dr_grpo"})
+        seeds_g = sorted({k[2] for k in by_key if k[0] == task and k[1] == "grpo"})
+        seeds_d = sorted({k[2] for k in by_key if k[0] == task and k[1] == "dr_grpo"})
         common = [s for s in seeds_g if s in seeds_d]
-        for stat_name, stat_key in [("tau_all", "tau_all"),
-                                     ("tau_up", "tau_up"),
-                                     ("tau_dn", "tau_dn"),
-                                     ("zeta_all", "zeta_all"),
-                                     ("zeta_up", "zeta_up"),
-                                     ("zeta_dn", "zeta_dn"),
-                                     ("loop_area", "loop_area")]:
-            grpo_vals = [by_key[(task, "grpo", s)][stat_key]for s in common]
+        for stat_name, stat_key in [
+            ("tau_all", "tau_all"),
+            ("tau_up", "tau_up"),
+            ("tau_dn", "tau_dn"),
+            ("zeta_all", "zeta_all"),
+            ("zeta_up", "zeta_up"),
+            ("zeta_dn", "zeta_dn"),
+            ("loop_area", "loop_area"),
+        ]:
+            grpo_vals = [by_key[(task, "grpo", s)][stat_key] for s in common]
             dr_vals = [by_key[(task, "dr_grpo", s)][stat_key] for s in common]
             obs, lo, hi, p, n_eff = paired_bootstrap(
-                grpo_vals, dr_vals, statistic=lambda xs: sum(xs) / len(xs))
-            summary_rows.append({
-                "task": task, "stat": stat_name,
-                "grpo_mean": sum(grpo_vals) / len(grpo_vals) if grpo_vals else math.nan,
-                "drgrpo_mean": sum(dr_vals) / len(dr_vals) if dr_vals else math.nan,
-                "diff_dr_minus_gr": obs,
-                "ci_lo": lo, "ci_hi": hi, "p_two_sided": p, "n_seeds": n_eff,
-            })
+                grpo_vals, dr_vals, statistic=lambda xs: sum(xs) / len(xs)
+            )
+            summary_rows.append(
+                {
+                    "task": task,
+                    "stat": stat_name,
+                    "grpo_mean": sum(grpo_vals) / len(grpo_vals) if grpo_vals else math.nan,
+                    "drgrpo_mean": sum(dr_vals) / len(dr_vals) if dr_vals else math.nan,
+                    "diff_dr_minus_gr": obs,
+                    "ci_lo": lo,
+                    "ci_hi": hi,
+                    "p_two_sided": p,
+                    "n_seeds": n_eff,
+                }
+            )
 
     sum_path = os.path.join(OUT_DIR, "length_bias_iter76_summary.tsv")
     with open(sum_path, "w") as f:
-        cols = ["task", "stat", "grpo_mean", "drgrpo_mean", "diff_dr_minus_gr",
-                "ci_lo", "ci_hi", "p_two_sided", "n_seeds"]
+        cols = [
+            "task",
+            "stat",
+            "grpo_mean",
+            "drgrpo_mean",
+            "diff_dr_minus_gr",
+            "ci_lo",
+            "ci_hi",
+            "p_two_sided",
+            "n_seeds",
+        ]
         f.write("\t".join(cols) + "\n")
         for r in summary_rows:
-            row = [r["task"], r["stat"], f"{r['grpo_mean']:.4f}",
-                   f"{r['drgrpo_mean']:.4f}",
-                   f"{r['diff_dr_minus_gr']:.4f}",
-                   f"{r['ci_lo']:.4f}", f"{r['ci_hi']:.4f}",
-                   f"{r['p_two_sided']:.4f}", str(int(r["n_seeds"]))]
+            row = [
+                r["task"],
+                r["stat"],
+                f"{r['grpo_mean']:.4f}",
+                f"{r['drgrpo_mean']:.4f}",
+                f"{r['diff_dr_minus_gr']:.4f}",
+                f"{r['ci_lo']:.4f}",
+                f"{r['ci_hi']:.4f}",
+                f"{r['p_two_sided']:.4f}",
+                str(int(r["n_seeds"])),
+            ]
             f.write("\t".join(row) + "\n")
     print(f"wrote {sum_path}", flush=True)
 

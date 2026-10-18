@@ -33,13 +33,12 @@ Usage
 Graceful degradation: unknown/missing keys print a schema-expected-vs-found
 diff on stderr and the step is skipped (not fatal).
 """
+
 from __future__ import annotations
 
 import argparse
-import io
 import json
 import math
-import os
 import sys
 import tempfile
 from pathlib import Path
@@ -73,18 +72,21 @@ def zvf(rewards_2d, eps: float = DEFAULT_EPS) -> float:
     if not math.isfinite(eps) or eps < 0:
         raise ValueError("epsilon must be finite and nonnegative")
     groups = validated_groups(rewards_2d)
-    variances = [sum((v-sum(row)/len(row))**2 for v in row)/(len(row)-1) for row in groups]
-    return sum(v <= eps for v in variances)/len(groups)
+    variances = [
+        sum((v - sum(row) / len(row)) ** 2 for v in row) / (len(row) - 1) for row in groups
+    ]
+    return sum(v <= eps for v in variances) / len(groups)
 
 
 def batch_reward_mean(rewards_2d) -> float:
-    groups=validated_groups(rewards_2d)
-    return sum(sum(row) for row in groups)/sum(map(len,groups))
+    groups = validated_groups(rewards_2d)
+    return sum(sum(row) for row in groups) / sum(map(len, groups))
 
 
 # ---------------------------------------------------------------------------
 # Log readers
 # ---------------------------------------------------------------------------
+
 
 def _iter_json_records(log_path: Path) -> Iterator[Dict[str, Any]]:
     """Yield dict records from a JSON or JSONL file.
@@ -147,16 +149,13 @@ def _iter_json_records(log_path: Path) -> Iterator[Dict[str, Any]]:
 # Schema discovery helper
 # ---------------------------------------------------------------------------
 
+
 def _schema_diff(expected: Iterable[str], record: Dict[str, Any]) -> str:
     expected_set = set(expected)
     found = set(_flatten_keys(record))
     missing = sorted(expected_set - found)
     extra = sorted(found - expected_set)[:8]
-    return (
-        f"expected={sorted(expected_set)}"
-        f" missing={missing}"
-        f" sample_found={extra}"
-    )
+    return f"expected={sorted(expected_set)} missing={missing} sample_found={extra}"
 
 
 def _flatten_keys(obj: Any, prefix: str = "") -> Iterator[str]:
@@ -182,12 +181,16 @@ def _get_nested(obj: Any, dotted: str, default: Any = None) -> Any:
 def _as_float_list(x: Any) -> List[float]:
     if x is None:
         return []
-    if not isinstance(x,(list,tuple)):
+    if not isinstance(x, (list, tuple)):
         raise ValueError("expected explicit individual reward list")
-    values=[]
+    values = []
     for item in x:
-        value=item.get("reward") if isinstance(item,dict) else item
-        if isinstance(value,bool) or not isinstance(value,(int,float)) or not math.isfinite(value):
+        value = item.get("reward") if isinstance(item, dict) else item
+        if (
+            isinstance(value, bool)
+            or not isinstance(value, (int, float))
+            or not math.isfinite(value)
+        ):
             raise ValueError("malformed/nonfinite reward; cannot drop observations")
         values.append(float(value))
     return values
@@ -196,6 +199,7 @@ def _as_float_list(x: Any) -> List[float]:
 # ---------------------------------------------------------------------------
 # Per-framework parsers
 # ---------------------------------------------------------------------------
+
 
 def parse_trl(record: Dict[str, Any]) -> Optional[Tuple[int, List[List[float]]]]:
     """TRL GRPOTrainer log row.
@@ -212,28 +216,24 @@ def parse_trl(record: Dict[str, Any]) -> Optional[Tuple[int, List[List[float]]]]
     rewards = _as_float_list(rewards)
     if not rewards:
         print(
-            f"[zvf][trl] schema miss @ step={step}: {_schema_diff(['rewards','group_size'], record)}",
+            f"[zvf][trl] schema miss @ step={step}: {_schema_diff(['rewards', 'group_size'], record)}",
             file=sys.stderr,
         )
         return None
     group_size = (
-        record.get("group_size")
-        or record.get("num_generations")
-        or record.get("num_rollouts")
+        record.get("group_size") or record.get("num_generations") or record.get("num_rollouts")
     )
     batch_size = record.get("batch_size") or record.get("prompts_per_batch")
     if group_size is None:
         if not batch_size or len(rewards) % int(batch_size):
             raise ValueError("missing or incompatible group identity")
         group_size = len(rewards) // int(batch_size)
-    if isinstance(group_size,bool) or int(group_size)!=group_size or int(group_size)<2:
+    if isinstance(group_size, bool) or int(group_size) != group_size or int(group_size) < 2:
         raise ValueError("invalid group size")
-    group_size=int(group_size)
-    if len(rewards)%group_size:
+    group_size = int(group_size)
+    if len(rewards) % group_size:
         raise ValueError("incomplete reward group; refusing truncation")
-    groups = [
-        rewards[i : i + group_size] for i in range(0, len(rewards), group_size)
-    ]
+    groups = [rewards[i : i + group_size] for i in range(0, len(rewards), group_size)]
     return int(step), groups
 
 
@@ -256,19 +256,19 @@ def parse_tinker(record: Dict[str, Any]) -> Optional[Tuple[int, List[List[float]
             return int(step), [list(map(float, row)) for row in gr]
     if not isinstance(rollouts, list) or not rollouts:
         print(
-            f"[zvf][tinker] schema miss @ step={step}: {_schema_diff(['rollouts.reward','rollouts.group_id'], record)}",
+            f"[zvf][tinker] schema miss @ step={step}: {_schema_diff(['rollouts.reward', 'rollouts.group_id'], record)}",
             file=sys.stderr,
         )
         return None
     by_group: Dict[Any, List[float]] = {}
     for r in rollouts:
-        if not isinstance(r,dict) or not ("group_id" in r or "prompt_id" in r):
+        if not isinstance(r, dict) or not ("group_id" in r or "prompt_id" in r):
             raise ValueError("rollout lacks group identity")
-        gid=r.get("group_id",r.get("prompt_id"))
+        gid = r.get("group_id", r.get("prompt_id"))
         if gid is None:
             raise ValueError("null group identity")
-        reward=_as_float_list([r.get("reward")])[0]
-        by_group.setdefault(gid,[]).append(reward)
+        reward = _as_float_list([r.get("reward")])[0]
+        by_group.setdefault(gid, []).append(reward)
     if not by_group:
         return None
     # preserve deterministic order by first-seen group id
@@ -291,7 +291,7 @@ def parse_openrlhf(record: Dict[str, Any]) -> Optional[Tuple[int, List[List[floa
     if isinstance(scores, list) and isinstance(indices, list) and scores and indices:
         if len(scores) == len(indices):
             by_group: Dict[Any, List[float]] = {}
-            for pid, s in zip(indices, scores):
+            for pid, s in zip(indices, scores, strict=False):
                 try:
                     by_group.setdefault(pid, []).append(float(s))
                 except Exception:
@@ -318,7 +318,7 @@ def parse_openrlhf(record: Dict[str, Any]) -> Optional[Tuple[int, List[List[floa
             groups = [by_group[k] for k in list(by_group.keys())]
             return int(step), groups
     print(
-        f"[zvf][openrlhf] schema miss @ step={step}: {_schema_diff(['reward_score','prompt_index'], record)}",
+        f"[zvf][openrlhf] schema miss @ step={step}: {_schema_diff(['reward_score', 'prompt_index'], record)}",
         file=sys.stderr,
     )
     return None
@@ -342,7 +342,7 @@ def parse_verl(record: Dict[str, Any]) -> Optional[Tuple[int, List[List[float]]]
     if isinstance(uids, list) and isinstance(rewards, list) and uids and rewards:
         if len(uids) == len(rewards):
             by_group: Dict[Any, List[float]] = {}
-            for u, r in zip(uids, rewards):
+            for u, r in zip(uids, rewards, strict=False):
                 try:
                     by_group.setdefault(u, []).append(float(r))
                 except Exception:
@@ -373,7 +373,7 @@ def parse_verl(record: Dict[str, Any]) -> Optional[Tuple[int, List[List[float]]]
             groups = [by_group[k] for k in list(by_group.keys())]
             return int(step), groups
     print(
-        f"[zvf][verl] schema miss @ step={step}: {_schema_diff(['uid','data_source/reward'], record)}",
+        f"[zvf][verl] schema miss @ step={step}: {_schema_diff(['uid', 'data_source/reward'], record)}",
         file=sys.stderr,
     )
     return None
@@ -391,15 +391,14 @@ PARSERS = {
 # Pipeline
 # ---------------------------------------------------------------------------
 
+
 def compute_time_series(
     records: Iterable[Dict[str, Any]],
     framework: str,
     epsilon: float = DEFAULT_EPS,
 ) -> List[Dict[str, Any]]:
     if framework not in PARSERS:
-        raise ValueError(
-            f"unknown framework {framework!r}; choose from {SUPPORTED_FRAMEWORKS}"
-        )
+        raise ValueError(f"unknown framework {framework!r}; choose from {SUPPORTED_FRAMEWORKS}")
     parser = PARSERS[framework]
     rows: List[Dict[str, Any]] = []
     for rec in records:
@@ -409,8 +408,8 @@ def compute_time_series(
         step, groups = parsed
         if not groups:
             continue
-        groups=validated_groups(groups)
-        sizes=[len(g) for g in groups]
+        groups = validated_groups(groups)
+        sizes = [len(g) for g in groups]
         rows.append(
             {
                 "step": int(step),
@@ -443,6 +442,7 @@ def default_out_path(log_path: Path, framework: str) -> Path:
 # Self-test
 # ---------------------------------------------------------------------------
 
+
 def _self_test() -> int:
     errors: List[str] = []
 
@@ -459,7 +459,7 @@ def _self_test() -> int:
         errors.append(f"trl rows={len(rows)} != 2")
     else:
         if abs(rows[0]["zvf"] - 2 / 3) > 1e-9:
-            errors.append(f"trl step0 zvf={rows[0]['zvf']} expected {2/3}")
+            errors.append(f"trl step0 zvf={rows[0]['zvf']} expected {2 / 3}")
         if rows[0]["n_groups"] != 3 or rows[0]["K"] != 2:
             errors.append(f"trl shape wrong: {rows[0]}")
 
@@ -547,6 +547,7 @@ def _self_test() -> int:
 # ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------
+
 
 def main(argv: Optional[List[str]] = None) -> int:
     p = argparse.ArgumentParser(

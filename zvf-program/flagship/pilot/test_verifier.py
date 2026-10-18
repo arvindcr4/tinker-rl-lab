@@ -19,6 +19,7 @@ from pilot.verifier import (
     _verify_wandb_run,
     verify_preflight_log,
 )
+import pytest
 
 
 class FakeWandbApi:
@@ -42,15 +43,15 @@ class VerifierTests(unittest.TestCase):
             {"entity": "entity", "project": "project", "run_id": "run-id"},
             label="unit",
         )
-        self.assertEqual(run.id, "run-id")
-        self.assertEqual(api.requested, "entity/project/run-id")
-        with self.assertRaisesRegex(VerificationError, "not finished"):
+        assert run.id == "run-id"
+        assert api.requested == "entity/project/run-id"
+        with pytest.raises(VerificationError, match="not finished"):
             _verify_wandb_run(
                 FakeWandbApi("running"),
                 {"entity": "entity", "project": "project", "run_id": "run-id"},
                 label="unit",
             )
-        with self.assertRaisesRegex(VerificationError, "incomplete"):
+        with pytest.raises(VerificationError, match="incomplete"):
             _verify_wandb_run(api, {"run_id": "run-id"}, label="unit")
 
     def test_file_verifier_rejects_tampering(self) -> None:
@@ -61,7 +62,7 @@ class VerifierTests(unittest.TestCase):
             digest = sha256_file(path)
             _verify_files(root, {"artifact": digest}, label="unit")
             path.write_bytes(b"wrong")
-            with self.assertRaisesRegex(VerificationError, "hash mismatch"):
+            with pytest.raises(VerificationError, match="hash mismatch"):
                 _verify_files(root, {"artifact": digest}, label="unit")
 
     def test_remote_corpus_checkpoint_verifier_hashes_entire_prefix(self) -> None:
@@ -145,9 +146,9 @@ class VerifierTests(unittest.TestCase):
                     seed=seed,
                     token="token",
                 )
-                self.assertEqual(verified["completed_groups"], 20)
+                assert verified["completed_groups"] == 20
                 (root / "groups/group-019.pt").write_bytes(b"tampered")
-                with self.assertRaisesRegex(VerificationError, "remote hash mismatch"):
+                with pytest.raises(VerificationError, match="remote hash mismatch"):
                     _verify_corpus_checkpoint_remote(
                         repo="private/repo",
                         revision="b" * 40,
@@ -196,11 +197,11 @@ class VerifierTests(unittest.TestCase):
             receipt = verify_preflight_log(
                 protocol=self.protocol, log_path=log, output_path=acceptance
             )
-            self.assertEqual(receipt["status"], "accepted")
-            self.assertTrue(acceptance.is_file())
+            assert receipt["status"] == "accepted"
+            assert acceptance.is_file()
             smoke["accelerator"] = "NVIDIA L4"
             log.write_text(SMOKE_PREFIX + __import__("json").dumps(smoke) + "\n")
-            with self.assertRaisesRegex(VerificationError, "A100"):
+            with pytest.raises(VerificationError, match="A100"):
                 verify_preflight_log(protocol=self.protocol, log_path=log)
             smoke["accelerator"] = "NVIDIA A100-SXM4-40GB"
             for field, value in (
@@ -212,7 +213,7 @@ class VerifierTests(unittest.TestCase):
                 with self.subTest(field=field, value=value):
                     smoke["receipt"][field] = value
                     log.write_text(SMOKE_PREFIX + __import__("json").dumps(smoke) + "\n")
-                    with self.assertRaisesRegex(VerificationError, "outside"):
+                    with pytest.raises(VerificationError, match="outside"):
                         verify_preflight_log(protocol=self.protocol, log_path=log)
                     smoke["receipt"][field] = 0.9 if field == "gradient_cosine" else 1.0
 

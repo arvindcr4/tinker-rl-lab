@@ -19,21 +19,22 @@ plus a stderr warning, so it can be run in partial-data environments.
 
 Run:  python3 experiments/survival_analysis.py
 """
+
 from __future__ import annotations
 
 import sys as _sys
 from pathlib import Path as _Path
-_sys.path.insert(0, str(next(p for p in _Path(__file__).resolve().parents if (p / "platform_hybrid").is_dir())))
+
+_sys.path.insert(
+    0, str(next(p for p in _Path(__file__).resolve().parents if (p / "platform_hybrid").is_dir()))
+)
 from platform_hybrid.experiments.research_contracts import EvidenceUnavailable
 
 
 import csv
-import glob
 import json
 import math
-import os
 import statistics
-import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Dict, Iterable, List, Optional, Tuple
@@ -120,8 +121,12 @@ def _coerce_record(raw: dict) -> Optional[dict]:
     algo = raw.get("method") or raw.get("algorithm") or raw.get("algo") or "GRPO"
     seed = raw.get("seed")
     steps = raw.get("steps_completed") or raw.get("steps") or raw.get("num_steps")
-    last10 = _safe_float(next((raw[k] for k in ("last10_avg", "last10", "last_10") if raw.get(k) is not None), None))
-    peak = _safe_float(next((raw[k] for k in ("peak_reward", "peak") if raw.get(k) is not None), None))
+    last10 = _safe_float(
+        next((raw[k] for k in ("last10_avg", "last10", "last_10") if raw.get(k) is not None), None)
+    )
+    peak = _safe_float(
+        next((raw[k] for k in ("peak_reward", "peak") if raw.get(k) is not None), None)
+    )
     # TODO: Include evaluation on held-out test sets. The paper relies entirely on
     # training reward (last10), which fails to rigorously prove generalized reasoning uplift.
     status = (raw.get("status") or "").lower()
@@ -235,8 +240,12 @@ def load_all_runs() -> List[dict]:
             # so path-only dedup double-counts every run and inflates both n and
             # significance (e.g. F3 reported n=40 for 20 real runs, p=6.7e-11).
             dedup_key = (
-                rec["framework"], rec["model"], rec["task"], rec["algo"],
-                rec["seed"], rec["steps"],
+                rec["framework"],
+                rec["model"],
+                rec["task"],
+                rec["algo"],
+                rec["seed"],
+                rec["steps"],
                 round(rec["last10"], 6) if rec["last10"] is not None else None,
             )
             if dedup_key in seen_records:
@@ -255,9 +264,7 @@ def group_runs(records: List[dict]) -> List[RunGroup]:
         key = (r["framework"], r["model"], r["task"], r["algo"])
         g = groups.get(key)
         if g is None:
-            g = RunGroup(
-                framework=r["framework"], model=r["model"], task=r["task"], algo=r["algo"]
-            )
+            g = RunGroup(framework=r["framework"], model=r["model"], task=r["task"], algo=r["algo"])
             groups[key] = g
         if r["seed"] is not None:
             g.seeds.append(int(r["seed"]))
@@ -430,7 +437,9 @@ def _tierab_runs(groups: List[RunGroup]) -> List[RunGroup]:
 
 
 def _f1_zvf_diagnostic(groups):
-    raise EvidenceUnavailable("_f1_zvf_diagnostic lacks required measured ZVF/matched configuration contributor identities")
+    raise EvidenceUnavailable(
+        "_f1_zvf_diagnostic lacks required measured ZVF/matched configuration contributor identities"
+    )
 
 
 def _f2_trainability(groups: List[RunGroup]):
@@ -450,11 +459,15 @@ def _f2_trainability(groups: List[RunGroup]):
 
 
 def _f3_ppo_vs_grpo(groups):
-    raise EvidenceUnavailable("_f3_ppo_vs_grpo lacks required measured ZVF/matched configuration contributor identities")
+    raise EvidenceUnavailable(
+        "_f3_ppo_vs_grpo lacks required measured ZVF/matched configuration contributor identities"
+    )
 
 
 def _f4_framework_gap(groups):
-    raise EvidenceUnavailable("_f4_framework_gap lacks required measured ZVF/matched configuration contributor identities")
+    raise EvidenceUnavailable(
+        "_f4_framework_gap lacks required measured ZVF/matched configuration contributor identities"
+    )
 
 
 def _f5_frontier_stability(groups: List[RunGroup]):
@@ -469,15 +482,19 @@ def _f5_frontier_stability(groups: List[RunGroup]):
         m = g.model.lower()
         # Heuristic: size tokens in model name.
         is_frontier = any(
-            tag in m
-            for tag in ("70b", "120b", "32b", "27b", "235b", "397b", "671b", "v3.1")
+            tag in m for tag in ("70b", "120b", "32b", "27b", "235b", "397b", "671b", "v3.1")
         )
         (frontier if is_frontier else non_frontier).extend(g.last10)
     if len(frontier) < 2:
         return None
     if len(non_frontier) < 2:
         return None
-    return (len(frontier) + len(non_frontier), cohens_d(frontier, non_frontier), frontier, non_frontier)
+    return (
+        len(frontier) + len(non_frontier),
+        cohens_d(frontier, non_frontier),
+        frontier,
+        non_frontier,
+    )
 
 
 FINDINGS: List[Tuple[str, str, callable]] = [
@@ -513,7 +530,9 @@ FINDINGS: List[Tuple[str, str, callable]] = [
 # Top-level runner
 # ---------------------------------------------------------------------------
 def run() -> None:
-    raise EvidenceUnavailable("Legacy survival certification disabled: requires finding-specific measurements, configuration matching and contributor receipts. See pro_review_06_protocol_v2.md.")
+    raise EvidenceUnavailable(
+        "Legacy survival certification disabled: requires finding-specific measurements, configuration matching and contributor receipts. See pro_review_06_protocol_v2.md."
+    )
 
 
 def _print_latex_table(rows: List[dict], n_a: int, n_b: int, n_c: int) -> None:
@@ -525,21 +544,11 @@ def _print_latex_table(rows: List[dict], n_a: int, n_b: int, n_c: int) -> None:
     )
     print(r"\midrule")
     if not rows:
-        print(
-            r"F1 & ZVF diagnostic & -- & -- & -- & -- & downgraded to Tier-C \\"
-        )
-        print(
-            r"F2 & Instruct $>$ Base & -- & -- & -- & -- & downgraded to Tier-C \\"
-        )
-        print(
-            r"F3 & PPO/GRPO heterogeneity & -- & -- & -- & -- & downgraded to Tier-C \\"
-        )
-        print(
-            r"F4 & Framework gap & -- & -- & -- & -- & downgraded to Tier-C \\"
-        )
-        print(
-            r"F5 & Frontier stability & -- & -- & -- & -- & downgraded to Tier-C \\"
-        )
+        print(r"F1 & ZVF diagnostic & -- & -- & -- & -- & downgraded to Tier-C \\")
+        print(r"F2 & Instruct $>$ Base & -- & -- & -- & -- & downgraded to Tier-C \\")
+        print(r"F3 & PPO/GRPO heterogeneity & -- & -- & -- & -- & downgraded to Tier-C \\")
+        print(r"F4 & Framework gap & -- & -- & -- & -- & downgraded to Tier-C \\")
+        print(r"F5 & Frontier stability & -- & -- & -- & -- & downgraded to Tier-C \\")
     else:
         short = {
             "F1": "ZVF diagnostic",
@@ -549,7 +558,11 @@ def _print_latex_table(rows: List[dict], n_a: int, n_b: int, n_c: int) -> None:
             "F5": "Frontier stability",
         }
         for r in rows:
-            surv = "\\textbf{survives}" if "survives BH" in r["conclusion"] and "DOES NOT" not in r["conclusion"] else "no"
+            surv = (
+                "\\textbf{survives}"
+                if "survives BH" in r["conclusion"] and "DOES NOT" not in r["conclusion"]
+                else "no"
+            )
             d = f"{r['d']:+.2f}" if not math.isnan(r["d"]) else "--"
             pb = f"{r['p_bh']:.3g}" if not math.isnan(r["p_bh"]) else "--"
             print(
@@ -559,10 +572,7 @@ def _print_latex_table(rows: List[dict], n_a: int, n_b: int, n_c: int) -> None:
     print(r"\bottomrule")
     print(r"\end{tabular}")
     print()
-    print(
-        f"% Tier counts: A={n_a}  B={n_b}  C={n_c}. "
-        f"BH applied over Tier-A/B p-values only (W5)."
-    )
+    print(f"% Tier counts: A={n_a}  B={n_b}  C={n_c}. BH applied over Tier-A/B p-values only (W5).")
 
 
 if __name__ == "__main__":

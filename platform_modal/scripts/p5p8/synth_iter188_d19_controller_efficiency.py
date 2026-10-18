@@ -30,20 +30,22 @@ Outputs (platform_hybrid/experiments/results/p5p8/):
   synth_iter188_d19_per_tier.tsv       3 tiers x 4 methods: tier-stratified eta
   synth_iter188_d19_summary.json       headline + verdicts
 """
+
 from __future__ import annotations
 import csv
 import json
-import math
 from pathlib import Path
 
 import numpy as np
 
 import sys
+
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
-from _p8_common import (  # noqa: E402
+from _paths import REPO_ROOT
+from _p8_common import (
     paired_bootstrap_ci,
 )
+
 ROOT = REPO_ROOT
 RES = ROOT / "platform_hybrid/experiments/results/p5p8"
 ITER187_PER_STEP = RES / "p7_iter187_infogain_per_step.tsv"
@@ -83,16 +85,19 @@ def main():
         eta = v["mean_dH"] / max(v["max_dH"], eps)
         bpr = v["mean_dH"] / G_ESC  # bits per extra rollout
         regret = v["max_dH"] - v["mean_dH"]
-        rows_step.append({
-            "method": m, "step": s,
-            "mean_dH": v["mean_dH"],
-            "max_dH": v["max_dH"],
-            "eta": eta,
-            "bits_per_rollout": bpr,
-            "dH_regret": regret,
-            "n_boundary": v["n_boundary"],
-            "n_mid_edge": v["n_mid_edge"],
-        })
+        rows_step.append(
+            {
+                "method": m,
+                "step": s,
+                "mean_dH": v["mean_dH"],
+                "max_dH": v["max_dH"],
+                "eta": eta,
+                "bits_per_rollout": bpr,
+                "dH_regret": regret,
+                "n_boundary": v["n_boundary"],
+                "n_mid_edge": v["n_mid_edge"],
+            }
+        )
         per_method_step[m].append(eta)
         per_method_dh_regret[m].append(regret)
 
@@ -100,28 +105,30 @@ def main():
     # boundary-dominated on N2, n_boundary threshold is uninformative).
     # We split ALL 160 cells into low/mid/high regret tertiles.
     all_regrets = np.array([r["dH_regret"] for r in rows_step])
-    tertile_edges = np.quantile(all_regrets, [1.0/3, 2.0/3])
+    tertile_edges = np.quantile(all_regrets, [1.0 / 3, 2.0 / 3])
+
     def tier_of(regret):
         if regret <= tertile_edges[0]:
             return "low_regret"
         if regret <= tertile_edges[1]:
             return "mid_regret"
         return "high_regret"
-    per_method_tier = {m: {"low_regret": [], "mid_regret": [], "high_regret": []}
-                       for m in METHODS}
+
+    per_method_tier = {m: {"low_regret": [], "mid_regret": [], "high_regret": []} for m in METHODS}
     for r in rows_step:
         per_method_tier[r["method"]][tier_of(r["dH_regret"])].append(r["eta"])
 
     # Per-step TSV
     out_step = RES / "synth_iter188_d19_per_step.tsv"
     with out_step.open("w") as f:
-        f.write("method\tstep\tmean_dH\tmax_dH\teta\tbits_per_rollout\t"
-                "n_boundary\tn_mid_edge\n")
+        f.write("method\tstep\tmean_dH\tmax_dH\teta\tbits_per_rollout\tn_boundary\tn_mid_edge\n")
         for r in rows_step:
-            f.write(f"{r['method']}\t{r['step']}\t{r['mean_dH']:.6f}\t"
-                    f"{r['max_dH']:.6f}\t{r['eta']:.6f}\t"
-                    f"{r['bits_per_rollout']:.6f}\t"
-                    f"{r['n_boundary']}\t{r['n_mid_edge']}\n")
+            f.write(
+                f"{r['method']}\t{r['step']}\t{r['mean_dH']:.6f}\t"
+                f"{r['max_dH']:.6f}\t{r['eta']:.6f}\t"
+                f"{r['bits_per_rollout']:.6f}\t"
+                f"{r['n_boundary']}\t{r['n_mid_edge']}\n"
+            )
 
     # Per-method TSV
     out_method = RES / "synth_iter188_d19_per_method.tsv"
@@ -129,9 +136,13 @@ def main():
         f.write("method\tn_steps\tmean_eta\tmean_dH\tmean_bpr\n")
         for m in METHODS:
             arr = np.array(per_method_step[m])
-            arr_dh = np.array([v["mean_dH"] for (mm, _), v in sorted(by_method_step.items()) if mm == m])
-            f.write(f"{m}\t{len(arr)}\t{float(arr.mean()):.6f}\t"
-                    f"{float(arr_dh.mean()):.6f}\t{float(arr_dh.mean()/G_ESC):.6f}\n")
+            arr_dh = np.array(
+                [v["mean_dH"] for (mm, _), v in sorted(by_method_step.items()) if mm == m]
+            )
+            f.write(
+                f"{m}\t{len(arr)}\t{float(arr.mean()):.6f}\t"
+                f"{float(arr_dh.mean()):.6f}\t{float(arr_dh.mean() / G_ESC):.6f}\n"
+            )
 
     # Per-tier TSV
     out_tier = RES / "synth_iter188_d19_per_tier.tsv"
@@ -139,10 +150,16 @@ def main():
         f.write("method\ttier\tn_steps\tmean_eta\tlo\thi\n")
         for m in METHODS:
             for tier in ["low_regret", "mid_regret", "high_regret"]:
-                arr = np.array(per_method_tier[m][tier]) if per_method_tier[m][tier] else np.array([0.0])
+                arr = (
+                    np.array(per_method_tier[m][tier])
+                    if per_method_tier[m][tier]
+                    else np.array([0.0])
+                )
                 ci = paired_bootstrap_ci(arr, N_BOOT, seed=20260706 + hash((m, tier)) % 100000)
-                f.write(f"{m}\t{tier}\t{len(per_method_tier[m][tier])}\t"
-                        f"{float(arr.mean()):.6f}\t{ci['lo']:.6f}\t{ci['hi']:.6f}\n")
+                f.write(
+                    f"{m}\t{tier}\t{len(per_method_tier[m][tier])}\t"
+                    f"{float(arr.mean()):.6f}\t{ci['lo']:.6f}\t{ci['hi']:.6f}\n"
+                )
 
     # ----- hypothesis evaluation -----
     print("Evaluating hypotheses...", flush=True)
@@ -157,7 +174,9 @@ def main():
     #     and grpo as reference. Check whether η_grpo, η_aero, η_gift, η_areal
     #     show tiebreak ordering vs cumulative reward (which iter-187 reports
     #     as method-invariant at 1% SD on dH).
-    cross_method_cv = float(np.std(list(per_method_mean.values())) / max(1e-9, np.mean(list(per_method_mean.values()))))
+    cross_method_cv = float(
+        np.std(list(per_method_mean.values())) / max(1e-9, np.mean(list(per_method_mean.values())))
+    )
     # If dH was method-invariant (iter-187) and η = mean_dH / max_dH (max also
     # method-invariant by the same reasoning), then η should be method-invariant.
     # Hypothesis fails if CV > 5% (substantive cross-method variation).
@@ -165,8 +184,16 @@ def main():
 
     # H3: Per-fire information value (bits/rollout) varies across methods —
     #     i.e., the cross-method CV on bits-per-rollout is > 5%.
-    per_method_bpr = {m: float(np.mean([v["mean_dH"] for (mm, _), v in sorted(by_method_step.items()) if mm == m]) / G_ESC) for m in METHODS}
-    bpr_cv = float(np.std(list(per_method_bpr.values())) / max(1e-9, np.mean(list(per_method_bpr.values()))))
+    per_method_bpr = {
+        m: float(
+            np.mean([v["mean_dH"] for (mm, _), v in sorted(by_method_step.items()) if mm == m])
+            / G_ESC
+        )
+        for m in METHODS
+    }
+    bpr_cv = float(
+        np.std(list(per_method_bpr.values())) / max(1e-9, np.mean(list(per_method_bpr.values())))
+    )
     h3 = bpr_cv > 0.05
 
     # H4: Cumulative η weighted by per-step reward variance shows tighter
@@ -181,7 +208,9 @@ def main():
         ws = ws / max(1e-9, ws.sum())
         eta_arr = np.array([v["mean_dH"] / max(v["max_dH"], eps) for _, v in steps])
         weighted_eta[m] = float(np.sum(ws * eta_arr))
-    w_cv = float(np.std(list(weighted_eta.values())) / max(1e-9, np.mean(list(weighted_eta.values()))))
+    w_cv = float(
+        np.std(list(weighted_eta.values())) / max(1e-9, np.mean(list(weighted_eta.values())))
+    )
     h4 = w_cv < cross_method_cv  # weighted CV < unweighted CV
 
     # H5: η on high-regret steps strictly < η on low-regret steps. Steps with
@@ -217,9 +246,16 @@ def main():
         "n_high_regret_steps": len(high_regret_eta),
         "n_low_regret_steps": len(low_regret_eta),
         "tertile_edges_regret": [float(tertile_edges[0]), float(tertile_edges[1])],
-        "verdict_count": sum(int(v) for v in [
-            h1, h2, h3, h4, h5,
-        ]),
+        "verdict_count": sum(
+            int(v)
+            for v in [
+                h1,
+                h2,
+                h3,
+                h4,
+                h5,
+            ]
+        ),
     }
     out_sum = RES / "synth_iter188_d19_summary.json"
     out_sum.write_text(json.dumps(summary, indent=2, default=float))

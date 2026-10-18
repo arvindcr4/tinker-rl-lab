@@ -171,15 +171,15 @@ def _contains_banned_markers(value: Any) -> bool:
 
 def _load_authority(contract_path: str | Path | None = None) -> Mapping[str, Any]:
     base = Path(__file__).resolve().parent
-    path = Path(contract_path) if contract_path is not None else base / "pavlovs_domain_contract.json"
+    path = (
+        Path(contract_path) if contract_path is not None else base / "pavlovs_domain_contract.json"
+    )
     try:
         payload = json.loads(path.read_text(encoding="utf-8"))
     except OSError as exc:
         raise VerilogEvalReceiptError(f"cannot read authority contract: {exc}") from exc
     except json.JSONDecodeError as exc:
-        raise VerilogEvalReceiptError(
-            f"authority contract is not valid JSON: {exc}"
-        ) from exc
+        raise VerilogEvalReceiptError(f"authority contract is not valid JSON: {exc}") from exc
     if not isinstance(payload, Mapping):
         raise VerilogEvalReceiptError("authority contract must be JSON object")
     installed = json.loads((base / "pavlovs_domain_contract.json").read_text(encoding="utf-8"))
@@ -253,13 +253,9 @@ def _validate_environment(value: Any) -> dict[str, Any]:
     container_digest = _require_sha256(
         value.get("container_digest"), "environment.container_digest"
     )
-    runtime_digest = _require_sha256(
-        value.get("runtime_digest"), "environment.runtime_digest"
-    )
+    runtime_digest = _require_sha256(value.get("runtime_digest"), "environment.runtime_digest")
     if _contains_banned_markers(container) or _contains_banned_markers(image):
-        raise VerilogEvalReceiptError(
-            "environment references blocked substitution source"
-        )
+        raise VerilogEvalReceiptError("environment references blocked substitution source")
     return {
         "container": container,
         "image": image,
@@ -290,9 +286,7 @@ def _validate_task_ids(value: Any, field: str = "task_id_hashes") -> list[str]:
 def _validate_split(value: Any, task_ids: list[str]) -> tuple[list[str], str, str]:
     if not isinstance(value, Mapping):
         raise VerilogEvalReceiptError("split must be an object")
-    split_ids = _validate_task_ids(
-        value.get("primary_eval"), field="split.primary_eval"
-    )
+    split_ids = _validate_task_ids(value.get("primary_eval"), field="split.primary_eval")
     if split_ids != task_ids:
         raise VerilogEvalReceiptError("split.primary_eval must match task_id_hashes")
     declared = _require_sha256(
@@ -317,9 +311,7 @@ def _validate_split_hashes(value: Mapping[str, Any], aggregate: str) -> dict[str
     return {"primary_eval": declared}
 
 
-def _validate_split_manifest_hash(
-    manifest: Mapping[str, Any], aggregate: str
-) -> tuple[str, str]:
+def _validate_split_manifest_hash(manifest: Mapping[str, Any], aggregate: str) -> tuple[str, str]:
     payload = canonical_json({"primary_eval": aggregate})
     observed = f"sha256:{_sha256(payload)}"
     declared = _require_sha256(manifest.get("split_manifest_hash"), "split_manifest_hash")
@@ -358,19 +350,17 @@ def _validate_held_out(manifest: Mapping[str, Any], scope: Mapping[str, Any]) ->
     held_out_receipt_ref = manifest.get("held_out_receipt_ref")
     scope_is_held_out = bool(scope.get("is_held_out"))
     if held_out != scope_is_held_out:
-        raise VerilogEvalReceiptError(
-            "scope.is_held_out and held_out must agree"
-        )
+        raise VerilogEvalReceiptError("scope.is_held_out and held_out must agree")
     if held_out and _is_placeholder(held_out_receipt_ref):
         raise VerilogEvalReceiptError("held_out_receipt_ref is required when held_out is true")
-    if not held_out and held_out_receipt_ref is not None and not _is_placeholder(
-        held_out_receipt_ref
+    if (
+        not held_out
+        and held_out_receipt_ref is not None
+        and not _is_placeholder(held_out_receipt_ref)
     ):
         raise VerilogEvalReceiptError("held_out_receipt_ref is forbidden when held_out is false")
     if held_out:
-        ref = _require_sha256(
-            held_out_receipt_ref, "held_out_receipt_ref"
-        )
+        ref = _require_sha256(held_out_receipt_ref, "held_out_receipt_ref")
         if not ref:
             raise VerilogEvalReceiptError("held_out_receipt_ref must be a concrete sha256")
     return held_out
@@ -399,13 +389,9 @@ def _validate_per_example(value: Any) -> list[dict[str, str]]:
         elif isinstance(raw_verdict, str):
             verdict = raw_verdict.strip().lower()
         else:
-            raise VerilogEvalReceiptError(
-                f"per_example[{index}].verdict must be pass|fail|error"
-            )
+            raise VerilogEvalReceiptError(f"per_example[{index}].verdict must be pass|fail|error")
         if verdict not in _EXPECTED_VERDICTS:
-            raise VerilogEvalReceiptError(
-                f"per_example[{index}].verdict must be pass|fail|error"
-            )
+            raise VerilogEvalReceiptError(f"per_example[{index}].verdict must be pass|fail|error")
         ids.append(example_id)
         normalized.append((example_id, category, verdict))
 
@@ -460,12 +446,8 @@ def _validate_hf_checkpoints(raw: Any) -> list[dict[str, Any]]:
     for index, checkpoint in enumerate(raw):
         if not isinstance(checkpoint, Mapping):
             raise VerilogEvalReceiptError(f"hf_checkpoints[{index}] must be an object")
-        repo = _require_url(
-            checkpoint.get("repo_url"), f"hf_checkpoints[{index}].repo_url"
-        )
-        revision = _require_hex40(
-            checkpoint.get("revision"), f"hf_checkpoints[{index}].revision"
-        )
+        repo = _require_url(checkpoint.get("repo_url"), f"hf_checkpoints[{index}].repo_url")
+        revision = _require_hex40(checkpoint.get("revision"), f"hf_checkpoints[{index}].revision")
         url = _require_url(checkpoint.get("url"), f"hf_checkpoints[{index}].url")
         stage = _require_text(checkpoint.get("stage"), f"hf_checkpoints[{index}].stage").lower()
         if stage not in _REQUIRED_HF_STAGES:
@@ -480,7 +462,9 @@ def _validate_hf_checkpoints(raw: Any) -> list[dict[str, Any]]:
                 f"hf_checkpoints[{index}].visibility must be public or private"
             )
         if checkpoint.get("safe_public_artifact") is not (visibility == "public"):
-            raise VerilogEvalReceiptError(f"hf_checkpoints[{index}].safe_public_artifact must match visibility")
+            raise VerilogEvalReceiptError(
+                f"hf_checkpoints[{index}].safe_public_artifact must match visibility"
+            )
 
         if _contains_banned_markers(repo):
             raise VerilogEvalReceiptError(
@@ -722,7 +706,9 @@ def build_receipt_record(
     except VerilogEvalReceiptError as exc:
         return {
             "schema_version": SCHEMA_VERSION,
-            "suite_id": manifest.get("suite_id", "<missing>") if isinstance(manifest, Mapping) else "<missing>",
+            "suite_id": manifest.get("suite_id", "<missing>")
+            if isinstance(manifest, Mapping)
+            else "<missing>",
             "exact_suite": manifest.get("suite_id") == SUITE_ID
             if isinstance(manifest, Mapping)
             else False,
@@ -731,8 +717,12 @@ def build_receipt_record(
             "launch": {"allowed": False, "reasons": ["launch is intentionally disabled"]},
             "authoritative_source": None,
             "contract_authority": {},
-            "category": manifest.get("category", "<missing>") if isinstance(manifest, Mapping) else "<missing>",
-            "role": manifest.get("role", "<missing>") if isinstance(manifest, Mapping) else "<missing>",
+            "category": manifest.get("category", "<missing>")
+            if isinstance(manifest, Mapping)
+            else "<missing>",
+            "role": manifest.get("role", "<missing>")
+            if isinstance(manifest, Mapping)
+            else "<missing>",
             "dataset_revision": None,
             "dataset_license": None,
             "dataset_source": None,
@@ -741,7 +731,9 @@ def build_receipt_record(
             "environment": None,
             "split": {"primary_eval": {}},
             "split_hashes": {},
-            "split_manifest_hash": manifest.get("split_manifest_hash") if isinstance(manifest, Mapping) else None,
+            "split_manifest_hash": manifest.get("split_manifest_hash")
+            if isinstance(manifest, Mapping)
+            else None,
             "declared_split_manifest_hash": manifest.get("split_manifest_hash")
             if isinstance(manifest, Mapping)
             else None,

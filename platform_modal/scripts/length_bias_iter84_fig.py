@@ -1,15 +1,19 @@
 #!/usr/bin/env python3
 """Iter 84 figure: 4-panel spectral + long-memory + Granger dashboard."""
-import json, os
+
+import os
 import numpy as np
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 import sys
 from pathlib import Path
+
 sys.path.append(str(Path(__file__).resolve().parent))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
+from _paths import REPO_ROOT
+
 W = str(REPO_ROOT)
 RES = os.path.join(W, "platform_hybrid/experiments", "results")
 FIGS = os.path.join(W, "platform_hybrid/paper", "figures")
@@ -20,10 +24,28 @@ with open(os.path.join(RES, "length_bias_iter84_perrun.tsv")) as f:
     lines = f.read().strip().split("\n")
     header = lines[0].split("\t")
     for ln in lines[1:]:
-        row = dict(zip(header, ln.split("\t")))
-        for k in ["hurst_L", "hurst_R", "coh_vlow", "coh_low", "coh_mid", "coh_high",
-                  "F_lr", "F_rl", "spearman_rho", "L_mean", "L_std", "R_mean", "R_std",
-                  "last10_acc", "p_lr", "p_rl", "spearman_p", "r2_lr", "r2_rl"]:
+        row = dict(zip(header, ln.split("\t"), strict=False))
+        for k in [
+            "hurst_L",
+            "hurst_R",
+            "coh_vlow",
+            "coh_low",
+            "coh_mid",
+            "coh_high",
+            "F_lr",
+            "F_rl",
+            "spearman_rho",
+            "L_mean",
+            "L_std",
+            "R_mean",
+            "R_std",
+            "last10_acc",
+            "p_lr",
+            "p_rl",
+            "spearman_p",
+            "r2_lr",
+            "r2_rl",
+        ]:
             try:
                 row[k] = float(row[k])
             except (KeyError, ValueError):
@@ -53,12 +75,24 @@ for ti, task in enumerate(TASKS):
         vals = []
         ses = []
         for bk in band_keys:
-            vs = [r[bk] for r in perrun if r["task"] == task and r["algo"] == algo and np.isfinite(r[bk])]
+            vs = [
+                r[bk]
+                for r in perrun
+                if r["task"] == task and r["algo"] == algo and np.isfinite(r[bk])
+            ]
             vals.append(np.mean(vs))
             ses.append(np.std(vs, ddof=1) / np.sqrt(max(1, len(vs))))
         pos = x + (ai - 0.5) * w
-        sub_ax.bar(pos, vals, w, yerr=ses, color=ALGO_CLR[algo],
-                   label=ALGO_LABEL[algo], alpha=0.85, capsize=2)
+        sub_ax.bar(
+            pos,
+            vals,
+            w,
+            yerr=ses,
+            color=ALGO_CLR[algo],
+            label=ALGO_LABEL[algo],
+            alpha=0.85,
+            capsize=2,
+        )
     sub_ax.set_xticks(x)
     sub_ax.set_xticklabels([b[1] for b in BANDS], fontsize=8)
     sub_ax.set_ylim(0, 1.05)
@@ -76,13 +110,18 @@ for ai, algo in enumerate(ALGOS):
     es = []
     for ti, task in enumerate(TASKS):
         for mi, _ in enumerate(metrics):
-            vs = [r[metrics[mi][0]] for r in perrun if r["task"] == task and r["algo"] == algo
-                  and np.isfinite(r[metrics[mi][0]])]
+            vs = [
+                r[metrics[mi][0]]
+                for r in perrun
+                if r["task"] == task and r["algo"] == algo and np.isfinite(r[metrics[mi][0]])
+            ]
             ys.append(np.mean(vs))
             es.append(np.std(vs, ddof=1) / np.sqrt(max(1, len(vs))))
             xs.append(ti * 3 + mi)
     pos = np.array(xs) + (ai - 0.5) * 0.30
-    ax.bar(pos, ys, 0.30, yerr=es, color=ALGO_CLR[algo], label=ALGO_LABEL[algo], alpha=0.85, capsize=2)
+    ax.bar(
+        pos, ys, 0.30, yerr=es, color=ALGO_CLR[algo], label=ALGO_LABEL[algo], alpha=0.85, capsize=2
+    )
 ax.set_xticks([0.5, 3.5])
 ax.set_xticklabels(TASKS, fontsize=9)
 ax.axhline(0.5, ls="--", color="grey", lw=0.7, label="H=0.5 (memoryless)")
@@ -98,10 +137,22 @@ delta_F_rl = []
 delta_coh_low = []
 delta_hurst = []
 for task in TASKS:
-    for kind, store in [("F_lr", delta_F_lr), ("F_rl", delta_F_rl),
-                        ("coh_low", delta_coh_low), ("hurst_L", delta_hurst)]:
-        g = [r[kind] for r in perrun if r["task"] == task and r["algo"] == "grpo" and np.isfinite(r[kind])]
-        d = [r[kind] for r in perrun if r["task"] == task and r["algo"] == "dr_grpo" and np.isfinite(r[kind])]
+    for kind, store in [
+        ("F_lr", delta_F_lr),
+        ("F_rl", delta_F_rl),
+        ("coh_low", delta_coh_low),
+        ("hurst_L", delta_hurst),
+    ]:
+        g = [
+            r[kind]
+            for r in perrun
+            if r["task"] == task and r["algo"] == "grpo" and np.isfinite(r[kind])
+        ]
+        d = [
+            r[kind]
+            for r in perrun
+            if r["task"] == task and r["algo"] == "dr_grpo" and np.isfinite(r[kind])
+        ]
         n = min(len(g), len(d))
         store.append(np.mean(d[:n]) - np.mean(g[:n]))
 x = np.arange(2)

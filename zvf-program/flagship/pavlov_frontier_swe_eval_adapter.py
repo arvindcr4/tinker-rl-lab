@@ -38,8 +38,7 @@ OFFICIAL_LICENSE_STATUS = "not_declared_by_official_metadata"
 PRIMARY_EVAL = "primary_eval"
 RECEIPT_PROVEN_HELDOUT = "receipt_proven_heldout"
 PRIMARY_EVAL_CLAIM = (
-    "FrontierSWE is primary_eval only; held-out status is not claimed without "
-    "an immutable receipt."
+    "FrontierSWE is primary_eval only; held-out status is not claimed without an immutable receipt."
 )
 
 BOUNDARY_SCHEMA_VERSION = "pavlov-frontier-swe-boundary-v1"
@@ -241,9 +240,7 @@ def native_environment_contract(
     }
 
 
-def native_artifact_contract(
-    *, manifest_sha256: str, paths: Sequence[str]
-) -> dict[str, Any]:
+def native_artifact_contract(*, manifest_sha256: str, paths: Sequence[str]) -> dict[str, Any]:
     return {
         "required": True,
         "mode": NATIVE_ARTIFACT_MODE,
@@ -253,9 +250,7 @@ def native_artifact_contract(
     }
 
 
-def native_verifier_contract(
-    *, verifier_sha256: str, entrypoint: str
-) -> dict[str, Any]:
+def native_verifier_contract(*, verifier_sha256: str, entrypoint: str) -> dict[str, Any]:
     return {
         "verifier_id": NATIVE_VERIFIER_ID,
         "entrypoint": entrypoint,
@@ -280,9 +275,7 @@ def build_boundary(
 ) -> dict[str, Any]:
     """Construct a JSON boundary; callers still must run :func:`validate_boundary`."""
 
-    split = deterministic_split_manifest(
-        task_ids, split_id, source_revision=source_revision
-    )
+    split = deterministic_split_manifest(task_ids, split_id, source_revision=source_revision)
     claim = {
         "evaluation_role": evaluation_role,
         "heldout_status": (
@@ -318,9 +311,7 @@ def build_boundary(
 
 
 def _validate_license(source: Mapping[str, Any], errors: list[str]) -> None:
-    identifier = _text(
-        source.get("license_identifier"), "source.license_identifier", errors
-    )
+    identifier = _text(source.get("license_identifier"), "source.license_identifier", errors)
     receipt = _mapping(source.get("license_receipt"), "source.license_receipt", errors)
     if receipt is None:
         return
@@ -331,10 +322,7 @@ def _validate_license(source: Mapping[str, Any], errors: list[str]) -> None:
     url = receipt.get("source_url")
     if not isinstance(url, str) or not url.startswith(_URL_PREFIXES):
         errors.append("source.license_receipt.source_url must be http(s)")
-    elif not (
-        url == OFFICIAL_METADATA_URL
-        or url.startswith(f"{AUTHORITATIVE_SOURCE_URL}/")
-    ):
+    elif not (url == OFFICIAL_METADATA_URL or url.startswith(f"{AUTHORITATIVE_SOURCE_URL}/")):
         errors.append("source.license_receipt.source_url must be an official FrontierSWE URL")
     _sha256(receipt.get("content_sha256"), "source.license_receipt.content_sha256", errors)
     _text(receipt.get("observed_at"), "source.license_receipt.observed_at", errors)
@@ -363,7 +351,9 @@ def _validate_source(boundary: Mapping[str, Any], errors: list[str]) -> Mapping[
     return source
 
 
-def _validate_split(boundary: Mapping[str, Any], source: Mapping[str, Any], errors: list[str]) -> Mapping[str, Any] | None:
+def _validate_split(
+    boundary: Mapping[str, Any], source: Mapping[str, Any], errors: list[str]
+) -> Mapping[str, Any] | None:
     split = _mapping(boundary.get("split"), "split", errors)
     if split is None:
         return None
@@ -422,8 +412,10 @@ def _validate_native_contracts(boundary: Mapping[str, Any], errors: list[str]) -
             errors.append("artifact.mode must require native artifacts or side effects")
         _sha256(artifact.get("manifest_sha256"), "artifact.manifest_sha256", errors)
         paths = artifact.get("paths")
-        if not isinstance(paths, list) or not paths or not all(
-            isinstance(path, str) and path.strip() for path in paths
+        if (
+            not isinstance(paths, list)
+            or not paths
+            or not all(isinstance(path, str) and path.strip() for path in paths)
         ):
             errors.append("artifact.paths must be a non-empty list of paths")
         if artifact.get("verifier_reads_artifact") is not True:
@@ -440,7 +432,9 @@ def _validate_native_contracts(boundary: Mapping[str, Any], errors: list[str]) -
                 errors.append(f"verifier.{key} must be true")
 
 
-def _validate_claim(boundary: Mapping[str, Any], split: Mapping[str, Any] | None, errors: list[str]) -> None:
+def _validate_claim(
+    boundary: Mapping[str, Any], split: Mapping[str, Any] | None, errors: list[str]
+) -> None:
     claim = _mapping(boundary.get("claim"), "claim", errors)
     if claim is None:
         return
@@ -495,21 +489,29 @@ def _reject_substitutes(boundary: Mapping[str, Any], errors: list[str]) -> None:
         else None,
     )
     if boundary.get("suite_id") != SUITE_ID:
-        errors.append("suite_id must be frontier_swe_eval; related benchmarks and xLAM are rejected")
+        errors.append(
+            "suite_id must be frontier_swe_eval; related benchmarks and xLAM are rejected"
+        )
     if boundary.get("benchmark_id") != BENCHMARK_ID:
         errors.append("benchmark_id must be frontierswe; related benchmarks and xLAM are rejected")
     if boundary.get("benchmark_family") != BENCHMARK_FAMILY:
         errors.append("benchmark_family must be FrontierSWE")
     for value in exact_values:
-        if isinstance(value, str) and any(marker in value.lower() for marker in _SUBSTITUTE_MARKERS):
+        if isinstance(value, str) and any(
+            marker in value.lower() for marker in _SUBSTITUTE_MARKERS
+        ):
             if value not in {AUTHORITATIVE_REPOSITORY, AUTHORITATIVE_SOURCE_URL}:
-                errors.append("related benchmark or xLAM identity cannot substitute for FrontierSWE")
+                errors.append(
+                    "related benchmark or xLAM identity cannot substitute for FrontierSWE"
+                )
     for key in ("substitute_benchmark", "related_benchmark", "replacement_suite_id"):
         if boundary.get(key) not in (None, "", []):
             errors.append(f"{key} is not an admissible FrontierSWE source")
     for key in ("dataset_id", "source_dataset", "related_suite_id"):
         value = boundary.get(key)
-        if isinstance(value, str) and any(marker in value.lower() for marker in _SUBSTITUTE_MARKERS):
+        if isinstance(value, str) and any(
+            marker in value.lower() for marker in _SUBSTITUTE_MARKERS
+        ):
             errors.append(f"{key} is rejected as an xLAM or related-benchmark substitute")
 
 
@@ -531,15 +533,23 @@ def validate_boundary(boundary: Mapping[str, Any]) -> list[str]:
     return errors
 
 
-def _validate_service_receipts(receipt: Mapping[str, Any], errors: list[str]) -> tuple[Mapping[str, Any] | None, Mapping[str, Any] | None, Mapping[str, Any] | None]:
+def _validate_service_receipts(
+    receipt: Mapping[str, Any], errors: list[str]
+) -> tuple[Mapping[str, Any] | None, Mapping[str, Any] | None, Mapping[str, Any] | None]:
     wandb = _mapping(receipt.get("wandb"), "wandb", errors)
     tinker = _mapping(receipt.get("tinker"), "tinker", errors)
-    huggingface = _mapping(
-        receipt.get("huggingface", receipt.get("hf")), "huggingface", errors
-    )
+    huggingface = _mapping(receipt.get("huggingface", receipt.get("hf")), "huggingface", errors)
     if wandb is not None:
         _text(_first(wandb, "run_id", "id"), "wandb.run_id", errors)
-        for key in ("url", "entity", "project", "group", "config_sha256", "artifact_name", "artifact_sha256"):
+        for key in (
+            "url",
+            "entity",
+            "project",
+            "group",
+            "config_sha256",
+            "artifact_name",
+            "artifact_sha256",
+        ):
             if key.endswith("sha256"):
                 _sha256(wandb.get(key), f"wandb.{key}", errors)
             else:
@@ -604,10 +614,18 @@ def _validate_result_rows(
     task_count = len(rows)
     expected_counts = {
         "task_count": task_count,
-        "successful_tasks": sum(bool(row.get("success")) for row in rows if isinstance(row, Mapping)),
-        "state_integrity_tasks": sum(bool(row.get("state_integrity")) for row in rows if isinstance(row, Mapping)),
-        "artifact_integrity_tasks": sum(bool(row.get("artifact_integrity")) for row in rows if isinstance(row, Mapping)),
-        "verifier_pass_tasks": sum(row.get("verifier_status") == "pass" for row in rows if isinstance(row, Mapping)),
+        "successful_tasks": sum(
+            bool(row.get("success")) for row in rows if isinstance(row, Mapping)
+        ),
+        "state_integrity_tasks": sum(
+            bool(row.get("state_integrity")) for row in rows if isinstance(row, Mapping)
+        ),
+        "artifact_integrity_tasks": sum(
+            bool(row.get("artifact_integrity")) for row in rows if isinstance(row, Mapping)
+        ),
+        "verifier_pass_tasks": sum(
+            row.get("verifier_status") == "pass" for row in rows if isinstance(row, Mapping)
+        ),
     }
     for key, expected in expected_counts.items():
         if results.get(key) != expected:
@@ -706,7 +724,9 @@ def validate_result_receipt(
         errors.append(f"receipt.domains must be exactly {list(DOMAINS)!r}")
     for key in ("dataset_id", "source_dataset", "related_suite_id"):
         value = receipt.get(key)
-        if isinstance(value, str) and any(marker in value.lower() for marker in _SUBSTITUTE_MARKERS):
+        if isinstance(value, str) and any(
+            marker in value.lower() for marker in _SUBSTITUTE_MARKERS
+        ):
             errors.append(f"receipt.{key} is rejected as an xLAM or related-benchmark substitute")
     nested_boundary = _mapping(receipt.get("boundary"), "receipt.boundary", errors)
     if nested_boundary is None:
@@ -736,7 +756,9 @@ def validate_result_receipt(
                 else None
             ),
             "task_ids_sha256": split.get("task_ids_sha256") if split is not None else None,
-            "split_manifest_sha256": split.get("split_manifest_sha256") if split is not None else None,
+            "split_manifest_sha256": split.get("split_manifest_sha256")
+            if split is not None
+            else None,
             "environment_digest": (
                 nested_boundary.get("environment", {}).get("environment_digest")
                 if isinstance(nested_boundary.get("environment"), Mapping)
@@ -758,7 +780,9 @@ def validate_result_receipt(
             errors.append("huggingface.revision must equal tinker.adapter_revision")
     if wandb is not None and results is not None:
         artifact = nested_boundary.get("artifact")
-        expected_artifact = artifact.get("manifest_sha256") if isinstance(artifact, Mapping) else None
+        expected_artifact = (
+            artifact.get("manifest_sha256") if isinstance(artifact, Mapping) else None
+        )
         if wandb.get("artifact_sha256") != expected_artifact:
             errors.append("wandb.artifact_sha256 must acknowledge the boundary artifact manifest")
     return errors

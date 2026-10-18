@@ -29,6 +29,7 @@ Outputs:
 - platform_hybrid/experiments/results/p5p8/p7_iter163_dominance.tsv (dominance matrix)
 - platform_hybrid/experiments/results/p5p8/p7_iter163_summary.json
 """
+
 from __future__ import annotations
 import json
 from _review_replay import stable_seed
@@ -53,24 +54,40 @@ BOOT_SEED = 20260705
 
 
 # --- Controller rule (one G per step applies to all 16 prompts) ---
-def c_static_g8(z): return 8
-def c_static_g16(z): return 16
-def c_static_g4(z): return 4
-def c_dualformer_step(z):
-    if z < 0.50: return 2
-    if z >= 0.85: return 32
-    return 8
-def c_unified_step_c4(z):
-    if z < TAU_FAST: return 4
-    if z >= TAU_DEGEN: return 16
+def c_static_g8(z):
     return 8
 
+
+def c_static_g16(z):
+    return 16
+
+
+def c_static_g4(z):
+    return 4
+
+
+def c_dualformer_step(z):
+    if z < 0.50:
+        return 2
+    if z >= 0.85:
+        return 32
+    return 8
+
+
+def c_unified_step_c4(z):
+    if z < TAU_FAST:
+        return 4
+    if z >= TAU_DEGEN:
+        return 16
+    return 8
+
+
 CONTROLLERS = {
-    "STATIC_G4":         c_static_g4,
-    "STATIC_G8":         c_static_g8,
-    "STATIC_G16":        c_static_g16,
-    "DUALFORMER_STEP":   c_dualformer_step,
-    "UNIFIED_STEP_C4":   c_unified_step_c4,
+    "STATIC_G4": c_static_g4,
+    "STATIC_G8": c_static_g8,
+    "STATIC_G16": c_static_g16,
+    "DUALFORMER_STEP": c_dualformer_step,
+    "UNIFIED_STEP_C4": c_unified_step_c4,
 }
 
 
@@ -93,9 +110,14 @@ def evaluate_step(method, step_rec, cname, cfn):
     contrast_retention = mean_cm_used / max(mean_cm_base, 1e-9)
     cost_ratio = g_used / G_BASE
     return {
-        "method": method, "step": step, "z_obs": z_obs, "g_used": g_used,
-        "cost_ratio": cost_ratio, "mean_cm_used": mean_cm_used,
-        "mean_cm_base": mean_cm_base, "contrast_retention": contrast_retention,
+        "method": method,
+        "step": step,
+        "z_obs": z_obs,
+        "g_used": g_used,
+        "cost_ratio": cost_ratio,
+        "mean_cm_used": mean_cm_used,
+        "mean_cm_base": mean_cm_base,
+        "contrast_retention": contrast_retention,
         "fired": g_used != G_BASE,
     }
 
@@ -108,7 +130,11 @@ def boot_ci(values, n_boot=BOOT_N, seed=BOOT_SEED):
         samp = [values[rng.randrange(n)] for _ in range(n)]
         boots.append(statistics.mean(samp))
     boots.sort()
-    return boots[int(.025 * len(boots))], boots[min(len(boots)-1, int(.975 * len(boots)))], statistics.mean(values)
+    return (
+        boots[int(0.025 * len(boots))],
+        boots[min(len(boots) - 1, int(0.975 * len(boots)))],
+        statistics.mean(values),
+    )
 
 
 def aggregate_step(decisions):
@@ -123,9 +149,12 @@ def aggregate_step(decisions):
     lo_f, hi_f, mean_f = boot_ci(fired)
     return {
         "n": len(decisions),
-        "mean_cost_ratio": mean_c, "ci95_cost": (lo_c, hi_c),
-        "mean_contrast_retention": mean_r, "ci95_retention": (lo_r, hi_r),
-        "mean_fire_rate": mean_f, "ci95_fire_rate": (lo_f, hi_f),
+        "mean_cost_ratio": mean_c,
+        "ci95_cost": (lo_c, hi_c),
+        "mean_contrast_retention": mean_r,
+        "ci95_retention": (lo_r, hi_r),
+        "mean_fire_rate": mean_f,
+        "ci95_fire_rate": (lo_f, hi_f),
         "mean_g": statistics.mean(gs),
     }
 
@@ -140,13 +169,10 @@ def main():
     decisions_by_mc = {}
     for m, steps in by_method.items():
         for cname, cfn in CONTROLLERS.items():
-            decisions_by_mc[(m, cname)] = [
-                evaluate_step(m, s, cname, cfn) for s in steps
-            ]
+            decisions_by_mc[(m, cname)] = [evaluate_step(m, s, cname, cfn) for s in steps]
 
     # Aggregate per (method, controller) with bootstrap CI
-    agg_mc = {(m, c): aggregate_step(decisions_by_mc[(m, c)])
-              for m in METHODS for c in CONTROLLERS}
+    agg_mc = {(m, c): aggregate_step(decisions_by_mc[(m, c)]) for m in METHODS for c in CONTROLLERS}
 
     # Aggregate per controller across methods (n=160)
     agg_c = {}
@@ -158,62 +184,95 @@ def main():
 
     # ----- Write per-method CI TSV -----
     with open(OUT_DIR / "p7_iter163_per_method_ci.tsv", "w") as f:
-        cols = ["method", "controller", "n", "mean_g", "mean_cost_ratio",
-                "ci95_cost_lo", "ci95_cost_hi", "mean_contrast_retention",
-                "ci95_ret_lo", "ci95_ret_hi", "mean_fire_rate",
-                "ci95_fire_lo", "ci95_fire_hi"]
+        cols = [
+            "method",
+            "controller",
+            "n",
+            "mean_g",
+            "mean_cost_ratio",
+            "ci95_cost_lo",
+            "ci95_cost_hi",
+            "mean_contrast_retention",
+            "ci95_ret_lo",
+            "ci95_ret_hi",
+            "mean_fire_rate",
+            "ci95_fire_lo",
+            "ci95_fire_hi",
+        ]
         f.write("\t".join(cols) + "\n")
         for m in METHODS:
             for c in CONTROLLERS:
                 a = agg_mc[(m, c)]
-                f.write("\t".join(f"{x:.4f}" if isinstance(x, float) else str(x)
-                                  for x in [
-                    m, c, a["n"], a["mean_g"], a["mean_cost_ratio"],
-                    a["ci95_cost"][0], a["ci95_cost"][1],
-                    a["mean_contrast_retention"],
-                    a["ci95_retention"][0], a["ci95_retention"][1],
-                    a["mean_fire_rate"],
-                    a["ci95_fire_rate"][0], a["ci95_fire_rate"][1],
-                ]) + "\n")
-    print(f"Wrote per_method_ci ({len(METHODS)*len(CONTROLLERS)} rows)")
+                f.write(
+                    "\t".join(
+                        f"{x:.4f}" if isinstance(x, float) else str(x)
+                        for x in [
+                            m,
+                            c,
+                            a["n"],
+                            a["mean_g"],
+                            a["mean_cost_ratio"],
+                            a["ci95_cost"][0],
+                            a["ci95_cost"][1],
+                            a["mean_contrast_retention"],
+                            a["ci95_retention"][0],
+                            a["ci95_retention"][1],
+                            a["mean_fire_rate"],
+                            a["ci95_fire_rate"][0],
+                            a["ci95_fire_rate"][1],
+                        ]
+                    )
+                    + "\n"
+                )
+    print(f"Wrote per_method_ci ({len(METHODS) * len(CONTROLLERS)} rows)")
 
     # ----- Pareto scatter (20 points: cost vs retention, all (m,c)) -----
     pareto_pts = []
     for m in METHODS:
         for c in CONTROLLERS:
             a = agg_mc[(m, c)]
-            pareto_pts.append({
-                "method": m, "controller": c,
-                "cost_ratio": a["mean_cost_ratio"],
-                "retention": a["mean_contrast_retention"],
-                "mean_g": a["mean_g"],
-            })
+            pareto_pts.append(
+                {
+                    "method": m,
+                    "controller": c,
+                    "cost_ratio": a["mean_cost_ratio"],
+                    "retention": a["mean_contrast_retention"],
+                    "mean_g": a["mean_g"],
+                }
+            )
     with open(OUT_DIR / "p7_iter163_pareto.tsv", "w") as f:
         f.write("method\tcontroller\tcost_ratio\tretention\tmean_g\n")
         for p in pareto_pts:
-            f.write(f"{p['method']}\t{p['controller']}\t"
-                    f"{p['cost_ratio']:.4f}\t{p['retention']:.4f}\t"
-                    f"{p['mean_g']:.2f}\n")
+            f.write(
+                f"{p['method']}\t{p['controller']}\t"
+                f"{p['cost_ratio']:.4f}\t{p['retention']:.4f}\t"
+                f"{p['mean_g']:.2f}\n"
+            )
     print(f"Wrote pareto ({len(pareto_pts)} points)")
 
     # ----- Pareto frontier: a point (c, r) is dominated if exists p' with
     # c' <= c AND r' >= r, with at least one strict. Pareto-optimal: no such.
     def is_dominated(p, others):
         for o in others:
-            if o is p: continue
-            if (o["cost_ratio"] <= p["cost_ratio"] and
-                    o["retention"] >= p["retention"] and
-                    (o["cost_ratio"] < p["cost_ratio"] or
-                     o["retention"] > p["retention"])):
+            if o is p:
+                continue
+            if (
+                o["cost_ratio"] <= p["cost_ratio"]
+                and o["retention"] >= p["retention"]
+                and (o["cost_ratio"] < p["cost_ratio"] or o["retention"] > p["retention"])
+            ):
                 return True
         return False
+
     frontier = [p for p in pareto_pts if not is_dominated(p, pareto_pts)]
     with open(OUT_DIR / "p7_iter163_pareto_frontier.tsv", "w") as f:
         f.write("method\tcontroller\tcost_ratio\tretention\tmean_g\n")
         for p in frontier:
-            f.write(f"{p['method']}\t{p['controller']}\t"
-                    f"{p['cost_ratio']:.4f}\t{p['retention']:.4f}\t"
-                    f"{p['mean_g']:.2f}\n")
+            f.write(
+                f"{p['method']}\t{p['controller']}\t"
+                f"{p['cost_ratio']:.4f}\t{p['retention']:.4f}\t"
+                f"{p['mean_g']:.2f}\n"
+            )
     print(f"Wrote pareto_frontier ({len(frontier)} Pareto-optimal points)")
 
     # ----- Cross-method SD on cost/retention per controller -----
@@ -229,27 +288,53 @@ def main():
             samp = [METHODS[rng.randrange(4)] for _ in range(4)]
             sc = statistics.mean([agg_mc[(s, c)]["mean_cost_ratio"] for s in samp])
             sr = statistics.mean([agg_mc[(s, c)]["mean_contrast_retention"] for s in samp])
-            boot_cost_sd.append(statistics.pstdev([agg_mc[(s, c)]["mean_cost_ratio"] for s in samp]))
-            boot_ret_sd.append(statistics.pstdev([agg_mc[(s, c)]["mean_contrast_retention"] for s in samp]))
-        boot_cost_sd.sort(); boot_ret_sd.sort()
-        xm_rows.append({
-            "controller": c,
-            "n_methods": 4,
-            "mean_cost_ratio": statistics.mean(costs),
-            "sd_cost_ratio": statistics.pstdev(costs),
-            "ci95_sd_cost_lo": boot_cost_sd[int(.025 * len(boot_cost_sd))], "ci95_sd_cost_hi": boot_cost_sd[min(len(boot_cost_sd)-1, int(.975 * len(boot_cost_sd)))],
-            "mean_retention": statistics.mean(rets),
-            "sd_retention": statistics.pstdev(rets),
-            "ci95_sd_ret_lo": boot_ret_sd[int(.025 * len(boot_ret_sd))], "ci95_sd_ret_hi": boot_ret_sd[min(len(boot_ret_sd)-1, int(.975 * len(boot_ret_sd)))],
-        })
+            boot_cost_sd.append(
+                statistics.pstdev([agg_mc[(s, c)]["mean_cost_ratio"] for s in samp])
+            )
+            boot_ret_sd.append(
+                statistics.pstdev([agg_mc[(s, c)]["mean_contrast_retention"] for s in samp])
+            )
+        boot_cost_sd.sort()
+        boot_ret_sd.sort()
+        xm_rows.append(
+            {
+                "controller": c,
+                "n_methods": 4,
+                "mean_cost_ratio": statistics.mean(costs),
+                "sd_cost_ratio": statistics.pstdev(costs),
+                "ci95_sd_cost_lo": boot_cost_sd[int(0.025 * len(boot_cost_sd))],
+                "ci95_sd_cost_hi": boot_cost_sd[
+                    min(len(boot_cost_sd) - 1, int(0.975 * len(boot_cost_sd)))
+                ],
+                "mean_retention": statistics.mean(rets),
+                "sd_retention": statistics.pstdev(rets),
+                "ci95_sd_ret_lo": boot_ret_sd[int(0.025 * len(boot_ret_sd))],
+                "ci95_sd_ret_hi": boot_ret_sd[
+                    min(len(boot_ret_sd) - 1, int(0.975 * len(boot_ret_sd)))
+                ],
+            }
+        )
     with open(OUT_DIR / "p7_iter163_cross_method_sd.tsv", "w") as f:
-        cols = ["controller", "n_methods", "mean_cost_ratio", "sd_cost_ratio",
-                "ci95_sd_cost_lo", "ci95_sd_cost_hi", "mean_retention",
-                "sd_retention", "ci95_sd_ret_lo", "ci95_sd_ret_hi"]
+        cols = [
+            "controller",
+            "n_methods",
+            "mean_cost_ratio",
+            "sd_cost_ratio",
+            "ci95_sd_cost_lo",
+            "ci95_sd_cost_hi",
+            "mean_retention",
+            "sd_retention",
+            "ci95_sd_ret_lo",
+            "ci95_sd_ret_hi",
+        ]
         f.write("\t".join(cols) + "\n")
         for r in xm_rows:
-            f.write("\t".join(str(r[k]) if k in ("controller", "n_methods")
-                              else f"{r[k]:.4f}" for k in cols) + "\n")
+            f.write(
+                "\t".join(
+                    str(r[k]) if k in ("controller", "n_methods") else f"{r[k]:.4f}" for k in cols
+                )
+                + "\n"
+            )
     print(f"Wrote cross_method_sd ({len(xm_rows)} rows)")
 
     # ----- Paired bootstrap: C4 vs each other controller per method -----
@@ -262,10 +347,10 @@ def main():
             d2 = decisions_by_mc[(m, c)]
             assert len(d1) == len(d2) == 40
             # Paired difference of contrast retention per step
-            diffs_cr = [d1[i]["contrast_retention"] - d2[i]["contrast_retention"]
-                        for i in range(40)]
-            diffs_cost = [d1[i]["cost_ratio"] - d2[i]["cost_ratio"]
-                          for i in range(40)]
+            diffs_cr = [
+                d1[i]["contrast_retention"] - d2[i]["contrast_retention"] for i in range(40)
+            ]
+            diffs_cost = [d1[i]["cost_ratio"] - d2[i]["cost_ratio"] for i in range(40)]
             rng = random.Random(BOOT_SEED + stable_seed((m, c)) % 100000)
             boot_dcr = []
             boot_dcost = []
@@ -273,36 +358,58 @@ def main():
                 idx = [rng.randrange(40) for _ in range(40)]
                 boot_dcr.append(statistics.mean([diffs_cr[i] for i in idx]))
                 boot_dcost.append(statistics.mean([diffs_cost[i] for i in idx]))
-            boot_dcr.sort(); boot_dcost.sort()
-            lo_cr, hi_cr = boot_dcr[int(.025 * len(boot_dcr))], boot_dcr[min(len(boot_dcr)-1, int(.975 * len(boot_dcr)))]
-            lo_cost, hi_cost = boot_dcost[int(.025 * len(boot_dcost))], boot_dcost[min(len(boot_dcost)-1, int(.975 * len(boot_dcost)))]
+            boot_dcr.sort()
+            boot_dcost.sort()
+            lo_cr, hi_cr = (
+                boot_dcr[int(0.025 * len(boot_dcr))],
+                boot_dcr[min(len(boot_dcr) - 1, int(0.975 * len(boot_dcr)))],
+            )
+            lo_cost, hi_cost = (
+                boot_dcost[int(0.025 * len(boot_dcost))],
+                boot_dcost[min(len(boot_dcost) - 1, int(0.975 * len(boot_dcost)))],
+            )
             # strict dominance: cost_lower AND retention_higher (CI excludes 0)
             sd_retention = lo_cr > 0  # C4 retention LOWER than c → c dominates
-            sd_cost = hi_cost < 0     # C4 cost LOWER than c → C4 cheaper
-            paired_rows.append({
-                "method": m, "vs_controller": c,
-                "delta_retention": statistics.mean(diffs_cr),
-                "ci95_dret_lo": lo_cr, "ci95_dret_hi": hi_cr,
-                "ci_excl0_ret": (lo_cr > 0 or hi_cr < 0),
-                "direction_ret": ("C4_GAIN" if statistics.mean(diffs_cr) > 0 else "C4_LOSS"),
-                "delta_cost": statistics.mean(diffs_cost),
-                "ci95_dcost_lo": lo_cost, "ci95_dcost_hi": hi_cost,
-                "ci_excl0_cost": (lo_cost > 0 or hi_cost < 0),
-                "strict_dominance_of": __import__("_review_replay").dominance(lo_cr, hi_cr, lo_cost, hi_cost),
-            })
+            sd_cost = hi_cost < 0  # C4 cost LOWER than c → C4 cheaper
+            paired_rows.append(
+                {
+                    "method": m,
+                    "vs_controller": c,
+                    "delta_retention": statistics.mean(diffs_cr),
+                    "ci95_dret_lo": lo_cr,
+                    "ci95_dret_hi": hi_cr,
+                    "ci_excl0_ret": (lo_cr > 0 or hi_cr < 0),
+                    "direction_ret": ("C4_GAIN" if statistics.mean(diffs_cr) > 0 else "C4_LOSS"),
+                    "delta_cost": statistics.mean(diffs_cost),
+                    "ci95_dcost_lo": lo_cost,
+                    "ci95_dcost_hi": hi_cost,
+                    "ci_excl0_cost": (lo_cost > 0 or hi_cost < 0),
+                    "strict_dominance_of": __import__("_review_replay").dominance(
+                        lo_cr, hi_cr, lo_cost, hi_cost
+                    ),
+                }
+            )
     with open(OUT_DIR / "p7_iter163_paired_bootstrap.tsv", "w") as f:
-        cols = ["method", "vs_controller", "delta_retention",
-                "ci95_dret_lo", "ci95_dret_hi", "ci_excl0_ret",
-                "direction_ret", "delta_cost",
-                "ci95_dcost_lo", "ci95_dcost_hi", "ci_excl0_cost",
-                "strict_dominance_of"]
+        cols = [
+            "method",
+            "vs_controller",
+            "delta_retention",
+            "ci95_dret_lo",
+            "ci95_dret_hi",
+            "ci_excl0_ret",
+            "direction_ret",
+            "delta_cost",
+            "ci95_dcost_lo",
+            "ci95_dcost_hi",
+            "ci_excl0_cost",
+            "strict_dominance_of",
+        ]
         f.write("\t".join(cols) + "\n")
         for r in paired_rows:
             row = []
             for k in cols:
                 v = r[k]
-                row.append(str(v) if isinstance(v, bool) or isinstance(v, str)
-                           else f"{v:.4f}")
+                row.append(str(v) if isinstance(v, bool) or isinstance(v, str) else f"{v:.4f}")
             f.write("\t".join(row) + "\n")
     print(f"Wrote paired_bootstrap ({len(paired_rows)} rows)")
 
@@ -310,7 +417,8 @@ def main():
     dom_counts = {c: 0 for c in CONTROLLERS}
     for c in CONTROLLERS:
         for c2 in CONTROLLERS:
-            if c2 == c: continue
+            if c2 == c:
+                continue
             sd_count = 0
             for r in paired_rows:
                 if r["vs_controller"] == c2 and r["strict_dominance_of"] == "C4":
@@ -325,7 +433,8 @@ def main():
     static_g16_ret_mean = statistics.mean(static_g16_ret)
     static_g16_dominated_by = 0
     for c in CONTROLLERS:
-        if c == "STATIC_G16": continue
+        if c == "STATIC_G16":
+            continue
         # c strictly dominates STATIC_G16 if cost(c) < 2 AND retention(c) > static_g16_ret on >= 3 methods
         sd_count = 0
         for m in METHODS:
@@ -349,17 +458,23 @@ def main():
     # ----- Headline verdicts (re-framed for step-aggregate granularity) -----
     h = {}
     # H1 (sharp positive): C4 retention > STATIC_G8 retention on 4/4 methods (paired CI excludes 0)
-    h1_passes = sum(1 for r in paired_rows
-                    if r["vs_controller"] == "STATIC_G8" and r["ci_excl0_ret"]
-                    and r["direction_ret"] == "C4_GAIN")
+    h1_passes = sum(
+        1
+        for r in paired_rows
+        if r["vs_controller"] == "STATIC_G8"
+        and r["ci_excl0_ret"]
+        and r["direction_ret"] == "C4_GAIN"
+    )
     h["H1_C4_retention_gt_STATIC_G8_passes"] = h1_passes
     h["H1_threshold"] = 4
     h["H1_verdict"] = "PASS" if h1_passes == 4 else "FAIL"
 
     # H2 (sharp positive): C4 cost < STATIC_G16 cost on 4/4 methods (CI excludes 0)
-    h2_passes = sum(1 for r in paired_rows
-                    if r["vs_controller"] == "STATIC_G16" and r["ci_excl0_cost"]
-                    and r["delta_cost"] < 0)
+    h2_passes = sum(
+        1
+        for r in paired_rows
+        if r["vs_controller"] == "STATIC_G16" and r["ci_excl0_cost"] and r["delta_cost"] < 0
+    )
     h["H2_C4_cost_lt_STATIC_G16_passes"] = h2_passes
     h["H2_threshold"] = 4
     h["H2_verdict"] = "PASS" if h2_passes == 4 else "FAIL"
@@ -374,7 +489,8 @@ def main():
         s16_ret = agg_mc[(m, "STATIC_G16")]["mean_contrast_retention"]
         dominated_on_m = False
         for c in CONTROLLERS:
-            if c == "STATIC_G16": continue
+            if c == "STATIC_G16":
+                continue
             cost_c = agg_mc[(m, c)]["mean_cost_ratio"]
             ret_c = agg_mc[(m, c)]["mean_contrast_retention"]
             if cost_c < 2.0 and ret_c >= s16_ret - 1e-9:
@@ -411,8 +527,7 @@ def main():
     h["H5_verdict"] = "PASS" if h5_passes == 4 else "FAIL"
 
     # H6 (Pareto presence): C4 on Pareto frontier on >= 3/4 methods
-    frontier_methods = set(p["method"] for p in frontier
-                           if p["controller"] == "UNIFIED_STEP_C4")
+    frontier_methods = set(p["method"] for p in frontier if p["controller"] == "UNIFIED_STEP_C4")
     h["H6_C4_on_frontier_methods"] = len(frontier_methods)
     h["H6_threshold"] = 3
     h["H6_verdict"] = "PASS" if len(frontier_methods) >= 3 else "FAIL"
@@ -439,14 +554,14 @@ def main():
         "n_step_method_decisions": 160,
         "n_methods": 4,
         "n_controllers": len(CONTROLLERS),
-        "boot_n": BOOT_N, "boot_seed": BOOT_SEED,
-        "agg_overall": {c: {k: (v[k][0], v[k][1]) if "ci95" in k else v[k]
-                            for k in v}
-                        for c, v in agg_c.items()},
+        "boot_n": BOOT_N,
+        "boot_seed": BOOT_SEED,
+        "agg_overall": {
+            c: {k: (v[k][0], v[k][1]) if "ci95" in k else v[k] for k in v} for c, v in agg_c.items()
+        },
         "pareto_frontier_count": len(frontier),
         "pareto_frontier_controllers_per_method": {
-            m: sorted(set(p["controller"] for p in frontier if p["method"] == m))
-            for m in METHODS
+            m: sorted(set(p["controller"] for p in frontier if p["method"] == m)) for m in METHODS
         },
         "headline": h,
         "n_passes": sum(1 for k in h if k.endswith("_verdict") and h[k] == "PASS"),

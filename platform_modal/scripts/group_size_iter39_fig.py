@@ -1,4 +1,5 @@
 """Iter 39 figure: 3-panel synthesis of G=4 vs G=32 critical-budget analysis."""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -6,6 +7,7 @@ from pathlib import Path
 import numpy as np
 
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from _analysis_common import read_tsv
@@ -24,14 +26,17 @@ def main() -> None:
     fig, axes = plt.subplots(1, 3, figsize=(13.5, 4.0))
 
     ax = axes[0]
-    iter31_row = next(r for r in rows if r["pair"] == "G=4 vs G=32" and r["source"] == "iter31_iso_token")
-    observations=read_tsv(RESULTS / "group_size_iter31_iso_token_v2.tsv")
-    observations=sorted(observations,key=lambda r:float(r["T_tokens"]))
-    if not observations: raise ValueError("missing retention observations")
-    T=np.array([float(r["T_tokens"])/1e6 for r in observations])
-    R_obs=np.array([float(r["retention"]) for r in observations])
-    R_lo=np.array([float(r["retention_ci_low"]) for r in observations])
-    R_hi=np.array([float(r["retention_ci_high"]) for r in observations])
+    iter31_row = next(
+        r for r in rows if r["pair"] == "G=4 vs G=32" and r["source"] == "iter31_iso_token"
+    )
+    observations = read_tsv(RESULTS / "group_size_iter31_iso_token_v2.tsv")
+    observations = sorted(observations, key=lambda r: float(r["T_tokens"]))
+    if not observations:
+        raise ValueError("missing retention observations")
+    T = np.array([float(r["T_tokens"]) / 1e6 for r in observations])
+    R_obs = np.array([float(r["retention"]) for r in observations])
+    R_lo = np.array([float(r["retention_ci_low"]) for r in observations])
+    R_hi = np.array([float(r["retention_ci_high"]) for r in observations])
     T_dense = np.linspace(0.5, 64, 200)
     R_inf = float(iter31_row["R_inf_exp"])
     Tau = float(iter31_row["Tau_M"])
@@ -40,11 +45,25 @@ def main() -> None:
     T_star_lo = float(iter31_row["T_star_lo_M"])
     T_star_hi = float(iter31_row["T_star_hi_M"])
     ax.fill_between(T_dense, R_fit, alpha=0.20, color="C0")
-    ax.plot(T_dense, R_fit, color="C0", label=f"Exp fit: $R_\\infty={R_inf:.3f}$, $\\tau={Tau:.2f}$M")
-    ax.errorbar(T, R_obs, yerr=[R_obs - R_lo, R_hi - R_obs], fmt="o", color="C0",
-                capsize=3, label="Input retention (iter 31; provenance in source)")
+    ax.plot(
+        T_dense, R_fit, color="C0", label=f"Exp fit: $R_\\infty={R_inf:.3f}$, $\\tau={Tau:.2f}$M"
+    )
+    ax.errorbar(
+        T,
+        R_obs,
+        yerr=[R_obs - R_lo, R_hi - R_obs],
+        fmt="o",
+        color="C0",
+        capsize=3,
+        label="Input retention (iter 31; provenance in source)",
+    )
     ax.axhline(0.976, color="C3", linestyle="--", label="Wu 2025 97.6% threshold")
-    ax.axvline(T_star, color="C2", linestyle=":", label=f"$T^*={T_star:.2f}$M ({T_star_lo:.2f}-{T_star_hi:.2f}M)")
+    ax.axvline(
+        T_star,
+        color="C2",
+        linestyle=":",
+        label=f"$T^*={T_star:.2f}$M ({T_star_lo:.2f}-{T_star_hi:.2f}M)",
+    )
     ax.fill_betweenx([0, 1.2], T_star_lo, T_star_hi, color="C2", alpha=0.15)
     ax.set_xscale("log")
     ax.set_xlim(0.5, 80)
@@ -63,8 +82,14 @@ def main() -> None:
     T_lows = [float(r["T_star_lo_M"]) for r in pairs_iter35_sorted]
     T_highs = [float(r["T_star_hi_M"]) for r in pairs_iter35_sorted]
     y = np.arange(len(labels))
-    ax.barh(y, T_stars, xerr=[np.array(T_stars) - np.array(T_lows), np.array(T_highs) - np.array(T_stars)],
-            color="C0", alpha=0.7, error_kw=dict(ecolor="C0", capsize=3))
+    ax.barh(
+        y,
+        T_stars,
+        xerr=[np.array(T_stars) - np.array(T_lows), np.array(T_highs) - np.array(T_stars)],
+        color="C0",
+        alpha=0.7,
+        error_kw=dict(ecolor="C0", capsize=3),
+    )
     ax.axvline(64, color="C3", linestyle="--", label="Max measured $T$=64M")
     ax.set_yticks(y)
     ax.set_yticklabels(labels, fontsize=8)
@@ -80,23 +105,30 @@ def main() -> None:
     n_tost = int(claim["n_cells_tost_equivalent_eps0.02"]["value"])
     ci_lo = float(claim["pass_fraction_bootstrap_CI_low"]["value"])
     ci_hi = float(claim["pass_fraction_bootstrap_CI_high"]["value"])
-    cats = ["Point retention\nat least 97.6%", "TOST equiv.\n($\\epsilon{=}0.02$)", "Worst cell\npasses Wu?"]
-    if n_total <= 0: raise ValueError("empty claim grid")
-    vals = [n_pass / n_total, n_tost / n_total,
-            0.0 if claim["worst_cell_upper_CI_excludes_Wu"]["value"] == "True" else 1.0]
+    cats = [
+        "Point retention\nat least 97.6%",
+        "TOST equiv.\n($\\epsilon{=}0.02$)",
+        "Worst cell\npasses Wu?",
+    ]
+    if n_total <= 0:
+        raise ValueError("empty claim grid")
+    vals = [
+        n_pass / n_total,
+        n_tost / n_total,
+        0.0 if claim["worst_cell_upper_CI_excludes_Wu"]["value"] == "True" else 1.0,
+    ]
     colors = ["C0", "C1", "C2" if vals[2] == 1.0 else "C3"]
     bars = ax.bar(cats, vals, color=colors, alpha=0.7)
     ax.axhline(0.5, color="grey", linestyle=":", label="50% reference")
     # Annotate counts
-    for i, (b, v) in enumerate(zip(bars, vals)):
+    for i, (b, v) in enumerate(zip(bars, vals, strict=False)):
         if i == 0:
             txt = f"{n_pass}/{n_total} ({ci_lo:.2f}-{ci_hi:.2f})"
         elif i == 1:
             txt = f"{n_tost}/{n_total}"
         else:
             txt = "YES" if v == 1.0 else "NO"
-        ax.text(b.get_x() + b.get_width() / 2, v + 0.02, txt,
-                ha="center", va="bottom", fontsize=8)
+        ax.text(b.get_x() + b.get_width() / 2, v + 0.02, txt, ha="center", va="bottom", fontsize=8)
     ax.set_ylabel("Fraction")
     ax.set_ylim(0, 1.05)
     ax.set_title("(c) Claim-strength audit (iter 35 sweep)")

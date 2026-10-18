@@ -1,7 +1,9 @@
-
 import sys as _sys
 from pathlib import Path as _Path
-_sys.path.insert(0, str(next(p for p in _Path(__file__).resolve().parents if (p / "platform_hybrid").is_dir())))
+
+_sys.path.insert(
+    0, str(next(p for p in _Path(__file__).resolve().parents if (p / "platform_hybrid").is_dir()))
+)
 from platform_hybrid.experiments.research_contracts import json_objects
 
 # ============================================================
@@ -13,26 +15,27 @@ from platform_hybrid.experiments.research_contracts import json_objects
 # !pip install -q transformers datasets peft trl accelerate bitsandbytes
 
 from huggingface_hub import login
-login(token="TOKEN")  
+
+login(token="TOKEN")
 
 import json, os, re, torch
 from datasets import load_dataset, Dataset
 from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
-from peft import LoraConfig, TaskType, PeftModel
+from peft import PeftModel
 from trl import GRPOTrainer, GRPOConfig
 import wandb
 
 wandb.init(project="qwen-grpo-tool-calling", name="qwen2.5-1.5b-grpo")
 
 # ── CONFIG ───────────────────────────────────────────────────
-MODEL_ID      = "Qwen/Qwen2.5-1.5B-Instruct"
-SFT_ADAPTER   = "/content/qwen15b-glaive-sft"    # from STEP 1
-OUTPUT_DIR    = "/content/qwen15b-glaive-grpo"
-NUM_SAMPLES   = 200     
-MAX_SEQ_LEN   = 512
-GRPO_EPOCHS   = 1
-BATCH_SIZE    = 2
-LR            = 1e-5   
+MODEL_ID = "Qwen/Qwen2.5-1.5B-Instruct"
+SFT_ADAPTER = "/content/qwen15b-glaive-sft"  # from STEP 1
+OUTPUT_DIR = "/content/qwen15b-glaive-grpo"
+NUM_SAMPLES = 200
+MAX_SEQ_LEN = 512
+GRPO_EPOCHS = 1
+BATCH_SIZE = 2
+LR = 1e-5
 
 SYSTEM_PROMPT = (
     "You are a helpful assistant with access to tools.\n"
@@ -44,6 +47,7 @@ SYSTEM_PROMPT = (
 # ── REWARD FUNCTIONS ─────────────────────────────────────────
 # These are the core of GRPO — the model learns to maximise these scores
 
+
 def reward_json_valid(completions, **kwargs) -> list[float]:
     """Reward 1: Is the output valid JSON at all?"""
     rewards = []
@@ -52,12 +56,13 @@ def reward_json_valid(completions, **kwargs) -> list[float]:
         text = text.strip()
         try:
             start = text.index("{")
-            end   = text.rindex("}") + 1
+            end = text.rindex("}") + 1
             json.loads(text[start:end])
-            rewards.append(1.0)   # valid JSON
+            rewards.append(1.0)  # valid JSON
         except Exception:
             rewards.append(-1.0)  # invalid / no JSON
     return rewards
+
 
 def reward_has_name_field(completions, **kwargs) -> list[float]:
     """Reward 2: Does the JSON have a 'name' field (tool name)?"""
@@ -67,12 +72,13 @@ def reward_has_name_field(completions, **kwargs) -> list[float]:
         text = text.strip()
         try:
             start = text.index("{")
-            end   = text.rindex("}") + 1
+            end = text.rindex("}") + 1
             obj = json.loads(text[start:end])
             rewards.append(1.0 if "name" in obj else 0.0)
         except Exception:
             rewards.append(-0.5)
     return rewards
+
 
 def reward_has_arguments_field(completions, **kwargs) -> list[float]:
     """Reward 3: Does the JSON have an 'arguments' field?"""
@@ -82,12 +88,15 @@ def reward_has_arguments_field(completions, **kwargs) -> list[float]:
         text = text.strip()
         try:
             start = text.index("{")
-            end   = text.rindex("}") + 1
+            end = text.rindex("}") + 1
             obj = json.loads(text[start:end])
-            rewards.append(1.0 if "arguments" in obj and isinstance(obj["arguments"], dict) else 0.0)
+            rewards.append(
+                1.0 if "arguments" in obj and isinstance(obj["arguments"], dict) else 0.0
+            )
         except Exception:
             rewards.append(-0.5)
     return rewards
+
 
 def reward_no_extra_text(completions, **kwargs) -> list[float]:
     """Reward 4: Penalise if model adds text outside the JSON block."""
@@ -97,15 +106,16 @@ def reward_no_extra_text(completions, **kwargs) -> list[float]:
         text = text.strip()
         try:
             start = text.index("{")
-            end   = text.rindex("}") + 1
+            end = text.rindex("}") + 1
             before = text[:start].strip()
-            after  = text[end:].strip()
+            after = text[end:].strip()
             # Penalise if there is significant extra text
             extra = len(before) + len(after)
             rewards.append(1.0 if extra < 10 else max(0.0, 1.0 - extra / 100))
         except Exception:
             rewards.append(-0.5)
     return rewards
+
 
 def reward_correct_tool_format(completions, prompts=None, **kwargs) -> list[float]:
     """
@@ -122,13 +132,13 @@ def reward_correct_tool_format(completions, prompts=None, **kwargs) -> list[floa
         text = text.strip()
         try:
             start = text.index("{")
-            end   = text.rindex("}") + 1
-            obj   = json.loads(text[start:end])
+            end = text.rindex("}") + 1
+            obj = json.loads(text[start:end])
 
             has_name = "name" in obj and isinstance(obj.get("name"), str) and len(obj["name"]) > 0
             has_args = "arguments" in obj and isinstance(obj.get("arguments"), dict)
-            extra    = len(text[:start].strip()) + len(text[end:].strip())
-            clean    = extra < 15
+            extra = len(text[:start].strip()) + len(text[end:].strip())
+            clean = extra < 15
 
             if has_name and has_args and clean:
                 rewards.append(1.0)
@@ -142,9 +152,11 @@ def reward_correct_tool_format(completions, prompts=None, **kwargs) -> list[floa
             rewards.append(-1.0)
     return rewards
 
+
 # ── LOAD DATASET FOR RL ──────────────────────────────────────
 print("Loading glaive dataset for GRPO ...")
 raw = load_dataset("glaiveai/glaive-function-calling-v2", split="train")
+
 
 # For GRPO we only need the prompts (questions), not the answers
 # The reward function grades the model's output
@@ -157,7 +169,7 @@ def extract_prompt(row):
         func_schema = json.dumps(schemas[0]) if schemas else ""
 
         # Get first USER turn only
-        user_match = re.search(r'USER:\s*(.*?)(?=ASSISTANT:|$)', chat_raw, re.DOTALL)
+        user_match = re.search(r"USER:\s*(.*?)(?=ASSISTANT:|$)", chat_raw, re.DOTALL)
         if not user_match:
             return None
 
@@ -171,10 +183,11 @@ def extract_prompt(row):
 
         return [
             {"role": "system", "content": sys_msg},
-            {"role": "user",   "content": user_msg},
+            {"role": "user", "content": user_msg},
         ]
     except Exception:
         return None
+
 
 print("Building GRPO prompts ...")
 prompts = []
@@ -192,7 +205,7 @@ print(f"GRPO dataset size: {len(grpo_dataset)}")
 print("\nLoading tokenizer ...")
 tokenizer = AutoTokenizer.from_pretrained(MODEL_ID, trust_remote_code=True)
 tokenizer.pad_token = tokenizer.eos_token
-tokenizer.padding_side = "left"   # GRPO needs left padding
+tokenizer.padding_side = "left"  # GRPO needs left padding
 
 print("Loading base model ...")
 bnb_config = BitsAndBytesConfig(
@@ -229,7 +242,7 @@ grpo_config = GRPOConfig(
     push_to_hub=True,
     hub_model_id="qwen15b-glaive-grpo",
     # GRPO specific
-    num_generations=4,          # generate 4 outputs per prompt, rank them
+    num_generations=4,  # generate 4 outputs per prompt, rank them
     max_completion_length=128,  # renamed from max_new_tokens
     seed=42,
 )
@@ -242,11 +255,11 @@ trainer = GRPOTrainer(
     model=model,
     processing_class=tokenizer,
     reward_funcs=[
-        reward_json_valid,            # weight: ensures basic JSON
-        reward_has_name_field,        # weight: ensures tool name present
-        reward_has_arguments_field,   # weight: ensures args present
-        reward_no_extra_text,         # weight: keeps output clean
-        reward_correct_tool_format,   # weight: combined quality score
+        reward_json_valid,  # weight: ensures basic JSON
+        reward_has_name_field,  # weight: ensures tool name present
+        reward_has_arguments_field,  # weight: ensures args present
+        reward_no_extra_text,  # weight: keeps output clean
+        reward_correct_tool_format,  # weight: combined quality score
     ],
     args=grpo_config,
     train_dataset=grpo_dataset,

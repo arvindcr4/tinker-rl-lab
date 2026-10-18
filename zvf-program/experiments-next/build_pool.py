@@ -22,7 +22,13 @@ from __future__ import annotations
 
 import argparse
 import inspect
-from analysis_contract import VERSION, digest, validate_resume, validate_full_pool, validate_identity
+from analysis_contract import (
+    VERSION,
+    digest,
+    validate_resume,
+    validate_full_pool,
+    validate_identity,
+)
 import json
 import os
 import statistics
@@ -44,12 +50,19 @@ from common import (
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--model", required=True, help="base model id (HF-style)")
-    ap.add_argument("--sampler-path", default=None,
-                    help="existing tinker:// weights path (defaults to base model)")
+    ap.add_argument(
+        "--sampler-path",
+        default=None,
+        help="existing tinker:// weights path (defaults to base model)",
+    )
     ap.add_argument("--tag", default=None, help="output tag (default: derived)")
     ap.add_argument("--prompts", type=int, default=512)
-    ap.add_argument("--rollouts", type=int, default=32,
-                    help="R rollouts per prompt; must be >= max G you will analyze")
+    ap.add_argument(
+        "--rollouts",
+        type=int,
+        default=32,
+        help="R rollouts per prompt; must be >= max G you will analyze",
+    )
     ap.add_argument("--split", default="train", choices=["train", "test"])
     ap.add_argument("--seed", type=int, default=42)
     ap.add_argument("--temperature", type=float, default=1.0)
@@ -59,15 +72,24 @@ def main() -> None:
     ap.add_argument("--lora-rank", type=int, default=4)
     for name in ("model-revision", "dataset-revision", "tokenizer-revision", "checkpoint-identity"):
         ap.add_argument("--" + name, help="immutable resolved identity; required for live sampling")
-    ap.add_argument("--dry-run", action="store_true",
-                    help="print the plan and cost estimate; contact nothing")
-    ap.add_argument("--resume", action="store_true",
-                    help="continue a partial pool with identical config "
-                         "(same seed => deterministic example order)")
-    ap.add_argument("--max-retries", type=int, default=3,
-                    help="retries per prompt after transient sampling failures")
-    ap.add_argument("--retry-backoff-seconds", type=float, default=2.0,
-                    help="initial exponential retry backoff")
+    ap.add_argument(
+        "--dry-run", action="store_true", help="print the plan and cost estimate; contact nothing"
+    )
+    ap.add_argument(
+        "--resume",
+        action="store_true",
+        help="continue a partial pool with identical config "
+        "(same seed => deterministic example order)",
+    )
+    ap.add_argument(
+        "--max-retries",
+        type=int,
+        default=3,
+        help="retries per prompt after transient sampling failures",
+    )
+    ap.add_argument(
+        "--retry-backoff-seconds", type=float, default=2.0, help="initial exponential retry backoff"
+    )
     args = ap.parse_args()
 
     if args.prompts <= 0 or args.rollouts <= 1:
@@ -82,9 +104,12 @@ def main() -> None:
     out_path = RESULTS_DIR / f"pool_{tag}.json"
 
     est_tokens = args.prompts * args.rollouts * 300
-    print(f"[pool:{tag}] plan: {args.prompts} prompts x {args.rollouts} rollouts "
-          f"({args.split} split), T={args.temperature}, top_p={args.top_p}, "
-          f"~{est_tokens/1e6:.1f}M output tokens estimated", flush=True)
+    print(
+        f"[pool:{tag}] plan: {args.prompts} prompts x {args.rollouts} rollouts "
+        f"({args.split} split), T={args.temperature}, top_p={args.top_p}, "
+        f"~{est_tokens / 1e6:.1f}M output tokens estimated",
+        flush=True,
+    )
     print(f"[pool:{tag}] output -> {out_path}", flush=True)
     if args.dry_run:
         print(f"[pool:{tag}] DRY RUN — nothing sampled.", flush=True)
@@ -101,29 +126,47 @@ def main() -> None:
         if existing.get("status") == "complete":
             sys.exit(f"[pool:{tag}] pool already complete; nothing to resume.")
 
-    identity = {"version": VERSION, "model_revision": args.model_revision,
-                "dataset_revision": args.dataset_revision, "tokenizer_revision": args.tokenizer_revision,
-                "checkpoint_identity": args.checkpoint_identity, "sampler_backend": "tinker",
-                "reward_parser_sha256": digest(inspect.getsource(reward_fn)),
-                "prompt_selection_policy": "gsm8k_shuffle_seed_prefix_v1",
-                "sampling_config_sha256": digest({"temperature":args.temperature,"top_p":args.top_p,
-                    "max_tokens":args.max_tokens,"max_prompt_tokens":args.max_prompt_tokens,
-                    "rollouts":args.rollouts,"lora_rank":args.lora_rank}),
-                "prompt_manifest_sha256": "pending"}
+    identity = {
+        "version": VERSION,
+        "model_revision": args.model_revision,
+        "dataset_revision": args.dataset_revision,
+        "tokenizer_revision": args.tokenizer_revision,
+        "checkpoint_identity": args.checkpoint_identity,
+        "sampler_backend": "tinker",
+        "reward_parser_sha256": digest(inspect.getsource(reward_fn)),
+        "prompt_selection_policy": "gsm8k_shuffle_seed_prefix_v1",
+        "sampling_config_sha256": digest(
+            {
+                "temperature": args.temperature,
+                "top_p": args.top_p,
+                "max_tokens": args.max_tokens,
+                "max_prompt_tokens": args.max_prompt_tokens,
+                "rollouts": args.rollouts,
+                "lora_rank": args.lora_rank,
+            }
+        ),
+        "prompt_manifest_sha256": "pending",
+    }
     validate_identity(identity)
     # Check requested checkpoint/config before environment, dataset or provider access.
-    early_expected = {"model":args.model,"requested_sampler_path":args.sampler_path,
-                      "max_prompt_tokens":args.max_prompt_tokens,"lora_rank":args.lora_rank,
-                      "tokenizer_revision":args.tokenizer_revision}
+    early_expected = {
+        "model": args.model,
+        "requested_sampler_path": args.sampler_path,
+        "max_prompt_tokens": args.max_prompt_tokens,
+        "lora_rank": args.lora_rank,
+        "tokenizer_revision": args.tokenizer_revision,
+    }
     if args.resume and out_path.exists():
         validate_resume(existing, early_expected)
-        for key,value in identity.items():
+        for key, value in identity.items():
             if key != "prompt_manifest_sha256" and existing["analysis_contract"].get(key) != value:
                 raise ValueError(f"resume refused: analysis identity {key} changed")
 
     examples = load_gsm8k(args.split, args.prompts, args.seed, revision=args.dataset_revision)
     if len(examples) != args.prompts:
-        raise ValueError(f"dataset shortfall: requested {args.prompts}, available {len(examples)}; use a new explicit sample plan")
+        raise ValueError(
+            f"dataset shortfall: requested {args.prompts}, available {len(examples)}; use a new explicit sample plan"
+        )
     identity["prompt_manifest_sha256"] = digest(examples)
     if args.resume and out_path.exists() and existing["analysis_contract"] != identity:
         raise ValueError("resume refused: prompt manifest or analysis identity changed")
@@ -166,35 +209,50 @@ def main() -> None:
                 "refusing unsafe resume"
             )
         if banked:
-            validate_full_pool({**prev, "status":"complete", "sampling_completeness":"full",
-                                "exploratory_only":False, "n_prompts":len(banked),
-                                "planned_prompts":len(banked), "prompts":banked})
+            validate_full_pool(
+                {
+                    **prev,
+                    "status": "complete",
+                    "sampling_completeness": "full",
+                    "exploratory_only": False,
+                    "n_prompts": len(banked),
+                    "planned_prompts": len(banked),
+                    "prompts": banked,
+                }
+            )
         previous = prev
-        print(f"[pool:{tag}] resuming: {len(banked)} prompts already banked; "
-              f"{len(examples) - len(banked)} to go "
-              "(same seed => same deterministic example order)", flush=True)
+        print(
+            f"[pool:{tag}] resuming: {len(banked)} prompts already banked; "
+            f"{len(examples) - len(banked)} to go "
+            "(same seed => same deterministic example order)",
+            flush=True,
+        )
 
     session_id = utc_now()
     result: dict = previous or {}
-    result.update({
-        "kind": "zvf_pool",
-        "analysis_contract": identity,
-        "max_prompt_tokens": args.max_prompt_tokens, "lora_rank": args.lora_rank,
-        "tokenizer_revision": args.tokenizer_revision,
-        "sampling_completeness": "in_progress", "planned_prompts": args.prompts,
-        "status": "started",
-        "tag": tag,
-        "model": args.model,
-        "split": args.split,
-        "n_prompts": len(examples),
-        "rollouts_per_prompt": args.rollouts,
-        "seed": args.seed,
-        "temperature": args.temperature,
-        "top_p": args.top_p,
-        "max_tokens": args.max_tokens,
-        "requested_sampler_path": args.sampler_path,
-        "prompts": banked,
-    })
+    result.update(
+        {
+            "kind": "zvf_pool",
+            "analysis_contract": identity,
+            "max_prompt_tokens": args.max_prompt_tokens,
+            "lora_rank": args.lora_rank,
+            "tokenizer_revision": args.tokenizer_revision,
+            "sampling_completeness": "in_progress",
+            "planned_prompts": args.prompts,
+            "status": "started",
+            "tag": tag,
+            "model": args.model,
+            "split": args.split,
+            "n_prompts": len(examples),
+            "rollouts_per_prompt": args.rollouts,
+            "seed": args.seed,
+            "temperature": args.temperature,
+            "top_p": args.top_p,
+            "max_tokens": args.max_tokens,
+            "requested_sampler_path": args.sampler_path,
+            "prompts": banked,
+        }
+    )
     result.setdefault("started_at", utc_now())
     result.setdefault("failure_events", [])
     result.setdefault("retry_count", 0)
@@ -207,10 +265,12 @@ def main() -> None:
     if not os.environ.get("TINKER_API_KEY"):
         sys.exit("TINKER_API_KEY not set; aborting")
     import tinker.types as T
+
     # Resume the original resolved sampler even for a base-model pool.
     resume_path = previous["sampler_path"] if previous else args.sampler_path
-    sc, tok, sampler_used = make_sampler(args.model, resume_path,
-                                         args.lora_rank, tokenizer_revision=args.tokenizer_revision)
+    sc, tok, sampler_used = make_sampler(
+        args.model, resume_path, args.lora_rank, tokenizer_revision=args.tokenizer_revision
+    )
     result["sampler_path"] = sampler_used
     write_result(out_path, result)  # persist resolved identity before first sampling call
     sampling = T.SamplingParams(
@@ -255,7 +315,7 @@ def main() -> None:
                 if attempt >= args.max_retries:
                     raise
                 result["retry_count"] += 1
-                delay = args.retry_backoff_seconds * (2 ** attempt)
+                delay = args.retry_backoff_seconds * (2**attempt)
                 print(
                     f"[pool:{tag}] prompt {i} attempt {attempt + 1} failed "
                     f"({type(exc).__name__}); retrying in {delay:.1f}s",
@@ -270,36 +330,35 @@ def main() -> None:
             )
         token_counts = [len(seq.tokens) for seq in sampled.sequences]
         rewards = [
-            reward_fn(tok.decode(list(seq.tokens), skip_special_tokens=True),
-                      answer)
+            reward_fn(tok.decode(list(seq.tokens), skip_special_tokens=True), answer)
             for seq in sampled.sequences
         ]
         p_hat = sum(rewards) / len(rewards)
-        result["prompts"].append({
-            "idx": i,
-            "answer": answer,
-            "rewards": rewards,
-            "p_hat": p_hat,
-            "token_counts": token_counts,
-            "sample_seconds": round(time.time() - sample_started, 3),
-        })
+        result["prompts"].append(
+            {
+                "idx": i,
+                "answer": answer,
+                "rewards": rewards,
+                "p_hat": p_hat,
+                "token_counts": token_counts,
+                "sample_seconds": round(time.time() - sample_started, 3),
+            }
+        )
         if (i + 1) % 25 == 0:
             elapsed = time.time() - t0
-            print(f"[pool:{tag}] {i+1}/{len(examples)} prompts "
-                  f"({elapsed:.0f}s, mean p_hat="
-                  f"{sum(p['p_hat'] for p in result['prompts'])/len(result['prompts']):.3f})",
-                  flush=True)
+            print(
+                f"[pool:{tag}] {i + 1}/{len(examples)} prompts "
+                f"({elapsed:.0f}s, mean p_hat="
+                f"{sum(p['p_hat'] for p in result['prompts']) / len(result['prompts']):.3f})",
+                flush=True,
+            )
             write_result(out_path, result)  # checkpoint partial progress
 
     segment_wall_seconds = time.time() - t0
     prior_wall_seconds = float(result.get("wall_seconds") or 0.0)
     cumulative_wall_seconds = prior_wall_seconds + segment_wall_seconds
-    total_output_tokens = sum(
-        sum(row.get("token_counts", [])) for row in result["prompts"]
-    )
-    token_count_prompts = sum(
-        1 for row in result["prompts"] if row.get("token_counts") is not None
-    )
+    total_output_tokens = sum(sum(row.get("token_counts", [])) for row in result["prompts"])
+    token_count_prompts = sum(1 for row in result["prompts"] if row.get("token_counts") is not None)
     total_samples = sum(len(row.get("rewards", [])) for row in result["prompts"])
     prompt_attempts = len(result["prompts"]) + len(result["failure_events"])
     failure_times = []
@@ -313,7 +372,7 @@ def main() -> None:
     failure_times.sort()
     failure_intervals = [
         (right - left).total_seconds()
-        for left, right in zip(failure_times, failure_times[1:])
+        for left, right in zip(failure_times, failure_times[1:], strict=False)
     ]
 
     result["status"] = "complete"
@@ -334,22 +393,21 @@ def main() -> None:
         ),
         "failure_count": len(result["failure_events"]),
         "retry_count": result["retry_count"],
-        "goodput_percent": round(
-            100.0 * len(result["prompts"]) / max(prompt_attempts, 1), 3
-        ),
+        "goodput_percent": round(100.0 * len(result["prompts"]) / max(prompt_attempts, 1), 3),
         "output_tokens_per_wall_second": round(
             total_output_tokens / max(cumulative_wall_seconds, 1e-9), 3
         ),
         "mean_prompt_sample_seconds": round(
             statistics.fmean(
-                row["sample_seconds"]
-                for row in result["prompts"]
-                if "sample_seconds" in row
+                row["sample_seconds"] for row in result["prompts"] if "sample_seconds" in row
             ),
             3,
-        ) if any("sample_seconds" in row for row in result["prompts"]) else None,
+        )
+        if any("sample_seconds" in row for row in result["prompts"])
+        else None,
         "mtbf_seconds": round(statistics.fmean(failure_intervals), 3)
-        if failure_intervals else None,
+        if failure_intervals
+        else None,
     }
     write_result(out_path, result)
     print(f"[pool:{tag}] complete -> {out_path}", flush=True)

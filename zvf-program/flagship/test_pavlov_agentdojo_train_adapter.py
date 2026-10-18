@@ -14,7 +14,9 @@ class PavlovAgentdojoTrainAdapterTests(unittest.TestCase):
     def setUp(self) -> None:
         self.bundle = adapter.generate_boundary_bundle()
 
-    def _make_filled_receipt(self, suite_id: str, *, include_public_first: bool = True) -> dict[str, Any]:
+    def _make_filled_receipt(
+        self, suite_id: str, *, include_public_first: bool = True
+    ) -> dict[str, Any]:
         task_id_hashes = ["a" * 64, "b" * 64, "c" * 64]
         checkpoint_visibility = "public" if include_public_first else "private"
         base = {
@@ -103,54 +105,57 @@ class PavlovAgentdojoTrainAdapterTests(unittest.TestCase):
         return bundle
 
     def test_generate_boundary_bundle(self) -> None:
-        self.assertEqual(self.bundle["schema_version"], adapter.SCHEMA_VERSION)
-        self.assertEqual(self.bundle["adapter_id"], adapter.ADAPTER_ID)
-        self.assertEqual(self.bundle["suite_count"], 1)
-        self.assertEqual(len(self.bundle["boundaries"]), 1)
-        self.assertEqual(self.bundle["boundaries"][0]["suite_id"], "agentdojo_train")
+        assert self.bundle["schema_version"] == adapter.SCHEMA_VERSION
+        assert self.bundle["adapter_id"] == adapter.ADAPTER_ID
+        assert self.bundle["suite_count"] == 1
+        assert len(self.bundle["boundaries"]) == 1
+        assert self.bundle["boundaries"][0]["suite_id"] == "agentdojo_train"
 
     def test_bundle_signature_is_stable(self) -> None:
-        self.assertEqual(self.bundle["bundle_signature"], adapter.generate_boundary_bundle()["bundle_signature"])
+        assert (
+            self.bundle["bundle_signature"]
+            == adapter.generate_boundary_bundle()["bundle_signature"]
+        )
 
     def test_validate_complete_boundary_bundle(self) -> None:
         bundle = self._with_complete_receipts()
         errors = adapter.validate_adapter_bundle(bundle)
-        self.assertEqual(errors, [])
+        assert errors == []
         result = adapter.evaluate_bundle(bundle)
-        self.assertEqual(result["status"], "READY")
-        self.assertEqual(result["errors"], [])
-        self.assertIn("agentdojo_train", result["suite_readiness"])
+        assert result["status"] == "READY"
+        assert result["errors"] == []
+        assert "agentdojo_train" in result["suite_readiness"]
 
     def test_validate_rejects_schema_drift(self) -> None:
         bad = copy.deepcopy(self._with_complete_receipts())
         bad["schema_version"] = "bad"
         self._with_resigned_bundle(bad)
         errors = adapter.validate_adapter_bundle(bad)
-        self.assertIn("adapter bundle schema_version mismatch", errors)
+        assert "adapter bundle schema_version mismatch" in errors
 
     def test_validate_rejects_unsupported_suite(self) -> None:
         bad = self._with_complete_receipts()
         bad["boundaries"][0]["suite_id"] = "other_suite"
         self._with_resigned_bundle(bad)
         errors = adapter.validate_adapter_bundle(bad)
-        self.assertTrue(any("unsupported suite_id" in error for error in errors))
+        assert any("unsupported suite_id" in error for error in errors)
 
     def test_validate_requires_train_claim_flags(self) -> None:
         bad = self._with_complete_receipts()
         bad["boundaries"][0]["suite_role"] = "primary_eval"
         self._with_resigned_bundle(bad)
         errors = adapter.validate_adapter_bundle(bad)
-        self.assertTrue(any("suite_role must be train" in error for error in errors))
+        assert any("suite_role must be train" in error for error in errors)
         bad = self._with_complete_receipts()
         bad["boundaries"][0]["primary_eval"] = True
         self._with_resigned_bundle(bad)
         errors = adapter.validate_adapter_bundle(bad)
-        self.assertTrue(any("primary_eval must be false" in error for error in errors))
+        assert any("primary_eval must be false" in error for error in errors)
         bad = self._with_complete_receipts()
         bad["boundaries"][0]["heldout"] = True
         self._with_resigned_bundle(bad)
         errors = adapter.validate_adapter_bundle(bad)
-        self.assertTrue(any("heldout must be false" in error for error in errors))
+        assert any("heldout must be false" in error for error in errors)
 
     def test_validate_rejects_mutable_hashes_and_zeroes(self) -> None:
         bad = self._with_complete_receipts()
@@ -158,11 +163,12 @@ class PavlovAgentdojoTrainAdapterTests(unittest.TestCase):
         bad["boundaries"][0]["receipts"]["hf_checkpoints"][0]["revision"] = "0" * 40
         self._with_resigned_bundle(bad)
         errors = adapter.validate_adapter_bundle(bad)
-        self.assertTrue(
-            any("dataset_or_source_revision must be immutable" in error for error in errors),
-            errors,
+        assert any("dataset_or_source_revision must be immutable" in error for error in errors), (
+            errors
         )
-        self.assertTrue(any("hf_checkpoints[0].revision must be a 40-char revision" in error for error in errors), errors)
+        assert any(
+            "hf_checkpoints[0].revision must be a 40-char revision" in error for error in errors
+        ), errors
 
     def test_validate_rejects_invalid_task_hash_and_split_hash(self) -> None:
         bad = self._with_complete_receipts()
@@ -171,12 +177,15 @@ class PavlovAgentdojoTrainAdapterTests(unittest.TestCase):
         bad["boundaries"][0]["receipts"]["split_manifest_hash"] = "0" * 64
         self._with_resigned_bundle(bad)
         errors = adapter.validate_adapter_bundle(bad)
-        self.assertTrue(
-            any("task_id_hashes[0] must be a SHA-256 digest" in error for error in errors),
-            errors,
+        assert any("task_id_hashes[0] must be a SHA-256 digest" in error for error in errors), (
+            errors
         )
-        self.assertTrue(any("split_task_id_hash must be a SHA-256 digest" in error for error in errors), errors)
-        self.assertTrue(any("split_manifest_hash must be a SHA-256 digest" in error for error in errors), errors)
+        assert any("split_task_id_hash must be a SHA-256 digest" in error for error in errors), (
+            errors
+        )
+        assert any("split_manifest_hash must be a SHA-256 digest" in error for error in errors), (
+            errors
+        )
 
     def test_validate_rejects_duplicate_task_hashes(self) -> None:
         bad = self._with_complete_receipts()
@@ -186,17 +195,16 @@ class PavlovAgentdojoTrainAdapterTests(unittest.TestCase):
         )
         self._with_resigned_bundle(bad)
         errors = adapter.validate_adapter_bundle(bad)
-        self.assertTrue(any("task_id_hashes must be unique" in error for error in errors), errors)
+        assert any("task_id_hashes must be unique" in error for error in errors), errors
 
     def test_validate_rejects_disallowed_dataset_substitution(self) -> None:
         bad = self._with_complete_receipts()
-        bad["boundaries"][0]["receipts"]["dataset_id"] = "UKGovernmentBEIS/inspect_evals/agentharm_eval"
+        bad["boundaries"][0]["receipts"]["dataset_id"] = (
+            "UKGovernmentBEIS/inspect_evals/agentharm_eval"
+        )
         self._with_resigned_bundle(bad)
         errors = adapter.validate_adapter_bundle(bad)
-        self.assertTrue(
-            any("substitute primary-eval prompts" in error for error in errors),
-            errors,
-        )
+        assert any("substitute primary-eval prompts" in error for error in errors), errors
 
     def test_validate_rejects_authoritative_source_mismatch(self) -> None:
         bad = self._with_complete_receipts()
@@ -204,19 +212,17 @@ class PavlovAgentdojoTrainAdapterTests(unittest.TestCase):
         bad["boundaries"][0]["authoritative_source"]["source_id"] = "other/project"
         self._with_resigned_bundle(bad)
         errors = adapter.validate_adapter_bundle(bad)
-        self.assertTrue(
-            any("authoritative_source.source_url must equal contract url" in error for error in errors),
-            errors,
-        )
+        assert any(
+            "authoritative_source.source_url must equal contract url" in error for error in errors
+        ), errors
 
     def test_validate_rejects_native_contract_drift(self) -> None:
         bad = self._with_complete_receipts()
         bad["boundaries"][0]["native_contract"]["environment"]["name"] = "wrong"
         self._with_resigned_bundle(bad)
         errors = adapter.validate_adapter_bundle(bad)
-        self.assertTrue(
-            any("native_contract.environment.name must be exact" in error for error in errors),
-            errors,
+        assert any("native_contract.environment.name must be exact" in error for error in errors), (
+            errors
         )
 
     def test_validate_rejects_wandb_offline(self) -> None:
@@ -224,58 +230,56 @@ class PavlovAgentdojoTrainAdapterTests(unittest.TestCase):
         bad["boundaries"][0]["receipts"]["wandb_run_identity"]["online"] = False
         self._with_resigned_bundle(bad)
         errors = adapter.validate_adapter_bundle(bad)
-        self.assertTrue(any("wandb_run_identity.online must be true" in error for error in errors), errors)
+        assert any("wandb_run_identity.online must be true" in error for error in errors), errors
 
     def test_validate_rejects_missing_hf_required_stages(self) -> None:
         bad = self._with_complete_receipts()
-        bad["boundaries"][0]["receipts"]["hf_checkpoints"] = bad["boundaries"][0]["receipts"]["hf_checkpoints"][0:2]
+        bad["boundaries"][0]["receipts"]["hf_checkpoints"] = bad["boundaries"][0]["receipts"][
+            "hf_checkpoints"
+        ][0:2]
         self._with_resigned_bundle(bad)
         errors = adapter.validate_adapter_bundle(bad)
-        self.assertTrue(any("missing required stage final" in error for error in errors), errors)
+        assert any("missing required stage final" in error for error in errors), errors
 
     def test_validate_rejects_public_checkpoint_without_safety(self) -> None:
         bad = self._with_complete_receipts()
         bad["boundaries"][0]["receipts"]["hf_checkpoints"][0]["safe_public_artifact"] = False
         self._with_resigned_bundle(bad)
         errors = adapter.validate_adapter_bundle(bad)
-        self.assertTrue(
-            any("safe_public_artifact must be true for public visibility" in error for error in errors),
-            errors,
-        )
+        assert any(
+            "safe_public_artifact must be true for public visibility" in error for error in errors
+        ), errors
 
     def test_validate_rejects_tinker_checkpoint_run_mismatch(self) -> None:
         bad = self._with_complete_receipts()
         bad["boundaries"][0]["receipts"]["hf_checkpoints"][0]["run_id"] = "other-run"
         self._with_resigned_bundle(bad)
         errors = adapter.validate_adapter_bundle(bad)
-        self.assertTrue(
-            any("hf checkpoint run_id values must match tinker_run_identity.run_id" in error for error in errors),
-            errors,
-        )
+        assert any(
+            "hf checkpoint run_id values must match tinker_run_identity.run_id" in error
+            for error in errors
+        ), errors
 
     def test_validate_rejects_primary_eval_dataset_substitution(self) -> None:
         bad = self._with_complete_receipts()
         bad["boundaries"][0]["receipts"]["dataset_id"] = "salesforce/xlam-function-calling-60k"
         self._with_resigned_bundle(bad)
         errors = adapter.validate_adapter_bundle(bad)
-        self.assertTrue(any("substitute primary-eval prompts" in error for error in errors), errors)
+        assert any("substitute primary-eval prompts" in error for error in errors), errors
 
     def test_disjointness_from_all_primary_eval_markers(self) -> None:
         bad = self._with_complete_receipts()
         bad["boundaries"][0]["receipts"]["dataset_id"] = "frontiermath_eval"
         self._with_resigned_bundle(bad)
         errors = adapter.validate_adapter_bundle(bad)
-        self.assertTrue(
-            any("substitute primary-eval prompts" in error for error in errors),
-            errors,
-        )
+        assert any("substitute primary-eval prompts" in error for error in errors), errors
 
     def test_evaluate_bundle_marks_blocked_with_boundary_errors(self) -> None:
         blocked = self._with_complete_receipts()
         blocked["boundaries"][0]["suite_role"] = "primary_eval"
         result = adapter.evaluate_bundle(blocked)
-        self.assertEqual(result["status"], "BLOCKED")
-        self.assertIn("suite_role must be train", result["errors"][0])
+        assert result["status"] == "BLOCKED"
+        assert "suite_role must be train" in result["errors"][0]
 
 
 if __name__ == "__main__":

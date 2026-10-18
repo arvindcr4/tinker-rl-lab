@@ -825,7 +825,10 @@ def audit(
         "declared_exact_source_lanes": exact_sources,
         "verified_exact_source_lanes": [],
         "scientific_claim_eligible": False,
-        "input_sha256": {"status": _sha256_bytes(status_bytes), "followup": _sha256_bytes(followup_bytes)},
+        "input_sha256": {
+            "status": _sha256_bytes(status_bytes),
+            "followup": _sha256_bytes(followup_bytes),
+        },
         "lanes": records,
         "claim_boundary": (
             "E1 and E11 are source declarations only. Task coverage, grader evidence and "

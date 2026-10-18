@@ -159,7 +159,9 @@ def read_size_table(checkout: Path) -> list[dict[str, Any]]:
 def rank_competitions_by_size(checkout: Path) -> list[dict[str, Any]]:
     """All surveyed competitions, ascending by recorded download size."""
 
-    return sorted(read_size_table(checkout), key=lambda row: (row["dataset_size_gb"], row["competition_id"]))
+    return sorted(
+        read_size_table(checkout), key=lambda row: (row["dataset_size_gb"], row["competition_id"])
+    )
 
 
 def smallest_competition(checkout: Path) -> dict[str, Any] | None:
@@ -174,11 +176,15 @@ def survey(checkout: Path) -> dict[str, Any]:
     eval_ids = read_split(checkout, EVAL_SPLIT_RELPATH)
     ranked = rank_competitions_by_size(checkout)
     surveyed_ids = {row["competition_id"] for row in ranked}
-    definition_dirs = sorted(
-        p.name
-        for p in (checkout / "mlebench/competitions").iterdir()
-        if p.is_dir() and (p / "config.yaml").is_file()
-    ) if (checkout / "mlebench/competitions").is_dir() else []
+    definition_dirs = (
+        sorted(
+            p.name
+            for p in (checkout / "mlebench/competitions").iterdir()
+            if p.is_dir() and (p / "config.yaml").is_file()
+        )
+        if (checkout / "mlebench/competitions").is_dir()
+        else []
+    )
 
     return {
         "source": {
@@ -215,7 +221,12 @@ def docker_image_digest(image: str = REQUIRED_IMAGE) -> dict[str, Any]:
             timeout=60,
         )
     except (OSError, subprocess.SubprocessError) as exc:
-        return {"image": image, "present": False, "digest": None, "error": f"{type(exc).__name__}: {exc}"}
+        return {
+            "image": image,
+            "present": False,
+            "digest": None,
+            "error": f"{type(exc).__name__}: {exc}",
+        }
 
     if completed.returncode != 0:
         return {
@@ -228,7 +239,12 @@ def docker_image_digest(image: str = REQUIRED_IMAGE) -> dict[str, Any]:
     try:
         payload = json.loads(completed.stdout)
     except json.JSONDecodeError as exc:
-        return {"image": image, "present": False, "digest": None, "error": f"unparseable inspect output: {exc}"}
+        return {
+            "image": image,
+            "present": False,
+            "digest": None,
+            "error": f"unparseable inspect output: {exc}",
+        }
 
     repo_digests = payload.get("RepoDigests") or []
     return {
@@ -351,7 +367,9 @@ def dataset_state(data_dir: Path, competition_id: str) -> dict[str, Any]:
     }
 
 
-def kaggle_rule_acceptance(competition_id: str, probe: dict[str, Any] | None = None) -> dict[str, Any]:
+def kaggle_rule_acceptance(
+    competition_id: str, probe: dict[str, Any] | None = None
+) -> dict[str, Any]:
     """Per-competition Kaggle rule state, with the URL a human must visit."""
 
     state: dict[str, Any] = {
@@ -381,11 +399,7 @@ def kaggle_rule_acceptance(competition_id: str, probe: dict[str, Any] | None = N
         state["accepted_evidence"] = (
             probe.get("error")
             or probe.get("downloaded")
-            or (
-                "download endpoint served data"
-                if probe.get("download_endpoint_ok")
-                else None
-            )
+            or ("download endpoint served data" if probe.get("download_endpoint_ok") else None)
         )
         if "download_endpoint_ok" in probe:
             state["verified_via"] = "download endpoint (the only gated one)"
@@ -420,7 +434,7 @@ def check_rules_accepted(competition_id: str, checkout: Path = DEFAULT_CHECKOUT)
         from mlebench.utils import authenticate_kaggle_api
 
         api = authenticate_kaggle_api()
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         result["error"] = f"kaggle auth failed: {type(exc).__name__}: {exc}"
         return result
 
@@ -429,16 +443,18 @@ def check_rules_accepted(competition_id: str, checkout: Path = DEFAULT_CHECKOUT)
     try:
         api.competition_list_files(competition_id)
         result["metadata_endpoint_ok"] = True
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         # An iteration quirk in some client versions still means the call returned.
         result["metadata_endpoint_ok"] = "not iterable" in str(exc)
 
     with tempfile.TemporaryDirectory() as tmp:
         try:
-            api.competition_download_files(competition=competition_id, path=tmp, quiet=True, force=True)
+            api.competition_download_files(
+                competition=competition_id, path=tmp, quiet=True, force=True
+            )
             result["download_endpoint_ok"] = True
             result["accepted"] = True
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             message = str(exc)
             result["download_endpoint_ok"] = False
             result["accepted"] = False
@@ -620,7 +636,8 @@ def harness_validate(
         result["data_provenance"] = "official_prepared_competition_data"
         result["fixture"] = None
         result["official_data"] = {
-            "answers_path": real_state["private_answers_sha256"] and str(Path(data_dir) / competition_id / "prepared/private/test.csv"),
+            "answers_path": real_state["private_answers_sha256"]
+            and str(Path(data_dir) / competition_id / "prepared/private/test.csv"),
             "answers_sha256": real_state["private_answers_sha256"],
             "sample_submission_sha256": real_state["sample_submission_sha256"],
             "prepared_by": "mlebench prepare (upstream preparer), checksums verified against the pinned checksums.yaml",
@@ -641,7 +658,7 @@ def harness_validate(
         from mlebench.data import get_leaderboard
         from mlebench.grade import grade_csv
         from mlebench.registry import Registry
-    except Exception as exc:  # noqa: BLE001 - missing deps must fail closed, not crash
+    except Exception as exc:
         result["status"] = "BLOCKED"
         result["reason"] = f"official mlebench package not importable: {type(exc).__name__}: {exc}"
         return result
@@ -652,8 +669,16 @@ def harness_validate(
 
     public_dir = Path(active_data_dir) / competition_id / "prepared/public"
     cases: list[tuple[str, Path, str]] = [
-        ("gold_submission", competition.gold_submission, "grader scoring the competition's own gold answers"),
-        ("sample_submission", competition.sample_submission, "the sample submission shipped by prepare.py"),
+        (
+            "gold_submission",
+            competition.gold_submission,
+            "grader scoring the competition's own gold answers",
+        ),
+        (
+            "sample_submission",
+            competition.sample_submission,
+            "the sample submission shipped by prepare.py",
+        ),
     ]
     invalid_path = public_dir / "invalid_submission.csv"
     if not invalid_path.is_file() and competition.sample_submission.is_file():
@@ -664,7 +689,9 @@ def harness_validate(
             _REPO_ROOT / "outputs/e9_mle_bench/harness_controls" / competition_id,
         )
     if invalid_path.is_file():
-        cases.append(("invalid_submission", invalid_path, "rows that violate the submission contract"))
+        cases.append(
+            ("invalid_submission", invalid_path, "rows that violate the submission contract")
+        )
 
     reports = []
     for case_name, submission_path, description in cases:
@@ -701,7 +728,8 @@ def harness_validate(
     result["upstream_reproduction"] = reproduction
 
     checks = {
-        "leaderboard_is_real_kaggle_data": bool(len(leaderboard)) and "score" in leaderboard.columns,
+        "leaderboard_is_real_kaggle_data": bool(len(leaderboard))
+        and "score" in leaderboard.columns,
         "gold_submission_scored": gold.get("score") is not None,
         "gold_submission_earns_gold_medal": bool(gold.get("gold_medal")),
         "sample_submission_scored": sample.get("score") is not None,
@@ -715,7 +743,8 @@ def harness_validate(
                 else gold["score"] > sample["score"]
             )
         ),
-        "invalid_submission_rejected": (invalid is not None) and (invalid.get("valid_submission") is False),
+        "invalid_submission_rejected": (invalid is not None)
+        and (invalid.get("valid_submission") is False),
     }
 
     result.update(
@@ -759,11 +788,23 @@ REQUIRED_GATES = (
 def verify_source_checkout(checkout: Path) -> dict[str, Any]:
     """Require the actual pinned Git tree and clean working tree, offline."""
     try:
-        revision = subprocess.run(["git", "rev-parse", "HEAD"], cwd=checkout, check=True, capture_output=True, text=True).stdout.strip()
-        status = subprocess.run(["git", "status", "--porcelain", "--untracked-files=all"], cwd=checkout, check=True, capture_output=True, text=True).stdout
+        revision = subprocess.run(
+            ["git", "rev-parse", "HEAD"], cwd=checkout, check=True, capture_output=True, text=True
+        ).stdout.strip()
+        status = subprocess.run(
+            ["git", "status", "--porcelain", "--untracked-files=all"],
+            cwd=checkout,
+            check=True,
+            capture_output=True,
+            text=True,
+        ).stdout
     except (OSError, subprocess.CalledProcessError):
         return {"verified": False, "reason": "missing_git_source_evidence"}
-    return {"verified": revision == UPSTREAM_COMMIT and not status, "observed_revision": revision, "clean": not bool(status)}
+    return {
+        "verified": revision == UPSTREAM_COMMIT and not status,
+        "observed_revision": revision,
+        "clean": not bool(status),
+    }
 
 
 def evaluate_gates(receipt: dict[str, Any]) -> dict[str, bool]:
@@ -778,7 +819,8 @@ def evaluate_gates(receipt: dict[str, Any]) -> dict[str, bool]:
     contamination = receipt.get("contamination_policy", {})
 
     return {
-        "upstream_revision_pinned": source.get("source_verification", {}).get("verified") is True and source.get("revision") == UPSTREAM_COMMIT,
+        "upstream_revision_pinned": source.get("source_verification", {}).get("verified") is True
+        and source.get("revision") == UPSTREAM_COMMIT,
         "split_manifest_resolved": bool(manifest.get("eval_split", {}).get("task_ids_sha256")),
         "verifier_identity_resolved": bool(verifier.get("resolved")),
         "dataset_license_accepted": binding.get("kaggle_rules", {}).get("accepted") is True,
@@ -887,11 +929,18 @@ def build_receipt(
         else {"image": REQUIRED_IMAGE, "present": False, "digest": None, "error": "not inspected"}
     )
     environment["dockerfile_sha256"] = sha256_file(checkout / "environment/Dockerfile")
-    environment["dockerfile_target_platform"] = "linux/amd64 (Miniconda3-latest-Linux-x86_64.sh is hard-coded)"
+    environment["dockerfile_target_platform"] = (
+        "linux/amd64 (Miniconda3-latest-Linux-x86_64.sh is hard-coded)"
+    )
     environment["verifier_only_variant"] = (
         docker_image_digest(VERIFIER_ONLY_IMAGE)
         if inspect_docker
-        else {"image": VERIFIER_ONLY_IMAGE, "present": False, "digest": None, "error": "not inspected"}
+        else {
+            "image": VERIFIER_ONLY_IMAGE,
+            "present": False,
+            "digest": None,
+            "error": "not inspected",
+        }
     )
     environment["verifier_only_variant"]["build_arg"] = "INSTALL_HEAVY_DEPENDENCIES=false"
     environment["verifier_only_variant"]["satisfies_container_gate"] = False
@@ -935,7 +984,9 @@ def build_receipt(
             "kaggle_rules": kaggle_rule_acceptance(competition_id, rule_probe),
             "dataset_state": dataset_state(data_dir, competition_id),
             "other_competitions_rule_state": {
-                "accepted_count": 1 if (rule_probe or {}).get("accepted") or (rule_probe or {}).get("rules_accepted") else 0,
+                "accepted_count": 1
+                if (rule_probe or {}).get("accepted") or (rule_probe or {}).get("rules_accepted")
+                else 0,
                 "eval_split_size": len(read_split(checkout, EVAL_SPLIT_RELPATH)),
                 "remaining_unaccepted": max(len(read_split(checkout, EVAL_SPLIT_RELPATH)) - 1, 0),
                 "note": (
@@ -956,7 +1007,8 @@ def build_receipt(
         "contamination_policy": {
             "rule": "evaluation competitions must be disjoint from any training corpus",
             "training_task_ids_sha256": None,
-            "evaluation_task_ids_sha256": task_ids_sha256(read_split(checkout, EVAL_SPLIT_RELPATH)) or None,
+            "evaluation_task_ids_sha256": task_ids_sha256(read_split(checkout, EVAL_SPLIT_RELPATH))
+            or None,
             "disjoint_receipt": None,
             "status": "BLOCKED",
             "reason": "No training provenance exists for this lane, so disjointness cannot be proven.",
@@ -988,14 +1040,16 @@ def build_receipt(
         key: str(path)
         for key, path in {
             "lane_status": _REPO_ROOT / "outputs/e9_mle_bench/lane_status_2026-08-09.md",
-            "competition_size_survey": _REPO_ROOT / "outputs/e9_mle_bench/evidence/competition_size_survey.json",
+            "competition_size_survey": _REPO_ROOT
+            / "outputs/e9_mle_bench/evidence/competition_size_survey.json",
             "kaggle_size_crosscheck": _REPO_ROOT
             / "outputs/e9_mle_bench/evidence/kaggle_files_spooky_author_identification.csv",
             "prepare_failure_log": _REPO_ROOT
             / "outputs/e9_mle_bench/evidence/prepare_spooky_author_identification.log",
             "kaggle_rule_acceptance_probe": _REPO_ROOT
             / "outputs/e9_mle_bench/evidence/kaggle_rule_acceptance_probe.json",
-            "harness_validation": _REPO_ROOT / "outputs/e9_mle_bench/evidence/harness_validation.json",
+            "harness_validation": _REPO_ROOT
+            / "outputs/e9_mle_bench/evidence/harness_validation.json",
             "official_cli_grade_sample_log": _REPO_ROOT
             / "outputs/e9_mle_bench/evidence/mlebench_grade_sample_fixture.log",
             "runner": _REPO_ROOT / "zvf-program/flagship/mle_bench_eval.py",
@@ -1031,7 +1085,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     p_survey.add_argument("--top", type=int, default=10)
     p_survey.add_argument("--out", type=Path, default=None)
 
-    p_harness = sub.add_parser("harness-validate", help="Grade gold answers through the official grader.")
+    p_harness = sub.add_parser(
+        "harness-validate", help="Grade gold answers through the official grader."
+    )
     p_harness.add_argument("--competition", type=str, default=None)
     p_harness.add_argument("--fixture-dir", type=Path, default=DEFAULT_FIXTURE_DIR)
     p_harness.add_argument("--data-dir", type=Path, default=DEFAULT_DATA_DIR)
@@ -1062,31 +1118,43 @@ def main(argv: Sequence[str] | None = None) -> int:
             print(f"total recorded download size: {payload['total_dataset_size_gb']} GB")
             print(f"smallest: {smallest['competition_id']} @ {smallest['dataset_size_gb']} GB")
             for row in payload["ranking"][: args.top]:
-                print(f"  {row['dataset_size_gb']:>10.5f} GB  {row['dataset_size_mb']:>9.2f} MB  {row['competition_id']}")
+                print(
+                    f"  {row['dataset_size_gb']:>10.5f} GB  {row['dataset_size_mb']:>9.2f} MB  {row['competition_id']}"
+                )
             return 0
         _write(payload, args.out)
         return 0
 
     if args.command == "harness-validate":
-        competition = args.competition or (smallest_competition(args.checkout) or {}).get("competition_id")
+        competition = args.competition or (smallest_competition(args.checkout) or {}).get(
+            "competition_id"
+        )
         payload = harness_validate(args.checkout, competition, args.fixture_dir, args.data_dir)
         _write(payload, args.out)
         return 0 if payload.get("status") == "PASS" else 1
 
     if args.command == "check-rules":
-        competition = args.competition or (smallest_competition(args.checkout) or {}).get("competition_id")
+        competition = args.competition or (smallest_competition(args.checkout) or {}).get(
+            "competition_id"
+        )
         payload = check_rules_accepted(competition, args.checkout)
         _write(payload, args.out)
         return 0 if payload.get("accepted") else 1
 
     if args.command == "receipt":
-        harness = json.loads(args.harness_json.read_text(encoding="utf-8")) if args.harness_json else None
+        harness = (
+            json.loads(args.harness_json.read_text(encoding="utf-8")) if args.harness_json else None
+        )
         probe_payload = None
         if args.rule_probe_json:
             raw = json.loads(args.rule_probe_json.read_text(encoding="utf-8"))
             entries = raw if isinstance(raw, list) else [raw]
-            competition = args.competition or (smallest_competition(args.checkout) or {}).get("competition_id")
-            probe_payload = next((e for e in entries if e.get("competition_id") == competition), None)
+            competition = args.competition or (smallest_competition(args.checkout) or {}).get(
+                "competition_id"
+            )
+            probe_payload = next(
+                (e for e in entries if e.get("competition_id") == competition), None
+            )
         payload = build_receipt(
             checkout=args.checkout,
             competition_id=args.competition,

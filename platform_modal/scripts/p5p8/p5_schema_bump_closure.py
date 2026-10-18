@@ -12,11 +12,13 @@ on the worklist (B=2000, seed=20260704). Closure act populates the
 worklist entries from the same DELTA_IMPLICATIONS source-of-truth
 iter-32 uses, then re-audits.
 """
+
 from __future__ import annotations
 import csv, datetime, json, pathlib, random, sys
 
 sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))
 from _paths import REPO_ROOT
+
 ROOT = REPO_ROOT
 REG = ROOT / "platform_hybrid/registry" / "entries"
 RES = ROOT / "platform_hybrid/experiments/results/p5p8/review17_v2"
@@ -26,18 +28,24 @@ NEW_FIELDS = ("token_aggregation", "reward_shaping_type", "sampling_dynamic_filt
 # (delta_id) -> tuple of NEW_FIELDS this variant touches. Mirrored from
 # platform_modal/scripts/p5p8/delta_minreport_consistency.py DELTA_IMPLICATIONS.
 DELTA_FIELD_APPLIES: dict[str, tuple[str, ...]] = {
-    "delta_dapo":     ("token_aggregation", "reward_shaping_type", "sampling_dynamic_filter"),
-    "delta_drgrpo":   (),
-    "delta_gspo":     ("token_aggregation",),
-    "delta_gift":     ("reward_shaping_type",),
-    "delta_aero":     (), "delta_areal":    (), "delta_cppo":   (),
-    "delta_es":       (), "delta_mcgrpo":   (), "delta_ngrpo":  (),
+    "delta_dapo": ("token_aggregation", "reward_shaping_type", "sampling_dynamic_filter"),
+    "delta_drgrpo": (),
+    "delta_gspo": ("token_aggregation",),
+    "delta_gift": ("reward_shaping_type",),
+    "delta_aero": (),
+    "delta_areal": (),
+    "delta_cppo": (),
+    "delta_es": (),
+    "delta_mcgrpo": (),
+    "delta_ngrpo": (),
     "delta_scafgrpo": (),
 }
 DELTA_FIELD_VALUE: dict[str, dict[str, object]] = {
-    "delta_dapo": {"token_aggregation": "token",
-                   "reward_shaping_type": "overlong_penalty",
-                   "sampling_dynamic_filter": True},
+    "delta_dapo": {
+        "token_aggregation": "token",
+        "reward_shaping_type": "overlong_penalty",
+        "sampling_dynamic_filter": True,
+    },
     "delta_gspo": {"token_aggregation": "sequence"},
     "delta_gift": {"reward_shaping_type": "gamma_baseline"},
 }
@@ -49,8 +57,11 @@ def _loss(entry, leaf):
 
 
 def active_deltas(entry):
-    return [d for d in entry.get("variant_deltas_applied", [])
-            if d.get("status") in ("implemented", "surrogate")]
+    return [
+        d
+        for d in entry.get("variant_deltas_applied", [])
+        if d.get("status") in ("implemented", "surrogate")
+    ]
 
 
 def closure_values(entry, fields):
@@ -91,29 +102,54 @@ def main():
     # CLI: --no-apply skips the side-effecting closure act; default applies.
     apply_changes = "--apply" in sys.argv[1:] and "--no-apply" not in sys.argv[1:]
     if not REG.exists():
-        print(f"ERROR: {REG} missing", file=sys.stderr); return 1
-    entries = [json.loads(p.read_text()) for p in sorted(REG.glob("*.json"))
-               if json.loads(p.read_text()).get("record_type") == "stack"]
+        print(f"ERROR: {REG} missing", file=sys.stderr)
+        return 1
+    entries = [
+        json.loads(p.read_text())
+        for p in sorted(REG.glob("*.json"))
+        if json.loads(p.read_text()).get("record_type") == "stack"
+    ]
 
-    counts = {f: {s: 0 for s in ("APPLIES_REPORTED", "APPLIES_UNPOPULATED",
-                                  "NOT_RELEVANT", "NOT_APPLICABLE")} for f in NEW_FIELDS}
+    counts = {
+        f: {
+            s: 0
+            for s in ("APPLIES_REPORTED", "APPLIES_UNPOPULATED", "NOT_RELEVANT", "NOT_APPLICABLE")
+        }
+        for f in NEW_FIELDS
+    }
     rows = []
     worklist = []
     for e in entries:
         per, applies_n, closeable_n = entry_score(e)
         for f, v in [(f, per[f]) for f in NEW_FIELDS]:
             counts[f][v] += 1
-            rows.append({"entry_id": e["id"], "field": f, "status": v,
-                         "actual_value": "" if _loss(e, f) is None else str(_loss(e, f))})
-        rows.append({"entry_id": e["id"], "field": "(deficit)",
-                     "status": f"{applies_n - closeable_n}/{applies_n}_populated",
-                     "actual_value": ""})
+            rows.append(
+                {
+                    "entry_id": e["id"],
+                    "field": f,
+                    "status": v,
+                    "actual_value": "" if _loss(e, f) is None else str(_loss(e, f)),
+                }
+            )
+        rows.append(
+            {
+                "entry_id": e["id"],
+                "field": "(deficit)",
+                "status": f"{applies_n - closeable_n}/{applies_n}_populated",
+                "actual_value": "",
+            }
+        )
         if closeable_n > 0:
-            worklist.append({"entry_id": e["id"],
-                              "closeable_n": closeable_n,
-                              "applies_n": applies_n,
-                              "unpopulated_fields": [f for f in NEW_FIELDS
-                                                      if per[f] == "APPLIES_UNPOPULATED"]})
+            worklist.append(
+                {
+                    "entry_id": e["id"],
+                    "closeable_n": closeable_n,
+                    "applies_n": applies_n,
+                    "unpopulated_fields": [
+                        f for f in NEW_FIELDS if per[f] == "APPLIES_UNPOPULATED"
+                    ],
+                }
+            )
     worklist.sort(key=lambda x: -x["closeable_n"])
 
     # TSV
@@ -122,12 +158,26 @@ def main():
         w = csv.writer(f, delimiter="\t")
         w.writerow(["entry_id", "delta_ids", "field", "status", "actual_value"])
         for r in rows:
-            w.writerow([r["entry_id"],
-                        ",".join(sorted({d["delta_id"] for d in (
-                            json.loads((REG / f"{r['entry_id']}.json").read_text())
-                        ).get("variant_deltas_applied", [])}
-                        )) if r["field"] != "(deficit)" else "",
-                        r["field"], r["status"], r["actual_value"]])
+            w.writerow(
+                [
+                    r["entry_id"],
+                    ",".join(
+                        sorted(
+                            {
+                                d["delta_id"]
+                                for d in (
+                                    json.loads((REG / f"{r['entry_id']}.json").read_text())
+                                ).get("variant_deltas_applied", [])
+                            }
+                        )
+                    )
+                    if r["field"] != "(deficit)"
+                    else "",
+                    r["field"],
+                    r["status"],
+                    r["actual_value"],
+                ]
+            )
 
     # Per-field summary
     field_summary = {}
@@ -140,7 +190,8 @@ def main():
             "not_applicable": c["NOT_APPLICABLE"],
             "applies_total": applies_total,
             "populate_rate": round(c["APPLIES_REPORTED"] / applies_total, 4)
-                              if applies_total else None,
+            if applies_total
+            else None,
             "closure_remaining": c["APPLIES_UNPOPULATED"],
         }
 
@@ -154,10 +205,16 @@ def main():
         boot = []
         for _ in range(2000):
             sample = [rng.choice(worklist) for _ in range(len(worklist))]
-            completed = sum(1 for w in sample
-                            if all(rng.random() < pop_rate[f] for f in w["unpopulated_fields"]))
-            boot.append(sum(w["closeable_n"] for w in sample)
-                        * per_field_ceiling * (completed / len(sample)))
+            completed = sum(
+                1
+                for w in sample
+                if all(rng.random() < pop_rate[f] for f in w["unpopulated_fields"])
+            )
+            boot.append(
+                sum(w["closeable_n"] for w in sample)
+                * per_field_ceiling
+                * (completed / len(sample))
+            )
         boot.sort()
         ci_low, ci_high = boot[int(0.025 * 2000)], boot[int(0.975 * 2000)]
         ci_mean = sum(boot) / 2000
@@ -165,7 +222,9 @@ def main():
         gain_mean = ci_low = ci_high = ci_mean = 0.0
 
     summary = {
-        "ts": datetime.datetime.now(datetime.UTC).isoformat(timespec="seconds").replace("+00:00", "Z"),
+        "ts": datetime.datetime.now(datetime.UTC)
+        .isoformat(timespec="seconds")
+        .replace("+00:00", "Z"),
         "n_entries": len(entries),
         "n_new_fields": len(NEW_FIELDS),
         "iter32_bump_fields": list(NEW_FIELDS),
@@ -190,11 +249,13 @@ def main():
     for w in worklist:
         ep = REG / f"{w['entry_id']}.json"
         if not ep.exists():
-            failures.append({"entry_id": w["entry_id"], "reason": "missing"}); continue
+            failures.append({"entry_id": w["entry_id"], "reason": "missing"})
+            continue
         entry = json.loads(ep.read_text())
         lf = entry.get("min_report", {}).get("loss_form", {})
         if not isinstance(lf, dict):
-            failures.append({"entry_id": w["entry_id"], "reason": "loss_form_not_dict"}); continue
+            failures.append({"entry_id": w["entry_id"], "reason": "loss_form_not_dict"})
+            continue
         changes = {}
         for field, val in closure_values(entry, w["unpopulated_fields"]).items():
             if lf.get(field) is None:
@@ -209,6 +270,7 @@ def main():
 
     if apply_changes:
         from review17_contract import validate_proposals
+
         if staged:
             validate_proposals({p.stem: e for p, e in staged.items()}, REG.parent / "schema.json")
         for path, entry in staged.items():
@@ -225,8 +287,7 @@ def main():
     post_summary = {}
     for f in NEW_FIELDS:
         applies_total = post[f]["APPLIES_REPORTED"] + post[f]["APPLIES_UNPOPULATED"]
-        post_rate = (post[f]["APPLIES_REPORTED"] / applies_total
-                     if applies_total else None)
+        post_rate = post[f]["APPLIES_REPORTED"] / applies_total if applies_total else None
         pre_rate = field_summary[f]["populate_rate"] or 0
         post_summary[f] = {
             "populate_rate_pre": field_summary[f]["populate_rate"],
@@ -234,25 +295,36 @@ def main():
             "delta": round((post_rate or 0) - pre_rate, 4),
             "closure_remaining_post": post[f]["APPLIES_UNPOPULATED"],
         }
-    summary["closure_act"] = {"populated_changes": populated,
-                              "populate_failures": failures,
-                              "post_field_summary": post_summary,
-                              "n_entries_populated": len(populated)}
+    summary["closure_act"] = {
+        "populated_changes": populated,
+        "populate_failures": failures,
+        "post_field_summary": post_summary,
+        "n_entries_populated": len(populated),
+    }
 
     # Write outputs
     (RES / "p5_schema_bump_closure.json").write_text(json.dumps(summary, indent=2, sort_keys=True))
     short = {
-        "ts": summary["ts"], "n_entries": len(entries),
+        "ts": summary["ts"],
+        "n_entries": len(entries),
         "worklist_size": len(worklist),
         "n_populated_in_closure_act": len(populated),
         "per_field_populate_rate": {f: field_summary[f]["populate_rate"] for f in NEW_FIELDS},
-        "post_closure_per_field_populate_rate": {f: post_summary[f]["populate_rate_post"] for f in NEW_FIELDS},
-        "per_field_closure_remaining": {f: field_summary[f]["closure_remaining"] for f in NEW_FIELDS},
-        "post_closure_per_field_closure_remaining": {f: post_summary[f]["closure_remaining_post"] for f in NEW_FIELDS},
+        "post_closure_per_field_populate_rate": {
+            f: post_summary[f]["populate_rate_post"] for f in NEW_FIELDS
+        },
+        "per_field_closure_remaining": {
+            f: field_summary[f]["closure_remaining"] for f in NEW_FIELDS
+        },
+        "post_closure_per_field_closure_remaining": {
+            f: post_summary[f]["closure_remaining_post"] for f in NEW_FIELDS
+        },
         "mean_gain_if_all_completed": round(gain_mean, 3),
         "bootstrap_mean_gain_95ci": [round(ci_low, 3), round(ci_high, 3)],
     }
-    (RES / "p5_schema_bump_closure_summary.json").write_text(json.dumps(short, indent=2, sort_keys=True))
+    (RES / "p5_schema_bump_closure_summary.json").write_text(
+        json.dumps(short, indent=2, sort_keys=True)
+    )
 
     # Stdout
     print(f"entries audited:    {len(entries)}")
@@ -261,21 +333,29 @@ def main():
     print("per-field populate_rate / applies_total / closure_remaining:")
     for f in NEW_FIELDS:
         s = field_summary[f]
-        print(f"  {f:<24s} {str(s['populate_rate']):<8s} {s['applies_total']:<3d} {s['closure_remaining']:<3d}")
+        print(
+            f"  {f:<24s} {str(s['populate_rate']):<8s} {s['applies_total']:<3d} {s['closure_remaining']:<3d}"
+        )
     print(f"per-entry closure ceiling gain: {gain_mean:+.3f} pts")
-    print(f"bootstrap 95% CI on completed-set gain: "
-          f"[{ci_low:+.3f}, {ci_high:+.3f}] (mean {ci_mean:+.3f}, B=2000)")
+    print(
+        f"bootstrap 95% CI on completed-set gain: "
+        f"[{ci_low:+.3f}, {ci_high:+.3f}] (mean {ci_mean:+.3f}, B=2000)"
+    )
     print("top-3 worklist:")
     for w in worklist[:3]:
-        print(f"  {w['entry_id']:<38s} closeable={w['closeable_n']} ({', '.join(w['unpopulated_fields'])})")
+        print(
+            f"  {w['entry_id']:<38s} closeable={w['closeable_n']} ({', '.join(w['unpopulated_fields'])})"
+        )
     print(f"closure act: populated {len(populated)} entries")
     for p in populated:
         print(f"  {p['entry_id']}: {list(p['fields_populated'].keys())}")
     print("per-field populate_rate PRE -> POST (delta):")
     for f in NEW_FIELDS:
         s = post_summary[f]
-        print(f"  {f:<24s} {str(s['populate_rate_pre']):<8s} -> {str(s['populate_rate_post']):<8s} "
-              f"(delta {s['delta']:+.4f})")
+        print(
+            f"  {f:<24s} {str(s['populate_rate_pre']):<8s} -> {str(s['populate_rate_post']):<8s} "
+            f"(delta {s['delta']:+.4f})"
+        )
     print(f"wrote {tsv}")
     print(f"wrote {RES / 'p5_schema_bump_closure.json'}")
     print(f"wrote {RES / 'p5_schema_bump_closure_summary.json'}")

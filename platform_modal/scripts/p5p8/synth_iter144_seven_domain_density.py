@@ -32,6 +32,7 @@ Outputs:
 
 Stdlib only. <=300 LoC.
 """
+
 import json
 import sys
 from pathlib import Path
@@ -39,11 +40,12 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _stats
-from _stats import wilson_p  # noqa: E402
+from _stats import wilson_p
 
 ROOT = Path(__file__).resolve().parents[2]
 RES = ROOT / "experiments" / "results" / "p5p8"
@@ -115,15 +117,18 @@ def compute_density(spread, thresh):
 def load_existing_domains():
     """Return dict of existing D1..D6 (from iter-140) as nominal anchors."""
     df = pd.read_csv(RES / "synth_iter140_six_domain_density.tsv", sep="\t")
-    return {row["domain_id"]: {
-        "n": int(row["n"]),
-        "k": int(row["k"]),
-        "density": float(row["density"]),
-        "wilson_lo": float(row["wilson_lo"]),
-        "wilson_hi": float(row["wilson_hi"]),
-        "name": row["domain"],
-        "source": row["source"],
-    } for _, row in df.iterrows()}
+    return {
+        row["domain_id"]: {
+            "n": int(row["n"]),
+            "k": int(row["k"]),
+            "density": float(row["density"]),
+            "wilson_lo": float(row["wilson_lo"]),
+            "wilson_hi": float(row["wilson_hi"]),
+            "name": row["domain"],
+            "source": row["source"],
+        }
+        for _, row in df.iterrows()
+    }
 
 
 def wilson_ci(k, n, z=1.96):
@@ -152,7 +157,7 @@ def main():
     by_method = load_n2_rewards()
     cell_mean, spread = per_cell_4method_spread(by_method)
     S, P = spread.shape
-    print(f"  cell grid: {S} steps x {P} prompts = {S*P} cells")
+    print(f"  cell grid: {S} steps x {P} prompts = {S * P} cells")
     print(f"  spread  median={np.median(spread):.4f}  max={spread.max():.4f}")
 
     existing = load_existing_domains()
@@ -167,51 +172,58 @@ def main():
     for thresh in THRESHOLDS:
         d, k, n = compute_density(spread, thresh)
         lo, hi = wilson_ci(k, n)
-        d7_rows.append({
-            "domain_id": f"D7@{thresh:.3f}",
-            "domain": f"N2 algorithm-axis spread > {thresh:.3f} (per (step, prompt))",
-            "n": n,
-            "k": k,
-            "density": d,
-            "wilson_lo": lo,
-            "wilson_hi": hi,
-            "source": f"iter-141 η²(method)=0.0005 + N2 panel {S}x{P}",
-        })
+        d7_rows.append(
+            {
+                "domain_id": f"D7@{thresh:.3f}",
+                "domain": f"N2 algorithm-axis spread > {thresh:.3f} (per (step, prompt))",
+                "n": n,
+                "k": k,
+                "density": d,
+                "wilson_lo": lo,
+                "wilson_hi": hi,
+                "source": f"iter-141 η²(method)=0.0005 + N2 panel {S}x{P}",
+            }
+        )
     # Choose the canonical one for the ratio matrix: D7@0.500
     d7_can = next(r for r in d7_rows if r["domain_id"] == "D7@0.500")
     D7 = d7_can
-    print(f"  D7@0.500 = {D7['density']:.4f} [{D7['wilson_lo']:.4f}, "
-          f"{D7['wilson_hi']:.4f}] ({D7['k']}/{D7['n']})")
+    print(
+        f"  D7@0.500 = {D7['density']:.4f} [{D7['wilson_lo']:.4f}, "
+        f"{D7['wilson_hi']:.4f}] ({D7['k']}/{D7['n']})"
+    )
 
     # ---- write 7-domain density table ----
     all_rows = []
     for did in ["D1", "D2", "D3", "D4", "D5", "D6"]:
         rec = existing[did]
-        all_rows.append({
-            "domain_id": did,
-            "domain": rec["name"],
-            "n": rec["n"],
-            "k": rec["k"],
-            "density": rec["density"],
-            "wilson_lo": rec["wilson_lo"],
-            "wilson_hi": rec["wilson_hi"],
-            "source": rec["source"],
-        })
+        all_rows.append(
+            {
+                "domain_id": did,
+                "domain": rec["name"],
+                "n": rec["n"],
+                "k": rec["k"],
+                "density": rec["density"],
+                "wilson_lo": rec["wilson_lo"],
+                "wilson_hi": rec["wilson_hi"],
+                "source": rec["source"],
+            }
+        )
     for r in d7_rows:
-        all_rows.append({
-            "domain_id": r["domain_id"],
-            "domain": r["domain"],
-            "n": r["n"],
-            "k": r["k"],
-            "density": r["density"],
-            "wilson_lo": r["wilson_lo"],
-            "wilson_hi": r["wilson_hi"],
-            "source": r["source"],
-        })
+        all_rows.append(
+            {
+                "domain_id": r["domain_id"],
+                "domain": r["domain"],
+                "n": r["n"],
+                "k": r["k"],
+                "density": r["density"],
+                "wilson_lo": r["wilson_lo"],
+                "wilson_hi": r["wilson_hi"],
+                "source": r["source"],
+            }
+        )
     df_all = pd.DataFrame(all_rows)
-    df_all.to_csv(RES / "synth_iter144_seven_domain_density.tsv",
-                  sep="\t", index=False)
-    print(f"Wrote {RES/'synth_iter144_seven_domain_density.tsv'} ({len(df_all)} rows)")
+    df_all.to_csv(RES / "synth_iter144_seven_domain_density.tsv", sep="\t", index=False)
+    print(f"Wrote {RES / 'synth_iter144_seven_domain_density.tsv'} ({len(df_all)} rows)")
 
     # ---- pairwise ratio matrix ----
     domain_keys = ["D1", "D2", "D3", "D4", "D5", "D6", "D7@0.500"]
@@ -223,21 +235,22 @@ def main():
             di, dj = densities[ki], densities[kj]
             ratio_point = di["density"] / dj["density"] if dj["density"] > 0 else np.inf
             mean, lo, hi = boot_ratio(di["k"], di["n"], dj["k"], dj["n"])
-            ratio_rows.append({
-                "numerator": ki,
-                "denominator": kj,
-                "numer_density": di["density"],
-                "denom_density": dj["density"],
-                "ratio": ratio_point,
-                "boot_mean": mean,
-                "boot_lo": lo,
-                "boot_hi": hi,
-                "ci_excludes_1": bool(lo > 1.0 or hi < 1.0),
-            })
+            ratio_rows.append(
+                {
+                    "numerator": ki,
+                    "denominator": kj,
+                    "numer_density": di["density"],
+                    "denom_density": dj["density"],
+                    "ratio": ratio_point,
+                    "boot_mean": mean,
+                    "boot_lo": lo,
+                    "boot_hi": hi,
+                    "ci_excludes_1": bool(lo > 1.0 or hi < 1.0),
+                }
+            )
     df_rat = pd.DataFrame(ratio_rows)
-    df_rat.to_csv(RES / "synth_iter144_seven_domain_ratios.tsv",
-                  sep="\t", index=False)
-    print(f"Wrote {RES/'synth_iter144_seven_domain_ratios.tsv'} ({len(df_rat)} pairs)")
+    df_rat.to_csv(RES / "synth_iter144_seven_domain_ratios.tsv", sep="\t", index=False)
+    print(f"Wrote {RES / 'synth_iter144_seven_domain_ratios.tsv'} ({len(df_rat)} pairs)")
 
     # ---- LOW cluster ----
     low_ids = ["D1", "D6", "D7@0.500"]
@@ -247,25 +260,32 @@ def main():
             if a == b:
                 continue
             key = f"{a}_vs_{b}"
-            rec = next((r for r in ratio_rows if
-                        (r["numerator"] == a and r["denominator"] == b) or
-                        (r["numerator"] == b and r["denominator"] == a)), None)
+            rec = next(
+                (
+                    r
+                    for r in ratio_rows
+                    if (r["numerator"] == a and r["denominator"] == b)
+                    or (r["numerator"] == b and r["denominator"] == a)
+                ),
+                None,
+            )
             if rec is None:
                 continue
-            low_rows.append({
-                "pair": key,
-                "numerator": rec["numerator"],
-                "denominator": rec["denominator"],
-                "ratio_point": rec["ratio"],
-                "boot_mean": rec["boot_mean"],
-                "boot_lo": rec["boot_lo"],
-                "boot_hi": rec["boot_hi"],
-                "ci_excludes_1": rec["ci_excludes_1"],
-            })
+            low_rows.append(
+                {
+                    "pair": key,
+                    "numerator": rec["numerator"],
+                    "denominator": rec["denominator"],
+                    "ratio_point": rec["ratio"],
+                    "boot_mean": rec["boot_mean"],
+                    "boot_lo": rec["boot_lo"],
+                    "boot_hi": rec["boot_hi"],
+                    "ci_excludes_1": rec["ci_excludes_1"],
+                }
+            )
     df_low = pd.DataFrame(low_rows)
-    df_low.to_csv(RES / "synth_iter144_low_cluster.tsv",
-                  sep="\t", index=False)
-    print(f"Wrote {RES/'synth_iter144_low_cluster.tsv'} ({len(df_low)} pairs)")
+    df_low.to_csv(RES / "synth_iter144_low_cluster.tsv", sep="\t", index=False)
+    print(f"Wrote {RES / 'synth_iter144_low_cluster.tsv'} ({len(df_low)} pairs)")
 
     # ---- summary ----
     n_excl = int(df_rat.ci_excludes_1.sum())
@@ -289,17 +309,17 @@ def main():
     }
     with open(RES / "synth_iter144_summary.json", "w") as f:
         json.dump(summary, f, indent=2)
-    print(f"Wrote {RES/'synth_iter144_summary.json'}")
+    print(f"Wrote {RES / 'synth_iter144_summary.json'}")
     print()
     print("Headlines:")
-    print(f"  D7@0.500 density = {D7['density']:.4f} "
-          f"[{D7['wilson_lo']:.4f}, {D7['wilson_hi']:.4f}] "
-          f"({D7['k']}/{D7['n']})")
-    print(f"  η²(method) from iter 141 = 0.0005; "
-          f"D7@0.500 = {D7['density']:.4f}")
+    print(
+        f"  D7@0.500 density = {D7['density']:.4f} "
+        f"[{D7['wilson_lo']:.4f}, {D7['wilson_hi']:.4f}] "
+        f"({D7['k']}/{D7['n']})"
+    )
+    print(f"  η²(method) from iter 141 = 0.0005; D7@0.500 = {D7['density']:.4f}")
     print(f"  Of 21 pairwise ratios, {n_excl}/{n_total} exclude 1.0")
-    print(f"  Of {n_pair_low} LOW-cluster pairs, "
-          f"{n_pair_low_excl} exclude 1.0")
+    print(f"  Of {n_pair_low} LOW-cluster pairs, {n_pair_low_excl} exclude 1.0")
 
     # ---- figure: 7-domain bar ----
     fig, ax = plt.subplots(figsize=(10, 4.5))
@@ -308,9 +328,9 @@ def main():
     lo = [densities[k]["wilson_lo"] for k in domain_keys]
     hi = [densities[k]["wilson_hi"] for k in domain_keys]
     colors = ["C0", "C1", "C1", "C1", "C2", "C0", "C0"]
-    ax.bar(xs, dens,
-           yerr=[np.array(dens) - np.array(lo), np.array(hi) - np.array(dens)],
-           color=colors)
+    ax.bar(
+        xs, dens, yerr=[np.array(dens) - np.array(lo), np.array(hi) - np.array(dens)], color=colors
+    )
     ax.set_yscale("log")
     ax.set_xticks(xs)
     ax.set_xticklabels(domain_keys, rotation=15)
@@ -321,7 +341,7 @@ def main():
     plt.savefig(FIG / "synth_iter144_seven_domain.png", dpi=150)
     plt.savefig(FIG / "synth_iter144_seven_domain.pdf")
     plt.close()
-    print(f"Wrote {FIG/'synth_iter144_seven_domain.png'}")
+    print(f"Wrote {FIG / 'synth_iter144_seven_domain.png'}")
 
 
 if __name__ == "__main__":

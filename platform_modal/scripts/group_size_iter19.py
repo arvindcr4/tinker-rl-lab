@@ -71,18 +71,17 @@ the four measured points.  No fabrication: R_0 is fixed at the
 Wu 97.6% claim, R_inf and tau are free, and the fit is reported
 with R^2 and uniform-summary sensitivity envelope.
 """
+
 from __future__ import annotations
 
 import csv
-import json
-import math
 from pathlib import Path
 
 import matplotlib
 
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt  # noqa: E402
-import numpy as np  # noqa: E402
+import matplotlib.pyplot as plt
+import numpy as np
 
 REPO = Path(__file__).resolve().parents[2] / "platform_hybrid"
 RESULTS = REPO / "experiments" / "results"
@@ -106,7 +105,7 @@ def read_tsv(path: Path) -> tuple[list[str], list[dict]]:
         reader = csv.reader(f, delimiter="\t")
         rows = list(reader)
     header = rows[0]
-    data = [dict(zip(header, r)) for r in rows[1:]]
+    data = [dict(zip(header, r, strict=False)) for r in rows[1:]]
     return header, data
 
 
@@ -128,8 +127,9 @@ def sigmoid_logT(T: np.ndarray, R_inf: float, tau: float, R_0: float) -> np.ndar
     return R_inf + (R_0 - R_inf) * np.exp(-T / tau)
 
 
-def fit_retention(T: np.ndarray, R_emp: np.ndarray, R_0_fixed: float,
-                  tol: float = 1e-8, max_iter: int = 5000) -> tuple[float, float]:
+def fit_retention(
+    T: np.ndarray, R_emp: np.ndarray, R_0_fixed: float, tol: float = 1e-8, max_iter: int = 5000
+) -> tuple[float, float]:
     """Fit R(T) = R_inf + (R_0 - R_inf) * exp(-T / tau) to (T, R_emp)
     with R_0 fixed (at the Wu retention claim) and R_inf, tau free.
 
@@ -180,9 +180,15 @@ def fit_retention(T: np.ndarray, R_emp: np.ndarray, R_0_fixed: float,
     return best_R_inf, float(best[0])
 
 
-def bootstrap_retention_fit(T: np.ndarray, R_emp: np.ndarray, R_0_fixed: float,
-                            ci_low: np.ndarray, ci_high: np.ndarray,
-                            B: int = BOOT_B, seed: int = RNG_SEED) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+def bootstrap_retention_fit(
+    T: np.ndarray,
+    R_emp: np.ndarray,
+    R_0_fixed: float,
+    ci_low: np.ndarray,
+    ci_high: np.ndarray,
+    B: int = BOOT_B,
+    seed: int = RNG_SEED,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Uniform-summary sensitivity envelope on (R_inf, tau) by drawing from per-point interval."""
     rng = np.random.default_rng(seed)
     n = len(T)
@@ -198,8 +204,11 @@ def bootstrap_retention_fit(T: np.ndarray, R_emp: np.ndarray, R_0_fixed: float,
         if R_inf is not None:
             R_infs.append(R_inf)
             taus.append(tau)
-    return (np.array(R_infs), np.array(taus),
-            np.array([np.percentile(R_infs, 2.5), np.percentile(R_infs, 97.5)]))
+    return (
+        np.array(R_infs),
+        np.array(taus),
+        np.array([np.percentile(R_infs, 2.5), np.percentile(R_infs, 97.5)]),
+    )
 
 
 def iso_g_savings(p_bin_n: dict, G_static: int, G_min_emp_per_bin: dict) -> float:
@@ -236,10 +245,8 @@ def main() -> None:
     _, rows = read_tsv(RESULTS / "group_size_g4_vs_g32_broader_scale.tsv")
     T_emp = np.array([float(r["T_tokens"]) for r in rows])
     R_emp = np.array([float(r["retention_pct_of_Gb"]) / 100.0 for r in rows])
-    R_lo = np.array([float(r["acc_G_a_ci_low"]) / max(1e-9, float(r["acc_G_b"]))
-                     for r in rows])
-    R_hi = np.array([float(r["acc_G_a_ci_high"]) / max(1e-9, float(r["acc_G_b"]))
-                     for r in rows])
+    R_lo = np.array([float(r["acc_G_a_ci_low"]) / max(1e-9, float(r["acc_G_b"])) for r in rows])
+    R_hi = np.array([float(r["acc_G_a_ci_high"]) / max(1e-9, float(r["acc_G_b"])) for r in rows])
     # ------------------------------------------------------------------
     # Fit the retention model.
     # ------------------------------------------------------------------
@@ -257,51 +264,78 @@ def main() -> None:
     T_pred = np.logspace(np.log10(T_emp.min()), np.log10(T_emp.max() * 1.5), 24)
     R_pred = sigmoid_logT(T_pred, R_inf_hat, tau_hat, WU_RETENTION_CLAIM)
     # Preserve joint parameter draws; percentiles are sensitivity envelopes.
-    joint_predictions=np.asarray([sigmoid_logT(T_pred,r,t,WU_RETENTION_CLAIM) for r,t in zip(R_infs_boot,taus_boot)])
-    R_pred_low,R_pred_high=np.quantile(joint_predictions,[.025,.975],axis=0)
+    joint_predictions = np.asarray(
+        [
+            sigmoid_logT(T_pred, r, t, WU_RETENTION_CLAIM)
+            for r, t in zip(R_infs_boot, taus_boot, strict=False)
+        ]
+    )
+    R_pred_low, R_pred_high = np.quantile(joint_predictions, [0.025, 0.975], axis=0)
 
     # Output the fit summary.
-    fit_header = ["model", "R_0_fixed_at", "R_inf_hat", "R_inf_ci_low",
-                  "R_inf_ci_high", "tau_hat_tokens", "tau_ci_low_tokens",
-                  "tau_ci_high_tokens", "R2", "n_points"]
-    fit_rows = [[
-        "R(T) = R_inf - (R_inf - R_0) * exp(-T/tau)",
-        WU_RETENTION_CLAIM,
-        round(R_inf_hat, 6),
-        round(float(np.percentile(R_infs_boot, 2.5)), 6),
-        round(float(np.percentile(R_infs_boot, 97.5)), 6),
-        round(tau_hat, 3),
-        round(float(np.percentile(taus_boot, 2.5)), 3),
-        round(float(np.percentile(taus_boot, 97.5)), 3),
-        round(R2, 6),
-        len(T_emp),
-    ]]
+    fit_header = [
+        "model",
+        "R_0_fixed_at",
+        "R_inf_hat",
+        "R_inf_ci_low",
+        "R_inf_ci_high",
+        "tau_hat_tokens",
+        "tau_ci_low_tokens",
+        "tau_ci_high_tokens",
+        "R2",
+        "n_points",
+    ]
+    fit_rows = [
+        [
+            "R(T) = R_inf - (R_inf - R_0) * exp(-T/tau)",
+            WU_RETENTION_CLAIM,
+            round(R_inf_hat, 6),
+            round(float(np.percentile(R_infs_boot, 2.5)), 6),
+            round(float(np.percentile(R_infs_boot, 97.5)), 6),
+            round(tau_hat, 3),
+            round(float(np.percentile(taus_boot, 2.5)), 3),
+            round(float(np.percentile(taus_boot, 97.5)), 3),
+            round(R2, 6),
+            len(T_emp),
+        ]
+    ]
     write_tsv(RESULTS / "group_size_iter19_retention_fit_v2.tsv", fit_header, fit_rows)
 
-    pred_header = ["T_tokens", "T_M_tokens", "retention_pred", "ret_pred_low",
-                   "ret_pred_high", "is_measured", "above_wu_97_6"]
+    pred_header = [
+        "T_tokens",
+        "T_M_tokens",
+        "retention_pred",
+        "ret_pred_low",
+        "ret_pred_high",
+        "is_measured",
+        "above_wu_97_6",
+    ]
     pred_rows = []
     for i, T in enumerate(T_pred):
-        pred_rows.append([
-            int(T),
-            round(T / 1e6, 4),
-            round(float(R_pred[i]), 4),
-            round(float(R_pred_low[i]), 4),
-            round(float(R_pred_high[i]), 4),
-            "no (model_prediction)",
-            "yes" if R_pred[i] >= 0.976 else "no",
-        ])
+        pred_rows.append(
+            [
+                int(T),
+                round(T / 1e6, 4),
+                round(float(R_pred[i]), 4),
+                round(float(R_pred_low[i]), 4),
+                round(float(R_pred_high[i]), 4),
+                "no (model_prediction)",
+                "yes" if R_pred[i] >= 0.976 else "no",
+            ]
+        )
     # Append the measured points as well.
     for i, T in enumerate(T_emp):
-        pred_rows.append([
-            int(T),
-            round(T / 1e6, 4),
-            round(float(R_emp[i]), 4),
-            round(float(R_lo[i]), 4),
-            round(float(R_hi[i]), 4),
-            "yes",
-            "yes" if R_emp[i] >= 0.976 else "no",
-        ])
+        pred_rows.append(
+            [
+                int(T),
+                round(T / 1e6, 4),
+                round(float(R_emp[i]), 4),
+                round(float(R_lo[i]), 4),
+                round(float(R_hi[i]), 4),
+                "yes",
+                "yes" if R_emp[i] >= 0.976 else "no",
+            ]
+        )
     pred_rows.sort(key=lambda r: r[0])
     write_tsv(RESULTS / "group_size_iter19_retention_pred_v2.tsv", pred_header, pred_rows)
 
@@ -311,9 +345,9 @@ def main() -> None:
     # ------------------------------------------------------------------
     _, isog_rows = read_tsv(RESULTS / "group_size_isog_sizing.tsv")
     # Aggregate across Y_target: take the worst-case (highest G_min_emp).
-    p_bin_n = {}      # p_lo -> n_in_bin (latest row per p_lo)
-    G_min_emp = {}    # p_lo -> max G_min_emp across Y_target
-    G_min_iid = {}    # p_lo -> max G_min_iid across Y_target
+    p_bin_n = {}  # p_lo -> n_in_bin (latest row per p_lo)
+    G_min_emp = {}  # p_lo -> max G_min_emp across Y_target
+    G_min_iid = {}  # p_lo -> max G_min_iid across Y_target
     for row in isog_rows:
         pb = row["p_bin"].strip("[]")
         lo, hi = pb.split(", ")
@@ -335,10 +369,15 @@ def main() -> None:
     # *same* distribution (since the bins come from the measured Qwen2.5
     # arithmetic sweep).  Instead we report the aggregate.  Iterate over
     # G_static in {16, 32, 64}.
-    isog_header = ["G_static", "G_a_isog_total", "G_static_total",
-                   "rollout_savings_pct", "rollout_savings_ci_low",
-                   "rollout_savings_ci_high",
-                   "comment"]
+    isog_header = [
+        "G_static",
+        "G_a_isog_total",
+        "G_static_total",
+        "rollout_savings_pct",
+        "rollout_savings_ci_low",
+        "rollout_savings_ci_high",
+        "comment",
+    ]
     isog_rows_out = []
     for G_static in (4, 16, 32, 64, 128):
         # Total rollouts: static is G_static per prompt; Iso-G is per-bin.
@@ -353,26 +392,32 @@ def main() -> None:
         sav_iid = (1.0 - tot_isog_iid / tot_static) * 100.0 if tot_static else 0.0
         # No independent observations support an empirical savings interval.
         sav_lo_q, sav_hi_q = float("nan"), float("nan")
-        comment = ("Iso-G matches static" if abs(sav_emp) < 1.0
-                   else "Iso-G saves rollouts")
-        isog_rows_out.append([
-            G_static,
-            tot_isog_emp,
-            tot_static,
-            round(sav_emp, 2),
-            round(sav_lo_q, 2),
-            round(sav_hi_q, 2),
-            comment,
-        ])
+        comment = "Iso-G matches static" if abs(sav_emp) < 1.0 else "Iso-G saves rollouts"
+        isog_rows_out.append(
+            [
+                G_static,
+                tot_isog_emp,
+                tot_static,
+                round(sav_emp, 2),
+                round(sav_lo_q, 2),
+                round(sav_hi_q, 2),
+                comment,
+            ]
+        )
     write_tsv(RESULTS / "group_size_iter19_isog_savings_v2.tsv", isog_header, isog_rows_out)
 
     # Per-Y_target savings table (the more interpretable framing: at a
     # given Y_target, Iso-G's G_min_per_bin is smaller than G_static on
     # the learning-frontier + most easy bins; only the easy-tail high-Y
     # target sees empirical G_min > static).
-    sav_per_y_header = ["Y_target", "G_static_4_savings_pct",
-                         "G_static_8_savings_pct", "G_static_16_savings_pct",
-                         "G_static_32_savings_pct", "G_static_64_savings_pct"]
+    sav_per_y_header = [
+        "Y_target",
+        "G_static_4_savings_pct",
+        "G_static_8_savings_pct",
+        "G_static_16_savings_pct",
+        "G_static_32_savings_pct",
+        "G_static_64_savings_pct",
+    ]
     sav_per_y_rows = []
     for Y_target in (0.5, 0.6, 0.7, 0.8, 0.9):
         # Build per-bin G_min for this Y_target.
@@ -408,40 +453,62 @@ def main() -> None:
                 tot_isog += n * G_min
             sav = (1.0 - tot_isog / tot_static) * 100.0 if tot_static else 0.0
             savs[G_static] = round(sav, 2)
-        sav_per_y_rows.append([
-            Y_target,
-            savs[4], savs[8], savs[16], savs[32], savs[64],
-        ])
-    write_tsv(RESULTS / "group_size_iter19_isog_savings_per_y_v2.tsv",
-              sav_per_y_header, sav_per_y_rows)
+        sav_per_y_rows.append(
+            [
+                Y_target,
+                savs[4],
+                savs[8],
+                savs[16],
+                savs[32],
+                savs[64],
+            ]
+        )
+    write_tsv(
+        RESULTS / "group_size_iter19_isog_savings_per_y_v2.tsv", sav_per_y_header, sav_per_y_rows
+    )
 
     # Single-row summary: focus on the headline Iso-G comparison at
     # Y_target=0.5 (frontier regime where most rollouts happen at
     # task start) vs static G=32, the practical baseline.
     sav_y05_g32 = float(sav_per_y_rows[0][4])  # Y=0.5, G_static=32
     sav_y05_g64 = float(sav_per_y_rows[0][5])
-    summary_header = ["setting", "Y_target", "G_static", "rollout_savings_pct",
-                       "baseline", "interpretation"]
+    summary_header = [
+        "setting",
+        "Y_target",
+        "G_static",
+        "rollout_savings_pct",
+        "baseline",
+        "interpretation",
+    ]
     summary_rows = [
         [
             "Iso-G vs static G (frontier Y_target=0.5)",
-            0.5, 32, round(sav_y05_g32, 2),
+            0.5,
+            32,
+            round(sav_y05_g32, 2),
             "iter 11 empirical Iso-G sizing",
-            ("At the practical frontier Y_target=0.5 (a single contrast "
-             "pair per group suffices), Iso-G saves 56% of rollouts vs "
-             "static G=32 on the iter 11 p-distribution"),
+            (
+                "At the practical frontier Y_target=0.5 (a single contrast "
+                "pair per group suffices), Iso-G saves 56% of rollouts vs "
+                "static G=32 on the iter 11 p-distribution"
+            ),
         ],
         [
             "Iso-G vs static G (frontier Y_target=0.5, G_static=64)",
-            0.5, 64, round(sav_y05_g64, 2),
+            0.5,
+            64,
+            round(sav_y05_g64, 2),
             "iter 11 empirical Iso-G sizing",
-            ("Pushing G_static to 64 increases Iso-G's relative "
-             "savings to 78%; the practical Iso-G rule is to NOT "
-             "scale static G past the frontier Y=0.5 G_min"),
+            (
+                "Pushing G_static to 64 increases Iso-G's relative "
+                "savings to 78%; the practical Iso-G rule is to NOT "
+                "scale static G past the frontier Y=0.5 G_min"
+            ),
         ],
     ]
-    write_tsv(RESULTS / "group_size_iter19_isog_savings_summary_v2.tsv",
-              summary_header, summary_rows)
+    write_tsv(
+        RESULTS / "group_size_iter19_isog_savings_summary_v2.tsv", summary_header, summary_rows
+    )
 
     # ------------------------------------------------------------------
     # Figure: three panels (retention, iso-G, projected savings).
@@ -450,14 +517,29 @@ def main() -> None:
 
     # Panel A: Retention-vs-log-T.
     ax = axes[0]
-    ax.fill_between(T_pred / 1e6, R_pred_low * 100, R_pred_high * 100,
-                    color="#9bb7d4", alpha=0.4, label="Fit 95% CI")
-    ax.plot(T_pred / 1e6, R_pred * 100, color="#1f4e79", linewidth=2.0,
-            label=f"Iter 19 fit: R_inf={R_inf_hat*100:.1f}%, tau={tau_hat/1e6:.2f}M")
-    ax.scatter(T_emp / 1e6, R_emp * 100, color="#1f4e79", s=40, zorder=5,
-               label="Measured")
-    ax.axhline(WU_RETENTION_CLAIM * 100, color="gray", linestyle="--",
-               linewidth=1.2, label=f"Wu 2025: {WU_RETENTION_CLAIM*100:.1f}%")
+    ax.fill_between(
+        T_pred / 1e6,
+        R_pred_low * 100,
+        R_pred_high * 100,
+        color="#9bb7d4",
+        alpha=0.4,
+        label="Fit 95% CI",
+    )
+    ax.plot(
+        T_pred / 1e6,
+        R_pred * 100,
+        color="#1f4e79",
+        linewidth=2.0,
+        label=f"Iter 19 fit: R_inf={R_inf_hat * 100:.1f}%, tau={tau_hat / 1e6:.2f}M",
+    )
+    ax.scatter(T_emp / 1e6, R_emp * 100, color="#1f4e79", s=40, zorder=5, label="Measured")
+    ax.axhline(
+        WU_RETENTION_CLAIM * 100,
+        color="gray",
+        linestyle="--",
+        linewidth=1.2,
+        label=f"Wu 2025: {WU_RETENTION_CLAIM * 100:.1f}%",
+    )
     ax.set_xscale("log")
     ax.set_xlabel("Token budget T (M)")
     ax.set_ylabel("Retention: acc(G=4) / acc(G=32) (%)")
@@ -476,9 +558,8 @@ def main() -> None:
     x = np.arange(len(p_los))
     ax.bar(x - width / 2, G_iid_arr, width, color="#9bb7d4", label="Iso-G (iid)")
     ax.bar(x + width / 2, G_emp_arr, width, color="#1f4e79", label="Iso-G (empirical)")
-    ax.axhline(32, color="crimson", linestyle="--", linewidth=1.5,
-               label="Static G=32")
-    p_lbl = [f"[{p:.2f}]\nn={n}" for p, n in zip(p_los, n_arr)]
+    ax.axhline(32, color="crimson", linestyle="--", linewidth=1.5, label="Static G=32")
+    p_lbl = [f"[{p:.2f}]\nn={n}" for p, n in zip(p_los, n_arr, strict=False)]
     ax.set_xticks(x)
     ax.set_xticklabels(p_lbl, fontsize=8)
     ax.set_ylabel("Minimum group size $G_{\\min}$")
@@ -495,8 +576,15 @@ def main() -> None:
     for j, Gs in enumerate(G_static_axes):
         col_idx = 1 + [4, 8, 16, 32, 64].index(Gs)  # column position: Y + 5 G_static cols
         savs_at_Y = [float(r[col_idx]) for r in sav_per_y_rows]
-        ax.plot(Y_targets, savs_at_Y, "o-", color=palette[j], markersize=7,
-                linewidth=2.0, label=f"Static G={Gs}")
+        ax.plot(
+            Y_targets,
+            savs_at_Y,
+            "o-",
+            color=palette[j],
+            markersize=7,
+            linewidth=2.0,
+            label=f"Static G={Gs}",
+        )
     ax.axhline(0, color="gray", linestyle=":", linewidth=1.0)
     ax.set_xlabel("Iso-G yield target $Y_{\\mathrm{target}}$")
     ax.set_ylabel("Iso-G rollout savings vs static G (%)")
@@ -512,12 +600,16 @@ def main() -> None:
 
     # Console summary.
     print("Iter 19 retention fit:")
-    print(f"  R_0 = {WU_RETENTION_CLAIM*100:.1f}%  R_inf = {R_inf_hat*100:.2f}%  "
-          f"tau = {tau_hat/1e6:.2f}M  R^2 = {R2:.4f}")
-    print(f"  R_inf 95% CI: [{R_infs_ci[0]*100:.2f}%, {R_infs_ci[1]*100:.2f}%]")
-    print("Iter 19 Iso-G savings (mean across G_static): "
-          f"{summary_rows[0][1]:.2f}%, "
-          f"at G_static=32: {summary_rows[0][2]:.2f}%")
+    print(
+        f"  R_0 = {WU_RETENTION_CLAIM * 100:.1f}%  R_inf = {R_inf_hat * 100:.2f}%  "
+        f"tau = {tau_hat / 1e6:.2f}M  R^2 = {R2:.4f}"
+    )
+    print(f"  R_inf 95% CI: [{R_infs_ci[0] * 100:.2f}%, {R_infs_ci[1] * 100:.2f}%]")
+    print(
+        "Iter 19 Iso-G savings (mean across G_static): "
+        f"{summary_rows[0][1]:.2f}%, "
+        f"at G_static=32: {summary_rows[0][2]:.2f}%"
+    )
 
 
 if __name__ == "__main__":

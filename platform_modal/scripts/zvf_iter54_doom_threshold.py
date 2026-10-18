@@ -48,6 +48,7 @@ Outputs
 - platform_hybrid/experiments/results/zvf_iter54_doom_summary_review28_v2.tsv
   One-row summary suitable for inclusion in the paper's headline table.
 """
+
 from __future__ import annotations
 
 import csv
@@ -84,7 +85,9 @@ def _read_tsv(path: Path) -> Tuple[List[str], List[Dict[str, str]]]:
     for r in rows[1:]:
         if not r or all(c == "" for c in r):
             continue
-        out.append({h: (v if i < len(r) else "") for i, (h, v) in enumerate(zip(header, r))})
+        out.append(
+            {h: (v if i < len(r) else "") for i, (h, v) in enumerate(zip(header, r, strict=False))}
+        )
     return header, out
 
 
@@ -148,7 +151,9 @@ def load_rows() -> List[Dict[str, Any]]:
         elif exp == "groupsize_zvf_sweep":
             gs_val = r.get("group_size", "").strip()
             if gs_val:
-                mz = _per_step_max_zvf_groupsize(int(gs_val), r.get("seed", ""), r.get("model", ""), r.get("task", ""))
+                mz = _per_step_max_zvf_groupsize(
+                    int(gs_val), r.get("seed", ""), r.get("model", ""), r.get("task", "")
+                )
                 if mz is not None and not math.isnan(mz):
                     max_zvf = mz
                     ts_max_zvf = True
@@ -178,7 +183,11 @@ def _per_step_max_zvf_variance_mitigation(seed: str, method: str) -> Optional[fl
     if not path.exists():
         return None
     _, rows = _read_tsv(path)
-    zvfs = [_f(r.get("zvf", "")) for r in rows if r.get("seed", "").strip() == seed and r.get("method", "").lower() == method.lower()]
+    zvfs = [
+        _f(r.get("zvf", ""))
+        for r in rows
+        if r.get("seed", "").strip() == seed and r.get("method", "").lower() == method.lower()
+    ]
     zvfs = [z for z in zvfs if not math.isnan(z)]
     return max(zvfs) if zvfs else None
 
@@ -195,8 +204,12 @@ def _per_step_max_zvf_groupsize(G: int, seed: str, model: str, task: str) -> Opt
     runs = d.get("runs", [])
     zvfs: List[float] = []
     for r in runs:
-        if (r.get("group_size") != G or str(r.get("seed", "")) != str(seed)
-                or r.get("model", "") != model or r.get("task", "") != task):
+        if (
+            r.get("group_size") != G
+            or str(r.get("seed", "")) != str(seed)
+            or r.get("model", "") != model
+            or r.get("task", "") != task
+        ):
             continue
         for s in r.get("step_log", []):
             if "zvf" in s:
@@ -343,7 +356,7 @@ def _load_per_problem_yield_gap() -> List[Dict[str, Any]]:
             G = len(rewards)
             if not G:
                 continue
-            if not all(value in (0,1) for value in rewards):
+            if not all(value in (0, 1) for value in rewards):
                 raise ValueError("Bernoulli plug-in requires binary rewards")
             k = sum(rewards)
             zvf_obs = 1.0 if (k == 0 or k == G) else 0.0
@@ -351,7 +364,7 @@ def _load_per_problem_yield_gap() -> List[Dict[str, Any]]:
             # of the marginal success probability). For Bernoulli collision
             # the i.i.d. baseline is p**G + (1-p)**G.
             p_x = k / G
-            zvf_iid = p_x ** G + (1.0 - p_x) ** G
+            zvf_iid = p_x**G + (1.0 - p_x) ** G
             out.append(
                 {
                     "source": "tinker_gsm8k",
@@ -382,7 +395,7 @@ def _load_per_problem_yield_gap() -> List[Dict[str, Any]]:
         zvf_obs = _f(r.get("mean_zvf", ""))
         if math.isnan(zvf_obs):
             continue
-        zvf_iid = p_x ** G_int + (1.0 - p_x) ** G_int
+        zvf_iid = p_x**G_int + (1.0 - p_x) ** G_int
         out.append(
             {
                 "source": "groupsize_zvf_sweep_agg",
@@ -394,7 +407,7 @@ def _load_per_problem_yield_gap() -> List[Dict[str, Any]]:
                 "zvf_obs": zvf_obs,
                 "zvf_iid": zvf_iid,
                 "Y_gap": zvf_iid - zvf_obs,
-                    "estimator": "same_group_plugin_descriptive_not_diversity_bonus",
+                "estimator": "same_group_plugin_descriptive_not_diversity_bonus",
             }
         )
     return out
@@ -511,9 +524,7 @@ def write_doom_summary(
     zvf_crit = best["threshold"] if best else float("nan")
     lo, hi, _ = bootstrap
     if best:
-        conf = (
-            f"[{lo:.3f},{hi:.3f}]" if not (math.isnan(lo) or math.isnan(hi)) else "n/a"
-        )
+        conf = f"[{lo:.3f},{hi:.3f}]" if not (math.isnan(lo) or math.isnan(hi)) else "n/a"
     else:
         conf = "n/a (no perfect separator)"
     zvf_crit_str = f"{zvf_crit:.3f}" if best else "n/a"
@@ -534,7 +545,9 @@ def write_doom_summary(
     )
     if rows:
         max_nonconv = max((r["mean_zvf"] for r in rows if r["non_converged"]), default=float("nan"))
-        min_conv = min((r["mean_zvf"] for r in rows if not r["non_converged"]), default=float("nan"))
+        min_conv = min(
+            (r["mean_zvf"] for r in rows if not r["non_converged"]), default=float("nan")
+        )
     else:
         max_nonconv = float("nan")
         min_conv = float("nan")
@@ -661,19 +674,11 @@ def main() -> int:
     write_yield_gap(yield_agg, out_yield)
 
     print(f"[iter54] loaded {len(rows)} runs from zvf_summary.tsv")
-    print(
-        f"[iter54] mean-ZVF sweep: {len(sweep_mean)} rows -> {out_sweep.name}"
-    )
-    print(
-        f"[iter54] max-ZVF sweep: {len(sweep_max)} rows -> {out_sweep_max.name}"
-    )
+    print(f"[iter54] mean-ZVF sweep: {len(sweep_mean)} rows -> {out_sweep.name}")
+    print(f"[iter54] max-ZVF sweep: {len(sweep_max)} rows -> {out_sweep_max.name}")
     if best_mean:
         lo, hi, _ = boot_mean
-        ci_str = (
-            f"[{lo:.3f}, {hi:.3f}]"
-            if not (math.isnan(lo) or math.isnan(hi))
-            else "n/a"
-        )
+        ci_str = f"[{lo:.3f}, {hi:.3f}]" if not (math.isnan(lo) or math.isnan(hi)) else "n/a"
         kind = best_mean.get("separator_type", "?")
         print(
             f"[iter54] ZVF_crit (mean) = {best_mean['threshold']:.3f}  "
@@ -681,25 +686,17 @@ def main() -> int:
         )
     if best_max:
         lo, hi, _ = boot_max
-        ci_str = (
-            f"[{lo:.3f}, {hi:.3f}]"
-            if not (math.isnan(lo) or math.isnan(hi))
-            else "n/a"
-        )
+        ci_str = f"[{lo:.3f}, {hi:.3f}]" if not (math.isnan(lo) or math.isnan(hi)) else "n/a"
         kind = best_max.get("separator_type", "?")
         print(
             f"[iter54] ZVF_crit (max)  = {best_max['threshold']:.3f}  "
             f"CI = {ci_str}  separator={kind}"
         )
-    print(
-        f"[iter54] cross-library Y_gap: {len(yield_agg)} rows -> {out_yield.name}"
-    )
+    print(f"[iter54] cross-library Y_gap: {len(yield_agg)} rows -> {out_yield.name}")
     anti = sum(1 for a in yield_agg if a["verdict"] == "anti-herd")
     herd = sum(1 for a in yield_agg if a["verdict"] == "herd")
     neut = sum(1 for a in yield_agg if a["verdict"] == "neutral")
-    print(
-        f"[iter54] Y_gap verdicts: anti-herd={anti}  herd={herd}  neutral={neut}"
-    )
+    print(f"[iter54] Y_gap verdicts: anti-herd={anti}  herd={herd}  neutral={neut}")
     return 0
 
 

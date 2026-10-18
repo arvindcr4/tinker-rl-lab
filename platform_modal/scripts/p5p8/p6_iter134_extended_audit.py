@@ -17,14 +17,17 @@ Outputs:
   platform_hybrid/experiments/results/p5p8/p6_iter134_empty_action_gap.tsv
   platform_hybrid/experiments/results/p5p8/p6_iter134_extended_summary.json
 """
+
 import csv
 import json
 import pathlib
-from collections import defaultdict, Counter
+from collections import Counter
 
 import sys
+
 sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))
 from _paths import REPO_ROOT
+
 ROOT = REPO_ROOT
 REG = ROOT / "platform_hybrid/registry/entries"
 OUT = ROOT / "platform_hybrid/experiments/results/p5p8/review17_v2"
@@ -52,45 +55,68 @@ def main():
         for i, m in enumerate(e.get("measured") or []):
             cm = m.get("ci_method")
             if cm is None:
-                ci_rows.append({"id": e["id"], "row_idx": i, "ci_method": "null",
-                                "n_boot": "", "seed": "", "ci_level": "",
-                                "ci_shape": "null"})
+                ci_rows.append(
+                    {
+                        "id": e["id"],
+                        "row_idx": i,
+                        "ci_method": "null",
+                        "n_boot": "",
+                        "seed": "",
+                        "ci_level": "",
+                        "ci_shape": "null",
+                    }
+                )
                 continue
             if not isinstance(cm, dict):
                 # String-typed ci_method — schema violation ($defs/ci_method requires object|null)
-                ci_rows.append({"id": e["id"], "row_idx": i,
-                                "ci_method": str(cm),
-                                "n_boot": "", "seed": "", "ci_level": "",
-                                "ci_shape": "string_violation"})
-                shape_violations.append({
-                    "id": e["id"],
-                    "row_idx": i,
-                    "metric": m.get("metric", ""),
-                    "panel": m.get("panel", ""),
-                    "ci_method_string": str(cm),
-                })
+                ci_rows.append(
+                    {
+                        "id": e["id"],
+                        "row_idx": i,
+                        "ci_method": str(cm),
+                        "n_boot": "",
+                        "seed": "",
+                        "ci_level": "",
+                        "ci_shape": "string_violation",
+                    }
+                )
+                shape_violations.append(
+                    {
+                        "id": e["id"],
+                        "row_idx": i,
+                        "metric": m.get("metric", ""),
+                        "panel": m.get("panel", ""),
+                        "ci_method_string": str(cm),
+                    }
+                )
                 continue
-            ci_rows.append({
-                "id": e["id"],
-                "row_idx": i,
-                "ci_method": cm.get("method", "none"),
-                "n_boot": cm.get("n_boot", ""),
-                "seed": cm.get("seed", ""),
-                "ci_level": cm.get("ci_level", ""),
-                "metric": m.get("metric", ""),
-                "panel": m.get("panel", ""),
-                "ci_shape": "object",
-            })
-            if cm.get("seed") in (None, "") or cm.get("seed") != 20260705:
-                seed_incons.append({
+            ci_rows.append(
+                {
                     "id": e["id"],
                     "row_idx": i,
+                    "ci_method": cm.get("method", "none"),
+                    "n_boot": cm.get("n_boot", ""),
+                    "seed": cm.get("seed", ""),
+                    "ci_level": cm.get("ci_level", ""),
                     "metric": m.get("metric", ""),
                     "panel": m.get("panel", ""),
-                    "ci_method": cm.get("method", ""),
-                    "seed": cm.get("seed", ""),
-                    "note": "missing_seed" if cm.get("seed") in (None, "") else "non_canonical_seed",
-                })
+                    "ci_shape": "object",
+                }
+            )
+            if cm.get("seed") in (None, "") or cm.get("seed") != 20260705:
+                seed_incons.append(
+                    {
+                        "id": e["id"],
+                        "row_idx": i,
+                        "metric": m.get("metric", ""),
+                        "panel": m.get("panel", ""),
+                        "ci_method": cm.get("method", ""),
+                        "seed": cm.get("seed", ""),
+                        "note": "missing_seed"
+                        if cm.get("seed") in (None, "")
+                        else "non_canonical_seed",
+                    }
+                )
 
     # Aggregate ci_method diversity
     ci_div = Counter(r["ci_method"] for r in ci_rows)
@@ -112,8 +138,17 @@ def main():
         w = csv.writer(f, delimiter="\t")
         w.writerow(["id", "row_idx", "metric", "panel", "ci_method", "seed", "note"])
         for r in seed_incons:
-            w.writerow([r["id"], r["row_idx"], r["metric"], r["panel"],
-                        r["ci_method"], r["seed"], r["note"]])
+            w.writerow(
+                [
+                    r["id"],
+                    r["row_idx"],
+                    r["metric"],
+                    r["panel"],
+                    r["ci_method"],
+                    r["seed"],
+                    r["note"],
+                ]
+            )
 
     # (iii) Cross-panel companion — read iter-110 verdict + map to delta_id
     xp_v = OUT / "p6_iter110_xpanel_verdict.tsv"
@@ -130,20 +165,22 @@ def main():
         mp = r["metric_pair"]
         if "zvf (N2)" not in mp:
             continue
-        cp_companion.append({
-            "id": f"delta_{v}",
-            "variant": v,
-            "metric_pair": mp,
-            "verdict": r["verdict"],
-            "n2_point": r["n2_point"],
-            "n2_ci_lo": r["n2_ci_lo"],
-            "n2_ci_hi": r["n2_ci_hi"],
-            "n2_sig": r["n2_sig"],
-            "zv_point": r["zv_point"],
-            "zv_ci_lo": r["zv_ci_lo"],
-            "zv_ci_hi": r["zv_ci_hi"],
-            "zv_sig": r["zv_sig"],
-        })
+        cp_companion.append(
+            {
+                "id": f"delta_{v}",
+                "variant": v,
+                "metric_pair": mp,
+                "verdict": r["verdict"],
+                "n2_point": r["n2_point"],
+                "n2_ci_lo": r["n2_ci_lo"],
+                "n2_ci_hi": r["n2_ci_hi"],
+                "n2_sig": r["n2_sig"],
+                "zv_point": r["zv_point"],
+                "zv_ci_lo": r["zv_ci_lo"],
+                "zv_ci_hi": r["zv_ci_hi"],
+                "zv_sig": r["zv_sig"],
+            }
+        )
     with (OUT / "p6_iter134_cross_panel_companion.tsv").open("w", newline="") as f:
         if cp_companion:
             w = csv.DictWriter(f, fieldnames=list(cp_companion[0].keys()), delimiter="\t")
@@ -155,22 +192,25 @@ def main():
     # (iv) Empty-measured action gap
     empty = []
     for e in vd:
-        if (e.get("measured") or []):
+        if e.get("measured") or []:
             continue
         ee = e.get("expected_effects") or []
         cit = e.get("citation", {})
-        empty.append({
-            "id": e["id"],
-            "citation_bibkey": cit.get("bibkey", ""),
-            "citation_arxiv": cit.get("arxiv", ""),
-            "has_expected_effects": bool(ee),
-            "n_expected_effects": len(ee),
-            "ee_panels": ";".join(sorted(set(x.get("panel", "") for x in ee))),
-            "blocking_note": (
-                "expected_effects declared; only needs a same-stack run; cite a measured TSV"
-                if ee else "no expected_effects; needs both prediction + same-stack run"
-            ),
-        })
+        empty.append(
+            {
+                "id": e["id"],
+                "citation_bibkey": cit.get("bibkey", ""),
+                "citation_arxiv": cit.get("arxiv", ""),
+                "has_expected_effects": bool(ee),
+                "n_expected_effects": len(ee),
+                "ee_panels": ";".join(sorted(set(x.get("panel", "") for x in ee))),
+                "blocking_note": (
+                    "expected_effects declared; only needs a same-stack run; cite a measured TSV"
+                    if ee
+                    else "no expected_effects; needs both prediction + same-stack run"
+                ),
+            }
+        )
     with (OUT / "p6_iter134_empty_action_gap.tsv").open("w", newline="") as f:
         if empty:
             w = csv.DictWriter(f, fieldnames=list(empty[0].keys()), delimiter="\t")
@@ -192,8 +232,10 @@ def main():
         "n_empty_without_expected_effects": sum(1 for e in empty if not e["has_expected_effects"]),
     }
     (OUT / "p6_iter134_extended_summary.json").write_text(json.dumps(summary, indent=2))
-    print(f"WROTE ci_div={len(ci_div)} seed_incons={len(seed_incons)} "
-          f"shape_viol={len(shape_violations)} xp_companion={len(cp_companion)} empty={len(empty)}")
+    print(
+        f"WROTE ci_div={len(ci_div)} seed_incons={len(seed_incons)} "
+        f"shape_viol={len(shape_violations)} xp_companion={len(cp_companion)} empty={len(empty)}"
+    )
     print(json.dumps(summary, indent=2))
 
 

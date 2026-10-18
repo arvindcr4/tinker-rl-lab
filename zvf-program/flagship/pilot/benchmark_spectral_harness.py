@@ -11,7 +11,6 @@ from __future__ import annotations
 import argparse
 import datetime
 import json
-import math
 import time
 from dataclasses import asdict, dataclass
 from pathlib import Path
@@ -19,7 +18,7 @@ from typing import Any, Sequence
 
 import torch
 
-from pilot.objective import condition_loss, spectral_legendre_grpo, entropic_givens_grpo
+from pilot.objective import condition_loss
 
 
 @dataclass(frozen=True, slots=True)
@@ -65,7 +64,9 @@ def generate_benchmark_fixture(
     generator = torch.Generator(device="cpu").manual_seed(seed)
 
     # 1. Normal reward variance fixture: binary alternating rewards
-    rewards_normal = torch.tensor([1.0 if i % 2 == 0 else 0.0 for i in range(G)], dtype=dtype, device=device)
+    rewards_normal = torch.tensor(
+        [1.0 if i % 2 == 0 else 0.0 for i in range(G)], dtype=dtype, device=device
+    )
 
     # 2. Zero reward variance fixture (ZVF starvation): all equal rewards
     rewards_zvf = torch.ones(G, dtype=dtype, device=device)
@@ -333,7 +334,7 @@ def run_spectral_benchmark_harness(
     for alg in algorithms:
         print(
             f"  {alg:24s} -> Avg Recovery: {avg_recovery[alg]:.4f} | "
-            f"Avg Grad Retention: {avg_retention[alg]*100:.2f}% | "
+            f"Avg Grad Retention: {avg_retention[alg] * 100:.2f}% | "
             f"Avg FLOP Ratio: {avg_flop_ratio[alg]:.3f}x"
         )
     print("=" * 70)

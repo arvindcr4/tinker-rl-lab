@@ -15,18 +15,22 @@ Outputs:
 
 Stdlib only. <= 300 LoC.
 """
+
 from __future__ import annotations
 import argparse
 import csv
 import json
-import math
 import pathlib
 import random
 import statistics
 
 import sys
-sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
+
+sys.path.append(
+    str(pathlib.Path(__file__).resolve().parents[1])
+)  # platform_modal/scripts, for _paths
+from _paths import REPO_ROOT
+
 WORKTREE = REPO_ROOT
 N2 = WORKTREE / "platform_hybrid/experiments" / "results" / "n2_reward_tensor_resume"
 OUT = WORKTREE / "platform_hybrid/experiments" / "results" / "p5p8"
@@ -35,7 +39,7 @@ THRESHOLDS = (0.50, 0.60, 0.70, 0.80, 0.90)
 G_BASE = 8
 G_ALT = 16
 N_PROMPTS = 16
-MAX_PCD = 0.20            # interior-regime guard
+MAX_PCD = 0.20  # interior-regime guard
 N_BOOT = 10_000
 RNG = random.Random(20260704)
 
@@ -62,8 +66,7 @@ def per_prompt_p(step):
 
 def zvf_per_p_at_g(per_p, g):
     """Per-prompt expected ZVF under i.i.d. binomial at group size g."""
-    return [(1 - pp) ** g + pp ** g for pp in
-            (min(max(p, 1e-9), 1 - 1e-9) for p in per_p)]
+    return [(1 - pp) ** g + pp**g for pp in (min(max(p, 1e-9), 1 - 1e-9) for p in per_p)]
 
 
 def is_degenerate_at_g(per_p, g, eps=1e-9):
@@ -163,20 +166,31 @@ def headline_cis(tensors):
     for m in METHODS:
         steps = tensors[m]
         n = len(steps)
-        for metric in ("zvf", "reward_mean", "pcd", "lag1_autocorr",
-                       "mean_len", "loss"):
+        for metric in ("zvf", "reward_mean", "pcd", "lag1_autocorr", "mean_len", "loss"):
             vals = [s[metric] for s in steps if s[metric] == s[metric]]  # drop NaN
             if not vals:
-                rows.append({"method": m, "metric": metric, "n": 0,
-                             "point": "NaN", "lo": "NaN", "hi": "NaN"})
+                rows.append(
+                    {
+                        "method": m,
+                        "metric": metric,
+                        "n": 0,
+                        "point": "NaN",
+                        "lo": "NaN",
+                        "hi": "NaN",
+                    }
+                )
                 continue
             pt, lo, hi, nboot = boot_ci(vals)
-            rows.append({
-                "method": m, "metric": metric, "n": nboot,
-                "point": round(pt, 4),
-                "lo": round(lo, 4),
-                "hi": round(hi, 4),
-            })
+            rows.append(
+                {
+                    "method": m,
+                    "metric": metric,
+                    "n": nboot,
+                    "point": round(pt, 4),
+                    "lo": round(lo, 4),
+                    "hi": round(hi, 4),
+                }
+            )
     return rows
 
 
@@ -253,12 +267,11 @@ def build_controllers():
 
 def regime_split(tensors):
     """For each method, count steps falling into each regime quadrant:
-       interior_low (PCD<=0.20, zvf<0.70), interior_high (PCD<=0.20, zvf>=0.70),
-       boundary_low (PCD>0.20, zvf<0.70), boundary_high (PCD>0.20, zvf>=0.70)."""
+    interior_low (PCD<=0.20, zvf<0.70), interior_high (PCD<=0.20, zvf>=0.70),
+    boundary_low (PCD>0.20, zvf<0.70), boundary_high (PCD>0.20, zvf>=0.70)."""
     out = {}
     for m in METHODS:
-        c = {"interior_low": 0, "interior_high": 0,
-             "boundary_low": 0, "boundary_high": 0}
+        c = {"interior_low": 0, "interior_high": 0, "boundary_low": 0, "boundary_high": 0}
         for s in tensors[m]:
             pcd = s["pcd"]
             zvf = s["zvf"]
@@ -290,16 +303,18 @@ def main():
     cost_rows = []
     for (m, name), v in evals.items():
         pt, lo, hi = bootstrap_cost_ci(v["per_step_cost"], baseline)
-        cost_rows.append({
-            "method": m,
-            "controller": name,
-            "fires": v["fires"],
-            "saved": v["saved"],
-            "wasted": v["wasted"],
-            "cost_ratio_pt": round(pt, 3),
-            "cost_ratio_lo": round(lo, 3),
-            "cost_ratio_hi": round(hi, 3),
-        })
+        cost_rows.append(
+            {
+                "method": m,
+                "controller": name,
+                "fires": v["fires"],
+                "saved": v["saved"],
+                "wasted": v["wasted"],
+                "cost_ratio_pt": round(pt, 3),
+                "cost_ratio_lo": round(lo, 3),
+                "cost_ratio_hi": round(hi, 3),
+            }
+        )
 
     # ----- Pareto summary (mean across methods) -------------------------
     pareto = {}
@@ -327,8 +342,16 @@ def main():
                 w.writerow(r)
 
         # Cost-ratio CIs TSV
-        cols_c = ["method", "controller", "fires", "saved", "wasted",
-                  "cost_ratio_pt", "cost_ratio_lo", "cost_ratio_hi"]
+        cols_c = [
+            "method",
+            "controller",
+            "fires",
+            "saved",
+            "wasted",
+            "cost_ratio_pt",
+            "cost_ratio_lo",
+            "cost_ratio_hi",
+        ]
         with (OUT / "p7_calibrated_controller.tsv").open("w") as f:
             w = csv.DictWriter(f, fieldnames=cols_c, delimiter="\t")
             w.writeheader()
@@ -366,46 +389,55 @@ def main():
                 "zvf-triage and its cost_ratio matches zvf-triage_0.70 exactly."
             ),
         }
-        (OUT / "p7_calibrated_controller.json").write_text(
-            json.dumps(out, indent=2))
+        (OUT / "p7_calibrated_controller.json").write_text(json.dumps(out, indent=2))
         print(f"wrote {OUT}/p7_headline_cis.tsv")
         print(f"wrote {OUT}/p7_calibrated_controller.{{tsv,json}}")
 
     # ----- Console ---------------------------------------------------------
     print("\n=== P7 headline bootstrap CIs (per-method, n=40 steps) ===")
-    print(f"{'method':6s} {'metric':16s} {'n':>4s} "
-          f"{'point':>8s} {'lo':>8s} {'hi':>8s}")
+    print(f"{'method':6s} {'metric':16s} {'n':>4s} {'point':>8s} {'lo':>8s} {'hi':>8s}")
     print("-" * 60)
     for r in headlines:
-        print(f"{r['method']:6s} {r['metric']:16s} {r['n']:>4d} "
-              f"{r['point']:>8} {r['lo']:>8} {r['hi']:>8}")
+        print(
+            f"{r['method']:6s} {r['metric']:16s} {r['n']:>4d} "
+            f"{r['point']:>8} {r['lo']:>8} {r['hi']:>8}"
+        )
 
     print("\n=== Controller cost ratio with bootstrap CI (95%, n_boot=10000) ===")
-    print(f"{'method':6s} {'controller':18s} "
-          f"{'fires':>5s} {'saved':>5s} {'wasted':>6s} "
-          f"{'ratio_pt':>9s} {'CI_lo':>6s} {'CI_hi':>6s}")
+    print(
+        f"{'method':6s} {'controller':18s} "
+        f"{'fires':>5s} {'saved':>5s} {'wasted':>6s} "
+        f"{'ratio_pt':>9s} {'CI_lo':>6s} {'CI_hi':>6s}"
+    )
     print("-" * 75)
     for r in cost_rows:
-        print(f"{r['method']:6s} {r['controller']:18s} "
-              f"{r['fires']:>5d} {r['saved']:>5d} {r['wasted']:>6d} "
-              f"{r['cost_ratio_pt']:>9.3f} "
-              f"{r['cost_ratio_lo']:>6.3f} {r['cost_ratio_hi']:>6.3f}")
+        print(
+            f"{r['method']:6s} {r['controller']:18s} "
+            f"{r['fires']:>5d} {r['saved']:>5d} {r['wasted']:>6d} "
+            f"{r['cost_ratio_pt']:>9.3f} "
+            f"{r['cost_ratio_lo']:>6.3f} {r['cost_ratio_hi']:>6.3f}"
+        )
 
     print("\n=== Pareto (mean across methods) ===")
-    print(f"{'controller':20s} {'mean_ratio':>10s} {'mean_saved':>10s} "
-          f"{'max_saved':>9s}")
+    print(f"{'controller':20s} {'mean_ratio':>10s} {'mean_saved':>10s} {'max_saved':>9s}")
     print("-" * 55)
     for name, v in sorted(pareto.items(), key=lambda kv: kv[1]["mean_cost_ratio"]):
-        print(f"{name:20s} {v['mean_cost_ratio']:>10.3f} "
-              f"{v['mean_saved']:>10.2f} {v['max_saved']:>9d}")
+        print(
+            f"{name:20s} {v['mean_cost_ratio']:>10.3f} "
+            f"{v['mean_saved']:>10.2f} {v['max_saved']:>9d}"
+        )
 
     print("\n=== Regime split (40 steps per method) ===")
-    print(f"{'method':6s} {'interior_low':>12s} {'interior_high':>13s} "
-          f"{'boundary_low':>12s} {'boundary_high':>13s}")
+    print(
+        f"{'method':6s} {'interior_low':>12s} {'interior_high':>13s} "
+        f"{'boundary_low':>12s} {'boundary_high':>13s}"
+    )
     print("-" * 70)
     for m, c in regimes.items():
-        print(f"{m:6s} {c['interior_low']:>12d} {c['interior_high']:>13d} "
-              f"{c['boundary_low']:>12d} {c['boundary_high']:>13d}")
+        print(
+            f"{m:6s} {c['interior_low']:>12d} {c['interior_high']:>13d} "
+            f"{c['boundary_low']:>12d} {c['boundary_high']:>13d}"
+        )
 
 
 if __name__ == "__main__":

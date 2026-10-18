@@ -107,9 +107,7 @@ def _read_payload(payload: Any) -> Any:
     return payload
 
 
-def _load_payload(
-    payload: Any, *, label: str, read_strings: bool = False
-) -> tuple[Any, list[str]]:
+def _load_payload(payload: Any, *, label: str, read_strings: bool = False) -> tuple[Any, list[str]]:
     if payload is None:
         return None, [f"{label} must be provided"]
     if read_strings and isinstance(payload, (str, Path)):
@@ -194,9 +192,7 @@ def _normalise_tinker_record(value: Any) -> tuple[dict[str, Any], list[str]]:
     if not isinstance(value, Mapping):
         return record, ["tinker run identity must be an object or run-id string"]
     raw = value
-    run_id = _first_text(
-        raw, "run_id", "id", "runId", "tinker_run_id", "tinkerRunId"
-    )
+    run_id = _first_text(raw, "run_id", "id", "runId", "tinker_run_id", "tinkerRunId")
     if run_id is None:
         errors.append("tinker run_id is missing")
     status = _first_text(raw, "status", "state")
@@ -216,7 +212,11 @@ def _normalise_checkpoints(value: Any) -> tuple[list[dict[str, Any]], str | None
 
     if isinstance(value, Mapping):
         payload_run_id = _first_text(value, "tinker_run_id", "run_id", "runId", "tinkerRunId")
-        raw_checkpoints = value.get("checkpoints") if isinstance(value.get("checkpoints"), list) else value.get("entries")
+        raw_checkpoints = (
+            value.get("checkpoints")
+            if isinstance(value.get("checkpoints"), list)
+            else value.get("entries")
+        )
         if raw_checkpoints is None:
             errors.append("checkpoint manifest must include a checkpoints list")
             return checkpoints, payload_run_id, errors
@@ -229,7 +229,11 @@ def _normalise_checkpoints(value: Any) -> tuple[list[dict[str, Any]], str | None
         if not value:
             errors.append("checkpoint manifest must not be empty")
     else:
-        return checkpoints, payload_run_id, ["checkpoint manifest must be a list or object with checkpoints"]
+        return (
+            checkpoints,
+            payload_run_id,
+            ["checkpoint manifest must be a list or object with checkpoints"],
+        )
 
     seen_steps: set[int] = set()
     seen_stages: set[str] = set()
@@ -273,13 +277,15 @@ def _normalise_checkpoints(value: Any) -> tuple[list[dict[str, Any]], str | None
 
     if not errors:
         by_stage = {entry["stage"]: entry["step"] for entry in checkpoints}
-        expected = dict(zip(REQUIRED_STAGES, REQUIRED_STEPS))
+        expected = dict(zip(REQUIRED_STAGES, REQUIRED_STEPS, strict=False))
         observed = {entry["stage"] for entry in checkpoints}
         if observed != set(REQUIRED_STAGES):
             missing = sorted(set(REQUIRED_STAGES) - observed)
             errors.append("checkpoint manifest missing stages: " + ", ".join(missing))
         elif len(checkpoints) != len(REQUIRED_STAGES):
-            errors.append("checkpoint manifest must contain exactly one initial, periodic, and final entry")
+            errors.append(
+                "checkpoint manifest must contain exactly one initial, periodic, and final entry"
+            )
         else:
             for stage, step in expected.items():
                 if by_stage.get(stage) != step:
@@ -295,7 +301,7 @@ def _normalise_hf_receipts(value: Any) -> tuple[list[dict[str, Any]], list[str]]
 
     raw: list[Any] = []
     if isinstance(value, Mapping):
-        for key, item in value.items():
+        for _key, item in value.items():
             if isinstance(item, list):
                 raw.extend(item)
             else:
@@ -344,7 +350,9 @@ def _normalise_hf_receipts(value: Any) -> tuple[list[dict[str, Any]], list[str]]
             errors.append(f"hf_receipts[{index}] visibility must be public or private")
             continue
         if visibility == "public" and safe_public is not True:
-            errors.append(f"hf_receipts[{index}] must set safe_public_artifact true for public visibility")
+            errors.append(
+                f"hf_receipts[{index}] must set safe_public_artifact true for public visibility"
+            )
         if revision is None or not SHA40_PREFIX_RE.fullmatch(revision):
             errors.append(f"hf_receipts[{index}] revision must be a 40-char hex commit")
             continue
@@ -379,7 +387,7 @@ def _normalise_hf_receipts(value: Any) -> tuple[list[dict[str, Any]], list[str]]
         elif len(receipts) != len(REQUIRED_STAGES):
             errors.append("hf receipts must contain exactly one initial, periodic, and final entry")
         else:
-            expected = dict(zip(REQUIRED_STAGES, REQUIRED_STEPS))
+            expected = dict(zip(REQUIRED_STAGES, REQUIRED_STEPS, strict=False))
             for stage, step in expected.items():
                 if by_stage.get(stage) != step:
                     errors.append(
@@ -465,9 +473,7 @@ def validate_launch_audit(
     )
     errors.extend(checkpoint_read_errors)
 
-    hf_payload, hf_read_errors = _load_payload(
-        hf_receipts, label="hf receipts", read_strings=True
-    )
+    hf_payload, hf_read_errors = _load_payload(hf_receipts, label="hf receipts", read_strings=True)
     errors.extend(hf_read_errors)
 
     wandb_record, wandb_errors = _normalise_wandb_record(wandb)
@@ -476,9 +482,7 @@ def validate_launch_audit(
     tinker_record, tinker_errors = _normalise_tinker_record(tinker_payload)
     errors.extend(tinker_errors)
 
-    checkpoints, checkpoint_run_id, checkpoint_errors = _normalise_checkpoints(
-        checkpoint_payload
-    )
+    checkpoints, checkpoint_run_id, checkpoint_errors = _normalise_checkpoints(checkpoint_payload)
     errors.extend(checkpoint_errors)
 
     hf_records, hf_errors = _normalise_hf_receipts(hf_payload)
@@ -496,18 +500,22 @@ def validate_launch_audit(
             run_ids=expected_ids,
             errors=errors,
         )
-        if checkpoint_run_id is not None and tinker_id is not None and checkpoint_run_id != tinker_id:
+        if (
+            checkpoint_run_id is not None
+            and tinker_id is not None
+            and checkpoint_run_id != tinker_id
+        ):
             errors.append("checkpoint manifest run_id must match tinker run_id")
 
         for stage in REQUIRED_STAGES:
-            cp_step = next(
-                (item["step"] for item in checkpoints if item["stage"] == stage), None
-            )
+            cp_step = next((item["step"] for item in checkpoints if item["stage"] == stage), None)
             hf_step = next((item["step"] for item in hf_records if item["stage"] == stage), None)
             if cp_step is None or hf_step is None:
                 continue
             if cp_step != hf_step:
-                errors.append(f"stage {stage} step mismatch between checkpoint ({cp_step}) and hf receipt ({hf_step})")
+                errors.append(
+                    f"stage {stage} step mismatch between checkpoint ({cp_step}) and hf receipt ({hf_step})"
+                )
         if any(item.get("model_revision") for item in checkpoints):
             for item in checkpoints:
                 revision = _coerce_text(item.get("model_revision"))
@@ -540,12 +548,8 @@ def generate_launch_audit(
         checkpoint_json=checkpoint_json,
         hf_receipts=hf_receipts,
     )
-    tinker_payload, _ = _load_payload(
-        tinker_run, label="tinker run identity", read_strings=False
-    )
-    wandb_payload, _ = _load_payload(
-        wandb_sync, label="wandb sync metadata", read_strings=True
-    )
+    tinker_payload, _ = _load_payload(tinker_run, label="tinker run identity", read_strings=False)
+    wandb_payload, _ = _load_payload(wandb_sync, label="wandb sync metadata", read_strings=True)
     status = "READY" if not blockers else "BLOCKED"
     return {
         "schema_version": SCHEMA_VERSION,

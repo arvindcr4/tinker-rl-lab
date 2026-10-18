@@ -1,4 +1,5 @@
 """Aggregate per-shard JSONL outputs from react_eval.py into a benchmark score."""
+
 from __future__ import annotations
 
 import argparse
@@ -25,7 +26,7 @@ class EpisodeResult:
     error: str | None = None
     seed: int | None = None
     evaluation_id: str | None = None
-    
+
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> EpisodeResult:
         return cls(
@@ -50,7 +51,7 @@ class AggregationResult:
     mean_valid_actions: float
     total_wall_time_sec: float
     max_wall_time_sec: float
-    
+
     def to_dict(self) -> Dict[str, Any]:
         return {
             "n": self.n,
@@ -76,11 +77,19 @@ def parse_results(paths: Sequence[Path]) -> List[EpisodeResult]:
                 item = EpisodeResult.from_dict(data)
                 if not item.evaluation_id or type(item.seed) is not int:
                     raise ValueError("missing episode identity")
-                if type(item.score) not in (int, float) or not math.isfinite(item.score) or not 0 <= item.score <= 1:
+                if (
+                    type(item.score) not in (int, float)
+                    or not math.isfinite(item.score)
+                    or not 0 <= item.score <= 1
+                ):
                     raise ValueError("invalid score")
                 if "total_reward" in data:
                     total = data["total_reward"]
-                    if type(total) not in (int, float) or not math.isfinite(total) or not 0 <= total <= item.num_steps:
+                    if (
+                        type(total) not in (int, float)
+                        or not math.isfinite(total)
+                        or not 0 <= total <= item.num_steps
+                    ):
                         raise ValueError("invalid total reward")
                 if item.num_steps < 0 or not 0 <= item.valid_action_count <= item.num_steps:
                     raise ValueError("invalid action counts")
@@ -100,8 +109,13 @@ def summarize(items: List[EpisodeResult], success_threshold: float = 1.0) -> Agg
     n = len(items)
     if n == 0:
         return AggregationResult(
-            n=0, success_rate=0.0, mean_reward=0.0, episodes_with_error=0,
-            mean_num_steps=0.0, mean_valid_actions=0.0, total_wall_time_sec=0.0,
+            n=0,
+            success_rate=0.0,
+            mean_reward=0.0,
+            episodes_with_error=0,
+            mean_num_steps=0.0,
+            mean_valid_actions=0.0,
+            total_wall_time_sec=0.0,
             max_wall_time_sec=0.0,
         )
 
@@ -111,7 +125,7 @@ def summarize(items: List[EpisodeResult], success_threshold: float = 1.0) -> Agg
     steps = [r.num_steps for r in items]
     actions = [r.valid_action_count for r in items]
     walltimes = [r.wall_time_sec for r in items]
-    
+
     return AggregationResult(
         n=n,
         success_rate=succ / n,
@@ -124,7 +138,9 @@ def summarize(items: List[EpisodeResult], success_threshold: float = 1.0) -> Agg
     )
 
 
-def aggregate_results(results: List[EpisodeResult], success_threshold: float = 1.0, num_shards: int = 1) -> Dict[str, Any]:
+def aggregate_results(
+    results: List[EpisodeResult], success_threshold: float = 1.0, num_shards: int = 1
+) -> Dict[str, Any]:
     """Aggregate total results and by-benchmark results."""
     by_prefix: Dict[str, List[EpisodeResult]] = defaultdict(list)
     for r in results:
@@ -135,7 +151,9 @@ def aggregate_results(results: List[EpisodeResult], success_threshold: float = 1
     out = {
         "completion_status": "coverage_unverified",
         "overall": summarize(results, success_threshold).to_dict(),
-        "by_benchmark": {k: summarize(v, success_threshold).to_dict() for k, v in by_prefix.items()},
+        "by_benchmark": {
+            k: summarize(v, success_threshold).to_dict() for k, v in by_prefix.items()
+        },
         "num_shards": num_shards,
     }
     return out
@@ -149,36 +167,64 @@ def validate_complete_evaluation(final: Dict[str, Any]) -> None:
     config = receipt.get("effective_config", {})
     eid = hashlib.sha256(json.dumps(config, sort_keys=True, allow_nan=False).encode()).hexdigest()
     tasks = config.get("tasks")
-    if (receipt.get("evaluation_id") != eid or not isinstance(tasks, list) or not tasks or
-        any(not isinstance(task, str) or not task for task in tasks) or
-        len(set(tasks)) != len(tasks) or type(config.get("seed")) is not int):
+    if (
+        receipt.get("evaluation_id") != eid
+        or not isinstance(tasks, list)
+        or not tasks
+        or any(not isinstance(task, str) or not task for task in tasks)
+        or len(set(tasks)) != len(tasks)
+        or type(config.get("seed")) is not int
+    ):
         raise ValueError("publication receipt configuration is invalid")
-    expected = {(eid, task, int.from_bytes(hashlib.sha256(
-        f"{config['seed']}:{task}".encode()).digest()[:4], "big")) for task in tasks}
+    expected = {
+        (
+            eid,
+            task,
+            int.from_bytes(hashlib.sha256(f"{config['seed']}:{task}".encode()).digest()[:4], "big"),
+        )
+        for task in tasks
+    }
     rows = receipt.get("coverage", [])
     actual = []
     for row in rows:
-        if (not isinstance(row, dict) or set(row) != {"evaluation_id", "env_id", "seed"}
-            or type(row["seed"]) is not int or not isinstance(row["env_id"], str)
-            or not isinstance(row["evaluation_id"], str)):
+        if (
+            not isinstance(row, dict)
+            or set(row) != {"evaluation_id", "env_id", "seed"}
+            or type(row["seed"]) is not int
+            or not isinstance(row["env_id"], str)
+            or not isinstance(row["evaluation_id"], str)
+        ):
             raise ValueError("publication receipt coverage is invalid")
         actual.append((row["evaluation_id"], row["env_id"], row["seed"]))
     overall = final.get("overall", {})
-    if (len(actual) != len(set(actual)) or set(actual) != expected or
-        type(overall.get("n")) is not int or overall["n"] != len(expected) or
-        type(overall.get("episodes_with_error")) is not int or overall["episodes_with_error"] != 0):
+    if (
+        len(actual) != len(set(actual))
+        or set(actual) != expected
+        or type(overall.get("n")) is not int
+        or overall["n"] != len(expected)
+        or type(overall.get("episodes_with_error")) is not int
+        or overall["episodes_with_error"] != 0
+    ):
         raise ValueError("publication receipt coverage is incomplete or inconsistent")
 
 
 def main() -> int:
     p = argparse.ArgumentParser()
-    p.add_argument("--inputs", nargs="+", required=True,
-                   help="JSONL files or glob (e.g. results_shard_*.jsonl)")
+    p.add_argument(
+        "--inputs",
+        nargs="+",
+        required=True,
+        help="JSONL files or glob (e.g. results_shard_*.jsonl)",
+    )
     p.add_argument("--receipts", nargs="+", help="Matching per-shard evaluation receipt JSON files")
     p.add_argument("--manifest", help="JSON list of expected env_id/seed/evaluation_id records")
     p.add_argument("--out", required=True, help="Where to write aggregated JSON")
-    p.add_argument("--success-threshold", type=float, default=1.0,
-                   help="Score >= this counts as success (WebArena uses 1.0)")
+    p.add_argument(
+        "--success-threshold",
+        type=float,
+        default=1.0,
+        help="Score >= this counts as success (WebArena uses 1.0)",
+    )
     p.add_argument("--log-level", default="INFO", help="Logging level")
     args = p.parse_args()
 
@@ -197,30 +243,50 @@ def main() -> int:
 
     results = parse_results(paths)
     out = aggregate_results(results, args.success_threshold, len(paths))
-    
+
     if args.receipts:
         receipts = [json.loads(Path(path).read_text()) for path in args.receipts]
         identities = {r.evaluation_id for r in results}
         config = receipts[0]["effective_config"]
-        evaluation_id = hashlib.sha256(json.dumps(config, sort_keys=True, allow_nan=False).encode()).hexdigest()
-        if identities != {evaluation_id} or any(r.get("evaluation_id") != evaluation_id for r in receipts):
+        evaluation_id = hashlib.sha256(
+            json.dumps(config, sort_keys=True, allow_nan=False).encode()
+        ).hexdigest()
+        if identities != {evaluation_id} or any(
+            r.get("evaluation_id") != evaluation_id for r in receipts
+        ):
             raise ValueError("receipt configuration hash/identity mismatch")
         if any(r["effective_config"] != config for r in receipts):
             raise ValueError("receipt configuration mismatch")
         tasks = config.get("tasks")
-        if (not isinstance(tasks, list) or not tasks or
-            any(not isinstance(task, str) or not task for task in tasks) or
-            len(set(tasks)) != len(tasks) or type(config.get("seed")) is not int):
+        if (
+            not isinstance(tasks, list)
+            or not tasks
+            or any(not isinstance(task, str) or not task for task in tasks)
+            or len(set(tasks)) != len(tasks)
+            or type(config.get("seed")) is not int
+        ):
             raise ValueError("invalid planned task/seed configuration")
-        planned = {(evaluation_id, task, int.from_bytes(hashlib.sha256(
-            f"{config['seed']}:{task}".encode()).digest()[:4], "big")) for task in tasks}
+        planned = {
+            (
+                evaluation_id,
+                task,
+                int.from_bytes(
+                    hashlib.sha256(f"{config['seed']}:{task}".encode()).digest()[:4], "big"
+                ),
+            )
+            for task in tasks
+        }
 
         def coverage_keys(rows):
             keys = []
             for row in rows:
-                if (not isinstance(row, dict) or set(row) != {"evaluation_id", "env_id", "seed"}
-                    or type(row["seed"]) is not int or not isinstance(row["env_id"], str)
-                    or not isinstance(row["evaluation_id"], str)):
+                if (
+                    not isinstance(row, dict)
+                    or set(row) != {"evaluation_id", "env_id", "seed"}
+                    or type(row["seed"]) is not int
+                    or not isinstance(row["env_id"], str)
+                    or not isinstance(row["evaluation_id"], str)
+                ):
                     raise ValueError("invalid episode coverage identity")
                 keys.append((row["evaluation_id"], row["env_id"], row["seed"]))
             if len(set(keys)) != len(keys):
@@ -236,7 +302,9 @@ def main() -> int:
             raise ValueError("manifest coverage does not match receipt coverage")
         out["evaluation_receipt"] = {**receipts[0], "coverage": coverage_rows}
         if observed == covered == planned:
-            out["completion_status"] = "complete_with_errors" if any(r.error for r in results) else "complete"
+            out["completion_status"] = (
+                "complete_with_errors" if any(r.error for r in results) else "complete"
+            )
         else:
             out["completion_status"] = "coverage_incomplete"
     elif args.manifest:

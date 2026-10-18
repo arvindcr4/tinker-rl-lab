@@ -98,9 +98,7 @@ def task_hash(example: Any) -> str:
     try:
         canonical = _canonical_json(identity)
     except (TypeError, ValueError) as exc:
-        raise SplitManifestError(
-            f"example fields are not JSON-canonicalizable: {exc}"
-        ) from exc
+        raise SplitManifestError(f"example fields are not JSON-canonicalizable: {exc}") from exc
     return _sha256(canonical)
 
 
@@ -132,7 +130,7 @@ def _example_fields(example: Any) -> tuple[Any, Any]:
         return example["prompt"], example.get("target")
     if not hasattr(example, "prompt"):
         raise SplitManifestError("dataset example is missing prompt")
-    return getattr(example, "prompt"), getattr(example, "target", None)
+    return example.prompt, getattr(example, "target", None)
 
 
 def _example_task_id(example: Any) -> Any | None:
@@ -170,9 +168,7 @@ def _split_examples(dataset: Any, split: str) -> list[Any]:
         raise SplitManifestError(f"dataset does not expose a {split!r} split") from None
 
 
-def _invoke_dataset_factory(
-    factory: Callable[..., Any], *, seed: int, revision: str
-) -> Any:
+def _invoke_dataset_factory(factory: Callable[..., Any], *, seed: int, revision: str) -> Any:
     """Call a fake or adapter factory without masking its own TypeErrors."""
 
     try:
@@ -180,8 +176,7 @@ def _invoke_dataset_factory(
     except (TypeError, ValueError):
         parameters = {}
     accepts_kwargs = any(
-        parameter.kind == inspect.Parameter.VAR_KEYWORD
-        for parameter in parameters.values()
+        parameter.kind == inspect.Parameter.VAR_KEYWORD for parameter in parameters.values()
     )
     kwargs: dict[str, Any] = {}
     if accepts_kwargs or "seed" in parameters:
@@ -225,14 +220,10 @@ def _dataset_at_revision(revision: str, seed: int) -> Any:
 
     def pinned_loader(dataset_id: str, *args: Any, **kwargs: Any) -> Any:
         if dataset_id != DATASET_ID:
-            raise SplitManifestError(
-                f"xLAM loader requested unexpected dataset {dataset_id!r}"
-            )
+            raise SplitManifestError(f"xLAM loader requested unexpected dataset {dataset_id!r}")
         requested = kwargs.get("revision")
         if requested is not None and requested != revision:
-            raise SplitManifestError(
-                "dataset loader revision disagrees with the manifest revision"
-            )
+            raise SplitManifestError("dataset loader revision disagrees with the manifest revision")
         kwargs["revision"] = revision
         return original_loader(dataset_id, *args, **kwargs)
 
@@ -307,9 +298,7 @@ def _normalise_receipts(
     }
     for alias, canonical in aliases.items():
         if alias in supplied and canonical in supplied and supplied[alias] != supplied[canonical]:
-            raise SplitManifestError(
-                f"receipt references {alias!r} and {canonical!r} disagree"
-            )
+            raise SplitManifestError(f"receipt references {alias!r} and {canonical!r} disagree")
         if alias in supplied and canonical not in supplied:
             supplied[canonical] = supplied[alias]
     for key, default in defaults.items():
@@ -365,11 +354,7 @@ def _manifest_hashes(manifest: Mapping[str, Any]) -> dict[str, list[str]]:
 def _suite_entries(manifest: Mapping[str, Any]) -> list[tuple[str, str, str]]:
     suite_id = str(manifest.get("suite_id", "<unknown-suite>"))
     hashes = _manifest_hashes(manifest)
-    return [
-        (suite_id, role, digest)
-        for role in ("train", "test")
-        for digest in hashes[role]
-    ]
+    return [(suite_id, role, digest) for role in ("train", "test") for digest in hashes[role]]
 
 
 def cross_suite_task_hash_overlaps(
@@ -385,9 +370,7 @@ def cross_suite_task_hash_overlaps(
             raise SplitManifestError("cross-suite manifest must be a JSON object")
         other_suite = str(other.get("suite_id", "<unknown-suite>"))
         if other_suite == current_suite and other is not manifest:
-            raise SplitManifestError(
-                f"duplicate suite_id {current_suite!r} in portfolio manifests"
-            )
+            raise SplitManifestError(f"duplicate suite_id {current_suite!r} in portfolio manifests")
         others.extend(_suite_entries(other))
     collisions: list[dict[str, str]] = []
     for suite_id, role, digest in current:
@@ -702,13 +685,7 @@ def build_manifest(
             f"{first['other_suite_id']}:{first['other_split_role']} "
             f"({first['task_hash']})"
         )
-    checked = sorted(
-        {
-            str(other.get("suite_id"))
-            for other in others
-            if isinstance(other, Mapping)
-        }
-    )
+    checked = sorted({str(other.get("suite_id")) for other in others if isinstance(other, Mapping)})
     provisional["cross_suite_overlap"] = {
         "checked_suite_ids": checked,
         "overlap_count": 0,
@@ -1011,9 +988,7 @@ def verify_manifest(
         except (OSError, json.JSONDecodeError) as exc:
             raise SplitManifestError(f"cannot read manifest {manifest_path}: {exc}") from exc
     supplied_revisions = [
-        value
-        for value in (expected_revision, revision, current_revision)
-        if value is not None
+        value for value in (expected_revision, revision, current_revision) if value is not None
     ]
     if supplied_revisions and any(
         value != supplied_revisions[0] for value in supplied_revisions[1:]

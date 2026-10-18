@@ -16,12 +16,12 @@ Outputs:
     - 2x2 grid: scatter of (L,R) per step with per-bin mean overlay +
       per-task slope comparison bar
 """
+
 from __future__ import annotations
 
 import csv
 import json
 import math
-import os
 import pathlib
 import sys
 from collections import defaultdict
@@ -137,7 +137,9 @@ def per_run_bin(run: dict, n_bins: int = 4) -> list[dict]:
                 "len_max": float(lengths[m].max()),
                 "len_mid": float(lengths[m].mean()),
                 "mean_reward": float(rewards[m].mean()),
-                "mean_zvf": float(np.mean([r["zvf"] for r in rows if m[rows.index(r)]])) if False else float(np.nan),
+                "mean_zvf": float(np.mean([r["zvf"] for r in rows if m[rows.index(r)]]))
+                if False
+                else float(np.nan),
                 "n_steps": int(m.sum()),
             }
         )
@@ -420,7 +422,7 @@ def main():
     algos = ["grpo", "dr_grpo"]
     colors = {"grpo": "#1f77b4", "dr_grpo": "#d62728"}
     fig, axes = plt.subplots(1, 2, figsize=(10.5, 4.6))
-    for ax, task in zip(axes, tasks):
+    for ax, task in zip(axes, tasks, strict=False):
         # scatter all per-run points
         for run in [r for r in runs if r["task"] == task]:
             L = [row["length"] for row in run["rows"]]
@@ -482,11 +484,17 @@ def main():
         )
     print("\n[iter16] aggregate mean rho per (task, algo):")
     for k, v in sorted(agg.items()):
-        print(f"  {k[0]:36s} {k[1]:7s}  mean_rho={np.mean(v):+.3f}  sd={np.std(v, ddof=1):.3f}  n={len(v)}")
+        print(
+            f"  {k[0]:36s} {k[1]:7s}  mean_rho={np.mean(v):+.3f}  sd={np.std(v, ddof=1):.3f}  n={len(v)}"
+        )
 
     print("\n[iter16] paired bootstrap Delta(Dr.GRPO - GRPO) rho(L,R):")
     for r in paired_rows:
-        sig = "***" if r["p_perm"] < 0.01 else ("**" if r["p_perm"] < 0.05 else ("*" if r["p_perm"] < 0.1 else ""))
+        sig = (
+            "***"
+            if r["p_perm"] < 0.01
+            else ("**" if r["p_perm"] < 0.05 else ("*" if r["p_perm"] < 0.1 else ""))
+        )
         print(
             f"  {r['task']:36s}  delta_rho={r['delta_rho']:+.3f}  CI=[{r['ci_lo']:+.3f},{r['ci_hi']:+.3f}]  "
             f"p_perm={r['p_perm']:.3f} {sig}"

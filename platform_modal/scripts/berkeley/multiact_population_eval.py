@@ -24,6 +24,7 @@ Hypotheses:
 
 This script runs on REAL repo data (no Tinker calls needed).
 """
+
 from __future__ import annotations
 import json
 import math
@@ -32,6 +33,7 @@ import statistics
 from pathlib import Path
 import ast
 import sys
+
 sys.path.append(str(Path(__file__).resolve().parents[1]))
 from _paths import REPO_ROOT
 from _review02_contracts import finite_json
@@ -51,7 +53,7 @@ def bootstrap_ci(values, stat=statistics.mean, n_boot=2000, alpha=0.05):
     """Return (point, lo, hi, half_width, se) of the bootstrap distribution."""
     n = len(values)
     if n < 2:
-        return (stat(values) if n else float("nan"),) + (float("nan"),)*4
+        return (stat(values) if n else float("nan"),) + (float("nan"),) * 4
     boots = []
     for _ in range(n_boot):
         sample = [values[random.randrange(n)] for _ in range(n)]
@@ -69,7 +71,7 @@ def paired_bootstrap_diff(a, b, n_boot=2000, alpha=0.05):
     n = len(a)
     if n == 0:
         return (float("nan"),) * 4
-    diffs = [ai - bi for ai, bi in zip(a[:n], b[:n])]
+    diffs = [ai - bi for ai, bi in zip(a[:n], b[:n], strict=False)]
     point = sum(diffs) / n
     boots = []
     for _ in range(n_boot):
@@ -86,7 +88,7 @@ def kendall_tau(a, b):
     n = len(a)
     if n < 2:
         return float("nan")
-    pairs = sorted(zip(a, b))
+    pairs = sorted(zip(a, b, strict=False))
     concord = 0
     discord = 0
     for i in range(n):
@@ -135,13 +137,21 @@ def load_zvf_summary():
                 seed = parts[16]
             except ValueError:
                 continue
-            out.setdefault(exp, []).append({
-                "model": model, "task": task, "phase": phase,
-                "group_size": g, "mean_zvf": mean_zvf,
-                "min_zvf": min_zvf, "max_zvf": max_zvf,
-                "mean_reward": mean_reward, "peak": peak,
-                "last10_avg": last10, "seed": seed,
-            })
+            out.setdefault(exp, []).append(
+                {
+                    "model": model,
+                    "task": task,
+                    "phase": phase,
+                    "group_size": g,
+                    "mean_zvf": mean_zvf,
+                    "min_zvf": min_zvf,
+                    "max_zvf": max_zvf,
+                    "mean_reward": mean_reward,
+                    "peak": peak,
+                    "last10_avg": last10,
+                    "seed": seed,
+                }
+            )
     return out
 
 
@@ -150,14 +160,16 @@ def parse_group_table(text):
         rows = json.loads(text)
     except ValueError:
         rows = ast.literal_eval(text)
-    if not isinstance(rows, list) or any(not isinstance(r, dict) or not isinstance(r.get('G'), (int, float)) for r in rows):
-        raise ValueError('expected per-G object list')
+    if not isinstance(rows, list) or any(
+        not isinstance(r, dict) or not isinstance(r.get("G"), (int, float)) for r in rows
+    ):
+        raise ValueError("expected per-G object list")
     for row in rows:
-        if row['G'] <= 0 or int(row['G']) != row['G']:
-            raise ValueError('positive integer group size required')
-        for key, value in row.items():
+        if row["G"] <= 0 or int(row["G"]) != row["G"]:
+            raise ValueError("positive integer group size required")
+        for _key, value in row.items():
             if isinstance(value, (float, int)) and not math.isfinite(value):
-                raise ValueError('finite result fields required')
+                raise ValueError("finite result fields required")
     return rows
 
 
@@ -201,7 +213,7 @@ def load_error_bars_audit():
                 continue
             if header is None:
                 continue
-            d = dict(zip(header, parts))
+            d = dict(zip(header, parts, strict=False))
             out.append(d)
     return out
 
@@ -211,10 +223,10 @@ def load_error_bars_audit():
 # ----------------------------------------------------------------------------
 def hypothesis_h1(zvf):
     """For each experiment, compute:
-       - single-best-method mean (smallest SE)
-       - population-mean (mixing all methods × seeds)
-       - improvement ratio = SE_best / SE_population
-       DECISIVE if ratio >= 1.5 in >= 2/3 of multi-method experiments.
+    - single-best-method mean (smallest SE)
+    - population-mean (mixing all methods × seeds)
+    - improvement ratio = SE_best / SE_population
+    DECISIVE if ratio >= 1.5 in >= 2/3 of multi-method experiments.
     """
     rows = []
     n_decisive = 0
@@ -231,7 +243,7 @@ def hypothesis_h1(zvf):
         # single-best-method: pick method with highest mean, compute its SE
         method_means = []
         for m, vals in per_method.items():
-            pt, lo,hi, hw, se = bootstrap_ci(vals, n_boot=1000)
+            pt, lo, hi, hw, se = bootstrap_ci(vals, n_boot=1000)
             method_means.append((m, pt, se, len(vals)))
         method_means.sort(key=lambda t: -t[1])
         best_name, best_pt, best_se, best_n = method_means[0]
@@ -242,21 +254,23 @@ def hypothesis_h1(zvf):
         verdict = "DECISIVE" if ratio >= 1.5 else "NULL"
         n_total += 1
         n_decisive += int(verdict == "DECISIVE")
-        rows.append({
-            "experiment": exp,
-            "n_methods": len(methods),
-            "n_seeds_per_method": best_n,
-            "n_pop": len(all_vals),
-            "best_method": best_name,
-            "best_mean": best_pt,
-            "best_se": best_se,
-            "pop_mean": pop_pt,
-            "pop_se": pop_se,
-            "pop_lo": pop_lo,
-            "pop_hi": pop_hi,
-            "ratio_se_best_over_pop": ratio,
-            "verdict": verdict,
-        })
+        rows.append(
+            {
+                "experiment": exp,
+                "n_methods": len(methods),
+                "n_seeds_per_method": best_n,
+                "n_pop": len(all_vals),
+                "best_method": best_name,
+                "best_mean": best_pt,
+                "best_se": best_se,
+                "pop_mean": pop_pt,
+                "pop_se": pop_se,
+                "pop_lo": pop_lo,
+                "pop_hi": pop_hi,
+                "ratio_se_best_over_pop": ratio,
+                "verdict": verdict,
+            }
+        )
     return rows, n_decisive, n_total
 
 
@@ -294,16 +308,18 @@ def hypothesis_h2(audit):
         signal_to_noise = abs(pt) / hw
         verdict = "DECISIVE" if signal_to_noise >= 2.0 else "NULL"
         n_decisive += int(verdict == "DECISIVE")
-        rows.append({
-            "headline": h["headline"][:80],
-            "point": pt,
-            "ci_lo": lo,
-            "ci_hi": hi,
-            "half_width": hw,
-            "signal_to_noise": signal_to_noise,
-            "row03_verdict": h["verdict"],
-            "population_extension_verdict": verdict,
-        })
+        rows.append(
+            {
+                "headline": h["headline"][:80],
+                "point": pt,
+                "ci_lo": lo,
+                "ci_hi": hi,
+                "half_width": hw,
+                "signal_to_noise": signal_to_noise,
+                "row03_verdict": h["verdict"],
+                "population_extension_verdict": verdict,
+            }
+        )
     return rows, n_decisive, n_total
 
 
@@ -352,15 +368,17 @@ def hypothesis_h3(zvf, group_size):
         ratio = (se_single / se_pop) if se_pop > 0 else float("nan")
         verdict = "DESCRIPTIVE_SD_VS_SEM" if math.isfinite(ratio) else "INSUFFICIENT_DATA"
         n_decisive += int(verdict == "DECISIVE")
-        rows.append({
-            "pillar": name,
-            "n_pop": len(vals),
-            "pop_mean": sum(vals) / len(vals),
-            "sd_across_heterogeneous_values": se_single,
-            "bootstrap_sem_of_mean": se_pop,
-            "sd_over_sem": ratio,
-            "verdict": verdict,
-        })
+        rows.append(
+            {
+                "pillar": name,
+                "n_pop": len(vals),
+                "pop_mean": sum(vals) / len(vals),
+                "sd_across_heterogeneous_values": se_single,
+                "bootstrap_sem_of_mean": se_pop,
+                "sd_over_sem": ratio,
+                "verdict": verdict,
+            }
+        )
     return rows, n_decisive, n_total
 
 
@@ -369,10 +387,10 @@ def hypothesis_h3(zvf, group_size):
 # ----------------------------------------------------------------------------
 def hypothesis_h4(zvf):
     """Compute Kendall tau between per-method mean_reward under
-       variance_mitigation (Pillar-2 'ZVF risk' proxy) and per-method
-       mean_reward under samestack_ppo_grpo (Pillar-1 'algorithm choice'
-       proxy).  Population-eval tau uses bootstrap aggregation; single
-       uses one seed per method.
+    variance_mitigation (Pillar-2 'ZVF risk' proxy) and per-method
+    mean_reward under samestack_ppo_grpo (Pillar-1 'algorithm choice'
+    proxy).  Population-eval tau uses bootstrap aggregation; single
+    uses one seed per method.
     """
     p2 = zvf.get("variance_mitigation", [])
     p1 = zvf.get("samestack_ppo_grpo", [])
@@ -414,16 +432,18 @@ def hypothesis_h4(zvf):
     abs_single = abs(tau_single) if not math.isnan(tau_single) else 0.0
     delta = abs_pop - abs_single
     verdict = "DECISIVE" if delta > 0 else "NULL"
-    rows = [{
-        "n_methods_common": len(common),
-        "methods": ",".join(common),
-        "tau_single_eval": tau_single,
-        "tau_population_eval": pop_pt,
-        "pop_lo": pop_lo,
-        "pop_hi": pop_hi,
-        "delta_abs_tau": delta,
-        "verdict": verdict,
-    }]
+    rows = [
+        {
+            "n_methods_common": len(common),
+            "methods": ",".join(common),
+            "tau_single_eval": tau_single,
+            "tau_population_eval": pop_pt,
+            "pop_lo": pop_lo,
+            "pop_hi": pop_hi,
+            "delta_abs_tau": delta,
+            "verdict": verdict,
+        }
+    ]
     return rows, int(verdict == "DECISIVE"), 1
 
 
@@ -452,21 +472,66 @@ def main():
             for r in rows:
                 f.write("\t".join(str(r.get(k, "")) for k in keys) + "\n")
 
-    write_tsv("h1_population_se", h1_rows,
-              ["experiment", "n_methods", "n_seeds_per_method", "n_pop",
-               "best_method", "best_mean", "best_se", "pop_mean", "pop_se",
-               "pop_lo", "pop_hi", "ratio_se_best_over_pop", "verdict"])
-    write_tsv("h2_row03_null_extension", h2_rows,
-              ["headline", "point", "ci_lo", "ci_hi", "half_width",
-               "signal_to_noise", "row03_verdict",
-               "population_extension_verdict"])
-    write_tsv("h3_pillar_checkpoint_se", h3_rows,
-              ["pillar", "n_pop", "pop_mean", "sd_across_heterogeneous_values",
-               "bootstrap_sem_of_mean", "sd_over_sem", "verdict"])
-    write_tsv("h4_cross_pillar_tau", h4_rows,
-              ["n_methods_common", "methods", "tau_single_eval",
-               "tau_population_eval", "pop_lo", "pop_hi", "delta_abs_tau",
-               "verdict"])
+    write_tsv(
+        "h1_population_se",
+        h1_rows,
+        [
+            "experiment",
+            "n_methods",
+            "n_seeds_per_method",
+            "n_pop",
+            "best_method",
+            "best_mean",
+            "best_se",
+            "pop_mean",
+            "pop_se",
+            "pop_lo",
+            "pop_hi",
+            "ratio_se_best_over_pop",
+            "verdict",
+        ],
+    )
+    write_tsv(
+        "h2_row03_null_extension",
+        h2_rows,
+        [
+            "headline",
+            "point",
+            "ci_lo",
+            "ci_hi",
+            "half_width",
+            "signal_to_noise",
+            "row03_verdict",
+            "population_extension_verdict",
+        ],
+    )
+    write_tsv(
+        "h3_pillar_checkpoint_se",
+        h3_rows,
+        [
+            "pillar",
+            "n_pop",
+            "pop_mean",
+            "sd_across_heterogeneous_values",
+            "bootstrap_sem_of_mean",
+            "sd_over_sem",
+            "verdict",
+        ],
+    )
+    write_tsv(
+        "h4_cross_pillar_tau",
+        h4_rows,
+        [
+            "n_methods_common",
+            "methods",
+            "tau_single_eval",
+            "tau_population_eval",
+            "pop_lo",
+            "pop_hi",
+            "delta_abs_tau",
+            "verdict",
+        ],
+    )
 
     summary = {
         "statistic_version": "pro-review-02-v2",
@@ -478,35 +543,47 @@ def main():
         "co_anchor": "AlphaStar (Vinyals et al. Nature 2019, s41586-019-1724-z) — verified via prior knowledge of Vinyals DeepMind StarCraft work",
         "hypotheses": {
             "H1_population_SE": {
-                "n_decisive": h1_dec, "n_total": h1_tot,
+                "n_decisive": h1_dec,
+                "n_total": h1_tot,
                 "verdict": "DECISIVE" if h1_dec >= max(1, (2 * h1_tot) // 3) else "NULL",
                 "rows": h1_rows,
             },
             "H2_row03_NULL_extension": {
-                "n_decisive": h2_dec, "n_total": h2_tot,
+                "n_decisive": h2_dec,
+                "n_total": h2_tot,
                 "verdict": "DECISIVE" if h2_dec >= 2 else "NULL",
                 "rows": h2_rows,
             },
             "H3_pillar_checkpoint_population": {
-                "n_decisive": h3_dec, "n_total": h3_tot,
+                "n_decisive": h3_dec,
+                "n_total": h3_tot,
                 "verdict": "DESCRIPTIVE_SD_VS_SEM" if h3_tot else "INSUFFICIENT_DATA",
                 "rows": h3_rows,
             },
             "H4_cross_pillar_agreement": {
-                "n_decisive": h4_dec, "n_total": h4_tot,
-                "verdict": "INSUFFICIENT_DATA" if h4_tot == 0 else ("DESCRIPTIVE_DIRECTION" if h4_dec == h4_tot else "INCONCLUSIVE"),
+                "n_decisive": h4_dec,
+                "n_total": h4_tot,
+                "verdict": "INSUFFICIENT_DATA"
+                if h4_tot == 0
+                else ("DESCRIPTIVE_DIRECTION" if h4_dec == h4_tot else "INCONCLUSIVE"),
                 "rows": h4_rows,
             },
         },
         "verdict_counts": {
-            "DECISIVE": sum([h1_dec >= max(1, (2 * h1_tot) // 3),
-                              h2_dec >= 2,
-                              h3_dec >= 3,
-                              h4_tot > 0 and h4_dec == h4_tot]),
+            "DECISIVE": sum(
+                [
+                    h1_dec >= max(1, (2 * h1_tot) // 3),
+                    h2_dec >= 2,
+                    h3_dec >= 3,
+                    h4_tot > 0 and h4_dec == h4_tot,
+                ]
+            ),
             "TOTAL": 4,
         },
     }
-    (OUT / "multiact_summary.json").write_text(json.dumps(finite_json(summary), indent=2, allow_nan=False))
+    (OUT / "multiact_summary.json").write_text(
+        json.dumps(finite_json(summary), indent=2, allow_nan=False)
+    )
     print("OK", json.dumps(summary["verdict_counts"]))
 
 

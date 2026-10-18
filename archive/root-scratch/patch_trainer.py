@@ -1,5 +1,3 @@
-import sys
-
 file_path = "/Users/arvind/.gemini/antigravity-cli/brain/d11d0942-494f-4f18-92dc-091dc26c5df9/.system_generated/worktrees/subagent-ERF-Logger-self-a4a31886/atropos/tinker_atropos/trainer.py"
 with open(file_path, "r") as f:
     content = f.read()

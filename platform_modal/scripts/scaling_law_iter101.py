@@ -47,6 +47,7 @@ Outputs:
   figures/scaling_law_iter101.{pdf,png}
   paper/figures/scaling_law_iter101.pdf
 """
+
 from __future__ import annotations
 
 import csv
@@ -57,8 +58,8 @@ from pathlib import Path
 import matplotlib
 
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt  # noqa: E402
-import numpy as np  # noqa: E402
+import matplotlib.pyplot as plt
+import numpy as np
 from _analysis_common import fit_saturation as _fit_saturation
 
 REPO = Path(__file__).resolve().parent.parent
@@ -86,10 +87,17 @@ MODELS: dict[str, tuple[float, str]] = {
 
 # ---------- family definitions (mirrors iter97 battery) -------------------
 
-FAMILIES = ["constant", "1seg_ols", "saturation", "powerlaw", "ar1",
-            "monod", "gompertz", "pw2seg"]
-NPARAMS = {"constant": 1, "1seg_ols": 2, "saturation": 2, "powerlaw": 2,
-           "ar1": 3, "monod": 2, "gompertz": 3, "pw2seg": 5}
+FAMILIES = ["constant", "1seg_ols", "saturation", "powerlaw", "ar1", "monod", "gompertz", "pw2seg"]
+NPARAMS = {
+    "constant": 1,
+    "1seg_ols": 2,
+    "saturation": 2,
+    "powerlaw": 2,
+    "ar1": 3,
+    "monod": 2,
+    "gompertz": 3,
+    "pw2seg": 5,
+}
 
 
 def f_constant(t, p):
@@ -114,7 +122,7 @@ def f_ar1_eval(t, p, y_ref):
     n = len(y_ref)
     out = np.empty_like(t, dtype=float)
     last = float(y_ref[-1])
-    for i, ti in enumerate(t):
+    for i, _ti in enumerate(t):
         # Note: this eval does not actually use ti -- AR(1) prediction is
         # recursive from y_ref's terminal value.  We keep the signature for
         # unified call dispatch.
@@ -140,13 +148,20 @@ def f_pw2seg(t, p):
     return out
 
 
-FUNCS = {"constant": f_constant, "1seg_ols": f_1seg_ols,
-         "saturation": f_saturation, "powerlaw": f_powerlaw,
-         "ar1": None,  # special
-         "monod": f_monod, "gompertz": f_gompertz, "pw2seg": f_pw2seg}
+FUNCS = {
+    "constant": f_constant,
+    "1seg_ols": f_1seg_ols,
+    "saturation": f_saturation,
+    "powerlaw": f_powerlaw,
+    "ar1": None,  # special
+    "monod": f_monod,
+    "gompertz": f_gompertz,
+    "pw2seg": f_pw2seg,
+}
 
 
 # ---------- fitters -------------------------------------------------------
+
 
 def _fit_constant(t, y):
     return [float(np.mean(y))]
@@ -225,16 +240,20 @@ def _fit_pw2seg(t, y):
         pred = np.where(mask, c1[0] + c1[1] * t, c2[0] + c2[1] * t)
         sse = float(np.sum((y - pred) ** 2))
         if sse < best[0]:
-            best = (sse, [float(c), float(c1[0]), float(c1[1]),
-                          float(c2[0]), float(c2[1])])
-    return best[1] if best[1] else [float(t.mean()), float(y.mean()), 0.0,
-                                     float(y.mean()), 0.0]
+            best = (sse, [float(c), float(c1[0]), float(c1[1]), float(c2[0]), float(c2[1])])
+    return best[1] if best[1] else [float(t.mean()), float(y.mean()), 0.0, float(y.mean()), 0.0]
 
 
-FITTERS = {"constant": _fit_constant, "1seg_ols": _fit_1seg_ols,
-           "saturation": _fit_saturation, "powerlaw": _fit_powerlaw,
-           "ar1": _fit_ar1, "monod": _fit_monod, "gompertz": _fit_gompertz,
-           "pw2seg": _fit_pw2seg}
+FITTERS = {
+    "constant": _fit_constant,
+    "1seg_ols": _fit_1seg_ols,
+    "saturation": _fit_saturation,
+    "powerlaw": _fit_powerlaw,
+    "ar1": _fit_ar1,
+    "monod": _fit_monod,
+    "gompertz": _fit_gompertz,
+    "pw2seg": _fit_pw2seg,
+}
 
 
 def _eval_family(fam, t_eval, params, y_ref=None):
@@ -252,6 +271,7 @@ def _bic(rss, n, k):
 
 
 # ---------- I/O -----------------------------------------------------------
+
 
 def _load_trace(fname: str) -> tuple[np.ndarray, np.ndarray]:
     p = TRACE_DIR / fname
@@ -271,10 +291,17 @@ def _write_tsv(path: Path, cols, rows) -> None:
 
 # ---------- Q6: cross-anchor transfer -------------------------------------
 
+
 def _q6_transfer(per_anchor: dict) -> tuple[list, dict]:
     rows = []
-    diag = {"home_mae": [], "off_diag_mae": [], "transfer_ratios": [],
-            "n_pairs": 0, "diagonal_n": 0, "off_diag_n": 0}
+    diag = {
+        "home_mae": [],
+        "off_diag_mae": [],
+        "transfer_ratios": [],
+        "n_pairs": 0,
+        "diagonal_n": 0,
+        "off_diag_n": 0,
+    }
     anchors = sorted(per_anchor.keys(), key=lambda k: per_anchor[k]["params_b"])
     for src in anchors:
         for tgt in anchors:
@@ -287,9 +314,19 @@ def _q6_transfer(per_anchor: dict) -> tuple[list, dict]:
             pred = f_saturation(t_tgt, p)
             mae = float(np.mean(np.abs(y_tgt - pred)))
             rmse = float(np.sqrt(np.mean((y_tgt - pred) ** 2)))
-            rows.append([src, tgt, src_d["params_b"], tgt_d["params_b"],
-                         round(p[0], 4), round(p[1], 4), round(mae, 4),
-                         round(rmse, 4), src == tgt])
+            rows.append(
+                [
+                    src,
+                    tgt,
+                    src_d["params_b"],
+                    tgt_d["params_b"],
+                    round(p[0], 4),
+                    round(p[1], 4),
+                    round(mae, 4),
+                    round(rmse, 4),
+                    src == tgt,
+                ]
+            )
             if src == tgt:
                 diag["home_mae"].append(mae)
                 diag["diagonal_n"] += 1
@@ -309,20 +346,25 @@ def _q6_scale_transfer(rows: list) -> dict:
     small = [r for r in rows if r[2] <= 32.0]
     large = [r for r in rows if r[2] > 100.0]
     bands = {}
-    for band_name, src_band, tgt_band in [
+    for _band_name, src_band, tgt_band in [
         ("S->S", small, small),
         ("L->L", large, large),
         ("S->L", small, large),
         ("L->S", large, small),
     ]:
-        offs = [r[6] for r in src_band for r2 in tgt_band
-                if r[0] == src_band[0] and r[1] == r2[1]
-                and not (r[0] == r2[1] and r[1] == r2[0])]
+        offs = [
+            r[6]
+            for r in src_band
+            for r2 in tgt_band
+            if r[0] == src_band[0] and r[1] == r2[1] and not (r[0] == r2[1] and r[1] == r2[0])
+        ]
         # Simpler: just keep non-diagonal cross-band entries.
         del offs  # not used; replaced below
+
     # Cleaner: compute by brute loop over (src, tgt) band membership.
     def in_band(r, band):
         return r[2] in [x[2] for x in band] and r[3] in [x[3] for x in band]
+
     pairs = {
         "S->S": [r for r in rows if r[2] <= 32 and r[3] <= 32 and not r[8]],
         "L->L": [r for r in rows if r[2] > 100 and r[3] > 100 and not r[8]],
@@ -332,13 +374,16 @@ def _q6_scale_transfer(rows: list) -> dict:
     out = {}
     for k, v in pairs.items():
         mae_list = [r[6] for r in v]
-        out[k] = {"n": len(mae_list),
-                  "mean_mae": float(np.mean(mae_list)) if mae_list else None,
-                  "median_mae": float(np.median(mae_list)) if mae_list else None}
+        out[k] = {
+            "n": len(mae_list),
+            "mean_mae": float(np.mean(mae_list)) if mae_list else None,
+            "median_mae": float(np.median(mae_list)) if mae_list else None,
+        }
     return out
 
 
 # ---------- Q7: stacked-AIC forecast --------------------------------------
+
 
 def _stacked_predict(t_train, y_train, t_eval, y_eval=None) -> dict:
     n = len(y_train)
@@ -358,13 +403,16 @@ def _stacked_predict(t_train, y_train, t_eval, y_eval=None) -> dict:
     w_sum = sum(w.values())
     w = {f: w[f] / w_sum for f in FAMILIES}
     stacked_eval = sum(w[f] * yhat_eval_per_fam[f] for f in FAMILIES)
-    out = {"aic": aic, "weights": w, "params_per_fam": params_per_fam,
-           "yhat_eval_per_fam": {f: y.tolist() for f, y in yhat_eval_per_fam.items()},
-           "stacked_eval": stacked_eval.tolist()}
+    out = {
+        "aic": aic,
+        "weights": w,
+        "params_per_fam": params_per_fam,
+        "yhat_eval_per_fam": {f: y.tolist() for f, y in yhat_eval_per_fam.items()},
+        "stacked_eval": stacked_eval.tolist(),
+    }
     if y_eval is not None:
         stacked_mae = float(np.mean(np.abs(y_eval - stacked_eval)))
-        per_fam_mae = {f: float(np.mean(np.abs(y_eval - yhat_eval_per_fam[f])))
-                       for f in FAMILIES}
+        per_fam_mae = {f: float(np.mean(np.abs(y_eval - yhat_eval_per_fam[f]))) for f in FAMILIES}
         best_single = min(per_fam_mae.items(), key=lambda kv: kv[1])
         out["stacked_mae"] = stacked_mae
         out["per_fam_mae"] = per_fam_mae
@@ -377,8 +425,14 @@ def _stacked_predict(t_train, y_train, t_eval, y_eval=None) -> dict:
 
 def _q7_stacked(per_anchor: dict, holdout_frac: float = 0.25) -> tuple[list, dict]:
     rows = []
-    diag = {"n_anchors": 0, "stacked_wins": 0, "deltas": [], "ties": 0,
-            "best_single_win_fams": {}, "stacked_beats_in_n": 0}
+    diag = {
+        "n_anchors": 0,
+        "stacked_wins": 0,
+        "deltas": [],
+        "ties": 0,
+        "best_single_win_fams": {},
+        "stacked_beats_in_n": 0,
+    }
     for label, d in per_anchor.items():
         t, y = d["t"], d["y"]
         n = len(y)
@@ -386,15 +440,22 @@ def _q7_stacked(per_anchor: dict, holdout_frac: float = 0.25) -> tuple[list, dic
         t_train, y_train = t[:-n_hold], y[:-n_hold]
         t_eval, y_eval = t[-n_hold:], y[-n_hold:]
         out = _stacked_predict(t_train, y_train, t_eval, y_eval)
-        rows.append([label, d["params_b"], n, n_hold,
-                     round(out["stacked_mae"], 4),
-                     out["best_single_fam"],
-                     round(out["best_single_mae"], 4),
-                     bool(out["stacked_beats_single"]),
-                     round(out["delta_vs_best"], 4),
-                     round(out["weights"]["saturation"], 4),
-                     round(out["weights"]["ar1"], 4),
-                     round(out["weights"]["constant"], 4)])
+        rows.append(
+            [
+                label,
+                d["params_b"],
+                n,
+                n_hold,
+                round(out["stacked_mae"], 4),
+                out["best_single_fam"],
+                round(out["best_single_mae"], 4),
+                bool(out["stacked_beats_single"]),
+                round(out["delta_vs_best"], 4),
+                round(out["weights"]["saturation"], 4),
+                round(out["weights"]["ar1"], 4),
+                round(out["weights"]["constant"], 4),
+            ]
+        )
         diag["n_anchors"] += 1
         if out["stacked_beats_single"]:
             diag["stacked_wins"] += 1
@@ -411,31 +472,54 @@ def _q7_stacked(per_anchor: dict, holdout_frac: float = 0.25) -> tuple[list, dic
 
 # ---------- main ---------------------------------------------------------
 
+
 def main() -> None:
     per_anchor = {}
     for label, (params_b, fname) in MODELS.items():
         t, y = _load_trace(fname)
-        per_anchor[label] = {"params_b": params_b, "t": t, "y": y,
-                             "n": len(y)}
+        per_anchor[label] = {"params_b": params_b, "t": t, "y": y, "n": len(y)}
 
     # Q6: cross-anchor transfer
     q6_rows, q6_diag = _q6_transfer(per_anchor)
     q6_bands = _q6_scale_transfer(q6_rows)
 
-    _write_tsv(RESULTS_DIR / "scaling_law_iter101_transfer.tsv",
-               ["src", "tgt", "src_params_B", "tgt_params_B",
-                "R_max", "lambda", "MAE_on_tgt", "RMSE_on_tgt", "diagonal"],
-               q6_rows)
+    _write_tsv(
+        RESULTS_DIR / "scaling_law_iter101_transfer.tsv",
+        [
+            "src",
+            "tgt",
+            "src_params_B",
+            "tgt_params_B",
+            "R_max",
+            "lambda",
+            "MAE_on_tgt",
+            "RMSE_on_tgt",
+            "diagonal",
+        ],
+        q6_rows,
+    )
 
     # Q7: stacked-AIC forecast
     q7_rows, q7_diag = _q7_stacked(per_anchor, holdout_frac=0.25)
 
-    _write_tsv(RESULTS_DIR / "scaling_law_iter101_stacked.tsv",
-               ["anchor", "params_B", "n", "n_holdout",
-                "stacked_MAE", "best_single_fam", "best_single_MAE",
-                "stacked_beats_single", "delta_vs_best",
-                "w_saturation", "w_ar1", "w_constant"],
-               q7_rows)
+    _write_tsv(
+        RESULTS_DIR / "scaling_law_iter101_stacked.tsv",
+        [
+            "anchor",
+            "params_B",
+            "n",
+            "n_holdout",
+            "stacked_MAE",
+            "best_single_fam",
+            "best_single_MAE",
+            "stacked_beats_single",
+            "delta_vs_best",
+            "w_saturation",
+            "w_ar1",
+            "w_constant",
+        ],
+        q7_rows,
+    )
 
     meta = {
         "iter": 101,
@@ -462,25 +546,28 @@ def main() -> None:
             "ties": q7_diag["ties"],
             "best_single_win_fams": q7_diag["best_single_win_fams"],
         },
-        "method": ("Q6: fit saturation R_max*(1-exp(-lambda t)) on each anchor, "
-                   "evaluate MAE/RMSE on every other anchor. "
-                   "Q7: hold out last 25% of each trace, AIC-stack {constant, "
-                   "1seg_ols, saturation, powerlaw, ar1, monod, gompertz, pw2seg}, "
-                   "compare stacked MAE vs best single-family MAE on the holdout."),
-        "frontier_synthesis": ("Stacked generalisation is the most rigorous "
-                               "AIC defence for not picking a single family; "
-                               "see breiman1996stacking, burnham2002model. "
-                               "hoerl1970ridge is implicit in the linearised-"
-                               "OLS Monod fitter.  Combined with Q6's transfer-"
-                               "ratio this *closes* the operational recom-"
-                               "mendation question left open by iter97: for "
-                               "between-anchor transfer use saturation (it is "
-                               "the only family with a meaningful parametrisa-"
-                               "tion); for within-anchor forecast use the "
-                               "AIC-stacked ensemble."),
+        "method": (
+            "Q6: fit saturation R_max*(1-exp(-lambda t)) on each anchor, "
+            "evaluate MAE/RMSE on every other anchor. "
+            "Q7: hold out last 25% of each trace, AIC-stack {constant, "
+            "1seg_ols, saturation, powerlaw, ar1, monod, gompertz, pw2seg}, "
+            "compare stacked MAE vs best single-family MAE on the holdout."
+        ),
+        "frontier_synthesis": (
+            "Stacked generalisation is the most rigorous "
+            "AIC defence for not picking a single family; "
+            "see breiman1996stacking, burnham2002model. "
+            "hoerl1970ridge is implicit in the linearised-"
+            "OLS Monod fitter.  Combined with Q6's transfer-"
+            "ratio this *closes* the operational recom-"
+            "mendation question left open by iter97: for "
+            "between-anchor transfer use saturation (it is "
+            "the only family with a meaningful parametrisa-"
+            "tion); for within-anchor forecast use the "
+            "AIC-stacked ensemble."
+        ),
     }
-    (RESULTS_DIR / "scaling_law_iter101_meta.json").write_text(
-        json.dumps(meta, indent=2))
+    (RESULTS_DIR / "scaling_law_iter101_meta.json").write_text(json.dumps(meta, indent=2))
 
     # ---------- figure ----------------------------------------------------
     fig, axes = plt.subplots(1, 3, figsize=(15, 4.5))
@@ -489,21 +576,37 @@ def main() -> None:
     off_rows = [r for r in q6_rows if not r[8]]
     src_params = np.array([r[2] for r in off_rows])
     tgt_mae = np.array([r[6] for r in off_rows])
-    axes[0].scatter(src_params, tgt_mae, s=24, alpha=0.55,
-                    color="#4C72B0", edgecolor="black", linewidth=0.4,
-                    label="transfer fit")
+    axes[0].scatter(
+        src_params,
+        tgt_mae,
+        s=24,
+        alpha=0.55,
+        color="#4C72B0",
+        edgecolor="black",
+        linewidth=0.4,
+        label="transfer fit",
+    )
     home_params = np.array([q6_diag.get("mean_home_mae", 0)])
-    axes[0].axhline(q6_diag.get("mean_home_mae", 0), ls="--", lw=1.2,
-                    color="red",
-                    label=f"home-anchor MAE={q6_diag.get('mean_home_mae',0):.3f}")
-    axes[0].axhline(q6_diag.get("mean_off_diag_mae", 0), ls=":", lw=1.2,
-                    color="orange",
-                    label=f"transfer MAE={q6_diag.get('mean_off_diag_mae',0):.3f}")
+    axes[0].axhline(
+        q6_diag.get("mean_home_mae", 0),
+        ls="--",
+        lw=1.2,
+        color="red",
+        label=f"home-anchor MAE={q6_diag.get('mean_home_mae', 0):.3f}",
+    )
+    axes[0].axhline(
+        q6_diag.get("mean_off_diag_mae", 0),
+        ls=":",
+        lw=1.2,
+        color="orange",
+        label=f"transfer MAE={q6_diag.get('mean_off_diag_mae', 0):.3f}",
+    )
     axes[0].set_xscale("log")
     axes[0].set_xlabel("source params (B, log)")
     axes[0].set_ylabel("MAE on target")
-    axes[0].set_title(f"Q6: cross-anchor transfer\n"
-                      f"ratio off/home={q6_diag.get('ratio_off_vs_home',0):.2f}")
+    axes[0].set_title(
+        f"Q6: cross-anchor transfer\nratio off/home={q6_diag.get('ratio_off_vs_home', 0):.2f}"
+    )
     axes[0].legend(loc="upper right", fontsize=8)
     axes[0].grid(True, alpha=0.3)
 
@@ -511,25 +614,25 @@ def main() -> None:
     stacked_mae = np.array([r[4] for r in q7_rows])
     best_mae = np.array([r[6] for r in q7_rows])
     ab = np.arange(len(q7_rows))
-    axes[1].bar(ab - 0.2, stacked_mae, width=0.4, color="#55A868",
-                label="stacked AIC")
-    axes[1].bar(ab + 0.2, best_mae, width=0.4, color="#C44E52",
-                label="best single family")
+    axes[1].bar(ab - 0.2, stacked_mae, width=0.4, color="#55A868", label="stacked AIC")
+    axes[1].bar(ab + 0.2, best_mae, width=0.4, color="#C44E52", label="best single family")
     axes[1].set_xticks(ab)
-    axes[1].set_xticklabels([r[0] for r in q7_rows], rotation=45,
-                            ha="right", fontsize=7)
+    axes[1].set_xticklabels([r[0] for r in q7_rows], rotation=45, ha="right", fontsize=7)
     axes[1].set_ylabel("Holdout forecast MAE")
-    axes[1].set_title(f"Q7: stacked vs best single\n"
-                      f"wins={q7_diag['stacked_wins']}/{q7_diag['n_anchors']}")
+    axes[1].set_title(
+        f"Q7: stacked vs best single\nwins={q7_diag['stacked_wins']}/{q7_diag['n_anchors']}"
+    )
     axes[1].legend(fontsize=8)
     axes[1].grid(True, alpha=0.3)
 
     # Panel C: stacked weight pie averaged across anchors
     weight_mat = np.zeros((len(q7_rows), len(FAMILIES)))
     for i, r in enumerate(q7_rows):
-        out = _stacked_predict(per_anchor[r[0]]["t"][:-max(2,int(0.25*len(per_anchor[r[0]]['y'])))],
-                               per_anchor[r[0]]["y"][:-max(2,int(0.25*len(per_anchor[r[0]]['y'])))],
-                               per_anchor[r[0]]["t"][-max(2,int(0.25*len(per_anchor[r[0]]['y']))):])
+        out = _stacked_predict(
+            per_anchor[r[0]]["t"][: -max(2, int(0.25 * len(per_anchor[r[0]]["y"])))],
+            per_anchor[r[0]]["y"][: -max(2, int(0.25 * len(per_anchor[r[0]]["y"])))],
+            per_anchor[r[0]]["t"][-max(2, int(0.25 * len(per_anchor[r[0]]["y"]))) :],
+        )
         for j, f in enumerate(FAMILIES):
             weight_mat[i, j] = out["weights"][f]
     mean_w = weight_mat.mean(axis=0)
@@ -538,31 +641,41 @@ def main() -> None:
     sorted_w = mean_w[order]
     cum = 0
     explode = [0.04 if i == 0 else 0 for i in range(len(sorted_fams))]
-    axes[2].pie(sorted_w, labels=sorted_fams, autopct="%1.0f%%",
-                startangle=90, explode=explode,
-                textprops={"fontsize": 8})
-    axes[2].set_title(f"Q7: mean AIC-stack weights\n"
-                      f"over {q7_diag['n_anchors']} anchors")
+    axes[2].pie(
+        sorted_w,
+        labels=sorted_fams,
+        autopct="%1.0f%%",
+        startangle=90,
+        explode=explode,
+        textprops={"fontsize": 8},
+    )
+    axes[2].set_title(f"Q7: mean AIC-stack weights\nover {q7_diag['n_anchors']} anchors")
 
     plt.tight_layout()
     out_pdf = FIG_DIR / "scaling_law_iter101.pdf"
     out_png = FIG_DIR / "scaling_law_iter101.png"
     plt.savefig(out_pdf, bbox_inches="tight")
-    plt.savefig(out_png, bbox_inches="tight",dpi=130)
+    plt.savefig(out_png, bbox_inches="tight", dpi=130)
     plt.close()
     # Mirror to paper/figures
     (PAPER_FIG / "scaling_law_iter101.pdf").write_bytes(out_pdf.read_bytes())
 
-    print(f"iter101 done. Q6 ratio off/home = "
-          f"{q6_diag.get('ratio_off_vs_home'):.3f}; "
-          f"Q7 stacked wins = {q7_diag['stacked_wins']}/"
-          f"{q7_diag['n_anchors']}.")
-    print(f"  home MAE={q6_diag.get('mean_home_mae'):.4f}, "
-          f"transfer MAE={q6_diag.get('mean_off_diag_mae'):.4f}")
-    print(f"  bands S->S={q6_bands['S->S']['mean_mae']:.4f}, "
-          f"L->L={q6_bands['L->L']['mean_mae']}, "
-          f"S->L={q6_bands['S->L']['mean_mae']}, "
-          f"L->S={q6_bands['L->S']['mean_mae']}")
+    print(
+        f"iter101 done. Q6 ratio off/home = "
+        f"{q6_diag.get('ratio_off_vs_home'):.3f}; "
+        f"Q7 stacked wins = {q7_diag['stacked_wins']}/"
+        f"{q7_diag['n_anchors']}."
+    )
+    print(
+        f"  home MAE={q6_diag.get('mean_home_mae'):.4f}, "
+        f"transfer MAE={q6_diag.get('mean_off_diag_mae'):.4f}"
+    )
+    print(
+        f"  bands S->S={q6_bands['S->S']['mean_mae']:.4f}, "
+        f"L->L={q6_bands['L->L']['mean_mae']}, "
+        f"S->L={q6_bands['S->L']['mean_mae']}, "
+        f"L->S={q6_bands['L->S']['mean_mae']}"
+    )
 
 
 if __name__ == "__main__":

@@ -13,26 +13,34 @@ from __future__ import annotations
 
 import sys as _sys
 from pathlib import Path as _Path
-_sys.path.insert(0, str(next(p for p in _Path(__file__).resolve().parents if (p / "platform_hybrid").is_dir())))
+
+_sys.path.insert(
+    0, str(next(p for p in _Path(__file__).resolve().parents if (p / "platform_hybrid").is_dir()))
+)
 from platform_hybrid.experiments.research_contracts import content_hash, EvidenceUnavailable
 
 
 import sys as _sys
 from pathlib import Path as _Path
-_sys.path.insert(0, str(next(p for p in _Path(__file__).resolve().parents if (p / "platform_hybrid").is_dir())))
-from platform_hybrid.experiments.research_contracts import gsm8k_reward, PROTOCOL_VERSION, GRADER_VERSION
+
+_sys.path.insert(
+    0, str(next(p for p in _Path(__file__).resolve().parents if (p / "platform_hybrid").is_dir()))
+)
+from platform_hybrid.experiments.research_contracts import (
+    gsm8k_reward,
+    PROTOCOL_VERSION,
+    GRADER_VERSION,
+)
 
 
 import argparse
 import json
 import math
-import os
 import random
 import re
 import time
 from pathlib import Path
 from dataclasses import dataclass, field, asdict
-from typing import Optional
 
 import numpy as np
 
@@ -72,12 +80,13 @@ DEFAULT_CONFIG = {
 # Dataclasses for logging
 # =============================================================================
 
+
 @dataclass
 class StepMetrics:
     step: int
     mean_reward: float
     zvf: float  # Zero-Variance Fraction
-    gu: float   # Gradient Utilization = 1 - ZVF
+    gu: float  # Gradient Utilization = 1 - ZVF
     n_effective_groups: int  # groups with nonzero gradient
     mean_group_reward_std: float
     mean_response_length: float
@@ -110,6 +119,7 @@ class ExperimentResult:
 # =============================================================================
 # Utility functions
 # =============================================================================
+
 
 def reward_gsm8k(response: str, answer: str) -> float:
     return gsm8k_reward(response, answer)
@@ -180,9 +190,11 @@ def wilson_ci(k: int, n: int, z: float = 1.96) -> tuple[float, float]:
 # Prompt binning
 # =============================================================================
 
+
 def load_gsm8k_prompts(tokenizer, max_examples: int = 200) -> list[dict]:
     """Load GSM8K train prompts."""
     from datasets import load_dataset
+
     ds = load_dataset("openai/gsm8k", "main", split="train")
     examples = []
     for item in ds.select(range(min(len(ds), max_examples))):
@@ -193,19 +205,29 @@ def load_gsm8k_prompts(tokenizer, max_examples: int = 200) -> list[dict]:
             f"Question: {question}\n\n"
             f"Show your work and put your final answer after ####."
         )
-        examples.append({
-            "prompt_text": prompt,
-            "prompt_ids": tokenizer.encode(prompt, add_special_tokens=False),
-            "answer": answer,
-        })
+        examples.append(
+            {
+                "prompt_text": prompt,
+                "prompt_ids": tokenizer.encode(prompt, add_special_tokens=False),
+                "answer": answer,
+            }
+        )
     return examples
 
 
-def sample_prompt(sc, tokenizer, prompt_ids: list[int], answer: str,
-                 num_samples: int = 8, max_tokens: int = 512,
-                 temperature: float = 0.8, top_p: float = 0.95) -> tuple[list[float], list[int]]:
+def sample_prompt(
+    sc,
+    tokenizer,
+    prompt_ids: list[int],
+    answer: str,
+    num_samples: int = 8,
+    max_tokens: int = 512,
+    temperature: float = 0.8,
+    top_p: float = 0.95,
+) -> tuple[list[float], list[int]]:
     """Sample G completions from a prompt and return rewards + response lengths."""
     import tinker.types as T
+
     prompt_mi = T.ModelInput.from_ints(prompt_ids)
     sp = T.SamplingParams(max_tokens=max_tokens, temperature=temperature, top_p=top_p)
     responses = sc.sample(prompt_mi, num_samples=num_samples, sampling_params=sp).result()
@@ -222,7 +244,9 @@ def sample_prompt(sc, tokenizer, prompt_ids: list[int], answer: str,
 
 
 def bin_prompts_by_difficulty(
-    sc, tokenizer, examples: list[dict],
+    sc,
+    tokenizer,
+    examples: list[dict],
     num_samples: int = 8,
     threshold_easy: float = 0.75,
     threshold_hard: float = 0.25,
@@ -248,8 +272,9 @@ def bin_prompts_by_difficulty(
 
     with ThreadPoolExecutor(max_workers=parallel) as pool:
         futures = {
-            pool.submit(sample_prompt, sc, tokenizer, ex["prompt_ids"], ex["answer"],
-                        num_samples): i
+            pool.submit(
+                sample_prompt, sc, tokenizer, ex["prompt_ids"], ex["answer"], num_samples
+            ): i
             for i, ex in enumerate(examples)
         }
         for future in as_completed(futures):
@@ -284,17 +309,20 @@ def bin_prompts_by_difficulty(
 
             if verbose and done % 25 == 0:
                 elapsed = time.time() - t0
-                print(f"  {done}/{len(examples)} binned "
-                      f"(dead={len(bins['dead'])}, mixed={len(bins['mixed'])}, "
-                      f"saturated={len(bins['saturated'])}) [{elapsed:.0f}s]")
+                print(
+                    f"  {done}/{len(examples)} binned "
+                    f"(dead={len(bins['dead'])}, mixed={len(bins['mixed'])}, "
+                    f"saturated={len(bins['saturated'])}) [{elapsed:.0f}s]"
+                )
 
     if verbose:
         elapsed = time.time() - t0
         print(f"\nBinning complete in {elapsed:.0f}s:")
         for bin_name in bins:
             mean_rate = sum(rates[bin_name]) / max(len(rates[bin_name]), 1)
-            print(f"  {bin_name}: {len(bins[bin_name])} prompts, "
-                  f"mean success rate = {mean_rate:.3f}")
+            print(
+                f"  {bin_name}: {len(bins[bin_name])} prompts, mean success rate = {mean_rate:.3f}"
+            )
 
     return bins
 
@@ -302,6 +330,7 @@ def bin_prompts_by_difficulty(
 # =============================================================================
 # GRPO Training Loop
 # =============================================================================
+
 
 def run_grpo_arm(
     phase: str,
@@ -383,7 +412,7 @@ def run_grpo_arm(
             std_r = (sum((r - mean_r) ** 2 for r in rewards) / len(rewards)) ** 0.5 + 1e-8
             advs = [(r - mean_r) / std_r for r in rewards]
 
-            for resp, adv in zip(responses.sequences, advs):
+            for resp, adv in zip(responses.sequences, advs, strict=False):
                 resp_ids = list(resp.tokens)
                 full_ids = prompt_ids + resp_ids
                 # next-token alignment; old `+ [0]` trained a spurious token-0
@@ -439,7 +468,7 @@ def run_grpo_arm(
 
         if verbose:
             print(
-                f"[{phase:8s}] Step {step+1:2d}/{total_steps} | "
+                f"[{phase:8s}] Step {step + 1:2d}/{total_steps} | "
                 f"loss={grpo_loss:.4f} | reward={avg_r:.3f} | "
                 f"ZVF={zvf:.2f} | GU={gu:.2f} | n_eff={n_effective}"
             )
@@ -459,7 +488,9 @@ def run_grpo_arm(
         result.reward_slope = compute_reward_slope(step_rewards)
 
     if verbose:
-        print(f"\n[{phase}] Completed {result.steps_completed} steps in {result.elapsed_seconds:.0f}s")
+        print(
+            f"\n[{phase}] Completed {result.steps_completed} steps in {result.elapsed_seconds:.0f}s"
+        )
         print(f"  Peak reward: {result.peak_reward:.3f}")
         print(f"  Last-10 reward: {result.last10_reward:.3f}")
         print(f"  Reward slope: {result.reward_slope:.4f}")
@@ -472,13 +503,15 @@ def run_grpo_arm(
 # Held-out Evaluation
 # =============================================================================
 
+
 def load_heldout_gsm8k(n: int = 500, seed: int = 0) -> list[tuple[str, str]]:
     """Load deterministic held-out slice of GSM8K test split."""
     from datasets import load_dataset
+
     ds = load_dataset("openai/gsm8k", "main", split="test")
     problems = []
     for row in ds:
-        m = re.search(r'####\s*([\-\d,\.]+)', row["answer"])
+        m = re.search(r"####\s*([\-\d,\.]+)", row["answer"])
         if not m:
             continue
         ans = m.group(1).replace(",", "").strip()
@@ -532,15 +565,16 @@ def evaluate_checkpoint_on_heldout(
 # Main experiment orchestration
 # =============================================================================
 
+
 def run_bin_phase(model: str, max_prompts: int, num_samples: int, output_path: str):
     """Phase 1: Bin prompts by difficulty."""
     from transformers import AutoTokenizer
     import tinker
 
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print("PHASE: Bin prompts by difficulty")
     print(f"Model: {model}, Max prompts: {max_prompts}, Samples: {num_samples}")
-    print(f"{'='*60}\n")
+    print(f"{'=' * 60}\n")
 
     tok = AutoTokenizer.from_pretrained(model, trust_remote_code=True)
     examples = load_gsm8k_prompts(tok, max_examples=max_prompts)
@@ -552,7 +586,9 @@ def run_bin_phase(model: str, max_prompts: int, num_samples: int, output_path: s
     print("Sampler ready")
 
     bins = bin_prompts_by_difficulty(
-        sc, tok, examples,
+        sc,
+        tok,
+        examples,
         num_samples=num_samples,
         threshold_easy=DEFAULT_CONFIG["bin_threshold_easy"],
         threshold_hard=DEFAULT_CONFIG["bin_threshold_hard"],
@@ -568,7 +604,9 @@ def run_bin_phase(model: str, max_prompts: int, num_samples: int, output_path: s
         "grader_version": GRADER_VERSION,
         "prompt_hash": content_hash([ex["prompt_ids"] for ex in examples]),
         "study_design": "difficulty_stratified_noncausal",
-        "unmeasured_indices": [i for i, ex in enumerate(examples) if ex.get("binning_status") != "measured"],
+        "unmeasured_indices": [
+            i for i, ex in enumerate(examples) if ex.get("binning_status") != "measured"
+        ],
         "total_prompts": len(examples),
         "thresholds": {
             "easy_threshold": DEFAULT_CONFIG["bin_threshold_easy"],
@@ -603,16 +641,22 @@ def run_training_arm(
     import tinker
     import wandb
 
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print(f"PHASE: Training arm — {phase}")
     print(f"Model: {config['model']}, Seed: {config['seed']}, Steps: {config['total_steps']}")
-    print(f"{'='*60}\n")
+    print(f"{'=' * 60}\n")
 
     random.seed(config["seed"])
     # Load bin data
     bin_data = json.loads(Path(bin_data_path).read_text())
-    if bin_data.get("protocol_version") != PROTOCOL_VERSION or bin_data.get("grader_version") != GRADER_VERSION or bin_data.get("model") != config["model"]:
-        raise EvidenceUnavailable("Binning contract mismatch; legacy bins need remeasurement under an approved protocol")
+    if (
+        bin_data.get("protocol_version") != PROTOCOL_VERSION
+        or bin_data.get("grader_version") != GRADER_VERSION
+        or bin_data.get("model") != config["model"]
+    ):
+        raise EvidenceUnavailable(
+            "Binning contract mismatch; legacy bins need remeasurement under an approved protocol"
+        )
     bin_prompts = bin_data["bins"][phase]["indices"]
     bin_rates = bin_data["bins"][phase]["rates"]
 
@@ -621,11 +665,15 @@ def run_training_arm(
     all_prompts = load_gsm8k_prompts(tok, max_examples=bin_data["total_prompts"])
     if content_hash([ex["prompt_ids"] for ex in all_prompts]) != bin_data.get("prompt_hash"):
         raise EvidenceUnavailable("Binning prompt identities changed")
-    if len(bin_prompts) != len(bin_rates) or len(set(bin_prompts)) != len(bin_prompts) or any(i < 0 or i >= len(all_prompts) for i in bin_prompts):
+    if (
+        len(bin_prompts) != len(bin_rates)
+        or len(set(bin_prompts)) != len(bin_prompts)
+        or any(i < 0 or i >= len(all_prompts) for i in bin_prompts)
+    ):
         raise EvidenceUnavailable("Invalid bin prompt IDs/rates")
     prompts = [all_prompts[i] for i in bin_prompts]
 
-    for ex, rate in zip(prompts, bin_rates):
+    for ex, rate in zip(prompts, bin_rates, strict=False):
         ex["base_success_rate"] = rate
 
     print(f"Loaded {len(prompts)} prompts for '{phase}' bin")
@@ -664,21 +712,27 @@ def run_training_arm(
     # Save result
     result.run_id = tc.model_id
     result.sampler_checkpoint_path = tc.save_weights_for_sampler(name="final").result().path
-    result.config.update(protocol_version=PROTOCOL_VERSION, grader_version=GRADER_VERSION, study_design="difficulty_stratified_noncausal")
+    result.config.update(
+        protocol_version=PROTOCOL_VERSION,
+        grader_version=GRADER_VERSION,
+        study_design="difficulty_stratified_noncausal",
+    )
     Path(output_path).write_text(json.dumps(asdict(result), indent=2))
     print(f"\nSaved result to: {output_path}")
 
     if config.get("use_wandb"):
         # Log summary metrics
-        wandb.log({
-            "peak_reward": result.peak_reward,
-            "last10_reward": result.last10_reward,
-            "reward_slope": result.reward_slope,
-            "final_zvf": result.final_zvf,
-            "final_gu": result.final_gu,
-            "steps_completed": result.steps_completed,
-            "elapsed_seconds": result.elapsed_seconds,
-        })
+        wandb.log(
+            {
+                "peak_reward": result.peak_reward,
+                "last10_reward": result.last10_reward,
+                "reward_slope": result.reward_slope,
+                "final_zvf": result.final_zvf,
+                "final_gu": result.final_gu,
+                "steps_completed": result.steps_completed,
+                "elapsed_seconds": result.elapsed_seconds,
+            }
+        )
         wandb.finish()
 
     return result
@@ -689,13 +743,12 @@ def run_evaluate_phase(run_ids: list[str], model: str, heldout_n: int, output_pa
     if any(not p.startswith("tinker://") or "/sampler_weights/" not in p for p in run_ids):
         raise ValueError("API-returned sampler checkpoint paths are required")
     from transformers import AutoTokenizer
-    import tinker
 
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print("PHASE: Held-out evaluation")
     print(f"Model: {model}, Held-out N: {heldout_n}")
     print(f"Run IDs: {run_ids}")
-    print(f"{'='*60}\n")
+    print(f"{'=' * 60}\n")
 
     tok = AutoTokenizer.from_pretrained(model, trust_remote_code=True)
     problems = load_heldout_gsm8k(n=heldout_n, seed=DEFAULT_CONFIG["heldout_seed"])
@@ -709,12 +762,14 @@ def run_evaluate_phase(run_ids: list[str], model: str, heldout_n: int, output_pa
         print(f"\nEvaluating {checkpoint}...")
         acc, lo, hi = evaluate_checkpoint_on_heldout(checkpoint, model, problems, tok)
         print(f"  Accuracy: {acc:.3f} [95% CI: {lo:.3f}, {hi:.3f}]")
-        results.append({
-            "run_id": run_id,
-            "accuracy": acc,
-            "ci95_low": lo,
-            "ci95_high": hi,
-        })
+        results.append(
+            {
+                "run_id": run_id,
+                "accuracy": acc,
+                "ci95_low": lo,
+                "ci95_high": hi,
+            }
+        )
 
     output = {
         "model": model,
@@ -731,6 +786,7 @@ def run_evaluate_phase(run_ids: list[str], model: str, heldout_n: int, output_pa
 # =============================================================================
 # CLI
 # =============================================================================
+
 
 def main():
     parser = argparse.ArgumentParser(description="Causal ZVF Experiment")
@@ -757,7 +813,14 @@ def main():
 
     # Evaluate phase
     eval_parser = subparsers.add_parser("evaluate", help="Evaluate on held-out GSM8K")
-    eval_parser.add_argument("--checkpoint-paths", "--run-ids", dest="run_ids", nargs="+", required=True, help="API-returned tinker://.../sampler_weights/... paths")
+    eval_parser.add_argument(
+        "--checkpoint-paths",
+        "--run-ids",
+        dest="run_ids",
+        nargs="+",
+        required=True,
+        help="API-returned tinker://.../sampler_weights/... paths",
+    )
     eval_parser.add_argument("--model", default=DEFAULT_CONFIG["model"])
     eval_parser.add_argument("--heldout-n", type=int, default=500)
     eval_parser.add_argument("--output", default="./causal_zvf_heldout.json")
@@ -769,15 +832,17 @@ def main():
 
     elif args.command == "train":
         config = DEFAULT_CONFIG.copy()
-        config.update({
-            "model": args.model,
-            "tinker_model": args.model,
-            "seed": args.seed,
-            "group_size": args.group_size,
-            "total_steps": args.steps,
-            "learning_rate": args.lr,
-            "lora_rank": args.lora_rank,
-        })
+        config.update(
+            {
+                "model": args.model,
+                "tinker_model": args.model,
+                "seed": args.seed,
+                "group_size": args.group_size,
+                "total_steps": args.steps,
+                "learning_rate": args.lr,
+                "lora_rank": args.lora_rank,
+            }
+        )
         run_training_arm(args.phase, args.bin_data, config, args.output)
 
     elif args.command == "evaluate":

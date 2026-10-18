@@ -74,9 +74,14 @@ class ArchiveBudget:
     """
 
     def __init__(self, max_bytes=8 * 1024**3, seconds=1800, reserve_bytes=0):
-        if (not isinstance(max_bytes, int) or max_bytes < 0
-                or not math.isfinite(seconds) or seconds <= 0
-                or reserve_bytes < 0 or reserve_bytes > max_bytes):
+        if (
+            not isinstance(max_bytes, int)
+            or max_bytes < 0
+            or not math.isfinite(seconds)
+            or seconds <= 0
+            or reserve_bytes < 0
+            or reserve_bytes > max_bytes
+        ):
             raise ValueError("invalid archive budget")
         self.max_bytes = max_bytes
         self.reserve_bytes = reserve_bytes
@@ -98,11 +103,14 @@ class ArchiveBudget:
         self.check(control=control)
 
     def receipt(self):
-        return {"protocol": ARCHIVE_PROTOCOL, "max_bytes": self.max_bytes,
-                "charged_write_bytes": self.written_bytes,
-                "deadline_expired": time.monotonic() >= self.deadline,
-                "deadline_scope": "cooperative_local_io; remote_operations_disabled",
-                "accounting": "cumulative_writes_including_failed_and_replaced_files"}
+        return {
+            "protocol": ARCHIVE_PROTOCOL,
+            "max_bytes": self.max_bytes,
+            "charged_write_bytes": self.written_bytes,
+            "deadline_expired": time.monotonic() >= self.deadline,
+            "deadline_scope": "cooperative_local_io; remote_operations_disabled",
+            "accounting": "cumulative_writes_including_failed_and_replaced_files",
+        }
 
 
 def atomic_bytes(path, data, budget, *, control=False):
@@ -133,7 +141,9 @@ def append_jsonl(path: Path, obj: Any) -> None:
         f.write(json.dumps(obj, sort_keys=True, default=str) + "\n")
 
 
-def run_cmd(args: list[str], *, env: dict[str, str] | None = None, timeout: int | None = None) -> subprocess.CompletedProcess[str]:
+def run_cmd(
+    args: list[str], *, env: dict[str, str] | None = None, timeout: int | None = None
+) -> subprocess.CompletedProcess[str]:
     return subprocess.run(
         args,
         cwd=REPO_ROOT,
@@ -215,7 +225,9 @@ def ignore_sensitive_cache_files(_: str, names: list[str]) -> set[str]:
     return ignored
 
 
-def copy_tree_hardlinked(src: Path, dst: Path, budget: ArchiveBudget | None = None) -> dict[str, Any]:
+def copy_tree_hardlinked(
+    src: Path, dst: Path, budget: ArchiveBudget | None = None
+) -> dict[str, Any]:
     budget = budget or ArchiveBudget()
     if not src.exists():
         return {"copied": False, "reason": "source_missing", "source": str(src)}
@@ -233,7 +245,9 @@ def copy_tree_hardlinked(src: Path, dst: Path, budget: ArchiveBudget | None = No
             budget.check()
             ignored = ignore_sensitive_cache_files(directory, dirs + names)
             # Do not introduce links that could escape the owned archive tree.
-            dirs[:] = [d for d in dirs if d not in ignored and not (Path(directory) / d).is_symlink()]
+            dirs[:] = [
+                d for d in dirs if d not in ignored and not (Path(directory) / d).is_symlink()
+            ]
             for name in names:
                 budget.check()
                 entry = Path(directory) / name
@@ -241,14 +255,23 @@ def copy_tree_hardlinked(src: Path, dst: Path, budget: ArchiveBudget | None = No
                     continue
                 hardlink_or_copy(str(entry), str(dst / entry.relative_to(src)), budget)
                 files += 1
-        return {"copied": True, "files": files, "written_bytes": budget.written_bytes - before,
-                "mode": ARCHIVE_PROTOCOL, "symlinks": "skipped"}
+        return {
+            "copied": True,
+            "files": files,
+            "written_bytes": budget.written_bytes - before,
+            "mode": ARCHIVE_PROTOCOL,
+            "symlinks": "skipped",
+        }
     except (BudgetExceeded, OSError, ValueError) as exc:
         # Only this fresh destination is owned. Never remove source evidence.
         if dst.exists():
             shutil.rmtree(dst)
-        return {"copied": False, "reason": str(exc), "partial_files_removed": True,
-                "charged_write_bytes": budget.written_bytes - before}
+        return {
+            "copied": False,
+            "reason": str(exc),
+            "partial_files_removed": True,
+            "charged_write_bytes": budget.written_bytes - before,
+        }
 
 
 def archive_local_wandb(out_root: Path, budget: ArchiveBudget | None = None) -> dict[str, Any]:
@@ -260,11 +283,22 @@ def archive_local_wandb(out_root: Path, budget: ArchiveBudget | None = None) -> 
     return result
 
 
-def archive_wandb_cloud(out_root: Path, projects: list[str], max_runs: int, history_limit: int, max_file_mb: float, budget: ArchiveBudget | None = None) -> dict[str, Any]:
+def archive_wandb_cloud(
+    out_root: Path,
+    projects: list[str],
+    max_runs: int,
+    history_limit: int,
+    max_file_mb: float,
+    budget: ArchiveBudget | None = None,
+) -> dict[str, Any]:
     # SDK metadata/history pagination and downloads lack a shared hard quota.
     # A timeout argument or provider size estimate cannot establish that quota.
-    return {"enabled": False, "reason": "unsupported_bounded_remote_transfer",
-            "protocol": ARCHIVE_PROTOCOL, "skipped": ["metadata", "history", "files"]}
+    return {
+        "enabled": False,
+        "reason": "unsupported_bounded_remote_transfer",
+        "protocol": ARCHIVE_PROTOCOL,
+        "skipped": ["metadata", "history", "files"],
+    }
 
 
 def list_hf_cache_repos(cache_root: Path) -> list[dict[str, Any]]:
@@ -289,7 +323,11 @@ def list_hf_cache_repos(cache_root: Path) -> list[dict[str, Any]]:
         if not repo_id:
             continue
         snapshots_dir = item / "snapshots"
-        snapshots = sorted(p.name for p in snapshots_dir.iterdir() if p.is_dir()) if snapshots_dir.exists() else []
+        snapshots = (
+            sorted(p.name for p in snapshots_dir.iterdir() if p.is_dir())
+            if snapshots_dir.exists()
+            else []
+        )
         repos.append(
             {
                 "kind": kind,
@@ -309,12 +347,19 @@ def discover_hf_references() -> list[str]:
         r"(?<![A-Za-z0-9_.-])([A-Za-z0-9_.-]+/[A-Za-z0-9][A-Za-z0-9_.-]+)(?![A-Za-z0-9_.-])",
     ]
     include_globs = ["*.json", "*.yaml", "*.yml", "*.md", "*.py", "*.tex"]
-    roots = [REPO_ROOT / "experiments", REPO_ROOT / "reports", REPO_ROOT / "atropos", REPO_ROOT / "paper"]
+    roots = [
+        REPO_ROOT / "experiments",
+        REPO_ROOT / "reports",
+        REPO_ROOT / "atropos",
+        REPO_ROOT / "paper",
+    ]
     for root in roots:
         if not root.exists():
             continue
         for path in root.rglob("*"):
-            if not path.is_file() or not any(fnmatch.fnmatch(path.name, glob) for glob in include_globs):
+            if not path.is_file() or not any(
+                fnmatch.fnmatch(path.name, glob) for glob in include_globs
+            ):
                 continue
             try:
                 text = path.read_text(errors="ignore")
@@ -326,23 +371,39 @@ def discover_hf_references() -> list[str]:
                         continue
                     if match.count("/") == 1 and not match.startswith(("./", "../")):
                         left, right = match.split("/", 1)
-                        if len(left) >= 2 and len(right) >= 2 and not left.endswith((".py", ".json", ".md", ".yaml", ".yml")):
+                        if (
+                            len(left) >= 2
+                            and len(right) >= 2
+                            and not left.endswith((".py", ".json", ".md", ".yaml", ".yml"))
+                        ):
                             references.add(match)
     return sorted(references)
 
 
-def archive_hf(out_root: Path, remote_metadata_limit: int, budget: ArchiveBudget | None = None) -> dict[str, Any]:
+def archive_hf(
+    out_root: Path, remote_metadata_limit: int, budget: ArchiveBudget | None = None
+) -> dict[str, Any]:
     budget = budget or ArchiveBudget()
-    cache_root = Path(os.environ.get("HF_HOME", str(Path.home() / ".cache" / "huggingface"))).expanduser()
+    cache_root = Path(
+        os.environ.get("HF_HOME", str(Path.home() / ".cache" / "huggingface"))
+    ).expanduser()
     result = copy_tree_hardlinked(cache_root, out_root / "huggingface" / "cache_hardlinked", budget)
-    return {"enabled": True, "cache_copy": result,
-            "remote_metadata_note": "unsupported_bounded_remote_transfer",
-            "protocol": ARCHIVE_PROTOCOL}
+    return {
+        "enabled": True,
+        "cache_copy": result,
+        "remote_metadata_note": "unsupported_bounded_remote_transfer",
+        "protocol": ARCHIVE_PROTOCOL,
+    }
 
 
 def discover_tinker_references() -> list[str]:
     refs: set[str] = set()
-    roots = [REPO_ROOT / "experiments", REPO_ROOT / "reports", REPO_ROOT / "atropos", REPO_ROOT / "paper"]
+    roots = [
+        REPO_ROOT / "experiments",
+        REPO_ROOT / "reports",
+        REPO_ROOT / "atropos",
+        REPO_ROOT / "paper",
+    ]
     for root in roots:
         if not root.exists():
             continue
@@ -406,13 +467,30 @@ def parse_size_bytes(value: Any) -> int | None:
         if match:
             number = float(match.group(1))
             unit = match.group(2).upper()
-            power = {"B": 0, "KB": 1, "KIB": 1, "MB": 2, "MIB": 2, "GB": 3, "GIB": 3, "TB": 4, "TIB": 4}.get(unit, 0)
+            power = {
+                "B": 0,
+                "KB": 1,
+                "KIB": 1,
+                "MB": 2,
+                "MIB": 2,
+                "GB": 3,
+                "GIB": 3,
+                "TB": 4,
+                "TIB": 4,
+            }.get(unit, 0)
             return int(number * (1024**power))
     return None
 
 
 def checkpoint_size(record: dict[str, Any]) -> int | None:
-    for key in ["size_bytes", "archive_size_bytes", "storage_size_bytes", "file_size_bytes", "bytes", "size"]:
+    for key in [
+        "size_bytes",
+        "archive_size_bytes",
+        "storage_size_bytes",
+        "file_size_bytes",
+        "bytes",
+        "size",
+    ]:
         size = parse_size_bytes(record.get(key))
         if size is not None:
             return size
@@ -424,7 +502,9 @@ def base_run_id(path: str) -> str:
     return match.group(1) if match else path
 
 
-def tinker_priority(path: str, referenced: set[str], referenced_run_ids: set[str], size: int | None) -> tuple[int, int, str]:
+def tinker_priority(
+    path: str, referenced: set[str], referenced_run_ids: set[str], size: int | None
+) -> tuple[int, int, str]:
     is_final = path.endswith("/final")
     is_sampler = "/sampler_weights/" in path
     run_ref = base_run_id(path) in referenced_run_ids
@@ -443,12 +523,24 @@ def tinker_priority(path: str, referenced: set[str], referenced_run_ids: set[str
     return (group, size if size is not None else 1024**4, path)
 
 
-def archive_tinker(out_root: Path, tinker_bin: Path, budget_gb: float, reserve_free_gb: float, max_downloads: int, budget: ArchiveBudget | None = None) -> dict[str, Any]:
+def archive_tinker(
+    out_root: Path,
+    tinker_bin: Path,
+    budget_gb: float,
+    reserve_free_gb: float,
+    max_downloads: int,
+    budget: ArchiveBudget | None = None,
+) -> dict[str, Any]:
     # CLI listing capture and downloader writes are not quota-controlled. Fail
     # closed before spawning, even when provider metadata advertises small files.
-    return {"enabled": False, "listed": False, "downloaded_count": 0,
-            "reason": "unsupported_bounded_remote_transfer", "protocol": ARCHIVE_PROTOCOL,
-            "skipped": ["checkpoint_listing", "checkpoint_downloads"]}
+    return {
+        "enabled": False,
+        "listed": False,
+        "downloaded_count": 0,
+        "reason": "unsupported_bounded_remote_transfer",
+        "protocol": ARCHIVE_PROTOCOL,
+        "skipped": ["checkpoint_listing", "checkpoint_downloads"],
+    }
 
 
 def redact_secrets(root: Path, budget: ArchiveBudget | None = None) -> dict[str, Any]:
@@ -507,14 +599,18 @@ def redact_secrets(root: Path, budget: ArchiveBudget | None = None) -> dict[str,
     }
 
 
-def write_readme(out_root: Path, manifest: dict[str, Any], budget: ArchiveBudget | None = None) -> None:
-    text = ("# Local Artifact Archive\n\nProtocol: " + ARCHIVE_PROTOCOL + "\n"
-            "Owned local W&B/HF copies only. Symlinks are skipped.\n"
-            "Remote W&B metadata/history/files, HF metadata and Tinker CLI operations\n"
-            "are disabled: unsupported_bounded_remote_transfer.\n"
-            "One cumulative byte quota includes temporary writes and redaction.\n"
-            "Local deadlines are cooperative; stalled filesystem calls cannot be interrupted.\n"
-            "This receipt does not certify unattended execution or secret-free binary data.\n")
+def write_readme(
+    out_root: Path, manifest: dict[str, Any], budget: ArchiveBudget | None = None
+) -> None:
+    text = (
+        "# Local Artifact Archive\n\nProtocol: " + ARCHIVE_PROTOCOL + "\n"
+        "Owned local W&B/HF copies only. Symlinks are skipped.\n"
+        "Remote W&B metadata/history/files, HF metadata and Tinker CLI operations\n"
+        "are disabled: unsupported_bounded_remote_transfer.\n"
+        "One cumulative byte quota includes temporary writes and redaction.\n"
+        "Local deadlines are cooperative; stalled filesystem calls cannot be interrupted.\n"
+        "This receipt does not certify unattended execution or secret-free binary data.\n"
+    )
     atomic_bytes(out_root / "README.md", text.encode(), budget or ArchiveBudget())
 
 
@@ -523,15 +619,26 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--archive-budget-gb", type=float, default=8.0)
     parser.add_argument("--archive-timeout-seconds", type=float, default=1800.0)
     parser.add_argument("--output-root", default="artifacts/local_copies/latest")
-    parser.add_argument("--wandb-project", action="append", default=[], help="W&B entity/project; can be passed multiple times.")
-    parser.add_argument("--wandb-max-runs", type=int, default=0, help="0 means all runs in each project.")
-    parser.add_argument("--wandb-history-limit", type=int, default=0, help="0 means full scan_history.")
+    parser.add_argument(
+        "--wandb-project",
+        action="append",
+        default=[],
+        help="W&B entity/project; can be passed multiple times.",
+    )
+    parser.add_argument(
+        "--wandb-max-runs", type=int, default=0, help="0 means all runs in each project."
+    )
+    parser.add_argument(
+        "--wandb-history-limit", type=int, default=0, help="0 means full scan_history."
+    )
     parser.add_argument("--wandb-max-file-mb", type=float, default=512.0)
     parser.add_argument("--hf-remote-metadata-limit", type=int, default=200)
     parser.add_argument("--tinker-bin", default=str(REPO_ROOT / ".venv-at" / "bin" / "tinker"))
     parser.add_argument("--tinker-budget-gb", type=float, default=8.0)
     parser.add_argument("--reserve-free-gb", type=float, default=6.0)
-    parser.add_argument("--tinker-max-downloads", type=int, default=0, help="0 means bounded only by budget.")
+    parser.add_argument(
+        "--tinker-max-downloads", type=int, default=0, help="0 means bounded only by budget."
+    )
     parser.add_argument("--skip-wandb-cloud", action="store_true")
     parser.add_argument("--skip-hf", action="store_true")
     parser.add_argument("--skip-tinker", action="store_true")
@@ -562,14 +669,35 @@ def main() -> int:
         if available < budget.max_bytes:
             raise BudgetExceeded("insufficient_free_space_for_aggregate_budget")
         manifest["wandb_local"] = archive_local_wandb(out_root, budget)
-        manifest["wandb_cloud"] = ({"enabled": False, "reason": "skipped_by_flag"} if args.skip_wandb_cloud else
-            archive_wandb_cloud(out_root, args.wandb_project or DEFAULT_WANDB_PROJECTS,
-                               args.wandb_max_runs, args.wandb_history_limit, args.wandb_max_file_mb, budget))
-        manifest["huggingface"] = ({"enabled": False, "reason": "skipped_by_flag"} if args.skip_hf else
-            archive_hf(out_root, args.hf_remote_metadata_limit, budget))
-        manifest["tinker"] = ({"enabled": False, "reason": "skipped_by_flag"} if args.skip_tinker else
-            archive_tinker(out_root, Path(args.tinker_bin), args.tinker_budget_gb,
-                           args.reserve_free_gb, args.tinker_max_downloads, budget))
+        manifest["wandb_cloud"] = (
+            {"enabled": False, "reason": "skipped_by_flag"}
+            if args.skip_wandb_cloud
+            else archive_wandb_cloud(
+                out_root,
+                args.wandb_project or DEFAULT_WANDB_PROJECTS,
+                args.wandb_max_runs,
+                args.wandb_history_limit,
+                args.wandb_max_file_mb,
+                budget,
+            )
+        )
+        manifest["huggingface"] = (
+            {"enabled": False, "reason": "skipped_by_flag"}
+            if args.skip_hf
+            else archive_hf(out_root, args.hf_remote_metadata_limit, budget)
+        )
+        manifest["tinker"] = (
+            {"enabled": False, "reason": "skipped_by_flag"}
+            if args.skip_tinker
+            else archive_tinker(
+                out_root,
+                Path(args.tinker_bin),
+                args.tinker_budget_gb,
+                args.reserve_free_gb,
+                args.tinker_max_downloads,
+                budget,
+            )
+        )
         redaction = redact_secrets(out_root, budget)
         manifest["redaction"] = {k: v for k, v in redaction.items() if k != "redacted_files"}
         write_readme(out_root, manifest, budget)
@@ -597,7 +725,9 @@ def main() -> int:
     data = (json.dumps(manifest, sort_keys=True) + "\n").encode()
     if len(data) > CONTROL_RESERVE_BYTES:
         raise ValueError("terminal receipt exceeds reserved capacity")
-    atomic_bytes(out_root / "MANIFEST.json", data.ljust(CONTROL_RESERVE_BYTES, b" "), budget, control=True)
+    atomic_bytes(
+        out_root / "MANIFEST.json", data.ljust(CONTROL_RESERVE_BYTES, b" "), budget, control=True
+    )
     return exit_code
 
 

@@ -55,19 +55,17 @@ def _pearson(xs: list[float], ys: list[float]) -> float | None:
     mean_x, mean_y = _mean(xs), _mean(ys)
     centered_x = [x - mean_x for x in xs]
     centered_y = [y - mean_y for y in ys]
-    denom = math.sqrt(
-        sum(x * x for x in centered_x) * sum(y * y for y in centered_y)
-    )
+    denom = math.sqrt(sum(x * x for x in centered_x) * sum(y * y for y in centered_y))
     if denom <= EPS:
         return None
-    return sum(x * y for x, y in zip(centered_x, centered_y)) / denom
+    return sum(x * y for x, y in zip(centered_x, centered_y, strict=False)) / denom
 
 
 def _binary_auc(scores: list[float], labels: list[float]) -> float | None:
     """Mann-Whitney AUC with average ranks for tied lengths."""
     if len(scores) != len(labels) or not scores:
         return None
-    pairs = sorted(zip(scores, labels), key=lambda item: item[0])
+    pairs = sorted(zip(scores, labels, strict=False), key=lambda item: item[0])
     n_positive = sum(1 for _, label in pairs if label > 0.5)
     n_negative = len(pairs) - n_positive
     if not n_positive or not n_negative:
@@ -80,13 +78,9 @@ def _binary_auc(scores: list[float], labels: list[float]) -> float | None:
         while end < len(pairs) and pairs[end][0] == pairs[index][0]:
             end += 1
         average_rank = ((index + 1) + end) / 2.0
-        positive_rank_sum += average_rank * sum(
-            1 for _, label in pairs[index:end] if label > 0.5
-        )
+        positive_rank_sum += average_rank * sum(1 for _, label in pairs[index:end] if label > 0.5)
         index = end
-    return (
-        positive_rank_sum - n_positive * (n_positive + 1) / 2.0
-    ) / (n_positive * n_negative)
+    return (positive_rank_sum - n_positive * (n_positive + 1) / 2.0) / (n_positive * n_negative)
 
 
 from analysis_contract import validate_rewards, completeness, ZVF_DEFINITION
@@ -103,15 +97,12 @@ def validate_prompts(pool: dict) -> list[dict]:
             raise ValueError(f"prompt {position} must contain at least two rewards")
         if expected_rollouts is not None and len(rewards) != expected_rollouts:
             raise ValueError(
-                f"prompt {position} has {len(rewards)} rewards, expected "
-                f"{expected_rollouts}"
+                f"prompt {position} has {len(rewards)} rewards, expected {expected_rollouts}"
             )
         validate_rewards(rewards)
         token_counts = row.get("token_counts")
         if token_counts is not None and len(token_counts) != len(rewards):
-            raise ValueError(
-                f"prompt {position} token_counts/rewards length mismatch"
-            )
+            raise ValueError(f"prompt {position} token_counts/rewards length mismatch")
     return prompts
 
 
@@ -134,9 +125,7 @@ def core_metrics(prompts: list[dict]) -> dict[str, float | int]:
         all_incorrect += int(all(reward <= 0.5 for reward in rewards))
         total_advantages += len(rewards)
         if not is_zero:
-            active_advantages += sum(
-                1 for reward in rewards if abs(reward - group_mean) > EPS
-            )
+            active_advantages += sum(1 for reward in rewards if abs(reward - group_mean) > EPS)
 
     n_prompts = len(prompts)
     return {
@@ -192,24 +181,31 @@ def length_diagnostics(prompts: list[dict]) -> dict:
         lengths.extend(float(value) for value in row["token_counts"])
         rewards.extend(float(value) for value in row["rewards"])
 
-    correct_lengths = [length for length, reward in zip(lengths, rewards) if reward > 0.5]
-    incorrect_lengths = [length for length, reward in zip(lengths, rewards) if reward <= 0.5]
-    ranked = sorted(zip(lengths, rewards), key=lambda item: item[0])
+    correct_lengths = [
+        length for length, reward in zip(lengths, rewards, strict=False) if reward > 0.5
+    ]
+    incorrect_lengths = [
+        length for length, reward in zip(lengths, rewards, strict=False) if reward <= 0.5
+    ]
+    ranked = sorted(zip(lengths, rewards, strict=False), key=lambda item: item[0])
     quartiles = []
     for quartile in range(4):
         bucket = [
-            pair for index, pair in enumerate(ranked)
+            pair
+            for index, pair in enumerate(ranked)
             if min(3, 4 * index // len(ranked)) == quartile
         ]
         if not bucket:
             continue
-        quartiles.append({
-            "quartile": quartile + 1,
-            "n": len(bucket),
-            "min_tokens": min(length for length, _ in bucket),
-            "max_tokens": max(length for length, _ in bucket),
-            "accuracy": _mean(reward for _, reward in bucket),
-        })
+        quartiles.append(
+            {
+                "quartile": quartile + 1,
+                "n": len(bucket),
+                "min_tokens": min(length for length, _ in bucket),
+                "max_tokens": max(length for length, _ in bucket),
+                "accuracy": _mean(reward for _, reward in bucket),
+            }
+        )
 
     return {
         "available": True,
@@ -220,13 +216,12 @@ def length_diagnostics(prompts: list[dict]) -> dict:
         "mean_tokens_incorrect": _mean(incorrect_lengths),
         "correct_minus_incorrect_tokens": (
             _mean(correct_lengths) - _mean(incorrect_lengths)
-            if correct_lengths and incorrect_lengths else None
+            if correct_lengths and incorrect_lengths
+            else None
         ),
         "reward_length_correlation": _pearson(lengths, rewards),
         "length_predictive_auc": _binary_auc(lengths, rewards),
-        "length_stratified_macro_accuracy": _mean(
-            row["accuracy"] for row in quartiles
-        ),
+        "length_stratified_macro_accuracy": _mean(row["accuracy"] for row in quartiles),
         "accuracy_by_length_quartile": quartiles,
     }
 
@@ -270,8 +265,7 @@ def analyze(pool: dict, *, n_bootstrap: int, seed: int) -> dict:
             "max_tokens": pool.get("max_tokens"),
             "checkpoint_identity": (
                 f"base:{pool.get('model')}"
-                if "requested_sampler_path" in pool
-                and pool.get("requested_sampler_path") is None
+                if "requested_sampler_path" in pool and pool.get("requested_sampler_path") is None
                 else pool.get("requested_sampler_path") or pool.get("sampler_path")
             ),
         },
@@ -306,9 +300,7 @@ def main() -> None:
 
     pool = json.loads(args.pool.read_text())
     if completeness(pool)["exploratory_only"] and not args.allow_partial:
-        raise SystemExit(
-            f"pool status is {pool.get('status')!r}; pass --allow-partial explicitly"
-        )
+        raise SystemExit(f"pool status is {pool.get('status')!r}; pass --allow-partial explicitly")
     payload = analyze(pool, n_bootstrap=args.bootstrap, seed=args.seed)
     payload["source"]["path"] = str(args.pool)
     payload["source"]["input_status"] = pool.get("status")

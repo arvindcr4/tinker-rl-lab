@@ -22,17 +22,20 @@ Outputs (platform_hybrid/experiments/results/p5p8/):
 
 Stdlib only. <= 300 LoC. Designed to be reviewable + rebuildable.
 """
+
 from __future__ import annotations
 import csv
 import json
-import math
 import pathlib
 import random
-import statistics
 
 import sys
-sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
+
+sys.path.append(
+    str(pathlib.Path(__file__).resolve().parents[1])
+)  # platform_modal/scripts, for _paths
+from _paths import REPO_ROOT
+
 WORKTREE = REPO_ROOT
 N2 = WORKTREE / "platform_hybrid/experiments" / "results" / "n2_reward_tensor_resume"
 OUT = WORKTREE / "platform_hybrid/experiments" / "results" / "p5p8" / "corrected-review19-v5"
@@ -48,8 +51,14 @@ N_BOOT = 4000
 BOOT_SEED = 20260705
 EPS = 1e-9
 DEGEN_ZVF = 0.99  # if zvf_i >= 0.99 under iid binomial, prompt is structurally degenerate
-FAILURE_CLASSES = ("USEFUL_ESCALATION", "LOW_GAIN_ESCALATION", "GUARD_BLOCKED",
-                   "TRIGGER_NOOP", "MISSED_MODELED_GAIN", "NO_GAIN_NO_ACTION")
+FAILURE_CLASSES = (
+    "USEFUL_ESCALATION",
+    "LOW_GAIN_ESCALATION",
+    "GUARD_BLOCKED",
+    "TRIGGER_NOOP",
+    "MISSED_MODELED_GAIN",
+    "NO_GAIN_NO_ACTION",
+)
 G_ESC_GRID = (8, 16)  # what G to escalate to for failure-budget eval
 
 
@@ -62,12 +71,21 @@ def pooled_failure_shares(by_method, classes, n_boot, rng):
     rows = []
     for column, cls in enumerate(classes):
         point = sum(r[column] for group in groups for r in group) / total
-        draws = sorted(sum(group[rng.randrange(len(group))][column]
-                           for group in groups for _ in group) / total
-                       for _ in range(n_boot))
-        lo, hi = draws[int(.025*n_boot)], draws[int(.975*n_boot)]
-        rows.append({"method": "POOLED", "class": cls, "share_obs": point,
-                     "ci_lo": lo, "ci_hi": hi, "ci_excludes_zero": int(lo > 0)})
+        draws = sorted(
+            sum(group[rng.randrange(len(group))][column] for group in groups for _ in group) / total
+            for _ in range(n_boot)
+        )
+        lo, hi = draws[int(0.025 * n_boot)], draws[int(0.975 * n_boot)]
+        rows.append(
+            {
+                "method": "POOLED",
+                "class": cls,
+                "share_obs": point,
+                "ci_lo": lo,
+                "ci_hi": hi,
+                "ci_excludes_zero": int(lo > 0),
+            }
+        )
     return rows
 
 
@@ -93,14 +111,14 @@ def per_prompt_means(rewards):
 
 def iid_zvf(p, g):
     pp = min(max(p, EPS), 1 - EPS)
-    return (1 - pp) ** g + pp ** g
+    return (1 - pp) ** g + pp**g
 
 
 def contrast_magnitude(per_p, gs):
     """sum (1 - zvf_p(G_p)) over all prompts -- zero if all prompt-cells are
     structurally degenerate at G_p."""
     s = 0.0
-    for p, g in zip(per_p, gs):
+    for p, g in zip(per_p, gs, strict=False):
         z = iid_zvf(p, g)
         s += 1 - z
     return s
@@ -132,7 +150,7 @@ def decide_gs_c3(per_p, zvf, pcd, tau):
         idx_map = {2: 0, 4: 1, 8: 2, 16: 3}
         bump_map = {0: 4, 1: 8, 2: 16, 3: 16}
         bumped = [bump_map[idx_map[g]] for g in gs]
-        fired = any(new > old for new, old in zip(bumped, gs))
+        fired = any(new > old for new, old in zip(bumped, gs, strict=False))
         gs = bumped
     return gs, fired
 
@@ -157,10 +175,19 @@ def optimal_tau_in_method(steps_m):
         # combined: savings-fraction weighted by contrast retention.
         # Equivalent to savings * ret on this frame.
         combined = sav * ret
-        rows.append({"tau": tau, "savings_frac": sav, "magnitude_retention": ret,
-                     "combined": combined, "fires": fires,
-                     "rollouts": rollouts, "magnitude": mag,
-                     "base_mag": base_mag, "base_rollouts": base_rollouts})
+        rows.append(
+            {
+                "tau": tau,
+                "savings_frac": sav,
+                "magnitude_retention": ret,
+                "combined": combined,
+                "fires": fires,
+                "rollouts": rollouts,
+                "magnitude": mag,
+                "base_mag": base_mag,
+                "base_rollouts": base_rollouts,
+            }
+        )
     rows.sort(key=lambda r: -r["combined"])
     return rows[0]["tau"], rows
 
@@ -179,8 +206,13 @@ def transfer_eval(steps_m, tau):
         fires += int(fired)
     sav = (base_rollouts - rollouts) / base_rollouts
     ret = mag / base_mag if base_mag > 0 else 1.0
-    return {"savings_frac": sav, "magnitude_retention": ret,
-            "fires": fires, "rollouts": rollouts, "magnitude": mag}
+    return {
+        "savings_frac": sav,
+        "magnitude_retention": ret,
+        "fires": fires,
+        "rollouts": rollouts,
+        "magnitude": mag,
+    }
 
 
 def action_diagnostics(s, tau):
@@ -190,12 +222,15 @@ def action_diagnostics(s, tau):
     potential, _ = decide_gs_c3(ps, 1.0, 0.0, 0.0)
     actual, fired = decide_gs_c3(ps, s["zvf"], s["pcd"], tau)
     base_yield = contrast_magnitude(ps, baseline)
-    return {"baseline_groups": baseline, "actual_groups": actual,
-            "trigger_eligible": bool(s["zvf"] >= tau and s["pcd"] <= PCD_GUARD),
-            "guard_blocked": bool(s["zvf"] >= tau and s["pcd"] > PCD_GUARD),
-            "fired": fired,
-            "incremental_opportunity": contrast_magnitude(ps, potential) - base_yield,
-            "incremental_gain": contrast_magnitude(ps, actual) - base_yield}
+    return {
+        "baseline_groups": baseline,
+        "actual_groups": actual,
+        "trigger_eligible": bool(s["zvf"] >= tau and s["pcd"] <= PCD_GUARD),
+        "guard_blocked": bool(s["zvf"] >= tau and s["pcd"] > PCD_GUARD),
+        "fired": fired,
+        "incremental_opportunity": contrast_magnitude(ps, potential) - base_yield,
+        "incremental_gain": contrast_magnitude(ps, actual) - base_yield,
+    }
 
 
 def failure_classify(s, tau):
@@ -236,9 +271,15 @@ def main():
         for s in steps:
             meta = tensors[(m, s, "_meta")]
             rew = tensors[(m, s)]
-            sl.append({"step": s, "zvf": meta["zvf"], "pcd": meta["pcd"],
-                       "reward_mean": meta["reward_mean"],
-                       "per_p": per_prompt_means(rew)})
+            sl.append(
+                {
+                    "step": s,
+                    "zvf": meta["zvf"],
+                    "pcd": meta["pcd"],
+                    "reward_mean": meta["reward_mean"],
+                    "per_p": per_prompt_means(rew),
+                }
+            )
         step_info_per_method[m] = sl
 
     # =========================================================================
@@ -248,68 +289,89 @@ def main():
     for m in METHODS:
         best_tau, scans = optimal_tau_in_method(step_info_per_method[m])
         for r in scans:
-            in_method_rows.append({"method": m, **r,
-                                   "is_optimal": int(r["tau"] == best_tau),
-                                   "optimal_tau": best_tau})
+            in_method_rows.append(
+                {"method": m, **r, "is_optimal": int(r["tau"] == best_tau), "optimal_tau": best_tau}
+            )
 
     transfer_rows = []
     opt_tau = {}
     for m in METHODS:
-        opt_tau[m] = [r["tau"] for r in in_method_rows
-                      if r["method"] == m and r["is_optimal"] == 1][0]
+        opt_tau[m] = [
+            r["tau"] for r in in_method_rows if r["method"] == m and r["is_optimal"] == 1
+        ][0]
     # TRANSFER: apply grpo's optimal tau to every method, vs each method's own.
     for target_m in METHODS:
         own = transfer_eval(step_info_per_method[target_m], opt_tau[target_m])
-        transfer_rows.append({
-            "source_method": target_m, "target_method": target_m,
-            "tau_used": opt_tau[target_m],
-            "kind": "IN_METHOD",
-            "savings_frac": own["savings_frac"],
-            "magnitude_retention": own["magnitude_retention"],
-            "fires": own["fires"],
-        })
+        transfer_rows.append(
+            {
+                "source_method": target_m,
+                "target_method": target_m,
+                "tau_used": opt_tau[target_m],
+                "kind": "IN_METHOD",
+                "savings_frac": own["savings_frac"],
+                "magnitude_retention": own["magnitude_retention"],
+                "fires": own["fires"],
+            }
+        )
         for source_m in METHODS:
             if source_m == target_m:
                 continue
             xfer = transfer_eval(step_info_per_method[target_m], opt_tau[source_m])
-            transfer_rows.append({
-                "source_method": source_m, "target_method": target_m,
-                "tau_used": opt_tau[source_m],
-                "kind": "TRANSFER",
-                "savings_frac": xfer["savings_frac"],
-                "magnitude_retention": xfer["magnitude_retention"],
-                "fires": xfer["fires"],
-            })
+            transfer_rows.append(
+                {
+                    "source_method": source_m,
+                    "target_method": target_m,
+                    "tau_used": opt_tau[source_m],
+                    "kind": "TRANSFER",
+                    "savings_frac": xfer["savings_frac"],
+                    "magnitude_retention": xfer["magnitude_retention"],
+                    "fires": xfer["fires"],
+                }
+            )
 
     # Bootstrap retention-DELTA (own - transferred) per target method, source != target
     boot_rows = []
     for tgt in METHODS:
-        own_sav = [r["savings_frac"] for r in transfer_rows
-                   if r["target_method"] == tgt and r["kind"] == "IN_METHOD"][0]
-        own_ret = [r["magnitude_retention"] for r in transfer_rows
-                   if r["target_method"] == tgt and r["kind"] == "IN_METHOD"][0]
+        own_sav = [
+            r["savings_frac"]
+            for r in transfer_rows
+            if r["target_method"] == tgt and r["kind"] == "IN_METHOD"
+        ][0]
+        own_ret = [
+            r["magnitude_retention"]
+            for r in transfer_rows
+            if r["target_method"] == tgt and r["kind"] == "IN_METHOD"
+        ][0]
         for src in METHODS:
             if src == tgt:
                 continue
-            xfer_sav = [r["savings_frac"] for r in transfer_rows
-                        if r["target_method"] == tgt
-                        and r["source_method"] == src][0]
-            xfer_ret = [r["magnitude_retention"] for r in transfer_rows
-                        if r["target_method"] == tgt
-                        and r["source_method"] == src][0]
-            boot_rows.append({
-                "source_method": src, "target_method": tgt,
-                "tau_source_optimal": opt_tau[src],
-                "tau_target_optimal": opt_tau[tgt],
-                "own_savings_frac": own_sav, "xfer_savings_frac": xfer_sav,
-                "own_magnitude_retention": own_ret,
-                "xfer_magnitude_retention": xfer_ret,
-                "delta_savings": own_sav - xfer_sav,
-                "delta_mag_ret": own_ret - xfer_ret,
-                # Will compute CIs below -- single transfer has only one number,
-                # so we cannot bootstrap a single point. We bootstrap the
-                # PER-STEP in-method-vs-transfer DELTA below.
-            })
+            xfer_sav = [
+                r["savings_frac"]
+                for r in transfer_rows
+                if r["target_method"] == tgt and r["source_method"] == src
+            ][0]
+            xfer_ret = [
+                r["magnitude_retention"]
+                for r in transfer_rows
+                if r["target_method"] == tgt and r["source_method"] == src
+            ][0]
+            boot_rows.append(
+                {
+                    "source_method": src,
+                    "target_method": tgt,
+                    "tau_source_optimal": opt_tau[src],
+                    "tau_target_optimal": opt_tau[tgt],
+                    "own_savings_frac": own_sav,
+                    "xfer_savings_frac": xfer_sav,
+                    "own_magnitude_retention": own_ret,
+                    "xfer_magnitude_retention": xfer_ret,
+                    "delta_savings": own_sav - xfer_sav,
+                    "delta_mag_ret": own_ret - xfer_ret,
+                    # Will compute CIs below -- single transfer has only one number,
+                    # so we cannot bootstrap a single point. We bootstrap the
+                    # PER-STEP in-method-vs-transfer DELTA below.
+                }
+            )
 
     # =========================================================================
     # PART 2: per-step failure-mode taxonomy + bootstrap CIs
@@ -318,24 +380,27 @@ def main():
     # descriptive only, not the threshold used by the classification rows.
     canonical_tau = sum(opt_tau.values()) / len(opt_tau)
     failure_rows = []
-    summary_counts = {m: {**dict.fromkeys(FAILURE_CLASSES, 0), "_total": 0}
-                      for m in METHODS}
+    summary_counts = {m: {**dict.fromkeys(FAILURE_CLASSES, 0), "_total": 0} for m in METHODS}
     per_step_records = []  # for bootstrap
     for m in METHODS:
         for s in step_info_per_method[m]:
             tau_for_step = opt_tau[m]
             cls = failure_classify(s, tau_for_step)
             diagnostic = action_diagnostics(s, tau_for_step)
-            per_step_records.append({
-                "method": m, "step": s["step"],
-                "tau": tau_for_step,
-                "zvf": s["zvf"], "pcd": s["pcd"],
-                "incremental_opportunity": diagnostic["incremental_opportunity"],
-                "incremental_gain": diagnostic["incremental_gain"],
-                "trigger_eligible": int(diagnostic["trigger_eligible"]),
-                "fired": int(diagnostic["fired"]),
-                "failure_class": cls,
-            })
+            per_step_records.append(
+                {
+                    "method": m,
+                    "step": s["step"],
+                    "tau": tau_for_step,
+                    "zvf": s["zvf"],
+                    "pcd": s["pcd"],
+                    "incremental_opportunity": diagnostic["incremental_opportunity"],
+                    "incremental_gain": diagnostic["incremental_gain"],
+                    "trigger_eligible": int(diagnostic["trigger_eligible"]),
+                    "fired": int(diagnostic["fired"]),
+                    "failure_class": cls,
+                }
+            )
             failure_rows.append(per_step_records[-1])
             summary_counts[m][cls] += 1
             summary_counts[m]["_total"] += 1
@@ -357,18 +422,21 @@ def main():
             shares = [r[ci] for r in records]
             boots = []
             for _ in range(N_BOOT):
-                s_share = sum(shares[rng.randrange(n)]
-                              for _ in range(n)) / n
+                s_share = sum(shares[rng.randrange(n)] for _ in range(n)) / n
                 boots.append(s_share)
             boots.sort()
             lo = boots[int(0.025 * N_BOOT)]
             hi = boots[int(0.975 * N_BOOT)]
-            fail_share_boot_rows.append({
-                "method": m, "class": cls,
-                "share_obs": sum(shares) / n,
-                "ci_lo": lo, "ci_hi": hi,
-                "ci_excludes_zero": int(lo > 0),
-            })
+            fail_share_boot_rows.append(
+                {
+                    "method": m,
+                    "class": cls,
+                    "share_obs": sum(shares) / n,
+                    "ci_lo": lo,
+                    "ci_hi": hi,
+                    "ci_excludes_zero": int(lo > 0),
+                }
+            )
     # Conditional within-method step bootstrap; preserves observed method weights.
     pooled_rows = pooled_failure_shares(by_method, classes, N_BOOT, rng)
     fail_share_boot_rows.extend(pooled_rows)
@@ -381,41 +449,41 @@ def main():
         for cls in classes:
             n = summary_counts[m][cls]
             share = n / total if total > 0 else 0.0
-            failure_summary_rows.append({
-                "method": m, "class": cls, "count": n, "total": total,
-                "share": share,
-            })
+            failure_summary_rows.append(
+                {
+                    "method": m,
+                    "class": cls,
+                    "count": n,
+                    "total": total,
+                    "share": share,
+                }
+            )
 
     # =========================================================================
     # WRITE OUTPUTS
     # =========================================================================
     with (OUT / "p7_iter107_taut_in_method.tsv").open("w") as f:
-        w = csv.DictWriter(f, fieldnames=list(in_method_rows[0].keys()),
-                           delimiter="\t")
+        w = csv.DictWriter(f, fieldnames=list(in_method_rows[0].keys()), delimiter="\t")
         w.writeheader()
         for r in in_method_rows:
             w.writerow(r)
     with (OUT / "p7_iter107_taut_transfer.tsv").open("w") as f:
-        w = csv.DictWriter(f, fieldnames=list(transfer_rows[0].keys()),
-                           delimiter="\t")
+        w = csv.DictWriter(f, fieldnames=list(transfer_rows[0].keys()), delimiter="\t")
         w.writeheader()
         for r in transfer_rows:
             w.writerow(r)
     with (OUT / "p7_iter107_failure_taxonomy.tsv").open("w") as f:
-        w = csv.DictWriter(f, fieldnames=list(failure_rows[0].keys()),
-                           delimiter="\t")
+        w = csv.DictWriter(f, fieldnames=list(failure_rows[0].keys()), delimiter="\t")
         w.writeheader()
         for r in failure_rows:
             w.writerow(r)
     with (OUT / "p7_iter107_failure_summary.tsv").open("w") as f:
-        w = csv.DictWriter(f, fieldnames=list(failure_summary_rows[0].keys()),
-                           delimiter="\t")
+        w = csv.DictWriter(f, fieldnames=list(failure_summary_rows[0].keys()), delimiter="\t")
         w.writeheader()
         for r in failure_summary_rows:
             w.writerow(r)
     with (OUT / "p7_iter107_failure_bootstrap_ci.tsv").open("w") as f:
-        w = csv.DictWriter(f, fieldnames=list(fail_share_boot_rows[0].keys()),
-                           delimiter="\t")
+        w = csv.DictWriter(f, fieldnames=list(fail_share_boot_rows[0].keys()), delimiter="\t")
         w.writeheader()
         for r in fail_share_boot_rows:
             w.writerow(r)
@@ -431,8 +499,7 @@ def main():
         "transfer_rows": transfer_rows,
         "failure_counts_per_method": summary_counts,
         "failure_pooled_shares": pool_shares,
-        "n_steps_per_method": {m: len(step_info_per_method[m])
-                               for m in METHODS},
+        "n_steps_per_method": {m: len(step_info_per_method[m]) for m in METHODS},
         "headline_holders": {
             # Filled below based on transfer findings:
             "PLACEHOLDER": [],

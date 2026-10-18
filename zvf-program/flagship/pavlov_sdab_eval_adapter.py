@@ -167,7 +167,9 @@ def _immutable_string(value: Any, field: str) -> str:
         raise SdabBoundaryError(f"{field} must be a non-placeholder string")
     normalised = value.strip()
     if normalised.casefold() in PLACEHOLDER_VALUES:
-        raise SdabBoundaryError(f"{field} must be pinned; placeholder {normalised!r} is not allowed")
+        raise SdabBoundaryError(
+            f"{field} must be pinned; placeholder {normalised!r} is not allowed"
+        )
     return normalised
 
 
@@ -227,9 +229,16 @@ def load_sdab_trust_root(document: Any) -> dict[str, str]:
         raise SdabBundleError("E3 provider trust roots must be a JSON object")
     data = dict(document)
     required = {
-        "schema_version", "provider_id", "lane", "suite_id", "key_id",
-        "key_fingerprint", "public_key_b64", "signature_algorithm",
-        "issued_at", "expires_at",
+        "schema_version",
+        "provider_id",
+        "lane",
+        "suite_id",
+        "key_id",
+        "key_fingerprint",
+        "public_key_b64",
+        "signature_algorithm",
+        "issued_at",
+        "expires_at",
     }
     if set(data) != required:
         raise SdabBundleError("E3 provider trust-root document has an invalid schema")
@@ -332,9 +341,7 @@ def _source_identity(spec: Mapping[str, Any]) -> dict[str, str]:
         )
     url = _required_string(raw, "canonical_url", "boundary.source_identity")
     if url.rstrip("/") != CANONICAL_URL:
-        raise SdabBoundaryError(
-            f"boundary.source_identity.canonical_url must be {CANONICAL_URL!r}"
-        )
+        raise SdabBoundaryError(f"boundary.source_identity.canonical_url must be {CANONICAL_URL!r}")
     provider = _normalise_provider(raw.get("provider"), "boundary.source_identity.provider")
     # Reject conflicting top-level identity aliases instead of silently
     # canonicalizing a record that also names another benchmark.
@@ -348,8 +355,13 @@ def _source_identity(spec: Mapping[str, Any]) -> dict[str, str]:
         if top_level_name.casefold() != BENCHMARK_NAME.casefold():
             _reject_substitute(top_level_name, "boundary.benchmark_name")
             raise SdabBoundaryError("boundary.benchmark_name must identify SDAB")
-    if "canonical_url" in spec and _required_string(spec, "canonical_url", "boundary").rstrip("/") != CANONICAL_URL:
-        raise SdabBoundaryError("boundary.canonical_url must identify the authoritative SDAB source")
+    if (
+        "canonical_url" in spec
+        and _required_string(spec, "canonical_url", "boundary").rstrip("/") != CANONICAL_URL
+    ):
+        raise SdabBoundaryError(
+            "boundary.canonical_url must identify the authoritative SDAB source"
+        )
     if "provider" in spec:
         _normalise_provider(spec["provider"], "boundary.provider")
     _reject_substitute(spec.get("substitute_for"), "boundary.substitute_for")
@@ -395,9 +407,7 @@ def _immutable_receipt(value: Any, field: str) -> dict[str, Any]:
     receipt_id = _immutable_string(value.get("receipt_id"), f"{field}.receipt_id")
     digest = _digest(value.get("digest"), f"{field}.digest")
     reference_values = [
-        value[key]
-        for key in ("reference", "uri", "url")
-        if key in value and value[key] is not None
+        value[key] for key in ("reference", "uri", "url") if key in value and value[key] is not None
     ]
     if not reference_values:
         raise SdabBoundaryError(f"{field}.reference must be a non-placeholder string")
@@ -439,7 +449,10 @@ def _task_ids(spec: Mapping[str, Any]) -> tuple[list[str], list[dict[str, Any]]]
     else:
         if not isinstance(supplied_ids, (list, tuple)) or not supplied_ids:
             raise SdabBoundaryError("boundary.task_ids must be a non-empty list")
-        ids = [_immutable_string(value, f"boundary.task_ids[{index}]") for index, value in enumerate(supplied_ids)]
+        ids = [
+            _immutable_string(value, f"boundary.task_ids[{index}]")
+            for index, value in enumerate(supplied_ids)
+        ]
     if len(set(ids)) != len(ids) or len({item.casefold() for item in ids}) != len(ids):
         raise SdabBoundaryError("boundary.task_ids must be unique without case-fold collisions")
     for index, task_id in enumerate(ids):
@@ -450,7 +463,9 @@ def _task_ids(spec: Mapping[str, Any]) -> tuple[list[str], list[dict[str, Any]]]
     ) != len(task_record_ids):
         raise SdabBoundaryError("boundary.tasks must be unique without case-fold collisions")
     if task_records and set(ids) != {record["task_id"] for record in task_records}:
-        raise SdabBoundaryError("boundary.tasks and boundary.task_ids do not describe the same tasks")
+        raise SdabBoundaryError(
+            "boundary.tasks and boundary.task_ids do not describe the same tasks"
+        )
     if not task_records:
         task_records = [{"task_id": task_id} for task_id in ids]
     ordered_ids = sorted(ids)
@@ -493,7 +508,10 @@ def _split_manifest(
     }
     split_hash = sha256_digest(canonical)
     supplied_hash = spec.get("split_manifest_hash", spec.get("split_hash"))
-    if supplied_hash is not None and _digest(supplied_hash, "boundary.split_manifest_hash") != split_hash:
+    if (
+        supplied_hash is not None
+        and _digest(supplied_hash, "boundary.split_manifest_hash") != split_hash
+    ):
         raise SdabBoundaryError("boundary.split_manifest_hash does not match the split manifest")
     return split_hash, canonical
 
@@ -514,10 +532,16 @@ def _validate_contract_overrides(spec: Mapping[str, Any]) -> None:
                 raise SdabBoundaryError(f"boundary.{key} cannot omit {required_key!r}")
             actual = override[required_key]
             if isinstance(expected_value, tuple):
-                if not isinstance(actual, (list, tuple, set)) or not set(expected_value).issubset(set(actual)):
-                    raise SdabBoundaryError(f"boundary.{key}.{required_key} weakens the native contract")
+                if not isinstance(actual, (list, tuple, set)) or not set(expected_value).issubset(
+                    set(actual)
+                ):
+                    raise SdabBoundaryError(
+                        f"boundary.{key}.{required_key} weakens the native contract"
+                    )
             elif actual != expected_value:
-                raise SdabBoundaryError(f"boundary.{key}.{required_key} must remain {expected_value!r}")
+                raise SdabBoundaryError(
+                    f"boundary.{key}.{required_key} must remain {expected_value!r}"
+                )
 
 
 def build_sdab_boundary(spec: Mapping[str, Any]) -> dict[str, Any]:
@@ -537,7 +561,9 @@ def build_sdab_boundary(spec: Mapping[str, Any]) -> dict[str, Any]:
         spec.get("source_revision_digest"), "boundary.source_revision_digest"
     )
     supplied_container_keys = tuple(
-        key for key in ("container_digest", "container_image_digest") if key in spec and spec[key] is not None
+        key
+        for key in ("container_digest", "container_image_digest")
+        if key in spec and spec[key] is not None
     )
     container_digest = (
         _required_digest_alias(spec, supplied_container_keys, "boundary.container_digest")
@@ -639,9 +665,13 @@ def _environment_receipt(value: Any) -> dict[str, Any]:
     _immutable_string(value.get("environment_id"), "result.environment_receipt.environment_id")
     seed = value.get("seed")
     if not isinstance(seed, (str, int)) or isinstance(seed, bool):
-        raise SdabBoundaryError("result.environment_receipt.seed must be a deterministic identifier")
+        raise SdabBoundaryError(
+            "result.environment_receipt.seed must be a deterministic identifier"
+        )
     if isinstance(seed, str) and not seed.strip():
-        raise SdabBoundaryError("result.environment_receipt.seed must be a deterministic identifier")
+        raise SdabBoundaryError(
+            "result.environment_receipt.seed must be a deterministic identifier"
+        )
     workspace_digest = _required_digest_alias(
         value, ("workspace_digest",), "result.environment_receipt.workspace_digest"
     )
@@ -766,9 +796,7 @@ def _backend_fields(result: Mapping[str, Any], backend: str) -> dict[str, str]:
         )
     elif backend == "hf":
         requirements["receipt_id"] = (
-            ("hf_receipt_id",)
-            if "hf_receipt_id" in result
-            else ("receipt_id",)
+            ("hf_receipt_id",) if "hf_receipt_id" in result else ("receipt_id",)
         )
     fields: dict[str, str] = {}
     for canonical, aliases in requirements.items():
@@ -785,7 +813,9 @@ def _backend_fields(result: Mapping[str, Any], backend: str) -> dict[str, str]:
     if canonical := fields.get("summary_digest"):
         fields["summary_digest"] = _digest(canonical, f"result.{backend}.summary_digest")
     if backend == "tinker":
-        fields["provider"] = _normalise_tinker_provider(fields["provider"], f"result.{backend}.provider")
+        fields["provider"] = _normalise_tinker_provider(
+            fields["provider"], f"result.{backend}.provider"
+        )
     if backend == "hf":
         fields["revision"] = _immutable_string(fields["revision"], f"result.{backend}.revision")
     return fields
@@ -820,7 +850,9 @@ def _claim_requested(result: Mapping[str, Any]) -> bool:
     return parsed[0]
 
 
-def _heldout_receipts(result: Mapping[str, Any], completed: bool) -> tuple[dict[str, Any], list[str]]:
+def _heldout_receipts(
+    result: Mapping[str, Any], completed: bool
+) -> tuple[dict[str, Any], list[str]]:
     heldout_raw = result.get("heldout_receipts")
     immutable_raw = result.get("immutable_receipts")
     if heldout_raw is not None and immutable_raw is not None:
@@ -852,7 +884,9 @@ def _heldout_receipts(result: Mapping[str, Any], completed: bool) -> tuple[dict[
         normalised[name] = _immutable_receipt(raw[name], f"result.heldout_receipts.{name}")
     receipt_ids = [receipt["receipt_id"] for receipt in normalised.values()]
     if len(set(receipt_ids)) != len(receipt_ids):
-        raise SdabBoundaryError("result.heldout_receipts must use a distinct immutable receipt for each requirement")
+        raise SdabBoundaryError(
+            "result.heldout_receipts must use a distinct immutable receipt for each requirement"
+        )
     receipt_fingerprints = [
         (receipt["digest"], receipt["reference"]) for receipt in normalised.values()
     ]
@@ -883,22 +917,38 @@ def build_result_receipt(
     if result.get("backend") is not None and _backend_name(result["backend"]) != backend_name:
         raise SdabBoundaryError("result.backend does not match the selected backend")
     _reject_substitute(result.get("suite_id"), "result.suite_id")
-    for key in ("benchmark_id", "benchmark", "evaluation_suite", "substitute_for", "related_benchmark"):
+    for key in (
+        "benchmark_id",
+        "benchmark",
+        "evaluation_suite",
+        "substitute_for",
+        "related_benchmark",
+    ):
         _reject_substitute(result.get(key), f"result.{key}")
     if result.get("suite_id") not in (None, SUITE_ID):
         raise SdabBoundaryError("result.suite_id must match sdab_eval")
     if result.get("role") not in (None, ROLE):
         raise SdabBoundaryError("result.role must remain primary_eval")
-    if result.get("benchmark_id") is not None and str(result["benchmark_id"]).casefold() != BENCHMARK_ID:
-        raise SdabBoundaryError("result.benchmark_id must identify the authoritative SDAB benchmark")
+    if (
+        result.get("benchmark_id") is not None
+        and str(result["benchmark_id"]).casefold() != BENCHMARK_ID
+    ):
+        raise SdabBoundaryError(
+            "result.benchmark_id must identify the authoritative SDAB benchmark"
+        )
     if result.get("benchmark") is not None:
         benchmark = result["benchmark"]
         if not isinstance(benchmark, str) or benchmark.strip().casefold() not in {
             BENCHMARK_ID,
             BENCHMARK_NAME.casefold(),
         }:
-            raise SdabBoundaryError("result.benchmark must identify the authoritative SDAB benchmark")
-    if result.get("evaluation_suite") is not None and str(result["evaluation_suite"]).casefold() != SUITE_ID:
+            raise SdabBoundaryError(
+                "result.benchmark must identify the authoritative SDAB benchmark"
+            )
+    if (
+        result.get("evaluation_suite") is not None
+        and str(result["evaluation_suite"]).casefold() != SUITE_ID
+    ):
         raise SdabBoundaryError("result.evaluation_suite must identify sdab_eval")
     if result.get("benchmark_name") is not None:
         if (
@@ -906,7 +956,9 @@ def build_result_receipt(
             or result["benchmark_name"].strip().casefold() != BENCHMARK_NAME.casefold()
         ):
             _reject_substitute(result["benchmark_name"], "result.benchmark_name")
-            raise SdabBoundaryError("result.benchmark_name must identify the authoritative SDAB benchmark")
+            raise SdabBoundaryError(
+                "result.benchmark_name must identify the authoritative SDAB benchmark"
+            )
     if result.get("canonical_url") is not None and (
         not isinstance(result["canonical_url"], str)
         or result["canonical_url"].strip().rstrip("/") != CANONICAL_URL
@@ -924,9 +976,11 @@ def build_result_receipt(
         )
         if result_identity != canonical_boundary["source_identity"]:
             raise SdabBoundaryError("result.source_identity does not match the SDAB boundary")
-    if "source_revision" in result and _immutable_string(
-        result["source_revision"], "result.source_revision"
-    ) != canonical_boundary["source_revision"]:
+    if (
+        "source_revision" in result
+        and _immutable_string(result["source_revision"], "result.source_revision")
+        != canonical_boundary["source_revision"]
+    ):
         raise SdabBoundaryError("result.source_revision does not match the SDAB boundary")
     for key, expected in (
         ("source_revision_digest", canonical_boundary["source_revision_digest"]),
@@ -940,16 +994,23 @@ def build_result_receipt(
         supplied_hashes = result["task_id_hashes"]
         if not isinstance(supplied_hashes, Mapping):
             raise SdabBoundaryError("result.task_id_hashes must be an object")
-        if "all" not in supplied_hashes or _digest(
-            supplied_hashes["all"], "result.task_id_hashes.all"
-        ) != canonical_boundary["task_id_hash"]:
+        if (
+            "all" not in supplied_hashes
+            or _digest(supplied_hashes["all"], "result.task_id_hashes.all")
+            != canonical_boundary["task_id_hash"]
+        ):
             raise SdabBoundaryError("result.task_id_hashes does not match the SDAB boundary")
-    if "dataset_revision" in result and _immutable_string(
-        result["dataset_revision"], "result.dataset_revision"
-    ) != canonical_boundary["dataset_revision"]:
+    if (
+        "dataset_revision" in result
+        and _immutable_string(result["dataset_revision"], "result.dataset_revision")
+        != canonical_boundary["dataset_revision"]
+    ):
         raise SdabBoundaryError("result.dataset_revision does not match the SDAB boundary")
     if "container_digest" in result and canonical_boundary["container_digest"] is not None:
-        if _digest(result["container_digest"], "result.container_digest") != canonical_boundary["container_digest"]:
+        if (
+            _digest(result["container_digest"], "result.container_digest")
+            != canonical_boundary["container_digest"]
+        ):
             raise SdabBoundaryError("result.container_digest does not match the SDAB boundary")
 
     receipt_id = _immutable_string(result.get("receipt_id"), "result.receipt_id")
@@ -958,33 +1019,53 @@ def build_result_receipt(
         raise SdabBoundaryError(f"result.status {status!r} is not a supported receipt state")
     started_at = _timestamp(result.get("started_at"), "result.started_at")
     completed_at = _timestamp(
-        result.get("completed_at"), "result.completed_at", required=status in {"completed", "failed", "rejected"}
+        result.get("completed_at"),
+        "result.completed_at",
+        required=status in {"completed", "failed", "rejected"},
     )
     metrics = result.get("metrics")
     if not isinstance(metrics, Mapping):
         raise SdabBoundaryError("result.metrics must be an object")
     if status == "completed" and not metrics:
-        raise SdabBoundaryError("completed SDAB results must include metrics; no result may be fabricated")
+        raise SdabBoundaryError(
+            "completed SDAB results must include metrics; no result may be fabricated"
+        )
     if status == "completed":
         grades = result.get("task_grades")
         if not isinstance(grades, list) or len(grades) != canonical_boundary["task_count"]:
             raise SdabBoundaryError("completed results require one native task grade per task")
-        if {g.get("task_id") for g in grades if isinstance(g, Mapping)} != set(canonical_boundary["task_ids"]):
+        if {g.get("task_id") for g in grades if isinstance(g, Mapping)} != set(
+            canonical_boundary["task_ids"]
+        ):
             raise SdabBoundaryError("native task grade coverage mismatch")
         composites = []
         perfect = []
         for grade in grades:
-            values = [grade.get(key) for key in ("feature_correctness", "operational_correctness", "engineering_correctness")]
+            values = [
+                grade.get(key)
+                for key in (
+                    "feature_correctness",
+                    "operational_correctness",
+                    "engineering_correctness",
+                )
+            ]
             if any(type(v) not in (int, float) or not 0 <= v <= 1 for v in values):
                 raise SdabBoundaryError("native score components must be finite in [0,1]")
             if grade.get("attempt") != 1 or type(grade.get("attempt")) is not int:
                 raise SdabBoundaryError("Pass@1 requires first-attempt grades")
-            composites.append(sum(w*v for w,v in zip((.6,.3,.1), values)))
+            composites.append(sum(w * v for w, v in zip((0.6, 0.3, 0.1), values, strict=False)))
             perfect.append(all(v == 1 for v in values))
-        expected = {"composite_score": 100*sum(composites)/len(grades), "pass_at_1": sum(perfect)/len(grades)}
+        expected = {
+            "composite_score": 100 * sum(composites) / len(grades),
+            "pass_at_1": sum(perfect) / len(grades),
+        }
         for key, value in expected.items():
             supplied = metrics.get(key)
-            if type(supplied) not in (int, float) or abs(supplied-value) > 1e-9 or supplied != supplied:
+            if (
+                type(supplied) not in (int, float)
+                or abs(supplied - value) > 1e-9
+                or supplied != supplied
+            ):
                 raise SdabBoundaryError(f"metrics.{key} disagrees with native task grades")
     metrics_digest = _required_digest_alias(result, ("metrics_digest",), "result.metrics_digest")
     expected_metrics_digest = sha256_digest(metrics)
@@ -994,13 +1075,20 @@ def build_result_receipt(
     adapter_revision = _immutable_string(result.get("adapter_revision"), "result.adapter_revision")
     environment = _environment_receipt(result.get("environment_receipt"))
     if "container_digest" in result:
-        if _digest(result["container_digest"], "result.container_digest") != environment["container_digest"]:
-            raise SdabBoundaryError("result.container_digest does not match the environment receipt")
+        if (
+            _digest(result["container_digest"], "result.container_digest")
+            != environment["container_digest"]
+        ):
+            raise SdabBoundaryError(
+                "result.container_digest does not match the environment receipt"
+            )
     if (
         canonical_boundary["container_digest"] is not None
         and environment["container_digest"] != canonical_boundary["container_digest"]
     ):
-        raise SdabBoundaryError("result.environment_receipt.container_digest does not match the SDAB boundary")
+        raise SdabBoundaryError(
+            "result.environment_receipt.container_digest does not match the SDAB boundary"
+        )
     artifact = _artifact_receipt(result.get("artifact_receipt"))
     verifier = _verifier_receipt(result.get("verifier_receipt"))
     backend_fields = _backend_fields(result, backend_name)
@@ -1056,9 +1144,10 @@ def build_result_receipt(
     }
     supplied_receipt_digest = result.get("receipt_digest")
     receipt_digest = sha256_digest(receipt)
-    if supplied_receipt_digest is not None and _digest(
-        supplied_receipt_digest, "result.receipt_digest"
-    ) != receipt_digest:
+    if (
+        supplied_receipt_digest is not None
+        and _digest(supplied_receipt_digest, "result.receipt_digest") != receipt_digest
+    ):
         raise SdabBoundaryError("result.receipt_digest does not match the canonical receipt")
     receipt["receipt_digest"] = receipt_digest
     return receipt
@@ -1160,9 +1249,22 @@ def _bundle_synthetic_flag(bundle: Mapping[str, Any]) -> bool:
 
 
 def _strip_raw_content(record: Mapping[str, Any]) -> tuple[dict[str, Any], list[str]]:
-    allowed = {"task_id", "category", "task_hash", "content_sha256", "revision", "source_revision", "license", "receipt_id"}
+    allowed = {
+        "task_id",
+        "category",
+        "task_hash",
+        "content_sha256",
+        "revision",
+        "source_revision",
+        "license",
+        "receipt_id",
+    }
     stripped = sorted(key for key in record if key not in allowed)
-    metadata = {key: value for key, value in record.items() if key in allowed and isinstance(value, (str, int, float, bool, type(None)))}
+    metadata = {
+        key: value
+        for key, value in record.items()
+        if key in allowed and isinstance(value, (str, int, float, bool, type(None)))
+    }
     return metadata, stripped
 
 
@@ -1198,13 +1300,12 @@ def validate_task_bundle(
         if name.casefold() != BENCHMARK_NAME.casefold():
             _reject_substitute(name, "bundle.benchmark_name")
             raise SdabBundleError(f"bundle.benchmark_name must be {BENCHMARK_NAME!r}")
-    if "canonical_url" in bundle and _required_string(
-        bundle, "canonical_url", "bundle"
-    ).rstrip("/") != CANONICAL_URL:
+    if (
+        "canonical_url" in bundle
+        and _required_string(bundle, "canonical_url", "bundle").rstrip("/") != CANONICAL_URL
+    ):
         raise SdabBundleError(f"bundle.canonical_url must be {CANONICAL_URL!r}")
-    provider = _normalise_provider(
-        bundle.get("provider", PROVIDER), "bundle.provider"
-    )
+    provider = _normalise_provider(bundle.get("provider", PROVIDER), "bundle.provider")
 
     split = _required_string(bundle, "split", "bundle")
     if split != "evaluation":
@@ -1269,9 +1370,7 @@ def validate_task_bundle(
         category = record.get("category")
         if category is not None:
             if not isinstance(category, str) or category.strip() not in OFFICIAL_CATEGORIES:
-                raise SdabBundleError(
-                    f"bundle.tasks[{index}].category is not an SDAB category"
-                )
+                raise SdabBundleError(f"bundle.tasks[{index}].category is not an SDAB category")
             record["category"] = category.strip()
             categories[record["category"]] = categories.get(record["category"], 0) + 1
         ordered_ids.append(task_id)
@@ -1395,8 +1494,7 @@ def prove_split_disjointness(
         )
     if strict and not train_ids:
         raise SdabBundleError(
-            "a disjointness proof requires the provider's training task-ID list; "
-            "none was supplied"
+            "a disjointness proof requires the provider's training task-ID list; none was supplied"
         )
     return proof
 
@@ -1410,7 +1508,9 @@ def build_boundary_spec_from_bundle(
 ) -> dict[str, Any]:
     """Derive the offline boundary spec that :func:`build_sdab_boundary` accepts."""
 
-    manifest = dict(split_manifest) if split_manifest is not None else build_split_manifest(bundle_report)
+    manifest = (
+        dict(split_manifest) if split_manifest is not None else build_split_manifest(bundle_report)
+    )
     spec: dict[str, Any] = {
         "suite_id": SUITE_ID,
         "role": ROLE,
@@ -1458,7 +1558,13 @@ def _verify_provider_grant(
         issued = datetime.fromisoformat(str(data["issued_at"]).replace("Z", "+00:00"))
         expires = datetime.fromisoformat(str(data["expires_at"]).replace("Z", "+00:00"))
         now = datetime.now(timezone.utc)
-        if issued.tzinfo is None or expires.tzinfo is None or issued > now or expires <= now or expires <= issued:
+        if (
+            issued.tzinfo is None
+            or expires.tzinfo is None
+            or issued > now
+            or expires <= now
+            or expires <= issued
+        ):
             raise ValueError
     except (KeyError, ValueError):
         raise SdabBundleError("provider grant has an invalid issue/expiry window") from None
@@ -1469,7 +1575,9 @@ def _verify_provider_grant(
             base64.b64decode(root["public_key_b64"], validate=True)
         ).verify(base64.b64decode(signature, validate=True), canonical_json(signed).encode("utf-8"))
     except (InvalidSignature, TypeError, ValueError):
-        raise SdabBundleError("provider grant signature does not verify against the supplied E3 trust root") from None
+        raise SdabBundleError(
+            "provider grant signature does not verify against the supplied E3 trust root"
+        ) from None
     return sha256_digest(data), root
 
 
@@ -1516,9 +1624,13 @@ def build_runtime_manifest(
             else license_identity.get("spdx_id") or license_identity.get("name")
         )
     grant_binding = {
-        "suite_id": SUITE_ID, "lane": SDAB_GRANT_LANE, "benchmark_revision": bundle["revision"],
-        "container_digest": container_digest, "environment_digest": environment_digest,
-        "verifier_sha256": verifier_sha256, "reset_contract": reset_contract,
+        "suite_id": SUITE_ID,
+        "lane": SDAB_GRANT_LANE,
+        "benchmark_revision": bundle["revision"],
+        "container_digest": container_digest,
+        "environment_digest": environment_digest,
+        "verifier_sha256": verifier_sha256,
+        "reset_contract": reset_contract,
         "license_id": resolved_license,
     }
     grant_hash, verified_root = _verify_provider_grant(
@@ -1568,7 +1680,9 @@ def build_runtime_manifest(
             "runtime_digest": _digest(environment_digest, "runtime_manifest.environment_digest"),
             "container_digest": _digest(container_digest, "runtime_manifest.container_digest"),
             "reset_contract": _immutable_string(reset_contract, "runtime_manifest.reset_contract"),
-            "grader_identity": _immutable_string(verifier_identity, "runtime_manifest.verifier_identity"),
+            "grader_identity": _immutable_string(
+                verifier_identity, "runtime_manifest.verifier_identity"
+            ),
             "license_id": _immutable_string(resolved_license, "runtime_manifest.license_id"),
             "provider_grant_sha256": grant_hash,
             "provider_trust_root_sha256": verified_root["trust_root_sha256"],
@@ -1644,7 +1758,9 @@ def ingest_task_bundle(
     spec = build_boundary_spec_from_bundle(
         bundle_report,
         source_revision_digest=source_revision_digest
-        or sha256_digest({"revision": bundle_report["revision"], "bundle_digest": bundle_report["bundle_digest"]}),
+        or sha256_digest(
+            {"revision": bundle_report["revision"], "bundle_digest": bundle_report["bundle_digest"]}
+        ),
         split_manifest=split_manifest,
         container_digest=container_digest,
     )
@@ -1654,8 +1770,7 @@ def ingest_task_bundle(
         errors = validate_sdab_boundary(spec)
         if not errors:
             raise SdabBundleError(
-                "synthetic fixture was accepted by the authoritative boundary; "
-                "refusing to continue"
+                "synthetic fixture was accepted by the authoritative boundary; refusing to continue"
             )
         report["boundary_rejection"] = errors
     else:
@@ -1723,9 +1838,7 @@ def _display(value: Any) -> Any:
 
 def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument(
-        "boundary", type=Path, nargs="?", help="offline SDAB boundary JSON"
-    )
+    parser.add_argument("boundary", type=Path, nargs="?", help="offline SDAB boundary JSON")
     parser.add_argument("--result", type=Path, help="optional offline backend result receipt JSON")
     parser.add_argument("--backend", choices=RESULT_BACKENDS)
     parser.add_argument(
@@ -1816,9 +1929,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                 }
                 missing = [name for name, value in required.items() if not value]
                 if missing:
-                    raise SdabBoundaryError(
-                        "--runtime-manifest requires " + ", ".join(missing)
-                    )
+                    raise SdabBoundaryError("--runtime-manifest requires " + ", ".join(missing))
                 if ingest["synthetic"] or not ingest["authoritative"]:
                     raise SdabBundleError(
                         "synthetic or harness-validation ingest can never produce a runtime manifest"

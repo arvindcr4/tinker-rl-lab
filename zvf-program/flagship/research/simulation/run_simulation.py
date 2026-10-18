@@ -13,11 +13,10 @@ import argparse
 import csv
 import hashlib
 import json
-import math
 import platform
 import sys
 from collections import defaultdict
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
@@ -181,7 +180,9 @@ def one_run(
     e1_signal_anchor = 0.5 * (
         float(e1["pearson_gradnorm_vs_p1mp"]) + float(e1["pearson_gradnorm_vs_GU"])
     )
-    learning_rate = 0.15 * e1_signal_anchor * float(cfg["learning_rate_scale"]) * learning_rate_multiplier
+    learning_rate = (
+        0.15 * e1_signal_anchor * float(cfg["learning_rate_scale"]) * learning_rate_multiplier
+    )
 
     active_difficulty = sample_difficulty(rng, cfg["difficulty"], int(cfg["pool_size"]), 0.0)
     heldout_difficulty = sample_difficulty(
@@ -257,7 +258,10 @@ def one_run(
                 retire = all_correct
                 if retire.any():
                     active_difficulty[indices[retire]] = sample_difficulty(
-                        rng, cfg["difficulty"], int(retire.sum()), float(cfg["difficulty_shift"]) if shifted else 0.0
+                        rng,
+                        cfg["difficulty"],
+                        int(retire.sum()),
+                        float(cfg["difficulty_shift"]) if shifted else 0.0,
                     )
                     retired_groups += int(retire.sum())
 
@@ -289,7 +293,13 @@ def one_run(
     x = np.asarray(curve_x, dtype=float)
     y = np.asarray(curve_y, dtype=float)
     auc_per_token = float(np.trapezoid(y, x) / max(x[-1], 1.0))
-    total_groups = max(useful_groups + (observed_mixed_groups - useful_groups) + all_wrong_count + all_correct_count, 1)
+    total_groups = max(
+        useful_groups
+        + (observed_mixed_groups - useful_groups)
+        + all_wrong_count
+        + all_correct_count,
+        1,
+    )
     flop_per_generated_token = 8.0 * float(cfg["parameter_billions"]) * 1e9
     return Outcome(
         policy=policy,
@@ -390,8 +400,7 @@ def main() -> None:
     (HERE / "e1_frozen_inputs.json").write_text(json.dumps(e1, indent=2) + "\n")
     scenario_doc = json.loads(SCENARIOS_PATH.read_text())
     scenario_configs = {
-        name: merge(scenario_doc["base"], spec)
-        for name, spec in scenario_doc["regimes"].items()
+        name: merge(scenario_doc["base"], spec) for name, spec in scenario_doc["regimes"].items()
     }
     scenario_configs.update(
         {
@@ -418,8 +427,20 @@ def main() -> None:
         ("high_learning_gain", "transitional", 4.0, 1.5, {}),
         ("uninformative_prior", "mostly_wrong", 0.1, 1.0, {}),
         ("strong_e1_prior", "mostly_wrong", 16.0, 1.0, {}),
-        ("clean_verifier", "noisy_verifier", 4.0, 1.0, {"verifier_sensitivity": 0.995, "verifier_specificity": 0.995}),
-        ("severe_verifier_noise", "noisy_verifier", 4.0, 1.0, {"verifier_sensitivity": 0.70, "verifier_specificity": 0.70}),
+        (
+            "clean_verifier",
+            "noisy_verifier",
+            4.0,
+            1.0,
+            {"verifier_sensitivity": 0.995, "verifier_specificity": 0.995},
+        ),
+        (
+            "severe_verifier_noise",
+            "noisy_verifier",
+            4.0,
+            1.0,
+            {"verifier_sensitivity": 0.70, "verifier_specificity": 0.70},
+        ),
         ("harder_shift", "distribution_shift", 4.0, 1.0, {"difficulty_shift": 2.0}),
     ]
     for probe_index, (probe, regime, prior, lr_mult, overrides) in enumerate(probes):
@@ -427,8 +448,16 @@ def main() -> None:
         probe_outcomes = []
         for policy_index, policy in enumerate(POLICIES):
             for replicate in range(args.sensitivity_replicates):
-                seed = args.seed + 50_000_000 + probe_index * 1_000_000 + policy_index * 10_000 + replicate
-                probe_outcomes.append(one_run(policy, regime, cfg, e1, replicate, seed, prior, lr_mult))
+                seed = (
+                    args.seed
+                    + 50_000_000
+                    + probe_index * 1_000_000
+                    + policy_index * 10_000
+                    + replicate
+                )
+                probe_outcomes.append(
+                    one_run(policy, regime, cfg, e1, replicate, seed, prior, lr_mult)
+                )
         by_policy = defaultdict(list)
         for outcome in probe_outcomes:
             by_policy[outcome.policy].append(outcome.auc_per_token)
@@ -471,10 +500,17 @@ def main() -> None:
         "platform": platform.platform(),
         "e1_source_sha256": e1["source_sha256"],
         "scenarios_sha256": hashlib.sha256(SCENARIOS_PATH.read_bytes()).hexdigest(),
-        "outputs": ["e1_frozen_inputs.json", "simulation_results.json", "policy_regime_summary.csv", "sensitivity_summary.csv"],
+        "outputs": [
+            "e1_frozen_inputs.json",
+            "simulation_results.json",
+            "policy_regime_summary.csv",
+            "sensitivity_summary.csv",
+        ],
     }
     (HERE / "run_manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
-    print(f"wrote {len(outcomes)} main synthetic outcomes and {len(sensitivity_rows)} sensitivity rows to {HERE}")
+    print(
+        f"wrote {len(outcomes)} main synthetic outcomes and {len(sensitivity_rows)} sensitivity rows to {HERE}"
+    )
 
 
 if __name__ == "__main__":

@@ -22,6 +22,7 @@ def extract_with_pymupdf4llm(pdf_path: str) -> str | None:
     """Try pymupdf4llm for markdown extraction (best quality)."""
     try:
         import pymupdf4llm
+
         return pymupdf4llm.to_markdown(pdf_path)
     except ImportError:
         return None
@@ -34,6 +35,7 @@ def extract_with_pymupdf(pdf_path: str) -> str | None:
     """Try pymupdf/fitz for plain text extraction."""
     try:
         import fitz
+
         doc = fitz.open(pdf_path)
         text_parts = []
         for page in doc:
@@ -51,6 +53,7 @@ def extract_with_pypdf(pdf_path: str) -> str | None:
     """Try pypdf for fallback text extraction."""
     try:
         from pypdf import PdfReader
+
         reader = PdfReader(pdf_path)
         text_parts = []
         for page in reader.pages:
@@ -86,7 +89,10 @@ def extract_text(pdf_path: str, preferred_format: str = "auto") -> str:
             print(f"Extracted using {name} ({len(text)} chars)", file=sys.stderr)
             return text
 
-    print("ERROR: All extraction methods failed. Install one of: pymupdf4llm, pymupdf, pypdf", file=sys.stderr)
+    print(
+        "ERROR: All extraction methods failed. Install one of: pymupdf4llm, pymupdf, pypdf",
+        file=sys.stderr,
+    )
     sys.exit(1)
 
 
@@ -94,8 +100,12 @@ def main():
     parser = argparse.ArgumentParser(description="Extract text from PDF for review")
     parser.add_argument("pdf_file", help="Path to PDF file")
     parser.add_argument("--output", "-o", help="Output text file (default: stdout)")
-    parser.add_argument("--format", choices=["auto", "markdown", "plain"],
-                        default="auto", help="Preferred output format")
+    parser.add_argument(
+        "--format",
+        choices=["auto", "markdown", "plain"],
+        default="auto",
+        help="Preferred output format",
+    )
     args = parser.parse_args()
 
     text = extract_text(args.pdf_file, args.format)

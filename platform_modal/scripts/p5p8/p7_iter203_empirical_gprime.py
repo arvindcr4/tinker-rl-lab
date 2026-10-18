@@ -47,17 +47,21 @@ Hypotheses:
 
 Stdlib only.
 """
+
 from __future__ import annotations
 import argparse
 import csv
 import json
-import math
 import pathlib
 import statistics
 
 import sys
-sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
+
+sys.path.append(
+    str(pathlib.Path(__file__).resolve().parents[1])
+)  # platform_modal/scripts, for _paths
+from _paths import REPO_ROOT
+
 WORKTREE = REPO_ROOT
 N2 = WORKTREE / "platform_hybrid/experiments" / "results" / "n2_reward_tensor_resume"
 OUT = WORKTREE / "platform_hybrid/experiments" / "results" / "p5p8/corrected-review20-v2"
@@ -97,7 +101,6 @@ def emp_gu_at_gpr(step_rewards, g_prime):
     if any(len(prompt) < g_prime for prompt in step_rewards):
         raise ValueError("UNAVAILABLE: insufficient same-prompt completions for requested G")
     return sum(0 < sum(prompt[:g_prime]) < g_prime for prompt in step_rewards) / len(step_rewards)
-
 
 
 def per_prompt_k(step_rewards, prompt_index):
@@ -141,13 +144,20 @@ def main():
                     chosen_gu = e
                     break
             n_fires = sum(1 for pi in range(N_PROMPTS) if is_saturated(per_prompt_k(step, pi)))
-            cell_rows.append({
-                "method": m, "step": step_idx,
-                "emp_gu_8": gu8, "emp_gu_16": gu16, "emp_gu_32": gu32, "emp_gu_64": gu64,
-                "chosen_g": chosen, "chosen_gu": chosen_gu,
-                "n_fires": n_fires,
-                "emp_gu_raised_by_chosen": chosen_gu - gu8,
-            })
+            cell_rows.append(
+                {
+                    "method": m,
+                    "step": step_idx,
+                    "emp_gu_8": gu8,
+                    "emp_gu_16": gu16,
+                    "emp_gu_32": gu32,
+                    "emp_gu_64": gu64,
+                    "chosen_g": chosen,
+                    "chosen_gu": chosen_gu,
+                    "n_fires": n_fires,
+                    "emp_gu_raised_by_chosen": chosen_gu - gu8,
+                }
+            )
             for pi in range(N_PROMPTS):
                 k = per_prompt_k(step, pi)
                 fires_pi = is_saturated(k)
@@ -158,13 +168,18 @@ def main():
                 else:
                     g_for_prompt = G_BASE
                     gu_for_prompt = gu8
-                per_obs_rows.append({
-                    "method": m, "step": step_idx, "prompt_index": pi,
-                    "k": k, "fires": int(fires_pi),
-                    "g_for_prompt": g_for_prompt,
-                    "gu_for_prompt": round(gu_for_prompt, 4),
-                    "cost_ratio": g_for_prompt / G_BASE,
-                })
+                per_obs_rows.append(
+                    {
+                        "method": m,
+                        "step": step_idx,
+                        "prompt_index": pi,
+                        "k": k,
+                        "fires": int(fires_pi),
+                        "g_for_prompt": g_for_prompt,
+                        "gu_for_prompt": round(gu_for_prompt, 4),
+                        "cost_ratio": g_for_prompt / G_BASE,
+                    }
+                )
 
     # Verdicts
     # H1: emp_gu_at_Gpr > emp_gu_at_8 in majority of (method, step) cells.
@@ -232,19 +247,25 @@ def main():
             "mean_emp_gu_16": sum(c["emp_gu_16"] for c in cell_rows) / n_cells,
             "mean_emp_gu_32": sum(c["emp_gu_32"] for c in cell_rows) / n_cells,
             "mean_emp_gu_64": sum(c["emp_gu_64"] for c in cell_rows) / n_cells,
-            "mean_gu_raised_by_chosen": sum(c["emp_gu_raised_by_chosen"] for c in cell_rows) / n_cells,
+            "mean_gu_raised_by_chosen": sum(c["emp_gu_raised_by_chosen"] for c in cell_rows)
+            / n_cells,
         },
         "method_stats": method_stats,
         "verdicts": {
             "H1_empGU_at_Gpr_gt_G_base": {
                 "pass": bool(h1_pass),
-                "n_16_wins": h1_16_wins, "n_32_wins": h1_32_wins, "n_64_wins": h1_64_wins,
+                "n_16_wins": h1_16_wins,
+                "n_32_wins": h1_32_wins,
+                "n_64_wins": h1_64_wins,
                 "n_cells": n_cells,
             },
             "H2_fire_rate_saturation": {"pass": bool(h2_pass), "value": h2_value},
             "H3_pareto_Gpr_wins": {"pass": bool(h3_pass), "n_escalate": h3_n_escalate},
-            "H4_cost_efficiency": {"pass": bool(h4_pass), "median_overhead": median_overhead,
-                                   "n_escalated": len(overheads)},
+            "H4_cost_efficiency": {
+                "pass": bool(h4_pass),
+                "median_overhead": median_overhead,
+                "n_escalated": len(overheads),
+            },
         },
     }
 
@@ -274,12 +295,18 @@ def main():
     print()
     print("Empirical GU by group size (pooled across all (method, step)):")
     print(f"  G=8  : mean = {summary['global']['mean_emp_gu_8']:.4f}")
-    print(f"  G=16 : mean = {summary['global']['mean_emp_gu_16']:.4f}  "
-          f"({h1_16_wins}/{n_cells} cells strictly > G=8)")
-    print(f"  G=32 : mean = {summary['global']['mean_emp_gu_32']:.4f}  "
-          f"({h1_32_wins}/{n_cells} cells strictly > G=8)")
-    print(f"  G=64 : mean = {summary['global']['mean_emp_gu_64']:.4f}  "
-          f"({h1_64_wins}/{n_cells} cells strictly > G=8)")
+    print(
+        f"  G=16 : mean = {summary['global']['mean_emp_gu_16']:.4f}  "
+        f"({h1_16_wins}/{n_cells} cells strictly > G=8)"
+    )
+    print(
+        f"  G=32 : mean = {summary['global']['mean_emp_gu_32']:.4f}  "
+        f"({h1_32_wins}/{n_cells} cells strictly > G=8)"
+    )
+    print(
+        f"  G=64 : mean = {summary['global']['mean_emp_gu_64']:.4f}  "
+        f"({h1_64_wins}/{n_cells} cells strictly > G=8)"
+    )
     print()
     print("Chosen G distribution (smallest G' ∈ {16,32,64} with GU strictly > G=8):")
     print(f"  G=8 : {chosen_dist.get(8, 0)} cells")
@@ -290,22 +317,34 @@ def main():
     print(f"  Mean GU raised by chosen: {summary['global']['mean_gu_raised_by_chosen']:.6f}")
     print()
     print("Per-method stats:")
-    print(f"  {'method':>6s} {'GU@8':>7s} {'GU@16':>7s} {'GU@32':>7s} {'GU@64':>7s} {'meanG':>6s} {'fires':>6s}")
+    print(
+        f"  {'method':>6s} {'GU@8':>7s} {'GU@16':>7s} {'GU@32':>7s} {'GU@64':>7s} {'meanG':>6s} {'fires':>6s}"
+    )
     for m in METHODS:
         s = method_stats[m]
-        print(f"  {m:>6s} {s['emp_gu_8_mean']:7.4f} {s['emp_gu_16_mean']:7.4f} "
-              f"{s['emp_gu_32_mean']:7.4f} {s['emp_gu_64_mean']:7.4f} "
-              f"{s['mean_chosen_g']:6.2f} {s['mean_fires_per_step']:6.2f}")
+        print(
+            f"  {m:>6s} {s['emp_gu_8_mean']:7.4f} {s['emp_gu_16_mean']:7.4f} "
+            f"{s['emp_gu_32_mean']:7.4f} {s['emp_gu_64_mean']:7.4f} "
+            f"{s['mean_chosen_g']:6.2f} {s['mean_fires_per_step']:6.2f}"
+        )
     print()
     print("V E R D I C T S")
-    print(f"  H1_empGU_at_Gpr_gt_G_base:  {'PASS' if h1_pass else 'FAIL'}"
-          f"   (16/32/64 wins = {h1_16_wins}/{h1_32_wins}/{h1_64_wins} of {n_cells})")
-    print(f"  H2_fire_rate_saturation:    {'PASS' if h2_pass else 'FAIL'}"
-          f"   (sanity: fires iff k∈{{0,8}})")
-    print(f"  H3_pareto_Gpr_wins:         {'PASS' if h3_pass else 'FAIL'}"
-          f"   ({h3_n_escalate}/{n_cells} cells escalate)")
-    print(f"  H4_cost_efficiency:         {'PASS' if h4_pass else 'FAIL'}"
-          f"   (median overhead = {median_overhead:.1f} over {len(overheads)} escalations)")
+    print(
+        f"  H1_empGU_at_Gpr_gt_G_base:  {'PASS' if h1_pass else 'FAIL'}"
+        f"   (16/32/64 wins = {h1_16_wins}/{h1_32_wins}/{h1_64_wins} of {n_cells})"
+    )
+    print(
+        f"  H2_fire_rate_saturation:    {'PASS' if h2_pass else 'FAIL'}"
+        f"   (sanity: fires iff k∈{{0,8}})"
+    )
+    print(
+        f"  H3_pareto_Gpr_wins:         {'PASS' if h3_pass else 'FAIL'}"
+        f"   ({h3_n_escalate}/{n_cells} cells escalate)"
+    )
+    print(
+        f"  H4_cost_efficiency:         {'PASS' if h4_pass else 'FAIL'}"
+        f"   (median overhead = {median_overhead:.1f} over {len(overheads)} escalations)"
+    )
     print()
     print("Outputs:")
     print(f"  {cell_tsv}")

@@ -26,7 +26,9 @@ def check_pdf(pdf: Path, receipt_path: Path, required_text: list[str]) -> dict:
     out = receipt_path.parent
     out.mkdir(parents=True, exist_ok=True)
     subprocess.run(["pdftotext", "-layout", str(pdf), str(out / "thesis_text.txt")], check=True)
-    subprocess.run(["pdftotext", "-bbox-layout", str(pdf), str(out / "thesis_bbox.html")], check=True)
+    subprocess.run(
+        ["pdftotext", "-bbox-layout", str(pdf), str(out / "thesis_bbox.html")], check=True
+    )
     text = (out / "thesis_text.txt").read_text()
     pages = text.split("\f")
     if not pages[-1].strip():
@@ -73,7 +75,13 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     receipt = check_pdf(args.pdf, args.receipt, terms)
     print(json.dumps(receipt, indent=2))
-    return int(bool(receipt["outside_page_bounds"] or receipt["missing_required_text"] or receipt["replacement_character_pages"]))
+    return int(
+        bool(
+            receipt["outside_page_bounds"]
+            or receipt["missing_required_text"]
+            or receipt["replacement_character_pages"]
+        )
+    )
 
 
 if __name__ == "__main__":

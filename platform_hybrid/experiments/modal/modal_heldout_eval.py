@@ -28,8 +28,10 @@ Env:
 from __future__ import annotations
 
 import atexit
+
 try:
     from codecarbon import EmissionsTracker
+
     _tracker = EmissionsTracker()
     _tracker.start()
     atexit.register(_tracker.stop)
@@ -76,17 +78,15 @@ SYSTEM_PROMPT = (
     "You are a math assistant. Solve the problem step by step, then give your "
     "final numerical answer inside \\boxed{}."
 )
-QUESTION_SUFFIX = (
-    " Provide a numerical answer without units, written inside \\boxed{}."
-)
+QUESTION_SUFFIX = " Provide a numerical answer without units, written inside \\boxed{}."
 
-HELDOUT_N = 500                 # fixed held-out size (§5 of the paper)
-HELDOUT_SEED = 0                # deterministic selection
+HELDOUT_N = 500  # fixed held-out size (§5 of the paper)
+HELDOUT_SEED = 0  # deterministic selection
 MAX_TOKENS = 512
-TEMPERATURE = 0.0               # greedy decoding for eval
+TEMPERATURE = 0.0  # greedy decoding for eval
 TOP_P = 1.0
-PROMPT_MAX_LEN = 1024           # same cap as training
-EVAL_MAX_WORKERS = 8            # concurrent sample calls per checkpoint
+PROMPT_MAX_LEN = 1024  # same cap as training
+EVAL_MAX_WORKERS = 8  # concurrent sample calls per checkpoint
 
 WANDB_PROJECT = "tinker-rl-lab-world-class"
 WANDB_ENTITY = "arvindcr4-pes-university"
@@ -125,11 +125,7 @@ def _as_float(x: Any) -> float | None:
 
 def _walk_for_runs(obj: Any, src: str, acc: list[RunRecord]) -> None:
     if isinstance(obj, dict):
-        ck = (
-            obj.get("checkpoint")
-            or obj.get("hf_checkpoint_url")
-            or obj.get("final_checkpoint")
-        )
+        ck = obj.get("checkpoint") or obj.get("hf_checkpoint_url") or obj.get("final_checkpoint")
         l10 = obj.get("last10_avg")
         if isinstance(ck, str) and CKPT_RE.match(ck) and _as_float(l10) is not None:
             acc.append(
@@ -189,7 +185,7 @@ def discover_top_checkpoints(
         if cur is None:
             best[r.checkpoint] = r
             continue
-        score = lambda rr: sum(v is not None for v in rr.__dict__.values())  # noqa: E731
+        score = lambda rr: sum(v is not None for v in rr.__dict__.values())
         if score(r) > score(cur):
             best[r.checkpoint] = r
     ranked = sorted(best.values(), key=lambda r: r.last10_avg, reverse=True)
@@ -259,6 +255,7 @@ def _wilson_ci(k: int, n: int, z: float = 1.96) -> tuple[float, float]:
 
 _TOKENIZER_CACHE: dict[str, Any] = {}
 import threading as _threading
+
 _TOKENIZER_LOCK = _threading.Lock()
 
 
@@ -294,7 +291,9 @@ def _get_tokenizer(model: str):
         try:
             tok = AutoTokenizer.from_pretrained(model, trust_remote_code=True)
         except Exception as e:
-            raise RuntimeError(f"Tokenizer identity unavailable for {model}; unverified fallback forbidden") from e
+            raise RuntimeError(
+                f"Tokenizer identity unavailable for {model}; unverified fallback forbidden"
+            ) from e
         _TOKENIZER_CACHE[model] = tok
     return tok
 
@@ -334,7 +333,9 @@ def evaluate_checkpoint(
         pid = build_prompt(question)
         for attempt in range(3):
             try:
-                resp = sc.sample(T.ModelInput.from_ints(pid), num_samples=1, sampling_params=sp).result()
+                resp = sc.sample(
+                    T.ModelInput.from_ints(pid), num_samples=1, sampling_params=sp
+                ).result()
                 break
             except Exception:
                 if attempt == 2:
@@ -357,9 +358,7 @@ def evaluate_checkpoint(
     tok_total = 0
 
     with ThreadPoolExecutor(max_workers=max_workers) as ex:
-        futs = {
-            ex.submit(score_one, i, q, a): i for i, (q, a) in enumerate(problems)
-        }
+        futs = {ex.submit(score_one, i, q, a): i for i, (q, a) in enumerate(problems)}
         done = 0
         for fut in as_completed(futs):
             i = futs[fut]
@@ -380,21 +379,31 @@ def evaluate_checkpoint(
             done += 1
             if done % 50 == 0 or done == len(problems):
                 print(
-                    f"       progress {done}/{len(problems)}  "
-                    f"acc={correct/done:.3f}",
+                    f"       progress {done}/{len(problems)}  acc={correct / done:.3f}",
                     flush=True,
                 )
 
     elapsed = time.time() - t0
     n = len(problems)
     if not n or any(p.get("error") for p in per_problem):
-        return {"status": "incomplete", "checkpoint": rec.checkpoint, "heldout_n": n,
-                "model": model, "model_short": rec.model_short, "seed": rec.seed,
-                "training_last10_avg": rec.last10_avg, "run_id": rec.run_id,
-                "experiment_id": rec.experiment_id, "source_file": rec.source_file,
-                "wandb_run_url": rec.wandb_run_url,
-                "heldout_accuracy": None, "heldout_correct": None, "per_problem": per_problem,
-                "evidence_error": "fixed_evaluation_incomplete", "claim_eligible": False}
+        return {
+            "status": "incomplete",
+            "checkpoint": rec.checkpoint,
+            "heldout_n": n,
+            "model": model,
+            "model_short": rec.model_short,
+            "seed": rec.seed,
+            "training_last10_avg": rec.last10_avg,
+            "run_id": rec.run_id,
+            "experiment_id": rec.experiment_id,
+            "source_file": rec.source_file,
+            "wandb_run_url": rec.wandb_run_url,
+            "heldout_accuracy": None,
+            "heldout_correct": None,
+            "per_problem": per_problem,
+            "evidence_error": "fixed_evaluation_incomplete",
+            "claim_eligible": False,
+        }
     acc = correct / n
     lo, hi = _wilson_ci(correct, n)
 
@@ -418,9 +427,7 @@ def evaluate_checkpoint(
         per_problem=(
             per_problem
             if keep_traces
-            else [
-                {k: v for k, v in p.items() if k != "completion"} for p in per_problem
-            ]
+            else [{k: v for k, v in p.items() if k != "completion"} for p in per_problem]
         ),
     )
     print(
@@ -428,7 +435,11 @@ def evaluate_checkpoint(
         f"({correct}/{n}) CI95=[{lo:.3f},{hi:.3f}]  {elapsed:.0f}s",
         flush=True,
     )
-    return {**asdict(result), "status": "completed", "scorer_id": "gsm8k-final-visible-box-or-number-v3"}
+    return {
+        **asdict(result),
+        "status": "completed",
+        "scorer_id": "gsm8k-final-visible-box-or-number-v3",
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -444,9 +455,7 @@ except Exception:
 
 def _build_modal_secrets() -> list:
     """Attach Tinker (required) + W&B / HF (optional) Modal secrets."""
-    secrets: list = [
-        modal.Secret.from_name("tinker-api", required_keys=["TINKER_API_KEY"])
-    ]
+    secrets: list = [modal.Secret.from_name("tinker-api", required_keys=["TINKER_API_KEY"])]
     for name, keys in (("wandb", ["WANDB_API_KEY"]), ("huggingface", ["HF_TOKEN"])):
         try:
             secrets.append(modal.Secret.from_name(name, required_keys=keys))
@@ -485,10 +494,7 @@ def run(
             f"with last10_avg metadata (requested {k})."
         )
     for i, r in enumerate(top, 1):
-        print(
-            f"  {i:2d}. last10={r.last10_avg:.4f}  {r.model}  seed={r.seed}  "
-            f"{r.checkpoint}"
-        )
+        print(f"  {i:2d}. last10={r.last10_avg:.4f}  {r.model}  seed={r.seed}  {r.checkpoint}")
 
     if dry_run:
         print("[heldout] --dry-run: stopping before evaluation")
@@ -515,9 +521,7 @@ def run(
         # Local: run checkpoints in parallel threads. Sampling is I/O-bound
         # (it all happens on the Tinker service) so threads are plenty.
         max_ckpt_workers = int(os.environ.get("HELDOUT_CKPT_WORKERS", "10"))
-        per_ckpt_workers = int(
-            os.environ.get("HELDOUT_PROBLEM_WORKERS", str(EVAL_MAX_WORKERS))
-        )
+        per_ckpt_workers = int(os.environ.get("HELDOUT_PROBLEM_WORKERS", str(EVAL_MAX_WORKERS)))
         print(
             f"[heldout] local mode: {max_ckpt_workers} checkpoints × "
             f"{per_ckpt_workers} problem workers in parallel"
@@ -551,7 +555,13 @@ def run(
     heldout_rank = {
         id(r): i + 1
         for i, r in enumerate(
-            sorted(results, key=lambda r: (r.get("heldout_accuracy") if r.get("heldout_accuracy") is not None else -1), reverse=True)
+            sorted(
+                results,
+                key=lambda r: (
+                    r.get("heldout_accuracy") if r.get("heldout_accuracy") is not None else -1
+                ),
+                reverse=True,
+            )
         )
     }
     for r in results:
@@ -561,7 +571,11 @@ def run(
     # problems evaluated (``len(problems)``) rather than the requested ``n``
     # so the metadata stays consistent with per-checkpoint ``heldout_n`` when
     # ``load_heldout_gsm8k`` skips rows or ``n`` exceeds the available split.
-    valid = [r for r in results if r.get("status") == "completed" and r.get("heldout_accuracy") is not None]
+    valid = [
+        r
+        for r in results
+        if r.get("status") == "completed" and r.get("heldout_accuracy") is not None
+    ]
     actual_n = len(problems)
     summary = {
         "n_checkpoints": len(results),
@@ -571,9 +585,7 @@ def run(
         "mean_heldout_accuracy": (
             sum(r["heldout_accuracy"] for r in valid) / len(valid) if valid else 0.0
         ),
-        "best_heldout_accuracy": max(
-            (r["heldout_accuracy"] for r in valid), default=0.0
-        ),
+        "best_heldout_accuracy": max((r["heldout_accuracy"] for r in valid), default=0.0),
         "total_elapsed_seconds": time.time() - t0,
     }
 
@@ -613,6 +625,7 @@ def run(
     if os.environ.get("WANDB_API_KEY"):
         try:
             import wandb
+
             patch_wandb_vram()
 
             run = wandb.init(

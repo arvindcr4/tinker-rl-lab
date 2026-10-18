@@ -17,14 +17,27 @@ Output: experiments/tinker-runs/results/wave6_ablations.json
 
 import sys as _contract_sys
 from pathlib import Path as _ContractPath
+
 if len(_ContractPath(__file__).resolve().parents) > 3:
     _contract_sys.path.insert(0, str(_ContractPath(__file__).resolve().parents[3]))
-from platform_hybrid.experiments.framework_contracts import score_gsm8k, SCORER_ID, PROTOCOL_VERSION, aligned_datum, response_logprobs, group_zvf, stable_seed, experiment_spec, validate_resume, objective_identity, completion_receipt, require_completed, token_advantage, wave6_spec, wave6_failure_receipt, validated_sample_sequences
+from platform_hybrid.experiments.framework_contracts import (
+    score_gsm8k,
+    SCORER_ID,
+    aligned_datum,
+    response_logprobs,
+    stable_seed,
+    completion_receipt,
+    wave6_spec,
+    wave6_failure_receipt,
+    validated_sample_sequences,
+)
 
 
 import atexit
+
 try:
     from codecarbon import EmissionsTracker
+
     _tracker = EmissionsTracker()
     _tracker.start()
     atexit.register(_tracker.stop)
@@ -89,9 +102,7 @@ SYSTEM_PROMPT = (
     "You are a math assistant. Solve the problem step by step, "
     "then give your final numerical answer inside \\boxed{}."
 )
-QUESTION_SUFFIX = (
-    " Provide a numerical answer without units, written inside \\boxed{}."
-)
+QUESTION_SUFFIX = " Provide a numerical answer without units, written inside \\boxed{}."
 
 
 # ── Lazy GSM8K loader ───────────────────────────────────────────────
@@ -108,9 +119,7 @@ def _load_gsm8k():
     for row in ds:
         m = re.search(r"####\s*([\-\d,\.]+)", row["answer"])
         if m:
-            _GSM8K_CACHE.append(
-                (row["question"], m.group(1).replace(",", "").strip())
-            )
+            _GSM8K_CACHE.append((row["question"], m.group(1).replace(",", "").strip()))
     print(f"Loaded {len(_GSM8K_CACHE)} GSM8K examples", flush=True)
     return _GSM8K_CACHE
 
@@ -182,9 +191,7 @@ def run_one(exp):
 
         # Tinker client — LoRA rank varies here
         svc = tinker.ServiceClient()
-        tc = svc.create_lora_training_client(
-            base_model=MODEL, rank=rank, seed=seed
-        )
+        tc = svc.create_lora_training_client(base_model=MODEL, rank=rank, seed=seed)
         run_id = tc.model_id
 
         w0 = tc.save_weights_for_sampler(name="s0").result()
@@ -217,7 +224,10 @@ def run_one(exp):
                     pid = pid[:1024]
 
                 sp = T.SamplingParams(
-                    max_tokens=512, temperature=temperature, top_p=0.95, seed=stable_seed(seed, step, pid)
+                    max_tokens=512,
+                    temperature=temperature,
+                    top_p=0.95,
+                    seed=stable_seed(seed, step, pid),
                 )
                 resp = sc.sample(
                     T.ModelInput.from_ints(pid),
@@ -234,23 +244,17 @@ def run_one(exp):
                     for r in sequences
                 ]
                 mr = sum(rews) / len(rews)
-                sr = (
-                    sum((r - mr) ** 2 for r in rews) / len(rews)
-                ) ** 0.5 + 1e-8
-                if (
-                    sum((r - mr) ** 2 for r in rews) / max(len(rews), 1)
-                ) < 1e-10:
+                sr = (sum((r - mr) ** 2 for r in rews) / len(rews)) ** 0.5 + 1e-8
+                if (sum((r - mr) ** 2 for r in rews) / max(len(rews), 1)) < 1e-10:
                     zero_var_prompts += 1
                 advs = [(r - mr) / sr for r in rews]
                 batch_r.extend(rews)
 
-                for r_seq, adv in zip(sequences, advs):
+                for r_seq, adv in zip(sequences, advs, strict=False):
                     rid = list(r_seq.tokens)
                     fid = pid + rid
                     tid = fid[1:]
-                    all_data.append(
-                        aligned_datum(T, pid, rid)
-                    )
+                    all_data.append(aligned_datum(T, pid, rid))
                     all_advs.append(adv)
 
             if not all_data:
@@ -258,14 +262,8 @@ def run_one(exp):
 
             _advs.clear()
             _advs.extend(all_advs)
-            fwdbwd = tc.forward_backward_custom(
-                data=all_data, loss_fn=loss_fn
-            ).result()
-            tc.optim_step(
-                T.AdamParams(
-                    learning_rate=lr, beta1=0.9, beta2=0.95, eps=1e-8
-                )
-            ).result()
+            fwdbwd = tc.forward_backward_custom(data=all_data, loss_fn=loss_fn).result()
+            tc.optim_step(T.AdamParams(learning_rate=lr, beta1=0.9, beta2=0.95, eps=1e-8)).result()
 
             avg = sum(batch_r) / len(batch_r) if batch_r else 0.0
             step_rewards.append(avg)
@@ -289,7 +287,7 @@ def run_one(exp):
 
             if step % 5 == 0:
                 print(
-                    f"  [{tag}] step {step+1}/{steps} reward={avg:.3f}",
+                    f"  [{tag}] step {step + 1}/{steps} reward={avg:.3f}",
                     flush=True,
                 )
 
@@ -308,24 +306,14 @@ def run_one(exp):
 
             # Refresh sampler every 10 steps (as campaign_v2)
             if True:  # v3: sampler refresh after every update
-                ckpt = tc.save_weights_for_sampler(
-                    name=f"s{step+1}"
-                ).result()
+                ckpt = tc.save_weights_for_sampler(name=f"s{step + 1}").result()
                 sc = tc.create_sampling_client(model_path=ckpt.path)
 
         final_ckpt = tc.save_weights_for_sampler(name="final").result()
 
         peak = max(step_rewards) if step_rewards else 0.0
-        last10 = (
-            sum(step_rewards[-10:]) / min(10, len(step_rewards))
-            if step_rewards
-            else 0.0
-        )
-        first5 = (
-            sum(step_rewards[:5]) / min(5, len(step_rewards))
-            if step_rewards
-            else 0.0
-        )
+        last10 = sum(step_rewards[-10:]) / min(10, len(step_rewards)) if step_rewards else 0.0
+        first5 = sum(step_rewards[:5]) / min(5, len(step_rewards)) if step_rewards else 0.0
         zero_reward_pct = (
             100.0 * sum(1 for r in step_rewards if r == 0.0) / len(step_rewards)
             if step_rewards
@@ -333,11 +321,7 @@ def run_one(exp):
         )
         zero_loss_pct = (
             100.0
-            * sum(
-                1
-                for s in step_log
-                if s["loss"] is not None and abs(s["loss"]) < 1e-9
-            )
+            * sum(1 for s in step_log if s["loss"] is not None and abs(s["loss"]) < 1e-9)
             / max(len(step_log), 1)
         )
 
@@ -404,8 +388,12 @@ def run_one(exp):
             pass
         return {
             **wave6_failure_receipt(
-                {**exp, "steps": steps}, e, successful_updates=len(step_rewards),
-                run_id=run_id, reward_trace=step_rewards, step_log=step_log,
+                {**exp, "steps": steps},
+                e,
+                successful_updates=len(step_rewards),
+                run_id=run_id,
+                reward_trace=step_rewards,
+                step_log=step_log,
             ),
             "logging_errors": logging_errors,
             "tag": tag,
@@ -486,10 +474,10 @@ def build_experiments():
 def launch(max_parallel=6):
     exps = build_experiments()
     print(
-        f"\n{'='*70}\n"
+        f"\n{'=' * 70}\n"
         f"WAVE 6 — Qwen3-8B Sensitivity Ablations ({len(exps)} experiments)\n"
         f"Max parallel: {max_parallel}\n"
-        f"{'='*70}\n",
+        f"{'=' * 70}\n",
         flush=True,
     )
 
@@ -590,21 +578,14 @@ def _save(results, exps, final=False):
             },
             "updated_at": datetime.now(timezone.utc).isoformat(),
             "total": len(exps),
-            "completed": sum(
-                1 for r in results if r.get("status") == "completed"
-            ),
-            "failed": sum(
-                1 for r in results if r.get("status") in ("failed", "crashed")
-            ),
+            "completed": sum(1 for r in results if r.get("status") == "completed"),
+            "failed": sum(1 for r in results if r.get("status") in ("failed", "crashed")),
             "finalized": final,
             "wandb_project": (
-                "https://wandb.ai/arvindcr4-pes-university/"
-                "tinker-rl-lab-world-class"
+                "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-world-class"
             ),
         },
-        "temperature_sweep": _collect(
-            "temperature", "temperature", [0.2, 0.4, 0.6, 0.8, 1.0]
-        ),
+        "temperature_sweep": _collect("temperature", "temperature", [0.2, 0.4, 0.6, 0.8, 1.0]),
         "rank_sweep": _collect("rank", "rank", [4, 8, 16, 32, 64]),
         "batch_sweep": _collect("batch", "batch", [1, 2, 4, 8]),
         "runs": results,

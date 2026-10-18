@@ -2,16 +2,26 @@
 """Review17-v2 descriptive measurement inventory.
 Scientific quality is unassessed: significance counts, duplicate measurements,
 and panel counts cannot establish independent replication or claim agreement."""
-import json, os, sys, statistics
+
+import json, sys, statistics
 from pathlib import Path
 
 sys.path.append(str(Path(__file__).resolve().parents[1]))
 from _paths import REPO_ROOT
 from review17_contract import validate_interval
+
 ROOT = REPO_ROOT
 ENTRIES = ROOT / "platform_hybrid/registry" / "entries"
-OUT_TSV = ROOT / "platform_hybrid/experiments/results/p5p8/review17_v2" / "p6_iter126_measured_evidence_tier.tsv"
-OUT_JSON = ROOT / "platform_hybrid/experiments/results/p5p8/review17_v2" / "p6_iter126_measured_evidence_tier.json"
+OUT_TSV = (
+    ROOT
+    / "platform_hybrid/experiments/results/p5p8/review17_v2"
+    / "p6_iter126_measured_evidence_tier.tsv"
+)
+OUT_JSON = (
+    ROOT
+    / "platform_hybrid/experiments/results/p5p8/review17_v2"
+    / "p6_iter126_measured_evidence_tier.json"
+)
 
 
 def ci_overlaps_zero(row):
@@ -58,24 +68,26 @@ def audit():
         ns = [r.get("n") for r in measured if isinstance(r.get("n"), (int, float))]
         med_n = round(statistics.median(ns), 1) if ns else None
         t = tier(n_sig, n_total, len(panels))
-        rows.append({
-            "delta_id": d.get("id", fp.stem),
-            "name": d.get("name", ""),
-            "base": d.get("base", ""),
-            "n_measured_rows": n_total,
-            "n_significant_rows": n_sig,
-            "pct_significant": pct_sig,
-            "median_ci_width": med_w,
-            "n_zero_ci": n_zero,
-            "direction_spread": spread,
-            "n_panels": len(panels),
-            "panels": ";".join(panels),
-            "n_metrics": len(metrics),
-            "metrics": ";".join(metrics),
-            "median_n_per_row": med_n,
-            "evidence_tier": t,
-            "citation_arxiv": (d.get("citation") or {}).get("arxiv", ""),
-        })
+        rows.append(
+            {
+                "delta_id": d.get("id", fp.stem),
+                "name": d.get("name", ""),
+                "base": d.get("base", ""),
+                "n_measured_rows": n_total,
+                "n_significant_rows": n_sig,
+                "pct_significant": pct_sig,
+                "median_ci_width": med_w,
+                "n_zero_ci": n_zero,
+                "direction_spread": spread,
+                "n_panels": len(panels),
+                "panels": ";".join(panels),
+                "n_metrics": len(metrics),
+                "metrics": ";".join(metrics),
+                "median_n_per_row": med_n,
+                "evidence_tier": t,
+                "citation_arxiv": (d.get("citation") or {}).get("arxiv", ""),
+            }
+        )
 
     rows.sort(key=lambda r: r["delta_id"])
     if not rows:
@@ -84,10 +96,22 @@ def audit():
     # Write TSV
     OUT_TSV.parent.mkdir(parents=True, exist_ok=True)
     cols = [
-        "delta_id", "name", "base", "n_measured_rows", "n_significant_rows",
-        "pct_significant", "median_ci_width", "n_zero_ci", "direction_spread",
-        "n_panels", "panels", "n_metrics", "metrics", "median_n_per_row",
-        "evidence_tier", "citation_arxiv",
+        "delta_id",
+        "name",
+        "base",
+        "n_measured_rows",
+        "n_significant_rows",
+        "pct_significant",
+        "median_ci_width",
+        "n_zero_ci",
+        "direction_spread",
+        "n_panels",
+        "panels",
+        "n_metrics",
+        "metrics",
+        "median_n_per_row",
+        "evidence_tier",
+        "citation_arxiv",
     ]
     with open(OUT_TSV, "w") as f:
         f.write("\t".join(cols) + "\n")
@@ -110,11 +134,21 @@ def audit():
         "d_tier_ids": [r["delta_id"] for r in rows if r["evidence_tier"] == "D"],
         "a_tier_ids": [r["delta_id"] for r in rows if r["evidence_tier"] == "A"],
         "entries_first10_by_id": [
-            {"delta_id": r["delta_id"], "tier": r["evidence_tier"], "n_sig": r["n_significant_rows"], "n_total": r["n_measured_rows"]}
+            {
+                "delta_id": r["delta_id"],
+                "tier": r["evidence_tier"],
+                "n_sig": r["n_significant_rows"],
+                "n_total": r["n_measured_rows"],
+            }
             for r in rows[:10]
         ],
         "entries_last5_by_id": [
-            {"delta_id": r["delta_id"], "tier": r["evidence_tier"], "n_sig": r["n_significant_rows"], "n_total": r["n_measured_rows"]}
+            {
+                "delta_id": r["delta_id"],
+                "tier": r["evidence_tier"],
+                "n_sig": r["n_significant_rows"],
+                "n_total": r["n_measured_rows"],
+            }
             for r in rows[-5:]
         ],
     }
@@ -131,7 +165,9 @@ def audit():
     print("index | status | delta_id                | n_sig/n_total | n_panels")
     print("-----+------+-------------------------+---------------+---------")
     for i, r in enumerate(rows, 1):
-        print(f"{i:4d} | {r['evidence_tier']:4s} | {r['delta_id']:23s} | {r['n_significant_rows']:2d}/{r['n_measured_rows']:2d} ({r['pct_significant']:.0f}%) | {r['n_panels']}")
+        print(
+            f"{i:4d} | {r['evidence_tier']:4s} | {r['delta_id']:23s} | {r['n_significant_rows']:2d}/{r['n_measured_rows']:2d} ({r['pct_significant']:.0f}%) | {r['n_panels']}"
+        )
 
 
 if __name__ == "__main__":

@@ -14,9 +14,7 @@ from collections.abc import Iterable, Mapping, Sequence
 from typing import Any
 
 REQUIRED_CHECKPOINT_KINDS: tuple[str, ...] = ("initial", "periodic", "final")
-_CHECKPOINT_KIND_ORDER = {
-    kind: index for index, kind in enumerate(REQUIRED_CHECKPOINT_KINDS)
-}
+_CHECKPOINT_KIND_ORDER = {kind: index for index, kind in enumerate(REQUIRED_CHECKPOINT_KINDS)}
 SCHEMA_VERSION = "pavlov-checkpoint-receipt-index-v1"
 
 _PLACEHOLDER_VALUES = frozenset(
@@ -108,7 +106,9 @@ def compute_checkpoint_content_digest(checkpoint: Mapping[str, Any]) -> str:
 def _canonical_checkpoint_payload(checkpoint: Mapping[str, Any]) -> dict[str, Any]:
     return {
         "repo": _first_value(checkpoint, ("repo", "repo_url", "repository", "huggingface_repo")),
-        "revision": str(_first_value(checkpoint, ("revision", "commit", "sha", "hash")).strip().lower())
+        "revision": str(
+            _first_value(checkpoint, ("revision", "commit", "sha", "hash")).strip().lower()
+        )
         if isinstance(_first_value(checkpoint, ("revision", "commit", "sha", "hash")), str)
         else _first_value(checkpoint, ("revision", "commit", "sha", "hash")),
         "kind": str(_first_value(checkpoint, ("kind", "stage"))).strip().lower()
@@ -139,13 +139,9 @@ def _validate_wandb_identity(
         errors.append(f"{record_prefix}.wandb_run_identity must be an object")
         return None
     if receipt.get("online") is not True:
-        errors.append(
-            f"{record_prefix}.wandb_run_identity.online must be boolean true"
-        )
+        errors.append(f"{record_prefix}.wandb_run_identity.online must be boolean true")
     if receipt.get("acknowledged") is not True:
-        errors.append(
-            f"{record_prefix}.wandb_run_identity.acknowledged must be boolean true"
-        )
+        errors.append(f"{record_prefix}.wandb_run_identity.acknowledged must be boolean true")
     run_id = _first_value(receipt, ("run_id", "id"))
     if not _nonempty_text(run_id):
         errors.append(f"{record_prefix}.wandb_run_identity.run_id must be a non-placeholder string")
@@ -167,9 +163,7 @@ def _validate_wandb_identity(
         )
     else:
         if run_id is not None and str(run_id) != match.group("run_id"):
-            errors.append(
-                f"{record_prefix}.wandb_run_identity.run_id must match run_url segment"
-            )
+            errors.append(f"{record_prefix}.wandb_run_identity.run_id must match run_url segment")
     state = _first_value(receipt, ("state", "status"))
     if not _nonempty_text(state) or str(state).strip().lower() not in WANDB_TERMINAL_STATES:
         errors.append(
@@ -177,9 +171,7 @@ def _validate_wandb_identity(
         )
 
     if expected_run_id is not None and run_id is not None and run_id != expected_run_id:
-        errors.append(
-            f"{record_prefix}.wandb_run_identity.run_id does not match expected run_id"
-        )
+        errors.append(f"{record_prefix}.wandb_run_identity.run_id does not match expected run_id")
     return str(run_id).strip() if run_id is not None else None
 
 
@@ -202,9 +194,7 @@ def _validate_tinker_identity(
                 f"{record_prefix}.tinker_run_identity.state/status must be one of {sorted(TINKER_TERMINAL_STATES)}"
             )
     if expected_run_id is not None and run_id is not None and run_id != expected_run_id:
-        errors.append(
-            f"{record_prefix}.tinker_run_identity.run_id does not match expected run_id"
-        )
+        errors.append(f"{record_prefix}.tinker_run_identity.run_id does not match expected run_id")
     return str(run_id).strip() if run_id is not None else None
 
 
@@ -243,9 +233,7 @@ def _validate_checkpoint(
 
     checkpoint_url = _first_value(checkpoint, ("url", "checkpoint_url", "repo_revision_url"))
     if not _nonempty_text(checkpoint_url):
-        errors.append(
-            f"{record_prefix}{checkpoint_prefix}.url/checkpoint_url must be non-empty"
-        )
+        errors.append(f"{record_prefix}{checkpoint_prefix}.url/checkpoint_url must be non-empty")
         return None
     if not isinstance(checkpoint_url, str):
         errors.append(f"{record_prefix}{checkpoint_prefix}.url must be HTTPS text")
@@ -262,17 +250,12 @@ def _validate_checkpoint(
             )
         return None
     if commit.lower() != commit_match.group("revision").lower():
-        errors.append(
-            f"{record_prefix}{checkpoint_prefix}.url commit must match revision/commit"
-        )
+        errors.append(f"{record_prefix}{checkpoint_prefix}.url commit must match revision/commit")
         return None
-    if (
-        commit_match.group("owner") != repo_match.group("owner")
-        or commit_match.group("repo") != repo_match.group("repo")
-    ):
-        errors.append(
-            f"{record_prefix}{checkpoint_prefix}.url repo must match repo/repo_url"
-        )
+    if commit_match.group("owner") != repo_match.group("owner") or commit_match.group(
+        "repo"
+    ) != repo_match.group("repo"):
+        errors.append(f"{record_prefix}{checkpoint_prefix}.url repo must match repo/repo_url")
         return None
 
     kind = _first_value(checkpoint, ("kind", "stage"))
@@ -297,9 +280,7 @@ def _validate_checkpoint(
 
     safe_public_artifact = checkpoint.get("safe_public_artifact")
     if not isinstance(safe_public_artifact, bool):
-        errors.append(
-            f"{record_prefix}{checkpoint_prefix}.safe_public_artifact must be a boolean"
-        )
+        errors.append(f"{record_prefix}{checkpoint_prefix}.safe_public_artifact must be a boolean")
         return None
     if visibility == "public" and safe_public_artifact is not True:
         errors.append(
@@ -387,9 +368,7 @@ def _validate_checkpoint_records(
 
         if "run_id" in record and _nonempty_text(record["run_id"]):
             if require_run_id is not None and str(record["run_id"]).strip() != require_run_id:
-                errors.append(
-                    f"{record_prefix}.run_id does not match required run_id"
-                )
+                errors.append(f"{record_prefix}.run_id does not match required run_id")
 
         record_source = _normalise_record(record_index, record)
         wandb_identity = _validate_wandb_identity(
@@ -409,9 +388,7 @@ def _validate_checkpoint_records(
             and observed_run_ids["wandb"] is not None
             and observed_run_ids["wandb"] != wandb_identity
         ):
-            errors.append(
-                f"{record_prefix}.wandb_run_identity.run_id drifts from previous records"
-            )
+            errors.append(f"{record_prefix}.wandb_run_identity.run_id drifts from previous records")
         if (
             tinker_identity is not None
             and observed_run_ids["tinker"] is not None
@@ -430,9 +407,7 @@ def _validate_checkpoint_records(
             and tinker_identity is not None
             and wandb_identity != tinker_identity
         ):
-            errors.append(
-                f"{record_prefix} has mismatched wandb and tinker run_id values"
-            )
+            errors.append(f"{record_prefix} has mismatched wandb and tinker run_id values")
         if wandb_identity is None and tinker_identity is None:
             # cannot infer run identity for this record.
             pass
@@ -473,9 +448,7 @@ def _validate_checkpoint_records(
         errors.append("run-id drift between W&B and Tinker receipts")
     if kinds_seen != set(REQUIRED_CHECKPOINT_KINDS):
         missing = sorted(set(REQUIRED_CHECKPOINT_KINDS) - kinds_seen)
-        errors.append(
-            f"checkpoint coverage is incomplete; missing kinds: {missing}"
-        )
+        errors.append(f"checkpoint coverage is incomplete; missing kinds: {missing}")
     if require_run_id is not None:
         if observed_run_ids["wandb"] is not None and observed_run_ids["wandb"] != require_run_id:
             errors.append("records contain unexpected wandb run_id")
@@ -531,9 +504,7 @@ def index_checkpoint_receipts(
         "run_ids": {"wandb": observed["wandb"], "tinker": observed["tinker"]},
         "checkpoint_count": len(ordered),
         "kind_coverage": [
-            kind
-            for kind in REQUIRED_CHECKPOINT_KINDS
-            if any(cp["kind"] == kind for cp in ordered)
+            kind for kind in REQUIRED_CHECKPOINT_KINDS if any(cp["kind"] == kind for cp in ordered)
         ],
         "checkpoints": ordered,
     }

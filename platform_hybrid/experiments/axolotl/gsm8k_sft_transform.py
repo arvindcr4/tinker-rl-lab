@@ -24,10 +24,7 @@ def gsm8k_sft_transform(cfg, *args, **kwargs):
         formatted = f"{reasoning}\n\\boxed{{{numeric_answer}}}"
 
         return {
-            "text": (
-                f"Question: {question}{question_suffix}\n\n"
-                f"Answer: {formatted}"
-            ),
+            "text": (f"Question: {question}{question_suffix}\n\nAnswer: {formatted}"),
         }
 
     return transform_fn, {"remove_columns": ["question", "answer"]}

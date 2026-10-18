@@ -121,8 +121,10 @@ def main() -> int:
 
     print("=" * 78)
     print("ZVF triage quickstart -- synthetic GRPO rollouts (numpy only)")
-    print(f"  groups/batch={args.groups}  rollouts/group(K)={args.K}  "
-          f"steps={args.steps}  seed={args.seed}")
+    print(
+        f"  groups/batch={args.groups}  rollouts/group(K)={args.K}  "
+        f"steps={args.steps}  seed={args.seed}"
+    )
     print("=" * 78)
     header = (
         f"{'step':>4} {'zvf':>6} {'roll':>6} {'r_bar':>6} "
@@ -137,21 +139,17 @@ def main() -> int:
     g_changes: List[str] = []
     stop_step = None
 
-    for t, solve_probs in enumerate(schedule):
+    for _t, solve_probs in enumerate(schedule):
         rewards, group_ids = simulate_step(rng, solve_probs, args.K)
         d = cb.on_step(rewards, group_ids)
 
         flags = []
         if prev_regime is not None and d.regime is not prev_regime:
             flags.append("REGIME-CHANGE")
-            regime_transitions.append(
-                f"  step {d.step}: {prev_regime.value} -> {d.regime.value}"
-            )
+            regime_transitions.append(f"  step {d.step}: {prev_regime.value} -> {d.regime.value}")
         if prev_G is not None and d.group_size != prev_G:
             flags.append(f"G {prev_G}->{d.group_size}")
-            g_changes.append(
-                f"  step {d.step}: G {prev_G} -> {d.group_size} (zvf={d.zvf:.2f})"
-            )
+            g_changes.append(f"  step {d.step}: G {prev_G} -> {d.group_size} (zvf={d.zvf:.2f})")
         if d.dropped_prompts:
             flags.append(f"DROP {d.dropped_prompts}")
         if d.auto_stop:
@@ -193,8 +191,10 @@ def main() -> int:
     print(f"Dropped prompts (cumulative): {cb.dropped_prompts}")
 
     if stop_step is not None:
-        print(f"Auto-stop fired at step {stop_step} "
-              f"(global ZVF == 1 for stop_k={cb.controller.stop_k} consecutive steps).")
+        print(
+            f"Auto-stop fired at step {stop_step} "
+            f"(global ZVF == 1 for stop_k={cb.controller.stop_k} consecutive steps)."
+        )
     else:
         print("Auto-stop did NOT fire within the simulated horizon.")
 
@@ -210,8 +210,7 @@ def main() -> int:
     # Sanity assertions so the example doubles as a smoke test: the run must
     # start healthy (low ZVF, exploitable contrast) and end in a fired auto-stop.
     assert panel.history[0]["zvf"] < 0.85, "run should start with usable contrast"
-    assert cb.decisions[0].regime is Regime.EXPLOITABLE_CONTRAST, \
-        "first step should be healthy"
+    assert cb.decisions[0].regime is Regime.EXPLOITABLE_CONTRAST, "first step should be healthy"
     assert stop_step is not None, "drifting run should trigger auto-stop"
     print("\nOK: started healthy (low ZVF) and ended in auto-stop. Demo complete.")
     return 0

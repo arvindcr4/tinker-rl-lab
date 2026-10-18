@@ -36,6 +36,7 @@ Outputs:
   platform_hybrid/experiments/results/scaling_law_iter109b_stability.tsv
   platform_hybrid/experiments/results/scaling_law_iter109b_meta.json
 """
+
 from __future__ import annotations
 import json
 import math
@@ -54,7 +55,6 @@ N_BOOT = 5000
 
 # Re-import the iter109 anchors + fits from the meta.json (deterministic;
 # we don't re-run the slow curve_fit bootstrap here).
-
 
 
 def ols(x, y):
@@ -90,15 +90,22 @@ def main() -> None:
     fam = []
     rmse = []
     for a in anchors:
-        if a.get("valid", False) and a["lambda_3p"] > 0 and np.isfinite([a["lambda_3p"], a["R_inf"], a["rmse"]]).all():
+        if (
+            a.get("valid", False)
+            and a["lambda_3p"] > 0
+            and np.isfinite([a["lambda_3p"], a["R_inf"], a["rmse"]]).all()
+        ):
             names.append(a["name"])
             log_n.append(math.log10(MODELS_PARAMS_B[a["name"]]))
             log_lam.append(math.log10(a["lambda_3p"]))
             rinf.append(a["R_inf"])
             fam.append(MODELS_FAMILY[a["name"]])
             rmse.append(a["rmse"])
-    log_n = np.asarray(log_n); log_lam = np.asarray(log_lam)
-    rinf = np.asarray(rinf); fam = np.asarray(fam); rmse = np.asarray(rmse)
+    log_n = np.asarray(log_n)
+    log_lam = np.asarray(log_lam)
+    rinf = np.asarray(rinf)
+    fam = np.asarray(fam)
+    rmse = np.asarray(rmse)
 
     # ---- (E) Permutation test -------------------------------------------
     rng = np.random.default_rng(SEED)
@@ -133,40 +140,87 @@ def main() -> None:
     p_lam_save = p_two
     z_lam_save = z_score
 
-    cols_e = ["regression", "n", "observed_slope", "null_mean",
-              "null_sd", "z_score", "p_two_sided", "p_positive", "p_negative",
-              "n_perm", "rejects_H0_at_0.05"]
+    cols_e = [
+        "regression",
+        "n",
+        "observed_slope",
+        "null_mean",
+        "null_sd",
+        "z_score",
+        "p_two_sided",
+        "p_positive",
+        "p_negative",
+        "n_perm",
+        "rejects_H0_at_0.05",
+    ]
     rows_e = [
-        ["log10(lambda) ~ log10(N)", len(log_n),
-         round(b_obs, 4), round(null_mean, 4), round(null_sd, 4),
-         round(z_score, 3), round(p_two, 4), round(p_pos, 4), round(p_neg, 4),
-         N_PERM, int(p_two < 0.05)],
-        ["R_inf ~ log10(N)", len(log_n),
-         round(b_ri_obs, 4), round(perm_ri_slopes.mean(), 4),
-         round(perm_ri_slopes.std(), 4), round(z_ri, 3),
-         round(p_ri_two, 4),
-         round(permutation_pvalue(perm_ri_slopes, b_ri_obs, "positive"), 4),
-         round(permutation_pvalue(perm_ri_slopes, b_ri_obs, "negative"), 4),
-         N_PERM, int(p_ri_two < 0.05)],
+        [
+            "log10(lambda) ~ log10(N)",
+            len(log_n),
+            round(b_obs, 4),
+            round(null_mean, 4),
+            round(null_sd, 4),
+            round(z_score, 3),
+            round(p_two, 4),
+            round(p_pos, 4),
+            round(p_neg, 4),
+            N_PERM,
+            int(p_two < 0.05),
+        ],
+        [
+            "R_inf ~ log10(N)",
+            len(log_n),
+            round(b_ri_obs, 4),
+            round(perm_ri_slopes.mean(), 4),
+            round(perm_ri_slopes.std(), 4),
+            round(z_ri, 3),
+            round(p_ri_two, 4),
+            round(permutation_pvalue(perm_ri_slopes, b_ri_obs, "positive"), 4),
+            round(permutation_pvalue(perm_ri_slopes, b_ri_obs, "negative"), 4),
+            N_PERM,
+            int(p_ri_two < 0.05),
+        ],
     ]
     _write_tsv(RES / "scaling_law_iter109b_permtest.tsv", cols_e, rows_e)
 
     # ---- (F) Family-stratified lambda-vs-N ------------------------------
     fams_unique = sorted(set(fam.tolist()))
-    cols_f = ["family", "n", "intercept", "slope_per_log10N", "se_slope",
-              "boot_slope_mean", "boot_slope_lo", "boot_slope_hi",
-              "boot_slope_excludes_0", "perm_p_two_sided",
-              "anchors"]
+    cols_f = [
+        "family",
+        "n",
+        "intercept",
+        "slope_per_log10N",
+        "se_slope",
+        "boot_slope_mean",
+        "boot_slope_lo",
+        "boot_slope_hi",
+        "boot_slope_excludes_0",
+        "perm_p_two_sided",
+        "anchors",
+    ]
     rows_f = []
     rng2 = np.random.default_rng(SEED + 1)
     for f in fams_unique:
         mask = fam == f
         if mask.sum() < 3 or np.ptp(log_n[mask]) == 0:
-            rows_f.append([f, int(mask.sum()), "nan", "nan", "nan",
-                           "nan", "nan", "nan", "nan", "nan",
-                           ";".join(np.asarray(names)[mask].tolist())])
+            rows_f.append(
+                [
+                    f,
+                    int(mask.sum()),
+                    "nan",
+                    "nan",
+                    "nan",
+                    "nan",
+                    "nan",
+                    "nan",
+                    "nan",
+                    "nan",
+                    ";".join(np.asarray(names)[mask].tolist()),
+                ]
+            )
             continue
-        ln = log_n[mask]; ll = log_lam[mask]
+        ln = log_n[mask]
+        ll = log_lam[mask]
         a_f, b_f, se_f = ols(ln, ll)
         # Bootstrap CI on slope
         bs = []
@@ -184,14 +238,21 @@ def main() -> None:
             perm.append(bb)
         perm = np.asarray(perm)
         p_two = permutation_pvalue(perm, b_f)
-        rows_f.append([
-            f, int(mask.sum()), round(a_f, 4), round(b_f, 4), round(se_f, 4),
-            round(bs.mean(), 4), round(float(np.percentile(bs, 2.5)), 4),
-            round(float(np.percentile(bs, 97.5)), 4),
-            int(not (np.percentile(bs, 2.5) <= 0 <= np.percentile(bs, 97.5))),
-            round(p_two, 4),
-            ";".join(np.asarray(names)[mask].tolist()),
-        ])
+        rows_f.append(
+            [
+                f,
+                int(mask.sum()),
+                round(a_f, 4),
+                round(b_f, 4),
+                round(se_f, 4),
+                round(bs.mean(), 4),
+                round(float(np.percentile(bs, 2.5)), 4),
+                round(float(np.percentile(bs, 97.5)), 4),
+                int(not (np.percentile(bs, 2.5) <= 0 <= np.percentile(bs, 97.5))),
+                round(p_two, 4),
+                ";".join(np.asarray(names)[mask].tolist()),
+            ]
+        )
     _write_tsv(RES / "scaling_law_iter109b_family.tsv", cols_f, rows_f)
 
     # ---- (G) Lambda-stability diagnostic --------------------------------
@@ -199,25 +260,43 @@ def main() -> None:
     #   CV = (hi - lo) / (2 * |median|)
     # Anchors with CV > 1.0 are lambda-unidentifiable (CI spans >2 orders
     # of magnitude on a log10 scale).
-    cols_g = ["model", "params_B", "family", "lambda_3p", "lambda_lo",
-              "lambda_hi", "log10_CI_width", "lambda_CV_proxy",
-              "lambda_unidentifiable"]
+    cols_g = [
+        "model",
+        "params_B",
+        "family",
+        "lambda_3p",
+        "lambda_lo",
+        "lambda_hi",
+        "log10_CI_width",
+        "lambda_CV_proxy",
+        "lambda_unidentifiable",
+    ]
     rows_g = []
     for a in anchors:
-        lo = a["lambda_lo"]; hi = a["lambda_hi"]; lam = a["lambda_3p"]
+        lo = a["lambda_lo"]
+        hi = a["lambda_hi"]
+        lam = a["lambda_3p"]
         if lam <= 0 or lo <= 0 or hi <= 0 or math.isnan(lam):
-            cv = float("nan"); width = float("nan"); unident = True
+            cv = float("nan")
+            width = float("nan")
+            unident = True
         else:
             width = math.log10(hi) - math.log10(lo)
             cv = (hi - lo) / (2.0 * abs(lam))
             unident = bool(cv > 1.0)
-        rows_g.append([
-            a["name"], MODELS_PARAMS_B[a["name"]], MODELS_FAMILY[a["name"]],
-            round(lam, 4), round(lo, 4), round(hi, 4),
-            round(width, 4) if not math.isnan(width) else "nan",
-            round(cv, 4) if not math.isnan(cv) else "nan",
-            int(unident),
-        ])
+        rows_g.append(
+            [
+                a["name"],
+                MODELS_PARAMS_B[a["name"]],
+                MODELS_FAMILY[a["name"]],
+                round(lam, 4),
+                round(lo, 4),
+                round(hi, 4),
+                round(width, 4) if not math.isnan(width) else "nan",
+                round(cv, 4) if not math.isnan(cv) else "nan",
+                int(unident),
+            ]
+        )
     _write_tsv(RES / "scaling_law_iter109b_stability.tsv", cols_g, rows_g)
 
     # ---- meta ----------------------------------------------------------
@@ -258,33 +337,49 @@ def main() -> None:
     (RES / "scaling_law_iter109b_meta.json").write_text(json.dumps(meta, indent=2))
     print(f"wrote {RES / 'scaling_law_iter109b_meta.json'}")
 
-    print(f"Permutation log10(lambda)~log10(N): observed slope={b_obs:+.4f}, "
-          f"null mean={null_mean:+.4f}, null sd={null_sd:.4f}, "
-          f"z={z_lam_save:+.3f}, p_two={p_lam_save:.4f}, reject_H0={p_lam_save<0.05}")
-    print(f"Permutation R_inf~log10(N):        observed slope={b_ri_obs:+.4f}, "
-          f"p_two={p_ri_two:.4f}, reject_H0={p_ri_two<0.05}")
+    print(
+        f"Permutation log10(lambda)~log10(N): observed slope={b_obs:+.4f}, "
+        f"null mean={null_mean:+.4f}, null sd={null_sd:.4f}, "
+        f"z={z_lam_save:+.3f}, p_two={p_lam_save:.4f}, reject_H0={p_lam_save < 0.05}"
+    )
+    print(
+        f"Permutation R_inf~log10(N):        observed slope={b_ri_obs:+.4f}, "
+        f"p_two={p_ri_two:.4f}, reject_H0={p_ri_two < 0.05}"
+    )
     print(f"Family-stratified lambda-vs-N:")
     for r in rows_f:
         print(f"  family={r[0]:8s} n={r[1]} slope={r[3]} perm_p={r[9]}")
-    print(f"Lambda-unidentifiable anchors (CV > 1.0): "
-          f"{[r[0] for r in rows_g if r[-1]==1]}")
+    print(f"Lambda-unidentifiable anchors (CV > 1.0): {[r[0] for r in rows_g if r[-1] == 1]}")
 
 
 # Reference anchor metadata -- mirror the iter109 MODELS dict.
 MODELS_PARAMS_B = {
-    "Qwen3.5-4B": 4.0, "Qwen3-8B": 8.0, "Llama-3.1-8B-Instruct": 8.0,
-    "Qwen3-32B": 32.0, "Qwen3.5-27B": 27.0, "gpt-oss-20B": 20.0,
-    "Qwen3-30B-MoE": 30.0, "Qwen3-30B-MoE-Inst": 30.0,
-    "DeepSeek-V3.1": 685.0, "Nemotron-120B": 120.0,
-    "Qwen3-235B-MoE": 235.0, "Kimi-K2-Thinking": 1000.0,
+    "Qwen3.5-4B": 4.0,
+    "Qwen3-8B": 8.0,
+    "Llama-3.1-8B-Instruct": 8.0,
+    "Qwen3-32B": 32.0,
+    "Qwen3.5-27B": 27.0,
+    "gpt-oss-20B": 20.0,
+    "Qwen3-30B-MoE": 30.0,
+    "Qwen3-30B-MoE-Inst": 30.0,
+    "DeepSeek-V3.1": 685.0,
+    "Nemotron-120B": 120.0,
+    "Qwen3-235B-MoE": 235.0,
+    "Kimi-K2-Thinking": 1000.0,
 }
 MODELS_FAMILY = {
-    "Qwen3.5-4B": "dense", "Qwen3-8B": "dense",
-    "Llama-3.1-8B-Instruct": "dense", "Qwen3-32B": "dense",
-    "Qwen3.5-27B": "dense", "gpt-oss-20B": "moe",
-    "Qwen3-30B-MoE": "moe", "Qwen3-30B-MoE-Inst": "moe",
-    "DeepSeek-V3.1": "moe", "Nemotron-120B": "dense",
-    "Qwen3-235B-MoE": "moe", "Kimi-K2-Thinking": "moe",
+    "Qwen3.5-4B": "dense",
+    "Qwen3-8B": "dense",
+    "Llama-3.1-8B-Instruct": "dense",
+    "Qwen3-32B": "dense",
+    "Qwen3.5-27B": "dense",
+    "gpt-oss-20B": "moe",
+    "Qwen3-30B-MoE": "moe",
+    "Qwen3-30B-MoE-Inst": "moe",
+    "DeepSeek-V3.1": "moe",
+    "Nemotron-120B": "dense",
+    "Qwen3-235B-MoE": "moe",
+    "Kimi-K2-Thinking": "moe",
 }
 
 

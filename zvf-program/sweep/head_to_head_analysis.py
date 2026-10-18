@@ -16,6 +16,7 @@ This script NEVER fabricates numbers. If a result JSON is missing or has
 status != "completed", it is dropped and counted. The output is
 deterministic given the same inputs.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -27,7 +28,9 @@ from collections import defaultdict
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
-DEFAULT_DIR = Path("/Users/arvind/Developer/tinker-rl-lab/platform_hybrid/experiments/tinker-runs/results/head_to_head")
+DEFAULT_DIR = Path(
+    "/Users/arvind/Developer/tinker-rl-lab/platform_hybrid/experiments/tinker-runs/results/head_to_head"
+)
 
 
 def load_results(results_dir: Path) -> list[dict]:
@@ -64,8 +67,13 @@ def per_arm_summary(runs: list[dict]) -> dict[str, dict]:
         zvfs = []
         for r in rs:
             zvfs.extend(s.get("zvf") for s in r.get("step_log", []))
-        missing = {k: sum(not _finite(r.get(k)) for r in rs) for k in ("last10_avg", "peak_reward", "zero_reward_pct")}
-        last10, peak, zero, zvfs = ([v for v in xs if _finite(v)] for xs in (last10, peak, zero, zvfs))
+        missing = {
+            k: sum(not _finite(r.get(k)) for r in rs)
+            for k in ("last10_avg", "peak_reward", "zero_reward_pct")
+        }
+        last10, peak, zero, zvfs = (
+            [v for v in xs if _finite(v)] for xs in (last10, peak, zero, zvfs)
+        )
         summary[arm] = {
             "excluded_missing_measurements": missing,
             "n_runs": len(rs),
@@ -91,14 +99,24 @@ def sign_test(deltas: list[float]) -> dict:
         return {"pos": pos, "neg": neg, "n": 0, "p_value": float("nan")}
     # p-value: 2 * P(X <= min(pos, neg)) for a two-sided test, where X ~ Bin(n, 0.5)
     from math import comb
+
     k = min(pos, neg)
-    p_one = sum(comb(n, i) for i in range(k + 1)) / (2 ** n)
+    p_one = sum(comb(n, i) for i in range(k + 1)) / (2**n)
     p_two = min(1.0, 2 * p_one)
     return {"pos": pos, "neg": neg, "n": n, "p_value": p_two}
 
 
-BLOCK_FIELDS = ("model_id", "dataset", "split", "steps", "group_size", "batch_prompts",
-                "max_tokens", "parser_version", "stack_fingerprint")
+BLOCK_FIELDS = (
+    "model_id",
+    "dataset",
+    "split",
+    "steps",
+    "group_size",
+    "batch_prompts",
+    "max_tokens",
+    "parser_version",
+    "stack_fingerprint",
+)
 
 
 def _finite(value):
@@ -115,30 +133,50 @@ def paired_comparison(runs: list[dict], baseline: str = "grpo") -> list[dict]:
     for run in runs:
         missing = [k for k in (*BLOCK_FIELDS, "seed") if run.get(k) is None]
         if missing or not _finite(run.get("last10_avg")):
-            print(f"[exclude] {run.get('source_path', '<record>')}: missing block/metric {missing}", file=sys.stderr)
+            print(
+                f"[exclude] {run.get('source_path', '<record>')}: missing block/metric {missing}",
+                file=sys.stderr,
+            )
             continue
         block = tuple(run[k] for k in BLOCK_FIELDS)
         key = (block, run["seed"], run.get("loss_arm") or run.get("loss"))
         if key in indexed:
-            raise ValueError(f"duplicate experimental block/seed/arm; no attempt-selection policy: {key}")
+            raise ValueError(
+                f"duplicate experimental block/seed/arm; no attempt-selection policy: {key}"
+            )
         indexed[key] = run
     rows = []
     for block in sorted({k[0] for k in indexed}, key=repr):
         seeds = sorted({k[1] for k in indexed if k[0] == block})
         for arm in sorted({k[2] for k in indexed if k[0] == block and k[2] != baseline}):
-            pairs = [(seed, indexed[(block, seed, arm)]["last10_avg"] - indexed[(block, seed, baseline)]["last10_avg"])
-                     for seed in seeds if (block, seed, arm) in indexed and (block, seed, baseline) in indexed]
+            pairs = [
+                (
+                    seed,
+                    indexed[(block, seed, arm)]["last10_avg"]
+                    - indexed[(block, seed, baseline)]["last10_avg"],
+                )
+                for seed in seeds
+                if (block, seed, arm) in indexed and (block, seed, baseline) in indexed
+            ]
             if pairs:
                 deltas = [value for _, value in pairs]
-                rows.append({"arm": arm, "baseline": baseline, "block": dict(zip(BLOCK_FIELDS, block)),
-                    "n_pairs": len(pairs), "mean_delta": statistics.mean(deltas),
-                    "delta_seeds": dict(pairs), "sign_test": sign_test(deltas),
-                    "claim_scope": "exploratory; primary comparisons and attempt selection require preregistration"})
+                rows.append(
+                    {
+                        "arm": arm,
+                        "baseline": baseline,
+                        "block": dict(zip(BLOCK_FIELDS, block, strict=False)),
+                        "n_pairs": len(pairs),
+                        "mean_delta": statistics.mean(deltas),
+                        "delta_seeds": dict(pairs),
+                        "sign_test": sign_test(deltas),
+                        "claim_scope": "exploratory; primary comparisons and attempt selection require preregistration",
+                    }
+                )
     return rows
 
 
 def fmt_pct(x: float) -> str:
-    return f"{100*x:.1f}%" if x == x else "n/a"
+    return f"{100 * x:.1f}%" if x == x else "n/a"
 
 
 def fmt_signed(x: float) -> str:
@@ -146,14 +184,16 @@ def fmt_signed(x: float) -> str:
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser(description=__doc__,
-                                 formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--results-dir", default=str(DEFAULT_DIR),
-                    help="directory of head-to-head result JSONs")
-    ap.add_argument("--baseline", default="grpo",
-                    help="baseline arm name for paired comparison (default: grpo)")
-    ap.add_argument("--out", default="",
-                    help="optional path to write the summary as JSON")
+    ap = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    ap.add_argument(
+        "--results-dir", default=str(DEFAULT_DIR), help="directory of head-to-head result JSONs"
+    )
+    ap.add_argument(
+        "--baseline", default="grpo", help="baseline arm name for paired comparison (default: grpo)"
+    )
+    ap.add_argument("--out", default="", help="optional path to write the summary as JSON")
     args = ap.parse_args()
 
     results_dir = Path(args.results_dir)
@@ -170,22 +210,28 @@ def main() -> int:
     print(f"  source: {results_dir}")
     print("=" * 78)
     print()
-    print(f"{'arm':10s} {'n':>3s} {'seeds':>5s}  {'last10_avg':>20s}  {'peak_reward':>20s}  {'zero%':>8s}  {'mean_zvf':>8s}")
+    print(
+        f"{'arm':10s} {'n':>3s} {'seeds':>5s}  {'last10_avg':>20s}  {'peak_reward':>20s}  {'zero%':>8s}  {'mean_zvf':>8s}"
+    )
     print("-" * 78)
     for arm, s in summary.items():
         last10 = f"{s['last10_avg_mean']:.3f} ± {s['last10_avg_std']:.3f}"
         peak = f"{s['peak_reward_mean']:.3f} ± {s['peak_reward_std']:.3f}"
-        print(f"{arm:10s} {s['n_runs']:>3d} {s['n_seeds']:>5d}  {last10:>20s}  {peak:>20s}  "
-              f"{fmt_pct(s['zero_reward_pct_mean']):>8s}  {s['mean_zvf_across_steps']:>8.3f}")
+        print(
+            f"{arm:10s} {s['n_runs']:>3d} {s['n_seeds']:>5d}  {last10:>20s}  {peak:>20s}  "
+            f"{fmt_pct(s['zero_reward_pct_mean']):>8s}  {s['mean_zvf_across_steps']:>8.3f}"
+        )
 
     print()
     print(f"PAIRED vs baseline={args.baseline}  (per-seed delta on last10_avg)")
     print("-" * 78)
     for row in paired:
         st = row["sign_test"]
-        print(f"  {row['arm']:8s}: mean_delta={fmt_signed(row['mean_delta'])}  "
-              f"n={row['n_pairs']}  pos={st['pos']} neg={st['neg']}  p={st['p_value']:.3f}  "
-              f"per_seed={row['delta_seeds']}")
+        print(
+            f"  {row['arm']:8s}: mean_delta={fmt_signed(row['mean_delta'])}  "
+            f"n={row['n_pairs']}  pos={st['pos']} neg={st['neg']}  p={st['p_value']:.3f}  "
+            f"per_seed={row['delta_seeds']}"
+        )
 
     if args.out:
         out = {

@@ -16,6 +16,7 @@ from pilot.supervisor import (
     main,
     ready_jobs,
 )
+import pytest
 
 
 class SupervisorTests(unittest.TestCase):
@@ -35,20 +36,20 @@ class SupervisorTests(unittest.TestCase):
 
     def test_initial_scheduler_exposes_only_the_preflight(self) -> None:
         ready = ready_jobs(self.manifest, self.state, capacity=3)
-        self.assertEqual(ready, ["preflight__a100_stack_smoke"])
+        assert ready == ["preflight__a100_stack_smoke"]
 
     def test_one_corpus_job_unlocks_after_preflight_under_amended_capacity(self) -> None:
         self.state["jobs"]["preflight__a100_stack_smoke"]["status"] = "accepted"
         ready = ready_jobs(self.manifest, self.state, capacity=3)
-        self.assertEqual(len(ready), 1)
-        self.assertTrue(all(job_id.startswith("corpus__") for job_id in ready))
+        assert len(ready) == 1
+        assert all(job_id.startswith("corpus__") for job_id in ready)
 
     def test_running_corpus_blocks_a_second_corpus(self) -> None:
         self.state["jobs"]["preflight__a100_stack_smoke"]["status"] = "accepted"
         first = "corpus__balanced_equal_length__s11"
         self.state["jobs"][first]["status"] = "running"
         ready = ready_jobs(self.manifest, self.state, capacity=3)
-        self.assertFalse(any(job_id.startswith("corpus__") for job_id in ready))
+        assert not any(job_id.startswith("corpus__") for job_id in ready)
 
     def test_attempt_logs_are_immutable_and_retry_classification_is_fail_closed(
         self,
@@ -58,15 +59,15 @@ class SupervisorTests(unittest.TestCase):
         log.parent.mkdir(parents=True)
         log.write_text("Traceback: source file missing\n")
         archived = _archive_attempt_output(output_dir=root, job_id="corpus", attempt=1)
-        self.assertEqual(archived["logs"].read_text(), log.read_text())
+        assert archived["logs"].read_text() == log.read_text()
         status, error = _classify_launcher_failure(
             log_path=archived["logs"],
             return_code=1,
             attempts=1,
             attempt_limit=3,
         )
-        self.assertEqual(status, "failed_validation")
-        self.assertIn("automatic retry is forbidden", error)
+        assert status == "failed_validation"
+        assert "automatic retry is forbidden" in error
 
         log.write_text("TooManyAssignmentsError: Precondition Failed\n")
         infra = _archive_attempt_output(output_dir=root, job_id="corpus", attempt=2)
@@ -76,15 +77,15 @@ class SupervisorTests(unittest.TestCase):
             attempts=2,
             attempt_limit=3,
         )
-        self.assertEqual(status, "pending")
-        self.assertIn("TooManyAssignmentsError", error)
+        assert status == "pending"
+        assert "TooManyAssignmentsError" in error
         status, _ = _classify_launcher_failure(
             log_path=infra["logs"],
             return_code=1,
             attempts=3,
             attempt_limit=3,
         )
-        self.assertEqual(status, "failed_infrastructure")
+        assert status == "failed_infrastructure"
 
         disconnect_log = root / "logs" / "disconnect.log"
         disconnect_log.write_text("RuntimeError: Connection was lost.\n")
@@ -94,11 +95,11 @@ class SupervisorTests(unittest.TestCase):
             attempts=1,
             attempt_limit=3,
         )
-        self.assertEqual(status, "pending")
-        self.assertIn("Connection was lost.", error)
+        assert status == "pending"
+        assert "Connection was lost." in error
 
         log.write_text("different payload\n")
-        with self.assertRaisesRegex(SupervisorError, "archive collision"):
+        with pytest.raises(SupervisorError, match="archive collision"):
             _archive_attempt_output(output_dir=root, job_id="corpus", attempt=1)
 
     def test_units_become_ready_only_after_their_corpus_is_accepted(self) -> None:
@@ -106,11 +107,11 @@ class SupervisorTests(unittest.TestCase):
         self.state["jobs"][corpus]["status"] = "accepted"
         ready = ready_jobs(self.manifest, self.state, capacity=10)
         matching = [job_id for job_id in ready if "balanced_equal_length__s11" in job_id]
-        self.assertEqual(len(matching), 4)
+        assert len(matching) == 4
 
     def test_run_refuses_before_subprocess_when_protocol_is_locked(self) -> None:
         with mock.patch("subprocess.Popen") as popen:
-            with self.assertRaisesRegex(SystemExit, "allocation is forbidden"):
+            with pytest.raises(SystemExit, match="allocation is forbidden"):
                 main(["--protocol", str(self.locked_path), "--run"])
         popen.assert_not_called()
 

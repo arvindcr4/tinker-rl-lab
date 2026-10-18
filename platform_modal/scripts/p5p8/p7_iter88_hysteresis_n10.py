@@ -50,8 +50,10 @@ import random
 from pathlib import Path
 
 import sys
+
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
+from _paths import REPO_ROOT
+
 ROOT = REPO_ROOT
 RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8"
 RES.mkdir(parents=True, exist_ok=True)
@@ -59,7 +61,11 @@ N10_DIR = ROOT / "platform_hybrid/experiments" / "results" / "n10_seed_expansion
 
 SEEDS = [42, 179, 316, 453, 590]
 TAUS = [0.40, 0.50, 0.60, 0.70]
-K_GRID = [(1, 1), (2, 2), (3, 3)]   # (K_up, K_dn)  (K_up=K_dn=1 = raw baseline reference but we keep all grid)
+K_GRID = [
+    (1, 1),
+    (2, 2),
+    (3, 3),
+]  # (K_up, K_dn)  (K_up=K_dn=1 = raw baseline reference but we keep all grid)
 N_BOOT = 2000
 BOOT_SEED = 20260705
 
@@ -76,7 +82,7 @@ def hysteresis_trajectory(zvf: list[float], tau: float, k_up: int, k_dn: int) ->
     """Return 0/1 elevated-state trajectory under hysteresis filter."""
     out = []
     state = 0  # 0 = idle, 1 = escalated
-    cnt = 0    # consecutive count
+    cnt = 0  # consecutive count
     for z in zvf:
         if state == 0:
             # count steps with zvf >= tau
@@ -126,7 +132,7 @@ def main() -> None:
     print("[iter88-hyst-N10] loading ...")
     zvf_per_seed = {s: load_seed_zvf(s) for s in SEEDS}
     for s, z in zvf_per_seed.items():
-        print(f"  seed={s} n_steps={len(z)} mean_zvf={sum(z)/len(z):.3f}")
+        print(f"  seed={s} n_steps={len(z)} mean_zvf={sum(z) / len(z):.3f}")
 
     # ---- Per-seed configs ----
     print("[iter88-hyst-N10] computing per-seed ...")
@@ -135,7 +141,7 @@ def main() -> None:
         zvf = zvf_per_seed[seed]
         # Raw baseline (K_up=K_dn=1) — apply for each tau
         for tau in TAUS:
-            for (k_up, k_dn) in K_GRID:
+            for k_up, k_dn in K_GRID:
                 state = hysteresis_trajectory(zvf, tau, k_up, k_dn)
                 # Raw = K_up=K_dn=1
                 raw_state = hysteresis_trajectory(zvf, tau, 1, 1)
@@ -143,19 +149,22 @@ def main() -> None:
                     # Skip the baseline vs itself
                     continue
                 stats = trajectory_stats(state, raw_state, zvf)
-                rows.append(dict(
-                    seed=seed,
-                    tau=tau,
-                    k_up=k_up, k_dn=k_dn,
-                    fires=stats["fires"],
-                    flips=stats["flips"],
-                    raw_fires=stats["raw_fires"],
-                    raw_flips=stats["raw_flips"],
-                    yield_proxy=stats["yield_proxy"],
-                    raw_yield=stats["raw_yield"],
-                    flip_ratio=stats["flip_ratio"],
-                    yield_retention=stats["yield_retention"],
-                ))
+                rows.append(
+                    dict(
+                        seed=seed,
+                        tau=tau,
+                        k_up=k_up,
+                        k_dn=k_dn,
+                        fires=stats["fires"],
+                        flips=stats["flips"],
+                        raw_fires=stats["raw_fires"],
+                        raw_flips=stats["raw_flips"],
+                        yield_proxy=stats["yield_proxy"],
+                        raw_yield=stats["raw_yield"],
+                        flip_ratio=stats["flip_ratio"],
+                        yield_retention=stats["yield_retention"],
+                    )
+                )
 
     if rows:
         with (RES / "p7_iter88_hysteresis_n10_per_seed.tsv").open("w") as f:
@@ -166,7 +175,9 @@ def main() -> None:
 
     # ---- Paired bootstrap across seeds (per config) ----
     print("[iter88-hyst-N10] paired-seed bootstrap ...")
-    cfg_keys = sorted({(r["tau"], r["k_up"], r["k_dn"]) for r in rows}, key=lambda x: (x[0], x[1], x[2]))
+    cfg_keys = sorted(
+        {(r["tau"], r["k_up"], r["k_dn"]) for r in rows}, key=lambda x: (x[0], x[1], x[2])
+    )
     rng = random.Random(BOOT_SEED)
 
     def per_seed_stat(key: tuple, stat_name: str) -> list[float]:
@@ -192,15 +203,21 @@ def main() -> None:
         fr_hi = boot_fr[int(0.975 * N_BOOT)]
         yr_lo = boot_yr[int(0.025 * N_BOOT)]
         yr_hi = boot_yr[int(0.975 * N_BOOT)]
-        boot_rows.append(dict(
-            tau=cfg[0], k_up=cfg[1], k_dn=cfg[2],
-            flip_ratio_median=boot_fr[len(boot_fr) // 2],
-            flip_ratio_lo=fr_lo, flip_ratio_hi=fr_hi,
-            flip_ratio_excludes_1=(fr_hi < 1.0),
-            yield_retention_median=boot_yr[len(boot_yr) // 2],
-            yield_retention_lo=yr_lo, yield_retention_hi=yr_hi,
-            yield_retention_excludes_1=(yr_hi < 1.0) or (yr_lo > 1.0),
-        ))
+        boot_rows.append(
+            dict(
+                tau=cfg[0],
+                k_up=cfg[1],
+                k_dn=cfg[2],
+                flip_ratio_median=boot_fr[len(boot_fr) // 2],
+                flip_ratio_lo=fr_lo,
+                flip_ratio_hi=fr_hi,
+                flip_ratio_excludes_1=(fr_hi < 1.0),
+                yield_retention_median=boot_yr[len(boot_yr) // 2],
+                yield_retention_lo=yr_lo,
+                yield_retention_hi=yr_hi,
+                yield_retention_excludes_1=(yr_hi < 1.0) or (yr_lo > 1.0),
+            )
+        )
 
     if boot_rows:
         with (RES / "p7_iter88_hysteresis_n10_boot.tsv").open("w") as f:

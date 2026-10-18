@@ -63,17 +63,20 @@ Honest-stat note: n=14 rows is small for partial correlation; CIs are
 wide and the test is reported alongside the unconditioned correlations
 from iter94/98/102 so the reader can see the ordering claim.
 """
+
 from __future__ import annotations
 
-import csv
 import json
 import math
 import pathlib
 import sys
-from typing import Any, Dict, List, Sequence, Tuple
+from typing import Any, Dict, List, Tuple
 
 import numpy as np
-from _analysis_common import maybe_matplotlib as _maybe_matplotlib, write_commented_tsv as _write_tsv
+from _analysis_common import (
+    maybe_matplotlib as _maybe_matplotlib,
+    write_commented_tsv as _write_tsv,
+)
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 RES = ROOT / "experiments" / "results"
@@ -91,6 +94,7 @@ G_DEFAULT = 8
 
 def load_calibration_rows() -> List[Dict[str, Any]]:
     from _review28_io import read_calibration
+
     return read_calibration(RES / "zvf_iter102_calibration_review28_v2.tsv")
 
 
@@ -127,7 +131,7 @@ def load_per_problem_phase_points() -> List[Dict[str, Any]]:
                 raise ValueError("Bernoulli plug-in requires binary rewards")
             p_x = float(np.mean(rewards))
             zvf_emp = 1.0 if (min(rewards) == max(rewards)) else 0.0
-            zvf_iid = p_x ** G + (1.0 - p_x) ** G
+            zvf_iid = p_x**G + (1.0 - p_x) ** G
             rows.append(
                 {
                     "seed": seed,
@@ -154,7 +158,7 @@ def _pearson(x: np.ndarray, y: np.ndarray) -> float:
         return float("nan")
     xm = x - x.mean()
     ym = y - y.mean()
-    denom = math.sqrt(float((xm ** 2).sum() * (ym ** 2).sum()))
+    denom = math.sqrt(float((xm**2).sum() * (ym**2).sum()))
     if denom < EPS:
         return float("nan")
     return float((xm * ym).sum() / denom)
@@ -162,12 +166,11 @@ def _pearson(x: np.ndarray, y: np.ndarray) -> float:
 
 def _spearman(x, y):
     from _review28_statistics import spearman
+
     return spearman(x, y)
 
 
-def _partial_corr(
-    x: np.ndarray, y: np.ndarray, z: np.ndarray, fn
-) -> float:
+def _partial_corr(x: np.ndarray, y: np.ndarray, z: np.ndarray, fn) -> float:
     """Partial correlation of x,y conditioning on z (Reisz-style).
 
     r_xy.z = (r_xy - r_xz * r_yz) / sqrt((1-r_xz^2)(1-r_yz^2))
@@ -178,7 +181,7 @@ def _partial_corr(
     r_yz = fn(y, z)
     if any(math.isnan(v) for v in (r_xy, r_xz, r_yz)):
         return float("nan")
-    denom = math.sqrt(max((1.0 - r_xz ** 2) * (1.0 - r_yz ** 2), 0.0))
+    denom = math.sqrt(max((1.0 - r_xz**2) * (1.0 - r_yz**2), 0.0))
     if denom < EPS:
         return float("nan")
     return (r_xy - r_xz * r_yz) / denom
@@ -347,7 +350,7 @@ def make_figure(
     # Iso-ZVF_iid(p) reference curve at G=8
     p_grid = np.linspace(0, 1, 200)
     G_iso = 8
-    zvf_iid_iso = p_grid ** G_iso + (1.0 - p_grid) ** G_iso
+    zvf_iid_iso = p_grid**G_iso + (1.0 - p_grid) ** G_iso
     axB.plot(
         p_grid,
         -zvf_iid_iso,
@@ -401,9 +404,7 @@ def make_figure(
         hi_err = max(float(r["ci_hi"]) - float(r["rho"]), 0.0)
         los.append(lo_err)
         his.append(hi_err)
-        colors.append(
-            "#c0392b" if "Delta" in r["predictor_label"] else "#7f8c8d"
-        )
+        colors.append("#c0392b" if "Delta" in r["predictor_label"] else "#7f8c8d")
     ypos = np.arange(len(labels))
     bars = axC.barh(
         ypos,
@@ -454,8 +455,7 @@ def main() -> int:
     cal_rows = load_calibration_rows()
     phase_pts = load_per_problem_phase_points()
     print(
-        f"  loaded {len(cal_rows)} calibration rows, "
-        f"{len(phase_pts)} per-problem points",
+        f"  loaded {len(cal_rows)} calibration rows, {len(phase_pts)} per-problem points",
         flush=True,
     )
     if not cal_rows:
@@ -498,8 +498,7 @@ def main() -> int:
     delta_arr = np.array([r["delta"] for r in cal_rows], dtype=float)
     zvf_arr = np.array([r["zvf_emp"] for r in cal_rows], dtype=float)
     is_collapse = np.array(
-        [1.0 if _classify_row(r["collapse_rate"], r["p"]) == "collapse" else 0.0
-         for r in cal_rows],
+        [1.0 if _classify_row(r["collapse_rate"], r["p"]) == "collapse" else 0.0 for r in cal_rows],
         dtype=float,
     )
 
@@ -510,10 +509,18 @@ def main() -> int:
     spear_d_pt, spear_d_ci = _bootstrap_ci(delta_arr, is_collapse, _spearman, B=2000, seed=4)
 
     # Partial | p
-    pp_zvf_pt, pp_zvf_ci = _bootstrap_partial_ci(zvf_arr, is_collapse, p_arr, _pearson, B=2000, seed=5)
-    sp_zvf_pt, sp_zvf_ci = _bootstrap_partial_ci(zvf_arr, is_collapse, p_arr, _spearman, B=2000, seed=6)
-    pp_d_pt, pp_d_ci = _bootstrap_partial_ci(delta_arr, is_collapse, p_arr, _pearson, B=2000, seed=7)
-    sp_d_pt, sp_d_ci = _bootstrap_partial_ci(delta_arr, is_collapse, p_arr, _spearman, B=2000, seed=8)
+    pp_zvf_pt, pp_zvf_ci = _bootstrap_partial_ci(
+        zvf_arr, is_collapse, p_arr, _pearson, B=2000, seed=5
+    )
+    sp_zvf_pt, sp_zvf_ci = _bootstrap_partial_ci(
+        zvf_arr, is_collapse, p_arr, _spearman, B=2000, seed=6
+    )
+    pp_d_pt, pp_d_ci = _bootstrap_partial_ci(
+        delta_arr, is_collapse, p_arr, _pearson, B=2000, seed=7
+    )
+    sp_d_pt, sp_d_ci = _bootstrap_partial_ci(
+        delta_arr, is_collapse, p_arr, _spearman, B=2000, seed=8
+    )
 
     corr_rows = [
         {
@@ -596,8 +603,7 @@ def main() -> int:
     # Headline console print
     print("\n=== iter106 headline ===", flush=True)
     print(
-        f"  cross-library rows (n={len(cal_rows)}), "
-        f"per-problem prompts (n={len(phase_pts)})",
+        f"  cross-library rows (n={len(cal_rows)}), per-problem prompts (n={len(phase_pts)})",
         flush=True,
     )
     print(

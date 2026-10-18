@@ -46,6 +46,7 @@ H4 -- fset sensitivity: 20raw+stat maximizes value_rate at low rates
 
 Stdlib + numpy + xgboost.  <= 300 lines.
 """
+
 from __future__ import annotations
 import csv
 import json
@@ -55,14 +56,16 @@ import numpy as np
 import xgboost as xgb
 
 import sys
+
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
-from _p8_common import (  # noqa: E402
+from _paths import REPO_ROOT
+from _p8_common import (
     RAW20,
     ALL24,
     load,
     downsample_positives,
 )
+
 ROOT = REPO_ROOT
 RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8/corrected-review21-v2"
 RES.mkdir(parents=True, exist_ok=True)
@@ -74,18 +77,18 @@ TAU_VMEAN = 0.0  # V_mean > 0 (the raw data has both signs; this is a one-sided 
 
 LLM_PRICE_TIERS = [
     ("cheap_heuristic", 0.0001),
-    ("small_open",      0.0006),
+    ("small_open", 0.0006),
     ("iter120_default", 0.0010),
-    ("mid_tier",        0.0050),
-    ("frontier_gpt4",   0.0300),
+    ("mid_tier", 0.0050),
+    ("frontier_gpt4", 0.0300),
 ]
 RATES_PCT = [1.44, 1.00, 0.50, 0.10, 0.05]
 
 FEATURE_SETS = {
-    "24full":       ALL24,
-    "20raw":        RAW20,
+    "24full": ALL24,
+    "20raw": RAW20,
     "20raw+minmax": RAW20 + ["V_min", "V_max"],
-    "20raw+stat":   RAW20 + ["V_mean", "V_std"],
+    "20raw+stat": RAW20 + ["V_mean", "V_std"],
 }
 # VALUE_PER_CATCH ($) -- operational fraud-ops estimate ($50–$500 per caught
 # fraud; we use a conservative $50 mid-range).
@@ -100,11 +103,15 @@ def fit_predict(Xtr, ytr, Xte, feats, seed):
     n_neg = max(1, len(ytr) - n_pos)
     spw = n_neg / n_pos
     m = xgb.XGBClassifier(
-        n_estimators=180, max_depth=5, learning_rate=0.1,
-        subsample=0.8, colsample_bytree=0.8,
+        n_estimators=180,
+        max_depth=5,
+        learning_rate=0.1,
+        subsample=0.8,
+        colsample_bytree=0.8,
         scale_pos_weight=spw,
         eval_metric="auc",
-        random_state=seed, n_jobs=4,
+        random_state=seed,
+        n_jobs=4,
     )
     m.fit(Xtr_s, ytr)
     return m.predict_proba(Xte_s)[:, 1]
@@ -149,19 +156,20 @@ def bootstrap_escalation(n_lift, n_waste, n_test, n_boot=N_BOOT, seed=20260706):
         return float("nan"), float("nan"), float("nan")
     rng = np.random.default_rng(seed)
     samples = rng.binomial(total, n_lift / total, size=n_boot) / total
-    return n_lift / total, float(np.quantile(samples, .025)), float(np.quantile(samples, .975))
-
+    return n_lift / total, float(np.quantile(samples, 0.025)), float(np.quantile(samples, 0.975))
 
 
 def main():
     print(f"[iter156] loading train/test ...")
     Xtr_full, ytr_full = load(ROOT / "train_data.csv")
     Xte_full, yte_full = load(ROOT / "test_data.csv")
-    print(f"[iter156] Xtr={Xtr_full.shape} ytr_pos={ytr_full.sum()} | "
-          f"Xte={Xte_full.shape} yte_pos={yte_full.sum()}")
+    print(
+        f"[iter156] Xtr={Xtr_full.shape} ytr_pos={ytr_full.sum()} | "
+        f"Xte={Xte_full.shape} yte_pos={yte_full.sum()}"
+    )
 
     matrix_rows = []  # per-(seed, rate, tier, fset) cell
-    h2_rows = []       # per-tier monotone test
+    h2_rows = []  # per-tier monotone test
     seed_summary = []  # per-seed aggregate
 
     for seed in SEEDS:
@@ -181,11 +189,16 @@ def main():
                 scores = fit_predict(Xtr_full, ytr_full, Xte, feats, seed)
                 counters = cell_counters(scores, v_mean, yte)
                 rate_fset_data[(rate_pct, fset_name)] = {
-                    "scores": scores, "yte": yte, "v_mean": v_mean, "counters": counters,
-                    "n_test": n_te, "n_pos": int(yte.sum()),
+                    "scores": scores,
+                    "yte": yte,
+                    "v_mean": v_mean,
+                    "counters": counters,
+                    "n_test": n_te,
+                    "n_pos": int(yte.sum()),
                 }
                 seed_data["per_cell_value_rate"].append(
-                    counters["n_lift"] / max(1, counters["n_xgb_missed_pos"]))
+                    counters["n_lift"] / max(1, counters["n_xgb_missed_pos"])
+                )
                 seed_data["per_cell_lift"].append(counters["n_lift"])
 
         # Per-cell × per-tier escalation metrics
@@ -205,39 +218,46 @@ def main():
                 breakeven = n_lift > 0 and n_lift * VALUE_PER_CATCH >= (n_lift + n_waste) * cost_llm
                 # bootstrap CI on esc_prec
                 prec_mean, prec_lo, prec_hi = bootstrap_escalation(
-                    n_lift, n_waste, d["n_test"], N_BOOT, seed)
-                matrix_rows.append({
-                    "seed": seed,
-                    "rate_pct": rate_pct,
-                    "tier": tier_name,
-                    "fset": fset_name,
-                    "cost_llm_per_call": cost_llm,
-                    "n_test": d["n_test"],
-                    "n_pos": d["n_pos"],
-                    "n_xgb_pos": c["n_xgb_pos"],
-                    "n_lift": n_lift,
-                    "n_waste": n_waste,
-                    "n_xgb_only": c["n_xgb_only"],
-                    "n_llm_only": n_llm_only,
-                    "value_rate": value_rate,
-                    "esc_prec": esc_prec,
-                    "esc_prec_boot_mean": prec_mean,
-                    "esc_prec_boot_lo": prec_lo,
-                    "esc_prec_boot_hi": prec_hi,
-                    "esc_cost_per_lift": esc_cost,
-                    "esc_value": esc_value,
-                    "breakeven": breakeven,
-                })
+                    n_lift, n_waste, d["n_test"], N_BOOT, seed
+                )
+                matrix_rows.append(
+                    {
+                        "seed": seed,
+                        "rate_pct": rate_pct,
+                        "tier": tier_name,
+                        "fset": fset_name,
+                        "cost_llm_per_call": cost_llm,
+                        "n_test": d["n_test"],
+                        "n_pos": d["n_pos"],
+                        "n_xgb_pos": c["n_xgb_pos"],
+                        "n_lift": n_lift,
+                        "n_waste": n_waste,
+                        "n_xgb_only": c["n_xgb_only"],
+                        "n_llm_only": n_llm_only,
+                        "value_rate": value_rate,
+                        "esc_prec": esc_prec,
+                        "esc_prec_boot_mean": prec_mean,
+                        "esc_prec_boot_lo": prec_lo,
+                        "esc_prec_boot_hi": prec_hi,
+                        "esc_cost_per_lift": esc_cost,
+                        "esc_value": esc_value,
+                        "breakeven": breakeven,
+                    }
+                )
 
-        seed_summary.append({
-            "seed": seed,
-            "n_cells": len(seed_data["per_cell_value_rate"]),
-            "mean_value_rate": float(np.mean(seed_data["per_cell_value_rate"])),
-            "mean_n_lift": float(np.mean(seed_data["per_cell_lift"])),
-            "max_n_lift": int(max(seed_data["per_cell_lift"])),
-        })
-        print(f"[iter156] seed {seed}: mean_value_rate={seed_summary[-1]['mean_value_rate']:.4f} "
-              f"max_n_lift={seed_summary[-1]['max_n_lift']}")
+        seed_summary.append(
+            {
+                "seed": seed,
+                "n_cells": len(seed_data["per_cell_value_rate"]),
+                "mean_value_rate": float(np.mean(seed_data["per_cell_value_rate"])),
+                "mean_n_lift": float(np.mean(seed_data["per_cell_lift"])),
+                "max_n_lift": int(max(seed_data["per_cell_lift"])),
+            }
+        )
+        print(
+            f"[iter156] seed {seed}: mean_value_rate={seed_summary[-1]['mean_value_rate']:.4f} "
+            f"max_n_lift={seed_summary[-1]['max_n_lift']}"
+        )
 
     # ----------------------------------------------------------------
     # H1: escalation_precision >= 0.05 on >= 80% of cells
@@ -245,8 +265,10 @@ def main():
     n_total = len(matrix_rows)
     n_prec_pass = sum(1 for r in matrix_rows if r["esc_prec"] >= 0.05)
     h1_pass = (n_prec_pass / max(1, n_total)) >= 0.80
-    print(f"[iter156] H1: {n_prec_pass}/{n_total} = {n_prec_pass/n_total:.3f} prec >= 0.05; "
-          f"PASS={h1_pass}")
+    print(
+        f"[iter156] H1: {n_prec_pass}/{n_total} = {n_prec_pass / n_total:.3f} prec >= 0.05; "
+        f"PASS={h1_pass}"
+    )
 
     # ----------------------------------------------------------------
     # H2: escalation_cost_per_lift monotone in tier price at each (rate,fset) cell
@@ -256,30 +278,45 @@ def main():
     for rate_pct in RATES_PCT:
         for fset_name in FEATURE_SETS:
             for seed in SEEDS:
-                rows = [r for r in matrix_rows if r["seed"] == seed
-                        and r["rate_pct"] == rate_pct and r["fset"] == fset_name]
+                rows = [
+                    r
+                    for r in matrix_rows
+                    if r["seed"] == seed and r["rate_pct"] == rate_pct and r["fset"] == fset_name
+                ]
                 if len(rows) != len(LLM_PRICE_TIERS):
                     continue
                 costs = [r["esc_cost_per_lift"] for r in rows]
                 # Monotone non-decreasing
-                mono = all(costs[i] <= costs[i+1] for i in range(len(costs)-1))
-                h2_verdicts.append({
-                    "seed": seed, "rate_pct": rate_pct, "fset": fset_name,
-                    "cheap_cost": costs[0], "frontier_cost": costs[-1],
-                    "monotone_in_tier_price": mono,
-                    "ratio_frontier_over_cheap": costs[-1] / max(1e-9, costs[0]),
-                })
-    h2_pass_rate = sum(1 for v in h2_verdicts if v["monotone_in_tier_price"]) / max(1, len(h2_verdicts))
-    print(f"[iter156] H2: monotone_in_tier_price={h2_pass_rate:.3f}; "
-          f"ratio frontier/cheap mean={np.mean([v['ratio_frontier_over_cheap'] for v in h2_verdicts]):.1f}x")
+                mono = all(costs[i] <= costs[i + 1] for i in range(len(costs) - 1))
+                h2_verdicts.append(
+                    {
+                        "seed": seed,
+                        "rate_pct": rate_pct,
+                        "fset": fset_name,
+                        "cheap_cost": costs[0],
+                        "frontier_cost": costs[-1],
+                        "monotone_in_tier_price": mono,
+                        "ratio_frontier_over_cheap": costs[-1] / max(1e-9, costs[0]),
+                    }
+                )
+    h2_pass_rate = sum(1 for v in h2_verdicts if v["monotone_in_tier_price"]) / max(
+        1, len(h2_verdicts)
+    )
+    print(
+        f"[iter156] H2: monotone_in_tier_price={h2_pass_rate:.3f}; "
+        f"ratio frontier/cheap mean={np.mean([v['ratio_frontier_over_cheap'] for v in h2_verdicts]):.1f}x"
+    )
 
     # H2 part B: cheap tier crosses breakeven value line (cost <= $50)
-    h2_cheap_breakeven = sum(1 for r in matrix_rows
-                             if r["tier"] == "cheap_heuristic" and r["breakeven"])
+    h2_cheap_breakeven = sum(
+        1 for r in matrix_rows if r["tier"] == "cheap_heuristic" and r["breakeven"]
+    )
     h2_cheap_total = sum(1 for r in matrix_rows if r["tier"] == "cheap_heuristic")
     h2_cheap_pass = (h2_cheap_breakeven / max(1, h2_cheap_total)) >= 0.50
-    print(f"[iter156] H2b: cheap tier breakeven {h2_cheap_breakeven}/{h2_cheap_total} = "
-          f"{h2_cheap_breakeven/h2_cheap_total:.3f}; PASS={h2_cheap_pass}")
+    print(
+        f"[iter156] H2b: cheap tier breakeven {h2_cheap_breakeven}/{h2_cheap_total} = "
+        f"{h2_cheap_breakeven / h2_cheap_total:.3f}; PASS={h2_cheap_pass}"
+    )
 
     # ----------------------------------------------------------------
     # H3: 5-seed CV on value_rate < 0.20 on >= 80% of (rate,tier,fset) cells
@@ -288,23 +325,35 @@ def main():
     for rate_pct in RATES_PCT:
         for tier_name, _ in LLM_PRICE_TIERS:
             for fset_name in FEATURE_SETS:
-                per_seed = [r["value_rate"] for r in matrix_rows
-                            if r["rate_pct"] == rate_pct and r["tier"] == tier_name
-                            and r["fset"] == fset_name]
+                per_seed = [
+                    r["value_rate"]
+                    for r in matrix_rows
+                    if r["rate_pct"] == rate_pct
+                    and r["tier"] == tier_name
+                    and r["fset"] == fset_name
+                ]
                 if len(per_seed) < 2:
                     continue
                 m = float(np.mean(per_seed))
                 sd = float(np.std(per_seed))
                 cv = sd / max(1e-9, m) if m > 0 else float("inf")
-                h3_rows.append({
-                    "rate_pct": rate_pct, "tier": tier_name, "fset": fset_name,
-                    "value_rate_mean": m, "value_rate_sd": sd, "value_rate_cv": cv,
-                    "cv_leq_020": cv <= 0.20,
-                })
+                h3_rows.append(
+                    {
+                        "rate_pct": rate_pct,
+                        "tier": tier_name,
+                        "fset": fset_name,
+                        "value_rate_mean": m,
+                        "value_rate_sd": sd,
+                        "value_rate_cv": cv,
+                        "cv_leq_020": cv <= 0.20,
+                    }
+                )
     h3_pass_rate = sum(1 for r in h3_rows if r["cv_leq_020"]) / max(1, len(h3_rows))
     h3_pass = h3_pass_rate >= 0.80
-    print(f"[iter156] H3: CV<=0.20 on {sum(1 for r in h3_rows if r['cv_leq_020'])}/{len(h3_rows)} = "
-          f"{h3_pass_rate:.3f}; PASS={h3_pass}")
+    print(
+        f"[iter156] H3: CV<=0.20 on {sum(1 for r in h3_rows if r['cv_leq_020'])}/{len(h3_rows)} = "
+        f"{h3_pass_rate:.3f}; PASS={h3_pass}"
+    )
 
     # ----------------------------------------------------------------
     # H4: fset sensitivity on value_rate — 20raw+stat best at low rates
@@ -314,28 +363,38 @@ def main():
         for tier_name, _ in LLM_PRICE_TIERS:
             per_fset = {}
             for fset_name in FEATURE_SETS:
-                vals = [r["value_rate"] for r in matrix_rows
-                        if r["rate_pct"] == rate_pct and r["tier"] == tier_name
-                        and r["fset"] == fset_name]
+                vals = [
+                    r["value_rate"]
+                    for r in matrix_rows
+                    if r["rate_pct"] == rate_pct
+                    and r["tier"] == tier_name
+                    and r["fset"] == fset_name
+                ]
                 per_fset[fset_name] = float(np.mean(vals))
             best = max(per_fset, key=per_fset.get)
-            h4_rows.append({
-                "rate_pct": rate_pct, "tier": tier_name, "best_fset": best,
-                **{f"vr_{k}": v for k, v in per_fset.items()},
-            })
+            h4_rows.append(
+                {
+                    "rate_pct": rate_pct,
+                    "tier": tier_name,
+                    "best_fset": best,
+                    **{f"vr_{k}": v for k, v in per_fset.items()},
+                }
+            )
     # Low rates: 0.05, 0.10 — does 20raw+stat win?
-    low_rate_bset_count = sum(1 for r in h4_rows
-                              if r["rate_pct"] in (0.05, 0.10)
-                              and r["best_fset"] == "20raw+stat")
+    low_rate_bset_count = sum(
+        1 for r in h4_rows if r["rate_pct"] in (0.05, 0.10) and r["best_fset"] == "20raw+stat"
+    )
     low_total = sum(1 for r in h4_rows if r["rate_pct"] in (0.05, 0.10))
-    release_rate_bset_count = sum(1 for r in h4_rows
-                                  if r["rate_pct"] == 1.44
-                                  and r["best_fset"] == "24full")
+    release_rate_bset_count = sum(
+        1 for r in h4_rows if r["rate_pct"] == 1.44 and r["best_fset"] == "24full"
+    )
     release_total = sum(1 for r in h4_rows if r["rate_pct"] == 1.44)
     h4_low_pass = low_rate_bset_count == low_total
     h4_release_pass = release_rate_bset_count == release_total
-    print(f"[iter156] H4: low-rate best=20raw+stat on {low_rate_bset_count}/{low_total}; "
-          f"release best=24full on {release_rate_bset_count}/{release_total}")
+    print(
+        f"[iter156] H4: low-rate best=20raw+stat on {low_rate_bset_count}/{low_total}; "
+        f"release best=24full on {release_rate_bset_count}/{release_total}"
+    )
 
     # ----------------------------------------------------------------
     # Outputs
@@ -384,8 +443,9 @@ def main():
         "h1_prec_pass_rate": n_prec_pass / max(1, n_total),
         "h2_pass": h2_pass_rate >= 0.80,
         "h2_pass_rate": h2_pass_rate,
-        "h2_ratio_frontier_over_cheap_mean": float(np.mean(
-            [v["ratio_frontier_over_cheap"] for v in h2_verdicts])),
+        "h2_ratio_frontier_over_cheap_mean": float(
+            np.mean([v["ratio_frontier_over_cheap"] for v in h2_verdicts])
+        ),
         "h2b_cheap_breakeven_pass": h2_cheap_pass,
         "h2b_cheap_breakeven_rate": h2_cheap_breakeven / max(1, h2_cheap_total),
         "h3_pass": h3_pass,

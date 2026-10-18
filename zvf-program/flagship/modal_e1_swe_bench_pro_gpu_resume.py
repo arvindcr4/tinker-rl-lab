@@ -26,8 +26,10 @@ except ImportError:
 
 
 APP_LANE = os.environ.get("E1_MODAL_LANE", "main")
-if not APP_LANE or len(APP_LANE) > 32 or not all(
-    char.isalnum() or char in "-_" for char in APP_LANE
+if (
+    not APP_LANE
+    or len(APP_LANE) > 32
+    or not all(char.isalnum() or char in "-_" for char in APP_LANE)
 ):
     raise RuntimeError("E1_MODAL_LANE must be a short alphanumeric slug")
 APP_NAME = f"pavlov-e1-swe-bench-pro-full-gpu-{APP_LANE}"
@@ -48,13 +50,9 @@ MEMORY_RATE_USD_PER_GIB_SECOND = 0.00000222
 MERGED_POINTER_PATH = Path("/cache/e1-qwen36-seed809-merged-pointer.json")
 
 secret = modal.Secret.from_name("pavlov-e1-e14")
-hf_cache = modal.Volume.from_name(
-    "pavlov-e1-qwen36-hf-cache", create_if_missing=True
-)
+hf_cache = modal.Volume.from_name("pavlov-e1-qwen36-hf-cache", create_if_missing=True)
 gpu_image = (
-    modal.Image.from_registry(
-        "nvidia/cuda:12.8.1-devel-ubuntu22.04", add_python="3.12"
-    )
+    modal.Image.from_registry("nvidia/cuda:12.8.1-devel-ubuntu22.04", add_python="3.12")
     .uv_pip_install(
         "vllm==0.19.0",
         "transformers==4.57.6",
@@ -108,7 +106,9 @@ def _require_enforced_budget() -> None:
     enforcement. This is intentionally not configurable through a bypass flag.
     Offline receipt construction and historical inspection remain available.
     """
-    raise RuntimeError("paid execution blocked: enforced reservation/settlement budget contract unavailable")
+    raise RuntimeError(
+        "paid execution blocked: enforced reservation/settlement budget contract unavailable"
+    )
 
 
 def _gpu_projection(pending_count: int) -> float:
@@ -124,16 +124,11 @@ def _augment_receipt(
     if not gpu_backend_receipts:
         raise RuntimeError("no Modal GPU backend receipts found")
     backend_counts = Counter(
-        str(item.get("generation_backend") or "tinker_remote")
-        for item in generations
+        str(item.get("generation_backend") or "tinker_remote") for item in generations
     )
-    task_gpu_usd = sum(
-        float(item.get("estimated_modal_gpu_usd") or 0.0)
-        for item in generations
-    )
+    task_gpu_usd = sum(float(item.get("estimated_modal_gpu_usd") or 0.0) for item in generations)
     startup_gpu_usd = sum(
-        float(item.get("estimated_modal_gpu_usd") or 0.0)
-        for item in gpu_backend_receipts
+        float(item.get("estimated_modal_gpu_usd") or 0.0) for item in gpu_backend_receipts
     )
     merge_receipts: dict[str, dict[str, Any]] = {}
     for item in gpu_backend_receipts:
@@ -156,9 +151,7 @@ def _augment_receipt(
     if len(merge_receipts) != 1:
         raise RuntimeError("GPU lanes do not share one immutable merge receipt")
     merge_cpu_usd = float(
-        next(iter(merge_receipts.values())).get(
-            "estimated_modal_cpu_memory_usd", 0.0
-        )
+        next(iter(merge_receipts.values())).get("estimated_modal_cpu_memory_usd", 0.0)
     )
     receipt["claim_boundary"] += (
         " The campaign used one immutable model checkpoint through two inference "
@@ -187,9 +180,7 @@ def _augment_receipt(
         {
             "estimated_modal_gpu_startup_usd": round(startup_gpu_usd, 8),
             "estimated_modal_gpu_task_usd": round(task_gpu_usd, 8),
-            "estimated_modal_gpu_total_usd": round(
-                startup_gpu_usd + task_gpu_usd, 8
-            ),
+            "estimated_modal_gpu_total_usd": round(startup_gpu_usd + task_gpu_usd, 8),
             "estimated_modal_merge_cpu_memory_usd": round(merge_cpu_usd, 8),
             "estimated_modal_total_compute_usd": round(
                 startup_gpu_usd + task_gpu_usd + merge_cpu_usd, 8
@@ -206,9 +197,7 @@ def _augment_receipt(
     return receipt
 
 
-def _load_gpu_backend_receipts(
-    root: Path, run_dir: Path
-) -> list[dict[str, Any]]:
+def _load_gpu_backend_receipts(root: Path, run_dir: Path) -> list[dict[str, Any]]:
     paths = sorted(run_dir.glob("gpu_backend_receipt*.json"))
     if not paths:
         raise RuntimeError("no GPU backend receipt artifacts found")
@@ -310,15 +299,11 @@ def inspect_checkpoint_layout() -> dict[str, Any]:
                 tuple(handle.get_slice(key).get_shape())
             )
 
-    index = json.loads(
-        (base_path / "model.safetensors.index.json").read_text(encoding="utf-8")
-    )
+    index = json.loads((base_path / "model.safetensors.index.json").read_text(encoding="utf-8"))
     selected = [
         key
         for key in index["weight_map"]
-        if key == "lm_head.weight"
-        or ".layers.0." in key
-        or ".layers.3." in key
+        if key == "lm_head.weight" or ".layers.0." in key or ".layers.3." in key
     ]
     by_file: dict[str, list[str]] = {}
     for key in selected:
@@ -329,9 +314,7 @@ def inspect_checkpoint_layout() -> dict[str, Any]:
             for key in keys:
                 base_layout[key] = tuple(handle.get_slice(key).get_shape())
     result = {
-        "adapter": {
-            key: sorted(shapes) for key, shapes in sorted(adapter_layout.items())
-        },
+        "adapter": {key: sorted(shapes) for key, shapes in sorted(adapter_layout.items())},
         "base": dict(sorted(base_layout.items())),
     }
     print(json.dumps(result, indent=2, sort_keys=True))
@@ -477,9 +460,7 @@ def merge_checkpoint() -> dict[str, Any]:
             raise RuntimeError(
                 f"adapter targets are absent from pinned base: {missing_targets[:10]}"
             )
-        merged_path = Path(
-            f"/cache/e1-qwen36-seed809-merged-{uuid.uuid4().hex[:12]}"
-        )
+        merged_path = Path(f"/cache/e1-qwen36-seed809-merged-{uuid.uuid4().hex[:12]}")
         merged_path.mkdir(parents=True)
         for source in base_path.iterdir():
             if source.is_file() and not source.name.endswith(".safetensors"):
@@ -492,15 +473,11 @@ def merge_checkpoint() -> dict[str, Any]:
         consumed_modules: set[str] = set()
         shard_sha256: dict[str, str] = {}
         shard_names = sorted(set(weight_map.values()))
-        with safe_open(
-            adapter_tensor_path, framework="pt", device="cpu"
-        ) as adapter_handle:
+        with safe_open(adapter_tensor_path, framework="pt", device="cpu") as adapter_handle:
             for shard_number, filename in enumerate(shard_names, start=1):
                 source_path = base_path / filename
                 tensors = load_file(source_path, device="cpu")
-                with safe_open(
-                    source_path, framework="pt", device="cpu"
-                ) as source_handle:
+                with safe_open(source_path, framework="pt", device="cpu") as source_handle:
                     metadata = source_handle.metadata()
 
                 def delta_for(item: dict[str, str | None]) -> torch.Tensor:
@@ -508,9 +485,7 @@ def merge_checkpoint() -> dict[str, Any]:
                     b = adapter_handle.get_tensor(str(item["b_key"]))
                     delta = torch.matmul(b.float(), a.float()).mul_(scaling)
                     if not bool(torch.isfinite(delta).all()):
-                        raise RuntimeError(
-                            f"non-finite LoRA delta for {item['module']}"
-                        )
+                        raise RuntimeError(f"non-finite LoRA delta for {item['module']}")
                     consumed_modules.add(str(item["module"]))
                     return delta
 
@@ -560,9 +535,7 @@ def merge_checkpoint() -> dict[str, Any]:
                 shard_sha256[filename] = digest.hexdigest()
                 del tensors
                 gc.collect()
-                print(
-                    f"merged and hashed shard {shard_number}/{len(shard_names)}"
-                )
+                print(f"merged and hashed shard {shard_number}/{len(shard_names)}")
 
         expected_modules = {str(item["module"]) for values in plans.values() for item in values}
         if consumed_modules != expected_modules:
@@ -628,9 +601,7 @@ def merge_checkpoint() -> dict[str, Any]:
         run.finish(exit_code=0)
         return receipt
     except Exception as exc:
-        run.summary.update(
-            {"status": "INFRA_ERROR", "error_type": type(exc).__name__}
-        )
+        run.summary.update({"status": "INFRA_ERROR", "error_type": type(exc).__name__})
         run.finish(exit_code=1)
         raise
 
@@ -682,12 +653,8 @@ class ExactCheckpointGenerator:
             raise RuntimeError("W&B online initialization failed before GPU load")
         try:
             api = HfApi(token=os.environ["HF_TOKEN"])
-            base_info = api.model_info(
-                base.MODEL_ID, revision=base.MODEL_REVISION
-            )
-            adapter_info = api.model_info(
-                base.HF_REPO, revision=base.HF_REVISION
-            )
+            base_info = api.model_info(base.MODEL_ID, revision=base.MODEL_REVISION)
+            adapter_info = api.model_info(base.HF_REPO, revision=base.HF_REVISION)
             if base_info.sha != base.MODEL_REVISION:
                 raise RuntimeError(f"base-model revision drift: {base_info.sha}")
             if adapter_info.sha != base.HF_COMMIT:
@@ -695,9 +662,7 @@ class ExactCheckpointGenerator:
 
             if not MERGED_POINTER_PATH.is_file():
                 raise RuntimeError("exact merged-checkpoint pointer is missing")
-            merge_receipt = json.loads(
-                MERGED_POINTER_PATH.read_text(encoding="utf-8")
-            )
+            merge_receipt = json.loads(MERGED_POINTER_PATH.read_text(encoding="utf-8"))
             if merge_receipt.get("base_commit") != base.MODEL_REVISION:
                 raise RuntimeError("merged checkpoint base revision drift")
             if merge_receipt.get("adapter_commit") != base.HF_COMMIT:
@@ -707,13 +672,9 @@ class ExactCheckpointGenerator:
             if merge_receipt.get("all_adapter_tensors_consumed") is not True:
                 raise RuntimeError("merged checkpoint has unconsumed adapter tensors")
             merged_path = Path(str(merge_receipt.get("merged_path") or ""))
-            if not merged_path.is_dir() or not list(
-                merged_path.glob("*.safetensors")
-            ):
+            if not merged_path.is_dir() or not list(merged_path.glob("*.safetensors")):
                 raise RuntimeError("exact merged checkpoint is incomplete")
-            self.tokenizer = AutoTokenizer.from_pretrained(
-                merged_path, local_files_only=True
-            )
+            self.tokenizer = AutoTokenizer.from_pretrained(merged_path, local_files_only=True)
             self.llm = LLM(
                 model=str(merged_path),
                 tokenizer=str(merged_path),
@@ -778,15 +739,11 @@ class ExactCheckpointGenerator:
             }
             run.finish(exit_code=0)
         except Exception as exc:
-            run.summary.update(
-                {"status": "INFRA_ERROR", "error_type": type(exc).__name__}
-            )
+            run.summary.update({"status": "INFRA_ERROR", "error_type": type(exc).__name__})
             run.finish(exit_code=1)
             raise
 
-    def _render_prompt(
-        self, task: dict[str, Any], sources: dict[str, str]
-    ) -> tuple[str, str]:
+    def _render_prompt(self, task: dict[str, Any], sources: dict[str, str]) -> tuple[str, str]:
         prompt = base._build_prompt(task, sources)
         rendered = self.tokenizer.apply_chat_template(
             [
@@ -841,25 +798,20 @@ class ExactCheckpointGenerator:
                     "lora_health": "PASSED",
                     "health_token_count": len(output.outputs[0].token_ids),
                     "health_seconds": round(seconds, 6),
-                    "health_estimated_modal_gpu_usd": round(
-                        seconds * GPU_RATE_USD_PER_SECOND, 8
-                    ),
+                    "health_estimated_modal_gpu_usd": round(seconds * GPU_RATE_USD_PER_SECOND, 8),
                     "health_wandb_run_id": str(run.id),
                     "health_wandb_url": str(run.url),
                 }
             )
             result["estimated_modal_gpu_usd"] = round(
-                float(result["estimated_modal_gpu_usd"])
-                + seconds * GPU_RATE_USD_PER_SECOND,
+                float(result["estimated_modal_gpu_usd"]) + seconds * GPU_RATE_USD_PER_SECOND,
                 8,
             )
             run.summary.update({"status": "PASSED"})
             run.finish(exit_code=0)
             return result
         except Exception as exc:
-            run.summary.update(
-                {"status": "INFRA_ERROR", "error_type": type(exc).__name__}
-            )
+            run.summary.update({"status": "INFRA_ERROR", "error_type": type(exc).__name__})
             run.finish(exit_code=1)
             raise
 
@@ -884,9 +836,7 @@ class ExactCheckpointGenerator:
             if set(task) != set(base.GENERATION_FIELDS):
                 raise RuntimeError("unexpected fields reached GPU generation")
             prompt, rendered = self._render_prompt(task, sources)
-            prompt_ids = self.tokenizer.encode(
-                rendered, add_special_tokens=False
-            )
+            prompt_ids = self.tokenizer.encode(rendered, add_special_tokens=False)
             if len(prompt_ids) + max_tokens > MAX_MODEL_LEN:
                 raise RuntimeError(
                     f"prompt plus output exceeds GPU context: "
@@ -929,9 +879,7 @@ class ExactCheckpointGenerator:
                     "temperature": temperature,
                     "top_p": 0.95,
                     "seed": seed,
-                    "source_sha256": base._sha256_text(
-                        base._stable_json(sources)
-                    ),
+                    "source_sha256": base._sha256_text(base._stable_json(sources)),
                     "prompt_sha256": base._sha256_text(prompt),
                 },
                 reinit=True,
@@ -954,9 +902,7 @@ class ExactCheckpointGenerator:
             )[0]
             seconds = time.perf_counter() - started
             tokens = list(output.outputs[0].token_ids)
-            response_text = self.tokenizer.decode(
-                tokens, skip_special_tokens=True
-            )
+            response_text = self.tokenizer.decode(tokens, skip_special_tokens=True)
             patch, validation_reason = base._extract_diff(response_text)
             status = "GENERATED" if patch else "GENERATION_FAILED"
             estimated_usd = seconds * GPU_RATE_USD_PER_SECOND
@@ -973,9 +919,7 @@ class ExactCheckpointGenerator:
             run.summary.update(
                 {
                     "status": status,
-                    "candidate_patch_sha256": (
-                        base._sha256_text(patch) if patch else None
-                    ),
+                    "candidate_patch_sha256": (base._sha256_text(patch) if patch else None),
                     "patch_validation_reason": validation_reason,
                 }
             )
@@ -996,9 +940,7 @@ class ExactCheckpointGenerator:
                 "response_text": response_text,
                 "response_sha256": base._sha256_text(response_text),
                 "prompt_sha256": base._sha256_text(prompt),
-                "source_sha256": base._sha256_text(
-                    base._stable_json(sources)
-                ),
+                "source_sha256": base._sha256_text(base._stable_json(sources)),
                 "prompt_tokens": len(prompt_ids),
                 "response_tokens": len(tokens),
                 "estimated_tinker_usd": 0.0,
@@ -1035,9 +977,7 @@ class ExactCheckpointGenerator:
                 "sample_started": sample_started,
                 "sample_completed": False,
                 "response_text": response_text,
-                "response_sha256": (
-                    base._sha256_text(response_text) if response_text else None
-                ),
+                "response_sha256": (base._sha256_text(response_text) if response_text else None),
                 "error_type": type(exc).__name__,
                 "error": str(exc)[:2000],
                 "generation_backend": GENERATION_BACKEND,
@@ -1059,9 +999,7 @@ def _validate_existing_run(
     raw_path = run_dir / "dataset_test_731.jsonl"
     sanitized_path = run_dir / "generation_manifest_731.jsonl"
     rows, tasks = base._validate_existing_dataset(raw_path, sanitized_path)
-    image_manifest = json.loads(
-        (run_dir / "image_manifest.json").read_text(encoding="utf-8")
-    )
+    image_manifest = json.loads((run_dir / "image_manifest.json").read_text(encoding="utf-8"))
     base._validate_image_manifest(image_manifest, tasks)
     evaluator_dir = root / "outputs/e1_swe_bench_pro/evaluator"
     evaluator_commit = subprocess.run(
@@ -1081,9 +1019,7 @@ def _save_generation_result(result: dict[str, Any], tasks_dir: Path) -> None:
     task_dir = tasks_dir / instance_id
     task_dir.mkdir(parents=True, exist_ok=True)
     response_text = str(result.pop("response_text", "") or "")
-    (task_dir / "generation_response.txt").write_text(
-        response_text, encoding="utf-8"
-    )
+    (task_dir / "generation_response.txt").write_text(response_text, encoding="utf-8")
     base._write_json(task_dir / "generation.json", result)
 
 
@@ -1102,9 +1038,7 @@ def _evaluate_completed_run(
     evaluator_workers: int,
 ) -> dict[str, Any]:
     candidates_path = run_dir / "candidates.json"
-    candidates, generations = base._build_candidates(
-        tasks, run_dir / "tasks", candidates_path
-    )
+    candidates, generations = base._build_candidates(tasks, run_dir / "tasks", candidates_path)
     if len(generations) != base.EXPECTED_TASK_COUNT:
         raise RuntimeError("evaluation requires 731 terminal generation receipts")
     base._write_json(
@@ -1182,21 +1116,13 @@ def main(
 ) -> None:
     _require_enforced_budget()
     if not (0 <= index_min <= index_max < base.EXPECTED_TASK_COUNT):
-        raise RuntimeError(
-            f"invalid task-index range {index_min}..{index_max}"
-        )
-    if not lane or len(lane) > 32 or not all(
-        char.isalnum() or char in "-_" for char in lane
-    ):
+        raise RuntimeError(f"invalid task-index range {index_min}..{index_max}")
+    if not lane or len(lane) > 32 or not all(char.isalnum() or char in "-_" for char in lane):
         raise RuntimeError("lane must be a short alphanumeric slug")
     if lane != APP_LANE:
-        raise RuntimeError(
-            f"lane argument {lane!r} must match E1_MODAL_LANE={APP_LANE!r}"
-        )
+        raise RuntimeError(f"lane argument {lane!r} must match E1_MODAL_LANE={APP_LANE!r}")
     if evaluation_only and (generate_only or lane != "main"):
-        raise RuntimeError(
-            "evaluation-only requires the main lane without --generate-only"
-        )
+        raise RuntimeError("evaluation-only requires the main lane without --generate-only")
     if (index_min, index_max) != (0, base.EXPECTED_TASK_COUNT - 1):
         if not generate_only:
             raise RuntimeError("a partial index range requires --generate-only")
@@ -1205,11 +1131,7 @@ def main(
         artifact_suffix = "" if lane == "main" else f"_{lane}"
 
     root = base._repo_root()
-    run_dir = (
-        root
-        / f"outputs/modal_e1_e14/{base.RUN_DATE}/"
-        f"e1_swe_bench_pro_full/seed{seed}"
-    )
+    run_dir = root / f"outputs/modal_e1_e14/{base.RUN_DATE}/e1_swe_bench_pro_full/seed{seed}"
     if not run_dir.is_dir():
         raise RuntimeError(f"cannot GPU-resume missing exact-suite run: {run_dir}")
     tasks_dir = run_dir / "tasks"
@@ -1224,9 +1146,7 @@ def main(
         temperature=temperature,
     )
     pending = [
-        payload
-        for payload in all_pending
-        if index_min <= int(payload["index"]) <= index_max
+        payload for payload in all_pending if index_min <= int(payload["index"]) <= index_max
     ]
     if evaluation_only:
         if all_pending:
@@ -1250,18 +1170,13 @@ def main(
         return
     projection = _gpu_projection(len(pending))
     if projection > MAX_GPU_PROJECTED_USD:
-        raise RuntimeError(
-            f"GPU projection ${projection:.4f} exceeds "
-            f"${MAX_GPU_PROJECTED_USD:.2f}"
-        )
+        raise RuntimeError(f"GPU projection ${projection:.4f} exceeds ${MAX_GPU_PROJECTED_USD:.2f}")
     preflight = {
         "schema_version": "pavlov-e1-modal-gpu-resume-preflight-v1",
         "status": "READY",
         "recorded_at": base._utc_now(),
         "task_count": base.EXPECTED_TASK_COUNT,
-        "terminal_generations_preserved": (
-            base.EXPECTED_TASK_COUNT - len(all_pending)
-        ),
+        "terminal_generations_preserved": (base.EXPECTED_TASK_COUNT - len(all_pending)),
         "global_pending_generations_at_start": len(all_pending),
         "pending_gpu_generations": len(pending),
         "lane": lane,
@@ -1281,12 +1196,8 @@ def main(
         "modal_gpu_cap_usd": MAX_GPU_PROJECTED_USD,
         "pricing_source": GPU_PRICING_SOURCE,
     }
-    preflight["receipt_sha256"] = base._sha256_text(
-        base._stable_json(preflight)
-    )
-    base._write_json(
-        run_dir / f"gpu_resume_preflight{artifact_suffix}.json", preflight
-    )
+    preflight["receipt_sha256"] = base._sha256_text(base._stable_json(preflight))
+    base._write_json(run_dir / f"gpu_resume_preflight{artifact_suffix}.json", preflight)
     base._write_json(
         state_path,
         {
@@ -1316,16 +1227,12 @@ def main(
     backend_receipt["merge"] = local_merge_receipt
     backend_receipt_path = run_dir / f"gpu_backend_receipt{artifact_suffix}.json"
     backend_receipt["path"] = str(backend_receipt_path.relative_to(root))
-    backend_receipt["receipt_sha256"] = base._sha256_text(
-        base._stable_json(backend_receipt)
-    )
+    backend_receipt["receipt_sha256"] = base._sha256_text(base._stable_json(backend_receipt))
     base._write_json(backend_receipt_path, backend_receipt)
     print(json.dumps(backend_receipt, indent=2, sort_keys=True))
 
     for completed, payload in enumerate(pending, start=1):
-        generation_path = (
-            tasks_dir / str(payload["task"]["instance_id"]) / "generation.json"
-        )
+        generation_path = tasks_dir / str(payload["task"]["instance_id"]) / "generation.json"
         if generation_path.exists():
             raise RuntimeError(
                 "terminal generation appeared after lane preflight; refusing "
@@ -1346,8 +1253,7 @@ def main(
                 },
             )
             raise RuntimeError(
-                f"GPU generation failed for {result['instance_id']}: "
-                f"{result.get('error')}"
+                f"GPU generation failed for {result['instance_id']}: {result.get('error')}"
             )
         if completed % 10 == 0 or completed == len(pending):
             print(f"saved {completed}/{len(pending)} Modal GPU generations")

@@ -4,10 +4,10 @@
 This edit is NOT an addendum; each fragment's content is woven into an existing
 parent section with a new sub-subsection number.
 """
+
 from __future__ import annotations
 
 import re
-import shutil
 import argparse
 import hashlib
 from pathlib import Path
@@ -65,7 +65,7 @@ def managed(payload):
 
 def insert_before(text: str, anchor_pat: str, payload: str) -> str:
     m = unique_anchor(text, anchor_pat)
-    return text[:m.start()] + managed(payload) + text[m.start():]
+    return text[: m.start()] + managed(payload) + text[m.start() :]
 
 
 def append_to_section(text: str, start_pat: str, end_pat: str, payload: str) -> str:
@@ -73,7 +73,7 @@ def append_to_section(text: str, start_pat: str, end_pat: str, payload: str) -> 
     end = unique_anchor(text, end_pat)
     if end.start() <= start.end():
         raise ValueError("section end precedes section start")
-    return text[:end.start()] + managed(payload) + text[end.start():]
+    return text[: end.start()] + managed(payload) + text[end.start() :]
 
 
 MARKER = "<!-- weave-addendum:review27-v2 -->"
@@ -84,18 +84,37 @@ def transform(txt: str, fragments=None) -> str:
     if MARKER in txt:
         return txt
 
-    fragments = dict(fragments) if fragments is not None else {name: read_fragment(name) for name in FRAGMENT_NAMES}
+    fragments = (
+        dict(fragments)
+        if fragments is not None
+        else {name: read_fragment(name) for name in FRAGMENT_NAMES}
+    )
     # Strip only our uniquely delimited generated regions before regenerating.
     starts = txt.count("<!-- weave-v3:begin -->")
     ends = txt.count("<!-- weave-v3:end -->")
     if starts != ends:
         raise ValueError("unbalanced managed sections")
-    txt, removed = re.subn(r"<!-- weave-v3:begin -->\n.*?<!-- weave-v3:end -->\n", "", txt, flags=re.DOTALL)
+    txt, removed = re.subn(
+        r"<!-- weave-v3:begin -->\n.*?<!-- weave-v3:end -->\n", "", txt, flags=re.DOTALL
+    )
     if removed != starts:
         raise ValueError("malformed/nested managed sections")
     txt = re.sub(r"^<!-- weave-addendum:review27-v3:[0-9a-f]{64} -->\n", "", txt)
     # Validate every report anchor, including replacements, before reading fragments.
-    for pattern in (r"^## 3\. Methodology", r"^### 4\.5\.8 ", r"^### 4\.6 ", r"^### 4\.2 ", r"^### 4\.3 ", r"^### 5\.8 ", r"^### 5\.9 ", r"^### 5\.12 ", r"^### 5\.13 ", r"^### 5\.16 ", r"^## 6\. Summary of Findings$", r"^### 7\.1[^\n]*$"):
+    for pattern in (
+        r"^## 3\. Methodology",
+        r"^### 4\.5\.8 ",
+        r"^### 4\.6 ",
+        r"^### 4\.2 ",
+        r"^### 4\.3 ",
+        r"^### 5\.8 ",
+        r"^### 5\.9 ",
+        r"^### 5\.12 ",
+        r"^### 5\.13 ",
+        r"^### 5\.16 ",
+        r"^## 6\. Summary of Findings$",
+        r"^### 7\.1[^\n]*$",
+    ):
         unique_anchor(txt, pattern)
 
     # --- F-8 Related Work extension → insert §2.7 and §2.8 right before "## 3. Methodology"
@@ -122,7 +141,12 @@ def transform(txt: str, fragments=None) -> str:
         "`paper/sections/extended_related_work.tex`. Bib keys: "
         "`treegrpo2025`, `lightman2023prm`, `stppo2025`, `dar2024`.*\n\n"
     )
-    f8_body = f8_top + _extract_between(f8, "#### 2.7.1", "#### 2.8.1") + f8_mid + _extract_from(f8, "#### 2.8.1")
+    f8_body = (
+        f8_top
+        + _extract_between(f8, "#### 2.7.1", "#### 2.8.1")
+        + f8_mid
+        + _extract_from(f8, "#### 2.8.1")
+    )
     txt = insert_before(txt, r"^## 3\. Methodology", f8_body + "\n")
 
     # --- F-3 Framework-Gap Deep-Dive → append inside §4.5.8 (before §4.6)
@@ -132,9 +156,7 @@ def transform(txt: str, fragments=None) -> str:
         "\n#### 4.5.8.1 Framework Configuration Disclosure and Retraction "
         "(Reviewer W6 / Q3)\n\n"
         "*Paper section: `paper/sections/framework_configs_appendix.tex`. "
-        "Reproducibility: `experiments/framework_config_dumps/*.yaml`.*\n\n"
-        + f3.strip()
-        + "\n"
+        "Reproducibility: `experiments/framework_config_dumps/*.yaml`.*\n\n" + f3.strip() + "\n"
     )
     txt = append_to_section(txt, r"^### 4\.5\.8 ", r"^### 4\.6 ", f3_wrapped)
 
@@ -160,9 +182,7 @@ def transform(txt: str, fragments=None) -> str:
         "Figures (Reviewer W10 / W12)\n\n"
         "*Paper sections: `paper/sections/frontier_scope_clarification.tex`, "
         "`paper/sections/figures_regeneration_note.tex`. Reproducibility: "
-        "`platform_modal/scripts/regenerate_missing_figures.py`.*\n\n"
-        + f7.strip()
-        + "\n"
+        "`platform_modal/scripts/regenerate_missing_figures.py`.*\n\n" + f7.strip() + "\n"
     )
     txt = append_to_section(txt, r"^### 5\.8 ", r"^### 5\.9 ", f7_wrapped)
 
@@ -175,9 +195,7 @@ def transform(txt: str, fragments=None) -> str:
         "*Paper sections: `paper/sections/appendix_zvf_formalization.tex`, "
         "`paper/sections/zvf_pipeline_spec.tex`. Reproducibility: "
         "`platform_modal/scripts/partial_correlation_zvf.py`, "
-        "`platform_modal/scripts/zvf_compute_cross_framework.py`.*\n\n"
-        + f1.strip()
-        + "\n"
+        "`platform_modal/scripts/zvf_compute_cross_framework.py`.*\n\n" + f1.strip() + "\n"
     )
     txt = append_to_section(txt, r"^### 5\.12 ", r"^### 5\.13 ", f1_wrapped)
 
@@ -189,9 +207,7 @@ def transform(txt: str, fragments=None) -> str:
         "(Reviewer W4 / W5 / Q5)\n\n"
         "*Paper section: `paper/sections/statistical_rigor_addendum.tex`. "
         "Reproducibility: `experiments/survival_analysis.py` → "
-        "`platform_hybrid/experiments/results/survival_analysis.tsv`.*\n\n"
-        + f4.strip()
-        + "\n"
+        "`platform_hybrid/experiments/results/survival_analysis.tsv`.*\n\n" + f4.strip() + "\n"
     )
     txt = append_to_section(txt, r"^### 5\.16 ", r"^## 6\. Summary", f4_wrapped)
 
@@ -217,16 +233,12 @@ def transform(txt: str, fragments=None) -> str:
         "(Reviewer W8)\n\n"
         "*Paper section: `paper/sections/heldout_stratified.tex`. "
         "Reproducibility: `experiments/stratified_heldout.py` → "
-        "`platform_hybrid/experiments/results/heldout_stratified.tsv`.*\n\n"
-        + f6_heldout
-        + "\n\n"
+        "`platform_hybrid/experiments/results/heldout_stratified.tsv`.*\n\n" + f6_heldout + "\n\n"
         "### 5.19 Base vs Instruct Paired Evaluation "
         "(Reviewer W9 / W11 / Q4)\n\n"
         "*Paper section: `paper/sections/base_vs_instruct_paired.tex`. "
         "Reproducibility: `experiments/base_instruct_paired.py` → "
-        "`platform_hybrid/experiments/results/base_instruct_paired.tsv`.*\n\n"
-        + f6_bi
-        + "\n\n"
+        "`platform_hybrid/experiments/results/base_instruct_paired.tsv`.*\n\n" + f6_bi + "\n\n"
     )
     txt = insert_before(txt, r"^## 6\. Summary", new_subs)
 
@@ -241,8 +253,11 @@ def transform(txt: str, fragments=None) -> str:
         "`platform_modal/scripts/reviewer_response_score.sh`.\n\n"
     )
     txt = re.sub(
-        r"(^## 6\. Summary of Findings\n)", r"\1" + managed(summary_note),
-        txt, count=1, flags=re.MULTILINE,
+        r"(^## 6\. Summary of Findings\n)",
+        r"\1" + managed(summary_note),
+        txt,
+        count=1,
+        flags=re.MULTILINE,
     )
 
     # --- Update §7.1 Gaps Closed
@@ -259,31 +274,51 @@ def transform(txt: str, fragments=None) -> str:
         "Tree-GRPO/PRM (W15), ST-PPO (W16), DAR/dual-KL (W17). "
         "See §§2.7–2.8 and §§5.8.1, 5.12.1, 5.16.1, 5.17–5.19.\n"
     )
+
     # insert as the first bullet under §7.1
     def _inject_under_71(m: re.Match) -> str:
         return m.group(0) + managed(gaps_note)
+
     txt = re.sub(
-        r"^### 7\.1[^\n]*\n", _inject_under_71,
-        txt, count=1, flags=re.MULTILINE,
+        r"^### 7\.1[^\n]*\n",
+        _inject_under_71,
+        txt,
+        count=1,
+        flags=re.MULTILINE,
     )
 
-    digest = hashlib.sha256("".join(fragments[name] for name in FRAGMENT_NAMES).encode()).hexdigest()
+    digest = hashlib.sha256(
+        "".join(fragments[name] for name in FRAGMENT_NAMES).encode()
+    ).hexdigest()
     return f"<!-- weave-addendum:review27-v3:{digest} -->\n" + txt
 
 
-FRAGMENT_NAMES = ("01-zvf-formalization.md", "02-group-size-reconcile.md", "03-framework-gap-configs.md", "04-statistical-rigor-survival.md", "05-toolcode-zvf-outside-math.md", "06-heldout-base-instruct.md", "07-f5-scope-figures.md", "08-related-work-integration.md")
+FRAGMENT_NAMES = (
+    "01-zvf-formalization.md",
+    "02-group-size-reconcile.md",
+    "03-framework-gap-configs.md",
+    "04-statistical-rigor-survival.md",
+    "05-toolcode-zvf-outside-math.md",
+    "06-heldout-base-instruct.md",
+    "07-f5-scope-figures.md",
+    "08-related-work-integration.md",
+)
 
 
 def main(argv=None) -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--input", type=Path, default=REPORT)
     parser.add_argument("--fragments", type=Path, default=FRAG_DIR)
-    parser.add_argument("--output", type=Path, default=REPORT.with_name(REPORT.stem + "_review27_v3.md"))
+    parser.add_argument(
+        "--output", type=Path, default=REPORT.with_name(REPORT.stem + "_review27_v3.md")
+    )
     args = parser.parse_args(argv)
     globals()["FRAG_DIR"] = args.fragments
     original = args.input.read_text()
     if MARKER in original:
-        raise ValueError("legacy frozen splice cannot be updated safely; supply its unmodified backup")
+        raise ValueError(
+            "legacy frozen splice cannot be updated safely; supply its unmodified backup"
+        )
     updated = transform(original)
     if args.output.exists() and args.output.read_text() == updated:
         return
@@ -303,12 +338,12 @@ def _extract_between(blob: str, start_needle: str, end_needle: str) -> str:
     end = unique_anchor(blob, r"^.*" + re.escape(end_needle) + r"[^\n]*$")
     if end.start() <= start.start():
         raise ValueError("fragment headings out of order")
-    return blob[start.start():end.start()]
+    return blob[start.start() : end.start()]
 
 
 def _extract_from(blob: str, needle: str) -> str:
     match = unique_anchor(blob, r"^.*" + re.escape(needle) + r"[^\n]*$")
-    return blob[match.start():]
+    return blob[match.start() :]
 
 
 if __name__ == "__main__":

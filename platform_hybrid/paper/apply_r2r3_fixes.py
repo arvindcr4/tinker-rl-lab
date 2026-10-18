@@ -5,7 +5,8 @@ no LLM involved — avoids the previous morph blow-ups.
 
 Run: python3 apply_r2r3_fixes.py
 """
-import pathlib, sys
+
+import pathlib
 
 ROOT = pathlib.Path(__file__).parent
 BODY = ROOT / "main_eai_body.tex"
@@ -75,19 +76,26 @@ body = body.replace(
 # Delete every parenthetical that mixes the 50-subset into the primary claim.
 REPS_N = [
     (r"(evaluated on a random 50-problem subset)", ""),
-    (r"paired per-prompt p=0.539 (evaluated on a random 50-problem subset)",
-     r"paired base-vs-GRPO over N=200 held-out prompts, 5 seeds"),
-    (r"paired per-prompt p=0.539",
-     r"paired base-vs-GRPO, N=200 held-out prompts"),
-    (r"A clean held-out GSM8K control (Qwen3-8B, 5 seeds, 200 prompts) shows only $82.0\% \to 83.3\%$ improvement ($p=0.26, paired per-prompt p=0.539 (evaluated on a random 50-problem subset)$)",
-     r"A clean held-out GSM8K control (Qwen3-8B, 5 seeds, $N=200$ held-out prompts) shows only $82.0\% \to 83.3\%$ improvement ($p=0.26$, paired per-prompt)"),
+    (
+        r"paired per-prompt p=0.539 (evaluated on a random 50-problem subset)",
+        r"paired base-vs-GRPO over N=200 held-out prompts, 5 seeds",
+    ),
+    (r"paired per-prompt p=0.539", r"paired base-vs-GRPO, N=200 held-out prompts"),
+    (
+        r"A clean held-out GSM8K control (Qwen3-8B, 5 seeds, 200 prompts) shows only $82.0\% \to 83.3\%$ improvement ($p=0.26, paired per-prompt p=0.539 (evaluated on a random 50-problem subset)$)",
+        r"A clean held-out GSM8K control (Qwen3-8B, 5 seeds, $N=200$ held-out prompts) shows only $82.0\% \to 83.3\%$ improvement ($p=0.26$, paired per-prompt)",
+    ),
 ]
 for old, new in REPS_N:
     body = body.replace(old, new)
 
 # Any remaining "random 50-problem" / "50-example" / standalone "N=50" sweeps
-for sub in ["random 50-problem subset", "random 50 problem subset",
-            "random 50-problem", "50-problem subset"]:
+for sub in [
+    "random 50-problem subset",
+    "random 50 problem subset",
+    "random 50-problem",
+    "50-problem subset",
+]:
     body = body.replace(f"({sub})", "")
     body = body.replace(f", {sub}", "")
     body = body.replace(sub, "")
@@ -110,4 +118,6 @@ body = body.replace(OLD_XLIB, NEW_XLIB, 1)  # replace first occurrence only
 
 BODY.write_text(body)
 delta = len(body) - orig_len
-print(f"OK body {orig_len} -> {len(body)} chars (delta {delta:+d}), {body.count(chr(92)+'section{Limitations}')} Limitations section(s)")
+print(
+    f"OK body {orig_len} -> {len(body)} chars (delta {delta:+d}), {body.count(chr(92) + 'section{Limitations}')} Limitations section(s)"
+)

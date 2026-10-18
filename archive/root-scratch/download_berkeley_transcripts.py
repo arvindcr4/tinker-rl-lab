@@ -8,7 +8,9 @@ from pathlib import Path
 import requests
 
 
-VIDEO_LIST = Path("/tmp/claude-1001/-home-claude-tinker-rl-lab/30780cda-8d14-4b43-8179-c46d6b7ba4dc/scratchpad/berkeley_videos.json")
+VIDEO_LIST = Path(
+    "/tmp/claude-1001/-home-claude-tinker-rl-lab/30780cda-8d14-4b43-8179-c46d6b7ba4dc/scratchpad/berkeley_videos.json"
+)
 OUT_ROOT = Path("/home/claude/tinker-rl-lab-minimax/berkeley_courses")
 MANIFEST = OUT_ROOT / "TRANSCRIPTS_MANIFEST.md"
 FIRECRAWL_URL = "https://api.firecrawl.dev/v2/scrape"
@@ -19,12 +21,7 @@ VIDEO_SLEEP_SECONDS = 3
 
 def load_firecrawl_key() -> str:
     config = json.loads((Path.home() / ".claude.json").read_text())
-    key = (
-        config.get("mcpServers", {})
-        .get("firecrawl", {})
-        .get("env", {})
-        .get("FIRECRAWL_API_KEY")
-    )
+    key = config.get("mcpServers", {}).get("firecrawl", {}).get("env", {}).get("FIRECRAWL_API_KEY")
     if key and not looks_placeholder(key):
         return key.strip()
 
@@ -36,8 +33,12 @@ def load_firecrawl_key() -> str:
             return cli_key.strip()
 
     if not key:
-        raise RuntimeError("Firecrawl API key missing at mcpServers.firecrawl.env.FIRECRAWL_API_KEY")
-    raise RuntimeError("Firecrawl API key at mcpServers.firecrawl.env.FIRECRAWL_API_KEY looks like a placeholder")
+        raise RuntimeError(
+            "Firecrawl API key missing at mcpServers.firecrawl.env.FIRECRAWL_API_KEY"
+        )
+    raise RuntimeError(
+        "Firecrawl API key at mcpServers.firecrawl.env.FIRECRAWL_API_KEY looks like a placeholder"
+    )
     return key
 
 
@@ -104,7 +105,11 @@ def find_balanced_json(text: str, start: int) -> str:
 
 
 def extract_player_response(raw_html: str) -> dict:
-    markers = ("ytInitialPlayerResponse =", "ytInitialPlayerResponse=", "var ytInitialPlayerResponse =")
+    markers = (
+        "ytInitialPlayerResponse =",
+        "ytInitialPlayerResponse=",
+        "var ytInitialPlayerResponse =",
+    )
     for marker in markers:
         marker_at = raw_html.find(marker)
         if marker_at == -1:
@@ -209,7 +214,9 @@ def fetch_timedtext_json3(url: str, api_key: str) -> dict:
     try:
         return parse_jsonish(raw_html)
     except Exception as exc:
-        raise RuntimeError(f"timedtext parse failed after {direct_error}; Firecrawl parse error: {exc}")
+        raise RuntimeError(
+            f"timedtext parse failed after {direct_error}; Firecrawl parse error: {exc}"
+        )
 
 
 def fetch_glasp_reader_transcript(video_id: str, api_key: str) -> tuple[str, str]:

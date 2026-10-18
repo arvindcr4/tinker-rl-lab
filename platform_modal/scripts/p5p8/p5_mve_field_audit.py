@@ -51,7 +51,9 @@ from collections import defaultdict
 from statistics import mean, median, stdev
 
 # --- I/O paths ---
-WORKTREE = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+WORKTREE = os.path.dirname(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+)
 CELLS_TSV = os.path.join(WORKTREE, "platform_hybrid/experiments/results/mega_20260704/cells.tsv")
 OUT_DIR = os.path.join(WORKTREE, "platform_hybrid/experiments/results/p5p8/review17_v2")
 FIG_DIR = os.path.join(OUT_DIR, "figures")
@@ -65,9 +67,10 @@ BOOT_B = 2000
 SEED = 20260704
 
 # --- helpers ---
-from p5_review17_stats import additive_r2, ratio_interval
+from p5_review17_stats import additive_r2
 
 from p5_review17_stats import json_safe
+
 
 def safe_float(x):
     try:
@@ -75,6 +78,7 @@ def safe_float(x):
         return value if math.isfinite(value) else None
     except (ValueError, TypeError):
         return None
+
 
 def eta_squared_one_way(values_by_group):
     """One-way η²: SS_between / SS_total. Returns (eta2, n_groups_used)."""
@@ -92,6 +96,7 @@ def eta_squared_one_way(values_by_group):
     if ss_total == 0:
         return float("nan"), len(group_means)
     return ss_between / ss_total, len(group_means)
+
 
 def bootstrap_eta2_ci(values_by_group, B=BOOT_B, seed=SEED):
     """Block-bootstrap 95% CI on η². Resample cells WITH REPLACEMENT
@@ -128,6 +133,7 @@ def bootstrap_eta2_ci(values_by_group, B=BOOT_B, seed=SEED):
     hi = etas[min(int(0.975 * len(etas)), len(etas) - 1)]
     return lo, hi
 
+
 def pearson(xs, ys):
     if len(xs) < 2 or len(ys) < 2 or len(xs) != len(ys):
         return float("nan")
@@ -141,8 +147,11 @@ def pearson(xs, ys):
     sxy = sum((xs[i] - mx) * (ys[i] - my) for i in range(n))
     return sxy / math.sqrt(sxx * syy)
 
+
 def main():
-    print("Protocol review17-p5-v2: exploratory descriptive associations; no independent-run, causal, equivalence, or held-out prediction claim")
+    print(
+        "Protocol review17-p5-v2: exploratory descriptive associations; no independent-run, causal, equivalence, or held-out prediction claim"
+    )
     os.makedirs(FIG_DIR, exist_ok=True)
     # 1) Load cells.tsv
     with open(CELLS_TSV) as f:
@@ -189,8 +198,12 @@ def main():
                 "mean": sum(vs) / len(vs),
                 "std": stdev(vs) if len(vs) > 1 else 0.0,
                 "iqr": iqr,
-                "pct_saturated_low": round(100.0 * sum(1 for v in vs if v == min(vs)) / max(1, n_valid), 2),
-                "pct_saturated_high": round(100.0 * sum(1 for v in vs if v == max(vs)) / max(1, n_valid), 2),
+                "pct_saturated_low": round(
+                    100.0 * sum(1 for v in vs if v == min(vs)) / max(1, n_valid), 2
+                ),
+                "pct_saturated_high": round(
+                    100.0 * sum(1 for v in vs if v == max(vs)) / max(1, n_valid), 2
+                ),
             }
         else:
             stats = {"field": f, "n_total": n_total, "n_valid": n_valid, "n_nan": n_nan}
@@ -207,26 +220,30 @@ def main():
                     vbg[r[axis]].append(v)
             eta2, n_groups = eta_squared_one_way(vbg)
             lo, hi = bootstrap_eta2_ci(vbg)
-            eta2_rows.append({
-                "field": f,
-                "axis": axis,
-                "n_groups": n_groups,
-                "eta2": round(eta2, 4) if not math.isnan(eta2) else None,
-                "ci_lo": round(lo, 4) if not math.isnan(lo) else None,
-                "ci_hi": round(hi, 4) if not math.isnan(hi) else None,
-            })
+            eta2_rows.append(
+                {
+                    "field": f,
+                    "axis": axis,
+                    "n_groups": n_groups,
+                    "eta2": round(eta2, 4) if not math.isnan(eta2) else None,
+                    "ci_lo": round(lo, 4) if not math.isnan(lo) else None,
+                    "ci_hi": round(hi, 4) if not math.isnan(hi) else None,
+                }
+            )
         # cross-axis sum
         axis_etas = [r["eta2"] for r in eta2_rows if r["field"] == f and r["eta2"] is not None]
         valid_rows = [r for r in rows if safe_float(r.get(f, "")) is not None]
         cross_sum = additive_r2(valid_rows, [safe_float(r[f]) for r in valid_rows], STACK_AXES)
-        eta2_rows.append({
-            "field": f,
-            "axis": "JOINT_CATEGORICAL_OLS_R2",
-            "n_groups": None,
-            "eta2": round(cross_sum, 4),
-            "ci_lo": None,
-            "ci_hi": None,
-        })
+        eta2_rows.append(
+            {
+                "field": f,
+                "axis": "JOINT_CATEGORICAL_OLS_R2",
+                "n_groups": None,
+                "eta2": round(cross_sum, 4),
+                "ci_lo": None,
+                "ci_hi": None,
+            }
+        )
 
     # 5) 5×5 Pearson correlation matrix between MVE fields
     #    Build aligned arrays (drop rows with any NaN in any of the 5 fields)
@@ -266,13 +283,15 @@ def main():
         if safe_float(r["pcd"]) == 0.0:
             flags.append("zero_pcd")
         if flags:
-            outliers.append({
-                "cell_id": cid,
-                "task_slice": r["task_slice"],
-                "model_family": r["model_family"],
-                "G": r["G"],
-                "flags": "|".join(flags),
-            })
+            outliers.append(
+                {
+                    "cell_id": cid,
+                    "task_slice": r["task_slice"],
+                    "model_family": r["model_family"],
+                    "G": r["G"],
+                    "flags": "|".join(flags),
+                }
+            )
     n_outliers = len(outliers)
     n_zvf_saturated = sum(1 for o in outliers if "zvf_saturated" in o["flags"])
     n_reward_saturated = sum(1 for o in outliers if "reward_saturated" in o["flags"])
@@ -283,8 +302,11 @@ def main():
     for task in TASK_NAMES:
         task_dist[task] = {}
         for f in MVE_FIELDS:
-            vs = [safe_float(r.get(f, "")) for r in rows
-                  if r["task_slice"] == task and safe_float(r.get(f, "")) is not None]
+            vs = [
+                safe_float(r.get(f, ""))
+                for r in rows
+                if r["task_slice"] == task and safe_float(r.get(f, "")) is not None
+            ]
             if vs:
                 task_dist[task][f] = {
                     "n": len(vs),
@@ -329,7 +351,9 @@ def main():
         "stack_axes": STACK_AXES,
         "per_field_dist": dist_rows,
         "per_field_per_axis_eta2": eta2_rows,
-        "corr_matrix_upper_triangle": {f"{k[0]}|{k[1]}": v for k, v in corr.items() if v is not None},
+        "corr_matrix_upper_triangle": {
+            f"{k[0]}|{k[1]}": v for k, v in corr.items() if v is not None
+        },
         "n_aligned_for_corr": n_aligned,
         "fingerprint_uniqueness": {
             "n_unique_fps": n_unique_fps,
@@ -354,8 +378,10 @@ def main():
     # --- figure: 5-panel per-field distribution ---
     try:
         import matplotlib
+
         matplotlib.use("Agg")
         import matplotlib.pyplot as plt
+
         fig, axes = plt.subplots(2, 3, figsize=(13, 7))
         axes = axes.flatten()
         for i, f in enumerate(MVE_FIELDS):
@@ -368,7 +394,11 @@ def main():
             else:
                 # unbounded lengths; use histogram with 20 bins
                 ax.hist(vs, bins=20, color="darkorange", edgecolor="black", alpha=0.7)
-            ax.set_title(f"{f}\nmin={min(vs):.3g} max={max(vs):.3g} std={stdev(vs):.3g}" if len(vs) > 1 else f)
+            ax.set_title(
+                f"{f}\nmin={min(vs):.3g} max={max(vs):.3g} std={stdev(vs):.3g}"
+                if len(vs) > 1
+                else f
+            )
             ax.set_xlabel(f)
             ax.set_ylabel("# cells")
             ax.grid(alpha=0.3)
@@ -396,12 +426,17 @@ def main():
         print("[figure] matplotlib not available, skipping figure", file=sys.stderr)
 
     # --- print headline ---
-    print(f"\n[headline] {n_cells} cells, {n_unique_fps}/{n_cells} ({round(100*n_unique_fps/n_cells,1)}%) unique 5-tuples")
-    print(f"[headline] outliers: {n_zvf_saturated} zvf-sat, {n_reward_saturated} reward-sat, {n_zero_std} zero-std")
+    print(
+        f"\n[headline] {n_cells} cells, {n_unique_fps}/{n_cells} ({round(100 * n_unique_fps / n_cells, 1)}%) unique 5-tuples"
+    )
+    print(
+        f"[headline] outliers: {n_zvf_saturated} zvf-sat, {n_reward_saturated} reward-sat, {n_zero_std} zero-std"
+    )
     print(f"[headline] cross-axis sum eta^2:")
     for f in MVE_FIELDS:
         s = next(r["eta2"] for r in eta2_rows if r["field"] == f and r["axis"] == "CROSS_SUM")
         print(f"   {f}: {s:.4f}")
+
 
 if __name__ == "__main__":
     main()

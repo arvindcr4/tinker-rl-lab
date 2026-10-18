@@ -58,6 +58,7 @@ Outputs:
     platform_hybrid/experiments/results/group_size_iter123_summary.tsv
     figures/group_size_iter123.pdf
 """
+
 from __future__ import annotations
 import json
 import math
@@ -65,6 +66,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from scipy import stats
@@ -120,15 +122,16 @@ def iso_reward_retention(iso: pd.DataFrame) -> list[dict]:
     out = []
     iso64 = iso[iso["budget_tokens"] == 64_000_000].copy()
     if iso64.empty:
-        return [{"metric_kind": "error", "metric_key": "no_data",
-                 "headline": "No T=64M data"}]
+        return [{"metric_kind": "error", "metric_key": "no_data", "headline": "No T=64M data"}]
     G_vals = sorted(iso64["G"].unique())
-    acc = {int(g): float(iso64[iso64["G"] == g]["heldout_acc_mean"].iloc[0])
-           for g in G_vals}
-    out.append({
-        "metric_kind": "iso_reward_setup", "metric_key": "T_64M_acc",
-        "headline": json.dumps({f"G={g}": a for g, a in acc.items()}),
-    })
+    acc = {int(g): float(iso64[iso64["G"] == g]["heldout_acc_mean"].iloc[0]) for g in G_vals}
+    out.append(
+        {
+            "metric_kind": "iso_reward_setup",
+            "metric_key": "T_64M_acc",
+            "headline": json.dumps({f"G={g}": a for g, a in acc.items()}),
+        }
+    )
 
     # For each pair (gs, gl), compute R
     rows = []
@@ -136,26 +139,36 @@ def iso_reward_retention(iso: pd.DataFrame) -> list[dict]:
         for gl in G_vals:
             if gs >= gl:
                 continue
-            rows.append({
-                "G_small": gs, "G_large": gl,
-                "acc_gs": acc[gs], "acc_gl": acc[gl],
-                "R": acc[gs] / acc[gl],
-                "rollouts_frac": gs / gl,
-                "wu_holds": acc[gs] / acc[gl] >= 0.976,
-            })
+            rows.append(
+                {
+                    "G_small": gs,
+                    "G_large": gl,
+                    "acc_gs": acc[gs],
+                    "acc_gl": acc[gl],
+                    "R": acc[gs] / acc[gl],
+                    "rollouts_frac": gs / gl,
+                    "wu_holds": acc[gs] / acc[gl] >= 0.976,
+                }
+            )
     pairs = pd.DataFrame(rows)
-    out.append({
-        "metric_kind": "iso_reward_pairs", "metric_key": "n_pairs",
-        "headline": f"At T=64M, {len(pairs)} (G_small, G_large) pairs; {int(pairs['wu_holds'].sum())} pass Wu's R>=0.976 threshold",
-    })
+    out.append(
+        {
+            "metric_kind": "iso_reward_pairs",
+            "metric_key": "n_pairs",
+            "headline": f"At T=64M, {len(pairs)} (G_small, G_large) pairs; {int(pairs['wu_holds'].sum())} pass Wu's R>=0.976 threshold",
+        }
+    )
 
     # Best (max rollouts-frac) Wu-holds pair
     if pairs["wu_holds"].any():
         best = pairs[pairs["wu_holds"]].sort_values("rollouts_frac", ascending=False).iloc[0]
-        out.append({
-            "metric_kind": "iso_reward_best", "metric_key": "max_rollouts_frac_at_T64M",
-            "headline": f"Max rollouts-frac with Wu R>=0.976 at T=64M: {best['rollouts_frac']:.3f} (G_small={int(best['G_small'])}, G_large={int(best['G_large'])}, R={best['R']:.3f})",
-        })
+        out.append(
+            {
+                "metric_kind": "iso_reward_best",
+                "metric_key": "max_rollouts_frac_at_T64M",
+                "headline": f"Max rollouts-frac with Wu R>=0.976 at T=64M: {best['rollouts_frac']:.3f} (G_small={int(best['G_small'])}, G_large={int(best['G_large'])}, R={best['R']:.3f})",
+            }
+        )
     return out
 
 
@@ -170,12 +183,20 @@ def noise_mechanism(snr: pd.DataFrame) -> list[dict]:
     """
     out = []
     if snr.empty:
-        return [{"metric_kind": "error", "metric_key": "no_snr_data",
-                 "headline": "No iter99 model-derived SNR projection data"}]
-    out.append({
-        "metric_kind": "snr_pool_size", "metric_key": "n_G",
-        "headline": f"Model-derived SNR-at-G projection pool: n={len(snr)} G-values: {sorted(snr['G'].astype(int).tolist())}",
-    })
+        return [
+            {
+                "metric_kind": "error",
+                "metric_key": "no_snr_data",
+                "headline": "No iter99 model-derived SNR projection data",
+            }
+        ]
+    out.append(
+        {
+            "metric_kind": "snr_pool_size",
+            "metric_key": "n_G",
+            "headline": f"Model-derived SNR-at-G projection pool: n={len(snr)} G-values: {sorted(snr['G'].astype(int).tolist())}",
+        }
+    )
     # OLS on log10(SNR) ~ log10(G) with theoretical slope +0.5 prediction
     g = snr["G"].astype(float).values
     snr_pred = snr["snr_pred_implicit_dpo"].astype(float).values
@@ -185,22 +206,30 @@ def noise_mechanism(snr: pd.DataFrame) -> list[dict]:
     logG = np.log10(g)
     logS = np.log10(snr_pred)
     slope, intercept, r, p, se = stats.linregress(logG, logS)
-    out.append({
-        "metric_kind": "snr_scaling", "metric_key": "ols_log10_snr_vs_log10_G",
-        "headline": f"OLS on model-derived projection log10(SNR) ~ log10(G): slope={slope:+.3f}/decade  projection-fit 95%CI [{slope-1.96*se:+.3f},{slope+1.96*se:+.3f}]  R^2={r**2:.3f}  p={p:.2e}",
-    })
-    out.append({
-        "metric_kind": "snr_scaling", "metric_key": "theoretical_pred_+0.5",
-        "headline": f"Theoretical SNR~G^0.5 predicts slope=+0.500/decade; model-derived projection={slope:+.3f}/decade -- slope is {'CONSISTENT' if abs(slope-0.5)<0.30 else 'INCONSISTENT'} with the reference at 0.30 tolerance (model-internal comparison only)",
-    })
+    out.append(
+        {
+            "metric_kind": "snr_scaling",
+            "metric_key": "ols_log10_snr_vs_log10_G",
+            "headline": f"OLS on model-derived projection log10(SNR) ~ log10(G): slope={slope:+.3f}/decade  projection-fit 95%CI [{slope - 1.96 * se:+.3f},{slope + 1.96 * se:+.3f}]  R^2={r**2:.3f}  p={p:.2e}",
+        }
+    )
+    out.append(
+        {
+            "metric_kind": "snr_scaling",
+            "metric_key": "theoretical_pred_+0.5",
+            "headline": f"Theoretical SNR~G^0.5 predicts slope=+0.500/decade; model-derived projection={slope:+.3f}/decade -- slope is {'CONSISTENT' if abs(slope - 0.5) < 0.30 else 'INCONSISTENT'} with the reference at 0.30 tolerance (model-internal comparison only)",
+        }
+    )
     # Per-G predictions and residuals
     pred = 10 ** (intercept + 0.5 * logG)
-    out.append({
-        "metric_kind": "snr_scaling", "metric_key": "pred_at_G",
-        "headline": "Model-derived SNR / G^0.5 reference at G: " +
-                     ", ".join(f"G={int(gi)}={snr_pred[i]:.3f}/{pred[i]:.3f}"
-                               for i, gi in enumerate(g)),
-    })
+    out.append(
+        {
+            "metric_kind": "snr_scaling",
+            "metric_key": "pred_at_G",
+            "headline": "Model-derived SNR / G^0.5 reference at G: "
+            + ", ".join(f"G={int(gi)}={snr_pred[i]:.3f}/{pred[i]:.3f}" for i, gi in enumerate(g)),
+        }
+    )
     return out
 
 
@@ -216,9 +245,17 @@ def wu_broader_pairs(iso: pd.DataFrame) -> list[dict]:
     """
     out = []
     Ts = [1_000_000, 4_000_000, 16_000_000, 64_000_000]
-    pairs_to_test = [(4, 32), (8, 32), (16, 32), (32, 64),
-                     (4, 64), (8, 64), (16, 64),
-                     (4, 16), (8, 16)]
+    pairs_to_test = [
+        (4, 32),
+        (8, 32),
+        (16, 32),
+        (32, 64),
+        (4, 64),
+        (8, 64),
+        (16, 64),
+        (4, 16),
+        (8, 16),
+    ]
     rows = []
     for gs, gl in pairs_to_test:
         for T in Ts:
@@ -228,30 +265,45 @@ def wu_broader_pairs(iso: pd.DataFrame) -> list[dict]:
             a_gs = float(sub[sub["G"] == gs]["heldout_acc_mean"].iloc[0])
             a_gl = float(sub[sub["G"] == gl]["heldout_acc_mean"].iloc[0])
             R = a_gs / a_gl
-            rows.append({
-                "G_small": gs, "G_large": gl, "T_tokens": T,
-                "acc_gs": a_gs, "acc_gl": a_gl,
-                "R": R, "rollouts_frac": gs / gl,
-                "wu_holds": R >= 0.976,
-            })
+            rows.append(
+                {
+                    "G_small": gs,
+                    "G_large": gl,
+                    "T_tokens": T,
+                    "acc_gs": a_gs,
+                    "acc_gl": a_gl,
+                    "R": R,
+                    "rollouts_frac": gs / gl,
+                    "wu_holds": R >= 0.976,
+                }
+            )
     df = pd.DataFrame(rows)
-    out.append({
-        "metric_kind": "wu_broader_setup", "metric_key": "n_pair_T_combos",
-        "headline": f"Wu-broad test: {len(df)} (G_small, G_large, T) combinations",
-    })
+    out.append(
+        {
+            "metric_kind": "wu_broader_setup",
+            "metric_key": "n_pair_T_combos",
+            "headline": f"Wu-broad test: {len(df)} (G_small, G_large, T) combinations",
+        }
+    )
 
     # At each T, count how many pairs satisfy Wu
     for T in Ts:
         sub = df[df["T_tokens"] == T]
         holds = sub[sub["wu_holds"]]
-        out.append({
-            "metric_kind": "wu_broader_at_T", "metric_key": f"T={T:.0e}",
-            "n_holds": len(holds), "n_pairs": len(sub),
-            "headline": f"T={T/1e6:.0f}M: {len(holds)}/{len(sub)} pairs satisfy R>=0.976 -- " +
-                        ", ".join(f"({int(r.G_small)},{int(r.G_large)})={r.R:.3f}"
-                                  for r in holds.itertuples()) if len(holds) else
-                        f"T={T/1e6:.0f}M: 0/{len(sub)} pairs satisfy R>=0.976 -- Wu FAILS at every tested G-ratio",
-        })
+        out.append(
+            {
+                "metric_kind": "wu_broader_at_T",
+                "metric_key": f"T={T:.0e}",
+                "n_holds": len(holds),
+                "n_pairs": len(sub),
+                "headline": f"T={T / 1e6:.0f}M: {len(holds)}/{len(sub)} pairs satisfy R>=0.976 -- "
+                + ", ".join(
+                    f"({int(r.G_small)},{int(r.G_large)})={r.R:.3f}" for r in holds.itertuples()
+                )
+                if len(holds)
+                else f"T={T / 1e6:.0f}M: 0/{len(sub)} pairs satisfy R>=0.976 -- Wu FAILS at every tested G-ratio",
+            }
+        )
 
     # Maximum rollouts-frac at T=64M
     sub64 = df[df["T_tokens"] == 64_000_000]
@@ -259,25 +311,40 @@ def wu_broader_pairs(iso: pd.DataFrame) -> list[dict]:
         best = sub64[sub64["wu_holds"]].sort_values("rollouts_frac", ascending=False)
         if not best.empty:
             r = best.iloc[0]
-            out.append({
-                "metric_kind": "wu_broader_at_T", "metric_key": "T=6e+07_best",
-                "headline": f"T=64M best Wu-passing pair: (G_small={int(r['G_small'])}, G_large={int(r['G_large'])}) R={r['R']:.3f}, rollouts-frac={r['rollouts_frac']:.3f}",
-            })
+            out.append(
+                {
+                    "metric_kind": "wu_broader_at_T",
+                    "metric_key": "T=6e+07_best",
+                    "headline": f"T=64M best Wu-passing pair: (G_small={int(r['G_small'])}, G_large={int(r['G_large'])}) R={r['R']:.3f}, rollouts-frac={r['rollouts_frac']:.3f}",
+                }
+            )
         else:
-            out.append({
-                "metric_kind": "wu_broader_at_T", "metric_key": "T=6e+07_best",
-"headline": "T=64M: NO pair satisfies R>=0.976 -- Wu FAILS universally at this budget",
-            })
+            out.append(
+                {
+                    "metric_kind": "wu_broader_at_T",
+                    "metric_key": "T=6e+07_best",
+                    "headline": "T=64M: NO pair satisfies R>=0.976 -- Wu FAILS universally at this budget",
+                }
+            )
 
     # All pairs at T=64M, sorted by R
     sub64_sorted = sub64.sort_values("R", ascending=False)
-    out.append({
-        "metric_kind": "wu_broader_at_T", "metric_key": "T=6e+07_full_table",
-        "headline": json.dumps([{"pair": f"({int(r.G_small)},{int(r.G_large)})",
-                                  "R": round(float(r.R), 4),
-                                  "rollouts_frac": round(float(r.rollouts_frac), 3)}
-                                 for r in sub64_sorted.itertuples()]),
-    })
+    out.append(
+        {
+            "metric_kind": "wu_broader_at_T",
+            "metric_key": "T=6e+07_full_table",
+            "headline": json.dumps(
+                [
+                    {
+                        "pair": f"({int(r.G_small)},{int(r.G_large)})",
+                        "R": round(float(r.R), 4),
+                        "rollouts_frac": round(float(r.rollouts_frac), 3),
+                    }
+                    for r in sub64_sorted.itertuples()
+                ]
+            ),
+        }
+    )
     return out
 
 
@@ -302,13 +369,17 @@ def effect_size(iso: pd.DataFrame, boot: pd.DataFrame) -> list[dict]:
         difference = float(a32["heldout_acc_mean"].iloc[0]) - float(a4["heldout_acc_mean"].iloc[0])
         if not math.isfinite(difference):
             raise ValueError(f"nonfinite accuracy difference at T={T}")
-        out.append({
-            "metric_kind": "effect_size", "metric_key": f"T={T:.0e}",
-            "mean_difference": difference, "cohens_d": None,
-            "effect_size_status": "NOT_IDENTIFIABLE_FROM_SUMMARY_CIS",
-            "headline": f"T={T/1e6:.0f}M: accuracy difference (G=32 minus G=4) = {difference:+.3f}; "
-                        "Cohen's d unavailable: replicate SDs/counts absent",
-        })
+        out.append(
+            {
+                "metric_kind": "effect_size",
+                "metric_key": f"T={T:.0e}",
+                "mean_difference": difference,
+                "cohens_d": None,
+                "effect_size_status": "NOT_IDENTIFIABLE_FROM_SUMMARY_CIS",
+                "headline": f"T={T / 1e6:.0f}M: accuracy difference (G=32 minus G=4) = {difference:+.3f}; "
+                "Cohen's d unavailable: replicate SDs/counts absent",
+            }
+        )
     return out
 
 
@@ -327,44 +398,60 @@ def cross_pillar_noise(zvf: pd.DataFrame) -> list[dict]:
     for _, r in zvf.iterrows():
         # Treat mean_zvf as the empirical 1 - effective_GU ratio. So effective_G = 1/(1-mean_zvf).
         # The expected baseline variance sigma^2/G scales with this.
-        rows.append({
-            "experiment": r["experiment"],
-            "model": r["model"],
-            "G_measured": int(r["group_size"]),
-            "mean_zvf": float(r["mean_zvf"]),
-            "last10_avg": float(r["last10_avg"]),
-            "mean_reward": float(r["mean_reward"]),
-            "n_seeds": int(r["n_seeds"]),
-        })
+        rows.append(
+            {
+                "experiment": r["experiment"],
+                "model": r["model"],
+                "G_measured": int(r["group_size"]),
+                "mean_zvf": float(r["mean_zvf"]),
+                "last10_avg": float(r["last10_avg"]),
+                "mean_reward": float(r["mean_reward"]),
+                "n_seeds": int(r["n_seeds"]),
+            }
+        )
     df = pd.DataFrame(rows)
     out = []
-    out.append({
-        "metric_kind": "cross_pillar_pool", "metric_key": "n_cells",
-        "headline": f"Pooled P2 x P3 cells: n={len(df)}",
-    })
+    out.append(
+        {
+            "metric_kind": "cross_pillar_pool",
+            "metric_key": "n_cells",
+            "headline": f"Pooled P2 x P3 cells: n={len(df)}",
+        }
+    )
     rho, p = stats.spearmanr(df["mean_zvf"], df["last10_avg"])
-    out.append({
-        "metric_kind": "cross_pillar_spearman", "metric_key": "rho_zvf_vs_last10_pooled",
-        "headline": f"Pooled Spearman rho(mean_zvf, last10_avg) = {rho:+.3f}  p={p:.3e}  n={len(df)}",
-    })
+    out.append(
+        {
+            "metric_kind": "cross_pillar_spearman",
+            "metric_key": "rho_zvf_vs_last10_pooled",
+            "headline": f"Pooled Spearman rho(mean_zvf, last10_avg) = {rho:+.3f}  p={p:.3e}  n={len(df)}",
+        }
+    )
     rho_r, p_r = stats.spearmanr(df["mean_zvf"], df["mean_reward"])
-    out.append({
-        "metric_kind": "cross_pillar_spearman", "metric_key": "rho_zvf_vs_mean_reward_pooled",
-        "headline": f"Pooled Spearman rho(mean_zvf, mean_reward) = {rho_r:+.3f}  p={p_r:.3e}",
-    })
+    out.append(
+        {
+            "metric_kind": "cross_pillar_spearman",
+            "metric_key": "rho_zvf_vs_mean_reward_pooled",
+            "headline": f"Pooled Spearman rho(mean_zvf, mean_reward) = {rho_r:+.3f}  p={p_r:.3e}",
+        }
+    )
     for exp_name, sub in df.groupby("experiment"):
         if len(sub) >= 3:
             r_, p_ = stats.spearmanr(sub["mean_zvf"], sub["last10_avg"])
-            out.append({
-                "metric_kind": "cross_pillar_spearman_within",
-                "metric_key": f"within_{exp_name}",
-                "headline": f"Within {exp_name}: Spearman rho(mean_zvf, last10_avg) = {r_:+.3f}  p={p_:.3e}  n={len(sub)}",
-            })
+            out.append(
+                {
+                    "metric_kind": "cross_pillar_spearman_within",
+                    "metric_key": f"within_{exp_name}",
+                    "headline": f"Within {exp_name}: Spearman rho(mean_zvf, last10_avg) = {r_:+.3f}  p={p_:.3e}  n={len(sub)}",
+                }
+            )
     # Save the records for plotting
-    out.append({
-        "metric_kind": "_extras", "metric_key": "_store",
-        "headline": json.dumps(df.to_dict(orient="records")),
-    })
+    out.append(
+        {
+            "metric_kind": "_extras",
+            "metric_key": "_store",
+            "headline": json.dumps(df.to_dict(orient="records")),
+        }
+    )
     return out
 
 
@@ -405,7 +492,7 @@ def make_figure(iso_reward, noise, wu, es, cross, out_pdf: Path) -> None:
         ax.grid(True, alpha=0.3)
 
     # (B) SNR scaling
-    ax =axes[0, 1]
+    ax = axes[0, 1]
     ax.set_title("(B) Model-derived SNR projection vs sqrt(G) reference")
     # Display model-derived input projections and an anchored reference curve
     # (noise extras would have records; we don't have that here so just show the headline prediction)
@@ -428,16 +515,33 @@ def make_figure(iso_reward, noise, wu, es, cross, out_pdf: Path) -> None:
                 # Pattern: "G=<gi>=<snr_projected>/<snr_pred>"
                 # Use a regex-style parse
                 import re
+
                 m = re.match(r"\s*G=(\d+)=([\d.]+)/", p)
                 if m:
                     Gs_projected.append(int(m.group(1)))
                     snr_projected.append(float(m.group(2)))
             if Gs_projected:
-                ax.scatter(Gs_projected, snr_projected, color="#d62728", s=80, zorder=3, label="model-derived SNR projection")
+                ax.scatter(
+                    Gs_projected,
+                    snr_projected,
+                    color="#d62728",
+                    s=80,
+                    zorder=3,
+                    label="model-derived SNR projection",
+                )
                 # Theory: snr ~ G^0.5; pick a single anchor to align
-                s_theory = snr_projected[len(snr_projected)//2] / (Gs_projected[len(Gs_projected)//2] ** 0.5)
-                ax.plot(Gs_th, s_theory * Gs_th ** 0.5, color="#1f77b4", lw=2, label="anchored G^0.5 reference")
-        ax.set_xscale("log"); ax.set_yscale("log")
+                s_theory = snr_projected[len(snr_projected) // 2] / (
+                    Gs_projected[len(Gs_projected) // 2] ** 0.5
+                )
+                ax.plot(
+                    Gs_th,
+                    s_theory * Gs_th**0.5,
+                    color="#1f77b4",
+                    lw=2,
+                    label="anchored G^0.5 reference",
+                )
+        ax.set_xscale("log")
+        ax.set_yscale("log")
         ax.set_xlabel("Group size G")
         ax.set_ylabel("Model-derived SNR projection")
         ax.legend(fontsize=8)
@@ -449,7 +553,14 @@ def make_figure(iso_reward, noise, wu, es, cross, out_pdf: Path) -> None:
     Ts = [1_000_000, 4_000_000, 16_000_000, 64_000_000]
     n_holds = []
     for T in Ts:
-        r = next((r for r in wu if r["metric_kind"] == "wu_broader_at_T" and r["metric_key"] == f"T={T:.0e}"), None)
+        r = next(
+            (
+                r
+                for r in wu
+                if r["metric_kind"] == "wu_broader_at_T" and r["metric_key"] == f"T={T:.0e}"
+            ),
+            None,
+        )
         n_holds.append(r["n_holds"] if r and "n_holds" in r else float("nan"))
     ax.plot(Ts_M, n_holds, "o-", color="#1f77b4", lw=2, markersize=10, label="Wu-passing pairs")
     ax.set_xscale("log")
@@ -463,7 +574,14 @@ def make_figure(iso_reward, noise, wu, es, cross, out_pdf: Path) -> None:
     ax = axes[1, 1]
     ds = []
     for T in Ts:
-        row = next((r for r in es if r["metric_kind"] == "effect_size" and r["metric_key"] == f"T={T:.0e}"), None)
+        row = next(
+            (
+                r
+                for r in es
+                if r["metric_kind"] == "effect_size" and r["metric_key"] == f"T={T:.0e}"
+            ),
+            None,
+        )
         value = row.get("mean_difference") if row else None
         ds.append(float(value) if value is not None else float("nan"))
     colors = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728"]
@@ -473,13 +591,22 @@ def make_figure(iso_reward, noise, wu, es, cross, out_pdf: Path) -> None:
     ax.set_ylabel("Accuracy difference (G=32 minus G=4)")
     ax.set_title("(D) Observed accuracy difference; Cohen's d unavailable")
     ax.grid(True, alpha=0.3)
-    for bar, difference in zip(bars, ds):
+    for bar, difference in zip(bars, ds, strict=False):
         if math.isfinite(difference):
-            ax.text(bar.get_x() + bar.get_width() / 2, difference, f"{difference:+.3f}",
-                    ha="center", va="bottom", fontsize=9)
+            ax.text(
+                bar.get_x() + bar.get_width() / 2,
+                difference,
+                f"{difference:+.3f}",
+                ha="center",
+                va="bottom",
+                fontsize=9,
+            )
 
-    fig.suptitle("Pillar 3 / Iter 123 -- Wu et al. (2025) G=2~=G=16 at broader scale:\niso-reward, model-derived SNR projection, broader G-pair sweep, effect-size magnitude",
-                 fontsize=11, fontweight="bold")
+    fig.suptitle(
+        "Pillar 3 / Iter 123 -- Wu et al. (2025) G=2~=G=16 at broader scale:\niso-reward, model-derived SNR projection, broader G-pair sweep, effect-size magnitude",
+        fontsize=11,
+        fontweight="bold",
+    )
     fig.tight_layout()
     fig.savefig(out_pdf, bbox_inches="tight")
     plt.close(fig)
@@ -502,34 +629,52 @@ def main() -> None:
     es = effect_size(iso, boot)
     cross = cross_pillar_noise(zvf)
 
-    write_tsv(RES / "group_size_iter123_iso_reward_v3.tsv", iso_r,
-              ["metric_kind", "metric_key", "headline"])
-    write_tsv(RES / "group_size_iter123_noise_mech_v3.tsv", noise,
-              ["metric_kind", "metric_key", "headline"])
-    write_tsv(RES / "group_size_iter123_wu_broader_v3.tsv", wu,
-              ["metric_kind", "metric_key", "headline"])
-    write_tsv(RES / "group_size_iter123_effect_size_v3.tsv", es,
-              ["metric_kind", "metric_key", "headline"])
+    write_tsv(
+        RES / "group_size_iter123_iso_reward_v3.tsv",
+        iso_r,
+        ["metric_kind", "metric_key", "headline"],
+    )
+    write_tsv(
+        RES / "group_size_iter123_noise_mech_v3.tsv",
+        noise,
+        ["metric_kind", "metric_key", "headline"],
+    )
+    write_tsv(
+        RES / "group_size_iter123_wu_broader_v3.tsv", wu, ["metric_kind", "metric_key", "headline"]
+    )
+    write_tsv(
+        RES / "group_size_iter123_effect_size_v3.tsv", es, ["metric_kind", "metric_key", "headline"]
+    )
     # Summary combines all
     summary = []
     for r in iso_r:
-        summary.append({"section": "A_iso_reward", "metric_key": r["metric_key"],
-                        "headline": r["headline"]})
+        summary.append(
+            {"section": "A_iso_reward", "metric_key": r["metric_key"], "headline": r["headline"]}
+        )
     for r in noise:
-        summary.append({"section": "B_noise_mech", "metric_key": r["metric_key"],
-                        "headline": r["headline"]})
+        summary.append(
+            {"section": "B_noise_mech", "metric_key": r["metric_key"], "headline": r["headline"]}
+        )
     for r in wu:
-        summary.append({"section": "C_wu_broader", "metric_key": r["metric_key"],
-                        "headline": r["headline"]})
+        summary.append(
+            {"section": "C_wu_broader", "metric_key": r["metric_key"], "headline": r["headline"]}
+        )
     for r in es:
-        summary.append({"section": "D_effect_size", "metric_key": r["metric_key"],
-                        "headline": r["headline"]})
+        summary.append(
+            {"section": "D_effect_size", "metric_key": r["metric_key"], "headline": r["headline"]}
+        )
     for r in cross:
         if r["metric_kind"] != "_extras":
-            summary.append({"section": "E_cross_pillar", "metric_key": r["metric_key"],
-                            "headline": r["headline"]})
-    write_tsv(RES / "group_size_iter123_summary_v3.tsv", summary,
-              ["section", "metric_key", "headline"])
+            summary.append(
+                {
+                    "section": "E_cross_pillar",
+                    "metric_key": r["metric_key"],
+                    "headline": r["headline"],
+                }
+            )
+    write_tsv(
+        RES / "group_size_iter123_summary_v3.tsv", summary, ["section", "metric_key", "headline"]
+    )
 
     make_figure(iso_r, noise, wu, es, cross, FIG / "group_size_iter123_v3.pdf")
 
@@ -551,7 +696,11 @@ def main() -> None:
             print(f"  {r['metric_key']!s:>40}  ::  {r['headline']}")
     print("\n=== Iter 123 (E) Cross-pillar noise ===")
     for r in cross:
-        if r["metric_kind"] in ("cross_pillar_pool", "cross_pillar_spearman", "cross_pillar_spearman_within"):
+        if r["metric_kind"] in (
+            "cross_pillar_pool",
+            "cross_pillar_spearman",
+            "cross_pillar_spearman_within",
+        ):
             print(f"  {r['metric_key']!s:>40}  ::  {r['headline']}")
 
 

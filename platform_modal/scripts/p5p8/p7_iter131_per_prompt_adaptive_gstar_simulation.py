@@ -66,15 +66,17 @@ Outputs:
     (5 rows: per-controller bootstrap CI on contrast_restored net of cost)
   platform_hybrid/experiments/results/p5p8/p7_iter131_summary.json
 """
+
 import json
-import math
 import statistics
 from collections import Counter, defaultdict
 from pathlib import Path
 
 import sys
+
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
+from _paths import REPO_ROOT
+
 WORK = REPO_ROOT
 N2_DIR = WORK / "platform_hybrid/experiments/results/n2_reward_tensor_resume"
 OUT_DIR = WORK / "platform_hybrid/experiments/results/p5p8/corrected-review19-v2"
@@ -93,10 +95,11 @@ COST_PENALTY_WEIGHT = 0.5
 
 # ---------- Closed-form Bernoulli helpers ----------
 
+
 def zvf_binom(p_hat, G):
     """Closed-form binomial ZVF under iid assumption at group size G."""
     p = min(max(p_hat, 0.0), 1.0)
-    return p ** G + (1.0 - p) ** G
+    return p**G + (1.0 - p) ** G
 
 
 def zvf_from_k(k, G):
@@ -118,6 +121,7 @@ def zvf_from_k(k, G):
 
 
 # ---------- Per-prompt controller rules ----------
+
 
 def gstar_per_prompt_static8(p_hat, zvf_obs):
     """C0: never escalate."""
@@ -184,6 +188,7 @@ def gstar_per_prompt_dualformer(p_hat):
 
 # ---------- Load N2 tensors ----------
 
+
 def load_n2():
     by_method = {}
     for m in METHODS:
@@ -194,6 +199,7 @@ def load_n2():
 
 
 # ---------- Per-cell evaluation ----------
+
 
 def evaluate_per_prompt(by_method):
     """For each (method, step, prompt) cell, compute observed k_p, p_hat, zvf_obs,
@@ -214,8 +220,11 @@ def evaluate_per_prompt(by_method):
                 p_hat = k / G_BASE
                 zvf_obs = 1.0 if k in (0, G_BASE) else zvf_binom(p_hat, G_BASE)
                 rec = {
-                    "method": m, "step": step, "prompt": p_idx,
-                    "k_obs": k, "p_hat": round(p_hat, 4),
+                    "method": m,
+                    "step": step,
+                    "prompt": p_idx,
+                    "k_obs": k,
+                    "p_hat": round(p_hat, 4),
                     "zvf_obs": round(zvf_obs, 4),
                     "is_boundary": int(k in (0, G_BASE)),
                 }
@@ -239,37 +248,47 @@ def evaluate_per_prompt(by_method):
 
 # ---------- Step aggregation ----------
 
+
 def aggregate_per_step(records):
     """For each (method, step, controller), aggregate rollouts_used,
     contrast_intent, contrast_magnitude, contrast_restored, cost_ratio."""
     step_summary = []
     grouped = defaultdict(list)
     for r in records:
-        for cname in ["STATIC_G8", "STATIC_G16", "ADAPTIVE_PP",
-                      "ADAPTIVE_PP_ORACLE", "DUALFORMER_PP"]:
+        for cname in [
+            "STATIC_G8",
+            "STATIC_G16",
+            "ADAPTIVE_PP",
+            "ADAPTIVE_PP_ORACLE",
+            "DUALFORMER_PP",
+        ]:
             grouped[(r["method"], r["step"], cname)].append(r)
 
     for (m, s, cname), prompts in sorted(grouped.items()):
         rollouts_used = sum(p[f"{cname}_Gstar"] for p in prompts)
-        contrast_intent = sum(1 for p in prompts
-                              if p[f"{cname}_zvf_pred"] < 0.999)
+        contrast_intent = sum(1 for p in prompts if p[f"{cname}_zvf_pred"] < 0.999)
         contrast_magnitude = sum(p[f"{cname}_contrast_mag"] for p in prompts)
         baseline_contrast_magnitude = sum(1.0 - p["zvf_obs"] for p in prompts)
         contrast_restored = contrast_magnitude - baseline_contrast_magnitude
         cost_ratio = rollouts_used / (N_PROMPTS_PER_STEP * G_BASE)
-        step_summary.append({
-            "method": m, "step": s, "controller": cname,
-            "rollouts_used": rollouts_used,
-            "contrast_intent": contrast_intent,
-            "contrast_magnitude": round(contrast_magnitude, 4),
-            "baseline_contrast_magnitude": round(baseline_contrast_magnitude, 4),
-            "contrast_restored": round(contrast_restored, 4),
-            "cost_ratio": round(cost_ratio, 4),
-        })
+        step_summary.append(
+            {
+                "method": m,
+                "step": s,
+                "controller": cname,
+                "rollouts_used": rollouts_used,
+                "contrast_intent": contrast_intent,
+                "contrast_magnitude": round(contrast_magnitude, 4),
+                "baseline_contrast_magnitude": round(baseline_contrast_magnitude, 4),
+                "contrast_restored": round(contrast_restored, 4),
+                "cost_ratio": round(cost_ratio, 4),
+            }
+        )
     return step_summary
 
 
 # ---------- Method aggregation ----------
+
 
 def aggregate_per_method(step_summary):
     method_summary = []
@@ -279,49 +298,57 @@ def aggregate_per_method(step_summary):
 
     for (m, cname), steps in sorted(grouped.items()):
         total_rollouts = sum(s["rollouts_used"] for s in steps)
-        total_contrast_intent = sum(s["contrast_intent"]for s in steps)
+        total_contrast_intent = sum(s["contrast_intent"] for s in steps)
         total_contrast_mag = sum(s["contrast_magnitude"] for s in steps)
-        total_baseline_contrast_mag = sum(s["baseline_contrast_magnitude"]
-                                          for s in steps)
+        total_baseline_contrast_mag = sum(s["baseline_contrast_magnitude"] for s in steps)
         total_contrast_restored = sum(s["contrast_restored"] for s in steps)
         baseline_rollouts = N_STEPS * N_PROMPTS_PER_STEP * G_BASE
-        mean_cost_ratio = (total_rollouts / baseline_rollouts
-                           if baseline_rollouts else 0.0)
+        mean_cost_ratio = total_rollouts / baseline_rollouts if baseline_rollouts else 0.0
         # Per-step contrast_restored net of cost penalty
         per_step_net = []
         for s in steps:
             cost_pen = COST_PENALTY_WEIGHT * (s["cost_ratio"] - 1.0)
             per_step_net.append(s["contrast_restored"] - cost_pen)
-        method_summary.append({
-            "method": m, "controller": cname,
-            "total_rollouts": total_rollouts,
-            "baseline_rollouts": baseline_rollouts,
-            "mean_cost_ratio": round(mean_cost_ratio, 4),
-            "total_contrast_intent": total_contrast_intent,
-            "total_contrast_magnitude": round(total_contrast_mag, 4),
-            "total_baseline_contrast_magnitude": round(total_baseline_contrast_mag, 4),
-            "total_contrast_restored": round(total_contrast_restored, 4),
-            "mean_contrast_restored_per_step": round(
-                statistics.mean([s["contrast_restored"] for s in steps]), 4),
-            "mean_net_per_step": round(statistics.mean(per_step_net), 4),
-            "n_steps": len(steps),
-        })
+        method_summary.append(
+            {
+                "method": m,
+                "controller": cname,
+                "total_rollouts": total_rollouts,
+                "baseline_rollouts": baseline_rollouts,
+                "mean_cost_ratio": round(mean_cost_ratio, 4),
+                "total_contrast_intent": total_contrast_intent,
+                "total_contrast_magnitude": round(total_contrast_mag, 4),
+                "total_baseline_contrast_magnitude": round(total_baseline_contrast_mag, 4),
+                "total_contrast_restored": round(total_contrast_restored, 4),
+                "mean_contrast_restored_per_step": round(
+                    statistics.mean([s["contrast_restored"] for s in steps]), 4
+                ),
+                "mean_net_per_step": round(statistics.mean(per_step_net), 4),
+                "n_steps": len(steps),
+            }
+        )
     return method_summary
 
 
 # ---------- Bootstrap CI ----------
 
+
 def bootstrap_ci(values, B=N_BOOT, alpha=0.05, seed=SEED):
     import random
+
     if not values:
         return (float("nan"),) * 3
     rng = random.Random(seed)
     boots = sorted(statistics.mean(rng.choices(values, k=len(values))) for _ in range(B))
-    return statistics.mean(values), boots[int(B*alpha/2)], boots[min(B-1,int(B*(1-alpha/2)))]
-
+    return (
+        statistics.mean(values),
+        boots[int(B * alpha / 2)],
+        boots[min(B - 1, int(B * (1 - alpha / 2)))],
+    )
 
 
 # ---------- Main ----------
+
 
 def main():
     by_method = load_n2()
@@ -335,19 +362,22 @@ def main():
         cost_pen = COST_PENALTY_WEIGHT * (s["cost_ratio"] - 1.0)
         by_controller[s["controller"]].append(s["contrast_restored"] - cost_pen)
     contrast_ci = []
-    for cname in ["STATIC_G8", "STATIC_G16", "ADAPTIVE_PP",
-                  "ADAPTIVE_PP_ORACLE", "DUALFORMER_PP"]:
+    for cname in ["STATIC_G8", "STATIC_G16", "ADAPTIVE_PP", "ADAPTIVE_PP_ORACLE", "DUALFORMER_PP"]:
         mu, lo, hi = bootstrap_ci(by_controller[cname])
-        contrast_ci.append({
-            "controller": cname, "mean_net": mu, "ci_lo": lo, "ci_hi": hi,
-            "ci_excludes_zero": int(lo > 0 or hi < 0),
-            "n": len(by_controller[cname]),
-        })
+        contrast_ci.append(
+            {
+                "controller": cname,
+                "mean_net": mu,
+                "ci_lo": lo,
+                "ci_hi": hi,
+                "ci_excludes_zero": int(lo > 0 or hi < 0),
+                "n": len(by_controller[cname]),
+            }
+        )
 
     # Per-prompt Gstar distribution by controller
     gstar_dist = {}
-    for cname in ["STATIC_G8", "STATIC_G16", "ADAPTIVE_PP",
-                  "ADAPTIVE_PP_ORACLE", "DUALFORMER_PP"]:
+    for cname in ["STATIC_G8", "STATIC_G16", "ADAPTIVE_PP", "ADAPTIVE_PP_ORACLE", "DUALFORMER_PP"]:
         counter = Counter(r[f"{cname}_Gstar"] for r in records)
         gstar_dist[cname] = dict(counter)
 
@@ -355,14 +385,18 @@ def main():
     cost_eq_ranking = []
     for ms in method_summary:
         if ms["total_rollouts"] > 0:
-            cost_eq_ranking.append({
-                "method": ms["method"], "controller": ms["controller"],
-                "contrast_per_unit_cost": round(
-                    ms["total_contrast_magnitude"] / ms["total_rollouts"], 6),
-                "total_contrast_magnitude": ms["total_contrast_magnitude"],
-                "total_rollouts": ms["total_rollouts"],
-                "mean_cost_ratio": ms["mean_cost_ratio"],
-            })
+            cost_eq_ranking.append(
+                {
+                    "method": ms["method"],
+                    "controller": ms["controller"],
+                    "contrast_per_unit_cost": round(
+                        ms["total_contrast_magnitude"] / ms["total_rollouts"], 6
+                    ),
+                    "total_contrast_magnitude": ms["total_contrast_magnitude"],
+                    "total_rollouts": ms["total_rollouts"],
+                    "mean_cost_ratio": ms["mean_cost_ratio"],
+                }
+            )
     # For ADAPTIVE_PP only, rank methods by contrast_per_unit_cost
     adaptive_rows = [r for r in cost_eq_ranking if r["controller"] == "ADAPTIVE_PP"]
     adaptive_rows.sort(key=lambda x: x["contrast_per_unit_cost"], reverse=True)
@@ -377,8 +411,7 @@ def main():
     boundary_rate_per_method = {}
     for m in METHODS:
         cells = [r for r in records if r["method"] == m]
-        boundary_rate_per_method[m] = round(
-            sum(r["is_boundary"] for r in cells) / len(cells), 4)
+        boundary_rate_per_method[m] = round(sum(r["is_boundary"] for r in cells) / len(cells), 4)
 
     # H1: ADAPTIVE_PP recovers strictly-positive contrast on ≥1 method × ≥1 step
     h1_pass = any(
@@ -387,8 +420,7 @@ def main():
     )
 
     # H2: per-prompt G*=16 dominates G*=32 by frequency for ADAPTIVE_PP
-    h2_pass = (gstar_dist["ADAPTIVE_PP"].get(16, 0) >
-               gstar_dist["ADAPTIVE_PP"].get(32, 0))
+    h2_pass = gstar_dist["ADAPTIVE_PP"].get(16, 0) > gstar_dist["ADAPTIVE_PP"].get(32, 0)
 
     # H3: ADAPTIVE_PP recovers more contrast_mag PER UNIT COST than STATIC_G16
     # (cost-equivalent comparison: STATIC_G16 is dumb-pay-2x-for-all;
@@ -396,21 +428,22 @@ def main():
     # contrast_mag / total_rollouts).
     h3_pass = False
     for m in METHODS:
-        adapt = next(ms for ms in method_summary
-                     if ms["method"] == m and ms["controller"] == "ADAPTIVE_PP")
-        static = next(ms for ms in method_summary
-                      if ms["method"] == m and ms["controller"] == "STATIC_G16")
-        if (static["total_rollouts"] > 0 and adapt["total_rollouts"] > 0):
+        adapt = next(
+            ms for ms in method_summary if ms["method"] == m and ms["controller"] == "ADAPTIVE_PP"
+        )
+        static = next(
+            ms for ms in method_summary if ms["method"] == m and ms["controller"] == "STATIC_G16"
+        )
+        if static["total_rollouts"] > 0 and adapt["total_rollouts"] > 0:
             adapt_eff = adapt["total_contrast_magnitude"] / adapt["total_rollouts"]
-            static_eff = (static["total_contrast_magnitude"]
-                           / static["total_rollouts"])
+            static_eff = static["total_contrast_magnitude"] / static["total_rollouts"]
             if adapt_eff >= static_eff:
                 h3_pass = True
                 break
 
     # H4: ranking match with iter-127 method-axis CCC (gift, grpo, aero, areal)
     iter127_ranking = ["gift", "grpo", "aero", "areal"]
-    h4_match = (adaptive_ranking == iter127_ranking)
+    h4_match = adaptive_ranking == iter127_ranking
 
     summary = {
         "iter": 131,
@@ -418,14 +451,17 @@ def main():
         "n_prompt_cells": len(records),
         "n_step_summary_rows": len(step_summary),
         "n_method_summary_rows": len(method_summary),
-        "controllers": ["STATIC_G8", "STATIC_G16", "ADAPTIVE_PP",
-                         "ADAPTIVE_PP_ORACLE", "DUALFORMER_PP"],
+        "controllers": [
+            "STATIC_G8",
+            "STATIC_G16",
+            "ADAPTIVE_PP",
+            "ADAPTIVE_PP_ORACLE",
+            "DUALFORMER_PP",
+        ],
         "tau_target_rule": "halve zvf_obs (zvf(G) < zvf_obs/2)",
-        "gstar_distribution": {c: dict(sorted(d.items()))
-                               for c, d in gstar_dist.items()},
+        "gstar_distribution": {c: dict(sorted(d.items())) for c, d in gstar_dist.items()},
         "gstar_per_method_adaptive_pp": {
-            f"{m}": dict(sorted(gstar_per_method[(m, "ADAPTIVE_PP")].items()))
-            for m in METHODS
+            f"{m}": dict(sorted(gstar_per_method[(m, "ADAPTIVE_PP")].items())) for m in METHODS
         },
         "boundary_rate_per_method": boundary_rate_per_method,
         "h1_adaptive_recovers_somewhere": bool(h1_pass),
@@ -440,12 +476,15 @@ def main():
     # ----- Write TSVs -----
     out_pp = OUT_DIR / "p7_iter131_per_prompt_gstar.tsv"
     with open(out_pp, "w") as f:
-        cols = ["method", "step", "prompt", "k_obs", "p_hat", "zvf_obs",
-                "is_boundary"]
-        for cname in ["STATIC_G8", "STATIC_G16", "ADAPTIVE_PP",
-                      "ADAPTIVE_PP_ORACLE", "DUALFORMER_PP"]:
-            cols.extend([f"{cname}_Gstar", f"{cname}_zvf_pred",
-                         f"{cname}_contrast_mag"])
+        cols = ["method", "step", "prompt", "k_obs", "p_hat", "zvf_obs", "is_boundary"]
+        for cname in [
+            "STATIC_G8",
+            "STATIC_G16",
+            "ADAPTIVE_PP",
+            "ADAPTIVE_PP_ORACLE",
+            "DUALFORMER_PP",
+        ]:
+            cols.extend([f"{cname}_Gstar", f"{cname}_zvf_pred", f"{cname}_contrast_mag"])
         f.write("\t".join(cols) + "\n")
         for r in records:
             f.write("\t".join(str(r[c]) for c in cols) + "\n")
@@ -453,9 +492,17 @@ def main():
 
     out_step = OUT_DIR / "p7_iter131_step_summary.tsv"
     with open(out_step, "w") as f:
-        cols = ["method", "step", "controller", "rollouts_used",
-                "contrast_intent", "contrast_magnitude",
-                "baseline_contrast_magnitude", "contrast_restored", "cost_ratio"]
+        cols = [
+            "method",
+            "step",
+            "controller",
+            "rollouts_used",
+            "contrast_intent",
+            "contrast_magnitude",
+            "baseline_contrast_magnitude",
+            "contrast_restored",
+            "cost_ratio",
+        ]
         f.write("\t".join(cols) + "\n")
         for s in step_summary:
             f.write("\t".join(str(s[c]) for c in cols) + "\n")
@@ -463,11 +510,20 @@ def main():
 
     out_method = OUT_DIR / "p7_iter131_method_summary.tsv"
     with open(out_method, "w") as f:
-        cols = ["method", "controller", "total_rollouts", "baseline_rollouts",
-                "mean_cost_ratio", "total_contrast_intent",
-                "total_contrast_magnitude", "total_baseline_contrast_magnitude",
-                "total_contrast_restored", "mean_contrast_restored_per_step",
-                "mean_net_per_step", "n_steps"]
+        cols = [
+            "method",
+            "controller",
+            "total_rollouts",
+            "baseline_rollouts",
+            "mean_cost_ratio",
+            "total_contrast_intent",
+            "total_contrast_magnitude",
+            "total_baseline_contrast_magnitude",
+            "total_contrast_restored",
+            "mean_contrast_restored_per_step",
+            "mean_net_per_step",
+            "n_steps",
+        ]
         f.write("\t".join(cols) + "\n")
         for ms in method_summary:
             f.write("\t".join(str(ms[c]) for c in cols) + "\n")
@@ -475,8 +531,7 @@ def main():
 
     out_ci = OUT_DIR / "p7_iter131_contrast_ci.tsv"
     with open(out_ci, "w") as f:
-        cols = ["controller", "mean_net", "ci_lo", "ci_hi",
-                "ci_excludes_zero", "n"]
+        cols = ["controller", "mean_net", "ci_lo", "ci_hi", "ci_excludes_zero", "n"]
         f.write("\t".join(cols) + "\n")
         for r in contrast_ci:
             f.write("\t".join(str(r[c]) for c in cols) + "\n")
@@ -500,16 +555,20 @@ def main():
     print()
     print("=== Per-method ranking by cost-equivalent contrast (ADAPTIVE_PP) ===")
     for r in adaptive_rows:
-        print(f"  {r['method']:8s}: contrast_per_unit_cost = "
-              f"{r['contrast_per_unit_cost']:.6f}  "
-              f"(contrast_mag={r['total_contrast_magnitude']}, "
-              f"rollouts={r['total_rollouts']}, cost_ratio={r['mean_cost_ratio']})")
+        print(
+            f"  {r['method']:8s}: contrast_per_unit_cost = "
+            f"{r['contrast_per_unit_cost']:.6f}  "
+            f"(contrast_mag={r['total_contrast_magnitude']}, "
+            f"rollouts={r['total_rollouts']}, cost_ratio={r['mean_cost_ratio']})"
+        )
     print()
     print("=== Bootstrap CI on per-step contrast_restored net of cost (B=2000) ===")
     for r in contrast_ci:
         excl = "EXCLUDES" if r["ci_excludes_zero"] else "includes"
-        print(f"  {r['controller']:25s}: mean={r['mean_net']:+.4f}  "
-              f"[{r['ci_lo']:+.4f}, {r['ci_hi']:+.4f}]  ({excl} zero)")
+        print(
+            f"  {r['controller']:25s}: mean={r['mean_net']:+.4f}  "
+            f"[{r['ci_lo']:+.4f}, {r['ci_hi']:+.4f}]  ({excl} zero)"
+        )
 
     print()
     print(f"H1 (ADAPTIVE_PP recovers >0 contrast on some method): {h1_pass}")

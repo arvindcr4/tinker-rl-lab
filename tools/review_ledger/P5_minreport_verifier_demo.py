@@ -7,6 +7,7 @@
 
 Outputs -> platform_hybrid/experiments/results/review_2026-10-18/P5_minreport/verifier_demo.json
 """
+
 import json
 
 
@@ -31,7 +32,16 @@ def main():
         tmp = Path(tmp)
         for name in ("campaign", "sweep"):
             out = tmp / f"{name}.audit.json"
-            code, text = run(["minreport.py", "verify", f"{name}.provenance.json", "--diagnostic", "--out", str(out)])
+            code, text = run(
+                [
+                    "minreport.py",
+                    "verify",
+                    f"{name}.provenance.json",
+                    "--diagnostic",
+                    "--out",
+                    str(out),
+                ]
+            )
             rep = json.load(open(out))
             res[name] = {
                 "exit": code,
@@ -45,14 +55,19 @@ def main():
         # sign.py's CLI `sign` refuses records that fail the evidence policy (both
         # repo records do), so exercise the signing primitive directly.
         sys.path.insert(0, str(PROV))
-        import sign  # noqa: E402
+        import sign
+
         keys = tmp / "keys"
         sign.keygen(key_dir=keys)
         pub = keys / "provenance_ed25519.pub"
         record = json.load(open(PROV / "campaign.provenance.json"))
         env = sign.sign_record(record, keys)
-        res["sign_cli_refuses_unready_record"] = run(
-            ["sign.py", "sign", str(PROV / "campaign.provenance.json"), "--key-dir", str(keys)])[0] != 0
+        res["sign_cli_refuses_unready_record"] = (
+            run(
+                ["sign.py", "sign", str(PROV / "campaign.provenance.json"), "--key-dir", str(keys)]
+            )[0]
+            != 0
+        )
         res["verify_pristine"] = sign.verify_record(record, env, pub)
         forged = json.loads(json.dumps(record))
         forged["provenance"]["git_sha"] = "0" * 40

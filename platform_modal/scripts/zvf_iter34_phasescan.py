@@ -65,7 +65,6 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-from scipy.special import softmax
 from scipy.spatial.distance import cdist
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -87,9 +86,7 @@ def zvf_proxies(df: pd.DataFrame) -> pd.DataFrame:
     out["zvf_instability"] = df["peak_frac"]
     out["zvf_slope"] = df["ols_slope_per_step"]
     out["zvf_direction"] = df["delta_late_minus_early"]
-    out["zvf_discriminator"] = out["zvf_level"] * np.clip(
-        1.0 - out["zvf_direction"], 0.0, 1.0
-    )
+    out["zvf_discriminator"] = out["zvf_level"] * np.clip(1.0 - out["zvf_direction"], 0.0, 1.0)
     return out
 
 
@@ -112,9 +109,7 @@ def loo_classify(
         raise ValueError("Classifier requires finite nonempty training folds")
     Xtr_n = _normalise(Xtr)
     Xte_n = (Xte - Xtr.mean(axis=0)) / Xtr.std(axis=0).clip(min=1e-9)
-    centroids = np.stack(
-        [Xtr_n[ytr == c].mean(axis=0) for c in classes]
-    )
+    centroids = np.stack([Xtr_n[ytr == c].mean(axis=0) for c in classes])
     d = cdist(Xte_n, centroids, metric="euclidean")
     nearest = np.argmin(d, axis=1)
     return np.array([classes[i] for i in nearest])
@@ -165,15 +160,11 @@ def loo_phase_classifier(
                 "perm_mean_acc": float(np.mean(perm_accs)),
                 "perm_std_acc": float(np.std(perm_accs)),
                 "delta_acc": base_acc - float(np.mean(perm_accs)),
-                "p_shuffled_beats": float(
-                    np.mean(np.array(perm_accs) >= base_acc)
-                ),
+                "p_shuffled_beats": float(np.mean(np.array(perm_accs) >= base_acc)),
             }
         )
 
-    importance = pd.DataFrame(importance_rows).sort_values(
-        "delta_acc", ascending=False
-    )
+    importance = pd.DataFrame(importance_rows).sort_values("delta_acc", ascending=False)
 
     per_class_recall = {}
     for c in classes:
@@ -219,9 +210,7 @@ def per_phase_discriminant(feats: pd.DataFrame, feature_cols: list[str]) -> pd.D
     return pd.DataFrame(rows)
 
 
-def collapse_discrimination(
-    feats: pd.DataFrame, feature_cols: list[str]
-) -> pd.DataFrame:
+def collapse_discrimination(feats: pd.DataFrame, feature_cols: list[str]) -> pd.DataFrame:
     """For each feature, the gap between collapse and the
     best-of-rest value."""
     collapse = feats[feats["phase"] == "collapse"]
@@ -256,9 +245,7 @@ def main() -> None:
     ]
     feats.to_csv(OUT / "zvf_iter34_phase_scan_review28_v2.tsv", sep="\t", index=False)
 
-    pred_df, confusion, metrics, importance = loo_phase_classifier(
-        feats, feature_cols
-    )
+    pred_df, confusion, metrics, importance = loo_phase_classifier(feats, feature_cols)
     pred_df.to_csv(OUT / "zvf_iter34_predictions_review28_v2.tsv", sep="\t", index=False)
     confusion.to_csv(OUT / "zvf_iter34_confusion_review28_v2.tsv", sep="\t")
     importance.to_csv(OUT / "zvf_iter34_feature_importance_review28_v2.tsv", sep="\t", index=False)
@@ -277,31 +264,31 @@ def main() -> None:
         "per_class_recall": metrics["per_class_recall"],
         "top_feature": importance.iloc[0]["feature"],
         "top_feature_delta_acc": float(importance.iloc[0]["delta_acc"]),
-        "collapse_zvf_level": float(
-            feats.loc[feats["phase"] == "collapse", "zvf_level"].mean()
-        ),
-        "noncollapse_zvf_level": float(
-            feats.loc[feats["phase"] != "collapse", "zvf_level"].mean()
-        ),
+        "collapse_zvf_level": float(feats.loc[feats["phase"] == "collapse", "zvf_level"].mean()),
+        "noncollapse_zvf_level": float(feats.loc[feats["phase"] != "collapse", "zvf_level"].mean()),
         "collapse_zvf_discriminator": float(
             feats.loc[feats["phase"] == "collapse", "zvf_discriminator"].mean()
         ),
         "noncollapse_zvf_discriminator": float(
             feats.loc[feats["phase"] != "collapse", "zvf_discriminator"].mean()
         ),
-        "collapse_only_model": str(
-            feats.loc[feats["phase"] == "collapse", "model"].iat[0]
-        ),
+        "collapse_only_model": str(feats.loc[feats["phase"] == "collapse", "model"].iat[0]),
     }
     with open(OUT / "zvf_iter34_summary_review28_v2.json", "w") as f:
         json.dump(summary, f, indent=2)
-    pd.DataFrame([summary]).to_csv(OUT / "zvf_iter34_summary_review28_v2.tsv", sep="\t", index=False)
+    pd.DataFrame([summary]).to_csv(
+        OUT / "zvf_iter34_summary_review28_v2.tsv", sep="\t", index=False
+    )
 
-    print(f"n_anchors={summary['n_anchors']} LOO acc={summary['loo_accuracy']:.3f} "
-          f"top_feature={summary['top_feature']} delta={summary['top_feature_delta_acc']:.3f}")
-    print(f"collapse_model={summary['collapse_only_model']} "
-          f"collapse_zvf_level={summary['collapse_zvf_level']:.3f} "
-          f"vs noncollapse={summary['noncollapse_zvf_level']:.3f}")
+    print(
+        f"n_anchors={summary['n_anchors']} LOO acc={summary['loo_accuracy']:.3f} "
+        f"top_feature={summary['top_feature']} delta={summary['top_feature_delta_acc']:.3f}"
+    )
+    print(
+        f"collapse_model={summary['collapse_only_model']} "
+        f"collapse_zvf_level={summary['collapse_zvf_level']:.3f} "
+        f"vs noncollapse={summary['noncollapse_zvf_level']:.3f}"
+    )
 
 
 if __name__ == "__main__":

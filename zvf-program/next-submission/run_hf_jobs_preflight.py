@@ -183,10 +183,17 @@ def run_unit(args: argparse.Namespace) -> dict[str, Any]:
         "tracking_packages": {"trackio": TRACKIO_VERSION},
         "source_snapshots": snapshots,
     }
-    request = common.seal_request(request, decoder=common.DECODER_CONTRACT,
-        tracking={"hf_repo_prefix": args.hf_repo_prefix, "wandb_project": args.wandb_project,
-                  "wandb_entity": args.wandb_entity, "wandb_group": args.wandb_group},
-        source_files={p.name: common.sha256_file(p) for p in (REMOTE_SCRIPT, SAMPLER, TRL_ADAPTER)})
+    request = common.seal_request(
+        request,
+        decoder=common.DECODER_CONTRACT,
+        tracking={
+            "hf_repo_prefix": args.hf_repo_prefix,
+            "wandb_project": args.wandb_project,
+            "wandb_entity": args.wandb_entity,
+            "wandb_group": args.wandb_group,
+        },
+        source_files={p.name: common.sha256_file(p) for p in (REMOTE_SCRIPT, SAMPLER, TRL_ADAPTER)},
+    )
     stack_fingerprint = request["stack_fingerprint"]
     unit = f"{args.task}__{args.arm}__s{args.seed}"
     hf_repo = (
@@ -367,10 +374,19 @@ def run_unit(args: argparse.Namespace) -> dict[str, Any]:
         failed = {**base, "status": "failed", "error": str(exc)}
         helpers.atomic_json(result_path, failed)
         return {"status": "failed", "result_path": str(result_path), "job_url": job.url}
-    complete = common.completed_receipt(base, result=result, manifest=manifest,
-        verification=verification, return_code=0,
-        cleanup={"session_absent_verified": False, "compute_terminal_verified": True,
-                 "provider_observation": job_stage(final_job), "resource_id": job.id})
+    complete = common.completed_receipt(
+        base,
+        result=result,
+        manifest=manifest,
+        verification=verification,
+        return_code=0,
+        cleanup={
+            "session_absent_verified": False,
+            "compute_terminal_verified": True,
+            "provider_observation": job_stage(final_job),
+            "resource_id": job.id,
+        },
+    )
 
     helpers.atomic_json(result_path, complete)
     return {"status": "completed", "result_path": str(result_path), "job_url": job.url}

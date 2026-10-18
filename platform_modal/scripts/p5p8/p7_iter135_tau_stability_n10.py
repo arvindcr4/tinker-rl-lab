@@ -26,14 +26,17 @@ Headline hypotheses (6):
 Outputs: platform_hybrid/experiments/results/p5p8/p7_iter135_{tau_grid,fire_rate,concordance,
   tau_flip,bootstrap_ci,summary}
 """
+
 from _review19_policy import high_zvf_fire
 import json
 import statistics
 from pathlib import Path
 
 import sys
+
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
+from _paths import REPO_ROOT
+
 WORK = REPO_ROOT
 N10_DIR = WORK / "platform_hybrid/experiments/results/n10_seed_expansion"
 OUT_DIR = WORK / "platform_hybrid/experiments/results/p5p8/corrected-review19-v5"
@@ -48,8 +51,12 @@ N_STEPS = 15
 
 def load_n10():
     """dict[seed] -> list of step_log records."""
-    return {s: sorted(json.load(open(N10_DIR / f"n10_grpo_s{s}.json"))["step_log"],
-                      key=lambda r: r["step"]) for s in SEEDS}
+    return {
+        s: sorted(
+            json.load(open(N10_DIR / f"n10_grpo_s{s}.json"))["step_log"], key=lambda r: r["step"]
+        )
+        for s in SEEDS
+    }
 
 
 def fire(z, t):
@@ -65,11 +72,23 @@ def build_tau_grid(by_seed):
             z = rec["zvf"]
             decisions = {f"tau_{t:.2f}": fire(z, t) for t in TAU_GRID}
             n_fire = sum(decisions.values())
-            n_flip = sum(1 for t in TAU_GRID
-                         if t != CANONICAL_TAU
-                         and decisions[f"tau_{t:.2f}"] != decisions[f"tau_{CANONICAL_TAU:.2f}"])
-            grid.append({"seed": s, "step": st, "z_obs": z, "reward": rec["reward"],
-                         "n_fire_tau": n_fire, "n_flip_vs_070": n_flip, **decisions})
+            n_flip = sum(
+                1
+                for t in TAU_GRID
+                if t != CANONICAL_TAU
+                and decisions[f"tau_{t:.2f}"] != decisions[f"tau_{CANONICAL_TAU:.2f}"]
+            )
+            grid.append(
+                {
+                    "seed": s,
+                    "step": st,
+                    "z_obs": z,
+                    "reward": rec["reward"],
+                    "n_fire_tau": n_fire,
+                    "n_flip_vs_070": n_flip,
+                    **decisions,
+                }
+            )
     return grid
 
 
@@ -80,9 +99,9 @@ def build_fire_rate(grid):
         for tau in TAU_GRID:
             key = f"tau_{tau:.2f}"
             n_fire = sum(r[key] for r in per_seed)
-            rows.append({"seed": s, "tau": tau,
-                         "fire_rate": round(n_fire / N_STEPS, 4),
-                         "n_fire": n_fire})
+            rows.append(
+                {"seed": s, "tau": tau, "fire_rate": round(n_fire / N_STEPS, 4), "n_fire": n_fire}
+            )
     return rows
 
 
@@ -93,9 +112,14 @@ def build_concordance(grid):
         for tj in TAU_GRID:
             kj = f"tau_{tj:.2f}"
             n_agree = sum(1 for r in grid if r[ki] == r[kj])
-            rows.append({"tau_i": ti, "tau_j": tj,
-                         "concordance": round(n_agree / len(grid), 4),
-                         "n_agree": n_agree})
+            rows.append(
+                {
+                    "tau_i": ti,
+                    "tau_j": tj,
+                    "concordance": round(n_agree / len(grid), 4),
+                    "n_agree": n_agree,
+                }
+            )
     return rows
 
 
@@ -115,10 +139,14 @@ def bootstrap_fire_rate(decisions, tau, n_boot=N_BOOT, seed=BOOT_SEED):
         idx = [int(next(gen) * n) for _ in range(n)]
         boots.append(sum(decisions[i] for i in idx) / n)
     boots.sort()
-    return {"tau": tau, "point": round(base, 4),
-            "boot_mean": round(sum(boots) / n_boot, 4),
-            "ci_lo": round(boots[int(0.025 * n_boot)], 4),
-            "ci_hi": round(boots[int(0.975 * n_boot)], 4), "n": n}
+    return {
+        "tau": tau,
+        "point": round(base, 4),
+        "boot_mean": round(sum(boots) / n_boot, 4),
+        "ci_lo": round(boots[int(0.025 * n_boot)], 4),
+        "ci_hi": round(boots[int(0.975 * n_boot)], 4),
+        "n": n,
+    }
 
 
 def build_bootstrap_ci(grid):
@@ -134,11 +162,18 @@ def build_bootstrap_ci(grid):
 
 
 def build_tau_flip(grid):
-    return [{"seed": r["seed"], "step": r["step"], "z_obs": r["z_obs"],
-             "reward": r["reward"], "n_fire_tau": r["n_fire_tau"],
-             "n_flip_vs_070": r["n_flip_vs_070"],
-             "canonical_decision": r[f"tau_{CANONICAL_TAU:.2f}"]}
-            for r in grid]
+    return [
+        {
+            "seed": r["seed"],
+            "step": r["step"],
+            "z_obs": r["z_obs"],
+            "reward": r["reward"],
+            "n_fire_tau": r["n_fire_tau"],
+            "n_flip_vs_070": r["n_flip_vs_070"],
+            "canonical_decision": r[f"tau_{CANONICAL_TAU:.2f}"],
+        }
+        for r in grid
+    ]
 
 
 def tau_stable_band(grid):
@@ -146,11 +181,14 @@ def tau_stable_band(grid):
     n_full_fire = sum(1 for r in grid if r["n_fire_tau"] == len(TAU_GRID))
     n_no_fire = sum(1 for r in grid if r["n_fire_tau"] == 0)
     n_partial = sum(1 for r in grid if 0 < r["n_fire_tau"] < len(TAU_GRID))
-    return {"n_universal_fire": n_full_fire, "n_universal_no_fire": n_no_fire,
-            "n_partial": n_partial,
-            "frac_universal_fire": round(n_full_fire / n_total, 4),
-            "frac_universal_no_fire": round(n_no_fire / n_total, 4),
-            "frac_partial": round(n_partial / n_total, 4)}
+    return {
+        "n_universal_fire": n_full_fire,
+        "n_universal_no_fire": n_no_fire,
+        "n_partial": n_partial,
+        "frac_universal_fire": round(n_full_fire / n_total, 4),
+        "frac_universal_no_fire": round(n_no_fire / n_total, 4),
+        "frac_partial": round(n_partial / n_total, 4),
+    }
 
 
 def check_h1_replication(grid):
@@ -160,33 +198,35 @@ def check_h1_replication(grid):
     for s in SEEDS:
         fires = [r[f"tau_{CANONICAL_TAU:.2f}"] for r in grid if r["seed"] == s]
         n_fire = sum(fires)
-        per_seed[s] = {"n_fire": n_fire,
-                       "mean_per_step": round(statistics.mean(fires), 4)}
+        per_seed[s] = {"n_fire": n_fire, "mean_per_step": round(statistics.mean(fires), 4)}
         per_seed_n_fire.append(n_fire)
     mean_n = statistics.mean(per_seed_n_fire)
     stdev_n = statistics.pstdev(per_seed_n_fire)
     fires_all = [r[f"tau_{CANONICAL_TAU:.2f}"] for r in grid]
-    return {"per_seed_n_fire": per_seed,
-            "mean_n_fire_per_seed": round(mean_n, 4),
-            "stdev_n_fire_across_seeds": round(stdev_n, 4),
-            "pooled_per_step_fire_rate": round(statistics.mean(fires_all), 4),
-            "iter99_anchor": "fires/seed = 4.20 +/- 1.48 (15 steps, tau=0.70)",
-            "replicate_pass": (
-                abs(mean_n - 4.20) < 1.0 and abs(stdev_n - 1.48) < 1.0)}
+    return {
+        "per_seed_n_fire": per_seed,
+        "mean_n_fire_per_seed": round(mean_n, 4),
+        "stdev_n_fire_across_seeds": round(stdev_n, 4),
+        "pooled_per_step_fire_rate": round(statistics.mean(fires_all), 4),
+        "iter99_anchor": "fires/seed = 4.20 +/- 1.48 (15 steps, tau=0.70)",
+        "replicate_pass": (abs(mean_n - 4.20) < 1.0 and abs(stdev_n - 1.48) < 1.0),
+    }
 
 
 def adjacent_rate_slopes(rates):
     """Signed slope for every adjacent supplied threshold pair."""
     items = sorted(rates.items())
-    return {lo: round((f_hi-f_lo)/(hi-lo), 4)
-            for (lo, f_lo), (hi, f_hi) in zip(items, items[1:])}
+    return {
+        lo: round((f_hi - f_lo) / (hi - lo), 4)
+        for (lo, f_lo), (hi, f_hi) in zip(items, items[1:], strict=False)
+    }
 
 
 def decline_near_max(slopes, tau):
     """Compare decline magnitudes; a flat/increasing curve is not a decline."""
     peak = max((max(0.0, -s) for s in slopes.values()), default=0.0)
     at_tau = max(0.0, -slopes[tau]) if tau in slopes else None
-    passed = peak > 0 and at_tau is not None and at_tau >= .9 * peak
+    passed = peak > 0 and at_tau is not None and at_tau >= 0.9 * peak
     return peak, at_tau, passed
 
 
@@ -201,8 +241,9 @@ def main():
     stable_band = tau_stable_band(grid)
     h1 = check_h1_replication(grid)
 
-    pooled_fire_rate = {tau: round(sum(r[f"tau_{tau:.2f}"] for r in grid) / len(grid), 4)
-                        for tau in TAU_GRID}
+    pooled_fire_rate = {
+        tau: round(sum(r[f"tau_{tau:.2f}"] for r in grid) / len(grid), 4) for tau in TAU_GRID
+    }
 
     pairwise_slope = adjacent_rate_slopes(pooled_fire_rate)
 
@@ -211,8 +252,9 @@ def main():
     for i in range(len(fr_items) - 1):
         t1, f1 = fr_items[i]
         t2, f2 = fr_items[i + 1]
-        inflection_taus.append({"tau_lo": t1, "tau_hi": t2,
-                                "slope": round(abs(f2 - f1) / (t2 - t1), 4)})
+        inflection_taus.append(
+            {"tau_lo": t1, "tau_hi": t2, "slope": round(abs(f2 - f1) / (t2 - t1), 4)}
+        )
     inflection_taus.sort(key=lambda x: -x["slope"])
     inflection_tau = inflection_taus[0] if inflection_taus else None
 
@@ -222,14 +264,15 @@ def main():
     mean_noflip_reward = statistics.mean(noflip_rewards) if noflip_rewards else 0
 
     print(f"  Stable band: {stable_band}")
-    print(f"  H1 replication: mean_n_fire/seed={h1['mean_n_fire_per_seed']}, "
-          f"stdev_across_seeds={h1['stdev_n_fire_across_seeds']}, "
-          f"replicate_pass={h1['replicate_pass']}")
+    print(
+        f"  H1 replication: mean_n_fire/seed={h1['mean_n_fire_per_seed']}, "
+        f"stdev_across_seeds={h1['stdev_n_fire_across_seeds']}, "
+        f"replicate_pass={h1['replicate_pass']}"
+    )
     print(f"  H3 sigmoid slope at 0.70: {pairwise_slope.get(0.70)}")
     print(f"  H4 pairwise slopes: {pairwise_slope}")
     print(f"  H5 inflection tau: {inflection_tau}")
-    print(f"  H6 mean reward (flip vs noflip): "
-          f"{mean_flip_reward:.4f} vs {mean_noflip_reward:.4f}")
+    print(f"  H6 mean reward (flip vs noflip): {mean_flip_reward:.4f} vs {mean_noflip_reward:.4f}")
 
     OUT_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -242,21 +285,31 @@ def main():
     grid_cols = ["seed", "step", "z_obs", "reward", "n_fire_tau", "n_flip_vs_070"]
     grid_cols += [f"tau_{t:.2f}" for t in TAU_GRID]
     write_tsv(OUT_DIR / "p7_iter135_tau_grid.tsv", grid, grid_cols)
-    write_tsv(OUT_DIR / "p7_iter135_fire_rate.tsv", fire_rate,
-              ["seed", "tau", "fire_rate", "n_fire"])
-    write_tsv(OUT_DIR / "p7_iter135_concordance.tsv", concordance,
-              ["tau_i", "tau_j", "concordance", "n_agree"])
-    write_tsv(OUT_DIR / "p7_iter135_tau_flip.tsv", tau_flip,
-              ["seed", "step", "z_obs", "reward", "n_fire_tau",
-               "n_flip_vs_070", "canonical_decision"])
-    write_tsv(OUT_DIR / "p7_iter135_bootstrap_ci.tsv", bootstrap_ci,
-              ["scope", "tau", "point", "boot_mean", "ci_lo", "ci_hi", "n"])
+    write_tsv(
+        OUT_DIR / "p7_iter135_fire_rate.tsv", fire_rate, ["seed", "tau", "fire_rate", "n_fire"]
+    )
+    write_tsv(
+        OUT_DIR / "p7_iter135_concordance.tsv",
+        concordance,
+        ["tau_i", "tau_j", "concordance", "n_agree"],
+    )
+    write_tsv(
+        OUT_DIR / "p7_iter135_tau_flip.tsv",
+        tau_flip,
+        ["seed", "step", "z_obs", "reward", "n_fire_tau", "n_flip_vs_070", "canonical_decision"],
+    )
+    write_tsv(
+        OUT_DIR / "p7_iter135_bootstrap_ci.tsv",
+        bootstrap_ci,
+        ["scope", "tau", "point", "boot_mean", "ci_lo", "ci_hi", "n"],
+    )
 
     h4_max_decline, h4_decline_at_070, h4_pass = decline_near_max(pairwise_slope, CANONICAL_TAU)
-    h5_verdict = ("PASS"
-                  if inflection_tau and inflection_tau["tau_lo"] <= 0.60
-                  and inflection_tau["tau_hi"] <= 0.70
-                  else "REPORTED")
+    h5_verdict = (
+        "PASS"
+        if inflection_tau and inflection_tau["tau_lo"] <= 0.60 and inflection_tau["tau_hi"] <= 0.70
+        else "REPORTED"
+    )
     h6_delta = mean_flip_reward - mean_noflip_reward
 
     summary = {
@@ -269,8 +322,10 @@ def main():
         "tau_grid": TAU_GRID,
         "canonical_tau": CANONICAL_TAU,
         "h1_replication": h1,
-        "h2_stable_band": {**stable_band,
-                            "verdict": "PASS" if stable_band["frac_partial"] >= 0.30 else "REPORTED"},
+        "h2_stable_band": {
+            **stable_band,
+            "verdict": "PASS" if stable_band["frac_partial"] >= 0.30 else "REPORTED",
+        },
         "h3_sigmoid_slope_at_070": pairwise_slope.get(0.70, 0),
         "h4_pairwise_slopes": pairwise_slope,
         "h4_max_decline_magnitude": h4_max_decline,

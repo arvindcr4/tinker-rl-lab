@@ -31,17 +31,19 @@ Method (pure stdlib + deterministic):
   - For N10 data: reuse iter-115 per_step_n10.tsv (75 step-seed rows with
     pre-computed p0, G_star, etc.).
 """
+
 from __future__ import annotations
 
 from _review19_policy import adaptive_target
 import json
-import math
 import random
 from pathlib import Path
 
 import sys
+
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
+from _paths import REPO_ROOT
+
 ROOT = REPO_ROOT
 P5P8 = ROOT / "platform_hybrid/experiments/results/p5p8/corrected-review19-v4"
 P5P8.mkdir(parents=True, exist_ok=True)
@@ -58,7 +60,7 @@ def invert_p0(zvf_obs: float, G_obs: int = 8, tol: float = 1e-10) -> float:
     lo, hi = 0.0, 0.5
     for _ in range(80):
         mid = 0.5 * (lo + hi)
-        z_mid = mid ** G_obs + (1.0 - mid) ** G_obs
+        z_mid = mid**G_obs + (1.0 - mid) ** G_obs
         # z is decreasing on [0, 0.5]; hi when z_mid > zvf_obs.
         if z_mid > zvf_obs:
             lo = mid
@@ -70,7 +72,7 @@ def invert_p0(zvf_obs: float, G_obs: int = 8, tol: float = 1e-10) -> float:
 
 
 def z_at(p0: float, G: int) -> float:
-    return p0 ** G + (1.0 - p0) ** G
+    return p0**G + (1.0 - p0) ** G
 
 
 # -------- the three component rules + composite -----------------------------
@@ -96,13 +98,15 @@ def dualformer_auto_acc(reward_mean: float, G_obs: int = 8) -> int:
     return 32
 
 
-def adaptive_gstar(zvf_obs: float, G_obs: int = 8,
-                   G_candidates=(16, 32, 64), floor: float = 0.50) -> int:
+def adaptive_gstar(
+    zvf_obs: float, G_obs: int = 8, G_candidates=(16, 32, 64), floor: float = 0.50
+) -> int:
     return adaptive_target(zvf_obs, G_obs, G_candidates, floor)
 
-def composite_ccc(reward_mean: float, zvf_obs: float,
-                  G_obs: int = 8,
-                  tau_degen: float = 0.70) -> tuple[int, int, int, int]:
+
+def composite_ccc(
+    reward_mean: float, zvf_obs: float, G_obs: int = 8, tau_degen: float = 0.70
+) -> tuple[int, int, int, int]:
     """CCC -- unified two-rule composition with regime gating.
 
     Returns (G_used, G_dualformer, G_alphaproof, G_adaptive_gstar).
@@ -152,7 +156,7 @@ def replay_n2(metrics_path: Path) -> list[dict]:
         header = fp.readline().rstrip("\n").split("\t")
         for line in fp:
             fields = line.rstrip("\n").split("\t")
-            rec = dict(zip(header, fields))
+            rec = dict(zip(header, fields, strict=False))
             zvf = float(rec["zvf"])
             reward = float(rec["reward_mean"])
             G_obs = int(rec["group_size"])
@@ -170,23 +174,25 @@ def replay_n2(metrics_path: Path) -> list[dict]:
                 contrast_saved = 0.0
             cost_ratio = g_ccc / G_obs
             net_benefit = contrast_saved - 0.5 * max(0.0, cost_ratio - 1.0)
-            rows.append({
-                "method": rec["method"],
-                "seed": rec["seed"],
-                "step": rec["step"],
-                "G_obs": G_obs,
-                "zvf_obs": zvf,
-                "reward_mean": reward,
-                "G_dualformer": g_d,
-                "G_alphaproof": g_a,
-                "G_adaptive_gstar": g_s,
-                "G_ccc": g_ccc,
-                "contrast_saved": contrast_saved,
-"cost_ratio": cost_ratio,
-                "net_benefit": net_benefit,
-                "ccc_dominates_static_g16": (g_ccc < 16),
-                "ccc_dominates_static_g8":  (g_ccc <= G_obs),
-            })
+            rows.append(
+                {
+                    "method": rec["method"],
+                    "seed": rec["seed"],
+                    "step": rec["step"],
+                    "G_obs": G_obs,
+                    "zvf_obs": zvf,
+                    "reward_mean": reward,
+                    "G_dualformer": g_d,
+                    "G_alphaproof": g_a,
+                    "G_adaptive_gstar": g_s,
+                    "G_ccc": g_ccc,
+                    "contrast_saved": contrast_saved,
+                    "cost_ratio": cost_ratio,
+                    "net_benefit": net_benefit,
+                    "ccc_dominates_static_g16": (g_ccc < 16),
+                    "ccc_dominates_static_g8": (g_ccc <= G_obs),
+                }
+            )
     return rows
 
 
@@ -201,7 +207,7 @@ def replay_n10(per_step_path: Path) -> list[dict]:
         header = fp.readline().rstrip("\n").split("\t")
         for line in fp:
             fields = line.rstrip("\n").split("\t")
-            rec = dict(zip(header, fields))
+            rec = dict(zip(header, fields, strict=False))
             zvf = float(rec["zvf_obs"])
             reward = float(rec["reward"])
             G_obs = 8
@@ -213,23 +219,25 @@ def replay_n10(per_step_path: Path) -> list[dict]:
             # CCC strict-improvement: rule chosen a lower G than iter-115's
             # ADAPTIVE-G* recommendation (i.e., =16 instead of =32/64).
             adaptive_recommended = int(rec.get("Gstar", 16))
-            rows.append({
-                "seed": rec["seed"],
-                "step": rec["step"],
-                "zvf_obs": zvf,
-                "reward": reward,
-                "G_obs": G_obs,
-                "G_dualformer": g_d,
-                "G_alphaproof": g_a,
-                "G_adaptive_gstar": g_s,
-                "G_ccc": g_ccc,
-                "G_adaptive_gstar_iter115": adaptive_recommended,
-                "contrast_saved": contrast_saved,
-                "cost_ratio": cost_ratio,
-                "net_benefit": net_benefit,
-                "ccc_lt_iter115_adaptive": (g_ccc < adaptive_recommended),
-                "ccc_lt_static_g16": (g_ccc < 16),
-            })
+            rows.append(
+                {
+                    "seed": rec["seed"],
+                    "step": rec["step"],
+                    "zvf_obs": zvf,
+                    "reward": reward,
+                    "G_obs": G_obs,
+                    "G_dualformer": g_d,
+                    "G_alphaproof": g_a,
+                    "G_adaptive_gstar": g_s,
+                    "G_ccc": g_ccc,
+                    "G_adaptive_gstar_iter115": adaptive_recommended,
+                    "contrast_saved": contrast_saved,
+                    "cost_ratio": cost_ratio,
+                    "net_benefit": net_benefit,
+                    "ccc_lt_iter115_adaptive": (g_ccc < adaptive_recommended),
+                    "ccc_lt_static_g16": (g_ccc < 16),
+                }
+            )
     return rows
 
 
@@ -241,62 +249,90 @@ def main() -> None:
 
     print(f"[iter119] reading {n2_metrics.name}")
     n2_rows = replay_n2(n2_metrics)
-    print(f"[iter119] N2 rows: {len(n2_rows)} "
-          f"(methods x steps; n={len(set(r['method'] for r in n2_rows))} methods)")
+    print(
+        f"[iter119] N2 rows: {len(n2_rows)} "
+        f"(methods x steps; n={len(set(r['method'] for r in n2_rows))} methods)"
+    )
     print(f"[iter119] reading {n10_perstep.name}")
     n10_rows = replay_n10(n10_perstep)
-    print(f"[iter119] N10 rows: {len(n10_rows)} "
-          f"(seeds x steps; n={len(set(r['seed'] for r in n10_rows))} seeds)")
+    print(
+        f"[iter119] N10 rows: {len(n10_rows)} "
+        f"(seeds x steps; n={len(set(r['seed'] for r in n10_rows))} seeds)"
+    )
 
     # ------  write per-step CCC replay (combined) ----------------------------
     per_step_path = out_dir / "p7_iter119_per_step_ccc.tsv"
     with per_step_path.open("w") as fp:
-        fp.write("dataset\t" + "\t".join([
-            "id", "zvf_obs", "reward", "G_obs", "G_dualformer",
-            "G_alphaproof", "G_adaptive_gstar", "G_ccc",
-            "contrast_saved", "cost_ratio", "net_benefit",
-        ]) + "\n")
-        for i, r in enumerate(n2_rows):
-            fp.write("\t".join([
-                "n2",
-                f"{r['method']}_s{r['seed']}_t{r['step']}",
-                f"{r['zvf_obs']:.6f}",
-                f"{r['reward_mean']:.6f}",
-                str(r["G_obs"]),
-                str(r["G_dualformer"]),
-                str(r["G_alphaproof"]),
-                str(r["G_adaptive_gstar"]),
-                str(r["G_ccc"]),
-                f"{r['contrast_saved']:.6f}",
-                f"{r['cost_ratio']:.6f}",
-                f"{r['net_benefit']:.6f}",
-            ]) + "\n")
-        for i, r in enumerate(n10_rows):
-            fp.write("\t".join([
-                "n10",
-                f"s{r['seed']}_t{r['step']}",
-                f"{r['zvf_obs']:.6f}",
-                f"{r['reward']:.6f}",
-                str(r["G_obs"]),
-                str(r["G_dualformer"]),
-                str(r["G_alphaproof"]),
-                str(r["G_adaptive_gstar"]),
-                str(r["G_ccc"]),
-                f"{r['contrast_saved']:.6f}",
-                f"{r['cost_ratio']:.6f}",
-                f"{r['net_benefit']:.6f}",
-            ]) + "\n")
+        fp.write(
+            "dataset\t"
+            + "\t".join(
+                [
+                    "id",
+                    "zvf_obs",
+                    "reward",
+                    "G_obs",
+                    "G_dualformer",
+                    "G_alphaproof",
+                    "G_adaptive_gstar",
+                    "G_ccc",
+                    "contrast_saved",
+                    "cost_ratio",
+                    "net_benefit",
+                ]
+            )
+            + "\n"
+        )
+        for _i, r in enumerate(n2_rows):
+            fp.write(
+                "\t".join(
+                    [
+                        "n2",
+                        f"{r['method']}_s{r['seed']}_t{r['step']}",
+                        f"{r['zvf_obs']:.6f}",
+                        f"{r['reward_mean']:.6f}",
+                        str(r["G_obs"]),
+                        str(r["G_dualformer"]),
+                        str(r["G_alphaproof"]),
+                        str(r["G_adaptive_gstar"]),
+                        str(r["G_ccc"]),
+                        f"{r['contrast_saved']:.6f}",
+                        f"{r['cost_ratio']:.6f}",
+                        f"{r['net_benefit']:.6f}",
+                    ]
+                )
+                + "\n"
+            )
+        for _i, r in enumerate(n10_rows):
+            fp.write(
+                "\t".join(
+                    [
+                        "n10",
+                        f"s{r['seed']}_t{r['step']}",
+                        f"{r['zvf_obs']:.6f}",
+                        f"{r['reward']:.6f}",
+                        str(r["G_obs"]),
+                        str(r["G_dualformer"]),
+                        str(r["G_alphaproof"]),
+                        str(r["G_adaptive_gstar"]),
+                        str(r["G_ccc"]),
+                        f"{r['contrast_saved']:.6f}",
+                        f"{r['cost_ratio']:.6f}",
+                        f"{r['net_benefit']:.6f}",
+                    ]
+                )
+                + "\n"
+            )
     print(f"[iter119] wrote {per_step_path.name}")
 
     # ------  per-rule summary ----------------------------------------------
     def per_rule_summary(rows: list[dict], dataset: str) -> dict:
         rules = {
-            "static_g8":  lambda r: r["G_obs"],
+            "static_g8": lambda r: r["G_obs"],
             "static_g16": lambda r: 16,
             "dualformer": lambda r: r["G_dualformer"],
             "alphaproof": lambda r: r["G_alphaproof"],
             "adaptive_gstar": lambda r: r["G_adaptive_gstar"],
-            "ccc":        lambda r: r["G_ccc"],
+            "ccc": lambda r: r["G_ccc"],
         }
         out = {"dataset": dataset, "n": len(rows), "rules": {}}
         for name, pick in rules.items():
@@ -329,7 +365,7 @@ def main() -> None:
                 "mean_cost_ratio": (sum(crs) / len(crs)) if crs else 0.0,
                 "mean_net_benefit": (sum(nbs) / len(nbs)) if nbs else 0.0,
                 "frac_under_g16": sum(1 for g in Gs if g < 16) / len(Gs),
-                "frac_under_g8":  sum(1 for g in Gs if g <= g_obs) / len(Gs),
+                "frac_under_g8": sum(1 for g in Gs if g <= g_obs) / len(Gs),
             }
         return out
 
@@ -361,7 +397,7 @@ def main() -> None:
             else:
                 cc = 0.0
             baselines.append(cc - 0.5 * max(0.0, g / g_obs - 1.0))
-        deltas = [a - b for a, b in zip(ccc, baselines)]
+        deltas = [a - b for a, b in zip(ccc, baselines, strict=False)]
         n = len(deltas)
         boots = []
         for _ in range(B):
@@ -402,7 +438,8 @@ def main() -> None:
         nbs = []
         for r in rows:
             g = {
-                "static_g8": r["G_obs"], "static_g16": 16,
+                "static_g8": r["G_obs"],
+                "static_g16": 16,
                 "dualformer": r["G_dualformer"],
                 "adaptive_gstar": r["G_adaptive_gstar"],
             }[rule]
@@ -429,17 +466,25 @@ def main() -> None:
     # H4: Pareto-dominance -- CCC no worse than worst rule, >=20% strictly better
     def pareto_check(rows, dataset):
         rules_to_compare = [
-            "static_g8", "static_g16", "dualformer", "adaptive_gstar",
+            "static_g8",
+            "static_g16",
+            "dualformer",
+            "adaptive_gstar",
         ]
         per_step_nb = {}
         for rule in rules_to_compare + ["ccc"]:
             per_step_nb[rule] = []
             for r in rows:
-                g = r["G_obs"] if rule == "static_g8" else (
-                    16 if rule == "static_g16" else (
-                        r["G_dualformer"] if rule == "dualformer" else (
-                            r["G_adaptive_gstar"] if rule == "adaptive_gstar"
-                            else r["G_ccc"]
+                g = (
+                    r["G_obs"]
+                    if rule == "static_g8"
+                    else (
+                        16
+                        if rule == "static_g16"
+                        else (
+                            r["G_dualformer"]
+                            if rule == "dualformer"
+                            else (r["G_adaptive_gstar"] if rule == "adaptive_gstar" else r["G_ccc"])
                         )
                     )
                 )
@@ -453,20 +498,19 @@ def main() -> None:
                     cc = 0.0
                 per_step_nb[rule].append(cc - 0.5 * max(0.0, g / g_obs - 1.0))
 
-        worst_nb = [min(per_step_nb[r][i] for r in rules_to_compare)
-                    for i in range(len(rows))]
+        worst_nb = [min(per_step_nb[r][i] for r in rules_to_compare) for i in range(len(rows))]
         ccc_nb = per_step_nb["ccc"]
         no_worse = sum(1 for i in range(len(rows)) if ccc_nb[i] >= worst_nb[i])
         strictly_better = sum(
-            1 for i in range(len(rows))
+            1
+            for i in range(len(rows))
             if ccc_nb[i] > max(per_step_nb[r][i] for r in rules_to_compare)
         )
         return {
             "dataset": dataset,
             "n": len(rows),
             "frac_ccc_no_worse_than_worst": no_worse / len(rows),
-            "frac_ccc_strictly_better_than_all_baselines":
-                strictly_better / len(rows),
+            "frac_ccc_strictly_better_than_all_baselines": strictly_better / len(rows),
         }
 
     n2_pareto = pareto_check(n2_rows, "n2")
@@ -494,13 +538,18 @@ def main() -> None:
         },
         "falsifiable_headline": {
             "H1_ccc_unique_net_cheapest_dynamic_controller_on_n10": {
-                "pass": (n10_sum["rules"]["ccc"]["mean_G_used"]
-                         <= n10_sum["rules"]["adaptive_gstar"]["mean_G_used"]
-                         - 2.0)
-                        and (n10_sum["rules"]["ccc"]["mean_net_benefit"]
-                             >= n10_sum["rules"]["dualformer"]["mean_net_benefit"])
-                        and (n10_sum["rules"]["ccc"]["mean_net_benefit"]
-                             >= n10_sum["rules"]["adaptive_gstar"]["mean_net_benefit"]),
+                "pass": (
+                    n10_sum["rules"]["ccc"]["mean_G_used"]
+                    <= n10_sum["rules"]["adaptive_gstar"]["mean_G_used"] - 2.0
+                )
+                and (
+                    n10_sum["rules"]["ccc"]["mean_net_benefit"]
+                    >= n10_sum["rules"]["dualformer"]["mean_net_benefit"]
+                )
+                and (
+                    n10_sum["rules"]["ccc"]["mean_net_benefit"]
+                    >= n10_sum["rules"]["adaptive_gstar"]["mean_net_benefit"]
+                ),
                 "pass_check_details": {
                     "mean_G_ccc_minus_adaptive": (
                         n10_sum["rules"]["ccc"]["mean_G_used"]
@@ -519,19 +568,18 @@ def main() -> None:
                 ),
             },
             "H2_ccc_preserves_97pct_of_baseline_reward": {
-                "pass": None, "status": "NOT_EVALUATED",
+                "pass": None,
+                "status": "NOT_EVALUATED",
                 "n2_mean_reward_static_g8": n2_mean_reward_g8,
                 "n2_mean_reward_ccc_predicted": n2_ccc_pred_reward,
-                "n2_preservation_ratio": (
-                    None
-                ),
+                "n2_preservation_ratio": (None),
                 "interpretation": (
                     "Controller accuracy is not measured by this retrospective replay."
                 ),
             },
             "H3_ccc_pareto_85pct_no_worse_than_worst_on_at_least_one_dataset": {
                 "pass": (n10_pareto["frac_ccc_no_worse_than_worst"] >= 0.85)
-                        or (n2_pareto["frac_ccc_no_worse_than_worst"] >= 0.85),
+                or (n2_pareto["frac_ccc_no_worse_than_worst"] >= 0.85),
                 "n2_pareto": n2_pareto,
                 "n10_pareto": n10_pareto,
                 "interpretation": (
@@ -543,7 +591,7 @@ def main() -> None:
             },
             "H4_ccc_mean_G_below_static_g16_on_at_least_one_dataset": {
                 "pass": (n10_sum["rules"]["ccc"]["mean_G_used"] < 16.0)
-                        or (n2_sum["rules"]["ccc"]["mean_G_used"] < 16.0),
+                or (n2_sum["rules"]["ccc"]["mean_G_used"] < 16.0),
                 "n2_mean_G_ccc": n2_sum["rules"]["ccc"]["mean_G_used"],
                 "n10_mean_G_ccc": n10_sum["rules"]["ccc"]["mean_G_used"],
                 "interpretation": (
@@ -566,23 +614,39 @@ def main() -> None:
     # ------  per-rule compact TSV -------------------------------------------
     rule_tsv_path = out_dir / "p7_iter119_per_rule_summary.tsv"
     with rule_tsv_path.open("w") as fp:
-        fp.write("\t".join([
-            "dataset", "rule", "mean_G_used", "mean_contrast_saved",
-            "mean_cost_ratio", "mean_net_benefit",
-            "frac_under_g16", "frac_under_g8",
-        ]) + "\n")
+        fp.write(
+            "\t".join(
+                [
+                    "dataset",
+                    "rule",
+                    "mean_G_used",
+                    "mean_contrast_saved",
+                    "mean_cost_ratio",
+                    "mean_net_benefit",
+                    "frac_under_g16",
+                    "frac_under_g8",
+                ]
+            )
+            + "\n"
+        )
         for summary in (n2_sum, n10_sum):
             dataset = summary["dataset"]
             for rule, vals in summary["rules"].items():
-                fp.write("\t".join([
-                    dataset, rule,
-                    f"{vals['mean_G_used']:.4f}",
-                    f"{vals['mean_contrast_saved']:.6f}",
-                    f"{vals['mean_cost_ratio']:.4f}",
-                    f"{vals['mean_net_benefit']:.6f}",
-                    f"{vals['frac_under_g16']:.4f}",
-                    f"{vals['frac_under_g8']:.4f}",
-                ]) + "\n")
+                fp.write(
+                    "\t".join(
+                        [
+                            dataset,
+                            rule,
+                            f"{vals['mean_G_used']:.4f}",
+                            f"{vals['mean_contrast_saved']:.6f}",
+                            f"{vals['mean_cost_ratio']:.4f}",
+                            f"{vals['mean_net_benefit']:.6f}",
+                            f"{vals['frac_under_g16']:.4f}",
+                            f"{vals['frac_under_g8']:.4f}",
+                        ]
+                    )
+                    + "\n"
+                )
     print(f"[iter119] wrote {rule_tsv_path.name}")
 
     print()

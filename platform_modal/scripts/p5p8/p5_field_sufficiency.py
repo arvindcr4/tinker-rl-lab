@@ -18,6 +18,7 @@ Method (stdlib + numpy + sklearn):
 
 Outputs: platform_hybrid/experiments/results/p5p8/p5_field_sufficiency{.tsv,_summary.json}
 """
+
 import csv, json, math, os, time
 import numpy as np
 from sklearn.ensemble import RandomForestRegressor
@@ -32,8 +33,8 @@ TARGETS = ["zvf", "mean_reward"]
 # Disclosed MIN-REPORT stack fields used as predictors + kind.
 FIELDS = ["model_family", "task_slice", "G", "temperature"]
 NUISANCE = "seed"
-CAT = {"model_family", "task_slice"}          # one-hot
-NUM = {"G", "temperature", "seed"}            # numeric (G -> log2)
+CAT = {"model_family", "task_slice"}  # one-hot
+NUM = {"G", "temperature", "seed"}  # numeric (G -> log2)
 N_BOOT = 2000
 FOLD_SEEDS = list(range(8))
 N_SPLITS = 8
@@ -79,8 +80,8 @@ def oof_predict(X, y):
         pred = np.zeros(n)
         for tr, te in kf.split(X):
             m = RandomForestRegressor(
-                n_estimators=200, min_samples_leaf=3,
-                max_features=0.8, random_state=fs, n_jobs=1)
+                n_estimators=200, min_samples_leaf=3, max_features=0.8, random_state=fs, n_jobs=1
+            )
             m.fit(X[tr], y[tr])
             pred[te] = m.predict(X[te])
         acc += pred
@@ -111,8 +112,13 @@ def main():
     rows = load()
     n = len(rows)
     tsv_rows = []
-    summary = {"n_cells": n, "n_boot": N_BOOT, "fold_seeds": len(FOLD_SEEDS),
-               "n_splits": N_SPLITS, "targets": {}}
+    summary = {
+        "n_cells": n,
+        "n_boot": N_BOOT,
+        "fold_seeds": len(FOLD_SEEDS),
+        "n_splits": N_SPLITS,
+        "targets": {},
+    }
 
     for tgt in TARGETS:
         y = np.array([float(r[tgt]) for r in rows])
@@ -121,13 +127,24 @@ def main():
         oof_full = oof_predict(Xfull, y)
         r2_full = r2(y, oof_full)
         m, lo, hi = boot_ci(lambda idx: r2(y, oof_full, idx), n)
-        tsv_rows.append(dict(target=tgt, model="full_stack",
-                             field_omitted="(none)", r2=round(r2_full, 4),
-                             dr2=0.0, dr2_lo="", dr2_hi="",
-                             r2_ci_lo=round(lo, 4), r2_ci_hi=round(hi, 4)))
-        tgt_sum = {"r2_full": round(r2_full, 4),
-                   "r2_full_ci": [round(lo, 4), round(hi, 4)],
-                   "fields": {}}
+        tsv_rows.append(
+            dict(
+                target=tgt,
+                model="full_stack",
+                field_omitted="(none)",
+                r2=round(r2_full, 4),
+                dr2=0.0,
+                dr2_lo="",
+                dr2_hi="",
+                r2_ci_lo=round(lo, 4),
+                r2_ci_hi=round(hi, 4),
+            )
+        )
+        tgt_sum = {
+            "r2_full": round(r2_full, 4),
+            "r2_full_ci": [round(lo, 4), round(hi, 4)],
+            "fields": {},
+        }
 
         # Leave-one-field-out.
         oof_abl = {}
@@ -138,50 +155,89 @@ def main():
             r2_a = r2(y, oof_abl[f])
             dr2 = r2_full - r2_a
             # paired bootstrap on dR^2
-            dm, dlo, dhi = boot_ci(
-                lambda idx: r2(y, oof_full, idx) - r2(y, oof_abl[f], idx), n)
-            tsv_rows.append(dict(target=tgt, model=f"drop_{f}",
-                                 field_omitted=f, r2=round(r2_a, 4),
-                                 dr2=round(dr2, 4), dr2_lo=round(dlo, 4),
-                                 dr2_hi=round(dhi, 4), r2_ci_lo="", r2_ci_hi=""))
+            dm, dlo, dhi = boot_ci(lambda idx: r2(y, oof_full, idx) - r2(y, oof_abl[f], idx), n)
+            tsv_rows.append(
+                dict(
+                    target=tgt,
+                    model=f"drop_{f}",
+                    field_omitted=f,
+                    r2=round(r2_a, 4),
+                    dr2=round(dr2, 4),
+                    dr2_lo=round(dlo, 4),
+                    dr2_hi=round(dhi, 4),
+                    r2_ci_lo="",
+                    r2_ci_hi="",
+                )
+            )
             tgt_sum["fields"][f] = {
-                "r2_ablated": round(r2_a, 4), "dr2": round(dr2, 4),
+                "r2_ablated": round(r2_a, 4),
+                "dr2": round(dr2, 4),
                 "dr2_ci": [round(dlo, 4), round(dhi, 4)],
-                "load_bearing": bool(dlo > 0)}
+                "load_bearing": bool(dlo > 0),
+            }
 
         # Nuisance control: add seed on top of full stack.
         Xseed, _ = encode(rows, FIELDS + [NUISANCE])
         oof_seed = oof_predict(Xseed, y)
         r2_seed = r2(y, oof_seed)
-        dm, dlo, dhi = boot_ci(
-            lambda idx: r2(y, oof_seed, idx) - r2(y, oof_full, idx), n)
-        tsv_rows.append(dict(target=tgt, model="full_stack+seed",
-                             field_omitted="(+seed)", r2=round(r2_seed, 4),
-                             dr2=round(r2_seed - r2_full, 4), dr2_lo=round(dlo, 4),
-                             dr2_hi=round(dhi, 4), r2_ci_lo="", r2_ci_hi=""))
+        dm, dlo, dhi = boot_ci(lambda idx: r2(y, oof_seed, idx) - r2(y, oof_full, idx), n)
+        tsv_rows.append(
+            dict(
+                target=tgt,
+                model="full_stack+seed",
+                field_omitted="(+seed)",
+                r2=round(r2_seed, 4),
+                dr2=round(r2_seed - r2_full, 4),
+                dr2_lo=round(dlo, 4),
+                dr2_hi=round(dhi, 4),
+                r2_ci_lo="",
+                r2_ci_hi="",
+            )
+        )
         tgt_sum["seed_control"] = {
             "r2_full+seed": round(r2_seed, 4),
             "dr2_add_seed": round(r2_seed - r2_full, 4),
-            "dr2_add_seed_ci": [round(dlo, 4), round(dhi, 4)]}
+            "dr2_add_seed_ci": [round(dlo, 4), round(dhi, 4)],
+        }
 
         # Label-only baseline (same label all cells -> mean model -> R^2 = 0).
         oof_lbl = oof_predict(np.zeros((n, 0)), y)
         tgt_sum["label_only_r2"] = round(r2(y, oof_lbl), 4)
-        tsv_rows.append(dict(target=tgt, model="label_only",
-                             field_omitted="(all stack)", r2=round(r2(y, oof_lbl), 4),
-                             dr2=round(r2_full - r2(y, oof_lbl), 4), dr2_lo="",
-                             dr2_hi="", r2_ci_lo="", r2_ci_hi=""))
+        tsv_rows.append(
+            dict(
+                target=tgt,
+                model="label_only",
+                field_omitted="(all stack)",
+                r2=round(r2(y, oof_lbl), 4),
+                dr2=round(r2_full - r2(y, oof_lbl), 4),
+                dr2_lo="",
+                dr2_hi="",
+                r2_ci_lo="",
+                r2_ci_hi="",
+            )
+        )
         summary["targets"][tgt] = tgt_sum
 
     # Write outputs.
-    cols = ["target", "model", "field_omitted", "r2", "dr2", "dr2_lo",
-            "dr2_hi", "r2_ci_lo", "r2_ci_hi"]
+    cols = [
+        "target",
+        "model",
+        "field_omitted",
+        "r2",
+        "dr2",
+        "dr2_lo",
+        "dr2_hi",
+        "r2_ci_lo",
+        "r2_ci_hi",
+    ]
     with open(os.path.join(OUTDIR, "p5_field_sufficiency.tsv"), "w", newline="") as fh:
         w = csv.DictWriter(fh, fieldnames=cols, delimiter="\t")
         w.writeheader()
         w.writerows(tsv_rows)
     summary["generated"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
-    json.dump(summary, open(os.path.join(OUTDIR, "p5_field_sufficiency_summary.json"), "w"), indent=2)
+    json.dump(
+        summary, open(os.path.join(OUTDIR, "p5_field_sufficiency_summary.json"), "w"), indent=2
+    )
     print(json.dumps(summary, indent=2))
 
 

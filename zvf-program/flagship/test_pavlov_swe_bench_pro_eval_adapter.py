@@ -38,6 +38,7 @@ from flagship.pavlov_swe_bench_pro_eval_adapter import (
     validate_manifest,
     validate_result_receipt,
 )
+import pytest
 
 
 def _task(index: int) -> dict[str, Any]:
@@ -243,37 +244,35 @@ class SweBenchProEvalAdapterTests(unittest.TestCase):
     def test_pinned_source_identity_and_public_primary_boundary(self) -> None:
         manifest = _manifest()
         accepted = validate_manifest(manifest)
-        self.assertEqual(accepted["source"]["dataset_id"], DATASET_ID)
-        self.assertEqual(accepted["source"]["dataset_revision"], DATASET_REVISION)
-        self.assertEqual(accepted["source"]["split"], "test")
-        self.assertEqual(
-            accepted["source"]["official_eval_repo_revision"], OFFICIAL_EVAL_REPO_REVISION
-        )
-        self.assertEqual(accepted["source"]["evaluation_code_license"], "MIT")
-        self.assertEqual(accepted["source"]["evaluation_code_license_url"], EVALUATION_CODE_LICENSE_URL)
-        self.assertEqual(accepted["source"]["dataset_card_url"], DATASET_CARD_URL)
-        self.assertFalse(accepted["source"]["dataset_card_license_declared"])
-        self.assertEqual(accepted["source"]["public_task_count"], PUBLIC_TASK_COUNT)
-        self.assertEqual(accepted["source"]["private_task_count"], PRIVATE_TASK_COUNT)
-        self.assertEqual(accepted["source"]["heldout_task_count"], HELDOUT_TASK_COUNT)
-        self.assertEqual(accepted["source"]["total_task_count"], TOTAL_TASK_COUNT)
-        self.assertEqual(accepted["split"]["role"], PRIMARY_EVAL)
-        self.assertEqual(accepted["split"]["coverage"], "sampled_public")
-        self.assertNotIn("heldout_proof", accepted)
+        assert accepted["source"]["dataset_id"] == DATASET_ID
+        assert accepted["source"]["dataset_revision"] == DATASET_REVISION
+        assert accepted["source"]["split"] == "test"
+        assert accepted["source"]["official_eval_repo_revision"] == OFFICIAL_EVAL_REPO_REVISION
+        assert accepted["source"]["evaluation_code_license"] == "MIT"
+        assert accepted["source"]["evaluation_code_license_url"] == EVALUATION_CODE_LICENSE_URL
+        assert accepted["source"]["dataset_card_url"] == DATASET_CARD_URL
+        assert not accepted["source"]["dataset_card_license_declared"]
+        assert accepted["source"]["public_task_count"] == PUBLIC_TASK_COUNT
+        assert accepted["source"]["private_task_count"] == PRIVATE_TASK_COUNT
+        assert accepted["source"]["heldout_task_count"] == HELDOUT_TASK_COUNT
+        assert accepted["source"]["total_task_count"] == TOTAL_TASK_COUNT
+        assert accepted["split"]["role"] == PRIMARY_EVAL
+        assert accepted["split"]["coverage"] == "sampled_public"
+        assert "heldout_proof" not in accepted
 
     def test_task_and_split_hashes_are_order_independent_but_exact(self) -> None:
         ids = ["z-task", "a-task"]
-        self.assertEqual(compute_task_ids_sha256(ids), compute_task_ids_sha256(reversed(ids)))
-        with self.assertRaises(BoundaryValidationError):
+        assert compute_task_ids_sha256(ids) == compute_task_ids_sha256(reversed(ids))
+        with pytest.raises(BoundaryValidationError):
             compute_task_ids_sha256(["a-task", "a-task"])
-        with self.assertRaises(BoundaryValidationError):
+        with pytest.raises(BoundaryValidationError):
             compute_task_ids_sha256([])
 
         manifest = _manifest()
         accepted = validate_manifest(manifest)
         manifest["split"]["task_ids_sha256"] = "0" * 64
         self.assert_rejected(manifest)
-        self.assertEqual(len(accepted["tasks"]), 2)
+        assert len(accepted["tasks"]) == 2
 
         manifest = _manifest()
         manifest["tasks"].reverse()
@@ -379,13 +378,13 @@ class SweBenchProEvalAdapterTests(unittest.TestCase):
         manifest = _manifest(coverage="full_public")
         self.assert_rejected(manifest)
         manifest = _manifest(coverage="sampled_public")
-        self.assertEqual(len(validate_manifest(manifest)["tasks"]), 2)
+        assert len(validate_manifest(manifest)["tasks"]) == 2
 
     def test_heldout_requires_an_explicit_proof_and_is_not_public_primary(self) -> None:
         heldout = _manifest(role=RECEIPT_PROVEN_HELDOUT, coverage="receipt_proven_heldout")
         accepted = validate_manifest(heldout)
-        self.assertEqual(accepted["split"]["role"], RECEIPT_PROVEN_HELDOUT)
-        self.assertEqual(accepted["heldout_proof"]["status"], "receipt_proven")
+        assert accepted["split"]["role"] == RECEIPT_PROVEN_HELDOUT
+        assert accepted["heldout_proof"]["status"] == "receipt_proven"
 
         primary = _manifest()
         primary["split"]["role"] = RECEIPT_PROVEN_HELDOUT
@@ -404,7 +403,7 @@ class SweBenchProEvalAdapterTests(unittest.TestCase):
             coverage="receipt_proven_heldout",
             receipt_subset=PRIVATE_SUBSET,
         )
-        self.assertEqual(validate_manifest(private)["split"]["subset"], PRIVATE_SUBSET)
+        assert validate_manifest(private)["split"]["subset"] == PRIVATE_SUBSET
 
         mismatched = _manifest(role=RECEIPT_PROVEN_HELDOUT, coverage="receipt_proven_heldout")
         mismatched["heldout_proof"]["source_identity"]["split"] = PRIVATE_SUBSET
@@ -414,9 +413,7 @@ class SweBenchProEvalAdapterTests(unittest.TestCase):
         mismatched["heldout_proof"]["access_receipt"]["source_revision"] = "c" * 40
         self.assert_rejected(mismatched)
 
-        public_identity = _manifest(
-            role=RECEIPT_PROVEN_HELDOUT, coverage="receipt_proven_heldout"
-        )
+        public_identity = _manifest(role=RECEIPT_PROVEN_HELDOUT, coverage="receipt_proven_heldout")
         public_identity["heldout_proof"]["source_identity"] = {
             "source_id": DATASET_ID,
             "source_url": "https://huggingface.co/datasets/ScaleAI/SWE-bench_Pro",
@@ -429,9 +426,9 @@ class SweBenchProEvalAdapterTests(unittest.TestCase):
         manifest = _manifest()
         result = _result(manifest)
         accepted = validate_result_receipt(result, manifest)
-        self.assertEqual(accepted["wandb_run_id"], "wandb-swe-pro-001")
-        self.assertEqual(accepted["tinker_run_id"], "tinker-swe-pro-001:eval:0")
-        self.assertEqual(accepted["hf_receipt"]["commit_sha"], "e" * 40)
+        assert accepted["wandb_run_id"] == "wandb-swe-pro-001"
+        assert accepted["tinker_run_id"] == "tinker-swe-pro-001:eval:0"
+        assert accepted["hf_receipt"]["commit_sha"] == "e" * 40
 
         for key in ("wandb_run_id", "tinker_run_id", "hf_receipt"):
             broken = copy.deepcopy(result)
@@ -445,88 +442,90 @@ class SweBenchProEvalAdapterTests(unittest.TestCase):
 
         broken = copy.deepcopy(result)
         broken["wandb"]["run_id"] = "different"
-        with self.assertRaises(BoundaryValidationError):
+        with pytest.raises(BoundaryValidationError):
             validate_result_receipt(broken, manifest)
 
     def test_result_is_bound_to_task_hashes_counts_native_receipts_and_hf_revision(self) -> None:
         manifest = _manifest()
         result = _result(manifest)
         result["task_ids_sha256"] = "0" * 64
-        with self.assertRaises(BoundaryValidationError):
+        with pytest.raises(BoundaryValidationError):
             validate_result_receipt(result, manifest)
 
         result = _result(manifest)
         result["evaluated_task_ids"] = result["evaluated_task_ids"][:-1]
-        with self.assertRaises(BoundaryValidationError):
+        with pytest.raises(BoundaryValidationError):
             validate_result_receipt(result, manifest)
 
         result = _result(manifest)
         result["resolve_rate"] = 0.9
-        with self.assertRaises(BoundaryValidationError):
+        with pytest.raises(BoundaryValidationError):
             validate_result_receipt(result, manifest)
 
         result = _result(manifest)
         result["hf_receipt"]["commit_sha"] = "not-immutable"
-        with self.assertRaises(BoundaryValidationError):
+        with pytest.raises(BoundaryValidationError):
             validate_result_receipt(result, manifest)
 
         result = _result(manifest)
         result["environment_receipt"]["container_digests"] = []
-        with self.assertRaises(BoundaryValidationError):
+        with pytest.raises(BoundaryValidationError):
             validate_result_receipt(result, manifest)
 
         result = _result(manifest)
-        result["verifier_receipt"]["pass_to_pass_passed"] = not result["verifier_receipt"]["pass_to_pass_passed"]
-        with self.assertRaises(BoundaryValidationError):
+        result["verifier_receipt"]["pass_to_pass_passed"] = not result["verifier_receipt"][
+            "pass_to_pass_passed"
+        ]
+        with pytest.raises(BoundaryValidationError):
             validate_result_receipt(result, manifest)
 
         result = _result(manifest)
         result["task_results"][0]["container_digest"] = manifest["tasks"][1]["container_digest"]
-        with self.assertRaises(BoundaryValidationError):
+        with pytest.raises(BoundaryValidationError):
             validate_result_receipt(result, manifest)
 
         result = _result(manifest)
         result["task_results"][0]["tests"] = result["task_results"][0]["tests"][:1]
-        with self.assertRaises(BoundaryValidationError):
+        with pytest.raises(BoundaryValidationError):
             validate_result_receipt(result, manifest)
 
         result = _result(manifest)
         result["task_results"][0]["tests"].append(
             {"name": "tests/test_fixture.py::test_bug", "status": "PASSED"}
         )
-        with self.assertRaises(BoundaryValidationError):
+        with pytest.raises(BoundaryValidationError):
             validate_result_receipt(result, manifest)
 
         result = _result(manifest)
         result["task_results"].reverse()
-        with self.assertRaises(BoundaryValidationError):
+        with pytest.raises(BoundaryValidationError):
             validate_result_receipt(result, manifest)
 
     def test_primary_result_cannot_make_a_heldout_claim(self) -> None:
         manifest = _manifest()
         result = _result(manifest)
         result["heldout_claim"] = True
-        with self.assertRaises(BoundaryValidationError):
+        with pytest.raises(BoundaryValidationError):
             validate_result_receipt(result, manifest)
 
     def test_boundary_wrapper_and_file_parser_are_offline(self) -> None:
         manifest = _manifest()
         result = _result(manifest)
         accepted = validate_evaluation_boundary(manifest, result)
-        self.assertEqual(accepted["result"]["status"], "completed")
+        assert accepted["result"]["status"] == "completed"
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "manifest.json"
             path.write_text(json.dumps(manifest), encoding="utf-8")
-            self.assertEqual(parse_manifest(path)["benchmark_id"], BENCHMARK_ID)
+            assert parse_manifest(path)["benchmark_id"] == BENCHMARK_ID
 
             duplicate = Path(directory) / "duplicate.json"
             duplicate.write_text('{"benchmark_id":"a","benchmark_id":"b"}')
-            with self.assertRaises(BoundaryValidationError):
+            with pytest.raises(BoundaryValidationError):
                 parse_manifest(duplicate)
 
             trailing = Path(directory) / "trailing.json"
             trailing.write_text('{"benchmark_id":"a"}{"benchmark_id":"b"}')
-            with self.assertRaises(BoundaryValidationError):
+            with pytest.raises(BoundaryValidationError):
                 parse_manifest(trailing)
 
     def test_cli_reports_only_safe_summary(self) -> None:
@@ -536,10 +535,10 @@ class SweBenchProEvalAdapterTests(unittest.TestCase):
             path.write_text(json.dumps(manifest), encoding="utf-8")
             output = io.StringIO()
             with contextlib.redirect_stdout(output):
-                self.assertEqual(main([str(path)]), 0)
-            self.assertIn('"status": "accepted"', output.getvalue())
-            self.assertNotIn("problem_statement", output.getvalue())
-            self.assertNotIn("access_receipt", output.getvalue())
+                assert main([str(path)]) == 0
+            assert '"status": "accepted"' in output.getvalue()
+            assert "problem_statement" not in output.getvalue()
+            assert "access_receipt" not in output.getvalue()
 
 
 # Keep the helper annotation local so the test file has no dependency on a

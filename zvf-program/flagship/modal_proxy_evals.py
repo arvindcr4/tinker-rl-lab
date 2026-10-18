@@ -98,7 +98,7 @@ def run_proxies() -> dict:
         prompt = (
             row["question"]
             + "\n"
-            + "\n".join(f"{L}. {o}" for L, o in zip(letters, opts))
+            + "\n".join(f"{L}. {o}" for L, o in zip(letters, opts, strict=False))
             + "\nAnswer with only the letter."
         )
         out = gen(prompt, return_full_text=False)[0]["generated_text"]

@@ -6,11 +6,11 @@ neither their sign nor an interval identifies sampler dependence. No calibrated
 independent prompt probabilities or held-out dependence experiment is available.
 Observed-grid sizing is exploratory, not cross-validated compute savings.
 """
+
 from __future__ import annotations
 
 import argparse
 import csv
-import json
 import math
 import statistics
 import sys
@@ -64,11 +64,15 @@ def load_decomposition(path: Path) -> List[Dict[str, Any]]:
         if key in identities:
             raise ValueError("duplicate decomposition identity")
         identities.add(key)
-        if row["G"] < 2 or any(not math.isfinite(row[k]) for k in ("p_x", "zvf_obs", "zvf_iid", "delta_div", "Y_obs")):
+        if row["G"] < 2 or any(
+            not math.isfinite(row[k]) for k in ("p_x", "zvf_obs", "zvf_iid", "delta_div", "Y_obs")
+        ):
             raise ValueError("invalid or nonfinite decomposition measurement")
         if any(not 0 <= row[k] <= 1 for k in ("p_x", "zvf_obs", "zvf_iid", "Y_obs")):
             raise ValueError("decomposition probability out of range")
-        if not math.isclose(row["Y_obs"], 1-row["zvf_obs"], abs_tol=1e-4) or not math.isclose(row["delta_div"], row["zvf_iid"]-row["zvf_obs"], abs_tol=1e-4):
+        if not math.isclose(row["Y_obs"], 1 - row["zvf_obs"], abs_tol=1e-4) or not math.isclose(
+            row["delta_div"], row["zvf_iid"] - row["zvf_obs"], abs_tol=1e-4
+        ):
             raise ValueError("inconsistent decomposition metrics")
     return rows
 
@@ -85,8 +89,7 @@ def bootstrap_mean(
         return (float("nan"), (float("nan"), float("nan")))
     point = statistics.fmean(vals)
     samples = [
-        statistics.fmean(vals[i] for i in (rng.randrange(n) for _ in range(n)))
-        for _ in range(B)
+        statistics.fmean(vals[i] for i in (rng.randrange(n) for _ in range(n))) for _ in range(B)
     ]
     samples.sort()
     lo = samples[int(0.025 * B)]
@@ -94,11 +97,7 @@ def bootstrap_mean(
     return (point, (lo, hi))
 
 
-from _review27_contracts import stable_seed
-
-def write_falsification_tsv(
-    rows: List[Dict[str, Any]], out_path: Path
-) -> Dict[str, Any]:
+def write_falsification_tsv(rows: List[Dict[str, Any]], out_path: Path) -> Dict[str, Any]:
     """Descriptive source summaries; no unsupported row-independence assumption."""
     by_source: Dict[str, List[Dict[str, Any]]] = {}
     for r in rows:
@@ -187,36 +186,51 @@ def empirical_isog_curve(
         for Yt in Y_targets:
             observed_by_g = {}
             for row in cell:
-                observed_by_g.setdefault(row["G"], []).append(row["Y_obs"] if "Y_obs" in row else 1-row["zvf_obs"])
-            candidates=[g for g,ys in observed_by_g.items() if statistics.fmean(ys)>=Yt]
-            selected=min(candidates) if candidates else float("inf")
-            iid=_iso_g_iid(mean_p,Yt)
-            rows_binned.append({
-                "source":source,"p_lo":lo,"p_hi":hi,"p_mean":mean_p,
-                "mean_delta_div":mean_d,"n":n,"Y_target":Yt,
-                "G_iid":iid,"G_empirical":selected,
-                "delta_G": selected-iid if math.isfinite(selected) and math.isfinite(iid) else float("nan"),
-                "status":"observed_grid_descriptive" if candidates else "not_observed_feasible",
-            })
+                observed_by_g.setdefault(row["G"], []).append(
+                    row["Y_obs"] if "Y_obs" in row else 1 - row["zvf_obs"]
+                )
+            candidates = [g for g, ys in observed_by_g.items() if statistics.fmean(ys) >= Yt]
+            selected = min(candidates) if candidates else float("inf")
+            iid = _iso_g_iid(mean_p, Yt)
+            rows_binned.append(
+                {
+                    "source": source,
+                    "p_lo": lo,
+                    "p_hi": hi,
+                    "p_mean": mean_p,
+                    "mean_delta_div": mean_d,
+                    "n": n,
+                    "Y_target": Yt,
+                    "G_iid": iid,
+                    "G_empirical": selected,
+                    "delta_G": selected - iid
+                    if math.isfinite(selected) and math.isfinite(iid)
+                    else float("nan"),
+                    "status": "observed_grid_descriptive"
+                    if candidates
+                    else "not_observed_feasible",
+                }
+            )
     return rows_binned
 
 
 def _iso_g_iid(p: float, Y_target: float):
     """Exact IID contrast-yield solver (review27-v2); inf means infeasible."""
     from _review27_contracts import exact_iso_g
+
     return exact_iso_g(p, Y_target)
 
 
-def write_empirical_isog_tsv(
-    rows: List[Dict[str, Any]], out_path: Path
-) -> List[Dict[str, Any]]:
+def write_empirical_isog_tsv(rows: List[Dict[str, Any]], out_path: Path) -> List[Dict[str, Any]]:
     """Write the per-source, per-bin empirical iso-G sizing table."""
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out: List[Dict[str, Any]] = []
     srcs = sorted({r["source"] for r in rows})
     with out_path.open("w") as fh:
         fh.write("# review27-v3: observed group-size grid only; infeasible/unsupported is inf.\n")
-        fh.write("# IID is a model prediction at bin mean p; delta_G is descriptive, not savings.\n")
+        fh.write(
+            "# IID is a model prediction at bin mean p; delta_G is descriptive, not savings.\n"
+        )
         writer = csv.writer(fh, delimiter="\t", lineterminator="\n")
         writer.writerow(
             (
@@ -267,6 +281,7 @@ def write_figure(
 ) -> Optional[str]:
     try:
         import matplotlib
+
         matplotlib.use("Agg")
         import matplotlib.pyplot as plt
     except Exception:
@@ -323,9 +338,7 @@ def write_figure(
     # Panel C: empirical-vs-iid iso-G sizing on tinker_gsm8k (Y_target=0.8).
     ax = axes[2]
     cell_rows = [
-        r
-        for r in isog_rows
-        if r["source"] == "tinker_gsm8k" and abs(r["Y_target"] - 0.80) < 1e-6
+        r for r in isog_rows if r["source"] == "tinker_gsm8k" and abs(r["Y_target"] - 0.80) < 1e-6
     ]
     if cell_rows:
         ps = [r["p_mean"] for r in cell_rows]
@@ -411,7 +424,9 @@ def main() -> int:
             f"CI=[{s['ci_lo']:+.4f}, {s['ci_hi']:+.4f}] "
             f"frac_positive={s['frac_positive']:.3f}  -> {s['verdict']}"
         )
-    print("[zvf-elevation] Dependence UNIDENTIFIED: independent calibration and evaluation required.")
+    print(
+        "[zvf-elevation] Dependence UNIDENTIFIED: independent calibration and evaluation required."
+    )
     if fig_path:
         print(f"[zvf-elevation] wrote figure {fig_path}")
     return 0

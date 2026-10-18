@@ -17,6 +17,7 @@ For entries with `expected_effects` but NO measured[] (dapo, gspo, ppo,
 ppo_reinforce, liteppo, reinforce) we cannot yet validate — we surface them as
 UNMEASURABLE and quantify the validation gap.
 """
+
 from __future__ import annotations
 
 import csv
@@ -50,7 +51,7 @@ def paired_step_bootstrap_pct(a, b, n_boot=N_BOOT, seed=SEED):
     rng = random.Random(seed)
     a, b = paired_values(a, b)
     n = len(a)
-    diffs = [bi - ai for ai, bi in zip(a, b)]
+    diffs = [bi - ai for ai, bi in zip(a, b, strict=False)]
     point = sum(diffs) / len(diffs)
     boots = []
     for _ in range(n_boot):
@@ -127,7 +128,7 @@ def zvf_risk_delta(panel, base_method, method, metric_key):
     na, nb = int(a.get(n_key, a.get("n_seeds"))), int(b.get(n_key, b.get("n_seeds")))
     if min(na, nb) < 2 or min(sd_a, sd_b) < 0 or not all(math.isfinite(x) for x in (sd_a, sd_b)):
         raise ValueError("Invalid metric-specific uncertainty")
-    se = math.sqrt(sd_a ** 2 / na + sd_b ** 2 / nb)
+    se = math.sqrt(sd_a**2 / na + sd_b**2 / nb)
     return delta, delta - 1.96 * se, delta + 1.96 * se, min(na, nb)
 
 
@@ -140,7 +141,15 @@ def main():
     print(f"[iter190] zvf130 method_risk methods: {sorted(zvrisk.keys())}")
 
     # ----- (A) Recompute N2 last-10 deltas for grpo/aero/gift/areal -----
-    metrics_n2 = ["zvf", "reward_mean", "pcd", "mean_len", "cv_len", "frac_all_zero", "frac_all_one"]
+    metrics_n2 = [
+        "zvf",
+        "reward_mean",
+        "pcd",
+        "mean_len",
+        "cv_len",
+        "frac_all_zero",
+        "frac_all_one",
+    ]
     base = "grpo"
     methods_n2 = ["grpo", "aero", "gift", "areal"]
     last10 = {met: n2_last10_by_method_metric(n2_rows, met) for met in metrics_n2}
@@ -157,21 +166,23 @@ def main():
             if not mv or not base_vals:
                 continue
             d, lo, hi = paired_step_bootstrap_pct(base_vals, mv)
-            per_pair_tsv.append({
-                "metric": met,
-                "panel": "n2_same_stack_last10",
-                "base": base,
-                "method": m,
-                "n": len(mv),
-                "mean_base": statistics.mean(base_vals.values()),
-                "mean_method": statistics.mean(mv.values()),
-                "delta_method_minus_base": round(d, 6),
-                "ci_low": round(lo, 6) if lo is not None else None,
-                "ci_high": round(hi, 6) if hi is not None else None,
-                "significant": bool(lo > 0 or hi < 0) if lo is not None else None,
-                "data_source": "platform_hybrid/experiments/results/n2_reward_tensor_resume/n2_metrics.tsv",
-                "ci_method": f"paired_step_bootstrap_pct n_boot={N_BOOT} seed={SEED}",
-            })
+            per_pair_tsv.append(
+                {
+                    "metric": met,
+                    "panel": "n2_same_stack_last10",
+                    "base": base,
+                    "method": m,
+                    "n": len(mv),
+                    "mean_base": statistics.mean(base_vals.values()),
+                    "mean_method": statistics.mean(mv.values()),
+                    "delta_method_minus_base": round(d, 6),
+                    "ci_low": round(lo, 6) if lo is not None else None,
+                    "ci_high": round(hi, 6) if hi is not None else None,
+                    "significant": bool(lo > 0 or hi < 0) if lo is not None else None,
+                    "data_source": "platform_hybrid/experiments/results/n2_reward_tensor_resume/n2_metrics.tsv",
+                    "ci_method": f"paired_step_bootstrap_pct n_boot={N_BOOT} seed={SEED}",
+                }
+            )
 
     # ----- (B) Recompute zvf130 risk-index deltas vs grpo -----
     zvf130_metrics = ["zvf_risk_mean", "mag_mean", "csd_mean", "drift_mean"]
@@ -184,21 +195,25 @@ def main():
             if res is None:
                 continue
             d, lo, hi, n = res
-            per_pair_tsv.append({
-                "metric": met,
-                "panel": "zvf130_5seed",
-                "base": base,
-                "method": m,
-                "n": n,
-                "mean_base": float(zvrisk[base][met]),
-                "mean_method": float(zvrisk[m][met]),
-                "delta_method_minus_base": round(d, 6),
-                "ci_low": round(lo, 6) if lo is not None else None,
-                "ci_high": round(hi, 6) if hi is not None else None,
-                "significant": bool(lo > 0 or hi < 0) if lo is not None else None,
-                "data_source": "platform_hybrid/experiments/results/zvf_iter130_method_risk.tsv",
-                "ci_method": "metric_specific_normal_approx_95pct" if lo is not None else "DESCRIPTIVE_ONLY_missing_metric_sd_or_n",
-            })
+            per_pair_tsv.append(
+                {
+                    "metric": met,
+                    "panel": "zvf130_5seed",
+                    "base": base,
+                    "method": m,
+                    "n": n,
+                    "mean_base": float(zvrisk[base][met]),
+                    "mean_method": float(zvrisk[m][met]),
+                    "delta_method_minus_base": round(d, 6),
+                    "ci_low": round(lo, 6) if lo is not None else None,
+                    "ci_high": round(hi, 6) if hi is not None else None,
+                    "significant": bool(lo > 0 or hi < 0) if lo is not None else None,
+                    "data_source": "platform_hybrid/experiments/results/zvf_iter130_method_risk.tsv",
+                    "ci_method": "metric_specific_normal_approx_95pct"
+                    if lo is not None
+                    else "DESCRIPTIVE_ONLY_missing_metric_sd_or_n",
+                }
+            )
 
     # ----- (C) Walk every delta_*.json: match expected_effects to recomputed pair -----
     lookup = defaultdict(dict)  # (method, metric) -> row from per_pair_tsv
@@ -207,7 +222,17 @@ def main():
 
     delta_files = sorted(glob.glob(str(ENT / "delta_*.json")))
     per_alignment = []
-    per_entry_rollup = defaultdict(lambda: {"supports": 0, "contradicts": 0, "neutral": 0, "unclaimed": 0, "unmeasurable": 0, "expected_total": 0, "measured_total": 0})
+    per_entry_rollup = defaultdict(
+        lambda: {
+            "supports": 0,
+            "contradicts": 0,
+            "neutral": 0,
+            "unclaimed": 0,
+            "unmeasurable": 0,
+            "expected_total": 0,
+            "measured_total": 0,
+        }
+    )
 
     for fp in delta_files:
         with open(fp) as f:
@@ -233,7 +258,11 @@ def main():
             measured_delta = None
             ci_lo = ci_hi = None
             sig = None
-            panel_used = "RECOMPUTED" if rk and rk.get("panel") == panel else ("PANEL_MISMATCH" if rk else "NONE")
+            panel_used = (
+                "RECOMPUTED"
+                if rk and rk.get("panel") == panel
+                else ("PANEL_MISMATCH" if rk else "NONE")
+            )
             if rk is not None and rk["panel"] == panel:
                 measured_delta = rk["delta_method_minus_base"]
                 ci_lo = rk["ci_low"]
@@ -250,21 +279,36 @@ def main():
                 ci_lo = rk["ci_low"]
                 ci_hi = rk["ci_high"]
                 verdict = "PANEL_MISMATCH"
-            per_alignment.append({
-                "delta_id": did,
-                "name": d.get("name", ""),
-                "method": method_name,
-                "metric": met,
-                "panel_expected": panel,
-                "predicted_sign": ps,
-                "panel_used": panel_used,
-                "recomputed_delta": measured_delta if measured_delta is not None else "",
-                "recomputed_ci_low": ci_lo if ci_lo is not None else "",
-                "recomputed_ci_high": ci_hi if ci_hi is not None else "",
-                "recomputed_significant": sig if sig is not None else "",
-                "verdict": verdict,
-            })
-            bucket = verdict.lower() if verdict in ("SUPPORTS", "CONTRADICTS", "NEUTRAL", "UNCLAIMED", "UNMEASURABLE", "SUPPORTS_NS", "PANEL_MISMATCH") else "unclaimed"
+            per_alignment.append(
+                {
+                    "delta_id": did,
+                    "name": d.get("name", ""),
+                    "method": method_name,
+                    "metric": met,
+                    "panel_expected": panel,
+                    "predicted_sign": ps,
+                    "panel_used": panel_used,
+                    "recomputed_delta": measured_delta if measured_delta is not None else "",
+                    "recomputed_ci_low": ci_lo if ci_lo is not None else "",
+                    "recomputed_ci_high": ci_hi if ci_hi is not None else "",
+                    "recomputed_significant": sig if sig is not None else "",
+                    "verdict": verdict,
+                }
+            )
+            bucket = (
+                verdict.lower()
+                if verdict
+                in (
+                    "SUPPORTS",
+                    "CONTRADICTS",
+                    "NEUTRAL",
+                    "UNCLAIMED",
+                    "UNMEASURABLE",
+                    "SUPPORTS_NS",
+                    "PANEL_MISMATCH",
+                )
+                else "unclaimed"
+            )
             if verdict in ("UNMEASURABLE", "PANEL_MISMATCH"):
                 bucket = "unmeasurable"
             if bucket not in per_entry_rollup[did]:
@@ -285,28 +329,48 @@ def main():
             stored_lo = m.get("ci_low", None)
             stored_hi = m.get("ci_high", None)
             rk = lookup.get((method_name, met))
-            recomputed_delta = rk["delta_method_minus_base"] if (rk and rk["panel"] == panel) else None
+            recomputed_delta = (
+                rk["delta_method_minus_base"] if (rk and rk["panel"] == panel) else None
+            )
             recomputed_lo = rk["ci_low"] if (rk and rk["panel"] == panel) else None
             recomputed_hi = rk["ci_high"] if (rk and rk["panel"] == panel) else None
             delta_diff = None
             if stored_delta is not None and recomputed_delta is not None:
                 delta_diff = round(recomputed_delta - stored_delta, 6)
-            stored_vs_recomputed.append({
-                "delta_id": did,
-                "metric": met,
-                "panel": panel,
-                "stored_delta": stored_delta,
-                "recomputed_delta": recomputed_delta,
-                "delta_diff": delta_diff,
-                "stored_ci": [stored_lo, stored_hi],
-                "recomputed_ci": [recomputed_lo, recomputed_hi],
-                "in_CI_band": None if (stored_delta is None or recomputed_lo is None) else bool(recomputed_lo <= stored_delta <= recomputed_hi),
-            })
+            stored_vs_recomputed.append(
+                {
+                    "delta_id": did,
+                    "metric": met,
+                    "panel": panel,
+                    "stored_delta": stored_delta,
+                    "recomputed_delta": recomputed_delta,
+                    "delta_diff": delta_diff,
+                    "stored_ci": [stored_lo, stored_hi],
+                    "recomputed_ci": [recomputed_lo, recomputed_hi],
+                    "in_CI_band": None
+                    if (stored_delta is None or recomputed_lo is None)
+                    else bool(recomputed_lo <= stored_delta <= recomputed_hi),
+                }
+            )
 
     # ----- Write outputs -----
     out_pair = RES / "p6_iter190_recomputed_deltas.tsv"
     with open(out_pair, "w") as f:
-        cols = ["metric", "panel", "base", "method", "n", "mean_base", "mean_method", "delta_method_minus_base", "ci_low", "ci_high", "significant", "data_source", "ci_method"]
+        cols = [
+            "metric",
+            "panel",
+            "base",
+            "method",
+            "n",
+            "mean_base",
+            "mean_method",
+            "delta_method_minus_base",
+            "ci_low",
+            "ci_high",
+            "significant",
+            "data_source",
+            "ci_method",
+        ]
         w = csv.DictWriter(f, fieldnames=cols, delimiter="\t")
         w.writeheader()
         for r in per_pair_tsv:
@@ -314,7 +378,20 @@ def main():
 
     out_align = RES / "p6_iter190_expected_vs_recomputed.tsv"
     with open(out_align, "w") as f:
-        cols = ["delta_id", "name", "method", "metric", "panel_expected", "predicted_sign", "panel_used", "recomputed_delta", "recomputed_ci_low", "recomputed_ci_high", "recomputed_significant", "verdict"]
+        cols = [
+            "delta_id",
+            "name",
+            "method",
+            "metric",
+            "panel_expected",
+            "predicted_sign",
+            "panel_used",
+            "recomputed_delta",
+            "recomputed_ci_low",
+            "recomputed_ci_high",
+            "recomputed_significant",
+            "verdict",
+        ]
         w = csv.DictWriter(f, fieldnames=cols, delimiter="\t")
         w.writeheader()
         for r in per_alignment:
@@ -322,7 +399,17 @@ def main():
 
     out_compare = RES / "p6_iter190_stored_vs_recomputed.tsv"
     with open(out_compare, "w") as f:
-        cols = ["delta_id", "metric", "panel", "stored_delta", "recomputed_delta", "delta_diff", "stored_ci", "recomputed_ci", "in_CI_band"]
+        cols = [
+            "delta_id",
+            "metric",
+            "panel",
+            "stored_delta",
+            "recomputed_delta",
+            "delta_diff",
+            "stored_ci",
+            "recomputed_ci",
+            "in_CI_band",
+        ]
         w = csv.DictWriter(f, fieldnames=cols, delimiter="\t")
         w.writeheader()
         for r in stored_vs_recomputed:
@@ -331,23 +418,36 @@ def main():
     # Per-entry rollup
     out_rollup = RES / "p6_iter190_entry_rollup.tsv"
     with open(out_rollup, "w") as f:
-        cols = ["delta_id", "expected_total", "measured_total", "supports", "supports_ns", "contradicts", "neutral", "unclaimed", "unmeasurable", "n_aligned"]
+        cols = [
+            "delta_id",
+            "expected_total",
+            "measured_total",
+            "supports",
+            "supports_ns",
+            "contradicts",
+            "neutral",
+            "unclaimed",
+            "unmeasurable",
+            "n_aligned",
+        ]
         w = csv.DictWriter(f, fieldnames=cols, delimiter="\t")
         w.writeheader()
         for did, roll in per_entry_rollup.items():
             sup = roll.get("supports", 0) + roll.get("supports_ns", 0)
-            w.writerow({
-                "delta_id": did,
-                "expected_total": roll.get("expected_total", 0),
-                "measured_total": roll.get("measured_total", 0),
-                "supports": roll.get("supports", 0),
-                "supports_ns": roll.get("supports_ns", 0),
-                "contradicts": roll.get("contradicts", 0),
-                "neutral": roll.get("neutral", 0),
-                "unclaimed": roll.get("unclaimed", 0),
-                "unmeasurable": roll.get("unmeasurable", 0),
-                "n_aligned": roll.get("expected_total", 0) - roll.get("unmeasurable", 0),
-            })
+            w.writerow(
+                {
+                    "delta_id": did,
+                    "expected_total": roll.get("expected_total", 0),
+                    "measured_total": roll.get("measured_total", 0),
+                    "supports": roll.get("supports", 0),
+                    "supports_ns": roll.get("supports_ns", 0),
+                    "contradicts": roll.get("contradicts", 0),
+                    "neutral": roll.get("neutral", 0),
+                    "unclaimed": roll.get("unclaimed", 0),
+                    "unmeasurable": roll.get("unmeasurable", 0),
+                    "n_aligned": roll.get("expected_total", 0) - roll.get("unmeasurable", 0),
+                }
+            )
 
     # Summary JSON
     n_align = len(per_alignment)
@@ -355,10 +455,22 @@ def main():
     n_supports_ns = sum(1 for r in per_alignment if r["verdict"] == "SUPPORTS_NS")
     n_contradicts = sum(1 for r in per_alignment if r["verdict"] == "CONTRADICTS")
     n_neutral = sum(1 for r in per_alignment if r["verdict"] == "NEUTRAL")
-    n_unmeasurable = sum(1 for r in per_alignment if r["verdict"] in ("UNMEASURABLE", "PANEL_MISMATCH"))
-    n_entries_with_expected = sum(1 for did, roll in per_entry_rollup.items() if roll.get("expected_total", 0) > 0)
-    n_entries_fully_validated = sum(1 for did, roll in per_entry_rollup.items() if roll.get("expected_total", 0) > 0 and roll.get("unmeasurable", 0) == 0)
-    n_drift_pairs = sum(1 for r in stored_vs_recomputed if r["delta_diff"] is not None and abs(r["delta_diff"]) > 0.05)
+    n_unmeasurable = sum(
+        1 for r in per_alignment if r["verdict"] in ("UNMEASURABLE", "PANEL_MISMATCH")
+    )
+    n_entries_with_expected = sum(
+        1 for did, roll in per_entry_rollup.items() if roll.get("expected_total", 0) > 0
+    )
+    n_entries_fully_validated = sum(
+        1
+        for did, roll in per_entry_rollup.items()
+        if roll.get("expected_total", 0) > 0 and roll.get("unmeasurable", 0) == 0
+    )
+    n_drift_pairs = sum(
+        1
+        for r in stored_vs_recomputed
+        if r["delta_diff"] is not None and abs(r["delta_diff"]) > 0.05
+    )
     n_stored = len(stored_vs_recomputed)
     summary = {
         "iter": 190,
@@ -375,8 +487,12 @@ def main():
         "n_entries_fully_validated": n_entries_fully_validated,
         "n_stored_pairs": n_stored,
         "n_stored_drift_gt_0p05": n_drift_pairs,
-        "supports_rate": round((n_supports + n_supports_ns) / max(1, n_align - n_unmeasurable), 4) if n_align > n_unmeasurable else None,
-        "contradicts_rate": round(n_contradicts / max(1, n_align - n_unmeasurable), 4) if n_align > n_unmeasurable else None,
+        "supports_rate": round((n_supports + n_supports_ns) / max(1, n_align - n_unmeasurable), 4)
+        if n_align > n_unmeasurable
+        else None,
+        "contradicts_rate": round(n_contradicts / max(1, n_align - n_unmeasurable), 4)
+        if n_align > n_unmeasurable
+        else None,
         "ci_method_n2": f"paired_step_bootstrap_pct n_boot={N_BOOT} seed={SEED}",
         "ci_method_zvf130": "welch_normal_approx_95pct n=5 (per-method aggregated sd)",
         "raw_data_sources": [

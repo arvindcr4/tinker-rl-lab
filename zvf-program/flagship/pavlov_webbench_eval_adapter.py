@@ -129,9 +129,16 @@ def load_webbench_trust_root(document: Any) -> dict[str, str]:
         raise WebBenchDatasetError("E6 provider trust roots must be a JSON object")
     data = dict(document)
     required = {
-        "schema_version", "provider_id", "lane", "suite_id", "key_id",
-        "key_fingerprint", "public_key_b64", "signature_algorithm",
-        "issued_at", "expires_at",
+        "schema_version",
+        "provider_id",
+        "lane",
+        "suite_id",
+        "key_id",
+        "key_fingerprint",
+        "public_key_b64",
+        "signature_algorithm",
+        "issued_at",
+        "expires_at",
     }
     if set(data) != required:
         raise WebBenchDatasetError("E6 provider trust-root document has an invalid schema")
@@ -163,7 +170,9 @@ def load_webbench_trust_root(document: Any) -> dict[str, str]:
         ):
             raise ValueError
     except (KeyError, TypeError, ValueError):
-        raise WebBenchDatasetError("E6 provider trust-root key or validity window is invalid") from None
+        raise WebBenchDatasetError(
+            "E6 provider trust-root key or validity window is invalid"
+        ) from None
     if data["key_fingerprint"] not in TRUSTED_PROVIDER_FINGERPRINTS:
         raise WebBenchDatasetError("provider key has no independently installed trust anchor")
     return {
@@ -194,7 +203,9 @@ def _strict_hex(value: Any, length: int) -> bool:
 
 
 def _finite(value: Any) -> bool:
-    return type(value) in (int, float) and not isinstance(value, bool) and math.isfinite(float(value))
+    return (
+        type(value) in (int, float) and not isinstance(value, bool) and math.isfinite(float(value))
+    )
 
 
 def _add(blockers: list[dict[str, Any]], code: str, message: str, **details: Any) -> None:
@@ -214,9 +225,19 @@ def _url(value: Any, *, host: str | None = None) -> tuple[bool, str]:
         port = parsed.port
     except ValueError:
         return False, "url_parse_error"
-    if parsed.scheme != "https" or not actual_host or parsed.username or parsed.password or port is not None:
+    if (
+        parsed.scheme != "https"
+        or not actual_host
+        or parsed.username
+        or parsed.password
+        or port is not None
+    ):
         return False, "url_not_https_or_hosted"
-    if actual_host.endswith(".invalid") or actual_host in {"example.com", "example.org", "example.net"}:
+    if actual_host.endswith(".invalid") or actual_host in {
+        "example.com",
+        "example.org",
+        "example.net",
+    }:
         return False, "url_placeholder_host"
     if host is not None and actual_host != host:
         return False, "url_host_not_authoritative"
@@ -244,7 +265,9 @@ def _receipt(value: Any, expected_binding: Mapping[str, Any]) -> tuple[bool, str
     if not isinstance(value, Mapping):
         return False, "receipt_not_object"
     allowed = {
-        "schema_version", "key_id", "signature_b64",
+        "schema_version",
+        "key_id",
+        "signature_b64",
         "receipt_id",
         "record_id",
         "identity",
@@ -268,7 +291,9 @@ def _receipt(value: Any, expected_binding: Mapping[str, Any]) -> tuple[bool, str
             return False, f"receipt_{key}_not_boolean"
         if value[key] is not True:
             return False, f"receipt_{key}_false"
-    if not isinstance(value.get("binding"), Mapping) or dict(value["binding"]) != dict(expected_binding):
+    if not isinstance(value.get("binding"), Mapping) or dict(value["binding"]) != dict(
+        expected_binding
+    ):
         return False, "receipt_binding_mismatch"
     payload = value.get("payload")
     if not isinstance(payload, Mapping):
@@ -291,7 +316,9 @@ def _receipt(value: Any, expected_binding: Mapping[str, Any]) -> tuple[bool, str
             return False, "receipt_payload_self_attestation"
         if key_text.endswith("_id") and not _strict_hex(child, 40):
             return False, "receipt_payload_id_not_lower_hex40"
-        if any(token in key_text for token in ("hash", "digest", "sha256")) and not _strict_hex(child, 64):
+        if any(token in key_text for token in ("hash", "digest", "sha256")) and not _strict_hex(
+            child, 64
+        ):
             return False, "receipt_payload_digest_not_lower_hex64"
         if key_text in {"url", "source_url", "repo_url", "run_url", "checkpoint_url"}:
             valid, reason = _url(child)
@@ -309,7 +336,9 @@ def _receipt(value: Any, expected_binding: Mapping[str, Any]) -> tuple[bool, str
     try:
         signed = {k: v for k, v in value.items() if k != "signature_b64"}
         Ed25519PublicKey.from_public_bytes(base64.b64decode(key, validate=True)).verify(
-            base64.b64decode(value["signature_b64"], validate=True), _canonical_json(signed).encode("utf-8"))
+            base64.b64decode(value["signature_b64"], validate=True),
+            _canonical_json(signed).encode("utf-8"),
+        )
     except (ValueError, TypeError, KeyError, InvalidSignature):
         return False, "receipt_signature_invalid"
     return True, "ok"
@@ -344,13 +373,20 @@ def _validate_result_receipt_payload(
     elif service == "tinker":
         if payload.get("provider") != "Tinker" or not _strict_hex(payload.get("run_id"), 40):
             return False, "tinker_run_identity_invalid"
-        if not _finite(payload.get("cumulative_cost_usd")) or float(payload["cumulative_cost_usd"]) < 0 or float(payload["cumulative_cost_usd"]) > 16.50:
+        if (
+            not _finite(payload.get("cumulative_cost_usd"))
+            or float(payload["cumulative_cost_usd"]) < 0
+            or float(payload["cumulative_cost_usd"]) > 16.50
+        ):
             return False, "tinker_cost_cap_invalid"
     elif service == "hf":
         revision = payload.get("revision")
         if not _strict_hex(revision, 40):
             return False, "hf_revision_not_lower_hex40"
-        if type(payload.get("visibility")) is not str or payload.get("visibility") not in {"public", "private"}:
+        if type(payload.get("visibility")) is not str or payload.get("visibility") not in {
+            "public",
+            "private",
+        }:
             return False, "hf_visibility_invalid"
         for key in ("repo_url", "checkpoint_url"):
             valid, reason = _authoritative_url(payload.get(key), "huggingface.co")
@@ -379,7 +415,11 @@ def _validate_result_receipt_payload(
 def _validate_source(manifest: Mapping[str, Any], blockers: list[dict[str, Any]]) -> bool:
     source = manifest.get("source")
     if not isinstance(source, Mapping):
-        _add(blockers, "source_identity_missing", "WebBench requires an authoritative source identity object.")
+        _add(
+            blockers,
+            "source_identity_missing",
+            "WebBench requires an authoritative source identity object.",
+        )
         return False
     good = True
     expected = {
@@ -389,19 +429,43 @@ def _validate_source(manifest: Mapping[str, Any], blockers: list[dict[str, Any]]
     }
     for key, expected_value in expected.items():
         if source.get(key) != expected_value:
-            _add(blockers, "source_identity_mismatch", "The manifest must identify the authoritative WebBench source exactly.", field=key, expected=expected_value, actual=source.get(key))
+            _add(
+                blockers,
+                "source_identity_mismatch",
+                "The manifest must identify the authoritative WebBench source exactly.",
+                field=key,
+                expected=expected_value,
+                actual=source.get(key),
+            )
             good = False
     valid_url, reason = _url(source.get("url"), host="github.com")
     if not valid_url:
-        _add(blockers, "source_url_invalid", "The authoritative source URL is not a valid official GitHub URL.", reason=reason)
+        _add(
+            blockers,
+            "source_url_invalid",
+            "The authoritative source URL is not a valid official GitHub URL.",
+            reason=reason,
+        )
         good = False
     revision = source.get("revision")
     if not _strict_hex(revision, 40):
-        _add(blockers, "revision_not_pinned", "WebBench needs an immutable lower-case 40-hex revision.")
+        _add(
+            blockers,
+            "revision_not_pinned",
+            "WebBench needs an immutable lower-case 40-hex revision.",
+        )
         good = False
     license_name = source.get("license")
-    if type(license_name) is not str or not license_name.strip() or license_name.lower() in {"unknown", "pending", "tbd", "to_be_confirmed"}:
-        _add(blockers, "license_not_pinned", "WebBench needs an explicit non-placeholder license identifier.")
+    if (
+        type(license_name) is not str
+        or not license_name.strip()
+        or license_name.lower() in {"unknown", "pending", "tbd", "to_be_confirmed"}
+    ):
+        _add(
+            blockers,
+            "license_not_pinned",
+            "WebBench needs an explicit non-placeholder license identifier.",
+        )
         good = False
     for field, kind in (("revision_receipt", "revision"), ("license_receipt", "license")):
         valid, reason = _receipt(
@@ -409,14 +473,25 @@ def _validate_source(manifest: Mapping[str, Any], blockers: list[dict[str, Any]]
             {"subject": WEBBENCH_SUITE_ID, "role": WEBBENCH_ROLE, "kind": kind},
         )
         if not valid:
-            _add(blockers, "source_receipt_invalid", "Pinned source identity/license needs a bound receipt.", field=field, reason=reason)
+            _add(
+                blockers,
+                "source_receipt_invalid",
+                "Pinned source identity/license needs a bound receipt.",
+                field=field,
+                reason=reason,
+            )
             good = False
         elif isinstance(source.get(field), Mapping):
             payload = _receipt_payload(source[field])
             expected_value = revision if kind == "revision" else license_name
             payload_key = "revision" if kind == "revision" else "license"
             if payload is None or payload.get(payload_key) != expected_value:
-                _add(blockers, "source_receipt_payload_mismatch", "The source receipt must bind the exact pinned revision or license.", field=field)
+                _add(
+                    blockers,
+                    "source_receipt_payload_mismatch",
+                    "The source receipt must bind the exact pinned revision or license.",
+                    field=field,
+                )
                 good = False
     return good
 
@@ -424,30 +499,65 @@ def _validate_source(manifest: Mapping[str, Any], blockers: list[dict[str, Any]]
 def _validate_tasks_and_split(manifest: Mapping[str, Any], blockers: list[dict[str, Any]]) -> bool:
     task_ids = manifest.get("task_ids")
     good = True
-    if not isinstance(task_ids, list) or not task_ids or any(type(item) is not str or not item.strip() for item in task_ids):
+    if (
+        not isinstance(task_ids, list)
+        or not task_ids
+        or any(type(item) is not str or not item.strip() for item in task_ids)
+    ):
         _add(blockers, "task_ids_invalid", "WebBench task_ids must be a non-empty list of strings.")
         return False
     if len(task_ids) != len(set(task_ids)) or task_ids != sorted(task_ids):
-        _add(blockers, "task_ids_not_deterministic", "Task IDs must be unique and lexicographically sorted.")
+        _add(
+            blockers,
+            "task_ids_not_deterministic",
+            "Task IDs must be unique and lexicographically sorted.",
+        )
         good = False
     expected_task_hash = task_ids_hash(task_ids)
     if manifest.get("task_id_hash") != expected_task_hash:
-        _add(blockers, "task_id_hash_mismatch", "task_id_hash must equal the canonical hash of deterministic task IDs.", expected=expected_task_hash, actual=manifest.get("task_id_hash"))
+        _add(
+            blockers,
+            "task_id_hash_mismatch",
+            "task_id_hash must equal the canonical hash of deterministic task IDs.",
+            expected=expected_task_hash,
+            actual=manifest.get("task_id_hash"),
+        )
         good = False
     split_manifest = manifest.get("split_manifest")
     if not isinstance(split_manifest, Mapping):
-        _add(blockers, "split_manifest_missing", "A deterministic split_manifest object is required.")
+        _add(
+            blockers, "split_manifest_missing", "A deterministic split_manifest object is required."
+        )
         return False
-    if split_manifest.get("suite_id") != WEBBENCH_SUITE_ID or split_manifest.get("role") != WEBBENCH_ROLE or split_manifest.get("split") != WEBBENCH_SPLIT or split_manifest.get("task_id_hash") != expected_task_hash:
-        _add(blockers, "split_manifest_boundary_mismatch", "The split manifest must bind WebBench, primary_eval, evaluation, and the task hash.")
+    if (
+        split_manifest.get("suite_id") != WEBBENCH_SUITE_ID
+        or split_manifest.get("role") != WEBBENCH_ROLE
+        or split_manifest.get("split") != WEBBENCH_SPLIT
+        or split_manifest.get("task_id_hash") != expected_task_hash
+    ):
+        _add(
+            blockers,
+            "split_manifest_boundary_mismatch",
+            "The split manifest must bind WebBench, primary_eval, evaluation, and the task hash.",
+        )
         good = False
     try:
         expected_split_hash = split_manifest_hash(split_manifest)
     except (TypeError, ValueError):
-        _add(blockers, "split_manifest_not_canonicalizable", "split_manifest must contain only canonical JSON values.")
+        _add(
+            blockers,
+            "split_manifest_not_canonicalizable",
+            "split_manifest must contain only canonical JSON values.",
+        )
         return False
     if manifest.get("split_manifest_hash") != expected_split_hash:
-        _add(blockers, "split_manifest_hash_mismatch", "split_manifest_hash must equal the canonical split manifest hash.", expected=expected_split_hash, actual=manifest.get("split_manifest_hash"))
+        _add(
+            blockers,
+            "split_manifest_hash_mismatch",
+            "split_manifest_hash must equal the canonical split manifest hash.",
+            expected=expected_split_hash,
+            actual=manifest.get("split_manifest_hash"),
+        )
         good = False
     task_receipt = manifest.get("task_receipt")
     valid, reason = _receipt(
@@ -455,10 +565,19 @@ def _validate_tasks_and_split(manifest: Mapping[str, Any], blockers: list[dict[s
         {"subject": WEBBENCH_SUITE_ID, "role": WEBBENCH_ROLE, "kind": "task"},
     )
     if not valid:
-        _add(blockers, "task_receipt_invalid", "Deterministic task IDs need a bound task receipt.", reason=reason)
+        _add(
+            blockers,
+            "task_receipt_invalid",
+            "Deterministic task IDs need a bound task receipt.",
+            reason=reason,
+        )
         good = False
     elif _receipt_payload(task_receipt).get("task_id_hash") != expected_task_hash:
-        _add(blockers, "task_receipt_payload_mismatch", "The task receipt must bind the exact task_id_hash.")
+        _add(
+            blockers,
+            "task_receipt_payload_mismatch",
+            "The task receipt must bind the exact task_id_hash.",
+        )
         good = False
     split_receipt = manifest.get("split_receipt")
     valid, reason = _receipt(
@@ -466,10 +585,19 @@ def _validate_tasks_and_split(manifest: Mapping[str, Any], blockers: list[dict[s
         {"subject": WEBBENCH_SUITE_ID, "role": WEBBENCH_ROLE, "kind": "split"},
     )
     if not valid:
-        _add(blockers, "split_receipt_invalid", "The split manifest needs a bound split receipt.", reason=reason)
+        _add(
+            blockers,
+            "split_receipt_invalid",
+            "The split manifest needs a bound split receipt.",
+            reason=reason,
+        )
         good = False
     elif _receipt_payload(split_receipt).get("split_manifest_hash") != expected_split_hash:
-        _add(blockers, "split_receipt_payload_mismatch", "The split receipt must bind the exact split_manifest_hash.")
+        _add(
+            blockers,
+            "split_receipt_payload_mismatch",
+            "The split receipt must bind the exact split_manifest_hash.",
+        )
         good = False
     return good
 
@@ -477,24 +605,67 @@ def _validate_tasks_and_split(manifest: Mapping[str, Any], blockers: list[dict[s
 def _validate_environment(manifest: Mapping[str, Any], blockers: list[dict[str, Any]]) -> bool:
     environment = manifest.get("environment")
     if not isinstance(environment, Mapping):
-        _add(blockers, "environment_contract_missing", "WebBench needs a native environment/artifact/verifier contract.")
+        _add(
+            blockers,
+            "environment_contract_missing",
+            "WebBench needs a native environment/artifact/verifier contract.",
+        )
         return False
     good = True
     for field in ("container_digest", "runtime_digest"):
         if not _strict_hex(environment.get(field), 64):
-            _add(blockers, "environment_digest_invalid", "Container and runtime identities must be lower-case 64-hex digests.", field=field)
+            _add(
+                blockers,
+                "environment_digest_invalid",
+                "Container and runtime identities must be lower-case 64-hex digests.",
+                field=field,
+            )
             good = False
     native = environment.get("native_environment")
-    if not isinstance(native, Mapping) or type(native.get("entrypoint")) is not str or not native.get("entrypoint") or type(native.get("state_model")) is not str or not native.get("state_model"):
-        _add(blockers, "native_environment_contract_invalid", "A native entrypoint and state model are required.")
+    if (
+        not isinstance(native, Mapping)
+        or type(native.get("entrypoint")) is not str
+        or not native.get("entrypoint")
+        or type(native.get("state_model")) is not str
+        or not native.get("state_model")
+    ):
+        _add(
+            blockers,
+            "native_environment_contract_invalid",
+            "A native entrypoint and state model are required.",
+        )
         good = False
     artifact = environment.get("artifact_contract")
-    if not isinstance(artifact, Mapping) or not isinstance(artifact.get("required_artifacts"), list) or not artifact.get("required_artifacts") or not isinstance(artifact.get("state_integrity_checks"), list) or not artifact.get("state_integrity_checks") or type(artifact.get("side_effect_policy")) is not str or not artifact.get("side_effect_policy"):
-        _add(blockers, "artifact_contract_invalid", "Artifact/state integrity and side-effect policy must be structured, non-empty fields.")
+    if (
+        not isinstance(artifact, Mapping)
+        or not isinstance(artifact.get("required_artifacts"), list)
+        or not artifact.get("required_artifacts")
+        or not isinstance(artifact.get("state_integrity_checks"), list)
+        or not artifact.get("state_integrity_checks")
+        or type(artifact.get("side_effect_policy")) is not str
+        or not artifact.get("side_effect_policy")
+    ):
+        _add(
+            blockers,
+            "artifact_contract_invalid",
+            "Artifact/state integrity and side-effect policy must be structured, non-empty fields.",
+        )
         good = False
     verifier = environment.get("verifier_contract")
-    if not isinstance(verifier, Mapping) or type(verifier.get("verifier_id")) is not str or not verifier.get("verifier_id") or not _strict_hex(verifier.get("verifier_revision"), 40) or not isinstance(verifier.get("checks"), list) or not verifier.get("checks") or type(verifier.get("native_state_inspection")) is not bool:
-        _add(blockers, "verifier_contract_invalid", "The verifier must identify an immutable revision, checks, and native-state inspection behavior.")
+    if (
+        not isinstance(verifier, Mapping)
+        or type(verifier.get("verifier_id")) is not str
+        or not verifier.get("verifier_id")
+        or not _strict_hex(verifier.get("verifier_revision"), 40)
+        or not isinstance(verifier.get("checks"), list)
+        or not verifier.get("checks")
+        or type(verifier.get("native_state_inspection")) is not bool
+    ):
+        _add(
+            blockers,
+            "verifier_contract_invalid",
+            "The verifier must identify an immutable revision, checks, and native-state inspection behavior.",
+        )
         good = False
     container_receipt = environment.get("container_receipt")
     valid, reason = _receipt(
@@ -502,13 +673,23 @@ def _validate_environment(manifest: Mapping[str, Any], blockers: list[dict[str, 
         {"subject": WEBBENCH_SUITE_ID, "role": WEBBENCH_ROLE, "kind": "container"},
     )
     if not valid:
-        _add(blockers, "container_receipt_invalid", "The runtime/container identity needs a bound receipt.", reason=reason)
+        _add(
+            blockers,
+            "container_receipt_invalid",
+            "The runtime/container identity needs a bound receipt.",
+            reason=reason,
+        )
         good = False
-    elif (
-        _receipt_payload(container_receipt).get("container_digest") != environment.get("container_digest")
-        or _receipt_payload(container_receipt).get("runtime_digest") != environment.get("runtime_digest")
+    elif _receipt_payload(container_receipt).get("container_digest") != environment.get(
+        "container_digest"
+    ) or _receipt_payload(container_receipt).get("runtime_digest") != environment.get(
+        "runtime_digest"
     ):
-        _add(blockers, "container_receipt_payload_mismatch", "The container receipt must bind the exact container and runtime digests.")
+        _add(
+            blockers,
+            "container_receipt_payload_mismatch",
+            "The container receipt must bind the exact container and runtime digests.",
+        )
         good = False
     verifier_receipt = environment.get("verifier_receipt")
     valid, reason = _receipt(
@@ -516,10 +697,21 @@ def _validate_environment(manifest: Mapping[str, Any], blockers: list[dict[str, 
         {"subject": WEBBENCH_SUITE_ID, "role": WEBBENCH_ROLE, "kind": "verifier"},
     )
     if not valid:
-        _add(blockers, "verifier_receipt_invalid", "The native verifier needs a bound receipt.", reason=reason)
+        _add(
+            blockers,
+            "verifier_receipt_invalid",
+            "The native verifier needs a bound receipt.",
+            reason=reason,
+        )
         good = False
-    elif not isinstance(verifier, Mapping) or _receipt_payload(verifier_receipt).get("verifier_revision") != verifier.get("verifier_revision"):
-        _add(blockers, "verifier_receipt_payload_mismatch", "The verifier receipt must bind the exact verifier revision.")
+    elif not isinstance(verifier, Mapping) or _receipt_payload(verifier_receipt).get(
+        "verifier_revision"
+    ) != verifier.get("verifier_revision"):
+        _add(
+            blockers,
+            "verifier_receipt_payload_mismatch",
+            "The verifier receipt must bind the exact verifier revision.",
+        )
         good = False
     return good
 
@@ -539,40 +731,100 @@ def _validate_provider_access_grant(
     """
     grant = manifest.get("provider_access_receipt")
     if not isinstance(grant, Mapping):
-        _add(blockers, "provider_access_receipt_invalid", "WebBench requires an authenticated provider access receipt.", reason="not_object")
+        _add(
+            blockers,
+            "provider_access_receipt_invalid",
+            "WebBench requires an authenticated provider access receipt.",
+            reason="not_object",
+        )
         return False, None
     data = dict(grant)
     historical = data.get("historical") is True
     if historical:
-        allowed = {"historical", "unlaunchable", "receipt_id", "issued_at", "provider_identity", "note"}
+        allowed = {
+            "historical",
+            "unlaunchable",
+            "receipt_id",
+            "issued_at",
+            "provider_identity",
+            "note",
+        }
         if set(data) - allowed or data.get("unlaunchable") is not True:
-            _add(blockers, "provider_access_receipt_invalid", "Historical provider evidence is accepted only when explicitly unlaunchable.", reason="historical_contract")
+            _add(
+                blockers,
+                "provider_access_receipt_invalid",
+                "Historical provider evidence is accepted only when explicitly unlaunchable.",
+                reason="historical_contract",
+            )
             return False, None
-        if not isinstance(data.get("receipt_id"), str) or not data["receipt_id"].strip() or not isinstance(data.get("note"), str) or not data["note"].strip():
-            _add(blockers, "provider_access_receipt_invalid", "Historical evidence needs a stable receipt ID and explanatory note.", reason="historical_identity")
+        if (
+            not isinstance(data.get("receipt_id"), str)
+            or not data["receipt_id"].strip()
+            or not isinstance(data.get("note"), str)
+            or not data["note"].strip()
+        ):
+            _add(
+                blockers,
+                "provider_access_receipt_invalid",
+                "Historical evidence needs a stable receipt ID and explanatory note.",
+                reason="historical_identity",
+            )
             return False, None
         return True, None
     required = {"provider_identity", "issued_at", "binding", "write_scope", "receipt_id"}
     if not required.issubset(data):
-        _add(blockers, "provider_access_receipt_invalid", "Provider access receipt is missing immutable identity, issue time, or binding fields.", reason="missing_fields")
+        _add(
+            blockers,
+            "provider_access_receipt_invalid",
+            "Provider access receipt is missing immutable identity, issue time, or binding fields.",
+            reason="missing_fields",
+        )
         return False, None
-    if data.get("historical") is not False or data.get("unlaunchable") is not False or not _strict_hex(data.get("receipt_id"), 40):
-        _add(blockers, "provider_access_receipt_invalid", "A live provider receipt must be explicitly launchable and use an immutable receipt ID.", reason="launchability")
+    if (
+        data.get("historical") is not False
+        or data.get("unlaunchable") is not False
+        or not _strict_hex(data.get("receipt_id"), 40)
+    ):
+        _add(
+            blockers,
+            "provider_access_receipt_invalid",
+            "A live provider receipt must be explicitly launchable and use an immutable receipt ID.",
+            reason="launchability",
+        )
         return False, None
     identity = data.get("provider_identity")
-    if not isinstance(identity, Mapping) or identity.get("provider_id") != "halluminate-webbench" or not _strict_hex(identity.get("key_id"), 40):
-        _add(blockers, "provider_access_receipt_invalid", "Provider identity must be the pinned Halluminate key identity.", reason="provider_identity")
+    if (
+        not isinstance(identity, Mapping)
+        or identity.get("provider_id") != "halluminate-webbench"
+        or not _strict_hex(identity.get("key_id"), 40)
+    ):
+        _add(
+            blockers,
+            "provider_access_receipt_invalid",
+            "Provider identity must be the pinned Halluminate key identity.",
+            reason="provider_identity",
+        )
         return False, None
     valid_url, reason = _authoritative_url(identity.get("url"), "github.com")
     if not valid_url or "/Halluminate/" not in str(identity.get("url")):
-        _add(blockers, "provider_access_receipt_invalid", "Provider identity URL is not authoritative.", reason=reason)
+        _add(
+            blockers,
+            "provider_access_receipt_invalid",
+            "Provider identity URL is not authoritative.",
+            reason=reason,
+        )
         return False, None
     try:
         issued = datetime.fromisoformat(str(data["issued_at"]).replace("Z", "+00:00"))
         if issued.tzinfo is None:
             raise ValueError
     except ValueError:
-        _add(blockers, "provider_access_receipt_invalid", "Provider receipt issued_at must be timezone-aware ISO-8601.", reason="issued_at")
+        _add(
+            blockers,
+            "provider_access_receipt_invalid",
+            "Provider receipt issued_at must be timezone-aware ISO-8601.",
+            reason="issued_at",
+        )
         return False, None
     try:
         expires = datetime.fromisoformat(str(data.get("expires_at", "")).replace("Z", "+00:00"))
@@ -580,7 +832,12 @@ def _validate_provider_access_grant(
         if expires.tzinfo is None or issued > now or expires <= now or expires <= issued:
             raise ValueError
     except ValueError:
-        _add(blockers, "provider_access_receipt_invalid", "Provider receipt must have non-expired, non-future issued/expires timestamps.", reason="time_window")
+        _add(
+            blockers,
+            "provider_access_receipt_invalid",
+            "Provider receipt must have non-expired, non-future issued/expires timestamps.",
+            reason="time_window",
+        )
         return False, None
     environment = manifest.get("environment")
     source = manifest.get("source")
@@ -589,23 +846,59 @@ def _validate_provider_access_grant(
         "suite_id": WEBBENCH_SUITE_ID,
         "lane": WEBBENCH_GRANT_LANE,
         "revision": source.get("revision") if isinstance(source, Mapping) else None,
-        "container_digest": environment.get("container_digest") if isinstance(environment, Mapping) else None,
-        "runtime_digest": environment.get("runtime_digest") if isinstance(environment, Mapping) else None,
-        "verifier_revision": verifier.get("verifier_revision") if isinstance(verifier, Mapping) else None,
+        "container_digest": environment.get("container_digest")
+        if isinstance(environment, Mapping)
+        else None,
+        "runtime_digest": environment.get("runtime_digest")
+        if isinstance(environment, Mapping)
+        else None,
+        "verifier_revision": verifier.get("verifier_revision")
+        if isinstance(verifier, Mapping)
+        else None,
     }
     binding = data.get("binding")
-    if not isinstance(binding, Mapping) or any(binding.get(key) != value for key, value in expected.items()):
-        _add(blockers, "provider_access_receipt_invalid", "Provider receipt must bind suite, revision, container, runtime, and verifier exactly.", reason="binding")
+    if not isinstance(binding, Mapping) or any(
+        binding.get(key) != value for key, value in expected.items()
+    ):
+        _add(
+            blockers,
+            "provider_access_receipt_invalid",
+            "Provider receipt must bind suite, revision, container, runtime, and verifier exactly.",
+            reason="binding",
+        )
         return False, None
-    if not _strict_hex(binding.get("reset_contract_digest"), 64) or not _strict_hex(binding.get("write_scope_digest"), 64):
-        _add(blockers, "provider_access_receipt_invalid", "Provider receipt must bind reset and write-scope hashes.", reason="reset_or_scope")
+    if not _strict_hex(binding.get("reset_contract_digest"), 64) or not _strict_hex(
+        binding.get("write_scope_digest"), 64
+    ):
+        _add(
+            blockers,
+            "provider_access_receipt_invalid",
+            "Provider receipt must bind reset and write-scope hashes.",
+            reason="reset_or_scope",
+        )
         return False, None
     scope = data.get("write_scope")
-    if not isinstance(scope, Mapping) or not isinstance(scope.get("operations"), list) or not scope["operations"] or not isinstance(scope.get("allowed_domains"), list) or not scope["allowed_domains"]:
-        _add(blockers, "provider_access_receipt_invalid", "Provider receipt write scope must be explicit and non-empty.", reason="write_scope")
+    if (
+        not isinstance(scope, Mapping)
+        or not isinstance(scope.get("operations"), list)
+        or not scope["operations"]
+        or not isinstance(scope.get("allowed_domains"), list)
+        or not scope["allowed_domains"]
+    ):
+        _add(
+            blockers,
+            "provider_access_receipt_invalid",
+            "Provider receipt write scope must be explicit and non-empty.",
+            reason="write_scope",
+        )
         return False, None
     if binding["write_scope_digest"] != sha256_hex(dict(scope)):
-        _add(blockers, "provider_access_receipt_invalid", "Provider receipt write scope digest does not recompute.", reason="write_scope_digest")
+        _add(
+            blockers,
+            "provider_access_receipt_invalid",
+            "Provider receipt write scope digest does not recompute.",
+            reason="write_scope_digest",
+        )
         return False, None
     try:
         root = load_webbench_trust_root(trust_root)
@@ -618,37 +911,67 @@ def _validate_provider_access_grant(
         or data.get("trust_root_sha256") != root["trust_root_sha256"]
         or data.get("signature_algorithm") != "ed25519"
     ):
-        _add(blockers, "provider_access_receipt_invalid", "Provider receipt does not bind the supplied E6 trust root.", reason="trust_root")
+        _add(
+            blockers,
+            "provider_access_receipt_invalid",
+            "Provider receipt does not bind the supplied E6 trust root.",
+            reason="trust_root",
+        )
         return False, None
     signature = data.get("detached_signature")
     if not isinstance(signature, str):
-        _add(blockers, "provider_access_receipt_invalid", "Provider receipt needs an Ed25519 detached signature.", reason="signature")
+        _add(
+            blockers,
+            "provider_access_receipt_invalid",
+            "Provider receipt needs an Ed25519 detached signature.",
+            reason="signature",
+        )
         return False, None
     signed = {key: value for key, value in data.items() if key != "detached_signature"}
     try:
         Ed25519PublicKey.from_public_bytes(
             base64.b64decode(root["public_key_b64"], validate=True)
-        ).verify(base64.b64decode(signature, validate=True), _canonical_json(signed).encode("utf-8"))
+        ).verify(
+            base64.b64decode(signature, validate=True), _canonical_json(signed).encode("utf-8")
+        )
     except (InvalidSignature, ValueError, TypeError):
-        _add(blockers, "provider_access_receipt_invalid", "Provider receipt signature does not verify against the supplied E6 trust root.", reason="signature")
+        _add(
+            blockers,
+            "provider_access_receipt_invalid",
+            "Provider receipt signature does not verify against the supplied E6 trust root.",
+            reason="signature",
+        )
         return False, None
     return True, root
 
 
-def _validate_result_receipts(manifest: Mapping[str, Any], blockers: list[dict[str, Any]]) -> tuple[bool, bool]:
+def _validate_result_receipts(
+    manifest: Mapping[str, Any], blockers: list[dict[str, Any]]
+) -> tuple[bool, bool]:
     """Return (any_result_material, all_result_receipts_valid)."""
 
-    material_keys = [key for key in ("result", "results", "metrics", "score", "scores") if key in manifest]
+    material_keys = [
+        key for key in ("result", "results", "metrics", "score", "scores") if key in manifest
+    ]
     receipts = manifest.get("result_receipts")
     if not material_keys and receipts is None:
         return False, False
     if not isinstance(receipts, Mapping):
-        _add(blockers, "result_receipts_missing", "Any WebBench result material requires W&B, Tinker, and HF receipts.")
+        _add(
+            blockers,
+            "result_receipts_missing",
+            "Any WebBench result material requires W&B, Tinker, and HF receipts.",
+        )
         return bool(material_keys), False
     good = True
     unexpected_receipts = [key for key in receipts if key not in RESULT_RECEIPT_FIELDS]
     if unexpected_receipts:
-        _add(blockers, "result_receipt_fields_invalid", "Result receipts must use exactly the W&B, Tinker, and HF fields.", fields=sorted(unexpected_receipts, key=str))
+        _add(
+            blockers,
+            "result_receipt_fields_invalid",
+            "Result receipts must use exactly the W&B, Tinker, and HF fields.",
+            fields=sorted(unexpected_receipts, key=str),
+        )
         good = False
     for field in RESULT_RECEIPT_FIELDS:
         valid, reason = _receipt(
@@ -656,24 +979,56 @@ def _validate_result_receipts(manifest: Mapping[str, Any], blockers: list[dict[s
             {"subject": WEBBENCH_SUITE_ID, "role": WEBBENCH_ROLE, "kind": f"result:{field}"},
         )
         if not valid:
-            _add(blockers, "result_receipt_invalid", "Every result bundle needs bound W&B/Tinker/HF receipts.", field=field, reason=reason)
+            _add(
+                blockers,
+                "result_receipt_invalid",
+                "Every result bundle needs bound W&B/Tinker/HF receipts.",
+                field=field,
+                reason=reason,
+            )
             good = False
     result = manifest.get("result")
     if result is None:
-        _add(blockers, "result_record_missing", "W&B/Tinker/HF result receipts cannot stand in for a missing result record.")
+        _add(
+            blockers,
+            "result_record_missing",
+            "W&B/Tinker/HF result receipts cannot stand in for a missing result record.",
+        )
         return True, False
     if result is not None:
-        if not isinstance(result, Mapping) or type(result.get("n")) is not int or result["n"] <= 0 or not _finite(result.get("metric")) or not 0.0 <= float(result["metric"]) <= 1.0:
-            _add(blockers, "result_record_invalid", "A recorded WebBench result needs a positive n and finite metric in [0,1].")
+        if (
+            not isinstance(result, Mapping)
+            or type(result.get("n")) is not int
+            or result["n"] <= 0
+            or not _finite(result.get("metric"))
+            or not 0.0 <= float(result["metric"]) <= 1.0
+        ):
+            _add(
+                blockers,
+                "result_record_invalid",
+                "A recorded WebBench result needs a positive n and finite metric in [0,1].",
+            )
             good = False
-        if isinstance(result, Mapping) and result.get("result_id") is not None and not _strict_hex(result.get("result_id"), 40):
-            _add(blockers, "result_identity_invalid", "Result identities must be lower-case 40-hex values.")
+        if (
+            isinstance(result, Mapping)
+            and result.get("result_id") is not None
+            and not _strict_hex(result.get("result_id"), 40)
+        ):
+            _add(
+                blockers,
+                "result_identity_invalid",
+                "Result identities must be lower-case 40-hex values.",
+            )
             good = False
         if isinstance(result, Mapping):
             try:
                 expected_result_digest = sha256_hex(dict(result))
             except (TypeError, ValueError):
-                _add(blockers, "result_record_not_canonicalizable", "The recorded result must contain only canonical JSON values.")
+                _add(
+                    blockers,
+                    "result_record_not_canonicalizable",
+                    "The recorded result must contain only canonical JSON values.",
+                )
                 return True, False
             for field in RESULT_RECEIPT_FIELDS:
                 valid, reason = _validate_result_receipt_payload(
@@ -682,7 +1037,13 @@ def _validate_result_receipts(manifest: Mapping[str, Any], blockers: list[dict[s
                     expected_result_digest=expected_result_digest,
                 )
                 if not valid:
-                    _add(blockers, "result_receipt_payload_invalid", "Each service receipt must bind the exact recorded result.", field=field, reason=reason)
+                    _add(
+                        blockers,
+                        "result_receipt_payload_invalid",
+                        "Each service receipt must bind the exact recorded result.",
+                        field=field,
+                        reason=reason,
+                    )
                     good = False
     return True, good
 
@@ -691,8 +1052,17 @@ def _scan_substitution_text(value: Any) -> bool:
     if isinstance(value, str):
         text = value.lower()
         return bool(
-            ("xlam" in text or "gsm8k" in text or "math-500" in text or "bfcl" in text or "browsergym" in text)
-            and any(term in text for term in ("substitut", "proxy", "stand-in", "instead of", "related benchmark"))
+            (
+                "xlam" in text
+                or "gsm8k" in text
+                or "math-500" in text
+                or "bfcl" in text
+                or "browsergym" in text
+            )
+            and any(
+                term in text
+                for term in ("substitut", "proxy", "stand-in", "instead of", "related benchmark")
+            )
         )
     if isinstance(value, Mapping):
         return any(_scan_substitution_text(child) for child in value.values())
@@ -713,18 +1083,49 @@ def validate_webbench_manifest(
     if manifest.get("suite_id") != WEBBENCH_SUITE_ID:
         _add(blockers, "suite_id_invalid", "Only the declared webbench_eval suite is accepted.")
     if manifest.get("role") != WEBBENCH_ROLE:
-        _add(blockers, "role_invalid", "WebBench is primary_eval; heldout is a receipt state, not a role.")
+        _add(
+            blockers,
+            "role_invalid",
+            "WebBench is primary_eval; heldout is a receipt state, not a role.",
+        )
     domains = manifest.get("domains")
     if not isinstance(domains, list) or tuple(domains) != WEBBENCH_DOMAINS:
-        _add(blockers, "domain_boundary_invalid", "WebBench must retain its browser, computer_use, and enterprise domain slice.")
+        _add(
+            blockers,
+            "domain_boundary_invalid",
+            "WebBench must retain its browser, computer_use, and enterprise domain slice.",
+        )
     heldout_status = manifest.get("heldout_status")
-    if type(heldout_status) is not str or heldout_status not in {"pending_receipts", "receipt_proven_heldout"}:
-        _add(blockers, "heldout_status_invalid", "heldout_status must be pending_receipts or receipt_proven_heldout.")
-    for key in ("substitutes_for", "proxy_for", "related_benchmark", "related_benchmarks", "xlam", "gsm8k"):
+    if type(heldout_status) is not str or heldout_status not in {
+        "pending_receipts",
+        "receipt_proven_heldout",
+    }:
+        _add(
+            blockers,
+            "heldout_status_invalid",
+            "heldout_status must be pending_receipts or receipt_proven_heldout.",
+        )
+    for key in (
+        "substitutes_for",
+        "proxy_for",
+        "related_benchmark",
+        "related_benchmarks",
+        "xlam",
+        "gsm8k",
+    ):
         if key in manifest and manifest.get(key):
-            _add(blockers, "related_benchmark_substitution", "Related benchmarks and xLAM cannot substitute for WebBench.", field=key)
+            _add(
+                blockers,
+                "related_benchmark_substitution",
+                "Related benchmarks and xLAM cannot substitute for WebBench.",
+                field=key,
+            )
     if _scan_substitution_text(manifest):
-        _add(blockers, "related_benchmark_substitution", "Related benchmark or xLAM substitution text is not an evaluation boundary.")
+        _add(
+            blockers,
+            "related_benchmark_substitution",
+            "Related benchmark or xLAM substitution text is not an evaluation boundary.",
+        )
     source_ok = _validate_source(manifest, blockers)
     tasks_ok = _validate_tasks_and_split(manifest, blockers)
     environment_ok = _validate_environment(manifest, blockers)
@@ -739,11 +1140,17 @@ def validate_webbench_manifest(
         source = manifest.get("source")
         environment = manifest.get("environment")
         expected_provenance = {
-            "revision": ("revision", source.get("revision") if isinstance(source, Mapping) else None),
+            "revision": (
+                "revision",
+                source.get("revision") if isinstance(source, Mapping) else None,
+            ),
             "license": ("license", source.get("license") if isinstance(source, Mapping) else None),
             "split": ("split_manifest_hash", manifest.get("split_manifest_hash")),
             "task": ("task_id_hash", manifest.get("task_id_hash")),
-            "container": ("container_digest", environment.get("container_digest") if isinstance(environment, Mapping) else None),
+            "container": (
+                "container_digest",
+                environment.get("container_digest") if isinstance(environment, Mapping) else None,
+            ),
             "decontamination": ("decontamination_hash", None),
         }
         for field in WEBBENCH_RECEIPT_FIELDS:
@@ -753,21 +1160,46 @@ def validate_webbench_manifest(
             )
             if not valid:
                 provenance_complete = False
-                _add(blockers, "provenance_receipt_invalid", "Primary_eval is not receipt-proven-heldout until every immutable field is bound.", field=field, reason=reason)
+                _add(
+                    blockers,
+                    "provenance_receipt_invalid",
+                    "Primary_eval is not receipt-proven-heldout until every immutable field is bound.",
+                    field=field,
+                    reason=reason,
+                )
                 continue
             payload = _receipt_payload(provenance[field])
             payload_key, expected_value = expected_provenance[field]
-            if payload is None or payload_key not in payload or (expected_value is not None and payload.get(payload_key) != expected_value):
+            if (
+                payload is None
+                or payload_key not in payload
+                or (expected_value is not None and payload.get(payload_key) != expected_value)
+            ):
                 provenance_complete = False
-                _add(blockers, "provenance_receipt_payload_mismatch", "Each provenance receipt must bind the exact WebBench revision, license, task/split, runtime, or decontamination digest.", field=field)
+                _add(
+                    blockers,
+                    "provenance_receipt_payload_mismatch",
+                    "Each provenance receipt must bind the exact WebBench revision, license, task/split, runtime, or decontamination digest.",
+                    field=field,
+                )
     result_material, result_receipts_ok = _validate_result_receipts(manifest, blockers)
     receipts_complete = provenance_complete and result_receipts_ok
     if heldout_status == "receipt_proven_heldout" and not receipts_complete:
-        _add(blockers, "heldout_status_without_receipts", "A receipt_proven_heldout status cannot be self-attested.")
+        _add(
+            blockers,
+            "heldout_status_without_receipts",
+            "A receipt_proven_heldout status cannot be self-attested.",
+        )
     if heldout_status == "pending_receipts" and receipts_complete:
-        _add(blockers, "heldout_status_stale", "Complete receipts require the explicit receipt_proven_heldout state.")
+        _add(
+            blockers,
+            "heldout_status_stale",
+            "Complete receipts require the explicit receipt_proven_heldout state.",
+        )
     boundary_valid = not blockers
-    receipt_proven_heldout = boundary_valid and heldout_status == "receipt_proven_heldout" and receipts_complete
+    receipt_proven_heldout = (
+        boundary_valid and heldout_status == "receipt_proven_heldout" and receipts_complete
+    )
     if boundary_valid and not receipt_proven_heldout:
         status = "READY_PRIMARY_EVAL_PENDING_RECEIPTS"
     elif receipt_proven_heldout:
@@ -807,7 +1239,9 @@ def validate_webbench_manifest(
 validate_manifest = validate_webbench_manifest
 
 
-def _report(boundary_valid: bool, receipt_proven_heldout: bool, blockers: list[dict[str, Any]]) -> dict[str, Any]:
+def _report(
+    boundary_valid: bool, receipt_proven_heldout: bool, blockers: list[dict[str, Any]]
+) -> dict[str, Any]:
     return {
         "schema_version": SCHEMA_VERSION,
         "status": "READY_RECEIPT_PROVEN_HELDOUT" if receipt_proven_heldout else "BLOCKED",
@@ -890,7 +1324,9 @@ def task_digest(record: Mapping[str, Any]) -> str:
     )
 
 
-def read_webbench_csv(path: Path, *, expected_sha256: str | None = WEBBENCH_DATASET_SHA256) -> list[dict[str, Any]]:
+def read_webbench_csv(
+    path: Path, *, expected_sha256: str | None = WEBBENCH_DATASET_SHA256
+) -> list[dict[str, Any]]:
     """Read and structurally validate the pinned public CSV. No network."""
 
     path = Path(path)
@@ -964,7 +1400,9 @@ def derive_task_records(rows: Iterable[Mapping[str, Any]]) -> list[dict[str, Any
         }
         record["registrable_domain"] = registrable_host(record["host"])
         record["task_digest"] = task_digest(record)
-        record["task_uid"] = WEBBENCH_TASK_UID_PREFIX + record["task_digest"][:WEBBENCH_TASK_UID_LENGTH]
+        record["task_uid"] = (
+            WEBBENCH_TASK_UID_PREFIX + record["task_digest"][:WEBBENCH_TASK_UID_LENGTH]
+        )
         records.append(record)
     records.sort(key=lambda item: item["task_id"])
     task_ids = [item["task_id"] for item in records]
@@ -1043,7 +1481,9 @@ def load_training_task_manifest(path: Path) -> dict[str, Any]:
     try:
         value = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, UnicodeError, json.JSONDecodeError) as exc:
-        raise WebBenchDatasetError(f"training task-ID manifest is malformed: {path}: {exc}") from exc
+        raise WebBenchDatasetError(
+            f"training task-ID manifest is malformed: {path}: {exc}"
+        ) from exc
     if isinstance(value, list):
         raw_ids, declared = value, None
     elif isinstance(value, Mapping):
@@ -1068,7 +1508,9 @@ def load_training_task_manifest(path: Path) -> dict[str, Any]:
     # that form only when every entry really is an integer, so a declared hash
     # from the runner can be verified rather than assumed.
     all_int = all(isinstance(item, int) and not isinstance(item, bool) for item in raw_ids)
-    legacy_hash = _sha256_text("\n".join(str(item) for item in sorted(raw_ids))) if all_int else None
+    legacy_hash = (
+        _sha256_text("\n".join(str(item) for item in sorted(raw_ids))) if all_int else None
+    )
     return {
         "path": str(path.resolve()),
         "sha256": file_sha256(path),
@@ -1132,10 +1574,14 @@ def characterize_task_set(records: Sequence[Mapping[str, Any]]) -> dict[str, Any
     id_span = list(range(csv_ids[0], csv_ids[-1] + 1))
     missing_ids = sorted(set(id_span) - set(csv_ids))
     category_domains = {
-        category: len({item["registrable_domain"] for item in records if item["category"] == category})
+        category: len(
+            {item["registrable_domain"] for item in records if item["category"] == category}
+        )
         for category in sorted(categories)
     }
-    write_class = sum(value for key, value in categories.items() if key in WEBBENCH_WRITE_CATEGORIES)
+    write_class = sum(
+        value for key, value in categories.items() if key in WEBBENCH_WRITE_CATEGORIES
+    )
     keyword_counts = {
         name: sum(1 for item in records if re.search(pattern, item["task"], re.IGNORECASE))
         for name, pattern in sorted(WEBBENCH_KEYWORD_PROBES.items())
@@ -1155,7 +1601,9 @@ def characterize_task_set(records: Sequence[Mapping[str, Any]]) -> dict[str, Any
         "distinct_hosts": len(hosts),
         "distinct_registrable_domains": len(domains),
         "url_schemes": dict(sorted(schemes.items())),
-        "http_only_urls": sorted({item["starting_url"] for item in records if item["scheme"] == "http"}),
+        "http_only_urls": sorted(
+            {item["starting_url"] for item in records if item["scheme"] == "http"}
+        ),
         "tasks_per_domain_min": per_domain[0],
         "tasks_per_domain_median": statistics.median(per_domain),
         "tasks_per_domain_max": per_domain[-1],
@@ -1286,9 +1734,13 @@ def write_split_artifacts(bundle: Mapping[str, Any], out_dir: Path) -> dict[str,
         "receipt_class": "local_derivation",
         "authenticated_receipt": None,
     }
-    split_path.write_text(json.dumps(split_payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    split_path.write_text(
+        json.dumps(split_payload, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
     derivation_path = out_dir / "webbench_split_derivation.json"
-    derivation_path.write_text(json.dumps(derivation, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    derivation_path.write_text(
+        json.dumps(derivation, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
     disjoint_path = out_dir / "webbench_disjointness_proof.json"
     disjoint_path.write_text(
         json.dumps(
@@ -1347,7 +1799,9 @@ def main(argv: Sequence[str] | None = None) -> int:
         help="derive the offline task index, split manifest, and disjointness proof",
     )
     parser.add_argument("--dataset", type=Path, help="pinned webbenchfinal.csv")
-    parser.add_argument("--training-task-manifest", type=Path, help="eval-only training task-ID manifest")
+    parser.add_argument(
+        "--training-task-manifest", type=Path, help="eval-only training task-ID manifest"
+    )
     parser.add_argument("--license", type=Path, help="pinned WEBBENCH_LICENSE file")
     parser.add_argument("--out-dir", type=Path, help="directory for derived split artifacts")
     parser.add_argument(
@@ -1364,7 +1818,9 @@ def main(argv: Sequence[str] | None = None) -> int:
                 args.dataset,
                 training_manifest_path=args.training_task_manifest,
                 license_path=args.license,
-                expected_dataset_sha256=None if args.allow_unpinned_dataset else WEBBENCH_DATASET_SHA256,
+                expected_dataset_sha256=None
+                if args.allow_unpinned_dataset
+                else WEBBENCH_DATASET_SHA256,
             )
         except WebBenchDatasetError as exc:
             print(json.dumps({"status": "BLOCKED", "error": str(exc)}, indent=2, sort_keys=True))
@@ -1383,7 +1839,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     try:
         manifest = json.loads(args.manifest.read_text(encoding="utf-8"))
     except (OSError, UnicodeError, json.JSONDecodeError) as exc:
-        report = _report(False, False, [{"code": "manifest_input_error", "message": str(exc), "details": {}}])
+        report = _report(
+            False, False, [{"code": "manifest_input_error", "message": str(exc), "details": {}}]
+        )
         print(json.dumps(report, indent=2, sort_keys=True))
         return 1
     if args.trust_roots is None:
@@ -1391,7 +1849,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     try:
         trust_root = json.loads(args.trust_roots.read_text(encoding="utf-8"))
     except (OSError, UnicodeError, json.JSONDecodeError) as exc:
-        report = _report(False, False, [{"code": "trust_root_input_error", "message": str(exc), "details": {}}])
+        report = _report(
+            False, False, [{"code": "trust_root_input_error", "message": str(exc), "details": {}}]
+        )
         print(json.dumps(report, indent=2, sort_keys=True))
         return 1
     report = validate_webbench_manifest(manifest, trust_root=trust_root)

@@ -25,11 +25,25 @@ def _postable(text: str) -> str:
 
 
 def valid_cells(cells):
-    expected = {(a, c) for a in ("stack_sensitivity", "heldout_capability", "ppo_grpo", "zvf_gu", "early_triage") for c in ("gsm8k", "humaneval", "math", "synthetic_tool_use")}
-    return (isinstance(cells, list) and len(cells) == 20
-            and all(isinstance(c, dict) and c.get("status") in {"evaluated", "not_evaluated", "quarantined"}
-                    and all(isinstance(c.get(k), str) and c[k].strip() for k in ("seed_basis", "reviewed_result", "permitted_inference")) for c in cells)
-            and {(c.get("analysis_id"), c.get("corpus")) for c in cells} == expected)
+    expected = {
+        (a, c)
+        for a in ("stack_sensitivity", "heldout_capability", "ppo_grpo", "zvf_gu", "early_triage")
+        for c in ("gsm8k", "humaneval", "math", "synthetic_tool_use")
+    }
+    return (
+        isinstance(cells, list)
+        and len(cells) == 20
+        and all(
+            isinstance(c, dict)
+            and c.get("status") in {"evaluated", "not_evaluated", "quarantined"}
+            and all(
+                isinstance(c.get(k), str) and c[k].strip()
+                for k in ("seed_basis", "reviewed_result", "permitted_inference")
+            )
+            for c in cells
+        )
+        and {(c.get("analysis_id"), c.get("corpus")) for c in cells} == expected
+    )
 
 
 def evaluate() -> dict[str, object]:
@@ -110,19 +124,26 @@ def evaluate() -> dict[str, object]:
         (
             "source_rules_applied",
             len(source_rules) >= 4
-            and any("rlhfbook.com/c/06-policy-gradients" in str(rule.get("source")) for rule in source_rules)
-            and any("rlhfbook.com/c/16-evaluation" in str(rule.get("source")) for rule in source_rules)
+            and any(
+                "rlhfbook.com/c/06-policy-gradients" in str(rule.get("source"))
+                for rule in source_rules
+            )
+            and any(
+                "rlhfbook.com/c/16-evaluation" in str(rule.get("source")) for rule in source_rules
+            )
             and any("CS2824" in str(rule.get("source")) for rule in source_rules),
         ),
         (
             "post_submission_boundary",
-            ledger.get("post_submission_evidence", {}).get("review_status") == "not_reviewed_not_used_to_answer_score",
+            ledger.get("post_submission_evidence", {}).get("review_status")
+            == "not_reviewed_not_used_to_answer_score",
         ),
         (
             "future_replication_and_matrix_gate",
             ledger.get("future_submission_gates", {}).get("replication_and_evaluation_sample_sizes")
             == "prospectively_justified_by_power_or_precision_targets"
-            and ledger.get("future_submission_gates", {}).get("all_in_scope_cells_accounted_for") is True,
+            and ledger.get("future_submission_gates", {}).get("all_in_scope_cells_accounted_for")
+            is True,
         ),
         (
             "decision_record_updated",

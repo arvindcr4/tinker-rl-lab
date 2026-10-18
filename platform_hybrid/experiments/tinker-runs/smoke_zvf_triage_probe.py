@@ -69,9 +69,11 @@ def main() -> int:
         print("FAIL: load_zvf_controller returned None (package not importable).")
         return 1
     print(f"controller loaded: {type(controller).__module__}.{type(controller).__name__}")
-    print(f"  config: zvf_max={args.zvf_max} var_eps={args.zvf_var_eps} "
-          f"stop_k={args.zvf_stop_k} adaptive_G={args.zvf_adaptive_g} "
-          f"G0={args.group} Gmax={args.zvf_gmax}\n")
+    print(
+        f"  config: zvf_max={args.zvf_max} var_eps={args.zvf_var_eps} "
+        f"stop_k={args.zvf_stop_k} adaptive_G={args.zvf_adaptive_g} "
+        f"G0={args.group} Gmax={args.zvf_gmax}\n"
+    )
 
     # --- Synthetic per-step grouped rewards -------------------------------
     # Each row = one optimizer step; each sublist = one prompt-group's rollouts.
@@ -81,20 +83,22 @@ def main() -> int:
     #   steps 2-4: ZVF==1 for stop_k=3 consecutive steps -> AUTO-STOP at step 4.
     #   step 5 onward never runs (probe breaks on auto_stop).
     steps = [
-        ("mixed contrast",      [[1.0, 0.0], [1.0, 0.0]]),  # ZVF=0
-        ("all-correct (sat)",   [[1.0, 1.0], [1.0, 1.0]]),  # ZVF=1, reward=1 (streak=1)
+        ("mixed contrast", [[1.0, 0.0], [1.0, 0.0]]),  # ZVF=0
+        ("all-correct (sat)", [[1.0, 1.0], [1.0, 1.0]]),  # ZVF=1, reward=1 (streak=1)
         ("all-zero collapse 1", [[0.0, 0.0], [0.0, 0.0]]),  # ZVF=1, reward=0 (streak=2)
         ("all-zero collapse 2", [[0.0, 0.0], [0.0, 0.0]]),  # ZVF=1, reward=0 (streak=3) -> stop
-        ("should-not-run",      [[1.0, 0.0], [1.0, 0.0]]),  # break before this
+        ("should-not-run", [[1.0, 0.0], [1.0, 0.0]]),  # break before this
     ]
 
     auto_stopped_at = None
-    header = (f"{'step':>4}  {'label':<20} {'zvf':>5} {'gu':>5} "
-              f"{'reward':>6} {'regime':<22} {'signal':<14} {'G*':>3} {'stop':>5}")
+    header = (
+        f"{'step':>4}  {'label':<20} {'zvf':>5} {'gu':>5} "
+        f"{'reward':>6} {'regime':<22} {'signal':<14} {'G*':>3} {'stop':>5}"
+    )
     print(header)
     print("-" * len(header))
 
-    for i, (label, group_rewards) in enumerate(steps, start=1):
+    for _i, (label, group_rewards) in enumerate(steps, start=1):
         batch_rewards, batch_group_ids = _build_batch(args, group_rewards)
         # This is exactly the call the probe makes per step.
         decision = controller.step(batch_rewards, batch_group_ids)
@@ -108,9 +112,11 @@ def main() -> int:
         # Probe behaviour: break on auto_stop.
         if decision.auto_stop:
             auto_stopped_at = decision.step
-            print(f"\n>>> AUTO-STOP fired at step {decision.step} "
-                  f"(global ZVF==1 for stop_k={args.zvf_stop_k} steps). "
-                  f"Probe would break here.")
+            print(
+                f"\n>>> AUTO-STOP fired at step {decision.step} "
+                f"(global ZVF==1 for stop_k={args.zvf_stop_k} steps). "
+                f"Probe would break here."
+            )
             break
 
     print()
@@ -119,8 +125,7 @@ def main() -> int:
     checks = []
     checks.append(("step1 ZVF==0 (mixed)", decisions[0] == 0.0))
     checks.append(("step2 ZVF==1 (all-correct)", decisions[1] == 1.0))
-    checks.append(("auto-stop fired at step 4 (3-step ZVF==1 streak)",
-                   auto_stopped_at == 4))
+    checks.append(("auto-stop fired at step 4 (3-step ZVF==1 streak)", auto_stopped_at == 4))
     checks.append(("controller.stopped True", controller.stopped is True))
 
     all_ok = True

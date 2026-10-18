@@ -8,23 +8,35 @@ from pathlib import Path
 from unittest.mock import patch
 
 from flagship import frontier_swe_eval as harness
+import pytest
 
 
 class FrontierSWEPreflightTests(unittest.TestCase):
     def test_exact_roster_and_smallest_task_are_frozen(self) -> None:
-        self.assertEqual(len(harness.OFFICIAL_TASK_IDS), 17)
-        self.assertEqual(harness.SMALLEST_TASK_ID, "revideo-perf-opt")
-        self.assertEqual(harness.OFFICIAL_TASK_IDS, (
-            "cranelift-codegen-opt", "dart-style-haskell", "dependent-type-checker",
-            "ffmpeg-swscale-rewrite", "frogsgame-rl", "git-to-zig",
-            "granite-mamba2-inference-optimization", "inference-system-optimization",
-            "libexpat-to-x86asm", "lua-native-compiler", "modular-stack-wan21",
-            "notebook-compression", "optimizer-design", "pcqm4mv2-autoresearch",
-            "postgres-sqlite-wire-adapter", "pyright-type-checking-optimization", "revideo-perf-opt",
-        ))
+        assert len(harness.OFFICIAL_TASK_IDS) == 17
+        assert harness.SMALLEST_TASK_ID == "revideo-perf-opt"
+        assert harness.OFFICIAL_TASK_IDS == (
+            "cranelift-codegen-opt",
+            "dart-style-haskell",
+            "dependent-type-checker",
+            "ffmpeg-swscale-rewrite",
+            "frogsgame-rl",
+            "git-to-zig",
+            "granite-mamba2-inference-optimization",
+            "inference-system-optimization",
+            "libexpat-to-x86asm",
+            "lua-native-compiler",
+            "modular-stack-wan21",
+            "notebook-compression",
+            "optimizer-design",
+            "pcqm4mv2-autoresearch",
+            "postgres-sqlite-wire-adapter",
+            "pyright-type-checking-optimization",
+            "revideo-perf-opt",
+        )
 
     def test_task_ids_must_be_disjoint(self) -> None:
-        with self.assertRaisesRegex(harness.GateError, "not disjoint"):
+        with pytest.raises(harness.GateError, match="not disjoint"):
             harness.validate_task_disjointness(["revideo-perf-opt"], ["revideo-perf-opt"])
 
     def test_blocked_receipt_has_precise_license_blocker_and_no_score(self) -> None:
@@ -48,9 +60,9 @@ class FrontierSWEPreflightTests(unittest.TestCase):
             }
             harness.write_receipt(path, receipt)
             loaded = json.loads(path.read_text())
-            self.assertEqual(loaded["status"], "BLOCKED")
-            self.assertIsNone(loaded["score"])
-            self.assertEqual(loaded["blockers"][0]["code"], "benchmark_license_missing")
+            assert loaded["status"] == "BLOCKED"
+            assert loaded["score"] is None
+            assert loaded["blockers"][0]["code"] == "benchmark_license_missing"
 
     def test_model_revision_is_immutable_and_model_is_fixed(self) -> None:
         payload = {"sha": "a" * 40}
@@ -72,7 +84,7 @@ class FrontierSWEPreflightTests(unittest.TestCase):
             return Response()
 
         with patch.object(harness, "MODEL_API_URL", "https://example.invalid/model"):
-            self.assertEqual(harness.resolve_model_revision(opener=opener), "a" * 40)
+            assert harness.resolve_model_revision(opener=opener) == "a" * 40
 
 
 class WandbOrderingTests(unittest.TestCase):
@@ -101,7 +113,7 @@ class WandbOrderingTests(unittest.TestCase):
             wandb_config={"suite_id": "frontier_swe_eval"},
             tinker_factory=tinker_factory,
         )
-        self.assertEqual(events[:2], ["wandb.init", "tinker"])
+        assert events[:2] == ["wandb.init", "tinker"]
 
     def test_offline_wandb_blocks_tinker_factory(self) -> None:
         events: list[str] = []
@@ -118,13 +130,13 @@ class WandbOrderingTests(unittest.TestCase):
                 events.append("wandb.init")
                 return Run()
 
-        with self.assertRaisesRegex(RuntimeError, "not verifiably online"):
+        with pytest.raises(RuntimeError, match="not verifiably online"):
             harness.run_tinker_guarded(
                 wandb_module=Wandb(),
                 wandb_config={},
                 tinker_factory=lambda: events.append("tinker"),
             )
-        self.assertNotIn("tinker", events)
+        assert "tinker" not in events
 
 
 if __name__ == "__main__":

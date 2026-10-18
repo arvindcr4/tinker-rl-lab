@@ -30,6 +30,7 @@ Outputs (TSVs):
   group_size_iter55_wu_model_v2.tsv         Wu retention model fits/predictions
   group_size_iter55_summary_v2.tsv          headline rollup
 """
+
 from __future__ import annotations
 
 import math
@@ -61,10 +62,10 @@ def effective_size(zvf):
         G = r["G"]
         zvf_obs = r["mean_zvf"]
         zvf_th = r["zvf_th"]
-        Y_obs = 1.0 - zvf_obs            # contrastive yield observed
-        Y_th = 1.0 - zvf_th              # contrastive yield under i.i.d.
-        d_eff_obs = G * Y_obs            # effective samples per group
-        d_eff_th = G * Y_th              # under i.i.d.
+        Y_obs = 1.0 - zvf_obs  # contrastive yield observed
+        Y_th = 1.0 - zvf_th  # contrastive yield under i.i.d.
+        d_eff_obs = G * Y_obs  # effective samples per group
+        d_eff_th = G * Y_th  # under i.i.d.
         out.append(
             {
                 "G": G,
@@ -143,9 +144,7 @@ def antiherding_test(eff):
                 "zvf_iid": "",
                 "delta_div": f"mean={d_mean:.4f}",
                 "delta_div_rel": f"std={d_std:.4f}",
-                "in_frontier_range": (
-                    f"range={d_range:.4f} cv={d_cv:.4f}"
-                ),
+                "in_frontier_range": (f"range={d_range:.4f} cv={d_cv:.4f}"),
             }
         )
         out.append(
@@ -334,7 +333,11 @@ def wu_retention_stepaware(rows, zvf, eff):
         gamma_cal, logc_cal = float("nan"), float("nan")
     # alpha from c = (de_ratio)^alpha → alpha = log(c) / log(de_ratio)
     c_cal = math.exp(logc_cal) if not math.isnan(logc_cal) else float("nan")
-    alpha_cal = math.log(c_cal) / math.log(de_ratio) if (de_ratio > 0 and de_ratio != 1 and c_cal > 0) else float("nan")
+    alpha_cal = (
+        math.log(c_cal) / math.log(de_ratio)
+        if (de_ratio > 0 and de_ratio != 1 and c_cal > 0)
+        else float("nan")
+    )
 
     # Also fit free OLS on all 4 points (for comparison)
     x_all = np.array([p[1] for p in pairs])
@@ -345,7 +348,11 @@ def wu_retention_stepaware(rows, zvf, eff):
     gamma_all = (n_all * sxy - sx * sy) / (n_all * sxx - sx * sx + 1e-12)
     logc_all = (sy - gamma_all * sx) / n_all
     c_all = math.exp(logc_all)
-    alpha_all = math.log(c_all) / math.log(de_ratio) if (de_ratio > 0 and de_ratio != 1 and c_all > 0) else float("nan")
+    alpha_all = (
+        math.log(c_all) / math.log(de_ratio)
+        if (de_ratio > 0 and de_ratio != 1 and c_all > 0)
+        else float("nan")
+    )
     # R^2 of the free fit
     yhat_all = gamma_all * x_all + logc_all
     ss_res = float(((y_all - yhat_all) ** 2).sum())
@@ -416,7 +423,9 @@ def wu_retention_model(rows, zvf, eff):
     g32 = next(r for r in rows if r["T"] == T_calib and r["G"] == 32)
     R_calib = g4["acc"] / g32["acc"] if g32["acc"] > 0 else float("nan")
     # alpha = log(R_calib) / log(de_ratio)
-    alpha = math.log(R_calib) / math.log(de_ratio) if de_ratio > 0 and de_ratio != 1 else float("nan")
+    alpha = (
+        math.log(R_calib) / math.log(de_ratio) if de_ratio > 0 and de_ratio != 1 else float("nan")
+    )
 
     for T in budgets:
         g4 = next(r for r in rows if r["T"] == T and r["G"] == 4)
@@ -515,7 +524,18 @@ def main():
     eff = effective_size(zvf)
     write_tsv(
         RES / "group_size_iter55_d_eff_v2.tsv",
-        ["G", "n_seeds", "estimand_kind", "zvf_obs", "zvf_iid", "Y_obs", "Y_iid", "d_eff_obs", "d_eff_iid", "ratio_d_eff_Yratio"],
+        [
+            "G",
+            "n_seeds",
+            "estimand_kind",
+            "zvf_obs",
+            "zvf_iid",
+            "Y_obs",
+            "Y_iid",
+            "d_eff_obs",
+            "d_eff_iid",
+            "ratio_d_eff_Yratio",
+        ],
         eff,
     )
     print(f"Wrote group_size_iter55_d_eff_v2.tsv ({len(eff)} rows)")
@@ -533,7 +553,15 @@ def main():
     pred = isoyield_pred(rows, eff, zvf)
     write_tsv(
         RES / "group_size_iter55_isoyield_pred_v2.tsv",
-        ["T_tokens", "G", "d_eff", "steps_per_prompt", "score", "is_predicted_peak", "predicted_argmax_G"],
+        [
+            "T_tokens",
+            "G",
+            "d_eff",
+            "steps_per_prompt",
+            "score",
+            "is_predicted_peak",
+            "predicted_argmax_G",
+        ],
         pred,
     )
     print(f"Wrote group_size_iter55_isoyield_pred_v2.tsv ({len(pred)} rows)")
@@ -542,7 +570,14 @@ def main():
     coup = coupling(rows, pred)
     write_tsv(
         RES / "group_size_iter55_coupling_v2.tsv",
-        ["T_tokens", "empirical_argmax_G", "predicted_argmax_G", "ratio_emp_over_pred", "residual_log10", "within_factor_2"],
+        [
+            "T_tokens",
+            "empirical_argmax_G",
+            "predicted_argmax_G",
+            "ratio_emp_over_pred",
+            "residual_log10",
+            "within_factor_2",
+        ],
         coup,
     )
     print(f"Wrote group_size_iter55_coupling_v2.tsv ({len(coup)} rows)")
@@ -567,7 +602,9 @@ def main():
     print(f"Wrote group_size_iter55_wu_model_v2.tsv ({len(wu)} rows)")
 
     # E2: budget-aware retention model
-    step, alpha_cal, alpha_all, gamma_cal, gamma_all, r2_all = wu_retention_stepaware(rows, zvf, eff)
+    step, alpha_cal, alpha_all, gamma_cal, gamma_all, r2_all = wu_retention_stepaware(
+        rows, zvf, eff
+    )
     write_tsv(
         RES / "group_size_iter55_stepaware_v2.tsv",
         [
@@ -599,13 +636,13 @@ def main():
     print("\nanti-herding delta_div:")
     deltas = [r["delta_div"] for r in anti if isinstance(r.get("delta_div"), float)]
     if deltas:
-        print(f"  mean={np.mean(deltas):.4f}  range={max(deltas)-min(deltas):.4f}")
+        print(f"  mean={np.mean(deltas):.4f}  range={max(deltas) - min(deltas):.4f}")
         in_band = sum(1 for d in deltas if 0.13 <= d <= 0.23)
         print(f"  {in_band}/{len(deltas)} cells in frontier [0.13, 0.23] band")
     print("\ncoupling (predicted vs empirical argmax G):")
     for r in coup:
         print(
-            f"  T={r['T_tokens']//1_000_000}M  emp={r['empirical_argmax_G']}  "
+            f"  T={r['T_tokens'] // 1_000_000}M  emp={r['empirical_argmax_G']}  "
             f"pred={r['predicted_argmax_G']}  ratio={r['ratio_emp_over_pred']:.3f}  "
             f"within 2x: {r['within_factor_2']}"
         )
@@ -613,7 +650,7 @@ def main():
     for r in wu:
         cal = " (calib)" if r["is_calibration_row"] == "yes" else ""
         print(
-            f"  T={r['T_tokens']//1_000_000}M  R_emp={r['empirical_retention']:.4f}  "
+            f"  T={r['T_tokens'] // 1_000_000}M  R_emp={r['empirical_retention']:.4f}  "
             f"R_pred(d_eff^alpha)={r['pred_retention_de_only']:.4f}  "
             f"err={r['abs_error_de_only']:+.4f}{cal}"
         )
@@ -622,7 +659,7 @@ def main():
     for r in step:
         cal = " (calib)" if r["is_calibration_pair"] == "yes" else ""
         print(
-            f"  T={r['T_tokens']//1_000_000}M  R_emp={r['empirical_retention']:.4f}  "
+            f"  T={r['T_tokens'] // 1_000_000}M  R_emp={r['empirical_retention']:.4f}  "
             f"R_pred_cal={r['R_pred_calibration_T1M_T4M']:.4f}  R_pred_full={r['R_pred_full_fit']:.4f}  "
             f"err_full={r['err_full']:+.4f}{cal}"
         )

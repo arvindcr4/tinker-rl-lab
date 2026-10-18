@@ -39,8 +39,10 @@ import random
 from pathlib import Path
 
 import sys
+
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
+from _paths import REPO_ROOT
+
 ROOT = REPO_ROOT
 RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8/review17_v2"
 TENSORS_DIR = ROOT / "platform_hybrid/experiments" / "results" / "n2_reward_tensor"
@@ -52,6 +54,7 @@ G = 8  # observed group size on N2
 
 
 from p5_review17_stats import json_safe
+
 
 def load_step_records() -> list[dict]:
     """Load all (method, step, rewards[16][8]) from the N2 four-method panels."""
@@ -68,10 +71,13 @@ def load_step_records() -> list[dict]:
                 if any(value not in (0, 1) for group in rewards for value in group):
                     raise ValueError(f"Binary rewards required: {f}")
                 k = [sum(group) for group in rewards]
-                record = dict(method=r.get("method", f.stem.split("_s")[0]),
-                              seed=int(r.get("seed", 0)), step=int(r["step"]),
-                              k_per_prompt=k,
-                              zvf_obs=sum(value in (0, G) for value in k)/len(k))
+                record = dict(
+                    method=r.get("method", f.stem.split("_s")[0]),
+                    seed=int(r.get("seed", 0)),
+                    step=int(r["step"]),
+                    k_per_prompt=k,
+                    zvf_obs=sum(value in (0, G) for value in k) / len(k),
+                )
                 key = (r.get("run_id", "N2"), record["method"], record["seed"], record["step"])
                 if key in out and out[key] != record:
                     raise ValueError(f"Conflicting resumed observation {key}")
@@ -89,9 +95,10 @@ def compute_per_step_items(record: dict) -> dict:
         raise ValueError("At least two binary-reward groups are required")
     p_hat = sum(k) / (n * G)
     # Item 13-step : zvf_yield_residual analog = zvf_obs - binom(zvf)
-    import math
+
     def binom_zvf(p, g):
-        return p ** g + (1 - p) ** g
+        return p**g + (1 - p) ** g
+
     binom_zvf_g = binom_zvf(p_hat, G)
     item_13 = (record["zvf_obs"] - binom_zvf_g) / max(1 - binom_zvf_g, 1e-12)
 
@@ -109,6 +116,7 @@ def compute_per_step_items(record: dict) -> dict:
 
     # Item 16-step: max share
     from collections import Counter
+
     cnt = Counter(k)
     item_16 = max(cnt.values()) / n
 
@@ -125,7 +133,8 @@ def compute_per_step_items(record: dict) -> dict:
         item_15_step=item_15,
         item_16_step=item_16,
         item_17_step=item_17,
-        p_hat=p_hat, n_unique=item_15,
+        p_hat=p_hat,
+        n_unique=item_15,
     )
 
 
@@ -134,8 +143,10 @@ def spearman_rho(xs: list[float], ys: list[float]) -> float:
     n = len(xs)
     if n < 2:
         return 0.0
-    rx = _rank(xs); ry = _rank(ys)
-    mean_rx = sum(rx) / n; mean_ry = sum(ry) / n
+    rx = _rank(xs)
+    ry = _rank(ys)
+    mean_rx = sum(rx) / n
+    mean_ry = sum(ry) / n
     num = sum((rx[i] - mean_rx) * (ry[i] - mean_ry) for i in range(n))
     dx = sum((rx[i] - mean_rx) ** 2 for i in range(n)) ** 0.5
     dy = sum((ry[i] - mean_ry) ** 2 for i in range(n)) ** 0.5
@@ -162,14 +173,16 @@ def _rank(xs: list[float]) -> list[float]:
 def simulate_step(record, rng):
     """Evaluate the identical plug-in statistic on an iid null record."""
     p_hat = sum(record["k_per_prompt"]) / (len(record["k_per_prompt"]) * G)
-    k = [sum(rng.random() < p_hat for _ in range(G))
-         for _ in record["k_per_prompt"]]
-    return compute_per_step_items({"k_per_prompt": k,
-        "zvf_obs": sum(value in (0, G) for value in k) / len(k)})
+    k = [sum(rng.random() < p_hat for _ in range(G)) for _ in record["k_per_prompt"]]
+    return compute_per_step_items(
+        {"k_per_prompt": k, "zvf_obs": sum(value in (0, G) for value in k) / len(k)}
+    )
 
 
 def main() -> None:
-    print("Protocol review17-p5-v2: exploratory descriptive associations; no independent-run, causal, equivalence, or held-out prediction claim")
+    print(
+        "Protocol review17-p5-v2: exploratory descriptive associations; no independent-run, causal, equivalence, or held-out prediction claim"
+    )
     RES.mkdir(parents=True, exist_ok=True)
     print("[iter96-SYNTH] loading N2 four-method tensors ...")
     records = load_step_records()
@@ -182,26 +195,33 @@ def main() -> None:
 
     out_rows = []
     for r in enriched:
-        out_rows.append(dict(
-            method=r["method"], seed=r["seed"], step=r["step"],
-            n_prompts=len(r["k_per_prompt"]),
-            k_mean=sum(r["k_per_prompt"]) / len(r["k_per_prompt"]),
-            item_13_step=r["item_13_step"],
-            item_14_step=r["item_14_step"],
-            item_15_step=r["item_15_step"],
-            item_16_step=r["item_16_step"],
-            item_17_step=r["item_17_step"],
-            p_hat=r["p_hat"],
-            zvf_obs=r["zvf_obs"],
-        ))
+        out_rows.append(
+            dict(
+                method=r["method"],
+                seed=r["seed"],
+                step=r["step"],
+                n_prompts=len(r["k_per_prompt"]),
+                k_mean=sum(r["k_per_prompt"]) / len(r["k_per_prompt"]),
+                item_13_step=r["item_13_step"],
+                item_14_step=r["item_14_step"],
+                item_15_step=r["item_15_step"],
+                item_16_step=r["item_16_step"],
+                item_17_step=r["item_17_step"],
+                p_hat=r["p_hat"],
+                zvf_obs=r["zvf_obs"],
+            )
+        )
     with (RES / "p5p8_iter96_per_step_yield_axes.tsv").open("w") as f:
         w = csv.DictWriter(f, fieldnames=list(out_rows[0].keys()), delimiter="\t")
-        w.writeheader(); [w.writerow(r) for r in out_rows]
+        w.writeheader()
+        [w.writerow(r) for r in out_rows]
 
     # ---- Spearman rho per (item, method) ----
     # Predict each Item_k_step vs |zvf_obs - mean(p_hat)^G - (1-mean(p_hat))^G|
-    import math
-    def b_zvf(p, g=G): return p ** g + (1 - p) ** g
+
+    def b_zvf(p, g=G):
+        return p**g + (1 - p) ** g
+
     target = []
     for r in enriched:
         target.append(abs(r["zvf_obs"] - b_zvf(r["p_hat"])))
@@ -226,15 +246,18 @@ def main() -> None:
 
     with (RES / "p5p8_iter96_per_step_rho.tsv").open("w") as f:
         w = csv.DictWriter(f, fieldnames=["method", "item", "spearman_rho"], delimiter="\t")
-        w.writeheader(); [w.writerow(r) for r in rho_rows]
+        w.writeheader()
+        [w.writerow(r) for r in rho_rows]
 
     # ---- Binomial(G, p) null control on Items 14-17 ----
     # For each step, the null is Binomial(G, p_hat): the expected Item values
     # under independent binomial rewards. Compare empirical to null.
     # Approx: simulate n=500 k-prompt vectors per step under Binomial(G, p_hat).
     rng = random.Random(SEED)
-    null_results = {m: {c: [] for c in ["item_14_step", "item_15_step", "item_16_step", "item_17_step"]}
-                    for m in methods + ["POOLED"]}
+    null_results = {
+        m: {c: [] for c in ["item_14_step", "item_15_step", "item_16_step", "item_17_step"]}
+        for m in methods + ["POOLED"]
+    }
     # Each draw is one complete replicate, including all pooled observations.
     for _ in range(500):
         replicate = {m: [] for m in methods + ["POOLED"]}
@@ -244,7 +267,9 @@ def main() -> None:
             replicate["POOLED"].append(simulated)
         for m, simulated_rows in replicate.items():
             for c in null_results[m]:
-                null_results[m][c].append(sum(row[c] for row in simulated_rows)/len(simulated_rows))
+                null_results[m][c].append(
+                    sum(row[c] for row in simulated_rows) / len(simulated_rows)
+                )
 
     # Empirical vs null: difference of means
     excess = {m: {} for m in methods + ["POOLED"]}
@@ -263,10 +288,13 @@ def main() -> None:
                 continue
             emp_mean = sum(emp_vals) / len(emp_vals)
             null_mean = sum(null_vals) / len(null_vals)
-            null_std = (sum((x - null_mean) ** 2 for x in null_vals) / max(len(null_vals) - 1, 1)) ** 0.5
+            null_std = (
+                sum((x - null_mean) ** 2 for x in null_vals) / max(len(null_vals) - 1, 1)
+            ) ** 0.5
             excess_z = (emp_mean - null_mean) / max(null_std, 1e-12)
-            excess[m][c] = dict(emp_mean=emp_mean, null_mean=null_mean,
-                                diff=emp_mean - null_mean, z=excess_z)
+            excess[m][c] = dict(
+                emp_mean=emp_mean, null_mean=null_mean, diff=emp_mean - null_mean, z=excess_z
+            )
 
     summary = {
         "analysis_protocol": "review17-p5-v2",
@@ -275,12 +303,18 @@ def main() -> None:
         "methods": methods,
         "rho_per_method_per_item": rho_rows,
         "excess_signal_vs_binom_null": {
-            m: {c: excess[m][c] for c in ["item_14_step", "item_15_step", "item_16_step", "item_17_step"]
-                if c in excess[m]}
-            for m in methods + ["POOLED"] if m in excess and excess[m]
+            m: {
+                c: excess[m][c]
+                for c in ["item_14_step", "item_15_step", "item_16_step", "item_17_step"]
+                if c in excess[m]
+            }
+            for m in methods + ["POOLED"]
+            if m in excess and excess[m]
         },
     }
-    (RES / "p5p8_iter96_per_step_summary.json").write_text(json.dumps(json_safe(summary), indent=2, default=str))
+    (RES / "p5p8_iter96_per_step_summary.json").write_text(
+        json.dumps(json_safe(summary), indent=2, default=str)
+    )
     print(json.dumps(json_safe(summary), indent=2, default=str))
 
 

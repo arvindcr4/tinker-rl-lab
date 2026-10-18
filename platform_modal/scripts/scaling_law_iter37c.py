@@ -13,6 +13,7 @@ The cross-check is direct: if the saturation model is correct, it should
 win on these 40-step per-step traces too. If linear wins here as well,
 the synthetic-vs-raw gap is closed and the falsification stands.
 """
+
 from __future__ import annotations
 
 import csv
@@ -21,11 +22,12 @@ import math
 from pathlib import Path
 
 import matplotlib
+
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt  # noqa: E402
-import numpy as np  # noqa: E402
-from scipy.optimize import curve_fit  # noqa: E402
-from _analysis_common import saturation as model_saturation  # noqa: E402
+import matplotlib.pyplot as plt
+import numpy as np
+from scipy.optimize import curve_fit
+from _analysis_common import saturation as model_saturation
 
 REPO = Path(__file__).resolve().parent.parent
 SRC = REPO / "experiments" / "results" / "samestack_ppo_grpo.json"
@@ -53,16 +55,41 @@ def model_linear(t, a, b):
 
 
 CANDIDATES = [
-    {"name": "A_saturation_exp", "fn": model_saturation,
-     "p0": [0.8, 0.3], "bounds": ([0.0, 1e-3], [2.0, 5.0]), "n_params": 2},
-    {"name": "B_michaelis_menten", "fn": model_michaelis_menten,
-     "p0": [0.9, 5.0], "bounds": ([0.0, 1e-3], [2.0, 1e4]), "n_params": 2},
-    {"name": "C_hill_n2", "fn": model_hill,
-     "p0": [0.9, 5.0], "bounds": ([0.0, 1e-3], [2.0, 1e4]), "n_params": 2},
-    {"name": "D_power_law", "fn": model_power,
-     "p0": [0.9, 0.4], "bounds": ([0.0, 1e-3], [2.0, 5.0]), "n_params": 2},
-    {"name": "E_linear", "fn": model_linear,
-     "p0": [0.3, 0.01], "bounds": ([-1.0, -1.0], [2.0, 2.0]), "n_params": 2},
+    {
+        "name": "A_saturation_exp",
+        "fn": model_saturation,
+        "p0": [0.8, 0.3],
+        "bounds": ([0.0, 1e-3], [2.0, 5.0]),
+        "n_params": 2,
+    },
+    {
+        "name": "B_michaelis_menten",
+        "fn": model_michaelis_menten,
+        "p0": [0.9, 5.0],
+        "bounds": ([0.0, 1e-3], [2.0, 1e4]),
+        "n_params": 2,
+    },
+    {
+        "name": "C_hill_n2",
+        "fn": model_hill,
+        "p0": [0.9, 5.0],
+        "bounds": ([0.0, 1e-3], [2.0, 1e4]),
+        "n_params": 2,
+    },
+    {
+        "name": "D_power_law",
+        "fn": model_power,
+        "p0": [0.9, 0.4],
+        "bounds": ([0.0, 1e-3], [2.0, 5.0]),
+        "n_params": 2,
+    },
+    {
+        "name": "E_linear",
+        "fn": model_linear,
+        "p0": [0.3, 0.01],
+        "bounds": ([-1.0, -1.0], [2.0, 2.0]),
+        "n_params": 2,
+    },
 ]
 
 
@@ -75,8 +102,7 @@ def aic_bic(n, k, ss_res):
 
 def fit_candidate(t, y, cand):
     try:
-        popt, _ = curve_fit(cand["fn"], t, y, p0=cand["p0"],
-                            bounds=cand["bounds"], maxfev=8000)
+        popt, _ = curve_fit(cand["fn"], t, y, p0=cand["p0"], bounds=cand["bounds"], maxfev=8000)
     except Exception:
         return None, float("inf"), float("inf"), float("inf"), -math.inf, True
     y_hat = cand["fn"](t, *popt)
@@ -103,15 +129,22 @@ def main() -> None:
             continue
         steps = np.array([s["step"] for s in sl], dtype=float) + 1.0
         rewards = np.array([s["mean_reward"] for s in sl], dtype=float)
-        per = {"algo": algo, "seed": seed, "model": r["model"],
-               "n_steps": len(sl),
-               "r_first": float(rewards[0]),
-               "r_last": float(rewards[-1]),
-               "r_mean": float(np.mean(rewards))}
+        per = {
+            "algo": algo,
+            "seed": seed,
+            "model": r["model"],
+            "n_steps": len(sl),
+            "r_first": float(rewards[0]),
+            "r_last": float(rewards[-1]),
+            "r_mean": float(np.mean(rewards)),
+        }
         for cand in CANDIDATES:
             popt, ss_res, aic, bic, r2, hit = fit_candidate(steps, rewards, cand)
-            params = {f"param_{k_}": float(p) for k_, p in zip(["p1", "p2"], popt)} \
-                if popt is not None else {"param_p1": float("nan"), "param_p2": float("nan")}
+            params = (
+                {f"param_{k_}": float(p) for k_, p in zip(["p1", "p2"], popt, strict=False)}
+                if popt is not None
+                else {"param_p1": float("nan"), "param_p2": float("nan")}
+            )
             row = dict(per)
             row["model_name"] = cand["name"]
             row.update(params)
@@ -135,19 +168,21 @@ def main() -> None:
         exp_neg_half = np.exp(-0.5 * delta_clip)
         exp_neg_half[~finite] = 0.0
         w = exp_neg_half / max(exp_neg_half.sum(), 1e-12)
-        summary_rows.append({
-            "algo": algo,
-            "seed": seed,
-            "n_steps": len(sl),
-            "r_first": float(rewards[0]),
-            "r_last": float(rewards[-1]),
-            "best_aic_model": best,
-            "w_saturation": round(float(w[0]), 4),
-            "w_michaelis_menten": round(float(w[1]), 4),
-            "w_hill_n2": round(float(w[2]), 4),
-            "w_power_law": round(float(w[3]), 4),
-            "w_linear": round(float(w[4]), 4),
-        })
+        summary_rows.append(
+            {
+                "algo": algo,
+                "seed": seed,
+                "n_steps": len(sl),
+                "r_first": float(rewards[0]),
+                "r_last": float(rewards[-1]),
+                "best_aic_model": best,
+                "w_saturation": round(float(w[0]), 4),
+                "w_michaelis_menten": round(float(w[1]), 4),
+                "w_hill_n2": round(float(w[2]), 4),
+                "w_power_law": round(float(w[3]), 4),
+                "w_linear": round(float(w[4]), 4),
+            }
+        )
 
     # Aggregate by algo
     summary_by_algo = {}
@@ -186,9 +221,11 @@ def main() -> None:
     for algo, s in summary_by_algo.items():
         print(f"\n{algo} (n={s['n_runs']}):")
         print(f"  winner_count: {s['winner_count']}")
-        print(f"  mean_w_sat={s['mean_w_sat']:.3f} mm={s['mean_w_mm']:.3f} "
-              f"hill={s['mean_w_hill']:.3f} power={s['mean_w_power']:.3f} "
-              f"linear={s['mean_w_linear']:.3f}")
+        print(
+            f"  mean_w_sat={s['mean_w_sat']:.3f} mm={s['mean_w_mm']:.3f} "
+            f"hill={s['mean_w_hill']:.3f} power={s['mean_w_power']:.3f} "
+            f"linear={s['mean_w_linear']:.3f}"
+        )
 
     # figure: per-run mean w stacked by algo
     fig, axes = plt.subplots(1, 2, figsize=(12.5, 4.8))
@@ -198,16 +235,32 @@ def main() -> None:
         sub = [s for s in summary_rows if s["algo"] == algo]
         x = np.arange(len(sub))
         bot = np.zeros(len(sub))
-        w_mat = np.array([[s["w_saturation"], s["w_michaelis_menten"],
-                            s["w_hill_n2"], s["w_power_law"], s["w_linear"]] for s in sub])
+        w_mat = np.array(
+            [
+                [
+                    s["w_saturation"],
+                    s["w_michaelis_menten"],
+                    s["w_hill_n2"],
+                    s["w_power_law"],
+                    s["w_linear"],
+                ]
+                for s in sub
+            ]
+        )
         for i, c in enumerate(colors):
-            axes[ax_i].bar(x, w_mat[:, i], bottom=bot, color=c, width=0.7,
-                            label=short_names[i] if ax_i == 0 else None,
-                            edgecolor="white", lw=0.3)
+            axes[ax_i].bar(
+                x,
+                w_mat[:, i],
+                bottom=bot,
+                color=c,
+                width=0.7,
+                label=short_names[i] if ax_i == 0 else None,
+                edgecolor="white",
+                lw=0.3,
+            )
             bot += w_mat[:, i]
         axes[ax_i].set_xticks(x)
-        axes[ax_i].set_xticklabels([f"seed={s['seed']}" for s in sub],
-                                   rotation=0, fontsize=8)
+        axes[ax_i].set_xticklabels([f"seed={s['seed']}" for s in sub], rotation=0, fontsize=8)
         axes[ax_i].set_ylim(0, 1.0)
         axes[ax_i].set_ylabel("Akaike weight")
         axes[ax_i].set_title(f"Raw per-step reward curve, {algo.upper()} (Qwen2.5-0.5B, 40 steps)")

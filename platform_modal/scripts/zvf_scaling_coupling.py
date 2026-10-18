@@ -30,12 +30,13 @@ Outputs:
   - figures/zvf_scaling_cross_pillar.pdf
   - paper/sections/zvf_scaling.tex
 """
+
 import csv
 import math
-import statistics
 from pathlib import Path
 
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
@@ -96,7 +97,7 @@ def pearson(xs, ys):
     n = len(xs)
     mx = sum(xs) / n
     my = sum(ys) / n
-    num = sum((x - mx) * (y - my) for x, y in zip(xs, ys))
+    num = sum((x - mx) * (y - my) for x, y in zip(xs, ys, strict=False))
     dx = math.sqrt(sum((x - mx) ** 2 for x in xs))
     dy = math.sqrt(sum((y - my) ** 2 for y in ys))
     if dx == 0 or dy == 0:
@@ -130,12 +131,21 @@ def main():
     params = [float(a["params_B"]) for a in anchors]
 
     zvf_proxy = [
-        (b + z) / 2 for b, z in zip(fr_below, zero_frac)
+        (b + z) / 2 for b, z in zip(fr_below, zero_frac, strict=False)
     ]  # average of two "all-wrong" fractions
 
     rows = []
     for a, ic, fb, fa, zf, lp, p, pr, zvfp in zip(
-        anchors, is_col, fr_below, fr_above, zero_frac, late_peak, params, peak, zvf_proxy
+        anchors,
+        is_col,
+        fr_below,
+        fr_above,
+        zero_frac,
+        late_peak,
+        params,
+        peak,
+        zvf_proxy,
+        strict=False,
     ):
         rows.append(
             dict(
@@ -210,7 +220,7 @@ def main():
     )
     # T6: per-anchor rank in ZVF-proxy
     ranks = rank([-v for v in zvf_proxy])  # higher rank = more collapse-prone
-    for a, rk, zvfp in zip(anchors, ranks, zvf_proxy):
+    for a, rk, zvfp in zip(anchors, ranks, zvf_proxy, strict=False):
         tests.append(
             dict(
                 test="T6-rank",
@@ -269,7 +279,7 @@ def main():
     ax.grid(alpha=0.3, axis="x")
 
     ax = axes[1]
-    for a, fb, lp, ic in zip(anchors, fr_below, late_peak, is_col):
+    for a, fb, lp, ic in zip(anchors, fr_below, late_peak, is_col, strict=False):
         ax.scatter(
             fb,
             lp,
@@ -298,10 +308,7 @@ def main():
     # Print
     print("Cross-pillar ZVF x scaling-law test results:")
     for t in tests:
-        print(
-            f"  {t['test']:>10s}  {t['description']:<55s}  "
-            f"{t['statistic']}={t['value']}"
-        )
+        print(f"  {t['test']:>10s}  {t['description']:<55s}  {t['statistic']}={t['value']}")
 
     # Write the paper section
     write_tex(rows, tests)
@@ -318,49 +325,27 @@ def write_tex(rows, tests):
         "% 5-anchor scaling-law corpus. Source: platform_modal/scripts/zvf_scaling_coupling.py\n"
     )
     lines.append("")
-    lines.append(
-        r"\section{ZVF as a Collapse Predictor on the Five-Anchor Scaling-Law Corpus}"
-    )
+    lines.append(r"\section{ZVF as a Collapse Predictor on the Five-Anchor Scaling-Law Corpus}")
     lines.append(r"\label{sec:zvf-scaling}")
     lines.append("")
-    lines.append(
-        r"This appendix closes the cross-pillar loop by asking whether the"
-    )
-    lines.append(
-        r"\texttt{is\_collapse} flag attached to the five-anchor scaling-law"
-    )
+    lines.append(r"This appendix closes the cross-pillar loop by asking whether the")
+    lines.append(r"\texttt{is\_collapse} flag attached to the five-anchor scaling-law")
     lines.append(
         r"table (\texttt{platform_hybrid/experiments/results/scaling\_law\_three\_phase.tsv})"
     )
-    lines.append(
-        r"is predictable from per-step heldout-reward statistics that are"
-    )
-    lines.append(
-        r"ZVF-adjacent: the fraction of optimizer steps with heldout"
-    )
-    lines.append(
-        r"reward $<0.1$ (\texttt{frac\_below\_0p1}) and the per-step"
-    )
-    lines.append(
-        r"zero-reward fraction (\texttt{zero\_fraction}). Both are direct"
-    )
-    lines.append(
-        r"surrogates for the within-group all-wrong regime that drives"
-    )
-    lines.append(
-        r"$\mathrm{ZVF} \to 1$ in the Pillar~2 framework."
-    )
+    lines.append(r"is predictable from per-step heldout-reward statistics that are")
+    lines.append(r"ZVF-adjacent: the fraction of optimizer steps with heldout")
+    lines.append(r"reward $<0.1$ (\texttt{frac\_below\_0p1}) and the per-step")
+    lines.append(r"zero-reward fraction (\texttt{zero\_fraction}). Both are direct")
+    lines.append(r"surrogates for the within-group all-wrong regime that drives")
+    lines.append(r"$\mathrm{ZVF} \to 1$ in the Pillar~2 framework.")
     lines.append("")
     lines.append(r"\begin{table}[htbp]")
     lines.append(r"\centering")
     lines.append(r"\small")
-    lines.append(
-        r"\begin{tabular}{lrrrrr}"
-    )
+    lines.append(r"\begin{tabular}{lrrrrr}")
     lines.append(r"\toprule")
-    lines.append(
-        r"model & params\_B & phase & is\_collapse & frac\_below\_0p1 & zero\_fraction \\"
-    )
+    lines.append(r"model & params\_B & phase & is\_collapse & frac\_below\_0p1 & zero\_fraction \\")
     lines.append(r"\midrule")
     for r in rows:
         lines.append(
@@ -382,9 +367,7 @@ def write_tex(rows, tests):
     lines.append(r"\begin{table}[htbp]")
     lines.append(r"\centering")
     lines.append(r"\small")
-    lines.append(
-        r"\begin{tabular}{lll}"
-    )
+    lines.append(r"\begin{tabular}{lll}")
     lines.append(r"\toprule")
     lines.append(r"test & description & statistic \\")
     lines.append(r"\midrule")
@@ -392,8 +375,7 @@ def write_tex(rows, tests):
         if t["test"].startswith("T6"):
             continue  # skip per-anchor ranks in the table
         lines.append(
-            f"{t['test']} & {t['description']} & "
-            f"{t['statistic']}$ = {t['value']:+.3f}$ \\\\"
+            f"{t['test']} & {t['description']} & {t['statistic']}$ = {t['value']:+.3f}$ \\\\"
         )
     lines.append(r"\bottomrule")
     lines.append(r"\end{tabular}")
@@ -435,9 +417,7 @@ def write_tex(rows, tests):
     lines.append("")
     lines.append(r"\begin{figure}[htbp]")
     lines.append(r"\centering")
-    lines.append(
-        r"\includegraphics[width=0.9\linewidth]{zvf_scaling_cross_pillar.pdf}"
-    )
+    lines.append(r"\includegraphics[width=0.9\linewidth]{zvf_scaling_cross_pillar.pdf}")
     lines.append(
         r"\caption{Five-anchor ZVF-proxy diagnostic. (A) ZVF-proxy "
         r"$= (\text{frac\_below\_0p1} + \text{zero\_fraction})/2$ per anchor; "

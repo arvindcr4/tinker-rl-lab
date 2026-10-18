@@ -37,10 +37,10 @@ Outputs (worktree-relative paths):
   platform_hybrid/experiments/results/p5p8/p7_threshold_sweep_ci.tsv
   platform_hybrid/experiments/results/p5p8/p7_threshold_sweep_summary.json
 """
+
 from __future__ import annotations
 import csv
 import json
-import math
 import random
 import statistics
 from pathlib import Path
@@ -75,12 +75,14 @@ def load_n10_seeds() -> list[dict]:
             continue
         zvfs = [float(s["zvf"]) for s in sl[:N_STEPS]]
         rewards = [float(s["reward"]) for s in sl[:N_STEPS]]
-        out.append({
-            "seed": int(d["seed"]),
-            "zvfs": zvfs,
-            "rewards": rewards,
-            "heldout_acc": float(d.get("heldout_acc", float("nan"))),
-        })
+        out.append(
+            {
+                "seed": int(d["seed"]),
+                "zvfs": zvfs,
+                "rewards": rewards,
+                "heldout_acc": float(d.get("heldout_acc", float("nan"))),
+            }
+        )
     return out
 
 
@@ -96,10 +98,10 @@ def controller_dualformer(z: list[float], tau: float) -> list[int]:
 def per_seed_metrics(G_t: list[int], z: list[float]) -> dict:
     n = len(G_t)
     total = sum(G_t)
-    fires = [g for g, zt in zip(G_t, z) if g != G_BASE]
+    fires = [g for g, zt in zip(G_t, z, strict=False) if g != G_BASE]
     n_fire = len(fires)
-    headroom_bad = sum(1 for g, zt in zip(G_t, z) if g > G_BASE and zt >= 0.99)
-    zvf_at_fire = [zt for g, zt in zip(G_t, z) if g != G_BASE]
+    headroom_bad = sum(1 for g, zt in zip(G_t, z, strict=False) if g > G_BASE and zt >= 0.99)
+    zvf_at_fire = [zt for g, zt in zip(G_t, z, strict=False) if g != G_BASE]
     return {
         "total_G": total,
         "savings": (G_BASE * n - total) / (G_BASE * n),
@@ -144,7 +146,11 @@ def main():
     controllers = [
         ("zvf_triage", controller_zvf_triage, {}),
         ("dualformer_auto", controller_dualformer, {}),
-        ("hybrid", controller_hybrid, {"delta": DELTA, "g_base": G_BASE, "g_esc": G_ESC, "g_des": G_DES}),
+        (
+            "hybrid",
+            controller_hybrid,
+            {"delta": DELTA, "g_base": G_BASE, "g_esc": G_ESC, "g_des": G_DES},
+        ),
     ]
 
     # -- per-seed detail rows -------------------------------------------------
@@ -163,16 +169,18 @@ def main():
             for s in seeds:
                 Gt = cfn(s["zvfs"], tau, **ckw) if cname == "hybrid" else cfn(s["zvfs"], tau)
                 m = per_seed_metrics(Gt, s["zvfs"])
-                per_seed_rows.append({
-                    "controller": cname,
-                    "tau": tau,
-                    "seed": s["seed"],
-                    "total_G": m["total_G"],
-                    "savings": m["savings"],
-                    "fire_rate": m["fire_rate"],
-                    "headroom_bad": m["headroom_bad"],
-                    "mean_zvf_at_fire": m["mean_zvf_at_fire"],
-                })
+                per_seed_rows.append(
+                    {
+                        "controller": cname,
+                        "tau": tau,
+                        "seed": s["seed"],
+                        "total_G": m["total_G"],
+                        "savings": m["savings"],
+                        "fire_rate": m["fire_rate"],
+                        "headroom_bad": m["headroom_bad"],
+                        "mean_zvf_at_fire": m["mean_zvf_at_fire"],
+                    }
+                )
                 savings_list.append(m["savings"])
                 total_list.append(m["total_G"])
                 fire_list.append(m["fire_rate"])
@@ -186,27 +194,31 @@ def main():
             cv_total = seed_cv(total_list)
             cv_savings = seed_cv(savings_list)
 
-            summary_rows.append({
-                "controller": cname,
-                "tau": tau,
-                "n_seeds": len(seeds),
-                "mean_total_G": mean_total,
-                "mean_savings": mean_savings,
-                "mean_fire_rate": mean_fire,
-                "mean_headroom_bad": mean_hrbad,
-                "seed_cv_total": cv_total,
-                "seed_cv_savings": cv_savings,
-            })
-            ci_rows.append({
-                "controller": cname,
-                "tau": tau,
-                "metric": "savings",
-                "point": mean_savings,
-                "ci_lo": lo,
-                "ci_hi": hi,
-                "excludes_zero": (lo > 0) or (hi < 0),
-                "seed_cv": cv_total,
-            })
+            summary_rows.append(
+                {
+                    "controller": cname,
+                    "tau": tau,
+                    "n_seeds": len(seeds),
+                    "mean_total_G": mean_total,
+                    "mean_savings": mean_savings,
+                    "mean_fire_rate": mean_fire,
+                    "mean_headroom_bad": mean_hrbad,
+                    "seed_cv_total": cv_total,
+                    "seed_cv_savings": cv_savings,
+                }
+            )
+            ci_rows.append(
+                {
+                    "controller": cname,
+                    "tau": tau,
+                    "metric": "savings",
+                    "point": mean_savings,
+                    "ci_lo": lo,
+                    "ci_hi": hi,
+                    "excludes_zero": (lo > 0) or (hi < 0),
+                    "seed_cv": cv_total,
+                }
+            )
 
     # --- write per_seed detail tsv --------------------------------------------
     psp = OUT_DIR / "p7_threshold_sweep_per_seed.tsv"
@@ -236,7 +248,9 @@ def main():
     # --- compute the headline: best-τ per controller under headroom-bad=0 -----
     headline = {}
     for cname, _, _ in controllers:
-        eligible = [r for r in summary_rows if r["controller"] == cname and r["mean_headroom_bad"] == 0]
+        eligible = [
+            r for r in summary_rows if r["controller"] == cname and r["mean_headroom_bad"] == 0
+        ]
         if not eligible:
             headline[cname] = {"best_tau": None, "best_savings": None, "best_seed_cv": None}
             continue
@@ -268,14 +282,18 @@ def main():
     }
     (OUT_DIR / "p7_threshold_sweep_summary.json").write_text(json.dumps(out, indent=2))
 
-    print(f"loaded {len(seeds)} seeds; wrote {len(per_seed_rows)} per-seed rows, "
-          f"{len(summary_rows)} summary rows, {len(ci_rows)} ci rows")
+    print(
+        f"loaded {len(seeds)} seeds; wrote {len(per_seed_rows)} per-seed rows, "
+        f"{len(summary_rows)} summary rows, {len(ci_rows)} ci rows"
+    )
     for cname, h in headline.items():
         if h["best_tau"] is None:
             print(f"  {cname:>15}: NO headroom-clean operating point")
         else:
-            print(f"  {cname:>15}: best_τ={h['best_tau']:.2f}  savings={h['best_savings']:+.4f}  "
-                  f"seed_CV_total={h['best_seed_cv_total']:.4f}")
+            print(
+                f"  {cname:>15}: best_τ={h['best_tau']:.2f}  savings={h['best_savings']:+.4f}  "
+                f"seed_CV_total={h['best_seed_cv_total']:.4f}"
+            )
 
 
 if __name__ == "__main__":

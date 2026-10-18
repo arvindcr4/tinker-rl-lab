@@ -46,7 +46,7 @@ from typing import Any
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 
-from jev_judge import DEFAULT_RECEIPT_DIR, healthcheck, run_ask, _record  # noqa: E402
+from jev_judge import DEFAULT_RECEIPT_DIR, healthcheck, run_ask, _record
 
 REPO_ROOT = HERE.parents[1]
 
@@ -87,17 +87,34 @@ def _persist_routing(function):
         values = bound.arguments
         try:
             outcome = function(*args, **kwargs)
-        except (OSError, subprocess.SubprocessError, RuntimeError, ValueError, KeyError, TypeError) as exc:
+        except (
+            OSError,
+            subprocess.SubprocessError,
+            RuntimeError,
+            ValueError,
+            KeyError,
+            TypeError,
+        ) as exc:
             outcome = Routing("FALLBACK_OUTAGE", note=f"{type(exc).__name__}: {exc}")
         policy = values.get("policy") or AbstainPolicy()
-        receipt = _record(kind="routing", label=values["label"]+"_routing", state=values["state"],
-            payload={"policy_version": "jev-routing-v2", "instructions": values["instructions"],
-                     "policy": asdict(policy), "choices": values.get("choices"),
-                     "min_confidence": values.get("min_confidence"),
-                     "raw_receipt_path": outcome.receipt_path},
-            answer=asdict(outcome), receipt_dir=values["receipt_dir"])
+        receipt = _record(
+            kind="routing",
+            label=values["label"] + "_routing",
+            state=values["state"],
+            payload={
+                "policy_version": "jev-routing-v2",
+                "instructions": values["instructions"],
+                "policy": asdict(policy),
+                "choices": values.get("choices"),
+                "min_confidence": values.get("min_confidence"),
+                "raw_receipt_path": outcome.receipt_path,
+            },
+            answer=asdict(outcome),
+            receipt_dir=values["receipt_dir"],
+        )
         outcome.receipt_path = receipt["receipt_path"]
         return outcome
+
     return wrapped
 
 
@@ -120,7 +137,8 @@ def judged(
     health = healthcheck()
     if not health["healthy"]:
         return Routing(
-            "FALLBACK_OUTAGE", note=f"healthcheck failed {health}",
+            "FALLBACK_OUTAGE",
+            note=f"healthcheck failed {health}",
         )
     receipt = run_ask(
         state,
@@ -158,7 +176,9 @@ def judged_choice(
     a = answers["judgment"]
     if float(a.get("confidence", 0.0)) < min_confidence:
         return Routing(
-            "FALLBACK_CHOICE", answer=a, receipt_path=receipt.get("receipt_path"),
+            "FALLBACK_CHOICE",
+            answer=a,
+            receipt_path=receipt.get("receipt_path"),
             note=f"choice confidence {a.get('confidence')} < {min_confidence}",
         )
     return Routing(a["choice"], answer=a, receipt_path=receipt.get("receipt_path"))
@@ -186,7 +206,8 @@ def locate(text: str, claim: str) -> str:
 
 
 def reciprocal_rank_fusion(
-    rankings: list[list[str]], k: int = 60,
+    rankings: list[list[str]],
+    k: int = 60,
 ) -> list[tuple[str, float]]:
     """Fuse several orderings; briefing: fusing beat Jev-alone and embedding-alone."""
     scores: dict[str, float] = {}
@@ -216,9 +237,7 @@ def rerank_fuse(
     q = re.findall(r"[a-z0-9]+", query.lower())
     lexical = sorted(
         candidates,
-        key=lambda c: -sum(
-            re.findall(r"[a-z0-9]+", c[text_key].lower()).count(t) for t in q
-        ),
+        key=lambda c: -sum(re.findall(r"[a-z0-9]+", c[text_key].lower()).count(t) for t in q),
     )
     lexical_rank = [c[id_key] for c in lexical]
     health = healthcheck()
@@ -299,14 +318,16 @@ def eval_judge(
             tier = "LLM_JUDGE"
         else:
             tier = "HUMAN"
-        results.append({
-            "claim": claim,
-            "support_probability": noul,
-            "tier": tier,
-            "evidence_span": locate(artifact_text, claim),
-            "routing": r.decision,
-            "receipt": r.receipt_path,
-        })
+        results.append(
+            {
+                "claim": claim,
+                "support_probability": noul,
+                "tier": tier,
+                "evidence_span": locate(artifact_text, claim),
+                "routing": r.decision,
+                "receipt": r.receipt_path,
+            }
+        )
     return {"label": label, "claims": results}
 
 
@@ -315,8 +336,14 @@ def eval_judge(
 # --------------------------------------------------------------------------
 
 DESTRUCTIVE_MARKERS = (
-    "rm -rf", "git reset --hard", "git push --force", "drop table", "shutdown",
-    "modal app stop", "aws ec2 terminate", "docker system prune",
+    "rm -rf",
+    "git reset --hard",
+    "git push --force",
+    "drop table",
+    "shutdown",
+    "modal app stop",
+    "aws ec2 terminate",
+    "docker system prune",
 )
 
 
@@ -341,8 +368,10 @@ def safety_gate(command: str, *, label: str = "safety_gate") -> dict:
     if r.decision == "NO":
         return {"exit": 0, "reason": "jev clear", "tier": "PASS", "noul": r.noul}
     return {
-        "exit": 2, "reason": f"abstained/outage ({r.decision}); human review required",
-        "tier": "REVIEW", "noul": r.noul,
+        "exit": 2,
+        "reason": f"abstained/outage ({r.decision}); human review required",
+        "tier": "REVIEW",
+        "noul": r.noul,
     }
 
 
@@ -353,8 +382,11 @@ def safety_gate(command: str, *, label: str = "safety_gate") -> dict:
 
 def next_action(lane: str, facts: dict, *, choices: list[str]) -> Routing:
     return judged_choice(
-        {"lane": lane, "facts": facts,
-         "rule": "Pick the first uncleared blocker to a NEW native suite result."},
+        {
+            "lane": lane,
+            "facts": facts,
+            "rule": "Pick the first uncleared blocker to a NEW native suite result.",
+        },
         f"Lane {lane}. Using only `facts`, pick the first uncleared blocker.",
         choices,
         label=f"next_action_{lane}",
@@ -397,8 +429,14 @@ def mine_ledgers(
             r = judged_choice(
                 {"file": path.name, "preview": text[:2000]},
                 "Classify this campaign ledger's overall status.",
-                ["terminal_complete", "in_progress", "blocked_external",
-                 "blocked_paid_or_quota", "review_or_seal_record", "other"],
+                [
+                    "terminal_complete",
+                    "in_progress",
+                    "blocked_external",
+                    "blocked_paid_or_quota",
+                    "review_or_seal_record",
+                    "other",
+                ],
                 label=f"mine_{path.name[:48]}",
                 receipt_dir=receipt_dir,
             )
@@ -406,8 +444,14 @@ def mine_ledgers(
             used_jev = not r.decision.startswith("FALLBACK")
         else:
             status, used_jev = _keyword_status(text), False
-        out.append({"path": str(path.relative_to(REPO_ROOT)), "lane": lane_hint,
-                    "status": status, "jev_used": used_jev})
+        out.append(
+            {
+                "path": str(path.relative_to(REPO_ROOT)),
+                "lane": lane_hint,
+                "status": status,
+                "jev_used": used_jev,
+            }
+        )
     return {"mined": len(out), "ledgers": out}
 
 
@@ -429,7 +473,6 @@ def _keyword_status(text: str) -> str:
     if status in {"SEALED", "REVIEW", "VALIDATION"}:
         return "review_or_seal_record"
     return "other"
-
 
 
 if __name__ == "__main__":

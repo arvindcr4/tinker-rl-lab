@@ -5,6 +5,7 @@ Independent venue candidates: paper_P1 … paper_P12 (12).
 Former companions R01/R02/R06/R07/U01 and fraud-P8 are archived under
 platform_hybrid/paper/archive/absorbed/ — not live roots.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -280,9 +281,7 @@ def check_claim_boundaries(root: Path = REPO_ROOT) -> list[str]:
 
 def check_absorption_markers(root: Path = REPO_ROOT) -> list[str]:
     errors: list[str] = []
-    errors.extend(
-        _check_marker_table(PARENT_ABSORPTION_MARKERS, root, "parent-absorption")
-    )
+    errors.extend(_check_marker_table(PARENT_ABSORPTION_MARKERS, root, "parent-absorption"))
     abs_md = root / "platform_hybrid/paper/ABSORPTION.md"
     if not abs_md.is_file():
         errors.append("missing platform_hybrid/paper/ABSORPTION.md")
@@ -374,9 +373,7 @@ def check_score_artifacts(
     if count is None:
         errors.append("rank_after missing in-set 'now' integer count")
     elif count != len(INDEPENDENT_SET):
-        errors.append(
-            f"rank_after count {count} != independent-set size {len(INDEPENDENT_SET)}"
-        )
+        errors.append(f"rank_after count {count} != independent-set size {len(INDEPENDENT_SET)}")
     return errors
 
 
@@ -414,10 +411,7 @@ def main(argv: list[str] | None = None) -> int:
     print("ACTIVE_ROSTER=" + ",".join(f"P{i}" for i in range(1, 13)))
     for pid in [f"P{i}" for i in range(1, 13)]:
         print(f"  {pid} {VENUE_TIER[pid]:18} {ACTIVE_ROSTER[pid]}")
-    print(
-        "ABSORPTION="
-        + ",".join(f"{k}->{v[0]}" for k, v in sorted(ABSORBED_ARCHIVED.items()))
-    )
+    print("ABSORPTION=" + ",".join(f"{k}->{v[0]}" for k, v in sorted(ABSORBED_ARCHIVED.items())))
     return 0
 
 

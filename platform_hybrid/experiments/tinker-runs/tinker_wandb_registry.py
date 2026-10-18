@@ -65,13 +65,7 @@ query($e:String!,$p:String!,$c:String) {
 
 def parse_args() -> argparse.Namespace:
     root = Path(__file__).resolve().parents[3]
-    default_output = (
-        root
-        / "platform_hybrid"
-        / "experiments"
-        / "results"
-        / "tinker_wandb_registry"
-    )
+    default_output = root / "platform_hybrid" / "experiments" / "results" / "tinker_wandb_registry"
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--entity", default=ENTITY)
     parser.add_argument("--registry-project", default=REGISTRY_PROJECT)
@@ -94,9 +88,7 @@ def load_tinker_key(repo_root: Path) -> None:
         raise RuntimeError("TINKER_API_KEY is unset and repository .env is missing")
     for line in env_path.read_text().splitlines():
         if line.startswith("TINKER_API_KEY="):
-            os.environ["TINKER_API_KEY"] = (
-                line.split("=", 1)[1].strip().strip('"').strip("'")
-            )
+            os.environ["TINKER_API_KEY"] = line.split("=", 1)[1].strip().strip('"').strip("'")
             return
     raise RuntimeError("TINKER_API_KEY is unset and not present in repository .env")
 
@@ -115,11 +107,7 @@ def sanitize(value: Any, key: str = "") -> Any:
     if SENSITIVE_KEY_RE.search(key):
         return "<redacted>"
     if isinstance(value, dict):
-        return {
-            str(k): sanitize(v, str(k))
-            for k, v in value.items()
-            if str(k) != "_wandb"
-        }
+        return {str(k): sanitize(v, str(k)) for k, v in value.items() if str(k) != "_wandb"}
     if isinstance(value, list):
         return [sanitize(item, key) for item in value]
     if isinstance(value, str):
@@ -171,9 +159,9 @@ def fetch_tinker(repo_root: Path) -> tuple[list[dict[str, Any]], list[dict[str, 
     runs: list[dict[str, Any]] = []
     offset = 0
     while True:
-        response = rest.list_training_runs(
-            limit=100, offset=offset, access_scope="owned"
-        ).result(timeout=120)
+        response = rest.list_training_runs(limit=100, offset=offset, access_scope="owned").result(
+            timeout=120
+        )
         page = [item.model_dump(mode="json", exclude_none=True) for item in response.training_runs]
         runs.extend(page)
         total = response.cursor.total_count
@@ -258,9 +246,7 @@ def fetch_wandb(entity: str) -> tuple[list[str], list[dict[str, Any]]]:
                 exact_ids = sorted(
                     {match.group("id").lower() for match in TINKER_ID_RE.finditer(combined)}
                 )
-                uuids = sorted(
-                    {match.group("id").lower() for match in UUID_RE.finditer(combined)}
-                )
+                uuids = sorted({match.group("id").lower() for match in UUID_RE.finditer(combined)})
                 model = first_value(config, ("model", "base_model", "model_name", "model_short"))
                 run = {
                     "entity": entity,
@@ -334,22 +320,19 @@ def correlate(
                 "delta_minutes": None,
             }
         elif uuid_index.get(base_uuid):
-            match_info[run_id] = {"matches": uuid_index[base_uuid],
-                                 "method": "ambiguous_uuid", "confidence": "unresolved",
-                                 "delta_minutes": None}
+            match_info[run_id] = {
+                "matches": uuid_index[base_uuid],
+                "method": "ambiguous_uuid",
+                "confidence": "unresolved",
+                "delta_minutes": None,
+            }
 
     # For non-exact rows, accept a time/model candidate only when the pair is
     # mutually nearest and clearly separated from each side's runner-up. This
     # makes the candidate layer one-to-one and avoids recycling a W&B run as the
     # explanation for several Tinker jobs launched around the same time.
-    used_wandb_urls = {
-        match["url"]
-        for info in match_info.values()
-        for match in info["matches"]
-    }
-    unmatched_tinker = [
-        run for run in tinker_runs if run["training_run_id"] not in match_info
-    ]
+    used_wandb_urls = {match["url"] for info in match_info.values() for match in info["matches"]}
+    unmatched_tinker = [run for run in tinker_runs if run["training_run_id"] not in match_info]
     unmatched_wandb = [
         run
         for run in wandb_runs
@@ -372,9 +355,7 @@ def correlate(
                 continue
             delta = abs(end_epoch - start_epoch) / 60.0
             if delta <= candidate_window_minutes:
-                tinker_candidates[tinker_run["training_run_id"]].append(
-                    (delta, wandb_run)
-                )
+                tinker_candidates[tinker_run["training_run_id"]].append((delta, wandb_run))
                 wandb_candidates[wandb_run["url"]].append((delta, tinker_run))
     for candidates in tinker_candidates.values():
         candidates.sort(key=lambda item: item[0])
@@ -389,9 +370,7 @@ def correlate(
         delta, wandb_run = choices[0]
         reverse_choices = wandb_candidates[wandb_run["url"]]
         tinker_separated = len(choices) == 1 or choices[1][0] - delta >= 5.0
-        wandb_separated = (
-            len(reverse_choices) == 1 or reverse_choices[1][0] - delta >= 5.0
-        )
+        wandb_separated = len(reverse_choices) == 1 or reverse_choices[1][0] - delta >= 5.0
         reciprocal = reverse_choices[0][1]["training_run_id"] == run_id
         if reciprocal and tinker_separated and wandb_separated:
             match_info[run_id] = {
@@ -656,12 +635,8 @@ def main() -> int:
         flush=True,
     )
 
-    correlations = correlate(
-        tinker_runs, wandb_runs, args.candidate_window_minutes
-    )
-    manifest, report = build_report(
-        projects, tinker_runs, checkpoints, wandb_runs, correlations
-    )
+    correlations = correlate(tinker_runs, wandb_runs, args.candidate_window_minutes)
+    manifest, report = build_report(projects, tinker_runs, checkpoints, wandb_runs, correlations)
 
     write_jsonl(args.output_dir / "tinker_runs.jsonl", tinker_runs)
     write_jsonl(args.output_dir / "tinker_checkpoints.jsonl", checkpoints)

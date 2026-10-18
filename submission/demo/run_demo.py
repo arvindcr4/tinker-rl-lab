@@ -148,9 +148,7 @@ def audit_recorded_artifact(path: Path, contract: Dict[str, Any]) -> Dict[str, A
     expected_sha256 = str(contract.get("sha256", ""))
     if actual_sha256 != expected_sha256:
         raise DemoError(
-            "artifact SHA-256 mismatch: got {}, expected {}".format(
-                actual_sha256, expected_sha256
-            )
+            "artifact SHA-256 mismatch: got {}, expected {}".format(actual_sha256, expected_sha256)
         )
 
     rows = data.get("per_problem")
@@ -196,7 +194,12 @@ def audit_recorded_artifact(path: Path, contract: Dict[str, Any]) -> Dict[str, A
     expected_accuracy = float(contract.get("overall_accuracy", math.nan))
     expected_zvf = float(contract.get("overall_zvf", math.nan))
     for label, computed, recorded, expected in (
-        ("overall_accuracy", overall_accuracy, float(data.get("overall_accuracy", math.nan)), expected_accuracy),
+        (
+            "overall_accuracy",
+            overall_accuracy,
+            float(data.get("overall_accuracy", math.nan)),
+            expected_accuracy,
+        ),
         ("overall_zvf", overall_zvf, float(data.get("overall_zvf", math.nan)), expected_zvf),
     ):
         if not math.isclose(computed, recorded, abs_tol=EPSILON):
@@ -500,7 +503,9 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--fixture", type=Path, default=DEFAULT_FIXTURE)
     parser.add_argument("--artifact", type=Path, default=None)
     parser.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT_DIR)
-    parser.add_argument("--serve", action="store_true", help="serve the generated dashboard locally")
+    parser.add_argument(
+        "--serve", action="store_true", help="serve the generated dashboard locally"
+    )
     parser.add_argument("--port", type=int, default=8765)
     parser.add_argument("--self-test", action="store_true", help="run the stdlib smoke-test suite")
     return parser
@@ -547,18 +552,24 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
 
     print("TinkerRL MTech Defense Demo")
     print("Mode: {}".format(args.mode))
-    print("Mechanism fixture: PASS ({} groups, ZVF={:.3f}, GU={:.3f})".format(
-        mechanism["group_count"], mechanism["zvf"], mechanism["gradient_utilization"]
-    ))
-    print("Recorded artifact: PASS ({} rewards, mean={:.4f}, ZVF={:.4f})".format(
-        artifact_audit["reward_count"],
-        artifact_audit["overall_accuracy"],
-        artifact_audit["overall_zvf"],
-    ))
+    print(
+        "Mechanism fixture: PASS ({} groups, ZVF={:.3f}, GU={:.3f})".format(
+            mechanism["group_count"], mechanism["zvf"], mechanism["gradient_utilization"]
+        )
+    )
+    print(
+        "Recorded artifact: PASS ({} rewards, mean={:.4f}, ZVF={:.4f})".format(
+            artifact_audit["reward_count"],
+            artifact_audit["overall_accuracy"],
+            artifact_audit["overall_zvf"],
+        )
+    )
     print("Artifact SHA-256: {}".format(artifact_audit["sha256"]))
     if report.get("live_smoke"):
         live = report["live_smoke"]
-        print("Live Groq/Kimi smoke: {} ({}/{})".format(live["status"], live["passed"], live["total"]))
+        print(
+            "Live Groq/Kimi smoke: {} ({}/{})".format(live["status"], live["passed"], live["total"])
+        )
     print("JSON report: {}".format(json_path))
     print("HTML dashboard: {}".format(html_path))
     print("Claim boundary: {}".format(report["claim_boundary"]))

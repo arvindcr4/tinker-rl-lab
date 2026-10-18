@@ -19,13 +19,14 @@ Outputs:
   figures/length_bias_iter60_elasticity.pdf
   paper/figures/length_bias_iter60_elasticity.pdf (mirror)
 """
+
 from __future__ import annotations
 import csv
 import json
 import math
-import random
 from pathlib import Path
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
@@ -81,8 +82,7 @@ def load_runs(path, task):
         ts = [int(s["step"]) for s in sl]
         rs = [float(s["mean_reward"]) for s in sl]
         ls = [float(s["mean_comp_len"]) for s in sl]
-        out.append({"task": task, "algo": r["algo"], "seed": r["seed"],
-                    "t": ts, "R": rs, "L": ls})
+        out.append({"task": task, "algo": r["algo"], "seed": r["seed"], "t": ts, "R": rs, "L": ls})
     return out
 
 
@@ -96,10 +96,14 @@ def fit_quadratic_R_of_L(R, L):
             for c in range(3):
                 AtA[r][c] += A[i][r] * A[i][c]
             Atb[r] += A[i][r] * R[i]
+
     def det3(m):
-        return (m[0][0] * (m[1][1] * m[2][2] - m[1][2] * m[2][1])
-                - m[0][1] * (m[1][0] * m[2][2] - m[1][2] * m[2][0])
-                + m[0][2] * (m[1][0] * m[2][1] - m[1][1] * m[2][0]))
+        return (
+            m[0][0] * (m[1][1] * m[2][2] - m[1][2] * m[2][1])
+            - m[0][1] * (m[1][0] * m[2][2] - m[1][2] * m[2][0])
+            + m[0][2] * (m[1][0] * m[2][1] - m[1][1] * m[2][0])
+        )
+
     d = det3(AtA)
     if abs(d) < 1e-12:
         return {"a": 0.0, "L_star": float("nan"), "b": 0.0}
@@ -139,22 +143,41 @@ def main():
         L_s = centred_smooth(r["L"], SMOOTH_K)
         eps = compute_elasticity(R_s, L_s)
         # filter finite
-        L_f = [r["L"][i] for i in range(len(eps))
-               if math.isfinite(eps[i]) and abs(eps[i]) < 1.0]
-        e_f = [eps[i] for i in range(len(eps))
-               if math.isfinite(eps[i]) and abs(eps[i]) < 1.0]
-        ax.scatter(L_f, e_f, c=ALGO_COLORS[algo], s=18, alpha=0.4,
-                   edgecolors="none", label=algo if r["seed"] == 42 else None)
+        L_f = [r["L"][i] for i in range(len(eps)) if math.isfinite(eps[i]) and abs(eps[i]) < 1.0]
+        e_f = [eps[i] for i in range(len(eps)) if math.isfinite(eps[i]) and abs(eps[i]) < 1.0]
+        ax.scatter(
+            L_f,
+            e_f,
+            c=ALGO_COLORS[algo],
+            s=18,
+            alpha=0.4,
+            edgecolors="none",
+            label=algo if r["seed"] == 42 else None,
+        )
     ax.axhline(0, color="k", linestyle=":", alpha=0.5, linewidth=0.8)
     ax.set_xlabel("Response length L (tokens)")
     ax.set_ylabel(r"Marginal elasticity $\epsilon = \Delta R / \Delta L$")
     ax.set_title("(A) GSM8K CoT: per-step elasticity")
-    handles = [plt.Line2D([0], [0], marker="o", color="w",
-                          markerfacecolor=ALGO_COLORS["grpo"],
-                          markersize=8, label="GRPO"),
-               plt.Line2D([0], [0], marker="o", color="w",
-                          markerfacecolor=ALGO_COLORS["dr_grpo"],
-                          markersize=8, label="Dr.GRPO")]
+    handles = [
+        plt.Line2D(
+            [0],
+            [0],
+            marker="o",
+            color="w",
+            markerfacecolor=ALGO_COLORS["grpo"],
+            markersize=8,
+            label="GRPO",
+        ),
+        plt.Line2D(
+            [0],
+            [0],
+            marker="o",
+            color="w",
+            markerfacecolor=ALGO_COLORS["dr_grpo"],
+            markersize=8,
+            label="Dr.GRPO",
+        ),
+    ]
     ax.legend(handles=handles, loc="upper right")
     ax.grid(alpha=0.3)
 
@@ -162,36 +185,41 @@ def main():
     ax = axes[1]
     L_min_data = min(min(r["L"]) for r in gsm)
     L_max_data = max(max(r["L"]) for r in gsm)
-    L_grid = [L_min_data + (L_max_data - L_min_data) * i / 200
-              for i in range(201)]
+    L_grid = [L_min_data + (L_max_data - L_min_data) * i / 200 for i in range(201)]
     fits = {}
     for r in gsm:
         algo = "grpo" if r["algo"] == "grpo" else "dr_grpo"
         fit = fit_quadratic_R_of_L(r["R"], r["L"])
         fits.setdefault(algo, []).append(fit)
-        ax.scatter(r["L"], r["R"], c=ALGO_COLORS[algo], s=12, alpha=0.4,
-                   edgecolors="none")
+        ax.scatter(r["L"], r["R"], c=ALGO_COLORS[algo], s=12, alpha=0.4, edgecolors="none")
     # plot mean parabola per algo
-    for algo, color in (("grpo", ALGO_COLORS["grpo"]),
-                        ("dr_grpo", ALGO_COLORS["dr_grpo"])):
+    for algo, color in (("grpo", ALGO_COLORS["grpo"]), ("dr_grpo", ALGO_COLORS["dr_grpo"])):
         if algo not in fits:
             continue
         a_mean = sum(f["a"] for f in fits[algo]) / len(fits[algo])
         b_mean = sum(f["b"] for f in fits[algo]) / len(fits[algo])
         # reconstruct mean beta from mean L_star and mean a
-        L_star_mean = sum(f["L_star"] for f in fits[algo]
-                          if math.isfinite(f["L_star"])) / max(
-            1, sum(1 for f in fits[algo] if math.isfinite(f["L_star"])))
+        L_star_mean = sum(f["L_star"] for f in fits[algo] if math.isfinite(f["L_star"])) / max(
+            1, sum(1 for f in fits[algo] if math.isfinite(f["L_star"]))
+        )
         # mean parabola using mean a and mean L_star
         if math.isfinite(L_star_mean):
-            R_grid = [a_mean * (l - L_star_mean) ** 2
-                      + max(0.0, 0.5 - a_mean * L_star_mean ** 2)
-                      for l in L_grid]
+            R_grid = [
+                a_mean * (l - L_star_mean) ** 2 + max(0.0, 0.5 - a_mean * L_star_mean**2)
+                for l in L_grid
+            ]
         else:
             R_grid = [a_mean * l * l + b_mean for l in L_grid]
-        ax.plot(L_grid, R_grid, c=color, linewidth=2.0, alpha=0.8,
-                label=f"{algo} (mean fit, $L^\\star$={L_star_mean:.0f})"
-                if math.isfinite(L_star_mean) else f"{algo} (mean fit)")
+        ax.plot(
+            L_grid,
+            R_grid,
+            c=color,
+            linewidth=2.0,
+            alpha=0.8,
+            label=f"{algo} (mean fit, $L^\\star$={L_star_mean:.0f})"
+            if math.isfinite(L_star_mean)
+            else f"{algo} (mean fit)",
+        )
     ax.set_xlabel("Response length L (tokens)")
     ax.set_ylabel("Reward R")
     ax.set_title("(B) GSM8K CoT: $R(L)$ quadratic fit")
@@ -210,22 +238,34 @@ def main():
     tasks = ["arithmetic_easy", "gsm8k_cot"]
     x = list(range(len(tasks)))
     width = 0.35
-    grpo_vals = [float(summary[t]["mean_grpo"]) for t in tasks
-                 if t in summary]
-    drgrpo_vals = [float(summary[t]["mean_drgrpo"]) for t in tasks
-                   if t in summary]
+    grpo_vals = [float(summary[t]["mean_grpo"]) for t in tasks if t in summary]
+    drgrpo_vals = [float(summary[t]["mean_drgrpo"]) for t in tasks if t in summary]
     grpo_errs = [
-        float(summary[t]["mean_grpo"]) - float(summary[t]["ci_lo"])
-        for t in tasks if t in summary]
+        float(summary[t]["mean_grpo"]) - float(summary[t]["ci_lo"]) for t in tasks if t in summary
+    ]
     drgrpo_errs = [
-        float(summary[t]["mean_drgrpo"]) - float(summary[t]["ci_lo"])
-        for t in tasks if t in summary]
-    ax.bar([xi - width / 2 for xi in x], grpo_vals, width,
-           color=ALGO_COLORS["grpo"], alpha=0.7,
-           yerr=grpo_errs, label="GRPO", capsize=4)
-    ax.bar([xi + width / 2 for xi in x], drgrpo_vals, width,
-           color=ALGO_COLORS["dr_grpo"], alpha=0.7,
-           yerr=drgrpo_errs, label="Dr.GRPO", capsize=4)
+        float(summary[t]["mean_drgrpo"]) - float(summary[t]["ci_lo"]) for t in tasks if t in summary
+    ]
+    ax.bar(
+        [xi - width / 2 for xi in x],
+        grpo_vals,
+        width,
+        color=ALGO_COLORS["grpo"],
+        alpha=0.7,
+        yerr=grpo_errs,
+        label="GRPO",
+        capsize=4,
+    )
+    ax.bar(
+        [xi + width / 2 for xi in x],
+        drgrpo_vals,
+        width,
+        color=ALGO_COLORS["dr_grpo"],
+        alpha=0.7,
+        yerr=drgrpo_errs,
+        label="Dr.GRPO",
+        capsize=4,
+    )
     ax.set_xticks(x)
     ax.set_xticklabels([t.replace("_", "\n") for t in tasks], fontsize=9)
     ax.set_ylabel("Negative-elasticity fraction")

@@ -2,7 +2,6 @@
 
 import ast
 import json
-import socket
 import subprocess
 import sys
 import types
@@ -82,7 +81,7 @@ def test_sampling_request_excludes_every_poisoned_gold_field():
 
 
 @pytest.mark.parametrize(
-    "revision,status",
+    ("revision", "status"),
     [
         ("0" * 40, ""),
         (mle.UPSTREAM_COMMIT, " M mlebench/grade.py"),

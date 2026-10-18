@@ -30,19 +30,19 @@ docs/p5p8_improvements/67_p5_mve_empirical.md
 
 Stdlib + json + csv + math + statistics. <=290 lines.
 """
+
 from __future__ import annotations
 
 import csv
 import json
-import math
 import re
 import statistics
 import sys
-from collections import Counter, defaultdict
 from pathlib import Path
 
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
+from _paths import REPO_ROOT
+
 ROOT = REPO_ROOT
 CELLS_TSV = ROOT / "platform_hybrid/experiments" / "results" / "mega_20260704" / "cells.tsv"
 MANIFEST_DIR = ROOT / "platform_hybrid/experiments" / "results" / "mega_20260704" / "manifests"
@@ -51,27 +51,39 @@ OUT = ROOT / "platform_hybrid/experiments" / "results" / "p5p8/review17_v2"
 
 # ----- iter-13 auditor's 7-item schema (copied for self-containment) -----
 SCHEMA_7 = [
-    (1, "loss_form", 10,
-     [r"^(grpo|gspo|dapo|drgrpo|dpo|sequence|ppo|sft|n/a-sampling)$"],
-     ["loss_form"]),
-    (2, "ref_policy_kl", 10,
-     [r"^(kl-[a-z]+(\d+(\.\d+)?)?|kl-est-[a-z]+|no-kl|n/a(?:-[a-z]+)?)$"],
-     ["ref_policy_kl", "ref_policy_kl_handling"]),
-    (3, "sampler_backend_precision", 20,
-     [r"^(tinker-closed|vllm|sglang|hf|trtllm|openai|anthropic)[-@a-zA-Z0-9._/]*$"],
-     ["sampler_backend_precision"]),
-    (4, "per_step_zvf_path", 20,
-     [r".*"],
-     ["per_step_zvf_path"]),
-    (5, "group_size_schedule", 10,
-     [r"^(fixed-G=\d+|adaptive[-+a-zA-Z0-9=<>]*|escalating|decaying|constant G=\d+.*|paired phases.*|arm [A-Z]:.*|n/a.*)$"],
-     ["group_size_schedule"]),
-    (6, "heldout_split", 10,
-     [r".*"],
-     ["heldout_split"]),
-    (7, "decontamination_notes", 20,
-     [r".*"],
-     ["decontamination_notes"]),
+    (
+        1,
+        "loss_form",
+        10,
+        [r"^(grpo|gspo|dapo|drgrpo|dpo|sequence|ppo|sft|n/a-sampling)$"],
+        ["loss_form"],
+    ),
+    (
+        2,
+        "ref_policy_kl",
+        10,
+        [r"^(kl-[a-z]+(\d+(\.\d+)?)?|kl-est-[a-z]+|no-kl|n/a(?:-[a-z]+)?)$"],
+        ["ref_policy_kl", "ref_policy_kl_handling"],
+    ),
+    (
+        3,
+        "sampler_backend_precision",
+        20,
+        [r"^(tinker-closed|vllm|sglang|hf|trtllm|openai|anthropic)[-@a-zA-Z0-9._/]*$"],
+        ["sampler_backend_precision"],
+    ),
+    (4, "per_step_zvf_path", 20, [r".*"], ["per_step_zvf_path"]),
+    (
+        5,
+        "group_size_schedule",
+        10,
+        [
+            r"^(fixed-G=\d+|adaptive[-+a-zA-Z0-9=<>]*|escalating|decaying|constant G=\d+.*|paired phases.*|arm [A-Z]:.*|n/a.*)$"
+        ],
+        ["group_size_schedule"],
+    ),
+    (6, "heldout_split", 10, [r".*"], ["heldout_split"]),
+    (7, "decontamination_notes", 20, [r".*"], ["decontamination_notes"]),
 ]
 
 # The 5 MVE fields (from iter-53 #64). We add a new item-8 with weight=20.
@@ -80,6 +92,7 @@ MVE_WEIGHT = 20
 
 
 from p5_review17_stats import json_safe
+
 
 def load_cells() -> dict[str, dict]:
     cells = {}
@@ -129,12 +142,20 @@ def score_one(manifest: dict, cells_by_id: dict[str, dict], include_mve: bool) -
             base = 0.25
         else:
             base = 0.0
-        sub_frac = 1.0   # baseline auditor uses sub_frac=1 unless sub-field validation
+        sub_frac = 1.0  # baseline auditor uses sub_frac=1 unless sub-field validation
         item_score = weight * base * sub_frac
         total += item_score
-        items.append({"item": item_no, "name": name, "weight": weight,
-                      "present": int(present), "validated": int(validated),
-                      "base": base, "score": round(item_score, 2)})
+        items.append(
+            {
+                "item": item_no,
+                "name": name,
+                "weight": weight,
+                "present": int(present),
+                "validated": int(validated),
+                "base": base,
+                "score": round(item_score, 2),
+            }
+        )
 
     # MVE item-8
     if include_mve:
@@ -145,8 +166,13 @@ def score_one(manifest: dict, cells_by_id: dict[str, dict], include_mve: bool) -
             if v is not None and str(v).strip() != "":
                 try:
                     import math
+
                     number = float(v)
-                    if not math.isfinite(number) or number < 0 or (fld in {"mean_reward", "zvf", "pcd"} and number > 1):
+                    if (
+                        not math.isfinite(number)
+                        or number < 0
+                        or (fld in {"mean_reward", "zvf", "pcd"} and number > 1)
+                    ):
                         continue
                     mve_present += 1
                     mve_valid += 1
@@ -156,17 +182,26 @@ def score_one(manifest: dict, cells_by_id: dict[str, dict], include_mve: bool) -
         base = mve_valid / 5.0
         sub_frac = 0.5 + 0.5 * (mve_valid / 5.0)
         item_score = MVE_WEIGHT * base * sub_frac
-        items.append({"item": 8, "name": "continuous_telemetry_mve",
-                      "weight": MVE_WEIGHT, "present": mve_present,
-                      "validated": mve_valid, "base": round(base, 3),
-                      "score": round(item_score, 2)})
+        items.append(
+            {
+                "item": 8,
+                "name": "continuous_telemetry_mve",
+                "weight": MVE_WEIGHT,
+                "present": mve_present,
+                "validated": mve_valid,
+                "base": round(base, 3),
+                "score": round(item_score, 2),
+            }
+        )
         total += item_score
 
     return {"items": items, "total": round(total, 2)}
 
 
 def main() -> None:
-    print("Protocol review17-p5-v2: exploratory descriptive associations; no independent-run, causal, equivalence, or held-out prediction claim")
+    print(
+        "Protocol review17-p5-v2: exploratory descriptive associations; no independent-run, causal, equivalence, or held-out prediction claim"
+    )
     OUT.mkdir(parents=True, exist_ok=True)
     print("[p5_mve_empirical] starting")
     cells = load_cells()
@@ -183,27 +218,38 @@ def main() -> None:
         a = score_one(m, cells, include_mve=True)
         # Conservative case: MVE item-8 with weight=10 (half weight)
         a_low = score_one(m, cells, include_mve=True)
-        a_low_total = b["total"] + sum(
-            it["score"] for it in a_low["items"] if it["item"] == 8
-        ) * 0.5
+        a_low_total = (
+            b["total"] + sum(it["score"] for it in a_low["items"] if it["item"] == 8) * 0.5
+        )
         delta = a["total"] - b["total"]
         delta_low = a_low_total - b["total"]
-        rows.append({
-            "cell_id": cell_id,
-            "baseline_total": b["total"],
-            "augmented_total": a["total"],
-            "augmented_low_total": round(a_low_total, 2),
-            "delta": delta,
-            "delta_low_weight": round(delta_low, 2),
-        })
+        rows.append(
+            {
+                "cell_id": cell_id,
+                "baseline_total": b["total"],
+                "augmented_total": a["total"],
+                "augmented_low_total": round(a_low_total, 2),
+                "delta": delta,
+                "delta_low_weight": round(delta_low, 2),
+            }
+        )
         baselines.append(b["total"])
         augmented.append(a["total"])
         augmented_low.append(a_low_total)
     df_path = OUT / "p5_mve_empirical.tsv"
     with open(df_path, "w") as f:
-        w = csv.DictWriter(f, fieldnames=["cell_id", "baseline_total",
-                                          "augmented_total", "augmented_low_total",
-                                          "delta", "delta_low_weight"], delimiter="\t")
+        w = csv.DictWriter(
+            f,
+            fieldnames=[
+                "cell_id",
+                "baseline_total",
+                "augmented_total",
+                "augmented_low_total",
+                "delta",
+                "delta_low_weight",
+            ],
+            delimiter="\t",
+        )
         w.writeheader()
         for r in rows:
             w.writerow(r)
@@ -213,10 +259,11 @@ def main() -> None:
     n = len(baselines)
     if not n:
         raise ValueError("No manifest evidence")
-    deltas = [a - b for a, b in zip(augmented, baselines)]
-    deltas_low = [a - b for a, b in zip(augmented_low, baselines)]
+    deltas = [a - b for a, b in zip(augmented, baselines, strict=False)]
+    deltas_low = [a - b for a, b in zip(augmented_low, baselines, strict=False)]
     seed = 20260704
     import random
+
     rng = random.Random(seed)
     boot_means = []
     boot_means_low = []
@@ -273,9 +320,11 @@ def main() -> None:
         json.dump(json_safe(summary), f, indent=2)
     print(f"  wrote {OUT / 'p5_mve_empirical_summary.json'}")
 
-    print(f"  HEADLINE: baseline={mean_b:.2f}, augmented_w20={mean_a:.2f}, "
-          f"mean_delta={mean_delta:.2f}, CI=[{ci_lo:.2f}, {ci_hi:.2f}], "
-          f"excl_zero={summary['ci_excludes_zero_weight20']}")
+    print(
+        f"  HEADLINE: baseline={mean_b:.2f}, augmented_w20={mean_a:.2f}, "
+        f"mean_delta={mean_delta:.2f}, CI=[{ci_lo:.2f}, {ci_hi:.2f}], "
+        f"excl_zero={summary['ci_excludes_zero_weight20']}"
+    )
 
 
 if __name__ == "__main__":

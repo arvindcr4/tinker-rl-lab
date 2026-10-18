@@ -10,10 +10,11 @@ fallback just as they do locally.
 
 Output: <out>/P1 .. <out>/P8, ready to mirror into each Overleaf git repo.
 """
+
 import os, shutil, sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-PAPER = os.path.abspath(os.path.join(HERE, "..", ".."))   # repo .../paper
+PAPER = os.path.abspath(os.path.join(HERE, "..", ".."))  # repo .../paper
 OUT = sys.argv[1] if len(sys.argv) > 1 else os.path.join(HERE, "stage")
 
 PAPERS = {
@@ -47,7 +48,9 @@ def build(pid, mainfile):
             shutil.copytree(src, os.path.join(stage, d))
     nsec = len(os.listdir(os.path.join(stage, "sections")))
     nfig = sum(len(fs) for _, _, fs in os.walk(os.path.join(stage, "figures")))
-    size = sum(os.path.getsize(os.path.join(dp, f)) for dp, _, fs in os.walk(stage) for f in fs) / 1e6
+    size = (
+        sum(os.path.getsize(os.path.join(dp, f)) for dp, _, fs in os.walk(stage) for f in fs) / 1e6
+    )
     print(f"{pid}: {mainfile}  sections={nsec} figures={nfig} size={size:.1f}MB")
 
 

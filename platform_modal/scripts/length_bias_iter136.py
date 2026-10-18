@@ -53,14 +53,12 @@ OUTPUTS (5 TSV + meta):
 
 USAGE : python3 platform_modal/scripts/length_bias_iter136.py [--B_perm 50000 --seed_base 20260704]
 """
+
 from __future__ import annotations
 
 import argparse
-import csv
 import json
-import math
 import os
-import sys
 from typing import Any
 
 import numpy as np
@@ -81,28 +79,33 @@ def load_runs() -> list[dict[str, Any]]:
     out: list[dict[str, Any]] = []
     d_arith = json.load(open(DRGR_VS_GRPO))
     for r in d_arith["runs"]:
-        out.append({
-            "task": "arithmetic_easy",
-            "algo": r["algo"],
-            "seed": r["seed"],
-            "step_log": r["step_log"],
-            "model": r["model"],
-        })
+        out.append(
+            {
+                "task": "arithmetic_easy",
+                "algo": r["algo"],
+                "seed": r["seed"],
+                "step_log": r["step_log"],
+                "model": r["model"],
+            }
+        )
     d_gsm = json.load(open(DRGR_GSM8K))
     for r in d_gsm["runs"]:
-        out.append({
-            "task": "gsm8k_cot",
-            "algo": r["algo"],
-            "seed": r["seed"],
-            "step_log": r["step_log"],
-            "model": r["model"],
-        })
+        out.append(
+            {
+                "task": "gsm8k_cot",
+                "algo": r["algo"],
+                "seed": r["seed"],
+                "step_log": r["step_log"],
+                "model": r["model"],
+            }
+        )
     return out
 
 
 # ---------------------------------------------------------------------------
 # Per-run statistics
 # ---------------------------------------------------------------------------
+
 
 def step_coupling_stats(step_log: list[dict[str, Any]]) -> dict[str, float]:
     """Compute the four H1-H4 statistics from a single run's step_log.
@@ -156,6 +159,7 @@ def step_coupling_stats(step_log: list[dict[str, Any]]) -> dict[str, float]:
 # Paired test machinery
 # ---------------------------------------------------------------------------
 
+
 def paired_one_sided(gr_vals: np.ndarray, dr_vals: np.ndarray, direction: str):
     """Return (mean_delta, W, p_one_sided_param, p_one_sided_perm_placeholder, n_pairs).
 
@@ -185,8 +189,9 @@ def paired_one_sided(gr_vals: np.ndarray, dr_vals: np.ndarray, direction: str):
     return mean_delta, W_pos, p_param, n
 
 
-def permutation_paired(gr_vals: np.ndarray, dr_vals: np.ndarray, direction: str,
-                       rng: np.random.Generator, B: int) -> float:
+def permutation_paired(
+    gr_vals: np.ndarray, dr_vals: np.ndarray, direction: str, rng: np.random.Generator, B: int
+) -> float:
     """Two-sided permutation p: fraction of |mean(Δ*)| >= |mean(Δ_obs)| under sign-flip null."""
     delta = dr_vals - gr_vals
     obs = abs(delta.mean())
@@ -198,6 +203,7 @@ def permutation_paired(gr_vals: np.ndarray, dr_vals: np.ndarray, direction: str,
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
+
 
 def main():
     ap = argparse.ArgumentParser()
@@ -232,14 +238,34 @@ def main():
     # Paired tests: for each (task, hypothesis) compute paired diffs across seeds
     hypotheses = [
         # (h_name, gr_key, dr_key, direction, pre_reg_direction_text)
-        ("H1_abs_rho_dR_dL_DR_smaller", "abs_rho_dR_dL", "abs_rho_dR_dL", "DR_smaller",
-         "GR>DR: GR tightly coupled velocity, DR decoupled"),
-        ("H2_abs_rho_len_lag1_DR_smaller", "abs_rho_len_lag1", "abs_rho_len_lag1", "DR_smaller",
-         "GR>DR: GR trending length, DR no-trend"),
-        ("H3_late_eff_DR_larger", "late_eff", "late_eff", "DR_larger",
-         "DR>GR: DR more reward-gain per unit length change"),
-        ("H4_rho_dZ_dL_DR_lessneg", "rho_dZ_dL", "rho_dZ_dL", "DR_lessneg",
-         "GR<0<DR: GR negative ZVF-length coupling, DR decoupled toward zero"),
+        (
+            "H1_abs_rho_dR_dL_DR_smaller",
+            "abs_rho_dR_dL",
+            "abs_rho_dR_dL",
+            "DR_smaller",
+            "GR>DR: GR tightly coupled velocity, DR decoupled",
+        ),
+        (
+            "H2_abs_rho_len_lag1_DR_smaller",
+            "abs_rho_len_lag1",
+            "abs_rho_len_lag1",
+            "DR_smaller",
+            "GR>DR: GR trending length, DR no-trend",
+        ),
+        (
+            "H3_late_eff_DR_larger",
+            "late_eff",
+            "late_eff",
+            "DR_larger",
+            "DR>GR: DR more reward-gain per unit length change",
+        ),
+        (
+            "H4_rho_dZ_dL_DR_lessneg",
+            "rho_dZ_dL",
+            "rho_dZ_dL",
+            "DR_lessneg",
+            "GR<0<DR: GR negative ZVF-length coupling, DR decoupled toward zero",
+        ),
     ]
 
     paired_rows: list[dict[str, Any]] = []
@@ -266,29 +292,35 @@ def main():
                 raise ValueError(f"unknown direction {direction}")
             # Cohen's d paired (delta)
             d = mean_delta / (np.std(dr_vals - gr_vals, ddof=1) + 1e-9)
-            paired_rows.append({
-                "task": task,
-                "hypothesis": h_name,
-                "pre_reg": pre_reg,
-                "direction": direction,
-                "n_pairs": n_pairs,
-                "mean_gr": f"{float(gr_vals.mean()):.4f}",
-                "mean_dr": f"{float(dr_vals.mean()):.4f}",
-                "mean_delta_dr_minus_gr": f"{mean_delta:.4f}",
-                "W": int(W),
-                "p_param_one_sided": f"{p_param:.4f}",
-                "p_perm_two_sided": f"{p_perm:.4f}",
-                "cohens_d_paired": f"{d:.3f}",
-                "verdict": "FAVOURS" if p_param < 0.05 else ("marginal" if p_param < 0.10 else "null"),
-            })
-            perm_null_rows.append({
-                "task": task,
-                "hypothesis": h_name,
-                "B_perm": args.B_perm,
-                "p_perm_two_sided": f"{p_perm:.4f}",
-                "p_param_one_sided": f"{p_param:.4f}",
-                "n_pairs": n_pairs,
-            })
+            paired_rows.append(
+                {
+                    "task": task,
+                    "hypothesis": h_name,
+                    "pre_reg": pre_reg,
+                    "direction": direction,
+                    "n_pairs": n_pairs,
+                    "mean_gr": f"{float(gr_vals.mean()):.4f}",
+                    "mean_dr": f"{float(dr_vals.mean()):.4f}",
+                    "mean_delta_dr_minus_gr": f"{mean_delta:.4f}",
+                    "W": int(W),
+                    "p_param_one_sided": f"{p_param:.4f}",
+                    "p_perm_two_sided": f"{p_perm:.4f}",
+                    "cohens_d_paired": f"{d:.3f}",
+                    "verdict": "FAVOURS"
+                    if p_param < 0.05
+                    else ("marginal" if p_param < 0.10 else "null"),
+                }
+            )
+            perm_null_rows.append(
+                {
+                    "task": task,
+                    "hypothesis": h_name,
+                    "B_perm": args.B_perm,
+                    "p_perm_two_sided": f"{p_perm:.4f}",
+                    "p_param_one_sided": f"{p_param:.4f}",
+                    "n_pairs": n_pairs,
+                }
+            )
 
     # Cross-task binomial: for each hypothesis, count FAVOURS across 2 tasks
     cross_rows: list[dict[str, Any]] = []
@@ -300,42 +332,50 @@ def main():
         n_marg = sum(1 for r in rows if r["verdict"] == "marginal")
         n_null = sum(1 for r in rows if r["verdict"] == "null")
         # Binomial: at least 2/2 favours -> p = 0.5^2 = 0.25 (one-sided)
-        binom_p_two = 0.5 ** 2 if n_fav == 2 else (2 * 0.5 ** 2 if n_fav == 1 else 1.0)
+        binom_p_two = 0.5**2 if n_fav == 2 else (2 * 0.5**2 if n_fav == 1 else 1.0)
         binom_p_two_sided = binom_p_two  # symmetric
         # Direction-consistency: do all favoured tasks have the SAME delta sign?
         deltas = []
         for r in rows:
             if r["verdict"] in ("FAVOURS", "marginal"):
                 deltas.append(float(r["mean_delta_dr_minus_gr"]))
-        consistent = (len(deltas) > 0 and all(d > 0 for d in deltas)) or \
-                     (len(deltas) > 0 and all(d < 0 for d in deltas))
+        consistent = (len(deltas) > 0 and all(d > 0 for d in deltas)) or (
+            len(deltas) > 0 and all(d < 0 for d in deltas)
+        )
         # Sign test on direction alone (regardless of significance)
         n_dir_pos = sum(1 for r in rows if float(r["mean_delta_dr_minus_gr"]) > 0)
         n_dir_neg = sum(1 for r in rows if float(r["mean_delta_dr_minus_gr"]) < 0)
         sign_test_p_one = 0.5 ** max(n_dir_pos, n_dir_neg)
-        cross_rows.append({
-            "hypothesis": h_name,
-            "n_tasks": len(rows),
-            "n_favours": n_fav,
-            "n_marginal": n_marg,
-            "n_null": n_null,
-            "n_dir_positive": n_dir_pos,
-            "n_dir_negative": n_dir_neg,
-            "direction_consistent": "yes" if consistent else "no",
-            "binom_p_two_sided_strict": f"{binom_p_two_sided:.4f}",
-            "binom_p_one_sided_signtest": f"{sign_test_p_one:.4f}",
-        })
-        summary_rows.append({
-            "hypothesis": h_name,
-            "tasks_favoured": ",".join(r["task"] for r in rows if r["verdict"] == "FAVOURS"),
-            "tasks_marginal": ",".join(r["task"] for r in rows if r["verdict"] == "marginal"),
-            "n_favours": n_fav,
-            "n_dir_pos": n_dir_pos,
-            "binom_p_two_sided_strict": f"{binom_p_two_sided:.4f}",
-            "binom_p_one_sided_signtest": f"{sign_test_p_one:.4f}",
-            "headline": ("REJECT_NULL" if n_fav == 2 else
-                         ("DIRECTIONAL" if (n_dir_pos == 2 or n_dir_neg == 2) else "INCONCLUSIVE")),
-        })
+        cross_rows.append(
+            {
+                "hypothesis": h_name,
+                "n_tasks": len(rows),
+                "n_favours": n_fav,
+                "n_marginal": n_marg,
+                "n_null": n_null,
+                "n_dir_positive": n_dir_pos,
+                "n_dir_negative": n_dir_neg,
+                "direction_consistent": "yes" if consistent else "no",
+                "binom_p_two_sided_strict": f"{binom_p_two_sided:.4f}",
+                "binom_p_one_sided_signtest": f"{sign_test_p_one:.4f}",
+            }
+        )
+        summary_rows.append(
+            {
+                "hypothesis": h_name,
+                "tasks_favoured": ",".join(r["task"] for r in rows if r["verdict"] == "FAVOURS"),
+                "tasks_marginal": ",".join(r["task"] for r in rows if r["verdict"] == "marginal"),
+                "n_favours": n_fav,
+                "n_dir_pos": n_dir_pos,
+                "binom_p_two_sided_strict": f"{binom_p_two_sided:.4f}",
+                "binom_p_one_sided_signtest": f"{sign_test_p_one:.4f}",
+                "headline": (
+                    "REJECT_NULL"
+                    if n_fav == 2
+                    else ("DIRECTIONAL" if (n_dir_pos == 2 or n_dir_neg == 2) else "INCONCLUSIVE")
+                ),
+            }
+        )
 
     # Global sign test: aggregate over ALL 8 paired tests (4 hypotheses x 2 tasks)
     # For each test, encode "predicted direction" per the hypothesis definition:
@@ -344,6 +384,7 @@ def main():
     #   DR_lessneg  -> predicted Δ = DR - GR > 0
     def predicted_direction_positive(direction: str) -> bool:
         return direction in ("DR_larger", "DR_lessneg")
+
     n_in_pred_dir = 0
     n_against = 0
     for r in paired_rows:
@@ -354,35 +395,44 @@ def main():
         else:
             n_against += 1
     n_global = len(paired_rows)
-    global_sign_p = 0.5 ** n_in_pred_dir  # one-sided under uniform-null
-    cross_rows.append({
-        "hypothesis": "GLOBAL_sign_test_over_all_8_paired",
-        "n_tasks": n_global,
-        "n_favours": sum(1 for r in paired_rows if r["verdict"] == "FAVOURS"),
-        "n_marginal": sum(1 for r in paired_rows if r["verdict"] == "marginal"),
-        "n_null": sum(1 for r in paired_rows if r["verdict"] == "null"),
-        "n_dir_positive": n_in_pred_dir,
-        "n_dir_negative": n_against,
-        "direction_consistent": "yes" if n_in_pred_dir == n_global else "no",
-        "binom_p_two_sided_strict": f"{global_sign_p:.4f}",
-        "binom_p_one_sided_signtest": f"{global_sign_p:.4f}",
-    })
-    summary_rows.append({
-        "hypothesis": "GLOBAL_sign_test_over_all_8_paired",
-        "tasks_favoured": "",
-        "tasks_marginal": "",
-        "n_favours": sum(1 for r in paired_rows if r["verdict"] == "FAVOURS"),
-        "n_dir_pos": n_in_pred_dir,
-        "binom_p_two_sided_strict": f"{global_sign_p:.4f}",
-        "binom_p_one_sided_signtest": f"{global_sign_p:.4f}",
-        "headline": "GLOBAL_REJECT" if n_in_pred_dir == n_global else "PARTIAL",
-    })
+    global_sign_p = 0.5**n_in_pred_dir  # one-sided under uniform-null
+    cross_rows.append(
+        {
+            "hypothesis": "GLOBAL_sign_test_over_all_8_paired",
+            "n_tasks": n_global,
+            "n_favours": sum(1 for r in paired_rows if r["verdict"] == "FAVOURS"),
+            "n_marginal": sum(1 for r in paired_rows if r["verdict"] == "marginal"),
+            "n_null": sum(1 for r in paired_rows if r["verdict"] == "null"),
+            "n_dir_positive": n_in_pred_dir,
+            "n_dir_negative": n_against,
+            "direction_consistent": "yes" if n_in_pred_dir == n_global else "no",
+            "binom_p_two_sided_strict": f"{global_sign_p:.4f}",
+            "binom_p_one_sided_signtest": f"{global_sign_p:.4f}",
+        }
+    )
+    summary_rows.append(
+        {
+            "hypothesis": "GLOBAL_sign_test_over_all_8_paired",
+            "tasks_favoured": "",
+            "tasks_marginal": "",
+            "n_favours": sum(1 for r in paired_rows if r["verdict"] == "FAVOURS"),
+            "n_dir_pos": n_in_pred_dir,
+            "binom_p_two_sided_strict": f"{global_sign_p:.4f}",
+            "binom_p_one_sided_signtest": f"{global_sign_p:.4f}",
+            "headline": "GLOBAL_REJECT" if n_in_pred_dir == n_global else "PARTIAL",
+        }
+    )
 
     # Headline verdict
-    headline = (f"Iter136 STEP-LEVEL TRAJECTORY COUPLING: {n_in_pred_dir}/{n_global} paired tests in predicted direction; "
-                f"global sign-test p={global_sign_p:.4f}; "
-                + "; ".join(f"{r['hypothesis']}={r['headline']}" for r in summary_rows
-                            if r['hypothesis'] != "GLOBAL_sign_test_over_all_8_paired"))
+    headline = (
+        f"Iter136 STEP-LEVEL TRAJECTORY COUPLING: {n_in_pred_dir}/{n_global} paired tests in predicted direction; "
+        f"global sign-test p={global_sign_p:.4f}; "
+        + "; ".join(
+            f"{r['hypothesis']}={r['headline']}"
+            for r in summary_rows
+            if r["hypothesis"] != "GLOBAL_sign_test_over_all_8_paired"
+        )
+    )
 
     # ------------------------------------------------------------------
     # Write TSVs
@@ -433,21 +483,27 @@ def main():
     print()
     print("Per-run:")
     for r in per_run_rows:
-        print(f"  {r['task']:18s} {r['algo']:8s} seed={r['seed']:5d} "
-              f"|rho(dR,dL)|={r['abs_rho_dR_dL']:6s} "
-              f"|rho_len_lag1|={r['abs_rho_len_lag1']:6s} "
-              f"late_eff={r['late_eff']:7s} "
-              f"rho(dZ,dL)={r['rho_dZ_dL']:6s}")
+        print(
+            f"  {r['task']:18s} {r['algo']:8s} seed={r['seed']:5d} "
+            f"|rho(dR,dL)|={r['abs_rho_dR_dL']:6s} "
+            f"|rho_len_lag1|={r['abs_rho_len_lag1']:6s} "
+            f"late_eff={r['late_eff']:7s} "
+            f"rho(dZ,dL)={r['rho_dZ_dL']:6s}"
+        )
     print()
     print("Paired tests:")
     for r in paired_rows:
-        print(f"  {r['task']:18s} {r['hypothesis']:40s} Δ={r['mean_delta_dr_minus_gr']:7s} "
-              f"W={int(r['W']):4d} p_param={r['p_param_one_sided']:7s} "
-              f"p_perm={r['p_perm_two_sided']:7s} d={r['cohens_d_paired']:6s} -> {r['verdict']}")
+        print(
+            f"  {r['task']:18s} {r['hypothesis']:40s} Δ={r['mean_delta_dr_minus_gr']:7s} "
+            f"W={int(r['W']):4d} p_param={r['p_param_one_sided']:7s} "
+            f"p_perm={r['p_perm_two_sided']:7s} d={r['cohens_d_paired']:6s} -> {r['verdict']}"
+        )
     print()
     print("Cross-task summary:")
     for r in summary_rows:
-        print(f"  {r['hypothesis']:45s} favours={r['n_favours']} signtest_p={r['binom_p_one_sided_signtest']:7s} -> {r['headline']}")
+        print(
+            f"  {r['hypothesis']:45s} favours={r['n_favours']} signtest_p={r['binom_p_one_sided_signtest']:7s} -> {r['headline']}"
+        )
 
 
 if __name__ == "__main__":

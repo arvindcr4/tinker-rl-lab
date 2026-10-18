@@ -27,6 +27,7 @@ USAGE
   python3 run_sweep.py --filter audit  # only cells whose tag contains 'audit'
   python3 run_sweep.py --limit 5       # cap number of cells (smoke test)
 """
+
 from __future__ import annotations
 
 import argparse
@@ -41,7 +42,13 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import yaml
-from run_contract import bind_spec, render_command, result_complete, result_file_complete, claim_attempt
+from run_contract import (
+    bind_spec,
+    render_command,
+    result_complete,
+    result_file_complete,
+    claim_attempt,
+)
 
 HERE = Path(__file__).resolve().parent
 # Repo root = .../tinker-rl-lab  (this file lives at zvf-program/sweep/)
@@ -124,7 +131,10 @@ def expand_manifest(cfg: dict) -> list[dict]:
             "prompt_filter": hp.get("prompt_filter", "none"),
             "batch_prompts": hp.get("batch_prompts", 2),
             "max_tokens": hp.get("max_tokens", 512),
-            **{key: hp[key] for key in ("clip_low", "clip_high", "importance_level", "dynamic_sampling")},
+            **{
+                key: hp[key]
+                for key in ("clip_low", "clip_high", "importance_level", "dynamic_sampling")
+            },
         }
         cell["effective_spec"], cell["run_id"] = bind_spec(cell)
         cell["tag"] += "_" + cell["run_id"][:12]
@@ -156,13 +166,23 @@ def expand_manifest(cfg: dict) -> list[dict]:
     mc = design.get("matched_compute", {})
     if mc.get("enabled"):
         from matched_compute import build_plan
+
         for command in build_plan(cfg)["commands"]:
             c = command["cell"]
             m = midx[command["model_short"]]
-            cells.append({**c, "tag": command["tag"], "block": "matched",
-                          "framework": frameworks[0], "family": m["family"],
-                          "model_short": m["short"], "tier": m["tier"],
-                          "effective_spec": command["effective_spec"], "run_id": command["run_id"]})
+            cells.append(
+                {
+                    **c,
+                    "tag": command["tag"],
+                    "block": "matched",
+                    "framework": frameworks[0],
+                    "family": m["family"],
+                    "model_short": m["short"],
+                    "tier": m["tier"],
+                    "effective_spec": command["effective_spec"],
+                    "run_id": command["run_id"],
+                }
+            )
 
     return cells
 
@@ -179,9 +199,7 @@ def build_command(cfg: dict, cell: dict) -> tuple[str, Path]:
     kind = runner["kind"]
     rc = runner[kind]
     results_dir = resolve(rc["results_dir"])
-    out_json = Path(
-        rc["out_json_template"].format(results_dir=str(results_dir), tag=cell["tag"])
-    )
+    out_json = Path(rc["out_json_template"].format(results_dir=str(results_dir), tag=cell["tag"]))
     subst = {
         "interpreter": rc["interpreter"],
         "script": str(resolve(rc["script"])),
@@ -226,7 +244,9 @@ def load_completed_tags_from_master(cfg: dict) -> set[str]:
     return done
 
 
-def result_json_is_complete(path: Path, planned_steps: int | None = None, expected_spec=None) -> bool:
+def result_json_is_complete(
+    path: Path, planned_steps: int | None = None, expected_spec=None
+) -> bool:
     try:
         return result_file_complete(path, planned_steps, expected_spec)
     except (OSError, ValueError, TypeError):
@@ -236,8 +256,18 @@ def result_json_is_complete(path: Path, planned_steps: int | None = None, expect
 # ---------------------------------------------------------------------------
 # Status ledger
 # ---------------------------------------------------------------------------
-LEDGER_COLS = ["tag", "block", "framework", "model_short", "status",
-               "started_at", "finished_at", "returncode", "result_json", "command"]
+LEDGER_COLS = [
+    "tag",
+    "block",
+    "framework",
+    "model_short",
+    "status",
+    "started_at",
+    "finished_at",
+    "returncode",
+    "result_json",
+    "command",
+]
 
 
 def write_ledger(path: Path, rows: list[dict]) -> None:
@@ -259,6 +289,7 @@ def write_ledger(path: Path, rows: list[dict]) -> None:
     """
     import os as _os
     import tempfile as _tempfile
+
     path.parent.mkdir(parents=True, exist_ok=True)
     fd, tmp_path = _tempfile.mkstemp(
         prefix=path.name + ".",
@@ -306,8 +337,7 @@ def run_one(cmd: str, out_json: Path, cell: dict) -> dict:
         raise TypeError(f"cmd must be str, got {type(cmd).__name__}")
     if any(c in cmd for c in ("\n", "\r", "\x00")):
         raise ValueError(
-            f"cmd contains a forbidden newline/NUL byte (shell-injection "
-            f"guard): {cmd[:80]!r}"
+            f"cmd contains a forbidden newline/NUL byte (shell-injection guard): {cmd[:80]!r}"
         )
     # Env scrubbing: pass a minimal env to the runner subprocess
     # rather than the full parent env. Without this, every secret
@@ -318,31 +348,46 @@ def run_one(cmd: str, out_json: Path, cell: dict) -> dict:
     # everything else. Users who need to forward specific vars can
     # set SWEEP_FORWARD_ENV in their shell.
     import os as _os
+
     forward = set(
         (f.strip() for f in _os.environ.get("SWEEP_FORWARD_ENV", "").split(",") if f.strip())
     )
     _always_keep = ("PATH", "HOME", "LANG", "LC_ALL", "TMPDIR", "USER", "SHELL")
-    minimal_env = {k: v for k, v in _os.environ.items()
-                    if k in _always_keep or k in forward}
+    minimal_env = {k: v for k, v in _os.environ.items() if k in _always_keep or k in forward}
     try:
-        nonce, attempt_dir = claim_attempt(out_json, {"command": cmd, "effective_spec": cell.get("effective_spec")})
+        nonce, attempt_dir = claim_attempt(
+            out_json, {"command": cmd, "effective_spec": cell.get("effective_spec")}
+        )
     except FileExistsError as exc:
-        return {**_ledger_base(cell, cmd, out_json), "status": "blocked-attempt-reconciliation",
-                "started_at": started, "finished_at": datetime.now(timezone.utc).isoformat(),
-                "returncode": str(exc)}
+        return {
+            **_ledger_base(cell, cmd, out_json),
+            "status": "blocked-attempt-reconciliation",
+            "started_at": started,
+            "finished_at": datetime.now(timezone.utc).isoformat(),
+            "returncode": str(exc),
+        }
     minimal_env["TINKER_ATTEMPT_NONCE"] = nonce
     try:
-        proc = subprocess.run(shlex.split(cmd), shell=False, cwd=str(REPO_ROOT),
-                              timeout=4 * 3600, env=minimal_env)
+        proc = subprocess.run(
+            shlex.split(cmd), shell=False, cwd=str(REPO_ROOT), timeout=4 * 3600, env=minimal_env
+        )
         rc = proc.returncode
     except subprocess.TimeoutExpired:
-        return {**_ledger_base(cell, cmd, out_json), "status": "timeout",
-                "started_at": started, "finished_at": datetime.now(timezone.utc).isoformat(),
-                "returncode": "timeout:4h"}
+        return {
+            **_ledger_base(cell, cmd, out_json),
+            "status": "timeout",
+            "started_at": started,
+            "finished_at": datetime.now(timezone.utc).isoformat(),
+            "returncode": "timeout:4h",
+        }
     except Exception as e:  # pragma: no cover - defensive
-        return {**_ledger_base(cell, cmd, out_json), "status": "error",
-                "started_at": started, "finished_at": datetime.now(timezone.utc).isoformat(),
-                "returncode": f"exc:{e}"}
+        return {
+            **_ledger_base(cell, cmd, out_json),
+            "status": "error",
+            "started_at": started,
+            "finished_at": datetime.now(timezone.utc).isoformat(),
+            "returncode": f"exc:{e}",
+        }
     finished = datetime.now(timezone.utc).isoformat()
     # Status comes from the runner's own file, not from us guessing.
     try:
@@ -355,28 +400,49 @@ def run_one(cmd: str, out_json: Path, cell: dict) -> dict:
         ok = data.get("attempt_nonce") == nonce
         if ok:
             from attempt_store import transition
-            transition(attempt_dir, nonce, "COMPLETED", result_sha256=__import__("hashlib").sha256(out_json.read_bytes()).hexdigest())
-    return {**_ledger_base(cell, cmd, out_json),
-            "status": "completed" if ok else "failed",
-            "started_at": started, "finished_at": finished, "returncode": rc}
+
+            transition(
+                attempt_dir,
+                nonce,
+                "COMPLETED",
+                result_sha256=__import__("hashlib").sha256(out_json.read_bytes()).hexdigest(),
+            )
+    return {
+        **_ledger_base(cell, cmd, out_json),
+        "status": "completed" if ok else "failed",
+        "started_at": started,
+        "finished_at": finished,
+        "returncode": rc,
+    }
 
 
 def _ledger_base(cell: dict, cmd: str, out_json: Path) -> dict:
-    return {"tag": cell["tag"], "block": cell["block"], "framework": cell["framework"],
-            "model_short": cell["model_short"], "result_json": str(out_json), "command": cmd}
+    return {
+        "tag": cell["tag"],
+        "block": cell["block"],
+        "framework": cell["framework"],
+        "model_short": cell["model_short"],
+        "result_json": str(out_json),
+        "command": cmd,
+    }
 
 
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
 def main() -> int:
-    ap = argparse.ArgumentParser(description=__doc__,
-                                 formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     mode = ap.add_mutually_exclusive_group()
-    mode.add_argument("--dry-run", action="store_true",
-                      help="(DEFAULT) print manifest + commands, execute nothing")
-    mode.add_argument("--execute", action="store_true",
-                      help="actually shell out to the real runners")
+    mode.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="(DEFAULT) print manifest + commands, execute nothing",
+    )
+    mode.add_argument(
+        "--execute", action="store_true", help="actually shell out to the real runners"
+    )
     ap.add_argument("--config", default=str(CONFIG_PATH))
     ap.add_argument("--filter", default="", help="substring filter on cell tag")
     ap.add_argument(
@@ -402,10 +468,13 @@ def main() -> int:
             "is to skip completed cells, which is almost always what you want."
         ),
     )
-    ap.add_argument("--force-execute", action="store_true",
-                    help="override the out-of-band guard: launch an enumeration "
-                         "outside sweep_design.target_run_count. Use with care; "
-                         "this is a deliberate 'I know what I'm doing' override.")
+    ap.add_argument(
+        "--force-execute",
+        action="store_true",
+        help="override the out-of-band guard: launch an enumeration "
+        "outside sweep_design.target_run_count. Use with care; "
+        "this is a deliberate 'I know what I'm doing' override.",
+    )
     args = ap.parse_args()
 
     execute = bool(args.execute)  # dry-run is the default whenever --execute is absent
@@ -434,6 +503,7 @@ def main() -> int:
             try:
                 old_pid = int(lock_path.read_text().strip())
                 import os as _os
+
                 try:
                     _os.kill(old_pid, 0)
                     print(
@@ -452,12 +522,12 @@ def main() -> int:
                     lock_path.unlink()
             except (ValueError, OSError) as exc:
                 print(
-                    f"[warn] Could not read lock file {lock_path}: {exc}. "
-                    f"Removing and continuing.",
+                    f"[warn] Could not read lock file {lock_path}: {exc}. Removing and continuing.",
                     file=sys.stderr,
                 )
                 lock_path.unlink()
         import os as _os
+
         lock_path.write_text(str(_os.getpid()))
 
     try:
@@ -469,7 +539,9 @@ def main() -> int:
             _, out_json = build_command(cfg, c)
             c["_out_json"] = out_json
             done = (not args.no_resume) and (
-                result_json_is_complete(out_json, planned_steps=c.get("steps"), expected_spec=c.get("effective_spec"))
+                result_json_is_complete(
+                    out_json, planned_steps=c.get("steps"), expected_spec=c.get("effective_spec")
+                )
             )
             (skipped if done else pending).append(c)
 
@@ -510,16 +582,11 @@ def main() -> int:
                     f"harness only orchestrates; cell_runner.py is a user-owned "
                     f"shim (see sweep/README.md 'What you must provide')."
                 )
-            if not os.access(runner_script, os.X_OK) and not os.access(
-                sys.executable, os.X_OK
-            ):
+            if not os.access(runner_script, os.X_OK) and not os.access(sys.executable, os.X_OK):
                 # The runner is dispatched via `python3 <script>`, so the
                 # script's own exec bit is not strictly required; we only
                 # need sys.executable (the interpreter) to be runnable.
-                ap.error(
-                    f"interpreter {sys.executable!r} is not executable; cannot "
-                    f"launch cells."
-                )
+                ap.error(f"interpreter {sys.executable!r} is not executable; cannot launch cells.")
 
         # ---- summary header ----
         by_block: dict[str, int] = {}
@@ -535,37 +602,58 @@ def main() -> int:
         for b, n in sorted(by_block.items()):
             print(f"   block {b:16s}: {n}")
         print(f"already completed : {len(skipped)} (skipped via resume)")
-        print(f"pending to run    : {len(pending)}"
-              + (f"  (capped to {args.limit})" if args.limit else ""))
+        print(
+            f"pending to run    : {len(pending)}"
+            + (f"  (capped to {args.limit})" if args.limit else "")
+        )
         print("-" * 78)
 
         # ---- build the manifest rows (with commands) ----
         manifest_rows = []
         for c in cells:
             cmd, out_json = build_command(cfg, c)
-            manifest_rows.append({
-                "tag": c["tag"], "block": c["block"], "framework": c["framework"],
-                "family": c["family"], "model_short": c["model_short"], "model_id": c["model_id"],
-                "tier": c["tier"], "task": c["task"], "loss": c["loss"], "seed": c["seed"],
-                "group_size": c["group_size"], "difficulty": c["difficulty"], "lr": c["lr"],
-                "steps": c["steps"], "rank": c["rank"],
-                "result_json": str(out_json), "command": cmd,
-                "effective_spec": c.get("effective_spec"), "run_id": c.get("run_id"),
-            })
+            manifest_rows.append(
+                {
+                    "tag": c["tag"],
+                    "block": c["block"],
+                    "framework": c["framework"],
+                    "family": c["family"],
+                    "model_short": c["model_short"],
+                    "model_id": c["model_id"],
+                    "tier": c["tier"],
+                    "task": c["task"],
+                    "loss": c["loss"],
+                    "seed": c["seed"],
+                    "group_size": c["group_size"],
+                    "difficulty": c["difficulty"],
+                    "lr": c["lr"],
+                    "steps": c["steps"],
+                    "rank": c["rank"],
+                    "result_json": str(out_json),
+                    "command": cmd,
+                    "effective_spec": c.get("effective_spec"),
+                    "run_id": c.get("run_id"),
+                }
+            )
 
         # ---- always write the manifest (even in dry-run) ----
         manifest_path = resolve(cfg["output"]["manifest_path"])
         manifest_path.parent.mkdir(parents=True, exist_ok=True)
         with open(manifest_path, "w") as f:
-            json.dump({
-                "sweep_name": cfg["sweep_name"],
-                "generated_at": datetime.now(timezone.utc).isoformat(),
-                "runner_kind": cfg["runner"]["kind"],
-                "total_cells": total_enumerated,
-                "by_block": by_block,
-                "target_band": band, "band_ok": band_ok,
-                "cells": manifest_rows,
-            }, f, indent=2)
+            json.dump(
+                {
+                    "sweep_name": cfg["sweep_name"],
+                    "generated_at": datetime.now(timezone.utc).isoformat(),
+                    "runner_kind": cfg["runner"]["kind"],
+                    "total_cells": total_enumerated,
+                    "by_block": by_block,
+                    "target_band": band,
+                    "band_ok": band_ok,
+                    "cells": manifest_rows,
+                },
+                f,
+                indent=2,
+            )
         print(f"manifest written  : {manifest_path}  ({total_enumerated} cells)")
 
         if not execute:
@@ -586,8 +674,15 @@ def main() -> int:
         # seed ledger with skipped (already-done) cells for a complete record
         for c in skipped:
             cmd, out_json = build_command(cfg, c)
-            ledger.append({**_ledger_base(c, cmd, out_json), "status": "completed",
-                           "started_at": "", "finished_at": "", "returncode": 0})
+            ledger.append(
+                {
+                    **_ledger_base(c, cmd, out_json),
+                    "status": "completed",
+                    "started_at": "",
+                    "finished_at": "",
+                    "returncode": 0,
+                }
+            )
         write_ledger(ledger_path, ledger)
 
         print(f"Launching {len(pending)} cells, max_parallel={args.max_parallel}")

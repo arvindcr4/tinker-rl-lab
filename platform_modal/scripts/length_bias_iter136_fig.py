@@ -10,18 +10,18 @@ Panel C: Late-training efficiency (H3) per (algo, seed, task) bar plot
 Panel D: ZVF-length co-movement (H4) per (algo, seed, task) scatter
          of rho(ΔZ, ΔL) with task split.
 """
+
 from __future__ import annotations
 
 import csv
 import json
 import os
-import sys
 
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
-from scipy import stats
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 RES = os.path.join(ROOT, "experiments", "results")
@@ -34,8 +34,9 @@ def read_tsv(path: str) -> list[dict[str, str]]:
         return list(reader)
 
 
-def bootstrap_paired_diff_ci(gr: np.ndarray, dr: np.ndarray, n_boot: int = 5000,
-                            rng: np.random.Generator | None = None) -> tuple[float, float]:
+def bootstrap_paired_diff_ci(
+    gr: np.ndarray, dr: np.ndarray, n_boot: int = 5000, rng: np.random.Generator | None = None
+) -> tuple[float, float]:
     """Bootstrap 95% CI for paired mean(DR - GR)."""
     if rng is None:
         rng = np.random.default_rng(20260704)
@@ -65,8 +66,10 @@ def main():
 
     tasks = ["arithmetic_easy", "gsm8k_cot"]
     task_to_seeds = {
-        t: sorted({int(r["seed"]) for r in per_run if r["task"] == t and r["algo"] == "grpo"}
-                  & {int(r["seed"]) for r in per_run if r["task"] == t and r["algo"] == "dr_grpo"})
+        t: sorted(
+            {int(r["seed"]) for r in per_run if r["task"] == t and r["algo"] == "grpo"}
+            & {int(r["seed"]) for r in per_run if r["task"] == t and r["algo"] == "dr_grpo"}
+        )
         for t in tasks
     }
     if any(len(seeds) < 2 for seeds in task_to_seeds.values()):
@@ -88,7 +91,7 @@ def main():
     bar_x = np.arange(len(hyp_to_keys))
     width = 0.35
     rng = np.random.default_rng(20260704)
-    for i, (task, color) in enumerate(zip(tasks, ["#1f77b4", "#d62728"])):
+    for i, (task, color) in enumerate(zip(tasks, ["#1f77b4", "#d62728"], strict=False)):
         effects = []
         ci_lo = []
         ci_hi = []
@@ -105,13 +108,18 @@ def main():
             d_hi = hi
             ci_lo.append(d_lo)
             ci_hi.append(d_hi)
-        ax.bar(bar_x + (i - 0.5) * width, effects, width=width, color=color, alpha=0.7,
-               label=task)
+        ax.bar(bar_x + (i - 0.5) * width, effects, width=width, color=color, alpha=0.7, label=task)
         # Add CI as error bars
-        err_lo = [e - lo for e, lo in zip(effects, ci_lo)]
-        err_hi = [hi - e for e, hi in zip(effects, ci_hi)]
-        ax.errorbar(bar_x + (i - 0.5) * width, effects,
-                    yerr=[err_lo, err_hi], fmt="none", ecolor="black", capsize=3)
+        err_lo = [e - lo for e, lo in zip(effects, ci_lo, strict=False)]
+        err_hi = [hi - e for e, hi in zip(effects, ci_hi, strict=False)]
+        ax.errorbar(
+            bar_x + (i - 0.5) * width,
+            effects,
+            yerr=[err_lo, err_hi],
+            fmt="none",
+            ecolor="black",
+            capsize=3,
+        )
     ax.axhline(0, color="gray", linestyle="--", linewidth=0.8)
     ax.set_xticks(bar_x)
     ax.set_xticklabels(list(hyp_to_keys.keys()), rotation=20, ha="right", fontsize=9)
@@ -126,12 +134,20 @@ def main():
     for task in tasks:
         for h_name, (_, direction) in hyp_to_keys.items():
             seeds = task_to_seeds[task]
-            difference = np.mean([by_seed[(task, "dr_grpo", seed, h_name)] -
-                                  by_seed[(task, "grpo", seed, h_name)] for seed in seeds])
+            difference = np.mean(
+                [
+                    by_seed[(task, "dr_grpo", seed, h_name)] - by_seed[(task, "grpo", seed, h_name)]
+                    for seed in seeds
+                ]
+            )
             n_in_dir += int(difference < 0 if direction == "smaller" else difference > 0)
             n_total += 1
-    ax.bar(["favours Dr.GR", "favours GR"], [n_in_dir, n_total - n_in_dir],
-           color=["#d62728", "#1f77b4"], alpha=0.7)
+    ax.bar(
+        ["favours Dr.GR", "favours GR"],
+        [n_in_dir, n_total - n_in_dir],
+        color=["#d62728", "#1f77b4"],
+        alpha=0.7,
+    )
     ax.set_ylabel("count of paired tests")
     ax.set_ylim(0, n_total + 1)
     ax.set_title(f"B. Descriptive directions: {n_in_dir}/{n_total}; overlapping tests")
@@ -149,19 +165,31 @@ def main():
         for ai, algo in enumerate(["grpo", "dr_grpo"]):
             vals = [by_seed[(task, algo, s, h_name)] for s in seeds]
             x = bar_x[ti] + (ai - 0.5) * width
-            for j, v in enumerate(vals):
+            for _j, v in enumerate(vals):
                 ax.scatter(x, v, color=colors[ai], alpha=0.6, s=30, zorder=3)
-            ax.bar(x, float(np.mean(vals)), width=width * 1.2, color=colors[ai], alpha=0.3,
-                   edgecolor=colors[ai])
+            ax.bar(
+                x,
+                float(np.mean(vals)),
+                width=width * 1.2,
+                color=colors[ai],
+                alpha=0.3,
+                edgecolor=colors[ai],
+            )
     ax.set_xticks(bar_x)
     ax.set_xticklabels(tasks)
     ax.set_ylabel("late-training efficiency = $\\Delta r / (|\\Delta L|+1)$")
     ax.set_title("C. H3 late-training efficiency (GR blue, Dr.GR red); dots = seeds")
     # Custom legend
     from matplotlib.patches import Patch
-    ax.legend(handles=[Patch(facecolor="#1f77b4", alpha=0.5, label="GRPO"),
-                       Patch(facecolor="#d62728", alpha=0.5, label="Dr.GRPO")],
-              loc="upper right", fontsize=9)
+
+    ax.legend(
+        handles=[
+            Patch(facecolor="#1f77b4", alpha=0.5, label="GRPO"),
+            Patch(facecolor="#d62728", alpha=0.5, label="Dr.GRPO"),
+        ],
+        loc="upper right",
+        fontsize=9,
+    )
 
     # --- Panel D: H4 ZVF-length scatter ---
     ax = axes[1, 1]
@@ -173,17 +201,26 @@ def main():
             vals = [by_seed[(task, algo, s, h_name)] for s in seeds]
             x_jitter = ti + (ai - 0.5) * 0.18
             for v in vals:
-                ax.scatter(x_jitter + rng_d.uniform(-0.04, 0.04),
-                           v, color=colors[ai], alpha=0.7, s=40, zorder=3)
+                ax.scatter(
+                    x_jitter + rng_d.uniform(-0.04, 0.04),
+                    v,
+                    color=colors[ai],
+                    alpha=0.7,
+                    s=40,
+                    zorder=3,
+                )
     ax.axhline(0, color="gray", linestyle="--", linewidth=0.8)
     ax.set_xticks([0, 1])
     ax.set_xticklabels(tasks)
     ax.set_ylabel(r"$\rho(\Delta Z_t, \Delta L_t)$ over consecutive steps")
     ax.set_title("D. H4 ZVF-length co-movement; >0 = ZVF falls with length shrink")
 
-    fig.suptitle("Iter 136 — Step-level trajectory coupling (Δreward, Δlength): "
-                 "paired seed observations (review25-v2)",
-                 fontsize=12, fontweight="bold")
+    fig.suptitle(
+        "Iter 136 — Step-level trajectory coupling (Δreward, Δlength): "
+        "paired seed observations (review25-v2)",
+        fontsize=12,
+        fontweight="bold",
+    )
     fig.tight_layout()
     out_pdf = os.path.join(FIG, "length_bias_iter136_v2.pdf")
     out_png = os.path.join(FIG, "length_bias_iter136_v2.png")

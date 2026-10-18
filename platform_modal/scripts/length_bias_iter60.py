@@ -37,6 +37,7 @@ Outputs (5 TSVs):
   platform_hybrid/experiments/results/length_bias_iter60_grpo_vs_drgrpo_v2.tsv
   platform_hybrid/experiments/results/length_bias_iter60_summary_v2.tsv
 """
+
 from __future__ import annotations
 import json
 import math
@@ -79,8 +80,17 @@ def load_runs(path: Path, task: str) -> list[dict]:
         rs = [float(s["mean_reward"]) for s in sl]
         ls = [float(s["mean_comp_len"]) for s in sl]
         zs = [float(s.get("zvf", float("nan"))) for s in sl]
-        out.append({"task": task, "algo": r["algo"], "seed": r["seed"],
-                    "t": ts, "R": rs, "L": ls, "zvf": zs})
+        out.append(
+            {
+                "task": task,
+                "algo": r["algo"],
+                "seed": r["seed"],
+                "t": ts,
+                "R": rs,
+                "L": ls,
+                "zvf": zs,
+            }
+        )
     return out
 
 
@@ -113,8 +123,7 @@ def compute_elasticity(R: list[float], L: list[float]) -> list[float]:
             dL = (L[i + 1] - L[i - 1]) / 2.0
         if abs(dL) < 1e-6:
             # avoid div-by-zero: use a large finite value with same sign as dR
-            eps[i] = float("inf") if dR > 0 else (
-                float("-inf") if dR < 0 else 0.0)
+            eps[i] = float("inf") if dR > 0 else (float("-inf") if dR < 0 else 0.0)
         else:
             eps[i] = dR / dL
     return eps
@@ -127,7 +136,7 @@ def fit_quadratic_R_of_L(R: list[float], L: list[float]) -> dict:
     # Parametrise R = alpha * L^2 + beta * L + gamma
     # OLS: [L^2, L, 1] -> R
     A = [[ls * ls, ls, 1.0] for ls in L]
-# Solve via normal equations A^T A x = A^T b
+    # Solve via normal equations A^T A x = A^T b
     AtA = [[0.0] * 3 for _ in range(3)]
     Atb = [0.0, 0.0, 0.0]
     for i in range(n):
@@ -135,15 +144,26 @@ def fit_quadratic_R_of_L(R: list[float], L: list[float]) -> dict:
             for c in range(3):
                 AtA[r][c] += A[i][r] * A[i][c]
             Atb[r] += A[i][r] * R[i]
+
     # Invert 3x3 via cofactors (small matrix)
     def det3(m):
-        return (m[0][0] * (m[1][1] * m[2][2] - m[1][2] * m[2][1])
-                - m[0][1] * (m[1][0] * m[2][2] - m[1][2] * m[2][0])
-                + m[0][2] * (m[1][0] * m[2][1] - m[1][1] * m[2][0]))
+        return (
+            m[0][0] * (m[1][1] * m[2][2] - m[1][2] * m[2][1])
+            - m[0][1] * (m[1][0] * m[2][2] - m[1][2] * m[2][0])
+            + m[0][2] * (m[1][0] * m[2][1] - m[1][1] * m[2][0])
+        )
+
     d = det3(AtA)
     if abs(d) < 1e-12:
-        return {"a": 0.0, "L_star": float("nan"), "b": 0.0,
-                "R_max": float("nan"), "R2": float("nan"), "n_pts": n, "optimum_identified": False}
+        return {
+            "a": 0.0,
+            "L_star": float("nan"),
+            "b": 0.0,
+            "R_max": float("nan"),
+            "R2": float("nan"),
+            "n_pts": n,
+            "optimum_identified": False,
+        }
     cof = [[0.0] * 3 for _ in range(3)]
     cof[0][0] = AtA[1][1] * AtA[2][2] - AtA[1][2] * AtA[2][1]
     cof[0][1] = -(AtA[1][0] * AtA[2][2] - AtA[1][2] * AtA[2][0])
@@ -170,24 +190,40 @@ def fit_quadratic_R_of_L(R: list[float], L: list[float]) -> dict:
     ss_res = sum((R[i] - R_pred[i]) ** 2 for i in range(n))
     ss_tot = sum((R[i] - sum(R) / n) ** 2 for i in range(n))
     R2 = 1.0 - ss_res / ss_tot if ss_tot > 0 else 0.0
-    return {"a": a, "L_star": L_star, "b": gamma,
-            "R_max": R_max, "R2": R2, "n_pts": n, "optimum_identified": _is_finite(L_star)}
+    return {
+        "a": a,
+        "L_star": L_star,
+        "b": gamma,
+        "R_max": R_max,
+        "R2": R2,
+        "n_pts": n,
+        "optimum_identified": _is_finite(L_star),
+    }
 
 
-def iso_reward_band(R: list[float], L: list[float],
-                    delta: float = ISO_DELTA) -> dict:
+def iso_reward_band(R: list[float], L: list[float], delta: float = ISO_DELTA) -> dict:
     """Range of L values where R >= R_max - delta."""
     R_max = float("nan")
     threshold = R_max - delta
     in_band = [(R[i] >= threshold, L[i]) for i in range(len(R))]
     if not any(b for b, _ in in_band):
-        return {"L_min": float("nan"), "L_max": float("nan"),
-                "width": 0.0, "n_pts": 0, "R_max": R_max,
-                "delta": delta}
+        return {
+            "L_min": float("nan"),
+            "L_max": float("nan"),
+            "width": 0.0,
+            "n_pts": 0,
+            "R_max": R_max,
+            "delta": delta,
+        }
     Ls = [L[i] for i in range(len(R)) if R[i] >= threshold]
-    return {"L_min": min(Ls), "L_max": max(Ls),
-            "width": max(Ls) - min(Ls), "n_pts": len(Ls),
-            "R_max": R_max, "delta": delta}
+    return {
+        "L_min": min(Ls),
+        "L_max": max(Ls),
+        "width": max(Ls) - min(Ls),
+        "n_pts": len(Ls),
+        "R_max": R_max,
+        "delta": delta,
+    }
 
 
 def _is_finite(x: float) -> bool:
@@ -208,7 +244,9 @@ def main() -> None:
     # ---- A. Per-run elasticity
     elast_rows = []
     for r in rows:
-        R = r["R"]; L = r["L"]; t = r["t"]
+        R = r["R"]
+        L = r["L"]
+        t = r["t"]
         R_smooth = centred_smooth(R, SMOOTH_K)
         L_smooth = centred_smooth(L, SMOOTH_K)
         eps = compute_elasticity(R_smooth, L_smooth)
@@ -216,63 +254,79 @@ def main() -> None:
         mean_eps = sum(finite_eps) / len(finite_eps) if finite_eps else 0.0
         median_eps = statistics.median(finite_eps) if finite_eps else 0.0
         # fraction of positive elasticities (marginal token produces reward)
-        pos_frac = sum(1 for e in finite_eps if e > 0) / len(finite_eps) \
-            if finite_eps else 0.0
+        pos_frac = sum(1 for e in finite_eps if e > 0) / len(finite_eps) if finite_eps else 0.0
         # fraction negative (marginal token destroys reward)
-        neg_frac = sum(1 for e in finite_eps if e < 0) / len(finite_eps) \
-            if finite_eps else 0.0
-        elast_rows.append({
-            "task": r["task"], "algo": r["algo"], "seed": r["seed"],
-            "mean_eps": round(mean_eps, 8),
-            "median_eps": round(median_eps, 8),
-            "pos_frac": round(pos_frac, 6),
-            "neg_frac": round(neg_frac, 6),
-            "n_steps": len(R),
-            "L_first": round(L[0], 4),
-            "L_last": round(L[-1], 4),
-            "R_first": round(R[0], 4),
-            "R_last": round(R[-1], 4),
-        })
-    write_tsv(RES / "length_bias_iter60_elasticity_v2.tsv", elast_rows,
-              fieldnames=list(elast_rows[0].keys()))
+        neg_frac = sum(1 for e in finite_eps if e < 0) / len(finite_eps) if finite_eps else 0.0
+        elast_rows.append(
+            {
+                "task": r["task"],
+                "algo": r["algo"],
+                "seed": r["seed"],
+                "mean_eps": round(mean_eps, 8),
+                "median_eps": round(median_eps, 8),
+                "pos_frac": round(pos_frac, 6),
+                "neg_frac": round(neg_frac, 6),
+                "n_steps": len(R),
+                "L_first": round(L[0], 4),
+                "L_last": round(L[-1], 4),
+                "R_first": round(R[0], 4),
+                "R_last": round(R[-1], 4),
+            }
+        )
+    write_tsv(
+        RES / "length_bias_iter60_elasticity_v2.tsv",
+        elast_rows,
+        fieldnames=list(elast_rows[0].keys()),
+    )
 
     # ---- B. Quadratic R(L) fit per (algo, seed)
     curv_rows = []
     for r in rows:
-        R = r["R"]; L = r["L"]
+        R = r["R"]
+        L = r["L"]
         fit = fit_quadratic_R_of_L(R, L)
-        curv_rows.append({
-            "task": r["task"], "algo": r["algo"], "seed": r["seed"],
-            "a": round(fit["a"], 10),
-            "L_star": round(fit["L_star"], 6) if _is_finite(fit["L_star"])
-            else "nan",
-            "b": round(fit["b"], 6),
-            "R_max_fit": round(fit["R_max"], 6),
-            "R2": round(fit["R2"], 6),
-            "n_pts": fit["n_pts"],
-            "optimum_identified": fit["optimum_identified"],
-            "L_first": round(L[0], 4),
-            "L_last": round(L[-1], 4),
-        })
-    write_tsv(RES / "length_bias_iter60_curvature_v2.tsv", curv_rows,
-              fieldnames=list(curv_rows[0].keys()))
+        curv_rows.append(
+            {
+                "task": r["task"],
+                "algo": r["algo"],
+                "seed": r["seed"],
+                "a": round(fit["a"], 10),
+                "L_star": round(fit["L_star"], 6) if _is_finite(fit["L_star"]) else "nan",
+                "b": round(fit["b"], 6),
+                "R_max_fit": round(fit["R_max"], 6),
+                "R2": round(fit["R2"], 6),
+                "n_pts": fit["n_pts"],
+                "optimum_identified": fit["optimum_identified"],
+                "L_first": round(L[0], 4),
+                "L_last": round(L[-1], 4),
+            }
+        )
+    write_tsv(
+        RES / "length_bias_iter60_curvature_v2.tsv", curv_rows, fieldnames=list(curv_rows[0].keys())
+    )
 
     # ---- C. Iso-reward length band
     band_rows = []
     for r in rows:
-        R = r["R"]; L = r["L"]
+        R = r["R"]
+        L = r["L"]
         b = iso_reward_band(R, L, delta=ISO_DELTA)
-        band_rows.append({
-            "task": r["task"], "algo": r["algo"], "seed": r["seed"],
-            "L_min": round(b["L_min"], 4) if _is_finite(b["L_min"]) else "nan",
-            "L_max": round(b["L_max"], 4) if _is_finite(b["L_max"]) else "nan",
-            "width": round(b["width"], 4) if _is_finite(b["width"]) else "nan",
-            "n_pts": b["n_pts"],
-            "R_max": round(b["R_max"], 4),
-            "delta": b["delta"],
-        })
-    write_tsv(RES / "length_bias_iter60_iso_band_v2.tsv", band_rows,
-              fieldnames=list(band_rows[0].keys()))
+        band_rows.append(
+            {
+                "task": r["task"],
+                "algo": r["algo"],
+                "seed": r["seed"],
+                "L_min": round(b["L_min"], 4) if _is_finite(b["L_min"]) else "nan",
+                "L_max": round(b["L_max"], 4) if _is_finite(b["L_max"]) else "nan",
+                "width": round(b["width"], 4) if _is_finite(b["width"]) else "nan",
+                "n_pts": b["n_pts"],
+                "R_max": round(b["R_max"], 4),
+                "delta": b["delta"],
+            }
+        )
+    write_tsv(
+        RES / "length_bias_iter60_iso_band_v2.tsv", band_rows, fieldnames=list(band_rows[0].keys())
+    )
 
     # ---- Paired bootstrap across (A), (B), (C)
     paired = []
@@ -280,18 +334,31 @@ def main() -> None:
     for task in ("arithmetic_easy", "gsm8k_cot"):
         for metric in ("mean_eps", "median_eps", "pos_frac", "neg_frac"):
             sub = elast_rows
-            grpo = {r["seed"]: r for r in sub if r["task"] == task
-                    and r["algo"] == "grpo"}
-            drgrpo = {r["seed"]: r for r in sub if r["task"] == task
-                      and r["algo"] in ("dr_grpo", "drgrpo")}
+            grpo = {r["seed"]: r for r in sub if r["task"] == task and r["algo"] == "grpo"}
+            drgrpo = {
+                r["seed"]: r
+                for r in sub
+                if r["task"] == task and r["algo"] in ("dr_grpo", "drgrpo")
+            }
             common = sorted(set(grpo) & set(drgrpo))
             n_total = len(common)
-            valid = [s for s in common if _is_finite(float(grpo[s][metric])) and _is_finite(float(drgrpo[s][metric]))]
-            coverage.append({"task": task, "metric": metric, "n_matched": n_total,
-                             "n_valid": len(valid), "n_excluded": n_total-len(valid),
-                             "n_unmatched_grpo": len(set(grpo)-set(drgrpo)),
-                             "n_unmatched_drgrpo": len(set(drgrpo)-set(grpo)),
-                             "status": "available" if len(valid) >= 2 else "insufficient_identifiable_pairs"})
+            valid = [
+                s
+                for s in common
+                if _is_finite(float(grpo[s][metric])) and _is_finite(float(drgrpo[s][metric]))
+            ]
+            coverage.append(
+                {
+                    "task": task,
+                    "metric": metric,
+                    "n_matched": n_total,
+                    "n_valid": len(valid),
+                    "n_excluded": n_total - len(valid),
+                    "n_unmatched_grpo": len(set(grpo) - set(drgrpo)),
+                    "n_unmatched_drgrpo": len(set(drgrpo) - set(grpo)),
+                    "status": "available" if len(valid) >= 2 else "insufficient_identifiable_pairs",
+                }
+            )
             common = valid
             if len(common) < 2:
                 continue
@@ -305,35 +372,56 @@ def main() -> None:
                 interp = "Dr.GRPO more negative-elasticity steps"
             elif metric == "mean_eps" and boot["mean_diff"] < 0 and boot["ci_hi"] < 0:
                 interp = "Dr.GRPO marginal-token productivity lower"
-            paired.append({
-                "task": task, "metric": metric, "kind": "elasticity",
-                "n_pairs": boot["n_pairs"],
-                "mean_grpo": round(sum(gv) / len(gv), 8),
-                "mean_drgrpo": round(sum(dv) / len(dv), 8),
-                "mean_diff": boot["mean_diff"],
-                "ci_lo": boot["ci_lo"],
-                "ci_hi": boot["ci_hi"],
-                "p_le0": boot["p_le0"],
-                "interpretation": interp,
-            })
+            paired.append(
+                {
+                    "task": task,
+                    "metric": metric,
+                    "kind": "elasticity",
+                    "n_pairs": boot["n_pairs"],
+                    "mean_grpo": round(sum(gv) / len(gv), 8),
+                    "mean_drgrpo": round(sum(dv) / len(dv), 8),
+                    "mean_diff": boot["mean_diff"],
+                    "ci_lo": boot["ci_lo"],
+                    "ci_hi": boot["ci_hi"],
+                    "p_le0": boot["p_le0"],
+                    "interpretation": interp,
+                }
+            )
         for metric in ("L_star", "a", "R_max_fit", "R2"):
             sub = curv_rows
-            grpo = {r["seed"]: r for r in sub if r["task"] == task
-                    and r["algo"] == "grpo"}
-            drgrpo = {r["seed"]: r for r in sub if r["task"] == task
-                      and r["algo"] in ("dr_grpo", "drgrpo")}
+            grpo = {r["seed"]: r for r in sub if r["task"] == task and r["algo"] == "grpo"}
+            drgrpo = {
+                r["seed"]: r
+                for r in sub
+                if r["task"] == task and r["algo"] in ("dr_grpo", "drgrpo")
+            }
             common = sorted(set(grpo) & set(drgrpo))
             n_total = len(common)
-            valid = [s for s in common if _is_finite(float(grpo[s][metric])) and _is_finite(float(drgrpo[s][metric]))]
-            coverage.append({"task": task, "metric": metric, "n_matched": n_total,
-                             "n_valid": len(valid), "n_excluded": n_total-len(valid),
-                             "n_unmatched_grpo": len(set(grpo)-set(drgrpo)),
-                             "n_unmatched_drgrpo": len(set(drgrpo)-set(grpo)),
-                             "status": "available" if len(valid) >= 2 else "insufficient_identifiable_pairs"})
+            valid = [
+                s
+                for s in common
+                if _is_finite(float(grpo[s][metric])) and _is_finite(float(drgrpo[s][metric]))
+            ]
+            coverage.append(
+                {
+                    "task": task,
+                    "metric": metric,
+                    "n_matched": n_total,
+                    "n_valid": len(valid),
+                    "n_excluded": n_total - len(valid),
+                    "n_unmatched_grpo": len(set(grpo) - set(drgrpo)),
+                    "n_unmatched_drgrpo": len(set(drgrpo) - set(grpo)),
+                    "status": "available" if len(valid) >= 2 else "insufficient_identifiable_pairs",
+                }
+            )
             common = valid
             if len(common) < 2:
                 continue
-            common = [s for s in common if _is_finite(float(grpo[s][metric])) and _is_finite(float(drgrpo[s][metric]))]
+            common = [
+                s
+                for s in common
+                if _is_finite(float(grpo[s][metric])) and _is_finite(float(drgrpo[s][metric]))
+            ]
             if len(common) < 2:
                 continue  # no identifiable paired comparison; never impute an optimum
             gv = [float(grpo[s][metric]) for s in common]
@@ -344,35 +432,56 @@ def main() -> None:
                 interp = "Dr.GRPO optimal length L* larger"
             elif metric == "R2" and boot["mean_diff"] < 0 and boot["ci_hi"] < 0:
                 interp = "Dr.GRPO R(L) less quadratic"
-            paired.append({
-                "task": task, "metric": metric, "kind": "curvature",
-                "n_pairs": boot["n_pairs"],
-                "mean_grpo": round(sum(gv) / len(gv), 8),
-                "mean_drgrpo": round(sum(dv) / len(dv), 8),
-                "mean_diff": boot["mean_diff"],
-                "ci_lo": boot["ci_lo"],
-                "ci_hi": boot["ci_hi"],
-                "p_le0": boot["p_le0"],
-                "interpretation": interp,
-            })
+            paired.append(
+                {
+                    "task": task,
+                    "metric": metric,
+                    "kind": "curvature",
+                    "n_pairs": boot["n_pairs"],
+                    "mean_grpo": round(sum(gv) / len(gv), 8),
+                    "mean_drgrpo": round(sum(dv) / len(dv), 8),
+                    "mean_diff": boot["mean_diff"],
+                    "ci_lo": boot["ci_lo"],
+                    "ci_hi": boot["ci_hi"],
+                    "p_le0": boot["p_le0"],
+                    "interpretation": interp,
+                }
+            )
         for metric in ("width", "n_pts"):
             sub = band_rows
-            grpo = {r["seed"]: r for r in sub if r["task"] == task
-                    and r["algo"] == "grpo"}
-            drgrpo = {r["seed"]: r for r in sub if r["task"] == task
-                      and r["algo"] in ("dr_grpo", "drgrpo")}
+            grpo = {r["seed"]: r for r in sub if r["task"] == task and r["algo"] == "grpo"}
+            drgrpo = {
+                r["seed"]: r
+                for r in sub
+                if r["task"] == task and r["algo"] in ("dr_grpo", "drgrpo")
+            }
             common = sorted(set(grpo) & set(drgrpo))
             n_total = len(common)
-            valid = [s for s in common if _is_finite(float(grpo[s][metric])) and _is_finite(float(drgrpo[s][metric]))]
-            coverage.append({"task": task, "metric": metric, "n_matched": n_total,
-                             "n_valid": len(valid), "n_excluded": n_total-len(valid),
-                             "n_unmatched_grpo": len(set(grpo)-set(drgrpo)),
-                             "n_unmatched_drgrpo": len(set(drgrpo)-set(grpo)),
-                             "status": "available" if len(valid) >= 2 else "insufficient_identifiable_pairs"})
+            valid = [
+                s
+                for s in common
+                if _is_finite(float(grpo[s][metric])) and _is_finite(float(drgrpo[s][metric]))
+            ]
+            coverage.append(
+                {
+                    "task": task,
+                    "metric": metric,
+                    "n_matched": n_total,
+                    "n_valid": len(valid),
+                    "n_excluded": n_total - len(valid),
+                    "n_unmatched_grpo": len(set(grpo) - set(drgrpo)),
+                    "n_unmatched_drgrpo": len(set(drgrpo) - set(grpo)),
+                    "status": "available" if len(valid) >= 2 else "insufficient_identifiable_pairs",
+                }
+            )
             common = valid
             if len(common) < 2:
                 continue
-            common = [s for s in common if _is_finite(float(grpo[s][metric])) and _is_finite(float(drgrpo[s][metric]))]
+            common = [
+                s
+                for s in common
+                if _is_finite(float(grpo[s][metric])) and _is_finite(float(drgrpo[s][metric]))
+            ]
             if len(common) < 2:
                 continue  # no identifiable paired comparison; never impute an optimum
             gv = [float(grpo[s][metric]) for s in common]
@@ -381,38 +490,83 @@ def main() -> None:
             interp = "inconclusive"
             if metric == "width" and boot["mean_diff"] > 0 and boot["ci_lo"] > 0:
                 interp = "Dr.GRPO iso-reward length band wider"
-            paired.append({
-                "task": task, "metric": metric, "kind": "iso_band",
-                "n_pairs": boot["n_pairs"],
-                "mean_grpo": round(sum(gv) / len(gv), 6),
-                "mean_drgrpo": round(sum(dv) / len(dv), 6),
-                "mean_diff": boot["mean_diff"],
-                "ci_lo": boot["ci_lo"],
-                "ci_hi": boot["ci_hi"],
-                "p_le0": boot["p_le0"],
-                "interpretation": interp,
-            })
-    write_tsv(RES / "length_bias_iter60_pair_coverage_v2.tsv", coverage,
-              fieldnames=list(coverage[0].keys()))
-    write_tsv(RES / "length_bias_iter60_grpo_vs_drgrpo_v2.tsv", paired,
-              fieldnames=list(paired[0].keys()) if paired else ["task", "metric", "kind", "n_pairs", "mean_grpo", "mean_drgrpo", "mean_diff", "ci_lo", "ci_hi", "p_le0", "interpretation"])
+            paired.append(
+                {
+                    "task": task,
+                    "metric": metric,
+                    "kind": "iso_band",
+                    "n_pairs": boot["n_pairs"],
+                    "mean_grpo": round(sum(gv) / len(gv), 6),
+                    "mean_drgrpo": round(sum(dv) / len(dv), 6),
+                    "mean_diff": boot["mean_diff"],
+                    "ci_lo": boot["ci_lo"],
+                    "ci_hi": boot["ci_hi"],
+                    "p_le0": boot["p_le0"],
+                    "interpretation": interp,
+                }
+            )
+    write_tsv(
+        RES / "length_bias_iter60_pair_coverage_v2.tsv",
+        coverage,
+        fieldnames=list(coverage[0].keys()),
+    )
+    write_tsv(
+        RES / "length_bias_iter60_grpo_vs_drgrpo_v2.tsv",
+        paired,
+        fieldnames=list(paired[0].keys())
+        if paired
+        else [
+            "task",
+            "metric",
+            "kind",
+            "n_pairs",
+            "mean_grpo",
+            "mean_drgrpo",
+            "mean_diff",
+            "ci_lo",
+            "ci_hi",
+            "p_le0",
+            "interpretation",
+        ],
+    )
 
     # ---- Summary rollup -- the strongest cross-task findings
     summary_rows = []
     for p in paired:
-        summary_rows.append({
-            "task": p["task"], "kind": p["kind"], "metric": p["metric"],
-            "n_pairs": p["n_pairs"],
-            "mean_grpo": p["mean_grpo"],
-            "mean_drgrpo": p["mean_drgrpo"],
-            "mean_diff": p["mean_diff"],
-            "ci_lo": p["ci_lo"],
-            "ci_hi": p["ci_hi"],
-            "p_le0": p["p_le0"],
-            "interpretation": p["interpretation"],
-        })
-    write_tsv(RES / "length_bias_iter60_summary_v2.tsv", summary_rows,
-              fieldnames=list(summary_rows[0].keys()) if summary_rows else ["task", "kind", "metric", "n_pairs", "mean_grpo", "mean_drgrpo", "mean_diff", "ci_lo", "ci_hi", "p_le0", "interpretation"])
+        summary_rows.append(
+            {
+                "task": p["task"],
+                "kind": p["kind"],
+                "metric": p["metric"],
+                "n_pairs": p["n_pairs"],
+                "mean_grpo": p["mean_grpo"],
+                "mean_drgrpo": p["mean_drgrpo"],
+                "mean_diff": p["mean_diff"],
+                "ci_lo": p["ci_lo"],
+                "ci_hi": p["ci_hi"],
+                "p_le0": p["p_le0"],
+                "interpretation": p["interpretation"],
+            }
+        )
+    write_tsv(
+        RES / "length_bias_iter60_summary_v2.tsv",
+        summary_rows,
+        fieldnames=list(summary_rows[0].keys())
+        if summary_rows
+        else [
+            "task",
+            "kind",
+            "metric",
+            "n_pairs",
+            "mean_grpo",
+            "mean_drgrpo",
+            "mean_diff",
+            "ci_lo",
+            "ci_hi",
+            "p_le0",
+            "interpretation",
+        ],
+    )
 
     print("=== iter60 length elasticity summary ===")
     for r in summary_rows:

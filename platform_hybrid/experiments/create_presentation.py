@@ -4,25 +4,28 @@
 from pptx import Presentation
 from pptx.util import Inches, Pt
 from pptx.dml.color import RGBColor
-from pptx.enum.text import PP_ALIGN, MSO_ANCHOR
+from pptx.enum.text import PP_ALIGN
 from pptx.enum.shapes import MSO_SHAPE
 
 # Color scheme
-DARK_BLUE = RGBColor(0x1a, 0x1a, 0x2e)
-LIGHT_BLUE = RGBColor(0x41, 0x69, 0xe1)
-GREEN = RGBColor(0x28, 0xa7, 0x45)
-ORANGE = RGBColor(0xff, 0x8c, 0x00)
-RED = RGBColor(0xdc, 0x35, 0x45)
-PURPLE = RGBColor(0x6f, 0x42, 0xc1)
+DARK_BLUE = RGBColor(0x1A, 0x1A, 0x2E)
+LIGHT_BLUE = RGBColor(0x41, 0x69, 0xE1)
+GREEN = RGBColor(0x28, 0xA7, 0x45)
+ORANGE = RGBColor(0xFF, 0x8C, 0x00)
+RED = RGBColor(0xDC, 0x35, 0x45)
+PURPLE = RGBColor(0x6F, 0x42, 0xC1)
 GRAY = RGBColor(0x66, 0x66, 0x66)
-LIGHT_GRAY = RGBColor(0xf0, 0xf0, 0xf0)
+LIGHT_GRAY = RGBColor(0xF0, 0xF0, 0xF0)
 WHITE = RGBColor(255, 255, 255)
 
-def add_box(slide, left, top, width, height, text, fill_color, text_color=WHITE, font_size=14, bold=True):
+
+def add_box(
+    slide, left, top, width, height, text, fill_color, text_color=WHITE, font_size=14, bold=True
+):
     """Add a rounded rectangle box with text."""
-    shape = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE,
-                                    Inches(left), Inches(top),
-                                    Inches(width), Inches(height))
+    shape = slide.shapes.add_shape(
+        MSO_SHAPE.ROUNDED_RECTANGLE, Inches(left), Inches(top), Inches(width), Inches(height)
+    )
     shape.fill.solid()
     shape.fill.fore_color.rgb = fill_color
     shape.line.color.rgb = RGBColor(0x33, 0x33, 0x33)
@@ -38,37 +41,50 @@ def add_box(slide, left, top, width, height, text, fill_color, text_color=WHITE,
     p.alignment = PP_ALIGN.CENTER
     return shape
 
+
 def add_arrow_right(slide, x, y, length=0.8, color=GRAY):
     """Add a right-pointing arrow."""
-    arr = slide.shapes.add_shape(MSO_SHAPE.RIGHT_ARROW, Inches(x), Inches(y), Inches(length), Inches(0.25))
+    arr = slide.shapes.add_shape(
+        MSO_SHAPE.RIGHT_ARROW, Inches(x), Inches(y), Inches(length), Inches(0.25)
+    )
     arr.fill.solid()
     arr.fill.fore_color.rgb = color
     arr.line.fill.background()
     return arr
+
 
 def add_arrow_down(slide, x, y, length=0.8, color=GRAY):
     """Add a down-pointing arrow."""
-    arr = slide.shapes.add_shape(MSO_SHAPE.DOWN_ARROW, Inches(x), Inches(y), Inches(0.25), Inches(length))
+    arr = slide.shapes.add_shape(
+        MSO_SHAPE.DOWN_ARROW, Inches(x), Inches(y), Inches(0.25), Inches(length)
+    )
     arr.fill.solid()
     arr.fill.fore_color.rgb = color
     arr.line.fill.background()
     return arr
+
 
 def add_arrow_left(slide, x, y, length=0.8, color=GRAY):
     """Add a left-pointing arrow."""
-    arr = slide.shapes.add_shape(MSO_SHAPE.LEFT_ARROW, Inches(x), Inches(y), Inches(length), Inches(0.25))
+    arr = slide.shapes.add_shape(
+        MSO_SHAPE.LEFT_ARROW, Inches(x), Inches(y), Inches(length), Inches(0.25)
+    )
     arr.fill.solid()
     arr.fill.fore_color.rgb = color
     arr.line.fill.background()
     return arr
 
+
 def add_arrow_up(slide, x, y, length=0.8, color=GRAY):
     """Add an up-pointing arrow."""
-    arr = slide.shapes.add_shape(MSO_SHAPE.UP_ARROW, Inches(x), Inches(y), Inches(0.25), Inches(length))
+    arr = slide.shapes.add_shape(
+        MSO_SHAPE.UP_ARROW, Inches(x), Inches(y), Inches(0.25), Inches(length)
+    )
     arr.fill.solid()
     arr.fill.fore_color.rgb = color
     arr.line.fill.background()
     return arr
+
 
 def add_label(slide, x, y, text, font_size=11, color=GRAY, italic=True):
     """Add a text label."""
@@ -80,6 +96,7 @@ def add_label(slide, x, y, text, font_size=11, color=GRAY, italic=True):
     p.font.italic = italic
     p.font.color.rgb = color
     return label
+
 
 def add_title_slide(prs, title, subtitle):
     slide = prs.slides.add_slide(prs.slide_layouts[6])
@@ -101,6 +118,7 @@ def add_title_slide(prs, title, subtitle):
     p.font.color.rgb = GRAY
     p.alignment = PP_ALIGN.CENTER
     return slide
+
 
 def add_content_slide(prs, title, bullets):
     slide = prs.slides.add_slide(prs.slide_layouts[6])
@@ -125,6 +143,7 @@ def add_content_slide(prs, title, bullets):
         p.font.color.rgb = RGBColor(0x33, 0x33, 0x33)
     return slide
 
+
 def add_tinker_architecture_diagram(prs):
     """Diagram: How Tinker Works - Cloud Architecture."""
     slide = prs.slides.add_slide(prs.slide_layouts[6])
@@ -143,9 +162,11 @@ def add_tinker_architecture_diagram(prs):
     add_box(slide, 0.3, 3.2, 2.2, 0.8, "API Key", ORANGE, WHITE, 12)
 
     # Cloud boundary
-    cloud = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(3.2), Inches(1.2), Inches(6.5), Inches(5))
+    cloud = slide.shapes.add_shape(
+        MSO_SHAPE.ROUNDED_RECTANGLE, Inches(3.2), Inches(1.2), Inches(6.5), Inches(5)
+    )
     cloud.fill.solid()
-    cloud.fill.fore_color.rgb = RGBColor(0xe8, 0xf4, 0xfc)
+    cloud.fill.fore_color.rgb = RGBColor(0xE8, 0xF4, 0xFC)
     cloud.line.color.rgb = LIGHT_BLUE
     cloud.line.width = Pt(2)
 
@@ -187,6 +208,7 @@ def add_tinker_architecture_diagram(prs):
     p.font.color.rgb = GRAY
     p.alignment = PP_ALIGN.CENTER
     return slide
+
 
 def add_rl_loop_diagram(prs):
     """Diagram: RL Training Loop."""
@@ -245,6 +267,7 @@ def add_rl_loop_diagram(prs):
     p.alignment = PP_ALIGN.CENTER
     return slide
 
+
 def add_distillation_diagram(prs):
     """Diagram: Knowledge Distillation."""
     slide = prs.slides.add_slide(prs.slide_layouts[6])
@@ -302,6 +325,7 @@ def add_distillation_diagram(prs):
     p.alignment = PP_ALIGN.CENTER
     return slide
 
+
 def add_preference_diagram(prs):
     """Diagram: Pairwise Preference Learning."""
     slide = prs.slides.add_slide(prs.slide_layouts[6])
@@ -324,11 +348,11 @@ def add_preference_diagram(prs):
     responses = [
         (4.6, 1.3, "A: 120 tok", RED),
         (4.6, 2.3, "B: 80 tok", ORANGE),
-        (4.6, 3.3, "C: 50 tok", RGBColor(0x90, 0xee, 0x90)),
+        (4.6, 3.3, "C: 50 tok", RGBColor(0x90, 0xEE, 0x90)),
         (4.6, 4.3, "D: 35 tok", GREEN),
     ]
     for x, y, text, color in responses:
-        text_color = WHITE if color not in [RGBColor(0x90, 0xee, 0x90)] else DARK_BLUE
+        text_color = WHITE if color not in [RGBColor(0x90, 0xEE, 0x90)] else DARK_BLUE
         add_box(slide, x, y, 1.8, 0.8, text, color, text_color, 11)
 
     # Comparator
@@ -385,6 +409,7 @@ def add_preference_diagram(prs):
     p.font.color.rgb = GRAY
     p.alignment = PP_ALIGN.CENTER
     return slide
+
 
 def add_lora_diagram(prs):
     """Diagram: LoRA Fine-tuning."""
@@ -461,11 +486,12 @@ def add_lora_diagram(prs):
     p.alignment = PP_ALIGN.CENTER
 
     p = tf.add_paragraph()
-    p.text = f"Per matrix: d=4096, r=32 → {100*(1-2*32/4096):.4f}% fewer parameters"
+    p.text = f"Per matrix: d=4096, r=32 → {100 * (1 - 2 * 32 / 4096):.4f}% fewer parameters"
     p.font.size = Pt(12)
     p.font.color.rgb = GRAY
     p.alignment = PP_ALIGN.CENTER
     return slide
+
 
 def add_results_chart(prs):
     """Visual chart of Math RL results."""
@@ -480,13 +506,17 @@ def add_results_chart(prs):
     p.font.color.rgb = DARK_BLUE
 
     # Y-axis
-    y_axis = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(1.5), Inches(1.3), Inches(0.03), Inches(4.2))
+    y_axis = slide.shapes.add_shape(
+        MSO_SHAPE.RECTANGLE, Inches(1.5), Inches(1.3), Inches(0.03), Inches(4.2)
+    )
     y_axis.fill.solid()
     y_axis.fill.fore_color.rgb = DARK_BLUE
     y_axis.line.fill.background()
 
     # X-axis
-    x_axis = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(1.5), Inches(5.5), Inches(5.5), Inches(0.03))
+    x_axis = slide.shapes.add_shape(
+        MSO_SHAPE.RECTANGLE, Inches(1.5), Inches(5.5), Inches(5.5), Inches(0.03)
+    )
     x_axis.fill.solid()
     x_axis.fill.fore_color.rgb = DARK_BLUE
     x_axis.line.fill.background()
@@ -529,11 +559,16 @@ def add_results_chart(prs):
     p.font.color.rgb = DARK_BLUE
 
     # Data points
-    points = [(1.5 + step * 0.22, 5.55 - reward * 4.25, f"{reward:.2f}") for step, reward in [(0, .67), (5, .85), (10, .95), (15, .99), (20, 1.0)]]
+    points = [
+        (1.5 + step * 0.22, 5.55 - reward * 4.25, f"{reward:.2f}")
+        for step, reward in [(0, 0.67), (5, 0.85), (10, 0.95), (15, 0.99), (20, 1.0)]
+    ]
     add_label(slide, 1.5, 6.3, "Illustrative values; no run ID or seed. Not empirical evidence.")
 
     for x, y, val in points:
-        pt = slide.shapes.add_shape(MSO_SHAPE.OVAL, Inches(x - 0.1), Inches(y - 0.1), Inches(0.2), Inches(0.2))
+        pt = slide.shapes.add_shape(
+            MSO_SHAPE.OVAL, Inches(x - 0.1), Inches(y - 0.1), Inches(0.2), Inches(0.2)
+        )
         pt.fill.solid()
         pt.fill.fore_color.rgb = GREEN
         pt.line.color.rgb = DARK_BLUE
@@ -547,7 +582,9 @@ def add_results_chart(prs):
         p.font.color.rgb = GREEN
 
     # Annotation box
-    ann_box = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(7.3), Inches(1.5), Inches(2.4), Inches(2.5))
+    ann_box = slide.shapes.add_shape(
+        MSO_SHAPE.ROUNDED_RECTANGLE, Inches(7.3), Inches(1.5), Inches(2.4), Inches(2.5)
+    )
     ann_box.fill.solid()
     ann_box.fill.fore_color.rgb = LIGHT_GRAY
     ann_box.line.color.rgb = GRAY
@@ -562,7 +599,12 @@ def add_results_chart(prs):
     p.font.bold = True
     p.font.color.rgb = DARK_BLUE
 
-    results = ["• Illustrative training snapshot", "• Single seed, short horizon", "• Convergence not established", "• Held-out accuracy unmeasured"]
+    results = [
+        "• Illustrative training snapshot",
+        "• Single seed, short horizon",
+        "• Convergence not established",
+        "• Held-out accuracy unmeasured",
+    ]
     # TODO: As per adversarial review, these are early-training snapshots (20 steps) and single-seed runs, which are insufficient to prove asymptotic RL convergence or generalization.
     for r in results:
         p = tf.add_paragraph()
@@ -570,6 +612,7 @@ def add_results_chart(prs):
         p.font.size = Pt(11)
         p.font.color.rgb = GRAY
     return slide
+
 
 def add_table_slide(prs, title, headers, rows):
     slide = prs.slides.add_slide(prs.slide_layouts[6])
@@ -583,7 +626,9 @@ def add_table_slide(prs, title, headers, rows):
     p.font.color.rgb = DARK_BLUE
 
     cols = len(headers)
-    table = slide.shapes.add_table(len(rows) + 1, cols, Inches(0.3), Inches(1.2), Inches(9.4), Inches(0.5 * (len(rows) + 1))).table
+    table = slide.shapes.add_table(
+        len(rows) + 1, cols, Inches(0.3), Inches(1.2), Inches(9.4), Inches(0.5 * (len(rows) + 1))
+    ).table
 
     for i, header in enumerate(headers):
         cell = table.cell(0, i)
@@ -600,6 +645,7 @@ def add_table_slide(prs, title, headers, rows):
             cell.text_frame.paragraphs[0].font.size = Pt(11)
     return slide
 
+
 def add_code_slide(prs, title, code):
     slide = prs.slides.add_slide(prs.slide_layouts[6])
 
@@ -611,9 +657,11 @@ def add_code_slide(prs, title, code):
     p.font.bold = True
     p.font.color.rgb = DARK_BLUE
 
-    code_bg = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(0.3), Inches(0.9), Inches(9.4), Inches(5.8))
+    code_bg = slide.shapes.add_shape(
+        MSO_SHAPE.ROUNDED_RECTANGLE, Inches(0.3), Inches(0.9), Inches(9.4), Inches(5.8)
+    )
     code_bg.fill.solid()
-    code_bg.fill.fore_color.rgb = RGBColor(0x1e, 0x1e, 0x1e)
+    code_bg.fill.fore_color.rgb = RGBColor(0x1E, 0x1E, 0x1E)
     code_bg.line.fill.background()
 
     code_box = slide.shapes.add_textbox(Inches(0.5), Inches(1.1), Inches(9), Inches(5.4))
@@ -623,12 +671,14 @@ def add_code_slide(prs, title, code):
     p.text = code
     p.font.size = Pt(12)
     p.font.name = "Courier New"
-    p.font.color.rgb = RGBColor(0x00, 0xff, 0x00)
+    p.font.color.rgb = RGBColor(0x00, 0xFF, 0x00)
     return slide
+
 
 def main():
     import argparse
     from pathlib import Path
+
     parser = argparse.ArgumentParser()
     parser.add_argument("--output", default="artifacts/illustrative_tinker_demo_v2.pptx")
     args = parser.parse_args()
@@ -637,18 +687,24 @@ def main():
     prs.slide_height = Inches(7.5)
 
     # 1. Title
-    add_title_slide(prs,
+    add_title_slide(
+        prs,
         "Reinforcement Learning for LLMs",
-        "Training Language Models with Tinker\n\nPES LLM Research Project")
+        "Training Language Models with Tinker\n\nPES LLM Research Project",
+    )
 
     # 2. What is Tinker
-    add_content_slide(prs, "What is Tinker?", [
-        "Cloud-based RL training platform for LLMs",
-        "Supports LoRA fine-tuning with reinforcement learning",
-        "Pre-built recipes: Math RL, Preference, Distillation",
-        "No GPU required locally - training runs in the cloud",
-        "Python SDK with simple API"
-    ])
+    add_content_slide(
+        prs,
+        "What is Tinker?",
+        [
+            "Cloud-based RL training platform for LLMs",
+            "Supports LoRA fine-tuning with reinforcement learning",
+            "Pre-built recipes: Math RL, Preference, Distillation",
+            "No GPU required locally - training runs in the cloud",
+            "Python SDK with simple API",
+        ],
+    )
 
     # 3. Tinker Architecture Diagram
     add_tinker_architecture_diagram(prs)
@@ -666,7 +722,9 @@ def main():
     add_preference_diagram(prs)
 
     # 8. Experiments Table
-    add_table_slide(prs, "Experiments Conducted",
+    add_table_slide(
+        prs,
+        "Experiments Conducted",
         ["Recipe", "Task", "Model", "Status", "Result"],
         [
             ["Math RL", "Arithmetic", "Llama-3.2-1B", "Complete", "100% accuracy"],
@@ -675,14 +733,17 @@ def main():
             ["Distill (Off)", "Reasoning", "Llama-3.2-1B", "Running", "SFT active"],
             ["Distill (On)", "KL Match", "Llama-3.2-1B", "Running", "KL: 2.88"],
             ["GSM8K", "Word Problems", "Llama-3.2-1B", "Running", "Multi-step"],
-        ])
+        ],
+    )
 
     # 9. Results Chart
     add_results_chart(prs)
 
     # 10. Code Example
-    add_code_slide(prs, "Example: Math RL Training",
-"""# Install Tinker
+    add_code_slide(
+        prs,
+        "Example: Math RL Training",
+        """# Install Tinker
 pip install tinker tinker-cookbook
 
 # Set API key
@@ -699,44 +760,61 @@ python -m tinker_cookbook.recipes.math_rl.train \\
 # Output:
 # Step 0:  reward=0.676, correct=69.5%
 # Step 10: reward=0.998, correct=99.8%
-# Step 20: reward=1.000, correct=100%""")
+# Step 20: reward=1.000, correct=100%""",
+    )
 
     # 11. Notebooks
-    add_content_slide(prs, "Jupyter Notebooks Created", [
-        "01_math_rl_arithmetic.ipynb - Basic RL for addition",
-        "02_chat_sl_sft.ipynb - Supervised fine-tuning",
-        "03_preference_shorter.ipynb - Pairwise preference learning",
-        "04_distillation_off_policy.ipynb - SFT distillation",
-        "05_distillation_on_policy.ipynb - KL distillation",
-        "06_math_rl_gsm8k.ipynb - Word problem solving"
-    ])
+    add_content_slide(
+        prs,
+        "Jupyter Notebooks Created",
+        [
+            "01_math_rl_arithmetic.ipynb - Basic RL for addition",
+            "02_chat_sl_sft.ipynb - Supervised fine-tuning",
+            "03_preference_shorter.ipynb - Pairwise preference learning",
+            "04_distillation_off_policy.ipynb - SFT distillation",
+            "05_distillation_on_policy.ipynb - KL distillation",
+            "06_math_rl_gsm8k.ipynb - Word problem solving",
+        ],
+    )
 
     # 12. Key Findings
-    add_content_slide(prs, "Key Findings", [
-        "Simple tasks (arithmetic): RL achieves 100% in ~20 steps",
-        "Complex tasks (GSM8K): Requires more training, larger models",
-        "Preference learning: Effective for stylistic control",
-        "Distillation: Efficient knowledge transfer",
-        "Cloud training: Accessible without local GPUs"
-    ])
+    add_content_slide(
+        prs,
+        "Key Findings",
+        [
+            "Simple tasks (arithmetic): RL achieves 100% in ~20 steps",
+            "Complex tasks (GSM8K): Requires more training, larger models",
+            "Preference learning: Effective for stylistic control",
+            "Distillation: Efficient knowledge transfer",
+            "Cloud training: Accessible without local GPUs",
+        ],
+    )
 
     # 13. Limitations
-    add_content_slide(prs, "Limitations", [
-        "ZVF Metric: Fragile across domains and acts as a symptom, not root cause",
-        "Early-Training Snapshots: 30-50 steps are insufficient for asymptotic RL dynamics",
-        "Closed-Source Confound: Tinker API obscures true algorithmic gains vs open-source",
-        "Generalization: Improvements on held-out test sets lack statistical significance",
-        "Single-Seed Vulnerability: Extrapolations from N=1 runs are statistically vulnerable"
-    ])
+    add_content_slide(
+        prs,
+        "Limitations",
+        [
+            "ZVF Metric: Fragile across domains and acts as a symptom, not root cause",
+            "Early-Training Snapshots: 30-50 steps are insufficient for asymptotic RL dynamics",
+            "Closed-Source Confound: Tinker API obscures true algorithmic gains vs open-source",
+            "Generalization: Improvements on held-out test sets lack statistical significance",
+            "Single-Seed Vulnerability: Extrapolations from N=1 runs are statistically vulnerable",
+        ],
+    )
 
     # 14. Future Work
-    add_content_slide(prs, "Future Directions", [
-        "Code generation with sandbox (DeepCoder)",
-        "Multi-agent RL training",
-        "RLHF with human preference data",
-        "Scaling to larger models (8B, 32B)",
-        "Custom reward functions"
-    ])
+    add_content_slide(
+        prs,
+        "Future Directions",
+        [
+            "Code generation with sandbox (DeepCoder)",
+            "Multi-agent RL training",
+            "RLHF with human preference data",
+            "Scaling to larger models (8B, 32B)",
+            "Custom reward functions",
+        ],
+    )
 
     # 15. Thank You
     add_title_slide(prs, "Thank You!", "Questions?\n\npes-llm-research/tinker-experiments")
@@ -746,6 +824,7 @@ python -m tinker_cookbook.recipes.math_rl.train \\
     prs.save(output_path)
     print(f"Presentation saved to {output_path}")
     print(f"Total slides: {len(prs.slides)}")
+
 
 if __name__ == "__main__":
     main()

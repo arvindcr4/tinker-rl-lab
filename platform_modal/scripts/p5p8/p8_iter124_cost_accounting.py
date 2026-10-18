@@ -56,6 +56,7 @@ H4 -- Sweet-spot price: the maximum LLM price at which
 
 Stdlib + numpy + xgboost.  <= 300 lines.
 """
+
 from __future__ import annotations
 import csv
 import json
@@ -65,39 +66,41 @@ import numpy as np
 import xgboost as xgb
 
 import sys
+
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
-from _p8_common import (  # noqa: E402
+from _paths import REPO_ROOT
+from _p8_common import (
     RAW20,
     AGG4,
     ALL24,
     load,
     recall_at_K,
 )
+
 ROOT = REPO_ROOT
 RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8/corrected-review21-v2"
 RES.mkdir(parents=True, exist_ok=True)
 SEED = 20260705
 N_BOOT = 1500
-COST_XGB = 0.0001   # per-decision XGB inference cost ($)
+COST_XGB = 0.0001  # per-decision XGB inference cost ($)
 K_PCT = 2.0
-G_THR = 0.001       # iter-80 gradient-band threshold
-WIDTH = 0.50        # iter-80 absolute-band threshold
+G_THR = 0.001  # iter-80 gradient-band threshold
+WIDTH = 0.50  # iter-80 absolute-band threshold
 
 # 5 LLM price tiers, $ per call.  Real 2026 prices vary 500x.
 LLM_PRICE_TIERS = [
     ("cheap_heuristic", 0.0001),
-    ("small_open",      0.0006),
+    ("small_open", 0.0006),
     ("iter120_default", 0.0010),
-    ("mid_tier",        0.0050),
-    ("frontier_gpt4",   0.0300),
+    ("mid_tier", 0.0050),
+    ("frontier_gpt4", 0.0300),
 ]
 
 FEATURE_SETS = {
-    "24full":       ALL24,
-    "20raw":        RAW20,
+    "24full": ALL24,
+    "20raw": RAW20,
     "20raw+minmax": RAW20 + ["V_min", "V_max"],
-    "20raw+stat":   RAW20 + ["V_mean", "V_std"],
+    "20raw+stat": RAW20 + ["V_mean", "V_std"],
 }
 
 
@@ -110,11 +113,15 @@ def fit_predict(Xtr, ytr, Xte, feats):
     n_neg_tr = max(1, len(ytr) - n_pos_tr)
     spw = n_neg_tr / n_pos_tr
     m = xgb.XGBClassifier(
-        n_estimators=200, max_depth=6, learning_rate=0.05,
-        subsample=0.8, colsample_bytree=0.8,
+        n_estimators=200,
+        max_depth=6,
+        learning_rate=0.05,
+        subsample=0.8,
+        colsample_bytree=0.8,
         scale_pos_weight=spw,
         eval_metric="auc",
-        random_state=SEED, n_jobs=4,
+        random_state=SEED,
+        n_jobs=4,
     )
     m.fit(Xtr_s, ytr)
     return m.predict_proba(Xte_s)[:, 1]
@@ -133,7 +140,7 @@ def gradient_band_fire(scores, top_k_mask, g_thr=G_THR):
     sorted_idx = np.argsort(-scores)
     sorted_scores = scores[sorted_idx]
     grad = np.abs(np.diff(sorted_scores, prepend=sorted_scores[0] + 1.0))
-    fire_sorted = (grad < g_thr)
+    fire_sorted = grad < g_thr
     fire = np.zeros(len(scores), dtype=bool)
     fire[sorted_idx] = fire_sorted
     return fire & top_k_mask
@@ -142,7 +149,8 @@ def gradient_band_fire(scores, top_k_mask, g_thr=G_THR):
 def mann_whitney_u(a, b):
     """One-sided MWU: probability that samples from `a` are stochastically
     greater than samples from `b`.  Approximation: normal w/ tie correction."""
-    a = np.asarray(a); b = np.asarray(b)
+    a = np.asarray(a)
+    b = np.asarray(b)
     n1, n2 = len(a), len(b)
     if n1 == 0 or n2 == 0:
         return float("nan"), float("nan")
@@ -166,8 +174,9 @@ def mann_whitney_u(a, b):
     return float(U1), float(z)
 
 
-def bootstrap_acd(fire_grad, n_test_q, cost_xgb=COST_XGB, cost_llm=0.0010,
-                  n_boot=N_BOOT, seed=SEED):
+def bootstrap_acd(
+    fire_grad, n_test_q, cost_xgb=COST_XGB, cost_llm=0.0010, n_boot=N_BOOT, seed=SEED
+):
     """Bootstrap the average cost ratio cpd_grad/cpd_xgb at a price tier."""
     rng = np.random.default_rng(seed)
     ratios = np.empty(n_boot)
@@ -177,11 +186,16 @@ def bootstrap_acd(fire_grad, n_test_q, cost_xgb=COST_XGB, cost_llm=0.0010,
         n_llm_s = int(fire_grad[idx].sum())
         cpd_grad = (n_test_q * cost_xgb + n_llm_s * cost_llm) / n_test_q
         ratios[bi] = cpd_grad / cpd_xgb
-    return float(ratios.mean()), float(np.percentile(ratios, 2.5)), float(np.percentile(ratios, 97.5))
+    return (
+        float(ratios.mean()),
+        float(np.percentile(ratios, 2.5)),
+        float(np.percentile(ratios, 97.5)),
+    )
 
 
-def sweet_spot_price(fire_grad, n_test_q, n_pos_recalled_xgb,
-                     cost_xgb=COST_XGB, n_boot=N_BOOT, seed=SEED):
+def sweet_spot_price(
+    fire_grad, n_test_q, n_pos_recalled_xgb, cost_xgb=COST_XGB, n_boot=N_BOOT, seed=SEED
+):
     """Return the max LLM price at which cppr(grad-band) <= cppr(xgb-only).
 
     cppr_xgb  = n_test_q * cost_xgb / n_pos_recalled_xgb
@@ -195,15 +209,16 @@ def sweet_spot_price(fire_grad, n_test_q, n_pos_recalled_xgb,
     if n_llm == 0:
         return float("inf")  # grad-band never fires: always sweet
     pos_caught = n_pos_recalled_xgb  # grad-band can only ADD recall
-    return 0.0 if n_pos_recalled_xgb > 0 else float("nan")  # additive cascade, equal catches assumed
+    return (
+        0.0 if n_pos_recalled_xgb > 0 else float("nan")
+    )  # additive cascade, equal catches assumed
 
 
 def main():
     print(f"[iter124] loading train/test ...")
     Xtr, ytr = load(ROOT / "train_data.csv")
     Xte, yte = load(ROOT / "test_data.csv")
-    print(f"[iter124] Xtr={Xtr.shape} ytr_pos={ytr.sum()} | "
-          f"Xte={Xte.shape} yte_pos={yte.sum()}")
+    print(f"[iter124] Xtr={Xtr.shape} ytr_pos={ytr.sum()} | Xte={Xte.shape} yte_pos={yte.sum()}")
 
     # ----------------------------------------------------------------
     # Sweep feature sets (LLM-as-sensor feature ablation backbone)
@@ -226,8 +241,10 @@ def main():
             "n_pos_total": int(pos_total),
             "n_pos_caught_xgb": int(pos_caught_xgb),
         }
-        print(f"[iter124]   xgb-only recall@K=2% = {pos_caught_xgb}/{pos_total} "
-              f"= {pos_caught_xgb/pos_total:.4f} | n_llm_grad={n_llm}")
+        print(
+            f"[iter124]   xgb-only recall@K=2% = {pos_caught_xgb}/{pos_total} "
+            f"= {pos_caught_xgb / pos_total:.4f} | n_llm_grad={n_llm}"
+        )
 
     # ----------------------------------------------------------------
     # H3 -- MWU test: does 20raw have same n_llm_grad distribution as 24full?
@@ -248,18 +265,20 @@ def main():
         n_test_only = int((~anchor_fire & f_fire).sum())
         n_neither = int((~anchor_fire & ~f_fire).sum())
         agreement = (n_both + n_neither) / len(yte)
-        h3_rows.append({
-            "fset": fset_name,
-            "n_fires_anchor": int(anchor_fire.sum()),
-            "n_fires_fset": int(f_fire.sum()),
-            "n_both": n_both,
-            "n_anchor_only": n_anchor_only,
-            "n_test_only": n_test_only,
-            "n_neither": n_neither,
-            "agreement": agreement,
-            "mwu_U": U,
-            "mwu_z": z,
-        })
+        h3_rows.append(
+            {
+                "fset": fset_name,
+                "n_fires_anchor": int(anchor_fire.sum()),
+                "n_fires_fset": int(f_fire.sum()),
+                "n_both": n_both,
+                "n_anchor_only": n_anchor_only,
+                "n_test_only": n_test_only,
+                "n_neither": n_neither,
+                "agreement": agreement,
+                "mwu_U": U,
+                "mwu_z": z,
+            }
+        )
 
     out_h3 = RES / "p8_iter124_feature_ablation.tsv"
     with out_h3.open("w") as f:
@@ -286,14 +305,14 @@ def main():
         vals_te = Xte[:, ALL24.index(stat)]
         qid = quartiles(vals_te)
         for q in range(4):
-            q_mask = (qid == q)
+            q_mask = qid == q
             n_q = max(1, int(q_mask.sum()))
             n_pos_q = int(yte[q_mask].sum())
             sub_scores = scores[q_mask]
             sub_y = yte[q_mask]
             sub_mask, sub_caught, sub_total = recall_at_K(sub_scores, sub_y, K_PCT)
             n_missed_q = max(1, sub_total - sub_caught)
-            fire_q = (fire_grad & q_mask)
+            fire_q = fire_grad & q_mask
             n_llm_q = int(fire_q.sum())
             # Sweet-spot price (closed-form)
             sweet = sweet_spot_price(fire_q, n_q, sub_caught, cost_xgb=COST_XGB)
@@ -304,22 +323,24 @@ def main():
                 cppr_xgb_q = (n_q * COST_XGB) / max(1, sub_caught)
                 cppr_grad_q = (n_q * COST_XGB + n_llm_q * cost_llm) / max(1, sub_caught)
                 acd_q = cpd_grad_q / cpd_xgb_q
-                sweep_rows.append({
-                    "stat": stat,
-                    "quartile": q,
-                    "tier": tier_name,
-                    "cost_llm_per_call": cost_llm,
-                    "n_test_q": n_q,
-                    "n_pos_q": n_pos_q,
-                    "xgb_caught_q": sub_caught,
-                    "n_llm_q": n_llm_q,
-                    "cpd_xgb": cpd_xgb_q,
-                    "cpd_grad": cpd_grad_q,
-                    "cppr_xgb": cppr_xgb_q,
-                    "cppr_grad": cppr_grad_q,
-                    "acd": acd_q,
-                    "sweet_spot_price": sweet,
-                })
+                sweep_rows.append(
+                    {
+                        "stat": stat,
+                        "quartile": q,
+                        "tier": tier_name,
+                        "cost_llm_per_call": cost_llm,
+                        "n_test_q": n_q,
+                        "n_pos_q": n_pos_q,
+                        "xgb_caught_q": sub_caught,
+                        "n_llm_q": n_llm_q,
+                        "cpd_xgb": cpd_xgb_q,
+                        "cpd_grad": cpd_grad_q,
+                        "cppr_xgb": cppr_xgb_q,
+                        "cppr_grad": cppr_grad_q,
+                        "acd": acd_q,
+                        "sweet_spot_price": sweet,
+                    }
+                )
 
     out_sweep = RES / "p8_iter124_cost_sweep.tsv"
     with out_sweep.open("w") as f:
@@ -334,9 +355,11 @@ def main():
         rows_t = [r for r in sweep_rows if r["tier"] == tier_name]
         worst = max(rows_t, key=lambda r: r["cppr_grad"] / max(1e-9, r["cppr_xgb"]))
         worst_per_tier[tier_name] = worst
-        print(f"[iter124 H2] worst-cost at tier {tier_name}: "
-              f"{worst['stat']} Q{worst['quartile']} "
-              f"cppr_grad/cppr_xgb={worst['cppr_grad']/max(1e-9,worst['cppr_xgb']):.3f}")
+        print(
+            f"[iter124 H2] worst-cost at tier {tier_name}: "
+            f"{worst['stat']} Q{worst['quartile']} "
+            f"cppr_grad/cppr_xgb={worst['cppr_grad'] / max(1e-9, worst['cppr_xgb']):.3f}"
+        )
 
     # ----------------------------------------------------------------
     # H1 -- sweep: at every LLM tier tested, is grad-band CHEAPER
@@ -355,7 +378,9 @@ def main():
         rows_t = [r for r in sweep_rows if r["tier"] == tier_name]
         # global: total cost / total caught across all 16 cells
         total_cost_xgb = sum(r["n_test_q"] * COST_XGB for r in rows_t) / 16  # average
-        total_cost_grad = sum(r["n_test_q"] * COST_XGB + r["n_llm_q"] * cost_llm for r in rows_t) / 16
+        total_cost_grad = (
+            sum(r["n_test_q"] * COST_XGB + r["n_llm_q"] * cost_llm for r in rows_t) / 16
+        )
         total_caught = sum(r["xgb_caught_q"] for r in rows_t)
         cppr_xgb_g = total_cost_xgb * 16 / max(1, total_caught)
         cppr_grad_g = total_cost_grad * 16 / max(1, total_caught)
@@ -366,9 +391,11 @@ def main():
             "grad_cheaper": cppr_grad_g <= cppr_xgb_g,
             "ratio_cppr_grad_over_xgb": cppr_grad_g / max(1e-9, cppr_xgb_g),
         }
-        print(f"[iter124 H1] tier={tier_name} cost_llm=${cost_llm:.4f}: "
-              f"cppr_xgb={cppr_xgb_g:.6f} cppr_grad={cppr_grad_g:.6f} "
-              f"grad_cheaper={cppr_grad_g <= cppr_xgb_g}")
+        print(
+            f"[iter124 H1] tier={tier_name} cost_llm=${cost_llm:.4f}: "
+            f"cppr_xgb={cppr_xgb_g:.6f} cppr_grad={cppr_grad_g:.6f} "
+            f"grad_cheaper={cppr_grad_g <= cppr_xgb_g}"
+        )
 
     # ----------------------------------------------------------------
     # H4 -- Sweet-spot price per (stat, quartile).
@@ -394,8 +421,12 @@ def main():
         "h3_feature_ablation": h3_rows,
         "h1_5tier_verdict": h1_verdict,
         "h2_worst_quartile_per_tier": {
-            t: {"stat": w["stat"], "quartile": w["quartile"],
-                "cppr_grad": w["cppr_grad"], "cppr_xgb": w["cppr_xgb"]}
+            t: {
+                "stat": w["stat"],
+                "quartile": w["quartile"],
+                "cppr_grad": w["cppr_grad"],
+                "cppr_xgb": w["cppr_xgb"],
+            }
             for t, w in worst_per_tier.items()
         },
         "llm_price_tiers": [{"tier": n, "cost_per_call": c} for n, c in LLM_PRICE_TIERS],

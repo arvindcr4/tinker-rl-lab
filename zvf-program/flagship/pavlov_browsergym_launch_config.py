@@ -495,7 +495,9 @@ def _validate_cost(value: Any, errors: list[str]) -> bool:
         errors.append("cost.currency must be USD")
     if cost.get("paid_launch") is not False:
         errors.append("cost.paid_launch must remain false")
-    envelope = _decimal(cost.get("conservative_envelope_usd"), "cost.conservative_envelope_usd", errors)
+    envelope = _decimal(
+        cost.get("conservative_envelope_usd"), "cost.conservative_envelope_usd", errors
+    )
     cap = _decimal(cost.get("cap_usd"), "cost.cap_usd", errors)
     if envelope is not None and cap is not None and envelope > cap:
         errors.append("conservative smoke envelope exceeds cap")
@@ -548,7 +550,9 @@ def validate_t3_pilot_config(config: Mapping[str, Any]) -> LaunchConfigValidatio
     split_hash = data.get("split_manifest_hash")
     if not isinstance(split_hash, str) or len(split_hash) != 64:
         errors.append("split_manifest_hash must be a SHA-256 digest")
-    elif isinstance(data.get("task_manifest"), list) and split_hash != task_manifest_hash(data["task_manifest"]):
+    elif isinstance(data.get("task_manifest"), list) and split_hash != task_manifest_hash(
+        data["task_manifest"]
+    ):
         errors.append("split_manifest_hash does not match task_manifest")
 
     telemetry = data.get("telemetry")
@@ -676,7 +680,12 @@ def validate_t3_pilot_config(config: Mapping[str, Any]) -> LaunchConfigValidatio
         ):
             if _bool(gate_data.get(field_name), f"receipt_gate.{field_name}", errors) is not True:
                 errors.append(f"receipt_gate.{field_name} must be true")
-        for field_name in ("receipt_attached", "receipts_verified", "paid_launch_allowed", "portfolio_evidence"):
+        for field_name in (
+            "receipt_attached",
+            "receipts_verified",
+            "paid_launch_allowed",
+            "portfolio_evidence",
+        ):
             if _bool(gate_data.get(field_name), f"receipt_gate.{field_name}", errors) is not False:
                 errors.append(f"receipt_gate.{field_name} must remain false before receipts")
 

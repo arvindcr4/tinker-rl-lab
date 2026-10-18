@@ -9,6 +9,7 @@ Panel layout (4 panels in a 2x2 grid):
   BL: lam_ratio bar plot per (task, algo) with bootstrap CI
   BR: resid_rho per (task, algo) showing anti-trap on GSM8K
 """
+
 from __future__ import annotations
 
 import json
@@ -96,16 +97,34 @@ def main():
     with open(GR_VS_DR) as f:
         for line in f.readlines()[1:]:
             parts = line.strip().split("\t")
-            gr_vs_dr.append(dict(
-                task=parts[0], grpo_mean=float(parts[2]), drgrpo_mean=float(parts[4]),
-                diff=float(parts[6]), diff_lo=float(parts[7]), diff_hi=float(parts[8]),
-            ))
+            gr_vs_dr.append(
+                dict(
+                    task=parts[0],
+                    grpo_mean=float(parts[2]),
+                    drgrpo_mean=float(parts[4]),
+                    diff=float(parts[6]),
+                    diff_lo=float(parts[7]),
+                    diff_hi=float(parts[8]),
+                )
+            )
     x = np.arange(len(gr_vs_dr))
     width = 0.35
-    ax.bar(x - width / 2, [r["grpo_mean"] for r in gr_vs_dr], width,
-           color="tab:blue", label="GRPO", alpha=0.8)
-    ax.bar(x + width / 2, [r["drgrpo_mean"] for r in gr_vs_dr], width,
-           color="tab:red", label="Dr.GRPO", alpha=0.8)
+    ax.bar(
+        x - width / 2,
+        [r["grpo_mean"] for r in gr_vs_dr],
+        width,
+        color="tab:blue",
+        label="GRPO",
+        alpha=0.8,
+    )
+    ax.bar(
+        x + width / 2,
+        [r["drgrpo_mean"] for r in gr_vs_dr],
+        width,
+        color="tab:red",
+        label="Dr.GRPO",
+        alpha=0.8,
+    )
     ax.axhline(1.0, color="black", ls=":", lw=1)
     ax.set_xticks(x)
     ax.set_xticklabels([r["task"] for r in gr_vs_dr], rotation=10)
@@ -119,10 +138,13 @@ def main():
     with open(PER_RUN) as f:
         for line in f.readlines()[1:]:
             parts = line.strip().split("\t")
-            per_run.append(dict(
-                task=parts[0], algo=parts[1],
-                resid_rho=float(parts[14]),
-            ))
+            per_run.append(
+                dict(
+                    task=parts[0],
+                    algo=parts[1],
+                    resid_rho=float(parts[14]),
+                )
+            )
     # aggregate
     tasks = ["arithmetic_easy", "gsm8k_cot"]
     algos = ["grpo", "dr_grpo"]
@@ -134,8 +156,9 @@ def main():
     im = ax.imshow(grid, cmap="RdBu_r", vmin=-1, vmax=1, aspect="auto")
     for i in range(len(tasks)):
         for j in range(len(algos)):
-            ax.text(j, i, f"{grid[i, j]:+.2f}", ha="center", va="center",
-                    color="black", fontsize=10)
+            ax.text(
+                j, i, f"{grid[i, j]:+.2f}", ha="center", va="center", color="black", fontsize=10
+            )
     ax.set_xticks(range(len(algos)))
     ax.set_xticklabels(algos)
     ax.set_yticks(range(len(tasks)))

@@ -62,14 +62,14 @@ GENUINE = {"grpo"}
 REWARD_ONLY_FEATURES = ["reward_mean", "frac_all_zero", "frac_all_one"]
 # full telemetry: reward-only PLUS group-variance / length / advantage structure.
 FULL_FEATURES = REWARD_ONLY_FEATURES + [
-    "zvf",              # fraction of prompt-groups with zero reward variance
-    "reward_std",       # std of all rewards in the step
-    "mean_len",         # mean completion length
-    "cv_len",           # coeff. of variation of lengths (std/mean)
+    "zvf",  # fraction of prompt-groups with zero reward variance
+    "reward_std",  # std of all rewards in the step
+    "mean_len",  # mean completion length
+    "cv_len",  # coeff. of variation of lengths (std/mean)
     "len_reward_corr",  # corr(length, reward) across all samples
-    "adv_abs_mean",     # mean |advantage|
-    "adv_std",          # std of advantages
-    "lag1_autocorr",    # lag-1 autocorr of the reward_mean step-series (per method)
+    "adv_abs_mean",  # mean |advantage|
+    "adv_std",  # std of advantages
+    "lag1_autocorr",  # lag-1 autocorr of the reward_mean step-series (per method)
 ]
 
 
@@ -95,18 +95,25 @@ def load_steps():
             reward_mean_series.append(f["reward_mean"])
         # lag-1 autocorr of the reward_mean series is a per-method scalar; broadcast it
         for prefix_index, (d, f) in enumerate(feats_seq):
-            lag1 = lag1_autocorr(reward_mean_series[:prefix_index + 1])
+            lag1 = lag1_autocorr(reward_mean_series[: prefix_index + 1])
             method = d["method"]
             f["lag1_autocorr"] = lag1
             label = 1 if method in SURROGATE else 0
-            rows.append({"run_id": d.get("run_id") or str(path), "method": method, "step": d.get("step"),
-                         "label": label, "features": f})
+            rows.append(
+                {
+                    "run_id": d.get("run_id") or str(path),
+                    "method": method,
+                    "step": d.get("step"),
+                    "label": label,
+                    "features": f,
+                }
+            )
     return rows
 
 
 def build_features(d):
     """Recompute all step-level features from the raw arrays. No pre-baked fields."""
-    rewards = np.asarray(d["rewards"], dtype=float)        # (n_prompts, group_size)
+    rewards = np.asarray(d["rewards"], dtype=float)  # (n_prompts, group_size)
     lengths = np.asarray(d["lengths"], dtype=float)
     advantages = np.asarray(d["advantages"], dtype=float)
 
@@ -165,8 +172,7 @@ def lag1_autocorr(series):
 
 
 def make_matrix(rows, feature_names):
-    X = np.array([[r["features"].get(f, np.nan) for f in feature_names] for r in rows],
-                 dtype=float)
+    X = np.array([[r["features"].get(f, np.nan) for f in feature_names] for r in rows], dtype=float)
     y = np.array([r["label"] for r in rows], dtype=int)
     return X, y
 
@@ -185,7 +191,13 @@ def cv_auroc(X, y, seed=0, groups=None):
     if len(counts) != 2 or min(counts) < 2:
         raise ValueError("At least two independent runs per class required")
     folds = min(5, min(counts))
-    pipe = Pipeline([("impute", SimpleImputer(strategy="median")), ("scale", StandardScaler()), ("clf", LogisticRegression(max_iter=2000, C=1.0))])
+    pipe = Pipeline(
+        [
+            ("impute", SimpleImputer(strategy="median")),
+            ("scale", StandardScaler()),
+            ("clf", LogisticRegression(max_iter=2000, C=1.0)),
+        ]
+    )
     splitter = StratifiedGroupKFold(n_splits=folds, shuffle=True, random_state=seed)
     splits = list(splitter.split(X, y, groups))
     if any(len(set(y[train])) < 2 or len(set(y[test])) < 2 for train, test in splits):
@@ -207,10 +219,16 @@ def main():
     try:
         auroc_full, _ = cv_auroc(X_full, y, seed=0, groups=groups)
     except ValueError as error:
-        out = {"status": "not_reproducible", "claim_eligible": False,
-               "reason": str(error), "cv": "StratifiedGroupKFold(independent_runs)",
-               "n_rows": len(rows), "methods": methods,
-               "auroc_full_telemetry": None, "auroc_reward_only": None}
+        out = {
+            "status": "not_reproducible",
+            "claim_eligible": False,
+            "reason": str(error),
+            "cv": "StratifiedGroupKFold(independent_runs)",
+            "n_rows": len(rows),
+            "methods": methods,
+            "auroc_full_telemetry": None,
+            "auroc_reward_only": None,
+        }
         OUT_PATH.parent.mkdir(parents=True, exist_ok=True)
         OUT_PATH.write_text(json.dumps(out, indent=2) + "\n")
         print(json.dumps(out))
@@ -224,8 +242,8 @@ def main():
 
     out = {
         "description": "Exploratory P8 method-trace classifier. Positive=surrogate "
-                       "(aero/areal/gift), negative=genuine (grpo). LogisticRegression, "
-                       "independent-run stratified group CV, out-of-fold AUROC.",
+        "(aero/areal/gift), negative=genuine (grpo). LogisticRegression, "
+        "independent-run stratified group CV, out-of-fold AUROC.",
         "data_dir": str(DATA_DIR.relative_to(ROOT)),
         "methods": methods,
         "n_rows": len(rows),
@@ -235,7 +253,7 @@ def main():
         "reward_only_features": REWARD_ONLY_FEATURES,
         "omitted_prose_features": {
             "loss": "training-side optimizer scalar; not derivable from reward/length "
-                    "tensor, so omitted for reproducibility",
+            "tensor, so omitted for reproducibility",
         },
         "auroc_full_telemetry": round(auroc_full, 4),
         "auroc_reward_only": round(auroc_rew, 4),
@@ -243,8 +261,12 @@ def main():
         "auroc_full_telemetry_seed_std": round(float(np.std(full_seeds)), 4),
         "auroc_reward_only_seed_mean": round(float(np.mean(rew_seeds)), 4),
         "auroc_reward_only_seed_std": round(float(np.std(rew_seeds)), 4),
-        "auroc_full_by_seed": {str(s): round(v, 4) for s, v in zip(seeds, full_seeds)},
-        "auroc_reward_by_seed": {str(s): round(v, 4) for s, v in zip(seeds, rew_seeds)},
+        "auroc_full_by_seed": {
+            str(s): round(v, 4) for s, v in zip(seeds, full_seeds, strict=False)
+        },
+        "auroc_reward_by_seed": {
+            str(s): round(v, 4) for s, v in zip(seeds, rew_seeds, strict=False)
+        },
         "cv": "StratifiedGroupKFold(independent_runs)",
         "pipeline": "SimpleImputer(median) -> StandardScaler -> LogisticRegression",
     }
@@ -256,8 +278,12 @@ def main():
     print(f"rows={len(rows)}  pos(surrogate)={n_pos}  neg(genuine)={n_neg}  methods={methods}")
     print(f"AUROC full-telemetry (seed0) = {auroc_full:.4f}")
     print(f"AUROC reward-only   (seed0) = {auroc_rew:.4f}")
-    print(f"AUROC full  over seeds {seeds}: mean={np.mean(full_seeds):.4f} std={np.std(full_seeds):.4f}")
-    print(f"AUROC rew   over seeds {seeds}: mean={np.mean(rew_seeds):.4f} std={np.std(rew_seeds):.4f}")
+    print(
+        f"AUROC full  over seeds {seeds}: mean={np.mean(full_seeds):.4f} std={np.std(full_seeds):.4f}"
+    )
+    print(
+        f"AUROC rew   over seeds {seeds}: mean={np.mean(rew_seeds):.4f} std={np.std(rew_seeds):.4f}"
+    )
     print(f"wrote {OUT_PATH}")
 
 

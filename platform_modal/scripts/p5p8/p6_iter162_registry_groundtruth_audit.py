@@ -28,6 +28,7 @@ Outputs: platform_hybrid/experiments/results/p5p8/p6_iter162_per_entry.tsv
          platform_hybrid/experiments/results/p5p8/p6_iter162_per_cell.tsv
          platform_hybrid/experiments/results/p5p8/p6_iter162_summary.json
 """
+
 import csv
 import json
 import os
@@ -37,8 +38,7 @@ from collections import defaultdict
 WORKTREE = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 ENT_DIR = os.path.join(WORKTREE, "registry", "entries")
 BIB_PATH = os.path.join(WORKTREE, "paper", "references.bib")
-GTT_PATH = os.path.join(WORKTREE, "experiments", "results",
-                        "zvf_iter130_method_risk.tsv")
+GTT_PATH = os.path.join(WORKTREE, "experiments", "results", "zvf_iter130_method_risk.tsv")
 OUT_DIR = os.path.join(WORKTREE, "experiments", "results", "p5p8")
 os.makedirs(OUT_DIR, exist_ok=True)
 
@@ -126,18 +126,23 @@ def main():
                     per_layer_counts["citation_pass"] += 1
                 else:
                     per_layer_counts["citation_fail"] += 1
-                    failed_cites.append({
-                        "entry_id": eid, "bibkey": cite_key,
-                        "fname": d["_fname"],
-                    })
-            per_cell_rows.append({
-                "entry_id": eid,
-                "layer": "citation",
-                "field": "citation.bibkey",
-                "value": cite_key or "",
-                "ok": "PASS" if cite_ok else ("FAIL" if cite_ok is False else "NA"),
-                "note": "" if cite_ok else "bibkey not in platform_hybrid/paper/references.bib",
-            })
+                    failed_cites.append(
+                        {
+                            "entry_id": eid,
+                            "bibkey": cite_key,
+                            "fname": d["_fname"],
+                        }
+                    )
+            per_cell_rows.append(
+                {
+                    "entry_id": eid,
+                    "layer": "citation",
+                    "field": "citation.bibkey",
+                    "value": cite_key or "",
+                    "ok": "PASS" if cite_ok else ("FAIL" if cite_ok is False else "NA"),
+                    "note": "" if cite_ok else "bibkey not in platform_hybrid/paper/references.bib",
+                }
+            )
 
         # Layer 2: source-path existence on every measured[] row
         measured = d.get("measured") or []
@@ -163,24 +168,29 @@ def main():
                 n_measured_ok += 1
             else:
                 per_layer_counts["source_fail"] += 1
-                missing_paths.append({
-                    "entry_id": eid, "source": src,
-                    "fname": d["_fname"],
-                })
-            per_cell_rows.append({
-                "entry_id": eid,
-                "layer": "source_path",
-                "field": f"measured[{i}].source",
-                "value": src or "",
-                "ok": "PASS" if ok else "FAIL",
-                "note": note,
-            })
+                missing_paths.append(
+                    {
+                        "entry_id": eid,
+                        "source": src,
+                        "fname": d["_fname"],
+                    }
+                )
+            per_cell_rows.append(
+                {
+                    "entry_id": eid,
+                    "layer": "source_path",
+                    "field": f"measured[{i}].source",
+                    "value": src or "",
+                    "ok": "PASS" if ok else "FAIL",
+                    "note": note,
+                }
+            )
 
         # Layer 3: zvf130 value integrity (stack entries only)
         zvf_match = None
         zvf_diff = None
         if rtype == "stack" and eid.startswith("zvf130_"):
-            method = eid[len("zvf130_"):]
+            method = eid[len("zvf130_") :]
             outcomes = d.get("outcomes") or {}
             stored = outcomes.get("zvf_risk_mean")
             stored_sd = outcomes.get("zvf_risk_sd")
@@ -209,21 +219,25 @@ def main():
                 per_layer_counts["zvf_value_pass"] += 1
             elif zvf_match is False:
                 per_layer_counts["zvf_value_fail"] += 1
-                value_diffs.append({
+                value_diffs.append(
+                    {
+                        "entry_id": eid,
+                        "stored": stored,
+                        "groundtruth": gt.get("zvf_risk_mean") if gt else None,
+                        "diff": zvf_diff,
+                        "fname": d["_fname"],
+                    }
+                )
+            per_cell_rows.append(
+                {
                     "entry_id": eid,
-                    "stored": stored,
-                    "groundtruth": gt.get("zvf_risk_mean") if gt else None,
-                    "diff": zvf_diff,
-                    "fname": d["_fname"],
-                })
-            per_cell_rows.append({
-                "entry_id": eid,
-                "layer": "zvf_value",
-                "field": "outcomes.zvf_risk_mean",
-                "value": f"{stored:.6g}" if stored is not None else "null",
-                "ok": ("PASS" if zvf_match else "FAIL") if zvf_match is not None else "NA",
-                "note": note,
-            })
+                    "layer": "zvf_value",
+                    "field": "outcomes.zvf_risk_mean",
+                    "value": f"{stored:.6g}" if stored is not None else "null",
+                    "ok": ("PASS" if zvf_match else "FAIL") if zvf_match is not None else "NA",
+                    "note": note,
+                }
+            )
             # Track sd separately
             if stored_sd is not None and gt and gt.get("zvf_risk_sd"):
                 per_layer_counts["zvf_sd_total"] += 1
@@ -234,21 +248,25 @@ def main():
                     per_layer_counts["zvf_sd_pass"] += 1
                 else:
                     per_layer_counts["zvf_sd_fail"] += 1
-                    value_diffs.append({
+                    value_diffs.append(
+                        {
+                            "entry_id": eid,
+                            "stored": stored_sd,
+                            "groundtruth": gt.get("zvf_risk_sd"),
+                            "diff": sd_diff,
+                            "fname": d["_fname"],
+                        }
+                    )
+                per_cell_rows.append(
+                    {
                         "entry_id": eid,
-                        "stored": stored_sd,
-                        "groundtruth": gt.get("zvf_risk_sd"),
-                        "diff": sd_diff,
-                        "fname": d["_fname"],
-                    })
-                per_cell_rows.append({
-                    "entry_id": eid,
-                    "layer": "zvf_value_sd",
-                    "field": "outcomes.zvf_risk_sd",
-                    "value": f"{stored_sd:.6g}",
-                    "ok": "PASS" if sd_match else "FAIL",
-                    "note": f"|sd - gt_sd|={sd_diff:.6g}",
-                })
+                        "layer": "zvf_value_sd",
+                        "field": "outcomes.zvf_risk_sd",
+                        "value": f"{stored_sd:.6g}",
+                        "ok": "PASS" if sd_match else "FAIL",
+                        "note": f"|sd - gt_sd|={sd_diff:.6g}",
+                    }
+                )
 
         # Per-entry integrity score: applicable checks
         applicable = 0
@@ -271,21 +289,23 @@ def main():
                 passed += 1
         integrity_score = passed / applicable if applicable else None
 
-        per_entry_rows.append({
-            "entry_id": eid,
-            "record_type": rtype,
-            "fname": d["_fname"],
-            "n_citation_check": int(cite_ok is not None),
-            "citation_ok": "PASS" if cite_ok else ("FAIL" if cite_ok is False else "NA"),
-            "bibkey": cite_key or "",
-            "n_measured": n_measured,
-            "n_measured_ok": n_measured_ok,
-            "zvf_match": ("PASS" if zvf_match else "FAIL") if zvf_match is not None else "NA",
-            "zvf_diff": "" if zvf_diff is None else f"{zvf_diff:.6g}",
-            "applicable_checks": applicable,
-            "passed_checks": passed,
-            "integrity_score": "" if integrity_score is None else f"{integrity_score:.4f}",
-        })
+        per_entry_rows.append(
+            {
+                "entry_id": eid,
+                "record_type": rtype,
+                "fname": d["_fname"],
+                "n_citation_check": int(cite_ok is not None),
+                "citation_ok": "PASS" if cite_ok else ("FAIL" if cite_ok is False else "NA"),
+                "bibkey": cite_key or "",
+                "n_measured": n_measured,
+                "n_measured_ok": n_measured_ok,
+                "zvf_match": ("PASS" if zvf_match else "FAIL") if zvf_match is not None else "NA",
+                "zvf_diff": "" if zvf_diff is None else f"{zvf_diff:.6g}",
+                "applicable_checks": applicable,
+                "passed_checks": passed,
+                "integrity_score": "" if integrity_score is None else f"{integrity_score:.4f}",
+            }
+        )
 
     # Sort per-entry by integrity score ascending so biggest gaps appear first
     sorted_rows = sorted(
@@ -312,13 +332,15 @@ def main():
         total = per_layer_counts.get(total_key, 0)
         passed = per_layer_counts.get(pass_key, 0)
         failed = per_layer_counts.get(fail_key, 0)
-        layer_rows.append({
-            "layer": layer,
-            "total": total,
-            "passed": passed,
-            "failed": failed,
-            "pass_rate": "" if total == 0 else f"{passed/total:.4f}",
-        })
+        layer_rows.append(
+            {
+                "layer": layer,
+                "total": total,
+                "passed": passed,
+                "failed": failed,
+                "pass_rate": "" if total == 0 else f"{passed / total:.4f}",
+            }
+        )
 
     pl_path = os.path.join(OUT_DIR, "p6_iter162_per_layer_summary.tsv")
     with open(pl_path, "w", newline="") as f:
@@ -351,24 +373,26 @@ def main():
         "n_zvf_sd_checks": per_layer_counts.get("zvf_sd_total", 0),
         "n_zvf_sd_fail": per_layer_counts.get("zvf_sd_fail", 0),
         "pct_citation_pass": (
-            100.0 * per_layer_counts.get("citation_pass", 0) /
-            max(per_layer_counts.get("citation_total", 0), 1)
+            100.0
+            * per_layer_counts.get("citation_pass", 0)
+            / max(per_layer_counts.get("citation_total", 0), 1)
         ),
         "pct_source_pass": (
-            100.0 * per_layer_counts.get("source_pass", 0) /
-            max(per_layer_counts.get("source_total", 0), 1)
+            100.0
+            * per_layer_counts.get("source_pass", 0)
+            / max(per_layer_counts.get("source_total", 0), 1)
         ),
         "pct_zvf_value_pass": (
-            100.0 * per_layer_counts.get("zvf_value_pass", 0) /
-            max(per_layer_counts.get("zvf_value_total", 0), 1)
+            100.0
+            * per_layer_counts.get("zvf_value_pass", 0)
+            / max(per_layer_counts.get("zvf_value_total", 0), 1)
         ),
         "pct_zvf_sd_pass": (
-            100.0 * per_layer_counts.get("zvf_sd_pass", 0) /
-            max(per_layer_counts.get("zvf_sd_total", 0), 1)
+            100.0
+            * per_layer_counts.get("zvf_sd_pass", 0)
+            / max(per_layer_counts.get("zvf_sd_total", 0), 1)
         ),
-        "overall_integrity": (
-            100.0 * n_total_passed / max(n_total_checks, 1)
-        ),
+        "overall_integrity": (100.0 * n_total_passed / max(n_total_checks, 1)),
         "n_failed_citations": len(failed_cites),
         "n_missing_source_paths": len(missing_paths),
         "n_zvf_value_diffs": len(value_diffs),
@@ -391,16 +415,22 @@ def main():
         json.dump(summary, f, indent=2, default=str)
 
     # Stdout
-    print(f"n_bibkeys_in_references_bib={len(bibkeys)} "
-          f"n_groundtruth_methods_in_tsv={len(groundtruth)}")
+    print(
+        f"n_bibkeys_in_references_bib={len(bibkeys)} "
+        f"n_groundtruth_methods_in_tsv={len(groundtruth)}"
+    )
     print(f"n_entries={n_total} (delta={n_delta}, stack={n_stack})")
     print("Per-layer pass rate:")
     for r in layer_rows:
-        print(f"  {r['layer']:20s} total={r['total']:3d} "
-              f"passed={r['passed']:3d} failed={r['failed']:3d} "
-              f"pass_rate={r['pass_rate']}")
-    print(f"Overall integrity: {n_total_passed}/{n_total_checks} "
-          f"= {headline['overall_integrity']:.2f}%")
+        print(
+            f"  {r['layer']:20s} total={r['total']:3d} "
+            f"passed={r['passed']:3d} failed={r['failed']:3d} "
+            f"pass_rate={r['pass_rate']}"
+        )
+    print(
+        f"Overall integrity: {n_total_passed}/{n_total_checks} "
+        f"= {headline['overall_integrity']:.2f}%"
+    )
     print(f"Failed citations ({len(failed_cites)}):")
     for f in failed_cites:
         print(f"  {f['fname']:50s} bibkey={f['bibkey']}")
@@ -411,8 +441,9 @@ def main():
         print(f"  ... ({len(missing_paths) - 10} more)")
     print(f"ZVF value diffs ({len(value_diffs)}):")
     for v in value_diffs:
-        print(f"  {v['fname']:50s} diff={v['diff']:.6g} "
-              f"(stored={v['stored']}, gt={v['groundtruth']})")
+        print(
+            f"  {v['fname']:50s} diff={v['diff']:.6g} (stored={v['stored']}, gt={v['groundtruth']})"
+        )
     print(f"\nFiles:\n  {pe_path}\n  {pl_path}\n  {cell_path}\n  {sum_path}")
 
 

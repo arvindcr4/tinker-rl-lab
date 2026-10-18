@@ -43,6 +43,7 @@ from .pavlov_sdab_eval_adapter import (
     validate_task_bundle,
 )
 from .eval_pavlov_sdab import task_ids_sha256, validate_native_manifest
+import pytest
 
 
 def _digest(character: str) -> str:
@@ -71,15 +72,20 @@ def _e3_test_trust_root() -> dict:
 
 def _e3_provider_grant(binding: dict, trust_root: dict) -> dict:
     grant = {
-        "lane": "e3_sdab", "suite_id": SUITE_ID,
+        "lane": "e3_sdab",
+        "suite_id": SUITE_ID,
         "key_id": trust_root["key_id"],
         "key_fingerprint": trust_root["key_fingerprint"],
         "trust_root_sha256": sha256_digest(trust_root),
-        "signature_algorithm": "ed25519", "issued_at": (datetime.now(timezone.utc) - timedelta(minutes=1)).isoformat(),
-        "expires_at": (datetime.now(timezone.utc) + timedelta(days=1)).isoformat(), "binding": binding,
+        "signature_algorithm": "ed25519",
+        "issued_at": (datetime.now(timezone.utc) - timedelta(minutes=1)).isoformat(),
+        "expires_at": (datetime.now(timezone.utc) + timedelta(days=1)).isoformat(),
+        "binding": binding,
     }
     key = Ed25519PrivateKey.from_private_bytes(base64.b64decode(_E3_TEST_PRIVATE_KEY_B64))
-    signed = json.dumps(grant, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
+    signed = json.dumps(grant, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode(
+        "utf-8"
+    )
     grant["detached_signature"] = base64.b64encode(key.sign(signed)).decode("ascii")
     return grant
 
@@ -105,10 +111,7 @@ def _boundary_spec(task_ids: tuple[str, ...] = ("task-001", "task-002")) -> dict
             "reference": "local://sdab/license/receipt-1",
         },
         "split": "evaluation",
-        "tasks": [
-            {"task_id": task_id, "category": "infrastructure_debugging"}
-            for task_id in ids
-        ],
+        "tasks": [{"task_id": task_id, "category": "infrastructure_debugging"} for task_id in ids],
         "task_ids": ids,
         "split_manifest": {
             "name": "evaluation",
@@ -163,7 +166,7 @@ def _heldout_receipts() -> dict[str, dict[str, str]]:
             "digest": _digest(character),
             "reference": f"local://sdab/heldout/{name}",
         }
-        for name, character in zip(REQUIRED_HELDOUT_RECEIPTS, "90abc")
+        for name, character in zip(REQUIRED_HELDOUT_RECEIPTS, "90abc", strict=False)
     }
 
 
@@ -178,7 +181,16 @@ def _result(
     result = {
         "receipt_id": "result-receipt-001",
         "boundary_sha256": sha256_digest(build_sdab_boundary(_boundary_spec())),
-        "task_grades": [{"task_id": task_id, "feature_correctness": 1., "operational_correctness": 1., "engineering_correctness": 1., "attempt": 1} for task_id in _boundary_spec()["task_ids"]],
+        "task_grades": [
+            {
+                "task_id": task_id,
+                "feature_correctness": 1.0,
+                "operational_correctness": 1.0,
+                "engineering_correctness": 1.0,
+                "attempt": 1,
+            }
+            for task_id in _boundary_spec()["task_ids"]
+        ],
         "status": status,
         "started_at": "2026-08-09T00:00:00Z",
         "metrics": metrics,
@@ -233,54 +245,54 @@ def _result(
 class SdabBoundaryTests(unittest.TestCase):
     def test_boundary_is_authoritative_primary_eval_and_not_heldout_evidence(self) -> None:
         boundary = build_sdab_boundary(_boundary_spec())
-        self.assertEqual(boundary["suite_id"], SUITE_ID)
-        self.assertEqual(boundary["role"], ROLE)
-        self.assertTrue(boundary["primary_eval"])
-        self.assertEqual(boundary["source_identity"]["benchmark_id"], BENCHMARK_ID)
-        self.assertEqual(boundary["source_identity"]["canonical_url"], CANONICAL_URL)
-        self.assertEqual(boundary["source_identity"]["provider"], "Emulated, Inc.")
-        self.assertEqual(boundary["official_task_count"], OFFICIAL_TASK_COUNT)
-        self.assertEqual(boundary["task_count"], 2)
-        self.assertEqual(boundary["dataset_revision"], boundary["source_revision"])
-        self.assertEqual(boundary["container_digest"], _digest("b"))
-        self.assertFalse(boundary["receipt_proven_heldout"])
-        self.assertFalse(boundary["heldout_claim_requested"])
-        self.assertEqual(boundary["heldout_missing_receipts"], list(REQUIRED_HELDOUT_RECEIPTS))
+        assert boundary["suite_id"] == SUITE_ID
+        assert boundary["role"] == ROLE
+        assert boundary["primary_eval"]
+        assert boundary["source_identity"]["benchmark_id"] == BENCHMARK_ID
+        assert boundary["source_identity"]["canonical_url"] == CANONICAL_URL
+        assert boundary["source_identity"]["provider"] == "Emulated, Inc."
+        assert boundary["official_task_count"] == OFFICIAL_TASK_COUNT
+        assert boundary["task_count"] == 2
+        assert boundary["dataset_revision"] == boundary["source_revision"]
+        assert boundary["container_digest"] == _digest("b")
+        assert not boundary["receipt_proven_heldout"]
+        assert not boundary["heldout_claim_requested"]
+        assert boundary["heldout_missing_receipts"] == list(REQUIRED_HELDOUT_RECEIPTS)
 
     def test_task_and_split_hashes_are_order_independent_and_reproducible(self) -> None:
         first = build_sdab_boundary(_boundary_spec(("task-002", "task-001")))
         second = build_sdab_boundary(_boundary_spec(("task-001", "task-002")))
-        self.assertEqual(first["task_ids"], ["task-001", "task-002"])
-        self.assertEqual(first["task_id_hash"], second["task_id_hash"])
-        self.assertEqual(first["task_id_hashes"], second["task_id_hashes"])
-        self.assertEqual(first["split_manifest_hash"], second["split_manifest_hash"])
-        self.assertEqual(first["split_manifest"], second["split_manifest"])
-        self.assertEqual(first["task_id_hash"], sha256_digest(["task-001", "task-002"]))
+        assert first["task_ids"] == ["task-001", "task-002"]
+        assert first["task_id_hash"] == second["task_id_hash"]
+        assert first["task_id_hashes"] == second["task_id_hashes"]
+        assert first["split_manifest_hash"] == second["split_manifest_hash"]
+        assert first["split_manifest"] == second["split_manifest"]
+        assert first["task_id_hash"] == sha256_digest(["task-001", "task-002"])
 
     def test_canonical_json_keeps_decimal_text_without_float_conversion(self) -> None:
-        self.assertEqual(canonical_json({"amount": "0.10"}), '{"amount":"0.10"}')
-        self.assertEqual(sha256_digest(["task-001", "task-002"]), sha256_digest(["task-001", "task-002"]))
+        assert canonical_json({"amount": "0.10"}) == '{"amount":"0.10"}'
+        assert sha256_digest(["task-001", "task-002"]) == sha256_digest(["task-001", "task-002"])
 
     def test_duplicate_task_ids_and_case_collisions_fail_closed(self) -> None:
         duplicate = _boundary_spec(("task-001", "task-001"))
-        with self.assertRaises(SdabBoundaryError):
+        with pytest.raises(SdabBoundaryError):
             build_sdab_boundary(duplicate)
         case_collision = _boundary_spec(("Task-001", "task-001"))
-        with self.assertRaises(SdabBoundaryError):
+        with pytest.raises(SdabBoundaryError):
             build_sdab_boundary(case_collision)
 
     def test_task_and_split_manifest_must_reconcile(self) -> None:
         mismatched_tasks = _boundary_spec()
         mismatched_tasks["task_ids"] = ["task-003", "task-004"]
-        with self.assertRaisesRegex(SdabBoundaryError, "same tasks"):
+        with pytest.raises(SdabBoundaryError, match="same tasks"):
             build_sdab_boundary(mismatched_tasks)
         mismatched_manifest = _boundary_spec()
         mismatched_manifest["split_manifest"]["task_ids"] = ["task-003", "task-004"]
-        with self.assertRaisesRegex(SdabBoundaryError, "split_manifest.task_ids"):
+        with pytest.raises(SdabBoundaryError, match="split_manifest.task_ids"):
             build_sdab_boundary(mismatched_manifest)
         bad_hash = _boundary_spec()
         bad_hash["task_id_hash"] = _digest("f")
-        with self.assertRaisesRegex(SdabBoundaryError, "task_id_hash"):
+        with pytest.raises(SdabBoundaryError, match="task_id_hash"):
             build_sdab_boundary(bad_hash)
 
     def test_revision_license_container_and_manifest_are_pinned(self) -> None:
@@ -295,53 +307,53 @@ class SdabBoundaryTests(unittest.TestCase):
                 build_sdab_boundary(invalid)
         no_license_receipt = _boundary_spec()
         no_license_receipt.pop("license_receipt")
-        with self.assertRaises(SdabBoundaryError):
+        with pytest.raises(SdabBoundaryError):
             build_sdab_boundary(no_license_receipt)
         placeholder_license = _boundary_spec()
         placeholder_license["license"] = {"name": "latest"}
-        with self.assertRaises(SdabBoundaryError):
+        with pytest.raises(SdabBoundaryError):
             build_sdab_boundary(placeholder_license)
         ambiguous_license_receipt = _boundary_spec()
         ambiguous_license_receipt["license_receipt"]["uri"] = "local://a-different-license"
-        with self.assertRaisesRegex(SdabBoundaryError, "aliases disagree"):
+        with pytest.raises(SdabBoundaryError, match="aliases disagree"):
             build_sdab_boundary(ambiguous_license_receipt)
         no_manifest_revision = _boundary_spec()
         no_manifest_revision["split_manifest"].pop("revision")
-        with self.assertRaises(SdabBoundaryError):
+        with pytest.raises(SdabBoundaryError):
             build_sdab_boundary(no_manifest_revision)
 
     def test_optional_boundary_container_aliases_must_agree(self) -> None:
         boundary = _boundary_spec()
         boundary.pop("container_digest")
         built = build_sdab_boundary(boundary)
-        self.assertIsNone(built["container_digest"])
+        assert built["container_digest"] is None
         boundary["container_image_digest"] = _digest("b")
         built = build_sdab_boundary(boundary)
-        self.assertEqual(built["container_digest"], _digest("b"))
+        assert built["container_digest"] == _digest("b")
         boundary["container_digest"] = _digest("c")
-        with self.assertRaisesRegex(SdabBoundaryError, "aliases disagree"):
+        with pytest.raises(SdabBoundaryError, match="aliases disagree"):
             build_sdab_boundary(boundary)
 
     def test_authoritative_identity_rejects_related_benchmarks_and_xlam(self) -> None:
         for bad_id in ("xLAM", "swe_bench_pro_eval", "frontier_swe_eval"):
             invalid = _boundary_spec()
             invalid["source_identity"]["benchmark_id"] = bad_id
-            with self.assertRaises(SdabBoundaryError):
+            with pytest.raises(SdabBoundaryError):
                 build_sdab_boundary(invalid)
         invalid = _boundary_spec()
         invalid["substitute_for"] = "xlam"
-        with self.assertRaises(SdabBoundaryError):
+        with pytest.raises(SdabBoundaryError):
             build_sdab_boundary(invalid)
         invalid = _boundary_spec()
         invalid["source_identity"]["canonical_url"] = "https://example.invalid/sdab"
-        with self.assertRaises(SdabBoundaryError):
+        with pytest.raises(SdabBoundaryError):
             build_sdab_boundary(invalid)
 
     def test_native_contract_cannot_be_weakened(self) -> None:
         boundary = build_sdab_boundary(_boundary_spec())
-        self.assertTrue(boundary["native_environment_contract"]["stateful"])
-        self.assertTrue(boundary["artifact_contract"]["native"])
-        self.assertTrue(boundary["verifier_contract"]["hidden_tests_outside_policy_workspace"])
+        assert boundary["native_environment_contract"]["stateful"]
+        assert boundary["artifact_contract"]["native"]
+        assert boundary["verifier_contract"]["hidden_tests_outside_policy_workspace"]
         invalid = _boundary_spec()
         invalid["native_environment_contract"] = {
             "execution_mode": "mock",
@@ -356,14 +368,14 @@ class SdabBoundaryTests(unittest.TestCase):
             ],
             "grading_harness": "outside_policy_visible_workspace",
         }
-        with self.assertRaises(SdabBoundaryError):
+        with pytest.raises(SdabBoundaryError):
             build_sdab_boundary(invalid)
 
     def test_validate_boundary_is_non_throwing_preflight(self) -> None:
-        self.assertEqual(validate_sdab_boundary(_boundary_spec()), [])
+        assert validate_sdab_boundary(_boundary_spec()) == []
         errors = validate_sdab_boundary({"suite_id": "xlam"})
-        self.assertEqual(len(errors), 1)
-        self.assertIn("sdab_eval", errors[0])
+        assert len(errors) == 1
+        assert "sdab_eval" in errors[0]
 
 
 class SdabResultReceiptTests(unittest.TestCase):
@@ -372,46 +384,50 @@ class SdabResultReceiptTests(unittest.TestCase):
 
     def test_primary_eval_receipt_does_not_claim_heldout_without_proof(self) -> None:
         receipt = build_result_receipt(self.boundary, _result(), "wandb")
-        self.assertTrue(receipt["primary_eval"])
-        self.assertFalse(receipt["receipt_proven_heldout"])
-        self.assertFalse(receipt["heldout_claim_requested"])
-        self.assertEqual(receipt["heldout_missing_receipts"], list(REQUIRED_HELDOUT_RECEIPTS))
+        assert receipt["primary_eval"]
+        assert not receipt["receipt_proven_heldout"]
+        assert not receipt["heldout_claim_requested"]
+        assert receipt["heldout_missing_receipts"] == list(REQUIRED_HELDOUT_RECEIPTS)
 
     def test_completed_heldout_claim_requires_every_distinct_immutable_receipt(self) -> None:
-        with self.assertRaisesRegex(SdabBoundaryError, "authenticated result attestation"):
+        with pytest.raises(SdabBoundaryError, match="authenticated result attestation"):
             build_result_receipt(self.boundary, _result(heldout=True), "wandb")
         duplicate = _result(heldout=True)
-        duplicate["heldout_receipts"]["license"]["receipt_id"] = duplicate["heldout_receipts"]["split"]["receipt_id"]
-        with self.assertRaisesRegex(SdabBoundaryError, "distinct"):
+        duplicate["heldout_receipts"]["license"]["receipt_id"] = duplicate["heldout_receipts"][
+            "split"
+        ]["receipt_id"]
+        with pytest.raises(SdabBoundaryError, match="distinct"):
             build_result_receipt(self.boundary, duplicate, "wandb")
 
     def test_claim_with_missing_receipt_fails_closed(self) -> None:
         result = _result(heldout=True)
         result["heldout_receipts"].pop("decontamination")
-        with self.assertRaisesRegex(SdabBoundaryError, "decontamination"):
+        with pytest.raises(SdabBoundaryError, match="decontamination"):
             build_result_receipt(self.boundary, result, "wandb")
 
     def test_pending_or_failed_receipts_never_become_heldout_evidence(self) -> None:
         pending = _result(status="pending", heldout=False)
         pending["heldout_receipts"] = _heldout_receipts()
         receipt = build_result_receipt(self.boundary, pending, "wandb")
-        self.assertFalse(receipt["receipt_proven_heldout"])
-        self.assertIn("completed_result", receipt["heldout_missing_receipts"])
+        assert not receipt["receipt_proven_heldout"]
+        assert "completed_result" in receipt["heldout_missing_receipts"]
         failed = _result(status="failed", heldout=False)
         failed["heldout_receipts"] = _heldout_receipts()
         receipt = build_result_receipt(self.boundary, failed, "wandb")
-        self.assertFalse(receipt["receipt_proven_heldout"])
-        self.assertIn("completed_result", receipt["heldout_missing_receipts"])
+        assert not receipt["receipt_proven_heldout"]
+        assert "completed_result" in receipt["heldout_missing_receipts"]
 
     def test_all_supported_backends_require_their_own_receipt_fields(self) -> None:
         for backend in ("wandb", "tinker", "hf"):
             with self.subTest(backend=backend):
                 receipt = build_result_receipt(self.boundary, _result(backend), backend)
-                self.assertEqual(receipt["backend"], backend)
-                self.assertTrue(receipt["backend_fields"])
-        self.assertEqual(
-            build_result_receipt(self.boundary, _result("tinker"), "tinker")["backend_fields"]["provider"],
-            "Tinker",
+                assert receipt["backend"] == backend
+                assert receipt["backend_fields"]
+        assert (
+            build_result_receipt(self.boundary, _result("tinker"), "tinker")["backend_fields"][
+                "provider"
+            ]
+            == "Tinker"
         )
 
     def test_backend_can_be_inferred_and_backend_receipt_id_can_be_distinct(self) -> None:
@@ -419,34 +435,34 @@ class SdabResultReceiptTests(unittest.TestCase):
         result["backend"] = "tinker"
         result["tinker_receipt_id"] = "billing-receipt-001"
         receipt = build_result_receipt(self.boundary, result)
-        self.assertEqual(receipt["backend"], "tinker")
-        self.assertEqual(receipt["backend_fields"]["receipt_id"], "billing-receipt-001")
+        assert receipt["backend"] == "tinker"
+        assert receipt["backend_fields"]["receipt_id"] == "billing-receipt-001"
         result["backend"] = "hf"
-        with self.assertRaisesRegex(SdabBoundaryError, "does not match"):
+        with pytest.raises(SdabBoundaryError, match="does not match"):
             build_result_receipt(self.boundary, result, "tinker")
 
     def test_tinker_provider_cannot_be_mislabelled_as_source_provider(self) -> None:
         result = _result("tinker")
         result["tinker_provider"] = "Emulated, Inc."
-        with self.assertRaisesRegex(SdabBoundaryError, "Tinker"):
+        with pytest.raises(SdabBoundaryError, match="Tinker"):
             build_result_receipt(self.boundary, result, "tinker")
 
     def test_missing_or_conflicting_backend_fields_fail_closed(self) -> None:
         result = _result("wandb")
         result.pop("wandb_summary_digest")
-        with self.assertRaises(SdabBoundaryError):
+        with pytest.raises(SdabBoundaryError):
             build_result_receipt(self.boundary, result, "wandb")
         result = _result("wandb")
         result["wandb_run_id"] = "latest"
-        with self.assertRaises(SdabBoundaryError):
+        with pytest.raises(SdabBoundaryError):
             build_result_receipt(self.boundary, result, "wandb")
         result = _result("hf")
         result["hf_revision"] = "latest"
-        with self.assertRaises(SdabBoundaryError):
+        with pytest.raises(SdabBoundaryError):
             build_result_receipt(self.boundary, result, "hf")
         result = _result("tinker")
         result["run_id"] = "different-run"
-        with self.assertRaisesRegex(SdabBoundaryError, "aliases disagree"):
+        with pytest.raises(SdabBoundaryError, match="aliases disagree"):
             build_result_receipt(self.boundary, result, "tinker")
 
     def test_environment_artifact_and_verifier_are_native_and_digest_pinned(self) -> None:
@@ -459,19 +475,19 @@ class SdabResultReceiptTests(unittest.TestCase):
             result = _result()
             result[section][key] = value
             with self.subTest(section=section):
-                with self.assertRaises(SdabBoundaryError):
+                with pytest.raises(SdabBoundaryError):
                     build_result_receipt(self.boundary, result, "wandb")
         result = _result()
         result["environment_receipt"].pop("container_digest")
-        with self.assertRaises(SdabBoundaryError):
+        with pytest.raises(SdabBoundaryError):
             build_result_receipt(self.boundary, result, "wandb")
         result = _result()
         result["verifier_receipt"]["hidden_tests_outside_policy_workspace"] = False
-        with self.assertRaises(SdabBoundaryError):
+        with pytest.raises(SdabBoundaryError):
             build_result_receipt(self.boundary, result, "wandb")
         result = _result()
         result["artifact_receipt"]["state_digest"] = "not-a-digest"
-        with self.assertRaises(SdabBoundaryError):
+        with pytest.raises(SdabBoundaryError):
             build_result_receipt(self.boundary, result, "wandb")
 
     def test_result_identity_and_hashes_must_match_boundary(self) -> None:
@@ -487,49 +503,49 @@ class SdabResultReceiptTests(unittest.TestCase):
             result = _result()
             result[field] = value
             with self.subTest(field=field):
-                with self.assertRaises(SdabBoundaryError):
+                with pytest.raises(SdabBoundaryError):
                     build_result_receipt(self.boundary, result, "wandb")
         result = _result()
         result["source_identity"] = copy.deepcopy(self.boundary["source_identity"])
         result["source_identity"]["canonical_url"] = "https://example.invalid/sdab"
-        with self.assertRaises(SdabBoundaryError):
+        with pytest.raises(SdabBoundaryError):
             build_result_receipt(self.boundary, result, "wandb")
 
     def test_metrics_digest_and_completed_metrics_are_not_fabricated(self) -> None:
         result = _result()
         result["metrics_digest"] = _digest("f")
-        with self.assertRaisesRegex(SdabBoundaryError, "metrics_digest"):
+        with pytest.raises(SdabBoundaryError, match="metrics_digest"):
             build_result_receipt(self.boundary, result, "wandb")
         result = _result()
         result["metrics"] = {}
         result["metrics_digest"] = sha256_digest({})
-        with self.assertRaisesRegex(SdabBoundaryError, "must include metrics"):
+        with pytest.raises(SdabBoundaryError, match="must include metrics"):
             build_result_receipt(self.boundary, result, "wandb")
 
     def test_result_container_must_match_pinned_boundary_and_environment(self) -> None:
         result = _result()
         result["environment_receipt"]["container_digest"] = _digest("c")
-        with self.assertRaisesRegex(SdabBoundaryError, "container_digest"):
+        with pytest.raises(SdabBoundaryError, match="container_digest"):
             build_result_receipt(self.boundary, result, "wandb")
         result = _result()
         result["container_digest"] = _digest("c")
-        with self.assertRaisesRegex(SdabBoundaryError, "container_digest"):
+        with pytest.raises(SdabBoundaryError, match="container_digest"):
             build_result_receipt(self.boundary, result, "wandb")
 
     def test_result_receipt_digest_is_canonical_and_supplied_digest_is_checked(self) -> None:
         first = build_result_receipt(self.boundary, _result(), "wandb")
         second = build_result_receipt(self.boundary, _result(), "wandb")
-        self.assertEqual(first["receipt_digest"], second["receipt_digest"])
+        assert first["receipt_digest"] == second["receipt_digest"]
         tampered = _result()
         tampered["receipt_digest"] = _digest("f")
-        with self.assertRaisesRegex(SdabBoundaryError, "receipt_digest"):
+        with pytest.raises(SdabBoundaryError, match="receipt_digest"):
             build_result_receipt(self.boundary, tampered, "wandb")
 
     def test_validate_result_receipt_returns_errors_without_throwing(self) -> None:
-        self.assertEqual(validate_result_receipt(self.boundary, _result(), "wandb"), [])
+        assert validate_result_receipt(self.boundary, _result(), "wandb") == []
         errors = validate_result_receipt(self.boundary, {"status": "completed"}, "wandb")
-        self.assertEqual(len(errors), 1)
-        self.assertIn("boundary binding", errors[0])
+        assert len(errors) == 1
+        assert "boundary binding" in errors[0]
 
 
 class SdabCliTests(unittest.TestCase):
@@ -540,17 +556,17 @@ class SdabCliTests(unittest.TestCase):
             output = io.StringIO()
             with redirect_stdout(output):
                 exit_code = main([str(path)])
-            self.assertEqual(exit_code, 0)
+            assert exit_code == 0
             parsed = json.loads(output.getvalue())
-            self.assertEqual(parsed["boundary"]["suite_id"], SUITE_ID)
-            self.assertTrue(parsed["boundary"]["primary_eval"])
+            assert parsed["boundary"]["suite_id"] == SUITE_ID
+            assert parsed["boundary"]["primary_eval"]
 
     def test_cli_fails_closed_for_missing_or_malformed_boundary(self) -> None:
         output = io.StringIO()
         with redirect_stdout(output):
             exit_code = main(["/tmp/does-not-exist-sdab-boundary.json"])
-        self.assertEqual(exit_code, 1)
-        self.assertEqual(json.loads(output.getvalue())["status"], "ERROR")
+        assert exit_code == 1
+        assert json.loads(output.getvalue())["status"] == "ERROR"
 
 
 # ---------------------------------------------------------------------------
@@ -646,60 +662,56 @@ def _shape_only_train_ids(count: int = 20) -> list[str]:
 class SdabBundleSchemaTests(unittest.TestCase):
     def test_synthetic_fixture_is_unmistakably_marked(self) -> None:
         bundle = synthetic_bundle()
-        self.assertTrue(bundle["synthetic"])
-        self.assertIn("NOT SDAB DATA", bundle["provenance"])
-        self.assertEqual(len(bundle["tasks"]), OFFICIAL_TASK_COUNT)
+        assert bundle["synthetic"]
+        assert "NOT SDAB DATA" in bundle["provenance"]
+        assert len(bundle["tasks"]) == OFFICIAL_TASK_COUNT
         for task in bundle["tasks"]:
-            self.assertIn(SYNTHETIC_MARKER, task["task_id"])
+            assert SYNTHETIC_MARKER in task["task_id"]
 
     def test_bundle_requires_exactly_the_official_task_count(self) -> None:
         short = synthetic_bundle(task_count=OFFICIAL_TASK_COUNT - 1)
-        with self.assertRaises(SdabBundleError) as ctx:
+        with pytest.raises(SdabBundleError) as ctx:
             validate_task_bundle(short, allow_synthetic=True)
-        self.assertIn(str(OFFICIAL_TASK_COUNT), str(ctx.exception))
+        assert str(OFFICIAL_TASK_COUNT) in str(ctx.value)
 
     def test_synthetic_bundle_is_refused_unless_explicitly_allowed(self) -> None:
-        with self.assertRaises(SdabBundleError):
+        with pytest.raises(SdabBundleError):
             validate_task_bundle(synthetic_bundle())
 
     def test_duplicate_and_casefold_colliding_task_ids_fail_closed(self) -> None:
         bundle = synthetic_bundle()
         bundle["tasks"][1]["task_id"] = bundle["tasks"][0]["task_id"]
-        with self.assertRaises(SdabBundleError):
+        with pytest.raises(SdabBundleError):
             validate_task_bundle(bundle, allow_synthetic=True)
         bundle = synthetic_bundle()
         bundle["tasks"][1]["task_id"] = bundle["tasks"][0]["task_id"].lower()
-        with self.assertRaises(SdabBundleError):
+        with pytest.raises(SdabBundleError):
             validate_task_bundle(bundle, allow_synthetic=True)
 
     def test_unknown_category_and_substitute_benchmarks_fail_closed(self) -> None:
         bundle = synthetic_bundle()
         bundle["tasks"][0]["category"] = "prompt_only_qa"
-        with self.assertRaises(SdabBundleError):
+        with pytest.raises(SdabBundleError):
             validate_task_bundle(bundle, allow_synthetic=True)
         bundle = synthetic_bundle()
         bundle["related_benchmark"] = "xlam"
-        with self.assertRaises(SdabBoundaryError):
+        with pytest.raises(SdabBoundaryError):
             validate_task_bundle(bundle, allow_synthetic=True)
 
     def test_raw_task_content_is_stripped_from_the_report(self) -> None:
         report = validate_task_bundle(synthetic_bundle(), allow_synthetic=True)
-        self.assertEqual(report["raw_content_keys_stripped"], ["prompt", "targets"])
+        assert report["raw_content_keys_stripped"] == ["prompt", "targets"]
         for record in report["tasks"]:
-            self.assertNotIn("prompt", record)
-            self.assertNotIn("targets", record)
-        self.assertNotIn("prompt", canonical_json(report["tasks"]))
+            assert "prompt" not in record
+            assert "targets" not in record
+        assert "prompt" not in canonical_json(report["tasks"])
 
     def test_task_id_hashing_matches_the_runner_hash_scheme(self) -> None:
         report = validate_task_bundle(synthetic_bundle(), allow_synthetic=True)
-        self.assertEqual(
-            report["task_id_sha256"], task_ids_sha256(report["task_ids"])
-        )
-        self.assertEqual(
-            report["task_id_sha256"], newline_task_id_sha256(report["task_ids"])
-        )
-        self.assertEqual(report["task_id_digest"], sha256_digest(report["task_ids"]))
-        self.assertEqual(report["task_count"], OFFICIAL_TASK_COUNT)
+        assert report["task_id_sha256"] == task_ids_sha256(report["task_ids"])
+        assert report["task_id_sha256"] == newline_task_id_sha256(report["task_ids"])
+        assert report["task_id_digest"] == sha256_digest(report["task_ids"])
+        assert report["task_count"] == OFFICIAL_TASK_COUNT
 
     def test_split_manifest_is_deterministic_and_order_independent(self) -> None:
         bundle = synthetic_bundle()
@@ -707,38 +719,38 @@ class SdabBundleSchemaTests(unittest.TestCase):
         shuffled = synthetic_bundle()
         shuffled["tasks"] = list(reversed(shuffled["tasks"]))
         second = build_split_manifest(validate_task_bundle(shuffled, allow_synthetic=True))
-        self.assertEqual(first, second)
-        self.assertEqual(first["name"], "evaluation")
-        self.assertEqual(len(first["task_ids"]), OFFICIAL_TASK_COUNT)
+        assert first == second
+        assert first["name"] == "evaluation"
+        assert len(first["task_ids"]) == OFFICIAL_TASK_COUNT
 
 
 class SdabDisjointnessTests(unittest.TestCase):
     def test_disjoint_split_produces_a_proof(self) -> None:
         proof = prove_split_disjointness(["eval-1", "eval-2"], ["train-1"])
-        self.assertTrue(proof["disjoint"])
-        self.assertEqual(proof["intersection_count"], 0)
-        self.assertNotEqual(proof["eval_task_id_sha256"], proof["train_task_id_sha256"])
-        self.assertTrue(proof["proof_digest"].startswith("sha256:"))
+        assert proof["disjoint"]
+        assert proof["intersection_count"] == 0
+        assert proof["eval_task_id_sha256"] != proof["train_task_id_sha256"]
+        assert proof["proof_digest"].startswith("sha256:")
 
     def test_overlapping_split_fails_closed(self) -> None:
-        with self.assertRaises(SdabBundleError):
+        with pytest.raises(SdabBundleError):
             prove_split_disjointness(["eval-1", "shared"], ["shared"])
 
     def test_casefold_overlap_is_still_contamination(self) -> None:
-        with self.assertRaises(SdabBundleError):
+        with pytest.raises(SdabBundleError):
             prove_split_disjointness(["Eval-1"], ["eval-1"])
 
     def test_missing_training_split_fails_closed_in_strict_mode(self) -> None:
-        with self.assertRaises(SdabBundleError):
+        with pytest.raises(SdabBundleError):
             prove_split_disjointness(["eval-1"], [])
         lenient = prove_split_disjointness(["eval-1"], [], strict=False)
-        self.assertFalse(lenient["train_split_supplied"])
-        self.assertIsNone(lenient["train_task_id_sha256"])
+        assert not lenient["train_split_supplied"]
+        assert lenient["train_task_id_sha256"] is None
 
 
 class SdabBundleIngestTests(unittest.TestCase):
     def test_synthetic_fixture_is_rejected_by_the_authoritative_path(self) -> None:
-        with self.assertRaises(SdabBundleError):
+        with pytest.raises(SdabBundleError):
             ingest_task_bundle(
                 synthetic_bundle(),
                 train_task_ids=synthetic_train_task_ids(),
@@ -751,22 +763,22 @@ class SdabBundleIngestTests(unittest.TestCase):
             train_task_ids=synthetic_train_task_ids(),
             mode="harness_validation",
         )
-        self.assertIsNone(report["score"])
-        self.assertFalse(report["is_model_score"])
-        self.assertTrue(report["synthetic"])
-        self.assertFalse(report["authoritative"])
-        self.assertIsNone(report["boundary"])
-        self.assertEqual(report["evidence_kind"], "harness_validation")
+        assert report["score"] is None
+        assert not report["is_model_score"]
+        assert report["synthetic"]
+        assert not report["authoritative"]
+        assert report["boundary"] is None
+        assert report["evidence_kind"] == "harness_validation"
         # The fixture is provably refused by build_sdab_boundary.
-        self.assertTrue(report["boundary_rejection"])
-        self.assertIn("synthetic", report["boundary_rejection"][0])
+        assert report["boundary_rejection"]
+        assert "synthetic" in report["boundary_rejection"][0]
         # Plumbing still ran end to end.
-        self.assertEqual(report["bundle"]["task_count"], OFFICIAL_TASK_COUNT)
-        self.assertEqual(len(report["split_manifest"]["task_ids"]), OFFICIAL_TASK_COUNT)
-        self.assertTrue(report["disjointness_proof"]["disjoint"])
+        assert report["bundle"]["task_count"] == OFFICIAL_TASK_COUNT
+        assert len(report["split_manifest"]["task_ids"]) == OFFICIAL_TASK_COUNT
+        assert report["disjointness_proof"]["disjoint"]
 
     def test_harness_validation_refuses_an_authentic_shaped_bundle(self) -> None:
-        with self.assertRaises(SdabBundleError):
+        with pytest.raises(SdabBundleError):
             ingest_task_bundle(
                 _shape_only_bundle(),
                 train_task_ids=_shape_only_train_ids(),
@@ -782,17 +794,15 @@ class SdabBundleIngestTests(unittest.TestCase):
             container_digest=_digest("b"),
         )
         boundary = report["boundary"]
-        self.assertIsNotNone(boundary)
-        self.assertEqual(boundary["task_count"], OFFICIAL_TASK_COUNT)
-        self.assertEqual(boundary["official_task_count"], OFFICIAL_TASK_COUNT)
-        self.assertEqual(boundary["split"], "evaluation")
-        self.assertEqual(boundary["task_id_hash"], report["bundle"]["task_id_digest"])
-        self.assertEqual(boundary["split_manifest_hash"], report["split_manifest_hash"])
-        self.assertFalse(boundary["receipt_proven_heldout"])
-        self.assertEqual(
-            sorted(boundary["heldout_missing_receipts"]), sorted(REQUIRED_HELDOUT_RECEIPTS)
-        )
-        self.assertIsNone(report["score"])
+        assert boundary is not None
+        assert boundary["task_count"] == OFFICIAL_TASK_COUNT
+        assert boundary["official_task_count"] == OFFICIAL_TASK_COUNT
+        assert boundary["split"] == "evaluation"
+        assert boundary["task_id_hash"] == report["bundle"]["task_id_digest"]
+        assert boundary["split_manifest_hash"] == report["split_manifest_hash"]
+        assert not boundary["receipt_proven_heldout"]
+        assert sorted(boundary["heldout_missing_receipts"]) == sorted(REQUIRED_HELDOUT_RECEIPTS)
+        assert report["score"] is None
 
     def test_ingest_is_deterministic(self) -> None:
         kwargs = {
@@ -803,12 +813,12 @@ class SdabBundleIngestTests(unittest.TestCase):
         }
         first = ingest_task_bundle(_shape_only_bundle(), **kwargs)
         second = ingest_task_bundle(_shape_only_bundle(), **kwargs)
-        self.assertEqual(first["ingest_digest"], second["ingest_digest"])
+        assert first["ingest_digest"] == second["ingest_digest"]
 
 
 class SdabRuntimeManifestTests(unittest.TestCase):
     def test_missing_external_trust_root_fails_closed(self) -> None:
-        with self.assertRaises(SdabBundleError):
+        with pytest.raises(SdabBundleError):
             load_sdab_trust_root(None)
 
     def _authoritative_ingest(self) -> dict:
@@ -821,7 +831,16 @@ class SdabRuntimeManifestTests(unittest.TestCase):
         )
 
     def _manifest(self, ingest: dict) -> dict:
-        binding = {"suite_id": SUITE_ID, "lane": "e3_sdab", "benchmark_revision": ingest["bundle"]["revision"], "container_digest": _digest("b"), "environment_digest": _digest("1"), "verifier_sha256": "f" * 64, "reset_contract": "provider-native-reset-required", "license_id": "LicenseRef-SDAB-Evaluation"}
+        binding = {
+            "suite_id": SUITE_ID,
+            "lane": "e3_sdab",
+            "benchmark_revision": ingest["bundle"]["revision"],
+            "container_digest": _digest("b"),
+            "environment_digest": _digest("1"),
+            "verifier_sha256": "f" * 64,
+            "reset_contract": "provider-native-reset-required",
+            "license_id": "LicenseRef-SDAB-Evaluation",
+        }
         trust_root = _e3_test_trust_root()
         return build_runtime_manifest(
             ingest,
@@ -838,19 +857,17 @@ class SdabRuntimeManifestTests(unittest.TestCase):
     def test_runtime_manifest_is_accepted_by_the_runner_gate(self) -> None:
         manifest = self._manifest(self._authoritative_ingest())
         validated = validate_native_manifest(manifest, required_tasks=1)
-        self.assertEqual(validated["task_count"], OFFICIAL_TASK_COUNT)
-        self.assertEqual(validated["split"], "evaluation")
-        self.assertTrue(validated["native_verifier"])
-        self.assertNotEqual(
-            validated["task_id_sha256"], validated["train_task_id_sha256"]
-        )
+        assert validated["task_count"] == OFFICIAL_TASK_COUNT
+        assert validated["split"] == "evaluation"
+        assert validated["native_verifier"]
+        assert validated["task_id_sha256"] != validated["train_task_id_sha256"]
 
     def test_runtime_manifest_is_metadata_only(self) -> None:
         manifest = self._manifest(self._authoritative_ingest())
         serialized = canonical_json(manifest)
         for key in ("prompt", "prompts", "target", "targets", "trajectory"):
-            self.assertNotIn(key, manifest)
-        self.assertNotIn("PLACEHOLDER", serialized)
+            assert key not in manifest
+        assert "PLACEHOLDER" not in serialized
 
     def test_runtime_manifest_refuses_a_synthetic_ingest(self) -> None:
         synthetic = ingest_task_bundle(
@@ -858,7 +875,7 @@ class SdabRuntimeManifestTests(unittest.TestCase):
             train_task_ids=synthetic_train_task_ids(),
             mode="harness_validation",
         )
-        with self.assertRaises(SdabBundleError):
+        with pytest.raises(SdabBundleError):
             self._manifest(synthetic)
 
     def test_cli_emits_runner_valid_runtime_manifest_only_for_authoritative_bundle(self) -> None:
@@ -871,27 +888,64 @@ class SdabRuntimeManifestTests(unittest.TestCase):
             bundle_path.write_text(json.dumps(_shape_only_bundle()), encoding="utf-8")
             train_path.write_text(json.dumps(_shape_only_train_ids()), encoding="utf-8")
             trust_root = _e3_test_trust_root()
-            grant_path.write_text(json.dumps(_e3_provider_grant({"suite_id": SUITE_ID, "lane": "e3_sdab", "benchmark_revision": _shape_only_bundle()["revision"], "container_digest": _digest("b"), "environment_digest": _digest("1"), "verifier_sha256": "f" * 64, "reset_contract": "emulated.reset.v1", "license_id": "LicenseRef-SDAB-Evaluation"}, trust_root)), encoding="utf-8")
+            grant_path.write_text(
+                json.dumps(
+                    _e3_provider_grant(
+                        {
+                            "suite_id": SUITE_ID,
+                            "lane": "e3_sdab",
+                            "benchmark_revision": _shape_only_bundle()["revision"],
+                            "container_digest": _digest("b"),
+                            "environment_digest": _digest("1"),
+                            "verifier_sha256": "f" * 64,
+                            "reset_contract": "emulated.reset.v1",
+                            "license_id": "LicenseRef-SDAB-Evaluation",
+                        },
+                        trust_root,
+                    )
+                ),
+                encoding="utf-8",
+            )
             trust_root_path.write_text(json.dumps(trust_root), encoding="utf-8")
             output = io.StringIO()
             with redirect_stdout(output):
-                exit_code = main([
-                    "--bundle", str(bundle_path), "--train-task-ids", str(train_path),
-                    "--source-revision-digest", _digest("a"),
-                    "--container-digest", _digest("b"), "--runtime-manifest",
-                    "--environment-digest", _digest("1"), "--verifier-sha256", "f" * 64,
-                    "--verifier-identity", "emulated-native-sdab-verifier",
-                    "--adapter-entrypoint", "emulated_sdab.runtime:create_runtime",
-                    "--disjointness-receipt", "provider://sdab/split-receipt-1",
-                    "--reset-contract", "emulated.reset.v1",
-                    "--provider-grant", str(grant_path),
-                    "--trust-roots", str(trust_root_path),
-                ])
-            self.assertEqual(exit_code, 0)
+                exit_code = main(
+                    [
+                        "--bundle",
+                        str(bundle_path),
+                        "--train-task-ids",
+                        str(train_path),
+                        "--source-revision-digest",
+                        _digest("a"),
+                        "--container-digest",
+                        _digest("b"),
+                        "--runtime-manifest",
+                        "--environment-digest",
+                        _digest("1"),
+                        "--verifier-sha256",
+                        "f" * 64,
+                        "--verifier-identity",
+                        "emulated-native-sdab-verifier",
+                        "--adapter-entrypoint",
+                        "emulated_sdab.runtime:create_runtime",
+                        "--disjointness-receipt",
+                        "provider://sdab/split-receipt-1",
+                        "--reset-contract",
+                        "emulated.reset.v1",
+                        "--provider-grant",
+                        str(grant_path),
+                        "--trust-roots",
+                        str(trust_root_path),
+                    ]
+                )
+            assert exit_code == 0
             manifest = json.loads(output.getvalue())["runtime_manifest"]
-            self.assertEqual(manifest["provider_runtime"]["reset_contract"], "emulated.reset.v1")
-            self.assertEqual(manifest["provider_runtime"]["grader_identity"], manifest["verifier_identity"])
-            self.assertEqual(validate_native_manifest(manifest, required_tasks=1)["task_count"], OFFICIAL_TASK_COUNT)
+            assert manifest["provider_runtime"]["reset_contract"] == "emulated.reset.v1"
+            assert manifest["provider_runtime"]["grader_identity"] == manifest["verifier_identity"]
+            assert (
+                validate_native_manifest(manifest, required_tasks=1)["task_count"]
+                == OFFICIAL_TASK_COUNT
+            )
 
     def test_cli_runtime_manifest_rejects_synthetic_bundle(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -906,18 +960,37 @@ class SdabRuntimeManifestTests(unittest.TestCase):
             trust_root_path.write_text(json.dumps(_e3_test_trust_root()), encoding="utf-8")
             output = io.StringIO()
             with redirect_stdout(output):
-                exit_code = main([
-                    "--bundle", str(bundle_path), "--train-task-ids", str(train_path),
-                    "--mode", "harness_validation", "--runtime-manifest",
-                    "--container-digest", _digest("b"), "--environment-digest", _digest("1"),
-                    "--verifier-sha256", "f" * 64, "--verifier-identity", "emulated-native-sdab-verifier",
-                    "--adapter-entrypoint", "emulated_sdab.runtime:create_runtime",
-                    "--disjointness-receipt", "provider://sdab/split-receipt-1", "--reset-contract", "reset.v1",
-                    "--provider-grant", str(grant_path),
-                    "--trust-roots", str(trust_root_path),
-                ])
-            self.assertEqual(exit_code, 1)
-            self.assertIn("synthetic", json.loads(output.getvalue())["errors"][0])
+                exit_code = main(
+                    [
+                        "--bundle",
+                        str(bundle_path),
+                        "--train-task-ids",
+                        str(train_path),
+                        "--mode",
+                        "harness_validation",
+                        "--runtime-manifest",
+                        "--container-digest",
+                        _digest("b"),
+                        "--environment-digest",
+                        _digest("1"),
+                        "--verifier-sha256",
+                        "f" * 64,
+                        "--verifier-identity",
+                        "emulated-native-sdab-verifier",
+                        "--adapter-entrypoint",
+                        "emulated_sdab.runtime:create_runtime",
+                        "--disjointness-receipt",
+                        "provider://sdab/split-receipt-1",
+                        "--reset-contract",
+                        "reset.v1",
+                        "--provider-grant",
+                        str(grant_path),
+                        "--trust-roots",
+                        str(trust_root_path),
+                    ]
+                )
+            assert exit_code == 1
+            assert "synthetic" in json.loads(output.getvalue())["errors"][0]
 
 
 class SdabIngestReceiptTests(unittest.TestCase):
@@ -930,11 +1003,11 @@ class SdabIngestReceiptTests(unittest.TestCase):
         receipt = build_ingest_receipt(
             report, status="BLOCKED", blockers=["synthetic fixture only"]
         )
-        self.assertIsNone(receipt["score"])
-        self.assertFalse(receipt["is_model_score"])
-        self.assertEqual(receipt["status"], "BLOCKED")
-        self.assertTrue(receipt["synthetic"])
-        self.assertTrue(receipt["receipt_digest"].startswith("sha256:"))
+        assert receipt["score"] is None
+        assert not receipt["is_model_score"]
+        assert receipt["status"] == "BLOCKED"
+        assert receipt["synthetic"]
+        assert receipt["receipt_digest"].startswith("sha256:")
 
     def test_cli_bundle_ingest_writes_a_blocked_synthetic_receipt(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -957,21 +1030,21 @@ class SdabIngestReceiptTests(unittest.TestCase):
                         str(out_path),
                     ]
                 )
-            self.assertEqual(exit_code, 0)
+            assert exit_code == 0
             parsed = json.loads(output.getvalue())
-            self.assertIsNone(parsed["ingest"]["score"])
-            self.assertIsNone(parsed["ingest"]["boundary"])
+            assert parsed["ingest"]["score"] is None
+            assert parsed["ingest"]["boundary"] is None
             receipt = json.loads(out_path.read_text(encoding="utf-8"))
-            self.assertEqual(receipt["status"], "BLOCKED")
-            self.assertIsNone(receipt["score"])
-            self.assertFalse(receipt["is_model_score"])
+            assert receipt["status"] == "BLOCKED"
+            assert receipt["score"] is None
+            assert not receipt["is_model_score"]
 
     def test_cli_requires_a_boundary_or_a_bundle(self) -> None:
         output = io.StringIO()
         with redirect_stdout(output):
             exit_code = main([])
-        self.assertEqual(exit_code, 1)
-        self.assertEqual(json.loads(output.getvalue())["status"], "ERROR")
+        assert exit_code == 1
+        assert json.loads(output.getvalue())["status"] == "ERROR"
 
 
 if __name__ == "__main__":

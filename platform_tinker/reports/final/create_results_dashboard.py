@@ -65,12 +65,14 @@ def main():
     ax = axes[0, 0]
     labels = ["Strict Tinker\n(no warm-up)", "SFT only", "SFT + GRPO"]
     values = [0.00, 0.72, 0.91]
-    bars = ax.bar(labels, values, color=[colors["red"], colors["gray"], colors["green"]], width=0.62)
+    bars = ax.bar(
+        labels, values, color=[colors["red"], colors["gray"], colors["green"]], width=0.62
+    )
     ax.set_ylim(0, 1.05)
     ax.set_ylabel("Tool-call reward / validity")
     ax.set_title("A. Tool use: GRPO refines a learned schema")
     style_axes(ax)
-    for bar, text in zip(bars, ["0.00", "0.72", "0.91"]):
+    for bar, text in zip(bars, ["0.00", "0.72", "0.91"], strict=False):
         annotate_bar(ax, bar, text)
     ax.annotate(
         "Warm-up creates\nvalid samples",
@@ -89,7 +91,9 @@ def main():
     interval_low = np.array([76.5, 80.6])
     interval_high = np.array([87.5, 86.0])
     yerr = np.vstack([heldout_values - interval_low, interval_high - heldout_values])
-    bars = ax.bar(heldout_labels, heldout_values, color=[colors["gray"], colors["blue"]], width=0.58)
+    bars = ax.bar(
+        heldout_labels, heldout_values, color=[colors["gray"], colors["blue"]], width=0.58
+    )
     ax.errorbar(
         np.arange(len(heldout_values)),
         heldout_values,
@@ -103,7 +107,7 @@ def main():
     ax.set_ylabel("Held-out GSM8K accuracy (%)")
     ax.set_title("B. Math: training reward is not proof of generalization")
     style_axes(ax)
-    for bar, text in zip(bars, ["82.0%", "83.3%"]):
+    for bar, text in zip(bars, ["82.0%", "83.3%"], strict=False):
         annotate_bar(ax, bar, text, dy=0.3)
     ax.text(
         0.5,
@@ -137,9 +141,33 @@ def main():
         ax.scatter(zvf, reward, s=120, color=color, edgecolor="white", linewidth=1.4, zorder=3)
         tx, ty, ha = label_pos[label]
         ax.text(tx, ty, label, ha=ha, va="center", fontsize=9)
-    ax.text(0.83, 0.13, "Failure:\nflat wrong groups", ha="center", va="center", fontsize=9, color="#7a2538")
-    ax.text(0.83, 0.92, "Saturation:\nflat correct groups", ha="center", va="center", fontsize=9, color="#254f87")
-    ax.text(0.24, 0.86, "Usable:\nreward diversity", ha="center", va="center", fontsize=9, color="#1f5d3b")
+    ax.text(
+        0.83,
+        0.13,
+        "Failure:\nflat wrong groups",
+        ha="center",
+        va="center",
+        fontsize=9,
+        color="#7a2538",
+    )
+    ax.text(
+        0.83,
+        0.92,
+        "Saturation:\nflat correct groups",
+        ha="center",
+        va="center",
+        fontsize=9,
+        color="#254f87",
+    )
+    ax.text(
+        0.24,
+        0.86,
+        "Usable:\nreward diversity",
+        ha="center",
+        va="center",
+        fontsize=9,
+        color="#1f5d3b",
+    )
     ax.set_xlim(0, 1.04)
     ax.set_ylim(0, 1.05)
     ax.set_xlabel("Mean ZVF (1 - GU)")
@@ -169,7 +197,7 @@ def main():
     ax.text(x[0], 0.47, "GRPO wins", ha="center", fontsize=10, weight="bold", color=colors["blue"])
     ax.text(x[1], 1.02, "PPO wins", ha="center", fontsize=10, weight="bold", color=colors["orange"])
 
-    for label, ax in zip(["A", "B", "C", "D"], axes.ravel()):
+    for label, ax in zip(["A", "B", "C", "D"], axes.ravel(), strict=False):
         ax.text(
             -0.08,
             1.08,

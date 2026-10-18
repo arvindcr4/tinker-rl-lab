@@ -63,8 +63,8 @@ from pathlib import Path
 import matplotlib
 
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt  # noqa: E402
-import numpy as np  # noqa: E402
+import matplotlib.pyplot as plt
+import numpy as np
 
 REPO = Path(__file__).resolve().parents[2] / "platform_hybrid"
 TRACE_DIR = REPO / "experiments" / "tinker-runs" / "results"
@@ -93,19 +93,32 @@ MODELS: dict[str, str] = {
     "Kimi-K2-Thinking": "arch_gsm8k_kimi-k2.json",
 }
 PARAM_B: dict[str, float] = {
-    "Qwen3.5-4B": 4.0, "Qwen3-8B": 8.0, "Llama-3.1-8B-Instruct": 8.0,
-    "Qwen3-32B": 32.0, "Qwen3.5-27B": 27.0, "gpt-oss-20B": 20.0,
-    "Qwen3-30B-MoE": 30.0, "Qwen3-30B-MoE-Inst": 30.0,
-    "DeepSeek-V3.1": 685.0, "Nemotron-120B": 120.0,
-    "Qwen3-235B-MoE": 235.0, "Kimi-K2-Thinking": 1000.0,
+    "Qwen3.5-4B": 4.0,
+    "Qwen3-8B": 8.0,
+    "Llama-3.1-8B-Instruct": 8.0,
+    "Qwen3-32B": 32.0,
+    "Qwen3.5-27B": 27.0,
+    "gpt-oss-20B": 20.0,
+    "Qwen3-30B-MoE": 30.0,
+    "Qwen3-30B-MoE-Inst": 30.0,
+    "DeepSeek-V3.1": 685.0,
+    "Nemotron-120B": 120.0,
+    "Qwen3-235B-MoE": 235.0,
+    "Kimi-K2-Thinking": 1000.0,
 }
 ARCH: dict[str, str] = {
-    "Qwen3.5-4B": "dense", "Qwen3-8B": "dense",
-    "Llama-3.1-8B-Instruct": "dense", "Qwen3-32B": "dense",
-    "Qwen3.5-27B": "dense", "gpt-oss-20B": "moe",
-    "Qwen3-30B-MoE": "moe", "Qwen3-30B-MoE-Inst": "moe",
-    "DeepSeek-V3.1": "moe", "Nemotron-120B": "dense",
-    "Qwen3-235B-MoE": "moe", "Kimi-K2-Thinking": "moe",
+    "Qwen3.5-4B": "dense",
+    "Qwen3-8B": "dense",
+    "Llama-3.1-8B-Instruct": "dense",
+    "Qwen3-32B": "dense",
+    "Qwen3.5-27B": "dense",
+    "gpt-oss-20B": "moe",
+    "Qwen3-30B-MoE": "moe",
+    "Qwen3-30B-MoE-Inst": "moe",
+    "DeepSeek-V3.1": "moe",
+    "Nemotron-120B": "dense",
+    "Qwen3-235B-MoE": "moe",
+    "Kimi-K2-Thinking": "moe",
 }
 
 SEED = 42
@@ -133,6 +146,7 @@ def zero_model(y):
 def _safe_curve_fit(fn, x, y, p0, lo, hi, maxfev=5000):
     try:
         from scipy.optimize import curve_fit
+
         popt, _ = curve_fit(fn, x, y, p0=p0, bounds=(lo, hi), maxfev=maxfev)
         return popt, True
     except Exception:
@@ -143,14 +157,13 @@ def fit_saturation(x, y):
     if len(x) < 3 or float(np.std(y)) < 1e-9:
         return None, float("inf")
     scale = float(np.max(np.abs(x)))
-    if not scale > 0: return None, float("inf")
+    if not scale > 0:
+        return None, float("inf")
     original_x = x
     x = x / scale
     y_max = float(np.max(y))
     p0 = (min(1.0, y_max + 0.05), 0.5)
-    popt, ok = _safe_curve_fit(
-        saturation, x, y, p0=p0, lo=(0.0, 1e-6), hi=(1.0, 10.0)
-    )
+    popt, ok = _safe_curve_fit(saturation, x, y, p0=p0, lo=(0.0, 1e-6), hi=(1.0, 10.0))
     if not ok:
         return None, float("inf")
     yhat = saturation(x, *popt)
@@ -164,14 +177,13 @@ def fit_power(x, y):
     if len(x) < 3 or float(np.std(y)) < 1e-9:
         return None, float("inf")
     scale = float(np.max(np.abs(x)))
-    if not scale > 0: return None, float("inf")
+    if not scale > 0:
+        return None, float("inf")
     original_x = x
     x = x / scale
     y_max = float(np.max(y))
     p0 = (max(1e-3, y_max), 0.5)
-    popt, ok = _safe_curve_fit(
-        power_law, x, y, p0=p0, lo=(0.0, -2.0), hi=(10.0, 5.0)
-    )
+    popt, ok = _safe_curve_fit(power_law, x, y, p0=p0, lo=(0.0, -2.0), hi=(10.0, 5.0))
     if not ok:
         return None, float("inf")
     yhat = power_law(x, *popt)
@@ -219,9 +231,10 @@ def fit_log_linear(x, y):
     return np.array([a, b]), rss
 
 
-def aic_bic(rss: float, n: int, k: int) -> tuple[float,float]:
+def aic_bic(rss: float, n: int, k: int) -> tuple[float, float]:
     from _review27_models import information_criteria
-    return information_criteria(rss,n,k+1)
+
+    return information_criteria(rss, n, k + 1)
 
 
 # ---- data loading ----
@@ -562,31 +575,47 @@ def write_tsv(path: Path, cols: list[str], rows: list[dict]) -> None:
             w.writerow({c: r.get(c, "") for c in cols})
 
 
-def make_figure(per_anchor: list[dict], strata_agg: list[dict], krows: list[dict], out_pdf: Path) -> None:
+def make_figure(
+    per_anchor: list[dict], strata_agg: list[dict], krows: list[dict], out_pdf: Path
+) -> None:
     fig, axes = plt.subplots(2, 2, figsize=(13, 9))
 
     # Panel 1: per-anchor AIC for sat vs best-of-rest (5-color encoding)
     fam_color = {
-        "saturation": "tab:blue", "power_law": "tab:orange", "linear": "tab:green",
-        "log_linear": "tab:red", "zero": "tab:purple", "none": "tab:gray",
+        "saturation": "tab:blue",
+        "power_law": "tab:orange",
+        "linear": "tab:green",
+        "log_linear": "tab:red",
+        "zero": "tab:purple",
+        "none": "tab:gray",
     }
     axes[0, 0].set_title("(A) Best family per anchor (step axis)")
     for r in per_anchor:
         axes[0, 0].scatter(
-            [r["anchor"]], [1 if r["best_family"] == "saturation" else 0],
-            color=fam_color.get(r["best_family"], "tab:gray"), s=80, edgecolor="black", linewidth=0.4,
+            [r["anchor"]],
+            [1 if r["best_family"] == "saturation" else 0],
+            color=fam_color.get(r["best_family"], "tab:gray"),
+            s=80,
+            edgecolor="black",
+            linewidth=0.4,
         )
     axes[0, 0].set_yticks([0, 1])
     axes[0, 0].set_yticklabels(["other", "saturation"])
-    axes[0, 0].set_xticklabels(per_anchor["anchor"] if False else [r["anchor"] for r in per_anchor],
-                               rotation=70, ha="right", fontsize=7)
+    axes[0, 0].set_xticklabels(
+        per_anchor["anchor"] if False else [r["anchor"] for r in per_anchor],
+        rotation=70,
+        ha="right",
+        fontsize=7,
+    )
 
     # Panel 2: stratum-aggregate winners
     axes[0, 1].set_title("(B) Stratum majority winner (single-axis)")
     srows = sorted(strata_agg, key=lambda r: (r["stratum_axis"], -r["n_anchors"]))
     labels = [f"{r['stratum_axis']}={r['stratum_value']}" for r in srows]
     colors = [fam_color.get(r["majority_winner"], "tab:gray") for r in srows]
-    axes[0, 1].barh(range(len(srows)), [r["n_anchors"] for r in srows], color=colors, edgecolor="black")
+    axes[0, 1].barh(
+        range(len(srows)), [r["n_anchors"] for r in srows], color=colors, edgecolor="black"
+    )
     axes[0, 1].set_yticks(range(len(srows)))
     axes[0, 1].set_yticklabels(labels, fontsize=7)
     axes[0, 1].invert_yaxis()
@@ -596,10 +625,20 @@ def make_figure(per_anchor: list[dict], strata_agg: list[dict], krows: list[dict
     axes[1, 0].set_title("(C) Operational forecasting horizon")
     valid = [r for r in krows if r["status"] == "ok" and math.isfinite(r["k50"])]
     if valid:
-        axes[1, 0].scatter([r["n_steps"] for r in valid], [r["k50"] for r in valid],
-                           color="tab:blue", label="k50", s=60)
-        axes[1, 0].scatter([r["n_steps"] for r in valid], [r["k80"] for r in valid],
-                           color="tab:orange", label="k80", s=60)
+        axes[1, 0].scatter(
+            [r["n_steps"] for r in valid],
+            [r["k50"] for r in valid],
+            color="tab:blue",
+            label="k50",
+            s=60,
+        )
+        axes[1, 0].scatter(
+            [r["n_steps"] for r in valid],
+            [r["k80"] for r in valid],
+            color="tab:orange",
+            label="k80",
+            s=60,
+        )
     axes[1, 0].plot([0, 32], [0, 32], "k--", alpha=0.3, label="k = n")
     axes[1, 0].set_xlabel("trace length n")
     axes[1, 0].set_ylabel("smallest prefix k s.t. suffix R^2 >= threshold")
@@ -607,13 +646,19 @@ def make_figure(per_anchor: list[dict], strata_agg: list[dict], krows: list[dict
 
     # Panel 4: lift distribution
     axes[1, 1].set_title("(D) AIC lift of majority winner over runner-up")
-    lifts = [r["lift_winner_minus_runner"] for r in strata_agg if math.isfinite(r["lift_winner_minus_runner"])]
+    lifts = [
+        r["lift_winner_minus_runner"]
+        for r in strata_agg
+        if math.isfinite(r["lift_winner_minus_runner"])
+    ]
     if lifts:
         axes[1, 1].hist(lifts, bins=10, color="tab:gray", edgecolor="black")
     axes[1, 1].set_xlabel("AIC lift (delta_AIC > 0 means majority winner is better)")
     axes[1, 1].set_ylabel("# strata")
 
-    fig.suptitle("Pillar 1 iter81 -- compute-aware refit, arch stratification, k50/k80 horizon", fontsize=12)
+    fig.suptitle(
+        "Pillar 1 iter81 -- compute-aware refit, arch stratification, k50/k80 horizon", fontsize=12
+    )
     fig.tight_layout(rect=[0, 0, 1, 0.96])
     fig.savefig(out_pdf)
     fig.savefig(out_pdf.with_suffix(".png"), dpi=130)
@@ -627,31 +672,62 @@ def main() -> None:
     # Q1: compute-axis refit
     refit_rows = compute_axis_refit(traces)
     cols = [
-        "anchor", "axis", "n_steps", "best_family",
-        "sat_aic", "pow_aic", "lin_aic", "log_aic", "zero_aic", "sat_converged",
+        "anchor",
+        "axis",
+        "n_steps",
+        "best_family",
+        "sat_aic",
+        "pow_aic",
+        "lin_aic",
+        "log_aic",
+        "zero_aic",
+        "sat_converged",
     ]
     write_tsv(RESULTS_DIR / "scaling_law_iter81_compute_refit_v3.tsv", cols, refit_rows)
 
     # Q2: stratification
     strata_per_anchor = stratification(traces)
     s_cols = [
-        "anchor", "arch", "param_bracket", "trace_bracket", "early_bracket",
-        "best_family", "sat_aic", "pow_aic", "lin_aic", "log_aic", "zero_aic",
+        "anchor",
+        "arch",
+        "param_bracket",
+        "trace_bracket",
+        "early_bracket",
+        "best_family",
+        "sat_aic",
+        "pow_aic",
+        "lin_aic",
+        "log_aic",
+        "zero_aic",
     ]
     write_tsv(RESULTS_DIR / "scaling_law_iter81_stratum_v3.tsv", s_cols, strata_per_anchor)
     strata_agg = stratum_lift(strata_per_anchor)
     a_cols = [
-        "stratum_axis", "stratum_value", "n_anchors", "majority_winner", "majority_count",
-        "winner_mean_aic", "runner_up_family", "runner_up_mean_aic",
-        "lift_winner_minus_runner", "anchors",
+        "stratum_axis",
+        "stratum_value",
+        "n_anchors",
+        "majority_winner",
+        "majority_count",
+        "winner_mean_aic",
+        "runner_up_family",
+        "runner_up_mean_aic",
+        "lift_winner_minus_runner",
+        "anchors",
     ]
     write_tsv(RESULTS_DIR / "scaling_law_iter81_stratum_lift_v3.tsv", a_cols, strata_agg)
 
     # Q3: operational forecasting k50/k80
     krows = operational_horizon(traces)
     k_cols = [
-        "anchor", "n_steps", "k50", "k80", "best_sat_r2", "best_const_r2",
-        "delta_sat_minus_const", "k_best", "status",
+        "anchor",
+        "n_steps",
+        "k50",
+        "k80",
+        "best_sat_r2",
+        "best_const_r2",
+        "delta_sat_minus_const",
+        "k_best",
+        "status",
     ]
     write_tsv(RESULTS_DIR / "scaling_law_iter81_k50_k80_v3.tsv", k_cols, krows)
 
@@ -717,25 +793,37 @@ def main() -> None:
     make_figure(strata_per_anchor, strata_agg, krows, fig_pdf)
     # mirror to paper/figures/
     (PAPER_FIG / fig_pdf.name).write_bytes(fig_pdf.read_bytes())
-    (PAPER_FIG / "scaling_law_iter81_v3.png").write_bytes((FIG_DIR / "scaling_law_iter81_v3.png").read_bytes())
+    (PAPER_FIG / "scaling_law_iter81_v3.png").write_bytes(
+        (FIG_DIR / "scaling_law_iter81_v3.png").read_bytes()
+    )
 
     # console summary
     print("=== iter81 summary ===")
     print(f"anchors: {len(traces)}")
     print(f"compute-axis invariance: {consistent}/12 step<->compute winner agreement")
     print(f"strata aggregated: {len(strata_agg)}")
-    print(f"k50/k80 computed for {sum(1 for r in krows if r['status']=='ok')}/{len(krows)} anchors")
+    print(
+        f"k50/k80 computed for {sum(1 for r in krows if r['status'] == 'ok')}/{len(krows)} anchors"
+    )
     for r in pred_rows:
         print(f"  {r['prediction_id']}: {r['pass_fail']} (observed={r['observed']})")
 
 
 def _stratum_lift_summary(rows: list[dict]) -> str:
-    n_lift = sum(1 for r in rows if math.isfinite(r["lift_winner_minus_runner"]) and r["lift_winner_minus_runner"] >= 2.0)
+    n_lift = sum(
+        1
+        for r in rows
+        if math.isfinite(r["lift_winner_minus_runner"]) and r["lift_winner_minus_runner"] >= 2.0
+    )
     return f"{n_lift}/{len(rows)} strata with lift>=2.0"
 
 
 def _stratum_lift_pass(rows: list[dict]) -> str:
-    n_lift = sum(1 for r in rows if math.isfinite(r["lift_winner_minus_runner"]) and r["lift_winner_minus_runner"] >= 2.0)
+    n_lift = sum(
+        1
+        for r in rows
+        if math.isfinite(r["lift_winner_minus_runner"]) and r["lift_winner_minus_runner"] >= 2.0
+    )
     return "PASS" if n_lift >= 6 else "FAIL"
 
 
@@ -771,7 +859,9 @@ def _delta_pass(rows: list[dict]) -> str:
 
 if __name__ == "__main__":
     from _review27_models import configure_paths
+
     configure_paths(globals())
     main()
     from _review27_models import write_manifest
+
     write_manifest(__file__, TRACE_DIR, RESULTS_DIR)

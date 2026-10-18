@@ -41,7 +41,10 @@ def _require_mapping(payload: Mapping[str, Any] | None, label: str) -> Mapping[s
 
 def _require_hex(value: Any, pattern: re.Pattern[str], label: str) -> str:
     _require(isinstance(value, str), f"{label} must be a string")
-    _require(pattern.fullmatch(value) is not None, f"{label} must be hex of length {40 if pattern is HEX40 else 64}")
+    _require(
+        pattern.fullmatch(value) is not None,
+        f"{label} must be hex of length {40 if pattern is HEX40 else 64}",
+    )
     return value
 
 
@@ -53,7 +56,9 @@ def _require_receipt_payload(value: Any, label: str) -> str:
 def _validate_task_hashes(task_hashes: Any, label: str) -> list[str]:
     _require(isinstance(task_hashes, list), f"{label}.task_hashes must be a list")
     _require(len(task_hashes) > 0, f"{label}.task_hashes cannot be empty")
-    _require(len(task_hashes) == len(set(task_hashes)), f"{label}.task_hashes must contain unique hashes")
+    _require(
+        len(task_hashes) == len(set(task_hashes)), f"{label}.task_hashes must contain unique hashes"
+    )
     normalized = []
     for index, value in enumerate(task_hashes):
         _require_hex(value, HEX64, f"{label}.task_hashes[{index}]")
@@ -91,12 +96,19 @@ def validate_openreward_contract(payload: Mapping[str, Any]) -> dict[str, Any]:
 
     train_hashes = set(train["task_hashes"])
     eval_hashes = set(games_eval["task_hashes"])
-    _require(train_hashes.isdisjoint(eval_hashes), "task hashes between train and primary_eval must be non-overlapping")
+    _require(
+        train_hashes.isdisjoint(eval_hashes),
+        "task hashes between train and primary_eval must be non-overlapping",
+    )
 
     _require(contract.get("stateful_trajectory") is True, "stateful_trajectory must be true")
 
-    state_receipt = _require_receipt_payload(contract.get("state_verifier_receipt"), "state_verifier_receipt")
-    artifact_receipt = _require_receipt_payload(contract.get("artifact_verifier_receipt"), "artifact_verifier_receipt")
+    state_receipt = _require_receipt_payload(
+        contract.get("state_verifier_receipt"), "state_verifier_receipt"
+    )
+    artifact_receipt = _require_receipt_payload(
+        contract.get("artifact_verifier_receipt"), "artifact_verifier_receipt"
+    )
 
     decontam_hash = _require_receipt_payload(contract.get("decontamination"), "decontamination")
     container_hash = _require_receipt_payload(contract.get("container"), "container")

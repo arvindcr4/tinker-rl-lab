@@ -41,6 +41,7 @@ Outputs (under platform_hybrid/experiments/results/p5p8/):
 
 Cost ratios: c in {1, 10, 100, 1000, 10000} (extends iter-188's {1,10,100,1000}).
 """
+
 from __future__ import annotations
 import json
 from pathlib import Path
@@ -48,9 +49,10 @@ from pathlib import Path
 import numpy as np
 
 import sys
+
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
-from _p8_common import (  # noqa: E402
+from _paths import REPO_ROOT
+from _p8_common import (
     RAW20,
     AGG4,
     ALL24,
@@ -61,6 +63,7 @@ from _p8_common import (  # noqa: E402
     fit_xgb,
     paired_bootstrap_ci,
 )
+
 ROOT = REPO_ROOT
 RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8/corrected-review21-v2"
 RES.mkdir(parents=True, exist_ok=True)
@@ -108,7 +111,7 @@ def min_cost_on_mask(s, y, mask, c):
     best_cost = float("inf")
     best_th = float("nan")
     for t in th:
-        flagged = (s_sub >= t)
+        flagged = s_sub >= t
         tp = int((flagged & (y_sub == 1)).sum())
         fp = int((flagged & (y_sub == 0)).sum())
         fn = n_pos - tp
@@ -127,8 +130,8 @@ def main():
     deciles, qs = assign_deciles(v_mean_te, N_DECILES)
     n_per_decile = [int((deciles == i).sum()) for i in range(N_DECILES)]
     pos_per_decile = [int(((deciles == i) & (yte == 1)).sum()) for i in range(N_DECILES)]
-    print(f"  train: {Xtr.shape} pos={int((ytr==1).sum())}", flush=True)
-    print(f"  test:  {Xte.shape} pos={int((yte==1).sum())}", flush=True)
+    print(f"  train: {Xtr.shape} pos={int((ytr == 1).sum())}", flush=True)
+    print(f"  test:  {Xte.shape} pos={int((yte == 1).sum())}", flush=True)
     for i in range(N_DECILES):
         print(f"  decile {i}: n={n_per_decile[i]} pos={pos_per_decile[i]}", flush=True)
 
@@ -141,10 +144,8 @@ def main():
 
     print("Computing per-(decile, fset, c, seed) min-cost...", flush=True)
     # minc[decile][c][fset][seed] = cost
-    minc = {d: {c: {f: {} for f in FEATURE_SETS} for c in COST_RATIOS}
-            for d in range(N_DECILES)}
-    opt_th = {d: {c: {f: {} for f in FEATURE_SETS} for c in COST_RATIOS}
-              for d in range(N_DECILES)}
+    minc = {d: {c: {f: {} for f in FEATURE_SETS} for c in COST_RATIOS} for d in range(N_DECILES)}
+    opt_th = {d: {c: {f: {} for f in FEATURE_SETS} for c in COST_RATIOS} for d in range(N_DECILES)}
     for d in range(N_DECILES):
         mask_d = deciles == d
         for c in COST_RATIOS:
@@ -163,10 +164,12 @@ def main():
             for fset in FEATURE_SETS:
                 for c in COST_RATIOS:
                     for sd in SEEDS:
-                        f.write(f"{d}\t{fset}\t{c}\t{sd}\t"
-                                f"{n_per_decile[d]}\t{pos_per_decile[d]}\t"
-                                f"{minc[d][c][fset][sd]:.6f}\t"
-                                f"{opt_th[d][c][fset][sd]:.4f}\n")
+                        f.write(
+                            f"{d}\t{fset}\t{c}\t{sd}\t"
+                            f"{n_per_decile[d]}\t{pos_per_decile[d]}\t"
+                            f"{minc[d][c][fset][sd]:.6f}\t"
+                            f"{opt_th[d][c][fset][sd]:.4f}\n"
+                        )
 
     # ---- Per-(decile, c) gap with paired bootstrap CI ----
     # Contrast: 24full-20raw, 4sensor-20raw
@@ -175,36 +178,58 @@ def main():
         for c in COST_RATIOS:
             for contrast in ["24full-20raw", "4sensor-20raw"]:
                 target = contrast.split("-")[0]
-                diffs = np.array([
-                    minc[d][c][target][sd] - minc[d][c]["20raw"][sd]
-                    for sd in SEEDS
-                ])
+                diffs = np.array([minc[d][c][target][sd] - minc[d][c]["20raw"][sd] for sd in SEEDS])
                 # Filter out NaN diffs (empty decile)
                 diffs = diffs[~np.isnan(diffs)]
                 if len(diffs) == 0:
                     continue
                 ci = paired_bootstrap_ci(diffs, N_BOOT, seed=20260706 + d * 100 + c)
-                mean_target = float(np.mean([minc[d][c][target][sd] for sd in SEEDS
-                                             if not np.isnan(minc[d][c][target][sd])]))
-                mean_baseline = float(np.mean([minc[d][c]["20raw"][sd] for sd in SEEDS
-                                               if not np.isnan(minc[d][c]["20raw"][sd])]))
-                gap_rows.append({
-                    "decile": d, "cost_ratio": c, "contrast": contrast,
-                    "mean_gap": ci["mean"], "lo": ci["lo"], "hi": ci["hi"],
-                    "mean_target": mean_target, "mean_20raw": mean_baseline,
-                    "ci_negative": bool(ci["hi"] < 0),
-                    "ci_positive": bool(ci["lo"] > 0),
-                })
+                mean_target = float(
+                    np.mean(
+                        [
+                            minc[d][c][target][sd]
+                            for sd in SEEDS
+                            if not np.isnan(minc[d][c][target][sd])
+                        ]
+                    )
+                )
+                mean_baseline = float(
+                    np.mean(
+                        [
+                            minc[d][c]["20raw"][sd]
+                            for sd in SEEDS
+                            if not np.isnan(minc[d][c]["20raw"][sd])
+                        ]
+                    )
+                )
+                gap_rows.append(
+                    {
+                        "decile": d,
+                        "cost_ratio": c,
+                        "contrast": contrast,
+                        "mean_gap": ci["mean"],
+                        "lo": ci["lo"],
+                        "hi": ci["hi"],
+                        "mean_target": mean_target,
+                        "mean_20raw": mean_baseline,
+                        "ci_negative": bool(ci["hi"] < 0),
+                        "ci_positive": bool(ci["lo"] > 0),
+                    }
+                )
 
     out_gap = RES / "p8_iter204_decile_gap.tsv"
     with out_gap.open("w") as f:
-        f.write("decile\tcost_ratio\tcontrast\tmean_gap\tlo\thi\t"
-                "mean_target\tmean_20raw\tci_negative\tci_positive\n")
+        f.write(
+            "decile\tcost_ratio\tcontrast\tmean_gap\tlo\thi\t"
+            "mean_target\tmean_20raw\tci_negative\tci_positive\n"
+        )
         for r in gap_rows:
-            f.write(f"{r['decile']}\t{r['cost_ratio']}\t{r['contrast']}\t"
-                    f"{r['mean_gap']:.6f}\t{r['lo']:.6f}\t{r['hi']:.6f}\t"
-                    f"{r['mean_target']:.6f}\t{r['mean_20raw']:.6f}\t"
-                    f"{int(r['ci_negative'])}\t{int(r['ci_positive'])}\n")
+            f.write(
+                f"{r['decile']}\t{r['cost_ratio']}\t{r['contrast']}\t"
+                f"{r['mean_gap']:.6f}\t{r['lo']:.6f}\t{r['hi']:.6f}\t"
+                f"{r['mean_target']:.6f}\t{r['mean_20raw']:.6f}\t"
+                f"{int(r['ci_negative'])}\t{int(r['ci_positive'])}\n"
+            )
 
     # ---- Per-(decile, c) attribution: each decile's share of total negative lift ----
     # At each c, compute 24full-20raw gap per decile, sum positive contributions
@@ -213,35 +238,47 @@ def main():
     for c in COST_RATIOS:
         per_decile_lift = []
         for d in range(N_DECILES):
-            g = next((r for r in gap_rows
-                      if r["decile"] == d and r["cost_ratio"] == c
-                      and r["contrast"] == "24full-20raw"), None)
-            per_decile_lift.append({
-                "decile": d,
-                "gap": g["mean_gap"] if g else np.nan,
-            })
+            g = next(
+                (
+                    r
+                    for r in gap_rows
+                    if r["decile"] == d and r["cost_ratio"] == c and r["contrast"] == "24full-20raw"
+                ),
+                None,
+            )
+            per_decile_lift.append(
+                {
+                    "decile": d,
+                    "gap": g["mean_gap"] if g else np.nan,
+                }
+            )
         # Share of total negative gap (cost reduction = -gap, larger is better)
         gaps = np.array([x["gap"] for x in per_decile_lift])
         valid = ~np.isnan(gaps)
         if valid.sum() == 0:
             continue
-        total = float(np.nansum([n_per_decile[x["decile"]] * max(-x["gap"], 0) for x in per_decile_lift]))  # negative if 24full beats 20raw overall
+        total = float(
+            np.nansum([n_per_decile[x["decile"]] * max(-x["gap"], 0) for x in per_decile_lift])
+        )  # negative if 24full beats 20raw overall
         for x in per_decile_lift:
             if np.isnan(x["gap"]) or total == 0:
                 share = np.nan
             else:
-                share = float(n_per_decile[x["decile"]] * max(-x["gap"],0) / total)
-            attrib_rows.append({
-                "decile": x["decile"], "cost_ratio": c,
-                "gap": x["gap"], "share": share,
-            })
+                share = float(n_per_decile[x["decile"]] * max(-x["gap"], 0) / total)
+            attrib_rows.append(
+                {
+                    "decile": x["decile"],
+                    "cost_ratio": c,
+                    "gap": x["gap"],
+                    "share": share,
+                }
+            )
 
     out_attr = RES / "p8_iter204_decile_attribution.tsv"
     with out_attr.open("w") as f:
         f.write("decile\tcost_ratio\tgap\tshare\n")
         for r in attrib_rows:
-            f.write(f"{r['decile']}\t{r['cost_ratio']}\t"
-                    f"{r['gap']:.6f}\t{r['share']:.6f}\n")
+            f.write(f"{r['decile']}\t{r['cost_ratio']}\t{r['gap']:.6f}\t{r['share']:.6f}\n")
 
     # ---- Hypotheses ----
     def gap_for(contrast, decile, c):
@@ -266,7 +303,7 @@ def main():
                 best_cost = float("inf")
                 best_th = float("nan")
                 for t in th_grid:
-                    flagged = (s >= t)
+                    flagged = s >= t
                     tp = int((flagged & (yte == 1)).sum())
                     fp = int((flagged & (yte == 0)).sum())
                     fn = n_pos - tp
@@ -278,10 +315,9 @@ def main():
                 global_th[c][fset][sd] = best_th
 
     # Global aggregate 24full-20raw gap at c=100 (5-seed paired bootstrap CI)
-    global_diffs_c100 = np.array([
-        global_minc[100]["24full"][sd] - global_minc[100]["20raw"][sd]
-        for sd in SEEDS
-    ])
+    global_diffs_c100 = np.array(
+        [global_minc[100]["24full"][sd] - global_minc[100]["20raw"][sd] for sd in SEEDS]
+    )
     global_ci_c100 = paired_bootstrap_ci(global_diffs_c100, N_BOOT, seed=20260706 + 999)
     global_gap_c100 = global_ci_c100["mean"]
 
@@ -305,11 +341,14 @@ def main():
     # H2: Per-decile 24full-20raw gap at c=100 is NON-MONOTONE in decile index:
     # at least one decile has strictly stronger (more negative) gap than the
     # aggregate AND at least one has strictly weaker.
-    gaps_c100 = np.array([
-        gap_for("24full-20raw", d, 100)["mean_gap"] if gap_for("24full-20raw", d, 100)
-        else np.nan
-        for d in range(N_DECILES)
-    ])
+    gaps_c100 = np.array(
+        [
+            gap_for("24full-20raw", d, 100)["mean_gap"]
+            if gap_for("24full-20raw", d, 100)
+            else np.nan
+            for d in range(N_DECILES)
+        ]
+    )
     valid_g = gaps_c100[~np.isnan(gaps_c100)]
     has_stronger = bool(np.any(np.diff(valid_g) < 0))
     has_weaker = bool(np.any(np.diff(valid_g) > 0))
@@ -317,11 +356,14 @@ def main():
 
     # H3: Per-decile lift attribution at c=10000 — top-1 decile (by most-negative
     # gap) accounts for >= 30% of total positive lift share.
-    gaps_c10000 = np.array([
-        gap_for("24full-20raw", d, 10000)["mean_gap"] if gap_for("24full-20raw", d, 10000)
-        else np.nan
-        for d in range(N_DECILES)
-    ])
+    gaps_c10000 = np.array(
+        [
+            gap_for("24full-20raw", d, 10000)["mean_gap"]
+            if gap_for("24full-20raw", d, 10000)
+            else np.nan
+            for d in range(N_DECILES)
+        ]
+    )
     valid_c10k = gaps_c10000[~np.isnan(gaps_c10000)]
     total_c10k = float(np.nansum(valid_c10k))
     if total_c10k < 0:  # only meaningful if 24full beats 20raw overall
@@ -354,8 +396,10 @@ def main():
 
     summary = {
         "iter": 204,
-"vein": ("P8 per-V_mean-decile cost-asymmetric savings (extends iter-192 "
-                 "+ iter-188 with 5 cost ratios and 10 V_mean deciles on the same pool)"),
+        "vein": (
+            "P8 per-V_mean-decile cost-asymmetric savings (extends iter-192 "
+            "+ iter-188 with 5 cost ratios and 10 V_mean deciles on the same pool)"
+        ),
         "n_fsets": len(FEATURE_SETS),
         "n_seeds": len(SEEDS),
         "n_deciles": N_DECILES,

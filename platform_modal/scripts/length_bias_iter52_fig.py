@@ -10,10 +10,12 @@ Reads:
   platform_hybrid/experiments/results/length_bias_iter52_grpo_vs_drgrpo.tsv
   platform_hybrid/experiments/results/length_bias_iter52_above_minus_below.tsv
 """
+
 from __future__ import annotations
 from pathlib import Path
 
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from _analysis_common import read_tsv
@@ -57,8 +59,7 @@ def main() -> None:
     x = list(range(len(regime_labels)))
     width = 0.36
     colors = ["#4C72B0", "#DD8452"]
-    b1 = ax.bar([xi - width / 2 for xi in x], grpo_vals, width,
-                color=colors[0], label="GRPO")
+    b1 = ax.bar([xi - width / 2 for xi in x], grpo_vals, width, color=colors[0], label="GRPO")
     below_diff = float(g_below["mean_diff"])
     below_lo = float(g_below["ci_lo"])
     below_hi = float(g_below["ci_hi"])
@@ -80,41 +81,60 @@ def main() -> None:
         ci_hi = float(d_row["ci_hi"])
         drgrpo_lo = grpo_mean + ci_lo
         drgrpo_hi = grpo_mean + ci_hi
-        return (max(0.0, drgrpo_mean - drgrpo_lo),
-                max(0.0, drgrpo_hi - drgrpo_mean))
+        return (max(0.0, drgrpo_mean - drgrpo_lo), max(0.0, drgrpo_hi - drgrpo_mean))
 
     # GRPO: no per-bin CI available; use a small visual marker of seed sd via bars.
     # We compute SE across the n_pairs and use that as the GRPO errorbar.
     # For simplicity we set GRPO error to zero (whisker omitted) and use the
     # CI on Dr.GRPO only (the meaningful uncertainty).
-    b2 = ax.bar([xi + width / 2 for xi in x], drgrpo_vals, width,
-                color=colors[1], label="Dr.GRPO",
-                yerr=[errs_d_below[0] + errs_d_above[0],
-                      errs_d_below[1] + errs_d_above[1]],
-                capsize=5)
+    b2 = ax.bar(
+        [xi + width / 2 for xi in x],
+        drgrpo_vals,
+        width,
+        color=colors[1],
+        label="Dr.GRPO",
+        yerr=[errs_d_below[0] + errs_d_above[0], errs_d_below[1] + errs_d_above[1]],
+        capsize=5,
+    )
 
     ax.axhline(0.0, color="k", linewidth=0.5)
     ax.set_xticks(x)
     ax.set_xticklabels(regime_labels)
     ax.set_ylabel("dL/dt (tokens per step)\nnegative = compression")
     ax.set_title(
-        "gsm8k_cot: regime-conditional length drift\n"
-        "Dr.GRPO compresses ~2x slower in BOTH regimes"
+        "gsm8k_cot: regime-conditional length drift\nDr.GRPO compresses ~2x slower in BOTH regimes"
     )
     ax.legend(loc="lower left", fontsize=9, framealpha=0.9)
 
     for i, v in enumerate(grpo_vals):
-        ax.text(i - width / 2, v - 0.06, f"{v:+.3f}", ha="center",
-                fontsize=9, color="white" if v < -0.3 else "black")
+        ax.text(
+            i - width / 2,
+            v - 0.06,
+            f"{v:+.3f}",
+            ha="center",
+            fontsize=9,
+            color="white" if v < -0.3 else "black",
+        )
     for i, v in enumerate(drgrpo_vals):
-        ax.text(i + width / 2, v + 0.02, f"{v:+.3f}", ha="center",
-                fontsize=9, color="black")
+        ax.text(i + width / 2, v + 0.02, f"{v:+.3f}", ha="center", fontsize=9, color="black")
 
     # annotate diffs
-    ax.text(0, -0.95, f"diff={float(g_below['mean_diff']):+.3f}\n95% CI [{float(g_below['ci_lo']):+.3f},{float(g_below['ci_hi']):+.3f}]",
-            ha="center", fontsize=8, color="#DD8452")
-    ax.text(1, -0.95, f"diff={float(g_above['mean_diff']):+.3f}\n95% CI [{float(g_above['ci_lo']):+.3f},{float(g_above['ci_hi']):+.3f}]",
-            ha="center", fontsize=8, color="#DD8452")
+    ax.text(
+        0,
+        -0.95,
+        f"diff={float(g_below['mean_diff']):+.3f}\n95% CI [{float(g_below['ci_lo']):+.3f},{float(g_below['ci_hi']):+.3f}]",
+        ha="center",
+        fontsize=8,
+        color="#DD8452",
+    )
+    ax.text(
+        1,
+        -0.95,
+        f"diff={float(g_above['mean_diff']):+.3f}\n95% CI [{float(g_above['ci_lo']):+.3f},{float(g_above['ci_hi']):+.3f}]",
+        ha="center",
+        fontsize=8,
+        color="#DD8452",
+    )
 
     # ---- Panel B: cross-regime gradient (above_minus_below) per (task, algo)
     ax = axes[1]
@@ -134,10 +154,24 @@ def main() -> None:
         grpo_err.append(float(g_row["sd"]) if g_row else 0.0)
         drgrpo_err.append(float(d_row["sd"]) if d_row else 0.0)
 
-    ax.bar([xi - width / 2 for xi in x], grpo_hl, width, color=colors[0],
-           label="GRPO", yerr=grpo_err, capsize=5)
-    ax.bar([xi + width / 2 for xi in x], drgrpo_hl, width, color=colors[1],
-           label="Dr.GRPO", yerr=drgrpo_err, capsize=5)
+    ax.bar(
+        [xi - width / 2 for xi in x],
+        grpo_hl,
+        width,
+        color=colors[0],
+        label="GRPO",
+        yerr=grpo_err,
+        capsize=5,
+    )
+    ax.bar(
+        [xi + width / 2 for xi in x],
+        drgrpo_hl,
+        width,
+        color=colors[1],
+        label="Dr.GRPO",
+        yerr=drgrpo_err,
+        capsize=5,
+    )
     ax.axhline(0.0, color="k", linewidth=0.5)
     ax.set_xticks(x)
     ax.set_xticklabels(task_labels, fontsize=9)
@@ -147,14 +181,17 @@ def main() -> None:
     )
     ax.legend(loc="upper right", fontsize=9, framealpha=0.9)
     for i, v in enumerate(grpo_hl):
-        ax.text(i - width / 2, v + (0.01 if v >= 0 else -0.03), f"{v:+.3f}",
-                ha="center", fontsize=9)
+        ax.text(
+            i - width / 2, v + (0.01 if v >= 0 else -0.03), f"{v:+.3f}", ha="center", fontsize=9
+        )
     for i, v in enumerate(drgrpo_hl):
-        ax.text(i + width / 2, v + (0.01 if v >= 0 else -0.03), f"{v:+.3f}",
-                ha="center", fontsize=9)
+        ax.text(
+            i + width / 2, v + (0.01 if v >= 0 else -0.03), f"{v:+.3f}", ha="center", fontsize=9
+        )
 
-    fig.suptitle("Iter 52 — Regime-Conditional Length-Bias Decomposition (Dr.GRPO vs GRPO)",
-                 fontsize=11)
+    fig.suptitle(
+        "Iter 52 — Regime-Conditional Length-Bias Decomposition (Dr.GRPO vs GRPO)", fontsize=11
+    )
     fig.tight_layout(rect=(0, 0, 1, 0.94))
     fig.savefig(OUT_PDF)
     print(f"wrote {OUT_PDF}")

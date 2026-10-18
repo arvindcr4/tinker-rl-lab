@@ -1,10 +1,16 @@
 """Statistical primitives and receipt-only empirical analysis. Legacy paper constants are unverified historical references. CLI: compute_statistics.py receipts.json hypotheses.json --out new_analysis.json. Trajectory summaries are descriptive, never independent replications."""
+
 from __future__ import annotations
 
 import sys as _sys
 from pathlib import Path as _Path
-_sys.path.insert(0, str(next(p for p in _Path(__file__).resolve().parents if (p / "platform_hybrid").is_dir())))
-from platform_hybrid.experiments.research_contracts import EvidenceUnavailable, measured_observations, PROTOCOL_VERSION
+
+_sys.path.insert(
+    0, str(next(p for p in _Path(__file__).resolve().parents if (p / "platform_hybrid").is_dir()))
+)
+from platform_hybrid.experiments.research_contracts import (
+    EvidenceUnavailable,
+)
 
 
 import hashlib
@@ -13,9 +19,9 @@ import math
 import os
 import sys
 import warnings
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Callable, Dict, Iterable, List, Optional, Sequence, Tuple
+from typing import Dict, List, Sequence, Tuple
 
 import numpy as np
 from scipy import stats
@@ -300,10 +306,10 @@ def load_cross_library_seeds() -> Dict[str, List[float]]:
         return per_lib
     master = json.load(MASTER_PATH.open())
     name_map = {
-        "trl_grpo_math_":    "TRL (GRPO)",
-        "sb3_ppo_math_":     "SB3 (PPO)",
+        "trl_grpo_math_": "TRL (GRPO)",
+        "sb3_ppo_math_": "SB3 (PPO)",
         "cleanrl_ppo_math_": "CleanRL (PPO)",
-        "tianshou_ppo_math_":"Tianshou (PPO)",
+        "tianshou_ppo_math_": "Tianshou (PPO)",
     }
     for rec in master.get("experiments", []):
         if not isinstance(rec, dict):
@@ -324,31 +330,31 @@ def load_cross_library_seeds() -> Dict[str, List[float]]:
 # ──────────────────────────────────────────────────────────────────────────────
 # Table 2 (Cross-library Arithmetic) — 5 seeds each
 CROSS_LIBRARY = {
-    "TRL (GRPO)":       {"mean": 0.734, "se": 0.028, "n": 5},
-    "Tinker (GRPO)":    {"mean": 0.999, "se": 0.001, "n": 5},
-    "SB3 (PPO)":        {"mean": 0.010, "se": 0.002, "n": 5},
-    "CleanRL (PPO)":    {"mean": 0.009, "se": 0.001, "n": 5},
-    "Tianshou (PPO)":   {"mean": 0.006, "se": 0.002, "n": 5},
+    "TRL (GRPO)": {"mean": 0.734, "se": 0.028, "n": 5},
+    "Tinker (GRPO)": {"mean": 0.999, "se": 0.001, "n": 5},
+    "SB3 (PPO)": {"mean": 0.010, "se": 0.002, "n": 5},
+    "CleanRL (PPO)": {"mean": 0.009, "se": 0.001, "n": 5},
+    "Tianshou (PPO)": {"mean": 0.006, "se": 0.002, "n": 5},
 }
 CROSS_LIBRARY_REFERENCE = "TRL (GRPO)"  # Bonferroni family: each other library vs TRL
 
 # TRL baseline cross-seed accuracies (Qwen2.5-0.5B, 5 seeds, GSM8K, 125 steps)
 TRL_SEEDS = {
     "accuracies": [0.735, 0.810, 0.620, 0.740, 0.765, 0.734, 0.734, 0.734, 0.734, 0.734],
-    "seeds":      [42, 123, 456, 789, 1024, 2048, 4096, 8192, 16384, 32768],
-    "model":      "Qwen2.5-0.5B",
-    "gpu":        "NVIDIA L4",
-    "steps":      125,
+    "seeds": [42, 123, 456, 789, 1024, 2048, 4096, 8192, 16384, 32768],
+    "model": "Qwen2.5-0.5B",
+    "gpu": "NVIDIA L4",
+    "steps": 125,
 }
 
 # Table 3 (GSM8K scaling): baseline (deterministic eval) vs post-RL (5 seeds, mean ± SE)
 GSM8K_SCALING = {
-    "Qwen3-0.6B":          {"baseline": 59.6, "post_mean": 73.5, "post_se": 1.2, "n": 10},
-    "Llama-3.2-1B":        {"baseline": 44.4, "post_mean": 56.8, "post_se": 1.4, "n": 10},
-    "Llama-3.2-3B":        {"baseline": 77.7, "post_mean": 85.3, "post_se": 0.9, "n": 10},
-    "Qwen3-4B":            {"baseline": 87.8, "post_mean": 93.1, "post_se": 0.7, "n": 10},
-    "Qwen3-8B":            {"baseline": 89.8, "post_mean": 94.2, "post_se": 0.5, "n": 10},
-    "Qwen3-14B":           {"baseline": 92.5, "post_mean": 95.8, "post_se": 0.4, "n": 10},
+    "Qwen3-0.6B": {"baseline": 59.6, "post_mean": 73.5, "post_se": 1.2, "n": 10},
+    "Llama-3.2-1B": {"baseline": 44.4, "post_mean": 56.8, "post_se": 1.4, "n": 10},
+    "Llama-3.2-3B": {"baseline": 77.7, "post_mean": 85.3, "post_se": 0.9, "n": 10},
+    "Qwen3-4B": {"baseline": 87.8, "post_mean": 93.1, "post_se": 0.7, "n": 10},
+    "Qwen3-8B": {"baseline": 89.8, "post_mean": 94.2, "post_se": 0.5, "n": 10},
+    "Qwen3-14B": {"baseline": 92.5, "post_mean": 95.8, "post_se": 0.4, "n": 10},
     "Qwen3-30B-A3B (MoE)": {"baseline": 91.8, "post_mean": 95.4, "post_se": 0.5, "n": 10},
 }
 
@@ -382,29 +388,45 @@ def table1_main_results(exps):
             values = np.asarray(trace, dtype=float)
             if not np.all(np.isfinite(values)):
                 raise EvidenceUnavailable("Nonfinite trajectory observation")
-            rows.append(dict(experiment=name, n_logged_steps=len(values),
-                full_mean=float(values.mean()), last10_mean=float(values[-10:].mean()),
-                analysis_unit="single_trajectory", inference="descriptive_only",
-                claim_eligible=False, ci95=None))
+            rows.append(
+                dict(
+                    experiment=name,
+                    n_logged_steps=len(values),
+                    full_mean=float(values.mean()),
+                    last10_mean=float(values[-10:].mean()),
+                    analysis_unit="single_trajectory",
+                    inference="descriptive_only",
+                    claim_eligible=False,
+                    ci95=None,
+                )
+            )
     if not rows:
         raise EvidenceUnavailable("No observed traces")
     return rows, []
 
 
 def table2_cross_library(real_seeds=None):
-    raise EvidenceUnavailable("Legacy table2_cross_library lacks independent measured run receipts. Use analyze_measured_runs; aggregate constants and trajectory steps are not replications.")
+    raise EvidenceUnavailable(
+        "Legacy table2_cross_library lacks independent measured run receipts. Use analyze_measured_runs; aggregate constants and trajectory steps are not replications."
+    )
 
 
 def table3_gsm8k_scaling():
-    raise EvidenceUnavailable("Legacy table3_gsm8k_scaling lacks independent measured run receipts. Use analyze_measured_runs; aggregate constants and trajectory steps are not replications.")
+    raise EvidenceUnavailable(
+        "Legacy table3_gsm8k_scaling lacks independent measured run receipts. Use analyze_measured_runs; aggregate constants and trajectory steps are not replications."
+    )
 
 
 def table4_ppo_vs_grpo(exps):
-    raise EvidenceUnavailable("Legacy table4_ppo_vs_grpo lacks independent measured run receipts. Use analyze_measured_runs; aggregate constants and trajectory steps are not replications.")
+    raise EvidenceUnavailable(
+        "Legacy table4_ppo_vs_grpo lacks independent measured run receipts. Use analyze_measured_runs; aggregate constants and trajectory steps are not replications."
+    )
 
 
 def trl_cross_seed_summary():
-    raise EvidenceUnavailable("Legacy trl_cross_seed_summary lacks independent measured run receipts. Use analyze_measured_runs; aggregate constants and trajectory steps are not replications.")
+    raise EvidenceUnavailable(
+        "Legacy trl_cross_seed_summary lacks independent measured run receipts. Use analyze_measured_runs; aggregate constants and trajectory steps are not replications."
+    )
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -418,7 +440,7 @@ def apply_family_wide(comps: List[Dict]) -> List[Dict]:
     raw_ps = [p for _, p in finite]
     bonf_all = bonferroni(raw_ps)
     bh_all = benjamini_hochberg(raw_ps)
-    for (i, _), bp, bh_p in zip(finite, bonf_all, bh_all):
+    for (i, _), bp, bh_p in zip(finite, bonf_all, bh_all, strict=False):
         comps[i]["p_bonf_global"] = bp
         comps[i]["p_bh_global"] = bh_p
     for c in comps:
@@ -431,7 +453,9 @@ def apply_family_wide(comps: List[Dict]) -> List[Dict]:
 # Markdown report
 # ──────────────────────────────────────────────────────────────────────────────
 def render_markdown(t1_rows, t2_rows, t3_rows, t4_rows, trl, comps):
-    raise EvidenceUnavailable("Legacy prose renderer disabled: use validated measured_analysis payload and render_stat_rigor_tex.render")
+    raise EvidenceUnavailable(
+        "Legacy prose renderer disabled: use validated measured_analysis payload and render_stat_rigor_tex.render"
+    )
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -439,6 +463,7 @@ def render_markdown(t1_rows, t2_rows, t3_rows, t4_rows, trl, comps):
 # ──────────────────────────────────────────────────────────────────────────────
 def main() -> int:
     from platform_hybrid.experiments.measured_analysis import main as measured_main
+
     measured_main()
     return 0
 

@@ -41,9 +41,9 @@ Outputs:
     (N2 panel SUPPORTS rate vs zvf130 panel SUPPORTS rate; explained)
   - platform_hybrid/experiments/results/p5p8/p6_iter142_summary.json
 """
+
 import json
 import pathlib
-import statistics
 from collections import Counter, defaultdict
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent.parent
@@ -57,7 +57,7 @@ OUT.mkdir(parents=True, exist_ok=True)
 def _read_tsv(path):
     with path.open() as f:
         header = f.readline().rstrip("\n").split("\t")
-        rows = [dict(zip(header, line.rstrip("\n").split("\t"))) for line in f]
+        rows = [dict(zip(header, line.rstrip("\n").split("\t"), strict=False)) for line in f]
     return rows
 
 
@@ -135,18 +135,20 @@ def main():
     for did, rec in sorted(deltas.items()):
         cvs = rec.get("claim_validation") or []
         for cv in cvs:
-            per_rows.append({
-                "delta_id": did,
-                "metric": cv.get("metric", ""),
-                "panel": cv.get("panel", ""),
-                "predicted_sign": cv.get("predicted_sign") or "",
-                "observed_delta": cv.get("observed_delta"),
-                "ci_low": cv.get("ci_low"),
-                "ci_high": cv.get("ci_high"),
-                "significant": cv.get("significant"),
-                "verdict": cv.get("verdict", ""),
-                "tier": tier_map.get(did, "?"),
-            })
+            per_rows.append(
+                {
+                    "delta_id": did,
+                    "metric": cv.get("metric", ""),
+                    "panel": cv.get("panel", ""),
+                    "predicted_sign": cv.get("predicted_sign") or "",
+                    "observed_delta": cv.get("observed_delta"),
+                    "ci_low": cv.get("ci_low"),
+                    "ci_high": cv.get("ci_high"),
+                    "significant": cv.get("significant"),
+                    "verdict": cv.get("verdict", ""),
+                    "tier": tier_map.get(did, "?"),
+                }
+            )
 
     # ----- aggregate: tier × verdict -----
     tv = defaultdict(Counter)
@@ -157,13 +159,15 @@ def main():
         c = tv.get(tier, Counter())
         total = sum(c.values())
         for v in ("SUPPORTS", "NEUTRAL", "CONTRADICTS", "UNCLAIMED"):
-            tier_rows.append({
-                "tier": tier,
-                "verdict": v,
-                "n": c.get(v, 0),
-                "pct": round(100 * c.get(v, 0) / total, 2) if total else 0.0,
-                "tier_total_n": total,
-            })
+            tier_rows.append(
+                {
+                    "tier": tier,
+                    "verdict": v,
+                    "n": c.get(v, 0),
+                    "pct": round(100 * c.get(v, 0) / total, 2) if total else 0.0,
+                    "tier_total_n": total,
+                }
+            )
 
     # ----- aggregate: metric × verdict -----
     mv = defaultdict(Counter)
@@ -174,13 +178,15 @@ def main():
         c = mv[metric]
         total = sum(c.values())
         for v in ("SUPPORTS", "NEUTRAL", "CONTRADICTS", "UNCLAIMED"):
-            metric_rows.append({
-                "metric": metric,
-                "verdict": v,
-                "n": c.get(v, 0),
-                "pct": round(100 * c.get(v, 0) / total, 2) if total else 0.0,
-                "metric_total_n": total,
-            })
+            metric_rows.append(
+                {
+                    "metric": metric,
+                    "verdict": v,
+                    "n": c.get(v, 0),
+                    "pct": round(100 * c.get(v, 0) / total, 2) if total else 0.0,
+                    "metric_total_n": total,
+                }
+            )
 
     # ----- aggregate: panel × verdict -----
     pv = defaultdict(Counter)
@@ -191,13 +197,15 @@ def main():
         c = pv[panel]
         total = sum(c.values())
         for v in ("SUPPORTS", "NEUTRAL", "CONTRADICTS", "UNCLAIMED"):
-            panel_rows.append({
-                "panel": panel,
-                "verdict": v,
-                "n": c.get(v, 0),
-                "pct": round(100 * c.get(v, 0) / total, 2) if total else 0.0,
-                "panel_total_n": total,
-            })
+            panel_rows.append(
+                {
+                    "panel": panel,
+                    "verdict": v,
+                    "n": c.get(v, 0),
+                    "pct": round(100 * c.get(v, 0) / total, 2) if total else 0.0,
+                    "panel_total_n": total,
+                }
+            )
 
     # ----- sign concordance per delta -----
     sig_conc = []
@@ -214,9 +222,15 @@ def main():
                 continue
             n_declared += 1
             obs_sign = _sign_of_num(od)
-            ps_sign = (">0" if ps in (">0", ">=0") else
-"<0" if ps in ("<0", "<=0") else
-                      "=0" if ps == "=0" else "")
+            ps_sign = (
+                ">0"
+                if ps in (">0", ">=0")
+                else "<0"
+                if ps in ("<0", "<=0")
+                else "=0"
+                if ps == "=0"
+                else ""
+            )
             if obs_sign == 1 and ps_sign == ">0":
                 n_sign_match += 1
                 if sig:
@@ -227,15 +241,19 @@ def main():
                     n_sign_match_sig += 1
             elif obs_sign == 0 and ps_sign == "=0":
                 n_sign_match += 1
-        sig_conc.append({
-            "delta_id": did,
-            "tier": tier_map.get(did, "?"),
-            "n_declared_expected": n_declared,
-            "n_sign_match": n_sign_match,
-            "n_sign_match_significant": n_sign_match_sig,
-            "pct_sign_match": round(100 * n_sign_match / n_declared, 2) if n_declared else 0.0,
-            "pct_sign_match_sig": round(100 * n_sign_match_sig / n_declared, 2) if n_declared else 0.0,
-        })
+        sig_conc.append(
+            {
+                "delta_id": did,
+                "tier": tier_map.get(did, "?"),
+                "n_declared_expected": n_declared,
+                "n_sign_match": n_sign_match,
+                "n_sign_match_significant": n_sign_match_sig,
+                "pct_sign_match": round(100 * n_sign_match / n_declared, 2) if n_declared else 0.0,
+                "pct_sign_match_sig": round(100 * n_sign_match_sig / n_declared, 2)
+                if n_declared
+                else 0.0,
+            }
+        )
 
     # ----- η²(method) paradox test -----
     # Iter-141 says η²(method) = 0.0005 [0.0001, 0.0049] — method axis under-
@@ -268,7 +286,9 @@ def main():
             "panel": "zvf130_5seed",
             "n_evaluated": zvf130_total,
             "n_supports": zvf130_supports,
-            "supports_rate_pct": round(100 * zvf130_supports / zvf130_total, 2) if zvf130_total else 0.0,
+            "supports_rate_pct": round(100 * zvf130_supports / zvf130_total, 2)
+            if zvf130_total
+            else 0.0,
         },
     ]
 
@@ -281,8 +301,18 @@ def main():
 
     _write_tsv(
         per_rows,
-        ["delta_id", "tier", "metric", "panel", "predicted_sign",
-         "observed_delta", "ci_low", "ci_high", "significant", "verdict"],
+        [
+            "delta_id",
+            "tier",
+            "metric",
+            "panel",
+            "predicted_sign",
+            "observed_delta",
+            "ci_low",
+            "ci_high",
+            "significant",
+            "verdict",
+        ],
         OUT / "p6_iter142_verdict_aggregate.tsv",
     )
     _write_tsv(
@@ -302,8 +332,15 @@ def main():
     )
     _write_tsv(
         sig_conc,
-        ["delta_id", "tier", "n_declared_expected", "n_sign_match",
-         "n_sign_match_significant", "pct_sign_match", "pct_sign_match_sig"],
+        [
+            "delta_id",
+            "tier",
+            "n_declared_expected",
+            "n_sign_match",
+            "n_sign_match_significant",
+            "pct_sign_match",
+            "pct_sign_match_sig",
+        ],
         OUT / "p6_iter142_sign_concordance.tsv",
     )
     _write_tsv(
@@ -327,9 +364,7 @@ def main():
         "n_sign_match_sig_total": sum(r["n_sign_match_significant"] for r in sig_conc),
         "n_declared_total": sum(r["n_declared_expected"] for r in sig_conc),
     }
-    (OUT / "p6_iter142_summary.json").write_text(
-        json.dumps(summary, indent=2, sort_keys=True)
-    )
+    (OUT / "p6_iter142_summary.json").write_text(json.dumps(summary, indent=2, sort_keys=True))
 
     # ----- stdout -----
     print("=== iter-142 P6 claim_validation aggregate audit ===")
@@ -345,7 +380,9 @@ def main():
     print(f"  point={eta2_pt}, CI=[{eta2_lo}, {eta2_hi}]")
     print("panel SUPPORTS rate (paradox test):")
     for r in paradox_rows:
-        print(f"  panel={r['panel']}: {r['n_supports']}/{r['n_evaluated']} = {r['supports_rate_pct']}%")
+        print(
+            f"  panel={r['panel']}: {r['n_supports']}/{r['n_evaluated']} = {r['supports_rate_pct']}%"
+        )
 
 
 if __name__ == "__main__":

@@ -41,8 +41,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 import sys
+
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
+from _paths import REPO_ROOT
+
 ROOT = REPO_ROOT
 RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8/corrected-review21-v2"
 FIG = RES / "figures"
@@ -108,7 +110,7 @@ def cohort_strata(values: np.ndarray, axis_name: str) -> np.ndarray:
         for i, t in enumerate(q, start=1):
             out[values > t] = i
         return out
-    elif axis_name == "Time_t":
+    if axis_name == "Time_t":
         q = np.quantile(values, [1 / 3, 2 / 3])
         out = np.zeros(len(values), dtype=int)
         for i, t in enumerate(q, start=1):
@@ -117,12 +119,16 @@ def cohort_strata(values: np.ndarray, axis_name: str) -> np.ndarray:
     raise ValueError(axis_name)
 
 
-def add_noise(X_te: np.ndarray, agg_idx: list[int], sigma_mult: float, sd_per: np.ndarray, rng: random.Random) -> np.ndarray:
+def add_noise(
+    X_te: np.ndarray, agg_idx: list[int], sigma_mult: float, sd_per: np.ndarray, rng: random.Random
+) -> np.ndarray:
     out = X_te.copy()
     if sigma_mult == 0.0:
         return out
     for j, col in enumerate(agg_idx):
-        out[:, col] = X_te[:, col] + np.array([rng.gauss(0.0, sigma_mult * sd_per[j]) for _ in range(len(X_te))])
+        out[:, col] = X_te[:, col] + np.array(
+            [rng.gauss(0.0, sigma_mult * sd_per[j]) for _ in range(len(X_te))]
+        )
     return out
 
 
@@ -144,8 +150,14 @@ def cost_at_k(y: np.ndarray, p: np.ndarray, k_pct: float, c_sense: float) -> dic
 
 
 def paired_bootstrap_cost_cohort(
-    y_strat: np.ndarray, p_a: np.ndarray, p_b: np.ndarray, k_pct: float, c_a: float, c_b: float,
-    n_boot: int = N_BOOT, seed: int = SEED,
+    y_strat: np.ndarray,
+    p_a: np.ndarray,
+    p_b: np.ndarray,
+    k_pct: float,
+    c_a: float,
+    c_b: float,
+    n_boot: int = N_BOOT,
+    seed: int = SEED,
 ) -> dict:
     """Paired bootstrap on per-row predictions, stratified by cohort label.
 
@@ -168,7 +180,7 @@ def paired_bootstrap_cost_cohort(
         for s in strata:
             idxs = strata_indices[s]
             sampled = [idxs[rng.randrange(sizes[s])] for _ in range(sizes[s])]
-            for j, ix in enumerate(sampled):
+            for _j, ix in enumerate(sampled):
                 pa_b[cursor] = p_a[ix]
                 pb_b[cursor] = p_b[ix]
                 yv_b[cursor] = y_strat[ix]  # holding stratum index as label
@@ -177,8 +189,10 @@ def paired_bootstrap_cost_cohort(
         k = max(1, int(round(k_pct / 100.0 * n)))
         order_a = np.argsort(-pa_b)[:k]
         order_b = np.argsort(-pb_b)[:k]
-        pred_a = np.zeros(n, dtype=bool); pred_a[order_a] = True
-        pred_b = np.zeros(n, dtype=bool); pred_b[order_b] = True
+        pred_a = np.zeros(n, dtype=bool)
+        pred_a[order_a] = True
+        pred_b = np.zeros(n, dtype=bool)
+        pred_b[order_b] = True
         # We need binary CLASS labels (1/0), not stratum int. Re-read from caller.
         # In this version we collect CLASS labels via a closure; see main()
         deltas.append((None, None, None))  # placeholder; main() computes fully
@@ -186,8 +200,15 @@ def paired_bootstrap_cost_cohort(
 
 
 def stratified_pair_bootstrap(
-    y: np.ndarray, y_strat: np.ndarray, p_a: np.ndarray, p_b: np.ndarray,
-    k_pct: float, c_a: float, c_b: float, n_boot: int = N_BOOT, seed: int = SEED,
+    y: np.ndarray,
+    y_strat: np.ndarray,
+    p_a: np.ndarray,
+    p_b: np.ndarray,
+    k_pct: float,
+    c_a: float,
+    c_b: float,
+    n_boot: int = N_BOOT,
+    seed: int = SEED,
 ) -> dict:
     """Stratum-preserving paired bootstrap on cost-delta."""
     rng = random.Random(seed)
@@ -197,20 +218,33 @@ def stratified_pair_bootstrap(
     sizes = {s: len(idxs) for s, idxs in strata_idx.items()}
     deltas_cost = []
     for _ in range(n_boot):
-        pa_b = np.empty(n); pb_b = np.empty(n); yv_b = np.empty(n, dtype=int)
+        pa_b = np.empty(n)
+        pb_b = np.empty(n)
+        yv_b = np.empty(n, dtype=int)
         cursor = 0
         for s in strata:
             idxs = strata_idx[s]
             samp = [idxs[rng.randrange(sizes[s])] for _ in range(sizes[s])]
             for ix in samp:
-                pa_b[cursor] = p_a[ix]; pb_b[cursor] = p_b[ix]; yv_b[cursor] = y[ix]; cursor += 1
+                pa_b[cursor] = p_a[ix]
+                pb_b[cursor] = p_b[ix]
+                yv_b[cursor] = y[ix]
+                cursor += 1
         k = max(1, int(round(k_pct / 100.0 * n)))
-        if k >= n: k = n - 1
-        order_a = np.argsort(-pa_b)[:k]; order_b = np.argsort(-pb_b)[:k]
-        pred_a = np.zeros(n, dtype=bool); pred_a[order_a] = True
-        pred_b = np.zeros(n, dtype=bool); pred_b[order_b] = True
-        tpa = int(np.sum(pred_a & (yv_b == 1))); fpa = int(np.sum(pred_a & (yv_b == 0))); fna = int(np.sum(~pred_a & (yv_b == 1)))
-        tpb = int(np.sum(pred_b & (yv_b == 1))); fpb = int(np.sum(pred_b & (yv_b == 0))); fnb = int(np.sum(~pred_b & (yv_b == 1)))
+        if k >= n:
+            k = n - 1
+        order_a = np.argsort(-pa_b)[:k]
+        order_b = np.argsort(-pb_b)[:k]
+        pred_a = np.zeros(n, dtype=bool)
+        pred_a[order_a] = True
+        pred_b = np.zeros(n, dtype=bool)
+        pred_b[order_b] = True
+        tpa = int(np.sum(pred_a & (yv_b == 1)))
+        fpa = int(np.sum(pred_a & (yv_b == 0)))
+        fna = int(np.sum(~pred_a & (yv_b == 1)))
+        tpb = int(np.sum(pred_b & (yv_b == 1)))
+        fpb = int(np.sum(pred_b & (yv_b == 0)))
+        fnb = int(np.sum(~pred_b & (yv_b == 1)))
         cost_a = c_a + (C_INV * (tpa + fpa) + L_MISS * fna) / n
         cost_b = c_b + (C_INV * (tpb + fpb) + L_MISS * fnb) / n
         deltas_cost.append(cost_a - cost_b)
@@ -226,7 +260,8 @@ def main() -> None:
     train, hdr_tr = load(TRAIN)
     test, hdr_te = load(TEST)
 
-    def col(name): return hdr_tr.index(name)
+    def col(name):
+        return hdr_tr.index(name)
 
     # V column indices in test (and train, with class-jitter handled separately)
     v20_idx = [col(f"V{i}") for i in range(1, 21)]
@@ -236,9 +271,11 @@ def main() -> None:
     # In the 24-col feature matrix X_te_24 (V20+AGG4), AGG4 lives at cols 20,21,22,23.
     agg_idx = [20, 21, 22, 23]
 
-    X_tr_20 = train[:, v20_idx]; y_tr = train[:, yi_train].astype(int)
+    X_tr_20 = train[:, v20_idx]
+    y_tr = train[:, yi_train].astype(int)
     X_tr_24 = train[:, v20_idx + agg_header_idx]
-    X_te_20 = test[:, v20_idx]; y_te = test[:, col("Class")].astype(int)
+    X_te_20 = test[:, v20_idx]
+    y_te = test[:, col("Class")].astype(int)
     X_te_24 = test[:, v20_idx + agg_header_idx]
     # Test split has only V1..V20 + V_mean..V_min + Class. Synthesize
     # Amount/Time from V_std and V_max ranks (per iter-99).
@@ -284,19 +321,31 @@ def main() -> None:
                     # Compute cost per model on this stratum only.
                     ca = cost_at_k(y_te[mask], p_20[mask], k_pct, c_sense=0.0)
                     cb = cost_at_k(y_te[mask], p24[mask], k_pct, c_sense=0.0035)
-                    rows.append(dict(
-                        axis=axis_name, stratum=int(s),
-                        n_stratum=n_stratum, pos_stratum=pos_stratum,
-                        noise_sigma=sigma, k_pct=k_pct,
-                        cost_20raw=ca["cost"], cost_24full=cb["cost"],
-                        delta_cost_24_minus_20=cb["cost"] - ca["cost"],
-                        recall_20raw=ca["recall"], recall_24full=cb["recall"],
-                        tp_20raw=ca["tp"], fp_20raw=ca["fp"], fn_20raw=ca["fn"],
-                        tp_24full=cb["tp"], fp_24full=cb["fp"], fn_24full=cb["fn"],
-                    ))
+                    rows.append(
+                        dict(
+                            axis=axis_name,
+                            stratum=int(s),
+                            n_stratum=n_stratum,
+                            pos_stratum=pos_stratum,
+                            noise_sigma=sigma,
+                            k_pct=k_pct,
+                            cost_20raw=ca["cost"],
+                            cost_24full=cb["cost"],
+                            delta_cost_24_minus_20=cb["cost"] - ca["cost"],
+                            recall_20raw=ca["recall"],
+                            recall_24full=cb["recall"],
+                            tp_20raw=ca["tp"],
+                            fp_20raw=ca["fp"],
+                            fn_20raw=ca["fn"],
+                            tp_24full=cb["tp"],
+                            fp_24full=cb["fp"],
+                            fn_24full=cb["fn"],
+                        )
+                    )
     with (RES / "p8_iter96_per_cohort_noise.tsv").open("w") as f:
         w = csv.DictWriter(f, fieldnames=list(rows[0].keys()), delimiter="\t")
-        w.writeheader(); [w.writerow(r) for r in rows]
+        w.writeheader()
+        [w.writerow(r) for r in rows]
 
     # ---- Stratified paired bootstrap at canonical (k=1.5%, axis=V_mean_q) ----
     print("[iter96] stratified bootstrap ...")
@@ -308,22 +357,37 @@ def main() -> None:
             mask = strata == s
             if mask.sum() < 50 or int(np.sum(y_te[mask] == 1)) < 2:
                 continue
-            y_st = y_te[mask]; st = strata[mask]
+            y_st = y_te[mask]
+            st = strata[mask]
             for sigma in NOISE_LEVELS:
                 p24 = p_24_noisy_cache[sigma]
                 for k_pct in (1.5, 2.0, 3.0):
                     ci = stratified_pair_bootstrap(
-                        y_st, st, p24[mask], p_20[mask], k_pct, 0.0035, 0.0,
+                        y_st,
+                        st,
+                        p24[mask],
+                        p_20[mask],
+                        k_pct,
+                        0.0035,
+                        0.0,
                     )
-                    boot_rows.append(dict(
-                        axis=axis_name, stratum=int(s),
-                        n_stratum=int(mask.sum()), noise_sigma=sigma, k_pct=k_pct,
-                        delta_median=ci["median"], delta_lo=ci["lo"], delta_hi=ci["hi"],
-                        sig_unfavorable=ci["excludes_zero"] and ci["median"] > 0,
-                    ))
+                    boot_rows.append(
+                        dict(
+                            axis=axis_name,
+                            stratum=int(s),
+                            n_stratum=int(mask.sum()),
+                            noise_sigma=sigma,
+                            k_pct=k_pct,
+                            delta_median=ci["median"],
+                            delta_lo=ci["lo"],
+                            delta_hi=ci["hi"],
+                            sig_unfavorable=ci["excludes_zero"] and ci["median"] > 0,
+                        )
+                    )
     with (RES / "p8_iter96_per_cohort_noise_boot.tsv").open("w") as f:
         w = csv.DictWriter(f, fieldnames=list(boot_rows[0].keys()), delimiter="\t")
-        w.writeheader(); [w.writerow(r) for r in boot_rows]
+        w.writeheader()
+        [w.writerow(r) for r in boot_rows]
 
     # ---- Headline ----
     # Count, across all (axis, stratum, sigma, k_pct) boot rows, how many have
@@ -340,15 +404,21 @@ def main() -> None:
 
     # Cross-coupling: amount-Q0 had iter-99 worst ECE on XGB-20raw — does it
     # also flip the cost frontier earliest?
-    amount_q0_unfav_sigma = [sig for (a, s), sig in first_unfav.items() if a == "Amount_q" and s == 0]
-    vmean_q2_unfav_sigma = [sig for (a, s), sig in first_unfav.items() if a == "V_mean_q" and s == 2]
+    amount_q0_unfav_sigma = [
+        sig for (a, s), sig in first_unfav.items() if a == "Amount_q" and s == 0
+    ]
+    vmean_q2_unfav_sigma = [
+        sig for (a, s), sig in first_unfav.items() if a == "V_mean_q" and s == 2
+    ]
 
     summary = {
         "n_test": int(len(y_te)),
         "n_pos_test": int(np.sum(y_te == 1)),
         "noise_levels": NOISE_LEVELS,
         "k_grid_pct": K_PCT,
-        "C_inv": C_INV, "L_miss": L_MISS, "rho": L_MISS / C_INV,
+        "C_inv": C_INV,
+        "L_miss": L_MISS,
+        "rho": L_MISS / C_INV,
         "cohorts": [c[0] for c in COHORTS],
         "n_cohort_cells": len(rows),
         "n_boot": N_BOOT,
@@ -357,15 +427,19 @@ def main() -> None:
         "first_unfavorable_sigma_per_cohort": {
             f"{a}|stratum={s}": float(sig) for (a, s), sig in sorted(first_unfav.items())
         },
-        "iter99_amount_q0_first_flip_sigma": (amount_q0_unfav_sigma[0] if amount_q0_unfav_sigma else None),
-        "iter99_vmean_q2_first_flip_sigma": (vmean_q2_unfav_sigma[0] if vmean_q2_unfav_sigma else None),
+        "iter99_amount_q0_first_flip_sigma": (
+            amount_q0_unfav_sigma[0] if amount_q0_unfav_sigma else None
+        ),
+        "iter99_vmean_q2_first_flip_sigma": (
+            vmean_q2_unfav_sigma[0] if vmean_q2_unfav_sigma else None
+        ),
     }
     (RES / "p8_iter96_per_cohort_summary.json").write_text(json.dumps(summary, indent=2))
     print(json.dumps(summary, indent=2))
 
     # ---- Figure: per-axis, per-stratum first-unfavorable-sigma ----
     fig, axes = plt.subplots(1, len(COHORTS), figsize=(4.0 * len(COHORTS), 3.6), sharey=True)
-    for ax, (axis_name, _) in zip(axes, COHORTS):
+    for ax, (axis_name, _) in zip(axes, COHORTS, strict=False):
         sigmas_per_stratum = []
         labels = []
         for s in range(int(cohorts[axis_name].max()) + 1):
@@ -375,13 +449,18 @@ def main() -> None:
             key = (axis_name, s)
             sigmas_per_stratum.append(first_unfav.get(key, np.nan))
             labels.append(f"{s} (n={int(mask.sum())})")
-        ax.bar(range(len(sigmas_per_stratum)), [0.5 if np.isnan(s) else s for s in sigmas_per_stratum],
-               color=["tab:gray" if np.isnan(s) else "tab:red" for s in sigmas_per_stratum])
+        ax.bar(
+            range(len(sigmas_per_stratum)),
+            [0.5 if np.isnan(s) else s for s in sigmas_per_stratum],
+            color=["tab:gray" if np.isnan(s) else "tab:red" for s in sigmas_per_stratum],
+        )
         ax.set_xticks(range(len(labels)))
         ax.set_xticklabels(labels, rotation=0, fontsize=8)
         ax.set_title(axis_name)
         ax.set_ylabel("min σ with unfavorable CI")
-        ax.axhline(0.10, color="tab:green", linestyle="--", linewidth=1.0, label="σ=0.10 (iter-88 H1)")
+        ax.axhline(
+            0.10, color="tab:green", linestyle="--", linewidth=1.0, label="σ=0.10 (iter-88 H1)"
+        )
         ax.grid(True, alpha=0.3, axis="y")
         ax.legend(fontsize=7)
     fig.suptitle("P8 iter-96 — first-unfavorable σ per cohort stratum (rho=200)", fontsize=10)

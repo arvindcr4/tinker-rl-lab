@@ -33,14 +33,16 @@ Citations used:
   - iter101 cross-anchor transfer & AIC stack
   - Chinchilla (Hoffmann et al. 2022) as analogue for power-law form
 """
+
 from __future__ import annotations
-import json, math, os, sys
+import json, math, sys
 from pathlib import Path
 from typing import Any
 import numpy as np
 
 sys.path.append(str(Path(__file__).resolve().parent))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
+from _paths import REPO_ROOT
+
 ROOT = REPO_ROOT
 RES = ROOT / "platform_hybrid/experiments" / "results"
 TR = ROOT / "platform_hybrid/experiments" / "tinker-runs" / "results"
@@ -50,18 +52,38 @@ TR = ROOT / "platform_hybrid/experiments" / "tinker-runs" / "results"
 # family in {"dense", "moe"}; params_B is total parameter count in billions.
 # ------------------------------------------------------------------
 ANCHORS: dict[str, dict[str, Any]] = {
-    "Qwen3.5-4B":            {"params_B": 4.0,    "family": "dense", "file": "scale_gsm8k_qwen3.5-4b.json"},
-    "Qwen3-8B":              {"params_B": 8.0,    "family": "dense", "file": "scale_gsm8k_qwen3-8b.json"},
-    "Llama-3.1-8B-Instruct": {"params_B": 8.0,    "family": "dense", "file": "scale_gsm8k_llama-8b-inst.json"},
-    "Qwen3-32B":             {"params_B": 32.0,   "family": "dense", "file": "scale_gsm8k_qwen3-32b.json"},
-    "Qwen3.5-27B":           {"params_B": 27.0,   "family": "dense", "file": "scale_gsm8k_qwen3.5-27b.json"},
-    "gpt-oss-20B":           {"params_B": 20.0,   "family": "moe",   "file": "arch_gsm8k_gpt-oss-20b.json"},
-    "Qwen3-30B-MoE":         {"params_B": 30.0,   "family": "moe",   "file": "moe_gsm8k_qwen3-30b-moe.json"},
-    "Qwen3-30B-MoE-Inst":    {"params_B": 30.0,   "family": "moe",   "file": "moe_gsm8k_qwen3-30b-inst.json"},
-    "DeepSeek-V3.1":         {"params_B": 685.0,  "family": "moe",   "file": "frontier_gsm8k_deepseek-v3.1.json"},
-    "Nemotron-120B":         {"params_B": 120.0,  "family": "dense", "file": "frontier_gsm8k_nemotron-120b.json"},
-    "Qwen3-235B-MoE":        {"params_B": 235.0,  "family": "moe",   "file": "frontier_gsm8k_qwen3-235b.json"},
-    "Kimi-K2-Thinking":      {"params_B": 1000.0, "family": "moe",   "file": "arch_gsm8k_kimi-k2.json"},
+    "Qwen3.5-4B": {"params_B": 4.0, "family": "dense", "file": "scale_gsm8k_qwen3.5-4b.json"},
+    "Qwen3-8B": {"params_B": 8.0, "family": "dense", "file": "scale_gsm8k_qwen3-8b.json"},
+    "Llama-3.1-8B-Instruct": {
+        "params_B": 8.0,
+        "family": "dense",
+        "file": "scale_gsm8k_llama-8b-inst.json",
+    },
+    "Qwen3-32B": {"params_B": 32.0, "family": "dense", "file": "scale_gsm8k_qwen3-32b.json"},
+    "Qwen3.5-27B": {"params_B": 27.0, "family": "dense", "file": "scale_gsm8k_qwen3.5-27b.json"},
+    "gpt-oss-20B": {"params_B": 20.0, "family": "moe", "file": "arch_gsm8k_gpt-oss-20b.json"},
+    "Qwen3-30B-MoE": {"params_B": 30.0, "family": "moe", "file": "moe_gsm8k_qwen3-30b-moe.json"},
+    "Qwen3-30B-MoE-Inst": {
+        "params_B": 30.0,
+        "family": "moe",
+        "file": "moe_gsm8k_qwen3-30b-inst.json",
+    },
+    "DeepSeek-V3.1": {
+        "params_B": 685.0,
+        "family": "moe",
+        "file": "frontier_gsm8k_deepseek-v3.1.json",
+    },
+    "Nemotron-120B": {
+        "params_B": 120.0,
+        "family": "dense",
+        "file": "frontier_gsm8k_nemotron-120b.json",
+    },
+    "Qwen3-235B-MoE": {
+        "params_B": 235.0,
+        "family": "moe",
+        "file": "frontier_gsm8k_qwen3-235b.json",
+    },
+    "Kimi-K2-Thinking": {"params_B": 1000.0, "family": "moe", "file": "arch_gsm8k_kimi-k2.json"},
 }
 
 
@@ -91,7 +113,7 @@ def trace_features(rt: list[float]) -> dict[str, float]:
     if n < 2:
         raise ValueError("trace too short")
     early = arr[: max(1, n // 5)].mean()  # first ~20%
-    late = arr[-max(1, n // 5):].mean()  # last ~20%
+    late = arr[-max(1, n // 5) :].mean()  # last ~20%
     delta_le = float(late - early)
     zero_frac = float((arr <= 1e-6).sum()) / n
     peak = float(arr.max())
@@ -170,7 +192,7 @@ def fit_loglinear(N: np.ndarray, y: np.ndarray) -> dict[str, float]:
     resid = y - yhat
     n = len(y)
     k = 2
-    rss = float((resid ** 2).sum())
+    rss = float((resid**2).sum())
     aic = n * math.log(rss / max(n, 1)) + 2 * k
     return {
         "family": "loglinear",
@@ -193,7 +215,7 @@ def fit_inverse(N: np.ndarray, y: np.ndarray) -> dict[str, float]:
     resid = y - yhat
     n = len(y)
     k = 2
-    rss = float((resid ** 2).sum())
+    rss = float((resid**2).sum())
     aic = n * math.log(rss / max(n, 1)) + 2 * k
     return {
         "family": "inverse",
@@ -213,12 +235,12 @@ def fit_chinchilla(N: np.ndarray, y: np.ndarray) -> dict[str, float]:
     best = None
     for c in cs:
         x1 = np.ones_like(N)
-        x2 = -1.0 / (N ** c)
+        x2 = -1.0 / (N**c)
         A = np.vstack([x1, x2]).T
         coef, *_ = np.linalg.lstsq(A, y, rcond=None)
         yhat = A @ coef
         resid = y - yhat
-        rss = float((resid ** 2).sum())
+        rss = float((resid**2).sum())
         if best is None or rss < best["rss"]:
             # yhat = coef[0] + coef[1]*(-1/N^c) = coef[0] - coef[1]/N^c,
             # so a = coef[0], b = coef[1].
@@ -231,7 +253,7 @@ def fit_chinchilla(N: np.ndarray, y: np.ndarray) -> dict[str, float]:
     resid = y - (best["a"] - best["b"] / (N ** best["c"]))
     n = len(y)
     k = 3
-    rss = float((resid ** 2).sum())
+    rss = float((resid**2).sum())
     aic = n * math.log(rss / max(n, 1)) + 2 * k
     return {
         "family": "chinchilla",
@@ -261,13 +283,15 @@ def lofo_residuals(N: np.ndarray, y: np.ndarray, families: list[str]) -> list[di
         pred = fit["a"] - fit["b"] / (N[~mask] ** fit["c"])
         resid = y[~mask] - pred
         for i, name in enumerate(np.array(list(ANCHORS.keys()))[~mask]):
-            out.append({
-                "held_out_family": hold,
-                "model": str(name),
-                "true_R_max_star": float(y[~mask][i]),
-                "pred_R_max_star": float(pred[i]),
-                "residual": float(resid[i]),
-            })
+            out.append(
+                {
+                    "held_out_family": hold,
+                    "model": str(name),
+                    "true_R_max_star": float(y[~mask][i]),
+                    "pred_R_max_star": float(pred[i]),
+                    "residual": float(resid[i]),
+                }
+            )
     return out
 
 
@@ -285,18 +309,22 @@ def main() -> int:
         meta = ANCHORS[name]
         f = trace_features(rt)
         label, pos = classify_mode(f)
-        fm_rows.append({
-            "model": name,
-            "params_B": meta["params_B"],
-            "family": meta["family"],
-            **f,
-            "mode": label,
-        })
-        pos_rows.append({
-            "model": name,
-            **{f"P({m})": round(v, 4) for m, v in pos.items()},
-            "mode": label,
-        })
+        fm_rows.append(
+            {
+                "model": name,
+                "params_B": meta["params_B"],
+                "family": meta["family"],
+                **f,
+                "mode": label,
+            }
+        )
+        pos_rows.append(
+            {
+                "model": name,
+                **{f"P({m})": round(v, 4) for m, v in pos.items()},
+                "mode": label,
+            }
+        )
 
     fm_path = RES / "scaling_law_iter105_failure_modes.tsv"
     write_tsv(fm_path, fm_rows, list(fm_rows[0].keys()))
@@ -323,7 +351,7 @@ def main() -> int:
         meta = ANCHORS[name]
         arr = np.asarray(rt, dtype=float)
         n = arr.size
-        last_third = arr[-max(1, n // 3):].mean()
+        last_third = arr[-max(1, n // 3) :].mean()
         peak = arr.max()
         # locate the failure-mode label
         label = next(r["mode"] for r in fm_rows if r["model"] == name)
@@ -360,7 +388,11 @@ def main() -> int:
         row = {
             "family": f["family"],
             "n_anchors": int(len(y)),
-            "params": ",".join(f"{k}={v:.4g}" for k, v in f.items() if k not in ("family", "rss", "mae", "rmse", "r2", "aic")),
+            "params": ",".join(
+                f"{k}={v:.4g}"
+                for k, v in f.items()
+                if k not in ("family", "rss", "mae", "rmse", "r2", "aic")
+            ),
             "rss": round(f["rss"], 4),
             "mae": round(f["mae"], 4),
             "rmse": round(f["rmse"], 4),
@@ -387,7 +419,9 @@ def main() -> int:
         fam_resid_std[hold] = float(np.std(rs)) if rs else float("nan")
     all_resids = [r["residual"] for r in lofo]
     overall_resid_std = float(np.std(all_resids))
-    family_invariance_score = float(1.0 - (sum(fam_resid_std.values()) / len(fam_resid_std)) / max(overall_resid_std, 1e-9))
+    family_invariance_score = float(
+        1.0 - (sum(fam_resid_std.values()) / len(fam_resid_std)) / max(overall_resid_std, 1e-9)
+    )
     print(f"[iter105] LOFO family-resid std: {fam_resid_std}")
     print(f"[iter105] family-invariance score: {family_invariance_score:.3f}")
 

@@ -54,9 +54,9 @@ Outputs (platform_hybrid/experiments/results/berkeley/):
   iso_g_cdh_echo.tsv
   iso_g_summary.json
 """
+
 from __future__ import annotations
-import csv, json, math, os, sys, datetime
-from collections import defaultdict
+import csv, json, math, sys, datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -99,17 +99,19 @@ def h1_anti_herding(per_G):
         G = int(row["G"])
         zvf_obs = float(row["mean_zvf_mean"])
         p = float(row["reward_mean"])  # empirical success prob
-        zvf_iid = p ** G + (1 - p) ** G
+        zvf_iid = p**G + (1 - p) ** G
         delta_div = zvf_iid - zvf_obs  # positive => observed < i.i.d.
         deltas.append(delta_div)
-        rows.append({
-            "G": G,
-            "p_emp": f"{p:.4f}",
-            "zvf_iid": f"{zvf_iid:.4f}",
-            "zvf_obs": f"{zvf_obs:.4f}",
-            "delta_div": f"{delta_div:+.4f}",
-            "anti_herd_present": "yes" if delta_div > 0 else "no",
-        })
+        rows.append(
+            {
+                "G": G,
+                "p_emp": f"{p:.4f}",
+                "zvf_iid": f"{zvf_iid:.4f}",
+                "zvf_obs": f"{zvf_obs:.4f}",
+                "delta_div": f"{delta_div:+.4f}",
+                "anti_herd_present": "yes" if delta_div > 0 else "no",
+            }
+        )
     # monotonic decrease check (largest delta_div at G=2, smallest at G=16)
     n_positive = sum(1 for d in deltas if d > 0)
     if len(deltas) >= 2:
@@ -145,7 +147,9 @@ def h2_iso_yield(per_G):
             log_hi = math.log10(G_values[-1])
             log_q = math.log10(g_query)
             w = (log_q - log_hi) / (log_hi - log_lo)
-            return max(0.0, zvf_emp[G_values[-1]] + w * (zvf_emp[G_values[-1]] - zvf_emp[G_values[-2]]))
+            return max(
+                0.0, zvf_emp[G_values[-1]] + w * (zvf_emp[G_values[-1]] - zvf_emp[G_values[-2]])
+            )
         # linear in log G between bracketing G values
         for i in range(len(G_values) - 1):
             if G_values[i] <= g_query <= G_values[i + 1]:
@@ -164,12 +168,14 @@ def h2_iso_yield(per_G):
             if y >= 0.5:
                 g_iso = G
                 break
-        rows.append({
-            "p": p,
-            "Y_target": 0.5,
-            "G_iso_p_emp": g_iso if g_iso is not None else ">=32",
-            "decisive_p_eq_0.5": "yes" if (g_iso is not None and g_iso <= 8) else "no",
-        })
+        rows.append(
+            {
+                "p": p,
+                "Y_target": 0.5,
+                "G_iso_p_emp": g_iso if g_iso is not None else ">=32",
+                "decisive_p_eq_0.5": "yes" if (g_iso is not None and g_iso <= 8) else "no",
+            }
+        )
     n_decisive = sum(1 for r in rows if r["decisive_p_eq_0.5"] == "yes")
     return rows, n_decisive
 
@@ -225,13 +231,15 @@ def h3_bounded_cone_explains(per_G):
         gap = acc_G64[T] - acc_G32[T]  # row 18: all non-positive
         if gap < 0:
             n_neg_gap += 1
-        rows.append({
-            "T": T,
-            "acc_G32_obs": f"{acc_G32[T]:.4f}",
-            "acc_G64_obs": f"{acc_G64[T]:.4f}",
-            "gap_G64_vs_G32": f"{gap:+.4f}",
-            "explained_by_herding": "yes" if gap < 0 else "no",
-        })
+        rows.append(
+            {
+                "T": T,
+                "acc_G32_obs": f"{acc_G32[T]:.4f}",
+                "acc_G64_obs": f"{acc_G64[T]:.4f}",
+                "gap_G64_vs_G32": f"{gap:+.4f}",
+                "explained_by_herding": "yes" if gap < 0 else "no",
+            }
+        )
     # Decisive if 4/4 non-positive (matches δ_div prediction)
     return rows, n_neg_gap
 
@@ -257,12 +265,14 @@ def h4_cross_pillar():
         m = r.get("method", "")
         if m in ("grpo", "ngrpo", "cppo", "scafgrpo", "aero", "mcgrpo", "areal", "gift", "es"):
             try:
-                methods.append({
-                    "method": m,
-                    "mag": float(r["mag_mean"]),
-                    "zvf_risk": float(r["zvf_risk_mean"]),
-                    "n_seeds": int(r["n_seeds"]),
-                })
+                methods.append(
+                    {
+                        "method": m,
+                        "mag": float(r["mag_mean"]),
+                        "zvf_risk": float(r["zvf_risk_mean"]),
+                        "n_seeds": int(r["n_seeds"]),
+                    }
+                )
             except (ValueError, KeyError):
                 continue
     # δ_div proxy: lower zvf_risk ≈ higher effective δ_div
@@ -284,20 +294,23 @@ def h4_cross_pillar():
         t = rho * math.sqrt((n - 2) / (1 - rho * rho + 1e-12))
         # one-sided p (we want rho > 0)
         # using normal approx for large t
-        from math import erf, sqrt
+        from math import erf
+
         z = t
         p_one_sided = 0.5 * (1 - erf(z / math.sqrt(2)))
     else:
         p_one_sided = 0.0
     for r in methods:
-        rows.append({
-            "method": r["method"],
-            "mag": f"{r['mag']:.4f}",
-            "zvf_risk": f"{r['zvf_risk']:.4f}",
-            "rank_mag": rank_mag[r["method"]],
-            "rank_zvf": rank_zvf[r["method"]],
-            "delta_div_proxy": f"{1 - r['zvf_risk']:.4f}",
-        })
+        rows.append(
+            {
+                "method": r["method"],
+                "mag": f"{r['mag']:.4f}",
+                "zvf_risk": f"{r['zvf_risk']:.4f}",
+                "rank_mag": rank_mag[r["method"]],
+                "rank_zvf": rank_zvf[r["method"]],
+                "delta_div_proxy": f"{1 - r['zvf_risk']:.4f}",
+            }
+        )
     return rows, rho, p_one_sided
 
 
@@ -335,7 +348,7 @@ def h5_cdh_echo(per_G):
     intercept_log10 = 0.9042
     target_log10_zvf = math.log10(0.5)
     log10_g_iso = (target_log10_zvf - intercept_log10) / slope_log10
-    g_iso_p5 = 10 ** log10_g_iso
+    g_iso_p5 = 10**log10_g_iso
 
     rows = []
     n_iso_le_raw = 0
@@ -343,13 +356,15 @@ def h5_cdh_echo(per_G):
         cdh_ok = g_iso_p5 <= G_raw
         if cdh_ok:
             n_iso_le_raw += 1
-        rows.append({
-            "T": T,
-            "G_raw_GRPO": G_raw,
-            "G_iso_p_eq_0.5_emp": f"{g_iso_p5:.0f}",
-            "iso_le_raw": "yes" if cdh_ok else "no",
-            "delta_G": f"{G_raw - g_iso_p5:+.0f}",
-        })
+        rows.append(
+            {
+                "T": T,
+                "G_raw_GRPO": G_raw,
+                "G_iso_p_eq_0.5_emp": f"{g_iso_p5:.0f}",
+                "iso_le_raw": "yes" if cdh_ok else "no",
+                "delta_G": f"{G_raw - g_iso_p5:+.0f}",
+            }
+        )
     return rows, n_iso_le_raw, g_iso_p5
 
 
@@ -362,15 +377,17 @@ def main():
 
     per_G = _read_per_G_table()
     if not per_G:
-        print("[iso_g] FATAL: no per_G table found"); sys.exit(1)
+        print("[iso_g] FATAL: no per_G table found")
+        sys.exit(1)
 
     # ---- H1 ----
     h1_rows, n_pos, monotonic, deltas = h1_anti_herding(per_G)
     h1_path = OUT / "iso_g_anti_herding.tsv"
     with h1_path.open("w", newline="") as fh:
         w = csv.DictWriter(fh, fieldnames=list(h1_rows[0].keys()), delimiter="\t")
-        w.writeheader(); w.writerows(h1_rows)
-    h1_decisive = (n_pos == 4 and monotonic)
+        w.writeheader()
+        w.writerows(h1_rows)
+    h1_decisive = n_pos == 4 and monotonic
     print(f"[h1] anti-herding δ_div > 0 in {n_pos}/4 cells, monotonic={monotonic}")
 
     # ---- H2 ----
@@ -378,8 +395,9 @@ def main():
     h2_path = OUT / "iso_g_iso_yield.tsv"
     with h2_path.open("w", newline="") as fh:
         w = csv.DictWriter(fh, fieldnames=list(h2_rows[0].keys()), delimiter="\t")
-        w.writeheader(); w.writerows(h2_rows)
-    h2_decisive = (n_decisive_h2 == 5)
+        w.writeheader()
+        w.writerows(h2_rows)
+    h2_decisive = n_decisive_h2 == 5
     print(f"[h2] Iso-G achieves Y*=0.5 in {n_decisive_h2}/5 p cells")
 
     # ---- H3 ----
@@ -387,8 +405,9 @@ def main():
     h3_path = OUT / "iso_g_bounded_cone_recovery.tsv"
     with h3_path.open("w", newline="") as fh:
         w = csv.DictWriter(fh, fieldnames=list(h3_rows[0].keys()), delimiter="\t")
-        w.writeheader(); w.writerows(h3_rows)
-    h3_decisive = (n_recovered >= 3)
+        w.writeheader()
+        w.writerows(h3_rows)
+    h3_decisive = n_recovered >= 3
     print(f"[h3] Iso-G bounded-cone recovery in {n_recovered}/4 T cells")
 
     # ---- H4 ----
@@ -397,8 +416,9 @@ def main():
     with h4_path.open("w", newline="") as fh:
         if h4_rows:
             w = csv.DictWriter(fh, fieldnames=list(h4_rows[0].keys()), delimiter="\t")
-            w.writeheader(); w.writerows(h4_rows)
-    h4_decisive = (rho > 0.30 and p_one_sided < 0.10)
+            w.writeheader()
+            w.writerows(h4_rows)
+    h4_decisive = rho > 0.30 and p_one_sided < 0.10
     print(f"[h4] Pillar-2 mag ↔ δ_div proxy Spearman ρ={rho:+.3f} p={p_one_sided:.4f}")
 
     # ---- H5 ----
@@ -407,8 +427,9 @@ def main():
     with h5_path.open("w", newline="") as fh:
         if h5_rows:
             w = csv.DictWriter(fh, fieldnames=list(h5_rows[0].keys()), delimiter="\t")
-            w.writeheader(); w.writerows(h5_rows)
-    h5_decisive = (n_cdh_ok >= 3)
+            w.writeheader()
+            w.writerows(h5_rows)
+    h5_decisive = n_cdh_ok >= 3
     print(f"[h5] CDH Echo (Iso-G ≤ raw G*) in {n_cdh_ok}/4 T cells")
 
     # ---- summary ----
@@ -429,16 +450,20 @@ def main():
         ],
         "hypotheses": {
             "H1_anti_herding": {
-                "n_positive": n_pos, "n_total": 4, "monotonic": monotonic,
+                "n_positive": n_pos,
+                "n_total": 4,
+                "monotonic": monotonic,
                 "deltas": deltas,
                 "verdict": "DECISIVE" if h1_decisive else "NULL",
             },
             "H2_iso_yield": {
-                "n_decisive_p_le_0.8": n_decisive_h2, "n_total": 5,
+                "n_decisive_p_le_0.8": n_decisive_h2,
+                "n_total": 5,
                 "verdict": "DECISIVE" if h2_decisive else "NULL",
             },
             "H3_bounded_cone_recovery": {
-                "n_recovered": n_recovered, "n_total": 4,
+                "n_recovered": n_recovered,
+                "n_total": 4,
                 "verdict": "DECISIVE" if h3_decisive else "NULL",
             },
             "H4_cross_pillar_mag_delta_div": {
@@ -448,7 +473,8 @@ def main():
                 "verdict": "DECISIVE" if h4_decisive else "NULL",
             },
             "H5_CDH_echo_iso_le_raw": {
-                "n_iso_le_raw": n_cdh_ok, "n_total": 4,
+                "n_iso_le_raw": n_cdh_ok,
+                "n_total": 4,
                 "verdict": "DECISIVE" if h5_decisive else "NULL",
             },
         },

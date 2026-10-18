@@ -14,7 +14,6 @@ Usage:
     python trl_ppo_gsm8k_baseline.py --seed 42
 """
 
-import argparse
 import re
 import os
 import sys
@@ -25,9 +24,8 @@ from typing import Optional
 from datasets import load_dataset
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from trl import RLOOTrainer, RLOOConfig
-from peft import LoraConfig
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 from utils.seed import set_global_seed, get_seed_from_args
 
 
@@ -35,10 +33,10 @@ question_suffix = " Provide a numerical answer without units, written inside \\b
 
 
 def extract_boxed_answer(text: str) -> Optional[str]:
-    match = re.search(r'\\boxed\{([^}]+)\}', text)
+    match = re.search(r"\\boxed\{([^}]+)\}", text)
     if match:
         return match.group(1).strip()
-    numbers = re.findall(r'[-+]?\d*\.?\d+', text)
+    numbers = re.findall(r"[-+]?\d*\.?\d+", text)
     return numbers[-1] if numbers else None
 
 
@@ -46,7 +44,7 @@ def reward_fn(completions, **kwargs):
     """Binary reward: 1.0 if correct, 0.0 otherwise."""
     gold_answers = kwargs.get("gold_answer", [])
     rewards = []
-    for completion, gold in zip(completions, gold_answers):
+    for completion, gold in zip(completions, gold_answers, strict=False):
         text = completion[0]["content"] if isinstance(completion, list) else str(completion)
         answer_text = text.split("</think>")[-1] if "</think>" in text else text
         predicted = extract_boxed_answer(answer_text)
@@ -96,12 +94,7 @@ def main():
     dataset = dataset.map(format_prompt, remove_columns=dataset.column_names)
 
     wandb.init(
-        project="rloo-gsm8k",
-        config={
-            "seed": seed,
-            "model": model_name,
-            "algorithm": "RLOO"
-        }
+        project="rloo-gsm8k", config={"seed": seed, "model": model_name, "algorithm": "RLOO"}
     )
 
     rloo_config = RLOOConfig(
@@ -149,7 +142,7 @@ def main():
     # Log the final results to wandb
     wandb.log({"final_results": result})
     wandb.finish()
-    
+
     # Push model to huggingface hub
     hub_id = os.environ.get("HUB_MODEL_ID", f"rloo-gsm8k-baseline-{seed}")
     print(f"Pushing to hub: {hub_id}")

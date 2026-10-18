@@ -33,22 +33,21 @@ platform_hybrid/experiments/results/p5p8/figures/p8_alert_volume.{png,pdf}
 
 Stdlib + numpy + pandas + xgboost + sklearn + matplotlib. <=300 lines.
 """
+
 from __future__ import annotations
 
 import json
-import os
 import sys
-from collections import defaultdict
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
 import xgboost as xgb
-from sklearn.metrics import precision_score, recall_score, f1_score
 
 # ------------------------------------------------------------------ paths
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
+from _paths import REPO_ROOT
+
 ROOT = REPO_ROOT
 OUT = ROOT / "platform_hybrid/experiments" / "results" / "p5p8/corrected-review20-v2"
 FIG = OUT / "figures"
@@ -56,11 +55,11 @@ OUT.mkdir(parents=True, exist_ok=True)
 FIG.mkdir(parents=True, exist_ok=True)
 
 # Same operational costs as iter-48 / iter-52
-C_INV = 0.50            # USD per alert (analyst review cost)
-C_SENSE = 0.0035        # USD per row scored by LLM-as-sensor (24full, 4sensor only)
-LOSS_GRID = [5, 25, 100, 250, 1000]   # L values to scan $/dec over
+C_INV = 0.50  # USD per alert (analyst review cost)
+C_SENSE = 0.0035  # USD per row scored by LLM-as-sensor (24full, 4sensor only)
+LOSS_GRID = [5, 25, 100, 250, 1000]  # L values to scan $/dec over
 
-K_BUDGETS = [0.05, 0.10, 0.25, 0.50, 1.00, 2.00, 5.00]   # review budget as % of stream
+K_BUDGETS = [0.05, 0.10, 0.25, 0.50, 1.00, 2.00, 5.00]  # review budget as % of stream
 N_BOOT = 400
 SEED = 20260704
 RNG = np.random.default_rng(SEED)
@@ -126,7 +125,8 @@ def metrics_at_topk(scores: np.ndarray, y: np.ndarray, k_pct: float) -> dict:
         "fp": fp,
         "fn": fn,
         "n_pos": int(y.sum()),
-        "alert_rate": k / n, "n_rows": n,
+        "alert_rate": k / n,
+        "n_rows": n,
         "precision": prec,
         "recall": rec,
         "f1": f1,
@@ -147,8 +147,12 @@ def compute_dollar_at_k(m: dict, model_kind: str) -> tuple[float, float]:
 
 # ------------------------------------------------------------------ bootstrap
 def paired_recall_gap_ci(
-    scores_a: np.ndarray, scores_b: np.ndarray, y: np.ndarray, k_pct: float,
-    n_boot: int, seed: int,
+    scores_a: np.ndarray,
+    scores_b: np.ndarray,
+    y: np.ndarray,
+    k_pct: float,
+    n_boot: int,
+    seed: int,
 ) -> tuple[float, float, float, float, float]:
     """Paired bootstrap of (recall_a, recall_b, F1_a, F1_b, gap) at fixed K.
 
@@ -187,9 +191,13 @@ def paired_recall_gap_ci(
         f1_b[b] = 2 * pb * rec_b[b] / max(pb + rec_b[b], 1e-9)
     gap = rec_a - rec_b
     return (
-        float(rec_a.mean()), float(rec_b.mean()),
-        float(f1_a.mean()), float(f1_b.mean()),
-        float(gap.mean()), float(np.percentile(gap, 2.5)), float(np.percentile(gap, 97.5)),
+        float(rec_a.mean()),
+        float(rec_b.mean()),
+        float(f1_a.mean()),
+        float(f1_b.mean()),
+        float(gap.mean()),
+        float(np.percentile(gap, 2.5)),
+        float(np.percentile(gap, 97.5)),
     )
 
 
@@ -197,8 +205,12 @@ def paired_recall_gap_ci(
 def main() -> None:
     print("[p8_alert_volume_pareto] starting")
     train, test = load_data()
-    print(f"  train: {len(train)} rows, {train['Class'].sum()} positives ({train['Class'].mean()*100:.3f}%)")
-    print(f"  test:  {len(test)} rows, {test['Class'].sum()} positives ({test['Class'].mean()*100:.3f}%)")
+    print(
+        f"  train: {len(train)} rows, {train['Class'].sum()} positives ({train['Class'].mean() * 100:.3f}%)"
+    )
+    print(
+        f"  test:  {len(test)} rows, {test['Class'].sum()} positives ({test['Class'].mean() * 100:.3f}%)"
+    )
 
     # Fit each tree once
     print("  fitting trees...")
@@ -209,7 +221,9 @@ def main() -> None:
         # Sanity print
         for K in [0.5, 1.0]:
             met = metrics_at_topk(s, y, K)
-            print(f"    {m} @ K={K}%: recall={met['recall']:.4f} prec={met['precision']:.4f} F1={met['f1']:.4f} tp={met['tp']} fp={met['fp']}")
+            print(
+                f"    {m} @ K={K}%: recall={met['recall']:.4f} prec={met['precision']:.4f} F1={met['f1']:.4f} tp={met['tp']} fp={met['fp']}"
+            )
     y = test["Class"].values
 
     # Per-cell metrics table
@@ -218,53 +232,61 @@ def main() -> None:
         for m in ("20raw", "24full", "4sensor"):
             met = metrics_at_topk(scores[m], y, K)
             dpd, dpc = compute_dollar_at_k(met, m)
-            rows.append({
-                "model": m,
-                "k_pct": K,
-                "alert_rate": met["alert_rate"],
-                "tp": met["tp"],
-                "fp": met["fp"],
-                "fn": met["fn"],
-                "n_pos": met["n_pos"],
-                "precision": met["precision"],
-                "recall": met["recall"],
-                "f1": met["f1"],
-                "usd_per_dec": dpd,
-                "usd_per_caught": dpc,
-            })
+            rows.append(
+                {
+                    "model": m,
+                    "k_pct": K,
+                    "alert_rate": met["alert_rate"],
+                    "tp": met["tp"],
+                    "fp": met["fp"],
+                    "fn": met["fn"],
+                    "n_pos": met["n_pos"],
+                    "precision": met["precision"],
+                    "recall": met["recall"],
+                    "f1": met["f1"],
+                    "usd_per_dec": dpd,
+                    "usd_per_caught": dpc,
+                }
+            )
     df = pd.DataFrame(rows)
     df.to_csv(OUT / "p8_alert_volume.tsv", sep="\t", index=False)
     print(f"  wrote {OUT / 'p8_alert_volume.tsv'} ({len(df)} rows)")
 
     # Paired-bootstrap CI on (24full - 20raw), (24full - 4sensor), (20raw - 4sensor) at each K
     pairs = [
-        ("24full", "20raw"),    # sensor increment
-        ("20raw", "4sensor"),   # raw vs sensor-only surrogate
+        ("24full", "20raw"),  # sensor increment
+        ("20raw", "4sensor"),  # raw vs sensor-only surrogate
         ("24full", "4sensor"),  # full vs sensor-only
     ]
     boot_rows = []
     for K in K_BUDGETS:
         for a, b in pairs:
             ma, mb, fa, fb, gap_mean, ci_lo, ci_hi = paired_recall_gap_ci(
-                scores[a], scores[b], y, K, n_boot=N_BOOT,
+                scores[a],
+                scores[b],
+                y,
+                K,
+                n_boot=N_BOOT,
                 seed=SEED + int(K * 100) + len(a) * 13,
             )
             excl_zero = "YES" if (ci_lo > 0 or ci_hi < 0) else "no"
             winner = a if ci_lo > 0 else (b if ci_hi < 0 else "TIE")
-            boot_rows.append({
-                "K_pct": K,
-                "model_a": a,
-                "model_b": b,
-                "recall_a": ma,
-                "recall_b": mb,
-                "f1_a": fa,
-                "f1_b": fb,
-                "delta_recall": gap_mean,
-                "ci_lo": ci_lo,
-                "ci_hi": ci_hi,
-                "ci_excludes_zero": excl_zero,
-                "winner": winner,
-            })
+            boot_rows.append(
+                {
+                    "K_pct": K,
+                    "model_a": a,
+                    "model_b": b,
+                    "recall_a": ma,
+                    "recall_b": mb,
+                    "f1_a": fa,
+                    "f1_b": fb,
+                    "delta_recall": gap_mean,
+                    "ci_lo": ci_lo,
+                    "ci_hi": ci_hi,
+                    "ci_excludes_zero": excl_zero,
+                    "winner": winner,
+                }
+            )
             print(
                 f"  K={K}% {a}−{b}: Δ-recall={gap_mean:+.4f} "
                 f"CI=[{ci_lo:+.4f},{ci_hi:+.4f}] excl_zero={excl_zero} winner={winner}"
@@ -310,7 +332,9 @@ def main() -> None:
 
 def _dominance_switch(boot_df: pd.DataFrame) -> dict:
     """Find the K at which 24full starts strictly dominating 20raw on recall gap."""
-    sub = boot_df[(boot_df["model_a"] == "24full") & (boot_df["model_b"] == "20raw")].sort_values("K_pct")
+    sub = boot_df[(boot_df["model_a"] == "24full") & (boot_df["model_b"] == "20raw")].sort_values(
+        "K_pct"
+    )
     first_strictly_dominant = sub[sub["ci_lo"] > 0]
     if len(first_strictly_dominant) == 0:
         return {"24full_strictly_dominates_20raw_at_no_K": True}
@@ -327,12 +351,13 @@ def _winners_table(boot_df: pd.DataFrame) -> dict:
     out = {}
     for K in K_BUDGETS:
         sub = boot_df[boot_df["K_pct"] == K]
-        out[f"{K}%"] = list(zip(sub["model_a"].tolist(), sub["winner"].tolist()))
+        out[f"{K}%"] = list(zip(sub["model_a"].tolist(), sub["winner"].tolist(), strict=False))
     return out
 
 
 def _plot_pareto(df: pd.DataFrame, boot_df: pd.DataFrame, scores: dict, y: np.ndarray) -> None:
     import matplotlib
+
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
 
@@ -364,7 +389,9 @@ def _plot_pareto(df: pd.DataFrame, boot_df: pd.DataFrame, scores: dict, y: np.nd
 
     # Panel 3: paired bootstrap Δ-recall(24full-20raw) with CI bars
     ax = axes[2]
-    sub = boot_df[(boot_df["model_a"] == "24full") & (boot_df["model_b"] == "20raw")].sort_values("K_pct")
+    sub = boot_df[(boot_df["model_a"] == "24full") & (boot_df["model_b"] == "20raw")].sort_values(
+        "K_pct"
+    )
     xs = sub["K_pct"].values
     ys = sub["delta_recall"].values
     yerr_lo = ys - sub["ci_lo"].values

@@ -58,8 +58,9 @@ def wilson_ci(zvf: float, m: int) -> tuple[float, float]:
     return (center - half, center + half)
 
 
-def population_zvf(prompts: list[dict], G: int, rng: random.Random,
-                   draws_per_prompt: int = 64) -> float:
+def population_zvf(
+    prompts: list[dict], G: int, rng: random.Random, draws_per_prompt: int = 64
+) -> float:
     """Population ZVF(G). For binary rewards this is computed EXACTLY via
     hypergeometric terms (drawing G of the m recorded rewards without
     replacement): P(uniform) = [C(k,G) + C(m-k,G)] / C(m,G) with k ones.
@@ -67,6 +68,7 @@ def population_zvf(prompts: list[dict], G: int, rng: random.Random,
     the coverage analysis (fixed 2026-07-11). Non-binary rewards fall back
     to resampling."""
     from math import comb
+
     validate_design(groups=[G], counts=[draws_per_prompt], n_prompts=len(prompts))
     total = 0.0
     n = 0
@@ -75,7 +77,7 @@ def population_zvf(prompts: list[dict], G: int, rng: random.Random,
         m = len(rewards)
         if m < G:
             continue
-        if set(rewards) <= {0, 0.0, 1, 1.0}:
+        if set(rewards) <= {0, 1}:
             k = sum(1 for r in rewards if r in (1, 1.0))
             total += (comb(k, G) + comb(m - k, G)) / comb(m, G)
         else:
@@ -89,9 +91,10 @@ def population_zvf(prompts: list[dict], G: int, rng: random.Random,
     return total / n
 
 
-def run_coverage(prompts: list[dict], G: int, M: int, B: int, truth: float,
-                 rng: random.Random, correlated: bool) -> dict:
-    validate_design(groups=[G], counts=[M,B], n_prompts=len(prompts))
+def run_coverage(
+    prompts: list[dict], G: int, M: int, B: int, truth: float, rng: random.Random, correlated: bool
+) -> dict:
+    validate_design(groups=[G], counts=[M, B], n_prompts=len(prompts))
     if M > len(prompts):
         raise ValueError("batch exceeds prompt population")
     ordered = sorted(prompts, key=lambda p: p["p_hat"]) if correlated else None
@@ -100,7 +103,7 @@ def run_coverage(prompts: list[dict], G: int, M: int, B: int, truth: float,
     for _ in range(B):
         if correlated:
             start = rng.randrange(0, len(ordered) - M + 1)
-            batch = ordered[start:start + M]
+            batch = ordered[start : start + M]
         else:
             batch = rng.sample(prompts, M)
         zvf = sum(subsample_indicator(rng, p["rewards"], G) for p in batch) / M
@@ -110,11 +113,17 @@ def run_coverage(prompts: list[dict], G: int, M: int, B: int, truth: float,
         wilson_hits += int(lo_w <= truth <= hi_w)
         widths.append(hi - lo)
     return {
-        "G": G, "M": M, "B": B, "correlated": correlated,
+        "G": G,
+        "M": M,
+        "B": B,
+        "correlated": correlated,
         "population_zvf": round(truth, 4),
         "wald_coverage": round(wald_hits / B, 4),
         "wilson_coverage": round(wilson_hits / B, 4),
-        "coverage_mc_ci95": {"wald": wilson_ci(wald_hits/B,B), "wilson": wilson_ci(wilson_hits/B,B)},
+        "coverage_mc_ci95": {
+            "wald": wilson_ci(wald_hits / B, B),
+            "wilson": wilson_ci(wilson_hits / B, B),
+        },
         "mean_wald_width": round(sum(widths) / len(widths), 4),
     }
 
@@ -123,17 +132,20 @@ def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--pool", required=True, type=Path)
     ap.add_argument("--group-sizes", type=int, nargs="+", default=[4, 8, 16])
-    ap.add_argument("--batch-sizes", type=int, nargs="+",
-                    default=[8, 16, 32, 64, 128])
-    ap.add_argument("--batches", type=int, default=2000,
-                    help="B resampled batches per cell")
+    ap.add_argument("--batch-sizes", type=int, nargs="+", default=[8, 16, 32, 64, 128])
+    ap.add_argument("--batches", type=int, default=2000, help="B resampled batches per cell")
     ap.add_argument("--seed", type=int, default=0)
     args = ap.parse_args()
 
     pool = load_pool(args.pool)
     prompts = pool["prompts"]
     R = pool["rollouts_per_prompt"]
-    validate_design(groups=args.group_sizes, counts=[args.batches,*args.batch_sizes], available=R, n_prompts=len(prompts))
+    validate_design(
+        groups=args.group_sizes,
+        counts=[args.batches, *args.batch_sizes],
+        available=R,
+        n_prompts=len(prompts),
+    )
     if not any(m <= len(prompts) for m in args.batch_sizes):
         raise ValueError("no feasible batch sizes")
     rng = random.Random(args.seed)
@@ -148,28 +160,33 @@ def main() -> None:
             if M > len(prompts):
                 continue
             for correlated in (False, True):
-                row = run_coverage(prompts, G, M, args.batches, truth, rng,
-                                   correlated)
+                row = run_coverage(prompts, G, M, args.batches, truth, rng, correlated)
                 rows.append(row)
                 mode = "corr" if correlated else "iid "
-                print(f"G={G:>2} M={M:>3} [{mode}] truth={truth:.3f} "
-                      f"wald={row['wald_coverage']:.3f} "
-                      f"wilson={row['wilson_coverage']:.3f} "
-                      f"width={row['mean_wald_width']:.3f}", flush=True)
+                print(
+                    f"G={G:>2} M={M:>3} [{mode}] truth={truth:.3f} "
+                    f"wald={row['wald_coverage']:.3f} "
+                    f"wilson={row['wilson_coverage']:.3f} "
+                    f"width={row['mean_wald_width']:.3f}",
+                    flush=True,
+                )
 
     out = RESULTS_DIR / f"t1_ci_coverage_{pool['tag']}.json"
-    write_result(out, {
-        "kind": "t1_ci_coverage",
-        "status": "complete",
-        "pool": str(args.pool),
-        "pool_tag": pool["tag"],
-        "model": pool["model"],
-        "batches_per_cell": args.batches,
-        "seed": args.seed,
-        "generated_at": utc_now(),
-        "rows": rows,
-        "decision_contract": T1_DECISION,
-    })
+    write_result(
+        out,
+        {
+            "kind": "t1_ci_coverage",
+            "status": "complete",
+            "pool": str(args.pool),
+            "pool_tag": pool["tag"],
+            "model": pool["model"],
+            "batches_per_cell": args.batches,
+            "seed": args.seed,
+            "generated_at": utc_now(),
+            "rows": rows,
+            "decision_contract": T1_DECISION,
+        },
+    )
     print(f"-> {out}")
 
 

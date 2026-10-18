@@ -9,6 +9,7 @@ Inputs (read-only, checked-in):
 
 Output: platform_hybrid/experiments/results/review_2026-10-18/P12_signal_starvation/recompute.json
 """
+
 import csv
 import json
 import math
@@ -23,9 +24,13 @@ OUT = RES / "review_2026-10-18/P12_signal_starvation/recompute.json"
 
 
 def load_cohort():
-    rows = [r for r in csv.DictReader(
-        (l for l in open(RES / "zvf_iter46_per_prompt_isog.tsv") if not l.startswith("#")),
-        delimiter="\t")]
+    rows = [
+        r
+        for r in csv.DictReader(
+            (l for l in open(RES / "zvf_iter46_per_prompt_isog.tsv") if not l.startswith("#")),
+            delimiter="\t",
+        )
+    ]
     keys = {}
     for r in rows:
         k = (r["seed"], r["problem_id"])
@@ -36,7 +41,7 @@ def load_cohort():
 
 
 def zvf_plugin(p, G):
-    return np.mean(p ** G + (1 - p) ** G)
+    return np.mean(p**G + (1 - p) ** G)
 
 
 def zvf_unbiased(k, n, G):
@@ -51,9 +56,16 @@ def main():
     probs = np.array([k[1] for k in keys])
     p = np.array(list(keys.values()))
     k8 = np.rint(p * 8).astype(int)
-    out = {"n_rows": len(rows), "n_keys": len(keys), "Y_targets": ytargets,
-           "n_problems": len(set(probs)), "seeds": sorted(set(seeds)),
-           "k_values": sorted(set(k8.tolist())), "mean_p": p.mean(), "var_p": p.var()}
+    out = {
+        "n_rows": len(rows),
+        "n_keys": len(keys),
+        "Y_targets": ytargets,
+        "n_problems": len(set(probs)),
+        "seeds": sorted(set(seeds)),
+        "k_values": sorted(set(k8.tolist())),
+        "mean_p": p.mean(),
+        "var_p": p.var(),
+    }
     U = {G: (1 - zvf_plugin(p, G)) / math.sqrt(G) for G in range(2, 17)}
     lin = {G: (1 - zvf_plugin(p, G)) / G for G in range(2, 17)}
     out["U_sqrt"] = U
@@ -79,7 +91,10 @@ def main():
         pick = rng.choice(uprob, len(uprob))
         clu.append(d(p[np.concatenate([idx[q] for q in pick])]))
     out["boot_iid_95"] = [float(np.percentile(iid, 2.5)), float(np.percentile(iid, 97.5))]
-    out["boot_problem_clustered_95"] = [float(np.percentile(clu, 2.5)), float(np.percentile(clu, 97.5))]
+    out["boot_problem_clustered_95"] = [
+        float(np.percentile(clu, 2.5)),
+        float(np.percentile(clu, 97.5)),
+    ]
     out["boot_problem_clustered_frac_positive"] = float(np.mean(np.array(clu) > 0))
     # polarized construction as in analyze_breakthroughs.polarization_audit
     mu = p.mean()
@@ -87,8 +102,15 @@ def main():
     w = (mu - lo) / (hi - lo)
     nh = int(round(1000 * w))
     pol = np.array([hi] * nh + [lo] * (1000 - nh))
-    out["polarized"] = {"hi": hi, "lo": lo, "n_hi": nh, "n_lo": 1000 - nh,
-                        "mean": pol.mean(), "var": pol.var(), "ZVF5": zvf_plugin(pol, 5)}
+    out["polarized"] = {
+        "hi": hi,
+        "lo": lo,
+        "n_hi": nh,
+        "n_lo": 1000 - nh,
+        "mean": pol.mean(),
+        "var": pol.var(),
+        "ZVF5": zvf_plugin(pol, 5),
+    }
     # boundary fires from raw tensors
     fires = {}
     for m in ("grpo", "aero", "gift", "areal"):
@@ -105,9 +127,13 @@ def main():
         fires[m] = {"obs": obs, "steps": len(steps), "all_correct": ac, "all_wrong": aw}
     tot_ac = sum(v["all_correct"] for v in fires.values())
     tot_aw = sum(v["all_wrong"] for v in fires.values())
-    out["boundary"] = {"per_method": fires, "obs": sum(v["obs"] for v in fires.values()),
-                       "all_correct": tot_ac, "all_wrong": tot_aw,
-                       "share_all_correct": tot_ac / (tot_ac + tot_aw)}
+    out["boundary"] = {
+        "per_method": fires,
+        "obs": sum(v["obs"] for v in fires.values()),
+        "all_correct": tot_ac,
+        "all_wrong": tot_aw,
+        "share_all_correct": tot_ac / (tot_ac + tot_aw),
+    }
     OUT.parent.mkdir(parents=True, exist_ok=True)
     json.dump(out, open(OUT, "w"), indent=1, default=float)
     print(json.dumps(out, indent=1, default=float))

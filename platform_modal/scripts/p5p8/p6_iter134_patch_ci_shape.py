@@ -2,14 +2,17 @@
 """Propose review17-v2 CI-method shape migration without inventing provenance.
 Original method names are preserved; unknown metadata remains null.
 Canonical schema validation precedes publication; original entries are untouched."""
+
 import csv
 import json
 import pathlib
 
 import sys
+
 sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))
 from review17_contract import validate_proposals
 from _paths import REPO_ROOT
+
 ROOT = REPO_ROOT
 REG = ROOT / "platform_hybrid/registry/entries"
 OUT = ROOT / "platform_hybrid/experiments/results/p5p8/review17_v2"
@@ -34,21 +37,25 @@ def main():
         for i, m in enumerate(rows):
             cm = m.get("ci_method")
             if isinstance(cm, str):
-                patch_log.append({
-                    "id": d["id"],
-                    "row_idx": i,
-                    "metric": m.get("metric", ""),
-                    "panel": m.get("panel", ""),
-                    "before": cm,
-                    "after": json.dumps(migrate_method(cm)),
-                })
+                patch_log.append(
+                    {
+                        "id": d["id"],
+                        "row_idx": i,
+                        "metric": m.get("metric", ""),
+                        "panel": m.get("panel", ""),
+                        "before": cm,
+                        "after": json.dumps(migrate_method(cm)),
+                    }
+                )
                 m["ci_method"] = migrate_method(cm)
                 changed = True
         if changed:
             proposed[p.stem] = d
     if proposed:
         validate_proposals(proposed, ROOT / "platform_hybrid/registry/schema.json")
-    (OUT / "p6_iter134_proposed_entries.json").write_text(json.dumps(proposed, indent=2, allow_nan=False) + "\n")
+    (OUT / "p6_iter134_proposed_entries.json").write_text(
+        json.dumps(proposed, indent=2, allow_nan=False) + "\n"
+    )
     with (OUT / "p6_iter134_patch_log.tsv").open("w", newline="") as f:
         if patch_log:
             w = csv.DictWriter(f, fieldnames=list(patch_log[0].keys()), delimiter="\t")

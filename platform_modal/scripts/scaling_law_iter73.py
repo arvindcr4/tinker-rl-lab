@@ -63,9 +63,9 @@ from pathlib import Path
 import matplotlib
 
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt  # noqa: E402
-import numpy as np  # noqa: E402
-from scipy.optimize import curve_fit  # noqa: E402
+import matplotlib.pyplot as plt
+import numpy as np
+from scipy.optimize import curve_fit
 from _analysis_common import saturation, write_rows_tsv as _write_tsv
 
 REPO = Path(__file__).resolve().parents[2] / "platform_hybrid"
@@ -135,9 +135,10 @@ def peak_decay(t, r_peak, t_peak, gamma):
     return r_peak * np.exp(-gamma * np.maximum(t - t_peak, 0.0) ** 2)
 
 
-def _aic_bic(rss: float, n: int, k: int) -> tuple[float,float]:
+def _aic_bic(rss: float, n: int, k: int) -> tuple[float, float]:
     from _review27_models import information_criteria
-    return information_criteria(rss,n,k+1)
+
+    return information_criteria(rss, n, k + 1)
 
 
 def _safe_log_diff(r_max: float, y: np.ndarray) -> np.ndarray:
@@ -163,20 +164,49 @@ def load_traces() -> dict[str, np.ndarray]:
 def closed_form_saturation(t: np.ndarray, y: np.ndarray) -> dict:
     """Profile original-space least squares, with the zero-intercept saturation equation."""
     from scipy.optimize import minimize_scalar
-    t=np.asarray(t,float); y=np.asarray(y,float); n=len(y)
-    failed=dict(r_max=float('nan'),lam=float('nan'),t_80=float('nan'),rss=float('nan'),
-                aic=float('nan'),bic=float('nan'),log_rss=float('nan'),n_used=0,status='fit_failed')
-    if n<4 or not np.all(np.isfinite(y)) or np.max(t)<=0: return failed
-    scale=float(np.max(np.abs(t))); u=t/scale
+
+    t = np.asarray(t, float)
+    y = np.asarray(y, float)
+    n = len(y)
+    failed = dict(
+        r_max=float("nan"),
+        lam=float("nan"),
+        t_80=float("nan"),
+        rss=float("nan"),
+        aic=float("nan"),
+        bic=float("nan"),
+        log_rss=float("nan"),
+        n_used=0,
+        status="fit_failed",
+    )
+    if n < 4 or not np.all(np.isfinite(y)) or np.max(t) <= 0:
+        return failed
+    scale = float(np.max(np.abs(t)))
+    u = t / scale
+
     def profile(log_l):
-        l=np.exp(log_l); shape=-np.expm1(-l*u)
-        r=float(np.clip(np.dot(shape,y)/np.dot(shape,shape),0,1.5))
-        return float(np.sum((y-r*shape)**2)),r
-    opt=minimize_scalar(lambda z:profile(z)[0],bounds=(-16,16),method='bounded')
-    if not opt.success: return failed
-    rss,r=profile(opt.x); lam=float(np.exp(opt.x)/scale); aic,bic=_aic_bic(rss,n,2)
-    return dict(r_max=r,lam=lam,t_80=-math.log(.2)/lam,rss=rss,aic=aic,bic=bic,
-                log_rss=float('nan'),n_used=n,status='ok')
+        l = np.exp(log_l)
+        shape = -np.expm1(-l * u)
+        r = float(np.clip(np.dot(shape, y) / np.dot(shape, shape), 0, 1.5))
+        return float(np.sum((y - r * shape) ** 2)), r
+
+    opt = minimize_scalar(lambda z: profile(z)[0], bounds=(-16, 16), method="bounded")
+    if not opt.success:
+        return failed
+    rss, r = profile(opt.x)
+    lam = float(np.exp(opt.x) / scale)
+    aic, bic = _aic_bic(rss, n, 2)
+    return dict(
+        r_max=r,
+        lam=lam,
+        t_80=-math.log(0.2) / lam,
+        rss=rss,
+        aic=aic,
+        bic=bic,
+        log_rss=float("nan"),
+        n_used=n,
+        status="ok",
+    )
 
 
 def curvefit_saturation(t: np.ndarray, y: np.ndarray) -> dict:
@@ -184,7 +214,9 @@ def curvefit_saturation(t: np.ndarray, y: np.ndarray) -> dict:
     n = len(t)
     try:
         popt, _ = curve_fit(
-            saturation, t, y,
+            saturation,
+            t,
+            y,
             p0=(max(0.9 * float(np.max(y)) + 0.05, 0.05), 0.3),
             bounds=([0.0, 1e-4], [1.5, 10.0]),
             maxfev=20_000,
@@ -194,19 +226,28 @@ def curvefit_saturation(t: np.ndarray, y: np.ndarray) -> dict:
         rss = float(np.sum((y - yhat) ** 2))
         aic, bic = _aic_bic(rss, n, k=2)
         t_80 = float(-math.log(0.2) / lam) if lam > 0 else float("nan")
-        return dict(r_max=r_max, lam=lam, t_80=t_80, rss=rss,
-                    aic=aic, bic=bic, lam_at_bound=lam >= 9.999)
+        return dict(
+            r_max=r_max, lam=lam, t_80=t_80, rss=rss, aic=aic, bic=bic, lam_at_bound=lam >= 9.999
+        )
     except Exception:
-        return dict(r_max=float("nan"), lam=float("nan"), t_80=float("nan"),
-                    rss=float("nan"), aic=float("nan"), bic=float("nan"),
-                    lam_at_bound=False)
+        return dict(
+            r_max=float("nan"),
+            lam=float("nan"),
+            t_80=float("nan"),
+            rss=float("nan"),
+            aic=float("nan"),
+            bic=float("nan"),
+            lam_at_bound=False,
+        )
 
 
 def curvefit_power(t: np.ndarray, y: np.ndarray) -> dict:
     n = len(t)
     try:
         popt, _ = curve_fit(
-            power_law, t, np.maximum(y, 1e-4),
+            power_law,
+            t,
+            np.maximum(y, 1e-4),
             p0=(float(y_mean := np.mean(y)), 0.3),
             bounds=([1e-6, -2.0], [10.0, 4.0]),
             maxfev=20_000,
@@ -217,15 +258,18 @@ def curvefit_power(t: np.ndarray, y: np.ndarray) -> dict:
         aic, bic = _aic_bic(rss, n, k=2)
         return dict(a=a, b=b, rss=rss, aic=aic, bic=bic)
     except Exception:
-        return dict(a=float("nan"), b=float("nan"), rss=float("nan"),
-                    aic=float("nan"), bic=float("nan"))
+        return dict(
+            a=float("nan"), b=float("nan"), rss=float("nan"), aic=float("nan"), bic=float("nan")
+        )
 
 
 def curvefit_linear(t: np.ndarray, y: np.ndarray) -> dict:
     n = len(t)
     try:
         popt, _ = curve_fit(
-            linear, t, y,
+            linear,
+            t,
+            y,
             p0=(0.01, float(np.mean(y))),
             bounds=([-1.0, -2.0], [1.0, 2.0]),
             maxfev=20_000,
@@ -236,8 +280,9 @@ def curvefit_linear(t: np.ndarray, y: np.ndarray) -> dict:
         aic, bic = _aic_bic(rss, n, k=2)
         return dict(m=m, c=c, rss=rss, aic=aic, bic=bic)
     except Exception:
-        return dict(m=float("nan"), c=float("nan"), rss=float("nan"),
-                    aic=float("nan"), bic=float("nan"))
+        return dict(
+            m=float("nan"), c=float("nan"), rss=float("nan"), aic=float("nan"), bic=float("nan")
+        )
 
 
 def zero_model(y: np.ndarray) -> dict:
@@ -257,12 +302,21 @@ def nemotron_peak_decay(t: np.ndarray, y: np.ndarray) -> dict:
     """
     n = len(t)
     if n < 5:
-        return dict(r_peak=float("nan"), t_peak=float("nan"), gamma=float("nan"),
-                    rss=float("nan"), aic=float("nan"), bic=float("nan"),
-                    early_after_peak=float("nan"), late_after_peak=float("nan"))
+        return dict(
+            r_peak=float("nan"),
+            t_peak=float("nan"),
+            gamma=float("nan"),
+            rss=float("nan"),
+            aic=float("nan"),
+            bic=float("nan"),
+            early_after_peak=float("nan"),
+            late_after_peak=float("nan"),
+        )
     try:
         popt, _ = curve_fit(
-            peak_decay, t, y,
+            peak_decay,
+            t,
+            y,
             p0=(float(np.max(y)), float(t[np.argmax(y)]), 0.05),
             bounds=([0.0, float(np.min(t)), 1e-6], [1.5, float(np.max(t)), 10.0]),
             maxfev=20_000,
@@ -274,17 +328,40 @@ def nemotron_peak_decay(t: np.ndarray, y: np.ndarray) -> dict:
         # fraction of trace after peak
         peak_idx = int(np.searchsorted(t, t_peak, side="right")) - 1
         if 0 <= peak_idx < n - 1:
-            after = y[peak_idx + 1:]
-            early = float(np.mean(after[:max(1, len(after) // 2)])) if len(after) >= 2 else float("nan")
-            late = float(np.mean(after[max(1, len(after) // 2):])) if len(after) >= 2 else float("nan")
+            after = y[peak_idx + 1 :]
+            early = (
+                float(np.mean(after[: max(1, len(after) // 2)]))
+                if len(after) >= 2
+                else float("nan")
+            )
+            late = (
+                float(np.mean(after[max(1, len(after) // 2) :]))
+                if len(after) >= 2
+                else float("nan")
+            )
         else:
             early = late = float("nan")
-        return dict(r_peak=r_peak, t_peak=t_peak, gamma=gamma, rss=rss,
-                    aic=aic, bic=bic, early_after_peak=early, late_after_peak=late)
+        return dict(
+            r_peak=r_peak,
+            t_peak=t_peak,
+            gamma=gamma,
+            rss=rss,
+            aic=aic,
+            bic=bic,
+            early_after_peak=early,
+            late_after_peak=late,
+        )
     except Exception:
-        return dict(r_peak=float("nan"), t_peak=float("nan"), gamma=float("nan"),
-                    rss=float("nan"), aic=float("nan"), bic=float("nan"),
-                    early_after_peak=float("nan"), late_after_peak=float("nan"))
+        return dict(
+            r_peak=float("nan"),
+            t_peak=float("nan"),
+            gamma=float("nan"),
+            rss=float("nan"),
+            aic=float("nan"),
+            bic=float("nan"),
+            early_after_peak=float("nan"),
+            late_after_peak=float("nan"),
+        )
 
 
 def three_phase_conformity(t: np.ndarray, y: np.ndarray) -> dict:
@@ -298,10 +375,18 @@ def three_phase_conformity(t: np.ndarray, y: np.ndarray) -> dict:
     """
     n = len(t)
     if n < 6:
-        return dict(pci=0.0, peak_late=False, slow_start=False,
-                    has_mid_peak=False, plateau=False, peak_step=int(np.argmax(y)) + 1,
-                    m1=float("nan"), m2=float("nan"), m3=float("nan"),
-                    n_phases_matched=0)
+        return dict(
+            pci=0.0,
+            peak_late=False,
+            slow_start=False,
+            has_mid_peak=False,
+            plateau=False,
+            peak_step=int(np.argmax(y)) + 1,
+            m1=float("nan"),
+            m2=float("nan"),
+            m3=float("nan"),
+            n_phases_matched=0,
+        )
     peak_idx = int(np.argmax(y))
     peak_late = peak_idx >= n // 2
 
@@ -323,19 +408,28 @@ def three_phase_conformity(t: np.ndarray, y: np.ndarray) -> dict:
         slopes.append(float(np.sum((tt - xm) * (yy - ym))) / den)
     m1, m2, m3 = slopes
 
-    slow_start = (math.isnan(m1) or abs(m1) < 0.020)
+    slow_start = math.isnan(m1) or abs(m1) < 0.020
     has_mid_peak = peak_late and (math.isnan(m2) or m2 >= -0.005)
-    plateau = (math.isnan(m3) or abs(m3) < 0.015)
+    plateau = math.isnan(m3) or abs(m3) < 0.015
 
     n_matched = sum([peak_late, slow_start, has_mid_peak, plateau])
     pci = float(n_matched) + 0.5 * (
-        (1.0 - min(1.0, abs(m1 if not math.isnan(m1) else 0.0) / 0.020)) +
-        (1.0 - min(1.0, max(0.0, (m2 if not math.isnan(m2) else 0.0)) / 0.040 + 0.5)) +
-        (1.0 - min(1.0, abs(m3 if not math.isnan(m3) else 0.0) / 0.015))
+        (1.0 - min(1.0, abs(m1 if not math.isnan(m1) else 0.0) / 0.020))
+        + (1.0 - min(1.0, max(0.0, (m2 if not math.isnan(m2) else 0.0)) / 0.040 + 0.5))
+        + (1.0 - min(1.0, abs(m3 if not math.isnan(m3) else 0.0) / 0.015))
     )
-    return dict(pci=pci, peak_late=peak_late, slow_start=slow_start,
-                has_mid_peak=has_mid_peak, plateau=plateau, peak_step=peak_idx + 1,
-                m1=m1, m2=m2, m3=m3, n_phases_matched=n_matched)
+    return dict(
+        pci=pci,
+        peak_late=peak_late,
+        slow_start=slow_start,
+        has_mid_peak=has_mid_peak,
+        plateau=plateau,
+        peak_step=peak_idx + 1,
+        m1=m1,
+        m2=m2,
+        m3=m3,
+        n_phases_matched=n_matched,
+    )
 
 
 def bootstrap_t80(t: np.ndarray, y: np.ndarray, n_boot: int = N_BOOT) -> dict:
@@ -344,52 +438,96 @@ def bootstrap_t80(t: np.ndarray, y: np.ndarray, n_boot: int = N_BOOT) -> dict:
     n = len(t)
     for _ in range(n_boot):
         idx = rng.integers(0, n, size=n)
-        tt = t[idx]; yy = y[idx]
+        tt = t[idx]
+        yy = y[idx]
         cf = closed_form_saturation(tt, yy)
         if math.isfinite(cf["t_80"]):
             bs.append(cf["t_80"])
     if not bs:
-        return dict(t_80_mean=float("nan"), t_80_lo=float("nan"),
-                    t_80_hi=float("nan"), n_boot=0)
+        return dict(t_80_mean=float("nan"), t_80_lo=float("nan"), t_80_hi=float("nan"), n_boot=0)
     arr = np.array(bs, float)
-    return dict(t_80_mean=float(np.mean(arr)),
-                t_80_lo=float(np.percentile(arr, 2.5)),
-                t_80_hi=float(np.percentile(arr, 97.5)),
-                n_boot=int(len(arr)))
+    return dict(
+        t_80_mean=float(np.mean(arr)),
+        t_80_lo=float(np.percentile(arr, 2.5)),
+        t_80_hi=float(np.percentile(arr, 97.5)),
+        n_boot=int(len(arr)),
+    )
 
 
 def main() -> None:
     traces = load_traces()
 
     # ---- 1. Closed-form vs curve_fit --------------------------------------
-    cols_cf = ["model", "params_B", "arch", "n_steps",
-               "r_max_cf", "lam_cf", "t_80_cf", "rss_cf",
-               "aic_cf", "bic_cf", "n_used_cf",
-               "r_max_cv", "lam_cv", "t_80_cv", "rss_cv",
-               "aic_cv", "bic_cv", "lam_at_bound_cv"]
+    cols_cf = [
+        "model",
+        "params_B",
+        "arch",
+        "n_steps",
+        "r_max_cf",
+        "lam_cf",
+        "t_80_cf",
+        "rss_cf",
+        "aic_cf",
+        "bic_cf",
+        "n_used_cf",
+        "r_max_cv",
+        "lam_cv",
+        "t_80_cv",
+        "rss_cv",
+        "aic_cv",
+        "bic_cv",
+        "lam_at_bound_cv",
+    ]
     rows_cf = []
     for label, rt in traces.items():
         t = np.arange(1, len(rt) + 1, dtype=float)
         cf = closed_form_saturation(t, rt)
         cv = curvefit_saturation(t, rt)
-        rows_cf.append([
-            label, PARAM_B[label], ARCH[label], len(rt),
-            f"{cf['r_max']:.4f}", f"{cf['lam']:.4f}", f"{cf['t_80']:.4f}",
-            f"{cf['rss']:.4f}", f"{cf['aic']:.4f}", f"{cf['bic']:.4f}",
-            cf["n_used"],
-            f"{cv['r_max']:.4f}", f"{cv['lam']:.4f}", f"{cv['t_80']:.4f}",
-            f"{cv['rss']:.4f}", f"{cv['aic']:.4f}", f"{cv['bic']:.4f}",
-            cv["lam_at_bound"],
-        ])
+        rows_cf.append(
+            [
+                label,
+                PARAM_B[label],
+                ARCH[label],
+                len(rt),
+                f"{cf['r_max']:.4f}",
+                f"{cf['lam']:.4f}",
+                f"{cf['t_80']:.4f}",
+                f"{cf['rss']:.4f}",
+                f"{cf['aic']:.4f}",
+                f"{cf['bic']:.4f}",
+                cf["n_used"],
+                f"{cv['r_max']:.4f}",
+                f"{cv['lam']:.4f}",
+                f"{cv['t_80']:.4f}",
+                f"{cv['rss']:.4f}",
+                f"{cv['aic']:.4f}",
+                f"{cv['bic']:.4f}",
+                cv["lam_at_bound"],
+            ]
+        )
     _write_tsv(RESULTS_DIR / "scaling_law_iter73_closed_form_v3.tsv", cols_cf, rows_cf)
 
     # ---- 2. AIC/BIC across model families --------------------------------
-    cols_aic = ["model", "params_B", "arch", "n_steps",
-                "rss_sat", "aic_sat", "bic_sat",
-                "rss_pow", "aic_pow", "bic_pow",
-                "rss_lin", "aic_lin", "bic_lin",
-                "rss_zero", "aic_zero", "bic_zero",
-                "best_aic", "best_bic"]
+    cols_aic = [
+        "model",
+        "params_B",
+        "arch",
+        "n_steps",
+        "rss_sat",
+        "aic_sat",
+        "bic_sat",
+        "rss_pow",
+        "aic_pow",
+        "bic_pow",
+        "rss_lin",
+        "aic_lin",
+        "bic_lin",
+        "rss_zero",
+        "aic_zero",
+        "bic_zero",
+        "best_aic",
+        "best_bic",
+    ]
     rows_aic = []
     for label, rt in traces.items():
         t = np.arange(1, len(rt) + 1, dtype=float)
@@ -397,29 +535,65 @@ def main() -> None:
         pow_ = curvefit_power(t, rt)
         lin = curvefit_linear(t, rt)
         zer = zero_model(rt)
-        aics = {"saturation": sat["aic"], "power": pow_["aic"],
-                "linear": lin["aic"], "zero": zer["aic"]}
-        bics = {"saturation": sat["bic"], "power": pow_["bic"],
-                "linear": lin["bic"], "zero": zer["bic"]}
+        aics = {
+            "saturation": sat["aic"],
+            "power": pow_["aic"],
+            "linear": lin["aic"],
+            "zero": zer["aic"],
+        }
+        bics = {
+            "saturation": sat["bic"],
+            "power": pow_["bic"],
+            "linear": lin["bic"],
+            "zero": zer["bic"],
+        }
         from _review27_models import best_candidate
+
         best_a = best_candidate(aics)
         best_b = best_candidate(bics)
-        rows_aic.append([
-            label, PARAM_B[label], ARCH[label], len(rt),
-            f"{sat['rss']:.4f}", f"{sat['aic']:.4f}", f"{sat['bic']:.4f}",
-            f"{pow_['rss']:.4f}", f"{pow_['aic']:.4f}", f"{pow_['bic']:.4f}",
-            f"{lin['rss']:.4f}", f"{lin['aic']:.4f}", f"{lin['bic']:.4f}",
-            f"{zer['rss']:.4f}", f"{zer['aic']:.4f}", f"{zer['bic']:.4f}",
-            best_a, best_b,
-        ])
+        rows_aic.append(
+            [
+                label,
+                PARAM_B[label],
+                ARCH[label],
+                len(rt),
+                f"{sat['rss']:.4f}",
+                f"{sat['aic']:.4f}",
+                f"{sat['bic']:.4f}",
+                f"{pow_['rss']:.4f}",
+                f"{pow_['aic']:.4f}",
+                f"{pow_['bic']:.4f}",
+                f"{lin['rss']:.4f}",
+                f"{lin['aic']:.4f}",
+                f"{lin['bic']:.4f}",
+                f"{zer['rss']:.4f}",
+                f"{zer['aic']:.4f}",
+                f"{zer['bic']:.4f}",
+                best_a,
+                best_b,
+            ]
+        )
     _write_tsv(RESULTS_DIR / "scaling_law_iter73_aic_bic_v3.tsv", cols_aic, rows_aic)
 
     # ---- 3. Nemotron collapse forensics ----------------------------------
-    cols_ne = ["model", "params_B", "arch", "n_steps", "peak_step",
-               "peak_reward", "r_peak_pd", "t_peak_pd", "gamma_pd",
-               "rss_pd", "aic_pd", "bic_pd",
-               "early_after_peak", "late_after_peak",
-               "late_minus_peak", "is_collapse_violator"]
+    cols_ne = [
+        "model",
+        "params_B",
+        "arch",
+        "n_steps",
+        "peak_step",
+        "peak_reward",
+        "r_peak_pd",
+        "t_peak_pd",
+        "gamma_pd",
+        "rss_pd",
+        "aic_pd",
+        "bic_pd",
+        "early_after_peak",
+        "late_after_peak",
+        "late_minus_peak",
+        "is_collapse_violator",
+    ]
     rows_ne = []
     for label, rt in traces.items():
         t = np.arange(1, len(rt) + 1, dtype=float)
@@ -427,40 +601,73 @@ def main() -> None:
         peak_idx = int(np.argmax(rt))
         peak_step = peak_idx + 1
         peak_reward = float(np.max(rt))
-        late = float(np.mean(rt[max(peak_idx + 1, 0):])) if peak_idx < len(rt) - 1 else float("nan")
+        late = (
+            float(np.mean(rt[max(peak_idx + 1, 0) :])) if peak_idx < len(rt) - 1 else float("nan")
+        )
         late_minus_peak = late - peak_reward
         # "collapse violator" = peak before step n//2 AND late < 0.4 * peak
         is_violator = (peak_step <= len(rt) // 2) and (late < 0.4 * peak_reward)
-        rows_ne.append([
-            label, PARAM_B[label], ARCH[label], len(rt), peak_step,
-            f"{peak_reward:.4f}",
-            f"{pd['r_peak']:.4f}", f"{pd['t_peak']:.4f}", f"{pd['gamma']:.4f}",
-            f"{pd['rss']:.4f}", f"{pd['aic']:.4f}", f"{pd['bic']:.4f}",
-            f"{pd['early_after_peak']:.4f}" if math.isfinite(pd["early_after_peak"]) else "nan",
-            f"{pd['late_after_peak']:.4f}" if math.isfinite(pd["late_after_peak"]) else "nan",
-            f"{late_minus_peak:.4f}",
-            is_violator,
-        ])
+        rows_ne.append(
+            [
+                label,
+                PARAM_B[label],
+                ARCH[label],
+                len(rt),
+                peak_step,
+                f"{peak_reward:.4f}",
+                f"{pd['r_peak']:.4f}",
+                f"{pd['t_peak']:.4f}",
+                f"{pd['gamma']:.4f}",
+                f"{pd['rss']:.4f}",
+                f"{pd['aic']:.4f}",
+                f"{pd['bic']:.4f}",
+                f"{pd['early_after_peak']:.4f}" if math.isfinite(pd["early_after_peak"]) else "nan",
+                f"{pd['late_after_peak']:.4f}" if math.isfinite(pd["late_after_peak"]) else "nan",
+                f"{late_minus_peak:.4f}",
+                is_violator,
+            ]
+        )
     _write_tsv(RESULTS_DIR / "scaling_law_iter73_nemotron_v3.tsv", cols_ne, rows_ne)
 
     # ---- 4. Three-phase conformity --------------------------------------
-    cols_pc = ["model", "params_B", "arch", "n_steps", "peak_step",
-               "m1", "m2", "m3",
-               "peak_late", "slow_start", "has_mid_peak", "plateau",
-               "n_phases_matched", "pci"]
+    cols_pc = [
+        "model",
+        "params_B",
+        "arch",
+        "n_steps",
+        "peak_step",
+        "m1",
+        "m2",
+        "m3",
+        "peak_late",
+        "slow_start",
+        "has_mid_peak",
+        "plateau",
+        "n_phases_matched",
+        "pci",
+    ]
     rows_pc = []
     for label, rt in traces.items():
         t = np.arange(1, len(rt) + 1, dtype=float)
         pc = three_phase_conformity(t, rt)
-        rows_pc.append([
-            label, PARAM_B[label], ARCH[label], len(rt),
-            pc["peak_step"],
-            f"{pc['m1']:.5f}" if math.isfinite(pc["m1"]) else "nan",
-            f"{pc['m2']:.5f}" if math.isfinite(pc["m2"]) else "nan",
-            f"{pc['m3']:.5f}" if math.isfinite(pc["m3"]) else "nan",
-            pc["peak_late"], pc["slow_start"], pc["has_mid_peak"], pc["plateau"],
-            pc["n_phases_matched"], f"{pc['pci']:.3f}",
-        ])
+        rows_pc.append(
+            [
+                label,
+                PARAM_B[label],
+                ARCH[label],
+                len(rt),
+                pc["peak_step"],
+                f"{pc['m1']:.5f}" if math.isfinite(pc["m1"]) else "nan",
+                f"{pc['m2']:.5f}" if math.isfinite(pc["m2"]) else "nan",
+                f"{pc['m3']:.5f}" if math.isfinite(pc["m3"]) else "nan",
+                pc["peak_late"],
+                pc["slow_start"],
+                pc["has_mid_peak"],
+                pc["plateau"],
+                pc["n_phases_matched"],
+                f"{pc['pci']:.3f}",
+            ]
+        )
     _write_tsv(RESULTS_DIR / "scaling_law_iter73_phase_conform_v3.tsv", cols_pc, rows_pc)
 
     # ---- 5. Bootstrap t_80 + predictions ---------------------------------
@@ -470,15 +677,23 @@ def main() -> None:
 
     # P1: closed-form fit converges for >= 9/12 anchors
     n_cf_converged = sum(
-        1 for label in traces
-        if math.isfinite(closed_form_saturation(np.arange(1, len(traces[label]) + 1, dtype=float), traces[label])["r_max"])
+        1
+        for label in traces
+        if math.isfinite(
+            closed_form_saturation(
+                np.arange(1, len(traces[label]) + 1, dtype=float), traces[label]
+            )["r_max"]
+        )
     )
-    rows_pr.append([
-        "P1_cf_converges",
-        "Closed-form saturation fit converges for >= 9/12 anchors.",
-        f"{n_cf_converged}/12", ">= 9/12",
-        "PASS" if n_cf_converged >= 9 else "FAIL",
-    ])
+    rows_pr.append(
+        [
+            "P1_cf_converges",
+            "Closed-form saturation fit converges for >= 9/12 anchors.",
+            f"{n_cf_converged}/12",
+            ">= 9/12",
+            "PASS" if n_cf_converged >= 9 else "FAIL",
+        ]
+    )
 
     # P2: closed-form lambda and curve_fit lambda correlate >= 0.5
     cf_lam = []
@@ -487,19 +702,29 @@ def main() -> None:
         t = np.arange(1, len(rt) + 1, dtype=float)
         cf = closed_form_saturation(t, rt)
         cv = curvefit_saturation(t, rt)
-        if math.isfinite(cf["lam"]) and math.isfinite(cv["lam"]) and cf["lam"] < 5 and cv["lam"] < 5:
+        if (
+            math.isfinite(cf["lam"])
+            and math.isfinite(cv["lam"])
+            and cf["lam"] < 5
+            and cv["lam"] < 5
+        ):
             cf_lam.append(cf["lam"])
             cv_lam.append(cv["lam"])
     if len(cf_lam) >= 3:
-        rho_cf_cv = float(__import__("scipy.stats", fromlist=["spearmanr"]).spearmanr(cf_lam, cv_lam).statistic)
+        rho_cf_cv = float(
+            __import__("scipy.stats", fromlist=["spearmanr"]).spearmanr(cf_lam, cv_lam).statistic
+        )
     else:
         rho_cf_cv = float("nan")
-    rows_pr.append([
-        "P2_cf_cv_lambda_correlate",
-        "Spearman(closed-form lambda, curve_fit lambda) >= 0.5 across the finite-lambda pool.",
-        f"rho={rho_cf_cv:.3f}, n={len(cf_lam)}", ">= 0.5",
-        "PASS" if rho_cf_cv >= 0.5 else "FAIL",
-    ])
+    rows_pr.append(
+        [
+            "P2_cf_cv_lambda_correlate",
+            "Spearman(closed-form lambda, curve_fit lambda) >= 0.5 across the finite-lambda pool.",
+            f"rho={rho_cf_cv:.3f}, n={len(cf_lam)}",
+            ">= 0.5",
+            "PASS" if rho_cf_cv >= 0.5 else "FAIL",
+        ]
+    )
 
     # P3: AIC picks saturation as best for >= 7/12 anchors
     n_sat_best = 0
@@ -508,53 +733,69 @@ def main() -> None:
         n_aic_total += 1
         if row[-2] == "saturation":
             n_sat_best += 1
-    rows_pr.append([
-        "P3_aic_saturation_best",
-        "AIC selects saturation as best model for >= 7/12 anchors (the saturation law holds as a parsimonious family).",
-        f"{n_sat_best}/12", ">= 7/12",
-        "PASS" if n_sat_best >= 7 else "FAIL",
-    ])
+    rows_pr.append(
+        [
+            "P3_aic_saturation_best",
+            "AIC selects saturation as best model for >= 7/12 anchors (the saturation law holds as a parsimonious family).",
+            f"{n_sat_best}/12",
+            ">= 7/12",
+            "PASS" if n_sat_best >= 7 else "FAIL",
+        ]
+    )
 
     # P4: AIC picks power as best for >= 2/12 anchors (alternative family is alive)
     n_pow_best = sum(1 for row in rows_aic if row[-2] == "power")
-    rows_pr.append([
-        "P4_aic_power_alternative",
-        "AIC selects power-law as best for >= 2/12 anchors (alternative family is non-trivially alive).",
-        f"{n_pow_best}/12", ">= 2/12",
-        "PASS" if n_pow_best >= 2 else "FAIL",
-    ])
+    rows_pr.append(
+        [
+            "P4_aic_power_alternative",
+            "AIC selects power-law as best for >= 2/12 anchors (alternative family is non-trivially alive).",
+            f"{n_pow_best}/12",
+            ">= 2/12",
+            "PASS" if n_pow_best >= 2 else "FAIL",
+        ]
+    )
 
     # P5: Nemotron-120B is identified as collapse violator by the peak-decay model
     violators = [r[0] for r in rows_ne if r[-1]]
     nem_unique = violators == ["Nemotron-120B"]
-    rows_pr.append([
-        "P5_nemotron_collapse_violator",
-        "Peak-decay model labels Nemotron-120B as the unique collapse violator (peak before step n//2, late < 0.4 * peak).",
-        f"violators={violators}", "True",
-        "PASS" if nem_unique else "FAIL",
-    ])
+    rows_pr.append(
+        [
+            "P5_nemotron_collapse_violator",
+            "Peak-decay model labels Nemotron-120B as the unique collapse violator (peak before step n//2, late < 0.4 * peak).",
+            f"violators={violators}",
+            "True",
+            "PASS" if nem_unique else "FAIL",
+        ]
+    )
 
     # P6: gamma > 0 for >= 5/12 anchors (peak-decay signature is alive)
     n_gamma_alive = sum(
-        1 for row in rows_ne
+        1
+        for row in rows_ne
         if float(row[8]) > 1e-3  # gamma > 0
     )
-    rows_pr.append([
-        "P6_peak_decay_signature_alive",
-        "Peak-decay gamma > 0 for >= 5/12 anchors (the three-phase template's 'peak at end' assumption is violated broadly).",
-        f"{n_gamma_alive}/12", ">= 5/12",
-        "PASS" if n_gamma_alive >= 5 else "FAIL",
-    ])
+    rows_pr.append(
+        [
+            "P6_peak_decay_signature_alive",
+            "Peak-decay gamma > 0 for >= 5/12 anchors (the three-phase template's 'peak at end' assumption is violated broadly).",
+            f"{n_gamma_alive}/12",
+            ">= 5/12",
+            "PASS" if n_gamma_alive >= 5 else "FAIL",
+        ]
+    )
 
     # P7: PCI mean across the pool is < 2.5 (three-phase template falsified, consistent with iter65)
     pcis = [float(row[-1]) for row in rows_pc]
     pci_mean = float(np.mean(pcis))
-    rows_pr.append([
-        "P7_three_phase_falsified",
-        "Mean PCI across the pool is < 2.5 (three-phase template is geometrically falsified, consistent with iter65).",
-        f"PCI_mean={pci_mean:.3f}", "< 2.5",
-        "PASS" if pci_mean < 2.5 else "FAIL",
-    ])
+    rows_pr.append(
+        [
+            "P7_three_phase_falsified",
+            "Mean PCI across the pool is < 2.5 (three-phase template is geometrically falsified, consistent with iter65).",
+            f"PCI_mean={pci_mean:.3f}",
+            "< 2.5",
+            "PASS" if pci_mean < 2.5 else "FAIL",
+        ]
+    )
 
     # P8: closed-form t_80 bootstrap CIs are finite for >= 9/12 anchors
     n_t80_ci = 0
@@ -563,21 +804,26 @@ def main() -> None:
         bs = bootstrap_t80(t, rt, n_boot=500)
         if math.isfinite(bs["t_80_lo"]) and math.isfinite(bs["t_80_hi"]) and bs["n_boot"] > 50:
             n_t80_ci += 1
-    rows_pr.append([
-        "P8_t80_bootstrap_ci_finite",
-        "Closed-form t_80 bootstrap CIs are finite for >= 9/12 anchors.",
-        f"{n_t80_ci}/12", ">= 9/12",
-        "PASS" if n_t80_ci >= 9 else "FAIL",
-    ])
+    rows_pr.append(
+        [
+            "P8_t80_bootstrap_ci_finite",
+            "Closed-form t_80 bootstrap CIs are finite for >= 9/12 anchors.",
+            f"{n_t80_ci}/12",
+            ">= 9/12",
+            "PASS" if n_t80_ci >= 9 else "FAIL",
+        ]
+    )
 
     _write_tsv(RESULTS_DIR / "scaling_law_iter73_predictions_v3.tsv", cols_pr, rows_pr)
 
     # ---- print headline ---------------------------------------------------
     print("\n=== Iter73 headline ===")
     print(f"closed-form fit converged: {n_cf_converged}/12")
-    print(f"AIC best family counts: sat={n_sat_best}, pow={n_pow_best}, lin="
-          f"{sum(1 for r in rows_aic if r[-2]=='linear')}, zero="
-          f"{sum(1 for r in rows_aic if r[-2]=='zero')}")
+    print(
+        f"AIC best family counts: sat={n_sat_best}, pow={n_pow_best}, lin="
+        f"{sum(1 for r in rows_aic if r[-2] == 'linear')}, zero="
+        f"{sum(1 for r in rows_aic if r[-2] == 'zero')}"
+    )
     print(f"PCI mean: {pci_mean:.3f}")
     print(f"peak-decay gamma > 0 anchors: {n_gamma_alive}/12")
     print(f"closed-form vs curve_fit lambda rho: {rho_cf_cv:.3f} (n={len(cf_lam)})")
@@ -598,19 +844,23 @@ def main() -> None:
     delta = aic_sat - aic_alt
     sorted_idx = np.argsort(delta)
     pos = np.arange(len(labels))
-    ax_a.barh(pos, delta[sorted_idx], color=[
-        "tab:green" if delta[i] < -2 else ("tab:orange" if delta[i] < 2 else "tab:red")
-        for i in sorted_idx
-    ], edgecolor="k", alpha=0.85)
+    ax_a.barh(
+        pos,
+        delta[sorted_idx],
+        color=[
+            "tab:green" if delta[i] < -2 else ("tab:orange" if delta[i] < 2 else "tab:red")
+            for i in sorted_idx
+        ],
+        edgecolor="k",
+        alpha=0.85,
+    )
     ax_a.set_yticks(pos)
-    ax_a.set_yticklabels([labels[i].replace("-Inst", "") for i in sorted_idx],
-                         fontsize=7)
+    ax_a.set_yticklabels([labels[i].replace("-Inst", "") for i in sorted_idx], fontsize=7)
     ax_a.axvline(0, color="k", lw=0.9, ls="--")
     ax_a.axvline(-2, color="tab:green", lw=0.7, ls=":", alpha=0.7)
     ax_a.axvline(2, color="tab:red", lw=0.7, ls=":", alpha=0.7)
     ax_a.set_xlabel(r"$\Delta \mathrm{AIC}$ (saturation $-$ best alternative)")
-    ax_a.set_title("(a) Saturation vs best alternative (AIC): "
-                   "green = sat wins (AIC<-2)")
+    ax_a.set_title("(a) Saturation vs best alternative (AIC): green = sat wins (AIC<-2)")
     ax_a.grid(axis="x", alpha=0.25)
 
     # (b) closed-form lambda vs curve_fit lambda
@@ -618,14 +868,22 @@ def main() -> None:
     cf_arr = np.array([float(r[5]) for r in rows_cf])
     cv_arr = np.array([float(r[12]) for r in rows_cf])
     finite = np.isfinite(cf_arr) & np.isfinite(cv_arr) & (cf_arr < 5) & (cv_arr < 5)
-    for i, (cf_i, cv_i, fin) in enumerate(zip(cf_arr, cv_arr, finite)):
+    for i, (cf_i, cv_i, fin) in enumerate(zip(cf_arr, cv_arr, finite, strict=False)):
         c = "tab:blue" if fin else "lightgray"
-        ax_b.scatter(cv_i, cf_i, c=c, s=60, edgecolor="k", alpha=0.8,
-                     label=labels[i].replace("-Inst", "") if fin else None)
-    maxv = max(np.nanmax(cf_arr[finite]) if finite.any() else 1.0,
-               np.nanmax(cv_arr[finite]) if finite.any() else 1.0)
-    ax_b.plot([0, maxv * 1.05], [0, maxv * 1.05], "k--", lw=0.9, alpha=0.6,
-              label="y=x")
+        ax_b.scatter(
+            cv_i,
+            cf_i,
+            c=c,
+            s=60,
+            edgecolor="k",
+            alpha=0.8,
+            label=labels[i].replace("-Inst", "") if fin else None,
+        )
+    maxv = max(
+        np.nanmax(cf_arr[finite]) if finite.any() else 1.0,
+        np.nanmax(cv_arr[finite]) if finite.any() else 1.0,
+    )
+    ax_b.plot([0, maxv * 1.05], [0, maxv * 1.05], "k--", lw=0.9, alpha=0.6, label="y=x")
     ax_b.set_xlabel(r"$\lambda_\mathrm{curve\_fit}$ (iter61 baseline)")
     ax_b.set_ylabel(r"$\lambda_\mathrm{closed-form}$ (iter73)")
     ax_b.set_title("(b) Closed-form vs curve_fit lambda (12 anchors)")
@@ -635,17 +893,17 @@ def main() -> None:
     # (c) PCI bar chart with arch color
     ax_c = fig.add_subplot(gs[1, 0])
     pcis_all = [float(r[-1]) for r in rows_pc]
-    arch_color = ["tab:blue" if ARCH[l] == "dense" else "tab:orange"
-                  for l in labels]
+    arch_color = ["tab:blue" if ARCH[l] == "dense" else "tab:orange" for l in labels]
     ax_c.bar(labels, pcis_all, color=arch_color, edgecolor="k", alpha=0.85)
     ax_c.axhline(2.5, color="tab:red", lw=0.9, ls="--", label="falsification threshold (2.5)")
     ax_c.axhline(3.0, color="tab:green", lw=0.7, ls=":", label="template match (3.0)")
     ax_c.set_ylim(0, 3.4)
     ax_c.set_ylabel("phase-conformity index (PCI)")
-    ax_c.set_title("(c) PCI per anchor (blue=dense, orange=MoE); iter65-confirmed template falsification")
+    ax_c.set_title(
+        "(c) PCI per anchor (blue=dense, orange=MoE); iter65-confirmed template falsification"
+    )
     ax_c.tick_params(axis="x", rotation=20, labelsize=7)
-    ax_c.set_xticklabels([l.replace("-Inst", "") for l in labels],
-                         rotation=20, ha="right")
+    ax_c.set_xticklabels([l.replace("-Inst", "") for l in labels], rotation=20, ha="right")
     ax_c.legend(fontsize=7, loc="upper right")
     ax_c.grid(axis="y", alpha=0.25)
 
@@ -654,16 +912,22 @@ def main() -> None:
     nem = traces.get("Nemotron-120B")
     if nem is not None:
         t_nem = np.arange(1, len(nem) + 1)
-        ax_d.bar(t_nem, nem, color="tab:red", alpha=0.65, edgecolor="k",
-                 label="Nemotron-120B reward")
+        ax_d.bar(
+            t_nem, nem, color="tab:red", alpha=0.65, edgecolor="k", label="Nemotron-120B reward"
+        )
         t_pd = np.linspace(1, len(nem), 100)
         pd = nemotron_peak_decay(np.arange(1, len(nem) + 1, dtype=float), nem)
         if math.isfinite(pd["r_peak"]):
             yhat = peak_decay(t_pd, pd["r_peak"], pd["t_peak"], pd["gamma"])
-            ax_d.plot(t_pd, yhat, color="k", lw=2.0,
-                      label=fr"peak-decay: $R_\mathrm{{peak}}={pd['r_peak']:.2f}$, "
-                            fr"$t_\mathrm{{peak}}={pd['t_peak']:.1f}$, "
-                            fr"$\gamma={pd['gamma']:.3f}$")
+            ax_d.plot(
+                t_pd,
+                yhat,
+                color="k",
+                lw=2.0,
+                label=rf"peak-decay: $R_\mathrm{{peak}}={pd['r_peak']:.2f}$, "
+                rf"$t_\mathrm{{peak}}={pd['t_peak']:.1f}$, "
+                rf"$\gamma={pd['gamma']:.3f}$",
+            )
             ax_d.axvline(pd["t_peak"], color="k", lw=0.7, ls=":")
             ax_d.annotate(
                 f"peak @ step {int(round(pd['t_peak']))}",
@@ -672,10 +936,14 @@ def main() -> None:
                 arrowprops=dict(arrowstyle="->", lw=0.9, color="k"),
                 fontsize=8,
             )
-        ax_d.set_xlabel("training step"); ax_d.set_ylabel("reward")
+        ax_d.set_xlabel("training step")
+        ax_d.set_ylabel("reward")
         ax_d.set_ylim(0, 1.05)
-        ax_d.set_title("(d) Nemotron-120B peak-decay fit: structural violation of three-phase template")
-        ax_d.legend(fontsize=7); ax_d.grid(alpha=0.25)
+        ax_d.set_title(
+            "(d) Nemotron-120B peak-decay fit: structural violation of three-phase template"
+        )
+        ax_d.legend(fontsize=7)
+        ax_d.grid(alpha=0.25)
 
     fig.suptitle(
         "Pillar 1 iter73 -- saturation-law saturation, AIC selection, "
@@ -693,7 +961,9 @@ def main() -> None:
 
 if __name__ == "__main__":
     from _review27_models import configure_paths
+
     configure_paths(globals())
     main()
     from _review27_models import write_manifest
+
     write_manifest(__file__, TRACE_DIR, RESULTS_DIR)

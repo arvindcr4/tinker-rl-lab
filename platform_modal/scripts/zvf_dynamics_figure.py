@@ -15,12 +15,13 @@ Inputs: platform_hybrid/experiments/results/zvf_dynamics_phase.tsv,
         platform_hybrid/experiments/results/zvf_dynamics_summary.tsv
 Outputs: paper/figures/zvf_dynamics_{phase,leadtime}.pdf and .png
 """
-import csv
+
 import os
 import sys
 
 try:
     import matplotlib
+
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
 except ImportError:
@@ -36,7 +37,7 @@ def _read_tsv(path):
     with open(path) as f:
         lines = [l for l in f if not l.startswith("#") and l.strip()]
     hdr = lines[0].rstrip("\n").split("\t")
-    return [dict(zip(hdr, l.rstrip("\n").split("\t"))) for l in lines[1:]]
+    return [dict(zip(hdr, l.rstrip("\n").split("\t"), strict=False)) for l in lines[1:]]
 
 
 def _phase_chart():
@@ -46,7 +47,7 @@ def _phase_chart():
     p1 = [float(r["zvf_phase1_mean"]) for r in rows]
     p2 = [float(r["zvf_phase2_mean"]) for r in rows]
     p3 = [float(r["zvf_phase3_mean"]) for r in rows]
-    drift = [a - b for a, b in zip(p3, p1)]
+    drift = [a - b for a, b in zip(p3, p1, strict=False)]
 
     fig, ax = plt.subplots(figsize=(7.0, 3.6))
     x = list(range(len(methods)))
@@ -58,9 +59,12 @@ def _phase_chart():
     ax.set_xticklabels(methods, rotation=30, ha="right", fontsize=8)
     ax.set_ylabel("phase-mean ZVF", fontsize=9)
     ax.set_ylim(0, 1.05)
-    ax.set_title("Per-method ZVF phase decomposition (5 seeds pooled)\nmonotonic late>early implies training-time signal starvation", fontsize=9)
+    ax.set_title(
+        "Per-method ZVF phase decomposition (5 seeds pooled)\nmonotonic late>early implies training-time signal starvation",
+        fontsize=9,
+    )
     ax.legend(fontsize=8, loc="upper left")
-    for xi, d in zip(x, drift):
+    for xi, d in zip(x, drift, strict=False):
         ax.text(xi, 1.02, f"Δ={d:+.2f}", ha="center", fontsize=7, color="#333")
     fig.tight_layout()
     fig.savefig(os.path.join(FIGS, "zvf_dynamics_phase.pdf"))
@@ -77,22 +81,43 @@ def _leadtime_chart():
         return
     fig, ax = plt.subplots(figsize=(5.2, 3.4))
     methods = sorted(set(r["method"] for r in rows))
-    cmap = {m: c for m, c in zip(methods, ["#be353c", "#377eb8", "#4daf4a", "#984ea3", "#ff7f00"])}
+    cmap = {
+        m: c
+        for m, c in zip(
+            methods, ["#be353c", "#377eb8", "#4daf4a", "#984ea3", "#ff7f00"], strict=False
+        )
+    }
     for r in rows:
-        ax.scatter(int(r["first_pass_step"]), int(r["first_collapse_step"]),
-                   color=cmap[r["method"]], s=80, edgecolors="black", linewidth=0.5,
-                   label=r["method"] if r is rows[0] else None)
-        ax.plot([int(r["first_pass_step"]), int(r["first_pass_step"])],
-                [int(r["first_pass_step"]), int(r["first_collapse_step"])],
-                color=cmap[r["method"]], alpha=0.4, lw=1.5)
+        ax.scatter(
+            int(r["first_pass_step"]),
+            int(r["first_collapse_step"]),
+            color=cmap[r["method"]],
+            s=80,
+            edgecolors="black",
+            linewidth=0.5,
+            label=r["method"] if r is rows[0] else None,
+        )
+        ax.plot(
+            [int(r["first_pass_step"]), int(r["first_pass_step"])],
+            [int(r["first_pass_step"]), int(r["first_collapse_step"])],
+            color=cmap[r["method"]],
+            alpha=0.4,
+            lw=1.5,
+        )
     lim = max(int(r["first_collapse_step"]) for r in rows) + 5
     ax.plot([0, lim], [0, lim], "--", color="grey", lw=1, label="y=x (instant)")
     ax.set_xlim(0, lim)
     ax.set_ylim(0, lim)
     ax.set_xlabel("first step at which ZVF crosses θ", fontsize=9)
     ax.set_ylabel("first collapse-flag step", fontsize=9)
-    ax.set_title(f"ZVF first-passage vs collapse lead\n({len(rows)} (method,seed) events; variance-mitigation runs)", fontsize=9)
-    handles = [plt.Line2D([0], [0], marker='o', color='w', markerfacecolor=cmap[m], markersize=8, label=m) for m in methods]
+    ax.set_title(
+        f"ZVF first-passage vs collapse lead\n({len(rows)} (method,seed) events; variance-mitigation runs)",
+        fontsize=9,
+    )
+    handles = [
+        plt.Line2D([0], [0], marker="o", color="w", markerfacecolor=cmap[m], markersize=8, label=m)
+        for m in methods
+    ]
     handles.append(plt.Line2D([0], [0], color="grey", ls="--", lw=1, label="y=x"))
     ax.legend(handles=handles, fontsize=8, loc="upper left")
     fig.tight_layout()

@@ -18,6 +18,7 @@ Outputs (all under experiments/results/A2_20260704/):
   a2_scaling_fit.tsv               OLS/Spearman summary for the two abscissae
   a2_meta.json                     headline metadata
 """
+
 from __future__ import annotations
 
 import csv
@@ -68,16 +69,16 @@ MODEL_SIZES = {
     "qwen3-8b-base": 8.0,
     "qwen3.5-27b": 27.0,
     "qwen3-32b": 32.0,
-    "qwen3-30b-moe": 3.0,       # active params
+    "qwen3-30b-moe": 3.0,  # active params
     "qwen3-30b-moe-inst": 3.0,
-    "qwen3-235b-moe": 22.0,     # active params
+    "qwen3-235b-moe": 22.0,  # active params
     "llama-8b": 8.0,
     "llama-8b-inst": 8.0,
     "llama-3.1-8b": 8.0,
     "llama-3.2-1b": 1.0,
     "llama-3.2-3b": 3.0,
     "deepseek-v3.1": 685.0,
-    "nemotron-120b": 12.0,      # active params
+    "nemotron-120b": 12.0,  # active params
 }
 
 FAMILY = {
@@ -103,6 +104,7 @@ COLORS = {
     "nemotron": "#f4a582",
 }
 
+
 # ---------------------------------------------------------------------------
 # 3-parameter offset saturation fit (iter137 model)
 # ---------------------------------------------------------------------------
@@ -119,13 +121,15 @@ def fit_3p(t: np.ndarray, y: np.ndarray) -> dict:
     starts = [
         [float(np.min(y)), float(np.max(y)), 0.1],
         [0.0, float(np.mean(y)), 0.5],
-        [float(np.median(y)), float(np.mean(y[-min(5, n):])), 0.2],
+        [float(np.median(y)), float(np.mean(y[-min(5, n) :])), 0.2],
     ]
     best = None
     for p0 in starts:
         try:
             popt, _ = curve_fit(
-                saturation_3p, t, y,
+                saturation_3p,
+                t,
+                y,
                 p0=p0,
                 bounds=([0.0, 0.0, 1e-4], [1.0, 1.05, 10.0]),
                 maxfev=20000,
@@ -135,8 +139,8 @@ def fit_3p(t: np.ndarray, y: np.ndarray) -> dict:
                 c, r_max = r_max, c
             pred = saturation_3p(t, c, r_max, lam)
             resid = y - pred
-            ss_res = float(np.sum(resid ** 2))
-            rmse = float(math.sqrt(np.mean(resid ** 2)))
+            ss_res = float(np.sum(resid**2))
+            rmse = float(math.sqrt(np.mean(resid**2)))
             ss_tot = float(np.sum((y - y.mean()) ** 2))
             r2 = 1.0 - ss_res / ss_tot if ss_tot > 0 else float("nan")
             cand = dict(c=c, R_max=r_max, lam=lam, rmse=rmse, r2=r2)
@@ -145,8 +149,14 @@ def fit_3p(t: np.ndarray, y: np.ndarray) -> dict:
         except Exception:
             continue
     if best is None:
-        return dict(c=float("nan"), R_max=float("nan"), lam=float("nan"),
-                    t_80=float("nan"), rmse=float("nan"), r2=float("nan"))
+        return dict(
+            c=float("nan"),
+            R_max=float("nan"),
+            lam=float("nan"),
+            t_80=float("nan"),
+            rmse=float("nan"),
+            r2=float("nan"),
+        )
     lam = best["lam"]
     best["t_80"] = float(-math.log(0.2) / lam) if lam and lam > 0 else float("nan")
     return best
@@ -161,7 +171,7 @@ def contrastive_yield(p: float, G: int) -> float:
         return 0.0
     if p >= 1.0:
         return 0.0
-    return 1.0 - p ** G - (1.0 - p) ** G
+    return 1.0 - p**G - (1.0 - p) ** G
 
 
 def optimal_G(p: float, G_values: list[int]) -> int:
@@ -191,9 +201,9 @@ def ols(x: np.ndarray, y: np.ndarray) -> tuple[float, float, float, float]:
     b = float(np.sum((x - xm) * (y - ym))) / den
     a = ym - b * xm
     resid = y - (a + b * x)
-    s2 = float(np.sum(resid ** 2)) / (n - 2)
+    s2 = float(np.sum(resid**2)) / (n - 2)
     se_b = math.sqrt(s2 / den) if den > 0 else float("nan")
-    r2 = 1.0 - float(np.sum(resid ** 2)) / float(np.sum((y - ym) ** 2))
+    r2 = 1.0 - float(np.sum(resid**2)) / float(np.sum((y - ym) ** 2))
     return a, b, se_b, r2
 
 
@@ -269,40 +279,39 @@ def main() -> None:
         mean_p = float(p_x.mean())
         G_star = optimal_G(mean_p, [2, 4, 8, 16, 32, 64])
 
-        anchors.append({
-            "model": obj.get("model", model_short),
-            "model_short": model_short,
-            "family": FAMILY.get(model_short, "other"),
-            "params_B": params,
-            "G": G,
-            "n_steps": T,
-            "trace_file": path.name,
-            "has_step_loss": all(row.get("loss") is not None for row in step_log),
-            "mean_p": mean_p,
-            "mean_Y": float(y_t.mean()),
-            "mean_KL": float(kl_t.mean()),
-            "cum_C_eff": cum_ceff,
-            "raw_rollouts": float(T * G),
-            "ceff_discount_ratio": float(cum_ceff / (T * G)) if (T * G) > 0 else float("nan"),
-            "c_3p": fit["c"],
-            "R_max_3p": fit["R_max"],
-            "lambda_3p": fit["lam"],
-            "t80_3p": fit["t_80"],
-            "rmse_3p": fit["rmse"],
-            "r2_3p": fit["r2"],
-            "delta_R_max": fit["R_max"] - fit["c"],
-            "G_star": G_star,
-            "peak": float(obj.get("peak", max(rt)) or max(rt)),
-        })
+        anchors.append(
+            {
+                "model": obj.get("model", model_short),
+                "model_short": model_short,
+                "family": FAMILY.get(model_short, "other"),
+                "params_B": params,
+                "G": G,
+                "n_steps": T,
+                "trace_file": path.name,
+                "has_step_loss": all(row.get("loss") is not None for row in step_log),
+                "mean_p": mean_p,
+                "mean_Y": float(y_t.mean()),
+                "mean_KL": float(kl_t.mean()),
+                "cum_C_eff": cum_ceff,
+                "raw_rollouts": float(T * G),
+                "ceff_discount_ratio": float(cum_ceff / (T * G)) if (T * G) > 0 else float("nan"),
+                "c_3p": fit["c"],
+                "R_max_3p": fit["R_max"],
+                "lambda_3p": fit["lam"],
+                "t80_3p": fit["t_80"],
+                "rmse_3p": fit["rmse"],
+                "r2_3p": fit["r2"],
+                "delta_R_max": fit["R_max"] - fit["c"],
+                "G_star": G_star,
+                "peak": float(obj.get("peak", max(rt)) or max(rt)),
+            }
+        )
 
     if not anchors:
         raise RuntimeError("No usable GSM8K traces found.")
 
     # Keep anchors with known size *and* per-step loss for the primary scaling fit.
-    primary = [
-        a for a in anchors
-        if not math.isnan(a["params_B"]) and a["has_step_loss"]
-    ]
+    primary = [a for a in anchors if not math.isnan(a["params_B"]) and a["has_step_loss"]]
     if len(primary) < 3:
         primary = anchors  # fall back to all usable traces
 
@@ -342,11 +351,28 @@ def main() -> None:
     # Write TSVs
     # ------------------------------------------------------------------
     summary_header = [
-        "model", "model_short", "family", "params_B", "G", "n_steps",
-        "has_step_loss", "mean_p", "mean_Y", "mean_KL", "cum_C_eff",
-        "raw_rollouts", "ceff_discount_ratio", "c_3p", "R_max_3p",
-        "lambda_3p", "t80_3p", "rmse_3p", "r2_3p", "delta_R_max",
-        "G_star", "peak",
+        "model",
+        "model_short",
+        "family",
+        "params_B",
+        "G",
+        "n_steps",
+        "has_step_loss",
+        "mean_p",
+        "mean_Y",
+        "mean_KL",
+        "cum_C_eff",
+        "raw_rollouts",
+        "ceff_discount_ratio",
+        "c_3p",
+        "R_max_3p",
+        "lambda_3p",
+        "t80_3p",
+        "rmse_3p",
+        "r2_3p",
+        "delta_R_max",
+        "G_star",
+        "peak",
     ]
     summary_path = OUT_DIR / "a2_ceff_summary.tsv"
     with summary_path.open("w", newline="") as f:
@@ -359,17 +385,35 @@ def main() -> None:
     fit_path = OUT_DIR / "a2_scaling_fit.tsv"
     with fit_path.open("w", newline="") as f:
         w = csv.writer(f, delimiter="\t")
-        w.writerow([
-            "axis", "y_metric", "n", "intercept", "slope_per_log10x", "se_slope",
-            "r2", "spearman_rho", "spearman_p", "models",
-        ])
+        w.writerow(
+            [
+                "axis",
+                "y_metric",
+                "n",
+                "intercept",
+                "slope_per_log10x",
+                "se_slope",
+                "r2",
+                "spearman_rho",
+                "spearman_p",
+                "models",
+            ]
+        )
         for fit in fits:
-            w.writerow([
-                fit["axis"], fit["y_field"], fit["n"], f"{fit['intercept']:.5f}",
-                f"{fit['slope_per_log10x']:.5f}", f"{fit['se_slope']:.5f}",
-                f"{fit['r2']:.4f}", f"{fit['spearman_rho']:.4f}",
-                f"{fit['spearman_p']:.4g}", ",".join(fit["models"]),
-            ])
+            w.writerow(
+                [
+                    fit["axis"],
+                    fit["y_field"],
+                    fit["n"],
+                    f"{fit['intercept']:.5f}",
+                    f"{fit['slope_per_log10x']:.5f}",
+                    f"{fit['se_slope']:.5f}",
+                    f"{fit['r2']:.4f}",
+                    f"{fit['spearman_rho']:.4f}",
+                    f"{fit['spearman_p']:.4g}",
+                    ",".join(fit["models"]),
+                ]
+            )
     print(f"wrote {fit_path}")
 
     # ------------------------------------------------------------------
@@ -392,21 +436,36 @@ def main() -> None:
                 continue
             color = COLORS.get(r["family"], "#888888")
             ax.scatter(
-                math.log10(r[x_field]), r["R_max_3p"],
-                color=color, s=100, zorder=5, edgecolors="white", linewidths=0.8,
+                math.log10(r[x_field]),
+                r["R_max_3p"],
+                color=color,
+                s=100,
+                zorder=5,
+                edgecolors="white",
+                linewidths=0.8,
             )
             ax.annotate(
                 PRETTY.get(r["model_short"], r["model_short"]),
                 (math.log10(r[x_field]), r["R_max_3p"]),
-                textcoords="offset points", xytext=(5, 4), fontsize=7.5, color=color,
+                textcoords="offset points",
+                xytext=(5, 4),
+                fontsize=7.5,
+                color=color,
             )
 
         # OLS line
         if not np.isnan(fit["slope_per_log10x"]):
             x_line = np.linspace(logxs.min() - 0.1, logxs.max() + 0.1, 200)
             y_line = fit["intercept"] + fit["slope_per_log10x"] * x_line
-            ax.plot(x_line, y_line, "--", color="#444444", linewidth=1.2, alpha=0.7,
-                    label=f"OLS slope={fit['slope_per_log10x']:.3f}")
+            ax.plot(
+                x_line,
+                y_line,
+                "--",
+                color="#444444",
+                linewidth=1.2,
+                alpha=0.7,
+                label=f"OLS slope={fit['slope_per_log10x']:.3f}",
+            )
 
         ax.set_xlabel(xlabel)
         ax.set_ylabel("R_max (3-param offset fit)")
@@ -417,13 +476,17 @@ def main() -> None:
     raw_fit = fits[0]
     ceff_fit = fits[1]
     plot_panel(
-        axes[0], "params_B", raw_fit,
+        axes[0],
+        "params_B",
+        raw_fit,
         f"(a) Raw scaling null\nslope={raw_fit['slope_per_log10x']:.3f} "
         f"(ρ={raw_fit['spearman_rho']:.2f}, p={raw_fit['spearman_p']:.3f})",
         "log10(parameters_B)",
     )
     plot_panel(
-        axes[1], "cum_C_eff", ceff_fit,
+        axes[1],
+        "cum_C_eff",
+        ceff_fit,
         f"(b) Contrastive-yield replot\nslope={ceff_fit['slope_per_log10x']:.3f} "
         f"(ρ={ceff_fit['spearman_rho']:.2f}, p={ceff_fit['spearman_p']:.3f})",
         "log10(C_eff)",
@@ -461,10 +524,13 @@ def main() -> None:
     print(f"wrote {meta_path}")
 
     print("\n=== A2 Headline ===")
-    print(f"Primary anchors (n={len(primary)}): " + ", ".join(
-        f"{r['model_short']} (C_eff={r['cum_C_eff']:.2e}, Rmax={r['R_max_3p']:.3f})"
-        for r in primary
-    ))
+    print(
+        f"Primary anchors (n={len(primary)}): "
+        + ", ".join(
+            f"{r['model_short']} (C_eff={r['cum_C_eff']:.2e}, Rmax={r['R_max_3p']:.3f})"
+            for r in primary
+        )
+    )
     for fit in fits:
         print(
             f"{fit['axis']:30s}  slope={fit['slope_per_log10x']:+.3f} "

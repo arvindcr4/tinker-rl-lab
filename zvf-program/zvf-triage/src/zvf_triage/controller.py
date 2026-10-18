@@ -121,9 +121,18 @@ class StepDecision:
             "notes": self.notes,
             "filtered_rewards": self.filtered_rewards,
         }
-        for name in ("observation_kind", "recommended_group_size", "applied_group_size",
-                     "verifier_zvf", "effective_training_reward_zvf", "reward_source", "reward_reduction", "reward_scale",
-                     "variance_convention", "variance_tolerance"):
+        for name in (
+            "observation_kind",
+            "recommended_group_size",
+            "applied_group_size",
+            "verifier_zvf",
+            "effective_training_reward_zvf",
+            "reward_source",
+            "reward_reduction",
+            "reward_scale",
+            "variance_convention",
+            "variance_tolerance",
+        ):
             d[name] = getattr(self, name)
         return d
 
@@ -268,14 +277,27 @@ class ZVFController:
         if not all(math.isfinite(x) and 0 <= x <= 1 for x in (zvf, mean_reward)):
             raise ValueError("summary metrics must be finite values in [0, 1]")
         regime, _ = self._classify(zvf, mean_reward)
-        return StepDecision(step=step_id, zvf=zvf, gu=1-zvf, mean_reward=mean_reward,
-                            regime=regime, signal="noop", group_size=self.G0,
-                            rolling_zvf=zvf, observation_kind="summary_only",
-                            notes="aggregate telemetry only; prompt and training controls disabled")
+        return StepDecision(
+            step=step_id,
+            zvf=zvf,
+            gu=1 - zvf,
+            mean_reward=mean_reward,
+            regime=regime,
+            signal="noop",
+            group_size=self.G0,
+            rolling_zvf=zvf,
+            observation_kind="summary_only",
+            notes="aggregate telemetry only; prompt and training controls disabled",
+        )
 
-    def step(self, rewards: ArrayLike, group_ids: ArrayLike, *,
-             prompt_ids: Optional[Sequence[object]] = None,
-             step_id: Optional[int] = None) -> StepDecision:
+    def step(
+        self,
+        rewards: ArrayLike,
+        group_ids: ArrayLike,
+        *,
+        prompt_ids: Optional[Sequence[object]] = None,
+        step_id: Optional[int] = None,
+    ) -> StepDecision:
         """Measure every observed reward; only stable prompt_ids enable drop recommendations.
 
         group_ids identify groups within this batch, never persistent dataset rows.
@@ -304,9 +326,18 @@ class ZVFController:
         self._step = self._step + 1 if step_id is None else step_id
         if values.size == 0:
             self._stopped = True
-            return StepDecision(self._step, 1., 0., 0., Regime.ALL_DROPPED, "abort",
-                                self.G0, 1., auto_stop=True,
-                                notes="empty observed pool; stop or replenish upstream")
+            return StepDecision(
+                self._step,
+                1.0,
+                0.0,
+                0.0,
+                Regime.ALL_DROPPED,
+                "abort",
+                self.G0,
+                1.0,
+                auto_stop=True,
+                notes="empty observed pool; stop or replenish upstream",
+            )
         batch_zvf = core.zvf(values, ids, eps=self.var_eps)
         mean = float(np.mean(values))
         self._zvf_history.append(batch_zvf)
@@ -315,24 +346,40 @@ class ZVFController:
         newly_dropped = []
         if stable is not None:
             for gid, zero in core.per_prompt_zvf(values, ids, eps=self.var_eps).items():
-                pid = stable[ids == gid][0].item() if hasattr(stable[ids == gid][0], "item") else stable[ids == gid][0]
+                pid = (
+                    stable[ids == gid][0].item()
+                    if hasattr(stable[ids == gid][0], "item")
+                    else stable[ids == gid][0]
+                )
                 self._prompt_streaks[pid] = self._prompt_streaks.get(pid, 0) + 1 if zero else 0
                 if self._prompt_streaks[pid] >= self.drop_k and pid not in self._dropped:
                     self._dropped.add(pid)
                     newly_dropped.append(pid)
-        self._global_collapse_streak = (self._global_collapse_streak + 1
-                                       if batch_zvf >= 1-1e-12 and mean < self.eps_lo else 0)
+        self._global_collapse_streak = (
+            self._global_collapse_streak + 1 if batch_zvf >= 1 - 1e-12 and mean < self.eps_lo else 0
+        )
         auto_stop = self._global_collapse_streak >= self.stop_k
         if auto_stop:
             self._stopped = True
             signal = "abort"
         recommended = self._adaptive_group_size(rolling)
-        return StepDecision(self._step, batch_zvf, 1-batch_zvf, mean, regime,
-                            signal, recommended, rolling, dropped_prompts=newly_dropped,
-                            auto_stop=auto_stop, n_groups=len(set(ids.tolist())),
-                            notes=self._notes(regime, batch_zvf, mean),
-                            recommended_group_size=recommended, verifier_zvf=batch_zvf,
-                            variance_tolerance=self.var_eps)
+        return StepDecision(
+            self._step,
+            batch_zvf,
+            1 - batch_zvf,
+            mean,
+            regime,
+            signal,
+            recommended,
+            rolling,
+            dropped_prompts=newly_dropped,
+            auto_stop=auto_stop,
+            n_groups=len(set(ids.tolist())),
+            notes=self._notes(regime, batch_zvf, mean),
+            recommended_group_size=recommended,
+            verifier_zvf=batch_zvf,
+            variance_tolerance=self.var_eps,
+        )
 
     # ------------------------------------------------------------------ private
 
@@ -366,7 +413,6 @@ class ZVFController:
             )
         if regime is Regime.SATURATION:
             return (
-                f"high ZVF ({batch_zvf:.3f}) with high reward "
-                f"({mean_reward:.3f}): task saturated"
+                f"high ZVF ({batch_zvf:.3f}) with high reward ({mean_reward:.3f}): task saturated"
             )
         return f"usable within-group contrast (ZVF={batch_zvf:.3f})"

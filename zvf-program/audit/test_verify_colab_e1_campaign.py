@@ -15,9 +15,20 @@ SPEC.loader.exec_module(VERIFY)
 
 class CampaignVerificationTests(unittest.TestCase):
     def setUp(self):
-        self.execution = {"mode":"confirmatory", "model":"Qwen/Qwen3-8B", "task":"GSM8K",
-                          "max_steps":10, "heldout_n":4, "max_completion_length":1024, "batch_prompts":4}
-        self.expected = {"execution":self.execution,"heldout_n":4,"treatment_changes":{"grpo":[]}}
+        self.execution = {
+            "mode": "confirmatory",
+            "model": "Qwen/Qwen3-8B",
+            "task": "GSM8K",
+            "max_steps": 10,
+            "heldout_n": 4,
+            "max_completion_length": 1024,
+            "batch_prompts": 4,
+        }
+        self.expected = {
+            "execution": self.execution,
+            "heldout_n": 4,
+            "treatment_changes": {"grpo": []},
+        }
         self.record = {
             "arm": "grpo",
             "seed": 11,
@@ -34,15 +45,20 @@ class CampaignVerificationTests(unittest.TestCase):
             "fingerprint": "f" * 64,
             "treatment_changes": [],
             "remote": {"wandb_run_id": "run123"},
-            "remote_verification": {"hf_repo":"owner/repo", "hf_commit":"c"*40, "wandb":{"state":"finished"}},
+            "remote_verification": {
+                "hf_repo": "owner/repo",
+                "hf_commit": "c" * 40,
+                "wandb": {"state": "finished"},
+            },
         }
         self.manifest = {
             "evidence_class": "confirmatory",
-            "audit_record": {
-                field: self.record[field] for field in VERIFY.AUDIT_FIELDS
-            },
+            "audit_record": {field: self.record[field] for field in VERIFY.AUDIT_FIELDS},
             "run_config": {
-                **self.execution, "arm":"grpo", "seed":11, "treatment_changes":[],
+                **self.execution,
+                "arm": "grpo",
+                "seed": 11,
+                "treatment_changes": [],
                 "unit_fingerprint": "f" * 64,
                 "stack_fingerprint": "a" * 64,
             },
@@ -60,17 +76,17 @@ class CampaignVerificationTests(unittest.TestCase):
 
     def test_required_files_cover_every_checkpoint_and_final_adapter(self):
         required = VERIFY.required_hf_files([5, 10])
-        self.assertIn("run_manifest.json", required)
-        self.assertIn("final/adapter_model.safetensors", required)
-        self.assertIn("checkpoints/checkpoint-5/optimizer.pt", required)
-        self.assertIn("checkpoints/checkpoint-10/trainer_state.json", required)
+        assert "run_manifest.json" in required
+        assert "final/adapter_model.safetensors" in required
+        assert "checkpoints/checkpoint-5/optimizer.pt" in required
+        assert "checkpoints/checkpoint-10/trainer_state.json" in required
 
     def test_matching_manifest_pair_is_accepted(self):
-        self.assertEqual(
+        assert (
             VERIFY.validate_manifest_pair(
                 self.record, self.manifest, checkpoint_steps=[5, 10], expected=self.expected
-            ),
-            [],
+            )
+            == []
         )
 
     def test_manifest_pair_rejects_fingerprint_score_and_wandb_drift(self):
@@ -81,9 +97,9 @@ class CampaignVerificationTests(unittest.TestCase):
         errors = VERIFY.validate_manifest_pair(
             self.record, broken, checkpoint_steps=[5, 10], expected=self.expected
         )
-        self.assertTrue(any("unit fingerprint" in error for error in errors))
-        self.assertTrue(any("held-out trace" in error for error in errors))
-        self.assertTrue(any("W&B" in error for error in errors))
+        assert any("unit fingerprint" in error for error in errors)
+        assert any("held-out trace" in error for error in errors)
+        assert any("W&B" in error for error in errors)
 
 
 if __name__ == "__main__":

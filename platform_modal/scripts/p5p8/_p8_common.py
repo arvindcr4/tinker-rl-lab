@@ -14,7 +14,7 @@ from pathlib import Path
 import numpy as np
 
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
+from _paths import REPO_ROOT
 
 RAW20 = [f"V{i}" for i in range(1, 21)]
 AGG4 = ["V_mean", "V_std", "V_max", "V_min"]
@@ -57,10 +57,17 @@ def fit_xgb(Xtr, ytr, Xte, feats, seed):
     cols = [COL_IDX[c] for c in feats]
     spw = float((ytr == 0).sum()) / max(1.0, float((ytr == 1).sum()))
     m = xgb.XGBClassifier(
-        n_estimators=200, max_depth=6, learning_rate=0.05,
-        subsample=0.8, colsample_bytree=0.8, scale_pos_weight=spw,
-        eval_metric="logloss", random_state=seed,
-        tree_method="hist", n_jobs=4)
+        n_estimators=200,
+        max_depth=6,
+        learning_rate=0.05,
+        subsample=0.8,
+        colsample_bytree=0.8,
+        scale_pos_weight=spw,
+        eval_metric="logloss",
+        random_state=seed,
+        tree_method="hist",
+        n_jobs=4,
+    )
     m.fit(Xtr[:, cols], ytr, verbose=False)
     return m.predict_proba(Xte[:, cols])[:, 1]
 
@@ -69,10 +76,16 @@ def fit_tree(X_tr, y_tr, seed):
     import xgboost as xgb
 
     clf = xgb.XGBClassifier(
-        n_estimators=200, max_depth=5, learning_rate=0.1,
-        subsample=0.8, colsample_bytree=0.8,
-        objective="binary:logistic", eval_metric="auc",
-        tree_method="hist", random_state=seed, n_jobs=4,
+        n_estimators=200,
+        max_depth=5,
+        learning_rate=0.1,
+        subsample=0.8,
+        colsample_bytree=0.8,
+        objective="binary:logistic",
+        eval_metric="auc",
+        tree_method="hist",
+        random_state=seed,
+        n_jobs=4,
     )
     clf.fit(X_tr, y_tr)
     return clf
@@ -125,8 +138,11 @@ def downsample_positives(Xte, yte, target_rate_pct, rng):
     n_target_pos = max(1, int(round(n_te * target_rate_pct / 100.0)))
     pos_idx = np.where(yte == 1)[0]
     neg_idx = np.where(yte == 0)[0]
-    keep_pos = pos_idx if len(pos_idx) < n_target_pos else rng.choice(
-        pos_idx, size=n_target_pos, replace=False)
+    keep_pos = (
+        pos_idx
+        if len(pos_idx) < n_target_pos
+        else rng.choice(pos_idx, size=n_target_pos, replace=False)
+    )
     keep = np.concatenate([keep_pos, neg_idx])
     keep.sort()
     return Xte[keep], yte[keep]

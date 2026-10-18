@@ -54,6 +54,7 @@ platform_hybrid/experiments/results/p5p8/figures/p8_decision_disagreement_select
 
 Stdlib + numpy + pandas + xgboost + matplotlib. <=290 lines.
 """
+
 from __future__ import annotations
 
 import csv
@@ -69,9 +70,11 @@ import numpy as np
 import xgboost as xgb
 
 import sys
+
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
 from _paths import REPO_ROOT
 from _p8_common import auc_p8
+
 ROOT = REPO_ROOT
 RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8" / "corrected-review20-v2"
 FIG = RES / "figures"
@@ -90,8 +93,12 @@ VARIANTS = {
     "XGB-pair": RAW20 + ["V_std", "V_max"],  # iter-68 row 79 best pair
     "LLM-as-scribe (XGB-24full @ $0.001)": ALL24,  # same tree, but $0.001/dec cost
 }
-COST = {"XGB-20raw": 0.0001, "XGB-24full": 0.0001, "XGB-pair": 0.0001,
-        "LLM-as-scribe (XGB-24full @ $0.001)": 0.0010}
+COST = {
+    "XGB-20raw": 0.0001,
+    "XGB-24full": 0.0001,
+    "XGB-pair": 0.0001,
+    "LLM-as-scribe (XGB-24full @ $0.001)": 0.0010,
+}
 
 # Borderline widths to sweep for selective composition
 WIDTHS = [0.10, 0.20, 0.30, 0.40, 0.50, 1.00]
@@ -113,9 +120,14 @@ def load(path):
 # ---------- train trees ----------
 def fit(name, cols, Xtr_all, ytr, Xte_all):
     m = xgb.XGBClassifier(
-        n_estimators=300, max_depth=5, learning_rate=0.1,
-        subsample=0.8, colsample_bytree=0.8, eval_metric="logloss",
-        random_state=SEED, n_jobs=4,
+        n_estimators=300,
+        max_depth=5,
+        learning_rate=0.1,
+        subsample=0.8,
+        colsample_bytree=0.8,
+        eval_metric="logloss",
+        random_state=SEED,
+        n_jobs=4,
     )
     ci = [ALL24.index(c) for c in cols]
     Xtr = Xtr_all[:, ci]
@@ -142,7 +154,11 @@ def precision_recall_f1(scores, y, k_frac):
     k = max(1, int(round(k_frac / 100 * n)))
     top = np.argsort(-scores)[:k]
     tp = int(y[top].sum())
-    return tp / k, tp / max(1, int(y.sum())), 2 * (tp / k) * (tp / max(1, int(y.sum()))) / (tp / k + tp / max(1, int(y.sum())) + 1e-12)
+    return (
+        tp / k,
+        tp / max(1, int(y.sum())),
+        2 * (tp / k) * (tp / max(1, int(y.sum()))) / (tp / k + tp / max(1, int(y.sum())) + 1e-12),
+    )
 
 
 def flip_rate(s1, s2, k_frac, y_te):
@@ -174,17 +190,22 @@ def main():
     flip_rows = []
     flip_boot_rows = []
     n_test = len(yte)
-    for (n1, n2) in combinations(VARIANTS.keys(), 2):
+    for n1, n2 in combinations(VARIANTS.keys(), 2):
         p1_te = scores[n1][1]
         p2_te = scores[n2][1]
         for k in K_BUDGETS:
             flips = flip_rate(p1_te, p2_te, k, yte)
             rate = flips / n_test
             # paired bootstrap CI on flip-rate
-            diff_vec = (np.argsort(-p1_te)[:max(1, int(round(k /100 * n_test)))] != np.argsort(-p2_te)[:max(1, int(round(k / 100 * n_test)))]).astype(int)
+            diff_vec = (
+                np.argsort(-p1_te)[: max(1, int(round(k / 100 * n_test)))]
+                != np.argsort(-p2_te)[: max(1, int(round(k / 100 * n_test)))]
+            ).astype(int)
             # Approximate: bootstrap the per-row flip indicator (computed once above per K)
-            a1 = np.zeros(n_test, dtype=bool); a1[np.argsort(-p1_te)[:max(1, int(round(k / 100 * n_test)))]] = True
-            a2 = np.zeros(n_test, dtype=bool); a2[np.argsort(-p2_te)[:max(1, int(round(k / 100 * n_test)))]] = True
+            a1 = np.zeros(n_test, dtype=bool)
+            a1[np.argsort(-p1_te)[: max(1, int(round(k / 100 * n_test)))]] = True
+            a2 = np.zeros(n_test, dtype=bool)
+            a2[np.argsort(-p2_te)[: max(1, int(round(k / 100 * n_test)))]] = True
             indicators = np.logical_xor(a1, a2).astype(int)
             rng = np.random.default_rng(SEED)
             boot = np.empty(N_BOOT)
@@ -192,21 +213,38 @@ def main():
                 idx = rng.integers(0, n_test, n_test)
                 boot[b] = indicators[idx].mean()
             lo, hi = float(np.percentile(boot, 2.5)), float(np.percentile(boot, 97.5))
-            flip_rows.append({"pair": f"{n1} vs {n2}", "K_pct": k,
-                              "n_flips": int(flips), "n_test": n_test,
-                              "flip_rate": rate, "ci_lo": lo, "ci_hi": hi})
-            flip_boot_rows.append({"pair": f"{n1} vs {n2}", "K_pct": k,
-                                   "boot_mean": boot.mean(),
-                                   "ci_lo": lo, "ci_hi": hi})
+            flip_rows.append(
+                {
+                    "pair": f"{n1} vs {n2}",
+                    "K_pct": k,
+                    "n_flips": int(flips),
+                    "n_test": n_test,
+                    "flip_rate": rate,
+                    "ci_lo": lo,
+                    "ci_hi": hi,
+                }
+            )
+            flip_boot_rows.append(
+                {
+                    "pair": f"{n1} vs {n2}",
+                    "K_pct": k,
+                    "boot_mean": boot.mean(),
+                    "ci_lo": lo,
+                    "ci_hi": hi,
+                }
+            )
 
     # --- G2: feature-level diagnosis at K=2% ---
     feat_rows = []
     K = 2.0
     k_n = max(1, int(round(K / 100 * n_test)))
-    for (n1, n2) in combinations(VARIANTS.keys(), 2):
-        p1 = scores[n1][1]; p2 = scores[n2][1]
-        a1 = np.zeros(n_test, dtype=bool); a1[np.argsort(-p1)[:k_n]] = True
-        a2 = np.zeros(n_test, dtype=bool); a2[np.argsort(-p2)[:k_n]] = True
+    for n1, n2 in combinations(VARIANTS.keys(), 2):
+        p1 = scores[n1][1]
+        p2 = scores[n2][1]
+        a1 = np.zeros(n_test, dtype=bool)
+        a1[np.argsort(-p1)[:k_n]] = True
+        a2 = np.zeros(n_test, dtype=bool)
+        a2[np.argsort(-p2)[:k_n]] = True
         flip_mask = np.logical_xor(a1, a2)
         n_flip = int(flip_mask.sum())
         if n_flip < 5:
@@ -215,20 +253,27 @@ def main():
             flipped_vals = Xte_all[flip_mask, col_i]
             agreed_vals = Xte_all[~flip_mask, col_i]
             if n_flip > 0:
-                feat_rows.append({"pair": f"{n1} vs {n2}",
-                                  "feature": col,
-                                  "n_flips": n_flip,
-                                  "flip_mean": float(flipped_vals.mean()),
-                                  "agreed_mean": float(agreed_vals.mean()),
-                                  "delta": float(flipped_vals.mean() - agreed_vals.mean()),
-                                  "flip_std": float(flipped_vals.std())})
+                feat_rows.append(
+                    {
+                        "pair": f"{n1} vs {n2}",
+                        "feature": col,
+                        "n_flips": n_flip,
+                        "flip_mean": float(flipped_vals.mean()),
+                        "agreed_mean": float(agreed_vals.mean()),
+                        "delta": float(flipped_vals.mean() - agreed_vals.mean()),
+                        "flip_std": float(flipped_vals.std()),
+                    }
+                )
 
     # --- G3: union/intersection at K=2% ---
     union_rows = []
-    for (n1, n2) in combinations(VARIANTS.keys(), 2):
-        p1 = scores[n1][1]; p2 = scores[n2][1]
-        a1 = np.zeros(n_test, dtype=bool); a1[np.argsort(-p1)[:k_n]] = True
-        a2 = np.zeros(n_test, dtype=bool); a2[np.argsort(-p2)[:k_n]] = True
+    for n1, n2 in combinations(VARIANTS.keys(), 2):
+        p1 = scores[n1][1]
+        p2 = scores[n2][1]
+        a1 = np.zeros(n_test, dtype=bool)
+        a1[np.argsort(-p1)[:k_n]] = True
+        a2 = np.zeros(n_test, dtype=bool)
+        a2[np.argsort(-p2)[:k_n]] = True
         union = np.logical_or(a1, a2)
         inter = np.logical_and(a1, a2)
         # union: take all rows in union, assign "alert" — use union score = max(p1,p2)
@@ -239,16 +284,20 @@ def main():
         n_inter_alerts = int(inter.sum())
         tp_union = int((union & (yte == 1)).sum())
         tp_inter = int((inter & (yte == 1)).sum())
-        union_rows.append({"pair": f"{n1} vs {n2}",
-                           "n_union_alerts": n_union_alerts,
-                           "n_inter_alerts": n_inter_alerts,
-                           "n_flips": int(np.logical_xor(a1, a2).sum()),
-                           "tp_union": tp_union,
-                           "tp_inter": tp_inter,
-                           "precision_union": tp_union / max(1, n_union_alerts),
-                           "precision_inter": tp_inter / max(1, n_inter_alerts),
-                           "recall_union": tp_union / yte.sum(),
-                           "recall_inter": tp_inter / yte.sum()})
+        union_rows.append(
+            {
+                "pair": f"{n1} vs {n2}",
+                "n_union_alerts": n_union_alerts,
+                "n_inter_alerts": n_inter_alerts,
+                "n_flips": int(np.logical_xor(a1, a2).sum()),
+                "tp_union": tp_union,
+                "tp_inter": tp_inter,
+                "precision_union": tp_union / max(1, n_union_alerts),
+                "precision_inter": tp_inter / max(1, n_inter_alerts),
+                "recall_union": tp_union / yte.sum(),
+                "recall_inter": tp_inter / yte.sum(),
+            }
+        )
 
     # --- G4: Selective LLM-as-sensor ---
     # Train XGB-20raw backbone (scoring-only when out of borderline range)
@@ -256,13 +305,16 @@ def main():
     p_scribe = scores["LLM-as-scribe (XGB-24full @ $0.001)"][1]
     sel_rows = []
     for w in WIDTHS:
-        lo, hi = 0.5 - w / 2, 0.5 + w / 2  # Score is a probability, not percentile - use raw score threshold
+        lo, hi = (
+            0.5 - w / 2,
+            0.5 + w / 2,
+        )  # Score is a probability, not percentile - use raw score threshold
         # Borderline rule: rows where XGB-20raw score is in [lo, hi] AND LLM gives a different score
         # The composition rule: use LLM-as-scribe ONLY in the borderline range; XGB-20raw outside
         composite = np.where(
             (p_20raw >= lo) & (p_20raw <= hi),
             p_scribe,  # invoke LLM
-            p_20raw,    # use cheap backbone
+            p_20raw,  # use cheap backbone
         )
         n_llm_calls = int(((p_20raw >= lo) & (p_20raw <= hi)).sum())
         cost_per = (n_llm_calls * 0.0010 + n_test * 0.0001) / n_test
@@ -271,23 +323,35 @@ def main():
         n_alert_2 = max(1, int(round(2.0 / 100 * n_test)))
         n_caught = int(yte[np.argsort(-composite)[:n_alert_2]].sum())
         cost_caught = (cost_per * n_test) / n_caught if n_caught else None
-        sel_rows.append({"width": w, "n_llm_calls": n_llm_calls,
-                         "frac_llm": n_llm_calls / n_test,
-                         "auc": float(auc),
-                         "recall_at_K2": float(r_at_2),
-                         "precision_at_K2": float(p_at_2),
-                         "f1_at_K2": float(f1_at_2),
-                         "cost_per_decision": cost_per,
-                         "cost_per_fraud_caught": cost_caught})
+        sel_rows.append(
+            {
+                "width": w,
+                "n_llm_calls": n_llm_calls,
+                "frac_llm": n_llm_calls / n_test,
+                "auc": float(auc),
+                "recall_at_K2": float(r_at_2),
+                "precision_at_K2": float(p_at_2),
+                "f1_at_K2": float(f1_at_2),
+                "cost_per_decision": cost_per,
+                "cost_per_fraud_caught": cost_caught,
+            }
+        )
 
     # --- write outputs ---
-    tsv = lambda name, rows, header=None: (
-        (RES / name).write_text(
-            "\n".join([
+    tsv = lambda name, rows, header=None: (RES / name).write_text(
+        "\n".join(
+            [
                 "\t".join(map(str, [h for h in (header or rows[0].keys())]))
-                if header else "\t".join(rows[0].keys())
-            ] + ["\t".join(f"{r[c]:.6g}" if isinstance(r[c], float) else str(r[c])
-                           for c in (header or rows[0].keys())) for r in rows])
+                if header
+                else "\t".join(rows[0].keys())
+            ]
+            + [
+                "\t".join(
+                    f"{r[c]:.6g}" if isinstance(r[c], float) else str(r[c])
+                    for c in (header or rows[0].keys())
+                )
+                for r in rows
+            ]
         )
     )
 
@@ -297,7 +361,9 @@ def main():
         keys = list(rows[0].keys())
         lines = ["\t".join(keys)]
         for r in rows:
-            lines.append("\t".join(f"{r[k]:.6g}" if isinstance(r[k], float) else str(r[k]) for k in keys))
+            lines.append(
+                "\t".join(f"{r[k]:.6g}" if isinstance(r[k], float) else str(r[k]) for k in keys)
+            )
         (RES / name).write_text("\n".join(lines) + "\n")
 
     write_tsv("p8_decision_disagreement_flip.tsv", flip_rows)
@@ -313,22 +379,38 @@ def main():
         "second_stage": "full-feature XGB surrogate; not measured LLM outcomes",
         "cost_model": "assumed $0.0001 screening per row plus $0.001 per invoked surrogate",
         "flip_count": len(flip_rows),
-        "flip_mean_rate_at_K2": float(np.mean([r["flip_rate"] for r in flip_rows if r["K_pct"] == 2.0])),
+        "flip_mean_rate_at_K2": float(
+            np.mean([r["flip_rate"] for r in flip_rows if r["K_pct"] == 2.0])
+        ),
         "feat_count": len(feat_rows),
         "union_count": len(union_rows),
         "selective_count": len(sel_rows),
-        "minimum_flip_pair_K2": min(flip_rows, key=lambda r: r["flip_rate"] if r["K_pct"] == 2.0 else 99),
-        "maximum_flip_pair_K2": max(flip_rows, key=lambda r: r["flip_rate"] if r["K_pct"] == 2.0 else -1),
+        "minimum_flip_pair_K2": min(
+            flip_rows, key=lambda r: r["flip_rate"] if r["K_pct"] == 2.0 else 99
+        ),
+        "maximum_flip_pair_K2": max(
+            flip_rows, key=lambda r: r["flip_rate"] if r["K_pct"] == 2.0 else -1
+        ),
         "selective_cheapest_cost_per_decision": min(s["cost_per_decision"] for s in sel_rows),
         "selective_best_AUC": max(s["auc"] for s in sel_rows),
     }
-    (RES / "p8_decision_disagreement_summary.json").write_text(json.dumps(summary, indent=2, default=str))
+    (RES / "p8_decision_disagreement_summary.json").write_text(
+        json.dumps(summary, indent=2, default=str)
+    )
     print("# wrote summary:", json.dumps(summary, indent=2, default=str))
 
     # --- figures ---
-    pairs_K2 = [(r["pair"], r["flip_rate"], r["ci_lo"], r["ci_hi"]) for r in flip_rows if r["K_pct"] == 2.0]
+    pairs_K2 = [
+        (r["pair"], r["flip_rate"], r["ci_lo"], r["ci_hi"]) for r in flip_rows if r["K_pct"] == 2.0
+    ]
     fig, ax = plt.subplots(figsize=(9, 4.5))
-    names = [p[0].replace("XGB-20raw", "XGB-20").replace("XGB-24full", "XGB-24").replace("XGB-pair", "XGB-pair") for p in pairs_K2]
+    names = [
+        p[0]
+        .replace("XGB-20raw", "XGB-20")
+        .replace("XGB-24full", "XGB-24")
+        .replace("XGB-pair", "XGB-pair")
+        for p in pairs_K2
+    ]
     rates = [p[1] for p in pairs_K2]
     los = [p[1] - p[2] for p in pairs_K2]
     his = [p[3] - p[1] for p in pairs_K2]

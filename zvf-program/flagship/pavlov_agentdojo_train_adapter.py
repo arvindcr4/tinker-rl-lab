@@ -310,7 +310,9 @@ def _validate_authoritative_source(
         errors.append(f"{suite_id}: authoritative_source.source_kind must be repo")
 
     if not isinstance(authoritative.get("disjoint_from_primary_markers"), Sequence):
-        errors.append(f"{suite_id}: authoritative_source.disjoint_from_primary_markers must be a sequence")
+        errors.append(
+            f"{suite_id}: authoritative_source.disjoint_from_primary_markers must be a sequence"
+        )
 
     source_url_value = authoritative.get("source_url")
     if not isinstance(source_url_value, str) or not _URL_RE.fullmatch(source_url_value.strip()):
@@ -335,7 +337,7 @@ def _validate_native_contract(suite_id: str, contract: Mapping[str, Any]) -> lis
         ("artifact", "artifact", "artifact_sha256"),
     )
 
-    for section, key, digest_key in sections:
+    for section, _key, digest_key in sections:
         observed = contract.get(section)
         if not isinstance(observed, Mapping):
             errors.append(f"{suite_id}: native_contract.{section} must be an object")
@@ -357,9 +359,7 @@ def _validate_native_contract(suite_id: str, contract: Mapping[str, Any]) -> lis
                     f"{suite_id}: native_contract.environment.artifact_required must be boolean"
                 )
             elif observed.get("artifact_required") != bool(spec.get("artifact_required")):
-                errors.append(
-                    f"{suite_id}: native_contract.environment.artifact_required mismatch"
-                )
+                errors.append(f"{suite_id}: native_contract.environment.artifact_required mismatch")
 
         expected_digest = _native_contract_signature(spec)
         if _placeholder(observed.get(digest_key)):
@@ -395,7 +395,9 @@ def _validate_dataset_substitution(
     return errors
 
 
-def _validate_receipt_fields(suite_id: str, receipt: Mapping[str, Any], contract: Mapping[str, Any]) -> list[str]:
+def _validate_receipt_fields(
+    suite_id: str, receipt: Mapping[str, Any], contract: Mapping[str, Any]
+) -> list[str]:
     errors: list[str] = []
 
     for key in REQUIRED_RECEIPT_KEYS:
@@ -447,7 +449,11 @@ def _validate_receipt_fields(suite_id: str, receipt: Mapping[str, Any], contract
             errors.append(f"{suite_id}: split_task_id_hash is required")
         elif not _is_sha256(receipt.get("split_task_id_hash")):
             errors.append(f"{suite_id}: split_task_id_hash must be a SHA-256 digest")
-        elif normalized and aggregate_task_id_hashes(normalized) != str(receipt.get("split_task_id_hash")).lower():
+        elif (
+            normalized
+            and aggregate_task_id_hashes(normalized)
+            != str(receipt.get("split_task_id_hash")).lower()
+        ):
             errors.append(f"{suite_id}: split_task_id_hash does not match task_id_hashes")
 
     if not _is_sha256(receipt.get("split_manifest_hash")):
@@ -483,7 +489,9 @@ def _validate_receipt_fields(suite_id: str, receipt: Mapping[str, Any], contract
         max_usd = budget.get("maximum_usd")
         if not isinstance(max_usd, (int, float)) or max_usd <= 0:
             errors.append(f"{suite_id}: budget_receipt.maximum_usd must be a positive number")
-        if _placeholder(_first_value(budget, ("receipt_id", "authorization_id", "id", "sha256", "hash"))):
+        if _placeholder(
+            _first_value(budget, ("receipt_id", "authorization_id", "id", "sha256", "hash"))
+        ):
             errors.append(f"{suite_id}: budget_receipt identity is missing")
 
     wandb = receipt.get("wandb_run_identity")
@@ -495,7 +503,9 @@ def _validate_receipt_fields(suite_id: str, receipt: Mapping[str, Any], contract
         for field in ("entity", "project", "group", "run_id", "run_url"):
             if _placeholder(wandb.get(field)):
                 errors.append(f"{suite_id}: wandb_run_identity.{field} is missing")
-        if not isinstance(wandb.get("run_url"), str) or not _URL_RE.fullmatch(wandb.get("run_url").strip()):
+        if not isinstance(wandb.get("run_url"), str) or not _URL_RE.fullmatch(
+            wandb.get("run_url").strip()
+        ):
             errors.append(f"{suite_id}: wandb_run_identity.run_url must be https URL")
         if str(wandb.get("mode", "online")).lower() not in _VALID_WANDB_STATUS:
             errors.append(f"{suite_id}: wandb mode must be online/ready")
@@ -508,7 +518,9 @@ def _validate_receipt_fields(suite_id: str, receipt: Mapping[str, Any], contract
             errors.append(f"{suite_id}: tinker_run_identity.run_id is missing")
         if str(tinker.get("cost_status", "")).lower() not in _VALID_TINKER_COST_STATUS:
             errors.append(f"{suite_id}: tinker_run_identity.cost_status is invalid")
-        if not _placeholder(tinker.get("run_url")) and not _URL_RE.fullmatch(str(tinker.get("run_url", "")).strip()):
+        if not _placeholder(tinker.get("run_url")) and not _URL_RE.fullmatch(
+            str(tinker.get("run_url", "")).strip()
+        ):
             errors.append(f"{suite_id}: tinker_run_identity.run_url must be https URL")
 
     if str(receipt.get("cost_status", "")).lower() not in _VALID_TINKER_COST_STATUS:
@@ -566,7 +578,9 @@ def _validate_receipt_fields(suite_id: str, receipt: Mapping[str, Any], contract
             cp_url = str(checkpoint.get("url", ""))
             cp_identity = (repo_url, cp_revision, cp_url)
             if cp_identity in seen_cp_identities:
-                errors.append(f"{suite_id}: hf_checkpoints[{index}] duplicates existing checkpoint entry")
+                errors.append(
+                    f"{suite_id}: hf_checkpoints[{index}] duplicates existing checkpoint entry"
+                )
             else:
                 seen_cp_identities.add(cp_identity)
 
@@ -638,7 +652,9 @@ def validate_boundary(boundary: Mapping[str, Any]) -> list[str]:
     if suite.get("role") != "train":
         return [f"{suite_id}: contract role must be train"]
 
-    if tuple(boundary.get("domains", ())) != tuple(sorted({str(v) for v in suite.get("domains", ())})):
+    if tuple(boundary.get("domains", ())) != tuple(
+        sorted({str(v) for v in suite.get("domains", ())})
+    ):
         return [f"{suite_id}: domains must match contract"]
 
     if bool(boundary.get("stateful")) != bool(suite.get("stateful")):
@@ -649,11 +665,15 @@ def validate_boundary(boundary: Mapping[str, Any]) -> list[str]:
         return [f"{suite_id}: artifact_or_side_effect flag must match contract"]
 
     contract_markers = _expected_primary_eval_markers(contract)
-    authoritative_markers = boundary.get("authoritative_source", {}).get("disjoint_from_primary_markers")
+    authoritative_markers = boundary.get("authoritative_source", {}).get(
+        "disjoint_from_primary_markers"
+    )
     if _as_sequence(authoritative_markers) is None:
         return [f"{suite_id}: authoritative_source.disjoint_from_primary_markers is required"]
     if tuple(authoritative_markers) != contract_markers:
-        return [f"{suite_id}: authoritative_source.disjoint_from_primary_markers must match contract"]
+        return [
+            f"{suite_id}: authoritative_source.disjoint_from_primary_markers must match contract"
+        ]
 
     errors = _validate_authoritative_source(suite_id, contract, boundary)
     errors.extend(_validate_native_contract(suite_id, boundary.get("native_contract", {})))

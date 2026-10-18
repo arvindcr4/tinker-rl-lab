@@ -51,33 +51,35 @@ H4 -- D10 clusters with what layer? Sharpest: D10 should land in MID layer
 
 Stdlib + numpy only. <= 250 LoC.
 """
+
 from __future__ import annotations
 import csv
 import json
 from collections import defaultdict
 from pathlib import Path
 
-import numpy as np
 
 import sys
+
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
-from _stats import wilson_ci  # noqa: E402
+from _paths import REPO_ROOT
+from _stats import wilson_ci
+
 ROOT = REPO_ROOT
 RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8"
 RES.mkdir(parents=True, exist_ok=True)
 
 # D1-D9 anchors from iter-140/144/148
 D_ANCHORS = {
-    "D1":  ("P8_grad_band_firing",          0.0083, "LOW"),
-    "D2":  ("P7_step_rejection",            0.5000, "MID"),
-    "D3":  ("P5_cells_with_seed_pass",      0.3673, "MID"),
-    "D4":  ("P7_per_prompt_boundary",       0.7293, "MID"),
-    "D5":  ("P8_iso_ECE_gt_010",            1.0000, "HIGH"),
-    "D6":  ("P8_sensor_firing_flip",        0.0053, "LOW"),
-    "D7":  ("N2_algo_axis_spread_gt_500",   0.0156, "LOW"),
-    "D8":  ("P7_UNIFIED_C4_FIRE_density",   0.0914, "MID"),
-    "D9":  ("P7_UNIFIED_C4_contrast_recov", 0.0914, "MID"),
+    "D1": ("P8_grad_band_firing", 0.0083, "LOW"),
+    "D2": ("P7_step_rejection", 0.5000, "MID"),
+    "D3": ("P5_cells_with_seed_pass", 0.3673, "MID"),
+    "D4": ("P7_per_prompt_boundary", 0.7293, "MID"),
+    "D5": ("P8_iso_ECE_gt_010", 1.0000, "HIGH"),
+    "D6": ("P8_sensor_firing_flip", 0.0053, "LOW"),
+    "D7": ("N2_algo_axis_spread_gt_500", 0.0156, "LOW"),
+    "D8": ("P7_UNIFIED_C4_FIRE_density", 0.0914, "MID"),
+    "D9": ("P7_UNIFIED_C4_contrast_recov", 0.0914, "MID"),
 }
 
 ACD_THRESHOLDS = [1.01, 1.10, 1.50, 2.00, 5.00]
@@ -85,6 +87,7 @@ ACD_THRESHOLDS = [1.01, 1.10, 1.50, 2.00, 5.00]
 
 def main():
     from review22_contract import require_independent_unit_contract
+
     require_independent_unit_contract()
     # Load iter-148 cost matrix (assumes iter-148 already ran)
     cm_path = RES / "p8_iter148_cost_matrix.tsv"
@@ -94,16 +97,18 @@ def main():
     with cm_path.open() as f:
         rdr = csv.DictReader(f, delimiter="\t")
         for line in rdr:
-            cells.append({
-                "rate_pct": float(line["rate_pct"]),
-                "tier": line["tier"],
-                "fset": line["fset"],
-                "acd": float(line["acd"]),
-                "n_test": int(line["n_test"]),
-                "n_pos": int(line["n_pos"]),
-                "n_llm_grad": int(line["n_llm_grad"]),
-                "caught_xgb": int(line["xgb_caught_K2"]),
-            })
+            cells.append(
+                {
+                    "rate_pct": float(line["rate_pct"]),
+                    "tier": line["tier"],
+                    "fset": line["fset"],
+                    "acd": float(line["acd"]),
+                    "n_test": int(line["n_test"]),
+                    "n_pos": int(line["n_pos"]),
+                    "n_llm_grad": int(line["n_llm_grad"]),
+                    "caught_xgb": int(line["xgb_caught_K2"]),
+                }
+            )
     n_total = len(cells)
     print(f"[load] {n_total} cells from iter-148 cost matrix", flush=True)
 
@@ -134,7 +139,8 @@ def main():
             if c["acd"] <= thr and c["n_llm_grad"] > 0:
                 per_rate[c["rate_pct"]][0] += 1
         rows_per_thresh[thr] = dict(
-            actionable=k, total=n_total,
+            actionable=k,
+            total=n_total,
             per_tier=sorted(((t, v[0], v[1]) for t, v in per_tier.items())),
             per_rate=sorted(((r, v[0], v[1]) for r, v in per_rate.items())),
         )
@@ -143,8 +149,17 @@ def main():
     out_sweep = RES / "synth_iter152_d10_sweep.tsv"
     with out_sweep.open("w") as f:
         w = csv.writer(f, delimiter="\t")
-        w.writerow(["acd_thresh", "n_actionable", "n_total", "D10",
-                    "wilson_lo", "wilson_hi", "layer_assignment_canonical"])
+        w.writerow(
+            [
+                "acd_thresh",
+                "n_actionable",
+                "n_total",
+                "D10",
+                "wilson_lo",
+                "wilson_hi",
+                "layer_assignment_canonical",
+            ]
+        )
         for thr in ACD_THRESHOLDS:
             k, n, p, lo, hi = summary_at_thresh[thr]
             # Layer assignment by canonical anchor cutoffs.
@@ -190,11 +205,26 @@ def main():
 
     ten_rows = []
     for d, (label, val, layer) in D_ANCHORS.items():
-        ten_rows.append({"domain": d, "label": label, "density": val,
-                         "wilson_lo": val, "wilson_hi": val, "layer": layer})
-    ten_rows.append({"domain": "D10", "label": "P8_operationally_actionable",
-                     "density": D10_val, "wilson_lo": D10_lo,
-                     "wilson_hi": D10_hi, "layer": D10_layer})
+        ten_rows.append(
+            {
+                "domain": d,
+                "label": label,
+                "density": val,
+                "wilson_lo": val,
+                "wilson_hi": val,
+                "layer": layer,
+            }
+        )
+    ten_rows.append(
+        {
+            "domain": "D10",
+            "label": "P8_operationally_actionable",
+            "density": D10_val,
+            "wilson_lo": D10_lo,
+            "wilson_hi": D10_hi,
+            "layer": D10_layer,
+        }
+    )
 
     with out_matrix.open("w") as f:
         w = csv.DictWriter(f, fieldnames=list(ten_rows[0].keys()), delimiter="\t")
@@ -218,8 +248,7 @@ def main():
                 # we report simple ratio + sign-of-CI-overlap vs anchors.
                 lo = ri["wilson_lo"] / rj["wilson_hi"] if rj["wilson_hi"] > 0 else None
                 hi = ri["wilson_hi"] / rj["wilson_lo"] if rj["wilson_lo"] > 0 else None
-            pairs.append({"a": ri["domain"], "b": rj["domain"], "ratio": ratio,
-                          "lo": lo, "hi": hi})
+            pairs.append({"a": ri["domain"], "b": rj["domain"], "ratio": ratio, "lo": lo, "hi": hi})
 
     out_ratios = RES / "synth_iter152_ten_domain_ratios.tsv"
     with out_ratios.open("w") as f:
@@ -227,8 +256,7 @@ def main():
         w.writeheader()
         for p_ in pairs:
             row = dict(p_)
-            row["ratio"] = (round(row["ratio"], 3)
-                            if row["ratio"] != float("inf") else "inf")
+            row["ratio"] = round(row["ratio"], 3) if row["ratio"] != float("inf") else "inf"
             if row["lo"] is not None:
                 row["lo"] = round(row["lo"], 3)
             if row["hi"] is not None:
@@ -237,9 +265,10 @@ def main():
     print(f"[save] {out_ratios}", flush=True)
 
     # Layer assignment table
-    layer_rows = [{"domain": r["domain"], "label": r["label"],
-                   "density": r["density"], "layer": r["layer"]}
-                  for r in ten_rows]
+    layer_rows = [
+        {"domain": r["domain"], "label": r["label"], "density": r["density"], "layer": r["layer"]}
+        for r in ten_rows
+    ]
     out_layers = RES / "synth_iter152_ten_domain_layers.tsv"
     with out_layers.open("w") as f:
         w = csv.DictWriter(f, fieldnames=list(layer_rows[0].keys()), delimiter="\t")
@@ -264,8 +293,9 @@ def main():
     rate_dict = {r: (k, n) for r, k, n in pr}
     rate_order = sorted(rate_dict.keys(), reverse=True)  # 1.44, 1.00, 0.50, 0.10, 0.05
     rate_density = [k / n if n > 0 else 0 for r in rate_order for k, n in [rate_dict[r]]]
-    monotone_decreasing = all(rate_density[i] >= rate_density[i + 1] - 1e-6
-                              for i in range(len(rate_density) - 1))
+    monotone_decreasing = all(
+        rate_density[i] >= rate_density[i + 1] - 1e-6 for i in range(len(rate_density) - 1)
+    )
     h3 = monotone_decreasing
     print(f"\n=== H3: D10 rate-monotone ===")
     print(f"  density by rate (1.44 -> 0.05): {rate_density}")
@@ -283,16 +313,23 @@ def main():
     summary = dict(
         iter=152,
         n_total_cells=n_total,
-        d10_sweep={str(thr): {"k": summary_at_thresh[thr][0],
-                              "n": summary_at_thresh[thr][1],
-                              "p": summary_at_thresh[thr][2],
-                              "lo": summary_at_thresh[thr][3],
-                              "hi": summary_at_thresh[thr][4]}
-                   for thr in ACD_THRESHOLDS},
+        d10_sweep={
+            str(thr): {
+                "k": summary_at_thresh[thr][0],
+                "n": summary_at_thresh[thr][1],
+                "p": summary_at_thresh[thr][2],
+                "lo": summary_at_thresh[thr][3],
+                "hi": summary_at_thresh[thr][4],
+            }
+            for thr in ACD_THRESHOLDS
+        },
         d10_at_canonical_1p50=D10_at_can,
         d10_layer=D10_layer,
         ten_domain_matrix=ten_rows,
-        h1_pass=h1, h2_pass=h2, h3_pass=h3, h4_pass=h4,
+        h1_pass=h1,
+        h2_pass=h2,
+        h3_pass=h3,
+        h4_pass=h4,
         per_tier_at_1p50={t: {"k": k, "n": n} for t, k, n in pt},
         per_rate_at_1p50={r: {"k": k, "n": n} for r, k, n in pr},
     )

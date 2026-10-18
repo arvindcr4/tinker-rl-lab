@@ -16,6 +16,7 @@ Outputs (all under platform_hybrid/experiments/results/p5p8/):
 
 Stdlib only. Run: python3 platform_modal/scripts/p5p8/p6_iter202_framework_method_coverage.py
 """
+
 import csv
 import json
 import pathlib
@@ -29,13 +30,24 @@ OUT.mkdir(parents=True, exist_ok=True)
 
 # Framework classifier — uses the stack record's framework.name prefix
 FRAMEWORK_PREFIXES = [
-    ("tinker", "tinker"), ("wandb", "wandb"), ("colab-open", "colab-open"),
-    ("openrlhf", "openrlhf"), ("trl", "trl"), ("verl", "verl"), ("zvf130", "zvf130"),
+    ("tinker", "tinker"),
+    ("wandb", "wandb"),
+    ("colab-open", "colab-open"),
+    ("openrlhf", "openrlhf"),
+    ("trl", "trl"),
+    ("verl", "verl"),
+    ("zvf130", "zvf130"),
 ]
 
-MIN_REPORT_ITEMS = ["loss_form", "reference_kl", "sampler_backend",
-                    "telemetry", "group_size_schedule", "heldout_split",
-                    "decontamination"]
+MIN_REPORT_ITEMS = [
+    "loss_form",
+    "reference_kl",
+    "sampler_backend",
+    "telemetry",
+    "group_size_schedule",
+    "heldout_split",
+    "decontamination",
+]
 
 
 def classify_framework(entry_id, framework_name):
@@ -107,7 +119,7 @@ def main():
     stacks, deltas = load_entries()
 
     # (framework, method) cells
-    cells = defaultdict(list)        # (fw, method) -> [entry_id]
+    cells = defaultdict(list)  # (fw, method) -> [entry_id]
     all_methods = set()
     all_frameworks = set()
     for sid, s in stacks.items():
@@ -125,16 +137,18 @@ def main():
             rec = stacks[sid]
             sc, _, _, _ = min_report_badge(rec)
             badges.append(sc)
-        cell_rows.append({
-            "framework": fw,
-            "method": m,
-            "n_entries": len(entries),
-            "entries": ",".join(entries),
-            "mean_badge": round(mean(badges), 2) if badges else 0.0,
-            "min_badge": min(badges) if badges else 0.0,
-            "max_badge": max(badges) if badges else 0.0,
-            "status": "POPULATED",
-        })
+        cell_rows.append(
+            {
+                "framework": fw,
+                "method": m,
+                "n_entries": len(entries),
+                "entries": ",".join(entries),
+                "mean_badge": round(mean(badges), 2) if badges else 0.0,
+                "min_badge": min(badges) if badges else 0.0,
+                "max_badge": max(badges) if badges else 0.0,
+                "status": "POPULATED",
+            }
+        )
 
     # Cross-framework same-method clusters
     cluster_rows = []
@@ -147,14 +161,16 @@ def main():
         all_entries_in_cluster = []
         for fw in fw_for_method:
             all_entries_in_cluster.extend([(sid, fw) for sid in cells[(fw, m)]])
-        cluster_rows.append({
-            "method": m,
-            "n_frameworks": len(fw_for_method),
-            "frameworks": ",".join(fw_for_method),
-            "n_entries": len(all_entries_in_cluster),
-            "entries": ",".join(f"{fw}:{sid}" for sid, fw in all_entries_in_cluster),
-            "status": "CROSS-FRAMEWORK",
-        })
+        cluster_rows.append(
+            {
+                "method": m,
+                "n_frameworks": len(fw_for_method),
+                "frameworks": ",".join(fw_for_method),
+                "n_entries": len(all_entries_in_cluster),
+                "entries": ",".join(f"{fw}:{sid}" for sid, fw in all_entries_in_cluster),
+                "status": "CROSS-FRAMEWORK",
+            }
+        )
 
         # Per-field divergence across the cluster — for every leaf field of
         # min_report, count distinct non-null values.
@@ -179,16 +195,18 @@ def main():
                         cross_fw_disagree += 1
             n_fw_pairs = len(fws) * (len(fws) - 1) // 2
             disagree_rate = (cross_fw_disagree / n_fw_pairs) if n_fw_pairs else 0.0
-            min_report_divergence_rows.append({
-                "method": m,
-                "field": fpath,
-                "n_fws_reporting": n_fws_reporting,
-                "n_distinct_values": n_distinct_total,
-                "cross_fw_pairs": n_fw_pairs,
-                "cross_fw_disagree_pairs": cross_fw_disagree,
-                "disagree_rate": round(disagree_rate, 4),
-                "per_fw_values": json.dumps(distinct_values_per_fw, sort_keys=True),
-            })
+            min_report_divergence_rows.append(
+                {
+                    "method": m,
+                    "field": fpath,
+                    "n_fws_reporting": n_fws_reporting,
+                    "n_distinct_values": n_distinct_total,
+                    "cross_fw_pairs": n_fw_pairs,
+                    "cross_fw_disagree_pairs": cross_fw_disagree,
+                    "disagree_rate": round(disagree_rate, 4),
+                    "per_fw_values": json.dumps(distinct_values_per_fw, sort_keys=True),
+                }
+            )
 
     # Unmined-cell priority: score each (framework, method) NOT in cells by
     # how transferable the harness + trace are. A cell is "easy" if the
@@ -209,14 +227,18 @@ def main():
             method_xfer = len(other_fws) > 0
             fw_xfer = len(other_methods) >= 2
             priority = (2 * method_xfer) + (3 * fw_xfer) + len(other_methods) + len(other_fws)
-            unmined_rows.append({
-                "framework": fw, "method": m,
-                "method_transferable_from": ",".join(sorted(other_fws)),
-                "n_other_methods_for_framework": len(other_methods),
-                "framework_has_2plus_methods": fw_xfer,
-                "method_already_covered": method_xfer,
-                "priority_score": priority, "status": "UNMINED",
-            })
+            unmined_rows.append(
+                {
+                    "framework": fw,
+                    "method": m,
+                    "method_transferable_from": ",".join(sorted(other_fws)),
+                    "n_other_methods_for_framework": len(other_methods),
+                    "framework_has_2plus_methods": fw_xfer,
+                    "method_already_covered": method_xfer,
+                    "priority_score": priority,
+                    "status": "UNMINED",
+                }
+            )
     unmined_rows.sort(key=lambda r: (-r["priority_score"], r["method"], r["framework"]))
 
     # Write TSVs
@@ -227,18 +249,53 @@ def main():
             for r in rows:
                 w.writerow(r)
 
-    write_tsv(OUT / "p6_iter202_framework_method_cell.tsv", cell_rows,
-              ["framework", "method", "n_entries", "entries", "mean_badge",
-               "min_badge", "max_badge", "status"])
-    write_tsv(OUT / "p6_iter202_same_method_clusters.tsv", cluster_rows,
-              ["method", "n_frameworks", "frameworks", "n_entries", "entries", "status"])
-    write_tsv(OUT / "p6_iter202_minreport_divergence.tsv", min_report_divergence_rows,
-              ["method", "field", "n_fws_reporting", "n_distinct_values",
-               "cross_fw_pairs", "cross_fw_disagree_pairs", "disagree_rate", "per_fw_values"])
-    write_tsv(OUT / "p6_iter202_unmined_cell_priority.tsv", unmined_rows,
-              ["framework", "method", "method_transferable_from",
-               "n_other_methods_for_framework", "framework_has_2plus_methods",
-               "method_already_covered", "priority_score", "status"])
+    write_tsv(
+        OUT / "p6_iter202_framework_method_cell.tsv",
+        cell_rows,
+        [
+            "framework",
+            "method",
+            "n_entries",
+            "entries",
+            "mean_badge",
+            "min_badge",
+            "max_badge",
+            "status",
+        ],
+    )
+    write_tsv(
+        OUT / "p6_iter202_same_method_clusters.tsv",
+        cluster_rows,
+        ["method", "n_frameworks", "frameworks", "n_entries", "entries", "status"],
+    )
+    write_tsv(
+        OUT / "p6_iter202_minreport_divergence.tsv",
+        min_report_divergence_rows,
+        [
+            "method",
+            "field",
+            "n_fws_reporting",
+            "n_distinct_values",
+            "cross_fw_pairs",
+            "cross_fw_disagree_pairs",
+            "disagree_rate",
+            "per_fw_values",
+        ],
+    )
+    write_tsv(
+        OUT / "p6_iter202_unmined_cell_priority.tsv",
+        unmined_rows,
+        [
+            "framework",
+            "method",
+            "method_transferable_from",
+            "n_other_methods_for_framework",
+            "framework_has_2plus_methods",
+            "method_already_covered",
+            "priority_score",
+            "status",
+        ],
+    )
 
     # Schema-bump cross-check: count entries present in registry dir vs those
     # that load successfully (the iter-198 bump lifted 34->46; verify).
@@ -263,20 +320,25 @@ def main():
         "n_cross_framework_clusters": len(cluster_rows),
         "cross_framework_methods": [r["method"] for r in cluster_rows],
         "framework_entry_counts": {
-            fw: sum(1 for sid, s in stacks.items()
-                    if classify_framework(sid, s.get("framework", {}).get("name", "")) == fw)
+            fw: sum(
+                1
+                for sid, s in stacks.items()
+                if classify_framework(sid, s.get("framework", {}).get("name", "")) == fw
+            )
             for fw in sorted(all_frameworks)
         },
         "method_entry_counts": {
             m: sum(1 for sid, s in stacks.items() if s.get("label_claimed") == m)
             for m in sorted(all_methods)
         },
-        "cartesian_density_pct": round(100 * len(cell_rows) / (len(all_frameworks) * len(all_methods)), 2),
+        "cartesian_density_pct": round(
+            100 * len(cell_rows) / (len(all_frameworks) * len(all_methods)), 2
+        ),
         "schema_bump_alignment": {
             "iter198_total_valid": 46,
             "iter202_files": n_files,
             "loaded_minus_bump": n_loaded_stacks - 46,
-            "note": "delta_*.json are variant-delta records (not stack records); iter-198's 46/46 covers both record types"
+            "note": "delta_*.json are variant-delta records (not stack records); iter-198's 46/46 covers both record types",
         },
     }
     (OUT / "p6_iter202_summary.json").write_text(json.dumps(summary, indent=2))
@@ -287,13 +349,17 @@ def main():
     print(f"  Files: {n_files}; loaded stacks={n_loaded_stacks}, deltas={n_loaded_deltas}")
     print(f"  Frameworks: {len(all_frameworks)}; methods: {len(all_methods)}")
     print(f"  Populated cells: {len(cell_rows)} / {n_total} ({summary['cartesian_density_pct']}%)")
-    print(f"  Cross-framework clusters (>=2 frameworks share method): {len(cluster_rows)}"
-          f" -> {[r['method'] for r in cluster_rows]}")
+    print(
+        f"  Cross-framework clusters (>=2 frameworks share method): {len(cluster_rows)}"
+        f" -> {[r['method'] for r in cluster_rows]}"
+    )
     print(f"  Unmined cells: {len(unmined_rows)}")
     print(f"  Top-3 unmined priority cells:")
     for r in unmined_rows[:3]:
-        print(f"    [{r['priority_score']}] {r['framework']} x {r['method']}"
-              f" (transferable from {r['method_transferable_from']}, fw has {r['n_other_methods_for_framework']} other methods)")
+        print(
+            f"    [{r['priority_score']}] {r['framework']} x {r['method']}"
+            f" (transferable from {r['method_transferable_from']}, fw has {r['n_other_methods_for_framework']} other methods)"
+        )
     print(f"  Output: {OUT}")
 
 

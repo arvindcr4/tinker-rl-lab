@@ -62,6 +62,7 @@ Outputs:
   - platform_hybrid/experiments/results/berkeley/cdh_echo_cross_pillar.tsv
   - platform_hybrid/experiments/results/berkeley/cdh_echo_summary.json
 """
+
 from __future__ import annotations
 
 import csv
@@ -98,26 +99,28 @@ def paired_wilcoxon(a: list[float], b: list[float]) -> tuple[float, int, float]:
     """
     if len(a) != len(b) or not all(math.isfinite(v) for v in a + b):
         raise ValueError("finite aligned pairs required")
-    diffs = [bi-ai for ai, bi in zip(a, b) if bi != ai]
-    ranks = [1 + sum(abs(x) < abs(d) for x in diffs)
-             + (sum(abs(x) == abs(d) for x in diffs)-1)/2 for d in diffs]
-    observed = round(2 * sum(r for r, d in zip(ranks, diffs) if d < 0))
+    diffs = [bi - ai for ai, bi in zip(a, b, strict=False) if bi != ai]
+    ranks = [
+        1 + sum(abs(x) < abs(d) for x in diffs) + (sum(abs(x) == abs(d) for x in diffs) - 1) / 2
+        for d in diffs
+    ]
+    observed = round(2 * sum(r for r, d in zip(ranks, diffs, strict=False) if d < 0))
     counts = {0: 1}
     for rank in ranks:
         updated = dict(counts)
         for total, count in counts.items():
-            key = total + round(2*rank)
+            key = total + round(2 * rank)
             updated[key] = updated.get(key, 0) + count
         counts = updated
-    p = sum(count for total, count in counts.items() if total >= observed) / 2**len(diffs)
-    return observed/2, sum(d < 0 for d in diffs), p
+    p = sum(count for total, count in counts.items() if total >= observed) / 2 ** len(diffs)
+    return observed / 2, sum(d < 0 for d in diffs), p
 
 
 def sign_test_binom(n_wins: int, n_total: int, p_one_sided: float = 0.5) -> float:
     """Exact upper-tail P(wins >= observed), ties excluded by caller."""
     if not 0 <= n_wins <= n_total or p_one_sided != 0.5:
         raise ValueError("invalid counts or unsupported null probability")
-    return sum(math.comb(n_total, k) for k in range(n_wins, n_total+1)) / 2**n_total
+    return sum(math.comb(n_total, k) for k in range(n_wins, n_total + 1)) / 2**n_total
 
 
 def main() -> None:
@@ -141,15 +144,17 @@ def main() -> None:
             if dk in m:
                 seed_pairs.setdefault(seed, []).append((m[gk], m[dk]))
     # Seed is the independent run unit; equally weight tasks within each seed.
-    pool = [(sum(a for a, _ in pairs)/len(pairs), sum(b for _, b in pairs)/len(pairs))
-            for _, pairs in sorted(seed_pairs.items())]
+    pool = [
+        (sum(a for a, _ in pairs) / len(pairs), sum(b for _, b in pairs) / len(pairs))
+        for _, pairs in sorted(seed_pairs.items())
+    ]
     if len(pool) < 2:
         raise ValueError("INSUFFICIENT_DATA: at least two paired independent cells required")
     diffs = [b - a for a, b in pool]
     W_minus, n_pred, wilcoxon_p = paired_wilcoxon([a for a, _ in pool], [b for _, b in pool])
     mean_gr = sum(a for a, _ in pool) / len(pool)
     mean_dr = sum(b for _, b in pool) / len(pool)
-    paired_sd = (sum((d - sum(diffs)/len(diffs))**2 for d in diffs)/(len(diffs)-1))**0.5
+    paired_sd = (sum((d - sum(diffs) / len(diffs)) ** 2 for d in diffs) / (len(diffs) - 1)) ** 0.5
     cohens_d = (mean_dr - mean_gr) / paired_sd if paired_sd else 0.0
     h1_row = {
         "hypothesis": "H1_pooled_DR_smaller",
@@ -163,26 +168,24 @@ def main() -> None:
         "n_pred_one_sided": n_pred,
         "cohens_d_paired": round(cohens_d, 3),
         "predicted_direction": "Dr.GR smaller (fixed normaliser decouples, learned break does not)",
-        "verdict": (
-            "FAVOURS"
-            if (mean_dr < mean_gr and wilcoxon_p < 0.05)
-            else "NULL"
-        ),
+        "verdict": ("FAVOURS" if (mean_dr < mean_gr and wilcoxon_p < 0.05) else "NULL"),
     }
     with (BERK / "cdh_echo_pooled_paired.tsv").open("w") as f:
         w = csv.DictWriter(f, fieldnames=list(h1_row.keys()), delimiter="\t")
         w.writeheader()
         w.writerow(h1_row)
-    print(f"H1 pooled: mean_GR={mean_gr:.4f}, mean_DR={mean_dr:.4f}, "
-          f"diff={mean_dr - mean_gr:+.4f}, W-={W_minus:.1f}, n_pred={n_pred}/{len(pool)}, "
-          f"d={cohens_d:+.3f} → {h1_row['verdict']}")
+    print(
+        f"H1 pooled: mean_GR={mean_gr:.4f}, mean_DR={mean_dr:.4f}, "
+        f"diff={mean_dr - mean_gr:+.4f}, W-={W_minus:.1f}, n_pred={n_pred}/{len(pool)}, "
+        f"d={cohens_d:+.3f} → {h1_row['verdict']}"
+    )
 
     # ---- H4: sign test over all (task, seed) cells ----
     # Predicted direction: Dr.GR < GR |ρ(Δr,ΔL)| (smaller |ρ| = decoupled)
     n_total = sum(a != b for a, b in pool)
     n_wins = sum(b < a for a, b in pool)
     binom_one_sided = sign_test_binom(n_wins, n_total)
-    binom_p_two_sided = min(1.0, 2 * sign_test_binom(max(n_wins, n_total-n_wins), n_total))
+    binom_p_two_sided = min(1.0, 2 * sign_test_binom(max(n_wins, n_total - n_wins), n_total))
     h4_row = {
         "hypothesis": "H4_sign_test_pooled_8_cells",
         "n_total_cells": n_total,
@@ -201,8 +204,10 @@ def main() -> None:
         w = csv.DictWriter(f, fieldnames=list(h4_row.keys()), delimiter="\t")
         w.writeheader()
         w.writerow(h4_row)
-    print(f"H4 sign test: {n_wins}/{n_total} cells Dr.GR smaller, "
-          f"binom_one_sided={binom_one_sided:.4f} → {h4_row['verdict']}")
+    print(
+        f"H4 sign test: {n_wins}/{n_total} cells Dr.GR smaller, "
+        f"binom_one_sided={binom_one_sided:.4f} → {h4_row['verdict']}"
+    )
 
     # ---- H3: ratio check Dr.GR/GR |ρ(Δr,ΔL)| per task ----
     by_task: dict[str, list[tuple[float, float]]] = {}
@@ -220,31 +225,37 @@ def main() -> None:
         m_dr = sum(b for _, b in ps) / len(ps)
         ratio = m_dr / m_gr if m_gr > 0 else float("nan")
         # Pre-reg: ratio < 1.0 (Dr.GR does not amplify |ρ|)
-        h3_rows.append({
-            "task": task,
-            "n_pairs": len(ps),
-            "mean_gr_abs_rho_dR_dL": round(m_gr, 4),
-            "mean_dr_abs_rho_dR_dL": round(m_dr, 4),
-            "ratio_dr_over_gr": round(ratio, 4),
-            "pre_reg_criterion": "ratio < 1.0",
-            "verdict": "FAVOURS" if ratio < 1.0 else "NULL",
-        })
+        h3_rows.append(
+            {
+                "task": task,
+                "n_pairs": len(ps),
+                "mean_gr_abs_rho_dR_dL": round(m_gr, 4),
+                "mean_dr_abs_rho_dR_dL": round(m_dr, 4),
+                "ratio_dr_over_gr": round(ratio, 4),
+                "pre_reg_criterion": "ratio < 1.0",
+                "verdict": "FAVOURS" if ratio < 1.0 else "NULL",
+            }
+        )
     pool_ratio = (mean_dr / mean_gr) if mean_gr > 0 else float("nan")
-    h3_rows.append({
-        "task": "POOLED",
-        "n_pairs": len(pool),
-        "mean_gr_abs_rho_dR_dL": round(mean_gr, 4),
-        "mean_dr_abs_rho_dR_dL": round(mean_dr, 4),
-        "ratio_dr_over_gr": round(pool_ratio, 4),
-        "pre_reg_criterion": "ratio < 1.0",
-        "verdict": "FAVOURS" if pool_ratio < 1.0 else "NULL",
-    })
+    h3_rows.append(
+        {
+            "task": "POOLED",
+            "n_pairs": len(pool),
+            "mean_gr_abs_rho_dR_dL": round(mean_gr, 4),
+            "mean_dr_abs_rho_dR_dL": round(mean_dr, 4),
+            "ratio_dr_over_gr": round(pool_ratio, 4),
+            "pre_reg_criterion": "ratio < 1.0",
+            "verdict": "FAVOURS" if pool_ratio < 1.0 else "NULL",
+        }
+    )
     with (BERK / "cdh_echo_ratio.tsv").open("w") as f:
         w = csv.DictWriter(f, fieldnames=list(h3_rows[0].keys()), delimiter="\t")
         w.writeheader()
         w.writerows(h3_rows)
-    print(f"H3 ratio check: POOLED Dr.GR/GR = {pool_ratio:.4f} "
-          f"({'FAVOURS' if pool_ratio < 1.0 else 'NULL'})")
+    print(
+        f"H3 ratio check: POOLED Dr.GR/GR = {pool_ratio:.4f} "
+        f"({'FAVOURS' if pool_ratio < 1.0 else 'NULL'})"
+    )
 
     # ---- H2: cross-pillar direction consistency ----
     # Row-12 (Pillar-1) empirical fact (cdh_gradnorm_vs_reward.tsv):
@@ -291,11 +302,13 @@ def main() -> None:
         w = csv.DictWriter(f, fieldnames=list(h2_row.keys()), delimiter="\t")
         w.writeheader()
         w.writerow(h2_row)
-    print(f"H2 cross-pillar consistency: p1_learned={p1_effect*100:+.2f}%, "
-          f"p4_fixed={p4_effect*100:+.2f}%, "
-          f"same_sign={h2_row['same_sign_check']}, "
-          f"learned_vs_fixed_ratio={effect_ratio:.2f} "
-          f"({h2_row['learned_amplifies_more_than_fixed_check']})")
+    print(
+        f"H2 cross-pillar consistency: p1_learned={p1_effect * 100:+.2f}%, "
+        f"p4_fixed={p4_effect * 100:+.2f}%, "
+        f"same_sign={h2_row['same_sign_check']}, "
+        f"learned_vs_fixed_ratio={effect_ratio:.2f} "
+        f"({h2_row['learned_amplifies_more_than_fixed_check']})"
+    )
 
     # ---- Summary JSON ----
     summary = {
@@ -316,9 +329,11 @@ def main() -> None:
         ),
         "verdict": (
             "validated"
-            if (h3_rows[-1]["verdict"] == "FAVOURS"
+            if (
+                h3_rows[-1]["verdict"] == "FAVOURS"
                 and h2_row["same_sign_check"] == "PASS"
-                and h2_row["learned_amplifies_more_than_fixed_check"] == "PASS")
+                and h2_row["learned_amplifies_more_than_fixed_check"] == "PASS"
+            )
             else "prototyped"
         ),
     }

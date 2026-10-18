@@ -26,14 +26,15 @@ Reads : platform_hybrid/experiments/results/length_bias_iter120_*.tsv
 Writes: figures/length_bias_iter120_sever_bwd.{pdf,png}
         mirrored to paper/figures/.
 """
+
 from __future__ import annotations
 
 import csv
-import os
 from pathlib import Path
 
 import numpy as np
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
@@ -65,16 +66,11 @@ COL = {"arith": "#1f77b4", "gsm": "#d62728"}
 
 
 def main() -> int:
-    pooled_h1 = load_tsv(
-        "length_bias_iter120_pooled_h1_sever_vs_bwd_GR.tsv")
-    pooled_h2 = load_tsv(
-        "length_bias_iter120_pooled_h2_sever_vs_fwd_GR.tsv")
-    envelope = load_tsv(
-        "length_bias_iter120_envelope.tsv")
-    per_window = load_tsv(
-        "length_bias_iter120_per_window.tsv")
-    boot = load_tsv(
-        "length_bias_iter120_rho_bootstrap.tsv")
+    pooled_h1 = load_tsv("length_bias_iter120_pooled_h1_sever_vs_bwd_GR.tsv")
+    pooled_h2 = load_tsv("length_bias_iter120_pooled_h2_sever_vs_fwd_GR.tsv")
+    envelope = load_tsv("length_bias_iter120_envelope.tsv")
+    per_window = load_tsv("length_bias_iter120_per_window.tsv")
+    boot = load_tsv("length_bias_iter120_rho_bootstrap.tsv")
 
     fig, axes = plt.subplots(2, 2, figsize=(11, 8.5))
 
@@ -85,19 +81,25 @@ def main() -> int:
     # by perturbing with task-specific scales of the per-window
     # std_zvf to spread the points.
     tasks_seeds = {"arithmetic_easy": 5, "gsm8k_cot": 3}
-    for task, n_seeds in tasks_seeds.items():
+    for task, _n_seeds in tasks_seeds.items():
         sub = [r for r in per_window if r["task"] == task]
         col = COL["arith"] if "arith" in task else COL["gsm"]
-        for w_i, r in enumerate(sub):
+        for _w_i, r in enumerate(sub):
             sever = float(r["mean_sever"])
             bwd = float(r["mean_bwd_GR"])
-            ax.scatter(sever, bwd, color=col, alpha=0.55, s=64,
-                       edgecolor="white", linewidths=0.5)
+            ax.scatter(sever, bwd, color=col, alpha=0.55, s=64, edgecolor="white", linewidths=0.5)
         env = next(e for e in envelope if e["task"] == task)
-        ax.scatter(float(env["mean_sever"]), float(env["mean_bwd_GR"]),
-                   color=col, marker="*", s=260, edgecolor="black",
-                   linewidths=0.7, zorder=5,
-                   label=f"{task} (n_seeds={env['n_seeds']})")
+        ax.scatter(
+            float(env["mean_sever"]),
+            float(env["mean_bwd_GR"]),
+            color=col,
+            marker="*",
+            s=260,
+            edgecolor="black",
+            linewidths=0.7,
+            zorder=5,
+            label=f"{task} (n_seeds={env['n_seeds']})",
+        )
     ax.axhline(0.85, color="grey", linewidth=0.6, linestyle=":")
     ax.axvline(0.0, color="grey", linewidth=0.6, linestyle=":")
     ax.set_xlabel(r"severship intensity $-\Delta\mathrm{bwd}$ (Dr.GR $-$ GR)")
@@ -114,17 +116,19 @@ def main() -> int:
     hi = []
     colors = []
     for hyp_name, pooled, key in (
-            ("H1 sever $\\to$ $|CCF_{\\mathrm{bwd}}^{GR}|$",
-             pooled_h1, "spearman_sever_vs_bwd_GR"),
-            ("H2 sever $\\to$ $|CCF_{\\mathrm{fwd}}^{GR}|$",
-             pooled_h2, "spearman_sever_vs_fwd_GR")):
+        ("H1 sever $\\to$ $|CCF_{\\mathrm{bwd}}^{GR}|$", pooled_h1, "spearman_sever_vs_bwd_GR"),
+        ("H2 sever $\\to$ $|CCF_{\\mathrm{fwd}}^{GR}|$", pooled_h2, "spearman_sever_vs_fwd_GR"),
+    ):
         for r in pooled:
             labels.append(f"{hyp_name}\n{r['task']}")
             obs.append(float(r[key]))
-            ci = next(b for b in boot
-                      if b["task"] == r["task"]
-                      and hyp_name.split(" ")[1] == b["hypothesis"].split("_")[1]
-                      and hyp_name.split(" ")[0][1] == b["hypothesis"][1])
+            ci = next(
+                b
+                for b in boot
+                if b["task"] == r["task"]
+                and hyp_name.split(" ")[1] == b["hypothesis"].split("_")[1]
+                and hyp_name.split(" ")[0][1] == b["hypothesis"][1]
+            )
             lo.append(float(ci["ci_lo"]))
             hi.append(float(ci["ci_hi"]))
             colors.append(COL["arith"] if "arith" in r["task"] else COL["gsm"])
@@ -132,8 +136,16 @@ def main() -> int:
     obs_arr = np.array(obs)
     err_lo = obs_arr - np.array(lo)
     err_hi = np.array(hi) - obs_arr
-    ax.bar(x, obs_arr, yerr=[err_lo, err_hi], color=colors, alpha=0.85,
-           edgecolor="black", linewidth=0.5, capsize=4)
+    ax.bar(
+        x,
+        obs_arr,
+        yerr=[err_lo, err_hi],
+        color=colors,
+        alpha=0.85,
+        edgecolor="black",
+        linewidth=0.5,
+        capsize=4,
+    )
     ax.axhline(0, color="black", linewidth=0.7)
     ax.set_xticks(x)
     ax.set_xticklabels(labels, fontsize=7, rotation=20, ha="right")
@@ -151,17 +163,22 @@ def main() -> int:
     for ti, task in enumerate(tasks):
         xs, ys = [], []
         for w in range(n_w):
-            row = next((r for r in per_window
-                        if r["task"] == task and int(r["window"]) == w), None)
+            row = next((r for r in per_window if r["task"] == task and int(r["window"]) == w), None)
             if row is None:
                 continue
             xs.append(w)
             ys.append(float(row["rho_sever_vs_bwd_GR"]))
         col = COL["arith"] if ti == 0 else COL["gsm"]
-        ax.bar([xi + ti * width - width / 2 for xi in xs], ys,
-               width=width * 0.95, color=col, alpha=0.85,
-               edgecolor="black", linewidth=0.4,
-               label=task.replace("_", " "))
+        ax.bar(
+            [xi + ti * width - width / 2 for xi in xs],
+            ys,
+            width=width * 0.95,
+            color=col,
+            alpha=0.85,
+            edgecolor="black",
+            linewidth=0.4,
+            label=task.replace("_", " "),
+        )
     ax.axhline(0, color="black", linewidth=0.7)
     ax.set_xticks(x)
     ax.set_xticklabels([f"w{w}" for w in range(n_w)])
@@ -175,19 +192,26 @@ def main() -> int:
     ax = axes[1, 1]
     for env in envelope:
         col = COL["arith"] if "arith" in env["task"] else COL["gsm"]
-        ax.scatter(float(env["mean_bwd_GR"]), float(env["mean_sever"]),
-                   color=col, marker="*", s=320, edgecolor="black",
-                   linewidths=0.7, zorder=5,
-                   label=f"{env['task']} (n={env['n_seeds']})")
+        ax.scatter(
+            float(env["mean_bwd_GR"]),
+            float(env["mean_sever"]),
+            color=col,
+            marker="*",
+            s=320,
+            edgecolor="black",
+            linewidths=0.7,
+            zorder=5,
+            label=f"{env['task']} (n={env['n_seeds']})",
+        )
     # arrow: arithmetic_easy -> gsm8k_cot
     are = next(e for e in envelope if "arith" in e["task"])
     gsm = next(e for e in envelope if "gsm" in e["task"])
-    ax.annotate("",
-                xy=(float(gsm["mean_bwd_GR"]), float(gsm["mean_sever"])),
-                xytext=(float(are["mean_bwd_GR"]),
-                        float(are["mean_sever"])),
-                arrowprops=dict(arrowstyle="->", color="black",
-                                lw=1.6, linestyle="--"))
+    ax.annotate(
+        "",
+        xy=(float(gsm["mean_bwd_GR"]), float(gsm["mean_sever"])),
+        xytext=(float(are["mean_bwd_GR"]), float(are["mean_sever"])),
+        arrowprops=dict(arrowstyle="->", color="black", lw=1.6, linestyle="--"),
+    )
     ax.axhline(0, color="grey", linewidth=0.6, linestyle=":")
     ax.set_xlabel(r"mean GR baseline $|CCF_{\mathrm{bwd}}|$")
     ax.set_ylabel(r"mean severship $-\Delta\mathrm{bwd}$ (Dr.GR $-$ GR)")
@@ -196,9 +220,10 @@ def main() -> int:
     ax.legend(loc="lower right", fontsize=8)
 
     fig.suptitle(
-        "Iter 120 — Severship $\\times$ baseline backward-CCF: "
-        "the de-herding efficacy frontier",
-        fontsize=12, y=0.995)
+        "Iter 120 — Severship $\\times$ baseline backward-CCF: the de-herding efficacy frontier",
+        fontsize=12,
+        y=0.995,
+    )
 
     out_pdf = FIGS / "length_bias_iter120_sever_bwd.pdf"
     out_png = FIGS / "length_bias_iter120_sever_bwd.png"
@@ -218,12 +243,16 @@ def main() -> int:
     # ============== headlines ==============
     print("\n[iter120 figure] H1 pooled Spearman (sever -> |CCF_bwd^GR|):")
     for r in pooled_h1:
-        print(f"  {r['task']:14s}: rho={r['spearman_sever_vs_bwd_GR']:+.3f} "
-              f"p={r['spearman_p_param']:.3f} n={r['n_points']}")
+        print(
+            f"  {r['task']:14s}: rho={r['spearman_sever_vs_bwd_GR']:+.3f} "
+            f"p={r['spearman_p_param']:.3f} n={r['n_points']}"
+        )
     print("[iter120 figure] H2 pooled Spearman (sever -> |CCF_fwd^GR|):")
     for r in pooled_h2:
-        print(f"  {r['task']:14s}: rho={r['spearman_sever_vs_fwd_GR']:+.3f} "
-              f"p={r['spearman_p_param']:.3f} n={r['n_points']}")
+        print(
+            f"  {r['task']:14s}: rho={r['spearman_sever_vs_fwd_GR']:+.3f} "
+            f"p={r['spearman_p_param']:.3f} n={r['n_points']}"
+        )
 
     return 0
 

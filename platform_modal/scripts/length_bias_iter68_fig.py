@@ -1,8 +1,10 @@
 """length_bias_iter68_fig.py — 3-panel matplotlib PDF for iter68 reversal finding."""
+
 from __future__ import annotations
 
 import os
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from _analysis_common import read_tsv as load_tsv
@@ -26,15 +28,22 @@ def main():
     per_run = load_tsv(os.path.join(RES, "length_bias_iter68_per_run.tsv"))
     gsm = [r for r in per_run if r["experiment"] == "drgrpo_gsm8k_cot"]
     arith = [r for r in per_run if r["experiment"] == "drgrpo_vs_grpo"]
-    for i, (data, label) in enumerate([(gsm, "GSM8K CoT (3 seeds)"), (arith, "Arith-easy (5 seeds)")]):
+    for i, (data, label) in enumerate(
+        [(gsm, "GSM8K CoT (3 seeds)"), (arith, "Arith-easy (5 seeds)")]
+    ):
         ax = axes[0]
         algo_vals = {"grpo": [], "dr_grpo": []}
         for r in data:
             algo_vals[r["algo"]].append(float(r["reversal_rate"]))
         positions = [i * 4 + 1, i * 4 + 2]
         vals = [algo_vals["grpo"], algo_vals["dr_grpo"]]
-        bp = ax.boxplot(vals, positions=positions, widths=0.6, patch_artist=True,
-                        boxprops=dict(facecolor="#ffe0b2" if i == 0 else "#c8e6c9"))
+        bp = ax.boxplot(
+            vals,
+            positions=positions,
+            widths=0.6,
+            patch_artist=True,
+            boxprops=dict(facecolor="#ffe0b2" if i == 0 else "#c8e6c9"),
+        )
         ax.set_xticks([i * 4 + 1.5])
         ax.set_xticklabels([label], fontsize=9)
         # overlay individual points
@@ -51,8 +60,12 @@ def main():
     neg = [r for r in rev_cond if r["cell"] == "rev_on_neg_dR"]
     labels = ["GSM8K pos-dR", "GSM8K neg-dR", "Arith pos-dR", "Arith neg-dR"]
     grpo_vals, drgrpo_vals = [], []
-    for src, exp in [(pos, "drgrpo_gsm8k_cot"), (neg, "drgrpo_gsm8k_cot"),
-                     (pos, "drgrpo_vs_grpo"), (neg, "drgrpo_vs_grpo")]:
+    for src, exp in [
+        (pos, "drgrpo_gsm8k_cot"),
+        (neg, "drgrpo_gsm8k_cot"),
+        (pos, "drgrpo_vs_grpo"),
+        (neg, "drgrpo_vs_grpo"),
+    ]:
         rows = [r for r in src if r["experiment"] == exp]
         grpo_vals.append(sum(float(r["rev_grpo"]) for r in rows) / len(rows))
         drgrpo_vals.append(sum(float(r["rev_drgrpo"]) for r in rows) / len(rows))
@@ -70,16 +83,26 @@ def main():
     # Panel 3: signed AUC by seed
     gsm_auc = [r for r in auc if r["experiment"] == "drgrpo_gsm8k_cot"]
     arith_auc = [r for r in auc if r["experiment"] == "drgrpo_vs_grpo"]
-    axes[2].bar(["GSM8K CoT"] * len(gsm_auc), [float(r["auc_grpo_minus_drgrpo"]) for r in gsm_auc],
-                color="#90caf9", label="GRPO - Dr.GRPO AUC")
+    axes[2].bar(
+        ["GSM8K CoT"] * len(gsm_auc),
+        [float(r["auc_grpo_minus_drgrpo"]) for r in gsm_auc],
+        color="#90caf9",
+        label="GRPO - Dr.GRPO AUC",
+    )
     axes[2].axhline(0, color="black", linewidth=0.5)
     axes[2].set_ylabel("signed area (token-step units)")
     axes[2].set_title("(c) Signed AUC (positive = GRPO trace above)")
     axes[2].grid(True, alpha=0.3)
     # show arith too as inset overlay
     ax2 = axes[2].twinx()
-    ax2.bar(["Arith-easy"] * len(arith_auc), [float(r["auc_grpo_minus_drgrpo"]) for r in arith_auc],
-            color="#ef9a9a", width=0.4, alpha=0.6, label="Arith-easy")
+    ax2.bar(
+        ["Arith-easy"] * len(arith_auc),
+        [float(r["auc_grpo_minus_drgrpo"]) for r in arith_auc],
+        color="#ef9a9a",
+        width=0.4,
+        alpha=0.6,
+        label="Arith-easy",
+    )
     ax2.set_ylabel("Arith-easy AUC", color="#c62828")
     ax2.tick_params(axis="y", labelcolor="#c62828")
 
@@ -89,8 +112,10 @@ def main():
         out = os.path.join(FIG_DIR, f"length_bias_iter68_reversal.{ext}")
         fig.savefig(out, dpi=150, bbox_inches="tight")
         if ext == "pdf":
-            fig.savefig(os.path.join(PAPER_FIG_DIR, f"length_bias_iter68_reversal.{ext}"),
-                        bbox_inches="tight")
+            fig.savefig(
+                os.path.join(PAPER_FIG_DIR, f"length_bias_iter68_reversal.{ext}"),
+                bbox_inches="tight",
+            )
         print(f"wrote {out}")
 
 

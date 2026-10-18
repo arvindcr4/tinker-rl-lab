@@ -33,7 +33,6 @@ from __future__ import annotations
 
 import json
 import math
-import os
 import statistics
 from collections import defaultdict
 from pathlib import Path
@@ -57,8 +56,12 @@ def read_tsv(path: Path):
             parts = line.rstrip("\n").split("\t")
             if len(parts) != len(head):
                 continue
-            out.append({h: (float(v) if h not in ("method", "G") and v else v)
-                        for h, v in zip(head, parts)})
+            out.append(
+                {
+                    h: (float(v) if h not in ("method", "G") and v else v)
+                    for h, v in zip(head, parts, strict=False)
+                }
+            )
     return out
 
 
@@ -90,8 +93,14 @@ def sign_test(rows, col_a, col_b):
     if n_eff == 0:
         return {"pos": pos, "neg": neg, "zero": zero, "n_eff": 0, "binom_p": 1.0}
     p2 = min(1.0, 2 * sum(math.comb(n_eff, k) for k in range(min(pos, neg) + 1)) / 2**n_eff)
-    return {"pos": pos, "neg": neg, "zero": zero, "n_eff": n_eff,
-            "binom_p": p2, "alternative": "two-sided"}
+    return {
+        "pos": pos,
+        "neg": neg,
+        "zero": zero,
+        "n_eff": n_eff,
+        "binom_p": p2,
+        "alternative": "two-sided",
+    }
 
 
 def cohens_d(a, b):
@@ -168,7 +177,7 @@ def tree_baseline(traj, t, gamma=0.5, h=5, mode="forward"):
         else:
             idx = t - i
         if 0 <= idx < len(traj):
-            res += (gamma ** i) * traj[idx]
+            res += (gamma**i) * traj[idx]
     return res
 
 
@@ -208,22 +217,33 @@ def main():
                 tree_rew.append(abs(rew[idx] - v))
             # tree-advantage proxy: mean of |r - V_tree| within window
             tree_adv_proxy = sum(tree_rew) / len(tree_rew)
-            h1_rows.append({
-                "G": g, "seed": sd, "w": w,
-                "mean_advantage_variance": zvf_naive,
-                "mean_reward_deviation": tree_adv_proxy,
-            })
-    write_tsv(OUTDIR / "alphaproof_tree_window.tsv",
-["G", "seed", "w", "mean_advantage_variance", "mean_reward_deviation"],
-              h1_rows)
+            h1_rows.append(
+                {
+                    "G": g,
+                    "seed": sd,
+                    "w": w,
+                    "mean_advantage_variance": zvf_naive,
+                    "mean_reward_deviation": tree_adv_proxy,
+                }
+            )
+    write_tsv(
+        OUTDIR / "alphaproof_tree_window.tsv",
+        ["G", "seed", "w", "mean_advantage_variance", "mean_reward_deviation"],
+        h1_rows,
+    )
     print(f"H1 wrote alphaproof_tree_window.tsv n={len(h1_rows)}")
 
     by_w = defaultdict(list)
     for r in h1_rows:
         by_w[r["w"]].append(r["mean_reward_deviation"])
-    h1_summary = {w: {"n_runs": len(values), "mean_reward_deviation": statistics.fmean(values),
-        "sd_across_runs": statistics.stdev(values) if len(values) > 1 else None}
-        for w, values in sorted(by_w.items())}
+    h1_summary = {
+        w: {
+            "n_runs": len(values),
+            "mean_reward_deviation": statistics.fmean(values),
+            "sd_across_runs": statistics.stdev(values) if len(values) > 1 else None,
+        }
+        for w, values in sorted(by_w.items())
+    }
     h1_verdict = "EXPLORATORY_PROXY_ONLY"
     print(f"H1: reward deviations by window = {h1_summary} -> {h1_verdict}")
 
@@ -239,12 +259,17 @@ def main():
     paired = []
     for sd in seed_to_g2w2:
         if sd in seed_to_g4w1:
-            paired.append({"seed": sd,
-                           "g2_w2": seed_to_g2w2[sd],
-                           "g4_w1": seed_to_g4w1[sd],
-                           "delta": seed_to_g2w2[sd] - seed_to_g4w1[sd]})
-    write_tsv(OUTDIR / "alphaproof_compute_equivalence.tsv",
-              ["seed", "g2_w2", "g4_w1", "delta"], paired)
+            paired.append(
+                {
+                    "seed": sd,
+                    "g2_w2": seed_to_g2w2[sd],
+                    "g4_w1": seed_to_g4w1[sd],
+                    "delta": seed_to_g2w2[sd] - seed_to_g4w1[sd],
+                }
+            )
+    write_tsv(
+        OUTDIR / "alphaproof_compute_equivalence.tsv", ["seed", "g2_w2", "g4_w1", "delta"], paired
+    )
     h2_st = sign_test(paired, "g2_w2", "g4_w1")
     # prediction: g2_w2 <= g4_w1 (tree-baseline partially substitutes)
     h2_d = cohens_d([p["g2_w2"] for p in paired], [p["g4_w1"] for p in paired])
@@ -266,11 +291,21 @@ def main():
                 v = tree_baseline(rew, t, gamma=gamma, h=5, mode="forward")
                 tree_rew.append(abs(rew[t] - v))
             mag = sum(tree_rew) / len(tree_rew)
-            h3_rows.append({"G": g, "seed": sd, "gamma": gamma,
-                            "mag": mag, "mean_advantage_variance": zvf_naive,
-                            "delta_mag": mag - 0.0})
-    write_tsv(OUTDIR / "alphaproof_gamma_sweep.tsv",
-              ["G", "seed", "gamma", "mag", "mean_advantage_variance", "delta_mag"], h3_rows)
+            h3_rows.append(
+                {
+                    "G": g,
+                    "seed": sd,
+                    "gamma": gamma,
+                    "mag": mag,
+                    "mean_advantage_variance": zvf_naive,
+                    "delta_mag": mag - 0.0,
+                }
+            )
+    write_tsv(
+        OUTDIR / "alphaproof_gamma_sweep.tsv",
+        ["G", "seed", "gamma", "mag", "mean_advantage_variance", "delta_mag"],
+        h3_rows,
+    )
     by_g = defaultdict(list)
     for r in h3_rows:
         by_g[r["gamma"]].append(r["delta_mag"])
@@ -281,8 +316,10 @@ def main():
     h3_total_at_opt = sum(1 for r in h3_rows if r["gamma"] == gamma_opt)
     # CDH-consistent prediction: gamma_opt < 1.0
     h3_verdict = "EXPLORATORY_PROXY_ONLY"
-    print(f"H3: mean Δmag by γ = {h3_summary}, γ*={gamma_opt}, "
-          f"neg_at_opt={h3_neg_at_opt}/{h3_total_at_opt} -> {h3_verdict}")
+    print(
+        f"H3: mean Δmag by γ = {h3_summary}, γ*={gamma_opt}, "
+        f"neg_at_opt={h3_neg_at_opt}/{h3_total_at_opt} -> {h3_verdict}"
+    )
 
     # ---- H4: Tree-baseline ZVF sign-stable against GRPO across 9 methods (iter130) ----
     # For each method, build mean reward trajectory and compute correlation
@@ -305,19 +342,29 @@ def main():
                 tree_rew.append(abs(rew[t] - v))
             tree_zvf_proxy = sum(tree_rew) / len(tree_rew)
             corr = pearson(zvf_naive, tree_rew)
-            h4_rows.append({"method": method, "seed": sd, "w": w,
-                            "zvf_naive_mean": sum(zvf_naive) / len(zvf_naive),
-                            "tree_zvf_proxy": tree_zvf_proxy,
-                            "pearson_zvf_to_treeadv": corr})
-    write_tsv(OUTDIR / "alphaproof_method_sign.tsv",
-              ["method", "seed", "w", "zvf_naive_mean", "tree_zvf_proxy",
-               "pearson_zvf_to_treeadv"], h4_rows)
+            h4_rows.append(
+                {
+                    "method": method,
+                    "seed": sd,
+                    "w": w,
+                    "zvf_naive_mean": sum(zvf_naive) / len(zvf_naive),
+                    "tree_zvf_proxy": tree_zvf_proxy,
+                    "pearson_zvf_to_treeadv": corr,
+                }
+            )
+    write_tsv(
+        OUTDIR / "alphaproof_method_sign.tsv",
+        ["method", "seed", "w", "zvf_naive_mean", "tree_zvf_proxy", "pearson_zvf_to_treeadv"],
+        h4_rows,
+    )
     # pearson > 0 means sign-stable
     pos_corr = sum(1 for r in h4_rows if r["pearson_zvf_to_treeadv"] > 0)
     h4_strict = sum(1 for r in h4_rows if r["pearson_zvf_to_treeadv"] > 0.5)
     n_total = len(h4_rows)
     h4_verdict = "INSUFFICIENT_DATA" if n_total < 2 else "EXPLORATORY_PROXY_ONLY"
-    print(f"H4: positive Pearson on {pos_corr}/{n_total} (strict>{0.5}: {h4_strict}/{n_total}) -> {h4_verdict}")
+    print(
+        f"H4: positive Pearson on {pos_corr}/{n_total} (strict>{0.5}: {h4_strict}/{n_total}) -> {h4_verdict}"
+    )
 
     # ---- H5: Δ(naive vs tree) tracks heldout_acc at final step (iter130) ----
     final_step = {}
@@ -330,30 +377,50 @@ def main():
         k = (r["method"], r["seed"])
         if k in final_step:
             final = final_step[k]
-            paired_acc.append({
-                "method": r["method"], "seed": r["seed"], "w": r["w"],
-                "tree_zvf_proxy": r["tree_zvf_proxy"],
-                "zvf_naive_mean": r["zvf_naive_mean"],
-                "heldout_acc_final": final["heldout_acc"],
-            })
+            paired_acc.append(
+                {
+                    "method": r["method"],
+                    "seed": r["seed"],
+                    "w": r["w"],
+                    "tree_zvf_proxy": r["tree_zvf_proxy"],
+                    "zvf_naive_mean": r["zvf_naive_mean"],
+                    "heldout_acc_final": final["heldout_acc"],
+                }
+            )
     # Stratify by method and window: never duplicate seeds by pooling windows.
     correlations = []
     for method in sorted({p["method"] for p in paired_acc}):
         for window in [2, 5]:
             cells = [p for p in paired_acc if p["method"] == method and p["w"] == window]
             if len(cells) >= 3:
-                correlations.append({"method": method, "w": window, "n_seeds": len(cells),
-                    "rho_proxy": spearman([p["heldout_acc_final"] for p in cells], [p["tree_zvf_proxy"] for p in cells]),
-                    "rho_zvf": spearman([p["heldout_acc_final"] for p in cells], [p["zvf_naive_mean"] for p in cells])})
+                correlations.append(
+                    {
+                        "method": method,
+                        "w": window,
+                        "n_seeds": len(cells),
+                        "rho_proxy": spearman(
+                            [p["heldout_acc_final"] for p in cells],
+                            [p["tree_zvf_proxy"] for p in cells],
+                        ),
+                        "rho_zvf": spearman(
+                            [p["heldout_acc_final"] for p in cells],
+                            [p["zvf_naive_mean"] for p in cells],
+                        ),
+                    }
+                )
     # Averages are descriptive only, not pooled-sample inferential estimates.
     sp = statistics.fmean(c["rho_proxy"] for c in correlations) if correlations else 0.0
     sp_naive = statistics.fmean(c["rho_zvf"] for c in correlations) if correlations else 0.0
-    write_tsv(OUTDIR / "alphaproof_final_acc_corr.tsv",
-              ["method", "seed", "w", "tree_zvf_proxy",
-               "zvf_naive_mean", "heldout_acc_final"], paired_acc)
+    write_tsv(
+        OUTDIR / "alphaproof_final_acc_corr.tsv",
+        ["method", "seed", "w", "tree_zvf_proxy", "zvf_naive_mean", "heldout_acc_final"],
+        paired_acc,
+    )
     # prediction: both are positive
     h5_verdict = "EXPLORATORY_PROXY_ONLY" if correlations else "INSUFFICIENT_DATA"
-    print(f"H5: spearman ρ(tree, heldout)={sp:.3f}, ρ(naive, heldout)={sp_naive:.3f} -> {h5_verdict}")
+    print(
+        f"H5: spearman ρ(tree, heldout)={sp:.3f}, ρ(naive, heldout)={sp_naive:.3f} -> {h5_verdict}"
+    )
 
     # Aggregated trajectory proxies cannot establish changes in within-group ZVF.
     # Do not promote directional heuristics or pooled dependent correlations to evidence.
@@ -371,7 +438,11 @@ def main():
             "alphaproof": {
                 "title": "AlphaProof: a formal-mathematics AI for IMO competition problems",
                 "venue": "Nature (s41586-025-09833-y, methodology Nov 12, 2025) and DeepMind blog (Jul 25, 2024)",
-                "components": ["pretrained LM (Gemini)", "AlphaZero MCTS over Lean states", "value-net + policy prior"],
+                "components": [
+                    "pretrained LM (Gemini)",
+                    "AlphaZero MCTS over Lean states",
+                    "value-net + policy prior",
+                ],
                 "year": 2024,
             },
             "alphazero": {
@@ -388,25 +459,45 @@ def main():
             "iter130_variance_mitigation": str(IT130_TSV.relative_to(ROOT)),
         },
         "hypotheses": [
-            {"id": "H1", "claim": "Descriptive tree-window mean reward deviation; no ZVF inference",
-             "summary": h1_summary,
-             "verdict": h1_verdict},
-            {"id": "H2", "claim": "Descriptive reward-deviation contrast across G/window; not compute equivalence",
-             "n_paired": len(paired), "neg_delta": h2_neg,
-             "cohens_d": h2_d, "sign_test": h2_st,
-             "verdict": h2_verdict},
-            {"id": "H3", "claim": "Descriptive discounted-baseline deviation sweep; no ZVF inference",
-             "mean_delta_by_gamma": h3_summary,
-             "gamma_optimal": gamma_opt,
-             "neg_at_opt": f"{h3_neg_at_opt}/{h3_total_at_opt}",
-             "verdict": h3_verdict},
-            {"id": "H4", "claim": "Within-run association of reward-deviation proxy with observed ZVF; not stability",
-             "n_total": n_total, "n_pos_corr": pos_corr, "n_strict": h4_strict,
-             "verdict": h4_verdict},
-            {"id": "H5", "claim": "Method/window-specific seed correlations with final accuracy; exploratory",
-             "method_window_seed_correlations": correlations,
-             "mean_descriptive_rho_proxy": sp, "mean_descriptive_rho_zvf": sp_naive,
-             "verdict": h5_verdict},
+            {
+                "id": "H1",
+                "claim": "Descriptive tree-window mean reward deviation; no ZVF inference",
+                "summary": h1_summary,
+                "verdict": h1_verdict,
+            },
+            {
+                "id": "H2",
+                "claim": "Descriptive reward-deviation contrast across G/window; not compute equivalence",
+                "n_paired": len(paired),
+                "neg_delta": h2_neg,
+                "cohens_d": h2_d,
+                "sign_test": h2_st,
+                "verdict": h2_verdict,
+            },
+            {
+                "id": "H3",
+                "claim": "Descriptive discounted-baseline deviation sweep; no ZVF inference",
+                "mean_delta_by_gamma": h3_summary,
+                "gamma_optimal": gamma_opt,
+                "neg_at_opt": f"{h3_neg_at_opt}/{h3_total_at_opt}",
+                "verdict": h3_verdict,
+            },
+            {
+                "id": "H4",
+                "claim": "Within-run association of reward-deviation proxy with observed ZVF; not stability",
+                "n_total": n_total,
+                "n_pos_corr": pos_corr,
+                "n_strict": h4_strict,
+                "verdict": h4_verdict,
+            },
+            {
+                "id": "H5",
+                "claim": "Method/window-specific seed correlations with final accuracy; exploratory",
+                "method_window_seed_correlations": correlations,
+                "mean_descriptive_rho_proxy": sp,
+                "mean_descriptive_rho_zvf": sp_naive,
+                "verdict": h5_verdict,
+            },
         ],
     }
     with (OUTDIR / "alphaproof_summary.json").open("w") as f:

@@ -36,6 +36,7 @@ Outputs:
   figures/scaling_law_iter93.{pdf,png}
   paper/sections/scaling_law_iter93_v3.tex
 """
+
 from __future__ import annotations
 
 import json
@@ -45,8 +46,8 @@ from pathlib import Path
 import matplotlib
 
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt  # noqa: E402
-import numpy as np  # noqa: E402
+import matplotlib.pyplot as plt
+import numpy as np
 from _analysis_common import fit_saturation as _fit_saturation, write_rows_tsv as _write_tsv
 
 REPO = Path(__file__).resolve().parents[2] / "platform_hybrid"
@@ -77,6 +78,7 @@ NPARAMS = {"constant": 2, "1seg_ols": 3, "saturation": 3, "powerlaw": 3, "ar1": 
 
 
 # ---------- families ------------------------------------------------------
+
 
 def f_constant(t, params):
     mu = params[0]
@@ -114,6 +116,7 @@ def _clip01(arr):
 
 # ---------- fitters: in-sample OLS-style, robust inits -------------------
 
+
 def _fit_constant(y):
     return [float(np.mean(y))]
 
@@ -132,44 +135,51 @@ def _fit_powerlaw(t, y):
 
 def _fit_ar1(y, t=None):
     """Conditional OLS AR(1), params [intercept, phi, innovation_sd]."""
-    y=np.asarray(y,float)
-    valid=np.ones(max(len(y)-1,0),dtype=bool) if t is None else np.isclose(np.diff(t),1)
-    if valid.sum()<3: raise ValueError('insufficient consecutive AR pairs')
-    x=y[:-1][valid]; z=y[1:][valid]
-    A=np.column_stack([np.ones(len(x)),x])
-    c,phi=np.linalg.lstsq(A,z,rcond=None)[0]
-    resid=z-c-phi*x
-    return [float(c),float(phi),float(np.sqrt(np.mean(resid**2)))]
+    y = np.asarray(y, float)
+    valid = np.ones(max(len(y) - 1, 0), dtype=bool) if t is None else np.isclose(np.diff(t), 1)
+    if valid.sum() < 3:
+        raise ValueError("insufficient consecutive AR pairs")
+    x = y[:-1][valid]
+    z = y[1:][valid]
+    A = np.column_stack([np.ones(len(x)), x])
+    c, phi = np.linalg.lstsq(A, z, rcond=None)[0]
+    resid = z - c - phi * x
+    return [float(c), float(phi), float(np.sqrt(np.mean(resid**2)))]
 
 
 def _predict_ar1(y_full, params, predict_steps, origin=None):
     """Recursive forecasts at actual integer offsets from the observed origin."""
-    c,phi,_=params[:3]
-    origin=len(y_full) if origin is None else origin
-    out=[]
+    c, phi, _ = params[:3]
+    origin = len(y_full) if origin is None else origin
+    out = []
     for target in predict_steps:
-        gap=float(target-origin)
-        if gap<1 or not gap.is_integer(): raise ValueError('invalid AR forecast time')
-        last=float(y_full[-1])
-        for _ in range(int(gap)): last=c+phi*last
+        gap = float(target - origin)
+        if gap < 1 or not gap.is_integer():
+            raise ValueError("invalid AR forecast time")
+        last = float(y_full[-1])
+        for _ in range(int(gap)):
+            last = c + phi * last
         out.append(last)
-    return np.asarray(out,float)
+    return np.asarray(out, float)
 
 
 # ---------- scoring criteria ---------------------------------------------
+
 
 def _residuals(y, yhat, k):
     return float(np.sum((y - yhat) ** 2)), float(np.sum(np.abs(y - yhat)))
 
 
-def _aic(rss,n,k):
+def _aic(rss, n, k):
     from _review27_models import information_criteria
-    return information_criteria(rss,n,k)[0]
+
+    return information_criteria(rss, n, k)[0]
 
 
-def _bic(rss,n,k):
+def _bic(rss, n, k):
     from _review27_models import information_criteria
-    return information_criteria(rss,n,k)[1]
+
+    return information_criteria(rss, n, k)[1]
 
 
 def _rolling_origin_rmse(y_full, t_full, family):
@@ -208,25 +218,32 @@ def _predict_one_at_step(t_ref, t_target, params, family, y_ref):
         # predict y_target given y_ref (use the last y in y_ref as the
         # autoregressive conditioning value)
         previous = np.flatnonzero(np.asarray(t_ref) < t_target)
-        if not len(previous): raise ValueError('no past conditioning observation')
+        if not len(previous):
+            raise ValueError("no past conditioning observation")
         j = previous[-1]
-        gap = t_target-t_ref[j]
-        if gap < 1 or not float(gap).is_integer(): raise ValueError('AR requires integer step spacing')
-        last=float(y_ref[j])
-        for _ in range(int(gap)): last=mu+phi*last
+        gap = t_target - t_ref[j]
+        if gap < 1 or not float(gap).is_integer():
+            raise ValueError("AR requires integer step spacing")
+        last = float(y_ref[j])
+        for _ in range(int(gap)):
+            last = mu + phi * last
         return float(last)
     raise ValueError(family)
 
 
 def _fit_predict(t, y, family):
     if family == "constant":
-        p = _fit_constant(y); yh = f_constant(t, p)
+        p = _fit_constant(y)
+        yh = f_constant(t, p)
     elif family == "1seg_ols":
-        p = _fit_1seg_ols(t, y); yh = f_1seg_ols(t, p)
+        p = _fit_1seg_ols(t, y)
+        yh = f_1seg_ols(t, p)
     elif family == "saturation":
-        p = _fit_saturation(t, y); yh = f_saturation(t, p)
+        p = _fit_saturation(t, y)
+        yh = f_saturation(t, p)
     elif family == "powerlaw":
-        p = _fit_powerlaw(t, y); yh = f_powerlaw(t, p)
+        p = _fit_powerlaw(t, y)
+        yh = f_powerlaw(t, p)
     elif family == "ar1":
         p = _fit_ar1(y, t)
         # for AR(1) in-sample "yhat", we use a deterministic 1-step-ahead
@@ -248,8 +265,8 @@ def _forecast_last_k(y_full, t_full, family, k=4):
         return float("nan"), float("nan")
     idx_train = np.arange(0, n - k)
     t_tr, y_tr = t_full[idx_train], y_full[idx_train]
-    t_te = t_full[n - k:]
-    y_te = y_full[n - k:]
+    t_te = t_full[n - k :]
+    y_te = y_full[n - k :]
     try:
         params, _ = _fit_predict(t_tr, y_tr, family)
     except Exception:
@@ -257,12 +274,11 @@ def _forecast_last_k(y_full, t_full, family, k=4):
     if family == "ar1":
         preds = _predict_ar1(y_tr, params, t_te, origin=t_tr[-1])
     else:
-        preds = np.array([
-            _predict_one_at_step(t_tr, t_target, params, family, y_tr)
-            for t_target in t_te
-        ], float)
-    preds_c = np.asarray(preds,float)
-    y_te_c = np.asarray(y_te,float)
+        preds = np.array(
+            [_predict_one_at_step(t_tr, t_target, params, family, y_tr) for t_target in t_te], float
+        )
+    preds_c = np.asarray(preds, float)
+    y_te_c = np.asarray(y_te, float)
     mae = float(np.mean(np.abs(y_te_c - preds_c)))
     rmse = float(np.sqrt(np.mean((y_te_c - preds_c) ** 2)))
     return mae, rmse
@@ -277,10 +293,12 @@ def _bootstrap_phi_ci(y, n_boot=N_BOOT):
     phis = []
     for _ in range(n_boot):
         c, phi, _ = _fit_ar1(y)
-        innovations = y[1:] - c - phi*y[:-1]
+        innovations = y[1:] - c - phi * y[:-1]
         innovations -= innovations.mean()
-        y_b = np.empty(n); y_b[0]=y[0]
-        for j in range(1,n): y_b[j]=c+phi*y_b[j-1]+rng.choice(innovations)
+        y_b = np.empty(n)
+        y_b[0] = y[0]
+        for j in range(1, n):
+            y_b[j] = c + phi * y_b[j - 1] + rng.choice(innovations)
         if np.std(y_b) < 1e-9:
             continue
         p = _fit_ar1(y_b)
@@ -300,6 +318,7 @@ _loocv_rmse = _rolling_origin_rmse
 
 # ---------- main ----------------------------------------------------------
 
+
 def main() -> None:
     raw = {}
     for label, (params_b, fname) in MODELS.items():
@@ -313,10 +332,19 @@ def main() -> None:
 
     # ---- Head-to-head: 5 families x 5 criteria ------------------------------
     head_cols = [
-        "model", "params_B", "n_steps", "family", "n_params",
-        "rmse_in_sample", "r2_in_sample",
-        "aic", "bic", "rolling_origin_rmse", "rolling_origin_mae",
-        "forecast_mae_last4", "forecast_rmse_last4",
+        "model",
+        "params_B",
+        "n_steps",
+        "family",
+        "n_params",
+        "rmse_in_sample",
+        "r2_in_sample",
+        "aic",
+        "bic",
+        "rolling_origin_rmse",
+        "rolling_origin_mae",
+        "forecast_mae_last4",
+        "forecast_rmse_last4",
     ]
     head_rows = []
     for label, (params_b, y, fname) in raw.items():
@@ -324,34 +352,70 @@ def main() -> None:
         t = np.arange(1, n + 1, dtype=float)
         for fam in FAMILIES:
             try:
-                params, yh = _fit_predict(t, y, fam) if fam == 'ar1' else _fit_predict(t[1:], y[1:], fam)
-                if fam == 'ar1': yh = yh[1:]
+                params, yh = (
+                    _fit_predict(t, y, fam) if fam == "ar1" else _fit_predict(t[1:], y[1:], fam)
+                )
+                if fam == "ar1":
+                    yh = yh[1:]
                 rss = float(np.sum((y[1:] - yh) ** 2))
-                rmse = float(np.sqrt(rss / (n-1)))
+                rmse = float(np.sqrt(rss / (n - 1)))
                 ss_tot = float(np.sum((y[1:] - y[1:].mean()) ** 2))
                 r2 = 1.0 - rss / ss_tot if ss_tot > 1e-12 else float("nan")
-                aic = _aic(rss, n-1, NPARAMS[fam])
-                bic = _bic(rss, n-1, NPARAMS[fam])
+                aic = _aic(rss, n - 1, NPARAMS[fam])
+                bic = _bic(rss, n - 1, NPARAMS[fam])
                 loo_r, loo_m, _ = _rolling_origin_rmse(y, t, fam)
                 fc_mae, fc_rmse = _forecast_last_k(y, t, fam, k=4)
-                head_rows.append([
-                    label, params_b, n, fam, NPARAMS[fam],
-                    f"{rmse:.6f}", f"{r2:.6f}",
-                    f"{aic:.6f}", f"{bic:.6f}",
-                    f"{loo_r:.6f}", f"{loo_m:.6f}",
-                    f"{fc_mae:.6f}", f"{fc_rmse:.6f}",
-                ])
+                head_rows.append(
+                    [
+                        label,
+                        params_b,
+                        n,
+                        fam,
+                        NPARAMS[fam],
+                        f"{rmse:.6f}",
+                        f"{r2:.6f}",
+                        f"{aic:.6f}",
+                        f"{bic:.6f}",
+                        f"{loo_r:.6f}",
+                        f"{loo_m:.6f}",
+                        f"{fc_mae:.6f}",
+                        f"{fc_rmse:.6f}",
+                    ]
+                )
             except Exception as e:
-                head_rows.append([
-                    label, params_b, n, fam, NPARAMS[fam],
-                    "nan", "nan", "nan", "nan", "nan", "nan", "nan", "nan",
-                ])
+                head_rows.append(
+                    [
+                        label,
+                        params_b,
+                        n,
+                        fam,
+                        NPARAMS[fam],
+                        "nan",
+                        "nan",
+                        "nan",
+                        "nan",
+                        "nan",
+                        "nan",
+                        "nan",
+                        "nan",
+                    ]
+                )
     _write_tsv(RESULTS_DIR / "scaling_law_iter93_headtohead_v3.tsv", head_cols, head_rows)
 
     # ---- AR(1) bootstrap-CI per anchor ------------------------------------
-    ar1_cols = ["model", "params_B", "n_steps", "phi_hat", "phi_lo", "phi_hi",
-                "ci_covers_zero", "intercept_hat", "sigma_hat",
-                "phi_lo_excludes_zero_oneright", "phi_hi_excludes_zero_oneleft"]
+    ar1_cols = [
+        "model",
+        "params_B",
+        "n_steps",
+        "phi_hat",
+        "phi_lo",
+        "phi_hi",
+        "ci_covers_zero",
+        "intercept_hat",
+        "sigma_hat",
+        "phi_lo_excludes_zero_oneright",
+        "phi_hi_excludes_zero_oneleft",
+    ]
     ar1_rows = []
     for label, (params_b, y, fname) in raw.items():
         n = len(y)
@@ -359,27 +423,49 @@ def main() -> None:
         mu_hat, phi_hat, sigma_hat = params[:3]
         bm, lo, hi = _bootstrap_phi_ci(y)
         ci_covers_zero = bool(lo <= 0.0 <= hi) if math.isfinite(lo) and math.isfinite(hi) else None
-        ar1_rows.append([
-            label, params_b, n,
-            f"{phi_hat:.6f}", f"{lo:.6f}", f"{hi:.6f}",
-            ci_covers_zero,
-            f"{mu_hat:.6f}", f"{sigma_hat:.6f}",
-            bool(lo > 0.0 and not math.isnan(lo)),
-            bool(hi < 0.0 and not math.isnan(hi)),
-        ])
+        ar1_rows.append(
+            [
+                label,
+                params_b,
+                n,
+                f"{phi_hat:.6f}",
+                f"{lo:.6f}",
+                f"{hi:.6f}",
+                ci_covers_zero,
+                f"{mu_hat:.6f}",
+                f"{sigma_hat:.6f}",
+                bool(lo > 0.0 and not math.isnan(lo)),
+                bool(hi < 0.0 and not math.isnan(hi)),
+            ]
+        )
     _write_tsv(RESULTS_DIR / "scaling_law_iter93_ar1_v3.tsv", ar1_cols, ar1_rows)
 
     # ---- Per-criterion winners --------------------------------------------
-    win_cols = ["criterion", "winner_family", "n_wins", "total_anchors",
-                "candidates", "totals_per_family"]
+    win_cols = [
+        "criterion",
+        "winner_family",
+        "n_wins",
+        "total_anchors",
+        "candidates",
+        "totals_per_family",
+    ]
     win_rows = []
-    aggregated = {fam: {crit: 0 for crit in ("aic", "bic", "rolling_origin", "forecast", "rmse", "r2")} for fam in FAMILIES}
+    aggregated = {
+        fam: {crit: 0 for crit in ("aic", "bic", "rolling_origin", "forecast", "rmse", "r2")}
+        for fam in FAMILIES
+    }
     anchor_count = 0
     for label, (params_b, y, fname) in raw.items():
         anchor_count += 1
         sub = [r for r in head_rows if r[0] == label]
         # aic, bic, rolling_origin_rmse, forecast_mae: lower better
-        for crit, idx in (("aic", 7), ("bic", 8), ("rolling_origin", 9), ("forecast", 11), ("rmse", 5)):
+        for crit, idx in (
+            ("aic", 7),
+            ("bic", 8),
+            ("rolling_origin", 9),
+            ("forecast", 11),
+            ("rmse", 5),
+        ):
             vals = []
             for r in sub:
                 v = r[idx]
@@ -405,8 +491,12 @@ def main() -> None:
             aggregated[winner[0]]["r2"] += 1
 
     crit_labels = [
-        ("aic", "AIC"), ("bic", "BIC"), ("rolling_origin", "rolling-origin-RMSE"),
-        ("forecast", "Forecast-MAE"), ("rmse", "In-sample RMSE"), ("r2", "In-sample R^2"),
+        ("aic", "AIC"),
+        ("bic", "BIC"),
+        ("rolling_origin", "rolling-origin-RMSE"),
+        ("forecast", "Forecast-MAE"),
+        ("rmse", "In-sample RMSE"),
+        ("r2", "In-sample R^2"),
     ]
     for crit, lbl in crit_labels:
         wins = [(fam, aggregated[fam][crit]) for fam in FAMILIES]
@@ -414,10 +504,16 @@ def main() -> None:
         winner_fam = wins[0][0] if wins[0][1] > 0 else "no_valid_candidate"
         n_wins = wins[0][1]
         per_family_str = ";".join(f"{f}:{aggregated[f][crit]}" for f in FAMILIES)
-        win_rows.append([
-            lbl, winner_fam, n_wins, anchor_count,
-            ",".join(FAMILIES), per_family_str,
-        ])
+        win_rows.append(
+            [
+                lbl,
+                winner_fam,
+                n_wins,
+                anchor_count,
+                ",".join(FAMILIES),
+                per_family_str,
+            ]
+        )
     _write_tsv(RESULTS_DIR / "scaling_law_iter93_winners_v3.tsv", win_cols, win_rows)
 
     # ---- meta + figure ---------------------------------------------------
@@ -434,7 +530,8 @@ def main() -> None:
         "ar1_phi_anchors_with_lo_excludes_0": n_ar1_signif_pos,
         "ar1_phi_anchors_with_ci_covers_zero": n_ar1_zero_covered,
         "consensus_winners_by_criterion": {
-            crit: aggregated_for_crit for crit, _ in crit_labels
+            crit: aggregated_for_crit
+            for crit, _ in crit_labels
             for aggregated_for_crit in [aggregated]
         },
     }
@@ -485,9 +582,17 @@ def main() -> None:
     lo_c = [max(min(l, 0.7), -0.7) for l in lo]
     hi_c = [max(min(h, 0.7), -0.7) for h in hi]
     axs[1, 0].errorbar(
-        phi_clipped, ys, xerr=[np.abs(np.array(phi_clipped) - np.array(lo_c)),
-                                 np.abs(np.array(hi_c) - np.array(phi_clipped))],
-        fmt="o", color="C0", ecolor="gray", elinewidth=1, capsize=2,
+        phi_clipped,
+        ys,
+        xerr=[
+            np.abs(np.array(phi_clipped) - np.array(lo_c)),
+            np.abs(np.array(hi_c) - np.array(phi_clipped)),
+        ],
+        fmt="o",
+        color="C0",
+        ecolor="gray",
+        elinewidth=1,
+        capsize=2,
     )
     axs[1, 0].axvline(0.0, color="red", linestyle="--", linewidth=1, label="phi=0")
     axs[1, 0].set_yticks(ys)
@@ -536,7 +641,9 @@ def main() -> None:
 
 if __name__ == "__main__":
     from _review27_models import configure_paths
+
     configure_paths(globals())
     main()
     from _review27_models import write_manifest
+
     write_manifest(__file__, TRACE_DIR, RESULTS_DIR)

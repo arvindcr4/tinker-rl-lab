@@ -31,6 +31,7 @@ Outputs:
 
 Stdlib + jsonschema only. Designed to be cheap (≤300 LoC) and CI-runnable.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -56,9 +57,9 @@ ENTRIES_DIR = REG / "entries"
 OUT = WORKTREE / "experiments" / "results" / "p5p8"
 OUT.mkdir(parents=True, exist_ok=True)
 
-REQUIRED_TOP_STACK = ["record_type", "id", "label_claimed",
-                      "framework", "provenance", "min_report"]
+REQUIRED_TOP_STACK = ["record_type", "id", "label_claimed", "framework", "provenance", "min_report"]
 REQUIRED_TOP_DELTA = ["record_type", "id", "name", "base", "deltas", "citation"]
+
 
 # (category, description, mutator_fn(entry) -> (perturbed_entry, change_summary))
 def _mut_remove_required_key(entry):
@@ -91,10 +92,16 @@ def _mut_id_pattern(entry):
 
 def _mut_enum_openness(entry):
     e = copy.deepcopy(entry)
-    e["framework"]["openness"] = random.choice([
-        "Open", "OPEN", "Public",
-        "weird", "unknown", "tinker",
-    ])
+    e["framework"]["openness"] = random.choice(
+        [
+            "Open",
+            "OPEN",
+            "Public",
+            "weird",
+            "unknown",
+            "tinker",
+        ]
+    )
     return e, "bad_framework_openness_enum"
 
 
@@ -199,13 +206,21 @@ def bootstrap_ci(samples, stat_fn, n_boot=4000, alpha=0.05, seed=20260704):
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--n-mutations-per-category", type=int, default=20,
-                    help="Number of mutation attempts per (category, entry) "
-                         "combination. Default 20 ⇒ 13 categories × 20 × "
-                         "20 entries ≈ 5200 attempted perturbations.")
+    ap.add_argument(
+        "--n-mutations-per-category",
+        type=int,
+        default=20,
+        help="Number of mutation attempts per (category, entry) "
+        "combination. Default 20 ⇒ 13 categories × 20 × "
+        "20 entries ≈ 5200 attempted perturbations.",
+    )
     ap.add_argument("--seed", type=int, default=20260704)
-    ap.add_argument("--only-entries", nargs="*", default=None,
-                    help="Restrict stress-test to a subset of entry IDs.")
+    ap.add_argument(
+        "--only-entries",
+        nargs="*",
+        default=None,
+        help="Restrict stress-test to a subset of entry IDs.",
+    )
     args = ap.parse_args()
 
     random.seed(args.seed)
@@ -219,13 +234,15 @@ def main():
     if not entries:
         print("no entries to stress-test", file=sys.stderr)
         sys.exit(2)
-    print(f"loaded {len(entries)} registry entries; "
-          f"{args.n_mutations_per_category} mutations × "
-          f"{len(MUTATORS)} categories.")
+    print(
+        f"loaded {len(entries)} registry entries; "
+        f"{args.n_mutations_per_category} mutations × "
+        f"{len(MUTATORS)} categories."
+    )
 
     per_run_rows = []
     misses = []
-    by_mutation = {}     # category -> list of CAUGHT (1) / MISSED (0)
+    by_mutation = {}  # category -> list of CAUGHT (1) / MISSED (0)
     per_category_total = {cat: 0 for cat, _ in MUTATORS}
     per_category_caught = {cat: 0 for cat, _ in MUTATORS}
 
@@ -236,20 +253,28 @@ def main():
                     perturbed, label = fn(rec)
                 except (KeyError, IndexError) as e:
                     # entry shape doesn't permit this mutation — skip cleanly
-                    per_run_rows.append({
-                        "entry_id": entry_id, "category": category,
-                        "mutation_idx": i, "expected": "caught",
-                        "actual": "skipped_noop",
-                        "mut_label": f"error:{type(e).__name__}",
-                    })
+                    per_run_rows.append(
+                        {
+                            "entry_id": entry_id,
+                            "category": category,
+                            "mutation_idx": i,
+                            "expected": "caught",
+                            "actual": "skipped_noop",
+                            "mut_label": f"error:{type(e).__name__}",
+                        }
+                    )
                     continue
                 if perturbed is None:
-                    per_run_rows.append({
-                        "entry_id": entry_id, "category": category,
-                        "mutation_idx": i, "expected": "caught",
-                        "actual": "skipped_noop",
-                        "mut_label": label,
-                    })
+                    per_run_rows.append(
+                        {
+                            "entry_id": entry_id,
+                            "category": category,
+                            "mutation_idx": i,
+                            "expected": "caught",
+                            "actual": "skipped_noop",
+                            "mut_label": label,
+                        }
+                    )
                     continue
                 caught = 1
                 actual = "caught"
@@ -258,34 +283,43 @@ def main():
                     jsonschema.validate(perturbed, schema)
                     caught = 0
                     actual = "MISSED"
-                    misses.append({
-                        "entry_id": entry_id, "category": category,
-                        "mutation_idx": i, "mut_label": mut_label,
-                    })
+                    misses.append(
+                        {
+                            "entry_id": entry_id,
+                            "category": category,
+                            "mutation_idx": i,
+                            "mut_label": mut_label,
+                        }
+                    )
                 except jsonschema.ValidationError:
                     actual = "caught"
                 by_mutation.setdefault(category, []).append(caught)
                 per_category_total[category] += 1
                 per_category_caught[category] += caught
-                per_run_rows.append({
-                    "entry_id": entry_id, "category": category,
-                    "mutation_idx": i, "expected": "caught",
-                    "actual": actual, "mut_label": mut_label,
-                })
+                per_run_rows.append(
+                    {
+                        "entry_id": entry_id,
+                        "category": category,
+                        "mutation_idx": i,
+                        "expected": "caught",
+                        "actual": actual,
+                        "mut_label": mut_label,
+                    }
+                )
 
     # Per-run TSV
     with (OUT / "registry_stress_per_run.tsv").open("w", newline="") as f:
-        w = csv.DictWriter(f, fieldnames=["entry_id", "category",
-                                          "mutation_idx", "expected",
-                                          "actual", "mut_label"])
+        w = csv.DictWriter(
+            f,
+            fieldnames=["entry_id", "category", "mutation_idx", "expected", "actual", "mut_label"],
+        )
         w.writeheader()
         for r in per_run_rows:
             w.writerow(r)
 
     # Misses TSV — the regression work-list
     with (OUT / "registry_stress_misses.tsv").open("w", newline="") as f:
-        w = csv.DictWriter(f, fieldnames=["entry_id", "category",
-                                          "mutation_idx", "mut_label"])
+        w = csv.DictWriter(f, fieldnames=["entry_id", "category", "mutation_idx", "mut_label"])
         w.writeheader()
         for r in misses:
             w.writerow(r)
@@ -298,15 +332,18 @@ def main():
         if not bag:
             continue
         for i in range(n_idx):
-            bucket = bag[i::n_idx]    # every n_idx-th element
+            bucket = bag[i::n_idx]  # every n_idx-th element
             mean_caught = (sum(bucket) / len(bucket)) if bucket else 0.0
-            by_mut_rows.append({
-                "category": cat, "mutation_idx": i,
-                "n": len(bucket), "mean_caught": round(mean_caught, 4),
-            })
+            by_mut_rows.append(
+                {
+                    "category": cat,
+                    "mutation_idx": i,
+                    "n": len(bucket),
+                    "mean_caught": round(mean_caught, 4),
+                }
+            )
     with (OUT / "registry_stress_by_mutation.tsv").open("w", newline="") as f:
-        w = csv.DictWriter(f, fieldnames=["category", "mutation_idx",
-                                          "n", "mean_caught"])
+        w = csv.DictWriter(f, fieldnames=["category", "mutation_idx", "n", "mean_caught"])
         w.writeheader()
         for r in by_mut_rows:
             w.writerow(r)
@@ -319,8 +356,8 @@ def main():
         "n_attempts_total": sum(per_category_total.values()),
         "n_caught_total": sum(per_category_caught.values()),
         "overall_recovery_rate": round(
-            sum(per_category_caught.values()) /
-            max(1, sum(per_category_total.values())), 4),
+            sum(per_category_caught.values()) / max(1, sum(per_category_total.values())), 4
+        ),
         "n_misses": len(misses),
         "per_category": {},
     }
@@ -332,12 +369,11 @@ def main():
         if not bag:
             continue
         for i in range(args.n_mutations_per_category):
-            bucket = bag[i::args.n_mutations_per_category]
+            bucket = bag[i :: args.n_mutations_per_category]
             if bucket:
                 overall_bags.append(sum(bucket) / len(bucket))
     if overall_bags:
-        pt, lo, hi = bootstrap_ci(overall_bags, statistics.fmean,
-                                  n_boot=4000, seed=args.seed)
+        pt, lo, hi = bootstrap_ci(overall_bags, statistics.fmean, n_boot=4000, seed=args.seed)
         summary["overall_recovery_rate_ci95"] = {
             "point": round(pt, 4),
             "lo": round(lo, 4),
@@ -349,11 +385,12 @@ def main():
             continue
         n = per_category_total[cat]
         c = per_category_caught[cat]
-        pt, lo, hi = bootstrap_ci(bag, statistics.fmean,
-                                  n_boot=4000,
-                                  seed=args.seed + hash(cat) % 10000)
+        pt, lo, hi = bootstrap_ci(
+            bag, statistics.fmean, n_boot=4000, seed=args.seed + hash(cat) % 10000
+        )
         summary["per_category"][cat] = {
-            "n": n, "n_caught": c,
+            "n": n,
+            "n_caught": c,
             "recovery_rate": round(c / max(1, n), 4),
             "recovery_rate_ci95": {
                 "point": round(pt, 4),
@@ -361,8 +398,7 @@ def main():
                 "hi": round(hi, 4),
             },
         }
-    (OUT / "registry_stress_summary.json").write_text(
-        json.dumps(summary, indent=2))
+    (OUT / "registry_stress_summary.json").write_text(json.dumps(summary, indent=2))
     print("=== stress-test summary ===")
     print(json.dumps(summary, indent=2))
 

@@ -13,9 +13,9 @@ from pathlib import Path
 import matplotlib
 
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt  # noqa: E402
-import numpy as np  # noqa: E402
-from scipy.optimize import curve_fit  # noqa: E402
+import matplotlib.pyplot as plt
+import numpy as np
+from scipy.optimize import curve_fit
 
 REPO = Path(__file__).resolve().parents[2] / "platform_hybrid"
 CANDIDATE = REPO / "experiments" / "results" / "review27_v3"
@@ -27,18 +27,26 @@ PAPER_FIG = CANDIDATE / "paper_figures"
 
 # 12-anchor pool: identical to iter13 / iter49.
 MODELS: dict[str, dict] = {
-    "Qwen3.5-4B":            {"file": "scale_gsm8k_qwen3.5-4b.json",      "params":   4.0, "arch": "dense"},
-    "Qwen3-8B":              {"file": "scale_gsm8k_qwen3-8b.json",        "params":   8.0, "arch": "dense"},
-    "Llama-3.1-8B-Instruct": {"file": "scale_gsm8k_llama-8b-inst.json",   "params":   8.0, "arch": "dense"},
-    "Qwen3-32B":             {"file": "scale_gsm8k_qwen3-32b.json",      "params":  32.0, "arch": "dense"},
-    "Qwen3.5-27B":           {"file": "scale_gsm8k_qwen3.5-27b.json",    "params":  27.0, "arch": "dense"},
-    "gpt-oss-20B":           {"file": "arch_gsm8k_gpt-oss-20b.json",     "params":  20.0, "arch": "moe"},
-    "Qwen3-30B-MoE":         {"file": "moe_gsm8k_qwen3-30b-moe.json",    "params":  30.0, "arch": "moe"},
-    "Qwen3-30B-MoE-Inst":    {"file": "moe_gsm8k_qwen3-30b-inst.json",   "params":  30.0, "arch": "moe"},
-    "DeepSeek-V3.1":         {"file": "frontier_gsm8k_deepseek-v3.1.json","params": 685.0, "arch": "moe"},
-    "Nemotron-120B":         {"file": "frontier_gsm8k_nemotron-120b.json","params": 120.0, "arch": "dense"},
-    "Qwen3-235B-MoE":        {"file": "frontier_gsm8k_qwen3-235b.json",  "params": 235.0, "arch": "moe"},
-    "Kimi-K2-Thinking":      {"file": "arch_gsm8k_kimi-k2.json",         "params":1000.0, "arch": "moe"},
+    "Qwen3.5-4B": {"file": "scale_gsm8k_qwen3.5-4b.json", "params": 4.0, "arch": "dense"},
+    "Qwen3-8B": {"file": "scale_gsm8k_qwen3-8b.json", "params": 8.0, "arch": "dense"},
+    "Llama-3.1-8B-Instruct": {
+        "file": "scale_gsm8k_llama-8b-inst.json",
+        "params": 8.0,
+        "arch": "dense",
+    },
+    "Qwen3-32B": {"file": "scale_gsm8k_qwen3-32b.json", "params": 32.0, "arch": "dense"},
+    "Qwen3.5-27B": {"file": "scale_gsm8k_qwen3.5-27b.json", "params": 27.0, "arch": "dense"},
+    "gpt-oss-20B": {"file": "arch_gsm8k_gpt-oss-20b.json", "params": 20.0, "arch": "moe"},
+    "Qwen3-30B-MoE": {"file": "moe_gsm8k_qwen3-30b-moe.json", "params": 30.0, "arch": "moe"},
+    "Qwen3-30B-MoE-Inst": {"file": "moe_gsm8k_qwen3-30b-inst.json", "params": 30.0, "arch": "moe"},
+    "DeepSeek-V3.1": {"file": "frontier_gsm8k_deepseek-v3.1.json", "params": 685.0, "arch": "moe"},
+    "Nemotron-120B": {
+        "file": "frontier_gsm8k_nemotron-120b.json",
+        "params": 120.0,
+        "arch": "dense",
+    },
+    "Qwen3-235B-MoE": {"file": "frontier_gsm8k_qwen3-235b.json", "params": 235.0, "arch": "moe"},
+    "Kimi-K2-Thinking": {"file": "arch_gsm8k_kimi-k2.json", "params": 1000.0, "arch": "moe"},
 }
 
 # Threshold for recorded group-ZVF measurements only.
@@ -73,22 +81,31 @@ def _fit_sat(t, y, lam_bound=LAM_BOUND):
     """Fit canonical saturation R(t) = R_max * (1 - exp(-lambda * t))."""
     t = np.asarray(t, dtype=float)
     y = np.asarray(y, dtype=float)
-    if t.ndim != 1 or y.shape != t.shape or len(t) < 3 or not np.isfinite(t).all() or not np.isfinite(y).all() or np.ptp(y) < 1e-6:
+    if (
+        t.ndim != 1
+        or y.shape != t.shape
+        or len(t) < 3
+        or not np.isfinite(t).all()
+        or not np.isfinite(y).all()
+        or np.ptp(y) < 1e-6
+    ):
         return (math.nan, math.nan, math.nan, math.nan)
     try:
         p0 = (float(np.mean(y)), 1.0)
         popt, _ = curve_fit(
             lambda tt, rm, lm: _sat(tt, rm, lm),
-            t, y, p0=p0,
+            t,
+            y,
+            p0=p0,
             bounds=([0.0, 1e-4], [1.5, lam_bound]),
             maxfev=20000,
         )
         rmax, lam = float(popt[0]), float(popt[1])
         pred = _sat(t, rmax, lam)
         resid = y - pred
-        rmse = float(np.sqrt(np.mean(resid ** 2)))
+        rmse = float(np.sqrt(np.mean(resid**2)))
         ss_tot = float(np.sum((y - np.mean(y)) ** 2))
-        r2 = 1.0 - float(np.sum(resid ** 2)) / max(1e-12, ss_tot)
+        r2 = 1.0 - float(np.sum(resid**2)) / max(1e-12, ss_tot)
         return rmax, lam, rmse, r2
     except Exception:
         return (math.nan, math.nan, math.nan, math.nan)
@@ -97,8 +114,15 @@ def _fit_sat(t, y, lam_bound=LAM_BOUND):
 def _zvf_proxy(rewards: list[float]) -> dict[str, float]:
     """Fraction of extreme step means; not an estimator of group ZVF."""
     if not rewards:
-        return dict(p_zero=math.nan, p_one=math.nan, fraction_extreme_step_means=math.nan,
-                    p_extreme=math.nan, p_mid=math.nan, mean_r=math.nan, var_r=math.nan)
+        return dict(
+            p_zero=math.nan,
+            p_one=math.nan,
+            fraction_extreme_step_means=math.nan,
+            p_extreme=math.nan,
+            p_mid=math.nan,
+            mean_r=math.nan,
+            var_r=math.nan,
+        )
     arr = np.asarray(rewards, dtype=float)
     if arr.ndim != 1 or not np.isfinite(arr).all() or np.any((arr < 0) | (arr > 1)):
         raise ValueError("finite reward probabilities required")
@@ -107,24 +131,31 @@ def _zvf_proxy(rewards: list[float]) -> dict[str, float]:
     p_extreme = p_zero + p_one
     p_mid = float(np.mean((arr > 0.0 + 1e-9) & (arr < 1.0 - 1e-9)))
     return dict(
-        p_zero=p_zero, p_one=p_one, fraction_extreme_step_means=p_extreme,
-        p_extreme=p_extreme, p_mid=p_mid,
-        mean_r=float(np.mean(arr)), var_r=float(np.var(arr, ddof=1)) if len(arr) > 1 else 0.0,
+        p_zero=p_zero,
+        p_one=p_one,
+        fraction_extreme_step_means=p_extreme,
+        p_extreme=p_extreme,
+        p_mid=p_mid,
+        mean_r=float(np.mean(arr)),
+        var_r=float(np.var(arr, ddof=1)) if len(arr) > 1 else 0.0,
     )
 
 
 def _ols(x, y):
-    x = np.asarray(x, float); y = np.asarray(y, float)
-    if len(x) < 3: return float("nan"), float("nan"), float("nan"), float("nan")
+    x = np.asarray(x, float)
+    y = np.asarray(y, float)
+    if len(x) < 3:
+        return float("nan"), float("nan"), float("nan"), float("nan")
     xm, ym = x.mean(), y.mean()
     den = float(np.sum((x - xm) ** 2))
-    if den <= 0: return float("nan"), float("nan"), float("nan"), float("nan")
+    if den <= 0:
+        return float("nan"), float("nan"), float("nan"), float("nan")
     b = float(np.sum((x - xm) * (y - ym))) / den
     a = ym - b * xm
     resid = y - (a + b * x)
-    s2 = float(np.sum(resid ** 2)) / max(1, len(x) - 2)
+    s2 = float(np.sum(resid**2)) / max(1, len(x) - 2)
     se_b = float(math.sqrt(s2 / den)) if den > 0 else float("nan")
-    return a, b, se_b, float(np.sum(resid ** 2))
+    return a, b, se_b, float(np.sum(resid**2))
 
 
 # ----------------------------------------------------------------------
@@ -150,18 +181,21 @@ def artefact_zvf_proxy() -> Path:
             has_step_zvf=bool(zvf_per_step),
             n_recorded_zvf_steps=len(zvf_per_step),
         )
-        rows.append({
-            "model": label,
-            "params_B": meta["params"],
-            "arch": meta["arch"],
-            "n_steps": len(rew),
-            **z,
-        })
+        rows.append(
+            {
+                "model": label,
+                "params_B": meta["params"],
+                "arch": meta["arch"],
+                "n_steps": len(rew),
+                **z,
+            }
+        )
     out = RESULTS_DIR / "scaling_law_iter61_zvf_proxy.tsv"
     with out.open("w") as f:
         w = csv.DictWriter(f, fieldnames=list(rows[0].keys()), delimiter="\t")
         w.writeheader()
-        for r in rows: w.writerow(r)
+        for r in rows:
+            w.writerow(r)
     print(f"[iter61] wrote {out}  ({len(rows)} rows)")
     return out
 
@@ -179,8 +213,13 @@ def artefact_stratum_fit(zvf_path: Path) -> Path:
         (high if stratum == "HIGH" else low).append(row["model"])
 
     rows = []
-    for stratum_name, stratum_models in [("HIGH_zvf", high), ("LOW_zvf", low), ("ALL", [r["model"] for r in proxy])]:
-        lam_at_bound = 0; lam_below = 0
+    for stratum_name, stratum_models in [
+        ("HIGH_zvf", high),
+        ("LOW_zvf", low),
+        ("ALL", [r["model"] for r in proxy]),
+    ]:
+        lam_at_bound = 0
+        lam_below = 0
         rmses = []
         lam_list = []
         for label in stratum_models:
@@ -196,23 +235,26 @@ def artefact_stratum_fit(zvf_path: Path) -> Path:
             lam_below += int(abs(lam - LAM_BOUND) >= 1e-3)
             rmses.append(rmse)
             lam_list.append(lam)
-        rows.append({
-            "stratum": stratum_name,
-            "n_anchors": len(lam_list),
-            "n_anchors_attempted": len(stratum_models),
-            "n_lam_at_bound": lam_at_bound,
-            "n_lam_below_bound": lam_below,
-            "frac_at_bound": (lam_at_bound / len(lam_list) if lam_list else math.nan),
-            "mean_rmse": float(np.mean(rmses)) if rmses else math.nan,
-            "mean_lambda": float(np.mean(lam_list)) if lam_list else math.nan,
-            "median_lambda": float(np.median(lam_list)) if lam_list else math.nan,
-            "models": "|".join(stratum_models),
-        })
+        rows.append(
+            {
+                "stratum": stratum_name,
+                "n_anchors": len(lam_list),
+                "n_anchors_attempted": len(stratum_models),
+                "n_lam_at_bound": lam_at_bound,
+                "n_lam_below_bound": lam_below,
+                "frac_at_bound": (lam_at_bound / len(lam_list) if lam_list else math.nan),
+                "mean_rmse": float(np.mean(rmses)) if rmses else math.nan,
+                "mean_lambda": float(np.mean(lam_list)) if lam_list else math.nan,
+                "median_lambda": float(np.median(lam_list)) if lam_list else math.nan,
+                "models": "|".join(stratum_models),
+            }
+        )
     out = RESULTS_DIR / "scaling_law_iter61_stratum_fit.tsv"
     with out.open("w") as f:
         w = csv.DictWriter(f, fieldnames=list(rows[0].keys()), delimiter="\t")
         w.writeheader()
-        for r in rows: w.writerow(r)
+        for r in rows:
+            w.writerow(r)
     print(f"[iter61] wrote {out}  (HIGH={len(high)}, LOW={len(low)})")
     return out
 
@@ -235,12 +277,17 @@ def artefact_jackknife() -> Path:
             continue
         # Fitted saturation target; no quantile substitution for an asymptote.
         rmax_robust = rmax
-        all_data.append({
-            "model": label, "params": meta["params"], "arch": meta["arch"],
-            "n_steps": len(rew), "rmax_robust": rmax_robust,
-            "log10P": math.log10(meta["params"]),
-            "log10C": math.log10(meta["params"] * len(rew)),
-        })
+        all_data.append(
+            {
+                "model": label,
+                "params": meta["params"],
+                "arch": meta["arch"],
+                "n_steps": len(rew),
+                "rmax_robust": rmax_robust,
+                "log10P": math.log10(meta["params"]),
+                "log10C": math.log10(meta["params"] * len(rew)),
+            }
+        )
 
     if len(all_data) < 4:
         raise ValueError("jackknife requires at least four successful fits")
@@ -257,25 +304,28 @@ def artefact_jackknife() -> Path:
         beta, *_ = np.linalg.lstsq(X, Y, rcond=None)
         a, b, c = beta
         pred_held = a * held["log10P"] + b * held["log10C"] + c
-        rows.append({
-            "held_out": held["model"],
-            "params_B": held["params"],
-            "arch": held["arch"],
-            "rmax_fitted": held["rmax_robust"],
-            "rmax_predicted": float(pred_held),
-            "residual": float(held["rmax_robust"] - pred_held),
-            "abs_residual": float(abs(held["rmax_robust"] - pred_held)),
-            "alpha_logP_loo": float(a),
-            "alpha_logC_loo": float(b),
-            "intercept_loo": float(c),
-            "delta_alpha_logP": float(a - a_full),
-            "delta_alpha_logC": float(b - b_full),
-        })
+        rows.append(
+            {
+                "held_out": held["model"],
+                "params_B": held["params"],
+                "arch": held["arch"],
+                "rmax_fitted": held["rmax_robust"],
+                "rmax_predicted": float(pred_held),
+                "residual": float(held["rmax_robust"] - pred_held),
+                "abs_residual": float(abs(held["rmax_robust"] - pred_held)),
+                "alpha_logP_loo": float(a),
+                "alpha_logC_loo": float(b),
+                "intercept_loo": float(c),
+                "delta_alpha_logP": float(a - a_full),
+                "delta_alpha_logC": float(b - b_full),
+            }
+        )
     out = RESULTS_DIR / "scaling_law_iter61_jackknife.tsv"
     with out.open("w") as f:
         w = csv.DictWriter(f, fieldnames=list(rows[0].keys()), delimiter="\t")
         w.writeheader()
-        for r in rows: w.writerow(r)
+        for r in rows:
+            w.writerow(r)
     print(f"[iter61] wrote {out}  (full alpha_logP={a_full:.3f}, alpha_logC={b_full:.3f})")
     return out
 
@@ -288,23 +338,63 @@ def artefact_cross_pillar(zvf_path: Path) -> Path:
     source = REPO / "experiments/results/tinker_gsm8k_zvf_summary.json"
     summary = json.loads(source.read_text()) if source.exists() else {}
     proxy = list(csv.DictReader(zvf_path.open(), delimiter="\t"))
-    finite = [float(r["zvf_per_step_mean"]) for r in proxy
-              if math.isfinite(float(r["zvf_per_step_mean"]))]
+    finite = [
+        float(r["zvf_per_step_mean"]) for r in proxy if math.isfinite(float(r["zvf_per_step_mean"]))
+    ]
     pzero = [float(r["p_zero"]) for r in proxy if math.isfinite(float(r["p_zero"]))]
     rows = []
     for source_name, metric, value, n, unit in (
-        ("Pillar2_tinker_G8", "mean_zvf_per_group", summary.get("mean_zvf", math.nan), summary.get("n_problems_total", 0), "group_rollout"),
-        ("Pillar1_iter61_step_zvf", "mean_recorded_group_zvf_per_step", np.mean(finite) if finite else math.nan, len(finite), "anchor_mean"),
-        ("Pillar1_iter61_step_zvf", "median_recorded_group_zvf_per_step", np.median(finite) if finite else math.nan, len(finite), "anchor_mean"),
-        ("Pillar1_iter61_step_zvf", "mean_p_zero_per_step", np.mean(pzero) if pzero else math.nan, len(pzero), "anchor_mean"),
-        ("Pillar1_iter61_step_zvf", "median_p_zero_per_step", np.median(pzero) if pzero else math.nan, len(pzero), "anchor_mean"),
+        (
+            "Pillar2_tinker_G8",
+            "mean_zvf_per_group",
+            summary.get("mean_zvf", math.nan),
+            summary.get("n_problems_total", 0),
+            "group_rollout",
+        ),
+        (
+            "Pillar1_iter61_step_zvf",
+            "mean_recorded_group_zvf_per_step",
+            np.mean(finite) if finite else math.nan,
+            len(finite),
+            "anchor_mean",
+        ),
+        (
+            "Pillar1_iter61_step_zvf",
+            "median_recorded_group_zvf_per_step",
+            np.median(finite) if finite else math.nan,
+            len(finite),
+            "anchor_mean",
+        ),
+        (
+            "Pillar1_iter61_step_zvf",
+            "mean_p_zero_per_step",
+            np.mean(pzero) if pzero else math.nan,
+            len(pzero),
+            "anchor_mean",
+        ),
+        (
+            "Pillar1_iter61_step_zvf",
+            "median_p_zero_per_step",
+            np.median(pzero) if pzero else math.nan,
+            len(pzero),
+            "anchor_mean",
+        ),
     ):
-        rows.append(dict(source=source_name, metric=metric, value=value, n=n, scale=unit,
-                         comparison_status="unavailable_protocol_match"))
+        rows.append(
+            dict(
+                source=source_name,
+                metric=metric,
+                value=value,
+                n=n,
+                scale=unit,
+                comparison_status="unavailable_protocol_match",
+            )
+        )
     out = RESULTS_DIR / "scaling_law_iter61_cross_pillar.tsv"
     with out.open("w") as f:
         writer = csv.DictWriter(f, fieldnames=list(rows[0]), delimiter="\t")
-        writer.writeheader(); writer.writerows(rows)
+        writer.writeheader()
+        writer.writerows(rows)
     return out
 
 
@@ -319,59 +409,93 @@ def artefact_predictions(stratum_path: Path, jack_path: Path, cross_path: Path) 
     high = next(r for r in stratum if r["stratum"] == "HIGH_zvf")
     low = next(r for r in stratum if r["stratum"] == "LOW_zvf")
 
-    abs_residuals = sorted([(r["held_out"], float(r["abs_residual"])) for r in jack],
-                           key=lambda x: -x[1])
+    abs_residuals = sorted(
+        [(r["held_out"], float(r["abs_residual"])) for r in jack], key=lambda x: -x[1]
+    )
 
     predictions = [
-        ("P1_high_stratum_more_bound",
-         "HIGH-ZVF stratum has higher bound-degenerate rate than LOW-ZVF",
-             float(high["frac_at_bound"]) > float(low["frac_at_bound"]),
-             f"{float(high['frac_at_bound']):.2f} > {float(low['frac_at_bound']):.2f}",
-             "HIGH > LOW"),
-        ("P2_nemotron_in_high_floor",
-         "Nemotron-120B has recorded mean group ZVF at or above the threshold",
-             "Nemotron-120B" in high["models"].split("|"),
-             "Nemotron-120B" in high["models"].split("|"),
-             True),
-        ("P3_nemotron_largest_jackknife_residual",
-         "Nemotron-120B has the largest |LOO residual| in the cross-scale fit",
-             (abs_residuals[0][0] if abs_residuals else "unavailable") == "Nemotron-120B",
-             (abs_residuals[0][0] if abs_residuals else "unavailable"),
-             "Nemotron-120B"),
-        ("P4_nemotron_alpha_logP_shift",
-         "Removing Nemotron-120B shifts alpha_logP (signed, in same direction as the full-fit residual)",
-             float(next((r["residual"] for r in jack
-                         if r["held_out"] == "Nemotron-120B"), 0.0))
-             * float(next((r["delta_alpha_logP"] for r in jack
-                           if r["held_out"] == "Nemotron-120B"), 0.0)) > 0,
-             next((float(r["delta_alpha_logP"]) for r in jack
-                   if r["held_out"] == "Nemotron-120B"), float("nan")),
-             "sign(residual)*sign(shift)>0"),
-        ("P5_step_zvf_above_rollout_zvf",
-         "Cross-cohort ZVF comparison requires matching model, task, and group protocol",
-             float(next(r["value"] for r in cross if r["metric"] == "mean_recorded_group_zvf_per_step"))
-             > float(next(r["value"] for r in cross if r["metric"] == "mean_zvf_per_group")),
-             float(next(r["value"] for r in cross if r["metric"] == "mean_recorded_group_zvf_per_step")),
-             "> rollout-level"),
+        (
+            "P1_high_stratum_more_bound",
+            "HIGH-ZVF stratum has higher bound-degenerate rate than LOW-ZVF",
+            float(high["frac_at_bound"]) > float(low["frac_at_bound"]),
+            f"{float(high['frac_at_bound']):.2f} > {float(low['frac_at_bound']):.2f}",
+            "HIGH > LOW",
+        ),
+        (
+            "P2_nemotron_in_high_floor",
+            "Nemotron-120B has recorded mean group ZVF at or above the threshold",
+            "Nemotron-120B" in high["models"].split("|"),
+            "Nemotron-120B" in high["models"].split("|"),
+            True,
+        ),
+        (
+            "P3_nemotron_largest_jackknife_residual",
+            "Nemotron-120B has the largest |LOO residual| in the cross-scale fit",
+            (abs_residuals[0][0] if abs_residuals else "unavailable") == "Nemotron-120B",
+            (abs_residuals[0][0] if abs_residuals else "unavailable"),
+            "Nemotron-120B",
+        ),
+        (
+            "P4_nemotron_alpha_logP_shift",
+            "Removing Nemotron-120B shifts alpha_logP (signed, in same direction as the full-fit residual)",
+            float(next((r["residual"] for r in jack if r["held_out"] == "Nemotron-120B"), 0.0))
+            * float(
+                next((r["delta_alpha_logP"] for r in jack if r["held_out"] == "Nemotron-120B"), 0.0)
+            )
+            > 0,
+            next(
+                (float(r["delta_alpha_logP"]) for r in jack if r["held_out"] == "Nemotron-120B"),
+                float("nan"),
+            ),
+            "sign(residual)*sign(shift)>0",
+        ),
+        (
+            "P5_step_zvf_above_rollout_zvf",
+            "Cross-cohort ZVF comparison requires matching model, task, and group protocol",
+            float(
+                next(r["value"] for r in cross if r["metric"] == "mean_recorded_group_zvf_per_step")
+            )
+            > float(next(r["value"] for r in cross if r["metric"] == "mean_zvf_per_group")),
+            float(
+                next(r["value"] for r in cross if r["metric"] == "mean_recorded_group_zvf_per_step")
+            ),
+            "> rollout-level",
+        ),
     ]
     rows = []
     for pid, claim, passed, observed, expected in predictions:
-        rows.append({
-            "prediction_id": pid,
-            "claim": claim,
-            "observed": observed,
-            "expected": expected,
-            "pass_fail": ("UNAVAILABLE" if pid.startswith("P5_") or
-                          (pid.startswith(("P2_", "P3_", "P4_")) and not any(r["held_out"] == "Nemotron-120B" for r in jack)) or
-                          (pid.startswith("P1_") and not all(math.isfinite(float(r["frac_at_bound"])) for r in (high, low)))
-                          else "PASS" if passed else "FAIL"),
-        })
+        rows.append(
+            {
+                "prediction_id": pid,
+                "claim": claim,
+                "observed": observed,
+                "expected": expected,
+                "pass_fail": (
+                    "UNAVAILABLE"
+                    if pid.startswith("P5_")
+                    or (
+                        pid.startswith(("P2_", "P3_", "P4_"))
+                        and not any(r["held_out"] == "Nemotron-120B" for r in jack)
+                    )
+                    or (
+                        pid.startswith("P1_")
+                        and not all(math.isfinite(float(r["frac_at_bound"])) for r in (high, low))
+                    )
+                    else "PASS"
+                    if passed
+                    else "FAIL"
+                ),
+            }
+        )
     out = RESULTS_DIR / "scaling_law_iter61_predictions.tsv"
     with out.open("w") as f:
         w = csv.DictWriter(f, fieldnames=list(rows[0].keys()), delimiter="\t")
         w.writeheader()
-        for r in rows: w.writerow(r)
-    print(f"[iter61] wrote {out}  ({sum(1 for r in rows if r['pass_fail']=='PASS')}/{len(rows)} PASS)")
+        for r in rows:
+            w.writerow(r)
+    print(
+        f"[iter61] wrote {out}  ({sum(1 for r in rows if r['pass_fail'] == 'PASS')}/{len(rows)} PASS)"
+    )
     return out
 
 
@@ -397,11 +521,15 @@ def plot_all(zvf_path: Path, stratum_path: Path, jack_path: Path, cross_path: Pa
     xs = [float(r["zvf_per_step_mean"]) for r in proxy]
     ys = [float(r["mean_r"]) for r in proxy]
     ax.scatter(xs, ys, c=colors, s=80, edgecolor="black")
-    for r, x, y in zip(proxy, xs, ys):
-        ax.annotate(r["model"].replace("Instruct", "-Inst"), (x, y),
-                    fontsize=7, xytext=(5, 5), textcoords="offset points")
-    ax.axvline(ZVF_THRESHOLD, color="grey", ls="--", lw=1,
-               label=f"ZVF threshold = {ZVF_THRESHOLD}")
+    for r, x, y in zip(proxy, xs, ys, strict=False):
+        ax.annotate(
+            r["model"].replace("Instruct", "-Inst"),
+            (x, y),
+            fontsize=7,
+            xytext=(5, 5),
+            textcoords="offset points",
+        )
+    ax.axvline(ZVF_THRESHOLD, color="grey", ls="--", lw=1, label=f"ZVF threshold = {ZVF_THRESHOLD}")
     ax.set_xlabel("Recorded mean group ZVF")
     ax.set_ylabel("Mean reward")
     ax.set_title("(A) Recorded group ZVF vs mean reward")
@@ -413,9 +541,8 @@ def plot_all(zvf_path: Path, stratum_path: Path, jack_path: Path, cross_path: Pa
     s_frac = [float(r["frac_at_bound"]) for r in stratum]
     s_n = [int(r["n_anchors"]) for r in stratum]
     bars = ax.bar(s_labels, s_frac, color=["tab:red", "tab:green", "tab:blue"])
-    for b, n, f in zip(bars, s_n, s_frac):
-        ax.text(b.get_x() + b.get_width() / 2, f + 0.02, f"n={n}, {f:.0%}",
-                ha="center", fontsize=9)
+    for b, n, f in zip(bars, s_n, s_frac, strict=False):
+        ax.text(b.get_x() + b.get_width() / 2, f + 0.02, f"n={n}, {f:.0%}", ha="center", fontsize=9)
     ax.set_ylim(0, 1.15)
     ax.set_ylabel("Fraction of anchors with λ at upper bound")
     ax.set_title("(B) Saturation-bound degeneracy by ZVF stratum")
@@ -427,8 +554,9 @@ def plot_all(zvf_path: Path, stratum_path: Path, jack_path: Path, cross_path: Pa
     sorted_idx = sorted(range(len(labels)), key=lambda i: -abs_res[i])
     labels_sorted = [labels[i] for i in sorted_idx]
     abs_res_sorted = [abs_res[i] for i in sorted_idx]
-    colors_sorted = ["tab:red" if lbl.startswith("Nemotron") else "tab:blue"
-                     for lbl in labels_sorted]
+    colors_sorted = [
+        "tab:red" if lbl.startswith("Nemotron") else "tab:blue" for lbl in labels_sorted
+    ]
     ax.barh(range(len(labels_sorted)), abs_res_sorted, color=colors_sorted)
     ax.set_yticks(range(len(labels_sorted)))
     ax.set_yticklabels(labels_sorted, fontsize=8)
@@ -456,8 +584,10 @@ def plot_all(zvf_path: Path, stratum_path: Path, jack_path: Path, cross_path: Pa
     ax.set_title("(D) Cross-pillar ZVF: rollout-level vs step-level")
     ax.legend(fontsize=8)
 
-    fig.suptitle("Iter 61 — Recorded ZVF and saturation optimizer diagnostics (Pillar 1 × Pillar 2)",
-                 fontsize=12)
+    fig.suptitle(
+        "Iter 61 — Recorded ZVF and saturation optimizer diagnostics (Pillar 1 × Pillar 2)",
+        fontsize=12,
+    )
     fig.tight_layout(rect=[0, 0, 1, 0.96])
     out_pdf = FIG_DIR / "scaling_law_iter61.pdf"
     out_png = FIG_DIR / "scaling_law_iter61.png"
@@ -473,26 +603,36 @@ def plot_all(zvf_path: Path, stratum_path: Path, jack_path: Path, cross_path: Pa
 # ----------------------------------------------------------------------
 # LaTeX section
 # ----------------------------------------------------------------------
-def write_section(zvf_path: Path, stratum_path: Path, jack_path: Path,
-                  cross_path: Path, pred_path: Path, fig_path: Path) -> Path:
+def write_section(
+    zvf_path: Path,
+    stratum_path: Path,
+    jack_path: Path,
+    cross_path: Path,
+    pred_path: Path,
+    fig_path: Path,
+) -> Path:
     """Render only supplied observations, with no hard-coded causal verdict."""
-    strata=list(csv.DictReader(stratum_path.open(),delimiter="\t"))
-    preds=list(csv.DictReader(pred_path.open(),delimiter="\t"))
-    lines=[r"\subsection{Exploratory saturation diagnostics (review27 v3)}",
-           "Extreme step-mean fractions are not group ZVF. Only recorded group-level measurements define ZVF strata. Missing traces and failed fits are excluded with counts; these associations do not establish a causal mechanism.",
-           r"\begin{tabular}{lrr}",r"Stratum & Attempted & Fitted \\"]
+    strata = list(csv.DictReader(stratum_path.open(), delimiter="\t"))
+    preds = list(csv.DictReader(pred_path.open(), delimiter="\t"))
+    lines = [
+        r"\subsection{Exploratory saturation diagnostics (review27 v3)}",
+        "Extreme step-mean fractions are not group ZVF. Only recorded group-level measurements define ZVF strata. Missing traces and failed fits are excluded with counts; these associations do not establish a causal mechanism.",
+        r"\begin{tabular}{lrr}",
+        r"Stratum & Attempted & Fitted \\",
+    ]
     for row in strata:
-        label=row["stratum"].replace("_",r"\_")
-        lines.append(f"{label} & {row.get('n_anchors_attempted',row['n_anchors'])} & {row['n_anchors']} " + r"\\")
+        label = row["stratum"].replace("_", r"\_")
+        lines.append(
+            f"{label} & {row.get('n_anchors_attempted', row['n_anchors'])} & {row['n_anchors']} "
+            + r"\\"
+        )
     lines.append(r"\end{tabular}")
     for row in preds:
-        label=row["prediction_id"].replace("_",r"\_")
+        label = row["prediction_id"].replace("_", r"\_")
         lines.append(f"Descriptive check {label}: {row['pass_fail']}.")
-    out=PAPER_SEC/"scaling_law_iter61_review27_v3.tex"
-    out.write_text("\n".join(lines)+"\n")
+    out = PAPER_SEC / "scaling_law_iter61_review27_v3.tex"
+    out.write_text("\n".join(lines) + "\n")
     return out
-
-
 
 
 def main(output_dir=None, source_root=None):
@@ -523,7 +663,13 @@ def main(output_dir=None, source_root=None):
         from ._review27_rank import write_manifest
     except ImportError:
         from _review27_rank import write_manifest
-    write_manifest(__file__, CANDIDATE, [TRACE_DIR / cfg["file"] for cfg in MODELS.values()] + [REPO / "experiments/results/tinker_gsm8k_zvf_summary.json"], seed=None)
+    write_manifest(
+        __file__,
+        CANDIDATE,
+        [TRACE_DIR / cfg["file"] for cfg in MODELS.values()]
+        + [REPO / "experiments/results/tinker_gsm8k_zvf_summary.json"],
+        seed=None,
+    )
 
 
 if __name__ == "__main__":

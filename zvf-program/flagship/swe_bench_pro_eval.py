@@ -21,9 +21,7 @@ import json
 import os
 import platform
 import re
-import shutil
 import subprocess
-import sys
 import time
 import urllib.error
 import urllib.request
@@ -38,8 +36,7 @@ DATASET_REVISION = "7ab5114912baf22bb098818e604c02fe7ad2c11f"
 DATASET_SPLIT = "test"
 DATASET_URL = "https://huggingface.co/datasets/ScaleAI/SWE-bench_Pro"
 DATASET_RAW_README = (
-    "https://huggingface.co/datasets/ScaleAI/SWE-bench_Pro/raw/"
-    f"{DATASET_REVISION}/README.md"
+    f"https://huggingface.co/datasets/ScaleAI/SWE-bench_Pro/raw/{DATASET_REVISION}/README.md"
 )
 EVALUATOR_REPOSITORY = "scaleapi/SWE-bench_Pro-os"
 EVALUATOR_URL = "https://github.com/scaleapi/SWE-bench_Pro-os"
@@ -53,9 +50,7 @@ TINKER_MAXIMUM_USD = 0.50
 OPERATIONAL_CAP_USD = 16.50
 SAFETY_RESERVE_USD = 1.50
 WANDB_PROJECT = "tinker-rl-lab-pavlov"
-DEFAULT_TASK_ID = (
-    "instance_NodeBB__NodeBB-04998908ba6721d64eba79ae3b65a351dcfbc5b5-vnan"
-)
+DEFAULT_TASK_ID = "instance_NodeBB__NodeBB-04998908ba6721d64eba79ae3b65a351dcfbc5b5-vnan"
 HEX40 = re.compile(r"^[0-9a-f]{40}$")
 HEX64 = re.compile(r"^[0-9a-f]{64}$")
 
@@ -257,10 +252,7 @@ def _decode_github_content(payload: Mapping[str, Any]) -> bytes:
 
 
 def fetch_evaluator_metadata() -> dict[str, Any]:
-    commit_url = (
-        f"https://api.github.com/repos/{EVALUATOR_REPOSITORY}/commits/"
-        f"{EVALUATOR_REVISION}"
-    )
+    commit_url = f"https://api.github.com/repos/{EVALUATOR_REPOSITORY}/commits/{EVALUATOR_REVISION}"
     license_url = (
         f"https://api.github.com/repos/{EVALUATOR_REPOSITORY}/contents/LICENSE?"
         f"ref={EVALUATOR_REVISION}"
@@ -291,7 +283,9 @@ def acquire_evaluator_checkout(runtime_dir: Path) -> Path:
             if not inspect_local_evaluator(checkout).get("clean"):
                 raise PreflightBlocked("evaluator checkout contains modified or untracked files")
             return checkout
-        raise PreflightBlocked("existing evaluator has a different revision; choose a fresh runtime directory instead of modifying it")
+        raise PreflightBlocked(
+            "existing evaluator has a different revision; choose a fresh runtime directory instead of modifying it"
+        )
     clone = _run(
         [
             "git",
@@ -305,7 +299,9 @@ def acquire_evaluator_checkout(runtime_dir: Path) -> Path:
     )
     if clone.returncode != 0:
         raise PreflightBlocked("could not clone the official SWE-bench Pro evaluator")
-    fetch = _run(["git", "fetch", "--depth", "1", "origin", EVALUATOR_REVISION], cwd=checkout, timeout=300)
+    fetch = _run(
+        ["git", "fetch", "--depth", "1", "origin", EVALUATOR_REVISION], cwd=checkout, timeout=300
+    )
     checkout_result = _run(["git", "checkout", "--detach", EVALUATOR_REVISION], cwd=checkout)
     if fetch.returncode != 0 or checkout_result.returncode != 0:
         raise PreflightBlocked(
@@ -327,7 +323,9 @@ def inspect_local_evaluator(checkout: Path) -> dict[str, Any]:
         "license": EVALUATOR_LICENSE if license_path.exists() else None,
         "license_sha256": license_sha,
         "clean": dirty.returncode == 0 and not dirty.stdout.strip(),
-        "runner_sha256": sha256_file(checkout / "swe_bench_pro_eval.py") if (checkout / "swe_bench_pro_eval.py").is_file() else None,
+        "runner_sha256": sha256_file(checkout / "swe_bench_pro_eval.py")
+        if (checkout / "swe_bench_pro_eval.py").is_file()
+        else None,
         "has_runner": (checkout / "swe_bench_pro_eval.py").is_file(),
         "has_run_scripts": (checkout / "run_scripts").is_dir(),
         "has_instance_dockerfiles": (checkout / "dockerfiles" / "instance_dockerfile").is_dir(),
@@ -344,7 +342,12 @@ def _docker_image_tag(row: Mapping[str, Any]) -> str:
     if suffix.endswith("-vnan"):
         suffix = suffix[:-5]
     if "element-hq" in repo and "element-web" in repo:
-        repo_name = "element-web" if instance_id == "instance_element-hq__element-web-ec0f940ef0e8e3b61078f145f34dc40d1938e6c5-vnan" else "element"
+        repo_name = (
+            "element-web"
+            if instance_id
+            == "instance_element-hq__element-web-ec0f940ef0e8e3b61078f145f34dc40d1938e6c5-vnan"
+            else "element"
+        )
     tag = f"{repo_base}.{repo_name}-{suffix}"
     return tag[:128]
 
@@ -368,7 +371,12 @@ def inspect_docker_image(row: Mapping[str, Any]) -> dict[str, Any]:
             "platform": descriptor.get("platform"),
         }
     except json.JSONDecodeError:
-        return {"uri": uri, "available": False, "digest": None, "error": "invalid manifest response"}
+        return {
+            "uri": uri,
+            "available": False,
+            "digest": None,
+            "error": "invalid manifest response",
+        }
 
 
 def inspect_docker_host() -> dict[str, Any]:
@@ -400,7 +408,11 @@ def inspect_isolated_environment(runtime_dir: Path) -> dict[str, Any]:
     packages: dict[str, bool] = {}
     if present:
         probe = _run(
-            [str(python_path), "-c", "import importlib.util, json; print(json.dumps({m: bool(importlib.util.find_spec(m)) for m in ['datasets','pandas','tqdm','docker','huggingface_hub']}))"],
+            [
+                str(python_path),
+                "-c",
+                "import importlib.util, json; print(json.dumps({m: bool(importlib.util.find_spec(m)) for m in ['datasets','pandas','tqdm','docker','huggingface_hub']}))",
+            ],
             timeout=30,
         )
         if probe.returncode == 0:
@@ -414,7 +426,11 @@ def inspect_isolated_environment(runtime_dir: Path) -> dict[str, Any]:
         "python": str(python_path) if present else None,
         "present": present,
         "packages": packages,
-        "all_required_packages": present and all(packages.get(name, False) for name in ("datasets", "pandas", "tqdm", "docker", "huggingface_hub")),
+        "all_required_packages": present
+        and all(
+            packages.get(name, False)
+            for name in ("datasets", "pandas", "tqdm", "docker", "huggingface_hub")
+        ),
     }
 
 
@@ -428,13 +444,20 @@ def bootstrap_isolated_environment(runtime_dir: Path, evaluator: Path | None = N
     python_path = venv_dir / ("Scripts/python.exe" if os.name == "nt" else "bin/python")
     requirements = runtime_dir / "requirements.lock.txt"
     requirements.write_text(
-        "datasets==4.4.1\n"
-        "pandas==2.3.3\n"
-        "tqdm==4.67.1\n"
-        "docker==7.1.0\n"
-        "huggingface_hub==1.1.2\n"
+        "datasets==4.4.1\npandas==2.3.3\ntqdm==4.67.1\ndocker==7.1.0\nhuggingface_hub==1.1.2\n"
     )
-    pip = _run([str(python_path), "-m", "pip", "install", "--disable-pip-version-check", "-r", str(requirements)], timeout=900)
+    pip = _run(
+        [
+            str(python_path),
+            "-m",
+            "pip",
+            "install",
+            "--disable-pip-version-check",
+            "-r",
+            str(requirements),
+        ],
+        timeout=900,
+    )
     if pip.returncode != 0:
         raise PreflightBlocked("isolated SWE-bench Pro dependency installation failed")
     return python_path
@@ -470,7 +493,9 @@ def validate_license_receipt(path: Path | None) -> dict[str, Any]:
         "approved": approved,
         "path": str(path),
         "dataset_id": receipt.get("dataset_id") if isinstance(receipt, Mapping) else None,
-        "dataset_revision": receipt.get("dataset_revision") if isinstance(receipt, Mapping) else None,
+        "dataset_revision": receipt.get("dataset_revision")
+        if isinstance(receipt, Mapping)
+        else None,
         "license": receipt.get("license") if isinstance(receipt, Mapping) else None,
         "source_url": receipt.get("source_url") if isinstance(receipt, Mapping) else None,
     }
@@ -491,16 +516,31 @@ def select_checkpoint(path: Path | None) -> dict[str, Any]:
     if path is None:
         return fallback
     payload = _load_json_file(path)
-    candidates = payload if isinstance(payload, list) else payload.get("checkpoints", []) if isinstance(payload, Mapping) else []
+    candidates = (
+        payload
+        if isinstance(payload, list)
+        else payload.get("checkpoints", [])
+        if isinstance(payload, Mapping)
+        else []
+    )
     compatible: list[dict[str, Any]] = []
     ignored: list[str] = []
     for candidate in candidates:
         if not isinstance(candidate, Mapping):
             continue
         candidate_model = candidate.get("model_id") or candidate.get("model")
-        commit = candidate.get("hf_commit") or candidate.get("hf_commit_sha") or candidate.get("commit_sha")
+        commit = (
+            candidate.get("hf_commit")
+            or candidate.get("hf_commit_sha")
+            or candidate.get("commit_sha")
+        )
         complete = candidate.get("status", "complete") in {"complete", "COMPLETE", "finished"}
-        if candidate_model != base_model or not complete or not isinstance(commit, str) or not HEX40.fullmatch(commit):
+        if (
+            candidate_model != base_model
+            or not complete
+            or not isinstance(commit, str)
+            or not HEX40.fullmatch(commit)
+        ):
             ignored.append(str(candidate.get("step", candidate.get("name", "unknown"))))
             continue
         item = dict(candidate)
@@ -508,7 +548,9 @@ def select_checkpoint(path: Path | None) -> dict[str, Any]:
         compatible.append(item)
     if not compatible:
         fallback["ignored_candidates"] = ignored
-        fallback["selection_reason"] = "no completed compatible Tinker sampler checkpoint; immutable base revision recorded"
+        fallback["selection_reason"] = (
+            "no completed compatible Tinker sampler checkpoint; immutable base revision recorded"
+        )
         return fallback
     selected = max(compatible, key=lambda item: item["_step"])
     return {
@@ -516,7 +558,9 @@ def select_checkpoint(path: Path | None) -> dict[str, Any]:
         "model_id": base_model,
         "model_revision": base_revision,
         "adapter_revision": selected.get("adapter_revision") or selected.get("revision"),
-        "hf_commit": selected.get("hf_commit") or selected.get("hf_commit_sha") or selected.get("commit_sha"),
+        "hf_commit": selected.get("hf_commit")
+        or selected.get("hf_commit_sha")
+        or selected.get("commit_sha"),
         "hf_repo": selected.get("hf_repo") or selected.get("repo_id"),
         "step": selected.get("step", 0),
         "selection_reason": "strongest completed compatible checkpoint by step",
@@ -547,7 +591,13 @@ def validate_patch_artifact(path: Path | None, task_ids: Sequence[str]) -> dict[
         return {"present": False, "valid": False, "path": None, "count": 0}
     payload = _load_json_file(path)
     if not isinstance(payload, list):
-        return {"present": True, "valid": False, "path": str(path), "count": 0, "error": "patch JSON must be a list"}
+        return {
+            "present": True,
+            "valid": False,
+            "path": str(path),
+            "count": 0,
+            "error": "patch JSON must be a list",
+        }
     seen: list[str] = []
     valid = True
     error = None
@@ -573,7 +623,18 @@ def validate_patch_artifact(path: Path | None, task_ids: Sequence[str]) -> dict[
     if sorted(seen) != sorted(task_ids):
         valid = False
         error = "patch IDs must exactly equal the selected disjoint task IDs"
-    return {"present": True, "valid": valid, "path": str(path), "count": len(payload), "task_id_hash": task_id_hash(seen), "predictions_sha256": sha256_text(json.dumps(payload, sort_keys=True, separators=(",", ":"))), "attribution": "provided_patch_verification_only", "error": error}
+    return {
+        "present": True,
+        "valid": valid,
+        "path": str(path),
+        "count": len(payload),
+        "task_id_hash": task_id_hash(seen),
+        "predictions_sha256": sha256_text(
+            json.dumps(payload, sort_keys=True, separators=(",", ":"))
+        ),
+        "attribution": "provided_patch_verification_only",
+        "error": error,
+    }
 
 
 def _unique(values: Iterable[str]) -> list[str]:
@@ -597,7 +658,9 @@ def build_preflight(
 ) -> dict[str, Any]:
     blockers: list[str] = []
     if require_tinker:
-        blockers.append("Tinker generation is unsupported; this runner verifies provided patches only")
+        blockers.append(
+            "Tinker generation is unsupported; this runner verifies provided patches only"
+        )
     root = _repo_root()
     selected_ids = list(task_ids or [DEFAULT_TASK_ID])
     if len(selected_ids) != len(set(selected_ids)):
@@ -615,7 +678,14 @@ def build_preflight(
             benchmark = {"dataset_id": DATASET_ID, "revision": None, "error": str(exc)}
             blockers.append(str(exc))
     else:
-        benchmark = {"dataset_id": DATASET_ID, "revision": DATASET_REVISION, "split": DATASET_SPLIT, "row_count": None, "declared_license": None, "offline": True}
+        benchmark = {
+            "dataset_id": DATASET_ID,
+            "revision": DATASET_REVISION,
+            "split": DATASET_SPLIT,
+            "row_count": None,
+            "declared_license": None,
+            "offline": True,
+        }
     if benchmark.get("revision") != DATASET_REVISION:
         blockers.append(f"dataset revision is not the pinned {DATASET_REVISION}")
     if benchmark.get("private") or benchmark.get("gated") or benchmark.get("disabled"):
@@ -633,7 +703,10 @@ def build_preflight(
     row_by_id = {str(row.get("instance_id")): row for row in dataset_rows}
     missing_ids = sorted(set(selected_ids) - set(row_by_id))
     if missing_ids:
-        blockers.append("selected task IDs are not present in the pinned public split: " + ", ".join(missing_ids))
+        blockers.append(
+            "selected task IDs are not present in the pinned public split: "
+            + ", ".join(missing_ids)
+        )
     selected_rows = [row_by_id[task_id] for task_id in selected_ids if task_id in row_by_id]
     if len(selected_rows) != len(selected_ids):
         selected_rows = []
@@ -647,7 +720,12 @@ def build_preflight(
             evaluator = {"repository": EVALUATOR_REPOSITORY, "revision": None, "error": str(exc)}
             blockers.append(str(exc))
     else:
-        evaluator = {"repository": EVALUATOR_REPOSITORY, "revision": EVALUATOR_REVISION, "license": EVALUATOR_LICENSE, "offline": True}
+        evaluator = {
+            "repository": EVALUATOR_REPOSITORY,
+            "revision": EVALUATOR_REVISION,
+            "license": EVALUATOR_LICENSE,
+            "offline": True,
+        }
     if evaluator.get("revision") != EVALUATOR_REVISION:
         blockers.append(f"official evaluator is not pinned to {EVALUATOR_REVISION}")
     if evaluator.get("license") != EVALUATOR_LICENSE:
@@ -663,23 +741,33 @@ def build_preflight(
     if local_evaluator.get("present") and not local_evaluator.get("clean"):
         blockers.append("evaluator checkout has modified or untracked content")
     if not local_evaluator.get("present"):
-        blockers.append("native SWE-bench Pro evaluator checkout is absent; acquire the pinned official checkout")
+        blockers.append(
+            "native SWE-bench Pro evaluator checkout is absent; acquire the pinned official checkout"
+        )
     else:
         if local_evaluator.get("revision") != EVALUATOR_REVISION:
             blockers.append(f"native evaluator checkout is not at {EVALUATOR_REVISION}")
-        for key, label in (("has_runner", "runner"), ("has_run_scripts", "run_scripts"), ("has_instance_dockerfiles", "instance Dockerfiles")):
+        for key, label in (
+            ("has_runner", "runner"),
+            ("has_run_scripts", "run_scripts"),
+            ("has_instance_dockerfiles", "instance Dockerfiles"),
+        ):
             if not local_evaluator.get(key):
                 blockers.append(f"native evaluator checkout is missing {label}")
 
     environment = inspect_isolated_environment(runtime_dir)
     if bootstrap_environment:
         try:
-            bootstrap_isolated_environment(runtime_dir, checkout if local_evaluator.get("present") else None)
+            bootstrap_isolated_environment(
+                runtime_dir, checkout if local_evaluator.get("present") else None
+            )
             environment = inspect_isolated_environment(runtime_dir)
         except PreflightBlocked as exc:
             blockers.append(str(exc))
     if not environment.get("present"):
-        blockers.append("benchmark dependencies must run in the per-worktree isolated venv; bootstrap it before launch")
+        blockers.append(
+            "benchmark dependencies must run in the per-worktree isolated venv; bootstrap it before launch"
+        )
     elif not environment.get("all_required_packages"):
         blockers.append("per-worktree venv is missing one or more native evaluator dependencies")
 
@@ -687,22 +775,34 @@ def build_preflight(
     if not docker_host.get("available"):
         blockers.append("Docker daemon is unavailable for the native repository verifier")
     elif not docker_host.get("meets_recommended_resources"):
-        blockers.append("Docker host is below the official evaluator recommendation of 8 CPUs and 16 GiB RAM")
+        blockers.append(
+            "Docker host is below the official evaluator recommendation of 8 CPUs and 16 GiB RAM"
+        )
     image_receipts = [inspect_docker_image(row) for row in selected_rows] if selected_rows else []
     if any(not item.get("available") for item in image_receipts):
-        blockers.append("one or more selected native SWE-bench Pro Docker images cannot be acquired")
+        blockers.append(
+            "one or more selected native SWE-bench Pro Docker images cannot be acquired"
+        )
 
     license_receipt = validate_license_receipt(license_receipt_path)
     if benchmark.get("declared_license"):
         license_receipt["dataset_card_license"] = benchmark["declared_license"]
     if not license_receipt.get("approved"):
-        blockers.append("authoritative dataset data license is not approved; provide an immutable license receipt")
+        blockers.append(
+            "authoritative dataset data license is not approved; provide an immutable license receipt"
+        )
 
     model_id, model_revision = _load_contract_model()
-    model: dict[str, Any] = {"model_id": model_id, "revision": model_revision, "source": "huggingface_base"}
+    model: dict[str, Any] = {
+        "model_id": model_id,
+        "revision": model_revision,
+        "source": "huggingface_base",
+    }
     if network:
         try:
-            model_meta = _json_request(f"https://huggingface.co/api/models/{model_id}/revision/{model_revision}")
+            model_meta = _json_request(
+                f"https://huggingface.co/api/models/{model_id}/revision/{model_revision}"
+            )
             model["hub_revision"] = model_meta.get("sha")
             model["hub_private"] = bool(model_meta.get("private"))
             model["hub_gated"] = bool(model_meta.get("gated"))
@@ -712,7 +812,9 @@ def build_preflight(
             model["error"] = str(exc)
             blockers.append("authoritative model revision could not be verified")
     model.update(select_checkpoint(checkpoint_receipt_path))
-    if model.get("source") == "tinker_sampler_checkpoint" and not HEX40.fullmatch(str(model.get("hf_commit"))):
+    if model.get("source") == "tinker_sampler_checkpoint" and not HEX40.fullmatch(
+        str(model.get("hf_commit"))
+    ):
         blockers.append("evaluated Tinker sampler checkpoint is missing an immutable HF commit")
 
     patch_receipt = validate_patch_artifact(patch_path, selected_ids)
@@ -730,7 +832,9 @@ def build_preflight(
         "tinker_call_requested": require_tinker,
     }
     if require_tinker and not wandb["api_key_present"]:
-        blockers.append("WANDB_API_KEY is required for online W&B initialization before any Tinker call")
+        blockers.append(
+            "WANDB_API_KEY is required for online W&B initialization before any Tinker call"
+        )
 
     projected_cost = estimate_tinker_cost(task_count=len(selected_ids)) if require_tinker else 0.0
     budget = {
@@ -743,15 +847,35 @@ def build_preflight(
         "shared_cap_preserved": OPERATIONAL_CAP_USD + SAFETY_RESERVE_USD == 18.0,
     }
     if projected_cost > TINKER_MAXIMUM_USD:
-        blockers.append(f"projected Tinker spend exceeds the hard ${TINKER_MAXIMUM_USD:.2f} suite cap")
+        blockers.append(
+            f"projected Tinker spend exceeds the hard ${TINKER_MAXIMUM_USD:.2f} suite cap"
+        )
 
     external_receipts = []
     if not license_receipt.get("approved"):
-        external_receipts.append({"kind": "dataset_license", "required_fields": ["dataset_id", "dataset_revision", "license", "source_url", "approved=true"]})
+        external_receipts.append(
+            {
+                "kind": "dataset_license",
+                "required_fields": [
+                    "dataset_id",
+                    "dataset_revision",
+                    "license",
+                    "source_url",
+                    "approved=true",
+                ],
+            }
+        )
     if patch_path is None:
-        external_receipts.append({"kind": "model_patch_artifact", "required_fields": ["instance_id", "patch", "model_revision", "generation_run_id"]})
+        external_receipts.append(
+            {
+                "kind": "model_patch_artifact",
+                "required_fields": ["instance_id", "patch", "model_revision", "generation_run_id"],
+            }
+        )
     if require_tinker and not wandb["api_key_present"]:
-        external_receipts.append({"kind": "wandb_online", "required_fields": ["online=true", "run_id", "run_url"]})
+        external_receipts.append(
+            {"kind": "wandb_online", "required_fields": ["online=true", "run_id", "run_url"]}
+        )
 
     return {
         "schema_version": "e1-swe-bench-pro-receipt-v2",
@@ -769,14 +893,28 @@ def build_preflight(
             "selected_task_id_hash": task_id_hash(selected_ids),
             "training_task_ids": sorted(set(training_task_ids)),
             "training_task_id_hash": task_id_hash(training_task_ids),
-            "task_ids_disjoint": not bool(set(selected_ids) & set(training_task_ids)) if training_task_ids else None,
-            "contamination_status": "checked_supplied_inventory_only" if training_task_ids else "not_checked",
+            "task_ids_disjoint": not bool(set(selected_ids) & set(training_task_ids))
+            if training_task_ids
+            else None,
+            "contamination_status": "checked_supplied_inventory_only"
+            if training_task_ids
+            else "not_checked",
             "selected_split_manifest_hash": selected_manifest_hash,
             "selected_row_count": len(selected_rows),
             "total_row_count": len(dataset_rows),
         },
-        "evaluator": {**evaluator, "authority": EVALUATOR_URL, "revision_expected": EVALUATOR_REVISION, "local": local_evaluator, "docker_images": image_receipts},
-        "native_environment": {"isolated": environment, "docker": docker_host, "host_platform": platform.platform()},
+        "evaluator": {
+            **evaluator,
+            "authority": EVALUATOR_URL,
+            "revision_expected": EVALUATOR_REVISION,
+            "local": local_evaluator,
+            "docker_images": image_receipts,
+        },
+        "native_environment": {
+            "isolated": environment,
+            "docker": docker_host,
+            "host_platform": platform.platform(),
+        },
         "license": license_receipt,
         "model": model,
         "patch_artifact": patch_receipt,
@@ -798,7 +936,9 @@ def start_wandb_online(config: Mapping[str, Any]) -> dict[str, Any]:
         import wandb  # type: ignore
     except Exception as exc:  # pragma: no cover - optional dependency
         raise PreflightBlocked("wandb is missing from the isolated environment") from exc
-    run = wandb.init(mode="online", project=WANDB_PROJECT, config=dict(config), reinit="finish_previous")
+    run = wandb.init(
+        mode="online", project=WANDB_PROJECT, config=dict(config), reinit="finish_previous"
+    )
     return {
         "initialized": True,
         "mode": "online",
@@ -812,7 +952,10 @@ def _write_json(path: Path, payload: Mapping[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     import os
     import tempfile
-    with tempfile.NamedTemporaryFile(mode="w", dir=path.parent, delete=False, encoding="utf-8") as handle:
+
+    with tempfile.NamedTemporaryFile(
+        mode="w", dir=path.parent, delete=False, encoding="utf-8"
+    ) as handle:
         json.dump(payload, handle, indent=2, sort_keys=True, allow_nan=False)
         handle.write("\n")
         handle.flush()
@@ -865,7 +1008,11 @@ def run_evaluation(
 ) -> dict[str, Any]:
     if not receipt.get("launchable"):
         raise PreflightBlocked("launch blocked: " + "; ".join(receipt.get("blockers", [])))
-    runtime_dir, evaluator, patch_path = runtime_dir.resolve(), evaluator.resolve(), patch_path.resolve()
+    runtime_dir, evaluator, patch_path = (
+        runtime_dir.resolve(),
+        evaluator.resolve(),
+        patch_path.resolve(),
+    )
     task_ids = receipt["benchmark"]["selected_task_ids"]
     checked = validate_patch_artifact(patch_path, task_ids)
     if not checked.get("valid"):
@@ -874,10 +1021,24 @@ def run_evaluation(
     if not inspected.get("clean") or inspected.get("revision") != EVALUATOR_REVISION:
         raise PreflightBlocked("evaluator snapshot is not clean and pinned")
     payload = _load_json_file(patch_path)
-    normalized = sorted(({"instance_id": item["instance_id"], "model_patch": item.get("model_patch", item.get("patch"))} for item in payload), key=lambda item: item["instance_id"])
-    identity = {"predictions": normalized, "dataset_revision": DATASET_REVISION,
-                "selected_rows": list(rows), "evaluator": inspected, "protocol": "provided-patch-verifier-v2",
-                "docker_platform": docker_platform}
+    normalized = sorted(
+        (
+            {
+                "instance_id": item["instance_id"],
+                "model_patch": item.get("model_patch", item.get("patch")),
+            }
+            for item in payload
+        ),
+        key=lambda item: item["instance_id"],
+    )
+    identity = {
+        "predictions": normalized,
+        "dataset_revision": DATASET_REVISION,
+        "selected_rows": list(rows),
+        "evaluator": inspected,
+        "protocol": "provided-patch-verifier-v2",
+        "docker_platform": docker_platform,
+    }
     evaluation_id = sha256_text(json.dumps(identity, sort_keys=True, separators=(",", ":")))
     output_dir = runtime_dir / "evaluation" / evaluation_id
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -886,15 +1047,28 @@ def run_evaluation(
     _write_rows(raw_samples, rows)
     _write_json(normalized_path, normalized)
     environment = receipt["native_environment"]["isolated"]
-    command = _official_eval_command(python_path=Path(str(environment["python"])).resolve(), evaluator=evaluator,
-        raw_samples=raw_samples, patches=normalized_path, output_dir=output_dir,
-        docker_platform=docker_platform or ("linux/amd64" if platform.machine().lower() in {"arm64", "aarch64"} else None))
+    command = _official_eval_command(
+        python_path=Path(str(environment["python"])).resolve(),
+        evaluator=evaluator,
+        raw_samples=raw_samples,
+        patches=normalized_path,
+        output_dir=output_dir,
+        docker_platform=docker_platform
+        or ("linux/amd64" if platform.machine().lower() in {"arm64", "aarch64"} else None),
+    )
     import uuid
+
     attempt_id = uuid.uuid4().hex
     terminal_path = output_dir / ("attempt-" + attempt_id + ".json")
-    receipt.update(status="STARTED", launches_any_job=True, attempt_id=attempt_id,
-                   evaluation_id=evaluation_id, evidence_class="provided_patch_verification_only",
-                   launch={"command":command,"output_dir":str(output_dir)}, cleanup_status="not_established")
+    receipt.update(
+        status="STARTED",
+        launches_any_job=True,
+        attempt_id=attempt_id,
+        evaluation_id=evaluation_id,
+        evidence_class="provided_patch_verification_only",
+        launch={"command": command, "output_dir": str(output_dir)},
+        cleanup_status="not_established",
+    )
     _write_json(terminal_path, receipt)
     if receipt_path is not None:
         _write_json(receipt_path, receipt)
@@ -907,19 +1081,46 @@ def run_evaluation(
         if not results_path.is_file():
             raise PreflightBlocked("official evaluator produced no eval_results.json")
         results = _load_json_file(results_path)
-        if not isinstance(results, Mapping) or set(results) != set(task_ids) or not task_ids or any(type(value) is not bool for value in results.values()):
-            raise PreflightBlocked("native results require exact task coverage and strict JSON booleans")
+        if (
+            not isinstance(results, Mapping)
+            or set(results) != set(task_ids)
+            or not task_ids
+            or any(type(value) is not bool for value in results.values())
+        ):
+            raise PreflightBlocked(
+                "native results require exact task coverage and strict JSON booleans"
+            )
         values = [results[task_id] for task_id in task_ids]
-        receipt["score"] = {"resolved":sum(values),"total":len(values),"accuracy":sum(values)/len(values),"per_task":dict(results)}
+        receipt["score"] = {
+            "resolved": sum(values),
+            "total": len(values),
+            "accuracy": sum(values) / len(values),
+            "per_task": dict(results),
+        }
         receipt["status"] = "COMPLETE"
-    except (subprocess.TimeoutExpired, KeyboardInterrupt, OSError, ValueError, PreflightBlocked) as exc:
-        receipt.update(status="FAILED", evidence_class="execution_failed", score=None,
-                       outstanding_reservation=True, cleanup_status="unverified_requires_reconciliation")
-        receipt["blockers"] = _unique([*receipt.get("blockers", []), str(exc) or type(exc).__name__])
+    except (
+        subprocess.TimeoutExpired,
+        KeyboardInterrupt,
+        OSError,
+        ValueError,
+        PreflightBlocked,
+    ) as exc:
+        receipt.update(
+            status="FAILED",
+            evidence_class="execution_failed",
+            score=None,
+            outstanding_reservation=True,
+            cleanup_status="unverified_requires_reconciliation",
+        )
+        receipt["blockers"] = _unique(
+            [*receipt.get("blockers", []), str(exc) or type(exc).__name__]
+        )
         for field in ("stdout", "stderr"):
             value = getattr(exc, field, None)
             if value is not None:
-                receipt["launch"][field] = value.decode(errors="replace") if isinstance(value, bytes) else str(value)
+                receipt["launch"][field] = (
+                    value.decode(errors="replace") if isinstance(value, bytes) else str(value)
+                )
     finally:
         _write_json(terminal_path, receipt)
         if receipt_path is not None:
@@ -956,14 +1157,23 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--evaluator-dir", type=Path, default=None)
     parser.add_argument("--acquire-evaluator", action="store_true")
     parser.add_argument("--bootstrap", action="store_true", help="create/install the isolated venv")
-    parser.add_argument("--tinker", action="store_true", help="request a Tinker-backed generation lane")
+    parser.add_argument(
+        "--tinker", action="store_true", help="request a Tinker-backed generation lane"
+    )
     parser.add_argument("--docker-platform", default=None)
     return parser
 
 
 def main(argv: Sequence[str] | None = None) -> int:
     args = _parser().parse_args(argv)
-    for name in ("out", "runtime_dir", "license_receipt", "checkpoint_receipt", "patches", "evaluator_dir"):
+    for name in (
+        "out",
+        "runtime_dir",
+        "license_receipt",
+        "checkpoint_receipt",
+        "patches",
+        "evaluator_dir",
+    ):
         value = getattr(args, name)
         if value is not None:
             setattr(args, name, value.expanduser().resolve())
@@ -987,7 +1197,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     try:
         if args.command == "run" and receipt.get("launchable"):
             rows = load_dataset_rows(cache_dir=runtime_dir / "hf-cache")
-            evaluator = Path(receipt["evaluator"]["local"].get("revision") and (args.evaluator_dir or runtime_dir / "evaluator"))
+            evaluator = Path(
+                receipt["evaluator"]["local"].get("revision")
+                and (args.evaluator_dir or runtime_dir / "evaluator")
+            )
             receipt = run_evaluation(
                 receipt=receipt,
                 runtime_dir=runtime_dir,
@@ -1001,9 +1214,21 @@ def main(argv: Sequence[str] | None = None) -> int:
             receipt["status"] = "BLOCKED"
     except (PreflightBlocked, OSError, ValueError, KeyboardInterrupt) as exc:
         receipt.update(status="FAILED", evidence_class="execution_failed", score=None)
-        receipt["blockers"] = _unique([*receipt.get("blockers", []), str(exc) or type(exc).__name__])
+        receipt["blockers"] = _unique(
+            [*receipt.get("blockers", []), str(exc) or type(exc).__name__]
+        )
     _write_json(out, receipt)
-    print(json.dumps({"status": receipt.get("status"), "launchable": receipt.get("launchable"), "receipt": str(out), "blockers": receipt.get("blockers", [])}, indent=2))
+    print(
+        json.dumps(
+            {
+                "status": receipt.get("status"),
+                "launchable": receipt.get("launchable"),
+                "receipt": str(out),
+                "blockers": receipt.get("blockers", []),
+            },
+            indent=2,
+        )
+    )
     return 0 if receipt.get("status") in {"READY", "COMPLETE"} else 1
 
 

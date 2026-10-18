@@ -33,7 +33,7 @@ GRID = [2, 3, 4, 6, 8, 12, 16, 24, 32]
 
 
 def h(p: float, G: int) -> float:
-    return p ** G + (1 - p) ** G
+    return p**G + (1 - p) ** G
 
 
 def analytic_J(stratum: list[dict], G: int) -> float:
@@ -44,8 +44,7 @@ def analytic_J(stratum: list[dict], G: int) -> float:
     return tot / (len(stratum) * G)
 
 
-def empirical_J(rng: random.Random, stratum: list[dict], G: int,
-                draws: int = 4000) -> float:
+def empirical_J(rng: random.Random, stratum: list[dict], G: int, draws: int = 4000) -> float:
     tot = 0.0
     for _ in range(draws):
         pr = rng.choice(stratum)
@@ -57,12 +56,14 @@ def empirical_J(rng: random.Random, stratum: list[dict], G: int,
     return tot / (draws * G)
 
 
-def naive_argmax(rng: random.Random, stratum: list[dict], grid: list[int],
-                 draws: int = 3000) -> int:
+def naive_argmax(
+    rng: random.Random, stratum: list[dict], grid: list[int], draws: int = 3000
+) -> int:
     best, best_v = grid[0], -1.0
     for G in grid:
-        hits = sum(1 for _ in range(draws)
-                   if len(set(rng.sample(rng.choice(stratum)["rewards"], G))) > 1)
+        hits = sum(
+            1 for _ in range(draws) if len(set(rng.sample(rng.choice(stratum)["rewards"], G))) > 1
+        )
         v = hits / (draws * G)
         if v > best_v:
             best, best_v = G, v
@@ -103,31 +104,35 @@ def main() -> None:
             "empirical_J": {str(G): round(v, 6) for G, v in eJ.items()},
         }
         rows.append(row)
-        print(f"{label}: p_hat~{row['mean_p_hat']:.2f} "
-              f"T3-predicted G*={row['t3_gstar_prediction']} "
-              f"empirical-J G*={row['empirical_J_argmax']} "
-              f"naive G*={row['naive_pmixed_argmax']}", flush=True)
+        print(
+            f"{label}: p_hat~{row['mean_p_hat']:.2f} "
+            f"T3-predicted G*={row['t3_gstar_prediction']} "
+            f"empirical-J G*={row['empirical_J_argmax']} "
+            f"naive G*={row['naive_pmixed_argmax']}",
+            flush=True,
+        )
 
-    agree = sum(1 for r in rows
-                if r["t3_gstar_prediction"] == r["empirical_J_argmax"])
+    agree = sum(1 for r in rows if r["t3_gstar_prediction"] == r["empirical_J_argmax"])
     out = RESULTS_DIR / f"t3_gstar_v2_{pool['tag']}.json"
-    write_result(out, {
-        "claim_scope": "proxy_objective_only",
-        "unique_learning_optimum_established": False,
-        "objective_id": "variance_weighted_mixed_per_rollout_v1",
-        "kind": "t3_gstar_v2_prediction_fill",
-        "status": "complete",
-        "pool": str(args.pool),
-        "pool_tag": pool["tag"],
-        "model": pool["model"],
-        "grid": grid,
-        "seed": args.seed,
-        "objective": "J(G) = (1/G) E_phi[(1-h_G(p)) p(1-p)] "
-                     "(zvf_theory.tex eq:efficiency)",
-        "rows": rows,
-        "analytic_empirical_agreement": f"{agree}/{len(rows)}",
-        "generated_at": utc_now(),
-    })
+    write_result(
+        out,
+        {
+            "claim_scope": "proxy_objective_only",
+            "unique_learning_optimum_established": False,
+            "objective_id": "variance_weighted_mixed_per_rollout_v1",
+            "kind": "t3_gstar_v2_prediction_fill",
+            "status": "complete",
+            "pool": str(args.pool),
+            "pool_tag": pool["tag"],
+            "model": pool["model"],
+            "grid": grid,
+            "seed": args.seed,
+            "objective": "J(G) = (1/G) E_phi[(1-h_G(p)) p(1-p)] (zvf_theory.tex eq:efficiency)",
+            "rows": rows,
+            "analytic_empirical_agreement": f"{agree}/{len(rows)}",
+            "generated_at": utc_now(),
+        },
+    )
     print(f"agreement (analytic vs empirical J): {agree}/{len(rows)} -> {out}")
 
 

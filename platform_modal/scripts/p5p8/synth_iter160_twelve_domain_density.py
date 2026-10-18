@@ -42,6 +42,7 @@ H4 -- 12-domain pairwise ratio matrix is mostly cross-domain; no two
 
 Stdlib + numpy only. ~250 LoC.
 """
+
 from __future__ import annotations
 import csv
 import json
@@ -50,9 +51,11 @@ from pathlib import Path
 import numpy as np
 
 import sys
+
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
-from _stats import wilson_ci  # noqa: E402
+from _paths import REPO_ROOT
+from _stats import wilson_ci
+
 ROOT = REPO_ROOT
 RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8"
 RES.mkdir(parents=True, exist_ok=True)
@@ -97,7 +100,9 @@ def compute_d12(reward_means, eps, *, simulation=False):
     synthesize a per-rollout array via binomial draws (this matches the
     ANOVA assumption of n_rollouts Bernoulli outcomes)."""
     if not simulation:
-        raise ValueError("Raw rollout rewards unavailable: aggregate means cannot establish empirical reward stability")
+        raise ValueError(
+            "Raw rollout rewards unavailable: aggregate means cannot establish empirical reward stability"
+        )
     rng = np.random.default_rng(SEED)
     cell_results = []
     for (method, step), m in reward_means.items():
@@ -105,27 +110,35 @@ def compute_d12(reward_means, eps, *, simulation=False):
         rollout_arr = rng.binomial(1, m, size=N_ROLLOUTS).astype(float)
         mean, lo, hi = bootstrap_reward(rollout_arr)
         half_width = (hi - lo) / 2.0
-        cell_results.append({
-            "evidence_kind": "model_based_bernoulli_simulation", "simulation_seed": SEED,
-            "method": method, "step": step,
-            "reward_mean": m, "boot_mean": mean,
-            "ci_lo": lo, "ci_hi": hi,
-            "ci_half_width": half_width,
-            "stable_025": int(half_width < 0.025),
-            "stable_050":  int(half_width < 0.05),
-            "stable_100":  int(half_width < 0.10),
-        })
+        cell_results.append(
+            {
+                "evidence_kind": "model_based_bernoulli_simulation",
+                "simulation_seed": SEED,
+                "method": method,
+                "step": step,
+                "reward_mean": m,
+                "boot_mean": mean,
+                "ci_lo": lo,
+                "ci_hi": hi,
+                "ci_half_width": half_width,
+                "stable_025": int(half_width < 0.025),
+                "stable_050": int(half_width < 0.05),
+                "stable_100": int(half_width < 0.10),
+            }
+        )
     return cell_results
 
 
 def main():
     from review22_contract import require_independent_unit_contract
+
     require_independent_unit_contract()
     print("Loading iter-141 reward means...", flush=True)
     reward_means = load_iter141_per_method_step_rewards()
     print(f"  loaded {len(reward_means)} (method, step) cells", flush=True)
-    assert len(reward_means) == len(METHODS) * N_STEPS, \
-        f"got {len(reward_means)}, expected {len(METHODS)*N_STEPS}"
+    assert len(reward_means) == len(METHODS) * N_STEPS, (
+        f"got {len(reward_means)}, expected {len(METHODS) * N_STEPS}"
+    )
 
     print("Computing D12...", flush=True)
     cell_results = compute_d12(reward_means, eps=0.05)
@@ -134,15 +147,17 @@ def main():
     # Overall density per eps
     densities = {}
     for eps in EPS_GRID:
-        key = f"stable_{int(eps*1000):03d}"
+        key = f"stable_{int(eps * 1000):03d}"
         n_stable = sum(r[key] for r in cell_results)
         p, lo, hi = wilson_ci(n_stable, n_total)
         densities[eps] = {
-            "n_stable": n_stable, "n_total": n_total,
-            "density": p, "wilson_lo": lo, "wilson_hi": hi,
+            "n_stable": n_stable,
+            "n_total": n_total,
+            "density": p,
+            "wilson_lo": lo,
+            "wilson_hi": hi,
         }
-        print(f"  eps={eps:.3f}: {n_stable}/{n_total} = {p:.4f} "
-              f"[Wilson {lo:.4f}, {hi:.4f}]")
+        print(f"  eps={eps:.3f}: {n_stable}/{n_total} = {p:.4f} [Wilson {lo:.4f}, {hi:.4f}]")
 
     # Per-method density (at eps=0.05, the canonical headline)
     EPS_CANON = 0.05
@@ -152,11 +167,13 @@ def main():
         n_stable = sum(r["stable_050"] for r in mcells)
         p, lo, hi = wilson_ci(n_stable, len(mcells))
         method_stats[m] = {
-            "n_stable": n_stable, "n_total": len(mcells),
-            "density": p, "wilson_lo": lo, "wilson_hi": hi,
+            "n_stable": n_stable,
+            "n_total": len(mcells),
+            "density": p,
+            "wilson_lo": lo,
+            "wilson_hi": hi,
         }
-        print(f"  method={m}: {n_stable}/{len(mcells)} = {p:.4f} "
-              f"[Wilson {lo:.4f}, {hi:.4f}]")
+        print(f"  method={m}: {n_stable}/{len(mcells)} = {p:.4f} [Wilson {lo:.4f}, {hi:.4f}]")
 
     # Save D12 per-cell tsv
     out_cell = RES / "synth_iter160_d12_per_cell.tsv"
@@ -171,19 +188,33 @@ def main():
         w = csv.writer(f, delimiter="\t")
         w.writerow(["eps", "n_stable", "n_total", "density", "wilson_lo", "wilson_hi"])
         for eps, d in densities.items():
-            w.writerow([f"{eps:.3f}", d["n_stable"], d["n_total"],
-                        f"{d['density']:.6f}", f"{d['wilson_lo']:.6f}",
-                        f"{d['wilson_hi']:.6f}"])
+            w.writerow(
+                [
+                    f"{eps:.3f}",
+                    d["n_stable"],
+                    d["n_total"],
+                    f"{d['density']:.6f}",
+                    f"{d['wilson_lo']:.6f}",
+                    f"{d['wilson_hi']:.6f}",
+                ]
+            )
     print(f"  wrote {out_eps}")
 
     out_meth = RES / "synth_iter160_d12_per_method.tsv"
     with out_meth.open("w", newline="") as f:
         w = csv.writer(f, delimiter="\t")
-        w.writerow(["method", "n_stable", "n_total", "density",
-                    "wilson_lo", "wilson_hi"])
+        w.writerow(["method", "n_stable", "n_total", "density", "wilson_lo", "wilson_hi"])
         for m, d in method_stats.items():
-            w.writerow([m, d["n_stable"], d["n_total"], f"{d['density']:.6f}",
-                        f"{d['wilson_lo']:.6f}", f"{d['wilson_hi']:.6f}"])
+            w.writerow(
+                [
+                    m,
+                    d["n_stable"],
+                    d["n_total"],
+                    f"{d['density']:.6f}",
+                    f"{d['wilson_lo']:.6f}",
+                    f"{d['wilson_hi']:.6f}",
+                ]
+            )
     print(f"  wrote {out_meth}")
 
     # Hypothesis tests ----
@@ -193,16 +224,19 @@ def main():
 
     # H1: D12@EPS=0.05 in MID layer (0.05 < density < 0.50)
     H1_pass = 0.05 <= d12_at_eps05 <= 0.50
-    print(f"H1 D12@0.05 in MID: density={d12_at_eps05:.4f}  "
-          f"(bar 0.05 <= d <= 0.50)  PASS={H1_pass}")
+    print(
+        f"H1 D12@0.05 in MID: density={d12_at_eps05:.4f}  (bar 0.05 <= d <= 0.50)  PASS={H1_pass}"
+    )
 
     # H2: per-method densities show at least one method with density >= 2x another's
     meth_p = [method_stats[m]["density"] for m in METHODS]
     ratio_max = max(meth_p) / max(min(meth_p), 1e-6)
     H2_pass = ratio_max >= 2.0
-    print(f"H2 max/min method density ratio >= 2: "
-          f"max={max(meth_p):.4f}, min={min(meth_p):.4f}, ratio={ratio_max:.2f}  "
-          f"PASS={H2_pass}")
+    print(
+        f"H2 max/min method density ratio >= 2: "
+        f"max={max(meth_p):.4f}, min={min(meth_p):.4f}, ratio={ratio_max:.2f}  "
+        f"PASS={H2_pass}"
+    )
 
     # H3: D12 density is different from D11 (a value in MID, not HIGH)
     # D11 canonical headline at cheap_heuristic = 1.0 (per iter-156)
@@ -214,8 +248,10 @@ def main():
         with f156.open() as f:
             d11_cheap = json.load(f).get("d11_cheaptier_density")
     H3_pass = d12_at_eps05 < 1.0 if d11_cheap else None
-    print(f"H3 D12 distinct from D11: D12@0.05={d12_at_eps05:.4f}, "
-          f"D11@cheap={d11_cheap}  PASS={H3_pass}")
+    print(
+        f"H3 D12 distinct from D11: D12@0.05={d12_at_eps05:.4f}, "
+        f"D11@cheap={d11_cheap}  PASS={H3_pass}"
+    )
 
     # H4: D12 differs from D8 and D9 (other MID-density controllers)
     # We need to look at iter-148 / iter-156 synth summary
@@ -257,7 +293,8 @@ def main():
         },
         "h3_distinct_from_d11": {
             "pass": bool(H3_pass) if H3_pass is not None else None,
-            "d12": d12_at_eps05, "d11_cheap": d11_cheap,
+            "d12": d12_at_eps05,
+            "d11_cheap": d11_cheap,
             "verdict": ("PASS" if H3_pass else "FAIL") if H3_pass is not None else "UNKNOWN",
         },
         "h4_d12_mid_not_high": {

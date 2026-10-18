@@ -85,10 +85,10 @@ Pure stdlib + matplotlib.  No external stats deps.  The KS test is a
 direct translation of scipy.stats.ks_2samp using only basic numpy-style
 operations on the merged CDF.
 """
+
 from __future__ import annotations
 
 import csv
-import json
 import math
 import os
 import random
@@ -150,7 +150,9 @@ def ecdf(samples, grid):
 def ks_2samp(a, b):
     """Descriptive KS distance. Repeated steps are not independent samples."""
     from scipy.stats import ks_2samp as scipy_ks
-    if not len(a) or not len(b): return float("nan"), float("nan")
+
+    if not len(a) or not len(b):
+        return float("nan"), float("nan")
     return float(scipy_ks(a, b).statistic), float("nan")
 
 
@@ -162,23 +164,25 @@ def hclust_average(dist, labels):
     from scipy.cluster.hierarchy import linkage
     from scipy.spatial.distance import squareform
     import numpy as np
+
     matrix = np.asarray(dist, float)
     z = linkage(squareform(matrix, checks=True), method="average")
     sizes = {i: 1 for i in range(len(labels))}
     rows = []
     for i, (a, b, height, count) in enumerate(z):
         a, b = int(a), int(b)
-        rows.append((a,b,float(height),sizes[a],sizes[b]))
-        sizes[len(labels)+i] = int(count)
+        rows.append((a, b, float(height), sizes[a], sizes[b]))
+        sizes[len(labels) + i] = int(count)
     return rows
 
 
 def cut_tree(linkage, n_leaves, k):
     """Undo merges in chronology, preserving each original leaf exactly once."""
-    if not 1 <= k <= n_leaves: raise ValueError("invalid cluster count")
+    if not 1 <= k <= n_leaves:
+        raise ValueError("invalid cluster count")
     active = {i: {i} for i in range(n_leaves)}
-    for i, (a,b,*_) in enumerate(linkage[:n_leaves-k]):
-        active[n_leaves+i] = active.pop(a) | active.pop(b)
+    for i, (a, b, *_) in enumerate(linkage[: n_leaves - k]):
+        active[n_leaves + i] = active.pop(a) | active.pop(b)
     return {leaf: label for label, leaves in enumerate(active.values()) for leaf in leaves}
 
 
@@ -190,7 +194,7 @@ def iid_predicted_zvf(accuracy, G=8):
 
     ZVF_iid = p^G + (1-p)^G.
     """
-    return accuracy ** G + (1.0 - accuracy) ** G
+    return accuracy**G + (1.0 - accuracy) ** G
 
 
 def beta_lower_bound(accuracy, G=8, n_eff=200, q=0.05):
@@ -216,7 +220,7 @@ def beta_lower_bound(accuracy, G=8, n_eff=200, q=0.05):
         x = _gamma(rng, a)
         y = _gamma(rng, b)
         p = x / (x + y) if (x + y) > 0 else 0.5
-        zs.append(p ** G + (1.0 - p) ** G)
+        zs.append(p**G + (1.0 - p) ** G)
     zs.sort()
     idx = max(0, min(len(zs) - 1, int(q * len(zs))))
     return zs[idx]
@@ -244,7 +248,7 @@ def _gamma(rng, shape):
         if v <= 0:
             continue
         u = rng.random()
-        if u < 1.0 - 0.0331 * (x ** 4):
+        if u < 1.0 - 0.0331 * (x**4):
             return d * v
         if math.log(u) < 0.5 * x * x + d * (1.0 - v + math.log(v)):
             return d * v
@@ -264,12 +268,12 @@ def main():
         print(f"  {m:<10s} {len(data[m]):>5d} rows")
 
     # ---- CDF overlay grid -------------------------------------------------
-    grid = [round(x * 0.02, 4) for x in range(0, 51)]  # 0.00 .. 1.00 step 0.02
+    grid = [round(x * 0.02, 4) for x in range(51)]  # 0.00 .. 1.00 step 0.02
     cdf_rows = []
     for m in methods:
         zvfs = [r[0] for r in data[m]]
         e = ecdf(zvfs, grid)
-        for x, y in zip(grid, e):
+        for x, y in zip(grid, e, strict=False):
             cdf_rows.append((m, x, y))
     with open(os.path.join(RES, "zvf_iter66_cdf_overlay_review28_v2.tsv"), "w") as f:
         f.write("# Pillar 2 Iter 66 — empirical CDF of per-step ZVF per library\n")
@@ -346,12 +350,8 @@ def main():
             ]
         )
         for k, (a, b, h, na, nb) in enumerate(linkage):
-            methods_a = ",".join(
-                sorted(methods[i] for i in range(len(methods)) if i == a)
-            )
-            methods_b = ",".join(
-                sorted(methods[i] for i in range(len(methods)) if i == b)
-            )
+            methods_a = ",".join(sorted(methods[i] for i in range(len(methods)) if i == a))
+            methods_b = ",".join(sorted(methods[i] for i in range(len(methods)) if i == b))
             w.writerow(
                 [
                     k,
@@ -389,9 +389,7 @@ def main():
         f.write("# Pillar 2 Iter 66 — cluster assignment at k=3\n")
         f.write("# Source: platform_modal/scripts/zvf_iter66_distshape.py\n")
         w = csv.writer(f, delimiter="\t")
-        w.writerow(
-            ["method", "cluster", "mean_zvf", "mean_acc", "ks_to_grpo"]
-        )
+        w.writerow(["method", "cluster", "mean_zvf", "mean_acc", "ks_to_grpo"])
         for r in cluster_rows:
             w.writerow(r)
 
@@ -505,8 +503,6 @@ def main():
 
         matplotlib.use("Agg")
         import matplotlib.pyplot as plt
-        import matplotlib.colors as mcolors
-        from matplotlib.patches import Rectangle
         import numpy as np
 
         # Color palette: GRPO red, AERO blue, rest muted.
@@ -552,18 +548,14 @@ def main():
         im = ax2.imshow(arr, cmap="magma", vmin=0.0, vmax=1.0)
         ax2.set_xticks(range(len(methods)))
         ax2.set_yticks(range(len(methods)))
-        ax2.set_xticklabels(
-            [m.upper() for m in methods], rotation=45, ha="right", fontsize=8
-        )
+        ax2.set_xticklabels([m.upper() for m in methods], rotation=45, ha="right", fontsize=8)
         ax2.set_yticklabels([m.upper() for m in methods], fontsize=8)
         # Cluster boundary: order methods by cluster id, then within cluster
         # by mean_zvf, so the heatmap block structure is visible.
         cluster_for = {m: cluster_lookup[m] for m in methods}
         order = sorted(
             methods,
-            key=lambda m: (cluster_for[m], -float(
-                next(r for r in cluster_rows if r[0] == m)[2]
-            )),
+            key=lambda m: (cluster_for[m], -float(next(r for r in cluster_rows if r[0] == m)[2])),
         )
         # Annotate each cell with the KS distance (top 5 only).
         for i in range(len(methods)):
@@ -593,7 +585,7 @@ def main():
         cluster_lines = [
             f"Cluster {c}: {', '.join(sorted(ms)).upper()}"
             for c, ms in sorted(cluster_descr.items())
-]
+        ]
         ax2.text(
             0.5,
             -0.34,

@@ -12,10 +12,10 @@ Also builds the registry-level evidence summary:
 
 Then runs jsonschema validation on every entry + emits 14/14 PASS evidence.
 """
+
 import csv
 import json
 import pathlib
-import re
 
 import jsonschema
 
@@ -29,41 +29,55 @@ OUT = ROOT / "platform_hybrid/experiments/results/p5p8"
 CHARACTERIZATION = {
     "delta_dapo": {
         "n_components": 5,
-        "core_claim": ("asymmetric clip + dynamic sampling + token-level loss + "
-                       "overlong reward shaping + KL removal"),
-        "needed_panel": ("N2-style same-stack 4-method paired tensor "
-                         "(aero/gift/areal/dapo/grpo) — NOT in this worktree"),
-        "closest_proxy": ("length_bias data (KL-removal acts on length); "
-                          "currently we have only n2 metrics for aero/gift/areal"),
+        "core_claim": (
+            "asymmetric clip + dynamic sampling + token-level loss + "
+            "overlong reward shaping + KL removal"
+        ),
+        "needed_panel": (
+            "N2-style same-stack 4-method paired tensor "
+            "(aero/gift/areal/dapo/grpo) — NOT in this worktree"
+        ),
+        "closest_proxy": (
+            "length_bias data (KL-removal acts on length); "
+            "currently we have only n2 metrics for aero/gift/areal"
+        ),
         "verdict_status": "OPEN",
     },
     "delta_gspo": {
         "n_components": 2,
         "core_claim": "sequence-level importance ratio + sequence-level clip",
-        "needed_panel": ("N2 same-stack 4-method run with GSPO replacing GRPO; "
-                         "would compare per-token vs per-sequence ratio gradient"),
-        "closest_proxy": ("tinker_gspo_qwen3.5-4b_gsm8k.json (stack entry exists, "
-                          "outcomes=null) — needs rollout tensor logging on GSPO"),
+        "needed_panel": (
+            "N2 same-stack 4-method run with GSPO replacing GRPO; "
+            "would compare per-token vs per-sequence ratio gradient"
+        ),
+        "closest_proxy": (
+            "tinker_gspo_qwen3.5-4b_gsm8k.json (stack entry exists, "
+            "outcomes=null) — needs rollout tensor logging on GSPO"
+        ),
         "verdict_status": "OPEN",
     },
     "delta_liteppo": {
         "n_components": 4,
-        "core_claim": ("lightweight PPO: remove value head + clip advantages; "
-                       "use group-relative baseline as critic surrogate"),
-        "needed_panel": ("N2 same-stack with LitePPO replacing GRPO — NOT in this "
-                         "worktree"),
-        "closest_proxy": ("no tinker LitePPO rollout log; would need a fresh "
-                          "training run"),
+        "core_claim": (
+            "lightweight PPO: remove value head + clip advantages; "
+            "use group-relative baseline as critic surrogate"
+        ),
+        "needed_panel": ("N2 same-stack with LitePPO replacing GRPO — NOT in this worktree"),
+        "closest_proxy": ("no tinker LitePPO rollout log; would need a fresh training run"),
         "verdict_status": "OPEN",
     },
     "delta_reinforce": {
         "n_components": 1,
-        "core_claim": ("vanilla REINFORCE with group-relative baseline "
-                       "(no clip, no KL, no value head)"),
-        "needed_panel": ("N2 same-stack 5th method (REINFORCE) rollout tensor — "
-                         "would isolate the clipping mechanism"),
-        "closest_proxy": ("no tinker REINFORCE rollout log; the 4 N2 methods are "
-                          "all PPO-family variants"),
+        "core_claim": (
+            "vanilla REINFORCE with group-relative baseline (no clip, no KL, no value head)"
+        ),
+        "needed_panel": (
+            "N2 same-stack 5th method (REINFORCE) rollout tensor — "
+            "would isolate the clipping mechanism"
+        ),
+        "closest_proxy": (
+            "no tinker REINFORCE rollout log; the 4 N2 methods are all PPO-family variants"
+        ),
         "verdict_status": "OPEN",
     },
 }
@@ -85,25 +99,36 @@ def main():
         if not meas and not exp and not val:
             cid = d["id"]
             char = CHARACTERIZATION.get(cid, {})
-            zero_rows.append({
-                "delta_id": cid,
-                "name": d.get("name", ""),
-                "n_components": n_comps,
-                "n_measured": 0,
-                "n_expected": 0,
-                "n_validated": 0,
-                "core_claim": char.get("core_claim", "(unknown; see registry)"),
-                "needed_panel": char.get("needed_panel", ""),
-                "closest_proxy": char.get("closest_proxy", ""),
-                "verdict_status": char.get("verdict_status", "OPEN"),
-            })
+            zero_rows.append(
+                {
+                    "delta_id": cid,
+                    "name": d.get("name", ""),
+                    "n_components": n_comps,
+                    "n_measured": 0,
+                    "n_expected": 0,
+                    "n_validated": 0,
+                    "core_claim": char.get("core_claim", "(unknown; see registry)"),
+                    "needed_panel": char.get("needed_panel", ""),
+                    "closest_proxy": char.get("closest_proxy", ""),
+                    "verdict_status": char.get("verdict_status", "OPEN"),
+                }
+            )
 
     zero_path = OUT / "p6_zero_evidence_audit.tsv"
     with open(zero_path, "w", newline="") as f:
         w = csv.writer(f, delimiter="\t")
-        cols = ["delta_id", "name", "n_components", "n_measured", "n_expected",
-                "n_validated", "core_claim", "needed_panel", "closest_proxy",
-                "verdict_status"]
+        cols = [
+            "delta_id",
+            "name",
+            "n_components",
+            "n_measured",
+            "n_expected",
+            "n_validated",
+            "core_claim",
+            "needed_panel",
+            "closest_proxy",
+            "verdict_status",
+        ]
         w.writerow(cols)
         for r in zero_rows:
             w.writerow([r[c] for c in cols])
@@ -123,30 +148,55 @@ def main():
         neu = sum(1 for v in val if v.get("verdict") == "NEUTRAL")
         unc = sum(1 for v in val if v.get("verdict") == "UNCLAIMED")
         yield_resid = d.get("measured_yield_residual")
-        summary_rows.append({
-            "delta_id": d["id"],
-            "name": d.get("name", ""),
-            "n_components": len(d.get("deltas", [])),
-            "n_measured": len(meas),
-            "n_expected": len(exp),
-            "n_validated": len(val),
-            "n_panels": len(panels),
-            "panels": ";".join(panels),
-            "supports": sup,
-            "contradicts": con,
-            "neutral": neu,
-            "unclaimed": unc,
-            "has_yield_residual": bool(yield_resid),
-            "n_yield_metrics": (len([k for k in (yield_resid or {}) if isinstance(yield_resid.get(k), (int, float))
-                                     and yield_resid[k] is not None]) if yield_resid else 0),
-        })
+        summary_rows.append(
+            {
+                "delta_id": d["id"],
+                "name": d.get("name", ""),
+                "n_components": len(d.get("deltas", [])),
+                "n_measured": len(meas),
+                "n_expected": len(exp),
+                "n_validated": len(val),
+                "n_panels": len(panels),
+                "panels": ";".join(panels),
+                "supports": sup,
+                "contradicts": con,
+                "neutral": neu,
+                "unclaimed": unc,
+                "has_yield_residual": bool(yield_resid),
+                "n_yield_metrics": (
+                    len(
+                        [
+                            k
+                            for k in (yield_resid or {})
+                            if isinstance(yield_resid.get(k), (int, float))
+                            and yield_resid[k] is not None
+                        ]
+                    )
+                    if yield_resid
+                    else 0
+                ),
+            }
+        )
 
     sum_path = OUT / "p6_registry_evidence_summary.tsv"
     with open(sum_path, "w", newline="") as f:
         w = csv.writer(f, delimiter="\t")
-        cols = ["delta_id", "name", "n_components", "n_measured", "n_expected",
-                "n_validated", "n_panels", "panels", "supports", "contradicts",
-                "neutral", "unclaimed", "has_yield_residual", "n_yield_metrics"]
+        cols = [
+            "delta_id",
+            "name",
+            "n_components",
+            "n_measured",
+            "n_expected",
+            "n_validated",
+            "n_panels",
+            "panels",
+            "supports",
+            "contradicts",
+            "neutral",
+            "unclaimed",
+            "has_yield_residual",
+            "n_yield_metrics",
+        ]
         w.writerow(cols)
         for r in summary_rows:
             w.writerow([r[c] for c in cols])
@@ -188,9 +238,7 @@ def main():
         "summary_tsv": str(sum_path),
         "zero_evidence_deltas": [r["delta_id"] for r in zero_rows],
     }
-    (OUT / "p6_zero_evidence_audit_summary.json").write_text(
-        json.dumps(summary, indent=2) + "\n"
-    )
+    (OUT / "p6_zero_evidence_audit_summary.json").write_text(json.dumps(summary, indent=2) + "\n")
     return summary
 
 

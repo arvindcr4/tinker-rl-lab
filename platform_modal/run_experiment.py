@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """MODAL experiment entry — physical parity shim (delegates to the unified launcher)."""
+
 import sys
 from pathlib import Path
 

@@ -51,11 +51,12 @@ import json
 from collections import defaultdict
 from pathlib import Path
 
-import numpy as np
 
 import sys
+
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
+from _paths import REPO_ROOT
+
 ROOT = REPO_ROOT
 RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8"
 SEED = 20260705
@@ -97,14 +98,16 @@ def compute_d5_from_iter136(target_rate=0.5, target_cal="iso_per_cohort", eps=EP
             per_rate[float(r["rate_pct"])]["fire"] += violation * n_strata_used
             per_tree[r["tree"]]["fire"] += violation * n_strata_used
             per_cohort[r["cohort"]]["fire"] += violation * n_strata_used
-            rows.append({
-                "rate_pct": float(r["rate_pct"]),
-                "tree": r["tree"],
-                "cohort": r["cohort"],
-                "worst_cell_ece": worst_ece,
-                "n_strata_used": n_strata_used,
-                "violation": violation,
-            })
+            rows.append(
+                {
+                    "rate_pct": float(r["rate_pct"]),
+                    "tree": r["tree"],
+                    "cohort": r["cohort"],
+                    "worst_cell_ece": worst_ece,
+                    "n_strata_used": n_strata_used,
+                    "violation": violation,
+                }
+            )
     return {
         "rate": fire / max(1, total),
         "n_fire": fire,
@@ -143,14 +146,15 @@ def rate_stratified_d5():
 
 
 # Existing iter-124 / iter-132 numbers (recomputed for self-consistency).
-D1 = density_ci(84, 10000)        # P8 grad-band per-row
-D2 = density_ci(20, 40)           # P7 step zvf-triage per-step
-D3 = density_ci(36, 98)           # P5 mega zvf=1.0 per-cell
-D4 = density_ci(1867, 2560)       # P7 per-prompt boundary
+D1 = density_ci(84, 10000)  # P8 grad-band per-row
+D2 = density_ci(20, 40)  # P7 step zvf-triage per-step
+D3 = density_ci(36, 98)  # P5 mega zvf=1.0 per-cell
+D4 = density_ci(1867, 2560)  # P7 per-prompt boundary
 
 
 def main():
     from review22_contract import require_independent_unit_contract
+
     require_independent_unit_contract()
     print("[1/3] computing D5 = P8 iso_per_cohort ECE>0.10 at rate=0.5%")
     d5_bundle = compute_d5_from_iter136(target_rate=0.5, target_cal="iso_per_cohort")
@@ -178,8 +182,9 @@ def main():
     # Write density table
     with (RES / "synth_iter136_five_domain_density.tsv").open("w") as fh:
         w = csv.writer(fh, delimiter="\t")
-        w.writerow(["domain", "pillar", "granularity", "n_fire", "n_total",
-                    "rate", "ci_lo", "ci_hi"])
+        w.writerow(
+            ["domain", "pillar", "granularity", "n_fire", "n_total", "rate", "ci_lo", "ci_hi"]
+        )
         meta = {
             "D1": ("P8", "per-row", "fraud_test"),
             "D2": ("P7", "per-step", "GRPO_steps"),
@@ -189,8 +194,18 @@ def main():
         }
         for k, d in domains.items():
             pillar, gran, panel = meta[k]
-            w.writerow([k, pillar, gran, d["n_fire"], d["n_total"],
-                        f"{d['rate']:.6f}", f"{d['lo']:.6f}", f"{d['hi']:.6f}"])
+            w.writerow(
+                [
+                    k,
+                    pillar,
+                    gran,
+                    d["n_fire"],
+                    d["n_total"],
+                    f"{d['rate']:.6f}",
+                    f"{d['lo']:.6f}",
+                    f"{d['hi']:.6f}",
+                ]
+            )
 
     # Write ratio matrix
     with (RES / "synth_iter136_five_domain_density_ratios.tsv").open("w") as fh:
@@ -198,8 +213,7 @@ def main():
         w.writerow(["pair", "ratio", "lo", "hi", "excludes_1.0"])
         for k1, k2, r in pairs:
             ex = r["ratio"] < 0.1 or r["ratio"] > 10.0
-            w.writerow([f"{k1}/{k2}", f"{r['ratio']:.3f}",
-                        f"{r['lo']:.3f}", f"{r['hi']:.3f}", ex])
+            w.writerow([f"{k1}/{k2}", f"{r['ratio']:.3f}", f"{r['lo']:.3f}", f"{r['hi']:.3f}", ex])
 
     # Write rate-stratified D5
     with (RES / "synth_iter136_d5_rate_stratified.tsv").open("w") as fh:
@@ -216,14 +230,19 @@ def main():
             "D2": {"pillar": "P7", "concept": "zvf-triage-step", "density": D2},
             "D3": {"pillar": "P5", "concept": "mega-zvf=1", "density": D3},
             "D4": {"pillar": "P7", "concept": "boundary-prompt-cell", "density": D4},
-            "D5": {"pillar": "P8", "concept": "iso_per_cohort-ECE>0.10-at-0.5%-rate",
-                   "density": D5,
-                   "source": "p8_iter136_calibration_realistic_rates.py at rate=0.5%",
-                   "n_per_tree": d5_bundle["per_tree"],
-                   "n_per_cohort": d5_bundle["per_cohort"]},
+            "D5": {
+                "pillar": "P8",
+                "concept": "iso_per_cohort-ECE>0.10-at-0.5%-rate",
+                "density": D5,
+                "source": "p8_iter136_calibration_realistic_rates.py at rate=0.5%",
+                "n_per_tree": d5_bundle["per_tree"],
+                "n_per_cohort": d5_bundle["per_cohort"],
+            },
         },
         "iter124_super_domain_claim": "{P5, P7-step} <-> P8 — does adding D5 break it?",
-        "ratios": {k: {"ratio": v["ratio"], "lo": v["lo"], "hi": v["hi"]} for k, v in ratios.items()},
+        "ratios": {
+            k: {"ratio": v["ratio"], "lo": v["lo"], "hi": v["hi"]} for k, v in ratios.items()
+        },
         "rate_stratified_d5": {str(k): v for k, v in d5_by_rate.items()},
     }
     with (RES / "synth_iter136_five_domain_density_summary.json").open("w") as fh:

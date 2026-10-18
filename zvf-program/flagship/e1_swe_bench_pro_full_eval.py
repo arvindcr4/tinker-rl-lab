@@ -30,7 +30,11 @@ def _load_image_map(path: Path, expected_instance_ids: list[str] | None = None) 
         instance_id = str(item.get("instance_id") or "")
         immutable_uri = str(item.get("immutable_uri") or "")
         digest = str(item.get("digest") or "")
-        if not instance_id or not immutable_uri or re.fullmatch(r"sha256:[0-9a-f]{64}", digest) is None:
+        if (
+            not instance_id
+            or not immutable_uri
+            or re.fullmatch(r"sha256:[0-9a-f]{64}", digest) is None
+        ):
             raise RuntimeError("image manifest contains an invalid record")
         if not immutable_uri.endswith("@" + digest):
             raise RuntimeError(f"image URI/digest mismatch for {instance_id}")
@@ -57,7 +61,11 @@ def main() -> None:
     import swe_bench_pro_eval as evaluator
 
     expected = json.loads(Path(wrapper_args.evaluation_task_ids_path).read_text())
-    if not isinstance(expected, list) or not expected or any(not isinstance(x, str) or not x for x in expected):
+    if (
+        not isinstance(expected, list)
+        or not expected
+        or any(not isinstance(x, str) or not x for x in expected)
+    ):
         raise RuntimeError("evaluation task inventory must be a nonempty string list")
     image_map = _load_image_map(Path(wrapper_args.image_manifest_path), expected)
 

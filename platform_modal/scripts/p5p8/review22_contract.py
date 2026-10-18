@@ -12,7 +12,7 @@ def bootstrap_paired_diff(a, b, n_boot=1000, seed=0):
         raise ValueError("equal nonempty finite pairs required")
     if not isinstance(n_boot, int) or isinstance(n_boot, bool) or n_boot < 100:
         raise ValueError("at least 100 bootstrap draws required")
-    diffs = [x - y for x, y in zip(a, b)]
+    diffs = [x - y for x, y in zip(a, b, strict=False)]
     rng = random.Random(seed)
     means = sorted(statistics.fmean(rng.choices(diffs, k=len(diffs))) for _ in range(n_boot))
     return (

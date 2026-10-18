@@ -9,6 +9,7 @@ from pathlib import Path
 import tempfile
 import unittest
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+import pytest
 
 try:
     from . import pavlov_appbench_openreward_games_adapter as adapter
@@ -125,32 +126,33 @@ class PavlovAppbenchOpenrewardGamesAdapterTests(unittest.TestCase):
 
     def test_valid_contract_passes(self) -> None:
         result = self._validate()
-        self.assertFalse(result["paid_launch_allowed"])
-        self.assertTrue(result["stateful_trajectory"])
-        self.assertEqual(result["boundaries"]["E12"]["name"], "appbench_eval")
-        self.assertEqual(result["boundaries"]["E12"]["evaluation_role"], "receipt_proven_heldout")
-        self.assertEqual(result["boundaries"]["E13"]["name"], "openreward_games_eval")
-        self.assertEqual(result["boundaries"]["E13"]["evaluation_role"], "primary_eval")
+        assert not result["paid_launch_allowed"]
+        assert result["stateful_trajectory"]
+        assert result["boundaries"]["E12"]["name"] == "appbench_eval"
+        assert result["boundaries"]["E12"]["evaluation_role"] == "receipt_proven_heldout"
+        assert result["boundaries"]["E13"]["name"] == "openreward_games_eval"
+        assert result["boundaries"]["E13"]["evaluation_role"] == "primary_eval"
 
     def test_paid_launch_allowed_must_be_false(self) -> None:
-        with self.assertRaisesRegex(
-            adapter.PavlovAppbenchOpenrewardGamesAdapterError, "paid_launch_allowed must be False"
+        with pytest.raises(
+            adapter.PavlovAppbenchOpenrewardGamesAdapterError,
+            match="paid_launch_allowed must be False",
         ):
             self._validate({"paid_launch_allowed": True})
 
     def test_stateful_trajectory_must_be_true(self) -> None:
-        with self.assertRaisesRegex(
+        with pytest.raises(
             adapter.PavlovAppbenchOpenrewardGamesAdapterError,
-            "stateful_trajectory must be true",
+            match="stateful_trajectory must be true",
         ):
             self._validate({"stateful_trajectory": False})
 
     def test_boundaries_must_be_exact_e12_e13(self) -> None:
         missing = copy.deepcopy(self.contract)
         del missing["boundaries"]["E12"]
-        with self.assertRaisesRegex(
+        with pytest.raises(
             adapter.PavlovAppbenchOpenrewardGamesAdapterError,
-            "boundaries must contain exactly",
+            match="boundaries must contain exactly",
         ):
             adapter.validate_pavlov_openreward_games_adapter(missing)
 
@@ -162,87 +164,84 @@ class PavlovAppbenchOpenrewardGamesAdapterTests(unittest.TestCase):
             revision=_VALID_REVISION_E13,
             task_ids=["e" * 64],
         )
-        with self.assertRaisesRegex(
+        with pytest.raises(
             adapter.PavlovAppbenchOpenrewardGamesAdapterError,
-            "boundaries must contain exactly",
+            match="boundaries must contain exactly",
         ):
             adapter.validate_pavlov_openreward_games_adapter(extra)
 
     def test_roles_must_match_semantics(self) -> None:
         bad_e12 = copy.deepcopy(self.contract)
         bad_e12["boundaries"]["E12"]["evaluation_role"] = "primary_eval"
-        with self.assertRaisesRegex(
+        with pytest.raises(
             adapter.PavlovAppbenchOpenrewardGamesAdapterError,
-            "evaluation_role must be 'receipt_proven_heldout'",
+            match="evaluation_role must be 'receipt_proven_heldout'",
         ):
             adapter.validate_pavlov_openreward_games_adapter(bad_e12)
 
         bad_e13 = copy.deepcopy(self.contract)
         bad_e13["boundaries"]["E13"]["evaluation_role"] = "receipt_proven_heldout"
-        with self.assertRaisesRegex(
+        with pytest.raises(
             adapter.PavlovAppbenchOpenrewardGamesAdapterError,
-            "evaluation_role must be 'primary_eval'",
+            match="evaluation_role must be 'primary_eval'",
         ):
             adapter.validate_pavlov_openreward_games_adapter(bad_e13)
 
     def test_revisions_must_be_40_hex(self) -> None:
         bad = copy.deepcopy(self.contract)
         bad["boundaries"]["E12"]["revision"] = "g" * 39
-        with self.assertRaisesRegex(
-            adapter.PavlovAppbenchOpenrewardGamesAdapterError,
-            r"boundaries\[E12\]\.revision",
+        with pytest.raises(
+            adapter.PavlovAppbenchOpenrewardGamesAdapterError, match=r"boundaries\[E12\]\.revision"
         ):
             adapter.validate_pavlov_openreward_games_adapter(bad)
 
         bad = copy.deepcopy(self.contract)
         bad["boundaries"]["E13"]["revision"] = "g" * 40 + "x"
-        with self.assertRaisesRegex(
-            adapter.PavlovAppbenchOpenrewardGamesAdapterError,
-            r"boundaries\[E13\]\.revision",
+        with pytest.raises(
+            adapter.PavlovAppbenchOpenrewardGamesAdapterError, match=r"boundaries\[E13\]\.revision"
         ):
             adapter.validate_pavlov_openreward_games_adapter(bad)
 
     def test_revisions_cannot_use_placeholder_hashes(self) -> None:
         bad = copy.deepcopy(self.contract)
         bad["boundaries"]["E12"]["revision"] = "0" * 40
-        with self.assertRaisesRegex(
+        with pytest.raises(
             adapter.PavlovAppbenchOpenrewardGamesAdapterError,
-            "must not be an all-identical placeholder digest",
+            match="must not be an all-identical placeholder digest",
         ):
             adapter.validate_pavlov_openreward_games_adapter(bad)
 
         bad = copy.deepcopy(self.contract)
         bad["boundaries"]["E13"]["revision"] = "f" * 40
-        with self.assertRaisesRegex(
+        with pytest.raises(
             adapter.PavlovAppbenchOpenrewardGamesAdapterError,
-            "must not be an all-identical placeholder digest",
+            match="must not be an all-identical placeholder digest",
         ):
             adapter.validate_pavlov_openreward_games_adapter(bad)
 
     def test_task_ids_must_be_64_hex(self) -> None:
         bad = copy.deepcopy(self.contract)
         bad["boundaries"]["E12"]["task_ids"][0] = "z" * 64
-        with self.assertRaisesRegex(
+        with pytest.raises(
             adapter.PavlovAppbenchOpenrewardGamesAdapterError,
-            r"boundaries\[E12\]\.task_ids\[0\]",
+            match=r"boundaries\[E12\]\.task_ids\[0\]",
         ):
             adapter.validate_pavlov_openreward_games_adapter(bad)
 
         bad = copy.deepcopy(self.contract)
         bad["boundaries"]["E12"]["task_ids"][0] = _VALID_TASK_ID_1
         bad["boundaries"]["E12"]["task_ids"][1] = _VALID_TASK_ID_1
-        with self.assertRaisesRegex(
-            adapter.PavlovAppbenchOpenrewardGamesAdapterError,
-            "must be unique",
+        with pytest.raises(
+            adapter.PavlovAppbenchOpenrewardGamesAdapterError, match="must be unique"
         ):
             adapter.validate_pavlov_openreward_games_adapter(bad)
 
     def test_task_ids_cannot_use_placeholder_hashes(self) -> None:
         bad = copy.deepcopy(self.contract)
         bad["boundaries"]["E12"]["task_ids"][0] = "f" * 64
-        with self.assertRaisesRegex(
+        with pytest.raises(
             adapter.PavlovAppbenchOpenrewardGamesAdapterError,
-            "must not be an all-identical placeholder digest",
+            match="must not be an all-identical placeholder digest",
         ):
             adapter.validate_pavlov_openreward_games_adapter(bad)
 
@@ -250,44 +249,43 @@ class PavlovAppbenchOpenrewardGamesAdapterTests(unittest.TestCase):
         bad = copy.deepcopy(self.contract)
         bad["boundaries"]["E13"]["task_ids"] = [_VALID_TASK_ID_1, _VALID_TASK_ID_4]
         bad["boundaries"]["E13"]["split_hash"] = _split_hash(bad["boundaries"]["E13"]["task_ids"])
-        with self.assertRaisesRegex(
-            adapter.PavlovAppbenchOpenrewardGamesAdapterError,
-            "must not overlap",
+        with pytest.raises(
+            adapter.PavlovAppbenchOpenrewardGamesAdapterError, match="must not overlap"
         ):
             adapter.validate_pavlov_openreward_games_adapter(bad)
 
     def test_split_hash_is_deterministic_of_task_ids(self) -> None:
         bad = copy.deepcopy(self.contract)
         bad["boundaries"]["E12"]["split_hash"] = hashlib.sha256(b"bad split hash").hexdigest()
-        with self.assertRaisesRegex(
+        with pytest.raises(
             adapter.PavlovAppbenchOpenrewardGamesAdapterError,
-            "split_hash is not the deterministic hash",
+            match="split_hash is not the deterministic hash",
         ):
             adapter.validate_pavlov_openreward_games_adapter(bad)
 
     def test_authoritative_source_markers_reject_substitution(self) -> None:
         bad = copy.deepcopy(self.contract)
         bad["boundaries"]["E12"]["authoritative_source"] = "xLAM benchmark mirror"
-        with self.assertRaisesRegex(
+        with pytest.raises(
             adapter.PavlovAppbenchOpenrewardGamesAdapterError,
-            "references blocked source marker",
+            match="references blocked source marker",
         ):
             adapter.validate_pavlov_openreward_games_adapter(bad)
 
         bad = copy.deepcopy(self.contract)
         bad["boundaries"]["E13"]["authoritative_source"] = "related benchmark dataset"
-        with self.assertRaisesRegex(
+        with pytest.raises(
             adapter.PavlovAppbenchOpenrewardGamesAdapterError,
-            "references blocked source marker",
+            match="references blocked source marker",
         ):
             adapter.validate_pavlov_openreward_games_adapter(bad)
 
     def test_authoritative_source_must_match_expected_marker(self) -> None:
         bad = copy.deepcopy(self.contract)
         bad["boundaries"]["E12"]["authoritative_source"] = "OpenReward Games benchmark specs"
-        with self.assertRaisesRegex(
+        with pytest.raises(
             adapter.PavlovAppbenchOpenrewardGamesAdapterError,
-            "must identify the authoritative source 'appbench'",
+            match="must identify the authoritative source 'appbench'",
         ):
             adapter.validate_pavlov_openreward_games_adapter(bad)
 
@@ -308,7 +306,7 @@ class PavlovAppbenchOpenrewardGamesAdapterTests(unittest.TestCase):
                 ok = copy.deepcopy(self.contract)
                 ok["boundaries"]["E12"]["authoritative_source"] = source
                 normalized = adapter.validate_pavlov_openreward_games_adapter(ok)
-                self.assertEqual(normalized["boundaries"]["E12"]["authoritative_source"], source)
+                assert normalized["boundaries"]["E12"]["authoritative_source"] == source
 
     def test_punctuated_substitution_markers_are_still_blocked(self) -> None:
         for source in (
@@ -319,50 +317,49 @@ class PavlovAppbenchOpenrewardGamesAdapterTests(unittest.TestCase):
             with self.subTest(source=source):
                 bad = copy.deepcopy(self.contract)
                 bad["boundaries"]["E12"]["authoritative_source"] = source
-                with self.assertRaisesRegex(
+                with pytest.raises(
                     adapter.PavlovAppbenchOpenrewardGamesAdapterError,
-                    "references blocked source marker",
+                    match="references blocked source marker",
                 ):
                     adapter.validate_pavlov_openreward_games_adapter(bad)
 
     def test_artifact_environment_and_verifier_contracts_are_required(self) -> None:
         missing = copy.deepcopy(self.contract)
         del missing["boundaries"]["E12"]["native_contract"]
-        with self.assertRaisesRegex(
+        with pytest.raises(
             adapter.PavlovAppbenchOpenrewardGamesAdapterError,
-            r"boundaries\[E12\]\.native_contract",
+            match=r"boundaries\[E12\]\.native_contract",
         ):
             adapter.validate_pavlov_openreward_games_adapter(missing)
 
         bad = copy.deepcopy(self.contract)
         bad["boundaries"]["E13"]["native_contract"]["artifact_size_bytes"] = -1
-        with self.assertRaisesRegex(
+        with pytest.raises(
             adapter.PavlovAppbenchOpenrewardGamesAdapterError,
-            "artifact_size_bytes must be non-negative",
+            match="artifact_size_bytes must be non-negative",
         ):
             adapter.validate_pavlov_openreward_games_adapter(bad)
 
         bad = copy.deepcopy(self.contract)
         bad["boundaries"]["E13"]["native_contract"]["environment"]["container_source"] = ""
-        with self.assertRaisesRegex(
-            adapter.PavlovAppbenchOpenrewardGamesAdapterError,
-            "cannot be empty",
+        with pytest.raises(
+            adapter.PavlovAppbenchOpenrewardGamesAdapterError, match="cannot be empty"
         ):
             adapter.validate_pavlov_openreward_games_adapter(bad)
 
         bad = copy.deepcopy(self.contract)
         bad["boundaries"]["E13"]["native_contract"]["verifier"]["wandb"]["run_id"] = "12345"
-        with self.assertRaisesRegex(
+        with pytest.raises(
             adapter.PavlovAppbenchOpenrewardGamesAdapterError,
-            "wandb.run_id must be 8 alphanumeric",
+            match="wandb.run_id must be 8 alphanumeric",
         ):
             adapter.validate_pavlov_openreward_games_adapter(bad)
 
         bad = copy.deepcopy(self.contract)
         bad["boundaries"]["E13"]["native_contract"]["verifier"]["tinker"]["job_id"] = "invalid"
-        with self.assertRaisesRegex(
+        with pytest.raises(
             adapter.PavlovAppbenchOpenrewardGamesAdapterError,
-            "tinker.job_id must be a hyphenated UUID string",
+            match="tinker.job_id must be a hyphenated UUID string",
         ):
             adapter.validate_pavlov_openreward_games_adapter(bad)
 
@@ -370,9 +367,9 @@ class PavlovAppbenchOpenrewardGamesAdapterTests(unittest.TestCase):
         bad["boundaries"]["E13"]["native_contract"]["verifier"]["hugging_face"]["repo_id"] = (
             "invalid_repo"
         )
-        with self.assertRaisesRegex(
+        with pytest.raises(
             adapter.PavlovAppbenchOpenrewardGamesAdapterError,
-            "hugging_face.repo_id must be owner/repo",
+            match="hugging_face.repo_id must be owner/repo",
         ):
             adapter.validate_pavlov_openreward_games_adapter(bad)
 
@@ -380,9 +377,9 @@ class PavlovAppbenchOpenrewardGamesAdapterTests(unittest.TestCase):
         bad["boundaries"]["E13"]["native_contract"]["verifier"]["artifact_verifier_receipt"][
             "sha256"
         ] = "0" * 64
-        with self.assertRaisesRegex(
+        with pytest.raises(
             adapter.PavlovAppbenchOpenrewardGamesAdapterError,
-            "must not be an all-identical placeholder digest",
+            match="must not be an all-identical placeholder digest",
         ):
             adapter.validate_pavlov_openreward_games_adapter(bad)
 
@@ -390,18 +387,18 @@ class PavlovAppbenchOpenrewardGamesAdapterTests(unittest.TestCase):
         for boundary_id in ("E12", "E13"):
             bad = copy.deepcopy(self.contract)
             bad["boundaries"][boundary_id]["license"]["sha256"] = "0" * 64
-            with self.assertRaisesRegex(
+            with pytest.raises(
                 adapter.PavlovAppbenchOpenrewardGamesAdapterError,
-                "must not be an all-identical placeholder digest",
+                match="must not be an all-identical placeholder digest",
             ):
                 adapter.validate_pavlov_openreward_games_adapter(bad)
 
         for boundary_id in ("E12", "E13"):
             bad = copy.deepcopy(self.contract)
             bad["boundaries"][boundary_id]["native_contract"]["environment"]["container"] = "f" * 64
-            with self.assertRaisesRegex(
+            with pytest.raises(
                 adapter.PavlovAppbenchOpenrewardGamesAdapterError,
-                "must not be an all-identical placeholder digest",
+                match="must not be an all-identical placeholder digest",
             ):
                 adapter.validate_pavlov_openreward_games_adapter(bad)
 
@@ -409,9 +406,9 @@ class PavlovAppbenchOpenrewardGamesAdapterTests(unittest.TestCase):
             bad["boundaries"][boundary_id]["native_contract"]["environment"]["decontamination"] = (
                 "a" * 64
             )
-            with self.assertRaisesRegex(
+            with pytest.raises(
                 adapter.PavlovAppbenchOpenrewardGamesAdapterError,
-                "must not be an all-identical placeholder digest",
+                match="must not be an all-identical placeholder digest",
             ):
                 adapter.validate_pavlov_openreward_games_adapter(bad)
 
@@ -419,9 +416,9 @@ class PavlovAppbenchOpenrewardGamesAdapterTests(unittest.TestCase):
             bad["boundaries"][boundary_id]["native_contract"]["verifier"][
                 "artifact_verifier_receipt"
             ]["sha256"] = "b" * 64
-            with self.assertRaisesRegex(
+            with pytest.raises(
                 adapter.PavlovAppbenchOpenrewardGamesAdapterError,
-                "must not be an all-identical placeholder digest",
+                match="must not be an all-identical placeholder digest",
             ):
                 adapter.validate_pavlov_openreward_games_adapter(bad)
 
@@ -429,9 +426,9 @@ class PavlovAppbenchOpenrewardGamesAdapterTests(unittest.TestCase):
             bad["boundaries"][boundary_id]["native_contract"]["verifier"]["state_verifier_receipt"][
                 "sha256"
             ] = "c" * 64
-            with self.assertRaisesRegex(
+            with pytest.raises(
                 adapter.PavlovAppbenchOpenrewardGamesAdapterError,
-                "must not be an all-identical placeholder digest",
+                match="must not be an all-identical placeholder digest",
             ):
                 adapter.validate_pavlov_openreward_games_adapter(bad)
 
@@ -439,9 +436,9 @@ class PavlovAppbenchOpenrewardGamesAdapterTests(unittest.TestCase):
             bad["boundaries"][boundary_id]["native_contract"]["verifier"]["tinker"][
                 "receipt_sha256"
             ] = "d" * 64
-            with self.assertRaisesRegex(
+            with pytest.raises(
                 adapter.PavlovAppbenchOpenrewardGamesAdapterError,
-                "must not be an all-identical placeholder digest",
+                match="must not be an all-identical placeholder digest",
             ):
                 adapter.validate_pavlov_openreward_games_adapter(bad)
 
@@ -449,9 +446,9 @@ class PavlovAppbenchOpenrewardGamesAdapterTests(unittest.TestCase):
             bad["boundaries"][boundary_id]["native_contract"]["verifier"]["hugging_face"][
                 "receipt_sha256"
             ] = "e" * 64
-            with self.assertRaisesRegex(
+            with pytest.raises(
                 adapter.PavlovAppbenchOpenrewardGamesAdapterError,
-                "must not be an all-identical placeholder digest",
+                match="must not be an all-identical placeholder digest",
             ):
                 adapter.validate_pavlov_openreward_games_adapter(bad)
 
@@ -459,9 +456,9 @@ class PavlovAppbenchOpenrewardGamesAdapterTests(unittest.TestCase):
             bad["boundaries"][boundary_id]["native_contract"]["verifier"]["hugging_face"][
                 "commit"
             ] = "0" * 40
-            with self.assertRaisesRegex(
+            with pytest.raises(
                 adapter.PavlovAppbenchOpenrewardGamesAdapterError,
-                "must not be an all-identical placeholder digest",
+                match="must not be an all-identical placeholder digest",
             ):
                 adapter.validate_pavlov_openreward_games_adapter(bad)
 
@@ -580,16 +577,14 @@ class AppBenchGrantTests(unittest.TestCase):
 
     def test_grant_requires_two_grader_protocol(self):
         grant = self._grant()
-        with self.assertRaises(adapter.PavlovAppbenchOpenrewardGamesAdapterError):
+        with pytest.raises(adapter.PavlovAppbenchOpenrewardGamesAdapterError):
             adapter.validate_appbench_provider_grant(grant)
-        self.assertFalse(
-            adapter.build_appbench_provider_handoff(grant, trust_root=self.TEST_ROOT)[
-                "paid_launch_allowed"
-            ]
-        )
+        assert not adapter.build_appbench_provider_handoff(grant, trust_root=self.TEST_ROOT)[
+            "paid_launch_allowed"
+        ]
         grant["graders"]["count"] = 1
         grant = self._sign(grant)
-        with self.assertRaisesRegex(adapter.PavlovAppbenchOpenrewardGamesAdapterError, "two-grader"):
+        with pytest.raises(adapter.PavlovAppbenchOpenrewardGamesAdapterError, match="two-grader"):
             adapter.validate_appbench_provider_grant(grant, trust_root=self.TEST_ROOT)
 
     def test_only_exact_provider_signed_result_can_complete(self):
@@ -597,9 +592,9 @@ class AppBenchGrantTests(unittest.TestCase):
         collected = adapter.collect_appbench_signed_result(
             grant, handoff, result, trust_root=self.TEST_ROOT
         )
-        self.assertEqual(collected["status"], "COMPLETE")
-        self.assertEqual(collected["score"], 0.75)
-        self.assertTrue(collected["provider_signed"])
+        assert collected["status"] == "COMPLETE"
+        assert collected["score"] == 0.75
+        assert collected["provider_signed"]
 
     def test_signed_non_six_task_grants_and_results_are_rejected(self):
         for task_count in (5, 7):
@@ -607,8 +602,8 @@ class AppBenchGrantTests(unittest.TestCase):
                 grant = self._grant()
                 grant["heldout"]["task_count"] = task_count
                 grant = self._sign(grant)
-                with self.assertRaisesRegex(
-                    adapter.PavlovAppbenchOpenrewardGamesAdapterError, "exact six-task"
+                with pytest.raises(
+                    adapter.PavlovAppbenchOpenrewardGamesAdapterError, match="exact six-task"
                 ):
                     adapter.validate_appbench_provider_grant(grant, trust_root=self.TEST_ROOT)
 
@@ -618,8 +613,8 @@ class AppBenchGrantTests(unittest.TestCase):
                 wrong_count = copy.deepcopy(result)
                 wrong_count["task_count"] = task_count
                 wrong_count = self._sign(wrong_count)
-                with self.assertRaisesRegex(
-                    adapter.PavlovAppbenchOpenrewardGamesAdapterError, "bindings"
+                with pytest.raises(
+                    adapter.PavlovAppbenchOpenrewardGamesAdapterError, match="bindings"
                 ):
                     adapter.collect_appbench_signed_result(
                         grant, handoff, wrong_count, trust_root=self.TEST_ROOT
@@ -629,7 +624,7 @@ class AppBenchGrantTests(unittest.TestCase):
         grant, handoff, result = self._valid_triplet()
         forged = copy.deepcopy(result)
         forged["score"] = 0.9
-        with self.assertRaisesRegex(adapter.PavlovAppbenchOpenrewardGamesAdapterError, "signature"):
+        with pytest.raises(adapter.PavlovAppbenchOpenrewardGamesAdapterError, match="signature"):
             adapter.collect_appbench_signed_result(
                 grant, handoff, forged, trust_root=self.TEST_ROOT
             )
@@ -637,7 +632,7 @@ class AppBenchGrantTests(unittest.TestCase):
         wrong_task_count = copy.deepcopy(result)
         wrong_task_count["task_count"] += 1
         wrong_task_count = self._sign(wrong_task_count)
-        with self.assertRaisesRegex(adapter.PavlovAppbenchOpenrewardGamesAdapterError, "bindings"):
+        with pytest.raises(adapter.PavlovAppbenchOpenrewardGamesAdapterError, match="bindings"):
             adapter.collect_appbench_signed_result(
                 grant, handoff, wrong_task_count, trust_root=self.TEST_ROOT
             )
@@ -645,7 +640,7 @@ class AppBenchGrantTests(unittest.TestCase):
         wrong_handoff = copy.deepcopy(result)
         wrong_handoff["handoff_fingerprint"] = hashlib.sha256(b"other handoff").hexdigest()
         wrong_handoff = self._sign(wrong_handoff)
-        with self.assertRaisesRegex(adapter.PavlovAppbenchOpenrewardGamesAdapterError, "bindings"):
+        with pytest.raises(adapter.PavlovAppbenchOpenrewardGamesAdapterError, match="bindings"):
             adapter.collect_appbench_signed_result(
                 grant, handoff, wrong_handoff, trust_root=self.TEST_ROOT
             )
@@ -655,8 +650,8 @@ class AppBenchGrantTests(unittest.TestCase):
         expired = copy.deepcopy(result)
         expired["expires_at"] = "2020-08-30T00:00:00Z"
         expired = self._sign(expired)
-        with self.assertRaisesRegex(
-            adapter.PavlovAppbenchOpenrewardGamesAdapterError, "validity window"
+        with pytest.raises(
+            adapter.PavlovAppbenchOpenrewardGamesAdapterError, match="validity window"
         ):
             adapter.collect_appbench_signed_result(
                 grant, handoff, expired, trust_root=self.TEST_ROOT
@@ -665,7 +660,7 @@ class AppBenchGrantTests(unittest.TestCase):
         future_completion = copy.deepcopy(result)
         future_completion["completed_at"] = "2029-08-30T00:00:00Z"
         future_completion = self._sign(future_completion)
-        with self.assertRaisesRegex(adapter.PavlovAppbenchOpenrewardGamesAdapterError, "outside"):
+        with pytest.raises(adapter.PavlovAppbenchOpenrewardGamesAdapterError, match="outside"):
             adapter.collect_appbench_signed_result(
                 grant, handoff, future_completion, trust_root=self.TEST_ROOT
             )
@@ -675,9 +670,7 @@ class AppBenchGrantTests(unittest.TestCase):
         one_grader = copy.deepcopy(result)
         one_grader["graders"]["count"] = 1
         one_grader = self._sign(one_grader)
-        with self.assertRaisesRegex(
-            adapter.PavlovAppbenchOpenrewardGamesAdapterError, "two-grader"
-        ):
+        with pytest.raises(adapter.PavlovAppbenchOpenrewardGamesAdapterError, match="two-grader"):
             adapter.collect_appbench_signed_result(
                 grant, handoff, one_grader, trust_root=self.TEST_ROOT
             )
@@ -685,9 +678,7 @@ class AppBenchGrantTests(unittest.TestCase):
         no_adjudication = copy.deepcopy(result)
         no_adjudication["graders"]["re_adjudication"] = False
         no_adjudication = self._sign(no_adjudication)
-        with self.assertRaisesRegex(
-            adapter.PavlovAppbenchOpenrewardGamesAdapterError, "two-grader"
-        ):
+        with pytest.raises(adapter.PavlovAppbenchOpenrewardGamesAdapterError, match="two-grader"):
             adapter.collect_appbench_signed_result(
                 grant, handoff, no_adjudication, trust_root=self.TEST_ROOT
             )
@@ -699,8 +690,8 @@ class AppBenchGrantTests(unittest.TestCase):
                 missing = copy.deepcopy(result)
                 del missing["receipts"][receipt_name]
                 missing = self._sign(missing)
-                with self.assertRaisesRegex(
-                    adapter.PavlovAppbenchOpenrewardGamesAdapterError, "result.receipts"
+                with pytest.raises(
+                    adapter.PavlovAppbenchOpenrewardGamesAdapterError, match="result.receipts"
                 ):
                     adapter.collect_appbench_signed_result(
                         grant, handoff, missing, trust_root=self.TEST_ROOT
@@ -724,7 +715,7 @@ class AppBenchGrantTests(unittest.TestCase):
                 (trust_path, self.TEST_ROOT),
             ):
                 path.write_text(json.dumps(payload), encoding="utf-8")
-            self.assertEqual(
+            assert (
                 adapter.main(
                     [
                         "--mode",
@@ -740,10 +731,10 @@ class AppBenchGrantTests(unittest.TestCase):
                         "--out",
                         str(out_path),
                     ]
-                ),
-                0,
+                )
+                == 0
             )
-            self.assertEqual(json.loads(out_path.read_text(encoding="utf-8"))["status"], "COMPLETE")
+            assert json.loads(out_path.read_text(encoding="utf-8"))["status"] == "COMPLETE"
 
 
 if __name__ == "__main__":

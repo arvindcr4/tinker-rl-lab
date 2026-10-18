@@ -30,9 +30,7 @@ DATASET_ID = "browsergym/miniwob"
 
 # The local setup script pins this MiniWoB++ commit.  The package pin is the
 # BrowserGym MiniWoB adapter declared in platform_tinker/atropos/pyproject.toml.
-PINNED_DATASET_REVISION = (
-    "miniwob-plusplus@7fd85d71a4b60325c6585396ec4f48377d049838"
-)
+PINNED_DATASET_REVISION = "miniwob-plusplus@7fd85d71a4b60325c6585396ec4f48377d049838"
 PINNED_ENVIRONMENT_REVISION = "browsergym-miniwob==0.14.3"
 
 # This is intentionally named as the primary held-out suite ID.  BrowserGym,
@@ -257,9 +255,7 @@ class TaskSpec:
         if self.dataset_revision != PINNED_DATASET_REVISION:
             raise AdapterSchemaError("dataset revision is not the pinned T3 revision")
         if self.environment_revision != PINNED_ENVIRONMENT_REVISION:
-            raise AdapterSchemaError(
-                "environment revision is not the pinned BrowserGym revision"
-            )
+            raise AdapterSchemaError("environment revision is not the pinned BrowserGym revision")
         if not self.artifact_contract:
             raise AdapterSchemaError("artifact_contract cannot be empty")
         if tuple(self.artifact_contract) != REQUIRED_ARTIFACT_NAMES:
@@ -314,12 +310,8 @@ class TaskSpec:
             split=data.get("split", SUITE_ROLE),
             suite_id=data.get("suite_id", SUITE_ID),
             dataset_revision=data.get("dataset_revision", PINNED_DATASET_REVISION),
-            environment_revision=data.get(
-                "environment_revision", PINNED_ENVIRONMENT_REVISION
-            ),
-            artifact_contract=tuple(
-                data.get("artifact_contract", REQUIRED_ARTIFACT_NAMES)
-            ),
+            environment_revision=data.get("environment_revision", PINNED_ENVIRONMENT_REVISION),
+            artifact_contract=tuple(data.get("artifact_contract", REQUIRED_ARTIFACT_NAMES)),
             task_id=data.get("task_id", ""),
             task_id_hash=data.get("task_id_hash", ""),
         )
@@ -416,9 +408,7 @@ class ActionRecord:
         )
 
 
-def deterministic_artifact_digest(
-    *, name: str, kind: str, metadata: Mapping[str, Any]
-) -> str:
+def deterministic_artifact_digest(*, name: str, kind: str, metadata: Mapping[str, Any]) -> str:
     """Hash artifact metadata, never artifact bytes or secret-bearing content."""
 
     return sha256_json({"name": name, "kind": kind, "metadata": dict(metadata)})
@@ -694,7 +684,10 @@ def verify_episode(trace: Mapping[str, Any]) -> VerificationResult:
     for index, action in enumerate(actions):
         if action.step != index:
             errors.append(f"action step {action.step} is not transition {index}")
-        if index + 1 < len(observations) and action.next_state_hash != observations[index + 1].state_hash:
+        if (
+            index + 1 < len(observations)
+            and action.next_state_hash != observations[index + 1].state_hash
+        ):
             errors.append(f"action {index} does not link to the next state hash")
 
     terminal = trace.get("terminal")
@@ -718,35 +711,24 @@ def verify_episode(trace: Mapping[str, Any]) -> VerificationResult:
             if terminal_artifacts != actual_artifacts:
                 errors.append("terminal artifact hashes do not match artifact receipts")
             actual_names = {item.name for item in artifacts if item.exists}
-            missing_names = [
-                name for name in REQUIRED_ARTIFACT_NAMES if name not in actual_names
-            ]
+            missing_names = [name for name in REQUIRED_ARTIFACT_NAMES if name not in actual_names]
             if missing_names:
-                errors.append(
-                    "missing required artifact receipts: " + ", ".join(missing_names)
-                )
+                errors.append("missing required artifact receipts: " + ", ".join(missing_names))
             if task is not None:
                 for artifact in artifacts:
                     if artifact.exists and artifact.metadata.get("task_id") != task.task_id:
-                        errors.append(
-                            f"artifact {artifact.name} is not bound to the task ID"
-                        )
+                        errors.append(f"artifact {artifact.name} is not bound to the task ID")
             if terminal.get("final_state_hash"):
                 browser_states = [
-                    item
-                    for item in artifacts
-                    if item.exists and item.name == "browser_state"
+                    item for item in artifacts if item.exists and item.name == "browser_state"
                 ]
                 if browser_states and any(
-                    item.metadata.get("final_state_hash")
-                    != terminal.get("final_state_hash")
+                    item.metadata.get("final_state_hash") != terminal.get("final_state_hash")
                     for item in browser_states
                 ):
                     errors.append("browser_state artifact is not bound to final state")
                 success_receipts = [
-                    item
-                    for item in artifacts
-                    if item.exists and item.name == "task_success"
+                    item for item in artifacts if item.exists and item.name == "task_success"
                 ]
                 if success_receipts and any(
                     item.metadata.get("success") != terminal.get("task_success")
@@ -775,14 +757,10 @@ def verify_episode(trace: Mapping[str, Any]) -> VerificationResult:
 
     metrics = {
         "trajectory_valid": not errors,
-        "task_success": bool(terminal.get("task_success"))
-        if _is_mapping(terminal)
-        else False,
-        "state_integrity": bool(observations) and not any(
-            "state" in error or "observation" in error for error in errors
-        ),
-        "artifact_integrity": bool(artifacts)
-        and not any("artifact" in error for error in errors),
+        "task_success": bool(terminal.get("task_success")) if _is_mapping(terminal) else False,
+        "state_integrity": bool(observations)
+        and not any("state" in error or "observation" in error for error in errors),
+        "artifact_integrity": bool(artifacts) and not any("artifact" in error for error in errors),
         "e6_substitute": False,
         "portfolio_evidence": False,
     }
@@ -823,9 +801,7 @@ class PreflightReadiness:
         }
 
 
-def preflight_readiness(
-    *, runtime: Mapping[str, bool] | None = None
-) -> PreflightReadiness:
+def preflight_readiness(*, runtime: Mapping[str, bool] | None = None) -> PreflightReadiness:
     """Validate only the offline fixture and explicitly report missing runtime.
 
     ``runtime`` is caller-provided metadata.  The adapter does not probe imports,
@@ -841,9 +817,7 @@ def preflight_readiness(
         normalized_runtime[component] = value
     fixture_result = verify_episode(offline_dry_run_fixture())
     missing = tuple(
-        component
-        for component in REQUIRED_RUNTIME_COMPONENTS
-        if not normalized_runtime[component]
+        component for component in REQUIRED_RUNTIME_COMPONENTS if not normalized_runtime[component]
     )
     return PreflightReadiness(
         status="READY_OFFLINE_FIXTURE" if fixture_result.ok else "BLOCKED_FIXTURE",

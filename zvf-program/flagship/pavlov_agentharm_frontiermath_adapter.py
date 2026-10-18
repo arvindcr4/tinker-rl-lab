@@ -331,7 +331,7 @@ def _validate_native_contract(suite_id: str, contract: Mapping[str, Any]) -> lis
         ("artifact", "artifact", "artifact_sha256"),
     )
 
-    for section, key, digest_key in sections:
+    for section, _key, digest_key in sections:
         observed = contract.get(section)
         if not isinstance(observed, Mapping):
             errors.append(f"{suite_id}: native_contract.{section} must be an object")
@@ -472,7 +472,12 @@ def _validate_receipt_fields(suite_id: str, receipt: Mapping[str, Any]) -> list[
         max_usd = budget.get("maximum_usd")
         if not isinstance(max_usd, (int, float)):
             max_usd = budget.get("max_usd")
-        if isinstance(max_usd, bool) or not isinstance(max_usd, (int, float)) or not math.isfinite(max_usd) or max_usd <= 0:
+        if (
+            isinstance(max_usd, bool)
+            or not isinstance(max_usd, (int, float))
+            or not math.isfinite(max_usd)
+            or max_usd <= 0
+        ):
             errors.append(f"{suite_id}: budget_receipt.maximum_usd must be a positive number")
         if _placeholder(
             _first_value(budget, ("receipt_id", "authorization_id", "id", "sha256", "hash"))
@@ -1149,7 +1154,9 @@ def emit_agentharm_score(
     return receipt
 
 
-def _verify_e10_signature(payload: Mapping[str, Any], trust_root: Mapping[str, Any] | str | Path | None) -> dict[str, str]:
+def _verify_e10_signature(
+    payload: Mapping[str, Any], trust_root: Mapping[str, Any] | str | Path | None
+) -> dict[str, str]:
     try:
         root = load_trust_root(
             trust_root,
@@ -1160,9 +1167,9 @@ def _verify_e10_signature(payload: Mapping[str, Any], trust_root: Mapping[str, A
             raise ValueError("wrong trust root")
         signature = base64.b64decode(str(payload["signature"]), validate=True)
         body = canonical_json({k: v for k, v in payload.items() if k != "signature"}).encode()
-        Ed25519PublicKey.from_public_bytes(
-            bytes.fromhex(root["public_key_hex"])
-        ).verify(signature, body)
+        Ed25519PublicKey.from_public_bytes(bytes.fromhex(root["public_key_hex"])).verify(
+            signature, body
+        )
         issued = _parse_e10_utc(payload["issued_at"], field="issued_at")
         expires = _parse_e10_utc(payload["expires_at"], field="expires_at")
         if (
@@ -1272,7 +1279,10 @@ def validate_agentharm_provider_grant(
 
 
 def build_agentharm_execution_request(
-    grant: Mapping[str, Any], *, budget_receipt: Mapping[str, Any], trust_root: Mapping[str, Any] | str | Path | None = None
+    grant: Mapping[str, Any],
+    *,
+    budget_receipt: Mapping[str, Any],
+    trust_root: Mapping[str, Any] | str | Path | None = None,
 ) -> dict[str, Any]:
     data = validate_agentharm_provider_grant(grant, trust_root=trust_root)
     if not isinstance(budget_receipt, Mapping) or budget_receipt.get("authorized") is not True:
@@ -1297,7 +1307,11 @@ def build_agentharm_execution_request(
 
 
 def collect_agentharm_signed_result(
-    grant: Mapping[str, Any], request: Mapping[str, Any], result: Mapping[str, Any], *, trust_root: Mapping[str, Any] | str | Path | None = None
+    grant: Mapping[str, Any],
+    request: Mapping[str, Any],
+    result: Mapping[str, Any],
+    *,
+    trust_root: Mapping[str, Any] | str | Path | None = None,
 ) -> dict[str, Any]:
     """The sole E10 completion path; validates a signed provider collection receipt."""
     verified = validate_agentharm_provider_grant(grant, trust_root=trust_root)
@@ -1427,7 +1441,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     args = parser.parse_args(argv)
     try:
         payload = build_agentharm_execution_request(
-            json.loads(args.grant.read_text()), budget_receipt=json.loads(args.budget.read_text()),
+            json.loads(args.grant.read_text()),
+            budget_receipt=json.loads(args.budget.read_text()),
             trust_root=args.trust_root,
         )
         _atomic_json(args.out, payload)

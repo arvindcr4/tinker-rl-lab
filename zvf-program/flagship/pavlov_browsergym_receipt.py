@@ -156,9 +156,7 @@ def _safe_reference(value: Any, label: str, *, observed: bool) -> None:
 
 def _safe_run_id(value: Any, label: str, *, observed: bool) -> None:
     _safe_reference(value, label, observed=observed)
-    if observed and (
-        not isinstance(value, str) or _SAFE_RUN_ID_RE.fullmatch(value) is None
-    ):
+    if observed and (not isinstance(value, str) or _SAFE_RUN_ID_RE.fullmatch(value) is None):
         raise ReceiptSchemaError(f"{label} is not a safe run identifier")
 
 
@@ -347,9 +345,7 @@ def _validate_native_verifier(
     if data.get("revision") != NATIVE_VERIFIER_REVISION:
         errors.append("native_verifier revision is not pinned")
     expected_source = (
-        NATIVE_VERIFIER_SOURCE
-        if receipt_kind == RECEIPT_KIND_OBSERVED
-        else OFFLINE_NATIVE_SOURCE
+        NATIVE_VERIFIER_SOURCE if receipt_kind == RECEIPT_KIND_OBSERVED else OFFLINE_NATIVE_SOURCE
     )
     if data.get("source") != expected_source:
         errors.append(f"native_verifier source must be {expected_source}")
@@ -529,9 +525,7 @@ def _validate_cost(cost: Any, *, receipt_kind: str, errors: list[str]) -> bool:
             errors.append("cost.cap_usd must be positive")
         if values["cap_usd"] > MAX_OPERATIONAL_CAP_USD:
             errors.append("cost.cap_usd exceeds the operational cap")
-    within_cap = values.get("charged_usd", Decimal("-1")) <= values.get(
-        "cap_usd", Decimal("-2")
-    )
+    within_cap = values.get("charged_usd", Decimal("-1")) <= values.get("cap_usd", Decimal("-2"))
     if not within_cap:
         errors.append("cost charged_usd exceeds cap_usd")
     if data.get("within_cap") is not within_cap:
@@ -570,9 +564,7 @@ def validate_receipt(receipt: Mapping[str, Any]) -> ReceiptValidationResult:
         errors.append("receipt_kind must be offline_synthetic_receipt or observed_result")
         kind = RECEIPT_KIND_OFFLINE
     expected_status = (
-        EVIDENCE_STATUS_OBSERVED
-        if kind == RECEIPT_KIND_OBSERVED
-        else EVIDENCE_STATUS_OFFLINE
+        EVIDENCE_STATUS_OBSERVED if kind == RECEIPT_KIND_OBSERVED else EVIDENCE_STATUS_OFFLINE
     )
     if data.get("evidence_status") != expected_status:
         errors.append(f"evidence_status must be {expected_status}")
@@ -631,9 +623,7 @@ def validate_receipt(receipt: Mapping[str, Any]) -> ReceiptValidationResult:
         action_count=len(actions),
         errors=errors,
     )
-    observed_flags = _validate_evidence(
-        data.get("evidence"), receipt_kind=kind, errors=errors
-    )
+    observed_flags = _validate_evidence(data.get("evidence"), receipt_kind=kind, errors=errors)
     cost_within_cap = _validate_cost(data.get("cost"), receipt_kind=kind, errors=errors)
     metrics = {
         "receipt_kind": kind,
@@ -642,9 +632,7 @@ def validate_receipt(receipt: Mapping[str, Any]) -> ReceiptValidationResult:
         "wandb_observed": observed_flags.get("wandb", False),
         "tinker_observed": observed_flags.get("tinker", False),
         "hf_observed": observed_flags.get("hf", False),
-        "all_external_evidence_observed": all(observed_flags.values())
-        if observed_flags
-        else False,
+        "all_external_evidence_observed": all(observed_flags.values()) if observed_flags else False,
         "cost_within_cap": cost_within_cap,
         "e6_substitute": False,
         "portfolio_evidence": False,

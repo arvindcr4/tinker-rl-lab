@@ -25,6 +25,7 @@ USAGE:
   python3 aggregate_sweep.py --matched       # only matched-compute cells
   python3 aggregate_sweep.py --block audit   # only a given block
 """
+
 from __future__ import annotations
 
 import argparse
@@ -103,26 +104,32 @@ def extract_zvf_gu(result: dict) -> dict:
     """
     step_log = result.get("step_log")
     if not step_log:
-        return {"n_steps": 0, "mean_zvf": None, "final_zvf": None,
-                "mean_gu": None, "final_gu": None, "first5_gu": None,
-                "last10_gu": None, "gu_derived_count": 0, "gu_measured_count": 0}
+        return {
+            "n_steps": 0,
+            "mean_zvf": None,
+            "final_zvf": None,
+            "mean_gu": None,
+            "final_gu": None,
+            "first5_gu": None,
+            "last10_gu": None,
+            "gu_derived_count": 0,
+            "gu_measured_count": 0,
+        }
     zvf = [s.get("zvf") for s in step_log]
     gu = [s.get("gu") for s in step_log]
-    real_measured_gu = sum(
-        1 for g, z in zip(gu, zvf)
-        if isinstance(g, (int, float))
-    )
+    real_measured_gu = sum(1 for g, z in zip(gu, zvf, strict=False) if isinstance(g, (int, float)))
     real_derived_gu = sum(
-        1 for g, z in zip(gu, zvf)
-        if g is None and isinstance(z, (int, float))
+        1 for g, z in zip(gu, zvf, strict=False) if g is None and isinstance(z, (int, float))
     )
     # If gu missing but zvf present, derive gu = 1 - zvf ONLY where zvf
     # is real. The derived-vs-measured split is preserved by the
     # gu_derived_count / gu_measured_count fields; the rendered
     # summary columns reflect the (derived OR measured) numeric value,
     # not a hidden fabrication.
-    gu = [(1.0 - z) if (g is None and isinstance(z, (int, float))) else g
-          for g, z in zip(gu, zvf)]
+    gu = [
+        (1.0 - z) if (g is None and isinstance(z, (int, float))) else g
+        for g, z in zip(gu, zvf, strict=False)
+    ]
     real_zvf = [z for z in zvf if isinstance(z, (int, float))]
     real_gu = [g for g in gu if isinstance(g, (int, float))]
     return {
@@ -158,20 +165,42 @@ def load_heldout(result_json_path: Path) -> dict:
 
 
 ROW_COLS = [
-    "tag", "block", "framework", "family", "model_short", "tier", "task", "loss",
-    "seed", "group_size", "difficulty", "steps_planned",
-    "run_status",            # completed | failed | MISSING (no result file)
+    "tag",
+    "block",
+    "framework",
+    "family",
+    "model_short",
+    "tier",
+    "task",
+    "loss",
+    "seed",
+    "group_size",
+    "difficulty",
+    "steps_planned",
+    "run_status",  # completed | failed | MISSING (no result file)
     "n_steps",
-    "peak_reward", "last10_avg", "first5_avg", "zero_reward_pct",
-    "mean_zvf", "final_zvf", "mean_gu", "final_gu", "first5_gu", "last10_gu",
-    "gu_measured_count", "gu_derived_count",
-    "heldout_GSM-Plus", "heldout_AIME-2025", "heldout_BFCL-v3",
+    "peak_reward",
+    "last10_avg",
+    "first5_avg",
+    "zero_reward_pct",
+    "mean_zvf",
+    "final_zvf",
+    "mean_gu",
+    "final_gu",
+    "first5_gu",
+    "last10_gu",
+    "gu_measured_count",
+    "gu_derived_count",
+    "heldout_GSM-Plus",
+    "heldout_AIME-2025",
+    "heldout_BFCL-v3",
     "result_json",
 ]
 
 
-def aggregate(cfg: dict, manifest: dict, block_filter: str | None,
-              matched_only: bool) -> list[dict]:
+def aggregate(
+    cfg: dict, manifest: dict, block_filter: str | None, matched_only: bool
+) -> list[dict]:
     rows = []
     for cell in manifest["cells"]:
         if matched_only and cell["block"] != "matched":
@@ -180,60 +209,99 @@ def aggregate(cfg: dict, manifest: dict, block_filter: str | None,
             continue
         rj = Path(cell["result_json"])
         base = {
-            "tag": cell["tag"], "block": cell["block"], "framework": cell["framework"],
-            "family": cell["family"], "model_short": cell["model_short"],
-            "tier": cell["tier"], "task": cell["task"], "loss": cell["loss"],
-            "seed": cell["seed"], "group_size": cell["group_size"],
-            "difficulty": cell["difficulty"], "steps_planned": cell["steps"],
+            "tag": cell["tag"],
+            "block": cell["block"],
+            "framework": cell["framework"],
+            "family": cell["family"],
+            "model_short": cell["model_short"],
+            "tier": cell["tier"],
+            "task": cell["task"],
+            "loss": cell["loss"],
+            "seed": cell["seed"],
+            "group_size": cell["group_size"],
+            "difficulty": cell["difficulty"],
+            "steps_planned": cell["steps"],
             "result_json": str(rj),
         }
         if not rj.exists():
-            rows.append({**base, "run_status": MISSING, "n_steps": 0,
-                         **{c: MISSING for c in ROW_COLS
-                            if c not in base and c != "run_status" and c != "n_steps"}})
+            rows.append(
+                {
+                    **base,
+                    "run_status": MISSING,
+                    "n_steps": 0,
+                    **{
+                        c: MISSING
+                        for c in ROW_COLS
+                        if c not in base and c != "run_status" and c != "n_steps"
+                    },
+                }
+            )
             continue
         try:
             with open(rj) as f:
                 result = json.load(f)
         except Exception:
-            rows.append({**base, "run_status": "failed(parse)", "n_steps": 0,
-                         **{c: MISSING for c in ROW_COLS
-                            if c not in base and c not in ("run_status", "n_steps")}})
+            rows.append(
+                {
+                    **base,
+                    "run_status": "failed(parse)",
+                    "n_steps": 0,
+                    **{
+                        c: MISSING
+                        for c in ROW_COLS
+                        if c not in base and c not in ("run_status", "n_steps")
+                    },
+                }
+            )
             continue
         # A result JSON whose top-level is a list (some legacy runner
         # configs emit a JSON list of step records) cannot be
         # projected to a record schema; report and skip rather than
         # crashing the aggregation.
         if not isinstance(result, dict):
-            rows.append({**base, "run_status": "failed(schema:non-dict)",
-                         "n_steps": 0,
-                         **{c: MISSING for c in ROW_COLS
-                            if c not in base and c not in ("run_status", "n_steps")}})
+            rows.append(
+                {
+                    **base,
+                    "run_status": "failed(schema:non-dict)",
+                    "n_steps": 0,
+                    **{
+                        c: MISSING
+                        for c in ROW_COLS
+                        if c not in base and c not in ("run_status", "n_steps")
+                    },
+                }
+            )
             continue
 
-        status = "completed" if result_file_complete(rj, cell.get("steps"), cell.get("effective_spec")) else "failed(contract)"
+        status = (
+            "completed"
+            if result_file_complete(rj, cell.get("steps"), cell.get("effective_spec"))
+            else "failed(contract)"
+        )
         zg = extract_zvf_gu(result)
         ho = load_heldout(rj)
-        rows.append({
-            **base,
-            "run_status": status,
-            "n_steps": zg["n_steps"],
-            "peak_reward": _safe_optional_float(result.get("peak_reward")),
-            "last10_avg": _safe_optional_float(result.get("last10_avg")),
-            "first5_avg": _safe_optional_float(result.get("first5_avg")),
-            "zero_reward_pct": _safe_optional_float(result.get("zero_reward_pct")),
-            "mean_zvf": zg["mean_zvf"] if zg["mean_zvf"] is not None else MISSING,
-            "final_zvf": zg["final_zvf"] if zg["final_zvf"] is not None else MISSING,
-            "mean_gu": zg["mean_gu"] if zg["mean_gu"] is not None else MISSING,
-            "final_gu": zg["final_gu"] if zg["final_gu"] is not None else MISSING,
-            "first5_gu": zg["first5_gu"] if zg["first5_gu"] is not None else MISSING,
-            "last10_gu": zg["last10_gu"] if zg["last10_gu"] is not None else MISSING,
-            "gu_measured_count": zg["gu_measured_count"],
-            "gu_derived_count": zg["gu_derived_count"],
-            "heldout_GSM-Plus": ho["GSM-Plus"],
-            "heldout_AIME-2025": ho["AIME-2025"],
-            "heldout_BFCL-v3": ho["BFCL-v3"],
-        })
+        rows.append(
+            {
+                **base,
+                "run_status": status,
+                "n_steps": zg["n_steps"],
+                "peak_reward": _safe_optional_float(result.get("peak_reward")),
+                "last10_avg": _safe_optional_float(result.get("last10_avg")),
+                "first5_avg": _safe_optional_float(result.get("first5_avg")),
+                "zero_reward_pct": _safe_optional_float(result.get("zero_reward_pct")),
+                "mean_zvf": zg["mean_zvf"] if zg["mean_zvf"] is not None else MISSING,
+                "final_zvf": zg["final_zvf"] if zg["final_zvf"] is not None else MISSING,
+                "mean_gu": zg["mean_gu"] if zg["mean_gu"] is not None else MISSING,
+                "final_gu": zg["final_gu"] if zg["final_gu"] is not None else MISSING,
+                "first5_gu": zg["first5_gu"] if zg["first5_gu"] is not None else MISSING,
+                "last10_gu": zg["last10_gu"] if zg["last10_gu"] is not None else MISSING,
+                "gu_measured_count": zg["gu_measured_count"],
+                "gu_derived_count": zg["gu_derived_count"],
+                "heldout_GSM-Plus": ho["GSM-Plus"],
+                "heldout_AIME-2025": ho["AIME-2025"],
+                "heldout_BFCL-v3": ho["BFCL-v3"],
+            }
+        )
     return rows
 
 
@@ -249,8 +317,9 @@ def write_table(cfg: dict, rows: list[dict]) -> Path:
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser(description=__doc__,
-                                 formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     ap.add_argument("--matched", action="store_true", help="only matched-compute cells")
     ap.add_argument("--block", default="", help="restrict to a block (audit|matched)")
     args = ap.parse_args()
@@ -266,8 +335,7 @@ def main() -> int:
     n_completed = sum(1 for r in rows if r["run_status"] == "completed")
     n_failed = n_total - n_missing - n_completed
     n_heldout = sum(
-        1 for r in rows
-        if any(r.get(f"heldout_{k}") not in (MISSING, None) for k in HELDOUT_KEYS)
+        1 for r in rows if any(r.get(f"heldout_{k}") not in (MISSING, None) for k in HELDOUT_KEYS)
     )
 
     print("=" * 70)
@@ -289,8 +357,10 @@ def main() -> int:
         shown = 0
         for r in rows:
             if r["run_status"] == "completed":
-                print(f"  {r['tag']:42s} mean_GU={r['mean_gu']} "
-                      f"final_ZVF={r['final_zvf']} peak={r['peak_reward']}")
+                print(
+                    f"  {r['tag']:42s} mean_GU={r['mean_gu']} "
+                    f"final_ZVF={r['final_zvf']} peak={r['peak_reward']}"
+                )
                 shown += 1
                 if shown >= 10:
                     print(f"  ... ({n_completed - 10} more in {out})")

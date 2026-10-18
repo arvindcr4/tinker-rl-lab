@@ -216,7 +216,7 @@ def verify_runtime_versions(protocol: PilotProtocol) -> dict[str, str]:
             )
     if "numpy" in expected:
         try:
-            from numpy._core.umath import _center  # noqa: F401
+            from numpy._core.umath import _center
         except (ImportError, AttributeError) as exc:
             raise RemoteContractError(
                 "numpy binary extension is stale or inconsistent with the installed "

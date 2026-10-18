@@ -135,7 +135,9 @@ def _hf_checkpoint_repo(value: Any) -> bool:
     if not _hosted_url(value, "huggingface.co"):
         return False
     parts = urlparse(str(value).strip()).path.strip("/").split("/")
-    return len(parts) == 2 and all(re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]*", part) for part in parts)
+    return len(parts) == 2 and all(
+        re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]*", part) for part in parts
+    )
 
 
 def _first(record: Mapping[str, Any], names: Sequence[str]) -> Any:
@@ -192,7 +194,9 @@ def _task_manifest_hash(
     )
 
 
-def _split_receipt_hash(split: Mapping[str, Any], task_id_hash: str, split_manifest_hash: str) -> str:
+def _split_receipt_hash(
+    split: Mapping[str, Any], task_id_hash: str, split_manifest_hash: str
+) -> str:
     return sha256_json(
         {
             "name": split.get("name"),
@@ -235,17 +239,11 @@ def _license_approval_hash(license_record: Mapping[str, Any]) -> str:
 
 
 def _access_receipt_payload(access: Mapping[str, Any]) -> dict[str, Any]:
-    return {
-        key: value for key, value in access.items() if key != "access_receipt_hash"
-    }
+    return {key: value for key, value in access.items() if key != "access_receipt_hash"}
 
 
 def _metadata_receipt_payload(upstream: Mapping[str, Any]) -> dict[str, Any]:
-    return {
-        key: value
-        for key, value in upstream.items()
-        if key != "metadata_receipt_hash"
-    }
+    return {key: value for key, value in upstream.items() if key != "metadata_receipt_hash"}
 
 
 def _artifact_contract_hash(artifacts: Mapping[str, Any]) -> str:
@@ -485,7 +483,15 @@ def build_boundary(
     boundary = _placeholder_boundary(contract)
     if isinstance(metadata, Mapping):
         for key, value in metadata.items():
-            if key in {"schema_version", "suite_id", "role", "status", "launchable", "blockers", "boundary_hash"}:
+            if key in {
+                "schema_version",
+                "suite_id",
+                "role",
+                "status",
+                "launchable",
+                "blockers",
+                "boundary_hash",
+            }:
                 continue
             boundary[key] = value
     task_ids = boundary.get("task_ids")
@@ -510,18 +516,30 @@ def build_boundary(
     return boundary
 
 
-def _validate_source(boundary: Mapping[str, Any], suite: Mapping[str, Any], errors: list[str]) -> None:
+def _validate_source(
+    boundary: Mapping[str, Any], suite: Mapping[str, Any], errors: list[str]
+) -> None:
     source = _mapping(boundary.get("authoritative_source"))
     expected_url = str(suite.get("url", EXPECTED_SOURCE_URL))
     if source is None or source.get("authoritative") is not True:
         _error(errors, "authoritative_source", "typed authoritative source identity is required")
         return
     if source.get("url") != expected_url or not _https_url(source.get("url")):
-        _error(errors, "authoritative_source.url", "must exactly match the official contract source URL")
+        _error(
+            errors,
+            "authoritative_source.url",
+            "must exactly match the official contract source URL",
+        )
     if not _nonempty(source.get("source_id")) or source.get("publisher") != "Mercor":
         _error(errors, "authoritative_source", "Mercor source_id and publisher are required")
-    if not _sha256(source.get("identity_hash")) or source.get("identity_hash") != _source_identity_hash(source):
-        _error(errors, "authoritative_source.identity_hash", "source identity receipt must bind the exact official identity")
+    if not _sha256(source.get("identity_hash")) or source.get(
+        "identity_hash"
+    ) != _source_identity_hash(source):
+        _error(
+            errors,
+            "authoritative_source.identity_hash",
+            "source identity receipt must bind the exact official identity",
+        )
 
 
 def _validate_dataset(boundary: Mapping[str, Any], errors: list[str]) -> None:
@@ -534,7 +552,11 @@ def _validate_dataset(boundary: Mapping[str, Any], errors: list[str]) -> None:
         or not _sha256(dataset.get("revision_receipt_hash"))
         or dataset.get("revision_receipt_hash") != _dataset_revision_receipt_hash(dataset)
     ):
-        _error(errors, "dataset", "official dataset identity, immutable revision, source, and bound receipt are required")
+        _error(
+            errors,
+            "dataset",
+            "official dataset identity, immutable revision, source, and bound receipt are required",
+        )
         return
     license_record = _mapping(dataset.get("license"))
     if (
@@ -545,37 +567,63 @@ def _validate_dataset(boundary: Mapping[str, Any], errors: list[str]) -> None:
         or not _sha256(license_record.get("approval_hash"))
         or license_record.get("approval_hash") != _license_approval_hash(license_record)
     ):
-        _error(errors, "dataset.license", "CC-BY approval must be typed, source-pinned, and cryptographically bound")
+        _error(
+            errors,
+            "dataset.license",
+            "CC-BY approval must be typed, source-pinned, and cryptographically bound",
+        )
 
 
 def _validate_tasks(boundary: Mapping[str, Any], errors: list[str]) -> None:
     task_ids = boundary.get("task_ids")
     split = _mapping(boundary.get("split"))
     split_name = str((split or {}).get("name", boundary.get("source_split_description", "")))
-    if not isinstance(task_ids, list) or not task_ids or any(not isinstance(task_id, str) or not task_id.strip() for task_id in task_ids) or len(set(task_ids)) != len(task_ids) or task_ids != sorted(task_ids):
+    if (
+        not isinstance(task_ids, list)
+        or not task_ids
+        or any(not isinstance(task_id, str) or not task_id.strip() for task_id in task_ids)
+        or len(set(task_ids)) != len(task_ids)
+        or task_ids != sorted(task_ids)
+    ):
         _error(errors, "task_ids", "sorted deterministic unique task IDs are required")
         return
     expected_task_hash = _task_id_hash(task_ids)
     expected_split_hash = _split_hash(split_name, task_ids)
-    if boundary.get("task_id_hash") != expected_task_hash or not _sha256(boundary.get("task_id_hash")):
+    if boundary.get("task_id_hash") != expected_task_hash or not _sha256(
+        boundary.get("task_id_hash")
+    ):
         _error(errors, "task_id_hash", "does not match sorted task IDs")
-    if boundary.get("split_manifest_hash") != expected_split_hash or not _sha256(boundary.get("split_manifest_hash")):
+    if boundary.get("split_manifest_hash") != expected_split_hash or not _sha256(
+        boundary.get("split_manifest_hash")
+    ):
         _error(errors, "split_manifest_hash", "does not match split name and task IDs")
     dataset = _mapping(boundary.get("dataset")) or {}
     expected_manifest_hash = _task_manifest_hash(str(dataset.get("revision")), split_name, task_ids)
-    if boundary.get("task_manifest_hash") != expected_manifest_hash or not _sha256(boundary.get("task_manifest_hash")):
-        _error(errors, "task_manifest_hash", "does not bind immutable source revision and task IDs")
-    if split is None or split_name != "sealed selection slice" or split.get("disjoint_from_training") is not True:
-        _error(errors, "split", "primary_eval must use the sealed selection slice and typed disjointness")
-    elif (
-        not _sha256(split.get("receipt_hash"))
-        or split.get("receipt_hash")
-        != _split_receipt_hash(split, str(boundary.get("task_id_hash")), str(boundary.get("split_manifest_hash")))
+    if boundary.get("task_manifest_hash") != expected_manifest_hash or not _sha256(
+        boundary.get("task_manifest_hash")
     ):
-        _error(errors, "split.receipt_hash", "split receipt must bind the sealed slice and task hashes")
+        _error(errors, "task_manifest_hash", "does not bind immutable source revision and task IDs")
+    if (
+        split is None
+        or split_name != "sealed selection slice"
+        or split.get("disjoint_from_training") is not True
+    ):
+        _error(
+            errors,
+            "split",
+            "primary_eval must use the sealed selection slice and typed disjointness",
+        )
+    elif not _sha256(split.get("receipt_hash")) or split.get("receipt_hash") != _split_receipt_hash(
+        split, str(boundary.get("task_id_hash")), str(boundary.get("split_manifest_hash"))
+    ):
+        _error(
+            errors, "split.receipt_hash", "split receipt must bind the sealed slice and task hashes"
+        )
 
 
-def _validate_native_contract(boundary: Mapping[str, Any], suite: Mapping[str, Any], errors: list[str]) -> None:
+def _validate_native_contract(
+    boundary: Mapping[str, Any], suite: Mapping[str, Any], errors: list[str]
+) -> None:
     environment = _mapping(boundary.get("native_environment"))
     if (
         environment is None
@@ -587,7 +635,11 @@ def _validate_native_contract(boundary: Mapping[str, Any], suite: Mapping[str, A
         or not _sha256(environment.get("receipt_hash"))
         or environment.get("receipt_hash") != _environment_receipt_hash(environment)
     ):
-        _error(errors, "native_environment", "native Archipelago runtime, immutable digests, source, and bound receipt are required")
+        _error(
+            errors,
+            "native_environment",
+            "native Archipelago runtime, immutable digests, source, and bound receipt are required",
+        )
     artifacts = _mapping(boundary.get("artifact_contract"))
     artifact_types = artifacts.get("artifact_types") if artifacts is not None else None
     if (
@@ -602,7 +654,11 @@ def _validate_native_contract(boundary: Mapping[str, Any], suite: Mapping[str, A
         or not _sha256(artifacts.get("receipt_hash"))
         or artifacts.get("receipt_hash") != _artifact_receipt_hash(artifacts)
     ):
-        _error(errors, "artifact_contract", "native Archipelago artifact types, source, contract, and receipt are required")
+        _error(
+            errors,
+            "artifact_contract",
+            "native Archipelago artifact types, source, contract, and receipt are required",
+        )
     verifier = _mapping(boundary.get("verifier_contract"))
     expected_rule = suite.get("verifier_rule")
     if expected_rule is None:
@@ -617,16 +673,28 @@ def _validate_native_contract(boundary: Mapping[str, Any], suite: Mapping[str, A
         or not _sha256(verifier.get("receipt_hash"))
         or verifier.get("receipt_hash") != _verifier_receipt_hash(verifier)
     ):
-        _error(errors, "verifier_contract", "native Archipelago verifier rule, pinned revision, source, and receipt are required")
+        _error(
+            errors,
+            "verifier_contract",
+            "native Archipelago verifier rule, pinned revision, source, and receipt are required",
+        )
 
 
 def _validate_upstream_metadata(boundary: Mapping[str, Any], errors: list[str]) -> None:
     upstream = _mapping(boundary.get("upstream_metadata"))
     if upstream is None:
-        _error(errors, "upstream_metadata", "official upstream metadata receipt is required; no local pin may be invented")
+        _error(
+            errors,
+            "upstream_metadata",
+            "official upstream metadata receipt is required; no local pin may be invented",
+        )
         return
     if upstream.get("verification_status") != "verified":
-        _error(errors, "upstream_metadata.verification_status", "must be verified by a local read-only official-source receipt")
+        _error(
+            errors,
+            "upstream_metadata.verification_status",
+            "must be verified by a local read-only official-source receipt",
+        )
     sources = _mapping(upstream.get("official_sources"))
     expected_sources = {
         "publisher_url": EXPECTED_SOURCE_URL,
@@ -635,16 +703,34 @@ def _validate_upstream_metadata(boundary: Mapping[str, Any], errors: list[str]) 
         "archipelago_url": EXPECTED_ARCHIPELAGO_URL,
     }
     if sources is None:
-        _error(errors, "upstream_metadata.official_sources", "all four official source identities are required")
+        _error(
+            errors,
+            "upstream_metadata.official_sources",
+            "all four official source identities are required",
+        )
     else:
         for name, expected_url in expected_sources.items():
             if sources.get(name) != expected_url:
-                _error(errors, f"upstream_metadata.official_sources.{name}", "must exactly match the authoritative upstream URL")
+                _error(
+                    errors,
+                    f"upstream_metadata.official_sources.{name}",
+                    "must exactly match the authoritative upstream URL",
+                )
         source_receipts = sources.get("source_receipt_hashes")
-        if not isinstance(source_receipts, Mapping) or set(source_receipts) != set(expected_sources):
-            _error(errors, "upstream_metadata.official_sources.source_receipt_hashes", "one immutable receipt hash is required per official source")
+        if not isinstance(source_receipts, Mapping) or set(source_receipts) != set(
+            expected_sources
+        ):
+            _error(
+                errors,
+                "upstream_metadata.official_sources.source_receipt_hashes",
+                "one immutable receipt hash is required per official source",
+            )
         elif any(not _sha256(source_receipts.get(name)) for name in expected_sources):
-            _error(errors, "upstream_metadata.official_sources.source_receipt_hashes", "source receipt hashes must be canonical SHA-256 values")
+            _error(
+                errors,
+                "upstream_metadata.official_sources.source_receipt_hashes",
+                "source receipt hashes must be canonical SHA-256 values",
+            )
     expected_facts = {
         "benchmark_name": EXPECTED_BENCHMARK_NAME,
         "dataset_id": EXPECTED_DATASET_ID,
@@ -659,13 +745,27 @@ def _validate_upstream_metadata(boundary: Mapping[str, Any], errors: list[str]) 
     }
     for name, expected in expected_facts.items():
         if upstream.get(name) != expected:
-            _error(errors, f"upstream_metadata.{name}", "does not match the authoritative APEX-Agents metadata")
+            _error(
+                errors,
+                f"upstream_metadata.{name}",
+                "does not match the authoritative APEX-Agents metadata",
+            )
     dataset = _mapping(boundary.get("dataset")) or {}
-    if upstream.get("dataset_revision") != dataset.get("revision") or not _immutable(upstream.get("dataset_revision")):
-        _error(errors, "upstream_metadata.dataset_revision", "must exactly bind the selected immutable dataset revision")
+    if upstream.get("dataset_revision") != dataset.get("revision") or not _immutable(
+        upstream.get("dataset_revision")
+    ):
+        _error(
+            errors,
+            "upstream_metadata.dataset_revision",
+            "must exactly bind the selected immutable dataset revision",
+        )
     access = _mapping(upstream.get("access_constraints"))
     if access is None:
-        _error(errors, "upstream_metadata.access_constraints", "dataset access conditions and a local receipt are required")
+        _error(
+            errors,
+            "upstream_metadata.access_constraints",
+            "dataset access conditions and a local receipt are required",
+        )
     else:
         required_booleans = {
             "contact_acceptance_required": True,
@@ -678,13 +778,27 @@ def _validate_upstream_metadata(boundary: Mapping[str, Any], errors: list[str]) 
         }
         for name, expected in required_booleans.items():
             if type(access.get(name)) is not bool or access.get(name) is not expected:
-                _error(errors, f"upstream_metadata.access_constraints.{name}", f"must be typed {expected}")
+                _error(
+                    errors,
+                    f"upstream_metadata.access_constraints.{name}",
+                    f"must be typed {expected}",
+                )
         access_hash = access.get("access_receipt_hash")
         if not _sha256(access_hash) or access_hash != sha256_json(_access_receipt_payload(access)):
-            _error(errors, "upstream_metadata.access_constraints.access_receipt_hash", "must bind the exact access conditions")
+            _error(
+                errors,
+                "upstream_metadata.access_constraints.access_receipt_hash",
+                "must bind the exact access conditions",
+            )
     metadata_hash = upstream.get("metadata_receipt_hash")
-    if not _sha256(metadata_hash) or metadata_hash != sha256_json(_metadata_receipt_payload(upstream)):
-        _error(errors, "upstream_metadata.metadata_receipt_hash", "must bind the official facts, source receipts, and access receipt")
+    if not _sha256(metadata_hash) or metadata_hash != sha256_json(
+        _metadata_receipt_payload(upstream)
+    ):
+        _error(
+            errors,
+            "upstream_metadata.metadata_receipt_hash",
+            "must bind the official facts, source receipts, and access receipt",
+        )
 
 
 def _validate_wandb(value: Any, errors: list[str]) -> None:
@@ -703,7 +817,11 @@ def _validate_wandb(value: Any, errors: list[str]) -> None:
         or not _sha256(record.get("receipt_hash"))
         or record.get("receipt_hash") != _wandb_receipt_hash(record)
     ):
-        _error(errors, "result_receipts.wandb", "online W&B run ID/URL/group and success receipt are required")
+        _error(
+            errors,
+            "result_receipts.wandb",
+            "online W&B run ID/URL/group and success receipt are required",
+        )
 
 
 def _validate_tinker(value: Any, errors: list[str]) -> None:
@@ -714,16 +832,25 @@ def _validate_tinker(value: Any, errors: list[str]) -> None:
         or str(record.get("provider", "")).lower() != "tinker"
         or not isinstance(run_id, str)
         or re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.:-]{2,127}", run_id) is None
-        or str(record.get("cost_status", "")).lower() not in {"authorized", "settled", "charged", "complete", "observed"}
+        or str(record.get("cost_status", "")).lower()
+        not in {"authorized", "settled", "charged", "complete", "observed"}
         or not _sha256(record.get("receipt_hash"))
         or record.get("receipt_hash") != _tinker_receipt_hash(record)
     ):
-        _error(errors, "result_receipts.tinker", "Tinker run identity, cost state, and receipt hash are required")
+        _error(
+            errors,
+            "result_receipts.tinker",
+            "Tinker run identity, cost state, and receipt hash are required",
+        )
 
 
 def _validate_hf(value: Any, errors: list[str]) -> None:
     if not isinstance(value, list) or not value:
-        _error(errors, "result_receipts.hf_checkpoints", "initial/periodic/final HF receipts are required")
+        _error(
+            errors,
+            "result_receipts.hf_checkpoints",
+            "initial/periodic/final HF receipts are required",
+        )
         return
     stages: set[str] = set()
     identities: set[tuple[str, str]] = set()
@@ -752,7 +879,12 @@ def _validate_hf(value: Any, errors: list[str]) -> None:
             and record.get("receipt_hash") == _hf_receipt_hash(record)
         )
         if visibility == "public":
-            ok = ok and safe is True and record.get("data_license_safe") is True and record.get("quota_safe") is True
+            ok = (
+                ok
+                and safe is True
+                and record.get("data_license_safe") is True
+                and record.get("quota_safe") is True
+            )
         elif visibility == "private":
             ok = ok and safe is False and record.get("private_artifact_safe") is True
         identity = (str(repo), str(revision))
@@ -762,9 +894,17 @@ def _validate_hf(value: Any, errors: list[str]) -> None:
         identities.add(identity)
         stages.add(stage)
         if not ok:
-            _error(errors, path, "immutable HF checkpoint identity and visibility safety receipt are required")
+            _error(
+                errors,
+                path,
+                "immutable HF checkpoint identity and visibility safety receipt are required",
+            )
     if stages != {"initial", "periodic", "final"}:
-        _error(errors, "result_receipts.hf_checkpoints", "exact initial/periodic/final stages are required")
+        _error(
+            errors,
+            "result_receipts.hf_checkpoints",
+            "exact initial/periodic/final stages are required",
+        )
 
 
 def _validate_results(boundary: Mapping[str, Any], errors: list[str]) -> None:
@@ -806,18 +946,47 @@ def validate_boundary(
         _error(errors, "primary_eval", "must be true")
     suite_split = str(suite.get("split", ""))
     if boundary.get("contract_split_description") != suite_split:
-        _error(errors, "contract_split_description", "must preserve the provider-declared split description")
+        _error(
+            errors,
+            "contract_split_description",
+            "must preserve the provider-declared split description",
+        )
     if boundary.get("source_split_description") != "sealed selection slice":
-        _error(errors, "source_split_description", "must remain a sealed selection slice until held-out proof exists")
+        _error(
+            errors,
+            "source_split_description",
+            "must remain a sealed selection slice until held-out proof exists",
+        )
     if type(boundary.get("receipt_proven_heldout")) is not bool:
         _error(errors, "receipt_proven_heldout", "must be a typed boolean")
-    if boundary.get("receipt_proven_heldout") is not True and boundary.get("heldout_claim_allowed") is not False:
-        _error(errors, "heldout_claim_allowed", "must remain false without an independent held-out receipt")
-    if boundary.get("receipt_proven_heldout") is not True and boundary.get("heldout_receipt") is not None:
-        _error(errors, "heldout_receipt", "must be absent until an independent held-out receipt is proven")
+    if (
+        boundary.get("receipt_proven_heldout") is not True
+        and boundary.get("heldout_claim_allowed") is not False
+    ):
+        _error(
+            errors,
+            "heldout_claim_allowed",
+            "must remain false without an independent held-out receipt",
+        )
+    if (
+        boundary.get("receipt_proven_heldout") is not True
+        and boundary.get("heldout_receipt") is not None
+    ):
+        _error(
+            errors,
+            "heldout_receipt",
+            "must be absent until an independent held-out receipt is proven",
+        )
     if boundary.get("receipt_proven_heldout") is True:
-        if type(boundary.get("heldout_claim_allowed")) is not bool or boundary.get("heldout_claim_allowed") is not True:
-            _error(errors, "heldout_claim_allowed", "must be explicitly true only with an independently proven receipt")
+        if (
+            type(boundary.get("heldout_claim_allowed")) is not bool
+            or boundary.get("heldout_claim_allowed") is not True
+        ):
+            _error(
+                errors,
+                "heldout_claim_allowed",
+                "must be explicitly true only with an independently proven receipt",
+            )
         receipt = _mapping(boundary.get("heldout_receipt"))
         task_ids = boundary.get("task_ids")
         dataset = _mapping(boundary.get("dataset")) or {}
@@ -843,20 +1012,32 @@ def validate_boundary(
                 }
             )
         ):
-            _error(errors, "heldout_receipt", "independent held-out receipt must bind the contract split, revision, and exact tasks")
+            _error(
+                errors,
+                "heldout_receipt",
+                "independent held-out receipt must bind the contract split, revision, and exact tasks",
+            )
     if boundary.get("related_benchmarks"):
-        _error(errors, "related_benchmarks", "related benchmarks cannot substitute for apex_agents_eval")
+        _error(
+            errors,
+            "related_benchmarks",
+            "related benchmarks cannot substitute for apex_agents_eval",
+        )
     if boundary.get("xlam_substitute") is not False:
         _error(errors, "xlam_substitute", "xLAM cannot substitute for this primary_eval boundary")
     if boundary.get("evidence_status") not in {"prospective", "observed", "admissible", "rejected"}:
         _error(errors, "evidence_status", "recognized evidence status is required")
     if boundary.get("scientific_evidence_status") != "not_established":
-        _error(errors, "scientific_evidence_status", "boundary provenance is not scientific evidence")
+        _error(
+            errors, "scientific_evidence_status", "boundary provenance is not scientific evidence"
+        )
     if type(boundary.get("provenance_ready")) is not bool:
         _error(errors, "provenance_ready", "must be a typed boolean")
     if boundary.get("status") not in {"BLOCKED", "READY"}:
         _error(errors, "status", "must be BLOCKED or READY")
-    if boundary.get("status") == "READY" and (boundary.get("provenance_ready") is not True or boundary.get("blockers") not in ([], None)):
+    if boundary.get("status") == "READY" and (
+        boundary.get("provenance_ready") is not True or boundary.get("blockers") not in ([], None)
+    ):
         _error(errors, "status", "READY requires provenance_ready=true and no blockers")
     if boundary.get("status") == "BLOCKED" and boundary.get("provenance_ready") is True:
         _error(errors, "status", "BLOCKED cannot claim provenance_ready=true")
@@ -870,7 +1051,9 @@ def validate_boundary(
     return errors
 
 
-def is_valid_boundary(boundary: Mapping[str, Any], contract: Mapping[str, Any] | None = None) -> bool:
+def is_valid_boundary(
+    boundary: Mapping[str, Any], contract: Mapping[str, Any] | None = None
+) -> bool:
     return not validate_boundary(boundary, contract)
 
 

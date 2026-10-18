@@ -19,8 +19,8 @@ from pathlib import Path
 import matplotlib
 
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt  # noqa: E402
-import numpy as np  # noqa: E402
+import matplotlib.pyplot as plt
+import numpy as np
 
 REPO = Path(__file__).resolve().parents[2] / "platform_hybrid"
 CANDIDATE = REPO / "experiments" / "results" / "review27_v3"
@@ -29,7 +29,6 @@ PHASE_SRC = CANDIDATE / "scaling_law_iter33_phase_score.tsv"
 RESULTS = CANDIDATE
 FIG_DIR = CANDIDATE / "figures"
 PAPER_SEC = CANDIDATE / "sections"
-
 
 
 def ols_3var(x1, x2, y):
@@ -64,7 +63,6 @@ def spearman_pvalue(x, y, b=2000):
     return spearman(x, y, b=b)
 
 
-
 def load_iter45():
     """Fail closed on unverified, synthetic, duplicate, or unidentified targets."""
     try:
@@ -80,7 +78,9 @@ def load_iter45():
     numeric = {"params_B", "n_steps", "C_proxy", "log10_C", "log10_P", "R_max", "lambda"}
     for row in rows:
         if row.get("evidence_kind") != "measured_trace_fit":
-            raise ValueError("reconstructed/legacy/synthetic targets rejected; measured-trace fits required")
+            raise ValueError(
+                "reconstructed/legacy/synthetic targets rejected; measured-trace fits required"
+            )
         for key in ("run_id", "trace_file", "trace_sha256"):
             value = row.get(key)
             if not isinstance(value, str) or value.strip().lower() in {"", "nan", "none", "null"}:
@@ -100,15 +100,19 @@ def load_iter45():
             raise ValueError("successful positive measured-trace fit required")
         if row["params_B"] <= 0 or row["n_steps"] < 4 or not row["n_steps"].is_integer():
             raise ValueError("positive parameters and valid trace length required")
-        if row["C_proxy"] <= 0 or not math.isclose(row["log10_P"], math.log10(row["params_B"]), abs_tol=1e-4):
+        if row["C_proxy"] <= 0 or not math.isclose(
+            row["log10_P"], math.log10(row["params_B"]), abs_tol=1e-4
+        ):
             raise ValueError("inconsistent parameter or compute coordinates")
         if not math.isclose(row["log10_C"], math.log10(row["C_proxy"]), abs_tol=1e-4):
             raise ValueError("inconsistent compute coordinates")
         trace, identity = observed_trace(row, REPO)
         source = json.loads((REPO / identity["trace_file"]).read_text())
         for record in (row, source):
-            if any(str(record.get(key, "")).lower() in {"true", "1", "yes"}
-                   for key in ("synthetic", "is_synthetic", "reconstructed")):
+            if any(
+                str(record.get(key, "")).lower() in {"true", "1", "yes"}
+                for key in ("synthetic", "is_synthetic", "reconstructed")
+            ):
                 raise ValueError("synthetic/reconstructed traces are not measured evidence")
             kind = str(record.get("evidence_kind", "")).lower()
             if "synthetic" in kind or "reconstruct" in kind:
@@ -142,7 +146,9 @@ def main(output_dir=None, source_root=None) -> None:
     global REPO, CANDIDATE, RESULTS, FIG_DIR, PAPER_SEC, SRC, PHASE_SRC
     if source_root is not None:
         REPO = Path(source_root)
-    CANDIDATE = Path(output_dir) if output_dir is not None else REPO / "experiments/results/review27_v3"
+    CANDIDATE = (
+        Path(output_dir) if output_dir is not None else REPO / "experiments/results/review27_v3"
+    )
     RESULTS, FIG_DIR, PAPER_SEC = CANDIDATE, CANDIDATE / "figures", CANDIDATE / "sections"
     SRC = CANDIDATE / "scaling_law_iter45_compute_proxy_v2.tsv"
     PHASE_SRC = REPO / "experiments/results/scaling_law_iter33_phase_score.tsv"
@@ -154,7 +160,9 @@ def main(output_dir=None, source_root=None) -> None:
     # Filter to good fits with R_max > 0
     recs = [r for r in rows if r.get("fit_ok") in (True, "True", "true", 1) and r["R_max"] > 0]
     if len(recs) < 4:
-        raise ValueError("at least four independent observed-trace fits required for leave-one-out analysis")
+        raise ValueError(
+            "at least four independent observed-trace fits required for leave-one-out analysis"
+        )
     log_p = np.array([r["log10_P"] for r in recs])
     log_c = np.array([r["log10_C"] for r in recs])
     rmax = np.array([r["R_max"] for r in recs])
@@ -163,13 +171,19 @@ def main(output_dir=None, source_root=None) -> None:
     a_full, b_full, c_full, r2_full, _, resid_full = ols_3var(log_p, log_c, rmax)
 
     fit_rows = []
-    fit_rows.append({
-        "stack": "all", "n_used": int(len(recs)), "semi_log_reward_slope_logP": round(a_full, 4),
-        "semi_log_reward_slope_logC": round(b_full, 4), "intercept": round(c_full, 4),
-        "r_squared": round(r2_full, 4), "rmse": round(float(np.sqrt(np.mean(resid_full ** 2))), 4),
-        "median_Rmax": round(float(np.median(rmax)), 4),
-        "note": "OLS R_max = a*log10(P) + b*log10(C) + c on full sample",
-    })
+    fit_rows.append(
+        {
+            "stack": "all",
+            "n_used": int(len(recs)),
+            "semi_log_reward_slope_logP": round(a_full, 4),
+            "semi_log_reward_slope_logC": round(b_full, 4),
+            "intercept": round(c_full, 4),
+            "r_squared": round(r2_full, 4),
+            "rmse": round(float(np.sqrt(np.mean(resid_full**2))), 4),
+            "median_Rmax": round(float(np.median(rmax)), 4),
+            "note": "OLS R_max = a*log10(P) + b*log10(C) + c on full sample",
+        }
+    )
     # Stack-conditional fits
     for arch in ("dense", "moe"):
         ix = np.array([i for i, r in enumerate(recs) if r["arch"] == arch])
@@ -178,13 +192,19 @@ def main(output_dir=None, source_root=None) -> None:
         if np.linalg.matrix_rank(np.column_stack([log_p[ix], log_c[ix], np.ones(len(ix))])) < 3:
             continue
         a_x, b_x, c_x, r2_x, _, res_x = ols_3var(log_p[ix], log_c[ix], rmax[ix])
-        fit_rows.append({
-            "stack": arch, "n_used": int(len(ix)), "semi_log_reward_slope_logP": round(a_x, 4),
-            "semi_log_reward_slope_logC": round(b_x, 4), "intercept": round(c_x, 4),
-            "r_squared": round(r2_x, 4), "rmse": round(float(np.sqrt(np.mean(res_x ** 2))), 4),
-            "median_Rmax": round(float(np.median(rmax[ix])), 4),
-            "note": "OLS R_max = a*log10(P) + b*log10(C) + c on stack-conditional sample",
-        })
+        fit_rows.append(
+            {
+                "stack": arch,
+                "n_used": int(len(ix)),
+                "semi_log_reward_slope_logP": round(a_x, 4),
+                "semi_log_reward_slope_logC": round(b_x, 4),
+                "intercept": round(c_x, 4),
+                "r_squared": round(r2_x, 4),
+                "rmse": round(float(np.sqrt(np.mean(res_x**2))), 4),
+                "median_Rmax": round(float(np.median(rmax[ix])), 4),
+                "note": "OLS R_max = a*log10(P) + b*log10(C) + c on stack-conditional sample",
+            }
+        )
 
     fields1 = list(fit_rows[0].keys())
     with open(RESULTS / "scaling_law_iter49_two_param_v2.tsv", "w", newline="") as f:
@@ -200,19 +220,21 @@ def main(output_dir=None, source_root=None) -> None:
         mask[i] = False
         a_i, b_i, c_i, _, _, _ = ols_3var(log_p[mask], log_c[mask], rmax[mask])
         yhat_i = a_i * log_p[i] + b_i * log_c[i] + c_i
-        loo_rows.append({
-            "model": recs[i]["model"],
-            "params_B": recs[i]["params_B"],
-            "arch": recs[i]["arch"],
-            "phase": phase_of.get(recs[i]["model"], "unknown"),
-            "R_max_actual": round(float(rmax[i]), 4),
-            "R_max_predicted": round(float(yhat_i), 4),
-            "residual": round(float(rmax[i] - yhat_i), 4),
-            "abs_residual": round(float(abs(rmax[i] - yhat_i)), 4),
-            "rel_residual": round(float((rmax[i] - yhat_i) / max(1e-9, yhat_i)), 4),
-            "log10_P": round(float(log_p[i]), 4),
-            "log10_C": round(float(log_c[i]), 4),
-        })
+        loo_rows.append(
+            {
+                "model": recs[i]["model"],
+                "params_B": recs[i]["params_B"],
+                "arch": recs[i]["arch"],
+                "phase": phase_of.get(recs[i]["model"], "unknown"),
+                "R_max_actual": round(float(rmax[i]), 4),
+                "R_max_predicted": round(float(yhat_i), 4),
+                "residual": round(float(rmax[i] - yhat_i), 4),
+                "abs_residual": round(float(abs(rmax[i] - yhat_i)), 4),
+                "rel_residual": round(float((rmax[i] - yhat_i) / max(1e-9, yhat_i)), 4),
+                "log10_P": round(float(log_p[i]), 4),
+                "log10_C": round(float(log_c[i]), 4),
+            }
+        )
 
     fields2 = list(loo_rows[0].keys())
     with open(RESULTS / "scaling_law_iter49_loo_residuals_v2.tsv", "w", newline="") as f:
@@ -233,14 +255,17 @@ def main(output_dir=None, source_root=None) -> None:
     phase_rows = []
     for ph, arr in sorted(by_phase.items()):
         arr = np.array(arr, float)
-        phase_rows.append({
-            "phase": ph, "n_anchors": int(len(arr)),
-            "mean_abs_residual": round(float(np.mean(arr)), 4),
-            "median_abs_residual": round(float(np.median(arr)), 4),
-            "max_abs_residual": round(float(np.max(arr)), 4),
-            "empirical_p90": round(float(np.percentile(arr, 90)), 4),
-            "note": "LOO |residual| from two-param joint fit",
-        })
+        phase_rows.append(
+            {
+                "phase": ph,
+                "n_anchors": int(len(arr)),
+                "mean_abs_residual": round(float(np.mean(arr)), 4),
+                "median_abs_residual": round(float(np.median(arr)), 4),
+                "max_abs_residual": round(float(np.max(arr)), 4),
+                "empirical_p90": round(float(np.percentile(arr, 90)), 4),
+                "note": "LOO |residual| from two-param joint fit",
+            }
+        )
     fields3 = list(phase_rows[0].keys())
     with open(RESULTS / "scaling_law_iter49_phase_residual_v2.tsv", "w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=fields3, delimiter="\t")
@@ -252,13 +277,17 @@ def main(output_dir=None, source_root=None) -> None:
     score_rows = []
     for lc in grid_log_c:
         values = budget_scores(log_p, lc, a_full, b_full, c_full)
-        for record, value in zip(recs, values):
-            score_rows.append({
-                "log10_C_proxy_target": float(lc), "model": record["model"],
-                "params_B": record["params_B"], "descriptive_R_max_score": float(value),
-                "allocation_status": "not_identified",
-                "note": "additive budget term leaves candidate ordering unchanged; feasibility untested",
-            })
+        for record, value in zip(recs, values, strict=False):
+            score_rows.append(
+                {
+                    "log10_C_proxy_target": float(lc),
+                    "model": record["model"],
+                    "params_B": record["params_B"],
+                    "descriptive_R_max_score": float(value),
+                    "allocation_status": "not_identified",
+                    "note": "additive budget term leaves candidate ordering unchanged; feasibility untested",
+                }
+            )
     with open(RESULTS / "scaling_law_iter49_budget_scores_v2.tsv", "w", newline="") as handle:
         writer = csv.DictWriter(handle, fieldnames=list(score_rows[0]), delimiter="\t")
         writer.writeheader()
@@ -266,7 +295,7 @@ def main(output_dir=None, source_root=None) -> None:
 
     # ---- (5) Exploratory descriptive criteria ----
     loo_abs = np.array([r["abs_residual"] for r in loo_rows])
-    rmse_loo = float(np.sqrt(np.mean(loo_abs ** 2)))
+    rmse_loo = float(np.sqrt(np.mean(loo_abs**2)))
     # P1: LOO RMSE < 0.30 R_max units.
     p1_pass = bool(rmse_loo < 0.30)
     # P2: named-anchor residual ordering, without inferring trajectory phase.
@@ -302,8 +331,13 @@ def main(output_dir=None, source_root=None) -> None:
     ]
     for result in pred_rows:
         result["analysis_kind"] = "exploratory_descriptive"
-        result["status"] = ("unavailable" if result["pass"] is None else
-                            "criterion_met" if result["pass"] else "criterion_not_met")
+        result["status"] = (
+            "unavailable"
+            if result["pass"] is None
+            else "criterion_met"
+            if result["pass"]
+            else "criterion_not_met"
+        )
     fields5 = list(pred_rows[0].keys())
     with open(RESULTS / "scaling_law_iter49_predictions_v2.tsv", "w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=fields5, delimiter="\t")
@@ -314,16 +348,34 @@ def main(output_dir=None, source_root=None) -> None:
     fig, axes = plt.subplots(1, 2, figsize=(11.5, 5.0))
 
     ax = axes[0]
-    colors = {"plateau": "#3a86ff", "saturation": "#06d6a0", "drift": "#ffbe0b",
-              "collapse": "#ef476f", "converged": "#3a86ff", "unknown": "#999999"}
+    colors = {
+        "plateau": "#3a86ff",
+        "saturation": "#06d6a0",
+        "drift": "#ffbe0b",
+        "collapse": "#ef476f",
+        "converged": "#3a86ff",
+        "unknown": "#999999",
+    }
     for r in loo_rows:
-        ax.scatter(r["R_max_predicted"], r["R_max_actual"],
-                   c=colors.get(r["phase"], "#999"), alpha=0.85, s=85,
-                   edgecolor="black", linewidth=0.4)
+        ax.scatter(
+            r["R_max_predicted"],
+            r["R_max_actual"],
+            c=colors.get(r["phase"], "#999"),
+            alpha=0.85,
+            s=85,
+            edgecolor="black",
+            linewidth=0.4,
+        )
         if r["model"] == "Nemotron-120B":
-            ax.annotate(r["model"], (r["R_max_predicted"], r["R_max_actual"]),
-                        xytext=(6, -14), textcoords="offset points", fontsize=8,
-                        color="#a00", weight="bold")
+            ax.annotate(
+                r["model"],
+                (r["R_max_predicted"], r["R_max_actual"]),
+                xytext=(6, -14),
+                textcoords="offset points",
+                fontsize=8,
+                color="#a00",
+                weight="bold",
+            )
     lo_line = np.linspace(0, max(rmax) * 1.05, 100)
     ax.plot(lo_line, lo_line, "--", color="black", alpha=0.5, label="y=x")
     ax.set_xlabel("LOO predicted R_max (two-param OLS)")
@@ -363,12 +415,16 @@ def main(output_dir=None, source_root=None) -> None:
         from ._review27_rank import write_manifest
     except ImportError:
         from _review27_rank import write_manifest
-    write_manifest(__file__, RESULTS, [SRC, PHASE_SRC] + [REPO / r["trace_file"] for r in recs], seed=None)
+    write_manifest(
+        __file__, RESULTS, [SRC, PHASE_SRC] + [REPO / r["trace_file"] for r in recs], seed=None
+    )
 
     # ---- summary ----
     n_pass = sum(1 for r in pred_rows if r["pass"])
-    print(f"iter49 done: a_logP={a_full:.3f}, b_logC={b_full:.3f}, c={c_full:.3f}, "
-          f"R^2={r2_full:.3f}, LOO RMSE={rmse_loo:.3f}, descriptive criteria met={n_pass}; allocation unavailable.")
+    print(
+        f"iter49 done: a_logP={a_full:.3f}, b_logC={b_full:.3f}, c={c_full:.3f}, "
+        f"R^2={r2_full:.3f}, LOO RMSE={rmse_loo:.3f}, descriptive criteria met={n_pass}; allocation unavailable."
+    )
 
 
 if __name__ == "__main__":

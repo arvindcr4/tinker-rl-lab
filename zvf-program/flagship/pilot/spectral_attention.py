@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import math
 import torch
 import torch.nn as nn
 
@@ -110,7 +109,9 @@ def spectral_pairwise_distance(c_i: torch.Tensor, c_j: torch.Tensor) -> torch.Te
     if c_i.shape != c_j.shape:
         raise SpectralAttentionError("spectral coefficient shapes must match")
     if c_i.ndim < 2:
-        raise SpectralAttentionError("spectral coefficients must have at least 2 dimensions [..., N, D]")
+        raise SpectralAttentionError(
+            "spectral coefficients must have at least 2 dimensions [..., N, D]"
+        )
 
     n_modes = c_i.shape[-2]
     n_idx = torch.arange(n_modes, device=c_i.device, dtype=c_i.dtype)
@@ -143,7 +144,9 @@ class LegendreSpectralRouting(nn.Module):
 
     def forward(self, x: torch.Tensor, mask: torch.Tensor | None = None) -> torch.Tensor:
         if x.ndim != 3:
-            raise SpectralAttentionError(f"LegendreSpectralRouting expects 3D tensor [B, L, D], got ndim={x.ndim}")
+            raise SpectralAttentionError(
+                f"LegendreSpectralRouting expects 3D tensor [B, L, D], got ndim={x.ndim}"
+            )
         c = legendre_spectral_projection(x, self.n_modes, mask=mask)  # [B, N, D]
 
         seq_len = x.shape[1]

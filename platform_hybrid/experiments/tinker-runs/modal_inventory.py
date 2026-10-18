@@ -41,9 +41,12 @@ MAX_JSON_FILES = 200
 
 def vol_ls(volume, path=""):
     import modal
+
     vol = modal.Volume.from_name(volume)
-    return [{"path": item.path, "type": getattr(item.type, "name", str(item.type)).lower()}
-            for item in vol.iterdir(path or "/", recursive=False)]
+    return [
+        {"path": item.path, "type": getattr(item.type, "name", str(item.type)).lower()}
+        for item in vol.iterdir(path or "/", recursive=False)
+    ]
 
 
 def walk(volume):
@@ -73,7 +76,12 @@ def main() -> None:
 
     inventory: list[dict] = []
     fetched = 0
-    coverage = {"requested_volumes": len(VOLUMES), "listed_volumes": 0, "failed": [], "truncated_files": 0}
+    coverage = {
+        "requested_volumes": len(VOLUMES),
+        "listed_volumes": 0,
+        "failed": [],
+        "truncated_files": 0,
+    }
     for vol in VOLUMES:
         try:
             files = walk(vol)
@@ -83,8 +91,7 @@ def main() -> None:
             continue
         print(f"[modal] {vol}: {len(files)} files", flush=True)
         for f in files:
-            inventory.append({"volume": vol, "path": f,
-                              "ref": f"modal://{vol}/{f}"})
+            inventory.append({"volume": vol, "path": f, "ref": f"modal://{vol}/{f}"})
         for f in files:
             if not f.endswith(".json"):
                 continue
@@ -96,17 +103,23 @@ def main() -> None:
             if dest.exists():
                 fetched += 1
                 continue
-            p = subprocess.run([str(MODAL), "volume", "get", vol, f,
-                                str(dest), "--force"],
-                               capture_output=True, text=True, timeout=180)
+            p = subprocess.run(
+                [str(MODAL), "volume", "get", vol, f, str(dest), "--force"],
+                capture_output=True,
+                text=True,
+                timeout=180,
+            )
             if p.returncode == 0:
                 fetched += 1
             else:
                 coverage["failed"].append({"volume": vol, "path": f, "error": p.stderr})
                 print(f"[modal] WARN get failed {vol}/{f}", flush=True)
 
-    coverage.update(discovered_files=len(inventory), fetched_files=fetched,
-                    status="partial" if coverage["failed"] or coverage["truncated_files"] else "complete")
+    coverage.update(
+        discovered_files=len(inventory),
+        fetched_files=fetched,
+        status="partial" if coverage["failed"] or coverage["truncated_files"] else "complete",
+    )
     (OUT_DIR / "coverage.json").write_text(json.dumps(coverage, indent=2))
     with (OUT_DIR / "modal_volumes.jsonl").open("w") as fh:
         for row in inventory:

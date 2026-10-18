@@ -17,27 +17,43 @@ Output:
 
 Stdlib only.
 """
+
 import csv
 import json
 import pathlib
 import sys
-from collections import defaultdict, Counter
+from collections import Counter
 
 sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))
 from _paths import REPO_ROOT
+
 ROOT = REPO_ROOT
 REG = ROOT / "platform_hybrid/registry/entries"
 OUT = ROOT / "platform_hybrid/experiments/results/p5p8/review17_v2"
 
 BASE_FIELDS = [
-    "metric", "panel", "base", "delta", "ci_low", "ci_high",
-    "n", "significant", "ci_method", "source", "note",
+    "metric",
+    "panel",
+    "base",
+    "delta",
+    "ci_low",
+    "ci_high",
+    "n",
+    "significant",
+    "ci_method",
+    "source",
+    "note",
 ]
 EXTRA_FIELDS = [
-    "window_sensitivity", "robust_panel",
-    "welch_ci_low", "welch_ci_high", "welch_sig",
-    "sig_robust_bootstrap_and_welch", "sig_robust_note",
-    "xpanel_verdict", "xpanel_method",
+    "window_sensitivity",
+    "robust_panel",
+    "welch_ci_low",
+    "welch_ci_high",
+    "welch_sig",
+    "sig_robust_bootstrap_and_welch",
+    "sig_robust_note",
+    "xpanel_verdict",
+    "xpanel_method",
 ]
 ALL_FIELDS = BASE_FIELDS + EXTRA_FIELDS
 
@@ -101,21 +117,22 @@ def main():
         per_row.extend(rs)
         # Per-entry aggregation
         if not rs:
-            per_entry.append({
-                "id": rec.get("id"),
-                "record_type": "variant_delta",
-                "n_measured_rows": 0,
-                **{f + "_present": 0 for f in ALL_FIELDS},
-                **{f + "_null": 0 for f in ALL_FIELDS},
-                "n_ci_consistent": 0,
-                "n_ci_inconsistent": 0,
-                "n_src_present": 0,
-                "n_src_missing": 0,
-            })
+            per_entry.append(
+                {
+                    "id": rec.get("id"),
+                    "record_type": "variant_delta",
+                    "n_measured_rows": 0,
+                    **{f + "_present": 0 for f in ALL_FIELDS},
+                    **{f + "_null": 0 for f in ALL_FIELDS},
+                    "n_ci_consistent": 0,
+                    "n_ci_inconsistent": 0,
+                    "n_src_present": 0,
+                    "n_src_missing": 0,
+                }
+            )
             continue
         n = len(rs)
-        agg = {"id": rec.get("id"), "record_type": "variant_delta",
-               "n_measured_rows": n}
+        agg = {"id": rec.get("id"), "record_type": "variant_delta", "n_measured_rows": n}
         for f in ALL_FIELDS:
             pres = sum(1 for r in rs if r[f + "_state"] == "PRESENT")
             agg[f + "_present"] = pres
@@ -130,13 +147,15 @@ def main():
     per_field = []
     for f in ALL_FIELDS:
         states = Counter(r[f + "_state"] for r in per_row)
-        per_field.append({
-            "field": f,
-            "n_rows": len(per_row),
-            "n_present": states.get("PRESENT", 0),
-            "n_null": states.get("NULL", 0),
-            "present_frac": round(states.get("PRESENT", 0) / max(len(per_row), 1), 4),
-        })
+        per_field.append(
+            {
+                "field": f,
+                "n_rows": len(per_row),
+                "n_present": states.get("PRESENT", 0),
+                "n_null": states.get("NULL", 0),
+                "present_frac": round(states.get("PRESENT", 0) / max(len(per_row), 1), 4),
+            }
+        )
     # CI consistency & provenance roll-ups
     n_rows = len(per_row)
     n_ci_cons = sum(1 for r in per_row if r["ci_consistent"] == "yes")
@@ -145,18 +164,23 @@ def main():
     n_src_no = sum(1 for r in per_row if r["src_exists"] == "no")
 
     # Significant-fraction roll-up
-    n_sig = sum(1 for r in per_row
-                if (per_row[0] and r.get("id") and
-                    any(rr["id"] == r["id"] and rr["row_idx"] == r["row_idx"]
-                        for rr in per_row) and
-                    r.get("significant_state") == "PRESENT"))
+    n_sig = sum(
+        1
+        for r in per_row
+        if (
+            per_row[0]
+            and r.get("id")
+            and any(rr["id"] == r["id"] and rr["row_idx"] == r["row_idx"] for rr in per_row)
+            and r.get("significant_state") == "PRESENT"
+        )
+    )
     # Recompute sig cleanly
     n_sig = 0
     for p in sorted(REG.glob("*.json")):
         rec = json.loads(p.read_text())
         if rec.get("record_type") != "variant_delta":
             continue
-        for m in (rec.get("measured") or []):
+        for m in rec.get("measured") or []:
             if m.get("significant") is True:
                 n_sig += 1
             elif m.get("significant") == False:
@@ -190,12 +214,27 @@ def main():
         w.writerows(per_field)
     (OUT / "p6_iter134_completeness_summary.json").write_text(json.dumps(summary, indent=2))
     print(f"WROTE per_row={len(per_row)} per_entry={len(per_entry)} per_field={len(per_field)}")
-    print(f"CI consistent: {n_ci_cons}/{n_rows}, src present: {n_src_yes}/{n_rows}, sig=true: {n_sig}")
+    print(
+        f"CI consistent: {n_ci_cons}/{n_rows}, src present: {n_src_yes}/{n_rows}, sig=true: {n_sig}"
+    )
     # Per-field quick view
     for r in per_field:
-        if r["field"] in ("metric", "panel", "base", "delta", "ci_low", "ci_high",
-                          "n", "significant", "ci_method", "source", "note"):
-            print(f"  {r['field']:>20s} present={r['n_present']:>2d}/{r['n_rows']:<2d} ({r['present_frac']*100:.1f}%)")
+        if r["field"] in (
+            "metric",
+            "panel",
+            "base",
+            "delta",
+            "ci_low",
+            "ci_high",
+            "n",
+            "significant",
+            "ci_method",
+            "source",
+            "note",
+        ):
+            print(
+                f"  {r['field']:>20s} present={r['n_present']:>2d}/{r['n_rows']:<2d} ({r['present_frac'] * 100:.1f}%)"
+            )
 
 
 if __name__ == "__main__":

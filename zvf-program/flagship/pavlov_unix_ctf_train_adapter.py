@@ -26,9 +26,7 @@ from typing import Any
 
 
 AUTHORITATIVE_SOURCE_ID = "VmaxAI/unix-ctf"
-AUTHORITATIVE_SOURCE_URL = (
-    "https://vmax.ai/team/unix-ctf-procedural-environments-for-unix-competence-reinforcement-learning"
-)
+AUTHORITATIVE_SOURCE_URL = "https://vmax.ai/team/unix-ctf-procedural-environments-for-unix-competence-reinforcement-learning"
 SUITE_ID = "unix_ctf_train"
 ROLE = "train"
 BOUNDARY_SCHEMA_VERSION = "unix-ctf-train-boundary-v1"
@@ -123,11 +121,15 @@ def _ids(name: str, values: Any) -> tuple[str, ...]:
     materialized = tuple(values)
     if not materialized:
         raise UnixCtfTrainBoundaryError((f"{name} must be non-empty",))
-    normalized = tuple(_string(f"{name}[{index}]", value) for index, value in enumerate(materialized))
+    normalized = tuple(
+        _string(f"{name}[{index}]", value) for index, value in enumerate(materialized)
+    )
     if len(set(normalized)) != len(normalized):
         raise UnixCtfTrainBoundaryError((f"{name} must not contain duplicate IDs",))
     if normalized != tuple(sorted(normalized)):
-        raise UnixCtfTrainBoundaryError((f"{name} must be lexically sorted for deterministic hashing",))
+        raise UnixCtfTrainBoundaryError(
+            (f"{name} must be lexically sorted for deterministic hashing",)
+        )
     return normalized
 
 
@@ -252,9 +254,7 @@ def _validate_procedural_generation(
     }
 
 
-def _normalise_disjointness(
-    boundary: Mapping[str, Any], diagnostics: list[str]
-) -> dict[str, Any]:
+def _normalise_disjointness(boundary: Mapping[str, Any], diagnostics: list[str]) -> dict[str, Any]:
     disjointness = boundary.get("disjointness")
     if not isinstance(disjointness, Mapping):
         diagnostics.append("disjointness is required")
@@ -319,7 +319,9 @@ def _validate_native_environment(
     try:
         container = environment.get("container_digest")
         if not isinstance(container, str) or not _DIGEST.fullmatch(container):
-            raise UnixCtfTrainBoundaryError(("native_environment.container_digest must be sha256:<64 hex>",))
+            raise UnixCtfTrainBoundaryError(
+                ("native_environment.container_digest must be sha256:<64 hex>",)
+            )
         environment_hash = _hash64(
             "native_environment.environment_manifest_sha256",
             environment.get("environment_manifest_sha256", environment.get("manifest_sha256")),
@@ -349,10 +351,14 @@ def _validate_native_environment(
         allowlist = ()
     else:
         try:
-            allowlist = tuple(_string("shell_sandbox.command_allowlist[]", item) for item in allowlist)
+            allowlist = tuple(
+                _string("shell_sandbox.command_allowlist[]", item) for item in allowlist
+            )
         except (UnixCtfTrainBoundaryError, TypeError) as exc:
             diagnostics.extend(
-                exc.diagnostics if isinstance(exc, UnixCtfTrainBoundaryError) else ("shell_sandbox.command_allowlist must be iterable",)
+                exc.diagnostics
+                if isinstance(exc, UnixCtfTrainBoundaryError)
+                else ("shell_sandbox.command_allowlist must be iterable",)
             )
             allowlist = ()
     artifact = environment.get("artifact_contract")
@@ -375,10 +381,14 @@ def _validate_native_environment(
         artifact_types = ()
     else:
         try:
-            artifact_types = tuple(_string("artifact_contract.types[]", item) for item in artifact_types)
+            artifact_types = tuple(
+                _string("artifact_contract.types[]", item) for item in artifact_types
+            )
         except (UnixCtfTrainBoundaryError, TypeError) as exc:
             diagnostics.extend(
-                exc.diagnostics if isinstance(exc, UnixCtfTrainBoundaryError) else ("artifact_contract.types must be iterable",)
+                exc.diagnostics
+                if isinstance(exc, UnixCtfTrainBoundaryError)
+                else ("artifact_contract.types must be iterable",)
             )
             artifact_types = ()
     verifier = environment.get("verifier_contract", environment.get("verifier"))
@@ -442,7 +452,11 @@ def _validate_budget_gate(boundary: Mapping[str, Any], diagnostics: list[str]) -
         maximum = _finite("budget_gate.maximum_usd", budget.get("maximum_usd"))
         cap = _finite("budget_gate.operational_cap_usd", budget.get("operational_cap_usd"))
         reserve = _finite("budget_gate.reserve_usd", budget.get("reserve_usd"))
-        if maximum != DEFAULT_MAXIMUM_USD or cap != DEFAULT_OPERATIONAL_CAP_USD or reserve != DEFAULT_RESERVE_USD:
+        if (
+            maximum != DEFAULT_MAXIMUM_USD
+            or cap != DEFAULT_OPERATIONAL_CAP_USD
+            or reserve != DEFAULT_RESERVE_USD
+        ):
             diagnostics.append("budget_gate must match the authorized $18/$16.50/$1.50 ledger")
         if cap + reserve > maximum:
             diagnostics.append("budget_gate cap plus reserve exceeds maximum")
@@ -513,13 +527,21 @@ def _validate_tracking(
             diagnostics.append("W&B receipt mode must be online")
         try:
             config_hash = _hash64("W&B config_sha256", wandb.get("config_sha256"))
-            metrics_hash = _hash64("W&B metrics_receipt_sha256", wandb.get("metrics_receipt_sha256"))
+            metrics_hash = _hash64(
+                "W&B metrics_receipt_sha256", wandb.get("metrics_receipt_sha256")
+            )
         except UnixCtfTrainBoundaryError as exc:
             diagnostics.extend(exc.diagnostics)
             config_hash = metrics_hash = ""
         if wandb.get("metrics_logged") is not True:
             diagnostics.append("W&B receipt metrics_logged must be true")
-        tracking["wandb"] = {"run_id": str(wandb.get("run_id", "")), "url": str(wandb.get("url", "")), "mode": "online", "config_sha256": config_hash, "metrics_receipt_sha256": metrics_hash}
+        tracking["wandb"] = {
+            "run_id": str(wandb.get("run_id", "")),
+            "url": str(wandb.get("url", "")),
+            "mode": "online",
+            "config_sha256": config_hash,
+            "metrics_receipt_sha256": metrics_hash,
+        }
     tinker = receipt.get("tinker")
     if not isinstance(tinker, Mapping):
         diagnostics.append("missing Tinker receipt")
@@ -536,7 +558,12 @@ def _validate_tracking(
         except UnixCtfTrainBoundaryError as exc:
             diagnostics.extend(exc.diagnostics)
             config_hash, cost = "", 0.0
-        tracking["tinker"] = {"run_id": str(tinker.get("run_id", "")), "status": str(tinker.get("status", "")), "config_sha256": config_hash, "cost_usd": cost}
+        tracking["tinker"] = {
+            "run_id": str(tinker.get("run_id", "")),
+            "status": str(tinker.get("status", "")),
+            "config_sha256": config_hash,
+            "cost_usd": cost,
+        }
     hf = receipt.get("hf")
     if not isinstance(hf, Mapping):
         diagnostics.append("missing Hugging Face receipt")
@@ -544,8 +571,12 @@ def _validate_tracking(
         if not isinstance(hf.get("repo"), str) or not hf["repo"].strip():
             diagnostics.append("Hugging Face receipt missing repo")
         try:
-            revision = _immutable_revision("Hugging Face revision", hf.get("revision", hf.get("commit")))
-            artifact_hash = _hash64("Hugging Face artifact_manifest_sha256", hf.get("artifact_manifest_sha256"))
+            revision = _immutable_revision(
+                "Hugging Face revision", hf.get("revision", hf.get("commit"))
+            )
+            artifact_hash = _hash64(
+                "Hugging Face artifact_manifest_sha256", hf.get("artifact_manifest_sha256")
+            )
         except UnixCtfTrainBoundaryError as exc:
             diagnostics.extend(exc.diagnostics)
             revision, artifact_hash = "", ""
@@ -553,11 +584,18 @@ def _validate_tracking(
             diagnostics.append("Hugging Face checkpoint visibility must be private")
         if artifact_hash != expected_artifact_hash:
             diagnostics.append("Hugging Face artifact manifest differs from artifact contract")
-        tracking["hf"] = {"repo": str(hf.get("repo", "")), "revision": revision, "visibility": "private", "artifact_manifest_sha256": artifact_hash}
+        tracking["hf"] = {
+            "repo": str(hf.get("repo", "")),
+            "revision": revision,
+            "visibility": "private",
+            "artifact_manifest_sha256": artifact_hash,
+        }
     return tracking
 
 
-def _validate_budget_receipt(receipt: Mapping[str, Any], boundary_budget: Mapping[str, Any], diagnostics: list[str]) -> dict[str, Any]:
+def _validate_budget_receipt(
+    receipt: Mapping[str, Any], boundary_budget: Mapping[str, Any], diagnostics: list[str]
+) -> dict[str, Any]:
     budget = receipt.get("budget_receipt")
     if not isinstance(budget, Mapping):
         diagnostics.append("budget_receipt is required")
@@ -568,7 +606,9 @@ def _validate_budget_receipt(receipt: Mapping[str, Any], boundary_budget: Mappin
         diagnostics.append("budget receipt authorized must be true")
     try:
         spent = _finite("budget_receipt.spent_usd", budget.get("spent_usd"))
-        projected = _finite("budget_receipt.projected_next_cost_usd", budget.get("projected_next_cost_usd"))
+        projected = _finite(
+            "budget_receipt.projected_next_cost_usd", budget.get("projected_next_cost_usd")
+        )
         if spent < 0 or projected < 0:
             raise UnixCtfTrainBoundaryError(("budget receipt costs must be non-negative",))
     except UnixCtfTrainBoundaryError as exc:
@@ -582,7 +622,13 @@ def _validate_budget_receipt(receipt: Mapping[str, Any], boundary_budget: Mappin
         diagnostics.append("projected training spend exceeds hard maximum")
     if budget.get("within_operational_cap") is not True:
         diagnostics.append("budget receipt within_operational_cap must be true")
-    return {"provider": str(budget.get("provider", "")), "authorized": True, "spent_usd": spent, "projected_next_cost_usd": projected, "within_operational_cap": True}
+    return {
+        "provider": str(budget.get("provider", "")),
+        "authorized": True,
+        "spent_usd": spent,
+        "projected_next_cost_usd": projected,
+        "within_operational_cap": True,
+    }
 
 
 def validate_unix_ctf_training_receipt(
@@ -598,7 +644,10 @@ def validate_unix_ctf_training_receipt(
         diagnostics.append(f"schema_version must be {RESULT_SCHEMA_VERSION!r}")
     if receipt.get("suite_id") != SUITE_ID or receipt.get("role") != ROLE:
         diagnostics.append("receipt must identify unix_ctf_train training")
-    if receipt.get("evaluation_role") in {"primary_eval", "receipt_proven_heldout"} or receipt.get("primary_eval") is True:
+    if (
+        receipt.get("evaluation_role") in {"primary_eval", "receipt_proven_heldout"}
+        or receipt.get("primary_eval") is True
+    ):
         diagnostics.append("Unix-CTF training receipt cannot be promoted to primary evaluation")
     if receipt.get("claim_scope", TRAINING_ONLY_CLAIM) != TRAINING_ONLY_CLAIM:
         diagnostics.append("claim_scope must remain unix_ctf_training_only")
@@ -612,7 +661,9 @@ def validate_unix_ctf_training_receipt(
             "url": source.get("url", source.get("source_url")),
             "revision": source.get("revision", source.get("immutable_revision")),
             "license_spdx": source.get("license_spdx", license_record.get("spdx")),
-            "license_text_sha256": source.get("license_text_sha256", license_record.get("text_sha256")),
+            "license_text_sha256": source.get(
+                "license_text_sha256", license_record.get("text_sha256")
+            ),
         }
         for field, expected in boundary["source_identity"].items():
             if fields.get(field) != expected:
@@ -622,7 +673,14 @@ def validate_unix_ctf_training_receipt(
     if not isinstance(procedural, Mapping):
         diagnostics.append("receipt procedural_generation is required")
     else:
-        for field in ("generator_id", "generator_revision", "seed", "seed_sha256", "task_id_manifest_sha256", "parameters_sha256"):
+        for field in (
+            "generator_id",
+            "generator_revision",
+            "seed",
+            "seed_sha256",
+            "task_id_manifest_sha256",
+            "parameters_sha256",
+        ):
             if procedural.get(field) != expected_procedural.get(field):
                 diagnostics.append(f"receipt procedural_generation.{field} differs from boundary")
         try:
@@ -636,11 +694,20 @@ def validate_unix_ctf_training_receipt(
     if not isinstance(disjoint_receipt, Mapping):
         diagnostics.append("disjointness_receipt is required")
     else:
-        if disjoint_receipt.get("binaryaudit_eval_task_id_manifest_sha256") != expected_disjoint["binaryaudit_eval"]["task_id_manifest_sha256"]:
+        if (
+            disjoint_receipt.get("binaryaudit_eval_task_id_manifest_sha256")
+            != expected_disjoint["binaryaudit_eval"]["task_id_manifest_sha256"]
+        ):
             diagnostics.append("receipt BinaryAudit task hash differs from boundary")
-        if disjoint_receipt.get("primary_eval_task_id_manifest_sha256") != expected_disjoint["primary_evals"]["task_id_manifest_sha256"]:
+        if (
+            disjoint_receipt.get("primary_eval_task_id_manifest_sha256")
+            != expected_disjoint["primary_evals"]["task_id_manifest_sha256"]
+        ):
             diagnostics.append("receipt primary-evaluation task hash differs from boundary")
-        if disjoint_receipt.get("verified") is not True or disjoint_receipt.get("overlap_count") != 0:
+        if (
+            disjoint_receipt.get("verified") is not True
+            or disjoint_receipt.get("overlap_count") != 0
+        ):
             diagnostics.append("receipt disjointness must be verified with zero overlap")
     environment = receipt.get("native_environment_receipt")
     expected_environment = boundary["native_environment"]
@@ -663,7 +730,9 @@ def validate_unix_ctf_training_receipt(
     if not isinstance(artifact, Mapping):
         diagnostics.append("artifact_receipt is required")
     else:
-        if artifact.get("manifest_sha256", artifact.get("artifact_manifest_sha256")) != expected_artifact.get("manifest_sha256"):
+        if artifact.get(
+            "manifest_sha256", artifact.get("artifact_manifest_sha256")
+        ) != expected_artifact.get("manifest_sha256"):
             diagnostics.append("artifact receipt manifest differs from artifact contract")
         paths = artifact.get("paths", artifact.get("artifacts"))
         if isinstance(paths, (str, bytes, bytearray)) or not paths:
@@ -676,7 +745,9 @@ def validate_unix_ctf_training_receipt(
         for field in ("name", "revision", "receipt_schema"):
             if verifier.get(field) != expected_verifier.get(field):
                 diagnostics.append(f"verifier receipt {field} differs from boundary")
-    tracking = _validate_tracking(receipt, str(expected_artifact.get("manifest_sha256", "")), diagnostics)
+    tracking = _validate_tracking(
+        receipt, str(expected_artifact.get("manifest_sha256", "")), diagnostics
+    )
     budget = _validate_budget_receipt(receipt, boundary["budget_gate"], diagnostics)
     tinker_cost = tracking.get("tinker", {}).get("cost_usd", 0.0)
     if tinker_cost > budget.get("projected_next_cost_usd", 0.0):

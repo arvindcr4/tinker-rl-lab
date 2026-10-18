@@ -10,7 +10,10 @@ Calls train_dpo.main directly with a custom GSM8K comparison builder.
 
 import sys as _sys
 from pathlib import Path as _Path
-_sys.path.insert(0, str(next(p for p in _Path(__file__).resolve().parents if (p / "platform_hybrid").is_dir())))
+
+_sys.path.insert(
+    0, str(next(p for p in _Path(__file__).resolve().parents if (p / "platform_hybrid").is_dir()))
+)
 from platform_hybrid.experiments.research_contracts import numeric_value
 
 
@@ -54,8 +57,10 @@ class GSM8KComparisonBuilder(ComparisonDatasetBuilder):
     def get_train_and_test_datasets(self):
         dataset = datasets.load_dataset("openai/gsm8k", "main")
         train = dataset["train"].shuffle(seed=self.seed)
-        test = dataset["test"].shuffle(seed=self.seed).select(
-            range(min(self.test_size, len(dataset["test"])))
+        test = (
+            dataset["test"]
+            .shuffle(seed=self.seed)
+            .select(range(min(self.test_size, len(dataset["test"]))))
         )
         return train, test
 

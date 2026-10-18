@@ -22,6 +22,7 @@ Outputs: platform_hybrid/experiments/results/length_zvf_coupling.tsv  (per-run j
          platform_hybrid/experiments/results/length_zvf_bincond.tsv   (per-run length-bin conditional ZVF)
          figures/length_zvf_coupling.pdf
 """
+
 import json
 from pathlib import Path
 import numpy as np
@@ -84,15 +85,17 @@ def length_bin_conditional_zvf(step_log, n_bins=3):
         mask = (leng >= qs[i]) & (leng < qs[i + 1])
         if mask.sum() == 0:
             continue
-        out.append({
-            "bin": f"L{i+1}",
-            "len_min": float(leng[mask].min()),
-            "len_max": float(leng[mask].max()),
-            "n_steps": int(mask.sum()),
-            "mean_len": float(leng[mask].mean()),
-            "mean_zvf": float(zvf[mask].mean()),
-            "mean_rew": float(rew[mask].mean()),
-        })
+        out.append(
+            {
+                "bin": f"L{i + 1}",
+                "len_min": float(leng[mask].min()),
+                "len_max": float(leng[mask].max()),
+                "n_steps": int(mask.sum()),
+                "mean_len": float(leng[mask].mean()),
+                "mean_zvf": float(zvf[mask].mean()),
+                "mean_rew": float(rew[mask].mean()),
+            }
+        )
     return out
 
 
@@ -110,26 +113,28 @@ def main():
     joint_rows = []
     for task, algo, seed, r in all_runs:
         out = per_step_correlations(r["step_log"])
-        joint_rows.append({
-            "task": task,
-            "algo": algo,
-            "seed": seed,
-            "model": r["model"],
-            "n_steps": out["n_steps"],
-            "rho_step_len": out["rho_step_len"][0],
-            "rho_step_zvf": out["rho_step_zvf"][0],
-            "rho_step_rew": out["rho_step_rew"][0],
-            "rho_len_zvf": out["rho_len_zvf"][0],
-            "rho_len_zvf_p": out["rho_len_zvf"][1],
-            "rho_len_rew": out["rho_len_rew"][0],
-            "rho_zvf_rew": out["rho_zvf_rew"][0],
-            "len_first5": out["len_first5"],
-            "len_last5": out["len_last5"],
-            "zvf_first5": out["zvf_first5"],
-            "zvf_last5": out["zvf_last5"],
-            "rew_first5": out["rew_first5"],
-            "rew_last5": out["rew_last5"],
-        })
+        joint_rows.append(
+            {
+                "task": task,
+                "algo": algo,
+                "seed": seed,
+                "model": r["model"],
+                "n_steps": out["n_steps"],
+                "rho_step_len": out["rho_step_len"][0],
+                "rho_step_zvf": out["rho_step_zvf"][0],
+                "rho_step_rew": out["rho_step_rew"][0],
+                "rho_len_zvf": out["rho_len_zvf"][0],
+                "rho_len_zvf_p": out["rho_len_zvf"][1],
+                "rho_len_rew": out["rho_len_rew"][0],
+                "rho_zvf_rew": out["rho_zvf_rew"][0],
+                "len_first5": out["len_first5"],
+                "len_last5": out["len_last5"],
+                "zvf_first5": out["zvf_first5"],
+                "zvf_last5": out["zvf_last5"],
+                "rew_first5": out["rew_first5"],
+                "rew_last5": out["rew_last5"],
+            }
+        )
 
     # Length-bin conditional ZVF
     bin_rows = []
@@ -138,12 +143,14 @@ def main():
         if bins is None:
             continue
         for b in bins:
-            bin_rows.append({
-                "task": task,
-                "algo": algo,
-                "seed": seed,
-                **b,
-            })
+            bin_rows.append(
+                {
+                    "task": task,
+                    "algo": algo,
+                    "seed": seed,
+                    **b,
+                }
+            )
 
     # Write outputs
     out_joint = RESULTS / "length_zvf_coupling.tsv"
@@ -180,7 +187,9 @@ def main():
         bin_summary.setdefault(key, []).append(row["mean_zvf"])
     for key, vals in bin_summary.items():
         arr = np.array(vals)
-        print(f"  {key}: mean ZVF={arr.mean():.3f} (sd={arr.std(ddof=1) if len(arr)>1 else 0:.3f}, n={len(arr)})")
+        print(
+            f"  {key}: mean ZVF={arr.mean():.3f} (sd={arr.std(ddof=1) if len(arr) > 1 else 0:.3f}, n={len(arr)})"
+        )
 
 
 if __name__ == "__main__":

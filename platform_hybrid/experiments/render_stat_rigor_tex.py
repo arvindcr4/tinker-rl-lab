@@ -1,9 +1,13 @@
 """Render only validated protocol-v2 independent-run results. Legacy statistical payloads are rejected; decisions use one authoritative correction family."""
+
 from __future__ import annotations
 
 import sys as _sys
 from pathlib import Path as _Path
-_sys.path.insert(0, str(next(p for p in _Path(__file__).resolve().parents if (p / "platform_hybrid").is_dir())))
+
+_sys.path.insert(
+    0, str(next(p for p in _Path(__file__).resolve().parents if (p / "platform_hybrid").is_dir()))
+)
 from platform_hybrid.experiments.research_contracts import EvidenceUnavailable
 
 
@@ -19,17 +23,17 @@ OUT_TEX = ROOT / "paper" / "sections" / "stat_rigor_updates.tex"
 
 # Rows from paper Table 1 (tab:main_results) that have step-level traces.
 TABLE1_KEYS = [
-    ("scale_gsm8k_qwen3-8b",       "Qwen3-8B",          "GRPO (Tinker)"),
-    ("scale_gsm8k_qwen3.5-4b",     "Qwen3.5-4B",        "GRPO (Tinker)"),
-    ("scale_gsm8k_llama-8b-inst",  "Llama-3.1-8B-Inst", "GRPO (Tinker)"),
-    ("frontier_gsm8k_deepseek-v3.1","DeepSeek-V3.1",    "GRPO (Tinker)"),
-    ("frontier_gsm8k_nemotron-120b","Nemotron-120B",    "GRPO (Tinker)"),
-    ("campaign_v2_w1_qwen3-8b-base","Qwen3-8B-Base",    "GRPO (Tinker)"),
-    ("campaign_v2_w1_gpt-oss-120b", "GPT-OSS-120B",     "GRPO (Tinker)"),
-    ("ppo_qwen3-8b",               "Qwen3-8B",          "PPO (Modal H100)"),
-    ("ppo_llama-8b-inst",          "Llama-3.1-8B-Inst", "PPO (Modal H100)"),
-    ("cross_tool_llama-8b-inst",   "Llama-3.1-8B-Inst", "GRPO (tool-use)"),
-    ("cross_tool_qwen3-32b",       "Qwen3-32B",         "GRPO (tool-use)"),
+    ("scale_gsm8k_qwen3-8b", "Qwen3-8B", "GRPO (Tinker)"),
+    ("scale_gsm8k_qwen3.5-4b", "Qwen3.5-4B", "GRPO (Tinker)"),
+    ("scale_gsm8k_llama-8b-inst", "Llama-3.1-8B-Inst", "GRPO (Tinker)"),
+    ("frontier_gsm8k_deepseek-v3.1", "DeepSeek-V3.1", "GRPO (Tinker)"),
+    ("frontier_gsm8k_nemotron-120b", "Nemotron-120B", "GRPO (Tinker)"),
+    ("campaign_v2_w1_qwen3-8b-base", "Qwen3-8B-Base", "GRPO (Tinker)"),
+    ("campaign_v2_w1_gpt-oss-120b", "GPT-OSS-120B", "GRPO (Tinker)"),
+    ("ppo_qwen3-8b", "Qwen3-8B", "PPO (Modal H100)"),
+    ("ppo_llama-8b-inst", "Llama-3.1-8B-Inst", "PPO (Modal H100)"),
+    ("cross_tool_llama-8b-inst", "Llama-3.1-8B-Inst", "GRPO (tool-use)"),
+    ("cross_tool_qwen3-32b", "Qwen3-32B", "GRPO (tool-use)"),
 ]
 
 
@@ -80,16 +84,31 @@ def sig_marker(p_bonf: Optional[float]) -> str:
 # ──────────────────────────────────────────────────────────────────────────────
 def render(payload: Dict) -> str:
     """Render measured results with one authoritative corrected decision."""
-    if payload.get("protocol_version") != "hybrid-research-v2" or payload.get("analysis_unit") != "independent_run":
-        raise EvidenceUnavailable("Legacy statistical payload is not eligible for empirical rendering")
+    if (
+        payload.get("protocol_version") != "hybrid-research-v2"
+        or payload.get("analysis_unit") != "independent_run"
+    ):
+        raise EvidenceUnavailable(
+            "Legacy statistical payload is not eligible for empirical rendering"
+        )
     comparisons = payload.get("comparisons", [])
     if not comparisons or payload.get("family_size") != len(comparisons):
         raise EvidenceUnavailable("Complete validated comparison family required")
+
     def escape(value):
-        return str(value).replace("_", r"\_").replace("%", r"\%").replace("&", r"\&").replace("#", r"\#")
-    lines = ["% Correction scope: " + payload["correction_scope"],
-             r"\begin{tabular}{lrrrrl}",
-             r"Hypothesis & Runs (A/B) & Effect & 95\% CI & Corrected p & Decision \\"]
+        return (
+            str(value)
+            .replace("_", r"\_")
+            .replace("%", r"\%")
+            .replace("&", r"\&")
+            .replace("#", r"\#")
+        )
+
+    lines = [
+        "% Correction scope: " + payload["correction_scope"],
+        r"\begin{tabular}{lrrrrl}",
+        r"Hypothesis & Runs (A/B) & Effect & 95\% CI & Corrected p & Decision \\",
+    ]
     for c in comparisons:
         if not c.get("run_ids") or not c.get("receipt_ids") or not c.get("hypothesis_id"):
             raise EvidenceUnavailable("Missing hypothesis/run/receipt provenance")
@@ -97,13 +116,17 @@ def render(payload: Dict) -> str:
             raise EvidenceUnavailable("Displayed sample counts disagree with contributors")
         low, high = c["ci95"]
         decision = "reject" if c["reject"] else "not rejected"
-        lines.append(f"{escape(c['hypothesis_id'])} & {c['n'][0]}/{c['n'][1]} & {c['effect']:+.3f} & [{low:+.3f}, {high:+.3f}] & {c['p_corrected']:.4g} & {decision} " + r"\\")
+        lines.append(
+            f"{escape(c['hypothesis_id'])} & {c['n'][0]}/{c['n'][1]} & {c['effect']:+.3f} & [{low:+.3f}, {high:+.3f}] & {c['p_corrected']:.4g} & {decision} "
+            + r"\\"
+        )
     lines.append(r"\end{tabular}")
     return "\n".join(lines) + "\n"
 
 
 def main() -> int:
     import argparse
+
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("payload", type=Path)
     parser.add_argument("--out", type=Path, required=True)

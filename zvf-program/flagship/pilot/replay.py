@@ -252,12 +252,12 @@ def filtered_variable_length_pool(
     lengths = tuple(len(candidate.token_ids) for candidate in pool)
     scored = [
         (length_cv([lengths[index] for index in indices]), indices)
-        for indices in itertools.combinations(range(FILTERED_CANDIDATE_POOL_SIZE), ACTIVE_FILTERED_ROWS)
+        for indices in itertools.combinations(
+            range(FILTERED_CANDIDATE_POOL_SIZE), ACTIVE_FILTERED_ROWS
+        )
     ]
     best_cv = max(score for score, _ in scored)
-    active_pool_indices = min(
-        indices for score, indices in scored if math.isclose(score, best_cv)
-    )
+    active_pool_indices = min(indices for score, indices in scored if math.isclose(score, best_cv))
     if best_cv < minimum_cv:
         raise ReplayContractError(
             f"filtered pool maximum selected-row length CV {best_cv:.6f} is below {minimum_cv:.6f}"

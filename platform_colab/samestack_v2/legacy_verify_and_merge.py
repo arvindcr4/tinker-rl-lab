@@ -99,7 +99,7 @@ def validate_result(name, result, texts, reference, items=None):
             )
 
         checks["independent_regrade"] = all(
-            [grade(t, item["answer"]) for t, item in zip(texts[key], items)] == vector
+            [grade(t, item["answer"]) for t, item in zip(texts[key], items, strict=False)] == vector
             for key, vector in (("pre", pre), ("post", post))
         )
     return checks

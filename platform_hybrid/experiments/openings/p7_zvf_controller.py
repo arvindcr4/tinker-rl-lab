@@ -58,8 +58,8 @@ from __future__ import annotations
 import argparse
 import json
 import os
-from dataclasses import dataclass, field, asdict
-from typing import Dict, List, Optional
+from dataclasses import dataclass, field
+from typing import List, Optional
 
 import numpy as np
 
@@ -80,15 +80,15 @@ def make_population(n_prompts: int, rng: np.random.Generator) -> np.ndarray:
     hard = comp == 0
     easy = comp == 1
     mid = comp == 2
-    p[hard] = rng.beta(0.6, 6.0, size=hard.sum())   # clustered near 0
-    p[easy] = rng.beta(6.0, 0.6, size=easy.sum())   # clustered near 1
-    p[mid] = rng.beta(3.0, 3.0, size=mid.sum())     # clustered near 0.5
+    p[hard] = rng.beta(0.6, 6.0, size=hard.sum())  # clustered near 0
+    p[easy] = rng.beta(6.0, 0.6, size=easy.sum())  # clustered near 1
+    p[mid] = rng.beta(3.0, 3.0, size=mid.sum())  # clustered near 0.5
     return np.clip(p, 1e-3, 1.0 - 1e-3)
 
 
 def analytic_zvf(p: np.ndarray, g: int) -> float:
     """Expected ZVF for pass-rates p at group size g (Bernoulli rollouts)."""
-    return float(np.mean(p ** g + (1.0 - p) ** g))
+    return float(np.mean(p**g + (1.0 - p) ** g))
 
 
 def rollout_group(p_i: float, g: int, rng: np.random.Generator) -> np.ndarray:
@@ -110,7 +110,7 @@ class PID:
     ki: float
     kd: float
     setpoint: float
-    i_clamp: float = 5.0          # anti-windup on the integral term
+    i_clamp: float = 5.0  # anti-windup on the integral term
     _integral: float = 0.0
     _prev_error: Optional[float] = None
 
@@ -164,7 +164,7 @@ class ZVFController:
         self.ema_beta = ema_beta
 
         # actuator state
-        self.w = w_center                       # start wide (== accept all)
+        self.w = w_center  # start wide (== accept all)
         self.factor = float(np.mean(factor_bounds))  # start mid-range
         # online pass-rate estimates
         self.p_hat: Optional[np.ndarray] = None
@@ -186,15 +186,16 @@ class ZVFController:
             self.p_hat[idx] = b * self.p_hat[idx] + (1.0 - b) * obs
 
     # -- selection -----------------------------------------------------------
-    def select(self, candidate_idx: np.ndarray, base_batch: int,
-               rng: np.random.Generator) -> np.ndarray:
+    def select(
+        self, candidate_idx: np.ndarray, base_batch: int, rng: np.random.Generator
+    ) -> np.ndarray:
         """Choose which candidate prompts to train on this step."""
         dist = np.abs(self.p_hat[candidate_idx] - 0.5)
         if self.actuator == "threshold":
             keep = candidate_idx[dist <= self.w]
-            if keep.size == 0:                      # never starve the step
+            if keep.size == 0:  # never starve the step
                 order = np.argsort(dist)
-                keep = candidate_idx[order[:max(1, base_batch // 4)]]
+                keep = candidate_idx[order[: max(1, base_batch // 4)]]
             if keep.size > base_batch:
                 keep = rng.choice(keep, size=base_batch, replace=False)
             return keep
@@ -202,14 +203,15 @@ class ZVFController:
         order = np.argsort(dist)
         return candidate_idx[order[:base_batch]]
 
-    def oversample_candidates(self, all_idx: np.ndarray, base_batch: int,
-                              rng: np.random.Generator) -> np.ndarray:
+    def oversample_candidates(
+        self, all_idx: np.ndarray, base_batch: int, rng: np.random.Generator
+    ) -> np.ndarray:
         n = min(all_idx.size, int(np.ceil(base_batch * self.factor)))
         return rng.choice(all_idx, size=n, replace=False)
 
     # -- control update ------------------------------------------------------
     def update(self, measured_zvf: float) -> None:
-        u = self.pid(measured_zvf)     # >0 when ZVF too high
+        u = self.pid(measured_zvf)  # >0 when ZVF too high
         if self.actuator == "threshold":
             # ZVF increasing in w -> move w against the error
             self.w = float(np.clip(self.w_center - u, *self.w_bounds))
@@ -223,9 +225,13 @@ class ZVFController:
 # ----------------------------------------------------------------------------
 # One training-loop step (shared by baseline and controlled runs)
 # ----------------------------------------------------------------------------
-def measure_step_zvf(p: np.ndarray, idx: np.ndarray, g: int,
-                     rng: np.random.Generator,
-                     ctrl: Optional[ZVFController] = None):
+def measure_step_zvf(
+    p: np.ndarray,
+    idx: np.ndarray,
+    g: int,
+    rng: np.random.Generator,
+    ctrl: Optional[ZVFController] = None,
+):
     """Run G rollouts for each prompt in idx; return (zvf, n_groups, gradient_groups).
 
     If ctrl is given, fold observed rollouts into its pass-rate estimates.
@@ -252,7 +258,7 @@ class RunTrace:
     grad_frac: List[float] = field(default_factory=list)
     n_groups: List[int] = field(default_factory=list)
     grad_groups: List[int] = field(default_factory=list)
-    knob: List[float] = field(default_factory=list)   # w (threshold) / factor
+    knob: List[float] = field(default_factory=list)  # w (threshold) / factor
 
 
 def _rolling_mean(xs: List[float], window: int) -> List[float]:
@@ -260,12 +266,13 @@ def _rolling_mean(xs: List[float], window: int) -> List[float]:
     out = []
     for k in range(len(xs)):
         lo = max(0, k - window + 1)
-        out.append(float(np.mean(xs[lo:k + 1])))
+        out.append(float(np.mean(xs[lo : k + 1])))
     return out
 
 
-def steps_to_converge(zvf_series: List[float], target: float, tol: float,
-                      hold: int = 3, smooth: int = 5) -> Optional[int]:
+def steps_to_converge(
+    zvf_series: List[float], target: float, tol: float, hold: int = 3, smooth: int = 5
+) -> Optional[int]:
     """First step (1-based) after which the causal rolling-mean ZVF stays within
     `tol` of target for `hold` consecutive steps.
 
@@ -292,12 +299,13 @@ def run_baseline(p, n_steps, base_batch, g, rng) -> RunTrace:
         tr.grad_frac.append(1.0 - zvf)
         tr.n_groups.append(ng)
         tr.grad_groups.append(gg)
-        tr.knob.append(1.0)   # no knob
+        tr.knob.append(1.0)  # no knob
     return tr
 
 
-def run_controlled(p, n_steps, base_batch, g, rng, ctrl: ZVFController,
-                   warmup_g: int = 4) -> RunTrace:
+def run_controlled(
+    p, n_steps, base_batch, g, rng, ctrl: ZVFController, warmup_g: int = 4
+) -> RunTrace:
     """Closed loop. A short warmup seeds pass-rate estimates for every prompt,
     then each step: select -> measure ZVF -> PID update."""
     tr = RunTrace()
@@ -359,9 +367,14 @@ def main() -> None:
 
     summary = {
         "config": {
-            "n_prompts": args.n_prompts, "n_steps": args.n_steps,
-            "batch": args.batch, "g": args.g, "target_zvf": args.target,
-            "tol": args.tol, "actuator": args.actuator, "seed": args.seed,
+            "n_prompts": args.n_prompts,
+            "n_steps": args.n_steps,
+            "batch": args.batch,
+            "g": args.g,
+            "target_zvf": args.target,
+            "tol": args.tol,
+            "actuator": args.actuator,
+            "seed": args.seed,
         },
         "population": {
             "analytic_zvf_full_G": round(a_zvf, 4),
@@ -386,11 +399,14 @@ def main() -> None:
         },
     }
     summary["improvement"] = {
-        "zvf_drop_tail": round(summary["baseline"]["zvf_tail_mean"]
-                               - summary["controlled"]["zvf_tail_mean"], 4),
+        "zvf_drop_tail": round(
+            summary["baseline"]["zvf_tail_mean"] - summary["controlled"]["zvf_tail_mean"], 4
+        ),
         "grad_groups_ratio": round(
             summary["controlled"]["grad_groups_total"]
-            / max(1, summary["baseline"]["grad_groups_total"]), 3),
+            / max(1, summary["baseline"]["grad_groups_total"]),
+            3,
+        ),
     }
 
     plot_data = {
@@ -416,24 +432,35 @@ def main() -> None:
     print("=" * 68)
     print("P7 ZVF CONTROLLER --- simulation report")
     print("=" * 68)
-    print(f"actuator={args.actuator}  target ZVF={args.target}  tol=+/-{args.tol}"
-          f"  G={args.g}  batch={args.batch}  prompts={args.n_prompts}")
+    print(
+        f"actuator={args.actuator}  target ZVF={args.target}  tol=+/-{args.tol}"
+        f"  G={args.g}  batch={args.batch}  prompts={args.n_prompts}"
+    )
     print(f"population analytic ZVF (train on everything, G={args.g}): {a_zvf:.3f}")
     print("-" * 68)
     print(f"{'':22s}{'ZVF step1':>11s}{'ZVF tail':>11s}{'grad-frac tail':>16s}")
-    print(f"{'UNCONTROLLED baseline':22s}{b['zvf_first']:>11.3f}"
-          f"{b['zvf_tail_mean']:>11.3f}{b['grad_frac_tail_mean']:>16.3f}")
-    print(f"{'CLOSED-LOOP controller':22s}{c['zvf_first']:>11.3f}"
-          f"{c['zvf_tail_mean']:>11.3f}{c['grad_frac_tail_mean']:>16.3f}")
+    print(
+        f"{'UNCONTROLLED baseline':22s}{b['zvf_first']:>11.3f}"
+        f"{b['zvf_tail_mean']:>11.3f}{b['grad_frac_tail_mean']:>16.3f}"
+    )
+    print(
+        f"{'CLOSED-LOOP controller':22s}{c['zvf_first']:>11.3f}"
+        f"{c['zvf_tail_mean']:>11.3f}{c['grad_frac_tail_mean']:>16.3f}"
+    )
     print("-" * 68)
-    print(f"ZVF driven {b['zvf_tail_mean']:.3f} -> {c['zvf_tail_mean']:.3f}"
-          f"  (target {args.target})")
+    print(
+        f"ZVF driven {b['zvf_tail_mean']:.3f} -> {c['zvf_tail_mean']:.3f}  (target {args.target})"
+    )
     print(f"steps-to-converge (|ZVF-target|<={args.tol}, held 3): {c['steps_to_converge']}")
-    print(f"gradient-bearing groups: baseline={b['grad_groups_total']}  "
-          f"controlled={c['grad_groups_total']}  "
-          f"ratio={summary['improvement']['grad_groups_ratio']}x")
-    print(f"final actuator knob "
-          f"({'w' if args.actuator=='threshold' else 'factor'})={c['final_knob']}")
+    print(
+        f"gradient-bearing groups: baseline={b['grad_groups_total']}  "
+        f"controlled={c['grad_groups_total']}  "
+        f"ratio={summary['improvement']['grad_groups_ratio']}x"
+    )
+    print(
+        f"final actuator knob "
+        f"({'w' if args.actuator == 'threshold' else 'factor'})={c['final_knob']}"
+    )
     print(f"\nplot-data -> {out_path}")
 
 

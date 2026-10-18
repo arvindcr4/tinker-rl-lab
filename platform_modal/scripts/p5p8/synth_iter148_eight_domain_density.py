@@ -55,6 +55,7 @@ H4 (PASS) -- D8 == D9 exactly (every fired cell recovers contrast), and
 Wilson CIs on every density (z=1.96 normal approx).
 Stdlib + numpy only.
 """
+
 from __future__ import annotations
 import csv
 import json
@@ -63,9 +64,11 @@ from pathlib import Path
 import numpy as np
 
 import sys
+
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
-from _stats import wilson_ci  # noqa: E402
+from _paths import REPO_ROOT
+from _stats import wilson_ci
+
 ROOT = REPO_ROOT
 RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8"
 RES.mkdir(parents=True, exist_ok=True)
@@ -97,10 +100,14 @@ def main():
 
     d8_density, d8_lo, d8_hi = wilson_ci(n_fired, n_total)
     d9_density, d9_lo, d9_hi = wilson_ci(n_recovered, n_total)
-    print(f"[iter148] D8 (cost>1.0): {n_fired}/{n_total} = {d8_density:.4f} "
-          f"[Wilson {d8_lo:.4f}, {d8_hi:.4f}]")
-    print(f"[iter148] D9 (cm_c4>cm_base): {n_recovered}/{n_total} = {d9_density:.4f} "
-          f"[Wilson {d9_lo:.4f}, {d9_hi:.4f}]")
+    print(
+        f"[iter148] D8 (cost>1.0): {n_fired}/{n_total} = {d8_density:.4f} "
+        f"[Wilson {d8_lo:.4f}, {d8_hi:.4f}]"
+    )
+    print(
+        f"[iter148] D9 (cm_c4>cm_base): {n_recovered}/{n_total} = {d9_density:.4f} "
+        f"[Wilson {d9_lo:.4f}, {d9_hi:.4f}]"
+    )
 
     # ----------------------------------------------------------------
     # Per-method densities (cross-method uniformity audit)
@@ -114,18 +121,20 @@ def main():
         n_m_rec = int((cm_c4[idx] > cm_g8[idx]).sum())
         d8_m, lo8_m, hi8_m = wilson_ci(n_m_fired, n_m)
         d9_m, lo9_m, hi9_m = wilson_ci(n_m_rec, n_m)
-        per_method_rows.append({
-            "method": m,
-            "n": n_m,
-            "n_fired": n_m_fired,
-            "d8_density": d8_m,
-            "d8_wilson_lo": lo8_m,
-            "d8_wilson_hi": hi8_m,
-            "n_recovered": n_m_rec,
-            "d9_density": d9_m,
-            "d9_wilson_lo": lo9_m,
-            "d9_wilson_hi": hi9_m,
-        })
+        per_method_rows.append(
+            {
+                "method": m,
+                "n": n_m,
+                "n_fired": n_m_fired,
+                "d8_density": d8_m,
+                "d8_wilson_lo": lo8_m,
+                "d8_wilson_hi": hi8_m,
+                "n_recovered": n_m_rec,
+                "d9_density": d9_m,
+                "d9_wilson_lo": lo9_m,
+                "d9_wilson_hi": hi9_m,
+            }
+        )
         print(f"[iter148] method={m}: D8={d8_m:.4f} D9={d9_m:.4f}")
 
     out_pm = RES / "synth_iter148_per_method.tsv"
@@ -152,36 +161,42 @@ def main():
     density_rows = []
     for did, name, n, k, source in prior:
         d, lo, hi = wilson_ci(k, n)
-        density_rows.append({
-            "domain_id": did,
-            "domain": name,
-            "n": n,
-            "k": k,
-            "density": d,
-            "wilson_lo": lo,
-            "wilson_hi": hi,
-            "source": source,
-        })
-    density_rows.append({
-        "domain_id": "D8",
-        "domain": "P7 UNIFIED_C4 per-cell FIRE (cost>1.0)",
-        "n": n_total,
-        "k": n_fired,
-        "density": d8_density,
-        "wilson_lo": d8_lo,
-        "wilson_hi": d8_hi,
-        "source": "iter-147 per_cell (4 methods x 40 steps x 16 prompts = 2560 cells)",
-    })
-    density_rows.append({
-        "domain_id": "D9",
-        "domain": "P7 UNIFIED_C4 per-cell contrast recovery (cm_c4>cm_base)",
-        "n": n_total,
-        "k": n_recovered,
-        "density": d9_density,
-        "wilson_lo": d9_lo,
-        "wilson_hi": d9_hi,
-        "source": "iter-147 per_cell (4 methods x 40 steps x 16 prompts = 2560 cells)",
-    })
+        density_rows.append(
+            {
+                "domain_id": did,
+                "domain": name,
+                "n": n,
+                "k": k,
+                "density": d,
+                "wilson_lo": lo,
+                "wilson_hi": hi,
+                "source": source,
+            }
+        )
+    density_rows.append(
+        {
+            "domain_id": "D8",
+            "domain": "P7 UNIFIED_C4 per-cell FIRE (cost>1.0)",
+            "n": n_total,
+            "k": n_fired,
+            "density": d8_density,
+            "wilson_lo": d8_lo,
+            "wilson_hi": d8_hi,
+            "source": "iter-147 per_cell (4 methods x 40 steps x 16 prompts = 2560 cells)",
+        }
+    )
+    density_rows.append(
+        {
+            "domain_id": "D9",
+            "domain": "P7 UNIFIED_C4 per-cell contrast recovery (cm_c4>cm_base)",
+            "n": n_total,
+            "k": n_recovered,
+            "density": d9_density,
+            "wilson_lo": d9_lo,
+            "wilson_hi": d9_hi,
+            "source": "iter-147 per_cell (4 methods x 40 steps x 16 prompts = 2560 cells)",
+        }
+    )
 
     out_density = RES / "synth_iter148_nine_domain_density.tsv"
     with out_density.open("w") as f:
@@ -208,13 +223,15 @@ def main():
             # simple normal-approx CI on log-ratio (no bootstrap here; the
             # densities are binomial proportions, and the Wilson CIs are
             # already reported in the table)
-            ratios.append({
-                "domain_i": di["domain_id"],
-                "domain_j": dj["domain_id"],
-                "density_i": ri,
-                "density_j": rj,
-                "ratio_i_over_j": ratio,
-            })
+            ratios.append(
+                {
+                    "domain_i": di["domain_id"],
+                    "domain_j": dj["domain_id"],
+                    "density_i": ri,
+                    "density_j": rj,
+                    "ratio_i_over_j": ratio,
+                }
+            )
 
     out_ratios = RES / "synth_iter148_nine_domain_ratios.tsv"
     with out_ratios.open("w") as f:
@@ -235,12 +252,14 @@ def main():
 
     layer_rows = []
     for r in density_rows:
-        layer_rows.append({
-            "domain_id": r["domain_id"],
-            "domain": r["domain"],
-            "density": r["density"],
-            "layer": layer(r["density"]),
-        })
+        layer_rows.append(
+            {
+                "domain_id": r["domain_id"],
+                "domain": r["domain"],
+                "density": r["density"],
+                "layer": layer(r["density"]),
+            }
+        )
     out_layer = RES / "synth_iter148_nine_domain_layers.tsv"
     with out_layer.open("w") as f:
         w = csv.DictWriter(f, fieldnames=list(layer_rows[0].keys()), delimiter="\t")
@@ -281,7 +300,8 @@ def main():
         "h4_d8_d9_identical_and_method_uniform": (
             abs(d8_density - d9_density) < 1e-9
             and max(r["d8_density"] for r in per_method_rows)
-                - min(r["d8_density"] for r in per_method_rows) < 0.025
+            - min(r["d8_density"] for r in per_method_rows)
+            < 0.025
         ),
         "per_method_d8_d9": per_method_rows,
     }

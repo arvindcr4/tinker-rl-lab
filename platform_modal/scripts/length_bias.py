@@ -24,6 +24,7 @@ Cite   : tong2025drgrpo (Dr.GRPO, arXiv:2503.20783 — Liu et al. 2025)
          wu2025grpo_dpo (arXiv:2510.00977 — equivalence of GRPO and DPO at the
                          contrastive level)
 """
+
 from __future__ import annotations
 
 import json
@@ -49,6 +50,7 @@ PAPER_FIGS.mkdir(parents=True, exist_ok=True)
 
 
 # ----------------------------- core metrics --------------------------------
+
 
 def spearman_with_nan(x: list[float], y: list[float]) -> tuple[float, float, int]:
     """Return Spearman rho, two-sided p-value, n. Returns NaN if constant."""
@@ -77,8 +79,9 @@ def half_diff(seq: list[float]) -> tuple[float, float]:
     return float(np.mean(seq[:mid])), float(np.mean(seq[mid:]))
 
 
-def length_bias_flag(length_slope: float, reward_slope: float,
-                     length_rho: float, reward_rho: float) -> int:
+def length_bias_flag(
+    length_slope: float, reward_slope: float, length_rho: float, reward_rho: float
+) -> int:
     """Dr.GRPO signature = length grows AND reward stays flat or drops.
 
     We use both slope signs (last-vs-first-half mean) and Spearman rho for robustness.
@@ -90,15 +93,16 @@ def length_bias_flag(length_slope: float, reward_slope: float,
 
 # ----------------------------- per-run analysis -----------------------------
 
+
 def per_run_metrics(step_log: list[dict]) -> dict:
     steps = [s["step"] for s in step_log]
     rewards = [float(s["mean_reward"]) for s in step_log]
     lens = [float(s["mean_comp_len"]) for s in step_log]
     zvfs = [float(s.get("zvf", float("nan"))) for s in step_log]
 
-    rho_lr, p_lr, _ = spearman_with_nan(steps, lens)          # length trend
-    rho_rr, p_rr, _ = spearman_with_nan(steps, rewards)       # reward trend
-    rho_pair, p_pair, _ = spearman_with_nan(lens, rewards)    # within-run coupling
+    rho_lr, p_lr, _ = spearman_with_nan(steps, lens)  # length trend
+    rho_rr, p_rr, _ = spearman_with_nan(steps, rewards)  # reward trend
+    rho_pair, p_pair, _ = spearman_with_nan(lens, rewards)  # within-run coupling
 
     # half-life differences (last half minus first half)
     _, len_last = half_diff(lens)
@@ -113,8 +117,8 @@ def per_run_metrics(step_log: list[dict]) -> dict:
     len_slope = slope(steps, lens)
     rew_slope = slope(steps, rewards)
 
-    last10_rew = float(np.mean(rewards[-min(10, len(rewards)):]))
-    last10_len = float(np.mean(lens[-min(10, len(lens)):]))
+    last10_rew = float(np.mean(rewards[-min(10, len(rewards)) :]))
+    last10_len = float(np.mean(lens[-min(10, len(lens)) :]))
     first5_rew = float(np.mean(rewards[: min(5, len(rewards))]))
     first5_len = float(np.mean(lens[: min(5, len(lens))]))
 
@@ -144,6 +148,7 @@ def per_run_metrics(step_log: list[dict]) -> dict:
 
 # ----------------------------- main pipeline --------------------------------
 
+
 def load_dataset(path: Path) -> list[dict]:
     d = json.loads(path.read_text())
     return d.get("runs", [])
@@ -172,26 +177,40 @@ def main() -> int:
             if not sl:
                 continue
             m = per_run_metrics(sl)
-            m.update({
-                "task": src["task"],
-                "algo": run["algo"],
-                "seed": run["seed"],
-                "model": run.get("model", ""),
-                "experiment": run.get("experiment", ""),
-            })
+            m.update(
+                {
+                    "task": src["task"],
+                    "algo": run["algo"],
+                    "seed": run["seed"],
+                    "model": run.get("model", ""),
+                    "experiment": run.get("experiment", ""),
+                }
+            )
             rows.append(m)
 
     # -------- per-run TSV -------------------------------------------------
     cols = [
-        "task", "algo", "seed", "model",
+        "task",
+        "algo",
+        "seed",
+        "model",
         "n_steps",
-        "first5_reward", "last10_reward", "reward_half_delta",
-        "first5_len", "last10_len", "len_half_delta",
-        "spearman_step_len_rho", "spearman_step_len_p",
-        "spearman_step_reward_rho", "spearman_step_reward_p",
-        "spearman_len_reward_rho", "spearman_len_reward_p",
-        "len_slope_per_step", "rew_slope_per_step",
-        "mean_zvf", "length_bias_flag",
+        "first5_reward",
+        "last10_reward",
+        "reward_half_delta",
+        "first5_len",
+        "last10_len",
+        "len_half_delta",
+        "spearman_step_len_rho",
+        "spearman_step_len_p",
+        "spearman_step_reward_rho",
+        "spearman_step_reward_p",
+        "spearman_len_reward_rho",
+        "spearman_len_reward_p",
+        "len_slope_per_step",
+        "rew_slope_per_step",
+        "mean_zvf",
+        "length_bias_flag",
     ]
     tsv = RES / "length_bias.tsv"
     with tsv.open("w") as f:
@@ -211,20 +230,30 @@ def main() -> int:
             rhos_r = np.array([r["spearman_step_reward_rho"] for r in sub])
             rhos_pair = np.array([r["spearman_len_reward_rho"] for r in sub])
             flags = np.array([r["length_bias_flag"] for r in sub])
-            sum_rows.append({
-                "task": task,
-                "algo": algo,
-                "n_seeds": len(sub),
-                "mean_step_len_rho": round(float(np.mean(rhos_l)), 4),
-                "sd_step_len_rho": round(float(np.std(rhos_l, ddof=1)) if len(rhos_l) > 1 else 0.0, 4),
-                "mean_step_reward_rho": round(float(np.mean(rhos_r)), 4),
-                "sd_step_reward_rho": round(float(np.std(rhos_r, ddof=1)) if len(rhos_r) > 1 else 0.0, 4),
-                "mean_len_reward_rho": round(float(np.mean(rhos_pair)), 4),
-                "sd_len_reward_rho": round(float(np.std(rhos_pair, ddof=1)) if len(rhos_pair) > 1 else 0.0, 4),
-                "mean_last10_reward": round(float(np.mean([r["last10_reward"] for r in sub])), 4),
-                "mean_last10_len": round(float(np.mean([r["last10_len"] for r in sub])), 4),
-                "length_bias_flag_rate": round(float(np.mean(flags)), 4),
-            })
+            sum_rows.append(
+                {
+                    "task": task,
+                    "algo": algo,
+                    "n_seeds": len(sub),
+                    "mean_step_len_rho": round(float(np.mean(rhos_l)), 4),
+                    "sd_step_len_rho": round(
+                        float(np.std(rhos_l, ddof=1)) if len(rhos_l) > 1 else 0.0, 4
+                    ),
+                    "mean_step_reward_rho": round(float(np.mean(rhos_r)), 4),
+                    "sd_step_reward_rho": round(
+                        float(np.std(rhos_r, ddof=1)) if len(rhos_r) > 1 else 0.0, 4
+                    ),
+                    "mean_len_reward_rho": round(float(np.mean(rhos_pair)), 4),
+                    "sd_len_reward_rho": round(
+                        float(np.std(rhos_pair, ddof=1)) if len(rhos_pair) > 1 else 0.0, 4
+                    ),
+                    "mean_last10_reward": round(
+                        float(np.mean([r["last10_reward"] for r in sub])), 4
+                    ),
+                    "mean_last10_len": round(float(np.mean([r["last10_len"] for r in sub])), 4),
+                    "length_bias_flag_rate": round(float(np.mean(flags)), 4),
+                }
+            )
     sum_cols = list(sum_rows[0].keys())
     sum_tsv = RES / "length_bias_summary.tsv"
     with sum_tsv.open("w") as f:
@@ -239,16 +268,19 @@ def main() -> int:
     # -------- terminal summary ------------------------------------------
     print("\n=== length-bias summary (per-algo, per-task) ===")
     for r in sum_rows:
-        print(f"  {r['task']:36s} {r['algo']:8s} "
-              f"rho_len={r['mean_step_len_rho']:+.3f} "
-              f"rho_reward={r['mean_step_reward_rho']:+.3f} "
-              f"rho_pair={r['mean_len_reward_rho']:+.3f} "
-              f"flag_rate={r['length_bias_flag_rate']:.2f}")
+        print(
+            f"  {r['task']:36s} {r['algo']:8s} "
+            f"rho_len={r['mean_step_len_rho']:+.3f} "
+            f"rho_reward={r['mean_step_reward_rho']:+.3f} "
+            f"rho_pair={r['mean_len_reward_rho']:+.3f} "
+            f"flag_rate={r['length_bias_flag_rate']:.2f}"
+        )
 
     return 0
 
 
 # ----------------------------- figure ---------------------------------------
+
 
 def make_figure(rows: list[dict]) -> None:
     """Two-panel figure:
@@ -282,7 +314,7 @@ def make_figure(rows: list[dict]) -> None:
     fig, axes = plt.subplots(1, 2, figsize=(13, 5.0))
     colors = {"grpo": "#1f77b4", "dr_grpo": "#d62728"}
 
-    for ax, task in zip(axes, [hard_task, easy_task]):
+    for ax, task in zip(axes, [hard_task, easy_task], strict=False):
         for r in by_task[task]:
             sl = load_sl(task, r["algo"], r["seed"])
             if not sl:
@@ -290,11 +322,25 @@ def make_figure(rows: list[dict]) -> None:
             steps = [s["step"] for s in sl]
             lens = [s["mean_comp_len"] for s in sl]
             rews = [s["mean_reward"] for s in sl]
-            ax.plot(lens, rews, "-o", color=colors[r["algo"]], alpha=0.45,
-                    markersize=3.5, linewidth=1.1,
-                    label=r["algo"] if r is by_task[task][0] or
-                    (r["algo"] == "grpo" and not any(rr["algo"] == "grpo" and rr is not r
-                    for rr in by_task[task][:by_task[task].index(r)])) else None)
+            ax.plot(
+                lens,
+                rews,
+                "-o",
+                color=colors[r["algo"]],
+                alpha=0.45,
+                markersize=3.5,
+                linewidth=1.1,
+                label=r["algo"]
+                if r is by_task[task][0]
+                or (
+                    r["algo"] == "grpo"
+                    and not any(
+                        rr["algo"] == "grpo" and rr is not r
+                        for rr in by_task[task][: by_task[task].index(r)]
+                    )
+                )
+                else None,
+            )
         # single legend handle per algo
         ax.plot([], [], "-o", color=colors["grpo"], label="GRPO")
         ax.plot([], [], "-o", color=colors["dr_grpo"], label="Dr. GRPO")
@@ -304,8 +350,9 @@ def make_figure(rows: list[dict]) -> None:
         ax.set_title(title_short)
         ax.grid(alpha=0.25)
 
-    fig.suptitle("Length-vs-reward trajectories: Dr. GRPO should decouple them",
-                 fontsize=12, y=1.02)
+    fig.suptitle(
+        "Length-vs-reward trajectories: Dr. GRPO should decouple them", fontsize=12, y=1.02
+    )
     plt.tight_layout()
     pdf_path = FIGS / "length_vs_reward.pdf"
     png_path = FIGS / "length_vs_reward.png"

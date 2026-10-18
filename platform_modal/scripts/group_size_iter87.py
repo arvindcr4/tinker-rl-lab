@@ -39,7 +39,6 @@ from __future__ import annotations
 
 import json
 import math
-import os
 import sys
 from pathlib import Path
 
@@ -71,7 +70,7 @@ def read_token_normalized() -> dict:
         header = f.readline().strip().split("\t")
         for line in f:
             row = line.rstrip("\n").split("\t")
-            rec = dict(zip(header, row))
+            rec = dict(zip(header, row, strict=False))
             T = int(rec["budget_tokens"])
             G = int(rec["G"])
             acc = float(rec["heldout_acc_mean"])
@@ -95,7 +94,7 @@ def linear_interp(x_pts: list[float], y_pts: list[float], y_target: float) -> fl
 
 def compute_crossover(table: dict, g_small: int, g_large: int) -> dict:
     """For (g_small, g_large), compute the retention curve and crossover budgets."""
-    T_values = sorted({T for T,g in table if g == g_small} & {T for T,g in table if g == g_large})
+    T_values = sorted({T for T, g in table if g == g_small} & {T for T, g in table if g == g_large})
     if len(T_values) < 2:
         raise ValueError("need at least two common group-budget cells")
     logT = [math.log10(T) for T in T_values]
@@ -121,11 +120,11 @@ def compute_crossover(table: dict, g_small: int, g_large: int) -> dict:
     for thr in (0.95, 0.90, 0.85, 0.80):
         x_star = linear_interp(logT, R_vals, thr)
         if x_star is not None:
-            crossovers[f"T_crossover_R{int(thr*100)}_tokens"] = 10 ** x_star
-            crossovers[f"log10T_crossover_R{int(thr*100)}"] = x_star
+            crossovers[f"T_crossover_R{int(thr * 100)}_tokens"] = 10**x_star
+            crossovers[f"log10T_crossover_R{int(thr * 100)}"] = x_star
         else:
-            crossovers[f"T_crossover_R{int(thr*100)}_tokens"] = None
-            crossovers[f"log10T_crossover_R{int(thr*100)}"] = None
+            crossovers[f"T_crossover_R{int(thr * 100)}_tokens"] = None
+            crossovers[f"log10T_crossover_R{int(thr * 100)}"] = None
 
     # Slope dR/dlog10(T): use linear regression on all 4 points
     x = np.array(logT, dtype=float)
@@ -161,12 +160,15 @@ def write_crossover_tsv(pairs: list[dict]) -> Path:
     with out.open("w") as f:
         f.write("\t".join(cols) + "\n")
         for p in pairs:
-            row = [str(p["g_small"]), str(p["g_large"]),
-                   f"{p['slope_dR_per_log10T']:.6f}",
-                   f"{p['intercept']:.6f}"]
+            row = [
+                str(p["g_small"]),
+                str(p["g_large"]),
+                f"{p['slope_dR_per_log10T']:.6f}",
+                f"{p['intercept']:.6f}",
+            ]
             for thr, name in thr_keys:
-                tok = p["crossovers"][f"T_crossover_R{int(thr*100)}_tokens"]
-                lg = p["crossovers"][f"log10T_crossover_R{int(thr*100)}"]
+                tok = p["crossovers"][f"T_crossover_R{int(thr * 100)}_tokens"]
+                lg = p["crossovers"][f"log10T_crossover_R{int(thr * 100)}"]
                 row.append("" if tok is None else f"{tok:.0f}")
                 row.append("" if lg is None else f"{lg:.4f}")
             for T in (1_000_000, 4_000_000, 16_000_000, 64_000_000):
@@ -183,23 +185,43 @@ def write_crossover_tsv(pairs: list[dict]) -> Path:
 def write_isoflop_tsv(pairs: list[dict], table: dict) -> Path:
     """Long-format TSV: one row per (g_small, g_large, T)."""
     out = RESULTS / "group_size_iter87_isoflop_v2.tsv"
-    cols = ["g_small", "g_large", "T_tokens", "log10T",
-            "acc_small", "acc_large", "R", "R_lo", "R_hi",
-            "gu_small", "gu_large"]
+    cols = [
+        "g_small",
+        "g_large",
+        "T_tokens",
+        "log10T",
+        "acc_small",
+        "acc_large",
+        "R",
+        "R_lo",
+        "R_hi",
+        "gu_small",
+        "gu_large",
+    ]
     with out.open("w") as f:
         f.write("\t".join(cols) + "\n")
         for p in pairs:
             for i, T in enumerate(p["T_tokens"]):
                 acc_s, lo_s, hi_s, gu_s = table[(T, p["g_small"])]
                 acc_l, lo_l, hi_l, gu_l = table[(T, p["g_large"])]
-                f.write("\t".join([
-                    str(p["g_small"]), str(p["g_large"]), str(T),
-                    f"{math.log10(T):.4f}",
-                    f"{acc_s:.4f}", f"{acc_l:.4f}",
-                    f"{p['R'][i]:.4f}",
-                    f"{p['R_lo'][i]:.4f}", f"{p['R_hi'][i]:.4f}",
-                    f"{gu_s:.4f}", f"{gu_l:.4f}",
-                ]) + "\n")
+                f.write(
+                    "\t".join(
+                        [
+                            str(p["g_small"]),
+                            str(p["g_large"]),
+                            str(T),
+                            f"{math.log10(T):.4f}",
+                            f"{acc_s:.4f}",
+                            f"{acc_l:.4f}",
+                            f"{p['R'][i]:.4f}",
+                            f"{p['R_lo'][i]:.4f}",
+                            f"{p['R_hi'][i]:.4f}",
+                            f"{gu_s:.4f}",
+                            f"{gu_l:.4f}",
+                        ]
+                    )
+                    + "\n"
+                )
     log(f"wrote {out}")
     return out
 
@@ -209,11 +231,18 @@ def write_slope_tsv(pairs: list[dict]) -> Path:
     early-budget (T<=4M) and late-budget (T>=4M) halves.
     """
     out = RESULTS / "group_size_iter87_retention_slope_v2.tsv"
-    cols = ["g_small", "g_large", "slope_dR_per_log10T_overall",
-            "slope_dR_per_log10T_early_1to4M",
-            "slope_dR_per_log10T_late_4to64M",
-            "R_1M", "R_4M", "R_16M", "R_64M",
-            "delta_R_1to64M"]
+    cols = [
+        "g_small",
+        "g_large",
+        "slope_dR_per_log10T_overall",
+        "slope_dR_per_log10T_early_1to4M",
+        "slope_dR_per_log10T_late_4to64M",
+        "R_1M",
+        "R_4M",
+        "R_16M",
+        "R_64M",
+        "delta_R_1to64M",
+    ]
     with out.open("w") as f:
         f.write("\t".join(cols) + "\n")
         for p in pairs:
@@ -222,10 +251,19 @@ def write_slope_tsv(pairs: list[dict]) -> Path:
             slope_all = float(np.polyfit(x, y, 1)[0])
             early_mask = x <= math.log10(4_000_000)
             late_mask = x >= math.log10(4_000_000)
-            slope_early = float(np.polyfit(x[early_mask], y[early_mask], 1)[0]) if early_mask.sum() >= 2 else float("nan")
-            slope_late = float(np.polyfit(x[late_mask], y[late_mask], 1)[0]) if late_mask.sum() >= 2 else float("nan")
+            slope_early = (
+                float(np.polyfit(x[early_mask], y[early_mask], 1)[0])
+                if early_mask.sum() >= 2
+                else float("nan")
+            )
+            slope_late = (
+                float(np.polyfit(x[late_mask], y[late_mask], 1)[0])
+                if late_mask.sum() >= 2
+                else float("nan")
+            )
             row = [
-                str(p["g_small"]), str(p["g_large"]),
+                str(p["g_small"]),
+                str(p["g_large"]),
                 f"{slope_all:.6f}",
                 f"{slope_early:.6f}",
                 f"{slope_late:.6f}",
@@ -240,12 +278,18 @@ def write_slope_tsv(pairs: list[dict]) -> Path:
 def write_summary_tsv(pairs: list[dict]) -> Path:
     """One row per pair: headline numbers for the paper."""
     out = RESULTS / "group_size_iter87_summary_v2.tsv"
-    cols = ["g_small", "g_large",
-            "R_at_1M", "R_at_64M",
-            "slope_dR_per_log10T",
-            "T_crossover_R95_tokens", "T_crossover_R90_tokens",
-            "T_crossover_R85_tokens", "T_crossover_R80_tokens",
-            "wu_claim_status_at_64M"]
+    cols = [
+        "g_small",
+        "g_large",
+        "R_at_1M",
+        "R_at_64M",
+        "slope_dR_per_log10T",
+        "T_crossover_R95_tokens",
+        "T_crossover_R90_tokens",
+        "T_crossover_R85_tokens",
+        "T_crossover_R80_tokens",
+        "wu_claim_status_at_64M",
+    ]
     with out.open("w") as f:
         f.write("\t".join(cols) + "\n")
         for p in pairs:
@@ -256,8 +300,10 @@ def write_summary_tsv(pairs: list[dict]) -> Path:
             R64 = p["R"][-1]
             status = "fails_hard" if R64 < 0.80 else "fails" if R64 < 0.95 else "holds"
             row = [
-                str(p["g_small"]), str(p["g_large"]),
-                f"{p['R'][0]:.4f}", f"{R64:.4f}",
+                str(p["g_small"]),
+                str(p["g_large"]),
+                f"{p['R'][0]:.4f}",
+                f"{R64:.4f}",
                 f"{p['slope_dR_per_log10T']:.6f}",
                 "" if T95 is None else f"{T95:.0f}",
                 "" if T90 is None else f"{T90:.0f}",
@@ -278,21 +324,30 @@ def plot_pair_curves(pairs: list[dict], out_png: Path, out_pdf: Path) -> None:
     cmap = plt.cm.viridis
     for k, p in enumerate(pairs):
         col = cmap(k / max(1, len(pairs) - 1))
-        ax.plot(p["log10T"], p["R"], "o-", color=col, lw=1.6,
-                label=f"$G_{{\\mathrm{{small}}}}={p['g_small']}, G_{{\\mathrm{{large}}}}={p['g_large']}$")
+        ax.plot(
+            p["log10T"],
+            p["R"],
+            "o-",
+            color=col,
+            lw=1.6,
+            label=f"$G_{{\\mathrm{{small}}}}={p['g_small']}, G_{{\\mathrm{{large}}}}={p['g_large']}$",
+        )
         # Interpolated curve for visualisation
         x_dense = np.linspace(logT_grid[0], logT_grid[-1], 60)
         y_dense = np.polyval(np.polyfit(p["log10T"], p["R"], 1), x_dense)
         ax.plot(x_dense, y_dense, "--", color=col, lw=0.8, alpha=0.5)
     for thr in (0.95, 0.90, 0.85, 0.80):
         ax.axhline(thr, color="grey", lw=0.7, ls=":", alpha=0.7)
-        ax.text(logT_grid[-1] + 0.02, thr, f"$R={thr}$",
-                fontsize=8, va="center", color="grey")
+        ax.text(logT_grid[-1] + 0.02, thr, f"$R={thr}$", fontsize=8, va="center", color="grey")
     ax.set_xticks(logT_grid)
     ax.set_xticklabels([f"$10^{int(v)}$" for v in logT_grid])
     ax.set_xlabel("Token budget $T$")
-    ax.set_ylabel("Retention $R(G_{\\mathrm{small}}, G_{\\mathrm{large}}, T) = \\mathrm{acc}_{\\mathrm{small}}/\\mathrm{acc}_{\\mathrm{large}}$")
-    ax.set_title("Iso-token retention vs budget $T$: Wu et al. (2025) claim falsified at every pair by $T{=}64\\,$M")
+    ax.set_ylabel(
+        "Retention $R(G_{\\mathrm{small}}, G_{\\mathrm{large}}, T) = \\mathrm{acc}_{\\mathrm{small}}/\\mathrm{acc}_{\\mathrm{large}}$"
+    )
+    ax.set_title(
+        "Iso-token retention vs budget $T$: Wu et al. (2025) claim falsified at every pair by $T{=}64\\,$M"
+    )
     ax.set_ylim(0.45, 1.10)
     ax.grid(alpha=0.3)
     ax.legend(fontsize=8, loc="lower left", ncol=2)
@@ -324,9 +379,16 @@ def plot_heatmap(pairs: list[dict], table: dict, out_png: Path, out_pdf: Path) -
     for i in range(n):
         for j in range(n):
             if not np.isnan(R_mat[i, j]):
-                ax.text(j, i, f"{R_mat[i, j]:.2f}", ha="center", va="center",
-                        fontsize=9, color="black")
-    fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04, label="$R = \\mathrm{acc}_{\\mathrm{small}}/\\mathrm{acc}_{\\mathrm{large}}$")
+                ax.text(
+                    j, i, f"{R_mat[i, j]:.2f}", ha="center", va="center", fontsize=9, color="black"
+                )
+    fig.colorbar(
+        im,
+        ax=ax,
+        fraction=0.046,
+        pad=0.04,
+        label="$R = \\mathrm{acc}_{\\mathrm{small}}/\\mathrm{acc}_{\\mathrm{large}}$",
+    )
     fig.tight_layout()
     fig.savefig(out_png, dpi=160)
     fig.savefig(out_pdf)
@@ -343,20 +405,27 @@ def plot_crossover(pairs: list[dict], out_png: Path, out_pdf: Path) -> None:
         Ts = []
         Ths = []
         for thr in thresholds:
-            tok = p["crossovers"][f"T_crossover_R{int(thr*100)}_tokens"]
+            tok = p["crossovers"][f"T_crossover_R{int(thr * 100)}_tokens"]
             if tok is not None:
                 Ts.append(tok)
                 Ths.append(thr)
         if Ts:
-            ax.plot(Ts, Ths, "o-", color=col,
-                    label=f"$G_{{\\mathrm{{small}}}}={p['g_small']}, G_{{\\mathrm{{large}}}}={p['g_large']}$")
+            ax.plot(
+                Ts,
+                Ths,
+                "o-",
+                color=col,
+                label=f"$G_{{\\mathrm{{small}}}}={p['g_small']}, G_{{\\mathrm{{large}}}}={p['g_large']}$",
+            )
     ax.axvline(1_000_000, color="grey", lw=0.5, ls=":", alpha=0.5, label="$T{=}1\\,$M")
     ax.axvline(4_000_000, color="grey", lw=0.5, ls="--", alpha=0.5, label="$T{=}4\\,$M")
     ax.axvline(64_000_000, color="red", lw=1.0, ls="--", alpha=0.5, label="$T{=}64\\,$M (max)")
     ax.set_xscale("log")
     ax.set_xlabel("Token budget $T^*$ at which retention crosses threshold")
     ax.set_ylabel("Retention threshold $R$")
-    ax.set_title("Crossover budget: when does $G_{\\mathrm{small}} \\approx G_{\\mathrm{large}}$ break?")
+    ax.set_title(
+        "Crossover budget: when does $G_{\\mathrm{small}} \\approx G_{\\mathrm{large}}$ break?"
+    )
     ax.set_ylim(0.78, 0.97)
     ax.grid(alpha=0.3, which="both")
     ax.legend(fontsize=7, loc="lower right")
@@ -382,8 +451,16 @@ def plot_slope_bars(pairs: list[dict], out_png: Path, out_pdf: Path) -> None:
         if T_arr[0] <= math.log10(4_000_000) <= T_arr[-1]:
             early_mask = T_arr <= math.log10(4_000_000)
             late_mask = T_arr >= math.log10(4_000_000)
-            early.append(float(np.polyfit(T_arr[early_mask], R_arr[early_mask], 1)[0]) if early_mask.sum() >= 2 else float("nan"))
-            late.append(float(np.polyfit(T_arr[late_mask], R_arr[late_mask], 1)[0]) if late_mask.sum() >= 2 else float("nan"))
+            early.append(
+                float(np.polyfit(T_arr[early_mask], R_arr[early_mask], 1)[0])
+                if early_mask.sum() >= 2
+                else float("nan")
+            )
+            late.append(
+                float(np.polyfit(T_arr[late_mask], R_arr[late_mask], 1)[0])
+                if late_mask.sum() >= 2
+                else float("nan")
+            )
         else:
             early.append(float("nan"))
             late.append(float("nan"))
@@ -435,8 +512,14 @@ def main() -> int:
     cmap = plt.cm.viridis
     for k, p in enumerate(pairs):
         col = cmap(k / max(1, len(pairs) - 1))
-        ax.plot(p["log10T"], p["R"], "o-", color=col, lw=1.6,
-                label=f"$G_s={p['g_small']},G_l={p['g_large']}$")
+        ax.plot(
+            p["log10T"],
+            p["R"],
+            "o-",
+            color=col,
+            lw=1.6,
+            label=f"$G_s={p['g_small']},G_l={p['g_large']}$",
+        )
     for thr in (0.95, 0.90, 0.85, 0.80):
         ax.axhline(thr, color="grey", lw=0.6, ls=":", alpha=0.7)
     ax.set_xticks(logT_grid)
@@ -468,8 +551,9 @@ def main() -> int:
     for i in range(n):
         for j in range(n):
             if not np.isnan(R_mat[i, j]):
-                ax.text(j, i, f"{R_mat[i, j]:.2f}", ha="center", va="center",
-                        fontsize=8, color="black")
+                ax.text(
+                    j, i, f"{R_mat[i, j]:.2f}", ha="center", va="center", fontsize=8, color="black"
+                )
     fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
 
     # Panel 3 (bottom-left): crossover curves
@@ -480,13 +564,12 @@ def main() -> int:
         col = cmap2(k / max(1, len(pairs) - 1))
         Ts, Ths = [], []
         for thr in thresholds:
-            tok = p["crossovers"][f"T_crossover_R{int(thr*100)}_tokens"]
+            tok = p["crossovers"][f"T_crossover_R{int(thr * 100)}_tokens"]
             if tok is not None:
                 Ts.append(tok)
                 Ths.append(thr)
         if Ts:
-            ax.plot(Ts, Ths, "o-", color=col,
-                    label=f"$G_s={p['g_small']},G_l={p['g_large']}$")
+            ax.plot(Ts, Ths, "o-", color=col, label=f"$G_s={p['g_small']},G_l={p['g_large']}$")
     ax.axvline(64_000_000, color="red", lw=1.0, ls="--", alpha=0.7, label="$T{=}64\\,$M (max)")
     ax.set_xscale("log")
     ax.set_xlabel("Token budget $T^*$ at crossover")
@@ -506,7 +589,11 @@ def main() -> int:
         T_arr = np.array(p["log10T"], dtype=float)
         R_arr = np.array(p["R"], dtype=float)
         late_mask = T_arr >= math.log10(4_000_000)
-        late.append(float(np.polyfit(T_arr[late_mask], R_arr[late_mask], 1)[0]) if late_mask.sum() >= 2 else float("nan"))
+        late.append(
+            float(np.polyfit(T_arr[late_mask], R_arr[late_mask], 1)[0])
+            if late_mask.sum() >= 2
+            else float("nan")
+        )
     ax.bar(x + 0.20, late, width=0.4, color="indianred", label="late ($T{\\geq}4\\,$M)")
     ax.axhline(0, color="black", lw=0.7)
     ax.set_xticks(x)
@@ -517,8 +604,10 @@ def main() -> int:
     ax.legend(fontsize=9)
     ax.grid(alpha=0.3, axis="y")
 
-    fig.suptitle("Iter 87 -- Pillar 3 (G=4 vs G=32): Crossover-Budget Test for Wu et al. (2025) Two-Octave Equivalence",
-                 fontsize=11)
+    fig.suptitle(
+        "Iter 87 -- Pillar 3 (G=4 vs G=32): Crossover-Budget Test for Wu et al. (2025) Two-Octave Equivalence",
+        fontsize=11,
+    )
     fig.tight_layout(rect=[0, 0, 1, 0.97])
     out_png = FIGURES / "group_size_iter87_v2.png"
     out_pdf = FIGURES / "group_size_iter87_v2.pdf"
@@ -537,7 +626,9 @@ def main() -> int:
         "pair_keys": [(p["g_small"], p["g_large"]) for p in pairs],
         "T_values": [1_000_000, 4_000_000, 16_000_000, 64_000_000],
         "wu_2025_claim": "G=2 retains 97.6% of G=16 at iso-token (12.5% rollouts, 21% training time).",
-        "headline_pair_G4_G32": next((p for p in pairs if p["g_small"] == 4 and p["g_large"] == 32), None),
+        "headline_pair_G4_G32": next(
+            (p for p in pairs if p["g_small"] == 4 and p["g_large"] == 32), None
+        ),
     }
     # Strip non-JSON-friendly keys from the headline pair
     if meta["headline_pair_G4_G32"] is not None:

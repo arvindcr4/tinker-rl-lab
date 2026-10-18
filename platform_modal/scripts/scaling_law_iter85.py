@@ -63,8 +63,8 @@ from pathlib import Path
 import matplotlib
 
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt  # noqa: E402
-import numpy as np  # noqa: E402
+import matplotlib.pyplot as plt
+import numpy as np
 
 REPO = Path(__file__).resolve().parents[2] / "platform_hybrid"
 TRACE_DIR = REPO / "experiments" / "tinker-runs" / "results"
@@ -90,7 +90,9 @@ MODELS: dict[str, tuple[str, float, str]] = {
 }
 
 
-def fit_piecewise_linear(y: np.ndarray, n_segments: int) -> tuple[float, list[int], list[float], list[float], list[int]]:
+def fit_piecewise_linear(
+    y: np.ndarray, n_segments: int
+) -> tuple[float, list[int], list[float], list[float], list[int]]:
     """Greedy changepoint fit of piecewise-linear regression.
 
     Returns (total_sse, changepoint_indices, slopes, intercepts, segment_lengths).
@@ -165,7 +167,8 @@ def fit_piecewise_linear(y: np.ndarray, n_segments: int) -> tuple[float, list[in
 
 def aic(sse: float, n: int, k: int) -> float:
     from _review27_models import information_criteria
-    return information_criteria(sse,n,k)[0]
+
+    return information_criteria(sse, n, k)[0]
 
 
 def longest_monotone_decline(y: np.ndarray, from_idx: int = 0) -> int:
@@ -178,7 +181,7 @@ def longest_monotone_decline(y: np.ndarray, from_idx: int = 0) -> int:
     for i in range(from_idx + 1, n):
         if y[i] < y[i - 1]:
             cur += 1
-            best =max(best, cur)
+            best = max(best, cur)
         else:
             cur = 0
     return best
@@ -202,7 +205,7 @@ def main() -> None:
         rt = np.array(d["reward_trace"], dtype=float)
         n = len(rt)
         first5 = float(np.mean(rt[:5])) if n >= 5 else float(np.mean(rt))
-        last10 = float(np.mean(rt[-10:])) if n >= 10 else float(np.mean(rt[-min(5, n):]))
+        last10 = float(np.mean(rt[-10:])) if n >= 10 else float(np.mean(rt[-min(5, n) :]))
         peak = float(np.max(rt))
         peak_idx = int(np.argmax(rt))
         peak_step = peak_idx + 1
@@ -226,9 +229,10 @@ def main() -> None:
         # And does segment 3 have a smaller |slope| than 2?
         if len(sl_3) == 3:
             from _review27_models import signed_phases
+
             canonical_order = signed_phases(sl_3)
             spurt_slope = sl_3[1]
-            spurt_dominant = bool(sl_3[1] > max(sl_3[0],sl_3[2]) and sl_3[1]>0)
+            spurt_dominant = bool(sl_3[1] > max(sl_3[0], sl_3[2]) and sl_3[1] > 0)
             spurt_largest = spurt_dominant
             canonical_temporal = canonical_order
         else:
@@ -259,8 +263,8 @@ def main() -> None:
         # Collapse diagnostics
         collapse_delta = last10 - peak
         recovery_ratio = (last10 - first5) / (peak - first5) if peak > first5 else 0.0
-        leading = rt[:max(1, n // 2)]
-        trailing = rt[max(1, n // 2):]
+        leading = rt[: max(1, n // 2)]
+        trailing = rt[max(1, n // 2) :]
         trailing_leading_var_ratio = float(np.var(trailing) / max(np.var(leading), 1e-9))
         decline_run = longest_monotone_decline(rt, peak_idx)
 
@@ -275,77 +279,103 @@ def main() -> None:
             phase_label = "saturation"
 
         anchor_data[model_name] = {
-            "trace": rt, "n": n, "first5": first5, "last10": last10,
-            "peak": peak, "peak_idx": peak_idx, "mean": mean_reward,
-            "var": var_reward, "phase_label": phase_label,
+            "trace": rt,
+            "n": n,
+            "first5": first5,
+            "last10": last10,
+            "peak": peak,
+            "peak_idx": peak_idx,
+            "mean": mean_reward,
+            "var": var_reward,
+            "phase_label": phase_label,
         }
 
-        phases_rows.append({
-            "model": model_name, "model_short": short, "params_B": params_b,
-            "n_steps": n, "first5_avg": round(first5, 4), "last10_avg": round(last10, 4),
-            "peak": round(peak, 4), "peak_step": peak_step,
-            "mean_reward": round(mean_reward, 4), "var_reward": round(var_reward, 4),
-            "phase_label": phase_label,
-            "collapse_delta": round(collapse_delta, 4),
-            "recovery_ratio": round(recovery_ratio, 4),
-            "trailing_leading_var_ratio": round(trailing_leading_var_ratio, 4),
-            "decline_run_after_peak": decline_run,
-        })
+        phases_rows.append(
+            {
+                "model": model_name,
+                "model_short": short,
+                "params_B": params_b,
+                "n_steps": n,
+                "first5_avg": round(first5, 4),
+                "last10_avg": round(last10, 4),
+                "peak": round(peak, 4),
+                "peak_step": peak_step,
+                "mean_reward": round(mean_reward, 4),
+                "var_reward": round(var_reward, 4),
+                "phase_label": phase_label,
+                "collapse_delta": round(collapse_delta, 4),
+                "recovery_ratio": round(recovery_ratio, 4),
+                "trailing_leading_var_ratio": round(trailing_leading_var_ratio, 4),
+                "decline_run_after_peak": decline_run,
+            }
+        )
 
-        conformity_rows.append({
-            "model": model_name, "model_short": short, "params_B": params_b,
-            "n_steps": n,
-            "sse_1seg": round(sse_1, 4),
-            "sse_2seg": round(sse_2, 4),
-            "sse_3seg": round(sse_3, 4),
-            "aic_1seg": round(aic_1, 4),
-            "aic_2seg": round(aic_2, 4),
-            "aic_3seg": round(aic_3, 4),
-            "delta_aic_3v1": round(delta_aic_3v1, 4),
-            "delta_aic_3v2": round(delta_aic_3v2, 4),
-            "conform_3phase_aic": bool(conform_3phase),
-            "spurt_largest_slope": bool(spurt_largest),
-            "spurt_dominant_vs_flanks": bool(spurt_dominant),
-            "canonical_temporal_order": bool(canonical_temporal),
-            "monotone_plateau_3seg": bool(monotone_plateau),
-            "conform_score_out_of_4": int(conform_score),
-            "creep_slope_abs": round(creep_slope_abs, 4),
-            "spurt_slope": round(spurt_slope, 4),
-            "level_slope_abs": round(level_slope_abs, 4),
-        })
+        conformity_rows.append(
+            {
+                "model": model_name,
+                "model_short": short,
+                "params_B": params_b,
+                "n_steps": n,
+                "sse_1seg": round(sse_1, 4),
+                "sse_2seg": round(sse_2, 4),
+                "sse_3seg": round(sse_3, 4),
+                "aic_1seg": round(aic_1, 4),
+                "aic_2seg": round(aic_2, 4),
+                "aic_3seg": round(aic_3, 4),
+                "delta_aic_3v1": round(delta_aic_3v1, 4),
+                "delta_aic_3v2": round(delta_aic_3v2, 4),
+                "conform_3phase_aic": bool(conform_3phase),
+                "spurt_largest_slope": bool(spurt_largest),
+                "spurt_dominant_vs_flanks": bool(spurt_dominant),
+                "canonical_temporal_order": bool(canonical_temporal),
+                "monotone_plateau_3seg": bool(monotone_plateau),
+                "conform_score_out_of_4": int(conform_score),
+                "creep_slope_abs": round(creep_slope_abs, 4),
+                "spurt_slope": round(spurt_slope, 4),
+                "level_slope_abs": round(level_slope_abs, 4),
+            }
+        )
 
         # changepoint record: which (cp1, cp2) was chosen + lengths
         if len(cp_3) == 2:
-            cp_rows.append({
-                "model": model_name, "model_short": short, "params_B": params_b,
-                "n_steps": n,
-                "cp1_step": cp_3[0] + 1,  # 1-indexed
-                "cp2_step": cp_3[1] + 1,
-                "seg1_len": lens_3[0],
-                "seg2_len": lens_3[1],
-                "seg3_len": lens_3[2],
-                "seg1_slope": round(sl_3[0], 4),
-                "seg2_slope": round(sl_3[1], 4),
-                "seg3_slope": round(sl_3[2], 4),
-                "seg1_intercept": round(ic_3[0], 4),
-                "seg2_intercept": round(ic_3[1], 4),
-                "seg3_intercept": round(ic_3[2], 4),
-            })
+            cp_rows.append(
+                {
+                    "model": model_name,
+                    "model_short": short,
+                    "params_B": params_b,
+                    "n_steps": n,
+                    "cp1_step": cp_3[0] + 1,  # 1-indexed
+                    "cp2_step": cp_3[1] + 1,
+                    "seg1_len": lens_3[0],
+                    "seg2_len": lens_3[1],
+                    "seg3_len": lens_3[2],
+                    "seg1_slope": round(sl_3[0], 4),
+                    "seg2_slope": round(sl_3[1], 4),
+                    "seg3_slope": round(sl_3[2], 4),
+                    "seg1_intercept": round(ic_3[0], 4),
+                    "seg2_intercept": round(ic_3[1], 4),
+                    "seg3_intercept": round(ic_3[2], 4),
+                }
+            )
 
         # Nemotron-specific row (or all anchors, but Nemotron is the focus)
-        nemotron_rows.append({
-            "model": model_name, "model_short": short, "params_B": params_b,
-            "n_steps": n,
-            "first5_avg": round(first5, 4),
-            "last10_avg": round(last10, 4),
-            "peak": round(peak, 4),
-            "peak_step": peak_step,
-            "collapse_delta": round(collapse_delta, 4),
-            "recovery_ratio": round(recovery_ratio, 4),
-            "trailing_leading_var_ratio": round(trailing_leading_var_ratio, 4),
-            "decline_run_after_peak": decline_run,
-            "phase_label": phase_label,
-        })
+        nemotron_rows.append(
+            {
+                "model": model_name,
+                "model_short": short,
+                "params_B": params_b,
+                "n_steps": n,
+                "first5_avg": round(first5, 4),
+                "last10_avg": round(last10, 4),
+                "peak": round(peak, 4),
+                "peak_step": peak_step,
+                "collapse_delta": round(collapse_delta, 4),
+                "recovery_ratio": round(recovery_ratio, 4),
+                "trailing_leading_var_ratio": round(trailing_leading_var_ratio, 4),
+                "decline_run_after_peak": decline_run,
+                "phase_label": phase_label,
+            }
+        )
 
     # Write TSVs
     write_tsv(RESULTS_DIR / "scaling_law_iter85_phases_v3.tsv", phases_rows)
@@ -378,8 +408,12 @@ def main() -> None:
         "n_zero_conform_score": n_zero_score,
         "nemotron_conform_score": nemotron["conform_score_out_of_4"] if nemotron else None,
         "nemotron_aic_3v1": nemotron["delta_aic_3v1"] if nemotron else None,
-        "nemotron_collapse_delta": next((r["collapse_delta"] for r in phases_rows if r["model"] == "Nemotron-120B"), None),
-        "nemotron_recovery_ratio": next((r["recovery_ratio"] for r in phases_rows if r["model"] == "Nemotron-120B"), None),
+        "nemotron_collapse_delta": next(
+            (r["collapse_delta"] for r in phases_rows if r["model"] == "Nemotron-120B"), None
+        ),
+        "nemotron_recovery_ratio": next(
+            (r["recovery_ratio"] for r in phases_rows if r["model"] == "Nemotron-120B"), None
+        ),
         "models": list(MODELS.keys()),
         "citation_arxiv_three_phase": "arXiv:2507.18014",
         "fit_method": "greedy O(n^2) changepoint + OLS piecewise-linear",
@@ -400,8 +434,7 @@ def main() -> None:
         x = np.arange(1, len(rt) + 1)
         score = cs_lookup.get(model_name, 0)
         color = cmap(score / 4.0) if 0 <= score <= 4 else "gray"
-        ax.plot(x, rt, alpha=0.6, lw=1.0, color=color,
-                label=f"{model_name} ({score}/4)")
+        ax.plot(x, rt, alpha=0.6, lw=1.0, color=color, label=f"{model_name} ({score}/4)")
         ax.scatter(x, rt, alpha=0.7, s=14, color=color)
     ax.set_xlabel("Step")
     ax.set_ylabel("Reward")
@@ -413,14 +446,24 @@ def main() -> None:
     ax = axes[0, 1]
     models_order = [r["model"] for r in conformity_rows]
     deltas = [r["delta_aic_3v1"] for r in conformity_rows]
-    colors_b = ["red" if r["phase_label"] == "collapse" else
-                "orange" if r["phase_label"] == "drift" else "steelblue"
-                for r in phases_rows]
+    colors_b = [
+        "red"
+        if r["phase_label"] == "collapse"
+        else "orange"
+        if r["phase_label"] == "drift"
+        else "steelblue"
+        for r in phases_rows
+    ]
     # Re-align colors with conformity rows order
     label_lookup = {r["model"]: r["phase_label"] for r in phases_rows}
-    colors_b = ["red" if label_lookup.get(m) == "collapse" else
-                "orange" if label_lookup.get(m) == "drift" else "steelblue"
-                for m in models_order]
+    colors_b = [
+        "red"
+        if label_lookup.get(m) == "collapse"
+        else "orange"
+        if label_lookup.get(m) == "drift"
+        else "steelblue"
+        for m in models_order
+    ]
     ax.barh(range(len(models_order)), deltas, color=colors_b)
     ax.set_yticks(range(len(models_order)))
     ax.set_yticklabels([r["model_short"] for r in conformity_rows], fontsize=8)
@@ -439,10 +482,13 @@ def main() -> None:
     for i, r in enumerate(cp_rows):
         x_start = 0
         for j in range(3):
-            seg_len = r[f"seg{j+1}_len"]
-            seg_slope = r[f"seg{j+1}_slope"]
-            color = "lightblue" if abs(seg_slope) < 0.005 else (
-                "salmon" if seg_slope > 0 else "lightgreen")
+            seg_len = r[f"seg{j + 1}_len"]
+            seg_slope = r[f"seg{j + 1}_slope"]
+            color = (
+                "lightblue"
+                if abs(seg_slope) < 0.005
+                else ("salmon" if seg_slope > 0 else "lightgreen")
+            )
             ax.barh(i, seg_len, left=x_start, color=color, edgecolor="black", linewidth=0.4)
             x_start += seg_len
     ax.set_yticks(range(n_show))
@@ -471,7 +517,8 @@ def main() -> None:
 
     plt.suptitle(
         "Iter 85: 3-phase hypothesis (arXiv:2507.18014) test and Nemotron-120B collapse audit",
-        fontsize=11)
+        fontsize=11,
+    )
     plt.tight_layout(rect=[0, 0, 1, 0.96])
     plt.savefig(FIG_DIR / "scaling_law_iter85_v3.pdf", dpi=150, bbox_inches="tight")
     plt.savefig(FIG_DIR / "scaling_law_iter85_v3.png", dpi=150, bbox_inches="tight")
@@ -486,9 +533,11 @@ def main() -> None:
     print(f"  Perfect conform score (4/4): {n_perfect_score}/{n_total}")
     print(f"  Zero conform score (0/4): {n_zero_score}/{n_total}")
     if nemotron:
-        print(f"  Nemotron-120B: conform_score={nemotron['conform_score_out_of_4']}/4, "
-              f"aic_3v1={nemotron['delta_aic_3v1']:.3f}, collapse_delta="
-              f"{next(r['collapse_delta'] for r in phases_rows if r['model'] == 'Nemotron-120B'):.3f}")
+        print(
+            f"  Nemotron-120B: conform_score={nemotron['conform_score_out_of_4']}/4, "
+            f"aic_3v1={nemotron['delta_aic_3v1']:.3f}, collapse_delta="
+            f"{next(r['collapse_delta'] for r in phases_rows if r['model'] == 'Nemotron-120B'):.3f}"
+        )
 
 
 def write_tsv(path: Path, rows: list[dict]) -> None:
@@ -505,7 +554,9 @@ def write_tsv(path: Path, rows: list[dict]) -> None:
 
 if __name__ == "__main__":
     from _review27_models import configure_paths
+
     configure_paths(globals())
     main()
     from _review27_models import write_manifest
+
     write_manifest(__file__, TRACE_DIR, RESULTS_DIR)

@@ -36,6 +36,7 @@ Output:
   platform_hybrid/experiments/results/p5p8/p8_cohort_calibration_summary.json (machine readable)
   platform_hybrid/experiments/results/p5p8/p8_cohort_calibration_boot.tsv     (B=2000 bootstrap)
 """
+
 from __future__ import annotations
 import csv
 import json
@@ -47,8 +48,10 @@ from collections import defaultdict
 
 import sys
 from pathlib import Path
+
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
 from _paths import REPO_ROOT
+
 DATA_DIR = str(REPO_ROOT)
 OUT_DIR = f"{DATA_DIR}/platform_hybrid/experiments/results/p5p8/corrected-review20-v2"
 TRAIN = f"{DATA_DIR}/fraud_data.csv"
@@ -65,6 +68,7 @@ random.seed(SEED)
 
 
 # ---------- helpers (stdlib only; no numpy) ----------
+
 
 def load(path: str) -> tuple[list[list[float]], list[int]]:
     """Load CSV with header; return (features, labels)."""
@@ -105,6 +109,7 @@ def predict_score(tree, x_row):
 
 
 # ---------- minimal xgboost surrogate: histogram-GBT (depth-limited) ----------
+
 
 class Node:
     __slots__ = ("feat", "thr", "left", "right", "leaf")
@@ -172,12 +177,14 @@ def fit_gbt(X, y, n_estimators=120, max_depth=4, lr=0.15, seed=0):
 def predict_proba(booster, X):
     import numpy as np
     import xgboost as xgb
+
     Xn = np.asarray(X, dtype=np.float32)
     d = xgb.DMatrix(Xn)
     return booster.predict(d)
 
 
 # ---------- calibration metrics ----------
+
 
 def calibration_ece(scores, labels, n_bin=10):
     """Expected calibration error (10-bin equal-width on [0,1])."""
@@ -208,7 +215,7 @@ def recall_at_k_pct(scores, labels, k_pct):
     """Recall at K% cutoff: how many positives fall in top K% of scores."""
     n = len(scores)
     k = min(n, max(1, int(round(k_pct / 100 * n))))
-    paired = sorted(zip(scores, labels), key=lambda r: -r[0])
+    paired = sorted(zip(scores, labels, strict=False), key=lambda r: -r[0])
     top = paired[:k]
     pos_in_top = sum(l for _, l in top)
     total_pos = sum(labels)
@@ -226,7 +233,7 @@ def calibration_gap_eta_squared(scores, labels, groups):
         raise ValueError("Scores, labels and cohort assignments must align")
     if not len(scores):
         return None
-    residuals = [float(p) - float(y) for p, y in zip(scores, labels)]
+    residuals = [float(p) - float(y) for p, y in zip(scores, labels, strict=False)]
     if not all(math.isfinite(r) for r in residuals):
         raise ValueError("Calibration residuals must be finite")
     overall = statistics.mean(residuals)
@@ -234,14 +241,14 @@ def calibration_gap_eta_squared(scores, labels, groups):
     if ss_total == 0:
         return None
     buckets = defaultdict(list)
-    for group, residual in zip(groups, residuals):
+    for group, residual in zip(groups, residuals, strict=False):
         buckets[group].append(residual)
-    ss_between = sum(len(rs) * (statistics.mean(rs) - overall) ** 2
-                     for rs in buckets.values())
+    ss_between = sum(len(rs) * (statistics.mean(rs) - overall) ** 2 for rs in buckets.values())
     return min(1.0, max(0.0, ss_between / ss_total))
 
 
 # ---------- cohort assignment ----------
+
 
 def cohort_strata(scores_meta):
     """Build three cohort strata sets: V_mean qcut, Amount qcut, Time tertile.
@@ -271,7 +278,9 @@ def cohort_strata(scores_meta):
         return len(cuts)
 
     def assign_t(value):
-        t = time_vals[max(0, min(len(time_vals) - 1, int(TERTILES * len(time_vals) / TERTILES) - 1))]
+        t = time_vals[
+            max(0, min(len(time_vals) - 1, int(TERTILES * len(time_vals) / TERTILES) - 1))
+        ]
         # simple tertile split
         third = len(time_vals) // 3
         idx = time_vals.index(value) if value in time_vals else None
@@ -287,18 +296,21 @@ def cohort_strata(scores_meta):
 
     out = []
     for s in scores_meta:
-        out.append({
-            "v_mean_bin": assign_q(s["V_mean"], vq),
-            "amount_bin": assign_q(s["Amount"], aq),
-            "time_bin": assign_t(s["Time"]),
-            "Amount": s["Amount"],
-            "Time": s["Time"],
-            "V_mean": s["V_mean"],
-        })
+        out.append(
+            {
+                "v_mean_bin": assign_q(s["V_mean"], vq),
+                "amount_bin": assign_q(s["Amount"], aq),
+                "time_bin": assign_t(s["Time"]),
+                "Amount": s["Amount"],
+                "Time": s["Time"],
+                "V_mean": s["V_mean"],
+            }
+        )
     return out, {"v_mean": vq, "amount": aq}
 
 
 # ---------- main ----------
+
 
 def main():
     os.makedirs(OUT_DIR, exist_ok=True)
@@ -320,15 +332,17 @@ def main():
                 klass = int(row["Class"])
             except (KeyError, ValueError):
                 continue
-            test_meta.append({
-                "V_mean": float(row["V_mean"]),
-                "V_std": float(row["V_std"]),
-                "V_max": float(row["V_max"]),
-                "V_min": float(row["V_min"]),
-                "Amount": float(row.get("Amount", float(row.get("V_mean", 0)))),
-                "Time": float(row.get("Time", float(row.get("V_std", 0)))),
-                "Class": klass,
-            })
+            test_meta.append(
+                {
+                    "V_mean": float(row["V_mean"]),
+                    "V_std": float(row["V_std"]),
+                    "V_max": float(row["V_max"]),
+                    "V_min": float(row["V_min"]),
+                    "Amount": float(row.get("Amount", float(row.get("V_mean", 0)))),
+                    "Time": float(row.get("Time", float(row.get("V_std", 0)))),
+                    "Class": klass,
+                }
+            )
     with open(TEST) as fh:
         metadata_columns = next(csv.reader(fh))
     has_amount = "Amount" in metadata_columns
@@ -349,10 +363,11 @@ def main():
     print(f"  Amount quintile cuts: {[round(c, 3) for c in cuts['amount']]}")
 
     print("[3/5] Training two XGB backbones (20raw, 24full) ...")
-    p20 = predict_proba(fit_gbt([row[:20] for row in tr_X], tr_y, n_estimators=180, max_depth=5, lr=0.1, seed=SEED),
-                        [r[:20] for r in te_X])
-    p24 = predict_proba(fit_gbt(tr_X, tr_y, n_estimators=180, max_depth=5, lr=0.1, seed=SEED),
-                        te_X)
+    p20 = predict_proba(
+        fit_gbt([row[:20] for row in tr_X], tr_y, n_estimators=180, max_depth=5, lr=0.1, seed=SEED),
+        [r[:20] for r in te_X],
+    )
+    p24 = predict_proba(fit_gbt(tr_X, tr_y, n_estimators=180, max_depth=5, lr=0.1, seed=SEED), te_X)
     p20 = p20.tolist()
     p24 = p24.tolist()
     print(f"  XGB-20raw AUC proxy = {1 - brier_score(p20, [float(y) for y in te_y]):.4f}")
@@ -361,12 +376,26 @@ def main():
     print("[4/5] Per-cell ECE / Brier / calib-gap / recall@K=2% ...")
     cohort_defs = [
         ("v_mean", "V_mean quintile", lambda s: s["v_mean_bin"]),
-        ("amount", "Amount quintile" if has_amount else "rank(V_std) proxy quintile", lambda s: s["amount_bin"]),
-        ("time", "Time tertile" if has_time else "rank(V_max) proxy tertile", lambda s: s["time_bin"]),
+        (
+            "amount",
+            "Amount quintile" if has_amount else "rank(V_std) proxy quintile",
+            lambda s: s["amount_bin"],
+        ),
+        (
+            "time",
+            "Time tertile" if has_time else "rank(V_max) proxy tertile",
+            lambda s: s["time_bin"],
+        ),
     ]
     rows = []
-    summary = {"n_test": len(te_X), "n_pos": int(sum(te_y)), "cells": [], "n_bin": N_BIN,
-               "boot_seed": SEED, "boot_B": B}
+    summary = {
+        "n_test": len(te_X),
+        "n_pos": int(sum(te_y)),
+        "cells": [],
+        "n_bin": N_BIN,
+        "boot_seed": SEED,
+        "boot_B": B,
+    }
     summary["cohort_sources"] = {
         "v_mean": {"source": "V_mean", "is_proxy": False},
         "amount": {"source": "Amount" if has_amount else "rank(V_std)", "is_proxy": not has_amount},
@@ -389,28 +418,37 @@ def main():
                 mean_pred = sum(s_scores) / len(s_scores)
                 obs_rate = sum(s_labels) / len(s_labels)
                 recall_k, k_n = recall_at_k_pct(s_scores, s_labels, K_PCT)
-                rows.append({
-                    "cohort": cohort_key,
-                    "cohort_label": cohort_label,
-                    "stratum": stratum,
-                    "tree": tree_name,
-                    "n_stratum": len(s_labels),
-                    "pos_stratum": int(sum(s_labels)),
-                    "mean_pred": round(mean_pred, 5),
-                    "obs_rate": round(obs_rate, 5),
-                    "calib_gap": round(mean_pred - obs_rate, 5),
-                    "ece10": round(ece, 5),
-                    "brier": round(brier, 5),
-                    "recall_at_K_2pct": round(recall_k, 5) if recall_k is not None else None,
-                })
-                summary["cells"].append({
-                    "cohort": cohort_key, "stratum": stratum, "tree": tree_name,
-                    "n": len(s_labels), "pos": int(sum(s_labels)),
-                    "ece10": ece, "brier": brier,
-                    "calib_gap": mean_pred - obs_rate,
-                    "mean_pred": mean_pred, "obs_rate": obs_rate,
-                    "recall_at_K_2pct": recall_k,
-                })
+                rows.append(
+                    {
+                        "cohort": cohort_key,
+                        "cohort_label": cohort_label,
+                        "stratum": stratum,
+                        "tree": tree_name,
+                        "n_stratum": len(s_labels),
+                        "pos_stratum": int(sum(s_labels)),
+                        "mean_pred": round(mean_pred, 5),
+                        "obs_rate": round(obs_rate, 5),
+                        "calib_gap": round(mean_pred - obs_rate, 5),
+                        "ece10": round(ece, 5),
+                        "brier": round(brier, 5),
+                        "recall_at_K_2pct": round(recall_k, 5) if recall_k is not None else None,
+                    }
+                )
+                summary["cells"].append(
+                    {
+                        "cohort": cohort_key,
+                        "stratum": stratum,
+                        "tree": tree_name,
+                        "n": len(s_labels),
+                        "pos": int(sum(s_labels)),
+                        "ece10": ece,
+                        "brier": brier,
+                        "calib_gap": mean_pred - obs_rate,
+                        "mean_pred": mean_pred,
+                        "obs_rate": obs_rate,
+                        "recall_at_K_2pct": recall_k,
+                    }
+                )
 
     # H1: ECE variance across strata
     ece_per_cohort_tree = defaultdict(list)
@@ -449,13 +487,12 @@ def main():
         # resample INSIDE each stratum rather than globally (preserves
         # observed cohort sizes and matches the paired-by-stratum
         # bootstrap that the headline reads as).
-        bucket_keys = {"v_mean": "v_mean_bin",
-                       "amount": "amount_bin",
-                       "time": "time_bin"}
+        bucket_keys = {"v_mean": "v_mean_bin", "amount": "amount_bin", "time": "time_bin"}
         bkey = bucket_keys[cohort_key]
         bucket_ids = sorted(set(s[bkey] for s in strata))
-        bucket_idx = {bid: [i for i, s in enumerate(strata) if s[bkey] == bid]
-                      for bid in bucket_ids}
+        bucket_idx = {
+            bid: [i for i, s in enumerate(strata) if s[bkey] == bid] for bid in bucket_ids
+        }
         bucket_lens = {bid: len(bucket_idx[bid]) for bid in bucket_ids}
         for _ in range(B):
             bs_deltas = []
@@ -492,7 +529,9 @@ def main():
             per_tree_eta2[tree_name] = round(eta2, 5) if eta2 is not None else None
         h3[cohort_key] = per_tree_eta2
     summary["H3_eta2_calib_gap"] = h3
-    summary["H3_eta2_definition"] = "between-cohort SS / total SS of prediction-minus-label residuals"
+    summary["H3_eta2_definition"] = (
+        "between-cohort SS / total SS of prediction-minus-label residuals"
+    )
     summary["undefined_metrics"] = {
         "recall_at_K_2pct": "null when a cohort has no positives",
         "H3_eta2_calib_gap": "null when row residual variance is zero",
@@ -502,7 +541,11 @@ def main():
     h4 = {}
     for cohort_key in ["v_mean", "amount", "time"]:
         worst = max(
-            (c for c in summary["cells"] if c["cohort"] == cohort_key and c["tree"] == "XGB-24full"),
+            (
+                c
+                for c in summary["cells"]
+                if c["cohort"] == cohort_key and c["tree"] == "XGB-24full"
+            ),
             key=lambda c: c["ece10"],
             default=None,
         )
@@ -519,8 +562,20 @@ def main():
 
     # ---- persist ----
     out_tsv = f"{OUT_DIR}/p8_cohort_calibration_parity.tsv"
-    cols = ["cohort", "cohort_label", "stratum", "tree", "n_stratum", "pos_stratum",
-            "mean_pred", "obs_rate", "calib_gap", "ece10", "brier", "recall_at_K_2pct"]
+    cols = [
+        "cohort",
+        "cohort_label",
+        "stratum",
+        "tree",
+        "n_stratum",
+        "pos_stratum",
+        "mean_pred",
+        "obs_rate",
+        "calib_gap",
+        "ece10",
+        "brier",
+        "recall_at_K_2pct",
+    ]
     with open(out_tsv, "w", newline="") as fh:
         w = csv.DictWriter(fh, fieldnames=cols, delimiter="\t")
         w.writeheader()
@@ -542,7 +597,9 @@ def main():
     print("H2 — XGB-24full ECE delta vs XGB-20raw per-cohort (paired bootstrap):")
     for k, v in h2.items():
         sign = "BETTER" if v["ci_hi"] < 0 else "WORSE" if v["ci_lo"] > 0 else "NS"
-        print(f"  {k}: mean={v['obs_mean_delta']:+.4f}  CI=[{v['ci_lo']:+.4f}, {v['ci_hi']:+.4f}]  -> {sign}")
+        print(
+            f"  {k}: mean={v['obs_mean_delta']:+.4f}  CI=[{v['ci_lo']:+.4f}, {v['ci_hi']:+.4f}]  -> {sign}"
+        )
     print("H3 — eta^2 of cohort membership on signed row prediction residuals:")
     for k, v in summary["H3_eta2_calib_gap"].items():
         for tree_name, eta in v.items():
@@ -550,7 +607,9 @@ def main():
             print(f"  {k} x {tree_name}: eta^2 = {eta_text}")
     print("H4 — worst-cohort ECE under XGB-24full (well-calibrated iff < 0.10):")
     for k, v in summary["H4_worst_cohort_ece_24full"].items():
-        print(f"  {k}: worst_stratum={v['worst_stratum']}  ECE={v['worst_ece10']:.4f}  n={v['worst_n_stratum']}  well-cal={'YES' if v['well_calibrated'] else 'NO'}")
+        print(
+            f"  {k}: worst_stratum={v['worst_stratum']}  ECE={v['worst_ece10']:.4f}  n={v['worst_n_stratum']}  well-cal={'YES' if v['well_calibrated'] else 'NO'}"
+        )
 
 
 if __name__ == "__main__":

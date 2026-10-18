@@ -12,6 +12,7 @@ from pilot.runtime_install import (
     install_runtime,
     load_install_request,
 )
+import pytest
 
 
 class RuntimeInstallTests(unittest.TestCase):
@@ -19,14 +20,12 @@ class RuntimeInstallTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary:
             path = Path(temporary) / "request.json"
             path.write_text(json.dumps({"package_pins": ["torch==2.7.1"]}))
-            self.assertEqual(load_install_request(path), ("torch==2.7.1",))
+            assert load_install_request(path) == ("torch==2.7.1",)
             path.write_text(json.dumps({"package_pins": ["torch>=2.7.1"]}))
-            with self.assertRaisesRegex(RuntimeInstallError, "exact"):
+            with pytest.raises(RuntimeInstallError, match="exact"):
                 load_install_request(path)
-            path.write_text(
-                json.dumps({"package_pins": ["torch==2.7.1", "Torch==2.7.1"]})
-            )
-            with self.assertRaisesRegex(RuntimeInstallError, "duplicate"):
+            path.write_text(json.dumps({"package_pins": ["torch==2.7.1", "Torch==2.7.1"]}))
+            with pytest.raises(RuntimeInstallError, match="duplicate"):
                 load_install_request(path)
 
     def test_install_verifies_resulting_versions(self) -> None:
@@ -42,16 +41,17 @@ class RuntimeInstallTests(unittest.TestCase):
             version_getter=lambda _: "2.7.1",
             spec_finder=lambda _: None,
         )
-        self.assertEqual(observed, {"torch": "2.7.1"})
-        self.assertEqual(
-            calls[0][0][:6],
-            ["uv", "pip", "install", "--system", "--reinstall-package", "numpy"],
-        )
-        self.assertEqual(
-            calls[1][0],
-            ["uv", "pip", "uninstall", "--system", *ABI_COUPLED_PACKAGES],
-        )
-        with self.assertRaisesRegex(RuntimeInstallError, "mismatch"):
+        assert observed == {"torch": "2.7.1"}
+        assert calls[0][0][:6] == [
+            "uv",
+            "pip",
+            "install",
+            "--system",
+            "--reinstall-package",
+            "numpy",
+        ]
+        assert calls[1][0] == ["uv", "pip", "uninstall", "--system", *ABI_COUPLED_PACKAGES]
+        with pytest.raises(RuntimeInstallError, match="mismatch"):
             install_runtime(
                 ("torch==2.7.1",),
                 runner=runner,
@@ -72,14 +72,14 @@ class RuntimeInstallTests(unittest.TestCase):
             version_getter=lambda _: "2.7.1",
             spec_finder=lambda _: None,
         )
-        self.assertEqual(calls[1][0][1:4], ["-m", "pip", "install"])
-        self.assertTrue(calls[1][1]["check"])
+        assert calls[1][0][1:4] == ["-m", "pip", "install"]
+        assert calls[1][1]["check"]
 
     def test_install_fails_closed_when_abi_coupled_package_remains(self) -> None:
         def runner(command, **kwargs):
             return SimpleNamespace(returncode=0)
 
-        with self.assertRaisesRegex(RuntimeInstallError, "torchao"):
+        with pytest.raises(RuntimeInstallError, match="torchao"):
             install_runtime(
                 ("torch==2.7.1",),
                 runner=runner,

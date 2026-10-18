@@ -5,6 +5,7 @@ samestack_source.json. Runtime package versions are checked against one shared
 exact lock. Existing JSON alone never skips training; the core validates an
 immutable protocol/config/source-bound artifact completion marker.
 """
+
 from __future__ import annotations
 
 import importlib.util
@@ -31,7 +32,13 @@ SOURCE = "/content/samestack_source.json"
 
 def ensure_packages(*, install=True):
     """Verify exact versions; optionally reconcile all mismatches, not only missing ones."""
-    from platform_hybrid.experiments.samestack_dependencies import IMPORT_NAMES, REQUIREMENTS, runtime_versions, verify_runtime
+    from platform_hybrid.experiments.samestack_dependencies import (
+        IMPORT_NAMES,
+        REQUIREMENTS,
+        runtime_versions,
+        verify_runtime,
+    )
+
     before = runtime_versions()
     try:
         return verify_runtime(before)
@@ -40,14 +47,19 @@ def ensure_packages(*, install=True):
             raise
     loaded = [name for name in IMPORT_NAMES.values() if name in sys.modules]
     if loaded:
-        raise RuntimeError("Restart the runtime before replacing already imported packages: " + ", ".join(loaded))
-    subprocess.check_call([sys.executable, "-m", "pip", "install", "--disable-pip-version-check", *REQUIREMENTS])
+        raise RuntimeError(
+            "Restart the runtime before replacing already imported packages: " + ", ".join(loaded)
+        )
+    subprocess.check_call(
+        [sys.executable, "-m", "pip", "install", "--disable-pip-version-check", *REQUIREMENTS]
+    )
     subprocess.check_call([sys.executable, "-m", "pip", "check"])
     return verify_runtime()
 
 
 def parse_runs(value):
     from platform_hybrid.experiments.samestack_contract import ARMS, SEEDS
+
     result = []
     for item in value.split(","):
         try:
@@ -78,10 +90,14 @@ def load_core(script=SCRIPT):
     return module
 
 
-def prepare_bundle(archive="/content/samestack_code.zip", source_path=SOURCE, destination="/content"):
+def prepare_bundle(
+    archive="/content/samestack_code.zip", source_path=SOURCE, destination="/content"
+):
     """Extract only declared source files after checking their original hashes."""
+
     def reject(value):
         raise ValueError(f"Non-finite JSON constant in source metadata: {value}")
+
     def unique(pairs):
         result = {}
         for key, value in pairs:
@@ -89,6 +105,7 @@ def prepare_bundle(archive="/content/samestack_code.zip", source_path=SOURCE, de
                 raise ValueError(f"Duplicate source metadata key: {key}")
             result[key] = value
         return result
+
     def finite(value):
         if isinstance(value, float) and not math.isfinite(value):
             reject(value)
@@ -98,8 +115,12 @@ def prepare_bundle(archive="/content/samestack_code.zip", source_path=SOURCE, de
         elif isinstance(value, list):
             for item in value:
                 finite(item)
-    source = json.loads(Path(source_path).read_text(encoding="utf-8"), parse_constant=reject,
-                        object_pairs_hook=unique)
+
+    source = json.loads(
+        Path(source_path).read_text(encoding="utf-8"),
+        parse_constant=reject,
+        object_pairs_hook=unique,
+    )
     finite(source)
     if not isinstance(source, dict):
         raise ValueError("source metadata must be an object")
@@ -115,8 +136,13 @@ def prepare_bundle(archive="/content/samestack_code.zip", source_path=SOURCE, de
         for name in names:
             relative = PurePosixPath(name)
             target = destination / name
-            if (relative.is_absolute() or ".." in relative.parts or "\\" in name
-                    or str(relative) != name or not target.resolve().is_relative_to(destination.resolve())):
+            if (
+                relative.is_absolute()
+                or ".." in relative.parts
+                or "\\" in name
+                or str(relative) != name
+                or not target.resolve().is_relative_to(destination.resolve())
+            ):
                 raise ValueError("unsafe source archive path")
             data = bundle.read(name)
             if hashlib.sha256(data).hexdigest() != files[name]:
@@ -129,7 +155,9 @@ def prepare_bundle(archive="/content/samestack_code.zip", source_path=SOURCE, de
                 origin = getattr(module, "__file__", None)
                 if origin and Path(origin).resolve() == target.resolve():
                     if getattr(module, "__samestack_source_hash__", None) != files[name]:
-                        raise RuntimeError("Imported same-stack source changed or is untracked; restart the Colab runtime")
+                        raise RuntimeError(
+                            "Imported same-stack source changed or is untracked; restart the Colab runtime"
+                        )
             checked.append((target, data))
         for target, data in checked:
             target.parent.mkdir(parents=True, exist_ok=True)
@@ -145,8 +173,16 @@ def prepare_bundle(archive="/content/samestack_code.zip", source_path=SOURCE, de
 def run_parallel(items, n):
     # Tensors peak at ~14 GiB per run, but the caching allocator keeps growing past 20 GiB unless capped,
     # so each child gets a hard 1/n share of the GPU (GPU_MEM_FRACTION) and n is sized to that peak.
-    total = int(subprocess.run(["nvidia-smi", "--query-gpu=memory.total", "--format=csv,noheader,nounits"],
-                               capture_output=True, text=True).stdout.split()[0]) / 1024
+    total = (
+        int(
+            subprocess.run(
+                ["nvidia-smi", "--query-gpu=memory.total", "--format=csv,noheader,nounits"],
+                capture_output=True,
+                text=True,
+            ).stdout.split()[0]
+        )
+        / 1024
+    )
     n = max(1, min(n, int(total // float(os.environ.get("GPU_GB_PER_RUN", "18")))))
     print(f"parallel runs: {n} ({total:.0f} GiB GPU)", flush=True)
     os.makedirs("/content/logs", exist_ok=True)
@@ -155,21 +191,44 @@ def run_parallel(items, n):
         while pending and len(live) < n:
             item = pending.pop(0)
             log = open(f"/content/logs/{item.replace(':', '_s')}.log", "w")
-            env = {**os.environ, "RUNS": item, "PARALLEL": "1", "PYTORCH_CUDA_ALLOC_CONF": "expandable_segments:True",
-                   "GPU_MEM_FRACTION": f"{0.97 / n:.3f}"}
+            env = {
+                **os.environ,
+                "RUNS": item,
+                "PARALLEL": "1",
+                "PYTORCH_CUDA_ALLOC_CONF": "expandable_segments:True",
+                "GPU_MEM_FRACTION": f"{0.97 / n:.3f}",
+            }
             try:
-                live.append((item, subprocess.Popen([sys.executable, SELF], env=env, stdout=log, stderr=subprocess.STDOUT)))
+                live.append(
+                    (
+                        item,
+                        subprocess.Popen(
+                            [sys.executable, SELF], env=env, stdout=log, stderr=subprocess.STDOUT
+                        ),
+                    )
+                )
             finally:
                 log.close()
         time.sleep(20)
         ticks += 1
         if ticks % 30 == 0:  # every ~10 min: GPU memory and utilisation, to size PARALLEL
             q = "--query-gpu=memory.used,memory.total,utilization.gpu"
-            print("GPU", subprocess.run(["nvidia-smi", q, "--format=csv,noheader"], capture_output=True, text=True).stdout.strip(),
-                  f"live={len(live)} pending={len(pending)}", flush=True)
+            print(
+                "GPU",
+                subprocess.run(
+                    ["nvidia-smi", q, "--format=csv,noheader"], capture_output=True, text=True
+                ).stdout.strip(),
+                f"live={len(live)} pending={len(pending)}",
+                flush=True,
+            )
         for item, proc in [x for x in live if x[1].poll() is not None]:
             live.remove((item, proc))
-            tail = open(f"/content/logs/{item.replace(':', '_s')}.log").read().strip().splitlines()[-1:]
+            tail = (
+                open(f"/content/logs/{item.replace(':', '_s')}.log")
+                .read()
+                .strip()
+                .splitlines()[-1:]
+            )
             print(f"{'FINISHED' if proc.returncode == 0 else 'FAILED'} {item}: {tail}", flush=True)
             if proc.returncode:
                 failed.append(item)
@@ -181,6 +240,7 @@ def main():
     source = prepare_bundle()
     from platform_hybrid.experiments.samestack_contract import validate_completion
     from platform_hybrid.experiments.samestack_protocol import PROTOCOL_ID
+
     runs = parse_runs(os.environ["RUNS"])
     smoke = os.environ.get("SMOKE") == "1"
     ensure_packages()
@@ -194,6 +254,7 @@ def main():
         if not math.isfinite(fraction) or not 0 < fraction <= 1:
             raise ValueError("GPU_MEM_FRACTION must be in (0, 1]")
         import torch
+
         torch.cuda.set_per_process_memory_fraction(fraction)
     module = load_core()
     for name, imported in list(sys.modules.items()):
@@ -211,9 +272,14 @@ def main():
         started = time.monotonic()
         record = module.run_arm_local(arm, seed, smoke=smoke, source_provenance=source)
         result_path = Path(RESULTS) / sub / f"{arm}_s{seed}.json"
-        validate_completion(result_path, expected={"environment": "colab", "protocol_id": PROTOCOL_ID})
-        print(f"PRESERVED {arm} s{seed} post={record['heldout_post_acc']:.4f} "
-              f"pre={record['heldout_pre_acc']:.4f} wall={time.monotonic() - started:.0f}s", flush=True)
+        validate_completion(
+            result_path, expected={"environment": "colab", "protocol_id": PROTOCOL_ID}
+        )
+        print(
+            f"PRESERVED {arm} s{seed} post={record['heldout_post_acc']:.4f} "
+            f"pre={record['heldout_pre_acc']:.4f} wall={time.monotonic() - started:.0f}s",
+            flush=True,
+        )
 
 
 if __name__ == "__main__":

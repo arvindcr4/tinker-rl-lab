@@ -23,12 +23,12 @@ Deliverables (all real, re-aggregated from existing TSVs):
 
 No fabrication: every number is sourced from an existing TSV.
 """
+
 from __future__ import annotations
 
 import math
 from pathlib import Path
 
-import numpy as np
 import pandas as pd
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -44,6 +44,7 @@ T_REGIMES = [1_000_000, 4_000_000, 16_000_000, 64_000_000]
 # ---------------------------------------------------------------------------
 # 1. Load existing TSVs
 # ---------------------------------------------------------------------------
+
 
 def load_g4_vs_g32() -> pd.DataFrame:
     return pd.read_csv(RES / "group_size_g4_vs_g32_broader_scale.tsv", sep="\t")
@@ -68,6 +69,7 @@ def load_fit() -> pd.DataFrame:
 # ---------------------------------------------------------------------------
 # 2. Iso-token TOST + retention matrix (Qwen3-8B / GSM8K)
 # ---------------------------------------------------------------------------
+
 
 def iso_token_tost() -> pd.DataFrame:
     """For each T, test G=4 vs G=32 retention at the Wu 97.6% equivalence bound.
@@ -95,33 +97,38 @@ def iso_token_tost() -> pd.DataFrame:
         # Exploratory normal approximation for the displayed ratio band.
         if b_lo <= 0 or b <= 0:
             raise ValueError("ratio requires positive reference interval")
-        se = max((R_hi-R_lo)/(2*1.96),1e-9)
+        se = max((R_hi - R_lo) / (2 * 1.96), 1e-9)
         from statistics import NormalDist
-        cdf=NormalDist().cdf
-        tost_p=max(cdf((WU_RETENTION-EPS_TOST-R)/se),cdf((R-WU_RETENTION-EPS_TOST)/se))
+
+        cdf = NormalDist().cdf
+        tost_p = max(
+            cdf((WU_RETENTION - EPS_TOST - R) / se), cdf((R - WU_RETENTION - EPS_TOST) / se)
+        )
         # Verdict
         is_equiv = tost_p < 0.05
         # Wu claim check
-        ci_includes_wu = (R_lo <= WU_RETENTION <= R_hi)
-        rows.append({
-            "T_tokens": T,
-            "G_a": int(r["G_a"]),
-            "G_b": int(r["G_b"]),
-            "acc_G_a": round(a, 4),
-            "acc_G_b": round(b, 4),
-            "diff": round(diff, 4),
-            "diff_ci_low": round(diff_lo, 4),
-            "diff_ci_high": round(diff_hi, 4),
-            "retention": round(R, 4),
-            "retention_ci_low": round(R_lo, 4),
-            "retention_ci_high": round(R_hi, 4),
-            "estimand": "accuracy_ratio_Gsmall_over_Glarge",
-            "inference": "summary_interval_normal_sensitivity",
-            "tost_p_eps0.02": round(tost_p, 6),
-            "tost_equivalent": bool(is_equiv),
-            "wu_97_6_in_CI": bool(ci_includes_wu),
-            "above_wu_97_6pct": bool(R >= WU_RETENTION),
-        })
+        ci_includes_wu = R_lo <= WU_RETENTION <= R_hi
+        rows.append(
+            {
+                "T_tokens": T,
+                "G_a": int(r["G_a"]),
+                "G_b": int(r["G_b"]),
+                "acc_G_a": round(a, 4),
+                "acc_G_b": round(b, 4),
+                "diff": round(diff, 4),
+                "diff_ci_low": round(diff_lo, 4),
+                "diff_ci_high": round(diff_hi, 4),
+                "retention": round(R, 4),
+                "retention_ci_low": round(R_lo, 4),
+                "retention_ci_high": round(R_hi, 4),
+                "estimand": "accuracy_ratio_Gsmall_over_Glarge",
+                "inference": "summary_interval_normal_sensitivity",
+                "tost_p_eps0.02": round(tost_p, 6),
+                "tost_equivalent": bool(is_equiv),
+                "wu_97_6_in_CI": bool(ci_includes_wu),
+                "above_wu_97_6pct": bool(R >= WU_RETENTION),
+            }
+        )
     df = pd.DataFrame(rows)
     out_path = RES / "group_size_iter31_iso_token_v2.tsv"
     df.to_csv(out_path, sep="\t", index=False)
@@ -131,6 +138,7 @@ def iso_token_tost() -> pd.DataFrame:
 # ---------------------------------------------------------------------------
 # 3. Wu claim audit: easy vs hard regime
 # ---------------------------------------------------------------------------
+
 
 def wu_audit(syn: pd.DataFrame) -> pd.DataFrame:
     """Two rows: easy regime (Qwen2.5-0.5B / arithmetic, measured) and
@@ -168,8 +176,8 @@ def wu_audit(syn: pd.DataFrame) -> pd.DataFrame:
             "verdict": (
                 "Wu 97.6% headline holds: all G>=4 retain >= 97.6% of G=2 on "
                 "easy arithmetic; flat reward-vs-G is the canonical DPO regime."
-                if easy_above_all else
-                "Wu 97.6% headline fails on easy arithmetic"
+                if easy_above_all
+                else "Wu 97.6% headline fails on easy arithmetic"
             ),
         },
         {
@@ -185,10 +193,10 @@ def wu_audit(syn: pd.DataFrame) -> pd.DataFrame:
             "wu_headline_holds": bool(hard_above_all),
             "verdict": (
                 "Wu 97.6% headline holds across all budgets on hard reasoning"
-                if hard_above_all else
-                f"Wu 97.6% headline fails: only {hard_n_above}/{hard_n_total} "
+                if hard_above_all
+                else f"Wu 97.6% headline fails: only {hard_n_above}/{hard_n_total} "
                 f"(G,T) cells retain >= 97.6%; retention drops to {hard_min:.3f} "
-                f"at T=64M tokens (a {100*(WU_RETENTION-hard_min):.1f}pp gap)."
+                f"at T=64M tokens (a {100 * (WU_RETENTION - hard_min):.1f}pp gap)."
             ),
         },
     ]
@@ -201,6 +209,7 @@ def wu_audit(syn: pd.DataFrame) -> pd.DataFrame:
 # ---------------------------------------------------------------------------
 # 4. ZVF x G cross-pillar coupling
 # ---------------------------------------------------------------------------
+
 
 def zvf_coupling(syn: pd.DataFrame) -> pd.DataFrame:
     """Cross-pillar: combine Pillar 2 (ZVF) and Pillar 3 (G retention)
@@ -221,15 +230,20 @@ def zvf_coupling(syn: pd.DataFrame) -> pd.DataFrame:
     # empirical ZVF per G (Qwen2.5-0.5B arithmetic) from group_size_effect.tsv
     zvf_by_g = {}
     for _, r in eff.iterrows():
-        if str(r.get("source", "")).startswith("qwen2.5-0.5b_arithmetic") and not str(r["source"]).startswith("qwen2.5-0.5b_arithmetic_iter27"):
+        if str(r.get("source", "")).startswith("qwen2.5-0.5b_arithmetic") and not str(
+            r["source"]
+        ).startswith("qwen2.5-0.5b_arithmetic_iter27"):
             g = int(r["G"])
             zvf = r.get("mean_zvf")
             if pd.notna(zvf):
                 zvf_by_g[g] = float(zvf)
     # also iter27 effect rows
-    syn_zvf = {int(r["G"]): float(r["mean_zvf"]) for _, r in eff.iterrows()
-               if str(r.get("source", "")).startswith("qwen2.5-0.5b_arithmetic")
-               and pd.notna(r.get("mean_zvf"))}
+    syn_zvf = {
+        int(r["G"]): float(r["mean_zvf"])
+        for _, r in eff.iterrows()
+        if str(r.get("source", "")).startswith("qwen2.5-0.5b_arithmetic")
+        and pd.notna(r.get("mean_zvf"))
+    }
     # union
     zvf_by_g.update(syn_zvf)
     g4_g32 = load_g4_vs_g32()
@@ -250,29 +264,31 @@ def zvf_coupling(syn: pd.DataFrame) -> pd.DataFrame:
         # (illustrative; using arithmetic mean reward ~ 0.86 as a stand-in for
         # the GSM8K base rate at the relevant difficulty)
         p_illust = 0.86  # proxy difficulty for GSM8K at mid-budget
-        zvf_G4 = p_illust ** 4 + (1 - p_illust) ** 4
-        zvf_G32 = p_illust ** 32 + (1 - p_illust) ** 32
+        zvf_G4 = p_illust**4 + (1 - p_illust) ** 4
+        zvf_G32 = p_illust**32 + (1 - p_illust) ** 32
         zvf_gap_pp = 100 * (zvf_G4 - zvf_G32)
         snr_G4 = snr_by_g.get(4, None)
         snr_G32 = snr_by_g.get(16, None)  # no SNR at G=32 in sweep; use G=16 as proxy
-        rows.append({
-            "T_tokens": T,
-            "G_a": int(r["G_a"]),
-            "G_b": int(r["G_b"]),
-            "retention_measured": round(R_meas, 4),
-            "retention_pred_iter19_fit": round(R_pred, 4),
-            "retention_pred_residual": round(R_meas - R_pred, 4),
-            "zvf_illustrative_G4": round(zvf_G4, 4),
-            "zvf_illustrative_G32": round(zvf_G32, 6),
-            "zvf_gap_pp": round(zvf_gap_pp, 2),
-            "snr_measured_G4": round(snr_G4, 3) if snr_G4 else None,
-            "snr_measured_G16_proxy_for_G32": round(snr_G32, 3) if snr_G32 else None,
-            "interpretation": (
-                "ZVF-gap high, retention well below Wu 97.6%"
-                if R_meas < WU_RETENTION and zvf_gap_pp > 1.0 else
-                "ZVF-gap low, retention within Wu 97.6%"
-            ),
-        })
+        rows.append(
+            {
+                "T_tokens": T,
+                "G_a": int(r["G_a"]),
+                "G_b": int(r["G_b"]),
+                "retention_measured": round(R_meas, 4),
+                "retention_pred_iter19_fit": round(R_pred, 4),
+                "retention_pred_residual": round(R_meas - R_pred, 4),
+                "zvf_illustrative_G4": round(zvf_G4, 4),
+                "zvf_illustrative_G32": round(zvf_G32, 6),
+                "zvf_gap_pp": round(zvf_gap_pp, 2),
+                "snr_measured_G4": round(snr_G4, 3) if snr_G4 else None,
+                "snr_measured_G16_proxy_for_G32": round(snr_G32, 3) if snr_G32 else None,
+                "interpretation": (
+                    "ZVF-gap high, retention well below Wu 97.6%"
+                    if R_meas < WU_RETENTION and zvf_gap_pp > 1.0
+                    else "ZVF-gap low, retention within Wu 97.6%"
+                ),
+            }
+        )
     df = pd.DataFrame(rows)
     out_path = RES / "group_size_iter31_zvf_coupling_v2.tsv"
     df.to_csv(out_path, sep="\t", index=False)
@@ -283,43 +299,46 @@ def zvf_coupling(syn: pd.DataFrame) -> pd.DataFrame:
 # 5. Compact summary
 # ---------------------------------------------------------------------------
 
+
 def write_summary(iso: pd.DataFrame, audit: pd.DataFrame, zvf: pd.DataFrame) -> Path:
     easy_row = audit[audit["regime"].str.startswith("easy")].iloc[0]
     hard_row = audit[audit["regime"].str.startswith("hard")].iloc[0]
     n_equiv = int(iso["tost_equivalent"].sum())
     n_above_wu = int(iso["above_wu_97_6pct"].sum())
-    summary = pd.DataFrame([
-        {
-            "metric": "easy_regime_Wu_holds",
-            "value": bool(easy_row["wu_headline_holds"]),
-            "detail": str(easy_row["verdict"]),
-        },
-        {
-            "metric": "hard_regime_Wu_holds",
-            "value": bool(hard_row["wu_headline_holds"]),
-            "detail": str(hard_row["verdict"]),
-        },
-        {
-            "metric": "iso_token_TOST_equiv_count",
-            "value": n_equiv,
-            "detail": f"{n_equiv}/{len(iso)} (G=4 vs G=32) cells TOST-equivalent at eps=0.02",
-        },
-        {
-            "metric": "iso_token_above_Wu_count",
-            "value": n_above_wu,
-            "detail": f"{n_above_wu}/{len(iso)} cells with retention >= 97.6%",
-        },
-        {
-            "metric": "hard_regime_retention_floor",
-            "value": round(float(hard_row["retention_min"]), 4),
-            "detail": f"min retention observed across (G,T) on GSM8K: {hard_row['retention_min']:.3f}",
-        },
-        {
-            "metric": "hard_regime_retention_drop_pp",
-            "value": round(float(100 * (WU_RETENTION - float(hard_row["retention_min"]))), 2),
-            "detail": f"gap from Wu 97.6% baseline to measured minimum: {100*(WU_RETENTION-float(hard_row['retention_min'])):.1f}pp",
-        },
-    ])
+    summary = pd.DataFrame(
+        [
+            {
+                "metric": "easy_regime_Wu_holds",
+                "value": bool(easy_row["wu_headline_holds"]),
+                "detail": str(easy_row["verdict"]),
+            },
+            {
+                "metric": "hard_regime_Wu_holds",
+                "value": bool(hard_row["wu_headline_holds"]),
+                "detail": str(hard_row["verdict"]),
+            },
+            {
+                "metric": "iso_token_TOST_equiv_count",
+                "value": n_equiv,
+                "detail": f"{n_equiv}/{len(iso)} (G=4 vs G=32) cells TOST-equivalent at eps=0.02",
+            },
+            {
+                "metric": "iso_token_above_Wu_count",
+                "value": n_above_wu,
+                "detail": f"{n_above_wu}/{len(iso)} cells with retention >= 97.6%",
+            },
+            {
+                "metric": "hard_regime_retention_floor",
+                "value": round(float(hard_row["retention_min"]), 4),
+                "detail": f"min retention observed across (G,T) on GSM8K: {hard_row['retention_min']:.3f}",
+            },
+            {
+                "metric": "hard_regime_retention_drop_pp",
+                "value": round(float(100 * (WU_RETENTION - float(hard_row["retention_min"]))), 2),
+                "detail": f"gap from Wu 97.6% baseline to measured minimum: {100 * (WU_RETENTION - float(hard_row['retention_min'])):.1f}pp",
+            },
+        ]
+    )
     out_path = RES / "group_size_iter31_summary_v2.tsv"
     summary.to_csv(out_path, sep="\t", index=False)
     return out_path
@@ -328,6 +347,7 @@ def write_summary(iso: pd.DataFrame, audit: pd.DataFrame, zvf: pd.DataFrame) -> 
 # ---------------------------------------------------------------------------
 # Driver
 # ---------------------------------------------------------------------------
+
 
 def main() -> None:
     syn = load_synthesis()

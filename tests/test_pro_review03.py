@@ -137,10 +137,10 @@ def test_authoritative_math(response, target, expected):
 
 @pytest.mark.parametrize(
     "args",
-    [{"path": "/TMP/A"}, {"path": False}, {"path": {"x": False}}, {"path": "/tmp/a", "extra": 1}],  # noqa: S108 - Dummy reward/command argument; no filesystem access.
+    [{"path": "/TMP/A"}, {"path": False}, {"path": {"x": False}}, {"path": "/tmp/a", "extra": 1}],
 )
 def test_tool_full_credit_requires_values_types_and_exact_keys(args):
-    target = {"tool": "read", "arguments": {"path": "/tmp/a"}}  # noqa: S108 - Dummy reward/command argument; no filesystem access.
+    target = {"tool": "read", "arguments": {"path": "/tmp/a"}}
     import json
 
     assert (

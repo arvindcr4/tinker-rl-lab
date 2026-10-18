@@ -7,6 +7,7 @@ Panel (b): empirical vs predicted argmax G at each budget — 3/4 within
 2x; the T=1M under-prediction is the cleanest single-cell evidence of
 budget-dependent per-token optimizer work.
 """
+
 from __future__ import annotations
 from pathlib import Path
 
@@ -14,7 +15,6 @@ import matplotlib
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-import numpy as np
 
 ROOT = Path(__file__).resolve().parent.parent
 RES = ROOT / "experiments" / "results"
@@ -27,7 +27,7 @@ PAPER_FIG.mkdir(exist_ok=True)
 def read_tsv(path):
     with open(path) as f:
         header = f.readline().rstrip("\n").split("\t")
-        return [dict(zip(header, line.rstrip("\n").split("\t"))) for line in f]
+        return [dict(zip(header, line.rstrip("\n").split("\t"), strict=False)) for line in f]
 
 
 def main():
@@ -57,7 +57,9 @@ def main():
     ax2.plot(Gs, des_iid, "s--", color="C3", alpha=0.5, label=r"$d_{\mathrm{eff,iid}}$")
     ax2.set_ylabel("Effective samples $d_{\\mathrm{eff}}$", color="C3")
     ax2.tick_params(axis="y", labelcolor="C3")
-    ax.set_title("(a) Contrastive yield and effective sample size\nat the small-scale zvf sweep ($p\\approx 0.86$)")
+    ax.set_title(
+        "(a) Contrastive yield and effective sample size\nat the small-scale zvf sweep ($p\\approx 0.86$)"
+    )
     ax.grid(True, alpha=0.3)
     # Combine legends
     lines1, labels1 = ax.get_legend_handles_labels()
@@ -75,16 +77,34 @@ def main():
     # Mark within 2x
     for i, w in enumerate(within):
         if w == "yes":
-            ax.scatter([Ts[i]], [emp[i]], s=200, facecolors="none", edgecolors="green", linewidths=2, zorder=5)
+            ax.scatter(
+                [Ts[i]],
+                [emp[i]],
+                s=200,
+                facecolors="none",
+                edgecolors="green",
+                linewidths=2,
+                zorder=5,
+            )
         else:
-            ax.scatter([Ts[i]], [emp[i]], s=200, facecolors="none", edgecolors="red", linewidths=2, zorder=5)
+            ax.scatter(
+                [Ts[i]],
+                [emp[i]],
+                s=200,
+                facecolors="none",
+                edgecolors="red",
+                linewidths=2,
+                zorder=5,
+            )
     ax.set_xscale("log")
     ax.set_yscale("log", base=2)
     ax.set_xlabel("Iso-token budget $T$ (M)")
     ax.set_ylabel("Argmax $G$")
     ax.set_yticks([4, 8, 16, 32, 64])
     ax.set_yticklabels(["4", "8", "16", "32", "64"])
-    ax.set_title("(b) Argmax $G$ per budget: empirical vs iso-yield\n(green=within 2x, red=out of 2x)")
+    ax.set_title(
+        "(b) Argmax $G$ per budget: empirical vs iso-yield\n(green=within 2x, red=out of 2x)"
+    )
     ax.grid(True, alpha=0.3, which="both")
     ax.legend(loc="lower right", fontsize=9)
 
@@ -97,6 +117,7 @@ def main():
     print(f"Wrote {out_pdf} and {out_png}")
     # Mirror to paper/figures
     import shutil
+
     shutil.copy(out_pdf, PAPER_FIG / "group_size_iter55.pdf")
     print(f"Mirrored to {PAPER_FIG / 'group_size_iter55.pdf'}")
 

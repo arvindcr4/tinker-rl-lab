@@ -40,10 +40,13 @@ from flagship.pavlov_webbench_eval_adapter import (
     validate_webbench_manifest as _validate_webbench_manifest,
     write_split_artifacts,
 )
+import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 REAL_DATASET = REPO_ROOT / "outputs" / "e6_webbench" / "webbenchfinal.csv"
-REAL_TRAINING_MANIFEST = REPO_ROOT / "outputs" / "e6_webbench" / "eval_only_training_task_manifest.json"
+REAL_TRAINING_MANIFEST = (
+    REPO_ROOT / "outputs" / "e6_webbench" / "eval_only_training_task_manifest.json"
+)
 
 # Recomputed by webbench_eval.py's independent hashing scheme over the same
 # pinned CSV.  If either implementation drifts, these stop matching.
@@ -78,14 +81,30 @@ def validate_webbench_manifest(manifest: object) -> dict[str, object]:
     """Test-only wrapper: production callers must supply --trust-roots/root input."""
     from unittest.mock import patch
     from flagship import pavlov_webbench_eval_adapter as module
-    with patch.object(module, "TRUSTED_PROVIDER_FINGERPRINTS", frozenset({_E6_TEST_TRUST_ROOT["key_fingerprint"]})), patch.object(module, "TRUSTED_RECEIPT_KEYS", {_E6_TEST_TRUST_ROOT["key_id"]: _E6_TEST_TRUST_ROOT["public_key_b64"]}):
+
+    with (
+        patch.object(
+            module,
+            "TRUSTED_PROVIDER_FINGERPRINTS",
+            frozenset({_E6_TEST_TRUST_ROOT["key_fingerprint"]}),
+        ),
+        patch.object(
+            module,
+            "TRUSTED_RECEIPT_KEYS",
+            {_E6_TEST_TRUST_ROOT["key_id"]: _E6_TEST_TRUST_ROOT["public_key_b64"]},
+        ),
+    ):
         return _validate_webbench_manifest(manifest, trust_root=_E6_TEST_TRUST_ROOT)
 
 
 def _sign_receipt(record):
     key = Ed25519PrivateKey.from_private_bytes(base64.b64decode(_E6_TEST_PRIVATE_KEY_B64))
     payload = {k: v for k, v in record.items() if k != "signature_b64"}
-    record["signature_b64"] = base64.b64encode(key.sign(json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=True).encode())).decode()
+    record["signature_b64"] = base64.b64encode(
+        key.sign(
+            json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=True).encode()
+        )
+    ).decode()
     return record
 
 
@@ -105,7 +124,9 @@ FIXTURE_ROWS = [
 
 
 class PavlovWebBenchBoundaryTests(unittest.TestCase):
-    def _receipt(self, binding: dict[str, str], number: int, payload_extra: dict[str, object] | None = None) -> dict[str, object]:
+    def _receipt(
+        self, binding: dict[str, str], number: int, payload_extra: dict[str, object] | None = None
+    ) -> dict[str, object]:
         payload: dict[str, object] = {
             "identity": f"{number:040x}"[-40:],
             "artifact_digest": f"{number:064x}"[-64:],
@@ -194,7 +215,10 @@ class PavlovWebBenchBoundaryTests(unittest.TestCase):
         environment["container_receipt"] = self._receipt(
             {"subject": WEBBENCH_SUITE_ID, "role": WEBBENCH_ROLE, "kind": "container"},
             5,
-            {"container_digest": environment["container_digest"], "runtime_digest": environment["runtime_digest"]},
+            {
+                "container_digest": environment["container_digest"],
+                "runtime_digest": environment["runtime_digest"],
+            },
         )
         environment["verifier_receipt"] = self._receipt(
             {"subject": WEBBENCH_SUITE_ID, "role": WEBBENCH_ROLE, "kind": "verifier"},
@@ -232,9 +256,19 @@ class PavlovWebBenchBoundaryTests(unittest.TestCase):
             "key_fingerprint": _E6_TEST_TRUST_ROOT["key_fingerprint"],
             "trust_root_sha256": sha256_hex(_E6_TEST_TRUST_ROOT),
         }
-        signing_key = Ed25519PrivateKey.from_private_bytes(base64.b64decode(_E6_TEST_PRIVATE_KEY_B64))
-        signed = {key: value for key, value in provider_grant.items() if key != "detached_signature"}
-        provider_grant["detached_signature"] = base64.b64encode(signing_key.sign(json.dumps(signed, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8"))).decode("ascii")
+        signing_key = Ed25519PrivateKey.from_private_bytes(
+            base64.b64decode(_E6_TEST_PRIVATE_KEY_B64)
+        )
+        signed = {
+            key: value for key, value in provider_grant.items() if key != "detached_signature"
+        }
+        provider_grant["detached_signature"] = base64.b64encode(
+            signing_key.sign(
+                json.dumps(
+                    signed, sort_keys=True, separators=(",", ":"), ensure_ascii=False
+                ).encode("utf-8")
+            )
+        ).decode("ascii")
         manifest["provider_access_receipt"] = provider_grant
         return manifest
 
@@ -276,15 +310,20 @@ class PavlovWebBenchBoundaryTests(unittest.TestCase):
                 "revision": f"{22:040x}"[-40:],
                 "visibility": "private",
                 "repo_url": "https://huggingface.co/example/webbench",
-                "checkpoint_url": "https://huggingface.co/example/webbench/commit/" + f"{22:040x}"[-40:],
+                "checkpoint_url": "https://huggingface.co/example/webbench/commit/"
+                + f"{22:040x}"[-40:],
             },
         )
         # The repeated URL expression above is intentionally corrected to a
         # valid single URL before hashing; it also makes accidental URL edits in
         # a test fixture visible rather than silently accepted.
         hf_payload = result_receipts["hf"]["payload"]
-        hf_payload["checkpoint_url"] = "https://huggingface.co/example/webbench/commit/" + f"{22:040x}"[-40:]
-        result_receipts["hf"]["digest"] = receipt_digest(result_receipts["hf"]["binding"], hf_payload)
+        hf_payload["checkpoint_url"] = (
+            "https://huggingface.co/example/webbench/commit/" + f"{22:040x}"[-40:]
+        )
+        result_receipts["hf"]["digest"] = receipt_digest(
+            result_receipts["hf"]["binding"], hf_payload
+        )
         manifest["receipts"] = receipts
         manifest["result"] = result
         manifest["result_receipts"] = result_receipts
@@ -294,23 +333,23 @@ class PavlovWebBenchBoundaryTests(unittest.TestCase):
     def test_primary_eval_boundary_is_valid_but_not_heldout_without_receipts(self) -> None:
         report = validate_webbench_manifest(self._manifest())
 
-        self.assertTrue(report["boundary_valid"])
-        self.assertTrue(report["primary_eval"])
-        self.assertFalse(report["receipt_proven_heldout"])
-        self.assertEqual(report["status"], "READY_PRIMARY_EVAL_PENDING_RECEIPTS")
+        assert report["boundary_valid"]
+        assert report["primary_eval"]
+        assert not report["receipt_proven_heldout"]
+        assert report["status"] == "READY_PRIMARY_EVAL_PENDING_RECEIPTS"
 
     def test_live_grant_without_external_trust_root_fails_closed(self) -> None:
         report = _validate_webbench_manifest(self._manifest())
-        self.assertFalse(report["boundary_valid"])
-        self.assertIn("provider_access_receipt_invalid", report["blocker_codes"])
+        assert not report["boundary_valid"]
+        assert "provider_access_receipt_invalid" in report["blocker_codes"]
 
     def test_complete_receipts_prove_heldout_results(self) -> None:
         report = validate_webbench_manifest(self._with_heldout_receipts(self._manifest()))
 
-        self.assertTrue(report["boundary_valid"])
-        self.assertTrue(report["receipt_proven_heldout"])
-        self.assertTrue(report["heldout_claim_allowed"])
-        self.assertEqual(report["status"], "READY_RECEIPT_PROVEN_HELDOUT")
+        assert report["boundary_valid"]
+        assert report["receipt_proven_heldout"]
+        assert report["heldout_claim_allowed"]
+        assert report["status"] == "READY_RECEIPT_PROVEN_HELDOUT"
 
     def test_heldout_role_is_not_a_substitute_for_primary_eval(self) -> None:
         manifest = self._manifest()
@@ -318,8 +357,8 @@ class PavlovWebBenchBoundaryTests(unittest.TestCase):
 
         report = validate_webbench_manifest(manifest)
 
-        self.assertFalse(report["boundary_valid"])
-        self.assertIn("role_invalid", report["blocker_codes"])
+        assert not report["boundary_valid"]
+        assert "role_invalid" in report["blocker_codes"]
 
     def test_self_attested_heldout_status_without_receipts_blocks(self) -> None:
         manifest = self._manifest()
@@ -327,21 +366,21 @@ class PavlovWebBenchBoundaryTests(unittest.TestCase):
 
         report = validate_webbench_manifest(manifest)
 
-        self.assertFalse(report["boundary_valid"])
-        self.assertIn("heldout_status_without_receipts", report["blocker_codes"])
+        assert not report["boundary_valid"]
+        assert "heldout_status_without_receipts" in report["blocker_codes"]
 
     def test_provider_grant_binds_the_immutable_runtime_and_write_scope(self) -> None:
         manifest = self._manifest()
         manifest["provider_access_receipt"]["binding"]["runtime_digest"] = "f" * 64
         report = validate_webbench_manifest(manifest)
-        self.assertFalse(report["boundary_valid"])
-        self.assertIn("provider_access_receipt_invalid", report["blocker_codes"])
+        assert not report["boundary_valid"]
+        assert "provider_access_receipt_invalid" in report["blocker_codes"]
 
         manifest = self._manifest()
         manifest["provider_access_receipt"]["write_scope"]["operations"] = []
         report = validate_webbench_manifest(manifest)
-        self.assertFalse(report["boundary_valid"])
-        self.assertIn("provider_access_receipt_invalid", report["blocker_codes"])
+        assert not report["boundary_valid"]
+        assert "provider_access_receipt_invalid" in report["blocker_codes"]
 
     def test_only_explicit_historical_unlaunchable_receipts_are_compatible(self) -> None:
         manifest = self._manifest()
@@ -354,12 +393,12 @@ class PavlovWebBenchBoundaryTests(unittest.TestCase):
             "note": "Historical access request; not launch authority.",
         }
         report = validate_webbench_manifest(manifest)
-        self.assertTrue(report["boundary_valid"], report["blockers"])
+        assert report["boundary_valid"], report["blockers"]
 
         manifest["provider_access_receipt"]["unlaunchable"] = False
         report = validate_webbench_manifest(manifest)
-        self.assertFalse(report["boundary_valid"])
-        self.assertIn("provider_access_receipt_invalid", report["blocker_codes"])
+        assert not report["boundary_valid"]
+        assert "provider_access_receipt_invalid" in report["blocker_codes"]
 
     def test_authoritative_source_identity_rejects_xlam_and_related_benchmarks(self) -> None:
         manifest = self._manifest()
@@ -368,9 +407,9 @@ class PavlovWebBenchBoundaryTests(unittest.TestCase):
 
         report = validate_webbench_manifest(manifest)
 
-        self.assertFalse(report["boundary_valid"])
-        self.assertIn("source_identity_mismatch", report["blocker_codes"])
-        self.assertIn("related_benchmark_substitution", report["blocker_codes"])
+        assert not report["boundary_valid"]
+        assert "source_identity_mismatch" in report["blocker_codes"]
+        assert "related_benchmark_substitution" in report["blocker_codes"]
 
     def test_fake_revision_license_and_receipt_strings_block(self) -> None:
         manifest = self._manifest()
@@ -380,10 +419,10 @@ class PavlovWebBenchBoundaryTests(unittest.TestCase):
 
         report = validate_webbench_manifest(manifest)
 
-        self.assertFalse(report["boundary_valid"])
-        self.assertIn("revision_not_pinned", report["blocker_codes"])
-        self.assertIn("license_not_pinned", report["blocker_codes"])
-        self.assertIn("source_receipt_invalid", report["blocker_codes"])
+        assert not report["boundary_valid"]
+        assert "revision_not_pinned" in report["blocker_codes"]
+        assert "license_not_pinned" in report["blocker_codes"]
+        assert "source_receipt_invalid" in report["blocker_codes"]
 
     def test_task_and_split_hashes_must_be_deterministic_and_bound(self) -> None:
         manifest = self._manifest()
@@ -392,9 +431,9 @@ class PavlovWebBenchBoundaryTests(unittest.TestCase):
 
         report = validate_webbench_manifest(manifest)
 
-        self.assertFalse(report["boundary_valid"])
-        self.assertIn("task_ids_not_deterministic", report["blocker_codes"])
-        self.assertIn("task_id_hash_mismatch", report["blocker_codes"])
+        assert not report["boundary_valid"]
+        assert "task_ids_not_deterministic" in report["blocker_codes"]
+        assert "task_id_hash_mismatch" in report["blocker_codes"]
 
     def test_task_receipt_cannot_attest_to_a_different_task_hash(self) -> None:
         manifest = self._manifest()
@@ -405,8 +444,8 @@ class PavlovWebBenchBoundaryTests(unittest.TestCase):
 
         report = validate_webbench_manifest(manifest)
 
-        self.assertFalse(report["boundary_valid"])
-        self.assertIn("task_receipt_payload_mismatch", report["blocker_codes"])
+        assert not report["boundary_valid"]
+        assert "task_receipt_payload_mismatch" in report["blocker_codes"]
 
     def test_native_artifact_and_verifier_contracts_are_required(self) -> None:
         manifest = self._manifest()
@@ -415,9 +454,9 @@ class PavlovWebBenchBoundaryTests(unittest.TestCase):
 
         report = validate_webbench_manifest(manifest)
 
-        self.assertFalse(report["boundary_valid"])
-        self.assertIn("artifact_contract_invalid", report["blocker_codes"])
-        self.assertIn("verifier_contract_invalid", report["blocker_codes"])
+        assert not report["boundary_valid"]
+        assert "artifact_contract_invalid" in report["blocker_codes"]
+        assert "verifier_contract_invalid" in report["blocker_codes"]
 
     def test_result_material_without_all_wandb_tinker_hf_receipts_blocks(self) -> None:
         manifest = self._manifest()
@@ -425,8 +464,8 @@ class PavlovWebBenchBoundaryTests(unittest.TestCase):
 
         report = validate_webbench_manifest(manifest)
 
-        self.assertFalse(report["boundary_valid"])
-        self.assertIn("result_receipts_missing", report["blocker_codes"])
+        assert not report["boundary_valid"]
+        assert "result_receipts_missing" in report["blocker_codes"]
 
     def test_fake_run_id_url_and_hf_visibility_cannot_clear_result(self) -> None:
         manifest = self._with_heldout_receipts(self._manifest())
@@ -443,8 +482,8 @@ class PavlovWebBenchBoundaryTests(unittest.TestCase):
 
         report = validate_webbench_manifest(manifest)
 
-        self.assertFalse(report["boundary_valid"])
-        self.assertIn("result_receipt_payload_invalid", report["blocker_codes"])
+        assert not report["boundary_valid"]
+        assert "result_receipt_payload_invalid" in report["blocker_codes"]
 
     def test_tampered_result_digest_blocks_even_with_receipt_shapes(self) -> None:
         manifest = self._with_heldout_receipts(self._manifest())
@@ -456,8 +495,8 @@ class PavlovWebBenchBoundaryTests(unittest.TestCase):
 
         report = validate_webbench_manifest(manifest)
 
-        self.assertFalse(report["boundary_valid"])
-        self.assertIn("result_receipt_payload_invalid", report["blocker_codes"])
+        assert not report["boundary_valid"]
+        assert "result_receipt_payload_invalid" in report["blocker_codes"]
 
     def test_authoritative_service_urls_reject_credentials_and_query_only_revision(self) -> None:
         manifest = self._with_heldout_receipts(self._manifest())
@@ -466,13 +505,15 @@ class PavlovWebBenchBoundaryTests(unittest.TestCase):
         wandb["digest"] = receipt_digest(wandb["binding"], wandb["payload"])
         hf = manifest["result_receipts"]["hf"]
         revision = hf["payload"]["revision"]
-        hf["payload"]["checkpoint_url"] = "https://huggingface.co/example/webbench/commit/latest?revision=" + revision
+        hf["payload"]["checkpoint_url"] = (
+            "https://huggingface.co/example/webbench/commit/latest?revision=" + revision
+        )
         hf["digest"] = receipt_digest(hf["binding"], hf["payload"])
 
         report = validate_webbench_manifest(manifest)
 
-        self.assertFalse(report["boundary_valid"])
-        self.assertIn("result_receipt_payload_invalid", report["blocker_codes"])
+        assert not report["boundary_valid"]
+        assert "result_receipt_payload_invalid" in report["blocker_codes"]
 
     def test_public_hf_artifact_requires_explicit_clean_safety_flags(self) -> None:
         manifest = self._with_heldout_receipts(self._manifest())
@@ -482,8 +523,8 @@ class PavlovWebBenchBoundaryTests(unittest.TestCase):
 
         report = validate_webbench_manifest(manifest)
 
-        self.assertFalse(report["boundary_valid"])
-        self.assertIn("result_receipt_payload_invalid", report["blocker_codes"])
+        assert not report["boundary_valid"]
+        assert "result_receipt_payload_invalid" in report["blocker_codes"]
 
     def test_noncanonical_split_and_typed_boundary_fields_fail_closed(self) -> None:
         manifest = self._manifest()
@@ -493,10 +534,10 @@ class PavlovWebBenchBoundaryTests(unittest.TestCase):
 
         report = validate_webbench_manifest(manifest)
 
-        self.assertFalse(report["boundary_valid"])
-        self.assertIn("split_manifest_not_canonicalizable", report["blocker_codes"])
-        self.assertIn("domain_boundary_invalid", report["blocker_codes"])
-        self.assertIn("heldout_status_invalid", report["blocker_codes"])
+        assert not report["boundary_valid"]
+        assert "split_manifest_not_canonicalizable" in report["blocker_codes"]
+        assert "domain_boundary_invalid" in report["blocker_codes"]
+        assert "heldout_status_invalid" in report["blocker_codes"]
 
     def test_pending_status_with_complete_receipts_is_not_silently_promoted(self) -> None:
         manifest = self._with_heldout_receipts(self._manifest())
@@ -504,8 +545,8 @@ class PavlovWebBenchBoundaryTests(unittest.TestCase):
 
         report = validate_webbench_manifest(manifest)
 
-        self.assertFalse(report["boundary_valid"])
-        self.assertIn("heldout_status_stale", report["blocker_codes"])
+        assert not report["boundary_valid"]
+        assert "heldout_status_stale" in report["blocker_codes"]
 
     def test_cli_is_offline_and_returns_json(self) -> None:
         script = Path(__file__).with_name("pavlov_webbench_eval_adapter.py")
@@ -516,45 +557,58 @@ class PavlovWebBenchBoundaryTests(unittest.TestCase):
             manifest_path.write_text(json.dumps(self._manifest()), encoding="utf-8")
             trust_root_path.write_text(json.dumps(_E6_TEST_TRUST_ROOT), encoding="utf-8")
             process = subprocess.run(
-                [sys.executable, str(script), "--manifest", str(manifest_path), "--trust-roots", str(trust_root_path)],
+                [
+                    sys.executable,
+                    str(script),
+                    "--manifest",
+                    str(manifest_path),
+                    "--trust-roots",
+                    str(trust_root_path),
+                ],
                 check=False,
                 capture_output=True,
                 text=True,
             )
 
         report = json.loads(process.stdout)
-        self.assertEqual(process.returncode, 1)
-        self.assertEqual(report["status"], "BLOCKED")
-        self.assertFalse(report["receipt_proven_heldout"])
-        self.assertNotIn("Traceback", process.stderr)
+        assert process.returncode == 1
+        assert report["status"] == "BLOCKED"
+        assert not report["receipt_proven_heldout"]
+        assert "Traceback" not in process.stderr
 
 
 class WebBenchSplitDerivationTests(unittest.TestCase):
     """Offline derivation of task identities, hashes, and the split manifest."""
 
-    def _write_fixture(self, directory: Path, rows: list[tuple[int, str, str, str]] | None = None) -> Path:
+    def _write_fixture(
+        self, directory: Path, rows: list[tuple[int, str, str, str]] | None = None
+    ) -> Path:
         path = directory / "webbenchfinal.csv"
         path.write_text(_csv(rows if rows is not None else FIXTURE_ROWS), encoding="utf-8")
         return path
 
-    def _records(self, directory: Path, rows: list[tuple[int, str, str, str]] | None = None) -> list[dict]:
-        return derive_task_records(read_webbench_csv(self._write_fixture(directory, rows), expected_sha256=None))
+    def _records(
+        self, directory: Path, rows: list[tuple[int, str, str, str]] | None = None
+    ) -> list[dict]:
+        return derive_task_records(
+            read_webbench_csv(self._write_fixture(directory, rows), expected_sha256=None)
+        )
 
     def test_task_ids_are_zero_padded_so_lexicographic_equals_numeric_order(self) -> None:
         ids = [format_task_id(value) for value in (0, 9, 10, 999, 1000, 2724)]
 
-        self.assertEqual(ids[0], "webbench-task-0000")
-        self.assertEqual(ids[-1], "webbench-task-2724")
-        self.assertEqual(sorted(ids), ids)
-        with self.assertRaises(WebBenchDatasetError):
+        assert ids[0] == "webbench-task-0000"
+        assert ids[-1] == "webbench-task-2724"
+        assert sorted(ids) == ids
+        with pytest.raises(WebBenchDatasetError):
             format_task_id(-1)
-        with self.assertRaises(WebBenchDatasetError):
+        with pytest.raises(WebBenchDatasetError):
             format_task_id(True)
 
     def test_registrable_host_only_strips_leading_www(self) -> None:
-        self.assertEqual(registrable_host("www.indeed.com"), "indeed.com")
-        self.assertEqual(registrable_host("open.spotify.com"), "open.spotify.com")
-        self.assertEqual(registrable_host("WWW.Example.COM"), "example.com")
+        assert registrable_host("www.indeed.com") == "indeed.com"
+        assert registrable_host("open.spotify.com") == "open.spotify.com"
+        assert registrable_host("WWW.Example.COM") == "example.com"
 
     def test_task_digest_is_content_addressed_and_row_order_independent(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -562,25 +616,27 @@ class WebBenchSplitDerivationTests(unittest.TestCase):
             reversed_rows = list(reversed(FIXTURE_ROWS))
             reverse = self._records(Path(tmp), reversed_rows)
 
-        self.assertEqual([item["task_id"] for item in forward], [item["task_id"] for item in reverse])
-        self.assertEqual([item["task_digest"] for item in forward], [item["task_digest"] for item in reverse])
-        self.assertEqual([item["task_uid"] for item in forward], [item["task_uid"] for item in reverse])
+        assert [item["task_id"] for item in forward] == [item["task_id"] for item in reverse]
+        assert [item["task_digest"] for item in forward] == [
+            item["task_digest"] for item in reverse
+        ]
+        assert [item["task_uid"] for item in forward] == [item["task_uid"] for item in reverse]
         # The digest binds content, not the derived label.
         mutated = dict(forward[0])
         mutated["task"] = forward[0]["task"] + " extra"
-        self.assertNotEqual(task_digest(mutated), forward[0]["task_digest"])
+        assert task_digest(mutated) != forward[0]["task_digest"]
 
     def test_derived_records_are_sorted_unique_and_carry_stable_fields(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             records = self._records(Path(tmp))
 
         task_ids = [item["task_id"] for item in records]
-        self.assertEqual(task_ids, sorted(task_ids))
-        self.assertEqual(len(task_ids), len(set(task_ids)))
-        self.assertEqual([item["csv_id"] for item in records], [3, 7, 1200])
-        self.assertEqual(records[0]["registrable_domain"], "docs.example-wiki.test")
-        self.assertEqual(records[2]["scheme"], "http")
-        self.assertTrue(all(item["task_uid"].startswith("webbench-uid-") for item in records))
+        assert task_ids == sorted(task_ids)
+        assert len(task_ids) == len(set(task_ids))
+        assert [item["csv_id"] for item in records] == [3, 7, 1200]
+        assert records[0]["registrable_domain"] == "docs.example-wiki.test"
+        assert records[2]["scheme"] == "http"
+        assert all(item["task_uid"].startswith("webbench-uid-") for item in records)
 
     def test_csv_reader_fails_closed_on_malformed_input(self) -> None:
         cases = {
@@ -588,7 +644,10 @@ class WebBenchSplitDerivationTests(unittest.TestCase):
             "bad_category": (_csv([(1, "https://a.test", "BROWSE", "do it")]), "category"),
             "empty_task": (_csv([(1, "https://a.test", "READ", "")]), "empty task"),
             "bad_url": (_csv([(1, "ftp://a.test", "READ", "do it")]), "Starting URL"),
-            "noninteger_id": ("ID,Starting URL,Category,Task\nx,https://a.test,READ,\"do it\"\n", "non-integer"),
+            "noninteger_id": (
+                'ID,Starting URL,Category,Task\nx,https://a.test,READ,"do it"\n',
+                "non-integer",
+            ),
             "duplicate_id": (
                 _csv([(1, "https://a.test", "READ", "one"), (1, "https://b.test", "READ", "two")]),
                 "duplicate",
@@ -599,18 +658,18 @@ class WebBenchSplitDerivationTests(unittest.TestCase):
                 path = Path(tmp) / f"{name}.csv"
                 path.write_text(body, encoding="utf-8")
                 with self.subTest(case=name):
-                    with self.assertRaises(WebBenchDatasetError) as ctx:
+                    with pytest.raises(WebBenchDatasetError) as ctx:
                         read_webbench_csv(path, expected_sha256=None)
-                    self.assertIn(fragment, str(ctx.exception))
+                    assert fragment in str(ctx.value)
 
     def test_csv_reader_enforces_the_dataset_pin(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             path = self._write_fixture(Path(tmp))
-            with self.assertRaises(WebBenchDatasetError) as ctx:
+            with pytest.raises(WebBenchDatasetError) as ctx:
                 read_webbench_csv(path, expected_sha256="0" * 64)
-            self.assertIn("SHA-256 mismatch", str(ctx.exception))
+            assert "SHA-256 mismatch" in str(ctx.value)
             missing = Path(tmp) / "absent.csv"
-            with self.assertRaises(WebBenchDatasetError):
+            with pytest.raises(WebBenchDatasetError):
                 read_webbench_csv(missing, expected_sha256=None)
 
     def test_aggregate_hashes_are_deterministic_and_order_independent(self) -> None:
@@ -620,18 +679,18 @@ class WebBenchSplitDerivationTests(unittest.TestCase):
 
         first = aggregate_task_hashes(records)
         second = aggregate_task_hashes(shuffled)
-        self.assertEqual(first, second)
-        self.assertEqual(first["task_count"], 3)
-        self.assertEqual(first["task_id_hash"], task_ids_hash([item["task_id"] for item in records]))
-        self.assertEqual(first["task_digest_hash"], sha256_hex([item["task_digest"] for item in records]))
+        assert first == second
+        assert first["task_count"] == 3
+        assert first["task_id_hash"] == task_ids_hash([item["task_id"] for item in records])
+        assert first["task_digest_hash"] == sha256_hex([item["task_digest"] for item in records])
         # A single content change must move the content hashes but not the ID hash.
         mutated = [dict(item) for item in records]
         mutated[0]["task"] = mutated[0]["task"] + "!"
         mutated[0]["task_digest"] = task_digest(mutated[0])
         third = aggregate_task_hashes(mutated)
-        self.assertEqual(third["task_id_hash"], first["task_id_hash"])
-        self.assertNotEqual(third["task_digest_hash"], first["task_digest_hash"])
-        self.assertNotEqual(third["legacy_runner_manifest_hash"], first["legacy_runner_manifest_hash"])
+        assert third["task_id_hash"] == first["task_id_hash"]
+        assert third["task_digest_hash"] != first["task_digest_hash"]
+        assert third["legacy_runner_manifest_hash"] != first["legacy_runner_manifest_hash"]
 
     def test_built_split_manifest_satisfies_the_boundary_task_and_split_checks(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -639,10 +698,10 @@ class WebBenchSplitDerivationTests(unittest.TestCase):
         task_ids = [item["task_id"] for item in records]
         split = build_split_manifest(task_ids)
 
-        self.assertEqual(split["suite_id"], WEBBENCH_SUITE_ID)
-        self.assertEqual(split["role"], WEBBENCH_ROLE)
-        self.assertEqual(split["split"], "evaluation")
-        self.assertEqual(split["task_id_hash"], task_ids_hash(task_ids))
+        assert split["suite_id"] == WEBBENCH_SUITE_ID
+        assert split["role"] == WEBBENCH_ROLE
+        assert split["split"] == "evaluation"
+        assert split["task_id_hash"] == task_ids_hash(task_ids)
 
         manifest = PavlovWebBenchBoundaryTests()._manifest()
         manifest["task_ids"] = task_ids
@@ -661,11 +720,11 @@ class WebBenchSplitDerivationTests(unittest.TestCase):
         _sign_receipt(manifest["split_receipt"])
 
         report = validate_webbench_manifest(manifest)
-        self.assertTrue(report["checks"]["tasks_and_split"], report["blocker_codes"])
-        self.assertNotIn("task_id_hash_mismatch", report["blocker_codes"])
-        self.assertNotIn("split_manifest_hash_mismatch", report["blocker_codes"])
+        assert report["checks"]["tasks_and_split"], report["blocker_codes"]
+        assert "task_id_hash_mismatch" not in report["blocker_codes"]
+        assert "split_manifest_hash_mismatch" not in report["blocker_codes"]
 
-        with self.assertRaises(WebBenchDatasetError):
+        with pytest.raises(WebBenchDatasetError):
             build_split_manifest(task_ids + task_ids[:1])
 
     def test_training_manifest_accepts_int_string_and_object_forms(self) -> None:
@@ -673,28 +732,30 @@ class WebBenchSplitDerivationTests(unittest.TestCase):
             root = Path(tmp)
             as_list = root / "list.json"
             as_list.write_text(json.dumps([7, 3]), encoding="utf-8")
-            self.assertEqual(
-                load_training_task_manifest(as_list)["task_ids"],
-                ["webbench-task-0003", "webbench-task-0007"],
-            )
+            assert load_training_task_manifest(as_list)["task_ids"] == [
+                "webbench-task-0003",
+                "webbench-task-0007",
+            ]
 
             as_strings = root / "strings.json"
-            as_strings.write_text(json.dumps({"task_ids": ["webbench-task-0007"]}), encoding="utf-8")
+            as_strings.write_text(
+                json.dumps({"task_ids": ["webbench-task-0007"]}), encoding="utf-8"
+            )
             loaded = load_training_task_manifest(as_strings)
-            self.assertEqual(loaded["task_ids"], ["webbench-task-0007"])
-            self.assertIsNone(loaded["legacy_runner_task_id_hash"])
+            assert loaded["task_ids"] == ["webbench-task-0007"]
+            assert loaded["legacy_runner_task_id_hash"] is None
 
             duplicated = root / "dupes.json"
             duplicated.write_text(json.dumps([5, 5]), encoding="utf-8")
-            with self.assertRaises(WebBenchDatasetError):
+            with pytest.raises(WebBenchDatasetError):
                 load_training_task_manifest(duplicated)
 
             malformed = root / "malformed.json"
             malformed.write_text("{not json", encoding="utf-8")
-            with self.assertRaises(WebBenchDatasetError):
+            with pytest.raises(WebBenchDatasetError):
                 load_training_task_manifest(malformed)
 
-            with self.assertRaises(WebBenchDatasetError):
+            with pytest.raises(WebBenchDatasetError):
                 load_training_task_manifest(root / "absent.json")
 
     def test_disjointness_proof_detects_overlap_and_bad_declared_hash(self) -> None:
@@ -714,41 +775,43 @@ class WebBenchSplitDerivationTests(unittest.TestCase):
                 encoding="utf-8",
             )
             clean = prove_split_disjointness(eval_ids, load_training_task_manifest(empty))
-            self.assertTrue(clean["disjoint"])
-            self.assertTrue(clean["valid"])
-            self.assertTrue(clean["training_declared_task_id_hash_verified"])
-            self.assertEqual(clean["overlap_count"], 0)
+            assert clean["disjoint"]
+            assert clean["valid"]
+            assert clean["training_declared_task_id_hash_verified"]
+            assert clean["overlap_count"] == 0
 
             overlapping = root / "overlap.json"
             overlapping.write_text(json.dumps([3]), encoding="utf-8")
             dirty = prove_split_disjointness(eval_ids, load_training_task_manifest(overlapping))
-            self.assertFalse(dirty["disjoint"])
-            self.assertFalse(dirty["valid"])
-            self.assertEqual(dirty["overlap_task_ids"], ["webbench-task-0003"])
+            assert not dirty["disjoint"]
+            assert not dirty["valid"]
+            assert dirty["overlap_task_ids"] == ["webbench-task-0003"]
 
             wrong_hash = root / "wrong.json"
-            wrong_hash.write_text(json.dumps({"task_ids": [], "task_id_hash": "f" * 64}), encoding="utf-8")
+            wrong_hash.write_text(
+                json.dumps({"task_ids": [], "task_id_hash": "f" * 64}), encoding="utf-8"
+            )
             bad = prove_split_disjointness(eval_ids, load_training_task_manifest(wrong_hash))
-            self.assertFalse(bad["valid"])
-            self.assertFalse(bad["training_declared_task_id_hash_verified"])
+            assert not bad["valid"]
+            assert not bad["training_declared_task_id_hash_verified"]
 
     def test_characterization_reports_id_gaps_and_domain_shape(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             records = self._records(Path(tmp))
         profile = characterize_task_set(records)
 
-        self.assertEqual(profile["task_count"], 3)
-        self.assertEqual(profile["csv_id_min"], 3)
-        self.assertEqual(profile["csv_id_max"], 1200)
-        self.assertFalse(profile["csv_ids_contiguous"])
-        self.assertEqual(profile["csv_id_gap_count"], 1195)
-        self.assertEqual(profile["distinct_registrable_domains"], 3)
-        self.assertEqual(profile["url_schemes"], {"http": 1, "https": 2})
-        self.assertEqual(profile["http_only_urls"], ["http://example-jobs.test"])
-        self.assertEqual(set(profile["categories"]) - set(WEBBENCH_CATEGORIES), set())
+        assert profile["task_count"] == 3
+        assert profile["csv_id_min"] == 3
+        assert profile["csv_id_max"] == 1200
+        assert not profile["csv_ids_contiguous"]
+        assert profile["csv_id_gap_count"] == 1195
+        assert profile["distinct_registrable_domains"] == 3
+        assert profile["url_schemes"] == {"http": 1, "https": 2}
+        assert profile["http_only_urls"] == ["http://example-jobs.test"]
+        assert set(profile["categories"]) - set(WEBBENCH_CATEGORIES) == set()
         # CREATE + FILE_MANIPULATION mutate live sites; READ does not.
-        self.assertEqual(profile["write_class_task_count"], 2)
-        self.assertEqual(profile["keyword_probe_counts"]["captcha"], 0)
+        assert profile["write_class_task_count"] == 2
+        assert profile["keyword_probe_counts"]["captcha"] == 0
 
     def test_bundle_is_labelled_a_local_derivation_not_a_receipt(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -762,21 +825,21 @@ class WebBenchSplitDerivationTests(unittest.TestCase):
             written = write_split_artifacts(bundle, root / "out")
 
             derivation = bundle["derivation"]
-            self.assertEqual(derivation["receipt_class"], "local_derivation")
-            self.assertIsNone(derivation["authenticated_receipt"])
-            self.assertFalse(derivation["externally_bound"])
-            self.assertFalse(derivation["network_accessed"])
-            self.assertTrue(derivation["disjointness"]["valid"])
-            self.assertEqual(len(Path(written["task_index"]).read_text(encoding="utf-8").splitlines()), 3)
+            assert derivation["receipt_class"] == "local_derivation"
+            assert derivation["authenticated_receipt"] is None
+            assert not derivation["externally_bound"]
+            assert not derivation["network_accessed"]
+            assert derivation["disjointness"]["valid"]
+            assert len(Path(written["task_index"]).read_text(encoding="utf-8").splitlines()) == 3
             split_payload = json.loads(Path(written["split_manifest"]).read_text(encoding="utf-8"))
-            self.assertEqual(split_payload["task_count"], 3)
-            self.assertIsNone(split_payload["authenticated_receipt"])
+            assert split_payload["task_count"] == 3
+            assert split_payload["authenticated_receipt"] is None
 
             # Re-running is byte-identical: the derivation is deterministic.
             again = build_split_artifacts(
                 dataset, training_manifest_path=training, expected_dataset_sha256=None
             )
-            self.assertEqual(again["derivation"]["derivation_hash"], derivation["derivation_hash"])
+            assert again["derivation"]["derivation_hash"] == derivation["derivation_hash"]
 
     def test_derived_split_alone_never_unblocks_the_environment_boundary(self) -> None:
         """A local split manifest must not make WebBench look runnable."""
@@ -804,11 +867,11 @@ class WebBenchSplitDerivationTests(unittest.TestCase):
         }
 
         report = validate_webbench_manifest(manifest)
-        self.assertEqual(report["status"], "BLOCKED")
-        self.assertIn("environment_contract_missing", report["blocker_codes"])
-        self.assertIn("task_receipt_invalid", report["blocker_codes"])
-        self.assertIn("split_receipt_invalid", report["blocker_codes"])
-        self.assertFalse(report["receipt_proven_heldout"])
+        assert report["status"] == "BLOCKED"
+        assert "environment_contract_missing" in report["blocker_codes"]
+        assert "task_receipt_invalid" in report["blocker_codes"]
+        assert "split_receipt_invalid" in report["blocker_codes"]
+        assert not report["receipt_proven_heldout"]
 
 
 @unittest.skipUnless(REAL_DATASET.is_file(), "pinned WebBench CSV is not on disk")
@@ -817,42 +880,44 @@ class WebBenchPinnedDatasetTests(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls) -> None:
-        cls.records = derive_task_records(read_webbench_csv(REAL_DATASET, expected_sha256=WEBBENCH_DATASET_SHA256))
+        cls.records = derive_task_records(
+            read_webbench_csv(REAL_DATASET, expected_sha256=WEBBENCH_DATASET_SHA256)
+        )
         cls.aggregates = aggregate_task_hashes(cls.records)
 
     def test_public_task_count_and_identity_scheme(self) -> None:
-        self.assertEqual(len(self.records), WEBBENCH_PUBLIC_TASK_COUNT)
+        assert len(self.records) == WEBBENCH_PUBLIC_TASK_COUNT
         task_ids = [item["task_id"] for item in self.records]
-        self.assertEqual(task_ids, sorted(task_ids))
-        self.assertEqual(len(set(task_ids)), WEBBENCH_PUBLIC_TASK_COUNT)
-        self.assertEqual(len({item["task_uid"] for item in self.records}), WEBBENCH_PUBLIC_TASK_COUNT)
-        self.assertEqual(len({item["task_digest"] for item in self.records}), WEBBENCH_PUBLIC_TASK_COUNT)
+        assert task_ids == sorted(task_ids)
+        assert len(set(task_ids)) == WEBBENCH_PUBLIC_TASK_COUNT
+        assert len({item["task_uid"] for item in self.records}) == WEBBENCH_PUBLIC_TASK_COUNT
+        assert len({item["task_digest"] for item in self.records}) == WEBBENCH_PUBLIC_TASK_COUNT
 
     def test_aggregates_agree_with_the_independent_runner_implementation(self) -> None:
-        self.assertEqual(self.aggregates["legacy_runner_task_id_hash"], RUNNER_TASK_ID_HASH)
-        self.assertEqual(self.aggregates["legacy_runner_manifest_hash"], RUNNER_MANIFEST_HASH)
+        assert self.aggregates["legacy_runner_task_id_hash"] == RUNNER_TASK_ID_HASH
+        assert self.aggregates["legacy_runner_manifest_hash"] == RUNNER_MANIFEST_HASH
 
     def test_public_ids_are_sparse_which_is_why_ids_must_be_sorted_explicitly(self) -> None:
         profile = characterize_task_set(self.records)
-        self.assertFalse(profile["csv_ids_contiguous"])
-        self.assertEqual(profile["csv_id_min"], 0)
-        self.assertEqual(profile["csv_id_max"], 2724)
-        self.assertEqual(profile["csv_id_gap_count"], 78)
-        self.assertEqual(sum(profile["categories"].values()), WEBBENCH_PUBLIC_TASK_COUNT)
-        self.assertEqual(profile["categories"]["READ"], 1637)
-        self.assertEqual(profile["write_class_task_count"], 1010)
-        self.assertEqual(profile["distinct_registrable_domains"], 448)
-        self.assertEqual(profile["keyword_probe_counts"]["credential_or_account"], 536)
+        assert not profile["csv_ids_contiguous"]
+        assert profile["csv_id_min"] == 0
+        assert profile["csv_id_max"] == 2724
+        assert profile["csv_id_gap_count"] == 78
+        assert sum(profile["categories"].values()) == WEBBENCH_PUBLIC_TASK_COUNT
+        assert profile["categories"]["READ"] == 1637
+        assert profile["write_class_task_count"] == 1010
+        assert profile["distinct_registrable_domains"] == 448
+        assert profile["keyword_probe_counts"]["credential_or_account"] == 536
 
     @unittest.skipUnless(REAL_TRAINING_MANIFEST.is_file(), "training manifest is not on disk")
     def test_evaluation_split_is_disjoint_from_the_training_manifest(self) -> None:
         training = load_training_task_manifest(REAL_TRAINING_MANIFEST)
         proof = prove_split_disjointness([item["task_id"] for item in self.records], training)
 
-        self.assertTrue(proof["disjoint"], proof["overlap_task_ids"][:10])
-        self.assertTrue(proof["valid"], proof["errors"])
-        self.assertEqual(proof["evaluation_task_count"], WEBBENCH_PUBLIC_TASK_COUNT)
-        self.assertTrue(proof["training_declared_task_id_hash_verified"])
+        assert proof["disjoint"], proof["overlap_task_ids"][:10]
+        assert proof["valid"], proof["errors"]
+        assert proof["evaluation_task_count"] == WEBBENCH_PUBLIC_TASK_COUNT
+        assert proof["training_declared_task_id_hash_verified"]
 
     def test_cli_build_split_is_offline_and_writes_artifacts(self) -> None:
         script = Path(__file__).with_name("pavlov_webbench_eval_adapter.py")
@@ -873,13 +938,15 @@ class WebBenchPinnedDatasetTests(unittest.TestCase):
                 capture_output=True,
                 text=True,
             )
-            self.assertEqual(process.returncode, 0, process.stderr)
-            self.assertNotIn("Traceback", process.stderr)
+            assert process.returncode == 0, process.stderr
+            assert "Traceback" not in process.stderr
             payload = json.loads(process.stdout)
-            self.assertEqual(payload["derivation"]["aggregates"]["task_count"], WEBBENCH_PUBLIC_TASK_COUNT)
-            self.assertFalse(payload["derivation"]["network_accessed"])
-            index_lines = Path(payload["written"]["task_index"]).read_text(encoding="utf-8").splitlines()
-            self.assertEqual(len(index_lines), WEBBENCH_PUBLIC_TASK_COUNT)
+            assert payload["derivation"]["aggregates"]["task_count"] == WEBBENCH_PUBLIC_TASK_COUNT
+            assert not payload["derivation"]["network_accessed"]
+            index_lines = (
+                Path(payload["written"]["task_index"]).read_text(encoding="utf-8").splitlines()
+            )
+            assert len(index_lines) == WEBBENCH_PUBLIC_TASK_COUNT
 
 
 if __name__ == "__main__":

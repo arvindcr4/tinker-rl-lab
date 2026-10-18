@@ -51,6 +51,7 @@ Deliverables (no fabrication: every number comes from an existing TSV):
         Single-row-per-finding summary table (6 rows) with the headline
         claims and effect sizes for the paper section.
 """
+
 from __future__ import annotations
 
 import math
@@ -75,6 +76,7 @@ EPS_TOST = 0.02
 # 1. Load existing TSVs
 # ---------------------------------------------------------------------------
 
+
 def load_token_normalized() -> pd.DataFrame:
     """Iso-token G x T accuracy table (Qwen3-8B / GSM8K illustrative)."""
     return pd.read_csv(RES / "group_size_token_normalized.tsv", sep="\t")
@@ -88,6 +90,7 @@ def load_g4_g32() -> pd.DataFrame:
 def load_zvf_sweep_runs() -> List[dict]:
     """Per-step rollouts on Qwen2.5-0.5B / arithmetic at G in {2,4,8,16}."""
     import json
+
     with open(RES / "groupsize_zvf_sweep.json") as f:
         return json.load(f)["runs"]
 
@@ -99,6 +102,7 @@ def load_measured_effect() -> pd.DataFrame:
 # ---------------------------------------------------------------------------
 # 2. Generalization-slope analysis: every (G_a, G_b) pair at every T
 # ---------------------------------------------------------------------------
+
 
 def pair_sweep() -> pd.DataFrame:
     """For each T, compute retention R = acc_Ga / acc_Gb and the
@@ -133,32 +137,36 @@ def pair_sweep() -> pd.DataFrame:
             # TOST at eps=0.02
             se = max((diff_hi - diff_lo) / (2.0 * 1.96), 1e-9)
             from math import erf, sqrt
+
             def pnorm(x: float) -> float:
                 return 0.5 * (1.0 + erf(x / sqrt(2.0)))
+
             z_low = (diff - EPS_TOST) / se
             z_high = (diff + EPS_TOST) / se
             p_low = pnorm(z_low)
             p_high = 1.0 - pnorm(z_high)
             tost_p = max(p_low, p_high)
-            rows.append({
-                "T_tokens": int(T),
-                "G_a": int(ga),
-                "G_b": int(gb),
-                "gap_log2": round(math.log2(max(gb, 1) / max(ga, 1)), 4),
-                "acc_G_a": round(a, 4),
-                "acc_G_b": round(b, 4),
-                "diff": round(diff, 4),
-                "diff_ci_low": round(diff_lo, 4),
-                "diff_ci_high": round(diff_hi, 4),
-                "retention": round(R, 4),
-                "retention_ci_low": round(R_lo, 4),
-                "retention_ci_high": round(R_hi, 4),
-                "dpo_equivalence_score": round(dpo_eq, 4),
-                "tost_p_eps0.02": round(tost_p, 6),
-                "tost_equivalent": bool(tost_p < 0.05),
-                "wu_97_6_in_CI": wu_within_ci,
-                "above_wu_97_6pct": above_wu,
-            })
+            rows.append(
+                {
+                    "T_tokens": int(T),
+                    "G_a": int(ga),
+                    "G_b": int(gb),
+                    "gap_log2": round(math.log2(max(gb, 1) / max(ga, 1)), 4),
+                    "acc_G_a": round(a, 4),
+                    "acc_G_b": round(b, 4),
+                    "diff": round(diff, 4),
+                    "diff_ci_low": round(diff_lo, 4),
+                    "diff_ci_high": round(diff_hi, 4),
+                    "retention": round(R, 4),
+                    "retention_ci_low": round(R_lo, 4),
+                    "retention_ci_high": round(R_hi, 4),
+                    "dpo_equivalence_score": round(dpo_eq, 4),
+                    "tost_p_eps0.02": round(tost_p, 6),
+                    "tost_equivalent": bool(tost_p < 0.05),
+                    "wu_97_6_in_CI": wu_within_ci,
+                    "above_wu_97_6pct": above_wu,
+                }
+            )
     df = pd.DataFrame(rows)
     out_path = RES / "group_size_iter35_pair_sweep_v2.tsv"
     df.to_csv(out_path, sep="\t", index=False)
@@ -168,6 +176,7 @@ def pair_sweep() -> pd.DataFrame:
 # ---------------------------------------------------------------------------
 # 3. Per-difficulty retention (measured Qwen2.5-0.5B / arithmetic sweep)
 # ---------------------------------------------------------------------------
+
 
 def per_difficulty_retention() -> pd.DataFrame:
     """Stratify the G=2 vs G=N retention by per-prompt difficulty p_hat.
@@ -226,13 +235,16 @@ def per_difficulty_retention() -> pd.DataFrame:
             if run is None:
                 continue
             for s in run["step_log"]:
-                per_step.append({
-                    "seed": seed,
-                    "step": int(s["step"]),
-                    "mean_reward": float(s["mean_reward"]),
-                    "zvf": float(s["zvf"]),
-                })
+                per_step.append(
+                    {
+                        "seed": seed,
+                        "step": int(s["step"]),
+                        "mean_reward": float(s["mean_reward"]),
+                        "zvf": float(s["zvf"]),
+                    }
+                )
         df = pd.DataFrame(per_step)
+
         # Bin by zvf into 3 regimes:
         #   low (frontier) zvf <= 0.55,
         #   mid (0.55, 0.75],
@@ -243,6 +255,7 @@ def per_difficulty_retention() -> pd.DataFrame:
             if z <= 0.75:
                 return "mid"
             return "saturation"
+
         df["bin"] = df["zvf"].apply(bin_zvf)
         for b in ["frontier", "mid", "saturation"]:
             sub = df[df["bin"] == b]
@@ -251,7 +264,9 @@ def per_difficulty_retention() -> pd.DataFrame:
             mean_rew = float(sub["mean_reward"].mean())
             n = int(len(sub))
             # bootstrap CI on mean_rew
-            rng = np.random.default_rng(RNG_SEED + G + {"frontier":101,"mid":202,"saturation":303}[b])
+            rng = np.random.default_rng(
+                RNG_SEED + G + {"frontier": 101, "mid": 202, "saturation": 303}[b]
+            )
             boots = np.empty(BOOT_B)
             arr = sub.groupby("seed")["mean_reward"].mean().values
             n = len(arr)
@@ -260,16 +275,18 @@ def per_difficulty_retention() -> pd.DataFrame:
                 boots[i] = arr[ix].mean()
             ci_lo = float(np.quantile(boots, 0.025))
             ci_hi = float(np.quantile(boots, 0.975))
-            rows.append({
-                "G": int(G),
-                "difficulty_bin": b,
-                "stratum_kind": "within_run_ZVF_not_fixed_prompt_difficulty",
-                "n_steps": n,
-                "mean_reward": round(mean_rew, 4),
-                "ci_low": round(ci_lo, 4),
-                "ci_high": round(ci_hi, 4),
-                "zvf_bin_center": round(float(sub["zvf"].mean()), 4),
-            })
+            rows.append(
+                {
+                    "G": int(G),
+                    "difficulty_bin": b,
+                    "stratum_kind": "within_run_ZVF_not_fixed_prompt_difficulty",
+                    "n_steps": n,
+                    "mean_reward": round(mean_rew, 4),
+                    "ci_low": round(ci_lo, 4),
+                    "ci_high": round(ci_hi, 4),
+                    "zvf_bin_center": round(float(sub["zvf"].mean()), 4),
+                }
+            )
     out = pd.DataFrame(rows)
     out_path = RES / "group_size_iter35_difficulty_v2.tsv"
     out.to_csv(out_path, sep="\t", index=False)
@@ -286,17 +303,20 @@ def per_difficulty_retention() -> pd.DataFrame:
             if math.isnan(v_g2) or math.isnan(v_gN) or v_gN == 0:
                 continue
             R = v_g2 / v_gN
-            ret_rows.append({
-                "G_a_vs_2": int(G),
-                "bin": b,
-                "mean_reward_G2": round(v_g2, 4),
-                "mean_reward_GN": round(v_gN, 4),
-                "retention_G2_of_GN": round(R, 4),
-                "interpretation": (
-                    "above Wu 97.6%" if R >= WU_RETENTION else
-                    f"below Wu 97.6% (gap {100 * (WU_RETENTION - R):.1f}pp)"
-                ),
-            })
+            ret_rows.append(
+                {
+                    "G_a_vs_2": int(G),
+                    "bin": b,
+                    "mean_reward_G2": round(v_g2, 4),
+                    "mean_reward_GN": round(v_gN, 4),
+                    "retention_G2_of_GN": round(R, 4),
+                    "interpretation": (
+                        "above Wu 97.6%"
+                        if R >= WU_RETENTION
+                        else f"below Wu 97.6% (gap {100 * (WU_RETENTION - R):.1f}pp)"
+                    ),
+                }
+            )
     ret_df = pd.DataFrame(ret_rows)
     out2 = RES / "group_size_iter35_difficulty_retention_v2.tsv"
     ret_df.to_csv(out2, sep="\t", index=False)
@@ -307,18 +327,19 @@ def per_difficulty_retention() -> pd.DataFrame:
 # 4. Cost-effectiveness Pareto frontier
 # ---------------------------------------------------------------------------
 
+
 def cost_effectiveness() -> pd.DataFrame:
     """Per (G, T) compute three cost-normalised metrics:
 
-       tokens_per_optimizer_update = G * K * L_bar
-         where K = n_prompts (rollout batch size in prompts) and
-         L_bar is the average per-rollout length. We set K=64 and
-         L_bar=512 (typical for Qwen3-8B / GSM8K) as a normalisation
-         constant; the metric then monotonically increases with G.
+    tokens_per_optimizer_update = G * K * L_bar
+      where K = n_prompts (rollout batch size in prompts) and
+      L_bar is the average per-rollout length. We set K=64 and
+      L_bar=512 (typical for Qwen3-8B / GSM8K) as a normalisation
+      constant; the metric then monotonically increases with G.
 
-       accuracy_per_M_tokens = heldout_acc / (T / 1e6)
-       rank_by_efficiency = rank of accuracy_per_M_tokens across
-         all 5 G values within a fixed T (1 = most efficient).
+    accuracy_per_M_tokens = heldout_acc / (T / 1e6)
+    rank_by_efficiency = rank of accuracy_per_M_tokens across
+      all 5 G values within a fixed T (1 = most efficient).
     """
     tn = load_token_normalized()
     # Assume fixed batch shape K=64 prompts, L_bar=512 tokens/rollout
@@ -331,20 +352,20 @@ def cost_effectiveness() -> pd.DataFrame:
             tokens_per_step = G * K * L_BAR
             n_steps = int(T) // tokens_per_step
             acc_per_M = acc / (int(T) / 1e6)
-            rows.append({
-                "T_tokens": int(T),
-                "G": G,
-                "heldout_acc": round(acc, 4),
-                "tokens_per_step": int(tokens_per_step),
-                "approx_optimizer_steps": int(n_steps),
-                "acc_per_M_tokens": round(acc_per_M, 4),
-            })
+            rows.append(
+                {
+                    "T_tokens": int(T),
+                    "G": G,
+                    "heldout_acc": round(acc, 4),
+                    "tokens_per_step": int(tokens_per_step),
+                    "approx_optimizer_steps": int(n_steps),
+                    "acc_per_M_tokens": round(acc_per_M, 4),
+                }
+            )
     df = pd.DataFrame(rows)
     # Rank by acc_per_M_tokens within each T (higher is better)
     df["rank_by_acc_per_M"] = (
-        df.groupby("T_tokens")["acc_per_M_tokens"]
-        .rank(ascending=False, method="min")
-        .astype(int)
+        df.groupby("T_tokens")["acc_per_M_tokens"].rank(ascending=False, method="min").astype(int)
     )
     # Also compute iso-update efficiency: acc per (T / tokens_per_step)
     # i.e. acc per optimizer step.  This is a different normalisation
@@ -361,6 +382,7 @@ def cost_effectiveness() -> pd.DataFrame:
 # ---------------------------------------------------------------------------
 # 5. Compact summary of all findings
 # ---------------------------------------------------------------------------
+
 
 def write_summary(pair: pd.DataFrame, diff: pd.DataFrame, pareto: pd.DataFrame) -> Path:
     """One row per concrete finding, plus per-(G, T) Pareto rank."""
@@ -383,38 +405,40 @@ def write_summary(pair: pd.DataFrame, diff: pd.DataFrame, pareto: pd.DataFrame) 
     n_above_diff = int((diff_ret["retention_G2_of_GN"] >= WU_RETENTION).sum())
     n_total_diff = int(len(diff_ret))
 
-    summary = pd.DataFrame([
-        {
-            "metric": "pair_sweep_n_above_wu_97_6pct",
-            "value": n_above,
-            "detail": f"{n_above}/{n_total} (G_a, G_b, T) cells retain >= 97.6% of G_b",
-        },
-        {
-            "metric": "pair_sweep_n_tost_equivalent_eps0.02",
-            "value": n_equiv,
-            "detail": f"{n_equiv}/{n_total} (G_a, G_b, T) cells TOST-equivalent at eps=0.02",
-        },
-        {
-            "metric": "worst_pair_at_T64M",
-            "value": f"G={int(worst['G_a'])} vs G={int(worst['G_b'])}",
-            "detail": f"diff = {float(worst['diff']):+.4f} [{float(worst['diff_ci_low']):+.4f}, {float(worst['diff_ci_high']):+.4f}], retention = {float(worst['retention']):.4f}",
-        },
-        {
-            "metric": "best_pair_at_T64M",
-            "value": f"G={int(best['G_a'])} vs G={int(best['G_b'])}",
-            "detail": f"diff = {float(best['diff']):+.4f} [{float(best['diff_ci_low']):+.4f}, {float(best['diff_ci_high']):+.4f}], retention = {float(best['retention']):.4f}, dpo_eq = {float(best['dpo_equivalence_score']):.4f}",
-        },
-        {
-            "metric": "best_G_by_acc_per_M_at_T64M",
-            "value": best_g_64m,
-            "detail": f"G={best_g_64m} has the highest acc-per-million-tokens at T=64M (most cost-effective)",
-        },
-        {
-            "metric": "difficulty_stratified_n_above_wu_97_6pct",
-            "value": n_above_diff,
-            "detail": f"{n_above_diff}/{n_total_diff} (G, difficulty_bin) cells retain >= 97.6% of G=2 on measured arithmetic",
-        },
-    ])
+    summary = pd.DataFrame(
+        [
+            {
+                "metric": "pair_sweep_n_above_wu_97_6pct",
+                "value": n_above,
+                "detail": f"{n_above}/{n_total} (G_a, G_b, T) cells retain >= 97.6% of G_b",
+            },
+            {
+                "metric": "pair_sweep_n_tost_equivalent_eps0.02",
+                "value": n_equiv,
+                "detail": f"{n_equiv}/{n_total} (G_a, G_b, T) cells TOST-equivalent at eps=0.02",
+            },
+            {
+                "metric": "worst_pair_at_T64M",
+                "value": f"G={int(worst['G_a'])} vs G={int(worst['G_b'])}",
+                "detail": f"diff = {float(worst['diff']):+.4f} [{float(worst['diff_ci_low']):+.4f}, {float(worst['diff_ci_high']):+.4f}], retention = {float(worst['retention']):.4f}",
+            },
+            {
+                "metric": "best_pair_at_T64M",
+                "value": f"G={int(best['G_a'])} vs G={int(best['G_b'])}",
+                "detail": f"diff = {float(best['diff']):+.4f} [{float(best['diff_ci_low']):+.4f}, {float(best['diff_ci_high']):+.4f}], retention = {float(best['retention']):.4f}, dpo_eq = {float(best['dpo_equivalence_score']):.4f}",
+            },
+            {
+                "metric": "best_G_by_acc_per_M_at_T64M",
+                "value": best_g_64m,
+                "detail": f"G={best_g_64m} has the highest acc-per-million-tokens at T=64M (most cost-effective)",
+            },
+            {
+                "metric": "difficulty_stratified_n_above_wu_97_6pct",
+                "value": n_above_diff,
+                "detail": f"{n_above_diff}/{n_total_diff} (G, difficulty_bin) cells retain >= 97.6% of G=2 on measured arithmetic",
+            },
+        ]
+    )
     out_path = RES / "group_size_iter35_summary_v2.tsv"
     summary.to_csv(out_path, sep="\t", index=False)
     return out_path
@@ -423,6 +447,7 @@ def write_summary(pair: pd.DataFrame, diff: pd.DataFrame, pareto: pd.DataFrame) 
 # ---------------------------------------------------------------------------
 # 6. Driver
 # ---------------------------------------------------------------------------
+
 
 def main() -> None:
     print("=== Iter 35 Pillar 3: G=4 vs G=32 cross-scale audit ===")

@@ -60,14 +60,16 @@ _BANNED_MARKERS = {
     "bfclv4_tool_use.py",
 }
 
-_ALLOWED_TINKER_COST_STATUS = frozenset({
-    "authorized",
-    "approved",
-    "observed",
-    "within_cap",
-    "complete",
-    "zero_cost",
-})
+_ALLOWED_TINKER_COST_STATUS = frozenset(
+    {
+        "authorized",
+        "approved",
+        "observed",
+        "within_cap",
+        "complete",
+        "zero_cost",
+    }
+)
 
 _REQUIRED_WANDB_FIELDS = ("entity", "project", "group", "run_id", "run_url")
 _REQUIRED_HF_STAGES = ("initial", "periodic", "final")
@@ -170,7 +172,9 @@ def _contains_banned_markers(value: Any) -> bool:
 
 def _load_authority(contract_path: str | Path | None = None) -> Mapping[str, Any]:
     base = Path(__file__).resolve().parent
-    path = Path(contract_path) if contract_path is not None else base / "pavlovs_domain_contract.json"
+    path = (
+        Path(contract_path) if contract_path is not None else base / "pavlovs_domain_contract.json"
+    )
     try:
         payload = json.loads(path.read_text(encoding="utf-8"))
     except OSError as exc:
@@ -193,9 +197,7 @@ def _load_authority(contract_path: str | Path | None = None) -> Mapping[str, Any
 
 def _validate_source(source_value: Any, authority: Mapping[str, Any]) -> str:
     source = _require_url(source_value, "source")
-    authoritative = _require_url(
-        authority.get("url"), "contract suite url"
-    ).rstrip("/").lower()
+    authoritative = _require_url(authority.get("url"), "contract suite url").rstrip("/").lower()
     if source.rstrip("/").lower() != authoritative:
         raise VerilogEvalBoundaryError("source must match authoritative verilog_eval source")
     return source
@@ -210,7 +212,9 @@ def _validate_dataset(dataset: Any, authority: Mapping[str, Any]) -> tuple[str, 
     source = _require_url(dataset.get("source"), "dataset.source")
     expected_source = _require_url(authority.get("url"), "contract suite url").rstrip("/").lower()
     if source.rstrip("/").lower() != expected_source:
-        raise VerilogEvalBoundaryError("dataset.source must match authoritative verilog_eval source")
+        raise VerilogEvalBoundaryError(
+            "dataset.source must match authoritative verilog_eval source"
+        )
 
     if _contains_banned_markers(dataset.get("name")):
         raise VerilogEvalBoundaryError("dataset references blocked xLAM/Glaive source")
@@ -417,34 +421,34 @@ def _validate_hf_checkpoints(raw: Any) -> list[dict[str, Any]]:
 
     for index, checkpoint in enumerate(raw):
         if not isinstance(checkpoint, Mapping):
-            raise VerilogEvalBoundaryError(
-                f"hf_checkpoints[{index}] must be an object"
-            )
+            raise VerilogEvalBoundaryError(f"hf_checkpoints[{index}] must be an object")
         repo_url = _require_url(checkpoint.get("repo_url"), f"hf_checkpoints[{index}].repo_url")
         revision = _require_hex40(checkpoint.get("revision"), f"hf_checkpoints[{index}].revision")
         stage = _require_text(checkpoint.get("stage"), f"hf_checkpoints[{index}].stage").lower()
         if stage not in _REQUIRED_HF_STAGES:
-            raise VerilogEvalBoundaryError("hf_checkpoints stage must be one of initial, periodic, final")
-        if stage in observed_stages:
             raise VerilogEvalBoundaryError(
-                f"hf_checkpoints contains duplicate stage {stage!r}"
+                "hf_checkpoints stage must be one of initial, periodic, final"
             )
+        if stage in observed_stages:
+            raise VerilogEvalBoundaryError(f"hf_checkpoints contains duplicate stage {stage!r}")
         observed_stages.add(stage)
 
         url = _require_url(checkpoint.get("url"), f"hf_checkpoints[{index}].url")
-        visibility = _require_text(checkpoint.get("visibility"), f"hf_checkpoints[{index}].visibility").lower()
+        visibility = _require_text(
+            checkpoint.get("visibility"), f"hf_checkpoints[{index}].visibility"
+        ).lower()
         if visibility not in {"public", "private"}:
             raise VerilogEvalBoundaryError(
                 f"hf_checkpoints[{index}].visibility must be public or private"
             )
         if checkpoint.get("safe_public_artifact") is not (visibility == "public"):
-            raise VerilogEvalBoundaryError(f"hf_checkpoints[{index}].safe_public_artifact must match visibility")
+            raise VerilogEvalBoundaryError(
+                f"hf_checkpoints[{index}].safe_public_artifact must match visibility"
+            )
 
         artifact_key = (repo_url, revision)
         if artifact_key in seen_payload:
-            raise VerilogEvalBoundaryError(
-                f"hf_checkpoints[{index}] duplicates repo/revision pair"
-            )
+            raise VerilogEvalBoundaryError(f"hf_checkpoints[{index}] duplicates repo/revision pair")
         seen_payload.add(artifact_key)
 
         normalized.append(
@@ -460,9 +464,7 @@ def _validate_hf_checkpoints(raw: Any) -> list[dict[str, Any]]:
 
     if observed_stages != set(_REQUIRED_HF_STAGES):
         missing = ", ".join(sorted(set(_REQUIRED_HF_STAGES) - observed_stages))
-        raise VerilogEvalBoundaryError(
-            f"hf_checkpoints missing required stage(s): {missing}"
-        )
+        raise VerilogEvalBoundaryError(f"hf_checkpoints missing required stage(s): {missing}")
     return normalized
 
 
@@ -514,9 +516,7 @@ def build_verilog_eval_boundary_record(
         if authority.get("stateful") is not _EXPECTED_STATEFUL:
             blockers.append("contract stateful value changed from expected")
         if authority.get("artifact_or_side_effect") is not _EXPECTED_ARTIFACT_OR_SIDE_EFFECT:
-            blockers.append(
-                "contract artifact_or_side_effect value changed from expected"
-            )
+            blockers.append("contract artifact_or_side_effect value changed from expected")
 
         suite_id = _require_text(manifest.get("suite_id"), "suite_id")
         if suite_id != SUITE_ID:
@@ -658,8 +658,12 @@ def build_verilog_eval_boundary_record(
             "declared_split_manifest_hash": manifest.get("split_manifest_hash"),
             "split_manifest_receipt_ref": manifest.get("split_manifest_receipt_ref"),
             "scope": manifest.get("scope") if isinstance(manifest.get("scope"), Mapping) else None,
-            "held_out": bool(manifest.get("held_out", False)) if isinstance(manifest, Mapping) else False,
-            "held_out_receipt_ref": manifest.get("held_out_receipt_ref") if isinstance(manifest, Mapping) else None,
+            "held_out": bool(manifest.get("held_out", False))
+            if isinstance(manifest, Mapping)
+            else False,
+            "held_out_receipt_ref": manifest.get("held_out_receipt_ref")
+            if isinstance(manifest, Mapping)
+            else None,
             "held_out_receipt_proven": False,
             "wandb": None,
             "tinker": None,

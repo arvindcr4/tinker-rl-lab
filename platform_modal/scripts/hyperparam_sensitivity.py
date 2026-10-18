@@ -11,16 +11,15 @@ Usage:
     python platform_modal/scripts/hyperparam_sensitivity.py --seed 42 --output-dir results/sensitivity
 """
 
-
 import sys
 import os
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 import argparse
 import csv
 import json
 import time
-from itertools import product
 
 import numpy as np
 
@@ -32,6 +31,7 @@ try:
     import torch.nn as nn
     import torch.optim as optim
     from torch.distributions.categorical import Categorical
+
     HAS_TORCH = True
 except ImportError:
     HAS_TORCH = False
@@ -58,11 +58,11 @@ SWEEPS = {
 
 # PPO training constants
 N_ENVS = 4
-N_STEPS = 128        # rollout length per update
+N_STEPS = 128  # rollout length per update
 BATCH_SIZE = 256
 N_EPOCHS = 4
-ACTION_DIM = 199     # 0 … 198 (answers to num1+num2, max=99+99=198)
-OBS_DIM = 2          # [num1, num2]
+ACTION_DIM = 199  # 0 … 198 (answers to num1+num2, max=99+99=198)
+OBS_DIM = 2  # [num1, num2]
 
 
 # ---------------------------------------------------------------------------
@@ -92,8 +92,8 @@ class ArithmeticEnv:
     def step(self, action: int):
         correct = self.num1 + self.num2
         reward = 1.0 if int(action) == correct else 0.0
-        obs = self.reset()          # immediately start next problem
-        return obs, reward, True, {}   # always done after one step
+        obs = self.reset()  # immediately start next problem
+        return obs, reward, True, {}  # always done after one step
 
 
 # ---------------------------------------------------------------------------
@@ -117,7 +117,7 @@ class PPOAgent(nn.Module if HAS_TORCH else object):
 
     def __init__(self, obs_dim: int = OBS_DIM, action_dim: int = ACTION_DIM, hidden: int = 64):
         super().__init__()
-        self.actor  = _make_mlp(obs_dim, hidden, action_dim)
+        self.actor = _make_mlp(obs_dim, hidden, action_dim)
         self.critic = _make_mlp(obs_dim, hidden, 1)
 
     def get_value(self, obs):
@@ -125,12 +125,12 @@ class PPOAgent(nn.Module if HAS_TORCH else object):
 
     def get_action_and_value(self, obs, action=None):
         logits = self.actor(obs)
-        dist   = Categorical(logits=logits)
+        dist = Categorical(logits=logits)
         if action is None:
             action = dist.sample()
         log_prob = dist.log_prob(action)
-        entropy  = dist.entropy()
-        value    = self.critic(obs).squeeze(-1)
+        entropy = dist.entropy()
+        value = self.critic(obs).squeeze(-1)
         return action, log_prob, entropy, value
 
 
@@ -142,27 +142,27 @@ class RolloutBuffer:
 
     def __init__(self, n_steps: int, n_envs: int, obs_dim: int):
         self.n_steps = n_steps
-        self.n_envs  = n_envs
-        self.obs      = np.zeros((n_steps, n_envs, obs_dim), dtype=np.float32)
-        self.actions  = np.zeros((n_steps, n_envs), dtype=np.int64)
-        self.rewards  = np.zeros((n_steps, n_envs), dtype=np.float32)
-        self.dones    = np.zeros((n_steps, n_envs), dtype=np.float32)
-        self.values   = np.zeros((n_steps, n_envs), dtype=np.float32)
+        self.n_envs = n_envs
+        self.obs = np.zeros((n_steps, n_envs, obs_dim), dtype=np.float32)
+        self.actions = np.zeros((n_steps, n_envs), dtype=np.int64)
+        self.rewards = np.zeros((n_steps, n_envs), dtype=np.float32)
+        self.dones = np.zeros((n_steps, n_envs), dtype=np.float32)
+        self.values = np.zeros((n_steps, n_envs), dtype=np.float32)
         self.log_probs = np.zeros((n_steps, n_envs), dtype=np.float32)
-        self.ptr      = 0
+        self.ptr = 0
 
     def add(self, obs, actions, rewards, dones, values, log_probs):
-        self.obs[self.ptr]       = obs
-        self.actions[self.ptr]   = actions
-        self.rewards[self.ptr]   = rewards
-        self.dones[self.ptr]     = dones
-        self.values[self.ptr]    = values
+        self.obs[self.ptr] = obs
+        self.actions[self.ptr] = actions
+        self.rewards[self.ptr] = rewards
+        self.dones[self.ptr] = dones
+        self.values[self.ptr] = values
         self.log_probs[self.ptr] = log_probs
         self.ptr += 1
 
     def compute_returns_and_advantages(self, last_values, gamma: float, gae_lambda: float):
         advantages = np.zeros_like(self.rewards)
-        last_gae   = np.zeros(self.n_envs, dtype=np.float32)
+        last_gae = np.zeros(self.n_envs, dtype=np.float32)
         for t in reversed(range(self.n_steps)):
             next_non_terminal = 1.0 - self.dones[t]
             next_values = last_values if t == self.n_steps - 1 else self.values[t + 1]
@@ -203,13 +203,15 @@ def train_and_evaluate(
         return float(np.clip(np.random.default_rng(seed).normal(0.5, 0.1), 0, 1))
 
     if not HAS_TORCH:
-        raise RuntimeError("PyTorch required for training; use explicit dry_run=True for synthetic output")
+        raise RuntimeError(
+            "PyTorch required for training; use explicit dry_run=True for synthetic output"
+        )
 
-    lr           = hyperparams["learning_rate"]
-    clip_range   = hyperparams["clip_range"]
+    lr = hyperparams["learning_rate"]
+    clip_range = hyperparams["clip_range"]
     entropy_coef = hyperparams["entropy_coef"]
-    gamma        = hyperparams["gamma"]
-    gae_lambda   = hyperparams["gae_lambda"]
+    gamma = hyperparams["gamma"]
+    gae_lambda = hyperparams["gae_lambda"]
 
     set_global_seed(seed)
     rng = np.random.default_rng(seed)
@@ -218,35 +220,35 @@ def train_and_evaluate(
     # Vectorised environments (simple loop, no multiprocessing needed)
     envs = [ArithmeticEnv(np.random.default_rng(seed + i)) for i in range(N_ENVS)]
     obs_list = [env.reset() for env in envs]
-    obs_arr  = np.stack(obs_list, axis=0)  # (n_envs, obs_dim)
+    obs_arr = np.stack(obs_list, axis=0)  # (n_envs, obs_dim)
 
-    agent     = PPOAgent().to(device)
+    agent = PPOAgent().to(device)
     optimizer = optim.Adam(agent.parameters(), lr=lr, eps=1e-5)
 
-    n_updates      = num_steps // (N_STEPS * N_ENVS)
-    global_step    = 0
+    n_updates = num_steps // (N_STEPS * N_ENVS)
+    global_step = 0
 
-    for update in range(1, n_updates + 1):
+    for _update in range(1, n_updates + 1):
         buffer = RolloutBuffer(N_STEPS, N_ENVS, OBS_DIM)
 
         # --- Collect rollout ---
-        for step in range(N_STEPS):
-            obs_tensor  = torch.tensor(obs_arr, dtype=torch.float32, device=device)
+        for _step in range(N_STEPS):
+            obs_tensor = torch.tensor(obs_arr, dtype=torch.float32, device=device)
             with torch.no_grad():
                 actions, log_probs, _, values = agent.get_action_and_value(obs_tensor)
-            actions_np  = actions.cpu().numpy()
-            values_np   = values.cpu().numpy()
+            actions_np = actions.cpu().numpy()
+            values_np = values.cpu().numpy()
             log_probs_np = log_probs.cpu().numpy()
 
-            rewards  = np.zeros(N_ENVS, dtype=np.float32)
-            dones    = np.zeros(N_ENVS, dtype=np.float32)
+            rewards = np.zeros(N_ENVS, dtype=np.float32)
+            dones = np.zeros(N_ENVS, dtype=np.float32)
             next_obs = np.zeros_like(obs_arr)
 
             for i, env in enumerate(envs):
                 nobs, rew, done, _ = env.step(int(actions_np[i]))
-                rewards[i]   = rew
-                dones[i]     = float(done)
-                next_obs[i]  = nobs
+                rewards[i] = rew
+                dones[i] = float(done)
+                next_obs[i] = nobs
 
             buffer.add(obs_arr, actions_np, rewards, dones, values_np, log_probs_np)
             obs_arr = next_obs
@@ -254,38 +256,42 @@ def train_and_evaluate(
 
         # Bootstrap value for last observation
         with torch.no_grad():
-            last_values = agent.get_value(
-                torch.tensor(obs_arr, dtype=torch.float32, device=device)
-            ).cpu().numpy()
+            last_values = (
+                agent.get_value(torch.tensor(obs_arr, dtype=torch.float32, device=device))
+                .cpu()
+                .numpy()
+            )
 
         returns, advantages = buffer.compute_returns_and_advantages(last_values, gamma, gae_lambda)
 
         # Flatten batch
-        b_obs        = torch.tensor(buffer.obs.reshape(-1, OBS_DIM), dtype=torch.float32, device=device)
-        b_actions    = torch.tensor(buffer.actions.reshape(-1), dtype=torch.long, device=device)
-        b_returns    = torch.tensor(returns.reshape(-1), dtype=torch.float32, device=device)
+        b_obs = torch.tensor(buffer.obs.reshape(-1, OBS_DIM), dtype=torch.float32, device=device)
+        b_actions = torch.tensor(buffer.actions.reshape(-1), dtype=torch.long, device=device)
+        b_returns = torch.tensor(returns.reshape(-1), dtype=torch.float32, device=device)
         b_advantages = torch.tensor(advantages.reshape(-1), dtype=torch.float32, device=device)
-        b_log_probs  = torch.tensor(buffer.log_probs.reshape(-1), dtype=torch.float32, device=device)
+        b_log_probs = torch.tensor(buffer.log_probs.reshape(-1), dtype=torch.float32, device=device)
 
         # Normalise advantages
         b_advantages = (b_advantages - b_advantages.mean()) / (b_advantages.std() + 1e-8)
 
         # --- PPO update epochs ---
-        batch_len    = b_obs.shape[0]
-        mini_bs      = BATCH_SIZE
-        for epoch in range(N_EPOCHS):
+        batch_len = b_obs.shape[0]
+        mini_bs = BATCH_SIZE
+        for _epoch in range(N_EPOCHS):
             idx = torch.randperm(batch_len, device=device)
             for start in range(0, batch_len, mini_bs):
-                mb = idx[start:start + mini_bs]
-                _, new_log_probs, entropy, new_values = agent.get_action_and_value(b_obs[mb], b_actions[mb])
+                mb = idx[start : start + mini_bs]
+                _, new_log_probs, entropy, new_values = agent.get_action_and_value(
+                    b_obs[mb], b_actions[mb]
+                )
 
-                ratio     = torch.exp(new_log_probs - b_log_probs[mb])
-                pg_loss1  = -b_advantages[mb] * ratio
-                pg_loss2  = -b_advantages[mb] * torch.clamp(ratio, 1 - clip_range, 1 + clip_range)
-                pg_loss   = torch.max(pg_loss1, pg_loss2).mean()
+                ratio = torch.exp(new_log_probs - b_log_probs[mb])
+                pg_loss1 = -b_advantages[mb] * ratio
+                pg_loss2 = -b_advantages[mb] * torch.clamp(ratio, 1 - clip_range, 1 + clip_range)
+                pg_loss = torch.max(pg_loss1, pg_loss2).mean()
 
                 value_loss = 0.5 * ((new_values - b_returns[mb]) ** 2).mean()
-                ent_loss   = entropy.mean()
+                ent_loss = entropy.mean()
 
                 loss = pg_loss + 0.5 * value_loss - entropy_coef * ent_loss
 
@@ -296,11 +302,11 @@ def train_and_evaluate(
 
     # --- Evaluation ---
     eval_env = ArithmeticEnv(np.random.default_rng(seed + 9999))
-    correct  = 0
+    correct = 0
     for _ in range(eval_episodes):
         obs = eval_env.reset()
         with torch.no_grad():
-            obs_t  = torch.tensor(obs, dtype=torch.float32, device=device).unsqueeze(0)
+            obs_t = torch.tensor(obs, dtype=torch.float32, device=device).unsqueeze(0)
             action = agent.actor(obs_t).argmax(dim=-1).item()
         n1, n2 = eval_env.num1, eval_env.num2
         if int(action) == n1 + n2:
@@ -316,10 +322,14 @@ def main():
     parser = argparse.ArgumentParser(
         description="Hyperparameter sensitivity analysis for TinkerRL PPO."
     )
-    parser.add_argument("--seed",       type=int,  default=42,                       help="Base RNG seed")
-    parser.add_argument("--output-dir", type=str,  default="results/sensitivity",    help="Directory for CSV output")
-    parser.add_argument("--num-steps",  type=int,  default=20_000,                   help="Training steps per configuration")
-    parser.add_argument("--dry-run",    action="store_true",                          help="Skip training, use random results")
+    parser.add_argument("--seed", type=int, default=42, help="Base RNG seed")
+    parser.add_argument(
+        "--output-dir", type=str, default="results/sensitivity", help="Directory for CSV output"
+    )
+    parser.add_argument(
+        "--num-steps", type=int, default=20_000, help="Training steps per configuration"
+    )
+    parser.add_argument("--dry-run", action="store_true", help="Skip training, use random results")
     args = parser.parse_args()
 
     if args.dry_run:
@@ -328,12 +338,12 @@ def main():
     set_global_seed(args.seed)
     os.makedirs(args.output_dir, exist_ok=True)
 
-    results = []   # list of dicts: {hyperparameter, value, accuracy, seed}
+    results = []  # list of dicts: {hyperparameter, value, accuracy, seed}
 
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print(f"  TinkerRL Hyperparameter Sensitivity Analysis")
     print(f"  Seed: {args.seed}  |  Steps/config: {args.num_steps:,}")
-    print(f"{'='*60}\n")
+    print(f"{'=' * 60}\n")
 
     total_configs = sum(len(v) for v in SWEEPS.items() if isinstance(v, list) for _ in [None])
     # Correct count
@@ -343,8 +353,8 @@ def main():
     for param_name, sweep_values in SWEEPS.items():
         print(f"--- Sweeping: {param_name} ---")
         for val in sweep_values:
-            hp = dict(DEFAULTS)          # start from defaults
-            hp[param_name] = val         # override one parameter
+            hp = dict(DEFAULTS)  # start from defaults
+            hp[param_name] = val  # override one parameter
 
             t0 = time.time()
             accuracy = train_and_evaluate(
@@ -355,18 +365,25 @@ def main():
             )
             elapsed = time.time() - t0
 
-            results.append({
-                "hyperparameter": param_name,
-                "value": val,
-                "accuracy": round(accuracy, 4),
-                "seed": args.seed,
-                "evidence_kind": "synthetic_dry_run" if args.dry_run else "measured_training",
-            })
+            results.append(
+                {
+                    "hyperparameter": param_name,
+                    "value": val,
+                    "accuracy": round(accuracy, 4),
+                    "seed": args.seed,
+                    "evidence_kind": "synthetic_dry_run" if args.dry_run else "measured_training",
+                }
+            )
             done += 1
-            print(f"  {param_name}={val:<10}  accuracy={accuracy:.3f}  [{elapsed:.1f}s]  ({done}/{total_configs})")
+            print(
+                f"  {param_name}={val:<10}  accuracy={accuracy:.3f}  [{elapsed:.1f}s]  ({done}/{total_configs})"
+            )
 
     # --- Save CSV ---
-    csv_path = os.path.join(args.output_dir, f"sensitivity_v2_{'dry_run' if args.dry_run else 'training'}_seed{args.seed}.csv")
+    csv_path = os.path.join(
+        args.output_dir,
+        f"sensitivity_v2_{'dry_run' if args.dry_run else 'training'}_seed{args.seed}.csv",
+    )
     fieldnames = ["hyperparameter", "value", "accuracy", "seed", "evidence_kind"]
     with open(csv_path, "w", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames)
@@ -375,16 +392,16 @@ def main():
     print(f"\nResults saved to: {csv_path}")
 
     # --- Summary table ---
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print(f"{'Hyperparameter':<20} {'Value':<12} {'Accuracy':>10}")
-    print(f"{'-'*20} {'-'*12} {'-'*10}")
+    print(f"{'-' * 20} {'-' * 12} {'-' * 10}")
     for row in results:
         print(f"{row['hyperparameter']:<20} {str(row['value']):<12} {row['accuracy']:>10.3f}")
 
     # --- Sensitivity report ---
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print("  Sensitivity Report (>10% accuracy swing = HIGH)")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
     by_param = {}
     for row in results:
         by_param.setdefault(row["hyperparameter"], []).append(row["accuracy"])
@@ -392,7 +409,7 @@ def main():
     high_sensitivity = []
     for param, accs in by_param.items():
         swing = max(accs) - min(accs)
-        tag   = "HIGH" if swing > 0.10 else "low"
+        tag = "HIGH" if swing > 0.10 else "low"
         print(f"  {param:<20}  swing={swing:.3f}  [{tag}]")
         if swing > 0.10:
             high_sensitivity.append(param)

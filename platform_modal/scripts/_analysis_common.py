@@ -194,7 +194,7 @@ def load_iter108_perrun(path: str) -> list[dict[str, Any]]:
         hdr = fh.readline().rstrip().split("\t")
         for line in fh:
             f = line.rstrip().split("\t")
-            row = dict(zip(hdr, f))
+            row = dict(zip(hdr, f, strict=False))
             row["window"] = int(row["window"])
             row["seed"] = int(row["seed"])
             row["n_total"] = int(row["n_total"])
@@ -211,7 +211,7 @@ def load_token_norm(res: Path):
     with open(res / "group_size_token_normalized.tsv") as f:
         header = f.readline().rstrip("\n").split("\t")
         for line in f:
-            row = dict(zip(header, line.rstrip("\n").split("\t")))
+            row = dict(zip(header, line.rstrip("\n").split("\t"), strict=False))
             out.append(
                 {
                     "T": int(row["budget_tokens"]),
@@ -231,7 +231,7 @@ def load_zvf_sweep(res: Path):
     with open(res / "groupsize_zvf_sweep.tsv") as f:
         header = f.readline().rstrip("\n").split("\t")
         for line in f:
-            row = dict(zip(header, line.rstrip("\n").split("\t")))
+            row = dict(zip(header, line.rstrip("\n").split("\t"), strict=False))
             out.append(
                 {
                     "G": int(row["G"]),
@@ -266,14 +266,18 @@ def paired_bootstrap(g: list[float], d: list[float], n_boot: int, rng: random.Ra
     """length_bias_iter56/60: percentile bootstrap of mean(d - g) over pairs."""
     _validate_resamples(n_boot)
     _validate_paired_lengths(g, d)
-    diffs = [di - gi for gi, di in zip(g, d)]
+    diffs = [di - gi for gi, di in zip(g, d, strict=False)]
     n = len(diffs)
     if n < 2:
         return {
-            'mean_diff': diffs[0] if n else float('nan'),
-            'sd_diff': float('nan'), 'ci_lo': float('nan'), 'ci_hi': float('nan'),
-            'p_le0': float('nan'), 'n_pairs': n, 'status': 'insufficient_data',
-            'p_le0_interpretation': 'bootstrap_tail_fraction_not_a_null_test_p_value',
+            "mean_diff": diffs[0] if n else float("nan"),
+            "sd_diff": float("nan"),
+            "ci_lo": float("nan"),
+            "ci_hi": float("nan"),
+            "p_le0": float("nan"),
+            "n_pairs": n,
+            "status": "insufficient_data",
+            "p_le0_interpretation": "bootstrap_tail_fraction_not_a_null_test_p_value",
         }
     if not all(math.isfinite(value) for value in diffs):
         raise ValueError("paired differences must be finite")
@@ -303,8 +307,13 @@ def paired_bootstrap(g: list[float], d: list[float], n_boot: int, rng: random.Ra
 
 def exact_sign_pvalue(differences):
     from scipy.stats import binomtest
+
     nonzero = np.asarray(differences)[np.asarray(differences) != 0]
-    return float(binomtest(int((nonzero > 0).sum()), len(nonzero), .5).pvalue) if len(nonzero) else 1.0
+    return (
+        float(binomtest(int((nonzero > 0).sum()), len(nonzero), 0.5).pvalue)
+        if len(nonzero)
+        else 1.0
+    )
 
 
 def paired_bootstrap_delta(g, d, B, seed, statistic=np.median):
@@ -322,8 +331,13 @@ def paired_bootstrap_delta(g, d, B, seed, statistic=np.median):
         raise ValueError("paired samples must be one-dimensional")
     n = len(g)
     if n == 0:
-        return {"delta": float("nan"), "ci_lo": float("nan"),
-                "ci_hi": float("nan"), "p": float("nan"), "n": 0}
+        return {
+            "delta": float("nan"),
+            "ci_lo": float("nan"),
+            "ci_hi": float("nan"),
+            "p": float("nan"),
+            "n": 0,
+        }
     diffs = d - g
     if not np.all(np.isfinite(diffs)):
         raise ValueError("paired differences must be finite")
@@ -333,14 +347,18 @@ def paired_bootstrap_delta(g, d, B, seed, statistic=np.median):
     point = float(statistic(diffs))
     if not math.isfinite(point) or not np.all(np.isfinite(boot)):
         raise ValueError("bootstrap statistic must be finite")
-    return {"delta": point,
-            "ci_lo": float(np.quantile(boot, 0.025)) if n >= 2 else float("nan"),
-            "ci_hi": float(np.quantile(boot, 0.975)) if n >= 2 else float("nan"),
-            "status": "ok" if n >= 2 else "insufficient_data",
-            "p": exact_sign_pvalue(diffs),
-            "p_method": "exact_two_sided_sign_test_zero_ties_excluded",
-            "bootstrap_tail_fraction_two_sided": float(min(1.0, 2 * min(np.mean(boot <= 0), np.mean(boot >= 0)))),
-            "n": int(n)}
+    return {
+        "delta": point,
+        "ci_lo": float(np.quantile(boot, 0.025)) if n >= 2 else float("nan"),
+        "ci_hi": float(np.quantile(boot, 0.975)) if n >= 2 else float("nan"),
+        "status": "ok" if n >= 2 else "insufficient_data",
+        "p": exact_sign_pvalue(diffs),
+        "p_method": "exact_two_sided_sign_test_zero_ties_excluded",
+        "bootstrap_tail_fraction_two_sided": float(
+            min(1.0, 2 * min(np.mean(boot <= 0), np.mean(boot >= 0)))
+        ),
+        "n": int(n),
+    }
 
 
 def spearman(x, y) -> tuple[float, float]:

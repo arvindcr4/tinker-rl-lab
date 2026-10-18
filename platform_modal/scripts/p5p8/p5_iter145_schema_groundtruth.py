@@ -24,10 +24,10 @@ iter-141 (algorithm-axis eta^2). None of those audited the
 cross-reference between the manifest *declarations* and the *derived
 fields* in the cell_id + the *linked tensor file* on disk.
 """
+
 from __future__ import annotations
 
 import collections
-import glob
 import json
 import os
 import re
@@ -35,7 +35,8 @@ import sys
 from pathlib import Path
 
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
+from _paths import REPO_ROOT
+
 REPO = REPO_ROOT
 MAN_DIR = REPO / "platform_hybrid/experiments/results/mega_20260704/manifests"
 TENS_DIR = REPO / "platform_hybrid/experiments/results/mega_20260704/group_tensors"
@@ -115,15 +116,14 @@ def audit_one(manifest_path: Path):
     expected_tensor_basename = cid + ".json"
     actual_tensor_basename = Path(m.get("per_step_zvf_path", "")).name
     rec["check2_hash_unique"] = (
-        "PASS" if expected_tensor_basename == actual_tensor_basename
+        "PASS"
+        if expected_tensor_basename == actual_tensor_basename
         else f"FAIL:tensor basename={actual_tensor_basename!r} vs manifest={expected_tensor_basename!r}"
     )
 
     # CHECK 3: per_step_zvf_path points to an existing file
     p = m.get("per_step_zvf_path", "")
-    rec["check3_tensor_exists"] = (
-        "PASS" if p and os.path.exists(p) else f"FAIL:path={p!r}"
-    )
+    rec["check3_tensor_exists"] = "PASS" if p and os.path.exists(p) else f"FAIL:path={p!r}"
 
     # CHECK 4 & 5: load tensor if exists
     tensor_cell = None
@@ -137,9 +137,9 @@ def audit_one(manifest_path: Path):
         tg = tensor_cell.get("group_size")
         tm = tensor_cell.get("model")
         rec["check4_tensor_G_match"] = (
-            "PASS" if tg == parsed["G"]
-            else f"FAIL:tensor G={tg} vs cell_id G={parsed['G']}"
+            "PASS" if tg == parsed["G"] else f"FAIL:tensor G={tg} vs cell_id G={parsed['G']}"
         )
+
         # Naming-convention check: cell_id encodes model as e.g.
         # "meta-llama-Llama-3-2-3B" (slashes replaced with dashes,
         # dots replaced with dashes). Tensor cell.model is the
@@ -149,24 +149,27 @@ def audit_one(manifest_path: Path):
         # schema-ground-truth verdict).
         def _canon(s: str) -> str:
             return s.lower().replace("/", "-").replace(".", "-")
+
         if not tm:
             rec["check5_tensor_model_match_strict"] = "FAIL:tensor cell.model missing"
             rec["check5_tensor_model_match_canon"] = "FAIL:tensor cell.model missing"
             rec["check5_tensor_model_match"] = "FAIL:tensor cell.model missing"
         else:
-            strict_ok = (parsed["model"] == tm)
-            canon_ok = (_canon(parsed["model"]) == _canon(tm))
+            strict_ok = parsed["model"] == tm
+            canon_ok = _canon(parsed["model"]) == _canon(tm)
             rec["check5_tensor_model_match_strict"] = (
-                "PASS" if strict_ok
+                "PASS"
+                if strict_ok
                 else f"FAIL:naming_drift cell_id={parsed['model']!r} vs tensor={tm!r}"
             )
             rec["check5_tensor_model_match_canon"] = (
-                "PASS" if canon_ok
+                "PASS"
+                if canon_ok
                 else f"FAIL:canon cell_id={_canon(parsed['model'])!r} vs tensor={_canon(tm)!r}"
             )
-            rec["check5_tensor_model_match"] = (
-                rec["check5_tensor_model_match_canon"]  # canonical is the authoritative verdict
-            )
+            rec["check5_tensor_model_match"] = rec[
+                "check5_tensor_model_match_canon"
+            ]  # canonical is the authoritative verdict
     else:
         rec["check4_tensor_G_match"] = "SKIP"
         rec["check5_tensor_model_match"] = "SKIP"
@@ -183,7 +186,8 @@ def audit_one(manifest_path: Path):
     dn = m.get("decontamination_notes", "")
     expected_dn = TASK_TO_DECONTAM.get(parsed["task"])
     rec["check7_decontam_matches_task"] = (
-        "PASS" if expected_dn is None or dn == expected_dn
+        "PASS"
+        if expected_dn is None or dn == expected_dn
         else f"FAIL:decontam={dn!r} vs expected={expected_dn!r} for task={parsed['task']!r}"
     )
 
@@ -192,8 +196,7 @@ def audit_one(manifest_path: Path):
     ok_gss, gss_g, _ = parse_gss(gss)
     if ok_gss:
         rec["check8_gss_matches_G"] = (
-            "PASS" if gss_g == parsed["G"]
-            else f"FAIL:gss_G={gss_g} vs cell_id_G={parsed['G']}"
+            "PASS" if gss_g == parsed["G"] else f"FAIL:gss_G={gss_g} vs cell_id_G={parsed['G']}"
         )
     else:
         rec["check8_gss_matches_G"] = f"FAIL:{gss_g}"
@@ -207,14 +210,30 @@ def main():
     print(f"Loaded {n} manifest files from {MAN_DIR}")
     rows = [audit_one(p) for p in files]
     # write TSV
-    check_keys = [f"check{i}_{name}" for i, name in enumerate(
-        ["cellid_parses", "hash_unique", "tensor_exists",
-         "tensor_G_match", "tensor_model_match", "heldout_matches_task",
-         "decontam_matches_task", "gss_matches_G"], start=1)]
-    cols = ["manifest", "cell_id"] + check_keys + [
-        "check5_tensor_model_match_strict",
-        "check5_tensor_model_match_canon",
+    check_keys = [
+        f"check{i}_{name}"
+        for i, name in enumerate(
+            [
+                "cellid_parses",
+                "hash_unique",
+                "tensor_exists",
+                "tensor_G_match",
+                "tensor_model_match",
+                "heldout_matches_task",
+                "decontam_matches_task",
+                "gss_matches_G",
+            ],
+            start=1,
+        )
     ]
+    cols = (
+        ["manifest", "cell_id"]
+        + check_keys
+        + [
+            "check5_tensor_model_match_strict",
+            "check5_tensor_model_match_canon",
+        ]
+    )
     with OUT_TSV.open("w") as f:
         f.write("\t".join(cols) + "\n")
         for r in rows:
@@ -252,9 +271,7 @@ def main():
 
     # overall pass rate across non-skipped checks
     non_skip_total = pass_counts.total() + fail_counts.total()
-    summary["overall_pass_rate"] = (
-        pass_counts.total() / non_skip_total if non_skip_total else 0.0
-    )
+    summary["overall_pass_rate"] = pass_counts.total() / non_skip_total if non_skip_total else 0.0
     summary["overall_pass_count"] = pass_counts.total()
     summary["overall_fail_count"] = fail_counts.total()
     summary["overall_skip_count"] = skip_counts.total()
@@ -275,6 +292,7 @@ def main():
     # non-canonical checks). This proves the audit is not a vacuous
     # ceiling.
     import random as _r
+
     _r.seed(20260705)
     perturb_rows = []
     perturb_detect = 0
@@ -286,7 +304,10 @@ def main():
     rng = _r.Random(20260705)
     sample_indices = rng.sample(range(n), min(20, n))
     perturbation_kinds = [
-        "heldout_swap", "gss_swap", "decontam_swap", "path_swap",
+        "heldout_swap",
+        "gss_swap",
+        "decontam_swap",
+        "path_swap",
     ]
     for idx in sample_indices:
         rec = rows[idx]
@@ -309,7 +330,9 @@ def main():
         elif kind == "decontam_swap":
             # pick a decontam value that's WRONG for the current task
             other_decontams = [
-                d for t, d in TASK_TO_DECONTAM.items() if t != parsed["task"]
+                d
+                for t, d in TASK_TO_DECONTAM.items()
+                if t != parsed["task"]
                 for d in [TASK_TO_DECONTAM[t]]
             ]
             other_decontams = list(set(other_decontams))
@@ -336,8 +359,7 @@ def main():
         perturb_total += 1
         # detect if ANY of the canonical checks is FAIL (string starts with "FAIL:")
         canon_fail = any(
-            isinstance(audited.get(c), str) and audited[c].startswith("FAIL")
-            for c in check_keys
+            isinstance(audited.get(c), str) and audited[c].startswith("FAIL") for c in check_keys
         )
         if canon_fail:
             perturb_detect += 1
@@ -352,8 +374,7 @@ def main():
     # NAMING-DRIFT FINDING — measure how many would FAIL without
     # canonicalization (i.e. on naive string equality).
     strict_fail_count = sum(
-        1 for r in rows
-        if str(r.get("check5_tensor_model_match_strict", "")).startswith("FAIL")
+        1 for r in rows if str(r.get("check5_tensor_model_match_strict", "")).startswith("FAIL")
     )
     summary["naming_drift_without_canonicalization"] = {
         "n_strict_fail": strict_fail_count,
@@ -365,16 +386,24 @@ def main():
     OUT_JSON.write_text(json.dumps(summary, indent=2))
     print(f"Wrote {OUT_JSON}")
     print(f"Pass: {pass_counts.total()}, Fail: {fail_counts.total()}, Skip: {skip_counts.total()}")
-    print(f"Fully consistent manifests: {fully_pass} / {n}  "
-          f"({summary['fully_consistent_rate']*100:.1f}%)")
+    print(
+        f"Fully consistent manifests: {fully_pass} / {n}  "
+        f"({summary['fully_consistent_rate'] * 100:.1f}%)"
+    )
     for c in check_keys:
-        pc = pass_counts[c]; fc = fail_counts[c]; sc = skip_counts[c]
+        pc = pass_counts[c]
+        fc = fail_counts[c]
+        sc = skip_counts[c]
         print(f"  {c}: PASS={pc}  FAIL={fc}  SKIP={sc}")
-    print(f"\nNaming-drift (without canonicalization) check5_strict: "
-          f"FAIL={strict_fail_count}/{n}  "
-          f"({summary['naming_drift_without_canonicalization']['strict_fail_rate']*100:.1f}%)")
-    print(f"Perturbation detection: {perturb_detect}/{perturb_total}  "
-          f"({summary['perturbation_test']['detect_rate']*100:.1f}%)")
+    print(
+        f"\nNaming-drift (without canonicalization) check5_strict: "
+        f"FAIL={strict_fail_count}/{n}  "
+        f"({summary['naming_drift_without_canonicalization']['strict_fail_rate'] * 100:.1f}%)"
+    )
+    print(
+        f"Perturbation detection: {perturb_detect}/{perturb_total}  "
+        f"({summary['perturbation_test']['detect_rate'] * 100:.1f}%)"
+    )
 
 
 if __name__ == "__main__":

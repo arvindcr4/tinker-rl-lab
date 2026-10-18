@@ -44,9 +44,11 @@ image = (
         "tinker>=0.5.0",
         "tinker-cookbook>=0.2.0",
     )
-    .env({
-        "WANDB_PROJECT": "tinker-rl-lab-world-class",
-    })
+    .env(
+        {
+            "WANDB_PROJECT": "tinker-rl-lab-world-class",
+        }
+    )
     .add_local_dir(
         str(REPO_ROOT),
         remote_path="/root/tinker-rl-lab",
@@ -61,9 +63,11 @@ image = (
     secrets=[
         modal.Secret.from_name("huggingface-secret"),
         modal.Secret.from_name("wandb-secret"),
-        modal.Secret.from_dict({
-            "TINKER_API_KEY": TINKER_KEY,
-        })
+        modal.Secret.from_dict(
+            {
+                "TINKER_API_KEY": TINKER_KEY,
+            }
+        ),
     ],
 )
 def run_tinker_qwen3_8b():
@@ -75,15 +79,22 @@ def run_tinker_qwen3_8b():
     REPO = "/root/tinker-rl-lab"
     sys.path.insert(0, REPO)
     from platform_hybrid.experiments.framework_contracts import read_tinker_preset
+
     source = read_tinker_preset(f"{REPO}/platform_tinker/tinkerrl/grpo_cli.py")
     requested = {**source["preset"], "model": MODEL, "steps": 30, "seed": 211}
 
     cmd = [
-        sys.executable, "-m", "platform_tinker.tinkerrl.grpo_cli",
-        "--preset", "gsm8k",
-        "--model", MODEL,
-        "--steps", "30",
-        "--seed", "211",
+        sys.executable,
+        "-m",
+        "platform_tinker.tinkerrl.grpo_cli",
+        "--preset",
+        "gsm8k",
+        "--model",
+        MODEL,
+        "--steps",
+        "30",
+        "--seed",
+        "211",
     ]
     print("[tinker] cmd:", " ".join(cmd))
     start = time.time()

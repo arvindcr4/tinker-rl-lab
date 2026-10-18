@@ -16,6 +16,7 @@ side has no canonical entry at all -- such deltas are returned as
 This is the P6 T3+T4 item: clean the UNVERIFIED_<method> provenance debt
 left over from iter 6.
 """
+
 import argparse
 import csv
 import json
@@ -25,8 +26,11 @@ import sys
 import urllib.error
 import urllib.request
 
-sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
+sys.path.append(
+    str(pathlib.Path(__file__).resolve().parents[1])
+)  # platform_modal/scripts, for _paths
+from _paths import REPO_ROOT
+
 WORKTREE = REPO_ROOT
 REGISTRY = WORKTREE / "platform_hybrid/registry"
 RESULTS = WORKTREE / "platform_hybrid/experiments" / "results" / "p5p8"
@@ -35,23 +39,20 @@ REF = WORKTREE / "platform_hybrid/paper" / "references.bib"
 # Canonical (bibkey, arxiv_id, expected short label) for each delta id
 # in the registry. Sourced from paper/references.bib round-3 dedup pass.
 CANON = {
-    "delta_aero":      {"bibkey": "le2025rlzvp",       "arxiv": "2509.21880",
-                         "short":  "AERO / RL-ZVP (entropy-guided advantage)"},
-    "delta_gift":      {"bibkey": "gift2025",           "arxiv": "2510.23868",
-                         "short":  "GIFT"},
-    "delta_areal":     {"bibkey": "areal2025",          "arxiv": "2505.24298",
-                         "short":  "AReaL"},
-    "delta_ngrpo":     {"bibkey": "nan2025ngrpo",       "arxiv": "2509.18851",
-                         "short":  "NGRPO"},
-    "delta_cppo":      {"bibkey": "lin2025cppo",        "arxiv": "2503.22342",
-                         "short":  "CPPO"},
-    "delta_mcgrpo":    {"bibkey": "mcgrpo2025",         "arxiv": "2601.22582",
-                         "short":  "MC-GRPO"},
-    "delta_es":        {"bibkey": "es2025",             "arxiv": "2509.24372",
-                         "short":  "ES at Scale"},
-    "delta_scafgrpo":  {"bibkey": "zhang2025scaffgrpo", "arxiv": "2510.19807",
-                         "short":  "Scaf-GRPO"},
+    "delta_aero": {
+        "bibkey": "le2025rlzvp",
+        "arxiv": "2509.21880",
+        "short": "AERO / RL-ZVP (entropy-guided advantage)",
+    },
+    "delta_gift": {"bibkey": "gift2025", "arxiv": "2510.23868", "short": "GIFT"},
+    "delta_areal": {"bibkey": "areal2025", "arxiv": "2505.24298", "short": "AReaL"},
+    "delta_ngrpo": {"bibkey": "nan2025ngrpo", "arxiv": "2509.18851", "short": "NGRPO"},
+    "delta_cppo": {"bibkey": "lin2025cppo", "arxiv": "2503.22342", "short": "CPPO"},
+    "delta_mcgrpo": {"bibkey": "mcgrpo2025", "arxiv": "2601.22582", "short": "MC-GRPO"},
+    "delta_es": {"bibkey": "es2025", "arxiv": "2509.24372", "short": "ES at Scale"},
+    "delta_scafgrpo": {"bibkey": "zhang2025scaffgrpo", "arxiv": "2510.19807", "short": "Scaf-GRPO"},
 }
+
 
 # Bibtex fetch: simple GET to the arXiv abstract page; we only use the
 # HTTP status to know the paper exists (the title is what we will VERIFY
@@ -72,7 +73,7 @@ def _brace_value(text: str, key: str) -> str:
     m = pat.search(text)
     if not m:
         return ""
-    i = m.end()               # first char after the opening brace
+    i = m.end()  # first char after the opening brace
     depth = 1
     out = []
     while i < len(text) and depth > 0:
@@ -95,7 +96,7 @@ def load_bib_index():
     for m in re.finditer(r"@\w+\{([^,]+),", text):
         key = m.group(1).strip()
         start = m.start()
-        block = text[start:start + 1600]
+        block = text[start : start + 1600]
         title = _brace_value(block, "title")
         arxiv_m = re.search(r"(?:arxiv:)?(\d{4}\.\d{4,5})", block, flags=re.I)
         arxiv = arxiv_m.group(1) if arxiv_m else ""
@@ -159,10 +160,19 @@ def main():
             # per-component text: drop "TO_VERIFY:" prefix
             for d in rec.get("deltas", []):
                 if "TO_VERIFY" in d.get("change", ""):
-                    d["change"] = re.sub(r"\s*TO_VERIFY:?\s*see source paper for the [A-Z]+ family\s*", " ", d["change"])
-                    d["change"] = re.sub(r"\s*TO_VERIFY:\s*NGraPO source paper\s*", " ", d["change"])
+                    d["change"] = re.sub(
+                        r"\s*TO_VERIFY:?\s*see source paper for the [A-Z]+ family\s*",
+                        " ",
+                        d["change"],
+                    )
+                    d["change"] = re.sub(
+                        r"\s*TO_VERIFY:\s*NGraPO source paper\s*", " ", d["change"]
+                    )
                     d["change"] = re.sub(r"\s*TO_VERIFY:\s*CPPO source paper\s*", " ", d["change"])
-                    d["change"] = d["change"].strip().rstrip(";") + f" (per {expect['bibkey']}, arXiv:{expect['arxiv']})."
+                    d["change"] = (
+                        d["change"].strip().rstrip(";")
+                        + f" (per {expect['bibkey']}, arXiv:{expect['arxiv']})."
+                    )
                     d["change"] = d["change"].replace("  ", " ")
                 if d.get("field", "").strip().lower() == "see notes":
                     d["field"] = "see delta-list and citation"
@@ -177,33 +187,45 @@ def main():
                 if "TO_VERIFY" in d.get("change", ""):
                     d["change"] = re.sub(r"\s*TO_VERIFY:\s*", " (per ", d["change"])
                     if d["change"].endswith(" source paper)"):
-                        d["change"] = d["change"][:-len(" source paper)")] + (
+                        d["change"] = d["change"][: -len(" source paper)")] + (
                             f"; arXiv:{new_arxiv})"
                         )
                 if d.get("field", "").strip().lower() == "see notes":
                     d["field"] = "see delta-list and citation"
             rec["deltas"] = rec.get("deltas", [])
             path.write_text(json.dumps(rec, indent=2, ensure_ascii=False) + "\n")
-        rows.append({
-            "delta_id": delta_id,
-            "short_label": expect["short"],
-            "expected_bibkey": expect["bibkey"],
-            "expected_arxiv": expect["arxiv"],
-            "old_bibkey": old_bibkey,
-            "old_arxiv": old_arxiv,
-            "bibkey_in_refs": "yes" if present_in_bib else "no",
-            "arxiv_matches_refs": "yes" if bib_has_arxiv else "no",
-            "arxiv_reachable": "yes" if arxiv_ok else "no",
-            "action": action,
-            "new_title": new_title[:80],
-        })
+        rows.append(
+            {
+                "delta_id": delta_id,
+                "short_label": expect["short"],
+                "expected_bibkey": expect["bibkey"],
+                "expected_arxiv": expect["arxiv"],
+                "old_bibkey": old_bibkey,
+                "old_arxiv": old_arxiv,
+                "bibkey_in_refs": "yes" if present_in_bib else "no",
+                "arxiv_matches_refs": "yes" if bib_has_arxiv else "no",
+                "arxiv_reachable": "yes" if arxiv_ok else "no",
+                "action": action,
+                "new_title": new_title[:80],
+            }
+        )
         details[delta_id] = rows[-1]
     # write outputs
     out_tsv = RESULTS / "variant_delta_citation_audit.tsv"
     out_json = RESULTS / "variant_delta_citation_audit.json"
-    cols = ["delta_id", "short_label", "expected_bibkey", "expected_arxiv",
-            "old_bibkey", "old_arxiv", "bibkey_in_refs", "arxiv_matches_refs",
-            "arxiv_reachable", "action", "new_title"]
+    cols = [
+        "delta_id",
+        "short_label",
+        "expected_bibkey",
+        "expected_arxiv",
+        "old_bibkey",
+        "old_arxiv",
+        "bibkey_in_refs",
+        "arxiv_matches_refs",
+        "arxiv_reachable",
+        "action",
+        "new_title",
+    ]
     with out_tsv.open("w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=cols, delimiter="\t")
         w.writeheader()
@@ -213,9 +235,11 @@ def main():
     # summary
     patched = sum(1 for r in rows if r["action"] == "patched")
     noop = sum(1 for r in rows if r["action"] == "noop")
-    print(f"PATCHED={patched}, NOOP={noop}, "
-          f"ORPHAN={sum(1 for r in rows if r['action']=='orphan')}, "
-          f"ARXIV_DOWN={sum(1 for r in rows if r['action']=='arxiv_unreachable')}")
+    print(
+        f"PATCHED={patched}, NOOP={noop}, "
+        f"ORPHAN={sum(1 for r in rows if r['action'] == 'orphan')}, "
+        f"ARXIV_DOWN={sum(1 for r in rows if r['action'] == 'arxiv_unreachable')}"
+    )
     print(f"out: {out_tsv} ; {out_json}")
     return 0 if not any(r["action"] in ("orphan", "arxiv_unreachable") for r in rows) else 1
 

@@ -122,7 +122,8 @@ def test_custom_adaptive_fn():
 def test_as_trl_callback_without_transformers_raises_cleanly():
     cb = ZVFCallback()
     try:
-        import transformers  # noqa: F401
+        import transformers
+
         has_transformers = True
     except Exception:
         has_transformers = False

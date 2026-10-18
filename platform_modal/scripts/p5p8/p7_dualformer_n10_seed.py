@@ -38,11 +38,10 @@ Outputs (worktree-relative paths):
   platform_hybrid/experiments/results/p5p8/p7_dualformer_n10_per_seed.tsv
   platform_hybrid/experiments/results/p5p8/p7_dualformer_n10_summary.json
 """
+
 from __future__ import annotations
 import csv
 import json
-import math
-import os
 import random
 import statistics
 from pathlib import Path
@@ -57,13 +56,13 @@ N10_DIR = ROOT / "platform_hybrid/experiments/results/n10_seed_expansion"
 OUT_DIR = ROOT / "platform_hybrid/experiments/results/p5p8/corrected-review19-v5"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
-TAU = 0.7           # primary zvf-triage threshold
-TAU_DELTA = 0.2     # Hybrid band width: z in [tau, tau+tau_delta) escalates
-G_BASE = 8          # N10 fixed group size
-G_ESC = 16          # escalation: 2x base (Dualformer "slow mode")
-G_DES = 4           # de-escalation: 0.5x base (Dualformer "fast mode")
-N_STEPS = 15        # N10 panel step count per seed
-N_BOOT = 2000       # bootstrap replicates
+TAU = 0.7  # primary zvf-triage threshold
+TAU_DELTA = 0.2  # Hybrid band width: z in [tau, tau+tau_delta) escalates
+G_BASE = 8  # N10 fixed group size
+G_ESC = 16  # escalation: 2x base (Dualformer "slow mode")
+G_DES = 4  # de-escalation: 0.5x base (Dualformer "fast mode")
+N_STEPS = 15  # N10 panel step count per seed
+N_BOOT = 2000  # bootstrap replicates
 RNG_SEED = 27
 
 
@@ -116,7 +115,7 @@ def per_seed_metrics(G_t: list[int], z: list[float]) -> dict:
     total = sum(G_t)
     n_fire = sum(1 for g in G_t if g != G_BASE)
     sel = n_fire / n
-    headroom_bad = sum(1 for g, zt in zip(G_t, z) if g > G_BASE and zt >= 0.99)
+    headroom_bad = sum(1 for g, zt in zip(G_t, z, strict=False) if g > G_BASE and zt >= 0.99)
     return {
         "total_G": total,
         "n_fire": n_fire,
@@ -149,12 +148,14 @@ def boot_ci(values: list[float], n_boot: int = N_BOOT, seed: int = RNG_SEED) -> 
     }
 
 
-def paired_boot_ci_delta(a: list[float], b: list[float], n_boot: int = N_BOOT, seed: int = RNG_SEED) -> dict:
+def paired_boot_ci_delta(
+    a: list[float], b: list[float], n_boot: int = N_BOOT, seed: int = RNG_SEED
+) -> dict:
     """Paired bootstrap on (a-b) across the same seed ordering."""
     assert len(a) == len(b)
     rng = random.Random(seed)
     n = len(a)
-    diffs = [ai - bi for ai, bi in zip(a, b)]
+    diffs = [ai - bi for ai, bi in zip(a, b, strict=False)]
     means = []
     for _ in range(n_boot):
         sample = [diffs[rng.randrange(n)] for _ in range(n)]
@@ -180,7 +181,9 @@ def main() -> None:
         "C0_baseline": lambda z: c0(z),
         f"C1_zvf_triage@{TAU:.2f}": lambda z: c1_zvf_triage(z, TAU),
         f"C2_dualformer@{TAU:.2f}": lambda z: c2_dualformer(z, TAU),
-        f"C3_hybrid@{TAU:.2f}+{TAU_DELTA:.2f}": lambda z: c3_hybrid(z, TAU, TAU_DELTA, g_base=G_BASE, g_esc=G_ESC, g_des=G_DES),
+        f"C3_hybrid@{TAU:.2f}+{TAU_DELTA:.2f}": lambda z: c3_hybrid(
+            z, TAU, TAU_DELTA, g_base=G_BASE, g_esc=G_ESC, g_des=G_DES
+        ),
     }
 
     # Per-seed total_G for every controller
@@ -210,7 +213,9 @@ def main() -> None:
         for name in controllers:
             if name == "C0_baseline":
                 continue
-            saving = (row["C0_baseline_total_G"] - row[f"{name}_total_G"]) / row["C0_baseline_total_G"]
+            saving = (row["C0_baseline_total_G"] - row[f"{name}_total_G"]) / row[
+                "C0_baseline_total_G"
+            ]
             row[f"{name}_savings"] = saving
             per_seed_savings[name].append(saving)
         rows.append(row)
@@ -280,7 +285,9 @@ def main() -> None:
     print(f"N10 panel: {n_seeds} seeds × {N_STEPS} steps, G_base={G_BASE}")
     print(f"tau={TAU}, tau_delta={TAU_DELTA}, G_esc={G_ESC}, G_des={G_DES}")
     print("=" * 72)
-    print(f"\nPer-controller total compute (sum G_t over 15 steps), bootstrap CI on n={n_seeds} seeds:")
+    print(
+        f"\nPer-controller total compute (sum G_t over 15 steps), bootstrap CI on n={n_seeds} seeds:"
+    )
     for name, ci in summary["per_controller_total_G_boot_ci"].items():
         print(f"  {name:35s}  mean={ci['mean']:7.3f}  95%CI=[{ci['lo']:7.3f}, {ci['hi']:7.3f}]")
     print(f"\nPer-controller savings vs baseline (fraction of compute NOT spent):")

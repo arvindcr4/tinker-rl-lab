@@ -145,7 +145,10 @@ def _validate_scope(receipt: Mapping[str, Any], errors: list[str]) -> None:
         _error(errors, "receipt_type", f"must be {RECEIPT_TYPE!r}")
     if type(receipt.get("launchable")) is not bool or receipt.get("launchable") is not False:
         _error(errors, "launchable", "must be false for a receipt validator")
-    if type(receipt.get("allocation_allowed")) is not bool or receipt.get("allocation_allowed") is not False:
+    if (
+        type(receipt.get("allocation_allowed")) is not bool
+        or receipt.get("allocation_allowed") is not False
+    ):
         _error(errors, "allocation_allowed", "must be false")
     if type(receipt.get("provenance_ready")) is not bool:
         _error(errors, "provenance_ready", "must be a typed boolean")
@@ -161,7 +164,12 @@ def _validate_scope(receipt: Mapping[str, Any], errors: list[str]) -> None:
     else:
         if claims.get("xlam_component_only") is not True:
             _error(errors, "claims.xlam_component_only", "must be true")
-        for name in ("portfolio_evidence", "primary_eval_heldout", "held_out", "company_usefulness"):
+        for name in (
+            "portfolio_evidence",
+            "primary_eval_heldout",
+            "held_out",
+            "company_usefulness",
+        ):
             if claims.get(name) is not False:
                 _error(errors, f"claims.{name}", "must be false; xLAM cannot be promoted")
     if evidence is None:
@@ -224,7 +232,9 @@ def _validate_model_dataset(receipt: Mapping[str, Any], errors: list[str]) -> No
     else:
         if not _nonempty_text(_first(dataset, ("dataset_id", "name", "source"))):
             _error(errors, "dataset.dataset_id", "dataset identity is missing")
-        if not _immutable_revision(_first(dataset, ("revision", "dataset_revision", "source_revision"))):
+        if not _immutable_revision(
+            _first(dataset, ("revision", "dataset_revision", "source_revision"))
+        ):
             _error(errors, "dataset.revision", "immutable 40/64-hex revision is required")
         if not _sha256_digest(_first(dataset, ("receipt_hash", "revision_receipt_hash"))):
             _error(errors, "dataset.receipt_hash", "immutable revision receipt hash is required")
@@ -301,7 +311,15 @@ def _validate_checkpoints(receipt: Mapping[str, Any], errors: list[str]) -> None
             _error(errors, f"{path}.url", "verified HTTPS checkpoint URL is required")
         elif _https_url(repo_url) and not str(url).startswith(str(repo_url).rstrip("/") + "/"):
             _error(errors, f"{path}.url", "URL must be under repo_url")
-        elif _commit_40(revision) and (urlparse(str(url)).query or urlparse(str(url)).fragment or urlparse(str(url)).path not in {urlparse(str(repo_url)).path.rstrip("/") + "/" + kind + "/" + revision for kind in ("tree", "commit")}):
+        elif _commit_40(revision) and (
+            urlparse(str(url)).query
+            or urlparse(str(url)).fragment
+            or urlparse(str(url)).path
+            not in {
+                urlparse(str(repo_url)).path.rstrip("/") + "/" + kind + "/" + revision
+                for kind in ("tree", "commit")
+            }
+        ):
             _error(errors, f"{path}.url", "URL must contain the immutable commit")
         if checkpoint.get("url_verified", checkpoint.get("verified")) is not True:
             _error(errors, f"{path}.url_verified", "must be true")
@@ -315,13 +333,25 @@ def _validate_checkpoints(receipt: Mapping[str, Any], errors: list[str]) -> None
             if safe_public_artifact is not True:
                 _error(errors, f"{path}.safe_public_artifact", "public artifact must be safe")
             if checkpoint.get("data_license_safe") is not True:
-                _error(errors, f"{path}.data_license_safe", "public artifact requires data-license safety")
+                _error(
+                    errors,
+                    f"{path}.data_license_safe",
+                    "public artifact requires data-license safety",
+                )
             if checkpoint.get("quota_safe") is not True:
                 _error(errors, f"{path}.quota_safe", "public artifact requires quota safety")
-        elif safe_public_artifact is not False or checkpoint.get("private_artifact_safe") is not True:
-            _error(errors, f"{path}.private_artifact_safe", "private artifact safety receipt is required")
+        elif (
+            safe_public_artifact is not False or checkpoint.get("private_artifact_safe") is not True
+        ):
+            _error(
+                errors,
+                f"{path}.private_artifact_safe",
+                "private artifact safety receipt is required",
+            )
         if not _sha256_digest(_first(checkpoint, ("receipt_hash", "publication_hash"))):
-            _error(errors, f"{path}.receipt_hash", "immutable HF publication receipt hash is required")
+            _error(
+                errors, f"{path}.receipt_hash", "immutable HF publication receipt hash is required"
+            )
         if _https_url(repo_url) and _commit_40(revision):
             identity = (str(repo_url).rstrip("/"), str(revision).lower())
             if identity in seen_repo_revisions:
@@ -336,7 +366,9 @@ def _validate_checkpoints(receipt: Mapping[str, Any], errors: list[str]) -> None
         _error(errors, "sampler_checkpoints", "missing stages: " + ", ".join(missing_stages))
 
 
-def _validate_budget(receipt: Mapping[str, Any], errors: list[str], contract: Mapping[str, Any] | None) -> None:
+def _validate_budget(
+    receipt: Mapping[str, Any], errors: list[str], contract: Mapping[str, Any] | None
+) -> None:
     budget = _mapping(receipt.get("budget"))
     if budget is None:
         _error(errors, "budget", "exact budget debit receipt is missing")
@@ -364,7 +396,9 @@ def _validate_budget(receipt: Mapping[str, Any], errors: list[str], contract: Ma
     if not _immutable_revision(_first(budget, ("authorization_id", "receipt_id"))):
         _error(errors, "budget.authorization_id", "immutable authorization identity is required")
     if not _sha256_digest(_first(budget, ("authorization_hash", "receipt_hash"))):
-        _error(errors, "budget.authorization_hash", "immutable authorization receipt hash is required")
+        _error(
+            errors, "budget.authorization_hash", "immutable authorization receipt hash is required"
+        )
     if contract is not None:
         contract_budget = _mapping(contract.get("budget_gate"))
         contract_max = _amount(contract_budget or {}, ("maximum_usd",))
@@ -424,9 +458,15 @@ def _validate_evaluator(receipt: Mapping[str, Any], errors: list[str]) -> None:
     if not _immutable_revision(_first(evaluator, ("revision", "evaluator_revision"))):
         _error(errors, "evaluator_provenance.revision", "immutable evaluator revision is required")
     if not _immutable_revision(_first(evaluator, ("dataset_revision", "source_revision"))):
-        _error(errors, "evaluator_provenance.dataset_revision", "immutable evaluator dataset revision is required")
+        _error(
+            errors,
+            "evaluator_provenance.dataset_revision",
+            "immutable evaluator dataset revision is required",
+        )
     dataset = _mapping(receipt.get("dataset")) or {}
-    if evaluator.get("dataset_revision") != _first(dataset, ("revision", "dataset_revision", "source_revision")):
+    if evaluator.get("dataset_revision") != _first(
+        dataset, ("revision", "dataset_revision", "source_revision")
+    ):
         _error(errors, "evaluator_provenance.dataset_revision", "must match declared dataset")
     for name in ("split_manifest_hash", "task_id_hash", "task_id_hashes", "verifier_hash"):
         if name in {"task_id_hashes"} and name not in evaluator:
@@ -434,15 +474,27 @@ def _validate_evaluator(receipt: Mapping[str, Any], errors: list[str]) -> None:
         if not _sha256_digest(evaluator.get(name)):
             _error(errors, f"evaluator_provenance.{name}", "64-hex SHA-256 receipt is required")
     if not _sha256_digest(evaluator.get("container_digest")):
-        _error(errors, "evaluator_provenance.container_digest", "64-hex container digest is required")
+        _error(
+            errors, "evaluator_provenance.container_digest", "64-hex container digest is required"
+        )
     if not _nonempty_text(_first(evaluator, ("receipt_id", "provenance_id"))):
         _error(errors, "evaluator_provenance.receipt_id", "provenance receipt identity is required")
     if not _immutable_revision(_first(evaluator, ("receipt_id", "provenance_id"))):
-        _error(errors, "evaluator_provenance.receipt_id", "immutable provenance receipt identity is required")
+        _error(
+            errors,
+            "evaluator_provenance.receipt_id",
+            "immutable provenance receipt identity is required",
+        )
     if not _sha256_digest(evaluator.get("provenance_hash")):
-        _error(errors, "evaluator_provenance.provenance_hash", "immutable provenance hash is required")
+        _error(
+            errors, "evaluator_provenance.provenance_hash", "immutable provenance hash is required"
+        )
     if evaluator.get("primary_eval_heldout") is True or evaluator.get("held_out") is True:
-        _error(errors, "evaluator_provenance", "held-out claims require a separate proven primary_eval receipt")
+        _error(
+            errors,
+            "evaluator_provenance",
+            "held-out claims require a separate proven primary_eval receipt",
+        )
 
 
 def _receipt_hash_payload(receipt: Mapping[str, Any]) -> dict[str, Any]:
@@ -498,7 +550,9 @@ def _load_json(path: Path) -> dict[str, Any]:
 
 def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--receipt", "--input", "--validate", dest="receipt_path", type=Path, required=True)
+    parser.add_argument(
+        "--receipt", "--input", "--validate", dest="receipt_path", type=Path, required=True
+    )
     parser.add_argument("--contract", type=Path, default=None)
     args = parser.parse_args(argv)
     receipt = _load_json(args.receipt_path)

@@ -68,8 +68,8 @@ class ExactStackDifferentialTests(unittest.TestCase):
             mask=self.raw_mask,
             selected_indices=self.selected_indices,
         )
-        self.assertEqual(config.loss_type, "dapo")
-        self.assertEqual(provenance.trl_version, "1.2.0")
+        assert config.loss_type == "dapo"
+        assert provenance.trl_version == "1.2.0"
         actual = condition_trace(
             condition="native_trl",
             rewards=self.rewards,

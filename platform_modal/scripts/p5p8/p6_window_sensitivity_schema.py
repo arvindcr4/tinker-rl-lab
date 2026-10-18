@@ -28,19 +28,20 @@ robust_panel:
      which the cell is significant AND matches the sign at full40;
      "none" if no panel is significant (vacuous cell).
 """
+
 from __future__ import annotations
 import csv
 import json
 import os
-import re
 import sys
-from copy import deepcopy
 
 import jsonschema
 
 from pathlib import Path
+
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
+from _paths import REPO_ROOT
+
 ROOT = str(REPO_ROOT)
 SCHEMA = f"{ROOT}/platform_hybrid/registry/schema.json"
 ENTRIES = f"{ROOT}/platform_hybrid/registry/entries"
@@ -71,7 +72,10 @@ def load_window_deltas() -> dict:
                 sig_s = row.get(f"{method}_sig", "True" if ci_lo > 0 or ci_hi < 0 else "False")
                 sig = sig_s.lower() == "true"
                 out.setdefault((method, metric), {})[window] = {
-                    "delta": delta, "ci_lo": ci_lo, "ci_hi": ci_hi, "sig": sig,
+                    "delta": delta,
+                    "ci_lo": ci_lo,
+                    "ci_hi": ci_hi,
+                    "sig": sig,
                 }
     return out
 
@@ -132,6 +136,7 @@ def _robust_panel(panels: dict) -> str:
 
 # ---------- main ----------
 
+
 def main():
     print("[1/5] Loading iter-82 window delta data ...")
     by_cell = load_window_deltas()
@@ -144,7 +149,8 @@ def main():
     for (method, metric), panels in by_cell.items():
         ws, rp = classify_cell(method, metric, panels)
         classifications[(method, metric)] = {
-            "window_sensitivity": ws, "robust_panel": rp,
+            "window_sensitivity": ws,
+            "robust_panel": rp,
             "panels": {w: v for w, v in panels.items()},
         }
     for k, v in sorted(classifications.items()):
@@ -189,11 +195,15 @@ def main():
             row["window_sensitivity"] = cell["window_sensitivity"]
             row["robust_panel"] = cell["robust_panel"]
             n_patched += 1
-            summary["cells_patched"].append({
-                "entry": eid, "metric": metric, "panel": panel,
-                "window_sensitivity": cell["window_sensitivity"],
-                "robust_panel": cell["robust_panel"],
-            })
+            summary["cells_patched"].append(
+                {
+                    "entry": eid,
+                    "metric": metric,
+                    "panel": panel,
+                    "window_sensitivity": cell["window_sensitivity"],
+                    "robust_panel": cell["robust_panel"],
+                }
+            )
         # append an inline notes addendumto make the relation explicit
         prior_notes = data.get("notes", "")
         addendum = (
@@ -228,7 +238,8 @@ def main():
             fails.append({"entry": fname, "msg": str(exc)[:120]})
 
     summary["validation"] = {
-        "n_pass": n_pass, "n_fail": n_fail,
+        "n_pass": n_pass,
+        "n_fail": n_fail,
         "fails": fails,
     }
     with open(SUMMARY, "w") as fh:
@@ -246,16 +257,24 @@ def main():
     # Output compact summary
     print()
     print("=== SUMMARY ===")
-    print(f"Schema patched: 2 new optional fields (`window_sensitivity`, `robust_panel`) on `measured_delta`.")
+    print(
+        f"Schema patched: 2 new optional fields (`window_sensitivity`, `robust_panel`) on `measured_delta`."
+    )
     print(f"Entries backfilled: {len(summary['entries_patched'])}")
     print(f"Cells backfilled: {len(summary['cells_patched'])}")
-    n_stable = sum(1 for c in summary['cells_patched'] if c['window_sensitivity'] == 'STABLE')
-    n_shift = sum(1 for c in summary['cells_patched'] if c['window_sensitivity'] == 'STABLE-DIRECTION-MAG-SHIFT')
-    n_frag = sum(1 for c in summary['cells_patched'] if c['window_sensitivity'] == 'FRAGILE-SIGN-FLIP')
+    n_stable = sum(1 for c in summary["cells_patched"] if c["window_sensitivity"] == "STABLE")
+    n_shift = sum(
+        1
+        for c in summary["cells_patched"]
+        if c["window_sensitivity"] == "STABLE-DIRECTION-MAG-SHIFT"
+    )
+    n_frag = sum(
+        1 for c in summary["cells_patched"] if c["window_sensitivity"] == "FRAGILE-SIGN-FLIP"
+    )
     print(f"  STABLE:           {n_stable}/{len(summary['cells_patched'])}")
     print(f"  STABLE-DIR-MAG:   {n_shift}/{len(summary['cells_patched'])}")
     print(f"  FRAGILE-SIGN-FLIP:{n_frag}/{len(summary['cells_patched'])}")
-    print(f"  Schema validate:  {n_pass}/{n_pass+n_fail} entries PASS")
+    print(f"  Schema validate:  {n_pass}/{n_pass + n_fail} entries PASS")
 
 
 if __name__ == "__main__":

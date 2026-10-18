@@ -30,13 +30,15 @@ ARXIV_NS = {"atom": "http://www.w3.org/2005/Atom"}
 
 def search_arxiv(query: str, max_results: int = 5, search_field: str = "ti") -> list[dict]:
     """Search arXiv API and return paper metadata."""
-    params = urllib.parse.urlencode({
-        "search_query": f"{search_field}:{urllib.parse.quote(query)}",
-        "start": 0,
-        "max_results": max_results,
-        "sortBy": "relevance",
-        "sortOrder": "descending",
-    })
+    params = urllib.parse.urlencode(
+        {
+            "search_query": f"{search_field}:{urllib.parse.quote(query)}",
+            "start": 0,
+            "max_results": max_results,
+            "sortBy": "relevance",
+            "sortOrder": "descending",
+        }
+    )
     url = f"{ARXIV_API}?{params}"
 
     try:
@@ -82,15 +84,17 @@ def search_arxiv(query: str, max_results: int = 5, search_field: str = "ti") -> 
             if m:
                 arxiv_id = m.group(1)
 
-        papers.append({
-            "title": title,
-            "authors": authors,
-            "published": published,
-            "summary": summary,
-            "abs_link": abs_link,
-            "pdf_link": pdf_link,
-            "arxiv_id": arxiv_id,
-        })
+        papers.append(
+            {
+                "title": title,
+                "authors": authors,
+                "published": published,
+                "summary": summary,
+                "abs_link": abs_link,
+                "pdf_link": pdf_link,
+                "arxiv_id": arxiv_id,
+            }
+        )
 
     return papers
 
@@ -176,8 +180,12 @@ def main():
     parser = argparse.ArgumentParser(description="Download arXiv paper source by title")
     parser.add_argument("--title", help="Paper title to search for")
     parser.add_argument("--arxiv-id", help="Direct arXiv ID (e.g., 1706.03762)")
-    parser.add_argument("--max-results", type=int, default=5, help="Max search results (default: 5)")
-    parser.add_argument("--output-dir", default="arxiv_papers", help="Output directory (default: arxiv_papers/)")
+    parser.add_argument(
+        "--max-results", type=int, default=5, help="Max search results (default: 5)"
+    )
+    parser.add_argument(
+        "--output-dir", default="arxiv_papers", help="Output directory (default: arxiv_papers/)"
+    )
     parser.add_argument("--metadata", action="store_true", help="Also output metadata JSON")
     args = parser.parse_args()
 
@@ -203,7 +211,7 @@ def main():
 
     print(f"Found {len(papers)} results:", file=sys.stderr)
     for i, p in enumerate(papers):
-        print(f"  [{i+1}] {p['title'][:80]} ({p['arxiv_id']})", file=sys.stderr)
+        print(f"  [{i + 1}] {p['title'][:80]} ({p['arxiv_id']})", file=sys.stderr)
 
     if args.metadata:
         meta_path = os.path.join(args.output_dir, "metadata.json")

@@ -96,7 +96,7 @@ def _advantages(
             or len(aero_observations) != rewards.shape[0]
         ):
             raise ValueError("complete AERO statistics required")
-        for successes, observations in zip(aero_successes, aero_observations):
+        for successes, observations in zip(aero_successes, aero_observations, strict=False):
             _validate_history(successes, observations)
     result = torch.zeros_like(rewards)
     active = active_rows.reshape_as(rewards).bool()
@@ -179,8 +179,11 @@ def objective_trace(
     if not torch.any(active):
         raise ValueError("selection must retain one active completion")
     advantages = canonical_advantages(
-        rewards_t, active, arm=arm,
-        aero_successes=aero_successes, aero_observations=aero_observations,
+        rewards_t,
+        active,
+        arm=arm,
+        aero_successes=aero_successes,
+        aero_observations=aero_observations,
     )
     delta = logps_t - old_t
     if arm == "gspo":
@@ -196,8 +199,16 @@ def objective_trace(
     per_completion = (surrogate[active] * mask_t[active]).sum(dim=1) / counts[active]
     loss = per_completion.mean()
     gradient = torch.autograd.grad(loss, logps_t)[0].flatten()
-    return Trace(arm, advantages.detach(), ratios.detach(), mask_t.detach(),
-                 surrogate.detach(), loss.detach(), gradient.detach(), chosen)
+    return Trace(
+        arm,
+        advantages.detach(),
+        ratios.detach(),
+        mask_t.detach(),
+        surrogate.detach(),
+        loss.detach(),
+        gradient.detach(),
+        chosen,
+    )
 
 
 def _validate_history(successes, total):
@@ -325,5 +336,6 @@ def assert_trace_close(actual: Trace, expected: Trace) -> None:
     if actual.arm != expected.arm or actual.selected_indices != expected.selected_indices:
         raise AssertionError("trace metadata differs")
     for field in ("advantages", "ratios", "mask", "surrogate", "loss", "gradient"):
-        torch.testing.assert_close(getattr(actual, field), getattr(expected, field),
-                                   rtol=RTOL, atol=ATOL, msg=field)
+        torch.testing.assert_close(
+            getattr(actual, field), getattr(expected, field), rtol=RTOL, atol=ATOL, msg=field
+        )

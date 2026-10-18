@@ -35,6 +35,7 @@ H4: joint classifier value_rate remains >= 0.30 at the threshold where
 
 Stdlib + numpy + xgboost + sklearn.linear_model.  <= 300 lines.
 """
+
 from __future__ import annotations
 import csv
 import json
@@ -43,15 +44,17 @@ from pathlib import Path
 import numpy as np
 
 import sys
+
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
-from _p8_common import (  # noqa: E402
+from _paths import REPO_ROOT
+from _p8_common import (
     RAW20,
     AGG4,
     ALL24,
     load,
     downsample_positives,
 )
+
 ROOT = REPO_ROOT
 RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8"
 RES.mkdir(parents=True, exist_ok=True)
@@ -61,9 +64,9 @@ VALUE_PER_CATCH = 50.0
 
 FEATURE_SETS = {
     "24full": ALL24,
-    "20raw":  RAW20,
+    "20raw": RAW20,
     "20raw+minmax": RAW20 + ["V_min", "V_max"],
-    "20raw+stat":   RAW20 + ["V_mean", "V_std"],
+    "20raw+stat": RAW20 + ["V_mean", "V_std"],
 }
 
 RATES_PCT = [1.44, 1.00, 0.50, 0.10, 0.05]
@@ -72,16 +75,21 @@ TAUS_JOINT = [0.05, 0.10, 0.15, 0.20, 0.30, 0.40, 0.50, 0.60, 0.70, 0.80, 0.90]
 
 def fit_xgb(Xtr, ytr, Xte, feats, seed):
     import xgboost as xgb
+
     cols = [ALL24.index(c) for c in feats]
     n_pos = max(1, int(ytr.sum()))
     n_neg = max(1, len(ytr) - n_pos)
     spw = n_neg / n_pos
     m = xgb.XGBClassifier(
-        n_estimators=180, max_depth=5, learning_rate=0.1,
-        subsample=0.8, colsample_bytree=0.8,
+        n_estimators=180,
+        max_depth=5,
+        learning_rate=0.1,
+        subsample=0.8,
+        colsample_bytree=0.8,
         scale_pos_weight=spw,
         eval_metric="auc",
-        random_state=seed, n_jobs=4,
+        random_state=seed,
+        n_jobs=4,
     )
     m.fit(Xtr[:, cols], ytr)
     return m.predict_proba(Xte[:, cols])[:, 1]
@@ -90,6 +98,7 @@ def fit_xgb(Xtr, ytr, Xte, feats, seed):
 def fit_joint_vstat_lr(Xtr, ytr):
     from sklearn.linear_model import LogisticRegression
     from sklearn.preprocessing import StandardScaler
+
     """Logistic regression on (V_mean, V_std, V_max, V_min) -> is_fraud."""
     cols = [ALL24.index(c) for c in AGG4]
     Xtr_v = Xtr[:, cols]
@@ -99,7 +108,9 @@ def fit_joint_vstat_lr(Xtr, ytr):
     n_neg = max(1, len(ytr) - n_pos)
     spw = n_neg / n_pos
     clf = LogisticRegression(
-        C=1.0, max_iter=200, solver="liblinear",
+        C=1.0,
+        max_iter=200,
+        solver="liblinear",
         class_weight={0: 1.0, 1: float(spw)},
         random_state=0,
     )
@@ -115,6 +126,7 @@ def predict_joint(clf, sc, Xte):
 def fit_vmean_lr(Xtr, ytr):
     from sklearn.linear_model import LogisticRegression
     from sklearn.preprocessing import StandardScaler
+
     """Single-feature logistic regression on V_mean only -> is_fraud."""
     cols = [ALL24.index("V_mean")]
     Xtr_v = Xtr[:, cols]
@@ -124,7 +136,9 @@ def fit_vmean_lr(Xtr, ytr):
     n_neg = max(1, len(ytr) - n_pos)
     spw = n_neg / n_pos
     clf = LogisticRegression(
-        C=1.0, max_iter=200, solver="liblinear",
+        C=1.0,
+        max_iter=200,
+        solver="liblinear",
         class_weight={0: 1.0, 1: float(spw)},
         random_state=0,
     )
@@ -137,38 +151,51 @@ def predict_vmean(clf, sc, Xte):
     return clf.predict_proba(sc.transform(Xte[:, cols]))[:, 1]
 
 
-def precision_target_rate(rows, precision_target=.05, value_target=.30):
-    keys = {(r['seed'], r['rate_pct'], r['fset']) for r in rows}
+def precision_target_rate(rows, precision_target=0.05, value_target=0.30):
+    keys = {(r["seed"], r["rate_pct"], r["fset"]) for r in rows}
     successful = reached = 0
     for key in keys:
-        eligible = sorted((r for r in rows if (r['seed'], r['rate_pct'], r['fset']) == key), key=lambda r: r['tau'])
-        first = next((r for r in eligible if r['esc_prec'] >= precision_target), None)
+        eligible = sorted(
+            (r for r in rows if (r["seed"], r["rate_pct"], r["fset"]) == key),
+            key=lambda r: r["tau"],
+        )
+        first = next((r for r in eligible if r["esc_prec"] >= precision_target), None)
         reached += first is not None
-        successful += first is not None and first['value_rate'] >= value_target
-    return dict(successful=successful, eligible=len(keys), reached_target=reached,
-                rate=successful/len(keys) if keys else None,
-                conditional_rate=successful/reached if reached else None,
-                status='descriptive_test_oracle' if keys else 'insufficient_data')
+        successful += first is not None and first["value_rate"] >= value_target
+    return dict(
+        successful=successful,
+        eligible=len(keys),
+        reached_target=reached,
+        rate=successful / len(keys) if keys else None,
+        conditional_rate=successful / reached if reached else None,
+        status="descriptive_test_oracle" if keys else "insufficient_data",
+    )
 
 
 def main():
     print(f"[iter172] loading train/test ...")
     Xtr, ytr = load(ROOT / "train_data.csv")
     Xte_full, yte_full = load(ROOT / "test_data.csv")
-    print(f"[iter172] Xtr={Xtr.shape} ytr_pos={ytr.sum()} | "
-          f"Xte={Xte_full.shape} yte_pos={yte_full.sum()}")
+    print(
+        f"[iter172] Xtr={Xtr.shape} ytr_pos={ytr.sum()} | "
+        f"Xte={Xte_full.shape} yte_pos={yte_full.sum()}"
+    )
 
     # Train joint and single-V_mean LRs once on the full train set.
     joint_clf, joint_sc = fit_joint_vstat_lr(Xtr, ytr)
     vmean_clf, vmean_sc = fit_vmean_lr(Xtr, ytr)
     joint_train_p = predict_joint(joint_clf, joint_sc, Xtr)
     vmean_train_p = predict_vmean(vmean_clf, vmean_sc, Xtr)
-    print(f"[iter172] train joint AUC-equivalent (pos_rate at thr=0.5): "
-          f"{(joint_train_p[ytr==1] > 0.5).mean():.4f} vs neg "
-          f"{(joint_train_p[ytr==0] > 0.5).mean():.4f}")
-    print(f"[iter172] train vmean pos_rate at thr=0.5: "
-          f"{(vmean_train_p[ytr==1] > 0.5).mean():.4f} vs neg "
-          f"{(vmean_train_p[ytr==0] > 0.5).mean():.4f}")
+    print(
+        f"[iter172] train joint AUC-equivalent (pos_rate at thr=0.5): "
+        f"{(joint_train_p[ytr == 1] > 0.5).mean():.4f} vs neg "
+        f"{(joint_train_p[ytr == 0] > 0.5).mean():.4f}"
+    )
+    print(
+        f"[iter172] train vmean pos_rate at thr=0.5: "
+        f"{(vmean_train_p[ytr == 1] > 0.5).mean():.4f} vs neg "
+        f"{(vmean_train_p[ytr == 0] > 0.5).mean():.4f}"
+    )
 
     matrix_rows = []
     pareto_rows = []
@@ -201,15 +228,23 @@ def main():
                     n_llm_only = int(np.sum(llm_fire))
                     value_rate = n_lift / max(1, n_xgb_missed_pos)
                     esc_prec = n_lift / max(1, n_lift + n_waste)
-                    matrix_rows.append({
-                        "seed": seed, "rate_pct": rate_pct, "fset": fset_name,
-                        "tau": tau, "clf": "joint_vstat",
-                        "n_test": n_te, "n_pos": int(yte.sum()),
-                        "n_xgb_missed_pos": n_xgb_missed_pos,
-                        "n_lift": n_lift, "n_waste": n_waste,
-                        "n_llm_only": n_llm_only,
-                        "value_rate": value_rate, "esc_prec": esc_prec,
-                    })
+                    matrix_rows.append(
+                        {
+                            "seed": seed,
+                            "rate_pct": rate_pct,
+                            "fset": fset_name,
+                            "tau": tau,
+                            "clf": "joint_vstat",
+                            "n_test": n_te,
+                            "n_pos": int(yte.sum()),
+                            "n_xgb_missed_pos": n_xgb_missed_pos,
+                            "n_lift": n_lift,
+                            "n_waste": n_waste,
+                            "n_llm_only": n_llm_only,
+                            "value_rate": value_rate,
+                            "esc_prec": esc_prec,
+                        }
+                    )
 
                 # ---- single-V_mean classifier sweep (matched operating) ----
                 for tau in TAUS_JOINT:
@@ -220,113 +255,162 @@ def main():
                     n_llm_only = int(np.sum(llm_fire))
                     value_rate = n_lift / max(1, n_xgb_missed_pos)
                     esc_prec = n_lift / max(1, n_lift + n_waste)
-                    matrix_rows.append({
-                        "seed": seed, "rate_pct": rate_pct, "fset": fset_name,
-                        "tau": tau, "clf": "vmean_only",
-                        "n_test": n_te, "n_pos": int(yte.sum()),
-                        "n_xgb_missed_pos": n_xgb_missed_pos,
-                        "n_lift": n_lift, "n_waste": n_waste,
-                        "n_llm_only": n_llm_only,
-                        "value_rate": value_rate, "esc_prec": esc_prec,
-                    })
+                    matrix_rows.append(
+                        {
+                            "seed": seed,
+                            "rate_pct": rate_pct,
+                            "fset": fset_name,
+                            "tau": tau,
+                            "clf": "vmean_only",
+                            "n_test": n_te,
+                            "n_pos": int(yte.sum()),
+                            "n_xgb_missed_pos": n_xgb_missed_pos,
+                            "n_lift": n_lift,
+                            "n_waste": n_waste,
+                            "n_llm_only": n_llm_only,
+                            "value_rate": value_rate,
+                            "esc_prec": esc_prec,
+                        }
+                    )
 
                 # Pareto frontier check at each (seed, rate, fset, clf, tau)
                 for tau in TAUS_JOINT:
                     for clf_name in ("joint_vstat", "vmean_only"):
-                        row = next((r for r in matrix_rows
-                                    if r["seed"] == seed
-                                    and r["rate_pct"] == rate_pct
-                                    and r["fset"] == fset_name
-                                    and r["tau"] == tau
-                                    and r["clf"] == clf_name), None)
+                        row = next(
+                            (
+                                r
+                                for r in matrix_rows
+                                if r["seed"] == seed
+                                and r["rate_pct"] == rate_pct
+                                and r["fset"] == fset_name
+                                and r["tau"] == tau
+                                and r["clf"] == clf_name
+                            ),
+                            None,
+                        )
                         if row is None:
                             continue
-                        pareto_rows.append({
-                            "seed": seed, "rate_pct": rate_pct,
-                            "fset": fset_name, "tau": tau,
-                            "clf": clf_name,
-                            "value_rate": row["value_rate"],
-                            "esc_prec": row["esc_prec"],
-                            "n_lift": row["n_lift"],
-                            "n_waste": row["n_waste"],
-                            "pareto_ok": (row["esc_prec"] >= 0.10
-                                          and row["value_rate"] >= 0.30),
-                        })
+                        pareto_rows.append(
+                            {
+                                "seed": seed,
+                                "rate_pct": rate_pct,
+                                "fset": fset_name,
+                                "tau": tau,
+                                "clf": clf_name,
+                                "value_rate": row["value_rate"],
+                                "esc_prec": row["esc_prec"],
+                                "n_lift": row["n_lift"],
+                                "n_waste": row["n_waste"],
+                                "pareto_ok": (
+                                    row["esc_prec"] >= 0.10 and row["value_rate"] >= 0.30
+                                ),
+                            }
+                        )
 
                 # H3: joint strictly > vmean-only at matched (tau) cell
-                joint_vrs = [r["value_rate"] for r in matrix_rows
-                             if r["seed"] == seed and r["rate_pct"] == rate_pct
-                             and r["fset"] == fset_name
-                             and r["clf"] == "joint_vstat"]
-                vmean_vrs = [r["value_rate"] for r in matrix_rows
-                             if r["seed"] == seed and r["rate_pct"] == rate_pct
-                             and r["fset"] == fset_name
-                             and r["clf"] == "vmean_only"]
-                joint_prec = [r["esc_prec"] for r in matrix_rows
-                              if r["seed"] == seed and r["rate_pct"] == rate_pct
-                              and r["fset"] == fset_name
-                              and r["clf"] == "joint_vstat"]
-                vmean_prec = [r["esc_prec"] for r in matrix_rows
-                              if r["seed"] == seed and r["rate_pct"] == rate_pct
-                              and r["fset"] == fset_name
-                              and r["clf"] == "vmean_only"]
+                joint_vrs = [
+                    r["value_rate"]
+                    for r in matrix_rows
+                    if r["seed"] == seed
+                    and r["rate_pct"] == rate_pct
+                    and r["fset"] == fset_name
+                    and r["clf"] == "joint_vstat"
+                ]
+                vmean_vrs = [
+                    r["value_rate"]
+                    for r in matrix_rows
+                    if r["seed"] == seed
+                    and r["rate_pct"] == rate_pct
+                    and r["fset"] == fset_name
+                    and r["clf"] == "vmean_only"
+                ]
+                joint_prec = [
+                    r["esc_prec"]
+                    for r in matrix_rows
+                    if r["seed"] == seed
+                    and r["rate_pct"] == rate_pct
+                    and r["fset"] == fset_name
+                    and r["clf"] == "joint_vstat"
+                ]
+                vmean_prec = [
+                    r["esc_prec"]
+                    for r in matrix_rows
+                    if r["seed"] == seed
+                    and r["rate_pct"] == rate_pct
+                    and r["fset"] == fset_name
+                    and r["clf"] == "vmean_only"
+                ]
                 if len(joint_vrs) == len(TAUS_JOINT) and len(vmean_vrs) == len(TAUS_JOINT):
-                    h3_rows.append({
-                        "seed": seed, "rate_pct": rate_pct, "fset": fset_name,
-                        "joint_mean_vr": float(np.mean(joint_vrs)),
-                        "vmean_mean_vr": float(np.mean(vmean_vrs)),
-                        "joint_mean_prec": float(np.mean(joint_prec)),
-                        "vmean_mean_prec": float(np.mean(vmean_prec)),
-                        "joint_strict_gt_vmean_prec": float(np.mean(
-                            [j > v for j, v in zip(joint_prec, vmean_prec)])),
-                        "joint_strict_gt_vmean_vr": float(np.mean(
-                            [j > v for j, v in zip(joint_vrs, vmean_vrs)])),
-                    })
+                    h3_rows.append(
+                        {
+                            "seed": seed,
+                            "rate_pct": rate_pct,
+                            "fset": fset_name,
+                            "joint_mean_vr": float(np.mean(joint_vrs)),
+                            "vmean_mean_vr": float(np.mean(vmean_vrs)),
+                            "joint_mean_prec": float(np.mean(joint_prec)),
+                            "vmean_mean_prec": float(np.mean(vmean_prec)),
+                            "joint_strict_gt_vmean_prec": float(
+                                np.mean(
+                                    [j > v for j, v in zip(joint_prec, vmean_prec, strict=False)]
+                                )
+                            ),
+                            "joint_strict_gt_vmean_vr": float(
+                                np.mean([j > v for j, v in zip(joint_vrs, vmean_vrs, strict=False)])
+                            ),
+                        }
+                    )
 
     # H1: joint esc_prec > 0.05 on >= 25% of (seed x rate x fset) cells at any tau
     joint_cells = [r for r in matrix_rows if r["clf"] == "joint_vstat"]
     h1_pass_cells = set()
     for cell_key in {(r["seed"], r["rate_pct"], r["fset"]) for r in joint_cells}:
-        cell_rows = [r for r in joint_cells
-                     if (r["seed"], r["rate_pct"], r["fset"]) == cell_key]
+        cell_rows = [r for r in joint_cells if (r["seed"], r["rate_pct"], r["fset"]) == cell_key]
         if any(r["esc_prec"] >= 0.05 for r in cell_rows):
             h1_pass_cells.add(cell_key)
     h1_total = len({(r["seed"], r["rate_pct"], r["fset"]) for r in joint_cells})
     h1_pass_rate = len(h1_pass_cells) / max(1, h1_total)
     h1_pass = h1_pass_rate >= 0.25
-    print(f"[iter172] H1: {len(h1_pass_cells)}/{h1_total} = {h1_pass_rate:.3f} "
-          f"cells achieve esc_prec >= 0.05 at some joint-tau; PASS={h1_pass}")
+    print(
+        f"[iter172] H1: {len(h1_pass_cells)}/{h1_total} = {h1_pass_rate:.3f} "
+        f"cells achieve esc_prec >= 0.05 at some joint-tau; PASS={h1_pass}"
+    )
 
     # H2: Pareto frontier exists on at least one joint-cell
     joint_pareto = [p for p in pareto_rows if p["clf"] == "joint_vstat"]
     n_pareto = sum(1 for p in joint_pareto if p["pareto_ok"])
     h2_pass = n_pareto >= 1
-    print(f"[iter172] H2: {n_pareto}/{len(joint_pareto)} joint pareto_ok cells; "
-          f"PASS={h2_pass}")
+    print(f"[iter172] H2: {n_pareto}/{len(joint_pareto)} joint pareto_ok cells; PASS={h2_pass}")
     if n_pareto >= 1:
-        best = max((p for p in joint_pareto if p["pareto_ok"]),
-                   key=lambda p: p["value_rate"])
-        print(f"[iter172]   best joint pareto cell: seed={best['seed']} "
-              f"rate={best['rate_pct']} fset={best['fset']} "
-              f"tau={best['tau']} vr={best['value_rate']:.4f} "
-              f"prec={best['esc_prec']:.4f}")
+        best = max((p for p in joint_pareto if p["pareto_ok"]), key=lambda p: p["value_rate"])
+        print(
+            f"[iter172]   best joint pareto cell: seed={best['seed']} "
+            f"rate={best['rate_pct']} fset={best['fset']} "
+            f"tau={best['tau']} vr={best['value_rate']:.4f} "
+            f"prec={best['esc_prec']:.4f}"
+        )
 
     # H3: joint precision strictly > vmean precision on >= 50% of cells (averaged across taus)
     if h3_rows:
-        h3_pass_rate = sum(1 for r in h3_rows
-                           if r["joint_strict_gt_vmean_prec"] >= 0.5) / max(1, len(h3_rows))
+        h3_pass_rate = sum(1 for r in h3_rows if r["joint_strict_gt_vmean_prec"] >= 0.5) / max(
+            1, len(h3_rows)
+        )
         h3_pass = h3_pass_rate >= 0.50
-        print(f"[iter172] H3: {sum(1 for r in h3_rows if r['joint_strict_gt_vmean_prec'] >= 0.5)}/"
-              f"{len(h3_rows)} = {h3_pass_rate:.3f} cells with joint>50% of taus"
-              f" beating vmean on precision; PASS={h3_pass}")
+        print(
+            f"[iter172] H3: {sum(1 for r in h3_rows if r['joint_strict_gt_vmean_prec'] >= 0.5)}/"
+            f"{len(h3_rows)} = {h3_pass_rate:.3f} cells with joint>50% of taus"
+            f" beating vmean on precision; PASS={h3_pass}"
+        )
 
     # H4: at the joint-tau where esc_prec first crosses 5%, value_rate remains >= 0.30 on >= 25%
     h4_result = precision_target_rate(joint_cells)
-    h4_pass_cells, h4_total_cells = h4_result['successful'], h4_result['eligible']
-    h4_pass_rate = h4_result['rate']
-    h4_pass = h4_pass_rate is not None and h4_pass_rate >= .25
-    print(f"[iter172] H4: {h4_pass_cells}/{h4_total_cells} = {h4_pass_rate:.3f} "
-          f"cells with value_rate>=0.30 at first-5%-tau; PASS={h4_pass}")
+    h4_pass_cells, h4_total_cells = h4_result["successful"], h4_result["eligible"]
+    h4_pass_rate = h4_result["rate"]
+    h4_pass = h4_pass_rate is not None and h4_pass_rate >= 0.25
+    print(
+        f"[iter172] H4: {h4_pass_cells}/{h4_total_cells} = {h4_pass_rate:.3f} "
+        f"cells with value_rate>=0.30 at first-5%-tau; PASS={h4_pass}"
+    )
 
     # Output files
     out_matrix = RES / "p8_iter172_threshold_matrix.tsv"

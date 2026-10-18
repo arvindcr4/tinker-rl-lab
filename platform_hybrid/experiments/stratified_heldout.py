@@ -5,15 +5,21 @@ from __future__ import annotations
 
 import sys as _sys
 from pathlib import Path as _Path
-_sys.path.insert(0, str(next(p for p in _Path(__file__).resolve().parents if (p / "platform_hybrid").is_dir())))
-from platform_hybrid.experiments.research_contracts import require_empirical, inherit_evidence, EvidenceUnavailable
+
+_sys.path.insert(
+    0, str(next(p for p in _Path(__file__).resolve().parents if (p / "platform_hybrid").is_dir()))
+)
+from platform_hybrid.experiments.research_contracts import (
+    require_empirical,
+    inherit_evidence,
+    EvidenceUnavailable,
+)
 
 
 import argparse
 import csv
 import json
 import math
-import os
 import random
 import sys
 from collections import defaultdict
@@ -30,43 +36,82 @@ SEED_DEFAULT = 42
 # Conditions we explicitly report in the paper table. Each entry is a
 # (display_name, predicate) pair; the predicate runs over an experiments row.
 CONDITIONS = [
-    ("Qwen3-8B-Base (W1)",
-     lambda e: e.get("model") == "Qwen/Qwen3-8B-Base"
-               or "qwen3-8b-base" in str(e.get("experiment_id", "")).lower()),
-    ("DeepSeek-V3.1 (W3)",
-     lambda e: "deepseek" in str(e.get("model", "")).lower()
-               and str(e.get("method") or "").upper().startswith("GRPO")),
-    ("gpt-oss-20b (arch)",
-     lambda e: "gpt-oss-20b" in str(e.get("model", "")).lower()
-               or "gpt-oss-20b" in str(e.get("experiment_id", "")).lower()),
-    ("Qwen3.5-4B (scale)",
-     lambda e: "qwen3.5-4b" in str(e.get("model", "")).lower()
-               or "qwen3.5-4b" in str(e.get("experiment_id", "")).lower()),
-    ("gpt-oss-120b (W1)",
-     lambda e: "gpt-oss-120b" in str(e.get("model", "")).lower()
-               or "gpt-oss-120b" in str(e.get("experiment_id", "")).lower()),
-    ("Qwen3-8B GRPO (campaign-v2)",
-     lambda e: e.get("model") == "Qwen/Qwen3-8B"
-               and str(e.get("method") or "").upper().startswith("GRPO")
-               and "campaign_v2" in str(e.get("experiment_id", ""))),
-    ("Qwen3-8B Wave6 temp-0.4",
-     lambda e: e.get("group") == "Wave 6 Sensitivity"
-               and "temp0.4" in str(e.get("experiment_id", ""))),
-    ("Qwen3-8B Wave6 batch-1",
-     lambda e: e.get("group") == "Wave 6 Sensitivity"
-               and "batch1" in str(e.get("experiment_id", ""))),
-    ("TRL-GRPO Qwen2.5-0.5B",
-     lambda e: e.get("model") == "Qwen/Qwen2.5-0.5B"
-               and str(e.get("method") or "").upper().startswith("GRPO")),
-    ("SB3/CleanRL/Tianshou PPO",
-     lambda e: "PPO" in str(e.get("method") or "")
-               and str(e.get("model", "")).lower().endswith("policy network)")),
+    (
+        "Qwen3-8B-Base (W1)",
+        lambda e: (
+            e.get("model") == "Qwen/Qwen3-8B-Base"
+            or "qwen3-8b-base" in str(e.get("experiment_id", "")).lower()
+        ),
+    ),
+    (
+        "DeepSeek-V3.1 (W3)",
+        lambda e: (
+            "deepseek" in str(e.get("model", "")).lower()
+            and str(e.get("method") or "").upper().startswith("GRPO")
+        ),
+    ),
+    (
+        "gpt-oss-20b (arch)",
+        lambda e: (
+            "gpt-oss-20b" in str(e.get("model", "")).lower()
+            or "gpt-oss-20b" in str(e.get("experiment_id", "")).lower()
+        ),
+    ),
+    (
+        "Qwen3.5-4B (scale)",
+        lambda e: (
+            "qwen3.5-4b" in str(e.get("model", "")).lower()
+            or "qwen3.5-4b" in str(e.get("experiment_id", "")).lower()
+        ),
+    ),
+    (
+        "gpt-oss-120b (W1)",
+        lambda e: (
+            "gpt-oss-120b" in str(e.get("model", "")).lower()
+            or "gpt-oss-120b" in str(e.get("experiment_id", "")).lower()
+        ),
+    ),
+    (
+        "Qwen3-8B GRPO (campaign-v2)",
+        lambda e: (
+            e.get("model") == "Qwen/Qwen3-8B"
+            and str(e.get("method") or "").upper().startswith("GRPO")
+            and "campaign_v2" in str(e.get("experiment_id", ""))
+        ),
+    ),
+    (
+        "Qwen3-8B Wave6 temp-0.4",
+        lambda e: (
+            e.get("group") == "Wave 6 Sensitivity" and "temp0.4" in str(e.get("experiment_id", ""))
+        ),
+    ),
+    (
+        "Qwen3-8B Wave6 batch-1",
+        lambda e: (
+            e.get("group") == "Wave 6 Sensitivity" and "batch1" in str(e.get("experiment_id", ""))
+        ),
+    ),
+    (
+        "TRL-GRPO Qwen2.5-0.5B",
+        lambda e: (
+            e.get("model") == "Qwen/Qwen2.5-0.5B"
+            and str(e.get("method") or "").upper().startswith("GRPO")
+        ),
+    ),
+    (
+        "SB3/CleanRL/Tianshou PPO",
+        lambda e: (
+            "PPO" in str(e.get("method") or "")
+            and str(e.get("model", "")).lower().endswith("policy network)")
+        ),
+    ),
 ]
 
 
 # -----------------------------------------------------------------------------
 # Data loading
 # -----------------------------------------------------------------------------
+
 
 def load_master():
     with MASTER.open() as f:
@@ -104,14 +149,22 @@ def group_checkpoints(experiments, heldout_map):
         checkpoints = exp.get("checkpoints") or []
         # A measured final endpoint is one observation, not one per trace step.
         if not checkpoints and exp_id in heldout_map:
-            checkpoints = [{"checkpoint_id": heldout_map[exp_id].get("checkpoint_id"),
-                            "last10_avg": exp.get("last10_avg", 0), "evaluation": heldout_map[exp_id]}]
+            checkpoints = [
+                {
+                    "checkpoint_id": heldout_map[exp_id].get("checkpoint_id"),
+                    "last10_avg": exp.get("last10_avg", 0),
+                    "evaluation": heldout_map[exp_id],
+                }
+            ]
         for checkpoint in checkpoints:
             cid = checkpoint.get("checkpoint_id") or checkpoint.get("checkpoint_path")
             # Training provenance can veto an evaluation, but cannot supply a
             # missing evaluation receipt or promote a bare endpoint to measured.
-            evaluation = inherit_evidence(checkpoint.get("evaluation") or heldout_map.get(cid, {}),
-                                          checkpoint, inherit_missing=False)
+            evaluation = inherit_evidence(
+                checkpoint.get("evaluation") or heldout_map.get(cid, {}),
+                checkpoint,
+                inherit_missing=False,
+            )
             evaluation = inherit_evidence(evaluation, exp, inherit_missing=False)
             acc = evaluation.get("heldout_accuracy")
             reason = None
@@ -119,19 +172,34 @@ def group_checkpoints(experiments, heldout_map):
                 require_empirical(evaluation)
                 if not cid or evaluation.get("checkpoint_id") != cid:
                     raise EvidenceUnavailable("Matching saved checkpoint identity required")
-                if isinstance(acc, bool) or not isinstance(acc, (int, float)) or not math.isfinite(acc) or not 0 <= acc <= 1:
+                if (
+                    isinstance(acc, bool)
+                    or not isinstance(acc, (int, float))
+                    or not math.isfinite(acc)
+                    or not 0 <= acc <= 1
+                ):
                     raise EvidenceUnavailable("Finite held-out accuracy in [0, 1] required")
                 n = evaluation.get("heldout_n")
                 if n is not None and (type(n) is not int or n <= 0):
-                    raise EvidenceUnavailable("Held-out count must be a positive integer when supplied")
+                    raise EvidenceUnavailable(
+                        "Held-out count must be a positive integer when supplied"
+                    )
             except EvidenceUnavailable as exc:
                 reason = str(exc)
             measured = reason is None
-            grouped[condition].append({"experiment_id": cid, "parent_experiment_id": exp_id,
-                "checkpoint_id": cid, "last10_avg": checkpoint.get("last10_avg", exp.get("last10_avg", 0)),
-                "_heldout_measured": measured, "_heldout_acc": acc if measured else None,
-                "_heldout_n": evaluation.get("heldout_n") if measured else None,
-                "_evaluation_receipt": evaluation, "_exclusion_reason": reason})
+            grouped[condition].append(
+                {
+                    "experiment_id": cid,
+                    "parent_experiment_id": exp_id,
+                    "checkpoint_id": cid,
+                    "last10_avg": checkpoint.get("last10_avg", exp.get("last10_avg", 0)),
+                    "_heldout_measured": measured,
+                    "_heldout_acc": acc if measured else None,
+                    "_heldout_n": evaluation.get("heldout_n") if measured else None,
+                    "_evaluation_receipt": evaluation,
+                    "_exclusion_reason": reason,
+                }
+            )
     return grouped
 
 
@@ -143,7 +211,7 @@ def linear_fit(xs, ys):
         return 0.0, 0.0
     mean_x = sum(xs) / n
     mean_y = sum(ys) / n
-    num = sum((x - mean_x) * (y - mean_y) for x, y in zip(xs, ys))
+    num = sum((x - mean_x) * (y - mean_y) for x, y in zip(xs, ys, strict=False))
     den = sum((x - mean_x) ** 2 for x in xs) or 1.0
     slope = num / den
     intercept = mean_y - slope * mean_x
@@ -153,6 +221,7 @@ def linear_fit(xs, ys):
 # -----------------------------------------------------------------------------
 # Sampling protocols
 # -----------------------------------------------------------------------------
+
 
 def sample_p1(rows):
     """Top-10 by training-last10 (descending)."""
@@ -210,6 +279,7 @@ def sample_p3(rows, rng):
 # Bootstrap
 # -----------------------------------------------------------------------------
 
+
 def bootstrap_ci(values, n_boot=N_BOOT, seed=SEED_DEFAULT, alpha=0.05):
     """Checkpoint selection summaries are descriptive, not independent-run CIs."""
     vals = [v for v in values if v is not None and math.isfinite(v)]
@@ -219,6 +289,7 @@ def bootstrap_ci(values, n_boot=N_BOOT, seed=SEED_DEFAULT, alpha=0.05):
 # -----------------------------------------------------------------------------
 # Main pipeline
 # -----------------------------------------------------------------------------
+
 
 def evaluate_protocol(rows, proto, rng):
     if proto == "p1":
@@ -250,16 +321,18 @@ def run(protocols, seed):
             measured = [r for r in sample if r.get("_heldout_measured")]
             vals = [r["_heldout_acc"] for r in sample]
             mean, lo, hi = bootstrap_ci(vals, seed=seed + ord(proto[-1]))
-            tmp[proto].append({
-                "condition": cond_name,
-                "mean_acc": mean,
-                "ci_low": lo,
-                "ci_high": hi,
-                "n_checkpoints_total": n_c,
-                "n_sampled": len(sample),
-                "n_measured": len(measured),
-                "sparse": sparse,
-            })
+            tmp[proto].append(
+                {
+                    "condition": cond_name,
+                    "mean_acc": mean,
+                    "ci_low": lo,
+                    "ci_high": hi,
+                    "n_checkpoints_total": n_c,
+                    "n_sampled": len(sample),
+                    "n_measured": len(measured),
+                    "sparse": sparse,
+                }
+            )
 
     # Assign per-protocol rank by mean_acc descending (NaN last).
     for proto, entries in tmp.items():
@@ -270,20 +343,24 @@ def run(protocols, seed):
         for i, e in enumerate(ranked, start=1):
             e["rank"] = i if math.isfinite(e["mean_acc"]) else ""
         for e in entries:
-            rows_out.append({
-                "condition": e["condition"],
-                "protocol": proto,
-                "mean_acc": round(e["mean_acc"], 4) if not math.isnan(e["mean_acc"]) else "",
-                "ci_low": round(e["ci_low"], 4) if not math.isnan(e["ci_low"]) else "",
-                "ci_high": round(e["ci_high"], 4) if not math.isnan(e["ci_high"]) else "",
-                "rank": e["rank"],
-                "n_checkpoints_total": e["n_checkpoints_total"],
-                "n_sampled": e["n_sampled"],
-                "n_measured": e["n_measured"],
-                "sparse": str(e["sparse"]).lower(),
-                "interval_type": "none_descriptive_checkpoint_mean",
-                "source": "measured_heldout_only" if e["n_measured"] else "no_eligible_heldout_measurements",
-            })
+            rows_out.append(
+                {
+                    "condition": e["condition"],
+                    "protocol": proto,
+                    "mean_acc": round(e["mean_acc"], 4) if not math.isnan(e["mean_acc"]) else "",
+                    "ci_low": round(e["ci_low"], 4) if not math.isnan(e["ci_low"]) else "",
+                    "ci_high": round(e["ci_high"], 4) if not math.isnan(e["ci_high"]) else "",
+                    "rank": e["rank"],
+                    "n_checkpoints_total": e["n_checkpoints_total"],
+                    "n_sampled": e["n_sampled"],
+                    "n_measured": e["n_measured"],
+                    "sparse": str(e["sparse"]).lower(),
+                    "interval_type": "none_descriptive_checkpoint_mean",
+                    "source": "measured_heldout_only"
+                    if e["n_measured"]
+                    else "no_eligible_heldout_measurements",
+                }
+            )
 
     return rows_out
 
@@ -291,8 +368,18 @@ def run(protocols, seed):
 def write_tsv(rows, path):
     path.parent.mkdir(parents=True, exist_ok=True)
     fieldnames = [
-        "condition", "protocol", "mean_acc", "ci_low", "ci_high", "rank",
-        "n_checkpoints_total", "n_sampled", "n_measured", "sparse", "interval_type", "source",
+        "condition",
+        "protocol",
+        "mean_acc",
+        "ci_low",
+        "ci_high",
+        "rank",
+        "n_checkpoints_total",
+        "n_sampled",
+        "n_measured",
+        "sparse",
+        "interval_type",
+        "source",
     ]
     with path.open("w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=fieldnames, delimiter="\t")
@@ -311,8 +398,7 @@ def main(argv=None):
     protocols = ["p1", "p2", "p3"] if args.protocol == "all" else [args.protocol]
 
     if not MASTER.exists():
-        print(f"ERROR: {MASTER} not found. Cannot run stratified heldout audit.",
-              file=sys.stderr)
+        print(f"ERROR: {MASTER} not found. Cannot run stratified heldout audit.", file=sys.stderr)
         return 2
 
     rows = run(protocols, args.seed)

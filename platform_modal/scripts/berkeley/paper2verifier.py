@@ -28,10 +28,7 @@ from __future__ import annotations
 import csv
 import json
 import math
-import os
 import re
-import sys
-from collections import defaultdict
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -128,7 +125,9 @@ def extract_pillar3_recipe() -> dict:
             r2 = float(m.group(1)) if m else None
             recipe["fields"][f"{section}.{key}"] = r2
             # also pull joint-fit coefficients from prose embedded in this row
-            m_intercept = re.search(r"\+\s*(\d+\.\d+)\s*\+\s*\(\s*([+-]?\d+\.\d+)\s*\)\s*\*\s*log10\(G\)", headline)
+            m_intercept = re.search(
+                r"\+\s*(\d+\.\d+)\s*\+\s*\(\s*([+-]?\d+\.\d+)\s*\)\s*\*\s*log10\(G\)", headline
+            )
             if m_intercept:
                 recipe["fields"]["A_joint_fit.intercept_a"] = float(m_intercept.group(1))
                 recipe["fields"]["A_joint_fit.slope_G"] = float(m_intercept.group(2))
@@ -174,12 +173,10 @@ def extract_pillar2_recipe() -> dict:
     recipe["source_files"].append(f.name)
     for row in rows:
         method = row.get("method", "").strip()
-        if not method or method.startswith("scaling_law") or method.startswith("tool_use"):
+        if not method or method.startswith(("scaling_law", "tool_use")):
             continue
         try:
-            recipe["fields"][f"method.{method}.zvf_risk_mean"] = float(
-                row["zvf_risk_mean"]
-            )
+            recipe["fields"][f"method.{method}.zvf_risk_mean"] = float(row["zvf_risk_mean"])
             recipe["fields"][f"method.{method}.mag_mean"] = float(row["mag_mean"])
             recipe["fields"][f"method.{method}.csd_mean"] = float(row["csd_mean"])
         except (KeyError, ValueError):
@@ -222,14 +219,13 @@ def _fit_log_log(points: list[tuple[float, float, float]]) -> dict:
     # build X = [1, log10 G, log10 T]
     X = [[1.0, x[0], x[1]] for x in xs]
     y = ys
+
     # normal equations: XtX beta = Xty
     def mxv(M, v):
         return [sum(M[i][k] * v[k] for k in range(len(v))) for i in range(len(M))]
 
-    Xt = list(zip(*X))
-    XtX = [
-        [sum(Xt[i][k] * Xt[j][k] for k in range(n)) for j in range(3)] for i in range(3)
-    ]
+    Xt = list(zip(*X, strict=False))
+    XtX = [[sum(Xt[i][k] * Xt[j][k] for k in range(n)) for j in range(3)] for i in range(3)]
     Xty = [sum(Xt[i][k] * y[k] for k in range(n)) for i in range(3)]
     # solve 3x3
     A = [row[:] + [Xty[i]] for i, row in enumerate(XtX)]
@@ -264,7 +260,12 @@ def load_measured_points(path: Path) -> list[tuple[float, float, float]]:
     points = []
     for row in rows:
         g, t, accuracy = (float(row[key]) for key in ("G", "T", "accuracy"))
-        if not all(math.isfinite(v) for v in (g, t, accuracy)) or g <= 0 or t <= 0 or not 0 <= accuracy < 1:
+        if (
+            not all(math.isfinite(v) for v in (g, t, accuracy))
+            or g <= 0
+            or t <= 0
+            or not 0 <= accuracy < 1
+        ):
             raise ValueError("invalid measured G/T/accuracy cell")
         points.append((g, t, accuracy))
     if len(points) < 4:
@@ -273,14 +274,20 @@ def load_measured_points(path: Path) -> list[tuple[float, float, float]]:
 
 
 def _sample_iter127_points():
-    raise ValueError("MISSING_MEASURED_DATA: pass measured iter127 cells; synthetic reproduction disabled")
+    raise ValueError(
+        "MISSING_MEASURED_DATA: pass measured iter127 cells; synthetic reproduction disabled"
+    )
 
 
 def _sample_iter135_points():
-    raise ValueError("MISSING_MEASURED_DATA: independent iter135 holdout and frozen prediction recipe required")
+    raise ValueError(
+        "MISSING_MEASURED_DATA: independent iter135 holdout and frozen prediction recipe required"
+    )
 
 
-def verify_pillar3_recipe(recipe: dict, points: list[tuple[float, float, float]], slice_label: str) -> dict:
+def verify_pillar3_recipe(
+    recipe: dict, points: list[tuple[float, float, float]], slice_label: str
+) -> dict:
     """Apply the recipe's joint fit to the given points."""
     fit = _fit_log_log(points)
     out = {
@@ -377,11 +384,10 @@ def main() -> None:
 
     pred_R2 = recipe_p3["predicted_outputs"].get("R2")
     fit_R2 = iter127_verify["fit"]["R2"]
-    r2_within_20pct = (
-        abs((fit_R2 or 0) - (pred_R2 or 0)) / max(abs(pred_R2 or 1e-6), 1e-6) <= 0.20
-    )
+    r2_within_20pct = abs((fit_R2 or 0) - (pred_R2 or 0)) / max(abs(pred_R2 or 1e-6), 1e-6) <= 0.20
     slope_ratio = (
-        iter127_verify["fit"]["b"] / (recipe_p3["predicted_outputs"].get("joint_fit_slope_G") or 1e-6)
+        iter127_verify["fit"]["b"]
+        / (recipe_p3["predicted_outputs"].get("joint_fit_slope_G") or 1e-6)
         if iter127_verify["fit"]["b"] is not None
         else None
     )
@@ -412,16 +418,13 @@ def main() -> None:
     recipe_stress["predicted_outputs"]["joint_fit_slope_G"] = None
     stress_verify = verify_pillar3_recipe(recipe_stress, iter127_pts, "iter127_stress")
     stress_failures = 0
-    if (
-        abs(stress_verify["fit"]["b"] - (recipe_p3["predicted_outputs"]["joint_fit_slope_G"] or 0))
-        > 0.20 * abs(recipe_p3["predicted_outputs"]["joint_fit_slope_G"] or 1e-6)
-    ):
+    if abs(
+        stress_verify["fit"]["b"] - (recipe_p3["predicted_outputs"]["joint_fit_slope_G"] or 0)
+    ) > 0.20 * abs(recipe_p3["predicted_outputs"]["joint_fit_slope_G"] or 1e-6):
         stress_failures += 1
-    if (
-        stress_verify["fit"]["R2"] is None
-        or abs((stress_verify["fit"]["R2"] or 0) - (recipe_p3["predicted_outputs"]["R2"] or 0))
-        > 0.20 * abs(recipe_p3["predicted_outputs"]["R2"] or 1e-6)
-    ):
+    if stress_verify["fit"]["R2"] is None or abs(
+        (stress_verify["fit"]["R2"] or 0) - (recipe_p3["predicted_outputs"]["R2"] or 0)
+    ) > 0.20 * abs(recipe_p3["predicted_outputs"]["R2"] or 1e-6):
         stress_failures += 1
     h4 = {
         "n_failures_after_stress": stress_failures,

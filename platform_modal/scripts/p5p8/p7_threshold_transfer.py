@@ -27,6 +27,7 @@ Outputs:
 
 Stdlib only. <= 300 LoC. seed=20260704, n_boot=2000.
 """
+
 from __future__ import annotations
 import csv
 import json
@@ -36,8 +37,12 @@ import random
 import statistics
 
 import sys
-sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
+
+sys.path.append(
+    str(pathlib.Path(__file__).resolve().parents[1])
+)  # platform_modal/scripts, for _paths
+from _paths import REPO_ROOT
+
 WORKTREE = REPO_ROOT
 N2 = WORKTREE / "platform_hybrid/experiments" / "results" / "n2_reward_tensor_resume"
 OUT = WORKTREE / "platform_hybrid/experiments" / "results" / "p5p8/corrected-review20-v2"
@@ -77,7 +82,7 @@ def zvf_per_p(step):
 def zvf_pred_at_g(p, g):
     """i.i.d. binomial expected ZVF at group size g given empirical p̂."""
     p = min(max(p, 1e-9), 1 - 1e-9)
-    return (1 - p) ** g + p ** g
+    return (1 - p) ** g + p**g
 
 
 # ---------------------------------------------------------------------------
@@ -103,8 +108,7 @@ def fires(step, tau):
 def cost_ratio_for(fires_seq):
     if not fires_seq:
         return float("nan")
-    return sum(G_ESC if fire else G_BASE for fire in fires_seq) / (len(fires_seq)*G_BASE)
-
+    return sum(G_ESC if fire else G_BASE for fire in fires_seq) / (len(fires_seq) * G_BASE)
 
 
 # ---------------------------------------------------------------------------
@@ -123,8 +127,7 @@ def wasted(step, g_esc=G_ESC):
     pp = zvf_per_p(step)
     base_degen = sum(1 for p in pp if zvf_pred_at_g(p, G_BASE) >= 0.99)
     esc_still_degen = sum(
-        1 for p in pp
-        if zvf_pred_at_g(p, G_BASE) >= 0.99 and zvf_pred_at_g(p, g_esc) >= 0.99
+        1 for p in pp if zvf_pred_at_g(p, G_BASE) >= 0.99 and zvf_pred_at_g(p, g_esc) >= 0.99
     )
     return esc_still_degen
 
@@ -209,36 +212,40 @@ def transfer_table(steps):
                 )
                 saved = sum(headroom(s) for s in steps[target] if fires(s, tau))
                 wasted_prompts = sum(wasted(s) for s in steps[target] if fires(s, tau))
-                summary_rows.append({
-                    "source": source,
-                    "target": target,
-                    "tau": f"{tau:.2f}",
-                    "is_source_self": "1" if source == target else "0",
-                    "is_source_selected": "1" if abs(tau - best_tau_eff) < 1e-9 else "0",
-                    "fires": sum(fires_seq),
-                    "cost_ratio": f"{ratio:.4f}",
-                    "cost_ratio_ci_lo": f"{ratio_lo:.4f}",
-                    "cost_ratio_ci_hi": f"{ratio_hi:.4f}",
-                    "saved": saved,
-                    "wasted": wasted_prompts,
-                })
+                summary_rows.append(
+                    {
+                        "source": source,
+                        "target": target,
+                        "tau": f"{tau:.2f}",
+                        "is_source_self": "1" if source == target else "0",
+                        "is_source_selected": "1" if abs(tau - best_tau_eff) < 1e-9 else "0",
+                        "fires": sum(fires_seq),
+                        "cost_ratio": f"{ratio:.4f}",
+                        "cost_ratio_ci_lo": f"{ratio_lo:.4f}",
+                        "cost_ratio_ci_hi": f"{ratio_hi:.4f}",
+                        "saved": saved,
+                        "wasted": wasted_prompts,
+                    }
+                )
             # additionally record the headline transfer cell (best_tau)
             for s in steps[target]:
-                per_step_rows.append({
-                    "source": source,
-                    "source_best_tau": f"{best_tau:.2f}" if best_tau is not None else "n/a",
-                    "source_worst_tau": f"{worst_tau:.2f}",
-                    "target": target,
-                    "step": s["step"],
-                    "zvf_target": f"{s.get('zvf', 0.0):.6f}",
-                    "zvf_source": f"{steps[source][s['step']].get('zvf', 0.0):.6f}",
-                    "fires_at_source_best": (
-                        "1" if (best_tau is not None and fires(s, best_tau)) else "0"
-                    ),
-                    "fires_at_source_worst": (
-                        "1" if (worst_tau is not None and fires(s, worst_tau)) else "0"
-                    ),
-                })
+                per_step_rows.append(
+                    {
+                        "source": source,
+                        "source_best_tau": f"{best_tau:.2f}" if best_tau is not None else "n/a",
+                        "source_worst_tau": f"{worst_tau:.2f}",
+                        "target": target,
+                        "step": s["step"],
+                        "zvf_target": f"{s.get('zvf', 0.0):.6f}",
+                        "zvf_source": f"{steps[source][s['step']].get('zvf', 0.0):.6f}",
+                        "fires_at_source_best": (
+                            "1" if (best_tau is not None and fires(s, best_tau)) else "0"
+                        ),
+                        "fires_at_source_worst": (
+                            "1" if (worst_tau is not None and fires(s, worst_tau)) else "0"
+                        ),
+                    }
+                )
     return summary_rows, per_step_rows, curves
 
 
@@ -247,6 +254,7 @@ def transfer_table(steps):
 # ---------------------------------------------------------------------------
 def transfer_penalty_table(steps, curves):
     """For each (source, target, τ*), report Δcost_ratio vs target-optimal τ*."""
+
     def pick_best(method):
         cands = [t for t in THRESHOLDS if curves[method][t]["saved_total"] >= 1]
         if not cands:
@@ -261,28 +269,38 @@ def transfer_penalty_table(steps, curves):
             if source_best is None or target_best is None:
                 # both methods have no savings at any threshold; report
                 # trivial zero-penalty cell.
-                rows.append({
-                    "source": source, "target": target,
-                    "tau_used": "n/a", "tau_target_opt": "n/a",
-                    "cost_used": None, "cost_target_opt": None,
-                    "transfer_penalty": None, "status": "no_feasible_source_or_target_threshold",
-                })
+                rows.append(
+                    {
+                        "source": source,
+                        "target": target,
+                        "tau_used": "n/a",
+                        "tau_target_opt": "n/a",
+                        "cost_used": None,
+                        "cost_target_opt": None,
+                        "transfer_penalty": None,
+                        "status": "no_feasible_source_or_target_threshold",
+                    }
+                )
                 continue
             # If source has no candidate, fall back to target's best τ
             tau_use = source_best if source_best is not None else target_best
             ratio_use = curves[target][tau_use]["cost_ratio"]
-            ratio_target_opt = curves[target][target_best]["cost_ratio"] \
-                if target_best is not None else 1.0
+            ratio_target_opt = (
+                curves[target][target_best]["cost_ratio"] if target_best is not None else 1.0
+            )
             penalty = ratio_use - ratio_target_opt
-            rows.append({
-                "source": source,
-                "target": target,
-                "tau_used": f"{tau_use:.2f}",
-                "tau_target_opt": f"{target_best:.2f}" if target_best else "n/a",
-                "cost_used": f"{ratio_use:.4f}",
-                "cost_target_opt": f"{ratio_target_opt:.4f}",
-                "transfer_penalty": f"{penalty:+.4f}", "status": "feasible",
-            })
+            rows.append(
+                {
+                    "source": source,
+                    "target": target,
+                    "tau_used": f"{tau_use:.2f}",
+                    "tau_target_opt": f"{target_best:.2f}" if target_best else "n/a",
+                    "cost_used": f"{ratio_use:.4f}",
+                    "cost_target_opt": f"{ratio_target_opt:.4f}",
+                    "transfer_penalty": f"{penalty:+.4f}",
+                    "status": "feasible",
+                }
+            )
     return rows
 
 
@@ -295,8 +313,8 @@ def fire_decisions(steps, method, tau):
 
 
 def jaccard(a, b):
-    inter = sum(1 for x, y in zip(a, b) if x and y)
-    union = sum(1 for x, y in zip(a, b) if x or y)
+    inter = sum(1 for x, y in zip(a, b, strict=False) if x and y)
+    union = sum(1 for x, y in zip(a, b, strict=False) if x or y)
     if union == 0:
         return float("nan")
     return inter / union
@@ -312,14 +330,16 @@ def cross_method_agreement(steps, taus=(0.50, 0.60, 0.65, 0.70, 0.75, 0.80, 0.85
                 if s >= t:
                     continue
                 j = jaccard(decs[s], decs[t])
-                out.append({
-                    "tau": f"{tau:.2f}",
-                    "method_a": s,
-                    "method_b": t,
-                    "fires_a": sum(decs[s]),
-                    "fires_b": sum(decs[t]),
-                    "jaccard": f"{j:.4f}" if not math.isnan(j) else "n/a",
-                })
+                out.append(
+                    {
+                        "tau": f"{tau:.2f}",
+                        "method_a": s,
+                        "method_b": t,
+                        "fires_a": sum(decs[s]),
+                        "fires_b": sum(decs[t]),
+                        "jaccard": f"{j:.4f}" if not math.isnan(j) else "n/a",
+                    }
+                )
     return out
 
 
@@ -332,17 +352,19 @@ def fixed_tau_transfer(steps, taus=(0.50, 0.60, 0.65, 0.70, 0.75, 0.80, 0.85, 0.
         mean = sum(vals) / len(vals)
         sd = statistics.pstdev(vals)
         rng = max(vals) - min(vals)
-        out.append({
-            "tau": f"{tau:.2f}",
-            "grpo": f"{per_method['grpo']:.4f}",
-            "aero": f"{per_method['aero']:.4f}",
-            "gift": f"{per_method['gift']:.4f}",
-            "areal": f"{per_method['areal']:.4f}",
-            "mean": f"{mean:.4f}",
-            "sd": f"{sd:.4f}",
-            "range": f"{rng:.4f}",
-            "max_minus_min_pct": f"{(rng / mean * 100):.2f}%",
-        })
+        out.append(
+            {
+                "tau": f"{tau:.2f}",
+                "grpo": f"{per_method['grpo']:.4f}",
+                "aero": f"{per_method['aero']:.4f}",
+                "gift": f"{per_method['gift']:.4f}",
+                "areal": f"{per_method['areal']:.4f}",
+                "mean": f"{mean:.4f}",
+                "sd": f"{sd:.4f}",
+                "range": f"{rng:.4f}",
+                "max_minus_min_pct": f"{(rng / mean * 100):.2f}%",
+            }
+        )
     return out
 
 
@@ -382,7 +404,9 @@ def main():
         if r["source"] == r["target"]:
             continue
         matrix[float(r["tau"])][(r["source"], r["target"])] = (
-            r["cost_ratio"], r["fires"], r["saved"]
+            r["cost_ratio"],
+            r["fires"],
+            r["saved"],
         )
 
     json_out = {
@@ -393,36 +417,40 @@ def main():
         "baseline_rollouts": BASELINE_ROLLOUTS,
         "transfer_matrix_per_tau": {
             f"{t:.2f}": {
-                f"{s}->{t2}": {"cost_ratio": matrix[t][(s, t2)][0],
-                                "fires": matrix[t][(s, t2)][1],
-                                "saved": matrix[t][(s, t2)][2]}
-                for s in METHODS for t2 in METHODS if s != t2
-                  and (s, t2) in matrix[t]
+                f"{s}->{t2}": {
+                    "cost_ratio": matrix[t][(s, t2)][0],
+                    "fires": matrix[t][(s, t2)][1],
+                    "saved": matrix[t][(s, t2)][2],
+                }
+                for s in METHODS
+                for t2 in METHODS
+                if s != t2 and (s, t2) in matrix[t]
             }
             for t in THRESHOLDS
         },
         "per_source_best_tau": {
-            m: (min(
-                (t for t in THRESHOLDS if curves[m][t]["saved_total"] >= 1),
-                key=lambda t: curves[m][t]["cost_ratio"],
-            ) if any(curves[m][t]["saved_total"] >= 1 for t in THRESHOLDS)
-                else None)
+            m: (
+                min(
+                    (t for t in THRESHOLDS if curves[m][t]["saved_total"] >= 1),
+                    key=lambda t: curves[m][t]["cost_ratio"],
+                )
+                if any(curves[m][t]["saved_total"] >= 1 for t in THRESHOLDS)
+                else None
+            )
             for m in METHODS
         },
         "transfer_penalty_rows": penalty_rows,
         "cross_method_agreement_rows": agreement_rows,
         "fixed_tau_transfer_rows": fixed_tau_rows,
     }
-    (OUT / "p7_threshold_transfer_summary.json").write_text(
-        json.dumps(json_out, indent=2)
-    )
+    (OUT / "p7_threshold_transfer_summary.json").write_text(json.dumps(json_out, indent=2))
 
-    print(f"wrote {OUT/'p7_threshold_transfer_summary.tsv'}")
-    print(f"wrote {OUT/'p7_threshold_transfer_per_step.tsv'}")
-    print(f"wrote {OUT/'p7_threshold_transfer_penalty.tsv'}")
-    print(f"wrote {OUT/'p7_threshold_transfer_agreement.tsv'}")
-    print(f"wrote {OUT/'p7_threshold_transfer_fixed_tau.tsv'}")
-    print(f"wrote {OUT/'p7_threshold_transfer_summary.json'}")
+    print(f"wrote {OUT / 'p7_threshold_transfer_summary.tsv'}")
+    print(f"wrote {OUT / 'p7_threshold_transfer_per_step.tsv'}")
+    print(f"wrote {OUT / 'p7_threshold_transfer_penalty.tsv'}")
+    print(f"wrote {OUT / 'p7_threshold_transfer_agreement.tsv'}")
+    print(f"wrote {OUT / 'p7_threshold_transfer_fixed_tau.tsv'}")
+    print(f"wrote {OUT / 'p7_threshold_transfer_summary.json'}")
     print()
     print("Per-method best τ and resulting cost_ratio (source target/trained):")
     for m in METHODS:

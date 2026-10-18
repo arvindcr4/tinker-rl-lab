@@ -35,7 +35,8 @@ Outputs: platform_hybrid/experiments/results/p5p8/p5_manifest_self_sufficiency.t
          platform_hybrid/experiments/results/p5p8/p5_manifest_self_sufficiency.json
          platform_hybrid/experiments/results/p5p8/figures/p5_manifest_r2_gap.{png,pdf}
 """
-import csv, json, math, os, sys, time
+
+import csv, json, os, time
 import numpy as np
 from sklearn.linear_model import LinearRegression
 
@@ -44,7 +45,6 @@ CELLS = os.path.join(ROOT, "platform_hybrid/experiments/results/mega_20260704/ce
 MDIR = os.path.join(ROOT, "platform_hybrid/experiments/results/mega_20260704/manifests")
 OUTDIR = os.path.join(ROOT, "platform_hybrid/experiments/results/p5p8/review17_v2")
 FIGDIR = os.path.join(OUTDIR, "figures")
-
 
 
 TARGETS = ["zvf", "mean_reward"]
@@ -59,6 +59,7 @@ C_AXES = ["model_family", "task_slice", "G", "temperature", "seed"]
 
 
 from p5_review17_stats import json_safe
+
 
 def load():
     rows = list(csv.DictReader(open(CELLS), delimiter="\t"))
@@ -124,7 +125,9 @@ def fit_r2(X, y):
 
 
 def main():
-    print("Protocol review17-p5-v2: exploratory descriptive associations; no independent-run, causal, equivalence, or held-out prediction claim")
+    print(
+        "Protocol review17-p5-v2: exploratory descriptive associations; no independent-run, causal, equivalence, or held-out prediction claim"
+    )
     os.makedirs(OUTDIR, exist_ok=True)
     os.makedirs(FIGDIR, exist_ok=True)
     rows, const = load()
@@ -132,9 +135,12 @@ def main():
     summary = {
         "analysis_protocol": "review17-p5-v2",
         "inference_scope": "exploratory descriptive; conditional on observed runs/configurations; no independent-run or prospective attribution claim",
-        "n_cells": n, "n_boot": N_BOOT, "seed": SEED,
+        "n_cells": n,
+        "n_boot": N_BOOT,
+        "seed": SEED,
         "const_manifest_fields": const,
-        "manifest_axes_used": M_AXES, "cells_axes_used": C_AXES,
+        "manifest_axes_used": M_AXES,
+        "cells_axes_used": C_AXES,
         "outcomes": {},
     }
 
@@ -214,44 +220,81 @@ def main():
             single_axis[f] = {"src": src, "r2": round(fit_r2(Xs, y), 4)}
 
         # ----- Headline rows -----
-        tsv_rows.append(dict(target=tgt, model="manifest_only",
-                             n_axes=len(M_AXES),
-                             r2=round(r2_man, 4),
-                             r2_ci_lo=round(lo_man, 4),
-                             r2_ci_hi=round(hi_man, 4), note=""))
-        tsv_rows.append(dict(target=tgt, model="cells_only",
-                             n_axes=len(C_AXES),
-                             r2=round(r2_cel, 4),
-                             r2_ci_lo=round(lo_cel, 4),
-                             r2_ci_hi=round(hi_cel, 4), note=""))
-        tsv_rows.append(dict(target=tgt, model="manifest+cells",
-                             n_axes=len(M_AXES) + len(C_AXES),
-                             r2=round(r2_all, 4),
-                             r2_ci_lo="", r2_ci_hi="",
-                             note=""))
-        tsv_rows.append(dict(target=tgt, model="GAP(cells-manifest)",
-                             n_axes="",
-                             r2=round(gap, 4),
-                             r2_ci_lo=round(lo_gap, 4),
-                             r2_ci_hi=round(hi_gap, 4),
-                             note="missing-field penalty on this outcome"))
+        tsv_rows.append(
+            dict(
+                target=tgt,
+                model="manifest_only",
+                n_axes=len(M_AXES),
+                r2=round(r2_man, 4),
+                r2_ci_lo=round(lo_man, 4),
+                r2_ci_hi=round(hi_man, 4),
+                note="",
+            )
+        )
+        tsv_rows.append(
+            dict(
+                target=tgt,
+                model="cells_only",
+                n_axes=len(C_AXES),
+                r2=round(r2_cel, 4),
+                r2_ci_lo=round(lo_cel, 4),
+                r2_ci_hi=round(hi_cel, 4),
+                note="",
+            )
+        )
+        tsv_rows.append(
+            dict(
+                target=tgt,
+                model="manifest+cells",
+                n_axes=len(M_AXES) + len(C_AXES),
+                r2=round(r2_all, 4),
+                r2_ci_lo="",
+                r2_ci_hi="",
+                note="",
+            )
+        )
+        tsv_rows.append(
+            dict(
+                target=tgt,
+                model="GAP(cells-manifest)",
+                n_axes="",
+                r2=round(gap, 4),
+                r2_ci_lo=round(lo_gap, 4),
+                r2_ci_hi=round(hi_gap, 4),
+                note="missing-field penalty on this outcome",
+            )
+        )
 
         for f, eta in axis_eta_manifest.items():
-            tsv_rows.append(dict(target=tgt, model=f"eta_man/{f}",
-                                 n_axes=1,
-                                 r2=round(eta, 4),
-                                 r2_ci_lo="", r2_ci_hi="",
-                                 note="manifest-only eta^2"))
+            tsv_rows.append(
+                dict(
+                    target=tgt,
+                    model=f"eta_man/{f}",
+                    n_axes=1,
+                    r2=round(eta, 4),
+                    r2_ci_lo="",
+                    r2_ci_hi="",
+                    note="manifest-only eta^2",
+                )
+            )
         for f, eta in axis_eta_cells.items():
-            tsv_rows.append(dict(target=tgt, model=f"eta_cel/{f}",
-                                 n_axes=1,
-                                 r2=round(eta, 4),
-                                 r2_ci_lo="", r2_ci_hi="",
-                                 note="cells-only eta^2"))
+            tsv_rows.append(
+                dict(
+                    target=tgt,
+                    model=f"eta_cel/{f}",
+                    n_axes=1,
+                    r2=round(eta, 4),
+                    r2_ci_lo="",
+                    r2_ci_hi="",
+                    note="cells-only eta^2",
+                )
+            )
 
         summary["outcomes"][tgt] = {
             "evaluation": "in_sample_description_only",
-            "manifest_design_rank": int(np.linalg.matrix_rank(np.column_stack([np.ones(n), X_man]))),
+            "manifest_design_rank": int(
+                np.linalg.matrix_rank(np.column_stack([np.ones(n), X_man]))
+            ),
             "cells_design_rank": int(np.linalg.matrix_rank(np.column_stack([np.ones(n), X_cel]))),
             "r2_manifest_only": round(r2_man, 4),
             "r2_manifest_only_ci": [round(lo_man, 4), round(hi_man, 4)],
@@ -264,7 +307,10 @@ def main():
             "axis_eta2_manifest": {k: round(v, 4) for k, v in axis_eta_manifest.items()},
             "axis_eta2_cells": {k: round(v, 4) for k, v in axis_eta_cells.items()},
             "single_axis_r2": single_axis,
-            "k_axes_manifest": {f: len(set(str((r["manifest"] or {}).get(f, "MISSING")) for r in rows)) for f in M_AXES},
+            "k_axes_manifest": {
+                f: len(set(str((r["manifest"] or {}).get(f, "MISSING")) for r in rows))
+                for f in M_AXES
+            },
             "k_axes_cells": {f: len(set(r[f] for r in rows)) for f in C_AXES},
         }
 
@@ -283,20 +329,27 @@ def main():
     # Bar plot of R^2 by axis set for each target.
     try:
         import matplotlib
+
         matplotlib.use("Agg")
         import matplotlib.pyplot as plt
+
         fig, ax = plt.subplots(figsize=(7, 4))
         labels = ["manifest_only", "cells_only", "manifest+cells"]
-        zvf_means = [summary["outcomes"]["zvf"]["r2_manifest_only"],
-                     summary["outcomes"]["zvf"]["r2_cells_only"],
-                     summary["outcomes"]["zvf"]["r2_combined"]]
-        rew_means = [summary["outcomes"]["mean_reward"]["r2_manifest_only"],
-                     summary["outcomes"]["mean_reward"]["r2_cells_only"],
-                     summary["outcomes"]["mean_reward"]["r2_combined"]]
+        zvf_means = [
+            summary["outcomes"]["zvf"]["r2_manifest_only"],
+            summary["outcomes"]["zvf"]["r2_cells_only"],
+            summary["outcomes"]["zvf"]["r2_combined"],
+        ]
+        rew_means = [
+            summary["outcomes"]["mean_reward"]["r2_manifest_only"],
+            summary["outcomes"]["mean_reward"]["r2_cells_only"],
+            summary["outcomes"]["mean_reward"]["r2_combined"],
+        ]
         x = np.arange(len(labels))
         ax.bar(x - 0.2, zvf_means, 0.4, label="zvf (signal-starvation)")
         ax.bar(x + 0.2, rew_means, 0.4, label="mean_reward")
-        ax.set_xticks(x); ax.set_xticklabels(labels, rotation=20)
+        ax.set_xticks(x)
+        ax.set_xticklabels(labels, rotation=20)
         ax.set_ylabel("R² (in-sample)")
         ax.set_title("MIN-REPORT MANIFEST SELF-SUFFICIENCY (n=98 mega cells)")
         ax.legend(loc="best")

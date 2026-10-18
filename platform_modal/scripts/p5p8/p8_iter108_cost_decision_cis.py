@@ -18,6 +18,7 @@ Falsifiable headline H2 -- cost-benefit asymmetry concentrates in the high-
 
 Stdlib + numpy + xgboost. <= 300 lines.
 """
+
 from __future__ import annotations
 
 import csv
@@ -28,13 +29,15 @@ import numpy as np
 import xgboost as xgb
 
 import sys
+
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
-from _p8_common import (  # noqa: E402
+from _paths import REPO_ROOT
+from _p8_common import (
     RAW20,
     ALL24,
     auc_p8 as auc,
 )
+
 ROOT = REPO_ROOT
 RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8/corrected-review21-v2"
 RES.mkdir(parents=True, exist_ok=True)
@@ -63,15 +66,23 @@ def load(path):
 
 def fit(Xtr, ytr, Xte, cols, seed):
     ci = [ALL24.index(c) for c in cols]
-    m = xgb.XGBClassifier(n_estimators=300, max_depth=5, learning_rate=0.1,
-                          subsample=0.8, colsample_bytree=0.8, eval_metric="logloss",
-                          random_state=seed, n_jobs=4)
+    m = xgb.XGBClassifier(
+        n_estimators=300,
+        max_depth=5,
+        learning_rate=0.1,
+        subsample=0.8,
+        colsample_bytree=0.8,
+        eval_metric="logloss",
+        random_state=seed,
+        n_jobs=4,
+    )
     m.fit(Xtr[:, ci], ytr)
     return m.predict_proba(Xte[:, ci])[:, 1]
 
 
 def pr_at_K(scores, y, k_pct):
-    n = len(y); k = max(1, int(round(k_pct / 100 * n)))
+    n = len(y)
+    k = max(1, int(round(k_pct / 100 * n)))
     top = np.argsort(-scores)[:k]
     tp = int(y[top].sum())
     return tp / max(1, int(y.sum())), tp
@@ -79,10 +90,14 @@ def pr_at_K(scores, y, k_pct):
 
 def apply_gradient(p_cheap, p_llm, g_thr, k_top):
     n = len(p_cheap)
-    order = np.argsort(-p_cheap); sorted_s = p_cheap[order]
-    grads = np.zeros(n); grads[1:] = sorted_s[:-1] - sorted_s[1:]
-    small = np.zeros(n, dtype=bool); small[order[1:]] = grads[1:] <= g_thr
-    top_k = np.zeros(n, dtype=bool); top_k[order[:k_top]] = True
+    order = np.argsort(-p_cheap)
+    sorted_s = p_cheap[order]
+    grads = np.zeros(n)
+    grads[1:] = sorted_s[:-1] - sorted_s[1:]
+    small = np.zeros(n, dtype=bool)
+    small[order[1:]] = grads[1:] <= g_thr
+    top_k = np.zeros(n, dtype=bool)
+    top_k[order[:k_top]] = True
     invoke = small & top_k
     comp = np.where(invoke, p_llm, p_cheap)
     return comp, int(invoke.sum())
@@ -106,8 +121,11 @@ def eval_rule(p_cheap, p_llm, y, rule, k_top):
     r_K, n_caught = pr_at_K(comp, y, K_PCT)
     cost_per = (n_llm * COST_LLM + (len(y) - n_llm) * COST_XGB) / len(y)
     return {
-        "auc": auc_v, "recall_at_K2": r_K, "n_caught_at_K2": n_caught,
-        "n_llm_calls": n_llm, "cost_per_decision": cost_per,
+        "auc": auc_v,
+        "recall_at_K2": r_K,
+        "n_caught_at_K2": n_caught,
+        "n_llm_calls": n_llm,
+        "cost_per_decision": cost_per,
         "cost_per_fraud_caught": float(cost_per * len(y) / max(1, n_caught)),
     }
 
@@ -116,9 +134,12 @@ def boot_pair_cost(scores_a, scores_b, y, k_pct, B, seed):
     """Paired-row bootstrap on (n_caught_at_K, cost_per_decision, cost_per_caught)
     for rule A vs rule B; returns recall-difference replicates (A - B); no cost CI is computed."""
     rng = np.random.default_rng(seed)
-    n = len(y); k = max(1, int(round(k_pct / 100 * n)))
+    n = len(y)
+    k = max(1, int(round(k_pct / 100 * n)))
     base = np.zeros(B)
-    delta_recall = np.zeros(B); delta_cpd = np.zeros(B); delta_cpf = np.zeros(B)
+    delta_recall = np.zeros(B)
+    delta_cpd = np.zeros(B)
+    delta_cpf = np.zeros(B)
     for b in range(B):
         idx = rng.integers(0, n, n)
         sb, yb = scores_a[idx], y[idx]
@@ -133,10 +154,13 @@ def boot_pair_cost(scores_a, scores_b, y, k_pct, B, seed):
 
 
 def write_tsv(name, rows, cols):
-    if not rows: return
+    if not rows:
+        return
     lines = ["\t".join(cols)]
     for r in rows:
-        lines.append("\t".join(f"{r[c]:.6g}" if isinstance(r[c], float) else str(r[c]) for c in cols))
+        lines.append(
+            "\t".join(f"{r[c]:.6g}" if isinstance(r[c], float) else str(r[c]) for c in cols)
+        )
     (RES / name).write_text("\n".join(lines) + "\n")
 
 
@@ -144,19 +168,20 @@ def main():
     print("# === P8 cost-per-decision / cost-per-fraud-caught CI (JOB A iter 108) ===")
     Xtr, ytr, _ = load(ROOT / "fraud_data.csv")
     Xte, yte, vmean_te = load(ROOT / "test_data.csv")
-    n_test = len(yte); k_top = max(1, int(round(K_PCT / 100 * n_test)))
+    n_test = len(yte)
+    k_top = max(1, int(round(K_PCT / 100 * n_test)))
     print(f"# train={Xtr.shape}, test={Xte.shape}, K_top={k_top}, base_rate={yte.mean():.4f}")
 
     # Fit two backbones -- XGB-20raw is the cheaper scorer, XGB-24full is the
     # richer one used as the "LLM" surrogate (per iter-80 row 94 protocol).
     p_te_20 = fit(Xtr, ytr, Xte, RAW20, SEED)
     p_te_24 = fit(Xtr, ytr, Xte, ALL24, SEED)
-    print(f"# AUC 20raw={auc(p_te_20,yte):.6f}  24full={auc(p_te_24,yte):.6f}")
+    print(f"# AUC 20raw={auc(p_te_20, yte):.6f}  24full={auc(p_te_24, yte):.6f}")
 
     # Cohort quartiles on V_mean
     qs = np.quantile(vmean_te, [0.25, 0.5, 0.75])
     cohort_idx = np.digitize(vmean_te, qs)
-    print(f"# cohort sizes: {[int((cohort_idx==i).sum()) for i in range(4)]}")
+    print(f"# cohort sizes: {[int((cohort_idx == i).sum()) for i in range(4)]}")
 
     # Per-rule / per-cohort cells
     rules = [
@@ -170,16 +195,20 @@ def main():
         mask = cohort_idx == cohort
         for rname, p_cheap, p_llm in rules:
             res = eval_rule(p_cheap[mask], p_llm[mask], yte[mask], rname, k_top)
-            row = {"cohort": f"Q{cohort}", "rule": rname, "n_test": int(mask.sum()),
-                   "n_pos": int(yte[mask].sum()), **res}
+            row = {
+                "cohort": f"Q{cohort}",
+                "rule": rname,
+                "n_test": int(mask.sum()),
+                "n_pos": int(yte[mask].sum()),
+                **res,
+            }
             rows.append(row)
 
     # Global rule-level rows (cohort-aggregated, mask=None applied via global)
     global_rows = []
     for rname, p_cheap, p_llm in rules:
         res = eval_rule(p_cheap, p_llm, yte, rname, k_top)
-        row = {"cohort": "ALL", "rule": rname, "n_test": n_test,
-               "n_pos": int(yte.sum()), **res}
+        row = {"cohort": "ALL", "rule": rname, "n_test": n_test, "n_pos": int(yte.sum()), **res}
         global_rows.append(row)
         rows.append(row)
 
@@ -220,13 +249,20 @@ def main():
         m_a = next(r for r in rows if r["cohort"] == f"Q{cohort}" and r["rule"] == "absolute-band")
         ratio_g_vs_x = m_g["cost_per_fraud_caught"] / max(1e-9, m_x["cost_per_fraud_caught"])
         ratio_a_vs_x = m_a["cost_per_fraud_caught"] / max(1e-9, m_x["cost_per_fraud_caught"])
-        cohort_ratio_rows.append({
-            "cohort": f"Q{cohort}", "n_test": m_g["n_test"], "n_pos": m_g["n_pos"],
-            "cpf_gb": m_g["cost_per_fraud_caught"], "cpf_ab": m_a["cost_per_fraud_caught"],
-            "cpf_xgb": m_x["cost_per_fraud_caught"],
-            "ratio_gb_vs_xgb": ratio_g_vs_x, "ratio_ab_vs_xgb": ratio_a_vs_x,
-            "n_llm_gb": m_g["n_llm_calls"], "n_llm_ab": m_a["n_llm_calls"],
-        })
+        cohort_ratio_rows.append(
+            {
+                "cohort": f"Q{cohort}",
+                "n_test": m_g["n_test"],
+                "n_pos": m_g["n_pos"],
+                "cpf_gb": m_g["cost_per_fraud_caught"],
+                "cpf_ab": m_a["cost_per_fraud_caught"],
+                "cpf_xgb": m_x["cost_per_fraud_caught"],
+                "ratio_gb_vs_xgb": ratio_g_vs_x,
+                "ratio_ab_vs_xgb": ratio_a_vs_x,
+                "n_llm_gb": m_g["n_llm_calls"],
+                "n_llm_ab": m_a["n_llm_calls"],
+            }
+        )
 
     # Headlines
     h_grl_global = next(r for r in global_rows if r["rule"] == "gradient-band")
@@ -256,34 +292,69 @@ def main():
     }
 
     # Write artifacts
-    per_cell_cols = ["cohort", "rule", "n_test", "n_pos", "auc", "recall_at_K2",
-                     "n_caught_at_K2", "n_llm_calls", "cost_per_decision",
-                     "cost_per_fraud_caught"]
+    per_cell_cols = [
+        "cohort",
+        "rule",
+        "n_test",
+        "n_pos",
+        "auc",
+        "recall_at_K2",
+        "n_caught_at_K2",
+        "n_llm_calls",
+        "cost_per_decision",
+        "cost_per_fraud_caught",
+    ]
     write_tsv("p8_iter108_cost_per_decision_per_cell.tsv", rows, per_cell_cols)
 
-    cohort_cols = ["cohort", "n_test", "n_pos", "cpf_gb", "cpf_ab", "cpf_xgb",
-                   "ratio_gb_vs_xgb", "ratio_ab_vs_xgb", "n_llm_gb", "n_llm_ab"]
+    cohort_cols = [
+        "cohort",
+        "n_test",
+        "n_pos",
+        "cpf_gb",
+        "cpf_ab",
+        "cpf_xgb",
+        "ratio_gb_vs_xgb",
+        "ratio_ab_vs_xgb",
+        "n_llm_gb",
+        "n_llm_ab",
+    ]
     write_tsv("p8_iter108_cohort_cost_asymmetry.tsv", cohort_ratio_rows, cohort_cols)
 
     boot_rows = []
     for name, info in boot_summary.items():
-        boot_rows.append({
-            "pair": name, "delta_recall_mean": info["delta_recall_mean"][0],
-            "delta_recall_ci_lo": info["delta_recall_mean"][1],
-            "delta_recall_ci_hi": info["delta_recall_mean"][2],
-        })
-    write_tsv("p8_iter108_paired_bootstrap_ci.tsv", boot_rows,
-              ["pair", "delta_recall_mean", "delta_recall_ci_lo", "delta_recall_ci_hi"])
+        boot_rows.append(
+            {
+                "pair": name,
+                "delta_recall_mean": info["delta_recall_mean"][0],
+                "delta_recall_ci_lo": info["delta_recall_mean"][1],
+                "delta_recall_ci_hi": info["delta_recall_mean"][2],
+            }
+        )
+    write_tsv(
+        "p8_iter108_paired_bootstrap_ci.tsv",
+        boot_rows,
+        ["pair", "delta_recall_mean", "delta_recall_ci_lo", "delta_recall_ci_hi"],
+    )
 
     summary = {
-        "seed": SEED, "n_boot": N_BOOT, "k_pct": K_PCT, "G_THR": G_THR, "W_ABS": W_ABS,
-        "COST_XGB": COST_XGB, "COST_LLM": COST_LLM,
-        "n_train": int(Xtr.shape[0]), "n_test": n_test,
-        "auc_20raw": auc(p_te_20, yte), "auc_24full": auc(p_te_24, yte),
-        "headline": headline, "cohort_sizes": [int((cohort_idx == i).sum()) for i in range(4)],
+        "seed": SEED,
+        "n_boot": N_BOOT,
+        "k_pct": K_PCT,
+        "G_THR": G_THR,
+        "W_ABS": W_ABS,
+        "COST_XGB": COST_XGB,
+        "COST_LLM": COST_LLM,
+        "n_train": int(Xtr.shape[0]),
+        "n_test": n_test,
+        "auc_20raw": auc(p_te_20, yte),
+        "auc_24full": auc(p_te_24, yte),
+        "headline": headline,
+        "cohort_sizes": [int((cohort_idx == i).sum()) for i in range(4)],
     }
     (RES / "p8_iter108_cost_per_decision_summary.json").write_text(json.dumps(summary, indent=2))
-    print(f"# WROTE: per_cell={len(rows)} rows, cohort_ratio={len(cohort_ratio_rows)} rows, boot={len(boot_rows)} rows")
+    print(
+        f"# WROTE: per_cell={len(rows)} rows, cohort_ratio={len(cohort_ratio_rows)} rows, boot={len(boot_rows)} rows"
+    )
     print(json.dumps(headline, indent=2))
 
 

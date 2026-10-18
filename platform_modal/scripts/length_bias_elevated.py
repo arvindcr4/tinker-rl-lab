@@ -52,6 +52,7 @@ Outputs: platform_hybrid/experiments/results/length_bias_trap.tsv         (per-r
 Cite   : tong2025drgrpo (Dr.GRPO, arXiv:2503.20783)
          mcgrpo2025      (median-centered advantage)
 """
+
 from __future__ import annotations
 
 import json
@@ -113,8 +114,8 @@ def half_diff(seq: list[float]) -> tuple[float, float]:
 
 # ----------------------------- (A) trap-onset ------------------------------
 
-def trap_onset(step_log: list[dict], window: int = 10,
-               rho_threshold: float = 0.3) -> dict:
+
+def trap_onset(step_log: list[dict], window: int = 10, rho_threshold: float = 0.3) -> dict:
     """Find the earliest step where the Dr.GRPO signature engages locally.
 
     The signature is:
@@ -148,9 +149,9 @@ def trap_onset(step_log: list[dict], window: int = 10,
     onset_rho_rew: float | None = None
     onset_end_len: float | None = None
     for s in range(window, n):
-        win_steps = steps[s - window: s]
-        win_lens = lens[s - window: s]
-        win_rew = rewards[s - window: s]
+        win_steps = steps[s - window : s]
+        win_lens = lens[s - window : s]
+        win_rew = rewards[s - window : s]
         r_l, _ = spearman(win_steps, win_lens)
         r_r, _ = spearman(win_steps, win_rew)
         cond_a = (not math.isnan(r_l)) and r_l > rho_threshold
@@ -167,9 +168,15 @@ def trap_onset(step_log: list[dict], window: int = 10,
         "window": window,
         "rho_threshold": rho_threshold,
         "trap_onset_step": onset_step if onset_step is not None else -1,
-        "trap_onset_rho_len": round(float(onset_rho_len), 4) if onset_rho_len is not None else float("nan"),
-        "trap_onset_rho_rew": round(float(onset_rho_rew), 4) if onset_rho_rew is not None else float("nan"),
-        "trap_onset_end_len": round(float(onset_end_len), 4) if onset_end_len is not None else float("nan"),
+        "trap_onset_rho_len": round(float(onset_rho_len), 4)
+        if onset_rho_len is not None
+        else float("nan"),
+        "trap_onset_rho_rew": round(float(onset_rho_rew), 4)
+        if onset_rho_rew is not None
+        else float("nan"),
+        "trap_onset_end_len": round(float(onset_end_len), 4)
+        if onset_end_len is not None
+        else float("nan"),
         "trap_fired": int(onset_step is not None),
         "first_half_mean_len": round(first_half_len, 4),
         "n_steps": n,
@@ -177,6 +184,7 @@ def trap_onset(step_log: list[dict], window: int = 10,
 
 
 # ----------------------------- (B) bootstrap CIs ----------------------------
+
 
 def bootstrap_ci(values: list[float], n_boot: int = 2000, seed: int = 0) -> tuple[float, float]:
     """Non-parametric 95% bootstrap CI on the mean."""
@@ -194,6 +202,7 @@ def bootstrap_ci(values: list[float], n_boot: int = 2000, seed: int = 0) -> tupl
 
 
 # ----------------------------- (C) decile bins -----------------------------
+
 
 def decile_binned_coupling(runs: list[dict], task: str, algo: str) -> list[dict]:
     """Pool per-step (len, reward) across all seeds for (task, algo),
@@ -219,20 +228,23 @@ def decile_binned_coupling(runs: list[dict], task: str, algo: str) -> list[dict]
             continue
         lens = [p[0] for p in chunk]
         rews = [p[1] for p in chunk]
-        rows.append({
-            "task": task,
-            "algo": algo,
-            "decile": k + 1,
-            "n_points": len(chunk),
-            "len_min": round(float(min(lens)), 4),
-            "len_max": round(float(max(lens)), 4),
-            "mean_len": round(float(np.mean(lens)), 4),
-            "mean_reward": round(float(np.mean(rews)), 4),
-        })
+        rows.append(
+            {
+                "task": task,
+                "algo": algo,
+                "decile": k + 1,
+                "n_points": len(chunk),
+                "len_min": round(float(min(lens)), 4),
+                "len_max": round(float(max(lens)), 4),
+                "mean_len": round(float(np.mean(lens)), 4),
+                "mean_reward": round(float(np.mean(rews)), 4),
+            }
+        )
     return rows
 
 
 # ----------------------------- (D) cross-validation ------------------------
+
 
 def crossval_arithmetic_metrics() -> dict:
     """Compute per-step Spearman and last-10 numbers on
@@ -269,6 +281,7 @@ def crossval_arithmetic_metrics() -> dict:
 
 # ----------------------------- main pipeline --------------------------------
 
+
 def main() -> int:
     # ---- (1) gather per-run metrics for both source files --------------
     rows_trap: list[dict] = []
@@ -279,25 +292,38 @@ def main() -> int:
             if not sl:
                 continue
             t = trap_onset(sl, window=10, rho_threshold=0.3)
-            t.update({
-                "task": src["task"],
-                "algo": run["algo"],
-                "seed": run["seed"],
-                "model": run.get("model", ""),
-            })
+            t.update(
+                {
+                    "task": src["task"],
+                    "algo": run["algo"],
+                    "seed": run["seed"],
+                    "model": run.get("model", ""),
+                }
+            )
             rows_trap.append(t)
-            by_cell.setdefault((src["task"], run["algo"]), []).append({
-                "task": src["task"],
-                "algo": run["algo"],
-                "seed": run["seed"],
-                "step_log": sl,
-            })
+            by_cell.setdefault((src["task"], run["algo"]), []).append(
+                {
+                    "task": src["task"],
+                    "algo": run["algo"],
+                    "seed": run["seed"],
+                    "step_log": sl,
+                }
+            )
 
     # write per-run trap TSV
     trap_cols = [
-        "task", "algo", "seed", "model", "n_steps", "window", "rho_threshold",
+        "task",
+        "algo",
+        "seed",
+        "model",
+        "n_steps",
+        "window",
+        "rho_threshold",
         "first_half_mean_len",
-        "trap_fired", "trap_onset_step", "trap_onset_rho_len", "trap_onset_rho_rew",
+        "trap_fired",
+        "trap_onset_step",
+        "trap_onset_rho_len",
+        "trap_onset_rho_rew",
         "trap_onset_end_len",
     ]
     trap_tsv = RES / "length_bias_trap.tsv"
@@ -311,14 +337,17 @@ def main() -> int:
     # load the existing length_bias.tsv for per-algo summary numbers
     base = RES / "length_bias.tsv"
     if not base.exists():
-        print(f"ERROR: {base} not found; run platform_modal/scripts/length_bias.py first.", file=sys.stderr)
+        print(
+            f"ERROR: {base} not found; run platform_modal/scripts/length_bias.py first.",
+            file=sys.stderr,
+        )
         return 1
     base_rows: list[dict] = []
     with base.open() as f:
         header = f.readline().rstrip("\n").split("\t")
         for line in f:
             parts = line.rstrip("\n").split("\t")
-            base_rows.append({h: p for h, p in zip(header, parts)})
+            base_rows.append({h: p for h, p in zip(header, parts, strict=False)})
 
     sum_rows: list[dict] = []
     for task in sorted({r["task"] for r in base_rows}):
@@ -342,23 +371,25 @@ def main() -> int:
             ci_l = bootstrap_ci(rhos_l, n_boot=2000, seed=hash((task, algo, "l")) & 0xFFFF)
             ci_r = bootstrap_ci(rhos_r, n_boot=2000, seed=hash((task, algo, "r")) & 0xFFFF)
             ci_p = bootstrap_ci(rhos_p, n_boot=2000, seed=hash((task, algo, "p")) & 0xFFFF)
-            sum_rows.append({
-                "task": task,
-                "algo": algo,
-                "n_seeds": len(sub),
-                "mean_step_len_rho": round(float(np.mean(rhos_l)), 4),
-                "ci_step_len_lo": round(ci_l[0], 4),
-                "ci_step_len_hi": round(ci_l[1], 4),
-                "mean_step_reward_rho": round(float(np.mean(rhos_r)), 4),
-                "ci_step_reward_lo": round(ci_r[0], 4),
-                "ci_step_reward_hi": round(ci_r[1], 4),
-                "mean_len_reward_rho": round(float(np.mean(rhos_p)), 4),
-                "ci_len_reward_lo": round(ci_p[0], 4),
-                "ci_len_reward_hi": round(ci_p[1], 4),
-            })
+            sum_rows.append(
+                {
+                    "task": task,
+                    "algo": algo,
+                    "n_seeds": len(sub),
+                    "mean_step_len_rho": round(float(np.mean(rhos_l)), 4),
+                    "ci_step_len_lo": round(ci_l[0], 4),
+                    "ci_step_len_hi": round(ci_l[1], 4),
+                    "mean_step_reward_rho": round(float(np.mean(rhos_r)), 4),
+                    "ci_step_reward_lo": round(ci_r[0], 4),
+                    "ci_step_reward_hi": round(ci_r[1], 4),
+                    "mean_len_reward_rho": round(float(np.mean(rhos_p)), 4),
+                    "ci_len_reward_lo": round(ci_p[0], 4),
+                    "ci_len_reward_hi": round(ci_p[1], 4),
+                }
+            )
         # paired bootstrap of Dr.GRPO - GRPO difference on shared seeds
         diffs_l, diffs_r, diffs_p = [], [], []
-        for seed, algos in per_seed.items():
+        for _seed, algos in per_seed.items():
             if "grpo" in algos and "dr_grpo" in algos:
                 diffs_l.append(algos["dr_grpo"]["len"] - algos["grpo"]["len"])
                 diffs_r.append(algos["dr_grpo"]["rew"] - algos["grpo"]["rew"])
@@ -367,20 +398,22 @@ def main() -> int:
             ci_dl = bootstrap_ci(diffs_l, n_boot=2000, seed=hash((task, "dl")) & 0xFFFF)
             ci_dr = bootstrap_ci(diffs_r, n_boot=2000, seed=hash((task, "dr")) & 0xFFFF)
             ci_dp = bootstrap_ci(diffs_p, n_boot=2000, seed=hash((task, "dp")) & 0xFFFF)
-            sum_rows.append({
-                "task": task,
-                "algo": "drgrpo_minus_grpo",
-                "n_seeds": len(diffs_l),
-                "mean_step_len_rho": round(float(np.mean(diffs_l)), 4),
-                "ci_step_len_lo": round(ci_dl[0], 4),
-                "ci_step_len_hi": round(ci_dl[1], 4),
-                "mean_step_reward_rho": round(float(np.mean(diffs_r)), 4),
-                "ci_step_reward_lo": round(ci_dr[0], 4),
-                "ci_step_reward_hi": round(ci_dr[1], 4),
-                "mean_len_reward_rho": round(float(np.mean(diffs_p)), 4),
-                "ci_len_reward_lo": round(ci_dp[0], 4),
-                "ci_len_reward_hi": round(ci_dp[1], 4),
-            })
+            sum_rows.append(
+                {
+                    "task": task,
+                    "algo": "drgrpo_minus_grpo",
+                    "n_seeds": len(diffs_l),
+                    "mean_step_len_rho": round(float(np.mean(diffs_l)), 4),
+                    "ci_step_len_lo": round(ci_dl[0], 4),
+                    "ci_step_len_hi": round(ci_dl[1], 4),
+                    "mean_step_reward_rho": round(float(np.mean(diffs_r)), 4),
+                    "ci_step_reward_lo": round(ci_dr[0], 4),
+                    "ci_step_reward_hi": round(ci_dr[1], 4),
+                    "mean_len_reward_rho": round(float(np.mean(diffs_p)), 4),
+                    "ci_len_reward_lo": round(ci_dp[0], 4),
+                    "ci_len_reward_hi": round(ci_dp[1], 4),
+                }
+            )
     sum_cols = list(sum_rows[0].keys())
     sum_tsv = RES / "length_bias_summary_ci.tsv"
     with sum_tsv.open("w") as f:
@@ -396,18 +429,28 @@ def main() -> int:
             sl = run.get("step_log")
             if not sl:
                 continue
-            flat_runs.append({
-                "task": src["task"],
-                "algo": run["algo"],
-                "seed": run["seed"],
-                "step_log": sl,
-            })
+            flat_runs.append(
+                {
+                    "task": src["task"],
+                    "algo": run["algo"],
+                    "seed": run["seed"],
+                    "step_log": sl,
+                }
+            )
     bin_rows: list[dict] = []
     for task in sorted({r["task"] for r in flat_runs}):
         for algo in ("grpo", "dr_grpo"):
             bin_rows.extend(decile_binned_coupling(flat_runs, task, algo))
-    bin_cols = ["task", "algo", "decile", "n_points", "len_min", "len_max",
-                "mean_len", "mean_reward"]
+    bin_cols = [
+        "task",
+        "algo",
+        "decile",
+        "n_points",
+        "len_min",
+        "len_max",
+        "mean_len",
+        "mean_reward",
+    ]
     bin_tsv = RES / "length_bias_bins.tsv"
     with bin_tsv.open("w") as f:
         f.write("\t".join(bin_cols) + "\n")
@@ -428,21 +471,27 @@ def main() -> int:
 
     # ---- (6) terminal summary -----------------------------------------
     print("\n=== Pillar 4 elevation summary ===")
-    print(f"  trap-on fired on {sum(r['trap_fired'] for r in rows_trap)} of "
-          f"{len(rows_trap)} runs (window=10, rho_threshold=0.3)")
-    print(f"  crossval (arithmetic_metrics.jsonl, n={cv.get('n_steps', 0)}): "
-          f"rho_len={cv.get('spearman_step_len_rho')}, "
-          f"rho_rew={cv.get('spearman_step_reward_rho')}, "
-          f"len_range={cv.get('len_range')}")
+    print(
+        f"  trap-on fired on {sum(r['trap_fired'] for r in rows_trap)} of "
+        f"{len(rows_trap)} runs (window=10, rho_threshold=0.3)"
+    )
+    print(
+        f"  crossval (arithmetic_metrics.jsonl, n={cv.get('n_steps', 0)}): "
+        f"rho_len={cv.get('spearman_step_len_rho')}, "
+        f"rho_rew={cv.get('spearman_step_reward_rho')}, "
+        f"len_range={cv.get('len_range')}"
+    )
     return 0
 
 
 # ----------------------------- figure ---------------------------------------
 
-def make_figure(rows_trap: list[dict], bin_rows: list[dict],
-                cv: dict, base_rows: list[dict]) -> None:
+
+def make_figure(
+    rows_trap: list[dict], bin_rows: list[dict], cv: dict, base_rows: list[dict]
+) -> None:
     """3-panel: (1) trap-onset step histogram, (2) decile binned reward,
-       (3) crossval reward-vs-step on arithmetic_metrics.jsonl.
+    (3) crossval reward-vs-step on arithmetic_metrics.jsonl.
     """
     fig, axes = plt.subplots(1, 3, figsize=(16, 4.6))
     colors = {"grpo": "#1f77b4", "dr_grpo": "#d62728"}
@@ -450,19 +499,31 @@ def make_figure(rows_trap: list[dict], bin_rows: list[dict],
     # ---- panel 1: trap-onset step histogram ----------------------------
     ax = axes[0]
     for algo in ("grpo", "dr_grpo"):
-        steps_fired = [r["trap_onset_step"] for r in rows_trap
-                       if r["algo"] == algo and r["trap_fired"] == 1]
+        steps_fired = [
+            r["trap_onset_step"] for r in rows_trap if r["algo"] == algo and r["trap_fired"] == 1
+        ]
         all_steps = [r["n_steps"] for r in rows_trap if r["algo"] == algo]
         # show a "did not fire" bar at the right
         not_fired = len(all_steps) - len(steps_fired)
         if steps_fired:
-            ax.hist(steps_fired, bins=range(0, max(steps_fired) + 12, 4),
-                    alpha=0.55, color=colors[algo], label=f"{algo} fired (n={len(steps_fired)})")
+            ax.hist(
+                steps_fired,
+                bins=range(0, max(steps_fired) + 12, 4),
+                alpha=0.55,
+                color=colors[algo],
+                label=f"{algo} fired (n={len(steps_fired)})",
+            )
         # annotate the "did not fire" count as text
-        ax.text(0.97, 0.05 + (0.06 if algo == "dr_grpo" else 0.0),
-                f"{algo}: {not_fired}/{len(all_steps)} runs did NOT fire trap-onset",
-                transform=ax.transAxes, fontsize=8, ha="right",
-                color=colors[algo], family="monospace")
+        ax.text(
+            0.97,
+            0.05 + (0.06 if algo == "dr_grpo" else 0.0),
+            f"{algo}: {not_fired}/{len(all_steps)} runs did NOT fire trap-onset",
+            transform=ax.transAxes,
+            fontsize=8,
+            ha="right",
+            color=colors[algo],
+            family="monospace",
+        )
     ax.set_xlabel("earliest trap-onset step (sliding window W=10, rho>0.3)")
     ax.set_ylabel("# runs (across all tasks)")
     ax.set_title("(A) Trap-onset detection\n(6/16 runs fire on hard task; easy task 2/10)")
@@ -503,17 +564,26 @@ def make_figure(rows_trap: list[dict], bin_rows: list[dict],
         ax2.set_ylabel("ac_tokens / turn (orange)", color="#ff7f0e")
         ax.tick_params(axis="y", labelcolor="#2ca02c")
         ax2.tick_params(axis="y", labelcolor="#ff7f0e")
-        ax.set_title(f"(C) Crossval: 100-step arithmetic_metrics.jsonl\n"
-                     f"rho_len={cv.get('spearman_step_len_rho')}, "
-                     f"rho_rew={cv.get('spearman_step_reward_rho')}")
+        ax.set_title(
+            f"(C) Crossval: 100-step arithmetic_metrics.jsonl\n"
+            f"rho_len={cv.get('spearman_step_len_rho')}, "
+            f"rho_rew={cv.get('spearman_step_reward_rho')}"
+        )
         ax.grid(alpha=0.25)
     else:
-        ax.text(0.5, 0.5, "arithmetic_metrics.jsonl missing",
-                ha="center", va="center", transform=ax.transAxes)
+        ax.text(
+            0.5,
+            0.5,
+            "arithmetic_metrics.jsonl missing",
+            ha="center",
+            va="center",
+            transform=ax.transAxes,
+        )
         ax.set_title("(C) Crossval: missing")
 
-    fig.suptitle("Pillar 4 elevation: trap-onset + decile-binned coupling + crossval",
-                 fontsize=12, y=1.02)
+    fig.suptitle(
+        "Pillar 4 elevation: trap-onset + decile-binned coupling + crossval", fontsize=12, y=1.02
+    )
     plt.tight_layout()
     pdf_path = FIGS / "length_vs_reward_elevated.pdf"
     png_path = FIGS / "length_vs_reward_elevated.png"

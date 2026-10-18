@@ -47,12 +47,10 @@ NEAR_DUPLICATE_THRESHOLD = 0.80
 MODEL_ID = "Qwen/Qwen3.6-35B-A3B"
 MODEL_REVISION = "995ad96eacd98c81ed38be0c5b274b04031597b0"
 FINAL_SAMPLER_PATH = (
-    "tinker://cf0ad8c1-1f1b-5ff3-8bd7-2a0bf232657b:train:0/"
-    "sampler_weights/seed809_final"
+    "tinker://cf0ad8c1-1f1b-5ff3-8bd7-2a0bf232657b:train:0/sampler_weights/seed809_final"
 )
 FINAL_HF_REPO = (
-    "arvindcr4/pavlov-portfolio-qwen36-seed809-stepfinal-"
-    "tinker-cf0ad8c1-1f1b-5ff-9f777c4018b6"
+    "arvindcr4/pavlov-portfolio-qwen36-seed809-stepfinal-tinker-cf0ad8c1-1f1b-5ff-9f777c4018b6"
 )
 FINAL_HF_REVISION = "checkpoint-seed809-stepfinal-9f777c4018b6"
 FINAL_HF_COMMIT = "64444133c55d88c3f1bf0df8a2f5d7ac646125c8"
@@ -188,8 +186,7 @@ def _source_text(value: Any) -> str:
     return _canonical_json(value)
 
 
-def _load_training_source_envelope(
-) -> tuple[list[tuple[str, str]], list[str], dict[str, Any]]:
+def _load_training_source_envelope() -> tuple[list[tuple[str, str]], list[str], dict[str, Any]]:
     root = _repo_root()
     if str(root) not in sys.path:
         sys.path.insert(0, str(root))
@@ -209,7 +206,9 @@ def _load_training_source_envelope(
             source_id = f"api_bank_rlvr_train:{extra.get('index')}"
             source_ids.append(source_id)
             for field in ("prompt", "ground_truth", "extra_info"):
-                documents.append((f"{source_id}:{split_name}:{row_index}:{field}", _source_text(row[field])))
+                documents.append(
+                    (f"{source_id}:{split_name}:{row_index}:{field}", _source_text(row[field]))
+                )
             api_rows += 1
     row_counts["Simu-Env/API-Bank-RLVR"] = api_rows
 
@@ -230,7 +229,9 @@ def _load_training_source_envelope(
             "FAIL_TO_PASS",
             "PASS_TO_PASS",
         ):
-            documents.append((f"{source_id}:train:{row_index}:{field}", _source_text(row.get(field))))
+            documents.append(
+                (f"{source_id}:train:{row_index}:{field}", _source_text(row.get(field)))
+            )
     row_counts["SWE-Gym/SWE-Gym"] = len(swe)
 
     expected_counts = {
@@ -290,21 +291,26 @@ def build_decontamination_receipt(checkout: Path) -> dict[str, Any]:
         "exact_source_document_to_eval_reference_overlap_count": len(
             training_document_hashes.intersection(eval_reference_hashes)
         ),
-        "cross_content_normalised_overlap_count": len(normalised_training.intersection(normalised_eval)),
+        "cross_content_normalised_overlap_count": len(
+            normalised_training.intersection(normalised_eval)
+        ),
         "near_duplicate": _max_near_duplicate(
             training_documents,
             eval_prompts + eval_references,
         ),
     }
-    verified = all(
-        comparisons[key] == 0
-        for key in (
-            "task_or_source_id_overlap_count",
-            "exact_source_document_to_eval_prompt_overlap_count",
-            "exact_source_document_to_eval_reference_overlap_count",
-            "cross_content_normalised_overlap_count",
+    verified = (
+        all(
+            comparisons[key] == 0
+            for key in (
+                "task_or_source_id_overlap_count",
+                "exact_source_document_to_eval_prompt_overlap_count",
+                "exact_source_document_to_eval_reference_overlap_count",
+                "cross_content_normalised_overlap_count",
+            )
         )
-    ) and comparisons["near_duplicate"]["pairs_at_or_above_threshold"] == 0
+        and comparisons["near_duplicate"]["pairs_at_or_above_threshold"] == 0
+    )
 
     identity = {
         "schema_version": SCHEMA_VERSION,

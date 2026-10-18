@@ -25,7 +25,7 @@ def archive(path, entries, gzip=True):
 @pytest.mark.parametrize(
     ("name", "kind"),
     [
-        ("/tmp/absolute", tarfile.REGTYPE),  # noqa: S108 - Deliberately unsafe archive entry; extraction must reject it.
+        ("/tmp/absolute", tarfile.REGTYPE),
         ("../outside", tarfile.REGTYPE),
         ("weights/../../outside", tarfile.REGTYPE),
         ("link", tarfile.LNKTYPE),

@@ -8,6 +8,7 @@ Unit of analysis = seed run (n=3 per arm). Unpaired: pooled SD + TOST (df=4 per 
 Seed-blocked: two-way additive ANOVA arm + seed (df_arm=3, df_seed=2, df_res=6);
 paired contrasts use the block-model residual MSE (df=6).
 """
+
 import glob
 import itertools
 import json
@@ -105,9 +106,13 @@ def main():
     ms_res = ss_res / 6
     f_arm = (ss_arm / 3) / ms_res
     res["block_anova"] = {
-        "frac_ss_seed": ss_seed / sst, "frac_ss_arm": ss_arm / sst, "frac_ss_res": ss_res / sst,
-        "F_arm": f_arm, "df": [3, 6], "p_arm": 1 - stats.f.cdf(f_arm, 3, 6),
-        "residual_sd": ms_res ** 0.5,
+        "frac_ss_seed": ss_seed / sst,
+        "frac_ss_arm": ss_arm / sst,
+        "frac_ss_res": ss_res / sst,
+        "F_arm": f_arm,
+        "df": [3, 6],
+        "p_arm": 1 - stats.f.cdf(f_arm, 3, 6),
+        "residual_sd": ms_res**0.5,
     }
     # seed-paired contrasts, block-model SE, 90% CI (= TOST alpha 0.05), and 95% CI
     se = (2 * ms_res / 3) ** 0.5
@@ -117,7 +122,11 @@ def main():
     worst = 0
     for a, b in itertools.combinations(ARMS, 2):
         d = res["arms"][a]["mean_last10"] - res["arms"][b]["mean_last10"]
-        pc[f"{a}-{b}"] = {"diff": d, "ci90": [d - t90 * se, d + t90 * se], "ci95": [d - t95 * se, d + t95 * se]}
+        pc[f"{a}-{b}"] = {
+            "diff": d,
+            "ci90": [d - t90 * se, d + t90 * se],
+            "ci95": [d - t95 * se, d + t95 * se],
+        }
         worst = max(worst, abs(d) + t90 * se)
     res["paired_contrasts_df6"] = pc
     res["block_all_pairs_equivalence_margin"] = worst

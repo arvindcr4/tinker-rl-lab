@@ -23,6 +23,7 @@ Output: platform_hybrid/experiments/results/p5p8/p6_iter118_claim_validation.tsv
 The script also prints a summary table: per delta, total SUPPORTS /
 CONTRADICTS / NEUTRAL / UNCLAIMED counts.
 """
+
 from review17_contract import validate_interval
 import math
 import argparse
@@ -31,8 +32,11 @@ import json
 import pathlib
 import sys
 
-sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
+sys.path.append(
+    str(pathlib.Path(__file__).resolve().parents[1])
+)  # platform_modal/scripts, for _paths
+from _paths import REPO_ROOT
+
 WORKTREE = REPO_ROOT
 REGISTRY = WORKTREE / "platform_hybrid/registry"
 RESULTS = WORKTREE / "platform_hybrid/experiments" / "results" / "p5p8" / "review17_v2"
@@ -80,8 +84,7 @@ def main():
 
     def ensure(did):
         s = summary.setdefault(did, {})
-        for k in ("SUPPORTS", "CONTRADICTS", "NEUTRAL",
-                  "NEUTRAL_MISMATCH", "UNCLAIMED", "total"):
+        for k in ("SUPPORTS", "CONTRADICTS", "NEUTRAL", "NEUTRAL_MISMATCH", "UNCLAIMED", "total"):
             s.setdefault(k, 0)
         return s
 
@@ -101,21 +104,23 @@ def main():
             rationale = ee.get("rationale", "")
             matched = measured_by_key.get((metric, panel), [])
             if not matched:
-                rows.append({
-                    "delta_id": delta_id,
-                    "name": name,
-                    "metric": metric,
-                    "panel": panel,
-                    "predicted_sign": pred,
-                    "rationale": rationale,
-                    "observed_delta": "",
-                    "ci_lo": "",
-                    "ci_hi": "",
-                    "n": "",
-                    "significant": "",
-                    "verdict": "UNCLAIMED",
-                    "note": "no measured entry for this (metric, panel)",
-                })
+                rows.append(
+                    {
+                        "delta_id": delta_id,
+                        "name": name,
+                        "metric": metric,
+                        "panel": panel,
+                        "predicted_sign": pred,
+                        "rationale": rationale,
+                        "observed_delta": "",
+                        "ci_lo": "",
+                        "ci_hi": "",
+                        "n": "",
+                        "significant": "",
+                        "verdict": "UNCLAIMED",
+                        "note": "no measured entry for this (metric, panel)",
+                    }
+                )
                 s = ensure(delta_id)
                 s["UNCLAIMED"] += 1
                 s["total"] += 1
@@ -137,28 +142,42 @@ def main():
                 tag = "INVALID_OR_MISSING"
                 if sign_matches is not None and valid_ci:
                     tag = verdict(sign_matches, ci_excludes_0)
-                rows.append({
-                    "delta_id": delta_id,
-                    "name": name,
-                    "metric": metric,
-                    "panel": panel,
-                    "predicted_sign": pred,
-                    "rationale": rationale[:80],
-                    "observed_delta": f"{float(delta):+.6f}" if delta is not None else "",
-                    "ci_lo": f"{float(lo):+.6f}" if lo is not None else "",
-                    "ci_hi": f"{float(hi):+.6f}" if hi is not None else "",
-                    "n": m.get("n", ""),
-                    "significant": "yes" if sig else ("no" if sig is False else ""),
-                    "verdict": tag,
-                    "note": m.get("note", "")[:80],
-                })
+                rows.append(
+                    {
+                        "delta_id": delta_id,
+                        "name": name,
+                        "metric": metric,
+                        "panel": panel,
+                        "predicted_sign": pred,
+                        "rationale": rationale[:80],
+                        "observed_delta": f"{float(delta):+.6f}" if delta is not None else "",
+                        "ci_lo": f"{float(lo):+.6f}" if lo is not None else "",
+                        "ci_hi": f"{float(hi):+.6f}" if hi is not None else "",
+                        "n": m.get("n", ""),
+                        "significant": "yes" if sig else ("no" if sig is False else ""),
+                        "verdict": tag,
+                        "note": m.get("note", "")[:80],
+                    }
+                )
                 s = ensure(delta_id)
                 s[tag] = s.get(tag, 0) + 1
                 s["total"] += 1
 
-    cols = ["delta_id", "name", "metric", "panel", "predicted_sign",
-            "rationale", "observed_delta", "ci_lo", "ci_hi", "n",
-            "significant", "verdict", "note"]
+    cols = [
+        "delta_id",
+        "name",
+        "metric",
+        "panel",
+        "predicted_sign",
+        "rationale",
+        "observed_delta",
+        "ci_lo",
+        "ci_hi",
+        "n",
+        "significant",
+        "verdict",
+        "note",
+    ]
     if args.write:
         with (RESULTS / "p6_iter118_claim_validation.tsv").open("w") as f:
             w = csv.DictWriter(f, fieldnames=cols, delimiter="\t")
@@ -168,18 +187,24 @@ def main():
 
     # print summary
     print(f"\n# Claim-validation summary across {len(deltas)} delta records")
-    print(f"{'delta':18s} {'tot':>4s}  {'SUPPORT':>7s} {'CONTR':>7s} {'NEUT':>5s} {'NEUT_M':>7s} {'UNCL':>5s}")
+    print(
+        f"{'delta':18s} {'tot':>4s}  {'SUPPORT':>7s} {'CONTR':>7s} {'NEUT':>5s} {'NEUT_M':>7s} {'UNCL':>5s}"
+    )
     grand = {"SUPPORTS": 0, "CONTRADICTS": 0, "NEUTRAL": 0, "NEUTRAL_MISMATCH": 0, "UNCLAIMED": 0}
     for did in sorted(summary):
         s = summary[did]
         for k in grand:
             grand[k] += s.get(k, 0)
-        print(f"{did:18s} {s['total']:>4d}  {s.get('SUPPORTS',0):>7d} "
-              f"{s.get('CONTRADICTS',0):>7d} {s.get('NEUTRAL',0):>5d} "
-              f"{s.get('NEUTRAL_MISMATCH',0):>7d} {s.get('UNCLAIMED',0):>5d}")
-    print(f"{'GRAND TOTAL':18s} {sum(grand.values()):>4d}  "
-          f"{grand['SUPPORTS']:>7d} {grand['CONTRADICTS']:>7d} "
-          f"{grand['NEUTRAL']:>5d} {grand['NEUTRAL_MISMATCH']:>7d} {grand['UNCLAIMED']:>5d}")
+        print(
+            f"{did:18s} {s['total']:>4d}  {s.get('SUPPORTS', 0):>7d} "
+            f"{s.get('CONTRADICTS', 0):>7d} {s.get('NEUTRAL', 0):>5d} "
+            f"{s.get('NEUTRAL_MISMATCH', 0):>7d} {s.get('UNCLAIMED', 0):>5d}"
+        )
+    print(
+        f"{'GRAND TOTAL':18s} {sum(grand.values()):>4d}  "
+        f"{grand['SUPPORTS']:>7d} {grand['CONTRADICTS']:>7d} "
+        f"{grand['NEUTRAL']:>5d} {grand['NEUTRAL_MISMATCH']:>7d} {grand['UNCLAIMED']:>5d}"
+    )
 
     if args.write:
         print(f"\nwrote {RESULTS}/p6_iter118_claim_validation.tsv ({len(rows)} rows)")

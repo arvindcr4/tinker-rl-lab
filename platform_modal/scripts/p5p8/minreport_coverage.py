@@ -8,13 +8,17 @@ record coverage / missingness / ambiguity. Outputs:
   platform_hybrid/experiments/results/p5p8/minreport_cell_completeness.tsv (per-cell audit)
   platform_hybrid/experiments/results/p5p8/minreport_summary.json
 """
+
 from __future__ import annotations
 
-from _minreport_contract import load_inventory_manifests, inventory_counts, verify_trajectory, VERSION
+from _minreport_contract import (
+    load_inventory_manifests,
+    inventory_counts,
+    VERSION,
+)
 from minreport_auditor import score_manifest
 import csv
 import json
-import os
 import re
 import sys
 from collections import defaultdict
@@ -22,6 +26,7 @@ from pathlib import Path
 
 sys.path.append(str(Path(__file__).resolve().parents[1]))
 from _paths import REPO_ROOT
+
 ROOT = REPO_ROOT / "platform_hybrid"
 MANIFEST_DIR = ROOT / "experiments" / "results" / "mega_20260704" / "manifests"
 CELLS_TSV = ROOT / "experiments" / "results" / "mega_20260704" / "cells.tsv"
@@ -31,34 +36,43 @@ OUT_DIR = ROOT / "experiments" / "results" / "p5p8"
 # Each entry: (item_no, name, list of accepted manifest keys,
 # regex/validator strings, severity if missing)
 SCHEMA = [
-    (1, "Loss form",
-     ["loss_form"],
-     [r"^(grpo|gspo|dapo|drgrpo|dpo|sequence|ppo|sft|n/a-sampling)$"],
-     "critical"),
-    (2, "Reference policy & KL",
-     ["ref_policy_kl"],
-     [r"^(kl-[a-z]+(\d+(\.\d+)?)?|kl-est-[a-z]+|no-kl|n/a(?:-[a-z]+)?)$"],
-     "critical"),
-    (3, "Sampler / backend / precision",
-     ["sampler_backend_precision"],
-     [r"^(tinker-closed|vllm|sglang|hf|trtllm|openai|anthropic)[-@a-zA-Z0-9._/]*$"],
-     "critical"),
-    (4, "Per-step ZVF/GU trajectory",
-     ["per_step_zvf_path"],
-     [r"/.*\.json$"],
-     "high"),
-    (5, "Group-size schedule",
-     ["group_size_schedule"],
-     [r"^(fixed-G=\d+|adaptive[-+a-zA-Z0-9=<>]*|escalating|decaying)$"],
-     "critical"),
-    (6, "Held-out split",
-     ["heldout_split"],
-     [r"^[a-z0-9_]+$"],
-     "critical"),
-    (7, "Decontamination & parser probe",
-     ["decontamination_notes"],   # parser probe not separately reported
-     [r".*"],  # any non-empty string is acceptable
-     "high"),
+    (
+        1,
+        "Loss form",
+        ["loss_form"],
+        [r"^(grpo|gspo|dapo|drgrpo|dpo|sequence|ppo|sft|n/a-sampling)$"],
+        "critical",
+    ),
+    (
+        2,
+        "Reference policy & KL",
+        ["ref_policy_kl"],
+        [r"^(kl-[a-z]+(\d+(\.\d+)?)?|kl-est-[a-z]+|no-kl|n/a(?:-[a-z]+)?)$"],
+        "critical",
+    ),
+    (
+        3,
+        "Sampler / backend / precision",
+        ["sampler_backend_precision"],
+        [r"^(tinker-closed|vllm|sglang|hf|trtllm|openai|anthropic)[-@a-zA-Z0-9._/]*$"],
+        "critical",
+    ),
+    (4, "Per-step ZVF/GU trajectory", ["per_step_zvf_path"], [r"/.*\.json$"], "high"),
+    (
+        5,
+        "Group-size schedule",
+        ["group_size_schedule"],
+        [r"^(fixed-G=\d+|adaptive[-+a-zA-Z0-9=<>]*|escalating|decaying)$"],
+        "critical",
+    ),
+    (6, "Held-out split", ["heldout_split"], [r"^[a-z0-9_]+$"], "critical"),
+    (
+        7,
+        "Decontamination & parser probe",
+        ["decontamination_notes"],  # parser probe not separately reported
+        [r".*"],  # any non-empty string is acceptable
+        "high",
+    ),
 ]
 
 # Sub-fields that MIN-REPORT requires *within* each item but are not separate
@@ -121,40 +135,50 @@ def main() -> int:
         print(f"no manifests in {MANIFEST_DIR}", file=sys.stderr)
         return 1
 
-    per_field_counts = defaultdict(lambda: {
-        "cells_total": 0,
-        "present": 0,
-        "validated": 0,
-        "missing": 0,
-        "na_or_empty": 0,
-        "unrecognized": 0,
-    })
+    per_field_counts = defaultdict(
+        lambda: {
+            "cells_total": 0,
+            "present": 0,
+            "validated": 0,
+            "missing": 0,
+            "na_or_empty": 0,
+            "unrecognized": 0,
+        }
+    )
 
     cell_rows = []
     for r in rows:
         cell_id = r.get("cell_id", r.get("_path", "?"))
         scored = score_manifest(r)
-        for (item_no, name, keys, validators, severity), typed in zip(SCHEMA, scored["per_item"]):
+        for (item_no, name, keys, _validators, _severity), typed in zip(
+            SCHEMA, scored["per_item"], strict=False
+        ):
             value = r.get(keys[0])
             present, validated = bool(typed["present"]), bool(typed["validated"])
-            sev, note = ("ok", "typed reported coverage; verification separate") if validated else ("warn", "missing or ambiguous typed subfields")
-            sub = {name: cls in ("EXTRACTABLE_LITERAL", "EXTRACTABLE_PARSED") for name, cls in typed["fields"].items()}
-            cell_rows.append({
-                "cell_id": cell_id,
-                "item_no": item_no,
-                "item_name": name,
-                "key": keys[0],
-                "present": int(present),
-                "validated": int(validated),
-                "evidence_verified": int(typed["evidence"]["verified"]),
-                "severity": sev,
-                "value": str(value) if value is not None else "",
-                "note": note,
-                **{
-                    f"sub_{k}": int(v)
-                    for k, v in sub.items()
-                },
-            })
+            sev, note = (
+                ("ok", "typed reported coverage; verification separate")
+                if validated
+                else ("warn", "missing or ambiguous typed subfields")
+            )
+            sub = {
+                name: cls in ("EXTRACTABLE_LITERAL", "EXTRACTABLE_PARSED")
+                for name, cls in typed["fields"].items()
+            }
+            cell_rows.append(
+                {
+                    "cell_id": cell_id,
+                    "item_no": item_no,
+                    "item_name": name,
+                    "key": keys[0],
+                    "present": int(present),
+                    "validated": int(validated),
+                    "evidence_verified": int(typed["evidence"]["verified"]),
+                    "severity": sev,
+                    "value": str(value) if value is not None else "",
+                    "note": note,
+                    **{f"sub_{k}": int(v) for k, v in sub.items()},
+                }
+            )
             c = per_field_counts[(item_no, name, keys[0])]
             c["cells_total"] += 1
             if present and validated:
@@ -173,20 +197,39 @@ def main() -> int:
     field_tsv = OUT_DIR / "minreport_field_coverage.tsv"
     with field_tsv.open("w", newline="") as f:
         w = csv.writer(f, delimiter="\t")
-        w.writerow([
-            "item_no", "item_name", "key", "cells_total",
-            "present", "validated", "missing", "na_or_empty", "unrecognized",
-            "pct_validated", "pct_missing",
-        ])
+        w.writerow(
+            [
+                "item_no",
+                "item_name",
+                "key",
+                "cells_total",
+                "present",
+                "validated",
+                "missing",
+                "na_or_empty",
+                "unrecognized",
+                "pct_validated",
+                "pct_missing",
+            ]
+        )
         for (item_no, name, key), c in sorted(per_field_counts.items()):
             pct_v = 100.0 * c["validated"] / max(1, c["cells_total"])
             pct_m = 100.0 * c["missing"] / max(1, c["cells_total"])
-            w.writerow([
-                item_no, name, key, c["cells_total"],
-                c["present"], c["validated"], c["missing"],
-                c["na_or_empty"], c["unrecognized"],
-                f"{pct_v:.1f}", f"{pct_m:.1f}",
-            ])
+            w.writerow(
+                [
+                    item_no,
+                    name,
+                    key,
+                    c["cells_total"],
+                    c["present"],
+                    c["validated"],
+                    c["missing"],
+                    c["na_or_empty"],
+                    c["unrecognized"],
+                    f"{pct_v:.1f}",
+                    f"{pct_m:.1f}",
+                ]
+            )
 
     # Per-cell TSV (long format)
     cell_tsv = OUT_DIR / "minreport_cell_completeness.tsv"
@@ -197,15 +240,17 @@ def main() -> int:
                 all_keys.append(k)
     with cell_tsv.open("w", newline="") as f:
         if cell_rows:
-            w = csv.DictWriter(f, fieldnames=all_keys, delimiter="\t",
-                               extrasaction="ignore")
+            w = csv.DictWriter(f, fieldnames=all_keys, delimiter="\t", extrasaction="ignore")
             w.writeheader()
             for row in cell_rows:
                 w.writerow(row)
 
     # Aggregate summary
     total_cells = len(rows)
-    fully_covered = sum(s['badge'] == 100 and s['evidence']['trajectory']['verified'] for s in map(score_manifest, rows))
+    fully_covered = sum(
+        s["badge"] == 100 and s["evidence"]["trajectory"]["verified"]
+        for s in map(score_manifest, rows)
+    )
 
     sub_missing = defaultdict(int)
     for r in cell_rows:
@@ -233,7 +278,7 @@ def main() -> int:
             f"{counts['unrecognized']}/{counts['cells_total']} incomplete or ambiguous typed reports; "
             f"{counts['validated']}/{counts['cells_total']} fully reported"
             for (item_no, name, _), counts in sorted(per_field_counts.items())
-            if counts['missing'] or counts['unrecognized']
+            if counts["missing"] or counts["unrecognized"]
         ],
     }
     with (OUT_DIR / "minreport_summary.json").open("w") as f:

@@ -9,14 +9,15 @@ Outputs:
   paper/figures/v2/p2_length_bias.png
   experiments/p2_length_bias.md
 """
+
 from __future__ import annotations
 
 import json
 import math
-from collections import defaultdict
 from pathlib import Path
 
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
@@ -39,17 +40,22 @@ def main():
         all_pairs.extend(pairs)
 
     rewarded = [L for L, rw in all_pairs if rw > 0.5]
-    failed   = [L for L, rw in all_pairs if rw <= 0.5]
+    failed = [L for L, rw in all_pairs if rw <= 0.5]
 
     def stats(xs):
-        if not xs: return {"n": 0, "mean": 0.0, "median": 0.0, "q25": 0.0, "q75": 0.0, "std": 0.0}
+        if not xs:
+            return {"n": 0, "mean": 0.0, "median": 0.0, "q25": 0.0, "q75": 0.0, "std": 0.0}
         xs = sorted(xs)
         n = len(xs)
         mean = sum(xs) / n
         var = sum((x - mean) ** 2 for x in xs) / max(n - 1, 1)
         return {
-            "n": n, "mean": mean, "std": math.sqrt(var),
-            "median": xs[n // 2], "q25": xs[n // 4], "q75": xs[(3 * n) // 4],
+            "n": n,
+            "mean": mean,
+            "std": math.sqrt(var),
+            "median": xs[n // 2],
+            "q25": xs[n // 4],
+            "q75": xs[(3 * n) // 4],
         }
 
     sp = stats(rewarded)
@@ -57,6 +63,7 @@ def main():
 
     # Paired bootstrap CI on (mean_pos - mean_neg)
     import random
+
     rng = random.Random(20260422)
     diffs = []
     all_L = [L for L, _ in all_pairs]
@@ -66,8 +73,9 @@ def main():
         idx = [rng.randrange(n_total) for _ in range(n_total)]
         p_L = [all_L[i] for i in idx if all_R[i] > 0.5]
         f_L = [all_L[i] for i in idx if all_R[i] <= 0.5]
-        if not p_L or not f_L: continue
-        diffs.append(sum(p_L)/len(p_L) - sum(f_L)/len(f_L))
+        if not p_L or not f_L:
+            continue
+        diffs.append(sum(p_L) / len(p_L) - sum(f_L) / len(f_L))
     diffs.sort()
     ci_lo = diffs[int(0.025 * len(diffs))]
     ci_hi = diffs[int(0.975 * len(diffs))]
@@ -77,8 +85,14 @@ def main():
 
     ax = axes[0][0]
     bins = [0, 50, 100, 150, 200, 250, 300, 350, 400, 500, 700, 1000]
-    ax.hist([rewarded, failed], bins=bins, label=["rewarded (r=1)", "failed (r=0)"],
-            color=["seagreen", "indianred"], alpha=0.75, stacked=False)
+    ax.hist(
+        [rewarded, failed],
+        bins=bins,
+        label=["rewarded (r=1)", "failed (r=0)"],
+        color=["seagreen", "indianred"],
+        alpha=0.75,
+        stacked=False,
+    )
     ax.set_xlabel("Completion tokens")
     ax.set_ylabel("Count")
     ax.set_title(f"A. Length distribution by outcome (n={len(all_pairs)} rollouts)")
@@ -86,18 +100,24 @@ def main():
     ax.grid(axis="y", alpha=0.3)
 
     ax = axes[0][1]
-    ax.boxplot([rewarded or [0], failed or [0]],
-               labels=["rewarded", "failed"], widths=0.5, patch_artist=True,
-               boxprops=dict(facecolor="lightyellow"))
+    ax.boxplot(
+        [rewarded or [0], failed or [0]],
+        labels=["rewarded", "failed"],
+        widths=0.5,
+        patch_artist=True,
+        boxprops=dict(facecolor="lightyellow"),
+    )
     ax.set_ylabel("Completion tokens")
-    ax.set_title(f"B. Boxplot: median rewarded={sp['median']}, failed={sn['median']}, Δ_mean={point:+.1f}")
+    ax.set_title(
+        f"B. Boxplot: median rewarded={sp['median']}, failed={sn['median']}, Δ_mean={point:+.1f}"
+    )
     ax.grid(axis="y", alpha=0.3)
 
     # Panel C: reward rate vs length bin (per-bin hit rate)
     ax = axes[1][0]
     bin_edges = list(range(0, 801, 50))
     xs, ys, ns = [], [], []
-    for lo, hi in zip(bin_edges[:-1], bin_edges[1:]):
+    for lo, hi in zip(bin_edges[:-1], bin_edges[1:], strict=False):
         in_bin = [rw for L, rw in all_pairs if lo <= L < hi]
         if len(in_bin) >= 20:
             xs.append((lo + hi) / 2)
@@ -118,16 +138,29 @@ def main():
         pp = r.get("per_problem", [])
         pos = [p["completion_tokens"] for p in pp if p["reward"] > 0.5]
         neg = [p["completion_tokens"] for p in pp if p["reward"] <= 0.5]
-        if not pos or not neg: continue
+        if not pos or not neg:
+            continue
         labels.append(r["experiment_id"][:20])
         pos_means.append(sum(pos) / len(pos))
         neg_means.append(sum(neg) / len(neg))
     x = list(range(len(labels)))
     w = 0.38
-    ax.bar([xi - w/2 for xi in x], pos_means, w, label="rewarded mean len",
-           color="seagreen", alpha=0.8)
-    ax.bar([xi + w/2 for xi in x], neg_means, w, label="failed mean len",
-           color="indianred", alpha=0.8)
+    ax.bar(
+        [xi - w / 2 for xi in x],
+        pos_means,
+        w,
+        label="rewarded mean len",
+        color="seagreen",
+        alpha=0.8,
+    )
+    ax.bar(
+        [xi + w / 2 for xi in x],
+        neg_means,
+        w,
+        label="failed mean len",
+        color="indianred",
+        alpha=0.8,
+    )
     ax.set_xticks(x)
     ax.set_xticklabels(labels, rotation=40, ha="right", fontsize=8)
     ax.set_ylabel("Mean completion tokens")

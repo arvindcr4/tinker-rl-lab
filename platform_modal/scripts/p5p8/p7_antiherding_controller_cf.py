@@ -45,8 +45,8 @@ Usage
 -----
 python3 platform_modal/scripts/p5p8/p7_antiherding_controller_cf.py
 """
+
 import json
-import math
 import pathlib
 import random
 import statistics
@@ -101,7 +101,6 @@ def load_per_step(method):
                 # but we already lost the G_obs composition per prompt.
                 # Use the simpler step-level: zvf_obs = fraction of
                 # prompts that are degenerate at G_BASE=8.
-                pass
             # Per-step observed ZVF: fraction of prompts that are
             # degenerate at G_BASE=8 (all-1 or all-0)
             deg_base = 0
@@ -113,7 +112,7 @@ def load_per_step(method):
             zvf_iid = 0.0
             for p in per_p:
                 pc = min(max(p, 1e-9), 1 - 1e-9)
-                zvf_iid += (1 - pc) ** G_BASE + pc ** G_BASE
+                zvf_iid += (1 - pc) ** G_BASE + pc**G_BASE
             zvf_iid /= N_PROMPTS_PER_STEP
             y_obs = 1.0 - zvf_obs
             y_iid = 1.0 - zvf_iid
@@ -132,14 +131,14 @@ def load_per_step(method):
             # in the [0, 0.10) zone at G=8 (no signal to recover).
             at_risk_g8 = 0
             recovered_g16 = 0
-            saved_at_g16 = 0    # at-risk at G=8 AND recovered at G=16
-            wasted_g16 = 0      # already in clear zone at G=8 (overkill)
-            deg_g16 = 0         # still saturated at G=16 (boundary)
+            saved_at_g16 = 0  # at-risk at G=8 AND recovered at G=16
+            wasted_g16 = 0  # already in clear zone at G=8 (overkill)
+            deg_g16 = 0  # still saturated at G=16 (boundary)
             headroom_total = 0.0  # sum of (zvf_g8 - zvf_g16)+ over at-risk
             for p in per_p:
                 pc = min(max(p, 1e-9), 1 - 1e-9)
-                zvf_g8 = (1 - pc) ** 8 + pc ** 8
-                zvf_g16 = (1 - pc) ** 16 + pc ** 16
+                zvf_g8 = (1 - pc) ** 8 + pc**8
+                zvf_g16 = (1 - pc) ** 16 + pc**16
                 if zvf_g16 >= 0.99:
                     deg_g16 += 1
                 # Operational definition (reviewer-actionable):
@@ -150,26 +149,26 @@ def load_per_step(method):
                         saved_at_g16 += 1
                 if zvf_g8 < 0.10:
                     wasted_g16 += 1
-            rows.append({
-                "method": method,
-                "step": r["step"],
-                "zvf_obs": zvf_obs,
-                "zvf_iid": zvf_iid,
-                "y_obs": y_obs,
-                "y_iid": y_iid,
-                "delta_div": delta_div,
-                "per_p": per_p,
-                "rewards": steps_rewards,
-                "deg_base": deg_base,            # empirical (context only)
-                "deg_g8_iid": at_risk_g8,        # at-risk under iid ZVF G=8
-                "deg_g16": deg_g16,              # still saturated under G=16
-                "saved_at_g16": saved_at_g16,    # recovered under G=16
-                "wasted_at_g16": wasted_g16,     # already clear at G=8
-                "headroom_total": headroom_total,
-                "p_hat_extreme": sum(
-                    1 for p in per_p if min(p, 1 - p) < 0.05
-                ),
-            })
+            rows.append(
+                {
+                    "method": method,
+                    "step": r["step"],
+                    "zvf_obs": zvf_obs,
+                    "zvf_iid": zvf_iid,
+                    "y_obs": y_obs,
+                    "y_iid": y_iid,
+                    "delta_div": delta_div,
+                    "per_p": per_p,
+                    "rewards": steps_rewards,
+                    "deg_base": deg_base,  # empirical (context only)
+                    "deg_g8_iid": at_risk_g8,  # at-risk under iid ZVF G=8
+                    "deg_g16": deg_g16,  # still saturated under G=16
+                    "saved_at_g16": saved_at_g16,  # recovered under G=16
+                    "wasted_at_g16": wasted_g16,  # already clear at G=8
+                    "headroom_total": headroom_total,
+                    "p_hat_extreme": sum(1 for p in per_p if min(p, 1 - p) < 0.05),
+                }
+            )
     rows.sort(key=lambda d: d["step"])
     return rows
 
@@ -189,7 +188,7 @@ def trigger_ddiv(step, tau):
 
 CONTROLLERS = [
     # (name, trigger_fn, threshold_sweep, label)
-    ("zvf_triage",  trigger_zvf,  [0.5, 0.6, 0.7, 0.8, 0.9], "ZVF>=tau"),
+    ("zvf_triage", trigger_zvf, [0.5, 0.6, 0.7, 0.8, 0.9], "ZVF>=tau"),
     ("yobs_triage", trigger_yobs, [0.125, 0.15, 0.20, 0.25, 0.30], "Y_obs<=tau (1-ZVF)"),
     ("ddiv_triage", trigger_ddiv, [0.03, 0.04, 0.05, 0.06, 0.07], "delta_div>=tau"),
 ]
@@ -221,35 +220,39 @@ def evaluate_controller(steps, ctl_name, trigger_fn, thresholds, label):
                 # If we *missed* firing on a step with saves, the controller
                 # wasted the opportunity
                 missed_realised += s["saved_at_g16"]
-            per_step_records.append({
-                "method": s["method"],
-                "step": s["step"],
-                "zvf_obs": s["zvf_obs"],
-                "y_obs": s["y_obs"],
-                "delta_div": s["delta_div"],
-                "deg_base": s["deg_base"],
-                "deg_g16": s["deg_g16"],
-                "saved_at_g16": s["saved_at_g16"],
-                "fires": int(fires_this),
-            })
+            per_step_records.append(
+                {
+                    "method": s["method"],
+                    "step": s["step"],
+                    "zvf_obs": s["zvf_obs"],
+                    "y_obs": s["y_obs"],
+                    "delta_div": s["delta_div"],
+                    "deg_base": s["deg_base"],
+                    "deg_g16": s["deg_g16"],
+                    "saved_at_g16": s["saved_at_g16"],
+                    "fires": int(fires_this),
+                }
+            )
         baseline_rollouts = N_STEPS * N_PROMPTS_PER_STEP * G_BASE
         cost_ratio = rollouts_used / baseline_rollouts
         saved_per_fire = saved_realised / max(fires, 1)
-        out_rows.append({
-            "method": steps[0]["method"],
-            "controller": ctl_name,
-            "trigger_label": label,
-            "threshold": tau,
-            "fires": fires,
-            "saved": saved_realised,
-            "missed": missed_realised,
-            "rollouts_used": rollouts_used,
-            "baseline_rollouts": baseline_rollouts,
-            "cost_ratio": cost_ratio,
-            "saved_per_fire": saved_per_fire,
-            "savings_per_rollout": saved_realised / max(rollouts_used, 1) * 1000,
-            "per_step_records": per_step_records,
-        })
+        out_rows.append(
+            {
+                "method": steps[0]["method"],
+                "controller": ctl_name,
+                "trigger_label": label,
+                "threshold": tau,
+                "fires": fires,
+                "saved": saved_realised,
+                "missed": missed_realised,
+                "rollouts_used": rollouts_used,
+                "baseline_rollouts": baseline_rollouts,
+                "cost_ratio": cost_ratio,
+                "saved_per_fire": saved_per_fire,
+                "savings_per_rollout": saved_realised / max(rollouts_used, 1) * 1000,
+                "per_step_records": per_step_records,
+            }
+        )
     return out_rows
 
 
@@ -287,124 +290,180 @@ def main():
         steps = load_per_step(m)
         # Save per-step records (across methods, aggregate)
         for s in steps:
-            summary["per_step"].append({
-                "method": m,
-                "step": s["step"],
-                "zvf_obs": s["zvf_obs"],
-                "y_obs": s["y_obs"],
-                "delta_div": s["delta_div"],
-                "deg_base": s["deg_base"],
-                "deg_g8_iid": s["deg_g8_iid"],
-                "deg_g16": s["deg_g16"],
-                "saved_at_g16": s["saved_at_g16"],
-                "p_hat_extreme": s["p_hat_extreme"],
-            })
+            summary["per_step"].append(
+                {
+                    "method": m,
+                    "step": s["step"],
+                    "zvf_obs": s["zvf_obs"],
+                    "y_obs": s["y_obs"],
+                    "delta_div": s["delta_div"],
+                    "deg_base": s["deg_base"],
+                    "deg_g8_iid": s["deg_g8_iid"],
+                    "deg_g16": s["deg_g16"],
+                    "saved_at_g16": s["saved_at_g16"],
+                    "p_hat_extreme": s["p_hat_extreme"],
+                }
+            )
         for ctl_name, trigger_fn, thresh, label in CONTROLLERS:
             rows = evaluate_controller(steps, ctl_name, trigger_fn, thresh, label)
             for r in rows:
                 # ---- Bootstrap CI on cost_ratio and savings_per_rollout ----
                 per_step_cost = [
-                    N_PROMPTS_PER_STEP * G_ALT if trigger_fn(s, r["threshold"])
+                    N_PROMPTS_PER_STEP * G_ALT
+                    if trigger_fn(s, r["threshold"])
                     else N_PROMPTS_PER_STEP * G_BASE
                     for s in steps
                 ]
                 per_step_saved = [
-                    s["saved_at_g16"] if trigger_fn(s, r["threshold"])
-                    else 0
-                    for s in steps
+                    s["saved_at_g16"] if trigger_fn(s, r["threshold"]) else 0 for s in steps
                 ]
                 # Baseline (per-step) cost ratio bootstraps
                 _, cr_lo, cr_hi = boot_ci(
                     [c / (N_PROMPTS_PER_STEP * G_BASE) for c in per_step_cost]
                 )
                 _, sp_lo, sp_hi = boot_ci(
-                    [saved / max(cost, 1) * 1000
-                     for saved, cost in zip(per_step_saved, per_step_cost)]
+                    [
+                        saved / max(cost, 1) * 1000
+                        for saved, cost in zip(per_step_saved, per_step_cost, strict=False)
+                    ]
                 )
-                summary["per_method"].append({
-                    "method": m,
-                    "controller": ctl_name,
-                    "trigger_label": label,
-                    "threshold": r["threshold"],
-                    "fires": r["fires"],
-                    "saved": r["saved"],
-                    "missed": r["missed"],
-                    "rollouts_used": r["rollouts_used"],
-                    "baseline_rollouts": r["baseline_rollouts"],
-                    "cost_ratio_pt": r["cost_ratio"],
-                    "cost_ratio_lo": cr_lo,
-                    "cost_ratio_hi": cr_hi,
-                    "saved_per_fire": r["saved_per_fire"],
-                    "savings_per_rollout_pt": r["savings_per_rollout"],
-                    "savings_per_rollout_lo": sp_lo,
-                    "savings_per_rollout_hi": sp_hi,
-                })
+                summary["per_method"].append(
+                    {
+                        "method": m,
+                        "controller": ctl_name,
+                        "trigger_label": label,
+                        "threshold": r["threshold"],
+                        "fires": r["fires"],
+                        "saved": r["saved"],
+                        "missed": r["missed"],
+                        "rollouts_used": r["rollouts_used"],
+                        "baseline_rollouts": r["baseline_rollouts"],
+                        "cost_ratio_pt": r["cost_ratio"],
+                        "cost_ratio_lo": cr_lo,
+                        "cost_ratio_hi": cr_hi,
+                        "saved_per_fire": r["saved_per_fire"],
+                        "savings_per_rollout_pt": r["savings_per_rollout"],
+                        "savings_per_rollout_lo": sp_lo,
+                        "savings_per_rollout_hi": sp_hi,
+                    }
+                )
 
     # ---- TSV outputs ----
     sm_tsv = OUTDIR / "p7_antiherding_controller_cf_summary.tsv"
     with sm_tsv.open("w") as f:
-        f.write("\t".join([
-            "method", "controller", "trigger_label", "threshold",
-            "fires", "saved", "missed", "rollouts_used", "baseline_rollouts",
-            "cost_ratio_pt", "cost_ratio_lo", "cost_ratio_hi",
-            "saved_per_fire", "savings_per_rollout_pt",
-            "savings_per_rollout_lo", "savings_per_rollout_hi",
-        ]) + "\n")
+        f.write(
+            "\t".join(
+                [
+                    "method",
+                    "controller",
+                    "trigger_label",
+                    "threshold",
+                    "fires",
+                    "saved",
+                    "missed",
+                    "rollouts_used",
+                    "baseline_rollouts",
+                    "cost_ratio_pt",
+                    "cost_ratio_lo",
+                    "cost_ratio_hi",
+                    "saved_per_fire",
+                    "savings_per_rollout_pt",
+                    "savings_per_rollout_lo",
+                    "savings_per_rollout_hi",
+                ]
+            )
+            + "\n"
+        )
         for r in summary["per_method"]:
-            f.write("\t".join([
-                r["method"], r["controller"], r["trigger_label"],
-                f"{r['threshold']:.4f}",
-                str(r["fires"]), str(r["saved"]), str(r["missed"]),
-                str(r["rollouts_used"]), str(r["baseline_rollouts"]),
-                f"{r['cost_ratio_pt']:.4f}",
-                f"{r['cost_ratio_lo']:.4f}",
-                f"{r['cost_ratio_hi']:.4f}",
-                f"{r['saved_per_fire']:.4f}",
-                f"{r['savings_per_rollout_pt']:.6f}",
-                f"{r['savings_per_rollout_lo']:.6f}",
-                f"{r['savings_per_rollout_hi']:.6f}",
-            ]) + "\n")
+            f.write(
+                "\t".join(
+                    [
+                        r["method"],
+                        r["controller"],
+                        r["trigger_label"],
+                        f"{r['threshold']:.4f}",
+                        str(r["fires"]),
+                        str(r["saved"]),
+                        str(r["missed"]),
+                        str(r["rollouts_used"]),
+                        str(r["baseline_rollouts"]),
+                        f"{r['cost_ratio_pt']:.4f}",
+                        f"{r['cost_ratio_lo']:.4f}",
+                        f"{r['cost_ratio_hi']:.4f}",
+                        f"{r['saved_per_fire']:.4f}",
+                        f"{r['savings_per_rollout_pt']:.6f}",
+                        f"{r['savings_per_rollout_lo']:.6f}",
+                        f"{r['savings_per_rollout_hi']:.6f}",
+                    ]
+                )
+                + "\n"
+            )
 
     ps_tsv = OUTDIR / "p7_antiherding_controller_cf_per_step.tsv"
     with ps_tsv.open("w") as f:
-        f.write("\t".join([
-            "method", "step", "zvf_obs", "y_obs", "delta_div",
-            "deg_g8_iid", "deg_g16", "saved_at_g16", "p_hat_extreme",
-        ]) + "\n")
+        f.write(
+            "\t".join(
+                [
+                    "method",
+                    "step",
+                    "zvf_obs",
+                    "y_obs",
+                    "delta_div",
+                    "deg_g8_iid",
+                    "deg_g16",
+                    "saved_at_g16",
+                    "p_hat_extreme",
+                ]
+            )
+            + "\n"
+        )
         for r in summary["per_step"]:
-            f.write("\t".join([
-                r["method"], str(r["step"]),
-                f"{r['zvf_obs']:.6f}", f"{r['y_obs']:.6f}",
-                f"{r['delta_div']:.6f}",
-                str(r["deg_base"]), str(r["deg_g16"]),
-                str(r["saved_at_g16"]),
-                str(r.get("p_hat_extreme", 0)),
-            ]) + "\n")
+            f.write(
+                "\t".join(
+                    [
+                        r["method"],
+                        str(r["step"]),
+                        f"{r['zvf_obs']:.6f}",
+                        f"{r['y_obs']:.6f}",
+                        f"{r['delta_div']:.6f}",
+                        str(r["deg_base"]),
+                        str(r["deg_g16"]),
+                        str(r["saved_at_g16"]),
+                        str(r.get("p_hat_extreme", 0)),
+                    ]
+                )
+                + "\n"
+            )
 
     # ---- JSON summary ----
     json_out = OUTDIR / "p7_antiherding_controller_cf_summary.json"
-    json_out.write_text(json.dumps({
-        "panel": summary["panel"],
-        "G_base": summary["G_base"],
-        "G_alt": summary["G_alt"],
-        "n_steps": summary["n_steps"],
-        "n_prompts_per_step": summary["n_prompts_per_step"],
-        "n_boot": summary["n_boot"],
-        "ci_level": summary["ci_level"],
-        "audit_date": summary["audit_date"],
-        "audit_source": summary["audit_source"],
-        "controllers": summary["per_method"],
-        "interpretation": (
-            "Three trigger variants on top of the iter-51 hybrid controller's "
-            "escalation branch. T1=ZVF_triage (iter-51 baseline), T2=Y_obs "
-            "_triage (1-ZVF, the iter-66 row-77 contrastive yield), T3=delta_div"
-            "_triage (the iter-66 anti-herding diversity bonus). For each "
-            "(method, controller, threshold), the paired counterfactual asks: "
-            "if we re-ran with this controller, what saved_at_g16 (currently "
-            "degenerate at G=8, recovered at G=16) would the controller have "
-            "realised? Bootstrap CI on cost_ratio and savings_per_rollout."
-        ),
-    }, indent=2))
+    json_out.write_text(
+        json.dumps(
+            {
+                "panel": summary["panel"],
+                "G_base": summary["G_base"],
+                "G_alt": summary["G_alt"],
+                "n_steps": summary["n_steps"],
+                "n_prompts_per_step": summary["n_prompts_per_step"],
+                "n_boot": summary["n_boot"],
+                "ci_level": summary["ci_level"],
+                "audit_date": summary["audit_date"],
+                "audit_source": summary["audit_source"],
+                "controllers": summary["per_method"],
+                "interpretation": (
+                    "Three trigger variants on top of the iter-51 hybrid controller's "
+                    "escalation branch. T1=ZVF_triage (iter-51 baseline), T2=Y_obs "
+                    "_triage (1-ZVF, the iter-66 row-77 contrastive yield), T3=delta_div"
+                    "_triage (the iter-66 anti-herding diversity bonus). For each "
+                    "(method, controller, threshold), the paired counterfactual asks: "
+                    "if we re-ran with this controller, what saved_at_g16 (currently "
+                    "degenerate at G=8, recovered at G=16) would the controller have "
+                    "realised? Bootstrap CI on cost_ratio and savings_per_rollout."
+                ),
+            },
+            indent=2,
+        )
+    )
 
     # ---- Console summary ----
     print(f"OK: {sm_tsv.relative_to(WORKTREE)}")
@@ -412,15 +471,18 @@ def main():
     print(f"OK: {json_out.relative_to(WORKTREE)}")
     # Print headline
     print("Headline (sorted by savings_per_rollout_pt descending):")
-    items = sorted(summary["per_method"],
-                   key=lambda r: r["savings_per_rollout_pt"], reverse=True)
-    print(f"{'method':<6}{'controller':<14}{'tau':<10}{'fires':<7}"
-          f"{'saved':<7}{'cost_ratio':<14}{'saved/fire':<12}")
+    items = sorted(summary["per_method"], key=lambda r: r["savings_per_rollout_pt"], reverse=True)
+    print(
+        f"{'method':<6}{'controller':<14}{'tau':<10}{'fires':<7}"
+        f"{'saved':<7}{'cost_ratio':<14}{'saved/fire':<12}"
+    )
     for r in items[:20]:
-        print(f"{r['method']:<6}{r['controller']:<14}"
-              f"{r['threshold']:<10.4f}{r['fires']:<7}"
-              f"{r['saved']:<7}{r['cost_ratio_pt']:<14.4f}"
-              f"{r['saved_per_fire']:<12.4f}")
+        print(
+            f"{r['method']:<6}{r['controller']:<14}"
+            f"{r['threshold']:<10.4f}{r['fires']:<7}"
+            f"{r['saved']:<7}{r['cost_ratio_pt']:<14.4f}"
+            f"{r['saved_per_fire']:<12.4f}"
+        )
 
 
 if __name__ == "__main__":

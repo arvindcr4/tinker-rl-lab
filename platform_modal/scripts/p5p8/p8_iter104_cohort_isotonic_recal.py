@@ -62,21 +62,20 @@ Stdlib + xgboost + numpy (already in worktree venv). Outputs:
   platform_hybrid/experiments/results/p5p8/p8_iter104_isotonic_per_cohort_boot.tsv
   platform_hybrid/experiments/results/p5p8/p8_iter104_isotonic_summary.json
 """
+
 from __future__ import annotations
 
 import csv
 import json
-import math
-import os
 import random
 from _review_calibration import stable_seed
-import statistics
-from collections import defaultdict
 
 import sys
 from pathlib import Path
+
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
+from _paths import REPO_ROOT
+
 DATA_DIR = str(REPO_ROOT)
 OUT_DIR = f"{DATA_DIR}/platform_hybrid/experiments/results/p5p8/corrected-review21-v2"
 TRAIN = f"{DATA_DIR}/fraud_data.csv"
@@ -96,6 +95,7 @@ random.seed(SEED)
 # ---------------------------------------------------------------------------
 # Calibration methods
 # ---------------------------------------------------------------------------
+
 
 def isotonic_pava(y: list[float], w: list[float] | None = None) -> list[float]:
     n = len(y)
@@ -119,8 +119,8 @@ def isotonic_pava(y: list[float], w: list[float] | None = None) -> list[float]:
 
 def isotonic_fit_predict(x_train, y_train, x_test):
     from _review_calibration import isotonic_predict
-    return isotonic_predict(x_train, y_train, x_test)
 
+    return isotonic_predict(x_train, y_train, x_test)
 
 
 def rate_rescale(scores, labels) -> tuple[list[float], float]:
@@ -140,6 +140,7 @@ def rate_rescale(scores, labels) -> tuple[list[float], float]:
 # ---------------------------------------------------------------------------
 # Data loading and backbones
 # ---------------------------------------------------------------------------
+
 
 def load(path: str) -> tuple[list[list[float]], list[int]]:
     feats, labels = [], []
@@ -164,6 +165,7 @@ def load(path: str) -> tuple[list[list[float]], list[int]]:
 def fit_gbt(X, y, n_estimators=180, max_depth=5, lr=0.1, seed=0):
     import numpy as np
     import xgboost as xgb
+
     Xn = np.asarray(X, dtype=np.float32)
     yn = np.asarray(y, dtype=np.float32)
     n_pos = int(yn.sum())
@@ -183,13 +185,15 @@ def fit_gbt(X, y, n_estimators=180, max_depth=5, lr=0.1, seed=0):
         "verbosity": 0,
         "tree_method": "hist",
     }
-    return xgb.train(params, dtrain, num_boost_round=n_estimators,
-                     evals=[(dtrain, "train")], verbose_eval=False)
+    return xgb.train(
+        params, dtrain, num_boost_round=n_estimators, evals=[(dtrain, "train")], verbose_eval=False
+    )
 
 
 def predict_proba(booster, X):
     import numpy as np
     import xgboost as xgb
+
     d = xgb.DMatrix(np.asarray(X, dtype=np.float32))
     return booster.predict(d).tolist()
 
@@ -197,6 +201,7 @@ def predict_proba(booster, X):
 # ---------------------------------------------------------------------------
 # Metrics
 # ---------------------------------------------------------------------------
+
 
 def calibration_ece(scores, labels, n_bin=10):
     edges = [i / n_bin for i in range(n_bin + 1)]
@@ -223,7 +228,7 @@ def brier_score(scores, labels):
 def recall_at_k(scores, labels, k):
     n = len(scores)
     k = max(1, min(k, n))
-    paired = sorted(zip(scores, labels), key=lambda r: -r[0])
+    paired = sorted(zip(scores, labels, strict=False), key=lambda r: -r[0])
     pos_in_top = sum(l for _, l in paired[:k])
     total_pos = sum(labels)
     return pos_in_top / max(1, total_pos)
@@ -232,6 +237,7 @@ def recall_at_k(scores, labels, k):
 # ---------------------------------------------------------------------------
 # Cohort assignment
 # ---------------------------------------------------------------------------
+
 
 def assign_cohorts(test_meta):
     n = len(test_meta)
@@ -271,11 +277,13 @@ def assign_cohorts(test_meta):
 
     out = []
     for s in test_meta:
-        out.append({
-            "v_mean_bin": assign_q(s["V_mean"], vq),
-            "amount_bin": assign_q(s["Amount"], aq),
-            "time_bin": assign_t(s["Time"]),
-        })
+        out.append(
+            {
+                "v_mean_bin": assign_q(s["V_mean"], vq),
+                "amount_bin": assign_q(s["Amount"], aq),
+                "time_bin": assign_t(s["Time"]),
+            }
+        )
     return out
 
 
@@ -283,15 +291,17 @@ def assign_cohorts(test_meta):
 # CV per (cohort, stratum, tree, method)
 # ---------------------------------------------------------------------------
 
+
 def cv_recal(scores, idx, te_y, method="isotonic", seed=SEED, n_folds=N_FOLDS):
     from _review_calibration import crossfit
-    return crossfit(scores, te_y, idx, method, seed, n_folds)
 
+    return crossfit(scores, te_y, idx, method, seed, n_folds)
 
 
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
+
 
 def main():
     print("[1/5] Loading data ...")
@@ -308,15 +318,17 @@ def main():
                 klass = int(row["Class"])
             except (KeyError, ValueError):
                 continue
-            test_meta.append({
-                "V_mean": float(row["V_mean"]),
-                "V_std": float(row["V_std"]),
-                "V_max": float(row["V_max"]),
-                "V_min": float(row["V_min"]),
-                "Amount": float(row.get("Amount", float(row.get("V_mean", 0)))),
-                "Time": float(row.get("Time", float(row.get("V_std", 0)))),
-                "Class": klass,
-            })
+            test_meta.append(
+                {
+                    "V_mean": float(row["V_mean"]),
+                    "V_std": float(row["V_std"]),
+                    "V_max": float(row["V_max"]),
+                    "V_min": float(row["V_min"]),
+                    "Amount": float(row.get("Amount", float(row.get("V_mean", 0)))),
+                    "Time": float(row.get("Time", float(row.get("V_std", 0)))),
+                    "Class": klass,
+                }
+            )
     has_amount = "Amount" in open(TEST).readline().rstrip("\n").split(",")
     if not has_amount:
         ranks_std = sorted(range(len(test_meta)), key=lambda i: test_meta[i]["V_std"])
@@ -338,11 +350,16 @@ def main():
     print(f"  strata sizes: {n_strata}")
 
     print("[3/5] Training two XGB backbones ...")
-    p20 = predict_proba(fit_gbt([row[:20] for row in tr_X], tr_y, n_estimators=180, max_depth=5, lr=0.1, seed=SEED),
-                        [r[:20] for r in te_X])
-    p24 = predict_proba(fit_gbt(tr_X, tr_y, n_estimators=180, max_depth=5, lr=0.1, seed=SEED + 1),
-                        te_X)
-    print(f"  XGB-20raw brier={brier_score(p20, te_y):.5f}  XGB-24full brier={brier_score(p24, te_y):.5f}")
+    p20 = predict_proba(
+        fit_gbt([row[:20] for row in tr_X], tr_y, n_estimators=180, max_depth=5, lr=0.1, seed=SEED),
+        [r[:20] for r in te_X],
+    )
+    p24 = predict_proba(
+        fit_gbt(tr_X, tr_y, n_estimators=180, max_depth=5, lr=0.1, seed=SEED + 1), te_X
+    )
+    print(
+        f"  XGB-20raw brier={brier_score(p20, te_y):.5f}  XGB-24full brier={brier_score(p24, te_y):.5f}"
+    )
 
     print("[4/5] Per-cohort CV isotonic + rate-rescaling + stacked baselines ...")
     K_ABS = int(round(K_PCT / 100.0 * len(te_X)))
@@ -353,8 +370,9 @@ def main():
     for tree_name, raw_scores in [("XGB-20raw", p20), ("XGB-24full", p24)]:
         # Global isotonic
         idx_all = list(range(len(te_X)))
-        oof = cv_recal(raw_scores, idx_all, te_y, "isotonic",
-                       seed=SEED + stable_seed(tree_name) % 1000)
+        oof = cv_recal(
+            raw_scores, idx_all, te_y, "isotonic", seed=SEED + stable_seed(tree_name) % 1000
+        )
         cal_scores = [None] * len(te_X)
         for k, i in enumerate(idx_all):
             cal_scores[i] = oof[k] if oof[k] is not None else raw_scores[i]
@@ -372,8 +390,13 @@ def main():
                 idx = [i for i, c in enumerate(cohort_idx) if c == stratum]
                 if len(idx) < 10:
                     continue
-                oof = cv_recal(raw_scores, idx, te_y, "isotonic",
-                               seed=SEED + stratum * 31 + stable_seed((tree_name, ck, "iso")) % 9973)
+                oof = cv_recal(
+                    raw_scores,
+                    idx,
+                    te_y,
+                    "isotonic",
+                    seed=SEED + stratum * 31 + stable_seed((tree_name, ck, "iso")) % 9973,
+                )
                 for k, i in enumerate(idx):
                     cal_scores[i] = oof[k] if oof[k] is not None else raw_scores[i]
             cal[(tree_name, ck, "isotonic")] = cal_scores
@@ -384,7 +407,9 @@ def main():
                 if len(idx) < 10:
                     continue
                 # CV rate rescale: 5 folds, each fold gets scale from other 4
-                rng = random.Random(SEED + stratum * 31 + stable_seed((tree_name, ck, "rate")) % 9973)
+                rng = random.Random(
+                    SEED + stratum * 31 + stable_seed((tree_name, ck, "rate")) % 9973
+                )
                 perm = idx[:]
                 rng.shuffle(perm)
                 fsize = max(1, len(perm) // N_FOLDS)
@@ -410,15 +435,23 @@ def main():
                     cal_scores[i] = oof[k] if oof[k] is not None else raw_scores[i]
             cal[(tree_name, ck, "rate")] = cal_scores
             from _review_calibration import stacked_crossfit
+
             cal[(tree_name, ck, "stacked")] = stacked_crossfit(
-                raw_scores, te_y, cohort_idx, seed=SEED + 13, n_folds=N_FOLDS)
+                raw_scores, te_y, cohort_idx, seed=SEED + 13, n_folds=N_FOLDS
+            )
 
     print("[5/5] Per-(cohort, stratum, tree, calibration) cell metrics + global top-K ...")
     rows = []
     summary: dict = {
-        "n_test": len(te_X), "n_pos": int(sum(te_y)),
-        "n_bin": N_BIN, "boot_seed": SEED, "boot_B": B, "n_folds": N_FOLDS,
-        "K_abs": K_ABS, "cells": [], "global_topk": {},
+        "n_test": len(te_X),
+        "n_pos": int(sum(te_y)),
+        "n_bin": N_BIN,
+        "boot_seed": SEED,
+        "boot_B": B,
+        "n_folds": N_FOLDS,
+        "K_abs": K_ABS,
+        "cells": [],
+        "global_topk": {},
     }
 
     # Global top-K recall for each (tree, scope, method)
@@ -433,7 +466,8 @@ def main():
                 cal_scores = cal[(tree_name, scope, method)]
                 rec = recall_at_k(cal_scores, te_y, K_ABS)
                 summary["global_topk"][tree_name]["scopes"][f"{scope}__{method}"] = {
-                    "recall": rec, "delta_vs_raw": rec - rec_raw
+                    "recall": rec,
+                    "delta_vs_raw": rec - rec_raw,
                 }
 
     # Per-cell metrics
@@ -459,32 +493,47 @@ def main():
                     k_strat = max(1, int(round(0.02 * len(idx))))
                     rec_raw = recall_at_k(s_raw, s_lab, k_strat)
                     rec_cal = recall_at_k(s_cal, s_lab, k_strat)
-                    rows.append({
-                        "cohort": ck, "cohort_label": ck_label, "stratum": stratum,
-                        "tree": tree_name, "method": method,
-                        "n_stratum": len(s_lab), "pos_stratum": int(sum(s_lab)),
-                        "ece_raw": round(ece_raw, 5),
-                        "ece_cal": round(ece_cal, 5),
-                        "delta_ece": round(ece_cal - ece_raw, 5),
-                        "brier_raw": round(br_raw, 5),
-                        "brier_cal": round(br_cal, 5),
-                        "delta_brier": round(br_cal - br_raw, 5),
-                        "calib_gap_cal": round(mean_pred_cal - obs_rate, 5),
-                        "recall_k2pct_raw": round(rec_raw, 5),
-                        "recall_k2pct_cal": round(rec_cal, 5),
-                        "delta_recall_k2pct": round(rec_cal - rec_raw, 5),
-                    })
-                    summary["cells"].append({
-                        "cohort": ck, "stratum": stratum, "tree": tree_name,
-                        "method": method, "n": len(s_lab), "pos": int(sum(s_lab)),
-                        "ece_raw": ece_raw, "ece_cal": ece_cal,
-                        "delta_ece": ece_cal - ece_raw,
-                        "brier_raw": br_raw, "brier_cal": br_cal,
-                        "delta_brier": br_cal - br_raw,
-                        "calib_gap_cal": mean_pred_cal - obs_rate,
-                        "recall_k2pct_raw": rec_raw, "recall_k2pct_cal": rec_cal,
-                        "delta_recall_k2pct": rec_cal - rec_raw,
-                    })
+                    rows.append(
+                        {
+                            "cohort": ck,
+                            "cohort_label": ck_label,
+                            "stratum": stratum,
+                            "tree": tree_name,
+                            "method": method,
+                            "n_stratum": len(s_lab),
+                            "pos_stratum": int(sum(s_lab)),
+                            "ece_raw": round(ece_raw, 5),
+                            "ece_cal": round(ece_cal, 5),
+                            "delta_ece": round(ece_cal - ece_raw, 5),
+                            "brier_raw": round(br_raw, 5),
+                            "brier_cal": round(br_cal, 5),
+                            "delta_brier": round(br_cal - br_raw, 5),
+                            "calib_gap_cal": round(mean_pred_cal - obs_rate, 5),
+                            "recall_k2pct_raw": round(rec_raw, 5),
+                            "recall_k2pct_cal": round(rec_cal, 5),
+                            "delta_recall_k2pct": round(rec_cal - rec_raw, 5),
+                        }
+                    )
+                    summary["cells"].append(
+                        {
+                            "cohort": ck,
+                            "stratum": stratum,
+                            "tree": tree_name,
+                            "method": method,
+                            "n": len(s_lab),
+                            "pos": int(sum(s_lab)),
+                            "ece_raw": ece_raw,
+                            "ece_cal": ece_cal,
+                            "delta_ece": ece_cal - ece_raw,
+                            "brier_raw": br_raw,
+                            "brier_cal": br_cal,
+                            "delta_brier": br_cal - br_raw,
+                            "calib_gap_cal": mean_pred_cal - obs_rate,
+                            "recall_k2pct_raw": rec_raw,
+                            "recall_k2pct_cal": rec_cal,
+                            "delta_recall_k2pct": rec_cal - rec_raw,
+                        }
+                    )
 
     # H1 -- per-cohort isotonic / rate / stacked reduce worst-cohort ECE
     h1 = {}
@@ -492,14 +541,18 @@ def main():
         h1[method] = {}
         for ck in ["v_mean", "amount", "time"]:
             for tr in ["XGB-20raw", "XGB-24full"]:
-                cells = [c for c in summary["cells"] if c["cohort"] == ck
-                         and c["tree"] == tr and c["method"] == method]
+                cells = [
+                    c
+                    for c in summary["cells"]
+                    if c["cohort"] == ck and c["tree"] == tr and c["method"] == method
+                ]
                 if not cells:
                     continue
                 worst_raw = max(c["ece_raw"] for c in cells)
                 worst_cal = max(c["ece_cal"] for c in cells)
                 h1[method][(ck, tr)] = {
-                    "worst_ece_raw": worst_raw, "worst_ece_cal": worst_cal,
+                    "worst_ece_raw": worst_raw,
+                    "worst_ece_cal": worst_cal,
                     "delta": worst_cal - worst_raw,
                     "reduced": worst_cal < worst_raw,
                 }
@@ -512,8 +565,11 @@ def main():
     for ck in ["v_mean", "amount", "time"]:
         for tr in ["XGB-20raw", "XGB-24full"]:
             for method in ("isotonic", "rate", "stacked"):
-                cells = [c for c in summary["cells"] if c["cohort"] == ck
-                         and c["tree"] == tr and c["method"] == method]
+                cells = [
+                    c
+                    for c in summary["cells"]
+                    if c["cohort"] == ck and c["tree"] == tr and c["method"] == method
+                ]
                 if not cells:
                     continue
                 d_recalls = [abs(c["delta_recall_k2pct"]) for c in cells]
@@ -528,10 +584,25 @@ def main():
 
     # Persist
     out_tsv = f"{OUT_DIR}/p8_iter104_isotonic_per_cohort.tsv"
-    cols = ["cohort", "cohort_label", "stratum", "tree", "method", "n_stratum", "pos_stratum",
-            "ece_raw", "ece_cal", "delta_ece",
-            "brier_raw", "brier_cal", "delta_brier", "calib_gap_cal",
-            "recall_k2pct_raw", "recall_k2pct_cal", "delta_recall_k2pct"]
+    cols = [
+        "cohort",
+        "cohort_label",
+        "stratum",
+        "tree",
+        "method",
+        "n_stratum",
+        "pos_stratum",
+        "ece_raw",
+        "ece_cal",
+        "delta_ece",
+        "brier_raw",
+        "brier_cal",
+        "delta_brier",
+        "calib_gap_cal",
+        "recall_k2pct_raw",
+        "recall_k2pct_cal",
+        "delta_recall_k2pct",
+    ]
     with open(out_tsv, "w", newline="") as fh:
         w = csv.DictWriter(fh, fieldnames=cols, delimiter="\t")
         w.writeheader()
@@ -550,11 +621,17 @@ def main():
     for method in ("isotonic", "rate", "stacked"):
         print(f"H1 ({method}) -- Worst-cohort ECE:")
         for k, v in h1[method].items():
-            print(f"  {k[0]} x {k[1]}: worst_raw={v['worst_ece_raw']:.4f}  worst_{method}={v['worst_ece_cal']:.4f}  delta={v['delta']:+.4f}  -> reduced={v['reduced']}")
+            print(
+                f"  {k[0]} x {k[1]}: worst_raw={v['worst_ece_raw']:.4f}  worst_{method}={v['worst_ece_cal']:.4f}  delta={v['delta']:+.4f}  -> reduced={v['reduced']}"
+            )
         print()
-    print("H3 -- Per-cohort top-K (=2% of stratum) recall preservation (max|delta|, n_preserved/n_total):")
+    print(
+        "H3 -- Per-cohort top-K (=2% of stratum) recall preservation (max|delta|, n_preserved/n_total):"
+    )
     for k, v in h3.items():
-        print(f"  {k[0]} x {k[1]} ({k[2]}): max|delta_recall|={v['max_abs_delta_recall']:.4f}  preserved={v['n_preserved']}/{v['n_total']}")
+        print(
+            f"  {k[0]} x {k[1]} ({k[2]}): max|delta_recall|={v['max_abs_delta_recall']:.4f}  preserved={v['n_preserved']}/{v['n_total']}"
+        )
     print()
     print("Global top-K (=200) recall -- per (tree, scope, method):")
     for tree_name in ["XGB-20raw", "XGB-24full"]:

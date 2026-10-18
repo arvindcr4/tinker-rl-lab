@@ -3,6 +3,7 @@
 Selected definitions are unchanged from the retained source identified in
 PROVENANCE.json. This module alone cannot authenticate empirical evidence.
 """
+
 from __future__ import annotations
 
 from decimal import Decimal, InvalidOperation
@@ -21,7 +22,7 @@ def normalize_number(text: str) -> str | None:
         return None
     for left, right in (("$", "$"), (r"\(", r"\)")):
         if text.startswith(left) and text.endswith(right):
-            text = text[len(left):-len(right)].strip()
+            text = text[len(left) : -len(right)].strip()
     # Accept a simple LaTeX fraction; no expression evaluation or recursive parser.
     frac = re.fullmatch(r"\\(?:dfrac|tfrac|frac)\{([^{}]+)\}\{([^{}]+)\}", text)
     if frac:
@@ -91,6 +92,7 @@ def parse_answer(text: str) -> dict[str, str | None]:
     blank lines between an ordinary heading and its successor retain v2 behavior.
     Known terminal-token removal remains the caller's responsibility, as in v1.
     """
+
     def failed(status: str) -> dict[str, str | None]:
         return {"status": status, "source": None, "value": None}
 
@@ -101,8 +103,9 @@ def parse_answer(text: str) -> dict[str, str | None]:
     if boxes is None:
         return failed("malformed_box")
     candidates = [("boxed", value) for value in boxes]
-    numbered_lines = [(number, line.strip()) for number, line in enumerate(text.splitlines())
-                      if line.strip()]
+    numbered_lines = [
+        (number, line.strip()) for number, line in enumerate(text.splitlines()) if line.strip()
+    ]
     positions = [number for number, _ in numbered_lines]
     lines = [line for _, line in numbered_lines]
     pending_heading = False
@@ -112,13 +115,19 @@ def parse_answer(text: str) -> dict[str, str | None]:
         if index < consumed_until:
             continue
         line = _canonical_line(raw)
-        adjacent_triplet = (index + 2 < len(lines)
-                            and positions[index + 1] == positions[index] + 1
-                            and positions[index + 2] == positions[index] + 2)
+        adjacent_triplet = (
+            index + 2 < len(lines)
+            and positions[index + 1] == positions[index] + 1
+            and positions[index + 2] == positions[index] + 2
+        )
         if pending_heading and raw == "$$":
             # R2: consume delimiters only after verifying the exact entire block.
-            if (not pending_textual_heading or not adjacent_triplet or lines[index + 2] != "$$"
-                    or _whole_numeric_box(lines[index + 1]) is None):
+            if (
+                not pending_textual_heading
+                or not adjacent_triplet
+                or lines[index + 2] != "$$"
+                or _whole_numeric_box(lines[index + 1]) is None
+            ):
                 return failed("invalid_numeric_answer")
             # The unchanged global box scan already added this numeric claim.
             consumed_until = index + 3
@@ -131,16 +140,24 @@ def parse_answer(text: str) -> dict[str, str | None]:
                 return failed("malformed_marker")
             payload = line[4:].strip()
             # R1: only a complete bold heading label, never arbitrary bold text.
-            if (raw == line and payload.startswith("**") and payload.endswith("**")
-                    and _HEADING.fullmatch(payload[2:-2])):
+            if (
+                raw == line
+                and payload.startswith("**")
+                and payload.endswith("**")
+                and _HEADING.fullmatch(payload[2:-2])
+            ):
                 payload = payload[2:-2]
             # R3: anchored opener/body/closer; do not skip blank or body lines.
             # A full-line bold wrapper is not one of these literal three lines.
-            if (raw == line and payload == "<answer>" and adjacent_triplet
-                    and lines[index + 1].startswith("####")
-                    and lines[index + 2].startswith("####")
-                    and lines[index + 2][4:].strip() == "</answer>"
-                    and normalize_number(lines[index + 1][4:].strip()) is not None):
+            if (
+                raw == line
+                and payload == "<answer>"
+                and adjacent_triplet
+                and lines[index + 1].startswith("####")
+                and lines[index + 2].startswith("####")
+                and lines[index + 2][4:].strip() == "</answer>"
+                and normalize_number(lines[index + 1][4:].strip()) is not None
+            ):
                 if pending_heading:
                     return failed("invalid_numeric_answer")
                 candidates.append(("hash_xml_three_line", lines[index + 1][4:].strip()))
@@ -160,8 +177,13 @@ def parse_answer(text: str) -> dict[str, str | None]:
             explicit = _EXPLICIT.fullmatch(line)
             if explicit:
                 source, value = "explicit_final", explicit.group(1).strip().removesuffix(".")
-            elif (pending_heading or index == len(lines) - 1) and normalize_number(line) is not None:
-                source, value = ("heading_numeric_line" if pending_heading else "standalone_final_line"), line
+            elif (pending_heading or index == len(lines) - 1) and normalize_number(
+                line
+            ) is not None:
+                source, value = (
+                    ("heading_numeric_line" if pending_heading else "standalone_final_line"),
+                    line,
+                )
             elif pending_heading:
                 # Only an entire balanced box can satisfy a heading, never prose.
                 if re.fullmatch(r"\\boxed\s*\{.*\}", line) and _boxed_values(line):
@@ -186,8 +208,12 @@ def parse_answer(text: str) -> dict[str, str | None]:
         return failed("invalid_numeric_answer")
     if len({value for _, value in parsed}) != 1:
         return failed("ambiguous_final_answers")
-    return {"status": "ok", "source": "+".join(dict.fromkeys(source for source, _ in parsed)),
-            "value": parsed[0][1]}
+    return {
+        "status": "ok",
+        "source": "+".join(dict.fromkeys(source for source, _ in parsed)),
+        "value": parsed[0][1],
+    }
+
 
 PARSER_VERSION = 3
 PARSER_STATUS = "prospective_candidate_not_deployed"

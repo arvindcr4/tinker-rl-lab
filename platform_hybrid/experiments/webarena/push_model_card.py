@@ -22,6 +22,7 @@ Usage:
         --model-repo  arvindcr4/webarena-eval-qwen3-8b-20260422 \\
         --benchmark webarena_verified --private
 """
+
 from __future__ import annotations
 
 import argparse
@@ -34,7 +35,12 @@ from textwrap import dedent
 
 
 def _render_model_card(
-    *, base_model: str, benchmark: str, final: dict, dataset_repo: str, run_id: str,
+    *,
+    base_model: str,
+    benchmark: str,
+    final: dict,
+    dataset_repo: str,
+    run_id: str,
 ) -> str:
     try:
         from .aggregate import validate_complete_evaluation
@@ -168,17 +174,21 @@ def _render_model_card(
 def main() -> int:
     p = argparse.ArgumentParser()
     p.add_argument("--final", required=True, help="final.json from aggregate.py")
-    p.add_argument("--shards", required=True,
-                   help="Glob for per-shard JSONLs (e.g. 'results/*.jsonl')")
+    p.add_argument(
+        "--shards", required=True, help="Glob for per-shard JSONLs (e.g. 'results/*.jsonl')"
+    )
     p.add_argument("--base-model", required=True, help="e.g. Qwen/Qwen3-8B")
-    p.add_argument("--dataset-repo", required=True,
-                   help="HF dataset repo to push JSONLs + final.json (user/name)")
-    p.add_argument("--model-repo", required=True,
-                   help="HF model repo to push the eval card README (user/name)")
+    p.add_argument(
+        "--dataset-repo",
+        required=True,
+        help="HF dataset repo to push JSONLs + final.json (user/name)",
+    )
+    p.add_argument(
+        "--model-repo", required=True, help="HF model repo to push the eval card README (user/name)"
+    )
     p.add_argument("--benchmark", default="webarena_verified")
     p.add_argument("--run-id", default=datetime.utcnow().strftime("%Y%m%d-%H%M%S"))
-    p.add_argument("--private", action="store_true",
-                   help="Create both repos as private")
+    p.add_argument("--private", action="store_true", help="Create both repos as private")
     args = p.parse_args()
 
     if not os.environ.get("HF_TOKEN"):
@@ -186,17 +196,23 @@ def main() -> int:
         return 2
 
     from huggingface_hub import HfApi, create_repo
+
     api = HfApi()
 
     final = json.loads(Path(args.final).read_text())
-    _render_model_card(base_model=args.base_model, benchmark=args.benchmark, final=final, dataset_repo=args.dataset_repo, run_id=args.run_id)
+    _render_model_card(
+        base_model=args.base_model,
+        benchmark=args.benchmark,
+        final=final,
+        dataset_repo=args.dataset_repo,
+        run_id=args.run_id,
+    )
 
     # -------------------------------------------------------------------------
     # 1) Dataset repo: raw JSONL shards + aggregated final.json
     # -------------------------------------------------------------------------
     print(f"==> Dataset repo: {args.dataset_repo}")
-    create_repo(args.dataset_repo, repo_type="dataset",
-                exist_ok=True, private=args.private)
+    create_repo(args.dataset_repo, repo_type="dataset", exist_ok=True, private=args.private)
     for shard in sorted(glob(args.shards)):
         remote_name = f"{args.run_id}/{Path(shard).name}"
         print(f"   -> {remote_name}")
@@ -248,11 +264,13 @@ def main() -> int:
     # 2) Model repo: README.md with eval report + results table
     # -------------------------------------------------------------------------
     print(f"==> Model repo:   {args.model_repo}")
-    create_repo(args.model_repo, repo_type="model",
-                exist_ok=True, private=args.private)
+    create_repo(args.model_repo, repo_type="model", exist_ok=True, private=args.private)
     card_md = _render_model_card(
-        base_model=args.base_model, benchmark=args.benchmark,
-        final=final, dataset_repo=args.dataset_repo, run_id=args.run_id,
+        base_model=args.base_model,
+        benchmark=args.benchmark,
+        final=final,
+        dataset_repo=args.dataset_repo,
+        run_id=args.run_id,
     )
     api.upload_file(
         path_or_fileobj=card_md.encode(),

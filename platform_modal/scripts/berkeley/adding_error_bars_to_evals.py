@@ -41,9 +41,15 @@ from collections import defaultdict
 from pathlib import Path
 import sys
 import numpy as np
+
 sys.path.append(str(Path(__file__).resolve().parents[1]))
 from _paths import REPO_ROOT
-from _review02_contracts import retention_noninferiority, structured_result, finite_json, result_provenance
+from _review02_contracts import (
+    retention_noninferiority,
+    structured_result,
+    finite_json,
+    result_provenance,
+)
 
 ROOT = REPO_ROOT
 RESULTS = ROOT / "platform_hybrid" / "experiments" / "results"
@@ -87,6 +93,7 @@ def _rng(seed):
 
 
 # ---- bootstrap primitives ----
+
 
 def bootstrap_ci_mean(values, B=10000, alpha=0.05, seed=0):
     """Two-sided percentile CI for the mean."""
@@ -145,11 +152,14 @@ def bootstrap_ci_difference_paired(a, b, B=10000, alpha=0.05, seed=0):
 
 class SlopeInterval(tuple):
     """Four-value legacy unpacking plus explicit resampling diagnostics."""
+
     def __new__(cls, point, low, high, n, requested, valid):
         obj = super().__new__(cls, (point, low, high, n))
         obj.requested_resamples = requested
         obj.valid_resamples = valid
-        obj.status = 'ok' if all(math.isfinite(v) for v in (point, low, high)) else 'insufficient_data'
+        obj.status = (
+            "ok" if all(math.isfinite(v) for v in (point, low, high)) else "insufficient_data"
+        )
         return obj
 
 
@@ -158,7 +168,7 @@ def ols_slope_with_ci(x, y, B=5000, alpha=0.05, seed=0, *, diagnostics=None):
     and percentile CI, plus the OLS point estimate for reference."""
     if len(x) != len(y) or B <= 0 or not 0 < alpha < 1:
         raise ValueError("matched inputs, positive B, and valid alpha required")
-    if not all(math.isfinite(v) for v in list(x)+list(y)):
+    if not all(math.isfinite(v) for v in list(x) + list(y)):
         raise ValueError("finite regression inputs required")
     if diagnostics is not None:
         diagnostics.update(requested_resamples=B, valid_resamples=0, status="insufficient_data")
@@ -185,10 +195,15 @@ def ols_slope_with_ci(x, y, B=5000, alpha=0.05, seed=0, *, diagnostics=None):
             continue
         boot.append(num_b / den_b)
     if diagnostics is not None:
-        diagnostics.update(requested_resamples=B, valid_resamples=len(boot), status="ok" if len(boot) >= 2 else "insufficient_data", method="exploratory_pairs_bootstrap_over_anchors")
+        diagnostics.update(
+            requested_resamples=B,
+            valid_resamples=len(boot),
+            status="ok" if len(boot) >= 2 else "insufficient_data",
+            method="exploratory_pairs_bootstrap_over_anchors",
+        )
     if len(boot) < 2:
         return SlopeInterval(b_hat, float("nan"), float("nan"), n, B, len(boot))
-    lo, hi = map(float, np.quantile(boot, [alpha/2, 1-alpha/2]))
+    lo, hi = map(float, np.quantile(boot, [alpha / 2, 1 - alpha / 2]))
     return SlopeInterval(b_hat, lo, hi, n, B, len(boot))
 
 
@@ -200,17 +215,18 @@ def ci_verdict(lo, hi, null=0.0, equiv_radius=None):
     if not all(math.isfinite(v) for v in (lo, hi)) or lo > hi:
         return "INSUFFICIENT_DATA"
     if equiv_radius is not None:
-        if null-equiv_radius <= lo <= hi <= null+equiv_radius:
+        if null - equiv_radius <= lo <= hi <= null + equiv_radius:
             return "EQUIVALENT"
-        if hi < null-equiv_radius:
+        if hi < null - equiv_radius:
             return "INFERIOR"
-        if lo > null+equiv_radius:
+        if lo > null + equiv_radius:
             return "SUPERIOR"
         return "INCONCLUSIVE"
     return "SUPERIOR" if lo > null else ("INFERIOR" if hi < null else "INCONCLUSIVE")
 
 
 # ---------- loaders ----------
+
 
 def load_sweep():
     """Load groupsize_zvf_sweep.json and pull per-(seed, G) heldout_acc.
@@ -221,12 +237,14 @@ def load_sweep():
     per_g_seeds = defaultdict(list)  # g -> [(seed, heldout_acc, last10, mean_zvf)]
     for r in runs:
         g = r["group_size"]
-        per_g_seeds[g].append({
-            "seed": r["seed"],
-            "heldout_acc": r["heldout_acc"],
-            "last10_avg": r["last10_avg"],
-            "mean_zvf": r["mean_zvf"],
-        })
+        per_g_seeds[g].append(
+            {
+                "seed": r["seed"],
+                "heldout_acc": r["heldout_acc"],
+                "last10_avg": r["last10_avg"],
+                "mean_zvf": r["mean_zvf"],
+            }
+        )
     return per_g_seeds
 
 
@@ -237,15 +255,17 @@ def load_zvf_link():
         if len(r) < 7 or r[0] == "SPEARMAN_LOG_T":
             continue
         try:
-            out.append({
-                "T": int(r[0]),
-                "acc_G4": _parse_float(r[1]),
-                "acc_G32": _parse_float(r[2]),
-                "retention": _parse_float(r[3]),
-                "GU_G4": _parse_float(r[4]),
-                "GU_G32": _parse_float(r[5]),
-                "GU_ratio": _parse_float(r[6]),
-            })
+            out.append(
+                {
+                    "T": int(r[0]),
+                    "acc_G4": _parse_float(r[1]),
+                    "acc_G32": _parse_float(r[2]),
+                    "retention": _parse_float(r[3]),
+                    "GU_G4": _parse_float(r[4]),
+                    "GU_G32": _parse_float(r[5]),
+                    "GU_ratio": _parse_float(r[6]),
+                }
+            )
         except (ValueError, IndexError):
             continue
     return out
@@ -281,17 +301,19 @@ def load_iter135_nativewu():
             md = re.search(r"diff\(mean 16-2\)=([+-]?[\d.]+)\+/-([\d.]+)", r[2])
             cd = re.search(r"Cohen's d \(paired\)=([+-]?[\d.]+)", r[2])
             if m and m2 and md and cd:
-                out.append({
-                    "G_small": 2,
-                    "G_large": 16,
-                    "acc_G2": float(m.group(1)),
-                    "acc_G2_se": float(m.group(2)),
-                    "acc_G16": float(m2.group(1)),
-                    "acc_G16_se": float(m2.group(2)),
-                    "diff": float(md.group(1)),
-                    "diff_se": float(md.group(2)),
-                    "cohens_d": float(cd.group(1)),
-                })
+                out.append(
+                    {
+                        "G_small": 2,
+                        "G_large": 16,
+                        "acc_G2": float(m.group(1)),
+                        "acc_G2_se": float(m.group(2)),
+                        "acc_G16": float(m2.group(1)),
+                        "acc_G16_se": float(m2.group(2)),
+                        "diff": float(md.group(1)),
+                        "diff_se": float(md.group(2)),
+                        "cohens_d": float(cd.group(1)),
+                    }
+                )
     return out
 
 
@@ -301,12 +323,14 @@ def load_iter137_aic():
     out = []
     for r in rows[1:]:
         try:
-            out.append({
-                "model": r[0],
-                "aic_sat": _parse_float(r[1]),
-                "aic_pw": _parse_float(r[2]),
-                "delta_aicc": _parse_float(r[5]) if len(r) > 5 else float("nan"),
-            })
+            out.append(
+                {
+                    "model": r[0],
+                    "aic_sat": _parse_float(r[1]),
+                    "aic_pw": _parse_float(r[2]),
+                    "delta_aicc": _parse_float(r[5]) if len(r) > 5 else float("nan"),
+                }
+            )
         except Exception:
             continue
     return out
@@ -326,18 +350,20 @@ def load_iter137_offset_t80():
         if len(r) <= max(col.values()):
             continue
         try:
-            out.append({
-                "model": r[col["model"]],
-                "params_B": float(r[col["params_B"]]),
-                "capability": r[col["capability"]],
-                "R_max_2p": float(r[col["R_max_2p"]]),
-                "R_max_3p": float(r[col["R_max_3p"]]),
-                "t80_2p": float(r[col["t80_2p"]]),
-                "t80_3p": float(r[col["t80_3p"]]),
-                "lambda_2p": float(r[col["lambda_2p"]]),
-                "lambda_3p": float(r[col["lambda_3p"]]),
-                "delta_aicc_3p_minus_2p": float(r[col["delta_aicc_3p_minus_2p"]]),
-            })
+            out.append(
+                {
+                    "model": r[col["model"]],
+                    "params_B": float(r[col["params_B"]]),
+                    "capability": r[col["capability"]],
+                    "R_max_2p": float(r[col["R_max_2p"]]),
+                    "R_max_3p": float(r[col["R_max_3p"]]),
+                    "t80_2p": float(r[col["t80_2p"]]),
+                    "t80_3p": float(r[col["t80_3p"]]),
+                    "lambda_2p": float(r[col["lambda_2p"]]),
+                    "lambda_3p": float(r[col["lambda_3p"]]),
+                    "delta_aicc_3p_minus_2p": float(r[col["delta_aicc_3p_minus_2p"]]),
+                }
+            )
         except (ValueError, IndexError, KeyError):
             continue
     return out
@@ -370,19 +396,21 @@ def load_iter136_paired():
         if len(r) < 13:
             continue
         try:
-            out.append({
-                "task": r[0],
-                "hypothesis": r[1],
-                "n_pairs": int(r[4]),
-                "mean_gr": _parse_float(r[5]),
-                "mean_dr": _parse_float(r[6]),
-                "delta": _parse_float(r[7]),
-                "W": _parse_float(r[8]),
-                "p_param": _parse_float(r[9]),
-                "p_perm": _parse_float(r[10]),
-                "cohens_d_paired": _parse_float(r[11]),
-                "verdict": r[12],
-            })
+            out.append(
+                {
+                    "task": r[0],
+                    "hypothesis": r[1],
+                    "n_pairs": int(r[4]),
+                    "mean_gr": _parse_float(r[5]),
+                    "mean_dr": _parse_float(r[6]),
+                    "delta": _parse_float(r[7]),
+                    "W": _parse_float(r[8]),
+                    "p_param": _parse_float(r[9]),
+                    "p_perm": _parse_float(r[10]),
+                    "cohens_d_paired": _parse_float(r[11]),
+                    "verdict": r[12],
+                }
+            )
         except Exception:
             continue
     return out
@@ -390,19 +418,29 @@ def load_iter136_paired():
 
 # ---------- headline re-derivations ----------
 
+
 def headline_h1_gu_ratio(sweep, zvf):
     """The T=1M GU ratio, without treating other budgets as replications."""
-    selected = [r for r in zvf if int(r['T']) == 1_000_000]
+    selected = [r for r in zvf if int(r["T"]) == 1_000_000]
     if len(selected) > 1:
         raise ValueError("duplicate T=1M summary; explicit repeated observations required")
-    point = selected[0]['GU_ratio'] if selected else float('nan')
-    return dict(headline="H1 GU ratio G4/G32 at T=1M", point_GU_ratio=point,
-                n_budgets_for_CI=0, CI95_lo=float('nan'), CI95_hi=float('nan'),
-                mean_over_budgets=float('nan'), GU_G4_CI95=None, GU_G32_CI95=None,
-                width_to_point=float('nan'), verdict_vs_1='INSUFFICIENT_DATA',
-                result=structured_result('GU_G4 / GU_G32 at T=1M', point, unit='ratio',
-                                         method='summary_point_only'),
-                explanation='A single budget summary supports a point only. Matched per-seed or per-example data are required for uncertainty.')
+    point = selected[0]["GU_ratio"] if selected else float("nan")
+    return dict(
+        headline="H1 GU ratio G4/G32 at T=1M",
+        point_GU_ratio=point,
+        n_budgets_for_CI=0,
+        CI95_lo=float("nan"),
+        CI95_hi=float("nan"),
+        mean_over_budgets=float("nan"),
+        GU_G4_CI95=None,
+        GU_G32_CI95=None,
+        width_to_point=float("nan"),
+        verdict_vs_1="INSUFFICIENT_DATA",
+        result=structured_result(
+            "GU_G4 / GU_G32 at T=1M", point, unit="ratio", method="summary_point_only"
+        ),
+        explanation="A single budget summary supports a point only. Matched per-seed or per-example data are required for uncertainty.",
+    )
 
 
 def headline_h2_retention_vs_T(zvf):
@@ -446,17 +484,23 @@ def headline_h3_snr_slope(snr):
 def headline_h4_native_wu_paired(nw):
     """Test G2 retention using paired raw observations, not an absolute margin."""
     r = nw[0] if nw else {}
-    a, b = r.get('paired_acc_G2', []), r.get('paired_acc_G16', [])
+    a, b = r.get("paired_acc_G2", []), r.get("paired_acc_G16", [])
     result = retention_noninferiority(a, b)
-    point = r.get('diff', float('nan'))
-    se = r.get('diff_se', float('nan'))
-    return dict(headline='H4 G2 vs G16 relative-retention noninferiority',
-                n_paired_seeds=len(a), point_diff=point, point_diff_se=se,
-                CI95_lo=float('nan'), CI95_hi=float('nan'),
-                cohens_d_paired=r.get('cohens_d'), verdict_vs_0=result['status'].upper(),
-                **{'wu_claim_holds_at_97.6pct': result.get('noninferior')},
-                result=result,
-                explanation='Noninferiority target E[G2] - 0.976 E[G16]. Summary difference/SE cannot identify the paired scaled-difference variance; raw matched observations required.')
+    point = r.get("diff", float("nan"))
+    se = r.get("diff_se", float("nan"))
+    return dict(
+        headline="H4 G2 vs G16 relative-retention noninferiority",
+        n_paired_seeds=len(a),
+        point_diff=point,
+        point_diff_se=se,
+        CI95_lo=float("nan"),
+        CI95_hi=float("nan"),
+        cohens_d_paired=r.get("cohens_d"),
+        verdict_vs_0=result["status"].upper(),
+        **{"wu_claim_holds_at_97.6pct": result.get("noninferior")},
+        result=result,
+        explanation="Noninferiority target E[G2] - 0.976 E[G16]. Summary difference/SE cannot identify the paired scaled-difference variance; raw matched observations required.",
+    )
 
 
 def headline_h5_t80_scaling(offset):
@@ -528,6 +572,7 @@ def headline_h7_late_eff_dratio(p136):
 
 # ---------- output ----------
 
+
 def write_tsv(path, rows, header):
     with open(path, "w") as f:
         f.write("\t".join(header) + "\n")
@@ -543,9 +588,15 @@ def write_tsv(path, rows, header):
 
 def main():
     """One structured source for TSV and narrative; absent inputs remain absent."""
-    loaders = [("H1", load_zvf_link), ("H2", load_zvf_link), ("H3", load_iter123_snr),
-               ("H4", load_iter135_nativewu), ("H5", load_iter137_offset_t80),
-               ("H6", load_iter130_auroc), ("H7", load_iter136_paired)]
+    loaders = [
+        ("H1", load_zvf_link),
+        ("H2", load_zvf_link),
+        ("H3", load_iter123_snr),
+        ("H4", load_iter135_nativewu),
+        ("H5", load_iter137_offset_t80),
+        ("H6", load_iter130_auroc),
+        ("H7", load_iter136_paired),
+    ]
     results = []
     for name, loader in loaders:
         try:
@@ -554,52 +605,89 @@ def main():
             results.append(dict(headline=name, **structured_result(name, reason=str(exc))))
             continue
         if name == "H1":
-            result = headline_h1_gu_ratio({}, data)['result']
+            result = headline_h1_gu_ratio({}, data)["result"]
         elif name == "H2":
             h = headline_h2_retention_vs_T(data)
-            result = structured_result('OLS retention slope per log10 token budget', h['OLS_slope_per_decade_T'],
-                                       unit='ratio per decade tokens', method='fixed-budget descriptive OLS',
-                                       status='descriptive', n_conditions=len(data),
-                                       uncertainty_source='unavailable: budgets are conditions, not replications')
+            result = structured_result(
+                "OLS retention slope per log10 token budget",
+                h["OLS_slope_per_decade_T"],
+                unit="ratio per decade tokens",
+                method="fixed-budget descriptive OLS",
+                status="descriptive",
+                n_conditions=len(data),
+                uncertainty_source="unavailable: budgets are conditions, not replications",
+            )
         elif name == "H3":
-            result = structured_result('SNR slope per log10 group size', data.get('slope'),
-                                       unit='log10 SNR per log10 G', method='archived summary only',
-                                       source_interval=[data.get('ci_lo'), data.get('ci_hi')],
-                                       reason='independent unit and source method need validation; no equivalence test performed')
+            result = structured_result(
+                "SNR slope per log10 group size",
+                data.get("slope"),
+                unit="log10 SNR per log10 G",
+                method="archived summary only",
+                source_interval=[data.get("ci_lo"), data.get("ci_hi")],
+                reason="independent unit and source method need validation; no equivalence test performed",
+            )
         elif name == "H4":
-            result = headline_h4_native_wu_paired(data)['result']
+            result = headline_h4_native_wu_paired(data)["result"]
         elif name == "H5":
             h = headline_h5_t80_scaling(data)
-            result = structured_result('R_max_2p slope versus log10 model size', h.get('point_slope'),
-                                       unit='reward per decade parameters', method='fixed-anchor descriptive OLS',
-                                       status='descriptive' if data else 'insufficient_data', n_conditions=len(data),
-                                       uncertainty_source='unavailable: anchor selection is not repeated training')
+            result = structured_result(
+                "R_max_2p slope versus log10 model size",
+                h.get("point_slope"),
+                unit="reward per decade parameters",
+                method="fixed-anchor descriptive OLS",
+                status="descriptive" if data else "insufficient_data",
+                n_conditions=len(data),
+                uncertainty_source="unavailable: anchor selection is not repeated training",
+            )
         elif name == "H6":
-            row = data.get('cross_experiment', {}).get('zvf_risk_max', {})
-            result = structured_result('AUROC of ZVF risk across archived experimental records', row.get('auroc'),
-                                       unit='AUROC', method='archived summary only',
-                                       source_interval=[row.get('ci_lo'), row.get('ci_hi')],
-                                       reason='clustered independent units and original CI method need validation')
+            row = data.get("cross_experiment", {}).get("zvf_risk_max", {})
+            result = structured_result(
+                "AUROC of ZVF risk across archived experimental records",
+                row.get("auroc"),
+                unit="AUROC",
+                method="archived summary only",
+                source_interval=[row.get("ci_lo"), row.get("ci_hi")],
+                reason="clustered independent units and original CI method need validation",
+            )
         else:
             h = headline_h7_late_eff_dratio(data)
-            result = structured_result('paired mean DR-GR late efficiency difference', h.get('delta_mean'),
-                                       unit='source efficiency units', method='summary point only',
-                                       standardized_effect=h.get('cohens_d_paired'),
-                                       reason='paired observations required to estimate a confidence interval')
-        result['headline'] = name
+            result = structured_result(
+                "paired mean DR-GR late efficiency difference",
+                h.get("delta_mean"),
+                unit="source efficiency units",
+                method="summary point only",
+                standardized_effect=h.get("cohens_d_paired"),
+                reason="paired observations required to estimate a confidence interval",
+            )
+        result["headline"] = name
         results.append(result)
     # The two artifacts and their prose consume exactly the same result records.
     header = list(dict.fromkeys(key for result in results for key in result))
-    write_tsv(OUT/'adding_error_bars_audit.tsv', results, header)
-    summary = dict(results=results,
-                   key_findings=[f"{r['headline']}: {r['estimand']} = {r['estimate']} {r['unit']}; status={r['status']}; method={r['method']}" for r in results],
-                   provenance=result_provenance([ITER115_ZVFLINK, ITER123_NOISE, ITER135_NATIVEWU,
-                                                 ITER137_OFFSET, ITER130_AXIS, ITER136_PAIRED],
-                                                uncertainty_method='declared per result; missing observations not simulated'),
-                   archived_outputs_regenerated=False)
-    (OUT/'adding_error_bars_summary.json').write_text(json.dumps(finite_json(summary), indent=2, allow_nan=False))
-    print('\n'.join(summary['key_findings']))
+    write_tsv(OUT / "adding_error_bars_audit.tsv", results, header)
+    summary = dict(
+        results=results,
+        key_findings=[
+            f"{r['headline']}: {r['estimand']} = {r['estimate']} {r['unit']}; status={r['status']}; method={r['method']}"
+            for r in results
+        ],
+        provenance=result_provenance(
+            [
+                ITER115_ZVFLINK,
+                ITER123_NOISE,
+                ITER135_NATIVEWU,
+                ITER137_OFFSET,
+                ITER130_AXIS,
+                ITER136_PAIRED,
+            ],
+            uncertainty_method="declared per result; missing observations not simulated",
+        ),
+        archived_outputs_regenerated=False,
+    )
+    (OUT / "adding_error_bars_summary.json").write_text(
+        json.dumps(finite_json(summary), indent=2, allow_nan=False)
+    )
+    print("\n".join(summary["key_findings"]))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

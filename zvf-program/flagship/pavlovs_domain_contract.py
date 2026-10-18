@@ -41,16 +41,12 @@ def validate_contract(contract: dict[str, Any]) -> list[str]:
     if len(domains) != len(domain_set):
         errors.append("domains must be unique")
     if len(domain_set) != snapshot.get("domain_count"):
-        errors.append(
-            f"domain count {len(domain_set)} != snapshot {snapshot.get('domain_count')}"
-        )
+        errors.append(f"domain count {len(domain_set)} != snapshot {snapshot.get('domain_count')}")
     names = [entry.get("name") for entry in companies]
     if len(names) != len(set(names)):
         errors.append("company names must be unique")
     if len(companies) != snapshot.get("company_count"):
-        errors.append(
-            f"company count {len(companies)} != snapshot {snapshot.get('company_count')}"
-        )
+        errors.append(f"company count {len(companies)} != snapshot {snapshot.get('company_count')}")
 
     company_domain_counts: Counter[str] = Counter()
     for company in companies:
@@ -98,9 +94,7 @@ def validate_contract(contract: dict[str, Any]) -> list[str]:
         if stateful_primary / primary_count < 0.6:
             errors.append("fewer than 60% of primary suites are stateful")
         if artifact_primary / primary_count < 0.5:
-            errors.append(
-                "fewer than 50% of primary suites inspect artifacts or side effects"
-            )
+            errors.append("fewer than 50% of primary suites inspect artifacts or side effects")
 
     model_roles = Counter()
     for model in contract.get("model_candidates", []):
@@ -110,8 +104,7 @@ def validate_contract(contract: dict[str, Any]) -> list[str]:
         missing_caps = REQUIRED_CAPABILITIES - caps
         if missing_caps:
             errors.append(
-                f"model {model.get('model_id')}: missing capabilities "
-                f"{sorted(missing_caps)}"
+                f"model {model.get('model_id')}: missing capabilities {sorted(missing_caps)}"
             )
     if model_roles["primary"] != 1 or model_roles["replication"] != 1:
         errors.append("exactly one primary and one replication model are required")
@@ -133,9 +126,7 @@ def validate_contract(contract: dict[str, Any]) -> list[str]:
     if sampling.get("minimum_stateful_fraction", 0.0) < 0.6:
         errors.append("at least 60% of the training mixture must be stateful")
     if sampling.get("minimum_artifact_or_side_effect_fraction", 0.0) < 0.5:
-        errors.append(
-            "at least 50% of the training mixture must inspect artifacts or side effects"
-        )
+        errors.append("at least 50% of the training mixture must inspect artifacts or side effects")
     if sampling.get("unit") != "environment episode, not isolated prompt":
         errors.append("training unit must be an environment episode")
 
@@ -156,9 +147,7 @@ def coverage_report(contract: dict[str, Any]) -> dict[str, Any]:
         "companies": len(contract["companies"]),
         "domains": len(contract["domains"]),
         "training_suites": sum(s["role"] == "train" for s in suites.values()),
-        "primary_eval_suites": sum(
-            s["role"] == "primary_eval" for s in suites.values()
-        ),
+        "primary_eval_suites": sum(s["role"] == "primary_eval" for s in suites.values()),
         "gsm8k_role": suites["gsm8k_calibration"]["role"],
         "paid_jobs_may_launch": contract["budget_gate"]["paid_jobs_may_launch"],
     }

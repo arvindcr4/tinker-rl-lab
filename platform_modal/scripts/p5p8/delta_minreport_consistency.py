@@ -11,6 +11,7 @@ Outputs:
   platform_hybrid/experiments/results/p5p8/delta_minreport_consistency.tsv  (per-triple rows)
   platform_hybrid/experiments/results/p5p8/delta_minreport_consistency.json (summary)
 """
+
 from __future__ import annotations
 import json, pathlib, sys, datetime, warnings
 from collections import defaultdict, Counter
@@ -156,8 +157,9 @@ def classify(entry: dict, status: str, expected) -> str:
         if actual is None:
             rows.append("MISSING_REPORT")
         else:
-            eq = (isinstance(v, float) and isinstance(actual, (int, float))
-                  and abs(actual - v) < 1e-9) or actual == v
+            eq = (
+                isinstance(v, float) and isinstance(actual, (int, float)) and abs(actual - v) < 1e-9
+            ) or actual == v
             rows.append("MATCH" if eq else "MISMATCH")
     if any(r == "MISMATCH" for r in rows):
         return "MISMATCH"
@@ -198,37 +200,54 @@ def main() -> int:
                             per_field = "MATCH" if abs(actual - expected) < 1e-9 else "MISMATCH"
                         else:
                             per_field = "MATCH" if actual == expected else "MISMATCH"
-                    rows.append({
+                    rows.append(
+                        {
+                            "entry_id": entry_id,
+                            "delta_id": delta_id,
+                            "component": comp,
+                            "status": status,
+                            "field": field,
+                            "expected_value": str(expected),
+                            "actual_value": "" if actual is None else str(actual),
+                            "verdict": per_field,
+                        }
+                    )
+            else:
+                # no MIN-REPORT implication for this component
+                rows.append(
+                    {
                         "entry_id": entry_id,
                         "delta_id": delta_id,
                         "component": comp,
                         "status": status,
-                        "field": field,
-                        "expected_value": str(expected),
-                        "actual_value": "" if actual is None else str(actual),
-                        "verdict": per_field,
-                    })
-            else:
-                # no MIN-REPORT implication for this component
-                rows.append({
-                    "entry_id": entry_id,
-                    "delta_id": delta_id,
-                    "component": comp,
-                    "status": status,
-                    "field": "(no_minreport_implication)",
-                    "expected_value": "(none)",
-                    "actual_value": "(none)",
-                    "verdict": "NOT_APPLICABLE",
-                })
+                        "field": "(no_minreport_implication)",
+                        "expected_value": "(none)",
+                        "actual_value": "(none)",
+                        "verdict": "NOT_APPLICABLE",
+                    }
+                )
     # TSV
     out_tsv = OUT / "delta_minreport_consistency.tsv"
     with out_tsv.open("w") as f:
-        f.write("entry_id\tdelta_id\tcomponent\tstatus\tfield\texpected_value\tactual_value\tverdict\n")
+        f.write(
+            "entry_id\tdelta_id\tcomponent\tstatus\tfield\texpected_value\tactual_value\tverdict\n"
+        )
         for r in rows:
-            f.write("\t".join([
-                r["entry_id"], r["delta_id"], r["component"], r["status"],
-                r["field"], r["expected_value"], r["actual_value"], r["verdict"],
-            ]) + "\n")
+            f.write(
+                "\t".join(
+                    [
+                        r["entry_id"],
+                        r["delta_id"],
+                        r["component"],
+                        r["status"],
+                        r["field"],
+                        r["expected_value"],
+                        r["actual_value"],
+                        r["verdict"],
+                    ]
+                )
+                + "\n"
+            )
     # Summary
     by_verdict = Counter(r["verdict"] for r in rows)
     by_delta: dict[str, Counter] = defaultdict(Counter)
@@ -252,11 +271,12 @@ def main() -> int:
     # many have at least one MIN-REPORT implication?
     n_total_components = sum(len(v) for v in DELTA_IMPLICATIONS.values())
     n_with_implication = sum(
-        1 for d in DELTA_IMPLICATIONS.values()
-        for c, impls in d.items() if impls
+        1 for d in DELTA_IMPLICATIONS.values() for c, impls in d.items() if impls
     )
     summary = {
-        "ts": datetime.datetime.now(datetime.UTC).isoformat(timespec="seconds").replace("+00:00", "Z"),
+        "ts": datetime.datetime.now(datetime.UTC)
+        .isoformat(timespec="seconds")
+        .replace("+00:00", "Z"),
         "n_entries_with_deltas": len({r["entry_id"] for r in rows}),
         "n_triples": len(rows),
         "n_implemented_triples": n_impl,
@@ -268,13 +288,17 @@ def main() -> int:
             "match_rate": round(n_match / n_impl, 4) if n_impl else None,
             "mismatch_rate": round(n_mismatch / n_impl, 4) if n_impl else None,
             "missing_report_rate": round(n_missing / n_impl, 4) if n_impl else None,
-            "checked_count": n_match+n_mismatch,
-            "consistent_rate": round(n_match / (n_match+n_mismatch), 4) if n_match+n_mismatch else None,
+            "checked_count": n_match + n_mismatch,
+            "consistent_rate": round(n_match / (n_match + n_mismatch), 4)
+            if n_match + n_mismatch
+            else None,
         },
         "schema_exposure": {
             "total_components": n_total_components,
             "components_with_minreport_implication": n_with_implication,
-            "exposure_rate": round(n_with_implication / n_total_components, 4) if n_total_components else None,
+            "exposure_rate": round(n_with_implication / n_total_components, 4)
+            if n_total_components
+            else None,
         },
         "by_status_verdict": {s: dict(c) for s, c in by_status.items()},
         "by_delta_verdict": {d: dict(c) for d, c in by_delta.items()},

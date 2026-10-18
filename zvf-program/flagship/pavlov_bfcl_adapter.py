@@ -96,9 +96,7 @@ def _require_lower_hex40(value: Any, field: str) -> str:
     text = _require_text(value, field)
     normalized = text.lower()
     if not _REVISION_RE.fullmatch(normalized):
-        raise BFCLAdapterBoundaryError(
-            f"{field} must be a 40-character immutable revision hash"
-        )
+        raise BFCLAdapterBoundaryError(f"{field} must be a 40-character immutable revision hash")
     return normalized
 
 
@@ -127,9 +125,7 @@ def _contains_banned_evidence(value: Any) -> bool:
         lowered = value.lower()
         return any(marker in lowered for marker in _BANNED_EVIDENCE_MARKERS)
     if isinstance(value, Mapping):
-        return any(
-            _contains_banned_evidence(item) for item in value.values() if item is not None
-        )
+        return any(_contains_banned_evidence(item) for item in value.values() if item is not None)
     if isinstance(value, Sequence) and not isinstance(value, (bytes, str)):
         return any(_contains_banned_evidence(item) for item in value)
     return False
@@ -147,7 +143,9 @@ def _validate_function_schema(schema: Mapping[str, Any]) -> FunctionSchema:
         if key not in properties:
             raise BFCLAdapterBoundaryError(f"function-call schema missing property {key!r}")
         if not isinstance(properties[key], Mapping):
-            raise BFCLAdapterBoundaryError(f"function-call schema property {key!r} must be an object")
+            raise BFCLAdapterBoundaryError(
+                f"function-call schema property {key!r} must be an object"
+            )
 
     tool_type = properties["tool"].get("type")
     args_type = properties["arguments"].get("type")
@@ -279,8 +277,7 @@ def build_boundary_record(manifest: Mapping[str, Any]) -> dict[str, Any]:
         )
         if verifier_category != NATIVE_CATEGORY:
             blockers.append(
-                f"verifier category must be {NATIVE_CATEGORY!r}, "
-                f"found {verifier_category!r}"
+                f"verifier category must be {NATIVE_CATEGORY!r}, found {verifier_category!r}"
             )
 
         schema = _validate_function_schema(

@@ -43,6 +43,7 @@ Deliverables (each computed from existing TSVs -- no fabrication):
     platform_hybrid/experiments/results/group_size_iter43_summary_v2.tsv
         Single-rollup table of headline findings for the paper section.
 """
+
 from __future__ import annotations
 
 import csv
@@ -83,7 +84,7 @@ def write_tsv(path: Path, header: list[str], rows: list[dict]) -> None:
 # ---------------------------------------------------------------------------
 def zvf_theoretical_from_p(p: float, G: int) -> float:
     """Expected ZVF under i.i.d. binary reward: P(K=0) + P(K=G)."""
-    return p ** G + (1.0 - p) ** G
+    return p**G + (1.0 - p) ** G
 
 
 def main_eff_zvf(token_norm: list[dict]) -> None:
@@ -106,15 +107,17 @@ def main_eff_zvf(token_norm: list[dict]) -> None:
         gu_th = 1.0 - zvf_th
         # Retention vs the same-budget largest-G acc (G=64 anchor).
         # We compute retention as acc / max_acc_at_same_T.
-        rows.append({
-            "T_tokens": T,
-            "G": G,
-            "acc": round(acc, 4),
-            "p_proxy": round(p, 4),
-            "zvf_theoretical": round(zvf_th, 4),
-            "gu_theoretical": round(gu_th, 4),
-            "acc_minus_p": round(acc - p, 4),  # should be 0 in our proxy
-        })
+        rows.append(
+            {
+                "T_tokens": T,
+                "G": G,
+                "acc": round(acc, 4),
+                "p_proxy": round(p, 4),
+                "zvf_theoretical": round(zvf_th, 4),
+                "gu_theoretical": round(gu_th, 4),
+                "acc_minus_p": round(acc - p, 4),  # should be 0 in our proxy
+            }
+        )
     # Add retention relative to max-G at the same T.
     by_T: dict[int, list[dict]] = {}
     for r in rows:
@@ -138,9 +141,11 @@ def main_eff_zvf(token_norm: list[dict]) -> None:
     print(f"[iter43/eff_zvf] Wrote {len(enriched)} rows")
     # Diagnostic
     for r in enriched[:5]:
-        print(f"  T={r['T_tokens']:>10} G={r['G']:>2} acc={r['acc']:.3f} "
-              f"zvf_th={r['zvf_theoretical']:.3f} R={r['retention_vs_max_G']:.3f} "
-              f"zvf_implied={r['zvf_implied_retention']:.3f} residual={r['zvf_residual']:+.3f}")
+        print(
+            f"  T={r['T_tokens']:>10} G={r['G']:>2} acc={r['acc']:.3f} "
+            f"zvf_th={r['zvf_theoretical']:.3f} R={r['retention_vs_max_G']:.3f} "
+            f"zvf_implied={r['zvf_implied_retention']:.3f} residual={r['zvf_residual']:+.3f}"
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -173,14 +178,19 @@ def main_difficulty(token_norm: list[dict]) -> None:
                 bin_label = "mid"
             else:
                 bin_label = "high"
-            rows.append({
-                "T_tokens": T,
-                "G": G,
-                "acc": round(acc, 4),
-                "difficulty_bin": bin_label,
-            })
-    write_tsv(RES / "group_size_iter43_difficulty_v2.tsv",
-              ["T_tokens", "G", "acc", "difficulty_bin"], rows)
+            rows.append(
+                {
+                    "T_tokens": T,
+                    "G": G,
+                    "acc": round(acc, 4),
+                    "difficulty_bin": bin_label,
+                }
+            )
+    write_tsv(
+        RES / "group_size_iter43_difficulty_v2.tsv",
+        ["T_tokens", "G", "acc", "difficulty_bin"],
+        rows,
+    )
     print(f"[iter43/difficulty] Wrote {len(rows)} rows")
     # Compute, per (G, bin), the mean acc across budgets.
     by_g_bin: dict[tuple, list[float]] = {}
@@ -189,7 +199,9 @@ def main_difficulty(token_norm: list[dict]) -> None:
         by_g_bin.setdefault(key, []).append(r["acc"])
     summary = []
     for (G, b), accs in sorted(by_g_bin.items()):
-        summary.append({"G": G, "bin": b, "n_budgets": len(accs), "mean_acc": round(float(np.mean(accs)), 4)})
+        summary.append(
+            {"G": G, "bin": b, "n_budgets": len(accs), "mean_acc": round(float(np.mean(accs)), 4)}
+        )
     print("[iter43/difficulty] G x bin -> mean acc:")
     for s in summary:
         print(f"  G={s['G']:>2} {s['bin']:>4} (n={s['n_budgets']}) -> {s['mean_acc']:.3f}")
@@ -246,7 +258,10 @@ def main_flop_tost(token_norm: list[dict]) -> None:
             diff_lo = a_lo - b_hi
             diff_hi = a_hi - b_lo
             # TOST at each eps.
-            tost_p = {f"tost_p_eps{e}": round(tost_pvalue(diff, diff_lo, diff_hi, e), 6) for e in eps_levels}
+            tost_p = {
+                f"tost_p_eps{e}": round(tost_pvalue(diff, diff_lo, diff_hi, e), 6)
+                for e in eps_levels
+            }
             # Retention.
             R = acc_a / acc_b if acc_b > 0 else float("nan")
             R_lo = a_lo / b_hi if b_hi > 0 else float("nan")
@@ -276,15 +291,17 @@ def main_flop_tost(token_norm: list[dict]) -> None:
     for e in eps_levels:
         col = f"tost_p_eps{e}"
         n_pass = sum(1 for r in rows if float(r[col]) < 0.05)
-        print(f"  TOST p<0.05 at eps={e}: {n_pass}/{len(rows)} = {n_pass/len(rows):.3f}")
+        print(f"  TOST p<0.05 at eps={e}: {n_pass}/{len(rows)} = {n_pass / len(rows):.3f}")
     n_wu = sum(1 for r in rows if r["wu_97_6_in_CI"])
-    print(f"  Wu 97.6% in CI: {n_wu}/{len(rows)} = {n_wu/len(rows):.3f}")
+    print(f"  Wu 97.6% in CI: {n_wu}/{len(rows)} = {n_wu / len(rows):.3f}")
 
 
 # ---------------------------------------------------------------------------
 # Summary
 # ---------------------------------------------------------------------------
-def main_summary(token_norm: list[dict], eff_rows: list[dict], diff_rows: list[dict], tost_rows: list[dict]) -> None:
+def main_summary(
+    token_norm: list[dict], eff_rows: list[dict], diff_rows: list[dict], tost_rows: list[dict]
+) -> None:
     """Compute headline summary statistics."""
     # (a) Mean ZVF-residual across all cells.
     residuals = [float(r["zvf_residual"]) for r in eff_rows]
@@ -299,19 +316,40 @@ def main_summary(token_norm: list[dict], eff_rows: list[dict], diff_rows: list[d
         {"metric": "n_eff_zvf_cells", "value": len(eff_rows)},
         {"metric": "mean_zvf_residual", "value": round(float(np.mean(residuals)), 4)},
         {"metric": "std_zvf_residual", "value": round(float(np.std(residuals)), 4)},
-        {"metric": "frac_residual_negative", "value": round(float(np.mean(np.array(residuals) < 0)), 4)},
+        {
+            "metric": "frac_residual_negative",
+            "value": round(float(np.mean(np.array(residuals) < 0)), 4),
+        },
         {"metric": "n_tost_cells_total", "value": n_total},
-        {"metric": "n_tost_equiv_eps0.05", "value": n_tost_005, "frac": round(n_tost_005 / n_total, 4)},
-        {"metric": "n_tost_equiv_eps0.10", "value": n_tost_010, "frac": round(n_tost_010 / n_total, 4)},
-        {"metric": "n_tost_equiv_eps0.20", "value": n_tost_020, "frac": round(n_tost_020 / n_total, 4)},
-        {"metric": "n_wu_97_6_in_CI", "value": sum(1 for r in tost_rows if r["wu_97_6_in_CI"] == "True"), "frac": round(sum(1 for r in tost_rows if r["wu_97_6_in_CI"] == "True") / n_total, 4)},
+        {
+            "metric": "n_tost_equiv_eps0.05",
+            "value": n_tost_005,
+            "frac": round(n_tost_005 / n_total, 4),
+        },
+        {
+            "metric": "n_tost_equiv_eps0.10",
+            "value": n_tost_010,
+            "frac": round(n_tost_010 / n_total, 4),
+        },
+        {
+            "metric": "n_tost_equiv_eps0.20",
+            "value": n_tost_020,
+            "frac": round(n_tost_020 / n_total, 4),
+        },
+        {
+            "metric": "n_wu_97_6_in_CI",
+            "value": sum(1 for r in tost_rows if r["wu_97_6_in_CI"] == "True"),
+            "frac": round(sum(1 for r in tost_rows if r["wu_97_6_in_CI"] == "True") / n_total, 4),
+        },
     ]
     for r in g4_g32:
-        summary_rows.append({
-            "metric": f"G4_vs_G32_T{r['T_tokens']}_retention",
-            "value": r["retention"],
-            "frac": "",
-        })
+        summary_rows.append(
+            {
+                "metric": f"G4_vs_G32_T{r['T_tokens']}_retention",
+                "value": r["retention"],
+                "frac": "",
+            }
+        )
     write_tsv(RES / "group_size_iter43_summary_v2.tsv", ["metric", "value", "frac"], summary_rows)
     print(f"[iter43/summary] Wrote {len(summary_rows)} headline metrics")
 

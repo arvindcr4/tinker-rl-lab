@@ -23,14 +23,15 @@ Outputs: platform_hybrid/experiments/results/p5p8/p6_iter158_per_cell.tsv
          platform_hybrid/experiments/results/p5p8/p6_iter158_coverage_gaps.tsv
          platform_hybrid/experiments/results/p5p8/p6_iter158_summary.json
 """
+
 import csv
 import json
 import os
 from collections import defaultdict
 
 WORKTREE = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-ENT_DIR  = os.path.join(WORKTREE, "registry", "entries")
-OUT_DIR  = os.path.join(WORKTREE, "experiments", "results", "p5p8")
+ENT_DIR = os.path.join(WORKTREE, "registry", "entries")
+OUT_DIR = os.path.join(WORKTREE, "experiments", "results", "p5p8")
 os.makedirs(OUT_DIR, exist_ok=True)
 
 
@@ -119,62 +120,78 @@ def main():
             # verdict of the claim_validation row (when present + machine-generated)
             verdict = cv_idx[k].get("verdict") if in_cv else None
             obs_delta = meas_idx[k].get("delta") if in_meas else None
-            cells.append({
-                "entry_id": eid,
-                "metric": m,
-                "panel": p,
-                "in_expected_effects": int(in_exp),
-                "in_measured": int(in_meas),
-                "in_claim_validation": int(in_cv),
-                "classification": classification,
-                "verdict": verdict if verdict is not None else "",
-                "obs_delta": "" if obs_delta is None else f"{obs_delta:.6f}",
-            })
+            cells.append(
+                {
+                    "entry_id": eid,
+                    "metric": m,
+                    "panel": p,
+                    "in_expected_effects": int(in_exp),
+                    "in_measured": int(in_meas),
+                    "in_claim_validation": int(in_cv),
+                    "classification": classification,
+                    "verdict": verdict if verdict is not None else "",
+                    "obs_delta": "" if obs_delta is None else f"{obs_delta:.6f}",
+                }
+            )
 
         # Coverage gaps: which (metric, panel) have prose but no claim_validation?
         for k in sorted(set(exp_idx) - set(cv_idx)):
             m, p = k
-            coverage_gaps.append({
-                "entry_id": eid,
-                "gap_type": "EXPECTED_WITHOUT_CV",
-                "metric": m, "panel": p,
-                "predicted_sign": exp_idx[k].get("predicted_sign"),
-                "rationale": (exp_idx[k].get("rationale") or "")[:120],
-                "severity": "high",  # forward claim without machine validation
-            })
+            coverage_gaps.append(
+                {
+                    "entry_id": eid,
+                    "gap_type": "EXPECTED_WITHOUT_CV",
+                    "metric": m,
+                    "panel": p,
+                    "predicted_sign": exp_idx[k].get("predicted_sign"),
+                    "rationale": (exp_idx[k].get("rationale") or "")[:120],
+                    "severity": "high",  # forward claim without machine validation
+                }
+            )
         # Which measured lack expected_effects (no forward claim)
         for k in sorted(set(meas_idx) - set(exp_idx)):
             m, p = k
-            coverage_gaps.append({
-                "entry_id": eid,
-                "gap_type": "MEASURED_WITHOUT_EXPECTED",
-                "metric": m, "panel": p,
-                "predicted_sign": None,
-                "rationale": f"measured delta={meas_idx[k].get('delta')}",
-                "severity": "medium",  # measurement without prose prediction
-            })
+            coverage_gaps.append(
+                {
+                    "entry_id": eid,
+                    "gap_type": "MEASURED_WITHOUT_EXPECTED",
+                    "metric": m,
+                    "panel": p,
+                    "predicted_sign": None,
+                    "rationale": f"measured delta={meas_idx[k].get('delta')}",
+                    "severity": "medium",  # measurement without prose prediction
+                }
+            )
         # Which prose-deltas have NO expected_effects at all
         if n_deltas > 0 and n_exp == 0:
-            for di, dl in enumerate(deltas):
-                coverage_gaps.append({
-                    "entry_id": eid,
-                    "gap_type": "DELTAS_WITHOUT_EXPECTED",
-                    "metric": "?", "panel": "?",
-                    "predicted_sign": None,
-                    "rationale": (dl.get("component") or "?") + ": " + (dl.get("change") or "")[:80],
-                    "severity": "high",
-                })
+            for _di, dl in enumerate(deltas):
+                coverage_gaps.append(
+                    {
+                        "entry_id": eid,
+                        "gap_type": "DELTAS_WITHOUT_EXPECTED",
+                        "metric": "?",
+                        "panel": "?",
+                        "predicted_sign": None,
+                        "rationale": (dl.get("component") or "?")
+                        + ": "
+                        + (dl.get("change") or "")[:80],
+                        "severity": "high",
+                    }
+                )
         # Which expected_effects lack measured
         for k in sorted(set(exp_idx) - set(meas_idx)):
             m, p = k
-            coverage_gaps.append({
-                "entry_id": eid,
-                "gap_type": "EXPECTED_WITHOUT_MEASURED",
-                "metric": m, "panel": p,
-                "predicted_sign": exp_idx[k].get("predicted_sign"),
-                "rationale": (exp_idx[k].get("rationale") or "")[:120],
-                "severity": "medium",
-            })
+            coverage_gaps.append(
+                {
+                    "entry_id": eid,
+                    "gap_type": "EXPECTED_WITHOUT_MEASURED",
+                    "metric": m,
+                    "panel": p,
+                    "predicted_sign": exp_idx[k].get("predicted_sign"),
+                    "rationale": (exp_idx[k].get("rationale") or "")[:120],
+                    "severity": "medium",
+                }
+            )
 
     # Write per-cell TSV
     cell_path = os.path.join(OUT_DIR, "p6_iter158_per_cell.tsv")
@@ -193,20 +210,41 @@ def main():
 
     # Per-entry TSV (sorted by completeness ascending — biggest gaps first)
     entry_path = os.path.join(OUT_DIR, "p6_iter158_per_entry.tsv")
-    sorted_eids = sorted(per_entry_stats.keys(),
-                         key=lambda e: (per_entry_stats[e]["completeness"]is None,
-                                        per_entry_stats[e]["completeness"] or 0))
+    sorted_eids = sorted(
+        per_entry_stats.keys(),
+        key=lambda e: (
+            per_entry_stats[e]["completeness"] is None,
+            per_entry_stats[e]["completeness"] or 0,
+        ),
+    )
     with open(entry_path, "w", newline="") as f:
         w = csv.writer(f, delimiter="\t")
-        w.writerow(["entry_id", "n_deltas", "n_expected_effects", "n_measured",
-                    "n_claim_validation", "n_distinct_keys", "n_joined",
-                    "registry_completeness"])
+        w.writerow(
+            [
+                "entry_id",
+                "n_deltas",
+                "n_expected_effects",
+                "n_measured",
+                "n_claim_validation",
+                "n_distinct_keys",
+                "n_joined",
+                "registry_completeness",
+            ]
+        )
         for eid in sorted_eids:
             s = per_entry_stats[eid]
-            w.writerow([eid, s["n_deltas"], s["n_expected_effects"],
-                        s["n_measured"], s["n_claim_validation"],
-                        s["n_distinct_keys"], s["n_joined"],
-                        f"{s['completeness']:.4f}" if s["completeness"] is not None else "NA"])
+            w.writerow(
+                [
+                    eid,
+                    s["n_deltas"],
+                    s["n_expected_effects"],
+                    s["n_measured"],
+                    s["n_claim_validation"],
+                    s["n_distinct_keys"],
+                    s["n_joined"],
+                    f"{s['completeness']:.4f}" if s["completeness"] is not None else "NA",
+                ]
+            )
 
     # Coverage gaps TSV
     gap_path = os.path.join(OUT_DIR, "p6_iter158_coverage_gaps.tsv")
@@ -244,20 +282,28 @@ def main():
         "per_entry_gap_count": dict(per_entry_gap_counts),
         "headline": {
             "n_entries_with_deltas_but_no_expected_effects": sum(
-                1 for eid, s in per_entry_stats.items()
+                1
+                for eid, s in per_entry_stats.items()
                 if s["n_deltas"] > 0 and s["n_expected_effects"] == 0
             ),
             "n_entries_with_expected_but_no_measured": sum(
-                1 for eid, s in per_entry_stats.items()
+                1
+                for eid, s in per_entry_stats.items()
                 if s["n_expected_effects"] > 0 and s["n_measured"] < s["n_expected_effects"]
             ),
             "n_entries_with_expected_but_no_cv": sum(
-                1 for eid, s in per_entry_stats.items()
+                1
+                for eid, s in per_entry_stats.items()
                 if s["n_expected_effects"] > 0 and s["n_claim_validation"] < s["n_expected_effects"]
             ),
-            "pct_full_cells": round(100.0 * sum(1 for c in cells if c["classification"] == "FULL") / max(len(cells), 1), 2),
-            "pct_high_severity_gaps": round(100.0 * severity_counts.get("high", 0) / max(severity_counts_total, 1), 2),
-        }
+            "pct_full_cells": round(
+                100.0 * sum(1 for c in cells if c["classification"] == "FULL") / max(len(cells), 1),
+                2,
+            ),
+            "pct_high_severity_gaps": round(
+                100.0 * severity_counts.get("high", 0) / max(severity_counts_total, 1), 2
+            ),
+        },
     }
 
     sum_path = os.path.join(OUT_DIR, "p6_iter158_summary.json")
@@ -273,10 +319,12 @@ def main():
     for eid in sorted_eids:
         s = per_entry_stats[eid]
         comp = f"{s['completeness']:.3f}" if s["completeness"] is not None else "  NA"
-        print(f"  {eid:50s} comp={comp}  deltas={s['n_deltas']:2d} "
-              f"exp={s['n_expected_effects']:2d} meas={s['n_measured']:2d} "
-              f"cv={s['n_claim_validation']:2d}  "
-              f"gaps={per_entry_gap_counts.get(eid, 0)}")
+        print(
+            f"  {eid:50s} comp={comp}  deltas={s['n_deltas']:2d} "
+            f"exp={s['n_expected_effects']:2d} meas={s['n_measured']:2d} "
+            f"cv={s['n_claim_validation']:2d}  "
+            f"gaps={per_entry_gap_counts.get(eid, 0)}"
+        )
     print(f"\nFiles: {cell_path}\n        {entry_path}\n        {gap_path}\n        {sum_path}")
 
 

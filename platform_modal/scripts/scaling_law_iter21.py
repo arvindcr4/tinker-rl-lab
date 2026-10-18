@@ -46,9 +46,9 @@ Figure:
                                         R_max residual histogram,
                                         two-anchor extrapolation)
 """
+
 from __future__ import annotations
 
-import csv
 import json
 import math
 from pathlib import Path
@@ -56,10 +56,10 @@ from pathlib import Path
 import matplotlib
 
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt  # noqa: E402
-import numpy as np  # noqa: E402
-from scipy.optimize import curve_fit  # noqa: E402
-from scipy.stats import levene, spearmanr  # noqa: E402
+import matplotlib.pyplot as plt
+import numpy as np
+from scipy.optimize import curve_fit
+from scipy.stats import levene, spearmanr
 
 REPO = Path(__file__).resolve().parent.parent
 TRACE_DIR = REPO / "experiments" / "tinker-runs" / "results"
@@ -70,18 +70,78 @@ PAPER_FIG = REPO / "paper" / "figures"
 PAPER_FIG.mkdir(exist_ok=True)
 
 EXTENDED_MODELS: dict[str, dict] = {
-    "Qwen3.5-4B": {"file": "scale_gsm8k_qwen3.5-4b.json", "params": 4.0, "arch": "dense", "family": "qwen"},
-    "Qwen3-8B": {"file": "scale_gsm8k_qwen3-8b.json", "params": 8.0, "arch": "dense", "family": "qwen"},
-    "Llama-3.1-8B-Instruct": {"file": "scale_gsm8k_llama-8b-inst.json", "params": 8.0, "arch": "dense", "family": "llama"},
-    "Qwen3-32B": {"file": "scale_gsm8k_qwen3-32b.json", "params": 32.0, "arch": "dense", "family": "qwen"},
-    "Qwen3.5-27B": {"file": "scale_gsm8k_qwen3.5-27b.json", "params": 27.0, "arch": "dense", "family": "qwen"},
-    "gpt-oss-20B": {"file": "arch_gsm8k_gpt-oss-20b.json", "params": 20.0, "arch": "moe", "family": "gpt-oss"},
-    "Qwen3-30B-MoE": {"file": "moe_gsm8k_qwen3-30b-moe.json", "params": 30.0, "arch": "moe", "family": "qwen"},
-    "Qwen3-30B-MoE-Inst": {"file": "moe_gsm8k_qwen3-30b-inst.json", "params": 30.0, "arch": "moe", "family": "qwen"},
-    "DeepSeek-V3.1": {"file": "frontier_gsm8k_deepseek-v3.1.json", "params": 685.0, "arch": "moe", "family": "deepseek"},
-    "Nemotron-120B": {"file": "frontier_gsm8k_nemotron-120b.json", "params": 120.0, "arch": "dense", "family": "nemotron"},
-    "Qwen3-235B-MoE": {"file": "frontier_gsm8k_qwen3-235b.json", "params": 235.0, "arch": "moe", "family": "qwen"},
-    "Kimi-K2-Thinking": {"file": "arch_gsm8k_kimi-k2.json", "params": 1000.0, "arch": "moe", "family": "kimi"},
+    "Qwen3.5-4B": {
+        "file": "scale_gsm8k_qwen3.5-4b.json",
+        "params": 4.0,
+        "arch": "dense",
+        "family": "qwen",
+    },
+    "Qwen3-8B": {
+        "file": "scale_gsm8k_qwen3-8b.json",
+        "params": 8.0,
+        "arch": "dense",
+        "family": "qwen",
+    },
+    "Llama-3.1-8B-Instruct": {
+        "file": "scale_gsm8k_llama-8b-inst.json",
+        "params": 8.0,
+        "arch": "dense",
+        "family": "llama",
+    },
+    "Qwen3-32B": {
+        "file": "scale_gsm8k_qwen3-32b.json",
+        "params": 32.0,
+        "arch": "dense",
+        "family": "qwen",
+    },
+    "Qwen3.5-27B": {
+        "file": "scale_gsm8k_qwen3.5-27b.json",
+        "params": 27.0,
+        "arch": "dense",
+        "family": "qwen",
+    },
+    "gpt-oss-20B": {
+        "file": "arch_gsm8k_gpt-oss-20b.json",
+        "params": 20.0,
+        "arch": "moe",
+        "family": "gpt-oss",
+    },
+    "Qwen3-30B-MoE": {
+        "file": "moe_gsm8k_qwen3-30b-moe.json",
+        "params": 30.0,
+        "arch": "moe",
+        "family": "qwen",
+    },
+    "Qwen3-30B-MoE-Inst": {
+        "file": "moe_gsm8k_qwen3-30b-inst.json",
+        "params": 30.0,
+        "arch": "moe",
+        "family": "qwen",
+    },
+    "DeepSeek-V3.1": {
+        "file": "frontier_gsm8k_deepseek-v3.1.json",
+        "params": 685.0,
+        "arch": "moe",
+        "family": "deepseek",
+    },
+    "Nemotron-120B": {
+        "file": "frontier_gsm8k_nemotron-120b.json",
+        "params": 120.0,
+        "arch": "dense",
+        "family": "nemotron",
+    },
+    "Qwen3-235B-MoE": {
+        "file": "frontier_gsm8k_qwen3-235b.json",
+        "params": 235.0,
+        "arch": "moe",
+        "family": "qwen",
+    },
+    "Kimi-K2-Thinking": {
+        "file": "arch_gsm8k_kimi-k2.json",
+        "params": 1000.0,
+        "arch": "moe",
+        "family": "kimi",
+    },
 }
 SEED = 42
 N_BOOT = 5_000
@@ -115,7 +175,9 @@ def fit_per_trace(y: np.ndarray) -> dict:
 
     try:
         popt, pcov = curve_fit(
-            saturation, t, y,
+            saturation,
+            t,
+            y,
             p0=(max(0.9 * float(y.max()) + 0.05, 0.05), 0.3),
             bounds=([0.0, 1e-4], [1.5, 10.0]),
             maxfev=20_000,
@@ -197,10 +259,14 @@ def axis_E_lambda_audit(rows: list[dict]) -> tuple[list[dict], dict]:
         "frac_lam_at_bound": n_bound / max(1, len(rows)),
         "n_degenerate_by_variance": n_deg_var,
         "frac_degenerate_by_variance": n_deg_var / max(1, len(rows)),
-        "correlation_log10var_lam": float(np.corrcoef(
-            [math.log10(max(r["var_y"], 1e-6)) for r in rows],
-            [min(r["lam"], 9.99) for r in rows],
-        )[0, 1]) if len(rows) >= 3 else float("nan"),
+        "correlation_log10var_lam": float(
+            np.corrcoef(
+                [math.log10(max(r["var_y"], 1e-6)) for r in rows],
+                [min(r["lam"], 9.99) for r in rows],
+            )[0, 1]
+        )
+        if len(rows) >= 3
+        else float("nan"),
     }
     return out, summary
 
@@ -351,7 +417,7 @@ def axis_H_r_max_invariant(rows: list[dict]) -> tuple[list[dict], dict]:
     else:
         stat, p = float("nan"), float("nan")
     rows_tsv = []
-    for r, a, lr, lnv in zip(keep, arch, resid, logN):
+    for r, a, lr, lnv in zip(keep, arch, resid, logN, strict=False):
         rows_tsv.append(
             {
                 "model": r["model"],
@@ -505,7 +571,7 @@ def make_figure(rows_fit: list[dict], summaries: dict, out_png: Path, out_pdf: P
     ax.set_ylim(0, 1.05)
     ax.set_ylabel("fraction with lambda_at_bound")
     ax.set_title("(E) lambda-bound hit rate by arch")
-    for i, k in enumerate(labels):
+    for i, _k in enumerate(labels):
         ax.text(i, fracs[i] + 0.02, f"{fracs[i]:.0%} (n={n_each[i]})", ha="center", fontsize=9)
     ax.grid(alpha=0.3, axis="y")
 
@@ -588,9 +654,7 @@ def main() -> dict:
     write_tsv(RESULTS_DIR / "scaling_law_iter21_two_anchor_extrap.tsv", extr_rows)
 
     comp_rows, comp_sum = axis_J_compute_regression(fits)
-    print(
-        f"  axis J: compute lift share = {comp_sum['compute_lift_share']:.3f}"
-    )
+    print(f"  axis J: compute lift share = {comp_sum['compute_lift_share']:.3f}")
     write_tsv(RESULTS_DIR / "scaling_law_iter21_compute_regression.tsv", comp_rows)
 
     summary_rows = [

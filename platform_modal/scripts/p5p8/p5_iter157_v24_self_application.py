@@ -32,7 +32,7 @@ from collections import Counter, defaultdict
 from pathlib import Path
 
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _stats
-from _stats import pow_root, wilson_p  # noqa: E402
+from _stats import pow_root, wilson_p
 
 ROOT = Path("platform_hybrid/experiments/results")
 MEGA_CELLS = ROOT / "mega_20260704" / "cells.tsv"
@@ -53,45 +53,166 @@ P8_BASE = Path("platform_hybrid/experiments/results")
 
 CLAIMS = [
     # iter-141 algorithm-axis eta^2 on N2
-    ("C01_eta2_prompt_n2",    "n2",       "0.9166", ["prompt_idx", "method", "step", "reward_mean"], "platform_hybrid/experiments/results/n2_reward_tensor_resume/grpo_s0_tensors.jsonl"),
-    ("C02_eta2_step_n2",      "n2",       "0.0625", ["step", "method", "prompt_idx", "reward_mean"], "platform_hybrid/experiments/results/n2_reward_tensor_resume/grpo_s0_tensors.jsonl"),
-    ("C03_eta2_method_n2",    "n2",       "0.0005", ["method", "step", "prompt_idx", "reward_mean"], "platform_hybrid/experiments/results/n2_reward_tensor_resume/grpo_s0_tensors.jsonl"),
+    (
+        "C01_eta2_prompt_n2",
+        "n2",
+        "0.9166",
+        ["prompt_idx", "method", "step", "reward_mean"],
+        "platform_hybrid/experiments/results/n2_reward_tensor_resume/grpo_s0_tensors.jsonl",
+    ),
+    (
+        "C02_eta2_step_n2",
+        "n2",
+        "0.0625",
+        ["step", "method", "prompt_idx", "reward_mean"],
+        "platform_hybrid/experiments/results/n2_reward_tensor_resume/grpo_s0_tensors.jsonl",
+    ),
+    (
+        "C03_eta2_method_n2",
+        "n2",
+        "0.0005",
+        ["method", "step", "prompt_idx", "reward_mean"],
+        "platform_hybrid/experiments/results/n2_reward_tensor_resume/grpo_s0_tensors.jsonl",
+    ),
     # iter-133 N10 per-axis eta^2
-    ("C04_eta2_seed_zvf_n10", "n10",      "0.1025", ["seed", "step_band", "zvf"], "platform_hybrid/experiments/results/n10_seed_expansion/n10_grpo_s42.json"),
-    ("C05_eta2_band_zvf_n10", "n10",      "0.0346", ["step_band", "seed", "zvf"], "platform_hybrid/experiments/results/n10_seed_expansion/n10_grpo_s42.json"),
-    ("C06_R_band_over_seed_reward_n10", "n10", "2.97", ["step_band", "seed", "reward_mean"], "platform_hybrid/experiments/results/n10_seed_expansion/n10_grpo_s42.json"),
+    (
+        "C04_eta2_seed_zvf_n10",
+        "n10",
+        "0.1025",
+        ["seed", "step_band", "zvf"],
+        "platform_hybrid/experiments/results/n10_seed_expansion/n10_grpo_s42.json",
+    ),
+    (
+        "C05_eta2_band_zvf_n10",
+        "n10",
+        "0.0346",
+        ["step_band", "seed", "zvf"],
+        "platform_hybrid/experiments/results/n10_seed_expansion/n10_grpo_s42.json",
+    ),
+    (
+        "C06_R_band_over_seed_reward_n10",
+        "n10",
+        "2.97",
+        ["step_band", "seed", "reward_mean"],
+        "platform_hybrid/experiments/results/n10_seed_expansion/n10_grpo_s42.json",
+    ),
     # iter-125 chained eta^2 (mega-98)
-    ("C07_R_stack_over_algo_zvf_mega", "mega", "10.32", ["stack_axis", "algo_axis", "zvf"], "platform_hybrid/experiments/results/mega_20260704/cells.tsv"),
-    ("C08_R_stack_over_algo_pcd_mega", "mega", "8.5",   ["stack_axis", "algo_axis", "pcd"], "platform_hybrid/experiments/results/mega_20260704/cells.tsv"),
+    (
+        "C07_R_stack_over_algo_zvf_mega",
+        "mega",
+        "10.32",
+        ["stack_axis", "algo_axis", "zvf"],
+        "platform_hybrid/experiments/results/mega_20260704/cells.tsv",
+    ),
+    (
+        "C08_R_stack_over_algo_pcd_mega",
+        "mega",
+        "8.5",
+        ["stack_axis", "algo_axis", "pcd"],
+        "platform_hybrid/experiments/results/mega_20260704/cells.tsv",
+    ),
     # iter-105 live field coverage
-    ("C09_field_coverage_mega", "mega",  "98/98", ["cell_id", "model", "task_slice", "G", "temperature", "seed", "zvf"], "platform_hybrid/experiments/results/mega_20260704/manifests/*.json"),
+    (
+        "C09_field_coverage_mega",
+        "mega",
+        "98/98",
+        ["cell_id", "model", "task_slice", "G", "temperature", "seed", "zvf"],
+        "platform_hybrid/experiments/results/mega_20260704/manifests/*.json",
+    ),
     # iter-113 v22 recovery
-    ("C10_recovery_rate_mega", "mega", "13/18", ["cell_id", "zvf", "pcd", "mean_completion_len"], "platform_hybrid/experiments/results/mega_20260704/cells.tsv"),
+    (
+        "C10_recovery_rate_mega",
+        "mega",
+        "13/18",
+        ["cell_id", "zvf", "pcd", "mean_completion_len"],
+        "platform_hybrid/experiments/results/mega_20260704/cells.tsv",
+    ),
     # iter-117 structural ambiguity
-    ("C11_ambiguous_fields_mega", "mega", "4/18", ["cell_id", "manifest_path"], "platform_hybrid/experiments/results/mega_20260704/cells.tsv"),
+    (
+        "C11_ambiguous_fields_mega",
+        "mega",
+        "4/18",
+        ["cell_id", "manifest_path"],
+        "platform_hybrid/experiments/results/mega_20260704/cells.tsv",
+    ),
     # iter-121 value-correctness
-    ("C12_value_correct_mega", "mega", "98/98", ["cell_id", "tensor_path", "manifest_path", "zvf"], "platform_hybrid/experiments/results/mega_20260704/cells.tsv"),
+    (
+        "C12_value_correct_mega",
+        "mega",
+        "98/98",
+        ["cell_id", "tensor_path", "manifest_path", "zvf"],
+        "platform_hybrid/experiments/results/mega_20260704/cells.tsv",
+    ),
     # iter-129 bootstrap CI audit (headlines, sourced from N2 panel)
-    ("C13_eta2_loss_n2", "n2", "0.987", ["method", "step", "loss"], "platform_hybrid/experiments/results/n2_reward_tensor_resume/grpo_s0_tensors.jsonl"),
-    ("C14_eta2_zvf_n2",  "n2", "0.045", ["method", "step", "zvf"],  "platform_hybrid/experiments/results/n2_reward_tensor_resume/grpo_s0_tensors.jsonl"),
+    (
+        "C13_eta2_loss_n2",
+        "n2",
+        "0.987",
+        ["method", "step", "loss"],
+        "platform_hybrid/experiments/results/n2_reward_tensor_resume/grpo_s0_tensors.jsonl",
+    ),
+    (
+        "C14_eta2_zvf_n2",
+        "n2",
+        "0.045",
+        ["method", "step", "zvf"],
+        "platform_hybrid/experiments/results/n2_reward_tensor_resume/grpo_s0_tensors.jsonl",
+    ),
     # iter-137 cross-corpus
-    ("C15_recoverable_mega", "mega", "13/18", ["cell_id", "manifest_path"], "platform_hybrid/experiments/results/mega_20260704/manifests/*.json"),
-    ("C16_recoverable_n2", "n2", "7/18", ["reward_mean", "zvf", "prompt_idx"], "platform_hybrid/experiments/results/n2_reward_tensor_resume/grpo_s0_tensors.jsonl"),
-    ("C17_recoverable_n10", "n10", "3/18", ["seed", "step_band", "zvf"], "platform_hybrid/experiments/results/n10_seed_expansion/n10_grpo_s42.json"),
+    (
+        "C15_recoverable_mega",
+        "mega",
+        "13/18",
+        ["cell_id", "manifest_path"],
+        "platform_hybrid/experiments/results/mega_20260704/manifests/*.json",
+    ),
+    (
+        "C16_recoverable_n2",
+        "n2",
+        "7/18",
+        ["reward_mean", "zvf", "prompt_idx"],
+        "platform_hybrid/experiments/results/n2_reward_tensor_resume/grpo_s0_tensors.jsonl",
+    ),
+    (
+        "C17_recoverable_n10",
+        "n10",
+        "3/18",
+        ["seed", "step_band", "zvf"],
+        "platform_hybrid/experiments/results/n10_seed_expansion/n10_grpo_s42.json",
+    ),
     # iter-145 schema ground-truth
-    ("C18_manifest_xref_mega", "mega", "98/98", ["cell_id", "manifest_path", "tensor_path"], "platform_hybrid/experiments/results/mega_20260704/manifests/*.json"),
+    (
+        "C18_manifest_xref_mega",
+        "mega",
+        "98/98",
+        ["cell_id", "manifest_path", "tensor_path"],
+        "platform_hybrid/experiments/results/mega_20260704/manifests/*.json",
+    ),
     # iter-149 cite-key audit
     ("C19_p5_cite_formed", "bib", "38/38", ["cite_key"], "platform_hybrid/paper/references.bib"),
     # iter-153 v2.4 identifier-stamp
     ("C20_v24_bib", "bib", "38/38", ["cite_key"], "platform_hybrid/paper/references.bib"),
-    ("C21_v24_manifest", "mega", "98/98", ["cell_id", "manifest_path"], "platform_hybrid/experiments/results/mega_20260704/manifests/*.json"),
-    ("C22_v24_cells", "mega", "98/98", ["cell_id", "tensor_path", "manifest_path"], "platform_hybrid/experiments/results/mega_20260704/cells.tsv"),
+    (
+        "C21_v24_manifest",
+        "mega",
+        "98/98",
+        ["cell_id", "manifest_path"],
+        "platform_hybrid/experiments/results/mega_20260704/manifests/*.json",
+    ),
+    (
+        "C22_v24_cells",
+        "mega",
+        "98/98",
+        ["cell_id", "tensor_path", "manifest_path"],
+        "platform_hybrid/experiments/results/mega_20260704/cells.tsv",
+    ),
 ]
 
 
 # ---------------------------------------------------------------------------
 # Step 2: source presence + per-row field checks
 # ---------------------------------------------------------------------------
+
 
 def load_mega_cells():
     """Return list of (cell_id, fields_dict) for mega cells.tsv."""
@@ -171,53 +292,66 @@ def load_bib():
 # Step 3: claim-field coverage evaluation
 # ---------------------------------------------------------------------------
 
+
 def fields_present_in_mega_cell(required):
     cells = load_mega_cells()
     manifests = load_mega_manifests()
     n_total = len(cells)
     n_pass = 0
-    for cell, manifest in zip(cells, manifests):
+    for cell, manifest in zip(cells, manifests, strict=False):
         ok = True
         for f in required:
             if f == "cell_id":
                 if not cell.get("cell_id"):
-                    ok = False; break
+                    ok = False
+                    break
             elif f == "manifest_path":
                 if not cell.get("manifest_path"):
-                    ok = False; break
+                    ok = False
+                    break
             elif f == "tensor_path":
                 if not cell.get("tensor_path"):
-                    ok = False; break
+                    ok = False
+                    break
             elif f == "stack_axis":
                 if not (cell.get("model") and cell.get("task_slice") and cell.get("G")):
-                    ok = False; break
+                    ok = False
+                    break
             elif f == "algo_axis":
                 # The cells.tsv has only 1 algo (GRPO) per cell; algo-axis
                 # is implicit in cells.tsv; pass if model is set
                 if not cell.get("model"):
-                    ok = False; break
+                    ok = False
+                    break
             elif f in ("loss", "zvf", "pcd", "reward_mean", "mean_completion_len"):
                 if cell.get(f) is None or cell.get(f) == "":
-                    ok = False; break
+                    ok = False
+                    break
             elif f == "model":
                 if not cell.get("model"):
-                    ok = False; break
+                    ok = False
+                    break
             elif f == "task_slice":
                 if not cell.get("task_slice"):
-                    ok = False; break
+                    ok = False
+                    break
             elif f == "G":
                 if cell.get("G") in (None, ""):
-                    ok = False; break
+                    ok = False
+                    break
             elif f == "temperature":
                 if cell.get("temperature") in (None, ""):
-                    ok = False; break
+                    ok = False
+                    break
             elif f == "seed":
                 if cell.get("seed") in (None, ""):
-                    ok = False; break
+                    ok = False
+                    break
             else:
                 # unknown field — fall back to manifest check
                 if not manifest.get(f):
-                    ok = False; break
+                    ok = False
+                    break
         if ok:
             n_pass += 1
     return n_total, n_pass
@@ -232,31 +366,40 @@ def fields_present_in_n2(required):
         for f in required:
             if f == "reward_mean":
                 if r.get("_reward_mean") is None:
-                    ok = False; break
+                    ok = False
+                    break
             elif f == "zvf":
                 if r.get("zvf") is None:
-                    ok = False; break
+                    ok = False
+                    break
             elif f == "loss":
                 if r.get("loss") is None:
-                    ok = False; break
+                    ok = False
+                    break
             elif f == "pcd":
                 if r.get("pcd") is None:
-                    ok = False; break
+                    ok = False
+                    break
             elif f == "prompt_idx":
                 if not r.get("prompt_indices"):
-                    ok = False; break
+                    ok = False
+                    break
             elif f == "method":
                 if not r.get("_method"):
-                    ok = False; break
+                    ok = False
+                    break
             elif f == "step":
                 if r.get("step") is None:
-                    ok = False; break
+                    ok = False
+                    break
             elif f == "stack_axis":
                 if not (r.get("group_size") and r.get("method")):
-                    ok = False; break
+                    ok = False
+                    break
             else:
                 if r.get(f) is None:
-                    ok = False; break
+                    ok = False
+                    break
         if ok:
             n_pass += 1
     return n_total, n_pass
@@ -271,22 +414,28 @@ def fields_present_in_n10(required):
         for f in required:
             if f == "zvf":
                 if r.get("zvf") is None:
-                    ok = False; break
+                    ok = False
+                    break
             elif f == "reward_mean":
                 if r.get("_reward_mean") is None and r.get("reward") is None:
-                    ok = False; break
+                    ok = False
+                    break
             elif f == "seed":
                 if r.get("seed") is None:
-                    ok = False; break
+                    ok = False
+                    break
             elif f == "step_band":
                 if r.get("step_band") is None and r.get("step") is None:
-                    ok = False; break
+                    ok = False
+                    break
             elif f == "step":
                 if r.get("step") is None:
-                    ok = False; break
+                    ok = False
+                    break
             else:
                 if r.get(f) is None:
-                    ok = False; break
+                    ok = False
+                    break
         if ok:
             n_pass += 1
     return n_total, n_pass
@@ -301,9 +450,9 @@ def fields_present_in_bib(required):
 
 SOURCE_EVAL = {
     "mega": fields_present_in_mega_cell,
-    "n2":   fields_present_in_n2,
-    "n10":  fields_present_in_n10,
-    "bib":  fields_present_in_bib,
+    "n2": fields_present_in_n2,
+    "n10": fields_present_in_n10,
+    "bib": fields_present_in_bib,
 }
 
 
@@ -317,6 +466,7 @@ def wilson95(p, n):
 # Step 4: main audit
 # ---------------------------------------------------------------------------
 
+
 def main():
     out_dir = Path("platform_hybrid/experiments/results/p5p8")
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -328,19 +478,21 @@ def main():
         n_total, n_pass = eval_fn(req)
         coverage = n_pass / n_total if n_total else 0.0
         lo, hi = wilson95(coverage, n_total)
-        claim_rows.append({
-            "claim_id": cid,
-            "source_corpus": src,
-            "value_str": val,
-            "n_required_fields": len(req),
-            "required_fields": ";".join(req),
-            "citation": cite,
-            "n_source_rows": n_total,
-            "n_source_rows_pass": n_pass,
-            "coverage": round(coverage, 4),
-            "wilson95_lo": round(lo, 4),
-            "wilson95_hi": round(hi, 4),
-        })
+        claim_rows.append(
+            {
+                "claim_id": cid,
+                "source_corpus": src,
+                "value_str": val,
+                "n_required_fields": len(req),
+                "required_fields": ";".join(req),
+                "citation": cite,
+                "n_source_rows": n_total,
+                "n_source_rows_pass": n_pass,
+                "coverage": round(coverage, 4),
+                "wilson95_lo": round(lo, 4),
+                "wilson95_hi": round(hi, 4),
+            }
+        )
 
     with open(out_dir / "p5_iter157_claim_inventory.tsv", "w") as fh:
         w = csv.DictWriter(fh, fieldnames=list(claim_rows[0].keys()), delimiter="\t")
@@ -364,18 +516,20 @@ def main():
     src_rows = []
     for src, rs in sorted(by_src.items()):
         n_total = sum(r["n_source_rows"] for r in rs)
-        n_pass  = sum(r["n_source_rows_pass"] for r in rs)
+        n_pass = sum(r["n_source_rows_pass"] for r in rs)
         cov = n_pass / n_total if n_total else 0.0
         lo, hi = wilson95(cov, n_total)
-        src_rows.append({
-            "source_corpus": src,
-            "n_claims": len(rs),
-            "n_source_rows_sum": n_total,
-            "n_source_rows_pass_sum": n_pass,
-            "coverage": round(cov, 4),
-            "wilson95_lo": round(lo, 4),
-            "wilson95_hi": round(hi, 4),
-        })
+        src_rows.append(
+            {
+                "source_corpus": src,
+                "n_claims": len(rs),
+                "n_source_rows_sum": n_total,
+                "n_source_rows_pass_sum": n_pass,
+                "coverage": round(cov, 4),
+                "wilson95_lo": round(lo, 4),
+                "wilson95_hi": round(hi, 4),
+            }
+        )
     with open(out_dir / "p5_iter157_source_coverage.tsv", "w") as fh:
         w = csv.DictWriter(fh, fieldnames=list(src_rows[0].keys()), delimiter="\t")
         w.writeheader()
@@ -389,11 +543,13 @@ def main():
     field_rows = []
     total_claims = len(CLAIMS)
     for f, c in field_count.most_common():
-        field_rows.append({
-            "field": f,
-            "n_claims_used": c,
-            "pct_claims": round(100.0 * c / total_claims, 1),
-        })
+        field_rows.append(
+            {
+                "field": f,
+                "n_claims_used": c,
+                "pct_claims": round(100.0 * c / total_claims, 1),
+            }
+        )
     with open(out_dir / "p5_iter157_field_discriminative.tsv", "w") as fh:
         w = csv.DictWriter(fh, fieldnames=list(field_rows[0].keys()), delimiter="\t")
         w.writeheader()
@@ -464,7 +620,9 @@ def main():
 
     # stdout
     print(f"iter 157 — P5 MIN-REPORT v2.4 self-application audit")
-    print(f"  n_claims = {len(CLAIMS)}, n_field_uses = {total_field_uses}, n_unique_fields = {len(field_count)}")
+    print(
+        f"  n_claims = {len(CLAIMS)}, n_field_uses = {total_field_uses}, n_unique_fields = {len(field_count)}"
+    )
     for h, v in summary["hypotheses"].items():
         print(f"  {h}: {'PASS' if v['pass'] else 'FAIL'} — {v}")
     print(f"  field_count_top10: {summary['field_count_top10']}")

@@ -158,17 +158,11 @@ def _non_placeholder_text(value: Any) -> bool:
 
 
 def _immutable_revision(value: Any) -> bool:
-    return bool(
-        _non_placeholder_text(value)
-        and _IMMUTABLE_REVISION_RE.fullmatch(value.strip())
-    )
+    return bool(_non_placeholder_text(value) and _IMMUTABLE_REVISION_RE.fullmatch(value.strip()))
 
 
 def _sha256_digest(value: Any) -> bool:
-    return bool(
-        isinstance(value, str)
-        and _SHA256_DIGEST_RE.fullmatch(value.strip())
-    )
+    return bool(isinstance(value, str) and _SHA256_DIGEST_RE.fullmatch(value.strip()))
 
 
 def _https_url(value: Any) -> bool:
@@ -179,8 +173,7 @@ def _receipt_field(value: Mapping[str, Any], *names: str) -> Any:
     for name in names:
         candidate = value.get(name)
         if candidate is not None and not (
-            isinstance(candidate, str)
-            and candidate.strip().lower() in _PLACEHOLDER_RECEIPT_VALUES
+            isinstance(candidate, str) and candidate.strip().lower() in _PLACEHOLDER_RECEIPT_VALUES
         ):
             return candidate
     return None
@@ -459,10 +452,7 @@ def _suite_registry(contract: Mapping[str, Any]) -> dict[str, Any]:
     structural_held_out = {
         suite_id: suite
         for suite_id, suite in primary_eval.items()
-        if any(
-            marker in str(suite.get("split", "")).lower()
-            for marker in ("held-out", "private")
-        )
+        if any(marker in str(suite.get("split", "")).lower() for marker in ("held-out", "private"))
     }
     pending_held_out = {
         suite_id: suite

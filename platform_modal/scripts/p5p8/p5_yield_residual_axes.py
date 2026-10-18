@@ -43,6 +43,7 @@ Outputs (6 files):
 
 Stdlib only. <=300 lines.
 """
+
 from __future__ import annotations
 
 import csv
@@ -65,27 +66,37 @@ N_BOOT = 2000
 N_PAIRS = 2000
 ITEM_WEIGHT = 20.0
 
-V1_ITEMS = ["loss_form", "ref_policy_kl", "sampler_backend_precision",
-            "per_step_zvf_path", "group_size_schedule", "heldout_split",
-            "decontamination_notes"]
-V2_STACK = [("model_family", 10), ("task_slice", 10), ("G", 5),
-            ("temperature", 5), ("seed", 5)]
+V1_ITEMS = [
+    "loss_form",
+    "ref_policy_kl",
+    "sampler_backend_precision",
+    "per_step_zvf_path",
+    "group_size_schedule",
+    "heldout_split",
+    "decontamination_notes",
+]
+V2_STACK = [("model_family", 10), ("task_slice", 10), ("G", 5), ("temperature", 5), ("seed", 5)]
 
 # Items beyond Item 13 (zvf_yield_residual) we will test.
 # Each is a callable: (K_array, G) -> scalar per cell.
 ITEMS = [
-    ("K_variance_residual", "item14_Kvar_residual",
-     lambda K, G: float(K.var(ddof=0) - G * (K.mean() / G) * (1 - K.mean() / G))),
-    ("K_unique_count", "item15_K_unique",
-     lambda K, G: float(len(set(K.astype(int).tolist())))),
-    ("max_K_share", "item16_max_Kshare",
-     lambda K, G: float(max(Counter(K.astype(int).tolist()).values()) / len(K))),
-    ("prompt_p_hat_var", "item17_p_hat_var",
-     lambda K, G: float((K / G).var(ddof=0))),
+    (
+        "K_variance_residual",
+        "item14_Kvar_residual",
+        lambda K, G: float(K.var(ddof=0) - G * (K.mean() / G) * (1 - K.mean() / G)),
+    ),
+    ("K_unique_count", "item15_K_unique", lambda K, G: float(len(set(K.astype(int).tolist())))),
+    (
+        "max_K_share",
+        "item16_max_Kshare",
+        lambda K, G: float(max(Counter(K.astype(int).tolist()).values()) / len(K)),
+    ),
+    ("prompt_p_hat_var", "item17_p_hat_var", lambda K, G: float((K / G).var(ddof=0))),
 ]
 
 
 from p5_review17_stats import json_safe
+
 
 def load_cells():
     rows = []
@@ -108,6 +119,7 @@ def load_per_cell_rewards():
     """Return dict cell_id -> numpy array shape (n_groups, G) of {0,1}."""
     out = {}
     import numpy as np
+
     for jf in sorted(GT_DIR.glob("*.json")):
         try:
             d = json.loads(jf.read_text())
@@ -144,7 +156,7 @@ def shannon(values):
 
 
 def hamming(a, b):
-    return sum(1 for x, y in zip(a, b) if x != y)
+    return sum(1 for x, y in zip(a, b, strict=False) if x != y)
 
 
 def delta_div(c):
@@ -154,7 +166,7 @@ def delta_div(c):
         raise ValueError("mean_reward must be a finite fraction in [0,1]")
     p = float(p)
     G = c["G"]
-    zvf_iid = p ** G + (1 - p) ** G
+    zvf_iid = p**G + (1 - p) ** G
     zvf_obs = c.get("zvf")
     if zvf_obs is None:
         return None
@@ -162,9 +174,12 @@ def delta_div(c):
 
 
 def main():
-    print("Protocol review17-p5-v2: exploratory descriptive associations; no independent-run, causal, equivalence, or held-out prediction claim")
+    print(
+        "Protocol review17-p5-v2: exploratory descriptive associations; no independent-run, causal, equivalence, or held-out prediction claim"
+    )
     OUT.mkdir(parents=True, exist_ok=True)
     import numpy as np
+
     print("# === P5 multi-axis yield-residual MIN-REPORT v2.2 (iter 81) ===")
     cells = load_cells()
     manifests = load_manifests()
@@ -204,27 +219,52 @@ def main():
     per_item = []
     for item in V1_ITEMS:
         vals = [str(manifests.get(c["cell_id"], {}).get(item, "MISSING")) for c in cells]
-        per_item.append({"item": item, "axis": "v1", "n_unique": len(set(vals)),
-                         "H_bits": shannon(vals), "weight": 10})
+        per_item.append(
+            {
+                "item": item,
+                "axis": "v1",
+                "n_unique": len(set(vals)),
+                "H_bits": shannon(vals),
+                "weight": 10,
+            }
+        )
     for axis, w in V2_STACK:
         vals = [str(c.get(axis, "MISSING")) for c in cells]
-        per_item.append({"item": axis, "axis": "v2_stack", "n_unique": len(set(vals)),
-                         "H_bits": shannon(vals), "weight": w})
+        per_item.append(
+            {
+                "item": axis,
+                "axis": "v2_stack",
+                "n_unique": len(set(vals)),
+                "H_bits": shannon(vals),
+                "weight": w,
+            }
+        )
 
     # Item 13 (zvf_yield_residual) - the iter-80 baseline
     vals13 = [round(v, 4) for v in item13_vals]
     h13 = shannon([str(v) for v in vals13])
-    per_item.append({"item": "zvf_yield_residual", "axis": "v2.1_yield",
-                     "n_unique": len(set(vals13)), "H_bits": h13, "weight": ITEM_WEIGHT})
+    per_item.append(
+        {
+            "item": "zvf_yield_residual",
+            "axis": "v2.1_yield",
+            "n_unique": len(set(vals13)),
+            "H_bits": h13,
+            "weight": ITEM_WEIGHT,
+        }
+    )
 
     # Items 14-17 (this iter)
     candidate_vals = {
-        "item14": item14_vals, "item15": item15_vals,
-        "item16": item16_vals, "item17": item17_vals,
+        "item14": item14_vals,
+        "item15": item15_vals,
+        "item16": item16_vals,
+        "item17": item17_vals,
     }
     candidate_names = {
-        "item14": "K_variance_residual", "item15": "K_unique_count",
-        "item16": "max_K_share", "item17": "prompt_p_hat_var",
+        "item14": "K_variance_residual",
+        "item15": "K_unique_count",
+        "item16": "max_K_share",
+        "item17": "prompt_p_hat_var",
     }
     candidate_h = {}
     candidate_pres = {}
@@ -234,14 +274,23 @@ def main():
         h = shannon([str(v) for v in rounded])
         candidate_h[key] = h
         candidate_pres[key] = len(rounded)
-        per_item.append({"item": candidate_names[key], "axis": "v2.2_yield_extended",
-                         "n_unique": len(set(rounded)), "H_bits": h, "weight": ITEM_WEIGHT})
+        per_item.append(
+            {
+                "item": candidate_names[key],
+                "axis": "v2.2_yield_extended",
+                "n_unique": len(set(rounded)),
+                "H_bits": h,
+                "weight": ITEM_WEIGHT,
+            }
+        )
 
     h_v2_total = sum(p["H_bits"] for p in per_item if p["axis"] in ("v1", "v2_stack"))
     h_v21_total = h_v2_total + h13
     h_v22_total = h_v21_total + sum(candidate_h.values())
-    print(f"# H_bits: v2.0={h_v2_total:.4f}; v2.1={h_v21_total:.4f} (+{h13:.3f} from Item 13); "
-          f"v2.2={h_v22_total:.4f} (Items 14-17 add {sum(candidate_h.values()):.4f})")
+    print(
+        f"# H_bits: v2.0={h_v2_total:.4f}; v2.1={h_v21_total:.4f} (+{h13:.3f} from Item 13); "
+        f"v2.2={h_v22_total:.4f} (Items 14-17 add {sum(candidate_h.values()):.4f})"
+    )
 
     # --- Spearman fingerprint-vs-|dzvf| (H2, H3) ---
     def fp(c, axis_keys):
@@ -308,7 +357,15 @@ def main():
         "v1": {"v1"},
         "v2.0": {"v1", "v2_stack"},
         "v2.1": {"v1", "v2_stack", "v2.1_yield"},
-        "v2.2_all": {"v1", "v2_stack", "v2.1_yield", "v2.2_item14", "v2.2_item15", "v2.2_item16", "v2.2_item17"},
+        "v2.2_all": {
+            "v1",
+            "v2_stack",
+            "v2.1_yield",
+            "v2.2_item14",
+            "v2.2_item15",
+            "v2.2_item16",
+            "v2.2_item17",
+        },
         "v2.2_item13+14": {"v1", "v2_stack", "v2.1_yield", "v2.2_item14"},
         "v2.2_item13+15": {"v1", "v2_stack", "v2.1_yield", "v2.2_item15"},
         "v2.2_item13+16": {"v1", "v2_stack", "v2.1_yield", "v2.2_item16"},
@@ -325,11 +382,15 @@ def main():
         print(f"# rho[{name}] = {r:.4f}  (n_pairs={n_pairs_used})")
 
     # --- Bootstrap CIs (H3) ---
-    diffs = {"v22_all_minus_v21": [], "v22_item13+14_minus_v21": [],
-             "v22_item13+15_minus_v21": [], "v22_item13+16_minus_v21": [],
-             "v22_item13+17_minus_v21": []}
+    diffs = {
+        "v22_all_minus_v21": [],
+        "v22_item13+14_minus_v21": [],
+        "v22_item13+15_minus_v21": [],
+        "v22_item13+16_minus_v21": [],
+        "v22_item13+17_minus_v21": [],
+    }
     diffs_keys = list(diffs.keys())
-    for b in range(N_BOOT):
+    for _b in range(N_BOOT):
         all_pairs = [(i, j) for i in range(n) for j in range(i + 1, n)]
         sample_ids = [RNG.randrange(n) for _ in range(n)]
         sampled = [(sample_ids[i], sample_ids[j]) for i in range(n) for j in range(i + 1, n)]
@@ -341,22 +402,64 @@ def main():
             if z_i is None or z_j is None:
                 continue
             d_zvf.append(abs(z_i - z_j))
-            fp_v21.append(hamming(fp_idx(i, {"v1", "v2_stack", "v2.1_yield"}),
-                                  fp_idx(j, {"v1", "v2_stack", "v2.1_yield"})))
-            fp_all.append(hamming(fp_idx(i, {"v1", "v2_stack", "v2.1_yield",
-                                              "v2.2_item14", "v2.2_item15",
-                                              "v2.2_item16", "v2.2_item17"}),
-                                  fp_idx(j, {"v1", "v2_stack", "v2.1_yield",
-                                              "v2.2_item14", "v2.2_item15",
-                                              "v2.2_item16", "v2.2_item17"})))
-            fp_14.append(hamming(fp_idx(i, {"v1", "v2_stack", "v2.1_yield", "v2.2_item14"}),
-                                 fp_idx(j, {"v1", "v2_stack", "v2.1_yield", "v2.2_item14"})))
-            fp_15.append(hamming(fp_idx(i, {"v1", "v2_stack", "v2.1_yield", "v2.2_item15"}),
-                                 fp_idx(j, {"v1", "v2_stack", "v2.1_yield", "v2.2_item15"})))
-            fp_16.append(hamming(fp_idx(i, {"v1", "v2_stack", "v2.1_yield", "v2.2_item16"}),
-                                 fp_idx(j, {"v1", "v2_stack", "v2.1_yield", "v2.2_item16"})))
-            fp_17.append(hamming(fp_idx(i, {"v1", "v2_stack", "v2.1_yield", "v2.2_item17"}),
-                                 fp_idx(j, {"v1", "v2_stack", "v2.1_yield", "v2.2_item17"})))
+            fp_v21.append(
+                hamming(
+                    fp_idx(i, {"v1", "v2_stack", "v2.1_yield"}),
+                    fp_idx(j, {"v1", "v2_stack", "v2.1_yield"}),
+                )
+            )
+            fp_all.append(
+                hamming(
+                    fp_idx(
+                        i,
+                        {
+                            "v1",
+                            "v2_stack",
+                            "v2.1_yield",
+                            "v2.2_item14",
+                            "v2.2_item15",
+                            "v2.2_item16",
+                            "v2.2_item17",
+                        },
+                    ),
+                    fp_idx(
+                        j,
+                        {
+                            "v1",
+                            "v2_stack",
+                            "v2.1_yield",
+                            "v2.2_item14",
+                            "v2.2_item15",
+                            "v2.2_item16",
+                            "v2.2_item17",
+                        },
+                    ),
+                )
+            )
+            fp_14.append(
+                hamming(
+                    fp_idx(i, {"v1", "v2_stack", "v2.1_yield", "v2.2_item14"}),
+                    fp_idx(j, {"v1", "v2_stack", "v2.1_yield", "v2.2_item14"}),
+                )
+            )
+            fp_15.append(
+                hamming(
+                    fp_idx(i, {"v1", "v2_stack", "v2.1_yield", "v2.2_item15"}),
+                    fp_idx(j, {"v1", "v2_stack", "v2.1_yield", "v2.2_item15"}),
+                )
+            )
+            fp_16.append(
+                hamming(
+                    fp_idx(i, {"v1", "v2_stack", "v2.1_yield", "v2.2_item16"}),
+                    fp_idx(j, {"v1", "v2_stack", "v2.1_yield", "v2.2_item16"}),
+                )
+            )
+            fp_17.append(
+                hamming(
+                    fp_idx(i, {"v1", "v2_stack", "v2.1_yield", "v2.2_item17"}),
+                    fp_idx(j, {"v1", "v2_stack", "v2.1_yield", "v2.2_item17"}),
+                )
+            )
         r_v21 = spearman(fp_v21, d_zvf)
         r_all = spearman(fp_all, d_zvf)
         r_14 = spearman(fp_14, d_zvf)
@@ -374,7 +477,9 @@ def main():
         arr = sorted(diffs[k])
         lo, hi = arr[len(arr) // 40], arr[-len(arr) // 40]
         pt = sum(arr) / len(arr)
-        boot_summary.append({"metric": k, "point": float(pt), "ci_lo": float(lo), "ci_hi": float(hi)})
+        boot_summary.append(
+            {"metric": k, "point": float(pt), "ci_lo": float(lo), "ci_hi": float(hi)}
+        )
         print(f"# paired Δrho[{k}] = {pt:+.4f}  CI [{lo:+.4f}, {hi:+.4f}]")
 
     # --- H4: BINOMIAL null control ---
@@ -401,8 +506,9 @@ def main():
             G = rv.shape[1]
             n_groups = rv.shape[0]
             p_cell = float(rv.mean())
-            K_null = np.array([sum(null_rng.random() < p_cell for _ in range(G))
-                               for _ in range(n_groups)])
+            K_null = np.array(
+                [sum(null_rng.random() < p_cell for _ in range(G)) for _ in range(n_groups)]
+            )
             shuf14.append(ITEMS[0][2](K_null, G))
             shuf15.append(ITEMS[1][2](K_null, G))
             shuf16.append(ITEMS[2][2](K_null, G))
@@ -421,15 +527,22 @@ def main():
         # beyond binomial
         excess = float(candidate_h[key]) - float(pt)
         z = excess / max(1e-9, (arr[-1] - arr[0]) / 6.0)
-        null_summary.append({"item": candidate_names[key],
-                             "observed_H_bits": float(candidate_h[key]),
-                             "null_mean": float(pt), "null_ci_lo": float(lo),
-                             "null_ci_hi": float(hi),
-                             "excess_H_bits": float(excess),
-                             "approx_z": float(z)})
-        print(f"# null control {key}: observed H={candidate_h[key]:.4f} "
-              f"vs null mean={pt:.4f}  CI [{lo:.4f}, {hi:.4f}]  "
-              f"excess={excess:+.4f} (~{z:+.1f}σ)")
+        null_summary.append(
+            {
+                "item": candidate_names[key],
+                "observed_H_bits": float(candidate_h[key]),
+                "null_mean": float(pt),
+                "null_ci_lo": float(lo),
+                "null_ci_hi": float(hi),
+                "excess_H_bits": float(excess),
+                "approx_z": float(z),
+            }
+        )
+        print(
+            f"# null control {key}: observed H={candidate_h[key]:.4f} "
+            f"vs null mean={pt:.4f}  CI [{lo:.4f}, {hi:.4f}]  "
+            f"excess={excess:+.4f} (~{z:+.1f}σ)"
+        )
 
     # --- Save outputs ---
     per_item_tsv = OUT / "p5_yield_residual_axes_per_item.tsv"
@@ -476,20 +589,18 @@ def main():
         "paired_bootstrap": boot_summary,
         "shuffle_null": null_summary,
         "verdict_items": {
-            "item14_Kvar_residual":
-                "SIGNAL-BEARING" if candidate_h["item14"] > 0.1 and
-                rho_pts["single_item14"][0] > 0.0 else
-                ("WEAK" if candidate_h["item14"] > 0.001 else "PLACEBO"),
-            "item15_K_unique_count":
-                "SIGNAL-BEARING" if candidate_h["item15"] > 0.1 else
-                ("WEAK" if candidate_h["item15"] > 0.001 else "PLACEBO"),
-            "item16_max_Kshare":
-                "SIGNAL-BEARING" if candidate_h["item16"] > 0.1 else
-                ("WEAK" if candidate_h["item16"] > 0.001 else "PLACEBO"),
-            "item17_p_hat_var":
-                "SIGNAL-BEARING" if candidate_h["item17"] > 0.1 and
-                rho_pts["single_item17"][0] > 0.0 else
-                ("WEAK" if candidate_h["item17"] > 0.001 else "PLACEBO"),
+            "item14_Kvar_residual": "SIGNAL-BEARING"
+            if candidate_h["item14"] > 0.1 and rho_pts["single_item14"][0] > 0.0
+            else ("WEAK" if candidate_h["item14"] > 0.001 else "PLACEBO"),
+            "item15_K_unique_count": "SIGNAL-BEARING"
+            if candidate_h["item15"] > 0.1
+            else ("WEAK" if candidate_h["item15"] > 0.001 else "PLACEBO"),
+            "item16_max_Kshare": "SIGNAL-BEARING"
+            if candidate_h["item16"] > 0.1
+            else ("WEAK" if candidate_h["item16"] > 0.001 else "PLACEBO"),
+            "item17_p_hat_var": "SIGNAL-BEARING"
+            if candidate_h["item17"] > 0.1 and rho_pts["single_item17"][0] > 0.0
+            else ("WEAK" if candidate_h["item17"] > 0.001 else "PLACEBO"),
         },
         "key_finding": (
             f"Items 14-17 add {sum(candidate_h.values()):.3f} bits to v2.1 ("
@@ -498,8 +609,11 @@ def main():
         ),
     }
     (OUT / "p5_yield_residual_axes_summary.json").write_text(
-        json.dumps(json_safe(summary), indent=2, default=str))
-    print("# === iter 81 multi-axis yield-residual: outputs in platform_hybrid/experiments/results/p5p8/ ===")
+        json.dumps(json_safe(summary), indent=2, default=str)
+    )
+    print(
+        "# === iter 81 multi-axis yield-residual: outputs in platform_hybrid/experiments/results/p5p8/ ==="
+    )
 
 
 if __name__ == "__main__":

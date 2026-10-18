@@ -330,7 +330,9 @@ def trl_trace(
         raise TRLPinError("S1 fixture harness must run on CPU")
 
     rewards_t = torch.as_tensor(rewards, dtype=torch.float64, device="cpu")
-    logps_t = torch.as_tensor(logps, dtype=torch.float64, device="cpu").detach().requires_grad_(True)
+    logps_t = (
+        torch.as_tensor(logps, dtype=torch.float64, device="cpu").detach().requires_grad_(True)
+    )
     old_t = torch.as_tensor(old_logps, dtype=torch.float64, device="cpu")
     mask_t = torch.as_tensor(mask, dtype=torch.float64, device="cpu")
     _validate_fixture(rewards_t, logps_t, old_t, mask_t)
@@ -397,7 +399,9 @@ def trl_intended_trace(
     """Exercise the exact S1 treatment through TRL's pinned loss kernel."""
     trainer_class, provenance = load_pinned_runtime()
     rewards_t = torch.as_tensor(rewards, dtype=torch.float64, device="cpu")
-    logps_t = torch.as_tensor(logps, dtype=torch.float64, device="cpu").detach().requires_grad_(True)
+    logps_t = (
+        torch.as_tensor(logps, dtype=torch.float64, device="cpu").detach().requires_grad_(True)
+    )
     old_t = torch.as_tensor(old_logps, dtype=torch.float64, device="cpu")
     mask_t = torch.as_tensor(mask, dtype=torch.float64, device="cpu")
     _validate_fixture(rewards_t, logps_t, old_t, mask_t)
@@ -477,15 +481,25 @@ def _field_comparison(field: str, actual: torch.Tensor, expected: torch.Tensor) 
 def _formula_notes(arm: str, actual_mask: torch.Tensor) -> tuple[str, ...]:
     notes: list[str] = []
     if arm in {"grpo", "dapo", "gspo"}:
-        notes.append("TRL divides centered group rewards by sample_std + 1e-4; the canonical reference uses sample_std")
+        notes.append(
+            "TRL divides centered group rewards by sample_std + 1e-4; the canonical reference uses sample_std"
+        )
     if arm == "dapo":
-        notes.append("TRL DAPO divides the masked token-loss sum by global active tokens; the canonical reference averages completion means")
+        notes.append(
+            "TRL DAPO divides the masked token-loss sum by global active tokens; the canonical reference averages completion means"
+        )
     if arm == "drgrpo":
-        notes.append("TRL DrGRPO divides by batch_size * max_completion_length; the canonical reference averages completion means")
+        notes.append(
+            "TRL DrGRPO divides by batch_size * max_completion_length; the canonical reference averages completion means"
+        )
     if arm == "gspo":
-        notes.append("TRL 1.2.0 represents GSPO as loss_type='grpo' with importance_sampling_level='sequence'")
+        notes.append(
+            "TRL 1.2.0 represents GSPO as loss_type='grpo' with importance_sampling_level='sequence'"
+        )
     if torch.any(actual_mask.sum(dim=1) == 0):
-        notes.append("TRL computes group advantages before applying completion masks and GRPO averages zero-mask rows; the canonical reference excludes inactive rows")
+        notes.append(
+            "TRL computes group advantages before applying completion masks and GRPO averages zero-mask rows; the canonical reference excludes inactive rows"
+        )
     return tuple(notes)
 
 

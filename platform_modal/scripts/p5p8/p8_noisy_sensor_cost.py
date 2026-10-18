@@ -22,6 +22,7 @@ platform_hybrid/experiments/results/p5p8/figures/p8_noisy_sensor.{png,pdf}
 
 Stdlib + numpy + pandas + xgboost. <=300 lines. Real data only.
 """
+
 import json
 from pathlib import Path
 
@@ -50,10 +51,16 @@ TREE_SEED = 42
 
 def fit_tree(X_tr, y_tr):
     clf = xgb.XGBClassifier(
-        n_estimators=200, max_depth=4, learning_rate=0.1,
-        subsample=0.8, colsample_bytree=0.8,
-        objective="binary:logistic", eval_metric="auc",
-        tree_method="hist", random_state=TREE_SEED, n_jobs=4,
+        n_estimators=200,
+        max_depth=4,
+        learning_rate=0.1,
+        subsample=0.8,
+        colsample_bytree=0.8,
+        objective="binary:logistic",
+        eval_metric="auc",
+        tree_method="hist",
+        random_state=TREE_SEED,
+        n_jobs=4,
     )
     clf.fit(X_tr, y_tr)
     return clf
@@ -61,11 +68,11 @@ def fit_tree(X_tr, y_tr):
 
 def optimal_cut(score, y, C_inv, L):
     from _review_policy import optimal_threshold
+
     r = optimal_threshold(score, y, C_inv, L)
     r["det_cost_per_dec"] = r["cost_per_dec"]
     r["alert_pct"] = 100 * r["alert_rate"]
     return r
-
 
 
 def add_noise(df, cols, sigma, seed):
@@ -159,14 +166,21 @@ def main():
             # Add sensing charge for 24full only
             cost24_full = c24["cost_per_dec"] + 0.0035
             cost20_full = c20["cost_per_dec"]
-            rows_cost.append({
-                "sigma": sigma, "rho": rho,
-                "raw_tau": c20["tau"], "raw_alert_pct": c20["alert_pct"],
-                "raw_recall": c20["recall"], "raw_cost_per_dec": cost20_full,
-                "full_tau": c24["tau"], "full_alert_pct": c24["alert_pct"],
-                "full_recall": c24["recall"], "full_cost_per_dec": cost24_full,
-                "delta_cost": cost24_full - cost20_full,
-            })
+            rows_cost.append(
+                {
+                    "sigma": sigma,
+                    "rho": rho,
+                    "raw_tau": c20["tau"],
+                    "raw_alert_pct": c20["alert_pct"],
+                    "raw_recall": c20["recall"],
+                    "raw_cost_per_dec": cost20_full,
+                    "full_tau": c24["tau"],
+                    "full_alert_pct": c24["alert_pct"],
+                    "full_recall": c24["recall"],
+                    "full_cost_per_dec": cost24_full,
+                    "delta_cost": cost24_full - cost20_full,
+                }
+            )
 
     df_cost = pd.DataFrame(rows_cost)
     df_cost.to_csv(OUT / "p8_noisy_sensor.tsv", sep="\t", index=False)
@@ -187,13 +201,17 @@ def main():
             mean_shift = ci["mean"] + 0.0035
             lo_shift = ci["lo"] + 0.0035
             hi_shift = ci["hi"] + 0.0035
-            rows_boot.append({
-                "sigma": sigma, "rho": rho,
-                "delta_cost_per_dec": mean_shift,
-                "ci_lo": lo_shift, "ci_hi": hi_shift,
-                "sensor_wins_sig": hi_shift < 0,   # 24full - raw < 0 -> sensor wins
-                "sensor_loses_sig": lo_shift > 0,  # 24full - raw > 0 -> sensor loses
-            })
+            rows_boot.append(
+                {
+                    "sigma": sigma,
+                    "rho": rho,
+                    "delta_cost_per_dec": mean_shift,
+                    "ci_lo": lo_shift,
+                    "ci_hi": hi_shift,
+                    "sensor_wins_sig": hi_shift < 0,  # 24full - raw < 0 -> sensor wins
+                    "sensor_loses_sig": lo_shift > 0,  # 24full - raw > 0 -> sensor loses
+                }
+            )
 
     df_boot = pd.DataFrame(rows_boot)
     df_boot.to_csv(OUT / "p8_noisy_sensor_boot.tsv", sep="\t", index=False)
@@ -203,11 +221,13 @@ def main():
     for sigma in SIGMA_GRID:
         s24 = noisy_scores[sigma]
         be = breakeven_L(score_raw, s24, y_te, sigma)
-        rows_be.append({
-            "sigma": sigma,
-            "L_star": be["L_star"],
-            "monotone": be["monotone"],
-        })
+        rows_be.append(
+            {
+                "sigma": sigma,
+                "L_star": be["L_star"],
+                "monotone": be["monotone"],
+            }
+        )
     df_be = pd.DataFrame(rows_be)
     df_be.to_csv(OUT / "p8_noisy_sensor_breakeven.tsv", sep="\t", index=False)
 
@@ -226,45 +246,53 @@ def main():
             "sigma": 0.02,
             "rho_sensor_wins_sig": df_boot.query("sigma == 0.02 and sensor_wins_sig").shape[0],
             "rho_sensor_loses_sig": df_boot.query("sigma == 0.02 and sensor_loses_sig").shape[0],
-            "rho_neither_sig": df_boot.query("sigma == 0.02 and not sensor_wins_sig and not sensor_loses_sig").shape[0],
+            "rho_neither_sig": df_boot.query(
+                "sigma == 0.02 and not sensor_wins_sig and not sensor_loses_sig"
+            ).shape[0],
             "rho_total": len(RHO_GRID),
         },
         "headline_at_oracle_sigma0": {
             "sigma": 0.0,
             "rho_sensor_wins_sig": df_boot.query("sigma == 0.0 and sensor_wins_sig").shape[0],
             "rho_sensor_loses_sig": df_boot.query("sigma == 0.0 and sensor_loses_sig").shape[0],
-            "rho_neither_sig": df_boot.query("sigma == 0.0 and not sensor_wins_sig and not sensor_loses_sig").shape[0],
+            "rho_neither_sig": df_boot.query(
+                "sigma == 0.0 and not sensor_wins_sig and not sensor_loses_sig"
+            ).shape[0],
         },
         "headline_at_high_noise_sigma05": {
             "sigma": 0.05,
             "rho_sensor_wins_sig": df_boot.query("sigma == 0.05 and sensor_wins_sig").shape[0],
             "rho_sensor_loses_sig": df_boot.query("sigma == 0.05 and sensor_loses_sig").shape[0],
-            "rho_neither_sig": df_boot.query("sigma == 0.05 and not sensor_wins_sig and not sensor_loses_sig").shape[0],
+            "rho_neither_sig": df_boot.query(
+                "sigma == 0.05 and not sensor_wins_sig and not sensor_loses_sig"
+            ).shape[0],
         },
-        "break_even_L_star": {
-            str(row["sigma"]): row["L_star"] for _, row in df_be.iterrows()
-        },
+        "break_even_L_star": {str(row["sigma"]): row["L_star"] for _, row in df_be.iterrows()},
     }
     (OUT / "p8_noisy_sensor_summary.json").write_text(json.dumps(summary, indent=2))
 
     # Figure: delta_cost vs rho, one curve per sigma
     try:
         import matplotlib
+
         matplotlib.use("Agg")
         import matplotlib.pyplot as plt
+
         fig, ax = plt.subplots(1, 1, figsize=(7, 4))
         for sigma in SIGMA_GRID:
             sub = df_boot[df_boot["sigma"] == sigma].sort_values("rho")
-            ax.plot(sub["rho"], sub["delta_cost_per_dec"] * 1000,
-                    marker="o", label=f"$\\sigma={sigma}$")
-            ax.fill_between(sub["rho"], sub["ci_lo"] * 1000, sub["ci_hi"] * 1000,
-                            alpha=0.15)
+            ax.plot(
+                sub["rho"], sub["delta_cost_per_dec"] * 1000, marker="o", label=f"$\\sigma={sigma}$"
+            )
+            ax.fill_between(sub["rho"], sub["ci_lo"] * 1000, sub["ci_hi"] * 1000, alpha=0.15)
         ax.axhline(0, color="black", linewidth=0.7)
         ax.set_xscale("log")
         ax.set_xlabel(r"cost ratio $\rho = L/C_{\mathrm{inv}}$")
         ax.set_ylabel(r"$\Delta$ cost / decision (milli-USD), positive = 24full costlier")
-        ax.set_title("Noisy-sensor cost advantage: 24full $-$ 20raw\n"
-                     r"(with $c_{\rm sense}=\$0.0035$/row for 24full)")
+        ax.set_title(
+            "Noisy-sensor cost advantage: 24full $-$ 20raw\n"
+            r"(with $c_{\rm sense}=\$0.0035$/row for 24full)"
+        )
         ax.legend(loc="upper left", fontsize=8)
         ax.grid(True, alpha=0.3)
         fig.tight_layout()

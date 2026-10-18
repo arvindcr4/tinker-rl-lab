@@ -9,7 +9,8 @@ platform_hybrid/experiments/tinker-runs/campaign_v2.py so behaviour is identical
 Output: platform_hybrid/experiments/tinker-runs/results/llama33_70b_seeds.json
 Then: regenerate master_results.json via platform_hybrid/experiments/aggregate_results.py
 """
-import os, sys, json, time
+
+import os, sys, json
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
@@ -17,7 +18,7 @@ REPO_ROOT = "/home/user/workspace/tinker-rl-lab"
 sys.path.insert(0, os.path.join(REPO_ROOT, "experiments", "tinker-runs"))
 
 # Import the shared experiment runner to avoid code duplication.
-from campaign_v2 import run_experiment  # noqa: E402
+from campaign_v2 import run_experiment
 
 MODEL = "meta-llama/Llama-3.3-70B-Instruct"
 SEEDS = [42, 123, 456, 789, 1024, 2048, 4096, 8192, 16384, 32768]
@@ -34,23 +35,27 @@ OUT_PATH = os.path.join(
 def build_exps():
     exps = []
     for seed in SEEDS:
-        exps.append({
-            "tag": f"w1_llama33-70b-inst_s{seed}",
-            "model": MODEL,
-            "wave": WAVE,
-            "priority": "HIGH",
-            "steps": STEPS,
-            "group_size": GROUP_SIZE,
-            "lr": LR,
-            "seed": seed,
-        })
+        exps.append(
+            {
+                "tag": f"w1_llama33-70b-inst_s{seed}",
+                "model": MODEL,
+                "wave": WAVE,
+                "priority": "HIGH",
+                "steps": STEPS,
+                "group_size": GROUP_SIZE,
+                "lr": LR,
+                "seed": seed,
+            }
+        )
     return exps
 
 
 def main(max_parallel: int = 2):
     exps = build_exps()
-    print(f"Launching {len(exps)} Llama-3.3-70B-Instruct runs "
-          f"(G={GROUP_SIZE}, lr={LR}, steps={STEPS}) @ max_parallel={max_parallel}")
+    print(
+        f"Launching {len(exps)} Llama-3.3-70B-Instruct runs "
+        f"(G={GROUP_SIZE}, lr={LR}, steps={STEPS}) @ max_parallel={max_parallel}"
+    )
 
     results = []
     started = datetime.utcnow().isoformat() + "Z"
@@ -85,17 +90,26 @@ def main(max_parallel: int = 2):
             try:
                 r = fut.result()
             except Exception as e:  # pragma: no cover — defensive
-                r = {"tag": exp["tag"], "model": exp["model"], "wave": exp["wave"],
-                     "status": "failed", "error": f"Executor error: {e}",
-                     "timestamp": datetime.utcnow().isoformat()}
+                r = {
+                    "tag": exp["tag"],
+                    "model": exp["model"],
+                    "wave": exp["wave"],
+                    "status": "failed",
+                    "error": f"Executor error: {e}",
+                    "timestamp": datetime.utcnow().isoformat(),
+                }
             results.append(r)
             snapshot()
-            print(f"  -> {r.get('tag')} status={r.get('status')} "
-                  f"peak={r.get('peak_reward')} last10={r.get('last10_avg')}")
+            print(
+                f"  -> {r.get('tag')} status={r.get('status')} "
+                f"peak={r.get('peak_reward')} last10={r.get('last10_avg')}"
+            )
 
     print(f"\nSaved to {OUT_PATH}")
-    print(f"  completed={sum(1 for r in results if r.get('status')=='completed')} "
-          f"failed={sum(1 for r in results if r.get('status')=='failed')}")
+    print(
+        f"  completed={sum(1 for r in results if r.get('status') == 'completed')} "
+        f"failed={sum(1 for r in results if r.get('status') == 'failed')}"
+    )
 
 
 if __name__ == "__main__":

@@ -820,8 +820,11 @@ def validate_hosted_evaluation_offer(
 
 
 def build_hosted_evaluation_request(
-    offer: dict[str, Any], *, model_revision: str, budget_authorized: bool,
-    trust_root: Mapping[str, Any] | str | Path | None = None
+    offer: dict[str, Any],
+    *,
+    model_revision: str,
+    budget_authorized: bool,
+    trust_root: Mapping[str, Any] | str | Path | None = None,
 ) -> dict[str, Any]:
     data = validate_hosted_evaluation_offer(offer, trust_root=trust_root)
     if (
@@ -848,15 +851,27 @@ def build_hosted_evaluation_request(
 
 
 def collect_hosted_signed_result(
-    offer: dict[str, Any], request: dict[str, Any], result: dict[str, Any], *,
-    trust_root: Mapping[str, Any] | str | Path | None = None
+    offer: dict[str, Any],
+    request: dict[str, Any],
+    result: dict[str, Any],
+    *,
+    trust_root: Mapping[str, Any] | str | Path | None = None,
 ) -> dict[str, Any]:
     data = validate_hosted_evaluation_offer(offer, trust_root=trust_root)
     request_required = {
-        "schema_version", "status", "suite_id", "offer_fingerprint", "offer_key_id",
-        "trust_root_sha256", "trust_root_key_fingerprint",
-        "model_revision", "created_at", "private_dataset_requested", "local_grader_requested",
-        "score", "request_fingerprint",
+        "schema_version",
+        "status",
+        "suite_id",
+        "offer_fingerprint",
+        "offer_key_id",
+        "trust_root_sha256",
+        "trust_root_key_fingerprint",
+        "model_revision",
+        "created_at",
+        "private_dataset_requested",
+        "local_grader_requested",
+        "score",
+        "request_fingerprint",
     }
     if (
         set(request) != request_required
@@ -900,8 +915,7 @@ def collect_hosted_signed_result(
         or result.get("provider") != "Epoch AI"
         or not isinstance(result.get("evaluated_task_count"), int)
         or isinstance(result.get("evaluated_task_count"), bool)
-        or result["evaluated_task_count"]
-        != data["expected_full_suite_task_count"]
+        or result["evaluated_task_count"] != data["expected_full_suite_task_count"]
         or isinstance(result.get("score"), bool)
         or not isinstance(result.get("score"), (int, float))
         or not float("-inf") < float(result["score"]) < float("inf")
@@ -976,7 +990,9 @@ def main(argv: list[str] | None = None) -> int:
     if args.hosted_offer:
         try:
             if not args.model_revision or not args.hosted_request_out or not args.trust_root:
-                raise ScoreProhibited("hosted offer requires model revision, trust root, and output")
+                raise ScoreProhibited(
+                    "hosted offer requires model revision, trust root, and output"
+                )
             request = build_hosted_evaluation_request(
                 json.loads(args.hosted_offer.read_text(encoding="utf-8")),
                 model_revision=args.model_revision,

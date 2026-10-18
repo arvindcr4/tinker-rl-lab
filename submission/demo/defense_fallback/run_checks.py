@@ -111,7 +111,11 @@ def check_claim2() -> dict[str, Any]:
     for filename, (expected_budget, expected_reward, expected_zvf) in CLAIM2_EXPECTED.items():
         data = load_json(RAW_DIR / filename)
         step_log = data.get("step_log")
-        if data.get("status") != "completed" or not isinstance(step_log, list) or len(step_log) < 10:
+        if (
+            data.get("status") != "completed"
+            or not isinstance(step_log, list)
+            or len(step_log) < 10
+        ):
             raise CheckError(f"incomplete Claim 2 run: {filename}")
         budget = int(data["group_size"]) * int(data["batch"]) * int(data["steps"])
         last10 = step_log[-10:]
@@ -123,17 +127,19 @@ def check_claim2() -> dict[str, Any]:
             raise CheckError(f"late reward mismatch in {filename}")
         if not math.isclose(zvf, expected_zvf, abs_tol=EPS):
             raise CheckError(f"late ZVF mismatch in {filename}")
-        rows.append({
-            "run": filename.removesuffix(".json"),
-            "group_size": int(data["group_size"]),
-            "seed": int(data["seed"]),
-            "steps": int(data["steps"]),
-            "rollout_budget": budget,
-            "late_reward_mean": reward,
-            "late_zvf_mean": zvf,
-            "late_zvf_min": min(float(row["zvf"]) for row in last10),
-            "late_zvf_max": max(float(row["zvf"]) for row in last10),
-        })
+        rows.append(
+            {
+                "run": filename.removesuffix(".json"),
+                "group_size": int(data["group_size"]),
+                "seed": int(data["seed"]),
+                "steps": int(data["steps"]),
+                "rollout_budget": budget,
+                "late_reward_mean": reward,
+                "late_zvf_mean": zvf,
+                "late_zvf_min": min(float(row["zvf"]) for row in last10),
+                "late_zvf_max": max(float(row["zvf"]) for row in last10),
+            }
+        )
     g2 = [row for row in rows if row["group_size"] == 2]
     g16 = [row for row in rows if row["group_size"] == 16]
     return {
@@ -141,10 +147,22 @@ def check_claim2() -> dict[str, Any]:
         "matched_rollout_budget": 2560,
         "rows": rows,
         "summary": {
-            "g2_late_reward_range": [min(row["late_reward_mean"] for row in g2), max(row["late_reward_mean"] for row in g2)],
-            "g2_late_zvf_mean_range": [min(row["late_zvf_mean"] for row in g2), max(row["late_zvf_mean"] for row in g2)],
-            "g16_late_reward_range": [min(row["late_reward_mean"] for row in g16), max(row["late_reward_mean"] for row in g16)],
-            "g16_late_zvf_mean_range": [min(row["late_zvf_mean"] for row in g16), max(row["late_zvf_mean"] for row in g16)],
+            "g2_late_reward_range": [
+                min(row["late_reward_mean"] for row in g2),
+                max(row["late_reward_mean"] for row in g2),
+            ],
+            "g2_late_zvf_mean_range": [
+                min(row["late_zvf_mean"] for row in g2),
+                max(row["late_zvf_mean"] for row in g2),
+            ],
+            "g16_late_reward_range": [
+                min(row["late_reward_mean"] for row in g16),
+                max(row["late_reward_mean"] for row in g16),
+            ],
+            "g16_late_zvf_mean_range": [
+                min(row["late_zvf_mean"] for row in g16),
+                max(row["late_zvf_mean"] for row in g16),
+            ],
         },
         "interpretation": "At equal 2,560-rollout budgets, G=2 receives 160 optimizer steps and reaches the all-correct high-ZVF wall; G=16 receives 20 steps and remains mid-learning. This is a two-seed trajectory observation, not a universal group-size optimum.",
     }
@@ -165,24 +183,35 @@ def check_p4() -> dict[str, Any]:
     for filename, expected in P4_EXPECTED.items():
         data = load_json(RAW_DIR / filename)
         step_log = data.get("step_log")
-        if data.get("status") != "completed" or not isinstance(step_log, list) or len(step_log) != 30:
+        if (
+            data.get("status") != "completed"
+            or not isinstance(step_log, list)
+            or len(step_log) != 30
+        ):
             raise CheckError(f"incomplete corrected P4 run: {filename}")
         first5 = mean([float(row["mean_comp_len"]) for row in step_log[:5]])
         last10 = mean([float(row["mean_comp_len"]) for row in step_log[-10:]])
         contraction = (first5 - last10) / first5 * 100.0
-        for label, actual, wanted in zip(("first5", "last10", "contraction"), (first5, last10, contraction), expected):
+        for label, actual, wanted in zip(
+            ("first5", "last10", "contraction"),
+            (first5, last10, contraction),
+            expected,
+            strict=False,
+        ):
             if not math.isclose(actual, wanted, abs_tol=EPS):
                 raise CheckError(f"P4 {label} mismatch in {filename}")
         algorithm = "Dr.GRPO" if "drgrpo" in filename else "GRPO"
-        rows.append({
-            "run": filename.removesuffix(".json"),
-            "algorithm": algorithm,
-            "seed": int(data["seed"]),
-            "first5_mean_length": first5,
-            "last10_mean_length": last10,
-            "contraction_pct": contraction,
-            "late_zvf_mean": mean([float(row["zvf"]) for row in step_log[-10:]]),
-        })
+        rows.append(
+            {
+                "run": filename.removesuffix(".json"),
+                "algorithm": algorithm,
+                "seed": int(data["seed"]),
+                "first5_mean_length": first5,
+                "last10_mean_length": last10,
+                "contraction_pct": contraction,
+                "late_zvf_mean": mean([float(row["zvf"]) for row in step_log[-10:]]),
+            }
+        )
     contractions = [row["contraction_pct"] for row in rows]
     if round(min(contractions), 1) != 3.8 or round(max(contractions), 1) != 12.2:
         raise CheckError("P4 documented 3.8-12.2% range did not reproduce")
@@ -261,11 +290,17 @@ def check_run_audit() -> dict[str, Any]:
     insights = read_xlsx_sheet(workbook, "insights")
     run_count = len(runs) - 1
     gold_count = len(key_runs) - 1
-    reconciliation = next((row for row in insights[1:] if row and row[0].startswith("Reconciliation: 983")), None)
+    reconciliation = next(
+        (row for row in insights[1:] if row and row[0].startswith("Reconciliation: 983")), None
+    )
     if run_count != 983 or gold_count != 19 or reconciliation is None:
         raise CheckError(f"run-audit reconciliation failed: runs={run_count}, gold={gold_count}")
     detail = reconciliation[1]
-    required = ("70+ logged runs", "983 training-run objects", "EVERY create_lora_training_client call")
+    required = (
+        "70+ logged runs",
+        "983 training-run objects",
+        "EVERY create_lora_training_client call",
+    )
     if not all(phrase in detail for phrase in required):
         raise CheckError("run-audit reconciliation wording drifted")
     return {
@@ -308,18 +343,26 @@ def print_summary(report: dict[str, Any]) -> None:
     print(f"  Provenance: {report['manifest']['file_count']} copied artifacts match SHA-256")
     print("  Claim 2: four runs, 2,560 rollouts per arm")
     for row in report["claim2"]["rows"]:
-        print(f"    {row['run']}: last-10 reward={row['late_reward_mean']:.4f}, ZVF={row['late_zvf_mean']:.3f}")
+        print(
+            f"    {row['run']}: last-10 reward={row['late_reward_mean']:.4f}, ZVF={row['late_zvf_mean']:.3f}"
+        )
     lo, hi = report["p4"]["exact_contraction_range_pct"]
-    print(f"  P4: all six corrected arms contract in length; exact range={lo:.4f}-{hi:.4f}% (say 3.8-12.2%)")
+    print(
+        f"  P4: all six corrected arms contract in length; exact range={lo:.4f}-{hi:.4f}% (say 3.8-12.2%)"
+    )
     audit = report["run_audit"]
-    print(f"  Run audit: {audit['tinker_run_objects']} objects vs {audit['curated_cross_library_claim']}; {audit['claim_critical_gold_rows']} gold rows")
+    print(
+        f"  Run audit: {audit['tinker_run_objects']} objects vs {audit['curated_cross_library_claim']}; {audit['claim_critical_gold_rows']} gold rows"
+    )
     print("  Dashboard: submission/demo/defense_fallback/output/dashboard.html")
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--json", action="store_true", help="print the complete report as JSON")
-    parser.add_argument("--serve", action="store_true", help="serve the package on localhost after checking")
+    parser.add_argument(
+        "--serve", action="store_true", help="serve the package on localhost after checking"
+    )
     parser.add_argument("--port", type=int, default=8771, help="localhost port for --serve")
     args = parser.parse_args(argv)
     try:

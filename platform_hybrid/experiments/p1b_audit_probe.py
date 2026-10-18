@@ -16,7 +16,10 @@ from __future__ import annotations
 
 import sys as _sys
 from pathlib import Path as _Path
-_sys.path.insert(0, str(next(p for p in _Path(__file__).resolve().parents if (p / "platform_hybrid").is_dir())))
+
+_sys.path.insert(
+    0, str(next(p for p in _Path(__file__).resolve().parents if (p / "platform_hybrid").is_dir()))
+)
 from platform_hybrid.experiments.research_contracts import gsm8k_reward, math_reward
 
 
@@ -46,9 +49,7 @@ GSM8K_SUFFIX = " Provide the final numerical answer inside \\boxed{}."
 
 def require_env():
     if not os.environ.get("TINKER_API_KEY"):
-        raise RuntimeError(
-            "TINKER_API_KEY not set. Export it in your shell before running."
-        )
+        raise RuntimeError("TINKER_API_KEY not set. Export it in your shell before running.")
 
 
 def reward_gsm8k(resp, ans):
@@ -65,14 +66,24 @@ def reward_arith(resp, ans):
 
 def build_prompt(system, user):
     return (
-        IMS + "system\n" + system + IME + "\n"
-        + IMS + "user\n" + user + IME + "\n"
-        + IMS + "assistant\n"
+        IMS
+        + "system\n"
+        + system
+        + IME
+        + "\n"
+        + IMS
+        + "user\n"
+        + user
+        + IME
+        + "\n"
+        + IMS
+        + "assistant\n"
     )
 
 
 def load_gsm8k(limit, seed):
     from datasets import load_dataset
+
     ds = load_dataset("openai/gsm8k", "main", split="train")
     examples = []
     for row in ds:
@@ -89,6 +100,7 @@ def load_gsm8k(limit, seed):
 
 def load_math500(limit, seed):
     from datasets import load_dataset
+
     ds = load_dataset("HuggingFaceH4/MATH-500", split="test")
     examples = []
     for row in ds:
@@ -130,10 +142,18 @@ def run(args):
     from transformers import AutoTokenizer
 
     random.seed(args.seed)
-    tag = args.tag or ("p1b_audit_" + args.task + "_"
-                        + args.model.split("/")[-1] + "_G" + str(args.group)
-                        + "_n" + str(args.prompts) + "_"
-                        + datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S"))
+    tag = args.tag or (
+        "p1b_audit_"
+        + args.task
+        + "_"
+        + args.model.split("/")[-1]
+        + "_G"
+        + str(args.group)
+        + "_n"
+        + str(args.prompts)
+        + "_"
+        + datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+    )
     out_json = OUT_DIR / (tag + ".json")
     out_csv = OUT_DIR / (tag + ".csv")
     started_at = datetime.now(timezone.utc).isoformat()
@@ -185,17 +205,28 @@ def run(args):
                 rewards.append(reward_fn(text, answer))
             p_x = sum(rewards) / len(rewards)
             zero_var = 1 if all(r == rewards[0] for r in rewards) else 0
-            per_prompt.append({
-                "idx": i,
-                "p_x": p_x,
-                "n_correct": sum(1 for r in rewards if r > 0.5),
-                "n_samples": len(rewards),
-                "zero_variance": zero_var,
-            })
+            per_prompt.append(
+                {
+                    "idx": i,
+                    "p_x": p_x,
+                    "n_correct": sum(1 for r in rewards if r > 0.5),
+                    "n_samples": len(rewards),
+                    "zero_variance": zero_var,
+                }
+            )
             if (i + 1) % 5 == 0:
                 mean_so_far = sum(p["p_x"] for p in per_prompt) / len(per_prompt)
-                print("[" + tag + "] " + str(i + 1) + "/" + str(len(examples))
-                      + " mean_p_x so far = " + ("{:.3f}".format(mean_so_far)), flush=True)
+                print(
+                    "["
+                    + tag
+                    + "] "
+                    + str(i + 1)
+                    + "/"
+                    + str(len(examples))
+                    + " mean_p_x so far = "
+                    + ("{:.3f}".format(mean_so_far)),
+                    flush=True,
+                )
 
         n = len(per_prompt)
         mean_p = sum(p["p_x"] for p in per_prompt) / n
@@ -203,16 +234,18 @@ def run(args):
         usable = sum(1 - (1 - p["p_x"]) ** G - p["p_x"] ** G for p in per_prompt) / n
         zvf_emp = sum(p["zero_variance"] for p in per_prompt) / n
 
-        result.update({
-            "status": "completed",
-            "mean_p_x": mean_p,
-            "predicted_usable_group_rate": usable,
-            "empirical_initial_zvf": zvf_emp,
-            "n_prompts": n,
-            "per_prompt": per_prompt,
-            "wall_clock_sec": time.time() - t0,
-            "completed_at": datetime.now(timezone.utc).isoformat(),
-        })
+        result.update(
+            {
+                "status": "completed",
+                "mean_p_x": mean_p,
+                "predicted_usable_group_rate": usable,
+                "empirical_initial_zvf": zvf_emp,
+                "n_prompts": n,
+                "per_prompt": per_prompt,
+                "wall_clock_sec": time.time() - t0,
+                "completed_at": datetime.now(timezone.utc).isoformat(),
+            }
+        )
         out_json.write_text(json.dumps(result, indent=2) + "\n")
 
         with open(out_csv, "w", newline="") as f:
@@ -221,9 +254,16 @@ def run(args):
             for p in per_prompt:
                 w.writerow([p["idx"], p["p_x"], p["n_correct"], p["n_samples"], p["zero_variance"]])
 
-        print("[" + tag + "] done. mean_p_x=" + ("{:.3f}".format(mean_p))
-              + " predicted_usable=" + ("{:.3f}".format(usable))
-              + " empirical_zvf=" + ("{:.3f}".format(zvf_emp)))
+        print(
+            "["
+            + tag
+            + "] done. mean_p_x="
+            + ("{:.3f}".format(mean_p))
+            + " predicted_usable="
+            + ("{:.3f}".format(usable))
+            + " empirical_zvf="
+            + ("{:.3f}".format(zvf_emp))
+        )
         print("wrote " + str(out_json))
         print("wrote " + str(out_csv))
         return result

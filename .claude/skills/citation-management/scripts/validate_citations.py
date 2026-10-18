@@ -78,7 +78,9 @@ def main():
     parser.add_argument("--tex", help="Main .tex file")
     parser.add_argument("--tex-dir", help="Directory to scan for .tex files")
     parser.add_argument("--bib", required=True, help=".bib file")
-    parser.add_argument("--check-figures", action="store_true", help="Also check figure files exist")
+    parser.add_argument(
+        "--check-figures", action="store_true", help="Also check figure files exist"
+    )
     parser.add_argument("--figures-dir", help="Directory containing figures")
     parser.add_argument("--fix", action="store_true", help="Output suggested fixes")
     args = parser.parse_args()
@@ -104,8 +106,7 @@ def main():
 
     # Also check for embedded bib in filecontents
     embedded_bib = re.search(
-        r"\\begin\{filecontents\}\{references\.bib\}(.*?)\\end\{filecontents\}",
-        all_tex, re.DOTALL
+        r"\\begin\{filecontents\}\{references\.bib\}(.*?)\\end\{filecontents\}", all_tex, re.DOTALL
     )
     if embedded_bib:
         bib_content += "\n" + embedded_bib.group(1)

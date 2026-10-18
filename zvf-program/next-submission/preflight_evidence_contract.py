@@ -63,7 +63,10 @@ def validate_counts(audit, arm, run_config):
     if not math.isclose(sum(fractions), 1, abs_tol=1e-9):
         raise ValueError("group fractions do not partition groups")
     counts = [round(v * groups) for v in fractions]
-    if any(not math.isclose(v * groups, c, abs_tol=1e-9) for v, c in zip(fractions, counts)):
+    if any(
+        not math.isclose(v * groups, c, abs_tol=1e-9)
+        for v, c in zip(fractions, counts, strict=False)
+    ):
         raise ValueError("group fractions imply fractional groups")
     expected = 8 * groups if arm == "grpo_g8" else 2 * groups + 6 * counts[2]
     if generated != expected:

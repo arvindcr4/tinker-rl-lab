@@ -5,6 +5,7 @@ on import. A valid legacy record can remain *unverified*: absent provenance is
 never invented. A completion marker means artifacts were preserved and checked;
 it does not mean optimizer/RNG state exists or interrupted training can resume.
 """
+
 from __future__ import annotations
 
 import gzip
@@ -24,13 +25,27 @@ SCHEMA_VERSION = 1
 HEX = re.compile(r"[0-9a-f]{64}\Z")
 REVISION = re.compile(r"[0-9a-f]{40,64}\Z")
 NAME = re.compile(r"(grpo_g8|grpo_g2|ppo_8x8|ppo)_s(\d+)\.json\Z")
-ROOT_CONFIG = ("model", "arm", "seed", "smoke", "n_steps", "n_eval", "n_gen", "group",
-               "prompts_per_step", "k_epochs", "lr", "max_new", "critic")
+ROOT_CONFIG = (
+    "model",
+    "arm",
+    "seed",
+    "smoke",
+    "n_steps",
+    "n_eval",
+    "n_gen",
+    "group",
+    "prompts_per_step",
+    "k_epochs",
+    "lr",
+    "max_new",
+    "critic",
+)
 
 
 def canonical_hash(value):
-    return hashlib.sha256(json.dumps(value, sort_keys=True, separators=(",", ":"),
-                                     allow_nan=False).encode()).hexdigest()
+    return hashlib.sha256(
+        json.dumps(value, sort_keys=True, separators=(",", ":"), allow_nan=False).encode()
+    ).hexdigest()
 
 
 def sha256_file(path):
@@ -84,16 +99,20 @@ def _hash(value):
 
 
 def _binary(values, n):
-    return (isinstance(values, list) and len(values) == n
-            and all(type(value) is int and value in (0, 1) for value in values))
+    return (
+        isinstance(values, list)
+        and len(values) == n
+        and all(type(value) is int and value in (0, 1) for value in values)
+    )
 
 
 def _number(value):
     return type(value) in (int, float) and math.isfinite(value)
 
 
-def validate_run(record, *, filename=None, texts=None, expected=None, seen=None,
-                 require_texts=True):
+def validate_run(
+    record, *, filename=None, texts=None, expected=None, seen=None, require_texts=True
+):
     """Return structured errors/unverified reasons without mutating the record.
 
     `expected` locks manifest values (e.g. environment/protocol/config/run IDs).
@@ -103,11 +122,23 @@ def validate_run(record, *, filename=None, texts=None, expected=None, seen=None,
     errors, unknown, metrics = [], [], {}
     identity = None
     if not isinstance(record, dict):
-        return {"valid": False, "verified": False, "errors": ["run must be an object"],
-                "unverified": [], "identity": None, "metrics": {}}
+        return {
+            "valid": False,
+            "verified": False,
+            "errors": ["run must be an object"],
+            "unverified": [],
+            "identity": None,
+            "metrics": {},
+        }
     if _nonfinite(record):
-        return {"valid": False, "verified": False, "errors": ["non-finite numeric value in run"],
-                "unverified": [], "identity": None, "metrics": {}}
+        return {
+            "valid": False,
+            "verified": False,
+            "errors": ["non-finite numeric value in run"],
+            "unverified": [],
+            "identity": None,
+            "metrics": {},
+        }
     arm, seed = record.get("arm"), record.get("seed")
     arm = arm if isinstance(arm, str) else None
     if arm not in ARMS:
@@ -128,50 +159,87 @@ def validate_run(record, *, filename=None, texts=None, expected=None, seen=None,
     smoke = record.get("smoke")
     if type(smoke) is not bool:
         errors.append("smoke must be boolean")
-    recipe = {"model": "Qwen/Qwen2.5-1.5B-Instruct", "n_steps": 2 if smoke else 30,
-              "n_eval": 32 if smoke else 1319, "n_gen": 64, "k_epochs": 2,
-              "lr": 1e-5, "max_new": 512}
+    recipe = {
+        "model": "Qwen/Qwen2.5-1.5B-Instruct",
+        "n_steps": 2 if smoke else 30,
+        "n_eval": 32 if smoke else 1319,
+        "n_gen": 64,
+        "k_epochs": 2,
+        "lr": 1e-5,
+        "max_new": 512,
+    }
     if arm in GROUPS:
         recipe.update(group=GROUPS[arm], prompts_per_step=64 // GROUPS[arm])
     for key, value in recipe.items():
-        if record.get(key) != value or type(record.get(key)) is bool or (type(value) is int and type(record.get(key)) is not int):
+        if (
+            record.get(key) != value
+            or type(record.get(key)) is bool
+            or (type(value) is int and type(record.get(key)) is not int)
+        ):
             errors.append(f"effective config mismatch: {key}")
     logs = record.get("step_log")
     if not isinstance(logs, list) or len(logs) != recipe["n_steps"]:
         errors.append("step_log length must match n_steps")
-    elif any(not isinstance(row, dict) or (type(row.get("step")) is not int or row["step"] != i) for i, row in enumerate(logs)):
+    elif any(
+        not isinstance(row, dict) or (type(row.get("step")) is not int or row["step"] != i)
+        for i, row in enumerate(logs)
+    ):
         errors.append("step_log must have ordered consecutive step IDs")
-    if isinstance(logs, list) and any(not isinstance(row, dict) or not _number(row.get("mean_reward"))
-                                     or not 0 <= row["mean_reward"] <= 1 for row in logs):
+    if isinstance(logs, list) and any(
+        not isinstance(row, dict)
+        or not _number(row.get("mean_reward"))
+        or not 0 <= row["mean_reward"] <= 1
+        for row in logs
+    ):
         errors.append("step_log mean_reward must be finite probabilities")
     warm = record.get("warm_log")
     warm_count = (1 if smoke else 4) if isinstance(arm, str) and arm.startswith("ppo") else 0
     if not isinstance(warm, list) or len(warm) != warm_count:
         errors.append("warm_log length does not match arm critic warm-up")
-    elif any(not isinstance(row, dict) or (type(row.get("warm_step")) is not int or row["warm_step"] != i) for i, row in enumerate(warm)):
+    elif any(
+        not isinstance(row, dict)
+        or (type(row.get("warm_step")) is not int or row["warm_step"] != i)
+        for i, row in enumerate(warm)
+    ):
         errors.append("warm_log must have ordered consecutive warm_step IDs")
     critic = record.get("critic")
     if arm in ("ppo", "ppo_8x8"):
-        if not isinstance(critic, dict) or any(critic.get(k) != v for k, v in {
-                "v_lr": 1e-3, "v_iters": 50, "warm_batches": warm_count,
-                "warm_generations": warm_count * 64}.items()):
+        if not isinstance(critic, dict) or any(
+            critic.get(k) != v
+            for k, v in {
+                "v_lr": 1e-3,
+                "v_iters": 50,
+                "warm_batches": warm_count,
+                "warm_generations": warm_count * 64,
+            }.items()
+        ):
             errors.append("critic config contradicts PPO recipe")
     elif critic is not None:
         errors.append("GRPO critic must be null")
-    for array, metric in (("pre_correct", "heldout_pre_acc"), ("post_correct", "heldout_post_acc"),
-                          ("pre_trunc", "heldout_pre_trunc"), ("post_trunc", "heldout_post_trunc")):
+    for array, metric in (
+        ("pre_correct", "heldout_pre_acc"),
+        ("post_correct", "heldout_post_acc"),
+        ("pre_trunc", "heldout_pre_trunc"),
+        ("post_trunc", "heldout_post_trunc"),
+    ):
         if n and _binary(record.get(array), n):
             metrics[metric] = sum(record[array]) / n
     if n and _binary(record.get("pre_correct"), n) and _binary(record.get("post_correct"), n):
-        pairs = list(zip(record["pre_correct"], record["post_correct"]))
+        pairs = list(zip(record["pre_correct"], record["post_correct"], strict=False))
         metrics["wrong_to_right"] = sum(a == 0 and b == 1 for a, b in pairs)
         metrics["right_to_wrong"] = sum(a == 1 and b == 0 for a, b in pairs)
-    if isinstance(logs, list) and logs and all(isinstance(row, dict) and _number(row.get("mean_reward")) for row in logs):
+    if (
+        isinstance(logs, list)
+        and logs
+        and all(isinstance(row, dict) and _number(row.get("mean_reward")) for row in logs)
+    ):
         metrics["last10_avg"] = sum(row["mean_reward"] for row in logs[-10:]) / len(logs[-10:])
     for key, value in metrics.items():
         if key in ("wrong_to_right", "right_to_wrong") and type(record.get(key)) is not int:
             errors.append(f"reported {key} must be an integer count")
-        if not _number(record.get(key)) or not math.isclose(record[key], value, rel_tol=0, abs_tol=1e-12):
+        if not _number(record.get(key)) or not math.isclose(
+            record[key], value, rel_tol=0, abs_tol=1e-12
+        ):
             errors.append(f"reported {key} disagrees with recomputed metric")
     if texts is not None:
         if not isinstance(texts, dict):
@@ -179,7 +247,11 @@ def validate_run(record, *, filename=None, texts=None, expected=None, seen=None,
         else:
             for key in ("pre", "post"):
                 values = texts.get(key)
-                if not isinstance(values, list) or len(values) != n or not all(isinstance(v, str) for v in values):
+                if (
+                    not isinstance(values, list)
+                    or len(values) != n
+                    or not all(isinstance(v, str) for v in values)
+                ):
                     errors.append(f"texts.{key} must contain exactly n_eval strings")
     elif require_texts:
         unknown.append("completion texts unavailable")
@@ -206,11 +278,24 @@ def validate_run(record, *, filename=None, texts=None, expected=None, seen=None,
         if not _hash(manifest.get("protocol_hash")):
             unknown.append("protocol_hash unavailable")
         try:
-            from .samestack_protocol import PROTOCOL_ID, PROTOCOL_HASH, ANALYSIS_PLAN_ID, prompt_schedules
+            from .samestack_protocol import (
+                PROTOCOL_ID,
+                PROTOCOL_HASH,
+                ANALYSIS_PLAN_ID,
+                prompt_schedules,
+            )
         except ImportError:
-            from samestack_protocol import PROTOCOL_ID, PROTOCOL_HASH, ANALYSIS_PLAN_ID, prompt_schedules
-        for key, required in (("protocol_id", PROTOCOL_ID), ("protocol_hash", PROTOCOL_HASH),
-                              ("analysis_plan_id", ANALYSIS_PLAN_ID)):
+            from samestack_protocol import (
+                PROTOCOL_ID,
+                PROTOCOL_HASH,
+                ANALYSIS_PLAN_ID,
+                prompt_schedules,
+            )
+        for key, required in (
+            ("protocol_id", PROTOCOL_ID),
+            ("protocol_hash", PROTOCOL_HASH),
+            ("analysis_plan_id", ANALYSIS_PLAN_ID),
+        ):
             if key in manifest and manifest[key] != required:
                 errors.append(f"manifest {key} is not the current prespecified protocol")
         config = manifest.get("effective_config")
@@ -235,14 +320,31 @@ def validate_run(record, *, filename=None, texts=None, expected=None, seen=None,
                 elif config[key] != required:
                     errors.append(f"effective_config.{key} contradicts recipe")
             required_full = {
-                "policy_optimizer": {"name": "Adam", "betas": [0.9, 0.999], "eps": 1e-8,
-                                     "weight_decay": 0, "max_grad_norm": 1.0},
-                "lora": {"r": 16, "alpha": 32, "dropout": 0.0,
-                         "target_modules": ["q_proj", "k_proj", "v_proj", "o_proj"]},
+                "policy_optimizer": {
+                    "name": "Adam",
+                    "betas": [0.9, 0.999],
+                    "eps": 1e-8,
+                    "weight_decay": 0,
+                    "max_grad_norm": 1.0,
+                },
+                "lora": {
+                    "r": 16,
+                    "alpha": 32,
+                    "dropout": 0.0,
+                    "target_modules": ["q_proj", "k_proj", "v_proj", "o_proj"],
+                },
                 "loss_normalization": "per-response mean over first-EOS-inclusive tokens",
-                "reference_kl": None, "policy_dropout_enabled": False, "attention_backend": "sdpa",
-                "precision": {"model": "torch.bfloat16", "logprobs": "torch.float32", "value_head": "torch.float32"},
-                "advantage_normalization": "batch sample-std" if arm in ("ppo", "ppo_8x8") else "group population-std",
+                "reference_kl": None,
+                "policy_dropout_enabled": False,
+                "attention_backend": "sdpa",
+                "precision": {
+                    "model": "torch.bfloat16",
+                    "logprobs": "torch.float32",
+                    "value_head": "torch.float32",
+                },
+                "advantage_normalization": "batch sample-std"
+                if arm in ("ppo", "ppo_8x8")
+                else "group population-std",
             }
             for key, required in required_full.items():
                 if key not in config:
@@ -260,21 +362,40 @@ def validate_run(record, *, filename=None, texts=None, expected=None, seen=None,
                     if not isinstance(generation, dict):
                         unknown.append(f"generation.{mode} unavailable")
                         continue
-                    required_generation = {"temperature": 1.0, "top_p": 1.0, "top_k": 0,
-                                           "repetition_penalty": 1.0, "num_beams": 1,
-                                           "do_sample": mode == "train", "max_new_tokens": recipe["max_new"]}
+                    required_generation = {
+                        "temperature": 1.0,
+                        "top_p": 1.0,
+                        "top_k": 0,
+                        "repetition_penalty": 1.0,
+                        "num_beams": 1,
+                        "do_sample": mode == "train",
+                        "max_new_tokens": recipe["max_new"],
+                    }
                     for key, required in required_generation.items():
-                        if (generation.get(key) != required
-                                or isinstance(generation.get(key), bool) != isinstance(required, bool)):
+                        if generation.get(key) != required or isinstance(
+                            generation.get(key), bool
+                        ) != isinstance(required, bool):
                             errors.append(f"generation.{mode}.{key} contradicts policy")
                     eos = generation.get("eos_token_id")
-                    if (not isinstance(eos, list) or not eos
-                            or not all(type(token) is int and token >= 0 for token in eos)
-                            or type(generation.get("pad_token_id")) is not int):
+                    if (
+                        not isinstance(eos, list)
+                        or not eos
+                        or not all(type(token) is int and token >= 0 for token in eos)
+                        or type(generation.get("pad_token_id")) is not int
+                    ):
                         errors.append(f"generation.{mode} has invalid EOS/PAD token IDs")
-                    for key in ("bad_words_ids", "forced_bos_token_id", "forced_eos_token_id",
-                                "suppress_tokens", "begin_suppress_tokens", "constraints", "force_words_ids",
-                                "sequence_bias", "min_p", "top_h"):
+                    for key in (
+                        "bad_words_ids",
+                        "forced_bos_token_id",
+                        "forced_eos_token_id",
+                        "suppress_tokens",
+                        "begin_suppress_tokens",
+                        "constraints",
+                        "force_words_ids",
+                        "sequence_bias",
+                        "min_p",
+                        "top_h",
+                    ):
                         if generation.get(key) is not None:
                             errors.append(f"generation.{mode}.{key} unexpectedly changes policy")
         if not _hash(manifest.get("chat_template_hash")):
@@ -282,7 +403,11 @@ def validate_run(record, *, filename=None, texts=None, expected=None, seen=None,
         ids = manifest.get("test_item_ids")
         if ids is None:
             unknown.append("ordered test item IDs unavailable")
-        elif not isinstance(ids, list) or len(ids) != n or not all(isinstance(v, str) and v for v in ids):
+        elif (
+            not isinstance(ids, list)
+            or len(ids) != n
+            or not all(isinstance(v, str) and v for v in ids)
+        ):
             errors.append("ordered test_item_ids must have n_eval nonempty strings")
         elif len(set(ids)) != n:
             errors.append("duplicate test item identities")
@@ -296,7 +421,11 @@ def validate_run(record, *, filename=None, texts=None, expected=None, seen=None,
             elif texts["test_item_ids"] != ids:
                 errors.append("text item order contradicts manifest")
         train_ids = manifest.get("train_item_ids")
-        if not isinstance(train_ids, list) or not train_ids or not all(isinstance(v, str) and v for v in train_ids):
+        if (
+            not isinstance(train_ids, list)
+            or not train_ids
+            or not all(isinstance(v, str) and v for v in train_ids)
+        ):
             unknown.append("ordered train item IDs unavailable")
         elif len(set(train_ids)) != len(train_ids):
             errors.append("duplicate train item IDs")
@@ -321,12 +450,24 @@ def validate_run(record, *, filename=None, texts=None, expected=None, seen=None,
         if not isinstance(hardware, dict) or not hardware:
             unknown.append("hardware environment unavailable")
         if isinstance(hardware, dict):
-            for key in ("python", "gpu_names", "driver_versions", "cuda_runtime", "cudnn",
-                        "attention_backend", "model_dtype",
-                        "tf32_matmul", "deterministic_algorithms"):
+            for key in (
+                "python",
+                "gpu_names",
+                "driver_versions",
+                "cuda_runtime",
+                "cudnn",
+                "attention_backend",
+                "model_dtype",
+                "tf32_matmul",
+                "deterministic_algorithms",
+            ):
                 if key not in hardware:
                     unknown.append(f"hardware.{key} unavailable")
-        environment_payload = {"environment": manifest.get("environment"), "dependencies": dependencies, "hardware": hardware}
+        environment_payload = {
+            "environment": manifest.get("environment"),
+            "dependencies": dependencies,
+            "hardware": hardware,
+        }
         if "environment_hash" not in manifest:
             unknown.append("environment_hash unavailable")
         elif manifest["environment_hash"] != canonical_hash(environment_payload):
@@ -335,12 +476,20 @@ def validate_run(record, *, filename=None, texts=None, expected=None, seen=None,
             if not isinstance(manifest.get(key), dict) or not manifest[key]:
                 unknown.append(f"manifest.{key} unavailable")
         source = manifest.get("source") if isinstance(manifest.get("source"), dict) else {}
-        if source.get("status") != "observed" or not isinstance(source.get("commit"), str) or not REVISION.fullmatch(source["commit"]):
+        if (
+            source.get("status") != "observed"
+            or not isinstance(source.get("commit"), str)
+            or not REVISION.fullmatch(source["commit"])
+        ):
             unknown.append("observed immutable source commit unavailable")
         if not _hash(source.get("dirty_hash")) or type(source.get("dirty")) is not bool:
             unknown.append("source dirty-tree state/hash unavailable")
         source_files = source.get("source_files")
-        if not isinstance(source_files, dict) or not source_files or not all(isinstance(k, str) and _hash(v) for k, v in source_files.items()):
+        if (
+            not isinstance(source_files, dict)
+            or not source_files
+            or not all(isinstance(k, str) and _hash(v) for k, v in source_files.items())
+        ):
             unknown.append("source file hashes unavailable")
         revisions = manifest.get("revisions", {})
         if isinstance(revisions, dict) and isinstance(config, dict):
@@ -351,42 +500,73 @@ def validate_run(record, *, filename=None, texts=None, expected=None, seen=None,
                 elif revision["revision"] != config.get(key + "_revision"):
                     errors.append(f"manifest {key} revision contradicts config")
         schedules = manifest.get("schedules")
-        if (isinstance(schedules, dict) and isinstance(train_ids, list) and train_ids
-                and arm in GROUPS and type(seed) is int):
-            required_schedule = prompt_schedules(seed, len(train_ids), recipe["n_steps"], warm_count, 64 // GROUPS[arm])
+        if (
+            isinstance(schedules, dict)
+            and isinstance(train_ids, list)
+            and train_ids
+            and arm in GROUPS
+            and type(seed) is int
+        ):
+            required_schedule = prompt_schedules(
+                seed, len(train_ids), recipe["n_steps"], warm_count, 64 // GROUPS[arm]
+            )
             for key, required in required_schedule.items():
                 if schedules.get(key) != required:
                     errors.append(f"schedule {key} contradicts deterministic seed schedule")
-            for key, indices_key in (("policy_item_ids", "policy"), ("critic_warmup_item_ids", "critic_warmup")):
+            for key, indices_key in (
+                ("policy_item_ids", "policy"),
+                ("critic_warmup_item_ids", "critic_warmup"),
+            ):
                 required = [[train_ids[i] for i in row] for row in required_schedule[indices_key]]
                 if schedules.get(key) != required:
                     errors.append(f"schedule {key} does not match ordered train item IDs")
         timestamps = manifest.get("timestamps", {})
         try:
-            start, finish = (datetime.fromisoformat(timestamps[key]) for key in ("started_at", "finished_at"))
+            start, finish = (
+                datetime.fromisoformat(timestamps[key]) for key in ("started_at", "finished_at")
+            )
             if start.tzinfo is None or finish.tzinfo is None or finish < start:
                 raise ValueError("unordered or timezone-naive timestamps")
         except (ValueError, TypeError, KeyError, AttributeError):
             unknown.append("ordered timezone-aware run start/finish timestamps unavailable")
-        run_payload = {"protocol_hash": manifest.get("protocol_hash"), "config_hash": manifest.get("config_hash"),
-                       "environment_hash": manifest.get("environment_hash"), "environment": manifest.get("environment"), "source_commit": source.get("commit"),
-                       "source_dirty_hash": source.get("dirty_hash"),
-                       "run_identity_version": manifest.get("run_identity_version"),
-                       "chat_template_hash": manifest.get("chat_template_hash"),
-                       "ordered_train_item_hash": canonical_hash(train_ids),
-                       "ordered_test_item_hash": canonical_hash(ids)}
-        if type(manifest.get("run_identity_version")) is not int or manifest["run_identity_version"] != 2:
+        run_payload = {
+            "protocol_hash": manifest.get("protocol_hash"),
+            "config_hash": manifest.get("config_hash"),
+            "environment_hash": manifest.get("environment_hash"),
+            "environment": manifest.get("environment"),
+            "source_commit": source.get("commit"),
+            "source_dirty_hash": source.get("dirty_hash"),
+            "run_identity_version": manifest.get("run_identity_version"),
+            "chat_template_hash": manifest.get("chat_template_hash"),
+            "ordered_train_item_hash": canonical_hash(train_ids),
+            "ordered_test_item_hash": canonical_hash(ids),
+        }
+        if (
+            type(manifest.get("run_identity_version")) is not int
+            or manifest["run_identity_version"] != 2
+        ):
             unknown.append("run identity version 2 unavailable")
         if "run_id" in manifest and manifest["run_id"] != canonical_hash(run_payload):
-            errors.append("run_id does not match immutable protocol/config/environment/source/template/item identity")
+            errors.append(
+                "run_id does not match immutable protocol/config/environment/source/template/item identity"
+            )
         for key, value in (expected or {}).items():
-            actual = source.get(key.removeprefix("source_")) if key in ("source_commit", "source_dirty_hash") else manifest.get(key)
+            actual = (
+                source.get(key.removeprefix("source_"))
+                if key in ("source_commit", "source_dirty_hash")
+                else manifest.get(key)
+            )
             if actual is None:
                 unknown.append(f"expected manifest {key} unavailable")
             elif actual != value:
                 errors.append(f"manifest {key} does not match expected run")
-        identity = (manifest.get("environment"), manifest.get("protocol_hash"),
-                    manifest.get("ordered_test_item_hash"), arm, seed)
+        identity = (
+            manifest.get("environment"),
+            manifest.get("protocol_hash"),
+            manifest.get("ordered_test_item_hash"),
+            arm,
+            seed,
+        )
         if not all(isinstance(value, str) for value in identity[:-1]) or type(seed) is not int:
             identity = None
         if seen is not None and identity is not None:
@@ -394,8 +574,14 @@ def validate_run(record, *, filename=None, texts=None, expected=None, seen=None,
                 errors.append("duplicate run identity")
             else:
                 seen.add(identity)
-    return {"valid": not errors, "verified": not errors and not unknown,
-            "errors": errors, "unverified": unknown, "identity": identity, "metrics": metrics}
+    return {
+        "valid": not errors,
+        "verified": not errors and not unknown,
+        "errors": errors,
+        "unverified": unknown,
+        "identity": identity,
+        "metrics": metrics,
+    }
 
 
 def completion_path(result_path):
@@ -408,24 +594,49 @@ def artifact_files(result_path):
     base, name = result_path.parent, result_path.stem
     texts_path = base / f"{name}_texts.json.gz"
     adapter = base / "adapters" / name
-    required = [result_path, texts_path, adapter / "adapter_config.json", adapter / "tokenizer_config.json",
-                adapter / "train_generation_config.json", adapter / "eval_generation_config.json"]
-    weights = [path for pattern in ("adapter_model*.safetensors", "adapter_model*.bin") for path in adapter.glob(pattern)]
-    tokens = [path for pattern in ("tokenizer.json", "tokenizer.model", "vocab.json") for path in adapter.glob(pattern)]
+    required = [
+        result_path,
+        texts_path,
+        adapter / "adapter_config.json",
+        adapter / "tokenizer_config.json",
+        adapter / "train_generation_config.json",
+        adapter / "eval_generation_config.json",
+    ]
+    weights = [
+        path
+        for pattern in ("adapter_model*.safetensors", "adapter_model*.bin")
+        for path in adapter.glob(pattern)
+    ]
+    tokens = [
+        path
+        for pattern in ("tokenizer.json", "tokenizer.model", "vocab.json")
+        for path in adapter.glob(pattern)
+    ]
     if not weights or not tokens:
         raise ValueError("required adapter weights and tokenizer vocabulary are missing")
     required += weights + tokens
-    for path in (adapter / "adapter_config.json", adapter / "tokenizer_config.json",
-                 adapter / "train_generation_config.json", adapter / "eval_generation_config.json"):
+    for path in (
+        adapter / "adapter_config.json",
+        adapter / "tokenizer_config.json",
+        adapter / "train_generation_config.json",
+        adapter / "eval_generation_config.json",
+    ):
         if not isinstance(strict_json_load(path), dict):
             raise ValueError(f"artifact config must be a strict JSON object: {path.name}")
-    if any(not path.is_file() or path.is_symlink() or path.stat().st_size == 0 for path in required):
+    if any(
+        not path.is_file() or path.is_symlink() or path.stat().st_size == 0 for path in required
+    ):
         raise ValueError("required run artifact missing, empty, or symlinked")
     # Include auxiliary adapter/tokenizer files too, so downloads are complete.
     files = sorted({*required, *(p for p in adapter.rglob("*") if p.is_file())})
-    if any(path.is_symlink() or not path.resolve().is_relative_to(base.resolve()) for path in files):
+    if any(
+        path.is_symlink() or not path.resolve().is_relative_to(base.resolve()) for path in files
+    ):
         raise ValueError("artifact path leaves run directory")
-    return {str(path.relative_to(base)): {"sha256": sha256_file(path), "size": path.stat().st_size} for path in files}
+    return {
+        str(path.relative_to(base)): {"sha256": sha256_file(path), "size": path.stat().st_size}
+        for path in files
+    }
 
 
 def _atomic_json(path, value):
@@ -447,7 +658,10 @@ def _atomic_json(path, value):
 def _validate_generation_artifacts(result_path, record):
     adapter = Path(result_path).parent / "adapters" / Path(result_path).stem
     for mode in ("train", "eval"):
-        if strict_json_load(adapter / f"{mode}_generation_config.json") != record["manifest"]["generation"][mode]:
+        if (
+            strict_json_load(adapter / f"{mode}_generation_config.json")
+            != record["manifest"]["generation"][mode]
+        ):
             raise ValueError(f"saved {mode} generation config contradicts effective manifest")
 
 
@@ -457,13 +671,21 @@ def write_completion(result_path, *, expected=None):
     texts = strict_json_load(result_path.with_name(result_path.stem + "_texts.json.gz"))
     result = validate_run(record, filename=result_path.name, texts=texts, expected=expected)
     if not result["verified"]:
-        raise ValueError("cannot mark unverified run complete: " + "; ".join(result["errors"] + result["unverified"]))
+        raise ValueError(
+            "cannot mark unverified run complete: "
+            + "; ".join(result["errors"] + result["unverified"])
+        )
     _validate_generation_artifacts(result_path, record)
     manifest = record["manifest"]
-    marker = {"schema_version": SCHEMA_VERSION, "run_id": manifest["run_id"],
-              "protocol_hash": manifest["protocol_hash"], "config_hash": manifest["config_hash"],
-              "environment_hash": manifest["environment_hash"], "training_resume_supported": False,
-              "files": artifact_files(result_path)}
+    marker = {
+        "schema_version": SCHEMA_VERSION,
+        "run_id": manifest["run_id"],
+        "protocol_hash": manifest["protocol_hash"],
+        "config_hash": manifest["config_hash"],
+        "environment_hash": manifest["environment_hash"],
+        "training_resume_supported": False,
+        "files": artifact_files(result_path),
+    }
     _atomic_json(completion_path(result_path), marker)
     return marker
 
@@ -477,7 +699,9 @@ def validate_completion(result_path, *, expected=None):
     texts = strict_json_load(result_path.with_name(result_path.stem + "_texts.json.gz"))
     result = validate_run(record, filename=result_path.name, texts=texts, expected=expected)
     if not result["verified"]:
-        raise ValueError("run schema/provenance failed: " + "; ".join(result["errors"] + result["unverified"]))
+        raise ValueError(
+            "run schema/provenance failed: " + "; ".join(result["errors"] + result["unverified"])
+        )
     for key in ("run_id", "protocol_hash", "config_hash", "environment_hash"):
         if marker.get(key) != record["manifest"][key]:
             raise ValueError(f"completion {key} mismatch")

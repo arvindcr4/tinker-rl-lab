@@ -68,7 +68,10 @@ def validate_source_request(source: dict[str, Any], source_request: Path) -> dic
     ):
         raise RuntimeError("source request does not match the frozen 30/500 contract")
     fingerprint = source.get("fingerprint")
-    if not isinstance(fingerprint, str) or shared.fingerprint(fingerprint_payload(source)) != fingerprint:
+    if (
+        not isinstance(fingerprint, str)
+        or shared.fingerprint(fingerprint_payload(source)) != fingerprint
+    ):
         raise RuntimeError("source request fingerprint does not validate")
     if source.get("stack_fingerprint") != shared.stack_fingerprint():
         raise RuntimeError("source request stack fingerprint is no longer compatible")
@@ -161,9 +164,7 @@ def reconcile_remote_completion(
     manifest = json.loads(Path(manifest_file).read_text(encoding="utf-8"))
     if not isinstance(manifest, dict):
         raise RuntimeError("remote manifest is not a JSON object")
-    result = remote_result_from_manifest(
-        manifest, hf_repo=hf_repo, hf_commit=hf_commit
-    )
+    result = remote_result_from_manifest(manifest, hf_repo=hf_repo, hf_commit=hf_commit)
     audit = result["audit_record"]
     if audit.get("arm") != arm or audit.get("seed") != seed:
         raise RuntimeError("remote manifest arm/seed does not match source request")
@@ -178,9 +179,7 @@ def reconcile_remote_completion(
     args.arm = arm
     args.seed = seed
     args.output_dir = source_output_dir
-    outputs = shared.write_validated_outputs(
-        args, result, manifest, unit_fingerprint, verification
-    )
+    outputs = shared.write_validated_outputs(args, result, manifest, unit_fingerprint, verification)
     completed_at = shared.utc_now()
     complete = {
         **fingerprint_payload(source),

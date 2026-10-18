@@ -35,6 +35,7 @@ Outputs (TSVs):
   group_size_iter59_decomp.tsv            multiplicative decomposition
   group_size_iter59_summary.tsv           headline rollup
 """
+
 from __future__ import annotations
 
 import math
@@ -150,8 +151,12 @@ def equivalence_regions(ret_curve):
                 "threshold_R": thr,
                 "T_min_grid_M": T_min // 1_000_000,
                 "T_max_grid_M": T_max // 1_000_000,
-                "T_first_below_threshold_M": (T_cross_down // 1_000_000) if T_cross_down is not None else "none",
-                "T_last_above_threshold_M": (T_last_above // 1_000_000) if T_last_above is not None else "none",
+                "T_first_below_threshold_M": (T_cross_down // 1_000_000)
+                if T_cross_down is not None
+                else "none",
+                "T_last_above_threshold_M": (T_last_above // 1_000_000)
+                if T_last_above is not None
+                else "none",
                 "equivalence_region_exists": in_region,
             }
         )
@@ -159,7 +164,7 @@ def equivalence_regions(ret_curve):
     for r in sorted_rc:
         out.append(
             {
-                "threshold_name": f"R_observed_T{r['T']//1_000_000}M",
+                "threshold_name": f"R_observed_T{r['T'] // 1_000_000}M",
                 "threshold_R": r["R"],
                 "T_min_grid_M": r["T"] // 1_000_000,
                 "T_max_grid_M": r["T"] // 1_000_000,
@@ -326,7 +331,7 @@ def multiplicative_decomposition(rows, Y_map, zvf_raw):
             "noise_residual": "",
             "log_R_emp": "",
             "log_structural_R": f"log_steps={math.log(steps_ratio):.4f}",
-            "log_noise": f"log_Y={math.log(Y4/Y32):.4f}",
+            "log_noise": f"log_Y={math.log(Y4 / Y32):.4f}",
             "is_structural_overestimate": "",
         }
     )
@@ -373,9 +378,7 @@ def summarize(regions, frontier, decomp):
                 }
             )
         if r["T_tokens"] == "log_decomposition":
-            out.append(
-                {"metric": "log_steps_ratio", "value": f"{r['log_structural_R']}"}
-            )
+            out.append({"metric": "log_steps_ratio", "value": f"{r['log_structural_R']}"})
     # Per-budget noise
     for r in decomp:
         if isinstance(r["T_tokens"], int):

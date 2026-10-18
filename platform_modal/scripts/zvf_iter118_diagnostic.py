@@ -31,6 +31,7 @@ Output artefacts:
 All inputs are existing per-experiment measurement files; no new
 tinker runs are launched.
 """
+
 from __future__ import annotations
 
 import csv
@@ -47,7 +48,7 @@ RESULTS = REPO_ROOT / "experiments" / "results"
 FIGURES = REPO_ROOT / "figures"
 
 sys.path.insert(0, str(REPO_ROOT / "scripts"))
-import zvf_diagnostic as zd  # type: ignore  # noqa: E402
+import zvf_diagnostic as zd  # type: ignore
 from _analysis_common import maybe_matplotlib as _maybe_matplotlib, rankdata_avg as _rankdata
 
 
@@ -165,8 +166,12 @@ def write_auroc(pooled: List[Dict[str, Any]], out_path: Path) -> Dict[str, Any]:
       (a) is_collapse            positive = collapse
       (b) is_collapse_or_drift   positive = collapse or drift
     """
-    pooled = [r for r in pooled if math.isfinite(r["mean_zvf"]) and
-              r.get("failure") in ("collapse", "drift", "plateau", "converged")]
+    pooled = [
+        r
+        for r in pooled
+        if math.isfinite(r["mean_zvf"])
+        and r.get("failure") in ("collapse", "drift", "plateau", "converged")
+    ]
 
     by_kind: Dict[str, List[Dict[str, Any]]] = {}
     for r in pooled:
@@ -206,7 +211,9 @@ def write_auroc(pooled: List[Dict[str, Any]], out_path: Path) -> Dict[str, Any]:
             )
         )
 
-        def _auroc_for(group: List[Dict[str, Any]], target: str) -> Tuple[float, Tuple[float, float]]:
+        def _auroc_for(
+            group: List[Dict[str, Any]], target: str
+        ) -> Tuple[float, Tuple[float, float]]:
             if target == "collapse_or_drift":
                 pos_set = ("collapse", "drift")
                 neg_set = ("converged", "plateau")
@@ -215,8 +222,16 @@ def write_auroc(pooled: List[Dict[str, Any]], out_path: Path) -> Dict[str, Any]:
                 neg_set = ("converged", "plateau", "drift")
             else:
                 raise ValueError(target)
-            pos = [r["mean_zvf"] for r in group if r["failure"] in pos_set and not math.isnan(r["mean_zvf"])]
-            neg = [r["mean_zvf"] for r in group if r["failure"] in neg_set and not math.isnan(r["mean_zvf"])]
+            pos = [
+                r["mean_zvf"]
+                for r in group
+                if r["failure"] in pos_set and not math.isnan(r["mean_zvf"])
+            ]
+            neg = [
+                r["mean_zvf"]
+                for r in group
+                if r["failure"] in neg_set and not math.isnan(r["mean_zvf"])
+            ]
             return _bootstrap_auc(pos, neg, B=2000, seed=7)
 
         for kind in sorted(by_kind.keys()):
@@ -284,8 +299,17 @@ def write_aero_grpo_gap(rows: List[Dict[str, Any]], out_path: Path) -> Dict[str,
         if "failure" not in r:
             r["failure"] = zd.classify(r)
 
-    aero = [r for r in rows if r["experiment"] == "variance_mitigation" and str(r["model"]).upper() == "AERO"]
-    grpo = [r for r in rows if r["experiment"] == "variance_mitigation" and str(r["model"]).upper() == "GRPO"]
+    aero = [
+        r
+        for r in rows
+        if r["experiment"] == "variance_mitigation" and str(r["model"]).upper() == "AERO"
+    ]
+    grpo = [
+        r
+        for r in rows
+        if r["experiment"] == "variance_mitigation" and str(r["model"]).upper() == "GRPO"
+    ]
+
     def keyed(group):
         result = {}
         for row in group:
@@ -294,6 +318,7 @@ def write_aero_grpo_gap(rows: List[Dict[str, Any]], out_path: Path) -> Dict[str,
                 raise ValueError("Missing or duplicate paired run identity")
             result[key] = row
         return result
+
     amap, gmap = keyed(aero), keyed(grpo)
     matched = sorted(amap.keys() & gmap.keys())
     unmatched_aero = len(amap.keys() - gmap.keys())
@@ -407,7 +432,8 @@ def write_aero_grpo_gap(rows: List[Dict[str, Any]], out_path: Path) -> Dict[str,
             )
 
     return {
-        "unmatched_aero": unmatched_aero, "unmatched_grpo": unmatched_grpo,
+        "unmatched_aero": unmatched_aero,
+        "unmatched_grpo": unmatched_grpo,
         "gap_zvf": gap_zvf,
         "gap_failure": gap_fail,
         "gap_last10": gap_last,
@@ -438,6 +464,7 @@ def write_calibration(pooled: List[Dict[str, Any]], out_path: Path) -> Dict[str,
     n = len(valid)
     n_bins = min(8, max(4, n // 3))
     from _review28_statistics import quantile_partitions
+
     bins = quantile_partitions(valid, "mean_zvf", n_bins)
 
     out_path.parent.mkdir(parents=True, exist_ok=True)
@@ -493,7 +520,9 @@ def write_calibration(pooled: List[Dict[str, Any]], out_path: Path) -> Dict[str,
         low = [r for r in valid if r["mean_zvf"] < 0.5]
         high = [r for r in valid if r["mean_zvf"] >= 0.5]
         low_fail = sum(1 for r in low if r["failure"] in ("collapse", "drift")) / max(1, len(low))
-        high_fail = sum(1 for r in high if r["failure"] in ("collapse", "drift")) / max(1, len(high))
+        high_fail = sum(1 for r in high if r["failure"] in ("collapse", "drift")) / max(
+            1, len(high)
+        )
     return {
         "n_bins": len(bins),
         "rates": rates,
@@ -515,30 +544,24 @@ def write_calibration_figure(
     n = len(valid)
     n_bins = min(8, max(4, n // 3))
     from _review28_statistics import quantile_partitions
+
     bins = quantile_partitions(valid, "mean_zvf", n_bins)
     zvf_means = [statistics.fmean([r["mean_zvf"] for r in b]) for b in bins]
-    fail_rates = [
-        sum(1 for r in b if r["failure"] in ("collapse", "drift")) / len(b) for b in bins
-    ]
+    fail_rates = [sum(1 for r in b if r["failure"] in ("collapse", "drift")) / len(b) for b in bins]
     cis = [
-        _wilson_ci(sum(1 for r in b if r["failure"] in ("collapse", "drift")), len(b))
-        for b in bins
+        _wilson_ci(sum(1 for r in b if r["failure"] in ("collapse", "drift")), len(b)) for b in bins
     ]
     # Identify the high-zvf tool-use cluster and the low-zvf drift cluster.
     tool_use = [r for r in valid if r["experiment"].startswith("cross_tool")]
-    drift = [
-        r
-        for r in valid
-        if r["failure"] == "drift"
-    ]
+    drift = [r for r in valid if r["failure"] == "drift"]
 
     fig, ax = plt.subplots(figsize=(7.5, 4.6))
     ax.errorbar(
         zvf_means,
         fail_rates,
         yerr=[
-            [r - lo for r, (lo, _) in zip(fail_rates, cis)],
-            [hi - r for r, (_, hi) in zip(fail_rates, cis)],
+            [r - lo for r, (lo, _) in zip(fail_rates, cis, strict=False)],
+            [hi - r for r, (_, hi) in zip(fail_rates, cis, strict=False)],
         ],
         fmt="o-",
         color="#c0392b",
@@ -691,8 +714,7 @@ def main() -> int:
     if fig_path:
         print(f"[zvf-iter118] wrote figure {fig_path}")
     print(
-        f"[zvf-iter118] wrote {out_auroc.name}, {out_gap.name}, "
-        f"{out_calib.name}, {out_narr.name}"
+        f"[zvf-iter118] wrote {out_auroc.name}, {out_gap.name}, {out_calib.name}, {out_narr.name}"
     )
     return 0
 

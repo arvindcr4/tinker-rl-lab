@@ -49,17 +49,22 @@ HF_OUT = REG_DIR / "hf_runs.jsonl"
 CSV_OUT = REG_DIR / "tinker_wandb_hf_correlation.csv"
 MD_OUT = REG_DIR / "RECTIFICATION.md"
 
-RUN_ID_RE = re.compile(r"\b([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-"
-                       r"[0-9a-f]{12}(?::train:\d+)?)\b")
+RUN_ID_RE = re.compile(
+    r"\b([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-"
+    r"[0-9a-f]{12}(?::train:\d+)?)\b"
+)
 AUTHOR = "arvindcr4"
 
 
 def hf_get(path: str, token: str, raw: bool = False):
     url = f"https://huggingface.co{path}"
-    req = urllib.request.Request(url, headers={
-        "Authorization": f"Bearer {token}",
-        "User-Agent": "tinker-rl-lab-rectify",
-    })
+    req = urllib.request.Request(
+        url,
+        headers={
+            "Authorization": f"Bearer {token}",
+            "User-Agent": "tinker-rl-lab-rectify",
+        },
+    )
     body = urllib.request.urlopen(req, timeout=30).read()
     return body.decode("utf-8", "replace") if raw else json.loads(body)
 
@@ -71,6 +76,7 @@ def normalize_run_id(rid):
 
 def harvest_hf(token):
     from huggingface_hub import HfApi, hf_hub_download
+
     api = HfApi(token=token)
     records = []
     for model in api.list_models(author=AUTHOR):
@@ -82,26 +88,59 @@ def harvest_hf(token):
                 files = api.list_repo_files(repo, revision=revision)
                 targets = [f for f in files if f.lower().endswith((".md", ".json"))]
                 for filename in targets:
-                    record = {"hf_repo": repo, "revision": revision, "source_file": filename,
-                              "tinker_run_ids": [], "hf_model_labels": [],
-                              "files_requested": 1, "files_fetched": 0, "files_failed": 0,
-                              "files_scanned": 0, "coverage": "partial", "evidence_role": "textual_reference"}
+                    record = {
+                        "hf_repo": repo,
+                        "revision": revision,
+                        "source_file": filename,
+                        "tinker_run_ids": [],
+                        "hf_model_labels": [],
+                        "files_requested": 1,
+                        "files_fetched": 0,
+                        "files_failed": 0,
+                        "files_scanned": 0,
+                        "coverage": "partial",
+                        "evidence_role": "textual_reference",
+                    }
                     try:
                         path = hf_hub_download(repo, filename, revision=revision, token=token)
                         text = Path(path).read_text()
-                        record["tinker_run_ids"] = sorted({normalize_run_id(m[1]) for m in RUN_ID_RE.finditer(text) if ":train:" in m[1]})
+                        record["tinker_run_ids"] = sorted(
+                            {
+                                normalize_run_id(m[1])
+                                for m in RUN_ID_RE.finditer(text)
+                                if ":train:" in m[1]
+                            }
+                        )
                         if filename.endswith(".json"):
                             obj = json.loads(text)
                             if isinstance(obj, dict):
-                                record["hf_model_labels"] = sorted({obj[k] for k in ("model", "base_model", "model_id", "model_name") if isinstance(obj.get(k), str)})
-                                record["evidence_role"] = obj.get("evidence_role", "textual_reference")
-                        record.update(files_fetched=1, files_scanned=1, coverage="metadata_file_complete")
+                                record["hf_model_labels"] = sorted(
+                                    {
+                                        obj[k]
+                                        for k in ("model", "base_model", "model_id", "model_name")
+                                        if isinstance(obj.get(k), str)
+                                    }
+                                )
+                                record["evidence_role"] = obj.get(
+                                    "evidence_role", "textual_reference"
+                                )
+                        record.update(
+                            files_fetched=1, files_scanned=1, coverage="metadata_file_complete"
+                        )
                     except Exception as exc:
                         record.update(files_failed=1, error=str(exc))
                     records.append(record)
         except Exception as exc:
-            records.append({"hf_repo": repo, "tinker_run_ids": [], "hf_model_labels": [],
-                            "files_scanned": 0, "coverage": "partial", "error": str(exc)})
+            records.append(
+                {
+                    "hf_repo": repo,
+                    "tinker_run_ids": [],
+                    "hf_model_labels": [],
+                    "files_scanned": 0,
+                    "coverage": "partial",
+                    "error": str(exc),
+                }
+            )
     return records
 
 
@@ -132,8 +171,7 @@ def main() -> None:
             hf_by_run[rid].append(r)
 
     # index: tinker run id -> wandb rows that explicitly reference it
-    wandb_rows = [json.loads(l) for l in
-                  (REG_DIR / "wandb_runs.jsonl").open()]
+    wandb_rows = [json.loads(l) for l in (REG_DIR / "wandb_runs.jsonl").open()]
     wandb_by_run: dict[str, list[dict]] = defaultdict(list)
     for wr in wandb_rows:
         for rid in wr.get("referenced_tinker_ids") or []:
@@ -161,8 +199,7 @@ def main() -> None:
                 hf_consistent = "conflict"
 
         wb_hits = wandb_by_run.get(rid, [])
-        wb_models = sorted({wr.get("model") or ""
-                            for wr in wb_hits} - {""})
+        wb_models = sorted({wr.get("model") or "" for wr in wb_hits} - {""})
         wandb_consistent = ""
         if wb_hits:
             if not wb_models:
@@ -175,8 +212,9 @@ def main() -> None:
         method = row["match_method"]
         if method == "verified_training_owner":
             if wandb_consistent == "consistent":
-                resolution = ("confirmed_wandb_hf" if hf_consistent == "consistent"
-                              else "confirmed_wandb")
+                resolution = (
+                    "confirmed_wandb_hf" if hf_consistent == "consistent" else "confirmed_wandb"
+                )
             else:  # wandb conflict
                 if hf_consistent == "consistent":
                     # Tinker registry + HF agree; the disagreeing W&B row is a
@@ -195,21 +233,28 @@ def main() -> None:
         stats[resolution] += 1
 
         if "conflict" in resolution or "mislink" in resolution:
-            conflict_details.append({
-                "run_id": rid, "tinker_model": tinker_model,
-                "wandb_models": wb_models, "hf_labels": hf_labels,
-                "hf_repos": hf_repos, "resolution": resolution,
-                "wandb_url": row.get("wandb_url", ""),
-            })
+            conflict_details.append(
+                {
+                    "run_id": rid,
+                    "tinker_model": tinker_model,
+                    "wandb_models": wb_models,
+                    "hf_labels": hf_labels,
+                    "hf_repos": hf_repos,
+                    "resolution": resolution,
+                    "wandb_url": row.get("wandb_url", ""),
+                }
+            )
 
-        row.update({
-            "wandb_model_labels": ";".join(wb_models),
-            "wandb_model_consistent": wandb_consistent,
-            "hf_repos": hf_repos,
-            "hf_model_label": ";".join(hf_labels),
-            "hf_model_consistent": hf_consistent,
-            "resolution": resolution,
-        })
+        row.update(
+            {
+                "wandb_model_labels": ";".join(wb_models),
+                "wandb_model_consistent": wandb_consistent,
+                "hf_repos": hf_repos,
+                "hf_model_label": ";".join(hf_labels),
+                "hf_model_consistent": hf_consistent,
+                "resolution": resolution,
+            }
+        )
         out_rows.append(row)
 
     fieldnames = list(out_rows[0].keys())
@@ -227,8 +272,7 @@ def main() -> None:
         "",
         f"- HF repos scanned: {len(hf_records)}",
         f"- Unique Tinker run IDs found on HF: {len(hf_run_ids)}",
-        f"- ...of which present in the 949-run registry: "
-        f"{len(hf_run_ids & csv_ids)}",
+        f"- ...of which present in the 949-run registry: {len(hf_run_ids & csv_ids)}",
         f"- ...NOT in the registry (orphans): {sorted(hf_run_ids - csv_ids)}",
         "",
         "## Resolution distribution",
@@ -239,10 +283,12 @@ def main() -> None:
     md += ["", "## Conflicts and arbitrations", ""]
     if conflict_details:
         for c in conflict_details:
-            md.append(f"- **{c['resolution']}** `{c['run_id']}` "
-                      f"Tinker=`{c['tinker_model']}` "
-                      f"W&B={c['wandb_models']} HF={c['hf_labels']} "
-                      f"({c['wandb_url'] or 'no wandb url'})")
+            md.append(
+                f"- **{c['resolution']}** `{c['run_id']}` "
+                f"Tinker=`{c['tinker_model']}` "
+                f"W&B={c['wandb_models']} HF={c['hf_labels']} "
+                f"({c['wandb_url'] or 'no wandb url'})"
+            )
     else:
         md.append("- none")
     md += [

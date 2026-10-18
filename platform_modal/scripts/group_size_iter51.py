@@ -14,10 +14,9 @@ Outputs (TSVs, written to platform_hybrid/experiments/results/):
   group_size_iter51_lit_compare_v2.tsv           Wu 2025 G=2~G=16 vs our G=4~G=32 retention
   group_size_iter51_summary_v2.tsv               headline rollup
 """
+
 from __future__ import annotations
 
-import math
-import os
 import random
 from pathlib import Path
 
@@ -40,7 +39,7 @@ def load_zvf_sweep():
     with open(RES / "groupsize_zvf_sweep.tsv") as f:
         header = f.readline().rstrip("\n").split("\t")
         for line in f:
-            row = dict(zip(header, line.rstrip("\n").split("\t")))
+            row = dict(zip(header, line.rstrip("\n").split("\t"), strict=False))
             out.append(
                 {
                     "G": int(row["G"]),
@@ -305,7 +304,7 @@ def summarize(rows, peak_rows, tost_rows, lit_rows, wu_rows):
         g32 = next(r for r in rows if r["T"] == T and r["G"] == 32)
         out.append(
             {
-                "metric": f"retention_G4_vs_G32_at_T{T//1_000_000}M",
+                "metric": f"retention_G4_vs_G32_at_T{T // 1_000_000}M",
                 "value": f"{g4['acc'] / g32['acc']:.4f}",
             }
         )
@@ -314,7 +313,7 @@ def summarize(rows, peak_rows, tost_rows, lit_rows, wu_rows):
     for T, Gp in argmax_G_by_T:
         out.append(
             {
-                "metric": f"argmax_G_at_T{T//1_000_000}M",
+                "metric": f"argmax_G_at_T{T // 1_000_000}M",
                 "value": str(Gp),
             }
         )
@@ -449,12 +448,12 @@ def main():
 
     # ----- console headline -----
     print("\n=== Iter 51 Headline ===")
-    print(f"argmax G by budget: {[(p['T_tokens']//1_000_000, p['argmax_G']) for p in pk]}")
+    print(f"argmax G by budget: {[(p['T_tokens'] // 1_000_000, p['argmax_G']) for p in pk]}")
     print("Retention G=4 vs G=32 by budget:")
     for r in lit:
         flag = "ABOVE Wu" if r["above_wu_threshold"] == "yes" else "BELOW Wu"
         print(
-            f"  T={r['T_tokens']//1_000_000}M  R={r['ours_retention']:.4f}  {flag}  (gap {r['gap_to_wu']:+.4f})"
+            f"  T={r['T_tokens'] // 1_000_000}M  R={r['ours_retention']:.4f}  {flag}  (gap {r['gap_to_wu']:+.4f})"
         )
     n_tost_05 = sum(1 for r in tost if r["epsilon"] == 0.05 and r["tost_equivalent"] == "yes")
     print(f"TOST equivalent at eps=0.05: {n_tost_05}/4 budgets")

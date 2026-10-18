@@ -5,6 +5,7 @@ import unittest
 
 from pilot.analysis import AnalysisContractError, confirmatory_power_gate, screening_gate
 from pilot.protocol import canonical_fingerprint
+import pytest
 
 
 def screening_records() -> list[dict]:
@@ -79,7 +80,7 @@ def seal_records(records):
         full = receipt["full_record"]
         full["status"] = "completed"
         unit = {k: full[k] for k in ("condition", "regime", "seed")}
-        sources = {"synthetic-source.py": "a"*64, "protocol.json": "b"*64}
+        sources = {"synthetic-source.py": "a" * 64, "protocol.json": "b" * 64}
         plan = {"unit": unit, "source_bindings": sources}
         plan["fingerprint"] = canonical_fingerprint(plan)
         full["manifest"].update(plan=plan, source_manifest=sources)
@@ -87,26 +88,34 @@ def seal_records(records):
         full["corpus_fingerprint"] = canonical_fingerprint([full["regime"], full["seed"]])
         for evaluation in full["evaluations"]:
             evaluation["heldout_n"] = 128
-            evaluation["correct"] = round(evaluation["accuracy"]*128)
-            evaluation["accuracy"] = evaluation["correct"]/128
+            evaluation["correct"] = round(evaluation["accuracy"] * 128)
+            evaluation["accuracy"] = evaluation["correct"] / 128
         for item in full["manifest"]["gradient_receipts"]:
-            item.update(intended_gradient_norm=1., native_gradient_norm=1., selected_gradient_norm=1.)
+            item.update(
+                intended_gradient_norm=1.0, native_gradient_norm=1.0, selected_gradient_norm=1.0
+            )
             item["condition"] = full["condition"]
-            item["group_fingerprint"] = canonical_fingerprint([full["regime"], full["seed"], item["step"]])
+            item["group_fingerprint"] = canonical_fingerprint(
+                [full["regime"], full["seed"], item["step"]]
+            )
         full.pop("fingerprint", None)
         full["fingerprint"] = canonical_fingerprint(full)
-        receipt.update(unit=unit, unit_fingerprint=full["unit_fingerprint"], corpus_fingerprint=full["corpus_fingerprint"])
+        receipt.update(
+            unit=unit,
+            unit_fingerprint=full["unit_fingerprint"],
+            corpus_fingerprint=full["corpus_fingerprint"],
+        )
     return records
 
 
 class AnalysisTests(unittest.TestCase):
     def test_prespecified_screening_gate_passes_complete_positive_fixture(self) -> None:
         report = screening_gate(screening_records())
-        self.assertEqual(report["verdict"], "GO")
-        self.assertTrue(report["mechanism_pass"])
-        self.assertTrue(report["causal_attribution_pass"])
-        self.assertTrue(report["learning"]["pass"])
-        self.assertTrue(report["matched_compute_pass"])
+        assert report["verdict"] == "GO"
+        assert report["mechanism_pass"]
+        assert report["causal_attribution_pass"]
+        assert report["learning"]["pass"]
+        assert report["matched_compute_pass"]
 
     def test_gate_kills_failed_mechanism_without_pseudoreplication(self) -> None:
         records = screening_records()
@@ -121,8 +130,8 @@ class AnalysisTests(unittest.TestCase):
             receipt["gradient_cosine"] = 0.9999
             receipt["gradient_relative_l2"] = 0.001
         report = screening_gate(seal_records(records))
-        self.assertEqual(report["verdict"], "KILL")
-        self.assertFalse(report["mechanism"]["filtered_variable_length"]["23"]["pass"])
+        assert report["verdict"] == "KILL"
+        assert not report["mechanism"]["filtered_variable_length"]["23"]["pass"]
 
     def test_joint_zero_is_equivalent_and_one_sided_zero_is_maximal_divergence(self) -> None:
         records = screening_records()
@@ -157,33 +166,32 @@ class AnalysisTests(unittest.TestCase):
                 }
             )
         report = screening_gate(seal_records(records))
-        self.assertEqual(
-            report["mechanism"]["balanced_equal_length"]["11"]["gradient_relation_counts"],
-            {"joint_zero": 100},
-        )
-        self.assertTrue(report["mechanism"]["balanced_equal_length"]["11"]["pass"])
-        self.assertEqual(
+        assert report["mechanism"]["balanced_equal_length"]["11"]["gradient_relation_counts"] == {
+            "joint_zero": 100
+        }
+        assert report["mechanism"]["balanced_equal_length"]["11"]["pass"]
+        assert (
             report["mechanism"]["filtered_variable_length"]["11"]["gradient_relation_counts"][
                 "intended_zero"
-            ],
-            20,
+            ]
+            == 20
         )
-        self.assertGreater(report["causal_attribution"]["11"]["native_relation_effect"], 0.2)
+        assert report["causal_attribution"]["11"]["native_relation_effect"] > 0.2
 
     def test_gate_rejects_incomplete_or_duplicate_matrix(self) -> None:
         records = screening_records()
-        with self.assertRaisesRegex(AnalysisContractError, "matrix mismatch"):
+        with pytest.raises(AnalysisContractError, match="matrix mismatch"):
             screening_gate(records[:-1])
         duplicate = copy.deepcopy(records)
         duplicate.append(copy.deepcopy(records[0]))
-        with self.assertRaisesRegex(AnalysisContractError, "duplicate"):
+        with pytest.raises(AnalysisContractError, match="duplicate"):
             screening_gate(duplicate)
 
     def test_power_gate_is_deterministic_and_stops_weak_design(self) -> None:
         report = screening_gate(screening_records())
         first = confirmatory_power_gate(report, draws=5_000)
         second = confirmatory_power_gate(report, draws=5_000)
-        self.assertEqual(first, second)
+        assert first == second
         weak = copy.deepcopy(report)
         weak["learning"]["auc_differences"]["filtered_variable_length"] = [
             0.0001,
@@ -192,13 +200,13 @@ class AnalysisTests(unittest.TestCase):
         ]
         weak["learning"]["auc_differences"]["balanced_equal_length"] = [0.0, 0.0, 0.0]
         stopped = confirmatory_power_gate(weak, draws=5_000)
-        self.assertEqual(stopped["verdict"], "EXPLORATORY_ONLY")
-        self.assertNotIn("pooled_auc_effects", stopped)
+        assert stopped["verdict"] == "EXPLORATORY_ONLY"
+        assert "pooled_auc_effects" not in stopped
 
     def test_power_gate_cannot_run_after_screening_kill(self) -> None:
         report = screening_gate(screening_records())
         report["verdict"] = "KILL"
-        with self.assertRaisesRegex(AnalysisContractError, "after a KILL"):
+        with pytest.raises(AnalysisContractError, match="after a KILL"):
             confirmatory_power_gate(report, draws=100)
 
 

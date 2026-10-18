@@ -35,6 +35,7 @@ Output artefacts:
 All inputs are existing per-experiment measurement files; no new
 tinker runs are launched.
 """
+
 from __future__ import annotations
 
 import csv
@@ -44,7 +45,7 @@ import random
 import statistics
 import sys
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Sequence, Tuple
+from typing import Any, Dict, List, Tuple
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 RESULTS = REPO_ROOT / "experiments" / "results"
@@ -52,8 +53,8 @@ FIGURES = REPO_ROOT / "figures"
 PAPER_FIGS = REPO_ROOT / "paper" / "figures"
 
 sys.path.insert(0, str(REPO_ROOT / "scripts"))
-import zvf_diagnostic as zd  # type: ignore  # noqa: E402
-import zvf_iter118_diagnostic as z118  # type: ignore  # noqa: E402
+import zvf_diagnostic as zd  # type: ignore
+import zvf_iter118_diagnostic as z118  # type: ignore
 
 
 # ---------------------------------------------------------------------------
@@ -63,23 +64,31 @@ import zvf_iter118_diagnostic as z118  # type: ignore  # noqa: E402
 
 def _iso_yield_curve(gs, zvfs, taus):
     """Observed-grid target attainment; no unvalidated monotonic extrapolation."""
-    if len(gs) != len(zvfs) or len(set(gs)) != len(gs): raise ValueError("unaligned/duplicate group sizes")
-    points=sorted(zip(gs,zvfs))
-    if any(g < 1 or int(g)!=g or not math.isfinite(z) or not 0<=z<=1 for g,z in points):
+    if len(gs) != len(zvfs) or len(set(gs)) != len(gs):
+        raise ValueError("unaligned/duplicate group sizes")
+    points = sorted(zip(gs, zvfs, strict=False))
+    if any(g < 1 or int(g) != g or not math.isfinite(z) or not 0 <= z <= 1 for g, z in points):
         raise ValueError("invalid measured group size or ZVF")
-    out=[]
+    out = []
     for tau in taus:
-        if not 0<=tau<=1: raise ValueError("target outside [0,1]")
-        successes=[(g,z) for g,z in points if z<=tau]
-        g,z=successes[0] if successes else (float("inf"),float("nan"))
-        out.append(dict(tau=tau,g_min=g,achieved_zvf=z,interpolated=False,extrapolated=False,
-                        status="observed" if successes else "not_reached_in_measured_range"))
+        if not 0 <= tau <= 1:
+            raise ValueError("target outside [0,1]")
+        successes = [(g, z) for g, z in points if z <= tau]
+        g, z = successes[0] if successes else (float("inf"), float("nan"))
+        out.append(
+            dict(
+                tau=tau,
+                g_min=g,
+                achieved_zvf=z,
+                interpolated=False,
+                extrapolated=False,
+                status="observed" if successes else "not_reached_in_measured_range",
+            )
+        )
     return out
 
 
-def _precision_recall(
-    pooled: List[Dict[str, Any]], tau: float, target: str
-) -> Dict[str, Any]:
+def _precision_recall(pooled: List[Dict[str, Any]], tau: float, target: str) -> Dict[str, Any]:
     """Compute precision/recall of (mean_zvf > tau) vs target at threshold tau.
 
     target='collapse'           -> positive = is_collapse
@@ -190,11 +199,7 @@ def write_iso_yield(out_path: Path) -> Dict[str, Any]:
                 (
                     r["task"],
                     r["tau"],
-                    (
-                        "inf"
-                        if math.isinf(r["g_min"])
-                        else f"{r['g_min']:.3f}"
-                    ),
+                    ("inf" if math.isinf(r["g_min"]) else f"{r['g_min']:.3f}"),
                     f"{r['achieved_zvf']:.4f}",
                     int(r["interpolated"]),
                     int(r["extrapolated"]),
@@ -223,6 +228,7 @@ def write_aero_quantile(out_path: Path) -> Dict[str, Any]:
     if not aero or not grpo:
         out_path.parent.mkdir(parents=True, exist_ok=True)
         from _review28_io import write_table
+
         write_table(out_path, [], fields=["seed", "aero_zvf", "grpo_zvf", "gap_zvf"])
         return {"n_pairs": 0, "n_bins": 0}
     by_seed_aero = {r["seed"]: r for r in aero}
@@ -234,6 +240,7 @@ def write_aero_quantile(out_path: Path) -> Dict[str, Any]:
     if not pairs:
         out_path.parent.mkdir(parents=True, exist_ok=True)
         from _review28_io import write_table
+
         write_table(out_path, [], fields=["seed", "aero_zvf", "grpo_zvf", "gap_zvf"])
         return {"n_pairs": 0}
 
@@ -329,12 +336,8 @@ def write_aero_quantile(out_path: Path) -> Dict[str, Any]:
                 "aero_zvf": statistics.fmean([pairs[i][0]["mean_zvf"] for i in sel]),
                 "grpo_zvf": statistics.fmean([pairs[i][1]["mean_zvf"] for i in sel]),
                 "gap_zvf": bin_gap,
-                "aero_last10": statistics.fmean(
-                    [pairs[i][0]["last10_avg"] for i in sel]
-                ),
-                "grpo_last10": statistics.fmean(
-                    [pairs[i][1]["last10_avg"] for i in sel]
-                ),
+                "aero_last10": statistics.fmean([pairs[i][0]["last10_avg"] for i in sel]),
+                "grpo_last10": statistics.fmean([pairs[i][1]["last10_avg"] for i in sel]),
                 "gap_last10": statistics.fmean(gaps_last[i] for i in sel),
             }
         )
@@ -379,64 +382,24 @@ def write_aero_quantile(out_path: Path) -> Dict[str, Any]:
                     r["row_kind"],
                     r.get("seed", ""),
                     r.get("n_pairs", ""),
-                    (
-                        f"{r['aero_zvf']:.4f}"
-                        if "aero_zvf" in r
-                        else ""
-                    ),
-                    (
-                        f"{r['grpo_zvf']:.4f}"
-                        if "grpo_zvf" in r
-                        else ""
-                    ),
-                    (
-                        f"{r['gap_zvf']:.4f}"
-                        if "gap_zvf" in r
-                        else ""
-                    ),
+                    (f"{r['aero_zvf']:.4f}" if "aero_zvf" in r else ""),
+                    (f"{r['grpo_zvf']:.4f}" if "grpo_zvf" in r else ""),
+                    (f"{r['gap_zvf']:.4f}" if "gap_zvf" in r else ""),
                     (
                         f"{r.get('gap_zvf_ci_lo', ''):.4f}"
                         if "gap_zvf_ci_lo" in r and not math.isnan(r["gap_zvf_ci_lo"])
-                        else (
-                            f"{r.get('gap_zvf_ci_lo', '')}"
-                            if "gap_zvf_ci_lo" in r
-                            else ""
-                        )
+                        else (f"{r.get('gap_zvf_ci_lo', '')}" if "gap_zvf_ci_lo" in r else "")
                     ),
                     (
                         f"{r.get('gap_zvf_ci_hi', ''):.4f}"
                         if "gap_zvf_ci_hi" in r and not math.isnan(r["gap_zvf_ci_hi"])
-                        else (
-                            f"{r.get('gap_zvf_ci_hi', '')}"
-                            if "gap_zvf_ci_hi" in r
-                            else ""
-                        )
+                        else (f"{r.get('gap_zvf_ci_hi', '')}" if "gap_zvf_ci_hi" in r else "")
                     ),
-                    (
-                        f"{r.get('gap_zvf_sd', ''):.4f}"
-                        if "gap_zvf_sd" in r
-                        else ""
-                    ),
-                    (
-                        f"{r['aero_last10']:.4f}"
-                        if "aero_last10" in r
-                        else ""
-                    ),
-                    (
-                        f"{r['grpo_last10']:.4f}"
-                        if "grpo_last10" in r
-                        else ""
-                    ),
-                    (
-                        f"{r['gap_last10']:.4f}"
-                        if "gap_last10" in r
-                        else ""
-                    ),
-                    (
-                        f"{r.get('gap_last10_sd', ''):.4f}"
-                        if "gap_last10_sd" in r
-                        else ""
-                    ),
+                    (f"{r.get('gap_zvf_sd', ''):.4f}" if "gap_zvf_sd" in r else ""),
+                    (f"{r['aero_last10']:.4f}" if "aero_last10" in r else ""),
+                    (f"{r['grpo_last10']:.4f}" if "grpo_last10" in r else ""),
+                    (f"{r['gap_last10']:.4f}" if "gap_last10" in r else ""),
+                    (f"{r.get('gap_last10_sd', ''):.4f}" if "gap_last10_sd" in r else ""),
                 )
             )
     return {
@@ -494,21 +457,9 @@ def write_op_sweep(out_path: Path, pooled: List[Dict[str, Any]]) -> Dict[str, An
                     r["fn"],
                     r["tn"],
                     r["n_positive"],
-                    (
-                        "nan"
-                        if math.isnan(r["precision"])
-                        else f"{r['precision']:.4f}"
-                    ),
-                    (
-                        "nan"
-                        if math.isnan(r["recall"])
-                        else f"{r['recall']:.4f}"
-                    ),
-                    (
-                        "nan"
-                        if math.isnan(r["f1"])
-                        else f"{r['f1']:.4f}"
-                    ),
+                    ("nan" if math.isnan(r["precision"]) else f"{r['precision']:.4f}"),
+                    ("nan" if math.isnan(r["recall"]) else f"{r['recall']:.4f}"),
+                    ("nan" if math.isnan(r["f1"]) else f"{r['f1']:.4f}"),
                 )
             )
     return {"n_rows": len(rows)}
@@ -560,10 +511,8 @@ def write_iso_yield_curve_plot(
                 alpha=0.4,
                 label=(
                     f"tau={tau:.2f} -> G={g_min:.1f}"
-                    if tau in {0.20, 0.40} and not any(
-                        l.get_label().startswith(f"tau={tau:.2f}")
-                        for l in ax.get_lines()
-                    )
+                    if tau in {0.20, 0.40}
+                    and not any(l.get_label().startswith(f"tau={tau:.2f}") for l in ax.get_lines())
                     else None
                 ),
             )
@@ -581,9 +530,7 @@ def write_iso_yield_curve_plot(
     ax.legend(loc="lower right", fontsize=8)
     ax.set_ylim(0.97, 1.0)
 
-    fig.suptitle(
-        f"Iter 122 iso-yield ZVF curve ({task_label})"
-    )
+    fig.suptitle(f"Iter 122 iso-yield ZVF curve ({task_label})")
     fig.tight_layout()
     fig.savefig(out_png)
     fig.savefig(out_png.with_suffix(".pdf"))
@@ -633,13 +580,11 @@ def main() -> int:
         # Mirror to paper/figures/ if present.
         try:
             (PAPER_FIGS).mkdir(parents=True, exist_ok=True)
-            (PAPER_FIGS / "zvf_iter122_iso_yield_review28_v2.png").write_bytes(
-                out_fig.read_bytes()
-            )
+            (PAPER_FIGS / "zvf_iter122_iso_yield_review28_v2.png").write_bytes(out_fig.read_bytes())
             (PAPER_FIGS / "zvf_iter122_iso_yield_review28_v2.pdf").write_bytes(
                 out_fig.with_suffix(".pdf").read_bytes()
             )
-        except Exception:  # noqa: BLE001
+        except Exception:
             pass
 
     # 2. AERO-vs-GRPO gap stratified by ZVF quantile.

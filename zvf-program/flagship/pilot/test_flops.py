@@ -10,6 +10,7 @@ from pilot.flops import (
     TorchPhaseProfiler,
     TrainingFlopLedger,
 )
+import pytest
 
 
 class FlopAccountingTests(unittest.TestCase):
@@ -19,14 +20,14 @@ class FlopAccountingTests(unittest.TestCase):
         right = torch.ones((16, 4))
         with profiler("policy_forward"):
             output = left @ right
-        self.assertEqual(output.shape, (8, 4))
-        self.assertGreater(profiler.phase_flops["policy_forward"], 0)
+        assert output.shape == (8, 4)
+        assert profiler.phase_flops["policy_forward"] > 0
 
     def test_disabled_profiler_is_a_noop(self) -> None:
         profiler = TorchPhaseProfiler(torch, enabled=False)
         with profiler("policy_forward"):
             _ = torch.ones(2) + 1
-        self.assertEqual(profiler.phase_flops, {})
+        assert profiler.phase_flops == {}
 
     def test_ledger_requires_exact_profiled_steps_and_extrapolates(self) -> None:
         ledger = TrainingFlopLedger()
@@ -45,18 +46,18 @@ class FlopAccountingTests(unittest.TestCase):
                 phase_flops=phase_flops,
             )
         record = ledger.final_record()
-        self.assertEqual(record["profiled_steps"], list(PROFILED_STEPS))
+        assert record["profiled_steps"] == list(PROFILED_STEPS)
         self.assertAlmostEqual(record["extrapolation_scale"], 100 / len(PROFILED_STEPS))
         self.assertAlmostEqual(record["policy_forward_flops"], 100.0 * 100)
         self.assertAlmostEqual(record["optimizer_backward_flops"], 200.0 * 100)
         self.assertAlmostEqual(record["diagnostic_backward_flops"], 300.0 * 100)
         restored = TrainingFlopLedger.from_record(record)
-        self.assertEqual(restored.profiled_steps, list(PROFILED_STEPS))
-        self.assertEqual(restored.total_padded_tokens, ledger.total_padded_tokens)
+        assert restored.profiled_steps == list(PROFILED_STEPS)
+        assert restored.total_padded_tokens == ledger.total_padded_tokens
 
     def test_ledger_fails_closed_on_missing_phase_or_step(self) -> None:
         ledger = TrainingFlopLedger()
-        with self.assertRaisesRegex(FlopAccountingError, "missing phases"):
+        with pytest.raises(FlopAccountingError, match="missing phases"):
             ledger.add_step(
                 step=1,
                 active_tokens=64,
@@ -74,10 +75,10 @@ class FlopAccountingTests(unittest.TestCase):
                 "diagnostic_backward": 1.0,
             },
         )
-        with self.assertRaisesRegex(FlopAccountingError, "profiled steps mismatch"):
+        with pytest.raises(FlopAccountingError, match="profiled steps mismatch"):
             valid.final_record()
         partial = valid.record(require_complete=False)
-        self.assertEqual(partial["profiled_steps"], [1])
+        assert partial["profiled_steps"] == [1]
 
 
 if __name__ == "__main__":

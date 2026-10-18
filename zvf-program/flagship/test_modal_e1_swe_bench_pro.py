@@ -17,21 +17,21 @@ index 7898192..6178079 100644
 
 class E1PatchValidationTests(unittest.TestCase):
     def test_accepts_concrete_unified_diff(self) -> None:
-        self.assertEqual(_validate_unified_diff(VALID_PATCH), (True, "valid unified diff"))
-        self.assertEqual(_extract_diff(f"preface\n{VALID_PATCH}"), VALID_PATCH)
+        assert _validate_unified_diff(VALID_PATCH) == (True, "valid unified diff")
+        assert _extract_diff(f"preface\n{VALID_PATCH}") == VALID_PATCH
 
     def test_rejects_placeholder_hunk(self) -> None:
         invalid = VALID_PATCH.replace("@@ -1 +1 @@", "@@ ... @@")
         valid, reason = _validate_unified_diff(invalid)
-        self.assertFalse(valid)
-        self.assertIn("concrete hunk", reason)
-        self.assertEqual(_extract_diff(invalid), "")
+        assert not valid
+        assert "concrete hunk" in reason
+        assert _extract_diff(invalid) == ""
 
     def test_rejects_prose_after_diff(self) -> None:
         invalid = VALID_PATCH + "I will now modify another file.\n"
         valid, reason = _validate_unified_diff(invalid)
-        self.assertFalse(valid)
-        self.assertIn("invalid patch line", reason)
+        assert not valid
+        assert "invalid patch line" in reason
 
 
 if __name__ == "__main__":

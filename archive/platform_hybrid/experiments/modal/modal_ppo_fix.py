@@ -2,6 +2,7 @@
 Modal H100: Fixed PPO training on Qwen3.5-4B with 4-bit quantization to avoid OOM.
 Also runs a retry of GRPO seed=123 with gradient checkpointing.
 """
+
 import json
 
 import modal
@@ -10,13 +11,18 @@ import os
 app = modal.App("tinker-rl-ppo-fix")
 results_vol = modal.Volume.from_name("tinker-rl-results", create_if_missing=True)
 
-gpu_image = (
-    modal.Image.debian_slim(python_version="3.11")
-    .pip_install(
-        "torch>=2.4", "transformers>=4.46", "datasets", "accelerate",
-        "peft", "trl>=0.12", "wandb", "huggingface_hub", "bitsandbytes",
-        "scipy", "numpy"
-    )
+gpu_image = modal.Image.debian_slim(python_version="3.11").pip_install(
+    "torch>=2.4",
+    "transformers>=4.46",
+    "datasets",
+    "accelerate",
+    "peft",
+    "trl>=0.12",
+    "wandb",
+    "huggingface_hub",
+    "bitsandbytes",
+    "scipy",
+    "numpy",
 )
 
 # WARNING (security): HF/W&B tokens previously were baked into the image via .env()/Secret.from_dict(); they now come from named Modal secrets. Rotate tokens if old images exist.
@@ -30,25 +36,33 @@ gpu_image = (
     secrets=[
         modal.Secret.from_name("huggingface-secret"),
         modal.Secret.from_name("wandb-secret"),
-        modal.Secret.from_dict({
-            "WANDB_PROJECT": "tinker-rl-lab-world-class",
-        })
+        modal.Secret.from_dict(
+            {
+                "WANDB_PROJECT": "tinker-rl-lab-world-class",
+            }
+        ),
     ],
 )
 def run_ppo_qwen35_4b_quantized():
     """PPO on Qwen3.5-4B with 4-bit quantization + gradient checkpointing."""
     import torch
     import wandb
+
     try:
         import torch, wandb
-        if not getattr(wandb, '_vram_patched', False):
+
+        if not getattr(wandb, "_vram_patched", False):
             _old_log = wandb.log
+
             def _vram_log(data, *args, **kwargs):
                 if torch.cuda.is_available():
-                    data['system/vram_peak_allocated_gb'] = torch.cuda.max_memory_allocated() / (1024**3)
-                    data['system/vram_reserved_gb'] = torch.cuda.max_memory_reserved() / (1024**3)
+                    data["system/vram_peak_allocated_gb"] = torch.cuda.max_memory_allocated() / (
+                        1024**3
+                    )
+                    data["system/vram_reserved_gb"] = torch.cuda.max_memory_reserved() / (1024**3)
                     torch.cuda.reset_peak_memory_stats()
                 _old_log(data, *args, **kwargs)
+
             wandb.log = _vram_log
             wandb._vram_patched = True
     except ImportError:
@@ -75,10 +89,18 @@ def run_ppo_qwen35_4b_quantized():
         project="tinker-rl-lab-world-class",
         name=f"ppo_{model_short}_gsm8k_s{SEED}_4bit",
         config={
-            "model": MODEL_ID, "method": "PPO", "task": "gsm8k",
-            "seed": SEED, "platform": "modal_h100", "gpu": "H100",
-            "lr": 1e-4, "rank": 32, "steps": 30, "quantization": "4bit",
-            "batch_size": 4, "grad_accum": 2,
+            "model": MODEL_ID,
+            "method": "PPO",
+            "task": "gsm8k",
+            "seed": SEED,
+            "platform": "modal_h100",
+            "gpu": "H100",
+            "lr": 1e-4,
+            "rank": 32,
+            "steps": 30,
+            "quantization": "4bit",
+            "batch_size": 4,
+            "grad_accum": 2,
         },
         tags=["ppo", "modal", "h100", model_short, "4bit"],
     )
@@ -96,16 +118,20 @@ def run_ppo_qwen35_4b_quantized():
     )
 
     model = AutoModelForCausalLM.from_pretrained(
-        MODEL_ID, quantization_config=bnb_config,
-        device_map=None if "LOCAL_RANK" in os.environ else "auto", trust_remote_code=True,
+        MODEL_ID,
+        quantization_config=bnb_config,
+        device_map=None if "LOCAL_RANK" in os.environ else "auto",
+        trust_remote_code=True,
     )
     model = prepare_model_for_kbit_training(model)
     model.gradient_checkpointing_enable()
 
     lora_config = LoraConfig(
-        r=32, lora_alpha=64,
+        r=32,
+        lora_alpha=64,
         target_modules=["q_proj", "v_proj", "k_proj", "o_proj"],
-        lora_dropout=0.05, task_type="CAUSAL_LM",
+        lora_dropout=0.05,
+        task_type="CAUSAL_LM",
     )
     model = get_peft_model(model, lora_config)
     model.print_trainable_parameters()
@@ -114,7 +140,7 @@ def run_ppo_qwen35_4b_quantized():
     ds = load_dataset("openai/gsm8k", "main", split="train")
     examples = []
     for row in ds:
-        m = re.search(r'####\s*([\-\d,\.]+)', row["answer"])
+        m = re.search(r"####\s*([\-\d,\.]+)", row["answer"])
         if not m:
             continue
         examples.append({"question": row["question"], "answer": m.group(1).replace(",", "")})
@@ -134,30 +160,38 @@ def run_ppo_qwen35_4b_quantized():
         total_loss = 0.0
 
         for accum_idx in range(GRAD_ACCUM):
-            mini_batch = batch[accum_idx * BATCH:(accum_idx + 1) * BATCH]
+            mini_batch = batch[accum_idx * BATCH : (accum_idx + 1) * BATCH]
             batch_loss = torch.tensor(0.0, device="cuda", requires_grad=True)
 
             for ex in mini_batch:
                 prompt = f"Solve: {ex['question']}\nAnswer (number only):"
-                inputs = tokenizer(prompt, return_tensors="pt", truncation=True, max_length=384).to("cuda")
+                inputs = tokenizer(prompt, return_tensors="pt", truncation=True, max_length=384).to(
+                    "cuda"
+                )
 
                 with torch.no_grad():
                     gen = model.generate(
-                        **inputs, max_new_tokens=128, do_sample=True,
-                        temperature=0.8, top_p=0.95, pad_token_id=tokenizer.pad_token_id,
+                        **inputs,
+                        max_new_tokens=128,
+                        do_sample=True,
+                        temperature=0.8,
+                        top_p=0.95,
+                        pad_token_id=tokenizer.pad_token_id,
                     )
-                response = tokenizer.decode(gen[0][inputs['input_ids'].shape[1]:], skip_special_tokens=True)
+                response = tokenizer.decode(
+                    gen[0][inputs["input_ids"].shape[1] :], skip_special_tokens=True
+                )
 
                 # Compute reward
-                nums = re.findall(r'[\-]?\d+\.?\d*', response)
+                nums = re.findall(r"[\-]?\d+\.?\d*", response)
                 reward = 1.0 if nums and nums[-1].strip() == ex["answer"] else 0.0
                 step_rewards.append(reward)
 
                 # Compute log probability of generated tokens
                 full_ids = gen[0].unsqueeze(0)
                 outputs = model(full_ids)
-                logits = outputs.logits[:, inputs['input_ids'].shape[1]-1:-1, :]
-                target = full_ids[:, inputs['input_ids'].shape[1]:]
+                logits = outputs.logits[:, inputs["input_ids"].shape[1] - 1 : -1, :]
+                target = full_ids[:, inputs["input_ids"].shape[1] :]
                 log_probs = torch.nn.functional.log_softmax(logits, dim=-1)
                 token_log_probs = log_probs.gather(2, target.unsqueeze(-1)).squeeze(-1)
                 mean_log_prob = token_log_probs.mean()
@@ -178,7 +212,14 @@ def run_ppo_qwen35_4b_quantized():
         mean_reward = np.mean(step_rewards)
         mean_entropy = float(np.mean(step_entropies))
         reward_trace.append(mean_reward)
-        wandb.log({"step": step, "mean_reward": mean_reward, "train/policy_entropy": mean_entropy, "batch_size": BATCH * GRAD_ACCUM})
+        wandb.log(
+            {
+                "step": step,
+                "mean_reward": mean_reward,
+                "train/policy_entropy": mean_entropy,
+                "batch_size": BATCH * GRAD_ACCUM,
+            }
+        )
         print(f"Step {step}/{STEPS}: reward={mean_reward:.3f}")
 
     # Save results
@@ -187,10 +228,17 @@ def run_ppo_qwen35_4b_quantized():
 
     results = {
         "experiment_id": f"ppo_{model_short}_4bit",
-        "model": MODEL_ID, "model_short": model_short,
-        "method": "PPO", "task": "gsm8k", "seed": SEED,
-        "platform": "modal_h100", "gpu": "H100", "quantization": "4bit",
-        "steps": STEPS, "peak": float(peak), "last10_avg": float(last10),
+        "model": MODEL_ID,
+        "model_short": model_short,
+        "method": "PPO",
+        "task": "gsm8k",
+        "seed": SEED,
+        "platform": "modal_h100",
+        "gpu": "H100",
+        "quantization": "4bit",
+        "steps": STEPS,
+        "peak": float(peak),
+        "last10_avg": float(last10),
         "reward_trace": [float(r) for r in reward_trace],
         "status": "completed",
     }
@@ -203,6 +251,7 @@ def run_ppo_qwen35_4b_quantized():
         hf_token = os.environ.get("HF_TOKEN")
         if hf_token:
             from huggingface_hub import login
+
             login(token=hf_token)
             repo_id = "arvindcr4/tinker-rl-ppo-qwen3.5-4b-4bit"
             model.push_to_hub(repo_id, private=True)
@@ -217,9 +266,9 @@ def run_ppo_qwen35_4b_quantized():
     wandb.log({"peak_accuracy": peak, "last10_accuracy": last10})
     wandb.finish()
 
-    print(f"\n{'='*50}")
+    print(f"\n{'=' * 50}")
     print(f"PPO Qwen3.5-4B (4-bit): peak={peak:.3f}, last10={last10:.3f}")
-    print(f"{'='*50}")
+    print(f"{'=' * 50}")
     return results
 
 
@@ -231,6 +280,7 @@ def main():
 
     # Save locally too
     import os
+
     out_path = os.path.join(os.path.dirname(__file__), "ppo_fix_result.json")
     with open(out_path, "w") as f:
         json.dump(result, f, indent=2)

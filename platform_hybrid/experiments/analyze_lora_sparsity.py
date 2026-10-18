@@ -1,6 +1,5 @@
-import os
-import torch
 from pathlib import Path
+
 
 def analyze_sparsity(checkpoint_dir, epsilon=1e-4):
     """
@@ -11,7 +10,7 @@ def analyze_sparsity(checkpoint_dir, epsilon=1e-4):
     if not path.exists():
         print(f"Checkpoint directory {checkpoint_dir} not found.")
         return
-    
+
     # Walk through the directory and find safetensors or bin files
     lora_files = list(path.glob("**/*.safetensors")) + list(path.glob("**/*.bin"))
     if not lora_files:
@@ -26,6 +25,7 @@ def analyze_sparsity(checkpoint_dir, epsilon=1e-4):
     print(f"Found {len(lora_files)} checkpoint files. Scaffolding sparsity analysis...")
     print("Target: Compare active parameters vs arXiv 2505.11711 (5-30% active expected).")
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     # Example placeholder path
-    analyze_sparsity('modal/checkpoints')
+    analyze_sparsity("modal/checkpoints")

@@ -96,7 +96,7 @@ def load_rows(path, metrics):
             if not line:
                 continue
             parts = line.split("\t")
-            d = dict(zip(header, parts))
+            d = dict(zip(header, parts, strict=False))
             for col in ("step", "group_size", "seed"):
                 if col in d:
                     d[col] = int(d[col])

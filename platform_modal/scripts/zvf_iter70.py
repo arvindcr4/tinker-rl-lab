@@ -61,13 +61,13 @@ Methodology notes (mirroring the iter26 honest-statistics comment):
   advantage variance is a deterministic function of ZVF, so
   partialling it out is circular.
 """
+
 from __future__ import annotations
 
 import argparse
 import csv
 import json
 import math
-import random
 import statistics
 import sys
 from collections import defaultdict
@@ -181,7 +181,7 @@ def tail_density(vals: Sequence[float]) -> Tuple[float, float, float]:
     cum = 0.0
     for i, v in enumerate(sorted_vals, start=1):
         cum += (2 * i - n - 1) * v
-    gini = cum/ (n * s)
+    gini = cum / (n * s)
     return (p1, p0, gini)
 
 
@@ -209,7 +209,7 @@ def _pearson(xs: Sequence[float], ys: Sequence[float]) -> float:
     my = statistics.fmean(ys)
     sxx = sum((x - mx) ** 2 for x in xs)
     syy = sum((y - my) ** 2 for y in ys)
-    sxy = sum((x - mx) * (y - my) for x, y in zip(xs, ys))
+    sxy = sum((x - mx) * (y - my) for x, y in zip(xs, ys, strict=False))
     if sxx == 0 or syy == 0:
         return float("nan")
     return sxy / math.sqrt(sxx * syy)
@@ -245,6 +245,7 @@ def bootstrap_ci(
     seed: int = 0,
 ) -> Tuple[float, Tuple[float, float]]:
     import random as _r
+
     rng = _r.Random(seed)
     n = len(xs)
     if n < 3:
@@ -311,14 +312,16 @@ def load_variance_mitigation_per_step() -> List[Dict[str, Any]]:
     with path.open() as fh:
         reader = csv.DictReader(fh, delimiter="\t")
         for r in reader:
-            out.append({
-                "method": r["method"],
-                "seed": int(r["seed"]),
-                "step": int(r["step"]),
-                "zvf": float(r["zvf"]),
-                "acc": float(r["heldout_acc"]),
-                "collapse": int(r["collapse"]),
-            })
+            out.append(
+                {
+                    "method": r["method"],
+                    "seed": int(r["seed"]),
+                    "step": int(r["step"]),
+                    "zvf": float(r["zvf"]),
+                    "acc": float(r["heldout_acc"]),
+                    "collapse": int(r["collapse"]),
+                }
+            )
     return out
 
 
@@ -381,34 +384,36 @@ def write_enhanced_summary(rows: List[Dict[str, Any]], out_path: Path) -> None:
         writer = csv.writer(fh, delimiter="\t", lineterminator="\n")
         writer.writerow(ENHANCED_HEADERS)
         for r in rows:
-            writer.writerow([
-                r.get("experiment", ""),
-                r.get("model", ""),
-                r.get("task", ""),
-                r.get("phase", ""),
-                r.get("group_size", ""),
-                r.get("n_seeds", ""),
-                _fmt(r.get("mean_zvf")),
-                _fmt(r.get("min_zvf")),
-                _fmt(r.get("max_zvf")),
-                _fmt(r.get("mean_reward")),
-                _fmt(r.get("peak")),
-                _fmt(r.get("last10_avg")),
-                r.get("failure_label") or zd.classify(r),
-                r.get("severity", -1),
-                _fmt(r.get("zvf_tail_p_eq1")),
-                _fmt(r.get("zvf_tail_p_eq0")),
-                _fmt(r.get("zvf_tail_gini")),
-                _fmt(r.get("zvf_first_q")),
-                _fmt(r.get("zvf_last_q")),
-                _fmt(r.get("zvf_delta")),
-                r.get("n_steps", ""),
-                r.get("evidence_path", ""),
-                r.get("seed", ""),
-            ])
+            writer.writerow(
+                [
+                    r.get("experiment", ""),
+                    r.get("model", ""),
+                    r.get("task", ""),
+                    r.get("phase", ""),
+                    r.get("group_size", ""),
+                    r.get("n_seeds", ""),
+                    _fmt(r.get("mean_zvf")),
+                    _fmt(r.get("min_zvf")),
+                    _fmt(r.get("max_zvf")),
+                    _fmt(r.get("mean_reward")),
+                    _fmt(r.get("peak")),
+                    _fmt(r.get("last10_avg")),
+                    r.get("failure_label") or zd.classify(r),
+                    r.get("severity", -1),
+                    _fmt(r.get("zvf_tail_p_eq1")),
+                    _fmt(r.get("zvf_tail_p_eq0")),
+                    _fmt(r.get("zvf_tail_gini")),
+                    _fmt(r.get("zvf_first_q")),
+                    _fmt(r.get("zvf_last_q")),
+                    _fmt(r.get("zvf_delta")),
+                    r.get("n_steps", ""),
+                    r.get("evidence_path", ""),
+                    r.get("seed", ""),
+                ]
+            )
 
 
-def severity_per_library(rows: List[Dict[str, Any]],out_path: Path) -> List[Dict[str, Any]]:
+def severity_per_library(rows: List[Dict[str, Any]], out_path: Path) -> List[Dict[str, Any]]:
     """Group iter70 rows by (library, model) and emit one summary row.
 
     Library = method (variance_mitigation) or experiment family.
@@ -443,15 +448,34 @@ def severity_per_library(rows: List[Dict[str, Any]],out_path: Path) -> List[Dict
             "# Source: platform_modal/scripts/zvf_iter70.py\n"
         )
         writer = csv.writer(fh, delimiter="\t", lineterminator="\n")
-        writer.writerow((
-            "library", "model", "n_rows", "mean_zvf", "mean_severity",
-            "max_severity", "mean_tail_p_eq1", "mean_tail_p_eq0",
-            "n_full_collapse", "n_collapse", "n_drift", "n_ok",
-            "rank_score", "evidence_path",
-        ))
+        writer.writerow(
+            (
+                "library",
+                "model",
+                "n_rows",
+                "mean_zvf",
+                "mean_severity",
+                "max_severity",
+                "mean_tail_p_eq1",
+                "mean_tail_p_eq0",
+                "n_full_collapse",
+                "n_collapse",
+                "n_drift",
+                "n_ok",
+                "rank_score",
+                "evidence_path",
+            )
+        )
         method_order = (
-            "grpo", "aero", "cppo", "ngrpo", "scafgrpo", "mcgrpo",
-            "gift", "areal", "es",
+            "grpo",
+            "aero",
+            "cppo",
+            "ngrpo",
+            "scafgrpo",
+            "mcgrpo",
+            "gift",
+            "areal",
+            "es",
         )
         sorted_keys: List[Tuple[str, str]] = []
         for m in method_order:
@@ -466,18 +490,24 @@ def severity_per_library(rows: List[Dict[str, Any]],out_path: Path) -> List[Dict
             lib, model_label = key
             recs = buckets[key]
             n = len(recs)
-            mzs = [float(r["mean_zvf"]) for r in recs
-                   if not (isinstance(r.get("mean_zvf"), float)
-                           and math.isnan(r["mean_zvf"]))]
+            mzs = [
+                float(r["mean_zvf"])
+                for r in recs
+                if not (isinstance(r.get("mean_zvf"), float) and math.isnan(r["mean_zvf"]))
+            ]
             sevs = [int(r.get("severity", -1)) for r in recs if r.get("severity", -1) >= 0]
-            tails1 = [float(r.get("zvf_tail_p_eq1", float("nan")))
-                      for r in recs
-                      if isinstance(r.get("zvf_tail_p_eq1"), float)
-                      and not math.isnan(r["zvf_tail_p_eq1"])]
-            tails0 = [float(r.get("zvf_tail_p_eq0", float("nan")))
-                      for r in recs
-                      if isinstance(r.get("zvf_tail_p_eq0"), float)
-                      and not math.isnan(r["zvf_tail_p_eq0"])]
+            tails1 = [
+                float(r.get("zvf_tail_p_eq1", float("nan")))
+                for r in recs
+                if isinstance(r.get("zvf_tail_p_eq1"), float)
+                and not math.isnan(r["zvf_tail_p_eq1"])
+            ]
+            tails0 = [
+                float(r.get("zvf_tail_p_eq0", float("nan")))
+                for r in recs
+                if isinstance(r.get("zvf_tail_p_eq0"), float)
+                and not math.isnan(r["zvf_tail_p_eq0"])
+            ]
             n3 = sum(1 for s in sevs if s == 3)
             n2 = sum(1 for s in sevs if s == 2)
             n1 = sum(1 for s in sevs if s == 1)
@@ -494,19 +524,42 @@ def severity_per_library(rows: List[Dict[str, Any]],out_path: Path) -> List[Dict
             else:
                 rank = mean_sev + (0.5 * t1 if not math.isnan(t1) else 0.0)
             ev = recs[0].get("evidence_path", "")
-            writer.writerow((
-                lib, model_label, n, _fmt(mean_zvf), _fmt(mean_sev),
-                max_sev, _fmt(t1), _fmt(t0), n3, n2, n1, n0,
-                _fmt(rank), ev,
-            ))
-            out.append({
-                "library": lib, "model": model_label, "n_rows": n,
-                "mean_zvf": mean_zvf, "mean_severity": mean_sev,
-                "max_severity": max_sev, "n_full_collapse": n3,
-                "n_collapse": n2, "n_drift": n1, "n_ok": n0,
-                "mean_tail_p_eq1": t1, "mean_tail_p_eq0": t0,
-                "rank_score": rank, "evidence_path": ev,
-            })
+            writer.writerow(
+                (
+                    lib,
+                    model_label,
+                    n,
+                    _fmt(mean_zvf),
+                    _fmt(mean_sev),
+                    max_sev,
+                    _fmt(t1),
+                    _fmt(t0),
+                    n3,
+                    n2,
+                    n1,
+                    n0,
+                    _fmt(rank),
+                    ev,
+                )
+            )
+            out.append(
+                {
+                    "library": lib,
+                    "model": model_label,
+                    "n_rows": n,
+                    "mean_zvf": mean_zvf,
+                    "mean_severity": mean_sev,
+                    "max_severity": max_sev,
+                    "n_full_collapse": n3,
+                    "n_collapse": n2,
+                    "n_drift": n1,
+                    "n_ok": n0,
+                    "mean_tail_p_eq1": t1,
+                    "mean_tail_p_eq0": t0,
+                    "rank_score": rank,
+                    "evidence_path": ev,
+                }
+            )
     return out
 
 
@@ -529,17 +582,19 @@ def write_per_run_zvf_acc(out_path: Path) -> List[Dict[str, Any]]:
             accs = [float(s.get("mean_reward", float("nan"))) for s in steps if "mean_reward" in s]
             if not zvfs or not accs:
                 continue
-            out.append({
-                "experiment": "groupsize_zvf_sweep",
-                "model": r.get("model", ""),
-                "group_size": r.get("group_size", 0),
-                "seed": r.get("seed", 0),
-                "n_steps": len(zvfs),
-                "mean_zvf": statistics.fmean(zvfs),
-                "mean_acc": statistics.fmean(accs),
-                "zvf_acc_corr": _pearson(zvfs, accs),
-                "evidence_path": "platform_hybrid/experiments/results/groupsize_zvf_sweep.json",
-            })
+            out.append(
+                {
+                    "experiment": "groupsize_zvf_sweep",
+                    "model": r.get("model", ""),
+                    "group_size": r.get("group_size", 0),
+                    "seed": r.get("seed", 0),
+                    "n_steps": len(zvfs),
+                    "mean_zvf": statistics.fmean(zvfs),
+                    "mean_acc": statistics.fmean(accs),
+                    "zvf_acc_corr": _pearson(zvfs, accs),
+                    "evidence_path": "platform_hybrid/experiments/results/groupsize_zvf_sweep.json",
+                }
+            )
 
     # 2. drgrpo_vs_grpo.json
     p = RES / "drgrpo_vs_grpo.json"
@@ -551,17 +606,19 @@ def write_per_run_zvf_acc(out_path: Path) -> List[Dict[str, Any]]:
             accs = [float(s.get("mean_reward", float("nan"))) for s in steps if "mean_reward" in s]
             if not zvfs or not accs:
                 continue
-            out.append({
-                "experiment": "drgrpo_vs_grpo",
-                "model": r.get("model", ""),
-                "algo": r.get("algo", ""),
-                "seed": r.get("seed", 0),
-                "n_steps": len(zvfs),
-                "mean_zvf": statistics.fmean(zvfs),
-                "mean_acc": statistics.fmean(accs),
-                "zvf_acc_corr": _pearson(zvfs, accs),
-                "evidence_path": "platform_hybrid/experiments/results/drgrpo_vs_grpo.json",
-            })
+            out.append(
+                {
+                    "experiment": "drgrpo_vs_grpo",
+                    "model": r.get("model", ""),
+                    "algo": r.get("algo", ""),
+                    "seed": r.get("seed", 0),
+                    "n_steps": len(zvfs),
+                    "mean_zvf": statistics.fmean(zvfs),
+                    "mean_acc": statistics.fmean(accs),
+                    "zvf_acc_corr": _pearson(zvfs, accs),
+                    "evidence_path": "platform_hybrid/experiments/results/drgrpo_vs_grpo.json",
+                }
+            )
 
     # 3. samestack_ppo_grpo.json
     p = RES / "samestack_ppo_grpo.json"
@@ -573,17 +630,19 @@ def write_per_run_zvf_acc(out_path: Path) -> List[Dict[str, Any]]:
             accs = [float(s.get("mean_reward", float("nan"))) for s in steps if "mean_reward" in s]
             if not zvfs or not accs:
                 continue
-            out.append({
-                "experiment": "samestack_ppo_grpo",
-                "model": r.get("model", ""),
-                "algo": r.get("algo", ""),
-                "seed": r.get("seed", 0),
-                "n_steps": len(zvfs),
-                "mean_zvf": statistics.fmean(zvfs),
-                "mean_acc": statistics.fmean(accs),
-                "zvf_acc_corr": _pearson(zvfs, accs),
-                "evidence_path":"platform_hybrid/experiments/results/samestack_ppo_grpo.json",
-            })
+            out.append(
+                {
+                    "experiment": "samestack_ppo_grpo",
+                    "model": r.get("model", ""),
+                    "algo": r.get("algo", ""),
+                    "seed": r.get("seed", 0),
+                    "n_steps": len(zvfs),
+                    "mean_zvf": statistics.fmean(zvfs),
+                    "mean_acc": statistics.fmean(accs),
+                    "zvf_acc_corr": _pearson(zvfs, accs),
+                    "evidence_path": "platform_hybrid/experiments/results/samestack_ppo_grpo.json",
+                }
+            )
 
     # 4. variance_mitigation.tsv: per-(method, seed)
     p = RES / "variance_mitigation.tsv"
@@ -599,17 +658,19 @@ def write_per_run_zvf_acc(out_path: Path) -> List[Dict[str, Any]]:
             accs = [float(r["heldout_acc"]) for r in recs]
             if not zvfs or not accs:
                 continue
-            out.append({
-                "experiment": "variance_mitigation",
-                "model": m.upper(),
-                "method": m,
-                "seed": s,
-                "n_steps": len(zvfs),
-                "mean_zvf": statistics.fmean(zvfs),
-                "mean_acc": statistics.fmean(accs),
-                "zvf_acc_corr": _pearson(zvfs, accs),
-                "evidence_path": "platform_hybrid/experiments/results/variance_mitigation.tsv",
-            })
+            out.append(
+                {
+                    "experiment": "variance_mitigation",
+                    "model": m.upper(),
+                    "method": m,
+                    "seed": s,
+                    "n_steps": len(zvfs),
+                    "mean_zvf": statistics.fmean(zvfs),
+                    "mean_acc": statistics.fmean(accs),
+                    "zvf_acc_corr": _pearson(zvfs, accs),
+                    "evidence_path": "platform_hybrid/experiments/results/variance_mitigation.tsv",
+                }
+            )
 
     out_path.parent.mkdir(parents=True, exist_ok=True)
     with out_path.open("w") as fh:
@@ -622,20 +683,37 @@ def write_per_run_zvf_acc(out_path: Path) -> List[Dict[str, Any]]:
             "# Source: platform_modal/scripts/zvf_iter70.py\n"
         )
         writer = csv.writer(fh, delimiter="\t", lineterminator="\n")
-        writer.writerow((
-            "experiment", "model", "method", "algo", "group_size",
-            "seed", "n_steps", "mean_zvf", "mean_acc", "zvf_acc_corr",
-            "evidence_path",
-        ))
+        writer.writerow(
+            (
+                "experiment",
+                "model",
+                "method",
+                "algo",
+                "group_size",
+                "seed",
+                "n_steps",
+                "mean_zvf",
+                "mean_acc",
+                "zvf_acc_corr",
+                "evidence_path",
+            )
+        )
         for r in out:
-            writer.writerow((
-                r.get("experiment", ""), r.get("model", ""),
-                r.get("method", ""), r.get("algo", ""),
-                r.get("group_size", ""), r.get("seed", ""),
-                r.get("n_steps", ""), _fmt(r.get("mean_zvf")),
-                _fmt(r.get("mean_acc")), _fmt(r.get("zvf_acc_corr")),
-                r.get("evidence_path", ""),
-            ))
+            writer.writerow(
+                (
+                    r.get("experiment", ""),
+                    r.get("model", ""),
+                    r.get("method", ""),
+                    r.get("algo", ""),
+                    r.get("group_size", ""),
+                    r.get("seed", ""),
+                    r.get("n_steps", ""),
+                    _fmt(r.get("mean_zvf")),
+                    _fmt(r.get("mean_acc")),
+                    _fmt(r.get("zvf_acc_corr")),
+                    r.get("evidence_path", ""),
+                )
+            )
     return out
 
 
@@ -667,17 +745,32 @@ def write_severity_corr(rows: List[Dict[str, Any]], out_path: Path) -> Dict[str,
         )
         writer = csv.writer(fh, delimiter="\t", lineterminator="\n")
         writer.writerow(("test", "n_pooled_rows", "rho", "ci_lo", "ci_hi", "method"))
-        writer.writerow((
-            "mean_zvf vs severity", len(pooled), _fmt(pear),
-            _fmt(plo), _fmt(phi), "Pearson descriptive; CI unavailable",
-        ))
-        writer.writerow((
-            "mean_zvf vs severity", len(pooled), _fmt(spear),
-            _fmt(slo), _fmt(shi), "Spearman descriptive; CI unavailable",
-        ))
+        writer.writerow(
+            (
+                "mean_zvf vs severity",
+                len(pooled),
+                _fmt(pear),
+                _fmt(plo),
+                _fmt(phi),
+                "Pearson descriptive; CI unavailable",
+            )
+        )
+        writer.writerow(
+            (
+                "mean_zvf vs severity",
+                len(pooled),
+                _fmt(spear),
+                _fmt(slo),
+                _fmt(shi),
+                "Spearman descriptive; CI unavailable",
+            )
+        )
     return {
-        "n": len(pooled), "pearson": pear, "spearman": spear,
-        "pearson_ci": (plo, phi), "spearman_ci": (slo, shi),
+        "n": len(pooled),
+        "pearson": pear,
+        "spearman": spear,
+        "pearson_ci": (plo, phi),
+        "spearman_ci": (slo, shi),
     }
 
 
@@ -689,8 +782,10 @@ def write_severity_corr(rows: List[Dict[str, Any]], out_path: Path) -> Dict[str,
 def _maybe_plt():
     try:
         import matplotlib
+
         matplotlib.use("Agg")
         import matplotlib.pyplot as plt
+
         return plt
     except Exception:
         return None
@@ -733,9 +828,13 @@ def write_failure_figure(
         if sev is None or sev < 0:
             continue
         axA.scatter(
-            mz, la, s=60,
+            mz,
+            la,
+            s=60,
             color=SEVERITY_COLORS.get(sev, "#34495e"),
-            edgecolor="white", linewidth=0.5, alpha=0.85,
+            edgecolor="white",
+            linewidth=0.5,
+            alpha=0.85,
         )
         plotted += 1
     axA.set_xlim(-0.02, 1.05)
@@ -744,27 +843,53 @@ def write_failure_figure(
     axA.set_ylabel("Heldout acc (last-10-window)")
     axA.set_title(f"A. ZVF vs outcome ({plotted} runs; severity-colored)")
     from matplotlib.lines import Line2D
+
     handles = [
-        Line2D([0], [0], marker="o", linestyle="", markerfacecolor=v,
-               markeredgecolor="white", label=lab, markersize=8)
-        for lab, v in [("full_collapse", SEVERITY_COLORS[3]),
-                       ("collapse", SEVERITY_COLORS[2]),
-                       ("drift", SEVERITY_COLORS[1]),
-                       ("ok", SEVERITY_COLORS[0])]
+        Line2D(
+            [0],
+            [0],
+            marker="o",
+            linestyle="",
+            markerfacecolor=v,
+            markeredgecolor="white",
+            label=lab,
+            markersize=8,
+        )
+        for lab, v in [
+            ("full_collapse", SEVERITY_COLORS[3]),
+            ("collapse", SEVERITY_COLORS[2]),
+            ("drift", SEVERITY_COLORS[1]),
+            ("ok", SEVERITY_COLORS[0]),
+        ]
     ]
     axA.legend(handles=handles, loc="lower left", frameon=False, fontsize=8)
     axA.grid(True, alpha=0.2)
 
     # Panel B: per-library mean_zvf vs mean_severity bar
     axB = fig.add_subplot(gs[0, 1])
-    libs = [r for r in sev_per_lib if r["library"] in {
-        "grpo", "aero", "cppo", "ngrpo", "scafgrpo", "mcgrpo",
-        "gift", "areal", "es", "tool_use", "gsm8k_real",
-        "arithmetic_groupsize", "scaling_law", "drgrpo_vs_grpo",
-        "samestack_ppo_grpo",
-    }]
-    method_order = ["grpo", "aero", "cppo", "ngrpo", "scafgrpo", "mcgrpo",
-                    "gift", "areal", "es"]
+    libs = [
+        r
+        for r in sev_per_lib
+        if r["library"]
+        in {
+            "grpo",
+            "aero",
+            "cppo",
+            "ngrpo",
+            "scafgrpo",
+            "mcgrpo",
+            "gift",
+            "areal",
+            "es",
+            "tool_use",
+            "gsm8k_real",
+            "arithmetic_groupsize",
+            "scaling_law",
+            "drgrpo_vs_grpo",
+            "samestack_ppo_grpo",
+        }
+    ]
+    method_order = ["grpo", "aero", "cppo", "ngrpo", "scafgrpo", "mcgrpo", "gift", "areal", "es"]
     libs_methods = [r for r in libs if r["library"] in method_order]
     libs_methods.sort(key=lambda r: method_order.index(r["library"]))
     libs_others = [r for r in libs if r["library"] not in method_order]
@@ -775,20 +900,22 @@ def write_failure_figure(
     sevs = [r["mean_severity"] if not math.isnan(r["mean_severity"]) else 0.0 for r in ordered]
     x = list(range(len(ordered)))
     width = 0.4
-    bars_z = axB.bar([xi - width / 2 for xi in x], means, width=width,
-                     color="#2c3e50", label="mean ZVF")
+    bars_z = axB.bar(
+        [xi - width / 2 for xi in x], means, width=width, color="#2c3e50", label="mean ZVF"
+    )
     axB.set_ylabel("Mean ZVF", color="#2c3e50")
     axB.set_ylim(0, max(1.05, max(means) * 1.18 if means else 1.05))
     axB.set_xticks(x)
     axB.set_xticklabels(names, rotation=45, fontsize=8)
     axB2 = axB.twinx()
-    bars_s = axB2.bar([xi + width / 2 for xi in x], sevs, width=width,
-                      color="#c0392b", label="mean severity")
+    bars_s = axB2.bar(
+        [xi + width / 2 for xi in x], sevs, width=width, color="#c0392b", label="mean severity"
+    )
     axB2.set_ylabel("Mean severity (0..3)", color="#c0392b")
     axB2.set_ylim(0, 3.5)
     axB.set_title("B. ZVF and severity per library")
     # highlight tool_use
-    for xi, r in zip(x, ordered):
+    for xi, r in zip(x, ordered, strict=False):
         if r["library"] == "tool_use":
             axB.axvspan(xi - 0.5, xi + 0.5, color="#7b1f1f", alpha=0.07)
     axB.grid(True, alpha=0.2, axis="y")
@@ -799,8 +926,12 @@ def write_failure_figure(
     for r in rows:
         first = r.get("zvf_first_q")
         last = r.get("zvf_last_q")
-        if (not isinstance(first, (int, float)) or math.isnan(first)
-                or not isinstance(last, (int, float)) or math.isnan(last)):
+        if (
+            not isinstance(first, (int, float))
+            or math.isnan(first)
+            or not isinstance(last, (int, float))
+            or math.isnan(last)
+        ):
             continue
         by_exp[str(r.get("experiment", ""))].append((first, last))
     exp_names = sorted(by_exp.keys())
@@ -811,10 +942,22 @@ def write_failure_figure(
         # Plot mean (first, last) per experiment family.
         first_mean = statistics.fmean(p[0] for p in pts)
         last_mean = statistics.fmean(p[1] for p in pts)
-        axC.scatter(first_mean, last_mean, s=120, edgecolor="white",
-                    linewidth=0.7, label=e if i < 10 else None)
-        axC.plot([first_mean, last_mean], [first_mean, last_mean], color="#7f8c8d",
-                 alpha=0.4, linewidth=0.8, zorder=0)
+        axC.scatter(
+            first_mean,
+            last_mean,
+            s=120,
+            edgecolor="white",
+            linewidth=0.7,
+            label=e if i < 10 else None,
+        )
+        axC.plot(
+            [first_mean, last_mean],
+            [first_mean, last_mean],
+            color="#7f8c8d",
+            alpha=0.4,
+            linewidth=0.8,
+            zorder=0,
+        )
     # Annotate the strong cases
     for e in exp_names:
         pts = by_exp.get(e, [])
@@ -837,8 +980,7 @@ def write_failure_figure(
     axD = fig.add_subplot(gs[1, 1])
     by_run_by_exp: Dict[str, List[Tuple[float, float]]] = defaultdict(list)
     for r in per_run:
-        by_run_by_exp[str(r.get("experiment", ""))].append(
-            (r["mean_zvf"], r["mean_acc"]))
+        by_run_by_exp[str(r.get("experiment", ""))].append((r["mean_zvf"], r["mean_acc"]))
     method_to_color = {
         "groupsize_zvf_sweep": "#3498db",
         "drgrpo_vs_grpo": "#16a085",
@@ -848,9 +990,16 @@ def write_failure_figure(
     for exp, pts in by_run_by_exp.items():
         xs = [p[0] for p in pts]
         ys = [p[1] for p in pts]
-        axD.scatter(xs, ys, s=30, alpha=0.7,
-                    color=method_to_color.get(exp, "#7f8c8d"),
-                    edgecolor="white", linewidth=0.3, label=exp)
+        axD.scatter(
+            xs,
+            ys,
+            s=30,
+            alpha=0.7,
+            color=method_to_color.get(exp, "#7f8c8d"),
+            edgecolor="white",
+            linewidth=0.3,
+            label=exp,
+        )
     axD.set_xlim(-0.02, 1.05)
     axD.set_ylim(-0.05, 1.10)
     axD.set_xlabel("Run-level mean ZVF")
@@ -884,27 +1033,33 @@ def write_failure_figure(
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--out-enhanced", type=Path,
+        "--out-enhanced",
+        type=Path,
         default=RES / "zvf_iter70_enhanced_summary.tsv",
     )
     parser.add_argument(
-        "--out-severity", type=Path,
+        "--out-severity",
+        type=Path,
         default=RES / "zvf_iter70_failure_severity.tsv",
     )
     parser.add_argument(
-        "--out-per-run", type=Path,
+        "--out-per-run",
+        type=Path,
         default=RES / "zvf_iter70_per_run_zvf_acc.tsv",
     )
     parser.add_argument(
-        "--out-severity-corr", type=Path,
+        "--out-severity-corr",
+        type=Path,
         default=RES / "zvf_iter70_severity_corr.tsv",
     )
     parser.add_argument(
-        "--out-figure", type=Path,
+        "--out-figure",
+        type=Path,
         default=FIG / "zvf_iter70_quad.pdf",
     )
     parser.add_argument(
-        "--out-zvf-vs-failure", type=Path,
+        "--out-zvf-vs-failure",
+        type=Path,
         default=FIG / "zvf_vs_failure.pdf",
     )
     args = parser.parse_args()
@@ -968,15 +1123,11 @@ def main() -> int:
     sev_per_lib = severity_per_library(rows, args.out_severity)
     per_run = write_per_run_zvf_acc(args.out_per_run)
     sev_corr = write_severity_corr(rows, args.out_severity_corr)
-    fig_path = write_failure_figure(
-        rows, sev_per_lib, per_run, sev_corr, args.out_figure
-    )
+    fig_path = write_failure_figure(rows, sev_per_lib, per_run, sev_corr, args.out_figure)
 
     # 6. Also overwrite the main zvf_vs_failure.pdf with the richer
     #    iter70 figure.
-    main_fig = write_failure_figure(
-        rows, sev_per_lib, per_run, sev_corr, args.out_zvf_vs_failure
-    )
+    main_fig = write_failure_figure(rows, sev_per_lib, per_run, sev_corr, args.out_zvf_vs_failure)
 
     # 7. Headline numbers.
     n = len(rows)

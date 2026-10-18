@@ -1,5 +1,6 @@
 """P7 review 2026-10-18: recompute N2 degenerate-group counts and binomial
 all-correct-share predictions from the logged N2 reward tensors."""
+
 import json
 from pathlib import Path
 
@@ -24,13 +25,14 @@ for m in methods:
             if k in (0, G):
                 md += 1
                 mo += k == G
-            pred_step_num += p ** G
-            pred_step_den += p ** G + (1 - p) ** G
+            pred_step_num += p**G
+            pred_step_den += p**G + (1 - p) ** G
     pm = sum(allr) / (8 * len(allr))
-    pred_meth_num += len(allr) * pm ** 8
-    pred_meth_den += len(allr) * (pm ** 8 + (1 - pm) ** 8)
-    per_method[m] = dict(steps=len(rows), groups=mt, degenerate=md,
-                         all_correct=mo, mean_reward=round(pm, 4))
+    pred_meth_num += len(allr) * pm**8
+    pred_meth_den += len(allr) * (pm**8 + (1 - pm) ** 8)
+    per_method[m] = dict(
+        steps=len(rows), groups=mt, degenerate=md, all_correct=mo, mean_reward=round(pm, 4)
+    )
     tot += mt
     deg += md
     ones += mo
@@ -46,18 +48,27 @@ for s in range(len(rows_by_m["grpo"])):
         for m in methods:
             others = [o for o in methods if o != m]
             p = sum(sum(rows_by_m[o][s]["rewards"][j]) for o in others) / (8 * len(others))
-            lomo_one += p ** 8
+            lomo_one += p**8
             lomo_zero += (1 - p) ** 8
-lomo = dict(expected_all_correct=round(lomo_one, 1), expected_all_wrong=round(lomo_zero, 1),
-            share=round(lomo_one / (lomo_one + lomo_zero), 4))
-out = dict(per_method=per_method, groups=tot, degenerate=deg, all_correct=ones,
-           all_wrong=deg - ones, binom_pred_leave_one_method_out=lomo,
-           note_91_5pct="the earlier 91.5% (1,775/165) prediction could not be reproduced by any "
-                        "definition tried (step-mean p: 99.99%; method-mean p: 100%; "
-                        "4-method pooled p: 92.1%; LOMO p: 91.9%)",
-           all_correct_share=round(ones / deg, 4),
-           binom_pred_share_stepmean_p=round(pred_step_num / pred_step_den, 4),
-           binom_pred_share_methodmean_p=round(pred_meth_num / pred_meth_den, 4))
+lomo = dict(
+    expected_all_correct=round(lomo_one, 1),
+    expected_all_wrong=round(lomo_zero, 1),
+    share=round(lomo_one / (lomo_one + lomo_zero), 4),
+)
+out = dict(
+    per_method=per_method,
+    groups=tot,
+    degenerate=deg,
+    all_correct=ones,
+    all_wrong=deg - ones,
+    binom_pred_leave_one_method_out=lomo,
+    note_91_5pct="the earlier 91.5% (1,775/165) prediction could not be reproduced by any "
+    "definition tried (step-mean p: 99.99%; method-mean p: 100%; "
+    "4-method pooled p: 92.1%; LOMO p: 91.9%)",
+    all_correct_share=round(ones / deg, 4),
+    binom_pred_share_stepmean_p=round(pred_step_num / pred_step_den, 4),
+    binom_pred_share_methodmean_p=round(pred_meth_num / pred_meth_den, 4),
+)
 print(json.dumps(out, indent=1))
 o = ROOT / "platform_hybrid/experiments/results/review_2026-10-18/P7_zvf_controller"
 o.mkdir(parents=True, exist_ok=True)

@@ -71,9 +71,7 @@ except ModuleNotFoundError as exc:
 def require_module(test: unittest.TestCase):
     """Fail acceptance when the required module cannot be imported."""
     if bounded_procgroup is None:
-        test.fail(
-            "bounded_procgroup not importable from {}: {!r}".format(HERE, IMPORT_ERROR)
-        )
+        test.fail("bounded_procgroup not importable from {}: {!r}".format(HERE, IMPORT_ERROR))
     return bounded_procgroup
 
 
@@ -174,6 +172,7 @@ def _public_names():
 # Outcome normalization: accept dict- or attribute-shaped results.
 # --------------------------------------------------------------------------
 
+
 def _dig(outcome, names, default=None):
     for name in names:
         if isinstance(outcome, dict):
@@ -231,6 +230,7 @@ def outcome_returncode(outcome):
 # Receipts on disk (durable artifacts the contract requires).
 # --------------------------------------------------------------------------
 
+
 def load_json(test, path: Path):
     if not path.exists():
         test.fail("required durable artifact missing: {}".format(path))
@@ -251,25 +251,21 @@ FINALIZATION_CORE_KEYS = (
 
 def assert_finalization_receipt(test, receipt: dict, *, expected_returncode):
     for key in FINALIZATION_CORE_KEYS:
-        test.assertIn(key, receipt, "group_finalization receipt lacks key {!r}: {}".format(key, receipt))
-    test.assertEqual(
-        receipt["worker_returncode"],
-        expected_returncode,
-        "receipt must record the direct worker returncode",
+        assert key in receipt, "group_finalization receipt lacks key {!r}: {}".format(key, receipt)
+    assert receipt["worker_returncode"] == expected_returncode, (
+        "receipt must record the direct worker returncode"
     )
-    test.assertTrue(receipt["worker_reaped"], "direct worker must be reaped: {}".format(receipt))
-    test.assertEqual(receipt["errors"], [], "no finalization errors expected on this path")
+    assert receipt["worker_reaped"], "direct worker must be reaped: {}".format(receipt)
+    assert receipt["errors"] == [], "no finalization errors expected on this path"
     provider_verified = receipt.get("provider_cleanup_verified")
     if provider_verified is not None:
-        test.assertFalse(
-            provider_verified,
-            "offline run must not claim provider cleanup verification",
-        )
+        assert not provider_verified, "offline run must not claim provider cleanup verification"
 
 
 # --------------------------------------------------------------------------
 # Real process-group observation helpers (no mocks of kill/killpg anywhere).
 # --------------------------------------------------------------------------
+
 
 def group_absent(pgid: int, timeout: float = 5.0) -> bool:
     """Poll killpg(pgid, 0) until it raises ESRCH (group truly absent)."""
@@ -319,9 +315,7 @@ def kill_group_hard(pgid: int):
 # --------------------------------------------------------------------------
 
 SLEEPING_SAME_GROUP_CHILD = (
-    "import signal, time; "
-    "signal.signal(signal.SIGTERM, signal.SIG_IGN); "
-    "time.sleep(60)"
+    "import signal, time; signal.signal(signal.SIGTERM, signal.SIG_IGN); time.sleep(60)"
 )
 
 WORKER_EXIT_TEMPLATE = r"""
@@ -381,8 +375,8 @@ def worker_hang_argv(shape: str, result_dir: Path):
             "import json, os, subprocess, sys, time; from pathlib import Path; "
             "d = Path(sys.argv[1]); "
             "p = subprocess.Popen([sys.executable, '-c', "
-            + repr(SLEEPING_SAME_GROUP_CHILD) +
-            "], stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL); "
+            + repr(SLEEPING_SAME_GROUP_CHILD)
+            + "], stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL); "
             "(d / 'child.pid').write_text(str(p.pid)); "
             "os.kill(p.pid, 0); "
             "(d / 't_before.json').write_text(json.dumps({'worker_pid': os.getpid(), "
@@ -392,11 +386,7 @@ def worker_hang_argv(shape: str, result_dir: Path):
         )
         return [sys.executable, "-B", "-c", code, d]
     if shape == "hang_ignoring_sigterm":
-        code = (
-            "import signal, time; "
-            "signal.signal(signal.SIGTERM, signal.SIG_IGN); "
-            "time.sleep(60)"
-        )
+        code = "import signal, time; signal.signal(signal.SIGTERM, signal.SIG_IGN); time.sleep(60)"
         return [sys.executable, "-B", "-c", code, d]
     if shape == "hang_blocked_on_fifo":
         code = (
@@ -422,8 +412,8 @@ def worker_hang_argv(shape: str, result_dir: Path):
             "import os, subprocess, sys, time; from pathlib import Path; "
             "d = Path(sys.argv[1]); "
             "p = subprocess.Popen([sys.executable, '-c', "
-            + repr(SLEEPING_SAME_GROUP_CHILD) +
-            "], stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL); "
+            + repr(SLEEPING_SAME_GROUP_CHILD)
+            + "], stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL); "
             "(d / 'child.pid').write_text(str(p.pid)); "
             "os.kill(p.pid, 0); "
             "os.chmod(d, 0o500); "  # any work-disk guard write now fails
@@ -484,6 +474,7 @@ class UnresolvedVerificationFault:
         for name in _WAIT_SEAM_CANDIDATES:
             original = getattr(module, name, None)
             if callable(original) and not isinstance(original, type):
+
                 def stuck_present(*_args, **_kwargs):
                     return False  # group still present within budget
 
@@ -496,7 +487,7 @@ class UnresolvedVerificationFault:
             try:
                 injector("group_absent_unresolved")
                 self.applied.append("inject_fault")
-            except Exception:  # noqa: BLE001 - injector is best effort
+            except Exception:
                 pass
         saved_env = {k: os.environ.get(k) for k in _FAULT_ENV}
         os.environ.update(_FAULT_ENV)

@@ -1,6 +1,7 @@
 """Modal PPO Campaign: Run PPO baselines on models where we only have GRPO data.
 This fills the critical PPO vs GRPO comparison gap.
 """
+
 import modal, os, json
 
 app = modal.App("tinker-rl-ppo-campaign")
@@ -10,14 +11,25 @@ app = modal.App("tinker-rl-ppo-campaign")
 image = (
     modal.Image.debian_slim(python_version="3.11")
     .pip_install(
-        "torch>=2.1", "transformers>=4.40", "datasets", "trl>=0.12",
-        "peft", "accelerate", "bitsandbytes", "scipy",
-        "numpy", "pandas", "wandb", "huggingface_hub",
+        "torch>=2.1",
+        "transformers>=4.40",
+        "datasets",
+        "trl>=0.12",
+        "peft",
+        "accelerate",
+        "bitsandbytes",
+        "scipy",
+        "numpy",
+        "pandas",
+        "wandb",
+        "huggingface_hub",
     )
-    .env({
-        "WANDB_PROJECT": "tinker-rl-lab-world-class",
-        "WANDB_ENTITY": "arvindcr4-pes-university",
-    })
+    .env(
+        {
+            "WANDB_PROJECT": "tinker-rl-lab-world-class",
+            "WANDB_ENTITY": "arvindcr4-pes-university",
+        }
+    )
 )
 
 # ── PPO experiments to run ──
@@ -37,29 +49,35 @@ PPO_EXPERIMENTS = [
 )
 def run_ppo_experiment(tag: str, model_id: str, model_short: str):
     """Run a single PPO experiment on Modal H100."""
-    import torch, wandb, json, time
+    import torch, wandb
+
     try:
         import torch, wandb
-        if not getattr(wandb, '_vram_patched', False):
+
+        if not getattr(wandb, "_vram_patched", False):
             _old_log = wandb.log
+
             def _vram_log(data, *args, **kwargs):
                 if torch.cuda.is_available():
-                    data['system/vram_peak_allocated_gb'] = torch.cuda.max_memory_allocated() / (1024**3)
-                    data['system/vram_reserved_gb'] = torch.cuda.max_memory_reserved() / (1024**3)
+                    data["system/vram_peak_allocated_gb"] = torch.cuda.max_memory_allocated() / (
+                        1024**3
+                    )
+                    data["system/vram_reserved_gb"] = torch.cuda.max_memory_reserved() / (1024**3)
                     torch.cuda.reset_peak_memory_stats()
                 _old_log(data, *args, **kwargs)
+
             wandb.log = _vram_log
             wandb._vram_patched = True
     except ImportError:
         pass
-    from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
+    from transformers import AutoTokenizer, BitsAndBytesConfig
     from datasets import load_dataset
     from trl import PPOConfig, PPOTrainer, AutoModelForCausalLMWithValueHead
     from peft import LoraConfig
     import numpy as np
-    
+
     print(f"Starting PPO experiment: {tag} with {model_id}")
-    
+
     # Initialize W&B
     wandb.init(
         project="tinker-rl-lab-world-class",
@@ -71,20 +89,20 @@ def run_ppo_experiment(tag: str, model_id: str, model_short: str):
             "task": "gsm8k",
             "platform": "modal_h100",
             "gpu": "H100",
-        }
+        },
     )
-    
+
     # Load model with 4-bit quantization for larger models
     quant_config = BitsAndBytesConfig(
         load_in_4bit=True,
         bnb_4bit_compute_dtype=torch.bfloat16,
         bnb_4bit_quant_type="nf4",
     )
-    
+
     tokenizer = AutoTokenizer.from_pretrained(model_id, trust_remote_code=True)
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
-    
+
     model = AutoModelForCausalLMWithValueHead.from_pretrained(
         model_id,
         quantization_config=quant_config,
@@ -99,10 +117,10 @@ def run_ppo_experiment(tag: str, model_id: str, model_short: str):
             task_type="CAUSAL_LM",
         ),
     )
-    
+
     # GSM8K dataset
     dataset = load_dataset("openai/gsm8k", "main", split="train[:200]")
-    
+
     # PPO Config
     ppo_config = PPOConfig(
         learning_rate=1e-5,
@@ -113,40 +131,41 @@ def run_ppo_experiment(tag: str, model_id: str, model_short: str):
         target_kl=0.01,
         log_with="wandb",
     )
-    
+
     trainer = PPOTrainer(
         config=ppo_config,
         model=model,
         tokenizer=tokenizer,
     )
-    
+
     # Simple reward function: check if answer matches
     def compute_reward(response_text, expected_answer):
         """Extract number from response and compare to expected."""
         import re
+
         # Extract number after ####
-        match = re.search(r'####\s*([\d,]+)', response_text)
+        match = re.search(r"####\s*([\d,]+)", response_text)
         if match:
             try:
-                pred = int(match.group(1).replace(',', ''))
-                exp = int(expected_answer.replace(',', ''))
+                pred = int(match.group(1).replace(",", ""))
+                exp = int(expected_answer.replace(",", ""))
                 return 1.0 if pred == exp else 0.0
             except:
                 return 0.0
         return 0.0
-    
+
     rewards_trace = []
     num_steps = 30
-    
+
     for step in range(num_steps):
         idx = step % len(dataset)
         question = dataset[idx]["question"]
         answer = dataset[idx]["answer"].split("####")[-1].strip()
-        
+
         prompt = f"Solve step by step. Give final answer after ####.\n\n{question}"
         inputs = tokenizer(prompt, return_tensors="pt", truncation=True, max_length=512)
         input_ids = inputs["input_ids"].to(model.pretrained_model.device)
-        
+
         # Generate
         with torch.no_grad():
             outputs = model.generate(
@@ -156,18 +175,20 @@ def run_ppo_experiment(tag: str, model_id: str, model_short: str):
                 temperature=0.7,
                 top_p=0.9,
             )
-        
-        response = tokenizer.decode(outputs[0][input_ids.shape[1]:], skip_special_tokens=True)
+
+        response = tokenizer.decode(outputs[0][input_ids.shape[1] :], skip_special_tokens=True)
         reward = compute_reward(response, answer)
         rewards_trace.append(reward)
-        
+
         query_tensors = [input_ids[0]]
-        response_tensors_list = [outputs[0][input_ids.shape[1]:]]
-        reward_tensors = [torch.tensor(reward, dtype=torch.float32, device=model.pretrained_model.device)]
-        
+        response_tensors_list = [outputs[0][input_ids.shape[1] :]]
+        reward_tensors = [
+            torch.tensor(reward, dtype=torch.float32, device=model.pretrained_model.device)
+        ]
+
         # PPO step
         stats = trainer.step(query_tensors, response_tensors_list, reward_tensors)
-        
+
         # Log to W&B
         log_dict = {
             "step": step,
@@ -180,17 +201,19 @@ def run_ppo_experiment(tag: str, model_id: str, model_short: str):
                     log_dict[f"ppo/{k}"] = float(v)
                 elif isinstance(v, torch.Tensor) and v.numel() == 1:
                     log_dict[f"ppo/{k}"] = float(v.item())
-                    
+
         wandb.log(log_dict, step=step)
-        
+
         if step % 5 == 0:
-            print(f"  Step {step}/{num_steps}: reward={reward:.3f}, running_avg={np.mean(rewards_trace[-10:]):.3f}")
-    
+            print(
+                f"  Step {step}/{num_steps}: reward={reward:.3f}, running_avg={np.mean(rewards_trace[-10:]):.3f}"
+            )
+
     # Compute final metrics
     peak = max(rewards_trace)
     last10 = np.mean(rewards_trace[-10:])
     first5 = np.mean(rewards_trace[:5])
-    
+
     result = {
         "tag": tag,
         "model": model_id,
@@ -205,7 +228,7 @@ def run_ppo_experiment(tag: str, model_id: str, model_short: str):
         "num_steps": num_steps,
         "status": "completed",
     }
-    
+
     # Push to HF Hub
     hf_repo_id = f"arvindcr4-pes-university/tinker-rl-{tag}"
     print(f"Pushing model to Hub: {hf_repo_id}")
@@ -216,10 +239,10 @@ def run_ppo_experiment(tag: str, model_id: str, model_short: str):
     except Exception as e:
         print(f"Failed to push to Hub: {e}")
         result["hub_error"] = str(e)
-    
+
     wandb.log({"final_peak": peak, "final_last10": last10})
     wandb.finish()
-    
+
     print(f"  ✓ {tag} DONE: peak={peak:.3f}, last10={last10:.3f}")
     return result
 
@@ -228,12 +251,12 @@ def run_ppo_experiment(tag: str, model_id: str, model_short: str):
 def main():
     """Launch all PPO experiments in parallel on Modal."""
     print(f"Launching {len(PPO_EXPERIMENTS)} PPO experiments on Modal H100...")
-    
+
     futures = []
     for tag, model_id, model_short in PPO_EXPERIMENTS:
         print(f"  Spawning: {tag} ({model_id})")
         futures.append(run_ppo_experiment.spawn(tag, model_id, model_short))
-    
+
     results = []
     for f in futures:
         try:
@@ -243,9 +266,11 @@ def main():
         except Exception as e:
             print(f"  ✗ Failed: {e}")
             results.append({"status": "failed", "error": str(e)})
-    
+
     # Save results
     with open("/home/user/workspace/elevation_outputs/modal_ppo_campaign.json", "w") as f:
         json.dump(results, f, indent=2)
-    
-    print(f"\nAll done! {len([r for r in results if r.get('status')=='completed'])}/{len(PPO_EXPERIMENTS)} completed")
+
+    print(
+        f"\nAll done! {len([r for r in results if r.get('status') == 'completed'])}/{len(PPO_EXPERIMENTS)} completed"
+    )

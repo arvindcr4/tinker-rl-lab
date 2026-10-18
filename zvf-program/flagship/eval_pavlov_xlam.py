@@ -75,17 +75,12 @@ PAVLOV_PRIMARY_EVAL_SUITE_DOMAINS: tuple[tuple[str, tuple[str, ...]], ...] = (
     ("openreward_games_eval", ("games", "long_horizon", "tool_use")),
     ("frontiermath_eval", ("math",)),
 )
-PAVLOV_PRIMARY_EVAL_SUITE_IDS = tuple(
-    suite_id for suite_id, _ in PAVLOV_PRIMARY_EVAL_SUITE_DOMAINS
-)
+PAVLOV_PRIMARY_EVAL_SUITE_IDS = tuple(suite_id for suite_id, _ in PAVLOV_PRIMARY_EVAL_SUITE_DOMAINS)
 
 
-def maximum_eval_cost(
-    examples: int, max_prompt_tokens: int, max_response_tokens: int
-) -> float:
+def maximum_eval_cost(examples: int, max_prompt_tokens: int, max_response_tokens: int) -> float:
     return (
-        examples * max_prompt_tokens * PREFILL_RATE
-        + examples * max_response_tokens * SAMPLE_RATE
+        examples * max_prompt_tokens * PREFILL_RATE + examples * max_response_tokens * SAMPLE_RATE
     ) / 1_000_000
 
 
@@ -135,9 +130,7 @@ def _validate_digest(name: str, value: str | None) -> str:
 def _validate_revision(name: str, value: str | None) -> str:
     normalized = _require_provenance_text(name, value)
     if not _REVISION_RE.fullmatch(normalized):
-        raise ValueError(
-            f"{name} must be an immutable 40/64-character revision or sha256 digest"
-        )
+        raise ValueError(f"{name} must be an immutable 40/64-character revision or sha256 digest")
     return normalized.lower()
 
 
@@ -162,14 +155,10 @@ def validate_provenance(
 
     provenance: dict[str, str | None] = {
         "dataset_revision": _validate_revision("dataset_revision", dataset_revision),
-        "split_manifest_sha256": _validate_sha256(
-            "split_manifest_sha256", split_manifest_sha256
-        ),
+        "split_manifest_sha256": _validate_sha256("split_manifest_sha256", split_manifest_sha256),
         "task_id_sha256": _validate_sha256("task_id_sha256", task_id_sha256),
         "license_id": _require_provenance_text("license_id", license_id),
-        "license_receipt": _require_provenance_text(
-            "license_receipt", license_receipt
-        ),
+        "license_receipt": _require_provenance_text("license_receipt", license_receipt),
         "decontamination_sha256": _validate_sha256(
             "decontamination_sha256", decontamination_sha256
         ),
@@ -179,18 +168,12 @@ def validate_provenance(
         "container_digest": _validate_digest("container_digest", container_digest),
         "runtime_digest": _validate_digest("runtime_digest", runtime_digest),
         "verifier_sha256": _validate_sha256("verifier_sha256", verifier_sha256),
-        "base_model_revision": _validate_revision(
-            "base_model_revision", base_model_revision
-        ),
-        "tokenizer_revision": _validate_revision(
-            "tokenizer_revision", tokenizer_revision
-        ),
+        "base_model_revision": _validate_revision("base_model_revision", base_model_revision),
+        "tokenizer_revision": _validate_revision("tokenizer_revision", tokenizer_revision),
         "adapter_revision": None,
     }
     if sampler_path:
-        provenance["adapter_revision"] = _validate_revision(
-            "adapter_revision", adapter_revision
-        )
+        provenance["adapter_revision"] = _validate_revision("adapter_revision", adapter_revision)
     elif adapter_revision is not None:
         # An adapter revision without an adapter evaluation is ambiguous and
         # must not silently enter the run's immutable provenance record.
@@ -214,17 +197,11 @@ def _normalise_domains(raw_domains: list[str] | None) -> tuple[str, ...]:
     return tuple(domains)
 
 
-def _validate_xlam_component_identity(
-    suite_id: str, domains: tuple[str, ...]
-) -> None:
+def _validate_xlam_component_identity(suite_id: str, domains: tuple[str, ...]) -> None:
     if suite_id != DEFAULT_SUITE_ID:
-        raise ValueError(
-            f"xLAM evaluation suite is fixed to component id {DEFAULT_SUITE_ID!r}"
-        )
+        raise ValueError(f"xLAM evaluation suite is fixed to component id {DEFAULT_SUITE_ID!r}")
     if domains != DEFAULT_DOMAINS:
-        raise ValueError(
-            "xLAM evaluation domains are fixed to the component-only tool_use domain"
-        )
+        raise ValueError("xLAM evaluation domains are fixed to the component-only tool_use domain")
 
 
 class _RevisionBoundDataset:
@@ -287,9 +264,7 @@ def _convert_xlam_rows(rows: Any, *, seed: int) -> _RevisionBoundDataset:
     return _RevisionBoundDataset(examples[:3000], examples[3000:3500])
 
 
-def _load_xlam_dataset(
-    *, seed: int, revision: str
-) -> tuple[Any, dict[str, Any]]:
+def _load_xlam_dataset(*, seed: int, revision: str) -> tuple[Any, dict[str, Any]]:
     """Load xLAM through a revision-aware runner API or a pinned local seam."""
 
     from platform_tinker.tinkerrl.grpo import make_xlam_dataset
@@ -423,9 +398,7 @@ def _assert_online_run(run: Any) -> None:
         mode = getattr(settings, "mode", None)
     mode = getattr(mode, "value", mode)
     if mode != "online":
-        raise RuntimeError(
-            "W&B run is not verifiably online; refusing to start Tinker evaluation"
-        )
+        raise RuntimeError("W&B run is not verifiably online; refusing to start Tinker evaluation")
 
 
 def _assert_wandb_identity(run: Any) -> None:
@@ -451,8 +424,7 @@ def _revision_parameter(
         if candidate in parameters:
             return candidate
     if allow_var_keyword and any(
-        parameter.kind is inspect.Parameter.VAR_KEYWORD
-        for parameter in parameters.values()
+        parameter.kind is inspect.Parameter.VAR_KEYWORD for parameter in parameters.values()
     ):
         if "revision" in candidates:
             return "revision"
@@ -464,9 +436,7 @@ def _load_tokenizer(
     tokenizer_loader: Any, *, model_name: str, revision: str
 ) -> tuple[Any, dict[str, Any]]:
     kwargs: dict[str, Any] = {"trust_remote_code": True}
-    revision_parameter = _revision_parameter(
-        tokenizer_loader, candidates=("revision",)
-    )
+    revision_parameter = _revision_parameter(tokenizer_loader, candidates=("revision",))
     if revision_parameter is not None:
         kwargs[revision_parameter] = revision
     return tokenizer_loader(model_name, **kwargs), {
@@ -504,9 +474,7 @@ def _create_sampling_client(
     else:
         kwargs = {"model_path": evaluated_path}
         candidates = ("adapter_revision", "model_path_revision", "revision")
-    revision_parameter = _revision_parameter(
-        service.create_sampling_client, candidates=candidates
-    )
+    revision_parameter = _revision_parameter(service.create_sampling_client, candidates=candidates)
     if revision_parameter is not None:
         kwargs[revision_parameter] = revision
     return service.create_sampling_client(**kwargs), {
@@ -550,17 +518,11 @@ def _object_revision(obj: Any) -> str | None:
     return None
 
 
-def _verify_revision(
-    label: str, obj: Any, *, expected_revision: str
-) -> dict[str, Any]:
+def _verify_revision(label: str, obj: Any, *, expected_revision: str) -> dict[str, Any]:
     observed_revision = _object_revision(obj)
-    if (
-        observed_revision is not None
-        and observed_revision.lower() != expected_revision.lower()
-    ):
+    if observed_revision is not None and observed_revision.lower() != expected_revision.lower():
         raise RuntimeError(
-            f"{label} revision mismatch: expected {expected_revision}, "
-            f"got {observed_revision}"
+            f"{label} revision mismatch: expected {expected_revision}, got {observed_revision}"
         )
     return {
         "expected_revision": expected_revision,
@@ -676,8 +638,14 @@ def main() -> int:
     parser.add_argument("--max-cost-usd", type=float, required=True)
     parser.add_argument("--out", type=Path, required=True)
     parser.add_argument("--dataset-revision")
-    parser.add_argument("--split-manifest-sha256", "--split-manifest-hash", dest="split_manifest_sha256")
-    parser.add_argument("--evaluation-manifest", type=Path, help="JSON ordered prompt/target content SHA-256 list; required for execution")
+    parser.add_argument(
+        "--split-manifest-sha256", "--split-manifest-hash", dest="split_manifest_sha256"
+    )
+    parser.add_argument(
+        "--evaluation-manifest",
+        type=Path,
+        help="JSON ordered prompt/target content SHA-256 list; required for execution",
+    )
     parser.add_argument("--task-id-sha256", "--task-id-hash", dest="task_id_sha256")
     parser.add_argument("--license-id", "--license-identifier", dest="license_id")
     parser.add_argument("--license-receipt")
@@ -704,7 +672,9 @@ def main() -> int:
     parser.add_argument("--wandb-entity", default=PAVLOV_WANDB_ENTITY)
     parser.add_argument("--wandb-project", default=PAVLOV_WANDB_PROJECT)
     parser.add_argument("--wandb-group", default=PAVLOV_WANDB_GROUP)
-    parser.add_argument("--wandb-name", "--wandb-run-name", dest="wandb_name", default=PAVLOV_WANDB_NAME)
+    parser.add_argument(
+        "--wandb-name", "--wandb-run-name", dest="wandb_name", default=PAVLOV_WANDB_NAME
+    )
     args = parser.parse_args()
 
     for name, value in (
@@ -747,17 +717,11 @@ def main() -> int:
         )
     except ValueError as exc:
         raise SystemExit(f"Phase-0 provenance gate failed: {exc}") from exc
-    provenance_sha256 = _sha256(
-        json.dumps(provenance, sort_keys=True, separators=(",", ":"))
-    )
+    provenance_sha256 = _sha256(json.dumps(provenance, sort_keys=True, separators=(",", ":")))
 
-    projected = maximum_eval_cost(
-        args.limit, args.max_prompt_tokens, args.max_response_tokens
-    )
+    projected = maximum_eval_cost(args.limit, args.max_prompt_tokens, args.max_response_tokens)
     if projected > args.max_cost_usd:
-        raise SystemExit(
-            f"projected maximum ${projected:.4f} exceeds cap ${args.max_cost_usd:.4f}"
-        )
+        raise SystemExit(f"projected maximum ${projected:.4f} exceeds cap ${args.max_cost_usd:.4f}")
 
     config = _wandb_config(
         args=args,
@@ -768,9 +732,7 @@ def main() -> int:
         provenance=provenance,
         provenance_sha256=provenance_sha256,
     )
-    config_sha256 = _sha256(
-        json.dumps(config, sort_keys=True, separators=(",", ":"))
-    )
+    config_sha256 = _sha256(json.dumps(config, sort_keys=True, separators=(",", ":")))
 
     # Import and initialize W&B first.  In particular, do not import/create a
     # Tinker client until this online run exists and its config is immutable.
@@ -794,14 +756,35 @@ def main() -> int:
             raise RuntimeError("xLAM dataset produced no evaluation examples")
         if args.evaluation_manifest is None:
             raise RuntimeError("explicit immutable evaluation manifest is required")
-        actual_ids = [_sha256(json.dumps({"prompt": example.prompt, "target": example.target}, sort_keys=True, separators=(",", ":"))) for example in examples]
+        actual_ids = [
+            _sha256(
+                json.dumps(
+                    {"prompt": example.prompt, "target": example.target},
+                    sort_keys=True,
+                    separators=(",", ":"),
+                )
+            )
+            for example in examples
+        ]
         if callable(getattr(dataset, "train_examples", None)):
-            training_ids = {_sha256(json.dumps({"prompt": example.prompt, "target": example.target}, sort_keys=True, separators=(",", ":"))) for example in dataset.train_examples()}
+            training_ids = {
+                _sha256(
+                    json.dumps(
+                        {"prompt": example.prompt, "target": example.target},
+                        sort_keys=True,
+                        separators=(",", ":"),
+                    )
+                )
+                for example in dataset.train_examples()
+            }
             if training_ids.intersection(actual_ids):
                 raise RuntimeError("xLAM component evaluation overlaps loaded training content")
         expected_ids = json.loads(args.evaluation_manifest.read_text(encoding="utf-8"))
-        if (actual_ids != expected_ids or len(set(actual_ids)) != len(actual_ids) or
-            _sha256("\n".join(actual_ids)) != provenance["task_id_sha256"]):
+        if (
+            actual_ids != expected_ids
+            or len(set(actual_ids)) != len(actual_ids)
+            or _sha256("\n".join(actual_ids)) != provenance["task_id_sha256"]
+        ):
             raise RuntimeError("xLAM evaluation manifest identity mismatch")
         tokenizer, tokenizer_binding = _load_tokenizer(
             AutoTokenizer.from_pretrained,
@@ -834,9 +817,7 @@ def main() -> int:
             service,
             expected_revision=provenance["base_model_revision"],
         )
-        sampling_revision = provenance["adapter_revision"] or provenance[
-            "base_model_revision"
-        ]
+        sampling_revision = provenance["adapter_revision"] or provenance["base_model_revision"]
         sampler, sampler_binding = _create_sampling_client(
             service,
             source_kind=source_kind,
@@ -896,12 +877,8 @@ def main() -> int:
                 )
 
         mean_reward = sum(scores) / len(scores) if scores else None
-        perfect_call_rate = (
-            sum(score == 1.0 for score in scores) / len(scores) if scores else None
-        )
-        estimated_cost = (
-            prompt_tokens * PREFILL_RATE + sample_tokens * SAMPLE_RATE
-        ) / 1_000_000
+        perfect_call_rate = sum(score == 1.0 for score in scores) / len(scores) if scores else None
+        estimated_cost = (prompt_tokens * PREFILL_RATE + sample_tokens * SAMPLE_RATE) / 1_000_000
         portfolio = {
             "portfolio_id": PAVLOV_PRIMARY_EVAL_PORTFOLIO_ID,
             "portfolio_role": "primary_eval",
@@ -945,8 +922,8 @@ def main() -> int:
             "tokenizer_model": args.tokenizer_model,
             "dataset_id": XLAM_DATASET_ID,
             "dataset_split": XLAM_SPLIT_ID,
-        "metric_name": "strict_tool_call_reward",
-        "official_benchmark_score": False,
+            "metric_name": "strict_tool_call_reward",
+            "official_benchmark_score": False,
             "seed": args.seed,
             "suite_id": args.suite_id,
             "suite_role": "component",

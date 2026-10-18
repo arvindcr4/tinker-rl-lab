@@ -15,9 +15,9 @@ Checks:
   7. Author list is identical across paper/main.tex, capstone_final_report.md,
      README.md, and CITATION.cff
 """
+
 from __future__ import annotations
 import json
-import os
 import re
 import sys
 import unicodedata
@@ -73,9 +73,9 @@ def check_abstract_numbers() -> dict:
 
     # Extract numerics: percentages, correlations, p-values, raw integers/decimals
     patterns = [
-        r"\d+\.\d+\\?%",          # 54.5%
-        r"\d+\\?%",                # 100%
-        r"[+\-]?0\.\d+",           # 0.922, -0.769
+        r"\d+\.\d+\\?%",  # 54.5%
+        r"\d+\\?%",  # 100%
+        r"[+\-]?0\.\d+",  # 0.922, -0.769
         r"r\{?=\}?\{?[+\-−]?0\.\d+\}?",  # r=-0.769
     ]
     raw = []
@@ -92,9 +92,22 @@ def check_abstract_numbers() -> dict:
     # Canonical high-signal claims mined from the abstract text.
     # Only numbers that ACTUALLY appear in abstract.tex.
     high_signal = [
-        "79", "0.769", "54.5", "32.5", "100",
-        "22.5", "34.4", "97.5", "84.4", "87.5", "91.7",
-        "0.922", "0.047", "0.969", "16.2", "80",
+        "79",
+        "0.769",
+        "54.5",
+        "32.5",
+        "100",
+        "22.5",
+        "34.4",
+        "97.5",
+        "84.4",
+        "87.5",
+        "91.7",
+        "0.922",
+        "0.047",
+        "0.969",
+        "16.2",
+        "80",
     ]
     for t in high_signal:
         core.add(t)
@@ -115,7 +128,7 @@ def check_abstract_numbers() -> dict:
         "checked": len(core),
         "found": len(found),
         "missing": missing,
-        "detail": "Every numeric claim in abstract.tex must also appear in the body of the paper."
+        "detail": "Every numeric claim in abstract.tex must also appear in the body of the paper.",
     }
 
 
@@ -201,7 +214,7 @@ def check_models_in_master() -> dict:
         "matched": len(matched),
         "discussed_only": discussed_only,
         "unmatched": unmatched,
-        "detail": "Every model family mentioned must either (a) map to a master_results.json entry or (b) be on the documented discussed-only allowlist."
+        "detail": "Every model family mentioned must either (a) map to a master_results.json entry or (b) be on the documented discussed-only allowlist.",
     }
 
 
@@ -246,13 +259,25 @@ def check_bib_integrity() -> dict:
 # ---------------------------------------------------------------------------
 def check_ref_resolution() -> dict:
     if not AUX_FILE.exists():
-        return {"name": "ref_resolution", "passed": False, "error": "main.aux missing — rebuild paper first"}
+        return {
+            "name": "ref_resolution",
+            "passed": False,
+            "error": "main.aux missing — rebuild paper first",
+        }
     aux = _read(AUX_FILE)
     defined = set(re.findall(r"\\newlabel\{([^}]+)\}", aux))
 
     tex = _all_tex()
     refs = set()
-    for cmd in (r"\\ref", r"\\cref", r"\\Cref", r"\\autoref", r"\\eqref", r"\\pageref", r"\\nameref"):
+    for cmd in (
+        r"\\ref",
+        r"\\cref",
+        r"\\Cref",
+        r"\\autoref",
+        r"\\eqref",
+        r"\\pageref",
+        r"\\nameref",
+    ):
         for m in re.finditer(rf"{cmd}\*?\{{([^}}]+)\}}", tex):
             for k in m.group(1).split(","):
                 k = k.strip()
@@ -301,7 +326,13 @@ def check_compute_budget() -> dict:
     sum_hi = sum(r[1] for r in ranges)
 
     if total_row is None:
-        return {"name": "compute_budget", "passed": False, "error": "claimed total not found", "sum_lo": sum_lo, "sum_hi": sum_hi}
+        return {
+            "name": "compute_budget",
+            "passed": False,
+            "error": "claimed total not found",
+            "sum_lo": sum_lo,
+            "sum_hi": sum_hi,
+        }
     c_lo, c_hi = total_row
 
     # Sub-rows sum EXCLUDES the per-person entries (Colab) and counts one H100 PPO row.
@@ -357,7 +388,16 @@ def check_carbon() -> dict:
         co2 = _num(cols[5].rstrip("\\ "))
         if None in (gpuh, tdp, pue, energy, co2):
             continue
-        rows.append({"line": platform[:60], "gpuh": gpuh, "tdp_w": tdp, "pue": pue, "energy_kwh": energy, "co2_kg": co2})
+        rows.append(
+            {
+                "line": platform[:60],
+                "gpuh": gpuh,
+                "tdp_w": tdp,
+                "pue": pue,
+                "energy_kwh": energy,
+                "co2_kg": co2,
+            }
+        )
 
     # Grid intensities documented in the paper (US 0.367, India 0.716 kg/kWh)
     US = 0.367
@@ -378,15 +418,17 @@ def check_carbon() -> dict:
         row_ok = (rel_energy < 0.35) and (rel_co2 < 0.5)
         if not row_ok:
             ok = False
-        details.append({
-            "platform": r["line"].split("&")[0].strip(),
-            "reported_kwh": r["energy_kwh"],
-            "computed_kwh": round(computed_kwh, 2),
-            "reported_co2_kg": r["co2_kg"],
-            "computed_co2_us_kg": round(co2_us, 2),
-            "computed_co2_in_kg": round(co2_in, 2),
-            "row_ok": row_ok,
-        })
+        details.append(
+            {
+                "platform": r["line"].split("&")[0].strip(),
+                "reported_kwh": r["energy_kwh"],
+                "computed_kwh": round(computed_kwh, 2),
+                "reported_co2_kg": r["co2_kg"],
+                "computed_co2_us_kg": round(co2_us, 2),
+                "computed_co2_in_kg": round(co2_in, 2),
+                "row_ok": row_ok,
+            }
+        )
 
     return {
         "name": "carbon_accounting",
@@ -418,7 +460,9 @@ def check_authors() -> dict:
 
     # capstone report
     md = _read(CAPSTONE_MD)
-    sources["platform_tinker/reports/final/capstone_final_report.md"] = [a for a in CANONICAL_AUTHORS if _norm_name(a) in _norm_name(md)]
+    sources["platform_tinker/reports/final/capstone_final_report.md"] = [
+        a for a in CANONICAL_AUTHORS if _norm_name(a) in _norm_name(md)
+    ]
 
     # README
     rm = _read(README_MD)
@@ -432,7 +476,7 @@ def check_authors() -> dict:
         given = re.findall(r'given-names:\s*"?([^"\n]+)"?', cf)
         family = re.findall(r'family-names:\s*"?([^"\n]+)"?', cf)
         pairs = []
-        for g, f in zip(given, family):
+        for g, f in zip(given, family, strict=False):
             pairs.append(f"{g.strip()} {f.strip()}")
             pairs.append(f"{f.strip()} {g.strip()}")
         norm_pool = " ".join(_norm_name(p) for p in pairs)
@@ -440,7 +484,9 @@ def check_authors() -> dict:
     else:
         sources["CITATION.cff"] = []
 
-    missing_per_source = {src: sorted(set(CANONICAL_AUTHORS) - set(names)) for src, names in sources.items()}
+    missing_per_source = {
+        src: sorted(set(CANONICAL_AUTHORS) - set(names)) for src, names in sources.items()
+    }
     # pass only when every source contains every canonical author
     passed = all(not miss for miss in missing_per_source.values())
     return {

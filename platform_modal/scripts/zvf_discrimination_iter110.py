@@ -42,17 +42,20 @@ Honest-stat note: n=14 rows for AUROC/EMD; we report both point estimates
 and full-estimator percentile bootstrap intervals (B=2000); no outer held-out
 validation is implemented. Optimized raw-score directions are exploratory.
 """
+
 from __future__ import annotations
 
-import csv
 import json
 import math
 import pathlib
 import sys
-from typing import Any, Dict, List, Sequence, Tuple
+from typing import Any, Dict, List, Tuple
 
 import numpy as np
-from _analysis_common import maybe_matplotlib as _maybe_matplotlib, write_commented_tsv as _write_tsv
+from _analysis_common import (
+    maybe_matplotlib as _maybe_matplotlib,
+    write_commented_tsv as _write_tsv,
+)
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 RES = ROOT / "experiments" / "results"
@@ -87,6 +90,7 @@ def _strip_comments(path: pathlib.Path) -> List[str]:
 
 def load_calibration_rows() -> List[Dict[str, Any]]:
     from _review28_io import read_calibration
+
     return read_calibration(RES / "zvf_iter102_calibration_review28_v2.tsv")
 
 
@@ -111,15 +115,11 @@ def load_leadtime_rows() -> List[Dict[str, Any]]:
                         "n_steps": int(float(parts[3])),
                         "mean_zvf": float(parts[4]),
                         "theta": float(parts[5]),
-                        "first_pass_step": (
-                            int(float(parts[6])) if parts[6] != "None" else None
-                        ),
+                        "first_pass_step": (int(float(parts[6])) if parts[6] != "None" else None),
                         "first_collapse_step": (
                             int(float(parts[7])) if parts[7] != "None" else None
                         ),
-                        "lead_steps": (
-                            int(float(parts[8])) if parts[8] != "None" else None
-                        ),
+                        "lead_steps": (int(float(parts[8])) if parts[8] != "None" else None),
                     }
                 )
             except ValueError:
@@ -210,6 +210,7 @@ def _classify_row(collapse_rate: float, p: float) -> str:
 
 def _auc_roc(scores, y):
     from _review28_statistics import auc
+
     return auc(scores, y)
 
 
@@ -254,9 +255,7 @@ def _em_distance_1d(a: np.ndarray, b: np.ndarray) -> float:
     return float((diffs[:-1] * widths).sum())
 
 
-def _normalised_em(
-    a: np.ndarray, b: np.ndarray, full: np.ndarray
-) -> float:
+def _normalised_em(a: np.ndarray, b: np.ndarray, full: np.ndarray) -> float:
     """EMD normalised by the empirical range of the full sample so the
     number is in roughly [0, 1] and comparable across predictors."""
     e = _em_distance_1d(a, b)
@@ -271,6 +270,7 @@ def _normalised_em(
 
 def _spearman(x, y):
     from _review28_statistics import spearman
+
     return spearman(x, y)
 
 
@@ -292,7 +292,7 @@ def _iso_g_floor(tau: float) -> List[Dict[str, Any]]:
         for t in TAU_GRID:
             g_min = None
             for G in range(1, G_MAX + 1):
-                z_iid = float(p ** G + (1.0 - p) ** G)
+                z_iid = float(p**G + (1.0 - p) ** G)
                 if z_iid <= t:
                     g_min = G
                     break
@@ -302,9 +302,7 @@ def _iso_g_floor(tau: float) -> List[Dict[str, Any]]:
                     "tau_saturation": float(t),
                     "g_min": int(g_min) if g_min is not None else -1,
                     "zvf_iid_at_gmin": (
-                        float(p ** g_min + (1.0 - p) ** g_min)
-                        if g_min is not None
-                        else float("nan")
+                        float(p**g_min + (1.0 - p) ** g_min) if g_min is not None else float("nan")
                     ),
                 }
             )
@@ -445,9 +443,7 @@ def main() -> int:
 
     # Build the binary collapse label and predictor arrays.
     labels = [_classify_row(r["collapse_rate"], r["p"]) for r in cal_rows]
-    is_col = np.array(
-        [1.0 if lbl == "collapse" else 0.0 for lbl in labels], dtype=float
-    )
+    is_col = np.array([1.0 if lbl == "collapse" else 0.0 for lbl in labels], dtype=float)
     zvf_arr = np.array([r["zvf_emp"] for r in cal_rows], dtype=float)
     delta_arr = np.array([r["delta"] for r in cal_rows], dtype=float)
     rho_arr = np.array([r["rho"] for r in cal_rows], dtype=float)
@@ -501,6 +497,7 @@ def main() -> int:
     # rank-discriminator that aligns with iter106's headline.
     _pv = np.array([r["p"] for r in cal_rows], dtype=float)
     from _review28_statistics import partial_auc_bootstrap
+
     partial_auroc_rows: List[Dict[str, Any]] = []
     for name, arr in (
         ("zvf_emp", zvf_arr),
@@ -520,7 +517,7 @@ def main() -> int:
         )
 
     # Merge partial-AUROC into the main auroc rows for unified output.
-    for r, p in zip(auroc_rows, partial_auroc_rows):
+    for r, p in zip(auroc_rows, partial_auroc_rows, strict=False):
         if r["predictor"] == p["predictor"]:
             r["partial_auroc_p"] = p["partial_auroc"]
             r["partial_auroc_ci_lo"] = p["ci_lo"]
@@ -566,9 +563,12 @@ def main() -> int:
         emd_rows.append(
             {
                 "predictor": name,
-                "emd_norm": round(max(e_pos, e_neg) if not (
-                    math.isnan(e_pos) and math.isnan(e_neg)
-) else float("nan"), 4),
+                "emd_norm": round(
+                    max(e_pos, e_neg)
+                    if not (math.isnan(e_pos) and math.isnan(e_neg))
+                    else float("nan"),
+                    4,
+                ),
                 "emd_norm_pos": round(e_pos, 4),
                 "emd_norm_neg": round(e_neg, 4),
                 "n_collapse": int(collapse_mask.sum()),
@@ -623,9 +623,7 @@ def main() -> int:
                 "median_lead_steps": round(float(np.median(a)), 2),
                 "iqr_lead_steps_lo": round(float(np.quantile(a, 0.25)), 2),
                 "iqr_lead_steps_hi": round(float(np.quantile(a, 0.75)), 2),
-                "median_first_pass_step": (
-                    round(float(np.median(fp)), 2) if len(fp) else ""
-                ),
+                "median_first_pass_step": (round(float(np.median(fp)), 2) if len(fp) else ""),
                 "share_lead_positive": round(float((a > 0).mean()), 4),
                 "share_no_collapse": round(
                     float(sum(1 for r in rs if r["first_collapse_step"] is None) / len(rs)),
@@ -695,8 +693,7 @@ def main() -> int:
         any_lead = [r for r in lead_summary if r["median_lead_steps"] > 0]
         if any_lead:
             ks = ", ".join(
-                f"{r['kind']}/{r['method']}:{r['median_lead_steps']:+.0f}"
-                for r in any_lead
+                f"{r['kind']}/{r['method']}:{r['median_lead_steps']:+.0f}" for r in any_lead
             )
             print(
                 "  LEAD-TIME: ZVF crossing leads collapse flag in: " + ks,
@@ -705,10 +702,12 @@ def main() -> int:
 
     print("\n  iso-G floor (selected):", flush=True)
     for r in iso_rows:
-        if r["p_difficulty"] in (0.10, 0.30, 0.50, 0.70, 0.90) and r["tau_saturation"] in (0.50, 0.70):
+        if r["p_difficulty"] in (0.10, 0.30, 0.50, 0.70, 0.90) and r["tau_saturation"] in (
+            0.50,
+            0.70,
+        ):
             print(
-                f"    p={r['p_difficulty']:.2f}, tau={r['tau_saturation']:.2f}: "
-                f"G_min={r['g_min']}",
+                f"    p={r['p_difficulty']:.2f}, tau={r['tau_saturation']:.2f}: G_min={r['g_min']}",
                 flush=True,
             )
 

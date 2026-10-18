@@ -159,11 +159,7 @@ def generate_smoke_config() -> dict[str, Any]:
         "portfolio_claim": False,
     }
     config["config_signature"] = _sha256(
-        {
-            key: config[key]
-            for key in config
-            if key != "config_signature"
-        }
+        {key: config[key] for key in config if key != "config_signature"}
     )
     return config
 
@@ -250,7 +246,9 @@ def validate_smoke_config(config: Mapping[str, Any]) -> list[str]:
         except SmokeConfigError as exc:
             errors.append(str(exc))
 
-    if config["save_every_steps"] not in config["sampler_checkpoints"].get("periodic_every_steps", []):
+    if config["save_every_steps"] not in config["sampler_checkpoints"].get(
+        "periodic_every_steps", []
+    ):
         errors.append("sampler_checkpoints.periodic_every_steps must include save_every_steps")
 
     # Stable run gate: W&B must be initialized online before the Tinker client.
@@ -263,7 +261,7 @@ def validate_smoke_config(config: Mapping[str, Any]) -> list[str]:
         if wandb["required_before_tinker"] is not True:
             errors.append("wandb.required_before_tinker must be true")
     if config["run_order"] != ["wandb_init", "tinker_client"]:
-        errors.append("run_order must be [\"wandb_init\", \"tinker_client\"]")
+        errors.append('run_order must be ["wandb_init", "tinker_client"]')
 
     # xLAM sampler checkpoints must be explicit and complete.
     checkpoints = config["sampler_checkpoints"]
@@ -284,10 +282,10 @@ def validate_smoke_config(config: Mapping[str, Any]) -> list[str]:
         else:
             errors.append("required_stages must be a list")
         if tuple(checkpoints.get("required_steps", ())) != EXPECTED_CHECKPOINT_STEPS:
-            errors.append(
-                "required_steps must be [0, save_every_steps, steps]"
-            )
-        if not isinstance(checkpoints.get("periodic_every_steps"), list) or checkpoints["periodic_every_steps"] != [SAVE_EVERY_STEPS]:
+            errors.append("required_steps must be [0, save_every_steps, steps]")
+        if not isinstance(checkpoints.get("periodic_every_steps"), list) or checkpoints[
+            "periodic_every_steps"
+        ] != [SAVE_EVERY_STEPS]:
             errors.append("periodic_every_steps must be [5]")
         visibility = checkpoints.get("allowed_visibility")
         if tuple(visibility or ()) != EXPECTED_CHECKPOINT_VISIBILITY:
@@ -320,8 +318,16 @@ def validate_smoke_config(config: Mapping[str, Any]) -> list[str]:
                 errors.append(f"budget missing required field: {key}")
         for key, expected, message in (
             ("maximum_usd", HARD_CAP_USD, "budget.maximum_usd must preserve $18.00 hard cap"),
-            ("operational_cap_usd", OPERATIONAL_CAP_USD, "budget.operational_cap_usd must preserve $16.50 cap"),
-            ("safety_reserve_usd", SAFETY_RESERVE_USD, "budget.safety_reserve_usd must preserve $1.50 reserve"),
+            (
+                "operational_cap_usd",
+                OPERATIONAL_CAP_USD,
+                "budget.operational_cap_usd must preserve $16.50 cap",
+            ),
+            (
+                "safety_reserve_usd",
+                SAFETY_RESERVE_USD,
+                "budget.safety_reserve_usd must preserve $1.50 reserve",
+            ),
             ("reservation_usd", RESERVATION_USD, "budget.reservation_usd must be exactly $0.50"),
         ):
             try:
@@ -330,7 +336,9 @@ def validate_smoke_config(config: Mapping[str, Any]) -> list[str]:
             except SmokeConfigError as exc:
                 errors.append(str(exc))
 
-    expected_signature = _sha256({key: config[key] for key in ROOT_KEYS if key != "config_signature"})
+    expected_signature = _sha256(
+        {key: config[key] for key in ROOT_KEYS if key != "config_signature"}
+    )
     if config.get("config_signature") != expected_signature:
         errors.append("config_signature is invalid or missing")
 

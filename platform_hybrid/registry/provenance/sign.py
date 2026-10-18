@@ -6,6 +6,7 @@ Use ``keygen --key-dir NEW_DIRECTORY`` to provision a distinct signing identity.
 The signing primitive authenticates JSON; publication additionally requires the
 schema and evidence checks in ``minreport.audit_file``.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -26,8 +27,12 @@ CANONICALIZATION = "python-json-sortkeys-ascii/1.0"
 BACKEND = "ed25519"
 DOMAIN = b"P5-PROVENANCE-SIG/2.0\x00"
 try:
-    from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey, Ed25519PublicKey
+    from cryptography.hazmat.primitives.asymmetric.ed25519 import (
+        Ed25519PrivateKey,
+        Ed25519PublicKey,
+    )
     from cryptography.hazmat.primitives import serialization
+
     HAVE_ED25519 = True
 except ImportError:  # Never downgrade to a MAC when the dependency is absent.
     HAVE_ED25519 = False
@@ -37,7 +42,11 @@ if TYPE_CHECKING:
     from ..json_protocol import canonical_bytes, load_json, strict_json_loads as strict_json_loads
 else:
     try:
-        from ..json_protocol import canonical_bytes, load_json, strict_json_loads as strict_json_loads
+        from ..json_protocol import (
+            canonical_bytes,
+            load_json,
+            strict_json_loads as strict_json_loads,
+        )
     except ImportError:  # Direct script invocation.
         sys.path.insert(0, str(HERE.parent))
         from json_protocol import canonical_bytes, load_json, strict_json_loads as strict_json_loads
@@ -82,11 +91,12 @@ def keygen(force=False, key_dir=None):
     if directory.stat().st_mode & 0o077:
         raise PermissionError("key directory must have mode 0700 before provisioning")
     private = Ed25519PrivateKey.generate()
-    private_raw = private.private_bytes(serialization.Encoding.Raw,
-                                        serialization.PrivateFormat.Raw,
-                                        serialization.NoEncryption())
-    public_raw = private.public_key().public_bytes(serialization.Encoding.Raw,
-                                                   serialization.PublicFormat.Raw)
+    private_raw = private.private_bytes(
+        serialization.Encoding.Raw, serialization.PrivateFormat.Raw, serialization.NoEncryption()
+    )
+    public_raw = private.public_key().public_bytes(
+        serialization.Encoding.Raw, serialization.PublicFormat.Raw
+    )
     fingerprint = key_fingerprint(public_raw)
     archive = directory / (fingerprint.replace(":", "-") + ".pub")
     # Exclusive opens protect against racing writers and existing symlinks. A
@@ -122,8 +132,9 @@ def _ensure_keys(key_dir=None):
     if directory.stat().st_mode & 0o077 or private_path.stat().st_mode & 0o077:
         raise PermissionError("signing requires directory 0700 and private key 0600")
     private = _load_ed_private(key_dir)
-    derived = private.public_key().public_bytes(serialization.Encoding.Raw,
-                                                serialization.PublicFormat.Raw)
+    derived = private.public_key().public_bytes(
+        serialization.Encoding.Raw, serialization.PublicFormat.Raw
+    )
     if derived != _decode_key(public_path):
         raise ValueError("private key does not match the configured public trust anchor")
     return private, derived
@@ -146,8 +157,12 @@ def sign_record(record, key_dir=None):
         "key_id": key_fingerprint(public),
         "digest_sha256": hashlib.sha256(message).hexdigest(),
     }
-    return {"protected": protected,
-            "signature_b64": base64.b64encode(private.sign(_payload(record, protected))).decode("ascii")}
+    return {
+        "protected": protected,
+        "signature_b64": base64.b64encode(private.sign(_payload(record, protected))).decode(
+            "ascii"
+        ),
+    }
 
 
 def verify_record(record, envelope, trusted_key=None, allowed_algorithms=("ed25519",)):
@@ -159,12 +174,19 @@ def verify_record(record, envelope, trusted_key=None, allowed_algorithms=("ed255
             return False
         header = envelope["protected"]
         if type(header) is not dict or set(header) != {
-            "spec", "canonicalization", "algorithm", "key_id", "digest_sha256"
+            "spec",
+            "canonicalization",
+            "algorithm",
+            "key_id",
+            "digest_sha256",
         }:
             return False
-        if (header["spec"] != PROTOCOL or header["canonicalization"] != CANONICALIZATION
-                or header["algorithm"] != "ed25519"
-                or header["algorithm"] not in allowed_algorithms):
+        if (
+            header["spec"] != PROTOCOL
+            or header["canonicalization"] != CANONICALIZATION
+            or header["algorithm"] != "ed25519"
+            or header["algorithm"] not in allowed_algorithms
+        ):
             return False
         public, raw = _load_ed_public(trusted_key)
         if header["key_id"] != key_fingerprint(raw):
@@ -205,8 +227,12 @@ def sign_file(record_path, key_dir=None):
 
 def verify_file(record_path, trusted_key=None, allowed_algorithms=("ed25519",)):
     try:
-        return verify_record(load_json(record_path), load_json(sig_path(record_path)),
-                             trusted_key, allowed_algorithms)
+        return verify_record(
+            load_json(record_path),
+            load_json(sig_path(record_path)),
+            trusted_key,
+            allowed_algorithms,
+        )
     except (ValueError, OSError):
         return False
 

@@ -3,7 +3,6 @@ from __future__ import annotations
 from pathlib import Path
 
 from docx import Document
-from docx.enum.section import WD_SECTION
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
@@ -146,7 +145,9 @@ def add_page_number(paragraph) -> None:
     run._r.extend([fld_char1, instr_text, fld_char2])
 
 
-def set_font(run, size: float, color: RGBColor = INK, bold: bool = False, italic: bool = False) -> None:
+def set_font(
+    run, size: float, color: RGBColor = INK, bold: bool = False, italic: bool = False
+) -> None:
     run.font.name = "Calibri"
     run._element.get_or_add_rPr().rFonts.set(qn("w:ascii"), "Calibri")
     run._element.get_or_add_rPr().rFonts.set(qn("w:hAnsi"), "Calibri")

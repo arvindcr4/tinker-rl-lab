@@ -52,18 +52,18 @@ References (verified):
   - friedman1937simple, pearson1895notes (Spearman rho, permutation null).
   - cohen1988statistical (effect-size bins for power interpretation).
 """
+
 from __future__ import annotations
 
 import json
 import math
-from itertools import combinations
 from pathlib import Path
 
 import matplotlib
 
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt  # noqa: E402
-import numpy as np  # noqa: E402
+import matplotlib.pyplot as plt
+import numpy as np
 from _analysis_common import saturation, write_rows_tsv as _write_tsv, ols
 
 REPO = Path(__file__).resolve().parents[2] / "platform_hybrid"
@@ -72,11 +72,11 @@ RESULTS_DIR = REPO / "experiments" / "results" / "review26_v2"
 FIG_DIR = REPO / "figures" / "review26_v2"
 
 MODELS: dict[str, tuple[str, float, str]] = {
-    "Qwen3.5-4B":            ("scale_gsm8k_qwen3.5-4b.json",      4.0,   "dense"),
-    "Qwen3-8B":              ("scale_gsm8k_qwen3-8b.json",        8.0,   "dense"),
-    "Llama-3.1-8B-Instruct": ("scale_gsm8k_llama-8b-inst.json",   8.0,   "dense"),
-    "DeepSeek-V3.1":         ("frontier_gsm8k_deepseek-v3.1.json", 685.0, "moe"),
-    "Nemotron-120B":         ("frontier_gsm8k_nemotron-120b.json", 120.0, "dense"),
+    "Qwen3.5-4B": ("scale_gsm8k_qwen3.5-4b.json", 4.0, "dense"),
+    "Qwen3-8B": ("scale_gsm8k_qwen3-8b.json", 8.0, "dense"),
+    "Llama-3.1-8B-Instruct": ("scale_gsm8k_llama-8b-inst.json", 8.0, "dense"),
+    "DeepSeek-V3.1": ("frontier_gsm8k_deepseek-v3.1.json", 685.0, "moe"),
+    "Nemotron-120B": ("frontier_gsm8k_nemotron-120b.json", 120.0, "dense"),
 }
 SEED = 1212026
 N_BOOT = 2000
@@ -91,25 +91,37 @@ def fit_one(t: np.ndarray, y: np.ndarray) -> dict:
 
     n = len(y)
     if n < 4:
-        return dict(R_max=float("nan"), lam=float("nan"), t_80=float("nan"),
-                    rmse=float("nan"), r2=float("nan"), lam_at_bound=1)
+        return dict(
+            R_max=float("nan"),
+            lam=float("nan"),
+            t_80=float("nan"),
+            rmse=float("nan"),
+            r2=float("nan"),
+            lam_at_bound=1,
+        )
     try:
-        popt, _ = curve_fit(saturation, t, y,
-                            p0=[float(np.mean(y[-min(5, n):])), 0.1],
-                            bounds=([0.0, 1e-4], [1.05, 10.0]),
-                            maxfev=20000)
+        popt, _ = curve_fit(
+            saturation,
+            t,
+            y,
+            p0=[float(np.mean(y[-min(5, n) :])), 0.1],
+            bounds=([0.0, 1e-4], [1.05, 10.0]),
+            maxfev=20000,
+        )
         r_max, lam = float(popt[0]), float(popt[1])
         pred = saturation(t, r_max, lam)
         resid = y - pred
-        rmse = float(math.sqrt(np.mean(resid ** 2)))
-        ss_res = float(np.sum(resid ** 2))
+        rmse = float(math.sqrt(np.mean(resid**2)))
+        ss_res = float(np.sum(resid**2))
         ss_tot = float(np.sum((y - y.mean()) ** 2))
         r2 = 1.0 - ss_res / ss_tot if ss_tot > 0 else float("nan")
         lam_at_bound = int(lam >= 9.999)
-    except Exception:  # noqa: BLE001
+    except Exception:
         r_max, lam, rmse, r2 = float("nan"), float("nan"), float("nan"), float("nan")
         lam_at_bound = 1
-    t_80 = float(-math.log(0.2) / lam) if (lam and not math.isnan(lam) and lam > 0) else float("nan")
+    t_80 = (
+        float(-math.log(0.2) / lam) if (lam and not math.isnan(lam) and lam > 0) else float("nan")
+    )
     return dict(R_max=r_max, lam=lam, t_80=t_80, rmse=rmse, r2=r2, lam_at_bound=lam_at_bound)
 
 
@@ -147,11 +159,13 @@ def spearman_rho(x: np.ndarray, y: np.ndarray) -> float:
     return float(np.sum((rx - rxm) * (ry - rym)) / den)
 
 
-def _anchors_array(rng: np.random.Generator,
-                   n_anchors: int,
-                   n_steps_min: int = 20,
-                   n_steps_max: int = 30,
-                   log10_n_range: tuple[float, float] = (0.6, 2.84)) -> tuple[np.ndarray, np.ndarray]:
+def _anchors_array(
+    rng: np.random.Generator,
+    n_anchors: int,
+    n_steps_min: int = 20,
+    n_steps_max: int = 30,
+    log10_n_range: tuple[float, float] = (0.6, 2.84),
+) -> tuple[np.ndarray, np.ndarray]:
     """Sample a fresh anchor pool of size n_anchors uniformly in
     log10(params_B) and uniform integer steps in [n_steps_min, n_steps_max].
     Returns (log_n_array, n_steps_array) of length n_anchors.
@@ -161,13 +175,15 @@ def _anchors_array(rng: np.random.Generator,
     return log_n, n_steps
 
 
-def synthetic_replicate(rng: np.random.Generator,
-                        log_n: np.ndarray,
-                        n_steps: np.ndarray,
-                        true_slope: float,
-                        noise_sd: float,
-                        lam_at_bound_frac: float,
-                        lam_max: float = 10.0) -> dict:
+def synthetic_replicate(
+    rng: np.random.Generator,
+    log_n: np.ndarray,
+    n_steps: np.ndarray,
+    true_slope: float,
+    noise_sd: float,
+    lam_at_bound_frac: float,
+    lam_max: float = 10.0,
+) -> dict:
     """Generate one synthetic replication under a planted scaling law
     R_max(N) = 0.85 - true_slope * log10(N / 8)  (capped to [0, 1]),
     with per-step Gaussian noise sd=noise_sd.  A random subset
@@ -193,8 +209,9 @@ def synthetic_replicate(rng: np.random.Generator,
         rmax_obs[i] = rmax_i
         lam_obs[i] = lam_i
         t80_obs[i] = -math.log(0.2) / lam_i
-    return dict(R_max=R_max_true, R_max_obs=rmax_obs,
-                lam=lam_obs, t80=t80_obs, n_steps=n_steps.astype(int))
+    return dict(
+        R_max=R_max_true, R_max_obs=rmax_obs, lam=lam_obs, t80=t80_obs, n_steps=n_steps.astype(int)
+    )
 
 
 def assess_recovery(syn: dict, log_n: np.ndarray) -> tuple[float, float]:
@@ -262,32 +279,58 @@ def main() -> None:
     perm_hi = float(np.quantile(perm_rho, 0.975)) if perm_rho else float("nan")
 
     rows_le: list[list] = []
-    rows_le.append([
-        "spearman_rho(log10N, late_minus_early)", len(log_n_log), f"{rho_obs:.4f}",
-        f"{boot_lo:.4f}", f"{boot_hi:.4f}", n_b,
-        f"{perm_p:.4f}", f"{perm_lo:.4f}", f"{perm_hi:.4f}", N_PERM,
-    ])
+    rows_le.append(
+        [
+            "spearman_rho(log10N, late_minus_early)",
+            len(log_n_log),
+            f"{rho_obs:.4f}",
+            f"{boot_lo:.4f}",
+            f"{boot_hi:.4f}",
+            n_b,
+            f"{perm_p:.4f}",
+            f"{perm_lo:.4f}",
+            f"{perm_hi:.4f}",
+            N_PERM,
+        ]
+    )
     # Auxiliary: a Pearson check too, for completeness.
     if len(log_n_log) >= 3:
         a_p, b_p, se_p = ols(log_n_log, delta_le)
-        rows_le.append([
-            "ols(log10N, late_minus_early)", len(log_n_log),
-            f"{a_p:.4f}", f"{b_p:.4f}", f"{se_p:.4f}",
-            n_b, "n/a", "n/a", "n/a", N_PERM,
-        ])
+        rows_le.append(
+            [
+                "ols(log10N, late_minus_early)",
+                len(log_n_log),
+                f"{a_p:.4f}",
+                f"{b_p:.4f}",
+                f"{se_p:.4f}",
+                n_b,
+                "n/a",
+                "n/a",
+                "n/a",
+                N_PERM,
+            ]
+        )
     _write_tsv(
         RESULTS_DIR / "scaling_law_iter121_late_early.tsv",
-        ["test", "n", "stat_or_intercept", "boot_lo_or_slope",
-         "boot_hi_or_se", "n_boot", "perm_p_or_perm_lo",
-         "perm_lo_or_perm_hi", "perm_hi_or_perm_hi", "n_perm"],
+        [
+            "test",
+            "n",
+            "stat_or_intercept",
+            "boot_lo_or_slope",
+            "boot_hi_or_se",
+            "n_boot",
+            "perm_p_or_perm_lo",
+            "perm_lo_or_perm_hi",
+            "perm_hi_or_perm_hi",
+            "n_perm",
+        ],
         rows_le,
     )
 
     # ---------- (2) Effective-compute scaling axis ----------
-    eff_compute_log = np.array([
-        math.log10(fits[n]["params_B"] * max(fits[n]["n_steps"], 1))
-        for n in fits
-    ], dtype=float)
+    eff_compute_log = np.array(
+        [math.log10(fits[n]["params_B"] * max(fits[n]["n_steps"], 1)) for n in fits], dtype=float
+    )
     metric_names = ["mean_reward", "peak", "var_reward", "R_max", "late_mean"]
     rows_ec: list[list] = []
     for metric in metric_names:
@@ -304,15 +347,32 @@ def main() -> None:
             mean_e = float(np.mean(slopes_ec))
         else:
             lo_e, hi_e, mean_e = float("nan"), float("nan"), float("nan")
-        rows_ec.append([
-            metric, len(vals), f"{a_eff:.6f}", f"{b_eff:.6f}", f"{se_eff:.6f}",
-            f"{mean_e:.6f}", f"{lo_e:.6f}", f"{hi_e:.6f}", n_b_ec,
-        ])
+        rows_ec.append(
+            [
+                metric,
+                len(vals),
+                f"{a_eff:.6f}",
+                f"{b_eff:.6f}",
+                f"{se_eff:.6f}",
+                f"{mean_e:.6f}",
+                f"{lo_e:.6f}",
+                f"{hi_e:.6f}",
+                n_b_ec,
+            ]
+        )
     _write_tsv(
         RESULTS_DIR / "scaling_law_iter121_effective_compute.tsv",
-        ["metric", "n_models", "intercept", "slope_per_log10_NxD",
-         "se_slope", "boot_slope_mean", "boot_slope_lo",
-         "boot_slope_hi", "n_boot"],
+        [
+            "metric",
+            "n_models",
+            "intercept",
+            "slope_per_log10_NxD",
+            "se_slope",
+            "boot_slope_mean",
+            "boot_slope_lo",
+            "boot_slope_hi",
+            "n_boot",
+        ],
         rows_ec,
     )
 
@@ -337,11 +397,16 @@ def main() -> None:
             successes = 0
             r2_list: list[float] = []
             slope_hat_list: list[float] = []
-            for rep in range(N_SYNTH_REPS):
+            for _rep in range(N_SYNTH_REPS):
                 log_n_s, n_steps_s = _anchors_array(rng, n_anc)
-                syn = synthetic_replicate(rng, log_n_s, n_steps_s,
-                                          true_slope=slope, noise_sd=noise_sd,
-                                          lam_at_bound_frac=lam_at_bound_frac)
+                syn = synthetic_replicate(
+                    rng,
+                    log_n_s,
+                    n_steps_s,
+                    true_slope=slope,
+                    noise_sd=noise_sd,
+                    lam_at_bound_frac=lam_at_bound_frac,
+                )
                 shat, r2 = assess_recovery(syn, log_n_s)
                 slope_hat_list.append(shat)
                 r2_list.append(r2)
@@ -350,23 +415,46 @@ def main() -> None:
             recovery = successes / N_SYNTH_REPS
             mean_r2 = float(np.mean(r2_list)) if r2_list else float("nan")
             mean_sh = float(np.mean(slope_hat_list)) if slope_hat_list else float("nan")
-            sd_sh = float(np.std(slope_hat_list, ddof=1)) if len(slope_hat_list) > 1 else float("nan")
-            rows_rec.append([
-                n_anc, slope, recovery, N_SYNTH_REPS, mean_r2, mean_sh, sd_sh,
-            ])
-            rows_pc.append([
-                n_anc, slope, recovery, mean_sh, sd_sh, mean_r2,
-            ])
+            sd_sh = (
+                float(np.std(slope_hat_list, ddof=1)) if len(slope_hat_list) > 1 else float("nan")
+            )
+            rows_rec.append(
+                [
+                    n_anc,
+                    slope,
+                    recovery,
+                    N_SYNTH_REPS,
+                    mean_r2,
+                    mean_sh,
+                    sd_sh,
+                ]
+            )
+            rows_pc.append(
+                [
+                    n_anc,
+                    slope,
+                    recovery,
+                    mean_sh,
+                    sd_sh,
+                    mean_r2,
+                ]
+            )
     _write_tsv(
         RESULTS_DIR / "scaling_law_iter121_synthetic_recovery.tsv",
-        ["n_anchors", "true_slope", "recovery_rate", "n_reps",
-         "mean_r2", "mean_slope_hat", "sd_slope_hat"],
+        [
+            "n_anchors",
+            "true_slope",
+            "recovery_rate",
+            "n_reps",
+            "mean_r2",
+            "mean_slope_hat",
+            "sd_slope_hat",
+        ],
         rows_rec,
     )
     _write_tsv(
         RESULTS_DIR / "scaling_law_iter121_power_curve.tsv",
-        ["n_anchors", "true_slope", "recovery_rate", "mean_slope_hat",
-         "sd_slope_hat", "mean_r2"],
+        ["n_anchors", "true_slope", "recovery_rate", "mean_slope_hat", "sd_slope_hat", "mean_r2"],
         rows_pc,
     )
 
@@ -375,19 +463,30 @@ def main() -> None:
         iter=121,
         pillar="P1-ScalingLaws",
         n_anchors=len(fits),
-        anchors=[dict(name=n, params_B=fit["params_B"], n_steps=fit["n_steps"],
-                      mean_reward=fit["mean_reward"], peak=fit["peak"],
-                      R_max=fit["R_max"], lambda_=fit["lam"],
-                      t_80=fit["t_80"], late_mean=fit["late_mean"],
-                      early_mean=fit["early_mean"],
-                      delta_late_minus_early=fit["delta_late_minus_early"],
-                      lam_at_bound=bool(fit["lam_at_bound"]))
-                 for n, fit in fits.items()],
+        anchors=[
+            dict(
+                name=n,
+                params_B=fit["params_B"],
+                n_steps=fit["n_steps"],
+                mean_reward=fit["mean_reward"],
+                peak=fit["peak"],
+                R_max=fit["R_max"],
+                lambda_=fit["lam"],
+                t_80=fit["t_80"],
+                late_mean=fit["late_mean"],
+                early_mean=fit["early_mean"],
+                delta_late_minus_early=fit["delta_late_minus_early"],
+                lam_at_bound=bool(fit["lam_at_bound"]),
+            )
+            for n, fit in fits.items()
+        ],
         late_early_spearman=dict(
             rho_obs=rho_obs,
-            boot_ci=[boot_lo, boot_hi], n_boot=n_b,
+            boot_ci=[boot_lo, boot_hi],
+            n_boot=n_b,
             perm_p_two_sided=perm_p,
-            perm_null_ci=[perm_lo, perm_hi], n_perm=N_PERM,
+            perm_null_ci=[perm_lo, perm_hi],
+            n_perm=N_PERM,
         ),
         effective_compute=dict(
             metric_names=metric_names,
@@ -409,8 +508,7 @@ def main() -> None:
             "identifiability. Historical fixed conclusions are superseded."
         ),
     )
-    (RESULTS_DIR / "scaling_law_iter121_meta.json").write_text(
-        json.dumps(meta, indent=2))
+    (RESULTS_DIR / "scaling_law_iter121_meta.json").write_text(json.dumps(meta, indent=2))
     print(f"wrote {RESULTS_DIR / 'scaling_law_iter121_meta.json'}")
 
     # ---------- Figure: 4-panel ----------
@@ -420,21 +518,23 @@ def main() -> None:
 
     # (0,0) Late-early vs log10(N) scatter + Spearman rho + perm null.
     ax_le.scatter(log_n_log, delta_le, s=100, c="tab:blue", edgecolor="black", zorder=3)
-    for x_v, y_v, nm in zip(log_n_log, delta_le, fits):
-        ax_le.annotate(nm, (x_v, y_v), fontsize=7, xytext=(5, 5),
-                       textcoords="offset points")
+    for x_v, y_v, nm in zip(log_n_log, delta_le, fits, strict=False):
+        ax_le.annotate(nm, (x_v, y_v), fontsize=7, xytext=(5, 5), textcoords="offset points")
     # Permutation null 95% CI.
     if perm_lo == perm_lo:  # not nan
-        ax_le.axhspan(perm_lo, perm_hi, color="gray", alpha=0.2,
-                      label=f"perm null 95% CI [{perm_lo:.2f},{perm_hi:.2f}]")
+        ax_le.axhspan(
+            perm_lo,
+            perm_hi,
+            color="gray",
+            alpha=0.2,
+            label=f"perm null 95% CI [{perm_lo:.2f},{perm_hi:.2f}]",
+        )
     a_le, b_le, _ = ols(log_n_log, delta_le)
     xs = np.linspace(log_n_log.min(), log_n_log.max(), 50)
-    ax_le.plot(xs, a_le + b_le * xs, "r--",
-               label=f"OLS slope={b_le:+.3f}")
+    ax_le.plot(xs, a_le + b_le * xs, "r--", label=f"OLS slope={b_le:+.3f}")
     ax_le.set_xlabel("log10(params_B)")
     ax_le.set_ylabel(r"$\Delta_{\mathrm{late-early}}$ reward")
-    ax_le.set_title(f"(1) Late-early vs log N | Spearman rho={rho_obs:+.3f}, "
-                    f"perm p={perm_p:.3f}")
+    ax_le.set_title(f"(1) Late-early vs log N | Spearman rho={rho_obs:+.3f}, perm p={perm_p:.3f}")
     ax_le.legend(fontsize=7, loc="lower right")
 
     # (0,1) Effective-compute axis: OLS slopes + bootstrap CI for each metric.
@@ -444,10 +544,14 @@ def main() -> None:
     lo_per = [float(r[6]) for r in rows_ec]
     hi_per = [float(r[7]) for r in rows_ec]
     x = np.arange(len(metric_short))
-    ax_ec.errorbar(x, slopes_per,
-                   yerr=[np.array(slopes_per) - np.array(lo_per),
-                         np.array(hi_per) - np.array(slopes_per)],
-                   fmt="o", capsize=5, color="tab:purple")
+    ax_ec.errorbar(
+        x,
+        slopes_per,
+        yerr=[np.array(slopes_per) - np.array(lo_per), np.array(hi_per) - np.array(slopes_per)],
+        fmt="o",
+        capsize=5,
+        color="tab:purple",
+    )
     ax_ec.axhline(0.0, color="red", linestyle=":")
     ax_ec.set_xticks(x)
     ax_ec.set_xticklabels(metric_short, fontsize=9)
@@ -463,8 +567,7 @@ def main() -> None:
                 if int(r[0]) == n_a and float(r[1]) == sl:
                     rec_grid[i, j] = float(r[2])
                     break
-    im = ax_rec.imshow(rec_grid, aspect="auto", origin="lower", cmap="viridis",
-                       vmin=0, vmax=1)
+    im = ax_rec.imshow(rec_grid, aspect="auto", origin="lower", cmap="viridis", vmin=0, vmax=1)
     ax_rec.set_xticks(range(len(SLOPES)))
     ax_rec.set_xticklabels([f"{s:.3f}" for s in SLOPES], fontsize=9)
     ax_rec.set_yticks(range(len(N_ANCHORS_GRID)))
@@ -474,9 +577,15 @@ def main() -> None:
     ax_rec.set_title("(3) Synthetic recovery rate (R^2>0.5)")
     for i in range(len(N_ANCHORS_GRID)):
         for j in range(len(SLOPES)):
-            ax_rec.text(j, i, f"{rec_grid[i,j]:.2f}", ha="center", va="center",
-                        color="white" if rec_grid[i,j] < 0.5 else "black",
-                        fontsize=8)
+            ax_rec.text(
+                j,
+                i,
+                f"{rec_grid[i, j]:.2f}",
+                ha="center",
+                va="center",
+                color="white" if rec_grid[i, j] < 0.5 else "black",
+                fontsize=8,
+            )
     fig.colorbar(im, ax=ax_rec, shrink=0.85)
 
     # (1,1) Power curve: recovery rate vs n_anchors, one line per slope.
@@ -491,12 +600,11 @@ def main() -> None:
         order = np.argsort(xs2)
         xs2 = np.array(xs2)[order]
         ys = np.array(ys)[order]
-        ax_pc.plot(xs2, ys, "o-", color=cmap_p(j / max(len(SLOPES) - 1, 1)),
-                   label=f"slope={sl:.3f}")
-    ax_pc.axhline(0.5, color="red", linestyle=":",
-                  label="50% recovery threshold")
-    ax_pc.axvline(5, color="black", linestyle="--", alpha=0.5,
-                  label="current n_anchors=5")
+        ax_pc.plot(
+            xs2, ys, "o-", color=cmap_p(j / max(len(SLOPES) - 1, 1)), label=f"slope={sl:.3f}"
+        )
+    ax_pc.axhline(0.5, color="red", linestyle=":", label="50% recovery threshold")
+    ax_pc.axvline(5, color="black", linestyle="--", alpha=0.5, label="current n_anchors=5")
     ax_pc.set_xscale("log")
     ax_pc.set_xlabel("n_anchors (log scale)")
     ax_pc.set_ylabel("Recovery rate")
@@ -518,17 +626,22 @@ def main() -> None:
 
     # ---------- Console digest ----------
     print("\n=== iter 121 Pillar 1 summary ===")
-    print(f"n_anchors = {len(fits)} | noise_sd (empirical) = {noise_sd:.4f} | "
-          f"lam_at_bound_frac = {lam_at_bound_frac:.2f}")
-    print(f"Spearman rho(log10N, late-early) = {rho_obs:+.4f} "
-          f"perm p = {perm_p:.4f}")
+    print(
+        f"n_anchors = {len(fits)} | noise_sd (empirical) = {noise_sd:.4f} | "
+        f"lam_at_bound_frac = {lam_at_bound_frac:.2f}"
+    )
+    print(f"Spearman rho(log10N, late-early) = {rho_obs:+.4f} perm p = {perm_p:.4f}")
     for r in rows_ec:
-        print(f"  {r[0]:14s} slope_NxD={float(r[3]):+.4f} "
-              f"95%CI=[{float(r[6]):+.4f},{float(r[7]):+.4f}]")
+        print(
+            f"  {r[0]:14s} slope_NxD={float(r[3]):+.4f} "
+            f"95%CI=[{float(r[6]):+.4f},{float(r[7]):+.4f}]"
+        )
     print("\nSynthetic recovery table (R^2>=0.5):")
     for r in rows_rec:
-        print(f"  n_anchors={int(r[0]):2d} slope={float(r[1]):.3f} "
-              f"recovery={float(r[2]):.2f} mean_R2={float(r[4]):.3f}")
+        print(
+            f"  n_anchors={int(r[0]):2d} slope={float(r[1]):.3f} "
+            f"recovery={float(r[2]):.2f} mean_R2={float(r[4]):.3f}"
+        )
 
 
 if __name__ == "__main__":

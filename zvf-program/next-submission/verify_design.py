@@ -35,8 +35,29 @@ EXPECTED_COURSE_FILES = {
 
 
 EXPECTED_SEEDS = [
-    211, 223, 227, 229, 233, 239, 241, 251, 257, 263, 269, 271, 277, 281, 283,
-    293, 307, 311, 313, 317, 331, 337, 347,
+    211,
+    223,
+    227,
+    229,
+    233,
+    239,
+    241,
+    251,
+    257,
+    263,
+    269,
+    271,
+    277,
+    281,
+    283,
+    293,
+    307,
+    311,
+    313,
+    317,
+    331,
+    337,
+    347,
 ]
 EXPECTED_SEED_24_RESERVE = 349
 EXPECTED_FIXED_COMPONENTS = [
@@ -186,9 +207,7 @@ def canonical_protocol_sha256(protocol: dict[str, Any]) -> str:
     return hashlib.sha256(text.encode("utf-8")).hexdigest()
 
 
-def expected_planning_seed_count(
-    power: dict[str, Any], power_impl: Any
-) -> tuple[int, int]:
+def expected_planning_seed_count(power: dict[str, Any], power_impl: Any) -> tuple[int, int]:
     alpha = float(power["planning_alpha_worst_case"])
     target_power = float(power["target_power"])
     sd = float(power["planning_sd"])
@@ -284,7 +303,8 @@ def verify_contract(
     )
     hardening_amendment = load_json(hardening_amendment_path)
     require(
-        hardening_amendment.get("timing", {}).get("confirmatory_rows_completed_before_amendment") == 0
+        hardening_amendment.get("timing", {}).get("confirmatory_rows_completed_before_amendment")
+        == 0
         and hardening_amendment.get("timing", {}).get("confirmatory_outcomes_inspected") is False,
         "confirmatory-hardening amendment is not prospective",
     )
@@ -327,9 +347,9 @@ def verify_contract(
         "seam-verification amendment window block drift",
     )
     require(
-        seam_amendment.get("change", {}).get("gate_unchanged", {}).get(
-            "require_live_mixed_reward_optimizer_update_per_cell"
-        )
+        seam_amendment.get("change", {})
+        .get("gate_unchanged", {})
+        .get("require_live_mixed_reward_optimizer_update_per_cell")
         is True,
         "seam-verification amendment relaxes the confirmatory execution gate",
     )

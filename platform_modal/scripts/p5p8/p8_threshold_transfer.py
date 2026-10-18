@@ -17,6 +17,7 @@ platform_hybrid/experiments/results/p5p8/p8_threshold_transfer.tsv          (per
 platform_hybrid/experiments/results/p5p8/p8_threshold_transfer_boot.tsv    (per cell CI)
 platform_hybrid/experiments/results/p5p8/p8_threshold_transfer_summary.json
 """
+
 from __future__ import annotations
 import json
 from pathlib import Path
@@ -32,11 +33,13 @@ OUT.mkdir(parents=True, exist_ok=True)
 
 V20 = [f"V{i}" for i in range(1, 21)]
 V_AGG = ["V_mean", "V_std", "V_max", "V_min"]
-RATES = [("release", None),  # full positive rate 1.44%
-         ("1.00%", 0.01),
-         ("0.50%", 0.005),
-         ("0.10%", 0.001),
-         ("0.05%", 0.0005)]
+RATES = [
+    ("release", None),  # full positive rate 1.44%
+    ("1.00%", 0.01),
+    ("0.50%", 0.005),
+    ("0.10%", 0.001),
+    ("0.05%", 0.0005),
+]
 RHOS = [10, 50, 100, 200, 500]
 C_INV = 0.5  # canonical alert-investigation cost, USD/alert
 C_SENSE = 0.0035  # USD/dec for sensor feature set (24full, 4sensor)
@@ -47,10 +50,16 @@ TREE_SEED = 42
 
 def fit_tree(X, y, seed=TREE_SEED):
     clf = xgb.XGBClassifier(
-        n_estimators=200, max_depth=4, learning_rate=0.1,
-        subsample=0.8, colsample_bytree=0.8,
-        objective="binary:logistic", eval_metric="auc",
-        tree_method="hist", random_state=seed, n_jobs=4,
+        n_estimators=200,
+        max_depth=4,
+        learning_rate=0.1,
+        subsample=0.8,
+        colsample_bytree=0.8,
+        objective="binary:logistic",
+        eval_metric="auc",
+        tree_method="hist",
+        random_state=seed,
+        n_jobs=4,
     )
     clf.fit(X, y)
     return clf
@@ -65,12 +74,15 @@ def downsample_pos(df: pd.DataFrame, target_rate: float, rng: np.random.Generato
     n_keep_pos = int(round(target_rate * len(neg) / (1.0 - target_rate)))
     n_keep_pos = min(n_keep_pos, len(pos))
     pos_sub = pos.sample(n=n_keep_pos, random_state=int(rng.integers(0, 2**31 - 1)))
-    out = pd.concat([pos_sub, neg], ignore_index=True).sample(frac=1.0, random_state=int(rng.integers(0, 2**31 - 1)))
+    out = pd.concat([pos_sub, neg], ignore_index=True).sample(
+        frac=1.0, random_state=int(rng.integers(0, 2**31 - 1))
+    )
     return out.reset_index(drop=True)
 
 
-def cost_at_threshold(scores: np.ndarray, y: np.ndarray, tau: float,
-                      L: float, c_inv: float, c_sense: float) -> float:
+def cost_at_threshold(
+    scores: np.ndarray, y: np.ndarray, tau: float, L: float, c_inv: float, c_sense: float
+) -> float:
     """Expected cost per decision: FN·L + FP·c_inv + c_sense (constant per row)."""
     alert = (scores >= tau).astype(np.int32)
     fn = int(((alert == 0) & (y == 1)).sum())
@@ -79,8 +91,9 @@ def cost_at_threshold(scores: np.ndarray, y: np.ndarray, tau: float,
     return (fn * L + fp * c_inv) / n + c_sense
 
 
-def find_tau_star(scores: np.ndarray, y: np.ndarray, L: float, c_inv: float,
-                  c_sense: float, taus: np.ndarray) -> tuple[float, float]:
+def find_tau_star(
+    scores: np.ndarray, y: np.ndarray, L: float, c_inv: float, c_sense: float, taus: np.ndarray
+) -> tuple[float, float]:
     """Grid search over taus for the cost-minimising threshold."""
     costs = np.array([cost_at_threshold(scores, y, t, L, c_inv, c_sense) for t in taus])
     idx = int(np.argmin(costs))
@@ -101,8 +114,16 @@ def main():
 
     for rate_label, target_rate in RATES:
         # Build the downsampled train and test sets
-        df_tr = downsample_pos(df_tr_full, target_rate, rng) if target_rate is not None else df_tr_full.copy()
-        df_te = downsample_pos(df_te_full, target_rate, rng) if target_rate is not None else df_te_full.copy()
+        df_tr = (
+            downsample_pos(df_tr_full, target_rate, rng)
+            if target_rate is not None
+            else df_tr_full.copy()
+        )
+        df_te = (
+            downsample_pos(df_te_full, target_rate, rng)
+            if target_rate is not None
+            else df_te_full.copy()
+        )
         actual_rate_tr = float(df_tr["Class"].mean())
         actual_rate_te = float(df_te["Class"].mean())
 
@@ -130,63 +151,77 @@ def main():
         for rho in RHOS:
             L = rho * C_INV
             for model_name, s_tr, s_te, c_sense in [
-                ("XGB-20raw",  s_tr_20, s_te_20, 0.0),
+                ("XGB-20raw", s_tr_20, s_te_20, 0.0),
                 ("XGB-24full", s_tr_24, s_te_24, C_SENSE),
-                ("XGB-4sensor", s_tr_4,  s_te_4,  C_SENSE),
+                ("XGB-4sensor", s_tr_4, s_te_4, C_SENSE),
             ]:
                 tau_star_tr, cost_tr = find_tau_star(s_tr, y_tr_sub, L, C_INV, c_sense, taus)
                 tau_star_te, cost_te = find_tau_star(s_te, y_te_sub, L, C_INV, c_sense, taus)
                 # Apply train-derived tau on test
-                cost_te_at_tau_tr = cost_at_threshold(s_te, y_te_sub, tau_star_tr, L, C_INV, c_sense)
+                cost_te_at_tau_tr = cost_at_threshold(
+                    s_te, y_te_sub, tau_star_tr, L, C_INV, c_sense
+                )
                 transfer_gap = cost_te_at_tau_tr - cost_te
 
                 # Paired bootstrap CI on transfer gap (resample test indices)
                 gaps = np.empty(N_BOOT, dtype=np.float64)
                 for b in range(N_BOOT):
                     idx = rng.integers(0, n_te_sub, size=n_te_sub)
-                    cost_b_at_tau_tr = cost_at_threshold(s_te[idx], y_te_sub[idx], tau_star_tr, L, C_INV, c_sense)
-                    tau_b_star, cost_b_te = find_tau_star(s_te[idx], y_te_sub[idx], L, C_INV, c_sense, taus)
+                    cost_b_at_tau_tr = cost_at_threshold(
+                        s_te[idx], y_te_sub[idx], tau_star_tr, L, C_INV, c_sense
+                    )
+                    tau_b_star, cost_b_te = find_tau_star(
+                        s_te[idx], y_te_sub[idx], L, C_INV, c_sense, taus
+                    )
                     gaps[b] = cost_b_at_tau_tr - cost_b_te
 
                 lo, hi = float(np.quantile(gaps, 0.025)), float(np.quantile(gaps, 0.975))
                 excl0 = bool(lo > 0.0)
 
-                rows.append({
-                    "rate_label": rate_label,
-                    "target_rate": target_rate if target_rate is not None else actual_rate_tr,
-                    "actual_rate_train": actual_rate_tr,
-                    "actual_rate_test": actual_rate_te,
-                    "rho": rho,
-                    "L_usd": L,
-                    "model": model_name,
-                    "tau_star_train": tau_star_tr,
-                    "tau_star_test": tau_star_te,
-                    "cost_train_at_tau_star": cost_tr,
-                    "cost_test_at_tau_star_test": cost_te,
-                    "cost_test_at_tau_star_train": cost_te_at_tau_tr,
-                    "transfer_gap_usd_per_dec": float(transfer_gap),
-                    "transfer_gap_rel_pct": float(100.0 * transfer_gap / cost_te) if cost_te > 0 else float("nan"),
-                    "n_train": int(len(y_tr_sub)),
-                    "n_test": int(len(y_te_sub)),
-                })
-                boot_rows.append({
-                    "rate_label": rate_label,
-                    "rho": rho,
-                    "model": model_name,
-                    "n_boot": N_BOOT,
-                    "mean": float(gaps.mean()),
-                    "ci_lo": lo,
-                    "ci_hi": hi,
-                    "excludes_zero": "yes" if excl0 else "no",
-                    "summary": f"{gaps.mean():+.5f} [{lo:+.5f}, {hi:+.5f}]",
-                })
+                rows.append(
+                    {
+                        "rate_label": rate_label,
+                        "target_rate": target_rate if target_rate is not None else actual_rate_tr,
+                        "actual_rate_train": actual_rate_tr,
+                        "actual_rate_test": actual_rate_te,
+                        "rho": rho,
+                        "L_usd": L,
+                        "model": model_name,
+                        "tau_star_train": tau_star_tr,
+                        "tau_star_test": tau_star_te,
+                        "cost_train_at_tau_star": cost_tr,
+                        "cost_test_at_tau_star_test": cost_te,
+                        "cost_test_at_tau_star_train": cost_te_at_tau_tr,
+                        "transfer_gap_usd_per_dec": float(transfer_gap),
+                        "transfer_gap_rel_pct": float(100.0 * transfer_gap / cost_te)
+                        if cost_te > 0
+                        else float("nan"),
+                        "n_train": int(len(y_tr_sub)),
+                        "n_test": int(len(y_te_sub)),
+                    }
+                )
+                boot_rows.append(
+                    {
+                        "rate_label": rate_label,
+                        "rho": rho,
+                        "model": model_name,
+                        "n_boot": N_BOOT,
+                        "mean": float(gaps.mean()),
+                        "ci_lo": lo,
+                        "ci_hi": hi,
+                        "excludes_zero": "yes" if excl0 else "no",
+                        "summary": f"{gaps.mean():+.5f} [{lo:+.5f}, {hi:+.5f}]",
+                    }
+                )
 
         print(f"rate={rate_label} done")
 
     df = pd.DataFrame(rows)
     df_boot = pd.DataFrame(boot_rows)
     df.to_csv(OUT / "p8_threshold_transfer.tsv", sep="\t", index=False, float_format="%.6f")
-    df_boot.to_csv(OUT / "p8_threshold_transfer_boot.tsv", sep="\t", index=False, float_format="%.6f")
+    df_boot.to_csv(
+        OUT / "p8_threshold_transfer_boot.tsv", sep="\t", index=False, float_format="%.6f"
+    )
 
     # Per-model summary at canonical ρ=100 AND ρ=500 (sensitivity)
     per_model = {"rho100": {}, "rho500": {}}
@@ -239,7 +274,18 @@ def main():
         "per_model_at_rho100_with_ci": per_model_ci,
         "per_rho_overall": per_rho,
         "headline": {
-            "current_result": {rk: {m: {"mean": v["mean"], "ci_lo": v["ci_lo"], "ci_hi": v["ci_hi"], "excludes_zero": v["excludes_zero"]} for m, v in records.items()} for rk, records in per_model_ci.items()},
+            "current_result": {
+                rk: {
+                    m: {
+                        "mean": v["mean"],
+                        "ci_lo": v["ci_lo"],
+                        "ci_hi": v["ci_hi"],
+                        "excludes_zero": v["excludes_zero"],
+                    }
+                    for m, v in records.items()
+                }
+                for rk, records in per_model_ci.items()
+            },
         },
     }
     with open(OUT / "p8_threshold_transfer_summary.json", "w") as fp:
@@ -247,24 +293,26 @@ def main():
 
     print("\nPer-model mean transfer gap at canonical ρ=100 (USD/dec):")
     for m, v in per_model["rho100"].items():
-        print(f"  {m:12s} mean={v['mean_transfer_gap_usd_per_dec']:+.5f} "
-              f"max={v['max_transfer_gap_usd_per_dec']:+.5f} "
-              f"cells_pos={v['cells_with_positive_gap']}/5")
+        print(
+            f"  {m:12s} mean={v['mean_transfer_gap_usd_per_dec']:+.5f} "
+            f"max={v['max_transfer_gap_usd_per_dec']:+.5f} "
+            f"cells_pos={v['cells_with_positive_gap']}/5"
+        )
     print("\nPer-model mean transfer gap at ρ=500 (USD/dec):")
     for m, v in per_model["rho500"].items():
-        print(f"  {m:12s} mean={v['mean_transfer_gap_usd_per_dec']:+.5f} "
-              f"max={v['max_transfer_gap_usd_per_dec']:+.5f} "
-              f"cells_pos={v['cells_with_positive_gap']}/5")
+        print(
+            f"  {m:12s} mean={v['mean_transfer_gap_usd_per_dec']:+.5f} "
+            f"max={v['max_transfer_gap_usd_per_dec']:+.5f} "
+            f"cells_pos={v['cells_with_positive_gap']}/5"
+        )
     print("\nWith bootstrap CI (per-model mean at ρ=100, 400 resamples):")
     for m, v in per_model_ci["rho100"].items():
         excl = "EXCL0" if v["excludes_zero"] else "incl0"
-        print(f"  {m:12s} mean={v['mean']:+.5f} "
-              f"[{v['ci_lo']:+.5f}, {v['ci_hi']:+.5f}] {excl}")
+        print(f"  {m:12s} mean={v['mean']:+.5f} [{v['ci_lo']:+.5f}, {v['ci_hi']:+.5f}] {excl}")
     print("\nWith bootstrap CI (per-model mean at ρ=500, 400 resamples):")
     for m, v in per_model_ci["rho500"].items():
         excl = "EXCL0" if v["excludes_zero"] else "incl0"
-        print(f"  {m:12s} mean={v['mean']:+.5f} "
-              f"[{v['ci_lo']:+.5f}, {v['ci_hi']:+.5f}] {excl}")
+        print(f"  {m:12s} mean={v['mean']:+.5f} [{v['ci_lo']:+.5f}, {v['ci_hi']:+.5f}] {excl}")
 
     # Figure is produced by the companion script p8_threshold_transfer_fig.py
 

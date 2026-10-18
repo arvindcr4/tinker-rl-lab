@@ -21,18 +21,18 @@ from trl import SFTTrainer, SFTConfig
 # ────────────────────────────────────────────────────────────
 # 2. CONFIG
 # ────────────────────────────────────────────────────────────
-MODEL_ID     = "Qwen/Qwen2.5-0.5B-Instruct"   
-                                               
-OUTPUT_DIR   = "./qwen25-tool-lora"
-MAX_SEQ_LEN  = 1024
-LORA_RANK    = 16
-LORA_ALPHA   = 32
+MODEL_ID = "Qwen/Qwen2.5-0.5B-Instruct"
+
+OUTPUT_DIR = "./qwen25-tool-lora"
+MAX_SEQ_LEN = 1024
+LORA_RANK = 16
+LORA_ALPHA = 32
 LORA_DROPOUT = 0.05
 TRAIN_EPOCHS = 3
-BATCH_SIZE   = 2
-GRAD_ACCUM   = 4
-LR           = 2e-4
-USE_4BIT     = True    
+BATCH_SIZE = 2
+GRAD_ACCUM = 4
+LR = 2e-4
+USE_4BIT = True
 
 # ────────────────────────────────────────────────────────────
 # 3. SYNTHETIC TOOL-CALL DATASET
@@ -60,7 +60,10 @@ RAW_EXAMPLES = [
     },
     {
         "user": "What's the weather in New York in Fahrenheit?",
-        "tool_call": {"tool": "get_weather", "arguments": {"city": "New York", "units": "fahrenheit"}},
+        "tool_call": {
+            "tool": "get_weather",
+            "arguments": {"city": "New York", "units": "fahrenheit"},
+        },
         "tool_result": {"temperature": 75, "condition": "Clear", "humidity": "45%"},
         "assistant": "New York is currently 75F with clear skies and 45% humidity.",
     },
@@ -73,20 +76,47 @@ RAW_EXAMPLES = [
     # Web search
     {
         "user": "Search for the latest news on quantum computing.",
-        "tool_call": {"tool": "search_web", "arguments": {"query": "latest news quantum computing", "max_results": 3}},
-        "tool_result": {"results": ["IBM unveils 1000-qubit processor", "Google claims quantum supremacy milestone", "Quantum computing startups raise record funding"]},
+        "tool_call": {
+            "tool": "search_web",
+            "arguments": {"query": "latest news quantum computing", "max_results": 3},
+        },
+        "tool_result": {
+            "results": [
+                "IBM unveils 1000-qubit processor",
+                "Google claims quantum supremacy milestone",
+                "Quantum computing startups raise record funding",
+            ]
+        },
         "assistant": "Latest quantum computing headlines:\n1. IBM unveiled a 1000-qubit processor.\n2. Google announced a new quantum supremacy milestone.\n3. Quantum computing startups are raising record funding.",
     },
     {
         "user": "Find me some Python tutorials for beginners.",
-        "tool_call": {"tool": "search_web", "arguments": {"query": "Python tutorials for beginners", "max_results": 3}},
-        "tool_result": {"results": ["Official Python docs tutorial", "Real Python beginner guide", "freeCodeCamp Python course"]},
+        "tool_call": {
+            "tool": "search_web",
+            "arguments": {"query": "Python tutorials for beginners", "max_results": 3},
+        },
+        "tool_result": {
+            "results": [
+                "Official Python docs tutorial",
+                "Real Python beginner guide",
+                "freeCodeCamp Python course",
+            ]
+        },
         "assistant": "Great resources for learning Python:\n1. Official Python docs tutorial\n2. Real Python beginner guide\n3. freeCodeCamp Python course",
     },
     {
         "user": "Search for recent AI research papers.",
-        "tool_call": {"tool": "search_web", "arguments": {"query": "recent AI research papers 2024", "max_results": 3}},
-        "tool_result": {"results": ["Attention follow-up paper", "LLM scaling laws revisited", "Multimodal AI advances"]},
+        "tool_call": {
+            "tool": "search_web",
+            "arguments": {"query": "recent AI research papers 2024", "max_results": 3},
+        },
+        "tool_result": {
+            "results": [
+                "Attention follow-up paper",
+                "LLM scaling laws revisited",
+                "Multimodal AI advances",
+            ]
+        },
         "assistant": "Recent AI research highlights:\n1. Follow-up work on transformer attention.\n2. New findings on LLM scaling laws.\n3. Advances in multimodal AI.",
     },
     # Calculator
@@ -138,15 +168,13 @@ RAW_EXAMPLES = [
 
 def build_chat_text(example, tokenizer):
     messages = [
-        {"role": "system",    "content": SYSTEM_PROMPT},
-        {"role": "user",      "content": example["user"]},
+        {"role": "system", "content": SYSTEM_PROMPT},
+        {"role": "user", "content": example["user"]},
         {"role": "assistant", "content": json.dumps(example["tool_call"])},
-        {"role": "tool",      "content": json.dumps(example["tool_result"])},
+        {"role": "tool", "content": json.dumps(example["tool_result"])},
         {"role": "assistant", "content": example["assistant"]},
     ]
-    return tokenizer.apply_chat_template(
-        messages, tokenize=False, add_generation_prompt=False
-    )
+    return tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=False)
 
 
 # ────────────────────────────────────────────────────────────
@@ -157,7 +185,7 @@ tokenizer = AutoTokenizer.from_pretrained(MODEL_ID, trust_remote_code=True)
 tokenizer.pad_token = tokenizer.eos_token
 tokenizer.padding_side = "right"
 
-texts   = [build_chat_text(ex, tokenizer) for ex in RAW_EXAMPLES]
+texts = [build_chat_text(ex, tokenizer) for ex in RAW_EXAMPLES]
 dataset = Dataset.from_dict({"text": texts})
 dataset = dataset.train_test_split(test_size=0.15, seed=42)
 print(f"Train samples: {len(dataset['train'])}  |  Eval samples: {len(dataset['test'])}")
@@ -166,12 +194,16 @@ print(f"Train samples: {len(dataset['train'])}  |  Eval samples: {len(dataset['t
 # 5. MODEL
 # ────────────────────────────────────────────────────────────
 print("Loading model ...")
-bnb_config = BitsAndBytesConfig(
-    load_in_4bit=True,
-    bnb_4bit_quant_type="nf4",
-    bnb_4bit_compute_dtype=torch.bfloat16,
-    bnb_4bit_use_double_quant=True,
-) if USE_4BIT else None
+bnb_config = (
+    BitsAndBytesConfig(
+        load_in_4bit=True,
+        bnb_4bit_quant_type="nf4",
+        bnb_4bit_compute_dtype=torch.bfloat16,
+        bnb_4bit_use_double_quant=True,
+    )
+    if USE_4BIT
+    else None
+)
 
 model = AutoModelForCausalLM.from_pretrained(
     MODEL_ID,
@@ -191,8 +223,7 @@ lora_config = LoraConfig(
     lora_alpha=LORA_ALPHA,
     lora_dropout=LORA_DROPOUT,
     bias="none",
-    target_modules=["q_proj", "k_proj", "v_proj", "o_proj",
-                    "gate_proj", "up_proj", "down_proj"],
+    target_modules=["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"],
 )
 
 # ────────────────────────────────────────────────────────────
@@ -249,6 +280,7 @@ try:
 except Exception as e:
     print(f"Failed to push to Hub: {e}")
 
+
 # ────────────────────────────────────────────────────────────
 # 10. QUICK INFERENCE TEST
 # ────────────────────────────────────────────────────────────
@@ -256,11 +288,9 @@ def run_inference(user_query):
     model.eval()
     messages = [
         {"role": "system", "content": SYSTEM_PROMPT},
-        {"role": "user",   "content": user_query},
+        {"role": "user", "content": user_query},
     ]
-    prompt = tokenizer.apply_chat_template(
-        messages, tokenize=False, add_generation_prompt=True
-    )
+    prompt = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
     inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
     with torch.no_grad():
         outputs = model.generate(
@@ -270,9 +300,8 @@ def run_inference(user_query):
             do_sample=True,
             eos_token_id=tokenizer.eos_token_id,
         )
-    return tokenizer.decode(
-        outputs[0][inputs["input_ids"].shape[1]:], skip_special_tokens=True
-    )
+    return tokenizer.decode(outputs[0][inputs["input_ids"].shape[1] :], skip_special_tokens=True)
+
 
 print("\n-- Inference test --")
 q = "What is the stock price of Microsoft?"

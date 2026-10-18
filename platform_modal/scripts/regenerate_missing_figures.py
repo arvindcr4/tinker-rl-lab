@@ -25,16 +25,17 @@ from typing import Iterable
 
 # -- matplotlib bootstrap ----------------------------------------------------
 try:
-    import matplotlib  # noqa: F401
+    import matplotlib
 except ImportError:
     import subprocess
+
     subprocess.call([sys.executable, "-m", "pip", "install", "--user", "matplotlib", "numpy"])
-    import matplotlib  # noqa: F401
+    import matplotlib
 
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt  # noqa: E402
-import matplotlib.ticker as mticker  # noqa: E402
-import numpy as np  # noqa: E402
+import matplotlib.pyplot as plt
+import matplotlib.ticker as mticker
+import numpy as np
 
 
 # -- paths ------------------------------------------------------------------
@@ -43,9 +44,7 @@ REPO = os.path.dirname(HERE)
 FIG_DIR = os.path.join(REPO, "paper", "figures")
 V2_DIR = os.path.join(FIG_DIR, "v2")
 ARITH_PATH = os.path.join(REPO, "experiments", "results", "arithmetic_metrics.jsonl")
-WAVE6_PATH = os.path.join(
-    REPO, "experiments", "tinker-runs", "results", "wave6_ablations.json"
-)
+WAVE6_PATH = os.path.join(REPO, "experiments", "tinker-runs", "results", "wave6_ablations.json")
 
 os.makedirs(V2_DIR, exist_ok=True)
 os.makedirs(FIG_DIR, exist_ok=True)
@@ -62,18 +61,20 @@ CB = [
 
 RNG = np.random.default_rng(42)
 
-plt.rcParams.update({
-    "font.family": "serif",
-    "font.size": 10,
-    "axes.labelsize": 10,
-    "axes.titlesize": 11,
-    "xtick.labelsize": 8,
-    "ytick.labelsize": 8,
-    "legend.fontsize": 8,
-    "axes.grid": True,
-    "grid.alpha": 0.3,
-    "figure.dpi": 200,
-})
+plt.rcParams.update(
+    {
+        "font.family": "serif",
+        "font.size": 10,
+        "axes.labelsize": 10,
+        "axes.titlesize": 11,
+        "xtick.labelsize": 8,
+        "ytick.labelsize": 8,
+        "legend.fontsize": 8,
+        "axes.grid": True,
+        "grid.alpha": 0.3,
+        "figure.dpi": 200,
+    }
+)
 
 
 # -- helpers ----------------------------------------------------------------
@@ -104,7 +105,7 @@ def _gaussian_smooth(y: np.ndarray, sigma: float = 2.0) -> np.ndarray:
         return y
     radius = int(max(1, round(3 * sigma)))
     xk = np.arange(-radius, radius + 1)
-    k = np.exp(-(xk ** 2) / (2.0 * sigma ** 2))
+    k = np.exp(-(xk**2) / (2.0 * sigma**2))
     k = k / k.sum()
     # reflect-pad edges to reduce boundary attenuation
     padded = np.pad(y, radius, mode="edge")
@@ -134,9 +135,9 @@ def fig_performance_profiles() -> None:
 
     # Synthesised score distributions per library (anchored to plausible means)
     sim_params = {
-        "SB3":       (0.91, 0.06),
-        "CleanRL":   (0.94, 0.04),
-        "Tianshou":  (0.87, 0.08),
+        "SB3": (0.91, 0.06),
+        "CleanRL": (0.94, 0.04),
+        "Tianshou": (0.87, 0.08),
         "PufferLib": (0.96, 0.03),
     }
     sim_profiles = {}
@@ -145,12 +146,10 @@ def fig_performance_profiles() -> None:
         sim_profiles[lib] = make_profile(s)
 
     fig, ax = plt.subplots(figsize=(7.0, 4.4))
-    ax.plot(tau_trl, frac_trl, color=CB[0], lw=1.9, drawstyle="steps-post",
-            label="TRL (GRPO)")
+    ax.plot(tau_trl, frac_trl, color=CB[0], lw=1.9, drawstyle="steps-post", label="TRL (GRPO)")
     for i, (lib, (tau, frac)) in enumerate(sim_profiles.items(), start=1):
         frac_sm = _gaussian_smooth(frac, sigma=3.0)
-        ax.plot(tau, frac_sm, color=CB[i], lw=1.4, drawstyle="steps-post",
-                label=lib)
+        ax.plot(tau, frac_sm, color=CB[i], lw=1.4, drawstyle="steps-post", label=lib)
 
     ax.set_xlabel(r"Normalised Score $\tau$")
     ax.set_ylabel(r"Fraction of Runs $\geq \tau$")
@@ -197,32 +196,40 @@ def fig_wave6_sensitivity() -> None:
     except Exception as e:
         print(f"  wave6_ablations.json unavailable ({e}); using canonical numbers")
         # Canonical-paper numbers consistent with the caption in main.tex.
-        temp = (np.array([0.2, 0.4, 0.6, 0.8, 1.0]),
-                np.array([0.780, 0.812, 0.788, 0.762, 0.688]),
-                np.array([0.385, 0.425, 0.402, 0.381, 0.340]),
-                np.array([0.190, 0.205, 0.215, 0.200, 0.185]))
-        rank = (np.array([4, 8, 16, 32, 64]),
-                np.array([0.750, 0.812, 0.805, 0.762, 0.688]),
-                np.array([0.395, 0.420, 0.410, 0.381, 0.350]),
-                np.array([0.195, 0.205, 0.210, 0.200, 0.180]))
-        batch = (np.array([1, 2, 4, 8]),
-                 np.array([0.720, 0.762, 0.795, 0.780]),
-                 np.array([0.358, 0.381, 0.412, 0.400]),
-                 np.array([0.175, 0.200, 0.215, 0.210]))
-        meta = {"seed": 42, "steps": 30, "group_size": 8, "lr": "1e-5",
-                "baseline": {"rank": 32, "temperature": 0.8, "batch": 2}}
+        temp = (
+            np.array([0.2, 0.4, 0.6, 0.8, 1.0]),
+            np.array([0.780, 0.812, 0.788, 0.762, 0.688]),
+            np.array([0.385, 0.425, 0.402, 0.381, 0.340]),
+            np.array([0.190, 0.205, 0.215, 0.200, 0.185]),
+        )
+        rank = (
+            np.array([4, 8, 16, 32, 64]),
+            np.array([0.750, 0.812, 0.805, 0.762, 0.688]),
+            np.array([0.395, 0.420, 0.410, 0.381, 0.350]),
+            np.array([0.195, 0.205, 0.210, 0.200, 0.180]),
+        )
+        batch = (
+            np.array([1, 2, 4, 8]),
+            np.array([0.720, 0.762, 0.795, 0.780]),
+            np.array([0.358, 0.381, 0.412, 0.400]),
+            np.array([0.175, 0.200, 0.215, 0.210]),
+        )
+        meta = {
+            "seed": 42,
+            "steps": 30,
+            "group_size": 8,
+            "lr": "1e-5",
+            "baseline": {"rank": 32, "temperature": 0.8, "batch": 2},
+        }
 
     fig, axes = plt.subplots(1, 3, figsize=(15, 4.6))
 
     def _panel(ax, xs, pk, l10, f5, title, xlabel, log_x=False, xticks=None):
         if log_x:
             ax.set_xscale("log", base=2)
-        ax.plot(xs, pk, "o-", lw=2.0, ms=8, color="#d6604d",
-                label="Peak reward")
-        ax.plot(xs, l10, "s-", lw=2.0, ms=7, color="#2166ac",
-                label="Last-10 avg")
-        ax.plot(xs, f5, "^-", lw=1.5, ms=6, color="#4dac26", alpha=0.75,
-                label="First-5 avg")
+        ax.plot(xs, pk, "o-", lw=2.0, ms=8, color="#d6604d", label="Peak reward")
+        ax.plot(xs, l10, "s-", lw=2.0, ms=7, color="#2166ac", label="Last-10 avg")
+        ax.plot(xs, f5, "^-", lw=1.5, ms=6, color="#4dac26", alpha=0.75, label="First-5 avg")
         if xticks is not None:
             ax.set_xticks(xticks)
             ax.get_xaxis().set_major_formatter(mticker.ScalarFormatter())
@@ -234,18 +241,29 @@ def fig_wave6_sensitivity() -> None:
         ax.spines["top"].set_visible(False)
         ax.spines["right"].set_visible(False)
 
-    _panel(axes[0], *temp,
-           title="Sampling temperature sensitivity",
-           xlabel="Sampling temperature",
-           xticks=[0.2, 0.4, 0.6, 0.8, 1.0])
-    _panel(axes[1], *rank,
-           title="LoRA rank sensitivity",
-           xlabel="LoRA rank",
-           log_x=True, xticks=[4, 8, 16, 32, 64])
-    _panel(axes[2], *batch,
-           title="Per-step batch size sensitivity",
-           xlabel="Prompts per GRPO step",
-           log_x=True, xticks=[1, 2, 4, 8])
+    _panel(
+        axes[0],
+        *temp,
+        title="Sampling temperature sensitivity",
+        xlabel="Sampling temperature",
+        xticks=[0.2, 0.4, 0.6, 0.8, 1.0],
+    )
+    _panel(
+        axes[1],
+        *rank,
+        title="LoRA rank sensitivity",
+        xlabel="LoRA rank",
+        log_x=True,
+        xticks=[4, 8, 16, 32, 64],
+    )
+    _panel(
+        axes[2],
+        *batch,
+        title="Per-step batch size sensitivity",
+        xlabel="Prompts per GRPO step",
+        log_x=True,
+        xticks=[1, 2, 4, 8],
+    )
 
     axes[0].legend(loc="lower right", frameon=False)
 
@@ -258,7 +276,9 @@ def fig_wave6_sensitivity() -> None:
     )
     fig.suptitle(
         "Wave 6: Qwen3-8B GRPO sensitivity to temperature, LoRA rank, and batch size",
-        fontsize=13, y=1.02, fontweight="bold",
+        fontsize=13,
+        y=1.02,
+        fontweight="bold",
     )
     fig.text(0.5, -0.02, sup, ha="center", fontsize=9.0, color="#555")
     plt.tight_layout()
@@ -292,8 +312,9 @@ def fig_old_trl_seeds() -> None:
     # Violin from a wider synthesised population (same mean/sd, 200 points) to
     # produce a smooth kernel shape; overlay the real 5-seed points.
     pop = RNG.normal(mean_pct, std_pct, 400)
-    parts = ax.violinplot([pop], positions=[1], widths=0.85,
-                          showmeans=False, showmedians=False, showextrema=False)
+    parts = ax.violinplot(
+        [pop], positions=[1], widths=0.85, showmeans=False, showmedians=False, showextrema=False
+    )
     for body in parts["bodies"]:
         body.set_facecolor(CB[0])
         body.set_edgecolor("#003366")
@@ -301,19 +322,32 @@ def fig_old_trl_seeds() -> None:
 
     # Jittered seed scatter
     jitter = RNG.uniform(-0.08, 0.08, size=len(seed_acc))
-    ax.scatter(1 + jitter, seed_acc, s=55, color="#003366",
-               edgecolor="white", zorder=5)
-    for i, (sd, acc) in enumerate(zip(seeds, seed_acc)):
-        ax.annotate(f"seed {sd}", (1 + jitter[i], acc),
-                    textcoords="offset points", xytext=(8, 0),
-                    fontsize=7.5, color="#333")
+    ax.scatter(1 + jitter, seed_acc, s=55, color="#003366", edgecolor="white", zorder=5)
+    for i, (sd, acc) in enumerate(zip(seeds, seed_acc, strict=False)):
+        ax.annotate(
+            f"seed {sd}",
+            (1 + jitter[i], acc),
+            textcoords="offset points",
+            xytext=(8, 0),
+            fontsize=7.5,
+            color="#333",
+        )
 
     # Mean + 95% CI bar (t-based, df=4)
     t_crit = 2.776  # two-sided 95%, df=4
     ci = t_crit * std_pct / np.sqrt(len(seed_acc))
-    ax.errorbar([1], [mean_pct], yerr=[[ci], [ci]], fmt="D",
-                color="#CC3311", ms=8, capsize=5, lw=1.8, zorder=6,
-                label=f"mean $\\pm$ 95\\% CI")
+    ax.errorbar(
+        [1],
+        [mean_pct],
+        yerr=[[ci], [ci]],
+        fmt="D",
+        color="#CC3311",
+        ms=8,
+        capsize=5,
+        lw=1.8,
+        zorder=6,
+        label=f"mean $\\pm$ 95\\% CI",
+    )
 
     # Reference: 50% floor (where the t-test compares against)
     ax.axhline(50.0, color="#888", ls="--", lw=1.0, label="50\\% reference")
@@ -323,8 +357,7 @@ def fig_old_trl_seeds() -> None:
     ax.set_ylabel("GSM8K accuracy (\\%)")
     ax.set_ylim(40, 90)
     ax.set_title(
-        "5-seed reproducibility (mean $=73.4\\%$, CV $=0.096$,\n"
-        "$t=7.44$, $p<0.001$)",
+        "5-seed reproducibility (mean $=73.4\\%$, CV $=0.096$,\n$t=7.44$, $p<0.001$)",
         fontsize=10,
     )
     ax.legend(loc="lower right", framealpha=0.9)
@@ -344,8 +377,9 @@ GENERATORS = {
 
 def main(argv: Iterable[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--only", choices=sorted(GENERATORS), default=None,
-                    help="Regenerate a single figure only")
+    ap.add_argument(
+        "--only", choices=sorted(GENERATORS), default=None, help="Regenerate a single figure only"
+    )
     args = ap.parse_args(argv)
 
     targets = [args.only] if args.only else list(GENERATORS)

@@ -1639,6 +1639,23 @@ Freeze any diagnostic rule, define its endpoint independently, compare nonlinear
 reward/history baselines, and hold out entire runs or tasks. A lower ZVF alone
 is not operator benefit.
 
+\paragraph{Prespecified evaluation of a diagnostic policy (future work).}
+Compare continuing the fixed schedule, a declared dynamic-sampling/retry rule,
+and the proposed diagnostic policy using common initializations, tasks,
+evaluators, and a fixed generation budget. Charge discarded and resampled
+completions, token lengths, and any warm-start training to that budget.
+Measure held-out quality at budget exhaustion, expenditure, false stops, and
+recovery; include all-failure groups with correct and malformed verifiers,
+all-success groups, mixed groups without improvement, and initially
+unproductive runs that later recover. Compare flexible reward mean/slope/history
+baselines with all-wrong/all-correct fractions, success-count distributions,
+and advantage variance before attributing incremental value to ZVF.
+Independent training seeds are the replication unit; sample size follows a
+prespecified effect or precision target and adequate failure-event coverage,
+not a rule that five seeds guarantees validation. No such prospective result
+is reported here.
+
+
 \subsection{What Stack Sensitivity Means for the Field}
 \label{sec:discuss_impl}
 

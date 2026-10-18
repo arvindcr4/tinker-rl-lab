@@ -23,6 +23,14 @@ Cohen's $d$ has zero pooled variance. All are undefined, not zero-valued evidenc
 of stability or no effect.
 \item The listed non-Colab spend ranges sum to USD 147--177, not USD 130--140.
 This is an arithmetic audit of historical entries, not a verified expenditure.
+\item Even hypothetical perfect detection of two independent positive cases
+would give a two-sided exact 95\% sensitivity interval
+$[\sqrt{0.025},1]\simeq[0.158,1]$. This is a conditional binomial
+illustration, not a recovered confusion matrix or a validated trigger.
+\item Convexity gives $\mathbb E_x[h_G(p_x)]\ge h_G(\mathbb E_x[p_x])$
+for $G\ge2$. Replacing latent $p_x$ by finite-sample estimates introduces
+estimation error and nonlinear plug-in bias; the population bound does not
+certify an empirical residual explanation.
 \end{enumerate}
 
 \paragraph{Required release checks, not a certification.}

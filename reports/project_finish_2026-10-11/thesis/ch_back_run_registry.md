@@ -367,7 +367,14 @@ identity, shows that the run population is far larger than the reported
 claims, and shows that those claims rest on a small, explicitly tiered subset
 with the P1–P8 empirical rows at Tier C or X and P11 at Tier C under the
 stated per-run step threshold. The four Tier X P1–P8 rows must not be cited
-as supporting evidence.
+as supporting evidence under their conflicted labels. Two are nevertheless
+cited elsewhere in a restricted form, and the restriction is part of the
+citation: P4-C1 is cited only under the model its runs actually record
+(`Qwen/Qwen2.5-1.5B-Instruct` in every row of `results/drgrpo_gsm8k_cot_full.json`),
+never under the Qwen3-8B label of the P4 source abstract; P5-C1 (0.856 versus
+0.050) is cited only as an under-specification exhibit whose checkpoint and
+back-end changed together, never as a back-end effect. P3-C2 and P8-C3 are not
+cited as evidence anywhere.
 
 The run totals that appear in different chapters count different corpora. Table A.10 lists the scientific study corpora retained publicly.
 

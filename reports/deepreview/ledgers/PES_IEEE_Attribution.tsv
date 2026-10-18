@@ -7,7 +7,7 @@ IV-D (old)	Llama-3.1-8B-Instruct cross-back-end effect size	d=12.75	unresolved s
 IV-A (old)	re-baselining estimator and curriculum panel results	qualitative	no specified artifact	none	removed
 IV-A	Phase-1 mean step ZVF range over 4 methods	0.706-0.770	platform_hybrid/experiments/results/n2_reward_tensor_resume/*_s0_tensors.jsonl	tools/review_ledger/PES_IEEE_Attribution_recompute.py	recomputed
 IV-A	all-correct fraction of groups	0.647-0.711	same	same	recomputed
-IV-A (old)	stored Qwen3-8B GSM8K tensors ZVF	0.130/0.190/0.155 pooled 0.158	P2 tensors not in checkout; tinker_direct_eval*.json give 0.30 (10 problems) and 0.15 (20 problems), not these values	none	removed
+IV-A	stored Qwen3-8B GSM8K sampling tensors ZVF (3 seeds x 200 problems, G=8, T=1.0); accuracy	0.130/0.190/0.155 pooled 0.158; 0.673-0.713	platform_hybrid/experiments/results/tinker_gsm8k_zvf_s{42,123,456}.json (per_problem rewards)	inline recompute: fraction of problems with all-equal rewards	recomputed
 IV-B; Fig.1	group-size sweep ZVF G=2..16	0.838/0.7635/0.6906/0.6312	platform_hybrid/experiments/results/groupsize_zvf_sweep.json	tools/review_ledger/PES_IEEE_Attribution_recompute.py	recomputed
 Fig.1	GU seed SD per G	0.0126/0.0157/0.0118/0.0083	same	same	recomputed
 IV-B	held-out accuracy per seed range	0.97-0.995	same	same	recomputed

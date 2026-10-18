@@ -214,8 +214,10 @@ division. Recomputed from the stored tensors (640 groups per method), mean
 step ZVF is 0.706--0.770 and all-correct groups are 0.647--0.711 of all
 groups, so most uniform groups are prompts already solved in the observed
 group; this does not establish true $p=1$. The regime is configuration-specific:
-other cohorts with more interior accuracy show much lower ZVF and are not
-pooled with this panel.
+a separate sampling-only cohort (Qwen3-8B on 200 GSM8K test problems per seed,
+$G=8$, temperature 1.0, three seeds, no training) has interior accuracy
+(0.67--0.71) and stored-tensor ZVF of 0.130, 0.190 and 0.155 (pooled 0.158).
+It is a different population and is not compared with the Phase-1 panel.
 
 \subsection{Group size: a mechanism, not a universal optimum}
 In a 12-run sweep (Qwen2.5-0.5B, synthetic arithmetic task, $G\in\{2,4,8,16\}$,

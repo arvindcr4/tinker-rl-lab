@@ -1,0 +1,19 @@
+location	claim_text	value	source_artifact	generator_script	status
+§6.3.3	pooled all-step training reward by G	0.840/0.863/0.869/0.873	platform_hybrid/experiments/results/groupsize_zvf_sweep.json (480 step logs)	inline recompute (mean of step mean_reward)	recomputed
+§6.3.3	h_8 at pooled mean; mean of per-step h_8	0.326; 0.597	same	same	recomputed
+§6.3.3	held-out plug-in h_8(0.923)	0.527	ch_back_errata.md Table E.1 (historical source value 0.923)	arithmetic	verified
+§6.5.4	per-seed delta t-tests GRPO; Dr GRPO	t2=13.98 p=0.0051 [+0.043,+0.081]; t2=10.0 p=0.0099 [+0.028,+0.072]	platform_hybrid/experiments/results/drgrpo_gsm8k_cot_full.json	inline scipy ttest_1samp	recomputed
+§6.5.4	direct post-RL GRPO vs Dr GRPO	0.2633 vs 0.2550; +0.0083, t2=0.94, p=0.44, [-0.030,+0.046]	same	same	recomputed
+§6.5.2	completion length first5->last5 pooled; per arm	194.4->183.5; 195.0->180.3; 193.9->186.8	same	inline mean	recomputed
+§6.3.1	jitter variance bounds	2.86e-9 (ddof=1), 2.50e-9 (ddof=0), 8.3e-10 expected	analytic (Popoviciu)	arithmetic	verified
+§4.1	d_min five vs five; five vs fifteen	2.024 (df 8); 1.530 (df 18)	analytic noncentral t	inline scipy nct	recomputed
+§4.5	all-pairs bound	26,240 x 98,363 = 2,581,045,120	ch04 field counts 13,113+71,966+13,284	arithmetic	verified
+§5.2	config partition	44 = 25 + 11 + 8	platform_hybrid/experiments/framework_config_dumps/*.yaml	tools/review_ledger/Thesis_2026_10_11_ESA_Corrected_config_partition.py	recomputed
+Fig 4.4	pooled sampling ZVF	95/600 = 0.158	platform_hybrid/experiments/results/tinker_gsm8k_zvf_summary.json; per-seed tinker_gsm8k_zvf_s*.json	inline recompute (all-equal groups)	recomputed
+Fig 1.1	worked group sigma and advantage (population)	0.50; +-1.00	analytic for [1,0,1,1,0,0,1,0]	arithmetic	verified
+Table 4.2 M04	GIFT advantage form; lambda	((1+l)(r-mu)+mu)/2; 0.5	platform_hybrid/experiments/variance_mitigation_integration.py	code read	verified
+Table 4.2 M17	settings of same-stack GSM8K-CoT runner	clip 0.2, 2 epochs, LoRA r16 qkvo, lr 1e-5, 30 steps, 64 gen/step	platform_hybrid/experiments/modal/modal_samestack_gsm8k_cot.py	code read	verified
+§2.1	RLOO vs centred advantage factor	G/(G-1)	analytic	algebra	verified
+FR-9/§7.2	badge formula	round(100*sum c_i/7)	platform_hybrid/registry/query.py badge(), item_score()	code read	verified
+App. A rule	P4-C1 recorded model	Qwen/Qwen2.5-1.5B-Instruct	platform_hybrid/experiments/results/drgrpo_gsm8k_cot_full.json	inline check	verified
+§4.4	twelve-cell panel labels/seeds/steps	GRPO,DAPO,DrGRPO,GSPO; 42/123/456; 15	W&B zvf-colab-experiments/tinker-h2h-qwen3.5-4b	none	verified

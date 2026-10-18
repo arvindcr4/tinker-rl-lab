@@ -3,6 +3,11 @@ import subprocess
 
 import pytest
 
+from pathlib import Path
+import sys
+
+# The production script is a source-only sibling, not an installed package.
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 from modal_e1_swe_bench_pro_full import _recount_hunks, _validate_unified_diff
 
 

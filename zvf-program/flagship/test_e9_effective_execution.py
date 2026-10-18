@@ -4,6 +4,11 @@ import json
 from dataclasses import replace
 
 import pytest
+from pathlib import Path
+import sys
+
+# Standalone pytest collection must not depend on another test's path setup.
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 import e9_mle_bench_streaming as core
 
 

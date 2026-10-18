@@ -73,7 +73,7 @@ sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scri
 from _paths import REPO_ROOT
 from _p8_common import auc_p8
 ROOT = REPO_ROOT
-RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8"
+RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8" / "corrected-review20-v2"
 FIG = RES / "figures"
 
 SEED = 20260705

@@ -44,7 +44,7 @@ from _p8_common import (
     auc_p8 as auc,
 )
 ROOT = REPO_ROOT
-RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8"
+RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8" / "corrected-review20-v2"
 
 SEED_ORIG = 20260705
 SEED_NEW = 42

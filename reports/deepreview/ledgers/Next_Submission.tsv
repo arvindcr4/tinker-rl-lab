@@ -1,0 +1,11 @@
+location	claim_text	value	source_artifact	generator_script	status
+Sec4.3	exact-t power at n=19 / n=18 (sd 0.0128285, margin 0.01, alpha 0.0125)	0.820 / 0.793	zvf-program/next-submission/preregistration.json power_plan	scipy noncentral t (review recompute)	recomputed
+Sec4.3	inflated seed count	ceil(19*1.2)=23	verify_design.py expected_planning_seed_count	-	verified
+Sec3.3	completion ratio / stop-rate threshold / iid bound	1-0.75a; 4/15; >=37.5%	analytic	-	recomputed
+Sec4.2	ln 0.8; exp(-0.2)-1	-0.2231; -18.1%	analytic	-	recomputed
+Sec3.2	batch geometry	2 groups/update; 60 groups/unit	protocol_amendment_004 implementation_path; preregistration treatment	-	verified
+Sec3.4	Qwen3-8B revision	b968826d	protocol_amendment_002 source_basis; remote_preflight.py MODEL_REVISION	-	verified
+Sec4.1	seeds are consecutive primes 211..349	24 primes	preregistration paired_seed_plan	review script	recomputed
+AppA.1	artifact SHA-256 prefixes	see table	preregistration.json bindings; files	tools/review_ledger/Next_Submission_binding_drift.py	verified
+AppA.1	binding drift at HEAD	9 files drift; verify_design fails	platform_hybrid/experiments/results/review_2026-10-18/Next_Submission/binding_drift.json	tools/review_ledger/Next_Submission_binding_drift.py	recomputed
+Sec4.4	A001 rows 888,1011; 7500 retained	2 rows	protocol_amendment_001	-	verified

@@ -1,0 +1,11 @@
+location	claim_text	value	source_artifact	generator_script	status
+tab:lambda	homogeneous grad norm / cosine sweep (G=8,L=512)	0.014267*lambda; cos 0.995248@0.1, 0.696798@1	platform_hybrid/experiments/results/review_2026-10-18/Spectral_Entropy/lambda_sweep.json	tools/review_ledger/Spectral_Entropy_lambda_sweep.py	recomputed
+Sec6	slope range, linearity, cosine ranges over 9 configs	0.0052-0.0188; <3e-15; 0.9952-0.9954; 0.683-0.716	platform_hybrid/experiments/results/review_2026-10-18/Spectral_Entropy/lambda_sweep.json	tools/review_ledger/Spectral_Entropy_lambda_sweep.py	recomputed
+Sec6	gate row entropy range; gated==ungated	6.24-7.62; True	platform_hybrid/experiments/results/review_2026-10-18/Spectral_Entropy/lambda_sweep.json	tools/review_ledger/Spectral_Entropy_lambda_sweep.py	recomputed
+Sec6	nine-condition ledger FLOP ratios; identical gated/ungated	4.48x, 5.48x	zvf-program/flagship/pilot/spectral_benchmark_results.json	pilot/benchmark_spectral_harness.py (rerun platform_hybrid/experiments/results/review_2026-10-18/Spectral_Entropy/spectral_benchmark_rerun.json identical)	verified
+Sec6	16 focused tests pass	16 passed	pilot/test_spectral_attention.py etc.	pytest	verified
+Sec7	MDE at n=5	1.62 (Eq.8), 1.68 exact, 2.48 at 0.0125	analytic	scipy noncentral t + MC (review recompute)	recomputed
+old Tab1	Gram/operator/coefficient/trapezoid errors, 296x, rank 4, 1.1e19, 153%	-	absent 77-case bundle dbd1386a	-	removed
+old Sec5	norm errors 2.61e-16, 1.52e-8, 1.20e-7, 11/12, 2e-17, 9.6e-4-6.2e-2, >3	-	absent 77-case bundle	-	removed
+old Tab2	3.7351*lambda sweep and cosines; forward-path cosines 0.9504/0.2620; 77 cases	-	absent 77-case bundle	-	removed
+Abstract	1e-17 vs 1e-3-1e-2	-	absent 77-case bundle	-	removed

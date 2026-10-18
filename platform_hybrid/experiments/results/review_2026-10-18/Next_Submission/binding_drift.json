@@ -1,0 +1,131 @@
+{
+ "preregistration_sha256": "4c0c318b7dda66680e48bd4078b337031b3db7220379f0d4bcf8f086b52dec3c",
+ "files": {
+  "zvf-program/next-submission/claim_ledger.json": {
+   "bound": "0ab19d64ec448642dbf760dc4005f2bb8b1cb6d5ae8baa728279dd6157de2234",
+   "working_tree": "0ab19d64ec448642dbf760dc4005f2bb8b1cb6d5ae8baa728279dd6157de2234",
+   "match": true,
+   "bound_version_commit": null
+  },
+  "zvf-program/next-submission/results_contract.json": {
+   "bound": "bef7dd99152ebea1ed6ab8d38174af7bd53a921e833081d60a51f6f3057dc78e",
+   "working_tree": "bef7dd99152ebea1ed6ab8d38174af7bd53a921e833081d60a51f6f3057dc78e",
+   "match": true,
+   "bound_version_commit": null
+  },
+  "zvf-program/next-submission/MANUSCRIPT_BLUEPRINT.md": {
+   "bound": "6a9c6645683d41383a38d5c399a0fb35c864a93f537625a171cfd6961fb62588",
+   "working_tree": "6a9c6645683d41383a38d5c399a0fb35c864a93f537625a171cfd6961fb62588",
+   "match": true,
+   "bound_version_commit": null
+  },
+  "zvf-program/next-submission/execution_authorization.json": {
+   "bound": "43e7d3cb810e423dbab7231dd256e32cbe4a6919c0dfe970cd903b1f04e5b92d",
+   "working_tree": "43e7d3cb810e423dbab7231dd256e32cbe4a6919c0dfe970cd903b1f04e5b92d",
+   "match": true,
+   "bound_version_commit": null
+  },
+  "zvf-program/next-submission/contrast_sampler.py": {
+   "bound": "083da9d93887f92b69ad6baf109c694de60b0e201833a641173750f5e77baf86",
+   "working_tree": "de64f99ad60f0edf8315119c9cc7eb03a1d08dd677087cd105527d33b3b6d526",
+   "match": false,
+   "bound_version_commit": "81eb211cda37ba6b198de0cfd48430fab57650a3"
+  },
+  "zvf-program/next-submission/trl_sampler_adapter.py": {
+   "bound": "869647469633f62b7d44273ab35ecc8823db2ad8a9c0e06fecf5ff95f801c365",
+   "working_tree": "48ba9dac8122dc51f3005bf1496c4ff8dec518a158809ae3a7e1c10068484fc1",
+   "match": false,
+   "bound_version_commit": "81eb211cda37ba6b198de0cfd48430fab57650a3"
+  },
+  "zvf-program/next-submission/remote_preflight.py": {
+   "bound": "2cc7b68f92c318d6a71844853a8faa6ab6d1709a42a032311c4b2524e4dd8964",
+   "working_tree": "9c98fb117751937121f014c5570f174a97081c4fa82ee00d7f6d7dbeab443b6b",
+   "match": false,
+   "bound_version_commit": "252f8ccd7213c6101126ac78be09439e449a33b3"
+  },
+  "zvf-program/next-submission/protocol_amendment_001_math_boxed.json": {
+   "bound": "89f8ff4653e4f41c2988b2e6103080c75c7e3bac342c0ff36680bee1c4ea371a",
+   "working_tree": "89f8ff4653e4f41c2988b2e6103080c75c7e3bac342c0ff36680bee1c4ea371a",
+   "match": true,
+   "bound_version_commit": null
+  },
+  "zvf-program/next-submission/protocol_amendment_002_qwen_decoder.json": {
+   "bound": "5695e5358f12b318c142b357fa7b42df3fb4b824bb55b5ea2f3d6d8a4454739d",
+   "working_tree": "5695e5358f12b318c142b357fa7b42df3fb4b824bb55b5ea2f3d6d8a4454739d",
+   "match": true,
+   "bound_version_commit": null
+  },
+  "zvf-program/next-submission/protocol_amendment_003_confirmatory_hardening.json": {
+   "bound": "25047e5a806651700b9112fb9f77f6b549955e54a4e1b98bad986b99d36e72f8",
+   "working_tree": "25047e5a806651700b9112fb9f77f6b549955e54a4e1b98bad986b99d36e72f8",
+   "match": true,
+   "bound_version_commit": null
+  },
+  "zvf-program/audit/aggregate_audit.py": {
+   "bound": "c323c4edcd021e10b0ffe5fe27461aa7c0f6354e718519b50f5bcfa1e240358e",
+   "working_tree": "3b0c061bb7a7351ced9dbd70d5ef0af297d9a49fda4edb5582d75059d7ba6fcb",
+   "match": false,
+   "bound_version_commit": "5d3ec90da24cdd49911eca415476d4e11c538b64"
+  },
+  "zvf-program/next-submission/run_preflight.py": {
+   "bound": "2b9656e88f66d7723d81a75cddbf2309a0e6ad2dd12395ac96bc9d95b02ddce9",
+   "working_tree": "b52875b38dcde7b3887c885a8aaaececa9c834c2212e1968c1a129353c2b766d",
+   "match": false,
+   "bound_version_commit": "252f8ccd7213c6101126ac78be09439e449a33b3"
+  },
+  "zvf-program/next-submission/verify_preflight_matrix.py": {
+   "bound": "f38204be7260093b68c34f89dfd769cfc9d9e2b205409a338243097642370af7",
+   "working_tree": "b075b54e5d59a406c3234c285787117b555cbcc8c1eb279b69c226d6c8ee1b92",
+   "match": false,
+   "bound_version_commit": "252f8ccd7213c6101126ac78be09439e449a33b3"
+  },
+  "zvf-program/next-submission/run_hf_jobs_preflight.py": {
+   "bound": "c0b465cca5ae45979fa088b3d0a0a06be3987a8e81310d451305adb92ed41dee",
+   "working_tree": "a931aa99804830b8a8ea8801907d2b3a8b1c9b8d1cc9ae2385c36a4ebdd4b692",
+   "match": false,
+   "bound_version_commit": "ef1786102f746c4c389446a159283fd6ab66a1dd"
+  },
+  "zvf-program/next-submission/run_kaggle_preflight.py": {
+   "bound": "317b9b82c522c6f836c97afae897ad23e528e0a8ea5c09a5a911509c81199341",
+   "working_tree": "651da9413f1ac9db6f3f3b40e3730230dbb52f2e4cfa6b138b9fd1cb16f5163d",
+   "match": false,
+   "bound_version_commit": "35ec989a53cb4f633def6de33b7329fbc8244a64"
+  },
+  "zvf-program/next-submission/run_gcp_preflight.py": {
+   "bound": "278ee98e1a1565c7b58c654b3e75faabb66e9ef343a682a1f04c61a09c39445e",
+   "working_tree": "6df622de1cff4e20347f2bde718d255d7d46aeed41ad66f8ee2ae83b48e4dc24",
+   "match": false,
+   "bound_version_commit": "ce1ada363bc9ac3b585054e703439330de26c0d4"
+  },
+  "zvf-program/next-submission/gcp_receipt_bucket.json": {
+   "bound": "0112621b8819de638732566845eebb18c59c4d1e867996bbc42ad5f5b577b6f1",
+   "working_tree": "0112621b8819de638732566845eebb18c59c4d1e867996bbc42ad5f5b577b6f1",
+   "match": true,
+   "bound_version_commit": null
+  },
+  "zvf-program/next-submission/secure_exec_preflight.py": {
+   "bound": "28bd89d7ad3314f405fa983034649e511da014285c4883326daccbaac217d2d0",
+   "working_tree": "28bd89d7ad3314f405fa983034649e511da014285c4883326daccbaac217d2d0",
+   "match": true,
+   "bound_version_commit": null
+  },
+  "zvf-program/next-submission/verify_preflight_environment.py": {
+   "bound": "ae1718e5c7eca2b1fb17e4d244cb387c3c0b83588fc333bb7789d9bb88c21b2a",
+   "working_tree": "ae1718e5c7eca2b1fb17e4d244cb387c3c0b83588fc333bb7789d9bb88c21b2a",
+   "match": true,
+   "bound_version_commit": null
+  },
+  "zvf-program/next-submission/setup_colab_preflight.py": {
+   "bound": "44245d3a7d03bf0972d4af89038e46e78e0aa20a8de845cd06150da0d745a611",
+   "working_tree": "44245d3a7d03bf0972d4af89038e46e78e0aa20a8de845cd06150da0d745a611",
+   "match": true,
+   "bound_version_commit": null
+  },
+  "zvf-program/next-submission/protocol_amendment_004_seam_verification_window.json": {
+   "bound": "b99f0c59d5fbd9e2f9bc760cd8b7244262b31653f2bc4972170693bbf646300a",
+   "working_tree": "b99f0c59d5fbd9e2f9bc760cd8b7244262b31653f2bc4972170693bbf646300a",
+   "match": true,
+   "bound_version_commit": null
+  }
+ }
+}

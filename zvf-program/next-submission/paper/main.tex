@@ -88,7 +88,7 @@ Group-relative sampling for RLVR & \citet{shao2024deepseekmath}; \citet{yu2025da
 \addlinespace
 Adaptive budget allocation & \citet{xiong2025reinforceada}; \citet{bengio2009curriculum} & Intervention & Difficulty-adaptive budgets and curricula reweight where compute is spent; our sampler never substitutes, reorders, or reweights prompts --- it only truncates sampling within a group. \\
 \addlinespace
-Early stopping and adaptive allocation & \citet{lai1985asymptotically}; \citet{auer2002finite}; \citet{evendar2006action}; \citet{nomand2026sara}; \citet{jiang2026vigor} & Intervention & Classical bandit allocation stops sampling arms whose value is resolved; SARA and VIGOR bring probe-then-allocate rules to RLVR groups. The two-sample contrast check is a degenerate, hard-threshold member of this family. \\
+Early stopping and adaptive allocation & \citet{lai1985asymptotically}; \citet{auer2002finite}; \citet{evendar2006action}; \citet{nomand2026sara}; \citet{jiang2026vigor}; \citet{kim2026pilotcommit} & Intervention & Classical bandit allocation stops sampling arms whose value is resolved; SARA, VIGOR, and Pilot-Commit bring probe-then-allocate rules to RLVR groups. The two-sample contrast check is a degenerate, hard-threshold member of this family. \\
 \addlinespace
 RL reproducibility and statistical practice & \citet{henderson2018deep}; \citet{agarwal2021deep} & Diagnostic & Motivates the paired multi-seed design, preregistered estimands, and interval-based verdicts used here. \\
 \addlinespace
@@ -97,7 +97,7 @@ Verifier and parser reliability & \citet{huang2025verifierrobustness}; \citet{ya
 \end{tabular}
 \end{table}
 
-Group-relative policy optimization (GRPO) was introduced for mathematical reasoning by \citet{shao2024deepseekmath} as a critic-free alternative to actor-critic methods such as PPO \citep{schulman2017proximal}, computing advantages relative to the mean reward of a sampled group. Follow-on systems have observed that zero-contrast groups waste computation and act on that observation at three positions. \emph{Before} rollout, GRESO predicts and skips prompts likely to be uninformative from reward dynamics \citep{zheng2025greso}. \emph{After} full group generation, DAPO-style dynamic sampling oversamples and filters zero-variance groups at the batch level \citep{yu2025dapo}, and AERO prunes rollouts selectively while maintaining a Bayesian posterior to avoid zero-advantage dead zones \citep{zhang2026aero}. \emph{Within} group generation, SARA maintains a per-prompt posterior and applies an SPRT-style two-threshold rule to commit or abandon groups after a short probe \citep{nomand2026sara}, while VIGOR progressively allocates additional rollouts to the highest-variance groups \citep{jiang2026vigor}; Reinforce-Ada instead allocates larger budgets to difficult prompts under a non-linear objective \citep{xiong2025reinforceada}. A complementary line argues zero-variance groups should be shaped rather than skipped \citep{le2025rlzvp}. Our rule sits in the third position as a degenerate member: a hard two-sample threshold with no posterior, no budget reallocation, no replacement prompts, and no batch reshaping. The contribution of this paper is not the rule but what the comparison prices: the probe cost and the false-homogeneity misclassification loss of the cheapest possible contrast check, measured under a preregistered joint cost/non-inferiority decision.
+Group-relative policy optimization (GRPO) was introduced for mathematical reasoning by \citet{shao2024deepseekmath} as a critic-free alternative to actor-critic methods such as PPO \citep{schulman2017proximal}, computing advantages relative to the mean reward of a sampled group. Follow-on systems have observed that zero-contrast groups waste computation and act on that observation at three positions. \emph{Before} rollout, GRESO predicts and skips prompts likely to be uninformative from reward dynamics \citep{zheng2025greso}. \emph{After} full group generation, DAPO-style dynamic sampling oversamples and filters zero-variance groups at the batch level \citep{yu2025dapo}, and AERO prunes rollouts selectively while maintaining a Bayesian posterior to avoid zero-advantage dead zones \citep{zhang2026aero}. \emph{Within} group generation, SARA maintains a per-prompt posterior and applies an SPRT-style two-threshold rule to commit or abandon groups after a short probe \citep{nomand2026sara}, while VIGOR progressively allocates additional rollouts to the highest-variance groups \citep{jiang2026vigor} and Pilot-Commit spends a pilot fraction of the rollout budget to estimate per-prompt informativeness before committing the rest to high-signal prompts \citep{kim2026pilotcommit}; Reinforce-Ada instead allocates larger budgets to difficult prompts under a non-linear objective \citep{xiong2025reinforceada}. A complementary line argues zero-variance groups should be shaped rather than skipped \citep{le2025rlzvp}. Our rule sits in the third position as a degenerate member: a hard two-sample threshold with no posterior, no budget reallocation, no replacement prompts, and no batch reshaping. The contribution of this paper is not the rule but what the comparison prices: the probe cost and the false-homogeneity misclassification loss of the cheapest possible contrast check, measured under a preregistered joint cost/non-inferiority decision.
 
 Every quantity in this study is defined by a verifier, so verifier error is a first-order limit on interpretation rather than a footnote. \citet{huang2025verifierrobustness} evaluate rule- and model-based verifiers for mathematical reasoning both statically and inside RL training, and report that open-source rule-based verifiers fail to recognize equivalent answers in different formats at non-negligible false-negative rates that worsen as the policy strengthens, while model-based verifiers are more accurate statically but susceptible to hacking that inflates reward; we take the strict-parser end of that tradeoff deliberately and hold one frozen parser fixed across arms so that parser error is common-mode rather than confounded with the intervention. \citet{yan2025verifybench} benchmark reference-based reward systems against human-annotated ground truth and find substantial headroom on hard cases for every system tested, which is the evidence base for our stating that the optimized reward is the parser's judgment and not intended solution quality. \citet{zhao2025onetoken} show that generative reward models return false-positive rewards for superficial ``master key'' inputs such as a lone punctuation mark or a generic reasoning opener; our deterministic exact-match parsers are immune to that specific attack, which is part of why the design does not substitute an LLM judge to recover the false negatives documented above.
 
@@ -118,18 +118,28 @@ Both arms train Qwen3-8B \citep{qwen3report2025} with a pinned open canonical GR
   \item If the two verifier rewards \emph{agree}, the sampler stops sampling that prompt and records a homogeneous group (all-wrong or all-correct). The group receives no gradient update and no replacement prompt. No auxiliary gradient, curriculum substitution, or hidden resampling is introduced.
 \end{enumerate}
 
-The intervention changes the sampling policy and nothing else: the model, prompt schedule, optimizer, reward parser, update count, checkpoint rule, evaluation harness, and the canonical GRPO objective applied to expanded groups are identical across arms.
+The intervention changes the sampling policy and nothing else: the model, prompt schedule, optimizer, reward parser, update count, checkpoint rule, evaluation harness, and the canonical GRPO objective applied to expanded groups are all identical across arms.
 
 \subsection{Canonical objective}
 
-Expanded groups in both arms are optimized with the same pinned group-relative objective: rewards within a group are centered against the group mean, and the resulting advantages weight a clipped policy-gradient update, exactly as in the pinned stack's canonical GRPO implementation \citep{shao2024deepseekmath, vonwerra2020trl}. The intervention introduces no new objective term; homogeneous groups under the intervention simply contribute no update, mirroring the fact that a zero-variance group contributes zero advantage under the baseline objective as well.
+Expanded groups in both arms are optimized with the same pinned group-relative objective \citep{shao2024deepseekmath, vonwerra2020trl}. Amendment A003 freezes its TRL configuration: group-level reward scaling, so that for group $g$ with binary rewards $r_{gi}$,
+\begin{equation}
+\hat A_{gi}=\frac{r_{gi}-\bar r_g}{\operatorname{std}(r_g)+\varepsilon_{\rm std}},
+\label{eq:adv}
+\end{equation}
+with the stack's default stabilizer $\varepsilon_{\rm std}$; token-level importance ratios $\rho_{git}$ clipped symmetrically to $[0.8,1.2]$; the \texttt{grpo} loss type, which averages the clipped surrogate $\min\{\rho_{git}\hat A_{gi},\operatorname{clip}(\rho_{git},0.8,1.2)\hat A_{gi}\}$ over the tokens of each completion before averaging over completions; no reference-KL term ($\beta=0$); one inner iteration per generation batch; and truncated completions left unmasked. Because there is one inner iteration and the adapter supplies no generation-time log probabilities, the old-policy log probabilities are expected to equal the current ones at each update, making the importance ratio one and the clip fraction zero; the policy-ratio, clip-fraction, and data-policy KL telemetry below are consistency checks on that expectation, not measures of off-policy drift. The intervention introduces no new objective term; homogeneous groups under the intervention simply contribute no reward-contrast term, mirroring the fact that a zero-variance group contributes zero advantage under the baseline objective as well.
+
+\paragraph{Batch geometry.} The batch fields below are TRL row counts: each optimizer update consumes 16 completion slots, i.e.\ two prompt groups of eight slots, so a 30-update unit draws 60 prompt groups (the geometry recorded in A004). The frozen adapter keeps eight slots per prompt in both arms. A homogeneous probe under the intervention is represented by eight inactive single-token end-of-sequence slots with zero completion mask and no reward, while its two real probe completions remain charged; no replacement prompt is drawn and the prompt schedule does not advance.
 
 \paragraph{Execution-specification boundary.} Zero reward contrast guarantees
 only a zero centered score-function term, not an unchanged AdamW state or
-zero total update under arbitrary regularization. Whether skipped groups stay
-in the loss denominator, whether an entirely homogeneous batch calls
-\texttt{optimizer.step}, how the scheduler advances, and whether inner epochs
-reuse rollouts must be checked against the pinned runner before execution.
+zero total update under arbitrary regularization. Whether the inactive slots of
+skipped groups stay in the pinned stack's loss denominator (and hence rescale
+the remaining groups), whether an update whose groups are all inactive still
+calls \texttt{optimizer.step} (which would move parameters through AdamW's
+first-moment buffer and decay both buffers), and how the scheduler advances are
+not fixed by any frozen artifact and must be checked against the pinned runner
+before execution; inner epochs do not reuse rollouts (one iteration).
 The manuscript does not treat these as interchangeable choices. A
 sampling-only causal interpretation is blocked if these semantics differ
 between arms; resolving them requires a prospective protocol/runner receipt,
@@ -139,19 +149,23 @@ not retrospective prose that assumes equivalence.
 
 The primary cost quantity is \emph{charged generated tokens}: every token the operator pays to generate during training rollouts. Under the intervention this includes the two-completion probe for every prompt \emph{and} every expansion completion for mixed groups. Skipped groups still pay for their probe. No token generated by either arm is excluded from the account, and evaluation tokens are accounted separately from training rollouts.
 
+Two elementary relations anchor the cost boundary. A skipped group charges two of eight completions, so a probe-agreement rate $a$ gives an expected completion ratio of $1-0.75a$ before length effects, and a $20\%$ completion saving needs $a\geq4/15\approx0.267$. Under conditionally i.i.d.\ binary rewards with per-prompt success probability $p$, the probe agrees with probability $p^2+(1-p)^2\geq1/2$, so the expected completion saving is at least $37.5\%$; the token estimand can differ because completion length may depend on correctness and on the training state.
+
 \subsection{Fixed components and decoder contract}
 
-The following components are frozen and identical across arms and seeds: initial checkpoint, tokenizer, prompt order, reward parser, optimizer, learning rate, batch size, number of training steps (30 optimizer updates; generation batch size 16; per-device train batch size 2 with gradient accumulation 8), completion cap (1{,}024 tokens), checkpoint rule (final registered checkpoint, never selected by online reward), held-out prompts, decoder, and evaluator.
+The following components are frozen and identical across arms and seeds: initial checkpoint (Qwen3-8B revision \texttt{b968826d}, recorded in A002), tokenizer, prompt order, reward parser, optimizer, learning rate, batch size, number of training steps (30 optimizer updates; generation batch size 16; per-device train batch size 2 with gradient accumulation 8), completion cap (1{,}024 tokens), checkpoint rule (final registered checkpoint, never selected by online reward), held-out prompts, decoder, and evaluator. A003 fixes the numerical configuration: fused AdamW at learning rate $10^{-6}$ with a linear schedule, no warmup, weight decay 0, and gradient-norm clip 1.0; bf16 with TF32 and gradient checkpointing; and a LoRA adapter of rank 16, $\alpha=32$, dropout 0 on all linear modules.
 
-The decoder contract, frozen prospectively by protocol amendment A002 (Section~\ref{sec:amendments}), runs Qwen3-8B in its explicit non-thinking mode for both arms: training samples with temperature $0.7$, top-$p$ $0.8$, top-$k$ $20$ (the model card's documented sampler), and the fixed held-out evaluation decodes deterministically in non-thinking mode. Completion clipping is a required receipt field, and a run whose sampled training completions are all clipped fails closed.
+Random streams are seeded per run (training and data seed equal to the run seed), not per prompt or sample. The two probe rounds are the same batched calls in both arms, but the arms' generation calls differ after the first expansion, so probe completions are not coupled across arms; pairing is by seed only.
+
+The decoder contract, frozen prospectively by protocol amendment A002 (Section~\ref{sec:amendments}), runs Qwen3-8B in its explicit non-thinking mode for both arms: training samples with temperature $0.7$, top-$p$ $0.8$, top-$k$ $20$ (the model card's documented sampler), and the fixed held-out evaluation decodes deterministically in non-thinking mode. Completion clipping is a required receipt field (the fraction of generated rollouts that reach the cap, accumulated over the run), and a preflight whose sampled training completions are all clipped cannot clear the execution gate. The frozen artifacts do not yet state the scope (per update or per run) or the ledger status of the corresponding confirmatory fail-closed rule; that must be fixed before execution.
 
 \subsection{Telemetry: ZVF/GU and mechanism instrumentation}
 
-Both arms log, per update and per run: the zero-variance group fraction (ZVF; the fraction of rollout groups whose rewards are homogeneous and thus carry no contrast), the gradient-updated group fraction (GU), all-wrong / all-correct / mixed group fractions, the two-sample false-homogeneity rate (measured on the \emph{baseline} arm by asking how often its first two samples agree while the full eight-sample group is mixed), policy-ratio quantiles ($q_{05}, q_{50}, q_{95}$), clip fraction by advantage sign, KL to the data policy and to the initial reference, parser disagreement, completion-clipped fraction, and wall-clock seconds. We examine mechanism telemetry; it is descriptive and model-based only, and can never upgrade the confirmatory claims (Section~\ref{sec:results}).
+Both arms log, per update and per run: the zero-variance group fraction (ZVF; the fraction of rollout groups whose rewards are homogeneous and thus carry no contrast), the gradient-updated group fraction (GU), all-wrong / all-correct / mixed group fractions, the two-sample false-homogeneity rate (measured on the \emph{baseline} arm by asking how often its first two samples agree while the full eight-sample group is mixed), policy-ratio quantiles ($q_{05}, q_{50}, q_{95}$), clip fraction by advantage sign, KL to the data policy and to the initial reference, parser disagreement, completion-clipped fraction, and wall-clock seconds. We examine mechanism telemetry; it is descriptive and model-based only, and can never upgrade the confirmatory claims (Section~\ref{sec:results}). Under the intervention, ZVF counts probe-agreement stops, which exceed the eight-sample homogeneous fraction by the false-homogeneity events. The protocol names the false-homogeneity and parser-disagreement fields but does not yet freeze their formulas: the former needs a stated denominator (all groups, mixed eight-sample groups, or probe-agreeing groups; A003's design rationale uses the last, about $0.98$ at $p=0.5$), and the latter needs a named comparator extraction rule. Both must be fixed before execution; until then neither field is interpretable.
 
 \subsection{Held-out evaluator}
 
-Each task has a fixed, hash-frozen held-out set evaluated identically for every run: 1{,}000 prompts drawn as a hash-frozen subset of the official GSM8K test split \citep{cobbe2021gsm8k}, and all 500 MATH-500 rows \citep{hendrycks2021math}, disjoint from the MATH training prompts. The evaluator decodes deterministically (non-thinking mode), applies the task's strict exact-match reward parser, and reports exact-match accuracy. The evaluator, its decoding parameters, and the held-out manifests are frozen before execution and are identical across arms.
+Each task has a fixed held-out set evaluated identically for every run: 1{,}000 prompts drawn as a subset of the official GSM8K test split \citep{cobbe2021gsm8k}, and all 500 MATH-500 rows \citep{hendrycks2021math}, disjoint from the MATH training prompts. The evaluator decodes deterministically (non-thinking mode), applies the task's strict exact-match reward parser, and reports exact-match accuracy. The evaluator, its decoding parameters, and the held-out manifests must be hash-frozen before execution and are identical across arms; the held-out manifest digests are not yet recorded in the preregistration bindings.
 
 \subsection{External-user contribution gate}
 
@@ -174,12 +188,12 @@ Table~\ref{tab:matrix} shows the complete confirmatory matrix. All four cells ar
 Task & Baseline arm & Intervention arm & Paired seeds & Held-out $n$ \\
 \midrule
 GSM8K   & fixed $G{=}8$ GRPO & $G{=}2$ check, mixed groups expand to $G{=}8$ & 23 & 1{,}000 \\
-MATH-500 & fixed $G{=}8$ GRPO & $G{=}2$ check, mixed groups expand to $G{=}8$ & 23 & 500 \\
+\shortstack[l]{MATH\\(MATH-500 eval)} & fixed $G{=}8$ GRPO & $G{=}2$ check, mixed groups expand to $G{=}8$ & 23 & 500 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-The twenty-three preregistered seeds per cell are 211, 223, 227, 229, 233, 239, 241, 251, 257, 263, 269, 271, 277, 281, 283, 293, 307, 311, 313, 317, 331, 337, and 347, paired across arms within each task before execution and disjoint from all prior audit seeds. Seeds beyond the original sixteen derive from a frozen deterministic rule (ascending primes above 293, disjoint from prior-audit and already-frozen seeds), so any reassessment-driven increase to the 24-seed cap uses the reserved seed 349 rather than a post-interim choice. The independent unit is the training seed within a frozen task-model-stack cell; optimization steps, prompts, completions, checkpoints, and held-out rows are \emph{not} treated as replications.
+The twenty-three preregistered seeds per cell are 211, 223, 227, 229, 233, 239, 241, 251, 257, 263, 269, 271, 277, 281, 283, 293, 307, 311, 313, 317, 331, 337, and 347, paired across arms within each task before execution and disjoint from all prior audit seeds (the E1 audit used 11, 23, 37, 53, 71, 89, 107, and 131). Seeds beyond the original sixteen derive from a frozen deterministic rule (ascending primes above 293, disjoint from prior-audit and already-frozen seeds); together with the reserve 349, the seeds are exactly the 24 consecutive primes from 211 to 349, so any reassessment-driven increase to the 24-seed cap uses the reserved seed 349 rather than a post-interim choice. The independent unit is the training seed within a frozen task-model-stack cell; optimization steps, prompts, completions, checkpoints, and held-out rows are \emph{not} treated as replications.
 
 Corpus is not a crossed factor. Each task keeps one frozen task-native pipeline: GSM8K train (\texttt{openai/gsm8k}, pinned revision) to the GSM8K held-out subset, and MATH-lighteval train (pinned revision) to the disjoint MATH-500 evaluation set (pinned revision). No cross-corpus transfer claim is made.
 
@@ -187,8 +201,8 @@ Corpus is not a crossed factor. Each task keeps one frozen task-native pipeline:
 
 We preregister a joint cost-quality decision. For each task, with seed pairing fixed before execution:
 \begin{itemize}
-  \item \textbf{Cost estimand:} the paired mean log ratio of charged generated tokens, $\log(t_{\mathrm{int}}/t_{\mathrm{base}})$ where $t$ counts charged tokens per run, displayed back-transformed as a relative change. We test whether the intervention reduces rollout cost, with success boundary $-0.20$ relative change (log-ratio boundary $\log 0.8$): the multiplicity-adjusted \emph{upper} confidence bound must be at most $-0.20$.
-  \item \textbf{Capability estimand:} the paired held-out exact-match accuracy difference, intervention minus baseline. We test held-out non-inferiority with margin one percentage point: the multiplicity-adjusted \emph{lower} confidence bound must be greater than $-0.01$, and the achieved power or precision gate must pass.
+  \item \textbf{Cost estimand:} the paired mean log ratio of charged generated tokens, $\log(t_{\mathrm{int}}/t_{\mathrm{base}})$ where $t$ counts charged tokens per run, displayed back-transformed via $\exp(\cdot)-1$ as a relative change in the geometric mean. We test whether the intervention reduces rollout cost: the multiplicity-adjusted \emph{upper} confidence bound on the natural-log scale must be at most $\ln 0.8\approx-0.2231$, equivalently at most $-0.20$ after back-transformation (comparing the log-scale bound directly with $-0.20$ would test an $18.1\%$ reduction instead).
+  \item \textbf{Capability estimand:} the paired held-out exact-match accuracy difference, intervention minus baseline. We test held-out non-inferiority with margin one percentage point: the multiplicity-adjusted \emph{lower} confidence bound must be greater than $-0.01$, and the required power receipt must pass (the protocol requires that receipt before final analysis; it defines no separate numeric precision gate).
 \end{itemize}
 
 The two endpoints form an intersection-union decision within each task, and Holm adjustment \citep{holm1979simple} is applied across the two tasks. Confidence intervals use a seed-paired bootstrap with deterministic streams \citep{efron1993bootstrap}, with a paired-$t$ sensitivity analysis. The intervention counts as useful only if both boundaries pass on both tasks. Any incomplete cell, failed provenance gate, power failure, or interval crossing a boundary yields \textsc{inconclusive} --- never ``equivalent'' and never a downgraded partial claim.
@@ -198,33 +212,43 @@ threshold is $0.0125$. The back-transformed mean log cost ratio is a geometric
 mean of within-seed ratios, not a ratio of arithmetic mean token counts.
 Task-level paired effects must be reported once per task (or explicitly
 marked as duplicated on arm rows); arm-level marginal means are separate
-descriptive quantities. Before analysis, the protocol still needs an exact
-bootstrap interval construction, resample count, and Holm-to-confidence-bound
-inversion rule; deterministic streams alone do not specify an interval.
+descriptive quantities. Because the joint rule already requires success on
+both tasks, it is an intersection-union test across tasks as well; Holm
+adjustment across the two tasks is therefore conservative for the joint claim
+rather than required by it. Before analysis, the protocol still needs an exact
+bootstrap interval construction (variant and resample count), a rule for
+whether bounds use the uniform $0.0125$ level or step-down Holm levels, and an
+adjudication rule when the bootstrap and paired-$t$ bounds fall on opposite
+sides of a margin; deterministic streams alone do not specify an interval.
 
 \subsection{Power derivation and blinded variance reassessment}
 
-The capability planning standard deviation is $0.0128285396$, a historical
-paired held-out standard deviation from the companion E1 single-stack audit.
-It is a planning prior only, not a certified effect or proof that its variance
-transfers here. The frozen plan records 19 paired seeds from a one-sided
-noncentral paired-$t$ calculation at the worst-case Holm level $0.0125$,
-target power $0.80$, and a one-point separation from the non-inferiority
-boundary; the transfer inflation gives 23. This does not certify cost power
-or the joint four-endpoint success probability (see Limitations).
+The capability planning standard deviation is $0.0128285396$, the worst
+paired held-out standard deviation from E1, the companion completed
+single-stack audit in \path{zvf-program/audit}. It is a planning prior only,
+not a certified effect or proof that its variance transfers here. The frozen
+plan records 19 paired seeds from a one-sided noncentral paired-$t$
+calculation at the worst-case Holm level $0.0125$ (half the familywise
+one-sided $0.025$), target power $0.80$, and a one-point separation from the
+non-inferiority boundary (power $0.820$ at 19 and $0.793$ at 18 pairs); the
+$20\%$ transfer inflation multiplies the seed count,
+$\lceil19\times1.2\rceil=23$. This does not certify cost power or the joint
+four-endpoint success probability (see Limitations).
 
-There is no valid prior for the intervention's paired token-cost variance. After eight completed pairs per cell, a \emph{blinded} variance-only reassessment therefore estimates the held-out-difference variance and the variance of the paired log token ratio with arm labels hidden --- it can see neither the sign nor the task-arm mean effect. It recomputes the paired count required for $80\%$ power at the one-point capability margin (exact one-sided noncentral-$t$ at the Holm worst-case $\alpha$) and the $\log 0.8$ cost boundary (one-sided paired-$t$ on the paired log token ratio at the same $\alpha$ and power); the frozen final count is the larger requirement, capped at 24 seeds per cell. The reassessment may increase but never decrease the count, may not inspect arm effects, may not change margins or estimands, and may not drop a task. If the requirement exceeds the cap, the study verdict is \textsc{stop\_underpowered} rather than a relaxed claim.
+There is no valid prior for the intervention's paired token-cost variance. After eight completed pairs per cell, a \emph{blinded} variance-only reassessment therefore is intended to estimate the held-out-difference variance and the variance of the paired log token ratio with arm labels hidden, so that it sees neither the sign nor the task-arm mean effect; the masking mechanism that achieves this is not yet specified (see Limitations). It recomputes the paired count required for $80\%$ power at the one-point capability margin (exact one-sided noncentral-$t$ at the Holm worst-case $\alpha$) and the $\log 0.8$ cost boundary (one-sided paired-$t$ on the paired log token ratio at the same $\alpha$ and power); the frozen final count is the larger requirement, capped at 24 seeds per cell. The reassessment may increase but never decrease the count, may not inspect arm effects, may not change margins or estimands, and may not drop a task. If the requirement exceeds the cap, the study verdict is \textsc{stop\_underpowered} rather than a relaxed claim.
 
 \subsection{Protocol amendments (prospective, pre-execution)}
 \label{sec:amendments}
 
-Three hash-bound prospective amendments were registered before any confirmatory row existed; all leave tasks, arms, reward semantics, estimands, and margins unchanged.
+Four hash-bound prospective amendments were registered before any confirmatory row existed; all leave tasks, arms, reward semantics, estimands, and margins unchanged.
 
-\textbf{A001 (MATH unbraced boxed targets).} A non-evidence MATH-500 preflight found two frozen MATH-lighteval training solutions whose final answers use unbraced \verb|\boxed| targets. The amendment adds a numeric-only compatibility rule for a final unbraced numeric atom after \verb|\boxed|, retains all 7{,}500 training rows, and drops none; arbitrary unbraced prose remains invalid.
+\textbf{A001 (MATH unbraced boxed targets).} A non-evidence MATH-500 preflight found two frozen MATH-lighteval training solutions (rows 888 and 1011) whose final answers use unbraced \verb|\boxed| targets. The amendment adds a numeric-only compatibility rule for a final unbraced numeric atom after \verb|\boxed| and whitespace, retains all 7{,}500 training rows, and drops none; arbitrary unbraced prose remains invalid. The amendment text does not give a lexical grammar for a numeric atom; the hash-bound preflight extractor is the operative definition.
 
 \textbf{A002 (Qwen3 non-thinking decoder).} The amended MATH baseline preflight then showed that thinking-mode decoding clipped every sampled training completion at the 1{,}024-token cap and produced no reward contrast. Consistent with the Qwen3 model card's guidance \citep{qwen3report2025}, the amendment freezes non-thinking chat templates, the model-card training sampler (temperature $0.7$, top-$p$ $0.8$, top-$k$ $20$), deterministic non-thinking evaluation, and a fail-closed completion-clipping receipt field. Preflight outcomes remain non-evidence and cannot support any confirmatory claim.
 
 \textbf{A003 (confirmatory hardening).} A pre-confirmatory adversarial audit found the frozen protocol under-specified: objective and optimizer hyperparameters lived only in a preflight script, the seed-extension rule was missing, the power derivation used a normal approximation and ignored the Holm worst-case $\alpha$, the probe size had no preregistered justification, and the execution authorization anchored no protocol hash. The amendment pins the objective, optimizer, precision, and adapter configuration into the protocol; freezes the exact-$t$ Holm-adjusted 23-seed plan with a deterministic extension rule to the 24-seed cap; specifies the blinded-reassessment method; justifies the single $G{=}2$ probe as the worst-case design point for the censoring mechanism, with $G{=}4$ named as the first follow-up ablation; documents preflight seed reuse (non-evidence, at most one optimizer step, never entering the ledger); completes the results-contract telemetry fields; and binds the authorization to a canonical protocol hash.
+
+\textbf{A004 (seam-verification window).} The preflight gate requires a live mixed-reward optimizer update in every task-arm cell, but a two-group preflight rarely produced one. The amendment widens only that non-evidence preflight window (at most 48 rollout groups for the intervention and 24 for the baseline, within 24 optimizer steps of the unchanged two-groups-per-step geometry) and quarantines its stopping-rule-biased group-class telemetry from every descriptive, planning, or reassessment use. Confirmatory units are unchanged.
 
 \subsection{Failure and missingness policy}
 
@@ -246,7 +270,7 @@ Table~\ref{tab:main} will be generated \emph{only} from the reconciled, hash-val
 
 \begin{table}[h]
 \centering
-\caption{\textbf{[PLACEHOLDER --- TABLE NOT GENERATED]} Main confirmatory table. Column structure follows the frozen contract \texttt{main\_table\_columns} in \texttt{results\_contract.json}: task, arm, completed seeds, charged-token mean with confidence interval, held-out accuracy mean with confidence interval, paired cost effect with confidence interval, paired accuracy effect with confidence interval, and verdict.}
+\caption{\textbf{[PLACEHOLDER --- TABLE NOT GENERATED]} Main confirmatory table. Column structure follows the frozen contract \texttt{main\_table\_columns} in \texttt{results\_contract.json}: task, arm, completed seeds, charged-token mean with confidence interval, held-out accuracy mean with confidence interval, paired cost effect with confidence interval, paired accuracy effect with confidence interval, and verdict. The paired-effect and verdict columns are task-level quantities on arm-indexed rows; the contract does not yet say how they appear on baseline rows, the confidence level of each interval column, the display scale of the paired cost effect, or where the power-receipt outcome is reported. These conventions must be fixed before the table is generated.}
 \label{tab:main}
 \resizebox{\textwidth}{!}{%
 \begin{tabular}{@{}llrrrrrrrrrrrrrl@{}}
@@ -284,8 +308,11 @@ increasing seeds: power planning requires a prespecified alternative strictly
 inside the acceptable region. The frozen cost plan does not state that
 alternative or a numeric precision gate. The claimed blinded reassessment
 also needs a concrete label-masking mechanism that preserves paired
-covariance; arbitrary independent sign flips do not preserve the centered
-variance. These are unresolved pre-execution design requirements, not
+covariance: independent per-pair sign flips $\tilde d_i=S_id_i$ estimate
+$\sigma_d^2+\mu_d^2$ rather than $\sigma_d^2$, which for the cost endpoint, where
+a large mean log-ratio is expected, would inflate the seed requirement; a
+consistent orientation inside a routine that releases only the centered
+variance and the resulting seed count avoids that bias. These are unresolved pre-execution design requirements, not
 procedures claimed to have run. Finally, early stopping can reduce the
 number of nonzero-gradient updates even at equal scheduled step counts;
 update sparsity must be reported rather than interpreted as unchanged
@@ -310,41 +337,54 @@ This appendix carries reproducibility material: artifact paths, hashes, run iden
 
 \subsection{Frozen design artifacts}
 
-The design is frozen under \texttt{zvf-program/next-submission/} with SHA-256 bindings recorded in \texttt{preregistration.json}. Key artifacts:
+The design is frozen under \texttt{zvf-program/next-submission/} with SHA-256 bindings recorded in \texttt{preregistration.json}. Key artifacts are listed in Table~\ref{tab:artifacts}.
 
-\begin{center}
+\begin{table}[h]
+\centering
+\caption{Key frozen design artifacts and the SHA-256 prefixes bound in the preregistration. The preregistration's own digest is its current file digest; \texttt{execution\_authorization.json} additionally records its canonical protocol digest.}
+\label{tab:artifacts}
 \small
 \begin{tabular}{@{}lp{9.2cm}@{}}
 \toprule
 Artifact & Path (SHA-256 prefix) \\
 \midrule
-Preregistration & \texttt{preregistration.json} \\
+Preregistration & \texttt{preregistration.json} (\texttt{4c0c318b\ldots}; canonical \texttt{e3403617\ldots}) \\
 Claim ledger & \texttt{claim\_ledger.json} (\texttt{0ab19d64\ldots}) \\
 Results contract & \texttt{results\_contract.json} (\texttt{bef7dd99\ldots}) \\
 Manuscript blueprint & \texttt{MANUSCRIPT\_BLUEPRINT.md} (\texttt{6a9c6645\ldots}) \\
-Execution authorization & \texttt{execution\_authorization.json} (\texttt{8f13c393\ldots}) \\
+Execution authorization & \texttt{execution\_authorization.json} (\texttt{43e7d3cb\ldots}) \\
 Contrast sampler & \texttt{contrast\_sampler.py} (\texttt{083da9d9\ldots}) \\
 TRL sampler adapter & \texttt{trl\_sampler\_adapter.py} (\texttt{86964746\ldots}) \\
-Remote preflight & \path{remote_preflight.py} (\texttt{dafa185f\ldots}) \\
+Remote preflight & \path{remote_preflight.py} (\texttt{2cc7b68f\ldots}; superseded pre-A004 \texttt{dafa185f\ldots}) \\
 Amendment A001 & \path{protocol_amendment_001_math_boxed.json} (\texttt{89f8ff46\ldots}) \\
 Amendment A002 & \path{protocol_amendment_002_qwen_decoder.json} (\texttt{5695e535\ldots}) \\
 Amendment A003 & \path{protocol_amendment_003_confirmatory_hardening.json} (\texttt{25047e5a\ldots}) \\
+Amendment A004 & \path{protocol_amendment_004_seam_verification_window.json} (\texttt{b99f0c59\ldots}) \\
 Power implementation & \path{zvf-program/audit/aggregate_audit.py} (\texttt{c323c4ed\ldots}) \\
 \bottomrule
 \end{tabular}
-\end{center}
+\end{table}
+
+\paragraph{Binding drift at the current repository head.} On 2026-10-18 the
+working-tree copies of the contrast sampler, TRL adapter, remote preflight,
+power implementation, and five preflight launchers and verifiers no longer match
+their bound digests, and \texttt{verify\_design.py} fails with
+``power implementation hash drift''.  The bound versions remain in the
+repository history.  Confirmatory execution must use the bound versions or a
+new prospective amendment that re-freezes the changed files; the design is
+not executable from the current working tree as frozen.
 
 Full 64-hex digests for these artifacts, and for every provider launcher (Colab, Hugging Face Jobs, Kaggle, GCP), are recorded in the \texttt{bindings} block of the preregistration file. The design verifier, \texttt{verify\_design.py}, checks the complete matrix, the exact noncentral-$t$ power calculation against the hash-bound implementation, the claim ledger, the contribution-type gate, the generated-table contract, the manuscript order, the execution authorization and its canonical protocol anchor, the preregistered seed values and extension reserve, the objective/optimizer/adapter configuration, the estimand boundaries and joint success rule, the analysis rules, the protocol and results-contract telemetry lists, executable source hashes, and the frozen evidence boundary.
 
 \subsection{Dataset pins}
 
-Frozen dataset revisions:
+Frozen dataset revisions (Hugging Face Hub Git commit identifiers, not SHA-256 file digests):
 \begin{itemize}
-  \item GSM8K training: \path{openai/gsm8k}, revision \texttt{740312ad\ldots}
+  \item GSM8K training: \path{openai/gsm8k}, configuration \texttt{main}, revision \texttt{740312ad\ldots}
   \item MATH training: \path{DigitalLearningGmbH/MATH-lighteval}, revision \texttt{0530c786\ldots}
   \item MATH-500 evaluation: \path{HuggingFaceH4/MATH-500}, revision \texttt{6e4ed1a2\ldots}
 \end{itemize}
-Held-out manifests are hash-frozen before execution.
+The base model is \path{Qwen/Qwen3-8B} at revision \texttt{b968826d\ldots}. The held-out manifest digests are not yet bound in the preregistration and must be bound before execution.
 
 \subsection{Run identities, environment locks, and recovery receipts}
 

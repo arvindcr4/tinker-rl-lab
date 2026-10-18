@@ -1153,7 +1153,7 @@ and remote manifests are byte-identical with SHA-256
 `3057541e3364213fa2ee36dfdfde995cf78b59c49fecfa50665739dcdb8a07de`.
 Every checkpoint trainer state reports its exact step, `max_steps=30`, and a
 contiguous history. The fail-closed aggregate now accepts 40/40 units and emits
-the preregistered verdicts: DAPO `DISAPPEARS`; GSPO, Dr.GRPO, and AERO
+the historical, now superseded verdicts: DAPO `DISAPPEARS`; GSPO, Dr.GRPO, and AERO
 `INCONCLUSIVE`. The campaign supervisor exited cleanly and released the last
 Colab A100 session.
 
@@ -1208,7 +1208,7 @@ final adapter, frozen fingerprints, and the byte-identical manifest (SHA-256
 reconcile with the accepted local record. The final trace contains indices
 0--499, 500 valid unique completion hashes, and 319 correct answers (`0.6380`).
 The full verifier accepted all 40 units with zero errors, and the frozen
-aggregate emitted the final verdicts: DAPO `DISAPPEARS`; GSPO, Dr.GRPO, and
+aggregate emitted the then-final, now superseded verdicts: DAPO `DISAPPEARS`; GSPO, Dr.GRPO, and
 AERO `INCONCLUSIVE`.
 
 ## Preflight and recovery record

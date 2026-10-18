@@ -67,3 +67,27 @@ def test_allowlist_matching():
     assert gate.is_allowlisted("zvf-program/audit/aggregate_audit.py")
     assert gate.is_allowlisted("archive/anything.md")
     assert not gate.is_allowlisted("outputs/new_deck.py")
+
+
+def test_exact_frozen_correction_direction_only(tmp_path):
+    gate = _load_gate()
+    target = tmp_path / "paper.tex"
+    for line in (
+        "because it changes DAPO from DISAPPEARS to INCONCLUSIVE.",
+        r"because it changes DAPO from \texttt{DISAPPEARS} to \texttt{INCONCLUSIVE}.",
+    ):
+        target.write_text(line)
+        assert gate.find_unmarked_occurrences(target, "paper.tex") == []
+    for line in (
+        "because it changes DAPO from INCONCLUSIVE to DISAPPEARS.",
+        "because it changes DAPO from DISAPPEARS to INCONCLUSIVE. DAPO DISAPPEARS today.",
+        "because it changes DAPO from DISAPPEARS to INCONCLUSIVE.\nDAPO DISAPPEARS today.",
+    ):
+        target.write_text(line)
+        assert gate.find_unmarked_occurrences(target, "paper.tex")
+
+
+def test_fixture_allowlist_is_exact():
+    gate = _load_gate()
+    assert gate.is_allowlisted("tests/reviews/test_review09_safe_tools.py")
+    assert not gate.is_allowlisted("tests/reviews/unreviewed_fixture.py")

@@ -125,7 +125,7 @@ condition and fallback venue.
 
 ### 6. Audited reproduction benchmark
 
-**What:** publish the 40/40 E1 audit and the `SURVIVES` / `DISAPPEARS` /
+**What:** publish the 40/40 E1 audit and the protocol vocabulary (do not quote as a current verdict): `SURVIVES` / `DISAPPEARS` /
 `INCONCLUSIVE` protocol as a reproducibility artifact.  
 **Note (2026-08-02):** all four E1 arms are now `INCONCLUSIVE`; the DAPO
 `DISAPPEARS` verdict is superseded (`zvf-program/audit/STATISTICAL_REANALYSIS.md`).

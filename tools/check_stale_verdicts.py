@@ -23,6 +23,7 @@ when any of the following holds:
 
 from __future__ import annotations
 
+import re
 import subprocess
 from pathlib import Path
 
@@ -52,6 +53,7 @@ TEXT_SUFFIXES = {".md", ".tex", ".py", ".json", ".txt", ".yaml", ".yml", ".rst"}
 ALLOWLISTED_FILES = {
     "tools/check_stale_verdicts.py",  # this gate
     "tests/test_stale_verdict_gate.py",  # gate tests
+    "tests/reviews/test_review09_safe_tools.py",  # synthetic stale-verdict adversarial fixtures
     "zvf-program/audit/aggregate_audit.py",  # preregistered rule implementation
     "zvf-program/audit/preregistration.json",  # preregistered rule definition
     "zvf-program/audit/test_aggregate_audit.py",  # synthetic fixtures
@@ -114,6 +116,13 @@ def find_unmarked_occurrences(path: Path, relative: str) -> list[str]:
             continue
         # Corrections must describe this occurrence on the same line. Generic
         # installation banners and nearby unrelated "invalid" text cannot hide it.
+        # Preserve frozen correction prose, but never exempt the reverse direction
+        # or an additional current-verdict claim on the same line.
+        plain = re.sub(r"\\texttt\{([^{}]+)\}", r"\1", line).replace("`", "")
+        if re.fullmatch(
+            r"\s*because it changes DAPO from DISAPPEARS to INCONCLUSIVE\.\s*", plain
+        ):
+            continue
         context = line.lower()
         if any(marker in context for marker in MARKERS):
             continue

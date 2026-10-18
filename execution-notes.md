@@ -322,7 +322,7 @@ recovery if the amendment permits corpus reuse.
 - Corrected that value, advanced the locked-directory date to 2026-07-20, fixed
   the conclusion's duplicated “together they” construction, and rebuilt the
   eight-page PDF successfully with TeX Live. The rendered PDF now prints
-  `0.650` and the unchanged frozen verdicts: DAPO `DISAPPEARS`; GSPO,
+  `0.650` and the then-frozen verdicts (now superseded): DAPO `DISAPPEARS`; GSPO,
   Dr.GRPO, and AERO `INCONCLUSIVE`.
 - Audited the flagship screening DAG. The non-scientific A100 smoke is
   `accepted`; all six corpus jobs are `failed_infrastructure` after three

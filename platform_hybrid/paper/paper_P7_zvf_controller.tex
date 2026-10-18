@@ -16,7 +16,7 @@
 \maketitle
 \input{sections/p7_abstract}
 \input{sections/p7_intro}
-\input{sections/_shared_methods}
+\input{sections/p7_methods}
 \input{sections/p7_results_intro}
 \input{sections/p7_theory}
 \input{sections/p7_ushape}
@@ -50,6 +50,7 @@
 \input{sections/p7_iter203_empirical_gprime}
 \fi
 \section{Replay audit boundary}
+\label{sec:p7-replay-boundary}
 The N2 archive contains four method traces, each with 40 successive steps and
 16 prompt groups per step ($G=8$). These are 2,560 logged group observations,
 not 2,560 independent experiments or controller interventions. N10 consists
@@ -57,6 +58,19 @@ of five seed trajectories of 15 steps. Repeated steps must not be treated as
 independent replicates. Existing step/cell bootstrap intervals and significance
 claims are withdrawn pending prompt- and seed-aware reanalysis with temporal
 dependence preserved; no replacement intervals are inferred here.
+
+\paragraph{The one N2 count retained.} Counting post hoc (no controller ran),
+1,723 of the 1,867 degenerate groups (92.3\%) are all-correct and 144
+all-wrong; mean reward is $0.83$. Because the 16 prompts at each step are
+shared across the four methods, each prompt's success rate can be estimated
+from the \emph{other} three methods' 24 rollouts; a binomial model at that
+held-out rate predicts 1,747 all-correct and 153 all-wrong degenerate groups
+(91.9\%). The all-correct share therefore follows from the reward level, not
+from any trigger; it is a single-seed descriptive count with no interval, and
+the leave-one-method-out rate mixes four different policies
+(\texttt{tools/review\_ledger/P7\_zvf\_controller\_n2\_check.py}). A symmetric
+ZVF trigger would mostly fire on solved prompts at this reward level; whether
+an all-wrong-only policy preserves held-out performance is unknown.
 
 All uses of $\delta_{\mathrm{div}}$ as a correlation measure, diversity bonus,
 control trigger, ranking, or lower-bound correction are withdrawn. Same-group
@@ -66,9 +80,11 @@ of anti-herding, and resampling eight identical observed rewards cannot test
 whether new rollouts restore contrast at an unknown interior success probability.
 
 Iter-147 results are excluded: iter-159 records misaligned per-cell columns
-(including a zero STATIC\_G8 group-size field), and reports retention
-$0.244$--$0.307$, not iter-147's $1.04$--$1.05$. The latter numbers and the
-claimed portability/lower bound are not admissible. Iter-159's reconstruction
+(including a zero STATIC\_G8 group-size field). The two iterations also report
+different quantities under the same ``retention'' label (iter-147: a ratio to
+the static-$G{=}8$ contrast, $1.04$--$1.05$; iter-159: raw mean contrast,
+$0.244$--$0.307$), so neither can be read against the other. The iter-147
+numbers and the claimed portability/lower bound are not admissible. Iter-159's reconstruction
 does not repair the independent-unit or policy-validation problem.
 
 The archive also uses ``Dualformer-Auto'' for incompatible local heuristics:

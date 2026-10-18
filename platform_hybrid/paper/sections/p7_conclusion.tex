@@ -20,10 +20,11 @@ $\mathrm{PCD} = \frac{G-1}{G}\E[p(1-p)]$, which survives the micro-jitter
 that silently zeroes ZVF in any pipeline with a dense sub-reward.
 
 The implemented callback and four-arm pilot establish feasibility, not
-superiority. Adaptive $G$ reached the same held-out delta as Dr.~GRPO while
-spending more rollouts, and a post-hoc count over 2,560 logged group outcomes
-(no controller ran) finds that 92.3\% of degenerate groups are all-correct,
-as a per-prompt binomial model at that reward level predicts (91.5\%). Cross-prompt pooling
+superiority. In a two-seed pilot, adaptive $G$ reached the same mean held-out delta as
+Dr.~GRPO while spending more rollouts, and a post-hoc count over 2,560 logged
+group outcomes (no controller ran) finds that 92.3\% of degenerate groups are
+all-correct, close to the 91.9\% a binomial model predicts when each prompt's
+success rate is estimated from the other methods' rollouts. Cross-prompt pooling
 cannot stand in for a larger GRPO group, and a frozen-$p$ simulation cannot stand
 in for closed-loop learning. The durable output is therefore a falsifiable design
 rule---separate failed starvation from solved saturation, price interventions in

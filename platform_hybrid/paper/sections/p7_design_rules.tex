@@ -1,7 +1,7 @@
 % Pillar-7: controller design rules (when to escalate G, thresholds)
 \section{Controller Design Rules}
 \label{sec:p7-rules}
-The theory and the E3 audit jointly support a small set of design rules for
+The theory and the E3 pilot jointly motivate a small set of design rules for
 group-size control. We state them as rules with their supporting evidence,
 in the spirit of engineering guidance rather than proven optima.
 
@@ -24,22 +24,24 @@ shaping terms are added.
 \paragraph{Rule 2: escalate multiplicatively, in small steps.} T2 gives
 exponential returns in $G$ at interior $p$ (at $p = \nicefrac12$,
 $h_G = 2^{1-G}$, so each additional rollout halves the degenerate
-fraction), but linear cost. The audited schedule $4 \to 6 \to 8$ (steps of
-$\times 1.5$ and $\times 1.33$) captured most of the achievable ZVF
-reduction at $+55\%$ total rollouts; jumping straight to a large fixed $G$
-pays the overhead on every step including the healthy ones. The repo sweep
+fraction), but linear cost. This rule is a recommendation from the theory, not an E3 finding: the E3
+escalator (steps of $+2$ from $G{=}4$) cost $+55\%$ rollouts and moved mean
+ZVF only from $0.25$ to $0.23$ (Table~\ref{tab:p7-e3}). Jumping straight to
+a large fixed $G$ pays the overhead on every step including the healthy
+ones. The repo sweep
 (Table~\ref{tab:p7-gsweep}) makes the same point statically: $G{=}16$ costs
 $4\times$ the rollouts of $G{=}4$ for a ZVF drop from $0.76$ to $0.63$ and
 no held-out gain on a near-saturated task.
 
-\paragraph{Rule 3: trigger on spikes, not levels.} Pillar~2 established
+\paragraph{Rule 3: trigger on spikes, not levels.} Pillar~2 reported
 that ZVF is temporally sticky (lag-1 autocorrelation $\approx 0.94$) and
-drifts upward over training. A level threshold therefore fires either never
-or permanently. The \texttt{zvf-triage} callback triggers on upward
-\emph{spikes} relative to the run's own recent trajectory, which is what
-fired the $4 \to 6 \to 8$ escalations live in E3. Sticky drift toward high
-ZVF with rising reward is the expected saturation endgame, not an
-emergency.
+drifts upward over training, so a level threshold tends to fire either never
+or permanently. We therefore recommend triggering on upward \emph{spikes}
+relative to the run's own recent trajectory. The E3 pilot did \emph{not}
+implement this: its trigger is a level threshold on a two-step moving average
+($>0.4$), so E3 provides no evidence for or against spike triggering. Sticky
+drift toward high ZVF with rising reward is the expected saturation endgame,
+not an emergency.
 
 \paragraph{Rule 4: never compare controllers across stacks.} The
 under-specified same-label comparison ($85.6\%$ vs $5.0\%$, with backend and
@@ -58,7 +60,7 @@ decontamination/parser probes---with the group-size \emph{schedule} (item
 sampling reports zero ZVF among accepted groups in the E3 pilot,
 at $+45\%$ rollout cost. This is not a termination or cost guarantee
 on other populations. Whether to buy it is a compute-allocation
-decision, and on our task it was not the best use of the marginal rollout
+decision; in the two-seed pilot it bought no held-out gain
 (Table~\ref{tab:p7-e3}). The controller framework makes the price explicit;
 we expect the trade to tip toward aggressive intervention on harder prompt
 populations, and flag that as the decisive open experiment
@@ -66,14 +68,17 @@ populations, and flag that as the decisive open experiment
 
 \paragraph{Endgame evidence that $G$ wants a schedule.} A two-seed
 matched-budget panel (2{,}560 rollouts per arm: $G{=}2\times160$ steps
-vs.\ $G{=}16\times20$ steps, Qwen3-8B/GSM8K, batch~8) shows the wall the
-rules above exist to avoid, at the \emph{high}-accuracy end: the $G{=}2$
-arms reach train reward near 1.0 and then idle at
-$\mathrm{ZVF}\approx0.75$--$1.0$ --- all-correct groups with zero centered
-reward contrast in the stated runner, not necessarily zero total gradient
---- while $G{=}16$ holds $\mathrm{ZVF}\le0.25$ on the same budget. A
-fixed small $G$ buys more optimizer steps early and starves in the
-endgame; a fixed large $G$ pays for contrast it does not yet need. The
+vs.\ $G{=}16\times20$ steps, Qwen3-8B/GSM8K, batch~8, seeds 123 and 456)
+shows the wall the rules above exist to avoid, at the \emph{high}-accuracy
+end. The $G{=}2$ arms reach last-10 train reward $0.90$ and $0.96$ and then
+idle at mean ZVF $0.975$ and $0.981$ over their last 20 steps --- all-correct
+groups with zero centered reward contrast in the stated runner, not
+necessarily zero total gradient. The $G{=}16$ arms average ZVF $0.19$ and
+$0.11$ (maxima $0.50$ and $0.38$) but, with only 20 optimizer steps, reach
+last-10 train reward of just $0.32$ and $0.39$. Neither arm has a held-out
+evaluation in these records. A fixed small $G$ buys more optimizer steps and
+starves in the endgame; a fixed large $G$ keeps contrast but, on the same budget,
+reaches far lower training reward. The
 static trade is exactly what Rules~1--3 convert into a closed-loop
 schedule: start small, escalate as $\hat p$ (and with it
 $\mathrm{ZVF}$) rises. Artifacts:

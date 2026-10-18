@@ -499,7 +499,7 @@ four-bar last-10-reward chart (Figure~\ref{fig:framework_gap}).
 \includegraphics[width=0.8\columnwidth]{figures/v2/framework_comparison.pdf}
 \caption{Task~4 framework-gap deep-dive. Identical GRPO config
 (Qwen3-8B, $G{=}8$, lr${=}10^{-5}$, GSM8K-500, 30 steps, seed~42) run through
-four launchers (\texttt{verl/}, \texttt{platform_modal/openrlhf/}, \texttt{trl\_integrations/}
+four launchers (\texttt{verl/}, \texttt{platform\_modal/openrlhf/}, \texttt{trl\_integrations/}
 and Tinker-Managed) in this repository. Tinker's managed reference-model
 offload and tuned rollout defaults dominate at 30 steps; TRL-H100 collapses on
 the same config (PEFT LoRA rank~32 over 500 prompts $\approx$ 10\% of
@@ -540,7 +540,7 @@ data from Modal GPU runs (NVIDIA L4/T4).}
 % Figure 6: Performance profiles
 \begin{figure}[t]
 \centering
-\includegraphics[width=0.85\linewidth]{figures/v2/performance_profiles.pdf}
+\includegraphics[width=0.85\linewidth]{figures/performance_profiles.pdf}
 \caption{Performance profiles showing the fraction of runs above a given normalized
 score threshold, following the methodology of Agarwal et al.~\cite{agarwal2021deep}.}
 \label{fig:performance_profiles}
@@ -1746,7 +1746,7 @@ PPO-REINFORCE = 4 runs; Tinker GRPO frontier = 9 runs; team members =
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.5\linewidth]{figures/v2/old_trl_seeds.pdf}
+\includegraphics[width=0.5\linewidth]{figures/old_trl_seeds.pdf}
 \caption{Cross-seed reproducibility analysis for TRL GRPO on Qwen2.5-0.5B (GSM8K, 125 steps, NVIDIA L4). Five seeds show mean accuracy 73.4\% with CV = 0.096. Violin plot shows the distribution; individual seeds are labeled. The mean is significantly above 50\% ($t = 7.44$, $p < 0.001$), confirming that GRPO produces reliable learning signal even at 0.5B scale.}
 \label{fig:trl_seeds}
 \end{figure}

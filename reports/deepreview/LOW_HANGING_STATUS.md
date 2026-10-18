@@ -1,7 +1,18 @@
 # DeepReview editorial pass — 18 October 2026
 
-Branch: `review-low-hanging-2026-10-18`. Local changes only; not merged,
-pushed, or published. No additional DeepReview API calls were made.
+Editorial branch: `review-low-hanging-2026-10-18`. This report records the
+editorial pass; the subsequent main integration was authorized by the user.
+No additional DeepReview API calls were made.
+
+## Main integration
+
+Newer substantive P4 and Sem4 dispositions, plus the P4 numeric ledger, take
+precedence over this pass's editorial scope deferrals. These three conflict
+resolutions preserve the corresponding main records byte-for-byte. After
+integration, the same 979 finding IDs are covered exactly once: **42 fixed,
+129 already-fixed, 1 needs-compute, 807 wontfix-scope**. The original
+editorial-only counts below remain a historical account of this pass.
+Uncommitted work in the original main checkout is excluded from this merge.
 
 ## Scope and outcome
 

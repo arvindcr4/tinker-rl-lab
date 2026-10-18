@@ -39,7 +39,7 @@
 \Urlmuskip=0mu plus 1mu
 \emergencystretch=2em
 
-\graphicspath{{./}{../../paper/figures/}{../../paper/figures/v2/}{../../grpo_ablation_results/images/}}
+\graphicspath{{./}{../../../platform_tinker/reports/final/}{../../paper/figures/}{../../paper/figures/v2/}{../../grpo_ablation_results/images/}}
 
 \newcommand{\projecttitle}{When Does a GRPO-Like Group-Relative RL Loop Have a Learning Signal?}
 \newcommand{\projectsubtitle}{A Diagnostic Audit of Reward Diversity, Evidence Calibration, and Stack-Conditioned LLM Post-Training}
@@ -317,7 +317,7 @@ The project's empirical program is structured around a common pattern: choose a 
 
 \begin{figure}[ht]
   \centering
-  \fitdiagram{tikz/system_architecture.tex}
+  \fitdiagram{../../../platform_tinker/reports/final/tikz/system_architecture.tex}
   \caption{System architecture linking datasets, reward environments, training backends, logging, evaluation, and report artifacts.}
   \label{fig:system-architecture}
 \end{figure}
@@ -392,7 +392,7 @@ The advantage is then used to weight the policy-gradient update. In the Tinker i
 
 \begin{figure}[ht]
   \centering
-  \fitdiagram{tikz/grpo_loop.tex}
+  \fitdiagram{../../../platform_tinker/reports/final/tikz/grpo_loop.tex}
   \caption{GRPO reward and update loop, including the zero-variance failure mode.}
   \label{fig:grpo-loop}
 \end{figure}
@@ -437,7 +437,7 @@ This diagnostic is not claimed as a new theory of GRPO. It is an operational pac
 
 \begin{figure}[ht]
   \centering
-  \fitdiagram{tikz/zvf_diagnostic.tex}
+  \fitdiagram{../../../platform_tinker/reports/final/tikz/zvf_diagnostic.tex}
   \caption{ZVF diagnostic logic used to interpret GRPO failure and saturation.}
   \label{fig:zvf-diagnostic}
 \end{figure}
@@ -777,7 +777,7 @@ The experiment inventory in Chapter~\ref{ch:experiment-inventory} is broad, but 
 
 \begin{figure}[t]
   \centering
-  \includegraphics[width=\textwidth]{results_dashboard.pdf}
+  \includegraphics[width=\textwidth]{results_dashboard.png}
   \caption{Chapter 6 results dashboard. Panel A shows that tool-call format reward improves only after an SFT warm-up creates valid samples. Panel B shows that Qwen3-8B held-out GSM8K accuracy improves only from 82.0\% to 83.3\% after GRPO, which is not statistically significant ($p=0.26, paired per-prompt p=0.539 (evaluated on a random 50-problem subset)$). Panel C shows how ZVF separates usable reward diversity from flat wrong groups and flat saturated groups. Panel D shows that algorithm-label comparisons are stack-conditioned: the Qwen PPO summary is artifact-sensitive, while the recorded Llama-3.1-8B-Instruct comparison favors PPO.}
   \label{fig:results-dashboard}
 \end{figure}

@@ -1,0 +1,7 @@
+task	metric	n_per_arm	diff_dr_minus_grpo	welch_t	welch_df	welch_p	exact_perm_p	n_perms	mde_d_80pct
+arithmetic	rho_step_len	5	0.0975389	0.863457	7.99523	0.413038	0.396825	252	2.02444
+arithmetic	rho_len_reward	5	0.126302	1.17982	7.80737	0.27277	0.253968	252	2.02444
+arithmetic	len_last5	5	-0.0034375	-0.106801	7.43653	0.917771	0.928571	252	2.02444
+gsm8k_cot	rho_step_len	3	0.266667	1.17172	3.89367	0.307979	0.3	20	3.07089
+gsm8k_cot	rho_len_reward	3	-0.116742	-0.712844	2.80465	0.530651	0.7	20	3.07089
+gsm8k_cot	len_last5	3	6.54271	1.07893	2.63221	0.369451	0.4	20	3.07089

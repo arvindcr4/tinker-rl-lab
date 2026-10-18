@@ -68,9 +68,15 @@ Coverage: 13 / 28 manuscripts have a report.
    token-budget apex; `sections/group_size_reconcile.tex` already labels the
    `G≈32` reconstruction a hypothesis, so the two now agree.
 
-4. **Sem-3 capstone build defect (open).** `platform_hybrid/sem 3 work/source/
-   capstone_final_report.tex` fails to build: `\fitdiagram{tikz/
-   system_architecture.tex}` -> file not found. The same file also carried
+4. **Sem-3 capstone build defect (resolved 2026-10-18).**
+   `platform_hybrid/sem 3 work/source/capstone_final_report.tex` failed because
+   the `tikz/` diagram directory had been deleted from the tree while the
+   manuscript still input three files from it, and it referenced a
+   `results_dashboard.pdf` that does not exist. The three diagrams are loaded
+   from their surviving location `platform_tinker/reports/final/tikz/`, and
+   `results_dashboard.png` is resolved through the graphics path. The build now
+   writes 119 pages with 0 LaTeX errors, 0 undefined references and no BibTeX
+   warnings. The same file also carried
    `.aux`-derived duplicate-key and orphan-cite entries earlier on 2026-10-18;
    a re-run of `tests/test_citation_integrity.py` now passes (3 passed).
    Across the 2026-10-18 follow-up runs the same test failed intermittently on

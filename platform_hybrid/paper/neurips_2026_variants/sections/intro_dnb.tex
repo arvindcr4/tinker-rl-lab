@@ -1,7 +1,7 @@
 % =============================================================================
 % Introduction --- DNB variant (Datasets & Benchmarks track)
 % Artifact-first framing; A/B/C claim grades; neutral wording.
-% Target: <= 1 page.
+% 2026-10-18 Deep Review pass: stratified-diagnostics paragraph withdrawn.
 % =============================================================================
 \section{Introduction}
 \label{sec:intro}
@@ -17,52 +17,46 @@ field needs auditable, tier-classified artifacts more than it needs another
 leaderboard.
 
 \paragraph{Artifact-first contribution.}
-\ours{} is a historical run collection with an unresolved run-ID census
-and incomplete file-level release inventory. Manifest rows include PPO
-baselines, GRPO runs, partial runs and unstarted plans; they cannot be
-summed into a verified GRPO experiment count. Every (backend, model, task) cell
-in the manifest is classified into one of three evidence tiers, used
-consistently in the abstract, the main evidence table, and the
-conclusion:
+\ours{} is a run collection with a manifest
+(Appendix~\ref{sec:run-manifest}). Manifest rows include PPO pipeline
+checks, GRPO runs, partial runs and unstarted plans; they cannot be summed
+into a count of comparable GRPO experiments. Every (backend, model, task)
+cell is classified into one of three evidence tiers, used consistently in
+the abstract, Table~\ref{tab:claims-tier}, Table~\ref{tab:artifact-card},
+the manifest, and the conclusion:
 \begin{itemize}\setlength\itemsep{1pt}
-  \item \textbf{(A-grade)} multi-seed completed cells; this is a completion
-        classification, not automatic inferential eligibility.
-  \item \textbf{(B-grade)} single-seed completed case-study runs on the
-        closed-backend Tinker API, reported descriptively only.
-  \item \textbf{(C-grade)} failed, partial, or never-started cells,
-        enumerated in the run manifest for honesty.
+  \item \textbf{(A)} completed cells with at least three seeds at a fixed
+        configuration; this is a completion classification, not automatic
+        inferential eligibility.
+  \item \textbf{(B)} completed single- or two-run case studies (mostly on
+        the closed-backend Tinker API), reported descriptively only.
+  \item \textbf{(C)} failed, partial, quarantined, or never-started cells,
+        enumerated in the manifest for honesty.
 \end{itemize}
+Mathematical statements (the ZVF expectation) and the separate five-seed
+held-out evaluation are kept outside the empirical tiers.
 
 \paragraph{What the artifact lets reviewers do.}
-A reviewer can inspect available summaries and scripts. End-to-end
-reproduction of every A-grade cell via \texttt{make reproduce-main} and
-trace availability for every reported run have not been verified;
-(iii) read off a per-run auditability matrix (Table~\ref{tab:artifact-card})
-that lists, for each cell, whether raw rollouts, ZVF traces, checkpoints,
-and held-out evaluation are released; and (iv) consult the claims-evidence
-table (Table~\ref{tab:claims-tier}) to see exactly which artifact each
-claim depends on and what its tier is.
+A reviewer can (i) recompute every training-reward number in
+Table~\ref{tab:main_results} from the named run JSON with a released script;
+(ii) read off a per-bucket auditability matrix
+(Table~\ref{tab:artifact-card}) that states, for each cell, whether a
+reward trace, a step-level ZVF trace, and held-out evaluation exist; and
+(iii) consult the claims table (Table~\ref{tab:claims-tier}) to see which
+artifact each claim depends on. End-to-end re-execution is not offered as a
+one-command target (Section~\ref{sec:repro-onecmd}).
 
-\paragraph{Two narrow scientific take-aways.}
-Two statements must be kept outside the empirical A/B/C tiers. First, the
-theoretical expectation $\mathbb E[\widehat{\mathrm{ZVF}}]=p^{G}+(1{-}p)^{G}$
-under conditionally i.i.d.\ binary sampling characterises
-when binary rewards produce zero centered reward contrast in the
-group-standardized runner; we use it as
-a descriptive diagnostic, not as a standalone causal predictor of
-downstream performance, because ZVF is mechanically coupled to reward
-sparsity, group size, and baseline accuracy. Second, later, separate five-seed
-Qwen3-8B GSM8K evidence yields only a $+1.3$pp delta over a fixed base;
-$p{=}0.26$ is a one-sample seed-level test, not a paired-seed test or
-reviewed-record evidence. Strong online reward curves on a closed backend do not by
-themselves establish generalization gains. All B-grade single-seed
-case-study runs across model scale are reported as illustrative.
-
-\paragraph{Stratified ZVF diagnostics.}
-A separate stratified diagnostic suite documents that the pooled
-ZVF-vs-performance correlation is dominated by task identity: within
-GSM8K alone the apparent monotone relationship does not survive
-(Pearson $r=+0.40$, $p=0.09$ across the 19 Tinker GSM8K runs;
-$r=+0.13$, $p=0.79$ across the 7 model-varying GSM8K cells). We
-release these stratified analyses precisely so that follow-up work can
-audit them against richer multi-seed corpora.
+\paragraph{What the evidence does and does not show.}
+The ZVF expectation $\mathbb E[\mathrm{ZVF}_t]=p^{G}+(1{-}p)^{G}$ under
+conditionally i.i.d.\ binary sampling characterises when binary rewards
+produce zero centered reward contrast in a group-standardized runner; we use
+ZVF as a descriptive diagnostic, not as a predictor of downstream
+performance. The separate five-seed Qwen3-8B GSM8K held-out evaluation gives
+$+1.3$pp over a single base-model run ($t(4){=}1.32$, $p{=}0.26$), which
+does not establish a gain. Strong online reward curves on a closed backend
+do not by themselves establish generalization. An audit of earlier drafts
+found several analyses with no traceable input (pooled and stratified
+ZVF--reward correlations, a token-budget group-size grid, compute and carbon
+tables, and some table rows); these are withdrawn and listed in the
+relevant appendices so that readers of earlier versions can see what
+changed.

@@ -25,25 +25,21 @@
           accurately reflect the paper's contributions and scope?
     \answerYes{The abstract and Section~\ref{sec:intro} state every claim
     with an explicit evidence tier (A/B/C) and map it to a row of
-    Table~\ref{tab:claims-tier} (claims hierarchy with evidence tier and
-    artifact availability) and Table~\ref{tab:artifact-card} (per-stack
-    auditability matrix). \textbf{(Theory, not an empirical evidence grade)}: the
-    expected exact-tie fraction $\mathbb E[\widehat{\mathrm{ZVF}}]{=}p^{G}{+}(1{-}p)^{G}$
-    for conditionally i.i.d.\ binary rewards at a fixed prompt success probability $p$.
-    This is not an identity for an observed finite batch or a total-gradient claim. A later, separate five-seed Qwen3-8B GSM8K
-    comparison is future-paper evidence: its $+1.3$pp result has
-    $p{=}0.26$ from a one-sample seed-level test against a fixed baseline,
-    not a paired-seed or reviewed-record test. \textbf{(B-grade,
-    single-seed descriptive)}: the closed-backend Tinker case-study runs
-    across model scale, the single-seed group-size sweep, and the
-    tool-use case studies. \textbf{(C-grade, listed for honesty)}: the
-    failed/partial cells enumerated in Appendix~\ref{sec:run-manifest}.
-    The scope is explicitly restricted to LoRA fine-tuning on three task
-    families (math, code, tool-use) at scales of 0.6B--671B total
-    parameters (0.6B--37B active for the largest MoE checkpoints)
-    (Section~\ref{sec:benchmark}). Section~\ref{sec:limitations}
-    discloses partial-run accounting; partial runs are marked $\dagger$
-    in Appendix~\ref{sec:appendix:full-results}.}
+    Table~\ref{tab:claims-tier} and Table~\ref{tab:artifact-card}. Outside
+    the empirical tiers: the expected exact-tie fraction
+    $\mathbb E[\mathrm{ZVF}_t]{=}p^{G}{+}(1{-}p)^{G}$ for conditionally i.i.d.\
+    binary rewards at fixed $p$ (not an identity for an observed finite
+    batch), and the separate five-seed Qwen3-8B GSM8K held-out evaluation
+    ($+1.3$pp, one-sample $t(4){=}1.32$, $p{=}0.26$; not evidence of a gain).
+    \textbf{(B)}: single- or two-run Tinker and Modal case studies.
+    \textbf{(C)}: failed/partial/quarantined/unstarted cells in
+    Appendix~\ref{sec:run-manifest}. Executed cells cover synthetic
+    addition, GSM8K and a synthetic tool-use corpus, from 0.5B to 671B
+    parameters plus Kimi-K2 MoE models (Section~\ref{sec:benchmark}).
+    Analyses from earlier drafts that could not be traced to released
+    inputs are withdrawn and listed (Appendices~\ref{sec:stratified-diagnostics}
+    and~\ref{sec:appendix:group-size-reconcile}). Appendix~\ref{sec:run-manifest}
+    discloses partial- and failed-run accounting.}
     \end{enumerate}
 
 % -- 2. Limitations ------------------------------------------------------------
@@ -59,27 +55,27 @@
             scheduler are undisclosed, so Tinker-derived results cannot be
             independently reproduced without Tinker access
             (Section~\ref{sec:limitations}).
-      \item \textbf{Infrastructure failures.} A non-trivial subset of
-            Tinker runs were interrupted by JWT token expiry, and a
-            non-trivial subset of Modal runs hit timeouts or
-            gradient-norm blow-ups; per-run status (completed,
-            partial, failed) is enumerated in
-            Appendix~\ref{sec:run-manifest} and partial rows are
-            marked $\dagger$ in Table~\ref{tab:main_results}.
+      \item \textbf{Infrastructure failures.} Some Tinker runs were
+            interrupted (JWT token expiry) and some Modal runs failed;
+            per-run status (completed, partial, quarantined, failed,
+            not started) is enumerated in Appendix~\ref{sec:run-manifest};
+            partial runs report no metrics.
       \item \textbf{Single-seed Tinker runs.} Cost constraints precluded
-            multi-seed replication on Tinker; these results are treated
-            as descriptive only (Section~\ref{sec:limitations}).
+            multi-seed replication for most Tinker cells (two have 3--4
+            seeds); these results are treated as descriptive only
+            (Section~\ref{sec:limitations}).
       \item \textbf{LoRA-only evaluation.} Full fine-tuning and
             quantisation-aware training are not evaluated
             (Section~\ref{sec:limitations}).
       \item \textbf{Train-set reward metric.} Primary Tinker metrics are
-            training rewards, not held-out accuracy.  The later Qwen3-8B GSM8K comparison is separate future-paper
-            evidence, not a reviewed-record held-out control
-            (Section~\ref{sec:limitations}); held-out evaluation remains incomplete.
-      \item \textbf{Proxy metrics in place of direct KL.}
-            the proxy-metrics discussion in the appendix discusses the limits of
-            trajectory-based stability indices as substitutes for direct
-            KL divergence.
+            training rewards, not held-out accuracy; the only held-out
+            evaluations are the Qwen2.5-0.5B arithmetic cell, the
+            Qwen2.5-0.5B group-size sweep, and the separate five-seed
+            Qwen3-8B GSM8K evaluation (Section~\ref{sec:limitations}).
+      \item \textbf{No direct KL monitoring.} Some backends do not expose
+            token-level KL divergence; step-level reward and ZVF traces
+            are not substitutes for direct KL monitoring, and the only
+            KL-tracking run failed (Tier C).
     \end{itemize}}
     \end{enumerate}
 
@@ -112,32 +108,19 @@
             jobs run on explicitly provisioned NVIDIA H100~SXM5 (80\,GB)
             workers; TRL baselines run on NVIDIA L4 (24\,GB).  Seeding is
             the manifest's responsibility (Appendix~\ref{sec:run-manifest},
-            source of truth): Tier-A open-stack rows
-            (CleanRL/SB3/Tianshou/Qwen2.5-0.5B classic-RL arms +
-            12~Tinker Wave-6 Qwen3-8B group-size cells (1 seed/cell,
-            30 steps max) + 4~Llama-3.3-70B-Inst rows) report
-            mean $\pm$ SE with 95\,\% bootstrap CIs via
-            \texttt{rliable}; Tier-B rows are single-seed and reported
-            descriptively; Tier-C rows are excluded from headline
-            claims. The single-seed Modal H100 Llama-3.2-{1,3}b GSM8K
-            and Qwen3-8B-family rows in Table~\ref{tab:main_results} are
-            therefore Tier-B by manifest classification.
+            source of truth): the Tier-A open-stack Modal cells (CleanRL,
+            SB3 and Tianshou PPO; TRL Qwen2.5-0.5B on L4) have 5 seeds and
+            are summarised by seed; no bootstrap or \texttt{rliable}
+            intervals are reported. The Tinker Wave-6 configurations,
+            single-run Modal H100 TRL cells and all other single-run cells
+            are Tier B and descriptive; Tier-C cells report no numbers.
       \item \textbf{Tinker API experiments (not fully reproducible).}
             Tinker is closed-source with serverless GPU dispatch; GPU
             type, driver version, and scheduling policy are not exposed.
             We release our exact API scripts and configuration files, but
             independent replication requires a Tinker account and is
             subject to the same JWT expiry issues we observed
-            (Section~\ref{sec:limitations}).  In
-            Table~\ref{tab:main_results} (Appendix~\ref{sec:appendix:full-results}),
-            all Tinker-only rows are explicitly listed under the
-            italicized headers ``GRPO on Tinker API'', ``single-seed
-            frontier-model case studies'', ``group-size ablation
-            (single-seed per cell)'', and ``Cross-task (Tool-Use), GRPO
-            on Tinker''; the ``$\dagger$'' marker is reserved for
-            partial / interrupted runs as defined in the table caption.
-            Tinker rows in figures (ZVF correlation) are explicitly
-            captioned as Tinker case studies.
+            (Section~\ref{sec:limitations}). Every Tinker row in Table~\ref{tab:main_results}, Table~\ref{tab:artifact-card} and Table~\ref{tab:run-manifest} is labelled by its platform, stack or backend column.
     \end{itemize}
     We claim \emph{Partial} rather than \emph{Yes}: the Tinker subset is
     irreducibly platform-dependent.}
@@ -165,15 +148,17 @@
     \item Does the paper specify all the training and test details
           (e.g., data splits, hyperparameters, how they were chosen,
           type of optimizer) necessary to understand the results?
-    \answerYes{Section~\ref{sec:benchmark} gives models, data splits, LoRA
-    configuration (rank~32), optimiser (Adam, $\beta_1{=}0.9$,
-    $\beta_2{=}0.95$, $\epsilon{=}10^{-8}$, learning rate $10^{-4}$),
-    and the 5-seed Modal protocol.  Table~\ref{tab:hyperparams} maps
-    these hyperparameters across all 7~libraries.
+    \answerPartial{Section~\ref{sec:benchmark} gives models, tasks and the
+    5-seed Modal protocol; per-run hyperparameters (group size, LoRA rank,
+    learning rate, steps, seed) are recorded in each run JSON named in
+    Appendix~\ref{sec:run-manifest}, not tabulated in the paper.  Table~\ref{tab:hyperparams} lists
+    PPO defaults for six libraries (executed cells exist for TRL, SB3,
+    CleanRL and Tianshou).
     Appendix~\ref{sec:appendix:full-results} reports sweep ranges.  Per-task
-    YAML configurations are version-controlled under
-    \texttt{atropos/configs/}.  GSM8K uses the standard
-    train/test partitions; HumanEval uses the full pass@1 suite.
+    YAML configurations for the Atropos environments are version-controlled under
+    \texttt{platform\_tinker/atropos/configs/}.  GSM8K training prompts come from the train split and held-out
+    evaluations from test-split subsets whose sizes are stated where
+    reported; the single HumanEval cell failed (Tier C).
     Tinker API call scripts describe requested settings, but do not establish
     executed-source identity, backend loss semantics, or hardware. The reviewed
     cohort census and some task/source bindings remain unresolved; missing
@@ -186,16 +171,16 @@
     \item Does the paper report error bars suitably and correctly
           defined or other appropriate information about the statistical
           significance of the experiments?
-    \answerPartial{Completed multi-seed cells are classified as Tier A only
+    \answerPartial{Seed-level summaries are reported only for Tier-A cells
+    (Table~\ref{tab:main_results}); the five-seed held-out test reports
+    $t$, df and $p$. Completed multi-seed cells are classified as Tier A only
     by replication metadata; inferential eligibility additionally requires matched
     task, source, metric, and seed identities. The 12 Qwen3-8B Wave-6 configurations
     have one seed each and are Tier B, not 12 independent replications of a treatment.
     Step-level rewards are dependent telemetry, so step-level bootstrap intervals
-    cannot establish seed-level uncertainty. The historical task binding of the
-    classic-RL rows and eligibility of some replicated Tinker rows remain unresolved.
-    Those rows and the single-seed case studies support descriptive summaries only
-    until their evidence contracts are complete. The later five-seed GSM8K test
-    against a fixed baseline is separate future-paper evidence.}
+    cannot establish seed-level uncertainty. The classic-RL cells are near-zero-accuracy pipeline checks, and
+    the replicated Tinker cells have no held-out evaluation; together with the
+    single-run case studies they support descriptive summaries only.}
     \end{enumerate}
 
 % -- 8. Compute resources ------------------------------------------------------
@@ -205,23 +190,10 @@
           information on the computer resources (type of compute
           workers, memory, time of execution) needed to reproduce the
           experiments?
-    \answerPartial{Section~\ref{sec:benchmark} and
-    Appendix~\ref{sec:run-manifest} list GPU
-    types and estimated GPU-hours for each experiment group; the
-    complete per-experiment breakdown with wall-clock time and
-    estimated cost is in \texttt{COMPUTE.md}.
-    \begin{itemize}
-      \item \textbf{Modal experiments.} Fully specified:
-            H100~SXM5 (80\,GB) for recent runs and L4 (24\,GB) for the
-            TRL reference sweep.  Wall-clock and GPU-hour estimates are
-            reported.
-      \item \textbf{Tinker API experiments.} Serverless dispatch masks
-            the exact GPU type; GPU-hour figures are inferred from
-            billing records and are flagged as approximate.
-    \end{itemize}
-    Total project cost is approximately 1{,}200 A100-equivalent GPU-hours
-    across both platforms.  \emph{Partial} reflects the Tinker-side
-    hardware opacity, which is a platform property we cannot resolve.}
+    \answerNo{Appendix~\ref{sec:run-manifest} lists the backend and GPU
+    type (Modal H100 or L4; Tinker undisclosed) for each cell, but per-run
+    GPU-hours, wall-clock times and costs were not logged, so no compute
+    total is reported (Section~\ref{sec:compute_accounting}).}
     \end{enumerate}
 
 % -- 9. Code of Ethics ---------------------------------------------------------
@@ -233,10 +205,11 @@
     confirm compliance.  This work involves no human subjects, no
     private or sensitive data, and no models trained on proprietary
     corpora.  All training datasets are public research datasets
-    (GSM8K, HumanEval, NoRobots, synthetic tool-use).  Broader societal
+    (GSM8K and an authored synthetic tool-use corpus for the executed cells;
+    see Appendix~\ref{sec:provenance}).  Broader societal
     impacts---including reward hacking, alignment failure modes of
     RLHF, and equity of compute access---are discussed in
-    Section~\ref{sec:limitations} and in \texttt{ethics\_statement.tex}.}
+    Section~\ref{sec:limitations} and in Appendix~\ref{sec:impact_standalone}.}
     \end{enumerate}
 
 % -- 10. Broader Impacts -------------------------------------------------------
@@ -244,9 +217,9 @@
     \begin{enumerate}
     \item Does the paper discuss both potential positive societal
           impacts and negative societal impacts of the work performed?
-    \answerYes{Section~\ref{sec:limitations} (plus
-    \texttt{ethics\_statement.tex} and \texttt{LIMITATIONS\_AND\_IMPACT.md})
-    discusses:
+    \answerYes{Section~\ref{sec:limitations} and
+    Appendix~\ref{sec:impact_standalone} (plus \texttt{LIMITATIONS\_AND\_IMPACT.md})
+    discuss:
     \begin{itemize}
       \item \textbf{Positive.} Lowering the barrier to RL post-training
             research; enabling reproducibility audits; surfacing
@@ -256,13 +229,9 @@
             concerns when optimising proxy rewards; potential misuse of
             fine-tuned models; compute-access disparities that could
             limit replication to well-resourced groups.
-      \item \textbf{Environmental.} Best-estimate project total is
-            \textasciitilde 296\,kg CO$_2$-eq, with 130--540\,kg under
-            optimistic / pessimistic Tinker assumptions
-            (Section~\ref{sec:carbon}; the dominant uncertainty is the Tinker
-            GPU-hour count because hardware telemetry is undisclosed).
-            The Modal-attributable footprint is itemized in
-            Table~\ref{tab:carbon2} of the ethics statement.
+      \item \textbf{Environmental.} No numerical carbon estimate is
+            reported: per-run GPU-hours were not logged and Tinker
+            discloses no hardware telemetry (Section~\ref{sec:carbon}).
     \end{itemize}}
     \end{enumerate}
 
@@ -272,14 +241,9 @@
     \item Does the paper describe safeguards that have been put in place
           for responsible release of data or models that have been
           identified as requiring safeguards?
-    \answerNA{The released artefacts are LoRA adapters fine-tuned from
-    already-public base models (Qwen, Llama, Nemotron, GPT-OSS,
-    Kimi-K2) on standard research datasets (GSM8K, HumanEval, synthetic
-    tool-use).  No new high-risk capabilities are introduced relative to
-    the base models; released checkpoints inherit the base models'
-    licence terms and include standard usage disclaimers in the
-    HuggingFace model cards
-    (\texttt{huggingface/MODEL\_CARD\_TEMPLATE.md}).}
+    \answerNA{No model weights or adapters are released with this
+    submission; the release consists of code, run records and summaries
+    on public datasets, which pose no new high-risk capability.}
     \end{enumerate}
 
 % -- 12. Licenses --------------------------------------------------------------
@@ -299,9 +263,10 @@
             API documentation; no upstream licence restrictions.
       \item \textbf{Qwen model family}: Apache-2.0.
       \item \textbf{Llama model family}: Meta Llama Community Licence.
-      \item \textbf{Nemotron, GPT-OSS, Kimi-K2}: used under their
-            respective published licences; credits in
-            Section~\ref{sec:benchmark}.
+      \item \textbf{Nemotron, GPT-OSS, Kimi-K2, DeepSeek-V3.1}: accessed
+            through the Tinker API under its terms of service and the
+            respective model publishers' licences; no weights of these
+            models or adapters on them are redistributed.
       \item \textbf{TRL, PEFT, Transformers}: Apache-2.0 (HuggingFace).
       \item \textbf{Modal}: commercial platform; terms of service
             respected.
@@ -324,23 +289,13 @@
             \url{https://anonymous.4open.science/r/agentic-grpo-bench-anon-2C6B}, released
             under Apache-2.0 and documented by \texttt{README.md},
             \texttt{REPRODUCE.md}, \texttt{ARTIFACT.md},
-            \texttt{COMPUTE.md}, \texttt{BASELINES.md},
-            \texttt{BENCHMARKS\_COMPARISON.md}, and
+            \texttt{BASELINES.md}, and
             \texttt{LIMITATIONS\_AND\_IMPACT.md}.
-      \item LoRA adapter checkpoints from the successful Modal
-            experiments released alongside the anonymous repository at
-            \url{https://anonymous.4open.science/r/agentic-grpo-bench-anon-2C6B},
-            each accompanied by a HuggingFace model card generated from
-            \texttt{huggingface/MODEL\_CARD\_TEMPLATE.md}
-            (intended use, training data, evaluation results, known
-            limitations).
-      \item All experiment logs released alongside the anonymous
-            repository (Weights~\&~Biases export bundled in the
-            artifact).
+      \item The run JSON files named in Appendix~\ref{sec:run-manifest}
+            (step-level reward traces and, where logged, ZVF), and the
+            recomputation scripts under \texttt{tools/review\_ledger/}.
     \end{itemize}
-    Checkpoints from JWT-interrupted Tinker runs are \emph{not} uploaded,
-    because those jobs did not reach a valid final state
-    (Section~\ref{sec:limitations}).}
+    No LoRA adapter checkpoints are released with this submission.}
     \end{enumerate}
 
 % -- 14. Crowdsourcing ---------------------------------------------------------
@@ -374,8 +329,8 @@
     \answerYes{LLMs appear in this work in two distinct roles, both
     declared:
     \begin{itemize}
-      \item \textbf{As subjects of evaluation.} The Qwen, Llama,
-            Nemotron, GPT-OSS, and Kimi-K2 model families are the
+      \item \textbf{As subjects of evaluation.} The Qwen, Llama, DeepSeek,
+            Nemotron, GPT-OSS, and Kimi model families are the
             primary \emph{subjects} of the benchmark; their role as RL
             fine-tuning targets is described in
             Section~\ref{sec:benchmark}.
@@ -386,8 +341,9 @@
             drafts; resulting suggestions were evaluated and, where
             accepted, manually incorporated. All scientific claims,
             experimental design, numerical results, figures, and
-            statistical analyses are human-authored and independently
-            verified against the logged Weights~\&~Biases traces.
+            statistical analyses are human-authored; reported training-reward
+            numbers are recomputed from the run JSON files by released
+            scripts.
     \end{itemize}
     LLMs are not an \emph{original} or \emph{non-standard} component of
     the core methodology.}

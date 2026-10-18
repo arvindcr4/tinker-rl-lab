@@ -6,13 +6,13 @@
 
 This section provides structural architectural diagrams for the eight core
 pipelines that govern data ingestion, quality filtering, licensing,
-evaluation, contamination auditing, and reproduction in \ours{}.
+evaluation, contamination auditing, and reproduction in \ours{}. They are design schematics of intended pipelines, not evidence that each stage is implemented or was executed; Section~\ref{sec:repro-onecmd} lists the entry points that exist.
 
 \subsection{Evidence Tiering and Open Distribution}
 Figure~\ref{fig:r04_dataset_tiering} outlines the classification pipeline
-that partitions raw experimental traces into Tier~A (analytic / multi-seed
-inferential), Tier~B (single-seed descriptive case studies), and Tier~C
-(uncompleted or diagnostic-only cells).
+that partitions raw experimental traces into Tier~A (completed multi-seed cells; inferential
+eligibility separately required), Tier~B (single-seed descriptive case studies), and Tier~C
+(failed, partial, or never-started cells).
 Figure~\ref{fig:r04_license_pipeline} documents the automated license checker
 verifying open-access redistribution terms across all bundled datasets.
 
@@ -188,7 +188,7 @@ tagging every release commit with immutable cryptographic digests.
 
 \subsection{Reproduction Harness Verification Flow}
 Figure~\ref{fig:r04_repro_harness} depicts the end-to-end execution of the
-reproduction harness (\texttt{make reproduce-main}), verifying container
+intended reproduction harness (not implemented as a make target; see Section~\ref{sec:repro-onecmd}), verifying container
 launch, rollout replay, and metric hash agreement.
 
 \begin{figure}[htbp]

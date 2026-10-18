@@ -20,3 +20,14 @@ Additional changes: actual MLE checkout revision/clean tree now required for sou
 
 ## Verification
 232 passed / 4 skipped across initial affected tests; 95 passed / 4 skipped after source-verification and network/sampling-counterexample additions; final focused counterexamples + signed AgentHarm: 52 passed. `git diff --check` passes. Counts overlap; they are not a repository-wide pass.
+
+### R39.14 follow-up: production resource/rate declarations
+
+The portfolio tests now import the complete production module against a
+local declaration-only Modal double. They capture both GPU function decorators,
+compare CPU/RAM resources and wall limits to the executed rate expression, and
+mutation-test that the production validator reads its production hourly rate.
+No copied test rate is injected. The separate private-runtime tests explicitly
+skip when `.codex-run/public_colab_runtime.py` is unavailable; resource declaration
+tests run without that fixture. This does not validate live prices or establish
+provider-backed reservation/settlement.

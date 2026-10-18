@@ -14,9 +14,11 @@ import sys
 from unittest.mock import patch
 
 SCRIPT = Path(__file__).resolve().parents[2] / ".codex-run/public_colab_runtime.py"
-spec = importlib.util.spec_from_file_location("public_runtime_under_test", SCRIPT)
-runtime = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(runtime)
+runtime = None
+if SCRIPT.is_file():
+    spec = importlib.util.spec_from_file_location("public_runtime_under_test", SCRIPT)
+    runtime = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(runtime)
 
 
 def reservation():
@@ -26,17 +28,44 @@ def reservation():
             "expires_at": (dt.datetime.now(dt.timezone.utc) + dt.timedelta(hours=1)).isoformat()}
 
 
-def profile_helpers():
+def profile_helpers(profile="canary"):
+    """Import the production module with a declaration-only Modal double.
+
+    Image chains and decorators are recorded locally; no SDK, image build,
+    credentials, remote function, or model is used.
+    """
+    declarations = {}
+
+    class Declaration:
+        def __getattr__(self, name):
+            return lambda *args, **kwargs: self
+
+        def function(self, **kwargs):
+            def decorate(function):
+                declarations[function.__name__] = kwargs
+                return function
+            return decorate
+
+        def local_entrypoint(self):
+            return lambda function: function
+
+    declaration = Declaration()
+    fake_modal = SimpleNamespace(
+        is_local=lambda: True, App=lambda *args: declaration,
+        Image=declaration, Volume=declaration, Secret=declaration,
+    )
     source = SCRIPT.parents[1] / "zvf-program/flagship/modal_public_portfolio_runtime.py"
-    tree = ast.parse(source.read_text())
-    helpers = [node for node in tree.body if isinstance(node, ast.FunctionDef)
-               and node.name in {"runtime_profile", "validate_profile_reservation"}]
-    namespace = {"load_runtime": lambda: runtime,
-                 "INCLUSIVE_HOURLY_USD": 3600 * (0.001261 + 4 * 0.0000131 + 128 * 0.00000222)}
-    exec(compile(ast.Module(body=helpers, type_ignores=[]), str(source), "exec"), namespace)
-    return namespace
+    spec = importlib.util.spec_from_file_location("portfolio_declarations_under_test", source)
+    module = importlib.util.module_from_spec(spec)
+    with patch.dict(sys.modules, {"modal": fake_modal}), patch.dict(
+        "os.environ", {"PUBLIC_RUNTIME_PROFILE": profile, "PUBLIC_RUNTIME_INCLUDE_AGENTDOJO": "0"}
+    ):
+        spec.loader.exec_module(module)
+    module.load_runtime = lambda: runtime
+    return {**vars(module), "declarations": declarations, "module": module}
 
 
+@unittest.skipIf(runtime is None, "Private .codex-run/public_colab_runtime.py fixture is unavailable")
 class RuntimeGuards(unittest.TestCase):
     def test_jsonl_preserves_literal_unicode_separators_and_full_lab_count(self):
         row = {"task_id": "unicode-fixture", "payload": {"messages": [{"role": "user", "content": "before\u2028middle\u2029after"}]}}
@@ -327,6 +356,37 @@ assert statuses==[200,200,403],statuses
             self.assertEqual(receipt["native_driver"]["requests"],1)
             self.assertEqual(receipt["native_driver"]["cache_hits"],1)
             self.assertEqual(receipt["native_driver"]["rejected"],1)
+
+
+class ProductionResourceWiring(unittest.TestCase):
+    def test_production_resource_decorators_and_rate_formula_are_bound(self):
+        for name in ("canary", "fullbatch"):
+            helpers = profile_helpers(name)
+            module = helpers["module"]
+            module.load_runtime = lambda: SimpleNamespace(check_reservation=lambda *args: None)
+            for function in ("run_batch", "run_agentdojo"):
+                resources = helpers["declarations"][function]
+                self.assertEqual(resources["gpu"], "H200")
+                self.assertEqual(resources["cpu"], module.CPU_CORES)
+                self.assertEqual(resources["memory"], module.MEMORY_GIB * 1024)
+                hourly = 3600 * (module.GPU_RATE + resources["cpu"] * module.CPU_RATE
+                                 + resources["memory"] / 1024 * module.RAM_RATE)
+                self.assertEqual(module.INCLUSIVE_HOURLY_USD, hourly)
+                wall = resources["timeout"] + resources["startup_timeout"]
+                self.assertEqual(wall, module.PROFILE["total_seconds"])
+                self.assertEqual(module.ESTIMATED_MAX_COMPUTE_USD, wall * hourly / 3600)
+                self.assertLessEqual(module.ESTIMATED_MAX_COMPUTE_USD, module.RESERVED_USD)
+                funds = {**reservation(), "runtime_profile": name,
+                         "reserved_units": module.RESERVED_USD, "max_wall_seconds": wall,
+                         "max_hourly_units": hourly,
+                         "expires_at": (dt.datetime.now(dt.timezone.utc) + dt.timedelta(hours=2)).isoformat()}
+                module.validate_profile_reservation(module.PROFILE, funds, 2)
+                # The executed production validator must read the production rate,
+                # not an independently copied constant in a test namespace.
+                with patch.object(module, "INCLUSIVE_HOURLY_USD", hourly + 0.01):
+                    with self.assertRaisesRegex(ValueError, "omits GPU, CPU, or memory"):
+                        module.validate_profile_reservation(module.PROFILE, funds, 2)
+
 
 
 if __name__ == "__main__":

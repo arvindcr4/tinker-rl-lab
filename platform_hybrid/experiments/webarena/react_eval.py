@@ -29,6 +29,8 @@ import argparse
 import hashlib
 import json
 import logging
+import math
+from numbers import Real
 import os
 import random
 import sys
@@ -79,8 +81,8 @@ class StepRecord:
 class EpisodeResult:
     env_id: str
     seed: int
-    score: float              # max reward over episode (task-scaled [0,1])
-    total_reward: float
+    score: float | None       # None means invalid native evidence, never a failure score
+    total_reward: float | None
     terminated: bool
     truncated: bool
     num_steps: int
@@ -216,6 +218,10 @@ class TinkerChatSampler:
 # Rollout
 # ---------------------------------------------------------------------------
 
+class InvalidNativeRewardError(ValueError):
+    """The native outcome cannot be interpreted as benchmark evidence."""
+
+
 def run_episode(
     sampler: TinkerChatSampler,
     env_id: str,
@@ -266,13 +272,17 @@ def run_episode(
                 break
             try:
                 obs, reward, terminated, truncated, info = env.step(action)
-                reward_f = float(reward or 0.0)
+                if isinstance(reward, bool) or not isinstance(reward, Real) or not math.isfinite(reward) or not 0 <= reward <= 1:
+                    raise InvalidNativeRewardError(f"invalid native reward: {reward!r}")
+                reward_f = float(reward)
                 step_error = obs.get("last_action_error") or info.get("action_exec_error")
                 if not step_error:
                     valid_action_count += 1
                 total_reward += reward_f
                 max_reward = max(max_reward, reward_f)
                 last_error = obs.get("last_action_error") or info.get("action_exec_error")
+            except InvalidNativeRewardError:
+                raise
             except Exception as exc:
                 step_error = repr(exc)
                 last_error = step_error
@@ -292,7 +302,9 @@ def run_episode(
         except Exception as e:
             logger.warning("Failed to close env after crash env_id=%s: %s", env_id, e)
         return EpisodeResult(
-            env_id=env_id, seed=seed, score=0.0, total_reward=0.0,
+            env_id=env_id, seed=seed,
+            score=None if isinstance(exc, InvalidNativeRewardError) else 0.0,
+            total_reward=None if isinstance(exc, InvalidNativeRewardError) else 0.0,
             terminated=False, truncated=False, num_steps=len(steps),
             valid_action_count=valid_action_count, steps=steps,
             wall_time_sec=time.time() - t0, error=repr(exc),
@@ -306,7 +318,6 @@ def run_episode(
         truncated = True
     # Versioned maximum task-reward contract; never sum partial rewards into success.
     score = max_reward
-    score = max(0.0, min(1.0, float(score)))
     return EpisodeResult(
         env_id=env_id, seed=seed, score=score, total_reward=total_reward,
         terminated=terminated, truncated=truncated, num_steps=len(steps),
@@ -390,7 +401,7 @@ def _main_sync(args: argparse.Namespace) -> int:
     out_path = Path(args.out)
     out_path.parent.mkdir(parents=True, exist_ok=True)
 
-    completed = {"n": 0, "sum_score": 0.0, "sum_steps": 0}
+    completed = {"n": 0, "sum_score": 0.0, "sum_steps": 0, "invalid_scores": 0}
 
     def one(env_id: str, seed: int, idx: int) -> None:
             res = run_episode(
@@ -403,10 +414,11 @@ def _main_sync(args: argparse.Namespace) -> int:
             with out_path.open("a") as f:
                 f.write(json.dumps(asdict(res), default=str) + "\n")
             completed["n"] += 1
-            completed["sum_score"] += res.score
+            completed["invalid_scores"] += int(res.score is None)
+            completed["sum_score"] += res.score if res.score is not None else 0.0
             completed["sum_steps"] += res.num_steps
             logger.info(
-                "done[%d/%d] env=%s score=%.3f steps=%d err=%s",
+                "done[%d/%d] env=%s score=%s steps=%d err=%s",
                 completed["n"], len(tasks), env_id, res.score, res.num_steps, res.error,
             )
             if wandb_run is not None:
@@ -421,7 +433,7 @@ def _main_sync(args: argparse.Namespace) -> int:
                             "episode/terminated": int(res.terminated),
                             "episode/truncated": int(res.truncated),
                             "episode/error": int(bool(res.error)),
-                            "running/mean_score": completed["sum_score"] / completed["n"],
+                            "running/mean_score": None if completed["invalid_scores"] else completed["sum_score"] / completed["n"],
                             "running/mean_steps": completed["sum_steps"] / completed["n"],
                             "running/completed": completed["n"],
                         },
@@ -445,7 +457,8 @@ def _main_sync(args: argparse.Namespace) -> int:
             # Explicit policy: retain all recorded attempts, including errors.
             done_ids.add(row["env_id"])
             completed["n"] += 1
-            completed["sum_score"] += row["score"]
+            completed["invalid_scores"] += int(row["score"] is None)
+            completed["sum_score"] += row["score"] if row["score"] is not None else 0.0
             completed["sum_steps"] += row["num_steps"]
         logger.info("resuming: %d already done", len(done_ids))
 
@@ -485,7 +498,7 @@ def _main_sync(args: argparse.Namespace) -> int:
         try:
             wandb_run.summary["final/n_completed"] = completed["n"]
             wandb_run.summary["final/mean_score"] = (
-                completed["sum_score"] / completed["n"] if completed["n"] else 0.0
+                None if completed["invalid_scores"] else completed["sum_score"] / completed["n"] if completed["n"] else 0.0
             )
             wandb_run.summary["final/shard"] = args.shard
             # Log the JSONL as a W&B artifact for later reruns/diffs

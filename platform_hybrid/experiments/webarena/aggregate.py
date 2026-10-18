@@ -75,8 +75,12 @@ def parse_results(paths: Sequence[Path]) -> List[EpisodeResult]:
                 item = EpisodeResult.from_dict(data)
                 if not item.evaluation_id or type(item.seed) is not int:
                     raise ValueError("missing episode identity")
-                if not math.isfinite(item.score) or not 0 <= item.score <= 1:
+                if type(item.score) not in (int, float) or not math.isfinite(item.score) or not 0 <= item.score <= 1:
                     raise ValueError("invalid score")
+                if "total_reward" in data:
+                    total = data["total_reward"]
+                    if type(total) not in (int, float) or not math.isfinite(total) or not 0 <= total <= item.num_steps:
+                        raise ValueError("invalid total reward")
                 if item.num_steps < 0 or not 0 <= item.valid_action_count <= item.num_steps:
                     raise ValueError("invalid action counts")
                 key = (item.evaluation_id, item.env_id, item.seed)

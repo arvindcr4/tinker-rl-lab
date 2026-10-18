@@ -1,60 +1,13 @@
 #!/usr/bin/env python3
-"""Iter 42 — Pillar 2 early-trace ZVF as predictor of late failure mode.
+"""Review28_v2: retrospective classification of completed trajectory summaries.
 
-Frontier synthesis (round 1, Pillar 2): "ZVF is best framed as observed
-signal availability, not difficulty."  Frontier synthesis (round 2):
-"Y(p, G) is the valid signal fraction; delta_div is the structural
-diversity bonus."
-
-This iter 42 closes the Pillar-1 × Pillar-2 identifiability loop:
-
-    iter 41 (P1): R_max of the saturation fit is identifiable from the
-                  first 60% of the trace (9/9 eligible anchors within
-                  ±10%).
-    iter 42 (P2): Does early-trace ZVF identify the late failure mode?
-
-Concretely, for each (kind, method, seed) run in the 60-row
-zvf_dynamics.json pool we extract three early-trace ZVF features
-defined RELATIVE to the trace length:
-
-    early_zvf05_first_pass_frac = first_pass_zvf05 / n_steps
-                                    (smaller = ZVF spikes earlier)
-    early_auc05_first_half       = auc_above_zvf05 on first 50% of
-                                    the trace, normalised to [0,1]
-                                    (we use first_pass_zvf05 * 0.5
-                                    capped at 0.5 as a proxy; the full
-                                    per-step stream isn't materialised
-                                    in the dynamics JSON, so we use
-                                    thedocumented first-pass threshold
-                                    statistic as the canonical
-                                    early-window summary)
-    early_auc09_first_half       = 0 if first_pass_zvf09 > 0.5*n_steps
-                                    else 1   (binary: did ZVF cross
-                                    0.9 in the first half?)
-
-Then we ask whether these early features predict the LATE-trace
-failure mode derived from (last10_avg, peak, mean_zvf) using the
-same deterministic taxonomy as iter 38:
-
-    collapse  := last10_avg < 0.05
-    plateau   := peak < 0.5
-    drift     := last10_avg < 0.85 * peak
-    converged := otherwise
-
-Outputs:
-    platform_hybrid/experiments/results/zvf_iter42_early_predicts.tsv
-        Per-run row with early features, late outcome, and a
-        leave-one-out knn prediction (k=3) of failure class.
-    platform_hybrid/experiments/results/zvf_iter42_summary.tsv
-        One-rollup summary: classifier accuracy, feature
-        univariate odds-ratio of collapse for early-bloomers,
-        Spearman correlation of early vs late ZVF summary stats.
-    platform_hybrid/experiments/results/zvf_iter42_failure_audit.tsv
-        Per-(kind, method) aggregate showing collapse rate among
-        "early-ZVF-spikers" vs "late-ZVF-spikers".
-
-This is the **mirror image** of iter 41's early-trace R_max
-identifiability result applied to Pillar 2.
+All features can contain full-run information, including AUC, autocorrelation,
+and first-passage fractions normalized by final trace length. No early-only,
+early-warning, or stopping-policy claim is supported. Labels reproduce a
+heuristic of final accuracy, actual observed peak accuracy, and mean ZVF.
+Missing peaks remain unavailable. kNN scaling is fit on training folds only.
+A future early-warning protocol needs a fixed recorded observation cutoff and
+raw-prefix feature construction; this analysis does not implement that study.
 """
 from __future__ import annotations
 
@@ -70,19 +23,19 @@ RESULTS = REPO_ROOT / "experiments" / "results"
 
 
 def load_summary() -> list[dict]:
-    p = RESULTS / "zvf_dynamics.json"
+    p = RESULTS / "zvf_dynamics_review28_v2.json"
     return json.loads(p.read_text())["summary"]
 
 
 def load_leadtime() -> list[dict]:
-    p = RESULTS / "zvf_dynamics_leadtime.tsv"
+    p = RESULTS / "zvf_dynamics_leadtime_review28_v2.tsv"
     rows = []
     with p.open() as f:
         for line in f:
             if line.startswith("#") or line.startswith("kind"):
                 continue
             parts = line.rstrip("\n").split("\t")
-            if len(parts) < 8:
+            if len(parts) < 9:
                 continue
             rows.append({
                 "kind": parts[0],
@@ -99,7 +52,7 @@ def load_leadtime() -> list[dict]:
 
 
 def classify_failure(last10: float, peak: float, mean_zvf: float) -> str:
-    """Same taxonomy as iter 38 zvf_iter38_classifier.tsv."""
+    """Same taxonomy as iter 38 zvf_iter38_classifier_review28_v2.tsv."""
     if last10 < 0.05:
         return "collapse"
     if peak < 0.5:
@@ -110,7 +63,7 @@ def classify_failure(last10: float, peak: float, mean_zvf: float) -> str:
 
 
 def early_features(row: dict) -> dict:
-    """Compute early-trace ZVF features from the summary row."""
+    """Compute retrospective full-trace ZVF features from the summary row."""
     n = max(row["n_steps"], 1)
     fp05 = row.get("first_pass_zvf05", -1) or -1
     fp07 = row.get("first_pass_zvf07", -1) or -1
@@ -130,7 +83,7 @@ def early_features(row: dict) -> dict:
 
     # ZVF burden: AUC above 0.5 — higher means more steps spent in
     # the high-contrast-loss regime. Iter 30 showed this is a
-    # calibrated leading indicator of training failure.
+    # retrospective full-trajectory burden; not a validated leading indicator.
     burden_05 = auc05
     burden_07 = auc07
 
@@ -152,9 +105,9 @@ def early_features(row: dict) -> dict:
 
 def late_outcome(row: dict) -> dict:
     last10 = row.get("last10_avg", float("nan"))
-    peak = row.get("heldout_acc", float("nan"))
+    peak = row.get("peak_accuracy", float("nan"))
     mean_zvf = row.get("mean_zvf", float("nan"))
-    label = classify_failure(last10, peak, mean_zvf)
+    label = classify_failure(last10, peak, mean_zvf) if all(math.isfinite(v) for v in (last10,peak,mean_zvf)) else "unavailable"
     return {
         "last10_avg": last10,
         "peak": peak,
@@ -164,125 +117,44 @@ def late_outcome(row: dict) -> dict:
     }
 
 
-def knn_loo(rows: list[dict], feature_keys: list[str], k: int = 3) -> list[str]:
-    """Leave-one-out kNN classifier over (label, features).
-
-    Distance: Euclidean over z-scored features. Ties broken by
-    majority. Returns list of predicted labels.
-    """
-    if not rows:
-        return []
-    # z-score per feature
-    means = []
-    sds = []
-    for k_ in feature_keys:
-        vs = [r["features"][k_] for r in rows]
-        m = statistics.fmean(vs) if vs else 0.0
-        v = statistics.pvariance(vs) if len(vs) > 1 else 0.0
-        s = math.sqrt(v) if v > 0 else 1.0
-        means.append(m)
-        sds.append(s)
-
-    def zfeat(idx: int, row: dict) -> list[float]:
-        return [(row["features"][feature_keys[i]] - means[i]) / sds[i]
-                for i in range(len(feature_keys))]
-
-    preds = []
-    for i, row in enumerate(rows):
-        zi = zfeat(i, row)
-        dists = []
-        for j, other in enumerate(rows):
-            if i == j:
-                continue
-            zj = zfeat(j, other)
-            d = sum((a - b) ** 2 for a, b in zip(zi, zj)) ** 0.5
-            dists.append((d, other["label"]))
-        dists.sort(key=lambda x: x[0])
-        top = [lab for _, lab in dists[:k]]
-        # majority
-        cnt = defaultdict(int)
-        for lab in top:
-            cnt[lab] += 1
-        # tie-break: pick the class with the smallest mean distance
-        max_cnt = max(cnt.values())
-        cand = [lab for lab, c in cnt.items() if c == max_cnt]
-        if len(cand) == 1:
-            preds.append(cand[0])
-        else:
-            # closest mean distance wins
-            best = None
-            best_d = float("inf")
-            for lab in cand:
-                ds = [d for d, l in dists[:k] if l == lab]
-                md = statistics.fmean(ds) if ds else float("inf")
-                if md < best_d:
-                    best_d = md
-                    best = lab
-            preds.append(best or "converged")
-    return preds
+def knn_loo(rows, feature_keys, k=3):
+    """Retrospective kNN with training-fold-only scaling; missing rows unevaluable."""
+    import numpy as np
+    from collections import Counter
+    predictions=[]
+    for i,row in enumerate(rows):
+        train=[other for j,other in enumerate(rows) if j != i]
+        train=[r for r in train if all(math.isfinite(r["features"][f]) for f in feature_keys)]
+        if not train or not all(math.isfinite(row["features"][f]) for f in feature_keys):
+            predictions.append("NOT_EVALUABLE"); continue
+        x=np.array([[r["features"][f] for f in feature_keys] for r in train])
+        query=np.array([row["features"][f] for f in feature_keys])
+        sd=x.std(axis=0); sd[sd==0]=1
+        distances=np.linalg.norm((x-query)/sd,axis=1)
+        nearest=sorted(range(len(train)),key=lambda j:(distances[j],str(train[j]["label"])))[:k]
+        counts=Counter(train[j]["label"] for j in nearest)
+        predictions.append(min(counts,key=lambda label:(-counts[label],min(distances[j] for j in nearest if train[j]["label"]==label),label)))
+    return predictions
 
 
-def knn_loo_cluster(rows: list[dict], feature_keys: list[str], k: int = 3) -> list[str]:
-    """Leave-one-CLUSTER-out kNN — drops every row from the held-out
-    cluster, so the cluster identity itself cannot be exploited.
-
-    This is the harder, more honest version: does the feature vector
-    GENERALISE across (kind, method) clusters, or does the LOO
-    accuracy come from the trivial fact that every row in a cluster
-    has the same label?
-    """
-    if not rows:
-        return []
-    means = []
-    sds = []
-    for k_ in feature_keys:
-        vs = [r["features"][k_] for r in rows]
-        m = statistics.fmean(vs) if vs else 0.0
-        v = statistics.pvariance(vs) if len(vs) > 1 else 0.0
-        s = math.sqrt(v) if v > 0 else 1.0
-        means.append(m)
-        sds.append(s)
-
-    def zfeat(row):
-        return [(row["features"][feature_keys[i]] - means[i]) / sds[i]
-                for i in range(len(feature_keys))]
-
-    cluster_ids = [(r["kind"], r["method"]) for r in rows]
-    pool = [zfeat(r) for r in rows]
-    labels = [r["label"] for r in rows]
-
-    preds = []
-    for i, row in enumerate(rows):
-        ci = cluster_ids[i]
-        dists = []
-        for j, other in enumerate(rows):
-            if cluster_ids[j] == ci:
-                continue  # leave the whole cluster out
-            d = sum((a - b) ** 2 for a, b in zip(pool[i], pool[j])) ** 0.5
-            dists.append((d, labels[j]))
-        if not dists:
-            preds.append("converged")
-            continue
-        dists.sort(key=lambda x: x[0])
-        top = [lab for _, lab in dists[:k]]
-        cnt = defaultdict(int)
-        for lab in top:
-            cnt[lab] += 1
-        max_cnt = max(cnt.values())
-        cand = [lab for lab, c in cnt.items() if c == max_cnt]
-        if len(cand) == 1:
-            preds.append(cand[0])
-        else:
-            best = None
-            best_d = float("inf")
-            for lab in cand:
-                ds = [d for d, l in dists[:k] if l == lab]
-                md = statistics.fmean(ds) if ds else float("inf")
-                if md < best_d:
-                    best_d = md
-                    best = lab
-            preds.append(best or "converged")
-    return preds
+def knn_loo_cluster(rows, feature_keys, k=3):
+    """Retrospective kNN with training-fold-only scaling; missing rows unevaluable."""
+    import numpy as np
+    from collections import Counter
+    predictions=[]
+    for i,row in enumerate(rows):
+        train=[other for j,other in enumerate(rows) if (other["kind"],other["method"]) != (row["kind"],row["method"])]
+        train=[r for r in train if all(math.isfinite(r["features"][f]) for f in feature_keys)]
+        if not train or not all(math.isfinite(row["features"][f]) for f in feature_keys):
+            predictions.append("NOT_EVALUABLE"); continue
+        x=np.array([[r["features"][f] for f in feature_keys] for r in train])
+        query=np.array([row["features"][f] for f in feature_keys])
+        sd=x.std(axis=0); sd[sd==0]=1
+        distances=np.linalg.norm((x-query)/sd,axis=1)
+        nearest=sorted(range(len(train)),key=lambda j:(distances[j],str(train[j]["label"])))[:k]
+        counts=Counter(train[j]["label"] for j in nearest)
+        predictions.append(min(counts,key=lambda label:(-counts[label],min(distances[j] for j in nearest if train[j]["label"]==label),label)))
+    return predictions
 
 
 def univariate_auc(xs: list[float], ys_bin: list[int]) -> float:
@@ -365,7 +237,7 @@ a = #bloom AND collapse
 
 def main() -> int:
     summary = load_summary()
-    # Build per-run rows with early features + late outcome
+    # Build per-run rows with retrospective features + late outcome
     rows = []
     for s in summary:
         ef = early_features(s)
@@ -384,7 +256,7 @@ def main() -> int:
         })
 
     # ---- 1. Early-features TSV ----
-    out_early = RESULTS / "zvf_iter42_early_predicts.tsv"
+    out_early = RESULTS / "zvf_iter42_early_predicts_review28_v2.tsv"
     feat_keys = ["fp05_frac", "fp07_frac", "fp09_frac",
                  "burden_05", "burden_07",
                  "mean_zvf", "zvf_std", "zvf_lag1"]
@@ -394,8 +266,8 @@ def main() -> int:
         r["correct"] = int(p == r["label"])
 
     with out_early.open("w") as f:
-        f.write("# Iter 42 Pillar 2 early-trace ZVF as predictor of late failure mode.\n")
-        f.write("# Per-run row: early features (fp05_frac = first_pass_zvf05 / n_steps,\n")
+        f.write("# Iter 42 Pillar 2 retrospective full-trace ZVF as predictor of late failure mode.\n")
+        f.write("# Per-run row: retrospective features (fp05_frac = first_pass_zvf05 / n_steps,\n")
         f.write("#   burden_05 = auc_above_zvf05, etc.) + late outcome label.\n")
         f.write("# kNN-LOO with k=3 over z-scored features predicting {collapse,\n")
         f.write("#   plateau, drift, converged}. Same taxonomy as iter 38.\n")
@@ -443,11 +315,11 @@ def main() -> int:
         class_recall[true] = n_pred / n_true if n_true else float("nan")
 
     # ---- 2b. Leave-one-CLUSTER-out kNN (the harder test) ----
-    early_only_keys = ["fp05_frac", "fp07_frac", "fp09_frac",
+    retrospective_keys = ["fp05_frac", "fp07_frac", "fp09_frac",
                        "burden_05", "burden_07", "zvf_lag1"]
     full_keys = feat_keys  # includes mean_zvf (full-trace summary)
 
-    preds_cluster = knn_loo_cluster(rows, early_only_keys, k=3)
+    preds_cluster = knn_loo_cluster(rows, retrospective_keys, k=3)
     n_correct_cluster = sum(1 for r, p in zip(rows, preds_cluster)
                              if p == r["label"])
     acc_cluster = n_correct_cluster / n_total if n_total else 0.0
@@ -474,7 +346,7 @@ def main() -> int:
     # Binary outcome: converged=1, plateau=0 (the only two classes in pool)
     ys_bin = [1 if r["label"] == "converged" else 0 for r in rows]
     auc_per_feature = {}
-    for fk in early_only_keys + ["mean_zvf"]:
+    for fk in retrospective_keys + ["mean_zvf"]:
         xs = [r["features"][fk] for r in rows]
         auc_per_feature[fk] = univariate_auc(xs, ys_bin)
 
@@ -539,7 +411,7 @@ def main() -> int:
                                         and r["label"] == "converged")
         m["mean_last10"].append(r["last10_avg"])
 
-    out_audit = RESULTS / "zvf_iter42_failure_audit.tsv"
+    out_audit = RESULTS / "zvf_iter42_failure_audit_review28_v2.tsv"
     with out_audit.open("w") as f:
         f.write("# Iter 42 Pillar 2 per-(kind, method) early-bloom failure audit.\n")
         f.write("# early_bloom05 = ZVF first crosses 0.5 in first half of trace.\n")
@@ -564,16 +436,16 @@ def main() -> int:
     print(f"wrote {out_audit}")
 
     # ---- 5. Summary ----
-    out_summary = RESULTS / "zvf_iter42_summary.tsv"
+    out_summary = RESULTS / "zvf_iter42_summary_review28_v2.tsv"
     with out_summary.open("w") as f:
         f.write("# Iter 42 Pillar 2 one-rollup summary.\n")
         f.write("# Source: platform_modal/scripts/zvf_iter42.py\n")
         f.write("metric\tvalue\tdetail\n")
-        f.write(f"n_runs\t{n_total}\t60-row zvf_dynamics.json pool\n")
+        f.write(f"n_runs\t{n_total}\t60-row zvf_dynamics_review28_v2.json pool\n")
         f.write(f"n_classes\t2\tobserved in pool: plateau=45, converged=15\n")
         f.write(f"loo_accuracy_per_row\t{acc:.4f}\tk=3, z-scored features, all 8\n")
-        f.write(f"loo_cluster_accuracy_early_only\t{acc_cluster:.4f}\t"
-                f"k=3, leave-one-(kind,method)-out, 6 EARLY features only\n")
+        f.write(f"loo_cluster_accuracy_retrospective\t{acc_cluster:.4f}\t"
+                f"k=3, leave-one-(kind,method)-out, 6 retrospective subset\n")
         f.write(f"loo_cluster_accuracy_full\t{acc_cluster_full:.4f}\t"
                 f"k=3, leave-one-(kind,method)-out, full 8 features\n")
         f.write(f"recall_collapse\t{class_recall.get('collapse', float('nan')):.4f}\t"
@@ -601,7 +473,7 @@ def main() -> int:
         f.write(f"spearman_fp05frac_last10\t{rho_fp05_last10:.4f}\t"
                 f"earliness of ZVF rise vs last-10 accuracy\n")
         # Univariate AUCs
-        for fk in early_only_keys + ["mean_zvf"]:
+        for fk in retrospective_keys + ["mean_zvf"]:
             f.write(f"auc_univariate_{fk}\t{auc_per_feature[fk]:.4f}\t"
                     f"single-feature AUC predicting converged vs plateau\n")
         # Per-cluster cluster-LOO accuracy
@@ -610,15 +482,15 @@ def main() -> int:
             fa = cluster_acc_full[ci]
             f.write(f"cluster_loo_early_{ci[0]}_{ci[1]}\t"
                     f"{ea[0]/ea[1] if ea[1] else float('nan'):.4f}\t"
-                    f"n={ea[1]} early-only; "
+                    f"n={ea[1]} retrospective; "
                     f"full-feature LOO={fa[0]/fa[1] if fa[1] else float('nan'):.4f}\n")
     print(f"wrote {out_summary}")
 
     # ---- 6. Console summary ----
-    print(f"\nIter 42 — early-trace ZVF predicts late failure mode")
+    print(f"\nIter 42 — retrospective full-trace ZVF predicts late failure mode")
     print(f"  n_runs = {n_total}")
     print(f"  LOO accuracy (per-row, all 8 features) = {acc:.3f} ({n_correct}/{n_total})")
-    print(f"  Cluster-LOO accuracy (EARLY features only) = {acc_cluster:.3f} "
+    print(f"  Cluster-LOO accuracy (retrospective subset) = {acc_cluster:.3f} "
           f"({n_correct_cluster}/{n_total})")
     print(f"  Cluster-LOO accuracy (FULL 8 features) = {acc_cluster_full:.3f} "
           f"({n_correct_cluster_full}/{n_total})")
@@ -629,7 +501,7 @@ def main() -> int:
     print(f"  Spearman(burden_05, mean_zvf) = {rho_burden_mean:.3f}")
     print(f"  Spearman(fp05_frac, last10) = {rho_fp05_last10:.3f}")
     print(f"  Univariate AUCs (converged vs plateau):")
-    for fk in early_only_keys + ["mean_zvf"]:
+    for fk in retrospective_keys + ["mean_zvf"]:
         print(f"    {fk:18s}  AUC = {auc_per_feature[fk]:.3f}")
     print(f"  Collapse rate: top-quartile burden={high_collapse}/{high_n}, "
           f"bottom-quartile={low_collapse}/{low_n}")

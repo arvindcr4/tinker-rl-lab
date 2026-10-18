@@ -7,7 +7,7 @@ contrastive yield:
     ZVF = E_x[p_x^G + (1-p_x)^G], Delta_G = ZVF_obs - ZVF_iid.
 
 Iter94/98/102 already materialised the marginal views:
-  - iter94: cross-library dashboard, anti-herding bonus delta_div(G).
+  - iter94: cross-library dashboard, same-group descriptive discrepancy bonus delta_div(G).
   - iter98: per-step over-dispersion ratio rho_t = ZVF_emp / ZVF_iid.
   - iter102: per-row Delta and AERO-vs-GRPO paired test.
 
@@ -35,9 +35,9 @@ disentangles them.  The sharpest single empirical claim of this iteration:
 Three fresh analyses on REAL measured data:
 
   1. PER-(LIBRARY, EXPERIMENT) PHASE COORDINATES
-     For every row in zvf_iter102_calibration.tsv, project the row
+     For every row in zvf_iter102_calibration_review28_v2.tsv, project the row
      onto (p, G, Delta, rho, is_collapse). Write to
-     platform_hybrid/experiments/results/zvf_iter106_phase_diag.tsv.
+     platform_hybrid/experiments/results/zvf_iter106_phase_diag_review28_v2.tsv.
 
   2. PARTIAL CORRELATION TESTS
      Compute partial Pearson + partial Spearman (Reisz / partial-rank)
@@ -54,9 +54,9 @@ Three fresh analyses on REAL measured data:
            vs Delta conditioned on p).
 
 Outputs:
-    platform_hybrid/experiments/results/zvf_iter106_phase_diag.tsv       (14+ rows)
-    platform_hybrid/experiments/results/zvf_iter106_partial_corr.tsv      (4 rows)
-    figures/zvf_vs_failure.pdf                            (3-panel re-emit)
+    platform_hybrid/experiments/results/zvf_iter106_phase_diag_review28_v2.tsv       (14+ rows)
+    platform_hybrid/experiments/results/zvf_iter106_partial_corr_review28_v2.tsv      (4 rows)
+    figures/zvf_vs_failure_106_review28_v2.pdf                            (3-panel re-emit)
 
 Source: platform_modal/scripts/zvf_diagnostic_iter106.py
 Honest-stat note: n=14 rows is small for partial correlation; CIs are
@@ -91,7 +91,7 @@ G_DEFAULT = 8
 
 def load_calibration_rows() -> List[Dict[str, Any]]:
     """Re-use the iter102 per-row calibration table."""
-    path = RES / "zvf_iter102_calibration.tsv"
+    path = RES / "zvf_iter102_calibration_review28_v2.tsv"
     rows: List[Dict[str, Any]] = []
     if not path.exists():
         return rows
@@ -151,6 +151,9 @@ def load_per_problem_phase_points() -> List[Dict[str, Any]]:
             rewards = list(p.get("rewards", []))
             if not rewards:
                 continue
+            G = len(rewards)
+            if not all(value in (0, 1) for value in rewards):
+                raise ValueError("Bernoulli plug-in requires binary rewards")
             p_x = float(np.mean(rewards))
             zvf_emp = 1.0 if (min(rewards) == max(rewards)) else 0.0
             zvf_iid = p_x ** G + (1.0 - p_x) ** G
@@ -163,6 +166,7 @@ def load_per_problem_phase_points() -> List[Dict[str, Any]]:
                     "zvf_emp": zvf_emp,
                     "zvf_iid": zvf_iid,
                     "delta": zvf_emp - zvf_iid,
+                    "estimator": "same_group_plugin_descriptive_not_dependence",
                     "k_correct": int(sum(rewards)),
                 }
             )
@@ -185,12 +189,9 @@ def _pearson(x: np.ndarray, y: np.ndarray) -> float:
     return float((xm * ym).sum() / denom)
 
 
-def _spearman(x: np.ndarray, y: np.ndarray) -> float:
-    if len(x) < 3:
-        return float("nan")
-    rx = np.argsort(np.argsort(x)).astype(float)
-    ry = np.argsort(np.argsort(y)).astype(float)
-    return _pearson(rx, ry)
+def _spearman(x, y):
+    from _review28_statistics import spearman
+    return spearman(x, y)
 
 
 def _partial_corr(
@@ -277,8 +278,10 @@ def _classify_row(collapse_rate: float, p: float) -> str:
     """
     if collapse_rate >= 0.5:
         return "collapse"
-    if p <= 0.05 or p >= 0.95:
-        return "collapse"
+    if p >= 0.95:
+        return "mastery"
+    if p <= 0.05:
+        return "incapacity"
     if p >= 0.85:
         return "converged"
     return "drift"
@@ -485,7 +488,7 @@ def main() -> int:
         flush=True,
     )
     if not cal_rows:
-        print("  ERROR: zvf_iter102_calibration.tsv missing -- run iter102 first")
+        print("  ERROR: zvf_iter102_calibration_review28_v2.tsv missing -- run iter102 first")
         return 1
 
     # ---- 1. Per-(library, experiment) phase coordinates.
@@ -508,10 +511,10 @@ def main() -> int:
             }
         )
     _write_tsv(
-        RES / "zvf_iter106_phase_diag.tsv",
+        RES / "zvf_iter106_phase_diag_review28_v2.tsv",
         phase_rows,
         header_comment=(
-            "# zvf_iter106_phase_diag.tsv -- (p, Delta) phase-space projection\n"
+            "# zvf_iter106_phase_diag_review28_v2.tsv -- (p, Delta) phase-space projection\n"
             "# of zvf_iter102_calibration rows. p = mean_reward, G from row,\n"
             "# Delta = ZVF_emp - (p^G + (1-p)^G), rho = ZVF_emp / max(ZVF_iid, eps).\n"
             "# phase_label uses collapse_rate >= 0.5 OR p in {<=0.05,>=0.95} -> collapse,\n"
@@ -598,10 +601,10 @@ def main() -> int:
         },
     ]
     _write_tsv(
-        RES / "zvf_iter106_partial_corr.tsv",
+        RES / "zvf_iter106_partial_corr_review28_v2.tsv",
         corr_rows,
         header_comment=(
-            "# zvf_iter106_partial_corr.tsv -- raw vs partial (| p) correlations\n"
+            "# zvf_iter106_partial_corr_review28_v2.tsv -- raw vs partial (| p) correlations\n"
             "# between ZVF / Delta and is_collapse across the cross-library rows.\n"
             "# 'conditioned_on=p_difficulty' uses the partial-correlation formula\n"
             "# r_xy.z = (r_xy - r_xz*r_yz) / sqrt((1-r_xz^2)(1-r_yz^2)).\n"
@@ -615,8 +618,8 @@ def main() -> int:
         cal_rows,
         phase_pts,
         corr_rows,
-        FIG / "zvf_vs_failure.pdf",
-        FIG / "zvf_vs_failure.png",
+        FIG / "zvf_vs_failure_106_review28_v2.pdf",
+        FIG / "zvf_vs_failure_106_review28_v2.png",
     )
 
     # Headline console print

@@ -43,16 +43,16 @@ permutation, and a confusion matrix between true and predicted
 phases.
 
 Outputs:
-    platform_hybrid/experiments/results/zvf_iter34_phase_scan.tsv     (12 rows)
-    platform_hybrid/experiments/results/zvf_iter34_discriminant.tsv   (4 rows
+    platform_hybrid/experiments/results/zvf_iter34_phase_scan_review28_v2.tsv     (12 rows)
+    platform_hybrid/experiments/results/zvf_iter34_discriminant_review28_v2.tsv   (4 rows
                                                       per-phase
                                                       feature
                                                       mean +- sd)
-    platform_hybrid/experiments/results/zvf_iter34_feature_importance.tsv (rows
+    platform_hybrid/experiments/results/zvf_iter34_feature_importance_review28_v2.tsv (rows
                                                       per feature)
-    platform_hybrid/experiments/results/zvf_iter34_confusion.tsv      (4x4 LOO
+    platform_hybrid/experiments/results/zvf_iter34_confusion_review28_v2.tsv      (4x4 LOO
                                                       confusion)
-    platform_hybrid/experiments/results/zvf_iter34_summary.tsv        (one-row
+    platform_hybrid/experiments/results/zvf_iter34_summary_review28_v2.tsv        (one-row
                                                       rollup)
 
 Source: platform_modal/scripts/zvf_iter34_phasescan.py
@@ -73,7 +73,7 @@ OUT = ROOT / "experiments" / "results"
 
 
 def zvf_proxies(df: pd.DataFrame) -> pd.DataFrame:
-    """Compute iter33-derived ZVF proxy features.
+    """Compute reward-summary proxies; these are not measured grouped-reward ZVF.
 
     For each trace we derive 4 features that mirror the iter30
     per-step ZVF feature battery (current, trailing_mean,
@@ -83,10 +83,10 @@ def zvf_proxies(df: pd.DataFrame) -> pd.DataFrame:
     out["model"] = df["model"]
     out["arch"] = df["arch"]
     out["phase"] = df["phase_classifier"]
-    out["zvf_level"] = df["zero_frac"].fillna(0.0)
-    out["zvf_instability"] = df["peak_frac"].fillna(0.0)
-    out["zvf_slope"] = df["ols_slope_per_step"].fillna(0.0)
-    out["zvf_direction"] = df["delta_late_minus_early"].fillna(0.0)
+    out["zvf_level"] = df["zero_frac"]
+    out["zvf_instability"] = df["peak_frac"]
+    out["zvf_slope"] = df["ols_slope_per_step"]
+    out["zvf_direction"] = df["delta_late_minus_early"]
     out["zvf_discriminator"] = out["zvf_level"] * np.clip(
         1.0 - out["zvf_direction"], 0.0, 1.0
     )
@@ -107,6 +107,9 @@ def loo_classify(
 
     Returns predicted class label for each row of Xte.
     """
+    classes = sorted(set(ytr))
+    if not classes or not np.isfinite(Xtr).all() or not np.isfinite(Xte).all():
+        raise ValueError("Classifier requires finite nonempty training folds")
     Xtr_n = _normalise(Xtr)
     Xte_n = (Xte - Xtr.mean(axis=0)) / Xtr.std(axis=0).clip(min=1e-9)
     centroids = np.stack(
@@ -124,6 +127,7 @@ def loo_phase_classifier(
     permutation importance. Uses weighted nearest-centroid
     (no sklearn dependency).
     """
+    feats = feats.dropna(subset=feature_cols).copy()
     X = feats[feature_cols].to_numpy(dtype=float)
     y = feats["phase"].to_numpy()
     classes = sorted(set(y))
@@ -250,20 +254,20 @@ def main() -> None:
         "zvf_direction",
         "zvf_discriminator",
     ]
-    feats.to_csv(OUT / "zvf_iter34_phase_scan.tsv", sep="\t", index=False)
+    feats.to_csv(OUT / "zvf_iter34_phase_scan_review28_v2.tsv", sep="\t", index=False)
 
     pred_df, confusion, metrics, importance = loo_phase_classifier(
         feats, feature_cols
     )
-    pred_df.to_csv(OUT / "zvf_iter34_predictions.tsv", sep="\t", index=False)
-    confusion.to_csv(OUT / "zvf_iter34_confusion.tsv", sep="\t")
-    importance.to_csv(OUT / "zvf_iter34_feature_importance.tsv", sep="\t", index=False)
+    pred_df.to_csv(OUT / "zvf_iter34_predictions_review28_v2.tsv", sep="\t", index=False)
+    confusion.to_csv(OUT / "zvf_iter34_confusion_review28_v2.tsv", sep="\t")
+    importance.to_csv(OUT / "zvf_iter34_feature_importance_review28_v2.tsv", sep="\t", index=False)
 
     disc = per_phase_discriminant(feats, feature_cols)
-    disc.to_csv(OUT / "zvf_iter34_discriminant.tsv", sep="\t", index=False)
+    disc.to_csv(OUT / "zvf_iter34_discriminant_review28_v2.tsv", sep="\t", index=False)
 
     collapse_gap = collapse_discrimination(feats, feature_cols)
-    collapse_gap.to_csv(OUT / "zvf_iter34_collapse_gap.tsv", sep="\t", index=False)
+    collapse_gap.to_csv(OUT / "zvf_iter34_collapse_gap_review28_v2.tsv", sep="\t", index=False)
 
     summary = {
         "n_anchors": int(metrics["n"]),
@@ -289,9 +293,9 @@ def main() -> None:
             feats.loc[feats["phase"] == "collapse", "model"].iat[0]
         ),
     }
-    with open(OUT / "zvf_iter34_summary.json", "w") as f:
+    with open(OUT / "zvf_iter34_summary_review28_v2.json", "w") as f:
         json.dump(summary, f, indent=2)
-    pd.DataFrame([summary]).to_csv(OUT / "zvf_iter34_summary.tsv", sep="\t", index=False)
+    pd.DataFrame([summary]).to_csv(OUT / "zvf_iter34_summary_review28_v2.tsv", sep="\t", index=False)
 
     print(f"n_anchors={summary['n_anchors']} LOO acc={summary['loo_accuracy']:.3f} "
           f"top_feature={summary['top_feature']} delta={summary['top_feature_delta_acc']:.3f}")

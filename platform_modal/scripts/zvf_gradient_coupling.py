@@ -8,10 +8,10 @@ platform_hybrid/experiments/results/group_size_advantage_variance.tsv (G-sweep o
 Qwen2.5-0.5B arithmetic, G in {2,4,8,16}, 3 seeds, 40 steps each).
 
 Produces:
-  - platform_hybrid/experiments/results/zvf_gradient_coupling.tsv   (per-G regression table)
-  - platform_hybrid/experiments/results/zvf_gradient_coupling_pivot.tsv  (per-(G,step) stats)
-  - figures/zvf_gradient_coupling.pdf
-  - paper/sections/zvf_gradient.tex
+  - platform_hybrid/experiments/results/zvf_gradient_coupling_review28_v2.tsv   (per-G regression table)
+  - platform_hybrid/experiments/results/zvf_gradient_coupling_pivot_review28_v2.tsv  (per-(G,step) stats)
+  - figures/zvf_gradient_coupling_review28_v2.pdf
+  - paper/sections/zvf_gradient_review28_v2.tex
 
 The empirical claim is narrow and falsifiable: within the G-sweep on
 Qwen2.5-0.5B, the per-step correlation between ZVF and grad_norm is
@@ -170,9 +170,7 @@ def per_G_pooled(rows):
                     pearson_r=round(mean_r, 4),
                     ci_lo=round(lo, 4),
                     ci_hi=round(hi, 4),
-                    n_obs=len(sub for sub in [r for r in rows if r["G"] == G])
-                    if False
-                    else len([r for r in rows if r["G"] == G]),
+                    n_obs=len([r for r in rows if r["G"] == G]),
                     n_seeds=len(per_seed),
                 )
             )
@@ -211,6 +209,11 @@ def write_tsv(path, rows, fieldnames):
             w.writerow(r)
 
 
+def tex_escape(value):
+    table = {"\\": r"\textbackslash{}", "_": r"\_", "%": r"\%", "&": r"\&", "#": r"\#", "$": r"\$", "{": r"\{", "}": r"\}"}
+    return "".join(table.get(char, char) for char in str(value))
+
+
 def write_tex(out_path, per_g_pooled_rows, per_step_stats_rows, header=""):
     def fmt(x):
         if isinstance(x, float):
@@ -233,7 +236,7 @@ def write_tex(out_path, per_g_pooled_rows, per_step_stats_rows, header=""):
     lines.append(r"\midrule")
     for r in per_g_pooled_rows:
         lines.append(
-            f"{r['G']} & {r['proxy']} & {fmt(r['pearson_r'])} & "
+            f"{r['G']} & {tex_escape(r['proxy'])} & {fmt(r['pearson_r'])} & "
             f"$[{fmt(r['ci_lo'])}, {fmt(r['ci_hi'])}]$ & {r['n_obs']} \\\\"
         )
     lines.append(r"\bottomrule")
@@ -241,7 +244,7 @@ def write_tex(out_path, per_g_pooled_rows, per_step_stats_rows, header=""):
     lines.append(
         r"\caption{Per-step Pearson correlation between ZVF and "
         r"gradient-flow proxies, pooled across seeds within each $G$. "
-        r"Source: \texttt{platform_hybrid/experiments/results/zvf\_gradient\_coupling.tsv}.}"
+        r"Source: \texttt{platform\_modal/experiments/results/zvf\_gradient\_coupling.tsv}.}"
     )
     lines.append(r"\label{tab:zvf-gradient-coupling}")
     lines.append(r"\end{table}")
@@ -329,17 +332,17 @@ def main():
     per_g = per_G_pooled(rows)
     stats = per_step_stats(rows)
     write_tsv(
-        RESULTS / "zvf_gradient_coupling.tsv",
+        RESULTS / "zvf_gradient_coupling_review28_v2.tsv",
         per_step,
         ["G", "seed", "proxy", "pearson_r", "ci_lo", "ci_hi", "n_steps"],
     )
     write_tsv(
-        RESULTS / "zvf_gradient_coupling_pooled.tsv",
+        RESULTS / "zvf_gradient_coupling_pooled_review28_v2.tsv",
         per_g,
         ["G", "proxy", "pearson_r", "ci_lo", "ci_hi", "n_obs", "n_seeds"],
     )
     write_tsv(
-        RESULTS / "zvf_gradient_coupling_pivot.tsv",
+        RESULTS / "zvf_gradient_coupling_pivot_review28_v2.tsv",
         stats,
         [
             "G",
@@ -357,13 +360,13 @@ def main():
             "sem_advantage_variance",
         ],
     )
-    make_figure(rows, FIGS / "zvf_gradient_coupling.pdf")
+    make_figure(rows, FIGS / "zvf_gradient_coupling_review28_v2.pdf")
     write_tex(
-        PAPER / "zvf_gradient.tex",
+        PAPER / "zvf_gradient_review28_v2.tex",
         per_g,
         stats,
         header=(
-            "% paper/sections/zvf_gradient.tex\n"
+            "% paper/sections/zvf_gradient_review28_v2.tex\n"
             "%\n"
             "% Pillar 2 (ZVF) cross-pillar elevation, iter18: ZVF x gradient-flow\n"
             "% coupling on the G-sweep (Qwen2.5-0.5B / synthetic arithmetic).\n"

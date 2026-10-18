@@ -25,14 +25,14 @@ Inputs (real per-step data already in the worktree):
 
 Outputs:
 
-  platform_hybrid/experiments/results/zvf_dynamics_summary.tsv
+  platform_hybrid/experiments/results/zvf_dynamics_summary_review28_v2.tsv
       One row per (method_or_group_size, seed-or-pool) with dynamics
       statistics.
-  platform_hybrid/experiments/results/zvf_dynamics_leadtime.tsv
+  platform_hybrid/experiments/results/zvf_dynamics_leadtime_review28_v2.tsv
       Per-(method,seed) first-ZVF>theta step, first-collapse step, lead.
-  platform_hybrid/experiments/results/zvf_dynamics_phase.tsv
+  platform_hybrid/experiments/results/zvf_dynamics_phase_review28_v2.tsv
       Early/mid/late ZVF statistics per run.
-  platform_hybrid/experiments/results/zvf_dynamics.json
+  platform_hybrid/experiments/results/zvf_dynamics_review28_v2.json
       All aggregates also in JSON for downstream figure scripts.
 """
 from __future__ import annotations
@@ -134,6 +134,8 @@ def _load_variance_mitigation_runs():
             "collapse_series": coll,
             "mean_zvf": sum(zvfs) / max(1, len(zvfs)),
             "heldout_acc": float(rs[-1]["heldout_acc"]),
+            "accuracy_series": [float(row["heldout_acc"]) for row in rs],
+            "step_series": [int(row["step"]) for row in rs],
             "last10_avg": sum(float(r["heldout_acc"]) for r in rs[-10:]) / min(10, len(rs)),
         })
     return runs
@@ -180,6 +182,7 @@ def _summarize_run(run, thetas=(0.5, 0.7, 0.9)):
         "n_steps": run["n_steps"],
         "mean_zvf": run["mean_zvf"],
         "heldout_acc": run["heldout_acc"],
+        "peak_accuracy": max(run.get("accuracy_series", []), default=float("nan")),
         "last10_avg": run["last10_avg"],
         "zvf_lag1": _autocorr_lag1(z),
         "reward_lag1": _autocorr_lag1(r),
@@ -198,39 +201,26 @@ def _summarize_run(run, thetas=(0.5, 0.7, 0.9)):
 
 
 def _lead_time(run):
-    """First step at which zvf>=theta AND collapse flag = 1 in next 10 steps.
-    Returns None if no lead event."""
-    z = run["zvf_series"]
-    c = run["collapse_series"]
+    """First onset and first alarm, retaining missed/late/false/censored status."""
+    z, c = run["zvf_series"], run["collapse_series"]
     n = min(len(z), len(c))
-    if n < 3:
-        return None
-    for theta in (0.7, 0.8, 0.9):
-        for i in range(1, n - 1):
-            if z[i] >= theta and z[i - 1] < theta:
-                # collapse within next 10 steps?
-                horizon = min(n - 1, i + 10)
-                if any(c[j] == 1 for j in range(i + 1, horizon + 1)):
-                    j_collapse = next(j for j in range(i + 1, horizon + 1) if c[j] == 1)
-                    return {
-                        "theta": theta,
-                        "first_pass_step": i,
-                        "first_collapse_step": j_collapse,
-                        "lead_steps": j_collapse - i,
-                    }
-    return None
+    if not n: return None
+    steps = run.get("step_series", list(range(n)))
+    onset = next((i for i in range(n) if c[i] == 1), None)
+    theta = .7
+    alarm = next((i for i in range(n) if z[i] >= theta and (i == 0 or z[i-1] < theta)), None)
+    status = ("censored" if onset is None and alarm is None else
+              "false_or_censored_alarm" if onset is None else
+              "missed" if alarm is None else "early" if alarm < onset else "late")
+    return {"theta": theta, "first_pass_step": steps[alarm] if alarm is not None else -1,
+            "first_collapse_step": steps[onset] if onset is not None else -1,
+            "lead_steps": steps[onset]-steps[alarm] if onset is not None and alarm is not None else float("nan"),
+            "status": status}
 
 
 def _write_tsv(path, rows):
-    if not rows:
-        return
-    keys = list(rows[0].keys())
-    with open(path, "w") as f:
-        writer = csv.DictWriter(f, fieldnames=keys, delimiter="\t", extrasaction="ignore")
-        writer.writeheader()
-        for r in rows:
-            writer.writerow(r)
-        f.write("# Pillar 2 ZVF dynamics — iter14. Source: platform_modal/scripts/zvf_dynamics.py\n")
+    from _review28_io import write_table
+    write_table(path, rows, comment="review28_v2; empty tables contain a header, no stale records")
 
 
 def main():
@@ -258,8 +248,8 @@ def main():
                 **lead,
             })
 
-    summary_path = os.path.join(RESULTS_DIR, "zvf_dynamics_summary.tsv")
-    lead_path = os.path.join(RESULTS_DIR, "zvf_dynamics_leadtime.tsv")
+    summary_path = os.path.join(RESULTS_DIR, "zvf_dynamics_summary_review28_v2.tsv")
+    lead_path = os.path.join(RESULTS_DIR, "zvf_dynamics_leadtime_review28_v2.tsv")
     _write_tsv(summary_path, summary_rows)
     _write_tsv(lead_path, lead_rows)
 
@@ -288,10 +278,10 @@ def main():
             "auc_above_zvf09": sum(r["auc_above_zvf09"] for r in rs) / n,
             "reward_zvf_corr": sum(r["reward_zvf_corr"] for r in rs if not math.isnan(r["reward_zvf_corr"])) / max(1, sum(1 for r in rs if not math.isnan(r["reward_zvf_corr"]))),
         })
-    pool_path = os.path.join(RESULTS_DIR, "zvf_dynamics_phase.tsv")
+    pool_path = os.path.join(RESULTS_DIR, "zvf_dynamics_phase_review28_v2.tsv")
     _write_tsv(pool_path, pool_rows)
 
-    json_path = os.path.join(RESULTS_DIR, "zvf_dynamics.json")
+    json_path = os.path.join(RESULTS_DIR, "zvf_dynamics_review28_v2.json")
     json.dump(
         {
             "n_runs": len(runs),

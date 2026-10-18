@@ -9,11 +9,11 @@ Panel B: Per-library cost savings at y_target=0.80 (G_iid*G*K_prompts*L_bar
 Panel C: Failure-mode LOO confusion heatmap on the 14-pool rows.
 
 Inputs:
-    platform_hybrid/experiments/results/zvf_iter38_isoyield.tsv
-    platform_hybrid/experiments/results/zvf_iter38_classifier.tsv
+    platform_hybrid/experiments/results/zvf_iter38_isoyield_review28_v2.tsv
+    platform_hybrid/experiments/results/zvf_iter38_classifier_review28_v2.tsv
 
 Output:
-    figures/zvf_iter38.pdf  (matplotlib fallback).
+    figures/zvf_iter38_review28_v2.pdf  (matplotlib fallback).
 """
 from __future__ import annotations
 
@@ -42,14 +42,14 @@ def load_tsv(path: Path):
 
 
 def main() -> None:
-    iso_rows = load_tsv(RESULTS / "zvf_iter38_isoyield.tsv")
+    iso_rows = load_tsv(RESULTS / "zvf_iter38_isoyield_review28_v2.tsv")
     # Header: library, model, p_x, y_target, G_ref, delta_div_lib, G_iid,
-    #         G_empirical, G_savings, cost_iid, cost_empirical, cost_savings_frac
+    #         G_projected_scenario, G_savings, cost_iid, cost_empirical, cost_savings_frac
     iso_hdr = iso_rows[0]
     idx = {c: i for i, c in enumerate(iso_hdr)}
     iso_libs = sorted({r[idx["library"]] for r in iso_rows[1:]})
 
-    cls_rows = load_tsv(RESULTS / "zvf_iter38_classifier.tsv")
+    cls_rows = load_tsv(RESULTS / "zvf_iter38_classifier_review28_v2.tsv")
     # Filter out the confusion block (lines that don't start with a library name)
     LIB_NAMES = {
         "grpo", "aero", "cppo", "ngrpo", "scafgrpo", "mcgrpo", "gift",
@@ -58,7 +58,7 @@ def main() -> None:
     }
     cls_data = [r for r in cls_rows if r[0] in LIB_NAMES]
     # Header: library, model, mean_zvf, mean_last10, mean_peak, true, pred, correct
-    cls_hdr = cls_data[0]
+    cls_hdr = cls_rows[0]
 
     # ------------------------------------------------------------------
     # Panel A: Iso-Yield curves for 5 representative libraries
@@ -71,29 +71,15 @@ def main() -> None:
         p_for_lib[r[idx["library"]]] = float(r[idx["p_x"]])
 
     y_grid = [0.50, 0.55, 0.60, 0.65, 0.70, 0.75, 0.80, 0.85, 0.90, 0.95]
-    delta_div = 0.122  # tinker_gsm8k per-prompt anti-herding
+    delta_div = 0.122  # tinker_gsm8k per-prompt plug-in discrepancy scenario
     for lib in rep_libs:
         p = p_for_lib[lib]
         g_iid = []
         g_emp = []
         for y in y_grid:
-            # iid
-            G = 1
-            if 1.0 - 2 * p * (1 - p) < y:
-                for Gc in range(2, 65):
-                    if 1.0 - p ** Gc - (1 - p) ** Gc >= y:
-                        G = Gc
-                        break
-            g_iid.append(G)
-            # empirical
-            Ge = 1
-            if 1.0 - max(0.0, 2 * p * (1 - p) - delta_div) < y:
-                for Gc in range(2, 65):
-                    z_eff = max(0.0, min(1.0, p ** Gc + (1 - p) ** Gc - delta_div))
-                    if 1.0 - z_eff >= y:
-                        Ge = Gc
-                        break
-            g_emp.append(Ge)
+            from zvf_iter38_crosslibrary import iso_yield_iid, iso_yield_empirical
+            g_iid.append(iso_yield_iid(p, y))
+            g_emp.append(iso_yield_empirical(p, delta_div, y))
         axes[0].plot(y_grid, g_iid, "--", alpha=0.5, lw=1)
         axes[0].plot(y_grid, g_emp, "-", lw=2, label=f"{lib} (p={p:.2f})")
     axes[0].set_xlabel("Target yield $Y_{target}$")
@@ -122,7 +108,7 @@ def main() -> None:
     # ------------------------------------------------------------------
     classes = ["collapse", "drift", "plateau", "converged"]
     conf = {c: {c2: 0 for c2 in classes} for c in classes}
-    for r in cls_data[1:]:
+    for r in cls_data:
         # library, model, mean_zvf, mean_last10, mean_peak, true, pred, correct
         truth = r[5]
         pred = r[6]
@@ -146,9 +132,9 @@ def main() -> None:
     plt.colorbar(im, ax=axes[2], fraction=0.04)
 
     plt.tight_layout()
-    out = FIG_DIR / "zvf_iter38.pdf"
+    out = FIG_DIR / "zvf_iter38_review28_v2.pdf"
     plt.savefig(out)
-    out_png = FIG_DIR / "zvf_iter38.png"
+    out_png = FIG_DIR / "zvf_iter38_review28_v2.png"
     plt.savefig(out_png, dpi=120)
     print(f"Wrote {out} and {out_png}")
 

@@ -39,10 +39,10 @@ Method
 6. Output four tables and one figure; LaTeX section reads them.
 
 Outputs (real, computed this session):
-    platform_hybrid/experiments/results/zvf_iter30_leadindic.tsv
-    platform_hybrid/experiments/results/zvf_iter30_calib.tsv
-    platform_hybrid/experiments/results/zvf_iter30_feature_importance.tsv
-    platform_hybrid/experiments/results/zvf_iter30_summary.tsv
+    platform_hybrid/experiments/results/zvf_iter30_leadindic_review28_v2.tsv
+    platform_hybrid/experiments/results/zvf_iter30_calib_review28_v2.tsv
+    platform_hybrid/experiments/results/zvf_iter30_feature_importance_review28_v2.tsv
+    platform_hybrid/experiments/results/zvf_iter30_summary_review28_v2.tsv
     figures/zvf_iter30_roc.{pdf,png}
 
 Honest scope
@@ -163,20 +163,15 @@ def _featurise_trajectory(
         sxy = sum((x - mx) * (y - my) for x, y in zip(xs, ys))
         return sxy / sxx
 
-    # Forward scan to compute "first future collapse step"
+    # Protocol v2: strictly future first onset in recorded training-step units.
     traj_len = n
-    first_future: List[int] = [traj_len] * traj_len  # default = no future collapse
-    next_collapse = traj_len
-    for t in range(traj_len - 1, -1, -1):
-        if steps[t][2] == 1:
-            next_collapse = t
-        first_future[t] = next_collapse
-
+    onset = next((step for step, _, collapsed in steps if collapsed == 1), None)
+    last_observed = steps[-1][0] if steps else None
     for t in range(traj_len):
         cur = zvfs[t]
         c_now = steps[t][2]
         record = {
-            "t": t,
+            "t": steps[t][0],
             "current_zvf": cur,
             "trailing_mean_25": _trailing_mean(t, window_long),
             "trailing_auc_25": _trailing_auc(t, window_long),
@@ -184,11 +179,15 @@ def _featurise_trajectory(
             "c_now": c_now,
         }
         for K in horizons:
-            y = 1 if first_future[t] <= t + K else 0
+            step = steps[t][0]
+            if onset is not None and step < onset:
+                y = int(onset <= step + K)
+            elif onset is None and last_observed >= step + K:
+                y = 0
+            else:
+                y = None  # censored or already collapsed
             record[f"y_K{K}"] = y
-            record[f"lead_to_collapse_K{K}"] = (
-                first_future[t] - t if first_future[t] != traj_len else -1
-            )
+            record[f"lead_to_collapse_K{K}"] = onset-step if onset is not None and step < onset else None
         out.append(record)
     return out
 
@@ -273,24 +272,9 @@ def _roc_auc(scores: Sequence[float], labels: Sequence[int]) -> float:
     return auc
 
 
-def _pr_auc(scores: Sequence[float], labels: Sequence[int]) -> float:
-    pairs = sorted(zip(scores, labels), key=lambda t: -t[0])
-    pos = sum(labels)
-    if pos == 0:
-        return float("nan")
-    tp = fp = 0
-    area = 0.0
-    prev_recall = 0.0
-    for s, y in pairs:
-        if y == 1:
-            tp += 1
-        else:
-            fp += 1
-        precision = tp / (tp + fp)
-        recall = tp / pos
-        area += (recall - prev_recall) * precision
-        prev_recall = recall
-    return area
+def _pr_auc(scores, labels):
+    from _review28_statistics import average_precision
+    return average_precision(scores, labels)
 
 
 def _brier(probs: Sequence[float], labels: Sequence[int]) -> float:
@@ -334,9 +318,10 @@ def _cv_score(
     logistic regression on ``feat`` to predict ``label_key``."""
     by_traj: Dict[Tuple[str, int], List[dict]] = defaultdict(list)
     for r in rows:
+        if r["_row"].get(label_key) is None:
+            continue
         by_traj[(r["method"], r["seed"])].append(r["_row"])
     traj_keys = list(by_traj.keys())
-    rng = random.Random(seed)
     scores: List[float] = []
     labels: List[int] = []
     for hold in traj_keys:
@@ -434,8 +419,8 @@ def main() -> int:
         # Use holdout predictions for calibration
         all_cal_rows: List[Tuple[float, int]] = []
         for hold in traj_keys:
-            train = [r for k, rows in by_traj.items() if k != hold for r in rows]
-            test = by_traj[hold]
+            train = [r for k, rows in by_traj.items() if k != hold for r in rows if r.get(label) is not None]
+            test = [r for r in by_traj[hold] if r.get(label) is not None]
             xs = [r["trailing_mean_25"] for r in train if not math.isnan(r["trailing_mean_25"])]
             ys = [r[label] for r in train if not math.isnan(r["trailing_mean_25"])]
             if not xs or len(set(ys)) < 2:
@@ -462,7 +447,7 @@ def main() -> int:
             calib_rows.append([K, bi, n, round(conf, 3), round(acc, 3)])
 
     # Write leadindic table
-    out_lead = RESULTS / "zvf_iter30_leadindic.tsv"
+    out_lead = RESULTS / "zvf_iter30_leadindic_review28_v2.tsv"
     with out_lead.open("w") as fh:
         fh.write(
             "# Iter 30 Pillar 2: ZVF as a leading indicator.\n"
@@ -474,7 +459,7 @@ def main() -> int:
         for r in lead_rows:
             fh.write("\t".join(str(x) for x in r) + "\n")
 
-    out_fi = RESULTS / "zvf_iter30_feature_importance.tsv"
+    out_fi = RESULTS / "zvf_iter30_feature_importance_review28_v2.tsv"
     with out_fi.open("w") as fh:
         fh.write(
             "# Iter 30 Pillar 2: feature importance by horizon.\n"
@@ -483,7 +468,7 @@ def main() -> int:
         for r in feat_imp_rows:
             fh.write("\t".join(str(x) for x in r) + "\n")
 
-    out_cal = RESULTS / "zvf_iter30_calib.tsv"
+    out_cal = RESULTS / "zvf_iter30_calib_review28_v2.tsv"
     with out_cal.open("w") as fh:
         fh.write(
             "# Iter 30 Pillar 2: 5-bin calibration of trailing_mean_25\n"
@@ -494,7 +479,7 @@ def main() -> int:
             fh.write("\t".join(str(x) for x in r) + "\n")
 
     # Build summary: best feature per K
-    out_sum = RESULTS / "zvf_iter30_summary.tsv"
+    out_sum = RESULTS / "zvf_iter30_summary_review28_v2.tsv"
     with out_sum.open("w") as fh:
         fh.write(
             "# Iter 30 Pillar 2 summary: best ZVF-only feature per\n"
@@ -532,9 +517,9 @@ def main() -> int:
                         r
                         for k, rows in by_traj2.items()
                         if k != hold
-                        for r in rows
+                        for r in rows if r.get(label) is not None
                     ]
-                    test = by_traj2[hold]
+                    test = [r for r in by_traj2[hold] if r.get(label) is not None]
                     xs = [
                         r[feat]
                         for r in train
@@ -593,8 +578,8 @@ def main() -> int:
             fontsize=11,
         )
         fig.tight_layout()
-        out_pdf = FIGURES / "zvf_iter30_roc.pdf"
-        out_png = FIGURES / "zvf_iter30_roc.png"
+        out_pdf = FIGURES / "zvf_iter30_roc_review28_v2.pdf"
+        out_png = FIGURES / "zvf_iter30_roc_review28_v2.png"
         fig.savefig(out_pdf)
         fig.savefig(out_png, dpi=120)
     except ImportError:

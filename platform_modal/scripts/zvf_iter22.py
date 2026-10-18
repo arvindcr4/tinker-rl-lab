@@ -4,14 +4,14 @@
 Two new empirical questions that the existing zvf_diagnostic.py does not
 answer:
 
-  (A) Per-library iterated bootstrap CIs on mean_ZVF and collapse_rate.
+  (A) Per-library iterated bootstrap CIs on mean_ZVF and collapsed_step_fraction.
       zvf_diagnostic.py only prints point estimates. For NeurIPS we need
-      95% CIs around each library's mean ZVF and collapse_rate so the
+      95% CIs around each library's mean ZVF and collapsed_step_fraction so the
       AERO vs GRPO contrast is properly bracketed. We do paired bootstrap
       across seeds (n=5 within library).
 
   (B) ZVF lead-time: does the ZVF time-series PREDICT the collapse step?
-      Existing zvf_dynamics_leadtime.tsv only covers grpo. We extend the
+      Existing zvf_dynamics_leadtime_review28_v2.tsv only covers grpo. We extend the
       lead-time analysis to every variance_mitigation library that has a
       per-step collapse flag in variance_mitigation.tsv, and add a
       "ZVF spike precedes collapse by k steps?" statistical test (signed
@@ -24,10 +24,10 @@ Inputs (real, measured):
     platform_hybrid/experiments/results/zvf_by_library.tsv             -- per-library pooled
 
 Outputs (real, computed this session):
-    platform_hybrid/experiments/results/zvf_library_bootstrap_ci.tsv   -- (A)
-    platform_hybrid/experiments/results/zvf_leadtime_all.tsv           -- (B) extended table
-    platform_hybrid/experiments/results/zvf_leadtime_summary.tsv       -- (B) aggregated
-    figures/zvf_leadtime.pdf                           -- (B) figure
+    platform_hybrid/experiments/results/zvf_library_bootstrap_ci_review28_v2.tsv   -- (A)
+    platform_hybrid/experiments/results/zvf_leadtime_all_review28_v2.tsv           -- (B) extended table
+    platform_hybrid/experiments/results/zvf_leadtime_summary_review28_v2.tsv       -- (B) aggregated
+    figures/zvf_leadtime_review28_v2.pdf                           -- (B) figure
 """
 from __future__ import annotations
 
@@ -47,7 +47,7 @@ FIGURES = REPO_ROOT / "figures"
 
 
 # ---------------------------------------------------------------------------
-# (A) Per-library iterated bootstrap CIs on mean_ZVF and collapse_rate
+# (A) Per-library iterated bootstrap CIs on mean_ZVF and collapsed_step_fraction
 # ---------------------------------------------------------------------------
 
 
@@ -78,7 +78,7 @@ def per_seed_mean_zvf(method: str, seed: int, rows: List[Dict[str, Any]]) -> flo
     return statistics.fmean(r["zvf"] for r in rows)
 
 
-def per_seed_collapse_rate(method: str, seed: int, rows: List[Dict[str, Any]]) -> float:
+def per_seed_collapsed_step_fraction(method: str, seed: int, rows: List[Dict[str, Any]]) -> float:
     if not rows:
         return float("nan")
     return statistics.fmean(r["collapse"] for r in rows)
@@ -107,14 +107,14 @@ def bootstrap_mean_ci(
 def compute_library_bootstrap_ci(
     per_method: Dict[str, Dict[int, List[Dict[str, Any]]]], out_path: Path
 ) -> None:
-    """For each method, compute mean_ZVF CI and collapse_rate CI from seeds."""
+    """For each method, compute mean_ZVF CI and collapsed_step_fraction CI from seeds."""
     rows: List[Dict[str, Any]] = []
     for method, by_seed in per_method.items():
         mz_by_seed = []
         cr_by_seed = []
         for seed, rows_ in by_seed.items():
             mz = per_seed_mean_zvf(method, seed, rows_)
-            cr = per_seed_collapse_rate(method, seed, rows_)
+            cr = per_seed_collapsed_step_fraction(method, seed, rows_)
             if not math.isnan(mz):
                 mz_by_seed.append(mz)
             if not math.isnan(cr):
@@ -128,9 +128,9 @@ def compute_library_bootstrap_ci(
                 "mean_zvf": mz_pt,
                 "mean_zvf_ci_lo": mz_lo,
                 "mean_zvf_ci_hi": mz_hi,
-                "collapse_rate": cr_pt,
-                "collapse_rate_ci_lo": cr_lo,
-                "collapse_rate_ci_hi": cr_hi,
+                "collapsed_step_fraction": cr_pt,
+                "collapsed_step_fraction_ci_lo": cr_lo,
+                "collapsed_step_fraction_ci_hi": cr_hi,
             }
         )
 
@@ -139,7 +139,7 @@ def compute_library_bootstrap_ci(
         fh.write("# Pillar 2 per-library iterated bootstrap CIs (iter 22)\n")
         fh.write(
             "# For each variance_mitigation method, B=2000 percentile bootstrap\n"
-            "# CIs on mean_ZVF and on collapse_rate, with seed-level resampling.\n"
+            "# CIs on mean_ZVF and on collapsed_step_fraction, with seed-level resampling.\n"
             "# Source: platform_modal/scripts/zvf_iter22.py\n"
         )
         writer = csv.writer(fh, delimiter="\t", lineterminator="\n")
@@ -150,9 +150,9 @@ def compute_library_bootstrap_ci(
                 "mean_zvf",
                 "mean_zvf_ci_lo",
                 "mean_zvf_ci_hi",
-                "collapse_rate",
-                "collapse_rate_ci_lo",
-                "collapse_rate_ci_hi",
+                "collapsed_step_fraction",
+                "collapsed_step_fraction_ci_lo",
+                "collapsed_step_fraction_ci_hi",
             )
         )
         for r in rows:
@@ -163,9 +163,9 @@ def compute_library_bootstrap_ci(
                     f"{r['mean_zvf']:.4f}",
                     f"{r['mean_zvf_ci_lo']:.4f}",
                     f"{r['mean_zvf_ci_hi']:.4f}",
-                    f"{r['collapse_rate']:.4f}",
-                    f"{r['collapse_rate_ci_lo']:.4f}",
-                    f"{r['collapse_rate_ci_hi']:.4f}",
+                    f"{r['collapsed_step_fraction']:.4f}",
+                    f"{r['collapsed_step_fraction_ci_lo']:.4f}",
+                    f"{r['collapsed_step_fraction_ci_hi']:.4f}",
                 )
             )
 
@@ -195,9 +195,7 @@ def find_first_collapse(rows: List[Dict[str, Any]]) -> Tuple[int, int, int, floa
     zvf_at_pass = peak_row["zvf"]
     peak_val = peak_row["heldout_acc"]
     collapse_step = -1
-    for r in rows:
-        if r["step"] <= pass_step:
-            continue
+    for r in sorted(rows, key=lambda r: r["step"]):
         if r["collapse"] == 1:
             collapse_step = r["step"]
             break
@@ -254,7 +252,7 @@ def compute_leadtime(
                 pre_window_end = pass_step + min(5, lead_steps)
                 pre_zvf_window = [r["zvf"] for r in rows if pass_step <= r["step"] < pre_window_end]
                 post_window_start = max(pass_step, collapse_step - 5)
-                post_zvf_window = [r["zvf"] for r in rows if post_window_start < r["step"] <= collapse_step]
+                post_zvf_window = [r["zvf"] for r in rows if post_window_start <= r["step"] < collapse_step]
             else:
                 pre_zvf_window = [r["zvf"] for r in rows if pass_step <= r["step"] < pass_step + 5]
                 post_zvf_window = [r["zvf"] for r in rows if rows and r["step"] >= rows[-1]["step"] - 5]
@@ -346,7 +344,7 @@ def aggregate_leadtime(leadtime_rows: List[Dict[str, Any]]) -> List[Dict[str, An
                 "method": method,
                 "n_runs": n_runs,
                 "n_collapsed": n_collapsed,
-                "collapse_rate": n_collapsed / n_runs if n_runs else float("nan"),
+                "collapsed_run_fraction": n_collapsed / n_runs if n_runs else float("nan"),
                 "mean_lead": statistics.fmean(leads) if leads else float("nan"),
                 "median_lead": statistics.median(leads) if leads else float("nan"),
                 "min_lead": min(leads) if leads else float("nan"),
@@ -369,7 +367,7 @@ def write_leadtime_summary(
         fh.write(
             "# n_runs = total (method, seed) pairs (5 seeds per method by default).\n"
             "# n_collapsed = number of those that set collapse=1 at any step.\n"
-            "# collapse_rate = n_collapsed / n_runs (mitigation libraries should be\n"
+            "# collapsed_run_fraction = n_collapsed / n_runs (mitigation libraries should be\n"
             "# near 0; non-mitigation grpo was 3/5 = 0.6 in this dataset).\n"
             "# mean_pre_zvf_5 vs mean_post_zvf_5: 5-step ZVF average\n"
             "# immediately AFTER peak vs immediately BEFORE collapse (or terminal).\n"
@@ -381,7 +379,7 @@ def write_leadtime_summary(
                 "method",
                 "n_runs",
                 "n_collapsed",
-                "collapse_rate",
+                "collapsed_run_fraction",
                 "mean_lead",
                 "median_lead",
                 "min_lead",
@@ -398,7 +396,7 @@ def write_leadtime_summary(
                     r["method"],
                     r["n_runs"],
                     r["n_collapsed"],
-                    f"{r['collapse_rate']:.4f}" if not math.isnan(r["collapse_rate"]) else "NA",
+                    f"{r['collapsed_run_fraction']:.4f}" if not math.isnan(r["collapsed_run_fraction"]) else "NA",
                     f"{r['mean_lead']:.2f}" if not math.isnan(r["mean_lead"]) else "NA",
                     f"{r['median_lead']:.1f}" if not math.isnan(r["median_lead"]) else "NA",
                     f"{r['min_lead']}" if not math.isnan(r["min_lead"]) else "NA",
@@ -416,39 +414,9 @@ def write_leadtime_summary(
 # ---------------------------------------------------------------------------
 
 
-def wilcoxon_signed_rank(deltas: Sequence[float]) -> Tuple[float, float]:
-    """Returns (W+, p_two_sided) by a normal approximation.
-
-    For n < 10 we just return the sum of positive ranks and a Gaussian
-    approximation p-value (which is fine for our n in [3, 5]).
-    """
-    deltas = [d for d in deltas if not math.isnan(d)]
-    n = len(deltas)
-    if n == 0:
-        return (float("nan"), float("nan"))
-    abs_d = sorted(((abs(d), 1 if d > 0 else -1) for d in deltas), key=lambda x: x[0])
-    # Assign average ranks for ties.
-    ranks = [0.0] * n
-    i = 0
-    while i < n:
-        j = i
-        while j < n and abs_d[j][0] == abs_d[i][0]:
-            j += 1
-        avg_rank = (i + 1 + j) / 2.0
-        for k in range(i, j):
-            ranks[k] = avg_rank
-        i = j
-    w_plus = sum(ranks[k] for k in range(n) if abs_d[k][1] > 0)
-    w_minus = sum(ranks[k] for k in range(n) if abs_d[k][1] < 0)
-    # Normal approximation (no ties correction needed at n<=5).
-    mu = n * (n + 1) / 4.0
-    sigma = math.sqrt(n * (n + 1) * (2 * n + 1) / 24.0)
-    if sigma == 0:
-        return (w_plus, float("nan"))
-    z = (w_plus - mu) / sigma
-    # Two-sided p-value (no continuity correction at n<=5).
-    p = 2.0 * (1.0 - 0.5 * (1.0 + math.erf(abs(z) / math.sqrt(2))))
-    return (w_plus, p)
+def wilcoxon_signed_rank(deltas):
+    from _review28_statistics import signed_rank
+    return signed_rank(deltas)
 
 
 def pre_post_test(
@@ -580,7 +548,7 @@ def write_leadtime_figure(
     axR.set_xticks(x)
     axR.set_xticklabels(methods, rotation=45, fontsize=8)
     axR.set_ylabel("Mean ZVF in 5-step window")
-    axR.set_title("Pre vs pre-collapse ZVF (paired)\nW+ test reported in zvf_leadtime_summary.tsv")
+    axR.set_title("Pre vs pre-collapse ZVF (paired)\nW+ test reported in zvf_leadtime_summary_review28_v2.tsv")
     axR.set_ylim(0, 1.05)
     axR.legend(loc="upper right", frameon=False, fontsize=8)
 
@@ -631,7 +599,7 @@ def main() -> int:
     per_method = load_variance_mitigation_per_seed()
 
     # (A) Bootstrap CIs
-    boot_path = RESULTS / "zvf_library_bootstrap_ci.tsv"
+    boot_path = RESULTS / "zvf_library_bootstrap_ci_review28_v2.tsv"
     compute_library_bootstrap_ci(per_method, boot_path)
     bootstrap_rows: List[Dict[str, Any]] = []
     with boot_path.open() as fh:
@@ -649,17 +617,17 @@ def main() -> int:
 
     # (B) Leadtime
     leadtime_rows = compute_leadtime(per_method, lead_window=30)
-    write_leadtime_table(leadtime_rows, RESULTS / "zvf_leadtime_all.tsv")
+    write_leadtime_table(leadtime_rows, RESULTS / "zvf_leadtime_all_review28_v2.tsv")
     summary = aggregate_leadtime(leadtime_rows)
-    write_leadtime_summary(summary, RESULTS / "zvf_leadtime_summary.tsv")
+    write_leadtime_summary(summary, RESULTS / "zvf_leadtime_summary_review28_v2.tsv")
     test = pre_post_test(leadtime_rows)
-    write_pre_post_test(test, RESULTS / "zvf_pre_post_test.tsv")
+    write_pre_post_test(test, RESULTS / "zvf_pre_post_test_review28_v2.tsv")
 
     # Figures
     fig_leadtime = write_leadtime_figure(
-        summary, test, FIGURES / "zvf_leadtime.pdf"
+        summary, test, FIGURES / "zvf_leadtime_review28_v2.pdf"
     )
-    fig_boot = write_bootstrap_figure(bootstrap_rows, FIGURES / "zvf_library_bootstrap.pdf")
+    fig_boot = write_bootstrap_figure(bootstrap_rows, FIGURES / "zvf_library_bootstrap_review28_v2.pdf")
 
     # Console summary
     print(f"[zvf-iter22] wrote {len(bootstrap_rows)} library bootstrap CIs -> {boot_path}")

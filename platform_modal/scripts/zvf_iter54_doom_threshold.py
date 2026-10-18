@@ -16,8 +16,8 @@ perfectly separates "converged" rows from "non-converged" rows.
 Why this matters
 ----------------
 Existing ZVF work (iters 22, 30, 34, 38, 42, 46, 50) treated ZVF as a
-*signal* (correlated with reward) and as a *diagnostic* (anti-herding
-diversity bonus). Iter 54 promotes ZVF to a *gating rule*: a single
+*signal* (correlated with reward) and as a *diagnostic* (same-group descriptive discrepancy
+same-group descriptive discrepancy). Iter 54 promotes ZVF to a *gating rule*: a single
 threshold that, on cross-library evidence, prevents wasted compute by
 predicting terminal collapse before heldout_acc has dropped.
 
@@ -26,7 +26,7 @@ We also derive the cross-library contrastive-yield gap:
     Y_gap = Y_obs - Y_iid = (1 - zvf_obs) - (1 - zvf_iid)
           = zvf_iid - zvf_obs = delta_div
 
-so a positive Y_gap is the structural diversity bonus the sampler
+so a positive Y_gap is the structural same-group descriptive discrepancy the sampler
 provides beyond independent-rollout Bernoulli collision.
 
 Inputs
@@ -39,13 +39,13 @@ Inputs
 
 Outputs
 -------
-- platform_hybrid/experiments/results/zvf_iter54_doom_threshold.tsv
+- platform_hybrid/experiments/results/zvf_iter54_doom_threshold_review28_v2.tsv
   Rows: threshold_candidate, n_below_converged, n_below_nonconv,
         precision_converged_below, recall_converged_below, J_stat
   Plus a "BEST" row that records ZVF_crit.
-- platform_hybrid/experiments/results/zvf_iter54_yield_gap.tsv
+- platform_hybrid/experiments/results/zvf_iter54_yield_gap_review28_v2.tsv
   Per-(library, model, group_size) contrastive-yield gap with bootstrap CI.
-- platform_hybrid/experiments/results/zvf_iter54_doom_summary.tsv
+- platform_hybrid/experiments/results/zvf_iter54_doom_summary_review28_v2.tsv
   One-row summary suitable for inclusion in the paper's headline table.
 """
 from __future__ import annotations
@@ -141,14 +141,14 @@ def load_rows() -> List[Dict[str, Any]]:
         if exp == "variance_mitigation":
             seed = r.get("seed", "").strip()
             if seed:
-                mz = _per_step_max_zvf_variance_mitigation(seed)
+                mz = _per_step_max_zvf_variance_mitigation(seed, r.get("model", ""))
                 if mz is not None and not math.isnan(mz):
                     max_zvf = mz
                     ts_max_zvf = True
         elif exp == "groupsize_zvf_sweep":
             gs_val = r.get("group_size", "").strip()
             if gs_val:
-                mz = _per_step_max_zvf_groupsize(int(gs_val))
+                mz = _per_step_max_zvf_groupsize(int(gs_val), r.get("seed", ""), r.get("model", ""), r.get("task", ""))
                 if mz is not None and not math.isnan(mz):
                     max_zvf = mz
                     ts_max_zvf = True
@@ -173,17 +173,17 @@ def load_rows() -> List[Dict[str, Any]]:
     return out
 
 
-def _per_step_max_zvf_variance_mitigation(seed: str) -> Optional[float]:
+def _per_step_max_zvf_variance_mitigation(seed: str, method: str) -> Optional[float]:
     path = RESULTS / "variance_mitigation.tsv"
     if not path.exists():
         return None
     _, rows = _read_tsv(path)
-    zvfs = [_f(r.get("zvf", "")) for r in rows if r.get("seed", "").strip() == seed]
+    zvfs = [_f(r.get("zvf", "")) for r in rows if r.get("seed", "").strip() == seed and r.get("method", "").lower() == method.lower()]
     zvfs = [z for z in zvfs if not math.isnan(z)]
     return max(zvfs) if zvfs else None
 
 
-def _per_step_max_zvf_groupsize(G: int) -> Optional[float]:
+def _per_step_max_zvf_groupsize(G: int, seed: str, model: str, task: str) -> Optional[float]:
     """Return the max per-step ZVF across the groupsize sweep runs for G.
 
     The source file stores per-step zvf in run["step_log"][i]["zvf"].
@@ -195,7 +195,8 @@ def _per_step_max_zvf_groupsize(G: int) -> Optional[float]:
     runs = d.get("runs", [])
     zvfs: List[float] = []
     for r in runs:
-        if r.get("group_size") != G:
+        if (r.get("group_size") != G or str(r.get("seed", "")) != str(seed)
+                or r.get("model", "") != model or r.get("task", "") != task):
             continue
         for s in r.get("step_log", []):
             if "zvf" in s:
@@ -340,6 +341,10 @@ def _load_per_problem_yield_gap() -> List[Dict[str, Any]]:
         for p in d["per_problem"]:
             rewards = p["rewards"]
             G = len(rewards)
+            if not G:
+                continue
+            if not all(value in (0,1) for value in rewards):
+                raise ValueError("Bernoulli plug-in requires binary rewards")
             k = sum(rewards)
             zvf_obs = 1.0 if (k == 0 or k == G) else 0.0
             # p_x is the mean reward in the group (the empirical estimate
@@ -358,6 +363,7 @@ def _load_per_problem_yield_gap() -> List[Dict[str, Any]]:
                     "zvf_obs": zvf_obs,
                     "zvf_iid": zvf_iid,
                     "Y_gap": zvf_iid - zvf_obs,
+                    "estimator": "same_group_plugin_descriptive_not_diversity_bonus",
                 }
             )
 
@@ -388,6 +394,7 @@ def _load_per_problem_yield_gap() -> List[Dict[str, Any]]:
                 "zvf_obs": zvf_obs,
                 "zvf_iid": zvf_iid,
                 "Y_gap": zvf_iid - zvf_obs,
+                    "estimator": "same_group_plugin_descriptive_not_diversity_bonus",
             }
         )
     return out
@@ -450,7 +457,7 @@ def _aggregate_yield_gap(
 def _write_tsv(path: Path, header: Sequence[str], rows: Sequence[Sequence[Any]]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w") as f:
-        f.write("# " + " | ".join(header) + "\n")
+        f.write("\t".join(header) + "\n")
         for r in rows:
             f.write("\t".join(str(x) for x in r) + "\n")
 
@@ -630,10 +637,10 @@ def main() -> int:
     yield_rows = _load_per_problem_yield_gap()
     yield_agg = _aggregate_yield_gap(yield_rows)
 
-    out_sweep = RESULTS / "zvf_iter54_doom_threshold.tsv"
-    out_summary = RESULTS / "zvf_iter54_doom_summary.tsv"
-    out_yield = RESULTS / "zvf_iter54_yield_gap.tsv"
-    out_sweep_max = RESULTS / "zvf_iter54_doom_threshold_maxzvf.tsv"
+    out_sweep = RESULTS / "zvf_iter54_doom_threshold_review28_v2.tsv"
+    out_summary = RESULTS / "zvf_iter54_doom_summary_review28_v2.tsv"
+    out_yield = RESULTS / "zvf_iter54_yield_gap_review28_v2.tsv"
+    out_sweep_max = RESULTS / "zvf_iter54_doom_threshold_maxzvf_review28_v2.tsv"
 
     write_doom_sweep(sweep_mean, out_sweep)
     write_doom_sweep(sweep_max, out_sweep_max)

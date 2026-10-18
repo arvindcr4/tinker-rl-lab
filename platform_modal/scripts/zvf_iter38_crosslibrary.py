@@ -22,16 +22,16 @@ Inputs (real, measured):
     platform_hybrid/experiments/results/zvf_failure_correlation.tsv (from zvf_diagnostic.py)
 
 Outputs:
-    platform_hybrid/experiments/results/zvf_iter38_isoyield.tsv
+    platform_hybrid/experiments/results/zvf_iter38_isoyield_review28_v2.tsv
         Per-library per-(Y_target, basis) row with the G needed and the
         cost (rollout tokens / prompt) to reach Y_target.
-    platform_hybrid/experiments/results/zvf_iter38_classifier.tsv
+    platform_hybrid/experiments/results/zvf_iter38_classifier_review28_v2.tsv
         Per-library LOO confusion + accuracy on the 4-class failure
         taxonomy.
-    platform_hybrid/experiments/results/zvf_iter38_summary.tsv
+    platform_hybrid/experiments/results/zvf_iter38_summary_review28_v2.tsv
         One-rollup summary table.
     figures/zvf_iter38.{pdf,png}
-        Three-panel: iso-yield curves (iid vs empirical-corrected);
+        Three-panel: iso-yield curves (iid vs sensitivity-corrected);
         iso-yield cost bar plot; failure-mode confusion heatmap.
 """
 from __future__ import annotations
@@ -124,40 +124,24 @@ def load_contrastive_yield(path: Path) -> List[Dict[str, Any]]:
 # ---------------------------------------------------------------------------
 
 
-def iso_yield_iid(p: float, y_target: float) -> int:
-    """Minimum G s.t. 1 - p**G - (1-p)**G >= y_target, iid-Bernoulli baseline.
-
-    Returns 1 if even G=1 is enough (i.e. p in (1-y_target, y_target));
-    raises if no G in [1, 1024] can reach the target.
-    """
-    if not (0.0 <= p <= 1.0):
-        return 1
-    if 1.0 - 2.0 * p * (1.0 - p) >= y_target:
-        return 1
-    for G in range(2, 1025):
-        z_iid = p ** G + (1.0 - p) ** G
-        if 1.0 - z_iid >= y_target:
-            return G
-    return 1024
+def iso_yield_iid(p, y_target):
+    """Projected sensitivity scenario; infinity means target not reached by G=1024."""
+    if not (0 <= p <= 1 and 0 <= y_target <= 1): raise ValueError("probability/target outside [0,1]")
+    if not math.isfinite(0.0): raise ValueError("nonfinite correction")
+    for G in range(1,1025):
+        value = 0.0 if G == 1 or p in (0,1) else min(1.,max(0.,1-p**G-(1-p)**G+0.0))
+        if value >= y_target: return G
+    return float("inf")
 
 
-def iso_yield_empirical(p: float, delta_div: float, y_target: float) -> int:
-    """Minimum G s.t. 1 - max(0, zvf_iid - delta_div) >= y_target.
-
-    Clamps the empirical ZVF into [0, 1] and uses the per-library
-    empirical anti-herding bonus to lower the G required.
-    """
-    if not (0.0 <= p <= 1.0):
-        return 1
-    zvf_eff_1 = max(0.0, 2.0 * p * (1.0 - p) - delta_div)
-    if 1.0 - zvf_eff_1 >= y_target:
-        return 1
-    for G in range(2, 1025):
-        z_iid = p ** G + (1.0 - p) ** G
-        zvf_eff = max(0.0, min(1.0, z_iid - delta_div))
-        if 1.0 - zvf_eff >= y_target:
-            return G
-    return 1024
+def iso_yield_empirical(p, delta_div, y_target):
+    """Projected sensitivity scenario; infinity means target not reached by G=1024."""
+    if not (0 <= p <= 1 and 0 <= y_target <= 1): raise ValueError("probability/target outside [0,1]")
+    if not math.isfinite(delta_div): raise ValueError("nonfinite correction")
+    for G in range(1,1025):
+        value = 0.0 if G == 1 or p in (0,1) else min(1.,max(0.,1-p**G-(1-p)**G+delta_div))
+        if value >= y_target: return G
+    return float("inf")
 
 
 # ---------------------------------------------------------------------------
@@ -188,7 +172,7 @@ def failure_class(r: Dict[str, Any]) -> str:
 def knn_predict(
     train: List[Dict[str, Any]], test_row: Dict[str, Any], k: int = 3
 ) -> str:
-    """kNN over (mean_zvf, mean_last10, mean_peak) z-scored features."""
+    """Heuristic-rule reproduction using the same quantities as the label rule."""
     feats = ["mean_zvf", "mean_last10", "mean_peak"]
     mus = {f: statistics.fmean(r[f] for r in train) for f in feats}
     sds = {f: max(1e-9, statistics.pstdev(r[f] for r in train)) for f in feats}
@@ -216,7 +200,6 @@ def main() -> None:
     parser.add_argument("--K-prompts", type=int, default=64)
     parser.add_argument("--L-bar", type=int, default=512)
     parser.add_argument("--knn-k", type=int, default=3)
-    parser.add_argument("--B-bootstrap", type=int, default=2000)
     args = parser.parse_args()
 
     by_lib = load_by_library(RESULTS / "zvf_by_library.tsv")
@@ -234,7 +217,7 @@ def main() -> None:
     # The variance_mitigation libraries all share the Tinker rollout
     # workers + reward parser + chat template of the tinker_gsm8k stream,
     # so we use the per-prompt tinker_gsm8k delta_div as the library-level
-    # anti-herding correction. (The groupsize_zvf_sweep stream is on a
+    # projected sensitivity correction. (The groupsize_zvf_sweep stream is on a
     # small near-deterministic arithmetic model and is NOT used as the
     # library-level proxy, since its herding signature is model-specific.)
     # ------------------------------------------------------------------
@@ -251,7 +234,7 @@ def main() -> None:
     for r in vm_rows:
         p_x = max(0.05, min(0.95, r["mean_last10"]))  # proxy: last-10 acc
         g_ref = 8  # all VM libraries ran at G=8 in zvf_by_library
-        # Library-specific anti-herding bonus inherited from Tinker infra.
+        # Library-specific signed sensitivity correction inherited from Tinker infra.
         delta_div_lib = max(0.0, delta_div_tinker)
         for y in y_targets:
             g_iid = iso_yield_iid(p_x, y)
@@ -269,7 +252,7 @@ def main() -> None:
                     "G_ref": g_ref,
                     "delta_div_lib": round(delta_div_lib, 4),
                     "G_iid": g_iid,
-                    "G_empirical": g_emp,
+                    "G_projected_scenario": g_emp,
                     "G_savings": g_iid - g_emp,
                     "cost_iid": cost_iid,
                     "cost_empirical": cost_emp,
@@ -277,10 +260,10 @@ def main() -> None:
                 }
             )
 
-    isoyield_path = RESULTS / "zvf_iter38_isoyield.tsv"
+    isoyield_path = RESULTS / "zvf_iter38_isoyield_review28_v2.tsv"
     cols = [
         "library", "model", "p_x", "y_target", "G_ref", "delta_div_lib",
-        "G_iid", "G_empirical", "G_savings", "cost_iid", "cost_empirical",
+        "G_iid", "G_projected_scenario", "G_savings", "cost_iid", "cost_empirical",
         "cost_savings_frac",
     ]
     with isoyield_path.open("w") as fh:
@@ -289,7 +272,7 @@ def main() -> None:
             "# For each variance_mitigation library, computes the minimum G\n"
             "# required to reach y_target contrastive yield under the iid\n"
             "# baseline (ZVF_iid = p**G + (1-p)**G) AND under the empirical\n"
-            "# library-specific anti-herding correction (delta_div_lib =\n"
+            "# library-specific projected sensitivity correction (delta_div_lib =\n"
             "# ZVF_iid_ref - mean_zvf). cost_* = G * 64 prompts * 512 tokens.\n"
             "# Source: platform_modal/scripts/zvf_iter38_crosslibrary.py\n"
         )
@@ -335,7 +318,7 @@ def main() -> None:
         if r["true"] in conf_mat and r["pred"] in conf_mat[r["true"]]:
             conf_mat[r["true"]][r["pred"]] += 1
 
-    class_path = RESULTS / "zvf_iter38_classifier.tsv"
+    class_path = RESULTS / "zvf_iter38_classifier_review28_v2.tsv"
     with class_path.open("w") as fh:
         fh.write(
             "# Iter 38 Pillar 2 LOO failure-mode classifier on by-library rows.\n"
@@ -457,7 +440,7 @@ def main() -> None:
         }
     )
 
-    summary_path = RESULTS / "zvf_iter38_summary.tsv"
+    summary_path = RESULTS / "zvf_iter38_summary_review28_v2.tsv"
     with summary_path.open("w") as fh:
         fh.write(
             "# Iter 38 Pillar 2 one-rollup summary.\n"
@@ -481,7 +464,7 @@ def main() -> None:
             r = sub[0]
             print(
                 f"  {lib:10s}  p_x={r['p_x']:.3f}  ddiv={r['delta_div_lib']:.3f}  "
-                f"G_iid={r['G_iid']:3d}  G_emp={r['G_empirical']:3d}  "
+                f"G_iid={r['G_iid']:3d}  G_emp={r['G_projected_scenario']:3d}  "
                 f"savings={r['cost_savings_frac']:.1%}"
             )
     print()

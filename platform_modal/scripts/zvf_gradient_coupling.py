@@ -39,8 +39,6 @@ ROOT = Path(__file__).resolve().parent.parent
 RESULTS = ROOT / "experiments" / "results"
 FIGS = ROOT / "figures"
 PAPER = ROOT / "paper" / "sections"
-FIGS.mkdir(exist_ok=True)
-PAPER.mkdir(exist_ok=True)
 
 SRC = RESULTS / "group_size_advantage_variance.tsv"
 
@@ -328,6 +326,8 @@ def make_figure(rows, out_pdf):
 
 def main():
     rows = load_rows()
+    for directory in (RESULTS, FIGS, PAPER):
+        directory.mkdir(parents=True, exist_ok=True)
     per_step = per_step_corr_table(rows)
     per_g = per_G_pooled(rows)
     stats = per_step_stats(rows)

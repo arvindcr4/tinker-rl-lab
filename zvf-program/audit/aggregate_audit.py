@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import argparse
 import functools
-from audit_evidence_contract import record_errors, execution_contract
+import importlib.util
 import json
 import math
 import random
@@ -27,6 +27,27 @@ from pathlib import Path
 from typing import Any, Iterable
 
 HERE = Path(__file__).resolve().parent
+
+
+def _load_evidence_contract():
+    """Resolve our sibling even when loaded by file path from another directory.
+
+    Do not depend on sys.path or an unrelated same-named cached module: the
+    evidence admission implementation must come from this audit directory.
+    """
+    path = HERE / "audit_evidence_contract.py"
+    spec = importlib.util.spec_from_file_location("_audit_local_evidence_contract", path)
+    if spec is None or spec.loader is None:
+        raise ImportError(f"Cannot load evidence contract: {path}")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+_evidence_contract = _load_evidence_contract()
+record_errors = _evidence_contract.record_errors
+execution_contract = _evidence_contract.execution_contract
+
 LATEX_ARM_NAMES = {
     "dapo": "DAPO",
     "gspo": "GSPO",

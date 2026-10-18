@@ -183,6 +183,8 @@ def cost_accounting_rows(timing_record, cpu_usd_per_hour=None,
         raise ValueError("batch_rows must be a positive integer")
     if not math.isfinite(sensor_coverage) or not 0 <= sensor_coverage <= 1:
         raise ValueError("sensor_coverage must lie in [0, 1]")
+    if llm_usd_per_invocation is None:
+        raise ValueError("An explicit finite LLM cost rate is required")
     for rate in (cpu_usd_per_hour, llm_usd_per_invocation):
         if rate is not None and (not math.isfinite(rate) or rate < 0):
             raise ValueError("Cost rates must be finite and nonnegative")

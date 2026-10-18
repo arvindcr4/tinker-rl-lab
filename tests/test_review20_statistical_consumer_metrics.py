@@ -191,6 +191,12 @@ def test_missing_timing_does_not_invent_measurement_or_tree_price():
     assert zero["cost_usd_batch"] == 0
 
 
+@pytest.mark.parametrize("rate", [None, -0.1, float("nan"), float("inf")])
+def test_llm_cost_rate_must_be_explicit_finite_and_nonnegative(rate):
+    with pytest.raises(ValueError, match="[Rr]ate"):
+        calibration.cost_accounting_rows({}, llm_usd_per_invocation=rate)
+
+
 def test_consumers_use_versioned_output_directories():
     for path in (cohort.OUT_DIR, tau.OUT, regret.OUT, calibration.RES):
         assert Path(path).name == "corrected-review20-v2"

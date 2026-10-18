@@ -104,6 +104,19 @@ def test_every_locked_package_prevents_inprocess_replacement(monkeypatch, name):
 def test_hardware_does_not_fabricate_training_tensor_precision(monkeypatch):
     from platform_hybrid.experiments import samestack_manifest as m
 
+    real_check_output = m.subprocess.check_output
+    # Only fake the nvidia-smi probe; platform.platform() shells out through
+    # the real subprocess.check_output and expects bytes from argv list calls.
+    monkeypatch.setattr(
+        m.subprocess,
+        "check_output",
+        lambda cmd, *a, **k: (
+            "test driver"
+            if isinstance(cmd, list) and cmd[:1] == ["nvidia-smi"]
+            else real_check_output(cmd, *a, **k)
+        ),
+    )
+
     torch = SimpleNamespace(
         cuda=SimpleNamespace(device_count=lambda: 0),
         version=SimpleNamespace(cuda=None),
@@ -113,7 +126,6 @@ def test_hardware_does_not_fabricate_training_tensor_precision(monkeypatch):
         ),
         are_deterministic_algorithms_enabled=lambda: False,
     )
-    monkeypatch.setattr(m.subprocess, "check_output", lambda *a, **k: "test driver")
     hardware = m.hardware_manifest(
         torch,
         SimpleNamespace(config=SimpleNamespace(_attn_implementation="sdpa")),

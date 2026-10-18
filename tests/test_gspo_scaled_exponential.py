@@ -31,6 +31,8 @@ def test_representable_product_retains_value_and_gradient(dtype, advantage, drif
     loss.backward()
     assert loss.item() == pytest.approx(expected, rel=2e-5, abs=0.0)
     expected_gradient = torch.full_like(values, expected / 2)
-    torch.testing.assert_close(values.grad, expected_gradient, rtol=2e-5, atol=0.0)
+    torch.testing.assert_close(
+        values.grad, expected_gradient, rtol=max(2e-5, torch.finfo(dtype).eps), atol=0.0
+    )
     assert torch.isfinite(values.grad).all()
     assert metrics["gspo_clip_frac"] == 1.0

@@ -45,9 +45,7 @@ def test_module_configuration_errors_are_actionable_without_traceback(tmp_path, 
 
 
 @pytest.mark.parametrize("token_variable", ["HF_TOKEN", "HUGGING_FACE_HUB_TOKEN"])
-def test_shell_error_redacts_configured_secret_but_library_error_is_preserved(
-    monkeypatch, capsys, token_variable
-):
+def test_shell_error_redacts_configured_secret(monkeypatch, capsys, token_variable):
     from platform_tinker.tinkerrl import grpo_cli as cli
 
     for name in ("HF_TOKEN", "HUGGING_FACE_HUB_TOKEN", "HUGGINGFACE_HUB_TOKEN"):
@@ -62,8 +60,13 @@ def test_shell_error_redacts_configured_secret_but_library_error_is_preserved(
     error = capsys.readouterr().err
     assert "[redacted]" in error
     assert "synthetic-secret-placeholder" not in error
-    with pytest.raises(ValueError, match="invalid request"):
-        cli.main([])
+
+
+def test_real_library_main_preserves_configuration_errors():
+    from platform_tinker.tinkerrl import grpo_cli as cli
+
+    with pytest.raises(ValueError, match="steps must be an integer"):
+        cli.main(["--check-config", "--steps", "-1"])
 
 
 def test_unexpected_runtime_failure_is_not_disguised_as_input_error(monkeypatch):

@@ -82,6 +82,8 @@ def test_all_failed_evaluation_cannot_claim_nonzero_mean():
     receipt = prior["result"]["heldout_evaluation"]
     receipt.update(status="all_failed", failed_n=2)
     receipt["summary"]["test/failed_n"] = 2.0
+    receipt["summary"]["test/reward_ci_low"] = 0.0
+    receipt["summary"]["test/reward_ci_high"] = 0.0
     with pytest.raises(RuntimeError, match="Completed receipt.*held-out"):
         _validate(prior)
 
@@ -112,7 +114,9 @@ def test_recorded_mean_only_evaluation_is_not_given_invented_uncertainty():
     evidence["uncertainty_kind"] = "not_recorded"
     evidence["summary"].pop("test/reward_ci_low")
     evidence["summary"].pop("test/reward_ci_high")
-    assert _validate(prior).heldout_evaluation == evidence
+    before = deepcopy(evidence)
+    assert _validate(prior).heldout_evaluation == before
+    assert evidence == before
 
 
 def test_evaluation_summary_uses_the_same_mean_as_the_run_result():

@@ -73,3 +73,16 @@ def test_duplicate_case_reference_is_rejected(tmp_path):
 
 def test_uppercase_identity_matches():
     assert _match_key("DEMO_S42", REFERENCE) == "demo"
+
+
+def test_malformed_seed_in_multiseed_log_is_reported_unverified(tmp_path, capsys):
+    (tmp_path / "demo.log").write_text(
+        "[grpo_cli] Seed 42 done.\navg_last10: 1.0\npeak_reward: 1.0\n"
+        "[grpo_cli] Seed foo done.\navg_last10: 1.0\npeak_reward: 1.0\n"
+    )
+    rows, failed = verify(tmp_path, REFERENCE, 0.0, 0.0)
+    assert failed == 1
+    assert len(rows) == 2
+    assert rows[0][-1] is True
+    assert rows[1][-1] is None
+    assert "UNVERIFIED demo_sfoo" in capsys.readouterr().err

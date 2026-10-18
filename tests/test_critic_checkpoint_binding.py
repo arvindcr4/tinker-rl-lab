@@ -74,7 +74,7 @@ def test_deserializer_uses_the_verified_snapshot_even_if_source_changes(saved):
 def test_invalid_binding_cannot_fall_back_to_legacy_or_read_a_path(tmp_path, digest):
     config = grpo.GRPOConfig(name="invalid", checkpoint_dir=str(tmp_path))
     with (
-        patch.object(Path, "read_bytes") as read,
+        patch.object(os, "open") as read,
         pytest.raises(RuntimeError, match="invalid critic SHA-256 binding"),
     ):
         grpo._load_critic_checkpoint(config, config.seed, 1, {"critic_state_sha256": digest})
@@ -114,7 +114,7 @@ def test_failed_publication_preserves_existing_state_and_cleans_own_temporary(sa
     before = path.read_bytes()
     with patch.object(os, "link", side_effect=OSError("simulated publish failure")):
         with pytest.raises(OSError, match="publish failure"):
-            grpo._save_critic(config, config.seed, critic, optimizer, step=2)
+            grpo._save_critic(config, config.seed, critic, optimizer, step=1)
     assert path.read_bytes() == before
     assert list(path.parent.glob(".critic-*")) == []
 

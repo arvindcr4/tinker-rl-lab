@@ -1046,8 +1046,7 @@ def _validate_existing_run(
     image_manifest = json.loads(
         (run_dir / "image_manifest.json").read_text(encoding="utf-8")
     )
-    if image_manifest.get("count") != base.EXPECTED_TASK_COUNT:
-        raise RuntimeError("saved image manifest is incomplete")
+    base._validate_image_manifest(image_manifest, tasks)
     evaluator_dir = root / "outputs/e1_swe_bench_pro/evaluator"
     evaluator_commit = subprocess.run(
         ["git", "rev-parse", "HEAD"],

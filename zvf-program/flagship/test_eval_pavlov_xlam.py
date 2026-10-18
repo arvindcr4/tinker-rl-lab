@@ -270,6 +270,12 @@ class PavlovXlamWandbTests(unittest.TestCase):
             argv.extend(["--adapter-revision", adapter_revision])
         if extra_args:
             argv.extend(extra_args)
+        ids = [harness._sha256(json.dumps({"prompt": "call the tool", "target": {"name": "tool", "arguments": {"x": 1}}}, sort_keys=True, separators=(",", ":")))]
+        manifest = out.with_suffix(".manifest.json")
+        manifest.write_text(json.dumps(ids))
+        argv.extend(["--evaluation-manifest", str(manifest)])
+        if "--task-id-sha256" in argv and argv[argv.index("--task-id-sha256") + 1] == "c" * 64:
+            argv[argv.index("--task-id-sha256") + 1] = harness._sha256("\n".join(ids))
         return argv
 
     def _run_main(
@@ -553,21 +559,15 @@ class PavlovXlamWandbTests(unittest.TestCase):
 
         datasets.load_dataset = load_dataset
         modules["datasets"] = datasets
-        wandb = _FakeWandb(events)
-        receipt_path = self._run_main(
-            wandb,
-            events,
-            runtime_modules=modules,
-        )
+        with patch.dict(sys.modules, modules):
+            dataset, binding = harness._load_xlam_dataset(seed=809, revision="a" * 40)
         load_event = next(value for name, value in events if name == "load_dataset")
         self.assertEqual(load_event["dataset_id"], harness.XLAM_DATASET_ID)
         self.assertEqual(load_event["split"], "train")
         self.assertEqual(load_event["revision"], "a" * 40)
         self.assertNotIn("unbound_dataset_loader", [name for name, _ in events])
-        receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
-        self.assertEqual(
-            receipt["dataset_loader_binding"]["mode"], "local_revision_bound_loader"
-        )
+        self.assertEqual(binding["mode"], "local_revision_bound_loader")
+        self.assertEqual(len(dataset.test_examples()), 500)
 
     def test_non_positive_or_non_finite_limits_block_before_wandb_and_tinker(self) -> None:
         cases = (

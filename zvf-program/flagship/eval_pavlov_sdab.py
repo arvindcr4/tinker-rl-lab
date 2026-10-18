@@ -673,7 +673,7 @@ def _receipt_from_preflight(report: Mapping[str, Any]) -> dict[str, Any]:
         {},
     )
     return {
-        "schema_version": "pavlov-sdab-e3-receipt-v1",
+        "schema_version": "pavlov-sdab-e3-receipt-v2",
         "created_at": datetime.now(timezone.utc).isoformat(),
         "status": "BLOCKED" if report.get("status") != "READY" else "READY",
         "suite_id": SDAB_SUITE_ID,
@@ -823,6 +823,9 @@ def _result_row(result: Mapping[str, Any], verification: Mapping[str, Any]) -> d
     score = result.get("score", result.get("composite_score"))
     if isinstance(score, bool) or not isinstance(score, (int, float)) or not math.isfinite(float(score)):
         raise RuntimeError("native result score must be a finite number")
+    for field in ("prompt_tokens", "sample_tokens", "tool_calls"):
+        if type(result.get(field)) is not int or result[field] < 0:
+            raise RuntimeError("native usage counts must be explicit non-negative integers")
     row = {
         "task_id": task_id,
         "task_id_sha256": sha256_text(task_id),
@@ -903,10 +906,15 @@ def run_evaluation(
         }
         import tinker
 
-        service, sampler = _create_tinker_sampler(tinker, model_gate=model_gate, args=args)
         tasks = list(bundle.runtime.list_tasks(split=SDAB_EVALUATION_SPLIT, limit=args.limit, seed=args.seed))
         if len(tasks) != args.limit:
             raise RuntimeError("native SDAB adapter returned a task count different from --limit")
+        selected_ids = [task.get("task_id") if isinstance(task, Mapping) else None for task in tasks]
+        if (any(not isinstance(value, str) for value in selected_ids) or
+            len(set(selected_ids)) != len(selected_ids) or
+            not set(selected_ids) <= set(bundle.manifest["task_ids"])):
+            raise RuntimeError("native SDAB selected task IDs must be unique manifest members")
+        service, sampler = _create_tinker_sampler(tinker, model_gate=model_gate, args=args)
         rows: list[dict[str, Any]] = []
         for task in tasks:
             if not isinstance(task, Mapping):
@@ -920,7 +928,13 @@ def run_evaluation(
             if not isinstance(result, Mapping):
                 raise RuntimeError("native SDAB adapter returned a non-object result")
             verification = _native_verified(bundle.runtime, result)
-            rows.append(_result_row(result, verification))
+            row = _result_row(result, verification)
+            if row["task_id"] != task["task_id"]:
+                raise RuntimeError("native SDAB result task identity mismatch")
+            rows.append(row)
+            observed = sum((Decimal(item["prompt_tokens"]) * PREFILL_USD_PER_MILLION + Decimal(item["sample_tokens"]) * SAMPLE_USD_PER_MILLION) for item in rows) / Decimal(1_000_000)
+            if observed > Decimal(str(budget_gate["requested_cap_usd"])):
+                raise RuntimeError("observed token cost exceeded the E3 cap; further tasks blocked")
         actual_cost = sum(
             (
                 Decimal(row["prompt_tokens"]) * PREFILL_USD_PER_MILLION
@@ -935,6 +949,8 @@ def run_evaluation(
             {
                 "status": "COMPLETED",
                 "result": {"task_count": len(rows), "mean_composite_score": score},
+                "evaluation_scope": "full" if len(rows) == len(bundle.manifest["task_ids"]) else "subset",
+                "benchmark_score": score if len(rows) == len(bundle.manifest["task_ids"]) else None,
                 "score": score,
                 "rows": rows,
                 "tinker": {

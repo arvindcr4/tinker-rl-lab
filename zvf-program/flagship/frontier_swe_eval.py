@@ -17,6 +17,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import math
 import os
 import re
 import shutil
@@ -652,7 +653,10 @@ def _native_verify(
         image,
         "/tests/test.sh",
     ]
-    result = _run(command, timeout=86400.0)
+    try:
+        result = _run(command, timeout=86400.0)
+    except subprocess.TimeoutExpired:
+        return 124, None, ["native verifier timed out"]
     reward_path = output_dir / "reward.json"
     reward: dict[str, Any] | None = None
     if reward_path.is_file():
@@ -739,9 +743,12 @@ def main(argv: Sequence[str] | None = None) -> int:
             cpus=cpus,
             memory_mb=memory_mb,
         )
-        receipt["status"] = "COMPLETED" if code == 0 and reward is not None else "FAILED"
+        score = reward.get("score", reward.get("reward")) if reward else None
+        valid_score = type(score) in (int, float) and math.isfinite(score)
+        receipt["status"] = "TIMED_OUT" if code == 124 else ("COMPLETED" if code == 0 and valid_score else "FAILED")
+        receipt["score_contract"] = "finite-native-numeric-v2"
         receipt["verifier"] = {"returncode": code, "logs_tail": logs, "reward": reward}
-        receipt["score"] = reward.get("score", reward.get("reward")) if reward else None
+        receipt["score"] = score if receipt["status"] == "COMPLETED" else None
     write_receipt(args.out, receipt)
     print(json.dumps(receipt, indent=2, sort_keys=True))
     return 0 if receipt["status"] in {"READY", "COMPLETED"} else 2

@@ -48,6 +48,7 @@ class PavlovSDABServiceLifetimeTests(unittest.TestCase):
         service = types.SimpleNamespace(run_id="tinker-run-1")
         bundle = harness.RuntimeBundle(
             manifest={
+                "task_ids": ["sdab-task-1"],
                 "benchmark_revision": "benchmark-revision-1",
                 "task_id_sha256": "a" * 64,
                 "train_task_id_sha256": "b" * 64,

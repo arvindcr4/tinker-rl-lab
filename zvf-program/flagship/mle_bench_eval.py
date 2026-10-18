@@ -375,7 +375,9 @@ def kaggle_rule_acceptance(competition_id: str, probe: dict[str, Any] | None = N
         accepted = probe.get("rules_accepted")
         if accepted is None:
             accepted = probe.get("accepted")
-        state["accepted"] = bool(accepted)
+        if accepted is not None and type(accepted) is not bool:
+            raise ValueError("rules acceptance must be boolean or unknown")
+        state["accepted"] = accepted
         state["accepted_evidence"] = (
             probe.get("error")
             or probe.get("downloaded")
@@ -713,7 +715,7 @@ def harness_validate(
                 else gold["score"] > sample["score"]
             )
         ),
-        "invalid_submission_rejected": (invalid is None) or (invalid.get("valid_submission") is False),
+        "invalid_submission_rejected": (invalid is not None) and (invalid.get("valid_submission") is False),
     }
 
     result.update(

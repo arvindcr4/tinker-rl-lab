@@ -37,7 +37,7 @@ PAVLOV_PRIMARY_EVAL_SUITE_COUNT = 14
 DEFAULT_SUITE_ID = "xlam_component"
 DEFAULT_DOMAINS = ("tool_use",)
 XLAM_DATASET_ID = "Salesforce/xlam-function-calling-60k"
-XLAM_SPLIT_ID = "observed test_examples slice"
+XLAM_SPLIT_ID = "custom_component_test_examples_v2"
 
 _SHA256_RE = re.compile(r"^[0-9a-fA-F]{64}$")
 _DIGEST_RE = re.compile(r"^sha256:[0-9a-fA-F]{64}$", re.IGNORECASE)
@@ -360,6 +360,8 @@ def _wandb_config(
         "tokenizer_model": args.tokenizer_model,
         "dataset_id": XLAM_DATASET_ID,
         "dataset_split": XLAM_SPLIT_ID,
+        "metric_name": "strict_tool_call_reward",
+        "official_benchmark_score": False,
         "reward": "StrictToolCallReward",
         "sampling_temperature": 0.1,
         "sampling_top_p": 0.95,
@@ -675,6 +677,7 @@ def main() -> int:
     parser.add_argument("--out", type=Path, required=True)
     parser.add_argument("--dataset-revision")
     parser.add_argument("--split-manifest-sha256", "--split-manifest-hash", dest="split_manifest_sha256")
+    parser.add_argument("--evaluation-manifest", type=Path, help="JSON ordered prompt/target content SHA-256 list; required for execution")
     parser.add_argument("--task-id-sha256", "--task-id-hash", dest="task_id_sha256")
     parser.add_argument("--license-id", "--license-identifier", dest="license_id")
     parser.add_argument("--license-receipt")
@@ -789,6 +792,13 @@ def main() -> int:
         examples = list(dataset.test_examples())[: args.limit]
         if not examples:
             raise RuntimeError("xLAM dataset produced no evaluation examples")
+        if args.evaluation_manifest is None:
+            raise RuntimeError("explicit immutable evaluation manifest is required")
+        actual_ids = [_sha256(json.dumps({"prompt": example.prompt, "target": example.target}, sort_keys=True, separators=(",", ":"))) for example in examples]
+        expected_ids = json.loads(args.evaluation_manifest.read_text(encoding="utf-8"))
+        if (actual_ids != expected_ids or len(set(actual_ids)) != len(actual_ids) or
+            _sha256("\n".join(actual_ids)) != provenance["task_id_sha256"]):
+            raise RuntimeError("xLAM evaluation manifest identity mismatch")
         tokenizer, tokenizer_binding = _load_tokenizer(
             AutoTokenizer.from_pretrained,
             model_name=args.tokenizer_model,
@@ -931,6 +941,8 @@ def main() -> int:
             "tokenizer_model": args.tokenizer_model,
             "dataset_id": XLAM_DATASET_ID,
             "dataset_split": XLAM_SPLIT_ID,
+        "metric_name": "strict_tool_call_reward",
+        "official_benchmark_score": False,
             "seed": args.seed,
             "suite_id": args.suite_id,
             "suite_role": "component",

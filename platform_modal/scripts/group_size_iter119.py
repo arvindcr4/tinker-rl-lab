@@ -11,12 +11,10 @@ Iter 118 measured on Pillar 2 that the variance_mitigation drift cells
 (GIFT/ES/AREAL/MCGRPO at ZVF ~0.11-0.15) lose accuracy -- an INVERSION
 of the cross-stratum trend where collapse cells live at HIGH ZVF.
 
-Iter 119 unifies the two: both stories are about *the cost of more
-aggressive per-pair contrast*. Small G has more contrast (lower ZVF,
-higher GU) per group but loses accuracy; variance-mitigation drift
-cells have lower ZVF and lose accuracy. Pillar 2 and Pillar 3 share
-the same mechanism: aggressive variance reduction -> per-step gradient
-noise -> drift.
+This analysis compares descriptive ZVF/accuracy associations across heterogeneous
+cells. A negative ZVF/accuracy correlation means lower ZVF (more contrast)
+is associated with higher accuracy. Neither sign establishes a shared mechanism
+or a causal effect of contrast on drift.
 
 Four analyses:
 
@@ -29,9 +27,8 @@ Four analyses:
   (B) Cross-pillar inversion correlation (P2 x P3). Compute Spearman
       rho(mean_zvf, last10 retention or accuracy penalty) across the
       pooled (groupsize + variance_mitigation) cell population. If
-      the inversions are the same mechanism, we expect a NEGATIVE rho
-      across the FULL pool (high GU -> drift) and POSITIVE rho within
-      collapse-only cells (high ZVF -> collapse).
+      ZVF/accuracy association is negative, lower ZVF corresponds to higher
+      accuracy. Pooled and within-stratum correlations are descriptive only.
 
   (C) Generalized Wu-equivalence boundary. Wu's headline is G=2/G=16
       retention=0.976 at 12.5% rollouts. We map the iso-retention-0.976
@@ -222,11 +219,9 @@ def cross_pillar_inversion(zvf_summary: pd.DataFrame, zvf_sweep: pd.DataFrame) -
     """Compute Spearman rho(mean_zvf, last10 accuracy) across the pooled
     (groupsize + variance_mitigation) cells.
 
-    If iter115 (P3: G=4 loses accuracy despite more contrast) and iter118
-    (P2: variance-mitigation drift cells lose accuracy at LOW ZVF) are
-    the SAME mechanism (aggressive per-pair contrast -> drift), the
-    pooled correlation should be NEGATIVE: higher GU (lower ZVF) ->
-    lower accuracy.
+    Negative rho means lower ZVF is associated with higher accuracy;
+    positive rho means lower ZVF is associated with lower accuracy.
+    Heterogeneous pooled cells do not identify causation or a shared mechanism.
     """
     rows = []
     # groupsize_zvf_sweep cells (G=2,4,8,16 on Qwen2.5-0.5B arithmetic)
@@ -285,24 +280,16 @@ def cross_pillar_inversion(zvf_summary: pd.DataFrame, zvf_sweep: pd.DataFrame) -
                 "headline": f"Within {exp_name}: Spearman rho(mean_zvf, last10_avg) = {r:+.3f}  p={p:.3e}  n={len(sub)}",
             })
 
-    # The KEY P2 <-> P3 inversion test:
-    # Within groupsize_zvf_sweep, retention R(G=2/G=16) is 100.3% (near-ceiling task, both saturate).
-    # Across methods in variance_mitigation, retention R(method/GRPO) tracks mean_zvf INVERSELY
-    # (drift cells have LOW ZVF and LOW accuracy).
-    # The SIGN-FLIP across strata is the cross-pillar inversion.
+    # Compare within-stratum associations without assuming their signs.
     if "groupsize_zvf_sweep" in df["experiment"].unique() and "variance_mitigation" in df["experiment"].unique():
         gs = df[df["experiment"] == "groupsize_zvf_sweep"].sort_values("G")
         vm_sub = df[df["experiment"] == "variance_mitigation"]
-        # In groupsize, G=2 (ZVF 0.84) -> last10 0.977; G=16 (ZVF 0.63) -> last10 0.984
-        # Slope is positive (+0.007 in last10, but with the cross-G retention mostly 100%)
-        # In variance_mitigation, low ZVF (drift) -> low last10; slope is positive too but
-        # the EXTREMES are different.
         gs_corr = np.corrcoef(gs["mean_zvf"].values, gs["last10_avg"].values)[0, 1]
         vm_corr = np.corrcoef(vm_sub["mean_zvf"].values, vm_sub["last10_avg"].values)[0, 1]
         out.append({
             "metric_kind": "inversion_signature",
             "metric_key": "stratum_corr_compare",
-            "headline": f"Pearson r within groupsize: {gs_corr:+.3f}; within variance_mitigation: {vm_corr:+.3f} -- both can be POSITIVE; the inversion is in the JOINT POOL sign-flip.",
+            "headline": f"Pearson r within groupsize: {gs_corr:+.3f}; within variance_mitigation: {vm_corr:+.3f} -- descriptive stratum associations; no shared mechanism established.",
         })
 
         # Pooled with GU (1-ZVF) instead of ZVF
@@ -311,7 +298,7 @@ def cross_pillar_inversion(zvf_summary: pd.DataFrame, zvf_sweep: pd.DataFrame) -
         out.append({
             "metric_kind": "spearman",
             "metric_key": "pooled_GU_vs_last10",
-            "headline": f"Pooled Spearman rho(GU, last10_avg) = {rho_gu:+.3f}  p={p_gu:.3e}  -- if NEGATIVE: high GU (more contrast) -> drift, P2 + P3 share mechanism",
+            "headline": f"Pooled Spearman rho(GU, last10_avg) = {rho_gu:+.3f}  p={p_gu:.3e}  -- negative rho associates more contrast with lower accuracy; causation is not established",
         })
 
     out.append({
@@ -414,12 +401,14 @@ def wu_equivalence_boundary(iso: pd.DataFrame, ceilings: pd.DataFrame) -> list[d
             out.append({
                 "metric_kind": "wu_boundary_at_T",
                 "metric_key": f"T={T:.0e}",
+                "max_group_ratio": best_ratio, "boundary_status": "OBSERVED_PASSING_PAIR",
                 "headline": f"T={T:.0e}: max G_small/G_large ratio with R>=0.976 is {best_ratio:.3f} (G_small={best_pair[0]}, G_large={best_pair[1]}, R={best_pair[2]:.3f})",
             })
         else:
             out.append({
                 "metric_kind": "wu_boundary_at_T",
                 "metric_key": f"T={T:.0e}",
+                "max_group_ratio": None, "boundary_status": "NO_PASSING_PAIR",
                 "headline": f"T={T:.0e}: NO G-pair achieves R>=0.976 -- Wu equivalence FAILS at every G-ratio",
             })
 
@@ -534,6 +523,16 @@ def per_step_variance(tinker_runs: list[pd.DataFrame]) -> list[dict]:
 # =============================================================================
 # Figure
 # =============================================================================
+def zvf_association_label(rho):
+    if not math.isfinite(rho):
+        return "Association unavailable; no causal inference"
+    if rho < 0:
+        return "Lower ZVF associated with higher accuracy; non-causal"
+    if rho > 0:
+        return "Lower ZVF associated with lower accuracy; non-causal"
+    return "Zero rank association; no causal inference"
+
+
 def make_figure(extrap, cross, wu, stepvar, out_pdf: Path) -> None:
     fig, axes = plt.subplots(2, 2, figsize=(13, 9))
 
@@ -583,7 +582,7 @@ def make_figure(extrap, cross, wu, stepvar, out_pdf: Path) -> None:
         rho = store_b["rho_pooled"]
         axes[0, 1].set_xlabel("mean_ZVF")
         axes[0, 1].set_ylabel("last10_avg accuracy")
-        axes[0, 1].set_title(f"(B) Cross-pillar: rho(ZVF, last10)={rho:+.3f}\nNEGATIVE rho => more contrast -> drift (P2+P3 unification)")
+        axes[0, 1].set_title(f"(B) Cross-pillar: rho(ZVF, last10)={rho:+.3f}\n{zvf_association_label(rho)}")
         axes[0, 1].legend(fontsize=8)
         axes[0, 1].grid(True, alpha=0.3)
 
@@ -595,21 +594,14 @@ def make_figure(extrap, cross, wu, stepvar, out_pdf: Path) -> None:
     max_ratios = []
     for T in Ts:
         hit = next((r for r in wu if r["metric_kind"] == "wu_boundary_at_T" and r["metric_key"] == f"T={T:.0e}"), None)
-        if hit and "max G_small/G_large" in hit["headline"]:
-            # parse the ratio from the headline
-            try:
-                r_str = hit["headline"].split("ratio is ")[1].split(" ")[0]
-                max_ratios.append(float(r_str))
-            except Exception:
-                max_ratios.append(0.0)
-        else:
-            max_ratios.append(0.0)
+        value = hit.get("max_group_ratio") if hit else None
+        max_ratios.append(float(value) if value is not None else float("nan"))
     axes[1, 0].plot(Ts_M, max_ratios, "o-", color="#1f77b4", lw=2, markersize=10, label="max G_ratio")
     axes[1, 0].axhline(0.125, color="green", ls="--", lw=1, label="Wu 12.5% (G=2/G=16)")
     axes[1, 0].set_xscale("log")
     axes[1, 0].set_xlabel("Total token budget T (M)")
     axes[1, 0].set_ylabel("Max G_small/G_large with R>=0.976")
-    axes[1, 0].set_title("(C) Wu-equivalence boundary collapses with T\n(rollouts-budget frontier)")
+    axes[1, 0].set_title("(C) Observed Wu-equivalence boundary\n(missing point: unavailable or no qualifying pair)")
     axes[1, 0].legend(fontsize=8)
     axes[1, 0].grid(True, alpha=0.3)
 
@@ -671,7 +663,8 @@ def make_summary(extrap, cross, wu, stepvar) -> list[dict]:
 
 
 def write_tsv(path: Path, rows: list[dict], cols: list[str]) -> None:
-    pd.DataFrame(rows, columns=cols).to_csv(path, sep="\t", index=False)
+    extra_cols = sorted({key for row in rows for key in row} - set(cols))
+    pd.DataFrame(rows, columns=cols + extra_cols).to_csv(path, sep="\t", index=False)
 
 
 def main() -> None:
@@ -687,18 +680,18 @@ def main() -> None:
     stepvar = per_step_variance(tinker)
     summary = make_summary(extrap, cross, wu, stepvar)
 
-    write_tsv(RES / "group_size_iter119_retention_extrap.tsv", extrap,
+    write_tsv(RES / "group_size_iter119_retention_extrap_v3.tsv", extrap,
               ["metric_kind", "metric_key", "headline"])
-    write_tsv(RES / "group_size_iter119_cross_pillar.tsv", cross,
+    write_tsv(RES / "group_size_iter119_cross_pillar_v3.tsv", cross,
               ["metric_kind", "metric_key", "headline"])
-    write_tsv(RES / "group_size_iter119_wu_boundary.tsv", wu,
+    write_tsv(RES / "group_size_iter119_wu_boundary_v3.tsv", wu,
               ["metric_kind", "metric_key", "headline"])
-    write_tsv(RES / "group_size_iter119_step_variance.tsv", stepvar,
+    write_tsv(RES / "group_size_iter119_step_variance_v3.tsv", stepvar,
               ["metric_kind", "metric_key", "headline"])
-    write_tsv(RES / "group_size_iter119_summary.tsv", summary,
+    write_tsv(RES / "group_size_iter119_summary_v3.tsv", summary,
               ["metric_kind", "metric_key", "headline"])
 
-    make_figure(extrap, cross, wu, stepvar, FIG / "group_size_iter119.pdf")
+    make_figure(extrap, cross, wu, stepvar, FIG / "group_size_iter119_v3.pdf")
 
     print("=== Iter 119 (A) Retention-vs-log(T) extrapolation ===")
     for r in extrap:

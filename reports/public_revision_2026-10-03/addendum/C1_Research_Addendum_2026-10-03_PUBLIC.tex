@@ -38,16 +38,17 @@ reconstruct or authenticate the full execution history. The empirical
 and review claims below must be read with this source-availability
 limitation.
 
-Benchmark reference errors, ambiguous questions and equivalent units
-limit what this diagnostic can establish. Its frozen parser-defined
-result is \textbf{11/64 questions (17.19\%; Wilson 95\% interval
-9.88-28.21\%)}. Assistant-assisted reconciliation corroborates
-\textbf{three numeric recovery witnesses on the same 64-question
-denominator}. This 3/64 count (4.69\%) describes the support found under
-a conservative review rule; it does not replace the frozen endpoint or
-estimate a population recovery rate. The other eight parser events
-include three convention-dependent interpretations, four materially
-ambiguous cases and one match to an incorrect reference answer.
+Benchmark reference errors {[}R2{]}, ambiguous questions and equivalent
+units limit what this diagnostic can establish. Its frozen
+parser-defined result is \textbf{11/64 questions (17.19\%; Wilson 95\%
+interval {[}R4{]} 9.88-28.21\%)}. Assistant-assisted reconciliation
+corroborates \textbf{three numeric recovery witnesses on the same
+64-question denominator}. This 3/64 count (4.69\%) describes the support
+found under a conservative review rule; it does not replace the frozen
+endpoint or estimate a population recovery rate. The other eight parser
+events include three convention-dependent interpretations, four
+materially ambiguous cases and one match to an incorrect reference
+answer.
 
 The study contains no training update. It does not measure useful
 reinforcement-learning gradients, reasoning improvement, controller
@@ -57,15 +58,16 @@ Historical V2 evidence remains separate and unpooled.
 
 \section{Frozen design and selection}\label{frozen-design-and-selection}
 
-C1 completed 4,096 fixed-order screening questions with eight
-independently seeded responses per question. Eligibility required all
-eight outputs to be parseable, uncapped and assigned zero exact-match
-reward by frozen parser v2. After the full screen, the first 64 of 87
-eligible questions received 24 additional responses each. Selection was
-truncated deterministically; the 23 other eligible questions were not
-followed up. The primary endpoint is whether at least one of the 24
-fresh responses receives parser-defined exact-match reward one. No
-question was removed or relabeled after review.
+C1 completed 4,096 fixed-order GSM8K {[}R1{]} screening questions with
+eight independently seeded responses per question. Eligibility required
+all eight outputs to be parseable, uncapped and assigned zero
+exact-match reward by frozen parser v2. After the full screen, the first
+64 of 87 eligible questions received 24 additional responses each.
+Selection was truncated deterministically; the 23 other eligible
+questions were not followed up. The primary endpoint, a
+repeated-sampling coverage event {[}R3{]}, is whether at least one of
+the 24 fresh responses receives parser-defined exact-match reward one.
+No question was removed or relabeled after review.
 
 The new workload contains 32,768 screening responses and 1,536 fresh
 follow-up responses, totaling 34,304 new draws. A disjoint historical
@@ -111,14 +113,31 @@ this fixed screen, not benchmark-wide mathematical failure prevalence.
 
 \section{Review design and coverage}\label{review-design-and-coverage}
 
+\textbf{Specification gaps.} The public method record {[}P2{]} gives the
+prompt suffix: ``Solve the problem. Show your calculation briefly, then
+put the final numeric answer on its own line in the format: \#\#\#\# .''
+Thinking is disabled, but the complete rendered chat-template bytes are
+not provided here. The recorded ordering template is
+\longtok{seed:order:question\_digest}; exact byte-level normalization
+conventions are not fully specified by that shorthand. Selected-case
+seed lists and relative affine strides are available, but the absolute
+seed-origin formula is not published and is not reconstructed from
+guessed constants. Reviewer model checkpoint identities and the
+selection rule for the 105 inspected non-success fresh responses are not
+recovered in this derivative. The 143 fresh responses therefore form a
+selected audit set, not a random validation sample. Parser-v2 code is
+identified by its hash in {[}P2{]}, not fully specified by this prose.
+Independent human adjudication and release of audited raw texts remain
+outstanding; neither is represented as completed.
+
 The first review solved the questions before comparing reference
 answers, then inspected the required model outputs. A second reference
 review was separately masked from the first judgments and model outputs.
 Final reconciliation compared the exact question, reference and
 annotations, retaining disagreements rather than forcing consensus. All
 stages were assistant-assisted. Separate masking and repeat review do
-not provide independent human validation or rule out shared model
-biases.
+not provide independent human validation or rule out shared model biases
+{[}R5{]}.
 
 The first output audit covers all 64 cases, all 512 initial responses
 and 143 required fresh responses: 655 responses in total, including all
@@ -325,13 +344,14 @@ and is not used to recompute C1 recovery.
 
 \section{Conclusion}\label{conclusion}
 
-C1 establishes an auditable frozen scoring result and three conservative
-numerical counterexamples to the idea that eight observed wrong answers
-force all future answers to be wrong under this checkpoint, task and
-decoder. It also demonstrates why selection on exact-match zeros can
-enrich reference faults, ambiguity and representation mismatches. The
-unchanged 11/64 score and the 3/64 corroborated witness count answer
-different questions and must be reported together.
+C1 reports a bounded frozen scoring result under the stated
+source-availability constraints and three conservative numerical
+counterexamples to the idea that eight observed wrong answers force all
+future answers to be wrong under this checkpoint, task and decoder. It
+also demonstrates why selection on exact-match zeros can enrich
+reference faults, ambiguity and representation mismatches. The unchanged
+11/64 score and the 3/64 corroborated witness count answer different
+questions and must be reported together.
 
 A next experimental step would require a new prospective design with
 independently reviewed references, explicit unit rules, random or fully
@@ -459,8 +479,8 @@ week has probability 3/5 = 60\%. A specified/randomly sampled test day
 has joint probability 3/25 = 12\%. Both reviewer rounds retain
 sampling-unit ambiguity; all 5 fresh 12 matches use the latter event.
 
-\textbf{C50 Reggie marbles.} With starting Reggie count R and losses
-L,90 = R+10 × (9-2 L), so R = 20 L. His friend's 100 does not set R.
+\textbf{C50 Reggie marbles.} With starting Reggie count R and losses L,
+90 = R + 10 × (9 - 2L), so R = 20L. His friend's 100 does not set R.
 Multiple feasible starts/losses exist. Gold's net-loss shortcut is
 invalid; all 3 fresh 1 matches have defective justifications. There is
 no uniquely correct loss count.
@@ -609,6 +629,20 @@ systems or authenticate execution.
 {[}P3{]} \textbf{Public benchmark and model.} The study uses the GSM8K
 training split (\texttt{openai/gsm8k}, main configuration) and Qwen3-8B
 (\texttt{Qwen/Qwen3-8B}) at the revisions listed above.
+
+\textbf{Scholarly references.} {[}R1{]} K. Cobbe et al., ``Training
+verifiers to solve math word problems,'' arXiv:2110.14168, 2021 (GSM8K).
+{[}R2{]} J. Vendrow, E. Vendrow, S. Beery and A. Madry, ``Do large
+language model benchmarks test reliability?,'' arXiv:2502.03461, 2025
+(label errors in GSM8K-style benchmarks). {[}R3{]} B. Brown et al.,
+``Large language monkeys: Scaling inference compute with repeated
+sampling,'' arXiv:2407.21787, 2024 (coverage under repeated sampling).
+{[}R4{]} L. D. Brown, T. T. Cai and A. DasGupta, ``Interval estimation
+for a binomial proportion,'' \emph{Statistical Science}, 16(2):101--133,
+2001 (Wilson interval). {[}R5{]} L. Zheng et al., ``Judging
+LLM-as-a-judge with MT-Bench and Chatbot Arena,'' arXiv:2306.05685, 2023
+(limits of model-based adjudication, relevant to the assistant-assisted
+review stages).
 
 This derivative reports the retained scientific analysis but is not a
 complete execution-provenance package or an independent replication.

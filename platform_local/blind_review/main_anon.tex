@@ -59,14 +59,14 @@
 
 % =============================================================================
 % Abstract reframed around F1--F5 (see sections/abstract.tex)
-\input{sections/abstract_anon}
+\input{../../platform_hybrid/paper/sections/abstract_anon}
 
 % Introduction reframed around F1--F5 (see sections/intro.tex)
-\input{sections/intro_anon}
+\input{../../platform_hybrid/paper/neurips_2026_variants/sections/intro_anon}
 
 % =============================================================================
 % Related Work (v2)
-\input{sections/related_work_v2_anon}
+\input{../../platform_hybrid/paper/sections/related_work_v2}
 
 % =============================================================================
 % =============================================================================
@@ -587,7 +587,7 @@ We analyze reward learning dynamics across all 44 experiments by fitting two par
 models to each reward trace $\{R(t)\}_{t=1}^{T}$.
 
 \paragraph{Exponential Saturation Model.}
-Motivated by prior work on neural scaling laws~\cite{nimmaturi2025scalinglaws}, we adopt:
+Motivated by prior work on neural scaling laws~\cite{nimmaturi2025predictive}, we adopt:
 \begin{equation}
   \label{eq:exp_sat}
   R(t) = R_{\max}\!\left(1 - e^{-k\,(t - t_0)}\right),
@@ -606,7 +606,7 @@ value-based RL and LLM fine-tuning. Qwen3-MoE shows the best-explained saturatio
 curve ($R^{2} = 0.797$), suggesting its sparse architecture converges more smoothly.
 
 \paragraph{Three-Phase Learning Dynamics.}
-Following~\citet{nimmaturi2025scalinglaws}, 15 of 28 experiments (53.6\%) satisfy
+Following~\citet{nimmaturi2025predictive}, 15 of 28 experiments (53.6\%) satisfy
 a three-phase criterion (slow start~$\to$ rapid improvement~$\to$ saturation).
 The fraction rises to \textbf{73\%} for LLM fine-tuning experiments, providing
 strong empirical support for this hypothesis in the transformer fine-tuning setting.
@@ -1081,7 +1081,7 @@ ZVF is driven entirely by tool-use experiments.}
 \label{sec:grpo-dpo}
 % ---------------------------------------------------------------------------
 
-Wu et al.~\cite{wu2025grpo_dpo} prove that GRPO is algebraically equivalent to
+Wu et al.~\cite{wu2025grpodpo} prove that GRPO is algebraically equivalent to
 an implicit contrastive objective (DPO), with group size $G$ affecting only
 the Monte Carlo variance of that objective. Their headline finding: \textbf{2-GRPO}
 ($G=2$) retains 98.1\% of 16-GRPO performance while requiring 12.5\% of rollouts
@@ -1201,7 +1201,7 @@ TRL-GRPO on Llama-3.2-3B-Instruct performs substantially better (71.3\% last-10)
 
 \paragraph{Base vs.~Instruct Models.}
 A clear pattern emerges: base models (Llama-3.1-70B at 36.4\%, Llama-3.1-8B at 11.5\%, DeepSeek-V3.1-Base at 57.3\%) struggle significantly compared to instruct counterparts.
-This aligns with the GRPO-as-DPO interpretation~\cite{wu2025grpo_dpo}: GRPO requires models that already produce \emph{some} correct completions to generate meaningful preference pairs.
+This aligns with the GRPO-as-DPO interpretation~\cite{wu2025grpodpo}: GRPO requires models that already produce \emph{some} correct completions to generate meaningful preference pairs.
 Base models lacking instruction-following capability produce uniformly low-quality completions, yielding zero-variance groups that prevent learning.
 
 \paragraph{Group Size Ablation.}
@@ -1365,8 +1365,8 @@ should be treated as a negative baseline rather than a performance signal.
 \paragraph{Background.}
 Standard GRPO is known to exhibit systematic \emph{length bias}: longer responses
 mechanically accumulate more gradient signal regardless of their correctness,
-as characterized formally by Liu et al.~\cite{liu2025drgrpo} and corroborated
-by the MAD~GRPO analysis~\cite{wang2025madgrpo}, which identified the related
+as characterized formally by Liu et al.~\cite{tong2025drgrpo} and corroborated
+by the MAD~GRPO analysis~\cite{taghia2026madgrpo}, which identified the related
 \emph{verbosity trap}: the model first learns that longer outputs are associated
 with higher rewards, rapidly increases sequence length, and then collapses as
 the reward model saturates.
@@ -1395,9 +1395,9 @@ self-regulate against length exploitation.
 \paragraph{Implications.}
 GRPO training produces reward trajectories that are more volatile in the tail,
 more susceptible to mid-training collapse, and less monotonically improving
-than PPO-on-LLM counterparts~\cite{liu2025drgrpo,wang2025madgrpo}.
+than PPO-on-LLM counterparts~\cite{tong2025drgrpo,taghia2026madgrpo}.
 Direct mitigation strategies---sequence-length normalization, token-budget
-penalties, or the ``Dr.~GRPO'' correction~\cite{liu2025drgrpo}---are not yet
+penalties, or the ``Dr.~GRPO'' correction~\cite{tong2025drgrpo}---are not yet
 represented in the current experiment set and constitute a natural next ablation.
 
 \begin{figure}[htbp]
@@ -1577,7 +1577,7 @@ Our ZVF measurements can serve as a calibration dataset for such prompt-skipping
 criteria.
 
 \paragraph{Scaling laws: exponential saturation and its limits.}
-\citet{nimmaturi2025scalinglaws} derive a three-phase exponential saturation
+\citet{nimmaturi2025predictive} derive a three-phase exponential saturation
 law for GRPO, finding that 80\% of training steps contribute marginally and
 proposing early stopping.
 We confirm the three-phase pattern in 73\% of LLM fine-tuning experiments,
@@ -1595,7 +1595,7 @@ We recommend that practitioners verify monotonicity before applying early
 stopping rules derived from the saturation model.
 
 \paragraph{``It Takes Two'' and the 2-GRPO/DPO equivalence.}
-\citet{wu2025grpo_dpo} prove that at $G = 2$, GRPO's advantage reduces to a
+\citet{wu2025grpodpo} prove that at $G = 2$, GRPO's advantage reduces to a
 DPO-equivalent contrastive objective, and show empirically that 2-GRPO retains
 98.1\% of 16-GRPO performance at 12.5\% of rollout cost.
 Our theoretical analysis confirms their prediction for the expected ZVF:
@@ -1637,10 +1637,10 @@ Connecting our behavioral proxy metrics to this parameter-level analysis is a
 natural and important next step.
 
 % Conclusion reframed around F1--F5 (see sections/conclusion.tex)
-\input{sections/conclusion_anon}
+\input{../../platform_hybrid/paper/sections/conclusion}
 
 % Ethics, Limitations, and Broader Impact (Task 10)
-\input{ethics_statement_anon}
+\input{../../platform_hybrid/paper/ethics_statement_anon}
 
 \begin{ack}
 Acknowledgments are withheld for blind review. We thank the Tinker team for
@@ -1666,7 +1666,7 @@ acceptance.
 
 
 \bibliographystyle{plainnat}
-\bibliography{references}
+\bibliography{../../platform_hybrid/paper/references}
 
 % =============================================================================
 \appendix
@@ -1757,14 +1757,14 @@ and \texttt{BENCHMARKS\_COMPARISON.md} for the full comparison table with existi
 % Task 6: Statistical rigor pass --- updated Tables 1--4 with 95% bootstrap CI,
 % Cohen's d, and Bonferroni-corrected p-values + Appendix G (Statistical Protocol).
 % Source: experiments/compute_statistics.py -> experiments/render_stat_rigor_tex.py
-\input{sections/stat_rigor_updates_anon}
+\input{../../platform_hybrid/paper/sections/stat_rigor_updates}
 
 % =============================================================================
 % NeurIPS Paper Checklist (Mandatory)
 % Final, audited version — see paper/sections/checklist.tex and
 % NEURIPS_CHECKLIST_FINAL.md in the repo root for the audit record (Task 9).
 % =============================================================================
-\input{sections/checklist_anon}
+\input{../../platform_hybrid/paper/sections/checklist_anon}
 
 \iffalse
 % -- Legacy inline checklist (kept for diff history; not compiled) ---------

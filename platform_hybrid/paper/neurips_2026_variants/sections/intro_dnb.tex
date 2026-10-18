@@ -17,18 +17,16 @@ field needs auditable, tier-classified artifacts more than it needs another
 leaderboard.
 
 \paragraph{Artifact-first contribution.}
-\ours{} is released as a reproducible artifact: a historical run collection (census unresolved) spanning 7 RL
-libraries, 5 model families, 32+ checkpoints, and total-parameter scales
-from 0.6B to 671B (active-parameter counts 0.6B--37B for the largest
-mixture-of-experts checkpoints), each accompanied by pinned containers,
-step-level reward traces, ZVF/GU diagnostics, and (where the backend
-permits) raw per-group rollout JSONL. Every (backend, model, task) cell
+\ours{} is a historical run collection with an unresolved run-ID census
+and incomplete file-level release inventory. Manifest rows include PPO
+baselines, GRPO runs, partial runs and unstarted plans; they cannot be
+summed into a verified GRPO experiment count. Every (backend, model, task) cell
 in the manifest is classified into one of three evidence tiers, used
 consistently in the abstract, the main evidence table, and the
 conclusion:
 \begin{itemize}\setlength\itemsep{1pt}
-  \item \textbf{(A-grade)} multi-seed completed cells used for inference;
-        these support the only inferential claims in the paper.
+  \item \textbf{(A-grade)} multi-seed completed cells; this is a completion
+        classification, not automatic inferential eligibility.
   \item \textbf{(B-grade)} single-seed completed case-study runs on the
         closed-backend Tinker API, reported descriptively only.
   \item \textbf{(C-grade)} failed, partial, or never-started cells,
@@ -36,9 +34,9 @@ conclusion:
 \end{itemize}
 
 \paragraph{What the artifact lets reviewers do.}
-A reviewer can: (i) re-run any A-grade open-stack cell end-to-end via
-\texttt{make reproduce-main}; (ii) inspect step-level ZVF/GU and reward
-traces for every reported run, including B-grade Tinker case studies;
+A reviewer can inspect available summaries and scripts. End-to-end
+reproduction of every A-grade cell via \texttt{make reproduce-main} and
+trace availability for every reported run have not been verified;
 (iii) read off a per-run auditability matrix (Table~\ref{tab:artifact-card})
 that lists, for each cell, whether raw rollouts, ZVF traces, checkpoints,
 and held-out evaluation are released; and (iv) consult the claims-evidence
@@ -46,8 +44,9 @@ table (Table~\ref{tab:claims-tier}) to see exactly which artifact each
 claim depends on and what its tier is.
 
 \paragraph{Two narrow scientific take-aways.}
-The artifact supports two A-grade results stated conservatively. First, the
-mechanical identity $\mathrm{ZVF}(p, G) = p^{G} + (1{-}p)^{G}$ characterises
+Two statements must be kept outside the empirical A/B/C tiers. First, the
+theoretical expectation $\mathbb E[\widehat{\mathrm{ZVF}}]=p^{G}+(1{-}p)^{G}$
+under conditionally i.i.d.\ binary sampling characterises
 when binary rewards produce zero centered reward contrast in the
 group-standardized runner; we use it as
 a descriptive diagnostic, not as a standalone causal predictor of

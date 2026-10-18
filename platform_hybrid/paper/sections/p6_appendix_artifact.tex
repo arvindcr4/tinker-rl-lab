@@ -23,13 +23,16 @@ registry/
   README.md
 \end{lstlisting}
 
-Every entry validates against the schema:
+Record validation must exclude the amendment sidecars, which are not
+stack or variant-delta records. The following is a reproduction command,
+not a claim of a newly executed full-corpus schema audit:
 
 \begin{lstlisting}[basicstyle=\ttfamily\scriptsize, frame=single]
 python3 -c "import json, glob, jsonschema; \
   s = json.load(open('registry/schema.json')); \
   [jsonschema.validate(json.load(open(p)), s) \
-   for p in glob.glob('registry/entries/*.json')]"
+   for p in glob.glob('registry/entries/*.json') \
+   if not p.endswith('.amendment.json')]"
 \end{lstlisting}
 
 \subsection{A Complete Variant-Delta Record}

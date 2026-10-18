@@ -91,6 +91,16 @@ starvation regime, which the seven-field run-manifest portion of the
 eight-item minimum reporting stack in the
 companion papers can carry across stacks.
 
+\paragraph{E3 provenance limit.}
+The summary above is an internal pilot record, not an independently
+reproducible comparison: the exact checkpoint, seed count, prompt batch,
+step count, and evaluation denominator are not established by this table.
+Its numerical tie does not establish competitiveness or equivalence.
+Dynamic sampling yields zero ZVF only among accepted groups when it can fill
+the batch; a finite resampling cap need not terminate with a full batch.
+
+% Exclude historical replay narrative, including withdrawn delta_div claims.
+\iffalse
 \subsection{Counterfactual evaluation on the N2 four-method reward tensors}
 \label{sec:p7-controller-cf}
 \paragraph{Setup.}
@@ -1168,12 +1178,12 @@ on the N10 panel}
 
 The previous subsection fixed the controller's evidence base on the N2
 four-method tensor. The Berkeley row-01 Dualformer-Auto analysis
-\citep{su2024dualformer} established a complementary cheap-direction rule:
-on the iter127 $n{=}20$ cell sweep, Dualformer-Auto (threshold-gated
-$G$) achieves $56.2\%$ savings vs always-$G{=}16$, vs the
-zvf-triage rule which (as shown above on N2) spends more compute on
-the saturated regime. The two rules have **opposite signs** on the
-escalation direction:
+\citep{su2024dualformer} was previously reported here as establishing a
+complementary cheap-direction rule with a $56.2\%$ saving on the iter127
+cell sweep. That attribution and saving figure are withdrawn (see
+the replay audit boundary in the introduction); only the rule's
+direction is retained as a historical description. The two rules have
+\textbf{opposite signs} on the escalation direction:
 \begin{itemize}
 \item \emph{zvf-triage}: $G_t = G_{\mathrm{esc}} (=16)$ when $z_t \geq \tau$, else $G_{\mathrm{base}} (=8)$ --- escalate on intermediate zvf, base otherwise.
 \item \emph{Dualformer-Auto} ($G$-de-escalating): $G_t = G_{\mathrm{des}} (=4)$ when $z_t \geq \tau$, else $G_{\mathrm{base}} (=8)$ --- de-escalate on intermediate zvf, base otherwise.
@@ -2149,7 +2159,11 @@ method & saving (pt) & 95\% CI (per-step) & Berkeley claim \\
 \end{tabular}
 \end{center}
 Every CI excludes $0.562$ (max upper CI = $0.375$ on grpo/aero/areal).
-\textbf{The Berkeley 56.2\% saving is not reproducible on the N2 corpus}.
+\textbf{The Berkeley 56.2\% saving is not reproduced on the N2 corpus.}
+This replay compares two estimators on unclustered per-prompt
+observations whose steps are not independent; it does not validate the
+rule or establish the corpus-mix explanation, which remains a
+hypothesis.
 The structural reason is the prompt mix: on N2, 461/640$\approx$72\%
 of prompts are boundary ($k{=}0$ or $k{=}8$), so Dualformer's
 $G'{=}2$ de-escalation cannot help them and the maximum achievable
@@ -2247,8 +2261,9 @@ $\approx 1.18$). It is an observed operating point, not a deployment designation
 
 \paragraph{Why this matters.}
 \begin{itemize}
-    \item \textbf{Refutes Berkeley row 01 on N2}: the 56.2\% saving
-        claim is corpus-mix-dependent; the falsifiable sub-claim is
+    \item \textbf{Does not reproduce Berkeley row 01 on N2}: the 56.2\%
+        saving is not recovered by this replay; the corpus-mix reading is
+        a hypothesis, and the falsifiable sub-claim is
         ``on a contrast-rich corpus ($\geq 50\%$ contrast prompts),
         Dualformer-Auto recovers the 56.2\% saving headline''.
     \item \textbf{Closes the loop from iter-66 row 77
@@ -2397,3 +2412,4 @@ dualformer-only contrast-only candidate ($0.79$--$0.83$).
 ($\leq 290$ LoC, stdlib only); outputs in
 \texttt{experiments/results/p5p8/p7\_joint\_controller.\{tsv,json\}},
 \texttt{p7\_joint\_controller\_boot.tsv}.
+\fi

@@ -22,6 +22,9 @@
 \input{sections/p7_ushape}
 \input{sections/p7_e1_validation}
 \input{sections/p7_controller}
+% Historical replay logs are quarantined, not active manuscript evidence.
+% They contain incompatible rule definitions and unclustered inference.
+\iffalse
 \input{sections/p7_iter79_multitrigger}
 \input{sections/p7_iter83_iso_g}
 \input{sections/p7_iter87_hysteresis}
@@ -45,6 +48,37 @@
 \input{sections/p7_iter195_unified_concordance}
 \input{sections/p7_iter199_closed_loop_counterfactual}
 \input{sections/p7_iter203_empirical_gprime}
+\fi
+\section{Replay audit boundary}
+The N2 archive contains four method traces, each with 40 successive steps and
+16 prompt groups per step ($G=8$). These are 2,560 logged group observations,
+not 2,560 independent experiments or controller interventions. N10 consists
+of five seed trajectories of 15 steps. Repeated steps must not be treated as
+independent replicates. Existing step/cell bootstrap intervals and significance
+claims are withdrawn pending prompt- and seed-aware reanalysis with temporal
+dependence preserved; no replacement intervals are inferred here.
+
+All uses of $\delta_{\mathrm{div}}$ as a correlation measure, diversity bonus,
+control trigger, ranking, or lower-bound correction are withdrawn. Same-group
+plug-in and pooled-probability comparisons have different estimator biases;
+neither identifies rollout dependence. Finite-pool subsampling is not evidence
+of anti-herding, and resampling eight identical observed rewards cannot test
+whether new rollouts restore contrast at an unknown interior success probability.
+
+Iter-147 results are excluded: iter-159 records misaligned per-cell columns
+(including a zero STATIC\_G8 group-size field), and reports retention
+$0.244$--$0.307$, not iter-147's $1.04$--$1.05$. The latter numbers and the
+claimed portability/lower bound are not admissible. Iter-159's reconstruction
+does not repair the independent-unit or policy-validation problem.
+
+The archive also uses ``Dualformer-Auto'' for incompatible local heuristics:
+difficulty-gated per-prompt allocation, step-ZVF de-escalation, and a
+contrast-only rule. They are not one reproducible baseline and are not
+established reproductions of the cited Dualformer method. All attribution,
+56.2\% transfer, rule-equivalence, and cross-iteration ranking claims are
+withdrawn pending a versioned rule specification and direct source validation.
+The excluded iteration logs remain in the repository for provenance, not as
+an appendix of scientific results. No data file has been altered.
 \input{sections/p7_design_rules}
 \input{sections/p7_synthesis}
 \input{sections/p7_limitations}

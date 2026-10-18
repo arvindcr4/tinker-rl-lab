@@ -78,15 +78,17 @@
     harness/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
     arrow/.style={-{Stealth[scale=1.2]}, thick, draw=green!60!black}
 ]
-    \node [tierbox] (t1) {Evidence Tier A\\(Executed Core Protocol)};
-    \node [tierbox, right=of t1] (t2) {Evidence Tier B\\(Bounded Empirical Cases)};
-    \node [harness, right=of t2] (repo) {\textbf{Tiered Reproduction Harness}\\Artifact-First Verification};
+    \node [tierbox] (t1) {Tier A: completed multi-seed\\Tier B: single-seed case studies};
+    \node [tierbox, right=of t1] (t2) {Tier C: partial, failed\\or unstarted cells};
+    \node [harness, right=of t2] (repo) {\textbf{Historical Inventory}\\Execution and payload checks pending};
 
-    \draw [arrow] (t1) -- (t2);
+    \draw [arrow] (t1) to[bend left=25] (repo);
     \draw [arrow] (t2) -- (repo);
 \end{tikzpicture}
 }
-\caption{\textbf{Tiered Benchmark Dataset \& Reproduction Harness Architecture (P9).} Categorizing artifact evidence into rigorous evidence tiers (A/B/C) with reproducible verification.}
+\caption{Completion categories in the historical inventory, not sequential
+training stages or proof of reproducibility. Theory and later excluded
+evidence are outside A/B/C.}
 \label{fig:dnb_benchmark_architecture}
 \end{figure}
 \input{sections/intro_dnb}
@@ -200,9 +202,10 @@ The single-seed group-size sweep on Qwen3-8B/GSM8K
 reward; neither the smallest nor the largest $G$ is uniformly best. We
 report this as a case study against the heuristic that ``larger $G$ is
 always better'' rather than as a prescription. The
-token-budget-normalised reanalysis showing that the
-$\widehat{\mathrm{TBGU}}$-optimal $G$ shifts rightward with total tokens
-$T$ is in Appendix~\ref{sec:appendix:group-size-reconcile}; per-row
+token-budget-normalised reconstruction in
+Appendix~\ref{sec:appendix:group-size-reconcile} uses fallback values, not
+measured multi-seed held-out outcomes. Its calibrated proxy and fitted apex
+do not establish a measured token-budget optimum; per-row
 training-reward numbers are in Appendix~\ref{sec:appendix:full-results}.
 A two-seed matched-budget follow-up (2{,}560 rollouts per arm;
 $G{=}2\times160$ vs.\ $G{=}16\times20$ steps, 512-token completions)
@@ -213,6 +216,9 @@ while $G{=}16$ ends mid-learning ($\approx0.3$--$0.5$) with
 $\mathrm{ZVF}\le0.25$ throughout. Artifacts:
 \texttt{tinker-runs/results/er2b\_*.json}.
 
+The historical correlation graphic is excluded because its plotted panels
+and caption have not been reconciled against the cohort-specific tables.
+\iffalse
 \begin{figure}[t]
 \centering
 \includegraphics[width=\textwidth]{../figures/v2/zvf_correlation}
@@ -227,22 +233,18 @@ model family. Within-GSM8K stratified Pearson is $r = +0.40$
 stratification.}
 \label{fig:zvf-correlation}
 \end{figure}
+\fi
 
 % -----------------------------------------------------------------------------
 \section{Reproducibility}
 \label{sec:reproducibility}
 % -----------------------------------------------------------------------------
 
-We release pinned containers, deterministic seed management, and
-\texttt{rliable}-based analysis scripts. Logged artifacts are released at
-three explicitly named levels of granularity: (i)~\textbf{precomputed
-ZVF/GU traces} for every reported run, including all Tinker rows;
-(ii)~\textbf{step-level aggregate logs} (per-step mean reward, loss,
-gradient norm, and---where the backend exposes it---KL) for every
-reported run; and (iii)~\textbf{raw per-group rollout JSONL} for the
-Tier-A open-stack rows in Appendix~\ref{sec:run-manifest} and a subset
-of Tinker GSM8K rows. Raw JSONL is \emph{not} bundled for every Tinker
-case-study or tool-use run; those cases are flagged in the manifest.
+The repository provides analysis code and historical summaries. We do not
+certify complete raw per-group rollout JSONL, checkpoints, pinned containers,
+or step traces for every manifest row. Aggregate traces do not substitute
+for raw groups. Auditability checkmarks below are historical availability
+reports pending a file-level hash inventory, not verified release guarantees.
 Full architectural diagrams of the data processing, licensing, and reproduction execution pipelines are provided in Appendix~\ref{sec:appendix:architecture}.
 
 \input{sections/reproducibility_card_dnb}

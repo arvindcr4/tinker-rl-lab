@@ -7,13 +7,13 @@
 % =============================================================================
 \begin{abstract}
 This is an \textbf{exploratory workshop artifact note}, not a benchmark paper.
-We release step-level group reward traces, Zero-Variance Fraction (ZVF)
-traces, a parser-script bundle, a per-run manifest, and a structured evidence
-grade table for a historical GRPO-style run collection (census unresolved) across 7 RL libraries (TRL, Stable
-Baselines3, CleanRL, Tianshou, PufferLib, rl\_games, d3rlpy), the closed
-\tinker{} API, and 5 model families (total parameters 0.6B--671B; active
-0.6B--37B for the largest mixture-of-experts checkpoints). The release lives
-at an anonymous repository documented in
+We present Zero-Variance Fraction (ZVF) summaries, parser scripts, and a
+historical manifest. The run-ID census and file-level release inventory
+remain unresolved; the collection mixes GRPO, PPO baselines and unexecuted
+plans and does not establish coverage of every named library or task.
+Raw group traces and checkpoints are not certified for every row.
+The historical artifact is associated with
+an anonymous repository documented in
 Section~\ref{sec:limitations}.
 
 \textbf{Claim hierarchy (descending strength).}
@@ -28,7 +28,7 @@ GSM8K only ($N{=}19$), $r{=}{+}0.40$ ($p{=}0.09$).
 We report ZVF as a cheap descriptive logging quantity, not as a
 predictive failure detector. Frontier-scale and tool-use rows are
 single-seed case studies, released for honesty and not as benchmark numbers.
-The rest of this artifact note is a candid evidence-grade table and three
+The rest of this artifact note is a candid evidence-grade table and
 discussion prompts for the workshop.
 \end{abstract}
 \paragraph{August 2026 evidence boundary.} This workshop artifact preserves

@@ -81,7 +81,7 @@ The controller preserves asynchronous single-rollout execution and logs
 sampling propensities to expose curriculum bias.
 
 We ground the proposal in an audited GRPO artifact.  Across 505 unique
-prompt-seed tasks, the identity between contrastive group yield and the gap
+prompt-seed keys, the arithmetic identity between contrastive group yield and the gap
 between pass@G and unanimous success holds to $1.11\times10^{-16}$.  In a
 2,560-observation controller trace, 1,723 of 1,867 escalation events (92.3\%)
 occurred on all-correct groups, whereas only 144 occurred on all-wrong groups.
@@ -93,7 +93,7 @@ falsifiable routing policy, and reproducible bridge from an established GRPO
 failure mode to critic-based PPO and asynchronous SAO. It reuses companion GRPO
 artifacts and must not be counted as an independent replication of those results.
 \textbf{Venue claim boundary (workshop-short methods / proposal).}
-Verified here: GRPO pass@G/ZVF identity, conditional group-size calculation,
+Checked here: GRPO pass@G/ZVF arithmetic identity, conditional proxy calculation,
 and all-correct/all-wrong controller counts from checked-in artifacts.
 Proposed here: Effective Gradient Mass, TriageRL routing, and the PPO/SAO
 evaluation contract.  \emph{Not claimed}: any PPO, SAO, or GLM-style training
@@ -102,9 +102,9 @@ group size.  Closing the PPO/SAO measurement gate is future work and is not
 required for the diagnostic-plus-contract contribution targeted at a
 workshop-short venue.
 \end{abstract}
-\paragraph{August 2026 evidence boundary.} High reward and high ZVF is only a
-binary-reward theoretical solved-task regime unless a named cell supports it;
-the routing policy is prospective, not a demonstrated deployment benefit.
+\paragraph{Evidence boundary.} The all-correct groups below provide observed
+high-reward flat-group examples, not mastery on unseen tasks. The routing
+policy is prospective, not a demonstrated deployment benefit.
 
 \begin{figure}[htbp]
 \centering
@@ -191,10 +191,10 @@ Our contributions are:
 \end{enumerate}
 
 \paragraph{Claim status.}
-The mathematical identities and reported GRPO counts are verified.  The
-unified controller is a method proposal.  Its PPO and SAO benefits are
-falsifiable hypotheses, not current empirical claims. This is the eighteenth
-document in the program but not an eighteenth independent evidence source.
+The identities are algebraic checks and the GRPO counts are descriptive.
+The unified controller is a method proposal. Its PPO and SAO benefits are
+falsifiable hypotheses, not current empirical claims. Reused GRPO artifacts
+are not independent replication evidence.
 
 \section{Background and the Three Starvation Mechanisms}
 \label{sec:background}
@@ -518,7 +518,8 @@ escalation of all-correct and all-wrong observations.
 
 For PPO, recompute GSR after each actor epoch and stop when either target KL is
 exceeded or marginal surviving mass drops below the frozen threshold.  High
-PAM plus low GSR means additional epochs cannot recover the masked evidence.
+PAM plus low GSR means the current gradient masks substantial coefficient
+mass, not that later epochs cannot change ratios and unmask tokens.
 For SAO, the analogous action is to reduce queue lag or refresh a trajectory;
 widening DIS would trade the observed inefficiency for off-policy instability.
 
@@ -539,6 +540,13 @@ uses a clipped propensity weight
   w(x)=\min\!\left(w_{\max},\frac{p_0(x)}{q(x)}\right).
   \label{eq:propensity}
 \end{equation}
+Clipping these weights introduces bias even for pre-rollout selection.
+Prompt-only weights do not correct outcome-dependent filtering of the current
+root. A base-distribution estimator would require selection before observing
+current outcomes, full history-conditioned mixture probabilities, retention
+of all outcomes, support, and unclipped weights. Otherwise the objective is
+curriculum optimization. A base-stream mixture of mass $q_{\min}$ gives
+$q(x)\ge q_{\min}p_0(x)$, not an absolute per-prompt probability floor.
 If $q(x)$ is not identifiable (for example, an open-ended environment creates
 new tasks), the run is labeled curriculum optimization rather than presented
 as an unbiased estimator.  Untouched held-out evaluation remains mandatory.
@@ -550,6 +558,9 @@ This section reports a deterministic re-analysis of checked-in experiment
 artifacts; it contains no PPO or SAO run.  The source contains 2,525 rows but
 505 unique $(\text{seed},\text{problem})$ keys because probabilities repeat
 across group settings.  No key has conflicting success probabilities.
+The TSV labels these as \texttt{tinker\_gsm8k}; its model and generation
+protocol are not established by these columns alone. Keys are not necessarily
+distinct prompts independent across seeds.
 
 \subsection{Pass@G and contrastive yield are the same event accounting}
 
@@ -568,8 +579,12 @@ Then
 \end{equation}
 The left side is exactly the probability mass of groups containing both a
 success and a failure, which is precisely the group-relative contrast GRPO
-can use.  Across $G=2,\ldots,16$ and 505 unique tasks, the maximum numerical
-discrepancy was $1.11\times10^{-16}$.
+can use. Across $G=2,\ldots,16$ and 505 unique prompt-seed keys, the maximum
+numerical discrepancy was $1.11\times10^{-16}$. Both sides use the same
+plug-in probabilities: this is an arithmetic sanity check, not independent
+empirical verification of independence or latent success rates. Convexity
+biases $f_G(\hat p)$ upward in expectation relative to $f_G(p)$; deduplication
+does not remove probability-estimation noise.
 
 \begin{proposition}[Polarization increases flat groups]
 For $G\geq2$, $f_G(p)=p^G+(1-p)^G$ is convex on $[0,1]$.  Therefore, among
@@ -577,14 +592,15 @@ prompt-probability distributions with equal mean, a mean-preserving spread
 cannot decrease expected ZVF.
 \end{proposition}
 The proof is in Appendix~\ref{app:proofs}.  As reported in
-Table~\ref{tab:polarization}, this explains why improving easy
-prompts while making hard prompts harder can raise average reward yet reduce
-contrastive training yield.
+Table~\ref{tab:polarization}, this bounds a fixed-mean comparison only.
+Increasing-mean training trajectories are not mean-preserving spreads and
+require a separate analysis.
 
 \begin{table}[t]
 \centering
 \caption{Equal-mean polarization audit at $G=5$.  The second cohort is a
-constructed mean-preserving polarized comparison, not a training run.}
+constructed equal-mean, higher-variance comparison, not a training run or
+an empirical proof of convex order.}
 \label{tab:polarization}
 \small
 \begin{tabular}{@{}lrrrr@{}}
@@ -597,30 +613,33 @@ Equal-mean polarized ($n=1000$) & 0.6743 & 0.1140 & 0.5876 & 0.4124 \\
 \end{tabular}
 \end{table}
 
-On the observed uncertain-middle cohort, $(1-\mathrm{ZVF})/\sqrt{G}$ is
-maximized at $G=4$.  The $G=4$ minus $G=5$ difference is 0.00177 with a
-95\% bootstrap interval $[0.00082,0.00270]$; $G=4$ wins all 5,000 bootstrap
-resamples.  This is a conditional allocation result for this cohort and
-utility, not a claim that $G=4$ is globally optimal.
+On this finite plug-in cohort, the arbitrary proxy
+$(1-\mathrm{ZVF})/\sqrt{G}$ is largest at $G=4$ on the evaluated integer
+grid. The square-root penalty is not a measured token, FLOP or wall-clock
+cost model, so this is not an optimal allocation result. The earlier
+interval $[0.00082,0.00270]$ and bootstrap win frequency are withdrawn as
+inferential evidence: independent resampling of prompt-seed keys does not
+preserve shared-prompt and shared-seed dependence. No clustered replacement
+interval or held-out allocation test is available.
 
 \subsection{The current escalation rule mostly spends on solved groups}
 
-The controller trace contains four methods, 40 steps, and 16 prompts per step
+The offline rule trace contains four methods, 40 steps, and 16 prompts per step
 ($4\times40\times16=2{,}560$ observations).  It fired 1,867 times.  Table
 \ref{tab:controller-audit} shows the boundary split.
 
 \begin{table}[t]
 \centering
-\caption{Audited escalation events.  ``Recovered contrast'' is descriptive
-under the logged escalation; it is not held-out reward improvement.}
+\caption{Offline escalation-rule audit, not a deployed controller.
+Counts are descriptive, not independent experimental replicates.}
 \label{tab:controller-audit}
 \small
 \begin{tabular}{@{}lrrr@{}}
 \toprule
-Boundary & Fires & Share of fires & Mean recovered contrast \\
+Boundary & Rule fires & Share of fires & Recovery estimate \\
 \midrule
-All correct & 1,723 & 92.3\% & 0.513 \\
-All wrong & 144 & 7.7\% & 0.634 \\
+All correct & 1,723 & 92.3\% & not established \\
+All wrong & 144 & 7.7\% & not established \\
 \midrule
 Total & 1,867 & 100\% & -- \\
 \bottomrule
@@ -636,6 +655,30 @@ retirement/distillation.
 
 \section{Preregistered Evaluation Contract for PPO and SAO}
 \label{sec:prereg}
+
+\paragraph{Protocol completeness gate.}
+This is a prospective design, not a registered or executed confirmatory
+study. Before any such run, archive a dated manifest of numeric thresholds,
+queue capacity and retry cap, cost estimator, critic-validation split and
+aggregation, update ordering, and analysis code. Without that manifest,
+the hypotheses below are exploratory. Global critic diagnostics are computed
+on disjoint validation roots; unavailable diagnostics defer a root rather
+than imply a healthy critic. A deferred root is revisited at most once after
+bounded critic repair, with ratios/gates recomputed; stale or still-invalid
+roots are refreshed or discarded, never replayed indefinitely. Invalid has
+first priority, then critic repair, transport refresh, low-PAM outcome routes,
+and ordinary update. Low-PAM intermediate-outcome roots fall through to the
+ordinary update but are logged as unclassified, not healthy. Solved/failed
+labels are outcome labels, not calibrated mastery estimates.
+
+All generated tokens, including retries, refreshes and discarded roots, count
+toward the rollout budget. Critic-only and distillation FLOPs and wall time
+must also be charged; token-matched comparisons alone do not establish compute
+efficiency. Arm 5 combines factors and cannot attribute an effect to one
+component: H3 requires refresh versus widening with all other routes fixed;
+H4 requires root versus chunk routing with the same optimizer and budgets.
+The H3 composite, H4 association measure, H1 regression/baselines and saturation
+screen must be specified before outcomes, not selected after observing them.
 
 The following tests are specified before collecting controller outcomes.
 Pilot data may set thresholds and estimate variance, but it is excluded from
@@ -1069,7 +1112,8 @@ following outcomes:
   base-stream floor cannot repair;
   \item critic-only routing increases value explained variance without
   improving actor endpoints, indicating a misaligned critic target;
-  \item refresh consumes more tokens than it recovers in surviving signal; or
+  \item refresh loses held-out success at matched total generated-token and
+  compute budgets (tokens and coefficient mass are not comparable units); or
   \item root-level routing does not reduce chunk-count selection bias.
 \end{itemize}
 Publishing these failures would still test the paper's central premise: a

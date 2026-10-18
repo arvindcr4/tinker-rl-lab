@@ -15,9 +15,8 @@ makes the run-start lessons reusable:
         stack-dependence results: a same-label comparison moved final reward
         $85.6\% \to 5.0\%$, $64\%$ of it from an unreported base-checkpoint
         switch and the rest from other unmatched fields,
-        and the scaling pillar (P1) found stack identity
-        competing with model scale as a predictor of outcome. Rankings that do
-        not pin these fields are rankings of launchers.
+        without establishing a causal decomposition. Comparisons that do
+        not pin these fields remain confounded.
   \item \emph{Item 4 (per-step ZVF/GU)} is forced by the ZVF pillar (P2): ZVF
         is ${\sim}0.95$ at both reward extremes in the 368-run audit (the
         interior of that cross-model curve is confounded with configuration),
@@ -36,15 +35,15 @@ makes the run-start lessons reusable:
         controller, not just a constant.
   \item \emph{Items 2, 6, 7 (KL; held-out split; decontamination/parser)} are
         forced by the confound audits behind P4 and the benchmark design: silent $\beta$ defaults differ $2\times$
-        across open frameworks, and length-bias results flip under
-        reward-parser changes that item 7's probe would surface.
+        across framework config dumps. Controlled parser probes and held-out
+        evaluation remain requirements, not demonstrated universal remedies.
 \end{itemize}
 
-\paragraph{Measured evidence (Appendix~\ref{sec:p6-measured}).} On the N2
+\paragraph{Measured evidence (Section~\ref{sec:p6-measured}).} On the N2
 same-stack run (one seed, 40 steps), swapping GRPO for AERO, GIFT, or AREAL
 moves last-10 reward by at most a few hundredths---two of the shifts are small
-but statistically detectable decreases---while completion length moves more;
-a raw-data recompute reproduces the registry's measured-delta block. We treat
+but detectable only under step-level resampling---while completion length moves more.
+This is not cross-seed uncertainty or a new verified recomputation. We treat
 these as one-seed observations, not variant rankings.
 
 Read this way, the registry is the program's exit artifact: the pillar papers

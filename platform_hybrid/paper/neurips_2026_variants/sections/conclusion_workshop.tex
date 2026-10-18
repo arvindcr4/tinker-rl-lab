@@ -20,15 +20,15 @@ by this release rather than open-ended philosophizing:
 \begin{enumerate}[leftmargin=1.4em,topsep=2pt,itemsep=2pt]
   \item Does step-level ZVF predict reward change \emph{within} a single
         run, controlling for run fixed effects, on stacks beyond Tinker?
-        Our residualized within-GSM8K scatter
-        (Figure~\ref{fig:workshop-killer}c) finds $r_{\mathrm{within}}$
-        close to zero; is this a backend artifact or a general property?
+        Our reported within-GSM8K cell correlation is $+0.401$ with an
+        interval crossing zero, not a within-run predictive validation;
+        can a prospective within-run analysis resolve the distinction?
   \item Under a fixed rollout-token budget, where does group size trade early
         step count for endgame contrast? Our two-seed $G{=}2\times160$ versus
         $G{=}16\times20$ panel ends with the small-$G$ arms at an all-correct
-        ZVF wall while $G{=}16$ remains mid-learning; a separate 3-seed
-        reanalysis places a fitted apex near $G{\approx}32$ for one stack and
-        budget. Neither identifies a universal optimum. The needed experiment
+        ZVF wall while $G{=}16$ remains mid-learning. The token-budget
+        appendix uses fallback reconstructions, not measured multi-seed
+        held-out outcomes. Neither establishes an optimum. The needed experiment
         is a directly trained, multi-seed, token-matched sweep on open stacks.
   \item Are there tasks where high-ZVF cells \emph{do} predict downstream
         collapse, beyond GSM8K? Tool-use is a degenerate $\mathrm{ZVF}{=}1$
@@ -41,7 +41,7 @@ by this release rather than open-ended philosophizing:
         loss / reward normalization / hardware metadata for a managed-API
         row to count as anything beyond a case study?
   \item Should ZVF-style diagnostic claims require raw per-group rollout
-        JSONL by default? Our release bundles step-level aggregates for
-        every run but raw JSONL only for a documented subset; we invite
+        JSONL by default? Our historical inventory does not certify
+        complete per-run aggregates or raw-group availability; we invite
         the workshop to align on a minimum raw-artifact bar.
 \end{enumerate}

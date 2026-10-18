@@ -120,6 +120,9 @@ cliff edges, PCD sees the slope.
 
 \subsection{The micro-jitter falsification}
 \label{sec:p7-jitter}
+For real-valued jittered rewards, PCD here is the within-group population
+variance $G^{-1}\sum_i(R_i-\bar R)^2$, not the binary-only expression
+$\hat p(1-\hat p)$. The Bernoulli expectation applies before jitter only.
 The sharpest separation between the two statistics is an intervention, not a
 correlation. Because ZVF is defined by \emph{exact} reward ties, adding
 i.i.d.\ jitter $\eps \sim \mathrm{U}(0, 10^{-4})$ to every reward makes ties

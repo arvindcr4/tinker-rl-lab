@@ -162,7 +162,9 @@ sampling}, explicitly resampling to avoid groups whose reward variance is zero,
 plus decoupled clipping---this is the most direct prior art for the ZVF problem
 we quantify in P2 and the curriculum lever we test. Group-variance methods such
 as GVPO~\cite{gvpo2025} re-weight by within-group variance. A cluster of very
-recent variants (AERO, NGRPO, $\lambda$-GRPO, MC-GRPO, AVSPO) attack advantage
+recent variants (AERO~\cite{aero2026}, NGRPO~\cite{ngrpo2025},
+$\lambda$-GRPO~\cite{lambdagrpo2025}, MC-GRPO~\cite{mcgrpo2026},
+AVSPO~\cite{avspo2026}) attack advantage
 collapse, length bias, and rollout accounting from different angles.\footnote{The
 newest GRPO-variant citations in this survey (AERO, NGRPO, GVPO, $\lambda$-GRPO,
 MC-GRPO, AVSPO) were verified against the arXiv API on 2026-07-06; all six

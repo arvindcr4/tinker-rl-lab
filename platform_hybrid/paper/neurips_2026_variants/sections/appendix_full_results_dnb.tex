@@ -69,10 +69,10 @@ sweeps $G \in \{2,4,8,16,32\}$ on Qwen3-8B at GSM8K, again at 1 seed per
 cell; the token-budget-normalised reanalysis lives in
 Appendix~\ref{sec:appendix:group-size-reconcile}.
 
-Peak reward and last-10-step mean reward are reported. Multi-seed Tier-A
-rows (Tinker Llama-3.3-70B-Inst at 4 seeds; the Tinker Qwen3-8B Wave-6
-ablation at 1 seed per cell across 12 cells, treated as a Tier-A
-hyperparameter sweep per Appendix~\ref{sec:run-manifest}) report cell-mean
+Peak reward and last-10-step mean reward are reported. The multi-seed Tier-A
+Tinker Llama-3.3-70B-Inst arm has 4 reported seeds. The Qwen3-8B Wave-6
+ablation has 1 seed per cell across 12 cells and is Tier B, not multi-seed
+replication. Both report cell-mean
 training reward; all other Tinker rows and the Modal H100 PPO rows are
 single-seed training rewards. Partial experiments (fewer steps than
 planned) are marked $\dagger$.

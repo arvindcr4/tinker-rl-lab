@@ -4,22 +4,22 @@
 % Target: <= 250 words; explicit (A/B/C)-grade claim labels.
 % =============================================================================
 \begin{abstract}
-We release \ours{}, a reproducible artifact for auditing reinforcement-learning
-post-training of language models across heterogeneous stacks. The artifact
-bundles a historical run collection (census unresolved) from 7 RL libraries, 5 model families, and total-parameter
-scales from 0.6B to 671B (active-parameter counts 0.6B--37B for the largest
-mixture-of-experts checkpoints) on GSM8K, MATH-500, HumanEval, and synthetic
-tool-use tasks; for every reported run we ship pinned containers, step-level
-reward traces, raw rollout JSONL where licensing allows, and Zero-Variance
-Fraction (ZVF) diagnostics.
+We present \ours{}, a historical artifact collection for auditing
+reinforcement-learning post-training across heterogeneous stacks.
+Its immutable run-ID census, task coverage, and file-level availability
+inventory remain incomplete. Summaries and Zero-Variance Fraction (ZVF)
+diagnostics are not substitutes for raw rollout JSONL or released checkpoints.
 
 We organize all claims into three explicit evidence tiers.
-\textbf{(A-grade, analytic or multi-seed inferential)}: a mechanical
-$\mathrm{ZVF}=p^{G}+(1{-}p)^{G}$ identity for binary-reward GRPO (analytic,
-not an empirical multi-seed claim), and later, separate five-seed Qwen3-8B
-GSM8K evidence showing only a $+1.3$pp delta over a fixed base. Its $p{=}0.26$
+\textbf{A}: completed multi-seed cells, with inferential eligibility
+separately required. Theory is outside the empirical tiers:
+$\mathbb E[\widehat{\mathrm{ZVF}}]=p^{G}+(1{-}p)^{G}$ assumes
+conditionally i.i.d.\ binary rewards at fixed $p$.
+Later, separate five-seed Qwen3-8B
+GSM8K evidence reports only a $+1.3$pp delta over a fixed base. Its $p{=}0.26$
 is a one-sample seed-level, not paired-seed, test and is not reviewed-record
-evidence. \textbf{(B-grade, single-seed descriptive)}:
+evidence and is outside the reviewed empirical tiers.
+\textbf{(B-grade, single-seed descriptive)}:
 case-study runs across model scale on the closed-backend Tinker API, including
 group-size sweeps and frontier-scale checkpoints, reported as illustrative not
 inferential. \textbf{(C-grade, listed for honesty)}: failed or partially
@@ -48,8 +48,7 @@ retired from the live tree to
 \texttt{archive/absorbed/U01\_main\_compendium/}. They are historical packaging
 of this artifact family, not independent venue counts.
 
-Code, traces, checkpoints, and a one-command \texttt{make reproduce-main}
-target are at
+The historical artifact URL (not a verified complete release inventory) is
 \url{https://anonymous.4open.science/r/agentic-grpo-bench-anon-2C6B}.
 \end{abstract}
 \paragraph{August 2026 evidence boundary.} Evidence tiers distinguish named

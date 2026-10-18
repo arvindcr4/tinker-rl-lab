@@ -6,8 +6,7 @@ only enforceable once a machine can reject a non-compliant run without a human
 in the loop. We therefore implement a reference verifier
 (\texttt{registry/provenance/minreport.py}, stdlib-only) that turns the
 seven-field run-manifest block from a descriptive checklist into an automated gate. This is
-the load-bearing distinction from the GRPO-Registry of \tableref{tab:implementations}
-and the P6 catalog: a registry \emph{catalogs} what a run declares; the verifier
+the distinction from the P6 catalog: a registry \emph{catalogs} what a run declares; the verifier
 \emph{recomputes} and \emph{rejects}.
 
 \paragraph{The record.} A run emits a provenance record

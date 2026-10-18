@@ -8,8 +8,9 @@ Fix a prompt $x$ with latent per-rollout success probability $p \in [0,1]$
 under the current policy, and let a GRPO group consist of $G$ conditionally
 i.i.d.\ binary rewards $R_1, \dots, R_G \sim \mathrm{Bernoulli}(p)$, so the
 success count is $K = \sum_i R_i \sim \mathrm{Binomial}(G, p)$. The group is
-\emph{degenerate}---zero within-group variance, zero centered advantage, zero
-gradient---iff $K \in \{0, G\}$. Define
+\emph{degenerate}---zero within-group variance and zero centered reward
+advantage---iff $K \in \{0,G\}$. This zeros the associated score-function
+term, not KL, entropy, value or other auxiliary gradients. Define
 \begin{equation}
   h_G(p) \;=\; p^G + (1-p)^G,
   \label{eq:p7-hG}
@@ -23,9 +24,10 @@ per prompt as
 The first factor is the contrast magnitude a non-degenerate group can carry
 (the Bernoulli variance, which also bounds the mean absolute advantage;
 Appendix~\ref{sec:p7-appendix}); the second is the probability that any
-signal survives group centering at all. Both factors vanish at $p \in
-\{0,1\}$ and peak at $p = \nicefrac{1}{2}$: GRPO learns fastest exactly where
-the policy is most uncertain, and starves at both ends. Three consequences
+signal survives group centering at all. This is a heuristic product, not the
+expected gradient norm or a learning-rate theorem. Both factors vanish at
+$p\in\{0,1\}$ and peak at $p=\nicefrac12$; this alone does not establish
+where GRPO learns fastest. Three consequences
 follow; proofs are deferred to Appendix~\ref{sec:p7-appendix}, and each
 theorem is paired here with the measurement that could have falsified it.
 
@@ -36,17 +38,19 @@ per-group ZVF indicator is exactly $h_G(p) = p^G + (1-p)^G$; aggregated over
 a prompt population $\mathcal{D}$, $\E[\mathrm{ZVF}] =
 \E_{x \sim \mathcal{D}}[\,p_x^G + (1-p_x)^G\,]$.}
 
-\emph{Empirical check.} Binning the per-group reward tensors of the GSM8K
+\emph{Definition check, not empirical validation.} Binning the per-group reward tensors of the GSM8K
 runs (the only runs that log full per-group tensors; $G = 8$, 3 seeds) by
-empirical success rate $\hat p_x$ reproduces the predicted profile---by
-construction at the endpoints, and empirically in the interior collapse: the
-ZVF indicator averages
+same-group empirical success rate $\hat p_x$ gives $1.000$ at the
+endpoints by construction (zero-variance groups), and the measured
+interior bins evaluate to $0.000$ on these runs:
+the ZVF indicator averages
 $1.000$ at $\hat p_x \in \{0, 1\}$ and $0.000$ at every interior bin
 $\hat p_x \in \{0.125, \dots, 0.875\}$
-(\texttt{experiments/results/pcd\_vs\_zvf\_shape.tsv}). At the run level, the
-group-size sweep of Table~\ref{tab:p7-gsweep} logs the closed-form prediction
-$h_G$ evaluated at the run's mean success rate next to the measured mean ZVF:
-the two co-vary monotonically in $G$, though measured ZVF sits above the
+(\texttt{experiments/results/pcd\_vs\_zvf\_shape.tsv}). It cannot test
+$h_G(p)$ at independently estimated latent $p$. At the run level, the
+group-size sweep of Table~\ref{tab:p7-gsweep} tabulates the closed-form
+$h_G$ evaluated at the run's mean success rate alongside the measured
+mean ZVF: the two co-vary monotonically in $G$, though measured ZVF sits above the
 prediction at every $G$ because the binomial model evaluates $h_G$ at the
 \emph{mean} $p$ while the true prompt population mixes mastered and hopeless
 prompts whose $h_G \approx 1$ (Jensen gap; this is the U-shape of

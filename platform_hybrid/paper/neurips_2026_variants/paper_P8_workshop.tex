@@ -101,8 +101,11 @@ $r=-0.443$ changes to $-0.026$ with task fixed effects, and its $N=19$
 GSM8K subset has $r=+0.401$. These are descriptive associations, not causal
 or predictive validation. Cohort inclusion IDs and independent-run eligibility
 must accompany any inferential reuse. The $N=15$ plot below is historical;
-it does not by itself isolate a stratification effect.
+it does not by itself isolate a stratification effect. The historical composite
+plot is excluded pending regeneration from the exact tabulated cohorts; its
+residualized panel must not stand in for the within-GSM8K correlation.
 
+\iffalse
 \begin{figure}[t]
 \centering
 \includegraphics[width=\linewidth]{figures/v2/workshop_killer}
@@ -118,6 +121,7 @@ last-10; within-task slope $r_{\mathrm{within}}\approx 0$, in sharp
 contrast to pooled $r{=}{-}0.769$.}
 \label{fig:workshop-killer}
 \end{figure}
+\fi
 
 \begin{table}[htbp]
 \centering\small
@@ -197,11 +201,10 @@ online training reward does not by itself imply held-out gain.
 We ran a single-seed exploratory $G$-sweep on Qwen3-8B/GSM8K whose results
 are non-monotonic across $G$; see
 Appendix~\ref{sec:appendix:group-size-reconcile} for the token-budget
-reanalysis. \textbf{We do not headline a winning $G$.} A 3-seed
-token-budget reanalysis at $T{\ge}16$M tokens places a fitted apex near
-$G{\approx}32$ for one stack and objective, but the apex shifts with $T$ and
-does not conflict with smaller-$G$ optima under different cost objectives; we
-deliberately avoid promoting a group-size law. A subsequent two-seed matched-budget
+reanalysis. \textbf{We do not headline a winning $G$.} The token-budget
+appendix contains fallback reconstructions, not measured multi-seed
+held-out outcomes; its fitted apex and calibrated utility cannot establish
+an optimal group size. A subsequent two-seed matched-budget
 panel (2{,}560 rollouts per arm; $G{=}2\times160$ vs.\ $G{=}16\times20$
 steps) adds one trajectory-level datum: the $G{=}2$ arms drive train
 reward to $\approx0.9$--$1.0$ on the sampled pool, then end in a sustained
@@ -240,18 +243,15 @@ Tool-use $0\%$ reward across runs & B & task-design failure, not capability. \\
 \label{sec:limitations}
 % =============================================================================
 
-We release pinned Docker images, deterministic seed management, and
-\texttt{rliable}-based analysis scripts. Anonymous code, logs, and
-checkpoints are at
+Analysis code and historical summaries are associated with the artifact at
 \url{https://anonymous.4open.science/r/agentic-grpo-bench-anon-2C6B}.
-The release distinguishes three artifact tiers explicitly:
-(i)~\textbf{precomputed ZVF / GU traces}, released for every reported run;
-(ii)~\textbf{step-level aggregate logs} (mean reward, peak reward,
-last-10), released for every reported run;
-(iii)~\textbf{raw per-group rollout JSONL} (per-prompt, per-completion
-reward arrays), released for a documented subset of stacks, with the full
-subset enumerated in the run manifest (Appendix~\ref{sec:run-manifest})
-and the parser contract released with the anonymous artifact.
+We do not certify that this external snapshot contains every run's traces,
+raw per-group rollout JSONL, checkpoint, or executable pinned container.
+Step aggregates cannot reconstruct per-group reward arrays. Manifest
+availability labels are historical reports, not verified download guarantees.
+The collection lacks a reconciled immutable run-ID census; headline library,
+model-family and run totals must not be treated as coverage guarantees.
+PPO baselines, GRPO runs, failed cells and unstarted plans are distinct.
 
 The release has known gaps that the workshop framing makes explicit. (i)~Most
 Tinker experiments are single-seed and depend on a closed-source backend; we

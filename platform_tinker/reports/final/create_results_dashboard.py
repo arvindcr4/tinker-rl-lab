@@ -127,9 +127,16 @@ def main():
         ("HumanEval", 0.98, 0.024, colors["red"]),
         ("Tool JSON", 0.55, 1.000, colors["blue"]),
     ]
+    label_pos = {
+        "GSM8K\nLR=1e-4": (0.44, 1.0, "right"),
+        "Tool JSON": (0.58, 0.94, "left"),
+        "MATH-500": (0.845, 0.574, "left"),
+        "HumanEval": (0.95, 0.024, "right"),
+    }
     for label, zvf, reward, color in zvf_points:
         ax.scatter(zvf, reward, s=120, color=color, edgecolor="white", linewidth=1.4, zorder=3)
-        ax.text(zvf + 0.025, reward, label, ha="left", va="center", fontsize=9)
+        tx, ty, ha = label_pos[label]
+        ax.text(tx, ty, label, ha=ha, va="center", fontsize=9)
     ax.text(0.83, 0.13, "Failure:\nflat wrong groups", ha="center", va="center", fontsize=9, color="#7a2538")
     ax.text(0.83, 0.92, "Saturation:\nflat correct groups", ha="center", va="center", fontsize=9, color="#254f87")
     ax.text(0.24, 0.86, "Usable:\nreward diversity", ha="center", va="center", fontsize=9, color="#1f5d3b")

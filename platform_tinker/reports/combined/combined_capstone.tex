@@ -892,7 +892,7 @@ Proximal Policy Optimisation \citep[PPO;][]{schulman2017ppo} served as the
 workhorse optimiser within early RLHF systems, but its reliance on a
 separately trained value network and careful hyperparameter tuning introduced
 significant computational overhead.  Direct Preference Optimisation
-\citep[DPO;][]{rafailov2023dpo} later showed that the reward-modelling
+\citep[DPO;][]{rafailov2023direct} later showed that the reward-modelling
 step could be bypassed entirely by re-parameterising the Bradley--Terry
 preference objective in terms of the policy itself.  Most recently, Group
 Relative Policy Optimisation \citep[GRPO;][]{shao2024deepseekmath} proposed
@@ -923,7 +923,7 @@ answers.  We focus on two widely adopted mathematical reasoning datasets:
 GSM8K \citep{cobbe2021gsm8k}, a collection of grade-school math word
 problems, and MATH \citep{hendrycks2021math}, a more challenging suite
 spanning algebra, number theory, geometry, and beyond.  Together with
-chain-of-thought prompting strategies \citep{wei2022chainofthought}, these
+chain-of-thought prompting strategies \citep{wei2022chain}, these
 benchmarks provide a controlled test-bed for measuring whether
 reinforcement-learning-based fine-tuning genuinely improves a model's
 capacity for step-by-step reasoning rather than superficial pattern
@@ -1093,7 +1093,7 @@ These challenges collectively explain why PPO-based RLHF has been described as a
 \section{Direct Preference Optimization}
 \label{sec:dpo}
 
-\emph{Direct Preference Optimization} (DPO)~\cite{rafailov2023dpo} eliminates the reward-modelling and reinforcement-learning stages entirely by showing that the optimal policy under the KL-constrained RLHF objective admits a closed-form solution.
+\emph{Direct Preference Optimization} (DPO)~\cite{rafailov2023direct} eliminates the reward-modelling and reinforcement-learning stages entirely by showing that the optimal policy under the KL-constrained RLHF objective admits a closed-form solution.
 
 \paragraph{Closed-form optimal policy.}
 The KL-constrained RLHF objective seeks:
@@ -1460,7 +1460,7 @@ The American Invitational Mathematics Examination consists of 15 problems with i
 
 \subsection{Chain-of-Thought and Its Connection to RL-Trained Reasoning}
 
-Chain-of-thought (CoT) prompting \cite{wei2022chainofthought} dramatically improved LLM performance on mathematical benchmarks by eliciting intermediate reasoning steps. The key insight underlying DeepSeek-R1-Zero is that RL training can cause CoT-like behaviors to \emph{emerge spontaneously}: the model discovers that generating intermediate reasoning steps is instrumentally useful for arriving at correct answers.
+Chain-of-thought (CoT) prompting \cite{wei2022chain} dramatically improved LLM performance on mathematical benchmarks by eliciting intermediate reasoning steps. The key insight underlying DeepSeek-R1-Zero is that RL training can cause CoT-like behaviors to \emph{emerge spontaneously}: the model discovers that generating intermediate reasoning steps is instrumentally useful for arriving at correct answers.
 
 \begin{table}[ht]
 \centering
@@ -1512,7 +1512,7 @@ The Mostly Basic Python Problems (MBPP) benchmark \cite{austin2021mbpp} compleme
 
 \subsubsection{LiveCodeBench}
 
-LiveCodeBench \cite{jain2024livecodebench}, published at ICLR 2025, addresses the critical problem of \emph{data contamination} in code benchmarks. It continuously collects new competitive programming problems from LeetCode, AtCoder, and Codeforces after a given cutoff date, ensuring that problems were not present in any model's training data. Beyond code generation, LiveCodeBench evaluates self-repair, code execution prediction, and test output prediction capabilities. The benchmark currently hosts over 600 problems and has been instrumental in detecting contamination across models including GPT-4o, Claude, and DeepSeek. DeepCoder-14B, a GRPO+-trained model, achieved 60.6\% on LiveCodeBench \cite{deepcoder2025}, demonstrating the applicability of RL-based training to code reasoning.
+LiveCodeBench \cite{jain2024livecodebench}, published at ICLR 2025, addresses the critical problem of \emph{data contamination} in code benchmarks. It continuously collects new competitive programming problems from LeetCode, AtCoder, and Codeforces after a given cutoff date, ensuring that problems were not present in any model's training data. Beyond code generation, LiveCodeBench evaluates self-repair, code execution prediction, and test output prediction capabilities. The benchmark currently hosts over 600 problems and has been instrumental in detecting contamination across models including GPT-4o, Claude, and DeepSeek. DeepCoder-14B, a GRPO+-trained model, achieved 60.6\% on LiveCodeBench \cite{xu2025deepcoder}, demonstrating the applicability of RL-based training to code reasoning.
 
 \subsubsection{SWE-bench}
 
@@ -1701,7 +1701,7 @@ This chapter has traced the intellectual lineage of reinforcement learning for l
 
 The foundational paradigm of \textbf{RLHF with PPO} established that human preference signals could steer pretrained language models toward helpful behaviour~\cite{ouyang2022instructgpt}, but carried substantial engineering complexity: a four-model orchestration with extensive hyperparameter tuning~\cite{schulman2017ppo, zheng2023secrets}.
 
-\textbf{Direct Preference Optimization (DPO)} offered an elegant shortcut by collapsing the RLHF pipeline into supervised learning on preference pairs~\cite{rafailov2023dpo}, yet introduced dependence on static data and the absence of online exploration.
+\textbf{Direct Preference Optimization (DPO)} offered an elegant shortcut by collapsing the RLHF pipeline into supervised learning on preference pairs~\cite{rafailov2023direct}, yet introduced dependence on static data and the absence of online exploration.
 
 \textbf{Group Relative Policy Optimization (GRPO)}~\cite{shao2024deepseekmath} charted a middle path, replacing learned value estimation with group-relative advantage normalization. The resulting algorithm retained PPO's clipped surrogate objective and KL regularisation while halving the number of trainable models.
 
@@ -2149,7 +2149,7 @@ Complex systems have hidden failure modes. Red teaming applies adversarial optim
 Progress demands measurement. Without agreed-upon yardsticks, we cannot distinguish genuine advances from cherry-picked results. Good benchmarks act as the community's shared exam---forcing models to prove their worth on problems they have not memorized.
 
 \section{Policy Gradient Methods: PPO and TRPO}
-Policy optimization has a cliff-edge problem: a single bad update can destroy the policy, and because the data distribution depends on the policy, it can never recover. PPO solves this by enforcing a "trust region"—a mathematical guardrail ensuring we never step too far into the unknown. Trust-region methods prevent catastrophic performance degradation by limiting policy updates. PPO \cite{schulman2017proximal} makes this practical with a clipping mechanism:
+Policy optimization has a cliff-edge problem: a single bad update can destroy the policy, and because the data distribution depends on the policy, it can never recover. PPO solves this by enforcing a "trust region"—a mathematical guardrail ensuring we never step too far into the unknown. Trust-region methods prevent catastrophic performance degradation by limiting policy updates. PPO \cite{schulman2017ppo} makes this practical with a clipping mechanism:
 \begin{equation}
 L^{CLIP}(\theta) = \mathbb{E}_t \left[ \min(r_t(\theta) \hat{A}_t, \text{clip}(r_t(\theta), 1-\epsilon, 1+\epsilon) \hat{A}_t) \right]
 \end{equation}
@@ -2469,7 +2469,7 @@ TRPO \cite{schulman2015trust} optimizes a surrogate objective under an explicit 
 \begin{equation}
 \max_\theta \mathbb{E}_t\left[\frac{\pi_\theta(a_t|s_t)}{\pi_{\theta_{\text{old}}}(a_t|s_t)} \hat{A}_t\right] \quad \text{s.t.} \quad \text{KL}[\pi_{\theta_{\text{old}}} \| \pi_\theta] \leq \delta
 \end{equation}
-Under bounded-advantage assumptions, TRPO is accompanied by a conservative improvement guarantee. PPO \cite{schulman2017proximal} replaces the hard KL constraint with a clipped surrogate objective:
+Under bounded-advantage assumptions, TRPO is accompanied by a conservative improvement guarantee. PPO \cite{schulman2017ppo} replaces the hard KL constraint with a clipped surrogate objective:
 \begin{equation}
 L^{\text{CLIP}}(\theta) = \mathbb{E}_t\left[\min\left(r_t(\theta)\hat{A}_t, \text{clip}(r_t(\theta), 1-\epsilon, 1+\epsilon)\hat{A}_t\right)\right]
 \end{equation}
@@ -2482,14 +2482,14 @@ The distinction matters for practitioners: TRPO offers provable (conservative) i
 
 \begin{heuristic}[Scaling Considerations for Agentic Benchmarks]
 \label{lem:scaling}
-Established pretraining scaling work (e.g., compute-optimal training \cite{hoffmann2022training}) demonstrates predictable tradeoffs between model size and the volume of training data given a static allocation of computational resources for \emph{pretraining loss}.
+Established pretraining scaling work (e.g., compute-optimal training \cite{hoffmann2022chinchilla}) demonstrates predictable tradeoffs between model size and the volume of training data given a static allocation of computational resources for \emph{pretraining loss}.
  However, the scaling behavior of \emph{agentic benchmark success rates} (as opposed to pretraining loss) is less settled and may saturate due to environment/tool bottlenecks. Early observations suggest:
 \begin{itemize}
     \item Larger models (e.g., GPT-4 vs.\ GPT-3.5) show disproportionate gains on agentic tasks
     \item Model capacity ($N$) appears more important than data ($D$) or compute ($C$) for tool-use tasks
     \item Success rates may plateau as tasks hit environment-side limits (API latency, simulator fidelity)
 \end{itemize}
-We treat agentic scaling trends as an empirical question evaluated via H5 (Section~\ref{sec:design_philosophy}) rather than as a formal scaling law. Unlike pretraining loss (which follows well-characterized power-law relationships~\cite{hoffmann2022training}), agentic success rates lack established theoretical foundations---observed trends should be viewed as empirical regularities subject to revision as more data accumulates.
+We treat agentic scaling trends as an empirical question evaluated via H5 (Section~\ref{sec:design_philosophy}) rather than as a formal scaling law. Unlike pretraining loss (which follows well-characterized power-law relationships~\cite{hoffmann2022chinchilla}), agentic success rates lack established theoretical foundations---observed trends should be viewed as empirical regularities subject to revision as more data accumulates.
 \end{heuristic}
 
 \begin{remark}
@@ -5986,7 +5986,7 @@ This appendix provides a comprehensive mapping of all surveyed papers to our 19-
 % === CORE ALGORITHMS: Policy-Based (Cat 1) ===
 \multicolumn{4}{|c|}{\cellcolor{blue!15}\textbf{Core Algorithms: Policy-Based (Category 1)}} \\
 \hline
-schulman2017proximal & Proximal Policy Optimization Algorithms & 1 & Policy-Based \\
+schulman2017ppo & Proximal Policy Optimization Algorithms & 1 & Policy-Based \\
 \hline
 schulman2015trust & Trust Region Policy Optimization & 1 & Policy-Based \\
 \hline
@@ -6104,7 +6104,7 @@ lightman2023lets & Verifying reasoning step-by-step & 14 & Reasoning \\
 \hline
 snell2024scaling & Scaling LLM Test-time Compute & 14 & Reasoning \\
 \hline
-hoffmann2022training & Chinchilla: Compute-optimal LLMs & 14 & Reasoning \\
+hoffmann2022chinchilla & Chinchilla: Compute-optimal LLMs & 14 & Reasoning \\
 \hline
 
 % === APPLICATIONS: Security & Safety (Cat 15) ===
@@ -6187,7 +6187,7 @@ Infrastructure & 17--19 & 6 \\
 \bibliographystyle{plainnat}
 \cleardoublepage\phantomsection
 \addcontentsline{toc}{chapter}{References}
-\bibliography{refs}
+\bibliography{references}
 
 
 

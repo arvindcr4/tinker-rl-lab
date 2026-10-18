@@ -5,8 +5,9 @@
 \subsection{One-command reproducibility}
 \label{sec:repro-onecmd}
 
-The artifact ships a top-level \texttt{Makefile} with three documented
-targets that govern the open-stack reproducibility surface:
+The following are intended reproduction interfaces, not verified execution
+guarantees. No clean-environment end-to-end run of these targets is certified
+by this manuscript, and runtime estimates are not benchmark measurements:
 
 \begin{itemize}\setlength\itemsep{1pt}
   \item \texttt{make smoke-test} --- $\sim$5\,min on a single commodity
@@ -47,9 +48,7 @@ do not test distributional agreement. Stochastic comparison requires named
 metrics, independent units, effect intervals and prespecified tolerances.
 
 \paragraph{Submission-time status.}
-At submission, the \texttt{Makefile} targets are wired to the
-already-released Modal scripts and the held-out evaluation harness; if a
-target is missing or stub-only at the time the camera-ready artifact tag
-is cut, the corresponding entry in the artifact card
-(Table~\ref{tab:artifact-card}) will be downgraded from \checkmark{} to
-``pending'' and the README will list the substitute manual command.
+Execution status is pending. Table~\ref{tab:artifact-card} checkmarks must
+not be read as successful target execution or downloadable adapter proof.
+The separate five-seed held-out Qwen3-8B comparison is outside this release's
+inferential evidence; the intended target description above does not admit it.

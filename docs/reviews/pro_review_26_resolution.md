@@ -43,3 +43,9 @@ Versioned iter109/109b/121/125/129/133/137 now use the repository's authoritativ
 The former `platform_modal/experiments/tinker-runs/results` default does not exist.
 Import-time directory creation was moved into main, and a regression checks all
 seven path contracts without reading any stored trace or executing analysis.
+
+The canonical `scaling_law_fit.py` entry also uses the authoritative hybrid trace
+root, writes only candidate `review26_v2` tables/figures, and has no import-time
+mkdir. Its main guard still invokes only its own main; repository source search
+found no executable wrapper invoking it. Historical consumers remain historical
+and are not silently redirected to candidate evidence.

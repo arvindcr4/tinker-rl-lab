@@ -137,3 +137,15 @@ def test_versioned_scaling_roots_bind_hybrid_sources():
         assert not any(isinstance(node, ast.Expr) and isinstance(node.value, ast.Call)
                        and isinstance(node.value.func, ast.Attribute) and node.value.func.attr == 'mkdir'
                        for node in tree.body)
+
+
+def test_canonical_scaling_root_and_candidate_output_isolation():
+    m = importlib.import_module('scaling_law_fit')
+    root = SCRIPTS.parents[1]/'platform_hybrid'
+    assert m.TRACE_DIR == root/'experiments/tinker-runs/results'
+    assert m.RESULTS_DIR == root/'experiments/results/review26_v2'
+    assert m.FIG_DIR == root/'figures/review26_v2'
+    tree = ast.parse((SCRIPTS/'scaling_law_fit.py').read_text())
+    assert not any(isinstance(node, ast.Expr) and isinstance(node.value, ast.Call)
+                   and isinstance(node.value.func, ast.Attribute) and node.value.func.attr == 'mkdir'
+                   for node in tree.body)

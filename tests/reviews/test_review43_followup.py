@@ -273,7 +273,9 @@ def test_card_requires_receipt_and_no_errors():
     from platform_hybrid.experiments.webarena.push_model_card import _render_model_card
 
     kwargs = dict(base_model="model", benchmark="webarena", dataset_repo="data", run_id="run")
-    with pytest.raises(ValueError):
+    with pytest.raises(
+        ValueError, match="publication requires complete validated coverage without episode errors"
+    ):
         _render_model_card(final={}, **kwargs)
     final = {
         "completion_status": "complete",
@@ -305,8 +307,10 @@ def test_card_requires_receipt_and_no_errors():
     )
     final["overall"] = dict(n=1, episodes_with_error=0)
     card = _render_model_card(final=final, **kwargs)
-    assert "temperature 0.7" in card and "budget 99" in card
-    assert "50-way" not in card and "sample_async" not in card
+    assert "temperature 0.7" in card
+    assert "budget 99" in card
+    assert "50-way" not in card
+    assert "sample_async" not in card
 
 
 def test_causal_unknown_argument_rejected_before_allocation(tmp_path):

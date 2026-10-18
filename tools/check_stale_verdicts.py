@@ -119,9 +119,7 @@ def find_unmarked_occurrences(path: Path, relative: str) -> list[str]:
         # Preserve frozen correction prose, but never exempt the reverse direction
         # or an additional current-verdict claim on the same line.
         plain = re.sub(r"\\texttt\{([^{}]+)\}", r"\1", line).replace("`", "")
-        if re.fullmatch(
-            r"\s*because it changes DAPO from DISAPPEARS to INCONCLUSIVE\.\s*", plain
-        ):
+        if re.fullmatch(r"\s*because it changes DAPO from DISAPPEARS to INCONCLUSIVE\.\s*", plain):
             continue
         context = line.lower()
         if any(marker in context for marker in MARKERS):

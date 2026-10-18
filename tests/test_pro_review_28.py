@@ -397,7 +397,10 @@ def test_precision_nonfinite_scores_fail_explicitly(name):
         ([0.5], [1, 0]),
         ([0.5], [2]),
     ]:
-        with pytest.raises(ValueError):
+        with pytest.raises(
+            ValueError,
+            match="scores and labels must be equally sized one\\-dimensional arrays|scores must be finite and labels must be binary",
+        ):
             metric(scores, labels)
 
 

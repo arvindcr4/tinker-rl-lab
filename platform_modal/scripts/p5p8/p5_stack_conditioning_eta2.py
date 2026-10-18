@@ -186,7 +186,8 @@ def boot_eta2(cell_rows: list[dict], axis_key: str, n_boot: int = N_BOOT,
     """
     if not cell_rows:
         return {"mean": float("nan"), "lo": float("nan"),
-                "hi": float("nan"), "sd": float("nan")}
+                "hi": float("nan"), "sd": float("nan"),
+                "n_boot": 0, "n_invalid": n_boot, "status": "DEGENERATE"}
     # We need access to per-cell g-level rewards for resampling
     # Re-build from cell_rows by tracking the original sample count
     rng = random.Random(seed)
@@ -212,7 +213,8 @@ def boot_eta2(cell_rows: list[dict], axis_key: str, n_boot: int = N_BOOT,
             etas.append(res["eta2"])
     if not etas:
         return {"mean": float("nan"), "lo": float("nan"),
-                "hi": float("nan"), "sd": float("nan")}
+                "hi": float("nan"), "sd": float("nan"),
+                "n_boot": 0, "n_invalid": n_boot, "status": "DEGENERATE"}
     etas.sort()
     return {
         "mean": statistics.fmean(etas),

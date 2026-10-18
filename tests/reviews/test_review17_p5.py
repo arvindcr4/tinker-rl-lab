@@ -136,3 +136,11 @@ def test_iter185_unknown_lengths_and_count_scope(tmp_path, monkeypatch):
     assert result['sampled_tokens']==160
     assert result['std_completion_len']==0
     assert not m.valid_field({'mean_reward':'nan'}, 'mean_reward')
+
+
+def test_all_invalid_bootstrap_reports_counts():
+    m=module('p5_stack_conditioning_eta2')
+    rows=[dict(method='a',step=0,prompt=0,cell_mean=1)]
+    result=m.boot_eta2(rows,'method',n_boot=20)
+    assert result['n_boot']==0 and result['n_invalid']==20
+    assert result['status']=='DEGENERATE'

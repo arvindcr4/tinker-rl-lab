@@ -133,8 +133,9 @@ def fit_2p(t: np.ndarray, y: np.ndarray) -> dict:
         r2 = 1.0 - ss_res / ss_tot if ss_tot > 0 else float("nan")
         lam_at_bound = int(lam >= 9.999)
     except Exception:  # noqa: BLE001
-        r_max, lam, rmse, r2 = float("nan"), float("nan"), float("nan"), float("nan")
-        lam_at_bound = 1
+        return dict(R_max=float("nan"), lam=float("nan"), t_80=float("nan"),
+                    rmse=float("nan"), r2=float("nan"), lam_at_bound=1,
+                    aicc=float("nan"), status="fit_failed")
     t_80 = float(-math.log(0.2) / lam) if (lam and not math.isnan(lam) and lam > 0) else float("nan")
     # AICc (Gaussian residual assumption)
     k = 2
@@ -145,7 +146,7 @@ def fit_2p(t: np.ndarray, y: np.ndarray) -> dict:
     aic = 2 * k - 2 * ll
     aicc = aic + (2 * k * (k + 1)) / max(n - k - 1, 1)
     return dict(R_max=r_max, lam=lam, t_80=t_80, rmse=rmse, r2=r2,
-                lam_at_bound=lam_at_bound, aicc=aicc)
+                lam_at_bound=lam_at_bound, aicc=aicc, status="available")
 
 
 def fit_3p(t: np.ndarray, y: np.ndarray) -> dict:
@@ -211,6 +212,13 @@ def fit_3p(t: np.ndarray, y: np.ndarray) -> dict:
     t_80 = float(-math.log(0.2) / lam) if (lam and not math.isnan(lam) and lam > 0) else float("nan")
     best["t_80"] = t_80 if best["identifiable"] else float("nan")
     return best
+
+
+def comparison_winner(fit_2p, fit_3p):
+    """A failed comparator cannot win through the false branch of NaN < x."""
+    if not all(np.isfinite(f["aicc"]) for f in (fit_2p, fit_3p)):
+        return "not_evaluable"
+    return "3p" if fit_3p["aicc"] < fit_2p["aicc"] else "2p"
 
 
 def main() -> None:
@@ -308,11 +316,11 @@ def main() -> None:
     for name in MODELS:
         f2 = fits_2p[name]
         f3 = fits_3p[name]
-        wins_3p = f3["aicc"] < f2["aicc"]
+        winner = comparison_winner(f2, f3)
         aic_rows.append([
             name, f"{f2['aicc']:.2f}", f"{f3['aicc']:.2f}",
             f"{f3['aicc'] - f2['aicc']:.2f}",
-            "3p" if wins_3p else "2p",
+            winner,
         ])
     # Summary row: how many anchors prefer 3p?
     n_3p_wins = sum(1 for r in aic_rows if r[4] == "3p")

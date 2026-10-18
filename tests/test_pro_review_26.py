@@ -108,3 +108,17 @@ def test_permutation_main_undefined_is_not_significant(tmp_path, monkeypatch, ca
         assert test['status'] == 'not_evaluable'
         assert np.isnan(test['p_two_sided'])
         assert test['rejects_H0_at_0.05'] is False
+
+
+def test_offset_comparison_optimizer_failure_is_unavailable(monkeypatch):
+    m = importlib.import_module('scaling_law_iter137')
+    def fail(*args, **kwargs): raise RuntimeError('optimizer failed')
+    monkeypatch.setattr(m, 'curve_fit', fail)
+    result = m.fit_2p(np.arange(1., 11.), np.linspace(.2, .6, 10))
+    assert result['status'] == 'fit_failed'
+    assert np.isnan(result['aicc'])
+    assert np.isnan(result['t_80'])
+    assert m.comparison_winner(result, {'aicc': 1.}) == 'not_evaluable'
+    assert m.comparison_winner({'aicc': 1.}, result) == 'not_evaluable'
+    assert m.comparison_winner(result, result) == 'not_evaluable'
+    assert m.comparison_winner({'aicc': 2.}, {'aicc': 1.}) == '3p'

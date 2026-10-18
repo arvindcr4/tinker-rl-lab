@@ -53,3 +53,7 @@ repository-level `platform_hybrid/experiments/results` directory. The renderer
 uses the producer's actual output path constants. A synthetic main-to-main test
 writes only temporary data and verifies a real figure from the generated table;
 it also asserts the default root contract. No historical artifacts were run.
+
+Shared average precision now removes nonfinite scores and invalid binary labels
+before grouping ties, and rejects unequal input shapes. A NaN score formerly
+caused a nonadvancing loop or division by zero depending on its position.

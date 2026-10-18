@@ -26,7 +26,11 @@ def auc(scores, labels):
 
 
 def average_precision(scores, labels):
-    pairs = sorted(zip(scores, labels), reverse=True)
+    scores, labels = np.asarray(scores, float), np.asarray(labels, float)
+    if scores.ndim != 1 or labels.shape != scores.shape:
+        raise ValueError("scores and labels must be equally sized one-dimensional arrays")
+    mask = np.isfinite(scores) & np.isin(labels, [0, 1])
+    pairs = sorted(zip(scores[mask], labels[mask]), reverse=True)
     positive = sum(label == 1 for _, label in pairs)
     if not positive:
         return float('nan')

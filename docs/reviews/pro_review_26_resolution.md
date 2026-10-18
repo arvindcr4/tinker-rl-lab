@@ -33,3 +33,7 @@ unavailable p-values and non-rejection, with explicit metadata status. NaN
 comparisons can no longer generate a spurious minimum Monte Carlo p-value.
 The generic fixed conclusion was replaced by an interpretation tied to the
 per-regression results. Four temporary-input main tests cover these cases.
+
+A follow-up failure-injection test covers the iter137 two-parameter comparator:
+optimizer failure returns a fixed unavailable schema, and either unavailable
+AICc makes the comparison not evaluable rather than awarding the failed 2p fit.

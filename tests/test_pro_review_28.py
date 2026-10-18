@@ -270,3 +270,12 @@ def test_iter50_producer_renderer_chain(tmp_path, monkeypatch):
     renderer.main()
     assert (tmp_path/'figures/zvf_iter50.png').is_file()
     assert float(renderer.read_rows(producer.OUT_LAGGED)[0]['r']) < 0
+
+
+def test_average_precision_nonfinite_scores_do_not_hang():
+    from _review28_statistics import average_precision
+    assert average_precision([.5, np.nan], [1, 0]) == 1.
+    assert average_precision([np.nan, .5], [0, 1]) == 1.
+    assert np.isnan(average_precision([np.nan], [1]))
+    assert average_precision([.5, np.inf, .1], [1, 1, 2]) == 1.
+    with pytest.raises(ValueError): average_precision([.5], [1, 0])

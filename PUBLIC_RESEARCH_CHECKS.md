@@ -6,11 +6,11 @@ From the repository root, run:
 make public-check PYTHON=python3
 ```
 
-Python 3.11 or later and Make are sufficient. No package installation, model,
+Python 3.11 or later, Git with the pinned historical commit available, and Make are sufficient. No package installation, model,
 GPU, account access, network request or TeX rebuild is involved. Without Make:
 
 ```sh
-python3 -B tools/check_public_release.py
+python3 -B tools/check_public_release.py --archived
 python3 -B tools/check_public_results.py
 python3 -B -m unittest discover -s tests -p 'test_public*.py' -v
 ```
@@ -21,10 +21,13 @@ to inspect another local checkout. They never rewrite a manifest, ledger or PDF.
 
 ## What the checks establish
 
-1. The reviewed 3 October snapshot's file inventory, byte counts and SHA-256
+1. The archived snapshot at commit `569995f5b356d4663654ade81b6a159f58cf5f9a`
+   is materialized in temporary storage and its inventory, byte counts and SHA-256
    digests match `reports/public_revision_2026-10-03/PUBLICATION_MANIFEST.json`.
-   Copied scientific definitions match their exact-source provenance digests.
-   Local links from the public entry-point READMEs resolve.
+   The working manifest must remain byte-identical to the archived manifest.
+   Separately labeled current-source checks verify copied definitions against
+   current provenance and check current navigation links. Those checks do not
+   certify the edited working tree as the frozen publication.
 2. Included scientific records are internally consistent across the summary,
    JSON and CSV ledgers, document projections and selected source bindings.
    The frozen primary endpoint and the separately classified conservative
@@ -34,12 +37,18 @@ to inspect another local checkout. They never rewrite a manifest, ledger or PDF.
 
 The original release manifest remains an unchanged historical input. These new
 verification tools and CI wiring are subsequent Git-tracked additions, outside
-that snapshot's allowlist. The check fails if covered release files change;
-do not refresh hashes merely to make it pass. An intentional document or data
+that snapshot's allowlist. The default `python3 -B tools/check_public_release.py`
+still checks the working tree strictly and currently fails because authorized
+source edits differ from frozen bytes. The explicit `--archived` mode verifies
+the historical publication and reports `working_tree_release_certified: false`;
+it never falls back to the working tree when Git history is unavailable.
+Do not refresh hashes merely to make either check pass. An intentional document or data
 revision requires a separately reviewed publication update.
 
 The dedicated `public-research` CI job runs the same command on Python 3.11,
-3.12 and 3.13. The normal non-LaTeX test suite also discovers these regressions.
+3.12 and 3.13 with full Git history. Shallow checkouts must obtain the pinned
+commit before running archived checks; missing history fails closed. The normal
+non-LaTeX test suite also discovers these regressions.
 A local pass does not imply that hosted CI has run or passed.
 
 Run `make review-check PYTHON=python3` separately before claiming the current PDF

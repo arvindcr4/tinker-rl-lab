@@ -77,8 +77,10 @@ submission-check:
 
 # Standard library only: use `make public-check PYTHON=python3` without uv or a GPU.
 # The 2026-10-03 manifest is read-only; this target never refreshes expected hashes.
-# The unittest suite runs both checkers and both CLIs against the real repository.
+# The historical release gate explicitly targets its pinned Git snapshot; current
+# source checks run separately and do not certify a frozen working-tree release.
 public-check:
+	$(PYTHON) -B tools/check_public_release.py --archived
 	$(PYTHON) -B -m unittest discover -s tests -p 'test_public*.py' -v
 
 # Separate publication-review gate: a frozen inventory match is not proof that

@@ -3,7 +3,7 @@
 %
 % Pillar 2: cross-experiment ZVF diagnostic. Aggregates ZVF streams
 % across the entire measured run matrix (Qwen3-8B/GSM8K, G-sweep,
-% variance-mitigation methods, cross-tool tool-use runs, scaling-law
+% cross-tool tool-use runs, scaling-law
 % three-phase table, DRGRPO-vs-GRPO paired comparison, and the
 % shared-stack PPO/GRPO study), computes a deterministic failure
 % taxonomy, and correlates per-experiment mean-ZVF against last-10
@@ -16,7 +16,7 @@
 %REVIEW-ADDR: P2-cross-experiment
 % =====================================================================
 
-\section{ZVF as a Cross-Library Failure Diagnostic}
+\section{ZVF as a Cross-Experiment Failure Diagnostic}
 \label{sec:zvf-cross-experiment}
 
 Appendix~\ref{sec:appendix:zvf-formalization} formalizes ZVF and
@@ -52,10 +52,9 @@ and $\ell < 0.35$ requires that the run \emph{lost} it by the end. The
 
 \subsection{Per-Cell Summary}
 
-Table~\ref{tab:zvf-failure-counts} aggregates the
-23 distinct (experiment, model, $G$) cells that carry at least one
-non-\texttt{NA} heldout-accuracy value. The full 80-row machine-readable
-form is in \texttt{experiments/results/zvf\_summary.tsv}. Three
+Table~\ref{tab:zvf-failure-counts} aggregates the 35 rows of
+\texttt{experiments/results/zvf\_summary.tsv} that come from measured training or
+evaluation runs. Three
 signature cells are highlighted below; full numerical details appear
 inline in the per-experiment rows of
 \texttt{experiments/results/zvf\_summary.tsv} (the on-disk
@@ -70,17 +69,17 @@ paper-embedded table is collapsed for space).
 Failure label & $n$ rows & median mean-ZVF & median peak & median last10 \\
 \midrule
 collapse  &  3 & 1.0000 & 0.0000 & 0.0000 \\
-drift     &  5 & 0.1087 & 0.4083 & 0.0215 \\
-plateau   & 42 & 0.2219 & 0.4040 & 0.3972 \\
+drift     &  1 & --     & 0.9950 & 0.7203 \\
+plateau   &  1 & --     & 0.2854 & 0.2854 \\
 converged & 30 & 0.7672 & 0.9850 & 0.9765 \\
 \midrule
-all 80 rows & -- & 0.2964 & 0.4111 & 0.4034 \\
+all 35 rows & -- & 0.7711 & 0.9850 & 0.9714 \\
 \bottomrule
 \end{tabular}
-\caption{Cross-experiment failure counts over the full 80-row
-\texttt{zvf\_summary.tsv} (the per-\emph{seed} long-form). The
-withdrawn 23-cell correlation in \S\ref{sec:zvf-cross-experiment:corr}
-pools those 80 rows down to one cell per (experiment, model, $G$).
+\caption{Cross-experiment failure counts over the 35 measured rows of
+\texttt{zvf\_summary.tsv} (per-seed long form: Qwen3-8B GSM8K tensors, the
+group-size sweep, Dr.~GRPO vs GRPO, same-stack PPO/GRPO, the scaling-law anchors,
+and the two tool-use cells). ``--'' marks rows without logged per-step ZVF.
 The five \texttt{scaling\_law\_three\_phase} rows are three-phase
 segmentation summaries; we classify them on their peak/late
 segment-mean accuracies (from
@@ -89,7 +88,8 @@ segment-mean accuracies (from
 on the segmentation BIC that the merged summary stores in the shared
 peak/last10 columns, which places one (Nemotron-120B) in
 \texttt{collapse}, one (Qwen3-8B) in \texttt{plateau}, and three
-(Qwen3.5-4B, Llama-3.1-8B, DeepSeek-V3.1) in \texttt{converged}. The
+(Qwen3.5-4B, Llama-3.1-8B, DeepSeek-V3.1) in \texttt{converged}. The drift row
+is one same-stack PPO seed. The
 collapse-row medians of $0$ for peak/last10 reflect the two tool-use
 zero-signal cells (peak $=$ last10 $= 0$); Nemotron is the only
 collapse row with a nonzero peak. Generated from
@@ -123,141 +123,31 @@ segment-mean accuracies. Per-step ZVF was not recorded for this run, so
 the row carries \texttt{NA} in the ZVF columns but is preserved in the
 taxonomy for cross-reference.
 
-\paragraph{MCGRPO / GIFT / AReaL / ES drift.}
-All four methods in \texttt{experiments/results/variance\_mitigation.tsv}
-reach $\ell < 0.03$ from a peak $p \approx 0.40$, so they are
-\texttt{drift}: the runs \emph{learned} something but lost it within
-$\approx 30$ steps. Mean-ZVF over the trajectory averages
-$0.10$--$0.13$, well below the GRPO baseline ($0.48$) on the same
-data; we discuss the implication in
-the companion paper on variance honesty.
-
 \subsection{Correlation With Heldout Outcome (withdrawn)}
 \label{sec:zvf-cross-experiment:corr}
 
 An earlier revision reported a Spearman correlation of $\rho=0.27$
 (95\% bootstrap CI $[-0.37,0.88]$) between per-cell mean ZVF and last-10
 outcome over ``23 cells''. \textbf{We withdraw it as a finding.} Only 17
-of the 23 cells carry a finite ZVF; 9 of those 17 are rows of the
-simulation projection \texttt{variance\_mitigation.tsv} (not training
-runs; see the evidence boundary below); 2 are $G{=}1$ tool-use cells whose
-ZVF is $1$ by construction; and the outcome column mixes held-out accuracy,
-training reward, and synthetic-task accuracy across different tasks and
-models. Restricted to the 8 finite non-simulated cells the coefficient is
-$-0.37$ ($p=0.36$), i.e.\ the sign is not even stable. No ZVF--outcome
-association is claimed. The point-biserial association with the
-\texttt{collapse} label ($0.62$) is likewise dominated by the two $G{=}1$
-tool-use cells and is reported only as a description of the table.
+of the 23 cells carried a finite ZVF, and only 8 of those came from measured
+training runs; 2 are $G{=}1$ tool-use cells whose ZVF is $1$ by construction; and
+the outcome column mixes held-out accuracy, training reward, and synthetic-task
+accuracy across different tasks and models. Restricted to the 8 measured cells
+the coefficient is $-0.37$ ($p=0.36$), i.e.\ the sign is not even stable. No ZVF--outcome
+association is claimed, and no association with the \texttt{collapse} label
+either: the only collapse cells with logged ZVF are the two $G{=}1$ tool-use
+cells.
 
-\subsection{Cross-Library Diagnostic vs AERO/RL-ZVP}
+\subsection{Relation to AERO and RL-ZVP}
 \label{sec:zvf-cross-experiment:aero}
 
 Zhang \etal~\cite{zhang2026aero} introduce AERO, while
-Le \etal~\cite{le2025rlzvp} introduce RL-ZVP. Both methods target
-zero-variance prompts with adaptive rollout or advantage-shaping mechanisms.
-Their central empirical claim is that vanilla GRPO suffers from
-``zero-variance prompts''---groups where every rollout earns the
-same reward and therefore have zero centered reward contrast in the stated
-GRPO estimator, rather than necessarily a zero total gradient---and that this
-failure mode can be detected and mitigated at the group-size
-level. The ZVF diagnostic studied in this section is the prevalence metric that
-these methods predict should differ across conditions.
-
-\paragraph{Evidence boundary.} The rows in
-\texttt{experiments/results/variance\_mitigation.tsv} are a simulation
-projection, not model-training runs. We use them only to illustrate expected
-diagnostic behavior. They cannot support an empirical ranking, mitigation
-claim, or statement that AERO or RL-ZVP works in this repository.
-
-\begin{table}[ht]
-\centering
-\small
-\begin{tabular}{lrrrrr}
-\toprule
-Library & $n_{\text{seeds}}$ & mean-ZVF & max-ZVF & collapse-seeds & mean-$\ell$ \\
-\midrule
-GRPO      & 5 & 0.481 & 0.482 & 3/5 & 0.379 \\
-AERO      & 5 & 0.220 & 0.222 & 0/5 & 0.399 \\
-CPPO      & 5 & 0.295 & 0.298 & 0/5 & 0.392 \\
-NGRPO     & 5 & 0.300 & 0.304 & 0/5 & 0.387 \\
-SCAFGRPO  & 5 & 0.317 & 0.322 & 0/5 & 0.409 \\
-MCGRPO    & 5 & 0.146 & 0.153 & 0/5 & 0.322 \\
-GIFT      & 5 & 0.114 & 0.118 & 0/5 & 0.326 \\
-AREAL     & 5 & 0.121 & 0.124 & 0/5 & 0.328 \\
-ES        & 5 & 0.114 & 0.119 & 0/5 & 0.316 \\
-\bottomrule
-\end{tabular}
-\caption{Per-library ZVF aggregation across the variance-mitigation
-corpus (GRPO + 8 mitigation methods; 5 seeds each, math-verifiable
-task, $G{=}8$). ``collapse-seeds'' counts the number of seeds in
-which the underlying per-step \texttt{collapse} flag ever fires
-(heldout-acc drops to 0 mid-run). mean-$\ell$ is the
-deterministic-tally last-10-window mean heldout accuracy. Generated
-by \texttt{scripts/zvf\_diagnostic.py}. Source TSV:
-\texttt{experiments/results/zvf\_by\_library.tsv}.}
-\label{tab:zvf-by-library-diagnostic}
-\end{table}
-
-\paragraph{Reviewed-record correction.} Any cross-library AERO/GRPO comparison
-below is later or heterogeneous evidence and not an algorithm ranking. In particular, do not use aggregate GU fields from
-\texttt{zvf\_audit\_summary.json}: submitted GU means $1-\mathrm{ZVF}$.
-The headline read of Table~\ref{tab:zvf-by-library} is the
-contrast between AERO and the GRPO baseline:
-
-\begin{itemize}
-\item AERO drives mean-ZVF to $0.220$ vs.\ GRPO's $0.481$, a
-      $54\%$ relative reduction that maps directly onto the
-      zero-variance-prompt phenomenon AERO is designed to mitigate.
-\item Three of five GRPO seeds exhibit a per-step collapse flag
-      (heldout-acc hits zero mid-trajectory); zero of five AERO
-      seeds do. Both AERO and GRPO end in the \texttt{plateau}
-      bucket under our deterministic classifier (peak $<0.5$ for
-      both), so this contrast is invisible to the peak-vs-last10
-      taxonomy alone -- it only surfaces when the per-step
-      \texttt{collapse} flag is reported.
-\item mean-$\ell$ is approximately equal for the two
-      ($\text{AERO}=0.399$ vs $\text{GRPO}=0.379$, within $0.02$
-      absolute); the diagnostic value of ZVF here is \emph{not}
-      that AERO converges higher, but that it avoids the
-      catastrophic mid-run collapse that GRPO exhibits on three
-      seeds. This is consistent with AERO's qualitative claim.
-\end{itemize}
-
-The other eight mitigation methods (CPPO, NGRPO, SCAFGRPO,
-MCGRPO, GIFT, AREAL, ES) all reduce mean-ZVF below GRPO's
-$0.481$ and all avoid the per-step collapse flag. SCAFGRPO has
-the highest heldout-accuracy among them ($0.409$), which matches
-the original SCAFGRPO claim of suppressing all-zero groups at the
-reward-landscape level.
-
-\begin{figure}[ht]
-\centering
-\includegraphics[width=0.95\linewidth]{figures/zvf_by_library.png}
-\caption{Cross-library ZVF diagnostic. \textbf{Left:} mean-ZVF per
-library; AERO (purple) is $54\%$ below the GRPO baseline (dark
-slate). \textbf{Right:} stacked failure-tally per library
-(red $=$ collapse, orange $=$ drift, gray $=$ plateau,
-green $=$ converged) at the per-(run,seed) granularity. Generated
-by \texttt{scripts/zvf\_diagnostic.py}; source:
-\texttt{experiments/results/zvf\_by\_library.tsv}.}
-\label{fig:zvf-by-library}
-\end{figure}
-
-\begin{figure}[ht]
-\centering
-\includegraphics[width=0.66\linewidth]{figures/zvf_vs_failure.png}
-\caption{Per-experiment mean-ZVF (x-axis) versus last-10-window
-heldout accuracy (y-axis), colored by the deterministic failure
-taxonomy (red $=$ collapse, orange $=$ drift, gray $=$ plateau,
-green $=$ converged). Three cells of interest are highlighted by their
-corner positions: cross-tool tool-use collapses (top-right at ZVF
-$=1$, last10 $=0$), the variance-mitigation \texttt{drift} cluster
-(bottom-left ZVF $\in [0.10, 0.22]$, last10 $\in [0.02, 0.03]$),
-and the GSM8K / arithmetic converged cells (diagonal at ZVF
-$\in [0.6, 0.84]$, last10 $\in [0.69, 0.98]$). Generated by
-\texttt{scripts/zvf\_diagnostic.py}.}
-\label{fig:zvf-vs-failure}
-\end{figure}
+Le \etal~\cite{le2025rlzvp} introduce RL-ZVP. Both target zero-variance prompts,
+by adaptive rollout allocation or by advantage shaping on those prompts. ZVF is
+the prevalence metric these methods act on. Our matched comparison
+(Section~\ref{sec:zvf-cross-library}) includes AERO but not RL-ZVP: AERO's mean ZVF
+($0.70$) and held-out accuracy ($0.632$) match GRPO's on that 30-step horizon,
+at $44\%$ of the generated tokens.
 
 \subsection{Practical Diagnostic Recipe}
 
@@ -274,21 +164,22 @@ a useful diagnostic for a given RL post-training run:
       recipe is conservative: it flags only the regime where most
       prompts are no longer informative.
 \end{enumerate}
-The 42 \texttt{plateau} rows in our matrix (median
-$\ell = 0.40$, median ZVF $= 0.22$) sit below the $0.6$
-trailing-window trigger, so the recipe stays silent on them; the
-collapse rows with recorded per-step ZVF (the two tool-use cells)
-reach ZVF $= 1.0$. The diagnostic is therefore loud on collapse and
-silent on plateau -- the asymmetry matches the gating behavior of GRPO
-at ceiling accuracy.
+Raw ZVF alone cannot apply this rule: the 30 converged rows in our matrix have
+median ZVF $0.77$, above the trigger, because near-ceiling runs saturate into
+all-correct groups. The qualifier ``before the heldout curve has plateaued near
+its peak'' is therefore essential, and the signed split of
+Section~\ref{sec:zvf-signed} separates the two cases directly (all-correct
+saturation versus all-wrong starvation). The collapse rows with recorded per-step
+ZVF (the two tool-use cells) reach ZVF $=1.0$ with zero reward, i.e.\ entirely
+all-wrong groups.
 
 \paragraph{Why this is evidence and not a circular claim.}
 The collapse label is computed only from peak vs.\ last-10, never
 from ZVF. The correlation between ZVF and the collapse label is
 therefore not a fit. With so few collapse cells (two of them $G{=}1$
-tool-use cells whose ZVF is $1$ by construction), what the table shows is a
-\emph{separation} (collapse rows ZVF $=1$, plateau rows median ZVF $0.22$),
-not an estimated association.
+tool-use cells whose ZVF is $1$ by construction) and converged rows that also
+carry high ZVF (median $0.77$), raw ZVF does not separate collapse from
+convergence in this matrix; only its sign does.
 
 \paragraph{Limitations.}
 We deliberately do \emph{not} report partial correlations

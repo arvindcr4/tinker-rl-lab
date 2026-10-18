@@ -1,93 +1,92 @@
 % ---------------------------------------------------------------------------
 % Pillar 2: Zero-Variance Fraction diagnostic
-% Iter 26 — cross-library, cross-scale elevation vs AERO (arXiv 2602.14338).
-% Materialised from scripts/zvf_diagnostic.py outputs:
-%   experiments/results/zvf_summary.tsv
-%   experiments/results/zvf_by_library.tsv
-%   experiments/results/zvf_failure_correlation.tsv
-%   figures/zvf_vs_failure.pdf
-%   figures/zvf_by_library.pdf
+% Variance-mitigation comparison on the real e1 confirmatory campaign
+% (W&B arvindcr4-pes-university/tinker-rl-lab, e1-confirmatory-*).
+% Analysis: platform_modal/scripts/e1_variance_mitigation_analysis.py
+%   -> experiments/results/e1_variance_mitigation_summary.tsv
+%   -> figures/e1_variance_mitigation.png
+% An earlier revision of this section used a simulated variance-mitigation
+% projection; it has been removed (Deep Review 6c172429).
 % ---------------------------------------------------------------------------
 
-\subsection{Cross-Library ZVF Diagnostic vs AERO}
+\subsection{ZVF Under Variance-Mitigation Variants: a Matched 8-Seed Comparison}
 \label{sec:zvf-cross-library}
-We elevate ZVF from a per-experiment sanity check to a
-\emph{cross-library} diagnostic by aggregating the per-step ZVF emitted
-by every mitigation method we ran on a single managed runtime (Tinker
-rollout workers, identical reward parser, identical $\beta{=}0$ KL, and
-identical chat template). The aggregation collapses
-$N{=}80$ (experiment, condition, seed) rows into one row per
-\emph{library} (mitigation method or experiment family), reported in
-\texttt{experiments/results/zvf\_by\_library.tsv}.
+Several GRPO variants act on zero-variance groups or on GRPO's normalisation:
+DAPO~\citep{yu2025dapo} over-samples and filters zero-variance groups,
+AERO~\citep{zhang2026aero} adapts rollout allocation,
+Dr.~GRPO~\citep{tong2025drgrpo} removes the $1/\sigma$ and length normalisers, and
+GSPO~\citep{qwen2025gspo} uses sequence-level importance ratios. We compare them
+with vanilla GRPO in a matched campaign (\texttt{e1-confirmatory-*}, exported to
+\texttt{experiments/results/e1\_confirmatory\_wandb\_export.tsv}): Qwen3-8B on GSM8K
+with an exact-match reward, TRL \texttt{GRPOTrainer}, $G{=}4$ generations per
+prompt, $30$ optimizer steps at learning rate $10^{-6}$, $\beta{=}0$, maximum
+completion length $1024$, temperature $1.0$. All five arms use the \emph{same}
+eight seeds ($11, 23, 37, 53, 71, 89, 107, 131$), so every contrast with GRPO is
+paired by seed, and each run is scored on the same $500$ held-out GSM8K problems.
+Adapters are released on the Hugging Face Hub (repository names in the export).
 
 \begin{table}[htbp]
 \centering
 \small
 \setlength{\tabcolsep}{4pt}
-\begin{tabular}{lrrrrr}
+\begin{tabular}{lcccccr}
 \hline
-Library          & Mean ZVF & Mean last-10 acc & Collapse & Drift & Plateau \\
+Arm & Held-out acc.\ (95\% CI) & $\Delta$ vs GRPO (95\% CI) & paired $p$ & TOST $p$ & Mean ZVF & Gen.\ tokens \\
 \hline
-GRPO (vanilla)   & 0.481    & 0.379  & 0/5 & 0/5 & 5/5 \\
-AERO             & 0.220    & 0.399  & 0/5 & 0/5 & 5/5 \\
-CPPO             & 0.295    & 0.392  & 0/5 & 0/5 & 5/5 \\
-NGRPO            & 0.300    & 0.387  & 0/5 & 0/5 & 5/5 \\
-SCAFGRPO         & 0.317    & 0.409  & 0/5 & 0/5 & 5/5 \\
-MCGRPO           & 0.146    & 0.322  & 0/5 & 1/5 & 4/5 \\
-GIFT             & 0.114    & 0.326  & 0/5 & 1/5 & 4/5 \\
-AREAL            & 0.121    & 0.328  & 0/5 & 1/5 & 4/5 \\
-ES               & 0.114    & 0.316  & 0/5 & 1/5 & 4/5 \\
+GRPO    & $0.633$ $[0.625, 0.641]$ & ---                             & ---    & ---     & $0.693$ & $422$k \\
+AERO    & $0.632$ $[0.629, 0.636]$ & $-0.001$ $[-0.010, +0.009]$ & $0.86$ & $0.001$ & $0.700$ & $184$k \\
+DAPO    & $0.634$ $[0.628, 0.640]$ & $+0.001$ $[-0.006, +0.008]$ & $0.76$ & $<0.001$ & $0$ & $420$k \\
+Dr.~GRPO & $0.631$ $[0.623, 0.639]$ & $-0.002$ $[-0.013, +0.009]$ & $0.67$ & $0.003$ & $0.712$ & $422$k \\
+GSPO    & $0.638$ $[0.633, 0.643]$ & $+0.005$ $[-0.004, +0.014]$ & $0.21$ & $0.002$ & $0.693$ & $422$k \\
 \hline
 \end{tabular}
-\caption{Mean ZVF per library on the math-verifiable-RL suite simulation projection
-($K{=}8$, 5 seeds each, 100 rollout steps). AERO halves the per-step
-zero-variance fraction relative to vanilla GRPO ($0.22$ vs $0.48$)
-and ties SCAFGRPO on last-10 accuracy ($0.399$ vs $0.409$).
-Source: \protect\path{experiments/results/zvf_by_library.tsv}; rows derived from the
-variance-mitigation dry-run projection should be read as synthetic, not as
-independent real-library deployments.}
+\caption{Matched 8-seed variance-mitigation comparison (Qwen3-8B, GSM8K, 30 steps).
+Held-out accuracy on $500$ GSM8K problems; CIs are $t$-based over seeds ($\nu{=}7$).
+$\Delta$ and the paired $t$-test use per-seed differences from GRPO; TOST is a
+paired two one-sided test at margin $\epsilon{=}0.02$. Mean ZVF is the per-run
+average over training steps, averaged over seeds; DAPO's is $0$ by construction
+because it discards zero-variance groups and re-samples (mean $1{,}734$ rollouts per
+run versus $480$ for GRPO). Generated tokens are means per run. Source:
+\texttt{experiments/results/e1\_variance\_mitigation\_summary.tsv}.}
 \label{tab:zvf-by-library}
 \end{table}
 
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.95\linewidth]{figures/e1_variance_mitigation.png}
+\caption{Matched 8-seed comparison. (A) Per-seed held-out accuracy (points) with
+mean and 95\% CI (black). (B) Per-seed mean ZVF over training; bars are arm means.
+Source: \texttt{platform\_modal/scripts/e1\_variance\_mitigation\_analysis.py}.}
+\label{fig:zvf-by-library}
+\end{figure}
+
 \paragraph{Reading the table.}
-Across the eight mitigation libraries we ran, vanilla GRPO shows the
-highest mean ZVF ($0.48$, half of rollouts land in zero-contrast groups).
-AERO (arXiv 2602.14338) cuts this in half to $0.22$ and is the
-\emph{only} library that ties vanilla GRPO's last-10 accuracy while
-halving its gradient starvation. The four sub-vanilla libraries
-(MCGRPO, GIFT, AREAL, ES) all further reduce ZVF but each introduces a
-1-of-5 drift failure --- none reach higher last-10 accuracy than
-vanilla GRPO. CPPO, NGRPO, and SCAFGRPO sit in between on both axes.
+No variant differs from GRPO on held-out accuracy: every paired difference is
+within $\pm0.005$, no paired $t$-test approaches significance, and every variant
+is equivalent to GRPO within $\pm0.02$ by seed-level TOST. Mean ZVF is
+$0.69$--$0.71$ for GRPO, AERO, Dr.~GRPO and GSPO, so about seven in ten groups carry
+no group-relative signal in every arm that keeps zero-variance groups. DAPO
+eliminates them entirely, yet its held-out accuracy is the same. AERO reaches the
+same accuracy with $44\%$ of GRPO's generated tokens.
 
-\paragraph{Honest scope.}
-This cross-library comparison shares \emph{rollout workers, reward
-parser, KL coefficient, and template} across all nine libraries, so
-differences in Table~\ref{tab:zvf-by-library} reflect the mitigation
-mechanism, not confounding infrastructure. It does \emph{not} cover
-Dr. GRPO / DPO-style bias correction (handled in Pillar~4) or
-group-size variation (handled in Pillar~3); it isolates the
-variance-mitigation axis on a single math-verifiable task.
+\paragraph{What this does and does not show.} Removing zero-variance groups (DAPO)
+or changing the normaliser (Dr.~GRPO, GSPO) did not change held-out accuracy in
+this regime, so a high ZVF was not by itself a measurable cost here. The regime is
+narrow: $30$ steps at learning rate $10^{-6}$ is very short training, and no
+base-model held-out score on these $500$ problems exists, so we cannot say how far
+any arm moved from its starting point. The null therefore rules out
+\emph{large} short-horizon differences, not effects that would appear over longer
+training, at higher learning rates, or on harder tasks. Other variance-mitigation
+methods (CPPO, Scaf-GRPO, NGRPO, MC-GRPO, ES, AReaL, GIFT) have no completed runs
+in this campaign and are not evaluated.
 
-\subsection{What ZVF Predicts Above and Beyond Mean Reward}
+\subsection{What ZVF Adds Beyond Mean Reward}
 \label{sec:zvf-residualised}
-The naive correlation between mean ZVF and last-10 accuracy
-($r{=}0.22$ across pooled rows; bootstrap 95\% CI $[-0.29,0.94]$,
-$n{=}23$) is \emph{insignificant} once the tool-use collapse endpoints
-are pooled with arithmetic runs --- mean reward already explains most
-of the axis. The cleaner question is whether ZVF carries
-\emph{residual} signal after regressing out mean reward.
-
-The residual diagnostic that exists on disk gives the opposite caution:
-after regressing out mean reward, residualised ZVF remains \emph{positively}
-associated with last-10 accuracy within the variance-mitigation slice
-($r=+0.80$, 95\% CI $[+0.54,+1.00]$;
-\texttt{experiments/results/zvf\_iter26\_residual.tsv}). We therefore do
-not treat ZVF as an incremental predictor above reward mean; the full pooled
-correlation breakdown is in \texttt{experiments/results/zvf\_failure\_correlation.tsv}.
-
-\paragraph{Limit.} Residualised coefficients are computed on aggregated
-per-experiment rows; per-step rows are autocorrelated (lag-1
-$\rho \approx 0.9$) and were deliberately aggregated first.
+ZVF and mean reward are mechanically related: more all-correct groups means
+higher reward and higher ZVF. We do not claim ZVF is an incremental predictor of
+outcome above mean reward, and the earlier pooled ZVF--outcome correlation is
+withdrawn (Section~\ref{sec:zvf-cross-experiment:corr}). Its value is
+interpretive, as the following case shows.
 
 \paragraph{The clearest case of ZVF-beyond-reward: the all-correct wall.}
 A two-seed matched-budget panel (2{,}560 rollouts per arm:
@@ -106,67 +105,25 @@ Artifacts: \texttt{tinker-runs/results/er2b\_*.json}.
 
 \subsection{Why We Treat ZVF as Diagnostic, Not Causal}
 \label{sec:zvf-caveat}
-Two consequences follow from the framing in
-\S\ref{sec:zvf-cross-library}--\S\ref{sec:zvf-residualised}.
 \begin{itemize}
-\item \textbf{Symptom, not cause.} ZVF rises \emph{after} the reward
-plateau in every collapse we measured (Nemotron-120B, tool-use
-$0\%$, MCGRPO seed 0); it is not the proximal cause of collapse, but
-the earliest cheap diagnostic we have for it. On this corpus the first-passage
-lead is short: ZVF saturates above $0.8$ before the collapse flag trips, but
-only by $1$--$3$ steps in the trajectory-level lead-time artifacts
-(\texttt{experiments/results/zvf\_leadtime\_summary.tsv};
-\texttt{experiments/results/zvf\_dynamics\_leadtime.tsv}). We therefore treat
-late-phase ZVF level, not lead time, as the operational signal.
-\item \textbf{Stack-controlled confound.} AERO's halving of ZVF on our
-runtime (Table~\ref{tab:zvf-by-library}) is a real, same-stack
-measurement; we do \emph{not} claim it transfers to other RL
-stacks without re-measurement. The opposite-direction gap between
-MCGRPO ($0.15$) and vanilla GRPO ($0.48$) suggests further
-variance-mitigation headroom exists.
+\item \textbf{Symptom, not cause.} In the collapses we measured (Nemotron-120B and
+the two tool-use cells) ZVF is high when reward is low; nothing in our data shows
+that ZVF precedes or causes collapse.
+\item \textbf{No outcome effect of removing it here.} In the matched comparison
+(Table~\ref{tab:zvf-by-library}) DAPO drives ZVF to zero without changing held-out
+accuracy, so on that short Qwen3-8B/GSM8K horizon ZVF did not limit the outcome.
 \end{itemize}
 
-\paragraph{Recommended use.} Report ZVF alongside mean reward in any
-GRPO/PPO ablation table; treat a $>0.3$ rise in mean ZVF over
-$10$ consecutive rollout steps as a \emph{warning} (not a failure
-trigger) that the rollout distribution may be collapsing onto a
-single mode for the current prompt batch.
+\paragraph{Recommended use.} Report ZVF alongside mean reward in any GRPO
+ablation table, together with its signed split (all-correct versus all-wrong
+groups, Section~\ref{sec:zvf-signed}), and read a high value as a statement about
+how many groups carry signal, not as a failure trigger.
 
 \subsection{Cross-References and Artifacts}
 \label{sec:zvf-artifacts}
-All numbers and figures cited above are regenerated from
-\texttt{scripts/zvf_diagnostic.py}, which itself reads only
-\texttt{experiments/results/\{tinker_gsm8k_zvf_*, groupsize_zvf_sweep,
-variance_mitigation, tool_code_reward_diagnostics,
-scaling_law_three_phase, drgrpo_vs_grpo, samestack_ppo_grpo\}}. The
-script's bootstrap-CI math uses $B{=}2000$ paired row resamples; the
-deterministic classifier for \texttt{failure_label} is defined at the top
-of the file (\S"Failure taxonomy") and re-used unchanged across the
-three produced TSVs.
-
-\paragraph{Figures.}
-\begin{itemize}
-\item \texttt{figures/zvf_vs_failure.pdf} --- per-(experiment, model,
-$G$) scatter of mean ZVF vs heldout accuracy, colored by
-deterministic collapse label (Fig.~\ref{fig:zvf-vs-failure}, this
-section).
-\item \texttt{figures/zvf_by_library.pdf} --- two-panel cross-library
-bar chart: mean ZVF (left, AERO highlighted) and failure-tally
-stacked bars (right).
-\end{itemize}
-
-\subsection{Iter 130: Unified ZVF Risk Index (withdrawn)}
-\label{sec:zvf-risk-index}
-\textbf{Withdrawn.} An earlier revision reported a three-channel ``ZVF risk
-index'' (magnitude, rolling lag-1 autocorrelation as a critical-slowing-down
-statistic~\citep{scheffer2009ews}, and drift slope) with cross-experiment AUROC
-$0.929$ and practitioner thresholds. Its 52-row panel combined the 45 simulated
-variance-mitigation trajectories (Section~\ref{sec:zvf-cross-library}) with
-seven run-level anchors entered with constant hand-set features: all five
-scaling-law anchors have identical mean ZVF ($0.95$), rolling lag-1 ($0.85$) and
-slope, and all are labelled \texttt{collapse}, which contradicts the per-anchor
-phases of Section~\ref{sec:zvf-scaling}. It
-therefore cannot validate a monitor, a threshold, or a stopping policy, and we
-make no claim from it. The artifacts
-(\texttt{platform\_modal/scripts/zvf\_diagnostic\_iter130.py},
-\texttt{experiments/results/zvf\_iter130\_*}) are retained only as an audit trail.
+The cross-experiment summary in Section~\ref{sec:zvf-cross-experiment} is
+regenerated by \texttt{platform\_modal/scripts/zvf\_diagnostic.py} from
+\texttt{experiments/results/\{tinker\_gsm8k\_zvf\_*, groupsize\_zvf\_sweep,
+tool\_code\_reward\_diagnostics, scaling\_law\_three\_phase, drgrpo\_vs\_grpo,
+samestack\_ppo\_grpo\}}; the matched comparison above by
+\texttt{platform\_modal/scripts/e1\_variance\_mitigation\_analysis.py}.

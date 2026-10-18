@@ -11,9 +11,11 @@ not contradictory.) Three limitations are load-bearing. First, ZVF is
 mechanically coupled to reward sparsity, group size, and baseline accuracy, so its
 correlations are partly bookkeeping rather than discovery; multivariate tests
 against reward mean, entropy, and divergence proxies are needed before any causal
-reading. Second, its strong association is with catastrophic \emph{collapse}, an
-easy target, and only weak with the graded held-out outcome that practitioners
-actually care about. Third, as an unsigned existence statistic it aliases mastery
+reading. Second, on our measured runs ZVF has no demonstrated association with
+outcome: the only logged collapses are $G{=}1$ tool-use cells, the pooled outcome
+correlation is withdrawn, and in a matched 8-seed comparison removing
+zero-variance groups entirely (DAPO) left held-out accuracy unchanged---although
+that comparison covers only 30 short training steps. Third, as an unsigned existence statistic it aliases mastery
 ($p \to 1$) with incapacity ($p \to 0$) and, as the cross-examination shows, can be
 driven to zero by sub-reward jitter (for example a small length penalty), falsely
 reporting a healthy batch. These are reasons to prefer magnitude- and sign-aware
@@ -23,10 +25,11 @@ the cross-examination sets.
 \section{Conclusion}
 \label{sec:p2-conclusion}
 The Zero-Variance Fraction is a useful, cheap, mechanistically grounded lens on
-when binary-reward GRPO stops producing within-group signal, and it reliably
-tracks collapse and drifts upward over training. It is not, on our data, a
-standalone predictor of final generalization, and its unsigned form conflates two
-opposite regimes. The constructive path forward is to measure the \emph{magnitude}
+when binary-reward GRPO stops producing within-group signal. It is not, on our
+data, a predictor of final generalization: in a matched comparison, four variants
+that remove, reweight or reshape zero-variance groups matched GRPO's held-out
+accuracy within $\pm0.005$ while ZVF ranged from $0$ to $0.71$. Its unsigned form
+also conflates two opposite regimes. The constructive path forward is to measure the \emph{magnitude}
 and \emph{sign} of within-group contrast rather than merely its existence, and to
 test such replacements as early-window leading indicators against held-out outcome.
 We release the per-group reward tensors precisely so that these stricter tests can

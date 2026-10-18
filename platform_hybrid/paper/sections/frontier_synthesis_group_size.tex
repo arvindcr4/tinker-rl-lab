@@ -26,8 +26,8 @@ Think). The exchange is a source of \emph{proposed theorems and
 falsifiable tests}, not additional experiments; we report the sharpest
 contributions and, where they bear on our evidence---the measured
 $100.3\%$ retention of $G{=}2$ vs $G{=}16$ on the near-ceiling
-arithmetic task, the reconstructed $0.24$ absolute $G{=}4\!\to\!G{=}32$ swing at
-canonical scale---we say so explicitly.
+arithmetic task and the measured iso-compute sweep of
+Section~\ref{sec:group-size-scaleup}---we say so explicitly.
 
 \paragraph{A proposed contrast-projection theorem: GRPO as an endogenous all-pairs DPO (frontier synthesis).}
 Writing $s_i = \nabla_\theta \log \pi_\theta(y_i \mid x)$ for the
@@ -117,11 +117,8 @@ $Y_2/2=Y_3/3=p(1-p)$, and $Y_G/G$ strictly decreases for $G\ge3$
 (by strict concavity of $Y_G$ in $G$), so
 $\arg\max_{G\ge2}Y_G(p)/G=\{2,3\}$ for \emph{every} $p$.
 Per-rollout yield alone therefore always picks the minimal group
-size---mirroring the monotone per-token gradient efficiency
-$\mathrm{GE}_{\mathrm{tok}}$---and cannot by itself produce a
-budget-dependent interior optimum. Such an optimum requires an
-explicit trade-off: per-step signal-to-noise (improving, but
-sub-$\sqrt{G}$, in $G$) against the number of optimizer steps a
+size and cannot by itself produce a budget-dependent interior optimum. Such an optimum requires an
+explicit trade-off: per-step gradient signal against the number of optimizer steps a
 fixed token budget $T$ affords,
 $n_\mathrm{step}(G)=T/(G\bar L)$ with mean completion length
 $\bar L$, or a hard constraint $\mathrm{ZVF}(p,G)\le\epsilon$.
@@ -129,14 +126,13 @@ Under the latter, with $p_{\min}=\min(p,1-p)$, the bound
 $G\gtrsim\log\epsilon/\log(1-p_{\min})$ (e.g.\
 $p_{\min}{=}0.1\Rightarrow G\approx29$ for $\mathrm{ZVF}<0.05$)
 gives the smallest $G$ that unlocks near-degenerate prompts.
-Whether that unlocking, rather than variance reduction, drives
-the measured $G{=}4\!\to\!G{=}32$ swing at canonical scale
-(Table~\ref{tab:groupsize-g4-g32}) is exactly what the
-$2\times2$ test below is designed to decide.
+Whether such unlocking translates into held-out accuracy is an empirical
+question; at equal compute on the unsaturated task of
+Section~\ref{sec:group-size-scaleup} it did not.
 
 \paragraph{A decisive test separating variance-reduction from ZVF-reduction.}
-Our data show a large held-out swing with $G$ but cannot, on their own,
-say \emph{why}. The frontier synthesis proposes a $2{\times}2$
+Our measured sweeps show ZVF falling with $G$ without a matching held-out
+gain, but cannot, on their own, separate the two mechanisms. The frontier synthesis proposes a $2{\times}2$
 super-group design that separates the two candidate mechanisms.
 \emph{Sampling protocol (a proposal; not run):} every arm first
 draws a super-group of $G_\mathrm{large}$ rollouts per prompt, and
@@ -170,16 +166,10 @@ would be consistent with Eq.~\eqref{eq:fs-contrast} exhausting
 the non-KL update, whereas a value well below $1$ would suggest
 the group baseline carries structure beyond pairwise preference.
 On the mechanism, the frontier models lean toward ZVF-reduction:
-Gemini conjectured that the $G{=}4\!\to\!G{=}32$ retention gap is
-concentrated in high-accuracy bins, quoting $+0.253$ at
-$p\ge0.75$ versus $+0.010$ at $p<0.5$; we stress that these two
-numbers are an \emph{unmeasured external-model hypothesis}---no
-run of ours produced them---offered as the predicted signature of
-escaping the ZVF floor rather than of classical $\sqrt{G}$
-variance reduction, to be tested rather than cited as evidence. This
-\emph{challenges} the variance-reduction reading we offer for the
-$G{=}32$ reconstruction in Section~\ref{sec:group-size} and is a concrete,
-falsifiable next experiment.
+Gemini conjectured that any large-$G$ benefit would concentrate on
+high-accuracy prompts, the signature of escaping the ZVF floor rather than of
+$\sqrt{G}$ variance reduction. We have no difficulty-stratified held-out
+measurement to test this; it is a prediction for the $2{\times}2$ design.
 
 \paragraph{The Baseline-Equivalence-Index (BEI).}
 Finally, the frontier synthesis proposes a Baseline-Equivalence-Index
@@ -219,9 +209,8 @@ useful fraction $Y_G(p)=\mathrm{GU}(p,G)$ (Eq.~\ref{eq:fs-yield})
 shows per-rollout yield alone favours minimal $G$, so any interior
 compute optimum must come from trading per-step gradient signal against step
 count at a fixed token budget. This is consistent
-with our measured near-ceiling equivalence at small $G$ and with the
-failure of that equivalence at canonical scale, while sharpening the one
-question our data leave open---whether the large-$G$ win is
-variance-reduction or ZVF-escape---into a preregistered, falsifiable
-test. We stress again that these are external reasoning contributions,
+with our measured sweeps, in which larger $G$ lowers ZVF without a held-out
+gain at equal compute; whether a large-$G$ benefit appears elsewhere, and whether
+it would be variance-reduction or ZVF-escape, is left to the preregistered
+$2{\times}2$ test. We stress again that these are external reasoning contributions,
 not experiments this paper ran.

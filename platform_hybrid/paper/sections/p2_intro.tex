@@ -23,11 +23,12 @@ descriptive instrument whose reach we bound rather than a causal predictor.
 We study ZVF as one pillar of \ours{}, a controlled benchmark of 70+ runs across
 seven RL libraries and seven model families ($0.5$B--$1$T) on GSM8K
 \citep{cobbe2021training}, HumanEval~\citep{chen2021codex}, and tool-use tasks.
-Our contributions are: (i) a cross-library, cross-scale measurement of ZVF and its
-relationship to training failure, showing strong association with catastrophic
-collapse but only weak association with the final held-out gain; (ii) an analysis
-of ZVF \emph{dynamics}, establishing that it is temporally sticky and drifts upward
-over training; (iii) a gradient-utilization view, $\mathrm{GU} = 1 - \mathrm{ZVF}$,
+Our contributions are: (i) measurements of ZVF across real runs---per-group
+GSM8K reward tensors, a group-size sweep, scaling-law anchors, tool-use cells, and
+a matched 8-seed comparison of GRPO with AERO, DAPO, Dr.~GRPO and GSPO in which
+removing or reshaping zero-variance groups leaves held-out accuracy unchanged;
+(ii) a signed decomposition showing why raw ZVF ranks healthy and unhealthy runs
+wrongly; (iii) a gradient-utilization view, $\mathrm{GU} = 1 - \mathrm{ZVF}$,
 linking the diagnostic to the fraction of the batch that carries signal; and (iv) a
 cross-examination that identifies ZVF's central failure---aliasing mastery with
 incapacity---and motivates magnitude- and sign-aware replacements.

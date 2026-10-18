@@ -9,8 +9,7 @@ Recomputes, from the per-run step logs in groupsize_zvf_sweep.json:
   * Table 4 power values for n1=5, n2=15;
   * the measured panels of the iter-27 figure (reward vs G, and the fraction of
     steps whose batch has a non-degenerate group, which the old "SNR(adv)"
-    column transformed as sqrt(f/(1-f))). The reconstructed-grid panels C/D are
-    cropped unchanged from figures/group_size_iter27.png.
+    column transformed as sqrt(f/(1-f))).
 
 Writes experiments/results/group_size_review_1ed8_*.tsv. No new training.
 """
@@ -19,7 +18,6 @@ import json
 from itertools import combinations
 from pathlib import Path
 
-from PIL import Image
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.ticker
@@ -122,7 +120,7 @@ def main():
                  "power_5v15": round(pw.solve_power(nobs1=5, ratio=3.0, alpha=0.05, power=0.8), 3)})
     write("power", prow)
 
-    # (5) Measured panels of the iter-27 figure + unchanged grid panels.
+    # (5) Measured panels of the iter-27 figure.
     frac = {g: np.array([np.mean([s["advantage_variance"] > 0.5 for s in r["step_log"]]) for r in by_g[g]]) for g in G_VALUES}
     fig, (ax_a, ax_b) = plt.subplots(1, 2, figsize=(11.0, 4.0))
     gs = np.array(G_VALUES)
@@ -149,9 +147,6 @@ def main():
     fig.tight_layout()
     fig.savefig(FIGURES / "group_size_iter27_measured.png", dpi=200)
     print("wrote group_size_iter27_measured.png")
-    img = Image.open(FIGURES / "group_size_iter27.png")
-    img.crop((0, int(img.height * 0.525), img.width, img.height)).save(FIGURES / "group_size_iter27_grid_panels.png")
-    print("wrote group_size_iter27_grid_panels.png")
 
 
 if __name__ == "__main__":

@@ -1,33 +1,19 @@
 % Pillar-3 (group size) results opener
 \section{Group Size: Results}
 \label{sec:p3-results}
-We report the effect of $G$ in three parts: the raw dependence of trainability on
-group size, the mechanism behind it, and the preference-learning interpretation.
-The dependence is non-monotone. Intermediate group sizes often outperform the
-smallest and largest settings we tested, but the swing is modest relative to
-seed variation and does not identify a universal optimum. Quantitatively, a
-$G{=}4$ versus $G{=}32$ token-budget reanalysis (illustrative, reconstructed
-from ablation logs; $G{=}32$ was not directly measured in the matched
-small-scale sweep) produces a sizable held-out swing, while held-out accuracy is
-retained almost completely on the measured near-ceiling task (a retention ratio
-of $\approx 1.003$, i.e.\ $100.3\%$---a ratio, not an accuracy---between
-$G{=}2$ and $G{=}16$).
-
-Under equivalence testing (TOST), no $G$ effect is detectable on the saturated
-task; on the 505-task cohort, difficulty-stratified
-retention shows the gains concentrate in regimes where small-$G$ groups can lack
-recoverable contrast, pointing toward a preference-density rather than a
-pure-variance mechanism. On the 505-task cohort (per-task success probabilities
-$p_x$), the mean non-degenerate yield gain $Y_{32}-Y_4$ is $+0.45$ in the
-high-accuracy bin ($p_x\ge0.75$, $n{=}286$), $+0.15$ at $0.5\le p_x<0.75$
-($n{=}157$), and $+0.29$ at $p_x<0.5$ ($n{=}62$): the largest recoverable-contrast
-gap sits where tasks are already mostly solved but small groups still collapse. We then
-make the preference view explicit: the group-centered GRPO update equals an
-all-pairs contrast over the group, so zero-variance groups contribute nothing and
-$G$ sets how many endogenous preference pairs a prompt supplies. This identity is
-an exact algebraic rewriting whose observable signatures are consistent with
-logged per-step diagnostics (advantage variance, ZVF, and gradient norms);
-direct gradient-vector validation remains future work. We reconcile it with the
-observed retention curves. The final subsection adds an external frontier-model
-cross-examination, including a decisive $2{\times}2$ design that would separate
-variance-reduction from contrast-density as the cause of the $G$ effect.
+We report three measured settings and one analytical audit. On a saturated
+addition task (Section~\ref{sec:group-size}) held-out accuracy is flat across
+$G\in\{2,\dots,16\}$, with $G{=}2$ retaining $100.3\%$ of $G{=}16$. At equal
+compute on an unsaturated multiplication task, and for four Qwen3-8B/GSM8K
+adapters (Section~\ref{sec:group-size-scaleup}), larger groups again do not raise
+held-out accuracy, including at $G{=}32$. In every setting the zero-variance
+fraction falls with $G$ and exceeds the homogeneous closed form, the signature
+of prompt-difficulty heterogeneity. Section~\ref{sec:group-size-iter27} gives the
+seed-level statistics for the saturated sweep. We then make the preference view
+explicit: the group-centred GRPO update equals an all-pairs contrast over the
+group, so zero-variance groups contribute nothing and $G$ sets how many endogenous
+preference pairs a prompt supplies; this identity is an exact algebraic rewriting
+whose direct gradient-vector validation remains future work. The final subsections
+add an external frontier-model cross-examination, including a $2{\times}2$ design
+that would separate variance-reduction from contrast-density, and small-scale
+robustness checks.

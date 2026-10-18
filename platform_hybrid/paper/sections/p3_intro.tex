@@ -19,26 +19,27 @@ on how many endogenous preference pairs each prompt contributes---nonzero only f
 mixed-reward groups.
 
 We study $G$ as one pillar of \ours{}, a controlled benchmark of 70+ runs across
-seven RL libraries and five model families ($0.6$B--$\sim$671B) on GSM8K
+seven RL libraries and seven model families ($0.5$B--$1$T) on GSM8K
 \citep{cobbe2021training}, HumanEval~\citep{chen2021codex}, and tool-use tasks. Our
-contributions are: (i) measured $G\in\{2,4,8,16\}$ sweeps showing that the effect
-of $G$ is regime-dependent, with no universal optimum, plus an explicitly
-\emph{reconstructed} $G\in\{4,8,16,32,64\}$ token-budget grid retained only as a
-hypothesis generator;
-(ii) an explicit validation, via observable signatures in logged diagnostics, that the group-centered
-update is an all-pairs preference contrast---the ``GRPO is secretly DPO'' bridge;
-and (iii) equivalence and difficulty-stratified analyses (Two One-Sided Tests, TOST) that separate a
-variance-reduction reading of the $G$ effect from a preference-density one. We make
-no claim that any single $G$ or algorithm is universally superior.
+contributions are: (i) a measured $G\in\{2,4,8,16\}$ sweep on a saturated task,
+with seed-level equivalence tests (Two One-Sided Tests, TOST);
+(ii) a measured iso-compute sweep over $G\in\{2,4,8,16,32\}$ on an unsaturated
+task, with unwhitened control arms and per-prompt pass-rate logging, plus a
+Qwen3-8B/GSM8K pass@$k$ check of adapters trained at four group sizes;
+(iii) a statement, with its observable signatures in logged diagnostics, of the
+sense in which the group-centered update is an all-pairs preference
+contrast---the ``GRPO is secretly DPO'' bridge; and (iv) a corrected comparison of
+measured zero-variance fraction (ZVF) against its closed form. We make no claim
+that any single $G$ or algorithm is universally superior.
 
-\paragraph{Evidence boundary for $G{=}32$.}
-Every $G{=}32$ number in the token-budget grid is a joint-fit reconstruction,
-not the outcome of a directly trained matched-budget arm. It may motivate the
-next sweep, but it cannot establish that $G{=}32$ is optimal. The strongest
-direct comparisons in this paper stop at $G{=}16$; the separate 505-task
-utility audit selects $G{=}4$ only under its declared
-$(1-\mathrm{ZVF})/\sqrt{G}$ objective and cohort
-(Section~\ref{sec:appendix:group-size-reconcile}).
+\paragraph{What changed from earlier versions.}
+Earlier drafts reported a 20-cell Qwen3-8B/GSM8K ``token-budget'' grid over
+$G\in\{4,\dots,64\}$ and $T\in\{1,4,16,64\}$M, from which they derived a
+budget-dependent optimum near $G{=}32$. Those cell values were entered by hand
+(\texttt{FALLBACK\_ROWS} in \texttt{experiments/group\_size\_token\_normalized.py})
+with no training runs behind them, so the grid and every fit, interval and
+recommendation built on it are removed. All group-size results in this version
+come from runs whose logs are released.
 
 \subsection{Related Work}
 \label{sec:p3-related}

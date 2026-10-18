@@ -2,37 +2,33 @@
 \begin{abstract}
 The group size $G$ is GRPO's most distinctive hyperparameter: it sets how many
 completions are sampled per prompt and, through the group-relative baseline, how
-much preference signal each prompt contributes. We study the effect of $G$ as one
-pillar of \ours{}, a benchmark of 70+ RL runs across seven libraries and
-five model families ($0.6$B--$\sim$671B), centered on GSM8K with HumanEval and
-tool-use checks. Two results
-anchor the pillar. First, trainability varies with $G$ in a non-monotone way:
-intermediate group sizes often behaved better than the smallest or largest we
-tested, but the data do not justify a universal optimum. Our measured equivalence
-tests extend to $G{=}16$; on the near-ceiling arithmetic task, held-out accuracy
-is essentially flat across this range---a retention \emph{ratio} of
-${\approx}1.003$ ($100.3\%$) between $G{=}2$ and $G{=}16$ (i.e.\ $G{=}16$ lands
-within noise of $G{=}2$; this $100.3\%$ is a ratio, not an accuracy). We caution that this is a \emph{saturated}
-regime: near the ceiling, variance is compressed, so the finding is ``no detectable
-$G$ effect under saturation,'' not evidence of equivalence on harder, unsaturated
-tasks. We do
-\emph{not} report a directly trained, matched-budget $G{=}32$ cell in the
-primary sweep: the paper's $G{=}32$ values come from an explicitly labeled
-reconstructed token-budget grid and are hypotheses, not measurements. A separate
-505-task conditional utility audit, using $(1-\mathrm{ZVF})/\sqrt{G}$ as the
-declared cost proxy, selects $G{=}4$ over $G{=}5$ by $0.00177$ with a 95\%
-bootstrap interval $[0.00082,0.00270]$; that result is cohort- and
-objective-conditional, not a universal optimum (cohort and estimator defined in
-Section~\ref{sec:appendix:group-size-reconcile}). Second, we make explicit the sense in which GRPO
-\emph{admits an all-pairs preference (DPO-like) interpretation}: the group-centered
-update behaves as an implicit all-pairs preference
-contrast---consistent with logged per-step diagnostics (advantage variance,
-Zero-Variance Fraction (ZVF), and gradient norms), though direct gradient-vector validation is still future
-work, so we frame this as an interpretation rather than a proven equivalence---with zero-variance groups
-projected out. We frame $G$ as a preference-density dial rather than a variance
-knob, test equivalence with Two One-Sided Tests (TOST) and difficulty-stratified retention, and release
-the in-repository artifacts used here.
+much preference signal each prompt contributes. We study $G$ as one pillar of
+\ours{}, a benchmark of 70+ RL runs across seven libraries and seven model
+families ($0.5$B--$1$T), using only measured runs. On a saturated task
+(Qwen2.5-0.5B, two-operand addition, $G\in\{2,4,8,16\}$, three seeds) held-out
+accuracy is flat: $G{=}2$ reaches a retention ratio of ${\approx}1.003$ ($100.3\%$)
+of $G{=}16$, a ratio of accuracies rather than an accuracy above $100\%$, and
+seed-level Two One-Sided Tests (TOST) at $\epsilon{=}0.02$ support equivalence on
+training reward for $G{=}4$ and $G{=}8$ but only borderline for $G{=}16$. On an
+unsaturated task at \emph{equal compute} (two-digit multiplication, $128$
+rollouts per step for every $G\in\{2,4,8,16,32\}$, five seeds, base accuracy
+$0.20$) every arm learns to $0.58$--$0.61$ held-out, with no gain from larger
+groups ($G{=}32$: $0.580$ vs.\ $G{=}4$: $0.612$) and no measurable effect of
+GRPO's $1/\sigma_r$ whitening. Four Qwen3-8B adapters trained on GSM8K at
+$G\in\{2,4,16,32\}$ land within base-model evaluation noise of each other on
+pass@$k$. Across settings, larger $G$ steadily lowers the zero-variance fraction
+(ZVF, the share of groups whose rewards are all equal and carry no group-relative
+signal)---from $0.83$ to $0.35$ on the unsaturated task---and the measured ZVF
+sits well above the homogeneous closed form $p^G+(1-p)^G$, as prompt-difficulty
+heterogeneity predicts; but lower ZVF did not translate into held-out accuracy.
+We also make explicit the sense in which the group-centred update is an
+all-pairs preference (DPO-like) contrast with zero-variance groups projected out,
+and report a separate 505-task analytical audit in which a declared
+$(1-\mathrm{ZVF})/\sqrt{G}$ proxy selects $G{=}4$
+(Section~\ref{sec:p3-utility-audit}). An earlier version's token-budget grid,
+which suggested an optimum near $G{=}32$, had no training runs behind it and has
+been removed.
 \end{abstract}
-\paragraph{August 2026 evidence boundary.} The group-size evidence is scoped
-to its named budgets and cells; reconstructed or heterogeneous results are not
-replications and do not prescribe a universal group size.
+\paragraph{Evidence boundary.} All group-size numbers come from released runs.
+The measured sweeps are small (0.5B models, 40--60 steps; one 8B training seed
+per $G$) and bound large effects rather than certify equivalence.

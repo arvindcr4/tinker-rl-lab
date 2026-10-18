@@ -12,17 +12,21 @@ descriptively and, deliberately, decline to promote it to a causal or
 incrementally predictive statistic. Three stored GSM8K group tensors recompute
 their reported ZVF values exactly (0.130, 0.190, and 0.155; pooled 0.1583).
 An earlier pooled ZVF--outcome correlation ($\rho\approx0.27$) is withdrawn: only
-17 of its 23 cells had a finite ZVF, 9 of those were simulation rows, and the
-outcome column mixed held-out accuracy with training reward. The same ZVF can
+17 of its 23 cells had a finite ZVF, only 8 came from measured training runs,
+and the outcome column mixed held-out accuracy with training reward. The same ZVF can
 describe mastery or incapacity. Under conditionally i.i.d.\ rollouts, batch ZVF
 equals $\mathbb{E}_i[h_G(p_i)]$ with $h_G(p)=p^G+(1-p)^G$, so its excess over
 $h_G(\bar p)$ measures prompt-difficulty dispersion: on GSM8K the observed $0.158$
 is $2.9\times$ the homogeneous value $0.054$ and a beta-binomial fit (intra-prompt
 correlation $0.16$) predicts $0.170$. ZVF is equivalent to the Advantage Collapse
 Rate~\cite{he2026advantage}, and the Jensen excess was shown
-in~\cite{nie2026gradstarvation}; we claim no new diagnostic. A separate variance-mitigation table is a declared simulation
-projection used for sensitivity analysis; it is not evidence that any named
-method mitigates failure. Under the stated iid-Bernoulli model, the relation
+in~\cite{nie2026gradstarvation}; we claim no new diagnostic. In a matched 8-seed comparison on Qwen3-8B/GSM8K
+(30 steps, 500 held-out problems), four GRPO variants---AERO, DAPO, Dr.~GRPO and
+GSPO---are each within $\pm0.005$ of GRPO's held-out accuracy ($0.633$) and
+equivalent to it within $\pm0.02$ by seed-level TOST, although mean ZVF is
+$0.69$--$0.71$ in every arm except DAPO, which removes zero-variance groups
+entirely; over this short horizon a high ZVF did not measurably limit the outcome.
+Under the stated iid-Bernoulli model, the relation
 $\operatorname{pass@}G-p^G=1-\mathrm{ZVF}$ follows algebraically. It identifies
 ZVF with contrastive group yield under that model, not with held-out improvement
 or causal intervention value. We release code, logs, and the three per-group

@@ -16,9 +16,26 @@ Source: https://research.google/deepreview/documents/1ed8fa8c-b86f-49ba-a7ac-684
 Recomputations: `platform_modal/scripts/group_size_review_1ed8_audit.py` → `platform_hybrid/experiments/results/group_size_review_1ed8_*.tsv`, `figures/group_size_iter27_{measured.pdf,grid_panels.png}`.
 Build: `paper_P3_group_size.tex` 27 pp, 0 undefined refs/cites; `paper_P1_scaling.tex` still builds (its one undefined ref, `sec:exp-design`, predates this change).
 
-## Blocking: reconstructed G×T grid has no measured runs (held for author)
+## Resolved (2026-10-18): reconstructed G×T grid removed, replaced by measured runs
 
-`experiments/group_size_token_normalized.py` `FALLBACK_ROWS` were written to "match the bold/non-bold cells of the appendix table"; `grpo_ablation_results/` only ever held an Edison literature report; `GU_SCALE=55000` is hand-calibrated to reproduce Table 10. The paper calls these "reconstructed point estimates from existing GRPO ablation logs". Grid-derived content is **untouched pending the author's decision**: Tables 6 (rows 2–3), 7, 10, 12, 13; Figs 4R, 5R, 6, iter27 C/D; T_crit and R(T) fits, bootstrap CIs, 1024M extrapolation; Iterative-RPO G*, Dualformer savings, paper2verifier R²; the title's "budget-dependent" claim. Review items that live only there (Fig 6 legend a/τ mismatch, Fig 6 rendering, GE_tok closed form/scale, bootstrap-on-fallback) are pending with it.
+The hand-entered `FALLBACK_ROWS` grid (no training runs behind it; script comment
+says the values were written to match the appendix table; `GU_SCALE` hand-calibrated)
+is removed with everything built on it: grid tables/figures, T_crit and R(T) fits,
+bootstrap CIs, iter23 section, reconcile section, GE_tok table, Iterative-RPO G*,
+Dualformer savings, Paper2Agent joint fit, and the "budget-dependent optimum near
+G=32" claim and title. Replacements, all measured:
+
+- **Iso-compute sweep on an unsaturated task** (Colab L4, `platform_colab/p3_isocompute_groupsize.py`;
+  40 runs in `experiments/results/p3_isocompute/`): Qwen2.5-0.5B, two-digit multiplication
+  (base 0.198), 128 rollouts/step for every G∈{2,4,8,16,32}, 60 steps, 5 seeds whitened +
+  3 seeds unwhitened. Held-out 0.598/0.612/0.599/0.597/0.580; only G4−G32 has p<0.05
+  (0.032, Bonferroni 0.13). ZVF 0.826→0.353, far above the batch-mean closed form. Whitening
+  effect null (paired p≥0.26).
+- **Qwen3-8B/GSM8K adapters at G∈{2,4,16,32}** (Tinker, 30 steps, lr 1e-5, one seed each;
+  W&B `campaign_w2_*`): pass@1 0.301–0.325, pass@32 0.905–0.915 vs base 0.266–0.306 /
+  0.865–0.890 (`experiments/results/w2_groupsize_passk_wandb_export.tsv`).
+
+New title: "Group Size in GRPO: Zero-Variance Mechanics, Measured Sweeps, and the Bridge to DPO".
 
 ## Fixed
 

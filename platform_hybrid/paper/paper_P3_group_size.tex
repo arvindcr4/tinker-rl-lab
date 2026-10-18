@@ -7,8 +7,8 @@
 \usepackage{tikz}
 \usetikzlibrary{shapes,arrows.meta,positioning,calc}
 \input{sections/_shared_preamble}
-\title{Group Size in GRPO Is Budget- and Regime-Dependent:\\
-       Contrast Density, Measured Bounds, and the Bridge to DPO}
+\title{Group Size in GRPO: Zero-Variance Mechanics, Measured Sweeps,\\
+       and the Bridge to DPO}
 \input{sections/_shared_author}
 \begin{document}
 \sloppy \hbadness=10000 \vbadness=10000 \hfuzz=2pt
@@ -18,12 +18,10 @@
 \input{sections/_shared_methods}
 \input{sections/p3_results_intro}
 \input{sections/group_size}
-\input{sections/group_size_reconcile}
-\input{sections/group_size_iter23}
+\input{sections/group_size_scaleup}
 \input{sections/group_size_iter27}
-% The legacy iter31--iter135 chain repeatedly reanalyzed the same reconstructed
-% G-by-token grid. Its non-duplicative conclusions and provenance boundaries are
-% consolidated in group_size, group_size_reconcile, iter23, and iter27.
+% Only measured group-size runs are included; the hand-entered token-budget grid
+% (group_size_reconcile, group_size_iter23 and the iter31--iter135 chain) is removed.
 \input{sections/frontier_synthesis_group_size}
 \input{sections/critic_degeneracy_hypothesis}
 \input{sections/cdh_echo_synthesis}

@@ -48,12 +48,9 @@
 \section{ZVF Cross-Pillar Phase Discrimination on the 12-Anchor Frontier}
 \label{sec:zvf-iter34}
 
-The iter30 analysis reported, \emph{on the simulated variance-mitigation
-trajectory set}, that ZVF time-series features carry leading
-indicator content. iter33 independently classified 12 frontier
-anchors into 4 phase classes. iter34 connects the two: it asks
-whether the same ZVF-feature decomposition, evaluated on iter33
-trace-level summary statistics, can discriminate phase classes
+A companion analysis (iter33) classified 12 frontier anchors (real Tinker
+GSM8K runs) into 4 phase classes. Here we ask whether ZVF-style features,
+evaluated on those traces' summary statistics, can discriminate the phase classes
 \emph{on the frontier set itself}. The answer is weak: only the
 saturation phase is recovered reliably, and the overall accuracy is not
 significantly above a label-permutation null.
@@ -62,8 +59,8 @@ significantly above a label-permutation null.
 \label{sec:zvf-iter34-setup}
 
 The iter33 phase score table provides 20 columns of trace-level
-summary statistics but no per-step ZVF stream. We map the iter30
-ZVF feature battery to four iter33 trace-level proxies:
+summary statistics but no per-step ZVF stream. We use five trace-level
+proxies:
 
 \begin{itemize}
 \item \texttt{zvf\_level} $\equiv$ \texttt{zero\_frac} (fraction

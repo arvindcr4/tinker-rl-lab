@@ -1,115 +1,54 @@
 % Pillar-3 (group size) discussion + conclusion
 \section{Discussion and Limitations}
 \label{sec:p3-discussion}
-Reframing $G$ as a preference-density dial clarifies the non-monotone effect, but
-several limitations bound the claim. The held-out swings, while suggestive, are
-modest against seed and difficulty variation, so we resist naming an optimal $G$;
-our equivalence tests are powered to reject large differences, not to certify exact
-parity. Read through the four-axis pipeline factorization of
-\citet{ivison2024unpacking}, applied here to verifiable-reward stacks in the
-RLVR paradigm of \citet{lambert2024tulu3}, the same-stack audit places the
-algorithm axis as residual ($\eta^2{=}0.023$; paired
-$\Delta_{\text{GRPO}-\text{PPO}}{=}-0.002$, permutation $p{=}0.62$) while the
-$G$ axis dominates the variance budget ($\eta^2{=}0.54$ on last-10-step mean reward,
-$0.63$ on gradient norm; Cohen's $d{=}-1.47$ for $G{=}2{\to}16$;
+Reframing $G$ as a preference-density dial explains why the zero-variance fraction
+falls with $G$, but in our measured runs that fall did not translate into held-out
+accuracy, so we resist naming an optimal $G$; our equivalence tests are powered to
+reject large differences, not to certify exact parity. Read through the four-axis
+pipeline factorization of \citet{ivison2024unpacking}, applied to verifiable-reward
+stacks in the RLVR paradigm of \citet{lambert2024tulu3}, the same-stack audit
+places the algorithm axis as residual ($\eta^2{=}0.023$; paired
+$\Delta_{\text{GRPO}-\text{PPO}}{=}-0.002$, permutation $p{=}0.62$). On the 12-run
+saturated $G$ sweep, $G$ accounts for $\eta^2{=}0.54$ of the variance in last-10
+training reward and $0.63$ in gradient norm (Cohen's $d{=}-1.47$ for $G{=}2{\to}16$;
 \texttt{experiments/results/berkeley/unpacking\_dpo\_ppo\_factorization.json}).
-These $\eta^2$ values are within-cohort descriptive variance shares, not
-accuracy-effect magnitudes: on the measured near-ceiling sweep the $G{=}2$ and
-$G{=}16$ held-out means differ by only $0.0033$ ($0.9817$ vs.\ $0.9783$), so a
-large $\eta^2$ there reflects tiny within-cell seed variance relative to
-between-$G$ cell means, not a large accuracy effect; the factorization is also
-a different cohort and metric from the 42-run marginal ANOVAs in Methods.
-An independent Miller-style error-bars audit \citep{miller2024erroreval} of the
-four Pillar-3 computed contrasts sharpens their numerical precision, not their
-provenance: the $G{=}4/G{=}32$
-$\widehat{\mathrm{GE}}_{\mathrm{tok}}$-ratio (audit H1, bootstrap CI
-$[4.16, 4.82]$) and the negative retention-vs-$T$ slope (H2, CI
-$[-0.237, -0.038]$) are precise \emph{within the reconstructed grid},
-whereas the SNR-slope-vs-theory comparison (H3) is not interpretable, because
-the logged ``SNR'' is a transform of the non-degenerate-step fraction rather than
-a gradient SNR (Section~\ref{sec:group-size-iter27}), and the native-Wu $G{=}2 \approx G{=}16$
-equivalence claim (H4; $n{=}3$ paired seeds, equivalence region straddled)
-are NULL, and the corrected TOST agrees with the H4 NULL verdict
-($G{=}16$ $p{=}0.056$, held-out $p{=}0.100$)
+These are within-cohort variance shares, not accuracy effects: near the ceiling
+the across-seed spread is so small that a $0.0066$ shift in mean reward is a large
+standardized effect while staying inside the $\epsilon{=}0.02$ equivalence margin.
+An independent Miller-style error-bars audit \citep{miller2024erroreval} agrees that
+the native-Wu $G{=}2\approx G{=}16$ equivalence is borderline at $n{=}3$ (TOST
+$p{=}0.056$ paired; held-out $p{=}0.100$), and its SNR-slope check is not
+interpretable because the logged ``SNR'' is a transform of the
+non-degenerate-step fraction (Section~\ref{sec:group-size-iter27})
 (\texttt{experiments/results/berkeley/adding\_error\_bars\_summary.json}).
 
-% Berkeley harvest rows 01 (Dualformer, F24 L8 Yuandong Tian) and 02
-% (DPO/Iterative-RPO, SP25 L2 Jason Weston); evidence:
-% experiments/results/berkeley/dualformer_*.tsv,
-% dpo_iterative_rpo_*.tsv + dpo_iterative_rpo_summary.json
-Two further reformulations sharpen the practical reading of the $G$ axis.
-First, the preference-pair view makes the DPO connection exact rather than
-rhetorical: on a single winner--loser pair within a $G{=}2$ group, the GRPO
-loss coincides with the small-$\beta$, no-KL, online limit of
-DPO~\citep{rafailov2024direct}, and Iterative RPO's DPO-plus-NLL
-objective~\citep{pang2024iterativerpo} corresponds to GRPO with replay on
-winning trajectories; in the spreadsheet construction on the reconstructed
-grid, the cell-wise argmax coincides ($G^\ast = 8, 16, 32, 32$ at
-$T \in \{1, 4, 16, 64\}\mathrm{M}$, where the $G{=}32$ optima at high $T$
-are joint-fit extrapolations); no Iterative-RPO run was trained and no
-invariance theorem is claimed
-(\texttt{experiments/results/berkeley/dpo\_iterative\_rpo\_summary.json}).
-Second, a Dualformer-style fast/slow/auto reading of
-$G$~\citep{su2024dualformer} suggests the non-monotone landscape is
-exploitable: this is an offline projection on the reconstructed 20-cell
-grid, where predicted accuracy comes from the grid's own cell accuracies
-(oracle difficulty, not a prospective predictor) and the intermediate
-mapping is unstated in the source, so the rule is stated only as reported
-($\geq 0.85 \to G{=}2$, else larger $G$ up to $32$). It attains mean
-$G_{\mathrm{auto}} = 7.0$ on that grid --- a projected $56.2\%$
-rollout saving versus always-$G{=}16$ and a further $\approx 42\%$ versus
-the reconstructed $G^\ast(T)$ schedule (mean $G{=}12.0$, itself a projected $25\%$
-saving versus always-$G{=}16$); these savings are projections, with 5/20 cells under-predicting by more than 5\,pp,
-consistent with joint-fit residual noise but not attributable without a
-prospective allocation experiment
-(\texttt{experiments/results/berkeley/dualformer\_compute\_savings.tsv}).
+The scale of the evidence is the main limitation. The saturated sweep is $n{=}3$
+seeds (minimum detectable effect $d{=}3.07$); the unsaturated iso-compute sweep is
+a 0.5B model trained for $60$ steps with five seeds; the Qwen3-8B adapters have one
+training seed per $G$ and fix steps rather than rollouts. None of these runs logs
+gradient vectors, so whitening and leave-one-out effects on gradient variance are
+inferred only through accuracy and ZVF. A multi-seed, matched-token sweep on
+Qwen3-8B with MATH-style low-pass-rate problems, and the $2{\times}2$
+contrast-versus-variance design, are the natural next experiments.
 
-The all-pairs contrast identity is an exact algebraic rewriting whose
-observable signatures are consistent with logged per-step diagnostics
-(advantage variance, ZVF, and gradient norms); direct gradient-vector validation
-remains future work, and the
-mechanism separating
-variance-reduction from contrast-density remains only partially resolved on
-existing data---the decisive controlled experiment (a token- and step-matched
-$2{\times}2$ design that supplies contrast without variance and vice versa) is
-specified but not yet run. Finally, the GRPO$\leftrightarrow$DPO bridge is exact
-only up to a KL penalty and the projection of zero-variance groups; treating GRPO
-as literally DPO ignores stabilizing structure the group baseline may carry.
+The all-pairs contrast identity is an exact algebraic rewriting whose observable
+signatures are consistent with logged per-step diagnostics (ZVF and gradient
+norms); direct gradient-vector validation remains future work. The
+GRPO$\leftrightarrow$DPO bridge is exact only up to a KL penalty and the
+projection of zero-variance groups; treating GRPO as literally DPO ignores
+stabilizing structure the group baseline may carry.
 
 \section{Conclusion}
 \label{sec:p3-conclusion}
 Group size in GRPO is best understood not as a variance knob to be maximized but as
-a dial on how much implicit preference signal each prompt contributes. On our
-benchmark its effect is non-monotone with no universal optimum, held-out
-accuracy is retained almost completely across $G{=}2$ to $G{=}16$ on the
-measured near-ceiling task. The illustrative reconstructed GSM8K grid falls to
-about $73\%$ $G{=}4$/$G{=}32$ retention at $T{=}64$M, but no directly trained
-matched-budget $G{=}32$ arm validates that projection. The signal-to-noise ratio grows
-far more slowly than $\sqrt{G}$---all consistent with a contrast-density rather than
-a pure-variance account, and with the exact sense in which the group-centered update
-is an all-pairs preference contrast. The clean causal test, and matched-budget
-multi-seed comparisons, are the natural next experiments; we release the sweeps,
-per-step gradient-norm logs, and scripts to enable them. The measured sweep is
-$n{=}3$ seeds on saturated arithmetic (minimum detectable effect $d{=}3.07$),
-there is no directly trained matched-budget $G{=}32$ arm, and there is no
-unwhitened (RLOO) or dynamic-filtering (DAPO) baseline in the $G$ sweep to
-isolate $1/\sigma$ whitening; these are required next experiments on
-unsaturated benchmarks (GSM8K/MATH-style low-pass-rate regimes). The released
-TSVs and scripts (the \texttt{group\_size\_iter15}, \texttt{group\_size\_iter19},
-\texttt{group\_size\_iter23}, and \texttt{group\_size\_iter27} drivers) suffice
-to regenerate the tables and figures in this paper. As a reproducibility
-check on the released artifacts, an automated extract-and-verify pass in the
-style of Paper2Agent \citep{miao2025paper2agent} recovers the analysis recipe
-from the Pillar-3 headline TSVs with full field recall ($1.000$), reproduces
-the published joint fit ($R^2{=}0.854$ vs.\ the published $0.796$), and
-transfers to a held-out slice ($R^2{=}0.812$). The ``joint fit'' is the
-iter-127 log--log regression $1-\mathrm{acc} = a + b\log_{10} G + c\log_{10} T$
-over the 20-cell reconstructed grid (published recipe:
-$a{=}1.669$, $b{=}-0.141$, $c{=}-0.293$; verifier refit $a{=}2.129$,
-$b{=}-0.129$, $c{=}-0.236$), and the held-out slice is the iter-135
-re-extraction; both $R^2$ values therefore measure recipe recoverability on
-reconstructed cells, not predictive accuracy on trained runs. The recipe also survives
-deletion of a fitted field (zero failures; the slope is re-recovered from the
-data alone), so the released TSVs are sufficient to reconstruct the paper's
-central fit without human intervention
-(\texttt{experiments/results/berkeley/paper2verifier.json}).
+a dial on how often a prompt yields any implicit preference pair. Measured across a
+saturated 0.5B sweep, an unsaturated iso-compute 0.5B sweep up to $G{=}32$, and
+four Qwen3-8B/GSM8K adapters, larger groups consistently lowered the zero-variance
+fraction---whose measured level exceeds the homogeneous closed form because prompt
+difficulty varies---but did not raise held-out accuracy, and removing GRPO's
+$1/\sigma_r$ whitening changed nothing measurable. On this evidence the cheap end of
+the range ($G\approx2$--$8$) loses nothing at equal compute in the settings tested;
+whether larger groups pay off on harder, longer-horizon training remains open. We
+release the sweeps, per-step logs, Colab driver and analysis scripts
+(\texttt{platform\_colab/p3\_isocompute\_*.py},
+\texttt{platform\_modal/scripts/group\_size\_review\_1ed8\_audit.py}).

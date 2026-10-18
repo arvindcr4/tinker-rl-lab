@@ -24,8 +24,8 @@ Think). The exchange is a source of \emph{arguments and proposed
 diagnostics}, not additional experiments; we report the sharpest
 contributions and, where they bear on our reported results---the
 (withdrawn) outcome correlation (Section~\ref{sec:zvf-cross-experiment:corr})
-and the temporal stickiness / upward drift
-(Section~\ref{sec:zvf-dynamics})---we say so explicitly.
+and the matched variance-mitigation comparison
+(Section~\ref{sec:zvf-cross-library})---we say so explicitly.
 
 \paragraph{Why ZVF cannot be an outcome predictor: mastery--incapacity aliasing.}
 In an external cross-examination, both models argued that ZVF is a weak
@@ -60,12 +60,11 @@ $\partial_G\ln\mathrm{ZVF}=-\ln 2$, so extra rollouts kill dead groups
 exponentially fast, whereas in the tails ($\epsilon\ll 1/G$) a Taylor
 expansion gives $\mathrm{ZVF}\approx 1-G\epsilon+O(\epsilon^2)$ and
 $\partial_G\mathrm{ZVF}\approx-\epsilon\to 0$---group-size scaling is
-crushed into a linear crawl. This is the frontier-side explanation for
-our temporal-stickiness result: as training drives $p_x\to1$ on mastered
-prompts, Eq.~\eqref{eq:zvf-inelasticity} pushes ZVF toward $1$
-\emph{and} makes it inelastic to $G$, so ZVF drifts up and does not
-return---matching the monotonic phase-1-to-phase-3 drift and high lag-1
-autocorrelation ($\rho_1\approx0.94$) we measure.
+crushed into a linear crawl. The prediction is that as training drives
+$p_x\to1$ on mastered prompts, ZVF rises toward $1$ \emph{and} becomes inelastic
+to $G$. Our measured runs are too short to test the training-time half of this
+prediction; the group-size sweep is consistent with the $G$ half (mean ZVF falls
+from $0.84$ to $0.63$ as $G$ goes from $2$ to $16$ at near-ceiling accuracy).
 
 \paragraph{Replacement diagnostics: PCD and a sign-resolving quality score.}
 Because ZVF measures only the \emph{existence} of contrast, the frontier
@@ -135,7 +134,7 @@ second-moment property, and one model produced an explicit counterexample
 ($G=4$, $p=\tfrac12$) with $\Delta_G<0$ yet pairwise $\rho>0$. The residual itself was an estimator artefact (sign-guaranteed under a
 same-group plug-in $\hat p$), so neither reading is supported. This
 reinforces the conservative stance already taken in
-Section~\ref{sec:zvf-dynamics}. Second, and as a genuine \emph{challenge}
+Section~\ref{sec:zvf-cross-source-falsification}. Second, and as a genuine \emph{challenge}
 to the ``zero gradient'' framing in the companion paper on ZVF gradients: in
 implementations that fold $\beta>0$ into the scalar reward before
 group standardization while ZVF is logged on the task reward alone (it does

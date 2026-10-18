@@ -30,19 +30,3 @@ pre-registered hypotheses were decisive; the $k{=}8$ ceiling leaves one
 undertested
 (\texttt{experiments/results/berkeley/cot\_decoding\_summary.json}).
 
-\paragraph{A critique-pass discount preserves the method ranking.}
-A Self-Debug-style reformulation~\citep{chen2023selfdebug} asks whether
-part of the magnitude channel in the iter130 risk decomposition is
-format-only variance that an execution-feedback critique pass would
-remove. Discounting a calibrated $\varepsilon = 0.12$ (from Self-Debug's
-$+12\%$ pass@1 on MBPP) drops \texttt{frac\_mag} by $\geq 2$\,pp on 8/9
-magnitude-dominant methods (mean $2.82$\,pp) while the one
-drift-dominant method (\texttt{grpo}) moves only $1.49$\,pp --- exactly
-the failure mode predicted by the no-intrinsic-self-correction
-result~\citep{huang2024selfcorrect}. The discount is ranking-preserving
-(Spearman $1.000$ across $\varepsilon \in [0, 0.30]$, the stability
-check suggested by OPRO~\citep{yang2024opro}), the three-bucket risk
-partition is preserved for 9/9 methods, and $\varepsilon = 0$ is an
-exact no-op; all five pre-registered hypotheses were decisive, and the
-top-ranked method is unchanged
-(\texttt{experiments/results/berkeley/selfdebug\_summary.json}).

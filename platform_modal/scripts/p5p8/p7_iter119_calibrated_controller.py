@@ -33,6 +33,7 @@ Method (pure stdlib + deterministic):
 """
 from __future__ import annotations
 
+from _review19_policy import adaptive_target
 import json
 import math
 import random
@@ -42,7 +43,7 @@ import sys
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
 from _paths import REPO_ROOT  # noqa: E402
 ROOT = REPO_ROOT
-P5P8 = ROOT / "platform_hybrid/experiments/results/p5p8"
+P5P8 = ROOT / "platform_hybrid/experiments/results/p5p8/corrected-review19-v4"
 P5P8.mkdir(parents=True, exist_ok=True)
 
 
@@ -96,23 +97,8 @@ def dualformer_auto_acc(reward_mean: float, G_obs: int = 8) -> int:
 
 
 def adaptive_gstar(zvf_obs: float, G_obs: int = 8,
-                   G_candidates=(16, 32, 64),
-                   floor: float = 0.50) -> int:
-    """Closed-form optimal target G* (iter-111/115).
-
-    Compute smallest G' in G_candidates for which predicted z(p0, G') is
-    strictly less than max(floor, 0.5 * zvf_obs). If no candidate salvages,
-    return the largest (pessimal escape hatch G=64).
-    """
-    if zvf_obs <= floor:
-        return G_obs  # already below the floor -- no escalate
-    p0 = invert_p0(zvf_obs, G_obs=G_obs)
-    target = max(floor, 0.5 * zvf_obs)
-    for G in G_candidates:
-        if z_at(p0, G) < target:
-            return G
-    return G_candidates[-1]  # pessimal: 64
-
+                   G_candidates=(16, 32, 64), floor: float = 0.50) -> int:
+    return adaptive_target(zvf_obs, G_obs, G_candidates, floor)
 
 def composite_ccc(reward_mean: float, zvf_obs: float,
                   G_obs: int = 8,

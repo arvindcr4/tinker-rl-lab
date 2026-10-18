@@ -42,7 +42,7 @@ sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))  # platform_mo
 from _paths import REPO_ROOT  # noqa: E402
 WORKTREE = REPO_ROOT
 N2 = WORKTREE / "platform_hybrid/experiments" / "results" / "n2_reward_tensor_resume"
-OUT = WORKTREE / "platform_hybrid/experiments" / "results" / "p5p8"
+OUT = WORKTREE / "platform_hybrid/experiments" / "results" / "p5p8" / "corrected-review19-v4"
 OUT.mkdir(parents=True, exist_ok=True)
 METHODS = ("grpo", "aero", "gift", "areal")
 TAUS = (0.50, 0.55, 0.60, 0.65, 0.70, 0.75, 0.80, 0.85, 0.90)
@@ -56,6 +56,24 @@ BOOT_SEED = 20260705
 EPS = 1e-9
 DEGEN_ZVF = 0.99  # if zvf_i >= 0.99 under iid binomial, prompt is structurally degenerate
 G_ESC_GRID = (8, 16)  # what G to escalate to for failure-budget eval
+
+
+def pooled_failure_shares(by_method, classes, n_boot, rng):
+    """Stratified step bootstrap; no independent-run uncertainty is implied."""
+    groups = [records for records in by_method.values() if records]
+    total = sum(map(len, groups))
+    if not total:
+        raise ValueError("no observations for pooled shares")
+    rows = []
+    for column, cls in enumerate(classes):
+        point = sum(r[column] for group in groups for r in group) / total
+        draws = sorted(sum(group[rng.randrange(len(group))][column]
+                           for group in groups for _ in group) / total
+                       for _ in range(n_boot))
+        lo, hi = draws[int(.025*n_boot)], draws[int(.975*n_boot)]
+        rows.append({"method": "POOLED", "class": cls, "share_obs": point,
+                     "ci_lo": lo, "ci_hi": hi, "ci_excludes_zero": int(lo > 0)})
+    return rows
 
 
 def load_tensors():
@@ -352,24 +370,12 @@ def main():
                 "method": m, "class": cls,
                 "share_obs": sum(shares) / n,
                 "ci_lo": lo, "ci_hi": hi,
-                "ci_excludes_zero": int(hi < 0.001),
+                "ci_excludes_zero": int(lo > 0),
             })
-    # Also pooled (across methods) per class
-    pooled_boots = {cls: [] for cls in classes}
-    ci = {cls: 0.0 for cls in classes}
-    for m in METHODS:
-        for ci_i, cls in enumerate(classes):
-            ci[cls] += summary_counts[m][cls]
-    pool_total = sum(ci.values())
-    pool_shares = {cls: ci[cls] / pool_total for cls in classes}
-    for cls in classes:
-        # Pooled is a single mean, not bootstrap-able -- still record it.
-        fail_share_boot_rows.append({
-            "method": "POOLED", "class": cls,
-            "share_obs": pool_shares[cls],
-            "ci_lo": pool_shares[cls], "ci_hi": pool_shares[cls],
-            "ci_excludes_zero": 0,
-        })
+    # Conditional within-method step bootstrap; preserves observed method weights.
+    pooled_rows = pooled_failure_shares(by_method, classes, N_BOOT, rng)
+    fail_share_boot_rows.extend(pooled_rows)
+    pool_shares = {r["class"]: r["share_obs"] for r in pooled_rows}
 
     # Failure summary table
     failure_summary_rows = []

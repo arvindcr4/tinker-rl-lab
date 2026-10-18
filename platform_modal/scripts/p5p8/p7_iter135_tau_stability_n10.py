@@ -26,6 +26,7 @@ Headline hypotheses (6):
 Outputs: platform_hybrid/experiments/results/p5p8/p7_iter135_{tau_grid,fire_rate,concordance,
   tau_flip,bootstrap_ci,summary}
 """
+from _review19_policy import high_zvf_fire
 import json
 import statistics
 from pathlib import Path
@@ -35,7 +36,7 @@ sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scri
 from _paths import REPO_ROOT  # noqa: E402
 WORK = REPO_ROOT
 N10_DIR = WORK / "platform_hybrid/experiments/results/n10_seed_expansion"
-OUT_DIR = WORK / "platform_hybrid/experiments/results/p5p8"
+OUT_DIR = WORK / "platform_hybrid/experiments/results/p5p8/corrected-review19-v4"
 
 SEEDS = [42, 179, 316, 453, 590]
 TAU_GRID = [0.50, 0.55, 0.60, 0.65, 0.70, 0.75, 0.80, 0.85]
@@ -53,7 +54,7 @@ def load_n10():
 
 def fire(z, t):
     """zvf-triage: fire iff z >= tau."""
-    return 1 if z >= t else 0
+    return int(high_zvf_fire(z, t))
 
 
 def build_tau_grid(by_seed):

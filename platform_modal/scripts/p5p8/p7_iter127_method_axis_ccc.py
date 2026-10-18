@@ -37,6 +37,7 @@ Outputs:
 """
 from __future__ import annotations
 
+from _review19_policy import adaptive_target
 import json
 import math
 from _review_replay import stable_seed
@@ -48,7 +49,7 @@ import sys
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
 from _paths import REPO_ROOT  # noqa: E402
 ROOT = REPO_ROOT
-P5P8 = ROOT / "platform_hybrid/experiments/results/p5p8/corrected-review19-v3"
+P5P8 = ROOT / "platform_hybrid/experiments/results/p5p8/corrected-review19-v4"
 P5P8.mkdir(parents=True, exist_ok=True)
 
 G_BASE = 8
@@ -99,13 +100,7 @@ def dualformer_auto_acc(reward_mean: float) -> int:
 
 
 def adaptive_gstar(zvf_obs: float, G_obs: int = 8) -> int:
-    """Smallest G' in G_CANDIDATES with z(p_hat, G') <= 0.45 -- restore contrast."""
-    p_hat = invert_p0(zvf_obs, G_obs)
-    for Gp in G_CANDIDATES:
-        if z_at(p_hat, Gp) <= 0.45:
-            return Gp
-    return G_CANDIDATES[-1]
-
+    return adaptive_target(zvf_obs, G_obs, G_CANDIDATES)
 
 def regime(zvf_obs: float) -> str:
     if zvf_obs < FAST_TAU:

@@ -6,7 +6,7 @@ N2 reward tensor corpus (grpo, aero, gift, areal x 40 steps). 6 artifacts in
 platform_hybrid/experiments/results/p5p8/. Stdlib only. LCG bootstrap B=2000 seed=20260705.
 """
 from __future__ import annotations
-import csv, json, os, random, statistics
+import csv, json, os, random, statistics, math
 
 import sys
 from pathlib import Path
@@ -15,7 +15,7 @@ from _paths import REPO_ROOT  # noqa: E402
 from _p5p7_common import load_tensors_b  # noqa: E402
 WORKTREE = str(REPO_ROOT)
 DATA_DIR = os.path.join(WORKTREE, "platform_hybrid/experiments/results/n2_reward_tensor_resume")
-OUT_DIR = os.path.join(WORKTREE, "platform_hybrid/experiments/results/p5p8/corrected-review19-v2")
+OUT_DIR = os.path.join(WORKTREE, "platform_hybrid/experiments/results/p5p8/corrected-review19-v4")
 os.makedirs(OUT_DIR, exist_ok=True)
 METHODS = ["grpo", "aero", "gift", "areal"]
 G_MENU = [2, 4, 8, 16]; G_BASE = 8; N_PROMPTS = 16
@@ -88,20 +88,31 @@ def y_signature_cis(tensors):
 
 
 def cross_method_tost(tensors):
+    """Conditional step-matched comparisons, not independent training replicates."""
     rows = []
+    indexed = {}
+    for method in METHODS:
+        indexed[method] = {}
+        for record in tensors[method]:
+            step = record["step"]
+            if step in indexed[method]:
+                raise ValueError(f"duplicate step {step} for {method}")
+            indexed[method][step] = record
     for metric in ("zvf", "reward_mean"):
-        ps_step = {m: [s[metric] for s in tensors[m] if s[metric] == s[metric]]
-                   for m in METHODS}
-        L = min(len(ps_step[m]) for m in METHODS)
         for m_a in METHODS:
             for m_b in METHODS:
                 if m_a >= m_b:
                     continue
-                a = ps_step[m_a][:L]; b = ps_step[m_b][:L]
-                pt, lo, hi, _ = _bci([a[i]-b[i] for i in range(L)])
+                common = sorted(indexed[m_a].keys() & indexed[m_b].keys())
+                pairs = [(indexed[m_a][step].get(metric), indexed[m_b][step].get(metric))
+                         for step in common]
+                pairs = [(a, b) for a, b in pairs if a is not None and b is not None
+                         and math.isfinite(a) and math.isfinite(b)]
+                a = [pair[0] for pair in pairs]; b = [pair[1] for pair in pairs]
+                pt, lo, hi, _ = _bci([x-y for x, y in pairs])
                 rows.append({"metric": metric, "pair": f"{m_a}-{m_b}",
-                             "n_pairs": L, "delta": round(pt, 4),
-                             "lo": round(lo, 4), "hi": round(hi, 4),
+                             "pairing": "explicit_step_conditional", "n_pairs": len(pairs),
+                             "delta": round(pt, 4), "lo": round(lo, 4), "hi": round(hi, 4),
                              "tost_pm_005_equiv": bool(tost_paired(a, b))})
     return rows
 

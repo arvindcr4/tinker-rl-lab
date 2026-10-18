@@ -49,3 +49,11 @@ These changes supersede the specific open code paths below; no historical numeri
 - R21 (iter123/127): stable digest seeds replace process-randomized Python hashes. Together with prior migrations this fixes the four specifically named scripts; a complete provenance manifest remains open.
 
 Validation: `tests/test_review19_closure.py` exercises synthetic replay/aggregation, both oracle summary/bootstrap consumers, C6 target fields, full iter143 and iter195 output entry points using temporary fixtures, malformed seed logs, and subprocesses with distinct PYTHONHASHSEED. Historical results were not loaded or regenerated; no training, provider calls or paid jobs were run.
+
+## Output and policy closure: corrected-review19-v4
+
+- R12: iter119/127 share the iter119 target policy (floor .50, strict predicted-target comparator, baseline below floor); iter135/155 share high-ZVF `>= tau` firing, including equality. The largest candidate remains a fallback, not a feasibility certificate.
+- R17: iter107 pooled failure shares now use a within-method stratified step bootstrap rather than point-estimate CI placeholders; zero exclusion means lower endpoint above zero. This is conditional step uncertainty, not independent training-seed inference. Iter115 replay and seed-summary writes were already fixed in v3; a temporary-fixture main-path regression now verifies both advertised artifacts and the replay target status.
+- R20: hybrid-unification rejects missing/nonfinite/out-of-range ZVF. Iter171 joins explicit step identities before jointly excluding missing/nonfinite metric pairs, rejects duplicate IDs, and records the conditional step pairing. Matching step IDs does not establish independent training replication or a shared randomized prompt design.
+
+All newly changed analyses target a separate corrected-review19-v4 output subtree. Synthetic tests cover boundaries, policy parity, heterogeneous pooled intervals, missingness/reordered identities, duplicate rejection, and actual iter115 output files. Historical artifacts were not loaded, regenerated, or certified; no training/provider/paid jobs were run.

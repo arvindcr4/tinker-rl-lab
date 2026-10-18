@@ -50,6 +50,7 @@ Outputs (worktree-relative paths):
 """
 from __future__ import annotations
 import csv
+import math
 import json
 import random
 import statistics
@@ -62,7 +63,7 @@ from _p5p7_common import c3_hybrid
 # ----------------------------------------------------------------------------
 ROOT = Path(__file__).resolve().parents[3]
 N2_DIR = ROOT / "platform_hybrid/experiments/results/n2_reward_tensor_resume"
-OUT_DIR = ROOT / "platform_hybrid/experiments/results/p5p8/corrected-review19-v2"
+OUT_DIR = ROOT / "platform_hybrid/experiments/results/p5p8/corrected-review19-v4"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 TAU = 0.7           # primary zvf-triage threshold
@@ -92,7 +93,12 @@ def load_n2_methods() -> list[dict]:
                 rows.append(d)
         if len(rows) != N_STEPS:
             continue
-        zvfs = [float(d.get("zvf", 0.0)) for d in rows]
+        zvfs = []
+        for row in rows:
+            value = row.get("zvf")
+            if value is None or not math.isfinite(float(value)) or not 0 <= float(value) <= 1:
+                raise ValueError(f"{path}: missing or invalid ZVF")
+            zvfs.append(float(value))
         out.append({"method": method, "zvfs": zvfs})
     return out
 

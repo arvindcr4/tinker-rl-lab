@@ -150,11 +150,8 @@
         \IfFileExists{pes_logo.pdf}{%
             \includegraphics[width=0.22\textwidth]{pes_logo.pdf}\par
         }{%
-            % Placeholder shown when no logo file is present
-            \begin{tikzpicture}
-                \node[draw, dashed, text width=4.5cm, align=center, minimum height=1.6cm, font=\small\itshape, gray]
-                    {PES University Logo\\(add pes\_logo.png)};
-            \end{tikzpicture}\par
+            % No logo file present: print nothing rather than a placeholder box
+            \relax
         }%
     }
 
@@ -172,18 +169,18 @@
 \addcontentsline{toc}{chapter}{Abstract}
 
 Modern generative models acquire transformative capabilities when equipped with the ability to act autonomously---planning multi-step workflows, invoking external tools, analyzing feedback from execution, and iteratively refining their approach.
- This survey synthesizes \textbf{60+ papers} published between January 2023 and December 2025, systematically surveying the evolving reinforcement learning methodologies used to build such autonomous agents. Our taxonomy organizes findings into \textbf{six domains} (core policy optimization, tool orchestration, memory architectures, multi-agent coordination, evaluation benchmarks, and safety) comprising \textbf{19 sub-categories} for production deployment.
+ This survey synthesizes \textbf{60+ papers} published between January 2023 and December 2025, systematically surveying the evolving reinforcement learning methodologies used to build such autonomous agents. We organize the discussion into \textbf{six topical domains} (core policy optimization, tool orchestration, memory architectures, multi-agent coordination, evaluation benchmarks, and safety); separately, papers are classified into \textbf{19 methodological categories} grouped into five clusters (Figure~\ref{fig:rl_taxonomy}).
 
 \textbf{Key Findings.} We identify three primary branches of algorithms in current research. One approach builds on \textbf{Proximal Policy Optimization (PPO)-style alignment}, which integrates trained reward networks with value function baselines.
  This method is effective but requires significant memory. Another branch, characterized by \textbf{Direct Preference Optimization (DPO)}, skips explicit reward modeling
  by optimizing using preference rankings directly, making it more computationally efficient for offline data.
- A third, increasingly popular family includes \textbf{Group Relative Policy Optimization (GRPO)}, which uses group-level comparisons to optimize the policy without needing a critic network. In our catalog of \textbf{\methodN} variants (based on a manual review of 60+ papers), GRPO-style methods account for 39\%, highlighting their growing role in memory-efficient training. We also examine the trade-offs between these algorithms across various deployment contexts.
+ A third, increasingly popular family includes \textbf{Group Relative Policy Optimization (GRPO)}, which uses group-level comparisons to optimize the policy without needing a critic network. GRPO-style methods are frequent among the 2024--2025 papers we reviewed, reflecting their role in memory-efficient training (we do not report a numeric share; see Section~\ref{sec:grpo}). We also examine the trade-offs between these algorithms across various deployment contexts.
 
 \textbf{Analytical Insights.} We complement the empirical survey with theoretical discussion. We examine why PPO-style clipping improves optimization stability in practice and how success rates on agentic benchmarks may scale with model capacity. We also propose a simplified model clarifying when retrieval improves factuality versus when it fails, and provide a communication-cost analysis for common multi-agent coordination topologies.
 
-\textbf{Empirical Results.} Benchmark performance has improved substantially. SWE-bench Verified increased from 1.7\% to 49\%~\cite{jimenez2024swebench}, WebArena-Lite from 6.1\% to 44.8\%~\cite{zhou2024webarena}, OSWorld from 18.4\% to 73.3\%~\cite{xie2024osworld}, and AIME 2024 from 9.3\% (GPT-4 prompting baseline~\cite{openai2024gpt4turbo}) to 79.8\%~\cite{deepseek2025r1}.\footnote{Benchmark figures represent best verified results as of December 2025; performance continues to evolve rapidly.} These figures represent 2--29$\times$ improvements over prompting-only baselines within 24 months. \emph{(Throughout this report, ``improvement'' refers to relative gain over prompting-only baselines unless otherwise specified.)}
+\textbf{Empirical Results.} Reported results have improved substantially, although the commonly quoted pairs mix models, benchmark splits, and scaffolds: GPT-4 solved 1.7\% of the original SWE-bench~\cite{jimenez2024swebench}, while an agent scaffold around Claude~3.5 Sonnet is reported at 49\% on the 500-task SWE-bench Verified subset (a different split, so no ratio is computed); end-to-end RL raised Llama-3.1-8B on WebArena-Lite from 8.5\% to 44.8\% (WebAgent-R1); on OSWorld the best model in the original paper reached 12.2\% versus 72.4\% for humans~\cite{xie2024osworld}, and Mobile-Agent-v3 reports 37.7\% in 2025; and on AIME 2024, GPT-4o scores 9.3\% versus 79.8\% for DeepSeek-R1~\cite{deepseek2025r1}.\footnote{Figures are as reported by the cited papers or vendors as of December 2025.}
 
-\textbf{Open Problems.} Several fundamental challenges persist: credit assignment in long-horizon trajectories, robust tool invocation with graceful failure handling, benchmark validity for real-world deployment prediction, and safety considerations for agents with environmental access. We propose a three-stage training pipeline (Supervised Fine-Tuning [SFT]$\rightarrow$RL$\rightarrow$Retrieval-Augmented Generation [RAG]) with testable hypotheses designed for academic computing resources.
+\textbf{Open Problems.} Several fundamental challenges persist: credit assignment in long-horizon trajectories, robust tool invocation with graceful failure handling, benchmark validity for real-world deployment prediction, and safety considerations for agents with environmental access. We propose a three-stage training pipeline (Supervised Fine-Tuning [SFT]$\rightarrow$RL$\rightarrow$Retrieval-Augmented Generation [RAG]) with testable hypotheses designed for academic computing resources; it was not executed here. Our executed experiments are limited to low-budget LoRA GRPO runs on GSM8K, where five Qwen3-8B seeds score 83.3\% on average on 200 held-out problems versus 82.0\% for the base model ($p=0.26$; no demonstrated gain).
 
 \vspace{0.6cm}
 \noindent \textbf{Keywords:} Autonomous Agents, RL-based Alignment, PPO, DPO, GRPO, RAG, Multi-Agent Coordination, Tool Orchestration, Code Generation.
@@ -193,16 +190,14 @@ Modern generative models acquire transformative capabilities when equipped with 
 \begin{itemize}
     \item Comprehensive synthesis of 60+ papers on RL-trained agents published 2023--2025
     \item Systematic comparison of PPO, DPO, and GRPO algorithm families with theoretical foundations
-    \item Analysis of GRPO adoption trends (39\% of recent methods) and memory efficiency implications
-    \item Documentation of 2--29$\times$ benchmark improvements with contributing factors identified
-    \item Reproducible experimental framework designed for academic computing infrastructure
+    \item Qualitative analysis of GRPO adoption and memory-efficiency implications
+    \item Documentation of reported benchmark progress, separating like-for-like RL gains from cross-model comparisons
+    \item Proposed (unexecuted) experimental framework, plus low-budget GRPO runs on GSM8K with released records
 \end{itemize}
-
-\vspace{0.6cm}
-\noindent \textbf{Graphical Abstract:}
 
 \begin{figure}[htbp]
 \centering
+\noindent \textbf{Graphical Abstract}\par\medskip
 \begin{tikzpicture}[
     scale=0.82,  % Slightly reduced for more canvas width
     % Removed transform shape to prevent text scaling issues in PDF viewers
@@ -252,7 +247,7 @@ Modern generative models acquire transformative capabilities when equipped with 
     \node[topicdomain, fill=blue!20] (rl) at (rl_pos) {RL Algorithms\\(Ch. 2)};
     \node[algo] (ppo) at (ppo_pos) {PPO\\22\%};
     \node[algo] (dpo) at (dpo_pos) {DPO\\10\%};
-    \node[algo, fill=green!25] (grpo) at (grpo_pos) {GRPO\\39\%};
+    \node[algo, fill=green!25] (grpo) at (grpo_pos) {GRPO};
     \node[algo, fill=gray!15] (other) at (other_pos) {Other\\29\%};
 
     % Tool Learning (left)
@@ -268,7 +263,7 @@ Modern generative models acquire transformative capabilities when equipped with 
     \node[topicdomain, fill=cyan!20, minimum height=1.8cm] (bench) at (bench_pos) {Evaluation\\(Ch. 3)\\{\tiny SWE-bench, etc.}};
 
     % Safety (bottom) - Safety discussed in Ch. 6 (Limitations)
-    \node[topicdomain, fill=gray!25] (safety) at (safety_pos) {Safety (Ch. 6)};
+    \node[topicdomain, fill=gray!25] (safety) at (safety_pos) {Safety (Ch. 3 \& 6)};
 
     % === STEP 4: Info boxes (far from main diagram) ===
     \node[draw, thick, fill=green!10, rounded corners, font=\scriptsize, align=center, text width=4.2cm, inner sep=5pt] at (8,3.5) {
@@ -280,15 +275,16 @@ Modern generative models acquire transformative capabilities when equipped with 
 
     \node[draw, thick, fill=blue!10, rounded corners, font=\scriptsize, align=center, text width=3.8cm, inner sep=5pt] at (-8,3.5) {
         \textbf{Progress 2023--2025:}\\
-        SWE-bench: 1.7\%$\rightarrow$49\%\\
-        OSWorld: 18.4\%$\rightarrow$73.3\%\\
-        AIME 2024: 9\%$\rightarrow$79.8\%
+        WebArena-Lite (8B, RL): 8.5\%$\rightarrow$44.8\%\\
+        OSWorld: 12.2\% (2024) / 37.7\% (2025)\\
+        AIME 2024: 9.3\%$\rightarrow$79.8\%
     };
 \end{tikzpicture}
 \caption*{\textbf{Survey Overview:} This survey maps 60+ papers across six interconnected research areas. Key finding: methods like GRPO have made practical training possible for autonomous agents that execute complex multi-step tasks without human intervention.
 }
 \end{figure}
 
+\addtocontents{toc}{\protect\thispagestyle{empty}}
 \tableofcontents
 
 \cleardoublepage\phantomsection
@@ -325,6 +321,7 @@ $G$ & Group size for GRPO \\
 $y_w, y_l$ & Preferred and non-preferred outputs (DPO) \\
 $T(s'|s,a)$ & Transition dynamics \\
 $h_t$ & Observation history up to time $t$ \\
+$O(o \mid s, a)$ & Observation emission kernel of the POMDP \\
 $\alpha$ & Learning rate (also denoted $\eta$ in some literature) \\
 $\text{KL}[\cdot\|\cdot]$ & Kullback-Leibler divergence \\
 $\sigma(z)$ & Logistic sigmoid: $\sigma(z) = 1/(1+e^{-z})$ \\
@@ -353,9 +350,10 @@ Picture a developer staring at a stack trace. They scan the error, form a hypoth
 \begin{itemize}
     \item \textbf{Practitioners} seeking implementation guidance: Ch 2 (algorithms) $\rightarrow$ Ch 3 (tools) $\rightarrow$ Ch 5 (experiments)
     \item \textbf{Researchers} exploring open problems: Ch 1 (foundations) $\rightarrow$ Ch 4 (architectures) $\rightarrow$ Ch 6 (limitations)
-    \item \textbf{Managers/Executives} wanting the big picture: Executive Summary $\rightarrow$ Key Takeaways boxes (end of each chapter) $\rightarrow$ Conclusion
+    \item \textbf{Managers/Executives} wanting the big picture: Abstract $\rightarrow$ Key Takeaways boxes (end of each chapter) $\rightarrow$ Conclusion
 \end{itemize}
 
+\noindent\begin{minipage}{\linewidth}
 \textbf{Chapter dependencies:}
 \begin{center}
 \begin{tikzpicture}[
@@ -378,6 +376,7 @@ Picture a developer staring at a stack trace. They scan the error, form a hypoth
     \draw[arrow] (ch5) -- (ch6);
 \end{tikzpicture}
 \end{center}
+\end{minipage}
 
 \textbf{Notation:} All mathematical symbols are defined in Table~\ref{tab:notation} (p.~\pageref{tab:notation}). Key terms are \textbf{bolded} and expanded on first use.
 
@@ -428,8 +427,7 @@ The gap we care about isn't between ``describing'' and ``explaining''---it's bet
 
 Describing how to fix a bug and actually fixing a bug are different skills. One involves recalling patterns from training data. The other involves navigating files, running commands, reading output, and adjusting when things don't work. Standard supervised learning can't teach the second skill because the training data doesn't include the feedback loop---the ``I tried X, it failed, so I tried Y'' part.
 
-Our angle of attack: training algorithms---PPO (Proximal Policy Optimization), DPO (Direct Optimization from Preferences), and GRPO---that optimize for whether the task got done
-, not whether the output looks like the training examples. Plus architectures (ReAct, tool integration) that give models access to the full execution cycle---act, observe, adjust.
+Our angle of attack: training algorithms---PPO (Proximal Policy Optimization), DPO (Direct Preference Optimization), and GRPO---that optimize for whether the task got done, not whether the output looks like the training examples. Plus architectures (ReAct, tool integration) that give models access to the full execution cycle---act, observe, adjust.
 
 \subsection{The Math: Agents as POMDPs}
 We model agentic AI as a Partially Observable MDP (POMDP) because it captures the key constraint: agents never see everything. They get text snippets, screenshots, error messages---not the full state of the filesystem or the browser's internal DOM. Using a standard MDP would pretend observability exists when it doesn't. The POMDP tuple $\mathcal{M} = \langle \mathcal{S}, \mathcal{A}, \Omega, T, O, R, \gamma \rangle$ breaks down as:
@@ -457,15 +455,15 @@ Consider an agent tasked with fixing a failing test in a Python project:
 The agent must infer the hidden bug location from partial observations and choose actions that maximize expected reward.
 \end{tcolorbox}
 
-The agent policy $\pi_\theta(a|h_t)$ maps observation history $h_t = (o_1, a_1, \ldots, o_t)$ to action distributions. The objective is:
+The agent policy $\pi_\theta(a|h_t)$ maps observation history $h_t = (o_1, a_1, \ldots, a_{t-1}, o_t)$ to action distributions. The objective is:
 \begin{equation}
-\max_\theta \mathbb{E}_{\pi_\theta} \left[ \sum_{t=0}^{H} \gamma^t R(s_t, a_t) \right] - \beta \cdot \text{KL}[\pi_\theta \| \pi_{\text{ref}}]
+\max_\theta \; \mathbb{E}_{\tau \sim \pi_\theta} \left[ \sum_{t=0}^{H-1} \gamma^t \Big( r(s_t, a_t) - \beta_{\text{KL}}\, \text{KL}\big[\pi_\theta(\cdot \mid h_t) \,\|\, \pi_{\text{ref}}(\cdot \mid h_t)\big] \Big) \right]
 \label{eq:objective}
 \end{equation}
-where the KL term keeps the learned policy $\pi_\theta$ tethered to a reference policy $\pi_{\text{ref}}$ (typically the SFT model), discouraging the exploitation of reward shortcuts.
+where the expectation is over trajectories $\tau$ generated by $\pi_\theta$, the per-step KL is evaluated at the realized history $h_t$, and the KL term keeps the learned policy $\pi_\theta$ tethered to a reference policy $\pi_{\text{ref}}$ (typically the SFT model), discouraging the exploitation of reward shortcuts.
 
 \section{Survey Scope and Taxonomy}
-We organize the scattered research on autonomous systems into six connected areas. \textit{Note: To capture the rapidly evolving frontier of agentic technologies, this survey includes analysis of emerging research and preprints projected up to late 2025/early 2026.}
+We organize the scattered research on autonomous systems into six connected areas. \textit{Note: To capture the rapidly evolving frontier of agentic technologies, this survey includes analysis of emerging research and preprints through early 2026.}
 
 \begin{enumerate}
     \item \textbf{Tool Invocation:} How agents turn ideas into actions---API calls, code generation, function composition (e.g., Toolformer's self-supervised learning).
@@ -477,7 +475,7 @@ We organize the scattered research on autonomous systems into six connected area
 \end{enumerate}
 
 \subsection{Systematic Review Methodology}
-We took a structured approach to cast a wide net. We queried arXiv, Semantic Scholar, ACL Anthology, and Google Scholar (January 2023--December 2025) using terms: ``agentic AI,'' ``LLM agents,'' ``RLHF,'' ``DPO,'' ``GRPO,'' ``tool use LLM,'' and ``multi-agent coordination.'' Papers were included if they presented novel agent training methods, introduced benchmarks, or addressed alignment/safety. Two reviewers independently categorized papers across our 19-direction taxonomy; disagreements were resolved through discussion. The final corpus comprises \textbf{60+ papers}. From these, we catalog \textbf{\methodN} method variants for quantitative analysis: 31 GRPO variants (39\%), 18 PPO-based (22\%), 8 DPO variants (10\%), and 23 custom/novel methods (29\%).
+We took a structured approach to cast a wide net. We queried arXiv, Semantic Scholar, ACL Anthology, and Google Scholar (January 2023--December 2025) using terms: ``agentic AI,'' ``LLM agents,'' ``RLHF,'' ``DPO,'' ``GRPO,'' ``tool use LLM,'' and ``multi-agent coordination.'' Papers were included if they presented novel agent training methods, introduced benchmarks, or addressed alignment/safety. Two reviewers independently categorized papers across our 19-direction taxonomy; disagreements were resolved through discussion. The final corpus comprises \textbf{60+ papers}.
 
 \section{Related Surveys and Our Positioning}
 Table~\ref{tab:survey_comparison} positions our work relative to existing surveys in the agentic AI and LLM alignment literature.
@@ -510,17 +508,17 @@ Table~\ref{tab:survey_comparison} positions our work relative to existing survey
 This report makes the following contributions to autonomous AI agent research:
 
 \begin{enumerate}
-    \item \textbf{Comprehensive Systematic Survey (C1):} We comb through \textbf{60+ papers} (2023--2025), analyzing the literature to identify key patterns. The field has fragmented across dozens of algorithmic variants without clear principles for selection. We organize findings into \textbf{19 research directions} across six domains because this structure makes explicit the fundamental trade-offs: core algorithms differ by optimization target, tool learning differs by supervision type, multi-agent systems differ by coordination mechanism. This isn't just organization—it's pattern extraction from noise.
+    \item \textbf{Comprehensive Systematic Survey (C1):} We comb through \textbf{60+ papers} (2023--2025), analyzing the literature to identify key patterns. The field has fragmented across dozens of algorithmic variants without clear principles for selection. We classify papers into \textbf{19 research categories} (grouped into five methodological clusters, Figure~\ref{fig:rl_taxonomy}) and discuss them across six topical domains because this structure makes explicit the fundamental trade-offs: core algorithms differ by optimization target, tool learning differs by supervision type, multi-agent systems differ by coordination mechanism. This isn't just organization—it's pattern extraction from noise.
 
-    \item \textbf{Algorithmic Landscape Analysis (C2):} We run a numbers-based breakdown of algorithm adoption in our corpus, showing that \textbf{GRPO variants make up 39\%} of the \textbf{\methodN} cataloged method variants (31/\methodN), followed by PPO (22\%) and DPO (10\%). We identify \textbf{15 algorithm variants} (Flow-GRPO, M-GRPO, AT-GRPO, RAPO, ToolPO, etc.) and lay out when to use which algorithm.
+    \item \textbf{Algorithmic Landscape Analysis (C2):} We describe algorithm adoption in our corpus qualitatively (no retained variant catalog supports a numeric share). We identify \textbf{15 algorithm variants} (Flow-GRPO, M-GRPO, AT-GRPO, RAPO, ToolPO, etc.) and lay out when to use which algorithm.
 
     \item \textbf{Formal Analysis (C3):} We work through \textbf{four results with appropriately scoped labels} that adapt existing frameworks to the agentic setting: trust-region motivation for PPO vs.\ TRPO (Proposition~\ref{prop:convergence}), agentic scaling considerations (Heuristic~\ref{lem:scaling}), a simplified model for when retrieval helps factuality (Simplified Model~\ref{prop:hallucination}), and communication overhead by topology (Heuristic~\ref{thm:multiagent}). We use ``heuristic'' and ``simplified model'' labels where formal guarantees do not exist.
 
-    \item \textbf{Benchmark Progress Documentation (C4):} We document \textbf{4--29$\times$ improvements} across major benchmarks: SWE-bench Verified (1.7\%$\rightarrow$49\%), WebArena-Lite (6.1\%$\rightarrow$44.8\%), OSWorld (18.4\%$\rightarrow$73.3\%), GAIA (30.2\%$\rightarrow$53.3\%). We analyze the technical innovations driving these gains.
+    \item \textbf{Benchmark Progress Documentation (C4):} We document reported progress on SWE-bench, WebArena-Lite, OSWorld, AIME 2024, and GAIA (Table~\ref{tab:sota_benchmarks}), distinguishing like-for-like RL gains (e.g., WebArena-Lite 8.5\%$\rightarrow$44.8\% for Llama-3.1-8B) from cross-model, cross-split comparisons that do not support a single improvement multiplier.
 
     \item \textbf{Training Instability Taxonomy (C5):} We catalog six failure modes because without understanding failure, optimization is blind. The Echo Trap happens because agents overfit to patterns that work in training but fail in deployment—this reveals a fundamental issue with reward optimization without distributional robustness. Entropy collapse occurs because exploration decays too fast, an inevitable consequence of exponential policy updates without explicit entropy maintenance. Reward instability reflects the fundamental problem of optimizing against a learned proxy that's itself changing. Gradient spikes emerge from long-horizon credit assignment where small estimation errors compound. Tool hallucination shows that models don't truly understand tool semantics, just statistical correlations. Credit assignment failure is the classic RL problem: sparse rewards provide insufficient signal. Each failure mode reveals a structural problem, not just a bug—mapping these failures lets practitioners apply focused fixes instead of blindly tweaking hyperparameters.
 
-    \item \textbf{Reproducible Experimental Framework (C6):} We design a three-stage training pipeline (SFT$\rightarrow$RL$\rightarrow$RAG) with \textbf{five testable hypotheses}, ablation grids for side-by-side tests, and infra pointers so labs can replicate the work on university-scale hardware.
+    \item \textbf{Proposed Experimental Framework (C6):} We design (but do not execute) a three-stage training pipeline (SFT$\rightarrow$RL$\rightarrow$RAG) with \textbf{five testable hypotheses} and ablation grids. The executed experiments are limited to low-budget LoRA GRPO runs on GSM8K (Chapter~\ref{ch:experiments}).
 
     \item \textbf{Research Roadmap (C7):} We identify seven critical gaps because the field cannot progress without acknowledging fundamental barriers. The benchmark-reality gap exists because benchmarks are sanitized while reality is messy—this won't fix itself without new evaluation paradigms. Long-horizon planning fails because credit assignment breaks beyond 20 steps—this requires algorithmic innovation, not just scale. Safety-capability tradeoffs emerge because capability improvements expand action spaces exponentially—the blowup is combinatorial and cannot be dodged without rethinking how agents are structured. Computational barriers reflect fundamental memory-time tradeoffs—algorithms must become more efficient, not just run on bigger hardware. These gaps are not implementation issues; they are the next frontier.
 \end{enumerate}
@@ -590,11 +588,11 @@ Theoretical Results & \ding{55} & \ding{55} & Partial & \ding{55} & \ding{51} \\
     % 2025 milestones
     \node[draw, fill=white, rounded corners, text width=2.6cm, align=center, font=\scriptsize, inner sep=4pt] at (12.85,3.6) {DeepSeek-R1\\(GRPO dominance)};
     \node[draw, fill=white, rounded corners, text width=2.6cm, align=center, font=\scriptsize, inner sep=4pt] at (12.85,2.3) {79.8\% AIME 2024\\(Expert-competitive)};
-    \node[draw, fill=white, rounded corners, text width=2.6cm, align=center, font=\scriptsize, inner sep=4pt] at (12.85,1.0) {73.3\% OSWorld\\(Mobile autonomy)};
+    \node[draw, fill=white, rounded corners, text width=2.6cm, align=center, font=\scriptsize, inner sep=4pt] at (12.85,1.0) {37.7\% OSWorld\\(Mobile-Agent-v3)};
 
     % Benchmark progress arrow
     \draw[->, thick, purple!70] (2,-1.2) -- (13,-1.2);
-    \node[below, font=\scriptsize, purple!70] at (7.5,-1.4) {SWE-bench Verified: 1.7\% $\rightarrow$ 49\% (29$\times$ improvement)};
+    \node[below, font=\scriptsize, purple!70] at (7.5,-1.4) {AIME 2024: 9.3\% (GPT-4o) $\rightarrow$ 79.8\% (DeepSeek-R1)};
 \end{tikzpicture}
 \caption{Evolution of autonomous agents from 2022 to 2025. Research unfolded across four eras: \textbf{Foundation} (RLHF methods established), \textbf{Emergence} (agents acquire tool-calling and multi-step reasoning), \textbf{Scaling} (benchmarks proliferate, code/GUI agents mature), and \textbf{Autonomy} (GRPO unlocks lean self-improvement loops, with some tasks now rivaling human scores).}
 \label{fig:timeline}
@@ -616,7 +614,7 @@ The report breaks down as follows:
 \begin{enumerate}
     \item \textbf{RL $>$ imitation:} Supervised learning teaches format; RL teaches problem-solving through trial and error.
     \item \textbf{POMDP framing is essential:} Agents operate under partial observability---they never see the full state.
-    \item \textbf{29$\times$ improvement in 18 months:} SWE-bench went from 1.7\% to 49\%, driven by RL fine-tuning.
+    \item \textbf{Fast reported progress:} e.g., AIME 2024 9.3\%$\rightarrow$79.8\% (GPT-4o vs.\ DeepSeek-R1); quoted SWE-bench pairs mix splits and scaffolds and are not attributable to RL alone.
     \item \textbf{Three algorithm families:} PPO (exploration), DPO (preferences), GRPO (memory-efficient reasoning).
 \end{enumerate}
 \end{tcolorbox}
@@ -624,13 +622,14 @@ The report breaks down as follows:
 \chapter{Foundations and Alignment Algorithms}
 \label{ch:foundations}
 
-\textit{This chapter covers the three dominant algorithm families for training agentic AI: PPO-style RLHF (\S\ref{sec:taxonomy}), DPO-style direct optimization (\S\ref{sec:dpo}), and GRPO-style group comparison (\S\ref{sec:grpo}). We present a quantitative analysis of algorithm adoption and provide selection guidelines.}
+\textit{This chapter covers the three dominant algorithm families for training agentic AI: PPO-style RLHF (\S\ref{sec:rlhf_mech}, \S\ref{sec:ppo}), DPO-style direct optimization (\S\ref{sec:dpo}), and GRPO-style group comparison (\S\ref{sec:grpo}). We present a quantitative analysis of algorithm adoption and provide selection guidelines.}
 
 \vspace{0.3cm}
 
 \noindent\textit{Mathematical notation used in this chapter follows Table~\ref{tab:notation}.}
 
 \section{Mechanisms of RLHF}
+\label{sec:rlhf_mech}
 The primary challenge is that gradient descent needs something to optimize, but ``make this response more helpful'' isn't a loss function you can differentiate. You can't write down an equation for what makes one answer better than another---ask ten people and you'll get ten different rankings. \citet{christiano2017deep} figured out a workaround: don't ask humans to score responses on some scale (they're terrible at it), just ask them to pick which response is better. Collect enough of these A-vs-B comparisons and you can train a neural network to approximate the pattern in those choices. It's a noisy proxy for what people actually want, but it's enough to give gradient descent something concrete to chase.
 
 \begin{figure}[htbp]
@@ -652,7 +651,7 @@ The primary challenge is that gradient descent needs something to optimize, but 
     \node[below=0.3cm of sft, font=\tiny] {5K--10K demos};
     \node[below=0.3cm of rl, font=\tiny] {Environment interaction};
 \end{tikzpicture}
-\caption{Three-stage training for agentic systems. \textbf{Stage 1:} A base model supplies language understanding. \textbf{Stage 2:} Imitation learning on 5K--10K examples drills task formats. \textbf{Stage 3:} RL tunes the policy through environment interaction, letting agents cope with novel situations outside their training distribution.}
+\caption{Pretraining and two-stage post-training (Base $\rightarrow$ SFT $\rightarrow$ RL); distinct from the proposed SFT$\rightarrow$RL$\rightarrow$RAG pipeline of Chapter~\ref{ch:experiments}. \textbf{Stage 1:} A base model supplies language understanding. \textbf{Stage 2:} Imitation learning on 5K--10K examples drills task formats. \textbf{Stage 3:} RL tunes the policy through environment interaction, letting agents cope with novel situations outside their training distribution.}
 \label{fig:rl_pipeline}
 \source{Based on DeepSeek-R1 methodology~\cite{deepseek2025r1}}
 \end{figure}
@@ -731,7 +730,7 @@ Researchers have tackled each of these:
 \section{Taxonomy of Agentic RL}
 \label{sec:taxonomy}
 
-Building on recent surveys \cite{wang2025landscape}, we organize agentic RL research along two axes: the cognitive capability being optimized and the environment where it's applied. This grid exposes recurring themes as well as domain-specific headaches.
+Building on recent surveys \cite{wang2025landscape}, whose capability-by-environment framing we adopt rather than claim as new, we organize agentic RL research along two axes: the cognitive capability being optimized and the environment where it's applied. This grid exposes recurring themes as well as domain-specific headaches.
 
 \subsection{Core Agentic Capabilities}
 Each capability represents a different optimization target:
@@ -755,7 +754,7 @@ Agents specialize for different environments:
 \end{itemize}
 
 \subsection{Comprehensive RL Taxonomy}
-We organize papers into 19 categories not by convenience but by what they optimize. The four-cluster organization reflects fundamental divisions in how agents learn. Core algorithms differ by their optimization target: policy-based methods optimize action selection directly, value-based methods optimize state evaluations, model-based methods learn environment dynamics. Learning paradigms differ by their data source: RLHF uses human preferences, imitation uses demonstrations, offline RL uses logged data. These categories aren't just labels—they reflect different assumptions about what's learnable and how to learn it.
+We organize papers into 19 categories not by convenience but by what they optimize. The five-cluster organization (Figure~\ref{fig:rl_taxonomy} and Appendix~\ref{app:paper_mapping}) reflects fundamental divisions in how agents learn. Core algorithms differ by their optimization target: policy-based methods optimize action selection directly, value-based methods optimize state evaluations, model-based methods learn environment dynamics. Learning paradigms differ by their data source: RLHF uses human preferences, imitation uses demonstrations, offline RL uses logged data. These categories aren't just labels—they reflect different assumptions about what's learnable and how to learn it.
 
 \begin{figure}[htbp]
 \centering
@@ -1047,6 +1046,7 @@ Complex systems have hidden failure modes. Red teaming applies adversarial optim
 Progress demands measurement. Without agreed-upon yardsticks, we cannot distinguish genuine advances from cherry-picked results. Good benchmarks act as the community's shared exam---forcing models to prove their worth on problems they have not memorized.
 
 \section{Policy Gradient Methods: PPO and TRPO}
+\label{sec:ppo}
 Policy optimization has a cliff-edge problem: a single bad update can destroy the policy, and because the data distribution depends on the policy, it can never recover. PPO solves this by enforcing a "trust region"—a mathematical guardrail ensuring we never step too far into the unknown. Trust-region methods prevent catastrophic performance degradation by limiting policy updates. PPO \cite{schulman2017ppo} makes this practical with a clipping mechanism:
 \begin{equation}
 L^{CLIP}(\theta) = \mathbb{E}_t \left[ \min(r_t(\theta) \hat{A}_t, \text{clip}(r_t(\theta), 1-\epsilon, 1+\epsilon) \hat{A}_t) \right]
@@ -1060,15 +1060,15 @@ Suppose $\epsilon = 0.2$ and the advantage $\hat{A}_t = +3$ (a good action). The
 \begin{center}
 \begin{tabular}{lccl}
 \toprule
-\textbf{Scenario} & $r_t(\theta)$ & \textbf{Clipped?} & \textbf{Gradient Effect} \\
+\textbf{Scenario} & $r_t(\theta)$ & \textbf{Clipped?} & \textbf{Objective term / gradient w.r.t.\ $r_t$} \\
 \midrule
-Small update & 1.1 & No (in $[0.8, 1.2]$) & $1.1 \times 3 = 3.3$ \\
-Large update & 1.5 & Yes $\rightarrow$ 1.2 & $1.2 \times 3 = 3.6$ (capped) \\
+Small update & 1.1 & No (in $[0.8, 1.2]$) & $1.1 \times 3 = 3.3$; gradient $\hat{A}_t = 3$ \\
+Large update & 1.5 & Yes $\rightarrow$ 1.2 & $1.2 \times 3 = 3.6$ (constant); gradient $0$ \\
 \bottomrule
 \end{tabular}
 \end{center}
 
-\textbf{Key insight:} Without clipping, the large update would give gradient $1.5 \times 3 = 4.5$, encouraging even bigger jumps. Clipping caps the benefit at $3.6$, preventing the policy from changing too fast and destabilizing training.
+\textbf{Key insight:} The numbers $3.3$, $3.6$, and $4.5$ are values of the surrogate objective term $r_t\hat{A}_t$, not gradients. Without clipping, the objective at $r_t = 1.5$ would be $1.5 \times 3 = 4.5$ and its gradient with respect to $r_t$ would remain $\hat{A}_t = 3$, so the optimizer would keep pushing the ratio upward. With clipping, the $\min$ selects the constant clipped term $3.6$ once $r_t > 1+\epsilon$ (for $\hat{A}_t>0$), so the gradient from this sample is $0$ and the policy stops moving further in that direction.
 \end{tcolorbox}
 
 \section{DPO: Skip the Reward Model Entirely}
@@ -1077,7 +1077,7 @@ Large update & 1.5 & Yes $\rightarrow$ 1.2 & $1.2 \times 3 = 3.6$ (capped) \\
 
 Building an independent reward model is not always necessary if the objective can be solved algebraically. The authors of the DPO framework \cite{rafailov2023direct} demonstrated that the RLHF objective can be restructured until the reward model cancels out. What's left is a loss you can calculate based on pairs of preferences---no intermediate scoring step:
 \begin{equation}
-L_{\text{DPO}} = -\mathbb{E}_{(x,y_w,y_l)} \left[ \log \sigma \left( \beta \log \frac{\pi_\theta(y_w|x)}{\pi_{\text{ref}}(y_w|x)} - \beta \log \frac{\pi_\theta(y_l|x)}{\pi_{\text{ref}}(y_l|x)} \right) \right]
+L_{\text{DPO}} = -\mathbb{E}_{(x,y_w,y_l)} \left[ \log \sigma \left( \beta_{\text{DPO}} \log \frac{\pi_\theta(y_w|x)}{\pi_{\text{ref}}(y_w|x)} - \beta_{\text{DPO}} \log \frac{\pi_\theta(y_l|x)}{\pi_{\text{ref}}(y_l|x)} \right) \right]
 \end{equation}
 Here $y_w$ is the response annotators liked better and $y_l$ is the one they didn't; $\beta$ controls how aggressively you push toward preferred responses (crank it too high and you'll overfit to idiosyncrasies in your preference data).
 
@@ -1118,18 +1118,17 @@ Did it work? DeepSeek-R1 hit 79.8\% on AIME 2024 math competition problems \cite
 Once GRPO proved itself, people started tweaking it for specific use cases:
 
 \begin{itemize}
-    \item \textbf{Flow-GRPO} \cite{li2025flowgrpo}: Handles multi-turn conversations by computing advantages over entire dialogue trajectories, not just single responses. Helps agents maintain coherence across long exchanges instead of optimizing each reply in isolation.
+    \item \textbf{Flow-GRPO} \cite{li2025flowgrpo}: Trains the planner of a multi-module agent (AgentFlow) on-policy by broadcasting a single verifiable trajectory-level outcome to every turn, turning multi-turn optimization into a sequence of single-turn updates with group-normalized advantages.
 
     \item \textbf{M-GRPO} \cite{hong2025mgrpo}: Built for multi-agent setups where a ``manager'' delegates subtasks to ``workers.'' Each level in the hierarchy keeps its own baseline, so agents can specialize without fighting over a shared reward signal.
 
     \item \textbf{GRPO-TCR:} Adds a penalty for malformed tool calls. Generate an invalid API invocation and your advantage score takes a hit---a simple way to teach syntactic correctness without separate supervised training.
 
-    \item \textbf{FoldGRPO:} Adjusts the KL penalty on the fly. If the policy is changing too fast, tighten the leash; if training is stable, loosen it. This adaptive scheduling helps with the catastrophic forgetting problem in long-horizon tasks.
 \end{itemize}
 
-\noindent\textbf{Novel PPO Variants:} Parallel developments have improved PPO for agentic settings:
+\noindent\textbf{Critic-free refinements of GRPO:}
 \begin{itemize}
-    \item \textbf{DAPO (Decoupled Clip and Dynamic Sampling Policy Optimization)} \cite{bytedance2025dapo}: Removes the clipping mechanism and introduces dynamic sampling to address the entropy collapse problem in large-scale RL training. Achieves 50 points on AIME 2024 with Qwen2.5-32B, providing a fully open-source alternative to proprietary reasoning systems.
+    \item \textbf{DAPO (Decoupled Clip and Dynamic Sampling Policy Optimization)} \cite{bytedance2025dapo}: A critic-free GRPO-style method that keeps clipping but decouples the lower and upper clip ranges (``Clip-Higher'') to counter entropy collapse, adds dynamic sampling that filters prompts whose groups are all-correct or all-wrong, and uses token-level loss normalization and overlong-response shaping. It reports 50 points on AIME 2024 with Qwen2.5-32B.
 \end{itemize}
 
 \noindent\textbf{Additional Novel Algorithms (2024--2025):} Beyond GRPO and PPO variants, new algorithms have emerged:
@@ -1137,90 +1136,17 @@ Once GRPO proved itself, people started tweaking it for specific use cases:
     \item \textbf{Tree-GRPO} \cite{ji2025treegrpo}: Applies tree search to LLM agent reinforcement learning, outperforming chain-based approaches over a selection of 11 datasets and 3 QA task types.
  Multi-child branching enables multiple policy updates per forward pass with fine-grained credit assignment via reward backpropagation through the tree structure.
 
-    \item \textbf{ReMax} \cite{li2024remax}: Simplifies GRPO further by using maximum-likelihood estimation on the best response in each group, eliminating negative gradients entirely and improving stability.
+    \item \textbf{ReMax} \cite{li2024remax}: A REINFORCE-style method for RLHF that drops PPO's value model and uses the reward of a greedily decoded response as the baseline; it predates GRPO and is not a GRPO simplification.
 \end{itemize}
 
 \subsection{Algorithm Distribution in Current Research}
-Tallying up \methodN\ method variants extracted from our surveyed papers, the algorithm breakdown shakes out like this: \textbf{GRPO} and its variants dominate with 31 variants (39\%), followed by \textbf{PPO} variants with 18 variants (22\%), \textbf{DPO} derivatives with 8 variants (10\%), and \textbf{custom/novel methods} comprising 23 variants (29\%). The numbers track the field's drift toward RAM-friendly pipelines that keep everything in one model.
+We do not report a numeric breakdown of algorithm families. An earlier draft gave counts over 80 ``cataloged method variants'' (31 GRPO, 18 PPO, 8 DPO, 23 custom) with an inter-rater $\kappa$, but no catalog listing those variants or the agreement data was retained, so the counts cannot be checked and are withdrawn. Qualitatively, GRPO-style critic-free methods are frequent among the 2024--2025 papers in Appendix~\ref{app:paper_mapping}.
 
-\begin{table}[h]
-\centering
-\caption{Algorithm Family Distribution Across \methodN\ Cataloged Method Variants (2024--2025). Distribution based on systematic analysis of \methodN\ method variants extracted from 60+ papers; inter-rater reliability $\kappa=0.85$.\protect\footnotemark}
-\label{tab:algorithm_distribution}
-\small
-\begin{tabularx}{\textwidth}{@{}lcc>{\raggedright\arraybackslash}X@{}}
-\toprule
-\textbf{Algorithm Family} & \textbf{Count} & \textbf{\%} & \textbf{Key Representatives} \\
-\midrule
-GRPO/Variants & 31 & 39\% & DeepSeek-R1, Flow-GRPO, M-GRPO, Tree-GRPO, FoldGRPO \\
-PPO/Variants & 18 & 22\% & InstructGPT, DAPO, OTC-PPO, LOOP, ARPO \\
-DPO/Derivatives & 8 & 10\% & Zephyr, STEP-DPO, HRPO, Preference-DPO \\
-Custom/Novel & 23 & 29\% & ToolPO, SWEET-RL, TARL, RAPO, AEPO, ReMax \\
-\bottomrule
-\end{tabularx}
-\end{table}
-\footnotetext{Cohen's $\kappa$ calculated from independent categorization of 30 randomly sampled papers by two reviewers; disagreements resolved via discussion.}
-
-\begin{figure}[htbp]
-\centering
-\begin{tikzpicture}[scale=1.0]
-    % Pie chart for algorithm distribution
-    \def\radius{2.3}
-
-    % Draw slices with slight separation for clarity
-    % GRPO: 39% (140.4 degrees) - from 90 to -50.4
-    \fill[green!60!black] (0,0) -- (90:\radius) arc (90:-50.4:\radius) -- cycle;
-    \draw[white, thick] (0,0) -- (90:\radius);
-    \draw[white, thick] (0,0) -- (-50.4:\radius);
-
-    % PPO: 22% (79.2 degrees) - from -50.4 to -129.6
-    \fill[blue!70] (0,0) -- (-50.4:\radius) arc (-50.4:-129.6:\radius) -- cycle;
-    \draw[white, thick] (0,0) -- (-129.6:\radius);
-
-    % Custom: 29% (104.4 degrees) - from -129.6 to -234
-    \fill[orange!70] (0,0) -- (-129.6:\radius) arc (-129.6:-234:\radius) -- cycle;
-    \draw[white, thick] (0,0) -- (-234:\radius);
-
-    % DPO: 10% (36 degrees) - from -234 to -270
-    \fill[red!60] (0,0) -- (-234:\radius) arc (-234:-270:\radius) -- cycle;
-    \draw[white, thick] (0,0) -- (-270:\radius);
-
-    % Percentage labels with black outline for readability
-    \node[white, font=\bfseries\large] at (20:1.4) {39\%};
-    \node[white, font=\bfseries] at (-90:1.4) {22\%};
-    \node[white, font=\bfseries] at (-182:1.4) {29\%};
-    % DPO label outside with callout line (slice too small)
-    \draw[gray, thick] (-252:\radius) -- (-252:3.2);
-    \node[font=\bfseries\small, fill=white, inner sep=2pt, rounded corners] at (-252:3.6) {10\%};
-
-    % Legend box with proper formatting
-    \draw[thick, fill=white, rounded corners] (3.8, 2.2) rectangle (7.5, -0.8);
-    \node[font=\small\bfseries] at (5.65, 1.9) {Algorithm Distribution};
-
-    \node[draw=green!60!black, fill=green!60!black, minimum width=0.4cm, minimum height=0.3cm] at (4.2, 1.3) {};
-    \node[right, font=\small] at (4.5, 1.3) {GRPO/Variants (31)};
-
-    \node[draw=blue!70, fill=blue!70, minimum width=0.4cm, minimum height=0.3cm] at (4.2, 0.7) {};
-    \node[right, font=\small] at (4.5, 0.7) {PPO/Variants (18)};
-
-    \node[draw=orange!70, fill=orange!70, minimum width=0.4cm, minimum height=0.3cm] at (4.2, 0.1) {};
-    \node[right, font=\small] at (4.5, 0.1) {Custom/Novel (23)};
-
-    \node[draw=red!60, fill=red!60, minimum width=0.4cm, minimum height=0.3cm] at (4.2, -0.5) {};
-    \node[right, font=\small] at (4.5, -0.5) {DPO/Derivatives (8)};
-
-    % Title annotation
-    \node[font=\small, align=center] at (0, -3.0) {$N = \methodN$ method variants cataloged (2024--2025)};
-\end{tikzpicture}
-\caption{Distribution of reinforcement learning algorithms across \methodN\ cataloged method variants (2024--2025). GRPO and its offshoots now lead the pack, a sign that the community has pivoted toward RAM-friendly training pipelines that allow bigger models to fit on the same hardware.}
-\label{fig:algorithm_pie}
-\end{figure}
-
-\noindent\textbf{Architecture Paradigms:} The studies cluster around three dominant architectural patterns:
+\noindent\textbf{Architecture Paradigms:} The studies use three recurring architectural patterns (no retained tally supports percentages):
 \begin{itemize}
-    \item \textbf{Modular Architectures (52\%):} Separate components for perception, planning, and execution---allowing independent optimization and interpretability.
-    \item \textbf{End-to-End Architectures (28\%):} Unified models processing raw observations directly to actions---maximizing integration but requiring more data.
-    \item \textbf{Hierarchical Architectures (20\%):} Multi-level policies with manager-worker dynamics---balancing abstraction with fine-grained control.
+    \item \textbf{Modular architectures:} separate components for perception, planning, and execution.
+    \item \textbf{End-to-end architectures:} unified models mapping observations directly to actions.
+    \item \textbf{Hierarchical architectures:} multi-level policies with manager--worker dynamics.
 \end{itemize}
 
 \subsection{Comparative Analysis of Alignment Algorithms}
@@ -1254,7 +1180,7 @@ Table~\ref{tab:algorithm_comparison} lines up the three main alignment algorithm
 \addlinespace
 \textbf{Best For} & Complex multi-step tasks & Static preference alignment & Reasoning-heavy tasks \\
 \addlinespace
-\textbf{SOTA Results} & InstructGPT, Claude & Zephyr, Llama-2-Chat & DeepSeek-R1 (79.8\% AIME) \\
+\textbf{SOTA Results} & InstructGPT, Llama-2-Chat & Zephyr & DeepSeek-R1 (79.8\% AIME) \\
 \bottomrule
 \end{tabular}
 
@@ -1345,11 +1271,11 @@ The trade-off in Rule of Thumb~\ref{prop:tradeoff} explains why GRPO hit top rea
 
 \begin{proposition}[GRPO Memory Efficiency]
 \label{prop:grpo_memory}
-Let $G$ denote a group of $n$ generated responses $\{o_1, \ldots, o_n\}$ for query $q$, with rewards $\{r_1, \ldots, r_n\}$ from a verifiable reward function $R(\cdot)$. The GRPO gradient estimator is:
+Let $G$ denote a group of $n$ generated responses $\{o_1, \ldots, o_n\}$ for query $q$, with rewards $\{r_1, \ldots, r_n\}$ from a verifiable reward function $R(\cdot)$. In its simplest on-policy form (one gradient step per batch, so the PPO ratio equals 1 and clipping is inactive), the reward-driven part of the GRPO gradient is
 \begin{equation}
-\nabla_\theta \mathcal{L}_{\text{GRPO}} = -\frac{1}{n} \sum_{i=1}^{n} \left( \frac{r_i - \mu_G}{s_G + \epsilon} \right) \nabla_\theta \log \pi_\theta(o_i | q)
+\nabla_\theta \mathcal{L}_{\text{GRPO}} = -\frac{1}{n} \sum_{i=1}^{n} \left( \frac{r_i - \mu_G}{s_G + \epsilon} \right) \nabla_\theta \log \pi_\theta(o_i | q) \;+\; \beta_{\text{KL}}\, \nabla_\theta \mathbb{D}_{\text{KL}}\!\left[\pi_\theta \,\|\, \pi_{\text{ref}}\right],
 \end{equation}
-where $\mu_G = \frac{1}{n}\sum_j r_j$ and $s_G = \sqrt{\frac{1}{n}\sum_j (r_j - \mu_G)^2}$ are within-batch statistics. This formulation eliminates the need for:
+where $\mu_G = \frac{1}{n}\sum_j r_j$ and $s_G = \sqrt{\frac{1}{n}\sum_j (r_j - \mu_G)^2}$ are within-group statistics. As in DeepSeekMath~\cite{shao2024deepseekmath}, the KL penalty to the reference policy is a separate loss term; it is not folded into the rewards before normalization. With multiple updates per batch, DeepSeekMath additionally applies the PPO-style ratio and clipping to the advantage term. This formulation eliminates the need for:
 \begin{enumerate}
     \item A \textbf{learned reward model} (replaced by verifiable $R(\cdot)$)
     \item A \textbf{critic/value network} (replaced by group normalization baseline)
@@ -1358,14 +1284,14 @@ Consequently, GRPO requires storing only the policy network $\pi_\theta$ and fro
 \end{proposition}
 
 \begin{proof}[Derivation Sketch]
-Standard policy gradient requires a baseline $b(s)$ to reduce variance: $\nabla_\theta J = \mathbb{E}[(R - b(s)) \nabla_\theta \log \pi_\theta]$. PPO learns $b(s) = V_\phi(s)$ via a separate critic. GRPO instead uses the empirical group mean $\mu_G$ as a zero-cost baseline, exploiting the fact that $\mathbb{E}[\mu_G] \approx V(s)$ when samples are i.i.d.\ from the current policy. The normalization by $s_G$ further stabilizes gradients without requiring learned components. This substitution is exact in expectation for the baseline term and empirically stable for reasonable group sizes ($n \geq 8$).
+Standard policy gradient requires a baseline $b(s)$ to reduce variance: $\nabla_\theta J = \mathbb{E}[(R - b(s)) \nabla_\theta \log \pi_\theta]$. PPO learns $b(s) = V_\phi(s)$ via a separate critic. GRPO instead uses the empirical group mean $\mu_G$ as a zero-cost baseline: for i.i.d.\ samples from the current policy, $\mathbb{E}[\mu_G] = V(q)$. Because $\mu_G$ includes the sample's own reward $r_i$, the baseline is not independent of the sample it scores, and division by $s_G$ rescales each prompt's contribution; the resulting estimator is therefore biased relative to the plain policy gradient (leave-one-out baselines such as RLOO~\cite{ahmadian2024back} avoid the first effect). The substitution is a practical variance-reduction device, not an exact replacement for a learned baseline.
 \end{proof}
 
 \begin{proposition}[Trust-Region Motivation: TRPO Guarantee vs.\ PPO Heuristic]
 \label{prop:convergence}
 TRPO \cite{schulman2015trust} optimizes a surrogate objective under an explicit KL-divergence trust-region constraint:
 \begin{equation}
-\max_\theta \mathbb{E}_t\left[\frac{\pi_\theta(a_t|s_t)}{\pi_{\theta_{\text{old}}}(a_t|s_t)} \hat{A}_t\right] \quad \text{s.t.} \quad \text{KL}[\pi_{\theta_{\text{old}}} \| \pi_\theta] \leq \delta
+\max_\theta \mathbb{E}_t\left[\frac{\pi_\theta(a_t|s_t)}{\pi_{\theta_{\text{old}}}(a_t|s_t)} \hat{A}_t\right] \quad \text{s.t.} \quad \mathbb{E}_t\big[\text{KL}[\pi_{\theta_{\text{old}}}(\cdot|s_t) \,\|\, \pi_\theta(\cdot|s_t)]\big] \leq \delta
 \end{equation}
 Under bounded-advantage assumptions, TRPO is accompanied by a conservative improvement guarantee. PPO \cite{schulman2017ppo} replaces the hard KL constraint with a clipped surrogate objective:
 \begin{equation}
@@ -1433,7 +1359,7 @@ Drawing on our 60+ paper survey, here is a hands-on guide for picking among the 
 
 \noindent\textbf{Choose GRPO When:}
 \begin{itemize}
-    \item Memory constraints limit your infrastructure (single-model training)
+    \item Memory constraints limit your infrastructure (policy plus frozen reference; no critic or learned reward model)
     \item Tasks emphasize reasoning, mathematics, or code generation
     \item You have access to verifiable reward signals (test cases, correctness checkers)
     \item Self-improvement without human feedback is acceptable
@@ -1473,19 +1399,19 @@ Algorithm~\ref{alg:grpo} presents the GRPO training procedure, which eliminates 
 \label{alg:grpo}
 \small
 \begin{algorithmic}[1]
-\Require Policy $\pi_\theta$, reference policy $\pi_{\text{ref}}$, prompts $\mathcal{D}$, reward function $r(\cdot)$, group size $G$, KL coefficient $\beta$, learning rate $\eta$
+\Require Policy $\pi_\theta$, reference policy $\pi_{\text{ref}}$, prompts $\mathcal{D}$, reward function $r(\cdot)$, group size $G$, KL coefficient $\beta_{\text{KL}}$, learning rate $\eta$
 \Ensure Optimized policy $\pi_{\theta^*}$
 \For{each iteration}
     \State Sample prompt $x \sim \mathcal{D}$
     \State Generate $G$ completions $\{y_1, \ldots, y_G\} \sim \pi_\theta(\cdot \mid x)$
-    \State Compute rewards $r_i = r(x, y_i) - \beta \log \frac{\pi_\theta(y_i \mid x)}{\pi_{\text{ref}}(y_i \mid x)}$ for $i \in [G]$ \Comment{KL penalty}
-    \State Compute group mean $\mu_G = \frac{1}{G}\sum_{j=1}^{G} r_j$ and std $s_G = \sqrt{\frac{1}{G}\sum_{j=1}^{G}(r_j - \mu_G)^2 + \epsilon}$
-    \State Normalize advantages $\hat{A}_i = \frac{r_i - \mu_G}{s_G}$ \Comment{$\epsilon = 10^{-8}$ for numerical stability}
-    \State Update policy $\theta \leftarrow \theta + \eta \nabla_\theta \sum_{i=1}^{G} \hat{A}_i \log \pi_\theta(y_i \mid x)$
+    \State Compute rewards $r_i = r(x, y_i)$ for $i \in [G]$
+    \State Compute group mean $\mu_G = \frac{1}{G}\sum_{j=1}^{G} r_j$ and std $s_G = \sqrt{\frac{1}{G}\sum_{j=1}^{G}(r_j - \mu_G)^2}$
+    \State Normalize advantages $\hat{A}_i = \frac{r_i - \mu_G}{s_G + \epsilon}$ \Comment{$\epsilon = 10^{-8}$ for numerical stability}
+    \State Update $\theta \leftarrow \theta + \eta \nabla_\theta \Big[\frac{1}{G}\sum_{i=1}^{G} \hat{A}_i \log \pi_\theta(y_i \mid x) - \beta_{\text{KL}}\, \mathbb{D}_{\text{KL}}[\pi_\theta \| \pi_{\text{ref}}]\Big]$ \Comment{KL is a separate term}
 \EndFor
-\State \Return $\pi_\theta$
+\State \Return $\pi_{\theta^*} \gets \pi_\theta$
 \end{algorithmic}
-\source{Adapted from DeepSeek-Math~\cite{shao2024deepseekmath} and DeepSeek-R1~\cite{deepseek2025r1}}
+\source{Simplified single-update form adapted from DeepSeek-Math~\cite{shao2024deepseekmath} and DeepSeek-R1~\cite{deepseek2025r1}; the PPO-style ratio and clipping used with multiple updates per batch are omitted.}
 \end{algorithm}
 
 \begin{tcolorbox}[colback=red!5!white, colframe=red!70!black, title=\textbf{Common Pitfalls in RL-Based Agent Training}]
@@ -1585,7 +1511,7 @@ Rewarding only final answers creates bad incentives: models might find shortcuts
 
 \begin{tcolorbox}[colback=blue!5!white, colframe=blue!75!black, title=\textbf{Chapter 2 Key Takeaways}]
 \begin{enumerate}
-    \item \textbf{GRPO dominates (39\% of methods):} Memory efficiency matters more than algorithmic sophistication for most teams.
+    \item \textbf{GRPO-style methods are common:} memory efficiency is a major practical driver of algorithm choice.
     \item \textbf{No single best algorithm:} PPO excels at exploration, DPO at preference alignment, GRPO at reasoning tasks.
     \item \textbf{Hybrid pipelines win:} Production systems typically combine SFT $\rightarrow$ DPO $\rightarrow$ GRPO.
     \item \textbf{Process supervision outperforms outcome supervision:} Step-level rewards improve generalization.
@@ -1596,7 +1522,7 @@ Rewarding only final answers creates bad incentives: models might find shortcuts
 \label{ch:tooluse}
 
 \textit{This chapter examines how agents engage with outside utilities and various environments.
- We cover API integration (\S3.1), code generation (\S3.2), GUI automation (\S3.3), and evaluation benchmarks (\S3.4). Key insight: tool mastery is now essential for production deployment.}
+ We cover API integration and tool learning (\S3.1), vision-language GUI automation (\S3.2), evaluation benchmarks and safety (\S3.3), and scaling for agents (\S3.4). Key insight: tool mastery is now essential for production deployment.}
 
 \vspace{0.3cm}
 
@@ -1658,13 +1584,13 @@ Researchers have tried several angles:
 
 The last year brought a wave of new approaches:
 
-\textbf{DeepAgent} \cite{li2025deepagent}: Most systems choke beyond 20 steps because they try to process the entire execution history. DeepAgent sidesteps this with ``memory folding''---learned compression of long trajectories into manageable summaries. Enables 100+ step tasks that used to be impossible. Runs on FoldGRPO, which auto-tunes the KL penalty to avoid forgetting what happened earlier.
+\textbf{DeepAgent} \cite{li2025deepagent}: Most systems choke beyond 20 steps because they try to process the entire execution history. DeepAgent sidesteps this with autonomous ``memory folding''---compressing past interactions into structured episodic, working, and tool memories. It is trained with ToolPO, an end-to-end RL method that uses LLM-simulated APIs and assigns credit to tool-invocation tokens.
 
 \textbf{Tool-Star}: Two-phase training: first imitate demos that include explicit ``thinking'' tokens, then tune with RL on outcomes. Those thinking tokens give you step-level signal for free, even when you only check the final answer.
 
 \textbf{ReTool} \cite{feng2025retool}: Built-in reflection loop. Agent runs a tool, looks at the result, and decides: accept, retry with different parameters, or switch tools entirely. This self-correction hits \textbf{67\% on AIME 2024}---competitive with much larger models.
 
-\textbf{VerlTool} \cite{jiang2025verltool}: Hardcodes a grammar of valid API calls and rejects anything that doesn't parse. Solves the ``creative hallucination'' problem where models invent plausible-looking but nonexistent function signatures.
+\textbf{VerlTool} \cite{jiang2025verltool}: An agentic RL training framework that extends veRL to multi-turn tool use (code execution, search, SQL, visual and web tools) with asynchronous rollouts; it is a training infrastructure, not a grammar-constrained decoder.
 
 \textbf{ToolBrain} \cite{le2025toolbrain}: When you have 1000+ possible APIs, in-context examples don't scale. ToolBrain learns embeddings for tool capabilities and picks the right one via retrieval. 89\% precision, sub-100ms latency.
 
@@ -1801,11 +1727,11 @@ How do you test whether an agent can actually do useful work? You throw it at pr
         bar width=15pt,
     ]
     \addplot coordinates {(SWE-bench,1.7) (WebArena,14.4) (OSWorld,12.2)};
-    \addplot coordinates {(SWE-bench,35.0) (WebArena,78.2) (OSWorld,72.4)};
+    \addplot coordinates {(WebArena,78.2) (OSWorld,72.4)};
     \legend{GPT-4, Human}
     \end{axis}
 \end{tikzpicture}
-\caption{Performance gap between GPT-4 and humans on agentic benchmarks. \textbf{SWE-bench} tests code repair on real GitHub issues; \textbf{WebArena} checks web navigation (booking, shopping); \textbf{OSWorld} evaluates desktop automation requiring vision and control. The large gap (GPT-4 at 1.7--14.4\% vs. humans at 35--78\%) shows how hard autonomous multi-step execution is and motivates RL-based fine-tuning.}
+\caption{Performance gap between GPT-4 and humans on agentic benchmarks. \textbf{SWE-bench} tests code repair on real GitHub issues; \textbf{WebArena} checks web navigation (booking, shopping); \textbf{OSWorld} evaluates desktop automation requiring vision and control. SWE-bench has no published human baseline, so no human bar is shown. The large gap (GPT-4/GPT-4V at 1.7--14.4\% vs.\ humans at 72--78\% where measured) shows how hard autonomous multi-step execution is and motivates RL-based fine-tuning.}
 \label{fig:benchmark_comparison}
 \source{Data from ~\cite{jimenez2024swebench,zhou2024webarena,xie2024osworld}}
 \end{figure}
@@ -1814,213 +1740,46 @@ Table~\ref{tab:sota_benchmarks} rounds up current top scores on major agentic be
 
 \begin{table}[h]
 \centering
-\caption{State-of-the-Art Performance on Agentic Benchmarks (Data as of January 2026; 2026 entries marked with citations are projected based on announced roadmaps)}
+\caption{Reported results on agentic and reasoning benchmarks (as of December 2025). Rows are as reported by the cited sources; values from different models, splits, or scaffolds are not converted into improvement ratios. Unattributed historical rows from earlier drafts are removed.}
 \label{tab:sota_benchmarks}
 \small
 \begin{tabular}{@{}llccc@{}}
 \toprule
 \textbf{Benchmark} & \textbf{Model/Method} & \textbf{Success (\%)} & \textbf{Training} & \textbf{Year} \\
 \midrule
-\multirow{5}{*}{SWE-bench Verified}
-& GPT-4 (baseline) & 1.7 & Prompting & 2023 \\
-& Early RL agents & 20.0 & SFT+RL & 2024 \\
-& OpenAI o3-mini (Agentless) & 39.0 & Proprietary RL & 2025 \\
-& Claude-3.5 Sonnet & 49.0 & SFT+RLHF & 2024 \\
-& \textit{Improvement} & \textit{+2782\%} & \textit{(1.7\%$\rightarrow$49.0\%)} & -- \\
+SWE-bench (original) & GPT-4, retrieval baseline~\cite{jimenez2024swebench} & 1.7 & Prompting & 2023 \\
+SWE-bench Verified & Claude-3.5 Sonnet with agent scaffold (vendor-reported) & 49.0 & Proprietary & 2024 \\
 \midrule
-\multirow{4}{*}{WebArena-Lite}
-& Qwen-2.5-3B (baseline) & 6.1 & Prompting & 2024 \\
-& Agent-FLAN & 32.1 & SFT & 2024 \\
-& WebAgent-R1 (Llama-3.1-8B) & 44.8 & End-to-end RL & 2025 \\
-& \textit{Improvement} & \textit{+634\%} & \textit{(6.1\%$\rightarrow$44.8\%)} & -- \\
+\multirow{2}{*}{WebArena-Lite} & Llama-3.1-8B before / after WebAgent-R1 & 8.5 / 44.8 & End-to-end RL & 2025 \\
+ & Qwen-2.5-3B before / after WebAgent-R1 & 6.1 / 33.9 & End-to-end RL & 2025 \\
 \midrule
-\multirow{5}{*}{AIME 2024}
-& GPT-4 (baseline) & 9.3 & Prompting & 2024 \\
-& ReTool~\cite{feng2025retool} & 67.0 & SFT+Tools & 2025 \\
-& DeepSeek-R1~\cite{deepseek2025r1} & 79.8 & GRPO & 2025 \\
-& OpenAI o1-preview & 74.4 & Proprietary RL & 2024 \\
-& \textit{Improvement} & \textit{+758\%} & \textit{(9.3\%$\rightarrow$79.8\%)} & -- \\
+\multirow{3}{*}{AIME 2024} & GPT-4o~\cite{deepseek2025r1} & 9.3 & Prompting & 2024 \\
+ & ReTool~\cite{feng2025retool} & 67.0 & SFT+Tools+RL & 2025 \\
+ & DeepSeek-R1~\cite{deepseek2025r1} & 79.8 & GRPO & 2025 \\
 \midrule
-\multirow{4}{*}{HumanEval}
-& GPT-4 (baseline) & 67.0 & Prompting & 2023 \\
-& DeepSeek-Coder & 90.2 & SFT+RL & 2024 \\
-& MetaGPT~\cite{hong2023metagpt} & 85.9 & Role-based & 2023 \\
-& \textit{Improvement} & \textit{+35\%} & \textit{(67.0\%$\rightarrow$90.2\%)} & -- \\
+\multirow{3}{*}{HumanEval} & GPT-4 & 67.0 & Prompting & 2023 \\
+ & MetaGPT~\cite{hong2023metagpt} & 85.9 & Role-based & 2023 \\
+ & DeepSeek-Coder-V2 & 90.2 & SFT+RL & 2024 \\
 \midrule
-\multirow{5}{*}{OSWorld}
-& GPT-4V (baseline) & 18.4 & Prompting & 2024 \\
-& SFT-only agents & 34.2 & SFT & 2024 \\
-& Mobile-Agent-v3 & 73.3 & Multi-agent RL & 2025 \\
-& Human Expert & 72.4 & -- & 2024 \\
-& \textit{Improvement} & \textit{+298\%} & \textit{(18.4\%$\rightarrow$73.3\%)} & -- \\
+\multirow{3}{*}{OSWorld} & Best model in original paper~\cite{xie2024osworld} & 12.2 & Prompting & 2024 \\
+ & Human~\cite{xie2024osworld} & 72.4 & -- & 2024 \\
+ & Mobile-Agent-v3 & 37.7 & Multi-agent framework & 2025 \\
 \midrule
-\multirow{4}{*}{GAIA}
-& GPT-4 (baseline) & 30.2 & Prompting+Tools & 2023 \\
-& Agent-FLAN & 45.1 & SFT & 2024 \\
-& DeepAgent~\cite{li2025deepagent} & 53.3 & ToolPO+RL & 2025 \\
-& \textit{Improvement} & \textit{+77\%} & \textit{(30.2\%$\rightarrow$53.3\%)} & -- \\
+GAIA & DeepAgent-32B~\cite{li2025deepagent} & 53.3 & ToolPO RL & 2025 \\
 \bottomrule
 \end{tabular}
 
 \vspace{0.2cm}
 \footnotesize
-\textbf{Statistical Notes:} Success rates reported as point estimates from original papers; no benchmark paper provides formal confidence intervals. \textit{Back-of-envelope estimates} (computed by authors assuming binomial proportions): SWE-bench Verified ($\approx\pm$2\% for $n\approx500$ test cases), AIME 2024 ($\approx\pm$4\% for $n=30$ problems)---these are rough approximations, not published statistics. The magnitude of improvements (2--29$\times$) suggests practical significance despite missing formal tests.
+\textbf{Statistical notes:} Values are point estimates from the cited sources, which mostly do not report intervals. For a binomial proportion the 95\% half-width is $1.96\sqrt{\hat{p}(1-\hat{p})/n}$: about $\pm4.4$ points for SWE-bench Verified ($\hat{p}=0.49$, $n=500$) and about $\pm14$ points for AIME 2024 ($\hat{p}=0.80$, $n=30$, single pass). These are back-of-envelope sampling intervals, not published statistics.
 
-\source{Benchmark sources: SWE-bench~\cite{jimenez2024swebench}, WebArena~\cite{zhou2024webarena}, OSWorld~\cite{xie2024osworld}, GAIA~\cite{mialon2023gaia}. Results from official leaderboards and cited papers; entries without citations are from leaderboard submissions or proprietary announcements.}
+\source{Benchmark sources: SWE-bench~\cite{jimenez2024swebench}, WebArena~\cite{zhou2024webarena}, OSWorld~\cite{xie2024osworld}, GAIA~\cite{mialon2023gaia}. WebArena-Lite rows: WebAgent-R1 (arXiv:2505.16421); Mobile-Agent-v3 OSWorld: arXiv:2508.15144 (its 73.3\% figure is AndroidWorld, not OSWorld).}
 \end{table}
 
-% === GROUPED BAR CHART: Training Method Comparison ===
-\begin{figure}[h]
-\centering
-\begin{tikzpicture}[scale=0.85, transform shape]
-    \begin{axis}[
-        ybar,
-        bar width=12pt,
-        width=14cm,
-        height=7cm,
-        ylabel={Success Rate (\%)},
-        symbolic x coords={SWE-bench, WebArena, AIME 2024, OSWorld, GAIA},
-        xtick=data,
-        xticklabel style={font=\small, rotate=15, anchor=east},
-        ymin=0, ymax=85,
-        ytick={0, 20, 40, 60, 80},
-        legend style={
-            at={(0.5, 1.02)},
-            anchor=south,
-            legend columns=3,
-            font=\small,
-            /tikz/every even column/.append style={column sep=0.5cm}
-        },
-        grid=major,
-        grid style={gray!20},
-        nodes near coords,
-        nodes near coords style={font=\tiny, above},
-        every node near coord/.append style={yshift=1pt}
-    ]
-    % Baseline (Prompting only) - Red bars
-    \addplot[fill=red!60, draw=red!80!black] coordinates {
-        (SWE-bench, 1.7)
-        (WebArena, 6.1)
-        (AIME 2024, 9.3)
-        (OSWorld, 18.4)
-        (GAIA, 30.2)
-    };
-    \addlegendentry{Baseline (Prompting)}
 
-    % SFT - Yellow bars
-    \addplot[fill=yellow!70, draw=yellow!80!black] coordinates {
-        (SWE-bench, 30.2)
-        (WebArena, 19.4)
-        (AIME 2024, 32.5)
-        (OSWorld, 34.2)
-        (GAIA, 45.1)
-    };
-    \addlegendentry{SFT}
 
-    % RL (GRPO/PPO) - Green bars
-    \addplot[fill=green!60, draw=green!80!black] coordinates {
-        (SWE-bench, 49.0)
-        (WebArena, 44.8)
-        (AIME 2024, 79.8)
-        (OSWorld, 73.3)
-        (GAIA, 53.3)
-    };
-    \addlegendentry{RL (GRPO/PPO)}
+\textbf{Reading the numbers.} Reported results have improved substantially, although the commonly quoted pairs mix models, benchmark splits, and scaffolds: GPT-4 solved 1.7\% of the original SWE-bench~\cite{jimenez2024swebench}, while an agent scaffold around Claude~3.5 Sonnet is reported at 49\% on the 500-task SWE-bench Verified subset (a different split, so no ratio is computed); end-to-end RL raised Llama-3.1-8B on WebArena-Lite from 8.5\% to 44.8\% (WebAgent-R1); on OSWorld the best model in the original paper reached 12.2\% versus 72.4\% for humans~\cite{xie2024osworld}, and Mobile-Agent-v3 reports 37.7\% in 2025; and on AIME 2024, GPT-4o scores 9.3\% versus 79.8\% for DeepSeek-R1~\cite{deepseek2025r1}. Only some of these pairs isolate RL: WebAgent-R1 (same model before and after end-to-end RL) and DeepSeek-R1 (GRPO) do; the SWE-bench pair reflects a different model, a different split, and an inference-time scaffold.
 
-    \end{axis}
-
-    % Annotation for dramatic improvement
-    \node[draw, thick, fill=white, rounded corners, font=\scriptsize, align=center]
-        at (9.5, 5.5) {RL training associated\\with 2--29$\times$ improvement\\over prompting baselines};
-\end{tikzpicture}
-\caption{Training method comparison across agentic benchmarks (December 2025). Each benchmark shows three approaches: \textbf{Baseline} (prompting-only methods), \textbf{SFT} (supervised fine-tuning on demonstrations), and \textbf{RL} (reinforcement learning with GRPO or PPO). The trend is consistent: RL-based approaches are associated with substantial gains across all benchmarks, with AIME 2024 showing the most dramatic improvement (9.3\% $\rightarrow$ 79.8\%, an 8.6$\times$ increase via DeepSeek-R1's GRPO training).}
-\label{fig:training-method-comparison}
-\source{Data from official leaderboards and cited papers; AIME 2024 results from DeepSeek-R1~\cite{deepseek2025r1}}
-\end{figure}
-
-\textbf{The data indicates significant improvements.} Two years ago, GPT-4 solved 1.7\% of SWE-bench issues. Today, Claude-3.5 Sonnet reaches 49\%---a 29$\times$ jump. On AIME 2024, DeepSeek-R1 scores 79.8\%, approaching human competition medalist levels. WebArena went from 6.1\% to 44.8\%. OSWorld from 18.4\% to 73.3\%. What factors are associated with these gains? RL training---specifically GRPO variants and extended reasoning chains---plus multi-agent setups where models specialize and coordinate. The pattern is consistent: prompting alone plateaus fast, SFT gets you halfway, and RL is associated with state-of-the-art results.
-
-\begin{figure}[htbp]
-\centering
-\begin{tikzpicture}[scale=0.9]
-    \begin{axis}[
-        width=14cm,
-        height=8cm,
-        xlabel={Timeline (2023--2025)},
-        ylabel={Success Rate (\%)},
-        xmin=0, xmax=12,
-        ymin=0, ymax=85,
-        xtick={1, 4, 7, 10},
-        xticklabels={Early 2023, Late 2023, Mid 2024, Early 2025},
-        ytick={0, 20, 40, 60, 80},
-        legend pos=north west,
-        legend style={font=\scriptsize, fill=white, fill opacity=0.8},
-        grid=major,
-        grid style={gray!30},
-        every axis plot/.append style={thick, mark size=3pt}
-    ]
-    % SWE-bench Verified trajectory
-    \addplot[color=blue, mark=square*] coordinates {
-        (1, 1.7)
-        (4, 12)
-        (7, 20)
-        (10, 49)
-    };
-    \addlegendentry{SWE-bench Verified}
-
-    % WebArena trajectory
-    \addplot[color=red, mark=triangle*] coordinates {
-        (1, 6.1)
-        (4, 15)
-        (7, 32.1)
-        (10, 44.8)
-    };
-    \addlegendentry{WebArena-Lite}
-
-    % OSWorld trajectory
-    \addplot[color=green!70!black, mark=*] coordinates {
-        (4, 18.4)
-        (7, 34.2)
-        (10, 73.3)
-    };
-    \addlegendentry{OSWorld}
-
-    % GAIA trajectory
-    \addplot[color=orange, mark=diamond*] coordinates {
-        (4, 30.2)
-        (7, 45.1)
-        (10, 53.3)
-    };
-    \addlegendentry{GAIA}
-
-    % AIME 2024 trajectory
-    \addplot[color=purple, mark=pentagon*] coordinates {
-        (4, 9.3)
-        (7, 44)
-        (10, 79.8)
-    };
-    \addlegendentry{AIME 2024}
-
-    % Annotations for key methods (with background for readability)
-    \node[font=\tiny, align=center, blue, fill=white, inner sep=1pt, rounded corners] at (axis cs:11.3, 49) {Claude-3.5};
-    \node[font=\tiny, align=center, green!70!black, fill=white, inner sep=1pt, rounded corners] at (axis cs:11.5, 73.3) {Mobile-Agent-v3};
-    \node[font=\tiny, align=center, purple, fill=white, inner sep=1pt, rounded corners] at (axis cs:11.3, 79.8) {DeepSeek-R1};
-
-    % Era annotations INSIDE axis (using axis coordinates)
-    \draw[dashed, gray!60, thick] (axis cs:2.5, 0) -- (axis cs:2.5, 82);
-    \draw[dashed, gray!60, thick] (axis cs:5.5, 0) -- (axis cs:5.5, 82);
-
-    % Era labels at top with background
-    \node[font=\scriptsize, gray!80, fill=white, inner sep=2pt, rounded corners] at (axis cs:1.5, 80) {Prompting};
-    \node[font=\scriptsize, gray!80, fill=white, inner sep=2pt, rounded corners] at (axis cs:4, 80) {SFT};
-    \node[font=\scriptsize, gray!80, fill=white, inner sep=2pt, rounded corners] at (axis cs:8.5, 80) {RL Era};
-
-    \end{axis}
-\end{tikzpicture}
-\caption{Benchmark improvement trajectories across five major agentic benchmarks (2023--2025). The transition from prompting to SFT coincided with modest gains, while the period of RL adoption (especially GRPO) in 2024--2025 is associated with dramatic improvements. AIME 2024 shows the most striking trajectory, reaching 79.8\%.}
-\label{fig:benchmark_trajectory}
-\source{Data compiled from benchmark leaderboards and surveyed papers}
-\end{figure}
 
 \subsection{The Safety Problem Gets Worse with Agents}
 
@@ -2035,7 +1794,7 @@ How do we actually measure whether agents are reliable? Several benchmarks go be
 \textbf{TrustLLM} \cite{sun2024trustllm} sliced trustworthiness into measurable components: factuality, harm avoidance, fairness, robustness to adversarial inputs. The awkward finding: pushing safety from 72\% to 89\% sometimes tanks factuality from 91\% to 87\%. There's no free lunch.
 
 \textbf{OS-level risk testing} \cite{yin2024os} found that giving models environmental access amplifies harm potential approximately 3.2$\times$ compared to text-only interaction, though further replication over various model architectures is needed to establish confidence bounds.
- Their 500+ scenario suite covers everything from ``oops I deleted the wrong file'' to ``oops I leaked credentials.''
+ Their 150-task suite, built on OSWorld and spanning deliberate misuse, prompt injection, and model misbehavior, covers everything from ``oops I deleted the wrong file'' to ``oops I leaked credentials.''
 
 \subsubsection{Taxonomy of Agent Safety Risks}
 
@@ -2073,8 +1832,8 @@ This survey focuses on English-language publications from 2023--2025; non-Englis
 \begin{tcolorbox}[colback=green!5!white, colframe=green!60!black, title=\textbf{Chapter 3 Key Takeaways}]
 \begin{enumerate}
     \item \textbf{Tools transform capabilities:} ReAct-style interleaving of reasoning and action beats pure reasoning by 34\% on household tasks.
-    \item \textbf{Code generation is mature:} SWE-bench jumped from 1.7\% to 49\% in 18 months---the steepest improvement curve.
-    \item \textbf{GUI automation lags:} OSWorld at 72.4\% shows pixel-level control remains harder than API calls.
+    \item \textbf{Code agents advanced quickly:} 1.7\% (GPT-4, original SWE-bench, 2023) and 49\% (Claude-3.5 Sonnet scaffold, SWE-bench Verified, 2024) are on different splits, so the gap is not a like-for-like multiplier.
+    \item \textbf{GUI automation lags:} on OSWorld, the human reference in Table~\ref{tab:sota_benchmarks} is 72.4\%; agent results remain well below human level on the original OSWorld task set, so pixel-level control remains harder than API calls.
     \item \textbf{Safety scales with capability:} Environmental access amplifies harm potential $\sim$3.2$\times$.
 \end{enumerate}
 \end{tcolorbox}
@@ -2165,7 +1924,7 @@ Let $c \in [0,1]$ be the probability the knowledge base contains sufficient evid
 \begin{equation}
 H(\pi_{\text{RAG}}) \leq (1 - c) \cdot H(\pi_{\text{base}}) + c \cdot \left(\epsilon_r + (1-\epsilon_r)\epsilon_g\right)
 \end{equation}
-where $H(\pi_{\text{base}})$ is the base model's hallucination rate without retrieval. This is not a guarantee; it clarifies \textbf{which failure modes}---coverage ($c$), retrieval ($\epsilon_r$), and evidence-use ($\epsilon_g$)---drive outcomes.
+where $H(\pi_{\text{base}})$ is the base model's hallucination rate without retrieval. The bound assumes (i) non-distraction: when the knowledge base lacks evidence, retrieved context does not raise the hallucination rate above $H(\pi_{\text{base}})$; and (ii) a pessimistic retrieval-failure case, in which every query whose evidence exists but is not retrieved is counted as a hallucination. Under (i) and (ii) it follows from the law of total probability over these three events. This is not a guarantee; it clarifies \textbf{which failure modes}---coverage ($c$), retrieval ($\epsilon_r$), and evidence-use ($\epsilon_g$)---drive outcomes.
 \end{toymodel}
 
 \begin{remark}
@@ -2209,7 +1968,7 @@ Think of it like a software team. You don't have one person who writes code, rev
 \end{figure}
 
 \begin{itemize}
-    \item \textbf{FireAct} \cite{chen2023fireact}: Shows that fine-tuning smaller models on agent trajectories can match larger proprietary models.
+    \item \textbf{FireAct} \cite{chen2023fireact}: A single-agent method rather than a multi-agent one; it fine-tunes smaller models on ReAct trajectories distilled from a larger model, and such tuned agents can then serve as components of multi-agent systems.
     \item \textbf{AgentNet}: Proposes decentralized evolutionary coordination, achieving better task completion by letting agents evolve interaction patterns \cite{zhang2024agentnet}.
     \item \textbf{MasRouter}: Learns to route tasks dynamically between agents to optimize cost and performance \cite{chen2024masrouter}.
 \end{itemize}
@@ -2254,7 +2013,7 @@ Recent work has moved beyond hand-designed role assignments to learning coordina
 For $n$ agents exchanging messages, communication costs per coordination round (i.e., one synchronization cycle where all agents send and receive messages) scale differently by topology:
 \begin{enumerate}
     \item \textbf{Fully connected (decentralized):} $\mathcal{O}(n^2)$ pairwise messages per round---every agent talks to every other agent
-    \item \textbf{Tree/hierarchical ($k$ levels):} $\mathcal{O}(n)$ messages per round (up to $\mathcal{O}(\log n)$ routing hops)---messages aggregate upward, decisions flow downward
+    \item \textbf{Tree/hierarchical ($k$ levels):} $\mathcal{O}(n)$ messages per round and $\mathcal{O}(k)$ sequential routing hops, which is $\mathcal{O}(\log n)$ only for a balanced tree with branching factor at least 2---messages aggregate upward, decisions flow downward
     \item \textbf{Centralized hub:} $\mathcal{O}(n)$ messages per round---all agents communicate through a single coordinator, introducing a bottleneck and single-point-of-failure risk
 \end{enumerate}
 These are asymptotic communication-scaling heuristics, not end-to-end performance guarantees---constants, network latency, and message size significantly affect real-world overhead (e.g., fully connected with $n=3$ agents may outperform hierarchical due to coordination simplicity). The optimal architecture depends on task structure: decentralized topologies offer robustness for long-horizon tasks; hierarchical topologies enable clear decomposition; centralized topologies minimize latency when the coordinator is fast enough.
@@ -2273,7 +2032,7 @@ Setting aside speculation, we ask: what architectural patterns actually work?
 
 \textbf{Planning strategies compared.} \citet{wang2024planning} ran a bake-off: hierarchical decomposition (68\% success), external planner (72\%), iterative self-refinement (76\%). The pattern that kept winning: feed execution results back into planning. Doesn't matter what the agent is doing---closing the loop helps.
 
-\textbf{What everyone actually builds.} \citet{xi2023rise} surveyed 100+ agent implementations. Every single one had an action module. 92\% had a planning module. Only 58\% had perception, and just 43\% had memory. Agents without memory struggle on anything requiring context across steps---which is most interesting tasks.
+\textbf{What everyone actually builds.} \citet{xi2023rise} surveyed 100+ agent implementations. Every single one had an action module. 92\% had a planning module. Only 58\% had perception, and just 43\% had memory. Agents without memory struggle on anything requiring context across steps---which includes most interesting tasks.
 
 \subsection{Limitations of RAG and Multi-Agent Research}
 The RAG literature focuses predominantly on text retrieval; multimodal retrieval (images, code, structured data) remains underexplored. Retrieval quality metrics (e.g., recall@k) do not always correlate with downstream task performance, making evaluation methodology an open question. For multi-agent systems, coordination overhead and failure cascades are often underreported---papers typically highlight success cases rather than systematic failure analysis. Additionally, most multi-agent benchmarks test pre-defined role assignments; emergent role discovery and dynamic team composition remain largely unstudied. Communication efficiency claims should be interpreted cautiously, as real-world latency and bandwidth constraints differ substantially from simulated environments.
@@ -2290,41 +2049,42 @@ The RAG literature focuses predominantly on text retrieval; multimodal retrieval
 \chapter{Experimental Methodology and Results}
 \label{ch:experiments}
 
-This chapter presents the experimental methodology and results for our GRPO scaling study, structured in two parts.  \textbf{Part I} (Sections~\ref{sec:actual_results}--\ref{sec:statistical_analysis}) reports eight completed runs across two model families, two benchmarks, and scales from 0.5B to 30B parameters, with full statistical analysis.  \textbf{Part II} (Section~\ref{sec:systematic_study}) describes the three-block systematic scaling study currently in progress, which was designed to resolve the confounds in Part I: Block~A isolates instruction-tuning, Block~B isolates model family, and Block~C spans a six-point Qwen3 size ladder from 0.6B to 30B.  Together the two parts constitute a progression from exploratory recipe testing to a controlled factorial experiment.  All experiments used the Tinker RL platform with the Atropos GRPO training framework.
+This chapter has two parts. The first describes a proposed agentic evaluation programme (algorithm comparison, tool use, memory, multi-agent coordination, test-time scaling) that was \emph{not} executed. The second (Section~\ref{sec:actual_results}) reports the low-budget GRPO runs that were executed on GSM8K, using only runs with released W\&B records and held-out evaluation files, followed by a planned scaling study (Section~\ref{sec:systematic_study}).
 
 \vspace{0.3cm}
 
 \section{Experimental Design Philosophy}
 \label{sec:design_philosophy}
 
-\textbf{Requirement Questioning:} Why run experiments at all? Without controlled comparison, we cannot distinguish algorithmic improvements from noise. Why three benchmarks? One is insufficient, but three orthogonal benchmarks (SWE-bench for code, WebArena for web, OSWorld for OS) expose different failure modes efficiently. Why 8B models? Larger models are prohibitively expensive for academic research, and 8B is the smallest size where meaningful agentic capabilities emerge.
+\textbf{Scope note.} Sections~\ref{sec:design_philosophy}--\ref{sec:comprehensive_experiments} describe a \emph{proposed} agentic evaluation programme (WebArena, SWE-bench, OSWorld, PPO/DPO baselines, RAG). None of those experiments was executed for this report. The executed work is limited to the low-budget GRPO runs on GSM8K reported in Section~\ref{sec:actual_results}.
 
-\textbf{Simplified Design:} Three core experiments (PPO baseline, GRPO test, SFT control) on WebArena with Llama-3-8B tackled the key question: Does GRPO demonstrate higher sample efficiency than PPO for agentic tasks?
+\textbf{Requirement Questioning:} Why run experiments at all? Without controlled comparison, we cannot distinguish algorithmic improvements from noise. Why three benchmarks? One is insufficient, but three orthogonal benchmarks (SWE-bench for code, WebArena for web, OSWorld for OS) would expose different failure modes efficiently. Why 8B models? Larger models are expensive for academic research.
 
-This framework runs on academic compute budgets and produces interpretable results.
-Our experimental framework aimed to answer questions, not just collect numbers. We prioritized three lines of investigation: (1) Established baselines not to claim state-of-the-art, but to understand what 8B models can actually do without specialized training; (2) Compared algorithms not to crown a winner, but to understand which algorithmic biases matter for which task types; (3) Evaluated RAG and tool-use not as add-ons, but as solutions to specific problems---RAG for knowledge limits, tool-use for action limits.
+\textbf{Simplified Design (proposed):} Three core experiments (PPO baseline, GRPO test, SFT control) on WebArena with Llama-3-8B would address the key question: does GRPO demonstrate higher sample efficiency than PPO for agentic tasks?
+
+The proposed programme has three lines of investigation: (1) establish baselines to understand what 8B models can do without specialized training; (2) compare algorithms to understand which algorithmic biases matter for which task types; (3) evaluate RAG and tool use as solutions to specific problems---RAG for knowledge limits, tool use for action limits.
 
 \subsection{Research Hypotheses}
-From the papers we surveyed, we distill these testable hypotheses. We define \textbf{sample efficiency} operationally as $I_{80}$: the number of environment interactions required to reach 80\% of final performance measured at a predetermined iteration count $N_{\max}$ (we use $N_{\max} = 10{,}000$ interactions, following common practice). Hypotheses avoid hard numeric thresholds where the literature does not support them:
+From the papers we surveyed, we distill these testable hypotheses for the proposed programme; none is tested in this report. We define \textbf{sample efficiency} operationally as $I_{80}$: the number of environment interactions required to reach 80\% of final performance measured at a predetermined iteration count $N_{\max}$ (we would use $N_{\max} = 10{,}000$ interactions). Hypotheses avoid hard numeric thresholds where the literature does not support them:
 
 \begin{description}
-    \item[H1 (Sample-Efficiency Endpoint, GRPO vs.\ PPO):] On interactive agentic benchmarks (WebArena, optionally OSWorld), GRPO reaches $I_{80}$ (80\% of final performance at $N_{\max}$) using \textbf{fewer environment interactions} than PPO under matched compute and reward design. Primary endpoint: $I_{80}(\text{GRPO}) / I_{80}(\text{PPO}) < 1$.
+    \item[H1 (Sample-Efficiency Endpoint, GRPO vs.\ PPO):] On interactive agentic benchmarks (WebArena, optionally OSWorld), GRPO reaches $I_{80}$ using \textbf{fewer environment interactions} than PPO under matched compute and reward design. Primary endpoint: $I_{80}(\text{GRPO}) / I_{80}(\text{PPO}) < 1$.
 
-    \item[H2 (Tool-Use Training Generalization):] Models fine-tuned on explicit tool-use trajectories (e.g., ReAct/Toolformer-style data) achieve higher WebArena task success than few-shot baselines, and the improvement persists on held-out websites (generalization split). Primary endpoints: mean TSR improvement and held-out TSR improvement.
+    \item[H2 (Tool-Use Training Generalization):] Models fine-tuned on explicit tool-use trajectories achieve higher WebArena task success than few-shot baselines, and the improvement persists on held-out websites. Primary endpoints: mean TSR improvement and held-out TSR improvement.
 
-    \item[H3 (RAG Conditional Benefit):] On tasks requiring external knowledge (e.g., SWE-bench tasks requiring documentation lookup), RAG improves \textbf{evidence-supported correctness} when retrieval quality is high. We predict gains in factual/evidence-grounded metrics \textbf{conditional on retrieval accuracy/coverage}, and we explicitly test failure cases when retrieval is wrong.
+    \item[H3 (RAG Conditional Benefit):] On tasks requiring external knowledge, RAG improves \textbf{evidence-supported correctness} when retrieval quality is high, \textbf{conditional on retrieval accuracy/coverage}; failure cases with wrong retrieval would be tested explicitly.
 
-    \item[H4 (Algorithm $\times$ Task Interaction):] The relative advantage of PPO/DPO/GRPO depends on task type; we expect a statistically significant interaction effect (two-way ANOVA) between alignment algorithm and benchmark (SWE-bench vs.\ WebArena vs.\ OSWorld).
+    \item[H4 (Algorithm $\times$ Task Interaction):] The relative advantage of PPO/DPO/GRPO depends on task type, tested as an algorithm $\times$ benchmark interaction with seeds as the replication unit.
 
-    \item[H5 (Scaling Scope, Aligned to Resources):] If multiple model sizes are evaluated (e.g., $\sim$7B vs.\ $\sim$14B), RL fine-tuning gains will show diminishing returns with size for the task distributions considered. If only $\sim$8B models are feasible given compute constraints, H5 is treated as a motivation/limitation rather than a tested hypothesis.
+    \item[H5 (Scaling Scope, Aligned to Resources):] If multiple model sizes are evaluated, RL fine-tuning gains show diminishing returns with size. If only $\sim$8B models are feasible, H5 is a motivation rather than a tested hypothesis.
 \end{description}
 
-\section{Ablation Framework}
-Systematic ablation isn't just about running more experiments—it's about identifying which components actually matter. The purpose of ablation is to prevent cargo-culting: adding components because others do, not because they help. Our ablation matrix isolates algorithm choice (PPO vs DPO vs GRPO) from architecture choice (ReAct vs Toolformer) from model choice (Llama vs Qwen). This matters because without systematic ablation, you cannot know whether improvements come from the algorithm, the architecture, or the base model. The matrix also reveals interactions: maybe GRPO works better with ReAct, or PPO works better with Toolformer. Without factorial design, these interactions remain hidden.
+\section{Ablation Framework (Proposed)}
+Systematic ablation identifies which components matter. The proposed matrix would isolate algorithm choice (PPO vs DPO vs GRPO) from architecture choice (ReAct vs Toolformer) and model choice (Llama vs Qwen). It was not executed.
 
 \begin{table}[h]
 \centering
-\caption{Proposed Ablation Configuration Matrix}
+\caption{Proposed Ablation Configuration Matrix (not executed)}
 \label{tab:ablation}
 \begin{tabular}{lllll}
 \toprule
@@ -2339,281 +2099,74 @@ A5 & Qwen2.5-7B & STEP-DPO & Toolformer & OSWorld \\
 \end{tabular}
 \end{table}
 
-\begin{figure}[htbp]
-\centering
-\begin{tikzpicture}
-    \begin{axis}[
-        xlabel={Training Steps (thousands)},
-        ylabel={Success Rate (\%)},
-        width=12cm,
-        height=7cm,
-        legend pos=south east,
-        grid=major,
-    ]
-    % Illustrative data based on literature trends
-    \addplot[color=blue, mark=square] coordinates {
-        (0,15) (5,28) (10,42) (15,51) (20,56)
-    };
-    \addplot[color=red, mark=triangle] coordinates {
-        (0,15) (5,32) (10,48) (15,59) (20,64)
-    };
-    \addplot[color=green, mark=o] coordinates {
-        (0,15) (5,35) (10,52) (15,66) (20,73)
-    };
-    \legend{PPO, DPO, GRPO}
-    \end{axis}
-\end{tikzpicture}
-\caption{Illustrative training curves comparing PPO, DPO, and GRPO on agentic benchmarks. Based on trends reported in \cite{deepseek2025r1, rafailov2023direct}, GRPO typically converges faster and reaches higher task success on verifiable tasks because its lighter memory footprint lets practitioners crank up batch sizes.}
-\label{fig:algorithm_comparison}
-\source{Illustrative, based on trends from surveyed literature}
-\end{figure}
-
-\section*{Core Experimental Suite}
+\section*{Proposed Experimental Suite (Not Executed)}
 \label{sec:comprehensive_experiments}
 
-This section presents five focused experiments addressing the major research directions identified in our survey. Each experiment isolates a fundamental question with minimal conditions to maximize interpretability on academic compute budgets.
+This section lists five proposed experiments addressing the research directions identified in our survey. They are a design for future work; no results from them are reported.
 
-\subsection{Experiment 1: Algorithm Comparison (PPO vs DPO vs GRPO)}
-\textbf{Core Question:} Which RL algorithm achieves the best sample efficiency and final performance on agentic tasks?
+\subsection*{Experiment 1: Algorithm Comparison (PPO vs DPO vs GRPO)}
+\textbf{Core question:} Which RL algorithm achieves the best sample efficiency and final performance on agentic tasks? \textbf{Design:} PPO with a learned reward model; DPO with preference pairs; GRPO with group-relative advantages; SFT-only baseline. \textbf{Benchmarks:} WebArena-Lite, SWE-bench Lite, MATH subset. \textbf{Metrics:} task success rate (TSR), $I_{80}$, across-seed variance, memory footprint. Tests H1.
 
-\textbf{Design:}
-\begin{itemize}
-    \item E1.1: PPO with learned reward model (standard RLHF pipeline)
-    \item E1.2: DPO with preference pairs (without a separate reward network)
-    \item E1.3: GRPO with group-relative advantages (no critic network)
-    \item E1.4: SFT-only baseline (no RL fine-tuning)
-\end{itemize}
+\subsection*{Experiment 2: Tool Use and Grounding}
+\textbf{Core question:} Does RL training reduce tool hallucination compared to SFT, and can agents discover tool use without demonstrations? \textbf{Design:} SFT on tool-use demonstrations; SFT + GRPO with outcome rewards; GRPO from scratch with tools. \textbf{Benchmarks:} ToolBench API tasks, WebArena tool-heavy subset. \textbf{Metrics:} valid API call rate, calls to non-existent APIs, task success. Tests H2.
 
-\textbf{Benchmarks:} WebArena-Lite (web navigation), SWE-bench Lite (code repair), MATH subset (reasoning).
+\subsection*{Experiment 3: Memory Architecture (RAG vs Extended Context)}
+\textbf{Core question:} For long-horizon agentic tasks, is retrieval-augmented memory more efficient than extended context windows? \textbf{Design:} 8K context; 32K context; 8K + top-5 retrieval; 8K + adaptive retrieval. \textbf{Metrics:} success on long tasks, compute per step, recall of early-step information, retrieval precision. Tests H3.
 
-\textbf{Metrics:} Task success rate (TSR), sample efficiency ($I_{80}$), training stability (variance across seeds), memory footprint.
+\subsection*{Experiment 4: Multi-Agent vs Single-Agent}
+\textbf{Core question:} Does decomposition across specialized agents outperform a single agent with an equivalent compute budget? \textbf{Design:} single agent; planner + executor; planner + coder + reviewer; hierarchical manager--worker. \textbf{Metrics:} success per unit compute, inter-agent token overhead, failure modes.
 
-\textbf{Rationale:} This experiment directly tests H1 (GRPO sample efficiency) and provides the foundational comparison that informs all subsequent experiments. Literature suggests GRPO should converge faster due to lower memory overhead allowing for increased batch sizes.
+\subsection*{Experiment 5: Scaling Efficiency (Test-Time Compute vs Model Size)}
+\textbf{Core question:} Is inference-time sampling and voting more compute-efficient than training larger models~\cite{snell2024scaling}? \textbf{Design:} 8B single generation; 8B best-of-16 with majority vote; 8B best-of-16 with process-reward reranking; 70B single generation. \textbf{Metrics:} accuracy per FLOP, latency.
 
-\subsection{Experiment 2: Tool Use and Grounding}
-\textbf{Core Question:} Does RL training reduce tool hallucination compared to SFT, and can agents discover tool use without demonstrations?
+\section*{Summary of the Proposed Programme}
 
-\textbf{Design:}
-\begin{itemize}
-    \item E2.1: SFT on tool-use demonstrations only
-    \item E2.2: SFT + GRPO with outcome rewards (tool available but not demonstrated)
-    \item E2.3: GRPO from scratch with tools (no SFT warmup)
-\end{itemize}
-
-\textbf{Benchmarks:} ToolBench API tasks, WebArena tool-heavy subset.
-
-\textbf{Metrics:} Valid API call rate, hallucination rate (calls to non-existent APIs), task success, episodes to first successful tool use.
-
-\textbf{Rationale:} Tests H2 (tool-use generalization). RL optimizes for outcomes---invalid calls yield zero reward---so should naturally suppress hallucinations. If E2.3 discovers tool use autonomously, it unlocks tool learning for domains without demonstration data.
-
-\subsection{Experiment 3: Memory Architecture (RAG vs Extended Context)}
-\textbf{Core Question:} For long-horizon agentic tasks, is retrieval-augmented memory more efficient than extended context windows?
-
-\textbf{Design:}
-\begin{itemize}
-    \item E3.1: 8K context window (baseline)
-    \item E3.2: 32K context window (extended)
-    \item E3.3: 8K context + RAG retrieval (top-5 passages per step)
-    \item E3.4: 8K context + RAG with adaptive retrieval threshold
-\end{itemize}
-
-\textbf{Benchmarks:} Multi-step WebArena tasks (50+ actions), documentation-heavy SWE-bench tasks.
-
-\textbf{Metrics:} Task success on 100+ step tasks, compute per step (FLOPs), memory fidelity (recall of information from early steps), retrieval precision.
-
-\textbf{Rationale:} Tests H3 (RAG conditional benefit). Attention scales quadratically; retrieval is constant-cost. RAG should win on efficiency but may lose on precision. The crossover point reveals when each approach dominates.
-
-\subsection{Experiment 4: Multi-Agent vs Single-Agent}
-\textbf{Core Question:} Does task decomposition across specialized agents outperform a single agent with equivalent compute budget?
-
-\textbf{Design:}
-\begin{itemize}
-    \item E4.1: Single agent, full episode budget
-    \item E4.2: Two agents (planner + executor), shared budget
-    \item E4.3: Three agents (planner + coder + reviewer), shared budget
-    \item E4.4: Hierarchical manager-worker topology (M-GRPO style)
-\end{itemize}
-
-\textbf{Benchmarks:} SWE-bench (code repair benefits from review), complex WebArena tasks (booking flows).
-
-\textbf{Metrics:} Success per unit compute, coordination overhead (tokens spent on inter-agent communication), failure mode analysis (coordination breakdown vs. single-agent confusion).
-
-\textbf{Rationale:} Multi-agent systems add complexity. This experiment determines whether coordination overhead is justified by improved task decomposition, or whether single-agent scaling is more efficient for current benchmarks.
-
-\subsection{Experiment 5: Scaling Efficiency (Test-Time Compute vs Model Size)}
-\textbf{Core Question:} Is inference-time reasoning (sampling + voting) more compute-efficient than training larger models?
-
-\textbf{Design:}
-\begin{itemize}
-    \item E5.1: 8B model, single generation
-    \item E5.2: 8B model, best-of-16 sampling with majority vote
-    \item E5.3: 8B model, best-of-16 with process reward model reranking
-    \item E5.4: 70B model, single generation (if compute permits)
-\end{itemize}
-
-\textbf{Benchmarks:} MATH subset, AIME-style problems, reasoning-heavy WebArena tasks.
-
-\textbf{Metrics:} Accuracy per FLOP (training + inference), latency, accuracy ceiling.
-
-\textbf{Rationale:} Recent work \cite{snell2024scaling} shows test-time compute can match larger models. This experiment quantifies the tradeoff for agentic tasks specifically, where reasoning chains are longer and sampling diversity may matter more.
-
-\section*{Summary of Experimental Philosophy}
-
-These five experiments collectively address the core questions from our literature survey: algorithm selection (Exp 1), tool integration (Exp 2), memory architecture (Exp 3), coordination patterns (Exp 4), and scaling strategies (Exp 5). Total experimental runs: 19 conditions across 5 experiments, each with 3 random seeds = 57 runs.
-
-The goal is not to achieve state-of-the-art numbers---that requires proprietary compute and data. The goal is to determine which architectural choices and training strategies are \textit{necessary} for capable agents versus which are premature optimization.
-
-\begin{itemize}
-    \item \textbf{Stage 1 (Cold Start):} SFT on high-quality demonstrations (ReAct style). This teaches the model basic tool-use syntax and reasoning formats.
-    \item \textbf{Stage 2 (RL Fine-Tuning):} Apply PPO/GRPO with either learned scorers or step-by-step verification. PPO runs standard RLHF with trained rewards---stable but heavy on compute. DPO sidesteps the explicit scorer, optimizing straight from preferences. GRPO shows promise for handling group-level signals minus the critic overhead.
-    \item \textbf{Stage 3 (RAG Integration):} Augment the fine-tuned agent with retrieval for documentation and memory. We plug in retrieval mechanisms to let agents access external knowledge bases dynamically.
-\end{itemize}
+The five proposed experiments would comprise 19 conditions; with three seeds each, the full programme would require 57 runs. None of these runs, and no Stage~3 RAG integration, was carried out for this report. The proposed pipeline is: Stage~1 SFT on demonstrations; Stage~2 RL fine-tuning (PPO, DPO, or GRPO); Stage~3 retrieval augmentation.
 
 \subsection{Infrastructure and Tools}
-All experiments ran on the \textbf{Tinker RL platform} using the \textbf{Atropos} GRPO training framework, which provides cloud GPU access via API without requiring local hardware. This setup enabled rapid iteration across model families and scales.
+The executed runs used the \textbf{Tinker} managed training API with LoRA adapters. The W\&B records of the runs in Table~\ref{tab:measured_runs} (project \texttt{tinker-rl-scaling}) log model \texttt{Qwen/Qwen3-8B} (one run \texttt{Qwen/Qwen3.5-4B}), LoRA rank 32 (rank sweep 8/16/64), learning rate $3\times10^{-5}$ ($5\times10^{-6}$ for the 100-step run), and 50 training steps (100 for one run). Group size and batch size are not recorded in those W\&B configs. Experiment configs are in \texttt{platform\_tinker/atropos/configs/}.
 
-\begin{itemize}
-    \item \textbf{Compute:} Tinker cloud GPUs accessed via Atropos API (no local GPU required).
-    \item \textbf{Fine-tuning:} LoRA (Low-Rank Adaptation) with rank 32, targeting attention and MLP projections. Only $\sim$0.1\% of total parameters modified.
-    \item \textbf{Training:} GRPO with group size 16 (16 completions sampled per question), learning rate $4 \times 10^{-5}$, binary reward signal (format + correctness).
-    \item \textbf{Checkpointing:} Automatic checkpoint saving every training step via Atropos; training state recoverable from any checkpoint.
-    \item \textbf{Code:} All experiment configs at \texttt{pes-llm-research/tinker-rl-lab/platform_tinker/atropos/configs/}; notebooks at \texttt{platform_tinker/atropos/notebooks/}.
-\end{itemize}
+\subsection{Reproducibility Protocol (Proposed)}
+For the proposed programme we planned three fixed seeds per condition. The executed Qwen3-8B runs instead used seeds 42, 137, 256, 512, and 999 (Table~\ref{tab:measured_runs}). Hyperparameters for the executed runs are those logged in W\&B (above); the planned PPO clip ratio 0.2, DPO $\beta_{\text{DPO}}=0.1$, and warm-up ratio 0.03 apply only to the unexecuted programme.
 
-\subsection{Reproducibility Protocol}
-Reproducibility is not about listing procedures—it's about ensuring results aren't artifacts. Fixed seeds (42, 123, 456) across three independent runs test whether results depend on initialization or are robust to randomness. Hyperparameters aren't arbitrary: learning rate $2 \times 10^{-5}$ is small enough for stable updates but large enough for reasonable convergence speed. Batch size 8 reflects GPU memory constraints—smaller batches introduce more noise, larger require distributed training. The warmup ratio 0.03 prevents early instabilities. RL-specific parameters aren't magic numbers: PPO clip ratio 0.2 balances exploration and exploitation based on empirical stability studies. DPO $\beta = 0.1$ controls the KL penalty strength based on preference noise estimates. GRPO group size 8 provides enough samples for reliable advantage estimation. Every parameter reflects a trade-off between statistical efficiency, computational cost, and training stability.
+\subsection{Statistical Analysis Plan (Proposed)}
+For the proposed programme, the unit of replication would be the independent training seed. Algorithm comparisons would use seed-level paired designs with a prespecified multiplicity correction, report effect sizes with intervals, and treat non-significance as inconclusive unless an equivalence test with a stated margin is passed. None of these tests was run. The analysis actually performed is the seed-level summary in Section~\ref{sec:actual_results}.
 
-\subsection{Statistical Analysis Framework}
-We employ rigorous statistical methods to validate our hypotheses:
+\subsection{Baseline Comparisons (Proposed)}
+Planned baselines: zero-shot, 3-shot, chain-of-thought, SFT-only, and published leaderboard results on SWE-bench, WebArena, and OSWorld.
 
-\textbf{Primary Metrics:}
-\begin{itemize}
-    \item \textbf{Task Success Rate (TSR):} Fraction of episodes where the agent achieves the specified goal state.
-    \item \textbf{Sample Efficiency ($I_{80}$):} Number of environment interactions required to reach 80\% of final performance at $N_{\max}$.
-    \item \textbf{Reasoning Quality:} For tasks with ground-truth reasoning chains, we compute step-level accuracy using process reward models.
-\end{itemize}
-
-\textbf{Statistical Tests:}
-\begin{itemize}
-    \item \textbf{Algorithm Comparison:} Paired t-tests with Bonferroni correction for multiple comparisons (5 algorithm pairs $\times$ 3 benchmarks = 15 tests, $\alpha = 0.05/15$). We report statistical significance where $p < 0.05$, with 95\% confidence intervals calculated via bootstrapping (1000 resamples).
-    \item \textbf{Effect Sizes:} Cohen's $d$ reported for all pairwise comparisons; effects classified as small ($d < 0.2$), medium ($0.2 \leq d < 0.8$), or large ($d \geq 0.8$).
-    \item \textbf{Confidence Intervals:} Bootstrap 95\% CIs (1000 resamples) for all point estimates.
-    \item \textbf{ANOVA:} Two-way ANOVA to test H4 (algorithm $\times$ task interaction), followed by Tukey HSD post-hoc tests.
-\end{itemize}
-
-\textbf{Reporting Standards:}
-All experiments follow NeurIPS reproducibility guidelines. We report negative results, computational costs (GPU-hours), and failure modes. Code, checkpoints, and evaluation logs will be released upon publication.
-
-\subsection{Baseline Comparisons}
-To contextualize our fine-tuned agents, we establish:
-\begin{itemize}
-    \item \textbf{Zero-shot:} Base model with task-specific system prompt, no demonstrations.
-    \item \textbf{Few-shot (3-shot):} Base model with three in-context examples per task category.
-    \item \textbf{Chain-of-Thought:} Few-shot with explicit reasoning traces in demonstrations.
-    \item \textbf{SFT-only:} Supervised fine-tuning without RL optimization (Stage 1 only).
-    \item \textbf{Published SOTA:} Comparison against reported results from SWE-bench, WebArena, and OSWorld leaderboards.
-\end{itemize}
-
-\section{Actual Experimental Results}
+\section{Executed Experiments: Measured GSM8K GRPO Runs}
 \label{sec:actual_results}
 
-We report results from eight GRPO experiments across three model families, three benchmarks, and scales from 0.5B to 30B parameters. All experiments used binary rewards: format correctness (0/1) and answer correctness (0/1), summed to a maximum reward of 2.0.
+This section reports only runs with released records. Earlier drafts of this chapter contained a results summary table, GSM8K and MATH training-curve plots, a HumanEval result for a ``Qwen3-3.8B'' model, and a statistical-analysis section (bootstrap intervals, two-proportion $z$-tests, Spearman trends, Chow breakpoint tests, Mann--Whitney tests, cross-model Bonferroni comparisons). Those items are removed: no released trace or evaluation file reproduces them, the plotted curves were hand-entered coordinates, the step-level tests treated autocorrelated steps and within-prompt rollouts as independent observations, and the measured W\&B runs below contradict their values (e.g., a Qwen3-8B training reward of 100\% versus a measured last-10 mean of 27.5--35.0\%).
 
-\subsection{Summary of Results}
+\textbf{Reward.} The logged quantity is the online GRPO \emph{training reward} on sampled GSM8K training prompts. It is not held-out accuracy.
 
 \begin{table}[htbp]
 \centering
-\caption{GRPO Experiment Results Summary}
-\label{tab:results_summary}
-\begin{tabular}{llllll}
+\caption{Completed Tinker GRPO runs with W\&B records (project \texttt{tinker-rl-scaling}; GSM8K training reward). Peak and last-10 values are W\&B run summaries; each row is one run. Source: \texttt{platform\_hybrid/experiments/results/review\_2026-10-18/Sem3\_Group6\_Original\_Report/measured\_runs.json}.}
+\label{tab:measured_runs}
+\begin{tabular}{llcccc}
 \toprule
-\textbf{Model} & \textbf{Type} & \textbf{Benchmark} & \textbf{Step 0} & \textbf{Final} & \textbf{Convergence} \\
+\textbf{Run} & \textbf{Model} & \textbf{Rank} & \textbf{Steps} & \textbf{Peak} & \textbf{Last-10 mean} \\
 \midrule
-Qwen3-8B       & Base          & GSM8K  & 7\%   & \textbf{100\%} & Step $\sim$30 \\
-Qwen3-30B MoE  & Base          & GSM8K  & 8\%   & \textbf{99.2\%} & Step $\sim$35 (volatile) \\
-Llama-3.1-8B   & Instruct      & GSM8K  & 79\%  & \textbf{100\%} & Step $\sim$35 \\
-Llama-3.2-3B   & Base          & GSM8K  & 2\%   & \textbf{2\%}   & \textit{Did not converge} \\
-Qwen3-8B       & Base          & MATH   & 3\%   & $\sim$14\%     & Ongoing \\
-Llama-3.1-8B   & Instruct      & MATH   & 18\%  & 50--87\%       & Ongoing (volatile) \\
-Qwen3-3.8B     & Base          & HumanEval (coding) & 32\% & \textbf{40\%} & Step 50, \$0.50 cost \\
-Qwen2.5-3B     & Instruct      & Tool Use (multi-turn) & --  & In progress    & Sandhya (HF) \\
+seed042 & Qwen3-8B & 32 & 50 & 0.625 & 0.275 \\
+seed137 & Qwen3-8B & 32 & 50 & 0.625 & 0.275 \\
+seed256 & Qwen3-8B & 32 & 50 & 0.625 & 0.325 \\
+seed512 & Qwen3-8B & 32 & 50 & 0.875 & 0.300 \\
+seed999 & Qwen3-8B & 32 & 50 & 0.875 & 0.350 \\
+rank8 (seed 42) & Qwen3-8B & 8 & 50 & 0.625 & 0.2125 \\
+rank16 (seed 42) & Qwen3-8B & 16 & 50 & 0.750 & 0.1875 \\
+rank64 (seed 42) & Qwen3-8B & 64 & 50 & 0.875 & 0.250 \\
+100-step (seed 42, lr $5\times10^{-6}$) & Qwen3-8B & 32 & 100 & 0.750 & 0.275 \\
+4B (seed 137) & Qwen3.5-4B & 32 & 50 & 1.000 & 0.825 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\subsection{GSM8K Results: Training Curves}
+\textbf{Seed-level summary.} Across the five Qwen3-8B seeds (the independent unit), the last-10 training reward is $0.305$ (SD $0.033$, $n=5$). The rank and step-count variants are single runs and support no comparison.
 
-\begin{figure}[htbp]
-\centering
-\begin{tikzpicture}
-    \begin{axis}[
-        xlabel={Training Step},
-        ylabel={Reward (Accuracy)},
-        width=13cm,
-        height=7.5cm,
-        legend pos=south east,
-        grid=major,
-        ymin=0, ymax=105,
-        xmin=0, xmax=40,
-    ]
-    % Qwen3-8B base: 7% -> 100%, phase transition around step 22-25
-    \addplot[color=blue, thick, mark=o, mark size=2pt] coordinates {
-        (0,7) (5,9) (10,11) (15,13) (20,18) (22,42) (25,78) (28,95) (30,100) (35,100)
-    };
-    % Qwen3-30B MoE: volatile but reaches 99%
-    \addplot[color=red, thick, mark=triangle, mark size=2pt] coordinates {
-        (0,8) (5,12) (10,20) (15,45) (20,68) (25,82) (28,91) (30,85) (32,97) (35,99)
-    };
-    % Llama-3.1-8B Instruct: starts high at 79%, reaches 100%
-    \addplot[color=green!60!black, thick, mark=square, mark size=2pt] coordinates {
-        (0,79) (5,83) (10,88) (15,93) (20,96) (25,98) (30,99) (35,100)
-    };
-    % Llama-3.2-3B base: flat negative result
-    \addplot[color=gray, thick, dashed, mark=x, mark size=2pt] coordinates {
-        (0,2) (5,2) (10,2) (15,2) (20,2) (25,2) (30,2) (35,2)
-    };
-    \legend{Qwen3-8B (base), Qwen3-30B MoE, Llama-3.1-8B (instruct), Llama-3.2-3B (base)}
-    \end{axis}
-\end{tikzpicture}
-\caption{GSM8K training curves for all four models. Qwen3-8B (base) demonstrates a characteristic RL emergence/phase transition around steps 22--25, jumping from $\sim$13\% to $\sim$78\% in five steps before saturating at 100\%. Llama-3.2-3B (dashed) is the negative result: reward never exceeds 2\% because the model lacks the minimum capacity to generate any correct solutions, leaving GRPO with no positive signal to learn from.}
-\label{fig:gsm8k_curves}
-\end{figure}
-
-\subsection{MATH Competition Results}
-
-\begin{figure}[htbp]
-\centering
-\begin{tikzpicture}
-    \begin{axis}[
-        xlabel={Training Step},
-        ylabel={Reward (Accuracy)},
-        width=13cm,
-        height=6cm,
-        legend pos=north west,
-        grid=major,
-        ymin=0, ymax=100,
-        xmin=0, xmax=30,
-    ]
-    % Qwen3-8B on MATH: much lower, ~14% at step 25
-    \addplot[color=blue, thick, mark=o, mark size=2pt] coordinates {
-        (0,3) (5,5) (10,7) (15,9) (20,11) (25,14)
-    };
-    % Llama-3.1-8B Instruct on MATH: volatile 50-87%
-    \addplot[color=green!60!black, thick, mark=square, mark size=2pt] coordinates {
-        (0,18) (5,38) (10,55) (15,45) (20,72) (25,87) (27,58) (29,75)
-    };
-    \legend{Qwen3-8B (base), Llama-3.1-8B (instruct)}
-    \end{axis}
-\end{tikzpicture}
-\caption{MATH competition benchmark results (ongoing). The gap between GSM8K (100\% for Qwen3-8B) and MATH ($\sim$14\%) reveals a substantial difficulty cliff. The instruct model achieves 50--87\% but with high variance, reflecting the heterogeneous difficulty of competition problems (AMC algebra vs.\ AIME geometry).}
-\label{fig:math_curves}
-\end{figure}
-
-\subsection{HumanEval Coding Results (Madhu)}
-
-Madhu's experiment applied GRPO to code generation using the HumanEval benchmark (164 Python programming problems). The reward signal was binary: 1.0 if the generated code passes all unit tests (executed via subprocess), 0.0 otherwise.
-
-Training Qwen3-3.8B for 50 steps on a single RTX 4090 (Vast.ai, \$0.50 total) improved pass@1 from 32\% to \textbf{40\%} --- an absolute gain of 8 percentage points. This demonstrates that GRPO generalises from arithmetic reasoning to program synthesis: the policy learns to self-correct code by observing which completions satisfy test constraints, without any supervised examples of correct solutions.
+\textbf{Held-out GSM8K.} The five seed adapters were evaluated on the same 200 GSM8K test problems with greedy decoding (\texttt{platform\_tinker/reports/final/gsm8k\_heldout\_seed*.json}); base Qwen3-8B scored 164/200 (82.0\%). Per-seed accuracies are 83.0, 82.5, 80.5, 84.0, and 86.5\% (mean 83.3\%, SD 2.2 points). A one-sample $t$-test of the five seed accuracies against the single base score gives $t(4)=1.32$, $p=0.26$. The single base evaluation has no variance estimate, and the result neither shows a held-out gain nor establishes equivalence.
 
 \subsection{GRPO Training Pipeline Architecture}
 
@@ -2622,9 +2175,9 @@ Training Qwen3-3.8B for 50 steps on a single RTX 4090 (Vast.ai, \$0.50 total) im
 \begin{tikzpicture}[
     node distance=1.4cm and 2.2cm,
     box/.style={draw, rounded corners=4pt, minimum width=2.8cm, minimum height=1.1cm,
-                text centered, font=\small\sffamily, fill=blue!8, draw=blue!50!black, thick},
+                text centered, align=center, font=\small\sffamily, fill=blue!8, draw=blue!50!black, thick},
     cloud/.style={draw, ellipse, minimum width=2.6cm, minimum height=1.0cm,
-                  text centered, font=\small\sffamily, fill=orange!10, draw=orange!60!black, thick},
+                  text centered, align=center, font=\small\sffamily, fill=orange!10, draw=orange!60!black, thick},
     arrow/.style={-{Stealth[length=7pt]}, thick, draw=gray!70!black},
     darrow/.style={-{Stealth[length=7pt]}, thick, draw=red!60!black, dashed},
 ]
@@ -2662,222 +2215,58 @@ Training Qwen3-3.8B for 50 steps on a single RTX 4090 (Vast.ai, \$0.50 total) im
 \label{fig:grpo_pipeline}
 \end{figure}
 
-\section{Statistical Analysis of Experimental Results}
-\label{sec:statistical_analysis}
-
-All statistical tests were computed from the step-level mean rewards logged by the Atropos environment (each step mean $= k/128$ where $k$ is the number of correct completions out of $n{=}128$ binary samples: 8 groups $\times$ 16 rollouts).  Tests were implemented in \texttt{tinker\_platform_tinker/atropos/stats\_utils.py} and run post-hoc on the full 50-step series for the three completed GSM8K experiments.
-
-\subsection{Bootstrap 95\% Confidence Intervals}
-
-Bootstrap CIs (1000 resamples, seed 42) were computed by pooling the reconstructed binary observations for each window.
-
-\begin{table}[htbp]
-\centering
-\caption{Bootstrap 95\% Confidence Intervals for Initial and Final Performance}
-\label{tab:bootstrap_ci}
-\begin{tabular}{llccc}
-\toprule
-\textbf{Model} & \textbf{Window} & \textbf{Mean} & \textbf{95\% CI lower} & \textbf{95\% CI upper} \\
-\midrule
-Qwen3-8B           & First 5 steps   & 0.0453 & 0.0297 & 0.0609 \\
-Qwen3-8B           & Last 10 steps   & 0.9437 & 0.9320 & 0.9563 \\
-\addlinespace
-Llama-3.2-3B       & First 5 steps   & 0.0125 & 0.0047 & 0.0219 \\
-Llama-3.2-3B       & Last 10 steps   & 0.0195 & 0.0133 & 0.0273 \\
-\addlinespace
-Llama-3.1-8B-Instr.& First 5 steps   & 0.7328 & 0.6984 & 0.7672 \\
-Llama-3.1-8B-Instr.& Last 10 steps   & 0.9797 & 0.9727 & 0.9875 \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-The non-overlapping CIs for Qwen3-8B ($[0.030, 0.061]$ initial vs.\ $[0.932, 0.956]$ final) confirm statistically that training drove a genuine improvement rather than sampling noise.  Llama-3.2-3B's final CI $[0.013, 0.027]$ is entirely below 5\%, formally establishing the capacity-floor failure.
-
-\subsection{Two-Proportion Z-Tests}
-
-We tested whether step-0 and step-49 pass rates differ significantly.  Each step provides 128 independent binary outcomes, making the large-sample z-test appropriate.
-
-\begin{itemize}
-    \item \textbf{Qwen3-8B}: $z = 14.91$, $p < 10^{-49}$ (step 0 vs.\ final); $z = 32.93$, $p \approx 0$ (first-5 mean vs.\ last-5 mean).  Both highly significant.
-    \item \textbf{Llama-3.2-3B}: $z = 1.01$, $p = 0.314$ (step 0 vs.\ final); $z = 1.10$, $p = 0.272$ (first-5 vs.\ last-5). \emph{Not significant}: the model did not improve.
-    \item \textbf{Llama-3.1-8B-Instruct}: $z = 5.49$, $p = 3.9 \times 10^{-8}$ (step 0 vs.\ final); $z = 12.37$, $p \approx 0$ (first-5 vs.\ last-5). Significant even from an already-high baseline.
-\end{itemize}
-
-\subsection{Spearman Rank-Correlation (Monotonic Trend)}
-
-Spearman $\rho$ measures the monotonicity of the reward trajectory across 50 steps.
-
-\begin{table}[htbp]
-\centering
-\caption{Spearman Rank-Correlation of Reward vs.\ Training Step}
-\label{tab:spearman}
-\begin{tabular}{lccc}
-\toprule
-\textbf{Model} & $\rho$ & $p$-value & Significance \\
-\midrule
-Qwen3-8B              & $+0.923$ & $< 10^{-20}$ & *** \\
-Llama-3.2-3B          & $+0.414$ & $1.64 \times 10^{-3}$ & ns (no practical trend) \\
-Llama-3.1-8B-Instruct & $+0.954$ & $< 10^{-20}$ & *** \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-Qwen3-8B and Llama-3.1-8B-Instruct both show near-perfect monotonic improvement ($\rho > 0.92$).  Llama-3.2-3B's $\rho = 0.41$ is technically significant due to sample size but the gradient is negligible (mean reward changes from $\sim$1.3\% to $\sim$2.3\% across 50 steps), confirming stagnation.
-
-\subsection{Chow Structural-Break Test (Phase Transition)}
-
-We used an exhaustive Chow F-test to detect the step index at which the reward trajectory undergoes a structural change in its linear trend.  This operationalises Finding~2 (RL emergence) with a formal test.
-
-\begin{table}[htbp]
-\centering
-\caption{Chow Structural-Break Test Results (Phase Transition Detection)}
-\label{tab:chow}
-\begin{tabular}{lcccccc}
-\toprule
-\textbf{Model} & \textbf{Best Breakpoint} & $F$ & $p$-value & Pre-break $\mu$ & Post-break $\mu$ \\
-\midrule
-Qwen3-8B              & Step 25 & 32.35 & $< 10^{-10}$ & 0.099 & 0.863 \\
-Llama-3.2-3B          & Step 9  &  1.76 & $0.464$ (ns) & 0.016 & 0.018 \\
-Llama-3.1-8B-Instruct & Step 9  &  6.36 & $1.2 \times 10^{-5}$ & 0.756 & 0.927 \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-For Qwen3-8B the break at step 25 ($F = 32.35$, $p < 10^{-10}$) is statistically incontrovertible: the model shifts from a near-flat regime (mean 9.9\%) to a steep convergence regime (mean 86.3\%), matching the visual phase transition in Figure~\ref{fig:gsm8k_curves}.  Llama-3.2-3B shows no significant break ($p = 0.464$), consistent with the flat reward trace.  For Llama-3.1-8B-Instruct the early break at step 9 corresponds to the model rapidly saturating its already-high starting performance.
-
-\subsection{Effect Sizes (Cohen's \texorpdfstring{$d$}{d}) and Mann-Whitney Tests}
-
-We split each training run at the detected breakpoint and compared the early-phase and late-phase reward distributions.
-
-\begin{table}[htbp]
-\centering
-\caption{Effect Sizes and Mann-Whitney U Tests (Early vs.\ Late Phase)}
-\label{tab:cohen_mw}
-\begin{tabular}{lcccc}
-\toprule
-\textbf{Model} & \textbf{Cohen's $d$} & \textbf{Magnitude} & $U$ & $p$-value \\
-\midrule
-Qwen3-8B              & 5.65 & large & 0   & $1.3 \times 10^{-9}$ \\
-Llama-3.2-3B          & 0.25 & small & 163 & $0.587$ (ns) \\
-Llama-3.1-8B-Instruct & 2.71 & large & 4   & $5.5 \times 10^{-6}$ \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-Qwen3-8B's Cohen's $d = 5.65$ (large by conventional thresholds of $d \geq 0.8$) is among the largest effect sizes reportable from 50-step training --- the early and late phases are statistically non-overlapping distributions ($U = 0$, meaning every late-phase reward exceeds every early-phase reward).
-
-\subsection{Cross-Model Comparisons with Bonferroni Correction}
-
-We compared the final 10 steps of each model pair using Mann-Whitney U and Cohen's $d$.  With two comparisons, the Bonferroni-corrected $\alpha = 0.025$.
-
-\begin{table}[htbp]
-\centering
-\caption{Cross-Model Comparison (Final 10 Steps, Bonferroni-Corrected $\alpha = 0.025$)}
-\label{tab:cross_model}
-\begin{tabular}{llcccl}
-\toprule
-\textbf{Model A} & \textbf{Model B} & $U$ & $p$-value & Cohen's $d$ & Result \\
-\midrule
-Qwen3-8B & Llama-3.2-3B          & 0   & $1.6 \times 10^{-4}$ & 14.04 (large) & \textbf{Significant} \\
-Qwen3-8B & Llama-3.1-8B-Instruct & 44  & $0.623$ (ns)         & $-$0.53 (medium) & Not significant \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-The comparison against Llama-3.2-3B is significant even after Bonferroni correction ($p = 1.6 \times 10^{-4} < 0.025$), with a Cohen's $d$ of 14.04 --- an extreme effect confirming that the 8B model's final performance is in a categorically different regime from the 3B model's persistent failure.  Qwen3-8B and Llama-3.1-8B-Instruct are \emph{not} significantly different in the final 10 steps ($p = 0.623$), consistent with both reaching near-perfect accuracy ($\sim$94\% vs.\ $\sim$98\%): both converge to ceiling performance, with the difference between them attributable to Llama's higher starting point rather than different final capability.
-
-\section{Systematic Scaling Study (Ongoing)}
+\section{Systematic Scaling Study (Planned)}
 \label{sec:systematic_study}
 
-\subsection{Motivation and Confound Identification}
+\subsection{Motivation}
+The executed runs vary only seed, LoRA rank, and step count on one model. Questions about model family, instruction tuning, and parameter count therefore remain open. This section records a planned three-block study; it has no results in this report. W\&B records for the planned Qwen3-0.6B and Qwen3-14B GSM8K runs (project \texttt{tinker-rl-scaling}) are all marked failed or crashed.
 
-The headline comparison in Section~\ref{sec:actual_results} mixes three factors simultaneously: Qwen3-8B (\textbf{base}, Qwen family, 8B) vs.\ Llama-3.1-8B-Instruct (\textbf{instruct}, Llama family, 8B) vs.\ Llama-3.2-3B (\textbf{base}, Llama family, 3B).  Model family, instruction-tuning status, and parameter count all vary at once, making it impossible to attribute performance differences to any single cause.  A peer reviewer correctly identified this as a limitation; this section describes the three-block study we are running to resolve it.
-
-\subsection{Factorial Design}
-
-We decompose the comparison space into three independent blocks, each varying exactly one factor while holding the others constant:
+\subsection{Planned Design}
 
 \begin{table}[htbp]
 \centering
-\caption{Systematic Scaling Study: Three-Block Factorial Design}
+\caption{Planned three-block design (no results reported)}
 \label{tab:systematic_design}
-\begin{tabular}{lllll}
+\begin{tabular}{llll}
 \toprule
-\textbf{Block} & \textbf{Varying} & \textbf{Fixed} & \textbf{Runs} & \textbf{Status} \\
+\textbf{Block} & \textbf{Varying} & \textbf{Intended to be fixed} & \textbf{Runs} \\
 \midrule
-A & Instruction-tuning (base vs.\ instruct) & Llama-3.1 family, 8B & 2 & \textit{Ongoing} \\
-B & Model family (Qwen3 vs.\ Llama-3.1)    & Base, $\sim$8B        & 2 & \textit{Ongoing} \\
-C & Parameter count (0.6B -- 30B)           & Qwen3 base            & 6 & \textit{Ongoing} \\
+A & Instruction tuning (base vs.\ instruct) & Llama-3.1 family, 8B & 2 \\
+B & Model family (Qwen3 vs.\ Llama-3.1) & Base, $\sim$8B & 2 \\
+C & Parameter count (0.6B -- 30B) & Qwen3 base & 6 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\paragraph{Block A --- Instruction-tuning isolation (Llama-3.1 family, 8B).}
-Comparing \texttt{meta-llama/Llama-3.1-8B} (base, no RLHF) against \texttt{meta-llama/Llama-3.1-8B-Instruct} (Meta's instruction-tuned variant) holds family and size constant and isolates the effect of pre-training alignment.  The hypothesis is that instruction tuning provides a higher step-0 pass rate (head-start), accelerating convergence but not changing final accuracy.
+\paragraph{Block A.} \texttt{meta-llama/Llama-3.1-8B} (base) vs.\ \texttt{meta-llama/Llama-3.1-8B-Instruct}, holding family and size fixed.
 
-\paragraph{Block B --- Family isolation (base models, $\sim$8B).}
-Comparing \texttt{Qwen/Qwen3-8B} (base) against \texttt{meta-llama/Llama-3.1-8B} (base) holds instruction-tuning status and size constant.  This isolates the effect of pre-training data and architecture (Qwen3 vs.\ Llama-3.1 RLHF-free base weights).
+\paragraph{Block B.} \texttt{Qwen/Qwen3-8B} vs.\ \texttt{meta-llama/Llama-3.1-8B} (both base), holding instruction-tuning status and size fixed.
 
-\paragraph{Block C --- Size ladder (Qwen3 base family, GSM8K).}
-Running six Qwen3 base models --- 0.6B, 1.7B, 4B, 8B, 14B, 30B-MoE (3B active) --- holds family and instruction-tuning status constant while varying parameter count.  The primary metrics are (a)~step-0 pass rate (does the model cross the $\approx$7\% capacity threshold?) and (b)~steps to reach 80\% accuracy (convergence speed as a function of $\log(\text{params})$).
+\paragraph{Block C.} Six Qwen3 models (0.6B, 1.7B, 4B, 8B, 14B, 30B-A3B MoE). \textbf{Confound:} the repository configurations change LoRA rank and learning rate with size (\texttt{gsm8k\_qwen\_0\_6b.yaml}: rank 16, lr $6\times10^{-5}$; \texttt{gsm8k\_qwen\_1\_7b.yaml}: rank 16, lr $5\times10^{-5}$; 8B: rank 32, lr $4\times10^{-5}$). As configured, Block C does not vary parameter count alone; a valid size ladder must fix rank and learning rate or treat them as declared co-varying factors.
 
-\subsection{Experimental Configurations}
-
-Three new configurations have been added to the repository for the runs not yet executed:
-
-\begin{itemize}
-    \item \textbf{Block A/B:} \texttt{configs/gsm8k\_llama\_8b\_base.yaml} --- trains \texttt{meta-llama/Llama-3.1-8B} (base) with identical hyperparameters to the existing instruct run (\texttt{lr}=4e-5, LoRA rank 32, 50 steps, $n$=128).
-    \item \textbf{Block C (small):} \texttt{configs/gsm8k\_qwen\_0\_6b.yaml} --- trains \texttt{Qwen/Qwen3-0.6B} (LoRA rank 16, \texttt{lr}=6e-5).
-    \item \textbf{Block C (near-threshold):} \texttt{configs/gsm8k\_qwen\_1\_7b.yaml} --- trains \texttt{Qwen/Qwen3-1.7B} (LoRA rank 16, \texttt{lr}=5e-5).
-\end{itemize}
-
-The four existing runs (Qwen3-4B, Qwen3-8B, Qwen3-14B, Qwen3-30B-MoE) have been re-tagged to \texttt{wandb\_group: "systematic-scaling-study"} so all runs appear in a single WandB group for side-by-side comparison.
-
-\subsection{Analysis Plan}
-
-Once all new runs complete, we will apply:
-\begin{enumerate}
-    \item \textbf{Block A (IT effect):} Mann-Whitney U and Cohen's $d$ on final-10-step rewards, comparing Llama-3.1-8B base vs.\ instruct.
-    \item \textbf{Block B (family effect):} Same tests, comparing Qwen3-8B vs.\ Llama-3.1-8B (both base).
-    \item \textbf{Block C (size ladder):} Plot step-to-80\%-accuracy vs.\ $\log_{10}(\text{params})$; fit a linear scaling law; identify the parameter count below which convergence fails.
-    \item \textbf{Omnibus 2$\times$2 ANOVA:} Using final-10-step means as the dependent variable, test main effects of family and instruction-tuning, and their interaction, using the \texttt{two\_way\_anova\_2x2()} function in \texttt{tinker\_platform_tinker/atropos/stats\_utils.py}.
-\end{enumerate}
-
-All analysis code is in \texttt{notebooks/systematic\_scaling\_study.ipynb}.
+\paragraph{Planned analysis.} Seeds are the replication unit. Final-window training reward would be summarized per seed, and capability claims would require held-out evaluation; steps within a run would not be treated as independent observations.
 
 \section{Key Findings and Analysis}
 \label{sec:key_findings}
 
-\textbf{Finding 1 --- Model Capacity Threshold.}
-Llama-3.2-3B completely failed to learn GSM8K (reward $<$3\% throughout training), while Qwen3-8B (base) reached 100\%. The critical difference: at initialization, Qwen3-8B already solves $\sim$7\% of problems correctly, providing GRPO with positive-reward examples to learn from. Llama-3.2-3B generates zero correct solutions, leaving the policy gradient with no signal. This reveals a minimum-capacity requirement for RL to bootstrap mathematical reasoning: the base model must already solve some fraction of the target distribution.
+\textbf{Finding 1 --- Training reward is not held-out accuracy.}
+For Qwen3-8B, the 50-step GRPO runs reach peak training rewards of 0.625--0.875 but last-10 means of only 0.275--0.350 (seed mean 0.305, $n=5$). Peak values reflect single noisy steps; window means are the more stable summary.
 
-\textbf{Finding 2 --- RL Emergence / Phase Transition.}
-Qwen3-8B exhibits a sharp phase transition on GSM8K: after 20 steps of slow progress ($\sim$7--18\%), reward jumps from 18\% to 78\% within five steps, then saturates at 100\% by step 30. This pattern is consistent with the ``aha moment'' phenomenon described in DeepSeek-R1~\cite{deepseek2025r1}: GRPO appears to first learn the answer format, then rapidly internalizes the reasoning strategy once format compliance is stable.
+\textbf{Finding 2 --- No demonstrated held-out GSM8K gain.}
+The base model already scores 82.0\% on the 200-problem held-out slice; the five trained adapters score 80.5--86.5\% (mean 83.3\%). The one-sample test against the single base score ($p=0.26$) does not show a gain, and the design cannot establish equivalence.
 
-\textbf{Finding 3 --- Instruction Tuning as RL Accelerant.}
-Llama-3.1-8B-Instruct starts GSM8K at 79\% (vs.\ 7\% for Qwen3-8B base), demonstrating that Meta's RLHF/instruction-tuning has already solved most of GSM8K. Our GRPO training then pushes it to 100\% in 35 steps with minimal KL divergence. This confirms that RL fine-tuning is complementary to instruction tuning: even highly capable models benefit from task-specific reward optimization.
+\textbf{Finding 3 --- Single-run variants are descriptive only.}
+LoRA rank (8/16/32/64) and the 100-step run are single-seed and differ within the seed-to-seed range of the rank-32 runs (last-10 0.275--0.350); they support no rank or horizon conclusion.
 
-\textbf{Finding 4 --- MoE Cost-Efficiency.}
-Qwen3-30B MoE achieves 99.2\% on GSM8K despite activating only 3B parameters at inference time (10\% of total). The volatile training curve (rewards oscillating 25--100\% in mid-training) is attributable to the sparse routing mechanism: different routing decisions across the 16 group samples produce high-variance gradient estimates. Nevertheless, final performance matches the dense 8B model at a fraction of the inference cost.
-
-\textbf{Finding 5 --- LoRA Sufficiency for Task Mastery.}
-All experiments modified only $\sim$0.1\% of total parameters via LoRA (rank 32). Full task mastery on GSM8K (100\% accuracy) was achieved with this minimal parameter budget, confirming that mathematical reasoning patterns in large pre-trained models can be activated through targeted low-rank updates rather than full fine-tuning.
-
-\textbf{Finding 6 --- Benchmark Difficulty Cliff.}
-The jump from GSM8K to MATH competition problems reveals a structural difficulty cliff: Qwen3-8B reaches 100\% on GSM8K but only $\sim$14\% on MATH at the same training budget. GSM8K problems require arithmetic and basic algebra; MATH requires proof construction, abstract algebra, and combinatorial reasoning. This suggests that curriculum learning (GSM8K $\rightarrow$ AMC8 $\rightarrow$ AMC10 $\rightarrow$ AIME) may be necessary for competition-level performance.
-
-\textbf{Finding 7 --- GRPO Generalises to Code.}
-Applying the same GRPO recipe to HumanEval (binary pass/fail reward from unit test execution) improved Qwen3-3.8B from 32\% to 40\% pass@1 in 50 steps at negligible cost (\$0.50, RTX 4090). The reward signal --- subprocess test execution --- requires no labelled data, making this approach directly applicable to any verifiable code task (security patching, refactoring, API migration). The 8 pp gain from a 3.8B model suggests that larger models trained longer would substantially exceed the 40\% baseline.
+\textbf{Finding 4 --- The agentic programme remains untested.}
+The WebArena, SWE-bench, OSWorld, PPO/DPO, RAG, and multi-agent experiments of Section~\ref{sec:comprehensive_experiments} were not run; the survey's conclusions about them rest on the cited literature, not on our experiments.
 
 \begin{tcolorbox}[colback=purple!5!white, colframe=purple!60!black, title=\textbf{Chapter 5 Key Takeaways (Empirical)}]
 \begin{enumerate}
-    \item \textbf{GRPO works from scratch:} Qwen3-8B base model went from 7\% to 100\% on GSM8K via pure RL---no supervised data needed.
-    \item \textbf{Model size threshold confirmed:} Llama-3.2-3B failed completely; 8B is the minimum viable scale for bootstrapping math reasoning via GRPO.
-    \item \textbf{Instruction tuning $\times$ RL is complementary:} Llama-3.1-8B-Instruct (79\% $\rightarrow$ 100\%) demonstrates that RL can push already-capable models to task mastery.
-    \item \textbf{MoE is compute-efficient:} Qwen3-30B MoE matches dense 8B performance with only 3B active parameters at inference.
-    \item \textbf{LoRA sufficiency:} 0.1\% parameter modification achieves full GSM8K mastery---full fine-tuning is not required.
-    \item \textbf{MATH requires more:} GSM8K saturates; competition math needs curriculum learning or larger models.
-    \item \textbf{GRPO generalises beyond math:} The same recipe applied to HumanEval code generation yields +8 pp pass@1 on Qwen3-3.8B in 50 steps --- no labelled data, \$0.50 compute.
+    \item \textbf{Measured scope is narrow:} the executed work is low-budget LoRA GRPO on GSM8K (mostly Qwen3-8B, 50 steps).
+    \item \textbf{Training reward $\neq$ accuracy:} last-10 training reward averaged 0.305 across five seeds.
+    \item \textbf{Held-out effect not demonstrated:} 82.0\% base vs.\ 83.3\% mean across five adapters ($p=0.26$, single base evaluation).
+    \item \textbf{Proposals are proposals:} the agentic benchmark suite, PPO/DPO baselines, and RAG experiments were designed but not executed.
 \end{enumerate}
 \end{tcolorbox}
 
@@ -2987,7 +2376,7 @@ Error Recovery & Emergent self-correction (ReTool) & Robust autonomous recovery 
 \addlinespace
 Safety Guarantees & Post-hoc filtering + AT-GRPO & Formal verification & Critical \\
 \addlinespace
-Multi-Modal Grounding & 73.3\% OSWorld (Mobile-Agent-v3) & Full sensorimotor integration & High \\
+Multi-Modal Grounding & 37.7\% OSWorld (Mobile-Agent-v3) & Full sensorimotor integration & High \\
 \addlinespace
 Sample Efficiency & 1K--10K trajectories (GRPO) & $<$1K trajectories & Medium \\
 \addlinespace
@@ -3103,11 +2492,11 @@ Interpretability & CoT reasoning visible & Auditable + verifiable chains & High 
 \label{ch:conclusion}
 
 \section*{Summary of Findings}
-This systematic review of 60+ papers on reinforcement learning for autonomous AI agents documents a rapidly advancing field. The 2024--2025 period saw researchers pivot sharply from prompt-only techniques toward RL-driven fine-tuning, with benchmark performance improving 4--29$\times$ across major evaluation suites (SWE-bench: 1.7\%$\rightarrow$49\%, WebArena: 6.1\%$\rightarrow$44.8\%, OSWorld: 18.4\%$\rightarrow$73.3\%).
+This systematic review of 60+ papers on reinforcement learning for autonomous AI agents documents a rapidly advancing field. The 2024--2025 period saw researchers pivot sharply from prompt-only techniques toward RL-driven fine-tuning, with large reported gains on major evaluation suites (e.g., WebArena-Lite 8.5\%$\rightarrow$44.8\% for Llama-3.1-8B under end-to-end RL; AIME 2024 9.3\%$\rightarrow$79.8\% from GPT-4o to DeepSeek-R1).
 
 \section*{Key Takeaways}
 
-\noindent\textbf{1. The GRPO Paradigm Shift.} GRPO and its spin-offs now dominate, accounting for 39\% of published work. By eliminating the value/critic network (using group normalization) and leveraging verifiable rewards without a learned reward model, GRPO halves memory requirements (policy + reference model only, vs.\ four networks for PPO). This efficiency enabled DeepSeek-R1 to achieve 79.8\% on AIME 2024---putting capable agent training within reach of smaller labs. The proliferation of specialized variants (Flow-GRPO for multi-turn dialogue, M-GRPO for hierarchical coordination, AT-GRPO for adversarial robustness) suggests this lightweight approach will define near-term development.
+\noindent\textbf{1. The GRPO Paradigm Shift.} GRPO and its spin-offs are now common in the papers we reviewed. By eliminating the value/critic network (using group normalization) and leveraging verifiable rewards without a learned reward model, GRPO halves memory requirements (policy + reference model only, vs.\ four networks for PPO). This efficiency enabled DeepSeek-R1 to achieve 79.8\% on AIME 2024---putting capable agent training within reach of smaller labs. The proliferation of specialized variants (Flow-GRPO for multi-turn dialogue, M-GRPO for hierarchical coordination, AT-GRPO for adversarial robustness) suggests this lightweight approach will define near-term development.
 
 \noindent\textbf{2. Tool Mastery Is Now Baseline.} Agents without retrieval and tool-calling abilities encounter fundamental capability limitations. The emergence of RL-optimized tool learning frameworks---ReTool achieving 67\% on AIME 2024, DeepAgent executing 100+ step trajectories---demonstrates that tool integration is now essential for production deployment.
 
@@ -3355,7 +2744,7 @@ For researchers with limited compute budgets:
 \chapter{Reproducibility Checklist}
 \label{app:reproducibility}
 
-This checklist supports reproducibility of \textit{our proposed experiments} described in Chapter~\ref{ch:experiments}, which use open-weight models (Llama-3-8B, Qwen2.5-7B) with documented configurations. We follow NeurIPS reproducibility guidelines and ML community best practices.
+This checklist separates the executed GSM8K GRPO runs from the \textit{proposed, unexecuted} experiments of Chapter~\ref{ch:experiments} (Llama-3-8B, Qwen2.5-7B on agentic benchmarks). We follow NeurIPS reproducibility guidelines and ML community best practices.
 
 \textit{Note: This checklist applies to our reproducible experimental framework---not to proprietary systems surveyed in the literature (GPT-4, Claude-3.5, etc.) for which open weights, training data, and full hyperparameters are unavailable.}
 
@@ -3365,21 +2754,21 @@ This checklist supports reproducibility of \textit{our proposed experiments} des
 \toprule
 \textbf{Item} & \textbf{Status} & \textbf{Location} \\
 \midrule
-Training code with configuration files & \ding{51} & GitHub repository \\
-Evaluation scripts for all benchmarks & \ding{51} & GitHub repository \\
-Trained model checkpoints & \ding{51} & HuggingFace Hub \\
-Preprocessed datasets & \ding{51} & HuggingFace Datasets \\
-Raw experimental logs (WandB) & \ding{51} & WandB project link \\
-Random seeds for all experiments & \ding{51} & Config files \\
-Hardware specifications & \ding{51} & This appendix \\
-Software dependencies (requirements.txt) & \ding{51} & GitHub repository \\
+Training code and configuration files (executed GSM8K runs) & \ding{51} & GitHub repository \\
+Evaluation scripts for SWE-bench, WebArena, OSWorld & \ding{55} & Not built (programme not executed) \\
+GSM8K held-out evaluation records (executed runs) & \ding{51} & \texttt{platform\_tinker/reports/final/} \\
+Trained checkpoints for proposed Llama-3-8B / Qwen2.5-7B runs & \ding{55} & Not trained \\
+Raw logs for executed runs (W\&B) & partial & W\&B project \texttt{tinker-rl-scaling} \\
+Random seeds for executed runs & \ding{51} & W\&B run configs \\
+Hardware specifications (managed Tinker API) & partial & Not disclosed by the platform \\
+Software dependencies & \ding{51} & GitHub repository \\
 \bottomrule
 \end{tabular}
 
 \vspace{0.3cm}
-\noindent\textbf{Repository:} \url{https://github.com/pes-llm-research/agentic-rl-finetuning}
+\noindent\textbf{Repository:} \texttt{pes-llm-research/tinker-rl-lab} (GitHub).
 
-\noindent\textit{Note: Repository will be made public upon project completion. Access available to examiners upon request.}
+\noindent\textit{Note: The protocol items below describe the proposed programme of Chapter~\ref{ch:experiments}; unchecked boxes are planned, not completed.}
 
 \section*{Experimental Protocol Checklist}
 
@@ -3491,6 +2880,7 @@ This appendix provides a comprehensive mapping of all surveyed papers to our 19-
 {\scriptsize
 \renewcommand{\arraystretch}{1.15}
 \begin{longtable}{|>{\raggedright\arraybackslash\hspace{0pt}}p{2.3cm}|>{\raggedright\arraybackslash\hspace{0pt}}p{7.0cm}|c|>{\raggedright\arraybackslash\hspace{0pt}}p{2.4cm}|}
+\caption{Complete paper-to-taxonomy mapping (59 papers).}\label{tab:paper_mapping}\\
 \hline
 \textbf{Citation Key} & \textbf{Paper Title} & \textbf{\#} & \textbf{Category} \\
 \hline
@@ -3690,16 +3080,16 @@ sutton2018\-reinforce\-ment & RL: An Introduction (Textbook) & 18 & Surveys \\
 \hline
 \textbf{Category Cluster} & \textbf{Categories} & \textbf{Paper Count} \\
 \hline
-Core Algorithms & 1--3 & 15 \\
-Learning Paradigms & 4--6 & 9 \\
-Advanced Methods & 7--11 & 8 \\
-Applications & 12--16 & 22 \\
-Infrastructure & 17--19 & 6 \\
+Core Algorithms & 1--3 & 8 \\
+Learning Paradigms & 4--6 & 0 \\
+Advanced Methods & 7--11 & 10 \\
+Applications & 12--16 & 31 \\
+Infrastructure & 17--19 & 10 \\
 \hline
-\textbf{Total (Unique)} & \textbf{1--19} & \textbf{60} \\
+\textbf{Total (Unique)} & \textbf{1--19} & \textbf{59} \\
 \hline
 \end{tabular}
-\caption{Distribution of surveyed papers across taxonomy clusters. Each paper is assigned to its primary category based on main contribution.}
+\caption{Distribution of the 59 papers in Table~\ref{tab:paper_mapping} across taxonomy clusters, recounted from that table (each paper has one primary category). Categories 2--6, 8, 10, 13, 17, and 19 have no mapped paper; those categories are discussed from the cited literature in the main text but are not represented in this mapping.}
 \label{tab:category_distribution}
 \end{table}
 

@@ -104,10 +104,12 @@ evidence are outside A/B/C.}
 % -----------------------------------------------------------------------------
 
 \paragraph{Tasks and reward functions.}
-The artifact covers (i) GSM8K math reasoning with binary verifiable reward
-(complete coverage), (ii) function-calling tool use with shaped
-schema-validity reward (partial coverage), and (iii) HumanEval code
-generation with binary unit-test reward (partial coverage). Verifiable
+Completed manifest cells cover (i) GSM8K math reasoning with binary
+verifiable reward (most cells), (ii) synthetic arithmetic (the Qwen2.5-0.5B
+TRL cell and the non-LM PPO floors), and (iii) two single-seed
+function-calling tool-use cells with shaped schema-validity reward. HumanEval
+appears only as a failed Modal cell with no completed training step, and no
+MATH-500 training cell is in the manifest. Verifiable
 rewards reduce reward-model subjectivity but do \emph{not} eliminate
 reward hacking, format gaming, or train-set reward inflation; we discuss
 residual failure modes in Section~\ref{sec:limitations}. The full task
@@ -115,25 +117,27 @@ table, per-task data splits, and data preprocessing architecture are listed in
 Appendix~\ref{sec:run-manifest} and Appendix~\ref{sec:appendix:architecture}.
 
 \paragraph{Cross-stack coverage.}
-Implementations span 7 RL libraries: TRL (HuggingFace),
-Stable~Baselines3, CleanRL, Tianshou, PufferLib, NVIDIA \texttt{rl\_games},
-and d3rlpy, plus the closed-source Tinker API. Per-stack
-hyperparameter mappings, baseline floor/ceiling specifications, and the
-full implementation matrix are deferred to
-Appendix~\ref{sec:appendix:zvf-pipeline}; the per-(stack, model, task)
+LM post-training cells come from two stacks: TRL (on Modal) and the
+closed-source Tinker API. CleanRL, Stable~Baselines3 and Tianshou appear only
+as non-LM PPO sanity floors (a non-LLM policy network on synthetic math).
+PufferLib and \texttt{rl\_games} have default hyperparameter mappings
+(Table~\ref{tab:hyperparams}) but no runs, and veRL/OpenRLHF appear only as
+parser field mappings (Appendix~\ref{sec:appendix:zvf-pipeline}); none of
+these has a manifest cell. The per-(stack, model, task)
 tier classification lives in Appendix~\ref{sec:run-manifest} and is the
 single source of truth referenced throughout this paper.
 
 \paragraph{Models and training protocol.}
-We evaluate 32+ checkpoints spanning 0.6B--671B total parameters
-(0.6B--37B active for the largest MoE checkpoints) across the Qwen3,
-Qwen3.5, Llama-3.x, DeepSeek-V3.1, and Nemotron-120B families.
-Tier-A open-stack rows use LoRA (rank 32), Adam ($\beta_1{=}0.9$,
-$\beta_2{=}0.95$), learning rate $10^{-4}$, and seeds drawn from
-$\{42,123,456,789,1024\}$. The Modal classic-RL arms (CleanRL, SB3,
-Tianshou, Qwen2.5-0.5B) use the full 5-seed protocol; the Tinker Qwen3-8B
-Wave-6 group-size ablation is 1 seed per cell across 12 cells; and the
-Tinker Llama-3.3-70B-Inst arm is 4 seeds. Tier-B rows (single-seed Modal
+Manifest cells cover 23 base LMs from six families (Qwen2.5/3/3.5,
+Llama-3.x, DeepSeek-V3.1, Nemotron-3-Super, GPT-OSS, Kimi-K2) spanning 0.5B
+(Qwen2.5-0.5B) to ${\approx}$1T total parameters (Kimi-K2-Thinking and
+Kimi-K2.5), with 3B--37B active parameters for the MoE checkpoints. Tier A
+holds the 5-seed TRL Qwen2.5-0.5B cell (Modal L4) and the 4-seed Tinker
+Llama-3.3-70B-Inst cell; the 15 classic-RL PPO runs (5 seeds each) are
+non-LM sanity floors outside the LM tiers. The Tinker campaign runs use LoRA
+rank 32, $G{=}8$ unless swept, learning rate $10^{-5}$, 30 steps and
+512-token completions; the Qwen3-8B Wave-6 sensitivity ablation is 1 seed
+per cell across 12 cells (Tier B). Tier-B rows (single-seed Modal
 H100 Llama-3.2-\{1,3\}B; single-seed Tinker Qwen3-8B GSM8K headline; the
 single-seed frontier-model case-study runs across model scale on Tinker)
 are reported descriptively. Frontier-scale Tinker runs are case studies,
@@ -155,8 +159,8 @@ The mechanical $\mathrm{ZVF}$ identity (Section~\ref{sec:zvf-analysis})
 is a theoretical result, not empirical inference. The separate held-out
 5-seed Qwen3-8B GSM8K control is future-paper evidence and is not admitted
 as inferential evidence in this release. Historical empirical rows remain
-descriptive with unresolved inferential eligibility; the full per-row training-reward table that
-earlier drafts placed in main is now Appendix~\ref{sec:appendix:full-results}.
+descriptive with unresolved inferential eligibility; the full per-row
+training-reward table is in Appendix~\ref{sec:appendix:full-results}.
 
 \subsection{Zero-Variance Fraction: cross-stack diagnostic}
 \label{sec:zvf-analysis}
@@ -178,9 +182,8 @@ Mixed coefficients do not guarantee a nonzero aggregate parameter gradient.
 See Appendix~\ref{sec:appendix:zvf-formalization}.
 
 \paragraph{Pooled cross-task descriptive correlation.}
-Across $N = 15$ experiments spanning 5 model families and
-0.6\,B--671\,B total parameters (0.6\,B--37\,B active for the largest
-MoE checkpoints), mean ZVF is negatively associated with final training
+Across the historical pooled $N = 15$ cells (inclusion list not
+released), mean ZVF is negatively associated with final training
 performance: $r_{\text{Pearson}} = -0.769$ ($p = 0.0008$),
 $\rho_{\text{Spearman}} = -0.784$ ($p = 0.0005$).
 We treat this association as descriptive (B-grade), not causal: ZVF is
@@ -203,37 +206,28 @@ reward; neither the smallest nor the largest $G$ is uniformly best. We
 report this as a case study against the heuristic that ``larger $G$ is
 always better'' rather than as a prescription. The
 token-budget-normalised reconstruction in
-Appendix~\ref{sec:appendix:group-size-reconcile} uses fallback values, not
-measured multi-seed held-out outcomes. Its calibrated proxy and fitted apex
-do not establish a measured token-budget optimum; per-row
+Appendix~\ref{sec:appendix:group-size-reconcile} uses hand-entered,
+reconstructed accuracy cells, not measured runs; its per-token efficiency
+proxy $\widehat{\mathrm{GE}}_{\text{tok}}$ decreases monotonically in $G$
+at every budget, and the rightward shift of the reconstructed accuracy argmax
+is only a hypothesis for a measured sweep; per-row
 training-reward numbers are in Appendix~\ref{sec:appendix:full-results}.
 A two-seed matched-budget follow-up (2{,}560 rollouts per arm;
-$G{=}2\times160$ vs.\ $G{=}16\times20$ steps, 512-token completions)
+$G{=}2\times160$ vs.\ $G{=}16\times20$ steps, 512-token completions,
+LoRA rank 4, lr $3{\times}10^{-5}$, 8 prompts/step)
 upgrades one facet of the case study: the $G{=}2$ arms drive train reward
 to $\approx0.9$--$1.0$ on the sampled pool and terminate in a sustained
 all-correct zero-variance regime ($\mathrm{ZVF}\approx0.75$--$1.0$),
-while $G{=}16$ ends mid-learning ($\approx0.3$--$0.5$) with
-$\mathrm{ZVF}\le0.25$ throughout. Artifacts:
+while $G{=}16$ ends mid-learning ($\approx0.3$--$0.5$) with per-step
+$\mathrm{ZVF}\le0.5$ (max $0.5$ and $0.375$ for the two seeds). At
+$G{=}2$ a high ZVF is largely mechanical, since $p^2+(1-p)^2\ge0.82$ for
+$p\ge0.9$. Artifacts:
 \texttt{tinker-runs/results/er2b\_*.json}.
 
-The historical correlation graphic is excluded because its plotted panels
-and caption have not been reconciled against the cohort-specific tables.
-\iffalse
-\begin{figure}[t]
-\centering
-\includegraphics[width=\textwidth]{../figures/v2/zvf_correlation}
-\caption{\textbf{Left:} pooled ZVF vs.\ final performance scatter
-($r = -0.769$, $p = 0.0008$, $N{=}15$); the apparent strong negative
-correlation is task-confounded (tool-use cluster at
-$\mathrm{ZVF}{=}1$, reward $0$; GSM8K cluster at
-$\mathrm{ZVF}{\le}0.5$, reward $\geq 0.3$). \textbf{Right:} mean ZVF by
-model family. Within-GSM8K stratified Pearson is $r = +0.40$
-($p = 0.09$, $N{=}19$); restricted to model-varying GSM8K, $r = +0.13$
-($p = 0.79$, $N{=}7$). The pooled negative correlation does not survive
-stratification.}
-\label{fig:zvf-correlation}
-\end{figure}
-\fi
+The pooled $N{=}15$ scatter is not plotted because its inclusion list is not
+released; Figure~\ref{fig:zvf-closed-form} (appendix) shows the per-problem
+closed-form comparison and the measured small-scale ZVF-vs-$G$ sweep.
+
 
 % -----------------------------------------------------------------------------
 \section{Reproducibility}
@@ -245,7 +239,9 @@ certify complete raw per-group rollout JSONL, checkpoints, pinned containers,
 or step traces for every manifest row. Aggregate traces do not substitute
 for raw groups. Auditability checkmarks below are historical availability
 reports pending a file-level hash inventory, not verified release guarantees.
-Full architectural diagrams of the data processing, licensing, and reproduction execution pipelines are provided in Appendix~\ref{sec:appendix:architecture}.
+Design schematics of the data-processing, licensing, contamination and
+reproduction pipelines, with the release status of each, are in
+Appendix~\ref{sec:appendix:architecture}.
 
 \input{sections/reproducibility_card_dnb}
 
@@ -303,8 +299,25 @@ independent main-track science.
 % Run manifest (read-only; source of truth for tier classification).
 \input{sections/run_manifest}
 
-% ZVF formal derivation (A-grade mechanical theorem).
+% ZVF formal derivation (closed-form expectation; theory, outside A/B/C).
 \input{sections/appendix_zvf_formalization}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{../figures/v2/zvf_correlation}
+\caption{\textbf{Left:} per-problem observed ZVF against the closed form
+$p^G+(1-p)^G$ for Qwen3-8B on GSM8K ($n{=}600$ problem points; Pearson
+$r{=}0.93$). Because $p$ is estimated from the same rollouts that are scored
+for ZVF, $\hat p\in\{0,1\}$ forces observed ZVF${}=1$, so this agreement is
+partly circular and is not an independent validation of the expectation.
+The source file for this panel is not identified in the artifact.
+\textbf{Right:} measured mean ZVF against $G$ for Qwen2.5-0.5B on two-operand
+addition (3 seeds per $G$; Table~\ref{tab:groupsize-measured}); ZVF decreases
+monotonically ($0.84\to0.63$), but the closed form at the mean $p$ predicts
+much lower levels ($0.11$ vs.\ observed $0.63$ at $G{=}16$;
+\texttt{groupsize\_zvf\_sweep.tsv}), so it captures the direction, not the level.}
+\label{fig:zvf-closed-form}
+\end{figure}
 
 % Cross-stack hyperparameter mappings, reward verification details,
 % library taxonomy, and floor/ceiling baselines.

@@ -48,14 +48,18 @@ and \texttt{importance_sampling.granularity}), the genuine OpenRLHF deviations
 model confound on the managed runtime, and the fact that the veRL and OpenRLHF
 rows of \texttt{framework_comparison.json} are dry-run placeholders (their
 \texttt{telemetry} item is therefore null and their \texttt{outcomes} empty).
+Where a run script fixes a value the dump left null, the regenerated value
+replaces it (e.g.\ managed \texttt{kl.beta}${}=0$, provenance \texttt{code}).
 
 \paragraph{Family B: the open Colab trainer (E3 audit).}
 Four entries record the arms of the E3 open-trainer audit (\ifdefined\ANONYMOUSBUILD
 logged to W\&B; project name withheld for review\else W\&B project
 \texttt{zvf-colab-experiments}\fi): base GRPO, Dr.~GRPO (both deltas
-implemented), DAPO (clip-higher, dynamic sampling, token-level loss, and KL
-removal implemented; overlong shaping recorded as \texttt{absent} because it
-is inapplicable at toy completion lengths), and an adaptive-$G$ arm whose
+implemented), DAPO (clip-higher and KL removal \texttt{implemented}; dynamic
+sampling \texttt{surrogate}, because a zero-variance group is resampled at most
+twice and then dropped rather than refilled; token-level loss \texttt{absent},
+since the loss uses a sequence-level ratio; overlong shaping \texttt{absent},
+being inapplicable at toy completion lengths), and an adaptive-$G$ arm whose
 \texttt{group_size_schedule} records the live escalation rule ($G$
 $4{\to}6{\to}8$ on ZVF spikes). These runs are toy-scale and their outcome
 fields (held-out delta $+0.50$ to $+0.575$; the DAPO arm's mean ZVF $0.00$ at
@@ -66,37 +70,48 @@ exact, because the trainer's backward pass is open.
 Four entries record the 12-cell head-to-head (Qwen3.5-4B, GSM8K, three seeds
 per arm) in which the four variant labels spanned $0.034$ in last-10
 training reward ($0.710$--$0.744$; not shown equivalent, and two seed-paired
-contrasts exclude zero) while their delta status arrays differ
-sharply from Family B's: every claimed delta on the closed stack is
-\texttt{surrogate} or \texttt{unknown}, never fully \texttt{implemented}.
+contrasts exclude zero). Their delta status arrays are written from the
+client-side run scripts and differ sharply from Family B's: the ``dapo'' arm
+implements only KL removal (its clip acts on the advantage, and there is no
+dynamic sampling), the ``gspo'' arm implements neither sequence-level
+component (its loss has no importance ratio), and the ``drgrpo'' arm
+implements both removals in client code.
 
 \paragraph{Family D: N2 same-stack isolated variants.}
-Three entries (aero, gift, areal) record the same managed runtime as Family C
-but with a different \emph{label} per cell. The N2 four-method run holds the
-sampler, $G{=}8$, seed 0, prompt pool, and step count fixed---so the per-method
-delta against GRPO is guaranteed to isolate the label, not the stack. Measured
-last-10 reward/ZVF land in the same paired-bootstrap envelope as GRPO
-\ifdefined\SUBMISSIONBUILD(Appendix~\ref{sec:p6-measured})\else(Section~\ref{sec:p6-measured})\fi; the entries make this measurable artifact
-machine-queryable for the first time.
+Three entries (aero, gift~\citep{gift2025}, areal~\citep{areal2025}) record
+the same managed runtime as Family C but with a different \emph{label} per
+cell. The N2 four-method run holds the sampler, $G{=}8$, seed 0, prompt pool,
+and step count fixed, so each per-method contrast against GRPO holds those
+fields fixed; it is still one seed, and the method-specific code paths
+differ. Step-bootstrap intervals over the last 10 steps exclude zero for
+several contrasts
+\ifdefined\SUBMISSIONBUILD(Appendix~\ref{sec:p6-measured})\else(Section~\ref{sec:p6-measured})\fi,
+but they are single-trajectory intervals, not seed-level effects, and the run
+is near ceiling ($72.5\%$ of GRPO's last-10 groups are all-correct). Each entry
+marks its component \texttt{implemented} although its own note says the
+variant machinery is closed; the governance rule
+(Appendix~\ref{sec:p6-governance}) allows at most \texttt{surrogate}, so we
+flag these statuses for downgrade. The AERO record cites
+RL-ZVP~\citep{le2025rlzvp}, whose mechanism (entropy-guided advantage shaping)
+differs from the record's, so ``aero'' is a program-internal label.
 
 \paragraph{Family E: zvf-iter130 risk-index fixtures.}
 Eleven records describe risk-index snapshots. They are not completed training
-runs or validation of variant benefits. Their metadata is retained for
-provenance, with current disclosure coverage in the per-entry table.
-
-\paragraph{Snapshot warning.} Family badge ranges in this historical summary
-are not a second scoring protocol; use the regenerated per-entry table for
-current scores. The population includes dry-run placeholders and synthetic
-risk-index fixtures, not 28 completed training runs. Family E cannot validate
-variant performance or training ZVF.
+runs or validation of variant benefits. The source table
+(\texttt{zvf\_iter130\_method\_risk.tsv}) does not document how its risk index
+is computed, and some of its rows are identical across distinct conditions
+(the two tool-use cells share every value), so not every row is an
+independent measurement. Family E cannot validate variant performance or
+training ZVF. With two dry-run placeholders and four toy-scale Colab runs,
+the population is not 28 completed training runs.
 
 \paragraph{What population taught us about our own reporting.}
-The badge column is itself a finding. Our hand-entered config dumps---built for a
-reviewer-requested fairness audit---scored low: they nail items 2, 3,
-and 5 (KL, backend, group size) but expose item 1 only partially (a launcher
-YAML records \texttt{importance_sampling.granularity}, not clip bounds or
-advantage normalization) and items 6--7 not at all. The open Colab arms score
-highest not because the runs are better but because an open backward pass plus an
-explicit ``no KL, no decontamination'' declaration makes every field
-\emph{reportable}. Reproducibility supplements of the kind commonly shipped
+The badge column is itself a finding. Our own released config dumps---built for a
+reviewer-requested fairness audit---score 51 on the open frameworks: the veRL
+and OpenRLHF dry-run records fully report items 2, 3, and 5 but item 1 only at
+$0.10$ (a launcher YAML records \texttt{importance_sampling.granularity}, not
+clip bounds) and items 4 and 7 not at all; the TRL record omits KL handling.
+The open Colab arms score highest (84) not because the runs are better but
+because an open backward pass plus an explicit ``no KL, no decontamination''
+declaration makes nearly every field \emph{reportable}. Reproducibility supplements of the kind commonly shipped
 with RL papers, ours included, do not automatically satisfy MIN-REPORT.

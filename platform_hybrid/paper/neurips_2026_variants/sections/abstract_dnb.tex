@@ -11,14 +11,12 @@ inventory remain incomplete. Summaries and Zero-Variance Fraction (ZVF)
 diagnostics are not substitutes for raw rollout JSONL or released checkpoints.
 
 We organize all claims into three explicit evidence tiers.
-\textbf{A}: completed multi-seed cells, with inferential eligibility
-separately required. Theory is outside the empirical tiers:
+\textbf{(A-grade)}: completed multi-seed LM cells (5-seed TRL Qwen2.5-0.5B;
+4-seed Tinker Llama-3.3-70B-Inst), with inferential eligibility separately
+required; classic-RL PPO runs with a non-LLM policy network are listed as
+sanity floors outside the tiers. Theory is also outside the empirical tiers:
 $\mathbb E[\widehat{\mathrm{ZVF}}]=p^{G}+(1{-}p)^{G}$ assumes
 conditionally i.i.d.\ binary rewards at fixed $p$.
-Later, separate five-seed Qwen3-8B
-GSM8K evidence reports only a $+1.3$pp delta over a fixed base. Its $p{=}0.26$
-is a one-sample seed-level, not paired-seed, test and is not reviewed-record
-evidence and is outside the reviewed empirical tiers.
 \textbf{(B-grade, single-seed descriptive)}:
 case-study runs across model scale on the closed-backend Tinker API, including
 group-size sweeps and frontier-scale checkpoints, reported as illustrative not
@@ -34,20 +32,13 @@ within-task predictive law---a finding we treat as descriptive
 instrumentation, not a causal claim.
 
 \paragraph{Venue claim boundary (position-artifact / datasets-and-benchmarks).}
-This manuscript is an \emph{artifact-first} release: pinned containers,
-tier-classified run cells, and reproduce targets. Stratified ZVF traces are
+This manuscript is an \emph{artifact-first} release of tier-classified run
+cells and analysis code; one-command reproduce targets are not yet released. Stratified ZVF traces are
 \emph{instrumentation shipped with the bench}, not a flagship ZVF theory or
 controller paper (those claims live in the companion diagnostic and theory
 vehicles). We do not headline a universal ZVF predictor, a winning group size,
 or an adaptive controller. Submission target is a datasets-and-benchmarks or
 workshop-artifact venue under the stated A/B/C evidence tiers.
-\paragraph{Absorbed satellites (retired).}
-The former ACM compact regenerate (R01) and long evidence compendium (U01) are
-retired from the live tree to
-\texttt{archive/absorbed/R01\_acm/} and
-\texttt{archive/absorbed/U01\_main\_compendium/}. They are historical packaging
-of this artifact family, not independent venue counts.
-
 The historical artifact URL (not a verified complete release inventory) is
 \url{https://anonymous.4open.science/r/agentic-grpo-bench-anon-2C6B}.
 \end{abstract}

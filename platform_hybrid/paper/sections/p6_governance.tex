@@ -28,20 +28,24 @@ revisions create a new record id with a superseded pointer, so old stack
 entries keep meaning what they meant.
 
 \paragraph{Schema evolution.}
-Every record carries \texttt{schema_version} (currently 0.1.0). Additive
+Every stack and variant-delta record carries \texttt{schema_version}
+(currently 0.1.0); the two amendment sidecars do not and are not records. Additive
 changes (new optional fields) bump the minor version and require no entry
 migration, since absent-in-old-schema is exactly the null/unreported semantics
 the tooling already handles. Breaking changes require a migration script
 shipped in the same commit and a major-version bump. The badge definition
 (Eq.~\ref{eq:p6-badge}) is versioned with the schema: published badge numbers
-are meaningless without it.
+are meaningless without it. An optional leaf added inside a
+\texttt{min_report} item enlarges that item's denominator and so lowers the
+badge of unmigrated entries; such an addition changes the badge definition
+even though it needs no entry migration.
 
 \paragraph{The bus-factor lesson.}
 Papers with Code was better resourced than any academic registry will be, and
 still disappeared with its steward~\citep{paperswithcode2025}. We adopt the
 three mitigations its aftermath validated: the registry is plain JSON files in
 a git repository (fork-to-preserve, no serving infrastructure to die), the
-license permits redistribution, and periodic snapshot dumps are archived with
+repository's Apache-2.0 license permits redistribution, and periodic snapshot dumps are archived with
 the benchmark release rather than only at a canonical URL. Continuity of the
 \emph{data} is engineered; continuity of \emph{curation} is not promised
 beyond the benchmark's maintenance window, and we say so rather than pretend

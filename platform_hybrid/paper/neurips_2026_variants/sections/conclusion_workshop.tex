@@ -10,9 +10,8 @@
 The workshop release is deliberately exploratory. Its strongest evidence is
 short-horizon GSM8K dynamics; non-math coverage is a stress case, not a
 result. We treat ZVF as a cheap descriptive diagnostic, not a predictive
-failure detector. The later Qwen3-8B comparison reports a small,
-non-significant difference against a fixed base; it is separate future-paper
-evidence, not a reviewed-record held-out control.
+failure detector. The five-seed Qwen3-8B held-out comparison reports a small,
+non-significant difference against the base model.
 
 \paragraph{Five concrete questions for the workshop.}
 We invite attendees to engage with five specific, testable questions raised
@@ -27,8 +26,8 @@ by this release rather than open-ended philosophizing:
         step count for endgame contrast? Our two-seed $G{=}2\times160$ versus
         $G{=}16\times20$ panel ends with the small-$G$ arms at an all-correct
         ZVF wall while $G{=}16$ remains mid-learning. The token-budget
-        appendix uses fallback reconstructions, not measured multi-seed
-        held-out outcomes. Neither establishes an optimum. The needed experiment
+        appendix table is hand-entered and illustrative, not measured.
+        Neither establishes an optimum. The needed experiment
         is a directly trained, multi-seed, token-matched sweep on open stacks.
   \item Are there tasks where high-ZVF cells \emph{do} predict downstream
         collapse, beyond GSM8K? Tool-use is a degenerate $\mathrm{ZVF}{=}1$
@@ -41,7 +40,7 @@ by this release rather than open-ended philosophizing:
         loss / reward normalization / hardware metadata for a managed-API
         row to count as anything beyond a case study?
   \item Should ZVF-style diagnostic claims require raw per-group rollout
-        JSONL by default? Our historical inventory does not certify
-        complete per-run aggregates or raw-group availability; we invite
-        the workshop to align on a minimum raw-artifact bar.
+        JSONL by default? Our release has per-step aggregates only, so
+        ZVF cannot be recomputed from raw rewards; we invite the workshop
+        to align on a minimum raw-artifact bar.
 \end{enumerate}

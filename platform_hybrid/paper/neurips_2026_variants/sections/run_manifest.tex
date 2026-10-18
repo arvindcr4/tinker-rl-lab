@@ -8,9 +8,11 @@
 % temperature/rank/batch sensitivity ablation. The ``steps_completed=0''
 % entries in master\_results.csv for several scale\_/arch\_/frontier\_ runs
 % are stale CSV cells; the per-run JSONs and reward\_trace arrays show those
-% runs actually completed (steps and last-10 metrics in the JSONs match
-% the values in Table~4 of the DNB variant and the case-study lists in the
-% ZVF and workshop variants). This manifest reflects the JSON ground truth.
+% runs actually completed. The campaign_v2_* rows of master_results.csv are
+% steps_completed=26 snapshots of other run attempts and do NOT match the
+% completed 30-step per-run JSONs; per-row reward tables must be generated from
+% the per-run JSON reward_trace arrays, not from master_results.csv. This
+% manifest reflects the JSON ground truth.
 % =============================================================================
 \section{Run Manifest}
 \label{sec:run-manifest}
@@ -19,7 +21,9 @@ This historical manifest records cells, not a reconciled corpus census.
 Its displayed run counts total 75, whereas earlier summaries said 79; no missing
 run identities are inferred. Tier A denotes completed multi-seed cells (at least
 three independent seeds at fixed configuration), B completed descriptive
-single-seed cells, and C failed, partial or unstarted cells. These labels do
+single-seed cells, and C failed, partial or unstarted cells. The three
+classic-RL PPO cells use a non-LLM policy network on synthetic math and are
+labelled F (non-LM sanity floor); they are outside the LM evidence tiers. These labels do
 not by themselves authorize inference: task, endpoint and independence must
 also be verified. Backend access is a separate field. Configuration sweeps
 are not seed replication. Artifact checks are historical availability claims,
@@ -33,28 +37,31 @@ not a certification that every current output is independently reproducible.
 \toprule
 Tier & Backend & Model & Task & Split & N & Seeds & Steps$_{\max}$ & Reward & Held-out & Logs & Ckpt \\
 \midrule
-\multicolumn{12}{l}{\textit{Tier A --- multi-seed completed cells, replication metadata; inference requires eligibility}} \\
+\multicolumn{12}{l}{\textit{F --- non-LM sanity floor: PPO with a non-LLM policy network on synthetic math (outside LM tiers)}} \\
 \midrule
-A & Modal       & cleanrl-ppo               & math                & gen     & 5 & 5 & 97280  & BV & --- & \checkmark & --- \\
-A & Modal       & sb3-ppo                   & math                & gen     & 5 & 5 & 100352 & BV & --- & \checkmark & --- \\
-A & Modal       & tianshou-ppo              & math                & gen     & 5 & 5 & 100000 & BV & --- & \checkmark & --- \\
+F & Modal       & cleanrl-ppo               & math                & gen     & 5 & 5 & 97280  & BV & --- & \checkmark & --- \\
+F & Modal       & sb3-ppo                   & math                & gen     & 5 & 5 & 100352 & BV & --- & \checkmark & --- \\
+F & Modal       & tianshou-ppo              & math                & gen     & 5 & 5 & 100000 & BV & --- & \checkmark & --- \\
+\midrule
+\multicolumn{12}{l}{\textit{Tier A --- multi-seed completed LM cells, replication metadata; inference requires eligibility}} \\
+\midrule
 A & Modal L4    & qwen2.5-0.5b              & math                & gen     & 5 & 5 & 125    & BV & --- & \checkmark & \checkmark \\
-B & Tinker      & qwen3-8b (Wave-6: 12 configurations)& gsm8k               & train+held-out & 12 & 1 & 30 & BV & \checkmark & \checkmark & --- \\
 A & Tinker      & llama-3.3-70b-inst        & gsm8k               & train   & 4 & 4 & 30     & BV & --- & \checkmark & --- \\
 \midrule
 \multicolumn{12}{l}{\textit{Tier B --- single-seed completed Tinker case studies}} \\
 \midrule
+B & Tinker      & qwen3-8b (Wave-6: 12 configurations)& gsm8k               & train+held-out & 12 & 1 & 30 & BV & \checkmark & \checkmark & --- \\
 B$^\dagger$ & Tinker      & qwen3-8b (G=8, base)      & gsm8k               & train+held-out & 1 & 1 & 30 & BV & \checkmark & \checkmark & --- \\
 B$^\dagger$ & Tinker      & qwen3.5-4b                & gsm8k               & train   & 1 & 1 & 30 & BV & --- & \checkmark & --- \\
 B$^\dagger$ & Tinker      & llama-8b-inst (gsm8k)     & gsm8k               & train   & 1 & 1 & 30 & BV & --- & \checkmark & --- \\
 B$^\dagger$ & Tinker      & deepseek-v3.1             & gsm8k               & train   & 1 & 1 & 20 & BV & --- & \checkmark & --- \\
 B$^\dagger$ & Tinker      & nemotron-120b             & gsm8k               & train   & 1 & 1 & 20 & BV & --- & \checkmark & --- \\
 B$^\dagger$ & Tinker      & gpt-oss-20b               & gsm8k               & train   & 1 & 1 & 30 & BV & --- & \checkmark & --- \\
-B$^\dagger$ & Tinker      & kimi-k2                   & gsm8k               & train   & 1 & 1 & 20 & BV & --- & \checkmark & --- \\
+B$^\dagger$ & Tinker      & kimi-k2-thinking (arch)   & gsm8k               & train   & 1 & 1 & 20 & BV & --- & \checkmark & --- \\
 B & Modal H100  & llama-3.2-3b-inst         & gsm8k               & train   & 1 & 1 & 30 & BV & --- & \checkmark & --- \\
 B & Modal H100  & llama-3.2-1b-inst         & gsm8k               & train   & 1 & 1 & 30 & BV & --- & \checkmark & --- \\
 B & Modal H100  & qwen3-8b (TRL ref)        & gsm8k               & train   & 1 & 1 & 30 & BV & --- & \checkmark & --- \\
-B & Modal H100  & llama-8b-inst             & gsm8k               & train   & 1 & 1 & 30 & BV & --- & \checkmark & --- \\
+B & Modal H100  & llama-8b-inst (PPO)       & gsm8k               & train   & 1 & 1 & 30 & BV & --- & \checkmark & --- \\
 B & Tinker      & llama-8b-inst (tool)      & tool\_use           & train   & 1 & 1 & 30 & SH & --- & \checkmark & --- \\
 B & Tinker      & qwen3-32b (tool)          & tool\_use           & train   & 1 & 1 & 30 & SH & --- & \checkmark & --- \\
 \midrule
@@ -75,7 +82,7 @@ B & Tinker      & qwen3-8b (G=2)            & gsm8k               & train   & 1 
 B & Tinker      & qwen3-8b (G=4)            & gsm8k               & train   & 1 & 1 & 30 & BV & --- & \checkmark & --- \\
 B & Tinker      & qwen3-8b (G=8)            & gsm8k               & train   & 1 & 1 & 30 & BV & --- & \checkmark & --- \\
 B & Tinker      & qwen3-8b (G=16)           & gsm8k               & train   & 1 & 1 & 30 & BV & --- & \checkmark & --- \\
-B$^\dagger$ & Tinker      & qwen3-8b (G=32) & gsm8k               & train   & 1 & 1 & 30 & BV & --- & \checkmark & --- \\
+B & Tinker      & qwen3-8b (G=32)           & gsm8k               & train   & 1 & 1 & 30 & BV & --- & \checkmark & --- \\
 C$^\S$ & ---         & qwen3-8b (G=64)$^\S$      & gsm8k (extrap.)     & ---     & 0 & 0 & 0  & --- & --- & --- & --- \\
 \midrule
 \multicolumn{12}{l}{\textit{Tier C --- failed, partial, or never-started cells (listed for honesty)}} \\
@@ -100,28 +107,28 @@ C & Tinker      & qwen3.5-27b               & gsm8k (partial)     & train   & 1 
 Tier classification: \textbf{A}~at least three independent seeds at fixed
 configuration, completed; \textbf{B}~completed single-seed observations,
 including Wave-6 (12 configurations $\times$ one seed), descriptive only;
-\textbf{C}~failed, partial, or unstarted. A is replication metadata, not an
+\textbf{C}~failed, partial, or unstarted; \textbf{F}~non-LM PPO sanity floor,
+outside the LM tiers. A is replication metadata, not an
 automatic inferential license. Backend openness is reported separately. Rows marked $\dagger$ in the Tinker case-study
 block are the seven single-seed Tinker GSM8K cells used as data points in
 the ZVF model-varying within-task stratified Pearson ($N{=}7$,
-Section~\ref{sec:zvf-analysis} of the ZVF variant); the additional
-$\dagger$ on the G=32 group-size row marks it as the single-seed cell
-that anchors the upper end of the within-sweep token-budget reanalysis
-in Appendix~\ref{sec:appendix:group-size-reconcile}.
+Appendix~\ref{sec:stratified-diagnostics}). The token-budget reanalysis
+in Appendix~\ref{sec:appendix:group-size-reconcile} uses hand-entered
+values, not the G=32 run. The kimi-k2 arch run's logged base model is
+Kimi-K2-Thinking (per-run JSON and Tinker run metadata).
 ``Split'' is the evaluation distribution used for reported numbers
 (\emph{train}: training-prompt reward; \emph{train+held-out}: also
 evaluated on a held-out test split; \emph{gen}: synthetic generated
 data; ``---'' for failed cells). ``Reward'' is BV (binary verifiable),
 SH (shaped), or PW (pairwise). All Tinker rows depend on a closed-source
 backend. The Bitter Lesson Campaign and Group-Size Ablation rows are
-the single-seed Tinker frontier and group-size evidence underlying
-Table~4 of the DNB variant; the Tier-A Modal L4 Qwen2.5-0.5B row is
-the workshop-headline multi-seed reference run.\\[2pt]
+the single-seed Tinker frontier and group-size evidence; the Tier-A
+Modal L4 Qwen2.5-0.5B row is the multi-seed open-stack GRPO reference run.\\[2pt]
 \textit{$^\S$~G=64: no direct training run was executed at this group size.
 Numbers appearing in the G=64 column of the token-budget reanalysis
 (Appendix~\ref{sec:appendix:group-size-reconcile},
-Table~\ref{tab:groupsize-tokennorm}) are extrapolated from the
-inverted-U fit on G$\in\{4,8,16,32\}$ and are descriptive only; we
+Table~\ref{tab:groupsize-tokennorm}) are hand-entered values in the
+script's \texttt{FALLBACK\_ROWS} table, not outputs of a run or a fit; we
 explicitly do \emph{not} treat G=64 as Tier-B evidence.}}
 \label{tab:run-manifest}
 \end{table}

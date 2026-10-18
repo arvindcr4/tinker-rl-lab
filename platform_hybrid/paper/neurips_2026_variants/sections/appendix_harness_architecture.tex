@@ -4,17 +4,23 @@
 \section{Benchmark Dataset and Reproduction Harness Architecture}
 \label{sec:appendix:architecture}
 
-This section provides structural architectural diagrams for the eight core
-pipelines that govern data ingestion, quality filtering, licensing,
-evaluation, contamination auditing, and reproduction in \ours{}.
+This section gives design schematics for eight pipelines (data ingestion,
+quality filtering, licensing, evaluation, contamination auditing, versioning,
+and reproduction). They describe intended structure, not released
+automation. Release status: tiering is done by hand in the run manifest
+(Appendix~\ref{sec:run-manifest}); no licence checker is released; an
+8/13-gram overlap script exists
+(\texttt{platform\_modal/scripts/contamination\_check.py}) but no
+contamination-audit output is reported in this paper; no SHA-256 version
+manifest and no \texttt{make} reproduction targets are released.
 
 \subsection{Evidence Tiering and Open Distribution}
 Figure~\ref{fig:r04_dataset_tiering} outlines the classification pipeline
-that partitions raw experimental traces into Tier~A (analytic / multi-seed
-inferential), Tier~B (single-seed descriptive case studies), and Tier~C
-(uncompleted or diagnostic-only cells).
-Figure~\ref{fig:r04_license_pipeline} documents the automated license checker
-verifying open-access redistribution terms across all bundled datasets.
+that partitions experimental cells into Tier~A (completed multi-seed LM cells),
+Tier~B (single-seed descriptive case studies), and Tier~C
+(failed, partial, or unstarted cells).
+Figure~\ref{fig:r04_license_pipeline} sketches a planned licence check of
+redistribution terms; it is not implemented in the released code.
 
 \begin{figure}[htbp]
 \centering
@@ -34,7 +40,7 @@ verifying open-access redistribution terms across all bundled datasets.
     \draw [arrow] (n2) -- (n3);
 \end{tikzpicture}
 }
-\caption{\textbf{Dataset Tiering \& Evidence Hierarchy (Tiers A/B/C)}. Structured categorization of benchmark dataset evidence levels into audited tiers.}
+\caption{\textbf{Dataset Tiering \& Evidence Hierarchy (Tiers A/B/C)}. Manual categorization of manifest cells into evidence tiers.}
 \label{fig:r04_dataset_tiering}
 \end{figure}
 
@@ -56,7 +62,7 @@ verifying open-access redistribution terms across all bundled datasets.
     \draw [arrow] (n2) -- (n3);
 \end{tikzpicture}
 }
-\caption{\textbf{Artifact License \& Open-Source Distribution}. Automated validation of data licenses and open-access artifact licensing terms.}
+\caption{\textbf{Artifact License \& Open-Source Distribution}. Planned check of data and artifact licence terms (not implemented).}
 \label{fig:r04_license_pipeline}
 \end{figure}
 
@@ -114,11 +120,11 @@ quality filtering engine applied to synthetic tool-use prompts.
 \subsection{Evaluation, Leakage Auditing, and Version Control}
 Figure~\ref{fig:r04_eval_harness} shows the evaluation pipeline that executes
 held-out assessment suites across checkpoints.
-Figure~\ref{fig:r04_leakage_audit} outlines the automated contamination audit
-that computes 8-gram and 13-gram overlaps between training prompts and held-out
-test splits to prevent data leakage.
-Figure~\ref{fig:r04_version_control} illustrates dataset version management,
-tagging every release commit with immutable cryptographic digests.
+Figure~\ref{fig:r04_leakage_audit} outlines the contamination audit, which
+would compute 8-gram and 13-gram overlaps between training prompts and held-out
+test splits; the script exists but its output is not reported here.
+Figure~\ref{fig:r04_version_control} illustrates planned dataset version
+management with cryptographic digests (not released).
 
 \begin{figure}[htbp]
 \centering
@@ -160,7 +166,7 @@ tagging every release commit with immutable cryptographic digests.
     \draw [arrow] (n2) -- (n3);
 \end{tikzpicture}
 }
-\caption{\textbf{Data Leakage Prevention \& Contamination Audit}. Detecting $n$-gram overlap between training and test splits.}
+\caption{\textbf{Data Leakage Prevention \& Contamination Audit}. Planned $n$-gram overlap audit between training and test splits (no output reported).}
 \label{fig:r04_leakage_audit}
 \end{figure}
 
@@ -182,14 +188,14 @@ tagging every release commit with immutable cryptographic digests.
     \draw [arrow] (n2) -- (n3);
 \end{tikzpicture}
 }
-\caption{\textbf{Dataset Maintenance \& Version Control Architecture}. Tracking dataset revisions, SHA-256 manifests, and patch histories.}
+\caption{\textbf{Dataset Maintenance \& Version Control Architecture}. Planned tracking of dataset revisions and SHA-256 manifests (not released).}
 \label{fig:r04_version_control}
 \end{figure}
 
 \subsection{Reproduction Harness Verification Flow}
-Figure~\ref{fig:r04_repro_harness} depicts the end-to-end execution of the
-reproduction harness (\texttt{make reproduce-main}), verifying container
-launch, rollout replay, and metric hash agreement.
+Figure~\ref{fig:r04_repro_harness} depicts the planned reproduction harness
+(container launch, rollout replay, metric hash agreement); the corresponding
+\texttt{make} targets are not yet released (Section~\ref{sec:repro-onecmd}).
 
 \begin{figure}[htbp]
 \centering
@@ -209,6 +215,6 @@ launch, rollout replay, and metric hash agreement.
     \draw [arrow] (n2) -- (n3);
 \end{tikzpicture}
 }
-\caption{\textbf{Reproduction Harness Execution \& Verification}. Verifying artifact reproduction end-to-end against cryptographic hashes.}
+\caption{\textbf{Reproduction Harness Execution \& Verification}. Planned end-to-end verification against cryptographic hashes (not released).}
 \label{fig:r04_repro_harness}
 \end{figure}

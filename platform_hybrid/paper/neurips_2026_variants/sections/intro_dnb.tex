@@ -34,12 +34,12 @@ conclusion:
 \end{itemize}
 
 \paragraph{What the artifact lets reviewers do.}
-A reviewer can inspect available summaries and scripts. End-to-end
-reproduction of every A-grade cell via \texttt{make reproduce-main} and
-trace availability for every reported run have not been verified;
-(iii) read off a per-run auditability matrix (Table~\ref{tab:artifact-card})
+A reviewer can (i) inspect the per-run JSON summaries and analysis scripts
+(one-command \texttt{make} reproduction targets are not yet released, and trace
+availability for every reported run has not been verified); (ii) read off a
+per-run auditability matrix (Table~\ref{tab:artifact-card})
 that lists, for each cell, whether raw rollouts, ZVF traces, checkpoints,
-and held-out evaluation are released; and (iv) consult the claims-evidence
+and held-out evaluation are released; and (iii) consult the claims-evidence
 table (Table~\ref{tab:claims-tier}) to see exactly which artifact each
 claim depends on and what its tier is.
 

@@ -30,16 +30,15 @@ made explicit.
 
 \paragraph{Condition-matched audit.}
 Table~\ref{tab:paired-bi} mirrors the actually released TSV artifact
-\texttt{experiments/results/base\_instruct\_paired.tsv}. Every row uses the
-same evaluation harness and the same held-out GSM8K-500 slice where those
-numbers are available. Rows with $n_{\text{seeds}}<5$ are descriptive only.
+\texttt{experiments/results/base\_instruct\_paired.tsv}. The reported slice and test identities conflict across descendants (200, 500,
+and 1,319 items). These rows remain historical summaries, not a verified
+condition-matched comparison. Rows with $n_{\text{seeds}}<5$ are descriptive only.
 
 \begin{table*}[t]
 \centering
 \caption{\textbf{Base-vs.-instruct audit under condition-matched reporting.}
 Pre-RL and post-RL columns are taken directly from the released paired-audit
-artifact. Held-out values use greedy evaluation on a fixed 500-problem GSM8K
-slice when available. ``d.o.'' = descriptive only (insufficient seeds for
+artifact. Held-out evaluation identity remains unresolved; these values do not certify a common slice. ``d.o.'' = descriptive only (insufficient seeds for
 inference).}
 \label{tab:paired-bi}
 \small
@@ -64,11 +63,13 @@ Llama-3.1-8B & Inst & \texttt{meta-llama/Llama-3.1-8B-Instruct} & 0.9500 & 0.962
         not an empirical one.} Once base and instruct rows are separated,
         there is no single number that both means ``held-out accuracy'' and
         ``training reward'' at once.
-  \item \textbf{The only inferential row in the released artifact is
-        Qwen3-8B instruct.} Its held-out GSM8K gain is
-        $+0.0130$ across 5 seeds with paired $t=1.3234$ and
-        $p=0.1857$ (BH-adjusted $p=0.1857$), i.e.\ directionally positive
-        but not statistically significant at conventional thresholds.
+  \item \textbf{The instruct inference is quarantined.}
+        A stated five-pair $t=1.3234$ would have four degrees of freedom and
+        two-sided $p\simeq0.256276$, not $0.1857$ (a normal-tail value).
+        This arithmetic check does not establish paired observations.
+        Other descendants describe a fixed-baseline one-sample test; the
+        raw seed outcomes, baseline and item IDs must resolve the contract
+        before either test or multiplicity-adjusted value is admitted.
   \item \textbf{The Qwen3-8B base row remains descriptive only.} Its
         held-out gain of $+0.0890$ is larger in magnitude than the instruct
         row, but with $n=1$ it cannot support a claim that base reliably

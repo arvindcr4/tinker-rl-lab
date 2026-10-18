@@ -169,11 +169,12 @@ completions receive identical rewards:
   \mathbf{1}\bigl[\operatorname{Var}_{c \sim \mathcal{C}(p)}\,r(c) = 0\bigr].
 \]
 \textbf{Gradient Utilization} $\mathrm{GU}_t = 1 - \mathrm{ZVF}_t$ is the
-complementary fraction. For binary-outcome tasks with per-prompt accuracy
-$p$, the closed-form identity $\mathrm{ZVF}(p, G) = p^G + (1-p)^G$ holds
-exactly; this is the (A-grade) mechanical theorem. The full derivation
-and a check against every logged group is in
-Appendix~\ref{sec:appendix:zvf-formalization}.
+mixed-reward-group fraction. Under conditionally independent binary
+rollouts at prompt success probability $p$, the expected homogeneous fraction
+is $p^G+(1-p)^G$, not an identity for an observed finite batch. Average this
+quantity over prompt-specific probabilities when prompts are heterogeneous.
+Mixed coefficients do not guarantee a nonzero aggregate parameter gradient.
+See Appendix~\ref{sec:appendix:zvf-formalization}.
 
 \paragraph{Pooled cross-task descriptive correlation.}
 Across $N = 15$ experiments spanning 5 model families and
@@ -185,16 +186,14 @@ We treat this association as descriptive (B-grade), not causal: ZVF is
 mechanically coupled to reward sparsity, group size, and baseline
 accuracy, and the pooled $N{=}15$ sample mixes tasks.
 
-\paragraph{Stratified within-task analysis (consistency note).}
-Stratifying within GSM8K, the apparent monotone relationship does not
-survive: Pearson $r = +0.40$ ($p = 0.09$, $N{=}19$ Tinker GSM8K runs);
-restricted to the 7 model-varying GSM8K cells, $r = +0.13$ ($p = 0.79$,
-$N{=}7$). The pooled negative correlation is therefore a task-identity
-artifact rather than a within-task predictive law. The full stratified
-diagnostic suite (per-task, per-family, per-group-size breakdowns) is
-released alongside this artifact under \texttt{analysis/stratified/};
-within the paper we report only the headline numbers above and refer
-readers to the artifact and to the appendix.
+\paragraph{Same-cohort descriptive analysis.}
+The $N=19$ GSM8K cohort is a subset of the extended $N=29$ pool, not the
+historical $N=15$ pool. In the extended pool, $r=-0.443$ becomes $-0.026$
+with task fixed effects; the GSM8K subset has $r=+0.401$. These estimates
+motivate caution about task confounding without establishing a predictive law.
+A change between the historical and extended pools also changes inclusion,
+so it cannot be attributed entirely to conditioning. See the stratified appendix
+for the reported summaries; immutable inclusion IDs remain required for reuse.
 
 \paragraph{Group-size sweep (B-grade case study).}
 The single-seed group-size sweep on Qwen3-8B/GSM8K

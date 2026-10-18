@@ -8,9 +8,9 @@ Zero-Variance Fraction (ZVF) is a per-step sentinel for zero reward-gradient
 contribution under group-relative policy advantages, not a cross-task
 predictor of GRPO performance. When every rollout in a GRPO group receives
 the same scalar reward, the group-relative advantage is zero and the prompt
-contributes no gradient; ZVF measures the share of groups in this regime. For
+has zero centered reward coefficients; ZVF measures the share of groups in this regime. For
 binary rewards the accounting is exact:
-$\operatorname{pass@}G-p^G=1-\mathrm{ZVF}$, so ZVF's complement is
+$[1-(1-p)^G]-p^G=1-\mathbb E[\widehat{\mathrm{ZVF}}]$ under iid Bernoulli sampling at fixed $p$, so ZVF's complement is
 contrastive group yield rather than an independent performance statistic.
 We make two paired claims about how to use this quantity. \emph{Positive:}
 per-step ZVF (and its complement $\mathrm{GU}_t = 1-\mathrm{ZVF}_t$) is a
@@ -22,9 +22,10 @@ step~1 (Qwen3-32B and Llama-3.1-8B), contrasted with a GSM8K run whose
 GU and reward both move. \emph{Negative:} the pooled cross-task ZVF--reward
 correlation that earlier drafts (and concurrent work) cite as evidence that
 ZVF predicts GRPO outcomes does \emph{not} survive within-task
-stratification ($r{=}-0.769$, $p{=}0.0008$, $N{=}15$ pooled $\to$ $r{=}+0.40$,
-$p{=}0.09$, $N{=}19$ within-GSM8K; $r{=}+0.13$, $N{=}7$ model-varying); it is
-confounded by task identity. We audit pooled correlations under stratification
+conditioning in the extended cohort ($N=29$, $r=-0.443$ unadjusted,
+$r=-0.026$ with task fixed effects; its $N=19$ GSM8K subset has $r=+0.401$).
+The historical $N=15$ pool is distinct and is not a basis for attributing
+changes solely to stratification. We audit pooled correlations under stratification
 and partial-correlation controls and provide a regime-to-action triage table.
 We release step-level ZVF/GU traces, formalization, and analysis code at
 \url{https://anonymous.4open.science/r/agentic-grpo-bench-anon-2C6B}.

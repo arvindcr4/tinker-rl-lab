@@ -42,8 +42,9 @@ On a successful \texttt{make reproduce-main} run, the artifact writes a
 \texttt{REPRODUCIBILITY\_HASHES.json} file containing SHA-256 digests of
 every emitted ZVF trace, reward CSV, and held-out evaluation summary.
 Reviewers can diff this against the reference manifest released with the
-artifact to confirm bit-level (where deterministic) or distributional
-(where sampling-based) agreement.
+artifact to check byte equality for deterministic outputs. Unequal hashes
+do not test distributional agreement. Stochastic comparison requires named
+metrics, independent units, effect intervals and prespecified tolerances.
 
 \paragraph{Submission-time status.}
 At submission, the \texttt{Makefile} targets are wired to the

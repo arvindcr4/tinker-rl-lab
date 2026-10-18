@@ -26,7 +26,7 @@ group-size ceiling effects, the shaped reward should not substantially reduce
 ZVF.
 
 \subsection{Design}
-We hold all other hyperparameters fixed and sweep
+We propose to hold all other hyperparameters fixed and sweep
 \(\{\text{Qwen3-4B-Instruct-2507}, \text{Qwen3-8B}\}
  \times \{\text{v1 binary-ish}, \text{v2 6-level}\}
  \times \{42, 43, 44\}\)
@@ -42,8 +42,7 @@ same canonical script used elsewhere in this paper
 
 \subsection{Results}
 Table~\ref{tab:zvf_counterfactual} summarises per-run ZVF and pass rate.
-Rows with em-dashes indicate runs that are in progress at the time of
-submission; the sweep state is tracked at
+Rows with em-dashes indicate planned cells with no admitted completed result; the sweep state is tracked at
 \texttt{experiments/tool\_use\_zvf\_sweep/manifest.tsv}.
 
 \begin{table}[h]
@@ -51,7 +50,7 @@ submission; the sweep state is tracked at
 \small
 \begin{tabular}{llrrrr}
 \toprule
-Model & Reward & Seed & Steps & ZVF (mean last 10 steps) & Pass\@1 \\
+Model & Reward & Seed & Planned steps & ZVF (mean last 10 steps) & Pass\@1 \\
 \midrule
 Qwen3-4B & v1 & 42 & 50 & --- & --- \\
 Qwen3-4B & v1 & 43 & 50 & --- & --- \\
@@ -72,10 +71,17 @@ Qwen3-8B & v2 & 44 & 50 & --- & --- \\
 with within-group score variance below \(10^{-4}\), averaged over the final
 ten training steps. \(3\) seeds per cell; the planned summary statistic is
 paired-\(t\) on per-seed ZVF between v1 and v2 within each model. Em-dash
-rows indicate runs still in progress; values will be spliced in from
+rows indicate unavailable results, not verified running jobs; any future values require validation against
 \texttt{experiments/tool\_use\_zvf\_sweep/results.csv} on the next build.}
 \label{tab:zvf_counterfactual}
 \end{table}
+
+\paragraph{Required manipulation checks.}
+Rescore the same frozen outputs with both rewarders and report reward histograms,
+parse validity and the fraction whose reward changes. If both rewarders assign
+zero to every unparsable output, unchanged ZVF does not test reward coarseness.
+Report exact homogeneous-group fraction separately from positive-threshold
+near-constant telemetry; neither measures held-out capability.
 
 \subsection{Pre-committed interpretation}
 We pre-commit to the following reading of the results to avoid post-hoc
@@ -86,8 +92,8 @@ rationalisation:
         the binary-ish reward is a partial confound and the
         ``capacity ceiling'' argument is weakened.
   \item \textbf{ZVF drops by \(<0.05\) under v2 in both models.}
-        Collapse is not primarily reward-shape-driven; the
-        capacity/group-size explanation is strengthened.
+        A null is inconclusive unless a manipulation check verifies changed
+        experienced reward support; it does not establish a capacity explanation.
   \item \textbf{ZVF drops sharply in 4B but not in 8B (or vice versa).}
         The effect interacts with scale; we report the interaction as
         the headline result and retract the uniform ``reward-shape does

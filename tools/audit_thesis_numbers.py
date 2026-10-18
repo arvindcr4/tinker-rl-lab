@@ -1661,7 +1661,7 @@ def code_rows():
             "| 16 (q, v) | 1e-4 | 2, 4, 8, 16 | 40 |",
             f"{M}/modal_groupsize_zvf_sweep.py",
             [
-                r"LoraConfig\(r=16",
+                r"LoraConfig\(\s*r=16",
                 r"lr=1e-4",
                 r"GROUP_SIZES = \[2, 4, 8, 16\]",
                 r"N_STEPS = 40",
@@ -1686,12 +1686,12 @@ def code_rows():
         (
             "| 16 | 1e-4 | 8 | 40 |",
             f"{M}/modal_drgrpo_vs_grpo.py",
-            [r"LoraConfig\(r=16", r"lr=1e-4", r"GROUP = 8", r"N_STEPS = 40", r"K_EPOCHS = 2"],
+            [r"LoraConfig\(\s*r=16", r"lr=1e-4", r"GROUP = 8", r"N_STEPS = 40", r"K_EPOCHS = 2"],
         ),
         (
             "| 16 | 1e-5 | 8 | 30 |",
             f"{M}/modal_drgrpo_gsm8k_cot.py",
-            [r"LoraConfig\(r=16", r"lr=1e-5", r"GROUP = 8", r"N_STEPS = 30", r"K_EPOCHS = 2"],
+            [r"LoraConfig\(\s*r=16", r"lr=1e-5", r"GROUP = 8", r"N_STEPS = 30", r"K_EPOCHS = 2"],
         ),
         (
             "| 4 | 3e-5 | 8 | 30 |",
@@ -1706,7 +1706,7 @@ def code_rows():
             "| 16 (q, v) | 1e-4 | GRPO 16 prompts × 8; PPO 128 prompts × 1 | 40 |",
             f"{M}/modal_samestack_ppo_grpo.py",
             [
-                r"LoraConfig\(r=16",
+                r"LoraConfig\(\s*r=16",
                 r'target_modules=\["q_proj", "v_proj"\]',
                 r"lr=1e-4",
                 r"N_GEN = 128",

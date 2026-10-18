@@ -125,6 +125,42 @@ td.mark { font: 700 15px var(--mono); width: 3.5em }
 td.mark.yes { color: var(--good) } td.mark.no { color: var(--bad) }
 .panel.qa p { max-width: 80ch }
 .pill.wrap { white-space: normal; line-height: 1.35; border-radius: 10px; max-width: 100% }
+.submission-card, .submission-overview { display: grid; gap: 14px; align-content: start }
+.submission-card h3 { font-size: 20px; line-height: 1.35; margin: 0 }
+.submission-card .stat dd { font-family: var(--body) }
+.submission-overview h3 { margin: 0 }
+.submission-summary, .submission-list { list-style: none; padding: 0; margin: 0 }
+.submission-summary { display: grid; gap: 10px }
+.submission-summary li { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px }
+.submission-history > section { margin-top: 24px }
+.submission-history > p + p { margin-top: 8px }
+.workshop-group { border-top: 1px solid var(--line); margin-top: 12px }
+.workshop-group summary .small { display: block; font-weight: 400; margin-top: 4px }
+.submission-list { margin-top: 12px }
+.submission-list > li { padding-block: 16px; border-top: 1px solid var(--line) }
+.submission-list h4 { font-size: 16px; font-weight: 600; margin: 8px 0 0 }
+.submission-results, .feedback-controls { display: grid; gap: 20px }
+.feedback-controls label { font-size: 14px; font-weight: 600 }
+.feedback-controls input[type=search] { font: inherit; min-height: 44px; color: var(--ink); background: var(--bg); border: 1px solid var(--control); border-radius: 8px; padding: 8px 10px; width: 100%; margin-top: 4px }
+.feedback-controls button:disabled { opacity: .65; cursor: default }
+.submission-feedback { border-top: 1px solid var(--line); margin-top: 6px }
+.submission-feedback > summary > .small { display: block; font-weight: 400; margin-top: 4px }
+.feedback-section { display: grid; gap: 10px; margin-top: 20px }
+.feedback-section h4, .feedback-section h5, .feedback-section h6 { font-size: 15px; font-weight: 600; margin: 0 }
+.feedback-entry { border-left: 3px solid var(--line); padding-left: 14px; display: grid; gap: 8px }
+.feedback-points { font-size: 14px }
+.feedback-points ul { margin: 4px 0 0; padding-left: 20px }
+.feedback-points li { border: 0; padding: 0; margin-top: 6px }
+.feedback-label { font-weight: 600 }
+.feedback-caveat { margin-top: 16px }
+.feedback-warning { display: grid; gap: 8px }
+.feedback-scores { font-size: 14px }
+.feedback-scores dl { display: grid; gap: 8px; margin: 8px 0 0 }
+.feedback-scores dl > div { display: grid; grid-template-columns: minmax(0, 100px) minmax(0, 1fr); gap: 8px }
+.feedback-scores dt { color: var(--muted) }
+.feedback-scores dd { margin: 0 }
+.receipt-only { border-left-style: dashed }
+:root.present .feedback-points, :root.present .feedback-scores { font-size: 17px }
 @media (max-width: 760px) {
   nav.tabs .section-links { display: none }
   nav.tabs .section-picker { display: flex; align-items: center; gap: 12px; padding-block: 10px }

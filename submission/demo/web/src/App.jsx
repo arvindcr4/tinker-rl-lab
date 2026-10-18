@@ -9,6 +9,7 @@ import StackDiff from "./views/StackDiff.jsx";
 import Audit from "./views/Audit.jsx";
 import RealAnswers from "./views/RealAnswers.jsx";
 import Viva from "./views/Viva.jsx";
+import Submissions from "./views/Submissions.jsx";
 
 // Order is the defense demo route.
 const VIEWS = [
@@ -21,6 +22,7 @@ const VIEWS = [
   ["stackdiff", "Stack diff", StackDiff],
   ["audit", "Evidence audit", Audit],
   ["viva", "Hard questions", Viva],
+  ["submissions", "Submissions", Submissions],
 ];
 
 const current = () => {
@@ -49,6 +51,7 @@ export default function App() {
       if (e.key === "ArrowRight" && i < VIEWS.length - 1) go(VIEWS[i + 1][0]);
       else if (e.key === "ArrowLeft" && i > 0) go(VIEWS[i - 1][0]);
       else if (/^[1-9]$/.test(e.key)) go(VIEWS[+e.key - 1][0]);
+      else if (e.key === "0") go("submissions");
       else if (e.key.toLowerCase() === "p") setPresent((v) => !v);
       else return;
       e.preventDefault();
@@ -118,18 +121,18 @@ export default function App() {
         </div>
         <div className="wrap section-links" ref={navRef}>
           {VIEWS.map(([id, label], i) => (
-            <a key={id} href={`#${id}`} aria-current={id === view ? "page" : undefined}><span className="key" aria-hidden="true">{i + 1}</span>{label}</a>
+            <a key={id} href={`#${id}`} aria-current={id === view ? "page" : undefined}><span className="key" aria-hidden="true">{(i + 1) % 10}</span>{label}</a>
           ))}
         </div>
       </nav>
       <main className="wrap" id="main-content" ref={mainRef} tabIndex={-1} aria-label={VIEWS[idx][1]}>
-        <div className="section-context"><span>Section <span className="mono">{idx + 1} / {VIEWS.length}</span></span><span>Stored results · Offline demo</span></div>
+        <div className="section-context"><span>Section <span className="mono">{idx + 1} / {VIEWS.length}</span></span><span>{view === "submissions" ? "Submission history · Offline snapshot" : "Stored results · Offline demo"}</span></div>
         <View />
         <nav className="next-row" aria-label="Previous and next sections">
           {previous ? <a className="next previous" href={`#${previous[0]}`}>← Previous: {previous[1]}</a> : <span className="small">Choose any section to explore</span>}
           {next && <a className="next" href={`#${next[0]}`}>Next: {next[1]} →</a>}
         </nav>
-        <p className="small keyboard-hint">{shortcuts ? "Keys: ← → or 1–9 to move, P to present. Turn shortcuts off in the header if needed." : "Keyboard shortcuts are off. Use the section links or Previous and Next to move."}</p>
+        <p className="small keyboard-hint">{shortcuts ? "Keys: ← → or 1–9 to move, 0 for submissions, P to present. Turn shortcuts off in the header if needed." : "Keyboard shortcuts are off. Use the section links or Previous and Next to move."}</p>
       </main>
       <footer><div className="wrap">
         <details>
@@ -142,7 +145,7 @@ export default function App() {
           <p className="small">Missing or unverified coverage: {missing.length ? missing.join("; ") : "none reported"}</p>
           <p className="small">Hashes identify the files read by this export. They do not retrospectively prove an unrecorded training environment or protocol.</p>
         </details>
-        <p style={{ marginTop: 10 }}>Built offline from stored results by <span className="mono">submission/demo/web/build_demo_web.py</span>. No model runs in this page, and nothing here is a new measurement. Registry: {SD.entries.length} stacks.</p>
+        <p style={{ marginTop: 10 }}>Experimental data exported offline from stored results by <span className="mono">submission/demo/web/build_demo_web.py</span>. Submission metadata is curated separately. No model runs in this page, and nothing here is a new measurement. Registry: {SD.entries.length} stacks.</p>
       </div></footer>
     </>
   );

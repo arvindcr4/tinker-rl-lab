@@ -191,7 +191,7 @@ def item_diagnostics(records, analysis, B=4000):
                        "twoway_boot_ci": np.percentile(two_way, [2.5, 97.5]).tolist(),
                        "items_only_boot_ci": np.percentile(items, [2.5, 97.5]).tolist(),
                        "items_only_scope": "Conditional on observed training seeds; no training-run uncertainty",
-                       "wilcoxon_items_seedavg_p": float(wilcoxon(nonzero).pvalue) if len(nonzero) else 1.0}
+                       "wilcoxon_items_seedavg_p": float(wilcoxon(nonzero).pvalue) if len(nonzero) else None}
     return output
 
 

@@ -252,6 +252,10 @@ def test_actual_generation_and_source_manifest_fit_completion_contract(tmp_path,
         "environment_hash": manifest["environment_hash"],
         "source_commit": manifest["source"]["commit"],
         "source_dirty_hash": manifest["source"]["dirty_hash"],
+        "run_identity_version": 2,
+        "chat_template_hash": manifest["chat_template_hash"],
+        "ordered_train_item_hash": canonical_hash(manifest["train_item_ids"]),
+        "ordered_test_item_hash": canonical_hash(manifest["test_item_ids"]),
     }
     manifest["run_id"] = canonical_hash(identity)
     path = tmp_path / "ppo_8x8_s42.json"

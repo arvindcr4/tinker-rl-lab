@@ -300,6 +300,8 @@ def validate_run(record, *, filename=None, texts=None, expected=None, seen=None,
             unknown.append("ordered train item IDs unavailable")
         elif len(set(train_ids)) != len(train_ids):
             errors.append("duplicate train item IDs")
+        elif manifest.get("ordered_train_item_hash") != canonical_hash(train_ids):
+            errors.append("ordered train item identity/hash mismatch")
         dependencies, hardware = manifest.get("dependencies"), manifest.get("hardware")
         if not isinstance(dependencies, dict) or not dependencies:
             unknown.append("dependency versions unavailable")
@@ -320,7 +322,7 @@ def validate_run(record, *, filename=None, texts=None, expected=None, seen=None,
             unknown.append("hardware environment unavailable")
         if isinstance(hardware, dict):
             for key in ("python", "gpu_names", "driver_versions", "cuda_runtime", "cudnn",
-                        "attention_backend", "model_dtype", "logprob_dtype", "value_head_dtype",
+                        "attention_backend", "model_dtype",
                         "tf32_matmul", "deterministic_algorithms"):
                 if key not in hardware:
                     unknown.append(f"hardware.{key} unavailable")
@@ -368,9 +370,15 @@ def validate_run(record, *, filename=None, texts=None, expected=None, seen=None,
             unknown.append("ordered timezone-aware run start/finish timestamps unavailable")
         run_payload = {"protocol_hash": manifest.get("protocol_hash"), "config_hash": manifest.get("config_hash"),
                        "environment_hash": manifest.get("environment_hash"), "environment": manifest.get("environment"), "source_commit": source.get("commit"),
-                       "source_dirty_hash": source.get("dirty_hash")}
+                       "source_dirty_hash": source.get("dirty_hash"),
+                       "run_identity_version": manifest.get("run_identity_version"),
+                       "chat_template_hash": manifest.get("chat_template_hash"),
+                       "ordered_train_item_hash": canonical_hash(train_ids),
+                       "ordered_test_item_hash": canonical_hash(ids)}
+        if type(manifest.get("run_identity_version")) is not int or manifest["run_identity_version"] != 2:
+            unknown.append("run identity version 2 unavailable")
         if "run_id" in manifest and manifest["run_id"] != canonical_hash(run_payload):
-            errors.append("run_id does not match immutable protocol/config/environment/source identity")
+            errors.append("run_id does not match immutable protocol/config/environment/source/template/item identity")
         for key, value in (expected or {}).items():
             actual = source.get(key.removeprefix("source_")) if key in ("source_commit", "source_dirty_hash") else manifest.get(key)
             if actual is None:

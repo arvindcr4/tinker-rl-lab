@@ -80,8 +80,10 @@ def hardware_manifest(torch, model, model_dtype=None):
             "driver_versions": driver, "cuda_runtime": torch.version.cuda,
             "cudnn": torch.backends.cudnn.version(),
             "attention_backend": getattr(model.config, "_attn_implementation", None),
-            "model_dtype": model_dtype or str(next(model.parameters()).dtype), "logprob_dtype": "torch.float32",
-            "value_head_dtype": "torch.float32", "tf32_matmul": torch.backends.cuda.matmul.allow_tf32,
+            "model_dtype": model_dtype or str(next(model.parameters()).dtype),
+            # Log-prob/value-head precision is declared in effective_config,
+            # not observed from hardware or model parameters here.
+            "tf32_matmul": torch.backends.cuda.matmul.allow_tf32,
             "deterministic_algorithms": torch.are_deterministic_algorithms_enabled()}
 
 

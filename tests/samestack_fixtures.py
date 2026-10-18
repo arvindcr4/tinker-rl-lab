@@ -111,8 +111,6 @@ def synthetic_run(arm="grpo_g8", seed=42, smoke=True, environment="colab"):
         cudnn=None,
         attention_backend="sdpa",
         model_dtype="torch.bfloat16",
-        logprob_dtype="torch.float32",
-        value_head_dtype="torch.float32",
         tf32_matmul=False,
         deterministic_algorithms=False,
     )
@@ -123,6 +121,7 @@ def synthetic_run(arm="grpo_g8", seed=42, smoke=True, environment="colab"):
     ]
     manifest = {
         "schema_version": 1,
+        "run_identity_version": 2,
         "protocol_id": PROTOCOL_ID,
         "protocol_hash": PROTOCOL_HASH,
         "protocol_spec": copy.deepcopy(PROTOCOL_SPEC),
@@ -140,6 +139,7 @@ def synthetic_run(arm="grpo_g8", seed=42, smoke=True, environment="colab"):
         "test_item_ids": ids,
         "train_item_ids": train_ids,
         "ordered_test_item_hash": canonical_hash(ids),
+        "ordered_train_item_hash": canonical_hash(train_ids),
         "source": source,
         "generation": generation,
         "schedules": schedules,
@@ -159,6 +159,10 @@ def synthetic_run(arm="grpo_g8", seed=42, smoke=True, environment="colab"):
             "environment_hash": manifest["environment_hash"],
             "source_commit": source["commit"],
             "source_dirty_hash": source["dirty_hash"],
+            "run_identity_version": 2,
+            "chat_template_hash": manifest["chat_template_hash"],
+            "ordered_train_item_hash": canonical_hash(train_ids),
+            "ordered_test_item_hash": canonical_hash(ids),
         }
     )
     record = {

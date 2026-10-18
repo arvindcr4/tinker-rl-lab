@@ -4,6 +4,7 @@ Run: python3 tests/test_demo.py   (uses Playwright with the installed Google Chr
 """
 
 import json
+import math
 import os
 import shutil
 import pathlib
@@ -23,6 +24,26 @@ if not CHROME:
 
 def num(text):
     return float(text.replace("−", "-").replace("+", ""))
+
+
+def p_pair_matches(text, raw, adjusted):
+    """Compare both rendered p-values with the page's documented rounding."""
+    if any(isinstance(v, bool) or not isinstance(v, (int, float)) or not math.isfinite(v)
+           or not 0 <= v <= 1 for v in (raw, adjusted)):
+        return False
+    try:
+        actual = [num(value.strip()) for value in text.split("/")]
+    except (ValueError, AttributeError):
+        return False
+    expected = [float(format(value, ".1e" if value < .001 else ".3f")) for value in (raw, adjusted)]
+    return len(actual) == 2 and all(math.isclose(a, b, rel_tol=1e-12, abs_tol=1e-15)
+                                    for a, b in zip(actual, expected))
+
+
+def disagreement_disclosed(audit, text):
+    value = audit.get("disagreements") if isinstance(audit, dict) else None
+    return (type(value) is int and value >= 0
+            and re.search(rf": {value} disagreements\b", text) is not None)
 
 
 def check(name, ok, detail=""):
@@ -62,7 +83,10 @@ def main():
             results.append(check("G8−PPO mean matches canonical artifact", abs(num(stats["Mean difference"]) - ref["mean"]) < 5e-5))
             results.append(check("95% difference CI matches artifact", abs(lo - ref["t_ci"][0]) < 5e-5 and abs(hi - ref["t_ci"][1]) < 5e-5))
             results.append(check("90% equivalence CI distinctly labeled", "90% equivalence CI" in stats))
-            results.append(check("combined TOST includes adjusted p", "Combined TOST p (raw / Holm)" in stats))
+            results.append(check("combined raw/Holm TOST matches artifact", p_pair_matches(
+                stats.get("Combined TOST p (raw / Holm)", ""), ref.get("tost_p"), ref.get("holm_tost_p"))))
+            results.append(check("raw/Holm sign-flip matches artifact", p_pair_matches(
+                stats.get("Exact sign-flip p (raw / Holm)", ""), ref.get("p_signflip"), ref.get("holm_p_signflip"))))
         else:
             results.append(check("missing validated pairs show unavailable inference", page.locator("text=Inferential statistics unavailable").count() > 0))
             results.append(check("missing provenance never yields a final equivalence verdict", "Equivalence established" not in page.locator("main").inner_text()))
@@ -88,7 +112,15 @@ def main():
         pill = page.locator(".pill", has_text="re-graded").inner_text()
         a, b = map(int, re.match(r"(\d+)/(\d+)", pill).groups())
         results.append(check("shown re-grade coverage matches exported examples", 0 <= a <= b and b == 3 * len(DATA["examples"]["items"]), pill))
-        results.append(check("historical disagreement count is disclosed", str(DATA.get("grader_check", {}).get("disagreements", "")) in page.locator("main").inner_text()))
+        sys.path.insert(0, str(ROOT))
+        from platform_hybrid.experiments.samestack_protocol import GRADING_SPEC_ID
+        audit = DATA.get("grader_check", {})
+        answer_text = page.locator("main").inner_text()
+        if audit.get("grading_spec_id") == GRADING_SPEC_ID:
+            results.append(check("current disagreement count is disclosed", disagreement_disclosed(audit, answer_text)))
+        else:
+            results.append(check("stale or missing grader audit is disclosed",
+                                 "Full audit for the current grading specification unavailable" in answer_text))
         # The grader probe follows the strict rule.
         for answer, gold, want in [("so \\boxed{18}", "18", "correct"), ("the answer is 18", "18", "wrong"),
                                    ("\\boxed{1,234.00}", "1234", "correct"), ("\\boxed{\\$1,234.00}", "1234", "correct"), ("\\boxed{10\\%}", "10", "correct"), ("\\boxedX{42}", "42", "wrong"), ("\\boxed{1/0}", "1", "wrong"), ("\\boxed{0.0000004}", "0", "wrong"), ("\\boxed{17}", "18", "wrong")]:

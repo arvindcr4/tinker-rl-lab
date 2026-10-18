@@ -62,7 +62,10 @@ into prospectively registered or fully reproduced evidence by this patch.
 `tinker_grpo_qwen3.5-4b_gsm8k`, `tinker_gspo_qwen3.5-4b_gsm8k`,
 `trl_grpo_qwen3-8b_gsm8k`, `verl_grpo_qwen3-8b_gsm8k`.
 
-## Final local validation (17 October 2026)
+## Initial implementation validation snapshot (17 October 2026)
+
+These counts describe the initial stage only. Later follow-up runs below supersede
+this snapshot; they are separate measured runs, not a single final-suite total.
 
 - Python: 281 passed across `tests/test_samestack_statistics.py`,
   `tests/test_samestack_artifact_contract.py`, `tests/test_samestack_analysis_review.py`,

@@ -168,3 +168,28 @@ python3 -m pytest tests/test_samestack_analysis_review.py -q
 The legacy three-positional-argument v2 CLI remains accepted, but its first
 scripts-directory argument is no longer used as an arbitrary import path.
 No command here should overwrite the checked-in historical outputs.
+
+## Updating the pending exposure-matched comparison
+
+The frozen pack records 7/10 PPO seeds and a pending exposure-matched PPO arm;
+these are historical status statements, not a claim about newly available runs.
+Use the canonical selector's completion and exclusion lists for current status.
+The `g8-ppo_8x8` contrast is already in the fixed primary dictionaries in
+`analysis_plan.py` and `v2_analysis.py`; do not change the family after seeing results.
+After independently verifying new completion bundles, rerun the documented CLI
+into a new, explicitly chosen output path and inspect the planned/missing counts.
+An approved publication refresh must then reconcile thesis §6.5.5/Table 6.2,
+Table 1.1, §9.3, abstract, appendices A/E, deck slides 4/5/6/10/12 and their notes,
+the brief, viva answers, and reviewer guide. Do not overwrite the frozen pack
+or historical outputs as part of a code review correction.
+
+### Run identity version 2
+
+New bundles identify the runtime configuration, source and environment plus the
+chat-template hash and both ordered train/test item hashes. `run_identity_version`
+is 2; pre-v2 run IDs are not silently upgraded or reused. This versions the
+artifact/resume identity rather than changing the training or grading protocol.
+Training log-probability and value-head precision remain declared recipe fields
+under `effective_config.precision`; hardware capture does not present those
+constants as measured tensor dtypes. The model dtype/backend is still compared
+with the loaded model before execution.

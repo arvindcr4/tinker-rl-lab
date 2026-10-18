@@ -16,6 +16,7 @@ LOCK = {
     "accelerate": "1.13.0", "datasets": "4.8.4", "huggingface-hub": "1.11.0",
     "numpy": "2.2.6", "safetensors": "0.8.0", "tokenizers": "0.22.2",
 }
+IMPORT_NAMES = {name: name.replace("-", "_") for name in LOCK}
 REQUIREMENTS = tuple(f"{name}=={version}" for name, version in LOCK.items())
 
 

@@ -31,14 +31,14 @@ SOURCE = "/content/samestack_source.json"
 
 def ensure_packages(*, install=True):
     """Verify exact versions; optionally reconcile all mismatches, not only missing ones."""
-    from platform_hybrid.experiments.samestack_dependencies import REQUIREMENTS, runtime_versions, verify_runtime
+    from platform_hybrid.experiments.samestack_dependencies import IMPORT_NAMES, REQUIREMENTS, runtime_versions, verify_runtime
     before = runtime_versions()
     try:
         return verify_runtime(before)
     except ValueError:
         if not install:
             raise
-    loaded = [name for name in ("torch", "transformers", "peft", "datasets", "numpy", "accelerate") if name in sys.modules]
+    loaded = [name for name in IMPORT_NAMES.values() if name in sys.modules]
     if loaded:
         raise RuntimeError("Restart the runtime before replacing already imported packages: " + ", ".join(loaded))
     subprocess.check_call([sys.executable, "-m", "pip", "install", "--disable-pip-version-check", *REQUIREMENTS])

@@ -145,7 +145,10 @@ def run_arm_local(arm: str, seed: int, smoke: bool = False, source_provenance=No
     environment_hash = canonical_hash({"environment": environment, "dependencies": dependencies, "hardware": hardware})
     identity = {"protocol_hash": PROTOCOL_HASH, "config_hash": config_hash,
                 "environment": environment, "environment_hash": environment_hash, "source_commit": source["commit"],
-                "source_dirty_hash": source["dirty_hash"]}
+                "source_dirty_hash": source["dirty_hash"], "run_identity_version": 2,
+                "chat_template_hash": canonical_hash(tok.chat_template),
+                "ordered_train_item_hash": canonical_hash(train_ids),
+                "ordered_test_item_hash": canonical_hash(test_ids)}
     run_id = canonical_hash(identity)
     expected = dict(identity, protocol_id=PROTOCOL_ID, run_id=run_id)
     sub = PROTOCOL_ID + ("_smoke" if smoke else "")
@@ -181,12 +184,13 @@ def run_arm_local(arm: str, seed: int, smoke: bool = False, source_provenance=No
         raise ValueError("Observed model backend/precision differs from the effective runtime manifest")
     manifest = {"schema_version": 1, "protocol_id": PROTOCOL_ID, "protocol_hash": PROTOCOL_HASH,
                 "protocol_spec": PROTOCOL_SPEC, "grading_spec_id": GRADING_SPEC_ID,
-                "analysis_plan_id": ANALYSIS_PLAN_ID, "run_id": run_id,
+                "analysis_plan_id": ANALYSIS_PLAN_ID, "run_id": run_id, "run_identity_version": 2,
                 "environment": environment, "source": source, "dependencies": dependencies,
                 "dependency_lock": lock_manifest(), "hardware": hardware,
                 "environment_hash": environment_hash,
                 "revisions": revisions, "chat_template_hash": canonical_hash(tok.chat_template),
                 "train_item_ids": train_ids, "test_item_ids": test_ids,
+                "ordered_train_item_hash": canonical_hash(train_ids),
                 "ordered_test_item_hash": canonical_hash(test_ids), "generation": generations,
                 "schedules": schedules, "budget": budget_accounting(n_steps, N_GEN, G, w_warm),
                 "effective_config": effective, "config_hash": config_hash,

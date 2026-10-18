@@ -432,6 +432,7 @@ def rehash_synthetic_identity(record):
             "hardware": manifest["hardware"],
         }
     )
+    manifest["ordered_train_item_hash"] = canonical_hash(manifest["train_item_ids"])
     manifest["run_id"] = canonical_hash(
         {
             "protocol_hash": manifest["protocol_hash"],
@@ -440,6 +441,10 @@ def rehash_synthetic_identity(record):
             "environment_hash": manifest["environment_hash"],
             "source_commit": manifest["source"]["commit"],
             "source_dirty_hash": manifest["source"]["dirty_hash"],
+            "run_identity_version": 2,
+            "chat_template_hash": manifest["chat_template_hash"],
+            "ordered_train_item_hash": canonical_hash(manifest["train_item_ids"]),
+            "ordered_test_item_hash": canonical_hash(manifest["test_item_ids"]),
         }
     )
 

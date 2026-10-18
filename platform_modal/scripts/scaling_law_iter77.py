@@ -134,7 +134,7 @@ def load_traces() -> dict[str, np.ndarray]:
 
 
 def prefix_horizon(t, y):
-    """For each prefix length k, fit saturation and report suffix R^2."""
+    """Exploratory oracle cutoff search; this is not a prospective stopping policy."""
     n = len(t)
     out = {"per_k": []}
     if n < 6:
@@ -157,7 +157,7 @@ def prefix_horizon(t, y):
         r2s = np.where(finite, arr[:, 1], -np.inf)
         r2c = np.where(finite, arr[:, 2], -np.inf)
         out["best_r2_sat"] = float(np.max(r2s))
-        out["best_r2_const"] = float(np.max(r2c))
+        out["best_r2_const"] = float(arr[np.argmax(r2s), 2])
         out["k_best_sat"] = float(arr[np.argmax(r2s), 0])
         out["k50"] = next((int(arr[i, 0]) for i in range(len(arr))
                            if finite[i] and arr[i, 1] >= 0.5), None)
@@ -198,7 +198,7 @@ def bootstrap_coverage(t, y, B=500, rng=None):
     if len(boot_rmax) < 50:
         return float("nan"), float("nan")
     pred_dist = np.array([
-        saturation(np.array([float(n)]), br, bl)[0]
+        saturation(np.array([float(t[-1])]), br, bl)[0] + rng.normal(0.0, sigma)
         for br, bl in zip(boot_rmax, boot_lam)
     ])
     pi_lo = float(np.quantile(pred_dist, 0.05))
@@ -281,6 +281,9 @@ def hierarchical_r_max(traces, dense_pool):
             "lambda": float(lambdas[a]),
             "r2_prefix": r2_pre,
             "r2_suffix": r2_suf,
+            "r2_constant_last": constant_last_r2(t_suf, y_suf, float(y_pre[-1])),
+            "suffix_mse": float(np.mean((y_suf-y_suf_pred)**2)),
+            "constant_last_mse": float(np.mean((y_suf-y_pre[-1])**2)),
         }
     return out
 
@@ -316,7 +319,7 @@ def main() -> None:
             "k_best_sat": h.get("k_best_sat", float("nan")),
             "delta_sat_const": (rs - rc) if isinstance(rs, float) else float("nan"),
         })
-    out = RESULTS_DIR / "scaling_law_iter77_prefix.tsv"
+    out = RESULTS_DIR / "scaling_law_iter77_prefix_v3.tsv"
     with out.open("w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=list(rows[0].keys()), delimiter="\t")
         w.writeheader()
@@ -335,7 +338,7 @@ def main() -> None:
             traj_rows.append({"anchor": label, "k": int(k), "r2_sat": r2s,
                               "r2_const": r2c, "r2_linear": r2l,
                               "delta_sat_const": delta})
-    out = RESULTS_DIR / "scaling_law_iter77_trajectory.tsv"
+    out = RESULTS_DIR / "scaling_law_iter77_trajectory_v3.tsv"
     with out.open("w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=list(traj_rows[0].keys()), delimiter="\t")
         w.writeheader()
@@ -359,7 +362,7 @@ def main() -> None:
                           "best_r2_const": h["best_r2_const"],
                           "delta_sat_minus_const": delta,
                           "sat_beats_const": "yes" if delta > 0 else "no"})
-    out = RESULTS_DIR / "scaling_law_iter77_baselines.tsv"
+    out = RESULTS_DIR / "scaling_law_iter77_baselines_v3.tsv"
     with out.open("w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=list(base_rows[0].keys()), delimiter="\t")
         w.writeheader()
@@ -382,7 +385,7 @@ def main() -> None:
             n_total_cov += 1
             if covered >= 0.5:
                 n_covered += 1
-    out = RESULTS_DIR / "scaling_law_iter77_coverage.tsv"
+    out = RESULTS_DIR / "scaling_law_iter77_coverage_v3.tsv"
     with out.open("w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=list(cov_rows[0].keys()), delimiter="\t")
         w.writeheader()
@@ -396,10 +399,11 @@ def main() -> None:
         hier_rows.append({
             "anchor": a, "params_B": PARAM_B.get(a, float("nan")),
             "lambda_h": d["lambda"], "r2_prefix": rp, "r2_suffix": rs,
+            "suffix_mse": d["suffix_mse"], "constant_last_mse": d["constant_last_mse"],
             "delta_prefix_minus_suffix": (rp - rs)
             if (math.isfinite(rp) and math.isfinite(rs)) else float("nan"),
         })
-    out = RESULTS_DIR / "scaling_law_iter77_hierarchical.tsv"
+    out = RESULTS_DIR / "scaling_law_iter77_hierarchical_v3.tsv"
     with out.open("w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=list(hier_rows[0].keys()), delimiter="\t")
         w.writeheader()
@@ -445,14 +449,14 @@ def main() -> None:
          "Median best suffix R^2 across the 12 anchors is > 0 (saturation adds information beyond a constant).",
          f"{median_best:.3f}", "> 0"),
         ("P4_mean_delta_positive",
-         "Mean (best R^2_sat - best R^2_const) is > 0 on average (saturation beats constant in aggregate).",
+         "Mean paired (R^2_sat - R^2_const) at the oracle-selected saturation cutoff is > 0 on average (saturation beats constant in aggregate).",
          f"{mean_delta:.3f}", "> 0"),
         ("P5_coverage_calibrated",
          "1-step 90% PI coverage at k=n-1 is >= 0.5 for >= 4/12 anchors (PI is at least directionally calibrated).",
          f"{n_cov_50}/{n_cov_with_pi}", ">= 4/12"),
         ("P6_hierarchical_suffix_better",
          "Hierarchical (shared R_max) suffix R^2 is better than constant-last baseline for >= 4/6 dense anchors.",
-         f"{sum(1 for r in hier_rows if math.isfinite(r['r2_suffix']) and r['r2_suffix'] > -0.1)}/{len(hier_rows)}",
+         f"{sum(1 for r in hier_rows if math.isfinite(r['suffix_mse']) and r['suffix_mse'] < r['constant_last_mse'])}/{len(hier_rows)}",
          ">= 4/6"),
         ("P7_horizon_collapse_violator",
          "Nemotron-120B has no prefix k with suffix R^2 >= 0 (the collapse is unforeshortenable).",
@@ -461,7 +465,7 @@ def main() -> None:
          "Per-anchor best suffix R^2 (saturation) > per-anchor best (linear-extrap) for >= 4/12 anchors (specific functional form beats linear).",
          f"{_n_sat_better}/{len(_per_anchor_best)}", ">= 4/12"),
     ]
-    out = RESULTS_DIR / "scaling_law_iter77_predictions.tsv"
+    out = RESULTS_DIR / "scaling_law_iter77_predictions_v3.tsv"
     with out.open("w", newline="") as f:
         w = csv.writer(f, delimiter="\t")
         w.writerow(["prediction_id", "claim", "observed", "expected", "pass_fail"])
@@ -520,11 +524,11 @@ def main() -> None:
     axes[1].legend()
     axes[1].grid(True, alpha=0.3, axis="y")
     fig.tight_layout()
-    out_pdf = FIG_DIR / "scaling_law_iter77.pdf"
-    out_png = FIG_DIR / "scaling_law_iter77.png"
+    out_pdf = FIG_DIR / "scaling_law_iter77_v3.pdf"
+    out_png = FIG_DIR / "scaling_law_iter77_v3.png"
     fig.savefig(out_pdf)
     fig.savefig(out_png, dpi=150)
-    (PAPER_FIG / "scaling_law_iter77.png").write_bytes(out_png.read_bytes())
+    (PAPER_FIG / "scaling_law_iter77_v3.png").write_bytes(out_png.read_bytes())
 
     print(f"=== iter77 Pillar 1 operational forecasting horizon ===")
     print(f"anchors = {n_pool}; predictable (n>=6) = {n_pool_compared}")
@@ -537,3 +541,5 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+    from _review27_models import write_manifest
+    write_manifest(__file__, TRACE_DIR, RESULTS_DIR)

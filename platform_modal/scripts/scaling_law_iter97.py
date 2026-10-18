@@ -3,14 +3,14 @@ families (Monod / Michaelis-Menten, Gompertz, piecewise-2-segment-OLS) and
 add a variance-scaling regression on top of the constant-fit residuals.
 
 iter93 closed Q1/Q2/Q3: among {constant, 1seg_ols, saturation, powerlaw, AR(1)}
-the constant baseline was the LOOCV/BIC/AIC winner in 5-6 of 12 anchors,
+the constant baseline was the rolling-origin/BIC/AIC winner in 5-6 of 12 anchors,
 with AR(1) capturing 4/12 forecast wins.  iter97 closes Q4/Q5:
 
   Q4 (Functional-form coverage): does ANY of the 3 new families
        {monod R_max * t / (K + t),         -- 2-param hyperbolic ceiling
         gompertz a * exp(-b * exp(-c * t)),-- 3-param asymmetric S
         pw2seg (c*, a1, b1, a2, b2)}       -- 5-param changepoint OLS
-    outperform the constant-mean baseline under LOOCV or AIC?
+    outperform the constant-mean baseline under rolling-origin or AIC?
     This is the "are there ANY more universal shapes?" question.
 
   Q5 (Variance scaling): for the constant-mean residual
@@ -27,12 +27,12 @@ References (verified):
   - kaplan2020scaling -- Scale-axis baseline.
 
 Outputs:
-  platform_hybrid/experiments/results/scaling_law_iter97_headtohead.tsv  (8 families x 12 anchors x 5 metrics)
-  platform_hybrid/experiments/results/scaling_law_iter97_winners.tsv     (per-criterion winners)
-  platform_hybrid/experiments/results/scaling_law_iter97_variance.tsv    (per-anchor sigma^2 + OLS regression)
-  platform_hybrid/experiments/results/scaling_law_iter97_meta.json
+  platform_hybrid/experiments/results/scaling_law_iter97_headtohead_v3.tsv  (8 families x 12 anchors x 5 metrics)
+  platform_hybrid/experiments/results/scaling_law_iter97_winners_v3.tsv     (per-criterion winners)
+  platform_hybrid/experiments/results/scaling_law_iter97_variance_v3.tsv    (per-anchor sigma^2 + OLS regression)
+  platform_hybrid/experiments/results/scaling_law_iter97_meta_v3.json
   figures/scaling_law_iter97.{pdf,png}
-  paper/figures/scaling_law_iter97.pdf
+  paper/figures/scaling_law_iter97_v3.pdf
 """
 from __future__ import annotations
 
@@ -75,8 +75,8 @@ SEED = 42
 # 8-family battery: iter93's 5 + iter97's 3 new
 FAMILIES = ["constant", "1seg_ols", "saturation", "powerlaw", "ar1",
             "monod", "gompertz", "pw2seg"]
-NPARAMS = {"constant": 1, "1seg_ols": 2, "saturation": 2, "powerlaw": 2,
-           "ar1": 3, "monod": 2, "gompertz": 3, "pw2seg": 5}
+NPARAMS = {"constant": 2, "1seg_ols": 3, "saturation": 3, "powerlaw": 3,
+           "ar1": 3, "monod": 3, "gompertz": 4, "pw2seg": 6}
 NEW_FAMILIES = ["monod", "gompertz", "pw2seg"]
 
 
@@ -98,20 +98,16 @@ def _fit_powerlaw(t, y):
     return [float(coef[0]), float(coef[1])]
 
 
-def _fit_ar1(y):
-    n = len(y)
-    if n < 4:
-        return [float(np.mean(y)), 0.0, float(np.std(y) + 1e-9)]
-    mu = float(np.mean(y))
-    x = y[:-1] - mu
-    z = y[1:] - mu
-    num = float(np.sum(x * z))
-    den = float(np.sum(x * x))
-    phi = num / den if den > 1e-12 else 0.0
-    phi = max(min(phi, 0.999), -0.999)
-    resid = z - phi * x
-    sigma = float(np.std(resid)) + 1e-9
-    return [mu, float(phi), sigma]
+def _fit_ar1(y, t=None):
+    """Conditional OLS AR(1), params [intercept, phi, innovation_sd]."""
+    y=np.asarray(y,float)
+    valid=np.ones(max(len(y)-1,0),dtype=bool) if t is None else np.isclose(np.diff(t),1)
+    if valid.sum()<3: raise ValueError('insufficient consecutive AR pairs')
+    x=y[:-1][valid]; z=y[1:][valid]
+    A=np.column_stack([np.ones(len(x)),x])
+    c,phi=np.linalg.lstsq(A,z,rcond=None)[0]
+    resid=z-c-phi*x
+    return [float(c),float(phi),float(np.sqrt(np.mean(resid**2)))]
 
 
 # ---------- iter97 new families ------------------------------------------
@@ -228,15 +224,18 @@ def _predict_pw2seg(t, params):
     return pred
 
 
-def _predict_ar1(y_full, params, predict_steps):
-    mu, phi, _ = params[:3]
-    preds = []
-    last = float(y_full[-1])
-    for _ in predict_steps:
-        nxt = mu + phi * (last - mu)
-        preds.append(nxt)
-        last = nxt
-    return np.asarray(preds, float)
+def _predict_ar1(y_full, params, predict_steps, origin=None):
+    """Recursive forecasts at actual integer offsets from the observed origin."""
+    c,phi,_=params[:3]
+    origin=len(y_full) if origin is None else origin
+    out=[]
+    for target in predict_steps:
+        gap=float(target-origin)
+        if gap<1 or not gap.is_integer(): raise ValueError('invalid AR forecast time')
+        last=float(y_full[-1])
+        for _ in range(int(gap)): last=c+phi*last
+        out.append(last)
+    return np.asarray(out,float)
 
 
 # ---------- helper: fit_predict dispatcher -------------------------------
@@ -254,12 +253,12 @@ def _fit_predict(t, y, family):
         p = _fit_powerlaw(t, y); a, b = p[:2]
         yh = a + b * np.log10(np.maximum(np.asarray(t, float), 1e-9))
     elif family == "ar1":
-        p = _fit_ar1(y)
+        p = _fit_ar1(y, t)
         mu, phi, _ = p[:3]
         yh_arr = np.empty_like(y)
         yh_arr[0] = mu
         for i in range(1, len(y)):
-            yh_arr[i] = mu + phi * (y[i - 1] - mu)
+            yh_arr[i] = mu + phi * y[i - 1]
         yh = yh_arr
     elif family == "monod":
         p = _fit_monod(t, y); yh = _predict_monod(t, p)
@@ -286,7 +285,14 @@ def _predict_one_at_step(t_ref, t_target, params, family, y_ref):
         return float(a + b * math.log10(max(t_target, 1e-9)))
     if family == "ar1":
         mu, phi, _ = params[:3]
-        return float(mu + phi * (float(y_ref[-1]) - mu))
+        previous = np.flatnonzero(np.asarray(t_ref) < t_target)
+        if not len(previous): raise ValueError('no past conditioning observation')
+        j = previous[-1]
+        gap = t_target-t_ref[j]
+        if gap < 1 or not float(gap).is_integer(): raise ValueError('AR requires integer step spacing')
+        last=float(y_ref[j])
+        for _ in range(int(gap)): last=mu+phi*last
+        return float(last)
     if family == "monod":
         rm, K = params[:2]
         return float(rm * t_target / (K + t_target))
@@ -305,20 +311,22 @@ def _clip01(arr):
     return np.clip(np.asarray(arr, float), 0.0, 1.5)
 
 
-def _aic(rss, n, k):
-    return float(n * math.log(rss / max(n, 1)) + 2 * k)
+def _aic(rss,n,k):
+    from _review27_models import information_criteria
+    return information_criteria(rss,n,k)[0]
 
 
-def _bic(rss, n, k):
-    return float(n * math.log(rss / max(n, 1)) + k * math.log(max(n, 2)))
+def _bic(rss,n,k):
+    from _review27_models import information_criteria
+    return information_criteria(rss,n,k)[1]
 
 
-def _loocv_rmse(y_full, t_full, family):
+def _rolling_origin_rmse(y_full, t_full, family):
     n = len(y_full)
     errs = []
     errs_mae = []
-    for i in range(n):
-        idx = np.array([j for j in range(n) if j != i])
+    for i in range(4, n):
+        idx = np.arange(i)
         y_ref = y_full[idx]
         t_ref = t_full[idx]
         try:
@@ -328,7 +336,7 @@ def _loocv_rmse(y_full, t_full, family):
             errs_mae.append(abs(float(y_full[i] - yhat_at_i)))
         except Exception:
             return float("nan"), float("nan"), -1
-    return float(np.sqrt(np.mean(errs))), float(np.mean(errs_mae)), n
+    return float(np.sqrt(np.mean(errs))), float(np.mean(errs_mae)), len(errs)
 
 
 def _forecast_last_k(y_full, t_full, family, k=4):
@@ -344,17 +352,20 @@ def _forecast_last_k(y_full, t_full, family, k=4):
     except Exception:
         return float("nan"), float("nan")
     if family == "ar1":
-        preds = _predict_ar1(y_tr, params, t_te)
+        preds = _predict_ar1(y_tr, params, t_te, origin=t_tr[-1])
     else:
         preds = np.array([
             _predict_one_at_step(t_tr, t_target, params, family, y_tr)
             for t_target in t_te
         ], float)
-    preds_c = _clip01(preds)
-    y_te_c = _clip01(y_te)
+    preds_c = np.asarray(preds,float)
+    y_te_c = np.asarray(y_te,float)
     mae = float(np.mean(np.abs(y_te_c - preds_c)))
     rmse = float(np.sqrt(np.mean((y_te_c - preds_c) ** 2)))
     return mae, rmse
+
+
+_loocv_rmse = _rolling_origin_rmse
 
 
 # ---------- main ---------------------------------------------------------
@@ -374,7 +385,7 @@ def main() -> None:
     head_cols = [
         "model", "params_B", "n_steps", "family", "n_params",
         "rmse_in_sample", "r2_in_sample",
-        "aic", "bic", "loocv_rmse", "loocv_mae",
+        "aic", "bic", "rolling_origin_rmse", "rolling_origin_mae",
         "forecast_mae_last4", "forecast_rmse_last4",
     ]
     head_rows = []
@@ -383,14 +394,15 @@ def main() -> None:
         t = np.arange(1, n + 1, dtype=float)
         for fam in FAMILIES:
             try:
-                params, yh = _fit_predict(t, y, fam)
-                rss = float(np.sum((y - yh) ** 2))
-                rmse = float(np.sqrt(rss / n))
-                ss_tot = float(np.sum((y - y.mean()) ** 2))
+                params, yh = _fit_predict(t, y, fam) if fam == 'ar1' else _fit_predict(t[1:], y[1:], fam)
+                if fam == 'ar1': yh = yh[1:]
+                rss = float(np.sum((y[1:] - yh) ** 2))
+                rmse = float(np.sqrt(rss / (n-1)))
+                ss_tot = float(np.sum((y[1:] - y[1:].mean()) ** 2))
                 r2 = 1.0 - rss / ss_tot if ss_tot > 1e-12 else float("nan")
-                aic = _aic(rss + 1e-9, n, NPARAMS[fam])
-                bic = _bic(rss + 1e-9, n, NPARAMS[fam])
-                loo_r, loo_m, _ = _loocv_rmse(y, t, fam)
+                aic = _aic(rss, n-1, NPARAMS[fam])
+                bic = _bic(rss, n-1, NPARAMS[fam])
+                loo_r, loo_m, _ = _rolling_origin_rmse(y, t, fam)
                 fc_mae, fc_rmse = _forecast_last_k(y, t, fam, k=4)
                 head_rows.append([
                     label, params_b, n, fam, NPARAMS[fam],
@@ -404,21 +416,21 @@ def main() -> None:
                     label, params_b, n, fam, NPARAMS[fam],
                     "nan", "nan", "nan", "nan", "nan", "nan", "nan", "nan",
                 ])
-    _write_tsv(RESULTS_DIR / "scaling_law_iter97_headtohead.tsv",
+    _write_tsv(RESULTS_DIR / "scaling_law_iter97_headtohead_v3.tsv",
                head_cols, head_rows)
 
     # ---- Per-criterion winners --------------------------------------------
     win_cols = ["criterion", "winner_family", "n_wins", "total_anchors",
                 "candidates", "totals_per_family"]
     win_rows = []
-    aggregated = {fam: {crit: 0 for crit in ("aic", "bic", "loocv", "forecast", "rmse", "r2")}
+    aggregated = {fam: {crit: 0 for crit in ("aic", "bic", "rolling_origin", "forecast", "rmse", "r2")}
                   for fam in FAMILIES}
     anchor_count = 0
     for label, (params_b, y, fname) in raw.items():
         anchor_count += 1
         sub = [r for r in head_rows if r[0] == label]
-        # aic, bic, loocv_rmse, forecast_mae: lower better
-        for crit, idx in (("aic", 7), ("bic", 8), ("loocv", 9), ("forecast", 11), ("rmse", 5)):
+        # aic, bic, rolling_origin_rmse, forecast_mae: lower better
+        for crit, idx in (("aic", 7), ("bic", 8), ("rolling_origin", 9), ("forecast", 11), ("rmse", 5)):
             vals = []
             for r in sub:
                 try:
@@ -443,20 +455,20 @@ def main() -> None:
             aggregated[winner[0]]["r2"] += 1
 
     crit_labels = [
-        ("aic", "AIC"), ("bic", "BIC"), ("loocv", "LOOCV-RMSE"),
+        ("aic", "AIC"), ("bic", "BIC"), ("rolling_origin", "rolling-origin-RMSE"),
         ("forecast", "Forecast-MAE"), ("rmse", "In-sample RMSE"), ("r2", "In-sample R^2"),
     ]
     for crit, lbl in crit_labels:
         wins = [(fam, aggregated[fam][crit]) for fam in FAMILIES]
         wins.sort(key=lambda x: -x[1])
-        winner_fam = wins[0][0]
+        winner_fam = wins[0][0] if wins[0][1] > 0 else "no_valid_candidate"
         n_wins = wins[0][1]
         per_family_str = ";".join(f"{f}:{aggregated[f][crit]}" for f in FAMILIES)
         win_rows.append([
             lbl, winner_fam, n_wins, anchor_count,
             ",".join(FAMILIES), per_family_str,
         ])
-    _write_tsv(RESULTS_DIR / "scaling_law_iter97_winners.tsv",
+    _write_tsv(RESULTS_DIR / "scaling_law_iter97_winners_v3.tsv",
                win_cols, win_rows)
 
     # ---- Variance-scaling test (Q5) --------------------------------------
@@ -478,7 +490,7 @@ def main() -> None:
         )
         # simpler: did ANY new family beat constant on ANY criterion for this anchor?
         new_wins_anchor = False
-        for crit, idx in (("aic", 7), ("bic", 8), ("loocv", 9), ("forecast", 11)):
+        for crit, idx in (("aic", 7), ("bic", 8), ("rolling_origin", 9), ("forecast", 11)):
             sub = [r for r in head_rows if r[0] == label]
             const_v = None
             for r in sub:
@@ -501,7 +513,7 @@ f"{sigma2:.6f}", f"{math.sqrt(max(sigma2, 0.0)):.6f}",
             f"{math.log10(max(params_b, 1e-3)):.6f}",
             new_wins_anchor,
         ])
-    _write_tsv(RESULTS_DIR / "scaling_law_iter97_variance.tsv",
+    _write_tsv(RESULTS_DIR / "scaling_law_iter97_variance_v3.tsv",
                var_cols, var_rows)
 
     # OLS regression: sigma^2 = alpha + beta * log10(params_B)
@@ -538,6 +550,8 @@ f"{sigma2:.6f}", f"{math.sqrt(max(sigma2, 0.0)):.6f}",
         "iter": 97,
         "n_anchors": len(raw),
         "families_compared": FAMILIES,
+        "family_aliases": {"powerlaw": "log_time: a+b*log10(t)"},
+        "evaluation": "paired expanding-window origins 4..n-1; suffix forecasts at n-4; conditional IC on steps 2..n",
         "new_families": NEW_FAMILIES,
         "consensus_winners_by_criterion": aggregated,
         "variance_scaling": {
@@ -552,12 +566,12 @@ f"{sigma2:.6f}", f"{math.sqrt(max(sigma2, 0.0)):.6f}",
                 "If beta > 0 (CI excludes 0), per-anchor reward variance GROWS with "
                 "log10(params_B) -- larger models are noisier under GRPO. "
                 "If beta < 0, larger models are smoother.  If CI covers 0, the "
-                "noise floor is approximately scale-invariant."
+                "evidence is inconclusive; equivalence requires a prespecified margin and a sufficiently narrow interval."
             ),
         },
         "new_family_wins_anchor_count": sum(1 for v in is_winner_per_anchor.values() if v),
     }
-    (RESULTS_DIR / "scaling_law_iter97_meta.json").write_text(json.dumps(meta, indent=2))
+    (RESULTS_DIR / "scaling_law_iter97_meta_v3.json").write_text(json.dumps(meta, indent=2))
 
     # ---- figure: 4 panels ----------------------------------------------
     fig, axs = plt.subplots(2, 2, figsize=(12, 8))
@@ -581,7 +595,7 @@ f"{sigma2:.6f}", f"{math.sqrt(max(sigma2, 0.0)):.6f}",
     axs[0, 0].grid(alpha=0.3)
     axs[0, 0].tick_params(axis='x', rotation=30)
 
-    # Panel B: LOOCV RMSE per family
+    # Panel B: rolling-origin RMSE per family
     loos = {fam: [] for fam in FAMILIES}
     for r in head_rows:
         try:
@@ -595,14 +609,14 @@ f"{sigma2:.6f}", f"{math.sqrt(max(sigma2, 0.0)):.6f}",
         tick_labels=FAMILIES,
         showmeans=True,
     )
-    axs[0, 1].set_title("(B) LOOCV RMSE per family")
-    axs[0, 1].set_ylabel("LOOCV RMSE")
+    axs[0, 1].set_title("(B) rolling-origin RMSE per family")
+    axs[0, 1].set_ylabel("rolling-origin RMSE")
     axs[0, 1].grid(alpha=0.3)
     axs[0, 1].tick_params(axis='x', rotation=30)
 
     # Panel C: per-criterion winners bar chart (grouped)
-    crit_labels_short = ["AIC", "BIC", "LOOCV", "Forecast", "RMSE", "R^2"]
-    crit_keys = ["aic", "bic", "loocv", "forecast", "rmse", "r2"]
+    crit_labels_short = ["AIC", "BIC", "rolling-origin", "Forecast", "RMSE", "R^2"]
+    crit_keys = ["aic", "bic", "rolling_origin", "forecast", "rmse", "r2"]
     x = np.arange(len(crit_labels_short))
     width = 0.10
     for i_fam, fam in enumerate(FAMILIES):
@@ -635,9 +649,9 @@ f"{sigma2:.6f}", f"{math.sqrt(max(sigma2, 0.0)):.6f}",
         fontsize=12,
     )
     fig.tight_layout()
-    fig.savefig(FIG_DIR / "scaling_law_iter97.pdf", bbox_inches="tight")
-    fig.savefig(FIG_DIR / "scaling_law_iter97.png", bbox_inches="tight", dpi=120)
-    fig.savefig(PAPER_FIG / "scaling_law_iter97.pdf", bbox_inches="tight")
+    fig.savefig(FIG_DIR / "scaling_law_iter97_v3.pdf", bbox_inches="tight")
+    fig.savefig(FIG_DIR / "scaling_law_iter97_v3.png", bbox_inches="tight", dpi=120)
+    fig.savefig(PAPER_FIG / "scaling_law_iter97_v3.pdf", bbox_inches="tight")
     plt.close(fig)
     print("wrote figures/scaling_law_iter97.{pdf,png}")
 
@@ -660,3 +674,5 @@ f"{sigma2:.6f}", f"{math.sqrt(max(sigma2, 0.0)):.6f}",
 
 if __name__ == "__main__":
     main()
+    from _review27_models import write_manifest
+    write_manifest(__file__, TRACE_DIR, RESULTS_DIR)

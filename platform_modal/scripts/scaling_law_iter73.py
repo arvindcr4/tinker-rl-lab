@@ -30,7 +30,7 @@ This iteration does three things the previous battery did not:
 
   (3) NEMOTRON-120B COLLAPSE FORENSICS.
       Fit a peak-and-decay model
-        R(t) = R_peak * exp(-gamma * (t - t_peak)^2)
+        R(t) = R_peak * exp(-gamma * max(t - t_peak, 0)^2)
       to the 5 anchors whose peak occurs before the
       midpoint of the trace, and quantify the gamma
       (decay rate) parameter as the structural-violation
@@ -39,13 +39,13 @@ This iteration does three things the previous battery did not:
       violates this by a wide margin.
 
 Outputs (5 TSV + 1 fig + 1 tex):
-  platform_hybrid/experiments/results/scaling_law_iter73_closed_form.tsv
-  platform_hybrid/experiments/results/scaling_law_iter73_aic_bic.tsv
-  platform_hybrid/experiments/results/scaling_law_iter73_nemotron.tsv
-  platform_hybrid/experiments/results/scaling_law_iter73_phase_conform.tsv
-  platform_hybrid/experiments/results/scaling_law_iter73_predictions.tsv
+  platform_hybrid/experiments/results/scaling_law_iter73_closed_form_v3.tsv
+  platform_hybrid/experiments/results/scaling_law_iter73_aic_bic_v3.tsv
+  platform_hybrid/experiments/results/scaling_law_iter73_nemotron_v3.tsv
+  platform_hybrid/experiments/results/scaling_law_iter73_phase_conform_v3.tsv
+  platform_hybrid/experiments/results/scaling_law_iter73_predictions_v3.tsv
   figures/scaling_law_iter73.{pdf,png}
-  paper/sections/scaling_law_iter73.tex
+  paper/sections/scaling_law_iter73_v3.tex
 
 Citations (frontier synthesis + 2025 GRPO/scaling literature):
   - nimmaturi2025predictive (arXiv:2507.18014): canonical 3-phase hypothesis.
@@ -137,11 +137,9 @@ def peak_decay(t, r_peak, t_peak, gamma):
     return r_peak * np.exp(-gamma * np.maximum(t - t_peak, 0.0) ** 2)
 
 
-def _aic_bic(rss: float, n: int, k: int) -> tuple[float, float]:
-    if not (rss > 0 and n > k + 1):
-        return float("nan"), float("nan")
-    log_l = -0.5 * n * (math.log(2 * math.pi * rss / n) + 1.0)
-    return float(-2 * log_l + 2 * k), float(-2 * log_l + k * math.log(n))
+def _aic_bic(rss: float, n: int, k: int) -> tuple[float,float]:
+    from _review27_models import information_criteria
+    return information_criteria(rss,n,k+1)
 
 
 def _safe_log_diff(r_max: float, y: np.ndarray) -> np.ndarray:
@@ -165,68 +163,22 @@ def load_traces() -> dict[str, np.ndarray]:
 
 
 def closed_form_saturation(t: np.ndarray, y: np.ndarray) -> dict:
-    """Profile-likelihood closed-form fit of R_max and lambda.
-
-    For a fixed R_max > max(y), the model is
-        log(R_max - R(t)) = log(R_max) - lambda * t
-    which is OLS in (log(R_max), lambda).  We profile R_max on a
-    grid in (max(y), max(y) + 0.6], pick the value that maximises
-    the OLS log-likelihood, and report the resulting pair.
-    """
-    n = len(t)
-    if n < 4:
-        return dict(r_max=float("nan"), lam=float("nan"),
-                    t_80=float("nan"), rss=float("nan"),
-                    aic=float("nan"), bic=float("nan"),
-                    log_rss=float("nan"), n_used=int(n))
-
-    y_max = float(np.max(y))
-    y_mean = float(np.mean(y))
-    candidates = np.linspace(y_max + 1e-3, y_max + 0.6, 25)
-
-    best = dict(neg_ll=float("inf"))
-    for r_max in candidates:
-        diff, idx = _safe_log_diff(r_max, y)
-        if len(idx) < 3:
-            continue
-        # OLS of log(diff) on t with intercept = log(R_max)
-        x_t = t[idx]
-        y_t = np.log(diff[idx])
-        # y_t = b0 - b1 * x_t;  fit b0 = log(R_max), b1 = lambda
-        # OLS of y_t on x_t with intercept b0
-        xm = float(np.mean(x_t))
-        ym = float(np.mean(y_t))
-        den = float(np.sum((x_t - xm) ** 2))
-        if den <= 0:
-            continue
-        b1 = float(np.sum((x_t - xm) * (y_t - ym))) / den  # slope; should be -lambda
-        b0 = ym - b1 * xm
-        if b1 > 0:
-            # log(R_max - R(t)) would be increasing => not a saturation model
-            continue
-        lam = -b1
-        # residual variance
-        resid = y_t - (b0 + b1 * x_t)
-        rss_log = float(np.sum(resid ** 2))
-        if rss_log < best["neg_ll"]:
-            best = dict(neg_ll=rss_log, r_max=r_max, lam=lam, n_used=int(len(idx)))
-
-    if not math.isfinite(best["neg_ll"]):
-        return dict(r_max=float("nan"), lam=float("nan"),
-                    t_80=float("nan"), rss=float("nan"),
-                    aic=float("nan"), bic=float("nan"),
-                    log_rss=float("nan"), n_used=0)
-
-    # convert log-space RSS to original-space RSS for fair AIC/BIC
-    r_max = float(best["r_max"])
-    lam = float(best["lam"])
-    yhat = saturation(t, r_max, lam)
-    rss = float(np.sum((y - yhat) ** 2))
-    aic, bic = _aic_bic(rss, n, k=2)
-    t_80 = float(-math.log(0.2) / lam) if lam > 0 else float("nan")
-    return dict(r_max=r_max, lam=lam, t_80=t_80, rss=rss,
-                aic=aic, bic=bic, log_rss=float(best["neg_ll"]),
-                n_used=int(best["n_used"]))
+    """Profile original-space least squares, with the zero-intercept saturation equation."""
+    from scipy.optimize import minimize_scalar
+    t=np.asarray(t,float); y=np.asarray(y,float); n=len(y)
+    failed=dict(r_max=float('nan'),lam=float('nan'),t_80=float('nan'),rss=float('nan'),
+                aic=float('nan'),bic=float('nan'),log_rss=float('nan'),n_used=0,status='fit_failed')
+    if n<4 or not np.all(np.isfinite(y)) or np.max(t)<=0: return failed
+    scale=float(np.max(np.abs(t))); u=t/scale
+    def profile(log_l):
+        l=np.exp(log_l); shape=-np.expm1(-l*u)
+        r=float(np.clip(np.dot(shape,y)/np.dot(shape,shape),0,1.5))
+        return float(np.sum((y-r*shape)**2)),r
+    opt=minimize_scalar(lambda z:profile(z)[0],bounds=(-16,16),method='bounded')
+    if not opt.success: return failed
+    rss,r=profile(opt.x); lam=float(np.exp(opt.x)/scale); aic,bic=_aic_bic(rss,n,2)
+    return dict(r_max=r,lam=lam,t_80=-math.log(.2)/lam,rss=rss,aic=aic,bic=bic,
+                log_rss=float('nan'),n_used=n,status='ok')
 
 
 def curvefit_saturation(t: np.ndarray, y: np.ndarray) -> dict:
@@ -299,7 +251,7 @@ def zero_model(y: np.ndarray) -> dict:
 
 
 def nemotron_peak_decay(t: np.ndarray, y: np.ndarray) -> dict:
-    """Peak-and-decay fit: R(t) = R_peak * exp(-gamma * (t - t_peak)^2).
+    """Peak-and-decay fit: R(t) = R_peak * exp(-gamma * max(t - t_peak, 0)^2).
 
     Used to quantify *how strongly* Nemotron-style traces violate
     the three-phase template's implicit assumption that the peak
@@ -313,8 +265,8 @@ def nemotron_peak_decay(t: np.ndarray, y: np.ndarray) -> dict:
     try:
         popt, _ = curve_fit(
             peak_decay, t, y,
-            p0=(float(np.max(y)), float(np.argmax(t) + 1), 0.05),
-            bounds=([0.0, 1.0, 1e-6], [1.5, float(n) + 1.0, 10.0]),
+            p0=(float(np.max(y)), float(t[np.argmax(y)]), 0.05),
+            bounds=([0.0, float(np.min(t)), 1e-6], [1.5, float(np.max(t)), 10.0]),
             maxfev=20_000,
         )
         r_peak, t_peak, gamma = float(popt[0]), float(popt[1]), float(popt[2])
@@ -322,7 +274,7 @@ def nemotron_peak_decay(t: np.ndarray, y: np.ndarray) -> dict:
         rss = float(np.sum((y - yhat) ** 2))
         aic, bic = _aic_bic(rss, n, k=3)
         # fraction of trace after peak
-        peak_idx = int(round(t_peak)) - 1
+        peak_idx = int(np.searchsorted(t, t_peak, side="right")) - 1
         if 0 <= peak_idx < n - 1:
             after = y[peak_idx + 1:]
             early = float(np.mean(after[:max(1, len(after) // 2)])) if len(after) >= 2 else float("nan")
@@ -431,7 +383,7 @@ def main() -> None:
             f"{cv['rss']:.4f}", f"{cv['aic']:.4f}", f"{cv['bic']:.4f}",
             cv["lam_at_bound"],
         ])
-    _write_tsv(RESULTS_DIR / "scaling_law_iter73_closed_form.tsv", cols_cf, rows_cf)
+    _write_tsv(RESULTS_DIR / "scaling_law_iter73_closed_form_v3.tsv", cols_cf, rows_cf)
 
     # ---- 2. AIC/BIC across model families --------------------------------
     cols_aic = ["model", "params_B", "arch", "n_steps",
@@ -451,8 +403,9 @@ def main() -> None:
                 "linear": lin["aic"], "zero": zer["aic"]}
         bics = {"saturation": sat["bic"], "power": pow_["bic"],
                 "linear": lin["bic"], "zero": zer["bic"]}
-        best_a = min(aics, key=lambda k: aics[k] if math.isfinite(aics[k]) else float("inf"))
-        best_b = min(bics, key=lambda k: bics[k] if math.isfinite(bics[k]) else float("inf"))
+        from _review27_models import best_candidate
+        best_a = best_candidate(aics)
+        best_b = best_candidate(bics)
         rows_aic.append([
             label, PARAM_B[label], ARCH[label], len(rt),
             f"{sat['rss']:.4f}", f"{sat['aic']:.4f}", f"{sat['bic']:.4f}",
@@ -461,7 +414,7 @@ def main() -> None:
             f"{zer['rss']:.4f}", f"{zer['aic']:.4f}", f"{zer['bic']:.4f}",
             best_a, best_b,
         ])
-    _write_tsv(RESULTS_DIR / "scaling_law_iter73_aic_bic.tsv", cols_aic, rows_aic)
+    _write_tsv(RESULTS_DIR / "scaling_law_iter73_aic_bic_v3.tsv", cols_aic, rows_aic)
 
     # ---- 3. Nemotron collapse forensics ----------------------------------
     cols_ne = ["model", "params_B", "arch", "n_steps", "peak_step",
@@ -490,7 +443,7 @@ def main() -> None:
             f"{late_minus_peak:.4f}",
             is_violator,
         ])
-    _write_tsv(RESULTS_DIR / "scaling_law_iter73_nemotron.tsv", cols_ne, rows_ne)
+    _write_tsv(RESULTS_DIR / "scaling_law_iter73_nemotron_v3.tsv", cols_ne, rows_ne)
 
     # ---- 4. Three-phase conformity --------------------------------------
     cols_pc = ["model", "params_B", "arch", "n_steps", "peak_step",
@@ -510,7 +463,7 @@ def main() -> None:
             pc["peak_late"], pc["slow_start"], pc["has_mid_peak"], pc["plateau"],
             pc["n_phases_matched"], f"{pc['pci']:.3f}",
         ])
-    _write_tsv(RESULTS_DIR / "scaling_law_iter73_phase_conform.tsv", cols_pc, rows_pc)
+    _write_tsv(RESULTS_DIR / "scaling_law_iter73_phase_conform_v3.tsv", cols_pc, rows_pc)
 
     # ---- 5. Bootstrap t_80 + predictions ---------------------------------
     cols_pr = ["prediction_id", "claim", "observed", "expected", "pass_fail"]
@@ -540,7 +493,7 @@ def main() -> None:
             cf_lam.append(cf["lam"])
             cv_lam.append(cv["lam"])
     if len(cf_lam) >= 3:
-        rho_cf_cv = float(np.corrcoef(cf_lam, cv_lam)[0, 1])
+        rho_cf_cv = float(__import__("scipy.stats", fromlist=["spearmanr"]).spearmanr(cf_lam, cv_lam).statistic)
     else:
         rho_cf_cv = float("nan")
     rows_pr.append([
@@ -574,12 +527,13 @@ def main() -> None:
     ])
 
     # P5: Nemotron-120B is identified as collapse violator by the peak-decay model
-    nem_row = next(r for r in rows_ne if r[0] == "Nemotron-120B")
+    violators = [r[0] for r in rows_ne if r[-1]]
+    nem_unique = violators == ["Nemotron-120B"]
     rows_pr.append([
         "P5_nemotron_collapse_violator",
         "Peak-decay model labels Nemotron-120B as the unique collapse violator (peak before step n//2, late < 0.4 * peak).",
-        f"is_collapse_violator={nem_row[-1]}", "True",
-        "PASS" if nem_row[-1] else "FAIL",
+        f"violators={violators}", "True",
+        "PASS" if nem_unique else "FAIL",
     ])
 
     # P6: gamma > 0 for >= 5/12 anchors (peak-decay signature is alive)
@@ -618,7 +572,7 @@ def main() -> None:
         "PASS" if n_t80_ci >= 9 else "FAIL",
     ])
 
-    _write_tsv(RESULTS_DIR / "scaling_law_iter73_predictions.tsv", cols_pr, rows_pr)
+    _write_tsv(RESULTS_DIR / "scaling_law_iter73_predictions_v3.tsv", cols_pr, rows_pr)
 
     # ---- print headline ---------------------------------------------------
     print("\n=== Iter73 headline ===")
@@ -730,14 +684,16 @@ def main() -> None:
         "and Nemotron-120B collapse forensics (12 anchors, 4B-1T params)",
         fontsize=12,
     )
-    out_pdf = FIG_DIR / "scaling_law_iter73.pdf"
+    out_pdf = FIG_DIR / "scaling_law_iter73_v3.pdf"
     fig.savefig(out_pdf)
     fig.savefig(out_pdf.with_suffix(".png"), dpi=150)
-    fig.savefig(PAPER_FIG / "scaling_law_iter73.pdf")
-    fig.savefig(PAPER_FIG / "scaling_law_iter73.png", dpi=150)
+    fig.savefig(PAPER_FIG / "scaling_law_iter73_v3.pdf")
+    fig.savefig(PAPER_FIG / "scaling_law_iter73_v3.png", dpi=150)
     plt.close(fig)
     print(f"wrote {out_pdf}")
 
 
 if __name__ == "__main__":
     main()
+    from _review27_models import write_manifest
+    write_manifest(__file__, TRACE_DIR, RESULTS_DIR)

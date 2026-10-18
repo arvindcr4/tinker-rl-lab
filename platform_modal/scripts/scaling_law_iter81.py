@@ -14,7 +14,7 @@ iter81 answers two operationally distinct questions that the
 iter73/77 battery did not:
 
   Q1 (compute axis): does re-fitting on the compute axis
-      R(C_k) where C_k = k * (G * B) tokens change which family
+      R(C_k) where C_k = k * (G * B) sampled responses change which family
       wins?  Compute is the *actual* optimization knob in
       Chinchilla/Kaplan-style scaling.  If the family selection
       is robust to step -> compute reparameterisation, the
@@ -37,14 +37,14 @@ iter73/77 battery did not:
       blank; this script fills them in.
 
 Outputs (6 TSV + 2 figures + 1 tex):
-  platform_hybrid/experiments/results/scaling_law_iter81_compute_refit.tsv
-  platform_hybrid/experiments/results/scaling_law_iter81_stratum.tsv
-  platform_hybrid/experiments/results/scaling_law_iter81_k50_k80.tsv
-  platform_hybrid/experiments/results/scaling_law_iter81_stratum_lift.tsv
-  platform_hybrid/experiments/results/scaling_law_iter81_meta.json
-  platform_hybrid/experiments/results/scaling_law_iter81_predictions.tsv
+  platform_hybrid/experiments/results/scaling_law_iter81_compute_refit_v3.tsv
+  platform_hybrid/experiments/results/scaling_law_iter81_stratum_v3.tsv
+  platform_hybrid/experiments/results/scaling_law_iter81_k50_k80_v3.tsv
+  platform_hybrid/experiments/results/scaling_law_iter81_stratum_lift_v3.tsv
+  platform_hybrid/experiments/results/scaling_law_iter81_meta_v3.json
+  platform_hybrid/experiments/results/scaling_law_iter81_predictions_v3.tsv
   figures/scaling_law_iter81.{pdf,png}
-  paper/sections/scaling_law_iter81.tex
+  paper/sections/scaling_law_iter81_v3.tex
 
 Citations (verified):
   - kaplan2020scaling (Chinchilla) -- compute-axis scaling.
@@ -74,7 +74,7 @@ FIG_DIR.mkdir(exist_ok=True)
 PAPER_FIG = REPO / "paper" / "figures"
 PAPER_FIG.mkdir(exist_ok=True)
 
-# Per-step compute proxy (tokens): G (group) * B (rollout batch).
+# Per-step compute proxy (sampled responses): G (group) * B (rollout batch).
 # Pulled from the source traces -- G=8 is the dominant setting; B=512
 # is the canonical rollout batch for the GSM8K runs.
 GROUP_SIZE = 8
@@ -110,7 +110,6 @@ ARCH: dict[str, str] = {
     "Qwen3-235B-MoE": "moe", "Kimi-K2-Thinking": "moe",
 }
 
-N_BOOT = 500
 SEED = 42
 
 # ---- model family library (matches iter73) ----
@@ -129,7 +128,7 @@ def linear(x, m, c):
 
 
 def zero_model(y):
-    """Constant-zero baseline: predicts mean(y) for all x."""
+    """Historical key zero: fitted constant-mean baseline (not fixed zero)."""
     return np.full_like(y, fill_value=float(np.mean(y)), dtype=float)
 
 
@@ -145,6 +144,10 @@ def _safe_curve_fit(fn, x, y, p0, lo, hi, maxfev=5000):
 def fit_saturation(x, y):
     if len(x) < 3 or float(np.std(y)) < 1e-9:
         return None, float("inf")
+    scale = float(np.max(np.abs(x)))
+    if not scale > 0: return None, float("inf")
+    original_x = x
+    x = x / scale
     y_max = float(np.max(y))
     p0 = (min(1.0, y_max + 0.05), 0.5)
     popt, ok = _safe_curve_fit(
@@ -154,12 +157,18 @@ def fit_saturation(x, y):
         return None, float("inf")
     yhat = saturation(x, *popt)
     rss = float(np.sum((y - yhat) ** 2))
+    popt = np.asarray(popt)
+    popt[1] /= scale
     return popt, rss
 
 
 def fit_power(x, y):
     if len(x) < 3 or float(np.std(y)) < 1e-9:
         return None, float("inf")
+    scale = float(np.max(np.abs(x)))
+    if not scale > 0: return None, float("inf")
+    original_x = x
+    x = x / scale
     y_max = float(np.max(y))
     p0 = (max(1e-3, y_max), 0.5)
     popt, ok = _safe_curve_fit(
@@ -169,6 +178,8 @@ def fit_power(x, y):
         return None, float("inf")
     yhat = power_law(x, *popt)
     rss = float(np.sum((y - yhat) ** 2))
+    popt = np.asarray(popt)
+    popt[0] /= scale ** popt[1]
     return popt, rss
 
 
@@ -210,11 +221,9 @@ def fit_log_linear(x, y):
     return np.array([a, b]), rss
 
 
-def aic_bic(rss: float, n: int, k: int) -> tuple[float, float]:
-    if not (rss > 0 and n > k + 1):
-        return float("nan"), float("nan")
-    log_l = -0.5 * n * (math.log(2 * math.pi * rss / n) + 1.0)
-    return float(-2 * log_l + 2 * k), float(-2 * log_l + k * math.log(n))
+def aic_bic(rss: float, n: int, k: int) -> tuple[float,float]:
+    from _review27_models import information_criteria
+    return information_criteria(rss,n,k+1)
 
 
 # ---- data loading ----
@@ -230,9 +239,9 @@ def load_traces() -> dict[str, np.ndarray]:
 
 
 def compute_axis(n_steps: int) -> np.ndarray:
-    """Return compute proxy C_k for k = 1..n_steps (in millions of tokens)."""
-    per_step_tokens = GROUP_SIZE * BATCH_PROMPTS
-    return np.arange(1, n_steps + 1, dtype=float) * per_step_tokens / 1e6
+    """Return compute proxy C_k for k = 1..n_steps (in millions of sampled responses)."""
+    per_step_responses = GROUP_SIZE * BATCH_PROMPTS
+    return np.arange(1, n_steps + 1, dtype=float) * per_step_responses / 1e6
 
 
 # ---- analysis routines ----
@@ -269,7 +278,7 @@ def best_family_by_aic(fits: dict) -> str:
         if math.isfinite(aic) and aic < best_aic:
             best_aic = aic
             best = name
-    return best or "none"
+    return best or "no_valid_candidate"
 
 
 def compute_axis_refit(traces: dict[str, np.ndarray]) -> list[dict]:
@@ -430,7 +439,7 @@ def prefix_suffix_r2(x: np.ndarray, y: np.ndarray, k: int) -> tuple[float, float
 
 
 def operational_horizon(traces: dict[str, np.ndarray]) -> list[dict]:
-    """For each anchor with n >= 6, compute k50, k80 and best suffix R^2."""
+    """Exploratory oracle suffix search; thresholds are not prospective policies."""
     rows = []
     for label, y in traces.items():
         n = len(y)
@@ -480,8 +489,8 @@ def operational_horizon(traces: dict[str, np.ndarray]) -> list[dict]:
         # k50: smallest k where sat_r2 >= 0.5; if never, return nan
         cross50 = np.where((sat_arr >= 0.5) & finite)[0]
         cross80 = np.where((sat_arr >= 0.8) & finite)[0]
-        k50 = int(ks[cross50[0]]) + 1 if len(cross50) else float("nan")  # +1: k is prefix length
-        k80 = int(ks[cross80[0]]) + 1 if len(cross80) else float("nan")
+        k50 = int(ks[cross50[0]]) if len(cross50) else float("nan")  # +1: k is prefix length
+        k80 = int(ks[cross80[0]]) if len(cross80) else float("nan")
         # k_best is in [3, n-3]; convert to step count
         k_best_step = int(ks[best_idx])
         rows.append(
@@ -623,7 +632,7 @@ def main() -> None:
         "anchor", "axis", "n_steps", "best_family",
         "sat_aic", "pow_aic", "lin_aic", "log_aic", "zero_aic", "sat_converged",
     ]
-    write_tsv(RESULTS_DIR / "scaling_law_iter81_compute_refit.tsv", cols, refit_rows)
+    write_tsv(RESULTS_DIR / "scaling_law_iter81_compute_refit_v3.tsv", cols, refit_rows)
 
     # Q2: stratification
     strata_per_anchor = stratification(traces)
@@ -631,14 +640,14 @@ def main() -> None:
         "anchor", "arch", "param_bracket", "trace_bracket", "early_bracket",
         "best_family", "sat_aic", "pow_aic", "lin_aic", "log_aic", "zero_aic",
     ]
-    write_tsv(RESULTS_DIR / "scaling_law_iter81_stratum.tsv", s_cols, strata_per_anchor)
+    write_tsv(RESULTS_DIR / "scaling_law_iter81_stratum_v3.tsv", s_cols, strata_per_anchor)
     strata_agg = stratum_lift(strata_per_anchor)
     a_cols = [
         "stratum_axis", "stratum_value", "n_anchors", "majority_winner", "majority_count",
         "winner_mean_aic", "runner_up_family", "runner_up_mean_aic",
         "lift_winner_minus_runner", "anchors",
     ]
-    write_tsv(RESULTS_DIR / "scaling_law_iter81_stratum_lift.tsv", a_cols, strata_agg)
+    write_tsv(RESULTS_DIR / "scaling_law_iter81_stratum_lift_v3.tsv", a_cols, strata_agg)
 
     # Q3: operational forecasting k50/k80
     krows = operational_horizon(traces)
@@ -646,23 +655,23 @@ def main() -> None:
         "anchor", "n_steps", "k50", "k80", "best_sat_r2", "best_const_r2",
         "delta_sat_minus_const", "k_best", "status",
     ]
-    write_tsv(RESULTS_DIR / "scaling_law_iter81_k50_k80.tsv", k_cols, krows)
+    write_tsv(RESULTS_DIR / "scaling_law_iter81_k50_k80_v3.tsv", k_cols, krows)
 
     # meta + predictions
     meta = {
         "n_anchors": len(traces),
         "group_size": GROUP_SIZE,
         "batch_prompts": BATCH_PROMPTS,
-        "per_step_tokens": GROUP_SIZE * BATCH_PROMPTS,
+        "per_step_responses": GROUP_SIZE * BATCH_PROMPTS,
         "n_families": 5,
-        "n_boot": N_BOOT,
+        "resampling": "none",
         "families": ["saturation", "power_law", "linear", "log_linear", "zero"],
         "strata_axes": ["arch", "param_bracket", "trace_bracket", "early_bracket"],
         "param_brackets": ["4-9B", "20-32B", "120-685B", "1000B+"],
         "trace_brackets": ["short_n_le5", "medium_n_6_20", "long_n_ge21"],
         "early_brackets": ["high_first5_ge0.8", "mid_first5_0.4_0.8", "low_first5_lt0.4"],
     }
-    (RESULTS_DIR / "scaling_law_iter81_meta.json").write_text(json.dumps(meta, indent=2))
+    (RESULTS_DIR / "scaling_law_iter81_meta_v3.json").write_text(json.dumps(meta, indent=2))
 
     # predictions (binary, falsifiable)
     axis_winner = {}
@@ -700,17 +709,17 @@ def main() -> None:
         },
     ]
     write_tsv(
-        RESULTS_DIR / "scaling_law_iter81_predictions.tsv",
+        RESULTS_DIR / "scaling_law_iter81_predictions_v3.tsv",
         ["prediction_id", "claim", "observed", "expected", "pass_fail"],
         pred_rows,
     )
 
     # figure
-    fig_pdf = FIG_DIR / "scaling_law_iter81.pdf"
+    fig_pdf = FIG_DIR / "scaling_law_iter81_v3.pdf"
     make_figure(strata_per_anchor, strata_agg, krows, fig_pdf)
     # mirror to paper/figures/
     (PAPER_FIG / fig_pdf.name).write_bytes(fig_pdf.read_bytes())
-    (PAPER_FIG / "scaling_law_iter81.png").write_bytes((FIG_DIR / "scaling_law_iter81.png").read_bytes())
+    (PAPER_FIG / "scaling_law_iter81_v3.png").write_bytes((FIG_DIR / "scaling_law_iter81_v3.png").read_bytes())
 
     # console summary
     print("=== iter81 summary ===")
@@ -764,3 +773,5 @@ def _delta_pass(rows: list[dict]) -> str:
 
 if __name__ == "__main__":
     main()
+    from _review27_models import write_manifest
+    write_manifest(__file__, TRACE_DIR, RESULTS_DIR)

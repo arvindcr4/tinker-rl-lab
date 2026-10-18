@@ -36,3 +36,21 @@ Validation: `python -m pytest -q tests/reviews/test_review27.py` (25 passed). Al
 - 24–25/27–28: replace causal/forecast/preregistered/equivalence language with explicit exploratory/model-dependent interpretations where no frozen protocol exists; central family spec, parameter counts and provenance manifests.
 
 These are not claimed resolved. No missing evidence or experiment was invented to close a methodological finding.
+
+## Iter73–97 follow-up — review27-v3
+
+Code fixes (synthetic evidence only; no historical artifacts regenerated):
+- 8: iter89 uses continuous hinge regression with all intercepts retained and original time coordinates in deletion CV; suffix predictions use the same fitted equation. Iter93/97 now fit an AR intercept with only consecutive pairs, condition only on past observations, forecast from the actual origin, and compare all families on identical expanding-window origins (renamed rolling-origin columns).
+- 9: iter73 profiles original-reward-space SSE with a constrained saturation equation, eliminating the fitted-but-discarded intercept and mismatched log objective. Peak initialization uses the reward maximum's time, bounds use actual times, and post-peak indexing searches observed times.
+- 10: iter89 resamples circular residual blocks around the fitted continuous trend with a local fixed RNG. Iter93 uses a recursive innovation bootstrap preserving the fitted temporal process (explicitly model-dependent). Iter77 predictive intervals include new-observation noise at the actual held-out time. These are exploratory uncertainty procedures, not empirical coverage validation.
+- 11: iter85 conformity requires signed positive learning phases; a large negative middle slope cannot become a learning spurt. Iter89 bootstrap classifications use the same signed predicate.
+- 12: iter73 unique-violator grading checks the entire observed violator set. Iter77 compares hierarchical suffix MSE against constant-last at the same origin, and its oracle saturation cutoff uses the paired baseline rather than independently maximizing both.
+- 13: iter81 normalizes saturation/power coordinates, converts fitted parameters back, and labels the compute proxy sampled responses. Exact coordinate-rescaling fixtures agree in RSS and predictions.
+- 14: iter73's reported rank correlation uses tie-aware SciPy Spearman.
+- 15: shared Gaussian AIC/BIC includes one residual-variance parameter consistently, uses a common documented numerical RSS floor and eligibility rule, and reports no_valid_candidate for invalid sets. Iter93/97 compare conditional likelihood on the same steps 2..n; iter85's piecewise count includes both knots and variance. Changepoint search penalties remain approximate and are explicitly documented.
+- 18: iter89 failed fits are unavailable rather than silent baseline predictions; CV records attempted/successful folds. Undefined AR intervals no longer count as covering zero. Suffix failure metrics remain scalar pairs.
+- 24–25/27–28: outputs are versioned v3; retrospective cutoff procedures are explicitly exploratory oracle searches. Zero-containing intervals no longer establish scale invariance. A central versioned family/equation/parameter contract and runtime provenance manifest record source inventory hashes, code digest/revision, dependency versions, seed/resampling assumptions, and lack of an equivalence protocol. Iter81 no longer reports a bootstrap it does not run. Historical `zero` and `powerlaw` keys are explicitly identified as constant-mean and log-time aliases where applicable.
+
+Validation: `python -m pytest -q tests/reviews/test_review27_models.py tests/reviews/test_review{23,24,25,27}.py --import-mode=importlib` — 93 passed. No review26 test file exists in this checkout. Regression fixtures are synthetic and no scientific outputs, provider jobs, training, or stored results were run/changed.
+
+Scientific limitations still open: no frozen prospective protocol, independent evaluation cohort, calibrated equivalence margin, empirical coverage experiment, or validated resource-allocation model was supplied. Runtime provenance inventories available inputs; included/excluded cohorts must still be interpreted from the generated result rows. This follow-up does not claim those missing experiments were performed.

@@ -38,13 +38,13 @@ battery:
         (f) 3-phase conformity under monotone-decreasing constraint
 
 Outputs (5 TSV + 1 figure + 1 tex):
-  platform_hybrid/experiments/results/scaling_law_iter85_phases.tsv
-  platform_hybrid/experiments/results/scaling_law_iter85_conformity.tsv
-  platform_hybrid/experiments/results/scaling_law_iter85_nemotron.tsv
-  platform_hybrid/experiments/results/scaling_law_iter85_changepoints.tsv
-  platform_hybrid/experiments/results/scaling_law_iter85_meta.json
+  platform_hybrid/experiments/results/scaling_law_iter85_phases_v3.tsv
+  platform_hybrid/experiments/results/scaling_law_iter85_conformity_v3.tsv
+  platform_hybrid/experiments/results/scaling_law_iter85_nemotron_v3.tsv
+  platform_hybrid/experiments/results/scaling_law_iter85_changepoints_v3.tsv
+  platform_hybrid/experiments/results/scaling_law_iter85_meta_v3.json
   figures/scaling_law_iter85.{pdf,png}
-  paper/sections/scaling_law_iter85.tex
+  paper/sections/scaling_law_iter85_v3.tex
 
 Citations (verified):
   - nimmaturi2025predictive (arXiv:2507.18014) -- 3-phase template.
@@ -166,10 +166,8 @@ def fit_piecewise_linear(y: np.ndarray, n_segments: int) -> tuple[float, list[in
 
 
 def aic(sse: float, n: int, k: int) -> float:
-    """AIC for OLS with Gaussian residuals, sigma-hat = sqrt(sse/n)."""
-    if n <= 0 or sse <= 0:
-        return float("nan")
-    return float(n * math.log(sse / n) + 2 * k)
+    from _review27_models import information_criteria
+    return information_criteria(sse,n,k)[0]
 
 
 def longest_monotone_decline(y: np.ndarray, from_idx: int = 0) -> int:
@@ -219,7 +217,7 @@ def main() -> None:
         sse_2, cp_2, sl_2, ic_2, lens_2 = fit_piecewise_linear(rt, 2)
 
         aic_1 = aic(sse_1, n, 3)  # slope + intercept + sigma
-        aic_3 = aic(sse_3, n, 8)  # 3*(slope+intercept) + sigma + 2 changepoints
+        aic_3 = aic(sse_3, n, 9)  # 3*(slope+intercept) + sigma + 2 changepoints
         aic_2 = aic(sse_2, n, 6)  # 2*(slope+intercept) + sigma + 1 changepoint
 
         delta_aic_3v1 = aic_3 - aic_1
@@ -229,18 +227,12 @@ def main() -> None:
         # 3-phase conformity: does segment 2 (spurt) have a larger |slope| than 1 and 3?
         # And does segment 3 have a smaller |slope| than 2?
         if len(sl_3) == 3:
-            abs_slopes = [abs(s) for s in sl_3]
-            spurt_index = int(np.argmax(abs_slopes))
-            spurt_slope = sl_3[spurt_index]
-            flank_max = max(abs(sl_3[i]) for i in range(3) if i != spurt_index) if 3 > 1 else 0.0
-            spurt_dominant = bool(abs(spurt_slope) > flank_max)
-            # Canonical ordering: creep (smallest |slope|) < spurt (largest |slope|) > level
-            creep_idx = int(np.argmin(abs_slopes))
-            level_idx = next(i for i in range(3) if i not in (creep_idx, spurt_index))
-            canonical_order = (creep_idx < spurt_index) and (spurt_index < level_idx)
-            spurt_largest = bool(abs_slopes[1] >= abs_slopes[0] and abs_slopes[1] >= abs_slopes[2])
-            # Creep must come before spurt in time order, level must come after
-            canonical_temporal = bool(lens_3[0] > 0 and lens_3[2] > 0)
+            from _review27_models import signed_phases
+            canonical_order = signed_phases(sl_3)
+            spurt_slope = sl_3[1]
+            spurt_dominant = bool(sl_3[1] > max(sl_3[0],sl_3[2]) and sl_3[1]>0)
+            spurt_largest = spurt_dominant
+            canonical_temporal = canonical_order
         else:
             spurt_dominant = False
             canonical_order = False
@@ -260,7 +252,7 @@ def main() -> None:
         if len(sl_3) == 3:
             level_slope_abs = abs(sl_3[2])
             creep_slope_abs = abs(sl_3[0])
-            monotone_plateau = bool(level_slope_abs <= creep_slope_abs)
+            monotone_plateau = bool(0 <= sl_3[2] <= sl_3[0] and sl_3[1] > sl_3[0])
         else:
             level_slope_abs = 0.0
             creep_slope_abs = 0.0
@@ -358,10 +350,10 @@ def main() -> None:
         })
 
     # Write TSVs
-    write_tsv(RESULTS_DIR / "scaling_law_iter85_phases.tsv", phases_rows)
-    write_tsv(RESULTS_DIR / "scaling_law_iter85_conformity.tsv", conformity_rows)
-    write_tsv(RESULTS_DIR / "scaling_law_iter85_changepoints.tsv", cp_rows)
-    write_tsv(RESULTS_DIR / "scaling_law_iter85_nemotron.tsv", nemotron_rows)
+    write_tsv(RESULTS_DIR / "scaling_law_iter85_phases_v3.tsv", phases_rows)
+    write_tsv(RESULTS_DIR / "scaling_law_iter85_conformity_v3.tsv", conformity_rows)
+    write_tsv(RESULTS_DIR / "scaling_law_iter85_changepoints_v3.tsv", cp_rows)
+    write_tsv(RESULTS_DIR / "scaling_law_iter85_nemotron_v3.tsv", nemotron_rows)
 
     # Conformity summary
     n_total = len(conformity_rows)
@@ -395,7 +387,7 @@ def main() -> None:
         "fit_method": "greedy O(n^2) changepoint + OLS piecewise-linear",
         "ts": "2026-07-03T18:25:00Z",
     }
-    with open(RESULTS_DIR / "scaling_law_iter85_meta.json", "w") as f:
+    with open(RESULTS_DIR / "scaling_law_iter85_meta_v3.json", "w") as f:
         json.dump(meta, f, indent=2)
 
     # Figure: 4-panel
@@ -483,9 +475,9 @@ def main() -> None:
         "Iter 85: 3-phase hypothesis (arXiv:2507.18014) test and Nemotron-120B collapse audit",
         fontsize=11)
     plt.tight_layout(rect=[0, 0, 1, 0.96])
-    plt.savefig(FIG_DIR / "scaling_law_iter85.pdf", dpi=150, bbox_inches="tight")
-    plt.savefig(FIG_DIR / "scaling_law_iter85.png", dpi=150, bbox_inches="tight")
-    plt.savefig(PAPER_FIG / "scaling_law_iter85.pdf", dpi=150, bbox_inches="tight")
+    plt.savefig(FIG_DIR / "scaling_law_iter85_v3.pdf", dpi=150, bbox_inches="tight")
+    plt.savefig(FIG_DIR / "scaling_law_iter85_v3.png", dpi=150, bbox_inches="tight")
+    plt.savefig(PAPER_FIG / "scaling_law_iter85_v3.pdf", dpi=150, bbox_inches="tight")
     plt.close()
 
     print(f"Iter 85 complete: {n_total} anchors")
@@ -515,3 +507,5 @@ def write_tsv(path: Path, rows: list[dict]) -> None:
 
 if __name__ == "__main__":
     main()
+    from _review27_models import write_manifest
+    write_manifest(__file__, TRACE_DIR, RESULTS_DIR)

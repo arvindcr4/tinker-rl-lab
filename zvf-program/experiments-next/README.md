@@ -157,3 +157,10 @@ Base and post-RL comparisons must use matching seed/config sets.
 - Offline analyses are deterministic and restart-safe: they make no paid calls
   and atomically replace their final JSON outputs.
 - Nothing in this directory invents a run, a metric, or a "win."
+
+## Prospective analysis contract (v2)
+
+For new runs, [PROSPECTIVE_ANALYSIS_V2.md](PROSPECTIVE_ANALYSIS_V2.md) and
+`analysis_contract.T1_DECISION` supersede older readiness/validation wording.
+Historical results are unchanged. Full versioned identity and sampling completeness
+are required for aggregation; truncated/legacy analyses are exploratory only.

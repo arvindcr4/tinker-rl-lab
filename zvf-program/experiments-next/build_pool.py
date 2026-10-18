@@ -21,6 +21,8 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import inspect
+from analysis_contract import VERSION, digest, validate_resume, validate_full_pool, validate_identity
 import json
 import os
 import statistics
@@ -55,6 +57,8 @@ def main() -> None:
     ap.add_argument("--max-tokens", type=int, default=512)
     ap.add_argument("--max-prompt-tokens", type=int, default=1024)
     ap.add_argument("--lora-rank", type=int, default=4)
+    for name in ("model-revision", "dataset-revision", "tokenizer-revision", "checkpoint-identity"):
+        ap.add_argument("--" + name, help="immutable resolved identity; required for live sampling")
     ap.add_argument("--dry-run", action="store_true",
                     help="print the plan and cost estimate; contact nothing")
     ap.add_argument("--resume", action="store_true",
@@ -97,16 +101,32 @@ def main() -> None:
         if existing.get("status") == "complete":
             sys.exit(f"[pool:{tag}] pool already complete; nothing to resume.")
 
-    load_repo_env()
-    if not os.environ.get("TINKER_API_KEY"):
-        sys.exit("TINKER_API_KEY not set (and not found in repo .env); aborting.")
+    identity = {"version": VERSION, "model_revision": args.model_revision,
+                "dataset_revision": args.dataset_revision, "tokenizer_revision": args.tokenizer_revision,
+                "checkpoint_identity": args.checkpoint_identity, "sampler_backend": "tinker",
+                "reward_parser_sha256": digest(inspect.getsource(reward_fn)),
+                "prompt_selection_policy": "gsm8k_shuffle_seed_prefix_v1",
+                "sampling_config_sha256": digest({"temperature":args.temperature,"top_p":args.top_p,
+                    "max_tokens":args.max_tokens,"max_prompt_tokens":args.max_prompt_tokens,
+                    "rollouts":args.rollouts,"lora_rank":args.lora_rank}),
+                "prompt_manifest_sha256": "pending"}
+    validate_identity(identity)
+    # Check requested checkpoint/config before environment, dataset or provider access.
+    early_expected = {"model":args.model,"requested_sampler_path":args.sampler_path,
+                      "max_prompt_tokens":args.max_prompt_tokens,"lora_rank":args.lora_rank,
+                      "tokenizer_revision":args.tokenizer_revision}
+    if args.resume and out_path.exists():
+        validate_resume(existing, early_expected)
+        for key,value in identity.items():
+            if key != "prompt_manifest_sha256" and existing["analysis_contract"].get(key) != value:
+                raise ValueError(f"resume refused: analysis identity {key} changed")
 
-    import tinker.types as T
-
-    examples = load_gsm8k(args.split, args.prompts, args.seed)
-    if len(examples) < args.prompts:
-        print(f"[pool:{tag}] WARNING: only {len(examples)} examples available",
-              flush=True)
+    examples = load_gsm8k(args.split, args.prompts, args.seed, revision=args.dataset_revision)
+    if len(examples) != args.prompts:
+        raise ValueError(f"dataset shortfall: requested {args.prompts}, available {len(examples)}; use a new explicit sample plan")
+    identity["prompt_manifest_sha256"] = digest(examples)
+    if args.resume and out_path.exists() and existing["analysis_contract"] != identity:
+        raise ValueError("resume refused: prompt manifest or analysis identity changed")
 
     banked: list[dict] = []
     previous: dict | None = None
@@ -134,7 +154,7 @@ def main() -> None:
                 f"[pool:{tag}] existing partial pool has incompatible config: "
                 f"{json.dumps(mismatches, sort_keys=True)}"
             )
-        if args.sampler_path and prev.get("sampler_path") != args.sampler_path:
+        if prev.get("requested_sampler_path") != args.sampler_path:
             sys.exit(
                 f"[pool:{tag}] sampler path differs from the partial pool; "
                 "refusing to mix checkpoints"
@@ -145,6 +165,10 @@ def main() -> None:
                 f"[pool:{tag}] partial pool is not a contiguous prompt prefix; "
                 "refusing unsafe resume"
             )
+        if banked:
+            validate_full_pool({**prev, "status":"complete", "sampling_completeness":"full",
+                                "exploratory_only":False, "n_prompts":len(banked),
+                                "planned_prompts":len(banked), "prompts":banked})
         previous = prev
         print(f"[pool:{tag}] resuming: {len(banked)} prompts already banked; "
               f"{len(examples) - len(banked)} to go "
@@ -154,6 +178,10 @@ def main() -> None:
     result: dict = previous or {}
     result.update({
         "kind": "zvf_pool",
+        "analysis_contract": identity,
+        "max_prompt_tokens": args.max_prompt_tokens, "lora_rank": args.lora_rank,
+        "tokenizer_revision": args.tokenizer_revision,
+        "sampling_completeness": "in_progress", "planned_prompts": args.prompts,
         "status": "started",
         "tag": tag,
         "model": args.model,
@@ -175,9 +203,16 @@ def main() -> None:
     result["sampling_session_id"] = session_id
     write_result(out_path, result)
 
-    sc, tok, sampler_used = make_sampler(args.model, args.sampler_path,
-                                         args.lora_rank)
+    load_repo_env()
+    if not os.environ.get("TINKER_API_KEY"):
+        sys.exit("TINKER_API_KEY not set; aborting")
+    import tinker.types as T
+    # Resume the original resolved sampler even for a base-model pool.
+    resume_path = previous["sampler_path"] if previous else args.sampler_path
+    sc, tok, sampler_used = make_sampler(args.model, resume_path,
+                                         args.lora_rank, tokenizer_revision=args.tokenizer_revision)
     result["sampler_path"] = sampler_used
+    write_result(out_path, result)  # persist resolved identity before first sampling call
     sampling = T.SamplingParams(
         max_tokens=args.max_tokens,
         temperature=args.temperature,
@@ -282,6 +317,10 @@ def main() -> None:
     ]
 
     result["status"] = "complete"
+    result["sampling_completeness"] = "full"
+    result["actual_prompts"] = len(result["prompts"])
+    result["exploratory_only"] = False
+    validate_full_pool(result)
     result["finished_at"] = utc_now()
     result["segment_wall_seconds"] = round(segment_wall_seconds, 1)
     result["wall_seconds"] = round(cumulative_wall_seconds, 1)

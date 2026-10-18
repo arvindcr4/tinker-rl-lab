@@ -1,26 +1,9 @@
 #!/usr/bin/env python3
 """analyze_t3_gstar.py — E-T3a: signal-per-rollout vs group size G.
 
-T3 (theory/zvf_theory.tex) derives a closed-form CANDIDATE optimal group size
-G* maximizing expected learning signal per rollout. This script produces the
-empirical curve it must match:
-
-  For each difficulty stratum (by p_hat) and each G in the grid:
-    P_mixed(G)      = fraction of size-G groups that are NOT zero-variance
-                      (signal per group)
-    signal_per_rollout(G) = P_mixed(G) / G
-
-  Under Bernoulli(p) rewards the analytic curve is
-    P_mixed(G) = 1 - p^G - (1-p)^G
-  and the script overlays that prediction (computed from each stratum's p_hat
-  distribution) against the empirical subsampled curve. The empirical argmax
-  of signal_per_rollout is reported per stratum; T3's G* should land on or
-  near it. Divergence localizes exactly which modeling assumption in S(p,G)
-  fails.
-
-NOTE: signal_per_rollout = P_mixed/G is the simplest per-rollout objective;
-if T3's S(p,G) differs, add it in analytic_curves() and compare both. This
-script is evidence, not proof (T3 uniqueness is an open gap).
+Descriptive objective: signal_per_rollout(G) = P(mixed)/G.
+This differs from the variance-weighted J(G) proxy. Neither empirical argmax
+establishes a unique learning-optimal group size. Compare only identical objectives.
 
 Pure offline analysis of a build_pool.py pool. G values above the pool's
 rollouts_per_prompt are skipped (subsampling is without replacement).
@@ -31,6 +14,8 @@ from __future__ import annotations
 import argparse
 import random
 from pathlib import Path
+
+from analysis_contract import validate_design, strata_all
 
 from common import RESULTS_DIR, load_pool, utc_now, write_result
 
@@ -70,12 +55,12 @@ def main() -> None:
     pool = load_pool(args.pool)
     prompts = pool["prompts"]
     R = pool["rollouts_per_prompt"]
+    validate_design(groups=args.grid, counts=[args.n_strata,args.draws], available=R, n_prompts=len(prompts))
     rng = random.Random(args.seed)
     grid = [G for G in args.grid if G <= R]
 
     ordered = sorted(prompts, key=lambda p: p["p_hat"])
-    k = max(1, len(ordered) // args.n_strata)
-    strata = [ordered[i:i + k] for i in range(0, len(ordered), k)][:args.n_strata]
+    strata = strata_all(ordered, args.n_strata)
 
     rows = []
     for si, stratum in enumerate(strata):
@@ -107,6 +92,9 @@ def main() -> None:
 
     out = RESULTS_DIR / f"t3_gstar_{pool['tag']}.json"
     write_result(out, {
+        "claim_scope": "proxy_objective_only",
+        "unique_learning_optimum_established": False,
+        "objective_id": "unweighted_mixed_per_rollout_v1",
         "kind": "t3_gstar_curve",
         "status": "complete",
         "pool": str(args.pool),
@@ -117,10 +105,7 @@ def main() -> None:
         "seed": args.seed,
         "generated_at": utc_now(),
         "rows": rows,
-        "next_step": "fill t3_gstar_prediction from the closed-form in "
-                     "theory/zvf_theory.tex sec:T3 and compare to "
-                     "empirical_argmax_G per stratum; then run E-T3b "
-                     "(short training at G* +/- delta, matched rollouts)",
+        "next_step": "Independent matched-compute learning outcomes required; proxy argmax is descriptive",
     })
     print(f"-> {out}")
 

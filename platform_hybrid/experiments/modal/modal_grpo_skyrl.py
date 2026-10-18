@@ -1,9 +1,9 @@
 """Modal GRPO Campaign — SkyRL launcher.
 
 Runs the canonical GSM8K GRPO run via SkyRL on a single Modal H100, invoking the
-recipe documented in ``platform_hybrid/skyrl/configs/grpo_gsm8k.yaml``::
+recipe documented in ``platform_hybrid/skyrl/configs/grpo_gsm8k_qwen3_8b.yaml``::
 
-    uv run --extra vllm -m skyrl_train.entrypoints.main_base @configs/grpo_gsm8k.yaml
+    uv run --extra vllm -m skyrl_train.entrypoints.main_base @configs/grpo_gsm8k_qwen3_8b.yaml
 
 SkyRL is not pip-installable, so the image clones ``NovaSky-AI/SkyRL`` at the
 ``skyrl_train-v0.4.0`` tag (the same pin the vast.ai provisioner uses) and the
@@ -70,7 +70,7 @@ def run_skyrl_qwen3_8b():
     import time
 
     REPO = "/root/tinker-rl-lab"
-    CONFIG = f"{REPO}/platform_hybrid/skyrl/configs/grpo_gsm8k.yaml"
+    CONFIG = f"{REPO}/platform_hybrid/skyrl/configs/grpo_gsm8k_qwen3_8b.yaml"
 
     import sys
     sys.path.insert(0, REPO)
@@ -107,7 +107,7 @@ def run_skyrl_qwen3_8b():
         "comparison_contract_satisfied": False,
         "claim_supported": False,
         "resolved_config_status": "unavailable_until_adapter_initialization",
-        "model": "Qwen/Qwen3-8B",
+        "model": source["requested_config"]["trainer"]["policy"]["model"]["path"],
         "algorithm": "GRPO",
         "seed": source["requested_config"].get("trainer", {}).get("seed"),
         "task": "gsm8k",

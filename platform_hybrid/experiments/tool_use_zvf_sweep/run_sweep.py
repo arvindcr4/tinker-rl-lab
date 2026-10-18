@@ -55,6 +55,21 @@ def reward_version_from_path(p: Path) -> str:
     return version
 
 
+
+def reward_source_manifest(atropos_dir: Path) -> dict:
+    """Bind the reward wrapper and its delegated scoring implementation."""
+    paths = ("tinker_atropos/environments/tool_use_tinker.py", "tinker_atropos/grading.py")
+    sources = {}
+    for relative in paths:
+        path = atropos_dir / relative
+        if not path.is_file():
+            raise FileNotFoundError("Reward implementation missing; refusing launch")
+        sources[relative] = hashlib.sha256(path.read_bytes()).hexdigest()
+    encoded = json.dumps(sources, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    return {"scheme": "tool-use-reward-sources-v1", "sources": sources,
+            "sha256": hashlib.sha256(encoded).hexdigest()}
+
+
 def estimate_cost(cfg: Path) -> dict:
     from cost_estimate import estimate  # local import so env is loaded
     return estimate(cfg)
@@ -111,12 +126,10 @@ def run_one(cfg: Path, atropos_dir: Path) -> int:
     base_env = os.environ.copy()
     base_env["TOOL_USE_REWARD_VERSION"] = rv
     base_env["RESOLVED_CONFIG_SHA256"] = hashlib.sha256(cfg.read_bytes()).hexdigest()
-    grader_source = atropos_dir / "tinker_atropos" / "environments" / "tool_use_tinker.py"
-    if not grader_source.is_file():
-        raise FileNotFoundError("Reward implementation missing; refusing launch")
-    grader_hash = hashlib.sha256(grader_source.read_bytes()).hexdigest()
+    reward_sources = reward_source_manifest(atropos_dir)
+    grader_hash = reward_sources["sha256"]
     base_env["TOOL_USE_REWARD_SHA256"] = grader_hash
-    (run_dir / "resolved_contract_v2.json").write_text(json.dumps({"reward_version": rv, "reward_sha256": grader_hash, "config_sha256": base_env["RESOLVED_CONFIG_SHA256"], "cost_kind": "preflight_estimate_not_live_billing_cap"}, indent=2))
+    (run_dir / "resolved_contract_v2.json").write_text(json.dumps({"reward_version": rv, "reward_sha256": grader_hash, "reward_sources": reward_sources, "config_sha256": base_env["RESOLVED_CONFIG_SHA256"], "cost_kind": "preflight_estimate_not_live_billing_cap"}, indent=2))
     # LIMITATION: ZVF metric fragility limitation. ZVF saturates at 1.0 for format-gated
     # tasks like tool-use. Monitor ERF (Effective-Rollout Fraction) instead.
     base_env["PYTHONPATH"] = f"{atropos_dir}:{base_env.get('PYTHONPATH','')}"

@@ -17,7 +17,7 @@ from __future__ import annotations
 import sys as _sys
 from pathlib import Path as _Path
 _sys.path.insert(0, str(next(p for p in _Path(__file__).resolve().parents if (p / "platform_hybrid").is_dir())))
-from platform_hybrid.experiments.research_contracts import gsm8k_reward
+from platform_hybrid.experiments.research_contracts import gsm8k_reward, math_reward
 
 
 import argparse
@@ -53,6 +53,10 @@ def require_env():
 
 def reward_gsm8k(resp, ans):
     return gsm8k_reward(resp, ans)
+
+
+def reward_math500(resp, ans):
+    return math_reward(resp, ans, require_box=True)
 
 
 def reward_arith(resp, ans):
@@ -112,7 +116,7 @@ def load_arith(limit, seed):
 
 TASKS = {
     "gsm8k": (load_gsm8k, reward_gsm8k),
-    "math500": (load_math500, reward_gsm8k),
+    "math500": (load_math500, reward_math500),
     "arith": (load_arith, reward_arith),
 }
 

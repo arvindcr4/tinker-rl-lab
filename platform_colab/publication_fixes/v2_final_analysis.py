@@ -88,7 +88,17 @@ gold = [t["answer"].split("####")[-1].strip().replace(",", "") for t in json.loa
 
 
 def hardware_label(result):
-    env = result.get("execution_environment") or result.get("env")
+    env = result.get("execution_environment")
+    if isinstance(env, str):
+        manifest = result.get("manifest")
+        hardware = manifest.get("hardware") if isinstance(manifest, dict) else None
+        names = hardware.get("gpu_names") if isinstance(hardware, dict) else None
+        if (not env.strip() or not isinstance(names, list) or not names
+                or any(not isinstance(name, str) or not name.strip() for name in names)):
+            raise ValueError("Per-run GPU and platform provenance is required; directory names are not evidence")
+        return f"{', '.join(names)} ({env})"
+    if env is None:
+        env = result.get("env")
     if not isinstance(env, dict) or any(not isinstance(env.get(k), str) or not env[k].strip() for k in ("gpu", "platform")):
         raise ValueError("Per-run GPU and platform provenance is required; directory names are not evidence")
     return f"{env['gpu']} ({env['platform']})"

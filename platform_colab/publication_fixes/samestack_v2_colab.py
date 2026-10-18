@@ -65,7 +65,10 @@ def run_arm(arm: str, seed: int, out_dir: str, smoke: bool = False) -> dict:
             texts = json.load(handle)
         if any(len(texts.get(k, [])) != expected["n_eval"] for k in ("pre", "post")):
             raise ValueError("Existing completion bundle is incomplete")
-        return cached
+        raise ValueError(
+            "Cached legacy run lacks a verified adapter/tokenizer/result hash bundle; "
+            "choose a fresh output root instead of reusing this evidence"
+        )
     wall_start_utc = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
 
     import random

@@ -65,6 +65,10 @@ def load_wandb_runs(project: str = "tinker-structural-ceiling") -> pd.DataFrame:
                 **{f"summary_{k}": v for k, v in run.summary.items()
                    if not k.startswith("_")},
             }
+            # Promote only measured summary endpoints; never accept config declarations
+            # as a substitute for observed endpoint/provenance fields.
+            for field in ("heldout_before", "heldout_after", "evaluation_ids_hash"):
+                record[field] = record.get(f"summary_{field}")
             # LIMITATION: "Early-Training Snapshot Problem" - flag or filter runs with very few
             # gradient steps (e.g., 30-50 steps) to avoid extrapolating from incomplete training dynamics.
             records.append(record)

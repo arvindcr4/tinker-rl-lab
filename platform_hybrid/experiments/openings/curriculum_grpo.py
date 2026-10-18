@@ -125,7 +125,7 @@ run = wandb.init(project="rlvr-openings", name=f"curriculum-vs-baseline-{args.mo
 results = {}
 for mode in ["baseline", "curriculum"]:
     r = run_arm(mode); results[mode] = r
-    for k in ["zero_loss_frac","oversample_factor","heldout_before","heldout_after","heldout_gain"]:
+    for k in ["near_zero_scalar_loss_fraction","oversample_factor","heldout_before","heldout_after","heldout_gain"]:
         run.summary[f"{mode}/{k}"] = r[k]
     for s, rw in enumerate(r["step_rewards"]):
         wandb.log({f"{mode}/reward": rw}, step=s)

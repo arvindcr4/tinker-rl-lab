@@ -28,7 +28,7 @@ import math
 import hashlib
 import re
 
-ANALYSIS_VERSION = "review27-v2"
+ANALYSIS_VERSION = "review27-v3"
 
 # ANSI color codes
 GREEN = "\033[92m"
@@ -180,37 +180,165 @@ def verify_gsm8k_heldout() -> Tuple[bool, str]:
         return False,str(exc)
 
 
-def verify_zvf_triage() -> Tuple[bool, str]:
-    return False, "UNVERIFIED (verify_zvf_triage): requires run-level rule predictions and observed collapse labels"
+# review27-v3 evidence contract. These files are deliberately not synthesized
+# from historical summary tables: cohort membership requires a scientific choice.
+# Each claim file contains schema_version, protocol_id, expected_run_ids, rows.
+# Each row has run_id, model, task, split, stack, algorithm, seed, protocol_id.
+# Values below are raw observations/predictions, not precomputed claim statistics.
+IDENTITY_FIELDS = ("run_id", "model", "task", "split", "stack", "algorithm", "protocol_id")
 
 
-def verify_stack_sensitivity() -> Tuple[bool, str]:
-    return False, "UNVERIFIED (verify_stack_sensitivity): requires exact matched run and stack identities, not first model-family match"
+def _number(value):
+    if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value):
+        raise ValueError("expected a finite numeric observation")
+    return float(value)
 
 
-def verify_tool_proxy() -> Tuple[bool, str]:
-    return False, "UNVERIFIED (verify_tool_proxy): scope statement is documentation, not an executable evidence check"
+def _claim_rows(claim):
+    path = EXPERIMENTS_DIR / "verification_v3" / (claim + ".json")
+    if not path.is_file():
+        raise FileNotFoundError(f"UNVERIFIED: explicit {claim} cohort contract unavailable: {path}")
+    document = load_json(path)
+    if document.get("schema_version") != "review27-v3" or not document.get("protocol_id"):
+        raise ValueError("unsupported evidence schema or missing protocol identity")
+    rows = document.get("rows")
+    expected = document.get("expected_run_ids")
+    if not isinstance(rows, list) or not rows or not isinstance(expected, list) or not expected:
+        raise ValueError("empty or missing explicit cohort")
+    ids = []
+    for row in rows:
+        if not isinstance(row, dict) or any(not isinstance(row.get(k), str) or not row[k].strip() for k in IDENTITY_FIELDS):
+            raise ValueError("missing run/model/task/split/stack/algorithm/protocol identity")
+        if type(row.get("seed")) is not int or row["protocol_id"] != document["protocol_id"]:
+            raise ValueError("invalid seed or mismatched protocol")
+        ids.append(row["run_id"])
+    if any(not isinstance(i, str) for i in expected) or len(set(expected)) != len(expected) or len(set(ids)) != len(ids) or set(ids) != set(expected):
+        raise ValueError("duplicate, missing, or unexpected cohort run")
+    return rows, hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def verify_proxy_harnesses() -> Tuple[bool, str]:
-    return False, "UNVERIFIED (verify_proxy_harnesses): scope statement is documentation, not an executable evidence check"
+def _verify_evidence(claim, calculator):
+    try:
+        rows, digest = _claim_rows(claim)
+        passed, detail = calculator(rows)
+        return passed, f"{detail}; n_runs={len(rows)}; evidence_sha256={digest}; review27-v3"
+    except (OSError, ValueError, TypeError, KeyError, ImportError) as exc:
+        return False, str(exc)
 
 
-def verify_zvf_correlation() -> Tuple[bool, str]:
-    return False, "UNVERIFIED (verify_zvf_correlation): requires defined complete-case observations and correlation recomputation"
+def verify_zvf_triage():
+    def calculate(rows):
+        counts = dict(TP=0, FP=0, TN=0, FN=0)
+        for row in rows:
+            # Predictions must be recorded independently of outcome labels.
+            predicted, observed = row["predicted_collapse"], row["observed_collapse"]
+            if type(predicted) is not bool or type(observed) is not bool:
+                raise ValueError("triage requires Boolean rule predictions and observed labels")
+            counts[("T" if predicted == observed else "F") + ("P" if predicted else "N")] += 1
+        return counts["TP"] == 2 and counts["FN"] == 0 and counts["FP"] == 0 and counts["TN"] > 0, json.dumps(counts, sort_keys=True)
+    return _verify_evidence("zvf_triage", calculate)
 
 
-def verify_saturation_fit() -> Tuple[bool, str]:
-    return False, "UNVERIFIED (verify_saturation_fit): requires actual traces, fitted predictions, and stated fit aggregation"
+def verify_zvf_correlation():
+    def calculate(rows):
+        from scipy.stats import pearsonr
+        # Reject incomplete cohorts rather than silently selecting favorable cases.
+        x = [_number(r["mean_zvf"]) for r in rows]
+        y = [_number(r["last10_avg"]) for r in rows]
+        units = [r["independent_unit_id"] for r in rows]
+        if len(rows) < 3 or any(not isinstance(u,str) or not u for u in units) or len(set(units)) != len(units) or len(set(x)) < 2 or len(set(y)) < 2:
+            raise ValueError("correlation needs complete nonconstant independent units")
+        rho, p = map(float, pearsonr(x, y))
+        return abs(rho - (-.769)) <= .005 and abs(p - .0008) <= .0005, f"Pearson r={rho:.8g}, two-sided p={p:.8g}, complete_cases={len(rows)}"
+    return _verify_evidence("zvf_correlation", calculate)
 
 
-def verify_trl_baseline() -> Tuple[bool, str]:
-    return False, "UNVERIFIED (verify_trl_baseline): requires exact TRL/GRPO run cohort and protocol identities"
+def verify_saturation_fit():
+    def calculate(rows):
+        scores = []
+        for row in rows:
+            if row.get("trace_provenance") != "measured" or row.get("fit_family") != "exponential_saturation":
+                raise ValueError("actual measured traces and exponential-saturation parameters required")
+            t = [_number(v) for v in row["steps"]]
+            y = [_number(v) for v in row["rewards"]]
+            if len(t) != len(y) or len(t) < 3 or any(b <= a for a,b in zip(t,t[1:])):
+                raise ValueError("invalid ordered measured trajectory")
+            initial, asymptote, rate = [_number(row[k]) for k in ("initial", "asymptote", "rate")]
+            if rate <= 0:
+                raise ValueError("positive saturation rate required")
+            predicted = [asymptote + (initial-asymptote)*math.exp(-rate*(v-t[0])) for v in t]
+            mean = sum(y)/len(y)
+            total = sum((v-mean)**2 for v in y)
+            if total == 0:
+                raise ValueError("R2 undefined for constant trace")
+            scores.append(1-sum((a-b)**2 for a,b in zip(y,predicted))/total)
+        score = sum(scores)/len(scores)
+        return abs(score-.21) <= .02, f"equal-run mean measured-trace R2={score:.8g}; individual_R2={scores}"
+    return _verify_evidence("saturation_fit", calculate)
 
 
-def verify_group_size() -> Tuple[bool, str]:
-    return False, "UNVERIFIED (verify_group_size): requires matched group-size ablation cohort, not first model match"
+def _matched_cells(rows, varying):
+    keys = ("model", "task", "split", "stack", "seed", "protocol_id")
+    keys = tuple(k for k in keys if k != varying)
+    cells = {}
+    for row in rows:
+        key = tuple(row[k] for k in keys)
+        cell = cells.setdefault(key, {})
+        value = row[varying]
+        if value in cell:
+            raise ValueError("duplicate treatment in matched cell")
+        cell[value] = _number(row["last10_avg"])
+    return cells
 
+
+def verify_stack_sensitivity():
+    def calculate(rows):
+        cells = _matched_cells(rows, "algorithm")
+        differences = {}
+        for key, cell in cells.items():
+            if set(cell) != {"grpo", "ppo"}:
+                raise ValueError("every matched cell requires exactly GRPO and PPO")
+            differences.setdefault(key[0], []).append(cell["grpo"]-cell["ppo"])
+        means = {k: sum(v)/len(v) for k,v in differences.items()}
+        return len(means) >= 2 and min(means.values()) < 0 < max(means.values()), f"descriptive matched GRPO-minus-PPO by model={means}; no causal stack attribution"
+    return _verify_evidence("stack_sensitivity", calculate)
+
+
+def verify_trl_baseline():
+    def calculate(rows):
+        if any(r["stack"] != "trl" or r["algorithm"] != "grpo" for r in rows):
+            raise ValueError("exact TRL/GRPO cohort required")
+        scope = {(r["model"], r["task"], r["split"]) for r in rows}
+        if len(scope) != 1 or len({r["seed"] for r in rows}) != len(rows):
+            raise ValueError("one matched task/model/split with distinct seeds required")
+        values = [_number(r["last10_avg"]) for r in rows]
+        mean = sum(values)/len(values)
+        return abs(mean-.734) <= .01, f"equal-seed TRL/GRPO last10 mean={mean:.8g}"
+    return _verify_evidence("trl_baseline", calculate)
+
+
+def verify_group_size():
+    def calculate(rows):
+        if any(type(r.get("group_size")) is not int or r["group_size"] < 2 for r in rows):
+            raise ValueError("explicit integer group sizes >=2 required")
+        # Algorithm is a matching dimension here as well as stack/task/model.
+        if len({r["algorithm"] for r in rows}) != 1:
+            raise ValueError("algorithm must be held fixed in group-size ablation")
+        cells = _matched_cells(rows, "group_size")
+        if any(8 not in c or len(c) < 2 for c in cells.values()) or len({tuple(sorted(c)) for c in cells.values()}) != 1:
+            raise ValueError("matched seeds require G=8 plus identical comparison group-size grid")
+        values = [c[8] for c in cells.values()]
+        mean = sum(values)/len(values)
+        return abs(mean-.844) <= .01, f"matched G=8 equal-cell last10 mean={mean:.8g}; n_cells={len(cells)}"
+    return _verify_evidence("group_size", calculate)
+
+
+def verify_tool_proxy():
+    return False, "UNVERIFIED: documentation scope statement is not an executable numeric claim"
+
+
+def verify_proxy_harnesses():
+    return False, "UNVERIFIED: documentation scope statement is not an executable numeric claim"
 
 def verify_figure_inputs() -> Tuple[bool, str]:
     """Verify figure input files exist."""
@@ -304,7 +432,12 @@ def main():
         help="Show detailed output"
     )
     
+    parser.add_argument("--base-dir", type=Path, default=BASE_DIR, help="Explicit evidence root containing experiments, reports, and checksum manifest")
     args = parser.parse_args()
+    globals()["BASE_DIR"] = args.base_dir.resolve()
+    globals()["EXPERIMENTS_DIR"] = BASE_DIR / "experiments"
+    globals()["REPORTS_DIR"] = BASE_DIR / "reports" / "final"
+    globals()["FIGURES_DIR"] = BASE_DIR / "paper" / "figures" / "v2"
     
     if args.list:
         print("Available checks:")

@@ -12,7 +12,16 @@ case "${1:-}" in
 esac
 PY="${PYTHON:-python3}"
 "$PY" - <<'PY'
-from platform_tinker.tinkerrl.grpo import _numeric_equal, normalize_rewards, is_degenerate_group
+from types import SimpleNamespace
+from platform_tinker.tinkerrl.grpo import _numeric_equal, normalize_rewards, is_degenerate_group, ExactMathReward
+grader = ExactMathReward()
+example = SimpleNamespace(target="42")
+assert grader.score(r"\boxed{42}", example) == 1.0
+assert grader.score(r"\boxed{42} then \boxed{99}", example) == 0.0
+assert grader.score(r"\boxed{99} final answer: 42", example) == 0.0
+assert grader.score(r"\boxed{42} then \boxed{", example) == 0.0
+assert grader.score("Final answer: 42", example) == 1.0
+assert grader.score("42 appeared in reasoning, answer is 99", example) == 0.0
 assert _numeric_equal('42','42')
 assert not _numeric_equal('99','42')
 assert not _numeric_equal('NaN','NaN')

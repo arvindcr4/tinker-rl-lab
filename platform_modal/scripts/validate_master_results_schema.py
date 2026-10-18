@@ -14,7 +14,7 @@ import math
 import sys
 from pathlib import Path
 from typing import Dict, List, Tuple, Any
-import pprint
+import argparse
 
 # Base directory
 SCRIPT_DIR = Path(__file__).parent
@@ -79,9 +79,17 @@ def normalize_row(row: Dict) -> Dict:
     return normalized
 
 
+NULLABLE_WHEN_UNAVAILABLE = {"peak_reward", "last10_avg", "reward_trace"}
+
+
 def validate_row(row: Dict, row_num: int) -> List[str]:
     """Validate a single row against the schema. Returns list of issues."""
     issues = []
+    if not isinstance(row, dict):
+        return [f"Row {row_num}: expected object"]
+    for alias in FIELD_ALIASES:
+        if alias in row:
+            issues.append(f"Row {row_num}: legacy alias {alias}; use explicit migrate command")
     
     # Check required fields
     for field, expected_type in CANONICAL_SCHEMA.items():
@@ -93,9 +101,12 @@ def validate_row(row: Dict, row_num: int) -> List[str]:
         if field in row:
             value = row[field]
             if value is None:
+                if field in NULLABLE_WHEN_UNAVAILABLE and row.get("status") == "unavailable":
+                    continue
                 issues.append(f"Row {row_num}: null required field {field}")
                 continue
-            if not isinstance(value, expected_type):
+            valid_type = (not isinstance(value, bool) and isinstance(value, (int, float))) if expected_type is float else (type(value) is int if expected_type is int else isinstance(value, expected_type))
+            if not valid_type:
                 issues.append(
                     f"Row {row_num}: Field '{field}' has type {type(value).__name__}, "
                     f"expected {expected_type.__name__}"
@@ -109,6 +120,15 @@ def validate_row(row: Dict, row_num: int) -> List[str]:
         value=row.get(field)
         if isinstance(value,bool) or isinstance(value,(int,float)) and not math.isfinite(value):
             issues.append(f"Row {row_num}: nonfinite/boolean {field}")
+    for field, minimum in (("seed",0),("steps_completed",0),("group_size",1)):
+        if type(row.get(field)) is int and row[field] < minimum:
+            issues.append(f"Row {row_num}: invalid range {field}")
+    if isinstance(row.get("learning_rate"),(int,float)) and row["learning_rate"] <= 0:
+        issues.append(f"Row {row_num}: learning_rate must be positive")
+    if row.get("source_files") == []:
+        issues.append(f"Row {row_num}: source_files must identify evidence")
+    if row.get("status") == "unavailable" and (row.get("steps_completed") != 0 or any(row.get(k) is not None for k in NULLABLE_WHEN_UNAVAILABLE)):
+        issues.append(f"Row {row_num}: unavailable requires zero steps and null trace/summaries")
     trace=row.get("reward_trace")
     if isinstance(trace,list):
         if not trace or any(isinstance(x,bool) or not isinstance(x,(int,float)) or not math.isfinite(x) for x in trace):
@@ -132,7 +152,7 @@ def analyze_schema(data: List[Dict]) -> Dict[str, Any]:
     type_variations = {}
     
     for i, row in enumerate(data):
-        normalized = normalize_row(row)
+        normalized = row
         
         for key, value in normalized.items():
             if key not in field_counts:
@@ -149,103 +169,38 @@ def analyze_schema(data: List[Dict]) -> Dict[str, Any]:
     }
 
 
-def main():
-    if not MASTER_RESULTS.exists():
-        print(f"ERROR: {MASTER_RESULTS} not found")
-        return 1
-    
-    print(f"Loading {MASTER_RESULTS}...")
-    
+def main(argv=None):
+    parser = argparse.ArgumentParser(description="Strict validation; migration is an explicit separate operation")
+    parser.add_argument("command", choices=("validate", "migrate"), nargs="?", default="validate")
+    parser.add_argument("--input", type=Path, default=MASTER_RESULTS)
+    parser.add_argument("--output", type=Path, help="Required new migration destination; never overwrites input")
+    args = parser.parse_args(argv)
     try:
-        data = load_json(MASTER_RESULTS)
-    except json.JSONDecodeError as e:
-        print(f"ERROR: Invalid JSON: {e}")
-        return 1
-    
-    # Handle different JSON structures
-    if isinstance(data, dict):
-        if "experiments" in data:
-            rows = data["experiments"]
-        else:
-            rows = [data]
-    else:
-        rows = data
-    
-    print(f"Found {len(rows)} rows")
-    
-    # Analyze schema
-    try:
-        normalized_rows=[normalize_row(row) for row in rows]
-        ids=[row.get("run_id") for row in normalized_rows]
-        if not rows or len(set(ids)) != len(ids):
-            raise ValueError("empty dataset or duplicate run identities")
-        analysis = analyze_schema(rows)
-    except (ValueError,TypeError) as exc:
+        data = load_json(args.input)
+        rows = data.get("experiments", [data]) if isinstance(data, dict) else data
+        if not isinstance(rows, list) or not rows:
+            raise ValueError("expected nonempty list of rows")
+        if args.command == "migrate":
+            if not args.output or args.output.resolve() == args.input.resolve() or args.output.exists():
+                raise ValueError("migration requires a new distinct --output file")
+            rows = [normalize_row(row) for row in rows]
+        issues = [issue for i,row in enumerate(rows,1) for issue in validate_row(row,i)]
+        ids = [r.get("run_id") for r in rows if isinstance(r,dict)]
+        if any(not isinstance(i,str) for i in ids) or len(set(i for i in ids if isinstance(i,str))) != len(ids):
+            issues.append("invalid or duplicate run identities")
+        if issues:
+            print("\n".join(issues))
+            return 1
+        if args.command == "migrate":
+            args.output.parent.mkdir(parents=True, exist_ok=True)
+            with args.output.open("x") as fh:
+                json.dump(rows, fh, indent=2, allow_nan=False)
+                fh.write("\n")
+        print(f"Validated {len(rows)} canonical rows; review27-v3")
+        return 0
+    except (OSError, ValueError, TypeError, AttributeError) as exc:
         print(f"ERROR: {exc}")
         return 1
-    
-    print("\n" + "="*60)
-    print("SCHEMA ANALYSIS")
-    print("="*60)
-    print(f"\nTotal rows: {analysis['n_rows']}")
-    
-    print("\nField usage:")
-    for field, count in sorted(analysis['field_counts'].items(), 
-                                 key=lambda x: -x[1]):
-        types = analysis['type_variations'][field]
-        print(f"  {field}: {count} rows, types: {', '.join(types)}")
-    
-    # Validate each row
-    print("\n" + "="*60)
-    print("VALIDATION")
-    print("="*60)
-    
-    all_issues = []
-    for i, row in enumerate(rows):
-        normalized = normalize_row(row)
-        issues = validate_row(normalized, i + 1)
-        all_issues.extend(issues)
-    
-    if all_issues:
-        print(f"\nFound {len(all_issues)} issues:")
-        for issue in all_issues[:20]:  # Limit output
-            print(f"  - {issue}")
-        if len(all_issues) > 20:
-            print(f"  ... and {len(all_issues) - 20} more")
-    else:
-        print("\nAll rows conform to canonical schema!")
-    
-    # Check for common issues
-    print("\n" + "="*60)
-    print("COMMON ISSUE CHECKS")
-    print("="*60)
-    
-    # Check for name vs experiment_id inconsistency
-    names = set()
-    experiment_ids = set()
-    for row in rows:
-        if "name" in row:
-            names.add(row["name"])
-        if "experiment_id" in row:
-            experiment_ids.add(row["experiment_id"])
-    
-    if names and experiment_ids:
-        overlap = names & experiment_ids
-        if not overlap:
-            print("\nWARNING: 'name' and 'experiment_id' fields have no overlap")
-            print("  This suggests inconsistent identification across rows")
-    
-    # Check for PPO/GRPO rows
-    methods = {}
-    for row in rows:
-        method = row.get("method", row.get("algorithm", "unknown"))
-        methods[method] = methods.get(method, 0) + 1
-    
-    print("\nMethod distribution:")
-    for method, count in sorted(methods.items(), key=lambda x: -x[1]):
-        print(f"  {method}: {count}")
-    
-    return 0 if not all_issues else 1
 
 
 if __name__ == "__main__":

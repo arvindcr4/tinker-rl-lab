@@ -92,9 +92,15 @@ jobs:
           timeout 10m tectonic -X compile --outdir "$RUNNER_TEMP/latex-audit" grpo_agentic_llm_paper_anonymous.tex
           timeout 10m tectonic -X compile --outdir "$RUNNER_TEMP/latex-audit" supplementary_appendix.tex
       - name: Install local secret gate scanner
+        env:
+          GITLEAKS_SHA256: 551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb
         run: |
-          curl -sSfL https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_linux_x64.tar.gz | tar -xz gitleaks
-          sudo install -m 755 gitleaks /usr/local/bin/gitleaks
+          set -euo pipefail
+          curl --fail --location --retry 3 https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_linux_x64.tar.gz -o "$RUNNER_TEMP/gitleaks.tar.gz"
+          echo "$GITLEAKS_SHA256  $RUNNER_TEMP/gitleaks.tar.gz" | sha256sum -c -
+          mkdir -p "$RUNNER_TEMP/gitleaks-bin"
+          tar -xzf "$RUNNER_TEMP/gitleaks.tar.gz" -C "$RUNNER_TEMP/gitleaks-bin" gitleaks
+          sudo install -m 755 "$RUNNER_TEMP/gitleaks-bin/gitleaks" /usr/local/bin/gitleaks
       - name: Coverage gate
         run: timeout 20m make coverage
 
@@ -153,9 +159,15 @@ jobs:
           pip install uv==0.10.11
           timeout 15m uv sync --locked --extra dev --python python
       - name: Install local secret gate scanner
+        env:
+          GITLEAKS_SHA256: 551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb
         run: |
-          curl -sSfL https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_linux_x64.tar.gz | tar -xz gitleaks
-          sudo install -m 755 gitleaks /usr/local/bin/gitleaks
+          set -euo pipefail
+          curl --fail --location --retry 3 https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_linux_x64.tar.gz -o "$RUNNER_TEMP/gitleaks.tar.gz"
+          echo "$GITLEAKS_SHA256  $RUNNER_TEMP/gitleaks.tar.gz" | sha256sum -c -
+          mkdir -p "$RUNNER_TEMP/gitleaks-bin"
+          tar -xzf "$RUNNER_TEMP/gitleaks.tar.gz" -C "$RUNNER_TEMP/gitleaks-bin" gitleaks
+          sudo install -m 755 "$RUNNER_TEMP/gitleaks-bin/gitleaks" /usr/local/bin/gitleaks
       - name: Run sharded unit tests
         run: |
           # NOTE: pytest-xdist is not a dependency (pyproject/requirements pin

@@ -117,3 +117,20 @@ def test_python_target_and_name_safety_have_no_broad_exemptions():
         "$(RUFF) check --select F821,F811 platform_* autoresearch analysis utils tests tools"
         in makefile
     )
+
+
+def test_all_ci_scanner_installations_verify_before_execution():
+    workflow = yaml.safe_load((ROOT / ".github/workflows/ci.yml").read_text())
+    steps = [
+        step
+        for job in workflow["jobs"].values()
+        for step in job["steps"]
+        if "gitleaks/releases/download" in step.get("run", "")
+    ]
+    assert len(steps) == 3
+    for step in steps:
+        assert step["env"]["GITLEAKS_SHA256"] == GITLEAKS_SHA256
+        script = step["run"]
+        assert script.startswith("set -euo pipefail\n")
+        assert script.index("sha256sum -c -") < script.index("tar -xzf")
+        assert "| tar" not in script

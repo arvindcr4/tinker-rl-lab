@@ -511,6 +511,69 @@ def test_marginal_eta_sum_requires_unique_paragraph(monkeypatch, source):
         audit.marginal_eta_sum()
 
 
+@pytest.mark.parametrize(
+    "comment",
+    [
+        r"% \paragraph{Variance decomposition.}",
+        r"% training method ($\eta^2 = 0.999$)",
+        r"\% literal percent; % training method ($\eta^2 = 0.999$)",
+    ],
+)
+def test_marginal_eta_sum_ignores_commented_headings_and_factors(monkeypatch, comment):
+    source = MARGINAL_ETA_PARAGRAPHS[1] + comment
+    monkeypatch.setattr(audit, "text", lambda _: source)
+    assert audit.marginal_eta_sum() == ["These four values sum to 1.897000"]
+
+
+def test_marginal_eta_sum_rejects_commented_only_heading(monkeypatch):
+    source = "% " + MARGINAL_ETA_PARAGRAPHS[1]
+    monkeypatch.setattr(audit, "text", lambda _: source)
+    with pytest.raises(ValueError, match="expected exactly one marginal eta-squared paragraph"):
+        audit.marginal_eta_sum()
+
+
+@pytest.mark.parametrize("backslashes", [0, 1, 2, 3, 4])
+def test_marginal_eta_sum_respects_percent_escape_parity(monkeypatch, backslashes):
+    source = MARGINAL_ETA_PARAGRAPHS[1].replace("training method", "another method")
+    source += "\\" * backslashes + r"% training method ($\eta^2 = 0.558$)"
+    monkeypatch.setattr(audit, "text", lambda _: source)
+    if backslashes % 2:
+        assert audit.marginal_eta_sum() == ["These four values sum to 1.897000"]
+    else:
+        with pytest.raises(ValueError, match="expected exactly one marginal eta-squared factor"):
+            audit.marginal_eta_sum()
+
+
+@pytest.mark.parametrize("newline", ["\n", "\r\n", "\r"])
+def test_marginal_eta_sum_preserves_comment_line_joining(monkeypatch, newline):
+    comment = "% ignored text" + newline + " \t"
+    source = MARGINAL_ETA_PARAGRAPHS[1]
+    source = source.replace("decomposition", "decompos" + comment + "ition")
+    source = source.replace("training", "train" + comment + "ing")
+    source = source.replace("0.558", "0.5" + comment + "58")
+    monkeypatch.setattr(audit, "text", lambda _: source)
+    assert audit.marginal_eta_sum() == ["These four values sum to 1.897000"]
+
+
+@pytest.mark.parametrize(
+    "command",
+    ["part", "chapter", "section", "subsection", "subsubsection", "paragraph", "subparagraph"],
+)
+@pytest.mark.parametrize("star", ["", "*"])
+@pytest.mark.parametrize("missing", [False, True])
+def test_marginal_eta_sum_stops_at_sectioning_commands(monkeypatch, command, star, missing):
+    source = MARGINAL_ETA_PARAGRAPHS[1]
+    if missing:
+        source = source.replace("training method", "another method")
+    source += "\\" + command + star + r"{Other results} training method ($\eta^2 = 0.558$)"
+    monkeypatch.setattr(audit, "text", lambda _: source)
+    if missing:
+        with pytest.raises(ValueError, match="expected exactly one marginal eta-squared factor"):
+            audit.marginal_eta_sum()
+    else:
+        assert audit.marginal_eta_sum() == ["These four values sum to 1.897000"]
+
+
 def test_precise_supplementary_claim_calculations(monkeypatch):
     monkeypatch.setattr(
         audit,

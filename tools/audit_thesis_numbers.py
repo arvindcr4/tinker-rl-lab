@@ -1933,6 +1933,9 @@ def a8_rows():
 
 def marginal_eta_sum():
     source = text(f"{SEC}/_shared_methods.tex")
+    # An even backslash run leaves % unescaped. TeX comments swallow the line
+    # ending; indentation on the next line is ignored, so split tokens rejoin.
+    source = re.sub(r"(?<!\\)((?:\\\\)*)%[^\r\n]*(?:\r\n|\r|\n|$)[ \t]*", r"\1", source)
     headings = list(
         re.finditer(
             r"\\paragraph\{Variance decomposition(?: \(marginal one-way ANOVAs\))?\.\}",
@@ -1941,8 +1944,11 @@ def marginal_eta_sum():
     )
     if len(headings) != 1:
         raise ValueError("expected exactly one marginal eta-squared paragraph")
+    # Standard sectioning commands, including starred forms, end this paragraph
+    # without requiring a blank line. Escaped command names are ordinary text.
     paragraph = re.split(
-        r"\n[ \t]*\n|\\(?:sub)*section\{|\\paragraph\{",
+        r"\n[ \t]*\n|(?<!\\)(?:\\\\)*"
+        r"\\(?:part|chapter|(?:sub){0,2}section|(?:sub)?paragraph)(?![A-Za-z])\*?",
         source[headings[0].end() :].lstrip(),
         maxsplit=1,
     )[0]

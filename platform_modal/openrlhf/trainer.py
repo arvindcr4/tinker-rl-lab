@@ -47,6 +47,20 @@ def atomic_json(path: Path, data: dict) -> None:
 def require_empirical_result(result: dict) -> dict:
     if result.get("data_kind") != "empirical" or result.get("state") != "completed":
         raise ValueError("Only completed empirical results may enter measured analyses")
+    rewards = result.get("reward_trace")
+    if (
+        result.get("metrics_status") != "observed_training_rollout_rewards"
+        or not isinstance(rewards, list)
+        or not rewards
+        or any(
+            type(value) not in (int, float)
+            or (type(value) is float and not math.isfinite(value))
+            for value in rewards
+        )
+        or type(result.get("logged_rollout_steps")) is not int
+        or result["logged_rollout_steps"] != len(rewards)
+    ):
+        raise ValueError("Measured analyses require observed finite training rollout rewards")
     return result
 
 
@@ -374,6 +388,8 @@ def _run_candidate_training(config: OpenRLHFConfig, output_dir: str | None = Non
                         seed=config.seed, group_size=config.algorithm.sample_num, model=config.model_name,
                         observed_counters={"rollout_rounds": len(rewards), "optimizer_updates": None,
                                            "generated_tokens": None},
+                        metrics_status="observed_training_rollout_rewards",
+                        logged_rollout_steps=len(rewards),
                         reward_trace=rewards, last10_avg=float(np.mean(rewards[-10:])),
                         first5_avg=float(np.mean(rewards[:5])), peak_reward=max(rewards),
                         duration_s=time.monotonic()-start, subprocess_exit=0)

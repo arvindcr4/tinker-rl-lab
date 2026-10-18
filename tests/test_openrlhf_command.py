@@ -153,10 +153,13 @@ def test_success_records_config_without_inventing_measurements(
     assert result["reward_trace"] == []
     assert result["metrics_status"] == "not_collected"
     assert "peak_reward" not in result
-    assert trainer.require_empirical_result(result) is result
+    assert result["state"] == "completed"
+    with pytest.raises(ValueError, match="observed finite"):
+        trainer.require_empirical_result(result)
     saved = json.loads((tmp_path / "relative/result.json").read_text())
     assert saved == result
-    assert trainer.require_empirical_result(saved) is saved
+    with pytest.raises(ValueError, match="observed finite"):
+        trainer.require_empirical_result(saved)
 
 
 def test_native_receipt_uses_launch_snapshot_during_caller_mutation(tmp_path, native_runtime):
@@ -526,3 +529,34 @@ def test_observed_native_receipt_admitted_without_inventing_optimizer_steps(
     assert result["optimizer_steps"] is None
     assert "heldout_score" not in result
     assert json.loads((output / "result.json").read_text()) == result
+
+
+@pytest.mark.parametrize(
+    "mutation",
+    [
+        {"metrics_status": "not_collected"},
+        {"metrics_status": None},
+        {"reward_trace": []},
+        {"reward_trace": None},
+        {"reward_trace": [float("nan")]},
+        {"reward_trace": [float("inf")]},
+        {"reward_trace": [True]},
+        {"reward_trace": ["0.25"]},
+        {"logged_rollout_steps": 2},
+        {"logged_rollout_steps": True},
+        {"logged_rollout_steps": None},
+    ],
+)
+def test_measured_analysis_rejects_missing_or_invalid_observations(mutation):
+    result = {
+        "data_kind": "empirical",
+        "state": "completed",
+        "metrics_status": "observed_training_rollout_rewards",
+        "reward_trace": [0.25],
+        "logged_rollout_steps": 1,
+    }
+    assert trainer.require_empirical_result(result) is result
+    result.update(mutation)
+    with pytest.raises(ValueError, match="observed finite"):
+        trainer.require_empirical_result(result)
+    assert result["state"] == "completed"

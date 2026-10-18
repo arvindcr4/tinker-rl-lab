@@ -81,3 +81,15 @@ def test_exact_noncredential_exceptions_do_not_hide_changed_values(tmp_path, pat
     code, findings = scan(line.replace(needle, synthetic))
     assert code == 1
     assert any(item["RuleID"] == "generic-api-key" for item in findings)
+
+
+def test_standalone_atropos_declares_dataset_retry_runtime_dependency():
+    from packaging.requirements import Requirement
+
+    project = tomllib.loads((ROOT / "platform_tinker/atropos/pyproject.toml").read_text())
+    requirements = {
+        Requirement(item).name: Requirement(item) for item in project["project"]["dependencies"]
+    }
+    assert "tenacity" in requirements
+    assert requirements["tenacity"].specifier == Requirement("tenacity>=9,<10").specifier
+    assert requirements["tenacity"].marker is None

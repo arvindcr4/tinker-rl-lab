@@ -157,6 +157,8 @@ def test_attempt_ids_isolate_stale_results(tmp_path, monkeypatch):
     first = trainer.run_openrlhf_training(OpenRLHFConfig(), str(tmp_path))
     second = trainer.run_openrlhf_training(OpenRLHFConfig(), str(tmp_path))
     assert first["attempt_id"] != second["attempt_id"]
+    assert trainer.require_empirical_result(first) is first
+    assert trainer.require_empirical_result(second) is second
     assert len(list(tmp_path.rglob("result.json"))) == 2
     assert first["observed_counters"]["optimizer_updates"] is None
 

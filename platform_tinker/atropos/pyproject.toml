@@ -15,6 +15,7 @@ dependencies = [
     "uvicorn[standard]>=0.54.0,<0.55.0",
     "pydantic>=2.13.0,<3.0.0",
     "requests>=2.34.0,<3.0.0",
+    "tenacity>=9,<10",  # dataset HTTP retry policy
     "aiohttp>=3.9.0",
     "wandb==0.21.0",
     "python-dotenv>=1.0.0",

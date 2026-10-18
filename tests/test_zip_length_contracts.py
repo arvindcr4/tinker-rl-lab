@@ -76,6 +76,8 @@ def test_unequal_cohort_is_reported_while_shared_prefix_is_audited():
     base, trained = _receipt("base"), _receipt("trained")
     extra = deepcopy(trained["records"][0])
     extra["source_id"] = "extra"
+    extra["prompt_sha256"] = "e" * 64
+    extra["prompt_token_ids_sha256"] = "f" * 64
     extra["sampling_seed"] = 14
     trained["records"].append(extra)
     trained["count"] = 3

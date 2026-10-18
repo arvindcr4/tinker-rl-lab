@@ -37,13 +37,11 @@ import numpy as np  # noqa: E402
 from scipy.optimize import curve_fit  # noqa: E402
 from _analysis_common import saturation  # noqa: E402
 
-REPO = Path(__file__).resolve().parent.parent
+REPO = Path(__file__).resolve().parents[2] / "platform_hybrid"
 TRACE_DIR = REPO / "experiments" / "tinker-runs" / "results"
-RESULTS_DIR = REPO / "experiments" / "results"
-FIG_DIR = REPO / "figures"
-FIG_DIR.mkdir(exist_ok=True)
-PAPER_FIG = REPO / "paper" / "figures"
-PAPER_FIG.mkdir(exist_ok=True)
+RESULTS_DIR = REPO / "experiments" / "results" / "review27_v3"
+FIG_DIR = REPO / "figures" / "review27_v3"
+PAPER_FIG = REPO / "paper" / "figures" / "review27_v3"
 
 MODELS: dict[str, str] = {
     "Qwen3.5-4B": "scale_gsm8k_qwen3.5-4b.json",
@@ -226,7 +224,7 @@ def hierarchical_r_max(traces, dense_pool):
             for a in dense_pool:
                 y = traces[a]
                 n = len(y)
-                if n < 5:
+                if n < 5 or not math.isfinite(lambdas[a]):
                     continue
                 k = max(3, int(round(n * prefix_k_frac)))
                 t_pre = np.arange(1, k + 1, dtype=float)
@@ -255,13 +253,14 @@ def hierarchical_r_max(traces, dense_pool):
                 )
                 lambdas[a] = float(popt[0])
             except Exception:
-                pass
+                lambdas[a] = float("nan")
     # per-anchor prefix fit quality
-    out = {"r_max_shared": float(r_max), "per_anchor": {}}
+    out = {"r_max_shared": float(r_max) if any(math.isfinite(v) for v in lambdas.values()) else float("nan"), "per_anchor": {},
+           "excluded": {a: "optimizer_failed" for a,v in lambdas.items() if not math.isfinite(v)}}
     for a in dense_pool:
         y = traces[a]
         n = len(y)
-        if n < 5:
+        if n < 5 or not math.isfinite(lambdas[a]):
             continue
         k = max(3, int(round(n * prefix_k_frac)))
         t_pre = np.arange(1, k + 1, dtype=float)
@@ -540,6 +539,8 @@ def main() -> None:
 
 
 if __name__ == "__main__":
+    from _review27_models import configure_paths
+    configure_paths(globals())
     main()
     from _review27_models import write_manifest
     write_manifest(__file__, TRACE_DIR, RESULTS_DIR)

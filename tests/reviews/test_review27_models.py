@@ -80,3 +80,21 @@ def test_paired_hierarchical_comparison():
     h=m.prefix_horizon(np.arange(1,9.),y)
     at=next(r for r in h['per_k'] if r[0]==h['k_best_sat'])
     assert h['best_r2_const']==at[2]
+
+def test_short_bootstrap_schema_and_explicit_paths(tmp_path):
+    m=mod(89); result=m.bootstrap_3seg(np.array([.1,.2,.3]),3)
+    assert result['n_boot_succeeded']==0
+    assert result['n_boot_failed']==3
+    assert np.isnan(result['canon_order_rate'])
+    from _review27_models import configure_paths
+    traces=tmp_path/'traces';traces.mkdir()
+    ns={'TRACE_DIR':traces,'RESULTS_DIR':tmp_path/'old'}
+    configure_paths(ns,['--output-dir',str(tmp_path/'new')])
+    assert ns['RESULTS_DIR']==tmp_path/'new'
+    assert not (tmp_path/'old').exists()
+
+def test_ar_forecast_respects_offset():
+    for n in (93,97):
+        m=mod(n)
+        assert m._predict_ar1(np.array([.2]),[.1,.5,.01],[12,14],origin=10)==pytest.approx([.2,.2])
+        assert m._predict_ar1(np.array([.1]),[.1,.5,.01],[12],origin=10)==pytest.approx([.175])

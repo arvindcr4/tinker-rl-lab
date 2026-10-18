@@ -49,13 +49,11 @@ import matplotlib.pyplot as plt  # noqa: E402
 import numpy as np  # noqa: E402
 from _analysis_common import fit_saturation as _fit_saturation, write_rows_tsv as _write_tsv
 
-REPO = Path(__file__).resolve().parent.parent
+REPO = Path(__file__).resolve().parents[2] / "platform_hybrid"
 TRACE_DIR = REPO / "experiments" / "tinker-runs" / "results"
-RESULTS_DIR = REPO / "experiments" / "results"
-FIG_DIR = REPO / "figures"
-FIG_DIR.mkdir(exist_ok=True)
-PAPER_FIG = REPO / "paper" / "figures"
-PAPER_FIG.mkdir(exist_ok=True)
+RESULTS_DIR = REPO / "experiments" / "results" / "review27_v3"
+FIG_DIR = REPO / "figures" / "review27_v3"
+PAPER_FIG = REPO / "paper" / "figures" / "review27_v3"
 
 # 12-anchor pool, identical to iter81 / iter85 / iter89.
 MODELS: dict[str, tuple[float, str]] = {
@@ -537,6 +535,8 @@ def main() -> None:
 
 
 if __name__ == "__main__":
+    from _review27_models import configure_paths
+    configure_paths(globals())
     main()
     from _review27_models import write_manifest
     write_manifest(__file__, TRACE_DIR, RESULTS_DIR)

@@ -57,13 +57,11 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 import numpy as np  # noqa: E402
 
-REPO = Path(__file__).resolve().parent.parent
+REPO = Path(__file__).resolve().parents[2] / "platform_hybrid"
 TRACE_DIR = REPO / "experiments" / "tinker-runs" / "results"
-RESULTS_DIR = REPO / "experiments" / "results"
-FIG_DIR = REPO / "figures"
-FIG_DIR.mkdir(exist_ok=True)
-PAPER_FIG = REPO / "paper" / "figures"
-PAPER_FIG.mkdir(exist_ok=True)
+RESULTS_DIR = REPO / "experiments" / "results" / "review27_v3"
+FIG_DIR = REPO / "figures" / "review27_v3"
+PAPER_FIG = REPO / "paper" / "figures" / "review27_v3"
 
 # 12-anchor pool (kept identical to iter81/85 for comparability).
 MODELS: dict[str, tuple[str, float, str]] = {
@@ -226,7 +224,10 @@ def bootstrap_3seg(y: np.ndarray, n_boot: int = N_BOOT) -> dict:
     canon_orders = 0
     spurt_largest_count = 0
     failed = 0
-    fitted = fit_3seg(y)['pred']
+    try:
+        fitted = fit_3seg(y)['pred']
+    except ValueError:
+        fitted = np.asarray(y,float).copy()  # all short refits report failure below
     residual = y-fitted
     residual -= residual.mean()
     rng = np.random.default_rng(42)
@@ -597,6 +598,8 @@ def main() -> None:
 
 
 if __name__ == "__main__":
+    from _review27_models import configure_paths
+    configure_paths(globals())
     main()
     from _review27_models import write_manifest
     write_manifest(__file__, TRACE_DIR, RESULTS_DIR)

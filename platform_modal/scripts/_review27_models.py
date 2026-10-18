@@ -45,3 +45,19 @@ def write_manifest(script, trace_dir, output_dir):
           'equivalence':'not assessed; no prespecified margin'}
     path=Path(output_dir)/(script.stem+'_v3_manifest.json')
     path.write_text(json.dumps(data,indent=2,allow_nan=False)+'\n')
+
+def configure_paths(namespace, argv=None):
+    """Explicit locations; defaults preserve historical Modal inputs, never guess evidence."""
+    import argparse
+    from pathlib import Path
+    parser=argparse.ArgumentParser(description='Exploratory review27-v3 analysis; does not establish prospective validation')
+    for flag,key in [('trace-dir','TRACE_DIR'),('output-dir','RESULTS_DIR'),('figure-dir','FIG_DIR'),('paper-figure-dir','PAPER_FIG')]:
+        parser.add_argument('--'+flag,type=Path,default=namespace.get(key))
+    args=parser.parse_args(argv)
+    for flag,key in [('trace_dir','TRACE_DIR'),('output_dir','RESULTS_DIR'),('figure_dir','FIG_DIR'),('paper_figure_dir','PAPER_FIG')]:
+        value=getattr(args,flag)
+        if value is not None:
+            namespace[key]=value.resolve()
+            if key!='TRACE_DIR': namespace[key].mkdir(parents=True,exist_ok=True)
+    if not namespace['TRACE_DIR'].is_dir(): parser.error('trace directory does not exist')
+    return args

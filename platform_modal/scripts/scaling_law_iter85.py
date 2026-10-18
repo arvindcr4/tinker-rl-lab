@@ -66,13 +66,11 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 import numpy as np  # noqa: E402
 
-REPO = Path(__file__).resolve().parent.parent
+REPO = Path(__file__).resolve().parents[2] / "platform_hybrid"
 TRACE_DIR = REPO / "experiments" / "tinker-runs" / "results"
-RESULTS_DIR = REPO / "experiments" / "results"
-FIG_DIR = REPO / "figures"
-FIG_DIR.mkdir(exist_ok=True)
-PAPER_FIG = REPO / "paper" / "figures"
-PAPER_FIG.mkdir(exist_ok=True)
+RESULTS_DIR = REPO / "experiments" / "results" / "review27_v3"
+FIG_DIR = REPO / "figures" / "review27_v3"
+PAPER_FIG = REPO / "paper" / "figures" / "review27_v3"
 
 # 12-anchor pool from iter81.
 MODELS: dict[str, tuple[str, float, str]] = {
@@ -506,6 +504,8 @@ def write_tsv(path: Path, rows: list[dict]) -> None:
 
 
 if __name__ == "__main__":
+    from _review27_models import configure_paths
+    configure_paths(globals())
     main()
     from _review27_models import write_manifest
     write_manifest(__file__, TRACE_DIR, RESULTS_DIR)

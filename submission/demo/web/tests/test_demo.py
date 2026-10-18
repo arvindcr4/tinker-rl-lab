@@ -10,8 +10,6 @@ import pathlib
 import re
 import sys
 
-from playwright.sync_api import sync_playwright
-
 HERE = pathlib.Path(__file__).resolve().parent.parent
 ROOT = HERE.parents[2]
 PAGE = "file://" + str(pathlib.Path(os.environ.get("DEMO_PAGE", str(HERE / "tinkerrl_demo.html"))).resolve())
@@ -33,6 +31,8 @@ def check(name, ok, detail=""):
 
 
 def main():
+    from playwright.sync_api import sync_playwright
+
     results = []
     with sync_playwright() as p:
         browser = p.chromium.launch(executable_path=CHROME)

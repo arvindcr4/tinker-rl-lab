@@ -252,7 +252,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     args = parse_args(argv)
     if args.dry_run:
         rows = run_dry_run(n_seeds=args.seeds, n_steps=args.steps)
-        write_tsv(rows, Path(args.out).parent / "simulations" / Path(args.out).name)
+        write_tsv(rows, Path(args.out))
         print(f"[bfclv4] wrote {len(rows)} rows -> {args.out}")
         print(f"[bfclv4] mean sparse reward: {sum(r['reward_sparse'] for r in rows)/len(rows):.3f}")
         print(f"[bfclv4] mean dense reward:  {sum(r['reward_dense'] for r in rows)/len(rows):.3f}")

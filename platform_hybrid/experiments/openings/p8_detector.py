@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 """
-P8 method-trace classifier -- reproducible exploratory version.
+P8 method-trace classifier -- independent-run exploratory diagnostic.
 
 Goal: replace the prose-only claim ("full-telemetry AUROC 0.63 vs reward-only 0.35")
 with a runnable script that reads the real per-step reward tensors and reports the
-AUROC numbers actually obtained.
+AUROC numbers actually obtained when independent-run coverage permits it.
+Otherwise writes status=not_reproducible with null AUROCs, never step-leaking folds.
 
 Data: experiments/results/n2_reward_tensor_resume/*_tensors.jsonl
       methods = grpo (genuine) / aero, areal, gift (surrogate)
@@ -13,7 +14,7 @@ Data: experiments/results/n2_reward_tensor_resume/*_tensors.jsonl
 Labeling: positive = surrogate (aero/areal/gift), negative = genuine (grpo).
 Each STEP is one sample -> 4 methods x 40 steps = 160 rows.
 
-Model: LogisticRegression with 5-fold stratified CV.
+Model: LogisticRegression with independent-run stratified group CV.
        Pipeline = SimpleImputer(median) + StandardScaler + LogisticRegression
        (imputer guards against any NaN feature so the fit never errors).
 
@@ -203,7 +204,17 @@ def main():
     X_full, y = make_matrix(rows, FULL_FEATURES)
     X_rew, _ = make_matrix(rows, REWARD_ONLY_FEATURES)
 
-    auroc_full, _ = cv_auroc(X_full, y, seed=0, groups=groups)
+    try:
+        auroc_full, _ = cv_auroc(X_full, y, seed=0, groups=groups)
+    except ValueError as error:
+        out = {"status": "not_reproducible", "claim_eligible": False,
+               "reason": str(error), "cv": "StratifiedGroupKFold(independent_runs)",
+               "n_rows": len(rows), "methods": methods,
+               "auroc_full_telemetry": None, "auroc_reward_only": None}
+        OUT_PATH.parent.mkdir(parents=True, exist_ok=True)
+        OUT_PATH.write_text(json.dumps(out, indent=2) + "\n")
+        print(json.dumps(out))
+        return out
     auroc_rew, _ = cv_auroc(X_rew, y, seed=0, groups=groups)
 
     # stability across a few CV seeds
@@ -214,7 +225,7 @@ def main():
     out = {
         "description": "Exploratory P8 method-trace classifier. Positive=surrogate "
                        "(aero/areal/gift), negative=genuine (grpo). LogisticRegression, "
-                       "5-fold stratified CV, out-of-fold AUROC.",
+                       "independent-run stratified group CV, out-of-fold AUROC.",
         "data_dir": str(DATA_DIR.relative_to(ROOT)),
         "methods": methods,
         "n_rows": len(rows),

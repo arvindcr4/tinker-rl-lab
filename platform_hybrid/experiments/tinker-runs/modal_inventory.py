@@ -47,9 +47,9 @@ def vol_ls(volume, path=""):
 
 
 def walk(volume):
-    files, frontier, seen = [], ["/"], set()
+    files, frontier, seen = [], [("/", 0)], set()
     while frontier:
-        path = frontier.pop()
+        path, depth = frontier.pop()
         for entry in vol_ls(volume, path):
             full = entry["path"].lstrip("/")
             if full in seen:
@@ -59,7 +59,8 @@ def walk(volume):
             if kind in {"file"}:
                 files.append(full)
             elif kind in {"directory", "dir"}:
-                frontier.append(full)
+                if depth < MAX_DEPTH:
+                    frontier.append((full, depth + 1))
             else:
                 raise ValueError(f"Unknown Modal entry type: {entry}")
     return sorted(files)

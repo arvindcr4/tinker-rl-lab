@@ -9,6 +9,7 @@ class ZVF_PIDController:
             raise ValueError("Invalid PID target, gains or group bounds")
         self.target, self.kp, self.ki, self.kd = target_zvf, kp, ki, kd
         self.integral = self.prev_error = 0.0
+        self.base_g = float(initial_g)
         self.current_g, self.min_g, self.max_g = float(initial_g), min_g, max_g
 
     def step(self, current_zvf):
@@ -17,7 +18,7 @@ class ZVF_PIDController:
         error = current_zvf - self.target
         candidate_integral = self.integral + error
         output = self.kp * error + self.ki * candidate_integral + self.kd * (error-self.prev_error)
-        candidate = self.current_g + output
+        candidate = self.base_g + output
         bounded = max(self.min_g, min(self.max_g, candidate))
         if candidate == bounded or (candidate > self.max_g and error < 0) or (candidate < self.min_g and error > 0):
             self.integral = candidate_integral

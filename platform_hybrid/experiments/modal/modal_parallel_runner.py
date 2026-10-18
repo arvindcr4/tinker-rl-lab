@@ -65,7 +65,7 @@ Modal H100 GPU experiment from TinkerRL-Bench world-class suite.
         return None
 
 
-# ── Experiment 1: PPO/REINFORCE baseline on GSM8K ────────────────────────
+# ── Experiment 1: Success-filtered best-of-4 SFT on GSM8K ────────────────────────
 @app.function(image=image, gpu="H100", timeout=7200,
               secrets=[modal.Secret.from_name("huggingface-secret"), modal.Secret.from_name("wandb-secret")])
 def run_ppo_gsm8k(model_name: str = "Qwen/Qwen3-8B", seed: int = 42, steps: int = 30):
@@ -76,14 +76,14 @@ def run_ppo_gsm8k(model_name: str = "Qwen/Qwen3-8B", seed: int = 42, steps: int 
     from peft import LoraConfig, get_peft_model
 
     random.seed(seed); torch.manual_seed(seed)
-    exp = f"ppo_gsm8k_{model_name.split('/')[-1]}_s{seed}"
+    exp = f"success_filtered_sft_best_of_4_gsm8k_{model_name.split('/')[-1]}_s{seed}"
 
     wandb.login(key=os.environ["WANDB_API_KEY"])
     wandb.init(project="tinker-rl-lab-world-class", name=exp,
                config={"model": model_name, "method": "success_filtered_sft_best_of_4", "task": "gsm8k",
                         "seed": seed, "steps": steps, "platform": "modal_h100",
                         "gpu": "H100"},
-               tags=["modal", "ppo", "gsm8k", "h100", model_name.split("/")[-1]])
+               tags=["modal", "success_filtered_sft_best_of_4", "gsm8k", "h100", model_name.split("/")[-1]])
 
     print(f"[{exp}] Loading model on H100...")
     tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
@@ -152,7 +152,7 @@ def run_ppo_gsm8k(model_name: str = "Qwen/Qwen3-8B", seed: int = 42, steps: int 
             print(f"[{exp}] {step+1}/{steps} reward={avg_r:.3f} avg={sum(step_rewards)/len(step_rewards):.3f}")
 
     # Save LoRA adapter to HF
-    adapter_path = f"/tmp/ppo_adapter_{exp}"
+    adapter_path = f"/tmp/success_filtered_sft_adapter_{exp}"
     model.save_pretrained(adapter_path)
     tokenizer.save_pretrained(adapter_path)
 

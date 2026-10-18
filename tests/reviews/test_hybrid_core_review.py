@@ -443,10 +443,15 @@ def test_c14_pid_direction_windup_and_entropy():
     spec.loader.exec_module(module)
     pid = module.ZVF_PIDController(target_zvf=0.4)
     assert pid.step(0.8) > 8
-    for _ in range(100):
+    for _ in range(200):
         pid.step(1.0)
     assert pid.current_g == 16
-    assert abs(pid.integral) < 20
+    saturated_integral = pid.integral
+    for _ in range(100):
+        pid.step(1.0)
+    assert pid.integral == saturated_integral
+    target_states = [pid.step(pid.target) for _ in range(20)]
+    assert len(set(target_states[1:])) == 1
     mod = functions("variance_mitigation_integration.py", ["reward_shaping"], MethodConfig=object)
     cfg = SimpleNamespace(entropy_bonus=True, beta_e=0.1)
     with pytest.raises(

@@ -63,9 +63,9 @@ def flat_scalars(obj: dict, prefix: str = "", depth: int = 0) -> dict:
 
 
 def existing_names(api, project):
-    """Immutable source/content IDs, not mutable display names."""
-    return {r.config.get("source_identity") for r in api.runs(f"{ENTITY}/{project}", per_page=500)
-            if r.config.get("source_identity")}
+    """Prefer content IDs; retain names only for legacy records without IDs."""
+    return {r.config.get("source_identity") or ("legacy-name:" + r.name)
+            for r in api.runs(f"{ENTITY}/{project}", per_page=500)}
 
 
 def log_file(project: str, name: str, path: Path, tags: list[str],
@@ -74,7 +74,7 @@ def log_file(project: str, name: str, path: Path, tags: list[str],
     source_uri = path.resolve().as_uri()
     source_digest = hashlib.sha256(path.read_bytes()).hexdigest()
     identity = content_hash({"source_uri": source_uri, "sha256": source_digest})
-    if identity in existing:
+    if identity in existing or "legacy-name:" + name in existing:
         print(f"[skip] {project}/{name} (exists)", flush=True)
         return False
     try:

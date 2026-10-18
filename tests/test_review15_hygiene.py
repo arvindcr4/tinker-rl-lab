@@ -185,7 +185,7 @@ def test_provenance_manifest_missing_records_and_signatures(tmp_path, monkeypatc
     with pytest.raises(ValueError, match=".+"):
         m.verify(tmp_path)
     (tmp_path / "a.provenance.json.sig").write_text("signature")
-    m.verify(tmp_path)
+    m.verify(tmp_path, trusted_key="/independently/trusted.pub")
     assert len(calls) == 2
     (tmp_path / "unexpected.provenance.json").write_text("{}")
     with pytest.raises(ValueError, match=".+"):

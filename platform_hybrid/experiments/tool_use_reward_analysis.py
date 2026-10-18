@@ -11,9 +11,8 @@ compute:
 
     - reward_mean, reward_std over the reward trace
     - nonzero_fraction     (fraction of steps with strictly positive reward)
-    - ZVF                  (zero-variance fraction — step-level surrogate
-                            here since per-group rollout detail is not
-                            always preserved in the summary JSON)
+    - ZVF                  (not computed: per-group rollout rewards are required;
+                            step-level summary traces cannot establish ZVF)
     - ERF                  (effective-rollout fraction =
                             format_pass AND nonzero_reward; when explicit
                             format_pass is absent we fall back to
@@ -253,7 +252,7 @@ def print_latex_table(rows):
     print(r"\end{tabular}")
     print(r"\caption{Tool-use / code reward diagnostics. "
           r"$\bar r$, $\sigma_r$: reward mean and std over the step "
-          r"trace. ZVF: step-level zero-variance-fraction surrogate. "
+          r"trace. ZVF is not computed without per-group rollout rewards. "
           r"ERF: Effective-Rollout Fraction "
           r"(\texttt{format\_pass} $\wedge$ \texttt{nonzero\_reward}; "
           r"lower-bounded by nonzero fraction when "

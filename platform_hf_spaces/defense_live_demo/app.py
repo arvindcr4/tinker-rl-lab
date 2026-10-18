@@ -328,9 +328,9 @@ with gr.Blocks(title="Tinker RL Defense Demo", css=CSS) as demo:
     with gr.Tab("4 · Offline provenance"):
         gr.Markdown(
             "### Verify the fail-safe bundle locally\n"
-            "The verifier uses only Python's standard library. It checks the 983-vs-70+ reconciliation, "
-            "the 19-row gold subset, "
-            "the G=2/G=16 evidence pair, HTTPS run links, unique run IDs, image presence, and SHA-256 digests."
+            "The verifier uses only Python's standard library. Given an independently trusted manifest digest, "
+            "it checks artifact hashes, snapshot date, exact and unique run IDs, PNG signatures, and HTTPS links. "
+            "OFFLINE PASS covers release artifact integrity only; audit-count reconciliation requires a separate inventory."
         )
         verify_button = gr.Button("Run offline verification", variant="primary")
         verify_status = gr.Markdown()

@@ -2,7 +2,7 @@
 import sys as _sys
 from pathlib import Path as _Path
 _sys.path.insert(0, str(next(p for p in _Path(__file__).resolve().parents if (p / "platform_hybrid").is_dir())))
-from platform_hybrid.experiments.research_contracts import response_token_mask, topk_overlap, gsm8k_reward
+from platform_hybrid.experiments.research_contracts import response_token_mask, topk_overlap
 
 # P1 white-box experiment (Colab L4) — per-layer adaptation profile under GRPO-style updates.
 # Tests: do GRPO gains concentrate in a few layers, and is the concentration PREDICTABLE from step 1?

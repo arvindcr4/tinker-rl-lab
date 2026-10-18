@@ -50,7 +50,7 @@ def validate(path, digest, benchmark):
 
 
 def main():
-    parser = argparse.ArgumentParser(description=__doc__)
+    parser = argparse.ArgumentParser(description=__doc__, add_help=False)
     parser.add_argument("manifest", type=Path)
     parser.add_argument("digest")
     parser.add_argument("benchmark")

@@ -37,6 +37,10 @@ while (($#)); do
     esac
 done
 [[ "$SEED" =~ ^[0-9]+$ ]] || { echo "seed must be nonnegative integer" >&2; exit 2; }
+# The service API used by this launcher does not expose an authenticated resolved
+# base-model revision. Do not allocate training or label unresolved receipts successful.
+echo "BLOCKED: service-resolved base-model revision unavailable; exact provenance required" >&2
+exit 1
 RUN_DIR=$(mktemp -d "${CAUSAL_OUTPUT_ROOT:-.}/causal-zvf-v3.XXXXXXXX")
 BIN_DATA="$RUN_DIR/bins.json"
 RESULT_DEAD="$RUN_DIR/dead.json"

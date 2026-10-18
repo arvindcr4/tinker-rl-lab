@@ -51,7 +51,7 @@ def compact_run(run: object) -> dict[str, object]:
             "config": {
                 key: config[key]
                 for key in sorted(config)
-                if key in CONFIG_TERMS and isinstance(config[key], (str, int, float, bool))
+                if any(term in key.lower() for term in CONFIG_TERMS) and isinstance(config[key], (str, int, float, bool))
             },
             "summary": selected_summary,
         }

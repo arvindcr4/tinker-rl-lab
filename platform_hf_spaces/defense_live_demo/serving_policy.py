@@ -27,6 +27,9 @@ def reserve_call(prompt, *, environ=None):
             )
             db.execute("INSERT OR IGNORE INTO budget VALUES (1, 0)")
             used = db.execute("SELECT used FROM budget WHERE id=1").fetchone()[0]
+            if type(used) is not int or used < 0:
+                db.execute("ROLLBACK")
+                return "quota_unavailable"
             if used >= limit:
                 db.execute("ROLLBACK")
                 return "shared_call_limit_reached"

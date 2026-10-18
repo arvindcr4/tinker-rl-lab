@@ -389,6 +389,10 @@ def evaluate_checkpoint(
     n = len(problems)
     if not n or any(p.get("error") for p in per_problem):
         return {"status": "incomplete", "checkpoint": rec.checkpoint, "heldout_n": n,
+                "model": model, "model_short": rec.model_short, "seed": rec.seed,
+                "training_last10_avg": rec.last10_avg, "run_id": rec.run_id,
+                "experiment_id": rec.experiment_id, "source_file": rec.source_file,
+                "wandb_run_url": rec.wandb_run_url,
                 "heldout_accuracy": None, "heldout_correct": None, "per_problem": per_problem,
                 "evidence_error": "fixed_evaluation_incomplete", "claim_eligible": False}
     acc = correct / n

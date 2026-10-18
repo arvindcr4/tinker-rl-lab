@@ -56,7 +56,7 @@ def run_one(cfg):
     run = wandb.init(project="rlvr-openings", name=name, group="campaign",
                      config=dict(mode=mode, G=G, seed=seed, steps=steps, model=model),
                      tags=["campaign", mode, f"seed{seed}", f"G{G}"], reinit=True)
-    ho0 = held(); zero_loss = 0; sampled = 0; accepted = 0; rewards = []
+    ho0 = held(); zero_loss = 0; no_data_steps = 0; loss_steps = 0; sampled = 0; accepted = 0; rewards = []
     for step in range(steps):
         data, advs, br = [], [], []; slots = 0; att = 0
         while slots < batch and att < batch*oversample_cap:
@@ -77,18 +77,20 @@ def run_one(cfg):
                     loss_fn_inputs={"target_tokens": T.TensorData(data=tid, dtype="int64", shape=[len(tid)]), "completion_mask": T.TensorData(data=cmask, dtype="float32", shape=[len(cmask)])}))
                 advs.append(a)
         if not data:
-            zero_loss += 1
+            no_data_steps += 1
             rewards.append(sum(br)/len(br) if br else None)
             continue
         res = tc.forward_backward_custom(data=data, loss_fn=mkloss(advs)).result()
         tc.optim_step(T.AdamParams(learning_rate=lr, beta1=0.9, beta2=0.95, eps=1e-8)).result()
         lv = res.metrics.get("loss", 0.0)
+        loss_steps += 1
         if abs(lv) < 1e-6: zero_loss += 1
         avg = sum(br)/len(br) if br else 0.0; rewards.append(avg)
         wandb.log({"reward": avg, "loss": lv, "near_zero_scalar_loss": int(abs(lv)<1e-6)}, step=step)
         sc = tc.create_sampling_client(model_path=tc.save_weights_for_sampler(name=f"{name}_s{step+1}").result().path)
     ho1 = held()
-    out = dict(name=name, mode=mode, G=G, seed=seed, near_zero_scalar_loss_fraction=zero_loss/steps,
+    out = dict(name=name, mode=mode, G=G, seed=seed, near_zero_scalar_loss_fraction=zero_loss/loss_steps if loss_steps else None,
+               no_data_steps=no_data_steps, loss_steps=loss_steps,
                oversample=sampled/max(accepted,1), heldout_before=ho0, heldout_after=ho1, heldout_gain=ho1-ho0)
     for k, v in out.items():
         run.summary[k] = v

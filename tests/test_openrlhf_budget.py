@@ -115,3 +115,9 @@ def test_backend_contracts_keep_defaults_and_user_overrides_separate():
     assert OpenRLHFConfig(execution_contract="native-0.8.4", max_steps=7).max_steps == 7
     with pytest.raises(ValueError, match="candidate-0.8.0"):
         trainer.effective_config(native)
+
+
+def test_native_defaults_have_whole_global_batches():
+    budget = plan_native_budget(OpenRLHFConfig(execution_contract="native-0.8.4"))
+    assert budget["completions_per_rollout"] == 128
+    assert budget["planned_update_boundaries_per_rollout"] == 20

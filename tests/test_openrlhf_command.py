@@ -441,3 +441,22 @@ def test_invalid_reward_service_url_fails_before_runtime_or_files(tmp_path, url)
 def test_valid_reward_service_urls_are_preserved(url):
     command = build_openrlhf_command(config(remote_rm_url=url), "/input", "/output")
     assert command[command.index("--remote_rm_url") + 1] == url
+
+
+def test_v084_uses_pretrain_for_both_actor_and_reference():
+    # Official v0.8.4 train_ppo_ray.py, blob 292dab0207aef0888ea288b61d4ddd8dcb46b0c5:
+    # parser declares pretrain only; reference initialization receives args.pretrain.
+    command = build_openrlhf_command(config(), "/data.jsonl", "/output")
+    assert "--ref_pretrain" not in command
+    assert command.count("--pretrain") == 1
+    assert command[command.index("--pretrain") + 1] == config().model_name
+
+
+@pytest.mark.parametrize(("field", "value"), [
+    ("gamma", -0.1), ("gamma", 1.1), ("lam", -0.1), ("lam", 1.1), ("kl_coef", -0.1),
+])
+def test_native_algorithm_ranges_fail_before_launch(field, value):
+    cfg = config()
+    setattr(cfg.algorithm, field, value)
+    with pytest.raises(ValueError, match=field):
+        build_openrlhf_command(cfg, "/data.jsonl", "/output")

@@ -70,7 +70,7 @@ class OpenRLHFConfig(BaseModel):
         # Defaults are versioned; an explicit user setting is never rewritten.
         if isinstance(values, dict) and values.get("execution_contract") == "native-0.8.4":
             values = dict(values)
-            for name, default in {"epochs": 20, "train_batch_size": 1024,
+            for name, default in {"epochs": 20, "train_batch_size": 128,
                                   "max_steps": None, "eval_interval": 5}.items():
                 values.setdefault(name, default)
         return values

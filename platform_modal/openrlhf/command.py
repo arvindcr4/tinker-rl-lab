@@ -66,6 +66,11 @@ def build_openrlhf_command(config: OpenRLHFConfig, data_path: str, output_dir: s
     for name in ("learning_rate", "weight_decay", "temperature", "epsilon"):
         if numeric[name] < 0:
             raise ValueError(f"{name} must be nonnegative")
+    for name in ("gamma", "lam"):
+        if not 0 <= numeric[name] <= 1:
+            raise ValueError(f"{name} must be in [0, 1]")
+    if numeric["kl_coef"] < 0:
+        raise ValueError("kl_coef must be nonnegative")
     for name in ("beta1", "beta2"):
         if not 0 <= numeric[name] < 1:
             raise ValueError(f"{name} must be in [0, 1)")
@@ -133,7 +138,6 @@ def build_openrlhf_command(config: OpenRLHFConfig, data_path: str, output_dir: s
         raise ValueError("run_name must be a single directory component for native logging")
     options = {
         "pretrain": config.model.model_path or config.model_name,
-        "ref_pretrain": config.model.model_path or config.model_name,
         "prompt_data": data_path,
         "input_key": "prompt",
         "label_key": "label",

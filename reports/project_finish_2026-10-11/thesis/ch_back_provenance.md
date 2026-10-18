@@ -30,11 +30,11 @@ Earlier number-to-artifact registry for Chapters 1, 4 and 6–9 and Appendices A
 | §8.2 | 21 | R | `5 files` | `Σ388c689fdb0` | 21 pass |
 | §8.3 | 10 | RTA | `3 files` | `Σ19c1dd75631` | 9 pass; 1 context |
 | §8.4 | 3 | R | `3 × result.json` | `Σf6a7ff9171a` | 3 pass |
-| Table 8.C | 18 | R | `6 × result.json` | `Σa13e3d43680` | 18 pass |
-| Table 8.D | 6 | S | `6 × result.json` | `Σa13e3d43680` | 6 pass |
+| Table 8.3 | 18 | R | `6 × result.json` | `Σa13e3d43680` | 18 pass |
+| Table 8.4 | 6 | S | `6 × result.json` | `Σa13e3d43680` | 6 pass |
 | §8.5 | 2 | S | `result.json` | `3603158797cd` | 2 pass |
-| Table 8.A | 14 | R | `14 × result.json` | `Σe3c416e24a2` | 14 pass |
-| Table 8.B | 18 | R | `14 × paired.json` | `Σ023282562fb` | 18 pass |
+| Table 8.5 | 14 | R | `14 × result.json` | `Σe3c416e24a2` | 14 pass |
+| Table 8.6 | 18 | R | `14 × paired.json` | `Σ023282562fb` | 18 pass |
 | §9.1 | 23 | RA | `14 files` | `Σ5eafca0389e` | 23 pass |
 | §9.2 | 6 | T | `LIMITATIONS_AND_IMPACT.md` | `c44062ee5dbd` | 6 pass |
 | Table 9.1 | 3 | RC | `6 files` | `Σe9e99772009` | 3 pass |

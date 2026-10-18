@@ -1,0 +1,135 @@
+{
+ "n2": {
+  "aero": {
+   "steps": 40,
+   "groups": 640,
+   "mean_step_zvf": 0.7203,
+   "degenerate": 461,
+   "all_correct": 427,
+   "all_wrong": 34,
+   "all_correct_frac_of_groups": 0.6672
+  },
+  "areal": {
+   "steps": 40,
+   "groups": 640,
+   "mean_step_zvf": 0.7063,
+   "degenerate": 452,
+   "all_correct": 414,
+   "all_wrong": 38,
+   "all_correct_frac_of_groups": 0.6469
+  },
+  "gift": {
+   "steps": 40,
+   "groups": 640,
+   "mean_step_zvf": 0.7703,
+   "degenerate": 493,
+   "all_correct": 455,
+   "all_wrong": 38,
+   "all_correct_frac_of_groups": 0.7109
+  },
+  "grpo": {
+   "steps": 40,
+   "groups": 640,
+   "mean_step_zvf": 0.7203,
+   "degenerate": 461,
+   "all_correct": 427,
+   "all_wrong": 34,
+   "all_correct_frac_of_groups": 0.6672
+  }
+ },
+ "n2_pooled": {
+  "degenerate": 1867,
+  "all_correct": 1723,
+  "share_all_correct": 0.9229
+ },
+ "groupsize": {
+  "2": {
+   "n_seeds": 3,
+   "task": [
+    "arithmetic_correctness"
+   ],
+   "mean_zvf": 0.838,
+   "gu": 0.162,
+   "gu_sd": 0.0126,
+   "heldout": [
+    0.99,
+    0.975,
+    0.98
+   ]
+  },
+  "4": {
+   "n_seeds": 3,
+   "task": [
+    "arithmetic_correctness"
+   ],
+   "mean_zvf": 0.7635,
+   "gu": 0.2365,
+   "gu_sd": 0.0157,
+   "heldout": [
+    0.99,
+    0.99,
+    0.985
+   ]
+  },
+  "8": {
+   "n_seeds": 3,
+   "task": [
+    "arithmetic_correctness"
+   ],
+   "mean_zvf": 0.6906,
+   "gu": 0.3094,
+   "gu_sd": 0.0118,
+   "heldout": [
+    0.985,
+    0.995,
+    0.99
+   ]
+  },
+  "16": {
+   "n_seeds": 3,
+   "task": [
+    "arithmetic_correctness"
+   ],
+   "mean_zvf": 0.6312,
+   "gu": 0.3688,
+   "gu_sd": 0.0083,
+   "heldout": [
+    0.97,
+    0.975,
+    0.99
+   ]
+  }
+ },
+ "samestack": {
+  "per_seed": {
+   "42": {
+    "grpo": 0.98,
+    "ppo": 0.985
+   },
+   "123": {
+    "grpo": 1.0,
+    "ppo": 0.995
+   },
+   "456": {
+    "grpo": 0.99,
+    "ppo": 0.995
+   },
+   "789": {
+    "grpo": 0.985,
+    "ppo": 0.985
+   },
+   "1024": {
+    "grpo": 0.995,
+    "ppo": 1.0
+   }
+  },
+  "mean_delta_grpo_minus_ppo": -0.002,
+  "t": -1.0,
+  "df": 4,
+  "p": 0.3739,
+  "ci95": [
+   -0.0076,
+   0.0036
+  ]
+ }
+}

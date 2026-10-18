@@ -30,7 +30,7 @@ The historical ledger is useful as a record of decisions and unresolved conflict
 
 ## 9.2 Rigour and Threats to Validity
 
-**What rigour was exercised.** Diagnostics are recomputable from stored raw tensors, and selected structural claims were historically checked by eleven named deterministic checks on 2026-09-19, recorded as passing, covering exact divisions, receipt presence, sealed-artifact hash equality and lost-source absence probes (source: outputs/verification/LEDGER_CODE_CHECK_2026-09-19.json). Held-out *n* is reported alongside every gain, and failed runs are counted rather than hidden: failed attempts remain part of the stated limitations.
+**What rigour was exercised.** Diagnostics are recomputable from stored raw tensors where tensor-instrumented runners persisted them, and selected structural claims were historically checked by eleven named deterministic checks on 2026-09-19, recorded as passing, covering exact divisions, receipt presence, sealed-artifact hash equality and lost-source absence probes (source: outputs/verification/LEDGER_CODE_CHECK_2026-09-19.json). Held-out *n* is reported alongside every gain, and failed runs are counted rather than hidden: failed attempts remain part of the stated limitations.
 
 Table 9.1 lists the threats discussed below, grouped as internal, construct and external, with the mitigation applied to each. Most mitigations narrow what is claimed rather than repair the evidence.
 

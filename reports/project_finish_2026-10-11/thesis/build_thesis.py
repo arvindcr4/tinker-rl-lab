@@ -62,7 +62,7 @@ FIGURES: dict[str, list[tuple[str, str, list[str]]]] = {
          'Historical framework records and the attribution gap. Tinker/Base and TRL/Instruct are different treatments; their recorded training rewards do not isolate a framework effect. Dry-run rows have no measured outcome. Marginal effect-size bars are removed rather than interpreted as a variance decomposition.',
          'fig:confounding', ['Motivating', 'Problem Statement', 'Introduction']),
         ('fig_grpo_loop',
-         'The group-relative loop and exact-tie mechanism. The Phase-1 P2 batch (0.72--0.77, Qwen3.5-4B, GSM8K, G=8, one seed) used mean-centred advantages r minus group mean without standard-deviation normalisation. Exact ties give zero reward-relative advantages in both that form and standardised GRPO. The arithmetic G sweep is training telemetry only, not estimator or held-out-accuracy evidence.',
+         'The group-relative loop and exact-tie mechanism. The Phase-1 P2 batch (0.72--0.77, Qwen3.5-4B, GSM8K, G=8, one seed) used mean-centred advantages r minus group mean without standard-deviation normalisation and an unclipped importance-sampling ratio, not the clipped update drawn in the generic loop. Exact ties give zero reward-relative advantages in both that form and standardised GRPO. The arithmetic G sweep is training telemetry only, not estimator or held-out-accuracy evidence. The worked group uses the population standard deviation (1/G) of the equation in Section 1.1, giving sigma = 0.50 and advantages of plus or minus 1.00; the sample convention 1/(G-1) would give 0.53 and 0.94.',
          'fig:grpoloop', ['Background', 'Introduction']),
         ("fig_contribution_map",
          "Boundary between the inherited Semester-3 group infrastructure and the "

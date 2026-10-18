@@ -1,0 +1,176 @@
+{
+ "n_leaf_fields": 44,
+ "counts": {
+  "identical_all_four": 25,
+  "null_in_tinker": 11,
+  "other": 8
+ },
+ "partition": {
+  "identical_all_four": [
+   "grpo.group_size",
+   "grpo.max_new_tokens",
+   "grpo.rollouts_per_group",
+   "lora.alpha",
+   "lora.dropout",
+   "lora.rank",
+   "lora.target_modules",
+   "metadata.seed",
+   "metadata.source_git_sha",
+   "metadata.task",
+   "optimizer.betas",
+   "optimizer.eps",
+   "optimizer.lr",
+   "optimizer.name",
+   "optimizer.weight_decay",
+   "ppo.clip_range",
+   "ppo.critic_lr",
+   "ppo.critic_warmup_steps",
+   "ppo.value_clip_range",
+   "reward.type",
+   "runtime.bf16",
+   "sampling.do_sample",
+   "sampling.temperature",
+   "sampling.top_k",
+   "sampling.top_p"
+  ],
+  "null_in_tinker": [
+   "importance_sampling.granularity",
+   "kl.beta",
+   "kl.surrogate",
+   "reference_model.offload",
+   "reference_model.recompute",
+   "reward.broadcast_precision",
+   "runtime.gradient_accumulation_steps",
+   "runtime.gradient_checkpointing",
+   "runtime.micro_batch_size",
+   "runtime.tensor_parallel_size",
+   "tokens_per_optimizer_step"
+  ],
+  "other": [
+   "metadata.framework",
+   "metadata.framework_version",
+   "metadata.model",
+   "metadata.model_sha256",
+   "reference_model.placement",
+   "runtime.gpu_memory_utilization",
+   "runtime.inference_backend",
+   "runtime.num_minibatches"
+  ]
+ },
+ "detail": {
+  "importance_sampling.granularity": {
+   "tinker": null,
+   "trl": "token",
+   "verl": "token",
+   "openrlhf": "sequence"
+  },
+  "kl.beta": {
+   "tinker": null,
+   "trl": 0.04,
+   "verl": 0.04,
+   "openrlhf": 0.02
+  },
+  "kl.surrogate": {
+   "tinker": null,
+   "trl": "low_var",
+   "verl": "low_var",
+   "openrlhf": "low_var"
+  },
+  "metadata.framework": {
+   "tinker": "tinker",
+   "trl": "trl",
+   "verl": "verl",
+   "openrlhf": "openrlhf"
+  },
+  "metadata.framework_version": {
+   "tinker": "0.2.x",
+   "trl": "0.14.0",
+   "verl": "0.4.x",
+   "openrlhf": "0.5.x"
+  },
+  "metadata.model": {
+   "tinker": "Qwen/Qwen3-8B-Base",
+   "trl": "Qwen/Qwen3-8B",
+   "verl": "Qwen/Qwen3-8B",
+   "openrlhf": "Qwen/Qwen3-8B"
+  },
+  "metadata.model_sha256": {
+   "tinker": "placeholder-sha256-of-qwen3-8b-base-hf-snapshot",
+   "trl": "placeholder-sha256-of-qwen3-8b-hf-snapshot",
+   "verl": "placeholder-sha256-of-qwen3-8b-hf-snapshot",
+   "openrlhf": "placeholder-sha256-of-qwen3-8b-hf-snapshot"
+  },
+  "reference_model.offload": {
+   "tinker": null,
+   "trl": false,
+   "verl": true,
+   "openrlhf": false
+  },
+  "reference_model.placement": {
+   "tinker": "managed",
+   "trl": "on_device",
+   "verl": "sharded_ray",
+   "openrlhf": "separate_process"
+  },
+  "reference_model.recompute": {
+   "tinker": null,
+   "trl": false,
+   "verl": false,
+   "openrlhf": false
+  },
+  "reward.broadcast_precision": {
+   "tinker": null,
+   "trl": "fp32",
+   "verl": "fp32",
+   "openrlhf": "fp32"
+  },
+  "runtime.gpu_memory_utilization": {
+   "tinker": "<absent>",
+   "trl": "<absent>",
+   "verl": 0.8,
+   "openrlhf": 0.8
+  },
+  "runtime.gradient_accumulation_steps": {
+   "tinker": null,
+   "trl": 4,
+   "verl": 1,
+   "openrlhf": 4
+  },
+  "runtime.gradient_checkpointing": {
+   "tinker": null,
+   "trl": true,
+   "verl": true,
+   "openrlhf": true
+  },
+  "runtime.inference_backend": {
+   "tinker": "<absent>",
+   "trl": "<absent>",
+   "verl": "vllm",
+   "openrlhf": "vllm"
+  },
+  "runtime.micro_batch_size": {
+   "tinker": null,
+   "trl": 1,
+   "verl": 1,
+   "openrlhf": 1
+  },
+  "runtime.num_minibatches": {
+   "tinker": "<absent>",
+   "trl": "<absent>",
+   "verl": 1,
+   "openrlhf": "<absent>"
+  },
+  "runtime.tensor_parallel_size": {
+   "tinker": null,
+   "trl": 1,
+   "verl": 1,
+   "openrlhf": 1
+  },
+  "tokens_per_optimizer_step": {
+   "tinker": null,
+   "trl": 3072,
+   "verl": 3072,
+   "openrlhf": 3072
+  }
+ }
+}

@@ -57,3 +57,8 @@ it also asserts the default root contract. No historical artifacts were run.
 Shared average precision and AUROC explicitly reject nonfinite scores, invalid
 binary labels, and unequal input shapes without silently changing denominators. A NaN score formerly
 caused a nonadvancing loop or division by zero depending on its position.
+
+Iter106/110 calibration readers now join named TSV fields. The new iter102
+estimator/interpretation columns previously shifted numeric offsets and caused
+both readers to discard every produced row. A production-writer-to-both-readers
+fixture verifies values, provenance and reordered columns in temporary files.

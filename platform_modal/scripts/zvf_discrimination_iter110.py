@@ -86,37 +86,8 @@ def _strip_comments(path: pathlib.Path) -> List[str]:
 
 
 def load_calibration_rows() -> List[Dict[str, Any]]:
-    """Re-use the iter102 per-row calibration table (same parser as iter106)."""
-    path = RES / "zvf_iter102_calibration_review28_v2.tsv"
-    rows: List[Dict[str, Any]] = []
-    if not path.exists():
-        return rows
-    with path.open() as fh:
-        for line in fh:
-            if line.startswith("#") or not line.strip():
-                continue
-            parts = line.rstrip("\n").split("\t")
-            if len(parts) < 10:
-                continue
-            try:
-                rows.append(
-                    {
-                        "library": parts[0],
-                        "model": parts[1],
-                        "G": int(float(parts[2])),
-                        "p": float(parts[3]),
-                        "zvf_emp": float(parts[4]),
-                        "zvf_iid": float(parts[5]),
-                        "delta": float(parts[6]),
-                        "rho": float(parts[7]),
-                        "collapse_rate": float(parts[8]),
-                        "converged_rate": float(parts[9]),
-                        "evidence_path": parts[10] if len(parts) > 10 else "",
-                    }
-)
-            except ValueError:
-                continue
-    return rows
+    from _review28_io import read_calibration
+    return read_calibration(RES / "zvf_iter102_calibration_review28_v2.tsv")
 
 
 def load_leadtime_rows() -> List[Dict[str, Any]]:

@@ -280,3 +280,25 @@ def test_precision_nonfinite_scores_fail_explicitly(name):
                            ([np.nan], [1]), ([.5, np.inf, .1], [1, 1, 2]),
                            ([.5], [1, 0]), ([.5], [2])]:
         with pytest.raises(ValueError): metric(scores, labels)
+
+
+def test_iter102_calibration_roundtrip_all_consumers(tmp_path, monkeypatch):
+    import zvf_iter102 as producer
+    rows = producer.calibration_table([dict(library='tool_use', model='m', mean_zvf=.5,
+        mean_last10=.5, mean_peak=.6, group_size=8, collapse_rate=0,
+        converged_rate=1, evidence_path='source.tsv')], [])
+    output = tmp_path/'zvf_iter102_calibration_review28_v2.tsv'
+    producer._write_tsv(output, rows, header_comment='synthetic calibration')
+    for name in ('zvf_diagnostic_iter106', 'zvf_discrimination_iter110'):
+        consumer = importlib.import_module(name)
+        monkeypatch.setattr(consumer, 'RES', tmp_path)
+        actual = consumer.load_calibration_rows()
+        assert len(actual) == 1
+        assert actual[0]['p'] == .5
+        assert actual[0]['delta'] == rows[0]['delta_calibration']
+        assert actual[0]['estimator'] == 'homogeneous_plugin_diagnostic'
+        assert actual[0]['evidence_path'] == 'source.tsv'
+    # Column reordering does not alter the joined meaning.
+    from _review28_io import write_table, read_calibration
+    write_table(output, rows, fields=list(reversed(rows[0])))
+    assert read_calibration(output)[0] == actual[0]

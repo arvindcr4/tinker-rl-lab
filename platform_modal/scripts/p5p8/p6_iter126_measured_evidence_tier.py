@@ -1,38 +1,23 @@
 #!/usr/bin/env python3
-"""
-Iter-126 P6 audit: per-delta measured-evidence tier classification.
-
-For each delta_*.json registry entry:
-  - n_measured_rows
-  - n_significant_rows
-  - pct_significant
-  - median_ci_width   (mean of ci_high - ci_low)
-  - n_zero_ci         (CI overlaps 0)
-  - direction_spread  (max - min of delta)
-  - n_panels          (unique measured.panel values)
-  - n_metrics         (unique measured.metric values)
-  - median_n_per_row
-  - evidence_tier     A/B/C/D (A=strongest)
-
-Outputs:
-  platform_hybrid/experiments/results/p5p8/p6_iter126_measured_evidence_tier.tsv   (15 rows: per delta)
-  platform_hybrid/experiments/results/p5p8/p6_iter126_measured_evidence_tier.json  (summary + ranking)
-
-No network; stdlib only; deterministic.
-"""
+"""Review17-v2 descriptive measurement inventory.
+Scientific quality is unassessed: significance counts, duplicate measurements,
+and panel counts cannot establish independent replication or claim agreement."""
 import json, os, sys, statistics
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[2]
-ENTRIES = ROOT / "registry" / "entries"
-OUT_TSV = ROOT / "experiments" / "results" / "p5p8" / "p6_iter126_measured_evidence_tier.tsv"
-OUT_JSON = ROOT / "experiments" / "results" / "p5p8" / "p6_iter126_measured_evidence_tier.json"
+sys.path.append(str(Path(__file__).resolve().parents[1]))
+from _paths import REPO_ROOT
+from review17_contract import validate_interval
+ROOT = REPO_ROOT
+ENTRIES = ROOT / "platform_hybrid/registry" / "entries"
+OUT_TSV = ROOT / "platform_hybrid/experiments/results/p5p8/review17_v2" / "p6_iter126_measured_evidence_tier.tsv"
+OUT_JSON = ROOT / "platform_hybrid/experiments/results/p5p8/review17_v2" / "p6_iter126_measured_evidence_tier.json"
 
 
 def ci_overlaps_zero(row):
     try:
         lo, hi = row.get("ci_low"), row.get("ci_high")
-        if lo is None or hi is None:
+        if not validate_interval(lo, hi):
             return None
         return lo <= 0 <= hi
     except Exception:
@@ -41,19 +26,14 @@ def ci_overlaps_zero(row):
 
 def ci_width(row):
     lo, hi = row.get("ci_low"), row.get("ci_high")
-    if lo is None or hi is None:
+    if not validate_interval(lo, hi):
         return None
     return hi - lo
 
 
 def tier(n_sig, n_total, n_panels):
-    if n_total == 0:
-        return "D"
-    if n_sig >= 3 and n_panels >= 2:
-        return "A"
-    if n_sig >= 1:
-        return "B"
-    return "C"
+    # Significance counts cannot establish evidence quality or replication.
+    return "NO_MEASUREMENTS" if n_total == 0 else "QUALITY_UNASSESSED"
 
 
 def audit():
@@ -97,9 +77,9 @@ def audit():
             "citation_arxiv": (d.get("citation") or {}).get("arxiv", ""),
         })
 
-    # Sort: tier A first, then n_sig desc, then n_total desc
-    tier_order = {"A": 0, "B": 1, "C": 2, "D": 3}
-    rows.sort(key=lambda r: (tier_order[r["evidence_tier"]], -r["n_significant_rows"], -r["n_measured_rows"]))
+    rows.sort(key=lambda r: r["delta_id"])
+    if not rows:
+        raise ValueError("Empty registry")
 
     # Write TSV
     OUT_TSV.parent.mkdir(parents=True, exist_ok=True)
@@ -129,11 +109,11 @@ def audit():
         "pct_d_overall": round(100 * d_tier / max(1, len(rows)), 1),
         "d_tier_ids": [r["delta_id"] for r in rows if r["evidence_tier"] == "D"],
         "a_tier_ids": [r["delta_id"] for r in rows if r["evidence_tier"] == "A"],
-        "ranking_top10": [
+        "entries_first10_by_id": [
             {"delta_id": r["delta_id"], "tier": r["evidence_tier"], "n_sig": r["n_significant_rows"], "n_total": r["n_measured_rows"]}
             for r in rows[:10]
         ],
-        "ranking_bottom5": [
+        "entries_last5_by_id": [
             {"delta_id": r["delta_id"], "tier": r["evidence_tier"], "n_sig": r["n_significant_rows"], "n_total": r["n_measured_rows"]}
             for r in rows[-5:]
         ],
@@ -148,7 +128,7 @@ def audit():
     print(f"total significant rows: {total_sig}")
     print(f"tier distribution: {counts_by_tier}")
     print()
-    print("rank | tier | delta_id                | n_sig/n_total | n_panels")
+    print("index | status | delta_id                | n_sig/n_total | n_panels")
     print("-----+------+-------------------------+---------------+---------")
     for i, r in enumerate(rows, 1):
         print(f"{i:4d} | {r['evidence_tier']:4s} | {r['delta_id']:23s} | {r['n_significant_rows']:2d}/{r['n_measured_rows']:2d} ({r['pct_significant']:.0f}%) | {r['n_panels']}")

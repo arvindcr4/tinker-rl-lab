@@ -56,11 +56,14 @@ import random
 import statistics
 from collections import Counter, defaultdict
 
-ROOT = pathlib.Path(__file__).resolve().parent.parent.parent
-ENT = ROOT / "registry" / "entries"
-OUT = ROOT / "experiments" / "results" / "p5p8"
-N2 = ROOT / "experiments" / "results" / "n2_reward_tensor_resume" / "n2_metrics.tsv"
-OUT.mkdir(parents=True, exist_ok=True)
+import sys
+sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))
+from _paths import REPO_ROOT
+from review17_contract import paired_result, keyed_rows, upsert
+ROOT = REPO_ROOT
+ENT = ROOT / "platform_hybrid/registry/entries"
+OUT = ROOT / "platform_hybrid/experiments/results/p5p8/review17_v2"
+N2 = ROOT / "platform_hybrid/experiments/results/n2_reward_tensor_resume/n2_metrics.tsv"
 
 SEED = 20260705
 B = 2000
@@ -73,44 +76,26 @@ PANEL_N2 = "n2_same_stack_last10"
 
 # ---------- bootstrap helpers ----------
 def bootstrap_paired_diff(values_a, values_b, B=B, seed=SEED):
-    """Paired bootstrap CI on (a - b). Returns (point, ci_lo, ci_high)."""
-    if not values_a or not values_b:
-        return None, None, None
-    n = min(len(values_a), len(values_b))
-    a = values_a[:n]
-    b = values_b[:n]
-    diffs = [ai - bi for ai, bi in zip(a, b)]
-    point = sum(diffs) / n
-    rng = random.Random(seed)
-    boots = []
-    for _ in range(B):
-        sample = [diffs[rng.randrange(n)] for _ in range(n)]
-        boots.append(sum(sample) / n)
-    boots.sort()
-    return point, boots[int(0.025 * B)], boots[int(0.975 * B)]
+    r = paired_result(values_b, values_a, B, seed)
+    return r["delta"], r["ci_low"], r["ci_high"]
 
 
 def load_n2_last10(metric):
-    """Return {method: [v0..v9]} over last 10 steps of n2_metrics.tsv."""
-    by_method = defaultdict(list)
+    import csv
+    by_method = defaultdict(dict)
     with N2.open() as f:
-        header = f.readline().rstrip("\n").split("\t")
-        idx = {h: i for i, h in enumerate(header)}
-        for line in f:
-            parts = line.rstrip("\n").split("\t")
-            if len(parts) < len(header):
+        for row in csv.DictReader(f, delimiter="\t"):
+            step = int(row["step"])
+            if not 30 <= step < 40:
                 continue
-            method = parts[idx["method"]]
-            step = int(parts[idx["step"]])
-            if step < 30:  # last 10 of 40
-                continue
-            try:
-                v = float(parts[idx[metric]])
-            except (ValueError, IndexError):
-                continue
-            if math.isnan(v):
-                continue
-            by_method[method].append(v)
+            method = row["method"]
+            value = float(row[metric])
+            if not math.isfinite(value) or step in by_method[method]:
+                raise ValueError("Invalid or duplicate step")
+            by_method[method][step] = value
+    for values in by_method.values():
+        if set(values) != set(range(30, 40)):
+            raise ValueError("Incomplete last-ten step window")
     return by_method
 
 
@@ -129,7 +114,9 @@ def compute_n2_delta(variant, metric, B=B):
         "delta": round(pt, 6),
         "ci_low": round(lo, 6),
         "ci_high": round(hi, 6),
-        "n": 10,
+        "n": len(by_method[variant]),
+        "n_steps": len(by_method[variant]), "n_independent_runs": 1,
+        "inference_scope": "conditional_within_run_descriptive",
         "significant": bool(lo > 0 or hi < 0),
         "ci_method": {
             "method": "paired_step_bootstrap_pct",
@@ -197,6 +184,7 @@ def machine_verdict(predicted_sign, delta, ci_lo, ci_high, significant):
 
 # ---------- main pipeline ----------
 def main():
+    OUT.mkdir(parents=True, exist_ok=True)
     # Job 1: load every delta entry
     delta_paths = sorted(ENT.glob("delta_*.json"))
     entries = []
@@ -246,11 +234,13 @@ def main():
         d = next(rec for _, rec in entries if rec["id"] == delta_id)
         d = json.loads(json.dumps(d))  # deep copy of the original on-disk entry
         for m, cv in ext_list:
-            d.setdefault("measured", []).append(m)
-            d.setdefault("claim_validation", []).append(cv)
+            upsert(d.setdefault("measured", []), m)
+            upsert(d.setdefault("claim_validation", []), cv)
         patched_entries[delta_id] = d
-        out_p = ENT / f"{delta_id}.json"
+        out_p = OUT / f"{delta_id}_proposal.json"
         out_p.write_text(json.dumps(d, indent=2, sort_keys=False) + "\n")
+
+    entries = [(p, patched_entries.get(d["id"], d)) for p, d in entries]
 
     n2_extensions = [
         (delta_id, m, cv)

@@ -23,7 +23,7 @@ import sys
 WORKTREE = pathlib.Path(__file__).resolve().parents[3]
 PROJECT_ROOT = WORKTREE / "platform_hybrid"
 REGISTRY = PROJECT_ROOT / "registry"
-RESULTS = PROJECT_ROOT / "experiments" / "results" / "p5p8"
+RESULTS = PROJECT_ROOT / "experiments" / "results" / "p5p8" / "review17_v2"
 
 MIN_REPORT_ITEMS = ["loss_form", "reference_kl", "sampler_backend",
                     "telemetry", "group_size_schedule", "heldout_split",
@@ -81,6 +81,17 @@ def main(argv=None):
               if rec["record_type"] == "variant_delta"}
 
     findings = []
+    if not validated_records:
+        return 1
+    for rid, rec in validated_records.items():
+        for claim in rec.get("expected_effects", []):
+            rationale = claim.get("rationale")
+            if not isinstance(rationale, str) or rationale.strip().lower() in {"", "todo", "tbd", "unknown", "n/a"}:
+                findings.append({"kind": "missing_rationale", "entry": rid, "severity": "error"})
+        for measurement in rec.get("measured", []):
+            convention = measurement.get("sign_convention")
+            if convention is not None and convention != "variant_minus_baseline":
+                findings.append({"kind": "sign_convention_drift", "entry": rid, "severity": "error"})
 
     # === orphan delta_id references ===
     for p in sorted((REGISTRY / "entries").glob("*.json")):
@@ -196,6 +207,8 @@ def main(argv=None):
     for k, n in sorted(by_kind.items()):
         print(f"  {k:30s} {n}")
     print(f"  wrote {out_path}")
+
+    return int(any(f["severity"] == "error" for f in findings))
 
 
 if __name__ == "__main__":

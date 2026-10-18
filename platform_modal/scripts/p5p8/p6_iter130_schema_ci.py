@@ -1,36 +1,20 @@
 #!/usr/bin/env python3
-"""P6 iter-130 schema CI validator + health badge.
-
-Three things, in one pass per `registry/entries/*.json`:
-
-  1. SCHEMA PARSE: load the record; report parse_ok vs parse_error with reason.
-  2. SCHEMA VALIDATE: walk the required-field tree (no jsonschema dep — read
-     the schema by hand, identical to what the registry/query.py path does).
-  3. HEALTH CLASSIFY: count `measured[]` rows; flag stale `ci_method` values
-     (the iter-128 POINT_ONLY set: `point_no_perseed_sd`); count zero-width
-     CIs (`ci_low == ci_high` from before patch); rank stars for the badge.
-
-Badge: A (>=3 measured rows AND >=1 significant AND zero stale) /
-       B (>=1 measured row AND zero stale) /
-       C (>=1 measured row, has stale) /
-       D (stack with no measured rows; or variant_delta with no measured).
-
-Outputs:
-  platform_hybrid/experiments/results/p5p8/p6_iter130_schema_ci.tsv    (one row / entry)
-  platform_hybrid/experiments/results/p5p8/p6_iter130_schema_ci.json   (summary + per-type counts)
-  platform_hybrid/experiments/results/p5p8/p6_iter130_schema_ci_patch_plan.tsv
-       (entries needing ci_method patch — id, n_stale, n_total)
-
-Stdlib only; deterministic; <= 300 lines.
-"""
+"""Review17-v2 canonical JSON Schema and finite-ordered-interval audit.
+Empty inputs and invalid records fail the CLI. Completeness badges do not reward
+significance counts and are not measures of scientific evidence quality."""
 from __future__ import annotations
 import json
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[2]
-ENTRIES = ROOT / "registry" / "entries"
-OUT_DIR = ROOT / "experiments" / "results" / "p5p8"
-OUT_DIR.mkdir(parents=True, exist_ok=True)
+import sys
+import jsonschema
+sys.path.append(str(Path(__file__).resolve().parents[1]))
+from _paths import REPO_ROOT
+from review17_contract import validate_interval
+ROOT = REPO_ROOT
+ENTRIES = ROOT / "platform_hybrid/registry/entries"
+SCHEMA = ROOT / "platform_hybrid/registry/schema.json"
+OUT_DIR = ROOT / "platform_hybrid/experiments/results/p5p8/review17_v2"
 
 # Required fields by record_type (mirrors registry/schema.json oneOf).
 REQ_STACK = ["record_type", "id", "label_claimed", "framework", "provenance", "min_report"]
@@ -56,28 +40,25 @@ def _is_nullable(prop):
     return None
 
 
-def valid_stack(rec, errs):
-    for k in REQ_STACK:
-        if k not in rec:
-            errs.append(f"missing:{k}")
-    if rec.get("record_type") != "stack":
-        errs.append("record_type!=stack")
-    if "min_report" in rec:
-        for item in MIN_REPORT_ITEMS:
-            if item not in rec["min_report"]:
-                errs.append(f"min_report.missing:{item}")
+def canonical_validate(rec, errs):
+    schema = json.loads(SCHEMA.read_text())
+    validator = jsonschema.validators.validator_for(schema)(schema)
+    errs.extend(error.message for error in validator.iter_errors(rec))
+    for row in rec.get("measured", []) if isinstance(rec.get("measured", []), list) else []:
+        if not isinstance(row, dict):
+            continue
+        lo, hi = row.get("ci_low"), row.get("ci_high")
+        if (lo is not None or hi is not None) and not validate_interval(lo, hi):
+            errs.append("invalid measured interval")
     return errs
+
+
+def valid_stack(rec, errs):
+    return canonical_validate(rec, errs)
 
 
 def valid_delta(rec, errs):
-    for k in REQ_DELTA:
-        if k not in rec:
-            errs.append(f"missing:{k}")
-    if rec.get("record_type") != "variant_delta":
-        errs.append("record_type!=variant_delta")
-    if "deltas" in rec and not isinstance(rec["deltas"], list):
-        errs.append("deltas not list")
-    return errs
+    return canonical_validate(rec, errs)
 
 
 # ----------------------------------------------------------------- per-row health
@@ -85,14 +66,14 @@ def valid_delta(rec, errs):
 
 def ci_overlaps_zero(row):
     lo, hi = row.get("ci_low"), row.get("ci_high")
-    if lo is None or hi is None:
+    if not validate_interval(lo, hi):
         return None
     return lo <= 0 <= hi
 
 
 def ci_width(row):
     lo, hi = row.get("ci_low"), row.get("ci_high")
-    if lo is None or hi is None:
+    if not validate_interval(lo, hi):
         return None
     return hi - lo
 
@@ -144,8 +125,6 @@ def measured_health(rec):
 def badge(h):
     if h["n_rows"] == 0:
         return "D"
-    if h["n_stale_method"] == 0 and h["n_rows"] >= 3 and h["n_sig"] >= 1:
-        return "A"
     if h["n_stale_method"] == 0 and h["n_rows"] >= 1:
         return "B"
     return "C"
@@ -170,11 +149,16 @@ def process(entry_path):
         row["err"] = f"parse:{type(e).__name__}:{e}"
         return row
     errs = []
+    if not isinstance(rec, dict):
+        row["err"] = "record must be an object"
+        return row
     rt = rec.get("record_type")
     if rt == "stack":
         valid_stack(rec, errs)
         row["label_or_name"] = rec.get("label_claimed", "") or ""
         fw = rec.get("framework", {}) or {}
+        if not isinstance(fw, dict):
+            fw = {}
         row["framework"] = fw.get("name", "") or ""
         row["openness"] = fw.get("openness", "") or ""
     elif rt == "variant_delta":
@@ -184,6 +168,7 @@ def process(entry_path):
         errs.append(f"record_type={rt}")
     if errs:
         row["err"] = ";".join(errs[:6])
+        return row
     row["schema_ok"] = 1 if not errs else 0
     h = measured_health(rec)
     for k, v in h.items():
@@ -200,6 +185,7 @@ def process(entry_path):
 
 
 def main():
+    OUT_DIR.mkdir(parents=True, exist_ok=True)
     rows = []
     for p in sorted(ENTRIES.glob("*.json")):
         rows.append(process(p))
@@ -247,7 +233,7 @@ def main():
             "stale_method_rows": n_total_stale,
         },
         "stale_action_required": n_total_stale > 0,
-        "schema_health": "PASS" if schema_ok == len(rows) else "FAIL",
+        "schema_health": "PASS" if rows and schema_ok == len(rows) else "FAIL",
     }
     (OUT_DIR / "p6_iter130_schema_ci.json").write_text(
         json.dumps(summary, indent=2, sort_keys=True) + "\n"
@@ -264,6 +250,8 @@ def main():
           f"schema_ok={schema_ok}/{len(rows)}; badges={badges}; "
           f"stale_method_rows={n_total_stale}")
 
+    return 0 if rows and schema_ok == len(rows) else 1
+
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

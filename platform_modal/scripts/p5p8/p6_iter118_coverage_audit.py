@@ -20,7 +20,7 @@ sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))  # platform_mo
 from _paths import REPO_ROOT  # noqa: E402
 WORKTREE = REPO_ROOT
 REGISTRY = WORKTREE / "platform_hybrid/registry"
-RESULTS = WORKTREE / "platform_hybrid/experiments" / "results" / "p5p8"
+RESULTS = WORKTREE / "platform_hybrid/experiments" / "results" / "p5p8" / "review17_v2"
 
 # Frameworks in repo (as listed in the brief) + 9 zvf130 methods.
 FRAMEWORKS = ["tinker", "openrlhf", "verl", "trl",
@@ -52,7 +52,8 @@ def match_stack(framework, method, stack):
             return False
     if method == "grpo-adaptiveg":
         return "adaptiveg" in fname
-    return method in fname or label == method
+    import re
+    return method in re.split(r"[_-]", fname) or label.lower() == method
 
 
 def leaves(d):
@@ -172,7 +173,7 @@ def main():
     fw_absent = sorted({r["framework"] for r in rows if r["has_stack_entry"] == "no"})
     n_ok = sum(r["schema_pass"] == "PASS" for r in rows)
     n_total = len(rows)
-    avg_badge = sum(int(r["badge"]) for r in rows if r["badge"]) / max(1, sum(1 for r in rows if r["badge"]))
+    avg_badge = sum(int(r["badge"]) for r in rows if r["badge"] not in (None, "")) / max(1, sum(1 for r in rows if r["badge"] not in (None, "")))
     orphan_total = sum(int(r["n_orphan_deltas"] or 0) for r in rows)
     miss_src_total = sum(int(r["n_measured_src_missing"] or 0) for r in rows)
     print(f"# coverage audit: {n_total} (fw x method) cells")

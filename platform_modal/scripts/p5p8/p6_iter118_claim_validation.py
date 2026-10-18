@@ -23,6 +23,8 @@ Output: platform_hybrid/experiments/results/p5p8/p6_iter118_claim_validation.tsv
 The script also prints a summary table: per delta, total SUPPORTS /
 CONTRADICTS / NEUTRAL / UNCLAIMED counts.
 """
+from review17_contract import validate_interval
+import math
 import argparse
 import csv
 import json
@@ -33,7 +35,7 @@ sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))  # platform_mo
 from _paths import REPO_ROOT  # noqa: E402
 WORKTREE = REPO_ROOT
 REGISTRY = WORKTREE / "platform_hybrid/registry"
-RESULTS = WORKTREE / "platform_hybrid/experiments" / "results" / "p5p8"
+RESULTS = WORKTREE / "platform_hybrid/experiments" / "results" / "p5p8" / "review17_v2"
 
 PRED_MAP = {
     ">0": lambda x: x > 0,
@@ -123,21 +125,17 @@ def main():
                 lo = m.get("ci_low")
                 hi = m.get("ci_high")
                 sig = m.get("significant")
-                ci_excludes_0 = False
-                try:
-                    if lo is not None and hi is not None:
-                        ci_excludes_0 = not (lo <= 0 <= hi)
-                except TypeError:
-                    ci_excludes_0 = False
+                valid_ci = validate_interval(lo, hi)
+                ci_excludes_0 = valid_ci and not (lo <= 0 <= hi)
                 pred_fn = parse_pred(pred)
                 sign_matches = None
-                if pred_fn is not None and delta is not None:
+                if pred_fn is not None and isinstance(delta, (float, int)) and math.isfinite(delta):
                     try:
                         sign_matches = bool(pred_fn(float(delta)))
                     except Exception:
                         sign_matches = None
-                tag = ""
-                if sign_matches is not None:
+                tag = "INVALID_OR_MISSING"
+                if sign_matches is not None and valid_ci:
                     tag = verdict(sign_matches, ci_excludes_0)
                 rows.append({
                     "delta_id": delta_id,
@@ -185,6 +183,8 @@ def main():
 
     if args.write:
         print(f"\nwrote {RESULTS}/p6_iter118_claim_validation.tsv ({len(rows)} rows)")
+
+    return 1 if not rows or any(r["verdict"] == "INVALID_OR_MISSING" for r in rows) else 0
 
 
 if __name__ == "__main__":

@@ -8,7 +8,7 @@ on the natural pairing unit (per-step for N2, per-seed for zvf130), and decide
 whether the two panels AGREE in sign+significance vs DIVERGE.
 
 The four-method N2 same-stack run (grpo/aero/gift/areal) and the 5-seed zvf130
-risk-index batch measure the same physics under different aggregation. If
+risk-index batch are different populations and estimands. Descriptive sign agreement cannot establish equivalence. If
 N2(40-step paired bootstrap) and zvf130(5-seed paired bootstrap) agree on a
 metric, that's convergent evidence the registry's claim is real. If they
 disagree, the registry is underdetermined -- exactly the kind of finding a
@@ -31,12 +31,16 @@ import random
 import statistics
 from collections import defaultdict
 
-ROOT = pathlib.Path(__file__).resolve().parents[2]
+import sys
+sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))
+from _paths import REPO_ROOT
+from review17_contract import keyed_rows, paired_result
+ROOT = REPO_ROOT
 N2_DIR = ROOT / "platform_hybrid/experiments/results/n2_reward_tensor_resume"
 ZV130_TSV = ROOT / "platform_hybrid/experiments/results/zvf_iter130_risk_index.tsv"
-REG = ROOT / "registry/entries"
-OUT = ROOT / "platform_hybrid/experiments/results/p5p8"
-OUT.mkdir(parents=True, exist_ok=True)
+REG = ROOT / "platform_hybrid/registry/entries"
+OUT = ROOT / "platform_hybrid/experiments/results/p5p8/review17_v2"
+
 
 SEED = 20260705
 B = 4000
@@ -88,24 +92,10 @@ def paired_bootstrap_diff(vals, base_vals, B=4000, seed=20260705, ci=0.95):
     """Paired bootstrap: at each draw, resample step indices 1..n with
     replacement, then compute mean over steps of (variant[step] - base[step]).
     Returns (point_estimate, ci_low, ci_high, n, sig)."""
-    assert len(vals) == len(base_vals)
-    n = len(vals)
-    if n == 0:
-        return 0.0, 0.0, 0.0, 0, False
-    diffs = [v - b for v, b in zip(vals, base_vals)]
-    point = statistics.mean(diffs)
-    rng = random.Random(seed)
-    idxs = list(range(n))
-    boot = []
-    for _ in range(B):
-        s = [diffs[rng.choice(idxs)] for _ in range(n)]
-        boot.append(statistics.mean(s))
-    boot.sort()
-    lo_i = int((1 - ci) / 2 * B)
-    hi_i = int((1 + ci) / 2 * B)
-    ci_lo, ci_hi = boot[lo_i], boot[min(hi_i, B - 1)]
-    sig = (ci_lo > 0) or (ci_hi < 0)
-    return point, ci_lo, ci_hi, n, sig
+    if ci != .95:
+        raise ValueError("Only declared 95% interval supported")
+    result = paired_result(base_vals, vals, B, seed)
+    return result["delta"], result["ci_low"], result["ci_high"], result["n"], result["significant"]
 
 
 # ----------------------------------------------------------------------------
@@ -114,19 +104,12 @@ def paired_bootstrap_diff(vals, base_vals, B=4000, seed=20260705, ci=0.95):
 def n2_panel(n2):
     """Returns list of (variant, metric, point, ci_lo, ci_hi, n, sig)."""
     out = []
-    base = n2[BASE]
+    base = keyed_rows(n2[BASE], "step", range(40))
     for v in METHODS:
-        vdat = n2[v]
+        vdat = keyed_rows(n2[v], "step", range(40))
         for met in N2_METRICS:
-            vals = []
-            base_vals = []
-            for step, base_step in zip(vdat, base):
-                if met == "loss":
-                    vals.append(float(step["loss"]))
-                    base_vals.append(float(base_step["loss"]))
-                else:
-                    vals.append(float(step[met]))
-                    base_vals.append(float(base_step[met]))
+            vals = {k: float(row[met]) for k, row in vdat.items()}
+            base_vals = {k: float(row[met]) for k, row in base.items()}
             pt, lo, hi, n, sig = paired_bootstrap_diff(vals, base_vals, B=B, seed=SEED)
             out.append((v, met, pt, lo, hi, n, sig))
     return out
@@ -138,19 +121,12 @@ def n2_panel(n2):
 def zv130_panel(zv):
     """Returns list of (variant, metric, point, ci_lo, ci_hi, n, sig)."""
     out = []
-    base = {int(s["seed"]): s for s in zv.get(BASE, [])}
+    base = keyed_rows(zv.get(BASE, []), "seed")
     for v in METHODS:
-        vdat = zv.get(v, [])
+        vdat = keyed_rows(zv.get(v, []), "seed", base)
         for met in ZV_METRICS:
-            paired = []
-            for s in vdat:
-                sk = int(s["seed"])
-                if sk in base:
-                    paired.append((float(s[met]), float(base[sk][met])))
-            if not paired:
-                continue
-            vals = [a for a, _ in paired]
-            base_vals = [b for _, b in paired]
+            vals = {k: float(row[met]) for k, row in vdat.items()}
+            base_vals = {k: float(row[met]) for k, row in base.items()}
             pt, lo, hi, n, sig = paired_bootstrap_diff(vals, base_vals, B=B, seed=SEED)
             out.append((v, met, pt, lo, hi, n, sig))
     return out
@@ -178,7 +154,7 @@ def cross_panel_verdict(n2_panel_rows, zv_panel_rows):
     zv_idx = {(v, m): r for v, m, *r in zv_panel_rows}
 
     METRIC_PAIRS = [
-        ("zvf", "zvf_risk", "zvf (N2) <-> zvf_risk (zvf130)"),
+        # risk-index is not ZVF; no interchangeable-estimand comparison.
         ("zvf", "mean_zvf", "zvf (N2) <-> mean_zvf (zvf130)"),
     ]
     verdicts = []
@@ -237,6 +213,7 @@ def patch_registry(verdicts):
 # Main
 # ----------------------------------------------------------------------------
 def main():
+    OUT.mkdir(parents=True, exist_ok=True)
     print(f"iter-110 cross-panel agreement audit (B={B} paired bootstrap, seed={SEED})")
     n2 = load_n2_per_step()
     zv = load_zv130_per_seed()
@@ -282,6 +259,7 @@ def main():
         "n_methods": len(METHODS),
         "n_pairs": len(verdicts),
         "verdict_counts": dict(counts),
+        "inference_scope": "exploratory_cross_dataset_descriptive; N2 has one independent run",
         "n_agree_both_sig": counts["AGREE_BOTH_SIG"],
         "n_diverge_both_sig": counts["DIVERGE_BOTH_SIG"],
         "n_partial": counts["PARTIAL_ONE_SIG"],

@@ -1,79 +1,33 @@
-"""
-Iter 114 — P6 Measured-Block Robustness Ledger.
-
-For every measured[] row in registry/entries/delta_*.json, classify into a
-robustness bucket by (effect / CI-half-width) signal strength and surface
-load-bearing vs fragile vs underpowered rows.
-
-Outputs (4 files):
-  - p6_iter114_robustness_per_row.tsv   (1 row per measured[] entry, sorted by |effect|/CI_h)
-  - p6_iter114_robustness_per_entry.tsv (1 row per delta entry, groundedness rollup)
-  - p6_iter114_robustness_claim_matrix.tsv (entry × metric × panel measured-vs-expected)
-  - p6_iter114_robustness_summary.json   (machine-readable headline counts)
-
-Vein (a) — validate existing entries against measured behavior. Fresh angle:
-characterize the *measurement quality* of the registry's evidence base,
-not the directional claim-validation that iter-90/iter-46 already cover.
-
-Definitions (stdlib only):
-  effect      = |delta|
-  ci_half     = (ci_high - ci_low) / 2
-  snr         = effect / ci_half   (signal-to-noise ratio)
-  bucket rules:
-    POINT_ONLY    = ci_method.method == 'point_no_perseed_sd'
-                  OR (ci_low == ci_high == delta)
-    UNDERPOWERED  = n_obs < 8                  (paired-seed bootstrap at n<8 is fragile)
-    LOAD_BEARING  = significant AND snr >= 5.0 (effect ≥ 5× CI half-width)
-    FRAGILE_SIG   = significant AND snr < 5.0  (CI barely excludes 0)
-    FRAGILE_NS    = NOT significant AND ci_half > 0 AND effect > 0
-                  = NS but data trended in a direction (cannot falsify)
-  groundedness_score = LOAD_BEARING * 1.0
-                     + FRAGILE_SIG  * 0.5
-                     + FRAGILE_NS   * 0.25
-                     + UNDERPOWERED * 0.10
-                     + POINT_ONLY   * 0.00
-                     / total_rows
-
-Run: python3 platform_modal/scripts/p5p8/p6_iter114_robustness_ledger.py
-"""
+"""Review17-v2 interval-availability inventory.
+No load-bearing or statistical-power quality claims are inferred from significance
+or effect/interval ratios. Missing or malformed inference remains explicit."""
 import json
 import os
 import sys
 from collections import defaultdict
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent.parent.parent
-ENTRIES_DIR = ROOT / "registry" / "entries"
-OUT_DIR = ROOT / "experiments" / "results" / "p5p8"
+import sys
+sys.path.append(str(Path(__file__).resolve().parents[1]))
+from _paths import REPO_ROOT
+from review17_contract import validate_interval
+ROOT = REPO_ROOT
+ENTRIES_DIR = ROOT / "platform_hybrid/registry" / "entries"
+OUT_DIR = ROOT / "platform_hybrid/experiments/results/p5p8/review17_v2"
 
 
 def classify(measured_row):
-    """Return (bucket, snr, ci_half) for a single measured[] row."""
-    delta = abs(float(measured_row.get("delta", 0.0)))
-    cl = float(measured_row.get("ci_low", 0.0))
-    ch = float(measured_row.get("ci_high", 0.0))
-    ci_half = (ch - cl) / 2.0
-    sig = bool(measured_row.get("significant", False))
-    n_obs = int(measured_row.get("n") or 0) if measured_row.get("n") is not None else 0
-    method = (measured_row.get("ci_method") or {}).get("method") or ""
-
-    # POINT_ONLY: collapsed CI (ci_low == ci_high == delta) or labelled
-    if method == "point_no_perseed_sd" or (ci_half == 0.0 and delta > 0.0):
-        return "POINT_ONLY", None, ci_half, n_obs, sig
-
-    snr = delta / ci_half if ci_half > 0 else (float("inf") if delta > 0 else 0.0)
-    if n_obs and n_obs < 8:
-        return "UNDERPOWERED", snr, ci_half, n_obs, sig
-    if sig and snr >= 5.0:
-        return "LOAD_BEARING", snr, ci_half, n_obs, sig
-    if sig and snr < 5.0:
-        return "FRAGILE_SIG", snr, ci_half, n_obs, sig
-    if (not sig) and ci_half > 0 and delta > 0:
-        return "FRAGILE_NS", snr, ci_half, n_obs, sig
-    return "DEGENERATE", snr, ci_half, n_obs, sig
+    """Report interval availability, not significance-based evidence quality."""
+    cl, ch = measured_row.get("ci_low"), measured_row.get("ci_high")
+    n_obs = measured_row.get("n") or 0
+    if not validate_interval(cl, ch):
+        return "INVALID_OR_MISSING", None, None, n_obs, False
+    half = (ch-cl)/2
+    return "DESCRIPTIVE_INTERVAL", None, half, n_obs, (cl > 0 or ch < 0)
 
 
 BUCKET_WEIGHTS = {
+    "INVALID_OR_MISSING": 0, "DESCRIPTIVE_INTERVAL": 0,
     "LOAD_BEARING": 1.00,
     "FRAGILE_SIG":  0.50,
     "FRAGILE_NS":   0.25,
@@ -121,16 +75,16 @@ def main():
         measured_pairs = set()
         for m in (e.get("measured") or []):
             bucket, snr, ci_half, n, sig = classify(m)
-            delta = float(m.get("delta", 0.0))
-            ci_l = float(m.get("ci_low", 0.0))
-            ci_h = float(m.get("ci_high", 0.0))
+            delta = float(m.get("delta") or 0.0)
+            ci_l = m.get("ci_low")
+            ci_h = m.get("ci_high")
             metric = m.get("metric", "")
             panel = m.get("panel", "")
             measured_pairs.add((metric, panel))
             per_entry[eid]["total_rows"] += 1
             per_entry[eid][bucket.lower()] = per_entry[eid].get(bucket.lower(), 0) + 1
             per_entry[eid]["n_panels"].add(panel)
-            ci_method_obj = m.get("ci_method") or {}
+            ci_method_obj = m.get("ci_method") if isinstance(m.get("ci_method"), dict) else {}
             per_row.append({
                 "delta_id": eid,
                 "metric": metric,

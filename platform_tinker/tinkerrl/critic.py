@@ -106,7 +106,7 @@ def restore_critic_state(
         saved_groups = payload["optimizer"]["param_groups"]
         if not isinstance(saved_groups, list) or len(saved_groups) != len(expected_groups):
             raise ValueError(error)
-        for saved, expected in zip(saved_groups, expected_groups):
+        for saved, expected in zip(saved_groups, expected_groups, strict=True):
             ids = saved["params"]
             if (
                 not isinstance(ids, list)
@@ -225,7 +225,7 @@ def explained_variance(predicted: Sequence[float], targets: Sequence[float]) -> 
     var_t = statistics.pvariance(targets)
     if var_t <= 1e-12:
         return 0.0
-    residuals = [t - p for t, p in zip(targets, predicted)]
+    residuals = [t - p for t, p in zip(targets, predicted, strict=True)]
     var_r = statistics.pvariance(residuals)
     return 1.0 - var_r / var_t
 
@@ -256,7 +256,7 @@ def compute_gae_advantages(
         delta = rewards[step] + gamma * values[step + 1] * mask - values[step]
         last_gae = delta + gamma * lam * mask * last_gae
         advantages[step] = last_gae
-    returns = [a + v for a, v in zip(advantages, values[:t])]
+    returns = [a + v for a, v in zip(advantages, values[:t], strict=True)]
     return advantages, returns
 
 

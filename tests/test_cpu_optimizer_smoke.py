@@ -75,7 +75,7 @@ class CPUClient(TransportlessClient):
         self.policy.grad = self.prompt.grad = None
         loss = sum(
             -(row * datum.loss_fn_inputs["weights"].to_torch()).sum()
-            for row, datum in zip(self.rows(data), data)
+            for row, datum in zip(self.rows(data), data, strict=True)
         )
         loss.backward()
         self.gradients.append(self.policy.grad.detach().clone())
@@ -239,13 +239,15 @@ def test_runner_sdk_and_adam_match_independent_cpu_objective(
     with patch.object(grpo, "_write_checkpoint", side_effect=capture):
         result = run()
     assert len(client.gradients) == len(expected_gradients)
-    for actual, expected_gradient in zip(client.gradients, expected_gradients):
+    for actual, expected_gradient in zip(client.gradients, expected_gradients, strict=True):
         torch.testing.assert_close(actual, expected_gradient, rtol=1e-5, atol=1e-7)
     torch.testing.assert_close(client.policy, expected, rtol=1e-5, atol=1e-7)
     assert torch.equal(client.prompt, original_prompt)
     direction = 1 if rewarded_token == 1 else -1
     assert all(
-        direction * (b - a) > 0 for a, b in zip(client.probabilities, client.probabilities[1:])
+        # Adjacent pairs intentionally omit the unpaired final element.
+        direction * (b - a) > 0
+        for a, b in zip(client.probabilities, client.probabilities[1:], strict=False)
     )
     assert result.reward_trace == [0.5] * config.steps
     receipt = json.loads(grpo._checkpoint_path(config, config.seed).read_text())

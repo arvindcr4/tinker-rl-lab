@@ -101,9 +101,12 @@ def run_bridge(data, logprobs, loss_fn):
 @pytest.mark.parametrize("mode", ["grpo", "grpo-nll", "gspo", "gspo-clipped"])
 def test_real_sdk_bridge_preserves_response_masking_and_gradient_sign(mode):
     prompts, responses = [[10, 11, 12], [30]], [[20, 21], [40, 41, 42]]
-    data = [_build_datum(prompt, response) for prompt, response in zip(prompts, responses)]
+    data = [
+        _build_datum(prompt, response) for prompt, response in zip(prompts, responses, strict=True)
+    ]
     lengths = [
-        _datum_response_len(prompt, response) for prompt, response in zip(prompts, responses)
+        _datum_response_len(prompt, response)
+        for prompt, response in zip(prompts, responses, strict=True)
     ]
     assert data[0].model_input.to_ints() == [10, 11, 12, 20]
     assert data[0].loss_fn_inputs["target_tokens"].data == [11, 12, 20, 21]
@@ -132,7 +135,7 @@ def test_real_sdk_bridge_preserves_response_masking_and_gradient_sign(mode):
         response_weight = 0.6 if mode == "grpo-nll" else 0.5
         expected = [[0.0, 0.0, response_weight, response_weight], [-0.5] * 3]
     client, result = run_bridge(data, logprobs, loss_fn)
-    for original, backward, weights in zip(data, client.backward_data, expected):
+    for original, backward, weights in zip(data, client.backward_data, expected, strict=True):
         assert backward.model_input == original.model_input
         assert backward.loss_fn_inputs["target_tokens"] == original.loss_fn_inputs["target_tokens"]
         actual = backward.loss_fn_inputs["weights"].to_torch()

@@ -15,11 +15,11 @@ def test_gspo_matches_direct_objective_and_gradients_in_every_finite_branch(dtyp
     ]
     oracle_new = [value.detach().clone().requires_grad_() for value in new]
     old = [torch.full_like(value, -3.0) for value in new]
-    ratios = [torch.exp((value - ref).mean()) for value, ref in zip(oracle_new, old)]
+    ratios = [torch.exp((value - ref).mean()) for value, ref in zip(oracle_new, old, strict=True)]
     oracle = -torch.stack(
         [
             torch.minimum(ratio * adv, torch.clamp(ratio, 0.9, 1.2) * adv)
-            for ratio, (adv, _) in zip(ratios, cases)
+            for ratio, (adv, _) in zip(ratios, cases, strict=True)
         ]
     ).mean()
     loss, metrics = make_gspo_loss_fn(
@@ -28,7 +28,7 @@ def test_gspo_matches_direct_objective_and_gradients_in_every_finite_branch(dtyp
     oracle.backward()
     loss.backward()
     torch.testing.assert_close(loss, oracle)
-    for actual, expected in zip(new, oracle_new):
+    for actual, expected in zip(new, oracle_new, strict=True):
         torch.testing.assert_close(actual.grad, expected.grad)
     expected_fraction = sum(not torch.equal(r, torch.clamp(r, 0.9, 1.2)) for r in ratios) / len(
         ratios

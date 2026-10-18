@@ -314,7 +314,8 @@ def plot_learning_curves_with_ci(
                     for v in numbers
                 ):
                     raise ValueError(f"Plot {label} must be finite numeric values")
-            if any(b <= a for a, b in zip(steps, steps[1:])):
+            # Adjacent pairs intentionally omit the unpaired final element.
+            if any(b <= a for a, b in zip(steps, steps[1:], strict=False)):
                 raise ValueError(
                     "Plot steps must be strictly increasing; duplicate or reordered steps are invalid"
                 )
@@ -527,7 +528,9 @@ def contract_scores(seed_results, contract=None, metric=None):
         modes.add(explicit)
         steps = [row["step"] for row in rows] if explicit else list(range(len(rows)))
         if any(type(step) is not int or step < 0 for step in steps) or any(
-            b <= a for a, b in zip(steps, steps[1:])
+            # Adjacent pairs intentionally omit the unpaired final element.
+            b <= a
+            for a, b in zip(steps, steps[1:], strict=False)
         ):
             raise ValueError(f"seed {seed}: steps must be strictly increasing integers")
         endpoints.add(steps[-1])

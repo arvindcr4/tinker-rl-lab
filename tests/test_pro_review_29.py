@@ -36,7 +36,10 @@ def test_spearman_undefined(x, y):
 
 def trace(z, a):
     return {
-        "steps": [{"step": i, "zvf": v, "heldout_acc": h} for i, (v, h) in enumerate(zip(z, a))]
+        "steps": [
+            {"step": i, "zvf": v, "heldout_acc": h}
+            for i, (v, h) in enumerate(zip(z, a, strict=True))
+        ]
     }
 
 

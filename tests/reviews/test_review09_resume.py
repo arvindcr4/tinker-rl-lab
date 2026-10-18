@@ -34,7 +34,7 @@ def equal_nested(left, right):
             equal_nested(left[key], right[key])
     elif isinstance(left, (list, tuple)):
         assert len(left) == len(right)
-        for a, b in zip(left, right):
+        for a, b in zip(left, right, strict=True):
             equal_nested(a, b)
     else:
         assert left == right

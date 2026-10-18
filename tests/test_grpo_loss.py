@@ -62,7 +62,7 @@ class TestNormalizeRewards(unittest.TestCase):
         advs = normalize_rewards([1.0, 2.0, 3.0, 4.0, 5.0])
         expected = [-1.41421356, -0.70710678, 0.0, 0.70710678, 1.41421356]
         self.assertEqual(len(advs), len(expected))
-        for actual, want in zip(advs, expected):
+        for actual, want in zip(advs, expected, strict=True):
             self.assertTrue(math.isclose(actual, want, rel_tol=1e-5))
 
 
@@ -238,7 +238,10 @@ class TestNormalizeAdvantagesGlobal(unittest.TestCase):
         per_group = normalize_rewards(batch[:3]) + normalize_rewards(batch[3:])
         batch_global = normalize_advantages_global(batch)
         self.assertFalse(
-            all(math.isclose(a, b, rel_tol=1e-5) for a, b in zip(per_group, batch_global))
+            all(
+                math.isclose(a, b, rel_tol=1e-5)
+                for a, b in zip(per_group, batch_global, strict=True)
+            )
         )
 
     def test_unbiased_is_batch_centered(self):

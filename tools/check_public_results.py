@@ -378,7 +378,7 @@ def check_method(method, cases, summary, provenance):
     require(isinstance(seeds, list) and len(seeds) == len(cases), "method seed case count")
     all_seeds = []
     screen_indices = summary["deterministic_selection"]["selected_screen_indices"]
-    for case, row in zip(cases, seeds):
+    for case, row in zip(cases, seeds, strict=True):
         for key in ("selected_index", "original_prompt_rank", "question_sha256"):
             exact(row[key], case[key], f"method seed identity.{key}")
         for key, length in (
@@ -391,7 +391,11 @@ def check_method(method, cases, summary, provenance):
                 require(count(value, key) < modulus, f"method.{key}: seed out of range")
             all_seeds.extend(values)
             require(
-                all((b - a) % modulus == multiplier % modulus for a, b in zip(values, values[1:])),
+                # Adjacent pairs intentionally omit the unpaired final element.
+                all(
+                    (b - a) % modulus == multiplier % modulus
+                    for a, b in zip(values, values[1:], strict=False)
+                ),
                 f"method.{key}: affine seed spacing",
             )
     require(
@@ -406,7 +410,7 @@ def check_method(method, cases, summary, provenance):
         ("fresh_seeds", method["fresh_draws"]),
     ):
         anchor = seeds[0][key][0]
-        for row, screen_index in zip(seeds, screen_indices):
+        for row, screen_index in zip(seeds, screen_indices, strict=True):
             expected = (anchor + multiplier * draws * (screen_index - screen_indices[0])) % modulus
             exact(row[key][0], expected, f"method.{key}: cross-case screen-index stride")
     exact(

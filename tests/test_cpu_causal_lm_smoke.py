@@ -58,7 +58,7 @@ class TinyCausalLMClient(TransportlessClient):
         rows = _rows(self.model, data)
         weighted_nll = sum(
             -(row * datum.loss_fn_inputs["weights"].to_torch()).sum()
-            for row, datum in zip(rows, data)
+            for row, datum in zip(rows, data, strict=True)
         )
         weighted_nll.backward()
         return ReadyFuture(
@@ -122,7 +122,7 @@ def test_real_causal_lm_update_matches_direct_objective_and_improves_rewarded_od
         weights = datum.loss_fn_inputs["weights"].to_torch()
         assert torch.equal(weights[:2], torch.zeros(2))
         assert torch.isfinite(weights).all()
-    for actual, expected in zip(model.parameters(), reference.parameters()):
+    for actual, expected in zip(model.parameters(), reference.parameters(), strict=True):
         assert actual.grad is not None
         assert torch.isfinite(actual.grad).all()
         torch.testing.assert_close(actual.grad, expected.grad, rtol=1e-5, atol=1e-7)
@@ -130,16 +130,18 @@ def test_real_causal_lm_update_matches_direct_objective_and_improves_rewarded_od
     reference_optimizer.step()
     assert any(
         not torch.equal(before, after)
-        for before, after in zip(before_parameters, model.parameters())
+        for before, after in zip(before_parameters, model.parameters(), strict=True)
     )
-    for actual, expected in zip(model.parameters(), reference.parameters()):
+    for actual, expected in zip(model.parameters(), reference.parameters(), strict=True):
         torch.testing.assert_close(actual, expected, rtol=1e-5, atol=1e-7)
     after_rows = _rows(model, data)
     after_odds = float((after_rows[0][-2:].sum() - after_rows[1][-2:].sum()).detach())
     assert after_odds > before_odds
     assert optimizer.state
     assert all("exp_avg" in state for state in optimizer.state.values())
-    for actual, expected in zip(optimizer.state.values(), reference_optimizer.state.values()):
+    for actual, expected in zip(
+        optimizer.state.values(), reference_optimizer.state.values(), strict=True
+    ):
         assert actual.keys() == expected.keys()
         for key in actual:
             torch.testing.assert_close(actual[key], expected[key], rtol=1e-5, atol=1e-7)

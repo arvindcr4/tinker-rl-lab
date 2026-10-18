@@ -18,13 +18,14 @@ checks name safety across platform trees, autoresearch, analysis, utils, tests,
 and tools, beyond the narrower style/formatting scope. These source repairs do
 not regenerate historical results or establish scientific validity.
 
-## Incomplete Python 3.11 zip migration
+## Completed Python 3.11 zip migration
 
-The supported Ruff target is now py311. B905 becomes newly applicable at this
-target, and remains temporarily ignored pending call-by-call review. Blindly
-setting strict=False would hide mismatched scientific pairings; strict=True
-would break intentional adjacent-window/truncating uses. Neither blanket fix
-has been applied. Other bug-finding checks remain enabled.
+The supported Ruff target is py311. B905 is now enabled after call-by-call
+review: 93 aligned pairings use strict=True and five documented common-prefix
+or adjacent-window pairings use strict=False. An absent optional NLL mask
+bypasses pairing explicitly. See [the per-call rationale ledger](zip-length-contracts.md).
+Mismatched scientific inputs are covered by offline regressions. Other
+bug-finding checks remain enabled.
 
 Snapshot inventory at integration base `378de199` plus this patch: **98 calls**
 in the curated `RUFF_PATHS` style scope (Ruff 0.17.1). Line numbers may drift:

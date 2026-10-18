@@ -80,7 +80,7 @@ def publication(tmp_path, monkeypatch):
                 "heldout_metrics": {"accuracy": value},
             },
         )
-        for seed, value in zip(seeds, values)
+        for seed, value in zip(seeds, values, strict=True)
     ]
     results = {
         "metric": "accuracy",
@@ -88,7 +88,9 @@ def publication(tmp_path, monkeypatch):
         "sd": statistics.stdev(values),
         "ci": [0.1, 0.7],
         "confidence": 0.95,
-        "per_seed": [{"seed": seed, "value": value} for seed, value in zip(seeds, values)],
+        "per_seed": [
+            {"seed": seed, "value": value} for seed, value in zip(seeds, values, strict=True)
+        ],
     }
     analysis = write_json(
         tmp_path / "analysis.json",

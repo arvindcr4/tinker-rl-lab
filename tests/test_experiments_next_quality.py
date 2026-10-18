@@ -106,7 +106,7 @@ def test_seed_aggregate_requires_distinct_compatible_evaluation_seeds():
     )
     base = quality.analyze(pool, n_bootstrap=100, seed=7)
     audits = []
-    for evaluation_seed, pass_at_1 in zip((42, 43, 44), (0.2, 0.3, 0.4)):
+    for evaluation_seed, pass_at_1 in zip((42, 43, 44), (0.2, 0.3, 0.4), strict=True):
         audit = copy.deepcopy(base)
         audit["source"]["seed"] = evaluation_seed
         audit["core_metrics"]["pass_at_1"] = pass_at_1

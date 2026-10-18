@@ -592,7 +592,7 @@ def test_sweep_retries_use_isolated_configs_checkpoints_and_wandb_ids(tmp_path, 
     for key in ("checkpoint_dir", "wandb_run_name", "wandb_run_id"):
         assert len({attempt[key] for attempt in attempts}) == 2
     assert attempts[0]["command"][3] != attempts[1]["command"][3]
-    for attempt, call in zip(attempts, process.call_args_list):
+    for attempt, call in zip(attempts, process.call_args_list, strict=True):
         config = yaml.safe_load(Path(attempt["command"][3]).read_text())
         assert config["tinker"]["checkpoint_dir"] == attempt["checkpoint_dir"]
         assert config["tinker"]["wandb_run_name"] == attempt["wandb_run_name"]

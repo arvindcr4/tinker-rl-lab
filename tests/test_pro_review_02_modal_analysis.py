@@ -602,7 +602,7 @@ def test_structured_error_bar_json_tsv_and_narrative_agree(tmp_path, monkeypatch
     with (tmp_path / "adding_error_bars_audit.tsv").open() as f:
         table = list(csv.DictReader(f, delimiter="\t"))
     assert len(table) == len(data["results"]) == 7
-    for row, record, prose in zip(table, data["results"], data["key_findings"]):
+    for row, record, prose in zip(table, data["results"], data["key_findings"], strict=True):
         assert row["headline"] == record["headline"]
         assert row["estimand"] == record["estimand"]
         assert record["status"] in prose

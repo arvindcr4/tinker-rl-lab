@@ -19,7 +19,7 @@ def test_gsm8k_revision_reaches_both_splits(monkeypatch, revision):
     data = grpo.make_gsm8k_dataset(seed=17, **kwargs)
     assert len(data.train) == len(data.test) == 1
     assert loader.call_count == 2
-    for call, split in zip(loader.call_args_list, ["train", "test"]):
+    for call, split in zip(loader.call_args_list, ["train", "test"], strict=True):
         assert call.args == ("openai/gsm8k", "main")
         assert call.kwargs == {"split": split, **kwargs}
 

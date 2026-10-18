@@ -28,7 +28,7 @@ def iso_fixture():
                 "heldout_acc_ci_high": a + 0.04,
             }
             for t, accs in [(1_000_000, [0.79, 0.8]), (4_000_000, [0.6, 0.8])]
-            for g, a in zip([4, 32], accs)
+            for g, a in zip([4, 32], accs, strict=True)
         ]
     )
 

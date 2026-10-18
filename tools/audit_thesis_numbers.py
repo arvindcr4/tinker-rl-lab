@@ -180,7 +180,7 @@ def signflip_p(diffs):
         raise ValueError("sign-flip requires nonempty finite differences")
     obs = abs(math.fsum(diffs))
     totals = (
-        abs(math.fsum(s * d for s, d in zip(signs, diffs)))
+        abs(math.fsum(s * d for s, d in zip(signs, diffs, strict=True)))
         for signs in itertools.product((1, -1), repeat=len(diffs))
     )
     hits = sum(total >= obs or math.isclose(total, obs, rel_tol=1e-12) for total in totals)
@@ -236,7 +236,7 @@ def m16():
     step = d["primary_step_unit_last10"]
     arms = ("aero", "areal", "gift")
     ps = [signflip_p(step[a]["step_deltas"]) for a in arms]
-    adj = dict(zip(arms, holm(ps)))
+    adj = dict(zip(arms, holm(ps), strict=True))
     means = {a: statistics.mean(step[a]["step_deltas"]) for a in arms}
     ci = {a: step[a]["ci95_orig_seed20260704"] for a in arms}
     return [
@@ -443,7 +443,7 @@ def table_8b(lane):
     mt, mb = statistics.mean(t), statistics.mean(b)
     out: list[float | str] = [len(rows), mt, mb, round(round(mt, 4) - round(mb, 4), 4)]
     if lane != "E4":
-        bb, cc, p = mcnemar(list(zip(t, b)))
+        bb, cc, p = mcnemar(list(zip(t, b, strict=True)))
         out += [p, f"{bb}/{cc}"]
     return out
 
@@ -2565,13 +2565,17 @@ def ch06_rows():
     def seed_mcnemar(algo):
         return ", ".join(
             "{:.6f}".format(
-                mcnemar(list(zip(run[algo, s]["post_correct"], run[algo, s]["pre_correct"])))[2]
+                mcnemar(
+                    list(
+                        zip(run[algo, s]["post_correct"], run[algo, s]["pre_correct"], strict=True)
+                    )
+                )[2]
             )
             for s in (42, 123, 456)
         )
 
     forms = sorted({tuple(int(x) for x in r["pre_correct"]) for r in full}, key=sum)
-    differ = sum(len(set(col)) > 1 for col in zip(*forms))
+    differ = sum(len(set(col)) > 1 for col in zip(*forms, strict=True))
     sd = {g: statistics.stdev(v) for g, v in acc.items()}
     se = {g: sd[g] / math.sqrt(3) for g in acc}
     return [
@@ -2794,7 +2798,7 @@ def numbers_agree(token, computed):
     want, got = NUM.findall(token), NUM.findall(computed)
     if len(want) != len(got) or not want:
         return False
-    for w, g in zip(want, got):
+    for w, g in zip(want, got, strict=True):
         wv = Decimal(w.replace("−", "-").replace(",", ""))
         gv = Decimal(g.replace("−", "-").replace(",", ""))
         exponent = wv.as_tuple().exponent

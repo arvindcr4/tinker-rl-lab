@@ -348,7 +348,7 @@ def test_correlation_stratifies_incompatible_metrics(tmp_path):
 def test_matched_stack_reversal_and_incomplete_pairs(tmp_path):
     rows = []
     for model, values in [("a", (0.7, 0.5)), ("b", (0.4, 0.8))]:
-        for algo, value in zip(["grpo", "ppo"], values):
+        for algo, value in zip(["grpo", "ppo"], values, strict=True):
             r = claim_row(model + algo, last10_avg=value)
             r.update(model=model, algorithm=algo)
             rows.append(r)

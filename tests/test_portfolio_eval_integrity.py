@@ -161,7 +161,7 @@ def test_full_prompt_receipt_matches_nontruncated_boundary(harness):
     )
     assert all(row["prompt_truncated"] is False for row in receipt["records"])
     assert receipt["sampling"]["prompt_truncation"] == "reject_over_budget"
-    for record, (sent, _) in zip(receipt["records"], harness.calls):
+    for record, (sent, _) in zip(receipt["records"], harness.calls, strict=True):
         assert record["prompt_token_ids_sha256"] == evaluator._sha256_text(
             json.dumps(sent, separators=(",", ":"))
         )

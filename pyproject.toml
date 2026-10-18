@@ -166,10 +166,6 @@ extend-exclude = [
 # annotation modernization is a separate migration from bug-finding checks.
 select = ["F", "W", "I", "UP031", "B", "S", "PIE", "PT", "RUF100", "RET505"]
 ignore = [
-    # Temporary Python 3.11 migration gap: audit zip pair alignment before
-    # choosing strict=True/False (98 calls in the current curated lint scope).
-    # R15.21 name safety is enabled; B905 migration remains incomplete.
-    "B905",
     "E501",   # line length — handled by formatter if at all
     "F541",   # f-string without placeholders — used for multi-line format strings
     "F841",   # unused local (research scripts set aside intermediates)

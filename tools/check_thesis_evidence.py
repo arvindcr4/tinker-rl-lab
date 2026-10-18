@@ -107,8 +107,8 @@ def unique(items, label):
 
 
 def mcnemar(trained, base):
-    b = sum(t == 1 and a == 0 for t, a in zip(trained, base))
-    c = sum(t == 0 and a == 1 for t, a in zip(trained, base))
+    b = sum(t == 1 and a == 0 for t, a in zip(trained, base, strict=True))
+    c = sum(t == 0 and a == 1 for t, a in zip(trained, base, strict=True))
     n = b + c
     p = min(1.0, 2 * sum(math.comb(n, k) for k in range(min(b, c) + 1)) / 2**n)
     return b, c, p
@@ -118,7 +118,7 @@ def paired_metric(record, trained, base, difference_key, binary=True, staged_rou
     trained_mean, base_mean = statistics.mean(trained), statistics.mean(base)
     same(record["trained_value"], trained_mean, "trained mean", digits=4)
     same(record["base_value"], base_mean, "base mean", digits=4)
-    raw_delta = statistics.mean(t - b for t, b in zip(trained, base))
+    raw_delta = statistics.mean(t - b for t, b in zip(trained, base, strict=True))
     if staged_rounding:
         # E3/code/paired_finalize.py also builds E7 and E12: each arm's k/n
         # is rounded to four places before subtracting and rounding again.
@@ -153,7 +153,7 @@ def check_m1b(data):
         same(count(short["config"][cfg_key]), expected, f"M1b config {cfg_key}")
     require(len(short["runs"]) == len(full["runs"]) == 15, "M1b requires 15 runs")
     runs: dict[tuple[str, int], dict[str, Any]] = {}
-    for small, run in zip(short["runs"], full["runs"]):
+    for small, run in zip(short["runs"], full["runs"], strict=True):
         projected = {
             k: v for k, v in run.items() if k not in ("pre_correct", "post_correct", "step_log")
         }
@@ -208,7 +208,7 @@ def check_m1b(data):
             runs["grpo_g8", s]["heldout_post_acc"] - runs[arm, s]["heldout_post_acc"] for s in seeds
         ]
         require(len(contrast["diffs"]) == 5, f"{arm} missing contrast differences")
-        for recorded, computed in zip(contrast["diffs"], diffs):
+        for recorded, computed in zip(contrast["diffs"], diffs, strict=True):
             same(recorded, computed, f"{arm} paired seed difference")
         same(contrast["mean_diff"], statistics.mean(diffs), f"{arm} mean difference")
         same(contrast["sd"], statistics.stdev(diffs), f"{arm} SD")
@@ -456,13 +456,13 @@ def check_paired(lane, d):
         )
         same(
             d["mean_item_difference"],
-            statistics.mean(t - b for t, b in zip(trained, base)),
+            statistics.mean(t - b for t, b in zip(trained, base, strict=True)),
             "E13 mean item difference",
             digits=4,
         )
         same(
             count(d["n_items_identical_progression"]),
-            sum(t == b for t, b in zip(trained, base)),
+            sum(t == b for t, b in zip(trained, base, strict=True)),
             "E13 identical episodes",
         )
         b, c, p = mcnemar([int(t == 1) for t in trained], [int(b == 1) for b in base])
@@ -478,7 +478,7 @@ def check_paired(lane, d):
         if lane == "E4":
             same(
                 d["paired_mean_difference"],
-                statistics.mean(t - b for t, b in zip(trained, base)),
+                statistics.mean(t - b for t, b in zip(trained, base, strict=True)),
                 "E4 paired mean difference",
                 digits=4,
             )
@@ -487,7 +487,7 @@ def check_paired(lane, d):
     if lane in ("E3", "E7", "E12"):
         return {
             "description": f"{len(rows)} outcomes: means, exact staged-rounding delta, McNemar",
-            "raw_paired_delta": statistics.mean(t - b for t, b in zip(trained, base)),
+            "raw_paired_delta": statistics.mean(t - b for t, b in zip(trained, base, strict=True)),
             "recorded_delta": d["difference_trained_minus_base"],
             "rounding_rule": "round(round(mean(trained), 4) - round(mean(base), 4), 4)",
             "generator": f"{PAIRED}/E3/code/paired_finalize.py",

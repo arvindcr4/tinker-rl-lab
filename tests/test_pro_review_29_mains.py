@@ -38,7 +38,8 @@ def make_trace(
         group_size=group_size,
         n_steps=len(zvfs),
         steps=[
-            dict(step=i, zvf=z, heldout_acc=a) for i, (z, a) in enumerate(zip(zvfs, accuracies))
+            dict(step=i, zvf=z, heldout_acc=a)
+            for i, (z, a) in enumerate(zip(zvfs, accuracies, strict=True))
         ],
     )
 

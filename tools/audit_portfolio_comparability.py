@@ -281,7 +281,8 @@ def audit(base: dict[str, Any], trained: dict[str, Any]) -> dict[str, Any]:
         compare(_lookup(base, path), _lookup(trained, path), ".".join(path))
     if len(base_rows) != len(trained_rows):
         mismatches.add("ordered_cohort_length")
-    for left, right in zip(base_rows, trained_rows):
+    # Length mismatch is already reported above; collect shared-prefix diagnostics.
+    for left, right in zip(base_rows, trained_rows, strict=False):
         for key in ROW_FIELDS:
             compare(left.get(key), right.get(key), f"ordered_records.{key}")
     _validate_recorded_relations(base, base_rows, "base")

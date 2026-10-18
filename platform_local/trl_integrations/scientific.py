@@ -43,7 +43,7 @@ def correctness_rewards(completions, answers):
     if answers is None or len(completions) != len(answers):
         raise ValueError("One gold answer is required for every completion")
     rewards = []
-    for completion, answer in zip(completions, answers):
+    for completion, answer in zip(completions, answers, strict=True):
         gold = numeric_answer(answer)
         if gold is None:
             raise ValueError("Gold answer does not match the versioned numeric contract")
@@ -55,7 +55,7 @@ def group_diagnostics(rewards, prompt_ids, group_size, epsilon=1e-8):
     if prompt_ids is None or len(prompt_ids) != len(rewards) or not rewards or group_size < 2:
         raise ValueError("Verified prompt IDs and a positive generation group are required")
     groups = defaultdict(list)
-    for prompt_id, reward in zip(prompt_ids, rewards):
+    for prompt_id, reward in zip(prompt_ids, rewards, strict=True):
         if not isinstance(prompt_id, (str, int)) or isinstance(prompt_id, bool):
             raise ValueError("Invalid prompt ID")
         groups[prompt_id].append(float(reward))

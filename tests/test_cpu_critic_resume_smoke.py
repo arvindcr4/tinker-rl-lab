@@ -28,7 +28,7 @@ def _same_state(actual, expected):
             _same_state(actual[key], expected[key])
     elif isinstance(expected, (list, tuple)):
         assert len(actual) == len(expected)
-        for left, right in zip(actual, expected):
+        for left, right in zip(actual, expected, strict=True):
             _same_state(left, right)
     else:
         assert actual == expected

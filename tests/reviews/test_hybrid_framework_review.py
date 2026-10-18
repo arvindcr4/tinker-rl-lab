@@ -125,7 +125,7 @@ def test_dapo_surrogate_equal_baseline_for_binary_groups_through_four():
             data = [c.aligned_datum(T, [10, 11], [20, 21]) for _ in rewards]
             lp = [torch.tensor([99.0, -1.0, -2.0], requires_grad=True) for _ in rewards]
             actual, _ = probe.loss_fn(data, lp)
-            expected = torch.stack([-a * l[1:].sum() for a, l in zip(adv, lp)]).mean()
+            expected = torch.stack([-a * l[1:].sum() for a, l in zip(adv, lp, strict=True)]).mean()
             assert torch.allclose(actual, expected)
             assert probe.OBJECTIVE_IDENTITY["canonical_algorithm_equivalent"] is False
 

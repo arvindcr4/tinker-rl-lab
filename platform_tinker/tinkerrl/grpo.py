@@ -870,7 +870,10 @@ def apply_truncation_mask(
             "advantages and token_lengths must pair 1:1, got "
             f"{len(advantages)} advantages and {len(token_lengths)} lengths"
         )
-    return [0.0 if length >= max_tokens else adv for adv, length in zip(advantages, token_lengths)]
+    return [
+        0.0 if length >= max_tokens else adv
+        for adv, length in zip(advantages, token_lengths, strict=True)
+    ]
 
 
 def normalize_advantages_global(
@@ -931,7 +934,7 @@ def _nll_mask_for_group(
     """Per-response NLL-auxiliary flags: correct and (when masking) untruncated."""
     return [
         (reward >= min_reward) and not (mask_truncated and was_truncated)
-        for reward, was_truncated in zip(rewards, truncated)
+        for reward, was_truncated in zip(rewards, truncated, strict=True)
     ]
 
 
@@ -997,7 +1000,7 @@ def _response_logprobs(
             f"{len(response_lens)} lengths for {len(logprobs_list)} responses"
         )
     sliced = []
-    for i, (logprobs, n) in enumerate(zip(logprobs_list, response_lens)):
+    for i, (logprobs, n) in enumerate(zip(logprobs_list, response_lens, strict=True)):
         total = logprobs.shape[0]
         if n < 0 or n > total:
             raise ValueError(f"response length {n} out of range for {total} logprobs on {i}")
@@ -1082,7 +1085,7 @@ def make_grpo_loss_fn(
         if nll_mask is not None and nll_coef != 0.0:
             masked = [
                 logprobs.mean()
-                for keep, logprobs in zip(nll_mask, accumulators)
+                for keep, logprobs in zip(nll_mask, accumulators, strict=True)
                 if keep and logprobs.numel() > 0
             ]
             if masked:
@@ -1090,9 +1093,14 @@ def make_grpo_loss_fn(
                 loss = loss + nll_coef * nll_loss
         if not torch.isfinite(loss):
             raise ValueError("GRPO objective is non-finite; refusing an invalid update")
-        masked_count = sum(
-            bool(keep) and lp.numel() > 0
-            for keep, lp in zip(() if nll_mask is None else nll_mask, resp_logprobs)
+        # An absent mask has no auxiliary examples; a present mask pairs 1:1.
+        masked_count = (
+            0
+            if nll_mask is None
+            else sum(
+                bool(keep) and lp.numel() > 0
+                for keep, lp in zip(nll_mask, resp_logprobs, strict=True)
+            )
         )
         for i, logprobs in enumerate(resp_logprobs):
             if logprobs.numel() == 0:
@@ -1303,7 +1311,7 @@ def _sample_scored_group(
     if meta is not None:
         sampler_logprobs: List[Optional[List[float]]] = []
         truncated: List[bool] = []
-        for resp, ids in zip(sequences, resp_ids_list):
+        for resp, ids in zip(sequences, resp_ids_list, strict=True):
             lps = getattr(resp, "logprobs", None)
             sampler_logprobs.append(
                 [float(v) for v in lps]
@@ -2930,7 +2938,7 @@ def _run_one_seed_locked(
                         seed=_sampling_seed(seed, -1 - pre_idx, ex_idx),
                         meta=pre_meta,
                     )
-                    for is_trunc, r in zip(pre_meta["truncated"], rewards):
+                    for is_trunc, r in zip(pre_meta["truncated"], rewards, strict=True):
                         if config.mask_truncated_responses and is_trunc:
                             continue
                         pre_prompts.append(prompt_ids)
@@ -3038,9 +3046,11 @@ def _run_one_seed_locked(
                 else:
                     advs = normalize_rewards(rewards, unbiased=config.debias_advantages)
                     if config.mask_truncated_responses:
-                        advs = [0.0 if cut else adv for adv, cut in zip(advs, truncated)]
+                        advs = [
+                            0.0 if cut else adv for adv, cut in zip(advs, truncated, strict=True)
+                        ]
                     for resp_ids, adv, keep_nll, old_lps in zip(
-                        resp_ids_list, advs, nll_flags, sampler_lps
+                        resp_ids_list, advs, nll_flags, sampler_lps, strict=True
                     ):
                         all_data.append(_build_datum(prompt_ids, resp_ids))
                         all_advs.append(adv)
@@ -3057,12 +3067,16 @@ def _run_one_seed_locked(
                     with torch.no_grad():
                         pred = critic([item[0] for item in pending]).tolist()
                     flat_basis = [
-                        r - v for (_, _, rewards, _, _), v in zip(pending, pred) for r in rewards
+                        r - v
+                        for (_, _, rewards, _, _), v in zip(pending, pred, strict=True)
+                        for r in rewards
                     ]
                     # The number logged as critic EV is this baseline, before
                     # the fit.  V is subtracted from truncated rewards too.
                     baseline_pred = [
-                        v for (_, _, rewards, _, _), v in zip(pending, pred) for _ in rewards
+                        v
+                        for (_, _, rewards, _, _), v in zip(pending, pred, strict=True)
+                        for _ in rewards
                     ]
                     critic_ev = explained_variance(baseline_pred, flat_rewards)
                 exclude = (
@@ -3076,18 +3090,23 @@ def _run_one_seed_locked(
                     exclude=exclude,
                 )
                 if config.mask_truncated_responses:
-                    flat_advs = [0.0 if cut else adv for adv, cut in zip(flat_advs, flat_truncated)]
+                    flat_advs = [
+                        0.0 if cut else adv
+                        for adv, cut in zip(flat_advs, flat_truncated, strict=True)
+                    ]
                 cursor = 0
                 for (prompt_ids, resp_ids_list, rewards, _, nll_flags), (cuts, lps) in zip(
-                    pending, pending_extra
+                    pending, pending_extra, strict=True
                 ):
                     if config.critic_enabled:
-                        for cut, r in zip(cuts, rewards):
+                        for cut, r in zip(cuts, rewards, strict=True):
                             if config.mask_truncated_responses and cut:
                                 continue
                             critic_prompts.append(prompt_ids)
                             critic_targets.append(r)
-                    for resp_ids, keep_nll, old_lps in zip(resp_ids_list, nll_flags, lps):
+                    for resp_ids, keep_nll, old_lps in zip(
+                        resp_ids_list, nll_flags, lps, strict=True
+                    ):
                         all_data.append(_build_datum(prompt_ids, resp_ids))
                         all_advs.append(flat_advs[cursor])
                         all_nll.append(keep_nll)
@@ -3139,7 +3158,7 @@ def _run_one_seed_locked(
                 # later epochs (the pre-2026-10-03 behaviour), logged.
                 gspo_sampler_old = all(lps is not None for lps in all_old)
                 sampler_old = (
-                    [lps[len(lps) - n :] for lps, n in zip(all_old, all_resp_lens)]
+                    [lps[len(lps) - n :] for lps, n in zip(all_old, all_resp_lens, strict=True)]
                     if gspo_sampler_old
                     else None
                 )
@@ -3881,7 +3900,9 @@ def make_pavlov_non_xlam_dataset(
 
     e1 = load_dataset("parquet", data_files=str(e1_path), split="train")
     e1_ids = {str(value) for value in e1["instance_id"]}
-    e1_pairs = {(str(repo), str(commit)) for repo, commit in zip(e1["repo"], e1["base_commit"])}
+    e1_pairs = {
+        (str(repo), str(commit)) for repo, commit in zip(e1["repo"], e1["base_commit"], strict=True)
+    }
     e2_ids = {path.name for path in e2_path.iterdir() if path.is_dir()}
 
     swe = load_dataset(

@@ -600,7 +600,7 @@ class StatisticsTests(unittest.TestCase):
                     rescue_statistics.wilson(k, n),
                 ]
                 for interval in intervals[1:]:
-                    for a, b in zip(intervals[0], interval):
+                    for a, b in zip(intervals[0], interval, strict=True):
                         self.assertAlmostEqual(a, b, places=14)
 
     def test_uniform_prediction_exact_reference(self):

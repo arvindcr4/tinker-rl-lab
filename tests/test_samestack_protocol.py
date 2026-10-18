@@ -56,7 +56,9 @@ def test_policy_prompt_stream_does_not_shift_for_critic_warmup():
     assert grpo["policy"][0] != ppo["critic_warmup"][0]
     assert random.getstate() == state
     g2 = prompt_schedules(42, 7473, 30, 0, 32)
-    assert all(g8row == g2row[:8] for g8row, g2row in zip(grpo["policy"], g2["policy"]))
+    assert all(
+        g8row == g2row[:8] for g8row, g2row in zip(grpo["policy"], g2["policy"], strict=True)
+    )
 
 
 def test_budget_is_policy_matched_not_total_exposure_matched():

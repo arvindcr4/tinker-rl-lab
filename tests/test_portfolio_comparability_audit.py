@@ -31,7 +31,7 @@ def _receipt(role, scores=(1.0, 0.0)):
             "score": score,
             "exact": score == 1,
         }
-        for index, (suite, score) in enumerate(zip(suites, scores))
+        for index, (suite, score) in enumerate(zip(suites, scores, strict=True))
     ]
     return {
         "schema_version": audit_tool.SCHEMA,

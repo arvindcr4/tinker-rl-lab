@@ -15,7 +15,7 @@ import sys
 HERE = pathlib.Path(__file__).resolve().parent.parent
 ROOT = HERE.parents[2]
 DATA = json.loads(pathlib.Path(os.environ.get("DEMO_DATA", str(HERE / "src/data.json"))).read_text())
-VIEWS = ["overview", "advantage", "zvf", "samestack", "platform", "answers", "stackdiff", "audit", "viva", "submissions"]
+VIEWS = ["overview", "advantage", "zvf", "samestack", "platform", "answers", "stackdiff", "audit", "viva", "submissions", "papers", "previous-semester"]
 CHROME = os.environ.get("CHROME_PATH") or shutil.which("chromium") or shutil.which("google-chrome")
 if not CHROME:
     candidate = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
@@ -236,6 +236,37 @@ def main():
                              page.locator("main").get_attribute("aria-label") == "Submissions"
                              and not page.locator(".submission-history").evaluate("el => el.open")))
 
+        # Research documents remain distinct from decisions and stored measurements.
+        page.locator('.next-row a[href="#papers"]').click()
+        page.wait_for_function("location.hash === '#papers'")
+        results.append(check("paper route separates acceptance from a public manuscript version",
+                             "Public paper version unverified" in page.locator("main").inner_text()
+                             and page.locator("[data-manuscript-id]").count() == 7
+                             and page.locator("main a[href$='.pdf']").count() == 1))
+        archive = page.locator(".document-disclosure > summary")
+        archive.focus()
+        page.keyboard.press("Enter")
+        results.append(check("archived fraud study has keyboard-accessible current-ID caveat",
+                             page.locator(".document-disclosure").evaluate("el => el.open")
+                             and "current manuscript roster reuses P8" in page.locator(".document-disclosure").inner_text()))
+        page.keyboard.press("Enter")
+        results.append(check("repeated archive disclosure closes without changing route",
+                             not page.locator(".document-disclosure").evaluate("el => el.open")
+                             and page.evaluate("location.hash") == "#papers"))
+        page.locator('.next-row a[href="#previous-semester"]').click()
+        page.wait_for_function("location.hash === '#previous-semester'")
+        results.append(check("previous-semester route preserves group credit and archive limitations",
+                             page.locator(".team-grid > li").count() == 6
+                             and "not a standalone build bundle" in page.locator("main").inner_text()
+                             and "does not prove submission" in page.locator("main").inner_text()))
+        page.go_back()
+        page.wait_for_function("location.hash === '#papers'")
+        results.append(check("research routes restore correctly with browser history",
+                             page.locator("main").get_attribute("aria-label") == "Papers & thesis"
+                             and not page.locator(".document-disclosure").evaluate("el => el.open")))
+        page.go_back()
+        page.wait_for_function("location.hash === '#submissions'")
+
         # Search/filter changes expose genuine retrieved content and retain missing-material caveats.
         search = page.locator("#submission-search")
         search.fill("backfilled upstream-run")
@@ -330,6 +361,16 @@ def main():
         results.append(check("expanded submissions reflow with presenter mode and text spacing",
                              page.evaluate("document.documentElement.scrollWidth <= innerWidth")
                              and page.locator(".submission-list > li:visible").count() == 31))
+        for document_view in ["papers", "previous-semester"]:
+            page.locator("#section-select").select_option(document_view)
+            page.wait_for_function("id => location.hash === '#' + id", arg=document_view)
+            if document_view == "papers":
+                page.locator(".document-disclosure > summary").click()
+                results.append(check("expanded document disclosure exposes its source link",
+                                     page.locator(".document-disclosure .document-link").is_visible()))
+            results.append(check(f"{document_view} reflows in presenter mode with text spacing",
+                                 page.evaluate("document.documentElement.scrollWidth <= innerWidth")
+                                 and page.locator(".document-link:visible").evaluate_all("els => els.length > 0 && els.every(el => el.scrollWidth <= el.clientWidth + 1 && el.getBoundingClientRect().height >= 44)")))
         page.close()
         page = browser.new_page(viewport={"width": 1280, "height": 900})
 

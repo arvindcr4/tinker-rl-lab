@@ -2,6 +2,7 @@ import React from "react";
 import { ARM_NAME, CONTRASTS, DATA, MODEL, SD, SS, nSeeds, zvfStats } from "../data.js";
 import { pct, pfmt, sgn } from "../stats.js";
 import { SubmissionOverview } from "./Submissions.jsx";
+import { ResearchOverview } from "./ResearchDocuments.jsx";
 
 export default function Overview() {
   const c = CONTRASTS.find((c) => c.id === "g8-ppo"), s = c?.stats;
@@ -36,6 +37,7 @@ export default function Overview() {
         <h2>Explore the evidence</h2>
         <p className="small">Start with a finding, then inspect the analysis and its limits.</p>
       </div>
+      <ResearchOverview />
       <div className="overview-grid">
         {cards.map((c) => (
           <a key={c.k} className="panel finding" href={`#${c.go}`}>

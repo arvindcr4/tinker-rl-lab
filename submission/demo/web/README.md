@@ -18,7 +18,7 @@ Presenter controls: ← / → or 1–9 change views; 0 opens Submissions; P togg
 
 ## Presentation and access
 
-- On narrow screens, a labeled section selector exposes all ten views. Desktop section links keep the current view in sight; Previous and Next links and browser Back/Forward remain available
+- On narrow screens, a labeled section selector exposes all twelve views. Desktop section links keep the current view in sight; Previous and Next links and browser Back/Forward remain available
 - A skip link bypasses the header. Route changes focus the named content region, except when selecting a section, where focus stays in the selector for repeated arrow-key use
 - Outcome-pattern selection uses native buttons with pressed states. Reward controls retain generous touch targets, and status labels and long identifiers can reflow
 - The page uses locally available fonts without external font requests. Reduced-motion preferences disable decorative control transitions
@@ -44,6 +44,19 @@ The Overview links to `#submissions`, a separate administrative snapshot verifie
 The author-response warning preserves chronology: the saved July 28 provenance audit predates the August 2 author claims about the 92.6%/92.1% control. The five-seed transfer claim is unsupported by that audit; withdrawal appears in an unposted revised-response draft. The UI does not treat historical author statements as current verified results or completed revisions, or drafts as posted responses.
 
 Titles remain verbatim historical titles, not current scientific conclusions. Dates are displayed in UTC without local timezone shifts; submission dates use notification dates except the ICICC creation record. Source correspondence, addresses, email IDs, reviewer identities, verbatim review text and private portal links are excluded. Explicit review scores are attributed to their dated source and documented scale. No public paper availability or proceedings indexing claim is made, and the page performs no inbox or portal requests. Updating these facts requires verifying new evidence and reviewing the sanitized source diff; it does not regenerate stored experiment results or the historical HTML artifact.
+
+## Papers and previous-semester work
+
+Overview has prominent reading cards for `#papers` and `#previous-semester`; both routes also appear in desktop/mobile navigation and the Previous/Next flow. The original 1–9 and 0 keyboard destinations are unchanged. New routes do not advertise duplicate number shortcuts.
+
+`src/researchDocuments.js` is a curated document index, independent of experimental results. Every external destination is pinned to verified public commit `eb9eb4927ddf1c5b24017f1fd913c96744bb6dd4`, with spaces URL-encoded. Document links explicitly open GitHub in a new tab and require internet; no document is fetched automatically by the offline page.
+
+- The featured ICICC record reuses existing submission metadata. No public manuscript version has been verified for that accepted title, so there is no guessed paper-download link. The October 11, 317-page public review thesis is presented as a separate document, with independent-review, institutional-approval and scientific limitations
+- Selected P1–P7 continuation manuscripts link actual public LaTeX sources and summarize the corrected scope in the canonical manuscript roster. This is a selection, not a count of all active papers or accepted publications. Historical P08 fraud is absorbed/archived; the current P8 workshop/artifact note is a different record
+- Semester 3 credits all six Group 6 students and both guides, shows the frozen capstone boundary, and links the tracked DOCX, archival source, contribution/citation records and prepared-package manifest. Untracked PDFs are not linked. The source is not a standalone build bundle; the prepared package does not prove submission or identify the later main-track record
+- The visible frozen-report erratum and two-phase progression retain unresolved historical contradictions. Academic phase attribution does not determine claim-level ownership. The solo continuation identifies Arvind C R and guide Ramesh Prakash Guledgudd without attributing the group foundation to them alone
+
+Contract tests verify every indexed path and file content against a captured object manifest from the pinned public Git tree (without requiring full Git history), prohibit missing/private paper URLs, check document/decision boundaries, and render both routes with unique headings and named disclosures. Browser checks include both routes across the existing viewport matrix, Back/Forward, repeated keyboard disclosures and presenter/text-spacing reflow. A blocked browser run is not a visual-validation pass.
 
 ## Scientific contract
 

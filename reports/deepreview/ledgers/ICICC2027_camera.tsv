@@ -1,0 +1,6 @@
+location	claim_text	value	source_artifact	generator_script	status
+Abstract; Table 3; E14 prose	Omni-MATH accepted-row vs all-disposition accuracy	2,271/4,426=51.31%; 2,271/4,428=51.29%	papers/icicc2027/SOURCE_MAP.md (E14 rows); arithmetic	n/a	verified
+E8-R prose	LAB-Bench end-to-end and parsed-subset accuracy	450/1,967=0.2288; 450/708=63.56% (descriptive)	papers/icicc2027/SOURCE_MAP.md	n/a	verified
+E11-O prose	VerilogEval extracted-only pass rate	129/162=79.63%; canonical 129/312=41.35%	papers/icicc2027/SOURCE_MAP.md	n/a	verified
+E11-O prose (proposed, not applied)	129/311 sensitivity	41.48%	arithmetic	n/a	verified
+Incomplete originals (proposed, not applied)	APEX attempted prefix denominator	11 attempted, 7 scored, 3 unscored, 1 interrupted; 0.050505 / 0.079365	outputs/e5_apex_agents/e5_exact_sequential_prefix_aggregate_2026-08-22.json (main checkout)	n/a	verified

@@ -31,7 +31,7 @@ across the operative Operating Point the controller chooses.
 Compared against the 5 existing controllers from iter-167 (C0..C5) on:
   (a) contrast-restored total |delta Y| per (method, controller)
   (b) compute cost in extra rollouts
-  (c) Pareto-optimality vs iter-167 oracle (per-prompt marginal-cost oracle)
+  (c) Pareto-optimality vs iter-167 oracle (per-prompt bounded raw-yield oracle)
 
 Outputs (platform_hybrid/experiments/results/p5p8/p7_iter175_*):
   per_obs.tsv        (2560 obs: G_C6, dY_C6, fire flags)
@@ -51,7 +51,7 @@ sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scri
 from _paths import REPO_ROOT  # noqa: E402
 WORKTREE = str(REPO_ROOT)
 DATA_DIR = os.path.join(WORKTREE, "platform_hybrid/experiments/results/n2_reward_tensor_resume")
-OUT_DIR = os.path.join(WORKTREE, "platform_hybrid/experiments/results/p5p8")
+OUT_DIR = os.path.join(WORKTREE, "platform_hybrid/experiments/results/p5p8/corrected-review19-v3")
 os.makedirs(OUT_DIR, exist_ok=True)
 G_BASE = 8
 G_MENU = [2, 4, 6, 8, 10, 12, 16, 24, 32]
@@ -76,7 +76,7 @@ def per_prompt_delta_y(p_hat, g_prime):
     return yield_iid(p_hat, g_prime) - yield_iid(p_hat, G_BASE)
 
 def oracle_g_star(p_hat):
-    """Marginal cost-effective oracle."""
+    """Raw-yield oracle on G_MENU; same objective as capture and regret."""
     if p_hat <= 0.0 or p_hat >= 1.0:
         return G_BASE, 0.0
     best_g, best_score, best_dy = G_BASE, -math.inf, 0.0
@@ -86,7 +86,7 @@ def oracle_g_star(p_hat):
         dY = per_prompt_delta_y(p_hat, g)
         if dY <= 1e-12:
             continue
-        score = dY / max(1, g - G_BASE)
+        score = dY
         if score > best_score:
             best_g, best_score, best_dy = g, score, dY
     if best_score <= 1e-12:
@@ -121,7 +121,7 @@ def dualformer_g_target(p_hat):
 # ---------- C6 Calibrated-Hybrid: intersection-and-fallback ----------
 
 def c6_decision(p_hat, step_zvf, zvf_tau=0.70):
-    """Return (G_C6, fire_dual_bool, fire_zvf_bool). The decision tree:
+    """Return (G_C6, fire_dual_bool, fire_zvf_bool, G_dual_target). The decision tree:
 
     fire_due_to_dualformer = (g_dual != G_base) and (bimodal > 0.05)
     fire_due_to_zvf        = step_zvf >= zvf_tau
@@ -139,9 +139,9 @@ def c6_decision(p_hat, step_zvf, zvf_tau=0.70):
     if fire_due_to_dualformer and fire_due_to_zvf:
         return g_dual, fire_due_to_dualformer, fire_due_to_zvf, g_dual
     elif fire_due_to_zvf:
-        return 16, fire_due_to_dualformer, fire_due_to_zvf, 16
+        return 16, fire_due_to_dualformer, fire_due_to_zvf, g_dual
     else:
-        return G_BASE, fire_due_to_dualformer, fire_due_to_zvf, G_BASE
+        return G_BASE, fire_due_to_dualformer, fire_due_to_zvf, g_dual
 
 
 # ---------- existing empirical controllers (verbatim from iter-167) ----------
@@ -396,6 +396,8 @@ def main(B=2000, seed=20260705):
             w.writerow(r)
     print(f"[iter175 v2] wrote {sweep_path} ({len(sweeps)} rows)")
     summary = {
+        "protocol": "corrected-review19-v3",
+        "oracle_objective": "raw_delta_y_on_common_G_MENU; cost efficiency is descriptive only",
         "n_obs": len(obs),
         "zvf_tau_default": 0.70,
         "per_method_c6_pct": {r["method"]: r["pct_oracle_captured"]

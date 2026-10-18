@@ -3,8 +3,8 @@
 
 Crosses iter-111 (ADAPTIVE-G* on N2 four-method per-prompt k_p) with iter-99
 (N10 5-seed τ-trigger sweep). Closed-form Bernoulli z(p,G)=p^G+(1-p)^G is
-uniquely determined despite the symmetric p-ambiguity because z(p_0,G') =
-z(1-p_0,G'). 4 headline claims all PASS with honest framing — see
+interpreted under a homogeneous Bernoulli scenario despite the symmetric p-ambiguity because z(p_0,G') =
+z(1-p_0,G'). Historical claims require rerunning the corrected protocol — see
 docs/p5p8_improvements/127_p7_n10_adaptive_gstar_multiseed.md.
 
 Stdlib only. ≤300 LoC.
@@ -19,7 +19,7 @@ sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scri
 from _paths import REPO_ROOT  # noqa: E402
 WORK = REPO_ROOT
 N10_DIR = WORK / "platform_hybrid/experiments/results/n10_seed_expansion"
-OUT_DIR = WORK / "platform_hybrid/experiments/results/p5p8"
+OUT_DIR = WORK / "platform_hybrid/experiments/results/p5p8/corrected-review19-v3"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 G_BASE, G_CANDS = 8, (16, 32, 64)
@@ -30,7 +30,7 @@ RULES = ("STATIC_G16", "DUALFORMER_d4", "DUALFORMER_d8", "ADAPTIVE_GSTAR")
 
 
 def zvf_binom(p, G):
-    p = min(max(p, 1e-15), 1.0 - 1e-15)
+    p = min(max(p, 0.0), 1.0)
     return p ** G + (1.0 - p) ** G
 
 
@@ -63,7 +63,7 @@ def optimal_gstar(zvf_obs):
         z = predicted_zvf(zvf_obs, G)
         if z <= threshold:
             return G, z
-    return 64, predicted_zvf(zvf_obs, 64)
+    return max(G_CANDS), predicted_zvf(zvf_obs, max(G_CANDS))
 
 
 def load_n10():
@@ -72,6 +72,10 @@ def load_n10():
         d = json.load(open(N10_DIR / f"n10_grpo_s{s}.json"))
         by_seed[s] = sorted(d.get("step_log", []), key=lambda r: r["step"])
     return by_seed
+
+
+def target_met(zvf_obs, z_target):
+    return z_target <= max(0.50, 0.5 * zvf_obs) + 1e-12
 
 
 def decide_step(zvf_obs):
@@ -83,7 +87,8 @@ def decide_step(zvf_obs):
         "predicted_zvf_G32": predicted_zvf(zvf_obs, 32),
         "predicted_zvf_G64": predicted_zvf(zvf_obs, 64),
         "Gstar": Gstar, "zvf_at_Gstar": z_at,
-        "salvageable": int(Gstar != max(G_CANDS) or z_at < zvf_obs * 0.5),
+        "target_status": "TARGET_MET" if target_met(zvf_obs, z_at) else "NO_FEASIBLE_G",
+        "salvageable": int(target_met(zvf_obs, z_at)),
         "Gstar_eq_G16": int(Gstar == 16),
         "Gstar_eq_G32": int(Gstar == 32),
         "Gstar_eq_G64": int(Gstar == 64),
@@ -97,11 +102,12 @@ def step_decision(zvf_obs, tau, rule):
         return G_BASE, zvf_obs, False, 0
     if rule == "ADAPTIVE_GSTAR":
         Gstar, z_at = optimal_gstar(zvf_obs)
-        return Gstar, z_at, True, int(Gstar != max(G_CANDS))
+        return Gstar, z_at, True, int(target_met(zvf_obs, z_at))
     # STATIC_G16 / DUALFORMER_d4 / DUALFORMER_d8 all escalate to G=16
     # when fired (DUALFORMER_d4/d8 resolve to min(12/16, 64)=12/16, but the
     # next-larger candidate in {16,32,64} is 16).
-    return 16, predicted_zvf(zvf_obs, 16), True, 0
+    z_at = predicted_zvf(zvf_obs, 16)
+    return 16, z_at, True, int(target_met(zvf_obs, z_at))
 
 
 def replay_seed(steps, tau, rule):
@@ -113,6 +119,9 @@ def replay_seed(steps, tau, rule):
         rows.append({
             "zvf_obs": zvf_obs, "fired": int(fired),
             "G_used": G_used, "zvf_target": z_target, "salvage": salvage,
+            "target_status": ("NOT_TRIGGERED" if not fired else
+                              "TARGET_MET" if salvage else
+                              "NO_FEASIBLE_G" if not target_met(zvf_obs, optimal_gstar(zvf_obs)[1]) else "TARGET_NOT_MET"),
             "cost_ratio": cost, "delta_z": zvf_obs - z_target,
             "net_benefit": zvf_obs - z_target - 0.5 * (cost - 1.0),
         })
@@ -176,7 +185,7 @@ def main():
     write_tsv(OUT_DIR / "p7_iter115_per_step_n10.tsv",
               ["seed", "step", "zvf_obs", "reward", "mean_len", "p0_inverted",
                "predicted_zvf_G16", "predicted_zvf_G32", "predicted_zvf_G64",
-               "Gstar", "zvf_at_Gstar", "salvageable",
+               "Gstar", "zvf_at_Gstar", "salvageable", "target_status",
                "Gstar_eq_G16", "Gstar_eq_G32", "Gstar_eq_G64"], per_step)
     print(f"[OK] per_step_n10.tsv: {len(per_step)} rows")
 
@@ -203,6 +212,9 @@ def main():
                     "seed": seed, "tau": tau, "rule": rule,
                     "mean_net_benefit": sm["mean_net_benefit"],
                 })
+
+    write_tsv(OUT_DIR / "p7_iter115_controller_replay.tsv", list(replay_rows[0]), replay_rows)
+    write_tsv(OUT_DIR / "p7_iter115_per_seed_summary.tsv", list(summary_rows[0]), summary_rows)
 
     # 3. bootstrap CIs -----------------------------------------------------
     salv_ci, nb_ci = [], []

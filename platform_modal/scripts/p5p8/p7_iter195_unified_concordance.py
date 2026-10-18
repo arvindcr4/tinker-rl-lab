@@ -1,38 +1,10 @@
 #!/usr/bin/env python3
-"""
-P7 iter-195 — Cross-paradigm Adaptive-G controller concordance.
+"""Iter195 synthetic rule concordance, corrected-review19-v3.
 
-Fresh vein (b) of P5P8_IMPROVEMENT_BRIEF.md: unify the Adaptive-G
-controller (iter-119) with the Dualformer auto-mode rule (Berkeley
-row 01) and the AlphaProof tree-baseline gamma*=0 smoothing (Berkeley
-row 19) into ONE calibrated controller section.
-
-Step-level binary decisions on the N2 four-method same-stack panel
-(4 methods x 40 steps = 160 step-cells):
-
-  AG-step  : Adaptive-G (iter-119) fires iff zvf_step >= tau = 0.70.
-  DF-step  : Dualformer auto-mode fires iff the step contains at
-             least one contrast prompt AND the cell-level compute-
-             equivalent reward r / sqrt(G) at G_BASE = 8 exceeds
-             that at G_ESC = 16.
-  AP-step  : AlphaProof gamma*=0 fires iff the smoothed-variance
-             proxy (Dirichlet(1,1) = Beta(1,1) at depth=0) for the
-             mean contrast-prompt kbar is strictly less than the
-             naive variance proxy kbar (G - kbar) / G^2.
-
-Concordance: Cohen's kappa among the three pairs (AG x DF,
-AG x AP, DF x AP), pooled across methods, with bootstrap percentile
-CIs (B=2000, seed=20260706).  Headline: does the Adaptive-G
-controller agree with the Berkeley-formalism rules when measured on
-the SAME step-cells?
-
-Outputs:
-  platform_hybrid/experiments/results/p5p8/p7_iter195_concordance_pair.tsv
-  platform_hybrid/experiments/results/p5p8/p7_iter195_concordance_boot.tsv
-  platform_hybrid/experiments/results/p5p8/p7_iter195_concordance_per_step.tsv
-  platform_hybrid/experiments/results/p5p8/p7_iter195_summary.json
-
-Stdlib only.
+The legacy AG/DF/AP column IDs are retained solely for schema traceability.
+AG is observed ZVF thresholding; DF is a mixed-group indicator; AP is an
+always-off diagnostic from an impossible inequality. These are not validated
+implementations of the named research systems. Cross-system verdicts are null.
 """
 from __future__ import annotations
 
@@ -48,7 +20,7 @@ sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))  # platform_mo
 from _paths import REPO_ROOT  # noqa: E402
 WORK = REPO_ROOT
 N2_DIR = WORK / "platform_hybrid/experiments/results/n2_reward_tensor_resume"
-OUT = WORK / "platform_hybrid/experiments/results/p5p8"
+OUT = WORK / "platform_hybrid/experiments/results/p5p8/corrected-review19-v3"
 OUT.mkdir(parents=True, exist_ok=True)
 
 METHODS = ("grpo", "aero", "gift", "areal")
@@ -61,12 +33,14 @@ SEED = 20260706
 
 def kappa(a, b):
     n = len(a)
+    if not n or len(b) != n:
+        raise ValueError("kappa requires nonempty aligned vectors")
     p0 = sum(1 for x, y in zip(a, b) if x == y) / n
     p1 = sum(a) / n
     p2 = sum(b) / n
     pe = p1 * p2 + (1 - p1) * (1 - p2)
     if pe == 1.0:
-        return float("nan")
+        return None
     return (p0 - pe) / (1 - pe)
 
 
@@ -83,6 +57,11 @@ def ap_naive_proxy(kbar, G):
 
 
 def step_decisions(row):
+    """Synthetic diagnostics only: AG threshold, mixed-group indicator, always-off.
+
+    The historical AP inequality is mathematically unreachable, and DF
+    simplifies to a mixed-group indicator. Neither implements the named systems.
+    """
     zvf_step = float(row["zvf"])
     ag_fire = int(zvf_step >= TAU)
 
@@ -208,13 +187,15 @@ def main():
             samp = [rng.choice(idx) for _ in range(n)]
             aa = [a[i] for i in samp]
             bb = [b[i] for i in samp]
-            boots.append(kappa(aa, bb))
+            value = kappa(aa, bb)
+            if value is not None:
+                boots.append(value)
         boots.sort()
-        lo = boots[int(0.025 * N_BOOT)]
-        hi = boots[int(0.975 * N_BOOT)]
+        lo = boots[int(0.025 * len(boots))] if boots else None
+        hi = boots[min(len(boots) - 1, int(0.975 * len(boots)))] if boots else None
         boot_rows.append({"pair": label, "point": kp, "lo": lo, "hi": hi,
                           "n": n, "B": N_BOOT,
-                          "excl_zero": int(lo > 0 or hi < 0)})
+                          "excl_zero": int(lo > 0 or hi < 0) if boots else None})
     with open(OUT / "p7_iter195_concordance_boot.tsv", "w") as f:
         w = csv.DictWriter(f, fieldnames=("pair", "point", "lo", "hi", "n",
                                           "B", "excl_zero"),
@@ -239,23 +220,11 @@ def main():
                           "value": sum(c["ap"] for c in sub) / len(sub),
                           "n": len(sub)})
 
-    verdicts = {
-        "H1_AG_step_fires_when_zvf_high": int(all(
-            r["kappa"] > 0.5 for r in pair_rows
-            if r["pair"] == "agxdf" and r["method"] != "POOLED")),
-        "H2_DF_AP_concordant_at_step_level": int(all(
-            r["kappa"] > 0.5 for r in pair_rows
-            if r["pair"] == "dfxap" and r["method"] != "POOLED")),
-        "H3_AG_DF_concordant_at_step_level": int(all(
-            r["kappa"] > 0.5 for r in pair_rows
-            if r["pair"] == "agxdf" and r["method"] != "POOLED")),
-        "H4_AG_AP_concordant_at_step_level": int(all(
-            r["kappa"] > 0.5 for r in pair_rows
-            if r["pair"] == "agxap" and r["method"] != "POOLED")),
-        "H5_pooled_AG_DF_kappa_excludes_zero": int(boot_rows[0]["excl_zero"]),
-        "H6_pooled_AG_AP_kappa_excludes_zero": int(boot_rows[1]["excl_zero"]),
-        "H7_pooled_DF_AP_kappa_excludes_zero": int(boot_rows[2]["excl_zero"]),
-    }
+    verdicts = {key: None for key in (
+        "H1_AG_step_fires_when_zvf_high", "H2_DF_AP_concordant_at_step_level",
+        "H3_AG_DF_concordant_at_step_level", "H4_AG_AP_concordant_at_step_level",
+        "H5_pooled_AG_DF_kappa_excludes_zero", "H6_pooled_AG_AP_kappa_excludes_zero",
+        "H7_pooled_DF_AP_kappa_excludes_zero")}
 
     summary = {
         "ts": "2026-07-06",
@@ -268,11 +237,16 @@ def main():
                      "N_BOOT": N_BOOT, "SEED": SEED},
         "stratified_rates": rate_rows,
         "boots": boot_rows,
-        "verdicts": verdicts,
+        "verdicts": {key: None for key in verdicts},
+        "verdict_status": "NOT_EVALUATED_SYNTHETIC_DIAGNOSTICS",
+        "protocol": "corrected-review19-v3",
+        "rule_identity": {"ag": "observed_zvf_threshold",
+                          "df": "mixed_group_indicator",
+                          "ap": "always_off_impossible_inequality"},
     }
     with open(OUT / "p7_iter195_summary.json", "w") as f:
-        json.dump(summary, f, indent=2)
-    print(json.dumps(verdicts, indent=2))
+        json.dump(summary, f, indent=2, allow_nan=False)
+    print(json.dumps(summary["verdicts"], indent=2))
     print("Done.")
 
 

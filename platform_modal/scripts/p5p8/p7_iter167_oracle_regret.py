@@ -7,8 +7,8 @@ corpus, compute the *oracle-optimal* adaptive group-size G* then measure the
 regret of each empirical controller (C0 fixed, C1 zvf-triage, C2 Dualformer,
 C3 Hybrid, C5 Iso-G) against oracle.
 
-Oracle criterion (cost-effective, per frontier synthesis Round 2):
-    maximize  DeltaY(p_hat, G') / max(1, G' - G_base)
+Oracle criterion (corrected-review19-v3, bounded raw yield):
+    maximize  DeltaY(p_hat, G') over the common G_MENU
 where
     DeltaY(p_hat, G') = ZVF_iid(p_hat, G_base) - ZVF_iid(p_hat, G')
     ZVF_iid(p, G)     = p^G + (1-p)^G
@@ -46,7 +46,7 @@ sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scri
 from _paths import REPO_ROOT  # noqa: E402
 WORKTREE = str(REPO_ROOT)
 DATA_DIR = os.path.join(WORKTREE, "platform_hybrid/experiments/results/n2_reward_tensor_resume")
-OUT_DIR = os.path.join(WORKTREE, "platform_hybrid/experiments/results/p5p8")
+OUT_DIR = os.path.join(WORKTREE, "platform_hybrid/experiments/results/p5p8/corrected-review19-v3")
 os.makedirs(OUT_DIR, exist_ok=True)
 
 G_BASE = 8
@@ -85,7 +85,7 @@ def per_prompt_yield_per_extra(p_hat: float, G_prime: int) -> float:
 
 
 def oracle_g_star(p_hat: float) -> Tuple[int, float, float, float]:
-    """Pick G' that maximises ΔY / max(1, G' - 8). Return (G*, dY, dY_per_extra, was_oracle_active)."""
+    """Pick G' maximizing raw ΔY on G_MENU. Return (G*, dY, score, active)."""
     best_g, best_score, best_dy = G_BASE, -math.inf, 0.0
     for g in G_MENU:
         if g == G_BASE:
@@ -93,7 +93,7 @@ def oracle_g_star(p_hat: float) -> Tuple[int, float, float, float]:
         dY = per_prompt_delta_y(p_hat, g)
         if dY <= 1e-12:
             continue
-        score = per_prompt_yield_per_extra(p_hat, g)
+        score = dY
         if score > best_score:
             best_g, best_score, best_dy = g, score, dY
     # If best_score still -inf or zero, oracle stays at base.
@@ -231,9 +231,10 @@ def per_step_aggregate(obs: List[dict]) -> List[dict]:
 
 
 def per_method_aggregate(obs: List[dict]) -> List[dict]:
-    """For each (method, controller): cumulative absolute ΔY, cumulative dY/cost, % oracle captured,
-       and the *cost-effective* alternative: oracle picks G' to maximise dY/extras; controller
-       picks dY/extras directly. We report both axes."""
+    """Raw-yield regret/capture against the bounded raw-yield oracle.
+
+    Efficiency ratios are descriptive comparisons, not efficiency-optimal regret.
+    """
     out = []
     for method in METHODS:
         m_obs = [o for o in obs if o["method"] == method]
@@ -246,7 +247,7 @@ def per_method_aggregate(obs: List[dict]) -> List[dict]:
             ctrl_costeff = ctrl_abs / max(1, ctrl_extras) * 1000.0 if ctrl_extras > 0 else 0.0
             captured = (ctrl_abs / oracle_abs) * 100.0 if oracle_abs > 0 else 0.0
             regret = oracle_abs - ctrl_abs
-            # Cost-effective ratio of controller cosine to oracle cosine
+            # Descriptive efficiency ratio; the reference optimizes raw yield
             costeff_ratio = (ctrl_costeff / oracle_costeff) if oracle_costeff > 0 else 0.0
             out.append({
                 "method": method,
@@ -352,6 +353,8 @@ def main() -> None:
     print(f"[iter167] wrote bootstrap TSV ({len(boot)} rows)")
 
     summary = {
+        "protocol": "corrected-review19-v3",
+        "oracle_objective": "raw_delta_y_on_common_G_MENU; cost efficiency is descriptive only",
         "n_obs": len(obs),
         "methods": METHODS,
         "g_base": G_BASE,

@@ -43,6 +43,7 @@ import json
 import math
 import os
 import pathlib
+from _review_replay import stable_seed
 import random
 import statistics
 from typing import Any, Callable
@@ -50,7 +51,7 @@ from typing import Any, Callable
 ROOT = pathlib.Path(__file__).resolve().parents[3]
 N10_DIR = ROOT / "experiments" / "results" / "n10_seed_expansion"
 N2_TSV = ROOT / "experiments" / "results" / "n2_reward_tensor_resume" / "n2_metrics.tsv"
-OUT_DIR = ROOT / "experiments" / "results" / "p5p8/corrected-review19-v2"
+OUT_DIR = ROOT / "experiments" / "results" / "p5p8/corrected-review19-v3"
 OUT_TSV = OUT_DIR / "p7_iter123_headline_cis.tsv"
 OUT_JSON = OUT_DIR / "p7_iter123_headline_cis.json"
 
@@ -259,7 +260,7 @@ def audit_n2_four_method() -> list[dict]:
     # H1: each method has 40 steps; method-level mean ZVF and its CI under step bootstrap
     for m in methods:
         zvf = by_method[m]
-        rng = random.Random(SEED + hash(m) % 10000)
+        rng = random.Random(SEED + stable_seed(m) % 10000)
         n = len(zvf)
         boots = []
         for _ in range(B):

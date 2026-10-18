@@ -12,7 +12,7 @@ n10_seed_expansion panel:
     * FIRE_p,t = 1[zvf_p,t ≥ τ] for each (seed, step) pair.
     * For each pair (i, j) of the k seeds, compute Cohen's κ
       on the 15-step FIRE vector (binary agreement above chance).
-    * Mean κ, SE(κ), CV(κ) over the C(k,2) pairs.
+    * Mean κ, descriptive SE(κ), SD(κ) over the C(k,2) pairs.
   - GROWING-PANEL ANALYSIS (the brief's literal "growing panel" vein):
     * k = 2, 3, 4, 5: the FIRST k seeds, in the order [42, 179, 316, 453, 590].
     * Track mean κ as k grows; test convergence.
@@ -26,8 +26,7 @@ Hypotheses (all falsifiable):
   H3: τ* = argmax_τ mean κ on the 5-seed panel lies in the iter-135
       "stable τ band" [0.55, 0.80]. This is the GROWING-panel analogue of
       the unified-bank's τ recommendation.
-  H4: At τ*, CV(κ across pairs) ≤ 0.30 — the κ recommendation is
-      STABLE across seed pairs (no single seed-pair dominates).
+  H4: Retired: CV is unsuitable for a signed statistic. Report SD instead.
 
 Outputs:
   platform_hybrid/experiments/results/p5p8/p7_iter143_pair_kappa.tsv     (7 τ × 10 pairs = 70 rows)
@@ -38,6 +37,7 @@ Outputs:
 Stdlib only.
 """
 import json
+import math
 import statistics
 from itertools import combinations
 from pathlib import Path
@@ -47,7 +47,7 @@ sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scri
 from _paths import REPO_ROOT  # noqa: E402
 WORK = REPO_ROOT
 N10_DIR = WORK / "platform_hybrid/experiments/results/n10_seed_expansion"
-OUT_DIR = WORK / "platform_hybrid/experiments/results/p5p8"
+OUT_DIR = WORK / "platform_hybrid/experiments/results/p5p8/corrected-review19-v3"
 
 TAU_GRID = (0.30, 0.40, 0.50, 0.55, 0.60, 0.65, 0.70, 0.75, 0.80, 0.85, 0.90)
 SEED_ORDER = (42, 179, 316, 453, 590)  # panel order, used for growing-k slices
@@ -59,20 +59,27 @@ LANDIS_KOCH_FAIR = 0.40  # "fair agreement" lower bound
 # ---------- I/O ----------
 
 def load_seeds():
-    """Load {seed: [zvf per step]} for the 5 N10 GRPO seeds, padded/truncated
-    to N_STEPS=15."""
+    """Require the full panel, unique aligned step IDs and finite probabilities."""
     out = {}
-    for s in SEED_ORDER:
-        path = N10_DIR / f"n10_grpo_s{s}.json"
-        if not path.exists():
-            raise FileNotFoundError(f"missing seed file: {path}")
-        d = json.load(open(path))
-        log = d["step_log"]
-        zvfs = [row["zvf"] for row in log[:N_STEPS]]
-        # Pad if short
-        if len(zvfs) < N_STEPS:
-            zvfs = zvfs + [zvfs[-1]] * (N_STEPS - len(zvfs))
-        out[s] = zvfs
+    expected_ids = None
+    for seed in SEED_ORDER:
+        path = N10_DIR / f"n10_grpo_s{seed}.json"
+        with open(path) as handle:
+            log = json.load(handle)["step_log"]
+        if len(log) != N_STEPS:
+            raise ValueError(f"seed {seed}: expected {N_STEPS} steps, got {len(log)}")
+        ids = [row["step"] for row in log]
+        if len(set(ids)) != N_STEPS:
+            raise ValueError(f"seed {seed}: duplicate step IDs")
+        log = sorted(log, key=lambda row: row["step"])
+        ids = [row["step"] for row in log]
+        if expected_ids is not None and ids != expected_ids:
+            raise ValueError(f"seed {seed}: mismatched step IDs")
+        expected_ids = ids
+        values = [float(row["zvf"]) for row in log]
+        if any(not math.isfinite(z) or not 0 <= z <= 1 for z in values):
+            raise ValueError(f"seed {seed}: invalid ZVF")
+        out[seed] = values
     return out
 
 
@@ -86,7 +93,7 @@ def cohens_kappa(f1, f2):
     """
     n = len(f1)
     if n == 0 or len(f2) != n:
-        return 0.0
+        raise ValueError("kappa requires nonempty aligned vectors")
     agree = sum(1 for a, b in zip(f1, f2) if a == b)
     p_o = agree / n
     p1_pos = sum(f1) / n
@@ -95,10 +102,7 @@ def cohens_kappa(f1, f2):
     p2_neg = 1.0 - p2_pos
     p_e = p1_pos * p2_pos + p1_neg * p2_neg
     if p_e >= 1.0 - 1e-12:
-        # degenerate: everyone agrees (kappa undefined → return 1.0 if perfect)
-        if p_o >= 1.0 - 1e-12:
-            return 1.0
-        return 0.0
+        return None  # chance agreement is one; kappa is undefined
     return (p_o - p_e) / (1.0 - p_e)
 
 
@@ -120,19 +124,27 @@ def all_pair_kappas(panel_zvfs, tau):
 
 
 def summarize_kappas(kdict):
-    """Return {mean, se, cv, n_pairs} over a {pair: kappa} dict."""
-    vals = list(kdict.values())
-    if not vals:
-        return {"mean": 0.0, "se": 0.0, "cv": 0.0, "n_pairs": 0}
-    m = statistics.mean(vals)
-    se = statistics.pstdev(vals) / (len(vals) ** 0.5) if len(vals) > 1 else 0.0
-    cv = (statistics.pstdev(vals) / m) if m > 1e-12 else 0.0
-    return {
-        "mean": round(m, 4),
-        "se": round(se, 4),
-        "cv": round(cv, 4),
-        "n_pairs": len(vals),
-    }
+    """Undefined pairs are excluded and counted; signed kappa uses SD, not CV."""
+    vals = [v for v in kdict.values() if v is not None]
+    n = len(vals)
+    mean = statistics.mean(vals) if n else None
+    sd = statistics.pstdev(vals) if n else None
+    return {"mean": mean, "se": sd / n**0.5 if n else None,
+            "sd": sd, "cv": None, "n_pairs": n,
+            "n_undefined": len(kdict) - n}
+
+
+def pair_diagnostics(panel, tau):
+    rows = []
+    for a, b in combinations(panel, 2):
+        f1, f2 = fire_vector(panel[a], tau), fire_vector(panel[b], tau)
+        k = cohens_kappa(f1, f2)
+        rows.append({"tau": tau, "seed_i": a, "seed_j": b,
+                     "kappa": k, "status": "DEFINED" if k is not None else "UNDEFINED",
+                     "raw_agreement": sum(x == y for x, y in zip(f1, f2)) / len(f1),
+                     "prevalence_i": statistics.mean(f1),
+                     "prevalence_j": statistics.mean(f2), "n_steps": len(f1)})
+    return rows
 
 
 # ---------- Per-τ full-panel analysis ----------
@@ -175,125 +187,57 @@ def write_pair_kappa(full_kappas):
 def write_summary(full_kappas):
     out = OUT_DIR / "p7_iter143_summary.tsv"
     with open(out, "w") as f:
-        cols = ["tau", "mean_kappa", "se_kappa", "cv_kappa", "n_pairs"]
+        cols = ["tau", "mean_kappa", "se_kappa", "sd_kappa", "n_pairs", "n_undefined"]
         f.write("\t".join(cols) + "\n")
         for tau in TAU_GRID:
             s = summarize_kappas(full_kappas[tau])
-            f.write(f"{tau}\t{s['mean']}\t{s['se']}\t{s['cv']}\t{s['n_pairs']}\n")
+            f.write(f"{tau}\t{s['mean']}\t{s['se']}\t{s['sd']}\t{s['n_pairs']}\t{s['n_undefined']}\n")
     print(f"wrote {out} ({len(TAU_GRID)} rows)")
 
 
 def write_growing(growing_kappas):
     out = OUT_DIR / "p7_iter143_growing_kappa.tsv"
     with open(out, "w") as f:
-        cols = ["k", "tau", "mean_kappa", "se_kappa", "cv_kappa", "n_pairs"]
+        cols = ["k", "tau", "mean_kappa", "se_kappa", "sd_kappa", "n_pairs", "n_undefined"]
         f.write("\t".join(cols) + "\n")
         for (k, tau), kdict in sorted(growing_kappas.items()):
             s = summarize_kappas(kdict)
-            f.write(f"{k}\t{tau}\t{s['mean']}\t{s['se']}\t{s['cv']}\t{s['n_pairs']}\n")
+            f.write(f"{k}\t{tau}\t{s['mean']}\t{s['se']}\t{s['sd']}\t{s['n_pairs']}\t{s['n_undefined']}\n")
     print(f"wrote {out} ({len(growing_kappas)} rows)")
 
 
 # ---------- Headline hypotheses ----------
 
 def headline(panel_zvfs, full_kappas, growing_kappas):
-    # H1: canonical τ=0.65 mean κ ≥ 0.40
-    canonical = summarize_kappas(full_kappas[CANONICAL_TAU])
-    h1_pass = canonical["mean"] >= LANDIS_KOCH_FAIR
-
-    # H2: κ(k=5) ≥ κ(k=2) − 0.10 at canonical τ=0.65
-    k5 = summarize_kappas(growing_kappas[(5, CANONICAL_TAU)])
-    k2 = summarize_kappas(growing_kappas[(2, CANONICAL_TAU)])
-    h2_pass = k5["mean"] >= (k2["mean"] - 0.10)
-
-    # H3: τ* = argmax_τ mean κ on full 5-seed panel lies in iter-135 band
-    iter135_band = (0.55, 0.80)
-    best_tau = max(TAU_GRID, key=lambda t: summarize_kappas(full_kappas[t])["mean"])
-    h3_pass = iter135_band[0] <= best_tau <= iter135_band[1]
-
-    # H4: at τ*, CV(κ across pairs) ≤ 0.30
-    h4_cv = summarize_kappas(full_kappas[best_tau])["cv"]
-    h4_pass = h4_cv <= 0.30
-
-    # Growing-panel convergence table
-    growing_table = {}
-    for k in (2, 3, 4, 5):
-        growing_table[k] = {
-            tau: summarize_kappas(growing_kappas[(k, tau)])["mean"]
-            for tau in TAU_GRID
-        }
-
+    stats = {tau: summarize_kappas(pairs) for tau, pairs in full_kappas.items()}
+    eligible = [tau for tau, row in stats.items() if row["mean"] is not None]
+    best = max(eligible, key=lambda tau: stats[tau]["mean"]) if eligible else None
+    canonical = stats[CANONICAL_TAU]
+    k2 = summarize_kappas(growing_kappas[(2, CANONICAL_TAU)])["mean"]
+    k5 = summarize_kappas(growing_kappas[(5, CANONICAL_TAU)])["mean"]
     summary = {
-        "iter": 143,
-        "pillar": "P7",
-        "vein": "Inter-seed FIRE-decision Cohen's κ concordance on the GROWING n10_seed_expansion panel",
-        "panel": "n10_seed_expansion/n10_grpo_s{42,179,316,453,590}.json",
-        "n_seeds": len(panel_zvfs),
-        "n_steps_per_seed": N_STEPS,
-        "tau_grid": list(TAU_GRID),
-        "canonical_tau": CANONICAL_TAU,
-        "landis_koch_fair_threshold": LANDIS_KOCH_FAIR,
-        "iter135_stable_band": list(iter135_band),
+        "protocol": "corrected-review19-v3", "iter": 143,
+        "status": "DEFINED" if eligible else "NO_DEFINED_KAPPA",
+        "best_tau": best, "canonical_summary_row": canonical,
+        "per_tau": stats, "n_steps_per_seed": {k: len(v) for k, v in panel_zvfs.items()},
+        "pair_diagnostics": [r for tau in TAU_GRID for r in pair_diagnostics(panel_zvfs, tau)],
         "H1_mean_kappa_at_canonical_ge_040": {
-            "tau": CANONICAL_TAU,
-            "mean_kappa": canonical["mean"],
-            "se_kappa": canonical["se"],
-            "cv_kappa": canonical["cv"],
-            "n_pairs": canonical["n_pairs"],
-            "pass": bool(h1_pass),
-        },
+            "pass": canonical["mean"] >= LANDIS_KOCH_FAIR if canonical["mean"] is not None else None},
         "H2_kappa_k5_ge_kappa_k2_minus_010": {
-            "tau": CANONICAL_TAU,
-            "kappa_k2": k2["mean"],
-            "kappa_k5": k5["mean"],
-            "delta_k5_minus_k2": round(k5["mean"] - k2["mean"], 4),
-            "pass": bool(h2_pass),
-        },
+            "pass": k5 >= k2 - 0.10 if k2 is not None and k5 is not None else None},
         "H3_best_tau_in_iter135_band": {
-            "best_tau": best_tau,
-            "best_mean_kappa": summarize_kappas(full_kappas[best_tau])["mean"],
-            "iter135_band": list(iter135_band),
-            "pass": bool(h3_pass),
-        },
-        "H4_cv_at_best_tau_le_030": {
-            "best_tau": best_tau,
-            "cv_kappa": h4_cv,
-            "pass": bool(h4_pass),
-        },
-        "growing_panel_table": growing_table,
-        "canonical_summary_row": canonical,
+            "pass": 0.55 <= best <= 0.80 if best is not None else None},
+        "H4_cv_at_best_tau_le_030": {"pass": None, "status": "RETIRED_SIGNED_STATISTIC_USE_SD"},
+        "growing_panel_table": {str(key): summarize_kappas(value) for key, value in growing_kappas.items()},
     }
-    out = OUT_DIR / "p7_iter143_summary.json"
-    with open(out, "w") as f:
-        json.dump(summary, f, indent=2)
-    print(f"wrote {out}")
-
-    print()
-    print("=== Per-τ Cohen's κ (full 5-seed panel) ===")
-    for tau in TAU_GRID:
-        s = summarize_kappas(full_kappas[tau])
-        marker = " <-- canonical" if tau == CANONICAL_TAU else ""
-        print(f"  τ={tau:.2f}  mean_k={s['mean']:+.4f}  se={s['se']:.4f}  "
-              f"cv={s['cv']:.3f}  n_pairs={s['n_pairs']}{marker}")
-    print()
-    print("=== Growing-panel mean κ at canonical τ = 0.65 ===")
-    for k in (2, 3, 4, 5):
-        s = summarize_kappas(growing_kappas[(k, CANONICAL_TAU)])
-        print(f"  k={k}: mean_k={s['mean']:+.4f}  n_pairs={s['n_pairs']}")
-    print()
-    print(f"H1 (mean κ ≥ 0.40 at τ=0.65): {h1_pass}  "
-          f"(observed mean_k={canonical['mean']:+.4f})")
-    print(f"H2 (κ(k=5) ≥ κ(k=2)−0.10 at τ=0.65): {h2_pass}  "
-          f"(observed κ(k=2)={k2['mean']:+.4f}, κ(k=5)={k5['mean']:+.4f})")
-    print(f"H3 (best τ in iter-135 band [0.55,0.80]): {h3_pass}  "
-          f"(observed best_tau={best_tau:.2f})")
-    print(f"H4 (CV(κ) ≤ 0.30 at best_tau): {h4_pass}  "
-          f"(observed cv={h4_cv:.3f} at τ={best_tau})")
+    with open(OUT_DIR / "p7_iter143_summary.json", "w") as handle:
+        json.dump(summary, handle, indent=2, allow_nan=False)
     return summary
 
 
 def main():
     panel_zvfs = load_seeds()
+    OUT_DIR.mkdir(parents=True, exist_ok=True)
     print(f"loaded {len(panel_zvfs)} seeds × {N_STEPS} steps each")
     full_kappas = full_panel_kappas(panel_zvfs)
     growing_kappas = growing_panel_kappas(panel_zvfs)

@@ -39,6 +39,7 @@ from __future__ import annotations
 
 import json
 import math
+from _review_replay import stable_seed
 import random
 from collections import Counter
 from pathlib import Path
@@ -47,7 +48,7 @@ import sys
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
 from _paths import REPO_ROOT  # noqa: E402
 ROOT = REPO_ROOT
-P5P8 = ROOT / "platform_hybrid/experiments/results/p5p8"
+P5P8 = ROOT / "platform_hybrid/experiments/results/p5p8/corrected-review19-v3"
 P5P8.mkdir(parents=True, exist_ok=True)
 
 G_BASE = 8
@@ -202,8 +203,8 @@ def main():
         reg_mix = Counter(r["regime"] for r in per_method)
         mean_G = sum(G_vals) / n
         mean_dG = sum(dG_vals) / n  # negative == restored contrast
-        G_lo, G_hi = bootstrap_ci(G_vals, n, SEED + hash(m) % 10000, B)
-        dG_lo, dG_hi = bootstrap_ci(dG_vals, n, SEED + hash(m) % 10000 + 7, B)
+        G_lo, G_hi = bootstrap_ci(G_vals, n, SEED + stable_seed(m) % 10000, B)
+        dG_lo, dG_hi = bootstrap_ci(dG_vals, n, SEED + stable_seed(m) % 10000 + 7, B)
         # reward proxy: how well the CCC aligns with observed reward -- use
         # the fraction of methods where CCC fires a G LESS than or equal
         # to G_base (conservative) vs escalates.

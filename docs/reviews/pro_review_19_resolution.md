@@ -35,3 +35,17 @@ CPU-only function regressions cover append probabilities (8/17), already-mixed g
 - R21: stable digest seeds in granularity replay and iter163; remaining scripts still need migration
 - Exact finite-pool fallback computes actual full-pool contrast instead of returning one
 Additional CPU regressions cover ratio estimands, conditional constant-group gaps, dominance/tradeoff/tie, observed-trigger reproduction and candidate-grid/unsupported-model behavior.
+
+## Closure pass: corrected-review19-v3
+
+These changes supersede the specific open code paths below; no historical numerical results or paper conclusions are validated. All seven changed analyses write to `corrected-review19-v3`, leaving stored evidence untouched.
+
+- R8 (iter115): one target-attainment predicate is shared across decisions and replay, including G64. Exact probability endpoints remain exact. Explicit no-feasible-target status and controller-independent salvage are exported with replay and seed summaries.
+- R13 (iter143): always-on/off identical vectors have undefined kappa; undefined pairs are counted and excluded from threshold selection. Raw agreement and both firing prevalences accompany every pair in JSON. All-undefined panels have no selected threshold or passing hypothesis. SD replaces the invalid signed-statistic CV criterion; overlapping pair SE remains descriptive, not independent-seed inference.
+- R13 (iter195): the impossible AP inequality remains only as a clearly named always-off synthetic diagnostic, and DF as a mixed-group indicator. No replacement controller is invented. Cross-system verdicts are null/NOT_EVALUATED, with rule identities in the output. Useful controller concordance remains unestablished.
+- R15 (iter167/175): a versioned objective change makes the oracle maximize raw incremental yield on the shared bounded action menu, matching raw-yield capture and regret consumers, including bootstrap. Cost-efficiency comparisons remain descriptive and are not an efficiency-optimal bound. This is a model replay, not independent training validation or a fixed-dollar-budget optimum.
+- R17 (iter175): the fourth decision slot always records the actual Dualformer target, including C6 fallback and no-fire branches.
+- R20 (iter143 only): exact panel length, unique aligned step IDs and finite unit-interval ZVF are required. Rows sort by explicit step ID; padding/truncation is removed. Other R20 loaders are not certified by this closure pass.
+- R21 (iter123/127): stable digest seeds replace process-randomized Python hashes. Together with prior migrations this fixes the four specifically named scripts; a complete provenance manifest remains open.
+
+Validation: `tests/test_review19_closure.py` exercises synthetic replay/aggregation, both oracle summary/bootstrap consumers, C6 target fields, full iter143 and iter195 output entry points using temporary fixtures, malformed seed logs, and subprocesses with distinct PYTHONHASHSEED. Historical results were not loaded or regenerated; no training, provider calls or paid jobs were run.

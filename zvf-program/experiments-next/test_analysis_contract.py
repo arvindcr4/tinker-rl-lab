@@ -9,16 +9,29 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-import analysis_contract as c
-import build_pool
-import common
-import analyze_rollout_quality as quality
-import aggregate_seed_audits as aggregate
-import analyze_t1_ci as t1
-import analyze_t1_correlated_fix as correlated
-import analyze_t2_floor as t2
-import analyze_t3_gstar as t3
-import fill_t3_prediction as weighted
+# These standalone scripts use local absolute imports. Isolate their module
+# names during collection so other analysis packages cannot replace them.
+import sys
+_LOCAL_NAMES = ['analysis_contract', 'build_pool', 'common', 'analyze_rollout_quality', 'aggregate_seed_audits', 'analyze_t1_ci', 'analyze_t1_correlated_fix', 'analyze_t2_floor', 'analyze_t3_gstar', 'fill_t3_prediction']
+_previous = {name: sys.modules.pop(name, None) for name in _LOCAL_NAMES}
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+try:
+    import analysis_contract as c
+    import build_pool
+    import common
+    import analyze_rollout_quality as quality
+    import aggregate_seed_audits as aggregate
+    import analyze_t1_ci as t1
+    import analyze_t1_correlated_fix as correlated
+    import analyze_t2_floor as t2
+    import analyze_t3_gstar as t3
+    import fill_t3_prediction as weighted
+finally:
+    sys.path.pop(0)
+    for _name, _module in _previous.items():
+        sys.modules.pop(_name, None)
+        if _module is not None:
+            sys.modules[_name] = _module
 
 
 def pool():

@@ -13,7 +13,11 @@ from unittest.mock import Mock,patch
 ROOT=Path(__file__).resolve().parents[2]
 SOURCE=Path(__file__).with_name('modal_public_portfolio_group_75_runtime.py')
 FAST=SOURCE.with_name('modal_public_portfolio_fast_runtime.py')
-spec=importlib.util.spec_from_file_location('actor75_validation_fixture',ROOT/'.codex-run/public_colab_runtime_fast.py')
+RUNTIME_FIXTURE = ROOT / '.codex-run/public_colab_runtime_fast.py'
+if not RUNTIME_FIXTURE.is_file():
+    import pytest
+    pytest.skip('Group75 runtime source is absent from repository; no fabricated fixture', allow_module_level=True)
+spec=importlib.util.spec_from_file_location('actor75_validation_fixture', RUNTIME_FIXTURE)
 actor=importlib.util.module_from_spec(spec);spec.loader.exec_module(actor)
 
 

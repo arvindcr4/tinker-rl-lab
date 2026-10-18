@@ -121,7 +121,11 @@ the slopes.  The fitted coefficients are reported in
   \end{tabular}
   \caption{\textbf{Cross-scale law: per-trace metric vs.~$\log_{10} N$
     across the five frontier anchors.}
-    Ordinary least squares with bootstrap 95\% confidence intervals.
+    Ordinary least squares with bootstrap 95\% confidence intervals
+    ($n=5$ anchors, df $=3$).  Tables~\ref{tab:scaling-fits}--\ref{tab:scaling-cross}
+    use DeepSeek-V3.1's 671B routed-parameter count; the 12-anchor
+    analyses use the 685B checkpoint count (a $0.009$-decade difference
+    that leaves every slope unchanged to the reported precision).
     None of the three slope coefficients is statistically
     distinguishable from zero -- the bootstrap CIs all bracket zero,
     and the within-trace OLS slopes
@@ -201,14 +205,15 @@ $t_{80} \cdot N$ scatter, and (d)~Nemotron-120B collapse autopsy.
 
 \begin{figure}[t]
   \centering
-  \IfFileExists{figures/scaling_law_elevated.png}{%
-  \includegraphics[width=0.85\linewidth]{figures/scaling_law_elevated.png}%
+  \IfFileExists{figures/review_2026-10-18/scaling_law_elevated.png}{%
+  \includegraphics[width=0.85\linewidth]{figures/review_2026-10-18/scaling_law_elevated.png}%
   }{%
     }
   \caption{\textbf{Pillar-1 elevation across 4B--671B.}
     (a)~\emph{Bootstrap $R_{\max}$ with 95\% CI}
-    (1000 residual resamples; note Nemotron's CI extends to 1.5
-    because the bound-saturated refits escape the prior).
+    (1000 residual resamples, $R_{\max}$ constrained to the physical
+    reward range $[0,1]$; Nemotron's CI spans $[0.09, 1.00]$ because its
+    refits are unidentified).
     (b)~\emph{Holdout 70/30}: red bars are the saturation-fit
     test RMSE, gray bars are the constant (train-mean) baseline;
     four of five bars are equal, confirming that the saturation fit
@@ -239,11 +244,11 @@ point estimate suggests (\tableref{tab:scaling-bootstrap}).
     Qwen3-8B              & 0.289 & 5.30 & \textbf{0.468} & 1.42 [0.16,\ 7.62] \\
     Llama-3.1-8B-Instruct & 0.869 & 6.92 & \textbf{0.595} & 0.46 [0.16,\ 1.98] \\
     DeepSeek-V3.1         & 0.847 & 6.48 & \textbf{0.548} & 0.47 [0.16,\ 1.53] \\
-    Nemotron-120B         & 0.310 & 3.26 & 0.277          & 17.87 [0.16,\ 161.4] \\
+    Nemotron-120B         & 0.271 & 3.27 & 0.278          & 12.95 [0.16,\ 104.4] \\
     \bottomrule
   \end{tabular}
   \caption{\textbf{Parametric-bootstrap saturation fit (1000 residual
-    resamples per trace).}  $P(\lambda \ge 9.5)$ is the fraction of
+    resamples per trace; $R_{\max} \in [0,1]$, $\lambda \in [10^{-4}, 10]$).}  $P(\lambda \ge 9.5)$ is the fraction of
     bootstrap refits in which $\lambda$ hits the optimiser's upper
     bound -- on four of five runs this is between 47\% and 60\%,
     confirming that the strict-$R(0)=0$ functional form is degenerate
@@ -253,8 +258,10 @@ point estimate suggests (\tableref{tab:scaling-bootstrap}).
     bound, because its collapse is a real non-monotone deviation
     from saturation rather than a numerical artefact.  $t_{80}$
     intervals are wide (lower-bound 0.16 step = optimiser clamp) for
-    the four degenerate runs, and unidentifiable (0.16--161 step)
-    for Nemotron.}
+    the four degenerate runs, and unidentifiable (0.16--104 step)
+    for Nemotron.  Recomputed with the $[0,1]$ ceiling by
+    \texttt{tools/review\_ledger/P1\_scaling\_elevated\_bounded.py}; an
+    earlier run with $R_{\max}\le 1.5$ changed only the Nemotron row.}
   \label{tab:scaling-bootstrap}
 \end{table}
 
@@ -313,8 +320,9 @@ on $\log_{10} N$ yields a slope of
 $+1.170 \pm 0.254$ per decade (since $\log_{10}(t_{80}\cdot N) =
 \log_{10} t_{80} + \log_{10} N$, adding $1$ to the $\log_{10} t_{80}$
 slope of $+0.170 \pm 0.254$ in \tableref{tab:scaling-iter117-t80};
-regressing unlogged $t_{80}\cdot N$ on $\log_{10} N$ yields
-$+482 \pm 490$ B-parameter-steps per decade, $R^2 = 0.244, p = 0.398$)
+regressing unlogged $t_{80}\cdot N$ on $\log_{10} N$, with
+bootstrap-mean $t_{80}$ and $R_{\max}\in[0,1]$, yields
+$+383 \pm 341$ B-parameter-steps per decade)
 -- which is not informative on the four saturation-bound runs because
 $t_{80}$ is itself clamped at $0.161$.  Using the parametric-bootstrap
 $\bar\lambda$ directly yields a slope of $-0.47 \pm 0.87$ per decade,
@@ -397,16 +405,21 @@ $\text{slope}(\log_{10}N, R)$ is an artefact of $n = 5$ or a real
 property of the GRPO landscape.  We re-run the same OLS-on-log-N
 diagnostic on a wider 12-anchor set that adds seven models to the five
 core anchors: \citet{gptoss} \texttt{gpt-oss-20B} (20B total / 3.6B
-active MoE, $T=24$), the short-horizon dense probes
-\texttt{Qwen3.5-27B} (27B dense, $T=4$) and \texttt{Qwen3-32B} (32B
-dense, $T=5$), the \citet{qwen3moe} MoE probes \texttt{Qwen3-30B-MoE}
+active MoE, $T=30$), the short-horizon dense probes
+\texttt{Qwen3.5-27B} (27B dense, $T=3$) and \texttt{Qwen3-32B} (32B
+dense, $T=3$), the \citet{qwen3moe} MoE probes \texttt{Qwen3-30B-MoE}
 (30B total / 3B active, $T=5$), \texttt{Qwen3-30B-MoE-Inst} (30B
 total / 3B active, $T=3$), and \texttt{Qwen3-235B-MoE} (235B total /
-22B active, $T=3$), and \citet{kimi2025k2, kimi2025thinking}
+22B active, $T=4$), and \citet{kimi2025k2, kimi2025thinking}
 \texttt{Kimi-K2-Thinking} (1000B total / 32B active MoE, $T=20$).  For
 MoE models we track both nominal total parameter count $N_{\text{total}}$
 (used in Table~\ref{tab:scaling-powerlaw}) and per-token active
-parameter count $N_{\text{act}}$ (audited in \secref{sec:iter41}--\secref{sec:iter53}).
+parameter count $N_{\text{act}}$ (both axes are compared in
+\secref{sec:p1-rawtrace}).  $T$ is the number of logged steps in the
+released trace; the five short probes are interrupted runs whose
+traces were transcribed from console output
+(\texttt{run\_id = partial-from-console}) and are used only as
+descriptive sensitivity points.
 We also stratify by \emph{architecture} (MoE vs dense) and compute a
 \emph{Spearman rank correlation} on top of the OLS slope so that
 the result does not depend on the linearity of the log-linear fit.
@@ -607,7 +620,10 @@ AIC profile relative to the best-fit candidate.
     non-negative slope or $\lambda \le 10$ saturation fit collapses
     onto the constant sample mean $\bar R$, yielding identical
     residual sum of squares to the $k=1$ constant model plus the
-    exact $2\Delta k$ parameter penalty.  By the
+    exact $2\Delta k$ parameter penalty.  Because these fits sit on a
+    parameter boundary (or reduce to the constant), the usual AIC
+    regularity conditions for an interior estimate do not hold and the
+    $\Delta$AIC values are descriptive.  By the
     \citet{burnham2002model} convention, $\Delta\text{AIC} < 2$
     means the second-best alternative is ``essentially equivalent'';
     $\Delta\text{AIC} \in (2, 4)$ is ``substantial support'';
@@ -821,8 +837,9 @@ curve collapses onto a step function, and any $\lambda \ge 5$
 produces identical fits to numerical precision.  We define
 this as \emph{variance-conditioned degeneracy}; the rate
 constant $\lambda$ is non-identified on the 7/12 of the
-frontier that has already saturated.  Frontier synthesis
-(ChatGPT Pro Extended, R1): the saturation law's role is
+frontier that has already saturated.  A conjecture raised in the
+external cross-examination (Appendix~\ref{sec:frontier-scaling};
+not a result of ours) is that the saturation law's role is
 not predictive but \emph{taxonomic} -- it partitions the
 frontier into ``saturated'' (variance $\le 0.06$, $\lambda$
 at bound, $R_{\max}$ well identified) vs ``unsaturated''
@@ -883,9 +900,8 @@ between MoE and dense either under the legacy 6-vs-6 split
 5-dense split (statistic $= 0.075, p = 0.789$).  Operationally,
 $R_{\max}$ exhibits no statistically significant trend in
 $\log_{10} N$, and \emph{around that flat baseline, MoE and dense
-residuals are exchangeable}.  Frontier synthesis: once a model's
-learning dynamics are conditioned on $\log_{10} N$, the nominal
-MoE-vs-dense architecture label does not predict the ceiling accuracy.
+residuals are exchangeable}: conditioned on $\log_{10} N$, the nominal
+MoE-vs-dense label does not predict the ceiling accuracy in this pool.
 
 \paragraph{(I) Two-anchor burn-in extrapolation.}
 \label{par:scaling-iter21-two-anchor}
@@ -911,8 +927,8 @@ for FPO).  Adding $\log_{10}(\mathrm{CF})$ lifts CV SSE by 64.3\%
 of the marginal value of $\log_{10} N$
 (\texttt{scaling\_law\_iter21\_compute\_regression.tsv}).
 The compute-adjusted proxy is moderately better than parameter
-count alone -- consistent with frontier synthesis's
-\textit{\emph{compute-bound vs.\ parameter-bound}} framing
+count alone -- consistent with the compute-bound vs.\
+parameter-bound conjecture of Appendix~\ref{sec:frontier-scaling}
 (\secref{par:scaling-compute}) and the well-known
 \citet{kaplan2020scalinglaws} compute-vs-parameter caveat.
 
@@ -1061,8 +1077,8 @@ model contributes one well-measured asymptote, even though the marginal
 regression $R_{\max}\sim\log_{10}N$ is itself flat at $p=0.549$ with
 arch-invariant residuals at $p=0.789$), \emph{not} in per-trace
 kinetics where a 20--30-step binary-reward trajectory carries almost no
-information about $\lambda$. This aligns with the frontier synthesis
-that outcome-reward RL is ``under-identified unless it changes the
+information about $\lambda$. This is in line with the external
+conjecture (Appendix~\ref{sec:frontier-scaling}) that outcome-reward RL is ``under-identified unless it changes the
 induced update operator'': here even the \emph{measurement} of the
 learning transient is under-identified, so claims must be built from
 endpoints and pooled cross-scale contrasts rather than single-trace
@@ -1479,9 +1495,16 @@ $(R_{\max}^{\text{pw}}, \lambda, \gamma)$ at $t_\mathrm{peak}$ anchored at the
 empirical peak; compare to the 2-parameter saturation baseline via
 AICc \citep{burnham2002model} and a nested $F$-test; and run
 LOOCV on the median-split cluster assignment.
-\emph{Result:} the piecewise model \emph{loses} to saturation in
-$5/5$ anchors -- $\Delta\text{AICc} \in [+1.20, +2.79]$, all
-$F$-test $p > 0.28$.  This is not a model-comparison failure but
+\emph{Result} (recomputed with $R_{\max}^{\text{pw}} \in [0,1]$,
+$\lambda \in [10^{-4},10]$, $\gamma \in [-0.2, 0.2]$; Gaussian AICc
+with the residual variance counted in $k$): the piecewise model
+\emph{loses} to saturation in $5/5$ anchors --
+$\Delta\text{AICc} \in [+1.40, +3.16]$ when the empirical
+$t_\mathrm{peak}$ is treated as fixed, and $[+4.30, +6.78]$ when it
+is counted as a fitted parameter; all nested $F$-test $p \ge 0.29$.
+Because the AICc regularity conditions assume interior estimates, the
+$\Delta$AICc values for fits whose $\lambda$ sits on the boundary are
+descriptive rather than calibrated.  This is not a model-comparison failure but
 a \emph{data-resolution} finding: the per-step trace noise
 ($\sigma \approx 0.19$ per iter121) is large enough that an
 extra collapse-rate parameter costs more AICc than it saves in
@@ -1514,11 +1537,11 @@ Figure~\ref{fig:scaling-iter129}.
            $\hat t_\mathrm{peak}$ & $\hat\gamma$ &
            $\Delta\text{AICc}_\text{pw-sat}$ \\
     \midrule
-    Qwen3.5-4B             & 0.817 & 0.930 & 1.0 & $-$0.0001 & $+2.48$ \\
-    Qwen3-8B               & 0.285 & 0.255 & 13.0 & $-$0.0060 & $+1.20$ \\
-    Llama-3.1-8B-Instruct  & 0.869 & 0.948 & 1.0 & $+0.0037$ & $+1.27$ \\
-    DeepSeek-V3.1          & 0.844 & 0.842 & 3.0 & $-$0.0003 & $+2.79$ \\
-    Nemotron-120B          & 0.182 & $1.000^{\ast}$ & 3.0 & $+0.0014$ & $+2.27$ \\
+    Qwen3.5-4B             & 0.817 & 0.816 & 1.0 & $-$0.0001 & $+2.68$ \\
+    Qwen3-8B               & 0.285 & 0.255 & 13.0 & $-$0.0060 & $+1.40$ \\
+    Llama-3.1-8B-Instruct  & 0.869 & 0.923 & 1.0 & $+0.0037$ & $+1.47$ \\
+    DeepSeek-V3.1          & 0.844 & 0.842 & 3.0 & $-$0.0003 & $+3.16$ \\
+    Nemotron-120B          & 0.182 & $1.000^{\ast}$ & 3.0 & $+0.0014$ & $+2.64$ \\
     \midrule
     \multicolumn{5}{r}{\emph{LOOCV cluster agreement}} & $5/5 = 1.00$ \\
     \multicolumn{5}{r}{\emph{Log BF (capability+params vs params alone)}} & $-9.53$ \\
@@ -1526,13 +1549,14 @@ Figure~\ref{fig:scaling-iter129}.
   \end{tabular}
   \caption{\textbf{Iter 129 piecewise fit + LOOCV + Bayes factor.}
     All five anchors have $\Delta\text{AICc} > 0$ (piecewise loses
-    to saturation by $1.2$--$2.8$ units, well above the
-    \citet{burnham2002model} threshold of $2$ ``substantial
-    evidence''), and the Bayes factor at $n=5$ firmly favours the
+    to saturation by $1.4$--$3.2$ units with $t_\mathrm{peak}$ fixed;
+    $4.3$--$6.8$ if $t_\mathrm{peak}$ is counted as a parameter), and the Bayes factor at $n=5$ firmly favours the
     simpler size-only model ($\log \mathrm{BF} = -9.53$, ``very
-    strong'' on Kass-Raftery).  ($^{\ast}$Capped at the physical
-    accuracy ceiling $1.000$; the unconstrained solver in
-    \texttt{scaling\_law\_iter129.py} used upper bound $1.050$.)
+    strong'' on Kass-Raftery).  Piecewise columns recomputed on the
+    raw traces with $R_{\max}^{\text{pw}} \in [0,1]$ by \texttt{tools/review\_ledger/P1\_scaling\_rawtrace\_refit.py}
+    ($^{\ast}$Nemotron's piecewise ceiling sits on the $1.0$ bound, i.e.\
+    it is not identified); LOOCV and BF rows are from
+    \texttt{scaling\_law\_iter129.py}.
     Yet the capability-bimodal cluster assignment is LOOCV stable
     at $5/5$.  Scripts:
     \texttt{scripts/scaling\_law\_iter129.py} $\to$
@@ -1670,12 +1694,21 @@ $n=5$ and $5/2$ at $n=7$), so the AICc values in rows 1--2 of
 \tableref{tab:scaling-iter133-aic} ($\mathrm{AICc} = -23.08$ vs.\
 $-2.04$ at $n=5$; $-41.61$ vs.\ $-10.98$ at $n=7$) hold identically
 for the exogenous pre-RL predictor without any post-hoc endogeneity.
-On the $n=12$ pool, 11 of 12 anchors agree between the exogenous
+On the $n=12$ pool, 11 of 12 anchors agree between the
 $R(1) \ge 0.50$ indicator and the Ward cluster label (only the
-3-step probe \texttt{Qwen3-235B-MoE}, which jumps from $R(1)=0.375$
-to $1.000$ at step 2, switches classes), and the exogenous indicator
-still beats $\log_{10} N$ alone ($\mathrm{AICc} = -32.39$ vs.\
-$-23.81$, $R^2 = 0.608$ vs.\ $0.056$).
+3-step probe \texttt{Qwen3.5-27B}, with $R(1)=0.562$ but trace mean
+$0.437$, switches classes), and the indicator still beats
+$\log_{10} N$ alone ($\mathrm{AICc} = -42.35$ vs.\ $-23.81$,
+$R^2 = 0.795$ vs.\ $0.038$; recomputed by \texttt{tools/review\_ledger/P1\_scaling\_rawtrace\_refit.py}).
+Two caveats bound this result.  First, $R(1)$ is measured before any
+gradient update but on the same rollout process as the endpoint, so
+the indicator restates that checkpoints which start near the GSM8K
+ceiling stay there; it is a pre-update baseline, not an independent
+capability covariate.  Second, the threshold $0.50$ was chosen after
+the bimodality was observed.  The AICc gaps in
+\tableref{tab:scaling-iter133-aic} for the Ward label are therefore
+not evidence for a capability effect: that label is computed from the
+response.
 
 \begin{table}[t]
   \centering
@@ -1697,8 +1730,10 @@ $-23.81$, $R^2 = 0.608$ vs.\ $0.056$).
     baseline.  At $n=5$ and $n=7$, the exogenous pre-RL indicator
     $R(1) \ge 0.50$ produces the exact same partition and identical
     AICc values as the post-hoc Ward cluster label; at $n=12$, the
-    exogenous $R(1) \ge 0.50$ split achieves $\mathrm{AICc} = -32.39$
-    (still beating params-only $-23.81$ by $8.58$ AICc units).  Adding
+    pre-update $R(1) \ge 0.50$ split achieves $\mathrm{AICc} = -42.35$
+    (params-only $-23.81$).  The ``capability'' column uses the Ward
+    label, which is defined on the response and is therefore
+    descriptive only.  Adding
     $\log_{10} N$ on top of capability \emph{worsens} the AICc at every
     pool size because the continuous-size axis adds no explanatory
     power beyond the regime split.
@@ -1707,8 +1742,11 @@ $-23.81$, $R^2 = 0.608$ vs.\ $0.056$).
   \label{tab:scaling-iter133-aic}
 \end{table}
 
-The interpretation is sharp: \emph{the discrete capability regime
-carries the cross-anchor signal, not the continuous parameter count}.
+Descriptively, \emph{a two-regime split separates the endpoints
+better than the continuous parameter count}; because the split is
+either computed from the response (Ward) or from the step-1 reward of
+the same run ($R(1)$), this is a summary of the bimodal endpoint
+distribution, not an exogenous test.
 Adding $\log_{10} N$ on top of the capability indicator worsens the
 AICc by $3.6$ units at $n=5$ and $3.7$ units at $n=11$ and $n=12$,
 because capable and incapable anchors alike span $4\,\text{B}$ to
@@ -1735,17 +1773,19 @@ sharp deliverables:
     $p$-value falls from $0.095$ ($n = 5$) to $0.002$
     ($n = 11$ and $n = 12$), and LOOCV agreement is perfect ($12/12$) at
     every pool size.
-  \item \textbf{Exogenous pre-RL regime dominates parameter count}:
-    at $n=5$ and $n=7$, the pre-RL accuracy regime $R(1) \ge 0.50$
-    induces the exact same partition as post-hoc clustering and beats
-    the $\log_{10} N$ model by $21$--$31$ AICc units, while adding
-    $\log_{10} N$ on top of the regime indicator worsens AICc.
+  \item \textbf{Pre-update baseline regime describes the endpoints
+    better than parameter count}: at $n=5$ and $n=7$, the step-1
+    accuracy regime $R(1) \ge 0.50$ induces the same partition as
+    post-hoc clustering and has $21$--$31$ AICc units lower than the
+    $\log_{10} N$ model ($18.5$ at $n=12$); adding $\log_{10} N$ on top
+    worsens AICc.  $R(1)$ is not independent of the endpoint (same
+    rollout process), so this is descriptive.
 \end{enumerate}
 
 The Pillar-1 finding is therefore: \emph{continuous parameter-count
-scaling laws fail across 4B--1T on this benchmark, whereas a binary
-pre-RL capability regime cleanly partitions the endpoint ceiling
-distribution}.
+scaling laws are not identified across 4B--1T on this benchmark,
+whereas a binary step-1 baseline regime descriptively partitions the
+endpoint ceiling distribution}.
 
 \paragraph{Caveats and forward work.}
 \label{par:scaling-iter133-caveats}
@@ -1811,62 +1851,47 @@ to the upper optimiser edge by an unrealistic boundary condition.
 \paragraph{(a) Iter 137 fit results.}
 \label{par:scaling-iter137-fits}
 
-The 3-param fit succeeds on every anchor and \emph{un-binds
-$\lambda$} on all $5/5$ anchors (vs.~$4/5$ anchored at $\lambda=10$
-under the 2-param fit).  However, the 3-param model loses to the
-2-param model by AICc on $5/5$ anchors (\tableref{tab:scaling-iter137-fits}).
-Notably, in the two-stage plug-in estimator implemented in
-\texttt{scaling\_law\_iter137.py} --- which fixes $c_{3p}$ to the
-early-window mean $\bar R_{1:5}$, constrains $R_{\max}^{3p} \ge \max(y)$,
-and restricts $\lambda_{3p} \in [10^{-3}, 5]$ so the curve cannot
-collapse onto a step function --- the constrained residual sum of
-squares on high-variance traces (\texttt{Qwen3.5-4B} and
-\texttt{Llama-3.1-8B-Instruct}) is larger than under the
-$\lambda=10$ step-function fit, producing $\Delta\mathrm{AICc}$
-penalties of $+18.18$ and $+14.77$.  When Eq.~\eqref{eq:sat-3p} is
-instead estimated by unconstrained joint MLE over $(c, R_{\max}, \lambda)$
-with the same $\lambda \in [10^{-4}, 10]$ domain so that the
-2-parameter model ($c=0$) is strictly nested, $\text{RSS}_{3p} \le
-\text{RSS}_{2p}$ holds everywhere as required by nesting, and the
-3-parameter model \emph{still} loses on all $5/5$ anchors by
-$\Delta\mathrm{AICc}_{\text{joint}} \in [+1.22, +2.79]$ because the
-near-zero residual reduction cannot overcome the finite-sample AICc
-penalty ($+2.48$ for $k=3$ vs.\ $k=2$ at $n=30$, and $+2.79$ at
-$n=20$).  The 3-param specification is therefore a useful
-\emph{interpretive} lens (exposing the pre-RL baseline $c$) rather
-than a superior predictive fit.
+We estimate Eq.~\eqref{eq:sat-3p} by joint bounded least squares
+over $(c, R_{\max}, \lambda)$ with $c \in [0,1]$, $c \le R_{\max} \le 1$
+and $\lambda \in [10^{-4}, 10]$, so that the 2-parameter model ($c=0$)
+is strictly nested (\tableref{tab:scaling-iter137-fits}).
+$\mathrm{RSS}_{3p} \le \mathrm{RSS}_{2p}$ holds on every anchor, and
+the 3-parameter model loses to the 2-parameter model by AICc on $5/5$
+anchors ($\Delta\mathrm{AICc} \in [+1.91, +3.17]$): the residual
+reduction from the offset is at most $0.022$ in RSS.  The offset does
+\emph{not} make $\lambda$ identifiable.  On the near-flat traces the
+optimiser sets $c$ to the trace level and $\lambda$ to (near) its lower
+bound, with $R_{\max}$ drifting to the $1.0$ ceiling on Qwen3.5-4B and
+Qwen3-8B, i.e.\ the transient is replaced by an almost linear drift
+whose ``asymptote'' is not determined by the data.  An earlier
+two-stage plug-in estimator (fixed $c = \bar R_{1:5}$,
+$\lambda \le 5$, $R_{\max} \le 1.05$) is withdrawn: it was not nested in
+the 2-parameter model and produced $\Delta\mathrm{AICc}$ of $+18.18$ and
+$+14.77$ that no nested fit can produce.  The 3-parameter form is
+useful only as an interpretive lens that exposes the pre-update
+baseline $c$.
 
 \paragraph{(b) Iter 137 cross-scale law.}
 \label{par:scaling-iter137-cross-scale}
 
-With the offset, the OLS regression of $\log_{10} t_{80}$ on
-$\log_{10} N$ produces a real (no longer degenerate) slope
-estimate: $b = +0.507 \pm 0.718$ (SE; $t = 0.71$, $p > 0.5$).
-The analogous regression of $R_{\max}$ on $\log_{10} N$ gives
-$b = -0.172 \pm 0.198$ (Spearman $\rho = -0.658$, $p = 0.227$,
-$n = 5$).  Both slopes are far from statistical significance on
-this evidence base, but their direction-of-effect is now
-informative: the iter~117 ``4/5 anchored at bound'' degeneracy is
-resolved into a real but small positive $\log t_{80}$-$\log N$
-slope and a small negative $R_{\max}$-$\log N$ slope.  Iter~137
-thus \emph{sharpens} the iter~117 null: the cross-scale
-saturation law is absent in two model classes (2-param and
-3-param), not one.
+Regressing $\log_{10} t_{80}^{3p}$ on $\log_{10} N$ ($n=5$, df $=3$)
+gives $b = -0.63 \pm 0.87$ (SE; $p = 0.52$), and $R_{\max}^{3p}$ on
+$\log_{10} N$ gives $b = -0.13 \pm 0.20$ ($p = 0.55$; Spearman
+$\rho = -0.46$).  Because $\lambda_{3p}$ and $R_{\max}^{3p}$ are on or
+near their bounds for four of the five anchors, these slopes are not
+interpretable as directions of effect; they confirm only that the
+offset model does not rescue a cross-scale law.
 
 \paragraph{(c) Iter 137 capability-axis propagation.}
 \label{par:scaling-iter137-capability}
 
-The iter~133 capability axis (capable = $R_{\max} \ge 0.7$)
-classifies the 3-param $R_{\max}$ distribution identically:
-$3/5$ capable (Qwen3.5-4B, Llama-3.1-8B-Instruct,
-DeepSeek-V3.1) and $2/5$ incapable (Qwen3-8B, Nemotron-120B).
-Mann-Whitney $U$ on 3-param $R_{\max}$ across classes is
-$U = 3.0$ (two-sided $p = 1.0$, degenerate at $n = 5$), and
-within-class Spearman $\rho(R_{\max}, \log_{10} N)$ is
-non-significant at $n = 3$ capable.  The capability-class
-verdict from iter~133 holds qualitatively through the 3-param
-fit, with the same within-class underpowering caveat at
-$n = 5$.
+Under the joint bounded fit the 3-param $R_{\max}$ no longer
+reproduces the iter~133 split: Qwen3-8B (trace mean $0.285$) is pushed
+to the $1.0$ bound together with Qwen3.5-4B, because a near-linear
+drift with $\lambda \approx 0$ leaves $R_{\max}$ unconstrained.  The
+capability split is therefore a property of the endpoint level
+($c$, the trace mean, or the 2-param $R_{\max}$), not of a fitted
+asymptote.
 
 \paragraph{(d) Iter 137 conclusion.}
 \label{par:scaling-iter137-conclusion}
@@ -1877,21 +1902,17 @@ The Pillar-1 finding is now triangulated by two model classes:
     upper bound on $4/5$ anchors, $R_{\max}$ bimodality is
     confirmed (iter~125/129/133), and the $t_{80}$-vs-$N$
     regression is degenerate.
-  \item The 3-param fit (iter~137): $\lambda$ is finite on
-    every anchor, but the model loses by AICc on $5/5$ anchors
-    (both under the two-stage plug-in fit and under strictly nested
-    joint MLE); the cross-scale slope on $t_{80}$ is
-    $+0.507 \pm 0.718$ and on $R_{\max}$ is $-0.172 \pm 0.198$ --
-    both far from significance.  The capability-class axis is
-    preserved.
+  \item The 3-param fit (iter~137, joint bounded): the model loses
+    by AICc on $5/5$ anchors, $\lambda$ moves to the opposite bound
+    rather than becoming identified, and the cross-scale slopes
+    ($-0.63 \pm 0.87$ on $\log_{10} t_{80}$, $-0.13 \pm 0.20$ on
+    $R_{\max}$) are uninformative.
 \end{enumerate}
-The sharpest single sentence: \emph{GRPO saturation is real
-(capable anchors have $R_{\max} > 0.8$, incapable have
-$R_{\max} < 0.3$) but its $t_{80}$, $\lambda$, and $R_{\max}$
-do not scale with parameter count on this evidence base even
-when the $R(0)=0$ boundary-condition artefact is removed.}
-The cross-scale law is absent in two model classes; the
-capability axis dominates in both.
+In one sentence: \emph{endpoint levels separate into high
+($>0.8$) and low ($<0.3$) groups, but neither $t_{80}$, $\lambda$,
+nor a fitted asymptote is identified on these traces, with or
+without the $R(0)=0$ constraint, so no cross-scale law can be
+estimated.}
 
 \begin{table}[t]
   \centering
@@ -1901,25 +1922,28 @@ capability axis dominates in both.
     Model & $n$ & $c_{3p}$ & $R_{\max}^{3p}$ & $\lambda_{3p}$ &
            $t_{80}^{3p}$ & $\mathrm{AICc}_{2p}$ & $\mathrm{AICc}_{3p}$ \\
     \midrule
-    Qwen3.5-4B             & 30 & 0.799 & 1.000 & 0.357  &   4.51  &  $-2.57$  &  $+15.61$  \\
-    Qwen3-8B               & 30 & 0.237 & $1.000^{\ast}$ & 0.004  & 400.89  & $-16.82$  & $-15.11$  \\
-    Llama-3.1-8B-Instruct  & 30 & 0.826 & 1.000 & 0.128  &  12.59  & $-19.16$  &  $-4.39$  \\
-    DeepSeek-V3.1          & 20 & 0.843 & 0.930 & 0.001  & 1501.36 & $-18.28$  & $-15.48$  \\
-    Nemotron-120B          & 20 & 0.000 & 0.182 & 0.990  &   1.63  &  $+4.92$  &  $+7.71$  \\
+    Qwen3.5-4B             & 30 & 0.816 & $1.000^{\ast}$ & $3\times10^{-4}$ & $>10^3$ & $-85.23$ & $-82.55$ \\
+    Qwen3-8B               & 30 & 0.237 & $1.000^{\ast}$ & 0.004  & 376     & $-99.47$ & $-97.57$ \\
+    Llama-3.1-8B-Instruct  & 30 & 0.869 & 0.869          & $1\times10^{-4}$ & $>10^4$ & $-101.82$ & $-99.14$ \\
+    DeepSeek-V3.1          & 20 & 0.843 & 0.963          & $8\times10^{-4}$ & $>10^3$ & $-72.24$ & $-69.07$ \\
+    Nemotron-120B          & 20 & 0.000 & 0.182          & 0.990  & 1.63    & $-49.04$ & $-45.88$ \\
     \bottomrule
   \end{tabular}
-  \caption{\textbf{Three-parameter offset saturation fit
-    (iter 137) vs.\ two-parameter fit (iter 117).}  The
-    two-stage 3-param estimator ($c_{3p} = \bar R_{1:5}$,
-    $R_{\max}^{3p} \ge \max(y)$, $\lambda_{3p} \in [10^{-3}, 5]$)
-    un-binds $\lambda$ on every anchor (vs.\ $4/5$ anchored at
-    $\lambda=10$ under 2-param) but loses by AICc on $5/5$ anchors
-    (and also loses by $\Delta\mathrm{AICc}_{\text{joint}} \in
-    [+1.22, +2.79]$ under strictly nested joint MLE over
-    $(c, R_{\max}, \lambda)$).  ($^{\ast}$Capped at physical ceiling
-    $1.000$; the solver in \texttt{scaling\_law\_iter137.py} used
-    upper bound $1.050$.)  $t_{80} = -\ln(0.2)/\lambda$ uses the
-    3-param $\lambda$ and is finite on every anchor.}
+  \caption{\textbf{Three-parameter offset saturation fit vs.\
+    two-parameter fit, joint bounded least squares on the raw traces.}
+    $c \in [0,1]$, $c \le R_{\max} \le 1$, $\lambda \in [10^{-4},10]$;
+    Gaussian AICc with $k$ = mean parameters $+1$ (variance).  The
+    3-param model nests the 2-param model ($c=0$) and
+    $\mathrm{RSS}_{3p} \le \mathrm{RSS}_{2p}$ on every anchor, so
+    $\Delta\mathrm{AICc} \in [+1.91, +3.17]$ is pure penalty: the
+    offset does not reduce residual error.  With the offset free,
+    $\lambda$ collapses towards its lower bound and $R_{\max}$ to its
+    upper bound on the near-flat traces ($^{\ast}$ = on the $1.0$
+    bound), so $t_{80}$ is unidentified rather than ``finite''.
+    An earlier two-stage plug-in estimator ($c$ fixed to
+    $\bar R_{1:5}$, $\lambda \le 5$, $R_{\max}\le 1.05$) produced
+    non-nested $\Delta$AICc up to $+18.2$ and is withdrawn.  Recomputed
+    by \texttt{tools/review\_ledger/P1\_scaling\_rawtrace\_refit.py}.}
   \label{tab:scaling-iter137-fits}
 \end{table}
 
@@ -1933,17 +1957,14 @@ capability axis dominates in both.
     \textbf{(a)} iter~117 2-param fit: $4/5$ anchors hit the
     $\lambda = 10$ upper bound; dashed lines mark the
     effectively-instant saturation fit.  \textbf{(b)} iter~137
-    3-param fit: $\lambda$ is un-bound on every anchor, the
-    baseline offset $c$ is reported in the legend, and the
-    fitted curves now reflect each anchor's actual learning
-    rate (Nemotron-120B remains the only anchor with $\lambda
-    \approx 1$ under both models).  \textbf{(c)}
-    $t_{80}$ vs.~$N$: the 3-param OLS slope is $+0.507
-    \pm 0.718$ (informative but underpowered) vs.~the
-    2-param fixed-$t_{80}$ cluster at $0.161$.  \textbf{(d)}
-    capability axis on the 3-param $R_{\max}$: the same
-    $3/2$ capable/incapable split as iter~133 propagates
-    exactly.}
+    3-param fit as produced by the withdrawn two-stage estimator of
+    \texttt{scaling\_law\_iter137.py} (see
+    \tableref{tab:scaling-iter137-fits} for the joint bounded refit,
+    which supersedes panels (b)--(d)).  \textbf{(c)} $t_{80}$ vs.~$N$
+    under the two-stage estimator vs.~the 2-param fixed-$t_{80}$
+    cluster at $0.161$.  \textbf{(d)} capability split on the
+    two-stage 3-param $R_{\max}$; under the joint refit Qwen3-8B moves
+    to the $1.0$ bound and the split is not reproduced.}
   \label{fig:scaling-iter137}
 \end{figure}
 

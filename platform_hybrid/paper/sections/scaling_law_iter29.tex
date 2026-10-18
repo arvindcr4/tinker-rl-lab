@@ -16,13 +16,17 @@ That audit left open whether the failure is intrinsic to the model or
 an artefact of the 20--30 step frontier horizons (where the noise floor
 is comparable to the signal). Iter~29 closes that gap by re-running the
 same identifiability battery on the longer-horizon same-stack traces
-(40 steps, $n_{\mathrm{eff}}=128$, \texttt{Qwen2.5-0.5B} on the
-calibrated synthetic math / modular-arithmetic verification task stored
-in \texttt{samestack\_ppo\_grpo.json}, where both algorithms climb from
-$\approx 0.25$ to $0.99$ accuracy, complementing the full-GSM8K
+(40 steps, $n_{\mathrm{eff}}=128$, \texttt{Qwen2.5-0.5B} with LoRA on the two-operand addition task of
+\secref{sec:benchmark} (\texttt{What is $a$ + $b$?}, binary exact-match
+reward; driver \texttt{experiments/modal/modal\_samestack\_ppo\_grpo.py},
+output \texttt{samestack\_ppo\_grpo.json}), where both algorithms climb
+from a low step-0 reward to $\approx 0.99$ held-out accuracy --- this is
+why the held-out accuracy here is far above the $0.734$ GSM8K TRL
+baseline of \secref{sec:exp-design}, complementing the full-GSM8K
 same-stack runs in \secref{sec:exp-design}), and---crucially---
-on \emph{both} algorithm stacks simultaneously. The frontier synthesis
-Round~1 licenses an \emph{Estimator-Equivalence Principle} (EEP): with
+on \emph{both} algorithm stacks simultaneously. We test a conjecture from the external cross-examination
+(Appendix~\ref{sec:frontier-scaling}), the \emph{Estimator-Equivalence
+Principle} (EEP): with
 rollout batch, KL, clipping, masking, optimiser and reward parser fixed,
 PPO and GRPO should be performance-equivalent. If EEP holds, the
 saturation-fit identifiability profile of the two stacks should be
@@ -76,9 +80,9 @@ PPO  & 5 & 0/5 & 0/5 & \textbf{5/5} & 0/5 & 0.078 \\
   candidate set $\{\text{constant}, \text{linear}, \text{exponential
   saturation}\}$, the AICc-best model \emph{diverges}: GRPO's running
   mean reward is best described by an exponential saturation curve (5/5),
-  whereas PPO's is preferred by a linear trend (5/5; see
-  \secref{sec:iter37} for the 5-model expansion where both stacks prefer
-  a sigmoidal Hill $n=2$ curve once critic warm-up lag is accommodated).
+  whereas PPO's is preferred by a linear trend (5/5).  The ranking is
+  specific to this 3-model candidate set; sigmoidal forms that can
+  represent a delayed rise were not compared here.
   Fisher exact on the 3-model AICc-best-saturation rate gives
   $p=0.0079$ (Table~\ref{tab:iter29-eep}).}
 \label{tab:iter29-cross-stack}
@@ -129,14 +133,14 @@ The decoupling---identical heldout accuracy, divergent early-transient
 curvature---reflects value-head warm-up lag in PPO: while GRPO computes
 group-relative advantages immediately from step~1 without learned critic
 parameters, PPO's value head requires several initial gradient updates
-to calibrate before emitting low-variance advantage estimates. As shown
-in \secref{sec:iter37} (\texttt{iter37c}), expanding the candidate
-family to include a sigmoidal Hill ($n=2$) model resolves this tension:
-Hill ($n=2$) wins 5/5 PPO traces over the linear model because it
-captures the slow initial critic warm-up followed by rapid mid-trace
-climb and late saturation. Practically, this means that \emph{concave
-exponential saturation rules-of-thumb derived from GRPO do not transfer
-directly to PPO without accounting for critic warm-up lag}.
+to calibrate before emitting low-variance advantage estimates.  This is
+a hypothesis, not something the battery tests: over a 40-step horizon on
+a 0.5B model, a slower initial PPO rise from critic warm-up would make a
+concave exponential fit badly and favour the linear candidate, so
+``linear beats saturation for PPO'' should not be read as PPO following
+non-saturating kinetics.  The safe practical reading is narrower:
+\emph{concave-exponential rules of thumb fitted to GRPO traces need not
+transfer to PPO traces on the same rollouts}.
 
 \paragraph{Limitations.}
 The same-stack data are at a single model size (\texttt{Qwen2.5-0.5B}),

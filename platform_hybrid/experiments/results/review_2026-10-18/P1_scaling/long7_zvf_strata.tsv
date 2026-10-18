@@ -1,0 +1,8 @@
+model	step_zvf	stratum	lam2p	lam_at_bound	rmse2p
+Qwen3.5-4B	0.4333	HIGH	10.0000	True	0.2153
+Qwen3-8B	0.0667	LOW	10.0000	True	0.1698
+Llama-3.1-8B-Instruct	0.4333	HIGH	10.0000	True	0.1633
+gpt-oss-20B	0.4333	HIGH	1.4943	False	0.1889
+DeepSeek-V3.1	0.3000	HIGH	10.0000	True	0.1362
+Nemotron-120B	0.5500	HIGH	0.9902	False	0.2433
+Kimi-K2-Thinking	0.4000	HIGH	10.0000	True	0.1705

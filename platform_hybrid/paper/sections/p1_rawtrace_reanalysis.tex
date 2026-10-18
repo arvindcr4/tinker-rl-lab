@@ -1,0 +1,146 @@
+% =====================================================================
+% paper/sections/p1_rawtrace_reanalysis.tex  (Deep Review 2026-10-18)
+%
+% Replaces the former Sections on iter33/37/41/45/49/53/65, whose
+% drivers (platform_modal/scripts/scaling_law_iter33.py ... iter53.py,
+% and the TSVs behind iter65) fitted per-step traces *synthesised* from
+% six summary statistics in scaling_law_extended_frontier.tsv instead of
+% the released per-step traces.  Everything below is recomputed on
+% platform_hybrid/experiments/tinker-runs/results/*_gsm8k_*.json by
+%   tools/review_ledger/P1_scaling_rawtrace_refit.py
+% -> platform_hybrid/experiments/results/review_2026-10-18/P1_scaling/
+% =====================================================================
+
+\subsection{Raw-trace re-analysis of the 12-anchor pool}
+\label{sec:p1-rawtrace}
+
+Earlier drafts of this paper contained six further analyses of the
+12-anchor pool (a three-phase prediction battery, a five-form
+functional-form race, truncation stability, iso-compute and iso-FLOP
+fits, and a phase-conformity index).  Their drivers did not read the
+released per-step traces: they synthesised a trace for every anchor by
+linear interpolation from six summary statistics (mean, variance, peak
+step, early and late means, zero fraction), and several also fitted
+$R_{\max}$ in $[0, 2]$, which let Nemotron-120B reach the unphysical
+$R_{\max} = 2.000$ and dominate the downstream regressions.  Curvature,
+phase boundaries and post-peak slopes of such traces are properties of
+the interpolation rule, so those analyses are withdrawn.  This section
+recomputes what can be recomputed directly from the per-step logs, with
+$R_{\max} \in [0,1]$ and $\lambda \in [10^{-4}, 10]$ throughout.
+
+\paragraph{The pool.}
+\tableref{tab:p1-rawtrace} lists the twelve anchors.  Seven are full
+runs whose traces were written by the training script (20 or 30 logged
+steps).  The other five are interrupted probes whose 3--5 logged rewards
+were transcribed from console output (\texttt{run\_id =
+partial-from-console}; the JSON records \texttt{steps\_completed} of
+10--20 but only 3--5 rewards); we report them but fit nothing to them.
+Each anchor is one single-seed run, so the unit of analysis for every
+cross-scale statistic below is the anchor ($n$ anchors, df $= n-2$ for
+an OLS slope).  Per-run configuration is taken from the trace JSON and
+the W\&B run config: 4B--32B and gpt-oss-20B runs use
+$8$ completions $\times$ $2$ prompts per step, LoRA rank 32 and
+learning rate $3\times10^{-5}$; the frontier runs (DeepSeek-V3.1,
+Nemotron-120B, Qwen3-235B, Kimi-K2) use $4 \times 2$, rank 16 and
+$10^{-5}$.  The step reward is therefore a mean over $16$ or $8$
+binary rollouts on training prompts, not a held-out score.
+
+\begin{table}[t]
+  \centering
+  \small
+  \setlength{\tabcolsep}{3.5pt}
+  \begin{tabular}{llrrrrrrrr}
+    \toprule
+    Model & arch & $N_{\text{tot}}/N_{\text{act}}$ & $T$ & $R(1)$ & $\bar R$ &
+      peak (step) & $P(R{=}0)$ & $R_{\max}^{2p}$ & $\hat\lambda$ \\
+    \midrule
+    Qwen3.5-4B            & dense & 4 / 4       & 30 & 1.000 & 0.817 & 1.000 (1)  & 0.000 & 0.817 & 10$^{\dagger}$ \\
+    Qwen3-8B              & dense & 8 / 8       & 30 & 0.375 & 0.285 & 0.625 (13) & 0.067 & 0.285 & 10$^{\dagger}$ \\
+    Llama-3.1-8B-Inst.    & dense & 8 / 8       & 30 & 1.000 & 0.869 & 1.000 (1)  & 0.000 & 0.869 & 10$^{\dagger}$ \\
+    gpt-oss-20B           & MoE   & 20 / 3.6    & 30 & 0.625 & 0.840 & 1.000 (3)  & 0.000 & 0.848 & 1.49 \\
+    DeepSeek-V3.1         & MoE   & 685 / 37    & 20 & 0.875 & 0.844 & 1.000 (3)  & 0.000 & 0.844 & 10$^{\dagger}$ \\
+    Nemotron-120B         & MoE   & 120 / 12    & 20 & 0.000 & 0.175 & 0.875 (3)  & 0.550 & 0.182 & 0.99 \\
+    Kimi-K2-Thinking      & MoE   & 1000 / 32   & 20 & 1.000 & 0.850 & 1.000 (1)  & 0.000 & 0.850 & 10$^{\dagger}$ \\
+    \midrule
+    Qwen3-32B$^{c}$       & dense & 32 / 32     & 3  & 0.312 & 0.250 & 0.312 (1)  & 0.000 & -- & -- \\
+    Qwen3.5-27B$^{c}$     & dense & 27 / 27     & 3  & 0.562 & 0.437 & 0.750 (2)  & 0.333 & -- & -- \\
+    Qwen3-30B-MoE$^{c}$   & MoE   & 30 / 3      & 5  & 0.188 & 0.325 & 0.500 (4)  & 0.000 & -- & -- \\
+    Qwen3-30B-MoE-Inst$^{c}$ & MoE & 30 / 3     & 3  & 1.000 & 1.000 & 1.000 (1)  & 0.000 & -- & -- \\
+    Qwen3-235B-MoE$^{c}$  & MoE   & 235 / 22    & 4  & 1.000 & 1.000 & 1.000 (1)  & 0.000 & -- & -- \\
+    \bottomrule
+  \end{tabular}
+  \caption{\textbf{The 12-anchor GSM8K pool, recomputed from the
+    released per-step traces.}  $R_{\max}^{2p}$, $\hat\lambda$: bounded
+    fit of $R(t)=R_{\max}(1-e^{-\lambda t})$, $R_{\max}\in[0,1]$,
+    $\lambda\in[10^{-4},10]$, only for $T \ge 6$; $^{\dagger}$ on the
+    upper $\lambda$ bound (5/7 long traces).  $^{c}$ interrupted probe,
+    rewards transcribed from console output; descriptive only.
+    Nemotron-3-Super-120B-A12B is a LatentMoE model (12B active).
+    Source: \texttt{rawtrace\_anchor\_table.tsv}.}
+  \label{tab:p1-rawtrace}
+\end{table}
+
+\paragraph{Cross-scale slopes.}
+\tableref{tab:p1-rawtrace-slopes} regresses the trace mean $\bar R$ on
+total and on active parameter count, and on a token-compute proxy
+$C = N\cdot T\cdot 512$ (512 = generation cap; a rough upper bound,
+since per-step token counts are not logged).  No slope is
+distinguishable from zero, but with $n=7$ (df $=5$) the 95\% intervals
+span roughly $\pm 0.35$ per decade on $N_{\text{tot}}$ and $\pm 0.9$ on
+$N_{\text{act}}$, so the data are equally compatible with sizeable
+positive or negative trends: this is a failure to detect, not evidence
+of flatness.  Dropping the Nemotron-120B collapse does not change the
+picture on the long traces ($+0.073 \pm 0.102$ per decade, $n=6$,
+exact permutation $p = 0.62$) or on all eleven remaining anchors
+($+0.118 \pm 0.118$, $n=11$, $p = 0.36$).  The bounded $R_{\max}^{2p}$
+gives the same slopes to two decimals because it equals $\bar R$
+whenever $\lambda$ is on the bound.
+
+\begin{table}[t]
+  \centering
+  \small
+  \begin{tabular}{llrrrr}
+    \toprule
+    Pool & regressor & $n$ & slope / decade [95\% CI] & $R^2$ & perm.\ $p$ \\
+    \midrule
+    long 7  & $\log_{10} N_{\text{tot}}$ & 7  & $+0.028$ [$-0.32$, $+0.38$] & 0.008 & 0.84 \\
+    long 7  & $\log_{10} N_{\text{act}}$ & 7  & $+0.037$ [$-0.83$, $+0.90$] & 0.002 & 0.88 \\
+    long 7  & $\log_{10} C_{\text{act}}$ & 7  & $+0.095$ [$-0.98$, $+1.17$] & 0.010 & 0.78 \\
+    long 7 $-$ Nemotron & $\log_{10} N_{\text{tot}}$ & 6 & $+0.073$ [$-0.21$, $+0.36$] & 0.113 & 0.62 \\
+    all 12  & $\log_{10} N_{\text{tot}}$ & 12 & $+0.081$ [$-0.21$, $+0.37$] & 0.038 & 0.54 \\
+    all 12  & $\log_{10} N_{\text{act}}$ & 12 & $-0.072$ [$-0.59$, $+0.44$] & 0.010 & 0.75 \\
+    all 12 $-$ Nemotron & $\log_{10} N_{\text{tot}}$ & 11 & $+0.118$ [$-0.15$, $+0.39$] & 0.100 & 0.36 \\
+    \bottomrule
+  \end{tabular}
+  \caption{\textbf{OLS slope of the trace-mean reward $\bar R$ on log
+    scale, one point per anchor.}  $t$-based 95\% CI on df $=n-2$;
+    permutation $p$ two-sided on $|$slope$|$, exact for $n \le 8$, else
+    20{,}000 shuffles.  Source: \texttt{cross\_scale\_regressions.tsv}.}
+  \label{tab:p1-rawtrace-slopes}
+\end{table}
+
+\paragraph{Architecture.}
+With Nemotron-120B correctly in the MoE group, the MoE$-$dense gap in
+$\bar R$ over all twelve anchors is $+0.188$ (exact one-sided
+permutation $p = 141/792 = 0.178$).  Excluding Nemotron gives $+0.278$
+(one-sided $p = 22/462 = 0.048$, two-sided $p = 0.093$), but this
+exclusion is post hoc, the comparison mixes interrupted probes with full
+runs, and on the seven full runs alone the gap is $+0.020$ ($p = 0.57$;
+$+0.188$, $p = 0.25$ without Nemotron).  We therefore make no
+architecture claim (\texttt{moe\_vs\_dense\_permutation.tsv}).
+
+\paragraph{Three-phase and collapse checks on the raw long traces.}
+On the seven full traces, the peak falls more than 10\% into the run on
+3/7 (Qwen3-8B, DeepSeek-V3.1, Nemotron-120B) and the last-third mean
+exceeds the first-third mean on 4/7.  A continuous three-segment
+hinge fit (at least two steps per segment) meets all three slope
+targets of the slow-start / rapid-rise / plateau template
+($|m_1| < 0.020$, $m_2 \ge 0.040$, $|m_3| < 0.015$) on one trace only,
+Llama-3.1-8B-Instruct, and there it fits a short mid-trace rebound of a
+trace that starts at $R(1)=1.0$ and whose last-third mean (0.844) is
+below its first-third mean (0.925), so no full trace shows the template.  The raw-trace collapse rule (peak
+$\ge 0.4$, last-5 mean $< 0.4\times$ peak, $P(R{=}0) \ge 0.30$) flags
+Nemotron-120B alone, and Nemotron-120B is also the only one of the
+twelve anchors with $P(R{=}0) > 0.5$ and $\bar R < 0.2$
+(\texttt{long7\_three\_phase.tsv}).  None of these counts is a
+significance test; with one seed per anchor they describe these runs.

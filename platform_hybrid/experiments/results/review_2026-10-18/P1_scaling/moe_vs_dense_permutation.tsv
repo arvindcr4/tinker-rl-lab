@@ -1,0 +1,5 @@
+pool	n_moe	n_dense	gap_moe_minus_dense	p_one_sided	p_two_sided	partitions
+all12	7	5	0.1875	0.1780	0.3725	792
+all12_minus_Nemotron	6	5	0.2782	0.0476	0.0931	462
+long7	4	3	0.0201	0.5714	0.8571	35
+long7_minus_Nemotron	3	3	0.1875	0.2500	0.5000	20

@@ -1,0 +1,13 @@
+{
+  "engine": "agy",
+  "model": null,
+  "source": "platform_hybrid/paper/neurips_2026_variants/paper_P9_dnb.pdf",
+  "usage": {
+    "input_tokens": 68036,
+    "output_tokens": 6153,
+    "thinking_tokens": 179,
+    "cache_read_tokens": 0,
+    "total_tokens": 74189
+  },
+  "conversation_id": "d939f8dd-9703-4f28-8ba3-ec01cd0c7783"
+}

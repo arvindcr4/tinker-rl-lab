@@ -1,0 +1,13 @@
+{
+  "engine": "agy",
+  "model": null,
+  "source": "platform_hybrid/sem 3 work/deliverables/group6-original-report.pdf",
+  "usage": {
+    "input_tokens": 68955,
+    "output_tokens": 5437,
+    "thinking_tokens": 0,
+    "cache_read_tokens": 0,
+    "total_tokens": 74392
+  },
+  "conversation_id": "d256c9c5-a238-4088-9a1a-9feebba82087"
+}

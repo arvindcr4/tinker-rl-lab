@@ -1,0 +1,13 @@
+{
+  "engine": "agy",
+  "model": null,
+  "source": "platform_hybrid/sem 4 work/papers/P8-fraud.pdf",
+  "usage": {
+    "input_tokens": 88975,
+    "output_tokens": 5085,
+    "thinking_tokens": 0,
+    "cache_read_tokens": 0,
+    "total_tokens": 94060
+  },
+  "conversation_id": "a45b2c45-aa6e-403f-be29-7f4afb211daf"
+}

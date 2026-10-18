@@ -1,0 +1,13 @@
+{
+  "engine": "agy",
+  "model": null,
+  "source": "zvf-program/next-submission/paper/main.pdf",
+  "usage": {
+    "input_tokens": 30393,
+    "output_tokens": 3361,
+    "thinking_tokens": 143,
+    "cache_read_tokens": 0,
+    "total_tokens": 33754
+  },
+  "conversation_id": "a84d2a75-9158-4001-8218-14a07617ae16"
+}

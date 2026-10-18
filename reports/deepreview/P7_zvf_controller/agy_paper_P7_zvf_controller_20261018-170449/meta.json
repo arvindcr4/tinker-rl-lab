@@ -1,0 +1,13 @@
+{
+  "engine": "agy",
+  "model": null,
+  "source": "platform_hybrid/paper/paper_P7_zvf_controller.pdf",
+  "usage": {
+    "input_tokens": 86073,
+    "output_tokens": 6714,
+    "thinking_tokens": 0,
+    "cache_read_tokens": 0,
+    "total_tokens": 92787
+  },
+  "conversation_id": "88b0d715-8141-4dc3-8693-5aaa5ca687c2"
+}

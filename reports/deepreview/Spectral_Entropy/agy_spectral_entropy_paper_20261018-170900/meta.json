@@ -1,0 +1,13 @@
+{
+  "engine": "agy",
+  "model": null,
+  "source": "zvf-program/flagship/paper/spectral_entropy_paper.pdf",
+  "usage": {
+    "input_tokens": 29361,
+    "output_tokens": 4203,
+    "thinking_tokens": 0,
+    "cache_read_tokens": 0,
+    "total_tokens": 33564
+  },
+  "conversation_id": "a82680c1-8c11-4b50-816c-0beea5046e00"
+}

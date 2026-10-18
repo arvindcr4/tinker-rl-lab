@@ -1,0 +1,13 @@
+{
+  "engine": "agy",
+  "model": null,
+  "source": "platform_hybrid/paper/paper_P4_length_bias.pdf",
+  "usage": {
+    "input_tokens": 76760,
+    "output_tokens": 6889,
+    "thinking_tokens": 292,
+    "cache_read_tokens": 0,
+    "total_tokens": 83649
+  },
+  "conversation_id": "fcaf1fd0-b4c0-4afa-b576-647e7aabbcce"
+}

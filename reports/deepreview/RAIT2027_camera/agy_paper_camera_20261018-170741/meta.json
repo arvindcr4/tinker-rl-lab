@@ -1,0 +1,13 @@
+{
+  "engine": "agy",
+  "model": null,
+  "source": "outputs/PES_Conference_Submissions_2026-09-25/RAIT2027/paper_camera.pdf",
+  "usage": {
+    "input_tokens": 25286,
+    "output_tokens": 4310,
+    "thinking_tokens": 153,
+    "cache_read_tokens": 0,
+    "total_tokens": 29596
+  },
+  "conversation_id": "20870d41-d7d9-4a9b-95be-f817af5a580a"
+}

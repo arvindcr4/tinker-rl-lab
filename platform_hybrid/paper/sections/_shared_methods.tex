@@ -7,8 +7,8 @@
 \begin{figure}[t]
 \centering
 \includegraphics[width=0.85\textwidth]{tikz/taxonomy.pdf}
-\caption{Task-coverage taxonomy of \ours{}. The benchmark organises tasks into
-mathematical reasoning (GSM8K; complete), tool use / function calling
+\caption{Task-coverage taxonomy of \ours{}. The broader benchmark organises tasks into
+mathematical reasoning (GSM8K and modular arithmetic; complete and the primary focus of this scaling study), tool use / function calling
 (partial), and code generation (HumanEval; partial). Library coverage is
 listed separately in Table~\ref{tab:implementations}.}
 \label{fig:taxonomy}
@@ -19,7 +19,7 @@ listed separately in Table~\ref{tab:implementations}.}
 % Table of tasks
 \begin{table}[htbp]
 \centering
-\caption{Benchmark task suite with standardized reward functions.}
+\caption{Full \ours{} benchmark task suite with standardized reward functions. This paper analyzes the online RL math reasoning tracks (Math RL Arithmetic across 7 classic-RL libraries and Math RL GSM8K across 12 LLM scale anchors); the SFT, DPO, and distillation tracks are evaluated in the broader \ours{} benchmark.}
 \label{tab:tasks}
 \begin{tabular}{llll}
 \toprule
@@ -79,7 +79,7 @@ d3rlpy & CQL (offline) & Offline RL \\
 
 We standardize hyperparameters across libraries using a common configuration schema.
 Table~\ref{tab:hyperparams} shows the mapping from Tinker PPO defaults to each library's
-native parameter names.
+native parameter names. For GRPO post-training on GSM8K, we sample $G = 16$ completions per prompt on medium-scale checkpoints ($4$B--$32$B, $T = 30$ steps) and $G = 8$ completions per prompt on frontier checkpoints ($120$B--$1$T, $T = 20$ steps) at sampling temperature $0.7$, maximum generation length $512$ tokens, learning rate $10^{-5}$--$2 \times 10^{-5}$, and reference-policy KL coefficient $\beta \in \{0.0, 0.01, 0.04\}$ with within-group advantage normalization $\hat{A}_i = (r_i - \mu_G)/(\sigma_G + 10^{-8})$.
 
 \begin{table}[htbp]
 \centering
@@ -102,6 +102,10 @@ Target KL & 0.01 & 0.01 & 0.01 & N/A & N/A & N/A \\
 
 \subsection{Reward Verification}
 
+All RL tasks in this study use deterministic, rule-based outcome verifiers returning binary rewards $R \in \{0, 1\}$ (Figure~\ref{fig:reward-flow}).
+On \textbf{GSM8K}~\citep{cobbe2021training}, the verifier extracts the final numerical answer after the canonical \texttt{\#\#\#\# <number>} delimiter (falling back to the last \texttt{\textbackslash boxed\{...\}} or trailing numeric token when the delimiter is absent), strips commas, currency symbols, and whitespace, and returns $R = 1$ if the parsed value matches the ground-truth answer within $10^{-6}$ and $R = 0$ otherwise. Completions without a parseable numeric answer receive $R = 0$ and are logged separately as format-extraction failures (capturing the $55\%$ zero-reward step rate on Nemotron-120B).
+On the \textbf{199-action modular-arithmetic environment} used for the classic-RL library benchmark ($F_3$), actions correspond to integers in $[-99, +99]$ and $R = 1$ is awarded for exact integer equality with the target expression.
+
 % Figure 3: Verifiable Reward Flow
 \begin{figure}[t]
 \centering
@@ -115,14 +119,13 @@ eliminating reward hacking and enabling exact accuracy measurement.}
 \subsection{Baselines: Floor and Ceiling}
 
 Following best practices for benchmark design~\cite{agarwal2021deep}, we establish
-clear performance bounds:
+clear performance bounds across both the synthetic arithmetic and GSM8K tasks:
 
 \begin{itemize}
-    \item \textbf{Floor (random baseline)}: Uniform random action selection yields
-    $\frac{1}{199} \approx 0.50\%$ accuracy on the arithmetic task.
-    \item \textbf{Ceiling (oracle)}: Direct computation achieves $100\%$ accuracy.
+    \item \textbf{Floor (random / zero-reward baseline)}: On the 199-choice modular-arithmetic task, uniform random action selection yields $\frac{1}{199} \approx 0.50\%$ accuracy ($20.0\%$ on the 5-choice L1 variant). On free-form GSM8K generation, unparseable or random output yields a $0.0\%$ floor, while pre-RL step-1 baseline accuracy $R(1)$ spans $0.000$ (Nemotron-120B format mismatch) and $0.250$ (\texttt{Qwen3-8B} base) up to $0.812$--$1.000$ on instruction-tuned checkpoints.
+    \item \textbf{Ceiling (oracle)}: Symbolic evaluation achieves $100\%$ accuracy on both arithmetic and GSM8K.
     \item \textbf{Human baseline}: College-level adults achieve $\sim$99.5\% on
-    two-digit addition under timed conditions.
+    two-digit addition under timed conditions and $\sim$85--95\% on untimed grade-school word problems.
 \end{itemize}
 
 % =============================================================================
@@ -133,38 +136,35 @@ clear performance bounds:
 \subsection{Models}
 
 Our benchmark targets a roster of 32+ model configurations spanning
-\textbf{0.6B to $\sim$671B \emph{total} parameters (up to $\sim$37B \emph{active}
+\textbf{0.5B to 1T \emph{total} parameters (4B to 1T on the 12-anchor GSM8K scaling suite; up to $\sim$37B \emph{active}
 for MoE checkpoints) across 5 model families}, organized into three
 tiers by compute scale; not all are completed end-to-end runs (per-run
-status flags accompany the released artifacts). Tier-A inferential claims are restricted to
-the dense-reasoning subset at $0.6$B--$235$B; the frontier MoE
-checkpoints (DeepSeek-V3.1 $\sim$671B / 37B active, Kimi-K2) are
+status flags accompany the released artifacts). Tier-A multi-seed inferential claims are restricted to
+the locally reproducible open-weight subset at $0.5$B--$32$B (with \texttt{Qwen3-235B-A22B} included in the 12-anchor descriptive scaling suite); the frontier MoE
+checkpoints (DeepSeek-V3.1 at $671$B architectural / $685$B total checkpoint parameters with $37$B active, Kimi-K2-Thinking at $1$T total / $32$B active, and Nemotron-3-Super-120B-A12B LatentMoE at $120$B total / $12$B active) are
 descriptive single-seed Tier-C case studies, and Qwen3.5-397B-A17B is a
 \emph{partial} run whose held-out evaluation did not complete.
 
-\paragraph{Small scale (0.6B--8B).}
-Qwen3-0.6B-Instruct, Qwen3.5-4B, Qwen3-4B, Qwen3-8B,
+\paragraph{Small scale (0.5B--8B).}
+Qwen2.5-0.5B, Qwen3-0.6B-Instruct, Qwen3.5-4B, Qwen3-4B, Qwen3-8B,
 Llama-3.2-1B, Llama-3.2-3B, Llama-3.1-8B-Instruct.
 
 \paragraph{Mid scale (14B--32B).}
-Qwen3-14B, Qwen3-30B-A3B (MoE), Qwen3-32B, Qwen3.5-27B,
-GPT-OSS-20b, Kimi-K2 (selected scale points).
+Qwen3-14B, Qwen3-30B-A3B (MoE, $30$B total / $3$B active, base and Instruct), Qwen3-32B, Qwen3.5-27B,
+GPT-OSS-20b (MoE, $20$B total / $3.6$B active).
 
-\paragraph{Frontier scale (70B--$\sim$671B total / $\sim$37B active).}
-Qwen3-235B-A22B (MoE, 22B active), DeepSeek-V3.1 ($\sim$671B total /
-$\sim$37B active MoE), Nemotron-120B (120B dense).
-Frontier models are evaluated via the Tinker API in inference mode
-with standardized generation parameters; LoRA fine-tuning at this
-scale is conducted on selected checkpoints (see the frontier case studies
-in the companion pillar papers of \ours{}).
+\paragraph{Frontier scale (120B--1T total / 12B--37B active).}
+Nemotron-3-Super-120B-A12B (LatentMoE, $120$B total / $12$B active), Qwen3-235B-A22B (MoE, $235$B total / $22$B active), DeepSeek-V3.1 ($671$B architectural / $685$B total checkpoint parameters, $37$B active MoE; we use $N=685$B in total-parameter regression tables and note $671$B routed parameters where relevant), and Kimi-K2-Thinking (MoE, $1$T total / $32$B active).
+Frontier models are evaluated and post-trained via the Tinker API
+with standardized generation parameters and LoRA adapters ($r=32$).
 
-\paragraph{Model family coverage.}
-The benchmark covers (1) \textbf{Qwen3}: a dense family from 0.6B to 32B;
-(2) \textbf{Qwen3.5}: an improved series including 4B and 27B;
-(3) \textbf{Llama-3.x}: Meta's 1B--8B instruction-tuned models;
-(4) \textbf{DeepSeek-V3.1}: a frontier MoE optimized for reasoning;
-(5) \textbf{Nemotron-120B}: NVIDIA's dense frontier model;
-and emerging architectures \textbf{GPT-OSS-20b} and \textbf{Kimi-K2}.
+\paragraph{Model family and architecture coverage.}
+The benchmark covers (1)~\textbf{Qwen2.5 / Qwen3}: dense ($0.5$B--$32$B) and MoE ($30$B-A3B, $235$B-A22B) checkpoints;
+(2)~\textbf{Qwen3.5}: dense $4$B and $27$B checkpoints;
+(3)~\textbf{Llama-3.x}: Meta's $1$B--$8$B instruction-tuned dense models;
+(4)~\textbf{DeepSeek-V3.1}: a frontier MoE ($671$B/$685$B total, $37$B active) optimized for reasoning;
+(5)~\textbf{Nemotron-3-Super-120B-A12B}: NVIDIA's frontier LatentMoE model ($120$B total, $12$B active; early pipeline scripts mislabelled this checkpoint as \texttt{dense}, which we correct to \texttt{moe} across all architecture analyses, yielding 7 MoE and 5 dense checkpoints in the 12-anchor GSM8K pool);
+and emerging MoE architectures \textbf{GPT-OSS-20b} and \textbf{Kimi-K2-Thinking} ($1$T total, $32$B active).
 
 \subsection{Training Protocol}
 
@@ -210,7 +210,7 @@ All pairwise comparisons were evaluated using Welch's independent-samples $t$-te
 (unequal variances assumed) and the non-parametric Mann--Whitney $U$ test as a
 robustness check. Effect sizes are reported as Cohen's $d$ with the pooled
 standard deviation estimator; confidence intervals follow the
-Hedges--Olkin (1985) analytical formula and are reported at the 95\% level
+\citet{hedges1985statistical} analytical formula and are reported at the 95\% level
 (two-tailed, $z = 1.96$). Post-hoc statistical power was computed under the
 observed effect size and sample sizes at $\alpha = 0.05$.
 
@@ -222,12 +222,12 @@ marked $^*$; those surviving BH--FDR correction are marked $^\dag$.
 
 \paragraph{Power Analysis.}
 All inferential tests in this paper are evaluated against pre-specified power
-requirements using \texttt{statsmodels.stats.power.TTestIndPower} with
+requirements using \texttt{statsmodels.stats.power.TTestIndPower} (which computes power under the equal-variance Student's $t$ approximation as a baseline for our primary Welch $t$-tests) with
 $\alpha = 0.05$ and target power $1 - \beta = 0.80$.
 
 \textbf{Modal H100 experiments ($n = 5$ seeds per arm).}
 The minimum detectable effect size (MDE) at 80\% power for a two-sample
-Welch $t$-test with $n_1 = n_2 = 5$ is
+$t$-test with $n_1 = n_2 = 5$ is
 $d_{\min} = 2.024$ (Cohen's $d$).
 Table~\ref{tab:power-analysis} reports achieved power for a range of effect sizes.
 This threshold falls in the \emph{very large} range, meaning that
@@ -257,7 +257,7 @@ partition and lists raw and BH-adjusted $p$-values from the
 earlier global family of $20$ tests with $19$ surviving correction;
 we retain it here as a methodological audit trail. The headline
 BH result the paper now stands behind is the restricted Tier-A/B
-family computed in the addendum, where only $F_3$ survives. Where
+family computed in the addendum, where only $F_3$ (cross-library heterogeneity across the 5 classic-RL PPO/policy-gradient implementations on the 199-choice arithmetic task: one-way ANOVA $F = 11.42, p = 4.996 \times 10^{-6}$, BH-adjusted $p = 2.5 \times 10^{-5}$; whereas matched same-stack LLM GRPO vs.\ PPO on Qwen2.5-0.5B is null at $p = 0.374$) survives. Where
 the global family disagrees with the restricted family, the
 addendum is authoritative.
 
@@ -268,7 +268,7 @@ confidence intervals ($B = 10{,}000$) are reported for all means.
 % Table: Power analysis at various effect sizes
 \begin{table}[!ht]
 \centering
-\caption{Statistical power for two-sample Welch $t$-tests at $\alpha = 0.05$,
+\caption{Statistical power for two-sample $t$-tests (\texttt{TTestIndPower} equal-variance pooled-SD approximation used as the power reference for our Welch $t$-tests) at $\alpha = 0.05$,
          power target $1{-}\beta = 0.80$.
          Column~(3): equal groups $n_1 = n_2 = 5$ (Modal H100 / TRL within-group).
          Column~(4): unequal groups $n_1 = 5$, $n_2 = 15$ (TRL vs.\ pooled Classic RL).}
@@ -298,17 +298,13 @@ Cohen's $d$ & Conventional size & Power ($n{=}5$ vs $n{=}5$) & Power ($n{=}5$ vs
 hypothesis tests reported in the paper with Benjamini--Hochberg (BH)
 adjusted $p$-values at FDR $= 0.05$.  Tests are ranked by raw
 $p$-value (ascending). $\checkmark$ = significant after BH correction
-on the historical $20$-test family; $\times$ = not significant. Total
+on the historical $20$-test family; $\times$ = not significant; $^{\ddag}$ = legacy test computed across per-step training rewards within single-seed traces (pseudo-replicated step observations rather than independent seed runs), which is invalid for cross-seed inference and excluded under our Tier-A/B protocol. Total
 tests: $20$; survive on the historical family: $19$. \emph{This
-figure is not the paper's headline statistical result.} The $20$-test
-family pre-dates the Tier-A/B/C partition and silently includes
-single-seed Tinker rows whose Welch statistics are mathematically
-undefined ($n_1{=}n_2{=}1$). Under the restricted Tier-A/B family of
+table is not the paper's headline statistical result.} Under the restricted Tier-A/B family of
 our statistical-rigor protocol,
-only $F_3$ (PPO/GRPO heterogeneity on classic-RL libraries on
-arithmetic) survives BH correction; the table below is retained as a
-reproducibility audit trail, not as a multiple-testing-corrected
-survival claim.}
+only $F_3$ (library heterogeneity across the 5 classic-RL implementations on
+arithmetic, $p = 4.996 \times 10^{-6}$) survives BH correction; the table below is retained solely as a
+reproducibility audit trail.}
 \label{tab:bh-pvalues}
 \scriptsize
 \begin{tabular}{@{}rp{6.2cm}ccc@{}}
@@ -346,29 +342,29 @@ an NVIDIA L4 GPU. We report mean accuracy $\bar{x} = 0.734$ ($\sigma = 0.0703$),
 median $= 0.740$, and IQM $= 0.747$. Normality was not rejected by Shapiro--Wilk
 ($W = 0.9018$, $p = 0.4198$); bootstrap 95\% CI $= [0.6720, 0.7820]$.
 
-\paragraph{Variance decomposition.}
-One-way ANOVAs across 42 experiments with valid performance observations show
-that library/framework ($\eta^2 = 0.546$) and training algorithm ($\eta^2 = 0.558$)
-are the dominant variance sources, consistent with our central thesis. Model
-family explains $\eta^2 = 0.471$; model scale explains $\eta^2 = 0.322$.
+\paragraph{Variance decomposition (marginal one-way ANOVAs).}
+Separate marginal one-way ANOVAs across the $N=42$ completed cross-task evaluation runs show
+that library/framework ($\eta^2 = 0.546$) and training method ($\eta^2 = 0.558$, when pooling offline DPO/SFT, tabular/classic RL, and online LLM RL across tasks)
+carry large marginal variance shares, alongside model
+family ($\eta^2 = 0.471$) and model scale ($\eta^2 = 0.322$). Because the 42 runs form an unbalanced observational corpus in which execution platform, library, and model scale are partially collinear (for example, frontier checkpoints run exclusively on Tinker while classic-RL libraries run on the 199-choice arithmetic environment), these four marginal $\eta^2$ values sum to $1.897 > 1.0$ and must be read as unadjusted marginal associations rather than an orthogonal Type-III factorial partition. When task and stack are held fixed (the matched 10-run Qwen2.5-0.5B control in \S\ref{sec:scaling-law-iter29}), the online RL algorithm effect (GRPO vs.\ PPO) is indistinguishable from zero ($\Delta = -0.002, p = 0.374$).
 
-\subsection{Compute Resources}
+\subsection{Compute Resources and Run Reconciliation}
 
-Experiments are distributed across two compute platforms:
+Experiments are distributed across three execution substrates, reconciling the $N=42$ cross-task evaluation corpus and the 70+ total benchmark runs as follows: (i)~\textbf{14 Tinker API runs} (covering the 12 GSM8K scaling anchors from $4$B to $1$T plus 2 cross-task tool-use/arithmetic probes), (ii)~\textbf{6 Modal H100/A10G cloud GPU runs} (PPO baselines on Qwen3-8B and Llama-3.1-8B, HumanEval, KL tracking, and held-out evaluations), (iii)~\textbf{10 local NVIDIA L4 GPU runs} (the 5-seed GRPO and 5-seed PPO matched same-stack control on Qwen2.5-0.5B), and (iv)~\textbf{12 classic-RL multi-library evaluation runs} across SB3, CleanRL, Tianshou, PufferLib, rl\_games, and d3rlpy ($14 + 6 + 10 + 12 = 42$ core evaluation runs, with 30+ additional group-size sweep cells $G \in \{2, 4, 8, 16\}$ and framework dry-run checks comprising the 70+ total project artifacts).
 
 \paragraph{Tinker API (14 experiments).}
 Scaling experiments across Qwen3-8B, Qwen3-32B, Qwen3.5-4B, Qwen3.5-27B,
 and Llama-3.1-8B-Instruct; frontier model evaluation on Qwen3-235B-A22B,
-DeepSeek-V3.1, and Nemotron-120B; Dense vs.~MoE comparison; cross-task
+DeepSeek-V3.1 ($671$B/$685$B), and Nemotron-3-Super-120B-A12B (LatentMoE); MoE vs.~dense comparisons; cross-task
 tool-use experiments; and emerging architecture evaluation (GPT-OSS-20b,
-Kimi-K2). Tinker provides scalable API access that makes frontier model
+Kimi-K2-Thinking $1$T). Tinker provides scalable API access that makes frontier model
 experiments economically tractable.
 
-\paragraph{Modal H100 GPU cluster (6 experiments).}
-PPO baseline training on Qwen3-8B and Llama-3.1-8B; full HumanEval
+\paragraph{Modal H100 / A10G and local L4 GPU cluster (16 experiments).}
+PPO baseline training on Qwen3-8B and Llama-3.1-8B; 10-run same-stack PPO vs.\ GRPO control on Qwen2.5-0.5B; full HumanEval
 benchmark evaluation; KL divergence tracking across GRPO training steps;
-and held-out evaluation for Qwen3-32B and Qwen3.5-27B. Modal H100s
-provide the low-level GPU access required for PPO value-model training.
+and held-out evaluation for Qwen3-32B and Qwen3.5-27B. Modal GPUs
+provide the low-level access required for PPO value-model training.
 
 \ifdefined\ANONYMOUSBUILD
 All experiment logs and model checkpoints will be released on Weights \&
@@ -380,6 +376,6 @@ All experiment logs are available on Weights \& Biases (project:
 Hub (\url{https://huggingface.co/arvindcr4/tinker-rl-bench-*}).
 \fi
 Per-run compute is logged with the released artifacts. Total project compute:
-$\sim$1,200 A100 GPU-hours across both platforms.
+$\sim$1,200 A100-equivalent GPU-hours across all platforms.
 
 % =============================================================================

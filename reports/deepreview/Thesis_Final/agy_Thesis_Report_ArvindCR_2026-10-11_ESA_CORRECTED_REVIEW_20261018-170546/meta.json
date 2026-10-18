@@ -1,0 +1,13 @@
+{
+  "engine": "agy",
+  "model": null,
+  "source": "reports/public_revision_2026-10-11/thesis/Thesis_Report_ArvindCR_2026-10-11_ESA_CORRECTED_REVIEW.pdf",
+  "usage": {
+    "input_tokens": 72006,
+    "output_tokens": 6535,
+    "thinking_tokens": 0,
+    "cache_read_tokens": 0,
+    "total_tokens": 78541
+  },
+  "conversation_id": "8c9dc0e5-4096-4443-bd26-2584b647fff3"
+}

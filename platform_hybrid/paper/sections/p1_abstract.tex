@@ -3,28 +3,32 @@
 Group Relative Policy Optimization (GRPO) has become a default algorithm for
 reinforcement-learning (RL) post-training of language models, yet how its benefit
 scales with model size remains unclear and is easily confounded by implementation
-and evaluation choices. We study GRPO scaling as one pillar of \ours{}, a
-benchmark spanning 70+ runs across seven RL libraries and five model families
-($0.6$B--$1$T parameters) on GSM8K, HumanEval, and synthetic tool-use tasks.
-Crucially, these runs use \emph{managed} and open back-ends rather than local
-frontier clusters: the frontier-scale anchors (Qwen3-235B-MoE, DeepSeek-V3.1 at the
-$685$B class, Kimi-K2 at $1$T, and Nemotron-120B LatentMoE) are obtained through the \textsc{Tinker} managed
-training/inference API in a single-seed, descriptive-only regime, which is what
-makes a cross-scale study tractable without owning frontier hardware (and why full
+and evaluation choices. We study GRPO scaling as one pillar of \ours{}, combining
+(i)~an execution-substrate and library audit spanning 70+ total runs ($N=42$ cross-task ANOVA runs)
+across seven RL implementations on a deterministic 199-action modular-arithmetic environment
+and two LLM post-training back-ends (\textsc{Tinker} API and HuggingFace \textsc{TRL} on Modal A10G GPUs)
+across five model families ($0.5$B--$1$T total parameters) on GSM8K, 5-choice arithmetic, and multi-hop tool-use tasks, and
+(ii)~a cross-scale GRPO scaling-law audit on GSM8K across 12 open-weight checkpoints ($4$B--$1$T total parameters,
+comprising 5 dense and 7 Mixture-of-Experts models) executed on the \textsc{Tinker} platform.
+Crucially, the frontier-scale anchors (Qwen3-235B-MoE, DeepSeek-V3.1 at $671$B/$685$B total parameters,
+Kimi-K2-Thinking at $1$T, and Nemotron-3-Super-120B-A12B LatentMoE with $12$B active parameters) are obtained through the \textsc{Tinker} managed
+training/inference API in a single-seed, descriptive-only regime, which makes a
+cross-scale study tractable without owning frontier hardware (and why full
 base weights are not released for those anchors).
-Our central result is a conservative negative one: across roughly $2.4$ orders of
-magnitude in parameter count spanned by the fitted anchor pool (a subset of the
-full $0.6$B--$1$T roster), the cross-scale slope of the mean GRPO training
-reward shows no reliable positive trend---flat within the (wide) uncertainty of
-these mostly single-seed anchors, which we therefore read \emph{descriptively}
+Our central result is a conservative negative one: across the $2.4$ orders of
+magnitude in parameter count spanned by the 12-anchor GSM8K pool ($4$B--$1$T),
+the cross-scale slope of the mean GRPO training
+reward shows no reliable positive trend---flat within the wide uncertainty of
+these single-seed anchors, which we read \emph{descriptively}
 rather than as a powered significance test---and no single saturation exponent is identifiable
-(four of the five frontier-scale traces have their saturation rate pinned at the
-fit boundary, and none is identifiable). An internal three-phase geometric check falsifies a clean three-phase
-saturation hypothesis (only $2$ of $12$ anchors match), and the Nemotron-120B run
+(four of the five core frontier-scale traces have their saturation rate pinned at the
+$\lambda=10$ fit boundary because instruction-tuned checkpoints start near their GSM8K ceiling at step~1, and AICc model selection prefers a one-parameter constant model on all five).
+An internal three-phase geometric check falsifies a clean three-phase
+saturation hypothesis (only $2$ of $12$ anchors match), and the Nemotron-120B LatentMoE run
 is better described as a distinct collapse phase (zero-reward step fraction $0.55$
-versus $\le 0.067$ elsewhere) than as a point on a smooth trend. The defensible
+versus $\le 0.067$ on the other core anchors) than as a point on a smooth trend. The defensible
 object is therefore a local, stack-conditioned taxonomy of endpoint ceilings,
-with categorical capability structure carrying more signal than $\log_{10} N$,
+where pre-existing instruction-following capability and rollout-level contrast carry more signal than $\log_{10} N$,
 not a Chinchilla-style power law in $N$.
 \paragraph{Venue claim boundary (workshop-short / limits audit).}
 This manuscript is submitted as a \emph{descriptive limits and identifiability
@@ -32,8 +36,7 @@ audit}, not as a positive scaling law or a multi-seed cross-scale significance
 study. Frontier anchors remain single-seed and descriptive by design; matched
 multi-seed cross-scale runs are an explicitly stated \emph{non-claim} for this
 submission and do not gate the negative/identifiability result we headline.
-We
-release all code, logs, per-step telemetry, and trained adapters; full base-model
+We release all code, logs, per-step telemetry, and trained adapters; full base-model
 checkpoints are shared where model licensing permits, while the managed
 frontier-scale runs expose logs and telemetry rather than base weights.
 \end{abstract}

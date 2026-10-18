@@ -33,9 +33,19 @@ converts GSM8K rollouts into sparse reward.  Second, success-rate
 estimates should carry Pass@$K$ sampling uncertainty
 \citep{chen2021codex}.  We apply both to the five-anchor
 $R_{\max}$ evidence: treating each anchor's per-step training rewards
-($n = 20$--$30$ steps) as its Pass@$K{=}1$ sample, a percentile
-bootstrap ($B = 20{,}000$) on the mean gives the 95\% intervals of
-\tableref{tab:scaling-passk-ci}.
+($n = 20$--$30$ steps) as an operational within-run Pass@$K{=}1$
+trajectory sample, a percentile bootstrap ($B = 20{,}000$) on the
+step-level Pass@$1$ estimator $\hat p$ gives the 95\% intervals of
+\tableref{tab:scaling-passk-ci}.  Because these resampled units are
+sequential training steps rather than i.i.d.\ held-out evaluation
+prompts, the resulting intervals quantify within-trace trajectory
+uncertainty; moreover, $\hat p$ in \tableref{tab:scaling-passk-ci}
+differs slightly from the unweighted full-trace mean $\bar R$ in
+\tableref{tab:scaling-fits} (e.g.\ $0.416$ vs.\ $0.285$ on
+\texttt{Qwen3-8B} and $0.219$ vs.\ $0.175$ on \texttt{Nemotron-120B})
+because \texttt{sweagent\_passk\_aci.py} evaluates the step-level
+Pass@$1$ estimator over the post-warmup rollout window rather than the
+raw 1-to-$T$ average.
 
 \begin{table}[t]
   \centering
@@ -53,7 +63,7 @@ bootstrap ($B = 20{,}000$) on the mean gives the 95\% intervals of
     \bottomrule
   \end{tabular}
   \caption{\textbf{Per-anchor Pass@$K{=}1$ bootstrap intervals.}
-    $\hat p$ is the step-level Pass@$1$ estimate; the CI is a
+    $\hat p$ is the post-warmup step-level Pass@$1$ estimate; the CI is a
     percentile bootstrap ($B = 20{,}000$) over the within-anchor step
     rewards.  Every CI width ($0.145$--$0.298$) exceeds the
     $0.025$--$0.052$ $R_{\max}$ gaps that separate the three
@@ -90,20 +100,22 @@ the hard floor, and \emph{none} in the soft floor
 (\texttt{experiments/results/berkeley/sweagent\_agentless\_tiers.tsv}).
 The empty middle tier restates the iter~125/133 bimodality from the
 interface side: no anchor occupies a policy-bounded intermediate
-plateau.  A proxy decomposition of the observed ceiling by ACI
-quality, $R_{\max}^{\text{policy}} = R_{\max}^{\text{obs}} /
-\max(\mathrm{RQS}, 0.05)$ capped at $1$ (RQS as defined in
-Eq.~\ref{eq:iter140-rqs}), makes the reading
-concrete: the three reachable anchors all cap at $1.0$
-(policy-saturated within their ACI regime), whereas Qwen3-8B's
-observed $R_{\max} = 0.285$ decomposes against $\mathrm{RQS} = 0.353$
-to an implied policy ceiling of $\approx 0.808$
+plateau.  An heuristic algebraic decomposition of the observed ceiling
+by reward-signal quality, $R_{\max}^{\text{policy}} = \min\bigl(1,\,
+R_{\max}^{\text{obs}} / \max(\mathrm{RQS}, 0.05)\bigr)$ (with
+$\mathrm{RQS}$ defined in Eq.~\eqref{eq:iter140-rqs}), illustrates how
+interface starvation can depress observed ceilings: the three reachable
+anchors all cap at $1.0$, whereas \texttt{Qwen3-8B}'s observed
+$R_{\max} = 0.285$ divided by $\mathrm{RQS} = 0.353$ yields an
+illustrative ratio of $\approx 0.808$
 (\texttt{experiments/results/berkeley/sweagent\_aci\_decomp.tsv}).
-On this reading, part of the ``incapable'' verdict for Qwen3-8B is a
-reward-parser ceiling rather than a policy deficit; the decomposition
-is a proxy, and confirming it would require re-training the anchor
-under a shared reward parser.  (Nemotron-120B has $\mathrm{RQS} = 0$
-and the decomposition is undefined.)
+Because $\mathrm{RQS}$ is computed directly from the same reward trace
+(variance, fraction $>0.5$, dynamic range, and non-zero fraction), this
+ratio is an endogenous diagnostic bound rather than an independent
+causal identification of policy vs.\ parser error; isolating the
+parser contribution causally requires evaluating the checkpoint under
+relaxed answer-extraction rules on identical rollouts.  (\texttt{Nemotron-120B}
+has $\mathrm{RQS} = 0$, saturating the $0.05$ denominator floor.)
 
 \paragraph{Statistical-rigor audit of the Pillar-1 headlines.}
 A companion Miller-style error-bars audit \citep{miller2024erroreval}

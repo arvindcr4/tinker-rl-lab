@@ -1,8 +1,9 @@
 \subsection{Temporal stability of the saturation fit (iter41)}
 \label{sec:scaling-law-iter41}
-\paragraph{Setup.} For each of the 12 frontier anchors we re-fit $R(t)=R_{\max}(1-e^{-\lambda t})$ to the per-step reward trace truncated at 40\%, 60\%, 80\%, and 100\% of its length. We track the fitted $\lambda$, $R_{\max}$, and pre-saturation slope $s_0=R_{\max}\lambda$ across truncations and ask whether the \emph{early-fit $R_{\max}$} predicts the \emph{full-fit $R_{\max}$} under a $B=200$ parametric bootstrap (observation noise $\sigma=0.05$).
+\label{sec:iter41}
+\paragraph{Setup.} For each of the 12 frontier anchors we re-fit $R(t)=R_{\max}(1-e^{-\lambda t})$ to the per-step reward trace truncated at 40\%, 60\%, 80\%, and 100\% of its length. We track the fitted $\lambda$, $R_{\max}$, and pre-saturation slope $s_0=R_{\max}\lambda$ across truncations and ask whether the \emph{early-fit $R_{\max}$} predicts the \emph{full-fit $R_{\max}$} under a $B=200$ parametric bootstrap (observation noise $\sigma=0.05$). Three short-horizon probes (\texttt{Qwen3-32B}, \texttt{Qwen3.5-27B}, and \texttt{Qwen3-30B-MoE-Inst}, which have only $T \in \{3, 4, 5\}$ total steps) have fewer than two data points at the 40\% truncation ($\lfloor 0.4 T \rfloor < 2$) and are therefore marked \texttt{degenerate} (\texttt{nan}), leaving $12 - 3 = 9$ evaluable anchors.
 \paragraph{Headline result.}
- 7/12 anchors are \textit{stable} (max relative $\Delta\lambda<0.5$); 2 are \textit{unstable}. The pre-saturation slope $s_0=R_{\max}\lambda$ correlates with $\log P$ on the dense stack at Spearman $\rho=-0.40$.
+ Among the 9 evaluable anchors, 7 are \textit{stable} (max relative $\Delta\lambda<0.5$) and 2 are \textit{unstable} (\texttt{Qwen3-8B} and \texttt{Nemotron-120B}, Table~\ref{tab:iter41-stability}). The pre-saturation slope $s_0=R_{\max}\lambda$ correlates with $\log P$ on the dense stack at Spearman $\rho=-0.40$.
 \paragraph{Per-anchor stability.}
 \begin{table}[ht]
 \centering\small
@@ -19,14 +20,15 @@ model & $\lambda_{\rm full}$ & $R_{\max,\rm full}$ & $t_{80,\rm full}$ & $\max|\
  Qwen3-30B-MoE & 3.2861 & 0.3278 & 0.49 & 0.019 & 0.016 & stable \\
  Qwen3-30B-MoE-Inst & nan & nan & nan & nan & nan & degenerate \\
  DeepSeek-V3.1 & 5.0000 & 0.8438 & 0.32 & 0.374 & 0.347 & stable \\
- Nemotron-120B & 0.0105 & 2.0000 & 153.40 & 27.593 & 1.000 & unstable \\
- Qwen3-235B-MoE & 5.0000 & 1.0017 & 0.32 & 0.000 & 0.000 & stable \\
+ Nemotron-120B & $0.9900^{\dagger}$ & $0.1820^{\dagger}$ & $1.63^{\dagger}$ & 27.593 & 1.000 & unstable \\
+ Qwen3-235B-MoE & 5.0000 & $1.0000^{\ast}$ & 0.32 & 0.000 & 0.000 & stable \\
  Kimi-K2-Thinking & 5.0000 & 0.8503 & 0.32 & 0.000 & 0.057 & stable \\
 \bottomrule
 \end{tabular}
-\caption{Stability of the saturation-model fit under trace truncation. $\max|\Delta\lambda|/\lambda$ is the largest relative difference between the truncated $\lambda$ and $\lambda_{\rm full}$.}
+\caption{Stability of the saturation-model fit under trace truncation. $\max|\Delta\lambda|/\lambda$ is the largest relative difference between the truncated $\lambda$ and $\lambda_{\rm full}$. Three short probes ($T \le 5$) have $<2$ points at 40\% truncation (\texttt{degenerate}). $^{\ast}$Capped at the physical accuracy bound $1.0000$ (unconstrained solver returned $1.0017$). $^{\dagger}$Canonical $[0,1]$-bounded fit on the raw trace (\tableref{tab:scaling-fits}); in \texttt{scaling\_law\_iter41.py}, fitting an unconstrained box $R_{\max} \in [0, 2]$ to the summary-reconstructed Nemotron trace drove $\lambda_{\rm full} \to 0.0105$ and pinned $R_{\max,\rm full} = 2.0000$ ($t_{80} = 153.40$), a collinearity artifact audited and removed in \secref{sec:iter61}.}
+\label{tab:iter41-stability}
 \end{table}
 \paragraph{Early $\to$ late prediction.}
- Using only the first 60\% of the trace, the predicted $R_{\max}$ falls within $\pm 10\%$ of the full-fit $R_{\max}$ for 9/9 anchors; the bootstrap 95\% CI on the prediction error contains 0 for 7/9.
+ Using only the first 60\% of the trace across the 9 non-degenerate anchors, the predicted $R_{\max}$ falls within $\pm 10\%$ of the full-fit $R_{\max}$ for 9/9 anchors; the bootstrap 95\% CI on the prediction error contains 0 for 7/9.
 \paragraph{Takeaway.}
- The saturation model is \emph{robust on identifiable traces} (those with $n_{\rm steps}\ge 10$ and non-pathological late-step dynamics) and produces a $R_{\max}$ that is recoverable from the early portion of the trace within $\le 0.10$ absolute error in the median case. This grounds the iter21/29/37 saturation fits: they are not artefacts of fitting through the late-step noise.
+ The saturation model is \emph{temporally stable on pre-saturated traces} (those with $n_{\rm steps}\ge 10$ that already sit near their ceiling at step~1, so $\lambda$ remains pinned at the upper bound across all truncations), whereas on non-stationary or collapsing traces (\texttt{Qwen3-8B} and \texttt{Nemotron-120B}) $\lambda$ and $R_{\max}$ shift by $>100\%$ across truncations.

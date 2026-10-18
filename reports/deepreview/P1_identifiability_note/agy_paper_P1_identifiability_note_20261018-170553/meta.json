@@ -1,0 +1,13 @@
+{
+  "engine": "agy",
+  "model": null,
+  "source": "platform_hybrid/paper/paper_P1_identifiability_note.pdf",
+  "usage": {
+    "input_tokens": 20769,
+    "output_tokens": 3165,
+    "thinking_tokens": 157,
+    "cache_read_tokens": 0,
+    "total_tokens": 23934
+  },
+  "conversation_id": "f3a84785-6ecc-495c-aa5d-3dad367f6548"
+}

@@ -1,0 +1,13 @@
+{
+  "engine": "agy",
+  "model": null,
+  "source": "platform_hybrid/sem 3 work/submissions/neurips-main-track/main-track-paper.pdf",
+  "usage": {
+    "input_tokens": 77716,
+    "output_tokens": 7503,
+    "thinking_tokens": 0,
+    "cache_read_tokens": 0,
+    "total_tokens": 85219
+  },
+  "conversation_id": "68517752-a818-4217-938d-6a13e147477e"
+}

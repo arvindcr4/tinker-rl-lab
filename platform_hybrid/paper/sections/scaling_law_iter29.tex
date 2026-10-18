@@ -4,19 +4,23 @@
 % ---------------------------------------------------------------------------
 
 \paragraph{Motivation.}
-Iter~25 audited the canonical saturation model
+Iter~25 (\secref{par:scaling-iter25}) audited the canonical saturation model
 $R(t)=R_{\max}\bigl(1-e^{-\lambda t}\bigr)$ on the five frontier-scale
 traces (Qwen3.5-4B, Qwen3-8B, Llama-3.1-8B-Instruct, DeepSeek-V3.1,
 Nemotron-120B) and concluded that the model is \emph{not identifiable}
 on those data: 4/5 traces had $\lambda$ pinned at the upper bound
 $\lambda=10$ (Nemotron-120B is the exception at $\lambda\!\approx\!0.99$),
 0/5 preferred saturation over a constant in noise-aware
-AICc, and 0/5 were identifiable~\citep{tinker-rl-lab-iter25}.
+AICc, and 0/5 were identifiable.
 That audit left open whether the failure is intrinsic to the model or
 an artefact of the 20--30 step frontier horizons (where the noise floor
 is comparable to the signal). Iter~29 closes that gap by re-running the
 same identifiability battery on the longer-horizon same-stack traces
-(40 steps, $n_{\mathrm{eff}}=128$, GSM8K, Qwen2.5-0.5B), and---crucially---
+(40 steps, $n_{\mathrm{eff}}=128$, \texttt{Qwen2.5-0.5B} on the
+calibrated synthetic math / modular-arithmetic verification task stored
+in \texttt{samestack\_ppo\_grpo.json}, where both algorithms climb from
+$\approx 0.25$ to $0.99$ accuracy, complementing the full-GSM8K
+same-stack runs in \secref{sec:exp-design}), and---crucially---
 on \emph{both} algorithm stacks simultaneously. The frontier synthesis
 Round~1 licenses an \emph{Estimator-Equivalence Principle} (EEP): with
 rollout batch, KL, clipping, masking, optimiser and reward parser fixed,
@@ -30,12 +34,14 @@ same-stack runs from \texttt{samestack\_ppo\_grpo.json} (5 GRPO + 5 PPO
 seeds, identical everything else) and applies the iter~25 noise-aware
 diagnostics per trace:
 (a) saturation fit with $\lambda$ bounded in $[10^{-3},\,10]$; (b)
-effective binomial $n$ inferred from the GCD of reward denominators;
+effective binomial $n_{\mathrm{eff}}$ inferred from the LCM of the
+reduced reward denominators;
 (c) AICc model selection over $\{\text{constant}, \text{linear},
 \text{saturation}\}$; (d) parametric bootstrap ($B=400$) on
-$\mathrm{Binomial}(n_{\mathrm{eff}},\,p_t)$ for the lambda CI; (e)
-detectability $T^{\star}=(z_{1-\alpha/2}+z_{\mathrm{power}})^{2}$
-benchmark against the actual trace length.
+$\mathrm{Binomial}(n_{\mathrm{eff}},\,p_t)$ for the $\lambda$ CI; (e)
+detectability horizon $T^{\star}=(z_{1-\alpha/2}+z_{\mathrm{power}})^{2}
+(\sigma_{\text{step}}/\Delta)^{2}$
+benchmarked against the actual 40-step trace length.
 
 Three EEP-falsifiable predictions were recorded in the internal iteration ledger (not an immutable external preregistration):
 \begin{description}
@@ -49,6 +55,9 @@ A non-rejected E1 $\wedge$ E2 $\wedge$ E3 would sustain EEP at the
 \emph{partial} falsification.
 
 \paragraph{Results.}
+Tables~\ref{tab:iter29-cross-stack} and \ref{tab:iter29-eep} summarize
+the cross-stack identifiability and EEP-falsification results across
+all ten 40-step traces.
 
 \begin{table}[t]
 \centering\small
@@ -62,10 +71,15 @@ PPO  & 5 & 0/5 & 0/5 & \textbf{5/5} & 0/5 & 0.078 \\
 \end{tabular}
 \caption{Cross-stack identifiability battery on the 40-step same-stack
   traces. Lambda is identifiable in both stacks (0/5 hit the upper
-  bound, vs.\ 5/5 in iter~25's 20--30 step frontier data). However the
-  AICc-best model \emph{diverges}: GRPO's running mean reward is best
-  described by an exponential saturation curve (5/5), PPO's by a linear
-  trend (5/5). Fisher exact on the AICc-best-saturation rate gives
+  bound, vs.\ 4/5 hitting the bound and 5/5 failing identifiability in
+  iter~25's 20--30 step frontier data). However, within the 3-model
+  candidate set $\{\text{constant}, \text{linear}, \text{exponential
+  saturation}\}$, the AICc-best model \emph{diverges}: GRPO's running
+  mean reward is best described by an exponential saturation curve (5/5),
+  whereas PPO's is preferred by a linear trend (5/5; see
+  \secref{sec:iter37} for the 5-model expansion where both stacks prefer
+  a sigmoidal Hill $n=2$ curve once critic warm-up lag is accommodated).
+  Fisher exact on the 3-model AICc-best-saturation rate gives
   $p=0.0079$ (Table~\ref{tab:iter29-eep}).}
 \label{tab:iter29-cross-stack}
 \end{table}
@@ -84,50 +98,54 @@ F2 paired heldout accuracy     & 0.99$\pm$0.0035 & 0.992$\pm$0.003 & 0.3739 & su
 \bottomrule
 \end{tabular}
 \caption{EEP-falsification battery on the same-stack traces.
-  E2 is decisively falsified: GRPO and PPO prefer different AICc-best
-  functional forms (saturation vs.\ linear) on the same rollout batches.
+  E2 is decisively falsified within the 3-model candidate family: GRPO
+  and PPO prefer different AICc-best functional forms (exponential
+  saturation vs.\ linear) on the same rollout batches.
   E1 and F1 are sustained: both stacks have identifiable $\lambda$ (0/5
   hit the bound), and the bootstrap CI excludes the bound in 5/5 GRPO
-  and 4/5 PPO traces. E3 borderline ($p=0.054$): PPO's saturation fit
-  leaves more heldout residual than GRPO's, consistent with E2's
-  AICc verdict. F2 (final accuracy) is sustained, matching iter~9.}
+  and 4/5 PPO traces. E3 borderline ($p=0.054$): PPO's exponential
+  saturation fit leaves more heldout residual than GRPO's, consistent
+  with E2's AICc verdict. F2 (final accuracy) is sustained.}
 \label{tab:iter29-eep}
 \end{table}
 
 \paragraph{Interpretation.}
-The strong Estimator-Equivalence Principle \emph{at the level of
-functional-form identifiability} is \textbf{falsified} on this data:
-GRPO's running reward is well-described by
+Within the 3-candidate family $\{\text{constant}, \text{linear},
+\text{exponential saturation}\}$, the strong Estimator-Equivalence
+Principle \emph{at the level of first-order exponential kinetics} is
+\textbf{falsified} on this data: GRPO's running reward is well-described by
 $R(t)\approx R_{\max}(1-e^{-\lambda t})$ with $\hat\lambda\approx 0.25$
 and $\hat R_{\max}\approx 0.89$ (a clean $t_{80}\approx 6.4$ steps);
-PPO's running reward is \emph{not}---its preferred model is linear with
-a much smaller effective rate ($\hat\lambda\approx 0.08$ if one forces
-the saturation form, vs.\ the GRPO estimate of $0.25$). This is
+PPO's running reward rises more gradually over early steps ($\hat\lambda
+\approx 0.08$ if one forces the concave exponential form, vs.\ the GRPO
+estimate of $0.25$), so a linear trend beats concave exponential
+saturation over the 40-step window. This is
 \emph{not} a final-accuracy effect: the two stacks are statistically
-indistinguishable on heldout accuracy ($p=0.37$), and the bootstrap CI
-on $\lambda$ is well-defined in both stacks (0/5 hit the bound, vs.\
-5/5 in the 20--30 step frontier data).
+indistinguishable on heldout accuracy ($0.990$ vs.\ $0.992$, $p=0.37$),
+and the bootstrap CI on $\lambda$ is well-defined in both stacks (0/5
+hit the bound, vs.\ 4/5 in the 20--30 step frontier data).
 
-The decoupling---identical heldout accuracy, divergent
-intermediate-curve shape---is the sharpest form of the critic
-degeneracy pattern flagged in the frontier synthesis: PPO's value
-head appears to flatten the intermediate gradient signal into a
-near-linear drift rather than a saturating exponential. Practically,
-this means that \emph{rules-of-thumb derived from GRPO saturation fits
-do not transfer to PPO} even when everything else in the stack is held
-fixed. The two algorithms reach the same accuracy, but they get there
-via different intermediate trajectories---and the saturation model
-$R(t)=R_{\max}(1-e^{-\lambda t})$ is only the right descriptive model
-for one of them.
+The decoupling---identical heldout accuracy, divergent early-transient
+curvature---reflects value-head warm-up lag in PPO: while GRPO computes
+group-relative advantages immediately from step~1 without learned critic
+parameters, PPO's value head requires several initial gradient updates
+to calibrate before emitting low-variance advantage estimates. As shown
+in \secref{sec:iter37} (\texttt{iter37c}), expanding the candidate
+family to include a sigmoidal Hill ($n=2$) model resolves this tension:
+Hill ($n=2$) wins 5/5 PPO traces over the linear model because it
+captures the slow initial critic warm-up followed by rapid mid-trace
+climb and late saturation. Practically, this means that \emph{concave
+exponential saturation rules-of-thumb derived from GRPO do not transfer
+directly to PPO without accounting for critic warm-up lag}.
 
 \paragraph{Limitations.}
-The same-stack data are at a single model size (Qwen2.5-0.5B), single
-task (GSM8K), and 40-step horizon. Whether the same AICc divergence
-holds at 8B+ with the frontier horizon needs a Tinker reproduction
-(cost-flagged in \texttt{FRONTIER\_INSIGHTS.md}). The
-``saturation-supported'' criterion in iter~25 (AICc-best $=$ sat AND
-CI excludes bound) is satisfied in 5/5 GRPO traces and 0/5 PPO traces;
-iter~25's stricter formulation would also falsify EEP here.
+The same-stack data are at a single model size (\texttt{Qwen2.5-0.5B}),
+single calibrated task, and 40-step horizon. Whether the same transient
+divergence holds at 8B+ with the frontier horizon requires a multi-seed
+frontier reproduction. The ``saturation-supported'' criterion in
+iter~25 (AICc-best $=$ exponential saturation AND CI excludes bound) is
+satisfied in 5/5 GRPO traces and 0/5 PPO traces under the 3-model
+candidate family.
 
 \paragraph{Artifacts.}
 Driver: \texttt{scripts/scaling\_law\_iter29.py}.
@@ -135,4 +153,3 @@ Per-trace: \texttt{scaling\_law\_iter29\_identifiability.tsv},
 \texttt{scaling\_law\_iter29\_bootstrap.tsv}.
 Stack rollup: \texttt{scaling\_law\_iter29\_summary.tsv}.
 EEP battery: \texttt{scaling\_law\_iter29\_stack\_compare.tsv}.
-Figure: \texttt{figures/scaling\_law\_iter29.pdf}.

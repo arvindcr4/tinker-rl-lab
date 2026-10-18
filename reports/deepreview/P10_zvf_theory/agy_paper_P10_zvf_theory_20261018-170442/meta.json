@@ -1,0 +1,13 @@
+{
+  "engine": "agy",
+  "model": null,
+  "source": "zvf-program/theory/paper_P10_zvf_theory.pdf",
+  "usage": {
+    "input_tokens": 30787,
+    "output_tokens": 4166,
+    "thinking_tokens": 156,
+    "cache_read_tokens": 0,
+    "total_tokens": 34953
+  },
+  "conversation_id": "441eb182-cf8f-427c-aad8-cee0de915def"
+}

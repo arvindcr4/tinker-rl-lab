@@ -1,0 +1,200 @@
+{
+  "P1_scaling": {
+    "label": "P1_scaling",
+    "path": "platform_hybrid/paper/paper_P1_scaling.pdf",
+    "engine": "deepreview",
+    "review": "documents/6e752656-d360-49a2-80df-031cc6fc88f2/reviews/5cb5dc81-b1a6-415a-b934-e816b5a4885c",
+    "state": "SUCCEEDED",
+    "output_dir": "reports/deepreview/documents_6e752656-d360-49a2-80df-031cc6fc88f2_reviews_5cb5dc81-b1a6-415a-b934-e816b5a4885c"
+  },
+  "P2_zvf": {
+    "label": "P2_zvf",
+    "path": "platform_hybrid/paper/paper_P2_zvf.pdf",
+    "engine": "deepreview",
+    "review": "documents/6c172429-8530-4670-ab66-7ee55a624715/reviews/46c8c3d3-f6be-42e3-a514-548cf897c21a",
+    "state": "SUCCEEDED",
+    "output_dir": "reports/deepreview/documents_6c172429-8530-4670-ab66-7ee55a624715_reviews_46c8c3d3-f6be-42e3-a514-548cf897c21a"
+  },
+  "P3_group_size": {
+    "label": "P3_group_size",
+    "path": "platform_hybrid/paper/paper_P3_group_size.pdf",
+    "engine": "agy",
+    "state": "SUCCEEDED",
+    "output_dir": "reports/deepreview/P3_group_size/agy_paper_P3_group_size_20261018-170307"
+  },
+  "P4_length_bias": {
+    "label": "P4_length_bias",
+    "path": "platform_hybrid/paper/paper_P4_length_bias.pdf",
+    "engine": "agy",
+    "state": "SUCCEEDED",
+    "output_dir": "reports/deepreview/P4_length_bias/agy_paper_P4_length_bias_20261018-170317"
+  },
+  "P5_minreport": {
+    "label": "P5_minreport",
+    "path": "platform_hybrid/paper/paper_P5_minreport.pdf",
+    "engine": "agy",
+    "state": "SUCCEEDED",
+    "output_dir": "reports/deepreview/P5_minreport/agy_paper_P5_minreport_20261018-170321"
+  },
+  "P6_registry": {
+    "label": "P6_registry",
+    "path": "platform_hybrid/paper/paper_P6_registry.pdf",
+    "engine": "agy",
+    "state": "SUCCEEDED",
+    "output_dir": "reports/deepreview/P6_registry/agy_paper_P6_registry_20261018-170317"
+  },
+  "P7_zvf_controller": {
+    "label": "P7_zvf_controller",
+    "path": "platform_hybrid/paper/paper_P7_zvf_controller.pdf",
+    "engine": "agy",
+    "state": "SUCCEEDED",
+    "output_dir": "reports/deepreview/P7_zvf_controller/agy_paper_P7_zvf_controller_20261018-170449"
+  },
+  "P2_zvf_falsification_note": {
+    "label": "P2_zvf_falsification_note",
+    "path": "platform_hybrid/paper/paper_P2_zvf_falsification_note.pdf",
+    "engine": "agy",
+    "state": "SUCCEEDED",
+    "output_dir": "reports/deepreview/agy_paper_P2_zvf_falsification_note_20261018-170056"
+  },
+  "P10_zvf_theory": {
+    "label": "P10_zvf_theory",
+    "path": "zvf-program/theory/paper_P10_zvf_theory.pdf",
+    "engine": "agy",
+    "state": "SUCCEEDED",
+    "output_dir": "reports/deepreview/P10_zvf_theory/agy_paper_P10_zvf_theory_20261018-170442"
+  },
+  "P9_dnb": {
+    "label": "P9_dnb",
+    "path": "platform_hybrid/paper/neurips_2026_variants/paper_P9_dnb.pdf",
+    "engine": "agy",
+    "state": "SUCCEEDED",
+    "output_dir": "reports/deepreview/P9_dnb/agy_paper_P9_dnb_20261018-170448"
+  },
+  "P1_identifiability_note": {
+    "label": "P1_identifiability_note",
+    "path": "platform_hybrid/paper/paper_P1_identifiability_note.pdf",
+    "engine": "agy",
+    "state": "SUCCEEDED",
+    "output_dir": "reports/deepreview/P1_identifiability_note/agy_paper_P1_identifiability_note_20261018-170553"
+  },
+  "P12_signal_starvation": {
+    "label": "P12_signal_starvation",
+    "path": "platform_hybrid/paper/unified_signal_starvation/paper_P12_signal_starvation.pdf",
+    "engine": "agy",
+    "state": "SUCCEEDED",
+    "output_dir": "reports/deepreview/P12_signal_starvation/agy_paper_P12_signal_starvation_20261018-170602"
+  },
+  "P11_reproducibility_audit": {
+    "label": "P11_reproducibility_audit",
+    "path": "zvf-program/audit/paper_P11_reproducibility_audit.pdf",
+    "engine": "agy",
+    "state": "SUCCEEDED",
+    "output_dir": "reports/deepreview/P11_reproducibility_audit/agy_paper_P11_reproducibility_audit_20261018-170607"
+  },
+  "P8_workshop": {
+    "label": "P8_workshop",
+    "path": "platform_hybrid/paper/neurips_2026_variants/paper_P8_workshop.pdf",
+    "engine": "agy",
+    "state": "SUCCEEDED",
+    "output_dir": "reports/deepreview/P8_workshop/agy_paper_P8_workshop_20261018-170624"
+  },
+  "ACL_ARR_Oct2026_camera": {
+    "label": "ACL_ARR_Oct2026_camera",
+    "path": "outputs/PES_Conference_Submissions_2026-09-25/ACL_ARR_Oct2026/paper_camera.pdf",
+    "engine": "agy",
+    "state": "SUCCEEDED",
+    "output_dir": "reports/deepreview/ACL_ARR_Oct2026_camera/agy_paper_camera_20261018-170700"
+  },
+  "ICICC2027_camera": {
+    "label": "ICICC2027_camera",
+    "path": "outputs/PES_Conference_Submissions_2026-09-25/ICICC2027/paper_camera.pdf",
+    "engine": "agy",
+    "state": "SUCCEEDED",
+    "output_dir": "reports/deepreview/ICICC2027_camera/agy_paper_camera_20261018-170707"
+  },
+  "P6_submission": {
+    "label": "P6_submission",
+    "path": "platform_hybrid/paper/paper_P6_submission.pdf",
+    "engine": "agy",
+    "state": "SUCCEEDED",
+    "output_dir": "reports/deepreview/P6_submission/agy_paper_P6_submission_20261018-170724"
+  },
+  "RAIT2027_camera": {
+    "label": "RAIT2027_camera",
+    "path": "outputs/PES_Conference_Submissions_2026-09-25/RAIT2027/paper_camera.pdf",
+    "engine": "agy",
+    "state": "SUCCEEDED",
+    "output_dir": "reports/deepreview/RAIT2027_camera/agy_paper_camera_20261018-170741"
+  },
+  "Flagship_Main": {
+    "label": "Flagship_Main",
+    "path": "zvf-program/flagship/paper/main.pdf",
+    "engine": "agy",
+    "state": "SUCCEEDED",
+    "output_dir": "reports/deepreview/Flagship_Main/agy_main_20261018-170804"
+  },
+  "PES_IEEE_Attribution": {
+    "label": "PES_IEEE_Attribution",
+    "path": "outputs/PES_Conference_Paper_2026-09-25/ArvindCR_GRPO_Attribution_IEEE.pdf",
+    "engine": "agy",
+    "state": "SUCCEEDED",
+    "output_dir": "reports/deepreview/PES_IEEE_Attribution/agy_ArvindCR_GRPO_Attribution_IEEE_20261018-170835"
+  },
+  "Spectral_Entropy": {
+    "label": "Spectral_Entropy",
+    "path": "zvf-program/flagship/paper/spectral_entropy_paper.pdf",
+    "engine": "agy",
+    "state": "SUCCEEDED",
+    "output_dir": "reports/deepreview/Spectral_Entropy/agy_spectral_entropy_paper_20261018-170900"
+  },
+  "Flagship_TMLR": {
+    "label": "Flagship_TMLR",
+    "path": "zvf-program/flagship/paper/tmlr_submission/main.pdf",
+    "engine": "agy",
+    "state": "SUCCEEDED",
+    "output_dir": "reports/deepreview/Flagship_TMLR/agy_main_20261018-170907"
+  },
+  "Next_Submission": {
+    "label": "Next_Submission",
+    "path": "zvf-program/next-submission/paper/main.pdf",
+    "engine": "agy",
+    "state": "SUCCEEDED",
+    "output_dir": "reports/deepreview/Next_Submission/agy_main_20261018-170910"
+  },
+  "Thesis_2026_10_11_ESA_Corrected": {
+    "label": "Thesis_2026_10_11_ESA_Corrected",
+    "path": "reports/public_revision_2026-10-11/thesis/Thesis_Report_ArvindCR_2026-10-11_ESA_CORRECTED_REVIEW.pdf",
+    "engine": "agy",
+    "state": "SUCCEEDED",
+    "output_dir": "reports/deepreview/Thesis_2026_10_11_ESA_Corrected/agy_Thesis_Report_ArvindCR_2026-10-11_ESA_CORRECTED_REVIEW_20261018-170958"
+  },
+  "C1_Research_Addendum": {
+    "label": "C1_Research_Addendum",
+    "path": "reports/public_revision_2026-10-03/addendum/C1_Research_Addendum_2026-10-03_PUBLIC.pdf",
+    "engine": "agy",
+    "state": "SUCCEEDED",
+    "output_dir": "reports/deepreview/C1_Research_Addendum/agy_C1_Research_Addendum_2026-10-03_PUBLIC_20261018-171006"
+  },
+  "Sem3_Group6_Original_Report": {
+    "label": "Sem3_Group6_Original_Report",
+    "path": "platform_hybrid/sem 3 work/deliverables/group6-original-report.pdf",
+    "engine": "agy",
+    "state": "SUCCEEDED",
+    "output_dir": "reports/deepreview/Sem3_Group6_Original_Report/agy_group6-original-report_20261018-171033"
+  },
+  "Sem3_NeurIPS_Main_Track": {
+    "label": "Sem3_NeurIPS_Main_Track",
+    "path": "platform_hybrid/sem 3 work/submissions/neurips-main-track/main-track-paper.pdf",
+    "engine": "agy",
+    "state": "SUCCEEDED",
+    "output_dir": "reports/deepreview/Sem3_NeurIPS_Main_Track/agy_main-track-paper_20261018-171049"
+  },
+  "Sem4_P8_Fraud": {
+    "label": "Sem4_P8_Fraud",
+    "path": "platform_hybrid/sem 4 work/papers/P8-fraud.pdf",
+    "engine": "agy",
+    "state": "SUCCEEDED",
+    "output_dir": "reports/deepreview/Sem4_P8_Fraud/agy_P8-fraud_20261018-171126"
+  }
+}

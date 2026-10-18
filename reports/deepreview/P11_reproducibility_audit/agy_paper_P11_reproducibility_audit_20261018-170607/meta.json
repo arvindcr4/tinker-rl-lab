@@ -1,0 +1,13 @@
+{
+  "engine": "agy",
+  "model": null,
+  "source": "zvf-program/audit/paper_P11_reproducibility_audit.pdf",
+  "usage": {
+    "input_tokens": 28568,
+    "output_tokens": 5375,
+    "thinking_tokens": 158,
+    "cache_read_tokens": 0,
+    "total_tokens": 33943
+  },
+  "conversation_id": "89343ec9-5675-4b20-9509-017f8c1802ab"
+}

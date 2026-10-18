@@ -19,33 +19,31 @@ reference policy, and evaluation protocol, so cross-paper comparisons conflate t
 algorithm with its plumbing. This paper isolates the scaling question inside a
 single, fixed benchmark.
 
-We study GRPO scaling as one pillar of \ours{}, a controlled benchmark of 70+ runs
-across seven RL libraries and five model families ($0.6$B--$1$T) on GSM8K
-\citep{cobbe2021training}, HumanEval~\citep{chen2021codex}, and synthetic tool-use
-tasks. Rather than assert a new law, we report what the data will and will not
-support. Our contributions are: (i) a same-benchmark measurement showing the
-cross-scale mean training-reward slope is statistically indistinguishable from zero
-over the measured 2--3-decade parameter range; (ii) an internal falsification check of a clean
-three-phase saturation hypothesis; (iii) an identifiability audit showing no
-universal saturation exponent is estimable on this data, so the defensible object
-is a local, stack-conditioned saturation law with the endpoint ceiling regressed
-on $\log_{10} N$; and (iv) a case study of the Nemotron-120B collapse as a
-distinct phase rather than trend noise. We read single-seed frontier-API runs as
+We study GRPO scaling as one pillar of \ours{}, a controlled benchmark spanning 70+ runs
+($N=42$ cross-task ANOVA runs) across seven RL implementations on a 199-choice modular-arithmetic task,
+two LLM post-training back-ends (\textsc{Tinker} and HuggingFace \textsc{TRL}) across five model families ($0.5$B--$1$T total parameters)
+on GSM8K~\citep{cobbe2021training}, 5-choice arithmetic, and multi-hop tool-use tasks, and a 12-anchor cross-scale GRPO suite ($4$B--$1$T) on GSM8K.
+Rather than assert a new law, we report what the data will and will not
+support. Our contributions are: (i) a same-benchmark measurement showing that the
+cross-scale mean training-reward slope ($+0.056 \pm 0.130$/decade on 5 core anchors; $+0.081 \pm 0.129$/decade on 12 anchors) and endpoint ceiling slope ($R_{\max} \sim \log_{10} N$) are statistically indistinguishable from zero
+over the measured $2.4$-decade parameter range ($p \ge 0.22$); (ii) an internal falsification check of a clean
+three-phase saturation hypothesis~\citep{nimmaturi2025predictive}; (iii) an identifiability audit showing that no
+universal saturation rate $\lambda$ or horizon $t_{80}$ is estimable on 20--30 step GSM8K traces because instruction-tuned checkpoints start near their ceiling at step~1 ($R(1) \in [0.75, 0.94]$), leaving a local, stack-conditioned taxonomy of endpoint ceilings separated by initial instruction-following capability rather than $\log_{10} N$; and (iv) a case study of the Nemotron-3-Super-120B-A12B (LatentMoE, $12$B active) collapse as a
+distinct format-starvation phase rather than trend noise. We read single-seed frontier-API runs as
 illustrative case studies, not universal laws. The title's ``limits'' is therefore
 substantive: this paper identifies where a parameter-count scaling law is not
-estimable from the corpus; it does not claim that GRPO lacks scaling behavior in
-better-controlled data. The program's stronger explanatory candidates are usable
+estimable from short-horizon GSM8K traces; it does not claim that GRPO lacks scaling behavior on harder, unsaturated benchmarks (e.g., AIME or competition code). The program's stronger explanatory candidates are usable
 contrastive compute and group-size-conditioned signal, tested separately in the
-ZVF and group-size companion papers.
+ZVF and group-size companion papers~\citep{zvfaudit2026}.
 
 \subsection{Related Work}
 \label{sec:p1-related}
 Neural scaling laws for pre-training are well established~\citep{kaplan2020scalinglaws, hoffmann2022chinchilla, muennighoff2023datascaling}. Scaling behavior of RL and
-RLHF post-training has been examined more recently~\citep{hilton2023rlscaling, rafailov2024rlhfscaling, nimmaturi2025predictive}, but typically within a single
+RLHF post-training has been examined more recently~\citep{hilton2023rlscaling, gao2023reward, rafailov2024rlhfscaling, nimmaturi2025predictive, tan2025scalingrl}, but typically within a single
 stack, leaving open whether reported trends transfer across libraries and model
 families. GRPO and its use in reasoning models originate
 with~\citet{shao2024deepseekmath} and~\citet{guo2025deepseekr1};
-\citet{ahmadian2024backtobasics} argue that much of the benefit of heavy RL
-machinery is recoverable by simpler estimators once the stack is controlled. Our
-work complements these by fixing the benchmark and asking, conservatively, which
-scaling conclusions survive.
+\citet{ahmadian2024backtobasics} and~\citet{li2026oxrl} argue that much of the benefit of heavy RL
+machinery is recoverable by simpler estimators once the stack is controlled.
+Concurrently, recent RLVR studies have shown that group-relative updates suffer from gradient starvation when prompts yield all-correct or all-incorrect rollouts, motivating dynamic sampling in DAPO~\citep{yu2025dapo}, variance-unbiased normalization in Dr.\ GRPO~\citep{tong2025drgrpo}, online difficulty filtering~\citep{bae2025online, jiang2025vcrl}, and zero-variance prompt recycling~\citep{le2025rlzvp, zhang2026greso}.
+Our work connects this variance-starvation mechanism directly to post-training scaling laws: when frontier instruction-tuned checkpoints start near saturation on GSM8K, high rollout-level zero-variance fractions flatten single-trace learning curves and mask cross-scale parameter trends.

@@ -1,42 +1,49 @@
 \subsection{Chinchilla-style iso-compute extrapolation (iter45)}
 \label{sec:scaling-law-iter45}
-\paragraph{Setup.} Iter21--41 all fit $R(t)=R_{\max}(1-e^{-\lambda t})$ as a function of \emph{optimisation steps} $t$, holding everything else fixed. None asked the operational question: \textbf{at a fixed training-compute budget, which model size maximises $R_{\max}$?} Here we extract $R_{\max}$ for the 12 frontier anchors from the iter21 saturation fit, compute a proxy training cost $C_\mathrm{proxy} = P \cdot n_{\rm steps} \cdot L_{\rm bar}$ with $L_{\rm bar}=512$ tokens, and ask (a) whether $R_{\max}$ depends on the (params, steps) partition at fixed $C$ (iso-compute invariance), and (b) what is the implied compute exponent $\alpha$ in $\log R_{\max}\sim\alpha\log C$.
+\label{sec:iter45}
+\paragraph{Setup.} Iter21--41 all fit $R(t)=R_{\max}(1-e^{-\lambda t})$ as a function of \emph{optimisation steps} $t$, holding everything else fixed. Here we ask the operational question: \textbf{at a fixed training-compute budget, does $R_{\max}$ scale with compute proxy $C_{\mathrm{proxy}} = P \cdot n_{\rm steps} \cdot L_{\rm bar}$ ($L_{\rm bar}=512$ tokens)?} For MoE models we track both nominal total parameter count $P_{\rm tot}$ and per-token active parameter count $P_{\rm act}$, and we enforce the physical accuracy ceiling $R_{\max} \in [0, 1]$ (comparing against the legacy unconstrained \texttt{scaling\_law\_iter45.py} run in which \texttt{Nemotron-120B} was assigned the unconstrained box bound $R_{\max}=2.000$ and misclassified as \texttt{dense}; see \secref{sec:iter61} for the full leverage audit).
 \paragraph{Compute-proxy table.}
 \begin{table}[ht]
 \centering\small
-\begin{tabular}{lrrrrr}
+\begin{tabular}{lrrrrrr}
 \toprule
-model & $P$ (B) & arch & $n_{\rm steps}$ & $\log_{10}C$ & $R_{\max}$ \\
+model & $P_{\rm tot}$ / $P_{\rm act}$ (B) & arch & $n_{\rm steps}$ & $\log_{10}C_{\rm tot}$ & $R_{\max}^{\rm bounded}$ & $R_{\max}^{\rm legacy}$ \\
 \midrule
- Qwen3.5-4B & 4.0 & dense & 30 & 4.788 & 0.818 \\
- Qwen3-8B & 8.0 & dense & 30 & 5.090 & 0.331 \\
- Llama-3.1-8B-Instruct & 8.0 & dense & 30 & 5.090 & 0.869 \\
- Qwen3-32B & 32.0 & dense & 3 & 4.691 & 0.250 \\
- Qwen3.5-27B & 27.0 & dense & 3 & 4.618 & 0.598 \\
- gpt-oss-20B & 20.0 & moe & 30 & 5.487 & 0.841 \\
- Qwen3-30B-MoE & 30.0 & moe & 5 & 4.885 & 0.333 \\
- Qwen3-30B-MoE-Inst & 30.0 & moe & 3 & 4.663 & 1.002 \\
- DeepSeek-V3.1 & 685.0 & moe & 20 & 6.846 & 0.844 \\
- Nemotron-120B & 120.0 & dense & 20 & 6.090 & 2.000 \\
- Qwen3-235B-MoE & 235.0 & moe & 4 & 5.682 & 1.002 \\
- Kimi-K2-Thinking & 1000.0 & moe & 20 & 7.010 & 0.850 \\
+ Qwen3.5-4B & 4.0 / 4.0 & dense & 30 & 4.788 & 0.818 & 0.818 \\
+ Qwen3-8B & 8.0 / 8.0 & dense & 30 & 5.090 & 0.331 & 0.331 \\
+ Llama-3.1-8B-Instruct & 8.0 / 8.0 & dense & 30 & 5.090 & 0.869 & 0.869 \\
+ Qwen3-32B & 32.0 / 32.0 & dense & 3 & 4.691 & 0.250 & 0.250 \\
+ Qwen3.5-27B & 27.0 / 27.0 & dense & 3 & 4.618 & 0.598 & 0.598 \\
+ gpt-oss-20B & 20.0 / 3.6 & moe & 30 & 5.487 & 0.841 & 0.841 \\
+ Qwen3-30B-MoE & 30.0 / 3.0 & moe & 5 & 4.885 & 0.333 & 0.333 \\
+ Qwen3-30B-MoE-Inst & 30.0 / 3.0 & moe & 3 & 4.663 & 1.000 & 1.002 \\
+ DeepSeek-V3.1 & 685.0 / 37.0 & moe & 20 & 6.846 & 0.844 & 0.844 \\
+ Nemotron-120B & 120.0 / 12.0 & moe$^{\dagger}$ & 20 & 6.090 & 0.182 & 2.000 \\
+ Qwen3-235B-MoE & 235.0 / 22.0 & moe & 4 & 5.682 & 1.000 & 1.002 \\
+ Kimi-K2-Thinking & 1000.0 / 32.0 & moe & 20 & 7.010 & 0.850 & 0.850 \\
 \bottomrule
 \end{tabular}
-\caption{Per-anchor compute proxy and fitted $R_{\max}$.}
+\caption{Per-anchor compute proxy ($\log_{10} C_{\rm tot}$ with $C_{\rm tot} = P_{\rm tot} \cdot n_{\rm steps} \cdot 512$ in billions of parameter-tokens) and fitted $R_{\max}$ under the physical $[0,1]$ bound vs.\ the legacy unconstrained script output. $^{\dagger}$\texttt{Nemotron-3-Super-120B-A12B} is LatentMoE (12B active), misclassified as \texttt{dense} with unconstrained $R_{\max}=2.000$ in the legacy \texttt{iter45} script.}
+\label{tab:iter45-compute}
 \end{table}
 \paragraph{Within-stack scaling.}
 \begin{table}[ht]
 \centering\small
 \begin{tabular}{lrrrr}
 \toprule
-stack & $n$ & $\alpha$ ($\log R_{\max}$ vs $\log C$) & Spearman $\rho$ & perm. $p$ \\
+stack & $n$ & $\alpha$ ($R_{\max}$ vs $\log_{10} C_{\rm tot}$) & Spearman $\rho$ & perm. $p$ \\
 \midrule
- all & 12 & 0.231 & 0.489 & 0.107 \\
- dense & 6 & 1.030 & 0.714 & 0.115 \\
- moe & 6 & 0.057 & 0.143 & 0.795 \\
+ all (bounded, 5 dense / 7 MoE) & 12 & $+0.097$ & $+0.245$ & 0.505 \\
+ dense (bounded, corrected)     &  5 & $+0.340$ & $+0.359$ & 0.750 \\
+ moe (bounded, corrected)       &  7 & $+0.014$ & $+0.036$ & 0.906 \\
+\midrule
+ all (legacy unconstrained)     & 12 & $+0.231$ & $+0.489$ & 0.107 \\
+ dense (legacy 6v6 w/ Nemotron) &  6 & $+1.030$ & $+0.714$ & 0.115 \\
+ moe (legacy 6v6)               &  6 & $+0.057$ & $+0.143$ & 0.795 \\
 \bottomrule
 \end{tabular}
-\caption{OLS slope $\alpha$ of $R_{\max}$ on $\log_{10}C$ and Spearman correlation with parametric-boot permutation $p$.}
+\caption{OLS slope $\alpha$ of $R_{\max}$ on $\log_{10}C_{\rm tot}$ and Spearman correlation with permutation $p$. Under both the corrected bounded $[0,1]$ table (top) and the legacy unconstrained table (bottom), every permutation $p > 0.10$. Using active-parameter compute $\log_{10} C_{\rm act}$ on the bounded table likewise yields a non-significant slope ($\alpha_{\rm all} = +0.168, p = 0.371$).}
+\label{tab:iter45-slopes}
 \end{table}
 \paragraph{Predictions.}
 \begin{table}[ht]
@@ -45,12 +52,12 @@ stack & $n$ & $\alpha$ ($\log R_{\max}$ vs $\log C$) & Spearman $\rho$ & perm. $
 \toprule
 prediction & pass? & note \\
 \midrule
- P1_isocompute_NOT_invariant & \textbf{YES} & max|delta_Rmax|/Rmax across 5 iso-compute pairs \\
- P2_compute_helps_alpha_positive & \textbf{YES} & alpha_dense=1.030, alpha_moe=0.057, alpha_all=0.231 \\
- P3_chinchilla_P_star_in_range & \textbf{YES} & P*=3.46B vs P_median=30.0B; ratio=0.115 \\
+ P1\_isocompute\_NOT\_invariant & \textbf{YES} & max$|\Delta R_{\max}|/R_{\max} = 0.694$ across iso-compute pairs \\
+ P2\_compute\_helps\_alpha\_positive & \textbf{NO (null)} & all permutation $p > 0.10$ (bounded and legacy alike) \\
+ P3\_chinchilla\_P\_star\_in\_range & \textbf{YES} & $P^{\star}=3.46$B vs $P_{\rm median}=30.0$B; ratio$=0.115$ \\
 \bottomrule
 \end{tabular}
 \caption{Internally recorded iso-compute predictions P1--P3.}
 \end{table}
 \paragraph{Takeaway.}
- Within the dense stack the compute exponent is $\alpha_{\rm dense}=1.030$ (Spearman $\rho=0.714$); within MoE $\alpha_{\rm MoE}=0.057$ (Spearman $\rho=0.143$). The maximum iso-compute $|\Delta R_{\max}|/R_{\max}$ gap is 0.694, the median is 0.403. 3/3 internally recorded predictions pass. This grounds the iter21/29/41 saturation fits in the Chinchilla compute-axis: GRPO $R_{\max}$ is not iso-compute invariant, and the within-stack $\alpha$ exponents are the operationally relevant knobs for selecting the next anchor scale.
+ GRPO $R_{\max}$ is \emph{not iso-compute invariant} (P1 passes: models at nearly identical compute budgets $C_{\rm tot}$, such as \texttt{Qwen3-8B} vs.\ \texttt{Llama-3.1-8B-Instruct} at $\log_{10} C = 5.090$ or \texttt{Qwen3-30B-MoE} vs.\ \texttt{Qwen3-30B-MoE-Inst}, differ in $R_{\max}$ by $0.538$--$0.667$ units). However, the apparent within-dense compute slope $\alpha_{\rm dense}=1.030$ in the legacy run was a non-significant ($p=0.115$) single-point leverage artifact of assigning \texttt{Nemotron-120B} to \texttt{dense} with an unconstrained $R_{\max}=2.000$; enforcing $R_{\max} \in [0,1]$ and the true 5-dense / 7-MoE split reduces $\alpha_{\rm dense}$ to $+0.340$ ($p=0.750$) and $\alpha_{\rm all}$ to $+0.097$ ($p=0.505$), as proven formally in \secref{sec:iter61}.

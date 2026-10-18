@@ -34,15 +34,16 @@ law in $N$. ChatGPT Pro proposed a \emph{gated saturating law}
     = z(N)\,\Delta_{\max}\bigl(1 - e^{-\lambda(\log N - \log N_0)_+}\bigr)
       - \bigl(1 - z(N)\bigr)\,C_{\mathrm{collapse}},
 \end{equation}
-where $\Delta_{\mathrm{GRPO}}$ is held-out gain over the base policy and
+where $\Delta_{\mathrm{GRPO}}$ is held-out gain over the base policy, $(x)_+ = \max(x, 0)$ is the positive-part operator, $N_0$ is the minimum threshold scale for positive GRPO gain, $C_{\mathrm{collapse}} \ge 0$ is the reward penalty incurred in the collapse regime, and
 $z(N)\in[0,1]$ is a \emph{stability gate} driven by observables rather than
 size, e.g.
 \begin{equation}
   \label{eq:frontier-gate}
   z(N) = \sigma\bigl(\gamma_0 + \gamma_1 \log N + \gamma_2\,\mathrm{GU}
          - \gamma_3\,\textsc{zvf} - \gamma_4\,\mathrm{KLspike}
-         - \gamma_5\,\mathrm{lengthdrift}\bigr).
+         - \gamma_5\,\mathrm{lengthdrift}\bigr),
 \end{equation}
+where $\sigma(\cdot)$ is the logistic sigmoid, $\mathrm{GU} = 1 - \textsc{zvf}$ is gradient utilization (the fraction of rollout groups with non-zero reward variance), and $\mathrm{KLspike}$ and $\mathrm{lengthdrift}$ denote step-to-step policy KL-divergence spikes and response-length drift indicators.
 The envelope says larger models raise the \emph{attainable} gain; the gate
 says that gain is realized only inside a stable, contrastive-learning phase.
 The concrete, falsifiable version is that residuals from a na\"ive log-size
@@ -54,7 +55,7 @@ the paper reports a zero-reward fraction of exactly $0.55$ for Nemotron-120B
 (\tableref{tab:scaling-nemotron-autopsy}) against $\le 0.067$ on every
 well-behaved anchor. Under this reading the Nemotron-120B point is a
 \emph{different phase}, not noise around a size trend, and if DeepSeek-V3.1
-(671B) is stable while 120B collapses, the instability is \emph{reentrant} in
+(671B architectural / 685B total) is stable while 120B collapses, the instability is \emph{reentrant} in
 scale, not monotone.
 
 \paragraph{Contrastive-yield compute as a proposed scaling axis (frontier synthesis).}
@@ -69,7 +70,7 @@ compute}. ChatGPT Pro proposed
   Y_G(p) = 1 - p^{G} - (1-p)^{G},
 \end{equation}
 where $Y_G(p)$ is the probability that a group of size $G$ contains at least
-one mixed-reward pair and hence a nonzero advantage. Gemini Deep Think pushed
+one mixed-reward pair and hence a nonzero advantage, and $\mathrm{KL}_t$ is the per-step realized policy KL divergence from the reference model. Gemini Deep Think pushed
 the same idea to a prediction: several anchors that appear to \emph{fail} a
 FLOP-based scaling fit should recover log-linear geometry once compute is
 discounted to $C_{\mathrm{eff}}=\int Y_G(p)\,\mathrm{d}C$, and the
@@ -146,8 +147,6 @@ seed-stable exponents ($\mathrm{CV}(\beta),\mathrm{CV}(\gamma)<0.2$);
 otherwise it is a trend, not a law. This is the external standard against
 which our present result is honestly a \emph{taxonomic} one: the paper's
 identifiability audit finds $0/5$ per-trace saturation rates estimable
-(\tableref{tab:scaling-iter25}), so the reliable Pillar-1 structure lives in
-the cross-scale endpoint regression $R_{\max}\sim\log_{10}N$ rather than in
-single-trace kinetics. The frontier synthesis does not overturn that null; it
+(\tableref{tab:scaling-iter25}), and while fitted $R_{\max}$ endpoints are well-determined per trace, the marginal cross-scale regression $R_{\max}\sim\log_{10}N$ is also flat ($p = 0.549$), so the reliable Pillar-1 structure lives in the endpoint ceiling separation across pre-RL capability regimes rather than in single-trace kinetics or a universal size slope. The frontier synthesis does not overturn that null; it
 prescribes the blind curve-collapse test and the $C_{\mathrm{eff}}$ abscissa
 as the route by which a future, larger sweep could upgrade the trend to a law.

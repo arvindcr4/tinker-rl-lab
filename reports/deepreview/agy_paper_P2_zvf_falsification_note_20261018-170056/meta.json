@@ -1,0 +1,13 @@
+{
+  "engine": "agy",
+  "model": null,
+  "source": "platform_hybrid/paper/paper_P2_zvf_falsification_note.pdf",
+  "usage": {
+    "input_tokens": 21841,
+    "output_tokens": 3776,
+    "thinking_tokens": 948,
+    "cache_read_tokens": 0,
+    "total_tokens": 25617
+  },
+  "conversation_id": "4a0a1496-796d-4bec-bb60-af2122617f0c"
+}

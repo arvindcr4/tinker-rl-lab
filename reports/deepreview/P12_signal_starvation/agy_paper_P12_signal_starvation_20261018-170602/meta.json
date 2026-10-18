@@ -1,0 +1,13 @@
+{
+  "engine": "agy",
+  "model": null,
+  "source": "platform_hybrid/paper/unified_signal_starvation/paper_P12_signal_starvation.pdf",
+  "usage": {
+    "input_tokens": 29917,
+    "output_tokens": 3437,
+    "thinking_tokens": 151,
+    "cache_read_tokens": 0,
+    "total_tokens": 33354
+  },
+  "conversation_id": "ee63e9bf-b84b-40f7-b2f3-f4afdcecef33"
+}

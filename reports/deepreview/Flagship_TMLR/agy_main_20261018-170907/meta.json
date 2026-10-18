@@ -1,0 +1,13 @@
+{
+  "engine": "agy",
+  "model": null,
+  "source": "zvf-program/flagship/paper/tmlr_submission/main.pdf",
+  "usage": {
+    "input_tokens": 29244,
+    "output_tokens": 5782,
+    "thinking_tokens": 171,
+    "cache_read_tokens": 0,
+    "total_tokens": 35026
+  },
+  "conversation_id": "620745eb-24cc-4121-8fd3-3d78eae75ba4"
+}

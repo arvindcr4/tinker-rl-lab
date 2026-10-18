@@ -1,0 +1,13 @@
+{
+  "engine": "agy",
+  "model": null,
+  "source": "outputs/PES_Conference_Submissions_2026-09-25/ICICC2027/paper_camera.pdf",
+  "usage": {
+    "input_tokens": 27177,
+    "output_tokens": 3912,
+    "thinking_tokens": 155,
+    "cache_read_tokens": 0,
+    "total_tokens": 31089
+  },
+  "conversation_id": "0ee50783-cfe8-47f8-8d0d-a00562b92cb3"
+}

@@ -1,0 +1,13 @@
+{
+  "engine": "agy",
+  "model": null,
+  "source": "platform_hybrid/paper/paper_P6_submission.pdf",
+  "usage": {
+    "input_tokens": 42673,
+    "output_tokens": 6499,
+    "thinking_tokens": 255,
+    "cache_read_tokens": 0,
+    "total_tokens": 49172
+  },
+  "conversation_id": "0e39fb80-981c-465c-8322-ce20af4f4438"
+}

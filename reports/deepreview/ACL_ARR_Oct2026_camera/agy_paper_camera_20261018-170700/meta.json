@@ -1,0 +1,13 @@
+{
+  "engine": "agy",
+  "model": null,
+  "source": "outputs/PES_Conference_Submissions_2026-09-25/ACL_ARR_Oct2026/paper_camera.pdf",
+  "usage": {
+    "input_tokens": 24415,
+    "output_tokens": 2923,
+    "thinking_tokens": 0,
+    "cache_read_tokens": 0,
+    "total_tokens": 27338
+  },
+  "conversation_id": "1fd34f74-0113-4932-a2c2-4f087a06b1dd"
+}

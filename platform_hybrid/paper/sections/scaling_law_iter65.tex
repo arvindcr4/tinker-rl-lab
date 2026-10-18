@@ -1,5 +1,7 @@
 \paragraph{Iter 65 elevation: phase-conformity geometry of the three-phase hypothesis.}
 \label{par:scaling-iter65}
+\label{sec:scaling-law-iter65}
+\label{sec:iter65}
 The iter 33 battery tested the canonical three-phase hypothesis
 (\emph{slow start, rapid improvement, plateau}) of
 \citet{nimmaturi2025predictive} with five summary statistics
@@ -14,15 +16,14 @@ This iteration formalises the test with a phase-conformity index
 (PCI) and bootstrap-resampled phase boundaries.
 
 \paragraph{Per-trace three-piece decomposition.}
-We fit three OLS segments per trace
-($n \geq 6$): pick two changepoints $(i, j)$ that minimise the
-sum of within-segment squared errors.  The three canonical slope
+We fit three OLS segments per trace by choosing two changepoints $(i, j)$ that minimise the
+sum of within-segment squared errors.  Because 5 of the 12 anchors are short capability probes with $n_{\text{steps}} \in \{3, 4, 5\} < 6$ (\texttt{Qwen3-32B}, \texttt{Qwen3.5-27B}, \texttt{Qwen3-30B-MoE}, \texttt{Qwen3-30B-MoE-Inst}, \texttt{Qwen3-235B-MoE}), \texttt{scripts/scaling\_law\_iter65.py} evaluates the 12-anchor pool on the 6-statistic synthetic step-trace reconstructions (padded to $\ge 6$ grid points), whereas restricting 3-segment OLS strictly to the $n=7$ long-horizon anchors with $n_{\text{steps}} \ge 20$ marks those 5 short probes as \texttt{insufficient\_data} and leaves only $1/7$ long-horizon traces (\texttt{DeepSeek-V3.1}) with the \texttt{three-phase} class label.  The three canonical slope
 targets are
 \begin{equation}
   \begin{aligned}
-    |m_1| &< \text{SLOW\_SLOPE\_MAX} = 0.020,\\
-    |m_2| &\geq \text{FAST\_SLOPE\_MIN} = 0.040,\\
-    |m_3| &< \text{PLATEAU\_SLOPE\_MAX} = 0.015,
+    |m_1| &< m_{\text{slow}}^{\max} = 0.020,\\
+    m_2 &\geq m_{\text{fast}}^{\min} = 0.040,\\
+    |m_3| &< m_{\text{plat}}^{\max} = 0.015,
   \end{aligned}
   \label{eq:iter65-pci}
 \end{equation}
@@ -30,9 +31,8 @@ in reward units per step.  The PCI is then
 \[
   \mathrm{PCI} = \sum_{k=1}^{3} \mathbb{1}[\text{constraint}_k] \cdot \left(1 + 0.5 \cdot w_k\right),
 \]
-with $w_k \in [0, 1]$ the proximity-to-bound weight.  A trace
-matching all three constraints has $\mathrm{PCI} = 3.0$; a trace
-failing all three has $\mathrm{PCI} \in [-1.5, 0]$.
+with $w_k \in [0, 1]$ the proximity-to-bound weight (or $\mathrm{PCI}_{\text{base}} = \sum_{k=1}^{3} \mathbb{1}[\text{constraint}_k] \in \{0, 1, 2, 3\}$ before proximity weighting, with the weighted score clipped to $[0, 3.0]$ in \texttt{scaling\_law\_iter65.py} and reaching up to $4.5$ unclipped when $w_k = 1$).  A trace
+failing all three constraints has $\mathrm{PCI} = 0.0$.
 
 \paragraph{Phase-class distribution across the 12 anchors.}
 The classifier labels each trace as one of seven classes
@@ -41,27 +41,23 @@ The classifier labels each trace as one of seven classes
 \begin{table}[t]
   \centering
   \small
-  \begin{tabular}{lrl}
+  \begin{tabular}{lrrr}
     \toprule
-    Class & Count & Frac \\
+    Class & All 12 (reconstructed) & Frac (12) & Long-horizon ($n_{\text{steps}} \ge 20$, $n=7$) \\
     \midrule
-    valley & 6 & 0.50 \\
-    three-phase & 2 & 0.17 \\
-    constant & 2 & 0.17 \\
-    anomalous & 1 & 0.08 \\
-    monotonic-rising & 1 & 0.08 \\
-    drift & 0 & 0.00 \\
-    collapse & 0 & 0.00 \\
+    valley & 6 & 0.50 & 5/7 (0.71) \\
+    three-phase & 2 & 0.17 & 1/7 (0.14) \\
+    constant & 2 & 0.17 & 0/7 (0.00) \\
+    anomalous & 1 & 0.08 & 1/7 (0.14) \\
+    monotonic-rising & 1 & 0.08 & 0/7 (0.00) \\
+    drift & 0 & 0.00 & 0/7 (0.00) \\
+    collapse & 0 & 0.00 & 0/7 (0.00) \\
     \bottomrule
   \end{tabular}
   \caption{\textbf{Phase-class distribution across the 12-anchor
-    pool.}  Only \textbf{2/12}
-    anchors match the canonical three-phase pattern; the plurality
-    (\textbf{6/12}) fall in the \emph{valley} class (an early dip with
-    partial late recovery).  No anchor is classified as collapse or
-    drift: Nemotron-120B, despite its late-trace decay, is classified
-    \emph{valley} ($n_{\text{collapse}}=0$).  The remaining anchors are
-    already-saturated (constant), anomalous, or monotonically rising.
+    pool (and the $n=7$ long-horizon subset with $n_{\text{steps}} \ge 20$).}  Only \textbf{2/12}
+    anchors (\textbf{1/7} among long-horizon traces with $n_{\text{steps}} \ge 20$) match the \texttt{three-phase} class label; the plurality
+    (\textbf{6/12}, or \textbf{5/7} long-horizon) fall in the \emph{valley} class (an early dip or mid-trace drop followed by a flat late segment).  Under \texttt{scaling\_law\_iter65.py}'s summary-reconstructed step traces, \texttt{Nemotron-120B} has a flat final segment ($m_3 = 0.0000$) and is classified as \emph{valley} ($n_{\text{collapse}}=0$), whereas on the raw 20-step trace (\tableref{tab:scaling-iter117-bic}) its 3-segment BIC means are $\{0.000, 0.875, 0.154\}$ (\emph{collapse}).
     \texttt{scripts/scaling\_law\_iter65.py}
     $\to$ \texttt{scaling\_law\_iter65\_phase\_pieces.tsv}.}
   \label{tab:iter65-class-dist}
@@ -70,10 +66,9 @@ The classifier labels each trace as one of seven classes
 \paragraph{Per-phase slopes.}
 The top-6 traces by $|m_3|$ (the plateau-phase slope) are
 shown in \tableref{tab:iter65-top-slopes}.  Five of the six
-have $|m_3| \geq 0.005$, meaning the late trace is not actually
-plateau.  The strongest counterexample is Nemotron-120B:
-$m_3 = +0.0000$ reflects
-the late-trace partial recovery after the early collapse.
+have $|m_3| \geq 0.005$, meaning the late trace is not a flat
+plateau.  Even \texttt{DeepSeek-V3.1}, which receives the \texttt{three-phase} label from the heuristic classifier, has $m_2 = -0.0125 < 0$ and $m_3 = +0.0875 > 0.015$, violating the canonical fast-rise ($m_2 \ge 0.040$) and flat-plateau ($|m_3| < 0.015$) constraints in Eq.~\eqref{eq:iter65-pci}.  On the summary-reconstructed trace, \texttt{Nemotron-120B} has
+$m_3 = +0.0000$ because the 6-statistic piecewise-linear interpolation flattens its post-peak tail, whereas its raw 20-step trace decays from a peak of $0.875$ to a post-peak segment mean of $0.154$ (\tableref{tab:scaling-iter117-bic}).
 
 \begin{table}[t]
   \centering
@@ -93,15 +88,13 @@ the late-trace partial recovery after the early collapse.
   \end{tabular}%
   }
   \caption{\textbf{Top-6 traces by $|m_3|$.}  Only anchors with
-    strong late-trace drift appear; canonical three-phase traces
-    (low $|m_3|$) are pushed off the top of the table.  $c_1$ and
+    strong late-trace drift appear; low-$|m_3|$ traces are pushed off the top of the table.  $c_1$ and
     $c_2$ are the changepoints as a fraction of trace length.}
   \label{tab:iter65-top-slopes}
 \end{table}
 
 \paragraph{Architecture composition.}
-The PCI is systematically higher for MoE than dense models
-(\tableref{tab:iter65-arch}), but neither architecture has a
+Across both the corrected 5-dense / 7-MoE architecture split (where \texttt{Nemotron-120B}, $\mathrm{PCI}=2.00$, is classified as \texttt{moe}) and the legacy 6-vs-6 split, mean PCI is slightly \emph{lower} for MoE than for dense models ($1.64$ vs.\ $1.70$ under 5-dense / 7-MoE; $1.58$ vs.\ $1.75$ under 6-vs-6; \tableref{tab:iter65-arch}), and neither architecture has a
 majority of three-phase traces.  This is consistent with the
 iter 41 cross-scale result that the saturation law is
 \emph{taxonomic} (partitioning the frontier into saturated vs
@@ -112,14 +105,17 @@ unsaturated) rather than \emph{predictive}.
   \small
   \begin{tabular}{lrrrrrr}
     \toprule
-    Arch & $n$ & 3P & collapse & drift & full-template & PCI mean \\
+    Arch split & $n$ & 3P & collapse & drift & full-template & PCI mean \\
     \midrule
-      dense & 6 & 1/6 & 0/6 & 0/6 & 1/6 & 1.75 \\
-      moe & 6 & 1/6 & 0/6 & 0/6 & 1/6 & 1.58 \\
+      dense (corrected 5v7) & 5 & 1/5 & 0/5 & 0/5 & 1/5 & 1.70 \\
+      moe (corrected 5v7, incl.\ Nemotron) & 7 & 1/7 & 0/7 & 0/7 & 1/7 & 1.64 \\
+    \midrule
+      dense (legacy 6v6) & 6 & 1/6 & 0/6 & 0/6 & 1/6 & 1.75 \\
+      moe (legacy 6v6) & 6 & 1/6 & 0/6 & 0/6 & 1/6 & 1.58 \\
     \bottomrule
   \end{tabular}
-  \caption{\textbf{Per-architecture phase composition.}
-    \emph{3P} is the count of canonical three-phase traces;
+  \caption{\textbf{Per-architecture phase composition under the corrected 5-dense / 7-MoE split and legacy 6-vs-6 split.}
+    \emph{3P} is the count of traces labeled \texttt{three-phase};
     \emph{full-template} is the count of traces satisfying all
     three slope constraints simultaneously.  PCI mean is over
     the stratum.  \texttt{scripts/scaling\_law\_iter65.py}
@@ -131,28 +127,23 @@ unsaturated) rather than \emph{predictive}.
 The eight predictions in
 \texttt{scaling\_law\_iter65\_predictions.tsv}:
 \begin{itemize}
-  \item P1\_three\_phase\_majority: FAIL (2/12 = 0.167)
-  \item P2\_nemotron\_classified\_collapse: FAIL (nemotron_class=valley, n_collapse=0)
-  \item P3\_pci\_below\_3\_for\_most: FAIL (pci_mean=1.667)
-  \item P4\_nemotron\_lowest\_pci: FAIL (nemotron_pci=2.000, others_median=1.500, all_pci=[1.0, 1.5, 1.0, 2.5, 2.5, 1.5, 2.0, 2.0, 1.0, 2.0, 2.0, 1.0])
-  \item P5\_template\_full\_at\_most\_3: PASS (2/12)
-  \item P6\_dense\_higher\_three\_phase\_rate: FAIL (dense_3p=1/6, moe_3p=1/6)
-  \item P7\_pci\_logparams\_correlation: FAIL (spearman_log=-0.464)
-  \item P8\_drift\_count\_3plus: FAIL (n_drift=0)
+  \item \texttt{P1\_three\_phase\_majority}: \textbf{FAIL} ($2/12 = 0.167$; three-phase is not the majority class).
+  \item \texttt{P2\_nemotron\_classified\_collapse}: \textbf{FAIL} ($\text{nemotron\_class}=\text{valley}$, $n_{\text{collapse}}=0$ on the summary-reconstructed trace; \texttt{collapse} on the raw 20-step trace in \tableref{tab:scaling-iter117-bic}).
+  \item \texttt{P3\_pci\_below\_3\_for\_most}: \textbf{PASS} ($\text{pci\_mean}=1.667 < 3.0$, and $12/12$ anchors have $\mathrm{PCI} \le 2.5 < 3.0$; logged as \texttt{FAIL} in the raw script output due to an inverted threshold sign check).
+  \item \texttt{P4\_nemotron\_lowest\_pci}: \textbf{FAIL} ($\text{nemotron\_pci}=2.000$, $\text{others\_median}=1.500$, $\text{all\_pci}=[1.0, 1.5, 1.0, 2.5, 2.5, 1.5, 2.0, 2.0, 1.0, 2.0, 2.0, 1.0]$).
+  \item \texttt{P5\_template\_full\_at\_most\_3}: \textbf{PASS} ($2/12 \le 3$).
+  \item \texttt{P6\_dense\_higher\_three\_phase\_rate}: \textbf{PASS} on 5-dense / 7-MoE ($1/5 = 20\%$ vs.\ $1/7 = 14\%$; \textbf{FAIL} on legacy 6-vs-6 where $\text{dense\_3p}=1/6$ and $\text{moe\_3p}=1/6$).
+  \item \texttt{P7\_pci\_logparams\_correlation}: \textbf{FAIL} ($\text{spearman\_log}=-0.464$, negative rather than positive).
+  \item \texttt{P8\_drift\_count\_3plus}: \textbf{FAIL} ($n_{\text{drift}}=0$ under the \texttt{valley} classifier ontology).
 \end{itemize}
 
 \paragraph{What iter 65 proves.}
 The three-phase hypothesis is geometrically falsified: only
 \textbf{2/12}
-anchors have the canonical (slow, fast, plateau) OLS-slope
-pattern, and the cross-pillar comparison shows that the
-falsification is concentrated on the collapse and drift classes.
-Nemotron-120B is the unique collapse anchor (peak-then-decay
-shape, $m_1 > 0$, $m_3 < 0$), a structural outlier that
-violates the hypothesis in a way the original Nimmaturi et al.\
-template cannot accommodate.  Iter 65 sharpens iter 33 by
+anchors (\textbf{1/7} long-horizon traces) receive the \texttt{three-phase} label, and \textbf{6/12} (\textbf{5/7} long-horizon traces) fall into the non-monotone \emph{valley} class (\tableref{tab:iter65-class-dist}).
+Wait-and-recover or peak-then-decay trajectories violate the monotone slow-start $\to$ fast-rise $\to$ flat-plateau template of \citet{nimmaturi2025predictive}: on the summary-reconstructed trace, \texttt{Nemotron-120B} is grouped into \texttt{valley} ($m_1 > 0, m_2 < 0, m_3 = 0$), whereas on the raw 20-step trace (\tableref{tab:scaling-iter117-bic}) its 3-segment BIC decomposition isolates its post-peak collapse ($\{0.000, 0.875, 0.154\}$).  Iter 65 sharpens iter 33 by
 showing that the falsification is not driven by a single
-metric but by the joint (slope, slope, slope) signature across
+metric but by the joint $(m_1, m_2, m_3)$ slope signature across
 all three phases.  The PCI provides a single-number summary
 that can be tracked across training budgets and group sizes;
 the iter 33 battery's $4/5$ falsification rate is consolidated

@@ -1,0 +1,13 @@
+{
+  "engine": "agy",
+  "model": null,
+  "source": "outputs/PES_Conference_Paper_2026-09-25/ArvindCR_GRPO_Attribution_IEEE.pdf",
+  "usage": {
+    "input_tokens": 26837,
+    "output_tokens": 4445,
+    "thinking_tokens": 61,
+    "cache_read_tokens": 0,
+    "total_tokens": 31282
+  },
+  "conversation_id": "6daf1197-a395-4dd9-921f-1fc53dbc4acb"
+}

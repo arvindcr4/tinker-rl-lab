@@ -1,0 +1,13 @@
+{
+  "engine": "agy",
+  "model": null,
+  "source": "reports/public_revision_2026-10-03/addendum/C1_Research_Addendum_2026-10-03_PUBLIC.pdf",
+  "usage": {
+    "input_tokens": 26099,
+    "output_tokens": 3918,
+    "thinking_tokens": 193,
+    "cache_read_tokens": 0,
+    "total_tokens": 30017
+  },
+  "conversation_id": "6dd6b14e-6199-487c-815e-1304670f50fb"
+}

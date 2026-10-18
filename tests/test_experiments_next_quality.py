@@ -81,7 +81,30 @@ def test_legacy_pool_never_imputes_missing_lengths():
 
 
 def test_seed_aggregate_requires_distinct_compatible_evaluation_seeds():
-    base = quality.analyze(synthetic_pool(), n_bootstrap=100, seed=7)
+    pool = synthetic_pool()
+    pool.update(
+        {
+            "planned_prompts": 2,
+            "n_prompts": 2,
+            "sampling_completeness": "full",
+            "exploratory_only": False,
+            "max_tokens": 64,
+            "sampler_path": "synthetic-frozen-checkpoint",
+            "analysis_contract": {
+                "version": "pool-analysis-v2",
+                "model_revision": "synthetic-model-revision",
+                "checkpoint_identity": "synthetic-frozen-checkpoint",
+                "dataset_revision": "synthetic-dataset-revision",
+                "prompt_manifest_sha256": "a" * 64,
+                "reward_parser_sha256": "b" * 64,
+                "tokenizer_revision": "synthetic-tokenizer-revision",
+                "sampler_backend": "synthetic-offline",
+                "sampling_config_sha256": "c" * 64,
+                "prompt_selection_policy": "synthetic-fixed-population",
+            },
+        }
+    )
+    base = quality.analyze(pool, n_bootstrap=100, seed=7)
     audits = []
     for evaluation_seed, pass_at_1 in zip((42, 43, 44), (0.2, 0.3, 0.4)):
         audit = copy.deepcopy(base)

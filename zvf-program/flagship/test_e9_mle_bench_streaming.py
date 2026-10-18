@@ -28,6 +28,14 @@ class E9StreamingPlanTests(unittest.TestCase):
             repo_root / "outputs/e9_mle_bench/modal_streaming/"
             "freesound-audio-tagging-2019-41fd84bf84d5"
         )
+        missing = [
+            name for name in ("solution.py", "receipt.json") if not (run_root / name).exists()
+        ]
+        if missing:
+            self.skipTest(
+                f"Private replay artifacts unavailable in {run_root.name}: {', '.join(missing)}; "
+                "synthetic replay and repair regressions remain enabled"
+            )
         solution = (run_root / "solution.py").read_text(encoding="utf-8").rstrip()
         receipt = json.loads((run_root / "receipt.json").read_text(encoding="utf-8"))
         return solution, receipt
@@ -38,6 +46,14 @@ class E9StreamingPlanTests(unittest.TestCase):
             repo_root / "outputs/e9_mle_bench/modal_streaming/"
             "smartphone-decimeter-2022-3de801aee652"
         )
+        missing = [
+            name for name in ("solution.py", "receipt.json") if not (run_root / name).exists()
+        ]
+        if missing:
+            self.skipTest(
+                f"Private replay artifacts unavailable in {run_root.name}: {', '.join(missing)}; "
+                "synthetic replay and repair regressions remain enabled"
+            )
         solution = (run_root / "solution.py").read_text(encoding="utf-8").rstrip()
         receipt = json.loads((run_root / "receipt.json").read_text(encoding="utf-8"))
         return solution, receipt
@@ -178,7 +194,12 @@ class E9StreamingPlanTests(unittest.TestCase):
     def test_pilot_receipt_never_claims_full_suite_score(self) -> None:
         receipt = build_run_receipt(
             competition_id="spooky-author-identification",
-            native_grade={"score": 0.42, "above_median": True, "valid_submission": True, "competition_id": "spooky-author-identification"},
+            native_grade={
+                "score": 0.42,
+                "above_median": True,
+                "valid_submission": True,
+                "competition_id": "spooky-author-identification",
+            },
             bridge_health={"hf_commit": "commit", "wandb_url": "https://wandb.ai/run"},
         )
 

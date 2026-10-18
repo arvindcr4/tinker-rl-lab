@@ -145,7 +145,27 @@ def test_strict_success_uses_unique_bound_outputs_and_forwards_stderr(
 def test_real_strict_producer_writes_requested_bound_audit(tmp_path):
     registry = tmp_path / "registry"
     (registry / "entries").mkdir(parents=True)
-    (registry / "schema.json").write_text("{}")
+    (registry / "schema.json").write_text((REG / "schema.json").read_text())
+    # A real strict audit requires nonempty, schema-valid input. This synthetic
+    # declaration tests binding only; it makes no historical measurement claim.
+    (registry / "entries/delta_fixture.json").write_text(
+        json.dumps(
+            {
+                "record_type": "variant_delta",
+                "id": "delta_fixture",
+                "name": "Synthetic fixture",
+                "base": "grpo",
+                "citation": {},
+                "deltas": [
+                    {
+                        "component": "fixture",
+                        "field": "loss_form.clip_eps_high",
+                        "change": "Synthetic test declaration",
+                    }
+                ],
+            }
+        )
+    )
     output = tmp_path / "fresh/audit.json"
     producer = REG.parents[1] / "platform_modal/scripts/p5p8/p6_iter118_strict_validator.py"
     digest = q.registry_manifest_sha256(q.registry_input_manifest(registry))
@@ -163,8 +183,11 @@ def test_real_strict_producer_writes_requested_bound_audit(tmp_path):
         capture_output=True,
         text=True,
     )
-    assert run.returncode == 0, run.stderr
-    assert json.loads(output.read_text())["input_sha256"] == digest
+    assert run.returncode == 0, run.stdout + run.stderr
+    audit = json.loads(output.read_text())
+    assert audit["input_sha256"] == digest
+    assert audit["n_deltas"] == 1
+    assert audit["findings"] == []
     rejected = tmp_path / "must-not-exist.json"
     run = subprocess.run(
         [
@@ -176,6 +199,25 @@ def test_real_strict_producer_writes_requested_bound_audit(tmp_path):
             str(rejected),
             "--input-sha256",
             "wrong",
+        ],
+        capture_output=True,
+        text=True,
+    )
+    assert run.returncode != 0
+    assert not rejected.exists()
+
+    (registry / "entries/delta_fixture.json").unlink()
+    empty_digest = q.registry_manifest_sha256(q.registry_input_manifest(registry))
+    run = subprocess.run(
+        [
+            sys.executable,
+            str(producer),
+            "--registry",
+            str(registry),
+            "--output",
+            str(rejected),
+            "--input-sha256",
+            empty_digest,
         ],
         capture_output=True,
         text=True,

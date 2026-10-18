@@ -24,11 +24,10 @@ from pathlib import Path
 
 import sys
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
+from _paths import REPO_ROOT
 WORKTREE = REPO_ROOT
 N10_DIR = WORKTREE / "platform_hybrid/experiments/results/n10_seed_expansion"
-OUT = WORKTREE / "platform_hybrid/experiments/results/p5p8"
-OUT.mkdir(parents=True, exist_ok=True)
+OUT = WORKTREE / "platform_hybrid/experiments/results/p5p8/corrected-review20-v2"
 
 SEEDS = [42, 179, 316, 453, 590]
 G_BASELINE = 8
@@ -88,7 +87,52 @@ def pearson(x, y):
     if sx == 0 or sy == 0: return 0.0
     return sum((xi-mx)*(yi-my) for xi,yi in zip(x,y)) / (sx*sy)
 
+
+def kendall_tau(a, b):
+    """Kendall tau-b, excluding joint ties from both denominator factors.
+
+    Return None when either trajectory has no comparable pairs. Such a
+    trajectory has undefined rank correlation, not zero correlation.
+    """
+    if len(a) != len(b):
+        raise ValueError("Kendall trajectories must have equal lengths")
+    if not all(math.isfinite(v) for v in itertools.chain(a, b)):
+        raise ValueError("Kendall trajectories must be finite")
+    concord = discord = ties_a = ties_b = 0
+    for i in range(len(a)):
+        for j in range(i + 1, len(a)):
+            da, db = a[i] - a[j], b[i] - b[j]
+            if da == 0 and db == 0:
+                continue
+            if da == 0:
+                ties_a += 1
+            elif db == 0:
+                ties_b += 1
+            elif da * db > 0:
+                concord += 1
+            else:
+                discord += 1
+    comparable = concord + discord
+    denom = math.sqrt((comparable + ties_a) * (comparable + ties_b))
+    return (concord - discord) / denom if denom else None
+
+
+def rollout_accounting(g_choices, g_base=G_BASELINE):
+    """Savings against the same number of constant-G baseline decisions."""
+    actual = sum(g_choices)
+    baseline = g_base * len(g_choices)
+    if baseline <= 0:
+        raise ValueError("Rollout accounting requires a positive baseline total")
+    return {
+        "baseline_rollouts": baseline,
+        "actual_rollouts": actual,
+        "saved_rollouts": baseline - actual,
+        "net_savings_pct": (baseline - actual) / baseline * 100.0,
+    }
+
+
 def main():
+    OUT.mkdir(parents=True, exist_ok=True)
     panel = [s for s in (load_seed(s) for s in SEEDS) if s is not None]
     n_seeds = len(panel)
     n_steps = min(len(s["zvf"]) for s in panel)
@@ -101,7 +145,8 @@ def main():
     # zvf_max across all seeds
     zvf_max_global = max(max(s["zvf"]) for s in panel)
     print(f"[p7] global zvf max across seeds: {zvf_max_global}")
-    print(f"[p7] ⇒ N10 has NO saturated step (zvf<{zvf_max_global}<1.0), so iter-51 controller is ESCALATION-ONLY here")
+    print(f"[p7] saturated steps (zvf=1.0): "
+          f"{sum(z == 1.0 for s in panel for z in s['zvf'])}")
 
     # ---------- Analysis 1: single-τ sweep, τ_esc only (matches paper sec) ----------
     TAUS = [0.30, 0.40, 0.50, 0.55, 0.60, 0.65, 0.70, 0.75, 0.80, 0.85, 0.90, 0.95]
@@ -114,7 +159,7 @@ def main():
             g_choices = apply_controller(s["zvf"], tau_esc=tau, tau_des=1.01)  # disable de-esc
             fires = [i for i, g in enumerate(g_choices) if g != G_BASELINE]
             per_seed_fires.append(len(fires))
-            sav = sum(G_BASELINE - g for g in g_choices) / (G_BASELINE * n_steps) * 100.0
+            sav = rollout_accounting(g_choices)["net_savings_pct"]
             per_seed_savings.append(sav)
             per_seed_wrong.append(sum(1 for i in range(n_steps) if s["zvf"][i] > 0.99 and g_choices[i] == G_ESC))
             per_seed_sat.append(sum(1 for i in range(n_steps) if s["zvf"][i] == 1.0 and g_choices[i] == G_ESC))
@@ -162,31 +207,27 @@ def main():
     print(f"\n[p7] two-threshold grid sweep (tau_esc, tau_des):")
     grid = []
     for tau_esc in [0.50, 0.60, 0.70, 0.80, 0.85]:
-        for tau_des in [0.80, 0.85, 0.90]:  # all > 0.875 (max zvf) ⇒ de-esc NEVER fires
+        for tau_des in [0.80, 0.85, 0.90]:
             row = {"tau_esc": tau_esc, "tau_des": tau_des, "de_esc_active": False}
-            # because max zvf is 0.875, all tau_des≥0.90 de-esc never fires
-            # also tau_des=0.85 only fires on zvf=0.875 steps (rare); let's check
             des_fires_total = 0
             esc_fires_total = 0
             savings_pct = []
+            all_choices = []
             for s in panel:
                 g_choices = apply_controller(s["zvf"], tau_esc=tau_esc, tau_des=tau_des)
+                all_choices.extend(g_choices)
                 des_fires_total += sum(1 for g in g_choices if g == G_DES)
                 esc_fires_total += sum(1 for g in g_choices if g == G_ESC)
-                sav = sum(G_BASELINE - g for g in g_choices) / (G_BASELINE * n_steps) * 100.0
+                sav = rollout_accounting(g_choices)["net_savings_pct"]
                 savings_pct.append(sav)
             row["de_esc_fires_total"] = des_fires_total
             row["esc_fires_total"] = esc_fires_total
+            row["de_esc_active"] = des_fires_total > 0
             row["savings_pct_mean"] = round(statistics.mean(savings_pct), 3)
             row["savings_pct_ci_lo"] = round(bootstrap_ci(savings_pct, B=10000)[1], 3)
             row["savings_pct_ci_hi"] = round(bootstrap_ci(savings_pct, B=10000)[2], 3)
-            row["net_savings_pct"] = round(
-                (G_BASELINE * n_steps * n_seeds - sum(
-                    (G_BASELINE - g) for s in panel for g in apply_controller(s["zvf"], tau_esc, tau_des)
-                )) / (G_BASELINE * n_steps * n_seeds) * 100.0, 3
-            )
-            # Actually compute correctly: savings = sum(baseline - actual) / (baseline * total_steps)
-            # for negative savings, we are spending MORE
+            row.update(rollout_accounting(all_choices))
+            row["net_savings_pct"] = round(row["net_savings_pct"], 3)
             grid.append(row)
             print(f"  (esc={tau_esc}, des={tau_des}) esc_fires={esc_fires_total} "
                   f"des_fires={des_fires_total} savings={row['savings_pct_mean']:+.2f}%")
@@ -201,24 +242,20 @@ def main():
 
     # ---------- Analysis 3: cross-seed Kendall-τ rank correlation of ZVF trajectory ----------
     # Are the per-step zvf trajectories themselves in the same order across seeds?
-    def kendall_tau(a, b):
-        n = len(a)
-        if n < 2: return 0.0
-        concord = 0
-        discord = 0
-        for i in range(n):
-            for j in range(i+1, n):
-                da = a[i] - a[j]
-                db = b[i] - b[j]
-                if da * db > 0: concord += 1
-                elif da * db < 0: discord += 1
-        return (concord - discord) / math.sqrt((concord+discord) or 1) / math.sqrt(n*(n-1)/2) if n>1 else 0.0
     # pairwise kendall between zvf trajectories (already truncated to n_steps)
     kendall_pairwise = []
     for a, b in itertools.combinations(range(n_seeds), 2):
         kendall_pairwise.append(kendall_tau(panel[a]["zvf"], panel[b]["zvf"]))
-    print(f"\n[p7] cross-seed Kendall-τ of per-step zvf trajectories: mean={statistics.mean(kendall_pairwise):.3f} "
-          f"min={min(kendall_pairwise):.3f} max={max(kendall_pairwise):.3f}")
+    defined_tau = [tau for tau in kendall_pairwise if tau is not None]
+    tau_summary = {
+        "variant": "tau-b",
+        "mean": round(statistics.mean(defined_tau), 3) if defined_tau else None,
+        "min": round(min(defined_tau), 3) if defined_tau else None,
+        "max": round(max(defined_tau), 3) if defined_tau else None,
+        "n_defined_pairs": len(defined_tau),
+        "n_undefined_pairs": len(kendall_pairwise) - len(defined_tau),
+    }
+    print(f"\n[p7] cross-seed Kendall tau-b of per-step zvf trajectories: {tau_summary}")
 
     # ---------- Analysis 4: per-seed heldout vs ZVF trajectories ----------
     heldout = [s["heldout_acc"] for s in panel]
@@ -246,10 +283,9 @@ def main():
         "seeds": [s["seed"] for s in panel],
         "global_zvf_max": zvf_max_global,
         "interpretation": (
-            "N10 panel has global zvf max < 1.0, so the iter-51 controller is "
-            "ESCALATION-ONLY (de-escalation branch never fires). All savings are "
-            "non-positive on N10; the controller's de-escalation branch cannot be "
-            "validated on this panel."
+            "The single-threshold sweep disables de-escalation. The two-threshold "
+            "grid reports active de-escalation from observed action counts. "
+            "Savings are baseline minus actual rollouts; negative values mean extra cost."
         ),
         "single_tau_sweep": [
             {
@@ -263,11 +299,7 @@ def main():
             } for r in rows_single
         ],
         "two_threshold_grid": grid,
-        "cross_seed_kendall_tau_zvf_trajectory": {
-            "mean": round(statistics.mean(kendall_pairwise), 3),
-            "min": round(min(kendall_pairwise), 3),
-            "max": round(max(kendall_pairwise), 3),
-        },
+        "cross_seed_kendall_tau_zvf_trajectory": tau_summary,
         "panel": {
             "heldout_acc": [round(v, 4) for v in heldout],
             "mean_zvf": [round(v, 4) for v in mean_zvf],
@@ -285,11 +317,12 @@ def main():
     # ---------- Print headline numbers ----------
     print()
     print("=" * 70)
+    headline = next(r for r in rows_single if r["tau_esc"] == 0.70)
     print("HEADLINE: at τ_esc=0.70 (the iter-51 default), per-seed firing")
-    print("         agreement is Jaccard=0.133, full step agreement=0.133")
-    print("         ⇒ the 5 seeds fire on COMPLETELY DIFFERENT STEPS")
-    print("         ⇒ a per-step decision policy is NOT seed-stable")
-    print("         ⇒ a per-(method, τ) summary IS stable (4.20±1.33 fires/seed)")
+    print(f"         agreement is Jaccard={headline['fire_set_jaccard_mean']:.3f}, "
+          f"full step agreement={headline['per_step_full_agreement']:.3f}")
+    print(f"         {n_seeds} seeds; fires/seed={headline['fires_per_seed_mean']:.3f}, "
+          f"CI=[{headline['fires_per_seed_ci_lo']:.3f}, {headline['fires_per_seed_ci_hi']:.3f}]")
     print("=" * 70)
 
 if __name__ == "__main__":

@@ -22,9 +22,9 @@ Falsifiable headlines:
   H1 — Does ECE vary across cohorts?  -> max-min across strata + bootstrap CI.
   H2 — Does XGB-24full beat XGB-20raw at the cohort-ECE level?  -> paired
        bootstrap on the per-cohort delta (not on the global ECE).
-  H3 — Is the cohort-ECE variance explained by cohort prevalence or by
-       cohort-specific model miscalibration?  -> eta^2 of cohort on
-       obs-vs-pred gap (analog of iter-65 P5 eta^2 recipe).
+  H3 — How much row-level prediction-residual variance is associated with
+       cohort membership? -> eta^2 = between-cohort SS / total residual SS.
+       This descriptive association does not identify a causal explanation.
   H4 — At the worst cohort, is XGB-24full's ECE still < 0.10 (well-calibrated
        band)?  -> if not, that cohort is a compliance-relevant hot-spot.
 
@@ -48,7 +48,7 @@ from collections import defaultdict
 import sys
 from pathlib import Path
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
+from _paths import REPO_ROOT
 DATA_DIR = str(REPO_ROOT)
 OUT_DIR = f"{DATA_DIR}/platform_hybrid/experiments/results/p5p8/corrected-review20-v2"
 TRAIN = f"{DATA_DIR}/fraud_data.csv"
@@ -207,12 +207,38 @@ def brier_score(scores, labels):
 def recall_at_k_pct(scores, labels, k_pct):
     """Recall at K% cutoff: how many positives fall in top K% of scores."""
     n = len(scores)
-    k = max(1, int(round(k_pct / 100 * n)))
+    k = min(n, max(1, int(round(k_pct / 100 * n))))
     paired = sorted(zip(scores, labels), key=lambda r: -r[0])
     top = paired[:k]
     pos_in_top = sum(l for _, l in top)
     total_pos = sum(labels)
-    return pos_in_top / max(1, total_pos), k
+    return (pos_in_top / total_pos if total_pos else None), k
+
+
+def calibration_gap_eta_squared(scores, labels, groups):
+    """ANOVA eta-squared for signed row residuals (prediction minus label).
+
+    The group means are the cohort calibration gaps. The denominator includes
+    within-cohort residual variance, not just squared cohort means. A constant
+    residual has no variance to explain and returns None, rather than 0 or 1.
+    """
+    if not (len(scores) == len(labels) == len(groups)):
+        raise ValueError("Scores, labels and cohort assignments must align")
+    if not len(scores):
+        return None
+    residuals = [float(p) - float(y) for p, y in zip(scores, labels)]
+    if not all(math.isfinite(r) for r in residuals):
+        raise ValueError("Calibration residuals must be finite")
+    overall = statistics.mean(residuals)
+    ss_total = sum((r - overall) ** 2 for r in residuals)
+    if ss_total == 0:
+        return None
+    buckets = defaultdict(list)
+    for group, residual in zip(groups, residuals):
+        buckets[group].append(residual)
+    ss_between = sum(len(rs) * (statistics.mean(rs) - overall) ** 2
+                     for rs in buckets.values())
+    return min(1.0, max(0.0, ss_between / ss_total))
 
 
 # ---------- cohort assignment ----------
@@ -275,6 +301,7 @@ def cohort_strata(scores_meta):
 # ---------- main ----------
 
 def main():
+    os.makedirs(OUT_DIR, exist_ok=True)
     print("[1/5] Loading data ...")
     tr_X, tr_y = load(TRAIN)
     te_X, te_y = load(TEST)
@@ -302,15 +329,20 @@ def main():
                 "Time": float(row.get("Time", float(row.get("V_std", 0)))),
                 "Class": klass,
             })
-    has_amount = "Amount" in open(TEST).readline().rstrip("\n").split(",")
+    with open(TEST) as fh:
+        metadata_columns = next(csv.reader(fh))
+    has_amount = "Amount" in metadata_columns
+    has_time = "Time" in metadata_columns
     if not has_amount:
         ranks_std = sorted(range(len(test_meta)), key=lambda i: test_meta[i]["V_std"])
-        ranks_max = sorted(range(len(test_meta)), key=lambda i: test_meta[i]["V_max"])
         for r, i in enumerate(ranks_std):
             test_meta[i]["Amount"] = (r + 1) / len(test_meta) * 1000.0
+        print("  (Amount proxy: rank(V_std), not observed transaction amount)")
+    if not has_time:
+        ranks_max = sorted(range(len(test_meta)), key=lambda i: test_meta[i]["V_max"])
         for r, i in enumerate(ranks_max):
             test_meta[i]["Time"] = (r + 1) / len(test_meta) * 86400.0
-        print("  (synthesized Amount=rank(V_std), Time=rank(V_max) for cohort stratification)")
+        print("  (Time proxy: rank(V_max), not observed transaction time)")
 
     strata, cuts = cohort_strata(test_meta)
     print(f"  V_mean quintile cuts: {[round(c, 3) for c in cuts['v_mean']]}")
@@ -329,12 +361,17 @@ def main():
     print("[4/5] Per-cell ECE / Brier / calib-gap / recall@K=2% ...")
     cohort_defs = [
         ("v_mean", "V_mean quintile", lambda s: s["v_mean_bin"]),
-        ("amount", "Amount quintile", lambda s: s["amount_bin"]),
-        ("time", "Time tertile", lambda s: s["time_bin"]),
+        ("amount", "Amount quintile" if has_amount else "rank(V_std) proxy quintile", lambda s: s["amount_bin"]),
+        ("time", "Time tertile" if has_time else "rank(V_max) proxy tertile", lambda s: s["time_bin"]),
     ]
     rows = []
     summary = {"n_test": len(te_X), "n_pos": int(sum(te_y)), "cells": [], "n_bin": N_BIN,
                "boot_seed": SEED, "boot_B": B}
+    summary["cohort_sources"] = {
+        "v_mean": {"source": "V_mean", "is_proxy": False},
+        "amount": {"source": "Amount" if has_amount else "rank(V_std)", "is_proxy": not has_amount},
+        "time": {"source": "Time" if has_time else "rank(V_max)", "is_proxy": not has_time},
+    }
     for cohort_key, cohort_label, accessor in cohort_defs:
         for tree_name, scores in [("XGB-20raw", p20), ("XGB-24full", p24)]:
             # bucket indices per stratum
@@ -345,7 +382,7 @@ def main():
                 idx = buckets[stratum]
                 s_scores = [scores[i] for i in idx]
                 s_labels = [te_y[i] for i in idx]
-                if not s_labels or sum(s_labels) == 0:
+                if not s_labels:
                     continue
                 ece, _ = calibration_ece(s_scores, s_labels, n_bin=N_BIN)
                 brier = brier_score(s_scores, s_labels)
@@ -364,7 +401,7 @@ def main():
                     "calib_gap": round(mean_pred - obs_rate, 5),
                     "ece10": round(ece, 5),
                     "brier": round(brier, 5),
-                    "recall_at_K_2pct": round(recall_k, 5),
+                    "recall_at_K_2pct": round(recall_k, 5) if recall_k is not None else None,
                 })
                 summary["cells"].append({
                     "cohort": cohort_key, "stratum": stratum, "tree": tree_name,
@@ -399,7 +436,7 @@ def main():
         for c in summary["cells"]:
             if c["cohort"] == cohort_key:
                 by_stratum[c["stratum"]][c["tree"]] = c["ece10"]
-        for stratum, m in by_stratum.items():
+        for m in by_stratum.values():
             if "XGB-20raw" in m and "XGB-24full" in m:
                 per_stratum_delta.append(m["XGB-24full"] - m["XGB-20raw"])
         if not per_stratum_delta:
@@ -420,15 +457,13 @@ def main():
         bucket_idx = {bid: [i for i, s in enumerate(strata) if s[bkey] == bid]
                       for bid in bucket_ids}
         bucket_lens = {bid: len(bucket_idx[bid]) for bid in bucket_ids}
-        for b in range(B):
+        for _ in range(B):
             bs_deltas = []
             for bid in bucket_ids:
                 idxs = bucket_idx[bid]
                 L = bucket_lens[bid]
                 rs = [idxs[random.randrange(L)] for _ in range(L)]
                 labels_b = [te_y[i] for i in rs]
-                if sum(labels_b) == 0:
-                    continue
                 s20 = [p20[i] for i in rs]
                 s24 = [p24[i] for i in rs]
                 ece20, _ = calibration_ece(s20, labels_b, N_BIN)
@@ -448,24 +483,20 @@ def main():
         }
     summary["H2_24full_minus_20raw_ece_delta"] = h2
 
-    # H3: eta^2 of cohort on |calib_gap| (analog of iter-65 P5 eta^2)
+    # H3: between-cohort / total variance of signed row-level residuals.
     h3 = {}
-    for cohort_key in ["v_mean", "amount", "time"]:
+    for cohort_key, _, accessor in cohort_defs:
         per_tree_eta2 = {}
-        for tree_name in ["XGB-20raw", "XGB-24full"]:
-            gaps = [c["calib_gap"] for c in summary["cells"]
-                    if c["cohort"] == cohort_key and c["tree"] == tree_name]
-            weights = [c["n"] for c in summary["cells"]
-                       if c["cohort"] == cohort_key and c["tree"] == tree_name]
-            if not gaps:
-                continue
-            overall = sum(g * w for g, w in zip(gaps, weights)) / sum(weights)
-            ss_within = sum((g - overall) ** 2 * w for g, w in zip(gaps, weights))
-            ss_total = sum((g - 0) ** 2 * w for g, w in zip(gaps, weights))
-            eta2 = 1 - ss_within / max(1e-12, ss_total)
-            per_tree_eta2[tree_name] = round(eta2, 5)
+        for tree_name, scores in [("XGB-20raw", p20), ("XGB-24full", p24)]:
+            eta2 = calibration_gap_eta_squared(scores, te_y, [accessor(s) for s in strata])
+            per_tree_eta2[tree_name] = round(eta2, 5) if eta2 is not None else None
         h3[cohort_key] = per_tree_eta2
     summary["H3_eta2_calib_gap"] = h3
+    summary["H3_eta2_definition"] = "between-cohort SS / total SS of prediction-minus-label residuals"
+    summary["undefined_metrics"] = {
+        "recall_at_K_2pct": "null when a cohort has no positives",
+        "H3_eta2_calib_gap": "null when row residual variance is zero",
+    }
 
     # H4: worst-cohort ECE under XGB-24full
     h4 = {}
@@ -512,10 +543,11 @@ def main():
     for k, v in h2.items():
         sign = "BETTER" if v["ci_hi"] < 0 else "WORSE" if v["ci_lo"] > 0 else "NS"
         print(f"  {k}: mean={v['obs_mean_delta']:+.4f}  CI=[{v['ci_lo']:+.4f}, {v['ci_hi']:+.4f}]  -> {sign}")
-    print("H3 — eta^2 cohort-on-|calib_gap| (P5-iter-65 analog):")
+    print("H3 — eta^2 of cohort membership on signed row prediction residuals:")
     for k, v in summary["H3_eta2_calib_gap"].items():
         for tree_name, eta in v.items():
-            print(f"  {k} x {tree_name}: eta^2 = {eta:.4f}")
+            eta_text = f"{eta:.4f}" if eta is not None else "undefined (zero residual variance)"
+            print(f"  {k} x {tree_name}: eta^2 = {eta_text}")
     print("H4 — worst-cohort ECE under XGB-24full (well-calibrated iff < 0.10):")
     for k, v in summary["H4_worst_cohort_ece_24full"].items():
         print(f"  {k}: worst_stratum={v['worst_stratum']}  ECE={v['worst_ece10']:.4f}  n={v['worst_n_stratum']}  well-cal={'YES' if v['well_calibrated'] else 'NO'}")

@@ -10,7 +10,8 @@ Tier \textbf{A}: completed cells with $\ge3$ seeds (inferential eligibility
 separately required). Tier \textbf{B}: completed single- or two-run case
 studies, descriptive only. Tier \textbf{C}: failed, partial, quarantined or
 unstarted cells (Appendix~\ref{sec:run-manifest}). ``Outside'' marks
-statements kept outside the empirical tiers. ``Repro.'': \emph{open}
+statements kept outside the empirical tiers; \emph{floor}: non-LM PPO
+sanity floor, outside the LM tiers. ``Repro.'': \emph{open}
 (open-source stack), \emph{closed-backend} (depends on the proprietary
 Tinker API), or \emph{listed} (enumerated only).}
 \label{tab:claims-tier}
@@ -27,9 +28,11 @@ Five-seed Qwen3-8B GSM8K held-out evaluation
  ($83.3\%$ vs.\ single base run $82.0\%$; $t(4){=}1.32$, $p{=}0.26$)
  & outside & One-sample seed-level test; base treated as fixed
  & \checkmark & closed-backend \\
-Multi-seed Modal cells (CleanRL, SB3, Tianshou PPO on an addition
- environment; TRL Qwen2.5-0.5B on generated addition)
- & A & Seed summaries; PPO cells are near-zero-accuracy pipeline checks
+TRL Qwen2.5-0.5B on generated addition, 5 seeds (Modal L4)
+ & A & Final accuracy per seed; one held-out set
+ & \checkmark & open \\
+CleanRL/SB3/Tianshou PPO, MLP policy on an addition environment, 5 seeds each
+ & floor & Non-LM sanity floor (accuracy 0.2--1.4\%); not LM evidence
  & \checkmark & open \\
 Tinker Llama-3.3-70B-Inst (4 seeds) and DeepSeek-V3.1 (3 seeds), GSM8K
  & A & Training reward per seed; no held-out evaluation
@@ -41,7 +44,7 @@ Single-run Tinker GSM8K runs across model scale (4B to 671B and
  Kimi-K2 MoE; Table~\ref{tab:main_results})
  & B & Training reward; ZVF where logged
  & \checkmark & closed-backend \\
-Single-run Tinker group-size sweep ($G\!\in\!\{2,4,16,32\}$, Qwen3-8B) and
+Single-run Tinker group-size sweep ($G\!\in\!\{2,4,8,16,32\}$, Qwen3-8B) and
  two-seed matched-budget follow-up; tool-use case studies
  (Qwen3-32B, Llama-3.1-8B-Inst; reward $0$ at 30 steps)
  & B & Training reward and ZVF traces

@@ -100,7 +100,7 @@
     \answerPartial{Reproducibility is \emph{partial by design} due to
     platform heterogeneity.
     \begin{itemize}
-      \item \textbf{Modal experiments (fully reproducible).} Complete
+      \item \textbf{Modal experiments (open stack).} Complete
             source code, a pinned \texttt{Dockerfile}, centralised seed
             management (\texttt{utils/seed.py}), and step-by-step
             commands are documented in \texttt{REPRODUCE.md} at
@@ -108,9 +108,9 @@
             jobs run on explicitly provisioned NVIDIA H100~SXM5 (80\,GB)
             workers; TRL baselines run on NVIDIA L4 (24\,GB).  Seeding is
             the manifest's responsibility (Appendix~\ref{sec:run-manifest},
-            source of truth): the Tier-A open-stack Modal cells (CleanRL,
-            SB3 and Tianshou PPO; TRL Qwen2.5-0.5B on L4) have 5 seeds and
-            are summarised by seed; no bootstrap or \texttt{rliable}
+            source of truth): the Tier-A open-stack cell (TRL Qwen2.5-0.5B
+            on L4) and the non-LM CleanRL/SB3/Tianshou PPO sanity floors have
+            5 seeds and are summarised by seed; no bootstrap or \texttt{rliable}
             intervals are reported. The Tinker Wave-6 configurations,
             single-run Modal H100 TRL cells and all other single-run cells
             are Tier B and descriptive; Tier-C cells report no numbers.

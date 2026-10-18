@@ -25,7 +25,7 @@ cell is classified into one of three evidence tiers, used consistently in
 the abstract, Table~\ref{tab:claims-tier}, Table~\ref{tab:artifact-card},
 the manifest, and the conclusion:
 \begin{itemize}\setlength\itemsep{1pt}
-  \item \textbf{(A)} completed cells with at least three seeds at a fixed
+  \item \textbf{(A)} completed LM cells with at least three seeds at a fixed
         configuration; this is a completion classification, not automatic
         inferential eligibility.
   \item \textbf{(B)} completed single- or two-run case studies (mostly on
@@ -33,8 +33,9 @@ the manifest, and the conclusion:
   \item \textbf{(C)} failed, partial, quarantined, or never-started cells,
         enumerated in the manifest for honesty.
 \end{itemize}
-Mathematical statements (the ZVF expectation) and the separate five-seed
-held-out evaluation are kept outside the empirical tiers.
+Mathematical statements (the ZVF expectation), the separate five-seed
+held-out evaluation, and the classic-RL PPO runs on a non-LM policy (listed
+as sanity floors) are kept outside the LM evidence tiers.
 
 \paragraph{What the artifact lets reviewers do.}
 A reviewer can (i) recompute every training-reward number in

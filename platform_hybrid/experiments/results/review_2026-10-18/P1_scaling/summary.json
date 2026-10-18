@@ -1,0 +1,12 @@
+{
+ "n_lam_at_bound_long7": 5,
+ "template_pass_long7": 1,
+ "collapse_long7": [
+  "Nemotron-120B"
+ ],
+ "p1_peakfrac_gt_0.10": 3,
+ "p2_late_gt_early": 4,
+ "unique_zero_gt_0.5_mean_lt_0.2_all12": [
+  "Nemotron-120B"
+ ]
+}

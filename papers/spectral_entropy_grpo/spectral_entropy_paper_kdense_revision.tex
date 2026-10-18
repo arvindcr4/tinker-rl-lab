@@ -443,8 +443,8 @@ trajectory score is defined before outcomes are observed.
 
 \paragraph{Primary hypotheses.}
 \textbf{H1 (alignment):} within homogeneous-reward groups, the preregistered
-score predicts a later independently measured outcome, such as verifier-
-corrected completion-level success from an independent verifier.
+score predicts a later independently measured outcome, such as
+verifier-corrected completion-level success from an independent verifier.
 \textbf{H2 (learning):} adding the score improves fixed held-out accuracy or
 sample efficiency at bounded KL divergence and equal rollout/token budget.
 \textbf{H3 (gating):} the Givens component adds benefit beyond the same
@@ -482,7 +482,9 @@ If it passes, screen with five paired seeds and expand using
  n\ \geq\ \frac{(z_{1-\alpha/2}+z_{1-\beta})^2s_d^2}{\delta^2}+2,
  \label{eq:power}
 \end{equation}
-where $s_d$ is the standard deviation of within-seed differences and $\delta$
+where $z_q$ is the standard normal $q$-quantile, $\alpha$ is the two-sided
+significance level, $1-\beta$ is the target power,
+$s_d$ is the standard deviation of within-seed differences, and $\delta$
 is the preregistered smallest effect worth claiming.  With two-sided
 $\alpha=0.05$, Eq.~\eqref{eq:power} is only a normal-approximation planning
 heuristic, not an exact five-seed power guarantee. Exact noncentral paired-$t$

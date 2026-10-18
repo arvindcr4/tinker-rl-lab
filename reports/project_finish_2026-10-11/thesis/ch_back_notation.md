@@ -23,7 +23,7 @@ This appendix records the symbols and abbreviations used across this report and 
 | $\varepsilon$ | Three distinct meanings — see §C.3 | Clip range 0.2; ZVF tolerance $10^{-6}$; Adam term $10^{-8}$ |
 | $\gamma$, $\lambda$, $T$ | Discount factor; GAE parameter; sampling temperature | $0.99$; $0.95$; canonical $0.8$ |
 | $\mathrm{SI}$, $\mathrm{PTD}$ | Stability index; peak-to-tail drift | Reported in place of direct KL |
-| PCD | Pairwise-contrast density | $\mathbb{E}[\hat{p}(1-\hat{p})] = \frac{G-1}{G}\,p(1-p)$ |
+| PCD | Pairwise-contrast density: $\widehat{\mathrm{PCD}}$ is the plug-in statistic $|B|^{-1}\sum_g \hat p_g(1-\hat p_g)$; PCD is its expectation | $\mathbb{E}[\hat{p}(1-\hat{p})] = \frac{G-1}{G}\,p(1-p)$ |
 | pass@1 | Pass rate under the suite's native scorer | E11 $129/312 = 41.35\,\%$; E1 $2/731 = 0.274\,\%$ |
 | $r$, $\rho$ | Correlation coefficients, Pearson and rank | $r = -0.769$, $p = 0.0008$; $\rho \approx 0.65$ |
 

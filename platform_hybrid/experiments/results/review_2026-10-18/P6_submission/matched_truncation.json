@@ -1,0 +1,107 @@
+{
+ "decoding": "greedy, 512 new tokens, eos [151645,151643]",
+ "items": "openai/gsm8k main test, first 200 (regex-parsed)",
+ "per_adapter": {
+  "base": {
+   "acc_regex": 0.345,
+   "acc_boxed": 0.115,
+   "trunc_frac": 0.985,
+   "mean_tokens": 511.61,
+   "share_ge_512": 0.985,
+   "gain_vs_base": 0.0
+  },
+  "trl_s42": {
+   "acc_regex": 0.31,
+   "acc_boxed": 0.105,
+   "trunc_frac": 0.985,
+   "mean_tokens": 511.475,
+   "share_ge_512": 0.985,
+   "gain_vs_base": -0.034999999999999976
+  },
+  "trl_s123": {
+   "acc_regex": 0.285,
+   "acc_boxed": 0.105,
+   "trunc_frac": 0.985,
+   "mean_tokens": 511.545,
+   "share_ge_512": 0.985,
+   "gain_vs_base": -0.06
+  },
+  "trl_s456": {
+   "acc_regex": 0.27,
+   "acc_boxed": 0.105,
+   "trunc_frac": 0.98,
+   "mean_tokens": 511.595,
+   "share_ge_512": 0.98,
+   "gain_vs_base": -0.07499999999999996
+  },
+  "tinker_s42": {
+   "acc_regex": 0.28,
+   "acc_boxed": 0.12,
+   "trunc_frac": 0.985,
+   "mean_tokens": 511.745,
+   "share_ge_512": 0.985,
+   "gain_vs_base": -0.06499999999999995
+  },
+  "tinker_s123": {
+   "acc_regex": 0.285,
+   "acc_boxed": 0.115,
+   "trunc_frac": 0.995,
+   "mean_tokens": 511.95,
+   "share_ge_512": 0.995,
+   "gain_vs_base": -0.06
+  },
+  "tinker_s456": {
+   "acc_regex": 0.335,
+   "acc_boxed": 0.135,
+   "trunc_frac": 0.975,
+   "mean_tokens": 511.435,
+   "share_ge_512": 0.975,
+   "gain_vs_base": -0.009999999999999953
+  }
+ },
+ "all_trained_below_base": true,
+ "train_trunc_by_seed": {
+  "trl": [
+   null,
+   null,
+   null
+  ],
+  "tinker": [
+   0.99375,
+   0.9833333333333333,
+   0.9833333333333333
+  ]
+ },
+ "last10_gap": {
+  "by_seed": [
+   -0.06874999999999998,
+   0.30000000000000004,
+   -0.08125000000000002
+  ],
+  "mean": 0.05000000000000002,
+  "t_ci95": [
+   -0.4880556410476965,
+   0.5880556410476966
+  ],
+  "boot_seed_step_ci95": [
+   -0.15630208333333329,
+   0.2938020833333326
+  ]
+ },
+ "heldout_gap": {
+  "by_seed": [
+   -0.03,
+   0.0,
+   0.065
+  ],
+  "mean": 0.011666666666666667,
+  "twoway_boot_ci95": [
+   -0.05,
+   0.07833333333333334
+  ],
+  "t_ci95_seed": [
+   -0.1089697038984904,
+   0.13230303723182374
+  ]
+ }
+}

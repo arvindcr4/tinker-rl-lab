@@ -19,13 +19,21 @@ registry/
     tinker_grpo_qwen3.5-4b_gsm8k.json   tinker_dapo_qwen3.5-4b_gsm8k.json
     tinker_drgrpo_qwen3.5-4b_gsm8k.json tinker_gspo_qwen3.5-4b_gsm8k.json
     delta_dapo.json  delta_drgrpo.json  delta_gspo.json
+    ...                # (16 further stack and 15 further delta records)
+    delta_aero.amendment.json  delta_areal.amendment.json
+  sidecars.json        # hash-pinned list of the two amendment sidecars
+  generate_entries.py  # regenerates run_config blocks from run sources
   query.py             # reference CLI (stdlib only)
   README.md
 \end{lstlisting}
 
 Record validation must exclude the amendment sidecars, which are not
-stack or variant-delta records. The following is a reproduction command,
-not a claim of a newly executed full-corpus schema audit:
+stack or variant-delta records: they carry no \texttt{record\_type} or
+\texttt{schema\_version} and fail \texttt{schema.json}, so \texttt{query.py}
+loads them only as hash-pinned \texttt{historical\_amendment} sidecars listed in
+\texttt{sidecars.json}. At registry commit \texttt{ca5b792}, the command below
+validates all 46 stack and variant-delta records; run over every file in
+\texttt{entries/}, it reports the two sidecars as the only failures:
 
 \begin{lstlisting}[basicstyle=\ttfamily\scriptsize, frame=single]
 python3 -c "import json, glob, jsonschema; \
@@ -40,7 +48,9 @@ python3 -c "import json, glob, jsonschema; \
 The DAPO record, verified against the source paper~\citep{yu2025dapo}:
 
 \begin{lstlisting}[basicstyle=\ttfamily\scriptsize, frame=single,
-  caption={\texttt{entries/delta_dapo.json} (whitespace compressed).},
+  caption={\texttt{entries/delta_dapo.json} (whitespace compressed;
+  maintenance notes and the \texttt{expected\_effects} block elided as
+  \texttt{[...]}). Each \texttt{field} is a \texttt{min\_report} leaf.},
   label={lst:p6-delta-dapo}]
 { "record_type": "variant_delta", "schema_version": "0.1.0",
   "id": "delta_dapo", "name": "DAPO", "base": "grpo",
@@ -53,32 +63,33 @@ The DAPO record, verified against the source paper~\citep{yu2025dapo}:
     "change": "asymmetric (decoupled) clip: eps_low=0.2,
                eps_high=0.28"},
    {"component": "dynamic_sampling",
-    "field": "sampling.dynamic_sampling",
+    "field": "loss_form.sampling_dynamic_filter",
     "change": "filter prompts whose groups have zero reward
-               variance and resample until the batch is full"},
+               variance and resample until the batch is full [...]"},
    {"component": "token_level_loss",
-    "field": "loss_form.aggregation",
+    "field": "loss_form.token_aggregation",
     "change": "token-level policy-gradient loss (mean over all
                tokens in the batch rather than per-sequence
                averaging)"},
    {"component": "overlong_reward_shaping",
-    "field": "reward.overlong_shaping",
+    "field": "loss_form.reward_shaping_type",
     "change": "soft length-aware penalty for truncated/overlong
-               completions"},
-   {"component": "kl_removed", "field": "reference_kl",
-    "change": "KL regularization term removed from the objective"}],
+               completions [...]"},
+   {"component": "kl_removed", "field": "reference_kl.kl_beta",
+    "change": "KL regularization term removed from the objective
+               (canonical leaf pinned at kl_beta=0.0)"}],
   "notes": "Four named techniques plus removal of the KL term,
-            per the source paper." }
+            per the source paper. [...]",
+  "expected_effects": [...] }
 \end{lstlisting}
 
 \subsection{Badge Output on the Seed Entries}
 \label{sec:p6-appendix-badge}
 The current per-entry badge and specification coverage are regenerated from
-\texttt{registry/query.py} in Table~\ref{tab:p6-entries}. The earlier hard-coded
-Listing 7 used an older scoring schema and is removed; its scores must not be
-compared with current badges. Per-item fractions are printed by
-\texttt{python3 registry/query.py badge}; the denominator is the canonical
-leaf set in that implementation, not an arbitrarily chosen number of
-populated JSON keys. Outcomes and CI-method declarations are not scored.
+\texttt{registry/query.py} in Table~\ref{tab:p6-entries}. Badge listings
+produced under earlier scoring schemas are not comparable with these values.
+Per-item fractions are printed by
+\texttt{python3 registry/query.py badge}; the denominator is the fixed leaf set
+of Section~\ref{sec:p6-badge}, not the number of populated JSON keys. Outcomes and CI-method declarations are not scored.
 \endinput
 // ... historical badge output below omitted from manuscript ...

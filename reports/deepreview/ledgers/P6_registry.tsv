@@ -1,0 +1,22 @@
+location	claim_text	value	source_artifact	generator_script	status
+abstract/intro	17x same-label gap: Tinker final reward	0.856	platform_hybrid/experiments/results/framework_comparison.json	experiments/results/aggregate_framework_comparison.py	verified
+abstract/intro	17x same-label gap: TRL final reward	0.050	platform_hybrid/experiments/results/framework_comparison.json	experiments/results/aggregate_framework_comparison.py	verified
+abstract/intro	checkpoint switch share of gap	64% ((0.85625-0.3375)/0.80625=0.643)	platform_hybrid/experiments/master_results.json:wave6_w6_base_r32_t0.8_b2	tools/review_ledger (hand arithmetic, recorded)	recomputed
+§4/Table 1	seed stack entries	28 (17 artifact-backed + 11 zvf130 fixtures)	platform_hybrid/experiments/results/review_2026-10-18/P6_registry/p6_registry_numbers.json	tools/review_ledger/P6_registry_numbers.py	recomputed
+Family E / Table 1	zvf130_* stack records (11)	simulation-projection fixture	platform_hybrid/experiments/results/zvf_iter130_method_risk.tsv	platform_modal/scripts/zvf_diagnostic_iter130.py	unsourced
+§5.3	stackdiff distribution (28 records)	R0 42,R2 1,R3 10,R4 23,R5 302; 378/378 underspecified	platform_hybrid/paper/sections/p6_registry_generated.tex	platform_hybrid/analysis_publication_fixes/p6_registry_numbers.py	verified
+§5.3	stackdiff distribution (17 records, fixtures excluded)	136 pairs: R0 6,R2 1,R3 1,R4 23,R5 105; median cov 0.20	platform_hybrid/experiments/results/review_2026-10-18/P6_registry/p6_registry_numbers.json	tools/review_ledger/P6_registry_numbers.py	recomputed
+§5.3	base models spanned	text says 8; 7 normalized ids (28 recs), 5 (17 recs)	platform_hybrid/experiments/results/review_2026-10-18/P6_registry/p6_registry_numbers.json	tools/review_ledger/P6_registry_numbers.py	recomputed
+§6.2	reference_kl census	text 7/12 FULL; 17 recs: FULL 11, PARTIAL 5, UNREPORTED 1	platform_hybrid/experiments/results/review_2026-10-18/P6_registry/p6_registry_numbers.json	tools/review_ledger/P6_registry_numbers.py	recomputed
+§3.3	ci_method populated entries	7 (4 Family C + 3 Family D)	platform_hybrid/experiments/results/review_2026-10-18/P6_registry/p6_registry_numbers.json	tools/review_ledger/P6_registry_numbers.py	recomputed
+Eq.1	badge leaf denominators	10,3,4,2,3,2,2 (26)	platform_hybrid/registry/schema.json	tools/review_ledger/P6_registry_numbers.py	recomputed
+§2/A.1	variant-delta records on disk	18 + 2 sidecars	platform_hybrid/registry/entries/	platform_hybrid/registry/query.py load()	verified
+Table N2 (last-10)	reward_mean delta aero/gift/areal	-0.014/+0.016/-0.020	platform_hybrid/experiments/results/n2_reward_tensor_resume/n2_metrics.tsv	tools/review_ledger/P6_registry_n2_recompute.py	recomputed
+Table N2 (last-10)	zvf delta aero/gift/areal	-0.025/+0.125/-0.056	platform_hybrid/experiments/results/n2_reward_tensor_resume/n2_metrics.tsv	tools/review_ledger/P6_registry_n2_recompute.py	recomputed
+Table N2 (last-10)	mean_len delta aero/gift/areal	+31.08/-3.89/+30.13	platform_hybrid/experiments/results/n2_reward_tensor_resume/n2_metrics.tsv	tools/review_ledger/P6_registry_n2_recompute.py	recomputed
+Table N2 (last-10)	cv_len delta aero/gift/areal	-0.034/+0.002/-0.038	platform_hybrid/experiments/results/n2_reward_tensor_resume/n2_metrics.tsv	tools/review_ledger/P6_registry_n2_recompute.py	recomputed
+Table N2 (last-10)	loss gift delta aero/gift/areal	-1.67e4 (var mean -1.65e4)	platform_hybrid/experiments/results/n2_reward_tensor_resume/n2_metrics.tsv	tools/review_ledger/P6_registry_n2_recompute.py	recomputed
+Table N2	95% step-bootstrap CIs and significance marks	removed (single seed)	platform_hybrid/experiments/results/n2_reward_tensor_resume/n2_metrics.tsv	tools/review_ledger/P6_registry_n2_recompute.py	removed
+Table N2	per-prompt pooled reward deltas -0.007/+0.011/-0.006	not reproducible (full40 -0.005/+0.011/-0.006)	platform_hybrid/experiments/results/review_2026-10-18/P6_registry/n2_descriptive_deltas.tsv	tools/review_ledger/P6_registry_n2_recompute.py	unsourced
+Table N2 (full-40)	reward_mean delta aero/gift/areal	-0.007/+0.011/-0.006	platform_hybrid/experiments/results/review_2026-10-18/P6_registry/n2_descriptive_deltas.tsv	tools/review_ledger/P6_registry_n2_recompute.py	recomputed
+Family D	N2 aero group size	8 at all 40 steps (controller g_max=8)	platform_hybrid/experiments/results/n2_reward_tensor_resume/n2_metrics.tsv	platform_hybrid/experiments/tinker-runs/scripts/n2_reward_tensor_20260704.py	verified

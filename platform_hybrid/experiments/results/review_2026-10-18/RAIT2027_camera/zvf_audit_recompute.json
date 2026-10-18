@@ -1,0 +1,273 @@
+{
+ "n_runs_project": 368,
+ "n_with_mean_zvf": 350,
+ "n_models": 9,
+ "models": [
+  "Qwen/Qwen3-30B-A3B-Instruct-2507",
+  "Qwen/Qwen3-32B",
+  "Qwen/Qwen3-4B-Instruct-2507",
+  "Qwen/Qwen3-8B",
+  "meta-llama/Llama-3.1-8B-Instruct",
+  "meta-llama/Llama-3.2-1B",
+  "meta-llama/Llama-3.2-3B",
+  "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-BF16",
+  "openai/gpt-oss-20b"
+ ],
+ "steps_distribution": {
+  "5": 300,
+  "3": 2,
+  "12": 40,
+  "2": 8
+ },
+ "n_backfill_tagged": 98,
+ "zvf_by_final_reward_bin": [
+  {
+   "lo": 0,
+   "hi": 0.05,
+   "n": 201,
+   "mean_zvf": 0.9592
+  },
+  {
+   "lo": 0.05,
+   "hi": 0.2,
+   "n": 8,
+   "mean_zvf": 0.8
+  },
+  {
+   "lo": 0.2,
+   "hi": 0.35,
+   "n": 4,
+   "mean_zvf": 0.1719
+  },
+  {
+   "lo": 0.35,
+   "hi": 0.5,
+   "n": 1,
+   "mean_zvf": 0.3333
+  },
+  {
+   "lo": 0.5,
+   "hi": 0.65,
+   "n": 6,
+   "mean_zvf": 0.5436
+  },
+  {
+   "lo": 0.65,
+   "hi": 0.8,
+   "n": 34,
+   "mean_zvf": 0.7916
+  },
+  {
+   "lo": 0.8,
+   "hi": 0.95,
+   "n": 66,
+   "mean_zvf": 0.8259
+  },
+  {
+   "lo": 0.95,
+   "hi": 1.01,
+   "n": 30,
+   "mean_zvf": 0.9018
+  }
+ ],
+ "model_G_cells": [
+  {
+   "model": "Qwen/Qwen3-30B-A3B-Instruct-2507",
+   "G": 4,
+   "n": 2,
+   "mean_zvf": 0.9622
+  },
+  {
+   "model": "Qwen/Qwen3-30B-A3B-Instruct-2507",
+   "G": 6,
+   "n": 1,
+   "mean_zvf": 1
+  },
+  {
+   "model": "Qwen/Qwen3-30B-A3B-Instruct-2507",
+   "G": 16,
+   "n": 3,
+   "mean_zvf": 0.9366
+  },
+  {
+   "model": "Qwen/Qwen3-32B",
+   "G": 4,
+   "n": 2,
+   "mean_zvf": 0.3333
+  },
+  {
+   "model": "Qwen/Qwen3-32B",
+   "G": 6,
+   "n": 1,
+   "mean_zvf": 0.4167
+  },
+  {
+   "model": "Qwen/Qwen3-32B",
+   "G": 8,
+   "n": 2,
+   "mean_zvf": 0.1771
+  },
+  {
+   "model": "Qwen/Qwen3-32B",
+   "G": 16,
+   "n": 1,
+   "mean_zvf": 0.0833
+  },
+  {
+   "model": "Qwen/Qwen3-4B-Instruct-2507",
+   "G": 4,
+   "n": 51,
+   "mean_zvf": 0.8892
+  },
+  {
+   "model": "Qwen/Qwen3-4B-Instruct-2507",
+   "G": 6,
+   "n": 1,
+   "mean_zvf": 1
+  },
+  {
+   "model": "Qwen/Qwen3-4B-Instruct-2507",
+   "G": 8,
+   "n": 52,
+   "mean_zvf": 0.8428
+  },
+  {
+   "model": "Qwen/Qwen3-4B-Instruct-2507",
+   "G": 16,
+   "n": 3,
+   "mean_zvf": 0.9149
+  },
+  {
+   "model": "Qwen/Qwen3-8B",
+   "G": 4,
+   "n": 2,
+   "mean_zvf": 0.3568
+  },
+  {
+   "model": "Qwen/Qwen3-8B",
+   "G": 6,
+   "n": 1,
+   "mean_zvf": 0.3333
+  },
+  {
+   "model": "Qwen/Qwen3-8B",
+   "G": 8,
+   "n": 1,
+   "mean_zvf": 0.2682
+  },
+  {
+   "model": "Qwen/Qwen3-8B",
+   "G": 16,
+   "n": 2,
+   "mean_zvf": 0.2057
+  },
+  {
+   "model": "meta-llama/Llama-3.1-8B-Instruct",
+   "G": 4,
+   "n": 3,
+   "mean_zvf": 0.7622
+  },
+  {
+   "model": "meta-llama/Llama-3.1-8B-Instruct",
+   "G": 6,
+   "n": 1,
+   "mean_zvf": 0.5
+  },
+  {
+   "model": "meta-llama/Llama-3.1-8B-Instruct",
+   "G": 8,
+   "n": 1,
+   "mean_zvf": 0.651
+  },
+  {
+   "model": "meta-llama/Llama-3.1-8B-Instruct",
+   "G": 16,
+   "n": 1,
+   "mean_zvf": 0.4661
+  },
+  {
+   "model": "meta-llama/Llama-3.2-1B",
+   "G": 4,
+   "n": 48,
+   "mean_zvf": 0.9802
+  },
+  {
+   "model": "meta-llama/Llama-3.2-1B",
+   "G": 6,
+   "n": 1,
+   "mean_zvf": 0.9167
+  },
+  {
+   "model": "meta-llama/Llama-3.2-1B",
+   "G": 8,
+   "n": 52,
+   "mean_zvf": 0.9668
+  },
+  {
+   "model": "meta-llama/Llama-3.2-3B",
+   "G": 4,
+   "n": 51,
+   "mean_zvf": 0.9658
+  },
+  {
+   "model": "meta-llama/Llama-3.2-3B",
+   "G": 6,
+   "n": 1,
+   "mean_zvf": 1
+  },
+  {
+   "model": "meta-llama/Llama-3.2-3B",
+   "G": 8,
+   "n": 52,
+   "mean_zvf": 0.9267
+  },
+  {
+   "model": "meta-llama/Llama-3.2-3B",
+   "G": 16,
+   "n": 2,
+   "mean_zvf": 0.8802
+  },
+  {
+   "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-BF16",
+   "G": 4,
+   "n": 4,
+   "mean_zvf": 0.5521
+  },
+  {
+   "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-BF16",
+   "G": 6,
+   "n": 1,
+   "mean_zvf": 0.3333
+  },
+  {
+   "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-BF16",
+   "G": 16,
+   "n": 1,
+   "mean_zvf": 0.4401
+  },
+  {
+   "model": "openai/gpt-oss-20b",
+   "G": 4,
+   "n": 2,
+   "mean_zvf": 0.8711
+  },
+  {
+   "model": "openai/gpt-oss-20b",
+   "G": 6,
+   "n": 1,
+   "mean_zvf": 0.6667
+  },
+  {
+   "model": "openai/gpt-oss-20b",
+   "G": 8,
+   "n": 1,
+   "mean_zvf": 0.8307
+  },
+  {
+   "model": "openai/gpt-oss-20b",
+   "G": 16,
+   "n": 2,
+   "mean_zvf": 0.7383
+  }
+ ]
+}

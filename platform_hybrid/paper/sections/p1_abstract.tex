@@ -23,12 +23,12 @@ these single-seed anchors, which we read \emph{descriptively}
 rather than as a powered significance test---and no single saturation exponent is identifiable
 (four of the five core frontier-scale traces have their saturation rate pinned at the
 $\lambda=10$ fit boundary because instruction-tuned checkpoints start near their GSM8K ceiling at step~1, and AICc model selection prefers a one-parameter constant model on all five).
-An internal three-phase geometric check falsifies a clean three-phase
-saturation hypothesis (only $2$ of $12$ anchors match), and the Nemotron-120B LatentMoE run
+On the seven full per-step traces, no run follows a clean slow-start /
+rapid-rise / plateau template, and the Nemotron-120B LatentMoE run
 is better described as a distinct collapse phase (zero-reward step fraction $0.55$
 versus $\le 0.067$ on the other core anchors) than as a point on a smooth trend. The defensible
-object is therefore a local, stack-conditioned taxonomy of endpoint ceilings,
-where pre-existing instruction-following capability and rollout-level contrast carry more signal than $\log_{10} N$,
+object is therefore a local, stack-conditioned description of endpoint levels,
+which separate by step-1 baseline reward more cleanly than by $\log_{10} N$,
 not a Chinchilla-style power law in $N$.
 \paragraph{Venue claim boundary (workshop-short / limits audit).}
 This manuscript is submitted as a \emph{descriptive limits and identifiability

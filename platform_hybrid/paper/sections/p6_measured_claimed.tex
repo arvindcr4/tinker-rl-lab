@@ -16,9 +16,11 @@ establish reward gains, successful exploration, or reproducibility of a
 training intervention.
 
 For N2, $\Delta$ means variant minus GRPO on the same last-10 window.
-The AERO ZVF delta is $-0.025$, not $+0.025$; its step-bootstrap interval
-$[-0.0625,+0.0125]$ includes zero. Thus the former AERO OPPOSE verdict was a
-sign error, not evidence against its claimed direction. GIFT's corresponding
+The AERO ZVF delta is $-0.025$ ($0.750-0.775$; the per-step values logged to
+W\&B reproduce both means); its step-bootstrap interval $[-0.0625,+0.0125]$
+includes zero. An earlier version of this reconciliation reported $+0.025$ and
+called it the only OPPOSE verdict; that was a sign error, not evidence against
+the claimed direction. GIFT's corresponding
 ZVF delta is $+0.125$, while AREAL's is about $-0.056$.
 These are single-seed descriptive comparisons. Ten adjacent training steps
 are not ten independent training replicates. The per-prompt reward intervals
@@ -28,8 +30,36 @@ AERO and AREAL reward decreases are not established seed-level effects.
 The registry records component-level declarations, not verified adoption by
 the field. Counting multiple components of a delta in one stack must not be
 reported as multiple distinct claimant stacks. A current claimant census must
-use distinct stack IDs and name the registry snapshot. No such population
+use distinct stack IDs and name the registry snapshot: at commit
+\texttt{ca5b792}, \texttt{delta\_dapo} and \texttt{delta\_drgrpo} are each
+claimed by 2 stacks and \texttt{delta\_gspo} by 1. No population
 ranking or adoption-vs-evidence conclusion is retained here.
+
+\paragraph{Post hoc prediction amendments.} The shipped \texttt{delta\_aero}
+and \texttt{delta\_areal} records predict \texttt{reward\_mean}${}\le 0$ on the
+N2 panel. Both predictions were amended from ${}\ge 0$ \emph{after} the
+step-level reward decreases ($-0.014$, $-0.020$) had been observed. The
+original signs are preserved in \texttt{delta\_aero.amendment.json} and
+\texttt{delta\_areal.amendment.json}, and each record's rationale says it was
+amended. A support rate computed against the amended signs is therefore not a
+test of the prediction. Against the original predictions, both observations
+run opposite to the claim, at step-level resolution only. The two amendment
+files carry no \texttt{record\_type} or \texttt{schema\_version} and fail
+schema validation; \texttt{query.py} loads them only as hash-pinned sidecars.
+
+\paragraph{Predictions that pass in either direction.} \texttt{delta\_gift}
+predicts N2 ZVF ${}>0$ and \texttt{zvf130} risk index ${}<0$. A prediction set
+that either direction satisfies cannot be falsified by these two panels, and
+the two quantities are different estimands. GIFT raises N2 ZVF ($+0.125$), so
+no statement that every measured variant lowers ZVF is supported.
+
+\paragraph{The \texttt{zvf130} table has two candidate ``ZVF'' columns.}
+\texttt{zvf\_iter130\_method\_risk.tsv} reports both \texttt{zvf\_risk\_mean}
+and \texttt{mag\_mean}, and they rank the variants differently: relative to
+GRPO, \texttt{scafgrpo} has the largest drop in \texttt{zvf\_risk\_mean}
+($-0.352$) but the smallest in \texttt{mag\_mean} ($-0.164$). The TSV
+documents neither quantity's computation, so neither is used here as training
+ZVF.
 
 \endinput % Historical unreconciled tables below are not part of the manuscript.
 

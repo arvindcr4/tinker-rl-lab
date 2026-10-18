@@ -513,7 +513,7 @@ mathematical correctness (Figure~\ref{fig:grpoloop}).
 
 \fig{fig_grpo_loop}
 {The group-relative loop and exact-tie mechanism}
-{The group-relative loop and exact-tie mechanism. The Phase-1 P2 batch (0.72--0.77, Qwen3.5-4B, GSM8K, G=8, one seed) used mean-centred advantages r minus group mean without standard-deviation normalisation. Exact ties give zero reward-relative advantages in both that form and standardised GRPO. The arithmetic G sweep is training telemetry only, not estimator or held-out-accuracy evidence.}
+{The group-relative loop and exact-tie mechanism. The Phase-1 P2 batch (0.72--0.77, Qwen3.5-4B, GSM8K, G=8, one seed) used mean-centred advantages r minus group mean without standard-deviation normalisation and an unclipped importance-sampling ratio, not the clipped update drawn in the generic loop. Exact ties give zero reward-relative advantages in both that form and standardised GRPO. The arithmetic G sweep is training telemetry only, not estimator or held-out-accuracy evidence. The worked group uses the population standard deviation (1/G) of the equation in Section 1.1, giving sigma = 0.50 and advantages of plus or minus 1.00; the sample convention 1/(G-1) would give 0.53 and 0.94.}
 {fig:grpoloop}
 
 
@@ -1233,8 +1233,9 @@ Capped GRPO / Dr.~GRPO pre → post; not a verbosity test & 0.202 → 0.263
 (binding), G = 8; unchanged greedy-base outputs disagree on 7/200 items
 & 3 seeds × 200 & \longtok{results/drgrpo\_\allowbreak{}gsm8k\_\allowbreak{}cot.json} \\
 Qwen3-8B pre → post (GRPO) & 82.0\% → 83.3\%, p = 0.26 &
-Qwen3-8B-Instruct, GSM8K; 82.0\% is the same checkpoint before RL & 5
-seeds & \longtok{archive/absorbed/U01\_\allowbreak{}main\_\allowbreak{}compendium/main.tex} \\
+Qwen3-8B-Instruct, GSM8K; 82.0\% is the same checkpoint before RL (no
+matched pre-RL control exists for the Qwen3-8B-Base row below) & 5 seeds
+& \longtok{archive/absorbed/U01\_\allowbreak{}main\_\allowbreak{}compendium/main.tex} \\
 Variant audit, DAPO − GRPO & Δ = +0.001, paired-t 95\% CI {[}−0.00632,
 +0.00832{]}; no BH rejection & Qwen3-8B, GSM8K, five arms & 8 seeds ×
 500 & \longtok{zvf-program/audit/results/full/};
@@ -1380,9 +1381,9 @@ PPO prompts. Two details of that work matter for this project. First,
 the reward model was 6B rather than 175B because the larger reward model
 proved unstable during training --- a reminder that the reward model is
 itself a trained component with its own failure modes. Second, the
-preference data were collected as rankings of K ∈ \{4, \ldots, 9\}
-responses, which yields C(K, 2) pairwise comparisons from a single
-annotation batch; this is precisely the within-prompt comparative
+preference data were collected as rankings of \(K \in \{4, \dots, 9\}\)
+responses, which yields \(\binom{K}{2}\) pairwise comparisons from a
+single annotation batch; this is precisely the within-prompt comparative
 structure that group-relative methods would later exploit directly.
 InstructGPT's headline results were that a 1.3B InstructGPT was
 preferred to the 175B GPT-3 base model, that the 175B InstructGPT was
@@ -1426,24 +1427,32 @@ structure rather than in the objective.
 
 Group Relative Policy Optimization (GRPO), introduced with DeepSeekMath
 \citep{shao2024deepseekmath}, removes the learned value network
-altogether. For each prompt it samples a group of G completions, scores
-them with a reward function, and standardises each completion's reward
-against the group mean and standard deviation; the resulting z-score
-serves as the advantage for every token of that completion. In the
-DeepSeekMath configuration G = 64 and β = 0.04. Eliminating the value
-model reduces the number of trained and served models from four to
-three; the paper motivates this as reducing PPO's memory usage but does
-not quantify the saving. DeepSeekMath-RL 7B reached 51.7\% top-1
-accuracy on MATH against a 46.8\% supervised fine-tuning baseline,
-60.9\% with self-consistency over 64 samples, GSM8K improved from 82.9\%
-to 88.2\%, and CMATH improved from 84.6\% to 88.8\% despite no Chinese
-data in the RL training set. The paper's iterative variant retains 10\%
-of historical data in a replay buffer to prevent catastrophic forgetting
-in the co-evolving reward model. RLOO \citep{ahmadian2024backtobasics}
-is the closely related leave-one-out estimator that baselines each
-sample against the mean of the \emph{other} samples in the group; it
-already performs a within-group baseline, and is therefore directly
-relevant to the signal-starvation analysis this project conducts.
+altogether. For each prompt it samples a group of \(G\) completions,
+scores them with a reward function, and standardises each completion's
+reward against the group mean and standard deviation; the resulting
+z-score serves as the advantage for every token of that completion. In
+the DeepSeekMath configuration \(G = 64\) and \(\beta = 0.04\).
+Eliminating the value model reduces the number of trained and served
+models from four to three; the paper motivates this as reducing PPO's
+memory usage but does not quantify the saving. DeepSeekMath-RL 7B
+reached 51.7\% top-1 accuracy on MATH against a 46.8\% supervised
+fine-tuning baseline, 60.9\% with self-consistency over 64 samples,
+GSM8K improved from 82.9\% to 88.2\%, and CMATH improved from 84.6\% to
+88.8\% despite no Chinese data in the RL training set. The paper's
+iterative variant retains 10\% of historical data in a replay buffer to
+prevent catastrophic forgetting in the co-evolving reward model. RLOO
+\citep{ahmadian2024backtobasics} is the closely related leave-one-out
+estimator that baselines each sample against the mean of the
+\emph{other} samples in the group (its advantage
+\(r_i-\frac{1}{G-1}\sum_{j\ne i}r_j\) equals
+\(\frac{G}{G-1}(r_i-\mu_g)\), so the unscaled group-centred advantage of
+Dr.~GRPO-style runners is RLOO up to the factor \(\frac{G-1}{G}\)).
+REINFORCE++ \citep{hu2025reinforcepp} instead normalises advantages over
+the global batch, as the same-stack PPO comparator of Table 4.2 does,
+and ReMax \citep{li2023remax} baselines against a single greedy
+completion; it already performs a within-group baseline, and is
+therefore directly relevant to the signal-starvation analysis this
+project conducts.
 
 DeepSeek-R1 \citep{guo2025deepseekr1} then demonstrated that pure
 outcome-reward RL can elicit chain-of-thought behaviour from a base
@@ -1525,9 +1534,15 @@ contrastive interpretation motivates the PCD statistic used here. The
 empirical binary-reward statistic
 \(\widehat{\mathrm{PCD}} = |B|^{-1}\sum_g \widehat p_g(1-\widehat p_g)\),
 where \(\widehat p_g\) is the observed correct fraction of group g, has
-expectation PCD = ((G − 1)/G) · E{[}p(1 − p){]} under conditionally
-independent Bernoulli rewards with per-prompt probability p.~It supplies
-a magnitude-aware contrast summary rather than a measured gradient norm,
+expectation \(\mathrm{PCD} = \frac{G-1}{G}\,\mathbb{E}[p(1-p)]\) under
+conditionally independent Bernoulli rewards with per-prompt probability
+\(p\). Throughout, \(\widehat{\mathrm{PCD}}\) denotes this unadjusted
+plug-in statistic (the population-variance form, equal to
+\(\frac{G-1}{G}\) times the unbiased within-group sample variance for
+binary rewards, hence a deterministic \((G-1)/G\) attenuation, one half
+at \(G=2\)) and PCD its expectation; the distinct-pair disagreement
+fraction would instead have expectation \(2p(1-p)\). It supplies a
+magnitude-aware contrast summary rather than a measured gradient norm,
 and the group-size question becomes a question about how much contrast a
 given sampling budget buys. The present project is careful about what it
 inherits from that argument: the reduction is cited as prior theory,
@@ -2160,8 +2175,13 @@ gradient utilisation, collapse counts, entropy, completion length, KL)
 to a log and to the tracker; the controller work adds a per-step
 counterfactual against a matched fixed-G control & Phase-1 report;
 \longtok{controller\_\allowbreak{}cf\_\allowbreak{}per\_\allowbreak{}step.tsv} \\
-FR-5 & Raw per-group reward tensors are persisted for every run, so
-diagnostics can be recomputed & Phase-1 report \\
+FR-5 & Raw per-group reward tensors are persisted by the
+tensor-instrumented runners (\longtok{tinker\_\allowbreak{}direct\_\allowbreak{}eval.py},
+\longtok{n2\_\allowbreak{}reward\_\allowbreak{}tensor\_\allowbreak{}20260704.py} and the Modal JSONL runners),
+so their diagnostics can be recomputed; the main \longtok{grpo\_cli.py}
+runner records scalar summaries only (§5.3), so this is a design
+requirement for new instrumented runs, not a property of every
+historical run & Phase-1 report \\
 FR-6 & Sweeps over G, seed and baseline-versus-intervention arms run
 under a fixed wall-clock or token budget & Phase-1 report \\
 FR-7 & For single-GPU models, per-layer LoRA gradient norms are
@@ -2176,15 +2196,21 @@ FR-9 & A stack-conditioned result carries the seven manifest fields of
 the eight-item standard (loss form, reference KL, sampler/backend with
 base-checkpoint revision and hash, telemetry, group-size schedule,
 held-out split, decontamination) plus its eighth, evaluation item
-(held-out pass@k); a 0--100 badge is emitted, and an unreported field is
+(held-out pass@k); a 0--100 badge,
+\(\mathrm{round}(100\cdot\frac{1}{7}\sum_i c_i)\) with \(c_i\) the
+fraction of item \(i\)'s schema leaves that are non-null, is emitted
+over the seven manifest items only, and an unreported field is
 distinguished from one reported as absent &
 \longtok{paper\_\allowbreak{}P6\_\allowbreak{}registry.tex};
 \longtok{minreport\_\allowbreak{}audit\_\allowbreak{}summary.json} \\
 FR-10 & The stack registry is queryable by stack, field or status &
 \longtok{registry/schema.json}; \longtok{registry/query.py} \\
 FR-11 & Each named variant stores an explicit delta against the GRPO
-reference, and \longtok{stackdiff} returns an R0--R5 flip-risk verdict
-for same-label entries & \longtok{paper\_\allowbreak{}P6\_\allowbreak{}registry.tex};
+reference, and \longtok{stackdiff} returns a rule-based R0--R5
+schema-mismatch level for a pair of entries, computed only from fields
+known on both sides, with unknown fields reported separately; the level
+is an uncalibrated reporting flag, not an attribution or effect-size
+estimate (§7.2) & \longtok{paper\_\allowbreak{}P6\_\allowbreak{}registry.tex};
 \longtok{registry/provenance/} \\
 FR-12 & An adaptive group-size controller with escalation asymmetry and
 hysteresis records its counterfactual against the best static recipe at
@@ -2374,7 +2400,10 @@ within FR-14/NFR-7; it does not verify FR-13 lane runtime execution.
 registry for a labelled entry and its delta record, and confirm that a
 field absent from the source is returned as unreported rather than as a
 zero value, and that a same-label pair with divergent behaviour triggers
-the flip-risk verdict. Verifies FR-9, FR-10, FR-11 and NFR-10.
+the flip-risk verdict. The target population is the 31 records shipped
+with P6 (31/31 schema-valid); the later 48-entry claim-to-run snapshot,
+with 44/48 valid, is a different population (Table A.5, P6-C1). Verifies
+FR-9, FR-10, FR-11 and NFR-10.
 
 \section{Requirements Traceability
 Matrix}\label{requirements-traceability-matrix}
@@ -2882,14 +2911,17 @@ two-sample contrasts; Cohen's d with Hedges--Olkin intervals; 95\%
 bootstrap confidence intervals with 10,000 resamples; rliable aggregate
 metrics (interquartile mean, median and optimality gap); and Bonferroni
 and Benjamini--Hochberg corrections over a declared test family. Power
-was computed rather than assumed: at 80\% power the minimum detectable
-effect for an equal-n comparison of five seeds against five is d\_min =
-2.024, improving to d\_min = 1.530 when a five-seed group is compared
-against a pooled group of fifteen. Those figures are a standing reminder
-of how coarse a five-seed design is, and smaller effects have lower
-detection probability, rather than being impossible to detect.
-Nonsignificance does not establish why an individual test failed to
-reject.
+was computed rather than assumed: for a two-sided, unpaired,
+equal-variance Student \(t\)-test at \(\alpha = 0.05\) and 80\% power,
+the minimum detectable standardised effect for five seeds against five
+(df = 8) is \(d_{\min} = 2.024\), improving to \(d_{\min} = 1.530\) when
+a five-seed group is compared against a pooled group of fifteen (pooled
+df = 18; a Welch test has fewer degrees of freedom and a larger
+\(d_{\min}\); seed-paired designs use their own df). Those figures are a
+standing reminder of how coarse a five-seed design is, and smaller
+effects have lower detection probability, rather than being impossible
+to detect. Nonsignificance does not establish why an individual test
+failed to reject.
 
 Two limitations are structural. First, the framework roster is a design
 inventory: only Tinker and TRL have completed runs in the historical
@@ -3177,8 +3209,13 @@ M03: P2 sampling tensors & n/a & exact binary ties; diagnostics use both
 variance conventions (ledger above) & Mask: n/a; KL/reference: n/a;
 critic: n/a \\
 M04: P2 Phase-1 four-method batch & Tinker \longtok{importance\_sampling}
-ratio against sampler log-probs; no clip & r − μ, no σ division (all
-arms) & Mask: completion only; KL/reference: none; critic: none \\
+ratio against sampler log-probs; no clip & r − μ, no σ division in the
+GRPO, AERO and AReaL arms; GIFT blends the centred advantage with a
+baseline-shifted implicit term, ((1 + λ)(r − μ) + μ)/2 with λ = 0.5;
+AERO uses the rolling-ZVF group-size rule with its maximum capped at the
+configured 8, so it can only shrink toward 4; AReaL refreshes sampler
+weights every 4 steps instead of every step & Mask: completion only;
+KL/reference: none; critic: none \\
 M05: P3 arithmetic sweep & none & (r − μ)/(σ + 10⁻⁶) & Mask: completion
 only; KL/reference: none; critic: none \\
 M06: P3 matched-budget panel & none in candidate source; execution
@@ -3198,10 +3235,11 @@ excluded & Mask: full sequence and alignment defect in candidate; later
 repaired source is not historical proof; KL/reference: none in
 historical candidate; critic: none \\
 M11: Same-stack arithmetic PPO/GRPO & both arms: sequence-level ratio on
-length-normalised log-prob, clip 0.2, 2 epochs & GRPO (r − μ\_g)/(σ\_g +
-10⁻⁶); PPO r − V, whitened over the batch with 1/(n − 1) & Mask:
-completion only; KL/reference: none; critic: PPO: linear value head on
-the prompt-end hidden state, 0.5 · MSE loss; no GAE (one-step) \\
+length-normalised log-prob, clip 0.2, 2 epochs & GRPO
+\((r-\mu_g)/(\sigma_g+10^{-6})\); PPO r − V, whitened over the batch
+with 1/(n − 1) & Mask: completion only; KL/reference: none; critic: PPO:
+linear value head on the prompt-end hidden state, 0.5 · MSE loss; no GAE
+(one-step) \\
 M12: P7 Colab four-arm audit & sequence-level ratio, clip 0.2 (DAPO 0.2
 / 0.28), 2 epochs & population variance; Dr.~GRPO r − μ; zero-variance
 groups dropped & Mask: completion only; KL/reference: none; critic:
@@ -3218,6 +3256,13 @@ unspecified; dump β = 0.04, on-device reference; critic: none \\
 M16: P1 PPO roster & TRL PPO defaults (clip, GAE, adaptive KL) & TRL
 whitening & Mask: TRL default; KL/reference: adaptive-KL defaults;
 executed settings unrecorded; critic: value head \\
+M17: Same-stack GSM8K-CoT GRPO/PPO (§6.5.5) & all arms: token-level
+ratio, clip 0.2, per-response length-normalised sum, 2 epochs & GRPO (G
+= 8 or 2) \((r-\mu_g)/(\sigma_g+10^{-6})\) with population \(\sigma_g\)
+(\(1/G\)); PPO r − V, whitened over the 64-completion batch with 1/(n −
+1) & Mask: completion only; KL/reference: none; critic: PPO linear value
+head on the prompt-end hidden state, 0.5 · MSE loss, default
+\longtok{nn.Linear} initialisation, no warm-up, no GAE \\
 \end{longtable}
 \endgroup
 
@@ -3300,6 +3345,8 @@ M13 & 32 & 1e-5 & 4 → 6 → 8 & 16 \\
 M14 & 16 (dump) & 1e-5 & 8 & 30 \\
 M15 & unknown executed rank: code 32 / dump 16 & 1e-5 & 8 & 30 \\
 M16 & 32 & 1e-5 & n/a & not recorded \\
+M17 & 16 (q, k, v, o) & 1e-5 & 64 generations per step: 8 × 8, 32 × 2,
+64 × 1 & 30 \\
 \end{longtable}
 \endgroup
 
@@ -3360,6 +3407,11 @@ M16 & 32 & 1e-5 & n/a & not recorded \\
 \item
   M16 (P1-roster PPO baselines): M/\longtok{modal\_\allowbreak{}ppo\_\allowbreak{}campaign.py} (TRL
   \texttt{PPOTrainer})
+\item
+  M17 (Same-stack GSM8K-CoT GRPO/PPO, §6.5.5):
+  M/\longtok{modal\_\allowbreak{}samestack\_\allowbreak{}gsm8k\_\allowbreak{}cot.py} (GRPO uses NumPy
+  \texttt{std}, population; PPO whitening uses \texttt{torch.std},
+  unbiased)
 \end{itemize}
 
 Budget matching is defined per experiment rather than inferred from a
@@ -3509,8 +3561,10 @@ stack must contain. Three exhibits carry the argument: a nominally
 matched-configuration backend audit, a same-label ``DAPO'' comparison
 between true dynamic sampling on an open trainer and an asymmetric-clip
 surrogate on a closed stack, and a twelve-cell head-to-head of four
-labelled algorithms on one fixed stack; their results are in Chapter 7
-§7.1. The study proposes an eight-item minimum reportable stack (seven
+labelled algorithms (GRPO, DAPO, Dr.~GRPO and GSPO; three seeds × 15
+steps) on one fixed stack, distinct from the single-seed 40-step N2 run
+of GRPO, AERO, GIFT and AReaL; their results are in Chapter 7 §7.1. The
+study proposes an eight-item minimum reportable stack (seven
 run-manifest fields and one evaluation item) --- loss form;
 reference-policy and KL handling; sampler, backend and precision
 including base-checkpoint identity by revision or hash; per-step ZVF and
@@ -3731,7 +3785,10 @@ source-field document hashes to the historical E11 receipt, adds 2,507
 decoded nested API-Bank strings to reach 26,240 source documents, and
 records 43,977,748 bytes downloaded against a 500 MiB cap, with the
 checker not having enumerated the roughly 2.58 billion possible document
-pairs.
+pairs (26,240 training documents × 98,363 evaluation fields). The
+near-duplicate check covered only the 23,881 evaluation fields eligible
+for eight-token checks; what was not enumerated is the all-pairs
+comparison, including shorter fields and character-edit overlap.
 
 The proposed gate and the executed path must also be distinguished. The
 27 September replacements used thin native runners under a separate
@@ -3835,12 +3892,16 @@ biases. {[}S2, S6{]}
 
 The first output audit covers all 64 cases, all 512 initial responses
 and 143 required fresh responses: 655 responses in total, including all
-38 primary-success outputs. The final mechanical coverage receipt
-verifies those identities and stored logic; it is not an independent
-mathematical adjudication. Six initially missing reasoning-caveat fields
-were clarified in a separately attributed supplement without altering
-the original fields, scores or verdicts. No coverage or annotation
-defect remains unresolved in the final receipt. {[}S7{]}
+38 primary-success outputs. The selection rule for the other 105 fresh
+responses is not recovered, so the 143 form a selected audit set rather
+than a random sample; whether the follow-up cap hits are a subset of the
+parser failures is likewise not recorded in the retained public ledger.
+The final mechanical coverage receipt verifies those identities and
+stored logic; it is not an independent mathematical adjudication. Six
+initially missing reasoning-caveat fields were clarified in a separately
+attributed supplement without altering the original fields, scores or
+verdicts. No coverage or annotation defect remains unresolved in the
+final receipt. {[}S7{]}
 
 For the eleven event questions, reconciliation read all 88 initial
 outputs and all 38 primary-success fresh outputs in full. All 126
@@ -4022,31 +4083,37 @@ recomputes the field partition from those templates: of 44 tracked leaf
 fields, 25 are identical across all four frameworks (LoRA rank, alpha,
 target modules and dropout; GRPO group size, rollouts per group and max
 new tokens; sampling temperature, top-p, top-k and do-sample; optimizer
-name, learning rate, weight decay, betas and epsilon; reward type; and
-the task, seed and source-git-sha metadata), while 11 are Tinker-managed
---- serialised as \texttt{null\ \ \#\ managed\_\allowbreak{}\allowbreak{}by\_\allowbreak{}\allowbreak{}tinker} in the Tinker
-dump --- covering \texttt{kl.beta}, \texttt{kl.surrogate},
-importance-sampling granularity, reference-model offload and recompute,
-tokens per optimizer step, reward broadcast precision, gradient
-checkpointing, micro-batch size, gradient accumulation, and
-tensor-parallel size. The same README records two disclaimers that
-matter more than the identical count: \texttt{model} and
-\texttt{model\_sha256} are \emph{not} identical, because the Tinker
-template names \texttt{Qwen/Qwen3-8B-Base} while TRL, veRL and OpenRLHF
-use the instruction-tuned \texttt{Qwen/Qwen3-8B}, and
+name, learning rate, weight decay, betas and epsilon; reward type; the
+task, seed and source-git-sha metadata; four PPO settings; and bf16),
+while 11 are Tinker-managed --- serialised as
+\texttt{null\ \ \#\ managed\_\allowbreak{}\allowbreak{}by\_\allowbreak{}\allowbreak{}tinker} in the Tinker dump --- covering
+\texttt{kl.beta}, \texttt{kl.surrogate}, importance-sampling
+granularity, reference-model offload and recompute, tokens per optimizer
+step, reward broadcast precision, gradient checkpointing, micro-batch
+size, gradient accumulation, and tensor-parallel size. The same README
+records two disclaimers that matter more than the identical count:
+\texttt{model} and \texttt{model\_sha256} are \emph{not} identical,
+because the Tinker template names \texttt{Qwen/Qwen3-8B-Base} while TRL,
+veRL and OpenRLHF use the instruction-tuned \texttt{Qwen/Qwen3-8B}, and
 \texttt{model\_sha256} is a placeholder rather than a verified checksum.
-Remaining fields are framework-specific and documented rather than
-harmonised --- KL beta is 0.04 for TRL and veRL against 0.02 for
-OpenRLHF, importance-sampling granularity is token-level for TRL and
-veRL against sequence-level for OpenRLHF, and reference-model placement
-differs across all four (\texttt{on\_device}, \texttt{managed},
-\texttt{separate\_process}, and \texttt{sharded\_ray}). The appendix's
-original ``byte-identical'' framing is retracted on the strength of this
-partition; the accurate statement is that a majority of template fields
-agree, without proving matched execution; the TRL code/dump rank
-conflict remains unresolved, a known Base-versus-Instruct confound
-survives, and eleven fields are not under user control at the Tinker API
-level at all.
+The partition is exhaustive, 25 + 11 + 8 = 44 (recomputed from the four
+YAMLs by
+\longtok{tools/review\_ledger/Thesis\_\allowbreak{}2026\_\allowbreak{}10\_\allowbreak{}11\_\allowbreak{}ESA\_\allowbreak{}Corrected\_\allowbreak{}config\_\allowbreak{}partition.py}).
+Within the 11 Tinker-managed fields the three open frameworks also
+differ among themselves: KL beta is 0.04 for TRL and veRL against 0.02
+for OpenRLHF, and importance-sampling granularity is token-level for TRL
+and veRL against sequence-level for OpenRLHF. The remaining eight fields
+differ across the four templates and are documented rather than
+harmonised: \texttt{model} and \texttt{model\_sha256} (above), framework
+name and version, reference-model placement (\texttt{on\_device},
+\texttt{managed}, \texttt{separate\_process} and \texttt{sharded\_ray}),
+GPU memory utilisation, inference backend and number of minibatches. The
+appendix's original ``byte-identical'' framing is retracted on the
+strength of this partition; the accurate statement is that a majority of
+template fields agree, without proving matched execution; the TRL
+code/dump rank conflict remains unresolved, a known Base-versus-Instruct
+confound survives, and eleven fields are not under user control at the
+Tinker API level at all.
 
 \section{The Custom-Loss Tinker Reference
 Loop}\label{the-custom-loss-tinker-reference-loop}
@@ -4056,20 +4123,26 @@ The reference implementation of the training loop lives in
 \texttt{grpo\_cli.py}. The loop follows the standard four-stage shape
 recorded in the Phase-1 report under ``The Tinker GRPO Loop'': sample a
 group of \texttt{G} completions per prompt, compute group-relative
-advantages, form the loss, and take an optimiser step. Advantages are
-normalised within the group to mean zero and unit standard deviation,
-using the population σ (\texttt{normalize\_rewards}, ε = 10⁻⁸). The loss
-is not the clipped, KL-regularised surrogate of the original GRPO paper.
-It is REINFORCE with a group-mean baseline,
+advantages, form the loss, and take an optimiser step. By default
+advantages are group z-scores, \(A_i=(r_i-\mu_g)/(\sigma_g+10^{-8})\)
+with the population \(\sigma_g\) (\texttt{normalize\_rewards}); with
+\texttt{unbiased=True} they are the unscaled centred rewards
+\(A_i=r_i-\mu_g\) (the Dr.~GRPO standard-deviation fix). The loss is not
+the clipped, KL-regularised surrogate of the original GRPO paper. It is
+REINFORCE with a group-mean baseline (z-scored by default),
 
-\[L(\theta) = -\frac{1}{N} \sum_i A_i \sum_t \log \pi_\theta(y_{i,t} \mid x, y_{i,<t})\]
+\[L(\theta) = -\frac{1}{N} \sum_{i=1}^{N} A_i \sum_{t=1}^{T_i} \log \pi_\theta(y_{i,t} \mid x, y_{i,<t}) \;+\; \lambda_{\mathrm{NLL}}\Bigl(-\frac{1}{|M|}\sum_{i\in M}\frac{1}{T_i}\sum_{t=1}^{T_i}\log \pi_\theta(y_{i,t}\mid x,y_{i,<t})\Bigr)\]
 
-averaged over the N completions in the batch, with no importance ratio,
-no clipping, no KL term and no reference policy. The inspected current
-source masks the loss to response tokens and refreshes the behaviour
-sampler every training step. Earlier candidate implementations used
-full-sequence scoring or checkpoint-only refresh, but their binding to
-the historical actor is unknown. The response-mask repair is dated 3
+where \(T_i\) is the passed response length, so only response tokens
+enter both sums, \(M\) is the optional set of masked (correct) responses
+and \(\lambda_{\mathrm{NLL}}\) the optional auxiliary coefficient
+(default 0, which removes the second term). The policy term is a token
+sum per response averaged over the \(N\) completions, with no importance
+ratio, no clipping, no KL term and no reference policy. The inspected
+current source masks the loss to response tokens and refreshes the
+behaviour sampler every training step. Earlier candidate implementations
+used full-sequence scoring or checkpoint-only refresh, but their binding
+to the historical actor is unknown. The response-mask repair is dated 3
 October 2026, after the campaign actor; it cannot retroactively certify
 that run. Optional GSPO and auxiliary paths in the current source are
 outside this default-path description. The implementation uses the
@@ -4096,8 +4169,8 @@ implementation.
 
 The single most consequential property of this loop for the project's
 research questions is the degenerate case. When the group's reward
-standard deviation \texttt{σ\_g} is zero, every advantage \texttt{A\_i}
-is zero, and because the loss has no KL or auxiliary term, the group
+standard deviation \(\sigma_g\) is zero, every advantage \(A_i\) is
+zero, and because the loss has no KL or auxiliary term, the group
 contributes exactly zero gradient. This is the mechanism behind the
 zero-variance-fraction diagnostic that runs through the project; it is
 recorded in the Phase-1 report as the observation that motivated the
@@ -4776,10 +4849,18 @@ sweep over these same 600 groups. With independent seeded δ
 threshold; at ε = 10⁻⁸ through 10⁻², including the declared 10⁻⁶, all
 95/600 remain. Unperturbed binary rewards retain 95/600 across this
 range. At G = 8, jitter alone has sample variance at most 2.86 × 10⁻⁹,
-so it cannot cross 10⁻⁶ in an originally tied group. PCD changes by
-+2.984 × 10⁻⁷. The example diagnoses exact-tie sensitivity, not failure
-of tolerance-based ZVF; it does not establish robustness to larger
-perturbations or other reward scales.
+so it cannot cross 10⁻⁶ in an originally tied group. This is the
+theoretical worst case, not an observed maximum: for eight perturbations
+in \([0, M]\) with \(M = 10^{-4}\), the unbiased sample variance
+(\texttt{ddof=1}, the convention of this historical recomputation) is
+maximised with four draws at 0 and four at \(M\), giving
+\(\frac{G}{4(G-1)}M^2 = \frac{2}{7}\times10^{-8}\); the
+population-variance (\texttt{ddof=0}) bound is \(2.50\times10^{-9}\),
+and the expected sample variance of uniform jitter is
+\(M^2/12 \approx 8.3\times10^{-10}\). PCD changes by +2.984 × 10⁻⁷. The
+example diagnoses exact-tie sensitivity, not failure of tolerance-based
+ZVF; it does not establish robustness to larger perturbations or other
+reward scales.
 
 \subsection{Measured evidence and excluded
 projections}\label{measured-evidence-and-excluded-projections}
@@ -4856,19 +4937,25 @@ probabilities is part of the formal null in §4.3. Evaluating the closed
 form at the pooled training rate understates the mean of the per-step
 plug-in predictions, because \(h_G\) is convex:
 \(h_G(\overline p_t) \le \overline{h_G(p_t)}\). The per-step-average
-plug-in baseline is \(0.60\) at \(G = 8\), rather than the \(0.33\)
-obtained at the pooled mean. A held-out rate is a different quantity and
-has no corresponding ordering guarantee. Even the per-step baseline uses
-a batch-average estimate instead of the unknown per-prompt probabilities
-in §4.3, so prompt-difficulty heterogeneity and estimation error remain.
-Against the per-step-average baseline the measured ZVF at \(G = 8\)
-(\(0.69\)) \emph{exceeds} the null by approximately \(0.09\). The change
-from the pooled baseline to the per-step baseline is the Jensen effect;
-it does not by itself explain the remaining 0.09 residual. The source
-consequently ``do{[}es{]} not read it as strong evidence that the
-independence null is a lower bound''. This chapter uses only the
-per-step-average baseline. It is a weak consistency check on shape
-rather than evidence about dependence.
+plug-in baseline is \(\overline{h_8(p_t)} = 0.597\) at \(G = 8\), rather
+than \(h_8(\overline p_t) = 0.326\) at the pooled all-step training mean
+\(\overline p_t = 0.869\) (pooled means 0.840, 0.863, 0.869 and 0.873 at
+G = 2, 4, 8 and 16; recomputed from the 480 step logs of
+\longtok{groupsize\_\allowbreak{}zvf\_\allowbreak{}sweep.json}). This Jensen gap (+0.27 at G = 8)
+is distinct from the Table E.1 correction, which replaced an earlier
+source's plug-in at held-out accuracy (\(h_8(0.923) \approx 0.527\)) by
+the per-step-average baseline. A held-out rate is a different quantity
+and has no corresponding ordering guarantee. Even the per-step baseline
+uses a batch-average estimate instead of the unknown per-prompt
+probabilities in §4.3, so prompt-difficulty heterogeneity and estimation
+error remain. Against the per-step-average baseline the measured ZVF at
+\(G = 8\) (\(0.69\)) \emph{exceeds} the null by approximately \(0.09\).
+The change from the pooled baseline to the per-step baseline is the
+Jensen effect; it does not by itself explain the remaining 0.09
+residual. The source consequently ``do{[}es{]} not read it as strong
+evidence that the independence null is a lower bound''. This chapter
+uses only the per-step-average baseline. It is a weak consistency check
+on shape rather than evidence about dependence.
 
 The formalisation's own summary of the same sweep, twelve runs and 480
 logged steps, reports per-step observed ZVF correlating at r = 0.92 with
@@ -5131,12 +5218,12 @@ audit}\label{the-roster-level-verbosity-trap-audit}
 Set against the controlled null is a descriptive audit over the whole
 experiment roster, and here the picture differs. The audit defines four
 statistics per trace with at least five steps: an instability index
-σ(r\_tail)/\textbar μ(r\_tail)\textbar{} over the final 50\% of
-training; a monotonicity score, the fraction of consecutive step-pairs
-with strictly improving reward; a regression severity, the largest
-normalised drop from peak; and a binary verbosity-trap flag, set when
-the peak occurs before 65\% of training and the terminal reward falls
-below 90\% of peak.
+\(\sigma(r_{\mathrm{tail}})/|\mu(r_{\mathrm{tail}})|\) over the final
+50\% of training; a monotonicity score, the fraction of consecutive
+step-pairs with strictly improving reward; a regression severity, the
+largest normalised drop from peak; and a binary verbosity-trap flag, set
+when the peak occurs before 65\% of training and the terminal reward
+falls below 90\% of peak.
 
 On that definition, the eleven GRPO runs in the roster have a mean
 instability index of 0.267 ± 0.335, against 0.785 ± 0.297 (mean ± spread
@@ -5159,17 +5246,22 @@ rather than this eleven-run subset, the rule fires on the majority of
 runs --- including PPO-labelled runs and the Dr.~GRPO control in the one
 matched comparison --- so 36\% sits at or below the rate the rule
 produces on traces with no decay at all. The project's own length data
-point the other way: under the 200-token cap, length drifts from 194.4
-to 183.5 tokens, i.e.~shorter. The run-level audit therefore does not
-establish length inflation, and the capped comparison does not establish
-its unconstrained absence. The Nemotron run records the highest
-instability index in the pool at 1.194, with a regression severity of
-1.0 and a terminal-to-peak reward ratio of 0.57. The two DeepSeek-V3.1
-GRPO runs, by contrast, show markedly lower instability, with a mean of
-0.143. The PPO rate of 12/17 has a Wilson 95\% CI of {[}47\%, 87\%{]}.
-These are descriptive uncertainty intervals for heterogeneous roster
-counts; their overlap is not a formal test of a rate difference, and the
-pool composition prevents an algorithm-level stability comparison.
+point the other way: under the 200-token cap, the pooled mean completion
+length over the six GRPO and Dr.~GRPO runs drifts from 194.4 tokens
+(first five steps) to 183.5 tokens (last five steps), i.e.~shorter; per
+arm, 195.0 → 180.3 (GRPO) and 193.9 → 186.8 (Dr.~GRPO) (recomputed from
+\longtok{drgrpo\_\allowbreak{}gsm8k\_\allowbreak{}cot\_\allowbreak{}full.json}). These five-step windows differ
+from the final-ten-step means quoted in §6.5.1. The run-level audit
+therefore does not establish length inflation, and the capped comparison
+does not establish its unconstrained absence. The Nemotron run records
+the highest instability index in the pool at 1.194, with a regression
+severity of 1.0 and a terminal-to-peak reward ratio of 0.57. The two
+DeepSeek-V3.1 GRPO runs, by contrast, show markedly lower instability,
+with a mean of 0.143. The PPO rate of 12/17 has a Wilson 95\% CI of
+{[}47\%, 87\%{]}. These are descriptive uncertainty intervals for
+heterogeneous roster counts; their overlap is not a formal test of a
+rate difference, and the pool composition prevents an algorithm-level
+stability comparison.
 
 Two caveats on that comparison must travel with it. First, the PPO pool
 is dominated by classic-RL library runs (SB3, CleanRL, Tianshou) that
@@ -5232,9 +5324,9 @@ checkpoint, the gain is +0.013 with a paired p = 0.256 at n = 5 ---
 small and not statistically significant, and a matched pre-RL control
 for the Qwen3-8B-Base checkpoint is not available. In summary, on this
 near-ceiling configuration, GRPO does not produce a held-out improvement
-that can be separated from noise at the available seed budget, and that
-GRPO and Dr.~GRPO produce held-out gains that are indistinguishable from
-each other at that budget.
+that can be separated from noise at the available seed budget, and GRPO
+and Dr.~GRPO produce held-out gains that are indistinguishable from each
+other at that budget.
 
 On Qwen2.5-1.5B-Instruct GSM8K-CoT, the stored mean pre/post changes are
 +6.2 percentage points for GRPO and +5.0 for Dr.~GRPO over three seeds
@@ -5249,8 +5341,16 @@ another execution difference. No specific cause or deterministic repair
 is claimed without repeated unchanged-checkpoint evaluations and
 execution receipts. The historical seed-level and McNemar tests
 therefore do not isolate training benefit from evaluation variability.
-The separately implemented v2 comparison below is reported under its own
-contract.
+For reference, the per-seed one-sample tests on the pre-to-post deltas
+give \(t_2 = 13.98\), \(p = 0.0051\), 95\% CI {[}+0.043, +0.081{]}
+(GRPO) and \(t_2 = 10.0\), \(p = 0.0099\), {[}+0.028, +0.072{]}
+(Dr.~GRPO), but with n = 3 the exact two-sided sign-flip test cannot go
+below \(p = 0.25\). The direct post-training comparison, which does not
+depend on the discordant pre-training evaluations, is 0.2633 against
+0.2550, a paired difference of +0.0083 (\(t_2 = 0.94\), \(p = 0.44\),
+95\% CI {[}−0.030, +0.046{]}); it is inconclusive (recomputed from
+\longtok{drgrpo\_\allowbreak{}gsm8k\_\allowbreak{}cot\_\allowbreak{}full.json}). The separately implemented v2
+comparison below is reported under its own contract.
 
 The raised-cap Qwen3-8B extension comprises six completed 30-step logs:
 GRPO and a centred-advantage arm labelled \texttt{drgrpo}, seeds 42, 123
@@ -5889,34 +5989,37 @@ entries onto the R0--R5 ladder and reports the highest rung triggered
 loss-form or KL-handling differences, R4 differing variant-delta sets,
 R5 unauditable because a differing item is null on at least one side.
 The badge formula weights the seven items equally and is outcome-blind:
-\(\mathrm{badge}(s) = \lfloor 100 \cdot \tfrac{1}{7} \sum_i c_i(s) \rfloor\).
-\texttt{stackdiff} prints a warning at R4 and above that outcome
-differences must not be attributed to the shared algorithm label, and
-the P6 report is careful to describe the ladder as ``a risk scale, not
-an effect-size scale.'' Applied to the shipped entries,
-\texttt{stackdiff} flags the open-versus-closed ``DAPO'' pair as R5 from
-manifests alone, and across the twenty seed entries the MIN-REPORT badge
-spanned 43--96; across the 28 current stack entries,
-\texttt{query.py\ badge} gives 43--93 with mean 62.68. Two boundaries
-deserve restating. The registry reports stated provenance and conflicts;
-it does not reconcile unresolved exact-ID or model conflicts, nor does
-it validate nominal algorithm comparisons. And the badge is coarse
-relative to the corpus --- twenty entries collapse to ten distinct
-fingerprints, and twenty of twenty-three sub-fields carry at most two
-values. The version of \texttt{stackdiff} described in the P6 report did
-not compare the model field, so the Base-versus-Instruct checkpoint
-difference behind the 17× exhibit was invisible to it; its R5 rung meant
-only that a differing item was null on one side, and it fired on 366 of
-the 378 pairs among the 28 current stack entries; and it shipped without
-unit tests. It was revised on 16 October 2026, and the revised tool is
-the one evaluated here. It compares a fixed catalogue of 48 fields and
-assigns a level only from fields known on both sides that differ, so
-missing information no longer raises the verdict. R5 is now reserved for
-outcome-critical fields --- execution mode, checkpoint identity and
-variant, reward definition, prompt and chat template, dataset and
-evaluation protocol --- and missing information is reported separately
-as a coverage fraction, the worst severity that could still be hidden,
-and an UNDERSPECIFIED flag when coverage is below 0.8 or an R5 field is
+\(\mathrm{badge}(s) = \mathrm{round}\bigl(100 \cdot \tfrac{1}{7} \sum_i c_i(s)\bigr)\),
+where \(c_i(s)\) is the fraction of item \(i\)'s schema leaves that are
+non-null (\texttt{badge()} and \texttt{item\_score()} in
+\longtok{platform\_hybrid/registry/query.py}). \texttt{stackdiff} prints
+a warning at R4 and above that outcome differences must not be
+attributed to the shared algorithm label, and the P6 report is careful
+to describe the ladder as ``a risk scale, not an effect-size scale.''
+Applied to the shipped entries, \texttt{stackdiff} flags the
+open-versus-closed ``DAPO'' pair as R5 from manifests alone, and across
+the twenty seed entries the MIN-REPORT badge spanned 43--96; across the
+28 current stack entries, \texttt{query.py\ badge} gives 43--93 with
+mean 62.68. Two boundaries deserve restating. The registry reports
+stated provenance and conflicts; it does not reconcile unresolved
+exact-ID or model conflicts, nor does it validate nominal algorithm
+comparisons. And the badge is coarse relative to the corpus --- twenty
+entries collapse to ten distinct fingerprints, and twenty of
+twenty-three sub-fields carry at most two values. The version of
+\texttt{stackdiff} described in the P6 report did not compare the model
+field, so the Base-versus-Instruct checkpoint difference behind the 17×
+exhibit was invisible to it; its R5 rung meant only that a differing
+item was null on one side, and it fired on 366 of the 378 pairs among
+the 28 current stack entries; and it shipped without unit tests. It was
+revised on 16 October 2026, and the revised tool is the one evaluated
+here. It compares a fixed catalogue of 48 fields and assigns a level
+only from fields known on both sides that differ, so missing information
+no longer raises the verdict. R5 is now reserved for outcome-critical
+fields --- execution mode, checkpoint identity and variant, reward
+definition, prompt and chat template, dataset and evaluation protocol
+--- and missing information is reported separately as a coverage
+fraction, the worst severity that could still be hidden, and an
+UNDERSPECIFIED flag when coverage is below 0.8 or an R5 field is
 unknown. Across the 378 pairs of the 28 stack entries the distribution
 is R0 39, R2 1, R3 10, R4 26 and R5 302; 342 pairs are UNDERSPECIFIED,
 with median coverage 0.19, because 16 of the 28 entries are still
@@ -6173,8 +6276,7 @@ Historical V2 evidence remains separate and unpooled.
   >{\raggedleft\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.4000}}
   >{\raggedright\arraybackslash\hspace{0pt}}p{(\linewidth - 6\tabcolsep) * \real{0.3000}}@{}}
 \caption{C1 results and interpretation. The final three rows partition
-the eight events outside the conservative witness count.
-{[}S1-S4{]}}\tabularnewline
+the eight events outside the conservative witness count.}\tabularnewline
 \toprule\noalign{}
 \begin{minipage}[b]{\linewidth}\raggedright
 Quantity
@@ -7630,12 +7732,13 @@ exceptions to hide.
 Validity}\label{rigour-and-threats-to-validity}
 
 \textbf{What rigour was exercised.} Diagnostics are recomputable from
-stored raw tensors, and selected structural claims were historically
-checked by eleven named deterministic checks on 2026-09-19, recorded as
-passing, covering exact divisions, receipt presence, sealed-artifact
-hash equality and lost-source absence probes. Held-out \emph{n} is
-reported alongside every gain, and failed runs are counted rather than
-hidden: failed attempts remain part of the stated limitations.
+stored raw tensors where tensor-instrumented runners persisted them, and
+selected structural claims were historically checked by eleven named
+deterministic checks on 2026-09-19, recorded as passing, covering exact
+divisions, receipt presence, sealed-artifact hash equality and
+lost-source absence probes. Held-out \emph{n} is reported alongside
+every gain, and failed runs are counted rather than hidden: failed
+attempts remain part of the stated limitations.
 
 Table 9.1 lists the threats discussed below, grouped as internal,
 construct and external, with the mitigation applied to each. Most
@@ -9328,7 +9431,15 @@ shows that the run population is far larger than the reported claims,
 and shows that those claims rest on a small, explicitly tiered subset
 with the P1--P8 empirical rows at Tier C or X and P11 at Tier C under
 the stated per-run step threshold. The four Tier X P1--P8 rows must not
-be cited as supporting evidence.
+be cited as supporting evidence under their conflicted labels. Two are
+nevertheless cited elsewhere in a restricted form, and the restriction
+is part of the citation: P4-C1 is cited only under the model its runs
+actually record (\texttt{Qwen/Qwen2.5-1.5B-Instruct} in every row of
+\longtok{results/drgrpo\_\allowbreak{}gsm8k\_\allowbreak{}cot\_\allowbreak{}full.json}), never under the
+Qwen3-8B label of the P4 source abstract; P5-C1 (0.856 versus 0.050) is
+cited only as an under-specification exhibit whose checkpoint and
+back-end changed together, never as a back-end effect. P3-C2 and P8-C3
+are not cited as evidence anywhere.
 
 The run totals that appear in different chapters count different
 corpora. Table A.10 lists the scientific study corpora retained
@@ -10190,7 +10301,9 @@ ZVF tolerance \(10^{-6}\); Adam term \(10^{-8}\) \\
 sampling temperature & \(0.99\); \(0.95\); canonical \(0.8\) \\
 \(\mathrm{SI}\), \(\mathrm{PTD}\) & Stability index; peak-to-tail drift
 & Reported in place of direct KL \\
-PCD & Pairwise-contrast density &
+PCD & Pairwise-contrast density: \(\widehat{\mathrm{PCD}}\) is the
+plug-in statistic \(|B|^{-1}\sum_g \hat p_g(1-\hat p_g)\); PCD is its
+expectation &
 \(\mathbb{E}[\hat{p}(1-\hat{p})] = \frac{G-1}{G}\,p(1-p)\) \\
 pass@1 & Pass rate under the suite's native scorer & E11
 \(129/312 = 41.35\,\%\); E1 \(2/731 = 0.274\,\%\) \\
@@ -13147,6 +13260,8 @@ Details}\label{chapter-5-implementation-details}
   \longtok{platform\_tinker/reports/final/evaluate\_\allowbreak{}gsm8k\_\allowbreak{}test.py}
 \end{itemize}
 
+\textbf{7.5 C1 Results with Reference and Unit Boundaries}
+
 \section{Chapter 8: The E1--E14 Infrastructure and Harness
 Audit}\label{chapter-8-the-e1e14-infrastructure-and-harness-audit}
 
@@ -13795,14 +13910,14 @@ pass \\
 context \\
 §8.4 & 3 & R & \texttt{3\ ×\ result.json} & \texttt{Σf6a7ff9171a} & 3
 pass \\
-Table 8.C & 18 & R & \texttt{6\ ×\ result.json} & \texttt{Σa13e3d43680}
+Table 8.3 & 18 & R & \texttt{6\ ×\ result.json} & \texttt{Σa13e3d43680}
 & 18 pass \\
-Table 8.D & 6 & S & \texttt{6\ ×\ result.json} & \texttt{Σa13e3d43680} &
+Table 8.4 & 6 & S & \texttt{6\ ×\ result.json} & \texttt{Σa13e3d43680} &
 6 pass \\
 §8.5 & 2 & S & \longtok{result.json} & \longtok{3603158797cd} & 2 pass \\
-Table 8.A & 14 & R & \texttt{14\ ×\ result.json} & \texttt{Σe3c416e24a2}
+Table 8.5 & 14 & R & \texttt{14\ ×\ result.json} & \texttt{Σe3c416e24a2}
 & 14 pass \\
-Table 8.B & 18 & R & \texttt{14\ ×\ paired.json} & \texttt{Σ023282562fb}
+Table 8.6 & 18 & R & \texttt{14\ ×\ paired.json} & \texttt{Σ023282562fb}
 & 18 pass \\
 §9.1 & 23 & RA & \texttt{14\ files} & \texttt{Σ5eafca0389e} & 23 pass \\
 §9.2 & 6 & T & \longtok{LIMITATIONS\_\allowbreak{}AND\_\allowbreak{}IMPACT.md} &

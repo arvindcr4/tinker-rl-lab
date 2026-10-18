@@ -65,7 +65,10 @@ Earlier drafts also showed (i) frontier and group-size values taken from
 six-point log samples of an aborted 26-step batch, (ii) interrupted MoE
 runs reconstructed from console output, and (iii) a Qwen3-8B $G{=}8$ row
 with no matching run; none of these is a measured trace, so they are
-removed. The interrupted runs remain listed, without numbers, as Tier~C in
+removed. The $G{=}8$ cell of the group-size block is instead the Wave-6
+baseline run (\texttt{wave6\_ablations.json}, run \texttt{01848b9b}), which
+uses the campaign's configuration (LoRA rank 32, 2 prompts per step,
+temperature 0.8, learning rate $10^{-5}$, seed 42, 512-token completions). The interrupted runs remain listed, without numbers, as Tier~C in
 Table~\ref{tab:run-manifest}. All rows except the multi-seed Tier-A and
 matched-budget blocks are single runs; all are reported descriptively.
 
@@ -74,14 +77,16 @@ Qwen3-8B-Base row of the frontier block (run \texttt{9f27c001}) and the
 Tinker row of the matched launcher comparison (run \texttt{ca0d6a00}) use
 the same configuration but are different runs; their last-10 rewards differ
 by 13 points, an indication of single-run variability. Second, the
-single-seed group-size sweep has no completed $G{=}8$ run.
+group-size sweep's $G{=}8$ cell comes from a different (identically
+configured) run file than its other cells.
 
 \begin{table*}[htbp]
 \centering
 \caption{\textbf{Per-row training reward on GSM8K and tool-use} (training
 prompts; not held-out accuracy). Peak and last-10 are recomputed from the
 run JSON listed in Table~\ref{tab:run-manifest}. Single runs unless a seed
-count is given. Size is total (active) parameters. $^\ast$Two same-name seed-42 runs in the W\&B export.}
+count is given; multi-seed rows give last-10 mean $\pm$ SE over seeds. Size
+is total (active) parameters. $^\ddagger$Wave-6 baseline run. $^\ast$Two same-name seed-42 runs in the W\&B export.}
 \label{tab:main_results}
 \scriptsize
 \setlength{\tabcolsep}{3pt}
@@ -94,33 +99,34 @@ count is given. Size is total (active) parameters. $^\ast$Two same-name seed-42 
 GRPO & Tinker & Qwen3-8B & 8B & 30 & 62.5\% & 34.4\% \\
 GRPO & Tinker & Qwen3.5-4B & 4B & 30 & 100\% & 85.0\% \\
 GRPO & Tinker & Llama-3.1-8B-Inst & 8B & 30 & 100\% & 84.4\% \\
-GRPO & Tinker & GPT-OSS-20B & 20B & 30 & 100\% & 87.5\% \\
+GRPO & Tinker & GPT-OSS-20B & 21B (3.6B) & 30 & 100\% & 87.5\% \\
 GRPO & Tinker & DeepSeek-V3.1 & 671B (37B) & 20 & 100\% & 85.0\% \\
 GRPO & Tinker & Nemotron-3-Super-120B & 120B (12B) & 20 & 87.5\% & 16.3\% \\
-GRPO & Tinker & Kimi-K2-Thinking & MoE & 20 & 100\% & 80.0\% \\
+GRPO & Tinker & Kimi-K2-Thinking & ${\approx}$1T (32B) & 20 & 100\% & 80.0\% \\
 \midrule
 \multicolumn{7}{l}{\textit{Single-run frontier-model case studies (GRPO, Tinker, one 30-step campaign batch)}} \\
 \midrule
 GRPO & Tinker & Qwen3-8B-Base & 8B & 30 & 100\% & 98.8\% \\
-GRPO & Tinker & Kimi-K2-Thinking & MoE & 30 & 100\% & 83.1\% \\
-GRPO & Tinker & Kimi-K2.5 & MoE & 30 & 100\% & 76.3\% \\
-GRPO & Tinker & GPT-OSS-120B & 120B & 30 & 100\% & 91.9\% \\
+GRPO & Tinker & Kimi-K2-Thinking & ${\approx}$1T (32B) & 30 & 100\% & 83.1\% \\
+GRPO & Tinker & Kimi-K2.5 & ${\approx}$1T (32B) & 30 & 100\% & 76.3\% \\
+GRPO & Tinker & GPT-OSS-120B & 117B (5.1B) & 30 & 100\% & 91.9\% \\
 GRPO & Tinker & Qwen3.5-397B & 397B (17B) & 30 & 100\% & 91.9\% \\
 GRPO & Tinker & Llama-3.1-70B & 70B & 30 & 75.0\% & 45.0\% \\
 GRPO & Tinker & DS-V3.1-Base & 671B (37B) & 30 & 93.8\% & 65.6\% \\
 GRPO & Tinker & Llama-3.1-8B & 8B & 30 & 31.3\% & 8.8\% \\
 \midrule
-\multicolumn{7}{l}{\textit{Group-size sweep (Qwen3-8B, GRPO, Tinker; same campaign batch, one run per $G$; no completed $G{=}8$ run)}} \\
+\multicolumn{7}{l}{\textit{Group-size sweep (Qwen3-8B, GRPO, Tinker; one run per $G$)}} \\
 \midrule
 GRPO & Tinker & Qwen3-8B (G=2) & 8B & 30 & 75.0\% & 35.0\% \\
 GRPO & Tinker & Qwen3-8B (G=4) & 8B & 30 & 87.5\% & 28.8\% \\
+GRPO & Tinker & Qwen3-8B (G=8)$^\ddagger$ & 8B & 30 & 68.8\% & 33.8\% \\
 GRPO & Tinker & Qwen3-8B (G=16) & 8B & 30 & 62.5\% & 32.5\% \\
 GRPO & Tinker & Qwen3-8B (G=32) & 8B & 30 & 67.2\% & 38.8\% \\
 \midrule
-\multicolumn{7}{l}{\textit{Multi-seed Tinker cells (Tier A; seed mean, per-seed range in parentheses)}} \\
+\multicolumn{7}{l}{\textit{Multi-seed Tinker cells (Tier A; last-10 seed mean $\pm$ SE)}} \\
 \midrule
-GRPO & Tinker & Llama-3.3-70B-Inst (4 seeds) & 70B & 30 & 100\% (all seeds) & 96.4\% (95.0--98.1) \\
-GRPO & Tinker & DeepSeek-V3.1 (3 seeds) & 671B (37B) & 30 & 100\% (all seeds) & 86.7\% (78.8--90.6) \\
+GRPO & Tinker & Llama-3.3-70B-Inst (4 seeds) & 70B & 30 & 100\% (all seeds) & $96.4\pm0.7$\% \\
+GRPO & Tinker & DeepSeek-V3.1 (3 seeds) & 671B (37B) & 30 & 100\% (all seeds) & $86.7\pm4.0$\% \\
 \midrule
 \multicolumn{7}{l}{\textit{Matched-budget follow-up (Qwen3-8B, Tinker, 2,560 rollouts per run; 2 seeds per arm; per-seed values)}} \\
 \midrule

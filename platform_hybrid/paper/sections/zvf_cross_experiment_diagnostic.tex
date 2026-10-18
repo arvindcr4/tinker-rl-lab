@@ -214,30 +214,44 @@ indicator is $0$ and $h_G>0$. So $\delta_x\ge0$ for every group, and under
 expectation is already $+0.105$. The value says nothing about rollout
 correlation.
 
-\paragraph{The arithmetic sign flip is Jensen.} There, $p$ was the
-\emph{step-mean} reward and $\mathrm{ZVF}_{\mathrm{obs}}$ the step's batch ZVF.
-With heterogeneous prompts and i.i.d.\ rollouts,
-$\E[\mathrm{ZVF}_t]=\E_i[h_G(p_i)]\ge h_G(\bar p_t)$ because $h_G$ is convex,
-so $\delta_t\le0$ is expected without any herding.
+\paragraph{The arithmetic sign has competing sources.} There, $p$ was the
+\emph{estimated} step-mean reward $\hat{\bar p}_t$ and $\mathrm{ZVF}_{\mathrm{obs}}$
+the step's batch ZVF. With heterogeneous prompts and i.i.d.\ rollouts,
+$\E[\mathrm{ZVF}_t]=\E_i[h_G(p_i)]\ge h_G(\bar p_t)$ because $h_G$ is convex, which
+pushes $\delta_t$ negative without any herding; but the plug-in
+$h_G(\hat{\bar p}_t)$ carries a positive finite-sample bias
+$\E[h_G(\hat{\bar p}_t)]-h_G(\bar p_t)\ge0$, so the sign of $\delta_t$ is not
+fixed by convexity alone. The logs store only step-mean reward and step ZVF
+($16$ prompts per step), not per-group counts, so the two terms cannot be
+separated here.
 
 \paragraph{Correct reading.} Batch ZVF is a convex functional of the
 prompt-difficulty distribution, $\E[\mathrm{ZVF}]=\E_i[h_G(p_i)]$; its excess
 over $h_G(\bar p)$ measures the dispersion of $p_i$. On the 600 GSM8K groups
-the observed ZVF is $0.158$, $h_8(\bar p)=0.054$, and a beta-binomial fit
-(intra-prompt correlation $0.160$) predicts $0.170$; the $k$-histogram is
-strongly over-dispersed relative to a single Binomial
-($\chi^2_7=8119$). Because the three seeds drew different problems, prompt
-dispersion cannot be separated from within-prompt correlation with these
-artefacts. Recomputation:
+the observed ZVF is $0.158$ and $h_8(\bar p)=0.054$. The $k$-histogram is
+strongly over-dispersed relative to a single Binomial (likelihood-ratio deviance
+$341.3$ on $7$ df, above all $20{,}000$ parametric-bootstrap replicates; the
+unpooled Pearson statistic is not used because two expected cells are below $1$).
+A two-parameter beta-binomial fitted to the same groups (marginal intra-class
+correlation $0.160$) gives ZVF $0.170$, but only by offsetting errors: it expects
+$4.2$ all-fail and $98.1$ all-success groups against $19$ and $76$ observed, and
+it is rejected (Pearson $\chi^2=82.2$, $6$ df). The three seeds are independent
+shuffles of the test split (503 distinct problems, 103 repeated-problem pairs
+whose success counts correlate at $r=0.65$), and single-pass groups cannot
+separate prompt dispersion from within-prompt rollout dependence. Recomputation:
 \texttt{analysis\_publication\_fixes/p2\_delta\_artifact.py} (output in
-\texttt{experiments/results/publication\_fixes/zvf\_confound/}). This is the
+\texttt{experiments/results/publication\_fixes/zvf\_confound/}); the goodness-of-fit,
+bootstrap and repeated-problem statistics by
+\texttt{tools/review\_ledger/P2\_zvf\_falsification\_note\_audit.py}. This is the
 same quantity as the Advantage Collapse Rate~\cite{he2026advantage}; see
 Section~\ref{sec:zvf-cross-experiment:related}.
 
 \paragraph{Prospective prediction test (not run).} The convex-functional
-reading makes a testable prediction: estimating each prompt's $p_i$ from an
-independent sample should predict a fresh batch's ZVF as $\E_i[h_G(p_i)]$ at any
-$G$. We have not run this test.
+reading makes a testable prediction: with $M\ge G$ independent calibration
+rollouts and $m_i$ successes on prompt $i$, the unbiased estimator
+$[\binom{m_i}{G}+\binom{M-m_i}{G}]/\binom{M}{G}$ of $h_G(p_i)$ (the plug-in
+$h_G(m_i/M)$ is biased upward), averaged over prompts, should predict a fresh
+batch's ZVF at any $G$. We have not run this test.
 
 \subsection{Relation to Advantage-Collapse and Difficulty-Filtering Work}
 \label{sec:zvf-cross-experiment:related}

@@ -25,8 +25,8 @@ two LLM post-training back-ends (\textsc{Tinker} and HuggingFace \textsc{TRL}) a
 on GSM8K~\citep{cobbe2021training}, 5-choice arithmetic, and multi-hop tool-use tasks, and a 12-anchor cross-scale GRPO suite ($4$B--$1$T) on GSM8K.
 Rather than assert a new law, we report what the data will and will not
 support. Our contributions are: (i) a same-benchmark measurement showing that the
-cross-scale mean training-reward slope ($+0.056 \pm 0.130$/decade on 5 core anchors; $+0.081 \pm 0.129$/decade on 12 anchors) and endpoint ceiling slope ($R_{\max} \sim \log_{10} N$) are statistically indistinguishable from zero
-over the measured $2.4$-decade parameter range ($p \ge 0.22$); (ii) an internal falsification check of a clean
+cross-scale mean training-reward slope ($-0.024 \pm 0.205$/decade on 5 core anchors, df $=3$; $+0.081 \pm 0.129$/decade on 12 anchors, df $=10$) and endpoint ceiling slope ($R_{\max} \sim \log_{10} N$) are not distinguishable from zero
+over the measured $2.4$-decade parameter range (all $p > 0.5$), with intervals too wide to establish flatness; (ii) an internal falsification check of a clean
 three-phase saturation hypothesis~\citep{nimmaturi2025predictive}; (iii) an identifiability audit showing that no
 universal saturation rate $\lambda$ or horizon $t_{80}$ is estimable on 20--30 step GSM8K traces because instruction-tuned checkpoints start near their ceiling at step~1 ($R(1) \in [0.75, 0.94]$), leaving a local, stack-conditioned taxonomy of endpoint ceilings separated by initial instruction-following capability rather than $\log_{10} N$; and (iv) a case study of the Nemotron-3-Super-120B-A12B (LatentMoE, $12$B active) collapse as a
 distinct format-starvation phase rather than trend noise. We read single-seed frontier-API runs as

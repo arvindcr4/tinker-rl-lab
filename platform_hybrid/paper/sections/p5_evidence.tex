@@ -28,10 +28,13 @@ $0.050$ on TRL: a $17\times$ ratio. The runs are not a backend comparison:
     the TRL run trained the Instruct \texttt{Qwen3-8B}. A run of Qwen3-8B (Instruct) on the same
     Tinker harness
     (\texttt{wave6\_w6\_base\_r32\_t0.8\_b2} in \texttt{master\_results.json})
-    reaches $0.338$. The checkpoint switch alone therefore moves reward by
+    reaches $0.338$. Using the unrounded last-10 values ($0.85625$, $0.3375$,
+    $0.05$), the checkpoint switch alone moves reward by
     $-0.519$, i.e.\ $64\%$ of the $-0.806$ gap; the residual $-0.288$
     (Tinker vs.\ TRL, both on Qwen3-8B (Instruct)) is the most that could be
-    attributed to ``backend''.
+    attributed to ``backend''. The Instruct reference run is a sampling
+    temperature $0.8$ ablation and the Base run's temperature is not
+    recorded, so the $64\%$ split is itself approximate.
   \item \textbf{Everything else that still differs.} Reward function and
     answer parser; system prompt and chat template; decoding (temperature,
     maximum completion length); batch shape ($2$ prompts $\times 8$ on Tinker
@@ -67,43 +70,63 @@ seeds; the open-trainer $0.00$ holds by construction; and the closed-stack
 sampling, i.e.\ not DAPO, and its registry entry should not carry the DAPO
 label. The defensible content is \emph{within-stack}: switching
 GRPO$\to$``DAPO'' moved mean ZVF from $0.25$ to $0.00$ on the open trainer
-and from $0.567$ to $0.578$ on the closed stack. The lesson for reporting is
+(Qwen2.5-0.5B-Instruct, synthetic two-digit addition, 2 seeds;
+\texttt{zvf-program/colab-experiments/results/e3\_open\_audit.json}) and from
+$0.567$ to $0.578$ on the closed stack (Exhibit~3, 3 seeds). The lesson for reporting is
 that a label must be accompanied by the mechanism actually implemented
 (here: whether dynamic sampling ran).
 
 \subsection{Exhibit 3: Four Labels on One Fixed Stack}
 \label{sec:p5-exhibit-h2h}
-In a 12-cell head-to-head on the Tinker stack (Qwen3.5-4B, GSM8K, three seeds
-per arm, 15 steps, batch 2, $G{=}8$; Stratum B), mean last-10 training reward
-spans $0.034$ ($0.710$--$0.744$; \tableref{tab:p5-h2h}). An earlier revision
-called this ``within noise''. The data do not show that. Treating arms as
-independent, the pooled within-arm seed SD is $0.105$ and two one-sided
-equivalence tests (TOST, $\alpha=0.05$) fail for every pair at margins
-$\pm0.05$, $\pm0.10$, and $\pm0.15$; equivalence of all six pairs is reached
-only at $\pm0.19$, wider than any effect of interest. Because each seed fixes
-the prompt stream, the appropriate analysis blocks on seed: seed accounts for
-$96\%$ of the sum of squares and arm for $2.5\%$ (arm $F_{3,6}=2.62$,
-$p=0.15$); the residual SD is $0.017$; and two seed-paired contrasts exclude
-zero (dapo$-$gspo $+0.033$, 90\% CI $[+0.006,+0.060]$; drgrpo$-$gspo
-$+0.031$, $[+0.004,+0.058]$). All-pairs equivalence under the block model
-holds only at $\pm0.060$. With 3 seeds and 15 steps, label differences of a
-few points can neither be excluded nor confirmed. Mean ZVF ($0.500$--$0.578$)
-is far from the $0.00$ that true dynamic sampling yields, consistent with
-the ``dapo'' arm not running dynamic sampling (Exhibit~2).
+In a 12-cell head-to-head on the Tinker stack (Qwen3.5-4B, GSM8K
+medium-difficulty bucket, three seeds per arm (42, 123, 456), 15 steps, batch
+2, $G{=}8$, LoRA rank 16, lr $10^{-5}$, temperature $0.8$; Stratum B), mean
+last-10 training reward spans $0.033$ ($0.710$--$0.744$;
+\tableref{tab:p5-h2h}). The four arms are \emph{surrogates} on one
+REINFORCE-style loop with group-standardized advantages and no importance
+ratio: ``dapo'' clips the advantage to $[-2,3]$, ``gspo'' averages rather than
+sums response log-probabilities, and ``drgrpo'' drops the standard-deviation
+normalization (\texttt{experiments/tinker-runs/cell\_runner.py}); none is the
+published algorithm, which is itself an instance of the label problem. An
+earlier revision called the spread ``within noise''. The data do not show
+that. With the seed run as the unit and arms treated as independent, the
+within-arm seed SD pooled over all four arms is $0.105$ (df $=8$); two
+one-sided equivalence tests (TOST, $\alpha=0.05$) fail for every pair at
+margins $\pm0.05$, $\pm0.10$, and $\pm0.15$, and all six pairs are equivalent
+only at margins of at least $\pm0.193$ ($\pm0.224$ with pair-specific variances,
+df $=4$), wider than any effect of interest. Because each seed fixes the prompt
+stream, the appropriate analysis blocks on seed (two-way additive model, arm
+df $=3$, seed df $=2$, residual df $=6$): seed accounts for $96\%$ of the sum
+of squares and arm for $2.5\%$ (arm $F_{3,6}=2.62$, $p=0.15$); the residual
+SD is $0.017$. Using unrounded arm means, two seed-paired contrasts have 90\%
+confidence intervals (the one-sided $\alpha=0.05$ TOST bounds) that exclude
+zero: dapo$-$gspo $+0.033$, $[+0.006,+0.060]$; drgrpo$-$gspo $+0.031$,
+$[+0.004,+0.058]$. These intervals are not adjusted for the six pairwise
+comparisons, and both two-sided 95\% intervals include zero
+($[-0.001,+0.067]$ and $[-0.003,+0.065]$). All-pairs equivalence under the
+block model holds only at $\pm0.060$. With 3 seeds and 15 steps, label
+differences of a few points can neither be excluded nor confirmed. Mean
+per-step ZVF ($0.500$--$0.578$) is far from the $0.00$ that true dynamic
+sampling yields, consistent with the ``dapo'' arm not running dynamic sampling
+(Exhibit~2). Raw runs:
+\texttt{experiments/tinker-runs/results/week\_h2h/h2h2\_*.json} (W\&B project
+\texttt{zvf-training}); statistics:
+\texttt{tools/review\_ledger/P5\_minreport\_exhibit3.py}.
 
 \begin{table}[t]
 \centering
 \caption{12-cell head-to-head on one fixed stack (Tinker; Qwen3.5-4B; GSM8K;
-3 seeds per arm; 15 steps; internal program records, June 2026). Differences
-are \emph{not} shown to be within noise: see text for unpaired TOST and
-seed-blocked contrasts.}
+3 seeds per arm; 15 steps; surrogate loss arms; internal program records, June
+2026). Values are means over the three seed runs; the spread computed from
+unrounded means is $0.033$. Differences are \emph{not} shown to be within
+noise: see text for unpaired TOST and seed-blocked contrasts.}
 \label{tab:p5-h2h}
 \small
 \begin{tabular}{@{}lcc@{}}
 \toprule
 Arm (label as configured) & Mean last-10 reward & Mean ZVF \\
 \midrule
-dapo (advantage-clip variant; no dynamic sampling) & 0.744 & 0.578 \\
+dapo (advantage clip $[-2,3]$; no dynamic sampling) & 0.744 & 0.578 \\
 drgrpo                           & 0.742 & 0.500 \\
 grpo                             & 0.723 & 0.567 \\
 gspo                             & 0.710 & 0.511 \\

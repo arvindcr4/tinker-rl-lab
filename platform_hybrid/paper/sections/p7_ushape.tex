@@ -9,9 +9,15 @@ success probabilities $p_i$ and conditionally i.i.d.\ rollouts, it gives
 $\E[\mathrm{ZVF}]=\E_i[h_G(p_i)]\ge h_G(\bar p)$ (convexity of $h_G$), so batch
 ZVF is high whenever most prompts sit near $p_i\approx0$ \emph{or}
 $p_i\approx1$, and its excess over $h_G(\bar p)$ measures the
-\emph{dispersion} of prompt difficulty. On the 600 GSM8K groups (three seeds,
-$G{=}8$), observed ZVF is $0.158$, $h_8(\bar p)=0.054$, and a beta-binomial
-fit with intra-prompt correlation $0.16$ predicts $0.170$. ZVF is the
+\emph{dispersion} of prompt difficulty. On the 600 GSM8K groups of substrate
+S3 (Qwen3-8B, three seeds, $G{=}8$, $\bar p=0.694$), observed ZVF is $0.158$
+and $h_8(\bar p)=0.054$. A beta-binomial maximum-likelihood fit to the
+per-group success counts gives $\mathrm{Beta}(\alpha{=}3.61,\beta{=}1.62)$,
+i.e.\ intra-prompt correlation $\rho=1/(\alpha+\beta+1)=0.16$, and predicts
+$\Pr(K\in\{0,8\})=0.170$
+(\texttt{analysis\_publication\_fixes/p2\_delta\_artifact.py}). The fit uses the
+same groups whose ZVF it predicts, so it is a dispersion summary, not an
+out-of-sample test; the out-of-sample test is S4 below. ZVF is the
 Advantage Collapse Rate of \citet{he2026advantage} up to aggregation
 granularity, and the Jensen excess over the Bernoulli prediction was proved by
 \citet{nie2026gradstarvation}; we claim neither, only the use of ZVF as a
@@ -31,25 +37,32 @@ showed seven of these rows and omitted Llama-3.1-8B-Instruct and gpt-oss-20b.
 \centering
 \small
 \caption{Per-model ZVF in the 368-run \texttt{zvf-audit} corpus, sorted by
-mean \emph{final-step} training reward. $n$ = runs with a summary;
-$h_G(p_{\mathrm{step}})$ and excess are step-level means (excess $=$ step ZVF
-$-\,h_G$(step reward)). Batch, $G$, and step budget differ by model (last
-column), so the rows are \emph{not} a controlled comparison. Script:
-\texttt{analysis\_publication\_fixes/zvf\_confound.py}.}
+mean \emph{final-step} training reward. Run-level columns ($n$ = runs with a
+summary; final reward; run ZVF) weight every run equally. Step-level columns
+($n_{\mathrm{step}}$ step rows; step ZVF; $h_G(p_{\mathrm{step}})$; excess $=$
+step ZVF $-\,h_G$(step reward)) weight runs by their step count, so
+run ZVF $-\,h_G$ need not equal the excess; step ZVF $-\,h_G$ does, up to
+rounding. Batch, $G$, and step budget differ by model (last column), so the
+rows are \emph{not} a controlled comparison. Script:
+\texttt{analysis\_publication\_fixes/zvf\_confound.py}; values from
+\texttt{zvf\_confound\_results.json}.}
 \label{tab:p7-ushape}
-\begin{tabular}{lrccccl}
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lrccrcccl}
 \toprule
-Model & $n$ & Final reward & ZVF & $h_G(p_{\mathrm{step}})$ & Excess & Config (batch; steps) \\
+ & \multicolumn{3}{c}{run level} & \multicolumn{4}{c}{step level} & \\
+\cmidrule(lr){2-4}\cmidrule(lr){5-8}
+Model & $n$ & Final rew. & ZVF & $n_{\mathrm{step}}$ & ZVF & $h_G(p_{\mathrm{step}})$ & Excess & Batch; steps \\
 \midrule
-Llama-3.2-1B             & 101 & 0.01 & 0.97 & 0.97 & 0.00 & 8; 3--5 \\
-Llama-3.2-3B             & 106 & 0.01 & 0.95 & 0.94 & 0.00 & 6--32; 2--12 \\
-Qwen3-32B                &   6 & 0.35 & 0.25 & 0.10 & 0.12 & 6--32; 2--12 \\
-Qwen3-8B                 &   6 & 0.50 & 0.29 & 0.09 & 0.19 & 6--32; 2--12 \\
-Nemotron-3-Nano-30B      &   6 & 0.77 & 0.50 & 0.32 & 0.20 & 6--32; 2--12 \\
-Llama-3.1-8B-Instruct    &   6 & 0.83 & 0.65 & 0.48 & 0.19 & 6--32; 2--12 \\
-Qwen3-4B-Instruct-2507   & 107 & 0.86 & 0.87 & 0.47 & 0.41 & 6--32; 2--12 \\
-gpt-oss-20b              &   6 & 0.90 & 0.79 & 0.49 & 0.32 & 6--32; 2--12 \\
-Qwen3-30B-A3B-Instruct   &   6 & 0.95 & 0.96 & 0.64 & 0.31 & 6--32; 2--12 \\
+Llama-3.2-1B             & 101 & 0.01 & 0.97 & 504 & 0.97 & 0.97 & 0.00 & 8; 3--5 \\
+Llama-3.2-3B             & 106 & 0.01 & 0.95 & 563 & 0.94 & 0.94 & 0.00 & 6--32; 2--12 \\
+Qwen3-32B                &   6 & 0.35 & 0.25 &  62 & 0.23 & 0.10 & 0.12 & 6--32; 2--12 \\
+Qwen3-8B                 &   6 & 0.50 & 0.29 &  62 & 0.28 & 0.09 & 0.19 & 6--32; 2--12 \\
+Nemotron-3-Nano-30B      &   6 & 0.77 & 0.50 &  62 & 0.52 & 0.32 & 0.20 & 6--32; 2--12 \\
+Llama-3.1-8B-Instruct    &   6 & 0.83 & 0.65 &  62 & 0.67 & 0.48 & 0.19 & 6--32; 2--12 \\
+Qwen3-4B-Instruct-2507   & 107 & 0.86 & 0.87 & 565 & 0.87 & 0.47 & 0.41 & 6--32; 2--12 \\
+gpt-oss-20b              &   6 & 0.90 & 0.79 &  62 & 0.81 & 0.49 & 0.32 & 6--32; 2--12 \\
+Qwen3-30B-A3B-Instruct-2507 & 6 & 0.95 & 0.96 & 62 & 0.95 & 0.64 & 0.31 & 6--32; 2--12 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -88,35 +101,57 @@ follows from the symmetry $h_G(p)=h_G(1-p)$ and does not need the
 population U to be causal: \emph{ZVF is a usable alarm but a poor steering
 signal.}
 
-\paragraph{Prospective ZVF prediction test.}
-We validated the closed-form population predictor $\widehat{\mathrm{ZVF}}=\frac1n\sum_i h_G(\hat p_i)$ on an independent 200-prompt GSM8K evaluation using Qwen2.5-1.5B-Instruct ($n_{\mathrm{ref}}=32$ reference samples per prompt, mean pass rate $0.568$, 600 groups per $G \in \{4,8,16\}$; artifact \texttt{zvf\_novelty\_result.json}).
-At $G{=}4$, observed batch ZVF is $0.362$ (95\% CI $[0.308, 0.415]$); the finite-pool corrected prediction is $0.364$ ($[0.328, 0.401]$), yielding a residual of $-0.002$ ($[-0.045, 0.042]$), whereas the homogeneous predictor $h_4(\bar p)=0.139$ severely underpredicts by $0.223$.
+\paragraph{Out-of-sample ZVF prediction test (S4).}
+This test estimates each prompt's difficulty from rollouts that are
+\emph{not} the groups being scored, which the same-group checks above cannot do.
+For 200 GSM8K training-split prompts, Qwen2.5-1.5B-Instruct (no training) drew
+$n_{\mathrm{ref}}=32$ reference samples per prompt ($c_i$ correct; mean pass
+rate $0.568$) and then, with different sampling seeds, three fresh groups per
+prompt at each $G\in\{4,8,16\}$ (600 groups per $G$). The predictor is
+$\widehat{\mathrm{ZVF}}_G=\tfrac1n\sum_i\bigl[\binom{c_i}{G}+\binom{32-c_i}{G}\bigr]/\binom{32}{G}$,
+which is unbiased for $\tfrac1n\sum_i h_G(p_i)$ (the plug-in
+$\tfrac1n\sum_i h_G(c_i/32)$ is biased upward by convexity, and its point
+estimate exceeds observed ZVF at every $G$). Intervals are prompt-level cluster bootstraps (10{,}000 draws;
+\texttt{zvf\_analyze.py}, output \texttt{zvf\_novelty\_result.json}; re-running
+the script on \texttt{zvf\_raw.json} reproduces every value).
+At $G{=}4$, observed batch ZVF is $0.362$ (95\% CI $[0.308, 0.415]$); the
+prediction is $0.364$ ($[0.328, 0.401]$), a residual of $-0.002$
+($[-0.045, 0.042]$), whereas the homogeneous predictor $h_4(\bar p)=0.139$
+underpredicts by $0.223$.
 At $G{=}8$, observed ZVF is $0.158$ ($[0.118, 0.202]$) vs.\ predicted $0.186$ ($[0.149, 0.226]$) and homogeneous $h_8(\bar p)=0.012$ (residual $-0.028$, $[-0.059, 0.004]$).
 At $G{=}16$, observed ZVF is $0.092$ ($[0.057, 0.130]$) vs.\ predicted $0.100$ ($[0.067, 0.137]$) and homogeneous $h_{16}(\bar p)=0.0001$.
-Across all three group sizes, the 95\% CIs on observed minus predicted span zero, confirming Theorem~1's population aggregation and demonstrating that the excess over $h_G(\bar p)$ quantitatively captures prompt-difficulty dispersion ($r = 0.581 \to 0.694 \to 0.804$ at prompt level).
+At $G{=}16$ the residual is $-0.009$ ($[-0.031, 0.015]$). At all three group
+sizes the 95\% CI on observed minus predicted includes zero (at $G{=}8$ only
+narrowly), so the data are consistent with Theorem~1's population aggregation;
+this is a failure to reject, not a demonstrated equivalence, and it covers one
+model and one prompt set. The prompt-level correlation between observed and
+predicted ZVF is $0.58$, $0.69$, and $0.80$ at $G=4,8,16$.
 
 \subsection{PCD: the pairwise-contrast density}
 \label{sec:p7-pcd}
 The disambiguating statistic falls out of the same model. Define the
-\emph{pairwise-contrast density} as the expected within-group reward
-variance,
+\emph{pairwise-contrast density} as the batch mean of the within-group
+population (divide-by-$G$) reward variance,
 \begin{equation}
-  \mathrm{PCD} \;=\; \E_x\bigl[\hat p_x(1 - \hat p_x)\bigr],
+  \mathrm{PCD} \;=\; \E_x\Bigl[\tfrac1G\textstyle\sum_{i=1}^{G}(R_{x,i}-\bar R_x)^2\Bigr],
   \qquad
   \E[\mathrm{PCD}] \;=\; \frac{G-1}{G}\,\E_x\bigl[p_x(1-p_x)\bigr],
   \label{eq:p7-pcd}
 \end{equation}
-where the identity (Appendix~\ref{sec:p7-appendix}) follows from
+where for binary rewards the inner term equals $\hat p_x(1-\hat p_x)$ (an
+identity that fails for shaped or jittered rewards) and the expectation
+(Appendix~\ref{sec:p7-appendix}) follows from
 $\E[\hat p(1-\hat p)] = (1 - \nicefrac{1}{G})\,p(1-p)$ for a binomial
 sample. PCD measures the \emph{magnitude} of within-group contrast rather
 than its mere existence, and it is proportional to the very $p(1-p)$ factor
 that T3 ties to gradient mass: PCD is, up to the $\frac{G-1}{G}$ factor, the
-average usable contrast per prompt. On the binned GSM8K reward tensors, PCD
-traces the parabola the theory predicts (peak $0.25$ at $\hat p_x = 0.5$,
-falling symmetrically to $0$ at the endpoints) while the ZVF indicator is a
-flat $0$ everywhere in the interior and jumps to $1$ only at the endpoints
-(\texttt{experiments/results/pcd\_vs\_zvf\_shape.tsv}): ZVF sees only the
-cliff edges, PCD sees the slope.
+average usable contrast per prompt. Binned by the same group's $\hat p_x$, PCD is the parabola
+$\hat p_x(1-\hat p_x)$ (peak $0.25$ at $\hat p_x = 0.5$, zero at the
+endpoints) and the ZVF indicator is $0$ in every interior bin and $1$ at the
+endpoints (\texttt{experiments/results/pcd\_vs\_zvf\_shape.tsv}). Both
+profiles are algebraic identities for any binary group, whatever the
+data-generating process, so they illustrate the definitions rather than test
+the model: ZVF registers only the cliff edges, PCD the slope.
 
 \subsection{The micro-jitter falsification}
 \label{sec:p7-jitter}
@@ -127,9 +162,9 @@ The sharpest separation between the two statistics is an intervention, not a
 correlation. Because ZVF is defined by \emph{exact} reward ties, adding
 i.i.d.\ jitter $\eps \sim \mathrm{U}(0, 10^{-4})$ to every reward makes ties
 measure-zero and drives measured ZVF to $0$, while shifting the expected
-within-group variance by only $\mathrm{Var}(\eps) \leq 10^{-9}$
-(Appendix~\ref{sec:p7-appendix}). Running this on $600$ prompt-groups from
-the GSM8K reward tensors (\texttt{scripts/pcd\_vs\_zvf.py}): batch ZVF
+within-group (divide-by-$G$) variance by only
+$\frac{G-1}{G}\mathrm{Var}(\eps) < 10^{-9}$ (Appendix~\ref{sec:p7-appendix}).
+Running this on the $600$ GSM8K groups of S3 (\texttt{scripts/pcd\_vs\_zvf.py}): batch ZVF
 collapses $0.158 \to 0.000$, while PCD is unchanged at the reported
 precision ($0.1538$ before and after; observed shift $< 10^{-6}$). Any
 pipeline that emits a tiny dense sub-reward---a length penalty, a format

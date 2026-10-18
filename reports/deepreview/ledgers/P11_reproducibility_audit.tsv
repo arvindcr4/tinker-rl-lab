@@ -1,0 +1,25 @@
+location	claim_text	value	source_artifact	generator_script	status
+Front matter	current admission status	PREREGISTERED-NOT-RUN; 0/40 validated; 163 errors (4x40 missing run_config task/batch_prompts/arm/seed + 3 GRPO treatment_changes)	zvf-program/audit/results/audit.json	zvf-program/audit/aggregate_audit.py	verified
+Sec6 prose	per-seed held-out scores, all 5 arms x 8 seeds	as listed (GRPO mean 0.633)	zvf-program/audit/results/full/<arm>-seed-<s>.json; W&B summaries	tools/review_ledger/P11_reproducibility_audit_wandb_crosscheck.py	verified (0/40 W&B mismatches)
+Table 1	paired delta DAPO/GSPO/DrGRPO/AERO	+0.00100/+0.00500/-0.00200/-0.00075	results/full/*.json	tools/review_ledger/P11_reproducibility_audit_recompute.py	recomputed
+Table 1	95% bootstrap CI (B=10000, seed 20260714)	DAPO [-0.00450,+0.00675]; GSPO [-0.00125,+0.01200]; DrGRPO [-0.00950,+0.00725]; AERO [-0.00825,+0.00675]	results/full/*.json	tools/review_ledger/P11_reproducibility_audit_recompute.py	recomputed
+Table 1	90% bootstrap CI (added)	DAPO [-0.00350,+0.00575]; GSPO [-0.00025,+0.01075]; DrGRPO [-0.00850,+0.00550]; AERO [-0.00700,+0.00550]	results/full/*.json	tools/review_ledger/P11_reproducibility_audit_recompute.py	recomputed
+Table 1	exact MDE80 (nu=7)	0.01012/0.01185/0.01483/0.01319	results/full/*.json	tools/review_ledger/P11_reproducibility_audit_recompute.py	recomputed
+Table 1	raw paired-t p; BH rejections	0.756/0.210/0.673/0.858; none	results/full/*.json	tools/review_ledger/P11_reproducibility_audit_recompute.py	recomputed
+Sec6	paired-t_7 95% CIs (added)	DAPO [-0.0063,+0.0083]; GSPO [-0.0036,+0.0136]; DrGRPO [-0.0127,+0.0087]; AERO [-0.0103,+0.0088]	results/full/*.json	tools/review_ledger/P11_reproducibility_audit_recompute.py	recomputed
+Sec6	margin sensitivity (added)	m=0.005 all inconclusive; m=0.02 all four meet disappears rule (secondary)	results/full/*.json	tools/review_ledger/P11_reproducibility_audit_recompute.py	recomputed
+Sec4	normal-multiplier DAPO MDE (pre-correction)	~0.0087 (2.8016 x 0.0030938)	results/full/*.json	arithmetic from recompute SE	recomputed
+Table (ii)	last-10 reward GRPO/DAPO/GSPO/DrGRPO/AERO	0.670/0.547/0.678/0.680/0.685	results/full/*.json	tools/review_ledger/P11_reproducibility_audit_recompute.py	recomputed
+Table (ii)	mean whole-run ZVF (label corrected from 'late-training')	0.693/0.000/0.693/0.711/0.700	results/full/*.json; e1_grpo_confirmatory.py line 1076 (mean over all steps)	tools/review_ledger/P11_reproducibility_audit_recompute.py	recomputed
+Table (ii)	rollouts	480/1734/480/480/431	results/full/*.json	tools/review_ledger/P11_reproducibility_audit_recompute.py	recomputed
+Table (ii)	wall clock h	3.11/4.47/3.20/2.74/4.05	results/full/*.json	tools/review_ledger/P11_reproducibility_audit_recompute.py	recomputed
+Table (ii)	collapse rate	0 all arms	results/full/*.json	tools/review_ledger/P11_reproducibility_audit_recompute.py	verified
+Sec8 Limits	replayed units	grpo 11/89/107, dapo 131, gspo 11/71	zvf-program/audit/results/full/legacy-unhashed-2026-07-19/README.md	read	verified
+Sec8 Limits	pre-replay sensitivity (GRPO s11 0.646)	DAPO delta +0.00150, MDE 0.01002 (>0.01; reviewer claimed 0.00994)	legacy-unhashed-2026-07-19/grpo-seed-11.json + results/full	tools/review_ledger/P11_reproducibility_audit_recompute.py	recomputed
+Sec6 recovery log	GSPO s71 319/500, AERO s37 318/500, W&B/HF ids	0.638, 0.636; 10ef44ab/c0c0b968..., 7547ba19/613d3f70...	results/full/gspo-seed-71.json, aero-seed-37.json	read	verified
+Sec2	shared-stack hyperparameters (added)	G=4, 4 prompts/step, LoRA r16 a32 d0 all-linear, lr 1e-6 linear, wd 0, clip 1.0, beta 0, eps 0.2/0.28, T=1 top-p 1, thinking on	zvf-program/colab-experiments/e1_grpo_confirmatory.py lines 969-1023; results/full/manifests/*.json treatment fields	read	verified (runner source; manifests bind via stack fingerprint only)
+Sec2	informative groups per run	~37 (120 x (1-0.693))	derived	arithmetic	recomputed
+Sec2 Arms	Dr.GRPO arm levers (corrected)	scale_rewards=none only; loss_type=grpo	results/full/manifests/drgrpo-seed-*.json	read	recomputed
+Sec7 Table 2	pilot values are two-seed means of post-pre greedy held-out change on 20 prompts	0.500/0.575/0.550/0.575; ZVF .250/.267/.000/.233; rollouts 120/120/174/186	zvf-program/colab-experiments/results/e3_open_audit.json	zvf-program/colab-experiments/e3_open_audit.py	verified (interpretation corrected)
+Sec8 panel	er2b last-10 reward / ZVF	0.9000/0.9625/0.3219/0.3891; .975/.975/.150/.100	submission/demo/defense_fallback/data/raw/er2b_*.json (sha1-identical to platform_hybrid/experiments/tinker-runs/results/er2b_*.json)	read step_log	verified
+Sec8 Limits	held-out level for scope statement	all arms ~0.63	results/full/*.json	tools/review_ledger/P11_reproducibility_audit_recompute.py	verified

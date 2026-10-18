@@ -1,0 +1,41 @@
+aero-seed-107.json 853facf3 finished {'record': 0.63, 'wandb': 0.63, 'match': True, 'keys': ['heldout_n', 'heldout_score', 'rollouts', 'train/aero/active_rollouts', 'train/aero/generated_rollouts', 'train/aero/rejected_rollouts']}
+aero-seed-11.json 0d4c16f9 finished {'record': 0.63, 'wandb': 0.63, 'match': True, 'keys': ['heldout_n', 'heldout_score', 'rollouts', 'train/aero/active_rollouts', 'train/aero/generated_rollouts', 'train/aero/rejected_rollouts']}
+aero-seed-131.json bdb898f5 finished {'record': 0.64, 'wandb': 0.64, 'match': True, 'keys': ['heldout_n', 'heldout_score', 'rollouts', 'train/aero/active_rollouts', 'train/aero/generated_rollouts', 'train/aero/rejected_rollouts']}
+aero-seed-23.json 3573a421 finished {'record': 0.628, 'wandb': 0.628, 'match': True, 'keys': ['heldout_n', 'heldout_score', 'rollouts', 'train/aero/active_rollouts', 'train/aero/generated_rollouts', 'train/aero/rejected_rollouts']}
+aero-seed-37.json 7547ba19 finished {'record': 0.636, 'wandb': 0.636, 'match': True, 'keys': ['heldout_n', 'heldout_score', 'rollouts', 'train/aero/active_rollouts', 'train/aero/generated_rollouts', 'train/aero/rejected_rollouts']}
+aero-seed-53.json bd8d23f9 finished {'record': 0.632, 'wandb': 0.632, 'match': True, 'keys': ['heldout_n', 'heldout_score', 'rollouts', 'train/aero/active_rollouts', 'train/aero/generated_rollouts', 'train/aero/rejected_rollouts']}
+aero-seed-71.json c73138a3 finished {'record': 0.632, 'wandb': 0.632, 'match': True, 'keys': ['heldout_n', 'heldout_score', 'rollouts', 'train/aero/active_rollouts', 'train/aero/generated_rollouts', 'train/aero/rejected_rollouts']}
+aero-seed-89.json 201279c6 finished {'record': 0.63, 'wandb': 0.63, 'match': True, 'keys': ['heldout_n', 'heldout_score', 'rollouts', 'train/aero/active_rollouts', 'train/aero/generated_rollouts', 'train/aero/rejected_rollouts']}
+dapo-seed-107.json f56135ec finished {'record': 0.634, 'wandb': 0.634, 'match': True, 'keys': ['heldout_n', 'heldout_score', 'rollouts', 'train/dapo/rollouts_cumulative']}
+dapo-seed-11.json e629158e finished {'record': 0.648, 'wandb': 0.648, 'match': True, 'keys': ['heldout_n', 'heldout_score', 'rollouts', 'train/dapo/rollouts_cumulative']}
+dapo-seed-131.json 95076dd5 finished {'record': 0.632, 'wandb': 0.632, 'match': True, 'keys': ['heldout_n', 'heldout_score', 'rollouts', 'train/dapo/rollouts_cumulative']}
+dapo-seed-23.json c0d53921 finished {'record': 0.624, 'wandb': 0.624, 'match': True, 'keys': ['heldout_n', 'heldout_score', 'rollouts', 'train/dapo/rollouts_cumulative']}
+dapo-seed-37.json 605e7589 finished {'record': 0.628, 'wandb': 0.628, 'match': True, 'keys': ['heldout_n', 'heldout_score', 'rollouts', 'train/dapo/rollouts_cumulative']}
+dapo-seed-53.json a4c73e0e finished {'record': 0.636, 'wandb': 0.636, 'match': True, 'keys': ['heldout_n', 'heldout_score', 'rollouts', 'train/dapo/rollouts_cumulative']}
+dapo-seed-71.json 98b3f510 finished {'record': 0.634, 'wandb': 0.634, 'match': True, 'keys': ['heldout_n', 'heldout_score', 'rollouts', 'train/dapo/rollouts_cumulative']}
+dapo-seed-89.json c0e809d5 finished {'record': 0.636, 'wandb': 0.636, 'match': True, 'keys': ['heldout_n', 'heldout_score', 'rollouts', 'train/dapo/rollouts_cumulative']}
+drgrpo-seed-107.json e033d448 finished {'record': 0.628, 'wandb': 0.628, 'match': True, 'keys': ['heldout_n', 'heldout_score', 'rollouts']}
+drgrpo-seed-11.json 52417d14 finished {'record': 0.642, 'wandb': 0.642, 'match': True, 'keys': ['heldout_n', 'heldout_score', 'rollouts']}
+drgrpo-seed-131.json 31ef6f34 finished {'record': 0.646, 'wandb': 0.646, 'match': True, 'keys': ['heldout_n', 'heldout_score', 'rollouts']}
+drgrpo-seed-23.json 63941052 finished {'record': 0.626, 'wandb': 0.626, 'match': True, 'keys': ['heldout_n', 'heldout_score', 'rollouts']}
+drgrpo-seed-37.json 5610e4f2 finished {'record': 0.622, 'wandb': 0.622, 'match': True, 'keys': ['heldout_n', 'heldout_score', 'rollouts']}
+drgrpo-seed-53.json 1215e9cb finished {'record': 0.636, 'wandb': 0.636, 'match': True, 'keys': ['heldout_n', 'heldout_score', 'rollouts']}
+drgrpo-seed-71.json 918b9a8a finished {'record': 0.62, 'wandb': 0.62, 'match': True, 'keys': ['heldout_n', 'heldout_score', 'rollouts']}
+drgrpo-seed-89.json faea790b finished {'record': 0.628, 'wandb': 0.628, 'match': True, 'keys': ['heldout_n', 'heldout_score', 'rollouts']}
+grpo-seed-107.json 5f0a7bf0 finished {'record': 0.634, 'wandb': 0.634, 'match': True, 'keys': ['heldout_n', 'heldout_score', 'rollouts']}
+grpo-seed-11.json 78393a67 finished {'record': 0.65, 'wandb': 0.65, 'match': True, 'keys': ['heldout_n', 'heldout_score', 'rollouts']}
+grpo-seed-131.json 6dd77cf1 finished {'record': 0.622, 'wandb': 0.622, 'match': True, 'keys': ['heldout_n', 'heldout_score', 'rollouts']}
+grpo-seed-23.json 0057b069 finished {'record': 0.636, 'wandb': 0.636, 'match': True, 'keys': ['heldout_n', 'heldout_score', 'rollouts']}
+grpo-seed-37.json 54592080 finished {'record': 0.634, 'wandb': 0.634, 'match': True, 'keys': ['heldout_n', 'heldout_score', 'rollouts']}
+grpo-seed-53.json c13bbc2b finished {'record': 0.634, 'wandb': 0.634, 'match': True, 'keys': ['heldout_n', 'heldout_score', 'rollouts']}
+grpo-seed-71.json f6d81075 finished {'record': 0.634, 'wandb': 0.634, 'match': True, 'keys': ['heldout_n', 'heldout_score', 'rollouts']}
+grpo-seed-89.json 2d3a2e89 finished {'record': 0.62, 'wandb': 0.62, 'match': True, 'keys': ['heldout_n', 'heldout_score', 'rollouts']}
+gspo-seed-107.json 879174ca finished {'record': 0.64, 'wandb': 0.64, 'match': True, 'keys': ['heldout_n', 'heldout_score', 'rollouts']}
+gspo-seed-11.json 5f4fc0d3 finished {'record': 0.64, 'wandb': 0.64, 'match': True, 'keys': ['heldout_n', 'heldout_score', 'rollouts']}
+gspo-seed-131.json 726607de finished {'record': 0.628, 'wandb': 0.628, 'match': True, 'keys': ['heldout_n', 'heldout_score', 'rollouts']}
+gspo-seed-23.json 1c16ac07 finished {'record': 0.638, 'wandb': 0.638, 'match': True, 'keys': ['heldout_n', 'heldout_score', 'rollouts']}
+gspo-seed-37.json 60e5b791 finished {'record': 0.642, 'wandb': 0.642, 'match': True, 'keys': ['heldout_n', 'heldout_score', 'rollouts']}
+gspo-seed-53.json ada5a2c2 finished {'record': 0.632, 'wandb': 0.632, 'match': True, 'keys': ['heldout_n', 'heldout_score', 'rollouts']}
+gspo-seed-71.json 10ef44ab finished {'record': 0.638, 'wandb': 0.638, 'match': True, 'keys': ['heldout_n', 'heldout_score', 'rollouts']}
+gspo-seed-89.json 3ec7b7f9 finished {'record': 0.646, 'wandb': 0.646, 'match': True, 'keys': ['heldout_n', 'heldout_score', 'rollouts']}
+mismatches: 0 of 40

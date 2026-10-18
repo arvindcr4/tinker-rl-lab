@@ -49,8 +49,8 @@ response-length bias and a question-difficulty amplification bias by using a
 constant loss normaliser and dropping the standard-deviation denominator in the
 advantage. MC-GRPO (median-centered advantage)~\cite{mcgrpo2025} replaces the
 group-mean baseline in the advantage with the group median to stabilise
-group-relative normalisation under small rollout counts. G$^{2}$RPO~\cite{hu2026openvlthinker} forces per-prompt
-advantages to match $\mathcal{N}(0,1)$ to fix reward-topology variance in
+group-relative normalisation under small rollout counts. G$^{2}$RPO~\cite{hu2026openvlthinker} forces per-task
+advantage distributions to match $\mathcal{N}(0,1)$ to fix reward-topology variance in
 multimodal settings. Wu et al.~\cite{wu2025grpodpo} relate GRPO and DPO through contrastive-gradient
 representations, with differences in token/group weighting and regularization.
 Group size can change the expected update, not only Monte Carlo variance.
@@ -113,9 +113,10 @@ scaffolding hints when learning stagnates, boosting AIME~2024 by $44.3\%$
 relative. MO-GRPO~\cite{ichihara2025mogrpo} addresses vanilla GRPO's
 collapse to a single reward component under multiple objectives via
 variance-based reward re-weighting. Finally,
-SSPO~\cite{yang2025sspo} operates at sentence granularity to balance the
-stability of GSPO against the expressiveness of token-level GRPO, improving
-by $3.56$ points on math benchmarks. Taken together, these results explain at
+SSPO~\cite{yang2025sspo} computes importance ratios at the subsentence level
+to balance token-level GRPO against sequence-level GSPO, reporting an average
+of $46.72$ versus $43.01$ (GRPO) and $44.42$ (GSPO) over five math datasets
+on Qwen2.5-1.5B-Math. Taken together, these results explain at
 a theoretical level why implementation details at the granularity of the
 importance ratio have such large empirical effects --- a motivation for auditing objective scope and cohort identity; this audit
 does not identify implementation defaults as the cause of a measured gap.
@@ -126,14 +127,15 @@ does not identify implementation defaults as the cause of a measured gap.
 
 The shift from outcome rewards to \emph{process} supervision has reshaped
 reasoning RL. Let's-Verify-Step-by-Step~\cite{lightman2023prm} showed
-that step-level PRMs dramatically outperform outcome reward models on GSM8K
-and MATH. Math-Shepherd~\cite{wang2024mathshepherd} derives process rewards
+that step-level PRMs outperform outcome reward models on MATH, following the
+GSM8K process- versus outcome-feedback comparison of
+Uesato et al.~\cite{uesato2022prm800k}. Math-Shepherd~\cite{wang2024mathshepherd} derives process rewards
 from auto-generated process annotations, avoiding costly human labels.
-PRM800K~\cite{uesato2022prm800k} and PRMBench~\cite{song2024prmbench} provide
+PRM800K~\cite{lightman2023prm} and PRMBench~\cite{song2024prmbench} provide
 evaluation data for step-level scoring. OmegaPRM~\cite{luo2024omegaprm} uses
 Monte-Carlo tree search to supervise process rewards without human-in-the-loop,
-while ReasonEval~\cite{xia2024reasoneval} introduces reasoning-specific reward
-models. Implicit PRM~\cite{yuan2024implicitprm} learns PRMs implicitly from
+while ReasonEval~\cite{xia2024reasoneval} scores the validity and redundancy
+of reasoning steps beyond final-answer accuracy. Implicit PRM~\cite{yuan2024implicitprm} learns PRMs implicitly from
 outcome labels, and VersaPRM~\cite{yuan2025versaprm} extends process rewards
 to multi-domain tasks. Process-reward approaches must be distinguished from outcome/format reward
 training. In particular, DeepSeek-R1 discusses process reward models among its
@@ -152,9 +154,10 @@ insistence on binary verifiable rewards and reported evaluation stacks.
 
 Reasoning-specific algorithmic contributions also continue to accumulate.
 ReFT~\cite{luong2024reft} studies supervised fine-tuning versus RL for
-reasoning. Let's Reward Step~\cite{zhang2025rewardstep} and
-STaR~\cite{zelikman2022star} bootstrap reasoning chains from weak
-supervisors. rStar-Math~\cite{guan2025rstarmath} combines MCTS-based PRMs
+reasoning. Let's Reward Step~\cite{zhang2025rewardstep} uses step-level PRM
+feedback to guide greedy search at inference time, and
+STaR~\cite{zelikman2022star} bootstraps reasoning chains from its own
+correct rationales. rStar-Math~\cite{guan2025rstarmath} combines MCTS-based PRMs
 with self-evolved reasoning. ReST-EM~\cite{singh2024restem} alternates
 expectation and maximisation steps over self-generated rationales.
 Self-Taught Evaluator~\cite{wang2024stevaluator} adapts an LLM to score its
@@ -162,7 +165,8 @@ own reasoning chains. GRPO-Lead~\cite{lu2025grpolead}, LCPO~\cite{lu2025lcpo},
 and LIMR~\cite{li2025limr} each tune reasoning depth with length-aware
 rewards. Search-R1~\cite{jin2025searchr1} trains reasoning agents to
 interleave search queries with chain-of-thought. TTRL~\cite{pu2025ttrl}
-performs test-time RL against self-generated verifiers. Dr.~GRPO~\cite{tong2025drgrpo} and GSPO~\cite{qwen2025gspo} are external
+performs test-time RL on unlabeled prompts using majority-vote pseudo-labels
+as rewards. Dr.~GRPO~\cite{tong2025drgrpo} and GSPO~\cite{qwen2025gspo} are external
 formulations; this audit does not evaluate them as reference implementations.
 
 % -----------------------------------------------------------------------------
@@ -213,13 +217,13 @@ scaling laws for DPO and PPO that show a strong dependence on reward-model
 quality. Nimmaturi et al.~\cite{nimmaturi2025predictive} derive an
 empirical scaling law specifically for GRPO, identifying three training
 phases (slow start, rapid improvement, plateau) and showing that most
-benefit is exhausted by roughly $80\%$ of one epoch. Liu et
+benefit is exhausted by roughly $80\%$ of one epoch. Mukherjee et
 al.~\cite{liu2025rlsubnetworks} find that RL fine-tuning updates only
 $5$--$30\%$ of model parameters across seven algorithms and ten model
 families, suggesting RL activates a sparse ``RL subnetwork.''
 MiniCPM~\cite{hu2024minicpm} and the SLM survey of
-Subramanian et al.~\cite{subramanian2025slm} characterise scaling in the
-sub-8B regime that forms the bulk of our frontier. Schaeffer et
+Nguyen et al.~\cite{subramanian2025slm} characterise the small-model
+regime. Schaeffer et
 al.~\cite{schaeffer2024emergent} caution that apparent emergent abilities may
 be metric artefacts, a concern that persists into RL. Our short heterogeneous traces are descriptive context, not scaling-law
 ground truth or independent scale replications.

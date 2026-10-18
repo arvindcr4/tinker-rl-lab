@@ -117,12 +117,13 @@ table is Table~\ref{tab:tasks}; per-cell tasks and splits are in
 Appendix~\ref{sec:run-manifest}.
 
 \paragraph{Cross-stack coverage.}
-Executed cells use four open RL libraries---TRL (HuggingFace),
-Stable~Baselines3, CleanRL, and Tianshou---plus the closed-source Tinker API.
-The PPO-default mapping in Table~\ref{tab:hyperparams} additionally lists
-PufferLib and NVIDIA \texttt{rl\_games}, for which no training run is reported. The
-cross-framework ZVF parser is specified in
-Appendix~\ref{sec:appendix:zvf-pipeline}; the per-(stack, model, task)
+LM post-training cells come from two stacks: TRL (on Modal) and the
+closed-source Tinker API. CleanRL, Stable~Baselines3 and Tianshou appear only
+as non-LM PPO sanity floors (an MLP policy on a two-integer addition
+environment). PufferLib and \texttt{rl\_games} have default hyperparameter
+mappings (Table~\ref{tab:hyperparams}) but no training runs, and veRL/OpenRLHF
+appear only as parser field mappings (Appendix~\ref{sec:appendix:zvf-pipeline});
+none of these has a manifest cell. The per-(stack, model, task)
 tier classification lives in Appendix~\ref{sec:run-manifest} and is the
 single source of truth referenced throughout this paper.
 
@@ -133,11 +134,13 @@ Completed language-model cells cover 19 checkpoints from six families
 (Table~\ref{tab:run-manifest}). Hyperparameters are recorded per run in the
 run JSON (e.g.\ the single-run Tinker GSM8K cells use LoRA rank 16--32 and
 learning rate $10^{-5}$--$3\times10^{-5}$); Modal multi-seed cells use seeds
-$\{42,123,456,789,1024\}$. The Modal Tier-A open-stack arms (CleanRL, SB3, and Tianshou PPO on
-Modal H100, plus TRL Qwen2.5-0.5B on Modal L4) use the full 5-seed protocol (the three PPO arms train a small MLP
-policy on a two-integer addition environment and stay near zero accuracy,
-so they are pipeline checks); the Tinker Llama-3.3-70B-Inst and
-DeepSeek-V3.1 GSM8K cells have 4 and 3 seeds. The Tinker Qwen3-8B Wave-6
+$\{42,123,456,789,1024\}$. Tier A holds the 5-seed TRL Qwen2.5-0.5B cell
+(Modal L4) and the 4-seed Llama-3.3-70B-Inst and 3-seed DeepSeek-V3.1 Tinker
+GSM8K cells. The CleanRL, SB3 and Tianshou PPO runs (5 seeds each) train a
+small MLP policy on a two-integer addition environment and stay near zero
+accuracy, so they are listed as non-LM sanity floors outside the LM tiers.
+The Tinker campaign runs use LoRA rank 32, 2 prompts per step, temperature
+0.8, learning rate $10^{-5}$, 30 steps and 512-token completions. The Tinker Qwen3-8B Wave-6
 temperature/rank/batch sensitivity sweep is one seed per configuration
 across 12 configurations (Tier B). Tier-B rows (single-run Modal H100 TRL
 cells; single-run Tinker GSM8K, frontier-scale and group-size runs) are
@@ -193,18 +196,21 @@ reproducible from logged ZVF, so they are withdrawn
 ZVF predicts final reward.
 
 \paragraph{Group-size sweep (B-grade case study).}
-The single-run group-size sweep on Qwen3-8B/GSM8K ($G\in\{2,4,16,32\}$, one
-30-step campaign batch; no completed $G{=}8$ run) is non-monotone in both
-peak ($75.0/87.5/62.5/67.2\%$) and last-10 training reward
-($35.0/28.8/32.5/38.8\%$); neither the smallest nor the largest $G$ is best
+The single-run group-size sweep on Qwen3-8B/GSM8K ($G\in\{2,4,8,16,32\}$;
+$G{=}2,4,16,32$ from one 30-step campaign batch, $G{=}8$ from the identically
+configured Wave-6 baseline run) is non-monotone in both peak
+($75.0/87.5/68.8/62.5/67.2\%$) and last-10 training reward
+($35.0/28.8/33.8/32.5/38.8\%$); neither the smallest nor the largest $G$ is best
 on both metrics, and no held-out accuracy exists for these runs. We report
 this as a case study against the heuristic that ``larger $G$ is always
 better'', not as a prescription; Appendix~\ref{sec:appendix:group-size-reconcile}
 explains why an earlier token-budget reanalysis was withdrawn. A two-seed
 matched-budget follow-up (2{,}560 rollouts per run;
-$G{=}2\times160$ vs.\ $G{=}16\times20$ steps, 512-token cap) shows the
+$G{=}2\times160$ vs.\ $G{=}16\times20$ steps, 512-token cap, LoRA rank 4,
+learning rate $3{\times}10^{-5}$, 8 prompts per step) shows the
 $G{=}2$ runs reaching last-10 training reward $0.90$ and $0.96$ and ending
-in an all-correct zero-variance regime (final ZVF $1.0$), while the $G{=}16$
+in an all-correct zero-variance regime (final ZVF $1.0$; at $G{=}2$ high
+ZVF is largely mechanical, since $p^2+(1-p)^2\ge0.82$ for $p\ge0.9$), while the $G{=}16$
 runs end mid-learning (last-10 $0.32$ and $0.39$) with ZVF peaking at
 $0.375$--$0.5$ early and ending at $0.125$--$0.25$. Nearly every $G{=}16$
 completion hits the 512-token cap (mean length $\ge508$ tokens at every
@@ -223,7 +229,9 @@ certify complete raw per-group rollout JSONL, checkpoints, pinned containers,
 or step traces for every manifest row. Aggregate traces do not substitute
 for raw groups. Auditability checkmarks below are historical availability
 reports pending a file-level hash inventory, not verified release guarantees.
-Full architectural diagrams of the data processing, licensing, and reproduction execution pipelines are provided in Appendix~\ref{sec:appendix:architecture}.
+Design schematics of the data-processing, licensing, contamination and
+reproduction pipelines, with the release status of each, are in
+Appendix~\ref{sec:appendix:architecture}.
 
 \input{sections/reproducibility_card_dnb}
 

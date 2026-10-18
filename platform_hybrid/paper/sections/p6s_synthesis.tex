@@ -17,24 +17,24 @@ makes the run-start lessons reusable:
         switch and the rest from other unmatched fields,
         without establishing a causal decomposition. Comparisons that do
         not pin these fields remain confounded.
-  \item \emph{Item 4 (per-step ZVF/GU)} is forced by the ZVF pillar (P2): ZVF
+  \item \emph{Item 4 (per-step ZVF/GU)} is forced by the companion ZVF paper: ZVF
         is ${\sim}0.95$ at both reward extremes in the 368-run audit (the
         interior of that cross-model curve is confounded with configuration),
         so only a trajectory, not an endpoint, is interpretable---and it is cheap to emit, since it needs
-        only per-group rewards. The pillar's micro-jitter falsification
+        only per-group rewards. That paper's micro-jitter falsification
         (batch ZVF $0.158 \to 0.000$ under $\sim$$10^{-4}$ reward jitter while
         contrast-density measures are invariant) is also why the schema
         records the telemetry \emph{source}: a ZVF of zero means different
         things from different reward pipelines.
-  \item \emph{Item 5 (group-size schedule)} is forced by the group-size pillar
-        (P3): expected ZVF-indicator is $p^G + (1-p)^G$, so larger $G$
+  \item \emph{Item 5 (group-size schedule)} is forced by the companion group-size
+        paper: expected ZVF-indicator is $p^G + (1-p)^G$, so larger $G$
         mechanically lowers ZVF, and our model$\times G$ sweeps confirm the
         monotone drop (e.g.\ Qwen3-32B: $0.33/0.18/0.08$ at $G{=}4/8/16$).
         Comparing stacks at unrecorded $G$ confounds algorithm with schedule;
         the adaptive-$G$ seed entry shows the field capturing a live
         controller, not just a constant.
   \item \emph{Items 2, 6, 7 (KL; held-out split; decontamination/parser)} are
-        forced by the confound audits behind P4 and the benchmark design: silent $\beta$ defaults differ $2\times$
+        forced by the confound audits behind the companion length-bias paper and the benchmark design: silent $\beta$ defaults differ $2\times$
         across framework config dumps. Controlled parser probes and held-out
         evaluation remain requirements, not demonstrated universal remedies.
 \end{itemize}
@@ -46,7 +46,7 @@ but detectable only under step-level resampling---while completion length moves 
 This is not cross-seed uncertainty or a new verified recomputation. We treat
 these as one-seed observations, not variant rankings.
 
-Read this way, the registry is the program's exit artifact: the pillar papers
+Read this way, the registry is the program's exit artifact: the companion papers
 established \emph{which} stack facts flip conclusions; the registry is the
 minimal data structure in which those facts travel with the stack instead of
 with the paper trail.

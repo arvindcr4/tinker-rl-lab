@@ -22,9 +22,10 @@ matched-token-budget $G$ sweep exists in this artifact.
 
 \paragraph{What is measured.}
 Two measured group-size results remain. (i) The single-run Qwen3-8B/GSM8K
-sweep on Tinker ($G\in\{2,4,16,32\}$, 30 steps, training reward only;
+sweep on Tinker ($G\in\{2,4,8,16,32\}$, 30 steps, training reward only;
+$G{=}8$ is the identically configured Wave-6 baseline run;
 Table~\ref{tab:main_results}): peak training reward is
-$75.0/87.5/62.5/67.2\%$ and last-10 is $35.0/28.8/32.5/38.8\%$, so neither
+$75.0/87.5/68.8/62.5/67.2\%$ and last-10 is $35.0/28.8/33.8/32.5/38.8\%$, so neither
 metric is monotone in $G$ and no held-out accuracy exists for these runs.
 (ii) The small Qwen2.5-0.5B arithmetic sweep below, which is a different
 model and task and must not be read as a Qwen3-8B/GSM8K result.

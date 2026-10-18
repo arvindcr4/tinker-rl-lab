@@ -1,0 +1,181 @@
+{
+  "runs": [
+    {
+      "wandb_id": "7azu6q2p",
+      "name": "gsm8k-qwen3-8b-seed042-tinker",
+      "model": "Qwen/Qwen3-8B",
+      "seed": 42,
+      "lora_rank": 32,
+      "learning_rate": 3e-05,
+      "tinker_run_id": "899d909e-7821-5b2b-a8d9-d8b3113ebd64:train:0",
+      "total_steps": 50,
+      "peak_train_reward": 0.625,
+      "last10_train_reward": 0.275
+    },
+    {
+      "wandb_id": "d5to7cef",
+      "name": "gsm8k-qwen3-8b-seed137-tinker",
+      "model": "Qwen/Qwen3-8B",
+      "seed": 137,
+      "lora_rank": 32,
+      "learning_rate": 3e-05,
+      "tinker_run_id": "5db4e965-07f3-575c-a806-2578d230a30d:train:0",
+      "total_steps": 50,
+      "peak_train_reward": 0.625,
+      "last10_train_reward": 0.275
+    },
+    {
+      "wandb_id": "4ncwubzc",
+      "name": "gsm8k-qwen3-8b-seed256-tinker",
+      "model": "Qwen/Qwen3-8B",
+      "seed": 256,
+      "lora_rank": 32,
+      "learning_rate": 3e-05,
+      "tinker_run_id": "aabb48cb-cb8b-5ebb-85f8-ccd6443eff00:train:0",
+      "total_steps": 50,
+      "peak_train_reward": 0.625,
+      "last10_train_reward": 0.325
+    },
+    {
+      "wandb_id": "n2u3w64a",
+      "name": "gsm8k-qwen3-8b-seed512-tinker",
+      "model": "Qwen/Qwen3-8B",
+      "seed": 512,
+      "lora_rank": 32,
+      "learning_rate": 3e-05,
+      "tinker_run_id": "99971b26-f228-5726-88c7-ab92c73b72ec:train:0",
+      "total_steps": 50,
+      "peak_train_reward": 0.875,
+      "last10_train_reward": 0.3
+    },
+    {
+      "wandb_id": "uimxa7eu",
+      "name": "gsm8k-qwen3-8b-seed999-tinker",
+      "model": "Qwen/Qwen3-8B",
+      "seed": 999,
+      "lora_rank": 32,
+      "learning_rate": 3e-05,
+      "tinker_run_id": "b3ba8df6-753b-545a-816d-0cbff0b059f7:train:0",
+      "total_steps": 50,
+      "peak_train_reward": 0.875,
+      "last10_train_reward": 0.35
+    },
+    {
+      "wandb_id": "lqpiwl6g",
+      "name": "gsm8k_100step-tinker",
+      "model": "Qwen/Qwen3-8B",
+      "seed": 42,
+      "lora_rank": 32,
+      "learning_rate": 5e-06,
+      "tinker_run_id": "1cc20cec-d27d-5546-962a-4c3bcbc84d9b:train:0",
+      "total_steps": 100,
+      "peak_train_reward": 0.75,
+      "last10_train_reward": 0.275
+    },
+    {
+      "wandb_id": "l9ka6klx",
+      "name": "gsm8k_rank8-tinker",
+      "model": "Qwen/Qwen3-8B",
+      "seed": 42,
+      "lora_rank": 8,
+      "learning_rate": 3e-05,
+      "tinker_run_id": "ba2a1694-f294-5015-b22b-6a5983a3bd5b:train:0",
+      "total_steps": 50,
+      "peak_train_reward": 0.625,
+      "last10_train_reward": 0.2125
+    },
+    {
+      "wandb_id": "ahmv6yu0",
+      "name": "gsm8k_rank16-tinker",
+      "model": "Qwen/Qwen3-8B",
+      "seed": 42,
+      "lora_rank": 16,
+      "learning_rate": 3e-05,
+      "tinker_run_id": "92ebcc48-d019-517b-badb-af14ec5ff339:train:0",
+      "total_steps": 50,
+      "peak_train_reward": 0.75,
+      "last10_train_reward": 0.1875
+    },
+    {
+      "wandb_id": "k4bwbnb8",
+      "name": "gsm8k_rank64-tinker",
+      "model": "Qwen/Qwen3-8B",
+      "seed": 42,
+      "lora_rank": 64,
+      "learning_rate": 3e-05,
+      "tinker_run_id": "9219771c-5e67-5f51-96e2-b83b53e60743:train:0",
+      "total_steps": 50,
+      "peak_train_reward": 0.875,
+      "last10_train_reward": 0.25
+    },
+    {
+      "wandb_id": "erbijgzr",
+      "name": "gsm8k_4B_s137-tinker",
+      "model": "Qwen/Qwen3.5-4B",
+      "seed": 137,
+      "lora_rank": 32,
+      "learning_rate": 3e-05,
+      "tinker_run_id": "566747c0-b9a6-5a8c-9352-4b477bb919d4:train:0",
+      "total_steps": 50,
+      "peak_train_reward": 1.0,
+      "last10_train_reward": 0.825
+    }
+  ],
+  "qwen3_8b_seed_level_last10_train_reward": {
+    "n_seeds": 5,
+    "values": [
+      0.275,
+      0.275,
+      0.325,
+      0.3,
+      0.35
+    ],
+    "mean": 0.305,
+    "sd": 0.03259601202601323
+  },
+  "heldout": {
+    "base": {
+      "correct": 164,
+      "attempted": 200,
+      "accuracy": 0.82
+    },
+    "per_seed": [
+      {
+        "seed": 42,
+        "correct": 166,
+        "attempted": 200,
+        "accuracy": 0.83
+      },
+      {
+        "seed": 137,
+        "correct": 165,
+        "attempted": 200,
+        "accuracy": 0.825
+      },
+      {
+        "seed": 256,
+        "correct": 161,
+        "attempted": 200,
+        "accuracy": 0.805
+      },
+      {
+        "seed": 512,
+        "correct": 168,
+        "attempted": 200,
+        "accuracy": 0.84
+      },
+      {
+        "seed": 999,
+        "correct": 173,
+        "attempted": 200,
+        "accuracy": 0.865
+      }
+    ],
+    "mean": 0.833,
+    "sd": 0.02196588263648878,
+    "one_sample_t": 1.32336515625415,
+    "df": 4,
+    "p_two_sided": 0.2562868244277185,
+    "note": "single base evaluation supplies no baseline variance; not an equivalence test"
+  }
+}

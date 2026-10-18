@@ -9,14 +9,15 @@ on language models across heterogeneous stacks (four open RL libraries and
 the closed Tinker API), with a run manifest that records, for every
 (backend, model, task) cell, whether it completed, how many seeds it has,
 and which run files back its numbers. The manifest lists 79 run records:
-27 in Tier~\textbf{A} (completed, at least three seeds; inferential
-eligibility separately required), 43 in Tier~\textbf{B} (completed single-
-or two-run case studies, descriptive only), and 9 in Tier~\textbf{C}
-(failed, partial, or quarantined), plus six planned cells that never
-started. Every reported training-reward number is recomputed from a named
+12 in Tier~\textbf{A} (completed LM cells with at least three seeds;
+inferential eligibility separately required), 43 in Tier~\textbf{B}
+(completed single- or two-run case studies, descriptive only), 9 in
+Tier~\textbf{C} (failed, partial, or quarantined), and 15 classic-RL PPO
+runs on a non-LM policy listed as sanity floors outside the tiers, plus six
+planned cells that never started. Every reported training-reward number is recomputed from a named
 run file. Most completed language-model cells are short single-seed GSM8K
-runs on Tinker; the open-stack multi-seed cells are a TRL Qwen2.5-0.5B
-arithmetic cell and three classic-RL PPO pipeline checks.
+runs on Tinker; the only open-stack multi-seed LM cell is a TRL
+Qwen2.5-0.5B arithmetic cell.
 
 Zero-Variance Fraction (ZVF), the share of rollout groups with identical
 rewards, is logged where the step logs allow; its expectation

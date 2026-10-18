@@ -6,13 +6,16 @@
 
 \subsection{The Apparent Contradiction}
 
-A reviewer asked how the fixed-step group-size results relate to the
-main-text discussion of $G{\approx}32$ and gradient utilization. These
-observations require the axis of comparison to be made explicit. In the
-measured fixed-step sweep (Table~\ref{tab:groupsize-measured}), the
+The fixed-step group-size results and the token-budget discussion of
+$G{\approx}32$ use different axes of comparison, which we make explicit here. In the
+measured fixed-step Qwen2.5-0.5B/arithmetic sweep
+(Table~\ref{tab:groupsize-measured}; a different model and task from the
+Qwen3-8B/GSM8K token-budget grid below), the
 last-10 training reward is essentially flat in $G$, with $G{=}16$
 numerically highest at $0.9837$, while held-out accuracy has its
-numerical apex at $G{=}8$ ($0.9900$). Under a \emph{fixed number of
+numerical apex at $G{=}8$ ($0.9900$). The separate single-seed
+Qwen3-8B/GSM8K fixed-step campaign runs at $G\in\{2,4,16,32\}$ are also
+non-monotone, with last-10 training reward between $0.29$ and $0.39$. Under a \emph{fixed number of
 optimizer steps}, larger $G$ costs proportionally more tokens per step,
 so a step-budget comparison benefits small $G$; under a \emph{fixed
 total token budget}, larger $G$ amortizes wasted (all-correct or
@@ -57,10 +60,11 @@ Because the $G$ in the denominator grows faster than the numerator saturates,
 $\widehat{\mathrm{GE}}_{\text{tok}}$ is monotone decreasing in $G$ in our sweep.
 
 \paragraph{The 505-task conditional utility audit (declared $\sqrt{G}$ proxy).}
-The audit quoted in the Abstract uses a \emph{different, separately declared}
+This audit uses a \emph{different, separately declared}
 cost proxy from $\widehat{\mathrm{GE}}_{\text{tok}}$ above, and the two must not
 be conflated. Its cohort is the 505 distinct (seed, problem) tasks with
-measured per-task success probabilities $p_x$ for Qwen3-8B on GSM8K
+measured per-task success probabilities $p_x$ for Qwen3-8B on GSM8K,
+restricted to $0.05<p_x<0.95$ as stated in the TSV header
 (\texttt{experiments/results/zvf\_iter46\_per\_prompt\_isog.tsv}; mean
 $p_x{=}0.674$; the same cohort as the pass$^k$ reliability audit in
 \texttt{experiments/results/berkeley/passk\_reliability\_summary.json}). For a
@@ -148,7 +152,7 @@ quantitative claim.
 
 We therefore revise the main-text claim as follows.
 \begin{quote}\itshape
-Under a fixed \emph{step} budget in the measured sweep
+Under a fixed \emph{step} budget in the measured Qwen2.5-0.5B/arithmetic sweep
 (Table~\ref{tab:groupsize-measured}), last-10 reward is essentially flat
 in $G$ ($G{=}16$ numerically highest at $0.9837$; held-out apex
 $G{=}8$ at $0.9900$). Under fixed \emph{total tokens} at the canonical
@@ -159,16 +163,15 @@ is not a measured recommendation. (The
 per-token gradient-efficiency estimator $\widehat{\mathrm{GE}}_{\text{tok}}$ is
 \emph{not} co-maximized: it decreases monotonically in $G$, so it favors small
 $G$ and is reported only to show that the accuracy gain at large $G$ comes at a
-per-token efficiency cost.) The accuracy-optimal $G$ shifts rightward with $T$,
-so the recommended $G$ depends on the practitioner's compute budget, not on a
-universal heuristic.
+per-token efficiency cost.) In the reconstruction the accuracy argmax shifts
+rightward with $T$; whether the recommended $G$ depends on the compute budget
+is a hypothesis for measured token-matched runs.
 \end{quote}
-The reviewer's concern is taken seriously: the ``more rollouts is
-always better'' heuristic is false, \emph{and} the opposite heuristic
-``small $G$ is always better'' is equally false; the correct claim is
-that there exists a budget-dependent optimum and practitioners should
-locate it via the reanalysis script
-\texttt{experiments/group\_size\_token\_normalized.py}.
+The ``more rollouts is always better'' heuristic is not supported, \emph{and} the opposite heuristic
+``small $G$ is always better'' is not supported either. The remaining
+hypothesis is a budget-dependent optimum, which needs measured
+token-matched runs; the script
+\texttt{experiments/group\_size\_token\_normalized.py} only illustrates it.
 
 \subsection{Measured Small-Scale Confirmation of the Inverted-U}
 \label{sec:appendix:group-size-measured}
@@ -201,6 +204,7 @@ that the optimal $G$ is interior rather than smallest-or-largest.
 Metric & $G{=}2$ & $G{=}4$ & $G{=}8$ & $G{=}16$ \\
 \midrule
 Held-out acc.\ (mean $\pm$ SE, $n{=}3$) & $0.982{\pm}.004$ & $0.988{\pm}.002$ & $\mathbf{0.990}{\pm}.003$ & $0.978{\pm}.006$ \\
+Last-10 train reward (mean, $n{=}3$) & $0.977$ & $0.971$ & $0.973$ & $0.984$ \\
 Mean ZVF & $0.84$ & $0.76$ & $0.69$ & $0.63$ \\
 \bottomrule
 \end{tabular}

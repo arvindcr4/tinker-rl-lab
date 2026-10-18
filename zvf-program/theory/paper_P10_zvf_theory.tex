@@ -74,7 +74,7 @@ group with probability $1-\delta$. Under the stated assumptions, this bounds
 rollouts to a potentially nonzero centered reward-contrast contribution, not
 rollouts to policy improvement or a total update. \textbf{T3} audits a
 proposed signal-per-rollout objective. Under that declared objective its optimum
-collapses to the prior-independent tie $G\in\{2,3\}$; it therefore supplies no
+collapses to the prior-independent tie in group size $G\in\{2,3\}$; it therefore supplies no
 data-adaptive group-size set-point. A richer variance-, Fisher-, wall-clock-, or
 outcome-aware objective is required before theory can justify adaptive $G$.
 Checked-in sampling experiments validate the operational accounting, while every
@@ -82,7 +82,7 @@ assumption and scope boundary is stated inline. The result is a calibrated senso
 conservative reliability trigger---not a proof that a particular controller or
 group size improves held-out performance.
 \end{abstract}
-\paragraph{August 2026 evidence boundary.} Theoretical homogeneous-reward
+\paragraph{Scope and evidence boundary.} Theoretical homogeneous-reward
 statements concern centered reward contrast and do not assert zero total
 gradient, canonical-GRPO equivalence, or an intervention outcome.
 
@@ -125,7 +125,9 @@ rather than merely annotate a training curve:
 
 This paper supplies one theorem per gap (T1--T3). We deliberately keep
 notation aligned with the Pillar~1 appendix and with the U-statistic analysis
-of \citet{zhou2026demystifyinggrpo}. The mixed-group probability used below is
+of the GRPO policy gradient by \citet{zhou2026demystifyinggrpo} (while noting in
+\S\ref{sec:T1} that our batch-level ZVF estimand is an order-1 sample mean of
+Bernoulli group indicators, not a higher-order U-statistic). The mixed-group probability used below is
 the elementary Bernoulli identity $1-p^G-(1-p)^G$, so it requires no separate
 attribution. This alignment lets the three results compose with existing work
 rather than re-deriving it.
@@ -155,9 +157,9 @@ particular estimator or objective.
 \paragraph{Honesty contract.} T1--T3 are conditional mathematical statements:
 their proofs are complete under the assumptions stated below. This does not make
 the assumptions empirically universal, and T3 does not elevate its declared
-proxy into a uniquely correct learning objective. The companion
-\texttt{THEORY\_NOTES.md} records the proof audit and the empirical extensions
-that remain outside the theorems.
+proxy into a uniquely correct learning objective.
+Sections~\ref{sec:empirical} and~\ref{sec:discussion} record the empirical
+checks, proof scope, and extensions that remain outside the theorems.
 
 %==============================================================================
 \section{Preliminaries and Notation}\label{sec:prelim}
@@ -264,13 +266,7 @@ unbiased) for every $m\ge 1$.
 $\ZVF_t = \frac1m\sum_g Z_g$ is the sample mean of the bounded i.i.d.\
 indicators $Z_g\in\{0,1\}$; unbiasedness is linearity of expectation
 together with $\E[Z_g]=h_K(p_g)$ averaged over $p_g\sim\phi$, giving
-\eqref{eq:theta}. \textbf{We do NOT claim ZVF is a U-statistic of
-order $\ge 2$: the U-statistic framing is a category error here (an
-order-1 U-statistic with symmetric kernel is a sample mean, so the
-asymptotic normality is the trivial binomial-proportion CLT, not
-Hoeffding's U-statistic CLT).} The genuine U-statistic content would
-require a degree-2 kernel, which is not the estimand in this paper. No
-U-statistic claim is needed for the per-step ZVF trajectory.
+\eqref{eq:theta}.
 \end{proof}
 
 \begin{theorem}[Asymptotic normality and closed-form CI for \ZVF{}]
@@ -292,16 +288,12 @@ step $t$ is
 \end{equation}
 and a Wilson-score interval is recommended near the boundaries
 $\ZVF_t\in\{0,1\}$ where the Wald interval \eqref{eq:ci} degenerates.
-
-\paragraph{Empirical calibration (E-T1).} The earlier 350-prompt analysis is
-superseded for numerical reporting by the complete 512-prompt pool in
-Section~\ref{sec:empirical}. That section reports shuffled Wald coverage
-0.93--0.96 at $m\ge64$, Wilson coverage 0.95--0.98, sorted global coverage
-0.07--0.22, local coverage 0.944, and stratified coverage 0.996.
-These are frozen-pool resampling results, not universal coverage guarantees.
-Wilson is the operational interval; the theorem above is asymptotic.
 \end{theorem}
 \begin{proof}
+Because $\ZVF_t$ is an order-1 statistic (a sample mean of i.i.d.\ indicators),
+its asymptotic normality is the binomial-proportion CLT, not Hoeffding's
+U-statistic CLT; a degree-2 kernel would be needed only for a second-order
+functional such as $\Var(Z_g)$, which is not the estimand here.
 Each $Z_g$ is a Bernoulli$(\theta_K)$ variable (its mean over the within-group
 randomness \emph{and} the prompt draw is $\theta_K$). Under
 Assumption~\ref{ass:across-iid} the $\{Z_g\}_{g=1}^m$ are i.i.d., so the
@@ -315,6 +307,16 @@ $\Var(Z_g)=\theta_K(1-\theta_K)$ exactly. The only subtlety is that the
 reporting pipeline must average the group indicators $Z_g$, not the conditional
 probabilities $h_K(p_g)$; Definition~\ref{def:zvf} does the former.
 \end{proof}
+
+\paragraph{Empirical calibration (E-T1).} On the complete 512-prompt pool
+(Section~\ref{sec:empirical}; an earlier billing-truncated 350-prompt pilot is
+superseded for numerical reporting), shuffled Wald coverage is 0.93--0.96 at
+$m\ge64$ and Wilson coverage 0.95--0.98 over the tested $(m,K)$ grid; under
+difficulty-sorted batching, Wald coverage of the global estimand is 0.07--0.22
+at $m\ge64$, while at $(K,m)=(8,32)$ the local-window coverage is 0.944 and
+stratified coverage of the global estimand is 0.996. These are frozen-pool
+resampling results, not universal coverage guarantees. Wilson is the
+operational interval; Theorem~\ref{thm:T1} is asymptotic.
 
 \begin{remark}[Connection to ``Demystifying GRPO'' and mixed-group probability]
 \label{rem:connections}
@@ -340,73 +342,76 @@ can contribute a nonzero centered reward-gradient term under the stated
 assumptions only if at least one group in the batch is
 \emph{informative}, i.e.\ has $Z_g=0$ (non-uniform outcomes). Define the
 per-prompt informativeness probability $q_g \coloneqq 1-h_K(p_g) =
-1-p_g^K-(1-p_g)^K$, the population fraction of informative groups
-$\bar q \coloneqq 1-\theta_K = \E_\phi[q_g]$, and note $\bar q = 1 - \ZVF$ in
-expectation.
+1-p_g^K-(1-p_g)^K$ and the population fraction of informative groups
+$\bar q \coloneqq 1-\theta_K = \E_\phi[q_g] = 1-\E[\ZVF_t]$. Throughout this
+section the population parameter $\theta_K$ (not the batch estimate $\ZVF_t$)
+enters every formula, and $\delta\in(0,1)$.
 
 \begin{lemma}[Rollouts per informative group]\label{lem:rollouts-per-group}
-Under Assumptions~\ref{ass:binary}--\ref{ass:across-iid}, drawing groups of
+Under Assumptions~\ref{ass:binary}--\ref{ass:nondegen}, drawing groups of
 size $K$ until the first informative group ($Z_g=0$) requires, in expectation,
-$1/\bar q$ groups, i.e.\ $K/\bar q$ rollouts. With $\bar q = 1-\ZVF$ this is
+$1/\bar q$ groups, i.e.\
 \begin{equation}\label{eq:exp-rollouts}
-\E[\text{rollouts to first informative group}] \;=\; \frac{K}{1-\ZVF}.
+\E[\text{rollouts to first informative group}] \;=\; \frac{K}{\bar q}
+\;=\; \frac{K}{1-\theta_K}.
 \end{equation}
 \end{lemma}
 \begin{proof}
 For each new group, Assumption~\ref{ass:across-iid} draws a fresh
 $p_g\sim\phi$. Marginalizing that draw gives
-$\Prob(Z_g=0)=\E_\phi[1-h_K(p_g)]=\bar q$. Independence of the prompt draws and
+$\Prob(Z_g=0)=\E_\phi[1-h_K(p_g)]=\bar q$, and $\bar q>0$ by
+Assumption~\ref{ass:nondegen}. Independence of the prompt draws and
 rollouts makes the indicators $\{1-Z_g\}$ i.i.d.\ Bernoulli$(\bar q)$, even
 though their conditional success probabilities vary with $p_g$. Therefore the
 number of groups through the first informative group is geometric with mean
 $1/\bar q$; multiplying by $K$ proves \eqref{eq:exp-rollouts}. If instead a
 latent difficulty is held fixed across several groups, the i.i.d.-mixture
-assumption fails and this equality is not claimed.
+assumption fails and this equality is not claimed. (Plugging the batch
+estimate into \eqref{eq:exp-rollouts} is biased upward by Jensen's inequality
+and undefined when $\ZVF_t=1$; the lemma concerns the population rate.)
 \end{proof}
 
 \begin{theorem}[Wasted-compute reliability bound]\label{thm:T2}
-Fix group size $K$ and a target: obtain at least one informative group with
-probability at least $1-\delta$. Under
-Assumptions~\ref{ass:binary}--\ref{ass:across-iid}, if the population
-zero-variance rate is $\theta_K=\ZVF$, then the number of \emph{independent
-groups} $n_g$ that must be drawn satisfies
+Fix group size $K\ge2$ and $\delta\in(0,1)$. Under
+Assumptions~\ref{ass:binary}--\ref{ass:nondegen}, let $\theta_K\in(0,1)$
+be the population zero-variance probability. Obtaining at least one
+informative group with probability at least $1-\delta$ requires and is
+ensured by an integer number of independent groups satisfying
 \begin{equation}\label{eq:T2-groups}
-n_g \;\ge\; \frac{\ln(1/\delta)}{-\ln \ZVF}
-\qquad\Longleftrightarrow\qquad
-N \;\coloneqq\; K\,n_g \;\ge\;
-\underbrace{K\,\frac{\ln(1/\delta)}{-\ln \ZVF}}_{\displaystyle N(\ZVF)}\!,
+n_g\ge\left\lceil\frac{\ln(1/\delta)}{-\ln\theta_K}\right\rceil,
+\qquad
+N_{\mathrm{disc}}(\theta_K)\coloneqq
+K\left\lceil\frac{\ln(1/\delta)}{-\ln\theta_K}\right\rceil.
 \end{equation}
-and $N(\ZVF)\to\infty$ as $\ZVF\to1^-$. This is a continuous lower
-bound, not the discrete quantile itself. The exact rollout quantile is
-$K\lceil\ln(1/\delta)/(-\ln\theta_K)\rceil$: a budget below the
-continuous bound leaves probability $>\delta$ that all groups are
-uninformative. This is not a bound on policy improvement or total gradients.
+Here $N_{\mathrm{disc}}$ is the exact rollout quantile. Its continuous lower
+bound is
+\[
+N_{\mathrm{cont}}(\theta_K)\coloneqq
+K\frac{\ln(1/\delta)}{-\ln\theta_K}\le N_{\mathrm{disc}}(\theta_K).
+\]
+A rollout allocation $B$ permits $\lfloor B/K\rfloor$ complete groups and
+meets the target iff $B\ge N_{\mathrm{disc}}(\theta_K)$; exceeding only
+$N_{\mathrm{cont}}$ is insufficient. Both quantities diverge as
+$\theta_K\to1^-$. This is not a bound on policy improvement or total gradients.
 \end{theorem}
 \begin{proof}
-With i.i.d.\ groups, each is uninformative with probability $\ZVF$, so all
-$n_g$ drawn groups are uninformative with probability $\ZVF^{\,n_g}$. Requiring
-this probability to be at most $\delta$ gives
-\[
-  n_g \ge \frac{\ln(1/\delta)}{-\ln \ZVF}.
-\]
-Multiplying by $K$ rollouts per group gives \eqref{eq:T2-groups}; the smallest
-integer group budget is
-\[
-  \left\lceil \frac{\ln(1/\delta)}{-\ln \ZVF} \right\rceil.
-\]
-The divergence as
-$\ZVF\to1$ follows since $-\ln \ZVF\to0^+$. The result is explicitly about an
-informative group that can supply a potentially nonzero centered
-reward-contrast contribution under the stated assumptions; no total-update or
-policy-improvement claim is used in the proof. Corollary~\ref{cor:T2-traj} handles estimation of the
-population rate. Under correlated groups the product probability
-$\ZVF^{n_g}$ need not hold, so the theorem's i.i.d.\ condition is essential.
+With i.i.d.\ groups, all $n_g$ groups are uninformative with probability
+$\theta_K^{n_g}$. Requiring this probability to be at most $\delta$ gives
+$n_g\ge\ln(1/\delta)/(-\ln\theta_K)$. Rounding up to a whole group and
+multiplying by $K$ proves \eqref{eq:T2-groups}. The divergence follows from
+$-\ln\theta_K\to0^+$; more precisely,
+$N_{\mathrm{cont}}(\theta_K)\sim K\ln(1/\delta)/(1-\theta_K)$.
+An informative group can supply a potentially nonzero centered reward-contrast
+contribution, but the proof uses no total-update or policy-improvement claim.
+Under correlated groups the product probability $\theta_K^{n_g}$ need not
+hold. Corollary~\ref{cor:T2-traj} handles estimation of the population rate.
 \end{proof}
 
 \begin{corollary}[Certified compute floor from an observed trajectory]
 \label{cor:T2-traj}
-Let $X=m\ZVF_t$ and let $L_\alpha(X;m)$ be the one-sided
-Clopper--Pearson lower confidence bound for the binomial proportion,
+Under the assumptions of T2, let $X=m\ZVF_t$ from a diagnostic batch of
+$m\ge1$ groups, and fix $\alpha\in(0,1)$. The one-sided
+Clopper--Pearson lower confidence bound is
 \[
 L_\alpha(X;m)=
 \begin{cases}
@@ -414,23 +419,35 @@ L_\alpha(X;m)=
 I^{-1}_{\alpha}(X,m-X+1), & X>0,
 \end{cases}
 \]
-where $I^{-1}$ is the inverse regularized incomplete Beta function. Under the
-assumptions of T1,
-$\Prob_{\theta_K}\{\theta_K\ge L_\alpha(X;m)\}\ge1-\alpha$. Since
-$N(Z)=K\ln(1/\delta)/(-\ln Z)$ is increasing on $(0,1)$,
+where $I^{-1}$ is the inverse regularized incomplete Beta function. Then
+$\Prob_{\theta_K}\{\theta_K\ge L_\alpha(X;m)\}\ge1-\alpha$.
+Extend $N_{\mathrm{cont}}(0)=0$ by continuity and
+$N_{\mathrm{disc}}(0)=K$ (one group suffices at zero population failure
+probability). Both functions are nondecreasing, so for
+$j\in\{\mathrm{cont},\mathrm{disc}\}$,
 \[
-\Prob_{\theta_K}\!\left\{N(\theta_K)\ge
-N\big(L_\alpha(X;m)\big)\right\}\ge1-\alpha.
+\Prob_{\theta_K}\!\left\{N_j(\theta_K)\ge
+N_j\big(L_\alpha(X;m)\big)\right\}\ge1-\alpha.
 \]
-Thus $N(L_{0.05})$ is an exact-coverage, conservative 95\% certified compute
-floor, conditional on the i.i.d.\ group model. Wilson bounds remain a convenient
-operational approximation, but the theorem does not depend on their asymptotic
-coverage.
-At $X=0$, define $N(0)=0$ by continuity; this lower certificate is vacuous,
-not an upper budget guaranteeing success. Throughout T2 and its expectation
-lemma, $\ZVF$ without a time subscript means the population parameter
-$\theta_K\in(0,1)$, not its noisy batch estimate. This uses the nondegeneracy
-assumption in addition to the sampling assumptions.
+Thus $N_{\mathrm{disc}}(L_{0.05}(X;m))$ is a conservative 95\% lower
+confidence bound on the required rollout budget, not a sufficient allocation.
+At $X=0$ it certifies only the trivial one-group minimum; at $X=m$,
+$L_\alpha(m;m)=\alpha^{1/m}<1$, so this lower budget bound stays finite.
+Wilson bounds remain an operational approximation, not the basis of this
+finite-sample certificate.
+
+Conversely, a sufficient budget certificate uses an \emph{upper} bound
+$U_\alpha(X;m)=I^{-1}_{1-\alpha}(X+1,m-X)$ for $X<m$, and
+$U_\alpha(m;m)=1$. With $N_{\mathrm{disc}}(1)=+\infty$,
+\[
+\Prob_{\theta_K}\!\left\{N_{\mathrm{disc}}(\theta_K)\le
+N_{\mathrm{disc}}\big(U_\alpha(X;m)\big)\right\}\ge1-\alpha.
+\]
+This is a confidence statement over diagnostic samples about a fresh batch's
+$1-\delta$ reliability target, not a claim that confidence $1-\alpha$ and
+future-batch success probability $1-\delta$ are the same quantity. These
+are pointwise guarantees for a fixed diagnostic sample size; repeated online
+checks require separate sequential or multiplicity control.
 \end{corollary}
 
 %==============================================================================
@@ -443,12 +460,19 @@ adaptive controller set-point.
 
 \paragraph{Learning signal per group.} For binary rewards at group size $G$,
 we declare a diagnostic proxy: weight the mixed-group probability by the
-population Bernoulli variance $p(1-p)$. This is not the expectation of the
-sample variance (which already incorporates homogeneous outcomes), nor a
-conditional variance identity. It intentionally weights informativeness twice
-near the boundaries; its optimality is only relative to this declared choice.
+external prompt-difficulty weight $p(1-p)$. To distinguish this choice from
+realized sample variance, let $C\sim\mathrm{Binomial}(G,p)$ and
+$V=C(G-C)/(G(G-1))$. Homogeneous groups already have $V=0$, hence
+\[
+\E[V\1\{Z_g=0\}\mid p]=\E[V\mid p]=p(1-p).
+\]
+The exact expected sample variance per rollout, averaged over $\phi$, is
+$\E_\phi[p(1-p)]/G$ and has the unique integer optimum $G=2$ under
+Assumption~\ref{ass:nondegen}. The extra mixed-group factor below instead
+creates a composite heuristic; its $\{2,3\}$ tie is not a sample-variance
+identity or a policy-gradient optimum:
 \begin{equation}\label{eq:signal-per-group}
-S(p,G)\propto (1-h_G(p))p(1-p),\qquad h_G(p)=p^G+(1-p)^G.
+S(p,G)\coloneqq (1-h_G(p))p(1-p),\qquad h_G(p)=p^G+(1-p)^G.
 \end{equation}
 
 \paragraph{Signal per rollout.} Each group of size $G$ costs $G$ rollouts, so
@@ -459,76 +483,56 @@ J(G) \;\coloneqq\; \frac{1}{G}\,
 \E_{p\sim\phi}\!\big[\,(1-h_G(p))\,p(1-p)\,\big].
 \end{equation}
 
-\begin{theorem}[Optimum of the declared proxy objective]\label{thm:T3}
-Under Assumptions~\ref{ass:binary},~\ref{ass:within-iid},~\ref{ass:nondegen}
-and a reward-density prior $\phi$ with positive mass on $(0,1)$, the
-population proxy has the exact integer maximizer set $\{2,3\}$, independent
-of $\phi$. Define its optimal group size by
-\begin{equation}\label{eq:Gstar}
-G^\star \;\in\; \argmax_{G\in\{2,3,\dots\}} \; J(G),
-\end{equation}
-and, treating $G$ as continuous, any interior \emph{critical point} satisfies
-the first-order stationarity condition $\partial J/\partial G = 0$, i.e.
-\begin{equation}\label{eq:foc}
-\E_{p\sim\phi}\!\Big[(1-h_G(p))\,p(1-p)\Big]
-\;=\;
--\,G\,\E_{p\sim\phi}\!\Big[\tfrac{\partial}{\partial G}h_G(p)\,p(1-p)\Big],
-\quad
-\tfrac{\partial}{\partial G}h_G(p)=p^G\ln p+(1-p)^G\ln(1-p).
-\end{equation}
-For a point-mass prior $\phi=\delta_{p_0}$ the objective becomes
-\begin{equation}\label{eq:J-pointmass}
-J(G)=\frac{1-p_0^G-(1-p_0)^G}{G}\,p_0(1-p_0),
-\end{equation}
-so the maximizing $G$ depends only on the
-informativeness-per-rollout term
-$(1-p_0^G-(1-p_0)^G)/G$.
-\textbf{Resolution (2026-07-11): under this objective the maximizer is
-universal, and the theorem is weaker than previously stated.} The
-algebraic identities $1-p^2-(1-p)^2 = 2p(1-p)$ and
-$1-p^3-(1-p)^3 = 3p(1-p)$ hold for all $p$, so
-$(1-h_2(p))/2 = (1-h_3(p))/3 = p(1-p)$ pointwise, and therefore
+\begin{theorem}[Universal discrete optimum of the declared proxy]\label{thm:T3}
+Under Assumptions~\ref{ass:binary},~\ref{ass:within-iid},~\ref{ass:nondegen},
+the population objective in \eqref{eq:efficiency} satisfies
 \begin{equation}\label{eq:J23}
-J(2) \;=\; J(3) \;=\; \E_{p\sim\phi}\big[(p(1-p))^2\big]
-\qquad\text{for \emph{every} prior }\phi,
+J(2)=J(3)=\E_{p\sim\phi}\big[(p(1-p))^2\big]>J(G)
+\quad\text{for every integer }G\ge4.
 \end{equation}
-while $(1-h_G(p))/G < p(1-p)$ on $(0,1)$ for $G\ge4$. Hence
-$G^\star\in\{2,3\}$ \emph{independently of $\phi$}: the argmax of
-\eqref{eq:efficiency} carries no information about the reward-density
-prior, the FOC \eqref{eq:foc} is vacuous for the discrete problem, and
-any \emph{data-dependent} optimal-$G$ claim must come from a richer
-objective (variance-, Fisher-information-, or wall-clock-aware), which
-this paper does not supply. We retain \eqref{eq:efficiency} as the
-simplest signal-per-rollout accounting, with its optimum stated
-honestly as the universal $\{2,3\}$.
+Consequently,
+\begin{equation}\label{eq:Gstar}
+\argmax_{G\in\{2,3,\dots\}} J(G)=\{2,3\},
+\end{equation}
+independently of $\phi$. This proxy supplies no data-adaptive integer set-point.
 \end{theorem}
 \begin{proof}
-Let $S\sim\mathrm{Binomial}(G,p)$ count successes in a group. The mixed-group
-event is $M=\{1\le S\le G-1\}$ and
+Let $C\sim\mathrm{Binomial}(G,p)$ count successes in a group. The mixed-group
+event is $M=\{1\le C\le G-1\}$ and
 $\Prob(M)=1-p^G-(1-p)^G$. On $M$,
-$S(G-S)\ge G-1$, with equality for every mixed outcome when $G\in\{2,3\}$.
+$C(G-C)\ge G-1$, with equality for every mixed outcome when $G\in\{2,3\}$.
 Moreover,
 \[
-\E[S(G-S)]=G(G-1)p(1-p).
+\E[C(G-C)]=G(G-1)p(1-p).
 \]
 Therefore
 \[
-\Prob(M)\le\frac{\E[S(G-S)]}{G-1}=G p(1-p).
+\Prob(M)\le\frac{\E[C(G-C)]}{G-1}=G p(1-p).
 \]
 For $G=2$ and $G=3$ equality holds pointwise. For $G\ge4$ and
-$p\in(0,1)$, outcomes with $2\le S\le G-2$ have positive probability and
+$p\in(0,1)$, outcomes with $2\le C\le G-2$ have positive probability and
 strictly exceed the lower bound $G-1$, so the inequality is strict. Multiplying
 by $p(1-p)/G$ and integrating over $\phi$ proves
 $J(2)=J(3)>J(G)$ for every integer $G\ge4$ under
 Assumption~\ref{ass:nondegen}.
-
-For completeness, the continuous relaxation is differentiable for $G>0$.
-The terms $p^G|\ln p|$ and $(1-p)^G|\ln(1-p)|$ are uniformly bounded by
-$1/(eG)$, so differentiation under any probability measure $\phi$ is justified
-by domination locally in $G$. The quotient rule then gives \eqref{eq:foc} for
-any interior critical point. No uniqueness or discrete-rounding claim is needed:
-the binomial argument above proves the discrete optimum directly.
 \end{proof}
+
+\begin{remark}[Continuous relaxation is not an integer control rule]
+For real $G>0$, $J$ is differentiable: the terms $p^G|\ln p|$ and
+$(1-p)^G|\ln(1-p)|$ are uniformly bounded by $1/(eG)$, justifying
+differentiation under $\phi$ locally in $G$. An interior stationary point
+therefore satisfies
+\begin{equation}\label{eq:foc}
+\E_\phi[(1-h_G(p))p(1-p)]
+=-G\E_\phi[(\partial_G h_G(p))p(1-p)],
+\end{equation}
+where $\partial_G h_G(p)=p^G\ln p+(1-p)^G\ln(1-p)$, with endpoint
+terms defined by continuity. Since $J(2)=J(3)$, Rolle's theorem ensures
+at least one stationary point between them (e.g.\ for a point mass at
+$p_0=\tfrac12$ the continuous maximizer is $G\approx2.42$, numerically).
+This does not change the exact
+integer maximizer set proved above, even for a point-mass prior.
+\end{remark}
 
 \begin{corollary}[Beta-prior closed form]\label{cor:beta}
 If $\phi=\mathrm{Beta}(\alpha,\beta)$, then
@@ -546,13 +550,12 @@ $(\alpha,\beta)$.
 %==============================================================================
 \section{Connection to the Pillar~1 Adaptive Controller}\label{sec:controller}
 %==============================================================================
-\noindent\emph{Scope note (2026-07-11 canonicalization).} This paper is
-canonical for the theorem-level treatment (T1--T3 and their proof gaps);
+\noindent\emph{Scope note.} This paper is
+canonical for the theorem-level treatment (T1--T3 and their scope);
 the controller's engineering --- trigger design, hysteresis, multi-seed
-validation, and design rules --- is treated in the companion Pillar-7
-paper \emph{``From Diagnostic to Controller: A Signal-Starvation Theory of
-GRPO and an Adaptive Group-Size Intervention''}
-(\texttt{platform\_hybrid/paper/paper\_P7\_zvf\_controller}).
+validation, and design rules --- is treated in a companion Pillar-7
+working paper, \emph{``From Diagnostic to Controller: A Signal-Starvation
+Theory of GRPO and an Adaptive Group-Size Intervention''} (in preparation).
 
 The results suggest a restricted prospective interface, not a proved online
 control law. Its sampling assumptions must hold for the next batch:
@@ -561,21 +564,41 @@ control law. Its sampling assumptions must hold for the next batch:
         compute $\ZVF_t$ and the one-sided Clopper--Pearson lower bound in
         Corollary~\ref{cor:T2-traj}. Wilson is an operational approximation;
         the displayed two-sided Wald interval is not this exact certificate.
-  \item \textbf{Decide (T2).} If the reliability budget
-        $N(\underline{\ZVF}_t)$ from Corollary~\ref{cor:T2-traj} exceeds the
-        next-batch rollout budget, that fresh batch cannot meet the stated
-        reliability target, with the certificate's confidence, under an
-        unchanged population and fixed $K$. This does not make a retrospective
-        probability claim about the already observed diagnostic batch.
+  \item \textbf{Decide (T2).} Write $L=L_\alpha(m\ZVF_t;m)$. If
+        $N_{\mathrm{disc}}(L)>B$ for the next-batch rollout allocation $B$,
+        that fresh batch cannot meet the stated reliability target, with the
+        certificate's confidence, under an unchanged population and fixed $K$.
+        This certifies \emph{insufficient budget}, not a realized batch failure.
+        The converse $N_{\mathrm{disc}}(L)\le B$ certifies no sufficiency;
+        that requires the upper-bound construction in
+        Corollary~\ref{cor:T2-traj}. No retrospective probability claim is
+        made about the already observed diagnostic batch. The check is
+        evaluated between steps (diagnostic batch at step $t$, allocation for
+        step $t{+}1$) with the number of groups held fixed, not inside a batch
+        whose rollouts are already drawn.
   \item \textbf{Act (T3, revised).} Under objective \eqref{eq:efficiency}
         the per-rollout optimum is the universal $G^\star\in\{2,3\}$
         (eq.~\ref{eq:J23}), so the controller cannot derive a
         \emph{data-dependent} group size from T3 as stated; re-estimating
         $\widehat\phi_t$ adds nothing. The escalation policy must instead
         be separately justified: a rate measured at one $K$ does not identify
-        $\theta_{K'}$ at another size. T2 alone cannot license escalation
-        without a cross-size model or new measurements.
+        $\theta_{K'}$ at another size, because $\theta_{K'}$ is a different
+        moment functional of the unknown $\phi$. Moreover, under a fixed
+        per-step rollout budget $B=mK$, raising $K$ reduces the number of groups
+        and need not lower the all-dead probability $\theta_{K'}^{B/K'}$
+        (near the all-fail wall the two effects nearly cancel). T2 alone
+        cannot license escalation without a cross-size model or new
+        measurements.
 \end{enumerate}
+At a fixed number of fresh groups $m$, raising $K$ reduces
+$\theta_K^m$ but spends more rollouts. At a fixed rollout allocation $B$,
+the failure probability is instead $\theta_K^{\lfloor B/K\rfloor}$ and
+can increase. For an analytic counterexample (not measured training data),
+let half the prompts have $p=0$ and half $p=1/2$. At $B=8$, four groups of
+size 2 fail with probability $(3/4)^4=81/256$, whereas one group of size 8
+fails with probability $129/256$. Group-size escalation therefore needs an
+explicit cost convention and cannot be justified from decreasing $\theta_K$
+alone.
 This is the formal interface between Pillar~2 (theory) and Pillar~1 (the
 mechanistic controller): T1 supplies \emph{sensor calibration}, T2 supplies a
 \emph{reliability trigger}, and T3 rules out the proposed proxy as a
@@ -590,19 +613,25 @@ Pillar~7 rather than asserted as a theorem here.
 %==============================================================================
 \section{Empirical Validation}\label{sec:empirical}
 %==============================================================================
-The following offline checks and small live panels examine the assumptions
-and operational context of the three theorems and the controller pilot
-under a pre-registered protocol (decision rules fixed before scoring; see
-\path{experiments-next/README.md}). The measurements test assumptions and
-operational relevance; they are not used to prove the mathematical statements.
+Three different kinds of evidence are reported here, and they should not be
+read as one ``validation'': (i)~offline resampling and a bandit simulation on a
+frozen rollout pool, which test the sampling assumptions and the calibration of
+T1/T2 (E-T1, E-T2, E-B); (ii)~an arithmetic check of the T3 identity, which by
+\eqref{eq:J23} cannot be an empirical test (E-T3a); and (iii)~two small,
+exploratory live LoRA training panels (E-R2b, E-P4). Offline decision rules were
+fixed before scoring (\path{zvf-program/experiments-next/README.md}). None of
+these measurements is used to prove a mathematical statement, and E-B tests
+prompt-stratum selection at fixed $G$, not the group-size controller of
+Section~\ref{sec:controller}.
 
-\paragraph{Setup.} One sampling pool: Qwen3-8B, GSM8K train split,
-$512$ prompts $\times$ $32$ rollouts at $T{=}1.0$ (Tinker sampling client;
-ChatML prompt and binary boxed-answer reward identical to the audit
-runners). All analyses are offline resampling of this pool. An initial
-billing-truncated pool ($n{=}350$, explicitly stamped) produced identical
-verdicts; numbers below are from the complete $n{=}512$ pool. Artifacts:
-\texttt{experiments-next/results/*qwen3-8b\_train\_n512\_r32\_s42*.json}.
+\paragraph{Setup (offline studies).} One sampling pool: Qwen3-8B, GSM8K train
+split, $512$ prompts $\times$ $32$ rollouts at $T{=}1.0$ (Tinker sampling
+client; ChatML prompt and binary boxed-answer reward identical to the audit
+runners). E-T1, E-T2, E-T3a, and E-B are offline resampling of this pool. An
+initial billing-truncated pool ($n{=}350$, explicitly stamped) produced the
+same qualitative verdicts, with slightly different coverage ranges; numbers
+below are from the complete $n{=}512$ pool. Artifacts:
+\path{zvf-program/experiments-next/results/*qwen3-8b_train_n512_r32_s42*.json}.
 
 \paragraph{E-T1: coverage of the ZVF confidence interval.}
 \begin{center}
@@ -612,12 +641,15 @@ Batching regime & Estimand & 95\% CI coverage \\
 \midrule
 shuffled (iid), Wald, $m\ge 64$ & global & 0.93--0.96 \\
 shuffled (iid), Wilson, all tested $(m,K)$ & global & 0.95--0.98 \\
-difficulty-sorted (curriculum) & global & 0.07--0.22 \\
-difficulty-sorted (curriculum) & \emph{local (window)} & 0.944 \\
-stratified batch composition & global & 0.996 \\
+difficulty-sorted (curriculum), Wald, $m\ge 64$ & global & 0.07--0.22 \\
+difficulty-sorted (curriculum), $(K,m)=(8,32)$ & \emph{local (window)} & 0.944 \\
+stratified batch composition, $(K,m)=(8,32)$ & global & 0.996 \\
 \bottomrule
 \end{tabular}
 \end{center}
+Grid: $K\in\{4,8,16\}$, $m\in\{8,16,32,64,128\}$, 2{,}000 resampled batches
+per cell. Under difficulty-sorted batching Wilson does not rescue global
+coverage either (0.08--0.87 across the grid).
 The Wald interval \eqref{eq:ci} is adequate at $m\ge 64$ and the Wilson
 interval is well calibrated everywhere; we adopt Wilson operationally.
 The curriculum-ordering ``failure'' is an \emph{estimand mismatch}: the
@@ -627,16 +659,21 @@ validity (conservatively). This resolves the across-group-i.i.d.\ threat
 (Assumption~\ref{ass:across-iid}) into a labeling requirement rather than
 an invalidation.
 
-\paragraph{E-T2: the waiting-time quantile.} With $G{=}8$ and
-$\delta{=}0.1$, the geometric $(1{-}\delta)$-quantile
+\paragraph{E-T2: the waiting-time quantile.} The 512 prompts are split into
+six difficulty strata of 85 prompts; in each stratum, 2{,}000 sequential trials
+draw prompts with replacement and, per prompt, $G{=}8$ of its 32 rollouts
+without replacement, until the first informative group. The discrete
+geometric $(1{-}\delta)$-quantile of Theorem~\ref{thm:T2},
 \[
-G\left\lceil\frac{\ln\delta}{\ln\mathrm{ZVF}}\right\rceil
+N_{\mathrm{disc}}(\theta_G)
+=G\left\lceil\frac{\ln(1/\delta)}{-\ln\theta_G}\right\rceil
 \]
-matched the observed
-$(1{-}\delta)$-quantile of rollouts-to-first-informative-group within
-0--5\% in all six difficulty strata. In the hardest stratum
-($\hat p\approx 0.01$, $\mathrm{ZVF}=0.886$) the quantile is
-\textbf{160 rollouts} (ratio 1.00). The geometric waiting-time model is
+matched the observed $(1{-}\delta)$-quantile exactly (ratio 1.00) in all six
+strata at $\delta\in\{0.5,0.1\}$, and within 4\% at $\delta=0.05$ (one stratum,
+ratio 1.04). In the hardest stratum ($\hat p\approx 0.015$,
+$\mathrm{ZVF}=0.886$) the $\delta=0.1$ quantile is \textbf{160 rollouts}
+(20 groups; the continuous bound $N_{\mathrm{cont}}\approx152.5$ is not an
+achievable whole-group budget). The geometric waiting-time model is
 essentially exact on this reward distribution. Note what is validated:
 a \emph{reliability budget} --- the rollouts needed to make a fully
 uninformative batch improbable at level $\delta$ --- not a minimum;
@@ -652,57 +689,67 @@ does --- a model-fit sanity check); it cannot validate a data-dependent
 prediction, because the objective makes none. What survives is
 objective-relative: \emph{if} signal-per-rollout \eqref{eq:efficiency}
 is the accepted accounting, prevailing $G\in[8,16]$ practice is
-several-fold inefficient per rollout. A first training-side
-corroboration: a $G{=}2$ adapter matched a $G{=}16$ adapter's held-out
-pass@32 improvement at $8\times$ fewer rollouts per step (single seed;
-extended to a two-seed matched-budget panel in E-R2b below, which also
-shows the endgame cost of small $G$). Experiment E-T3b under a richer
-objective remains the decisive test.
+several-fold inefficient per rollout. Held-out evidence is weak: on 200
+GSM8K test problems under one Modal/vLLM evaluator, single-seed $G{=}2$ and
+$G{=}16$ adapters both reach pass@32 $=0.91$ versus $0.89$ for the base model
+(pass@1 $0.301$ and $0.325$ vs.\ $0.306$;
+\path{passk_modal_qwen3-8b_*_gsm8k_p200_n32_s42.json}). A $0.02$ pass@32
+difference is four problems from one seed and is not evidence of a held-out
+gain or of $G{=}2$/$G{=}16$ parity. E-R2b below reports training telemetry
+only, not held-out accuracy. Experiment E-T3b under a richer objective remains
+the decisive test.
 
 \paragraph{E-B: controller pilot (offline).} Treating stratum selection as
 a Thompson-sampling bandit with reward = ``group is informative'' recovers
 97\% of the static-oracle's informative groups per 1{,}000 rollouts
-(120.7 vs.\ 124.3), beats uniform allocation by 28\%, and exceeds a
-hardest-first policy by $8.8\times$ --- difficulty and signal are not the
-same axis, exactly as $J(G,p)$ predicts. Caveat: frozen-pool simulation;
+(120.7 vs.\ 124.3), beats uniform allocation by 29\% (120.7 vs.\ 93.6), and
+exceeds a hardest-first policy by $8.8\times$ (500 simulations, 250-group
+budget, $G{=}8$) --- difficulty and informativeness are not the same axis.
+This is prompt-stratum selection at fixed $G$, not group-size control.
+Caveat: frozen-pool simulation;
 the training-time pilot must confirm under the distribution shift induced
 by learning itself.
 
 \paragraph{E-R2b: matched-budget training at $G{=}2$ vs.\ $G{=}16$.} Four
 LoRA (rank~4) training runs on Qwen3-8B/GSM8K at a matched budget of
 2{,}560 rollouts per arm --- $G{=}2\times160$ steps vs.\ $G{=}16\times20$
-steps, batch 8, 512-token completions, seeds $\{123,456\}$ --- extend the
-single-seed corroboration above. The $G{=}2$ arms convert the budget into
-$8\times$ more optimiser steps and drive train reward to
-$\approx0.9$--$1.0$ on the sampled pool --- small-$G$ per-rollout
-efficiency in action --- before finishing in sustained
-$\ZVF\approx0.75$--$1.0$: the all-\emph{correct} zero-variance wall, the
-mirror image of T2's all-incorrect wall. The $G{=}16$ arms end
-mid-learning (train reward $\approx0.3$--$0.5$ after their 20 steps) with
-$\ZVF$ at $0$--$0.25$ throughout and signal intact. Small $G$ buys more optimizer steps per rollout early, then
-exhausts its own gradient signal as $\hat p\to 1$; group-size policy is
-therefore a \emph{schedule} question, exactly the regime the controller of
-Section~\ref{sec:controller} targets. Artifacts:
-\texttt{tinker-runs/results/er2b\_*.json}.
+steps, batch 8, 512-token completions, seeds $\{123,456\}$ --- record
+training-side telemetry. The $G{=}2$ arms convert the budget into
+$8\times$ more optimizer steps and reach last-10-step train reward $0.90$ and
+$0.96$ on the sampled pool, finishing with per-step $\ZVF$ in $[0.75,1.0]$
+over the last 20 steps (last-10 mean $0.975$ in both seeds): the
+all-\emph{correct} zero-variance wall, the mirror image of T2's all-incorrect
+wall. The $G{=}16$ arms end mid-learning (last-10 train reward $0.32$ and
+$0.39$ after 20 steps) with per-step $\ZVF$ in $[0,0.5]$ (last-10 means $0.15$
+and $0.10$). Small $G$ buys more optimizer steps per rollout early, then
+exhausts its own reward contrast as $\hat p\to 1$, consistent with group size
+being a \emph{schedule} question. Artifacts:
+\path{platform_hybrid/experiments/tinker-runs/results/er2b_g{2,16}_s{123,456}.json}.
 This comparison confounds group size with an eightfold difference in optimizer
-steps and reports training-pool telemetry, not a held-out causal group-size
-effect. Two seeds cannot establish generalization or a preferred schedule.
+steps (isolating $G$ would require matching both rollouts and steps, e.g.\
+$G{=}2,m{=}64$ vs.\ $G{=}16,m{=}8$ at 20 steps), and it reports training-pool
+telemetry only: no held-out evaluation of these four adapters was run. Two
+seeds cannot establish generalization or a preferred schedule.
 
 \paragraph{E-P4: advantage normalization and the length-bias premise.}
-A completion-capped (1{,}024-token) six-arm panel --- GRPO vs.\ Dr.GRPO's
-$/\sigma$-free advantage \cite{tong2025drgrpo}, three seeds each, 30
-steps, $G{=}8$, batch 4, Qwen3-8B/GSM8K --- tests the premise that
-std-normalized advantages inflate completion length. Neither loss
-inflates length: mean completion length \emph{declines} 3.8--12.2\% over
-training in all six arms (GRPO $1004{\to}905$, $981{\to}944$,
-$996{\to}900$; Dr.GRPO $999{\to}931$, $972{\to}902$, $1000{\to}878$
-tokens). Nor does the $/\sigma$ removal show a ZVF signature: late-run
-ZVF is 0.45/0.70/0.72 (Dr.GRPO) vs.\ 0.47/0.47/0.55 (GRPO). At this
-scale the length-bias motivation for the normalization change has no
-observable footprint on either axis (Tier~C, $n{=}3$ seeds per loss).
-The 1,024-token ceiling is close to the reported early means, so censoring can
-hide length growth. Batch-level ZVF is coarsely quantized and three seeds have
-low power; failure to see a signature does not refute a length-bias mechanism.
+A 1{,}024-token-capped six-arm panel (cap doubled from E-R2b's 512) --- GRPO
+vs.\ Dr.GRPO's $/\sigma$-free advantage \cite{tong2025drgrpo}, three seeds
+each ($\{42,123,456\}$), 30 steps, $G{=}8$, batch 4, Qwen3-8B/GSM8K ---
+probes the premise that std-normalized advantages inflate completion length.
+No arm shows length growth: mean completion length (mean of the first 5 steps
+$\to$ mean of the last 10) \emph{declines} 3.8--12.2\% in all six arms (GRPO
+$1004{\to}905$, $981{\to}944$, $996{\to}900$; Dr.GRPO $999{\to}931$,
+$972{\to}902$, $1000{\to}878$ tokens; matched 3-, 5-, or 10-step windows also
+give declines in every arm). Late-run ZVF (mean over the last 10 steps, i.e.\
+40 groups) is 0.45/0.73/0.70 (Dr.GRPO, seeds 42/123/456) vs.\ 0.48/0.48/0.55
+(GRPO); with three seeds per loss this difference is not interpretable as a
+$/\sigma$ signature in either direction (Tier~C). These observations are
+heavily confounded: early means already sit at 95--98\% of the 1{,}024-token
+cap, so right-censoring blocks upward length growth and truncated completions
+that miss \verb|\boxed{}| are penalized; per-step ZVF at batch 4 is quantized
+in steps of 0.25; and three seeds have low power. Failure to see a signature
+does not refute a length-bias mechanism. Artifacts (valid 2026-07-11 rerun):
+\path{platform_hybrid/experiments/tinker-runs/results/p4uncap_{grpo,drgrpo}_s{42,123,456}.json}.
 Provenance: an earlier version of this panel was invalidated by an
 unwired loss flag --- both ``arms'' had trained vanilla GRPO --- and was
 caught only by reading the runner, not from any output-level signal; the
@@ -724,8 +771,9 @@ reward types.
 \paragraph{What is conditionally established.} Under i.i.d.\ groups and binary
 verifiable rewards: (T1) $\ZVF_t$ is an unbiased, asymptotically normal
 estimator of a well-defined population quantity with a closed-form CI; (T2)
-high \ZVF{} implies a logarithmically diverging \emph{reliability budget} ---
-the $(1{-}\delta)$-quantile of rollouts to a potentially nonzero centered
+high population \ZVF{} implies a diverging \emph{reliability budget},
+with $N_{\mathrm{disc}}(\theta_K)\sim K\ln(1/\delta)/(1-\theta_K)$ as
+$\theta_K\to1^-$ --- the $(1{-}\delta)$-quantile of rollouts to a potentially nonzero centered
 reward-contrast contribution under the stated assumptions; (T3) the
 signal-per-rollout objective has a well-defined optimum, which is the
 \emph{universal} $G^\star\in\{2,3\}$ (eq.~\ref{eq:J23}), prior-independent.
@@ -737,13 +785,20 @@ signal-per-rollout objective has a well-defined optimum, which is the
         degeneracy analysis; no such claim is made here.
   \item \textbf{T2 bounds rollouts to a potentially nonzero centered
         reward-contrast contribution under the stated assumptions, not
-        rollouts to improvement or a total gradient.} Corollary~\ref{cor:T2-traj} supplies an exact-
-        coverage lower bound when the population $\ZVF$ is estimated.
-  \item \textbf{T3's objective $S(p,G)$ is a modelling choice,} and under it
+        rollouts to improvement or a total gradient.}
+        Corollary~\ref{cor:T2-traj} supplies a conservative exact-binomial
+        lower certificate when the population rate $\theta_K$ is estimated;
+        it certifies insufficiency of a budget, and only the separate
+        upper-bound construction certifies sufficiency.
+  \item \textbf{T3's objective $S(p,G)$ is a modeling choice,} and under it
         the optimum is the universal, prior-independent $\{2,3\}$
         (eq.~\ref{eq:J23}) --- so T3 as stated supports no data-adaptive
         group-size policy; a richer objective and prospective experiment are
-        required for any adaptive-$G^\star$ claim.
+        required for any adaptive-$G^\star$ claim. The $G{=}2$ contrastive
+        structure has been analyzed independently \cite{wu2025grpodpo}, and
+        the full policy-gradient group-size question is treated by the
+        U-statistic analysis of \citet{zhou2026demystifyinggrpo}; T3 adds
+        only the audit of this particular proxy.
   \item \textbf{Across-group i.i.d.\ (Assumption~\ref{ass:across-iid})
         underlies all three} and is violated by curriculum, replay, and
         within-epoch correlation. \emph{Resolved empirically (E-T1):} under
@@ -754,19 +809,27 @@ signal-per-rollout objective has a well-defined optimum, which is the
         not an invalidation.
 \end{itemize}
 
-\paragraph{Empirical status of the theorems.} Superseded by
-Section~\ref{sec:empirical}, which reports the complete $n{=}512$
-validation (T1 coverage and estimand resolution, T2 floor tightness
-1.00--1.05, T3 $G^\star\in\{2,3\}$ agreement, controller pilot). The
+\paragraph{Empirical status of the theorems.} Section~\ref{sec:empirical}
+reports the complete $n{=}512$ offline checks of the sampling assumptions: T1
+coverage and estimand resolution, and T2 quantile tightness (observed/model
+ratio 1.00--1.04). The T3 argmax agreement is an arithmetic check of an
+identity, not an empirical validation, and the offline bandit (E-B) concerns
+prompt-stratum selection rather than the group-size controller. The
 truncated-pool ($n{=}350$) artifacts are retained alongside as the
-pre-registration record; no verdict changed between $n{=}350$ and
-$n{=}512$.
+pre-registration record; no qualitative verdict changed between $n{=}350$ and
+$n{=}512$, although coverage ranges shifted slightly.
 
-\paragraph{No empirical claims beyond the cited artifacts.} This draft
-reports six substudies in Section~\ref{sec:empirical}, including offline
-resampling and small live training panels; it does not report a new campaign
-beyond those checked-in artifacts. Numeric observations are restricted to the
-named artifacts and are not independent validations of algebraic identities.
+\begin{sloppypar}\noindent\textbf{No empirical claims beyond the cited artifacts.} All empirical
+numbers in Section~\ref{sec:empirical} derive from two checked-in artifact
+classes: (i)~offline resampling and bandit simulation on the frozen
+512-prompt $\times$ 32-rollout Qwen3-8B/GSM8K pool
+(\path{zvf-program/experiments-next/results/*qwen3-8b_train_n512_r32_s42*.json};
+E-T1, E-T2, E-T3a, E-B), plus the single-seed pass@$k$ evaluations quoted in
+E-T3a; and (ii)~small live LoRA training runs
+(\path{platform_hybrid/experiments/tinker-runs/results/er2b_*.json} for E-R2b and
+\path{p4uncap_{grpo,drgrpo}_s{42,123,456}.json} for the valid E-P4 rerun).
+No other campaign is reported, and none of these numbers independently
+validates an algebraic identity.\end{sloppypar}
 
 %==============================================================================
 

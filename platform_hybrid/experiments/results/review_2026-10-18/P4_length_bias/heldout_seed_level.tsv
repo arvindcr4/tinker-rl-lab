@@ -1,0 +1,7 @@
+task	quantity	n	mean	se	ci_lo	ci_hi	df	note
+arithmetic	grpo_post_acc	5	0.987	0.00254951	0.979921	0.994079	4	t-based 95% CI over seeds
+gsm8k_cot	grpo_gain_post_minus_pre	3	0.0616667	0.00440959	0.0426938	0.0806396	2	t-based 95% CI over seeds
+arithmetic	dr_grpo_post_acc	5	0.992	0.00339116	0.982585	1.00142	4	t-based 95% CI over seeds
+gsm8k_cot	dr_grpo_gain_post_minus_pre	3	0.05	0.005	0.0284867	0.0715133	2	t-based 95% CI over seeds
+arithmetic	dr_minus_grpo	5	0.005	0.00424264	1.17851	0.274969	7.42693	ci_lo=Welch t, ci_hi=Welch p; exact perm p=0.373 over 252
+gsm8k_cot	dr_minus_grpo	3	-0.0116667	0.00666667	-1.75	0.156135	3.93846	ci_lo=Welch t, ci_hi=Welch p; exact perm p=0.300 over 20

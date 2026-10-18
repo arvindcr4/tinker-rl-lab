@@ -1,7 +1,7 @@
 % Paper 6 (GRPO-Registry) discussion + limitations + conclusion
 \section{Discussion and Limitations}
 \label{sec:p6-discussion}
-Four limitations bound what this resource can claim. First, \emph{seed
+Five limitations bound what this resource can claim. First, \emph{seed
 breadth}: all 28 stack entries derive from one research program's
 artifacts. They exercise every schema feature (open/managed, implemented/
 surrogate/absent/unknown, fixed/adaptive $G$, dry-run vs.\ completed), but the
@@ -11,7 +11,7 @@ Colab runs; we use them as existence proofs that the schema can capture a
 fully-audited stack, and as directional corroboration of the manifest-level
 DAPO diff---not as effect sizes. The larger-scale observations (the
 under-specified same-label swing and the 368-run per-model ZVF table) come
-from the program audits reported in the companion pillars and are themselves
+from the program audits reported in the companion papers and are themselves
 confounded (checkpoint and harness for the former; model and configuration
 for the latter). Third, \emph{self-report}: for closed
 stacks the registry records what the operator exposes; the null semantics and
@@ -21,7 +21,8 @@ semantics}: the badge measures reporting coverage with equal item weights; it
 is not a correctness proof, not a quality score, and alternative weightings
 would reorder the middle of Table~\ref{tab:p6-entries}\ifdefined\SUBMISSIONBUILD{} (Appendix~\ref{app:p6s-entries})\fi{} (the endpoints are
 robust). We ship the scoring function precisely so disagreements about
-weights can be run, not argued.
+weights can be run, not argued. Fifth, \emph{curation}: some seed entries
+carry errors flagged here but not yet corrected in the data.
 \ifdefined\SUBMISSIONBUILD\else
 \paragraph{Vehicle packaging.}
 In the program's consolidation plan this resource is the appendix/linked
@@ -47,5 +48,5 @@ CLI whose \texttt{stackdiff} lists those confounds field by field, with
 severity, coverage, and an underspecified flag. The registry does not make
 stacks comparable; it makes their incomparability precise, and that is the
 prerequisite for every fair comparison the field wants to run. Schema,
-entries, and tooling are released with the benchmark; the entry format is a
-pull request away for anyone whose stack we did not catalog.
+entries, and tooling are released with the benchmark; new entries arrive by
+pull request (no trainer-side emitter is shipped yet).

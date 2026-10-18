@@ -6,21 +6,31 @@
 \author{Arvind C R \and Ramesh Prakash Guledgudd}
 \date{Source correction, 18 October 2026; not a new release}
 \begin{document}
+\sloppy
 \maketitle
 \begin{abstract}
 This corrected descendant retains a bounded synthetic-tabular observation,
 not a deployment or language-model sensor result. The historical downstream
 calibration, feature-ablation, cost and cross-domain tables are withdrawn
 from current scientific conclusions: their fit/evaluation populations and
-iteration-specific definitions are not consistently reconciled. No retraining,
-new model evaluation, or numerical replacement is represented as completed.
+iteration-specific definitions are not consistently reconciled. Apart from a
+single CPU refit of the released tree baseline, used only as a
+software-version sensitivity check, no retraining, new model evaluation, or
+numerical replacement is represented as completed.
 The historical semester PDF and absorbed source archive remain historical records.
 \end{abstract}
 \section{Dataset and observation units}
 The supplied CSVs contain 50,000 synthetic rows (719 positives), a
 40,000-row training split (575 positives), and a 10,000-row test split
 (144 positives). They are not institutional transaction data. The generator
-uses anonymous numeric features; row-wise mean, standard deviation, maximum
+(\texttt{platform\_local/train\_xgboost.py}) calls scikit-learn
+\texttt{make\_classification} with 20 features (10 informative, 2 redundant),
+two clusters per class, class weights $(0.99, 0.01)$, \texttt{flip\_y}$=0.01$,
+\texttt{class\_sep}$=0.8$ and \texttt{random\_state}$=42$, followed by a
+stratified 80/20 split with \texttt{random\_state}$=42$. Because
+\texttt{flip\_y} reassigns about 1\% of labels at random, the realised positive
+rate (719/50,000 $=1.44\%$) exceeds the nominal 1\% weight.
+The features are anonymous; row-wise mean, standard deviation, maximum
 and minimum are deterministic functions of the existing features. They are
 neither VLM perception nor LLM-produced regulatory narratives, and introduce
 no independent unstructured information. Anonymous feature names also do
@@ -30,23 +40,32 @@ The root \texttt{xgboost\_results.json} records ROC-AUC
 0.794241240530303, precision 0.723404255319149, recall
 0.2361111111111111 and F1 0.35602094240837695. Its recorded inference duration
 is 0.006184816360473633 seconds per 10,000-row batch, not per-request latency.
-The alternative historical quick-artifact AUC 0.7955 has a different
-configuration and must not be merged into this result. Neither number
+The alternative historical quick-artifact AUC 0.7955
+(\texttt{quick\_20260704/qp8\_fraud.tsv}) was written by a separate comparison
+wrapper whose code and library versions are not released, so it must not be
+merged into this result. A CPU refit of the released script's configuration
+on the same disjoint splits under xgboost 3.3.0 gives AUC 0.8019, showing that
+the third decimal is sensitive to the software version. Neither number
 establishes production validity. Historical 0.975/0.948 figures are not
 reconstructed and are excluded from current empirical conclusions.
 
-The historical Qwen SFT record used a 500-row, 20\%-positive enriched subset,
-not the tree's entire 10,000-row natural-rate evaluation population.
+The historical SFT record (Qwen/Qwen3.5-4B, LoRA rank 16, one seed; W\&B run
+\texttt{ek1b2cxn}) used a 500-row, 20\%-positive enriched subset of the test
+split, not the tree's entire 10,000-row natural-rate evaluation population.
 Its reported accuracy 0.792 is below the constant-negative baseline
 $400/500=0.800$; AUC 0.48268 does not support useful ranking. This is not a
-matched-row head-to-head effect estimate. The enriched subset bounds inference
-work; fewer positives and fewer negatives do not improve AUC precision.
+matched-row head-to-head effect estimate. The enriched subset (100 positives,
+400 negatives) bounds inference work, but it has fewer positives and fewer
+negatives than the full test split (144 and 9,856), so it does not make the
+AUC estimate more precise.
 An exact common-row manifest and matched scoring are needed before a
 comparative claim. Missing XGBoost accuracy on that subset is not imputed.
 \section{Withdrawal of downstream conclusions}
 The historical calibration pipeline reads \texttt{fraud\_data.csv} for fitting
-and \texttt{test\_data.csv} for evaluation; the latter is contained in the
-former. Consequently its apparent test scores are in-sample, not leakage-free
+and \texttt{test\_data.csv} for evaluation
+(\texttt{platform\_modal/scripts/p5p8/\_p8\_common.py}); all 10,000 test rows
+occur in the 50,000-row fitting file, while the 40,000-row training split and
+the test split share no rows. Consequently its apparent test scores are in-sample, not leakage-free
 held-out evidence. Within-protocol comparisons do not cure differential
 memorisation across feature sets. All downstream historical calibration,
 feature-ablation, noise, threshold-transfer and cost tables are excluded
@@ -77,8 +96,9 @@ zero decision flips by construction. Unrelated RL telemetry and evolving
 cross-paper density tables are excluded, not evidence about fraud decisions.
 \section{Remaining requirements}
 Before this study can support a comparative publication, recover the exact
-row manifests, fit/configuration identities, predictions and costs; verify
-train/test disjointness, then recompute matched-row metrics and uncertainty.
+row manifests, fit/configuration identities, predictions and costs; refit
+every downstream analysis on the disjoint 40,000-row training split only, then
+recompute matched-row metrics and uncertainty.
 Do not infer human expert validation, deployment efficacy or language-model
 roles from this synthetic observation. All such claims remain unestablished.
 \end{document}

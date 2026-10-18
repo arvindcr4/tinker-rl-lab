@@ -10,14 +10,15 @@
 \label{sec:run-manifest}
 
 This manifest lists every cell for which the repository holds a run
-record, plus planned cells that never started. Tier A denotes completed cells
-with at least three independent seeds at a fixed configuration, B completed
+record, plus planned cells that never started. Tier A denotes completed LM
+cells with at least three independent seeds at a fixed configuration, B completed
 cells with one or two runs (including configuration sweeps, which are not
 seed replication), and C failed, partial, quarantined, or never-started
 cells. These labels do not by themselves authorize inference: task, endpoint
 and independence must also be verified. Column $N$ counts run records (a
-never-started cell has $N{=}0$); it sums to 79 (Tier A 27, Tier B 43,
-Tier C 9), and six planned cells never started. ``Trace'' means a
+never-started cell has $N{=}0$); it sums to 79 (Tier A 12, Tier B 43,
+Tier C 9, and 15 non-LM PPO sanity-floor runs outside the tiers), and six
+planned cells never started. ``Trace'' means a
 step-level reward trace is in the repository; ``ZVF'' means the step log also
 records ZVF. No cell has certified raw per-group rollout JSONL, and no
 LoRA adapter is released for any cell.
@@ -30,11 +31,14 @@ LoRA adapter is released for any cell.
 \toprule
 Tier & Backend & Model & Task & Algo & N & Seeds & Steps & Reward & Held-out & Trace & ZVF \\
 \midrule
-\multicolumn{12}{l}{\textit{Tier A --- completed, $\ge3$ seeds at fixed configuration (replication metadata; inference requires eligibility)}} \\
+\multicolumn{12}{l}{\textit{Non-LM sanity floors (outside the LM tiers)}} \\
 \midrule
-A & Modal       & MLP policy (CleanRL)      & addition env.$^a$   & PPO  & 5 & 5 & 97280  & BV & ---        & \checkmark & --- \\
-A & Modal       & MLP policy (SB3)          & addition env.$^a$   & PPO  & 5 & 5 & 100352 & BV & ---        & \checkmark & --- \\
-A & Modal       & MLP policy (Tianshou)     & addition env.$^a$   & PPO  & 5 & 5 & 100000 & BV & ---        & \checkmark & --- \\
+floor & Modal    & MLP policy (CleanRL)      & addition env.$^a$   & PPO  & 5 & 5 & 97280  & BV & ---        & \checkmark & --- \\
+floor & Modal    & MLP policy (SB3)          & addition env.$^a$   & PPO  & 5 & 5 & 100352 & BV & ---        & \checkmark & --- \\
+floor & Modal    & MLP policy (Tianshou)     & addition env.$^a$   & PPO  & 5 & 5 & 100000 & BV & ---        & \checkmark & --- \\
+\midrule
+\multicolumn{12}{l}{\textit{Tier A --- completed LM cells, $\ge3$ seeds at fixed configuration (replication metadata; inference requires eligibility)}} \\
+\midrule
 A & Modal L4    & Qwen2.5-0.5B (TRL)        & addition (gen.)$^b$ & GRPO & 5 & 5 & 125    & BV & \checkmark & ---        & --- \\
 A & Tinker      & Llama-3.3-70B-Inst        & GSM8K               & GRPO & 4 & 4 & 30     & BV & ---        & \checkmark & --- \\
 A & Tinker      & DeepSeek-V3.1             & GSM8K               & GRPO & 3 & 3 & 30     & BV & ---        & \checkmark & --- \\
@@ -104,7 +108,7 @@ conflicting last-10 values for Qwen3-8B). Reward: BV binary verifiable, SH
 shaped. All Tinker rows depend on a closed-source backend.
 $^a$~Gym environment for adding two integers in $[1,99]$ with a discrete-action
 MLP policy (not a language model); final accuracy is near zero (0.2--1.4\% per seed),
-so these cells are pipeline checks, not learning results.
+so these cells are sanity floors, not learning results.
 $^b$~Generated two-number addition (``What is $a{+}b$?''; 1{,}000 train / 200
 generated evaluation problems); one final accuracy per seed, no step trace.
 $^c$~Step counts are the last logged step; only 3--5 reward values were

@@ -1,0 +1,49 @@
+% =============================================================================
+% Ethics, limitations, and broader impact --- P8 workshop note only.
+% Replaces the shared ethics_statement_zvf.tex for P8, which describes
+% datasets, libraries, releases and results that P8 does not contain.
+% =============================================================================
+\section{Ethics, Limitations, and Broader Impact}
+\label{sec:impact_standalone}
+
+\paragraph{Dual use.}
+The release consists of GRPO driver scripts for GSM8K~\cite{cobbe2021training}
+and a ten-prompt synthetic tool-call task, per-run JSON records, and logging
+code for ZVF. No Tinker model weights are released. The held-out
+comparison in Section~\ref{sec:results} is a null result, so the release does
+not demonstrate a capability gain. Public GRPO implementations of at least
+equal capability already exist~\cite{shao2024deepseekmath,vonwerra2022trl}.
+GRPO optimizes a proxy reward and can reward-hack~\cite{skalse2022specificationgaming};
+ZVF measures within-group reward contrast and does not detect reward hacking.
+
+\paragraph{Data.}
+GSM8K (MIT licence; 7{,}473 train / 1{,}319 test problems) is used unmodified.
+Training samples the train split; the held-out evaluation uses the first 200
+test problems. The tool-use probes use ten prompts over five invented tools
+(calculator, weather, search, reminder, translate) written by the authors and
+contained in the driver script. The classic-RL PPO reference runs use a
+synthetic math environment. No web scraping, human subjects, or personal data
+are involved.
+
+\paragraph{Compute.}
+Author records put platform spend at USD 147--177 across Tinker, Modal H100
+and an NVIDIA L4 instance, including failed runs (W\&B and Hugging Face were
+used at no cost); these figures were not
+reconciled against billing statements. We give no carbon estimate for the
+Tinker runs: the hardware and its utilization are not disclosed, and the
+client wall-clock time includes queueing and API stalls.
+
+\paragraph{Closed backend.}
+Most rows depend on the managed Tinker API. Our driver computes advantages
+(group mean and standard deviation) and the policy-gradient loss on the client
+through \texttt{forward\_backward\_custom}, so those are auditable. Sampler and
+trainer numerics, hardware, and scheduling are not. Tinker rows are case
+studies; replication requires Tinker access.
+
+\paragraph{Methodological limits.}
+Tinker training horizons are short (20--50 steps; 160 for the $G{=}2$ matched-budget
+arms). Most Tinker cells have one seed. All Tinker runs use LoRA. Tinker
+training reward is measured on sampled training prompts (under a 512-token cap
+in the case studies) and is not a measure of GSM8K accuracy (Section~\ref{sec:results}). The study is
+exploratory and not pre-registered; reported $p$-values are not corrected for
+multiple comparisons.

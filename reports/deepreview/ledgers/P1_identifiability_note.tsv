@@ -1,0 +1,5 @@
+location	claim_text	value	source_artifact	generator_script	status
+Table 1 MoE-dense row (proposed)	7v5 / 6v5 / long7 gaps	+0.188 p=0.178; +0.278 p=0.048; +0.020 p=0.57	platform_hybrid/experiments/results/review_2026-10-18/P1_scaling/moe_vs_dense_permutation.tsv	tools/review_ledger/P1_scaling_rawtrace_refit.py	recomputed
+Table 1 leave-Nemotron row (proposed)	slope n=11 / n=6	+0.118+-0.118 p=0.36; +0.073+-0.102 p=0.62	platform_hybrid/experiments/results/review_2026-10-18/P1_scaling/cross_scale_regressions.tsv	tools/review_ledger/P1_scaling_rawtrace_refit.py	recomputed
+Table 1 Nemotron row	peak 0.875@3, last-10 0.1625, zero 11/20, 5/20 > 0.25	verified against trace	platform_hybrid/experiments/tinker-runs/results/frontier_gsm8k_nemotron-120b.json	tools/review_ledger/P1_scaling_rawtrace_refit.py	verified
+Table 1 size regressions	historical p=0.7382/0.5061	verified present in TSV; not retained as evidence	platform_hybrid/experiments/results/scaling_law_iter109b_permtest.tsv	platform_modal/scripts/scaling_law_iter109b.py	verified

@@ -1,48 +1,9 @@
-"""Pillar 1 iter69 -- Spectral-decay and autocorrelation coupling of GRPO
-saturation dynamics.
+"""Exploratory spectral, autocorrelation, and saturation diagnostics.
 
-The iter45/49/57/61/65 battery reduced the saturation law
-R(t) = R_max * (1 - e^{-lambda t}) to per-trace estimates of
-(R_max, lambda, t_80).  What those reductions missed: the SERIAL
-CORRELATION STRUCTURE of the reward trace -- how step t
-correlates with step t + k for various lags k.  This iteration
-asks whether the trace's serial-correlation fingerprint:
-
-  - Lag-k autocorrelation ACF(k) for k = 1..8
-  - Lag-1 AR(1) coefficient rho1
-  - Periodogram spectral-decay exponent alpha (S(f) ~ 1/f^alpha)
-  - First-difference variance sigma^2_dy
-  - Integrated autocorrelation time tau_int = 1 + 2 sum_{k=1..K} rho_k
-  - Effective sample size fraction n_eff / n
-
-predicts the saturation-rate lambda, the saturation level
-R_max, or the architecture (dense vs MoE).  If yes, the
-saturation dynamics are a *coloured-noise* stochastic process
-and ACF-based features can serve as a cheap diagnostic.  If no,
-the saturation dynamics are dominated by structural shifts
-(phase changes, regime boundaries) and ACF features are pure
-noise.
-
-The test battery is power-spectrum-aware: the spectral exponent
-alpha is THE primary dependent variable, since it is robust to
-trace length (works for n >= 4 via FFT on zero-padded arrays)
-and has a 40-year theoretical literature on 1/f^alpha noise.
-
-Outputs (6 TSV + 1 fig + 1 tex):
-  platform_hybrid/experiments/results/scaling_law_iter69_acf.tsv
-  platform_hybrid/experiments/results/scaling_law_iter69_spectral.tsv
-  platform_hybrid/experiments/results/scaling_law_iter69_ar1.tsv
-  platform_hybrid/experiments/results/scaling_law_iter69_coupling.tsv
-  platform_hybrid/experiments/results/scaling_law_iter69_arch.tsv
-  platform_hybrid/experiments/results/scaling_law_iter69_predictions.tsv
-  figures/scaling_law_iter69.{pdf,png}
-  paper/sections/scaling_law_iter69.tex
-
-Citations (frontier synthesis + 2025 GRPO/scaling literature):
-  - nimmaturi2025predictive (arXiv:2507.18014): canonical 3-phase hypothesis.
-  - kaplan2020scaling (Chinchilla): parametric vs FLOP allocation.
-  - hou2025advancing: GRPO saturation dynamics.
-  - goldenberg2024scaling: spectral decay of LLM training loss.
+Short nonstationary reward traces do not establish a stationary noise model,
+robust spectral exponents, effective independent sample counts, or a validated
+forecasting proxy. All retrospective thresholds are descriptive. Candidate
+outputs go to review27_v3 or an explicitly supplied output directory.
 """
 
 from __future__ import annotations
@@ -56,16 +17,19 @@ import matplotlib
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
-import numpy as np  # noqa: E402
+import numpy as np
+try:
+    from ._review27_rank import rank_correlation
+except ImportError:
+    from _review27_rank import rank_correlation  # noqa: E402
 
-REPO = Path(__file__).resolve().parent.parent
+REPO = Path(__file__).resolve().parents[2] / "platform_hybrid"
+CANDIDATE = REPO / "experiments" / "results" / "review27_v3"
 TRACE_DIR = REPO / "experiments" / "tinker-runs" / "results"
-RESULTS_DIR = REPO / "experiments" / "results"
-FIG_DIR = REPO / "figures"
-PAPER_SEC = REPO / "paper" / "sections"
-PAPER_FIG = REPO / "paper" / "figures"
-for d in (FIG_DIR, PAPER_SEC, PAPER_FIG):
-    d.mkdir(parents=True, exist_ok=True)
+RESULTS_DIR = CANDIDATE
+FIG_DIR = CANDIDATE / "figures"
+PAPER_SEC = CANDIDATE / "sections"
+PAPER_FIG = CANDIDATE / "paper_figures"
 
 MODELS: dict[str, dict] = {
     "Qwen3.5-4B":            {"file": "scale_gsm8k_qwen3.5-4b.json",     "params":   4.0, "arch": "dense"},
@@ -82,9 +46,6 @@ MODELS: dict[str, dict] = {
     "Kimi-K2-Thinking":      {"file": "arch_gsm8k_kimi-k2.json",         "params":1000.0, "arch": "moe"},
 }
 
-SEED = 20260703
-N_BOOT = 2000
-RNG = np.random.default_rng(SEED)
 
 # Maximum lag considered for ACF / tau_int (avoid boundary effects for
 # short traces; for n = 3 we keep lag = 1 only).
@@ -93,17 +54,14 @@ MAX_LAG = 8
 MIN_N_AR1 = 3
 # Spectral slope is computed via log-log OLS on the periodogram.
 MIN_N_SPEC = 4
-# Subsample block size for the stationary bootstrap on short traces.
-BLOCK_SIZE_FRAC = 0.25
 
 
 def _load_trace(fname: str) -> list[float]:
-    fp = TRACE_DIR / fname
-    if not fp.exists():
-        return []
-    obj = json.loads(fp.read_text())
-    rt = obj.get("reward_trace") or []
-    return [float(r) for r in rt if r is not None]
+    try:
+        from ._review27_rank import load_reward_trace
+    except ImportError:
+        from _review27_rank import load_reward_trace
+    return load_reward_trace(TRACE_DIR / fname)
 
 
 def _acf(y: np.ndarray, max_lag: int) -> list[float]:
@@ -114,11 +72,11 @@ def _acf(y: np.ndarray, max_lag: int) -> list[float]:
     """
     n = len(y)
     if n < 2:
-        return [1.0] + [0.0] * max_lag
+        return [math.nan] * (max_lag + 1)
     y0 = y - y.mean()
     denom = float(np.sum(y0 * y0))
     if denom < 1e-12:
-        return [1.0] + [0.0] * max_lag
+        return [math.nan] * (max_lag + 1)
     out = [1.0]
     for k in range(1, max_lag + 1):
         if k >= n:
@@ -196,40 +154,22 @@ def _ar1_rho(y: np.ndarray) -> tuple[float, float]:
 
 
 def _fit_saturation(y: np.ndarray) -> tuple[float, float, float]:
-    """Fit R(t) = R_max * (1 - e^{-lambda t}) via OLS on transformed
-    variable:  -log(1 - y/R_max) = lambda * t.  Iterates over a small
-    grid of R_max to find the best (R_max, lambda) pair, with a
-    guardrail against R_max collapsing to a tiny value.
-    Returns (R_max, lambda, t_80) where t_80 = -ln(0.2)/lambda.
-    """
-    n = len(y)
-    if n < 4:
-        return (float(y.mean()), float("inf"), math.nan)
-    t = np.arange(1, n + 1, dtype=float)
-    ymax = float(y.max())
-    ymin = float(y.min())
-    if ymax < 1e-6:
-        return (0.0, float("inf"), math.nan)
-    best = (ymax, float("inf"), math.inf)
-    for r_max in np.linspace(max(ymax, 0.5), min(1.0, max(ymax, 0.5) + 0.5), 12):
-        # Avoid log(neg)
-        ratio = np.clip(y / r_max, 1e-3, 1 - 1e-3)
-        z = -np.log(1.0 - ratio)
-        # OLS through origin (model: z = lambda * t)
-        num = float(np.sum(z * t))
-        den = float(np.sum(t * t))
-        if den < 1e-12:
-            continue
-        lam = num / den
-        if lam <= 0:
-            continue
-        resid = z - lam * t
-        sse = float(np.sum(resid ** 2))
-        if sse < best[2]:
-            best = (float(r_max), float(lam), sse)
-    r_max, lam, _ = best
-    t_80 = -math.log(0.2) / lam if 0 < lam < 100 else math.nan
-    return (r_max, lam, t_80)
+    """Fit the same saturation curve in original reward space; failures are missing."""
+    from scipy.optimize import curve_fit
+    y = np.asarray(y, dtype=float)
+    if y.ndim != 1 or len(y) < 4 or not np.isfinite(y).all() or np.ptp(y) < 1e-8:
+        return math.nan, math.nan, math.nan
+    t = np.arange(1, len(y) + 1, dtype=float)
+    def model(t, maximum, rate):
+        return maximum * (-np.expm1(-rate*t))
+    try:
+        parameters, _ = curve_fit(model, t, y,
+                                  p0=[max(.01, min(float(y.max()), 1.4)), .1],
+                                  bounds=([0, 1e-4], [1.5, 10]), maxfev=20000)
+        maximum, rate = map(float, parameters)
+        return maximum, rate, -math.log(.2)/rate
+    except (ValueError, RuntimeError, FloatingPointError):
+        return math.nan, math.nan, math.nan
 
 
 def _first_diff_var(y: np.ndarray) -> float:
@@ -239,26 +179,44 @@ def _first_diff_var(y: np.ndarray) -> float:
 
 
 def _tau_int(acf_vals: list[float]) -> float:
-    """Integrated autocorrelation time tau_int = 1 + 2 sum_{k>=1} rho_k,
-    clipped at the first negative rho (Geyer's initial monotone
-    sequence estimator).  We allow negative tails by adding them
-    in full when they occur (the canonical recipe); the simple
-    "first negative rho" version above is too aggressive for
-    oscillating series.
-    """
-    s = 1.0
-    for k in range(1, len(acf_vals)):
-        s += 2.0 * acf_vals[k]
-    return float(max(s, 1.0))
+    """Finite initial-positive paired autocorrelation sum (exploratory)."""
+    values=np.asarray(acf_vals,dtype=float)
+    if len(values)<2 or not np.isfinite(values).all():
+        return math.nan
+    total=0.0
+    previous=math.inf
+    for k in range(0,len(values)-1,2):
+        pair=float(values[k]+values[k+1])
+        if pair<=0:
+            break
+        previous=min(previous,pair)
+        total+=previous
+    return max(1.0,-1.0+2.0*total)
+
+
 
 
 def _eff_n(n: int, tau_int: float) -> float:
-    if tau_int < 1.0:
-        return float(n)
+    if not math.isfinite(tau_int) or tau_int < 1 or n < 2:
+        return math.nan
     return float(n / tau_int)
 
 
-def main() -> None:
+def main(output_dir=None, source_root=None):
+    global REPO, CANDIDATE, FIG_DIR, PAPER_SEC
+    global RESULTS_DIR, TRACE_DIR, PAPER_FIG
+    if source_root is not None:
+        REPO = Path(source_root)
+    if output_dir is not None:
+        CANDIDATE = Path(output_dir)
+    RESULTS_DIR = CANDIDATE
+    TRACE_DIR = REPO / "experiments/tinker-runs/results"
+    PAPER_FIG = CANDIDATE / "paper_figures"
+    PAPER_FIG.mkdir(parents=True, exist_ok=True)
+    FIG_DIR, PAPER_SEC = CANDIDATE / "figures", CANDIDATE / "sections"
+    for directory in (CANDIDATE, FIG_DIR, PAPER_SEC):
+        directory.mkdir(parents=True, exist_ok=True)
+
     acf_rows, spec_rows, ar1_rows, cou_rows = [], [], [], []
     arch_rows_dense, arch_rows_moe = [], []
 
@@ -295,9 +253,10 @@ def main() -> None:
         cou_rows.append({
             "model": m, "params_B": cfg["params"], "arch": cfg["arch"],
             "n": n, "R_max": r_max, "lambda": lam, "t_80": t_80,
+            "fit_status": "unavailable" if not math.isfinite(lam) else "bound" if min(abs(lam - 10), abs(lam - 1e-4)) < 1e-3 else "interior",
             "alpha": alpha, "rho1": rho1, "dy_var": dy_var, "tau_int": tau,
             "n_eff_frac": n_eff / n if n else 0.0,
-            "log_params": math.log(cfg["params"]),
+            "log_params": math.log10(cfg["params"]),
         })
         if cfg["arch"] == "dense":
             arch_rows_dense.append({"alpha": alpha, "rho1": rho1, "dy_var": dy_var,
@@ -306,6 +265,8 @@ def main() -> None:
             arch_rows_moe.append({"alpha": alpha, "rho1": rho1, "dy_var": dy_var,
                                    "tau_int": tau, "lambda": lam, "R_max": r_max})
 
+    if not cou_rows:
+        raise ValueError("no observed reward traces available")
     # Write per-tab TSVs
     def _dump(rows: list[dict], fname: str) -> None:
         path = RESULTS_DIR / fname
@@ -321,8 +282,6 @@ def main() -> None:
 
     # Architecture-level summary
     def _arch_summary(group: list[dict], arch: str) -> dict:
-        if not group:
-            return {"arch": arch, "n_anchors": 0}
         alphas = [r["alpha"] for r in group if not math.isnan(r["alpha"])]
         rhos = [r["rho1"] for r in group if not math.isnan(r["rho1"])]
         dys = [r["dy_var"] for r in group]
@@ -346,7 +305,7 @@ def main() -> None:
                  _arch_summary(arch_rows_moe,   "moe")]
     _dump(arch_rows, "scaling_law_iter69_arch.tsv")
 
-    # ---- Pre-registered predictions (falsifiable battery calibrated
+    # ---- Exploratory predictions (falsifiable battery calibrated
     # against the data shape we observe -- the pool has oscillating
     # ACF and rank-coupled alpha/lambda, so we register predictions
     # that the data can either confirm or refute).
@@ -357,7 +316,7 @@ def main() -> None:
     # P1: ACF(1) is NEGATIVE for >= 10/12 anchors (anti-persistent regime)
     acf1_neg = sum(1 for r in acf_rows if not math.isnan(r["acf1"]) and r["acf1"] < 0)
     p1_observed = f"{acf1_neg}/{n_total}"
-    p1_pass = acf1_neg >= 10
+    p1_pass = acf1_neg / n_total >= 10/12
 
     # P2: |ACF(1)| is the largest in magnitude among lags 1..4 (the
     # anti-persistence is concentrated at lag 1) for >= 8/12.
@@ -370,7 +329,7 @@ def main() -> None:
         if a1 >= m_others:
             acf1_largest += 1
     p2_observed = f"{acf1_largest}/{n_total}"
-    p2_pass = acf1_largest >= 8
+    p2_pass = acf1_largest / n_total >= 8/12
 
     # P3: Spectral slope alpha finite and in [-2, 4] for >= 2/3 of pool.
     in_range = sum(1 for r in spec_rows if not math.isnan(r["alpha"]) and -2 <= r["alpha"] <= 4)
@@ -381,7 +340,7 @@ def main() -> None:
     if len(valid) >= 5:
         lp = np.array([r["log_params"] for r in valid])
         al = np.array([r["alpha"] for r in valid])
-        sp_alpha = float(np.corrcoef(lp, al)[0, 1])
+        sp_alpha = rank_correlation(lp, al)
     else:
         sp_alpha = float("nan")
     p4_observed = f"spearman={sp_alpha:+.3f}, n={n_valid}" if not math.isnan(sp_alpha) else "NA"
@@ -389,11 +348,11 @@ def main() -> None:
 
     # P5: Spearman(alpha, lambda) > 0.50 (rank coupling -- the headline
     # cheap-diagnostic test).  Excludes the lambda=inf outliers.
-    valid_coupl = [r for r in valid if not math.isnan(r["lambda"]) and r["lambda"] < 1e3 and r["lambda"] > 0]
+    valid_coupl = [r for r in valid if r["fit_status"] == "interior"]
     if len(valid_coupl) >= 5:
         al_c = np.array([r["alpha"] for r in valid_coupl])
         la_c = np.array([r["lambda"] for r in valid_coupl])
-        sp_alpha_lambda = float(np.corrcoef(al_c, la_c)[0, 1])
+        sp_alpha_lambda = rank_correlation(al_c, la_c)
     else:
         sp_alpha_lambda = float("nan")
     p5_observed = (
@@ -407,7 +366,7 @@ def main() -> None:
     if len(valid) >= 5:
         lp = np.array([r["log_params"] for r in valid])
         dy = np.array([r["dy_var"] for r in valid])
-        sp_dy = float(np.corrcoef(lp, dy)[0, 1])
+        sp_dy = rank_correlation(lp, dy)
     else:
         sp_dy = float("nan")
     p6_observed = f"spearman={sp_dy:+.3f}" if not math.isnan(sp_dy) else "NA"
@@ -416,7 +375,7 @@ def main() -> None:
     # P7: |rho1| < 0.5 for >= 7/12 anchors (no random-walk regime).
     bounded_rho = sum(1 for r in ar1_rows if not math.isnan(r["rho1"]) and abs(r["rho1"]) < 0.5)
     p7_observed = f"{bounded_rho}/{n_total}"
-    p7_pass = bounded_rho >= 7
+    p7_pass = bounded_rho / n_total >= 7/12
 
     # P8: spectral slope alpha differs across dense vs MoE (Mann-Whitney p < 0.10).
     alphas_dense = sorted([r["alpha"] for r in cou_rows if r["arch"] == "dense" and not math.isnan(r["alpha"])])
@@ -480,6 +439,9 @@ def main() -> None:
          "observed": p8_observed,
          "expected": "p < 0.10", "pass_fail": "PASS" if p8_pass else "FAIL"},
     ]
+    for result in pred_rows:
+        if result["observed"] == "NA":
+            result["pass_fail"] = "UNAVAILABLE"
     _dump(pred_rows, "scaling_law_iter69_predictions.tsv")
 
     # ---- 4-panel figure
@@ -593,170 +555,14 @@ def main() -> None:
     p_mw_str = f"{p_mw:.3f}" if not math.isnan(p_mw) else "NA"
     beta_lam_str = f"{(beta_lam[1]):+.3f}" if not math.isnan(r2_lam) else "NA"
 
-    sec = r"""\paragraph{Iter 69 elevation: spectral-decay and autocorrelation coupling of GRPO saturation dynamics.}
-\label{par:scaling-iter69}
-The iter 49 battery fit the saturation law
-$R(t) = R_\mathrm{max} \cdot \left(1 - e^{-\lambda t}\right)$ to the
-reward traces across 12 anchors and reported
-$R^2 = 0.18$ for a two-parameter iso-FLOP joint fit; iter 57
-audited the identifiability (4/5 anchors at the $\lambda$
-upper-bound); iter 61 conditioned the degeneracy on per-step
-ZVF; iter 65 sharpened the three-phase falsification with a
-geometric PCI.  What remained untested is the \emph{serial
-correlation structure} of the trace itself: the ACF, the AR(1)
-coefficient, the spectral-decay exponent, and the integrated
-autocorrelation time.  This iteration asks whether the trace's
-serial correlation fingerprint predicts the saturation rate
-$\lambda$ and thereby licenses a \emph{cheap diagnostic} for
-extrapolation.
-
-\paragraph{Per-trace serial-correlation fingerprint.}
-For each of the 12 anchors we compute:
-\begin{itemize}
-  \item $\mathrm{ACF}(k)$ for $k = 1, \dots, 8$ (sample autocorrelation, no bias correction);
-  \item $\rho_1$ and its standard error (lag-1 AR(1) coefficient OLS on the detrended reward);
-  \item the periodogram spectral-decay exponent $\alpha$ defined by
-        $\log_{10} S(f) = -\alpha \cdot \log_{10} f + \mathrm{const}$
-        on the linearly-detrended, FFT-zero-padded signal;
-  \item the first-difference variance $\mathrm{Var}[\Delta y]$;
-  \item the integrated autocorrelation time
-        $\tau_\mathrm{int} = 1 + 2 \sum_{k \geq 1} \rho_k$
-        (Geyer initial positive-sequence, $\max(1, \cdot)$ clamp);
-\end{itemize}
-All features require only $n \geq 3$ (AR(1)) or $n \geq 4$
-(spectral slope) and therefore work on the shortest
-(Llama-3.1-8B at $n = 30$, the $n = 3$ arch anchors) as well as the
-frontier ($n = 20$) traces.
-
-\paragraph{Headline finding.}
-The reward traces across the 12-anchor pool are
-\textbf{anti-persistent}: $\mathrm{ACF}(1) < 0$ in
-""" + f"{acf1_neg}/{n_total}" + r""" of the anchors (""" + f"{acf1_neg_frac:.2f}" + r""" of the pool).
-This is a strict departure from the random-walk regime
-($\rho_1 \approx 1$) and from the white-noise regime
-($\rho_1 \approx 0$); the traces instead exhibit mean-reverting
-anti-correlation, consistent with iterative-reward feedback
-that overshoots in both directions.  The anti-persistence is
-concentrated at lag 1 in """ + f"{acf1_largest}/{n_total}" + r""" anchors
-(|$\mathrm{ACF}(1)$| $\geq$ max of lags 2-4), and the
-first-difference variance \emph{decreases} with model size
-(Spearman $\log N$ vs $\mathrm{Var}[\Delta y]$ = """ + sp_dy_str + r"""),
-which together license the headline interpretation: larger
-GRPO-trained models fluctuate less between successive reward
-steps.
-
-\paragraph{Pre-registered predictions.}
-We pre-register eight falsifiable predictions in
-""" + _g("scaling_law_iter69_predictions.tsv") + r""":
-\begin{itemize}
-  \item P1\_acf1\_negative: """ + pred_rows[0]["pass_fail"] + r""" (""" + pred_rows[0]["observed"] + r""")
-  \item P2\_acf1\_dominant: """ + pred_rows[1]["pass_fail"] + r""" (""" + pred_rows[1]["observed"] + r""")
-  \item P3\_alpha\_finite: """ + pred_rows[2]["pass_fail"] + r""" (""" + pred_rows[2]["observed"] + r""")
-  \item P4\_logparams\_alpha\_positive: """ + pred_rows[3]["pass_fail"] + r""" (""" + pred_rows[3]["observed"] + r""")
-  \item P5\_alpha\_lambda\_rank\_coupling: """ + pred_rows[4]["pass_fail"] + r""" (Spearman($\alpha$, $\lambda$) = """ + sp_al_la_str + r""")
-  \item P6\_logparams\_smoothness: """ + pred_rows[5]["pass_fail"] + r""" (""" + pred_rows[5]["observed"] + r""")
-  \item P7\_rho1\_bounded: """ + pred_rows[6]["pass_fail"] + r""" (""" + pred_rows[6]["observed"] + r""")
-  \item P8\_arch\_alpha\_differs: """ + pred_rows[7]["pass_fail"] + r""" (""" + pred_rows[7]["observed"] + r""")
-\end{itemize}
-
-\paragraph{Per-architecture summary.}
-The architecture-level medians of $\alpha$, $\rho_1$,
-$\mathrm{Var}[\Delta y]$, $\tau_\mathrm{int}$, and $\lambda$
-are summarised in \tableref{tab:iter69-arch}.
-
-\begin{table}[t]
-  \centering
-  \small
-  \begin{tabular}{lrrrrrrr}
-    \toprule
-    Arch & $n$ & $\alpha$ (med) & $\rho_1$ (med) & $\mathrm{Var}[\Delta y]$ & $\tau_\mathrm{int}$ (med) & $\lambda$ (med) & $R_\mathrm{max}$ (mean) \\
-    \midrule
-""" + arch_table + r"""
-    \bottomrule
-  \end{tabular}
-  \caption{\textbf{Per-architecture serial-correlation fingerprint.}
-    MoE models have """ + ("higher" if arch_rows[1]["alpha_med"] > arch_rows[0]["alpha_med"] else "lower") + r"""
-    spectral slopes on average than dense models.
-    \texttt{platform_modal/scripts/scaling\_law\_iter69.py} $\to$
-    \texttt{scaling\_law\_iter69\_arch.tsv}.}
-  \label{tab:iter69-arch}
-\end{table}
-
-\paragraph{Top anchors by spectral slope.}
-The top-8 traces sorted by $|\alpha|$ (spectral fingerprint
-extremes) are shown in \tableref{tab:iter69-top-alpha}.
-
-\begin{table}[t]
-  \centering
-  \small
-  \begin{tabular}{lrrrrrrrrr}
-    \toprule
-    Model & $N$ (B) & arch & $n$ & $\alpha$ & $\rho_1$ & $\mathrm{Var}[\Delta y]$ & $\tau_\mathrm{int}$ & $\lambda$ & $R_\mathrm{max}$ \\
-    \midrule
-""" + alpha_table + r"""
-    \bottomrule
-  \end{tabular}
-  \caption{\textbf{Top-8 traces by spectral-decay exponent
-    $|\alpha|$.}  Anchors with $\alpha \approx 1$ are
-    $1/f$ noise; $\alpha \approx 2$ is Brownian; $\alpha \in
-    [0, 1]$ is short-memory coloured noise.  $\texttt{...}$ $\to$
-    \texttt{scaling\_law\_iter69\_coupling.tsv}.}
-  \label{tab:iter69-top-alpha}
-\end{table}
-
-\paragraph{Coupling falsification battery.}
-Across the pool of $n \geq 4$ traces with finite $\lambda$
-we test:
-\begin{itemize}
-  \item Spearman rank correlation between the spectral exponent
-        $\alpha$ and the saturation rate $\lambda$
-        (""" + sp_al_la_str + r"""); the cheap-diagnostic hypothesis
-        is that $\alpha$ is a stand-in for $\lambda$ on
-        short traces where the saturation fit is unstable.
-  \item OLS R$^2$ of $\lambda \sim \log_{10} N + \alpha$
-        (additive-feature test, R$^2$ =
-        """ + r2_str + r"""$).
-  \item Mann-Whitney U on $\alpha$ across dense vs MoE
-        ($p = """ + p_mw_str + r"""$).
-\end{itemize}
-
-\paragraph{What iter 69 proves.}
-The serial-correlation fingerprint across the 12-anchor pool
-is summarised by the eight pre-registered predictions above.
-The Spearman($\alpha$, $\lambda$) = """ + sp_al_la_str + r"""
-is the \emph{headline coupling}: traces with steeper spectral
-decay identify the same set of slow-saturation anchors as
-the explicit $R(t) = R_\mathrm{max} (1 - e^{-\lambda t})$
-fit, and conversely the steepest-spectrum anchors (Qwen3.5-27B,
-Qwen3-235B-MoE) are the already-saturated ones.  The Spearman
-($\log N$, $\mathrm{Var}[\Delta y]$) = """ + sp_dy_str + r"""
-quantifies the smoothness scaling across model size.  The
-architecture decomposition in \tableref{tab:iter69-arch}
-shows whether the trace fingerprint carries an architecture
-signal independent of model size (it does not: Mann-Whitney
-$p = """ + p_mw_str + r"""$).  The spectral exponent $\alpha$ is
-a \emph{cheap} proxy for $\lambda$ on short traces (computed
-from $n \geq 4$ points, no saturation fit required).
-
-\begin{figure}[t]
-  \centering
-  \IfFileExists{figures/scaling_law_iter69.pdf}{%
-  \includegraphics[width=0.95\linewidth]{figures/scaling_law_iter69.pdf}%
-  }{%
-  \fbox{\parbox{0.86\linewidth}{\centering\small\vspace{1em}\textit{[Figure placeholder: scaling\_law\_iter69.pdf pending regeneration.]}\vspace{1em}}%
-  }
-  \caption{\textbf{Iter 69 serial-correlation fingerprint.}
-    \textbf{(A)} ACF lags 1--4 per anchor (blue = dense,
-    orange = MoE).
-    \textbf{(B)} periodogram spectral-decay exponent $\alpha$
-    per anchor with $\alpha = 1$ and $\alpha = 2$ bounds.
-    \textbf{(C)} $\alpha$ vs $\log_{10} N$ scatter with OLS
-    line; slope = """ + beta_lam_str + r""", Spearman = """ + sp_str + r""".
-    \textbf{(D)} lag-1 AR(1) coefficient $\rho_1$ per anchor
-    with $\pm 1$ SE bars; $\rho_1 = \pm 0.5$ bounds.}
-  \label{fig:scaling-iter69}
-\end{figure}
-"""
+    sec = r"\subsection{Exploratory serial-correlation diagnostics}" + "\n"
+    sec += "These retrospective checks are descriptive. Sample ACF, initial-positive paired autocorrelation sums, effective sample sizes and spectral slopes from short nonstationary training traces do not establish stationarity or calibrated forecasting performance.\n"
+    sec += f"Included anchors: {n_total}; finite spectral fits: {n_valid}.\n"
+    sec += f"Spearman spectral slope versus saturation rate: {sp_al_la_str}; architecture Mann-Whitney p: {p_mw_str}.\n"
+    sec += r"\begin{tabular}{lrrrrrrr}" + "\n" + arch_table + "\n" + r"\end{tabular}" + "\n"
+    for result in pred_rows:
+        label = result["prediction_id"].replace("_", r"\_")
+        sec += f"Descriptive check {label}: {result['pass_fail']}.\n"
     (PAPER_SEC / "scaling_law_iter69.tex").write_text(sec)
 
     # ---- console summary
@@ -774,39 +580,20 @@ from $n \geq 4$ points, no saturation fit required).
     for p in pred_rows:
         print(f"  {p['prediction_id']}: {p['pass_fail']} -- {p['observed']}")
 
+    try:
+        from ._review27_rank import write_manifest
+    except ImportError:
+        from _review27_rank import write_manifest
+    write_manifest(__file__, CANDIDATE, [TRACE_DIR / cfg["file"] for cfg in MODELS.values()], seed=None)
+
 
 def _mann_whitney_u(xs: list[float], ys: list[float]) -> tuple[float, float]:
-    """Two-sided Mann-Whitney U with normal approximation (continuity
-    corrected).  Returns (U, p_two_sided).  Returns (nan, nan) if
-    either group has fewer than 2 elements.
-    """
-    n1, n2 = len(xs), len(ys)
-    if n1 < 2 or n2 < 2:
-        return (float("nan"), float("nan"))
-    combined = [(v, 0) for v in xs] + [(v, 1) for v in ys]
-    combined.sort(key=lambda t: (t[0], t[1]))
-    # Assign mean ranks (handles ties).
-    ranks = [0.0] * (n1 + n2)
-    pos = 0
-    while pos < len(combined):
-        end = pos
-        while end + 1 < len(combined) and combined[end + 1][0] == combined[pos][0]:
-            end += 1
-        avg = (pos + 1 + end + 1) / 2.0
-        for k in range(pos, end + 1):
-            ranks[k] = avg
-        pos = end + 1
-    r1 = sum(ranks[k] for k in range(n1 + n2) if combined[k][1] == 0)
-    u1 = r1 - n1 * (n1 + 1) / 2.0
-    u2 = n1 * n2 - u1
-    u = min(u1, u2)
-    mu = n1 * n2 / 2.0
-    sigma = math.sqrt(n1 * n2 * (n1 + n2 + 1) / 12.0)
-    if sigma < 1e-12:
-        return (float(u), 1.0)
-    z = (u - mu + 0.5) / sigma  # continuity-corrected
-    p = math.erfc(abs(z) / math.sqrt(2.0))
-    return (float(u), float(p))
+    """Two-sided tie-corrected asymptotic Mann-Whitney test."""
+    from scipy.stats import mannwhitneyu
+    if len(xs) < 2 or len(ys) < 2 or not np.isfinite(xs).all() or not np.isfinite(ys).all():
+        return math.nan, math.nan
+    result = mannwhitneyu(xs, ys, alternative="two-sided", method="asymptotic")
+    return float(result.statistic), float(result.pvalue)
 
 
 if __name__ == "__main__":

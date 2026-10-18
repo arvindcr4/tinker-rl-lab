@@ -1,5 +1,6 @@
 """The local gate must inspect staged and unstaged tracked changes."""
 
+import os
 from pathlib import Path
 import shutil
 import subprocess
@@ -14,6 +15,8 @@ ROOT = Path(__file__).resolve().parents[1]
 def test_make_secret_gate_checks_both_git_diff_surfaces(tmp_path, state):
     scanner = shutil.which("gitleaks")
     if scanner is None:
+        if os.environ.get("CI"):
+            pytest.fail("CI requires gitleaks to exercise the local secret gate")
         pytest.skip("optional gitleaks executable is unavailable")
     if shutil.which("git") is None or shutil.which("make") is None:
         pytest.skip("git and make are required for the isolated scan contract")
@@ -58,3 +61,10 @@ def test_make_secret_gate_checks_both_git_diff_surfaces(tmp_path, state):
         assert result.returncode != 0, f"{state} synthetic marker escaped the local gate"
         assert "leaks found" in result.stderr.lower()
     assert marker not in result.stdout + result.stderr
+
+
+def test_ci_cannot_silently_skip_missing_scanner(tmp_path, monkeypatch):
+    monkeypatch.setenv("CI", "true")
+    monkeypatch.setattr(shutil, "which", lambda _name: None)
+    with pytest.raises(pytest.fail.Exception, match="CI requires gitleaks"):
+        test_make_secret_gate_checks_both_git_diff_surfaces(tmp_path, "clean")

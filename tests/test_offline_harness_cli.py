@@ -17,7 +17,10 @@ def setup(tmp_path, monkeypatch):
     monkeypatch.setattr(harness, "ROOT", tmp_path)
     monkeypatch.setattr(harness, "SOURCES", ("fixture.py",))
     monkeypatch.setattr(harness.importlib.util, "find_spec", lambda _name: object())
-    monkeypatch.setattr(harness.importlib.metadata, "version", lambda _name: "synthetic")
+    monkeypatch.setattr(harness.importlib.metadata, "version", lambda _name: "1.0")
+    monkeypatch.setattr(
+        harness, "_locked_versions", lambda: {name: "1.0" for name in harness.DEPENDENCIES}
+    )
     calls = []
 
     def run(command, **kwargs):
@@ -152,3 +155,26 @@ def test_missing_dependencies_have_actionable_error(tmp_path, monkeypatch, setup
     assert raised.value.code == 2
     assert "uv sync --frozen --extra dev --python 3.12" in capsys.readouterr().err
     assert calls == []
+
+
+def test_unlocked_runtime_is_rejected_before_running(tmp_path, monkeypatch, setup, capsys):
+    _, calls, _ = setup
+    monkeypatch.setattr(harness.importlib.metadata, "version", lambda _name: "2.0")
+    output = tmp_path / "receipt.json"
+    with pytest.raises(SystemExit) as failure:
+        harness.main(["--out", str(output)])
+    assert failure.value.code == 2
+    assert "runtime differs from uv.lock" in capsys.readouterr().err
+    assert not calls
+    assert not output.exists()
+
+
+def test_lock_reader_extracts_unique_required_versions(tmp_path, monkeypatch):
+    monkeypatch.setattr(harness, "ROOT", tmp_path)
+    monkeypatch.setattr(harness, "DEPENDENCIES", ("torch",))
+    lock = tmp_path / "uv.lock"
+    lock.write_text('[[package]]\nname = "torch"\nversion = "2.7.1"\n')
+    assert harness._locked_versions() == {"torch": "2.7.1"}
+    lock.write_text('[[package]]\nname = "other"\nversion = "1.0"\n')
+    with pytest.raises(ValueError, match="one version"):
+        harness._locked_versions()

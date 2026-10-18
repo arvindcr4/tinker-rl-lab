@@ -14,6 +14,9 @@ import subprocess
 import sys
 import tempfile
 import time
+import tomllib
+
+from packaging.version import Version
 import xml.etree.ElementTree as ET
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -33,6 +36,7 @@ SOURCES = (
     "tests/conftest.py",
     "tests/test_cpu_optimizer_smoke.py",
     "pyproject.toml",
+    "uv.lock",
     "tests/test_grpo_coverage.py",
     "tests/test_cpu_causal_lm_smoke.py",
     "tests/test_tinker_sdk_loss_integration.py",
@@ -53,6 +57,17 @@ def _junit_counts(path: Path) -> dict[str, int]:
         "errors": sum(case.find("error") is not None for case in cases),
         "skipped": sum(case.find("skipped") is not None for case in cases),
     }
+
+
+def _locked_versions() -> dict[str, str]:
+    lock = tomllib.loads((ROOT / "uv.lock").read_text())
+    versions = {}
+    for name in DEPENDENCIES:
+        candidates = {package["version"] for package in lock["package"] if package["name"] == name}
+        if len(candidates) != 1:
+            raise ValueError(f"locked runtime must identify one version for {name}")
+        versions[name] = candidates.pop()
+    return versions
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -76,6 +91,14 @@ def main(argv: list[str] | None = None) -> int:
         name: hashlib.sha256((ROOT / name).read_bytes()).hexdigest() for name in SOURCES
     }
     versions = {name: importlib.metadata.version(name) for name in DEPENDENCIES}
+    locked_versions = _locked_versions()
+    mismatches = [
+        f"{name}: installed {versions[name]}, locked {locked_versions[name]}"
+        for name in DEPENDENCIES
+        if Version(versions[name]).public != Version(locked_versions[name]).public
+    ]
+    if mismatches:
+        parser.error("runtime differs from uv.lock: " + "; ".join(mismatches))
     environment = dict(os.environ)
     environment.update(
         CUDA_VISIBLE_DEVICES="",

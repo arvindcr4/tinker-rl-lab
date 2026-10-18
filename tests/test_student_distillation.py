@@ -22,11 +22,9 @@ class ToyModel(torch.nn.Module):
         self.next_token = 3
         self.fail = False
 
-    def generate(
-        self, *, input_ids, attention_mask, generation_config, max_new_tokens, use_model_defaults
-    ):
+    def generate(self, *, input_ids, attention_mask, generation_config):
+        max_new_tokens = generation_config.max_new_tokens
         assert not self.training
-        assert use_model_defaults is False
         assert not torch.is_grad_enabled()
         assert generation_config.do_sample
         assert generation_config.temperature == 1.0
@@ -205,6 +203,7 @@ def test_real_transformers_generation_with_random_tiny_cpu_models():
     assert torch.isfinite(loss)
     assert 3 <= len(records[0].input_ids) <= 4
     assert json.loads(records[0].sampling_config_json)["top_k"] == 0
+    assert student.generation_config.top_k == 2
     loss.backward()
     assert any(p.grad is not None for p in student.parameters())
     assert all(p.grad is None for p in teacher.parameters())

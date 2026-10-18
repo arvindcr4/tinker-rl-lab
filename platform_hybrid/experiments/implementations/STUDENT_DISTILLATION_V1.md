@@ -27,8 +27,9 @@ previous modes are restored even after an exception. Generation uses no gradient
 Generation uses a newly constructed Transformers `GenerationConfig`: sampling
 is enabled, temperature 1, top-k 0, top-p 1, one beam and one returned sequence.
 Checkpoint generation defaults (including penalties/forced tokens) are not
-inherited (`use_model_defaults=False` is explicit; the installed Transformers
-version must support this generation argument). Each immutable trajectory records exact input IDs, response mask,
+inherited: global defaults are resolved, and the student generation config is
+temporarily isolated during the call, then restored. Concurrent use of the same
+model object is unsupported. Each immutable trajectory records exact input IDs, response mask,
 optimizer global-step behavior version, protocol version, and the complete
 resolved generation configuration including continuation budget. These snapshots
 are retained as `trainer.last_trajectories` for inspection; they are not durable

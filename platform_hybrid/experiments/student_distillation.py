@@ -74,6 +74,13 @@ def student_trajectory_loss(
         return_dict_in_generate=False,
         max_new_tokens=max_new_tokens,
     )
+    # Transformers 5 fills unset fields from model.generation_config. Resolve
+    # global defaults, then temporarily isolate the model's config as well.
+    defaults = getattr(generation_config, "_get_default_generation_params", None)
+    if defaults is not None:
+        generation_config.update(**defaults(), defaults_only=True)
+    previous_generation_config = getattr(student, "generation_config", None)
+    student.generation_config = generation_config
     rows, records, masks = [], [], []
     student_training, teacher_training = student.training, teacher.training
     student.eval()
@@ -89,8 +96,6 @@ def student_trajectory_loss(
                     input_ids=prompt,
                     attention_mask=torch.ones_like(prompt),
                     generation_config=generation_config,
-                    use_model_defaults=False,
-                    max_new_tokens=max_new_tokens,
                 )
             if sampled.ndim != 2 or sampled.shape[0] != 1:
                 raise ValueError("Generation must return one token sequence per prompt")
@@ -112,9 +117,7 @@ def student_trajectory_loss(
                     tuple(row.tolist()),
                     tuple(mask.tolist()),
                     behavior_version,
-                    json.dumps(
-                        {**generation_config.to_dict(), "use_model_defaults": False}, sort_keys=True
-                    ),
+                    json.dumps(generation_config.to_dict(), sort_keys=True),
                 )
             )
         # Right padding preserves each unpadded prompt's original causal positions.
@@ -134,5 +137,6 @@ def student_trajectory_loss(
         )
         return loss, outputs, tuple(records)
     finally:
+        student.generation_config = previous_generation_config
         student.train(student_training)
         teacher.train(teacher_training)

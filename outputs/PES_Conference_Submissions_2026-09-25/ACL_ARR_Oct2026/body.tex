@@ -1,3 +1,7 @@
+% Repository locator: hidden in the anonymous review build (acl.sty review option).
+\makeatletter
+\newcommand{\repolocator}{\ifacl@anonymize an anonymised repository (withheld for review)\else\url{https://github.com/arvindcr4/tinker-rl-lab}\fi}
+\makeatother
 \begin{abstract}
 Comparative claims about reinforcement-learning post-training of language
 models are usually made between method labels: ``GRPO beats PPO'', ``DAPO beats
@@ -168,7 +172,7 @@ The items extend general reporting norms
 specifics of group-relative RL.
 
 The current implementation is in \texttt{platform\_hybrid/registry/}
-of \url{https://github.com/arvindcr4/tinker-rl-lab}: \texttt{schema.json},
+of \repolocator: \texttt{schema.json},
 \texttt{entries/} and \texttt{query.py}. This is a repository locator, not
 a frozen release or proof of historical execution. Stack records describe
 configurations; variant-delta records describe declared changes, not new runs.

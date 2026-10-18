@@ -1,0 +1,270 @@
+{
+  "evidence_type": "new deterministic synthetic CPU replay; not the historical 77-case audit",
+  "python": "3.14.7",
+  "torch": "2.9.0",
+  "dtype": "float64",
+  "seed": 42,
+  "n_modes": 8,
+  "default_lambda": 0.1,
+  "default_tau": 0.5,
+  "forced_control_tau": 10.0,
+  "n_noise_dims": 1,
+  "source_sha256": {
+    "zvf-program/flagship/pilot/objective.py": "20f420f3901c75bdd3d91f2796d7afe903cd6cf950172249cefe3c18ef995a0b",
+    "zvf-program/flagship/pilot/spectral_attention.py": "4928843352d44cffe70c46671907017d8d8521832c58c15e8edce99f31edff80",
+    "zvf-program/flagship/pilot/entropic_gating.py": "8ee6d7980bbadba076797d7672af9665dc82654fe7cb90899beae1eab1722b6a",
+    "zvf-program/flagship/pilot/benchmark_spectral_harness.py": "0ab97833da66aacc27b23cbb0e7d01fb739402ca0d7376ccb28298c9af3c0ea0"
+  },
+  "grid": [
+    {
+      "G": 4,
+      "L": 512,
+      "entropy_min": 6.237939066668362,
+      "entropy_max": 6.2382385653696435,
+      "default_gate_count": 0,
+      "alternating": {
+        "baseline_gradient_norm": 0.019178795535904503,
+        "spectral_gradient_norm": 0.019144519808006216,
+        "gated_gradient_norm": 0.019144519808006216,
+        "default_gradient_max_difference": 0.0,
+        "forced_gate_count": 4,
+        "forced_gradient_max_difference": 4.6332783091027735e-05
+      },
+      "homogeneous": {
+        "baseline_gradient_norm": 0.0,
+        "spectral_gradient_norm": 0.0018784798904390582,
+        "gated_gradient_norm": 0.0018784798904390582,
+        "default_gradient_max_difference": 0.0,
+        "forced_gate_count": 4,
+        "forced_gradient_max_difference": 4.6332783091027776e-05
+      }
+    },
+    {
+      "G": 4,
+      "L": 1024,
+      "entropy_min": 6.931071137141256,
+      "entropy_max": 6.931382471924722,
+      "default_gate_count": 0,
+      "alternating": {
+        "baseline_gradient_norm": 0.013560116478379094,
+        "spectral_gradient_norm": 0.01350958773465483,
+        "gated_gradient_norm": 0.01350958773465483,
+        "default_gradient_max_difference": 0.0,
+        "forced_gate_count": 4,
+        "forced_gradient_max_difference": 2.4001271143088426e-05
+      },
+      "homogeneous": {
+        "baseline_gradient_norm": 0.0,
+        "spectral_gradient_norm": 0.0013315102225310129,
+        "gated_gradient_norm": 0.0013315102225310129,
+        "default_gradient_max_difference": 0.0,
+        "forced_gate_count": 4,
+        "forced_gradient_max_difference": 2.4001271143088423e-05
+      }
+    },
+    {
+      "G": 4,
+      "L": 2048,
+      "entropy_min": 7.624218604968381,
+      "entropy_max": 7.624537061477895,
+      "default_gate_count": 0,
+      "alternating": {
+        "baseline_gradient_norm": 0.0095894912000571,
+        "spectral_gradient_norm": 0.009566964816484993,
+        "gated_gradient_norm": 0.009566964816484993,
+        "default_gradient_max_difference": 0.0,
+        "forced_gate_count": 4,
+        "forced_gradient_max_difference": 1.1702659905462933e-05
+      },
+      "homogeneous": {
+        "baseline_gradient_norm": 0.0,
+        "spectral_gradient_norm": 0.000940407576650282,
+        "gated_gradient_norm": 0.000940407576650282,
+        "default_gradient_max_difference": 0.0,
+        "forced_gate_count": 4,
+        "forced_gradient_max_difference": 1.1702659905462939e-05
+      }
+    },
+    {
+      "G": 8,
+      "L": 512,
+      "entropy_min": 6.237930264453831,
+      "entropy_max": 6.238268487181882,
+      "default_gate_count": 0,
+      "alternating": {
+        "baseline_gradient_norm": 0.014639535614045653,
+        "spectral_gradient_norm": 0.01462892664325487,
+        "gated_gradient_norm": 0.01462892664325487,
+        "default_gradient_max_difference": 0.0,
+        "forced_gate_count": 8,
+        "forced_gradient_max_difference": 3.1416558761726516e-05
+      },
+      "homogeneous": {
+        "baseline_gradient_norm": 0.0,
+        "spectral_gradient_norm": 0.0014267282429545156,
+        "gated_gradient_norm": 0.0014267282429545156,
+        "default_gradient_max_difference": 0.0,
+        "forced_gate_count": 8,
+        "forced_gradient_max_difference": 3.14165587617265e-05
+      }
+    },
+    {
+      "G": 8,
+      "L": 1024,
+      "entropy_min": 6.931076644807414,
+      "entropy_max": 6.93141971985853,
+      "default_gate_count": 0,
+      "alternating": {
+        "baseline_gradient_norm": 0.010352983699553859,
+        "spectral_gradient_norm": 0.01036410692548647,
+        "gated_gradient_norm": 0.01036410692548647,
+        "default_gradient_max_difference": 0.0,
+        "forced_gate_count": 8,
+        "forced_gradient_max_difference": 1.611769388503802e-05
+      },
+      "homogeneous": {
+        "baseline_gradient_norm": 0.0,
+        "spectral_gradient_norm": 0.0010067969868116746,
+        "gated_gradient_norm": 0.0010067969868116746,
+        "default_gradient_max_difference": 0.0,
+        "forced_gate_count": 8,
+        "forced_gradient_max_difference": 1.611769388503802e-05
+      }
+    },
+    {
+      "G": 8,
+      "L": 2048,
+      "entropy_min": 7.624218604968381,
+      "entropy_max": 7.624562203692761,
+      "default_gate_count": 0,
+      "alternating": {
+        "baseline_gradient_norm": 0.007320037808800088,
+        "spectral_gradient_norm": 0.0073324143956110385,
+        "gated_gradient_norm": 0.0073324143956110385,
+        "default_gradient_max_difference": 0.0,
+        "forced_gate_count": 8,
+        "forced_gradient_max_difference": 7.738811483075654e-06
+      },
+      "homogeneous": {
+        "baseline_gradient_norm": 0.0,
+        "spectral_gradient_norm": 0.0007112188376308435,
+        "gated_gradient_norm": 0.0007112188376308435,
+        "default_gradient_max_difference": 0.0,
+        "forced_gate_count": 8,
+        "forced_gradient_max_difference": 7.73881148307566e-06
+      }
+    },
+    {
+      "G": 16,
+      "L": 512,
+      "entropy_min": 6.237927589780174,
+      "entropy_max": 6.238278224804276,
+      "default_gate_count": 0,
+      "alternating": {
+        "baseline_gradient_norm": 0.010714279641223828,
+        "spectral_gradient_norm": 0.010739481155423303,
+        "gated_gradient_norm": 0.010739481155423303,
+        "default_gradient_max_difference": 0.0,
+        "forced_gate_count": 16,
+        "forced_gradient_max_difference": 1.9216428771650306e-05
+      },
+      "homogeneous": {
+        "baseline_gradient_norm": 0.0,
+        "spectral_gradient_norm": 0.0010355093529587655,
+        "gated_gradient_norm": 0.0010355093529587655,
+        "default_gradient_max_difference": 0.0,
+        "forced_gate_count": 16,
+        "forced_gradient_max_difference": 1.9216428771650306e-05
+      }
+    },
+    {
+      "G": 16,
+      "L": 1024,
+      "entropy_min": 6.931076885790645,
+      "entropy_max": 6.931419501340551,
+      "default_gate_count": 0,
+      "alternating": {
+        "baseline_gradient_norm": 0.007575546240249849,
+        "spectral_gradient_norm": 0.0076021626943742135,
+        "gated_gradient_norm": 0.0076021626943742135,
+        "default_gradient_max_difference": 0.0,
+        "forced_gate_count": 16,
+        "forced_gradient_max_difference": 9.217523583478463e-06
+      },
+      "homogeneous": {
+        "baseline_gradient_norm": 0.0,
+        "spectral_gradient_norm": 0.0007309579383871341,
+        "gated_gradient_norm": 0.0007309579383871341,
+        "default_gradient_max_difference": 0.0,
+        "forced_gate_count": 16,
+        "forced_gradient_max_difference": 9.217523583478465e-06
+      }
+    },
+    {
+      "G": 16,
+      "L": 2048,
+      "entropy_min": 7.624218604968381,
+      "entropy_max": 7.624567991897224,
+      "default_gate_count": 0,
+      "alternating": {
+        "baseline_gradient_norm": 0.005357214919380694,
+        "spectral_gradient_norm": 0.005374822183218109,
+        "gated_gradient_norm": 0.005374822183218109,
+        "default_gradient_max_difference": 0.0,
+        "forced_gate_count": 16,
+        "forced_gradient_max_difference": 4.7188403856836885e-06
+      },
+      "homogeneous": {
+        "baseline_gradient_norm": 0.0,
+        "spectral_gradient_norm": 0.0005169985298952496,
+        "gated_gradient_norm": 0.0005169985298952496,
+        "default_gradient_max_difference": 0.0,
+        "forced_gate_count": 16,
+        "forced_gradient_max_difference": 4.718840385683684e-06
+      }
+    }
+  ],
+  "lambda_sweep_G4_L512": [
+    {
+      "lambda": 0.0,
+      "homogeneous_gradient_norm": 0.0,
+      "heterogeneous_cosine_to_baseline": 1.0000000000000009
+    },
+    {
+      "lambda": 1e-06,
+      "homogeneous_gradient_norm": 1.8784798904390575e-08,
+      "heterogeneous_cosine_to_baseline": 0.9999999999995225
+    },
+    {
+      "lambda": 1e-05,
+      "homogeneous_gradient_norm": 1.878479890439057e-07,
+      "heterogeneous_cosine_to_baseline": 0.99999999995225
+    },
+    {
+      "lambda": 0.0001,
+      "homogeneous_gradient_norm": 1.8784798904390585e-06,
+      "heterogeneous_cosine_to_baseline": 0.9999999952249241
+    },
+    {
+      "lambda": 0.001,
+      "homogeneous_gradient_norm": 1.8784798904390577e-05,
+      "heterogeneous_cosine_to_baseline": 0.9999995224361062
+    },
+    {
+      "lambda": 0.01,
+      "homogeneous_gradient_norm": 0.00018784798904390582,
+      "heterogeneous_cosine_to_baseline": 0.9999521903691555
+    },
+    {
+      "lambda": 0.1,
+      "homogeneous_gradient_norm": 0.0018784798904390582,
+      "heterogeneous_cosine_to_baseline": 0.9951963353433939
+    },
+    {
+      "lambda": 1.0,
+      "homogeneous_gradient_norm": 0.01878479890439058,
+      "heterogeneous_cosine_to_baseline": 0.6910000845090392
+    }
+  ],
+  "active_row_reference_max_error": 3.469446951953614e-18
+}

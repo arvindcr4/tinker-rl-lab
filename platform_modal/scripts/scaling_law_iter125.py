@@ -299,7 +299,6 @@ def main() -> None:
     )
     n_violators = sum(1 for r in mono_rows if int(r[15]) == 0)
     # Binomial test against H0: P(monotone) = 0.5 (would need majority).
-    from scipy.stats import binomtest
     p_majority_violate = binomtest(n_violators, len(mono_rows), 0.5,
                                    alternative="greater").pvalue
 

@@ -24,6 +24,8 @@ lint: lint-ruff
 
 lint-ruff:
 	$(RUFF) check $(RUFF_PATHS)
+	# Name safety applies beyond the narrower style/formatting gate.
+	$(RUFF) check --select F821,F811 platform_* autoresearch analysis utils tests tools
 
 format:
 	$(RUFF) format $(RUFF_PATHS)

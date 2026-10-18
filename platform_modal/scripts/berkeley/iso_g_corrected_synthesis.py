@@ -343,7 +343,7 @@ def main():
     print(f"[h4] cross-pillar Spearman ρ={rho:+.3f} p={p_one_sided:.4f}")
 
     # ---- H5 ----
-    h5_rows, n_close, g_iso = h5_practitioner_iso_g()
+    h5_rows, n_floor_ok, g_iso = h5_practitioner_iso_g()
     h5_path = OUT / "iso_g_corrected_practitioner.tsv"
     with h5_path.open("w", newline="") as fh:
         if h5_rows:

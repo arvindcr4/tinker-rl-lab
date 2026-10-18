@@ -58,7 +58,6 @@ from collections import Counter
 from pathlib import Path
 
 
-import sys
 sys.path.append(str(Path(__file__).resolve().parents[1]))
 from _review02_contracts import sampled_pairs, cell_distance_spearman_ci, finite_json, spearman_coefficient as spearman
 from _minreport_contract import ITEM_ALIASES

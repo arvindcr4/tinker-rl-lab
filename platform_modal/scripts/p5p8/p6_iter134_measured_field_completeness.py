@@ -23,7 +23,6 @@ import pathlib
 import sys
 from collections import defaultdict, Counter
 
-import sys
 sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))
 from _paths import REPO_ROOT
 ROOT = REPO_ROOT

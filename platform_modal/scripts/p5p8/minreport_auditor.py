@@ -44,7 +44,6 @@ import sys
 from collections import defaultdict
 from pathlib import Path
 
-import sys
 sys.path.append(str(Path(__file__).resolve().parents[1]))
 from _paths import REPO_ROOT
 ROOT = REPO_ROOT / "platform_hybrid"

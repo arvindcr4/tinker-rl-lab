@@ -7,7 +7,6 @@ import sys
 from collections import defaultdict
 from pathlib import Path
 
-import sys
 sys.path.append(str(Path(__file__).resolve().parents[1]))
 from _paths import REPO_ROOT
 from review17_contract import validate_interval

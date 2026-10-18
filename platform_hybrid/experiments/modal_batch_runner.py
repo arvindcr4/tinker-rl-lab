@@ -55,7 +55,6 @@ def run_trl_grpo(seed: int, num_steps: int = 20) -> dict:
     import subprocess
     import time
     import uuid
-    from pathlib import Path
     if num_steps <= 0 or type(seed) is not int:
         raise ValueError("Valid seed and positive step budget required")
     exp_path = Path("/root/tinker-rl-lab/platform_hybrid/experiments/implementations/trl_grpo_math.py")
@@ -88,7 +87,6 @@ def run_trl_grpo(seed: int, num_steps: int = 20) -> dict:
 @app.local_entrypoint()
 def main(seeds: int = 3, steps: int = 20):
     """Launch multi-seed TRL experiments on Modal GPUs."""
-    from pathlib import Path
     source = Path(__file__).resolve().parent / "implementations" / "trl_grpo_math.py"
     compile(source.read_text(), str(source), "exec")
     if type(seeds) is not int or not 1 <= seeds <= 3 or steps <= 0:

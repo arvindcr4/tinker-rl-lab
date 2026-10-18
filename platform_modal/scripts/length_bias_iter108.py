@@ -32,7 +32,7 @@ from typing import Any
 
 import numpy as np
 from scipy import stats
-from _analysis_common import ccf_at_lags, load_step_log, paired_bootstrap_delta
+from _analysis_common import ccf_at_lags, load_step_log
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 RESULTS = os.path.join(ROOT, "experiments", "results")

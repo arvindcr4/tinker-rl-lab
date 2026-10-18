@@ -1,0 +1,30 @@
+{
+  "checked_date": "2026-10-18",
+  "scope": "Editorial/build checks, existing-count arithmetic and unchanged historical receipt hash; not new benchmark verification or venue-policy certification",
+  "pages_including_references": 12,
+  "paper_size": "A4",
+  "cited_references": 37,
+  "references_dated_2024_or_2025": 18,
+  "references_dated_2026": 9,
+  "abstract_whitespace_word_count": 184,
+  "unresolved_citations": 0,
+  "overfull_boxes": 0,
+  "bibtex_warnings": 0,
+  "all_fonts_embedded_scalable": true,
+  "raster_images": 0,
+  "editable_tables": 5,
+  "numbered_equations": 2,
+  "vector_scope_state_figure": 1,
+  "original_contract_rows": 14,
+  "reported_replacement_identities": 9,
+  "primary_paired_outcome_contrasts": 17,
+  "historical_ledger_check_status": "checked existing repository record",
+  "historical_ledger_sha256_unchanged": true,
+  "known_nonfatal_diagnostics": [
+    "LLNCS/amsmath: Unable to redefine math accent vec",
+    "Underfull bibliography lines; render inspected"
+  ],
+  "pdf_sha256": "5c6ceae1c937417d4f5799bd3e1cd916cbb481c09a37da975544b1a33fffb188",
+  "source_sha256": "e16a70de3acd7e18ca8cb0dac75ecdce2dbe82c35d9ed06b7267a92055bb9a6f",
+  "bibliography_sha256": "d2b072eb58950e30b680159b1eb8293d4ddef74dc22cca704c80a9881717bf3c"
+}

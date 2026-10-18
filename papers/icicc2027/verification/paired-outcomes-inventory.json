@@ -1,0 +1,397 @@
+[
+  {
+    "source": "outputs/e1_e14_small_scale_2026-09-26/E1/paired.json",
+    "summary": {
+      "lane": "E1",
+      "metric": "resolved rate (native SWE-bench Pro evaluator)",
+      "n_items": 10,
+      "trained_value": 0.0,
+      "base_value": 0.0,
+      "difference": 0.0,
+      "mcnemar_exact_p": 1.0
+    },
+    "field_names": [
+      "lane",
+      "metric",
+      "n_items",
+      "trained_value",
+      "base_value",
+      "difference",
+      "discordant_b_trained_only",
+      "discordant_c_base_only",
+      "mcnemar_exact_p",
+      "diagnostic_git_apply_check",
+      "items"
+    ]
+  },
+  {
+    "source": "outputs/e1_e14_small_scale_2026-09-26/E2/paired.json",
+    "summary": {
+      "lane": "E2",
+      "metric": "pass@1",
+      "n_items": 30,
+      "trained_value": 0.7,
+      "base_value": 0.8,
+      "difference": -0.10000000000000009,
+      "mcnemar_exact_p": 0.25
+    },
+    "field_names": [
+      "lane",
+      "benchmark",
+      "metric",
+      "n_items",
+      "trained_value",
+      "base_value",
+      "difference",
+      "discordant_b_trained_only",
+      "discordant_c_base_only",
+      "mcnemar_exact_p",
+      "secondary_log_net_paired",
+      "items"
+    ]
+  },
+  {
+    "source": "outputs/e1_e14_small_scale_2026-09-26/E3/paired.json",
+    "summary": {
+      "lane": "E3",
+      "n_items": 8,
+      "trained_value": 0.625,
+      "base_value": 0.375,
+      "mcnemar_exact_p": 0.5
+    },
+    "field_names": [
+      "lane",
+      "n_items",
+      "trained_value",
+      "base_value",
+      "difference_trained_minus_base",
+      "discordant_b_trained_only",
+      "discordant_c_base_only",
+      "mcnemar_exact_p",
+      "per_item",
+      "wall_time_s",
+      "tokens",
+      "note"
+    ]
+  },
+  {
+    "source": "outputs/e1_e14_small_scale_2026-09-26/E4/paired.json",
+    "summary": {
+      "lane": "E4",
+      "n_items": 6,
+      "trained_value": 0.0662,
+      "base_value": 0.0928,
+      "difference": -0.0266,
+      "paired_mean_difference": -0.0266
+    },
+    "field_names": [
+      "lane",
+      "n_items",
+      "item_ids",
+      "per_item",
+      "trained_value",
+      "base_value",
+      "difference",
+      "paired_mean_difference",
+      "bootstrap95_ci",
+      "bootstrap",
+      "wall_time",
+      "tokens",
+      "benchmark",
+      "note"
+    ]
+  },
+  {
+    "source": "outputs/e1_e14_small_scale_2026-09-26/E5/paired.json",
+    "summary": {
+      "lane": "E5",
+      "n_items": 10,
+      "trained_value": 0.5,
+      "base_value": 0.2,
+      "difference": 0.3,
+      "mcnemar_exact_p": 0.375
+    },
+    "field_names": [
+      "lane",
+      "n_items",
+      "item_ids",
+      "per_item",
+      "trained_value",
+      "base_value",
+      "difference",
+      "discordant_b_trained_only",
+      "discordant_c_base_only",
+      "mcnemar_exact_p",
+      "wall_time",
+      "tokens",
+      "benchmark",
+      "note"
+    ]
+  },
+  {
+    "source": "outputs/e1_e14_small_scale_2026-09-26/E6/paired.json",
+    "summary": {
+      "lane": "E6",
+      "metric": "episode success rate (native MiniWoB reward > 0)",
+      "n_items": 36,
+      "trained_value": 0.4444,
+      "base_value": 0.4722,
+      "difference": -0.0278,
+      "mcnemar_exact_p": 1.0
+    },
+    "field_names": [
+      "lane",
+      "n_items",
+      "metric",
+      "trained_value",
+      "base_value",
+      "difference",
+      "b_trained_only",
+      "c_base_only",
+      "mcnemar_exact_p",
+      "per_item",
+      "arms",
+      "claim_boundary",
+      "caveats"
+    ]
+  },
+  {
+    "source": "outputs/e1_e14_small_scale_2026-09-26/E7/paired.json",
+    "summary": {
+      "lane": "E7",
+      "n_items": 6,
+      "trained_value": 0.1667,
+      "base_value": 0.0,
+      "mcnemar_exact_p": 1.0
+    },
+    "field_names": [
+      "lane",
+      "n_items",
+      "trained_value",
+      "base_value",
+      "difference_trained_minus_base",
+      "discordant_b_trained_only",
+      "discordant_c_base_only",
+      "mcnemar_exact_p",
+      "per_item",
+      "wall_time_s",
+      "tokens",
+      "note"
+    ]
+  },
+  {
+    "source": "outputs/e1_e14_small_scale_2026-09-26/E8/paired.json",
+    "summary": {
+      "lane": "E8",
+      "metric": "accuracy (native LAB-Bench Evaluator.compute_metrics; unsure/unanswerable = incorrect)",
+      "n_items": 80,
+      "trained_value": 0.3125,
+      "base_value": 0.3125,
+      "difference": 0.0,
+      "mcnemar_exact_p": 1.0
+    },
+    "field_names": [
+      "lane",
+      "metric",
+      "n_items",
+      "trained_value",
+      "base_value",
+      "difference",
+      "discordant_b_trained_only",
+      "discordant_c_base_only",
+      "mcnemar_exact_p",
+      "per_item",
+      "cost"
+    ]
+  },
+  {
+    "source": "outputs/e1_e14_small_scale_2026-09-26/E9/paired.json",
+    "summary": {
+      "lane": "E9",
+      "metric": "any-medal rate (official mlebench grade_csv any_medal)",
+      "n_items": 5,
+      "trained_value": 0.0,
+      "base_value": 0.0,
+      "difference": 0.0,
+      "mcnemar_exact_p": 1.0,
+      "above_median": {
+        "trained": 0.0,
+        "base": 0.2,
+        "b_trained_only": 0,
+        "c_base_only": 1,
+        "mcnemar_exact_p": 1.0
+      }
+    },
+    "field_names": [
+      "lane",
+      "n_items",
+      "metric",
+      "trained_value",
+      "base_value",
+      "difference",
+      "b_trained_only",
+      "c_base_only",
+      "mcnemar_exact_p",
+      "above_median",
+      "per_item",
+      "arms",
+      "claim_boundary",
+      "caveats"
+    ]
+  },
+  {
+    "source": "outputs/e1_e14_small_scale_2026-09-26/E10/paired.json",
+    "summary": {
+      "lane": "E10",
+      "n_items": {
+        "harmful": 30,
+        "benign": 30
+      },
+      "refusal_rate": {
+        "trained_value": 0.7,
+        "base_value": 0.6667,
+        "difference": 0.0333,
+        "discordant_b_trained_only": 3,
+        "discordant_c_base_only": 2,
+        "mcnemar_exact_p": 1.0
+      },
+      "harm_score": {
+        "trained_value": 0.2467,
+        "base_value": 0.2362,
+        "paired_mean_difference": 0.0105,
+        "bootstrap95": [
+          -0.0533,
+          0.0781
+        ]
+      },
+      "benign_score": {
+        "trained_value": 0.7799,
+        "base_value": 0.7944,
+        "paired_mean_difference": -0.0146,
+        "bootstrap95": [
+          -0.0498,
+          0.0121
+        ]
+      }
+    },
+    "field_names": [
+      "lane",
+      "n_items",
+      "refusal_rate",
+      "harm_score",
+      "benign_score",
+      "per_item",
+      "cost"
+    ]
+  },
+  {
+    "source": "outputs/e1_e14_small_scale_2026-09-26/E11/paired.json",
+    "summary": {
+      "lane": "E11",
+      "metric": "pass@1 (1 sample/problem, native sv-iv-test testbench: 'Mismatches: 0 in N samples')",
+      "n_items": 50,
+      "trained_value": 0.66,
+      "base_value": 0.66,
+      "difference": 0.0,
+      "mcnemar_exact_p": 1.0
+    },
+    "field_names": [
+      "lane",
+      "metric",
+      "n_items",
+      "trained_value",
+      "base_value",
+      "difference",
+      "discordant_b_trained_only",
+      "discordant_c_base_only",
+      "mcnemar_exact_p",
+      "per_item",
+      "cost"
+    ]
+  },
+  {
+    "source": "outputs/e1_e14_small_scale_2026-09-26/E12/paired.json",
+    "summary": {
+      "lane": "E12",
+      "n_items": 151,
+      "trained_value": 0.7483,
+      "base_value": 0.7815,
+      "mcnemar_exact_p": 0.3018
+    },
+    "field_names": [
+      "lane",
+      "n_items",
+      "trained_value",
+      "base_value",
+      "difference_trained_minus_base",
+      "discordant_b_trained_only",
+      "discordant_c_base_only",
+      "mcnemar_exact_p",
+      "per_item",
+      "wall_time_s",
+      "tokens",
+      "note",
+      "per_task_passed"
+    ]
+  },
+  {
+    "source": "outputs/e1_e14_small_scale_2026-09-26/E13/paired.json",
+    "summary": {
+      "lane": "E13",
+      "metric": "BALROG native progression %: mean over envs of per-env mean episode progression (x100), 5 envs equal-weighted",
+      "n_items": 26,
+      "trained_value": 25.51,
+      "base_value": 23.63,
+      "difference": 1.875
+    },
+    "field_names": [
+      "lane",
+      "benchmark_run",
+      "engine",
+      "trained",
+      "base",
+      "n_items",
+      "item_type",
+      "metric",
+      "trained_value",
+      "base_value",
+      "difference",
+      "difference_bootstrap95",
+      "per_env",
+      "mean_item_difference",
+      "mean_item_difference_bootstrap95",
+      "bootstrap",
+      "secondary_full_success_mcnemar",
+      "n_items_identical_progression",
+      "cost",
+      "items",
+      "caveats",
+      "built_utc"
+    ]
+  },
+  {
+    "source": "outputs/e1_e14_small_scale_2026-09-26/E14/paired.json",
+    "summary": {
+      "lane": "E14",
+      "metric": "accuracy (native Omni-Judge 'Equivalence Judgement' == TRUE; unparsed judge output = incorrect)",
+      "n_items": 100,
+      "trained_value": 0.43,
+      "base_value": 0.44,
+      "difference": -0.01,
+      "mcnemar_exact_p": 1.0
+    },
+    "field_names": [
+      "lane",
+      "metric",
+      "n_items",
+      "trained_value",
+      "base_value",
+      "difference",
+      "discordant_b_trained_only",
+      "discordant_c_base_only",
+      "mcnemar_exact_p",
+      "per_item",
+      "cost"
+    ]
+  }
+]

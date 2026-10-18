@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync, writeFileSync, mkdtempSync, rmSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdtempSync, mkdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -298,4 +298,21 @@ test("audit rejects empty gold, malformed records, unequal arrays and declared d
       assert.ok(result.invalid_inputs.length + result.length_mismatches.length + result.invalid_scores.length > 0);
     }
   } finally { rmSync(directory, { recursive: true, force: true }); }
+});
+
+
+test("grading audit discovers nested promoted run sidecars", () => {
+  const root = mkdtempSync(join(tmpdir(), "nested-grading-"));
+  try {
+    const leaf = join(root, "grpo_g8_s42"); mkdirSync(leaf);
+    const goldPath = join(root, "gold.json");
+    writeFileSync(goldPath, JSON.stringify({ test: [{ answer: "#### 1" }] }));
+    writeFileSync(join(leaf, "grpo_g8_s42.json"), JSON.stringify({ n_eval: 1, pre_correct: [1], post_correct: [1] }));
+    writeFileSync(join(leaf, "grpo_g8_s42_texts.json.gz"), gzipSync(JSON.stringify({ pre: ["\\boxed{1}"], post: ["\\boxed{1}"] })));
+    const report = auditStoredScores({ resultsDir: root, goldPath });
+    assert.equal(report.runs_checked, 1);
+    assert.equal(report.completions, 2);
+    assert.equal(report.coverage_complete, true);
+    assert.equal(report.disagreements, 0);
+  } finally { rmSync(root, { recursive: true, force: true }); }
 });

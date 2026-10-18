@@ -117,7 +117,9 @@ class ExportTests(unittest.TestCase):
                 for seed in (42, 123):
                     record, texts = synthetic_run(arm, seed, smoke=False)
                     records.append(record)
-                    synthetic_bundle(pathlib.Path(tmp), record, texts)
+                    leaf = pathlib.Path(tmp) / f"{arm}_s{seed}"
+                    leaf.mkdir()
+                    synthetic_bundle(leaf, record, texts)
             plan = export.default_plan()
             plan.update({"planned_seeds": [42, 123], "endpoint": {"declared": True, "description": "synthetic fixture"},
                          "shared_stack_hash": export.shared_stack_fingerprint(records[0]),

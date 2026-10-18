@@ -620,3 +620,27 @@ def test_file_loader_records_validated_bundle_and_rejects_corruption(audit, tmp_
         json.dump(texts, stream, allow_nan=False)
     with pytest.raises(ValueError, match="no valid completion bundle"):
         audit.load_inputs(tmp_path, gold)
+
+
+def test_loader_discovers_nested_promoted_runs_and_ignores_receipts(audit, tmp_path):
+    import gzip
+    leaf = tmp_path / "grpo_g8_s42"
+    leaf.mkdir()
+    (leaf / "grpo_g8_s42.json").write_text(json.dumps({"arm": "grpo_g8", "seed": 42}))
+    (leaf / "grpo_g8_s42.complete.json").write_text("{}")
+    with gzip.open(leaf / "grpo_g8_s42_texts.json.gz", "wt") as stream:
+        json.dump({"pre": ["1"], "post": ["1"]}, stream)
+    gold = tmp_path / "gold.json"
+    gold.write_text(json.dumps({"test": [{"question": "synthetic", "answer": "#### 1"}]}))
+    inputs = audit.load_inputs(tmp_path, gold)
+    assert len(inputs["records"]) == 1
+    assert inputs["records"][0]["seed"] == 42
+    assert inputs["completions"][0]["post"] == ["1"]
+
+
+def test_loader_rejects_unrecognized_run_filename(audit, tmp_path):
+    gold = tmp_path / "gold.json"
+    gold.write_text(json.dumps({"test": [{"question": "synthetic", "answer": "#### 1"}]}))
+    (tmp_path / "unexpected_s42.json").write_text("{}")
+    with pytest.raises(ValueError, match="Unexpected run filename"):
+        audit.load_inputs(tmp_path, gold)

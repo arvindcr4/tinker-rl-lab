@@ -52,6 +52,14 @@ function disagreementCause(result, gold) {
   return "invalid_numeric_or_unsupported_syntax";
 }
 
+function runFiles(directory, prefix = "") {
+  return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
+    const name = prefix + entry.name;
+    if (entry.isDirectory()) return runFiles(`${directory}/${entry.name}`, `${name}/`);
+    return entry.isFile() && /_s\d+\.json$/.test(entry.name) ? [name] : [];
+  }).sort();
+}
+
 const count = (object, key) => { object[key] = (object[key] || 0) + 1; };
 
 export function auditStoredScores({ resultsDir, goldPath }) {
@@ -61,7 +69,7 @@ export function auditStoredScores({ resultsDir, goldPath }) {
   }
   const gold = items.map((t) => t.answer.split("####").pop().trim());
   if (gold.some((answer) => toNum(answer) === null)) throw new Error("gold answers must be finite exact numbers with valid grouping");
-  const files = readdirSync(resultsDir).filter((f) => /_s\d+\.json$/.test(f)).sort();
+  const files = runFiles(resultsDir);
   const report = {
     grading_spec_id: GRADING_SPEC_ID,
     historical_scores_mutated: false,
@@ -74,7 +82,7 @@ export function auditStoredScores({ resultsDir, goldPath }) {
   };
   for (const file of files) {
     const runPath = new URL(file, pathToFileURL(resultsDir.endsWith("/") ? resultsDir : resultsDir + "/"));
-    const sidecarPath = new URL(file.replace(/\.json$/, "_texts.json.gz"), runPath);
+    const sidecarPath = new URL(runPath.href.replace(/\.json$/, "_texts.json.gz"));
     if (!existsSync(sidecarPath)) { report.missing_sidecars.push(file); continue; }
     let run, texts;
     try {

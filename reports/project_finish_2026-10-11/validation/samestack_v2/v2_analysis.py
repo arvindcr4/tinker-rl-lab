@@ -108,9 +108,11 @@ def load_inputs(data_dir, gold_path):
                 sort_keys=True, separators=(",", ":"), allow_nan=False).encode()).hexdigest()
                 for index, item in enumerate(test)]
     records, completions, completion_validated_ids = [], [], []
-    for path in sorted(Path(data_dir).glob("*_s*.json")):
+    for path in sorted(Path(data_dir).rglob("*_s*.json")):
         if re.fullmatch(r"(?:grpo_g8|grpo_g2|ppo|ppo_8x8)_s\d+\.json", path.name) is None:
-            continue
+            if path.name.endswith(".complete.json"):
+                continue
+            raise ValueError(f"Unexpected run filename: {path}")
         record = load_json(path)
         if record.get("manifest"):
             from platform_hybrid.experiments.samestack_contract import validate_completion

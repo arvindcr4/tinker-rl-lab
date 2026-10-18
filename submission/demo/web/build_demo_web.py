@@ -49,9 +49,11 @@ def samestack(plan=None, results_dir=None):
     """Export immutable records and the canonical selector's output, without guessed identity."""
     runs, records, sources, bundle_failures, validated_ids = [], [], [], [], []
     results_dir = results_dir or V2
-    for path in sorted(results_dir.glob("*_s*.json")):
+    for path in sorted(results_dir.rglob("*_s*.json")):
         if not re.fullmatch(r"(?:grpo_g8|grpo_g2|ppo_8x8|ppo)_s\d+\.json", path.name):
-            continue
+            if path.name.endswith(".complete.json"):
+                continue
+            raise ValueError(f"Unexpected run filename: {path}")
         r = json.loads(path.read_text())
         if r.get("arm") not in ARMS or r.get("smoke"):
             continue

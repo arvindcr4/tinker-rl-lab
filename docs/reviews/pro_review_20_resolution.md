@@ -58,3 +58,58 @@ screening cost, zero catches, a failed historical bound, identical-system paired
 CI degeneracy, undefined positive-free recall replicates, and importing with
 training/directory creation/plotting forbidden. Optional ML dependencies are
 stubbed for import validation; no fitted-model integration run was performed.
+
+- R9/R10/R12: joint accounting and its seed-CI extension share a versioned
+  step-first action rule. Fired steps are counted once, already-contrastive
+  groups receive no restoration credit, and rollout savings and predicted
+  restored prompts occupy separate fields. Observed restoration is unavailable.
+  Savings are retrospective allocations conditional on the original G=8 sample,
+  not executable pilot-inclusive generation savings. Legacy consumers of the
+  historical joint TSV are not silently redirected to the changed schema.
+- R10/R14: N10 triage is high-tail, equality-inclusive. Calibration-seed paired
+  differences and whole trajectory-seed clusters are independently resampled;
+  a shared sampled calibration mean applies to all interventions in a replicate.
+  No-fire per-intervention effects are unavailable, and adverse transported
+  effects are retained. This propagates uncertainty under an explicitly stated
+  transport/independence assumption, not newly measured treatment effects.
+- R13: hysteresis resamples baseline/raw/controller yields with identical indices.
+  Nonpositive raw-gain denominators produce unavailable retention, with counts
+  and interval status, rather than perfect retention; gain differences remain
+  separately available.
+- R15: iter99 thresholds the actual step-level ZVF fraction, preserves actual
+  prompt counts, and reports hypergeometric retained-sample contrast probability
+  rather than equating interventions with restored contrast. Homogeneous groups
+  cannot acquire contrast by subsampling. The rule remains retrospective.
+- R16/R19: cohort eta-squared is between-group / total row-residual sum of
+  squares; zero variance is unavailable. Nonempty all-negative cohorts remain
+  in calibration/Brier/ECE analyses while positive-class recall is unavailable.
+  Kendall uses tau-b's tie-corrected denominator; constant ranks are unavailable.
+- R17/R18: tau seed summaries derive action flags, savings percentages and prose
+  from actual chosen rollout totals. Regret figures select explicit model IDs
+  and separate monetary closure from dimensionless captured fraction. Cost
+  accounting separates inference duration, assumed token charges and dollars;
+  absent CPU pricing leaves total tree/hybrid dollars unavailable. At the stated
+  $0.0035/invocation assumption, 1,000 sensor calls contribute $3.50, not $35.
+  CPU throughput is not asserted to be request latency, and LLM latency is
+  unavailable.
+
+These additional nine consumers also isolate corrected outputs under
+`corrected-review20-v2`. Their synthetic regressions cover noncollapsed
+calibration uncertainty, no-fire denominators, paired baseline invariance,
+threshold-sensitive actions, no invented contrast, negative/zero savings,
+tau-b reference agreement, all-negative cohorts, figure payloads and unit
+conversion. Caching/consolidation, calibration transport validation, real
+second-stage/provider outcomes, independent held-out policy selection and
+historical-result regeneration remain outside this code-only closure.
+
+The old fixed N2 comparator in N10 is unavailable pending a controller-rule and
+horizon-matched replay. It is not used as measured corroboration.
+
+Final offline gate: 74 passed across
+`tests/test_review20_remaining_score_consumers.py`,
+`tests/test_review20_remaining_controller_semantics.py`,
+`tests/test_review20_statistical_consumer_metrics.py`, and the existing
+`test_pro_review_{19,20,21}_regressions.py` suites, run with
+`/tmp/tinker-review-venv/bin/python -m pytest -q`.
+Changed Python files pass Ruff, compileall, and `git diff --check`.
+All synthetic output files were written only in temporary test directories.

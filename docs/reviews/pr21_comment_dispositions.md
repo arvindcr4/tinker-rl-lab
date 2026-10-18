@@ -64,3 +64,14 @@ Offline review repairs. Historical result artifacts are not recomputed. Provider
 - 4305495435: fixed — Removed unused gsm8k_reward import; no unsupported contract-grade claim in the layer profiler import surface.
 - 4305495438: fixed — Empty-data steps use their own counter and are excluded from computed-loss denominator; zero evaluated losses returns null rather than a fabricated zero fraction.
 - 4305495442: fixed — Fixed: Schema defines resolution_status and unresolved evidence_needed.
+
+## Six follow-up comments on the previous head
+
+- 4305592330: fixed — Contrast tests cover the automatic dark-mode selector as well as explicit light/dark palettes and reject missing selectors.
+- 4305592337: fixed — Static fixtures render all nine routes; section-option counts are scoped to the navigation selector rather than unrelated view controls.
+- 4305592340: fixed — Successful native execution may remain completed, but measured-analysis admission additionally requires observed finite reward metrics and matching observed rollout count.
+- 4305592342: fixed — npm test builds source directly to dist and targets that page with the same data input; the historical HTML artifact is not overwritten.
+- 4305592344: fixed — Standalone Atropos declares its runtime tenacity dependency.
+- 4305592349: fixed — Shortcut toggle keeps a constant accessible label, with aria-pressed conveying state.
+
+Follow-up validation: 41 JavaScript tests and Vite build passed; 130 Python tests passed with 3 scanner skips. Browser execution was attempted but Chromium could not start under the local sandbox (socket operation denied); no browser-pass claim is made.

@@ -13,7 +13,7 @@
 %   experiments/results/p1_layerfreeze/FINDINGS.md
 % =====================================================================
 
-\subsection{Small-Scale Robustness Checks: Popular Levers Do Not Help}
+\subsection{Small-Scale Robustness Checks: Popular Levers Do Not Robustly Help}
 \label{sec:smallscale-nulls}
 
 A benchmark that is meant to be \emph{diagnostic rather than a
@@ -21,8 +21,12 @@ leaderboard} earns its keep partly by reporting the tweaks that
 \emph{fail} its checks. In that spirit we ran a set of controlled,
 multi-seed re-tests of four popular GRPO levers at a single small scale
 (Qwen3.5-4B, an easy GSM8K subset, held-out $n{=}12$--$20$ per arm,
-$2$--$3$ seeds). Every one came back null: none robustly beat a matched
-baseline, and all measured effects sit within seed-and-difficulty noise.
+$2$--$3$ seeds). Every one came back inconclusive at this sample
+size: none robustly beat a matched baseline, and all measured
+effects sit within seed-and-difficulty noise. The resolution floor
+is coarse: one held-out item is $5.0$--$8.3$ percentage points, the
+binomial standard error at $p{=}0.5$ is at least $11$ points, and
+an effect of $+0.125$ corresponds to $1$--$2$ held-out items.
 Table~\ref{tab:smallscale-nulls} summarizes the four checks.
 
 \begin{table}[t]
@@ -30,8 +34,9 @@ Table~\ref{tab:smallscale-nulls} summarizes the four checks.
   \small
   \caption{Small-scale, multi-seed re-tests of four popular GRPO levers
   (Qwen3.5-4B, easy GSM8K subset). Each lever's ``advertised'' benefit
-  fails to materialize against a matched baseline; differences are
-  within noise at held-out $n{=}12$--$20$. Effects are reported as
+  fails to materialize against a matched baseline; all rows are
+  inconclusive (under-powered) at held-out $n{=}12$--$20$, where one
+  item is $5.0$--$8.3$ points. Effects are reported as
   mean held-out accuracy gain unless noted.}
   \label{tab:smallscale-nulls}
   \begin{tabular}{@{}p{0.30\linewidth}p{0.33\linewidth}p{0.30\linewidth}@{}}
@@ -39,50 +44,62 @@ Table~\ref{tab:smallscale-nulls} summarizes the four checks.
     \textbf{Lever (proposed benefit)} & \textbf{Controlled result} & \textbf{Verdict} \\
     \midrule
     Difficulty curriculum / filter collapsed groups
+      (cf.\ the filtering lever in \citep{yu2025dapo})
       & Eliminates zero-gradient waste as designed ($0.50{\to}0.00$
         collapse frac), but at ${\sim}4.8\times$ sampling cost and
         \emph{identical} held-out gain ($+0.05$ vs $+0.05$); still ties
         baseline at a \emph{matched} $30$k-token budget ($+0.028$ vs
         $+0.028$) and loses at $5\times$ cost.
-      & Null (no free lunch). \\
+      & Inconclusive at $n{=}12$--$20$ (under-powered; no free lunch detected). \\
     \addlinespace
     Group-size sweet spot ($G\in\{2,4,8,16\}$)
-      & $G{=}2$ under-trains ($50\%$ batch collapse, $+0.0$); a
-        single-seed $G{=}4$ ``win'' ($+0.125$) is one held-out example
-        and does not survive multi-seed re-testing; $G{\geq}8$ gives
+      & $G{=}2$ under-trains ($50\%$ batch collapse, $+0.0$); the
+        flagged $G{=}4$ ``optimum'' is the single-seed Qwen3.5-4B
+        GSM8K $+0.125$ in \emph{this} table (not the separate
+        arithmetic $G$-sweep), i.e.\ $1$--$2$ held-out items, and it
+        does not survive multi-seed re-testing; $G{\geq}8$ gives
         diminishing gradient signal at linear token cost.
-      & Null (no robust optimal $G$). \\
+      & Inconclusive at $n{=}12$--$20$ (under-powered; no robust optimal $G$ detected). \\
     \addlinespace
     Length-bias loss fixes (mean-norm, surprise-weighting)
       & Standard \emph{sum} was, if anything, best on held-out ($+0.125$
         vs $+0.000$ mean-norm, $+0.042$ surprise), and completions did
         not inflate under it ($\Delta\text{len}{=}-16$) --- little
         length bias to correct on this setup.
-      & Null (fixes do not beat sum). \\
+      & Inconclusive at $n{=}12$--$20$ (under-powered; fixes do not beat sum). \\
     \addlinespace
     Step-1 predictive layer-freeze
       & Step-1$\to$final top-$k$ layer overlap collapses from $1.0$ (on
         a 1.5B hardcoded-arithmetic toy) to $0.11$ ($\approx$chance,
         both seeds) at 3B on real GSM8K; the predictability premise is a
         toy artifact (concentration $\approx0.39$ still holds).
-      & Null (not predictable from step 1). \\
+      & Inconclusive at $n{=}12$--$20$ (under-powered; not predictable from step 1 here). \\
     \bottomrule
   \end{tabular}
 \end{table}
 
-\paragraph{Reading the nulls.}
+\paragraph{Reading these results.}
 The consistent message is that levers which look promising in a single
 underpowered run---a curriculum that visibly removes wasted gradients, a
 $G{=}4$ that edges ahead by one example, a ``length-debiased'' loss, a
 step-1 freeze rule---do not translate into a robust held-out advantage
-once the comparison is cost-matched and repeated across seeds. Two of
-these (the curriculum and the $G{=}4$ optimum) were flagged as
-\texttt{SUSPECT}/overclaimed by an independent verification pass before
-the multi-seed re-test confirmed them as noise, and the layer-freeze
+once the comparison is cost-matched and repeated across seeds; at
+$n{=}12$--$20$ the honest verdict is inconclusive, not ``no effect''.
+Two of these (the curriculum and the $G{=}4$ optimum in the table
+above) were flagged as \texttt{SUSPECT}/overclaimed by an independent
+verification pass before the multi-seed re-test returned
+under-powered, inconclusive results for both, and the layer-freeze
 result explicitly \emph{reverses} its own toy-scale positive under
-scaling. This is exactly the failure mode a diagnostic benchmark exists
-to catch: it is the re-testing discipline, not any single lever, that is
-doing the work.
+scaling. The $G{=}2$ behaviour also does not contradict the
+arithmetic $G$-sweep elsewhere in this paper: here $G{=}2$
+under-trains ($50\%$ batch collapse) because the model is in an
+active chain-of-thought learning regime at intermediate $p$,
+whereas on saturated arithmetic ($p\approx0.98$) almost every
+mixed group already contains a usable win--loss pair and $G{=}2$
+sufficed---different $p$ regimes, not conflicting results. This is
+exactly the failure mode a diagnostic benchmark exists to catch: it
+is the re-testing discipline, not any single lever, that is doing
+the work.
 
 \paragraph{Scope and caveat.}
 We stress that these are \emph{small-scale} checks, not a refutation of

@@ -28,7 +28,7 @@ hypothesis generator; the measured signal-to-noise ratio grows at only
 $\approx 52\%$ of the $\sqrt{G}$ ideal;
 (ii) an explicit validation, via observable signatures in logged diagnostics, that the group-centered
 update is an all-pairs preference contrast---the ``GRPO is secretly DPO'' bridge;
-and (iii) equivalence and difficulty-stratified analyses (TOST) that separate a
+and (iii) equivalence and difficulty-stratified analyses (Two One-Sided Tests, TOST) that separate a
 variance-reduction reading of the $G$ effect from a preference-density one. We make
 no claim that any single $G$ or algorithm is universally superior.
 
@@ -38,15 +38,37 @@ not the outcome of a directly trained matched-budget arm. It may motivate the
 next sweep, but it cannot establish that $G{=}32$ is optimal. The strongest
 direct comparisons in this paper stop at $G{=}16$; the separate 505-task
 utility audit selects $G{=}4$ only under its declared
-$(1-\mathrm{ZVF})/\sqrt{G}$ objective and cohort.
+$(1-\mathrm{ZVF})/\sqrt{G}$ objective and cohort
+(Section~\ref{sec:appendix:group-size-reconcile}).
 
 \subsection{Related Work}
 \label{sec:p3-related}
 Group-relative and critic-free RL objectives have proliferated around
-GRPO~\citep{shao2024deepseekmath, ahmadian2024backtobasics, lin2025cppo, gift2025}.
+GRPO~\citep{shao2024deepseekmath, ahmadian2024backtobasics, lin2025cppo, gift2025},
+and how each normalizes advantages determines what $G$ can change. RLOO~\citep{ahmadian2024backtobasics}
+uses a leave-one-out baseline without per-group whitening---the baseline structure
+our leave-one-out decomposition of the GRPO update later builds on---whereas
+REINFORCE++~\citep{hu2025reinforcepp} normalizes advantages over the global batch,
+so its signal scale depends on batch composition rather than within-group variance
+alone. Dr.~GRPO~\citep{tong2025drgrpo} argues that GRPO's $1/\sigma$ whitening (and
+per-token length normalization) biases updates toward low-variance and long
+responses, so part of any apparent $G$ effect may be a whitening artifact as the
+group $\sigma$ estimate stabilizes with $G$. DAPO~\citep{yu2025dapo} instead attacks
+the groups that carry no signal at all, dynamically sampling and filtering out
+zero-variance (all-correct or all-wrong) groups; the share of such groups---the
+Zero-Variance Fraction (ZVF) we log throughout---is exactly the mass that larger
+$G$ can convert into mixed, informative groups.
+
 The preference-learning view descends from
-DPO~\citep{rafailov2024direct} and its relatives~\citep{azar2024ipo, ethayarajh2024kto, hong2024orpo}, and the GRPO$\leftrightarrow$DPO correspondence has been examined
-directly~\citep{wu2025grpodpo}. Our contribution is empirical: rather
+DPO~\citep{rafailov2024direct} and its relatives~\citep{azar2024ipo, ethayarajh2024kto, hong2024orpo},
+and the GRPO$\leftrightarrow$DPO correspondence has been examined
+directly~\citep{wu2025grpodpo}; relatedly, casting GRPO as an alignment
+objective~\citep{vojnovic2025grpo} makes precise which preference objective the
+group-relative update optimizes, with $G$ setting how many within-group contrasts
+estimate it per prompt. Finally, iso-compute scaling studies~\citep{tan2025scalingrl, cheng2026isocompute}
+stress that, at fixed compute, generations per prompt trade off against prompts
+seen, so group-size comparisons must be made at matched token budgets rather than
+per step---the matching our sweeps adopt. Our contribution is empirical: rather
 than derive the bridge in isolation, we validate the all-pairs contrast identity
 against logged GRPO diagnostic signatures and connect the group-size effect to preference
 density on a fixed benchmark.

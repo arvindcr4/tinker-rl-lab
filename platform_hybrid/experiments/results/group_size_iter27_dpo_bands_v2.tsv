@@ -1,0 +1,15 @@
+T_tokens	G_a	G_b	band	retention	retention_ci_low	retention_ci_high	source
+256000000	4	32	iter19_fit_extrapolation	0.7291	0.6951	0.761	iter19 saturating fit (extrapolated projection)
+1024000000	4	32	iter19_fit_extrapolation	0.7291	0.6951	0.761	iter19 saturating fit (extrapolated projection)
+1000000	4	32	iter19_fit_ingrid	0.9367			iter19 saturating fit (in-grid only)
+4000000	4	32	iter19_fit_ingrid	0.8525			iter19 saturating fit (in-grid only)
+16000000	4	32	iter19_fit_ingrid	0.7445			iter19 saturating fit (in-grid only)
+64000000	4	32	iter19_fit_ingrid	0.7292			iter19 saturating fit (in-grid only)
+1000000	4	32	measured_G4_vs_G32	0.9762	0.8333	1.1191	iter7+iter15 illustrative reconstruction
+4000000	4	32	measured_G4_vs_G32	0.8333	0.7424	0.9242	iter7+iter15 illustrative reconstruction
+16000000	4	32	measured_G4_vs_G32	0.75	0.6786	0.8214	iter7+iter15 illustrative reconstruction
+64000000	4	32	measured_G4_vs_G32	0.7273	0.6591	0.7955	iter7+iter15 illustrative reconstruction
+1000000	2	16	wu_2025_constant_97.6	0.976			Wu et al. arXiv:2510.00977
+4000000	2	16	wu_2025_constant_97.6	0.976			Wu et al. arXiv:2510.00977
+16000000	2	16	wu_2025_constant_97.6	0.976			Wu et al. arXiv:2510.00977
+64000000	2	16	wu_2025_constant_97.6	0.976			Wu et al. arXiv:2510.00977

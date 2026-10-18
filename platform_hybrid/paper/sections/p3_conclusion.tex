@@ -10,18 +10,27 @@ parity. Read through the four-axis pipeline factorization of
 RLVR paradigm of \citet{lambert2024tulu3}, the same-stack audit places the
 algorithm axis as residual ($\eta^2{=}0.023$; paired
 $\Delta_{\text{GRPO}-\text{PPO}}{=}-0.002$, permutation $p{=}0.62$) while the
-$G$ axis dominates the variance budget ($\eta^2{=}0.54$ on terminal accuracy,
+$G$ axis dominates the variance budget ($\eta^2{=}0.54$ on last-10-step mean reward,
 $0.63$ on gradient norm; Cohen's $d{=}-1.47$ for $G{=}2{\to}16$;
 \texttt{experiments/results/berkeley/unpacking\_dpo\_ppo\_factorization.json}).
+These $\eta^2$ values are within-cohort descriptive variance shares, not
+accuracy-effect magnitudes: on the measured near-ceiling sweep the $G{=}2$ and
+$G{=}16$ held-out means differ by only $0.0033$ ($0.9817$ vs.\ $0.9783$), so a
+large $\eta^2$ there reflects tiny within-cell seed variance relative to
+between-$G$ cell means, not a large accuracy effect; the factorization is also
+a different cohort and metric from the 42-run marginal ANOVAs in Methods.
 An independent Miller-style error-bars audit \citep{miller2024erroreval} of the
 four Pillar-3 computed contrasts sharpens their numerical precision, not their
-provenance: the $G{=}4/G{=}32$ GU-ratio (audit H1, bootstrap CI
+provenance: the $G{=}4/G{=}32$
+$\widehat{\mathrm{GE}}_{\mathrm{tok}}$-ratio (audit H1, bootstrap CI
 $[4.16, 4.82]$) and the negative retention-vs-$T$ slope (H2, CI
 $[-0.237, -0.038]$) are precise \emph{within the reconstructed grid},
-whereas the SNR-slope-vs-theory comparison (H3; CI $[+0.148, +0.583]$
-contains the theoretical $+0.500$) and the native-Wu $G{=}2 \approx G{=}16$
+whereas the SNR-slope-vs-theory comparison (H3, a log--log SNR-vs-$G$ slope
+in decade/decade where $\sqrt{G}$ predicts $+0.500$; the point slope from the
+per-$G$ SNRs is $+0.183$/decade) and the native-Wu $G{=}2 \approx G{=}16$
 equivalence claim (H4; $n{=}3$ paired seeds, equivalence region straddled)
-are NULL
+are NULL, and the corrected TOST agrees with the H4 NULL verdict
+($G{=}16$ $p{=}0.056$, held-out $p{=}0.100$)
 (\texttt{experiments/results/berkeley/adding\_error\_bars\_summary.json}).
 
 % Berkeley harvest rows 01 (Dualformer, F24 L8 Yuandong Tian) and 02
@@ -34,22 +43,24 @@ rhetorical: on a single winner--loser pair within a $G{=}2$ group, the GRPO
 loss coincides with the small-$\beta$, no-KL, online limit of
 DPO~\citep{rafailov2024direct}, and Iterative RPO's DPO-plus-NLL
 objective~\citep{pang2024iterativerpo} corresponds to GRPO with replay on
-winning trajectories; by analytical construction the two share the same
-optimal group size at every budget ($G^\ast = 8, 16, 32, 32$ at
+winning trajectories; in the spreadsheet construction on the reconstructed
+grid, the cell-wise argmax coincides ($G^\ast = 8, 16, 32, 32$ at
 $T \in \{1, 4, 16, 64\}\mathrm{M}$, where the $G{=}32$ optima at high $T$
-are joint-fit extrapolations---no $G{=}32$ cell and no Iterative-RPO run
-was trained), and the SNR slope in $G$
-($+0.366$/decade, 95\% CI $[+0.148, +0.583]$) contains the
-$\sqrt{G}$-theory value of $+0.500$
+are joint-fit extrapolations); no Iterative-RPO run was trained and no
+invariance theorem is claimed. The log--log SNR slope in $G$ is
+$+0.183$/decade, below the $\sqrt{G}$-theory value of $+0.500$/decade
 (\texttt{experiments/results/berkeley/dpo\_iterative\_rpo\_summary.json}).
 Second, a Dualformer-style fast/slow/auto reading of
 $G$~\citep{su2024dualformer} suggests the non-monotone landscape is
-exploitable: a difficulty-gated allocation rule (predicted accuracy
-$\geq 0.85 \to G{=}2$, down to $G{=}32$ otherwise) attains mean
-$G_{\mathrm{auto}} = 7.0$ on the 20-cell joint-fit grid --- a projected $56.2\%$
+exploitable: this is an offline projection on the reconstructed 20-cell
+grid, where predicted accuracy comes from the grid's own cell accuracies
+(oracle difficulty, not a prospective predictor) and the intermediate
+mapping is unstated in the source, so the rule is stated only as reported
+($\geq 0.85 \to G{=}2$, else larger $G$ up to $32$). It attains mean
+$G_{\mathrm{auto}} = 7.0$ on that grid --- a projected $56.2\%$
 rollout saving versus always-$G{=}16$ and a further $\approx 42\%$ versus
 the reconstructed $G^\ast(T)$ schedule (mean $G{=}12.0$, itself a projected $25\%$
-saving versus always-$G{=}16$) --- with 5/20 cells under-predicting by more than 5\,pp,
+saving versus always-$G{=}16$); these savings are projections, with 5/20 cells under-predicting by more than 5\,pp,
 consistent with joint-fit residual noise but not attributable without a
 prospective allocation experiment
 (\texttt{experiments/results/berkeley/dualformer\_compute\_savings.tsv}).
@@ -79,12 +90,26 @@ far more slowly than $\sqrt{G}$---all consistent with a contrast-density rather 
 a pure-variance account, and with the exact sense in which the group-centered update
 is an all-pairs preference contrast. The clean causal test, and matched-budget
 multi-seed comparisons, are the natural next experiments; we release the sweeps,
-per-step gradient-norm logs, and scripts to enable them. As a reproducibility
+per-step gradient-norm logs, and scripts to enable them. The measured sweep is
+$n{=}3$ seeds on saturated arithmetic (minimum detectable effect $d{=}3.07$),
+there is no directly trained matched-budget $G{=}32$ arm, and there is no
+unwhitened (RLOO) or dynamic-filtering (DAPO) baseline in the $G$ sweep to
+isolate $1/\sigma$ whitening; these are required next experiments on
+unsaturated benchmarks (GSM8K/MATH-style low-pass-rate regimes). The released
+TSVs and scripts (the \texttt{group\_size\_iter15}, \texttt{group\_size\_iter19},
+\texttt{group\_size\_iter23}, and \texttt{group\_size\_iter27} drivers) suffice
+to regenerate the tables and figures in this paper. As a reproducibility
 check on the released artifacts, an automated extract-and-verify pass in the
 style of Paper2Agent \citep{miao2025paper2agent} recovers the analysis recipe
 from the Pillar-3 headline TSVs with full field recall ($1.000$), reproduces
 the published joint fit ($R^2{=}0.854$ vs.\ the published $0.796$), and
-transfers to a held-out slice ($R^2{=}0.812$). The recipe also survives
+transfers to a held-out slice ($R^2{=}0.812$). The ``joint fit'' is the
+iter-127 log--log regression $1-\mathrm{acc} = a + b\log_{10} G + c\log_{10} T$
+over the 20-cell reconstructed grid (published recipe:
+$a{=}1.669$, $b{=}-0.141$, $c{=}-0.293$; verifier refit $a{=}2.129$,
+$b{=}-0.129$, $c{=}-0.236$), and the held-out slice is the iter-135
+re-extraction; both $R^2$ values therefore measure recipe recoverability on
+reconstructed cells, not predictive accuracy on trained runs. The recipe also survives
 deletion of a fitted field (zero failures; the slope is re-recovered from the
 data alone), so the released TSVs are sufficient to reconstruct the paper's
 central fit without human intervention

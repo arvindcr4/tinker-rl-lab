@@ -1,14 +1,15 @@
 % =============================================================================
 % Iter 27 — Pillar 3 unified synthesis: Reward vs Group Size + DPO framing
 % Driver: scripts/group_size_iter27.py  (+ scripts/group_size_iter27_extend.py)
-% Inputs: experiments/results/group_size_iter27_synthesis.tsv
+% Inputs: experiments/results/group_size_iter27_synthesis_v2.tsv
 %         experiments/results/group_size_iter27_dpo_bands.tsv
-%         experiments/results/group_size_iter15_{equivalence,snr}.tsv
+%         experiments/results/group_size_iter15_equivalence_v2.tsv
+%         experiments/results/group_size_iter15_snr.tsv
 %         experiments/results/group_size_iter19_retention_fit.tsv
 %         experiments/results/groupsize_zvf_sweep.json
 %         experiments/results/group_size_g4_vs_g32_broader_scale.tsv
 % Outputs: experiments/results/group_size_effect.tsv (extended)
-%          figures/group_size_iter27.{pdf,png}
+%          figures/group_size_iter27_v2.{pdf,png}
 % =============================================================================
 \subsection{Iter 27 Unified Synthesis: Reward vs.\ Group Size and the Wu~2025 DPO Framing}
 \label{sec:group-size-iter27}
@@ -22,7 +23,8 @@ of the rollout cost. The natural practitioner question is therefore
 matters on canonical training budgets?}''  The earlier iterations of
 this section already produced fragmented answers: iter~3 measured the
 Qwen2.5-0.5B / arithmetic sweep with a flat reward-vs-G profile
-(retention in $[97.6\%,\,106.8\%]$ vs G=2); iter~7 extended the test
+(retention $\{99.4\%,\,99.6\%,\,100.7\%\}$ for $G\in\{4,8,16\}$ vs G=2);
+iter~7 extended the test
 to an illustrative Qwen3-8B/GSM8K reconstruction at
 T$\in\{1,4,16,64\}$\,M, where retention falls from $97.6\%$ to
 $72.7\%$; iter~11 sharpened
@@ -49,39 +51,51 @@ gives the full per-$G$ row including SNR and TOST verdict.
 \hline
 $G$ & $n$ & last10 reward & ret.\ vs $G{=}2$ & 95\% CI & SNR(adv) & SNR 95\% CI & TOST vs $G{=}2$ ($\epsilon{=}0.02$) & above Wu? \\
 \hline
-2  & 3 & 0.9771 & 1.0000 & [0.998,\,1.002] & 1.46 & [1.22,\,1.81] & --- & yes \\
-4  & 3 & 0.9714 & 0.9941 & [0.992,\,0.997] & 1.76 & [1.46,\,2.23] & yes ($p<10^{-9}$)  & yes \\
-8  & 3 & 0.9732 & 0.9960 & [0.989,\,1.004] & 1.94 & [1.58,\,2.54] & yes ($p<10^{-9}$)  & yes \\
-16 & 3 & 0.9837 & 1.0068 & [0.998,\,1.013] & 2.16 & [1.72,\,2.86] & yes ($p<10^{-4}$)  & yes \\
+2  & 3 & 0.9771 & 1.0000 & [1.000,\,1.000] & 1.46 & [1.22,\,1.81] & --- & yes \\
+4  & 3 & 0.9714 & 0.9941 & [0.990,\,0.998] & 1.76 & [1.46,\,2.23] & yes ($p{=}0.012$)  & yes \\
+8  & 3 & 0.9732 & 0.9960 & [0.988,\,1.006] & 1.94 & [1.58,\,2.54] & yes ($p{=}0.043$)  & yes \\
+16 & 3 & 0.9837 & 1.0068 & [0.997,\,1.012] & 2.16 & [1.72,\,2.86] & no ($p{=}0.056$)  & yes \\
 \hline
 \end{tabular}%
 }
 \caption{\textbf{Iter 27 Pillar 3 unified synthesis row.} Per-$G$
 canonical measurements on the Qwen2.5-0.5B / arithmetic sweep: 3 seeds,
-40 steps. Retention is computed against the $G{=}2$ reference with
-bootstrap 95\% CI ($B{=}5000$, seed 20260702). SNR is on the per-step
-advantage-variance trajectory with bootstrap 95\% CI. TOST verdict at
-$\epsilon{=}0.02$ is the iter~15 paired test on the per-seed
-last-10-step mean reward. ``above Wu?'' compares the retention against
-the Wu~2025 $97.6\%$ headline. Source:
-\texttt{experiments/results/group\_size\_iter27\_synthesis.tsv}.}
+40 steps. Retention is the paired last-10 reward ratio
+$\text{reward}_G/\text{reward}_{G{=}2}$ (the $G{=}2$ row is identically
+$1.0000$, CI $[1,1]$). SNR is on the per-step advantage-variance
+trajectory (see text). TOST at $\epsilon{=}0.02$ is the paired test on
+per-seed last-10 training reward ($n{=}3$, $\nu{=}2$) versus $G{=}2$:
+$G{=}4$ $p{=}0.012$, $G{=}8$ $p{=}0.043$, $G{=}16$ $p{=}0.056$ (not
+equivalent at $\alpha{=}0.05$); 90\% CIs for the mean difference
+($G$ minus $G{=}2$) are $[-0.0124,0.0009]$, $[-0.0186,0.0108]$, and
+$[-0.0077,0.0209]$ respectively (the last crosses $+\epsilon$). Held-out
+$G{=}2$ vs $G{=}16$ TOST $p{=}0.100$. Pairing caveat: seed labels are
+matched across $G$ arms but trajectories diverge after step~1, so pairing
+is a sensitivity choice, not a matched-run design. ``above Wu?''
+compares retention against the Wu~2025 $97.6\%$ headline. Sources:
+\texttt{experiments/results/group\_size\_iter27\_synthesis\_v2.tsv},
+\texttt{group\_size\_iter15\_equivalence\_v2.tsv}.}
 \label{tab:groupsize-iter27-synthesis}
 \end{table}
 
 \paragraph{SNR scaling (DPO vs MC variance).}
-Figure~\ref{fig:group-size-iter27}B plots the per-$G$ SNR from
-iter~15 with two reference laws anchored at $G{=}2$: the flat
+SNR is defined as the pooled per-step \texttt{advantage\_variance}
+$|\text{mean}|/\text{std}$, using $120$ step-values per $G$ (3 seeds
+$\times$ 40 steps). Figure~\ref{fig:group-size-iter27}B plots the per-$G$
+SNR from iter~15 with two reference laws anchored at $G{=}2$: the flat
 DPO-equivalence reference ($\text{SNR}(G) = \text{SNR}(G{=}2)$) and the
 $\sqrt{G}$ MC-variance reference ($\text{SNR}(G) = \text{SNR}(G{=}2)
 \sqrt{G/2}$). The measured SNR is $\{1.46,\,1.76,\,1.94,\,2.16\}$
 for $G\in\{2,4,8,16\}$---monotonically increasing but \emph{sub}-$\sqrt{G}$:
-the $G{=}16$ measurement is $52\%$ of the $\sqrt{G}$ prediction
-and $48\%$ above the flat baseline. The signal is \emph{not} purely
-DPO (which would predict a flat SNR); it is also \emph{not} pure MC
-variance reduction (which would predict SNR $\propto \sqrt{G}$). The
-data sit between the two reference laws with a clear convex shape
+at $G{=}16$ the measured value is $52\%$ of the anchored $\sqrt{G}$
+prediction $1.46\sqrt{8}{=}4.14$, and $48\%$ above the flat baseline.
+The log-log slope is $0.183$ per decade, versus $0.500$ for $\sqrt{G}$.
+The signal is \emph{not} purely DPO (which would predict a flat SNR);
+it is also \emph{not} pure MC variance reduction (which would predict
+SNR $\propto \sqrt{G}$). The data sit between the two reference laws,
 suggesting that within-group contrast quality improves with $G$ but is
-bounded by the iter-11 entropy-collapse floor.
+bounded by the iter-11 entropy-collapse floor. This is descriptive only:
+steps are autocorrelated and $n{=}3$ seeds.
 
 \paragraph{Retention-vs-budget: three DPO bands.}
 Figure~\ref{fig:group-size-iter27}C plots retention $R(T) =
@@ -93,8 +107,7 @@ illustrative reanalysis at four budgets, with three bands:
         the published point estimate for the reported 2-GRPO versus
         16-GRPO setting. We extend it horizontally only as a visual
         reference; Wu et al.\ did not claim invariance over token budget.
-  \item \textbf{Reconstructed G=4 vs G=32} (blue, with bootstrap CI
-        conditional on the reconstruction). This is the iter~7
+  \item \textbf{Reconstructed G=4 vs G=32} (blue). This is the iter~7
         broader-scale reanalysis extended by
         iter~15 and iter~19: R$(1\,\text{M}) = 0.976$ (consistent with
         Wu), R$(4\,\text{M}) = 0.833$, R$(16\,\text{M}) = 0.750$,
@@ -102,10 +115,13 @@ illustrative reanalysis at four budgets, with three bands:
   \item \textbf{Iter-19 fit extrapolation} (orange). The iter-19
         saturating-exponential fit gives $R(T) = 0.729 + 0.247 \,
         e^{-T/5.76\,\text{M}}$ with $R^2 = 0.948$ on the four
-        measurements. We extrapolate to $T{=}256\,$M and $T{=}1024\,$M
+        measurements ($R_0$ fixed at $0.976$, so the fit has two free
+        parameters on $n{=}4$ points). We extrapolate to $T{=}256\,$M and $T{=}1024\,$M
         where $R$ asymptotes to $0.729$ (95\% CI $[0.712,\,0.745]$).
         This is extrapolation of reconstructed points, not a measured
-        learning curve.
+        learning curve: the interval is conditional on the reconstruction
+        and the saturating form, and no inferential claim about trained
+        runs at those budgets is made.
 \end{enumerate}
 
 The Wu~2025 reference line and the reconstructed G=4 vs G=32 curve
@@ -140,8 +156,13 @@ Across the four panels of Figure~\ref{fig:group-size-iter27}:
 \begin{enumerate}
   \item \textbf{Reward is flat in $G$ on easy near-ceiling tasks}
         (Panel~A). All $G\in\{2,4,8,16\}$ meet the Wu~97.6\%
-        retention bar with CIs that include 1.0. This is the
-        contrastive-DPO regime Wu et~al.\ describe.
+        retention bar; the $G{=}8$ and $G{=}16$ retention CIs include
+        $1.0$ while the $G{=}4$ CI $[0.990,0.998]$ excludes $1.0$.
+        Paired TOST at $\epsilon{=}0.02$ passes for $G{=}4$
+        ($p{=}0.012$) and $G{=}8$ ($p{=}0.043$) but fails for $G{=}16$
+        ($p{=}0.056$), so equivalence to $G{=}2$ is inconclusive
+        overall, consistent with the Discussion NULL verdict. This is
+        the contrastive-DPO regime Wu et~al.\ describe.
   \item \textbf{SNR lies between two reference curves}
         (Panel~B). With three seeds per group, this is descriptive evidence,
         not a rejection of either asymptotic law.
@@ -161,28 +182,30 @@ easy near-ceiling sweep and makes no universal recommendation for hard tasks.
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.95\textwidth]{figures/group_size_iter27.pdf}
+\includegraphics[width=0.95\textwidth]{figures/group_size_iter27_v2.pdf}
 \caption{\textbf{Iter 27 Pillar 3 unified synthesis.}
 \emph{(A)} Canonical reward-vs-$G$ plot on the measured
 Qwen2.5-0.5B / arithmetic sweep (3 seeds, 40 steps). All $G\ge 4$
-have retention within 1.5\% of $G{=}2$ and meet the Wu~2025 97.6\%
-threshold with CIs including 1.0; the dashed gray line is the Wu
+have retention $\{99.4\%,99.6\%,100.7\%\}$ versus $G{=}2$ and meet the
+Wu~2025 97.6\% threshold; the $G{=}4$ retention CI excludes $1.0$ while
+the $G{=}8$ and $G{=}16$ CIs include it. The dashed gray line is the Wu
 band at 97.6\% of the $G{=}2$ baseline.
-\emph{(B)} Per-$G$ SNR on the per-step advantage-variance trajectory
-(green, with 95\% CI), with the flat DPO-equivalence reference
-(purple) and the $\sqrt{G}$ MC-variance reference (red). Measured SNR
-is sub-$\sqrt{G}$ but above flat, consistent with the iter~11
-entropy-collapse bounding.
+\emph{(B)} Per-$G$ SNR (pooled per-step \texttt{advantage\_variance}
+$|\text{mean}|/\text{std}$, 120 step-values per $G$; green), with the
+flat DPO-equivalence reference (purple) and the $\sqrt{G}$
+MC-variance reference (red). Measured SNR is sub-$\sqrt{G}$ but above
+flat (descriptive only; steps autocorrelated, $n{=}3$ seeds).
 \emph{(C)} Illustrative retention vs token budget for Qwen3-8B/GSM8K. The Wu
 reference line (gray, R$=0.976$) and the reconstructed G=4 vs G=32 curve
 (blue) cross at $T{=}1\,$M and diverge by $25$\,pp at $T{=}64\,$M.
 The orange extension is the iter-19 saturating-exponential fit
 $R_\infty + (R_0 - R_\infty)\,e^{-T/\tau}$ with $R_\infty{=}0.729$
-(95\% CI $[0.712,\,0.745]$) and $\tau{=}5.76\,$M.
+(95\% CI $[0.712,\,0.745]$, conditional on the reconstruction) and $\tau{=}5.76\,$M,
+extrapolated to $T{=}256\,$M and $T{=}1024\,$M as a labeled projection, not a measurement.
 \emph{(D)} Illustrative accuracy$(T,G)$ heatmap from
 \texttt{group\_size\_token\_normalized.tsv}; the within-grid argmax varies from
 $8$ at $T{=}1\,$M to $32$ at $T \ge 16\,$M. Source:
-\texttt{figures/group\_size\_iter27.pdf}.}
+\texttt{figures/group\_size\_iter27\_v2.pdf}.}
 \label{fig:group-size-iter27}
 \end{figure}
 
@@ -191,14 +214,13 @@ The iter 27 artifacts are produced by
 \texttt{platform\_modal/scripts/group\_size\_iter27.py} (driver) and
 \texttt{platform\_modal/scripts/group\_size\_iter27\_extend.py} (TSV extension)
 from the existing TSVs
-(\texttt{group\_size\_iter15\_equivalence.tsv},
+(\texttt{group\_size\_iter15\_equivalence\_v2.tsv},
 \texttt{group\_size\_iter15\_snr.tsv},
 \texttt{group\_size\_iter19\_retention\_fit.tsv},
 \texttt{group\_size\_g4\_vs\_g32\_broader\_scale.tsv},
 \texttt{groupsize\_zvf\_sweep.json}).  All numerics are re-aggregations
-of measured or illustrative-reanalysis data with bootstrap CIs
-($B{=}5000$, seed 20260702).  The driver writes two TSVs
-(\texttt{group\_size\_iter27\_synthesis.tsv} with 4 rows and
+of measured or illustrative-reanalysis data.  The driver writes two TSVs
+(\texttt{group\_size\_iter27\_synthesis\_v2.tsv} with 4 rows and
 \texttt{group\_size\_iter27\_dpo\_bands.tsv} with 12 rows), reads the
 illustrative grid from \texttt{group\_size\_token\_normalized.tsv}, and
 produces the PDF and PNG versions of the four-panel figure.

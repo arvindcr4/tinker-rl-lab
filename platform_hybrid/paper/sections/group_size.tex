@@ -33,11 +33,13 @@ Table~\ref{tab:groupsize-summary}:
         three seeds each
         (\texttt{experiments/results/groupsize\_zvf\_sweep.json}).
         Held-out accuracy traces an inverted-U with its numerical apex
-        at $G{=}8$ ($0.990{\pm}0.003$); $G{=}2$ ($0.982{\pm}0.004$) and
-        $G{=}16$ ($0.978{\pm}0.006$) are statistically indistinguishable
-        from $G{=}8$ at $n{=}3$ seeds (overlapping SEs). On this task
-        $G{=}2$ actually \emph{retains 100.3\% of 16-GRPO held-out accuracy}
-        (\texttt{experiments/results/group\_size\_effect\_dpo\_check.tsv}),
+        at $G{=}8$ ($0.9900{\pm}0.003$); $G{=}2$ ($0.9817{\pm}0.004$) and
+        $G{=}16$ ($0.9783{\pm}0.006$) are statistically indistinguishable
+        from $G{=}8$ at $n{=}3$ seeds (overlapping $1.96\cdot\mathrm{SE}$
+        bands). On this task
+        $G{=}2$ \emph{retains 100.34\% (100.3\%) of 16-GRPO held-out
+        accuracy} (difference $+0.0033$ from unrounded means;
+        \texttt{experiments/results/groupsize\_zvf\_sweep.json}),
         comfortably above the 97.6\% Wu et al.\ headline---the contrastive
         reading predicts this on easy, near-ceiling tasks where every
         group yields a usable preference pair.
@@ -45,7 +47,7 @@ Table~\ref{tab:groupsize-summary}:
         on Qwen3-8B / GSM8K with $G \in \{4, 8, 16, 32, 64\}$ and total
         token budget $T \in \{1, 4, 16, 64\}\,$M
         (\texttt{experiments/results/group\_size\_token\_normalized.tsv},
-        Appendix~\ref{sec:appendix:group-size-reconcile}). At
+        Section~\ref{sec:appendix:group-size-reconcile}). At
         $T{=}64\,$M the reconstructed per-row accuracy maximum is at $G{=}32$
         ($0.88$), with $G{=}4$ at $0.64$---a $0.24$ absolute swing that
         is the largest $G$-vs-$G$ effect in this token-normalized
@@ -53,14 +55,20 @@ Table~\ref{tab:groupsize-summary}:
         ($0.48$), confirming the budget-dependent optimum.
   \item \textbf{ZVF/GU closed form} for binary-outcome tasks,
         $\mathrm{ZVF}(p, G) = p^G + (1{-}p)^G$
-        ($\mathrm{GU}(p, G) = 1 - \mathrm{ZVF}$). At the empirical
-        per-$G$ accuracies of the arithmetic sweep the predicted
-        $\mathrm{ZVF}$ over-estimates the empirical ZVF by $0.07$--$0.23$
-        (\texttt{experiments/results/group\_size\_effect\_theory.tsv}):
-        the empirical advantage signal is \emph{stronger} than the
-        Bernoulli-independent closed form, consistent with the
-        contrastive reading (rollouts within a group are negatively
-        correlated, not independent).
+        ($\mathrm{GU}(p, G) = 1 - \mathrm{ZVF}$). Against a
+        \emph{trajectory-matched} baseline---the mean over steps/runs of
+        $p_t^G + (1{-}p_t)^G$ at the per-step batch mean reward $p_t$,
+        on the same rollouts as the empirical ZVF
+        (\texttt{experiments/results/groupsize\_zvf\_sweep.json})---the
+        empirical ZVF \emph{exceeds} the closed form by $+0.010$ to
+        $+0.109$ (Table~\ref{tab:groupsize-zvf-theory}). The positive
+        residuals are consistent with prompt-difficulty heterogeneity
+        (Jensen: $\mathbb{E}[p_x^G + (1{-}p_x)^G] >
+        \bar p^G + (1{-}\bar p)^G$ by strict convexity), i.e.\ positive
+        marginal within-group association / overdispersion, not
+        negative correlation. An earlier comparison that mixed
+        trajectory-averaged training ZVF with terminal held-out $p$
+        was invalid and is withdrawn (see below).
 \end{enumerate}
 
 \begin{table}[htbp]
@@ -71,7 +79,7 @@ Table~\ref{tab:groupsize-summary}:
 \toprule
 Source & $G$ range & Optimum & Best heldout acc. & $G{=}2$ retains of $G{=}16$ \\
 \midrule
-Qwen2.5-0.5B / arithmetic (measured) & 2--16 & 8 & $0.990 \pm 0.003$ & $100.3\%$ \\
+Qwen2.5-0.5B / arithmetic (measured) & 2--16 & 8 & $0.9900 \pm 0.003$ & $100.34\%$ \\
 Qwen3-8B / GSM8K, $T{=}1\,$M (illustrative)   & 4--64 & 8  & $0.48$ & n/a \\
 Qwen3-8B / GSM8K, $T{=}64\,$M (illustrative) & 4--64 & 32 & $\mathbf{0.88}$ & n/a \\
 \bottomrule
@@ -79,7 +87,7 @@ Qwen3-8B / GSM8K, $T{=}64\,$M (illustrative) & 4--64 & 32 & $\mathbf{0.88}$ & n/
 }
 \caption{Group-size sweep summary, three sources. \emph{Measured} entries
 are real per-seed runs ($n{=}3$); the \emph{illustrative} rows are the
-re-analysis in Appendix~\ref{sec:appendix:group-size-reconcile}. The
+re-analysis in Section~\ref{sec:appendix:group-size-reconcile}. The
 optimum shifts rightward in the reconstructed token-budget grid: small on
 short horizons, $G{\approx}32$ at the canonical training scale
 ($T{\ge}16\,$M).}
@@ -127,24 +135,30 @@ direct matched-budget sweep, not a refutation from fresh training cells.
 \begin{table}[htbp]
 \centering
 \small
+\resizebox{\linewidth}{!}{%
 \begin{tabular}{ccccccc}
 \toprule
-$T$ (M) & $G{=}4$ acc. & $G{=}32$ acc. & $\Delta(G{=}4{-}G{=}32)$ & 95\% CI on $\Delta$ & Retention & Generalizes Wu? \\
+$T$ (M) & $G{=}4$ acc. & $G{=}32$ acc. & $\Delta(G{=}4{-}G{=}32)$ & Assumed band on $\Delta$ & Retention & Generalizes Wu? \\
 \midrule
 1  & $0.41$ & $0.42$ & $-0.01$ & $[-0.07, +0.05]$ & $\mathbf{97.6\%}$ & yes \\
 4  & $0.55$ & $0.66$ & $-0.11$ & $[-0.17, -0.05]$ & $83.3\%$          & no  \\
 16 & $0.63$ & $0.84$ & $-0.21$ & $[-0.27, -0.15]$ & $75.0\%$          & no  \\
 64 & $0.64$ & $0.88$ & $-0.24$ & $[-0.30, -0.18]$ & $\mathbf{72.7\%}$ & no  \\
 \bottomrule
-\end{tabular}
+\end{tabular}%
+}
 \caption{Reconstructed test of whether the Wu et al.\ (2025)
 $G{=}2{\sim}G{=}16$ contrastive-equivalence claim generalizes to
 $G{=}4{\sim}G{=}32$ at canonical training scale. \emph{Retention} is
 $100\% \cdot \mathrm{acc}_{G{=}4} / \mathrm{acc}_{G{=}32}$;
 \emph{Generalizes Wu?} flags rows where retention $\ge 90\%$. The
 reconstruction retains the claim only at $T{=}1\,$M (the under-trained
-regime), not at $T \ge 4\,$M. These are conditional reconstruction
-intervals, not fresh-run confidence intervals. Source:
+regime), not at $T \ge 4\,$M. The $\pm0.06$ assumed bands are the
+reconstruction script's assumed bands---the held-out cells are stored
+as point estimates with $\pm0.03$ bands in
+\texttt{group\_size\_token\_normalized.tsv}---not seed-level sampling
+confidence intervals; only the point estimates carry the comparison.
+Source:
 \texttt{experiments/results/group\_size\_g4\_vs\_g32\_broader\_scale.tsv}.}
 \label{tab:groupsize-g4-g32}
 \end{table}
@@ -176,12 +190,13 @@ trajectory (faint lines) is overlaid for visual context. Reward is
 statistically flat in $G$ on this near-ceiling task
 (range 0.971--0.984). \emph{Right:} $G{=}4$ retention of $G{=}32$ (left
 axis, blue) and the absolute $\Delta(\mathrm{acc}_{G{=}4} - \mathrm{acc}_{G{=}32})$
-with conservative CI (right axis, red) vs token budget $T$, on the
+with the reconstruction's assumed $\pm0.06$ band (not a sampling CI;
+right axis, red) vs token budget $T$, on the
 illustrative Qwen3-8B / GSM8K reanalysis. The Wu et al.\ (2025)
 97.6\% retention band is overlaid in gray. The retention curve is a
 clean monotonic decline from 97.6\% at $T{=}1\,$M to 72.7\% at
 $T{=}64\,$M, the reconstructed signature that the contrastive reading may
-saturates by $T \approx 4\,$M and the variance-reduction reading
+saturate by $T \approx 4\,$M and the variance-reduction reading
 dominates for larger $T$.}
 \label{fig:group-size-reward}
 \end{figure}
@@ -190,9 +205,10 @@ dominates for larger $T$.}
 Table~\ref{tab:groupsize-dpo-check} reports a Welch-style difference
 of means with a non-parametric bootstrap 95\% CI
 ($B{=}4000$, seed $20260702$) for $G{=}2$ vs $G{=}16$ on the measured
-arithmetic sweep. The retention is 100.34\% with a bootstrap CI of
-$[-0.0083, 0.0150]$ on the absolute difference, \emph{i.e.} the
-$C{=}0$ difference is well inside the 95\% CI and the retention is
+arithmetic sweep. The retention is 100.34\% (100.3\%, difference
+$+0.0033$ from unrounded means) with a bootstrap CI of
+$[-0.0083, 0.0150]$ on the absolute difference, \emph{i.e.} a zero
+difference ($\Delta{=}0$) is well inside the 95\% CI and the retention is
 indistinguishable from Wu et al.'s 97.6\% to within a few percentage
 points---a positive small-scale cross-validation of the DPO-equivalence
 prediction on a near-ceiling task.
@@ -204,33 +220,49 @@ prediction on a near-ceiling task.
 \toprule
 Comparison & Mean A & Mean B & Diff. (A--B) & 95\% CI on diff. \\
 \midrule
-$G{=}2$ vs $G{=}16$ (Wu headline)        & $0.982$ & $0.978$ & $+0.003$ & $[-0.008, +0.015]$ \\
-$G{=}4$ vs $G{=}16$                      & $0.988$ & $0.978$ & $+0.010$ & n/a                \\
-$G{=}8$ vs $G{=}16$                      & $0.990$ & $0.978$ & $+0.012$ & n/a                \\
-$G{=}4$ vs $G{=}32$ (Pillar 3 question)  & $0.988$ & n/a     & n/a     & not measured on this sweep \\
+$G{=}2$ vs $G{=}16$ (Wu headline)        & $0.9817$ & $0.9783$ & $+0.0033$ & $[-0.0083, +0.0150]$ \\
+$G{=}4$ vs $G{=}16$                      & $0.9883$ & $0.9783$ & $+0.0100$ & n/a                \\
+$G{=}8$ vs $G{=}16$                      & $0.9900$ & $0.9783$ & $+0.0117$ & n/a                \\
+$G{=}4$ vs $G{=}32$ (Pillar 3 question)  & $0.9883$ & n/a     & n/a     & not measured on this sweep \\
 \bottomrule
 \end{tabular}
 \caption{Per-G bootstrap on the measured Qwen2.5-0.5B / arithmetic sweep.
-$G{=}2$ retains $100.3\%$ of $G{=}16$, well above Wu et al.\ (2025)'s
-97.6\% headline and consistent with the DPO-equivalence prediction.
+Means are reported to 4 decimals; differences and retention are
+computed from unrounded means. $G{=}2$ retains $100.34\%$ (100.3\%) of
+$G{=}16$ (difference $+0.0033$), above Wu et al.\ (2025)'s
+97.6\% headline and descriptively consistent with the DPO-equivalence
+prediction at $n{=}3$ (not certified equivalence; see Conclusions).
 $G{=}32$ is not measured on this sweep; we refer to the
 illustrative Qwen3-8B / GSM8K reanalysis (Table~\ref{tab:groupsize-summary}).}
 \label{tab:groupsize-dpo-check}
 \end{table}
 
 \paragraph{ZVF-vs-G: empirical vs theory.}
-Table~\ref{tab:groupsize-zvf-theory} reports the closed-form prediction
-$\mathrm{ZVF}(p, G) = p^G + (1{-}p)^G$ at the empirical per-$G$
-accuracy, alongside the measured $\overline{\mathrm{ZVF}}$. The empirical
-ZVF is consistently \emph{below} the theory prediction across all
-$G \in \{2, 4, 8, 16\}$ (residual $-0.13$ to $-0.23$). This means the
-empirical contrastive signal is \emph{stronger} than the Bernoulli-
-independent prediction: rollouts within a group are negatively
-correlated (correct rollouts cluster, incorrect rollouts cluster)
-rather than independent. This is the exact correlation structure
-Wu et al.\ rely on in their Proposition 4.1: a non-trivial
-$\mathrm{Cov}(g^+, g^-)$ reduces gradient variance further than the
-independent-coin baseline predicts.
+Table~\ref{tab:groupsize-zvf-theory} reports a
+\emph{trajectory-matched} recomputation: the theory column is the mean
+over steps/runs of $p_t^G + (1{-}p_t)^G$ evaluated at the per-step
+batch mean reward $p_t$, on the same rollouts as the empirical
+$\overline{\mathrm{ZVF}}$ (mean training $p$ ranges only
+$0.840$--$0.873$). This replaces an earlier, invalid comparison that
+mixed trajectory-averaged training ZVF with terminal held-out $p$:
+at $G{=}2$, empirical $\mathrm{ZVF}{=}0.838$ together with held-out
+$p{=}0.982$ is impossible, since at that $p$,
+$\mathrm{ZVF} \ge 1 - 2(1{-}p) = 0.964$. On the matched baseline the
+residuals are \emph{positive} at every
+$G \in \{2, 4, 8, 16\}$ ($+0.010$, $+0.055$, $+0.094$, $+0.109$):
+empirical ZVF exceeds the batch-mean closed form. This is the sign
+expected from prompt-difficulty heterogeneity: by strict convexity of
+$p \mapsto p^G + (1{-}p)^G$ and Jensen's inequality,
+$\mathbb{E}[p_x^G + (1{-}p_x)^G] > \bar p^G + (1{-}\bar p)^G$, so
+collapsing per-prompt success probabilities $p_x$ to a batch mean
+under-predicts ZVF---positive marginal within-group association /
+overdispersion. It is not evidence of negative correlation:
+conditional on $(x, \theta)$, i.i.d.\ decoding gives zero within-group
+correlation, and the positive association arises only marginally from
+mixing over prompt difficulty. Nor does it bear on
+Proposition~4.1 of Wu et al., which concerns
+$\mathrm{Cov}(g^+, g^-)$ between gradient components, not correlation
+between rollout outcomes; that earlier attribution is withdrawn.
 
 \paragraph{Matched-budget trajectory check on the Wu pairing itself.}
 A two-seed matched-budget panel on exactly the $G{=}2$ vs.\ $G{=}16$
@@ -246,28 +278,47 @@ $\mathrm{ZVF}\le0.25$ throughout. On this budget the small-$G$ arm wins
 the train-reward race outright --- and that is precisely the trap: it
 spends its final optimizer steps in an endgame where most groups have zero
 centered reward contrast in the stated runner, while the reward curve reads
-success; this does not transfer to every total-gradient contribution. Artifacts:
+success; this does not transfer to every total-gradient contribution.
+Two scope limits on this check. First, it is confounded by optimizer
+steps: at matched rollouts the $G{=}16$ arm takes $8\times$ fewer
+optimizer steps than the $G{=}2$ arm (20 vs.\ 160 steps) at the same
+learning rate ($3\times10^{-5}$ in both arms of the er2b artifacts),
+so the train-reward gap conflates group size with number of updates.
+Second, held-out (test) GSM8K accuracy was not measured for these two
+arms---only training-pool reward and ZVF are reported here---so this
+panel establishes no held-out advantage for either arm. Artifacts:
 \texttt{tinker-runs/results/er2b\_*.json}.
 
 \begin{table}[htbp]
 \centering
 \small
+\resizebox{\linewidth}{!}{%
 \begin{tabular}{cccccc}
 \toprule
-$G$ & $p$ (empirical) & ZVF (empirical) & ZVF (theory at $p$) & Residual & GU (empirical) \\
+$G$ & Mean training $p$ & ZVF (empirical) & ZVF (trajectory-matched theory) & Residual & GU (empirical) \\
 \midrule
-2  & $0.982$ & $0.838$ & $0.964$ & $-0.126$ & $0.162$ \\
-4  & $0.988$ & $0.764$ & $0.954$ & $-0.191$ & $0.237$ \\
-8  & $0.990$ & $0.691$ & $0.923$ & $-0.232$ & $0.309$ \\
-16 & $0.978$ & $0.631$ & $0.704$ & $-0.073$ & $0.369$ \\
+2  & $0.840$ & $0.838$ & $0.828$ & $+0.010$ & $0.162$ \\
+4  & $0.863$ & $0.764$ & $0.709$ & $+0.055$ & $0.237$ \\
+8  & $0.869$ & $0.691$ & $0.597$ & $+0.094$ & $0.309$ \\
+16 & $0.873$ & $0.631$ & $0.522$ & $+0.109$ & $0.369$ \\
 \bottomrule
-\end{tabular}
-\caption{ZVF empirical vs closed-form prediction
-$\mathrm{ZVF}(p, G) = p^G + (1{-}p)^G$ on the Qwen2.5-0.5B /
-arithmetic sweep. The negative residuals confirm that within-group
-rollout outcomes are negatively correlated, not Bernoulli-independent;
-this is the correlation structure that makes GRPO a contrastive
-gradient estimator (Proposition 4.1 of Wu et al.).}
+\end{tabular}%
+}
+\caption{ZVF empirical vs trajectory-matched closed form on the
+Qwen2.5-0.5B / arithmetic sweep
+(\texttt{experiments/results/groupsize\_zvf\_sweep.json}). The theory
+column is the mean over steps/runs of $p_t^G + (1{-}p_t)^G$ at the
+per-step batch mean reward $p_t$, on the same rollouts as the
+empirical ZVF; the second column is the corresponding mean training
+$p$ (not terminal held-out accuracy). Residuals are positive
+($+0.010$ to $+0.109$), consistent with prompt-difficulty
+heterogeneity: $\mathbb{E}[p_x^G + (1{-}p_x)^G] >
+\bar p^G + (1{-}\bar p)^G$ by strict convexity (Jensen), i.e.\
+positive marginal within-group association / overdispersion.
+Conditional on $(x, \theta)$, i.i.d.\ decoding gives zero within-group
+correlation; Proposition~4.1 of Wu et al.\ concerns
+$\mathrm{Cov}(g^+, g^-)$, not outcome correlation, and is not invoked
+here.}
 \label{tab:groupsize-zvf-theory}
 \end{table}
 
@@ -291,24 +342,30 @@ Measured Qwen2.5-0.5B / arithmetic sweep
 held-out accuracy (mean $\pm\,1.96 \cdot \mathrm{SE}$); the red dashed
 line is the last-10 mean reward; the gray band is the Wu et al.\ (2025)
 97.6\%-retention-of-16-GRPO prediction. Our measured $G{=}2$ retains
-100.3\% of $G{=}16$, comfortably inside the band. \emph{Right:}
+100.34\% (100.3\%) of $G{=}16$, comfortably above the band. \emph{Right:}
 Token-budget normalized sweep (Qwen3-8B / GSM8K, $T{=}64\,$M,
 illustrative reanalysis; $G{=}32$ was not directly measured in the matched
 small-scale sweep). $G{=}4$ is at $0.64$, $G{=}32$ at $0.88$;
 the difference is the largest $G$-vs-$G$ effect in this reconstructed
 grid and motivates, but does not by itself measure,
 ``$G{\approx}32$ at canonical scale'' in
-Appendix~\ref{sec:appendix:group-size-reconcile}.}
+Section~\ref{sec:appendix:group-size-reconcile}.}
 \label{fig:group-size-effect}
 \end{figure}
 
 \paragraph{Conclusions.}
 \begin{enumerate}
-  \item \textbf{The Wu et al.\ (2025) headline is cross-validated on our
-        small-scale sweep}: $G{=}2$ retains $100.3\% \pm 2.7\%$ of
-        $G{=}16$ on Qwen2.5-0.5B / arithmetic, within the 97.6\%
-        headline to within sampling noise. The contrastive reading is
-        \emph{correct on easy, near-ceiling tasks}.
+  \item \textbf{The Wu et al.\ (2025) headline is descriptively
+        consistent with our small-scale sweep, not certified
+        equivalence}: $G{=}2$ retains $100.34\%$ (100.3\%) of $G{=}16$
+        on Qwen2.5-0.5B / arithmetic, an absolute difference of
+        $+0.0033$ with bootstrap 95\% CI $[-0.0083, 0.0150]$. This is a
+        descriptive statement at $n{=}3$ seeds (minimum detectable
+        effect $d_{\min}{=}3.07$ at $n{=}3$ vs $3$), \emph{not}
+        certified equivalence: a held-out TOST at
+        $\varepsilon{=}0.02$ gives $p{=}0.100$, so equivalence is not
+        established. The contrastive reading is \emph{consistent with
+        these data on an easy, near-ceiling task}.
   \item \textbf{At canonical token budgets, the reconstruction favors larger
         $G$}.
         The illustrative $T{=}64\,$M reanalysis shows $G{=}32$ at

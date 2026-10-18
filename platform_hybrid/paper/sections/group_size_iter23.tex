@@ -2,12 +2,14 @@
 % anti-herding δ_div injection simulation.
 % (M. M3 autonomous, July 2026.)
 
-\subsubsection{Pillar 3 elevation: phase diagram, $T_\text{crit}$, and the anti-herding lever}
+\subsubsection{Pillar 3 elevation: phase diagram, \texorpdfstring{$T_\text{crit}$}{T\_crit}, and the anti-herding lever}
 \label{sec:pillar3-iter23}
 
 \paragraph{Setup.}
-We lift the Pillar-3 question~\cite{tan2025scalingrl} ``does $G\!\approx\!32$ confer a meaningful
-benefit over $G\!=\!4$?'' from point estimates to a four-axis decomposition:
+We lift the Pillar-3 question ``does $G\!\approx\!32$ confer a meaningful
+benefit over $G\!=\!4$?''---posed in the broader context of scaling-law
+analyses of RL compute~\cite{tan2025scalingrl}---from point estimates to a
+four-axis decomposition:
 \begin{enumerate}\itemsep1pt
 \item a continuous $T_\text{crit}$ estimate (when does $G\!=\!4$ cease to be
       equivalent to $G\!=\!32$ on a paired metric);
@@ -20,13 +22,17 @@ benefit over $G\!=\!4$?'' from point estimates to a four-axis decomposition:
 \end{enumerate}
 
 \paragraph{$T_\text{crit}$ for $G=4$ vs $G=32$.}
-Fitting $|\Delta(T)| = a \cdot (1 - e^{-T/\tau})$ to four reconstructed
-budget points
-yields $\hat a=0.30$, $\hat\tau \!\approx\! 12.1$M tokens.
+The unconstrained fit of $|\Delta(T)| = a \cdot (1 - e^{-T/\tau})$ to four
+reconstructed budget points yields $\hat a=0.240$,
+$\hat\tau \!\approx\! 7.41$M tokens
+(\texttt{group\_size\_iter23\_t\_critical\_v2.tsv}).
 The 5pp-equivalence breaking threshold falls at
-$T_\text{crit}^{5\%}\!=\!2.21$M tokens
-(bootstrap 95\% CI: $[1.29\text{M}, 4.77\text{M}]$).  At $T\!=\!1$M, the
-canonical comparison holds ($|\Delta|\!\le\!1$pp); at $T\!=\!4$M it breaks.
+$T_\text{crit}^{5\%}\!=\!1.73$M tokens; the full set is
+$T_\text{crit}^{1\%}\!=\!0.32$M, $T_\text{crit}^{3\%}\!=\!0.99$M,
+$T_\text{crit}^{5\%}\!=\!1.73$M, $T_\text{crit}^{10\%}\!=\!3.99$M.
+Intervals obtained by resampling the assumed bands are not reported as
+inferential confidence intervals.  At $T\!=\!1$M, the canonical
+comparison holds ($|\Delta|\!\le\!1$pp); at $T\!=\!4$M it breaks.
 Numerically, this reconstruction places the boundary between
 ``Wu-equivalence operational'' and ``$G$ matters'' between $1$M and $2$M
 tokens.  It is a hypothesis for a matched-budget Qwen3-8B/GSM8K sweep, not a
@@ -36,15 +42,15 @@ measured learning-curve transition.
 Table~\ref{tab:p3-pareto} shows the per-budget argmax inside the reconstructed
 grid.  It must not be read as a deployment optimum.
 
-\begin{table}[h!]
+\begin{table}[htbp]
 \centering
-\caption{Within-reconstruction $G^\star(T)$ on Qwen3-8B / GSM8K, with
-conditional bootstrap 95\% intervals.}
+\caption{Within-reconstruction $G^\star(T)$ on Qwen3-8B / GSM8K. The last
+column is the stored assumed $\pm0.03$ band, not an inferential interval.}
 \label{tab:p3-pareto}
 \small
 \begin{tabular}{rccc}
 \hline
-$T$ (tokens) & $G^\star(T)$ & acc($G^\star$) & CI \\ \hline
+$T$ (tokens) & $G^\star(T)$ & acc($G^\star$) & assumed $\pm0.03$ band \\ \hline
   1,000,000 &   8 & 0.48 & [0.45, 0.51] \\
   4,000,000 &  16 & 0.69 & [0.66, 0.72] \\
  16,000,000 &  32 & 0.84 & [0.81, 0.87] \\
@@ -60,13 +66,13 @@ indistinguishability of $G{=}32$ and $G{=}64$ nor resolve the Wu et al.\ result
 outside the setting that paper actually tested.
 
 \paragraph{Crossover matrix.}
-Table~\ref{tab:p3-crossings} applies paired-bootstrap calculations to the
+Table~\ref{tab:p3-crossings} summarizes contrasts within the
 reconstructed grid.  Conditional on that grid, the largest contrast is the
 $G{=}4$ versus $G{=}32$ comparison at $T{=}64$M.  Because the inputs are not
-direct matched-budget runs, these intervals quantify reconstruction
-uncertainty only.
+direct matched-budget runs, any resampling bands quantify reconstruction
+uncertainty only and are not reported as inferential confidence intervals.
 
-\begin{table}[h!]
+\begin{table}[htbp]
 \centering
 \caption{Conditional $\Delta_\text{pp}=\text{acc}(G_b)-\text{acc}(G_a)$ in the
 reconstructed Qwen3-8B/GSM8K grid; $T_\text{cross}$ is an interpolated
@@ -80,8 +86,8 @@ threshold, not an observed training transition.}
 The frontier synthesis (Round 2) crystallises the question:
 \emph{``can we inflate $\delta_\text{div}$ during decoding to achieve $G\!=\!32$ yield at
 $G\!=\!4$ FLOP cost?''}
-Model ZVF$(G, p_\text{eff}, \delta_\text{div}) = \max(0, p^G + (1-p)^G - \delta_\text{div})$.
-Solving $\text{ZVF}(4, p, \delta') = \text{ZVF}(32, p, \delta_\text{base}=0.18)$ across
+Model ZVF$(G, p_\text{eff}, \delta_\text{div}) = \max(0, p_\text{eff}^{G} + (1-p_\text{eff})^{G} - \delta_\text{div})$.
+Solving $\text{ZVF}(4, p_\text{eff}, \delta') = \text{ZVF}(32, p_\text{eff}, \delta_\text{base}=0.18)$ across
 $p_\text{eff}\!\in\![0.60, 0.98]$ we obtain:\newline
 \textbf{feasible} ($\delta'\!\le\!0.23$): $p_\text{eff}\!\le\!0.68$ ($\sim\!23\%$ of frontier);\newline
 \textbf{stretch via decoding penalty} ($0.23\!<\!\delta'\!\le\!0.45$): $p_\text{eff}\!\in\!(0.68, 0.83]$ ($\sim\!33\%$);\newline
@@ -99,11 +105,12 @@ $\delta_\text{div}$-needs curve across the learning frontier.
 
 \begin{figure}[ht]
 \centering
-\includegraphics[width=\textwidth]{figures/group_size_iter23.pdf}
+\includegraphics[width=\textwidth]{figures/group_size_iter23_v2.pdf}
 \caption{Pillar-3 elevation panel. \textbf{(a)} $\!|\Delta(G\!=\!4\!-\!G\!=\!32)|$ vs.
-training tokens (paired bootstrap); the dashed vertical lines mark
-$T_\text{crit}^{1\%}\!=\!0.41$M, $T_\text{crit}^{3\%}\!=\!1.27$M,
-$T_\text{crit}^{5\%}\!=\!2.21$M, $T_\text{crit}^{10\%}\!=\!4.91$M.
+training tokens (unconstrained fit $\hat a{=}0.240$, $\hat\tau{=}7.41$M;
+\texttt{group\_size\_iter23\_t\_critical\_v2.tsv}); the dashed vertical lines mark
+$T_\text{crit}^{1\%}\!=\!0.32$M, $T_\text{crit}^{3\%}\!=\!0.99$M,
+$T_\text{crit}^{5\%}\!=\!1.73$M, $T_\text{crit}^{10\%}\!=\!3.99$M.
 \textbf{(b)}\ Per-pair $\Delta_\text{pp}$ at $T\!=\!64$M tokens; positive bars mark
 pairs where the larger $G_b$ wins (\textit{frontier synthesis}).
 \textbf{(c)}\ illustrative acc$(T,G)$ reconstruction for Qwen3-8B/GSM8K;

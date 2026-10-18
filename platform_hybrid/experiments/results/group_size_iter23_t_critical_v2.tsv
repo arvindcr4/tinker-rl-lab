@@ -1,0 +1,5 @@
+model	a_hat	tau_hat_tokens	abs_delta_threshold	T_critical_tokens	T_ci_low	T_ci_high	interpretation
+|Δ(T)| = 0.240*(1 - exp(-T/7.408e+06))	0.24	7407543.1	0.01	315262.0	160632.0	574008.0	The reconstruction crosses a 1pp G=4/G=32 gap near T_c≈0.32M tokens.
+|Δ(T)| = 0.240*(1 - exp(-T/7.408e+06))	0.24	7407543.1	0.03	989140.0	503015.0	1806791.0	The reconstruction crosses a 3pp G=4/G=32 gap near T_c≈0.99M tokens.
+|Δ(T)| = 0.240*(1 - exp(-T/7.408e+06))	0.24	7407543.1	0.05	1730512.0	878054.0	3173096.0	The reconstruction crosses a 5pp G=4/G=32 gap near T_c≈1.73M tokens.
+|Δ(T)| = 0.240*(1 - exp(-T/7.408e+06))	0.24	7407543.1	0.1	3992640.0	2037886.0	7421395.0	The reconstruction crosses a 10pp G=4/G=32 gap near T_c≈3.99M tokens.

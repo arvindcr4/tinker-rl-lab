@@ -1,0 +1,6 @@
+G_static	G_a_isog_total	G_static_total	rollout_savings_pct	rollout_savings_ci_low	rollout_savings_ci_high	comment
+4	51720	1920	-2593.75	nan	nan	Iso-G saves rollouts
+16	51720	7680	-573.44	nan	nan	Iso-G saves rollouts
+32	51720	15360	-236.72	nan	nan	Iso-G saves rollouts
+64	51720	30720	-68.36	nan	nan	Iso-G saves rollouts
+128	51720	61440	15.82	nan	nan	Iso-G saves rollouts

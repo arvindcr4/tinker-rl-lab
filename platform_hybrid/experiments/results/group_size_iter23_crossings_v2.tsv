@@ -1,0 +1,11 @@
+G_a	G_b	direction	T_crossover_tokens	diff_T1M_pct	diff_T64M_pct	delta_pct
+4	8	G=8 dominates G=4	1000000.0	7.0	16.0	9.0
+4	16	G=16 dominates G=4	1000000.0	6.0	21.0	15.0
+4	32	G=32 dominates G=4	1148698.0	1.0	24.0	23.0
+4	64	mixed or tied ordering	3428976.0	-6.0	23.0	29.0
+8	16	mixed or tied ordering	4000000.0	-1.0	5.0	6.0
+8	32	mixed or tied ordering	7245789.0	-6.0	8.0	14.0
+8	64	mixed or tied ordering	16000000.0	-13.0	7.0	20.0
+16	32	mixed or tied ordering	16000000.0	-5.0	3.0	8.0
+16	64	mixed or tied ordering	64000000.0	-12.0	2.0	14.0
+32	64	G=32 dominates G=64		-7.0	-1.0	6.0

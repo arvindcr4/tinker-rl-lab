@@ -16,7 +16,7 @@
 % Source digest: frontier_calls/digests/frontier_P3.md
 % =====================================================================
 
-\subsection{Frontier-Model Cross-Examination: Group Size and GRPO$\leftrightarrow$DPO}
+\subsection{Frontier-Model Cross-Examination: Group Size and \texorpdfstring{GRPO$\leftrightarrow$DPO}{GRPO <-> DPO}}
 \label{sec:frontier-group-size}
 
 To stress-test the group-size analysis beyond our own measurements, we
@@ -40,20 +40,38 @@ derives the exact identity
 \end{equation}
 so the mean-centred GRPO reward-contrast term has an all-pairs preference
 (DPO) form in which every ordered pair contributes its reward margin
-$r_i-r_j$. Two consequences follow. First, any group with zero reward
+$r_i-r_j$ (folding over unordered pairs,
+$\sum_{i,j}(r_i-r_j)s_i=\sum_{i<j}(r_i-r_j)(s_i-s_j)$). Two consequences follow. First, any group with zero reward
 variance ($r_i \equiv r_j$) is projected out of that centered term; this
 does not assert a zero total gradient. This is the algebraic origin of the zero-variance floor
 $\mathrm{ZVF}(p,G)=p^G+(1-p)^G$ used throughout
 Section~\ref{sec:group-size}. Second, unlike DPO, GRPO supplies its own
 margins: it self-induces a preference signal \emph{only} on
-mixed-reward groups. For binary rewards with $K$ successes the frontier
-models give the closed form
-$g_\text{GRPO}(x) = \tfrac{1}{G\,K(G-K)}\, g_\text{pair}(x)$, exposing
-the $K(G-K)$ pair count as the mechanistic driver. In an external
+mixed-reward groups. For binary rewards with $K$ successes
+($W$, $|W|{=}K$) and $G-K$ failures ($L$), define the
+winner--loser pair sum
+$S_\mathrm{pair}(x)=\sum_{i\in W,\,j\in L}(s_i-s_j)$ over the
+$K(G-K)$ pairs, with mean pair vector
+$\bar S_\mathrm{pair}=S_\mathrm{pair}/[K(G-K)]$. The unwhitened
+centred term is then exactly
+$\sum_i(r_i-\bar r)s_i=\tfrac1G S_\mathrm{pair}
+=\tfrac{K(G-K)}{G}\,\bar S_\mathrm{pair}$, i.e.\ with the usual
+outer $1/G$ loss normalisation the per-prompt gradient is
+$\tfrac{K(G-K)}{G^2}\,\bar S_\mathrm{pair}$. Under population-std
+whitening ($\sigma_r=\sqrt{K(G-K)}/G$ for binary rewards),
+$\tfrac1G\sum_i\hat A_i s_i
+=S_\mathrm{pair}/[G\sqrt{K(G-K)}]
+=\tfrac{\sqrt{K(G-K)}}{G}\,\bar S_\mathrm{pair}$: whitening
+replaces the pair-count coefficient $K(G-K)/G^2$ by its square
+root $\sqrt{K(G-K)}/G$. In an external
 cross-examination the models argued this is precisely why our measured
 $G{=}2$ run retains $100.3\%$ of $G{=}16$ on the near-ceiling task: at
 $p\!\to\!1$ almost every non-degenerate group already yields one usable
-win--loss pair, so extra rollouts buy only redundant pairs.
+win--loss pair, so extra rollouts buy only redundant pairs. We note that these
+identities are standard U-statistic and leave-one-out algebra
+\citep{ahmadian2024backtobasics}; this section is a synthesis of
+known results via the frontier exchange, not a claim of new
+theorems.
 
 \paragraph{Whitening turns the baseline into an adaptive-margin auto-curriculum.}
 Gemini Deep Think separates GRPO's centering from its $1/\sigma$
@@ -61,11 +79,17 @@ whitening. Centering alone is a scaled leave-one-out (LOO) control
 variate, $r_i - \bar r = \tfrac{G-1}{G}\,(r_i - b_{-i})$ with
 $b_{-i}=\tfrac{1}{G-1}\sum_{j\ne i} r_j$, which is unbiased but injects
 an $O(1/G)$ baseline-estimation penalty
-$\mathrm{Var}(b_{-i}) = p_x(1-p_x)/(G-1)$. Dividing by the reward
-standard deviation then \emph{breaks} control-variate neutrality: for a
-group with $K$ successes the whitened advantages collapse to the
-deterministic DPO-style scalars $A_+ = \sqrt{(G-K)/K}$ and
-$A_- = -\sqrt{K/(G-K)}$, with adaptive margin
+$\mathrm{Var}(b_{-i}) = p(x)(1-p(x))/(G-1)$, with $p(x)$ the
+prompt's success probability. Dividing by the reward
+standard deviation then \emph{breaks} control-variate neutrality
+(cf.\ the whitening-bias analyses of \citep{tong2025drgrpo,vojnovic2025grpo}):
+for a group with $K$ successes, and the \emph{population} standard
+deviation $\sigma_r^2=\tfrac1G\sum_i(r_i-\bar r)^2$ (a
+Bessel-corrected sample standard deviation would rescale every
+whitened advantage below by $\sqrt{(G-1)/G}$), the whitened
+advantages collapse to the deterministic DPO-style scalars
+$A_+ = \sqrt{(G-K)/K}$ and $A_- = -\sqrt{K/(G-K)}$, with adaptive
+margin
 \begin{equation}
   \Delta_\text{margin} = A_+ - A_- = \frac{G}{\sqrt{K(G-K)}}.
   \label{eq:fs-margin}
@@ -89,31 +113,48 @@ The frontier models formalize the useful-signal rate
 which is \emph{identical} to our gradient-utilization closed form
 $\mathrm{GU}(p,G) = 1 - \mathrm{ZVF}(p,G)$: their ``contrastive yield''
 and our ``gradient utilization'' are the same object reached from the
-preference and the variance side respectively. Because $Y_G$ saturates
-at $1$, increasing $G$ trades three quantities against one another---pair
-generation ($\uparrow$), baseline variance ($\downarrow$ as $1/G$), and
-inference compute ($\uparrow$ linearly)---so the compute-optimal group
-size is finite, $G^\star = \arg\max_G Y_G(p)/G$, not ``as large as
-possible''. For prompts bounded away from the extremes the frontier
-bound $G \gtrsim \log\epsilon / \log(1-p_\text{min})$ (e.g.\
-$p_\text{min}{=}0.1 \Rightarrow G\approx 29$ for $\mathrm{ZVF}<0.05$)
-predicts that $G{\approx}32$ is the first genuinely DPO-equivalent
-regime while $G{=}2$ is pairwise-equivalent only on already-unlocked
-prompts. This reinforces our budget-dependent optimum
-(Table~\ref{tab:groupsize-summary}) and gives a first-principles account
-of why the Wu et al.\ $G{=}2{\sim}G{=}16$ equivalence fails to
-generalize to $G{=}4{\sim}G{=}32$ at canonical scale
-(Table~\ref{tab:groupsize-g4-g32}).
+preference and the variance side respectively. Per rollout,
+however, the yield $Y_G(p)/G$ has no interior optimum:
+$Y_2/2=Y_3/3=p(1-p)$, and $Y_G/G$ strictly decreases for $G\ge3$
+(by strict concavity of $Y_G$ in $G$), so
+$\arg\max_{G\ge2}Y_G(p)/G=\{2,3\}$ for \emph{every} $p$.
+Per-rollout yield alone therefore always picks the minimal group
+size---mirroring the monotone per-token gradient efficiency
+$\mathrm{GE}_{\mathrm{tok}}$---and cannot by itself produce a
+budget-dependent interior optimum. Such an optimum requires an
+explicit trade-off: per-step signal-to-noise (improving, but
+sub-$\sqrt{G}$, in $G$) against the number of optimizer steps a
+fixed token budget $T$ affords,
+$n_\mathrm{step}(G)=T/(G\bar L)$ with mean completion length
+$\bar L$, or a hard constraint $\mathrm{ZVF}(p,G)\le\epsilon$.
+Under the latter, with $p_{\min}=\min(p,1-p)$, the bound
+$G\gtrsim\log\epsilon/\log(1-p_{\min})$ (e.g.\
+$p_{\min}{=}0.1\Rightarrow G\approx29$ for $\mathrm{ZVF}<0.05$)
+gives the smallest $G$ that unlocks near-degenerate prompts.
+Whether that unlocking, rather than variance reduction, drives
+the measured $G{=}4\!\to\!G{=}32$ swing at canonical scale
+(Table~\ref{tab:groupsize-g4-g32}) is exactly what the
+$2\times2$ test below is designed to decide.
 
 \paragraph{A decisive test separating variance-reduction from ZVF-reduction.}
 Our data show a large held-out swing with $G$ but cannot, on their own,
 say \emph{why}. The frontier synthesis proposes a $2{\times}2$
-super-group design that separates the two candidate mechanisms while
-holding tokens, steps, and KL fixed: Arm~A (natural small $G$), Arm~B
-(variance-only: the same set of unlocked prompts but all $K(G{-}K)$
-pairs used), Arm~C (ZVF-only: more unlocked prompts but a single random
-win--loss pair each, or noise injected to match Arm~A's gradient
-covariance), and Arm~D (natural large $G$). With a target swing of
+super-group design that separates the two candidate mechanisms.
+\emph{Sampling protocol (a proposal; not run):} every arm first
+draws a super-group of $G_\mathrm{large}$ rollouts per prompt, and
+token cost is counted on \emph{all generated} rollouts, including
+ones an arm discards---we state this accounting choice explicitly,
+since counting only used rollouts would flatter the subsampling
+arms. Arm~A uses only the first $G_\mathrm{small}$ rollouts of
+each super-group (natural small $G$). Arm~B (variance-only)
+restricts to prompts already unlocked at $G_\mathrm{small}$
+(mixed-reward within the first $G_\mathrm{small}$ rollouts) but
+uses all $K(G_\mathrm{large}{-}K)$ pairs in the full super-group.
+Arm~C (ZVF-only) uses every prompt unlocked at
+$G_\mathrm{large}$ but only one random win--loss pair per prompt
+(a subsampled gradient), with the optimizer-step count matched
+to the other arms by prompt replication. Arm~D uses the full
+super-group (natural large $G$). With a target swing of
 $\Delta_{32-2}\approx 0.020$, the preregistered rule is
 \emph{ZVF-dominant} if Arm~C recovers $\ge 75\%$ of the gain while
 Arm~B recovers $\le 25\%$, and variance-dominant if the pattern
@@ -121,14 +162,23 @@ reverses. A complementary single-batch \emph{residual-isomorphism}
 check subtracts a synthetic margin-scaled DPO gradient
 $V_\text{mDPO}=\tfrac{1}{G}\sum_{i<j}(r_i-r_j)(s_i-s_j)$ from the
 empirical GRPO gradient and tests whether the residual is pure
-KL-penalty: $\cos(V_\text{GRPO}-V_\text{mDPO},\,V_\text{KL})\approx 1$
-would confirm Eq.~\eqref{eq:fs-contrast} exactly, whereas $<0.99$ would
-prove the group baseline carries stabilizing structure orthogonal to
-pairwise preference. On the mechanism, the frontier models lean toward
-ZVF-reduction: Gemini argued the $G{=}4\!\to\!G{=}32$ retention gap is
-concentrated in high-accuracy bins ($+0.253$ at $p\ge 0.75$ versus
-$+0.010$ at $p<0.5$), which is the signature of escaping the ZVF floor
-rather than of classical $\sqrt{G}$ variance reduction. This
+KL-penalty. For the check to be informative, $V_\text{mDPO}$ must
+be built with the \emph{same} per-prompt $1/\sigma_r(x)$ whitening
+and the same length normalisers as $V_\text{GRPO}$; otherwise the
+residual is trivially nonzero from rescaling alone, and the test
+measures bookkeeping rather than structure. With that matching in
+place, $\cos(V_\text{GRPO}-V_\text{mDPO},\,V_\text{KL})\approx1$
+would be consistent with Eq.~\eqref{eq:fs-contrast} exhausting
+the non-KL update, whereas a value well below $1$ would suggest
+the group baseline carries structure beyond pairwise preference.
+On the mechanism, the frontier models lean toward ZVF-reduction:
+Gemini conjectured that the $G{=}4\!\to\!G{=}32$ retention gap is
+concentrated in high-accuracy bins, quoting $+0.253$ at
+$p\ge0.75$ versus $+0.010$ at $p<0.5$; we stress that these two
+numbers are an \emph{unmeasured external-model hypothesis}---no
+run of ours produced them---offered as the predicted signature of
+escaping the ZVF floor rather than of classical $\sqrt{G}$
+variance reduction, to be tested rather than cited as evidence. This
 \emph{challenges} the variance-reduction reading we offer for the
 $G{=}32$ reconstruction in Section~\ref{sec:group-size} and is a concrete,
 falsifiable next experiment.
@@ -144,7 +194,7 @@ baseline) and $g_V$ (value head),
   \frac{E_x\langle g_V, g_G\rangle}
        {\sqrt{E_x\|g_V\|^2\; E_x\|g_G\|^2}}
   \cdot
-  \min\!\Big(\tfrac{E\|g_G\|}{E\|g_V\|},\,\tfrac{E\|g_V\|}{E\|g_G\|}\Big),
+  \min\!\Big(\tfrac{E_x\|g_G\|}{E_x\|g_V\|},\,\tfrac{E_x\|g_V\|}{E_x\|g_G\|}\Big),
   \label{eq:fs-bei}
 \end{equation}
 so that $\mathrm{BEI}\approx 1$ requires the two updates to match in
@@ -159,17 +209,22 @@ mean-squared error. Because our measured SNR rises only sublinearly
 sublinearly and \emph{saturate before} critic-free GRPO becomes fully
 value-head-equivalent at the group sizes we test---i.e.\ $G{=}16$ is not
 yet in the PPO-equivalent regime. At the opposite end the same account
-recovers the exact GRPO$\leftrightarrow$DPO bridge: at $G{=}2$ the
-centred update assigns $+\tfrac12$ to the winner and $-\tfrac12$ to the
-loser, precisely a one-pair DPO step.
+recovers the GRPO$\leftrightarrow$DPO bridge up to a stated scalar:
+at $G{=}2$ a mixed group is a single win--loss pair, on which the
+\emph{unwhitened} centred update assigns $\pm\tfrac12$,
+population-std whitening assigns $\pm1$, and Bessel-corrected
+whitening $\pm1/\sqrt2$---a one-pair DPO step under any of these
+conventions, with the step size set by the convention chosen.
 
 \paragraph{Bottom line (frontier synthesis).}
 Taken together, the external analysis recasts the group-size knob as a
 preference-learning dial: $G$ controls how many endogenous DPO pairs a
 prompt contributes (Eq.~\ref{eq:fs-contrast}), the whitened margin turns
 that count into an auto-curriculum (Eq.~\ref{eq:fs-margin}), and the
-useful fraction $Y_G(p)=\mathrm{GU}(p,G)$ (Eq.~\ref{eq:fs-yield}) bounds
-the payoff so that the compute-optimal $G$ is finite. This is consistent
+useful fraction $Y_G(p)=\mathrm{GU}(p,G)$ (Eq.~\ref{eq:fs-yield})
+shows per-rollout yield alone favours minimal $G$, so any interior
+compute optimum must come from trading per-step SNR against step
+count at a fixed token budget. This is consistent
 with our measured near-ceiling equivalence at small $G$ and with the
 failure of that equivalence at canonical scale, while sharpening the one
 question our data leave open---whether the large-$G$ win is

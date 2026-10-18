@@ -16,6 +16,18 @@ listed separately in Table~\ref{tab:implementations}.}
 
 \subsection{Task Suite}
 
+\paragraph{Measured arithmetic task (group-size sweep).}
+The measured arithmetic task analysed in this paper is two-operand addition with operands $a,b$ drawn i.i.d.\ from $\mathrm{Uniform}\{1,\ldots,99\}$, so target sums lie in $[2,198]$.
+Each prompt is exactly \texttt{What is \{a\} + \{b\}? Answer with just the number.}
+There is no fixed training set: $16$ fresh prompts are resampled at every optimizer step, for $40$ optimizer steps in total.
+Training generation uses temperature $1.0$, top-$p$ $1.0$, and at most $10$ new tokens; adaptation is LoRA with $r{=}16$, $\alpha{=}32$ on the query and value ($q$/$v$) projections, optimized with Adam at learning rate $10^{-4}$.
+Reward is verifiable and binary: the last integer matching the regular expression \texttt{-?\textbackslash d+} in the completion must equal $a+b$ exactly ($R{=}1$), otherwise $R{=}0$.
+Held-out evaluation uses $200$ fresh problems drawn from the same distribution with greedy decoding (and the same $10$-token cap and parsing rule).
+
+\paragraph{Distinct 199-action classic-RL environment.}
+Separately, the $199$-action arithmetic environment with discrete actions $[-99,+99]$ is a contextual-bandit-style interface for classic RL libraries: the agent selects an integer action rather than generating text.
+It is used only for the cross-library $F_3$ comparison --- $F_3$ denotes the cross-library heterogeneity claim, i.e.\ that outcomes vary across RL libraries/stacks when the task and algorithm family are held as fixed as the libraries allow (formalised in the Multiple-Comparison Correction paragraph below) --- and is not an LLM generation task, so its accuracies are never pooled with the LLM arithmetic sweep above.
+
 % Table of tasks
 \begin{table}[htbp]
 \centering
@@ -43,13 +55,13 @@ should not be conflated. The cross-RL-library benchmark below
 (Table~\ref{tab:implementations}) covers TRL, SB3, CleanRL, Tianshou,
 PufferLib, rl\_games, and d3rlpy --- seven libraries that span
 LLM-native RL, classic online RL, high-throughput RL, and offline RL,
-and that we use as the algorithm-and-stack ablation underlying $F_3$.
+and that we use as the algorithm-and-stack ablation underlying $F_3$ (the cross-library heterogeneity claim defined in the Task Suite above and formalised in the Multiple-Comparison Correction paragraph below).
 The cross-launcher LLM-RL scaffold referenced in the framework-gap
-discussion (framework-configurations material) is a different seven-library
+discussion (per-run config artifacts released with the artifacts) is a different seven-library
 roster --- Tinker, TRL, SkyRL, verl, OpenRLHF, Atropos, and HF
 reference launchers --- that targets LLM post-training launchers
 specifically. Of those, only Tinker and TRL produced completed
-runs in this release; veRL and OpenRLHF entries in the
+runs in this release; verl and OpenRLHF entries in the
 \texttt{framework\_comparison.json} artefact are dry-run
 placeholders. Supplementary presentation materials use the second roster; the
 cross-RL-library evidence in $F_3$ uses the first.
@@ -78,8 +90,8 @@ d3rlpy & CQL (offline) & Offline RL \\
 \subsection{Hyperparameter Mapping}
 
 We standardize hyperparameters across libraries using a common configuration schema.
-Table~\ref{tab:hyperparams} shows the mapping from Tinker PPO defaults to each library's
-native parameter names. For GRPO post-training on GSM8K, we sample $G = 16$ completions per prompt on medium-scale checkpoints ($4$B--$32$B, $T = 30$ steps) and $G = 8$ completions per prompt on frontier checkpoints ($120$B--$1$T, $T = 20$ steps) at sampling temperature $0.7$, maximum generation length $512$ tokens, learning rate $10^{-5}$--$2 \times 10^{-5}$, and reference-policy KL coefficient $\beta \in \{0.0, 0.01, 0.04\}$ with within-group advantage normalization $\hat{A}_i = (r_i - \mu_G)/(\sigma_G + 10^{-8})$.
+Table~\ref{tab:hyperparams} lists the standardized values used under that schema (it does not list each library's native parameter names; native spellings differ by library and are recorded in the per-run config artifacts released with the artifacts). For GRPO post-training on GSM8K, we sample $G = 16$ completions per prompt on medium-scale checkpoints ($4$B--$32$B, $T = 30$ steps) and $G = 8$ completions per prompt on frontier checkpoints ($120$B--$1$T, $T = 20$ steps) at sampling temperature $0.7$, maximum generation length $512$ tokens, learning rate $10^{-5}$--$2 \times 10^{-5}$, and reference-policy KL coefficient $\beta \in \{0.0, 0.01, 0.04\}$ with within-group advantage normalization $\hat{A}_i = (r_i - \mu_G)/(\sigma_G + 10^{-8})$; prompts per batch and nucleus (top-$p$) truncation are likewise fixed per run and released with the artifacts (for the measured arithmetic $G$-sweep in the Task Suite, $16$ prompts per optimizer step and top-$p = 1.0$).
+The GAE $\lambda$ and discount $\gamma$ rows of Table~\ref{tab:hyperparams} are PPO-only and do not apply to critic-free GRPO, which uses group-relative advantages without a value function, GAE, or discounting.
 
 \begin{table}[htbp]
 \centering
@@ -104,6 +116,7 @@ Target KL & 0.01 & 0.01 & 0.01 & N/A & N/A & N/A \\
 
 All RL tasks in this study use deterministic, rule-based outcome verifiers returning binary rewards $R \in \{0, 1\}$ (Figure~\ref{fig:reward-flow}).
 On \textbf{GSM8K}~\citep{cobbe2021training}, the verifier extracts the final numerical answer after the canonical \texttt{\#\#\#\# <number>} delimiter (falling back to the last \texttt{\textbackslash boxed\{...\}} or trailing numeric token when the delimiter is absent), strips commas, currency symbols, and whitespace, and returns $R = 1$ if the parsed value matches the ground-truth answer within $10^{-6}$ and $R = 0$ otherwise. Completions without a parseable numeric answer receive $R = 0$ and are logged separately as format-extraction failures (capturing the $55\%$ zero-reward step rate on Nemotron-120B).
+On the \textbf{measured LLM arithmetic task} (Task Suite above), the verifier extracts the last integer matching the regular expression \texttt{-?\textbackslash d+} in the completion and returns $R = 1$ iff that integer equals $a+b$ exactly, and $R = 0$ otherwise (including when no integer is present).
 On the \textbf{199-action modular-arithmetic environment} used for the classic-RL library benchmark ($F_3$), actions correspond to integers in $[-99, +99]$ and $R = 1$ is awarded for exact integer equality with the target expression.
 
 % Figure 3: Verifiable Reward Flow
@@ -130,14 +143,14 @@ clear performance bounds across both the synthetic arithmetic and GSM8K tasks:
 
 % =============================================================================
 \section{Experimental Setup}
-\label{sec:setup}
+\label{sec:setup}\label{sec:exp-design}
 % =============================================================================
 
 \subsection{Models}
 
 Our benchmark targets a roster of 32+ model configurations spanning
 \textbf{0.5B to 1T \emph{total} parameters (4B to 1T on the 12-anchor GSM8K scaling suite; up to $\sim$37B \emph{active}
-for MoE checkpoints) across 5 model families}, organized into three
+for MoE checkpoints) across the Qwen, Llama, DeepSeek, Nemotron, GPT-OSS, and Kimi lines}, organized into three
 tiers by compute scale; not all are completed end-to-end runs (per-run
 status flags accompany the released artifacts). Tier-A multi-seed inferential claims are restricted to
 the locally reproducible open-weight subset at $0.5$B--$32$B (with \texttt{Qwen3-235B-A22B} included in the 12-anchor descriptive scaling suite); the frontier MoE
@@ -151,7 +164,7 @@ Llama-3.2-1B, Llama-3.2-3B, Llama-3.1-8B-Instruct.
 
 \paragraph{Mid scale (14B--32B).}
 Qwen3-14B, Qwen3-30B-A3B (MoE, $30$B total / $3$B active, base and Instruct), Qwen3-32B, Qwen3.5-27B,
-GPT-OSS-20b (MoE, $20$B total / $3.6$B active).
+GPT-OSS-20B (MoE, $20$B total / $3.6$B active).
 
 \paragraph{Frontier scale (120B--1T total / 12B--37B active).}
 Nemotron-3-Super-120B-A12B (LatentMoE, $120$B total / $12$B active), Qwen3-235B-A22B (MoE, $235$B total / $22$B active), DeepSeek-V3.1 ($671$B architectural / $685$B total checkpoint parameters, $37$B active MoE; we use $N=685$B in total-parameter regression tables and note $671$B routed parameters where relevant), and Kimi-K2-Thinking (MoE, $1$T total / $32$B active).
@@ -164,17 +177,17 @@ The benchmark covers (1)~\textbf{Qwen2.5 / Qwen3}: dense ($0.5$B--$32$B) and MoE
 (3)~\textbf{Llama-3.x}: Meta's $1$B--$8$B instruction-tuned dense models;
 (4)~\textbf{DeepSeek-V3.1}: a frontier MoE ($671$B/$685$B total, $37$B active) optimized for reasoning;
 (5)~\textbf{Nemotron-3-Super-120B-A12B}: NVIDIA's frontier LatentMoE model ($120$B total, $12$B active; early pipeline scripts mislabelled this checkpoint as \texttt{dense}, which we correct to \texttt{moe} across all architecture analyses, yielding 7 MoE and 5 dense checkpoints in the 12-anchor GSM8K pool);
-and emerging MoE architectures \textbf{GPT-OSS-20b} and \textbf{Kimi-K2-Thinking} ($1$T total, $32$B active).
+and emerging MoE architectures \textbf{GPT-OSS-20B} and \textbf{Kimi-K2-Thinking} ($1$T total, $32$B active).
 
 \subsection{Training Protocol}
 
 Unless otherwise noted, controlled Modal/TRL sweeps use LoRA
 \cite{hu2022lora} at rank $32$, learning rate $10^{-4}$ and Adam
 ($\beta_1{=}0.9$, $\beta_2{=}0.95$, $\epsilon{=}10^{-8}$). Tinker / API,
-Task-4, Wave-6 and frontier case studies use per-run configs (in
+Task-4, Wave-6 (internal Tinker API run-cohort labels) and frontier case studies use per-run configs (in
 particular Task-4/Wave-6 use $\mathrm{lr}{=}10^{-5}$) and are
 single-seed unless explicitly marked multi-seed; the per-run
-settings are listed in the framework-configs appendix.
+settings are in the per-run config artifacts released with the artifacts.
 
 \paragraph{Seed management.} The controlled TRL/Modal sweeps used for
 Tier-A claims (F3 PPO-vs.-GRPO heterogeneity and the five-seed TRL GRPO
@@ -183,7 +196,7 @@ $\{42, 123, 456, 789, 1024\}$, with seeds set for Python \texttt{random},
 NumPy, PyTorch, and CUDA backends. Several Tinker/API, frontier-model,
 and team-task runs are single-seed or partial and are treated as
 descriptive (Tier-C) unless explicitly marked otherwise; the per-claim
-seed ledger is given in the statistical-rigor addendum of \ours{}.
+seed ledger is in the seed-ledger files released with the artifacts.
 
 % Figure 4: Experiment Pipeline
 \begin{figure}[t]
@@ -214,11 +227,16 @@ standard deviation estimator; confidence intervals follow the
 (two-tailed, $z = 1.96$). Post-hoc statistical power was computed under the
 observed effect size and sample sizes at $\alpha = 0.05$.
 
-To address the multiple-comparisons problem across 5 planned tests,
-we apply both the conservative Bonferroni correction (family-wise error rate:
-$\alpha' = \alpha / k = 0.0100$) and the Benjamini--Hochberg procedure
-(false discovery rate $< 0.05$). Results surviving Bonferroni correction are
-marked $^*$; those surviving BH--FDR correction are marked $^\dag$.
+\paragraph{Equivalence testing (TOST).}
+Claims of \emph{no meaningful difference} between two conditions $a$ and $b$ are tested by the two-one-sided-tests (TOST) procedure rather than by a non-significant difference test.
+With equivalence margin $\varepsilon > 0$ (here $\varepsilon = 0.02$ in accuracy units), the null hypothesis is $H_0\colon |\mu_a - \mu_b| \ge \varepsilon$ against the alternative $H_1\colon |\mu_a - \mu_b| < \varepsilon$.
+Let $d_s$ denote the per-seed paired differences ($s = 1,\ldots,n$) with mean $\bar{d}$ and standard error $\mathrm{SE}(\bar{d})$.
+TOST rejects $H_0$ iff both one-sided paired $t$ statistics $t_{\mathrm{lower}} = (\bar{d} + \varepsilon)/\mathrm{SE}(\bar{d})$ and $t_{\mathrm{upper}} = (\bar{d} - \varepsilon)/\mathrm{SE}(\bar{d})$, each on $\nu = n - 1$ degrees of freedom, reject their respective one-sided nulls; equivalently, equivalence at $\alpha = 0.05$ is declared iff the $90\%$ confidence interval for the mean difference lies entirely inside $[-\varepsilon, \varepsilon]$.
+In this paper $\varepsilon = 0.02$.
+With $n = 3$ seeds, $\nu = 2$ and power to establish equivalence is very low; failure to reject a difference (or failure to reject $H_0$ in TOST) is therefore never read as evidence of equivalence.
+
+To address the multiple-comparisons problem, corrections are applied within each declared family, with the family size $k$ stated wherever a corrected result is reported: within the stated family we use the conservative Bonferroni correction (family-wise error rate, $\alpha' = \alpha / k$ for that family) and the Benjamini--Hochberg procedure (false discovery rate $< 0.05$).
+No single fixed family size is assumed across the paper.
 
 \paragraph{Power Analysis.}
 All inferential tests in this paper are evaluated against pre-specified power
@@ -247,9 +265,13 @@ When compared to the pooled Classic-RL group ($n = 15$), the MDE
 improves to $d_{\min} = 1.530$,
 reflecting higher power from the larger reference group.
 
+Two caveats apply to every number in Table~\ref{tab:power-analysis}.
+(a) \texttt{TTestIndPower} is an equal-variance (pooled Student) approximation to our Welch tests: the Welch--Satterthwaite degrees of freedom can be lower than the pooled degrees of freedom when variances differ, so the true Welch minimum detectable effect is at least the tabulated value (true Welch MDE $\ge$ tabulated MDE), and tabulated power is an upper bound.
+(b) The pooled Classic-RL $n = 15$ column mixes runs from $3$ libraries, violating the i.i.d.\ assumption behind a two-sample $t$-test; that column is a sensitivity reference only and is not used for any headline inferential claim.
+
 \paragraph{Multiple-Comparison Correction.}
 Inferential tests in this paper are reported only for Tier-A/B
-comparisons as defined in our statistical-rigor protocol;
+comparisons under the tiering protocol released with the artifacts;
 single-seed or partial Tinker/API rows are descriptive and are
 excluded from Welch / Mann--Whitney testing, BH correction, power,
 and CI claims. Table~\ref{tab:bh-pvalues} predates the Tier-A/B/C
@@ -257,9 +279,9 @@ partition and lists raw and BH-adjusted $p$-values from the
 earlier global family of $20$ tests with $19$ surviving correction;
 we retain it here as a methodological audit trail. The headline
 BH result the paper now stands behind is the restricted Tier-A/B
-family computed in the addendum, where only $F_3$ (cross-library heterogeneity across the 5 classic-RL PPO/policy-gradient implementations on the 199-choice arithmetic task: one-way ANOVA $F = 11.42, p = 4.996 \times 10^{-6}$, BH-adjusted $p = 2.5 \times 10^{-5}$; whereas matched same-stack LLM GRPO vs.\ PPO on Qwen2.5-0.5B is null at $p = 0.374$) survives. Where
+family released with the artifacts, where only $F_3$ (cross-library heterogeneity across the 5 classic-RL PPO/policy-gradient implementations on the 199-choice arithmetic task: one-way ANOVA $F = 11.42, p = 4.996 \times 10^{-6}$, BH-adjusted $p = 2.5 \times 10^{-5}$; whereas matched same-stack LLM GRPO vs.\ PPO on Qwen2.5-0.5B is null at $p = 0.374$) survives. Where
 the global family disagrees with the restricted family, the
-addendum is authoritative.
+released tiering and seed-ledger artifacts are authoritative.
 
 All tests are two-sided.  Effect sizes are reported as Cohen's $d$ for
 $t$-tests and Pearson/Spearman $r$ for correlations.  Bootstrap 95\%
@@ -300,8 +322,7 @@ adjusted $p$-values at FDR $= 0.05$.  Tests are ranked by raw
 $p$-value (ascending). $\checkmark$ = significant after BH correction
 on the historical $20$-test family; $\times$ = not significant; $^{\ddag}$ = legacy test computed across per-step training rewards within single-seed traces (pseudo-replicated step observations rather than independent seed runs), which is invalid for cross-seed inference and excluded under our Tier-A/B protocol. Total
 tests: $20$; survive on the historical family: $19$. \emph{This
-table is not the paper's headline statistical result.} Under the restricted Tier-A/B family of
-our statistical-rigor protocol,
+table is not the paper's headline statistical result.} Under the restricted Tier-A/B family released with the artifacts,
 only $F_3$ (library heterogeneity across the 5 classic-RL implementations on
 arithmetic, $p = 4.996 \times 10^{-6}$) survives BH correction; the table below is retained solely as a
 reproducibility audit trail.}
@@ -311,8 +332,8 @@ reproducibility audit trail.}
 \toprule
 Rank & Comparison & Raw $p$ & BH-adj.\ $p$ & Sig. \\
 \midrule
-        1 & Dense vs MoE Architecture (Welch t-test) & 2.357e-21 & 0 & $\checkmark$ \\
-        2 & PPO vs GRPO on Llama-3.1-8B (Welch t-test)$^{\ddag}$ & 3.924e-10 & 0 & $\checkmark$ \\
+        1 & Dense vs MoE Architecture (Welch t-test) & 2.357e-21 & $4.7\times10^{-20}$ & $\checkmark$ \\
+        2 & PPO vs GRPO on Llama-3.1-8B (Welch t-test)$^{\ddag}$ & 3.924e-10 & $3.9\times10^{-9}$ & $\checkmark$ \\
         3 & Method ANOVA (F-test across algorithm families) & 3.091e-06 & 2.1e-05 & $\checkmark$ \\
         4 & Library ANOVA (F-test across 5 libraries) & 4.996e-06 & 2.5e-05 & $\checkmark$ \\
         5 & TRL vs Tinker (Welch t-test, implementation effect) & 2.064e-05 & 8.3e-05 & $\checkmark$ \\
@@ -346,7 +367,10 @@ median $= 0.740$, and IQM $= 0.747$. Normality was not rejected by Shapiro--Wilk
 Separate marginal one-way ANOVAs across the $N=42$ completed cross-task evaluation runs show
 that library/framework ($\eta^2 = 0.546$) and training method ($\eta^2 = 0.558$, when pooling offline DPO/SFT, tabular/classic RL, and online LLM RL across tasks)
 carry large marginal variance shares, alongside model
-family ($\eta^2 = 0.471$) and model scale ($\eta^2 = 0.322$). Because the 42 runs form an unbalanced observational corpus in which execution platform, library, and model scale are partially collinear (for example, frontier checkpoints run exclusively on Tinker while classic-RL libraries run on the 199-choice arithmetic environment), these four marginal $\eta^2$ values sum to $1.897 > 1.0$ and must be read as unadjusted marginal associations rather than an orthogonal Type-III factorial partition. When task and stack are held fixed (the matched 10-run Qwen2.5-0.5B control in \S\ref{sec:scaling-law-iter29}), the online RL algorithm effect (GRPO vs.\ PPO) is indistinguishable from zero ($\Delta = -0.002, p = 0.374$).
+family ($\eta^2 = 0.471$) and model scale ($\eta^2 = 0.322$). Because the 42 runs form an unbalanced observational corpus in which execution platform, library, and model scale are partially collinear (for example, frontier checkpoints run exclusively on Tinker while classic-RL libraries run on the 199-choice arithmetic environment), these four marginal $\eta^2$ values sum to $1.897 > 1.0$ and must be read as unadjusted marginal associations rather than an orthogonal Type-III factorial partition.
+Explicitly, these separate marginal one-way ANOVAs on a confounded, unbalanced corpus cannot isolate independent contributions: the $\eta^2$ values overlap (shared variance is counted in several margins at once), so no $\eta^2$ here estimates the independent effect of its factor holding the others fixed.
+Isolating independent contributions would require a balanced factorial design or a joint factorial/mixed-effects model, which this observational corpus does not support.
+When task and stack are held fixed (the matched 10-run Qwen2.5-0.5B same-stack control), the online RL algorithm effect (GRPO vs.\ PPO) is indistinguishable from zero ($\Delta = -0.002, p = 0.374$).
 
 \subsection{Compute Resources and Run Reconciliation}
 
@@ -356,7 +380,7 @@ Experiments are distributed across three execution substrates, reconciling the $
 Scaling experiments across Qwen3-8B, Qwen3-32B, Qwen3.5-4B, Qwen3.5-27B,
 and Llama-3.1-8B-Instruct; frontier model evaluation on Qwen3-235B-A22B,
 DeepSeek-V3.1 ($671$B/$685$B), and Nemotron-3-Super-120B-A12B (LatentMoE); MoE vs.~dense comparisons; cross-task
-tool-use experiments; and emerging architecture evaluation (GPT-OSS-20b,
+tool-use experiments; and emerging architecture evaluation (GPT-OSS-20B,
 Kimi-K2-Thinking $1$T). Tinker provides scalable API access that makes frontier model
 experiments economically tractable.
 

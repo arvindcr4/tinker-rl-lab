@@ -83,7 +83,7 @@ def fit_t_critical(g4_vs_g32: pd.DataFrame) -> pd.DataFrame:
     # 2-parameter fit via grid search (deterministic, no scipy needed).
     best = None
     for tau in np.geomspace(1e4, 1e9, 400):
-        for a in np.linspace(0.30, 0.40, 21):
+        for a in np.linspace(0.05, 0.60, 56):
             pred = a * (1.0 - np.exp(-T / tau))
             resid = pred - abs_delta
             sse = float(np.sum(resid ** 2))
@@ -112,7 +112,7 @@ def fit_t_critical(g4_vs_g32: pd.DataFrame) -> pd.DataFrame:
         # Refit quickly
         bbest = None
         for tau in np.geomspace(1e4, 1e9, 80):
-            for a in np.linspace(0.30, 0.40, 11):
+            for a in np.linspace(0.05, 0.60, 23):
                 pred = a * (1.0 - np.exp(-T / tau))
                 resid = pred - delta_b
                 sse_b = float(np.sum(resid ** 2))
@@ -433,7 +433,7 @@ def main():
         ax[0].plot(T_dense / 1e6,
                    a_hat * (1.0 - np.exp(-T_dense / tau_hat)),
                    color="#c0392b", lw=2,
-                   label=fr"fit: $|Δ|=0.395 \cdot (1-e^{{-T/5.76M}})$")
+                   label=fr"fit: $|\Delta|={a_hat:.3f} \cdot (1-e^{{-T/{tau_hat/1e6:.2f}M}})$")
         for _, r in t_crit.iterrows():
             tc = r.T_critical_tokens
             if isinstance(tc, (int, float)) and math.isfinite(tc):
@@ -458,17 +458,17 @@ def main():
             [f"G{a}→G{b}" for a, b in zip(crossings["G_a"], crossings["G_b"])],
             rotation=30, ha="right", fontsize=8)
         ax[1].axhline(0, color="black", lw=0.5)
-        ax[1].set_ylabel(r"Δ acc(b) − Δ acc(a) at T=64M (pp)")
+        ax[1].set_ylabel(r"acc($G_b$) $-$ acc($G_a$) at T=64M (pp)")
         ax[1].set_title("(b)  Pillar-3 group-size crossovers")
         ax[1].grid(alpha=0.3)
 
-        # (c) Phase diagram: accuracy vs T per G
-        for G in sorted(effect.G.unique()):
-            sub = effect[effect.G == G].sort_values("T_tokens")
-            ax[2].errorbar(sub["T_tokens"] / 1e6, sub["acc"],
-                           yerr=[np.maximum(sub["acc"] - sub["acc_lo"], 0.005),
-                                 np.maximum(sub["acc_hi"] - sub["acc"], 0.005)],
-                           marker="o", label=f"G={G}", capsize=2)
+        # (c) Phase diagram: observed cells at (T, G); accuracy is the
+        # contour quantity, so cells are marked at their (T, G) position
+        # (plotting acc values on the G axis would compress them to y~0).
+        ax[2].scatter(effect["T_tokens"] / 1e6, effect["G"],
+                      c=effect["acc"], cmap="viridis", vmin=0.3, vmax=0.9,
+                      edgecolors="black", linewidths=0.6, s=55, zorder=5,
+                      label="reconstructed cells (color = acc)")
         # Iso-acc contours via interpolated grid
         Ts_m = np.logspace(math.log10(1e6), math.log10(64e6), 60)
         Gs_g = np.array([4, 8, 16, 32, 64], dtype=float)

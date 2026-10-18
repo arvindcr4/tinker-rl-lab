@@ -10,9 +10,9 @@ anchor the pillar. First, trainability varies with $G$ in a non-monotone way:
 intermediate group sizes often behaved better than the smallest or largest we
 tested, but the data do not justify a universal optimum. Our measured equivalence
 tests extend to $G{=}16$; on the near-ceiling arithmetic task, held-out accuracy
-is essentially flat across this range---a retention \emph{ratio} of ${\approx}1.00$
-between $G{=}2$ and $G{=}16$ (i.e.\ $G{=}16$ lands within noise of $G{=}2$; this is
-a ratio, not an accuracy above $100\%$). We caution that this is a \emph{saturated}
+is essentially flat across this range---a retention \emph{ratio} of
+${\approx}1.003$ ($100.3\%$) between $G{=}2$ and $G{=}16$ (i.e.\ $G{=}16$ lands
+within noise of $G{=}2$; this $100.3\%$ is a ratio, not an accuracy). We caution that this is a \emph{saturated}
 regime: near the ceiling, variance is compressed, so the finding is ``no detectable
 $G$ effect under saturation,'' not evidence of equivalence on harder, unsaturated
 tasks. The effective signal-to-noise ratio
@@ -23,14 +23,15 @@ reconstructed token-budget grid and are hypotheses, not measurements. A separate
 505-task conditional utility audit, using $(1-\mathrm{ZVF})/\sqrt{G}$ as the
 declared cost proxy, selects $G{=}4$ over $G{=}5$ by $0.00177$ with a 95\%
 bootstrap interval $[0.00082,0.00270]$; that result is cohort- and
-objective-conditional, not a universal optimum. Second, we make explicit the sense in which GRPO
+objective-conditional, not a universal optimum (cohort and estimator defined in
+Section~\ref{sec:appendix:group-size-reconcile}). Second, we make explicit the sense in which GRPO
 \emph{admits an all-pairs preference (DPO-like) interpretation}: the group-centered
 update behaves as an implicit all-pairs preference
 contrast---consistent with logged per-step diagnostics (advantage variance,
-ZVF, and gradient norms), though direct gradient-vector validation is still future
+Zero-Variance Fraction (ZVF), and gradient norms), though direct gradient-vector validation is still future
 work, so we frame this as an interpretation rather than a proven equivalence---with zero-variance groups
 projected out. We frame $G$ as a preference-density dial rather than a variance
-knob, test equivalence with TOST and difficulty-stratified retention, and release
+knob, test equivalence with Two One-Sided Tests (TOST) and difficulty-stratified retention, and release
 the in-repository artifacts used here.
 \end{abstract}
 \paragraph{August 2026 evidence boundary.} The group-size evidence is scoped

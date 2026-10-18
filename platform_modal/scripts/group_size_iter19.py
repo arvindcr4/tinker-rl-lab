@@ -84,9 +84,9 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 import numpy as np  # noqa: E402
 
-REPO = Path(__file__).resolve().parent.parent
+REPO = Path(__file__).resolve().parents[2] / "platform_hybrid"
 RESULTS = REPO / "experiments" / "results"
-FIG = REPO / "figures"
+FIG = REPO / "paper" / "figures"
 FIG.mkdir(exist_ok=True)
 
 RNG_SEED = 20260702

@@ -78,9 +78,9 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 import numpy as np  # noqa: E402
 
-REPO = Path(__file__).resolve().parent.parent
+REPO = Path(__file__).resolve().parents[2] / "platform_hybrid"
 RESULTS = REPO / "experiments" / "results"
-FIG = REPO / "figures"
+FIG = REPO / "paper" / "figures"
 FIG.mkdir(exist_ok=True)
 
 RNG_SEED = 20260702
@@ -186,14 +186,18 @@ def per_seed_last10_mean_reward(sweep: dict) -> dict[int, np.ndarray]:
 
 
 def per_step_advantage_variance(sweep: dict) -> dict[int, np.ndarray]:
-    """Return {G: array of per-run mean advantage_variance; independent seed units}."""
+    """Return {G: pooled per-step advantage_variance values (runs x steps)}.
+
+    Descriptive trajectory statistic only: steps within a run are
+    autocorrelated, so bootstrap intervals over these pooled values are
+    nominal and must not be read as seed-level inference (n=3 seeds).
+    """
     out: dict[int, list[float]] = {g: [] for g in G_VALUES}
     for run in sweep["runs"]:
         g = int(run["group_size"])
         if g not in out:
             continue
-        if run["step_log"]:
-            out[g].append(float(np.mean([step["advantage_variance"] for step in run["step_log"]])))
+        out[g].extend(float(step["advantage_variance"]) for step in run["step_log"])
     return {g: np.asarray(v, dtype=float) for g, v in out.items()}
 
 

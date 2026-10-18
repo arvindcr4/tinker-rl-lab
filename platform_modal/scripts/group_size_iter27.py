@@ -118,8 +118,8 @@ def per_g_master(sweep: dict) -> pd.DataFrame:
         shared = sorted(ref_by_seed.keys() & by_seed.keys())
         if not shared:
             raise ValueError("no shared seed identities")
-        numerator = np.array([np.mean([s["mean_reward"] for s in ref_by_seed[k]["step_log"][-10:]]) for k in shared])
-        denominator = np.array([np.mean([s["mean_reward"] for s in by_seed[k]["step_log"][-10:]]) for k in shared])
+        numerator = np.array([np.mean([s["mean_reward"] for s in by_seed[k]["step_log"][-10:]]) for k in shared])
+        denominator = np.array([np.mean([s["mean_reward"] for s in ref_by_seed[k]["step_log"][-10:]]) for k in shared])
         if np.any(denominator <= 0):
             raise ValueError("retention denominator must be positive")
         retention_vs_g2 = float(numerator.mean() / denominator.mean())
@@ -134,7 +134,7 @@ def per_g_master(sweep: dict) -> pd.DataFrame:
             "last10_mean_reward": last10,
             "last10_se": last10_se,
             "retention_vs_G2": retention_vs_g2,
-            "numerator_G": 2, "denominator_G": g,
+            "numerator_G": g, "denominator_G": 2,
             "metric": "last10_mean_training_reward",
             "analysis_version": "review23-v2",
             "retention_ci_low": ci_lo,
@@ -168,7 +168,7 @@ def write_synthesis_tsv(per_g: pd.DataFrame) -> Path:
         g = int(r["G"])
         snr_r = snr_by_g.get(g, None)
         if g == 2:
-            tost_eq, tost_p = True, 0.0
+            tost_eq, tost_p = None, None
         else:
             tost_eq, tost_p = tost_vs_g2.get(g, (None, None))
         out_rows.append({
@@ -249,7 +249,9 @@ def write_dpo_bands() -> Path:
             "source": "Wu et al. arXiv:2510.00977",
         })
 
-    # Saturating fit extrapolation at higher T
+    # Saturating fit evaluated inside the reconstructed grid, plus the
+    # labeled out-of-grid extrapolation rows (projection, not measurement;
+    # intervals are conditional on the reconstruction).
     for T in [256_000_000, 1024_000_000]:
         R = R_inf + (R0 - R_inf) * math.exp(-T / tau)
         rows.append({
@@ -260,7 +262,19 @@ def write_dpo_bands() -> Path:
             "retention": round(R, 4),
             "retention_ci_low": round(R_inf_lo + (R0 - R_inf_lo) * math.exp(-T / tau), 4),
             "retention_ci_high": round(R_inf_hi + (R0 - R_inf_hi) * math.exp(-T / tau), 4),
-            "source": "iter19 saturating fit",
+            "source": "iter19 saturating fit (extrapolated projection)",
+        })
+    for T in T_BROADER:
+        R = R_inf + (R0 - R_inf) * math.exp(-T / tau)
+        rows.append({
+            "T_tokens": int(T),
+            "G_a": 4,
+            "G_b": 32,
+            "band": "iter19_fit_ingrid",
+            "retention": round(R, 4),
+            "retention_ci_low": float("nan"),
+            "retention_ci_high": float("nan"),
+            "source": "iter19 saturating fit (in-grid only)",
         })
 
     df = pd.DataFrame(rows).sort_values(["band", "T_tokens"]).reset_index(drop=True)
@@ -348,7 +362,7 @@ def build_figure(per_g: pd.DataFrame) -> Path:
     ax = axes[1, 0]
     wu_rows = bands[bands["band"] == "wu_2025_constant_97.6"]
     meas_rows = bands[bands["band"] == "measured_G4_vs_G32"]
-    fit_rows = bands[bands["band"] == "iter19_fit_extrapolation"]
+    fit_rows = bands[bands["band"] == "iter19_fit_ingrid"]
     # Wu band
     ax.plot(wu_rows["T_tokens"] / 1e6, wu_rows["retention"], "s-",
             color="gray", linewidth=2, markersize=8,
@@ -362,11 +376,16 @@ def build_figure(per_g: pd.DataFrame) -> Path:
                       meas_rows["retention_ci_high"] - meas_rows["retention"]],
                 fmt="o-", color="#1f77b4", capsize=4, linewidth=2, markersize=8,
                 label="reconstructed G=4 vs G=32 (iter7)")
-    # Iter19 fit extrapolation
+    # Iter19 fit: in-grid curve plus labeled extrapolated projection
     if len(fit_rows) > 0:
         ax.plot(fit_rows["T_tokens"] / 1e6, fit_rows["retention"], "v--",
                 color="#ff7f0e", linewidth=1.6, markersize=8,
-                label="iter19 fit extrapolation (G=4 vs G=32)")
+                label="iter19 saturating fit (in-grid)")
+    extrap_rows = bands[bands["band"] == "iter19_fit_extrapolation"]
+    if len(extrap_rows) > 0:
+        ax.plot(extrap_rows["T_tokens"] / 1e6, extrap_rows["retention"], "v:",
+                color="#ff7f0e", linewidth=1.4, markersize=7,
+                label="iter19 fit extrapolation (projection)")
     ax.set_xscale("log")
     ax.set_xlabel("Token budget T (M)")
     ax.set_ylabel("Retention R = acc(G_a) / acc(G_b)")

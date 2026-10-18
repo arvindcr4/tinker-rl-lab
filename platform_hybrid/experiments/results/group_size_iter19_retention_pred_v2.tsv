@@ -1,0 +1,29 @@
+T_tokens	T_M_tokens	retention_pred	ret_pred_low	ret_pred_high	is_measured	above_wu_97_6
+1000000	1.0	0.9367	0.9121	0.9516	no (model_prediction)	no
+1000000	1.0	0.9762	0.9048	1.0476	yes	yes
+1219510	1.2195	0.9289	0.9005	0.9466	no (model_prediction)	no
+1487206	1.4872	0.9199	0.8871	0.9405	no (model_prediction)	no
+1813665	1.8137	0.9093	0.8724	0.9334	no (model_prediction)	no
+2211784	2.2118	0.8973	0.8572	0.9251	no (model_prediction)	no
+2697295	2.6973	0.8837	0.8409	0.9153	no (model_prediction)	no
+3289381	3.2894	0.8686	0.8233	0.9041	no (model_prediction)	no
+4000000	4.0	0.8333	0.7879	0.8788	yes	no
+4011436	4.0114	0.8522	0.8045	0.8912	no (model_prediction)	no
+4891990	4.892	0.8348	0.7888	0.8768	no (model_prediction)	no
+5965836	5.9658	0.8168	0.7723	0.8608	no (model_prediction)	no
+7275403	7.2754	0.799	0.7593	0.8435	no (model_prediction)	no
+8872433	8.8724	0.7821	0.7458	0.8254	no (model_prediction)	no
+10820030	10.82	0.7669	0.7343	0.8064	no (model_prediction)	no
+13195145	13.1951	0.7542	0.7239	0.7883	no (model_prediction)	no
+16000000	16.0	0.75	0.7143	0.7857	yes	no
+16091624	16.0916	0.7443	0.7168	0.7734	no (model_prediction)	no
+19623911	19.6239	0.7373	0.7119	0.7658	no (model_prediction)	no
+23931575	23.9316	0.733	0.7066	0.7622	no (model_prediction)	no
+29184818	29.1848	0.7307	0.7031	0.7613	no (model_prediction)	no
+35591205	35.5912	0.7297	0.6997	0.7612	no (model_prediction)	no
+43403865	43.4039	0.7293	0.6978	0.7611	no (model_prediction)	no
+52931489	52.9315	0.7292	0.6964	0.761	no (model_prediction)	no
+64000000	64.0	0.7273	0.6932	0.7614	yes	no
+64550531	64.5505	0.7292	0.6956	0.761	no (model_prediction)	no
+78720080	78.7201	0.7291	0.6951	0.761	no (model_prediction)	no
+95999999	96.0	0.7291	0.6951	0.761	no (model_prediction)	no

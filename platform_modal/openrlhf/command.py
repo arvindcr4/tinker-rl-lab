@@ -63,9 +63,11 @@ def build_openrlhf_command(config: OpenRLHFConfig, data_path: str, output_dir: s
             finite = False
         if not finite:
             raise ValueError(f"{name} must be a finite number for native training")
-    for name in ("learning_rate", "weight_decay", "temperature", "epsilon"):
+    for name in ("learning_rate", "weight_decay", "epsilon"):
         if numeric[name] < 0:
             raise ValueError(f"{name} must be nonnegative")
+    if numeric["temperature"] <= 0:
+        raise ValueError("temperature must be strictly positive for grouped GRPO rollouts")
     for name in ("gamma", "lam"):
         if not 0 <= numeric[name] <= 1:
             raise ValueError(f"{name} must be in [0, 1]")

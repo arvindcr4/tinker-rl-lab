@@ -1,6 +1,7 @@
 """Native-driver contracts, using CPU mocks and no provider/network execution."""
 
 import importlib
+import json
 import hashlib
 import subprocess
 import sys
@@ -152,6 +153,10 @@ def test_success_records_config_without_inventing_measurements(
     assert result["reward_trace"] == []
     assert result["metrics_status"] == "not_collected"
     assert "peak_reward" not in result
+    assert trainer.require_empirical_result(result) is result
+    saved = json.loads((tmp_path / "relative/result.json").read_text())
+    assert saved == result
+    assert trainer.require_empirical_result(saved) is saved
 
 
 def test_native_receipt_uses_launch_snapshot_during_caller_mutation(tmp_path, native_runtime):
@@ -396,10 +401,9 @@ def test_native_optimizer_boundaries_preserve_zero_modes():
     cfg.optimizer.learning_rate = 0.0
     cfg.optimizer.weight_decay = 0.0
     cfg.optimizer.beta1 = 0.0
-    cfg.algorithm.temperature = 0.0
     cfg.algorithm.epsilon = 0.0
     command = build_openrlhf_command(cfg, "/data", "/output")
-    for name in ("actor_learning_rate", "temperature", "eps_clip", "l2"):
+    for name in ("actor_learning_rate", "eps_clip", "l2"):
         assert float(command[command.index("--" + name) + 1]) == 0.0
 
 
@@ -467,3 +471,58 @@ def test_native_algorithm_ranges_fail_before_launch(field, value):
     setattr(cfg.algorithm, field, value)
     with pytest.raises(ValueError, match=field):
         build_openrlhf_command(cfg, "/data.jsonl", "/output")
+
+
+@pytest.mark.parametrize("temperature", [0.0, -0.5])
+def test_nonpositive_native_temperature_rejected_before_side_effects(tmp_path, temperature):
+    cfg = config()
+    cfg.algorithm.temperature = temperature
+    output = tmp_path / "never-created"
+    with (
+        patch.object(trainer, "_validate_native_runtime") as runtime,
+        patch.object(trainer, "_prepare_gsm8k_500_jsonl") as prepare,
+        patch.object(trainer.subprocess, "run") as native,
+        pytest.raises(ValueError, match="temperature must be strictly positive"),
+    ):
+        trainer.run_openrlhf_training(cfg, str(output))
+    runtime.assert_not_called()
+    prepare.assert_not_called()
+    native.assert_not_called()
+    assert not output.exists()
+
+
+@pytest.mark.parametrize("temperature", [0.01, 1.0])
+def test_positive_native_temperature_forwarded_unchanged(temperature):
+    cfg = config()
+    cfg.algorithm.temperature = temperature
+    command = build_openrlhf_command(cfg, "/data", "/output")
+    assert command[command.index("--temperature") + 1] == str(temperature)
+
+
+def test_observed_native_receipt_admitted_without_inventing_optimizer_steps(
+    tmp_path, native_runtime
+):
+    # This is a synthetic subprocess/metrics contract fixture, not a training run.
+    observed = {
+        "reward_trace": [0.25] * 30,
+        "metrics_status": "observed_training_rollout_rewards",
+        "logged_rollout_steps": 30,
+        "steps": None,
+    }
+    output = tmp_path / "observed"
+    with (
+        patch.dict(sys.modules, {"openrlhf": types.ModuleType("openrlhf")}),
+        patch.object(trainer, "_prepare_gsm8k_500_jsonl", side_effect=write_native_input_fixture),
+        patch.object(trainer.subprocess, "run"),
+        patch("platform_modal.openrlhf.metrics.read_native_metrics", return_value=observed),
+    ):
+        result = trainer.run_openrlhf_training(config(), str(output))
+    assert result["data_kind"] == "empirical"
+    assert result["state"] == "completed"
+    assert trainer.require_empirical_result(result) is result
+    assert result["reward_trace"] == observed["reward_trace"]
+    assert result["metrics_status"] == observed["metrics_status"]
+    assert result["steps"] is None
+    assert result["optimizer_steps"] is None
+    assert "heldout_score" not in result
+    assert json.loads((output / "result.json").read_text()) == result

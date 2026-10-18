@@ -445,6 +445,9 @@ def _run_native_training(
     subprocess.run(cmd, cwd=str(output), env=env, check=True)
     ensure_input_unchanged(data_path, input_artifact)
     result = {
+        # Completion records the successful native subprocess, not metric completeness.
+        "data_kind": "empirical",
+        "state": "completed",
         "framework": "openrlhf",
         "mode": "real",
         "model": config.model_name,

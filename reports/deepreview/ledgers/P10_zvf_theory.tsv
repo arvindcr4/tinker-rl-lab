@@ -1,0 +1,31 @@
+location	claim_text	value	source_artifact	generator_script	status
+Sec3 E-T1 para / Sec7 table	shuffled Wald coverage at m>=64	0.93-0.96 (0.931-0.961)	zvf-program/experiments-next/results/t1_ci_coverage_qwen3-8b_train_n512_r32_s42.json	tools/review_ledger/P10_zvf_theory_verify.py	verified
+Sec3 / Sec7 table	shuffled Wilson coverage, all (K,m)	0.95-0.98 (0.949-0.982)	t1_ci_coverage_qwen3-8b_train_n512_r32_s42.json	tools/review_ledger/P10_zvf_theory_verify.py	verified
+Sec3 / Sec7 table	difficulty-sorted global coverage (label corrected to Wald, m>=64)	0.07-0.22 (0.0675-0.2225)	t1_ci_coverage_qwen3-8b_train_n512_r32_s42.json	tools/review_ledger/P10_zvf_theory_verify.py	recomputed
+Sec7 E-T1	sorted Wilson coverage full grid (added)	0.08-0.87	t1_ci_coverage_qwen3-8b_train_n512_r32_s42.json	tools/review_ledger/P10_zvf_theory_verify.py	recomputed
+Sec3 / Sec7 table	local-window coverage (cell (K,m)=(8,32) added)	0.944	zvf-program/experiments-next/results/t1_correlated_fix_qwen3-8b_train_n512_r32_s42_G8_M32.json	tools/review_ledger/P10_zvf_theory_verify.py	verified
+Sec3 / Sec7 table	stratified global coverage ((8,32))	0.996	t1_correlated_fix_qwen3-8b_train_n512_r32_s42_G8_M32.json	tools/review_ledger/P10_zvf_theory_verify.py	verified
+Sec7 E-T1	grid and resamples	K in {4,8,16}, m in {8..128}, 2000 batches/cell	t1_ci_coverage_qwen3-8b_train_n512_r32_s42.json	tools/review_ledger/P10_zvf_theory_verify.py	verified
+Sec7 E-T2	strata / trials / sampling	6 x 85 prompts; 2000 trials; prompts w/ repl., 8 of 32 rollouts w/o repl.	zvf-program/experiments-next/results/t2_floor_qwen3-8b_train_n512_r32_s42_G8.json; analyze_t2_floor.py	tools/review_ledger/P10_zvf_theory_verify.py	verified
+Sec7 E-T2	observed/model quantile ratio	1.00 all strata at delta 0.5,0.1; max 1.04 at delta 0.05 (old text: 0-5%)	t2_floor_qwen3-8b_train_n512_r32_s42_G8.json	tools/review_ledger/P10_zvf_theory_verify.py	recomputed
+Sec7 E-T2	hardest stratum p_hat, ZVF, quantile	0.0147 (text 0.015; old 0.01), 0.8862, 160 rollouts	t2_floor_qwen3-8b_train_n512_r32_s42_G8.json	tools/review_ledger/P10_zvf_theory_verify.py	recomputed
+Sec7 E-T2 / Thm2	continuous bound at hardest stratum	152.47 (N_cont) vs 160 (N_disc); P(fail|19 groups)=0.1007	closed form	tools/review_ledger/P10_zvf_theory_verify.py	recomputed
+Sec8	T2 tightness range (old 1.00-1.05)	1.00-1.04	t2_floor_qwen3-8b_train_n512_r32_s42_G8.json	tools/review_ledger/P10_zvf_theory_verify.py	recomputed
+Sec7 E-T3a	J-argmax per stratum and pooled	2,2,2,3, pooled 3	zvf-program/experiments-next/results/t3_gstar_v2_qwen3-8b_train_n512_r32_s42.json	tools/review_ledger/P10_zvf_theory_verify.py	verified
+Sec7 E-T3a	held-out pass@32 G=2 / G=16 / base (replaces 'G=2 matched G=16 improvement')	0.91 / 0.91 / 0.89 (pass@1 0.3009/0.3248/0.3063), 200 problems, seed 42	zvf-program/experiments-next/results/passk_modal_qwen3-8b_{base,tinker-rl-w2_qwen3-8b_g2-qwen3-8b-s42,tinker-rl-w2_qwen3-8b_g16-qwen3-8b-s42}_gsm8k_p200_n32_s42.json	read directly	recomputed
+Sec7 E-B	Thompson vs oracle informative groups per 1k rollouts	120.7 vs 124.3 (97%)	zvf-program/experiments-next/results/bandit_realloc_qwen3-8b_train_n512_r32_s42_G8.json	tools/review_ledger/P10_zvf_theory_verify.py	verified
+Sec7 E-B	gain over uniform (old 28%)	29% (120.735/93.646)	bandit_realloc_qwen3-8b_train_n512_r32_s42_G8.json	tools/review_ledger/P10_zvf_theory_verify.py	recomputed
+Sec7 E-B	ratio over hardest-first	8.8x	bandit_realloc_qwen3-8b_train_n512_r32_s42_G8.json	tools/review_ledger/P10_zvf_theory_verify.py	verified
+Sec7 E-R2b	G=2 last-10 train reward	0.90, 0.9625	platform_hybrid/experiments/tinker-runs/results/er2b_g2_s{123,456}.json	read step_log	verified
+Sec7 E-R2b	G=2 per-step ZVF last 20 steps; last-10 mean	[0.75,1.0]; 0.975	er2b_g2_s{123,456}.json	read step_log	verified
+Sec7 E-R2b	G=16 last-10 train reward (old 0.3-0.5)	0.3219, 0.3891	er2b_g16_s{123,456}.json	read step_log	recomputed
+Sec7 E-R2b	G=16 per-step ZVF range (old 0-0.25)	[0,0.5]; last-10 means 0.15, 0.10	er2b_g16_s{123,456}.json	read step_log	recomputed
+Sec7 E-R2b	held-out evaluation of er2b adapters	none exists	er2b_*.json (no eval fields)	n/a	removed
+Sec7 E-P4	length first-5 mean -> last-10 mean, seeds 42/123/456	GRPO 1004->905, 981->944, 996->900; Dr.GRPO 999->931, 972->902, 1000->878; decline 3.8-12.2%	platform_hybrid/experiments/tinker-runs/results/p4uncap_{grpo,drgrpo}_s{42,123,456}.json	read step_log mean_comp_len	verified
+Sec7 E-P4	late ZVF (last-10 mean) seeds 42/123/456 (old Dr.GRPO order wrong)	Dr.GRPO 0.45/0.725/0.70; GRPO 0.475/0.475/0.55	p4uncap_{grpo,drgrpo}_s{42,123,456}.json	read step_log zvf	recomputed
+Sec7 E-P4	early means as share of 1024 cap	95-98% (972-1004 tokens)	p4uncap_*.json	read step_log	recomputed
+Thm3 / remark	continuous maximizer at p0=0.5 (reviewer 2.479)	2.421	closed form	tools/review_ledger/P10_zvf_theory_verify.py	recomputed
+Thm3	J(2)=J(3)=E[(p(1-p))^2] > J(G>=4)	identity err 1e-16; strict for G=4..64	closed form	tools/review_ledger/P10_zvf_theory_verify.py	verified
+Cor beta	Beta closed form for J(G)	max abs err vs quadrature 1e-11	closed form	tools/review_ledger/P10_zvf_theory_verify.py	verified
+Cor1	Clopper-Pearson L_0.05(m;m) at m=32	0.9106 (= 0.05^(1/32))	closed form	tools/review_ledger/P10_zvf_theory_verify.py	verified
+Sec8	T2 growth rate (old 'logarithmically diverging')	~K ln(1/delta)/(1-theta_K)	closed form	n/a	recomputed

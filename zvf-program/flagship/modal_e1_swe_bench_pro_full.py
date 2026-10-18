@@ -225,6 +225,19 @@ SOURCE_EXTENSIONS = {
 }
 
 
+PAID_EXECUTION_POLICY = "blocked-until-enforced-reservation-settlement-v2"
+
+
+def _require_enforced_budget() -> None:
+    """No launch until a provider-bound reservation/settlement contract exists.
+
+    Advisory projections and caller-declared authorization are not spending
+    enforcement. This is intentionally not configurable through a bypass flag.
+    Offline receipt construction and historical inspection remain available.
+    """
+    raise RuntimeError("paid execution blocked: enforced reservation/settlement budget contract unavailable")
+
+
 def _repo_root() -> Path:
     return Path(__file__).resolve().parents[2]
 
@@ -849,6 +862,7 @@ def _shared_tinker_sampler(tinker_module: Any, wandb_run_id: str) -> Any:
 def generate_candidate(payload: dict[str, Any]) -> dict[str, Any]:
     """Generate one pass@1 candidate with W&B online before the Tinker call."""
 
+    _require_enforced_budget()
     task = dict(payload["task"])
     sources = dict(payload["sources"])
     seed = int(payload["seed"])
@@ -1616,6 +1630,7 @@ def main(
     evaluator_workers: int = 20,
     resume: bool = False,
 ) -> None:
+    _require_enforced_budget()
     root = _repo_root()
     run_dir = root / f"outputs/modal_e1_e14/{RUN_DATE}/e1_swe_bench_pro_full/seed{seed}"
     if run_dir.exists() and not resume:

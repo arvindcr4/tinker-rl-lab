@@ -130,6 +130,19 @@ class RuntimeBundle:
     entrypoint: str
 
 
+PAID_EXECUTION_POLICY = "blocked-until-enforced-reservation-settlement-v2"
+
+
+def _require_enforced_budget() -> None:
+    """No launch until a provider-bound reservation/settlement contract exists.
+
+    Advisory projections and caller-declared authorization are not spending
+    enforcement. This is intentionally not configurable through a bypass flag.
+    Offline receipt construction and historical inspection remain available.
+    """
+    raise RuntimeError("paid execution blocked: enforced reservation/settlement budget contract unavailable")
+
+
 def canonical_json(value: Any) -> str:
     """Return deterministic JSON suitable for a receipt digest."""
 
@@ -774,6 +787,7 @@ def _create_tinker_sampler(
     model_gate: Mapping[str, Any],
     args: argparse.Namespace,
 ) -> tuple[Any, Any]:
+    _require_enforced_budget()
     service_factory = getattr(tinker, "ServiceClient", None)
     if not callable(service_factory):
         raise RuntimeError("tinker.ServiceClient is unavailable")

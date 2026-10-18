@@ -119,7 +119,7 @@ def _valid_manifest() -> dict[str, Any]:
                 "revision": "b" * 40,
                 "url": "https://huggingface.co/example-org/verilog-runner/commit/b",
                 "stage": "periodic",
-                "safe_public_artifact": True,
+                "safe_public_artifact": False,
                 "visibility": "private",
             },
             {

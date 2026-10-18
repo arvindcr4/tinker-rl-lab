@@ -276,7 +276,8 @@ class LifeSciBenchEvalAdapterTests(unittest.TestCase):
         result = e8.validate_e8_receipt(observed, boundary=boundary)
         self.assertTrue(result.ok, result.errors)
         self.assertTrue(result.metrics["primary_eval"])
-        self.assertTrue(result.metrics["receipt_proven_heldout"])
+        self.assertFalse(result.metrics["receipt_proven_heldout"])
+        self.assertTrue(result.metrics["manifest_disjointness_valid"])
         self.assertFalse(result.metrics["portfolio_evidence"])
         self.assertFalse(result.metrics["paid_launch_authorized"])
 
@@ -640,7 +641,8 @@ class LifeSciBenchLocalBuilderTests(unittest.TestCase):
             payload["receipt"], boundary=payload["boundary"]
         )
         self.assertTrue(receipt_result.ok, receipt_result.errors)
-        self.assertTrue(receipt_result.metrics["receipt_proven_heldout"])
+        self.assertFalse(receipt_result.metrics["receipt_proven_heldout"])
+        self.assertTrue(receipt_result.metrics["manifest_disjointness_valid"])
         # Plumbing completeness never implies portfolio evidence or paid launch.
         self.assertFalse(receipt_result.metrics["portfolio_evidence"])
         self.assertFalse(receipt_result.metrics["paid_launch_authorized"])

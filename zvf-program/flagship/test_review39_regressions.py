@@ -37,6 +37,7 @@ def test_sampling_request_excludes_every_poisoned_gold_field():
     ttypes.SamplingParams = lambda **kwargs: kwargs
     tinker.types = ttypes
     wandb = types.SimpleNamespace(init=lambda **kwargs: run)
+    namespace['_require_enforced_budget'] = lambda: None  # Synthetic sampler only.
     namespace['_verified_tokenizer'] = Tokenizer
     namespace['_shared_tinker_sampler'] = lambda *args: Sampler()
     exec(compile(ast.Module(body=[node], type_ignores=[]), runner.__file__, 'exec'), namespace)

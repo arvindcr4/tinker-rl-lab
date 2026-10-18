@@ -131,6 +131,19 @@ merged_vllm_signing_secret = modal.Secret.from_name("pavlov-e9-allocation-attest
 merged_vllm_cache = modal.Volume.from_name("pavlov-e1-qwen36-hf-cache", create_if_missing=False)
 
 
+PAID_EXECUTION_POLICY = "blocked-until-enforced-reservation-settlement-v2"
+
+
+def _require_enforced_budget() -> None:
+    """No launch until a provider-bound reservation/settlement contract exists.
+
+    Advisory projections and caller-declared authorization are not spending
+    enforcement. This is intentionally not configurable through a bypass flag.
+    Offline receipt construction and historical inspection remain available.
+    """
+    raise RuntimeError("paid execution blocked: enforced reservation/settlement budget contract unavailable")
+
+
 def _utc_now() -> str:
     return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
 
@@ -383,6 +396,7 @@ def regrade_saved_submission(
 ) -> dict[str, Any]:
     """Re-run only the native grader for an immutable saved submission."""
 
+    _require_enforced_budget()
     sys.path.insert(0, "/root")
     from e9_mle_bench_streaming import (
         build_run_receipt,
@@ -954,6 +968,7 @@ def run_one(
     merged_vllm_launch_nonce: str | None = None,
     merged_vllm_v3_contract: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
+    _require_enforced_budget()
     sys.path.insert(0, "/root")
     from e9_mle_bench_streaming import (
         LaunchGateError,
@@ -1451,6 +1466,7 @@ def probe_vllm_pilot(
 ) -> None:
     """Print the no-download rule-access gate for the prospective pilot."""
 
+    _require_enforced_budget()
     result = probe_kaggle_rules.remote(competition_id)
     print(json.dumps(result, indent=2, sort_keys=True))
     if result.get("accepted") is not True:
@@ -1465,6 +1481,7 @@ def main(
     solution_path: str = "",
     submission_path: str = "",
 ) -> None:
+    _require_enforced_budget()
     from e9_mle_bench_streaming import (
         extract_python_code,
         validate_replay_provenance,
@@ -1780,6 +1797,7 @@ def spawn_replay(
 ) -> None:
     """Spawn a replay and persist its FunctionCall ID before the client exits."""
 
+    _require_enforced_budget()
     (
         solution_override,
         replay_provenance,

@@ -112,7 +112,7 @@ def _valid_manifest() -> dict[str, Any]:
                 "revision": "b" * 40,
                 "url": "https://huggingface.co/example-org/verilog-runner/commit/b",
                 "stage": "periodic",
-                "safe_public_artifact": True,
+                "safe_public_artifact": False,
                 "visibility": "private",
             },
             {
@@ -263,7 +263,7 @@ class VerilogEvalBoundaryTests(unittest.TestCase):
         manifest["hf_checkpoints"][0]["safe_public_artifact"] = False
         blocked = validator.build_verilog_eval_boundary_record(manifest)
         self.assertEqual(blocked["status"], "BLOCKED")
-        self.assertTrue(any("safe_public_artifact must be true" in item for item in blocked["blockers"]))
+        self.assertTrue(any("safe_public_artifact must match visibility" in item for item in blocked["blockers"]))
 
     def test_costs_require_non_negative_number(self) -> None:
         manifest = _valid_manifest()

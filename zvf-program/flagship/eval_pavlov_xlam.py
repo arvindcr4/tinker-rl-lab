@@ -345,7 +345,7 @@ def _wandb_config(
     """Build the only config sent to W&B; it contains no prompts/responses."""
 
     return {
-        "config_schema_version": "pavlov-xlam-wandb-config-v1",
+        "config_schema_version": "pavlov-xlam-wandb-config-v2",
         "config_immutable": True,
         "artifact_ack_required": True,
         "provenance_schema_version": "pavlov-phase0-provenance-v1",
@@ -795,6 +795,10 @@ def main() -> int:
         if args.evaluation_manifest is None:
             raise RuntimeError("explicit immutable evaluation manifest is required")
         actual_ids = [_sha256(json.dumps({"prompt": example.prompt, "target": example.target}, sort_keys=True, separators=(",", ":"))) for example in examples]
+        if callable(getattr(dataset, "train_examples", None)):
+            training_ids = {_sha256(json.dumps({"prompt": example.prompt, "target": example.target}, sort_keys=True, separators=(",", ":"))) for example in dataset.train_examples()}
+            if training_ids.intersection(actual_ids):
+                raise RuntimeError("xLAM component evaluation overlaps loaded training content")
         expected_ids = json.loads(args.evaluation_manifest.read_text(encoding="utf-8"))
         if (actual_ids != expected_ids or len(set(actual_ids)) != len(actual_ids) or
             _sha256("\n".join(actual_ids)) != provenance["task_id_sha256"]):
@@ -921,7 +925,7 @@ def main() -> int:
             if value is not None:
                 run_identity[key] = value
         receipt = {
-            "schema_version": "pavlov-xlam-eval-v1",
+            "schema_version": "pavlov-xlam-eval-v2",
             "created_at": datetime.now(timezone.utc).isoformat(),
             "config_sha256": config_sha256,
             "provenance_schema_version": "pavlov-phase0-provenance-v1",

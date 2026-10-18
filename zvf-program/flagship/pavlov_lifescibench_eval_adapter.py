@@ -35,7 +35,7 @@ except ImportError:  # Direct execution from this directory remains offline-safe
 
 
 SCHEMA_VERSION = "pavlov-lifescibench-e8-boundary-v1"
-RECEIPT_SCHEMA_VERSION = "pavlov-lifescibench-e8-result-receipt-v2"
+RECEIPT_SCHEMA_VERSION = "pavlov-lifescibench-e8-result-receipt-v3"
 SUITE_ID = "lifescibench_eval"
 ROLE = "primary_eval"
 SPLIT = "evaluation"
@@ -1547,7 +1547,9 @@ def validate_e8_receipt(
     metrics = {
         "schema_valid": not errors,
         "primary_eval": True,
-        "receipt_proven_heldout": bool(heldout_valid and manifest_valid and eval_hash_valid),
+        "receipt_proven_heldout": False,
+        "manifest_disjointness_valid": bool(heldout_valid and manifest_valid and eval_hash_valid),
+        "evidence_authenticity": "unverified_local_structure",
         "native_verifier_valid": native_valid,
         "wandb_valid": wandb_valid,
         "tinker_valid": tinker_valid,

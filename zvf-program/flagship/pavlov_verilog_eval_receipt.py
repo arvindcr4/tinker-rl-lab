@@ -25,7 +25,7 @@ try:
 except ImportError:  # pragma: no cover - direct execution fallback
     from pavlov_verilog_eval_adapter import _sha256, canonical_json
 
-SCHEMA_VERSION = "pavlov-verilog-eval-receipt-v1"
+SCHEMA_VERSION = "pavlov-verilog-eval-receipt-v2"
 SUITE_ID = "verilog_eval"
 SUITE_ROLE = "primary_eval"
 _EXPECTED_CATEGORY = "code"
@@ -472,10 +472,6 @@ def _validate_hf_checkpoints(raw: Any) -> list[dict[str, Any]]:
             raise VerilogEvalReceiptError(
                 f"hf_checkpoints[{index}].stage must be one of {', '.join(_REQUIRED_HF_STAGES)}"
             )
-        if checkpoint.get("safe_public_artifact") is not True:
-            raise VerilogEvalReceiptError(
-                f"hf_checkpoints[{index}].safe_public_artifact must be true"
-            )
         visibility = _require_text(
             checkpoint.get("visibility"), f"hf_checkpoints[{index}].visibility"
         ).lower()
@@ -483,6 +479,9 @@ def _validate_hf_checkpoints(raw: Any) -> list[dict[str, Any]]:
             raise VerilogEvalReceiptError(
                 f"hf_checkpoints[{index}].visibility must be public or private"
             )
+        if checkpoint.get("safe_public_artifact") is not (visibility == "public"):
+            raise VerilogEvalReceiptError(f"hf_checkpoints[{index}].safe_public_artifact must match visibility")
+
         if _contains_banned_markers(repo):
             raise VerilogEvalReceiptError(
                 f"hf_checkpoints[{index}] contains blocked checkpoint source"
@@ -506,7 +505,7 @@ def _validate_hf_checkpoints(raw: Any) -> list[dict[str, Any]]:
                 "revision": revision,
                 "url": url,
                 "stage": stage,
-                "safe_public_artifact": True,
+                "safe_public_artifact": visibility == "public",
                 "visibility": visibility,
             }
         )

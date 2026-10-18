@@ -25,6 +25,8 @@ import argparse
 import csv
 import hashlib
 import json
+import math
+import signal
 import os
 import re
 import subprocess
@@ -35,7 +37,7 @@ from pathlib import Path
 from typing import Any, Callable, Iterable, Mapping, Sequence
 
 
-SCHEMA_VERSION = "pavlov-e6-webbench-receipt-v1"
+SCHEMA_VERSION = "pavlov-e6-webbench-receipt-v2"
 SUITE_ID = "webbench_eval"
 BENCHMARK_NAME = "Halluminate/WebBench"
 BENCHMARK_REPO_URL = "https://github.com/Halluminate/WebBench"
@@ -134,6 +136,19 @@ class Task:
         }
 
 
+PAID_EXECUTION_POLICY = "blocked-until-enforced-reservation-settlement-v2"
+
+
+def _require_enforced_budget() -> None:
+    """No launch until a provider-bound reservation/settlement contract exists.
+
+    Advisory projections and caller-declared authorization are not spending
+    enforcement. This is intentionally not configurable through a bypass flag.
+    Offline receipt construction and historical inspection remain available.
+    """
+    raise WebBenchError("paid execution blocked: enforced reservation/settlement budget contract unavailable")
+
+
 def canonical_json(value: Any) -> str:
     """Return a stable JSON representation for receipt hashes."""
 
@@ -184,10 +199,16 @@ def file_sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
+def strict_task_id(value: Any) -> int:
+    if type(value) is not int or value < 0:
+        raise WebBenchError("task ID must be a non-negative integer")
+    return value
+
+
 def task_id_hash(task_ids: Iterable[int]) -> str:
     """Hash a sorted, duplicate-free task-ID set."""
 
-    ids = [int(value) for value in task_ids]
+    ids = [strict_task_id(value) for value in task_ids]
     if len(ids) != len(set(ids)):
         raise WebBenchError("task IDs must be unique")
     if any(value < 0 for value in ids):
@@ -252,7 +273,7 @@ def select_tasks(tasks: Sequence[Task], task_ids: Sequence[int] | None = None, *
 
     by_id = {task.task_id: task for task in tasks}
     if task_ids:
-        requested = [int(value) for value in task_ids]
+        requested = [strict_task_id(value) for value in task_ids]
         if len(requested) != len(set(requested)):
             raise WebBenchError("requested task IDs must be unique")
         missing = sorted(set(requested) - set(by_id))
@@ -285,7 +306,7 @@ def load_task_id_manifest(path: Path) -> tuple[list[int], str | None]:
     if not isinstance(raw_ids, list):
         raise WebBenchError("training task-ID manifest must contain a task_ids list")
     try:
-        ids = [int(item) for item in raw_ids]
+        ids = [strict_task_id(item) for item in raw_ids]
     except (TypeError, ValueError) as exc:
         raise WebBenchError("training task-ID manifest contains a non-integer ID") from exc
     computed = task_id_hash(ids)
@@ -871,17 +892,70 @@ def start_wandb_online(config: Mapping[str, Any], wandb_module: Any | None = Non
     }
 
 
-def _run_command(command: Sequence[str], *, env: Mapping[str, str], cwd: Path) -> subprocess.CompletedProcess[str]:
+class WebBenchTimeout(WebBenchError):
+    pass
+
+
+def _run_command(command: Sequence[str], *, env: Mapping[str, str], cwd: Path, timeout_seconds: float = 300) -> subprocess.CompletedProcess[str]:
     if not command or not all(_nonempty(item) for item in command):
         raise WebBenchError("external command must be a non-empty argv list")
-    return subprocess.run(
-        list(command),
-        cwd=str(cwd),
-        env=dict(env),
-        check=False,
-        text=True,
-        capture_output=True,
-    )
+    if type(timeout_seconds) not in (int, float) or not math.isfinite(timeout_seconds) or timeout_seconds <= 0:
+        raise WebBenchError("command timeout must be positive and finite")
+    if os.name != "posix":
+        raise WebBenchError("process-tree cleanup requires a POSIX runtime")
+    process = subprocess.Popen(list(command), cwd=str(cwd), env=dict(env), text=True,
+                               stdout=subprocess.PIPE, stderr=subprocess.PIPE, start_new_session=True)
+    try:
+        stdout, stderr = process.communicate(timeout=timeout_seconds)
+    except BaseException as exc:
+        try:
+            os.killpg(process.pid, signal.SIGKILL)
+        except ProcessLookupError:
+            pass
+        process.communicate()
+        if isinstance(exc, subprocess.TimeoutExpired):
+            raise WebBenchTimeout(f"benchmark command exceeded {timeout_seconds}s") from exc
+        raise
+    return subprocess.CompletedProcess(list(command), process.returncode, stdout, stderr)
+
+
+def _validate_artifact(root: Path, path_value: Any, digest: Any) -> str:
+    if not isinstance(path_value, str) or not path_value or not _sha256(digest):
+        raise WebBenchError("native evidence requires artifact path and SHA-256")
+    root = root.resolve()
+    path = (root / path_value).resolve()
+    if not path.is_relative_to(root) or not path.is_file():
+        raise WebBenchError("native artifact must be a file inside the evidence root")
+    if file_sha256(path) != str(digest).removeprefix("sha256:"):
+        raise WebBenchError("native artifact bytes do not match declared digest")
+    return str(path.relative_to(root))
+
+
+def _validate_verdict_rows(rows: Sequence[Mapping[str, Any]], tasks: Sequence[Task], output_dir: Path) -> list[dict[str, Any]]:
+    expected_ids = {strict_task_id(task.task_id) for task in tasks}
+    if len(expected_ids) != len(tasks):
+        raise WebBenchError("requested task IDs must be unique")
+    by_id = {}
+    for row in rows:
+        if not isinstance(row, Mapping):
+            raise WebBenchError("native verdict must be an object")
+        task_id = strict_task_id(row.get("task_id"))
+        if task_id in by_id:
+            raise WebBenchError(f"duplicate verdict for task {task_id}")
+        by_id[task_id] = dict(row)
+    if set(by_id) != expected_ids:
+        raise WebBenchError("native verifier task IDs do not match requested IDs")
+    for task_id, row in by_id.items():
+        if type(row.get("success")) is not bool:
+            raise WebBenchError(f"native verdict for task {task_id} lacks boolean success")
+        if row.get("verifier") != "Halluminate/WebBench/native":
+            raise WebBenchError("verdict does not name native verifier")
+        for kind in ("screenshot", "dom", "trajectory"):
+            _validate_artifact(output_dir, row.get(kind + "_path"), row.get(kind + "_sha256"))
+        for field in ("environment_revision", "verifier_revision"):
+            if not _immutable_revision(row.get(field)):
+                raise WebBenchError(f"native verdict requires immutable {field}")
+    return [by_id[task.task_id] for task in tasks]
 
 
 def run_native_evaluation(
@@ -892,8 +966,12 @@ def run_native_evaluation(
     worktree_root: Path,
     output_dir: Path,
     env: Mapping[str, str] | None = None,
+    agent_timeout_seconds: float = 300,
+    verifier_timeout_seconds: float = 120,
 ) -> list[dict[str, Any]]:
     """Run an official agent/verifier command pair and require native evidence."""
+
+    _require_enforced_budget()
 
     if not tasks:
         raise WebBenchError("native evaluation requires at least one task")
@@ -902,6 +980,8 @@ def run_native_evaluation(
     task_file = output_dir / "tasks.jsonl"
     trajectory_file = output_dir / "trajectories.jsonl"
     verdict_file = output_dir / "verdicts.jsonl"
+    if trajectory_file.exists() or verdict_file.exists():
+        raise WebBenchError("native evaluation requires a fresh evidence directory")
     task_file.write_text("\n".join(canonical_json(task.as_dict()) for task in tasks) + "\n", encoding="utf-8")
     child_env = os.environ.copy()
     child_env.update({str(key): str(value) for key, value in (env or {}).items()})
@@ -914,7 +994,7 @@ def run_native_evaluation(
             "WEBBENCH_SUITE_ID": SUITE_ID,
         }
     )
-    agent = _run_command(agent_command, env=child_env, cwd=Path(worktree_root))
+    agent = _run_command(agent_command, env=child_env, cwd=Path(worktree_root), timeout_seconds=agent_timeout_seconds)
     if agent.returncode != 0:
         raise WebBenchError(f"native agent command failed ({agent.returncode}): {agent.stderr[-1000:]}")
     if not trajectory_file.is_file():
@@ -922,7 +1002,7 @@ def run_native_evaluation(
     child_env["WEBBENCH_VERDICT_FILE"] = str(verdict_file)
     verifier_env = dict(child_env)
     verifier_env["WEBBENCH_TRAJECTORY_FILE"] = str(trajectory_file)
-    verifier = _run_command(verifier_command, env=verifier_env, cwd=Path(worktree_root))
+    verifier = _run_command(verifier_command, env=verifier_env, cwd=Path(worktree_root), timeout_seconds=verifier_timeout_seconds)
     if verifier.returncode != 0:
         raise WebBenchError(f"native verifier command failed ({verifier.returncode}): {verifier.stderr[-1000:]}")
     if not verdict_file.is_file():
@@ -938,18 +1018,12 @@ def run_native_evaluation(
             rows.append(dict(value))
     except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
         raise WebBenchError(f"native verdict output is malformed: {exc}") from exc
-    by_id = {int(row["task_id"]): row for row in rows if "task_id" in row}
-    expected_ids = {task.task_id for task in tasks}
-    if set(by_id) != expected_ids:
-        raise WebBenchError(f"native verifier task IDs do not match requested IDs: expected {sorted(expected_ids)}, got {sorted(by_id)}")
-    for task_id, row in by_id.items():
-        if not isinstance(row.get("success"), bool):
-            raise WebBenchError(f"native verdict for task {task_id} lacks boolean success")
-        if not _sha256(row.get("screenshot_sha256")) or not _sha256(row.get("dom_sha256")):
-            raise WebBenchError(f"native verdict for task {task_id} lacks screenshot/DOM hashes")
-        if row.get("verifier") != "Halluminate/WebBench/native":
-            raise WebBenchError(f"task {task_id} was not scored by the native Halluminate verifier")
-    return [by_id[task.task_id] for task in tasks]
+    validated = _validate_verdict_rows(rows, tasks, output_dir)
+    for row in validated:
+        if (output_dir / row["trajectory_path"]).resolve() != trajectory_file.resolve():
+            raise WebBenchError("verdict trajectory is not the observed agent trajectory")
+    _write_json(output_dir / "evidence_manifest.json", {"schema_version": "webbench-local-evidence-v2", "benchmark_revision": BENCHMARK_REVISION, "rows": validated})
+    return validated
 
 
 def launch(
@@ -963,9 +1037,12 @@ def launch(
     wandb_factory: Callable[[Mapping[str, Any]], Mapping[str, Any]] | None = None,
     tinker_callback: Callable[[], Any] | None = None,
     native_runner: Callable[..., list[dict[str, Any]]] = run_native_evaluation,
+    agent_timeout_seconds: float = 300,
+    verifier_timeout_seconds: float = 120,
 ) -> dict[str, Any]:
     """Launch only after a READY receipt; W&B precedes any Tinker callback."""
 
+    _require_enforced_budget()
     if receipt.get("status") != "READY":
         raise LaunchBlocked("E6 launch is blocked by preflight", receipt)
     if not tasks:
@@ -988,35 +1065,40 @@ def launch(
     if wandb_errors:
         raise WebBenchError("invalid online W&B receipt: " + "; ".join(wandb_errors))
     # A Tinker callback is optional for this eval-only lane.  If one is
-    # supplied, W&B has already been initialized and the callback is bounded by
-    # the preflight projected cost.
+    # supplied, W&B has already been initialized. A projection does not enforce
+    # provider spending; this boundary records billing as unverified.
     tinker_result = None
     tinker_call_count = 0
     if tinker_callback is not None:
         tinker_result = tinker_callback()
         tinker_call_count = 1
-    rows = native_runner(
-        tasks=tasks,
-        agent_command=agent_command,
-        verifier_command=verifier_command,
-        worktree_root=worktree_root,
-        output_dir=output_dir,
-    )
-    score = sum(1 for row in rows if row["success"]) / len(rows)
     updated = json.loads(json.dumps(receipt))
-    updated["status"] = "COMPLETED"
+    try:
+        rows = native_runner(tasks=tasks, agent_command=agent_command, verifier_command=verifier_command,
+                             worktree_root=worktree_root, output_dir=output_dir,
+                             agent_timeout_seconds=agent_timeout_seconds, verifier_timeout_seconds=verifier_timeout_seconds)
+        rows = _validate_verdict_rows(rows, tasks, output_dir)
+    except WebBenchError as exc:
+        updated.update(status="TIMED_OUT" if isinstance(exc, WebBenchTimeout) else "FAILED", score=None, benchmark_score=None, failure_kind=str(exc), expected_task_count=len(tasks), completed_task_count=0)
+        _write_json(output_dir / "terminal_receipt.json", updated)
+        return updated
+    score = sum(1 for row in rows if row["success"]) / len(rows)
+    updated["status"] = "SMOKE_COMPLETED" if len(tasks) == 1 else "SUBSET_COMPLETED"
+    updated.update(evaluation_scope="smoke" if len(tasks) == 1 else "subset", expected_task_count=len(tasks), completed_task_count=len(rows), subset_score=score, benchmark_score=None, is_full_benchmark_result=False)
+    updated["billing_reconciliation"] = {"status": "UNVERIFIED", "observed_usd": None, "unreconciled_usd": None, "hard_spend_enforced": False}
     updated["wandb_run_identity"] = dict(wandb_record)
     updated["launch"] = {
         "requested": True,
         "attempted": True,
         "tinker_call_count": tinker_call_count,
         "tinker_result": tinker_result,
-        "score": score,
+        "score": None,
+        "subset_score": score,
         "result_rows": rows,
     }
     updated["evidence_boundary"] = {
-        "score_is_claimable": True,
-        "reason": "The official native verifier returned one evidence-bound verdict per requested task.",
+        "score_is_claimable": False,
+        "reason": "Local evidence-bound subset only; issuer authenticity, full official coverage and billing reconciliation are not established.",
         "human_annotation_is_not_native_verification": True,
         "ground_truth_issue_url": GROUND_TRUTH_ISSUE_URL,
     }
@@ -1029,12 +1111,13 @@ def _parse_task_ids(values: Sequence[str] | None) -> list[int] | None:
     ids: list[int] = []
     for value in values:
         for item in value.split(","):
-            if not item.strip():
-                continue
+            if not re.fullmatch(r"[0-9]+", item.strip()):
+                raise WebBenchError(f"invalid task ID {item!r}")
             try:
                 ids.append(int(item.strip()))
             except ValueError as exc:
                 raise WebBenchError(f"invalid task ID {item!r}") from exc
+    task_id_hash(ids)
     return ids
 
 
@@ -1049,6 +1132,8 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--sampler-receipt", type=Path, help="completed compatible public HF sampler receipt JSON")
     parser.add_argument("--model-revision", default=BASE_MODEL_REVISION)
     parser.add_argument("--projected-tinker-usd", type=float, default=None)
+    parser.add_argument("--agent-timeout-seconds", type=float, default=300)
+    parser.add_argument("--verifier-timeout-seconds", type=float, default=120)
     parser.add_argument("--agent-command", nargs="+", help="official environment agent command")
     parser.add_argument("--verifier-command", nargs="+", help="official native verifier command")
     parser.add_argument("--output-dir", type=Path, default=Path("outputs/e6-webbench"))
@@ -1106,10 +1191,12 @@ def main(argv: Sequence[str] | None = None) -> int:
                 verifier_command=verifier_command,
                 worktree_root=worktree_root,
                 output_dir=args.output_dir,
+                agent_timeout_seconds=args.agent_timeout_seconds,
+                verifier_timeout_seconds=args.verifier_timeout_seconds,
             )
         _write_json(args.receipt, receipt)
         print(json.dumps(receipt, indent=2, sort_keys=True))
-        return EXIT_OK if receipt["status"] in {"READY", "COMPLETED"} else EXIT_BLOCKED
+        return EXIT_OK if receipt["status"] in {"READY", "COMPLETED", "SMOKE_COMPLETED", "SUBSET_COMPLETED"} else EXIT_BLOCKED
     except LaunchBlocked as exc:
         _write_json(args.receipt, exc.receipt)
         print(json.dumps(exc.receipt, indent=2, sort_keys=True))

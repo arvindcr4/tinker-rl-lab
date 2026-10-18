@@ -206,3 +206,10 @@ def test_invalid_record_framing_is_rejected_before_scalar_parser(tmp_path):
         assert result["metrics_reason"] == "native_events_unreadable"
         assert result["reward_trace"] == []
     reader.Reload.assert_not_called()
+
+
+def test_missing_tensorboard_is_configuration_error_not_unreadable_evidence(tmp_path):
+    fixture(tmp_path, [(1, 0.5)])
+    with patch.dict(sys.modules, {"tensorboard.backend.event_processing.event_accumulator": None}):
+        with pytest.raises(ModuleNotFoundError):
+            read_native_metrics(str(tmp_path), "native", 1)

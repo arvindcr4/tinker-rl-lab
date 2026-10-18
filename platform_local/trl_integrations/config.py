@@ -150,6 +150,14 @@ class TRLConfig(BaseModel):
 
     @model_validator(mode="after")
     def validate_precision(self) -> "TRLConfig":
+        if self.algorithm.algorithm.lower() == "grpo":
+            batch = (
+                self.data.train_batch_size * self.data.gradient_accumulation_steps * self.num_gpus
+            )
+            if batch <= 0 or batch % self.algorithm.num_generations:
+                raise ValueError(
+                    "GRPO effective batch must be positive and divisible by num_generations"
+                )
         if self.bf16 and self.fp16:
             raise ValueError("bf16 and fp16 are mutually exclusive")
         return self

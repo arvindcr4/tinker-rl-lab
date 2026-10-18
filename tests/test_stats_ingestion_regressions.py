@@ -118,9 +118,11 @@ def test_explicit_missing_metric_does_not_fall_back(tmp_path, capsys):
 
 
 @pytest.mark.parametrize("step_key", ["global_step", "_step", "optimizer_step"])
-def test_unhandled_step_metadata_is_not_observation_index(tmp_path, step_key):
-    with pytest.raises(SystemExit):
+def test_unhandled_step_metadata_is_not_observation_index(tmp_path, step_key, capsys):
+    with pytest.raises(SystemExit) as failure:
         run_cli(tmp_path, [[{"accuracy": 0.8, step_key: 100}], [{"accuracy": 0.2, step_key: 1}]])
+    assert failure.value.code == 2
+    assert "unsupported step metadata" in capsys.readouterr().err
 
 
 def test_auto_metric_uses_common_key(tmp_path):
@@ -134,3 +136,10 @@ def test_loader_rejects_seed_directory_without_metrics(tmp_path):
     (tmp_path / "demo" / "seed_2").mkdir()
     with pytest.raises(ValueError, match="Missing metric source"):
         stats.load_multi_seed_results(str(tmp_path), "demo")
+
+
+def test_missing_common_metric_requests_explicit_selection(tmp_path, capsys):
+    with pytest.raises(SystemExit) as failure:
+        run_cli(tmp_path, [[{"accuracy": 0.8}], [{"reward/mean": 0.2}]])
+    assert failure.value.code == 2
+    assert "--metric is required" in capsys.readouterr().err

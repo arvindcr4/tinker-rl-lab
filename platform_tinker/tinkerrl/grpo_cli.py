@@ -378,7 +378,7 @@ def _parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
     parser.add_argument(
         "--json-config",
         type=Path,
-        help="GRPO hyperparameters in JSON; dataset/reward selection still follows CLI flags.",
+        help="GRPO hyperparameters in JSON; explicitly supplied CLI hyperparameters override JSON values. Dataset/reward selection follows CLI flags.",
     )
     parser.add_argument(
         "--check-config",

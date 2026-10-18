@@ -45,11 +45,12 @@ def read_native_metrics(output_dir: str, run_name: str, expected_rollouts: int) 
     if len(files) != 1 or not files[0].is_file() or files[0].is_symlink():
         return {**result, "metrics_reason": "expected_one_native_event_file"}
     event_file = files[0]
+    from tensorboard.backend.event_processing.event_accumulator import EventAccumulator
+    from tensorboard.compat.tensorflow_stub.pywrap_tensorflow import masked_crc32c
+
     try:
         source_bytes = read_regular_bytes(event_file)
         before = hashlib.sha256(source_bytes).hexdigest()
-        from tensorboard.backend.event_processing.event_accumulator import EventAccumulator
-        from tensorboard.compat.tensorflow_stub.pywrap_tensorflow import masked_crc32c
 
         # The writer is stopped: unlike a live dashboard, trailing partial
         # records or bad checksums cannot be treated as a clean end of file.

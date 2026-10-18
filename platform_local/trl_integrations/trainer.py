@@ -199,6 +199,8 @@ def create_grpo_trainer(
     from trl import GRPOConfig, GRPOTrainer
 
     grpo_config = GRPOConfig(
+        num_generations=config.algorithm.num_generations,
+        temperature=config.algorithm.temperature,
         output_dir=config.model.model_path or "./checkpoints",
         num_train_epochs=config.epochs,
         max_steps=config.max_steps,

@@ -41,3 +41,8 @@ def test_synthetic_failure_does_not_return_partial_success(monkeypatch):
     )
     with pytest.raises(RuntimeError, match="injected synthetic failure"):
         asyncio.run(trainer.OpenRLHFTrainer(OpenRLHFConfig(epochs=3), dry_run=True).run())
+
+
+def test_negative_seed_is_rejected_before_dryrun():
+    with pytest.raises(ValueError, match="greater than or equal to 0"):
+        OpenRLHFConfig(seed=-1)

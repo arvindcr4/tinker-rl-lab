@@ -68,6 +68,7 @@ def test_invalid_reward_reference_rejected_before_writing(tmp_path, path):
     config.reward_callable = path
     with pytest.raises(ValueError, match="module:attribute"):
         generate_trl_train_script(config, tmp_path / "generated.py")
+    assert not (tmp_path / "generated.py").exists()
 
 
 def test_unsupported_prompt_cap_and_evaluation_are_not_ignored(tmp_path):
@@ -323,3 +324,34 @@ def test_launcher_rejects_invalid_or_short_optimizer_receipts(monkeypatch, tmp_p
     launcher.trl_config = native_config(tmp_path, max_steps=4)
     with pytest.raises(RuntimeError, match="receipt"):
         launcher._run_trl()
+
+
+@pytest.mark.parametrize(("batch", "accum", "generations"), [(3, 1, 8), (2, 2, 3)])
+def test_grpo_batch_geometry_rejected_at_configuration(batch, accum, generations):
+    with pytest.raises(ValueError, match="divisible by num_generations"):
+        TRLConfig(
+            data={"train_batch_size": batch, "gradient_accumulation_steps": accum},
+            algorithm={"num_generations": generations},
+        )
+
+
+def test_in_process_grpo_forwards_sampling_settings(monkeypatch):
+    import sys
+    from types import SimpleNamespace
+    from platform_local.trl_integrations.trainer import create_grpo_trainer
+
+    captured = {}
+
+    def configuration(**kwargs):
+        captured.update(kwargs)
+        return kwargs
+
+    monkeypatch.setitem(
+        sys.modules,
+        "trl",
+        SimpleNamespace(GRPOConfig=configuration, GRPOTrainer=lambda **kwargs: kwargs),
+    )
+    config = TRLConfig(algorithm={"num_generations": 4, "temperature": 0.7})
+    create_grpo_trainer(object(), object(), [], [], config)
+    assert captured["num_generations"] == 4
+    assert captured["temperature"] == 0.7

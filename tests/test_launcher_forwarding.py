@@ -217,3 +217,30 @@ def test_direct_trl_rejects_unsupported_configuration(extra):
     with pytest.raises(SystemExit) as failure:
         invoke_trl(extra)
     assert failure.value.code == 2
+
+
+def test_tinker_grpo_fails_closed_before_subprocess():
+    with (
+        patch("subprocess.run") as run,
+        pytest.raises(NotImplementedError, match="Tinker canonical execution is unavailable"),
+    ):
+        launcher("tinker")._run_tinker()
+    run.assert_not_called()
+
+
+@pytest.mark.parametrize("backend", ["modal", "gcp", "vast"])
+@pytest.mark.parametrize("flag", ["--reward-callable", "--output-dir"])
+def test_remote_trl_rejects_unforwarded_native_settings(backend, flag, capsys):
+    with (
+        patch.object(
+            sys,
+            "argv",
+            ["unified", "--framework", "trl", "--backend", backend, flag, "synthetic", "--dry-run"],
+        ),
+        patch.object(UnifiedLauncher, "run") as run,
+        pytest.raises(SystemExit) as failure,
+    ):
+        main()
+    assert failure.value.code == 2
+    assert "require local/Colab TRL" in capsys.readouterr().err
+    run.assert_not_called()

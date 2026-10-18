@@ -21,6 +21,7 @@ Examples:
   # Generate a real TRL script with QLoRA
   python -m platform_local.unified --framework trl --algorithm grpo \\
     --peft-method lora --load-in-4bit --train-data train.json \\
+    --reward-callable my_rewards:reward --output-dir fresh_grpo_output \\
     --generate-script train_grpo.py
 
   # Run with verl PPO
@@ -173,6 +174,13 @@ Examples:
     parser.add_argument("--seed", type=int, default=211)
     parser.add_argument("--gradient-accumulation-steps", type=int, default=8)
     args = parser.parse_args()
+    if (args.reward_callable or args.output_dir) and (
+        args.framework != "trl"
+        or (args.backend not in ("local", "colab") and not args.generate_script)
+    ):
+        parser.error(
+            "--reward-callable and --output-dir require local/Colab TRL or TRL script generation"
+        )
 
     # Create launcher
     launcher = UnifiedLauncher()

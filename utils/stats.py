@@ -510,6 +510,8 @@ def contract_scores(seed_results, contract=None, metric=None):
         *(set(rows[-1]) if rows else set() for rows in seed_results.values())
     )
     legacy_metric = metric or next((key for key in METRIC_UNITS if key in common_keys), None)
+    if contract is None and legacy_metric is None and all(seed_results.values()):
+        raise ValueError("no shared default metric; --metric is required")
     selected, keys, endpoints, modes = [], set(), set(), set()
     for seed, rows in sorted(seed_results.items()):
         if not rows:

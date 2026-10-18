@@ -10,6 +10,7 @@ from pydantic import BaseModel, Field, ConfigDict, model_validator
 
 class OpenRLHFModelConfig(BaseModel):
     """Model configuration"""
+
     model_config = ConfigDict(extra="forbid")
     model_name: str = "Qwen/Qwen2.5-1.5B-Instruct"
     model_path: Optional[str] = None
@@ -22,6 +23,7 @@ class OpenRLHFModelConfig(BaseModel):
 
 class OpenRLHFOptimizerConfig(BaseModel):
     """Optimizer configuration"""
+
     model_config = ConfigDict(extra="forbid")
     learning_rate: float = 1e-6
     beta1: float = 0.9
@@ -32,6 +34,7 @@ class OpenRLHFOptimizerConfig(BaseModel):
 
 class OpenRLHFAlgorithmConfig(BaseModel):
     """RL algorithm configuration"""
+
     model_config = ConfigDict(extra="forbid")
     algorithm: str = "grpo"  # this versioned driver supports GRPO only
     gamma: float = 1.0
@@ -48,6 +51,7 @@ class OpenRLHFAlgorithmConfig(BaseModel):
 
 class OpenRLHFDataConfig(BaseModel):
     """Data configuration"""
+
     model_config = ConfigDict(extra="forbid")
     train_data: List[str] = Field(default_factory=list)
     val_data: List[str] = Field(default_factory=list)
@@ -60,6 +64,7 @@ class OpenRLHFDataConfig(BaseModel):
 
 class OpenRLHFConfig(BaseModel):
     """Complete OpenRLHF training configuration"""
+
     model_config = ConfigDict(extra="forbid")
 
     execution_contract: Literal["candidate-0.8.0", "native-0.8.4"] = "candidate-0.8.0"
@@ -70,8 +75,12 @@ class OpenRLHFConfig(BaseModel):
         # Defaults are versioned; an explicit user setting is never rewritten.
         if isinstance(values, dict) and values.get("execution_contract") == "native-0.8.4":
             values = dict(values)
-            for name, default in {"epochs": 20, "train_batch_size": 128,
-                                  "max_steps": None, "eval_interval": 5}.items():
+            for name, default in {
+                "epochs": 20,
+                "train_batch_size": 128,
+                "max_steps": None,
+                "eval_interval": 5,
+            }.items():
                 values.setdefault(name, default)
         return values
 
@@ -85,7 +94,7 @@ class OpenRLHFConfig(BaseModel):
     train_batch_size: int = 128  # completions, not prompts
     micro_batch_size: int = 1
     # LIMITATION: default seed path is N=1 unless callers parameterize multi-seed.
-    seed: int = 42
+    seed: int = Field(default=42, ge=0)
     # LIMITATION: short max_samples/steps yield early-training snapshots only.
     max_steps: Optional[int] = 30  # optimizer updates, not reward observations
     wall_timeout_s: int = 7200

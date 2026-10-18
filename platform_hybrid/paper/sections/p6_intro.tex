@@ -25,12 +25,13 @@ same-harness rerun) and also differed in reward function, prompt template,
 decoding, batch shape, data subset, and loss/optimizer implementation; the
 ``matched'' configuration file describes neither run. Separately, a closed-stack
 arm labelled ``dapo'' was an advantage-clip variant with no dynamic sampling,
-while an open-trainer ``DAPO'' arm ran true dynamic sampling (ZVF $0.00$ by
-construction); within each stack, GRPO$\to$``DAPO'' moved mean ZVF $0.25\to0.00$
-(open) and $0.567\to0.578$ (closed). When labels underdetermine update rules, empirical rankings of ``GRPO vs.\ DAPO
+while an open-trainer ``DAPO'' arm resampled zero-variance groups (a surrogate
+of DAPO's dynamic sampling: at most two resamples, then the group is dropped,
+so batch ZVF is $0.00$ by construction); within each stack, GRPO$\to$``DAPO'' moved mean ZVF $0.25\to0.00$
+(open) and $0.567\to0.578$ (managed). When labels underdetermine update rules, empirical rankings of ``GRPO vs.\ DAPO
 vs.\ GSPO'' are rankings of stacks, not algorithms---a confound our companion
-pillar papers (P1 scaling, P2 ZVF, P3 group size, P4 length bias) hit from four
-different directions.
+papers on scaling, zero-variance filtering, group size, and length bias hit
+from four different directions.
 
 We respond with a \emph{resource}, not another variant:
 \textsc{GRPO-Registry}, a machine-readable catalog with two record types.
@@ -42,14 +43,16 @@ environment, and (7) decontamination plus parser-robustness probes. The
 standard's eighth item, held-out pass@$k$, is an evaluation-report field rather
 than run-start stack identity. A
 \emph{variant-delta record} pins down, component by component, what a named
-variant changes relative to base GRPO, verified against the source paper; stack
+variant changes relative to base GRPO (for DAPO, Dr.~GRPO, and GSPO, verified
+against the source paper); stack
 records then declare per-component implementation status
 (\texttt{implemented} / \texttt{surrogate} / \texttt{absent} / \texttt{unknown}),
 which is exactly where label flips become visible to a script.
 
 Our contributions are:
 (i) the schema (Section~\ref{sec:p6-schema});
-(ii) verified delta records for DAPO, Dr.~GRPO, and GSPO;
+(ii) 18 variant-delta records, of which those for DAPO, Dr.~GRPO, and GSPO are
+verified against their source papers;
 (iii) 28 seed stack entries populated from real artifacts of this benchmark---the
 released per-framework config dumps, an open-trainer audit, a
 managed-runtime head-to-head, a same-stack four-method run, and a five-seed
@@ -57,9 +60,9 @@ risk-index batch (Section~\ref{sec:p6-population});
 (iv) a query API, a 0--100 MIN-REPORT auditor badge, and a \texttt{stackdiff}
 tool that converts a pair of entries into a flip-risk verdict on the R0--R5
 ladder (Section~\ref{sec:p6-query}); and
-(v) worked examples in which the registry flags, \emph{before any GPU time is
-spent}, the confounds behind the same-label exhibits
-(Section~\ref{sec:p6-worked}).
+(v) worked examples that encode the confounds behind the same-label exhibits
+retrospectively, showing that they are visible from manifests alone; no
+prospectively flagged pair is claimed (Section~\ref{sec:p6-worked}).
 
 \subsection{Related Work}
 \label{sec:p6-related}

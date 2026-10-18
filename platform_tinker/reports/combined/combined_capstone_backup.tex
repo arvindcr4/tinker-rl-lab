@@ -3408,7 +3408,7 @@ Failed / 0\% & 7 \\
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.95\textwidth]{gsm8k_scaling.pdf}
+\includegraphics[width=0.95\textwidth]{gsm8k_scaling.png}
 \caption{GRPO training curves on GSM8K across model scales (from W\&B).}
 \label{fig:gsm8k_scaling}
 \end{figure}
@@ -3472,7 +3472,7 @@ Qwen3-30B-A3B Base (MoE)$^\dagger$ & 30B & 5 & 50.0\% & 32.5\% & Base lags instr
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.95\textwidth]{ppo.pdf}
+\includegraphics[width=0.95\textwidth]{ppo.png}
 \caption{PPO training curves on GSM8K --- Qwen3-8B and Llama-3.1-8B-Instruct (Modal H100, from W\&B).}
 \label{fig:ppo}
 \end{figure}
@@ -3564,7 +3564,7 @@ All runs completed to 50 steps with proper state checkpoints.
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.95\textwidth]{frontier.pdf}
+\includegraphics[width=0.95\textwidth]{frontier.png}
 \caption{Frontier model GRPO training on GSM8K (from W\&B).}
 \label{fig:frontier}
 \end{figure}
@@ -3613,7 +3613,7 @@ GRPO learns structural/format tasks perfectly but fails on semantic tasks requir
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.95\textwidth]{arch.pdf}
+\includegraphics[width=0.95\textwidth]{arch.png}
 \caption{Cross-architecture GRPO comparison --- GPT-OSS-20B and Kimi-K2 (from W\&B).}
 \label{fig:arch}
 \end{figure}
@@ -3698,7 +3698,7 @@ Llama-3.2-1B & 1B & 0.000 & 0.000 & 1.00 & step 0 \\
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.95\textwidth]{wave2_group.pdf}
+\includegraphics[width=0.95\textwidth]{wave2_group.png}
 \caption{Wave 2 group size ablation --- $G \in \{2, 4, 16, 32\}$ on Qwen3-8B (from W\&B).}
 \label{fig:wave2_group}
 \end{figure}
@@ -3712,7 +3712,7 @@ the differences are in gradient efficiency, not final performance.
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.95\textwidth]{wave6_sensitivity.pdf}
+\includegraphics[width=0.95\textwidth]{wave6_sensitivity.png}
 \caption{Wave 6 sensitivity ablation --- temperature, LoRA rank, batch size on Qwen3-8B (from W\&B).}
 \label{fig:wave6_sensitivity}
 \end{figure}
@@ -5477,7 +5477,7 @@ and HuggingFace model references.
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.95\textwidth]{wave1_arch.pdf}
+\includegraphics[width=0.95\textwidth]{wave1_arch.png}
 \caption{Wave 1 cross-architecture frontier scaling --- 19 runs across 8 model families (from W\&B).}
 \label{fig:wave1_arch}
 \end{figure}
@@ -5673,7 +5673,7 @@ wave6\_w6\_batch8\_r32\_t0.8 & qwen3-8b & GRPO & 0.547 & 0.353 & \href{https://w
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.95\textwidth]{wave3_seed.pdf}
+\includegraphics[width=0.95\textwidth]{wave3_seed.png}
 \caption{Wave 3 multi-seed DeepSeek-V3.1 reproducibility (from W\&B).}
 \label{fig:wave3_seed}
 \end{figure}
@@ -5696,7 +5696,7 @@ with open("model-checkpoint.tar.gz", "wb") as f:
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.95\textwidth]{top20.pdf}
+\includegraphics[width=0.95\textwidth]{top20.png}
 \caption{Top 20 experiments ranked by last-10 average reward.}
 \label{fig:top20}
 \end{figure}
@@ -5713,7 +5713,7 @@ Published model cards follow the template at \texttt{huggingface/MODEL\_CARD\_TE
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.95\textwidth]{heatmap.pdf}
+\includegraphics[width=0.95\textwidth]{heatmap.png}
 \caption{Reward heatmap across all 76 W\&B-tracked experiments (step $\times$ run).}
 \label{fig:heatmap}
 \end{figure}

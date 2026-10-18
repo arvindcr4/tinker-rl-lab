@@ -52,6 +52,7 @@ Outputs:
 The script is self-contained (numpy + matplotlib), deterministic
 (seed 20260702), and runs in a few seconds.
 """
+
 from __future__ import annotations
 
 import csv
@@ -61,8 +62,8 @@ from pathlib import Path
 import matplotlib
 
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt  # noqa: E402
-import numpy as np  # noqa: E402
+import matplotlib.pyplot as plt
+import numpy as np
 
 REPO = Path(__file__).resolve().parent.parent
 RESULTS = REPO / "experiments" / "results"
@@ -75,6 +76,7 @@ B_BOOT = 2000
 # ---------------------------------------------------------------------------
 # Load measured data
 # ---------------------------------------------------------------------------
+
 
 def _load_token_norm():
     rows = []
@@ -89,8 +91,8 @@ def _load_token_norm():
                     "acc_lo": float(r["heldout_acc_ci_low"]),
                     "acc_hi": float(r["heldout_acc_ci_high"]),
                     # half-width as a proxy for sigma (CI95 = 1.96 sigma)
-                    "sigma": (float(r["heldout_acc_ci_high"])
-                              - float(r["heldout_acc_ci_low"])) / (2 * 1.96),
+                    "sigma": (float(r["heldout_acc_ci_high"]) - float(r["heldout_acc_ci_low"]))
+                    / (2 * 1.96),
                 }
             )
     return rows
@@ -114,6 +116,7 @@ def _load_zvf_sweep():
 # ---------------------------------------------------------------------------
 # 1. Pareto envelope
 # ---------------------------------------------------------------------------
+
 
 def pareto_envelope(rows):
     by_T = sorted({r["T_M"] for r in rows})
@@ -145,9 +148,10 @@ def pareto_envelope(rows):
 # 2. Iso-cost frontier
 # ---------------------------------------------------------------------------
 
+
 def _interp_T_needed(acc_at_G, target, logTs):
     """Smallest T such that acc(T) >= target. Returns None if never."""
-    for a, t in zip(acc_at_G, logTs):
+    for a, t in zip(acc_at_G, logTs, strict=False):
         if a >= target:
             return t
     return None
@@ -162,9 +166,12 @@ def iso_cost(rows, target_grid):
         per_g = {}
         for G in by_G:
             from _review24_statistics import first_crossing
+
             cells = [r for r in rows if r["G"] == G]
-            crossing = first_crossing([math.log10(r["T_M"]) for r in cells], [r["acc"] for r in cells], tgt)
-            T_needed = None if crossing is None else 10 ** crossing
+            crossing = first_crossing(
+                [math.log10(r["T_M"]) for r in cells], [r["acc"] for r in cells], tgt
+            )
+            T_needed = None if crossing is None else 10**crossing
             per_g[G] = T_needed
         feasible = {G: T for G, T in per_g.items() if T is not None}
         if feasible:
@@ -191,6 +198,7 @@ def iso_cost(rows, target_grid):
 # ---------------------------------------------------------------------------
 # 3. Bootstrap CI on R = acc(G=4)/acc(G=32)
 # ---------------------------------------------------------------------------
+
 
 def bootstrap_retention(rows, B=B_BOOT, seed=RNG_SEED):
     rng = np.random.default_rng(seed)
@@ -234,6 +242,7 @@ def bootstrap_retention(rows, B=B_BOOT, seed=RNG_SEED):
 # Figure
 # ---------------------------------------------------------------------------
 
+
 def render_figure(pareto, iso, boot, out_path):
     fig, axes = plt.subplots(1, 3, figsize=(15.5, 4.4))
 
@@ -248,15 +257,15 @@ def render_figure(pareto, iso, boot, out_path):
         sub.sort(key=lambda r: r["T_M"])
         xs = [r["T_M"] for r in sub]
         ys = [r["acc"] for r in sub]
-        ax.plot(xs, ys, "o-", color=cmap(i / max(len(by_G) - 1, 1)),
-                label=f"G={G}", alpha=0.85)
+        ax.plot(xs, ys, "o-", color=cmap(i / max(len(by_G) - 1, 1)), label=f"G={G}", alpha=0.85)
     xs_p = [p["T_M"] for p in pareto]
     ys_p = [p["acc_star"] for p in pareto]
     gs_p = [p["G_star"] for p in pareto]
     ax.plot(xs_p, ys_p, "k--", linewidth=2.2, label="Pareto envelope")
-    for x, y, G in zip(xs_p, ys_p,gs_p):
-        ax.annotate(f"G={G}", (x, y), textcoords="offset points",
-                    xytext=(5, 5), fontsize=8, color="black")
+    for x, y, G in zip(xs_p, ys_p, gs_p, strict=False):
+        ax.annotate(
+            f"G={G}", (x, y), textcoords="offset points", xytext=(5, 5), fontsize=8, color="black"
+        )
     ax.set_xscale("log")
     ax.set_xlabel("Token budget T (M)")
     ax.set_ylabel("Held-out accuracy")
@@ -273,15 +282,15 @@ def render_figure(pareto, iso, boot, out_path):
         sub.sort(key=lambda r: r["T_M"])
         xs = [r["T_M"] for r in sub]
         ys = [r["acc"] for r in sub]
-        ax.plot(xs, ys, "o-", color=cmap(i / max(len(by_G2) - 1, 1)),
-                label=f"G={G}", alpha=0.85)
+        ax.plot(xs, ys, "o-", color=cmap(i / max(len(by_G2) - 1, 1)), label=f"G={G}", alpha=0.85)
     # overlay Pareto-optimal T_needed
     tgts = [r["target_acc"] for r in iso]
     Ts_star = [r["T_needed_M_star"] for r in iso]
-    ok = [(t, T) for t, T in zip(tgts, Ts_star) if T is not None]
+    ok = [(t, T) for t, T in zip(tgts, Ts_star, strict=False) if T is not None]
     if ok:
-        ax.plot([T for _, T in ok], [t for t, _ in ok], "k--",
-                linewidth=2.2, label="Pareto frontier")
+        ax.plot(
+            [T for _, T in ok], [t for t, _ in ok], "k--", linewidth=2.2, label="Pareto frontier"
+        )
     ax.set_xscale("log")
     ax.set_xlabel("Token budget T (M)")
     ax.set_ylabel("Held-out accuracy")
@@ -295,13 +304,10 @@ def render_figure(pareto, iso, boot, out_path):
     ys = [b["R_point"] for b in boot]
     los = [b["R_lo"] for b in boot]
     his = [b["R_hi"] for b in boot]
-    ax.fill_between(xs, los, his, alpha=0.25, color="C0",
-                    label="bootstrap 95% CI")
+    ax.fill_between(xs, los, his, alpha=0.25, color="C0", label="bootstrap 95% CI")
     ax.plot(xs, ys, "o-", color="C0", label="R(G=4/G=32) point")
-    ax.axhline(0.976, color="gray", linestyle="--", linewidth=1.5,
-               label="Wu et al. 2025 (97.6%)")
-    ax.axhline(0.80, color="crimson", linestyle=":", linewidth=1.5,
-               label="equivalence 80%")
+    ax.axhline(0.976, color="gray", linestyle="--", linewidth=1.5, label="Wu et al. 2025 (97.6%)")
+    ax.axhline(0.80, color="crimson", linestyle=":", linewidth=1.5, label="equivalence 80%")
     ax.set_xscale("log")
     ax.set_xlabel("Token budget T (M)")
     ax.set_ylabel("Retention R = acc(G=4) / acc(G=32)")
@@ -312,7 +318,8 @@ def render_figure(pareto, iso, boot, out_path):
 
     fig.suptitle(
         "Iter 91 Pillar 3 — Pareto envelope + iso-cost frontier + bootstrap CI on R(G=4/G=32)",
-        fontsize=10)
+        fontsize=10,
+    )
     fig.tight_layout(rect=(0, 0, 1, 0.96))
     fig.savefig(out_path, bbox_inches="tight")
     plt.close(fig)
@@ -321,6 +328,7 @@ def render_figure(pareto, iso, boot, out_path):
 # ---------------------------------------------------------------------------
 # Writer
 # ---------------------------------------------------------------------------
+
 
 def _write_kv(rows, out_path, header_first=("metric", "value")):
     with out_path.open("w", newline="") as f:
@@ -337,95 +345,142 @@ def write_outputs(pareto, iso, boot):
     # pareto.tsv
     with (RESULTS / "group_size_iter91_pareto_v2.tsv").open("w", newline="") as f:
         w = csv.writer(f, delimiter="\t")
-        w.writerow(["T_M", "G_star", "acc_star", "worst_G", "worst_acc",
-                    "envelope_gap_pp", "envelope_gap_at_G4_pp"])
+        w.writerow(
+            [
+                "T_M",
+                "G_star",
+                "acc_star",
+                "worst_G",
+                "worst_acc",
+                "envelope_gap_pp",
+                "envelope_gap_at_G4_pp",
+            ]
+        )
         for r in pareto:
-            w.writerow([r["T_M"], r["G_star"], f"{r['acc_star']:.4f}",
-                        r["worst_G"], f"{r['worst_acc']:.4f}",
-                        f"{r['envelope_gap_pp']:.2f}",
-                        f"{r['envelope_gap_at_G4_pp']:.2f}"])
+            w.writerow(
+                [
+                    r["T_M"],
+                    r["G_star"],
+                    f"{r['acc_star']:.4f}",
+                    r["worst_G"],
+                    f"{r['worst_acc']:.4f}",
+                    f"{r['envelope_gap_pp']:.2f}",
+                    f"{r['envelope_gap_at_G4_pp']:.2f}",
+                ]
+            )
 
     # isocost.tsv
     with (RESULTS / "group_size_iter91_isocost_v2.tsv").open("w", newline="") as f:
         w = csv.writer(f, delimiter="\t")
-        w.writerow(["target_acc", "G_star", "T_needed_M_star",
-                    "T_needed_M_G4", "T_needed_M_G8", "T_needed_M_G16",
-                    "T_needed_M_G32", "T_needed_M_G64"])
+        w.writerow(
+            [
+                "target_acc",
+                "G_star",
+                "T_needed_M_star",
+                "T_needed_M_G4",
+                "T_needed_M_G8",
+                "T_needed_M_G16",
+                "T_needed_M_G32",
+                "T_needed_M_G64",
+            ]
+        )
         for r in iso:
-            w.writerow([f"{r['target_acc']:.2f}",
-                        r["G_star"] if r["G_star"] is not None else "NA",
-                        r["T_needed_M_star"] if r["T_needed_M_star"]
-                        is not None else "NA",
-                        r["T_needed_M_G4"] if r["T_needed_M_G4"]
-                        is not None else "NA",
-                        r["T_needed_M_G8"] if r["T_needed_M_G8"]
-                        is not None else "NA",
-                        r["T_needed_M_G16"] if r["T_needed_M_G16"]
-                        is not None else "NA",
-                        r["T_needed_M_G32"] if r["T_needed_M_G32"]
-                        is not None else "NA",
-                        r["T_needed_M_G64"] if r["T_needed_M_G64"]
-                        is not None else "NA"])
+            w.writerow(
+                [
+                    f"{r['target_acc']:.2f}",
+                    r["G_star"] if r["G_star"] is not None else "NA",
+                    r["T_needed_M_star"] if r["T_needed_M_star"] is not None else "NA",
+                    r["T_needed_M_G4"] if r["T_needed_M_G4"] is not None else "NA",
+                    r["T_needed_M_G8"] if r["T_needed_M_G8"] is not None else "NA",
+                    r["T_needed_M_G16"] if r["T_needed_M_G16"] is not None else "NA",
+                    r["T_needed_M_G32"] if r["T_needed_M_G32"] is not None else "NA",
+                    r["T_needed_M_G64"] if r["T_needed_M_G64"] is not None else "NA",
+                ]
+            )
 
     # bootstrap.tsv
     with (RESULTS / "group_size_iter91_bootstrap_v2.tsv").open("w", newline="") as f:
         w = csv.writer(f, delimiter="\t")
-        w.writerow(["T_M", "R_point", "R_lo", "R_med", "R_hi",
-                    "p_below_wu_976", "p_below_equivalence_80",
-                    "acc4_point", "acc32_point", "sigma4", "sigma32"])
+        w.writerow(
+            [
+                "T_M",
+                "R_point",
+                "R_lo",
+                "R_med",
+                "R_hi",
+                "p_below_wu_976",
+                "p_below_equivalence_80",
+                "acc4_point",
+                "acc32_point",
+                "sigma4",
+                "sigma32",
+            ]
+        )
         for r in boot:
-            w.writerow([r["T_M"],
-                        f"{r['R_point']:.4f}",
-                        f"{r['R_lo']:.4f}",
-                        f"{r['R_med']:.4f}",
-                        f"{r['R_hi']:.4f}",
-                        f"{r['p_below_wu_976']:.3f}",
-                        f"{r['p_below_equivalence_80']:.3f}",
-                        f"{r['acc4_point']:.4f}",
-                        f"{r['acc32_point']:.4f}",
-                        f"{r['sigma4']:.4f}",
-                        f"{r['sigma32']:.4f}"])
+            w.writerow(
+                [
+                    r["T_M"],
+                    f"{r['R_point']:.4f}",
+                    f"{r['R_lo']:.4f}",
+                    f"{r['R_med']:.4f}",
+                    f"{r['R_hi']:.4f}",
+                    f"{r['p_below_wu_976']:.3f}",
+                    f"{r['p_below_equivalence_80']:.3f}",
+                    f"{r['acc4_point']:.4f}",
+                    f"{r['acc32_point']:.4f}",
+                    f"{r['sigma4']:.4f}",
+                    f"{r['sigma32']:.4f}",
+                ]
+            )
 
     # summary.tsv (long-form key/value with 'finding')
     rows = []
     # Pareto findings
     for p in pareto:
-        rows.append({"metric": f"pareto_T{p['T_M']}M_G_star",
-                     "value": p["G_star"],
-                     "finding": (
-                         f"At T={p['T_M']}M the per-row best G is "
-                         f"{p['G_star']} (acc={p['acc_star']:.3f}); "
-                         f"envelope gap to worst G = "
-                         f"{p['envelope_gap_pp']:.1f} pp; gap from "
-                         f"G=4 anchor = {p['envelope_gap_at_G4_pp']:.1f} pp."
-                     )})
+        rows.append(
+            {
+                "metric": f"pareto_T{p['T_M']}M_G_star",
+                "value": p["G_star"],
+                "finding": (
+                    f"At T={p['T_M']}M the per-row best G is "
+                    f"{p['G_star']} (acc={p['acc_star']:.3f}); "
+                    f"envelope gap to worst G = "
+                    f"{p['envelope_gap_pp']:.1f} pp; gap from "
+                    f"G=4 anchor = {p['envelope_gap_at_G4_pp']:.1f} pp."
+                ),
+            }
+        )
     # Iso-cost findings
     for r in iso:
         if r["G_star"] is None:
             continue
-        rows.append({
-            "metric": f"isocost_target_{r['target_acc']:.2f}_G_star",
-            "value": r["G_star"],
-            "finding": (
-                f"Target acc={r['target_acc']:.2f}: cheapest G is "
-                f"G={r['G_star']} at T={r['T_needed_M_star']}M; "
-                f"G=4 needs T={r['T_needed_M_G4']}M, "
-                f"G=32 needs T={r['T_needed_M_G32']}M."
-            ),
-        })
+        rows.append(
+            {
+                "metric": f"isocost_target_{r['target_acc']:.2f}_G_star",
+                "value": r["G_star"],
+                "finding": (
+                    f"Target acc={r['target_acc']:.2f}: cheapest G is "
+                    f"G={r['G_star']} at T={r['T_needed_M_star']}M; "
+                    f"G=4 needs T={r['T_needed_M_G4']}M, "
+                    f"G=32 needs T={r['T_needed_M_G32']}M."
+                ),
+            }
+        )
     # Bootstrap findings
     for r in boot:
-        rows.append({
-            "metric": f"bootstrap_T{r['T_M']}M_R_point",
-            "value": f"{r['R_point']:.3f}",
-            "finding": (
-                f"At T={r['T_M']}M the bootstrap retention R "
-                f"(B={B_BOOT}) has median {r['R_med']:.3f} "
-                f"[{r['R_lo']:.3f}, {r['R_hi']:.3f}]; "
-                f"P(R<0.976)={r['p_below_wu_976']:.3f}, "
-                f"P(R<0.80)={r['p_below_equivalence_80']:.3f}."
-            ),
-        })
+        rows.append(
+            {
+                "metric": f"bootstrap_T{r['T_M']}M_R_point",
+                "value": f"{r['R_point']:.3f}",
+                "finding": (
+                    f"At T={r['T_M']}M the bootstrap retention R "
+                    f"(B={B_BOOT}) has median {r['R_med']:.3f} "
+                    f"[{r['R_lo']:.3f}, {r['R_hi']:.3f}]; "
+                    f"P(R<0.976)={r['p_below_wu_976']:.3f}, "
+                    f"P(R<0.80)={r['p_below_equivalence_80']:.3f}."
+                ),
+            }
+        )
 
     with (RESULTS / "group_size_iter91_summary_v2.tsv").open("w", newline="") as f:
         w = csv.writer(f, delimiter="\t")
@@ -437,6 +492,7 @@ def write_outputs(pareto, iso, boot):
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
+
 
 def main():
     rows = _load_token_norm()
@@ -453,24 +509,30 @@ def main():
     print("=== Iter 91 Pillar 3 — Pareto + Iso-cost + Bootstrap ===")
     print("\n[A] Pareto envelope (per-T best G):")
     for p in pareto:
-        print(f"  T={p['T_M']}M: G*={p['G_star']}  acc*={p['acc_star']:.3f}  "
-              f"gap_to_worst={p['envelope_gap_pp']:.1f}pp  "
-              f"gap_to_G4={p['envelope_gap_at_G4_pp']:.1f}pp")
+        print(
+            f"  T={p['T_M']}M: G*={p['G_star']}  acc*={p['acc_star']:.3f}  "
+            f"gap_to_worst={p['envelope_gap_pp']:.1f}pp  "
+            f"gap_to_G4={p['envelope_gap_at_G4_pp']:.1f}pp"
+        )
     print("\n[B] Iso-cost frontier (cheapest G per target acc):")
     for r in iso:
         if r["G_star"] is None:
             print(f"  target={r['target_acc']:.2f}: not reachable in observed grid")
             continue
-        print(f"  target={r['target_acc']:.2f}: G*={r['G_star']}  "
-              f"T*={r['T_needed_M_star']}M  "
-              f"G=4->T={r['T_needed_M_G4']}  G=32->T={r['T_needed_M_G32']}")
+        print(
+            f"  target={r['target_acc']:.2f}: G*={r['G_star']}  "
+            f"T*={r['T_needed_M_star']}M  "
+            f"G=4->T={r['T_needed_M_G4']}  G=32->T={r['T_needed_M_G32']}"
+        )
     print("\n[C] Bootstrap retention R = acc(G=4)/acc(G=32):")
     for r in boot:
-        print(f"  T={r['T_M']}M: R_point={r['R_point']:.3f}  "
-              f"median={r['R_med']:.3f}  "
-              f"95% CI [{r['R_lo']:.3f},{r['R_hi']:.3f}]  "
-              f"P(R<0.976)={r['p_below_wu_976']:.3f}  "
-              f"P(R<0.80)={r['p_below_equivalence_80']:.3f}")
+        print(
+            f"  T={r['T_M']}M: R_point={r['R_point']:.3f}  "
+            f"median={r['R_med']:.3f}  "
+            f"95% CI [{r['R_lo']:.3f},{r['R_hi']:.3f}]  "
+            f"P(R<0.976)={r['p_below_wu_976']:.3f}  "
+            f"P(R<0.80)={r['p_below_equivalence_80']:.3f}"
+        )
 
     # Save figure
     fig_path = FIG / "group_size_iter91_v2.pdf"
@@ -479,26 +541,21 @@ def main():
 
     # Bonus: compute headline-finding numbers for the findings ledger
     headline = {
-        "pareto_Gstar_at_T64M": next(p for p in pareto
-                                     if p["T_M"] == 64.0)["G_star"],
-        "pareto_accstar_at_T64M": next(p for p in pareto
-                                       if p["T_M"] == 64.0)["acc_star"],
-        "pareto_gap_at_G4_T64M_pp": next(p for p in pareto
-                                         if p["T_M"] == 64.0)["envelope_gap_at_G4_pp"],
-        "isocost_target_080_Gstar": next(r for r in iso
-                                         if abs(r["target_acc"] - 0.80)
-                                         < 1e-6)["G_star"],
-        "isocost_target_080_Tstar_M": next(r for r in iso
-                                           if abs(r["target_acc"] - 0.80)
-                                           < 1e-6)["T_needed_M_star"],
-        "bootstrap_R_point_T1M": next(r for r in boot
-                                      if r["T_M"] == 1.0)["R_point"],
-        "bootstrap_R_point_T64M": next(r for r in boot
-                                       if r["T_M"] == 64.0)["R_point"],
-        "bootstrap_R_lo_T64M": next(r for r in boot
-                                    if r["T_M"] == 64.0)["R_lo"],
-        "bootstrap_p_below_wu_T64M": next(r for r in boot
-                                         if r["T_M"] == 64.0)["p_below_wu_976"],
+        "pareto_Gstar_at_T64M": next(p for p in pareto if p["T_M"] == 64.0)["G_star"],
+        "pareto_accstar_at_T64M": next(p for p in pareto if p["T_M"] == 64.0)["acc_star"],
+        "pareto_gap_at_G4_T64M_pp": next(p for p in pareto if p["T_M"] == 64.0)[
+            "envelope_gap_at_G4_pp"
+        ],
+        "isocost_target_080_Gstar": next(r for r in iso if abs(r["target_acc"] - 0.80) < 1e-6)[
+            "G_star"
+        ],
+        "isocost_target_080_Tstar_M": next(r for r in iso if abs(r["target_acc"] - 0.80) < 1e-6)[
+            "T_needed_M_star"
+        ],
+        "bootstrap_R_point_T1M": next(r for r in boot if r["T_M"] == 1.0)["R_point"],
+        "bootstrap_R_point_T64M": next(r for r in boot if r["T_M"] == 64.0)["R_point"],
+        "bootstrap_R_lo_T64M": next(r for r in boot if r["T_M"] == 64.0)["R_lo"],
+        "bootstrap_p_below_wu_T64M": next(r for r in boot if r["T_M"] == 64.0)["p_below_wu_976"],
     }
     print("\nHeadline numbers:")
     for k, v in headline.items():

@@ -35,6 +35,7 @@ exact hypergeometric subsampling to G in {2,4,8} -- no Monte-Carlo):
       rescale is 0 at e=0 and grows with e -> isolates verifier-decorrelation as
       the real CoVe mechanism (factored beats joint b/c verifier != draft's error).
 """
+
 import json, glob, math, os
 from collections import defaultdict
 
@@ -58,19 +59,30 @@ NATIVE = groups[0][2]
 seeds = sorted(set(g[0] for g in groups))
 print(f"loaded {N} prompt-groups from {len(seed_files)} seeds {seeds}, native G={NATIVE}")
 
+
 # ---- exact hypergeometric subsample: prob of j correct in size-G draw from (n,k) ----
 def hyper_pmf(n, k, G, j):
-    if j < max(0, G-(n-k)) or j > min(k, G):
+    if j < max(0, G - (n - k)) or j > min(k, G):
         return 0.0
-    return (math.comb(k, j) * math.comb(n-k, G-j)) / math.comb(n, G)
+    return (math.comb(k, j) * math.comb(n - k, G - j)) / math.comb(n, G)
+
 
 # ---- per-(k,n,G) exact expectations over the subsample count K ----
 def group_stats(n, k, G):
     """Return exact expected quantities over hypergeometric subsampling to size G."""
-    acc = dict(E_bias_corr=0.0, E_bias_wrong=0.0, id_err=0.0,
-               zvf=0.0, var_naive=0.0, var_loo=0.0,
-               n_corr=0.0, n_wrong=0.0, lone_wrong=0.0, lone_corr=0.0)
-    for j in range(0, G+1):
+    acc = dict(
+        E_bias_corr=0.0,
+        E_bias_wrong=0.0,
+        id_err=0.0,
+        zvf=0.0,
+        var_naive=0.0,
+        var_loo=0.0,
+        n_corr=0.0,
+        n_wrong=0.0,
+        lone_wrong=0.0,
+        lone_corr=0.0,
+    )
+    for j in range(G + 1):
         pj = hyper_pmf(n, k, G, j)
         if pj == 0.0:
             continue
@@ -81,39 +93,40 @@ def group_stats(n, k, G):
         # advantages
         # correct rollouts (j of them)
         a_naive_c = 1.0 - b
-        a_loo_c = (1.0 - (j-1)/(G-1)) if j >= 1 else 0.0
+        a_loo_c = (1.0 - (j - 1) / (G - 1)) if j >= 1 else 0.0
         # wrong rollouts (G-j of them)
         a_naive_w = -b
-        a_loo_w = (-(j)/(G-1)) if (G-j) >= 1 else 0.0
+        a_loo_w = (-(j) / (G - 1)) if (G - j) >= 1 else 0.0
         # exact bias identities
-        beta_c_pred = (G - j) / (G*(G-1)) if G > 1 else 0.0
-        beta_w_pred = -(j) / (G*(G-1)) if G > 1 else 0.0
+        beta_c_pred = (G - j) / (G * (G - 1)) if G > 1 else 0.0
+        beta_w_pred = -(j) / (G * (G - 1)) if G > 1 else 0.0
         if j >= 1:
             acc["E_bias_corr"] += pj * j * (a_loo_c - a_naive_c)
             acc["n_corr"] += pj * j
             acc["id_err"] = max(acc["id_err"], abs((a_loo_c - a_naive_c) - beta_c_pred))
-        if (G-j) >= 1:
-            acc["E_bias_wrong"] += pj * (G-j) * (a_loo_w - a_naive_w)
-            acc["n_wrong"] += pj * (G-j)
+        if (G - j) >= 1:
+            acc["E_bias_wrong"] += pj * (G - j) * (a_loo_w - a_naive_w)
+            acc["n_wrong"] += pj * (G - j)
             acc["id_err"] = max(acc["id_err"], abs((a_loo_w - a_naive_w) - beta_w_pred))
         # advantage variance contributions (mean of A is 0 within group for naive)
-        vn = (j*a_naive_c**2 + (G-j)*a_naive_w**2)/G
-        vl = (j*a_loo_c**2 + (G-j)*a_loo_w**2)/G
+        vn = (j * a_naive_c**2 + (G - j) * a_naive_w**2) / G
+        vl = (j * a_loo_c**2 + (G - j) * a_loo_w**2) / G
         acc["var_naive"] += pj * vn
         acc["var_loo"] += pj * vl
         # lone-outlier events
-        if j == G-1:
-            acc["lone_wrong"] += pj      # exactly one wrong
+        if j == G - 1:
+            acc["lone_wrong"] += pj  # exactly one wrong
         if j == 1:
-            acc["lone_corr"] += pj       # exactly one correct
+            acc["lone_corr"] += pj  # exactly one correct
     return acc
+
 
 # ================= H1/H2/H3/H4/H5: sweep G over real distribution ==================
 G_LIST = [2, 4, 8]
 rows_g = []
 for G in G_LIST:
     agg = defaultdict(float)
-    for (_, k, n) in groups:
+    for _, k, n in groups:
         s = group_stats(n, k, G)
         for key, v in s.items():
             if key == "id_err":
@@ -125,30 +138,42 @@ for G in G_LIST:
     # rollout count, not by N.
     mean_bias_corr = agg["E_bias_corr"] / agg["n_corr"] if agg["n_corr"] > 0 else 0.0
     mean_bias_wrong = agg["E_bias_wrong"] / agg["n_wrong"] if agg["n_wrong"] > 0 else 0.0
-    agg_bias_per_group = agg["E_bias_corr"] / N   # ~constant invariant (mean-advantage preserved)
+    agg_bias_per_group = agg["E_bias_corr"] / N  # ~constant invariant (mean-advantage preserved)
     zvf = agg["zvf"] / N
     var_naive = agg["var_naive"] / N
     var_loo = agg["var_loo"] / N
     rescale_emp = math.sqrt(var_loo / var_naive) if var_naive > 0 else float("nan")
-    rows_g.append(dict(
-        G=G, id_err=agg["id_err"],
-        mean_bias_corr=mean_bias_corr, mean_bias_wrong=mean_bias_wrong,
-        agg_bias_per_group=agg_bias_per_group,
-        zvf_naive=zvf, zvf_loo=zvf,              # identical by construction (H3)
-        var_naive=var_naive, var_loo=var_loo,
-        rescale_emp=rescale_emp, rescale_pred=G/(G-1),
-        lone_wrong_frac=agg["lone_wrong"]/N, lone_corr_frac=agg["lone_corr"]/N,
-    ))
+    rows_g.append(
+        dict(
+            G=G,
+            id_err=agg["id_err"],
+            mean_bias_corr=mean_bias_corr,
+            mean_bias_wrong=mean_bias_wrong,
+            agg_bias_per_group=agg_bias_per_group,
+            zvf_naive=zvf,
+            zvf_loo=zvf,  # identical by construction (H3)
+            var_naive=var_naive,
+            var_loo=var_loo,
+            rescale_emp=rescale_emp,
+            rescale_pred=G / (G - 1),
+            lone_wrong_frac=agg["lone_wrong"] / N,
+            lone_corr_frac=agg["lone_corr"] / N,
+        )
+    )
 
 # bias-scaling slope on log-log |mean_bias_corr| vs G  -> expect exactly -1
 # (per-rollout self-confirmation bias is C/G on the real distribution)
 xs = [math.log(r["G"]) for r in rows_g]
 ys = [math.log(abs(r["mean_bias_corr"])) for r in rows_g]
-mx = sum(xs)/len(xs); my = sum(ys)/len(ys)
-slope = sum((x-mx)*(y-my) for x, y in zip(xs, ys)) / sum((x-mx)**2 for x in xs)
+mx = sum(xs) / len(xs)
+my = sum(ys) / len(ys)
+slope = sum((x - mx) * (y - my) for x, y in zip(xs, ys, strict=False)) / sum(
+    (x - mx) ** 2 for x in xs
+)
 
 # rescale identity: max |rescale_emp - G/(G-1)|
-rescale_maxerr = max(abs(r["rescale_emp"]-r["rescale_pred"]) for r in rows_g)
+rescale_maxerr = max(abs(r["rescale_emp"] - r["rescale_pred"]) for r in rows_g)
+
 
 # ================= H6: independent noisy verifier breaks the pure rescale ==========
 # Model: verifier flips each reward independently w.p. e (parser disagreement). The
@@ -163,14 +188,14 @@ def verifier_residual(n, k, G, e):
     if not (2 <= G <= n and 0 <= k <= n and math.isfinite(e) and 0 <= e <= 1):
         raise ValueError("invalid group or verifier noise")
     tot = 0.0
-    for j in range(0, G+1):
+    for j in range(G + 1):
         pj = hyper_pmf(n, k, G, j)
         if pj == 0.0:
             continue
         # expected verifier-correct count among the OTHER G-1 rollouts, for a rollout
         # whose TRUE label is c in {1 (correct), 0 (wrong)}:
         # others true-correct = j-c ; each flips w.p. e.
-        for c, cnt in ((1, j), (0, G-j)):
+        for c, cnt in ((1, j), (0, G - j)):
             if cnt == 0:
                 continue
             others_true_corr = j - c
@@ -178,21 +203,32 @@ def verifier_residual(n, k, G, e):
             a_target = (G / (G - 1)) * (c - j / G)
             # Exact convolution: surviving positives and flipped negatives among peers.
             for positive in range(others_true_corr + 1):
-                p_pos = math.comb(others_true_corr, positive) * (1-e)**positive * e**(others_true_corr-positive)
+                p_pos = (
+                    math.comb(others_true_corr, positive)
+                    * (1 - e) ** positive
+                    * e ** (others_true_corr - positive)
+                )
                 negatives = others - others_true_corr
                 for flipped in range(negatives + 1):
-                    p_neg = math.comb(negatives, flipped) * e**flipped * (1-e)**(negatives-flipped)
+                    p_neg = (
+                        math.comb(negatives, flipped)
+                        * e**flipped
+                        * (1 - e) ** (negatives - flipped)
+                    )
                     a_loo_v = c - (positive + flipped) / others
                     tot += pj * cnt * p_pos * p_neg * abs(a_loo_v - a_target)
     return tot / G
+
 
 rows_noise = []
 for e in [0.0, 0.05, 0.10, 0.20]:
     resid = sum(verifier_residual(n, k, 8, e) for (_, k, n) in groups) / N
     rows_noise.append(dict(e=e, mean_residual=resid))
 resid0 = rows_noise[0]["mean_residual"]
-resid_grows = all(rows_noise[i]["mean_residual"] <= rows_noise[i+1]["mean_residual"]+1e-12
-                  for i in range(len(rows_noise)-1))
+resid_grows = all(
+    rows_noise[i]["mean_residual"] <= rows_noise[i + 1]["mean_residual"] + 1e-12
+    for i in range(len(rows_noise) - 1)
+)
 
 # ================= STaR contrast (row-21 bridge): ZVF invariance vs recovery =======
 # STaR/row-21 recovered ZVF_hi (all-correct tail). CoVe-baseline recovers NONE of it.
@@ -202,56 +238,102 @@ for G in G_LIST:
     zvf = next(r["zvf_naive"] for r in rows_g if r["G"] == G)
     star_recovered.append(dict(G=G, zvf=zvf, cove_recovered=0.0, star_recovered_hi=zvf))
 
+
 # ---------------- write outputs ----------------
 def wtsv(path, rows, cols):
     with open(path, "w") as fh:
-        fh.write("\t".join(cols)+"\n")
+        fh.write("\t".join(cols) + "\n")
         for r in rows:
-            fh.write("\t".join(f"{r[c]:.6f}" if isinstance(r[c], float) else str(r[c]) for c in cols)+"\n")
+            fh.write(
+                "\t".join(f"{r[c]:.6f}" if isinstance(r[c], float) else str(r[c]) for c in cols)
+                + "\n"
+            )
 
-wtsv(f"{OUT}/cove_baseline_identity.tsv", rows_g,
-     ["G","id_err","mean_bias_corr","mean_bias_wrong","agg_bias_per_group","zvf_naive","zvf_loo",
-      "var_naive","var_loo","rescale_emp","rescale_pred","lone_wrong_frac","lone_corr_frac"])
-wtsv(f"{OUT}/cove_verifier_noise.tsv", rows_noise, ["e","mean_residual"])
-wtsv(f"{OUT}/cove_star_contrast.tsv", star_recovered, ["G","zvf","cove_recovered","star_recovered_hi"])
+
+wtsv(
+    f"{OUT}/cove_baseline_identity.tsv",
+    rows_g,
+    [
+        "G",
+        "id_err",
+        "mean_bias_corr",
+        "mean_bias_wrong",
+        "agg_bias_per_group",
+        "zvf_naive",
+        "zvf_loo",
+        "var_naive",
+        "var_loo",
+        "rescale_emp",
+        "rescale_pred",
+        "lone_wrong_frac",
+        "lone_corr_frac",
+    ],
+)
+wtsv(f"{OUT}/cove_verifier_noise.tsv", rows_noise, ["e", "mean_residual"])
+wtsv(
+    f"{OUT}/cove_star_contrast.tsv",
+    star_recovered,
+    ["G", "zvf", "cove_recovered", "star_recovered_hi"],
+)
 
 # H4 outlier-catch amplification table
 rows_outlier = []
 for G in G_LIST:
-    rows_outlier.append(dict(G=G,
-        lone_wrong_naive_adv=-(G-1)/G, lone_wrong_loo_adv=-1.0,
-        amplification=G/(G-1),
-        lone_corr_naive_adv=1.0/G, lone_corr_loo_adv=1.0))
-wtsv(f"{OUT}/cove_outlier_catch.tsv", rows_outlier,
-     ["G","lone_wrong_naive_adv","lone_wrong_loo_adv","amplification",
-      "lone_corr_naive_adv","lone_corr_loo_adv"])
+    rows_outlier.append(
+        dict(
+            G=G,
+            lone_wrong_naive_adv=-(G - 1) / G,
+            lone_wrong_loo_adv=-1.0,
+            amplification=G / (G - 1),
+            lone_corr_naive_adv=1.0 / G,
+            lone_corr_loo_adv=1.0,
+        )
+    )
+wtsv(
+    f"{OUT}/cove_outlier_catch.tsv",
+    rows_outlier,
+    [
+        "G",
+        "lone_wrong_naive_adv",
+        "lone_wrong_loo_adv",
+        "amplification",
+        "lone_corr_naive_adv",
+        "lone_corr_loo_adv",
+    ],
+)
 
 summary = dict(
-    n_groups=N, seeds=seeds, native_G=NATIVE,
+    n_groups=N,
+    seeds=seeds,
+    native_G=NATIVE,
     H1_max_identity_err=max(r["id_err"] for r in rows_g),
     H1_verdict="DECISIVE" if max(r["id_err"] for r in rows_g) < 1e-9 else "FAIL",
-    H2_bias_loglog_slope=slope, H2_bias_at_G2=rows_g[0]["mean_bias_corr"],
+    H2_bias_loglog_slope=slope,
+    H2_bias_at_G2=rows_g[0]["mean_bias_corr"],
     H2_bias_at_G8=rows_g[-1]["mean_bias_corr"],
-    H2_verdict="DECISIVE" if abs(slope+1.0) < 0.25 else "SUGGESTIVE",
-    H3_zvf_invariant=all(abs(r["zvf_naive"]-r["zvf_loo"]) < 1e-12 for r in rows_g),
+    H2_verdict="DECISIVE" if abs(slope + 1.0) < 0.25 else "SUGGESTIVE",
+    H3_zvf_invariant=all(abs(r["zvf_naive"] - r["zvf_loo"]) < 1e-12 for r in rows_g),
     H3_verdict="DECISIVE",
-    H4_amplification_G8=8/7,
+    H4_amplification_G8=8 / 7,
     H4_verdict="DECISIVE",
     H5_rescale_maxerr=rescale_maxerr,
     H5_verdict="DECISIVE" if rescale_maxerr < 1e-9 else "FAIL",
-    H6_residual_at_e0=resid0, H6_residual_at_e20=rows_noise[-1]["mean_residual"],
+    H6_residual_at_e0=resid0,
+    H6_residual_at_e20=rows_noise[-1]["mean_residual"],
     H6_monotone_growth=resid_grows,
-    H6_verdict="DECISIVE" if (resid0 < 1e-9 and resid_grows and rows_noise[-1]["mean_residual"]>0.01) else "SUGGESTIVE",
+    H6_verdict="DECISIVE"
+    if (resid0 < 1e-9 and resid_grows and rows_noise[-1]["mean_residual"] > 0.01)
+    else "SUGGESTIVE",
     thesis="CoVe factored-vs-joint verification == RLOO LOO-vs-naive baseline; for a "
-           "self-consistent verifier it is an EXACT G/(G-1) step-size rescale "
-           "(under-identified up to a scalar, ZVF-invariant, no tail recovery -- "
-           "unlike STaR row-21); CoVe's genuine value is verifier DECORRELATION, "
-           "which appears only under an independent/noisy verifier (H6).",
+    "self-consistent verifier it is an EXACT G/(G-1) step-size rescale "
+    "(under-identified up to a scalar, ZVF-invariant, no tail recovery -- "
+    "unlike STaR row-21); CoVe's genuine value is verifier DECORRELATION, "
+    "which appears only under an independent/noisy verifier (H6).",
     citations=dict(
         cove="Dhuliawala, Komeili, Xu, Raileanu, Li, Celikyilmaz (Weston). "
-             "Chain-of-Verification Reduces Hallucination in LLMs. arXiv:2309.11495, EACL-F 2024.",
+        "Chain-of-Verification Reduces Hallucination in LLMs. arXiv:2309.11495, EACL-F 2024.",
         rloo="Ahmadian, Cremer, Galle, Fadaee, Kreutzer, Pietquin. Back to Basics: "
-             "Revisiting REINFORCE Style Optimization for RLHF. arXiv:2402.14740, ACL 2024.",
+        "Revisiting REINFORCE Style Optimization for RLHF. arXiv:2402.14740, ACL 2024.",
     ),
 )
 json.dump(summary, open(f"{OUT}/cove_summary.json", "w"), indent=2)

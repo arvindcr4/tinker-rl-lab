@@ -14,7 +14,6 @@ Usage:
 
 import argparse
 import json
-import os
 import re
 import sys
 import time
@@ -35,9 +34,35 @@ CLAIM_PATTERNS = [
 ]
 
 COMMON_WORDS = {
-    "a", "an", "the", "of", "in", "on", "at", "to", "for", "and", "or",
-    "is", "are", "was", "were", "be", "been", "with", "from", "by", "as",
-    "we", "our", "this", "that", "these", "those", "it", "its",
+    "a",
+    "an",
+    "the",
+    "of",
+    "in",
+    "on",
+    "at",
+    "to",
+    "for",
+    "and",
+    "or",
+    "is",
+    "are",
+    "was",
+    "were",
+    "be",
+    "been",
+    "with",
+    "from",
+    "by",
+    "as",
+    "we",
+    "our",
+    "this",
+    "that",
+    "these",
+    "those",
+    "it",
+    "its",
 }
 
 
@@ -82,11 +107,13 @@ def find_uncited_claims(tex_content: str) -> list[dict]:
                 words = re.findall(r"[A-Za-z]+", sent)
                 content_words = [w for w in words if w.lower() not in COMMON_WORDS and len(w) > 2]
                 query = " ".join(content_words[:8])
-                claims.append({
-                    "sentence": sent[:200],
-                    "pattern": pattern,
-                    "query": query,
-                })
+                claims.append(
+                    {
+                        "sentence": sent[:200],
+                        "pattern": pattern,
+                        "query": query,
+                    }
+                )
                 break
 
     return claims
@@ -94,11 +121,13 @@ def find_uncited_claims(tex_content: str) -> list[dict]:
 
 def search_semantic_scholar(query: str, limit: int = 3, api_key: str = "") -> list[dict]:
     """Search Semantic Scholar for papers matching the query."""
-    params = urllib.parse.urlencode({
-        "query": query,
-        "limit": limit,
-        "fields": "title,authors,year,venue,externalIds,citationCount,abstract",
-    })
+    params = urllib.parse.urlencode(
+        {
+            "query": query,
+            "limit": limit,
+            "fields": "title,authors,year,venue,externalIds,citationCount,abstract",
+        }
+    )
     url = f"{S2_API}?{params}"
     headers = {"User-Agent": "SkillScript/1.0"}
     if api_key:
@@ -166,7 +195,9 @@ def main():
     parser.add_argument("--tex", required=True, help="Main .tex file")
     parser.add_argument("--bib", required=True, help=".bib file")
     parser.add_argument("--output", "-o", help="Output .bib file for candidates")
-    parser.add_argument("--max-rounds", type=int, default=10, help="Max harvesting rounds (default: 10)")
+    parser.add_argument(
+        "--max-rounds", type=int, default=10, help="Max harvesting rounds (default: 10)"
+    )
     parser.add_argument("--api-key", default="", help="Semantic Scholar API key")
     parser.add_argument("--dry-run", action="store_true", help="Only show claims, don't search")
     parser.add_argument("--verbose", action="store_true", help="Print detailed progress")
@@ -187,8 +218,8 @@ def main():
 
     if args.dry_run:
         print(f"\n## Uncited Claims (top {min(len(claims), args.max_rounds)}):")
-        for i, claim in enumerate(claims[:args.max_rounds]):
-            print(f"\n[{i+1}] {claim['sentence'][:120]}...")
+        for i, claim in enumerate(claims[: args.max_rounds]):
+            print(f"\n[{i + 1}] {claim['sentence'][:120]}...")
             print(f"    Pattern: {claim['pattern']}")
             print(f"    Query: {claim['query']}")
         sys.exit(0)
@@ -202,7 +233,7 @@ def main():
     rounds = min(len(claims), args.max_rounds)
 
     for i, claim in enumerate(claims[:rounds]):
-        print(f"\n[{i+1}/{rounds}] Searching for: {claim['query'][:60]}...", file=sys.stderr)
+        print(f"\n[{i + 1}/{rounds}] Searching for: {claim['query'][:60]}...", file=sys.stderr)
         papers = search_semantic_scholar(claim["query"], limit=3, api_key=args.api_key)
         time.sleep(1)  # Rate limiting
 

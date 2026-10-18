@@ -90,7 +90,9 @@ def first_col(df: pd.DataFrame, *names: str) -> str | None:
     return None
 
 
-def numeric_frame(df: pd.DataFrame, required: list[str], optional: list[str] | None = None) -> pd.DataFrame:
+def numeric_frame(
+    df: pd.DataFrame, required: list[str], optional: list[str] | None = None
+) -> pd.DataFrame:
     out = df.copy()
     for col in required + (optional or []):
         if col in out.columns:
@@ -135,8 +137,12 @@ def render_qp12(df: pd.DataFrame, row_count: int) -> list[tuple[str, str]]:
     fig, axes = plt.subplots(1, 2, figsize=(10.5, 4.2), sharex=True)
     for seed, group in clean.sort_values(["seed", "step"]).groupby("seed"):
         label = f"seed {int(seed) if float(seed).is_integer() else seed}"
-        axes[0].plot(group["step"], group[reward_col], marker="o", linewidth=1.8, markersize=3, label=label)
-        axes[1].plot(group["step"], group["zvf"], marker="o", linewidth=1.8, markersize=3, label=label)
+        axes[0].plot(
+            group["step"], group[reward_col], marker="o", linewidth=1.8, markersize=3, label=label
+        )
+        axes[1].plot(
+            group["step"], group["zvf"], marker="o", linewidth=1.8, markersize=3, label=label
+        )
     axes[0].set_title("Reward Trajectory")
     axes[0].set_xlabel("Step")
     axes[0].set_ylabel("Mean reward")
@@ -145,7 +151,9 @@ def render_qp12(df: pd.DataFrame, row_count: int) -> list[tuple[str, str]]:
     axes[1].set_ylabel("ZVF")
     axes[1].legend(title="Seed", frameon=False)
     fig.suptitle("qp12: Reward and ZVF by Seed", y=1.03)
-    return [save_fig(fig, "qp12_reward_zvf", "Reward and ZVF vs step, one line per seed", row_count)]
+    return [
+        save_fig(fig, "qp12_reward_zvf", "Reward and ZVF vs step, one line per seed", row_count)
+    ]
 
 
 def render_qp3(df: pd.DataFrame, row_count: int) -> list[tuple[str, str]]:
@@ -159,7 +167,9 @@ def render_qp3(df: pd.DataFrame, row_count: int) -> list[tuple[str, str]]:
     fig, ax = plt.subplots(figsize=(7.2, 4.8))
     for g, group in clean.sort_values(["G", "step"]).groupby("G"):
         label = f"G={int(g) if float(g).is_integer() else g}"
-        ax.plot(group["step"], group[reward_col], marker="o", linewidth=2, markersize=3, label=label)
+        ax.plot(
+            group["step"], group[reward_col], marker="o", linewidth=2, markersize=3, label=label
+        )
     ax.set_title("qp3: Reward by Group Size")
     ax.set_xlabel("Step")
     ax.set_ylabel("Mean reward")
@@ -173,7 +183,9 @@ def render_qp3(df: pd.DataFrame, row_count: int) -> list[tuple[str, str]]:
         inset.set_xlabel("Step", fontsize=8)
         inset.set_ylabel("ZVF", fontsize=8)
         inset.tick_params(labelsize=7)
-    return [save_fig(fig, "qp3_g4_vs_g8", "Reward vs step for G=4 vs G=8 with ZVF inset", row_count)]
+    return [
+        save_fig(fig, "qp3_g4_vs_g8", "Reward vs step for G=4 vs G=8 with ZVF inset", row_count)
+    ]
 
 
 def render_qp4(df: pd.DataFrame, row_count: int) -> list[tuple[str, str]]:
@@ -194,7 +206,11 @@ def render_qp4(df: pd.DataFrame, row_count: int) -> list[tuple[str, str]]:
     ax.set_ylabel("Accuracy")
     ax.set_ylim(bottom=0)
     ax.legend(title="Model", frameon=False, loc="best")
-    return [save_fig(fig, "qp4_truncation", "Accuracy vs cap on log-x axis, one line per model", row_count)]
+    return [
+        save_fig(
+            fig, "qp4_truncation", "Accuracy vs cap on log-x axis, one line per model", row_count
+        )
+    ]
 
 
 def render_qp7(df: pd.DataFrame, row_count: int) -> list[tuple[str, str]]:
@@ -207,7 +223,9 @@ def render_qp7(df: pd.DataFrame, row_count: int) -> list[tuple[str, str]]:
 
     fig, axes = plt.subplots(2, 1, figsize=(7.4, 6.2), sharex=True, height_ratios=[2.0, 1.0])
     for arm, group in clean.sort_values(["arm", "step"]).groupby("arm"):
-        axes[0].plot(group["step"], group[reward_col], marker="o", linewidth=2, markersize=3, label=str(arm))
+        axes[0].plot(
+            group["step"], group[reward_col], marker="o", linewidth=2, markersize=3, label=str(arm)
+        )
         axes[1].step(group["step"], group["G"], where="post", linewidth=2, label=str(arm))
     axes[0].set_title("qp7: Fixed-G vs Adaptive-G Reward")
     axes[0].set_ylabel("Mean reward")
@@ -216,7 +234,11 @@ def render_qp7(df: pd.DataFrame, row_count: int) -> list[tuple[str, str]]:
     axes[1].set_xlabel("Step")
     axes[1].set_ylabel("G")
     axes[1].legend(title="Arm", frameon=False, loc="best")
-    return [save_fig(fig, "qp7_adaptive", "Reward vs step by arm with step-G staircase subplot", row_count)]
+    return [
+        save_fig(
+            fig, "qp7_adaptive", "Reward vs step by arm with step-G staircase subplot", row_count
+        )
+    ]
 
 
 def render_qp8(df: pd.DataFrame, row_count: int) -> list[tuple[str, str]]:
@@ -243,7 +265,9 @@ def render_qp8(df: pd.DataFrame, row_count: int) -> list[tuple[str, str]]:
     ax.set_xticklabels(clean["label"], rotation=20, ha="right")
     ax.set_ylim(0, min(1.05, max(1.0, clean[["accuracy", "auc"]].max().max() * 1.15)))
     ax.legend(frameon=False, loc="best")
-    return [save_fig(fig, "qp8_fraud", "Bar chart comparing model and XGBoost accuracy/AUC", row_count)]
+    return [
+        save_fig(fig, "qp8_fraud", "Bar chart comparing model and XGBoost accuracy/AUC", row_count)
+    ]
 
 
 def render_mega(df: pd.DataFrame, row_count: int) -> list[tuple[str, str]]:
@@ -255,13 +279,22 @@ def render_mega(df: pd.DataFrame, row_count: int) -> list[tuple[str, str]]:
 
     rendered: list[tuple[str, str]] = []
     fig, ax = plt.subplots(figsize=(7.0, 5.0))
-    scatter = ax.scatter(clean["mean_reward"], clean["zvf"], c=clean["G"], cmap="viridis", alpha=0.78, s=34)
+    scatter = ax.scatter(
+        clean["mean_reward"], clean["zvf"], c=clean["G"], cmap="viridis", alpha=0.78, s=34
+    )
     cbar = fig.colorbar(scatter, ax=ax)
     cbar.set_label("G")
     ax.set_title("Mega Campaign: ZVF vs Mean Reward")
     ax.set_xlabel("Mean reward")
     ax.set_ylabel("ZVF")
-    rendered.append(save_fig(fig, "mega_zvf_vs_reward", "ZVF vs mean_reward scatter colored by G (U-shape view)", row_count))
+    rendered.append(
+        save_fig(
+            fig,
+            "mega_zvf_vs_reward",
+            "ZVF vs mean_reward scatter colored by G (U-shape view)",
+            row_count,
+        )
+    )
 
     fig, ax = plt.subplots(figsize=(7.0, 5.0))
     ax.scatter(clean["mean_reward"], clean["pcd"], alpha=0.7, s=34)
@@ -281,7 +314,9 @@ def render_mega(df: pd.DataFrame, row_count: int) -> list[tuple[str, str]]:
         offset = -total_width / 2 + model_width * (m_idx + 0.5)
         data = [model_df.loc[model_df["G"] == g, "zvf"].dropna().to_numpy() for g in gs]
         box_positions = positions + offset
-        non_empty = [(pos, vals) for pos, vals in zip(box_positions, data) if len(vals)]
+        non_empty = [
+            (pos, vals) for pos, vals in zip(box_positions, data, strict=False) if len(vals)
+        ]
         if not non_empty:
             continue
         ax.boxplot(
@@ -294,15 +329,27 @@ def render_mega(df: pd.DataFrame, row_count: int) -> list[tuple[str, str]]:
             medianprops={"linewidth": 1.5},
         )
         for pos, vals in non_empty:
-            jitter = np.linspace(-model_width * 0.18, model_width * 0.18, len(vals)) if len(vals) > 1 else [0]
-            ax.scatter(np.asarray(jitter) + pos, vals, s=18, alpha=0.7, label=model if pos == non_empty[0][0] else None)
+            jitter = (
+                np.linspace(-model_width * 0.18, model_width * 0.18, len(vals))
+                if len(vals) > 1
+                else [0]
+            )
+            ax.scatter(
+                np.asarray(jitter) + pos,
+                vals,
+                s=18,
+                alpha=0.7,
+                label=model if pos == non_empty[0][0] else None,
+            )
     ax.set_title("Mega Campaign: ZVF by G and Model")
     ax.set_xlabel("G")
     ax.set_ylabel("ZVF")
     ax.set_xticks(positions)
     ax.set_xticklabels([str(int(g)) if float(g).is_integer() else str(g) for g in gs])
     ax.legend(title="Model", frameon=False, bbox_to_anchor=(1.02, 1), loc="upper left")
-    rendered.append(save_fig(fig, "mega_zvf_by_g_model", "ZVF vs G box/strip plot per model", row_count))
+    rendered.append(
+        save_fig(fig, "mega_zvf_by_g_model", "ZVF vs G box/strip plot per model", row_count)
+    )
     return rendered
 
 
@@ -367,7 +414,10 @@ def main() -> int:
             poll(is_final=True)
             break
         if quiet >= QUIET_SECONDS:
-            print(f"[{now_iso()}] All sources quiet for {math.floor(quiet)}s; doing final render pass.", flush=True)
+            print(
+                f"[{now_iso()}] All sources quiet for {math.floor(quiet)}s; doing final render pass.",
+                flush=True,
+            )
             poll(is_final=True)
             break
         time.sleep(POLL_SECONDS)

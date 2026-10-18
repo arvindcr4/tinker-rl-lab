@@ -21,7 +21,7 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 
-from jev_judge import run_ask  # noqa: E402
+from jev_judge import run_ask
 
 REPO_ROOT = HERE.parents[1]
 
@@ -174,8 +174,8 @@ def main() -> None:
         }
         r = run_ask(lane_state, q, label=f"triage_blocker_{lane}")
         receipts.append(r["receipt_path"])
-        blocker_answers[lane] = r["answer"].get("answers", r["answer"]).get(
-            "first_uncleared_blocker", r["answer"]
+        blocker_answers[lane] = (
+            r["answer"].get("answers", r["answer"]).get("first_uncleared_blocker", r["answer"])
         )
 
     state = {

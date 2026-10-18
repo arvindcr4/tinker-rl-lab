@@ -59,13 +59,16 @@ Outputs:
 
 Stdlib only; deterministic.
 """
+
 from __future__ import annotations
-import csv, glob, json, os, random, statistics
+import csv, json, os, random, statistics
 
 import sys
 from pathlib import Path
+
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
+from _paths import REPO_ROOT
+
 WORKTREE = str(REPO_ROOT)
 DATA_DIR = os.path.join(WORKTREE, "platform_hybrid/experiments/results/n2_reward_tensor_resume")
 OUT_DIR = os.path.join(WORKTREE, "platform_hybrid/experiments/results/p5p8")
@@ -74,9 +77,17 @@ os.makedirs(OUT_DIR, exist_ok=True)
 METHODS = ["grpo", "aero", "gift", "areal"]
 G_BASE = 8
 N_PROMPTS = 16
-G_N_GRID = [12, 16, 24, 32, 48]   # escalation-only (G_N >= G_BASE=8); C4 trigger is an escalation controller
-G_N_STATIC = 16                          # static rule default
-B = 2000; SEED = 20260706; ALPHA = 0.05
+G_N_GRID = [
+    12,
+    16,
+    24,
+    32,
+    48,
+]  # escalation-only (G_N >= G_BASE=8); C4 trigger is an escalation controller
+G_N_STATIC = 16  # static rule default
+B = 2000
+SEED = 20260706
+ALPHA = 0.05
 
 
 def _bci(v, stat_fn=statistics.mean, rng=None):
@@ -99,7 +110,7 @@ def _bci(v, stat_fn=statistics.mean, rng=None):
 def binomial_y(p, G):
     if p <= 0.0 or p >= 1.0:
         return 0.0
-    return 1.0 - (p ** G) - ((1.0 - p) ** G)
+    return 1.0 - (p**G) - ((1.0 - p) ** G)
 
 
 def load_tensors():
@@ -128,7 +139,7 @@ def per_prompt_record(method, step, k_p, tau):
     optimal G_N*, restored_optimal, rollouts_static, rollouts_optimal,
     cost_eff_static, cost_eff_optimal."""
     p_hat = k_p / G_BASE
-    is_boundary = (k_p == 0 or k_p == G_BASE)
+    is_boundary = k_p == 0 or k_p == G_BASE
     # Restored at static G=16
     y_base = binomial_y(p_hat, G_BASE)
     y_static = binomial_y(p_hat, G_N_STATIC)
@@ -167,7 +178,7 @@ def per_prompt_record(method, step, k_p, tau):
         "k_p": k_p,
         "p_hat": p_hat,
         "is_boundary": int(is_boundary),
-        "tau_fired": tau,                  # currently we filter below
+        "tau_fired": tau,  # currently we filter below
         "static_G_N": G_N_STATIC,
         "restored_static": restored_static,
         "eff_static": eff_static,
@@ -203,8 +214,7 @@ def main():
     # 2. Write per-prompt TSV
     pp_path = os.path.join(OUT_DIR, "p7_iter192_per_prompt.tsv")
     with open(pp_path, "w", newline="") as fh:
-        w = csv.DictWriter(fh, fieldnames=list(per_prompt_rows[0].keys()),
-                           delimiter="\t")
+        w = csv.DictWriter(fh, fieldnames=list(per_prompt_rows[0].keys()), delimiter="\t")
         w.writeheader()
         for row in per_prompt_rows:
             w.writerow(row)
@@ -255,8 +265,9 @@ def main():
             xs = [G for G in sorted(G_eff_table) if G != G_BASE]
             ys = [G_eff_table[G] for G in xs]
             if len(xs) >= 2:
-                mx = sum(xs) / len(xs); my = sum(ys) / len(ys)
-                num = sum((x - mx) * (y - my) for x, y in zip(xs, ys))
+                mx = sum(xs) / len(xs)
+                my = sum(ys) / len(ys)
+                num = sum((x - mx) * (y - my) for x, y in zip(xs, ys, strict=False))
                 den_x = sum((x - mx) ** 2 for x in xs)
                 slope = num / den_x if den_x > 0 else 0.0
                 h4_monotone = slope < 0
@@ -270,42 +281,41 @@ def main():
         # also CI on rollouts saved per method
         m_roll, lo_roll, hi_roll = _bci(all_savings_rollouts)
         # per-method aggregate
-        per_method.append({
-            "method": method,
-            "n_prompts": n_prompts,
-            "n_boundary": n_boundary,
-            "n_contrast": n_contrast,
-            "mean_gn_optimal": (sum(all_gn) / len(all_gn)) if all_gn else 0.0,
-            "mean_gn_optimal_contrast": (
-                sum(contrast_gn) / len(contrast_gn)
-            ) if contrast_gn else 0.0,
-            "mean_restored_static": (
-                sum(all_restored_static) / len(all_restored_static)
-            ) if all_restored_static else 0.0,
-            "mean_restored_optimal": (
-                sum(all_restored_opt) / len(all_restored_opt)
-            ) if all_restored_opt else 0.0,
-            "mean_savings_frac": (
-                sum(sav_pct) / len(sav_pct)
-            ) if sav_pct else 0.0,
-            "savings_frac_boot_lo": lo,
-            "savings_frac_boot_hi": hi,
-            "mean_savings_rollouts": (
-                sum(all_savings_rollouts) / len(all_savings_rollouts)
-            ) if all_savings_rollouts else 0.0,
-            "savings_rollouts_boot_lo": lo_roll,
-            "savings_rollouts_boot_hi": hi_roll,
-            "n_pareto_dominates_static": n_dominates,
-            "frac_pareto_dominates": n_dominates / n_prompts if n_prompts > 0 else 0.0,
-            "h4_monotone_dec_slope": "n/a" if h4_monotone is None else (
-                "PASS" if h4_monotone else "FAIL"
-            ),
-        })
+        per_method.append(
+            {
+                "method": method,
+                "n_prompts": n_prompts,
+                "n_boundary": n_boundary,
+                "n_contrast": n_contrast,
+                "mean_gn_optimal": (sum(all_gn) / len(all_gn)) if all_gn else 0.0,
+                "mean_gn_optimal_contrast": (sum(contrast_gn) / len(contrast_gn))
+                if contrast_gn
+                else 0.0,
+                "mean_restored_static": (sum(all_restored_static) / len(all_restored_static))
+                if all_restored_static
+                else 0.0,
+                "mean_restored_optimal": (sum(all_restored_opt) / len(all_restored_opt))
+                if all_restored_opt
+                else 0.0,
+                "mean_savings_frac": (sum(sav_pct) / len(sav_pct)) if sav_pct else 0.0,
+                "savings_frac_boot_lo": lo,
+                "savings_frac_boot_hi": hi,
+                "mean_savings_rollouts": (sum(all_savings_rollouts) / len(all_savings_rollouts))
+                if all_savings_rollouts
+                else 0.0,
+                "savings_rollouts_boot_lo": lo_roll,
+                "savings_rollouts_boot_hi": hi_roll,
+                "n_pareto_dominates_static": n_dominates,
+                "frac_pareto_dominates": n_dominates / n_prompts if n_prompts > 0 else 0.0,
+                "h4_monotone_dec_slope": "n/a"
+                if h4_monotone is None
+                else ("PASS" if h4_monotone else "FAIL"),
+            }
+        )
     pm_path = os.path.join(OUT_DIR, "p7_iter192_per_method.tsv")
     if per_method:
         with open(pm_path, "w", newline="") as fh:
-            w = csv.DictWriter(fh, fieldnames=list(per_method[0].keys()),
-                               delimiter="\t")
+            w = csv.DictWriter(fh, fieldnames=list(per_method[0].keys()), delimiter="\t")
             w.writeheader()
             for row in per_method:
                 w.writerow(row)
@@ -313,74 +323,83 @@ def main():
     # 4. CI TSV per method
     ci_rows = []
     for r in per_method:
-        ci_rows.append({
-            "method": r["method"],
-            "metric": "savings_frac",
-            "point": r["mean_savings_frac"],
-            "lo": r["savings_frac_boot_lo"],
-            "hi": r["savings_frac_boot_hi"],
-            "excludes_zero": (r["savings_frac_boot_lo"] > 0),
-        })
-        ci_rows.append({
-            "method": r["method"],
-            "metric": "savings_rollouts",
-            "point": r["mean_savings_rollouts"],
-            "lo": r["savings_rollouts_boot_lo"],
-            "hi": r["savings_rollouts_boot_hi"],
-            "excludes_zero": (r["savings_rollouts_boot_lo"] > 0),
-        })
+        ci_rows.append(
+            {
+                "method": r["method"],
+                "metric": "savings_frac",
+                "point": r["mean_savings_frac"],
+                "lo": r["savings_frac_boot_lo"],
+                "hi": r["savings_frac_boot_hi"],
+                "excludes_zero": (r["savings_frac_boot_lo"] > 0),
+            }
+        )
+        ci_rows.append(
+            {
+                "method": r["method"],
+                "metric": "savings_rollouts",
+                "point": r["mean_savings_rollouts"],
+                "lo": r["savings_rollouts_boot_lo"],
+                "hi": r["savings_rollouts_boot_hi"],
+                "excludes_zero": (r["savings_rollouts_boot_lo"] > 0),
+            }
+        )
     ci_path = os.path.join(OUT_DIR, "p7_iter192_ci.tsv")
     with open(ci_path, "w", newline="") as fh:
-        w = csv.DictWriter(fh, fieldnames=["method", "metric", "point", "lo", "hi",
-                                           "excludes_zero"], delimiter="\t")
+        w = csv.DictWriter(
+            fh,
+            fieldnames=["method", "metric", "point", "lo", "hi", "excludes_zero"],
+            delimiter="\t",
+        )
         w.writeheader()
         for row in ci_rows:
             w.writerow(row)
 
     # 5. Verdicts for the 5 hypotheses
     n_with_savings = sum(1 for r in per_method if r["mean_savings_frac"] > 0)
-    n_dominate = sum(1 for r in per_method
-                     if r["frac_pareto_dominates"] >= 1.0 - 1e-9)
-    n_savings_excl_zero = sum(1 for r in ci_rows
-                              if r["metric"] == "savings_frac"
-                              and r["excludes_zero"])
-    n_rollouts_excl_zero = sum(1 for r in ci_rows
-                               if r["metric"] == "savings_rollouts"
-                               and r["excludes_zero"])
+    n_dominate = sum(1 for r in per_method if r["frac_pareto_dominates"] >= 1.0 - 1e-9)
+    n_savings_excl_zero = sum(
+        1 for r in ci_rows if r["metric"] == "savings_frac" and r["excludes_zero"]
+    )
+    n_rollouts_excl_zero = sum(
+        1 for r in ci_rows if r["metric"] == "savings_rollouts" and r["excludes_zero"]
+    )
     # H4: monotone decreasing on contrast mean
-    monotone_pass = sum(1 for r in per_method
-                        if r["h4_monotone_dec_slope"] == "PASS")
+    monotone_pass = sum(1 for r in per_method if r["h4_monotone_dec_slope"] == "PASS")
     verdict = {
         "H1_per_prompt_optimal_lt_16_on_majority_contrast_prompts": (
             f"n_methods_with_opt_mean_lt_16 = "
             f"{sum(1 for r in per_method if r['mean_gn_optimal_contrast'] < 16)} / "
             f"{len(per_method)}; "
-            f"PASS" if sum(1 for r in per_method
-                           if r["mean_gn_optimal_contrast"] < 16) >= 3 else "FAIL"
+            f"PASS"
+            if sum(1 for r in per_method if r["mean_gn_optimal_contrast"] < 16) >= 3
+            else "FAIL"
         ),
         "H2_mean_gn_optimal_lt_16_every_method": (
             f"n_methods = {sum(1 for r in per_method if r['mean_gn_optimal'] < 16)} / "
             f"{len(per_method)}; "
-            f"PASS" if n_with_savings >= len(per_method) else "FAIL"
+            f"PASS"
+            if n_with_savings >= len(per_method)
+            else "FAIL"
         ),
         "H3_per_prompt_optimal_dominates_static_on_all_methods": (
-            f"n_methods_with_full_pareto = {n_dominate} / {len(per_method)}; "
-            f"PASS" if n_dominate >= 4 else "FAIL"
+            f"n_methods_with_full_pareto = {n_dominate} / {len(per_method)}; PASS"
+            if n_dominate >= 4
+            else "FAIL"
         ),
         "H4_cost_eff_monotone_dec_in_GN": (
-            f"n_methods_with_slope_lt_zero = {monotone_pass} / "
-            f"{len(per_method)}; "
-            f"PASS" if monotone_pass >= 4 else "FAIL"
+            f"n_methods_with_slope_lt_zero = {monotone_pass} / {len(per_method)}; PASS"
+            if monotone_pass >= 4
+            else "FAIL"
         ),
         "H5_bootstrap_ci_excludes_zero_on_savings_frac": (
-            f"n_methods_with_ci_excl_zero = {n_savings_excl_zero} / "
-            f"{len(per_method)}; "
-            f"PASS" if n_savings_excl_zero >= 4 else "FAIL"
+            f"n_methods_with_ci_excl_zero = {n_savings_excl_zero} / {len(per_method)}; PASS"
+            if n_savings_excl_zero >= 4
+            else "FAIL"
         ),
         "H5b_bootstrap_ci_excludes_zero_on_savings_rollouts": (
-            f"n_methods_with_ci_excl_zero = {n_rollouts_excl_zero}/ "
-            f"{len(per_method)}; "
-            f"PASS" if n_rollouts_excl_zero >= 4 else "FAIL"
+            f"n_methods_with_ci_excl_zero = {n_rollouts_excl_zero}/ {len(per_method)}; PASS"
+            if n_rollouts_excl_zero >= 4
+            else "FAIL"
         ),
     }
     summary = {
@@ -393,7 +412,8 @@ def main():
             "G_BASE": G_BASE,
             "G_N_GRID": G_N_GRID,
             "G_N_STATIC": G_N_STATIC,
-            "B": B, "SEED": SEED,
+            "B": B,
+            "SEED": SEED,
         },
     }
     sm_path = os.path.join(OUT_DIR, "p7_iter192_summary.json")
@@ -405,15 +425,17 @@ def main():
     print(f"  fired prompts total: {len(per_prompt_rows)}")
     print(f"  per-method:")
     for r in per_method:
-        print(f"    {r['method']}: n={r['n_prompts']} (b={r['n_boundary']}, "
-              f"c={r['n_contrast']})  mean_GN*={r['mean_gn_optimal']:.3f} "
-              f"(c-only={r['mean_gn_optimal_contrast']:.3f})  "
-              f"savings={r['mean_savings_frac']:.3f} "
-              f"[{r['savings_frac_boot_lo']:.3f}, "
-              f"{r['savings_frac_boot_hi']:.3f}]  "
-              f"restored opt={r['mean_restored_optimal']:.4f} "
-              f"vs static={r['mean_restored_static']:.4f}  "
-              f"dom={r['frac_pareto_dominates']:.3f}")
+        print(
+            f"    {r['method']}: n={r['n_prompts']} (b={r['n_boundary']}, "
+            f"c={r['n_contrast']})  mean_GN*={r['mean_gn_optimal']:.3f} "
+            f"(c-only={r['mean_gn_optimal_contrast']:.3f})  "
+            f"savings={r['mean_savings_frac']:.3f} "
+            f"[{r['savings_frac_boot_lo']:.3f}, "
+            f"{r['savings_frac_boot_hi']:.3f}]  "
+            f"restored opt={r['mean_restored_optimal']:.4f} "
+            f"vs static={r['mean_restored_static']:.4f}  "
+            f"dom={r['frac_pareto_dominates']:.3f}"
+        )
     print(f"  verdicts:")
     for k, v in verdict.items():
         print(f"    {k}: {v}")

@@ -53,6 +53,7 @@ Outputs:
   synth_iter200_d22_stability.tsv       4 methods x 10 deciles x 4 pillars x 2 weightings
   synth_iter200_d22_summary.json        H1..H5 verdicts
 """
+
 from __future__ import annotations
 import csv
 import json
@@ -61,8 +62,10 @@ from pathlib import Path
 import numpy as np
 
 import sys
+
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
+from _paths import REPO_ROOT
+
 ROOT = REPO_ROOT
 RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8"
 RES.mkdir(parents=True, exist_ok=True)
@@ -113,8 +116,9 @@ def main():
     # Compute cost-optimal weight per (method, step).
     # Use the iter-188 c=100 weighting: w = reward / (1 + (c/100) * mean_len / ref_len)
     # where ref_len = mean(mean_len across all cells) = ~800 tokens (proxy).
-    ref_len = float(np.mean([per_method_step[(m, s)]["mean_len"]
-                              for m in METHODS for s in range(N_STEPS)]))
+    ref_len = float(
+        np.mean([per_method_step[(m, s)]["mean_len"] for m in METHODS for s in range(N_STEPS)])
+    )
     c_norm = 1.0  # cost ratio scaling (c=100 gives c_norm=1.0)
     weights = {}
     for m in METHODS:
@@ -128,17 +132,17 @@ def main():
         for s in range(N_STEPS):
             cell = per_method_step[(m, s)]
             w = weights[(m, s)]
-            per_method_step[(m, s)].update({
-                "P5_w": cell["P5_reward"] * w,
-                "P6_w": cell["P6_minus_zvf"] * w,
-                "P7_w": cell["P7_snr"] * w,
-                "P8_w": cell["P8_reward_per_len"] * w,
-            })
+            per_method_step[(m, s)].update(
+                {
+                    "P5_w": cell["P5_reward"] * w,
+                    "P6_w": cell["P6_minus_zvf"] * w,
+                    "P7_w": cell["P7_snr"] * w,
+                    "P8_w": cell["P8_reward_per_len"] * w,
+                }
+            )
 
-    pairs = [("P5", "P6"), ("P5", "P7"), ("P5", "P8"),
-             ("P6", "P7"), ("P6", "P8"), ("P7", "P8")]
-    keys_raw = {"P5": "P5_reward", "P6": "P6_minus_zvf",
-                "P7": "P7_snr", "P8": "P8_reward_per_len"}
+    pairs = [("P5", "P6"), ("P5", "P7"), ("P5", "P8"), ("P6", "P7"), ("P6", "P8"), ("P7", "P8")]
+    keys_raw = {"P5": "P5_reward", "P6": "P6_minus_zvf", "P7": "P7_snr", "P8": "P8_reward_per_len"}
     keys_w = {"P5": "P5_w", "P6": "P6_w", "P7": "P7_w", "P8": "P8_w"}
 
     # Aggregate cross-pillar ρ on 160 cells
@@ -146,10 +150,12 @@ def main():
         keys = keys_w if weighting == "weighted" else keys_raw
         out = {}
         for p1, p2 in pairs:
-            v1 = np.array([per_method_step[(m, s)][keys[p1]]
-                           for m in METHODS for s in range(N_STEPS)])
-            v2 = np.array([per_method_step[(m, s)][keys[p2]]
-                           for m in METHODS for s in range(N_STEPS)])
+            v1 = np.array(
+                [per_method_step[(m, s)][keys[p1]] for m in METHODS for s in range(N_STEPS)]
+            )
+            v2 = np.array(
+                [per_method_step[(m, s)][keys[p2]] for m in METHODS for s in range(N_STEPS)]
+            )
             out[(p1, p2)] = spearman(v1, v2)
         return out
 
@@ -162,7 +168,7 @@ def main():
         out = {pair: [] for pair in pairs}
         cells = [(m, s) for m in METHODS for s in range(N_STEPS)]
         rng = np.random.default_rng(20260706)
-        for b in range(n_boot):
+        for _b in range(n_boot):
             idx = rng.integers(0, len(cells), size=len(cells))
             for p1, p2 in pairs:
                 v1 = np.array([per_method_step[cells[i]][keys[p1]] for i in idx])
@@ -174,8 +180,9 @@ def main():
     boot_w = boot_aggregate_rho("weighted", N_BOOT)
 
     # Per-decile ρ for both weightings
-    reward_means = np.array([per_method_step[(m, s)]["P5_reward"]
-                              for m in METHODS for s in range(N_STEPS)])
+    reward_means = np.array(
+        [per_method_step[(m, s)]["P5_reward"] for m in METHODS for s in range(N_STEPS)]
+    )
     decile_edges = np.quantile(reward_means, np.linspace(0, 1, N_DECILES + 1))
     decile_edges[0] -= 1e-9
     decile_edges[-1] += 1e-9
@@ -233,21 +240,27 @@ def main():
                     boot = boot_w[pair]
                 lo = float(np.quantile(boot, 0.025))
                 hi = float(np.quantile(boot, 0.975))
-                f.write(f"{pair[0]}-{pair[1]}\t{weighting}\t{rho:.4f}\t"
-                        f"{lo:.4f}\t{hi:.4f}\t{int(lo > 0)}\t{int(hi < 0)}\n")
+                f.write(
+                    f"{pair[0]}-{pair[1]}\t{weighting}\t{rho:.4f}\t"
+                    f"{lo:.4f}\t{hi:.4f}\t{int(lo > 0)}\t{int(hi < 0)}\n"
+                )
 
     # ----- TSV: per-decile ρ raw -----
     def write_per_decile(rows, suffix):
         out = RES / f"synth_iter200_d22_per_decile{suffix}.tsv"
         with out.open("w") as f:
-            f.write("decile\trho_P5P6\trho_P5P7\trho_P5P8\trho_P6P7\trho_P6P8\trho_P7P8\t"
-                    "best_P5\tbest_P6\tbest_P7\tbest_P8\n")
+            f.write(
+                "decile\trho_P5P6\trho_P5P7\trho_P5P8\trho_P6P7\trho_P6P8\trho_P7P8\t"
+                "best_P5\tbest_P6\tbest_P7\tbest_P8\n"
+            )
             for r in rows:
-                f.write(f"{r['decile']}\t"
-                        f"{r['rho_P5P6']:.4f}\t{r['rho_P5P7']:.4f}\t{r['rho_P5P8']:.4f}\t"
-                        f"{r['rho_P6P7']:.4f}\t{r['rho_P6P8']:.4f}\t{r['rho_P7P8']:.4f}\t"
-                        f"{r['best_per_pillar']['P5']}\t{r['best_per_pillar']['P6']}\t"
-                        f"{r['best_per_pillar']['P7']}\t{r['best_per_pillar']['P8']}\n")
+                f.write(
+                    f"{r['decile']}\t"
+                    f"{r['rho_P5P6']:.4f}\t{r['rho_P5P7']:.4f}\t{r['rho_P5P8']:.4f}\t"
+                    f"{r['rho_P6P7']:.4f}\t{r['rho_P6P8']:.4f}\t{r['rho_P7P8']:.4f}\t"
+                    f"{r['best_per_pillar']['P5']}\t{r['best_per_pillar']['P6']}\t"
+                    f"{r['best_per_pillar']['P7']}\t{r['best_per_pillar']['P8']}\n"
+                )
 
     write_per_decile(raw_decile, "")
     write_per_decile(w_decile, "_w")
@@ -258,8 +271,8 @@ def main():
         f.write("decile\tp\tweighting\tbest_method\n")
         for d in range(N_DECILES):
             for p in ["P5", "P6", "P7", "P8"]:
-                f.write(f"{d+1}\t{p}\traw\t{raw_decile[d]['best_per_pillar'][p]}\n")
-                f.write(f"{d+1}\t{p}\tweighted\t{w_decile[d]['best_per_pillar'][p]}\n")
+                f.write(f"{d + 1}\t{p}\traw\t{raw_decile[d]['best_per_pillar'][p]}\n")
+                f.write(f"{d + 1}\t{p}\tweighted\t{w_decile[d]['best_per_pillar'][p]}\n")
 
     # ----- Hypotheses -----
     # H1: |P5↔P8| ρ magnitude greater under cost-weighting than raw
@@ -280,17 +293,17 @@ def main():
     h2_pass = bool(w_score > raw_score)
 
     # H3: cost-weighting reduces per-decile ρ variance (averaged over all pairs)
-    raw_var = float(np.mean([np.var([r[f"rho_{p1}{p2}"] for r in raw_decile])
-                              for p1, p2 in pairs]))
-    w_var = float(np.mean([np.var([r[f"rho_{p1}{p2}"] for r in w_decile])
-                            for p1, p2 in pairs]))
+    raw_var = float(np.mean([np.var([r[f"rho_{p1}{p2}"] for r in raw_decile]) for p1, p2 in pairs]))
+    w_var = float(np.mean([np.var([r[f"rho_{p1}{p2}"] for r in w_decile]) for p1, p2 in pairs]))
     h3_pass = bool(w_var < raw_var)
 
     # H4: low-decile |ρ| variance > high-decile |ρ| variance (D21 H4 holds under weighting)
-    low_var_w = float(np.mean([abs(w_decile[d][f"rho_{p1}{p2}"])
-                                for d in range(3) for p1, p2 in pairs]))
-    high_var_w = float(np.mean([abs(w_decile[d][f"rho_{p1}{p2}"])
-                                 for d in range(7, 10) for p1, p2 in pairs]))
+    low_var_w = float(
+        np.mean([abs(w_decile[d][f"rho_{p1}{p2}"]) for d in range(3) for p1, p2 in pairs])
+    )
+    high_var_w = float(
+        np.mean([abs(w_decile[d][f"rho_{p1}{p2}"]) for d in range(7, 10) for p1, p2 in pairs])
+    )
     h4_pass = bool(low_var_w > high_var_w)
 
     # H5: best method per pillar more stable under cost-weighting —
@@ -302,9 +315,9 @@ def main():
         for p in ["P5", "P6", "P7", "P8"]:
             # Compare across deciles: how often does the best method flip?
             if d > 0:
-                if raw_decile[d]["best_per_pillar"][p] != raw_decile[d-1]["best_per_pillar"][p]:
+                if raw_decile[d]["best_per_pillar"][p] != raw_decile[d - 1]["best_per_pillar"][p]:
                     n_changes_raw += 1
-                if w_decile[d]["best_per_pillar"][p] != w_decile[d-1]["best_per_pillar"][p]:
+                if w_decile[d]["best_per_pillar"][p] != w_decile[d - 1]["best_per_pillar"][p]:
                     n_changes_w += 1
     h5_pass = bool(n_changes_w < n_changes_raw)
 
@@ -333,8 +346,10 @@ def main():
         "h5_best_method_more_stable_under_weighting": h5_pass,
         "h5_n_changes_raw": n_changes_raw,
         "h5_n_changes_weighted": n_changes_w,
-        "verdict_counts": {"PASS": sum([h1_pass, h2_pass, h3_pass, h4_pass,h5_pass]),
-                            "FAIL": 5 - sum([h1_pass, h2_pass, h3_pass, h4_pass, h5_pass])},
+        "verdict_counts": {
+            "PASS": sum([h1_pass, h2_pass, h3_pass, h4_pass, h5_pass]),
+            "FAIL": 5 - sum([h1_pass, h2_pass, h3_pass, h4_pass, h5_pass]),
+        },
     }
     out_sum = RES / "synth_iter200_d22_summary.json"
     with out_sum.open("w") as f:

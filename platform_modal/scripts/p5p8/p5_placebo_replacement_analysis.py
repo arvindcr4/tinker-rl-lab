@@ -47,20 +47,21 @@ Outputs:
     platform_hybrid/experiments/results/p5p8/p5_placebo_replacement_boot.tsv
     platform_hybrid/experiments/results/p5p8/p5_placebo_replacement_summary.json
 """
+
 from __future__ import annotations
 
 import json
 import math
-import os
-import random
 from collections import Counter
 from pathlib import Path
-from statistics import fmean, pstdev
+from statistics import fmean
 
 import sys
+
 sys.path.append(str(Path(__file__).resolve().parents[1]))
 from _review02_contracts import finite_json
 from _paths import REPO_ROOT
+
 ROOT = REPO_ROOT / "platform_hybrid"
 RES = ROOT / "experiments" / "results" / "p5p8"
 MEGA = ROOT / "experiments" / "results" / "mega_20260704"
@@ -73,6 +74,7 @@ N_PAIRS_BOOT = 2000
 # -----------------------------------------------------------------------------
 # helpers
 # -----------------------------------------------------------------------------
+
 
 def shannon_entropy_bits(values):
     n = len(values)
@@ -100,7 +102,7 @@ def load_cells_tsv():
     with open(MEGA / "cells.tsv") as fh:
         header = fh.readline().rstrip("\n").split("\t")
         for line in fh:
-            row = dict(zip(header, line.rstrip("\n").split("\t")))
+            row = dict(zip(header, line.rstrip("\n").split("\t"), strict=False))
             cells.append(row)
     return cells
 
@@ -133,7 +135,7 @@ V2_CANDIDATES = [
     "advantage_normalization",
     "mini_batch_size",
     "temperature_schedule",  # corpus-controlled: T in {0.6, 1.0}
-    "model_family_label",     # corpus-controlled: {llama, qwen}
+    "model_family_label",  # corpus-controlled: {llama, qwen}
 ]
 
 
@@ -161,16 +163,19 @@ def compute_v1_info_budget(manifests):
         else:
             classification = "VARYING_STACK_DESCRIPTOR"
             stack_discriminative_bits = h
-        per_item.append({
-            "item": item,
-            "n_unique": n_unique,
-            "H_bits": h,
-            "stack_discriminative_bits": stack_discriminative_bits,
-            "classification": classification,
-            "top_value": Counter(vals).most_common(1)[0][0],
-            "top_freq": Counter(vals).most_common(1)[0][1],
-            "fraction_na": sum(1 for v in vals if v in (None, "", "n/a", "n/a-sampling")) / len(vals),
-        })
+        per_item.append(
+            {
+                "item": item,
+                "n_unique": n_unique,
+                "H_bits": h,
+                "stack_discriminative_bits": stack_discriminative_bits,
+                "classification": classification,
+                "top_value": Counter(vals).most_common(1)[0][0],
+                "top_freq": Counter(vals).most_common(1)[0][1],
+                "fraction_na": sum(1 for v in vals if v in (None, "", "n/a", "n/a-sampling"))
+                / len(vals),
+            }
+        )
     total_h = sum(p["H_bits"] for p in per_item)
     total_stack_discriminative = sum(p["stack_discriminative_bits"] for p in per_item)
     return per_item, total_h, total_stack_discriminative
@@ -181,65 +186,77 @@ def project_v2_info_budget(manifests, cells):
     were added to the manifest, given the live experimental design."""
     per_item = []
     # 1) kl_coefficient: Tinker-closed -> constant -> placebo
-    per_item.append({
-        "item": "kl_coefficient",
-        "live_corpus_value": "0.0 (Tinker-closed RLVR default)",
-        "n_unique": 1,
-        "H_bits": 0.0,
-        "classification": "WOULD-BE CONSTANT_DESCRIPTIVE (single-stack corpus)",
-        "uplift_bits": 0.0,
-    })
+    per_item.append(
+        {
+            "item": "kl_coefficient",
+            "live_corpus_value": "0.0 (Tinker-closed RLVR default)",
+            "n_unique": 1,
+            "H_bits": 0.0,
+            "classification": "WOULD-BE CONSTANT_DESCRIPTIVE (single-stack corpus)",
+            "uplift_bits": 0.0,
+        }
+    )
     # 2) clip_range_low: Tinker-closed -> constant -> placebo
-    per_item.append({
-        "item": "clip_range_low",
-        "live_corpus_value": "0.2 (PPO/GRPO default)",
-        "n_unique": 1,
-        "H_bits": 0.0,
-        "classification": "WOULD-BE CONSTANT_DESCRIPTIVE (single-stack corpus)",
-        "uplift_bits": 0.0,
-    })
+    per_item.append(
+        {
+            "item": "clip_range_low",
+            "live_corpus_value": "0.2 (PPO/GRPO default)",
+            "n_unique": 1,
+            "H_bits": 0.0,
+            "classification": "WOULD-BE CONSTANT_DESCRIPTIVE (single-stack corpus)",
+            "uplift_bits": 0.0,
+        }
+    )
     # 3) advantage_normalization: Tinker-closed -> constant -> placebo
-    per_item.append({
-        "item": "advantage_normalization",
-        "live_corpus_value": "per-group (GRPO default)",
-        "n_unique": 1,
-        "H_bits": 0.0,
-        "classification": "WOULD-BE CONSTANT_DESCRIPTIVE (single-stack corpus)",
-        "uplift_bits": 0.0,
-    })
+    per_item.append(
+        {
+            "item": "advantage_normalization",
+            "live_corpus_value": "per-group (GRPO default)",
+            "n_unique": 1,
+            "H_bits": 0.0,
+            "classification": "WOULD-BE CONSTANT_DESCRIPTIVE (single-stack corpus)",
+            "uplift_bits": 0.0,
+        }
+    )
     # 4) mini_batch_size: Tinker-closed -> constant -> placebo
-    per_item.append({
-        "item": "mini_batch_size",
-        "live_corpus_value": "1 (Tinker RLVR per-step default)",
-        "n_unique": 1,
-        "H_bits": 0.0,
-        "classification": "WOULD-BE CONSTANT_DESCRIPTIVE (single-stack corpus)",
-        "uplift_bits": 0.0,
-    })
+    per_item.append(
+        {
+            "item": "mini_batch_size",
+            "live_corpus_value": "1 (Tinker RLVR per-step default)",
+            "n_unique": 1,
+            "H_bits": 0.0,
+            "classification": "WOULD-BE CONSTANT_DESCRIPTIVE (single-stack corpus)",
+            "uplift_bits": 0.0,
+        }
+    )
     # 5) temperature_schedule: cells.tsv varies T in {0.6, 1.0} -> varies!
     temps = [c["temperature"] for c in cells]
     T_counts = Counter(temps)
-    per_item.append({
-        "item": "temperature_schedule",
-        "live_corpus_value": "varies T in {0.6, 1.0}",
-        "n_unique": len(T_counts),
-        "H_bits": shannon_entropy_bits(temps),
-        "classification": "WOULD VARY (corpus-controlled)",
-        "uplift_bits": shannon_entropy_bits(temps),
-    })
+    per_item.append(
+        {
+            "item": "temperature_schedule",
+            "live_corpus_value": "varies T in {0.6, 1.0}",
+            "n_unique": len(T_counts),
+            "H_bits": shannon_entropy_bits(temps),
+            "classification": "WOULD VARY (corpus-controlled)",
+            "uplift_bits": shannon_entropy_bits(temps),
+        }
+    )
     # 6) model_family_label: cells.tsv varies model in {Llama, Qwen} -> varies
     #    but this is already in cells.tsv as a column -> redundant
     models = [c["model_family"] for c in cells]
     M_counts = Counter(models)
     h_m = shannon_entropy_bits(models)
-    per_item.append({
-        "item": "model_family_label",
-        "live_corpus_value": "varies model in {llama, qwen}",
-        "n_unique": len(M_counts),
-        "H_bits": h_m,
-        "classification": "WOULD VARY but REDUNDANT (already in cells.tsv)",
-        "uplift_bits": 0.0,  # redundant: 0 net-new info
-    })
+    per_item.append(
+        {
+            "item": "model_family_label",
+            "live_corpus_value": "varies model in {llama, qwen}",
+            "n_unique": len(M_counts),
+            "H_bits": h_m,
+            "classification": "WOULD VARY but REDUNDANT (already in cells.tsv)",
+            "uplift_bits": 0.0,  # redundant: 0 net-new info
+        }
+    )
     return per_item
 
 
@@ -248,6 +265,7 @@ def project_v2_info_budget(manifests, cells):
 # (replays the Berkeley row unpacking_dpo_ppo_factorization logic at the
 # manifest-vs-cells.tsv granularity)
 # -----------------------------------------------------------------------------
+
 
 def eta_squared_algo_vs_stack(manifests, cells):
     """Partition the 98-cell outcome variance (ZVF) by:
@@ -291,14 +309,15 @@ def eta_squared_algo_vs_stack(manifests, cells):
 # Bootstrap protocol
 # -----------------------------------------------------------------------------
 
+
 def boot_total_h(manifests, n_boot=B_BOOT, seed=SEED):
     """Fixed campaign descriptive marginal sum; no sampling population specified."""
     _, total, _ = compute_v1_info_budget(manifests)
-    return total, float('nan'), float('nan')
+    return total, float("nan"), float("nan")
 
 
 def boot_per_item_h(manifests, item, n_boot=B_BOOT, seed=SEED):
-    return shannon_entropy_bits([m.get(item) for _, m in manifests]), float('nan'), float('nan')
+    return shannon_entropy_bits([m.get(item) for _, m in manifests]), float("nan"), float("nan")
 
 
 def main():
@@ -325,48 +344,74 @@ def main():
     # ---------------- write outputs ----------------
     out_tsv = RES / "p5_placebo_replacement.tsv"
     with open(out_tsv, "w") as fh:
-        fh.write("section\titem\tclassification\tH_bits\tstack_discriminative_bits\tn_unique\ttop_value\ttop_freq\t"
-                 "fraction_na\tuplift_bits\tnotes\n")
+        fh.write(
+            "section\titem\tclassification\tH_bits\tstack_discriminative_bits\tn_unique\ttop_value\ttop_freq\t"
+            "fraction_na\tuplift_bits\tnotes\n"
+        )
         for r in v1_items:
-            fh.write("\t".join([
-                "v1_current", r["item"],
-                r["classification"],
-                f"{r['H_bits']:.4f}",
-                f"{r['stack_discriminative_bits']:.4f}",
-                str(r["n_unique"]),
-                str(r["top_value"]), str(r["top_freq"]),
-                f"{r['fraction_na']:.4f}", "0.0",
-                "iter-65 row 76 confirmed (live measurement)",
-            ]) + "\n")
+            fh.write(
+                "\t".join(
+                    [
+                        "v1_current",
+                        r["item"],
+                        r["classification"],
+                        f"{r['H_bits']:.4f}",
+                        f"{r['stack_discriminative_bits']:.4f}",
+                        str(r["n_unique"]),
+                        str(r["top_value"]),
+                        str(r["top_freq"]),
+                        f"{r['fraction_na']:.4f}",
+                        "0.0",
+                        "iter-65 row 76 confirmed (live measurement)",
+                    ]
+                )
+                + "\n"
+            )
         for r in v2_items:
-            fh.write("\t".join([
-                "v2_projected", r["item"], r["classification"],
-                f"{r['H_bits']:.4f}",
-                f"{r['uplift_bits']:.4f}",
-                str(r["n_unique"]),
-                str(r["live_corpus_value"]), "-", "0.0000",
-                f"{r['uplift_bits']:.4f}",
-                "projection under current corpus experimental design",
-            ]) + "\n")
+            fh.write(
+                "\t".join(
+                    [
+                        "v2_projected",
+                        r["item"],
+                        r["classification"],
+                        f"{r['H_bits']:.4f}",
+                        f"{r['uplift_bits']:.4f}",
+                        str(r["n_unique"]),
+                        str(r["live_corpus_value"]),
+                        "-",
+                        "0.0000",
+                        f"{r['uplift_bits']:.4f}",
+                        "projection under current corpus experimental design",
+                    ]
+                )
+                + "\n"
+            )
 
     out_boot = RES / "p5_placebo_replacement_boot.tsv"
     with open(out_boot, "w") as fh:
         fh.write("section\tmetric\tvalue\tci95_low\tci95_high\tnotes\n")
-        fh.write(f"H1\tv1_total_H_bits\t{v1_total:.4f}\t{boot_lo:.4f}\t{boot_hi:.4f}\t"
-                 f"bootstrap B={B_BOOT} seed={SEED}\n")
+        fh.write(
+            f"H1\tv1_total_H_bits\t{v1_total:.4f}\t{boot_lo:.4f}\t{boot_hi:.4f}\t"
+            f"bootstrap B={B_BOOT} seed={SEED}\n"
+        )
         for it, (m, lo, hi) in boot_per_vary.items():
-            fh.write(f"H1\t{it}_H_bits\t{m:.4f}\t{lo:.4f}\t{hi:.4f}\t"
-                     f"bootstrap B={B_BOOT} seed={SEED}\n")
+            fh.write(
+                f"H1\t{it}_H_bits\t{m:.4f}\t{lo:.4f}\t{hi:.4f}\tbootstrap B={B_BOOT} seed={SEED}\n"
+            )
         # v2 total = v1 + 4 placebos + 1 temperature uplift
         v2_total_boot = boot_mean + shannon_entropy_bits([c["temperature"] for c in cells])
-        fh.write(f"H2\tv2_total_H_bits_with_temperature\t{v2_total_boot:.4f}\t"
-                 f"{boot_lo + shannon_entropy_bits([c['temperature'] for c in cells]):.4f}\t"
-                 f"{boot_hi + shannon_entropy_bits([c['temperature'] for c in cells]):.4f}\t"
-                 f"v1 + temperature_schedule uplift only\n")
+        fh.write(
+            f"H2\tv2_total_H_bits_with_temperature\t{v2_total_boot:.4f}\t"
+            f"{boot_lo + shannon_entropy_bits([c['temperature'] for c in cells]):.4f}\t"
+            f"{boot_hi + shannon_entropy_bits([c['temperature'] for c in cells]):.4f}\t"
+            f"v1 + temperature_schedule uplift only\n"
+        )
         # 4 hyperparameter candidates contribute 0
-        fh.write(f"H1\tv2_total_H_bits_with_hyperparams\t{boot_mean:.4f}\t"
-                 f"{boot_lo:.4f}\t{boot_hi:.4f}\t"
-                 f"v1 + 4 hyperparameter candidates (each uplift=0)\n")
+        fh.write(
+            f"H1\tv2_total_H_bits_with_hyperparams\t{boot_mean:.4f}\t"
+            f"{boot_lo:.4f}\t{boot_hi:.4f}\t"
+            f"v1 + 4 hyperparameter candidates (each uplift=0)\n"
+        )
 
     summary = {
         "statistic_version": "pro-review-02-v2",
@@ -381,12 +426,18 @@ def main():
         "n_v2_candidates": len(v2_items),
         "H1": {
             "claim": "GRPO/PPO hyperparameter candidates (kl_coeff, clip_range, adv_norm, mini_batch_size) would all be placebos on the live corpus (single-stack Tinker-closed campaign)",
-            "n_placebo_candidates": sum(1 for r in v2_items if "CONSTANT_DESCRIPTIVE" in r["classification"]),
+            "n_placebo_candidates": sum(
+                1 for r in v2_items if "CONSTANT_DESCRIPTIVE" in r["classification"]
+            ),
             "n_varying_candidates": sum(1 for r in v2_items if "WOULD VARY" in r["classification"]),
             "total_uplift_bits_from_hyperparam_candidates": sum(
-                r["uplift_bits"] for r in v2_items if "hyperparameter" in r["classification"] or
-                "kl_coefficient" in r["item"] or "clip_range" in r["item"] or
-                "advantage_normalization" in r["item"] or "mini_batch_size" in r["item"]
+                r["uplift_bits"]
+                for r in v2_items
+                if "hyperparameter" in r["classification"]
+                or "kl_coefficient" in r["item"]
+                or "clip_range" in r["item"]
+                or "advantage_normalization" in r["item"]
+                or "mini_batch_size" in r["item"]
             ),
             "verdict": "All 4 GRPO/PPO hyperparameter candidates would replicate the iter-65 4-placebo problem at higher cardinality. NO stack-discriminative bits added on the live corpus.",
         },
@@ -413,18 +464,21 @@ def main():
             "sum_of_marginal_entropies_observed": v1_total,
             "total_stack_discriminative_bits": v1_stack_disc,
             "per_item": [
-                {"item": r["item"], "H_bits": r["H_bits"],
-                 "stack_discriminative_bits": r["stack_discriminative_bits"],
-                 "classification": r["classification"]}
+                {
+                    "item": r["item"],
+                    "H_bits": r["H_bits"],
+                    "stack_discriminative_bits": r["stack_discriminative_bits"],
+                    "classification": r["classification"],
+                }
                 for r in v1_items
             ],
         },
         "v2_projected_info_budget": {
             "with_4_hyperparam_candidates_only": v1_total + 0.0,
-            "with_temperature_schedule_only": v1_total + shannon_entropy_bits(
-                [c["temperature"] for c in cells]),
-            "with_temperature_and_redundant_model": v1_total + shannon_entropy_bits(
-                [c["temperature"] for c in cells]),  # model is redundant
+            "with_temperature_schedule_only": v1_total
+            + shannon_entropy_bits([c["temperature"] for c in cells]),
+            "with_temperature_and_redundant_model": v1_total
+            + shannon_entropy_bits([c["temperature"] for c in cells]),  # model is redundant
         },
         "bootstrap": {
             "n_boot": B_BOOT,
@@ -435,9 +489,12 @@ def main():
             "interpretation": "Intervals unavailable: fixed-campaign census with no declared population sampling model; identity fields are excluded from scientific-information claims.",
             "per_varying_item_observed_and_ci95": {
                 it: {
-                    "observed": v1_items[next(i for i, r in enumerate(v1_items) if r["item"] == it)]["H_bits"],
+                    "observed": v1_items[
+                        next(i for i, r in enumerate(v1_items) if r["item"] == it)
+                    ]["H_bits"],
                     "ci95": [lo, hi],
-                } for it, (_, lo, hi) in boot_per_vary.items()
+                }
+                for it, (_, lo, hi) in boot_per_vary.items()
             },
         },
         "operational_recommendation": (
@@ -451,17 +508,17 @@ def main():
         ),
         "cross_paper_coupling": {
             "iter_49": "P5 eta^2 finding: algorithm-axis eta^2 < 0.05 on the multi-method "
-                       "corpus -- replicated here at zero by single-algorithm design",
+            "corpus -- replicated here at zero by single-algorithm design",
             "iter_53": "P5 subfield completeness audit -- 4 placebo items identified",
             "iter_65_row_76": "P5 manifest x outcome coupling -- 4/7 items are placebos "
-                              "on the live 98-cell corpus (H=11.4 bits concentrated in 3 items)",
+            "on the live 98-cell corpus (H=11.4 bits concentrated in 3 items)",
             "iter_66_row_77": "P6 measured_yield_residual (delta_div) is the only signal that "
-                              "varies per-method on the same-stack corpus -- but it is an "
-                              "OUTCOMES not a STACK axis, so it cannot be a v2 replacement "
-                              "for stack descriptors",
+            "varies per-method on the same-stack corpus -- but it is an "
+            "OUTCOMES not a STACK axis, so it cannot be a v2 replacement "
+            "for stack descriptors",
             "iter_68_row_79": "P8 single-sensor: 4-aggregate block is non-uniform; 2 of 4 "
-                              "members do the work -- same structural finding (4-of-7 has "
-                              "limited utility) at a different axis",
+            "members do the work -- same structural finding (4-of-7 has "
+            "limited utility) at a different axis",
         },
     }
     with open(RES / "p5_placebo_replacement_summary.json", "w") as fh:
@@ -470,17 +527,27 @@ def main():
     # ---------------- print headline ----------------
     print("=" * 60)
     print(f"Iter 69 (P5) -- Placebo-replacement feasibility on live 98-cell corpus")
-    print(f"v1 (7-item) total marginal diversity sum:        {v1_total:.4f} bits "
-          f"[{boot_lo:.4f}, {boot_hi:.4f}] (B={B_BOOT} bootstrap)")
-    print(f"v1 stack-discriminative bits:         {v1_stack_disc:.4f} "
-          f"(CONSTANT_DESCRIPTIVE+CELL_ID = {sum(1 for r in v1_items if r['classification'] != 'VARYING_STACK_DESCRIPTOR')}/7 "
-          f"contribute 0 stack-discriminative bits)")
+    print(
+        f"v1 (7-item) total marginal diversity sum:        {v1_total:.4f} bits "
+        f"[{boot_lo:.4f}, {boot_hi:.4f}] (B={B_BOOT} bootstrap)"
+    )
+    print(
+        f"v1 stack-discriminative bits:         {v1_stack_disc:.4f} "
+        f"(CONSTANT_DESCRIPTIVE+CELL_ID = {sum(1 for r in v1_items if r['classification'] != 'VARYING_STACK_DESCRIPTOR')}/7 "
+        f"contribute 0 stack-discriminative bits)"
+    )
     print(f"v2 candidates (4 hyperparam):         4/4 would-be placebos (single-stack corpus)")
-    print(f"v2 temperature_schedule:              {shannon_entropy_bits([c['temperature'] for c in cells]):.4f} bits (varies on corpus)")
+    print(
+        f"v2 temperature_schedule:              {shannon_entropy_bits([c['temperature'] for c in cells]):.4f} bits (varies on corpus)"
+    )
     print(f"v2 model_family:                      REDUNDANT (already in cells.tsv)")
-    print(f"  => v2 total (with temperature only): {v1_total + shannon_entropy_bits([c['temperature'] for c in cells]):.4f} bits")
+    print(
+        f"  => v2 total (with temperature only): {v1_total + shannon_entropy_bits([c['temperature'] for c in cells]):.4f} bits"
+    )
     print(f"  => v2 total (with 4 hyperparams):    {v1_total:.4f} bits (NO uplift)")
-    print(f"H3 eta^2 stack-axis:                  {eta2['stack_axis_eta2']:.4f} (algorithm-axis = 0 by construction)")
+    print(
+        f"H3 eta^2 stack-axis:                  {eta2['stack_axis_eta2']:.4f} (algorithm-axis = 0 by construction)"
+    )
     print(f"Operational recommendation:           add temperature_schedule; defer 4 hyperparams")
     print("=" * 60)
 

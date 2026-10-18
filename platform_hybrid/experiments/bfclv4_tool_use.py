@@ -29,19 +29,18 @@ from __future__ import annotations
 
 import sys as _sys
 from pathlib import Path as _Path
-_sys.path.insert(0, str(next(p for p in _Path(__file__).resolve().parents if (p / "platform_hybrid").is_dir())))
+
+_sys.path.insert(
+    0, str(next(p for p in _Path(__file__).resolve().parents if (p / "platform_hybrid").is_dir()))
+)
 from platform_hybrid.experiments.research_contracts import group_metrics, SIMULATION_METADATA
 
 
 import argparse
 import ast
-import json
-import math
-import os
 import random
-import sys
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Sequence, Tuple
+from typing import Any, Dict, List, Optional, Sequence
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 RESULTS_DIR = REPO_ROOT / "experiments" / "results"
@@ -50,6 +49,7 @@ OUT_TSV = RESULTS_DIR / "bfclv4_tool_use.tsv"
 # ---------------------------------------------------------------------------
 # BFCLv4-style reward definitions
 # ---------------------------------------------------------------------------
+
 
 def _ast_eq(a: Any, b: Any) -> bool:
     """Deep equality of AST nodes (for function-call exact match)."""
@@ -61,12 +61,11 @@ def _ast_eq(a: Any, b: Any) -> bool:
             if not _ast_eq(val_a, val_b):
                 return False
         return True
-    elif isinstance(a, list):
+    if isinstance(a, list):
         if len(a) != len(b):
             return False
-        return all(_ast_eq(x, y) for x, y in zip(a, b))
-    else:
-        return a == b
+        return all(_ast_eq(x, y) for x, y in zip(a, b, strict=False))
+    return a == b
 
 
 def parse_function_call(call_str: str) -> Optional[ast.Call]:
@@ -130,6 +129,7 @@ def reward_dense(pred_call: str, gold_call: str) -> float:
 # Simulated BFCLv4 dataset
 # ---------------------------------------------------------------------------
 
+
 class SimulatedBFCLv4:
     """Lightweight simulator when real BFCLv4 data is unavailable."""
 
@@ -159,7 +159,7 @@ class SimulatedBFCLv4:
             vals = [f"'{p}_val'" for p in params]
         else:
             vals = [f"'{p}_val'" if self.rng.random() > 0.3 else f"'wrong'" for p in params]
-        return f"{name}({', '.join(f'{p}={v}' for p, v in zip(params, vals))})"
+        return f"{name}({', '.join(f'{p}={v}' for p, v in zip(params, vals, strict=False))})"
 
     def sample_predictions(self, n: int, skill_level: float = 0.5) -> List[str]:
         """Sample n predictions with given skill level (0=random, 1=perfect)."""
@@ -174,6 +174,7 @@ class SimulatedBFCLv4:
 # ---------------------------------------------------------------------------
 # Training loop shim
 # ---------------------------------------------------------------------------
+
 
 def run_dry_run(n_seeds: int = 5, n_steps: int = 100) -> List[Dict[str, Any]]:
     """Simulate a BFCLv4 tool-use RL loop with sparse and dense rewards."""
@@ -219,9 +220,19 @@ def run_dry_run(n_seeds: int = 5, n_steps: int = 100) -> List[Dict[str, Any]]:
 # ---------------------------------------------------------------------------
 
 TSV_HEADER = [
-    "seed", "step", "n_correct", "n_total",
-    "reward_sparse", "reward_dense", "zvf_sparse", "zvf_dense",
-    "execution_kind", "measured", "claim_eligible", "artifact_type", "protocol_version",
+    "seed",
+    "step",
+    "n_correct",
+    "n_total",
+    "reward_sparse",
+    "reward_dense",
+    "zvf_sparse",
+    "zvf_dense",
+    "execution_kind",
+    "measured",
+    "claim_eligible",
+    "artifact_type",
+    "protocol_version",
 ]
 
 
@@ -236,6 +247,7 @@ def write_tsv(rows: List[Dict[str, Any]], path: Path = OUT_TSV) -> None:
 # ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------
+
 
 def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
     p = argparse.ArgumentParser(description="BFCLv4 tool-use evaluation scaffold")
@@ -254,10 +266,14 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         rows = run_dry_run(n_seeds=args.seeds, n_steps=args.steps)
         write_tsv(rows, Path(args.out))
         print(f"[bfclv4] wrote {len(rows)} rows -> {args.out}")
-        print(f"[bfclv4] mean sparse reward: {sum(r['reward_sparse'] for r in rows)/len(rows):.3f}")
-        print(f"[bfclv4] mean dense reward:  {sum(r['reward_dense'] for r in rows)/len(rows):.3f}")
-        print(f"[bfclv4] ZVF(sparse): {sum(r['zvf_sparse'] for r in rows)/len(rows):.3f}")
-        print(f"[bfclv4] ZVF(dense):  {sum(r['zvf_dense'] for r in rows)/len(rows):.3f}")
+        print(
+            f"[bfclv4] mean sparse reward: {sum(r['reward_sparse'] for r in rows) / len(rows):.3f}"
+        )
+        print(
+            f"[bfclv4] mean dense reward:  {sum(r['reward_dense'] for r in rows) / len(rows):.3f}"
+        )
+        print(f"[bfclv4] ZVF(sparse): {sum(r['zvf_sparse'] for r in rows) / len(rows):.3f}")
+        print(f"[bfclv4] ZVF(dense):  {sum(r['zvf_dense'] for r in rows) / len(rows):.3f}")
         return 0
 
     # Real evaluation path (placeholder for actual model integration)

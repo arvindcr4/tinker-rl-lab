@@ -8,12 +8,13 @@ Panel C: ZVF-binned ols_slope heatmap (4 rows task x algo, 3 cols zvf_bin).
 Panel D: condvar std(R|L) vs L_bin_center overlaid for the two algos on the
          easy task (most data).
 """
+
 from __future__ import annotations
-import json
 import math
 from pathlib import Path
 
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
@@ -55,13 +56,17 @@ def main() -> None:
             for tau in TAUS:
                 key = (task, algo, tau)
                 v = grouped.get(key, [])
-                labels.append(f"{task[:4]}/{algo[:4]}/q{int(float(tau)*100)}")
+                labels.append(f"{task[:4]}/{algo[:4]}/q{int(float(tau) * 100)}")
                 data.append(v if v else [0.0])
                 colors.append("#377eb8" if algo == "grpo" else "#e41a1c")
-    bp = ax.boxplot(data, patch_artist=True, widths=0.6, showmeans=True,
-                    meanprops={"marker": "D", "markerfacecolor": "white",
-                               "markeredgecolor": "black"})
-    for patch, c in zip(bp["boxes"], colors):
+    bp = ax.boxplot(
+        data,
+        patch_artist=True,
+        widths=0.6,
+        showmeans=True,
+        meanprops={"marker": "D", "markerfacecolor": "white", "markeredgecolor": "black"},
+    )
+    for patch, c in zip(bp["boxes"], colors, strict=False):
         patch.set_facecolor(c)
         patch.set_alpha(0.5)
     ax.axhline(0, color="grey", linewidth=0.5)
@@ -82,13 +87,14 @@ def main() -> None:
     width = 0.35
     means_g = [np.mean(grp[(t, "grpo")]) for t in tasks]
     means_d = [np.mean(grp[(t, "dr_grpo")]) for t in tasks]
-    ax.bar(x - width/2, means_g, width, color="#377eb8", label="GRPO", alpha=0.7)
-    ax.bar(x + width/2, means_d, width, color="#e41a1c", label="Dr.GRPO", alpha=0.7)
+    ax.bar(x - width / 2, means_g, width, color="#377eb8", label="GRPO", alpha=0.7)
+    ax.bar(x + width / 2, means_d, width, color="#e41a1c", label="Dr.GRPO", alpha=0.7)
     for i, t in enumerate(tasks):
         for j, vals in enumerate((grp[(t, "grpo")], grp[(t, "dr_grpo")])):
-            for k, v in enumerate(vals):
-                ax.scatter(i + (-width/2 if j == 0 else width/2),
-                           v, color="black", s=18, zorder=5)
+            for _k, v in enumerate(vals):
+                ax.scatter(
+                    i + (-width / 2 if j == 0 else width / 2), v, color="black", s=18, zorder=5
+                )
     ax.set_xticks(x)
     ax.set_xticklabels([t[:10] for t in tasks])
     ax.set_ylabel("asymmetry delta = slope_q90 - slope_q10")
@@ -104,9 +110,14 @@ def main() -> None:
         for algo in algos:
             row = []
             for zb in ("low", "mid", "high"):
-                v = next((to_float(r["ols_slope"]) for r in zvf
-                          if r["task"] == task and r["algo"] == algo
-                          and r["zvf_bin"] == zb), float("nan"))
+                v = next(
+                    (
+                        to_float(r["ols_slope"])
+                        for r in zvf
+                        if r["task"] == task and r["algo"] == algo and r["zvf_bin"] == zb
+                    ),
+                    float("nan"),
+                )
                 row.append(v)
             rows.append(row)
     row_labels = [f"{t[:4]}/{a[:4]}" for t in tasks for a in algos]
@@ -121,16 +132,21 @@ def main() -> None:
         for j in range(M.shape[1]):
             v = M[i, j]
             if not math.isnan(v):
-                ax.text(j, i, f"{v:+.3f}", ha="center", va="center",
-                        color="white" if abs(v) > vmax * 0.5 else "black",
-                        fontsize=8)
+                ax.text(
+                    j,
+                    i,
+                    f"{v:+.3f}",
+                    ha="center",
+                    va="center",
+                    color="white" if abs(v) > vmax * 0.5 else "black",
+                    fontsize=8,
+                )
     ax.set_title("C. ols_slope by ZVF bin (task/algo)")
     fig.colorbar(im, ax=ax, shrink=0.85, label="ols_slope R|L")
 
     # ---- Panel D: condvar std(R|L) vs L_bin (arithmetic_easy only) ----
     ax = axes[1, 1]
-    for algo, color, label in (("grpo", "#377eb8", "GRPO"),
-                                ("dr_grpo", "#e41a1c", "Dr.GRPO")):
+    for algo, color, label in (("grpo", "#377eb8", "GRPO"), ("dr_grpo", "#e41a1c", "Dr.GRPO")):
         xs_all, ys_all = [], []
         for r in cv:
             if r["task"] == "arithmetic_easy" and r["algo"] == algo:
@@ -146,7 +162,8 @@ def main() -> None:
     fig.suptitle(
         "Iter 44 conditional quantile regression on R|L — anti-trap at upper "
         "quantile, Dr.GRPO strengthens asymmetry",
-        fontsize=11)
+        fontsize=11,
+    )
     fig.tight_layout(rect=[0, 0, 1, 0.97])
     for ext in ("pdf", "png"):
         out = FIG / f"length_bias_iter44.{ext}"

@@ -11,7 +11,10 @@ PufferLib features:
 
 import sys as _sys
 from pathlib import Path as _Path
-_sys.path.insert(0, str(next(p for p in _Path(__file__).resolve().parents if (p / "platform_hybrid").is_dir())))
+
+_sys.path.insert(
+    0, str(next(p for p in _Path(__file__).resolve().parents if (p / "platform_hybrid").is_dir()))
+)
 from platform_hybrid.experiments.research_contracts import simulation_result
 
 
@@ -22,18 +25,16 @@ import argparse
 from dataclasses import dataclass, field
 from typing import Dict, Any, Tuple, Optional, Callable
 
-import wandb
 from huggingface_hub import HfApi
 
 # Setup logging
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 logger = logging.getLogger(__name__)
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 import numpy as np
 import gymnasium as gym
 from gymnasium import spaces
-from utils.seed import set_global_seed, get_seed_from_args
 
 
 def push_to_hub(repo_id: str, filename: str, filepath: str):
@@ -100,15 +101,15 @@ class ArithmeticEnv(gym.Env):
         self.max_answer = max_num * 2
 
         # Normalized observations for neural network
-        self.observation_space = spaces.Box(
-            low=0.0, high=1.0, shape=(2,), dtype=np.float32
-        )
+        self.observation_space = spaces.Box(low=0.0, high=1.0, shape=(2,), dtype=np.float32)
         self.action_space = spaces.Discrete(self.max_answer + 1)
 
         self.current_nums: Optional[np.ndarray] = None
         self.correct_answer: Optional[int] = None
 
-    def reset(self, seed: Optional[int] = None, options: Optional[Dict[str, Any]] = None) -> Tuple[np.ndarray, Dict[str, Any]]:
+    def reset(
+        self, seed: Optional[int] = None, options: Optional[Dict[str, Any]] = None
+    ) -> Tuple[np.ndarray, Dict[str, Any]]:
         super().reset(seed=seed)
 
         self.current_nums = self.np_random.integers(1, self.max_num + 1, size=2)
@@ -125,17 +126,25 @@ class ArithmeticEnv(gym.Env):
         # Normalize observation
         obs = self.current_nums.astype(np.float32) / self.max_num
 
-        return obs, reward, True, False, {
-            "correct": reward == 1.0,
-            "predicted": action,
-            "expected": self.correct_answer,
-        }
+        return (
+            obs,
+            reward,
+            True,
+            False,
+            {
+                "correct": reward == 1.0,
+                "predicted": action,
+                "expected": self.correct_answer,
+            },
+        )
 
 
 def make_env_creator(config: PufferLibConfig) -> Callable[[], gym.Env]:
     """Create environment factory for PufferLib."""
+
     def create_env() -> gym.Env:
         return ArithmeticEnv(max_num=config.env.max_num)
+
     return create_env
 
 
@@ -144,10 +153,14 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--seed", type=int, default=None, help="Random seed")
     parser.add_argument("--learning-rate", type=float, default=1e-4, help="Learning rate")
     parser.add_argument("--track", action="store_true", help="Track experiments with WandB")
-    parser.add_argument("--wandb-project-name", type=str, default="pufferlib_math", help="WandB project name")
+    parser.add_argument(
+        "--wandb-project-name", type=str, default="pufferlib_math", help="WandB project name"
+    )
     parser.add_argument("--wandb-entity", type=str, default=None, help="WandB entity")
     parser.add_argument("--push-to-hub", action="store_true", help="Push model to HuggingFace Hub")
-    parser.add_argument("--hf-repo-id", type=str, default="arvindcr4/pufferlib-math", help="HuggingFace Hub Repo ID")
+    parser.add_argument(
+        "--hf-repo-id", type=str, default="arvindcr4/pufferlib-math", help="HuggingFace Hub Repo ID"
+    )
     parser.add_argument("--exp-name", type=str, default="pufferlib_math", help="Experiment name")
     return parser.parse_known_args()[0]
 
@@ -157,7 +170,11 @@ def main() -> None:
     parser.add_argument("--simulation", action="store_true")
     parser.add_argument("--output-dir", default=".")
     args = parser.parse_args()
-    print(simulation_result("pufferlib_math", {}, simulation=args.simulation, output_dir=args.output_dir))
+    print(
+        simulation_result(
+            "pufferlib_math", {}, simulation=args.simulation, output_dir=args.output_dir
+        )
+    )
 
 
 if __name__ == "__main__":

@@ -10,15 +10,17 @@ Optimizations vs v1:
 from __future__ import annotations
 
 import atexit
+
 try:
     from codecarbon import EmissionsTracker
+
     _tracker = EmissionsTracker()
     _tracker.start()
     atexit.register(_tracker.stop)
 except ImportError:
     pass
 
-import json, os, random, re, time
+import json, re, time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
@@ -29,6 +31,7 @@ from transformers import AutoTokenizer
 
 def load_gsm8k_prompts(tokenizer, max_examples=200):
     from datasets import load_dataset
+
     ds = load_dataset("openai/gsm8k", "main", split="train")
     examples = []
     for item in ds.select(range(min(len(ds), max_examples))):
@@ -40,18 +43,20 @@ def load_gsm8k_prompts(tokenizer, max_examples=200):
             f"Show your work and put your final answer after ####."
         )
         prompt_ids = tokenizer.encode(prompt, add_special_tokens=False)
-        examples.append({
-            "prompt_text": prompt,
-            "prompt_ids": prompt_ids,
-            "answer": answer,
-        })
+        examples.append(
+            {
+                "prompt_text": prompt,
+                "prompt_ids": prompt_ids,
+                "answer": answer,
+            }
+        )
     return examples
 
 
 def reward_gsm8k(response: str, answer: str) -> float:
-    m = re.search(r'####\s*(.+?)(?:\s|$)', response)
+    m = re.search(r"####\s*(.+?)(?:\s|$)", response)
     if not m:
-        m = re.search(r'(?:answer|Answer).*?(\-?\d[\d,]*\.?\d*)', response)
+        m = re.search(r"(?:answer|Answer).*?(\-?\d[\d,]*\.?\d*)", response)
     if not m:
         return 0.0
     pred = m.group(1).replace(",", "").strip()
@@ -68,7 +73,8 @@ def sample_one_prompt(sc, tok, ex, idx, num_samples=4):
     sp = T.SamplingParams(max_tokens=512, temperature=0.8, top_p=0.95)
     responses = sc.sample(prompt_mi, num_samples=num_samples, sampling_params=sp).result()
     successes = sum(
-        1 for resp in responses.sequences
+        1
+        for resp in responses.sequences
         if reward_gsm8k(tok.decode(list(resp.tokens), skip_special_tokens=True), ex["answer"]) > 0.5
     )
     return idx, successes / num_samples
@@ -88,7 +94,9 @@ def main():
     svc = tinker.ServiceClient(base_url=None)
     tc = svc.create_lora_training_client(base_model=model_name, rank=32)
     sc = tc.save_weights_and_get_sampling_client()
-    print(f"Sampler ready — binning {len(examples)} prompts ({num_samples} samples each, {parallel} concurrent)")
+    print(
+        f"Sampler ready — binning {len(examples)} prompts ({num_samples} samples each, {parallel} concurrent)"
+    )
 
     t0 = time.time()
     rates = [0.0] * len(examples)
@@ -108,9 +116,11 @@ def main():
                 print(f"  {done}/{len(examples)} binned ({elapsed:.0f}s elapsed)")
 
     # Classify
-    bins = {"easy": {"indices": [], "rates": []},
-            "mid": {"indices": [], "rates": []},
-            "hard": {"indices": [], "rates": []}}
+    bins = {
+        "easy": {"indices": [], "rates": []},
+        "mid": {"indices": [], "rates": []},
+        "hard": {"indices": [], "rates": []},
+    }
 
     for i, rate in enumerate(rates):
         if rate > 0.75:

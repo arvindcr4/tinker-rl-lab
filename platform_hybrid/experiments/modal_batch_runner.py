@@ -16,26 +16,25 @@ from pathlib import Path
 
 app = modal.App("tinker-rl-lab-real")
 
-image = (
-    modal.Image.debian_slim(python_version="3.11")
-    .pip_install(
-        "torch>=2.4.0",
-        "transformers>=4.45.0",
-        "trl>=0.12.0",
-        "datasets>=3.0.0",
-        "accelerate>=1.0.0",
-        "peft>=0.13.0",
-        "numpy>=1.26.0",
-        "scipy>=1.14.0",
-    )
+image = modal.Image.debian_slim(python_version="3.11").pip_install(
+    "torch>=2.4.0",
+    "transformers>=4.45.0",
+    "trl>=0.12.0",
+    "datasets>=3.0.0",
+    "accelerate>=1.0.0",
+    "peft>=0.13.0",
+    "numpy>=1.26.0",
+    "scipy>=1.14.0",
 )
 
 # Mount repo
 repo_mount = modal.Mount.from_local_dir(
     str(__import__("pathlib").Path(__file__).resolve().parents[2]),
     remote_path="/root/tinker-rl-lab",
-    condition=lambda path: not any(
-        x in path for x in [".git", "__pycache__", "wandb", ".pyc", "platform_hybrid/paper/"]
+    condition=lambda path: (
+        not any(
+            x in path for x in [".git", "__pycache__", "wandb", ".pyc", "platform_hybrid/paper/"]
+        )
     ),
 )
 
@@ -55,28 +54,57 @@ def run_trl_grpo(seed: int, num_steps: int = 20) -> dict:
     import subprocess
     import time
     import uuid
+
     if num_steps <= 0 or type(seed) is not int:
         raise ValueError("Valid seed and positive step budget required")
-    exp_path = Path("/root/tinker-rl-lab/platform_hybrid/experiments/implementations/trl_grpo_math.py")
+    exp_path = Path(
+        "/root/tinker-rl-lab/platform_hybrid/experiments/implementations/trl_grpo_math.py"
+    )
     compile(exp_path.read_text(), str(exp_path), "exec")  # syntax preflight, never executes source
     attempt_id = uuid.uuid4().hex
     result_dir = Path(f"/results/trl_grpo/seed_{seed}/{attempt_id}")
     result_dir.mkdir(parents=True, exist_ok=False)
     start = time.time()
-    result = dict(experiment="trl_grpo_math", seed=seed, attempt_id=attempt_id, status="running", success=False)
+    result = dict(
+        experiment="trl_grpo_math",
+        seed=seed,
+        attempt_id=attempt_id,
+        status="running",
+        success=False,
+    )
     try:
-        proc = subprocess.run(["python", str(exp_path), "--seed", str(seed), "--max_steps", str(num_steps),
-            "--num_train_problems", "200", "--output_dir", str(result_dir / "model")],
-            capture_output=True, text=True, timeout=1200, cwd="/root/tinker-rl-lab",
-            env={**os.environ, "PYTHONUNBUFFERED": "1", "RESULTS_DIR": str(result_dir)})
-        result.update(success=proc.returncode == 0, status="completed" if proc.returncode == 0 else "failed",
-            returncode=proc.returncode, stdout_tail=proc.stdout[-1500:], stderr_tail=proc.stderr[-1000:])
+        proc = subprocess.run(
+            [
+                "python",
+                str(exp_path),
+                "--seed",
+                str(seed),
+                "--max_steps",
+                str(num_steps),
+                "--num_train_problems",
+                "200",
+                "--output_dir",
+                str(result_dir / "model"),
+            ],
+            capture_output=True,
+            text=True,
+            timeout=1200,
+            cwd="/root/tinker-rl-lab",
+            env={**os.environ, "PYTHONUNBUFFERED": "1", "RESULTS_DIR": str(result_dir)},
+        )
+        result.update(
+            success=proc.returncode == 0,
+            status="completed" if proc.returncode == 0 else "failed",
+            returncode=proc.returncode,
+            stdout_tail=proc.stdout[-1500:],
+            stderr_tail=proc.stderr[-1000:],
+        )
     except subprocess.TimeoutExpired:
         result.update(status="timeout", error="1200-second deadline exceeded")
     except Exception as exc:
         result.update(status="error", error=str(exc))
     finally:
-        result["elapsed_seconds"] = round(time.time()-start, 1)
+        result["elapsed_seconds"] = round(time.time() - start, 1)
         # Process success alone is never an empirical evidence attestation.
         result.update(measured=False, claim_eligible=False, artifact_type="execution_receipt")
         (result_dir / "result.json").write_text(json.dumps(result, indent=2))

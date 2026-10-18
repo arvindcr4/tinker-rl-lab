@@ -29,9 +29,7 @@ REPO_ROOT = Path(__file__).resolve().parents[3]
 SKYRL_TAG = "skyrl_train-v0.4.0"
 
 image = (
-    modal.Image.from_registry(
-        "nvidia/cuda:12.1.1-devel-ubuntu22.04", add_python="3.11"
-    )
+    modal.Image.from_registry("nvidia/cuda:12.1.1-devel-ubuntu22.04", add_python="3.11")
     .apt_install("git", "build-essential")
     .env({"CUDA_HOME": "/usr/local/cuda"})
     .pip_install("packaging", "wheel", "ninja", "setuptools", "uv", "pyyaml")
@@ -40,10 +38,12 @@ image = (
         f"git clone --depth 1 --branch {SKYRL_TAG} "
         "https://github.com/NovaSky-AI/SkyRL.git /root/SkyRL"
     )
-    .env({
-        "WANDB_PROJECT": "tinker-rl-lab-world-class",
-        "SKYRL_CHECKOUT": "/root/SkyRL",
-    })
+    .env(
+        {
+            "WANDB_PROJECT": "tinker-rl-lab-world-class",
+            "SKYRL_CHECKOUT": "/root/SkyRL",
+        }
+    )
     .add_local_dir(
         str(REPO_ROOT),
         remote_path="/root/tinker-rl-lab",
@@ -59,9 +59,11 @@ image = (
     secrets=[
         modal.Secret.from_name("huggingface-secret"),
         modal.Secret.from_name("wandb-secret"),
-        modal.Secret.from_dict({
-            "TINKER_API_KEY": TINKER_KEY,
-        })
+        modal.Secret.from_dict(
+            {
+                "TINKER_API_KEY": TINKER_KEY,
+            }
+        ),
     ],
 )
 def run_skyrl_qwen3_8b():
@@ -73,19 +75,30 @@ def run_skyrl_qwen3_8b():
     CONFIG = f"{REPO}/platform_hybrid/skyrl/configs/grpo_gsm8k_qwen3_8b.yaml"
 
     import sys
+
     sys.path.insert(0, REPO)
     from platform_hybrid.experiments.framework_contracts import read_skyrl_recipe
+
     try:
         source = read_skyrl_recipe(CONFIG)
     except (ValueError, OSError) as error:
-        return {"framework": "skyrl", "status": "blocked", "last10_avg": None,
-                "evidence_error": str(error), "completion_contract_satisfied": False,
-                "comparison_contract_satisfied": False}
+        return {
+            "framework": "skyrl",
+            "status": "blocked",
+            "last10_avg": None,
+            "evidence_error": str(error),
+            "completion_contract_satisfied": False,
+            "comparison_contract_satisfied": False,
+        }
 
     # The recipe command documented at the top of grpo_gsm8k.yaml.
     cmd = [
-        "uv", "run", "--extra", "vllm",
-        "-m", "skyrl_train.entrypoints.main_base",
+        "uv",
+        "run",
+        "--extra",
+        "vllm",
+        "-m",
+        "skyrl_train.entrypoints.main_base",
         f"@{CONFIG}",
     ]
     print("[skyrl] cmd:", " ".join(cmd))

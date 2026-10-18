@@ -33,6 +33,7 @@ across backbones) is the cost-sensitive surface.
 
 Stdlib + numpy + xgboost.  <= 300 lines.
 """
+
 from __future__ import annotations
 import csv
 import json
@@ -42,13 +43,15 @@ import numpy as np
 import xgboost as xgb
 
 import sys
+
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
-from _p8_common import (  # noqa: E402
+from _paths import REPO_ROOT
+from _p8_common import (
     RAW20,
     ALL24,
     load,
 )
+
 ROOT = REPO_ROOT
 RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8/corrected-review21-v2"
 RES.mkdir(parents=True, exist_ok=True)
@@ -56,16 +59,16 @@ TRAIN = ROOT / "train_data.csv"
 TEST = ROOT / "test_data.csv"
 SEED = 20260705
 RATE_SEED = 20260706
-K_PCT = 1.0     # top-1% for the rate-conditioned read
+K_PCT = 1.0  # top-1% for the rate-conditioned read
 G_THR = 0.001
 WIDTH = 0.50
 
 
 FEATURE_SETS = {
-    "24full":       ALL24,
-    "20raw":        RAW20,
+    "24full": ALL24,
+    "20raw": RAW20,
     "20raw+minmax": RAW20 + ["V_min", "V_max"],
-    "20raw+stat":   RAW20 + ["V_mean", "V_std"],
+    "20raw+stat": RAW20 + ["V_mean", "V_std"],
 }
 
 RATES = [1.44, 1.00, 0.50, 0.10, 0.05]
@@ -94,11 +97,15 @@ def fit_predict(Xtr, ytr, Xte, feats):
     n_neg_tr = max(1, len(ytr) - n_pos_tr)
     spw = n_neg_tr / n_pos_tr
     m = xgb.XGBClassifier(
-        n_estimators=200, max_depth=6, learning_rate=0.05,
-        subsample=0.8, colsample_bytree=0.8,
+        n_estimators=200,
+        max_depth=6,
+        learning_rate=0.05,
+        subsample=0.8,
+        colsample_bytree=0.8,
         scale_pos_weight=spw,
         eval_metric="auc",
-        random_state=SEED, n_jobs=4,
+        random_state=SEED,
+        n_jobs=4,
     )
     m.fit(Xtr_s, ytr)
     return m.predict_proba(Xte_s)[:, 1]
@@ -117,7 +124,7 @@ def grad_band_fire(scores, top_k_mask_arr, g_thr=G_THR):
     sorted_idx = np.argsort(-scores)
     sorted_scores = scores[sorted_idx]
     grad = np.abs(np.diff(sorted_scores, prepend=sorted_scores[0] + 1.0))
-    fire_sorted = (grad < g_thr)
+    fire_sorted = grad < g_thr
     fire = np.zeros(len(scores), dtype=bool)
     fire[sorted_idx] = fire_sorted
     return fire & top_k_mask_arr
@@ -134,8 +141,8 @@ def p_at_top_k(scores, y, k_pct):
 def pr_auc_at_mask(scores, y, k_pct):
     """Average precision (not trapezoidal PR-AUC), tie and permutation invariant."""
     from sklearn.metrics import average_precision_score
-    return float(average_precision_score(y, scores)) if sum(y) else float("nan")
 
+    return float(average_precision_score(y, scores)) if sum(y) else float("nan")
 
 
 def event_overlap(anchor, candidate):
@@ -144,8 +151,7 @@ def event_overlap(anchor, candidate):
         raise ValueError("fire masks must align")
     both = int((anchor & candidate).sum())
     union = int((anchor | candidate).sum())
-    return (both / union if union else None,
-            both / int(anchor.sum()) if anchor.any() else None)
+    return (both / union if union else None, both / int(anchor.sum()) if anchor.any() else None)
 
 
 def main():
@@ -153,8 +159,10 @@ def main():
     Xtr, ytr = load(TRAIN)
     Xte, yte = load(TEST)
     rng_rate = np.random.default_rng(RATE_SEED)
-    print(f"[iter140] Xtr={Xtr.shape} pos_tr={ytr.sum()} | "
-          f"Xte={Xte.shape} pos_te={yte.sum()} rate={100*yte.mean():.3f}%")
+    print(
+        f"[iter140] Xtr={Xtr.shape} pos_tr={ytr.sum()} | "
+        f"Xte={Xte.shape} pos_te={yte.sum()} rate={100 * yte.mean():.3f}%"
+    )
 
     # First, fit each feature set ONCE on full train (iter-124 convention);
     # we'll re-use the trained model across rates by re-evaluating on
@@ -209,27 +217,30 @@ def main():
             n_neither = int((~af & ~ff).sum())
             agreement = (n_both + n_neither) / n_te
             iou, retention = event_overlap(af, ff)
-            rows_h1.append({
-                "rate_target": rate,
-                "rate_actual": round(rate_actual, 3),
-                "n_test": n_te,
-                "n_pos": n_pos_r,
-                "fset": fset_name,
-                "anchor": anchor,
-                "n_fires_anchor": int(af.sum()),
-                "n_fires_fset": int(ff.sum()),
-                "n_both": n_both,
-                "n_anchor_only": n_anc_only,
-                "n_fset_only": n_fset_only,
-                "n_neither": n_neither,
-                "agreement": round(agreement, 4),
-                "fire_iou": iou, "anchor_retention": retention,
-                "delta_fires": int(ff.sum() - af.sum()),
-                "p_at_1": round(p_at_1[fset_name], 4),
-                "pr_auc": round(prs[fset_name], 4),
-                "p_at_1_anchor": round(p_at_1[anchor], 4),
-                "pr_auc_anchor": round(prs[anchor], 4),
-            })
+            rows_h1.append(
+                {
+                    "rate_target": rate,
+                    "rate_actual": round(rate_actual, 3),
+                    "n_test": n_te,
+                    "n_pos": n_pos_r,
+                    "fset": fset_name,
+                    "anchor": anchor,
+                    "n_fires_anchor": int(af.sum()),
+                    "n_fires_fset": int(ff.sum()),
+                    "n_both": n_both,
+                    "n_anchor_only": n_anc_only,
+                    "n_fset_only": n_fset_only,
+                    "n_neither": n_neither,
+                    "agreement": round(agreement, 4),
+                    "fire_iou": iou,
+                    "anchor_retention": retention,
+                    "delta_fires": int(ff.sum() - af.sum()),
+                    "p_at_1": round(p_at_1[fset_name], 4),
+                    "pr_auc": round(prs[fset_name], 4),
+                    "p_at_1_anchor": round(p_at_1[anchor], 4),
+                    "pr_auc_anchor": round(prs[anchor], 4),
+                }
+            )
 
         # H3: per-rate fire-count std across 4 backbones (rate-conditioning)
         fire_counts = {k: int(v.sum()) for k, v in fires.items()}
@@ -266,13 +277,15 @@ def main():
         for fset_name in FEATURE_SETS:
             p_anchor = rate_summary[str(rate)]["p_at_1_per_fset"]["24full"]
             p_fset = rate_summary[str(rate)]["p_at_1_per_fset"][fset_name]
-            rows_h2.append({
-                "rate": rate,
-                "fset": fset_name,
-                "p_at_1": p_fset,
-                "p_at_1_anchor": p_anchor,
-                "delta": round(p_fset - p_anchor, 4),
-            })
+            rows_h2.append(
+                {
+                    "rate": rate,
+                    "fset": fset_name,
+                    "p_at_1": p_fset,
+                    "p_at_1_anchor": p_anchor,
+                    "delta": round(p_fset - p_anchor, 4),
+                }
+            )
     out_h2 = RES / "p8_iter140_p_at_1_per_rate.tsv"
     with out_h2.open("w") as f:
         w = csv.DictWriter(f, fieldnames=list(rows_h2[0].keys()), delimiter="\t")
@@ -304,13 +317,15 @@ def main():
     for r in rows_h1:
         # "flip rate" = cells that fire in EXACTLY one of {anchor, fset}
         flip = (r["n_anchor_only"] + r["n_fset_only"]) / r["n_test"]
-        rows_h4.append({
-            "rate": r["rate_target"],
-            "fset": r["fset"],
-            "flip_rate_pct": round(100 * flip, 2),
-            "anchor_only_pct": round(100 * r["n_anchor_only"] / r["n_test"], 2),
-            "fset_only_pct": round(100 * r["n_fset_only"] / r["n_test"], 2),
-        })
+        rows_h4.append(
+            {
+                "rate": r["rate_target"],
+                "fset": r["fset"],
+                "flip_rate_pct": round(100 * flip, 2),
+                "anchor_only_pct": round(100 * r["n_anchor_only"] / r["n_test"], 2),
+                "fset_only_pct": round(100 * r["n_fset_only"] / r["n_test"], 2),
+            }
+        )
     out_h4 = RES / "p8_iter140_flip_rate.tsv"
     with out_h4.open("w") as f:
         w = csv.DictWriter(f, fieldnames=list(rows_h4[0].keys()), delimiter="\t")
@@ -320,7 +335,7 @@ def main():
 
     summary = {
         "iter": 140,
-        "n_boot": 0,           # this iter is rate-sweep not bootstrap
+        "n_boot": 0,  # this iter is rate-sweep not bootstrap
         "rates": RATES,
         "n_test_release": len(yte),
         "n_pos_release": int(yte.sum()),
@@ -338,8 +353,10 @@ def main():
     with out_sum.open("w") as f:
         json.dump(summary, f, indent=2)
     print(f"[iter140] wrote {out_sum}")
-    print(f"[iter140 H1] fire IoU range = [{h1_min}, {h1_max}], "
-          f"verdict={'UNAVAILABLE' if h1_pass is None else 'PASS' if h1_pass else 'FAIL'}")
+    print(
+        f"[iter140 H1] fire IoU range = [{h1_min}, {h1_max}], "
+        f"verdict={'UNAVAILABLE' if h1_pass is None else 'PASS' if h1_pass else 'FAIL'}"
+    )
     print(f"[iter140 H2] max |delta P@1%| per fset = {h2_max_delta}")
     print(f"[iter140 H3] fire-count CV per rate = {h3_cv}")
     print(f"[iter140] DONE")

@@ -1,0 +1,36 @@
+% =============================================================================
+% P9 (DNB) replacement for stratified_diagnostics.tex (2026-10-18 Deep Review).
+% The bootstrap/permutation and partial-correlation tables were removed: their
+% stated inputs (experiments/analysis/v5/{bootstrap,partial_corr}_table.csv)
+% never existed in the repository or its history, no generating script exists,
+% the N=15/29/19/7 cohorts cannot be reconstructed, and the N=15 r=-0.769 is
+% reproduced only when the x-variable is zero_reward_pct (fraction of steps
+% with zero batch reward), not ZVF. See reports/deepreview/dispositions/P9_dnb.jsonl.
+% =============================================================================
+\section{ZVF Telemetry in the Artifact}
+\label{sec:stratified-diagnostics}
+
+\paragraph{Withdrawn analyses.}
+Earlier drafts reported pooled and stratified correlations between mean ZVF
+and last-10 training reward (pooled $N{=}15$, extended $N{=}29$, within-GSM8K
+$N{=}19$, model-varying $N{=}7$), with bootstrap intervals, permutation
+$p$-values and partial correlations controlling for task, $\log G$ and base
+accuracy. These are withdrawn. Their stated input tables are not in the
+repository or its history, no script that produces them exists, and the
+cohorts cannot be reconstructed from the released run files. A re-derivation
+of the pooled $N{=}15$ value ($r{=}{-}0.769$) succeeds only when the
+$x$-variable is the fraction of training steps with zero batch reward, not
+the zero-variance fraction; with the logged step-level ZVF, only 9 of those
+runs carry ZVF at all. The figure that illustrated the pooled correlation is
+withdrawn for the same reason. No claim in this paper rests on these
+analyses.
+
+\paragraph{What is available.}
+Step-level ZVF is logged for the cells marked in the ZVF column of
+Table~\ref{tab:run-manifest}: the individual single-run Tinker GSM8K and
+tool-use runs, the twelve Wave-6 configurations, and the matched-budget
+runs. The two tool-use runs have ZVF $=1$ and reward $0$ throughout (every
+group all-wrong). Any correlation between ZVF and reward across these cells
+mixes tasks, models, group sizes and step budgets, and a defensible analysis
+would require a pre-declared cohort with immutable run IDs and seeds as the
+unit; we leave that to future work rather than report an ad hoc pool.

@@ -77,38 +77,103 @@ def add_deck():
 
     slide = prs.slides.add_slide(prs.slide_layouts[6])
     set_bg(slide)
-    text(slide, 0.9, 0.95, 11.5, 0.55, "When Does GRPO Have a Learning Signal?", 28, TEAL, True, PP_ALIGN.CENTER)
-    text(slide, 0.9, 1.7, 11.5, 0.9, "Reward Diversity, Structured Outputs, and Reasoning Benchmarks", 34, WHITE, True, PP_ALIGN.CENTER)
-    text(slide, 1.6, 3.0, 10.1, 0.35, "Final Capstone Presentation | Group 6 | PES University", 17, MUTED, False, PP_ALIGN.CENTER)
+    text(
+        slide,
+        0.9,
+        0.95,
+        11.5,
+        0.55,
+        "When Does GRPO Have a Learning Signal?",
+        28,
+        TEAL,
+        True,
+        PP_ALIGN.CENTER,
+    )
+    text(
+        slide,
+        0.9,
+        1.7,
+        11.5,
+        0.9,
+        "Reward Diversity, Structured Outputs, and Reasoning Benchmarks",
+        34,
+        WHITE,
+        True,
+        PP_ALIGN.CENTER,
+    )
+    text(
+        slide,
+        1.6,
+        3.0,
+        10.1,
+        0.35,
+        "Final Capstone Presentation | Group 6 | PES University",
+        17,
+        MUTED,
+        False,
+        PP_ALIGN.CENTER,
+    )
     stat(slide, 1.3, 4.2, "32+", "structured runs")
     stat(slide, 4.1, 4.2, "5", "task families", BLUE)
     stat(slide, 6.9, 4.2, "4", "training backends", AMBER)
     stat(slide, 9.7, 4.2, "76", "report pages", GREEN)
-    text(slide, 1.0, 6.55, 11.3, 0.3, "Guides: Prof. Narayana Darapaneni and Mr. Anwesh Reddy Paduri", 12, MUTED, False, PP_ALIGN.CENTER)
+    text(
+        slide,
+        1.0,
+        6.55,
+        11.3,
+        0.3,
+        "Guides: Prof. Narayana Darapaneni and Mr. Anwesh Reddy Paduri",
+        12,
+        MUTED,
+        False,
+        PP_ALIGN.CENTER,
+    )
 
     slide = prs.slides.add_slide(prs.slide_layouts[6])
     set_bg(slide)
-    title(slide, "01", "Problem and Research Questions", "When does critic-free RL have usable reward signal?")
+    title(
+        slide,
+        "01",
+        "Problem and Research Questions",
+        "When does critic-free RL have usable reward signal?",
+    )
     card(slide, 0.7, 1.35, 5.7, 4.9)
     text(slide, 1.0, 1.65, 5.1, 0.4, "Motivation", 20, TEAL, True)
-    bullets(slide, 1.0, 2.25, [
-        "LLM post-training needs verifiable behavior, not only imitation.",
-        "Tool-call emissions must be valid before execution can be tested.",
-        "Math and code tasks expose whether reward gains generalize.",
-        "GRPO removes the PPO value model, but depends on reward variance.",
-    ])
+    bullets(
+        slide,
+        1.0,
+        2.25,
+        [
+            "LLM post-training needs verifiable behavior, not only imitation.",
+            "Tool-call emissions must be valid before execution can be tested.",
+            "Math and code tasks expose whether reward gains generalize.",
+            "GRPO removes the PPO value model, but depends on reward variance.",
+        ],
+    )
     card(slide, 6.9, 1.35, 5.7, 4.9)
     text(slide, 7.2, 1.65, 5.1, 0.4, "Core Questions", 20, AMBER, True)
-    bullets(slide, 7.2, 2.25, [
-        "Can GRPO improve structured tool-call emission beyond supervised tuning?",
-        "How do model size and instruction tuning affect GRPO?",
-        "How do GRPO and PPO compare under similar constraints?",
-        "Can ZVF and GU diagnose bad RL runs early?",
-    ], size=14)
+    bullets(
+        slide,
+        7.2,
+        2.25,
+        [
+            "Can GRPO improve structured tool-call emission beyond supervised tuning?",
+            "How do model size and instruction tuning affect GRPO?",
+            "How do GRPO and PPO compare under similar constraints?",
+            "Can ZVF and GU diagnose bad RL runs early?",
+        ],
+        size=14,
+    )
 
     slide = prs.slides.add_slide(prs.slide_layouts[6])
     set_bg(slide)
-    title(slide, "02", "Methodology", "A shared rollout-score-update loop across tool use, math, and code")
+    title(
+        slide,
+        "02",
+        "Methodology",
+        "A shared rollout-score-update loop across tool use, math, and code",
+    )
     labels = [
         ("Prompt Dataset", 0.8, 2.1, BLUE),
         ("Policy Samples", 3.25, 2.1, TEAL),
@@ -120,19 +185,39 @@ def add_deck():
         card(slide, x, y, 1.85, 1.15, color)
         text(slide, x + 0.12, y + 0.36, 1.6, 0.35, label, 13, BG, True, PP_ALIGN.CENTER)
     for x in [2.66, 5.12, 7.56, 10.02]:
-        arrow = slide.shapes.add_shape(MSO_SHAPE.RIGHT_ARROW, Inches(x), Inches(2.48), Inches(0.42), Inches(0.28))
+        arrow = slide.shapes.add_shape(
+            MSO_SHAPE.RIGHT_ARROW, Inches(x), Inches(2.48), Inches(0.42), Inches(0.28)
+        )
         arrow.fill.solid()
         arrow.fill.fore_color.rgb = MUTED
         arrow.line.fill.background()
     card(slide, 1.2, 4.05, 10.9, 1.45)
     text(slide, 1.45, 4.25, 10.4, 0.35, "Diagnostics", 18, TEAL, True)
-    text(slide, 1.45, 4.75, 10.4, 0.35, "Zero-Variance Fraction (ZVF) measures dead groups; Gradient Utilization (GU) measures how much sampled rollout data can produce a useful policy update.", 15, WHITE)
+    text(
+        slide,
+        1.45,
+        4.75,
+        10.4,
+        0.35,
+        "Zero-Variance Fraction (ZVF) measures dead groups; Gradient Utilization (GU) measures how much sampled rollout data can produce a useful policy update.",
+        15,
+        WHITE,
+    )
 
     slide = prs.slides.add_slide(prs.slide_layouts[6])
     set_bg(slide)
-    title(slide, "03", "Experiment Inventory", "Final report consolidates the first chapter, interim scope, literature survey, and all completed experiments")
+    title(
+        slide,
+        "03",
+        "Experiment Inventory",
+        "Final report consolidates the first chapter, interim scope, literature survey, and all completed experiments",
+    )
     cols = [
-        ("Structured Outputs", ["SFT warm-up", "GRPO on schema rewards", "0.5B and 1.5B Qwen variants"], TEAL),
+        (
+            "Structured Outputs",
+            ["SFT warm-up", "GRPO on schema rewards", "0.5B and 1.5B Qwen variants"],
+            TEAL,
+        ),
         ("Math", ["Arithmetic", "GSM8K", "MATH and held-out GSM8K"], BLUE),
         ("Code", ["HumanEval-style rewards", "Semantic code", "Framework sensitivity"], AMBER),
         ("Baselines", ["PPO: SB3, CleanRL", "TRL GRPO", "DPO & distillation"], GREEN),
@@ -145,18 +230,37 @@ def add_deck():
 
     slide = prs.slides.add_slide(prs.slide_layouts[6])
     set_bg(slide)
-    title(slide, "04", "Key Result: Tool Use", "GRPO is most useful when the model already has a supervised behavioral prior")
+    title(
+        slide,
+        "04",
+        "Key Result: Tool Use",
+        "GRPO is most useful when the model already has a supervised behavioral prior",
+    )
     stat(slide, 0.8, 1.5, "SFT", "establishes schema")
     stat(slide, 3.65, 1.5, "GRPO", "sharpens validity", GREEN)
     stat(slide, 6.5, 1.5, "ZVF", "triage alarm", AMBER)
     stat(slide, 9.35, 1.5, "GU", "tracks usable signal", BLUE)
     card(slide, 1.0, 3.55, 11.3, 1.85)
     text(slide, 1.35, 3.85, 10.7, 0.35, "Interpretation", 19, TEAL, True)
-    text(slide, 1.35, 4.35, 10.7, 0.55, "Tool-call rewards are structured and immediate. Once SFT teaches the output format, GRPO can exploit reward variation to improve schema-valid emission.", 16, WHITE)
+    text(
+        slide,
+        1.35,
+        4.35,
+        10.7,
+        0.55,
+        "Tool-call rewards are structured and immediate. Once SFT teaches the output format, GRPO can exploit reward variation to improve schema-valid emission.",
+        16,
+        WHITE,
+    )
 
     slide = prs.slides.add_slide(prs.slide_layouts[6])
     set_bg(slide)
-    title(slide, "05", "Key Result: Mathematical Reasoning", "Scale and initialization matter more than the optimizer label")
+    title(
+        slide,
+        "05",
+        "Key Result: Mathematical Reasoning",
+        "Scale and initialization matter more than the optimizer label",
+    )
     rows = [
         ("Small/base models", "Weak or unstable gains"),
         ("Instruct-tuned models", "Higher starting point and easier saturation"),
@@ -172,25 +276,47 @@ def add_deck():
 
     slide = prs.slides.add_slide(prs.slide_layouts[6])
     set_bg(slide)
-    title(slide, "06", "Key Result: Code and PPO Baselines", "Negative results clarified the structural ceiling")
+    title(
+        slide,
+        "06",
+        "Key Result: Code and PPO Baselines",
+        "Negative results clarified the structural ceiling",
+    )
     card(slide, 0.75, 1.45, 5.65, 4.8)
     text(slide, 1.05, 1.75, 5.05, 0.35, "Code Generation", 20, AMBER, True)
-    bullets(slide, 1.05, 2.35, [
-        "Reward sparsity made on-policy learning brittle.",
-        "Semantic correctness required stronger evaluation than format checks.",
-        "Short runs were not enough to establish robust code gains.",
-    ], size=14)
+    bullets(
+        slide,
+        1.05,
+        2.35,
+        [
+            "Reward sparsity made on-policy learning brittle.",
+            "Semantic correctness required stronger evaluation than format checks.",
+            "Short runs were not enough to establish robust code gains.",
+        ],
+        size=14,
+    )
     card(slide, 6.9, 1.45, 5.65, 4.8)
     text(slide, 7.2, 1.75, 5.05, 0.35, "PPO and Classical RL", 20, GREEN, True)
-    bullets(slide, 7.2, 2.35, [
-        "Small CartPole-style PPO baselines did not transfer to LLM behavior.",
-        "Framework choice affected stability and throughput.",
-        "The bottleneck was reward signal quality, not only algorithm choice.",
-    ], size=14)
+    bullets(
+        slide,
+        7.2,
+        2.35,
+        [
+            "Small CartPole-style PPO baselines did not transfer to LLM behavior.",
+            "Framework choice affected stability and throughput.",
+            "The bottleneck was reward signal quality, not only algorithm choice.",
+        ],
+        size=14,
+    )
 
     slide = prs.slides.add_slide(prs.slide_layouts[6])
     set_bg(slide)
-    title(slide, "07", "Final Conclusions", "GRPO amplifies useful priors; it does not reliably create missing reasoning ability")
+    title(
+        slide,
+        "07",
+        "Final Conclusions",
+        "GRPO amplifies useful priors; it does not reliably create missing reasoning ability",
+    )
     conclusions = [
         ("1", "Best domain", "Structured tool-call emission after supervised warm-up"),
         ("2", "Main failure mode", "Zero reward variance leads to dead policy updates"),
@@ -208,8 +334,14 @@ def add_deck():
     set_bg(slide)
     title(slide, "08", "Submission Artifacts", "Everything is packaged for review and reproduction")
     artifacts = [
-        ("Overleaf source", "Self-contained TeX, TikZ diagrams, literature survey inputs, bibliography"),
-        ("Data and code", "Experiments, notebooks, scripts, logs, tests, and result JSON/CSV files"),
+        (
+            "Overleaf source",
+            "Self-contained TeX, TikZ diagrams, literature survey inputs, bibliography",
+        ),
+        (
+            "Data and code",
+            "Experiments, notebooks, scripts, logs, tests, and result JSON/CSV files",
+        ),
         ("Final report", "76-page compiled PDF"),
         ("PPT", "This final presentation deck"),
     ]
@@ -224,7 +356,18 @@ def add_deck():
     set_bg(slide)
     text(slide, 1.0, 2.25, 11.3, 0.8, "Thank You", 44, WHITE, True, PP_ALIGN.CENTER)
     text(slide, 1.0, 3.25, 11.3, 0.5, "Questions and Discussion", 24, TEAL, True, PP_ALIGN.CENTER)
-    text(slide, 1.0, 4.25, 11.3, 0.35, "Group 6 | When Does GRPO Have a Learning Signal?", 15, MUTED, False, PP_ALIGN.CENTER)
+    text(
+        slide,
+        1.0,
+        4.25,
+        11.3,
+        0.35,
+        "Group 6 | When Does GRPO Have a Learning Signal?",
+        15,
+        MUTED,
+        False,
+        PP_ALIGN.CENTER,
+    )
 
     return prs
 

@@ -25,6 +25,7 @@ paired t 95% CI and TOST equivalence at a margin of +/-2.0 accuracy points.
 Usage:
   modal run experiments/modal/modal_samestack_gsm8k_cot.py
 """
+
 import json
 import math
 import os
@@ -36,13 +37,15 @@ app = modal.App("tinkerrl-samestack-gsm8k-cot")
 results_vol = modal.Volume.from_name("tinkerrl-results", create_if_missing=True)
 RESULTS_DIR = "/results"
 
-image = (
-    modal.Image.debian_slim(python_version="3.11")
-    .pip_install(
-        "torch>=2.3.0", "transformers>=4.46.0", "peft>=0.13.0",
-        "datasets>=3.0.0", "numpy>=1.26.0,<2.0.0", "accelerate>=1.0.0",
-        "safetensors>=0.4.0", "huggingface-hub>=0.26.0",
-    )
+image = modal.Image.debian_slim(python_version="3.11").pip_install(
+    "torch>=2.3.0",
+    "transformers>=4.46.0",
+    "peft>=0.13.0",
+    "datasets>=3.0.0",
+    "numpy>=1.26.0,<2.0.0",
+    "accelerate>=1.0.0",
+    "safetensors>=0.4.0",
+    "huggingface-hub>=0.26.0",
 )
 
 SEEDS = [42, 123, 456, 789, 1024]
@@ -61,8 +64,14 @@ CHUNK = 4
 MARGIN = 0.02  # TOST equivalence margin, accuracy fraction
 
 
-@app.function(image=image, gpu="A10G", timeout=3 * 3600, volumes={RESULTS_DIR: results_vol},
-              retries=1, secrets=[modal.Secret.from_name("huggingface-secret")])
+@app.function(
+    image=image,
+    gpu="A10G",
+    timeout=3 * 3600,
+    volumes={RESULTS_DIR: results_vol},
+    retries=1,
+    secrets=[modal.Secret.from_name("huggingface-secret")],
+)
 def run_arm(arm: str, seed: int) -> dict:
     os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
     out_path = f"{RESULTS_DIR}/samestack_gsm8k/{arm}_s{seed}.json"
@@ -80,7 +89,9 @@ def run_arm(arm: str, seed: int) -> dict:
     from peft import LoraConfig, get_peft_model
     from transformers import AutoModelForCausalLM, AutoTokenizer
 
-    random.seed(seed); np.random.seed(seed); torch.manual_seed(seed)
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
     torch.cuda.manual_seed_all(seed)
     device = "cuda"
 
@@ -90,8 +101,13 @@ def run_arm(arm: str, seed: int) -> dict:
     tok.padding_side = "left"
     model = get_peft_model(
         AutoModelForCausalLM.from_pretrained(MODEL, dtype=torch.bfloat16).to(device),
-        LoraConfig(r=16, lora_alpha=32, lora_dropout=0.0,
-                   target_modules=["q_proj", "k_proj", "v_proj", "o_proj"], task_type="CAUSAL_LM"),
+        LoraConfig(
+            r=16,
+            lora_alpha=32,
+            lora_dropout=0.0,
+            target_modules=["q_proj", "k_proj", "v_proj", "o_proj"],
+            task_type="CAUSAL_LM",
+        ),
     )
     model.train()
     params = [p for p in model.parameters() if p.requires_grad]
@@ -114,7 +130,13 @@ def run_arm(arm: str, seed: int) -> dict:
         return cand.replace(",", "").replace("$", "").strip() if cand else None
 
     def build(q):
-        msgs = [{"role": "user", "content": q + "\nThink step by step, then give the final answer as \\boxed{ANSWER}."}]
+        msgs = [
+            {
+                "role": "user",
+                "content": q
+                + "\nThink step by step, then give the final answer as \\boxed{ANSWER}.",
+            }
+        ]
         return tok.apply_chat_template(msgs, tokenize=False, add_generation_prompt=True)
 
     def reward(text, gold):
@@ -133,18 +155,20 @@ def run_arm(arm: str, seed: int) -> dict:
         model.eval()
         corr = []
         for i in range(0, len(test), 16):
-            ch = test[i:i + 16]
+            ch = test[i : i + 16]
             _, _, c = gen_batch([build(x["question"]) for x in ch], greedy=True)
-            for x, t in zip(ch, tok.batch_decode(c, skip_special_tokens=True)):
+            for x, t in zip(ch, tok.batch_decode(c, skip_special_tokens=True), strict=False):
                 corr.append(int(reward(t, gold_of(x["answer"])) == 1.0))
         model.train()
         return corr
 
     def forward(full, attn, plen, cs, ce, want_value):
-        out = model(input_ids=full[cs:ce], attention_mask=attn[cs:ce], output_hidden_states=want_value)
+        out = model(
+            input_ids=full[cs:ce], attention_mask=attn[cs:ce], output_hidden_states=want_value
+        )
         logits = out.logits[:, :-1, :].float()
         tgt = full[cs:ce][:, 1:]
-        lp = F.log_softmax(logits, dim=-1).gather(-1, tgt.unsqueeze(-1)).squeeze(-1)[:, plen - 1:]
+        lp = F.log_softmax(logits, dim=-1).gather(-1, tgt.unsqueeze(-1)).squeeze(-1)[:, plen - 1 :]
         v = vhead(out.hidden_states[-1][:, plen - 1, :].float()).squeeze(-1) if want_value else None
         del out, logits
         return lp, v
@@ -162,14 +186,18 @@ def run_arm(arm: str, seed: int) -> dict:
             try:
                 batch.append(next(train_iter))
             except StopIteration:
-                train_iter = iter(train.shuffle(seed=seed + step)); batch.append(next(train_iter))
+                train_iter = iter(train.shuffle(seed=seed + step))
+                batch.append(next(train_iter))
         prompts, golds = [], []
         for ex in batch:
             for _ in range(G):
-                prompts.append(build(ex["question"])); golds.append(gold_of(ex["answer"]))
+                prompts.append(build(ex["question"]))
+                golds.append(gold_of(ex["answer"]))
         enc, plen, comp_ids = gen_batch(prompts, greedy=False)
         comp_txt = tok.batch_decode(comp_ids, skip_special_tokens=True)
-        rewards = np.array([reward(t, g) for t, g in zip(comp_txt, golds)], dtype=np.float32)
+        rewards = np.array(
+            [reward(t, g) for t, g in zip(comp_txt, golds, strict=False)], dtype=np.float32
+        )
         rew_t = torch.tensor(rewards, device=device)
 
         full = torch.cat([enc["input_ids"], comp_ids], dim=1)
@@ -182,7 +210,8 @@ def run_arm(arm: str, seed: int) -> dict:
             for cs in range(0, B, CHUNK):
                 ce = min(cs + CHUNK, B)
                 lp, v = forward(full, attn, plen, cs, ce, is_ppo)
-                olds.append(lp); masks.append((full[cs:ce][:, 1:] != tok.pad_token_id).float()[:, plen - 1:])
+                olds.append(lp)
+                masks.append((full[cs:ce][:, 1:] != tok.pad_token_id).float()[:, plen - 1 :])
                 if is_ppo:
                     vals.append(v)
             old_lp, mask = torch.cat(olds), torch.cat(masks)
@@ -206,7 +235,8 @@ def run_arm(arm: str, seed: int) -> dict:
             for cs in range(0, B, CHUNK):
                 ce = min(cs + CHUNK, B)
                 lp, v = forward(full, attn, plen, cs, ce, is_ppo)
-                m = mask[cs:ce]; a_i = adv[cs:ce].unsqueeze(1)
+                m = mask[cs:ce]
+                a_i = adv[cs:ce].unsqueeze(1)
                 ratio = torch.exp(lp - old_lp[cs:ce])
                 ptl = -torch.min(ratio * a_i, torch.clamp(ratio, 1 - CLIP, 1 + CLIP) * a_i) * m
                 loss = (ptl.sum(1) / m.sum(1).clamp(min=1.0)).sum() / B
@@ -218,29 +248,51 @@ def run_arm(arm: str, seed: int) -> dict:
                 del lp, ptl, loss
             gnorm = float(torch.nn.utils.clip_grad_norm_(params, 1.0))
             opt.step()
-        step_log.append({"step": step, "mean_reward": float(rewards.mean()), "zvf": zvf,
-                         "mean_comp_len": comp_len, "grad_norm": gnorm,
-                         "value_loss": vloss_sum / K_EPOCHS if is_ppo else None})
+        step_log.append(
+            {
+                "step": step,
+                "mean_reward": float(rewards.mean()),
+                "zvf": zvf,
+                "mean_comp_len": comp_len,
+                "grad_norm": gnorm,
+                "value_loss": vloss_sum / K_EPOCHS if is_ppo else None,
+            }
+        )
         print(f"[{arm} s{seed}] step {step} r={rewards.mean():.3f} len={comp_len:.0f}", flush=True)
 
     post_correct = heldout()
     pre, post = np.array(pre_correct), np.array(post_correct)
-    res = {"experiment": "samestack_gsm8k_cot", "arm": arm, "seed": seed, "model": MODEL,
-           "group": G, "prompts_per_step": n_prompts, "n_gen": N_GEN, "n_steps": N_STEPS,
-           "k_epochs": K_EPOCHS, "lr": LR, "max_new": MAX_NEW,
-           "heldout_pre_acc": float(pre.mean()), "heldout_post_acc": float(post.mean()),
-           "n_eval": int(len(pre)),
-           "wrong_to_right": int(((pre == 0) & (post == 1)).sum()),
-           "right_to_wrong": int(((pre == 1) & (post == 0)).sum()),
-           "last10_avg": float(np.mean([s["mean_reward"] for s in step_log[-10:]])),
-           "elapsed_seconds": time.time() - t0,
-           "pre_correct": pre_correct, "post_correct": post_correct, "step_log": step_log}
+    res = {
+        "experiment": "samestack_gsm8k_cot",
+        "arm": arm,
+        "seed": seed,
+        "model": MODEL,
+        "group": G,
+        "prompts_per_step": n_prompts,
+        "n_gen": N_GEN,
+        "n_steps": N_STEPS,
+        "k_epochs": K_EPOCHS,
+        "lr": LR,
+        "max_new": MAX_NEW,
+        "heldout_pre_acc": float(pre.mean()),
+        "heldout_post_acc": float(post.mean()),
+        "n_eval": int(len(pre)),
+        "wrong_to_right": int(((pre == 0) & (post == 1)).sum()),
+        "right_to_wrong": int(((pre == 1) & (post == 0)).sum()),
+        "last10_avg": float(np.mean([s["mean_reward"] for s in step_log[-10:]])),
+        "elapsed_seconds": time.time() - t0,
+        "pre_correct": pre_correct,
+        "post_correct": post_correct,
+        "step_log": step_log,
+    }
     os.makedirs(f"{RESULTS_DIR}/samestack_gsm8k/adapters", exist_ok=True)
     model.save_pretrained(f"{RESULTS_DIR}/samestack_gsm8k/adapters/{arm}_s{seed}")
     with open(out_path, "w") as f:
         json.dump(res, f)
     results_vol.commit()
-    print(f"[{arm} s{seed}] pre={pre.mean():.3f} post={post.mean():.3f} last10={res['last10_avg']:.3f}")
+    print(
+        f"[{arm} s{seed}] pre={pre.mean():.3f} post={post.mean():.3f} last10={res['last10_avg']:.3f}"
+    )
     return res
 
 
@@ -249,21 +301,31 @@ def _t_cdf(t, df):
     if t == 0:
         return 0.5
     x = df / (df + t * t)
+
     def betacf(a, b, x):
         qab, qap, qam = a + b, a + 1, a - 1
         c, d = 1.0, 1 - qab * x / qap
-        d = 1 / (d if abs(d) > 1e-300 else 1e-300); h = d
+        d = 1 / (d if abs(d) > 1e-300 else 1e-300)
+        h = d
         for m in range(1, 300):
             m2 = 2 * m
             aa = m * (b - m) * x / ((qam + m2) * (a + m2))
-            d = 1 / (1 + aa * d or 1e-300); c = 1 + aa / c or 1e-300; h *= d * c
+            d = 1 / (1 + aa * d or 1e-300)
+            c = 1 + aa / c or 1e-300
+            h *= d * c
             aa = -(a + m) * (qab + m) * x / ((a + m2) * (qap + m2))
-            d = 1 / (1 + aa * d or 1e-300); c = 1 + aa / c or 1e-300; de = d * c; h *= de
+            d = 1 / (1 + aa * d or 1e-300)
+            c = 1 + aa / c or 1e-300
+            de = d * c
+            h *= de
             if abs(de - 1) < 3e-14:
                 break
         return h
+
     a, b = df / 2.0, 0.5
-    bt = math.exp(math.lgamma(a + b) - math.lgamma(a) - math.lgamma(b) + a * math.log(x) + b * math.log(1 - x))
+    bt = math.exp(
+        math.lgamma(a + b) - math.lgamma(a) - math.lgamma(b) + a * math.log(x) + b * math.log(1 - x)
+    )
     ib = bt * betacf(a, b, x) / a if x < (a + 1) / (a + b + 2) else 1 - bt * betacf(b, a, 1 - x) / b
     return 1 - 0.5 * ib if t > 0 else 0.5 * ib
 
@@ -287,12 +349,22 @@ def paired(a: dict, b: dict) -> dict:
     t = md / se if se > 0 else float("inf")
     p = 2 * (1 - _t_cdf(abs(t), df)) if se > 0 else 0.0
     tc = _t_ppf(0.975, df)
-    p_lo = 1 - _t_cdf((md + MARGIN) / se, df) if se > 0 else 0.0   # H0: diff <= -margin
-    p_hi = _t_cdf((md - MARGIN) / se, df) if se > 0 else 0.0       # H0: diff >= +margin
-    return {"n_seeds": n, "seeds": seeds, "diffs": d, "mean_diff": md, "sd": sd,
-            "ci95": [md - tc * se, md + tc * se], "t": t, "df": df, "p_two_sided": p,
-            "tost_margin": MARGIN, "tost_p": max(p_lo, p_hi),
-            "equivalent_at_margin": max(p_lo, p_hi) < 0.05}
+    p_lo = 1 - _t_cdf((md + MARGIN) / se, df) if se > 0 else 0.0  # H0: diff <= -margin
+    p_hi = _t_cdf((md - MARGIN) / se, df) if se > 0 else 0.0  # H0: diff >= +margin
+    return {
+        "n_seeds": n,
+        "seeds": seeds,
+        "diffs": d,
+        "mean_diff": md,
+        "sd": sd,
+        "ci95": [md - tc * se, md + tc * se],
+        "t": t,
+        "df": df,
+        "p_two_sided": p,
+        "tost_margin": MARGIN,
+        "tost_p": max(p_lo, p_hi),
+        "equivalent_at_margin": max(p_lo, p_hi) < 0.05,
+    }
 
 
 @app.local_entrypoint()
@@ -308,33 +380,54 @@ def main():
         if not rs:
             continue
         post = [r["heldout_post_acc"] for r in rs]
-        summ[a] = {"n_seeds": len(rs),
-                   "heldout_pre_mean": sum(r["heldout_pre_acc"] for r in rs) / len(rs),
-                   "heldout_post_mean": sum(post) / len(rs),
-                   "delta_mean": sum(r["heldout_post_acc"] - r["heldout_pre_acc"] for r in rs) / len(rs),
-                   "last10_mean": sum(r["last10_avg"] for r in rs) / len(rs)}
+        summ[a] = {
+            "n_seeds": len(rs),
+            "heldout_pre_mean": sum(r["heldout_pre_acc"] for r in rs) / len(rs),
+            "heldout_post_mean": sum(post) / len(rs),
+            "delta_mean": sum(r["heldout_post_acc"] - r["heldout_pre_acc"] for r in rs) / len(rs),
+            "last10_mean": sum(r["last10_avg"] for r in rs) / len(rs),
+        }
     post_of = {a: {s: r["heldout_post_acc"] for s, r in by[a].items()} for a in ARMS}
     contrasts = {}
     for x, y in [("grpo_g8", "ppo"), ("grpo_g8", "grpo_g2")]:
         if len(set(post_of[x]) & set(post_of[y])) >= 2:
             contrasts[f"{x}_minus_{y}"] = paired(post_of[x], post_of[y])
 
-    out = {"config": {"model": MODEL, "n_steps": N_STEPS, "n_gen": N_GEN, "group": GROUP,
-                      "k_epochs": K_EPOCHS, "lr": LR, "max_new": MAX_NEW, "n_eval": N_EVAL,
-                      "seeds": SEEDS, "tost_margin": MARGIN, "unit": "seed",
-                      "metric": "greedy accuracy on 200 GSM8K test items after training"},
-           "summary": summ, "contrasts": contrasts,
-           "runs": [{k: v for k, v in r.items() if k not in ("pre_correct", "post_correct", "step_log")}
-                    for r in results]}
+    out = {
+        "config": {
+            "model": MODEL,
+            "n_steps": N_STEPS,
+            "n_gen": N_GEN,
+            "group": GROUP,
+            "k_epochs": K_EPOCHS,
+            "lr": LR,
+            "max_new": MAX_NEW,
+            "n_eval": N_EVAL,
+            "seeds": SEEDS,
+            "tost_margin": MARGIN,
+            "unit": "seed",
+            "metric": "greedy accuracy on 200 GSM8K test items after training",
+        },
+        "summary": summ,
+        "contrasts": contrasts,
+        "runs": [
+            {k: v for k, v in r.items() if k not in ("pre_correct", "post_correct", "step_log")}
+            for r in results
+        ],
+    }
     with open("experiments/results/samestack_gsm8k_cot.json", "w") as f:
         json.dump(out, f, indent=2)
     with open("experiments/results/samestack_gsm8k_cot_full.json", "w") as f:
         json.dump({**out, "runs": results}, f)
     print("\n=== Same-stack GSM8K-CoT (Qwen2.5-1.5B-Instruct) ===")
     for a, s in summ.items():
-        print(f"  {a:8s}: {s['heldout_pre_mean']:.3f} -> {s['heldout_post_mean']:.3f} "
-              f"(Δ{s['delta_mean']:+.3f}, n={s['n_seeds']}) last10={s['last10_mean']:.3f}")
+        print(
+            f"  {a:8s}: {s['heldout_pre_mean']:.3f} -> {s['heldout_post_mean']:.3f} "
+            f"(Δ{s['delta_mean']:+.3f}, n={s['n_seeds']}) last10={s['last10_mean']:.3f}"
+        )
     for k, c in contrasts.items():
-        print(f"  {k}: {c['mean_diff']:+.4f} CI [{c['ci95'][0]:+.4f}, {c['ci95'][1]:+.4f}] "
-              f"p={c['p_two_sided']:.3f} TOST(±{MARGIN}) p={c['tost_p']:.3f}")
+        print(
+            f"  {k}: {c['mean_diff']:+.4f} CI [{c['ci95'][0]:+.4f}, {c['ci95'][1]:+.4f}] "
+            f"p={c['p_two_sided']:.3f} TOST(±{MARGIN}) p={c['tost_p']:.3f}"
+        )
     print("Saved experiments/results/samestack_gsm8k_cot.json")

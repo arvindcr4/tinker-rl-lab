@@ -13,7 +13,8 @@ Usage:
 
 import sys
 import os
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 import argparse
 import hashlib
@@ -21,7 +22,7 @@ import json
 import time
 from collections import Counter
 from pathlib import Path
-from typing import Dict, List, Optional, Set, Tuple
+from typing import Dict, List, Set, Tuple
 
 import numpy as np
 
@@ -29,6 +30,7 @@ import numpy as np
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _hash_string(text: str) -> str:
     """Return the SHA-256 hex digest of a UTF-8-encoded string."""
@@ -46,12 +48,13 @@ def _hash_file(path: str) -> str:
 
 def _ngrams(tokens: List[str], n: int) -> Set[Tuple[str, ...]]:
     """Return the set of n-gram tuples for a token list."""
-    return set(tuple(tokens[i:i + n]) for i in range(len(tokens) - n + 1))
+    return set(tuple(tokens[i : i + n]) for i in range(len(tokens) - n + 1))
 
 
 # ---------------------------------------------------------------------------
 # 1. Arithmetic task contamination
 # ---------------------------------------------------------------------------
+
 
 def check_arithmetic_contamination(seed_list: List[int]) -> Dict:
     """
@@ -80,7 +83,7 @@ def check_arithmetic_contamination(seed_list: List[int]) -> Dict:
         rng = np.random.default_rng(seed)
         num1s = rng.integers(1, 100, size=SAMPLE_SIZE)
         num2s = rng.integers(1, 100, size=SAMPLE_SIZE)
-        problems = set(zip(num1s.tolist(), num2s.tolist()))
+        problems = set(zip(num1s.tolist(), num2s.tolist(), strict=False))
 
         # Chi-squared uniformity test on num1 (99 bins)
         counts = Counter(num1s.tolist())
@@ -91,7 +94,7 @@ def check_arithmetic_contamination(seed_list: List[int]) -> Dict:
         per_seed_stats[seed] = {
             "unique_problems": len(problems),
             "chi2_num1": round(chi2, 2),
-            "chi2_ok": chi2 < 200,   # liberal threshold for 98 df, alpha=0.001
+            "chi2_ok": chi2 < 200,  # liberal threshold for 98 df, alpha=0.001
         }
         all_problem_sets.append(problems)
 
@@ -117,6 +120,7 @@ def check_arithmetic_contamination(seed_list: List[int]) -> Dict:
 # ---------------------------------------------------------------------------
 # 2. N-gram overlap (GSM8K-style)
 # ---------------------------------------------------------------------------
+
 
 def check_ngram_overlap(
     train_texts: List[str],
@@ -144,27 +148,29 @@ def check_ngram_overlap(
         train_ngram_set.update(_ngrams(tokens, n))
 
     contaminated_count = 0
-    overlap_fractions  = []
+    overlap_fractions = []
 
     for text in test_texts:
-        tokens     = text.lower().split()
+        tokens = text.lower().split()
         test_grams = _ngrams(tokens, n)
         if not test_grams:
             continue
         overlap = len(test_grams & train_ngram_set)
-        frac    = overlap / len(test_grams)
+        frac = overlap / len(test_grams)
         overlap_fractions.append(frac)
         if frac > 0.0:
             contaminated_count += 1
 
     mean_overlap = float(np.mean(overlap_fractions)) if overlap_fractions else 0.0
-    exact_overlap = bool({v.strip().lower() for v in train_texts} & {v.strip().lower() for v in test_texts})
-    if exact_overlap or mean_overlap > .05:
-        flag="FAIL"
+    exact_overlap = bool(
+        {v.strip().lower() for v in train_texts} & {v.strip().lower() for v in test_texts}
+    )
+    if exact_overlap or mean_overlap > 0.05:
+        flag = "FAIL"
     elif not train_ngram_set or len(overlap_fractions) < len(test_texts) or not test_texts:
-        flag="INCOMPLETE"
+        flag = "INCOMPLETE"
     else:
-        flag="PASS"
+        flag = "PASS"
 
     return {
         "check": f"ngram_overlap_n{n}",
@@ -174,7 +180,7 @@ def check_ngram_overlap(
         "mean_overlap_fraction": round(mean_overlap, 4),
         "contaminated_test_docs": contaminated_count,
         "test_docs_with_ngrams": len(overlap_fractions),
-        "short_test_docs": len(test_texts)-len(overlap_fractions),
+        "short_test_docs": len(test_texts) - len(overlap_fractions),
         "flag": flag,
     }
 
@@ -182,6 +188,7 @@ def check_ngram_overlap(
 # ---------------------------------------------------------------------------
 # 3. Exact duplicate detection
 # ---------------------------------------------------------------------------
+
 
 def check_exact_duplicates(
     dataset1: List[str],
@@ -203,7 +210,7 @@ def check_exact_duplicates(
     """
     hashes1 = {_hash_string(ex) for ex in dataset1}
     hashes2 = {_hash_string(ex) for ex in dataset2}
-    common  = hashes1 & hashes2
+    common = hashes1 & hashes2
 
     flag = "FAIL" if common else "PASS"
     return {
@@ -211,7 +218,7 @@ def check_exact_duplicates(
         f"{label1}_size": len(dataset1),
         f"{label2}_size": len(dataset2),
         "duplicate_count": len(common),
-        "duplicate_hashes": sorted(common)[:20],   # cap at 20 for readability
+        "duplicate_hashes": sorted(common)[:20],  # cap at 20 for readability
         "flag": flag,
     }
 
@@ -219,6 +226,7 @@ def check_exact_duplicates(
 # ---------------------------------------------------------------------------
 # 4. Seed independence
 # ---------------------------------------------------------------------------
+
 
 def check_seed_independence(seeds: List[int], sample_size: int = 200) -> Dict:
     """
@@ -239,24 +247,26 @@ def check_seed_independence(seeds: List[int], sample_size: int = 200) -> Dict:
         rng = np.random.default_rng(seed)
         num1s = rng.integers(1, 100, size=sample_size).tolist()
         num2s = rng.integers(1, 100, size=sample_size).tolist()
-        orderings[seed] = list(zip(num1s, num2s))
+        orderings[seed] = list(zip(num1s, num2s, strict=False))
 
     pairwise_matches = []
     for i in range(len(seeds)):
         for j in range(i + 1, len(seeds)):
             matches = sum(
-                1 for a, b in zip(orderings[seeds[i]], orderings[seeds[j]]) if a == b
+                1 for a, b in zip(orderings[seeds[i]], orderings[seeds[j]], strict=False) if a == b
             )
-            pairwise_matches.append({
-                "seed_a": seeds[i],
-                "seed_b": seeds[j],
-                "matching_positions": matches,
-                "fraction": round(matches / sample_size, 4),
-            })
+            pairwise_matches.append(
+                {
+                    "seed_a": seeds[i],
+                    "seed_b": seeds[j],
+                    "matching_positions": matches,
+                    "fraction": round(matches / sample_size, 4),
+                }
+            )
 
     # Expect at most ~1/99^2 ≈ 0.01% positional agreement by chance
     max_fraction = max((m["fraction"] for m in pairwise_matches), default=0.0)
-    all_unique   = max_fraction < 0.10   # generous threshold
+    all_unique = max_fraction < 0.10  # generous threshold
     flag = "PASS" if all_unique else "FAIL"
 
     return {
@@ -272,6 +282,7 @@ def check_seed_independence(seeds: List[int], sample_size: int = 200) -> Dict:
 # ---------------------------------------------------------------------------
 # 5. Results file integrity (checksum validation)
 # ---------------------------------------------------------------------------
+
 
 def check_results_integrity(results_dir: str) -> Dict:
     """
@@ -310,14 +321,24 @@ def check_results_integrity(results_dir: str) -> Dict:
         else:
             status = "UNVERIFIED"
 
-        file_status.append({
-            "file": str(candidate.relative_to(results_path)),
-            "sha256": actual_hash[:16] + "…",
-            "status": status,
-        })
+        file_status.append(
+            {
+                "file": str(candidate.relative_to(results_path)),
+                "sha256": actual_hash[:16] + "…",
+                "status": status,
+            }
+        )
 
     tampered = [f for f in file_status if f["status"] == "CHECKSUM_MISMATCH"]
-    flag = "FAIL" if tampered else ("PASS" if file_status and all(f["status"] == "OK" for f in file_status) else "INCOMPLETE")
+    flag = (
+        "FAIL"
+        if tampered
+        else (
+            "PASS"
+            if file_status and all(f["status"] == "OK" for f in file_status)
+            else "INCOMPLETE"
+        )
+    )
 
     return {
         "check": "results_integrity",
@@ -331,6 +352,7 @@ def check_results_integrity(results_dir: str) -> Dict:
 # ---------------------------------------------------------------------------
 # Report generator
 # ---------------------------------------------------------------------------
+
 
 def generate_report(check_results: List[Dict], output_path: str) -> None:
     """
@@ -347,7 +369,9 @@ def generate_report(check_results: List[Dict], output_path: str) -> None:
         "generated_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         "overall_flag": "PASS" if overall_pass else "FAIL",
         "checks": check_results,
-        "scope": "synthetic_demonstration" if any(r.get("reason") == "synthetic demonstration is not evidence" for r in check_results) else "supplied_texts_and_integrity",
+        "scope": "synthetic_demonstration"
+        if any(r.get("reason") == "synthetic demonstration is not evidence" for r in check_results)
+        else "supplied_texts_and_integrity",
         "benchmark_contamination_assessed": overall_pass,
         "methodology": {
             "ngram_sizes": [8, 13],
@@ -369,6 +393,7 @@ def generate_report(check_results: List[Dict], output_path: str) -> None:
 # ---------------------------------------------------------------------------
 # Synthetic GSM8K-like data for demonstration
 # ---------------------------------------------------------------------------
+
 
 def _generate_synthetic_gsm8k(n: int, rng: np.random.Generator) -> List[str]:
     """Generate n synthetic arithmetic word-problem strings (GSM8K-like)."""
@@ -392,25 +417,37 @@ def _generate_synthetic_gsm8k(n: int, rng: np.random.Generator) -> List[str]:
 # Main
 # ---------------------------------------------------------------------------
 
+
 def main():
     parser = argparse.ArgumentParser(
         description="Data contamination detection for TinkerRL benchmarks."
     )
     parser.add_argument(
-        "--results-dir", type=str, default="platform_hybrid/experiments/results/",
-        help="Directory containing experiment result files for integrity check"
+        "--results-dir",
+        type=str,
+        default="platform_hybrid/experiments/results/",
+        help="Directory containing experiment result files for integrity check",
     )
     parser.add_argument(
-        "--output", type=str, default="results/contamination/contamination_report.json",
-        help="Path to write the contamination report JSON"
+        "--output",
+        type=str,
+        default="results/contamination/contamination_report.json",
+        help="Path to write the contamination report JSON",
     )
     parser.add_argument(
-        "--seeds", type=int, nargs="+", default=[0, 1, 2, 42, 123],
-        help="Seeds to use for arithmetic contamination and seed-independence checks"
+        "--seeds",
+        type=int,
+        nargs="+",
+        default=[0, 1, 2, 42, 123],
+        help="Seeds to use for arithmetic contamination and seed-independence checks",
     )
     parser.add_argument("--train-texts", help="Actual training texts JSON list")
     parser.add_argument("--test-texts", help="Actual held-out texts JSON list")
-    parser.add_argument("--demo", action="store_true", help="Synthetic demonstration, never a contamination certification")
+    parser.add_argument(
+        "--demo",
+        action="store_true",
+        help="Synthetic demonstration, never a contamination certification",
+    )
     args = parser.parse_args()
     if not args.demo and not (args.train_texts and args.test_texts):
         parser.error("provide actual --train-texts and --test-texts, or explicitly select --demo")
@@ -431,9 +468,14 @@ def main():
         train_texts = _generate_synthetic_gsm8k(1000, np.random.default_rng(0))
         test_texts = _generate_synthetic_gsm8k(200, np.random.default_rng(999))
     else:
-        with open(args.train_texts) as f: train_texts = json.load(f)
-        with open(args.test_texts) as f: test_texts = json.load(f)
-        if any(not isinstance(x, list) or not x or not all(isinstance(v, str) and v.strip() for v in x) for x in (train_texts, test_texts)):
+        with open(args.train_texts) as f:
+            train_texts = json.load(f)
+        with open(args.test_texts) as f:
+            test_texts = json.load(f)
+        if any(
+            not isinstance(x, list) or not x or not all(isinstance(v, str) and v.strip() for v in x)
+            for x in (train_texts, test_texts)
+        ):
             parser.error("text inputs must be nonempty JSON lists of nonempty strings")
 
     for n in (8, 13):
@@ -453,7 +495,9 @@ def main():
     print("\n[4/5] Checking seed independence...")
     r4 = check_seed_independence(args.seeds)
     all_results.append(r4)
-    print(f"  Max positional overlap: {r4['max_positional_overlap_fraction']:.4f}  Flag: {r4['flag']}")
+    print(
+        f"  Max positional overlap: {r4['max_positional_overlap_fraction']:.4f}  Flag: {r4['flag']}"
+    )
 
     # ------------------------------------------------------------------
     print("\n[5/5] Checking results file integrity...")
@@ -462,7 +506,9 @@ def main():
     if r5["flag"] == "SKIP":
         print(f"  Skipped (directory not found or empty): {args.results_dir}")
     else:
-        print(f"  Files checked: {r5['files_checked']}  Tampered: {len(r5['tampered_files'])}  Flag: {r5['flag']}")
+        print(
+            f"  Files checked: {r5['files_checked']}  Tampered: {len(r5['tampered_files'])}  Flag: {r5['flag']}"
+        )
 
     # ------------------------------------------------------------------
     if args.demo:
@@ -470,9 +516,9 @@ def main():
     generate_report(all_results, args.output)
 
     overall = "PASS" if all(r.get("flag") == "PASS" for r in all_results) else "FAIL"
-    print(f"\n{'='*50}")
+    print(f"\n{'=' * 50}")
     print(f"  OVERALL CONTAMINATION CHECK: {overall}")
-    print(f"{'='*50}\n")
+    print(f"{'=' * 50}\n")
     raise SystemExit(0 if overall == "PASS" else 1)
 
 

@@ -45,7 +45,6 @@ effect_surface.png
 from __future__ import annotations
 
 import json
-import os
 import warnings
 from pathlib import Path
 
@@ -56,7 +55,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from scipy.optimize import minimize
-from scipy.stats import norm
 
 warnings.filterwarnings("ignore", category=RuntimeWarning)
 
@@ -79,8 +77,8 @@ def load_records(path: Path) -> pd.DataFrame:
             pids = row["prompt_indices"]
             rewards = row["rewards"]
             lengths = row["lengths"]
-            for pid, rv, lv in zip(pids, rewards, lengths):
-                for r, l in zip(rv, lv):
+            for pid, rv, lv in zip(pids, rewards, lengths, strict=False):
+                for r, l in zip(rv, lv, strict=False):
                     records.append(
                         {
                             "group_size": g,
@@ -197,7 +195,9 @@ def bootstrap_effects(
     return pd.DataFrame(rows)
 
 
-def make_figures(df: pd.DataFrame, point: dict, boot: pd.DataFrame, out_dir: Path) -> dict[str, Path]:
+def make_figures(
+    df: pd.DataFrame, point: dict, boot: pd.DataFrame, out_dir: Path
+) -> dict[str, Path]:
     """Render diagnostic and result figures."""
     paths: dict[str, Path] = {}
 
@@ -224,7 +224,7 @@ def make_figures(df: pd.DataFrame, point: dict, boot: pd.DataFrame, out_dir: Pat
     ax.set_ylabel("Mean reward")
     ax.set_title("A4: Mean reward by group size")
     ax.set_ylim(0, 1)
-    for x, y in zip(means.index.astype(str), means.values):
+    for x, y in zip(means.index.astype(str), means.values, strict=False):
         ax.text(x, y + 0.02, f"{y:.3f}", ha="center")
     fig.tight_layout()
     p = out_dir / "reward_by_group_size.png"
@@ -238,14 +238,23 @@ def make_figures(df: pd.DataFrame, point: dict, boot: pd.DataFrame, out_dir: Pat
     vals = [point["NDE"], point["NIE"], point["TE"]]
     ci_low = [boot["NDE"].quantile(0.025), boot["NIE"].quantile(0.025), boot["TE"].quantile(0.025)]
     ci_high = [boot["NDE"].quantile(0.975), boot["NIE"].quantile(0.975), boot["TE"].quantile(0.975)]
-    errs = [[v - l for v, l in zip(vals, ci_low)], [h - v for v, h in zip(vals, ci_high)]]
+    errs = [
+        [v - l for v, l in zip(vals, ci_low, strict=False)],
+        [h - v for v, h in zip(vals, ci_high, strict=False)],
+    ]
     colors = ["#54a24b", "#eeca3b", "#b279a2"]
     bars = ax.bar(labels, vals, yerr=errs, color=colors, capsize=5, edgecolor="black")
     ax.axhline(0, color="black", linewidth=0.8)
     ax.set_ylabel("Effect on reward (probability scale)")
     ax.set_title("A4: CLMP length-mediation estimates (G=8 vs G=4)")
-    for bar, v in zip(bars, vals):
-        ax.text(bar.get_x() + bar.get_width() / 2, v + (0.015 if v >= 0 else -0.025), f"{v:.4f}", ha="center", va="bottom" if v >= 0 else "top")
+    for bar, v in zip(bars, vals, strict=False):
+        ax.text(
+            bar.get_x() + bar.get_width() / 2,
+            v + (0.015 if v >= 0 else -0.025),
+            f"{v:.4f}",
+            ha="center",
+            va="bottom" if v >= 0 else "top",
+        )
     fig.tight_layout()
     p = out_dir / "mediation_bars.png"
     fig.savefig(p, dpi=200)
@@ -334,11 +343,18 @@ def main() -> None:
             "formula": "length_z ~ 1 + T",
             "params": {"gamma0": float(gamma[0]), "gamma1": float(gamma[1])},
             "sigma": sigma,
-            "interpretation": "G=8 completions are %.3f sd longer than G=4 completions" % float(gamma[1]),
+            "interpretation": "G=8 completions are {:.3f} sd longer than G=4 completions".format(
+                float(gamma[1])
+            ),
         },
         "outcome_model": {
             "formula": "reward ~ 1 + T + length_z + T:length_z",
-            "params": {"beta0": float(beta[0]), "beta1": float(beta[1]), "beta2": float(beta[2]), "beta3": float(beta[3])},
+            "params": {
+                "beta0": float(beta[0]),
+                "beta1": float(beta[1]),
+                "beta2": float(beta[2]),
+                "beta3": float(beta[3]),
+            },
         },
         "estimates": {
             key: {
@@ -348,8 +364,11 @@ def main() -> None:
             }
             for key in ["NDE", "NIE", "TE", "GER", "PM"]
         },
-        "headline": "GER=%.3f (%.1f%% of the G=8-vs-G=4 reward effect is mediated by completion length)" % (point["GER"], point["GER"] * 100),
-        "method_note": "Parametric causal mediation with Monte Carlo counterfactuals; bootstrap CI based on %d resamples." % N_BOOT,
+        "headline": "GER={:.3f} ({:.1f}% of the G=8-vs-G=4 reward effect is mediated by completion length)".format(
+            point["GER"], point["GER"] * 100
+        ),
+        "method_note": "Parametric causal mediation with Monte Carlo counterfactuals; bootstrap CI based on %d resamples."
+        % N_BOOT,
     }
 
     json_path = out_dir / "mediation_estimates.json"
@@ -381,11 +400,19 @@ def main() -> None:
 
     # Print concise report.
     print("A4 CLMP length-mediation analysis complete")
-    print(f"  rollouts: {len(df)} (G=4: {(df['group_size']==4).sum()}, G=8: {(df['group_size']==8).sum()})")
-    print(f"  NDE = {point['NDE']:.4f} [{ci['NDE'][0]:.4f}, {ci['NDE'][1]:.4f}], p={pvals['NDE']:.3f}")
-    print(f"  NIE = {point['NIE']:.4f} [{ci['NIE'][0]:.4f}, {ci['NIE'][1]:.4f}], p={pvals['NIE']:.3f}")
+    print(
+        f"  rollouts: {len(df)} (G=4: {(df['group_size'] == 4).sum()}, G=8: {(df['group_size'] == 8).sum()})"
+    )
+    print(
+        f"  NDE = {point['NDE']:.4f} [{ci['NDE'][0]:.4f}, {ci['NDE'][1]:.4f}], p={pvals['NDE']:.3f}"
+    )
+    print(
+        f"  NIE = {point['NIE']:.4f} [{ci['NIE'][0]:.4f}, {ci['NIE'][1]:.4f}], p={pvals['NIE']:.3f}"
+    )
     print(f"  TE  = {point['TE']:.4f}  [{ci['TE'][0]:.4f}, {ci['TE'][1]:.4f}], p={pvals['TE']:.3f}")
-    print(f"  GER = {point['GER']:.3f} [{ci['GER'][0]:.3f}, {ci['GER'][1]:.3f}], p={pvals['GER']:.3f}")
+    print(
+        f"  GER = {point['GER']:.3f} [{ci['GER'][0]:.3f}, {ci['GER'][1]:.3f}], p={pvals['GER']:.3f}"
+    )
     print(f"  outputs: {out_dir}")
     for name, p in fig_paths.items():
         print(f"    {name}: {p.name}")

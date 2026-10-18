@@ -131,7 +131,7 @@ def extract_sections(doc, threshold: float) -> list[dict]:
                     is_upper_heading = (
                         not font_heading
                         and text.isupper()
-                        and sum(1 for c in text if c.isupper() and 'A' <= c <= 'Z') > 4
+                        and sum(1 for c in text if c.isupper() and "A" <= c <= "Z") > 4
                     )
 
                     is_font_heading = (
@@ -144,19 +144,23 @@ def extract_sections(doc, threshold: float) -> list[dict]:
                         upper_heading = True
                         if "References" in text or "REFERENCES" in text:
                             if current_heading:
-                                sections.append({
-                                    "name": current_heading,
-                                    "text": " ".join(current_text).strip(),
-                                    "page": current_page + 1,
-                                })
+                                sections.append(
+                                    {
+                                        "name": current_heading,
+                                        "text": " ".join(current_text).strip(),
+                                        "page": current_page + 1,
+                                    }
+                                )
                             return sections
 
                         if current_heading:
-                            sections.append({
-                                "name": current_heading,
-                                "text": " ".join(current_text).strip(),
-                                "page": current_page + 1,
-                            })
+                            sections.append(
+                                {
+                                    "name": current_heading,
+                                    "text": " ".join(current_text).strip(),
+                                    "page": current_page + 1,
+                                }
+                            )
                         current_heading = text
                         current_text = []
                         current_page = page_index
@@ -171,19 +175,23 @@ def extract_sections(doc, threshold: float) -> list[dict]:
 
                         if "References" in text:
                             if current_heading:
-                                sections.append({
-                                    "name": current_heading,
-                                    "text": " ".join(current_text).strip(),
-                                    "page": current_page + 1,
-                                })
+                                sections.append(
+                                    {
+                                        "name": current_heading,
+                                        "text": " ".join(current_text).strip(),
+                                        "page": current_page + 1,
+                                    }
+                                )
                             return sections
 
                         if current_heading:
-                            sections.append({
-                                "name": current_heading,
-                                "text": " ".join(current_text).strip(),
-                                "page": current_page + 1,
-                            })
+                            sections.append(
+                                {
+                                    "name": current_heading,
+                                    "text": " ".join(current_text).strip(),
+                                    "page": current_page + 1,
+                                }
+                            )
                         current_heading = text
                         current_text = []
                         current_page = page_index
@@ -193,11 +201,13 @@ def extract_sections(doc, threshold: float) -> list[dict]:
 
     # Flush last section
     if current_heading:
-        sections.append({
-            "name": current_heading,
-            "text": " ".join(current_text).strip(),
-            "page": current_page + 1,
-        })
+        sections.append(
+            {
+                "name": current_heading,
+                "text": " ".join(current_text).strip(),
+                "page": current_page + 1,
+            }
+        )
 
     return sections
 
@@ -231,8 +241,9 @@ def main():
     parser = argparse.ArgumentParser(description="Parse PDF papers into structured sections")
     parser.add_argument("--pdf", required=True, help="Input PDF file")
     parser.add_argument("--output", "-o", help="Output JSON file (default: stdout)")
-    parser.add_argument("--format", choices=["json", "text"], default="json",
-                        help="Output format (default: json)")
+    parser.add_argument(
+        "--format", choices=["json", "text"], default="json", help="Output format (default: json)"
+    )
     parser.add_argument("--verbose", action="store_true", help="Print progress info")
     args = parser.parse_args()
 

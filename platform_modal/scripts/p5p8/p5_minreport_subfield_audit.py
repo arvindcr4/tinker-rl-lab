@@ -53,6 +53,7 @@ Outputs:
   platform_hybrid/experiments/results/p5p8/p5_minreport_mve.tsv                     (PART B per-extension table)
   platform_hybrid/experiments/results/p5p8/p5_minreport_mve_summary.json            (PART B summary)
 """
+
 from __future__ import annotations
 
 from _minreport_contract import valid_literal
@@ -64,7 +65,8 @@ from collections import Counter
 from pathlib import Path
 
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
+from _paths import REPO_ROOT
+
 ROOT = REPO_ROOT
 CELLS = ROOT / "platform_hybrid" / "experiments" / "results" / "mega_20260704" / "cells.tsv"
 MANIFESTS = ROOT / "platform_hybrid" / "experiments" / "results" / "mega_20260704" / "manifests"
@@ -73,22 +75,20 @@ OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 # ----- the 7 MIN-REPORT items and their sub-fields (from sec:p5-stack) -----
 SUBFIELDS: dict[str, list[str]] = {
-    "loss_form":                  # Item 1
-        ["ratio_level", "clip_low", "clip_high", "token_mask",
-         "advantage_norm", "dynamic_sampling"],
-    "ref_policy_kl":              # Item 2
-        ["ref_snapshot", "kl_coef", "kl_estimator"],
+    "loss_form":  # Item 1
+    ["ratio_level", "clip_low", "clip_high", "token_mask", "advantage_norm", "dynamic_sampling"],
+    "ref_policy_kl":  # Item 2
+    ["ref_snapshot", "kl_coef", "kl_estimator"],
     "sampler_backend_precision":  # Item 3
-        ["sampler_backend", "sampling_engine", "precision",
-         "decoding_parameters"],
-    "per_step_zvf_path":          # Item 4
-        ["zvf_traj", "GU_per_step"],
-    "group_size_schedule":        # Item 5
-        ["G_value", "schedule_form"],
-    "heldout_split":# Item 6
-        ["split_name", "split_size", "disjointness"],
-    "decontamination_notes":      # Item 7
-        ["decontam_check", "parser_probe"],
+    ["sampler_backend", "sampling_engine", "precision", "decoding_parameters"],
+    "per_step_zvf_path":  # Item 4
+    ["zvf_traj", "GU_per_step"],
+    "group_size_schedule":  # Item 5
+    ["G_value", "schedule_form"],
+    "heldout_split":  # Item 6
+    ["split_name", "split_size", "disjointness"],
+    "decontamination_notes":  # Item 7
+    ["decontam_check", "parser_probe"],
 }
 
 # Items where the value is ALWAYS a structured string (file path / schedule /
@@ -96,8 +96,8 @@ SUBFIELDS: dict[str, list[str]] = {
 # implicitly covered when the value is non-empty. Items where the value can
 # be a sentinel (n/a) have an opt-out:
 SENTINEL_PREFIXES = {
-    "loss_form":                ["n/a"],   # e.g. "n/a-sampling"
-    "ref_policy_kl":            ["n/a"],   # e.g. "n/a-no-kl"
+    "loss_form": ["n/a"],  # e.g. "n/a-sampling"
+    "ref_policy_kl": ["n/a"],  # e.g. "n/a-no-kl"
     # Items 3/4/5/6/7: any non-empty value is structured
 }
 
@@ -165,14 +165,16 @@ def part_a() -> dict:
             H = -(p * math.log2(p) + (1 - p) * math.log2(1 - p))
             n_unique_when_covered = 2  # "covered" or "not covered"
         vacuous = (covered == n and H == 0.0) or covered == 0
-        table_rows.append({
-            "sub_field": sf,
-            "covered_n": covered,
-            "coverage_pct": round(cov_pct, 2),
-            "n_unique_when_covered": n_unique_when_covered,
-            "H_bits": round(H, 4),
-            "vacuous": vacuous,
-        })
+        table_rows.append(
+            {
+                "sub_field": sf,
+                "covered_n": covered,
+                "coverage_pct": round(cov_pct, 2),
+                "n_unique_when_covered": n_unique_when_covered,
+                "H_bits": round(H, 4),
+                "vacuous": vacuous,
+            }
+        )
 
     # rank sort: zero-coverage first (most-missing), then vacuous, then
     # informative
@@ -181,17 +183,25 @@ def part_a() -> dict:
     # per-item aggregates
     per_item_rows: list[dict] = []
     for item in SUBFIELDS:
-        per_item_rows.append({
-            "item": item,
-            "n_subfields_declared": len(SUBFIELDS[item]),
-            "n_subfields_covered": len(item_sub_covered[item]),
-            "item_present_pct": round(100.0 * item_present[item] / n, 2),
-        })
+        per_item_rows.append(
+            {
+                "item": item,
+                "n_subfields_declared": len(SUBFIELDS[item]),
+                "n_subfields_covered": len(item_sub_covered[item]),
+                "item_present_pct": round(100.0 * item_present[item] / n, 2),
+            }
+        )
 
     out_tsv = OUT_DIR / "p5_minreport_subfield_audit.tsv"
     with open(out_tsv, "w", newline="") as f:
-        cols = ["sub_field", "covered_n", "coverage_pct",
-                "n_unique_when_covered", "H_bits", "vacuous"]
+        cols = [
+            "sub_field",
+            "covered_n",
+            "coverage_pct",
+            "n_unique_when_covered",
+            "H_bits",
+            "vacuous",
+        ]
         w = csv.DictWriter(f, fieldnames=cols, delimiter="\t")
         w.writeheader()
         for r in table_rows:
@@ -199,8 +209,7 @@ def part_a() -> dict:
 
     out_item_tsv = OUT_DIR / "p5_minreport_subfield_audit_per_item.tsv"
     with open(out_item_tsv, "w", newline="") as f:
-        cols = ["item", "n_subfields_declared", "n_subfields_covered",
-                "item_present_pct"]
+        cols = ["item", "n_subfields_declared", "n_subfields_covered", "item_present_pct"]
         w = csv.DictWriter(f, fieldnames=cols, delimiter="\t")
         w.writeheader()
         w.writerows(per_item_rows)
@@ -211,12 +220,10 @@ def part_a() -> dict:
         "n_subfields_total": n_subs,
         "n_subfields_zero_coverage": sum(1 for r in table_rows if r["covered_n"] == 0),
         "n_subfields_full_coverage_vacuous": sum(
-            1 for r in table_rows
-            if r["covered_n"] == n and r["H_bits"] == 0.0
+            1 for r in table_rows if r["covered_n"] == n and r["H_bits"] == 0.0
         ),
         "n_subfields_nontrivial": sum(
-            1 for r in table_rows
-            if r["covered_n"] > 0 and r["H_bits"] > 0
+            1 for r in table_rows if r["covered_n"] > 0 and r["H_bits"] > 0
         ),
         "per_item": per_item_rows,
     }
@@ -226,20 +233,26 @@ def part_a() -> dict:
     print(f"  -> {out_tsv.relative_to(ROOT)} ({len(table_rows)} rows)")
     print(f"  -> {out_item_tsv.relative_to(ROOT)} ({len(per_item_rows)} rows)")
     print(f"  -> {out_json.relative_to(ROOT)}")
-    print(f"  zero-coverage sub-fields:    "
-          f"{summary['n_subfields_zero_coverage']}/{n_subs}")
-    print(f"  vacuous (covered, H=0):      "
-          f"{summary['n_subfields_full_coverage_vacuous']}/{n_subs}")
-    print(f"  informative (covered, H>0):  "
-          f"{summary['n_subfields_nontrivial']}/{n_subs}")
+    print(f"  zero-coverage sub-fields:    {summary['n_subfields_zero_coverage']}/{n_subs}")
+    print(f"  vacuous (covered, H=0):      {summary['n_subfields_full_coverage_vacuous']}/{n_subs}")
+    print(f"  informative (covered, H>0):  {summary['n_subfields_nontrivial']}/{n_subs}")
     return summary
 
 
 # ----- PART B -----
 EXTENSION_CANDIDATES = [
-    "model_family", "task_slice", "G", "temperature", "seed",
-    "n_groups", "sample_errors",
-    "mean_reward", "zvf", "pcd", "mean_completion_len", "std_completion_len",
+    "model_family",
+    "task_slice",
+    "G",
+    "temperature",
+    "seed",
+    "n_groups",
+    "sample_errors",
+    "mean_reward",
+    "zvf",
+    "pcd",
+    "mean_completion_len",
+    "std_completion_len",
 ]
 
 
@@ -261,7 +274,7 @@ def _resolve_manifest_path(p: str) -> Path:
     /home/claude/tinker-rl-lab/ root (the original root) or our local one."""
     p = p.strip()
     if p.startswith("/home/claude/tinker-rl-lab/experiments/"):
-        rel = p[len("/home/claude/tinker-rl-lab/experiments/"):]
+        rel = p[len("/home/claude/tinker-rl-lab/experiments/") :]
         return ROOT / "platform_hybrid" / "experiments" / rel
     return Path(p)
 
@@ -300,10 +313,11 @@ def part_b() -> dict:
     n_distinct_content = len(content_counter)
     H_raw = _h_from_counts(raw_counter)
     H_content = _h_from_counts(content_counter)
-    print(f"  RAW baseline (incl. Item 4 file path): {n_distinct_raw}/{n}  "
-          f"H={H_raw:.4f} bits")
-    print(f"  CONTENT baseline (excl. Item 4 file path): "
-          f"{n_distinct_content}/{n}  H={H_content:.4f} bits")
+    print(f"  RAW baseline (incl. Item 4 file path): {n_distinct_raw}/{n}  H={H_raw:.4f} bits")
+    print(
+        f"  CONTENT baseline (excl. Item 4 file path): "
+        f"{n_distinct_content}/{n}  H={H_content:.4f} bits"
+    )
 
     # the content baseline is the right test for "what does the standard
     # tell us about a cell, ignoring its unique trajectory file?" --
@@ -316,26 +330,27 @@ def part_b() -> dict:
     sig_with_ext: dict[str, list[str]] = {}
     for fld in EXTENSION_CANDIDATES:
         sig_with_ext[fld] = [
-            sig_minrep[i] + "||" + fld + "=" + str(rows[i].get(fld, ""))
-            for i in range(n)
+            sig_minrep[i] + "||" + fld + "=" + str(rows[i].get(fld, "")) for i in range(n)
         ]
         counter_with = Counter(sig_with_ext[fld])
         n_distinct_with = len(counter_with)
         H_with = _h_from_counts(counter_with)
         delta_distinct = n_distinct_with - n_distinct_minrep
         cells_unique_with = sum(1 for c in counter_with.values() if c == 1)
-        table_rows.append({
-            "extension_field": fld,
-            "H_field_minrep": round(H_minrep, 4),
-            "n_distinct_minrep_alone": n_distinct_minrep,
-            "n_distinct_with_extension": n_distinct_with,
-            "delta_distinct": delta_distinct,
-            "delta_distinct_pct": round(100.0 * delta_distinct / n, 2),
-            "cells_with_unique_profile": cells_unique_with,
-            "H_with_extension": round(H_with, 4),
-            "delta_H_bits": round(H_with - H_minrep, 4),
-            "rank_by_delta_distinct": None,
-        })
+        table_rows.append(
+            {
+                "extension_field": fld,
+                "H_field_minrep": round(H_minrep, 4),
+                "n_distinct_minrep_alone": n_distinct_minrep,
+                "n_distinct_with_extension": n_distinct_with,
+                "delta_distinct": delta_distinct,
+                "delta_distinct_pct": round(100.0 * delta_distinct / n, 2),
+                "cells_with_unique_profile": cells_unique_with,
+                "H_with_extension": round(H_with, 4),
+                "delta_H_bits": round(H_with - H_minrep, 4),
+                "rank_by_delta_distinct": None,
+            }
+        )
 
     # rank by delta_distinct descending
     table_rows.sort(key=lambda r: -r["delta_distinct"])
@@ -362,16 +377,25 @@ def part_b() -> dict:
         chosen_set = list(chosen)
 
     n_dist_mve, H_mve = profile_count(chosen_set)
-    print(f"  MVE (greedy cardinality (minimality not established), n_distinct >= n/2): {chosen_set} "
-          f"-> {n_dist_mve}/{n} distinct, H={H_mve:.4f} bits")
+    print(
+        f"  MVE (greedy cardinality (minimality not established), n_distinct >= n/2): {chosen_set} "
+        f"-> {n_dist_mve}/{n} distinct, H={H_mve:.4f} bits"
+    )
 
     out_tsv = OUT_DIR / "p5_minreport_mve.tsv"
     with open(out_tsv, "w", newline="") as f:
-        cols = ["rank_by_delta_distinct", "extension_field",
-                "H_field_minrep", "n_distinct_minrep_alone",
-                "n_distinct_with_extension", "delta_distinct",
-                "delta_distinct_pct", "cells_with_unique_profile",
-                "H_with_extension", "delta_H_bits"]
+        cols = [
+            "rank_by_delta_distinct",
+            "extension_field",
+            "H_field_minrep",
+            "n_distinct_minrep_alone",
+            "n_distinct_with_extension",
+            "delta_distinct",
+            "delta_distinct_pct",
+            "cells_with_unique_profile",
+            "H_with_extension",
+            "delta_H_bits",
+        ]
         w = csv.DictWriter(f, fieldnames=cols, delimiter="\t")
         w.writeheader()
         for r in table_rows:
@@ -397,10 +421,15 @@ def part_b() -> dict:
             "n_distinct_with_extension": n_dist_mve,
             "H_with_extension": round(H_mve, 4),
             "distinct_profile_ratio": round(n_dist_mve / n, 4),
-            "frac_unique_with_extension": sum(c == 1 for c in Counter(tuple(sig_with_ext[f][i] for f in chosen_set) for i in range(n)).values()) / n,
+            "frac_unique_with_extension": sum(
+                c == 1
+                for c in Counter(
+                    tuple(sig_with_ext[f][i] for f in chosen_set) for i in range(n)
+                ).values()
+            )
+            / n,
             "search_method": "greedy; minimality not established",
-            "distinct_uplift_pct": round(
-                100.0 * (n_dist_mve - n_distinct_minrep) / n, 2),
+            "distinct_uplift_pct": round(100.0 * (n_dist_mve - n_distinct_minrep) / n, 2),
         },
         "falsifiable_headline": (
             f"CONTENT baseline (MIN-REPORT excluding the unique-per-cell "
@@ -438,7 +467,7 @@ def main() -> int:
     )
     print(
         f"PART B: MVE = {b['mve']['extension_fields']} -> "
-        f"{b['mve']['n_distinct_with_extension']}/{b['baseline']['n_distinct_minrep_alone']+b['mve']['distinct_uplift_pct']*98/100:.0f} distinct "
+        f"{b['mve']['n_distinct_with_extension']}/{b['baseline']['n_distinct_minrep_alone'] + b['mve']['distinct_uplift_pct'] * 98 / 100:.0f} distinct "
         f"({b['mve']['frac_unique_with_extension']:.3f}) vs "
         f"{b['baseline']['n_distinct_minrep_alone']}/{b['baseline']['n_distinct_minrep_alone'] + (98 - b['baseline']['n_distinct_minrep_alone'])} MIN-REPORT-alone."
     )

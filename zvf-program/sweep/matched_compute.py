@@ -25,6 +25,7 @@ USAGE
   python3 matched_compute.py --json         # emit machine-readable plan
   python3 matched_compute.py --execute      # shell out to the real runner per arm
 """
+
 from __future__ import annotations
 
 import argparse
@@ -47,13 +48,13 @@ CONFIG_PATH = HERE / "sweep_config.yaml"
 @dataclass
 class Arm:
     name: str
-    loss: str                 # token passed to cell_runner --loss; runner maps to the real loss
+    loss: str  # token passed to cell_runner --loss; runner maps to the real loss
     description: str
     # canonical knobs (recorded for provenance; runner is the source of truth)
     group_size: int
     clip_low: float
     clip_high: float
-    importance_level: str     # "token" | "sequence"
+    importance_level: str  # "token" | "sequence"
     dynamic_sampling: bool
     prompt_filter: str = "none"
     notes: str = ""
@@ -66,74 +67,99 @@ class Arm:
 def define_arms() -> list[Arm]:
     return [
         Arm(
-            name="grpo", loss="grpo",
+            name="grpo",
+            loss="grpo",
             description="Canonical GRPO (baseline): group-relative advantage, "
-                        "token-level PG, symmetric IS clip.",
-            group_size=8, clip_low=0.2, clip_high=0.2,
-            importance_level="token", dynamic_sampling=False,
+            "token-level PG, symmetric IS clip.",
+            group_size=8,
+            clip_low=0.2,
+            clip_high=0.2,
+            importance_level="token",
+            dynamic_sampling=False,
             notes="Reference arm. Symmetric clip eps=0.2.",
         ),
         Arm(
-            name="dapo", loss="dapo",
+            name="dapo",
+            loss="dapo",
             description="DAPO: decoupled higher clip, dynamic sampling (drops "
-                        "zero-variance groups), token-level loss, overlong shaping.",
-            group_size=8, clip_low=0.2, clip_high=0.28,
-            importance_level="token", dynamic_sampling=True,
+            "zero-variance groups), token-level loss, overlong shaping.",
+            group_size=8,
+            clip_low=0.2,
+            clip_high=0.28,
+            importance_level="token",
+            dynamic_sampling=True,
             notes="clip_higher=0.28; dynamic sampling directly attacks ZVF by "
-                  "resampling all-same-reward groups.",
+            "resampling all-same-reward groups.",
         ),
         Arm(
-            name="gspo", loss="gspo",
+            name="gspo",
+            loss="gspo",
             description="GSPO: sequence-level importance ratio + sequence-level clip.",
-            group_size=8, clip_low=0.2, clip_high=0.2,
-            importance_level="sequence", dynamic_sampling=False,
-            notes="Importance weighting/clipping at the sequence level rather "
-                  "than per-token.",
+            group_size=8,
+            clip_low=0.2,
+            clip_high=0.2,
+            importance_level="sequence",
+            dynamic_sampling=False,
+            notes="Importance weighting/clipping at the sequence level rather than per-token.",
         ),
         Arm(
-            name="drgrpo", loss="drgrpo",
+            name="drgrpo",
+            loss="drgrpo",
             description="Dr.GRPO: removes the /std normalization in the per-group "
-                        "advantage, eliminating the length bias of vanilla GRPO. "
-                        "Token-level loss, symmetric IS clip, no dynamic sampling.",
-            group_size=8, clip_low=0.2, clip_high=0.2,
-            importance_level="token", dynamic_sampling=False,
+            "advantage, eliminating the length bias of vanilla GRPO. "
+            "Token-level loss, symmetric IS clip, no dynamic sampling.",
+            group_size=8,
+            clip_low=0.2,
+            clip_high=0.2,
+            importance_level="token",
+            dynamic_sampling=False,
             notes="Implements Liu et al. 2025 'Dr. GRPO: Passing the Token-Level "
-                  "Reward Bias in GRPO' (https://arxiv.org/abs/2506.13937). The "
-                  "/std removal is enforced by toggling live_zvf_probe._ADV_NORMALIZE_STD "
-                  "in cell_runner.install_loss_arm; the loss kernel is unchanged.",
+            "Reward Bias in GRPO' (https://arxiv.org/abs/2506.13937). The "
+            "/std removal is enforced by toggling live_zvf_probe._ADV_NORMALIZE_STD "
+            "in cell_runner.install_loss_arm; the loss kernel is unchanged.",
         ),
         Arm(
-            name="greso", loss="grpo", prompt_filter="greso",
+            name="greso",
+            loss="grpo",
+            prompt_filter="greso",
             description="GRESO-style pre-rollout filtering: skip prompts whose "
-                        "rolling success-rate estimate predicts a zero-variance "
-                        "group; recycle the saved rollouts into fresh prompts. "
-                        "Loss identical to canonical GRPO — the ONLY delta is "
-                        "which prompts get rolled out (point-estimate gate).",
-            group_size=8, clip_low=0.2, clip_high=0.2,
-            importance_level="token", dynamic_sampling=True,
+            "rolling success-rate estimate predicts a zero-variance "
+            "group; recycle the saved rollouts into fresh prompts. "
+            "Loss identical to canonical GRPO — the ONLY delta is "
+            "which prompts get rolled out (point-estimate gate).",
+            group_size=8,
+            clip_low=0.2,
+            clip_high=0.2,
+            importance_level="token",
+            dynamic_sampling=True,
             notes="Zheng et al. 2025 'Act Only When It Pays' (arXiv:2506.02177). "
-                  "Point-estimate gate: skip if rolling p_hat outside "
-                  "[tau, 1-tau], tau=0.1, window=3 encounters. Runner flag: "
-                  "--prompt-filter greso. Matched budget counts only EXECUTED "
-                  "rollouts, so recycling is budget-neutral.",
+            "Point-estimate gate: skip if rolling p_hat outside "
+            "[tau, 1-tau], tau=0.1, window=3 encounters. Runner flag: "
+            "--prompt-filter greso. Matched budget counts only EXECUTED "
+            "rollouts, so recycling is budget-neutral.",
         ),
         Arm(
-            name="zvf_ci_gated", loss="grpo", prompt_filter="zvf_ci_gated",
+            name="zvf_ci_gated",
+            loss="grpo",
+            prompt_filter="zvf_ci_gated",
             description="ZVF CI-gated controller (ours): identical prompt-skip "
-                        "action to greso, but gated on the Wilson 95% interval "
-                        "of the rolling estimate (T1) with m>=64 groups of "
-                        "history — act only when the CI excludes the useful "
-                        "band. Below m=64 history the gate stays open "
-                        "(no filtering), so early training is unbiased.",
-            group_size=8, clip_low=0.2, clip_high=0.2,
-            importance_level="token", dynamic_sampling=True,
+            "action to greso, but gated on the Wilson 95% interval "
+            "of the rolling estimate (T1) with m>=64 groups of "
+            "history — act only when the CI excludes the useful "
+            "band. Below m=64 history the gate stays open "
+            "(no filtering), so early training is unbiased.",
+            group_size=8,
+            clip_low=0.2,
+            clip_high=0.2,
+            importance_level="token",
+            dynamic_sampling=True,
             notes="The E-C positioning arm: calibrated controller vs "
-                  "point-estimate heuristics at matched compute. Gate: skip "
-                  "prompt iff Wilson-95 interval for its stratum's "
-                  "zero-variance probability lies entirely above 0.8. "
-                  "Requires shuffled batching (T1 estimand result: curriculum "
-                  "ordering changes the estimand). Runner flag: "
-                  "--prompt-filter zvf_ci_gated.",
+            "point-estimate heuristics at matched compute. Gate: skip "
+            "prompt iff Wilson-95 interval for its stratum's "
+            "zero-variance probability lies entirely above 0.8. "
+            "Requires shuffled batching (T1 estimand result: curriculum "
+            "ordering changes the estimand). Runner flag: "
+            "--prompt-filter zvf_ci_gated.",
         ),
     ]
 
@@ -143,8 +169,8 @@ def define_arms() -> list[Arm]:
 # ---------------------------------------------------------------------------
 @dataclass
 class Budget:
-    total_rollouts: int       # G * batch_prompts * steps  (held equal across arms)
-    max_tokens: int           # held equal across arms
+    total_rollouts: int  # G * batch_prompts * steps  (held equal across arms)
+    max_tokens: int  # held equal across arms
     base_batch_prompts: int
     base_steps: int
     base_group_size: int
@@ -154,8 +180,12 @@ class Budget:
         return self.total_rollouts * self.max_tokens
 
 
-def matched_budget(base_group_size: int = 8, base_batch_prompts: int = 2,
-                   base_steps: int = 30, max_tokens: int = 512) -> Budget:
+def matched_budget(
+    base_group_size: int = 8,
+    base_batch_prompts: int = 2,
+    base_steps: int = 30,
+    max_tokens: int = 512,
+) -> Budget:
     """Construct the matched Budget for one GRPO-style step.
 
     total_rollouts = G * batch_prompts * steps. Held equal across arms
@@ -169,21 +199,25 @@ def matched_budget(base_group_size: int = 8, base_batch_prompts: int = 2,
     fit_arm_to_budget when the user types ``base_batch_prompts: 0``
     in the YAML.
     """
-    for name, val in (("base_group_size", base_group_size),
-                      ("base_batch_prompts", base_batch_prompts),
-                      ("max_tokens", max_tokens)):
+    for name, val in (
+        ("base_group_size", base_group_size),
+        ("base_batch_prompts", base_batch_prompts),
+        ("max_tokens", max_tokens),
+    ):
         if not isinstance(val, int) or val <= 0:
-            raise ValueError(
-                f"matched_budget: {name} must be a positive int, got {val!r}"
-            )
+            raise ValueError(f"matched_budget: {name} must be a positive int, got {val!r}")
     if not isinstance(base_steps, int) or base_steps < 0:
         raise ValueError(
             f"matched_budget: base_steps must be a non-negative int, got {base_steps!r}"
         )
     total_rollouts = base_group_size * base_batch_prompts * base_steps
-    return Budget(total_rollouts=total_rollouts, max_tokens=max_tokens,
-                  base_batch_prompts=base_batch_prompts, base_steps=base_steps,
-                  base_group_size=base_group_size)
+    return Budget(
+        total_rollouts=total_rollouts,
+        max_tokens=max_tokens,
+        base_batch_prompts=base_batch_prompts,
+        base_steps=base_steps,
+        base_group_size=base_group_size,
+    )
 
 
 def fit_arm_to_budget(arm: Arm, budget: Budget) -> Arm:
@@ -207,9 +241,11 @@ def fit_arm_to_budget(arm: Arm, budget: Budget) -> Arm:
     arm.steps = max(1, round(budget.total_rollouts / per_step))
     realized = arm.group_size * arm.batch_prompts * arm.steps
     if realized != budget.total_rollouts:
-        print(f"  [warn] arm '{arm.name}': realized rollouts {realized} != "
-              f"target {budget.total_rollouts} (residual from integer steps).",
-              file=sys.stderr)
+        print(
+            f"  [warn] arm '{arm.name}': realized rollouts {realized} != "
+            f"target {budget.total_rollouts} (residual from integer steps).",
+            file=sys.stderr,
+        )
     return arm
 
 
@@ -226,8 +262,9 @@ def resolve(p: str) -> Path:
     return pp if pp.is_absolute() else (REPO_ROOT / pp)
 
 
-def arm_commands(cfg: dict, arm: Arm, models: list[str], seeds: list[int],
-                 difficulty: str) -> list[dict]:
+def arm_commands(
+    cfg: dict, arm: Arm, models: list[str], seeds: list[int], difficulty: str
+) -> list[dict]:
     """Build launch commands for one arm across the matched-compute model/seed set.
 
     The arm-specific hyperparameters (clip_low, clip_high,
@@ -251,14 +288,21 @@ def arm_commands(cfg: dict, arm: Arm, models: list[str], seeds: list[int],
         m = midx[short]
         for seed in seeds:
             tag = f"matched_{arm.name}_{short}_G{arm.group_size}_{difficulty}_s{seed}"
-            out_json = Path(rc["out_json_template"].format(
-                results_dir=str(results_dir), tag=tag))
+            out_json = Path(rc["out_json_template"].format(results_dir=str(results_dir), tag=tag))
             subst = {
-                "interpreter": rc["interpreter"], "script": str(resolve(rc["script"])),
-                "results_dir": str(results_dir), "out_json": str(out_json),
-                "tag": tag, "model_id": m["model_id"], "task": cfg["fixed"]["task"],
-                "loss": arm.loss, "seed": seed, "group_size": arm.group_size,
-                "lr": cfg["fixed"]["lr"], "steps": arm.steps, "rank": cfg["fixed"]["rank"],
+                "interpreter": rc["interpreter"],
+                "script": str(resolve(rc["script"])),
+                "results_dir": str(results_dir),
+                "out_json": str(out_json),
+                "tag": tag,
+                "model_id": m["model_id"],
+                "task": cfg["fixed"]["task"],
+                "loss": arm.loss,
+                "seed": seed,
+                "group_size": arm.group_size,
+                "lr": cfg["fixed"]["lr"],
+                "steps": arm.steps,
+                "rank": cfg["fixed"]["rank"],
                 "difficulty": difficulty,
                 "prompt_filter": arm.prompt_filter,
                 "batch_prompts": arm.batch_prompts,
@@ -273,9 +317,19 @@ def arm_commands(cfg: dict, arm: Arm, models: list[str], seeds: list[int],
             out_json = Path(rc["out_json_template"].format(results_dir=str(results_dir), tag=tag))
             subst.update(tag=tag, out_json=str(out_json))
             cmd = render_command(rc["command_template"], subst)
-            cmds.append({"tag": tag, "arm": arm.name, "model_short": short,
-                         "seed": seed, "command": cmd, "result_json": str(out_json),
-                         "effective_spec": spec, "run_id": run_id, "cell": subst})
+            cmds.append(
+                {
+                    "tag": tag,
+                    "arm": arm.name,
+                    "model_short": short,
+                    "seed": seed,
+                    "command": cmd,
+                    "result_json": str(out_json),
+                    "effective_spec": spec,
+                    "run_id": run_id,
+                    "cell": subst,
+                }
+            )
     return cmds
 
 
@@ -304,33 +358,57 @@ def build_plan(cfg: dict) -> dict:
     return {
         "budget": asdict(budget) | {"total_tokens": budget.total_tokens},
         "arms": [asdict(a) for a in arms],
-        "models": mc["models"], "seeds": mc["seeds"], "difficulty": mc["difficulty"],
+        "models": mc["models"],
+        "seeds": mc["seeds"],
+        "difficulty": mc["difficulty"],
         "commands": all_cmds,
     }
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser(description=__doc__,
-                                 formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--json", action="store_true", help="emit machine-readable plan only (no execution, no print)")
-    ap.add_argument("--execute", action="store_true",
-                    help="shell out to the real runner for each arm/model/seed. "
-                         "Mutually exclusive with --json-only: --json is the read-only "
-                         "plan view, --execute runs the cells.")
-    ap.add_argument("--dry-run", action="store_true",
-                    help="(DEFAULT) print plan + commands, execute nothing. Same as omitting --execute.")
-    ap.add_argument("--force", action="store_true",
-                    help="skip the concurrency lock (see --lock-file). Only use this "
-                         "if you are sure no other matched_compute.py is running.")
-    ap.add_argument("--lock-file", type=Path, default=Path(".matched_compute.lock"),
-                    help="PID file used to detect concurrent invocations. The lock "
-                         "is acquired on --execute and released on exit; concurrent "
-                         "invocations with --execute are refused to prevent "
-                         "double-launch and ledger corruption. Set --force to skip.")
-    ap.add_argument("--per-cell-timeout", type=int, default=4 * 3600,
-                    help="per-cell subprocess timeout in seconds (default 4h). "
-                         "A hung cell blocks the entire matched-compute sweep "
-                         "forever without this.")
+    ap = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    ap.add_argument(
+        "--json",
+        action="store_true",
+        help="emit machine-readable plan only (no execution, no print)",
+    )
+    ap.add_argument(
+        "--execute",
+        action="store_true",
+        help="shell out to the real runner for each arm/model/seed. "
+        "Mutually exclusive with --json-only: --json is the read-only "
+        "plan view, --execute runs the cells.",
+    )
+    ap.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="(DEFAULT) print plan + commands, execute nothing. Same as omitting --execute.",
+    )
+    ap.add_argument(
+        "--force",
+        action="store_true",
+        help="skip the concurrency lock (see --lock-file). Only use this "
+        "if you are sure no other matched_compute.py is running.",
+    )
+    ap.add_argument(
+        "--lock-file",
+        type=Path,
+        default=Path(".matched_compute.lock"),
+        help="PID file used to detect concurrent invocations. The lock "
+        "is acquired on --execute and released on exit; concurrent "
+        "invocations with --execute are refused to prevent "
+        "double-launch and ledger corruption. Set --force to skip.",
+    )
+    ap.add_argument(
+        "--per-cell-timeout",
+        type=int,
+        default=4 * 3600,
+        help="per-cell subprocess timeout in seconds (default 4h). "
+        "A hung cell blocks the entire matched-compute sweep "
+        "forever without this.",
+    )
     args = ap.parse_args()
 
     # --json + --execute is logically inconsistent: --json prints the
@@ -339,9 +417,11 @@ def main() -> int:
     # confusing "I asked for the plan and got launches" UX. Refuse the
     # combination explicitly.
     if args.json and args.execute:
-        ap.error("--json and --execute are mutually exclusive. "
-                  "Use --json for a read-only plan; drop --json (or use --dry-run) "
-                  "for the plan + commands without launching.")
+        ap.error(
+            "--json and --execute are mutually exclusive. "
+            "Use --json for a read-only plan; drop --json (or use --dry-run) "
+            "for the plan + commands without launching."
+        )
 
     cfg = load_config()
     plan = build_plan(cfg)
@@ -361,17 +441,21 @@ def main() -> int:
     print(f"  base_batch     : {b['base_batch_prompts']} prompts/step")
     print("-" * 78)
     for a in plan["arms"]:
-        print(f"ARM {a['name'].upper():5s} loss={a['loss']:5s} "
-              f"G={a['group_size']} steps={a['steps']} "
-              f"batch={a['batch_prompts']} max_tok={a['max_tokens']} "
-              f"clip=[{a['clip_low']},{a['clip_high']}] "
-              f"IS={a['importance_level']} dyn_sample={a['dynamic_sampling']}")
+        print(
+            f"ARM {a['name'].upper():5s} loss={a['loss']:5s} "
+            f"G={a['group_size']} steps={a['steps']} "
+            f"batch={a['batch_prompts']} max_tok={a['max_tokens']} "
+            f"clip=[{a['clip_low']},{a['clip_high']}] "
+            f"IS={a['importance_level']} dyn_sample={a['dynamic_sampling']}"
+        )
         print(f"          {a['description']}")
         if a["notes"]:
             print(f"          note: {a['notes']}")
     print("-" * 78)
-    print(f"models={plan['models']} seeds={plan['seeds']} "
-          f"difficulty={plan['difficulty']}  -> {len(plan['commands'])} runs total")
+    print(
+        f"models={plan['models']} seeds={plan['seeds']} "
+        f"difficulty={plan['difficulty']}  -> {len(plan['commands'])} runs total"
+    )
     print("-" * 78)
 
     if not args.execute:
@@ -379,8 +463,10 @@ def main() -> int:
         for c in plan["commands"]:
             print(f"  $ {c['command']}")
         print("-" * 78)
-        print("Nothing launched. Use --execute to launch, then aggregate_sweep.py "
-              "to compute the comparison from REAL logs.")
+        print(
+            "Nothing launched. Use --execute to launch, then aggregate_sweep.py "
+            "to compute the comparison from REAL logs."
+        )
         return 0
 
     # EXECUTE: acquire the concurrency lock first so two parallel
@@ -396,6 +482,7 @@ def main() -> int:
                 old_pid = int(lock.read_text().strip())
                 # Check if the old PID is still alive.
                 import os as _os
+
                 try:
                     _os.kill(old_pid, 0)
                     print(
@@ -414,26 +501,34 @@ def main() -> int:
                     lock.unlink()
             except (ValueError, OSError) as exc:
                 print(
-                    f"[warn] Could not read lock file {lock}: {exc}. "
-                    f"Removing and continuing.",
+                    f"[warn] Could not read lock file {lock}: {exc}. Removing and continuing.",
                     file=sys.stderr,
                 )
                 lock.unlink()
         import os as _os
+
         lock.write_text(str(_os.getpid()))
         lock_acquired = True
     else:
         lock_acquired = False
 
     try:
-        print(f"Launching {len(plan['commands'])} matched-compute runs sequentially "
-              f"(timeout {args.per_cell_timeout}s/cell)...")
+        print(
+            f"Launching {len(plan['commands'])} matched-compute runs sequentially "
+            f"(timeout {args.per_cell_timeout}s/cell)..."
+        )
         failed = False
         for c in plan["commands"]:
             print(f"  $ {c['command']}")
             from run_sweep import run_one
-            cell = {**c["cell"], "block": "matched", "framework": cfg["runner"]["kind"],
-                    "model_short": c["model_short"], "effective_spec": c["effective_spec"]}
+
+            cell = {
+                **c["cell"],
+                "block": "matched",
+                "framework": cfg["runner"]["kind"],
+                "model_short": c["model_short"],
+                "effective_spec": c["effective_spec"],
+            }
             row = run_one(c["command"], Path(c["result_json"]), cell)
             failed = failed or row["status"] != "completed"
             print(f"    -> {c['tag']} status={row['status']} rc={row['returncode']}")

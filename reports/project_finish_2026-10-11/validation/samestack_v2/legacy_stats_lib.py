@@ -3,6 +3,7 @@
 exchangeable signs, not randomized treatment assignment. Five nonzero pairs
 have minimum two-sided exact p = 2 / 2**5 = .0625.
 """
+
 import itertools
 import math
 import numbers
@@ -40,8 +41,10 @@ def signflip(d):
         d = d / scale
     obs = abs(float(d.sum()))
     tol = np.finfo(float).eps * max(float(np.abs(d).sum()), np.finfo(float).tiny) * len(d) * 4
-    hits = sum(abs(float((np.array(s) * d).sum())) >= obs - tol
-               for s in itertools.product([1, -1], repeat=len(d)))
+    hits = sum(
+        abs(float((np.array(s) * d).sum())) >= obs - tol
+        for s in itertools.product([1, -1], repeat=len(d))
+    )
     return hits / 2 ** len(d)
 
 
@@ -61,7 +64,12 @@ def paired(a, b, margin=0.02):
 
     The margin is a sensitivity parameter, not a justified equivalence claim.
     """
-    if isinstance(margin, bool) or not isinstance(margin, numbers.Real) or not math.isfinite(margin) or margin <= 0:
+    if (
+        isinstance(margin, bool)
+        or not isinstance(margin, numbers.Real)
+        or not math.isfinite(margin)
+        or margin <= 0
+    ):
         raise ValueError("margin must be finite and positive")
     seeds = sorted(set(a) & set(b))
     av, bv = np.asarray([a[s] for s in seeds], float), np.asarray([b[s] for s in seeds], float)
@@ -69,16 +77,31 @@ def paired(a, b, margin=0.02):
         raise ValueError("finite paired differences are required")
     if len(seeds) < 2:
         diffs = (av - bv).tolist()
-        return {"status":"insufficient_pairs", "unavailable_reason":"at least two shared seeds required",
-                "n":len(seeds), "seeds":seeds, "diffs":diffs,
-                "mean":float(diffs[0]) if diffs else None, "sd":None, "t_ci":None,
-                "boot_ci":None, "p_t":None, "p_signflip":None, "tost_p":None,
-                "unmatched_a_seeds":sorted(set(a)-set(b)), "unmatched_b_seeds":sorted(set(b)-set(a))}
+        return {
+            "status": "insufficient_pairs",
+            "unavailable_reason": "at least two shared seeds required",
+            "n": len(seeds),
+            "seeds": seeds,
+            "diffs": diffs,
+            "mean": float(diffs[0]) if diffs else None,
+            "sd": None,
+            "t_ci": None,
+            "boot_ci": None,
+            "p_t": None,
+            "p_signflip": None,
+            "tost_p": None,
+            "unmatched_a_seeds": sorted(set(a) - set(b)),
+            "unmatched_b_seeds": sorted(set(b) - set(a)),
+        }
     d = differences(av - bv)
     n = len(d)
     scale = float(np.max(np.abs(d)))
     normalized = d / scale if scale else d
-    md, sd = (float(d[0]), 0.0) if np.all(d == d[0]) else (float(normalized.mean() * scale), float(normalized.std(ddof=1) * scale))
+    md, sd = (
+        (float(d[0]), 0.0)
+        if np.all(d == d[0])
+        else (float(normalized.mean() * scale), float(normalized.std(ddof=1) * scale))
+    )
     se = sd / math.sqrt(n)
     if not math.isfinite(md) or not math.isfinite(sd):
         raise ValueError("paired summary overflowed; rescale the finite inputs")
@@ -93,25 +116,49 @@ def paired(a, b, margin=0.02):
         p_t = float(2 * stats.t.sf(abs(t), n - 1))
         p_lo = float(stats.t.sf((md + margin) / se, n - 1))
         p_hi = float(stats.t.cdf((md - margin) / se, n - 1))
-        ci95 = [md - stats.t.ppf(.975, n - 1) * se, md + stats.t.ppf(.975, n - 1) * se]
-        ci90 = [md - stats.t.ppf(.95, n - 1) * se, md + stats.t.ppf(.95, n - 1) * se]
+        ci95 = [md - stats.t.ppf(0.975, n - 1) * se, md + stats.t.ppf(0.975, n - 1) * se]
+        ci90 = [md - stats.t.ppf(0.95, n - 1) * se, md + stats.t.ppf(0.95, n - 1) * se]
     if not all(math.isfinite(value) for value in ci95 + ci90):
         raise ValueError("paired confidence interval overflowed; rescale inputs")
-    directional_p = float(stats.t.cdf((md - .05) / se, n - 1)) if se else (0.0 if md < .05 else .5 if md == .05 else 1.0)
-    upper = float(md + stats.t.ppf(.95, n - 1) * se)
-    return {"difference_ci_95": list(map(float, ci95)) if sd else None, "equivalence_ci_90": list(map(float, ci90)) if sd else None,
-            "equivalence_margin": float(margin),
-            "positive_5pp_test": {"null_hypothesis": "mean >= +0.05", "alternative_hypothesis": "mean < +0.05",
-                                  "p_value": directional_p if sd else None, "upper_bound_95": upper if sd else None,
-                                  "reject_at_0_05": bool(sd and directional_p < .05)},
-            "n": n, "seeds": seeds, "diffs": d.tolist(), "mean": md, "sd": sd,
-            "unmatched_a_seeds": sorted(set(a) - set(b)), "unmatched_b_seeds": sorted(set(b) - set(a)),
-            "t": t, "status": "zero_variance" if sd == 0 else "available",
-            "unavailable_reason": "parametric variance estimate is zero" if sd == 0 else None, "zero_variance": sd == 0, "t_ci": list(map(float, ci95)) if sd else None,
-            "tost_ci90": list(map(float, ci90)) if sd else None, "boot_ci": boot_ci(d), "p_t": p_t,
-            "p_signflip": signflip(d), "tost_margin": float(margin), "tost_p": max(p_lo, p_hi) if sd else None,
-            "tost_lower_p": p_lo if sd else None, "tost_upper_p": p_hi if sd else None,
-            "within_margin_unadjusted": bool(sd and ci90[0] > -margin and ci90[1] < margin)}
+    directional_p = (
+        float(stats.t.cdf((md - 0.05) / se, n - 1))
+        if se
+        else (0.0 if md < 0.05 else 0.5 if md == 0.05 else 1.0)
+    )
+    upper = float(md + stats.t.ppf(0.95, n - 1) * se)
+    return {
+        "difference_ci_95": list(map(float, ci95)) if sd else None,
+        "equivalence_ci_90": list(map(float, ci90)) if sd else None,
+        "equivalence_margin": float(margin),
+        "positive_5pp_test": {
+            "null_hypothesis": "mean >= +0.05",
+            "alternative_hypothesis": "mean < +0.05",
+            "p_value": directional_p if sd else None,
+            "upper_bound_95": upper if sd else None,
+            "reject_at_0_05": bool(sd and directional_p < 0.05),
+        },
+        "n": n,
+        "seeds": seeds,
+        "diffs": d.tolist(),
+        "mean": md,
+        "sd": sd,
+        "unmatched_a_seeds": sorted(set(a) - set(b)),
+        "unmatched_b_seeds": sorted(set(b) - set(a)),
+        "t": t,
+        "status": "zero_variance" if sd == 0 else "available",
+        "unavailable_reason": "parametric variance estimate is zero" if sd == 0 else None,
+        "zero_variance": sd == 0,
+        "t_ci": list(map(float, ci95)) if sd else None,
+        "tost_ci90": list(map(float, ci90)) if sd else None,
+        "boot_ci": boot_ci(d),
+        "p_t": p_t,
+        "p_signflip": signflip(d),
+        "tost_margin": float(margin),
+        "tost_p": max(p_lo, p_hi) if sd else None,
+        "tost_lower_p": p_lo if sd else None,
+        "tost_upper_p": p_hi if sd else None,
+        "within_margin_unadjusted": bool(sd and ci90[0] > -margin and ci90[1] < margin),
+    }
 
 
 def holm(ps):
@@ -142,7 +189,11 @@ def _power_inputs(sd, n, alpha):
 def paired_t_power(sd, n, effect, alpha=0.05):
     """Unadjusted paired-t power, including BOTH noncentral-t tails."""
     _power_inputs(sd, n, alpha)
-    if isinstance(effect, bool) or not isinstance(effect, numbers.Real) or not math.isfinite(effect):
+    if (
+        isinstance(effect, bool)
+        or not isinstance(effect, numbers.Real)
+        or not math.isfinite(effect)
+    ):
         raise ValueError("effect must be finite")
     df = n - 1
     critical = stats.t.ppf(1 - alpha / 2, df)
@@ -155,11 +206,25 @@ def paired_t_power(sd, n, effect, alpha=0.05):
     # positive noncentrality. Integrate the defining normal/chi mixture,
     # rather than dropping the second tail or failing the n=2 root bracket.
     if not math.isfinite(lower):
-        lower = quad(lambda radius: stats.norm.cdf(-critical * radius / math.sqrt(df) - noncentrality)
-                     * stats.chi.pdf(radius, df), 0, math.inf, epsabs=1e-14)[0]
+        lower = quad(
+            lambda radius: (
+                stats.norm.cdf(-critical * radius / math.sqrt(df) - noncentrality)
+                * stats.chi.pdf(radius, df)
+            ),
+            0,
+            math.inf,
+            epsabs=1e-14,
+        )[0]
     if not math.isfinite(upper):
-        upper = quad(lambda radius: stats.norm.sf(critical * radius / math.sqrt(df) - noncentrality)
-                     * stats.chi.pdf(radius, df), 0, math.inf, epsabs=1e-12)[0]
+        upper = quad(
+            lambda radius: (
+                stats.norm.sf(critical * radius / math.sqrt(df) - noncentrality)
+                * stats.chi.pdf(radius, df)
+            ),
+            0,
+            math.inf,
+            epsabs=1e-12,
+        )[0]
     result = upper + lower
     if not math.isfinite(result):
         raise ValueError("noncentral-t power calculation was nonfinite")
@@ -177,8 +242,9 @@ def mde(sd, n, power=0.8, alpha=0.05):
         high *= 2
         if not math.isfinite(high):
             raise ValueError("could not bracket a finite MDE")
-    root = brentq(lambda ratio: paired_t_power(sd, n, ratio * sd, alpha) - power,
-                  0.0, high / sd, xtol=1e-12)
+    root = brentq(
+        lambda ratio: paired_t_power(sd, n, ratio * sd, alpha) - power, 0.0, high / sd, xtol=1e-12
+    )
     return float(root * sd)
 
 
@@ -187,7 +253,12 @@ def n_needed(sd, effect, power=0.8, alpha=0.05, max_n=100000):
     _probability(power, "power")
     if power <= alpha:
         raise ValueError("target power must exceed alpha")
-    if isinstance(effect, bool) or not isinstance(effect, numbers.Real) or not math.isfinite(effect) or effect <= 0:
+    if (
+        isinstance(effect, bool)
+        or not isinstance(effect, numbers.Real)
+        or not math.isfinite(effect)
+        or effect <= 0
+    ):
         raise ValueError("effect must be finite and strictly positive")
     if isinstance(max_n, bool) or not isinstance(max_n, numbers.Integral) or max_n < 2:
         raise ValueError("max_n must be an integer >= 2")

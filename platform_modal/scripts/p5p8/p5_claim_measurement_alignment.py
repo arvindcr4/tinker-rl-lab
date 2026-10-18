@@ -35,6 +35,7 @@ Headline falsifiable claim:
   worst axis being Y (where Y ∈ {model, task, G, temperature, seed,
   decontam}).
 """
+
 from __future__ import annotations
 
 import csv
@@ -93,12 +94,18 @@ def parse_cell_id(cid: str) -> dict | None:
 
 
 GS_RE = re.compile(r"fixed-G=(\d+)|constant G=(\d+)|adaptive.*G=(\d+)")
-DECONTAM_CLASSES = {"train-slice", "held-out-disjoint", "test-disjoint",
-                    "exact-ngram-overlap", "external-disjoint", "n/a",
-                    "n/a-train-only",
-                    # corpus-actual tokens emitted by the live manifest emitter
-                    "gsm8k-train-slice",
-                    "humaneval-openai-subset"}
+DECONTAM_CLASSES = {
+    "train-slice",
+    "held-out-disjoint",
+    "test-disjoint",
+    "exact-ngram-overlap",
+    "external-disjoint",
+    "n/a",
+    "n/a-train-only",
+    # corpus-actual tokens emitted by the live manifest emitter
+    "gsm8k-train-slice",
+    "humaneval-openai-subset",
+}
 
 
 def parse_manifest(manifest: dict) -> dict:
@@ -130,8 +137,10 @@ def axis_match(axis: str, claimed, measured) -> tuple[float, str]:
     mv = str(measured).strip()
     if axis == "model":
         # Exact, documented cell-slug aliases; never substring or punctuation erasure.
-        aliases = {"meta-llama-Llama-3-2-3B": "meta-llama/Llama-3.2-3B",
-                   "Qwen-Qwen3-5-4B": "Qwen/Qwen3.5-4B"}
+        aliases = {
+            "meta-llama-Llama-3-2-3B": "meta-llama/Llama-3.2-3B",
+            "Qwen-Qwen3-5-4B": "Qwen/Qwen3.5-4B",
+        }
         if aliases.get(cv, cv) == aliases.get(mv, mv):
             return 16.67, "match"
         return 0.0, "catastrophic_mismatch"
@@ -158,8 +167,7 @@ def axis_match(axis: str, claimed, measured) -> tuple[float, str]:
     return 0.0, "unknown_axis"
 
 
-def per_cell_score(claims: dict, measured: dict,
-                   cid_claims_override: dict | None = None) -> dict:
+def per_cell_score(claims: dict, measured: dict, cid_claims_override: dict | None = None) -> dict:
     out = {}
     cid = measured.get("cell_id", "?")
     cid_parsed = parse_cell_id(cid)
@@ -178,28 +186,33 @@ def per_cell_score(claims: dict, measured: dict,
             claimed = cid_claims.get(axis)
             if axis == "G" and claimed is None:
                 claimed = claims.get("G")
-            measured_val = measured.get({
-                "model": "model_family",
-                "task": "task_slice",
-                "G": "_G_meas",
-                "temperature": "_T_meas",
-                "seed": "_S_meas",
-            }[axis])
+            measured_val = measured.get(
+                {
+                    "model": "model_family",
+                    "task": "task_slice",
+                    "G": "_G_meas",
+                    "temperature": "_T_meas",
+                    "seed": "_S_meas",
+                }[axis]
+            )
         pts, sev = axis_match(axis, claimed, measured_val)
         total += pts
-        rows.append({
-            "axis": axis,
-            "claimed": claimed,
-            "measured": measured_val,
-            "points": round(pts, 2),
-            "severity": sev,
-        })
+        rows.append(
+            {
+                "axis": axis,
+                "claimed": claimed,
+                "measured": measured_val,
+                "points": round(pts, 2),
+                "severity": sev,
+            }
+        )
     return {"cell_id": cid, "score": round(total, 1), "axes": rows}
 
 
 def bootstrap_ci(values: list[float], n_boot: int = 2000, seed: int = 0):
     """Paired bootstrap percentile CI on the mean."""
     import random
+
     rng = random.Random(seed)
     n = len(values)
     if n == 0:
@@ -220,24 +233,44 @@ def write_outputs(scored):
     tsv = OUT_DIR / "claim_alignment.tsv"
     with tsv.open("w", newline="") as f:
         w = csv.writer(f, delimiter="\t")
-        w.writerow([
-            "cell_id", "score",
-            "model_pts", "task_pts", "G_pts",
-            "temp_pts", "seed_pts", "decontam_pts",
-            "model_sev", "task_sev", "G_sev",
-            "temp_sev", "seed_sev", "decontam_sev",
-        ])
+        w.writerow(
+            [
+                "cell_id",
+                "score",
+                "model_pts",
+                "task_pts",
+                "G_pts",
+                "temp_pts",
+                "seed_pts",
+                "decontam_pts",
+                "model_sev",
+                "task_sev",
+                "G_sev",
+                "temp_sev",
+                "seed_sev",
+                "decontam_sev",
+            ]
+        )
         for s in scored:
             am = {a["axis"]: a for a in s["axes"]}
-            w.writerow([
-                s["cell_id"], s["score"],
-                am["model"]["points"], am["task"]["points"], am["G"]["points"],
-                am["temperature"]["points"], am["seed"]["points"],
-                am["decontam"]["points"],
-                am["model"]["severity"], am["task"]["severity"],
-                am["G"]["severity"], am["temperature"]["severity"],
-                am["seed"]["severity"], am["decontam"]["severity"],
-            ])
+            w.writerow(
+                [
+                    s["cell_id"],
+                    s["score"],
+                    am["model"]["points"],
+                    am["task"]["points"],
+                    am["G"]["points"],
+                    am["temperature"]["points"],
+                    am["seed"]["points"],
+                    am["decontam"]["points"],
+                    am["model"]["severity"],
+                    am["task"]["severity"],
+                    am["G"]["severity"],
+                    am["temperature"]["severity"],
+                    am["seed"]["severity"],
+                    am["decontam"]["severity"],
+                ]
+            )
     per_axis_match = defaultdict(int)
     per_axis_total = defaultdict(int)
     per_axis_sev = defaultdict(lambda: defaultdict(int))
@@ -258,44 +291,40 @@ def write_outputs(scored):
         "score_ci95_hi": round(hi, 2),
         "score_min": round(min(scores), 2) if scores else 0,
         "score_max": round(max(scores), 2) if scores else 0,
-        "score_std": round((sum((s - mean) ** 2 for s in scores)
-                            / max(1, n)) ** 0.5, 2),
+        "score_std": round((sum((s - mean) ** 2 for s in scores) / max(1, n)) ** 0.5, 2),
         "per_axis_match_pct": {
-            a: round(100.0 * per_axis_match[a] / max(1, per_axis_total[a]), 1)
-            for a in AXES
+            a: round(100.0 * per_axis_match[a] / max(1, per_axis_total[a]), 1) for a in AXES
         },
-        "per_axis_severity_mix": {
-            a: dict(per_axis_sev[a]) for a in AXES
-        },
+        "per_axis_severity_mix": {a: dict(per_axis_sev[a]) for a in AXES},
     }
-    (OUT_DIR / "claim_alignment_summary.json").write_text(
-        json.dumps(summary, indent=2))
+    (OUT_DIR / "claim_alignment_summary.json").write_text(json.dumps(summary, indent=2))
     return summary
 
 
 def make_figure(scored, summary):
     try:
         import matplotlib
+
         matplotlib.use("Agg")
         import matplotlib.pyplot as plt
     except ImportError:
-        print("warn: matplotlib not available; skipping figure",
-              file=sys.stderr)
+        print("warn: matplotlib not available; skipping figure", file=sys.stderr)
         return
     # Per-axis match %
     axes = AXES
     pct = [summary["per_axis_match_pct"][a] for a in axes]
     fig, ax = plt.subplots(figsize=(7, 4))
     bars = ax.bar(axes, pct, color="#4477AA", edgecolor="black")
-    for b, p in zip(bars, pct):
-        ax.text(b.get_x() + b.get_width() / 2, p + 1, f"{p:.1f}%",
-                ha="center", fontsize=9)
+    for b, p in zip(bars, pct, strict=False):
+        ax.text(b.get_x() + b.get_width() / 2, p + 1, f"{p:.1f}%", ha="center", fontsize=9)
     ax.set_ylim(0, 105)
     ax.set_ylabel("% claim-measurement match")
-    ax.set_title(f"MIN-REPORT claim-measurement alignment per axis\n"
-                 f"(n={summary['n_cells']}, mean={summary['score_mean']:.1f}, "
-                 f"95% CI [{summary['score_ci95_lo']:.1f}, "
-                 f"{summary['score_ci95_hi']:.1f}])")
+    ax.set_title(
+        f"MIN-REPORT claim-measurement alignment per axis\n"
+        f"(n={summary['n_cells']}, mean={summary['score_mean']:.1f}, "
+        f"95% CI [{summary['score_ci95_lo']:.1f}, "
+        f"{summary['score_ci95_hi']:.1f}])"
+    )
     fig.tight_layout()
     fig.savefig(FIG_DIR / "claim_alignment_per_axis.png", dpi=150)
     fig.savefig(FIG_DIR / "claim_alignment_per_axis.pdf")
@@ -304,8 +333,12 @@ def make_figure(scored, summary):
     fig2, ax2 = plt.subplots(figsize=(7, 4))
     scores = [s["score"] for s in scored]
     ax2.hist(scores, bins=15, color="#EE6677", edgecolor="black")
-    ax2.axvline(summary["score_mean"], color="black", linestyle="--",
-                label=f"mean={summary['score_mean']:.1f}")
+    ax2.axvline(
+        summary["score_mean"],
+        color="black",
+        linestyle="--",
+        label=f"mean={summary['score_mean']:.1f}",
+    )
     ax2.set_xlabel("Claim-measurement alignment score (0-100)")
     ax2.set_ylabel("# cells")
     ax2.set_title(f"Alignment score distribution (n={summary['n_cells']})")
@@ -366,7 +399,9 @@ def main():
                 "model": cids_parsed.get("model"),
                 "task": perturbed_value if axis == "task" else cids_parsed.get("task"),
                 "G": perturbed_value if axis == "G" else cids_parsed.get("G"),
-                "temperature": perturbed_value if axis == "temperature" else cids_parsed.get("temperature"),
+                "temperature": perturbed_value
+                if axis == "temperature"
+                else cids_parsed.get("temperature"),
                 "seed": perturbed_value if axis == "seed" else cids_parsed.get("seed"),
             }
             claims = {
@@ -377,16 +412,17 @@ def main():
             ps = per_cell_score(claims, meas, cid_claims_override=cid_claims)
             orig_axis = next(a for a in s["axes"] if a["axis"] == axis)
             pert_axis = next(a for a in ps["axes"] if a["axis"] == axis)
-            detected = (orig_axis["severity"] == "match"
-                        and pert_axis["severity"] != "match")
-            perturb_results.append({
-                "cell_id": cid,
-                "axis": axis,
-                "perturbed_to": perturbed_value,
-                "orig_severity": orig_axis["severity"],
-                "perturbed_severity": pert_axis["severity"],
-                "detected": detected,
-            })
+            detected = orig_axis["severity"] == "match" and pert_axis["severity"] != "match"
+            perturb_results.append(
+                {
+                    "cell_id": cid,
+                    "axis": axis,
+                    "perturbed_to": perturbed_value,
+                    "orig_severity": orig_axis["severity"],
+                    "perturbed_severity": pert_axis["severity"],
+                    "detected": detected,
+                }
+            )
     detected_n = sum(1 for r in perturb_results if r["detected"])
     total_n = len(perturb_results)
     print(f"  perturbations:        {total_n}")
@@ -401,16 +437,26 @@ def main():
 
     # Persist perturbation results next to the alignment TSV.
     (OUT_DIR / "claim_alignment_perturbation.json").write_text(
-        json.dumps({"n": total_n, "detected": detected_n,
-                    "per_axis": {a: {"detected": d, "total": t}
-                                 for a, (d, t) in by_axis.items()},
-                    "rows": perturb_results}, indent=2))
+        json.dumps(
+            {
+                "n": total_n,
+                "detected": detected_n,
+                "per_axis": {a: {"detected": d, "total": t} for a, (d, t) in by_axis.items()},
+                "rows": perturb_results,
+            },
+            indent=2,
+        )
+    )
 
     print(f"\nn_cells:                 {summary['n_cells']}")
-    print(f"score mean / 95% CI:     {summary['score_mean']} "
-          f"[{summary['score_ci95_lo']}, {summary['score_ci95_hi']}]")
-    print(f"score range:             [{summary['score_min']}, {summary['score_max']}]"
-          f"  (std={summary['score_std']})")
+    print(
+        f"score mean / 95% CI:     {summary['score_mean']} "
+        f"[{summary['score_ci95_lo']}, {summary['score_ci95_hi']}]"
+    )
+    print(
+        f"score range:             [{summary['score_min']}, {summary['score_max']}]"
+        f"  (std={summary['score_std']})"
+    )
     print("per-axis match %:")
     for a in AXES:
         print(f"  {a:>11s}: {summary['per_axis_match_pct'][a]:>5.1f}%")

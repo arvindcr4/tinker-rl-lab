@@ -19,6 +19,7 @@ from .e9_mle_bench_streaming import (
     validate_replay_provenance,
     validate_submission_regrade_provenance,
 )
+import pytest
 
 
 class E9StreamingPlanTests(unittest.TestCase):
@@ -81,13 +82,13 @@ class E9StreamingPlanTests(unittest.TestCase):
             source_receipt=source_receipt,
         )
 
-        self.assertEqual(provenance["status"], "ARCHIVED_SAMPLING_RECEIPT_REPLAY")
-        self.assertEqual(provenance["source_solution_sha256"], solution_sha256)
+        assert provenance["status"] == "ARCHIVED_SAMPLING_RECEIPT_REPLAY"
+        assert provenance["source_solution_sha256"] == solution_sha256
 
     def test_replay_rejects_solution_hash_drift(self) -> None:
         _, source_receipt = self.replay_receipt()
 
-        with self.assertRaisesRegex(LaunchGateError, "solution hash"):
+        with pytest.raises(LaunchGateError, match="solution hash"):
             validate_replay_provenance(
                 competition_id="spooky-author-identification",
                 solution_sha256="0" * 64,
@@ -98,7 +99,7 @@ class E9StreamingPlanTests(unittest.TestCase):
         solution_sha256, source_receipt = self.replay_receipt()
         source_receipt["run_id"] = "tampered"
 
-        with self.assertRaisesRegex(LaunchGateError, "receipt hash"):
+        with pytest.raises(LaunchGateError, match="receipt hash"):
             validate_replay_provenance(
                 competition_id="spooky-author-identification",
                 solution_sha256=solution_sha256,
@@ -124,8 +125,8 @@ class E9StreamingPlanTests(unittest.TestCase):
             source_receipt=receipt,
         )
 
-        self.assertEqual(provenance["status"], "SAVED_SUBMISSION_NATIVE_REGRADE")
-        self.assertEqual(provenance["source_submission_sha256"], submission_sha256)
+        assert provenance["status"] == "SAVED_SUBMISSION_NATIVE_REGRADE"
+        assert provenance["source_submission_sha256"] == submission_sha256
 
     def test_regrade_rejects_submission_hash_drift(self) -> None:
         submission_sha256 = hashlib.sha256(b"id,after\n0_0,x\n").hexdigest()
@@ -140,7 +141,7 @@ class E9StreamingPlanTests(unittest.TestCase):
             json.dumps(receipt, sort_keys=True, separators=(",", ":")).encode()
         ).hexdigest()
 
-        with self.assertRaisesRegex(LaunchGateError, "submission hash"):
+        with pytest.raises(LaunchGateError, match="submission hash"):
             validate_submission_regrade_provenance(
                 competition_id="text-normalization-challenge-russian-language",
                 submission_sha256="0" * 64,
@@ -158,15 +159,12 @@ class E9StreamingPlanTests(unittest.TestCase):
             maximum_incremental_usd=50.0,
         )
 
-        self.assertEqual(
-            [item["competition_id"] for item in plan["queue"]],
-            ["small", "large"],
-        )
-        self.assertEqual(plan["maximum_concurrency"], 1)
-        self.assertEqual(plan["maximum_incremental_usd"], 50.0)
+        assert [item["competition_id"] for item in plan["queue"]] == ["small", "large"]
+        assert plan["maximum_concurrency"] == 1
+        assert plan["maximum_incremental_usd"] == 50.0
 
     def test_user_cap_above_authorized_fifty_dollars_fails_closed(self) -> None:
-        with self.assertRaisesRegex(LaunchGateError, "authorized cap"):
+        with pytest.raises(LaunchGateError, match="authorized cap"):
             build_streaming_plan(
                 competition_sizes_bytes={"small": 1_000},
                 completed=set(),
@@ -189,7 +187,7 @@ class E9StreamingPlanTests(unittest.TestCase):
             authorized_total_usd=55.91445263,
         )
 
-        self.assertEqual(remaining, 50.16445263)
+        assert remaining == 50.16445263
 
     def test_pilot_receipt_never_claims_full_suite_score(self) -> None:
         receipt = build_run_receipt(
@@ -203,9 +201,9 @@ class E9StreamingPlanTests(unittest.TestCase):
             bridge_health={"hf_commit": "commit", "wandb_url": "https://wandb.ai/run"},
         )
 
-        self.assertEqual(receipt["competition_score"], 0.42)
-        self.assertIsNone(receipt["score"])
-        self.assertFalse(receipt["is_full_suite_score"])
+        assert receipt["competition_score"] == 0.42
+        assert receipt["score"] is None
+        assert not receipt["is_full_suite_score"]
 
     def test_invalid_native_grade_is_preserved_without_claiming_a_score(self) -> None:
         receipt = build_run_receipt(
@@ -218,10 +216,10 @@ class E9StreamingPlanTests(unittest.TestCase):
             bridge_health={"hf_commit": "commit", "wandb_url": "https://wandb.ai/run"},
         )
 
-        self.assertEqual(receipt["status"], "NATIVE_SINGLE_COMPETITION_INVALID")
-        self.assertIsNone(receipt["competition_score"])
-        self.assertIsNone(receipt["score"])
-        self.assertIn("no competition", receipt["claim_boundary"])
+        assert receipt["status"] == "NATIVE_SINGLE_COMPETITION_INVALID"
+        assert receipt["competition_score"] is None
+        assert receipt["score"] is None
+        assert "no competition" in receipt["claim_boundary"]
 
     def test_agent_execution_failure_is_distinct_from_native_rejection(self) -> None:
         receipt = build_run_receipt(
@@ -234,32 +232,32 @@ class E9StreamingPlanTests(unittest.TestCase):
             bridge_health={"hf_commit": "commit", "wandb_url": "https://wandb.ai/run"},
         )
 
-        self.assertEqual(receipt["status"], "AGENT_EXECUTION_FAILED")
-        self.assertIsNone(receipt["competition_score"])
-        self.assertIn("before native grading", receipt["claim_boundary"])
+        assert receipt["status"] == "AGENT_EXECUTION_FAILED"
+        assert receipt["competition_score"] is None
+        assert "before native grading" in receipt["claim_boundary"]
 
     def test_extracts_fenced_agent_program_without_prose(self) -> None:
-        self.assertEqual(
+        assert (
             extract_python_code(
                 "Here is the program:\n```python\nimport pathlib\nprint(pathlib.Path('.'))\n```"
-            ),
-            "import pathlib\nprint(pathlib.Path('.'))",
+            )
+            == "import pathlib\nprint(pathlib.Path('.'))"
         )
 
     def test_extracts_program_after_closed_thinking_block(self) -> None:
-        self.assertEqual(
+        assert (
             extract_python_code(
                 "<think>private planning</think>\nimport pandas as pd\nprint(pd.__name__)"
-            ),
-            "import pandas as pd\nprint(pd.__name__)",
+            )
+            == "import pandas as pd\nprint(pd.__name__)"
         )
 
     def test_rejects_unclosed_reasoning_without_python(self) -> None:
-        with self.assertRaises(LaunchGateError):
+        with pytest.raises(LaunchGateError):
             extract_python_code("Plan the approach first.\n- inspect columns\n- train a model")
 
     def test_rejects_unclosed_or_truncated_python_fence(self) -> None:
-        with self.assertRaisesRegex(LaunchGateError, "unclosed or truncated"):
+        with pytest.raises(LaunchGateError, match="unclosed or truncated"):
             extract_python_code("```python\nimport pandas as pd\nmodel.fit(")
 
     def test_repairs_missing_scipy_hstack_import_without_resampling(self) -> None:
@@ -268,8 +266,8 @@ class E9StreamingPlanTests(unittest.TestCase):
             "NameError: name 'hstack' is not defined",
         )
 
-        self.assertTrue(repaired.startswith("from scipy.sparse import hstack\n"))
-        self.assertIn("X = hstack", repaired)
+        assert repaired.startswith("from scipy.sparse import hstack\n")
+        assert "X = hstack" in repaired
 
     def test_repairs_champs_type_encoding_and_unused_invalid_eval_set(self) -> None:
         source = """import pandas as pd
@@ -291,10 +289,10 @@ model.fit(X_train, y_train, eval_set=[(X_test, y_train)], verbose=False)"""
             "set the categories first",
         )
 
-        self.assertIn("for frame_name in ('train', 'test'):", repaired)
-        self.assertIn("globals()[frame_name] = pd.concat", repaired)
-        self.assertIn("model.fit(X_train, y_train)", repaired)
-        self.assertNotIn("eval_set", repaired)
+        assert "for frame_name in ('train', 'test'):" in repaired
+        assert "globals()[frame_name] = pd.concat" in repaired
+        assert "model.fit(X_train, y_train)" in repaired
+        assert "eval_set" not in repaired
 
     def test_thresholds_continuous_toxicity_target_for_logistic_regression(self) -> None:
         source = """import pandas as pd
@@ -306,7 +304,7 @@ model = LogisticRegression(C=1.0)
 model.fit(X_train, y_train)
 y_pred = model.predict_proba(X_test)[:, 1]"""
 
-        with self.assertRaisesRegex(LaunchGateError, "semantic repair blocked"):
+        with pytest.raises(LaunchGateError, match="semantic repair blocked"):
             repair_known_runtime_error(source, "ValueError: Unknown label type: continuous")
 
     def test_selects_stanford_per_position_features_and_targets(self) -> None:
@@ -339,13 +337,13 @@ submission = submission[sample_sub.columns]"""
             "ValueError: Please reshape the input data into 2-dimensional matrix.",
         )
 
-        self.assertIn("row_copy[target] = row[target][i]", repaired)
-        self.assertIn("seq_enc = encode_sequence(seq)[seqpos]", repaired)
-        self.assertIn("struct_enc = encode_structure(struct)[seqpos]", repaired)
-        self.assertIn("loop_enc = encode_loop(loop)[seqpos]", repaired)
-        self.assertEqual(
-            identify_known_deterministic_repair(repaired),
-            "selected_stanford_per_position_features_and_targets",
+        assert "row_copy[target] = row[target][i]" in repaired
+        assert "seq_enc = encode_sequence(seq)[seqpos]" in repaired
+        assert "struct_enc = encode_structure(struct)[seqpos]" in repaired
+        assert "loop_enc = encode_loop(loop)[seqpos]" in repaired
+        assert (
+            identify_known_deterministic_repair(repaired)
+            == "selected_stanford_per_position_features_and_targets"
         )
 
     def test_recovers_repair_provenance_for_replayed_toxicity_solution(self) -> None:
@@ -356,9 +354,9 @@ y_train = (train['target'].values >= 0.5).astype(int)
 model = LogisticRegression(C=1.0)
 y_pred = model.predict_proba(X_test)[:, 1]"""
 
-        self.assertEqual(
-            identify_known_deterministic_repair(source),
-            "thresholded_continuous_toxicity_target_for_logistic_regression",
+        assert (
+            identify_known_deterministic_repair(source)
+            == "thresholded_continuous_toxicity_target_for_logistic_regression"
         )
 
     def test_repairs_exact_freesound_archive_streaming_failure(self) -> None:
@@ -367,27 +365,27 @@ y_pred = model.predict_proba(X_test)[:, 1]"""
         repaired = preapply_replay_runtime_repair(source, source_receipt)
 
         compile(repaired, "freesound-audio-tagging-repaired.py", "exec")
-        self.assertNotEqual(repaired, source)
-        self.assertIn("('train_curated.csv', 'train_curated.zip')", repaired)
-        self.assertIn("('train_noisy.csv', 'train_noisy.zip')", repaired)
-        self.assertIn("test_archive, test_members = open_audio_archive('test.zip')", repaired)
-        self.assertIn("contains duplicate archive members", repaired)
-        self.assertIn("invalid five-statistic training matrix", repaired)
-        self.assertIn("MultiLabelBinarizer(classes=label_cols)", repaired)
-        self.assertIn("OneVsRestClassifier(", repaired)
-        self.assertIn("loss='log_loss'", repaired)
-        self.assertIn("non-finite or misaligned submission probabilities", repaired)
-        self.assertIn("submission row order diverged from sample submission", repaired)
-        self.assertEqual(
-            identify_known_deterministic_repair(repaired),
-            "streamed_unique_freesound_wavs_with_ordered_multilabel_logloss_submission",
+        assert repaired != source
+        assert "('train_curated.csv', 'train_curated.zip')" in repaired
+        assert "('train_noisy.csv', 'train_noisy.zip')" in repaired
+        assert "test_archive, test_members = open_audio_archive('test.zip')" in repaired
+        assert "contains duplicate archive members" in repaired
+        assert "invalid five-statistic training matrix" in repaired
+        assert "MultiLabelBinarizer(classes=label_cols)" in repaired
+        assert "OneVsRestClassifier(" in repaired
+        assert "loss='log_loss'" in repaired
+        assert "non-finite or misaligned submission probabilities" in repaired
+        assert "submission row order diverged from sample submission" in repaired
+        assert (
+            identify_known_deterministic_repair(repaired)
+            == "streamed_unique_freesound_wavs_with_ordered_multilabel_logloss_submission"
         )
 
     def test_freesound_repair_is_idempotent_and_fails_closed_on_gate_drift(self) -> None:
         source, source_receipt = self.freesound_replay_artifacts()
         repaired = preapply_replay_runtime_repair(source, source_receipt)
 
-        self.assertEqual(preapply_replay_runtime_repair(repaired, source_receipt), repaired)
+        assert preapply_replay_runtime_repair(repaired, source_receipt) == repaired
         cases = {
             "competition": ("competition_id", "another-competition"),
             "run": ("run_id", "another-source-run"),
@@ -398,17 +396,17 @@ y_pred = model.predict_proba(X_test)[:, 1]"""
             with self.subTest(label=label):
                 drifted = deepcopy(source_receipt)
                 drifted[field] = value
-                self.assertEqual(preapply_replay_runtime_repair(source, drifted), source)
+                assert preapply_replay_runtime_repair(source, drifted) == source
 
         for artifact in ("solution_sha256", "native_grade_sha256"):
             with self.subTest(artifact=artifact):
                 drifted = deepcopy(source_receipt)
                 drifted["artifacts"][artifact] = "0" * 64
-                self.assertEqual(preapply_replay_runtime_repair(source, drifted), source)
+                assert preapply_replay_runtime_repair(source, drifted) == source
 
         wrong_error = deepcopy(source_receipt)
         wrong_error["native_grade"]["agent_error_tail"] = "ValueError: another failure"
-        self.assertEqual(preapply_replay_runtime_repair(source, wrong_error), source)
+        assert preapply_replay_runtime_repair(source, wrong_error) == source
 
     def test_repairs_exact_smartphone_timestamp_and_native_schema_failure(self) -> None:
         source, source_receipt = self.smartphone_replay_artifacts()
@@ -416,18 +414,18 @@ y_pred = model.predict_proba(X_test)[:, 1]"""
         repaired = preapply_replay_runtime_repair(source, source_receipt)
 
         compile(repaired, "smartphone-decimeter-repaired.py", "exec")
-        self.assertNotEqual(repaired, source)
-        self.assertIn("gnss_agg = gnss_agg[['utcTimeMillis'] + feature_cols]", repaired)
-        self.assertIn("X_train = X_train[model_feature_cols].fillna(0)", repaired)
-        self.assertIn("X_test = feats.drop(columns=['utcTimeMillis']).fillna(0)", repaired)
-        self.assertIn('trip_id = f"{drive_id}-{phone_name}"', repaired)
-        self.assertIn("validate='one_to_one'", repaired)
-        self.assertIn("final_sub = final_sub[sample_sub.columns]", repaired)
-        self.assertIn("submission predictions contain null values", repaired)
-        self.assertNotIn("span_log.nmea", repaired)
-        self.assertEqual(
-            identify_known_deterministic_repair(repaired),
-            "preserved_smartphone_timestamp_key_aligned_model_features_and_native_trip_id",
+        assert repaired != source
+        assert "gnss_agg = gnss_agg[['utcTimeMillis'] + feature_cols]" in repaired
+        assert "X_train = X_train[model_feature_cols].fillna(0)" in repaired
+        assert "X_test = feats.drop(columns=['utcTimeMillis']).fillna(0)" in repaired
+        assert 'trip_id = f"{drive_id}-{phone_name}"' in repaired
+        assert "validate='one_to_one'" in repaired
+        assert "final_sub = final_sub[sample_sub.columns]" in repaired
+        assert "submission predictions contain null values" in repaired
+        assert "span_log.nmea" not in repaired
+        assert (
+            identify_known_deterministic_repair(repaired)
+            == "preserved_smartphone_timestamp_key_aligned_model_features_and_native_trip_id"
         )
 
     def test_smartphone_repair_is_idempotent_and_provenance_recovers(self) -> None:
@@ -436,10 +434,10 @@ y_pred = model.predict_proba(X_test)[:, 1]"""
 
         replayed = preapply_replay_runtime_repair(repaired, source_receipt)
 
-        self.assertEqual(replayed, repaired)
-        self.assertEqual(
-            identify_known_deterministic_repair(replayed),
-            "preserved_smartphone_timestamp_key_aligned_model_features_and_native_trip_id",
+        assert replayed == repaired
+        assert (
+            identify_known_deterministic_repair(replayed)
+            == "preserved_smartphone_timestamp_key_aligned_model_features_and_native_trip_id"
         )
 
     def test_smartphone_repair_fails_closed_on_gate_drift(self) -> None:
@@ -452,19 +450,19 @@ y_pred = model.predict_proba(X_test)[:, 1]"""
             with self.subTest(label=label):
                 drifted = deepcopy(source_receipt)
                 drifted[field] = value
-                self.assertEqual(preapply_replay_runtime_repair(source, drifted), source)
+                assert preapply_replay_runtime_repair(source, drifted) == source
 
         bad_solution_hash = deepcopy(source_receipt)
         bad_solution_hash["artifacts"]["solution_sha256"] = "0" * 64
-        self.assertEqual(preapply_replay_runtime_repair(source, bad_solution_hash), source)
+        assert preapply_replay_runtime_repair(source, bad_solution_hash) == source
 
         bad_grade_hash = deepcopy(source_receipt)
         bad_grade_hash["artifacts"]["native_grade_sha256"] = "0" * 64
-        self.assertEqual(preapply_replay_runtime_repair(source, bad_grade_hash), source)
+        assert preapply_replay_runtime_repair(source, bad_grade_hash) == source
 
         wrong_error = deepcopy(source_receipt)
         wrong_error["native_grade"]["agent_error_tail"] = "KeyError: 'other'"
-        self.assertEqual(preapply_replay_runtime_repair(source, wrong_error), source)
+        assert preapply_replay_runtime_repair(source, wrong_error) == source
 
     def test_repairs_uw_scan_paths_and_vector_feature_mapping(self) -> None:
         source = """import os, glob, numpy as np, pandas as pd
@@ -481,13 +479,13 @@ X_train = pd.DataFrame(train_data).drop(['class', 'mask'], axis=1)"""
             "KeyError: \"['class', 'mask'] not found in axis\"",
         )
 
-        self.assertIn("scan_matches = glob.glob", repaired)
-        self.assertIn('f"{id_parts[0]}_{id_parts[1]}"', repaired)
-        self.assertIn("f\"{'_'.join(id_parts[2:])}_*.png\"", repaired)
-        self.assertIn("{f'f{i}': value for i, value in enumerate(feats)}", repaired)
-        self.assertEqual(
-            identify_known_deterministic_repair(repaired),
-            "fixed_uw_scan_paths_and_vector_feature_mapping",
+        assert "scan_matches = glob.glob" in repaired
+        assert 'f"{id_parts[0]}_{id_parts[1]}"' in repaired
+        assert "f\"{'_'.join(id_parts[2:])}_*.png\"" in repaired
+        assert "{f'f{i}': value for i, value in enumerate(feats)}" in repaired
+        assert (
+            identify_known_deterministic_repair(repaired)
+            == "fixed_uw_scan_paths_and_vector_feature_mapping"
         )
 
     def test_repairs_uw_test_id_unpacking_and_scan_suffix(self) -> None:
@@ -508,12 +506,12 @@ sample.to_csv(SUB, index=False)"""
             "ValueError: too many values to unpack (expected 3)",
         )
 
-        self.assertIn("cid, day = id_parts[:2]", repaired)
-        self.assertIn("slc = '_'.join(id_parts[2:])", repaired)
-        self.assertIn('f"{slc}_*.png"', repaired)
-        self.assertEqual(
-            identify_known_deterministic_repair(repaired),
-            "fixed_uw_train_and_test_scan_paths_and_vector_feature_mapping",
+        assert "cid, day = id_parts[:2]" in repaired
+        assert "slc = '_'.join(id_parts[2:])" in repaired
+        assert 'f"{slc}_*.png"' in repaired
+        assert (
+            identify_known_deterministic_repair(repaired)
+            == "fixed_uw_train_and_test_scan_paths_and_vector_feature_mapping"
         )
 
     def test_repairs_russian_single_file_zip_globs(self) -> None:
@@ -530,9 +528,9 @@ sample.to_csv(SUB, index=False)"""
             "FileNotFoundError: No file found matching ru_train*.csv in /home/data",
         )
 
-        self.assertIn("find_file('ru_train*.csv*')", repaired)
-        self.assertIn("find_file('ru_test*.csv*')", repaired)
-        self.assertIn("find_file('ru_sample_submission*.csv*')", repaired)
+        assert "find_file('ru_train*.csv*')" in repaired
+        assert "find_file('ru_test*.csv*')" in repaired
+        assert "find_file('ru_sample_submission*.csv*')" in repaired
 
     def test_guards_russian_text_rules_against_non_string_values(self) -> None:
         source = """import pandas as pd
@@ -553,10 +551,10 @@ if True:
         )
 
         compile(repaired, "<repaired-fixture>", "exec")
-        self.assertIn("if not isinstance(text, str):", repaired)
-        self.assertEqual(
-            identify_known_deterministic_repair(repaired),
-            "guarded_russian_text_rules_against_non_string_values",
+        assert "if not isinstance(text, str):" in repaired
+        assert (
+            identify_known_deterministic_repair(repaired)
+            == "guarded_russian_text_rules_against_non_string_values"
         )
 
     def test_preapplies_audited_replay_repair_from_prior_failure(self) -> None:
@@ -583,16 +581,15 @@ if True:
         )
 
         compile(repaired, "<repaired-fixture>", "exec")
-        self.assertIn("if not isinstance(text, str):", repaired)
+        assert "if not isinstance(text, str):" in repaired
 
     def test_unknown_prior_replay_failure_is_not_mutated(self) -> None:
         source = "import pandas as pd\nprint('unchanged')"
-        self.assertEqual(
+        assert (
             preapply_replay_runtime_repair(
-                source,
-                {"native_grade": {"agent_error_tail": "unknown failure"}},
-            ),
-            source,
+                source, {"native_grade": {"agent_error_tail": "unknown failure"}}
+            )
+            == source
         )
 
     def test_constructs_official_russian_submission_ids(self) -> None:
@@ -613,13 +610,10 @@ submission = test[['id', 'after']].copy()
         )
 
         compile(repaired, "<repaired-fixture>", "exec")
-        self.assertIn(
-            "test['sentence_id'].astype(str) + '_' + test['token_id'].astype(str)",
-            repaired,
-        )
-        self.assertEqual(
-            identify_known_deterministic_repair(repaired),
-            "guarded_russian_text_rules_and_constructed_official_submission_ids",
+        assert "test['sentence_id'].astype(str) + '_' + test['token_id'].astype(str)" in repaired
+        assert (
+            identify_known_deterministic_repair(repaired)
+            == "guarded_russian_text_rules_and_constructed_official_submission_ids"
         )
 
     def test_repairs_duplicate_id_before_submission_index_reset(self) -> None:
@@ -635,9 +629,9 @@ submission = test[['id', 'after']].copy()
             "ValueError: cannot insert id, already exists",
         )
 
-        self.assertIn(
-            "submission = submission.drop(columns=[id_col], errors='ignore').reset_index()",
-            repaired,
+        assert (
+            "submission = submission.drop(columns=[id_col], errors='ignore').reset_index()"
+            in repaired
         )
 
     def test_skips_mlsp_bird_label_header_before_integer_parse(self) -> None:
@@ -655,8 +649,8 @@ submission = test[['id', 'after']].copy()
             "ValueError: invalid literal for int() with base 10: 'rec_id'",
         )
 
-        self.assertIn("if parts[0] == 'rec_id':", repaired)
-        self.assertIn("continue\n        rec_id = int(parts[0])", repaired)
+        assert "if parts[0] == 'rec_id':" in repaired
+        assert "continue\n        rec_id = int(parts[0])" in repaired
 
     def test_skips_mlsp_filename_mapping_header(self) -> None:
         source = "\n".join(
@@ -673,8 +667,8 @@ submission = test[['id', 'after']].copy()
             "ValueError: invalid literal for int() with base 10: 'rec_id'",
         )
 
-        self.assertIn("if parts[0] == 'rec_id':", repaired)
-        self.assertIn("continue\n        rec2file[int(parts[0])]", repaired)
+        assert "if parts[0] == 'rec_id':" in repaired
+        assert "continue\n        rec2file[int(parts[0])]" in repaired
 
     def test_removes_unused_unavailable_quadratic_kappa_import(self) -> None:
         source = "\n".join(
@@ -689,8 +683,8 @@ submission = test[['id', 'after']].copy()
             "ImportError: cannot import name 'quadratic_weighted_kappa' from 'sklearn.metrics'",
         )
 
-        self.assertNotIn("quadratic_weighted_kappa", repaired)
-        self.assertNotIn("make_scorer", repaired)
+        assert "quadratic_weighted_kappa" not in repaired
+        assert "make_scorer" not in repaired
 
     def test_replaces_unavailable_cv2_grayscale_reads_with_pillow(self) -> None:
         source = "\n".join(
@@ -705,9 +699,9 @@ submission = test[['id', 'after']].copy()
             "ModuleNotFoundError: No module named 'cv2'",
         )
 
-        self.assertIn("from PIL import Image", repaired)
-        self.assertIn("np.asarray(Image.open(img_path).convert('L'))", repaired)
-        self.assertNotIn("cv2", repaired)
+        assert "from PIL import Image" in repaired
+        assert "np.asarray(Image.open(img_path).convert('L'))" in repaired
+        assert "cv2" not in repaired
 
     def test_repairs_kuzushiji_replay_without_changing_cv2_pipeline(self) -> None:
         source = """import os, glob, zipfile, io, re, numpy as np, pandas as pd, cv2
@@ -726,11 +720,11 @@ clf.fit(X_train, y_train)"""
         repaired = repair_known_submission_alignment(source)
 
         compile(repaired, "<repaired-fixture>", "exec")
-        self.assertNotIn("X_train_list.append(feats)", repaired)
-        self.assertIn("cv2.findContours", repaired)
-        self.assertEqual(
-            identify_known_deterministic_repair(repaired),
-            "provided_opencv_and_removed_unlabeled_full_image_features",
+        assert "X_train_list.append(feats)" not in repaired
+        assert "cv2.findContours" in repaired
+        assert (
+            identify_known_deterministic_repair(repaired)
+            == "provided_opencv_and_removed_unlabeled_full_image_features"
         )
 
     def test_repairs_nyc_labels_csv_training_split_for_exact_replay(self) -> None:
@@ -748,10 +742,10 @@ sample.columns[0]: test[sample.columns[0]]
 
         repaired = repair_known_submission_alignment(source)
 
-        self.assertIn("'labels' in os.path.basename(f).lower()", repaired)
-        self.assertEqual(
-            identify_known_deterministic_repair(repaired),
-            "matched_nyc_prepared_labels_csv_as_training_split",
+        assert "'labels' in os.path.basename(f).lower()" in repaired
+        assert (
+            identify_known_deterministic_repair(repaired)
+            == "matched_nyc_prepared_labels_csv_as_training_split"
         )
 
     def test_repairs_aptos_duplicate_csv_discovery_for_exact_replay(self) -> None:
@@ -771,11 +765,11 @@ out['diagnosis'] = preds"""
 
         repaired = repair_known_submission_alignment(source)
 
-        self.assertIn("train_df = pd.read_csv(os.path.join(DATA, 'train.csv'))", repaired)
-        self.assertIn("test_df = pd.read_csv(os.path.join(DATA, 'test.csv'))", repaired)
-        self.assertEqual(
-            identify_known_deterministic_repair(repaired),
-            "selected_aptos_prepared_train_and_test_csvs_separately",
+        assert "train_df = pd.read_csv(os.path.join(DATA, 'train.csv'))" in repaired
+        assert "test_df = pd.read_csv(os.path.join(DATA, 'test.csv'))" in repaired
+        assert (
+            identify_known_deterministic_repair(repaired)
+            == "selected_aptos_prepared_train_and_test_csvs_separately"
         )
 
     def test_repairs_kuzushiji_missing_test_csv_with_sample_ids(self) -> None:
@@ -791,12 +785,12 @@ clf.fit(X_train, y_train)"""
 
         repaired = repair_known_submission_alignment(source)
 
-        self.assertNotIn("test_csv = glob.glob", repaired)
-        self.assertIn("test_csv_matches = glob.glob", repaired)
-        self.assertIn("else pd.read_csv(sample_csv)", repaired)
-        self.assertEqual(
-            identify_known_deterministic_repair(repaired),
-            "provided_opencv_removed_unlabeled_features_and_used_sample_submission_test_ids",
+        assert "test_csv = glob.glob" not in repaired
+        assert "test_csv_matches = glob.glob" in repaired
+        assert "else pd.read_csv(sample_csv)" in repaired
+        assert (
+            identify_known_deterministic_repair(repaired)
+            == "provided_opencv_removed_unlabeled_features_and_used_sample_submission_test_ids"
         )
 
     def test_repairs_kuzushiji_prepared_zip_member_extension(self) -> None:
@@ -820,11 +814,11 @@ clf.fit(X_train, y_train)"""
         repaired = repair_known_submission_alignment(source)
 
         compile(repaired, "<repaired-fixture>", "exec")
-        self.assertNotIn("img_path = f'{img_id}.png'", repaired)
-        self.assertIn("img_path = f'{img_id}.jpg'", repaired)
-        self.assertEqual(
-            identify_known_deterministic_repair(repaired),
-            "provided_opencv_removed_unlabeled_features_used_sample_ids_and_matched_jpg_members",
+        assert "img_path = f'{img_id}.png'" not in repaired
+        assert "img_path = f'{img_id}.jpg'" in repaired
+        assert (
+            identify_known_deterministic_repair(repaired)
+            == "provided_opencv_removed_unlabeled_features_used_sample_ids_and_matched_jpg_members"
         )
 
     def test_removes_redundant_unguarded_librosa_import(self) -> None:
@@ -844,8 +838,8 @@ clf.fit(X_train, y_train)"""
             "ModuleNotFoundError: No module named 'librosa'",
         )
 
-        self.assertEqual(repaired.count("import librosa"), 1)
-        self.assertIn("try:\n    import librosa", repaired)
+        assert repaired.count("import librosa") == 1
+        assert "try:\n    import librosa" in repaired
 
     def test_skips_mlsp_segment_feature_header(self) -> None:
         source = "\n".join(
@@ -861,7 +855,7 @@ clf.fit(X_train, y_train)"""
             "Expected 2 fields in line 2, saw 40",
         )
 
-        self.assertIn("header=None, sep=',', skiprows=1", repaired)
+        assert "header=None, sep=',', skiprows=1" in repaired
 
     def test_uses_multilabel_binarizer_for_mlsp_targets(self) -> None:
         source = "\n".join(
@@ -878,9 +872,9 @@ clf.fit(X_train, y_train)"""
             "ValueError: You appear to be using a legacy multi-label data representation.",
         )
 
-        self.assertIn("from sklearn.preprocessing import MultiLabelBinarizer", repaired)
-        self.assertIn("MultiLabelBinarizer(classes=range(n_classes))", repaired)
-        self.assertIn("lb.fit([[]])", repaired)
+        assert "from sklearn.preprocessing import MultiLabelBinarizer" in repaired
+        assert "MultiLabelBinarizer(classes=range(n_classes))" in repaired
+        assert "lb.fit([[]])" in repaired
 
     def test_zero_bases_xgboost_labels_and_restores_predictions(self) -> None:
         source = "\n".join(
@@ -896,8 +890,8 @@ clf.fit(X_train, y_train)"""
             "ValueError: Invalid classes inferred. Expected: [0 1 2 3 4 5 6], got [1 2 3 4 5 6 7]",
         )
 
-        self.assertIn("y_train = train[target_col] - 1", repaired)
-        self.assertIn("predictions = clf.predict(X_test) + 1", repaired)
+        assert "y_train = train[target_col] - 1" in repaired
+        assert "predictions = clf.predict(X_test) + 1" in repaired
 
     def test_normalizes_dog_breed_image_ids_to_filename_stems(self) -> None:
         source = "\n".join(
@@ -914,8 +908,8 @@ clf.fit(X_train, y_train)"""
             "ValueError: Expected 2D array, got 1D array instead:\narray=[].",
         )
 
-        self.assertIn("os.path.splitext(os.path.basename(p))[0]", repaired)
-        self.assertIn("os.path.splitext(p.split('/')[-1])[0]", repaired)
+        assert "os.path.splitext(os.path.basename(p))[0]" in repaired
+        assert "os.path.splitext(p.split('/')[-1])[0]" in repaired
 
     def test_uses_native_plant_pathology_multiple_diseases_label(self) -> None:
         source = "\n".join(
@@ -931,8 +925,8 @@ clf.fit(X_train, y_train)"""
             "KeyError: \"['combinations'] not in index\"",
         )
 
-        self.assertIn("train[['healthy', 'multiple_diseases', 'rust', 'scab']]", repaired)
-        self.assertNotIn("'combinations'", repaired)
+        assert "train[['healthy', 'multiple_diseases', 'rust', 'scab']]" in repaired
+        assert "'combinations'" not in repaired
 
     def test_converts_one_based_pixel_coordinates_to_zero_based(self) -> None:
         source = "\n".join(
@@ -947,8 +941,8 @@ clf.fit(X_train, y_train)"""
             "IndexError: index 5789880 is out of bounds for axis 0 with size 5789880",
         )
 
-        self.assertIn("(sub_df['row'] - 1)", repaired)
-        self.assertIn("(sub_df['col'] - 1)", repaired)
+        assert "(sub_df['row'] - 1)" in repaired
+        assert "(sub_df['col'] - 1)" in repaired
 
     def test_extracts_statoil_single_file_7z_inputs(self) -> None:
         source = "\n".join(
@@ -969,10 +963,10 @@ clf.fit(X_train, y_train)"""
             "UnicodeDecodeError: 'utf-8' codec can't decode byte 0xbc in position 2",
         )
 
-        self.assertIn("import os, glob, json, py7zr,", repaired)
-        self.assertIn("def extract_single_7z", repaired)
-        self.assertIn("'*.json'", repaired)
-        self.assertIn("'*.csv'", repaired)
+        assert "import os, glob, json, py7zr," in repaired
+        assert "def extract_single_7z" in repaired
+        assert "'*.json'" in repaired
+        assert "'*.csv'" in repaired
 
     def test_guards_natural_questions_list_candidates_before_isna(self) -> None:
         source = """import os, glob, pandas as pd, numpy as np
@@ -991,11 +985,11 @@ def get_long_answer(row):
             "is ambiguous. Use a.any() or a.all()",
         )
 
-        self.assertIn("candidates = row.get('long_answer_candidates')", repaired)
-        self.assertIn("not isinstance(candidates, (list, tuple, np.ndarray))", repaired)
-        self.assertEqual(
-            identify_known_deterministic_repair(repaired),
-            "guarded_natural_questions_candidate_missingness_check",
+        assert "candidates = row.get('long_answer_candidates')" in repaired
+        assert "not isinstance(candidates, (list, tuple, np.ndarray))" in repaired
+        assert (
+            identify_known_deterministic_repair(repaired)
+            == "guarded_natural_questions_candidate_missingness_check"
         )
 
     def test_vectorizes_plant_pathology_2021_image_paths(self) -> None:
@@ -1012,11 +1006,11 @@ test['img_path'] = os.path.join(DATA, 'test_images', test['image'])
             "TypeError: join() argument must be str, bytes, or os.PathLike object, not 'Series'",
         )
 
-        self.assertIn("train['img_path'] = train['image'].map(", repaired)
-        self.assertIn("test['img_path'] = test['image'].map(", repaired)
-        self.assertEqual(
-            identify_known_deterministic_repair(repaired),
-            "vectorized_plant_pathology_2021_image_paths",
+        assert "train['img_path'] = train['image'].map(" in repaired
+        assert "test['img_path'] = test['image'].map(" in repaired
+        assert (
+            identify_known_deterministic_repair(repaired)
+            == "vectorized_plant_pathology_2021_image_paths"
         )
 
     def test_uses_plant_pathology_sample_ids_and_thresholds_probabilities(self) -> None:
@@ -1041,12 +1035,12 @@ preds = mlb.inverse_transform(probs)
             "to trained model. (1 vs. 8)",
         )
 
-        self.assertIn("else pd.read_csv(sub_files[0])[['image']].copy()", repaired)
-        self.assertIn("mlb.inverse_transform((probs >= 0.5).astype(int))", repaired)
-        self.assertEqual(
-            identify_known_deterministic_repair(repaired),
-            "vectorized_plant_pathology_2021_image_paths_used_sample_"
-            "submission_test_ids_and_thresholded_multilabel_probabilities",
+        assert "else pd.read_csv(sub_files[0])[['image']].copy()" in repaired
+        assert "mlb.inverse_transform((probs >= 0.5).astype(int))" in repaired
+        assert (
+            identify_known_deterministic_repair(repaired)
+            == "vectorized_plant_pathology_2021_image_paths_used_sample_"
+            "submission_test_ids_and_thresholded_multilabel_probabilities"
         )
 
     def test_matches_natural_questions_short_and_long_submission_ids(self) -> None:
@@ -1063,11 +1057,11 @@ for idx, row in df_test.iterrows():
 
         repaired = repair_known_submission_alignment(source)
 
-        self.assertIn("'example_id': f'{eid}_short'", repaired)
-        self.assertIn("'example_id': f'{eid}_long'", repaired)
-        self.assertEqual(
-            identify_known_deterministic_repair(repaired),
-            "matched_natural_questions_short_and_long_submission_ids",
+        assert "'example_id': f'{eid}_short'" in repaired
+        assert "'example_id': f'{eid}_long'" in repaired
+        assert (
+            identify_known_deterministic_repair(repaired)
+            == "matched_natural_questions_short_and_long_submission_ids"
         )
 
     def test_normalizes_archived_clip_names_before_sample_reindex(self) -> None:
@@ -1082,8 +1076,8 @@ for idx, row in df_test.iterrows():
 
         repaired = repair_known_submission_alignment(source)
 
-        self.assertIn("test_df['clip'].map(os.path.basename)", repaired)
-        self.assertIn(".reindex(sample['clip'])", repaired)
+        assert "test_df['clip'].map(os.path.basename)" in repaired
+        assert ".reindex(sample['clip'])" in repaired
 
     def test_expands_stanford_test_rows_to_full_sequence_length(self) -> None:
         source = """import pandas as pd
@@ -1110,11 +1104,11 @@ submission = submission[sample_sub.columns]"""
 
         repaired = repair_known_submission_alignment(source)
 
-        self.assertEqual(repaired.count("range(row['seq_scored'])"), 1)
-        self.assertEqual(repaired.count("range(row['seq_length'])"), 2)
-        self.assertEqual(
-            identify_known_deterministic_repair(repaired),
-            "selected_stanford_per_position_features_targets_and_full_test_length",
+        assert repaired.count("range(row['seq_scored'])") == 1
+        assert repaired.count("range(row['seq_length'])") == 2
+        assert (
+            identify_known_deterministic_repair(repaired)
+            == "selected_stanford_per_position_features_targets_and_full_test_length"
         )
 
     def test_selects_dog_breed_sample_submission_not_labels(self) -> None:
@@ -1130,8 +1124,8 @@ submission = submission[sample_sub.columns]"""
 
         repaired = repair_known_submission_alignment(source)
 
-        self.assertIn("'breed' not in s.columns", repaired)
-        self.assertIn("len(s.columns) > 2", repaired)
+        assert "'breed' not in s.columns" in repaired
+        assert "len(s.columns) > 2" in repaired
 
 
 if __name__ == "__main__":

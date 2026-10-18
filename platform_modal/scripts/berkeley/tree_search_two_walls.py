@@ -47,8 +47,8 @@ Hypotheses (all on REAL data):
      becomes the DOMINANT component of ZVF, so tree search cannot rescue GRPO's
      large-g signal collapse.  DECISIVE if saturation share > 0.5 at g=32.
 """
+
 import json, glob, math, os
-from collections import defaultdict
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 RES = os.path.join(ROOT, "experiments", "results")
@@ -86,7 +86,7 @@ def walls_at_g(ks, g):
         else:  # i.i.d. extrapolation past native draws
             p = k / NATIVE
             aw += (1.0 - p) ** g
-            ac += p ** g
+            ac += p**g
     n = len(ks)
     return aw / n, ac / n
 
@@ -95,7 +95,7 @@ def walls_per_prompt(k, g):
     if g <= NATIVE:
         return comb(NATIVE - k, g) / comb(NATIVE, g), comb(k, g) / comb(NATIVE, g)
     p = k / NATIVE
-    return (1.0 - p) ** g, p ** g
+    return (1.0 - p) ** g, p**g
 
 
 def main():
@@ -112,17 +112,17 @@ def main():
         zvf = aw + ac
         cov = 1.0 - aw
         yield_ = 1.0 - zvf
-        cov_share = aw / zvf if zvf > 0 else float("nan")   # tree-search addressable
-        sat_share = ac / zvf if zvf > 0 else float("nan")   # search-invariant
+        cov_share = aw / zvf if zvf > 0 else float("nan")  # tree-search addressable
+        sat_share = ac / zvf if zvf > 0 else float("nan")  # search-invariant
         rows.append((g, aw, ac, zvf, cov, yield_, cov_share, sat_share))
         if crossover is None and ac > aw:
             crossover = g
     with open(os.path.join(OUT, "tree_search_two_walls.tsv"), "w") as fh:
-        fh.write("g\tall_wrong\tall_correct\tzvf\tcoverage\tyield\t"
-                 "coverage_share\tsaturation_share\n")
+        fh.write(
+            "g\tall_wrong\tall_correct\tzvf\tcoverage\tyield\tcoverage_share\tsaturation_share\n"
+        )
         for r in rows:
-            fh.write("\t".join(f"{x:.6f}" if isinstance(x, float) else str(x)
-                               for x in r) + "\n")
+            fh.write("\t".join(f"{x:.6f}" if isinstance(x, float) else str(x) for x in r) + "\n")
 
     # H2 (corrected): the saturation wall DOMINATES at every g -- tree search is
     # orthogonal to most dead signal. (Original monotone-decrease conjecture is
@@ -131,8 +131,9 @@ def main():
     sat_shares = [r[7] for r in rows]
     h2_sat_dominates_all_g = all(s > 0.5 for s in sat_shares)
     h2_cov_share_max = max(cov_shares)
-    h2_cov_share_monotone = all(cov_shares[i] >= cov_shares[i + 1] - 1e-9
-                                for i in range(len(cov_shares) - 1))  # expected False
+    h2_cov_share_monotone = all(
+        cov_shares[i] >= cov_shares[i + 1] - 1e-9 for i in range(len(cov_shares) - 1)
+    )  # expected False
 
     # ---- H3: hardness targeting -- where does all-wrong mass live? ----
     # p-tertiles by per-prompt p_hat=k/8; use a representative small g (g=4).
@@ -153,9 +154,9 @@ def main():
     for name, vals in strata.items():
         saw = sum(a for a, _ in vals)
         sac = sum(c for _, c in vals)
-        h3_rows.append((name, len(vals),
-                        saw / tot_aw if tot_aw else 0.0,
-                        sac / tot_ac if tot_ac else 0.0))
+        h3_rows.append(
+            (name, len(vals), saw / tot_aw if tot_aw else 0.0, sac / tot_ac if tot_ac else 0.0)
+        )
     hard_aw_share = h3_rows[0][2]
     with open(os.path.join(OUT, "tree_search_hardness_targeting.tsv"), "w") as fh:
         fh.write("stratum\tn_prompts\tall_wrong_mass_share\tall_correct_mass_share\n")
@@ -209,7 +210,7 @@ def main():
         "sanity_zvf_at_g8": round(r8[3], 4),
         "n_prompts": n,
         "citation": "Koh, McAleer, Fried, Salakhutdinov 2024, arXiv:2407.01476, "
-                    "Tree Search for Language Model Agents (SP25 L6)",
+        "Tree Search for Language Model Agents (SP25 L6)",
     }
     with open(os.path.join(OUT, "tree_search_summary.json"), "w") as fh:
         json.dump(verdicts, fh, indent=2)
@@ -220,15 +221,23 @@ def main():
     for r in rows:
         print(f"{r[0]:>2} {r[1]:.4f}   {r[2]:.4f}    {r[3]:.4f} {r[6]:.4f}   {r[7]:.4f}")
     print(f"\ncrossover g* (all_correct>all_wrong): {crossover}")
-    print(f"H2 saturation dominates every g: {h2_sat_dominates_all_g} "
-          f"(coverage share max={h2_cov_share_max:.4f}, "
-          f"monotone conjecture falsified={not h2_cov_share_monotone})")
-    print(f"H3 hard-tertile all-wrong share: {hard_aw_share:.4f} "
-          f"(decisive>=0.80: {hard_aw_share>=0.80})")
-    print(f"H4 parallel g*={g_star_cov} vs oracle-seq {oracle_seq:.2f} "
-          f"-> ratio {compute_ratio:.2f}; uncoverable(p=0)={frac_uncoverable:.4f}")
-    print(f"H5 saturation share @g32: {sat32:.4f} "
-          f"(decisive>0.5: {sat32>0.5}); coverage share @g32: {cov32:.4f}")
+    print(
+        f"H2 saturation dominates every g: {h2_sat_dominates_all_g} "
+        f"(coverage share max={h2_cov_share_max:.4f}, "
+        f"monotone conjecture falsified={not h2_cov_share_monotone})"
+    )
+    print(
+        f"H3 hard-tertile all-wrong share: {hard_aw_share:.4f} "
+        f"(decisive>=0.80: {hard_aw_share >= 0.80})"
+    )
+    print(
+        f"H4 parallel g*={g_star_cov} vs oracle-seq {oracle_seq:.2f} "
+        f"-> ratio {compute_ratio:.2f}; uncoverable(p=0)={frac_uncoverable:.4f}"
+    )
+    print(
+        f"H5 saturation share @g32: {sat32:.4f} "
+        f"(decisive>0.5: {sat32 > 0.5}); coverage share @g32: {cov32:.4f}"
+    )
 
 
 if __name__ == "__main__":

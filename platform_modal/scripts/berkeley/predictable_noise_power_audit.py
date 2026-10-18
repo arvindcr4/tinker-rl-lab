@@ -29,6 +29,7 @@ Pre-registered hypotheses:
       smaller than the unpaired two-sample SE => pairing is WHAT makes the
       equivalence claim well-powered, quantifying Wang's all-pairs recommendation.
 """
+
 import json, os
 import numpy as np
 from scipy.stats import nct, t as tdist, norm
@@ -82,7 +83,8 @@ def load():
         steps[r["algo"]][r["seed"]] = [s["mean_reward"] for s in r["step_log"][-10:]]
     seeds = sorted(set(by["grpo"]) & set(by["ppo"]))
     diffs = {
-        m: np.array([by["grpo"][s][m] - by["ppo"][s][m] for s in seeds]) for m in ("heldout", "last10")
+        m: np.array([by["grpo"][s][m] - by["ppo"][s][m] for s in seeds])
+        for m in ("heldout", "last10")
     }
     return by, steps, seeds, diffs
 
@@ -126,21 +128,69 @@ def main():
         tcrit_eq = tdist.ppf(1 - ALPHA, df)  # one-sided for TOST / 90% CI
         ci90 = (mean - tcrit_eq * se, mean + tcrit_eq * se)
         equiv_bound = max(abs(ci90[0]), abs(ci90[1]))  # tightest margin passing TOST
-        metric_stat[m] = dict(mean=mean, s_d=s_d, se=se, df=df, mde80=mde80,
-                              equiv_bound=equiv_bound, p_two=p_two)
-        power_rows.append([m, n, round(mean, 6), round(s_d, 6), round(se, 6),
-                           round(tstat, 4), round(p_two, 4), round(mde80, 6),
-                           round(mde50, 6), round(obs_power, 4), round(power_at_lit, 4)])
-        tost_rows.append([m, round(mean, 6), round(se, 6), round(ci90[0], 6),
-                          round(ci90[1], 6), round(equiv_bound, 6),
-                          bool(equiv_bound < 0.02), bool(equiv_bound < 0.05),
-                          bool(equiv_bound < 0.10)])
-    tsv(os.path.join(OUT, "pnpa_power_mde.tsv"),
-        ["metric", "n", "mean_diff", "s_d", "se", "t", "p_two", "mde_80", "mde_50",
-         "obs_power", "power_at_5pt"], power_rows)
-    tsv(os.path.join(OUT, "pnpa_tost_equivalence.tsv"),
-        ["metric", "mean_diff", "se", "ci90_low", "ci90_high", "equiv_bound",
-         "equiv_at_2pt", "equiv_at_5pt", "equiv_at_10pt"], tost_rows)
+        metric_stat[m] = dict(
+            mean=mean, s_d=s_d, se=se, df=df, mde80=mde80, equiv_bound=equiv_bound, p_two=p_two
+        )
+        power_rows.append(
+            [
+                m,
+                n,
+                round(mean, 6),
+                round(s_d, 6),
+                round(se, 6),
+                round(tstat, 4),
+                round(p_two, 4),
+                round(mde80, 6),
+                round(mde50, 6),
+                round(obs_power, 4),
+                round(power_at_lit, 4),
+            ]
+        )
+        tost_rows.append(
+            [
+                m,
+                round(mean, 6),
+                round(se, 6),
+                round(ci90[0], 6),
+                round(ci90[1], 6),
+                round(equiv_bound, 6),
+                bool(equiv_bound < 0.02),
+                bool(equiv_bound < 0.05),
+                bool(equiv_bound < 0.10),
+            ]
+        )
+    tsv(
+        os.path.join(OUT, "pnpa_power_mde.tsv"),
+        [
+            "metric",
+            "n",
+            "mean_diff",
+            "s_d",
+            "se",
+            "t",
+            "p_two",
+            "mde_80",
+            "mde_50",
+            "obs_power",
+            "power_at_5pt",
+        ],
+        power_rows,
+    )
+    tsv(
+        os.path.join(OUT, "pnpa_tost_equivalence.tsv"),
+        [
+            "metric",
+            "mean_diff",
+            "se",
+            "ci90_low",
+            "ci90_high",
+            "equiv_bound",
+            "equiv_at_2pt",
+            "equiv_at_5pt",
+            "equiv_at_10pt",
+        ],
+        tost_rows,
+    )
 
     # ---- H3 pooling fabricates power (last10 step-level) -------------------
     # honest: seed-clustered n=5 on last-10 step means; illusion: pool 5x10=50 iid.
@@ -151,36 +201,59 @@ def main():
     icc = var_between / (var_between + var_within) if (var_between + var_within) > 0 else 0.0
     M = 10
     deff = 1 + (M - 1) * icc
-    s_seed = seed_means.std(ddof=1)          # honest cluster-level sd (one number/seed)
-    s_pool = pooled.std(ddof=1)              # naive pooled sd
+    s_seed = seed_means.std(ddof=1)  # honest cluster-level sd (one number/seed)
+    s_pool = pooled.std(ddof=1)  # naive pooled sd
     mde_honest = mde(len(seeds), s_seed, 0.80)
     mde_pool = mde(len(pooled), s_pool, 0.80)  # the illusion: treat 50 obs as iid pairs
-    tsv(os.path.join(OUT, "pnpa_pooling_power_inflation.tsv"),
+    tsv(
+        os.path.join(OUT, "pnpa_pooling_power_inflation.tsv"),
         ["quantity", "value"],
-[["n_honest_seeds", len(seeds)], ["n_pooled_stepobs", len(pooled)],
-         ["icc_step", round(float(icc), 4)], ["deff", round(float(deff), 4)],
-         ["sqrt_deff", round(float(np.sqrt(deff)), 4)],
-         ["mde80_honest", round(float(mde_honest), 6)],
-         ["mde80_pooled_illusion", round(float(mde_pool), 6)],
-         ["power_inflation_ratio", round(float(mde_honest / mde_pool), 4)]])
+        [
+            ["n_honest_seeds", len(seeds)],
+            ["n_pooled_stepobs", len(pooled)],
+            ["icc_step", round(float(icc), 4)],
+            ["deff", round(float(deff), 4)],
+            ["sqrt_deff", round(float(np.sqrt(deff)), 4)],
+            ["mde80_honest", round(float(mde_honest), 6)],
+            ["mde80_pooled_illusion", round(float(mde_pool), 6)],
+            ["power_inflation_ratio", round(float(mde_honest / mde_pool), 4)],
+        ],
+    )
 
     # ---- H4 outlier robustness (last10, drop PPO seed-456 collapse) --------
     d_full = diffs["last10"]
     keep = [i for i, s in enumerate(seeds) if s != 456]
     d_drop = d_full[keep]
     rob_rows = []
-    for name, dd in (("full", d_full), ("drop_seed456", d_drop),
-                     ("winsor10", np.clip(d_full, np.percentile(d_full, 10), np.percentile(d_full, 90)))):
+    for name, dd in (
+        ("full", d_full),
+        ("drop_seed456", d_drop),
+        ("winsor10", np.clip(d_full, np.percentile(d_full, 10), np.percentile(d_full, 90))),
+    ):
         n = len(dd)
         s_d = float(dd.std(ddof=1))
         se = s_d / np.sqrt(n)
         eb = tdist.ppf(1 - ALPHA, n - 1) * se + abs(float(dd.mean()))  # conservative equiv bound
-        eb = max(abs(float(dd.mean()) - tdist.ppf(1 - ALPHA, n - 1) * se),
-                 abs(float(dd.mean()) + tdist.ppf(1 - ALPHA, n - 1) * se))
-        rob_rows.append([name, n, round(float(dd.mean()), 6), round(s_d, 6),
-                         round(se, 6), round(mde(n, s_d, 0.80), 6), round(eb, 6)])
-    tsv(os.path.join(OUT, "pnpa_outlier_robustness.tsv"),
-        ["variant", "n", "mean_diff", "s_d", "se", "mde_80", "equiv_bound"], rob_rows)
+        eb = max(
+            abs(float(dd.mean()) - tdist.ppf(1 - ALPHA, n - 1) * se),
+            abs(float(dd.mean()) + tdist.ppf(1 - ALPHA, n - 1) * se),
+        )
+        rob_rows.append(
+            [
+                name,
+                n,
+                round(float(dd.mean()), 6),
+                round(s_d, 6),
+                round(se, 6),
+                round(mde(n, s_d, 0.80), 6),
+                round(eb, 6),
+            ]
+        )
+    tsv(
+        os.path.join(OUT, "pnpa_outlier_robustness.tsv"),
+        ["variant", "n", "mean_diff", "s_d", "se", "mde_80", "equiv_bound"],
+        rob_rows,
+    )
 
     # ---- H5 paired vs unpaired power gain (Wang all-pairs) -----------------
     pv_rows = []
@@ -191,19 +264,37 @@ def main():
         se_paired = (g - p).std(ddof=1) / np.sqrt(n)
         se_unpaired = np.sqrt(g.var(ddof=1) / n + p.var(ddof=1) / n)
         ratio = se_unpaired / se_paired if se_paired > 0 else float("nan")
-        pv_rows.append([m, round(float(se_paired), 6), round(float(se_unpaired), 6),
-                        round(float(ratio), 4),
-                        round(mde(n, (g - p).std(ddof=1), 0.80), 6),
-                        round(mde(n, np.sqrt(g.var(ddof=1) + p.var(ddof=1)), 0.80), 6)])
-    tsv(os.path.join(OUT, "pnpa_paired_vs_unpaired.tsv"),
-        ["metric", "se_paired", "se_unpaired", "se_ratio_unp_over_pair",
-         "mde_paired", "mde_unpaired"], pv_rows)
+        pv_rows.append(
+            [
+                m,
+                round(float(se_paired), 6),
+                round(float(se_unpaired), 6),
+                round(float(ratio), 4),
+                round(mde(n, (g - p).std(ddof=1), 0.80), 6),
+                round(mde(n, np.sqrt(g.var(ddof=1) + p.var(ddof=1)), 0.80), 6),
+            ]
+        )
+    tsv(
+        os.path.join(OUT, "pnpa_paired_vs_unpaired.tsv"),
+        [
+            "metric",
+            "se_paired",
+            "se_unpaired",
+            "se_ratio_unp_over_pair",
+            "mde_paired",
+            "mde_unpaired",
+        ],
+        pv_rows,
+    )
 
     # ---- H3b sample-size forecast (heldout seed-level sd) ------------------
     s_held = diffs["heldout"].std(ddof=1)
     fc_rows = [[dlt, n_for_delta(dlt, s_held, 0.80)] for dlt in (0.005, 0.01, 0.02, 0.05, 0.10)]
-    tsv(os.path.join(OUT, "pnpa_sample_size_forecast.tsv"),
-        ["target_delta", "n_seeds_for_80pct_power"], fc_rows)
+    tsv(
+        os.path.join(OUT, "pnpa_sample_size_forecast.tsv"),
+        ["target_delta", "n_seeds_for_80pct_power"],
+        fc_rows,
+    )
 
     # ---- verdicts ---------------------------------------------------------
     h1 = metric_stat["heldout"]["mde80"] < 0.01 and metric_stat["heldout"]["mde80"] < LIT_GAP
@@ -212,12 +303,18 @@ def main():
     h3 = infl >= np.sqrt(deff) * 0.9 and infl >= 1.8
     eb_full = [r for r in rob_rows if r[0] == "full"][0][6]
     eb_drop = [r for r in rob_rows if r[0] == "drop_seed456"][0][6]
-    h4 = (metric_stat["last10"]["equiv_bound"] > 10 * metric_stat["heldout"]["equiv_bound"]
-          and eb_full > 3 * eb_drop)
+    h4 = (
+        metric_stat["last10"]["equiv_bound"] > 10 * metric_stat["heldout"]["equiv_bound"]
+        and eb_full > 3 * eb_drop
+    )
     h5 = pv_rows[0][3] >= 1.5  # heldout se_ratio
-    verdicts = {"H1_heldout_well_powered": bool(h1), "H2_positive_equivalence": bool(h2),
-                "H3_pooling_fabricates_power": bool(h3), "H4_metric_choice_matters": bool(h4),
-                "H5_pairing_power_gain": bool(h5)}
+    verdicts = {
+        "H1_heldout_well_powered": bool(h1),
+        "H2_positive_equivalence": bool(h2),
+        "H3_pooling_fabricates_power": bool(h3),
+        "H4_metric_choice_matters": bool(h4),
+        "H5_pairing_power_gain": bool(h5),
+    }
     summary["verdicts"] = verdicts
     summary["n_decisive"] = int(sum(verdicts.values()))
     summary["headline"] = {
@@ -225,7 +322,8 @@ def main():
         "heldout_equiv_bound": round(metric_stat["heldout"]["equiv_bound"], 6),
         "last10_equiv_bound": round(metric_stat["last10"]["equiv_bound"], 6),
         "power_inflation_from_pooling": round(infl, 3),
-        "icc_step": round(float(icc), 4), "deff": round(float(deff), 4),
+        "icc_step": round(float(icc), 4),
+        "deff": round(float(deff), 4),
         "paired_power_gain_heldout": pv_rows[0][3],
         "n_seeds_for_1pt_gap": n_for_delta(0.01, s_held, 0.80),
     }

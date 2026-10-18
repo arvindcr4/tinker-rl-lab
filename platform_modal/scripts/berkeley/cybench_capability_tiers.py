@@ -45,9 +45,9 @@ Writes (to platform_hybrid/experiments/results/berkeley/):
 
 Run:  python3 platform_modal/scripts/berkeley/cybench_capability_tiers.py
 """
+
 import json
 import math
-import os
 from pathlib import Path
 
 import numpy as np
@@ -127,7 +127,7 @@ def load_rqs():
     hdr = rows[0]
     out = {}
     for r in rows[1:]:
-        rec = dict(zip(hdr, r))
+        rec = dict(zip(hdr, r, strict=False))
         try:
             out[rec["model"]] = {
                 "RQS": float(rec["RQS"]),
@@ -186,7 +186,7 @@ def per_tier_scaling(anchors):
             continue
         x = [a["logN"] for a in grp]
         y = [a["R_max"] for a in grp]
-        r, slope, intercept = _pearson(x, y) if len(grp) >= 3 else (float("nan"),)*3
+        r, slope, intercept = _pearson(x, y) if len(grp) >= 3 else (float("nan"),) * 3
         out.append(
             {
                 "tier": tier,
@@ -270,7 +270,7 @@ def write_tier_scaling(per_tier, anchors, rqs):
         for row in per_tier:
             tier = row["tier"]
             n = row["n"]
-# H1: within-tier scaling signal present?
+            # H1: within-tier scaling signal present?
             if n >= 3:
                 h1 = "testable"
             elif n == 2:
@@ -278,11 +278,7 @@ def write_tier_scaling(per_tier, anchors, rqs):
             else:
                 h1 = "n/a (n<2)"
             # RQS mean
-            rqs_vals = [
-                rqs[m]["RQS"]
-                for m in row["members"].split(";")
-                if m in rqs
-            ]
+            rqs_vals = [rqs[m]["RQS"] for m in row["members"].split(";") if m in rqs]
             rqs_mean = float(np.mean(rqs_vals)) if rqs_vals else float("nan")
             f.write(
                 "\t".join(
@@ -332,9 +328,7 @@ def write_tier_scaling(per_tier, anchors, rqs):
                     _safe_round(
                         float(np.mean([a["R_max"] for a in t1])) if t1 else float("nan"), 4
                     ),
-                    _safe_round(
-                        float(np.mean([a["logN"] for a in t1])) if t1 else float("nan"), 3
-                    ),
+                    _safe_round(float(np.mean([a["logN"] for a in t1])) if t1 else float("nan"), 3),
                     _safe_round(r_t1, 4),
                     _safe_round(slope_t1, 4),
                     _safe_round(intercept_t1, 4),
@@ -379,9 +373,7 @@ def write_tier_shift(per_tier, anchors):
     L2 = [a for a in anchors if a["tier"] == "C3_Upper"]
     L3 = [a for a in anchors if a["tier"] == "C2_Lower"]
     boundary_near_055 = (
-        abs(np.mean([a["R_max"] for a in L2 + L3]) - 0.55) < 0.3
-        if (L2 or L3)
-        else False
+        abs(np.mean([a["R_max"] for a in L2 + L3]) - 0.55) < 0.3 if (L2 or L3) else False
     )
     hdr = [
         "comparison",
@@ -399,29 +391,20 @@ def write_tier_shift(per_tier, anchors):
             "Cybench-style frontier-to-collapse gap (H3 candidate)\n"
         )
         f.write(
-            f"4-tier max-range\t{_safe_round(gap_4tier, 4)}\t"
-            "tier-conditional spread of R_max\n"
+            f"4-tier max-range\t{_safe_round(gap_4tier, 4)}\ttier-conditional spread of R_max\n"
         )
         f.write(
             f"H3 boundary at 0.55?\t{str(boundary_near_055)}\t"
             "is iter125's dip boundary the L2/L3 cut?\n"
         )
+        f.write(f"L1 n\t{sum(1 for a in anchors if a['tier'] == 'C4_High')}\tTier 1 anchor count\n")
         f.write(
-            f"L1 n\t{sum(1 for a in anchors if a['tier'] == 'C4_High')}\t"
-            "Tier 1 anchor count\n"
+            f"L2 n\t{sum(1 for a in anchors if a['tier'] == 'C3_Upper')}\tTier 2 anchor count\n"
         )
         f.write(
-            f"L2 n\t{sum(1 for a in anchors if a['tier'] == 'C3_Upper')}\t"
-            "Tier 2 anchor count\n"
+            f"L3 n\t{sum(1 for a in anchors if a['tier'] == 'C2_Lower')}\tTier 3 anchor count\n"
         )
-        f.write(
-            f"L3 n\t{sum(1 for a in anchors if a['tier'] == 'C2_Lower')}\t"
-            "Tier 3 anchor count\n"
-        )
-        f.write(
-            f"L4 n\t{sum(1 for a in anchors if a['tier'] == 'C1_Low')}\t"
-            "Tier 4 anchor count\n"
-        )
+        f.write(f"L4 n\t{sum(1 for a in anchors if a['tier'] == 'C1_Low')}\tTier 4 anchor count\n")
     return path, gap_2tier, gap_t1_t4, gap_4tier
 
 
@@ -458,9 +441,7 @@ def main():
     n_t3 = sum(1 for a in anchors if a["tier"] == "C2_Lower")
     n_t4 = sum(1 for a in anchors if a["tier"] == "C1_Low")
     h2_decisive = (
-        not math.isnan(r_t1)
-        and not math.isnan(r_global)
-        and abs(r_t1) > abs(r_global) + 0.10
+        not math.isnan(r_t1) and not math.isnan(r_global) and abs(r_t1) > abs(r_global) + 0.10
     )
     h3_decisive = gap_t1_t4 > 0.5  # any front-vs-collapse gap > 0.5 is decisive at n=5
     h1_decisive = False  # descriptive bins do not establish scaling significance
@@ -491,10 +472,7 @@ def main():
         "hypotheses": {
             "H1_within_tier_scaling_signal": h1_decisive,
             "H2_tier_frontier_exceeds_global": h2_decisive,
-            "H3_bimodality_is_L2_L3_cut": (
-                gap_t1_t4 > 0.5
-                and abs(gap_t1_t4 - gap_2) < 0.15
-            ),
+            "H3_bimodality_is_L2_L3_cut": (gap_t1_t4 > 0.5 and abs(gap_t1_t4 - gap_2) < 0.15),
         },
         "frontier_synthesis": "Fixed descriptive capability bands on five anchors; no confirmatory scaling or difficulty-tier claim. Within-band estimates with fewer than three anchors are NOT_ESTIMABLE.",
         "evidence_paths": {

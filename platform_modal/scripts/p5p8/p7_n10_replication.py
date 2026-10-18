@@ -18,6 +18,7 @@ Outputs (all in platform_hybrid/experiments/results/p5p8/):
   p7_n10_replication_summary.json — aggregates + bootstrap CIs + Pareto frontier
   p7_n10_contrast.tsv          — per-step contrast-restoration predictions
 """
+
 import json
 import math
 import random
@@ -27,13 +28,14 @@ from pathlib import Path
 
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
 from _paths import REPO_ROOT
+
 WORK = REPO_ROOT
 N10 = WORK / "platform_hybrid/experiments/results/n10_seed_expansion"
 OUT = WORK / "platform_hybrid/experiments/results/p5p8/corrected-review20-v2"
 
 N10_SEEDS = [42, 179, 316, 453, 590]
-G_BASE = 8                       # N10 base group size (all 5 seeds)
-G_DBL = 16                       # candidate doubled G
+G_BASE = 8  # N10 base group size (all 5 seeds)
+G_DBL = 16  # candidate doubled G
 BOOT_N = 2000
 RNG_SEED = 20260704
 
@@ -54,17 +56,16 @@ def beta_midrange(k, n, grid_n=512):
     """Beta(k+1, n-k+1) posterior mid-range probability m(k,n)."""
     if k < 0 or k > n or n == 0:
         return 0.0
-    log_norm = (math.lgamma(k + 1) + math.lgamma(n - k + 1)
-                - math.lgamma(n + 2))
+    log_norm = math.lgamma(k + 1) + math.lgamma(n - k + 1) - math.lgamma(n + 2)
     grid = [i / grid_n for i in range(grid_n + 1)]
-    log_pdf = [(k) * math.log(max(x, 1e-12))
-               + (n - k) * math.log(max(1.0 - x, 1e-12))
-               - log_norm for x in grid]
+    log_pdf = [
+        (k) * math.log(max(x, 1e-12)) + (n - k) * math.log(max(1.0 - x, 1e-12)) - log_norm
+        for x in grid
+    ]
     pdf = [math.exp(lp) for lp in log_pdf]
     cum = [0.0]
     for i in range(1, len(pdf)):
-        cum.append(cum[-1] + 0.5 * (pdf[i - 1] + pdf[i])
-                   * (grid[i] - grid[i - 1]))
+        cum.append(cum[-1] + 0.5 * (pdf[i - 1] + pdf[i]) * (grid[i] - grid[i - 1]))
     total = cum[-1] if cum[-1] > 0 else 1.0
     cum = [c / total for c in cum]
     return max(0.0, cum[int(0.95 * grid_n)] - cum[int(0.05 * grid_n)])
@@ -78,6 +79,7 @@ def expected_k_from_reward(reward_mean, G):
 def fit_contrast_regression():
     """Require paired per-seed ZVF contrasts; never substitute accuracy SE."""
     import csv
+
     path = WORK / "platform_hybrid/experiments/results/groupsize_zvf_sweep.tsv"
     if not path.exists():
         raise ValueError("UNAVAILABLE: missing per-seed ZVF calibration")
@@ -87,26 +89,35 @@ def fit_contrast_regression():
             if "seed" not in row:
                 raise ValueError("UNAVAILABLE: calibration lacks seed identity")
             g = int(row["G"])
-            if g not in (8,16): continue
+            if g not in (8, 16):
+                continue
             key = (row["seed"], g)
-            if key in groups: raise ValueError("duplicate seed/group calibration")
+            if key in groups:
+                raise ValueError("duplicate seed/group calibration")
             groups[key] = float(row["mean_zvf"])
             if not math.isfinite(groups[key]) or not 0 <= groups[key] <= 1:
                 raise ValueError("calibration ZVF must be finite and in [0, 1]")
-    seeds = sorted({seed for seed,g in groups if (seed,8) in groups and (seed,16) in groups})
+    seeds = sorted({seed for seed, g in groups if (seed, 8) in groups and (seed, 16) in groups})
     if len(seeds) < 2:
         raise ValueError("UNAVAILABLE: at least two paired ZVF calibration seeds required")
     import statistics
-    differences = [groups[(seed,8)]-groups[(seed,16)] for seed in seeds]
+
+    differences = [groups[(seed, 8)] - groups[(seed, 16)] for seed in seeds]
     delta = statistics.mean(differences)
     se = statistics.stdev(differences) / math.sqrt(len(seeds))
-    return dict(type="paired_seed_zvf_calibration", zvf_g8_emp=statistics.mean(groups[(seed,8)] for seed in seeds),
-                zvf_g16_emp=statistics.mean(groups[(seed,16)] for seed in seeds),
-                delta_zvf_abs=delta, delta_zvf_se=se, delta_zvf_lo=delta-1.96*se,
-                delta_zvf_hi=delta+1.96*se, n_seeds_at_each_g=len(seeds),
-                uncertainty_status="paired_seed_calibration_available", per_seed_differences=differences,
-                calibration_seeds=seeds)
-
+    return dict(
+        type="paired_seed_zvf_calibration",
+        zvf_g8_emp=statistics.mean(groups[(seed, 8)] for seed in seeds),
+        zvf_g16_emp=statistics.mean(groups[(seed, 16)] for seed in seeds),
+        delta_zvf_abs=delta,
+        delta_zvf_se=se,
+        delta_zvf_lo=delta - 1.96 * se,
+        delta_zvf_hi=delta + 1.96 * se,
+        n_seeds_at_each_g=len(seeds),
+        uncertainty_status="paired_seed_calibration_available",
+        per_seed_differences=differences,
+        calibration_seeds=seeds,
+    )
 
 
 TRIAGE_RULE_ID = "zvf_triage_high_tail_ge_v2"
@@ -142,8 +153,9 @@ def bootstrap_restoration(n10, calibration, fires, n_boot=None, seed=None):
         raise ValueError("nonempty trajectory seeds and positive bootstrap count required")
 
     # Cache action decisions, especially the numerical Bayesian integration.
-    trajectories = [(len(rows), [row["zvf"] for row in rows if fires(row)])
-                    for rows in trajectories]
+    trajectories = [
+        (len(rows), [row["zvf"] for row in rows if fires(row)]) for rows in trajectories
+    ]
 
     def evaluate(sample, delta):
         total, count = 0.0, 0
@@ -152,36 +164,51 @@ def bootstrap_restoration(n10, calibration, fires, n_boot=None, seed=None):
             for zvf in selected_zvf:
                 total += zvf - predicted_zvf_after(zvf, delta)
                 count += 1
-        return {"delta_zvf": total / count if count else None,
-                "restoration_total_per_seed": total / len(sample),
-                "restoration_per_step": total / n_steps, "n_fired_steps": count}
+        return {
+            "delta_zvf": total / count if count else None,
+            "restoration_total_per_seed": total / len(sample),
+            "restoration_per_step": total / n_steps,
+            "n_fired_steps": count,
+        }
 
     point = evaluate(trajectories, sum(differences) / len(differences))
     draws = {key: [] for key in ("delta_zvf", "restoration_total_per_seed", "restoration_per_step")}
     rng = random.Random(seed)
     for _ in range(n_boot):
-        delta = sum(differences[rng.randrange(len(differences))]
-                    for _ in differences) / len(differences)
+        delta = sum(differences[rng.randrange(len(differences))] for _ in differences) / len(
+            differences
+        )
         sample = [trajectories[rng.randrange(len(trajectories))] for _ in trajectories]
         result = evaluate(sample, delta)
         for key in draws:
             if result[key] is not None:
                 draws[key].append(result[key])
-    out = {"n_fired_steps": point["n_fired_steps"],
-           "effect_status": "transported_calibration_prediction",
-           "uncertainty_status": "independent_calibration_and_trajectory_seed_bootstrap",
-           "n_boot": n_boot, "n_valid_effect_boot": len(draws["delta_zvf"]),
-           "effect_interval_status": ("unavailable_no_fires" if not draws["delta_zvf"] else
-                                      "conditional_on_nonzero_fires" if len(draws["delta_zvf"]) < n_boot else "defined")}
+    out = {
+        "n_fired_steps": point["n_fired_steps"],
+        "effect_status": "transported_calibration_prediction",
+        "uncertainty_status": "independent_calibration_and_trajectory_seed_bootstrap",
+        "n_boot": n_boot,
+        "n_valid_effect_boot": len(draws["delta_zvf"]),
+        "effect_interval_status": (
+            "unavailable_no_fires"
+            if not draws["delta_zvf"]
+            else "conditional_on_nonzero_fires"
+            if len(draws["delta_zvf"]) < n_boot
+            else "defined"
+        ),
+    }
     for key, values in draws.items():
         values.sort()
         out[f"{key}_mean"] = point[key]
         out[f"{key}_lo"] = values[int(0.025 * len(values))] if values else None
-        out[f"{key}_hi"] = values[min(len(values)-1, int(0.975 * len(values)))] if values else None
+        out[f"{key}_hi"] = (
+            values[min(len(values) - 1, int(0.975 * len(values)))] if values else None
+        )
     return out
 
 
 # -------------------------------------------------------- main simulation ---
+
 
 def main():
     t0 = time.time()
@@ -224,21 +251,27 @@ def main():
             restored_zvf = predicted_zvf_after(r["zvf"], contrast["delta_zvf_abs"])
             # contrast-restoration is the magnitude of zvf reduction
             contrast_restored = r["zvf"] - restored_zvf  # positive
-            contrast_per_step.append({
-                "seed": s, "step": r["step"],
-                "zvf_g8": r["zvf"],
-                "zvf_restored_pred": restored_zvf,
-                "contrast_restored": contrast_restored,
-                "would_fire_triage_0.70": int(triage_fires(r["zvf"], 0.70)),
-                "would_fire_bayes_0.60": int(beta_midrange(
-                    expected_k_from_reward(r["reward"], G_BASE), G_BASE) < 0.60)
-            })
+            contrast_per_step.append(
+                {
+                    "seed": s,
+                    "step": r["step"],
+                    "zvf_g8": r["zvf"],
+                    "zvf_restored_pred": restored_zvf,
+                    "contrast_restored": contrast_restored,
+                    "would_fire_triage_0.70": int(triage_fires(r["zvf"], 0.70)),
+                    "would_fire_bayes_0.60": int(
+                        beta_midrange(expected_k_from_reward(r["reward"], G_BASE), G_BASE) < 0.60
+                    ),
+                }
+            )
 
     OUT.mkdir(parents=True, exist_ok=True)
     # write per-seed table
     with (OUT / "p7_n10_replication.tsv").open("w") as f:
-        f.write("controller\tthreshold\tseed\tn_steps\tfires\tfire_rate\t"
-                "rollouts_used\tcost_ratio\tmean_zvf_at_fire\n")
+        f.write(
+            "controller\tthreshold\tseed\tn_steps\tfires\tfire_rate\t"
+            "rollouts_used\tcost_ratio\tmean_zvf_at_fire\n"
+        )
         for th in triage_thresholds:
             for s in N10_SEEDS:
                 n = len(n10[s])
@@ -249,8 +282,10 @@ def main():
                 rollouts = n * G_BASE + fires * G_BASE
                 baseline = n * G_BASE
                 cost_ratio = rollouts / baseline if baseline else 1.0
-                f.write(f"zvf_triage\t{th}\t{s}\t{n}\t{fires}\t"
-                        f"{fires/n:.4f}\t{rollouts}\t{cost_ratio:.3f}\t{mz:.4f}\n")
+                f.write(
+                    f"zvf_triage\t{th}\t{s}\t{n}\t{fires}\t"
+                    f"{fires / n:.4f}\t{rollouts}\t{cost_ratio:.3f}\t{mz:.4f}\n"
+                )
         for th in bayes_thresholds:
             for s in N10_SEEDS:
                 n = len(n10[s])
@@ -258,11 +293,14 @@ def main():
                 rollouts = n * G_BASE + fires * G_BASE
                 baseline = n * G_BASE
                 cost_ratio = rollouts / baseline if baseline else 1.0
-                f.write(f"bayes_midrange\t{th}\t{s}\t{n}\t{fires}\t"
-                        f"{fires/n:.4f}\t{rollouts}\t{cost_ratio:.3f}\tnan\n")
+                f.write(
+                    f"bayes_midrange\t{th}\t{s}\t{n}\t{fires}\t"
+                    f"{fires / n:.4f}\t{rollouts}\t{cost_ratio:.3f}\tnan\n"
+                )
 
     # ---- aggregates + bootstrap CIs ---------------------------------------
     import random
+
     rng = random.Random(RNG_SEED)
 
     def bootstrap_mean_ci(vals, n_boot=BOOT_N):
@@ -286,7 +324,7 @@ def main():
         "G_base": G_BASE,
         "G_candidate": G_DBL,
         "contrast_restoration_model": contrast,
-        "controllers": {}
+        "controllers": {},
     }
 
     # for Pareto frontier: (controller, threshold) -> mean cost_ratio,
@@ -294,12 +332,16 @@ def main():
     for th in triage_thresholds:
         fires_list = [per_seed_fires[th][s] for s in N10_SEEDS]
         m, lo, hi = bootstrap_mean_ci(fires_list)
-        effect = bootstrap_restoration(n10, contrast,
-                                       lambda row, threshold=th: triage_fires(row["zvf"], threshold),
-                                       n_boot=BOOT_N)
-        cost_ratio_list = [(len(n10[s]) * G_BASE + f * G_BASE)
-                           / (len(n10[s]) * G_BASE)
-                           for s, f in per_seed_fires[th].items()]
+        effect = bootstrap_restoration(
+            n10,
+            contrast,
+            lambda row, threshold=th: triage_fires(row["zvf"], threshold),
+            n_boot=BOOT_N,
+        )
+        cost_ratio_list = [
+            (len(n10[s]) * G_BASE + f * G_BASE) / (len(n10[s]) * G_BASE)
+            for s, f in per_seed_fires[th].items()
+        ]
         cm, clo, chi = bootstrap_mean_ci(cost_ratio_list)
         summary["controllers"][f"zvf_triage_{th}"] = {
             "fires_per_seed_mean": m,
@@ -313,14 +355,19 @@ def main():
     for th in bayes_thresholds:
         fires_list = [per_seed_fires_bayes[th][s] for s in N10_SEEDS]
         m, lo, hi = bootstrap_mean_ci(fires_list)
-        cost_ratio_list = [(len(n10[s]) * G_BASE + f * G_BASE)
-                           / (len(n10[s]) * G_BASE)
-                           for s, f in per_seed_fires_bayes[th].items()]
+        cost_ratio_list = [
+            (len(n10[s]) * G_BASE + f * G_BASE) / (len(n10[s]) * G_BASE)
+            for s, f in per_seed_fires_bayes[th].items()
+        ]
         cm, clo, chi = bootstrap_mean_ci(cost_ratio_list)
         effect = bootstrap_restoration(
-            n10, contrast,
-            lambda row, threshold=th: beta_midrange(expected_k_from_reward(row["reward"], G_BASE), G_BASE) < threshold,
-            n_boot=BOOT_N)
+            n10,
+            contrast,
+            lambda row, threshold=th: (
+                beta_midrange(expected_k_from_reward(row["reward"], G_BASE), G_BASE) < threshold
+            ),
+            n_boot=BOOT_N,
+        )
         summary["controllers"][f"bayes_midrange_{th}"] = {
             "fires_per_seed_mean": m,
             "fires_per_seed_lo": lo,
@@ -339,10 +386,14 @@ def main():
         for other_name, m2 in items:
             if other_name == name:
                 continue
-            if (m2["cost_ratio_mean"]<= m1["cost_ratio_mean"]
-                    and m2["restoration_per_step_mean"] >= m1["restoration_per_step_mean"]
-                    and (m2["cost_ratio_mean"] < m1["cost_ratio_mean"]
-                         or m2["restoration_per_step_mean"] > m1["restoration_per_step_mean"])):
+            if (
+                m2["cost_ratio_mean"] <= m1["cost_ratio_mean"]
+                and m2["restoration_per_step_mean"] >= m1["restoration_per_step_mean"]
+                and (
+                    m2["cost_ratio_mean"] < m1["cost_ratio_mean"]
+                    or m2["restoration_per_step_mean"] > m1["restoration_per_step_mean"]
+                )
+            ):
                 dominated = True
                 break
         if not dominated:
@@ -351,12 +402,16 @@ def main():
 
     # per-step contrast table
     with (OUT / "p7_n10_contrast.tsv").open("w") as f:
-        f.write("seed\tstep\tzvf_g8\tzvf_restored_pred\tcontrast_restored\t"
-                "fire_triage_0.70\tfire_bayes_0.60\n")
+        f.write(
+            "seed\tstep\tzvf_g8\tzvf_restored_pred\tcontrast_restored\t"
+            "fire_triage_0.70\tfire_bayes_0.60\n"
+        )
         for r in contrast_per_step:
-            f.write(f"{r['seed']}\t{r['step']}\t{r['zvf_g8']:.4f}\t"
-                    f"{r['zvf_restored_pred']:.4f}\t{r['contrast_restored']:+.4f}\t"
-                    f"{r['would_fire_triage_0.70']}\t{r['would_fire_bayes_0.60']}\n")
+            f.write(
+                f"{r['seed']}\t{r['step']}\t{r['zvf_g8']:.4f}\t"
+                f"{r['zvf_restored_pred']:.4f}\t{r['contrast_restored']:+.4f}\t"
+                f"{r['would_fire_triage_0.70']}\t{r['would_fire_bayes_0.60']}\n"
+            )
 
     # The legacy scalar N2 reference has neither a replayable rule nor the
     # same horizon. Do not subtract it from the corrected high-tail N10 result.
@@ -364,15 +419,15 @@ def main():
     summary["n10_vs_n2_at_tau_0.70"] = {
         "status": "unavailable_requires_rule_and_horizon_matched_n2_replay",
         "n10_fires_per_seed_mean": summary["controllers"][key_070]["fires_per_seed_mean"],
-        "n2_fires_per_seed_mean": None, "delta_n10_minus_n2": None,
+        "n2_fires_per_seed_mean": None,
+        "delta_n10_minus_n2": None,
     }
 
     with (OUT / "p7_n10_replication_summary.json").open("w") as f:
         json.dump(summary, f, indent=2, default=str)
 
-    print(f"[p7_n10] done in {time.time()-t0:.1f}s", file=sys.stderr)
-    print("[p7_n10] fires/seed at τ=0.70:", summary["controllers"]
-          [key_070]["fires_per_seed_mean"])
+    print(f"[p7_n10] done in {time.time() - t0:.1f}s", file=sys.stderr)
+    print("[p7_n10] fires/seed at τ=0.70:", summary["controllers"][key_070]["fires_per_seed_mean"])
     print("[p7_n10] pareto frontier:", frontier)
 
 

@@ -21,13 +21,13 @@ from __future__ import annotations
 
 import sys as _contract_sys
 from pathlib import Path as _ContractPath
+
 if len(_ContractPath(__file__).resolve().parents) > 3:
     _contract_sys.path.insert(0, str(_ContractPath(__file__).resolve().parents[3]))
 from platform_hybrid.experiments.framework_contracts import content_hash
 
 
 import json
-import sys
 from pathlib import Path
 
 import wandb
@@ -37,8 +37,7 @@ REPO = HERE.parents[2]
 ENTITY = "arvindcr4-pes-university"
 
 EXPNEXT = REPO / "zvf-program" / "experiments-next" / "results"
-MODAL_ART = (HERE.parents[1] / "experiments" / "results" / "modal_registry"
-             / "modal_artifacts")
+MODAL_ART = HERE.parents[1] / "experiments" / "results" / "modal_registry" / "modal_artifacts"
 TRAIN_RESULTS = HERE / "results"
 
 MAX_CONFIG_STR = 200
@@ -64,13 +63,17 @@ def flat_scalars(obj: dict, prefix: str = "", depth: int = 0) -> dict:
 
 def existing_names(api, project):
     """Prefer content IDs; retain names only for legacy records without IDs."""
-    return {r.config.get("source_identity") or ("legacy-name:" + r.name)
-            for r in api.runs(f"{ENTITY}/{project}", per_page=500)}
+    return {
+        r.config.get("source_identity") or ("legacy-name:" + r.name)
+        for r in api.runs(f"{ENTITY}/{project}", per_page=500)
+    }
 
 
-def log_file(project: str, name: str, path: Path, tags: list[str],
-             notes: str, existing: set[str]) -> bool:
+def log_file(
+    project: str, name: str, path: Path, tags: list[str], notes: str, existing: set[str]
+) -> bool:
     import hashlib
+
     source_uri = path.resolve().as_uri()
     source_digest = hashlib.sha256(path.read_bytes()).hexdigest()
     identity = content_hash({"source_uri": source_uri, "sha256": source_digest})
@@ -88,11 +91,19 @@ def log_file(project: str, name: str, path: Path, tags: list[str],
     cfg["source_uri"] = source_uri
     cfg["source_sha256"] = source_digest
     cfg["source_path"] = str(path.relative_to(REPO))
-    run = wandb.init(entity=ENTITY, project=project, name=name, tags=tags,
-                     notes=notes, config=cfg, reinit="create_new",
-                     settings=wandb.Settings(silent=True))
-    numeric = {k: v for k, v in cfg.items() if isinstance(v, (int, float))
-               and not isinstance(v, bool)}
+    run = wandb.init(
+        entity=ENTITY,
+        project=project,
+        name=name,
+        tags=tags,
+        notes=notes,
+        config=cfg,
+        reinit="create_new",
+        settings=wandb.Settings(silent=True),
+    )
+    numeric = {
+        k: v for k, v in cfg.items() if isinstance(v, (int, float)) and not isinstance(v, bool)
+    }
     if numeric:
         run.summary.update(numeric)
     art = wandb.Artifact(name=f"{name}-json", type="result-json")
@@ -118,10 +129,11 @@ def main() -> None:
             continue
         kind = data.get("kind", p.stem.split("_")[0])
         name = p.stem
-        notes = (f"Backfilled from {p.relative_to(REPO)}; kind={kind}; "
-                 "Tinker sampling experiments (experiments-next suite)")
-        total += log_file(proj, name, p, ["backfill", "tinker", kind], notes,
-                          seen)
+        notes = (
+            f"Backfilled from {p.relative_to(REPO)}; kind={kind}; "
+            "Tinker sampling experiments (experiments-next suite)"
+        )
+        total += log_file(proj, name, p, ["backfill", "tinker", kind], notes, seen)
 
     # 2. modal artifacts
     proj = "modal-open-stack"
@@ -134,8 +146,7 @@ def main() -> None:
             name = f"{volume}--{name}"[:120]
             modal_ref = f"modal://{volume}/{'/'.join(rel.parts[1:])}"
             notes = f"Backfilled from {modal_ref} (open-stack Modal artifact)"
-            total += log_file(proj, name, p,
-                              ["backfill", "modal", volume], notes, seen)
+            total += log_file(proj, name, p, ["backfill", "modal", volume], notes, seen)
 
     # 3. Tinker training runs (live_zvf_probe outputs; no native W&B logging)
     proj = "zvf-training"
@@ -151,8 +162,7 @@ def main() -> None:
             if not isinstance(data, dict):
                 continue  # legacy batch files are top-level lists; skip
             if data.get("status") not in ("completed", "complete"):
-                print(f"[skip] {p.name} status={data.get('status')!r}",
-                      flush=True)
+                print(f"[skip] {p.name} status={data.get('status')!r}", flush=True)
                 continue
             name = p.stem
             tags = ["backfill", "tinker-train"]
@@ -160,8 +170,7 @@ def main() -> None:
                 tags.append("drgrpo")
             elif "grpo" in name:
                 tags.append("grpo")
-            notes = (f"Backfilled from {p.relative_to(REPO)}; "
-                     "live_zvf_probe training run (P4/E-R2b)")
+            notes = f"Backfilled from {p.relative_to(REPO)}; live_zvf_probe training run (P4/E-R2b)"
             total += log_file(proj, name, p, tags, notes, seen)
 
     print(f"done: {total} new runs logged", flush=True)

@@ -29,11 +29,13 @@ platform_hybrid/experiments/results/p5p8/figures/p8_decision_regret.{png,pdf}
 
 Stdlib + numpy + pandas + xgboost + sklearn + matplotlib. <=300 lines.
 """
+
 import json
 
 import numpy as np
 import pandas as pd
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from _p8_common import (
@@ -68,9 +70,9 @@ FEATS = {
 
 def argmin_cost(scores, y, c_inv, L, c_sense):
     from _review_policy import optimal_threshold
+
     r = optimal_threshold(scores, y, c_inv, L, c_sense)
     return r["tau"], r["cost_per_dec"], r["tp"], r["fp"], r["fn"]
-
 
 
 def oracle_cost_per_dec(y, c_inv, c_sense):
@@ -87,7 +89,9 @@ def cell_eval(scores, y, c_inv, L):
     """Per cell: cost-oracle lower bound + per-tree regret at tau*."""
     n = len(y)
     pos = int(y.sum())
-    cell_oracle_per_dec = oracle_cost_per_dec(y, c_inv, C_SENSE) if False else oracle_cost_per_dec(y, c_inv, 0.0)
+    cell_oracle_per_dec = (
+        oracle_cost_per_dec(y, c_inv, C_SENSE) if False else oracle_cost_per_dec(y, c_inv, 0.0)
+    )
     # Oracle is identical for all three trees in expectation (the LLM sensor's
     # c_sense is paid regardless of decision), so we report one oracle value.
     rows = []
@@ -96,23 +100,25 @@ def cell_eval(scores, y, c_inv, L):
         oracle = oracle_cost_per_dec(y, c_inv, c_sense)
         tau, cost_actual, tp, fp, fn = argmin_cost(scores[name], y, c_inv, L, c_sense)
         regret = cost_actual - oracle
-        rows.append({
-            "model": name,
-            "C_inv": c_inv,
-            "L": L,
-            "rho": L / c_inv,
-            "n_test": n,
-            "n_pos_test": pos,
-            "tau_star": tau,
-            "cost_actual_per_dec": cost_actual,
-            "cost_oracle_per_dec": oracle,
-            "regret_per_dec": regret,
-            "regret_pct_of_oracle": (regret / oracle * 100.0) if oracle > 0 else float("nan"),
-            "tp_at_star": tp,
-            "fp_at_star": fp,
-            "fn_at_star": fn,
-            "c_sense": c_sense,
-        })
+        rows.append(
+            {
+                "model": name,
+                "C_inv": c_inv,
+                "L": L,
+                "rho": L / c_inv,
+                "n_test": n,
+                "n_pos_test": pos,
+                "tau_star": tau,
+                "cost_actual_per_dec": cost_actual,
+                "cost_oracle_per_dec": oracle,
+                "regret_per_dec": regret,
+                "regret_pct_of_oracle": (regret / oracle * 100.0) if oracle > 0 else float("nan"),
+                "tp_at_star": tp,
+                "fp_at_star": fp,
+                "fn_at_star": fn,
+                "c_sense": c_sense,
+            }
+        )
     return rows
 
 
@@ -169,39 +175,44 @@ def boot_grid(scores, y):
             sensor_closure_fs = raw_regrets - fs_regrets  # >0 means sensor-only helps
             # sensor_full_ceiling: how much COULD any sensor close? (raw regret - 0)
             sensor_ceiling = raw_regrets
-            rows.append({
-                "C_inv": c_inv,
-                "L": L,
-                "rho": L / c_inv,
-                # 20raw regret
-                "regret_20raw_mean": float(raw_regrets.mean()),
-                "regret_20raw_ci_low": float(np.percentile(raw_regrets, 2.5)),
-                "regret_20raw_ci_high": float(np.percentile(raw_regrets, 97.5)),
-                # 24full regret
-                "regret_24full_mean": float(full_regrets.mean()),
-                "regret_24full_ci_low": float(np.percentile(full_regrets, 2.5)),
-                "regret_24full_ci_high": float(np.percentile(full_regrets, 97.5)),
-                # 4sensor regret
-                "regret_4sensor_mean": float(fs_regrets.mean()),
-                "regret_4sensor_ci_low": float(np.percentile(fs_regrets, 2.5)),
-                "regret_4sensor_ci_high": float(np.percentile(fs_regrets, 97.5)),
-                # sensor_closure = how much 24full closes 20raw's regret
-                "sensor_closure_24full_mean": float(sensor_closure.mean()),
-                "sensor_closure_24full_ci_low": float(np.percentile(sensor_closure, 2.5)),
-                "sensor_closure_24full_ci_high": float(np.percentile(sensor_closure, 97.5)),
-                "sensor_closure_24full_excl0": bool(np.percentile(sensor_closure, 2.5) > 0),
-                # sensor_full_ceiling = 20raw's regret (max achievable)
-                "sensor_full_ceiling_mean": float(sensor_ceiling.mean()),
-                "sensor_full_ceiling_ci_low": float(np.percentile(sensor_ceiling, 2.5)),
-                "sensor_full_ceiling_ci_high": float(np.percentile(sensor_ceiling, 97.5)),
-                "fraction_captured_mean": float(
-                    (sensor_closure / np.maximum(sensor_ceiling, 1e-12)).mean()),
-                "fraction_captured_ci_low": float(
-                    np.percentile(sensor_closure / np.maximum(sensor_ceiling, 1e-12), 2.5)),
-                "fraction_captured_ci_high": float(
-                    np.percentile(sensor_closure / np.maximum(sensor_ceiling, 1e-12), 97.5)),
-                "n_boot_used": len(raw_regrets),
-            })
+            rows.append(
+                {
+                    "C_inv": c_inv,
+                    "L": L,
+                    "rho": L / c_inv,
+                    # 20raw regret
+                    "regret_20raw_mean": float(raw_regrets.mean()),
+                    "regret_20raw_ci_low": float(np.percentile(raw_regrets, 2.5)),
+                    "regret_20raw_ci_high": float(np.percentile(raw_regrets, 97.5)),
+                    # 24full regret
+                    "regret_24full_mean": float(full_regrets.mean()),
+                    "regret_24full_ci_low": float(np.percentile(full_regrets, 2.5)),
+                    "regret_24full_ci_high": float(np.percentile(full_regrets, 97.5)),
+                    # 4sensor regret
+                    "regret_4sensor_mean": float(fs_regrets.mean()),
+                    "regret_4sensor_ci_low": float(np.percentile(fs_regrets, 2.5)),
+                    "regret_4sensor_ci_high": float(np.percentile(fs_regrets, 97.5)),
+                    # sensor_closure = how much 24full closes 20raw's regret
+                    "sensor_closure_24full_mean": float(sensor_closure.mean()),
+                    "sensor_closure_24full_ci_low": float(np.percentile(sensor_closure, 2.5)),
+                    "sensor_closure_24full_ci_high": float(np.percentile(sensor_closure, 97.5)),
+                    "sensor_closure_24full_excl0": bool(np.percentile(sensor_closure, 2.5) > 0),
+                    # sensor_full_ceiling = 20raw's regret (max achievable)
+                    "sensor_full_ceiling_mean": float(sensor_ceiling.mean()),
+                    "sensor_full_ceiling_ci_low": float(np.percentile(sensor_ceiling, 2.5)),
+                    "sensor_full_ceiling_ci_high": float(np.percentile(sensor_ceiling, 97.5)),
+                    "fraction_captured_mean": float(
+                        (sensor_closure / np.maximum(sensor_ceiling, 1e-12)).mean()
+                    ),
+                    "fraction_captured_ci_low": float(
+                        np.percentile(sensor_closure / np.maximum(sensor_ceiling, 1e-12), 2.5)
+                    ),
+                    "fraction_captured_ci_high": float(
+                        np.percentile(sensor_closure / np.maximum(sensor_ceiling, 1e-12), 97.5)
+                    ),
+                    "n_boot_used": len(raw_regrets),
+                }
+            )
     return rows
 
 
@@ -226,8 +237,12 @@ def regret_plot_payloads(grid_rows):
     closure = raw - full
     fraction = np.full_like(raw, np.nan)
     np.divide(closure, raw, out=fraction, where=raw > 0)
-    return {"raw_regret": raw, "full_regret": full,
-            "sensor_closure": closure, "fraction_captured": fraction}
+    return {
+        "raw_regret": raw,
+        "full_regret": full,
+        "sensor_closure": closure,
+        "fraction_captured": fraction,
+    }
 
 
 def plot_grid(grid_rows, out_png, out_pdf):
@@ -240,7 +255,7 @@ def plot_grid(grid_rows, out_png, out_pdf):
         ("fraction_captured", "Fraction of raw regret ceiling captured (dimensionless)"),
     ]
     payloads = regret_plot_payloads(grid_rows)
-    for ax, (panel_id, title) in zip(axes.flat, panels):
+    for ax, (panel_id, title) in zip(axes.flat, panels, strict=False):
         z = payloads[panel_id]
         im = ax.imshow(z, aspect="auto", origin="lower", cmap="viridis")
         ax.set_title(title)
@@ -253,8 +268,17 @@ def plot_grid(grid_rows, out_png, out_pdf):
         for i in range(z.shape[0]):
             for j in range(z.shape[1]):
                 if np.isfinite(z[i, j]):
-                    ax.text(j, i, f"{z[i, j]:.3f}", ha="center", va="center", fontsize=7,
-                            color="white" if z[i, j] > (np.nanmean(z) if np.any(np.isfinite(z)) else 0) else "black")
+                    ax.text(
+                        j,
+                        i,
+                        f"{z[i, j]:.3f}",
+                        ha="center",
+                        va="center",
+                        fontsize=7,
+                        color="white"
+                        if z[i, j] > (np.nanmean(z) if np.any(np.isfinite(z)) else 0)
+                        else "black",
+                    )
         fig.colorbar(im, ax=ax, fraction=0.046)
     plt.tight_layout()
     plt.savefig(out_png, dpi=150)
@@ -270,22 +294,24 @@ def main():
     scores, y = load_split(TRAIN, TEST, FEATS, TREE_SEED)
     n = len(y)
     pos = int(y.sum())
-    print(f"test n = {n}, positives = {pos} ({y.mean()*100:.3f}%)")
+    print(f"test n = {n}, positives = {pos} ({y.mean() * 100:.3f}%)")
     print("\nEvaluating decision regret on (C_inv x L) grid ...")
     grid_rows = grid_eval(scores, y)
     pd.DataFrame(grid_rows).to_csv(OUT / "p8_decision_regret.tsv", sep="\t", index=False)
-    print(f"Wrote {OUT/'p8_decision_regret.tsv'} ({len(grid_rows)} cells)")
+    print(f"Wrote {OUT / 'p8_decision_regret.tsv'} ({len(grid_rows)} cells)")
     print("\nPaired bootstrap (B=1000, over test rows) ...")
     boot_rows = boot_grid(scores, y)
     pd.DataFrame(boot_rows).to_csv(OUT / "p8_decision_regret_boot.tsv", sep="\t", index=False)
-    print(f"Wrote {OUT/'p8_decision_regret_boot.tsv'} ({len(boot_rows)} cells)")
+    print(f"Wrote {OUT / 'p8_decision_regret_boot.tsv'} ({len(boot_rows)} cells)")
     plot_grid(grid_rows, FIG / "p8_decision_regret.png", FIG / "p8_decision_regret.pdf")
+
     # Build the canonical-cell summary (C_inv=0.50, L=100 -- same as iter-48/59)
     def at_canonical(rows, model):
         for r in rows:
             if r["model"] == model and r["C_inv"] == 0.50 and r["L"] == 100.0:
                 return r
         return None
+
     canon = {m: at_canonical(grid_rows, m) for m in MODELS}
     canon_boot = {r["rho"]: r for r in boot_rows if abs(r["rho"] - 200) < 1e-9}  # 100/0.5 = 200
     summary = {
@@ -317,28 +343,36 @@ def main():
     }
     with open(OUT / "p8_decision_regret_summary.json", "w") as f:
         json.dump(summary, f, indent=2)
-    print(f"Wrote {OUT/'p8_decision_regret_summary.json'}")
+    print(f"Wrote {OUT / 'p8_decision_regret_summary.json'}")
     print("\n=== Headline (canonical $0.50 / $100) ===")
     for m in MODELS:
         c = canon[m]
         if c is None:
             continue
-        print(f"  {m:12s}  oracle=${c['cost_oracle_per_dec']:.4f}/dec   "
-              f"actual=${c['cost_actual_per_dec']:.4f}/dec   "
-              f"regret=${c['regret_per_dec']:.4f}/dec "
-              f"({c['regret_pct_of_oracle']:.1f}% of oracle)   "
-              f"tau*={c['tau_star']:.4f}")
-    print(f"\nCells where adding the sensor (24full) closes 20raw's regret with CI excluding 0 "
-          f"(positive sensor-closure): "
-          f"{summary['cells_with_sensor_closure_24full_ci_excl0_positive']}/{len(boot_rows)}")
+        print(
+            f"  {m:12s}  oracle=${c['cost_oracle_per_dec']:.4f}/dec   "
+            f"actual=${c['cost_actual_per_dec']:.4f}/dec   "
+            f"regret=${c['regret_per_dec']:.4f}/dec "
+            f"({c['regret_pct_of_oracle']:.1f}% of oracle)   "
+            f"tau*={c['tau_star']:.4f}"
+        )
+    print(
+        f"\nCells where adding the sensor (24full) closes 20raw's regret with CI excluding 0 "
+        f"(positive sensor-closure): "
+        f"{summary['cells_with_sensor_closure_24full_ci_excl0_positive']}/{len(boot_rows)}"
+    )
     # Headline: oracle-vs-actual ratio at canonical cell
     print(f"\nOracle vs actual at canonical cell (C_inv=$0.50, L=$100):")
-    print(f"  20raw: oracle=${canon['XGB-20raw']['cost_oracle_per_dec']:.4f}/dec   "
-          f"actual=${canon['XGB-20raw']['cost_actual_per_dec']:.4f}/dec   "
-          f"ratio={canon['XGB-20raw']['cost_actual_per_dec']/canon['XGB-20raw']['cost_oracle_per_dec']:.2f}x")
-    print(f"  24full: oracle=${canon['XGB-24full']['cost_oracle_per_dec']:.4f}/dec   "
-          f"actual=${canon['XGB-24full']['cost_actual_per_dec']:.4f}/dec   "
-          f"ratio={canon['XGB-24full']['cost_actual_per_dec']/canon['XGB-24full']['cost_oracle_per_dec']:.2f}x")
+    print(
+        f"  20raw: oracle=${canon['XGB-20raw']['cost_oracle_per_dec']:.4f}/dec   "
+        f"actual=${canon['XGB-20raw']['cost_actual_per_dec']:.4f}/dec   "
+        f"ratio={canon['XGB-20raw']['cost_actual_per_dec'] / canon['XGB-20raw']['cost_oracle_per_dec']:.2f}x"
+    )
+    print(
+        f"  24full: oracle=${canon['XGB-24full']['cost_oracle_per_dec']:.4f}/dec   "
+        f"actual=${canon['XGB-24full']['cost_actual_per_dec']:.4f}/dec   "
+        f"ratio={canon['XGB-24full']['cost_actual_per_dec'] / canon['XGB-24full']['cost_oracle_per_dec']:.2f}x"
+    )
 
 
 if __name__ == "__main__":

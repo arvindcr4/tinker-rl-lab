@@ -58,14 +58,17 @@ Outputs:
 
 Stdlib only; deterministic (seed=20260706); B=2000 bootstrap CIs.
 """
+
 from __future__ import annotations
 import csv, json, os, random, statistics
 
 import sys
 from pathlib import Path
+
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
-from _p5p7_common import load_tensors_b  # noqa: E402
+from _paths import REPO_ROOT
+from _p5p7_common import load_tensors_b
+
 WORKTREE = str(REPO_ROOT)
 DATA_DIR = os.path.join(WORKTREE, "platform_hybrid/experiments/results/n2_reward_tensor_resume")
 OUT_DIR = os.path.join(WORKTREE, "platform_hybrid/experiments/results/p5p8/corrected-review19-v2")
@@ -97,7 +100,7 @@ def _bci(v, stat_fn=statistics.mean, rng=None):
         idx = [rng.randrange(n) for _ in range(n)]
         boots.append(stat_fn([v[i] for i in idx]))
     boots.sort()
-    return (pt, boots[int(ALPHA/2*B)], boots[int((1-ALPHA/2)*B)], B)
+    return (pt, boots[int(ALPHA / 2 * B)], boots[int((1 - ALPHA / 2) * B)], B)
 
 
 def expected_zvf(p_hats, g):
@@ -109,7 +112,7 @@ def expected_zvf(p_hats, g):
         return float("nan")
     z = 0.0
     for p in p_hats:
-        z += (p**g) + ((1.0 - p)**g)
+        z += (p**g) + ((1.0 - p) ** g)
     return z / len(p_hats)
 
 
@@ -136,10 +139,9 @@ def choose_g_hyb(step_zvf, g_n_grid, p_hats=None):
         raise ValueError("prompt probability model required to evaluate restoration")
     baseline = expected_contrast(p_hats, G_BASE)
     for g in sorted(g_n_grid):
-        if g >= G_BASE and expected_contrast(p_hats, g) - baseline >= .005:
+        if g >= G_BASE and expected_contrast(p_hats, g) - baseline >= 0.005:
             return g
     return G_BASE
-
 
 
 def simulate_trajectory(method_tensors, policy, g_n_grid=()):
@@ -242,15 +244,20 @@ def main():
             metrics_by_policy[policy] = met
 
             # per-step rows
-            for t, (g_t, z_t) in enumerate(zip(g_seq, proj_zvf_seq)):
+            for t, (g_t, z_t) in enumerate(zip(g_seq, proj_zvf_seq, strict=False)):
                 obs_z = tensors[m][t].get("zvf", 0.0)
-                per_step_rows.append({
-                    "method": m, "policy": policy, "step": t,
-                    "G_t": g_t, "cost_t": g_t / G_BASE,
-                    "obs_zvf": round(obs_z, 4),
-                    "proj_zvf": round(z_t, 4),
-                    "proj_contrast": round(1.0 - z_t, 4),
-                })
+                per_step_rows.append(
+                    {
+                        "method": m,
+                        "policy": policy,
+                        "step": t,
+                        "G_t": g_t,
+                        "cost_t": g_t / G_BASE,
+                        "obs_zvf": round(obs_z, 4),
+                        "proj_zvf": round(z_t, 4),
+                        "proj_contrast": round(1.0 - z_t, 4),
+                    }
+                )
 
         # per-method aggregate rows (4 policies × 4 methods = 16 rows)
         for policy in POLICIES:
@@ -258,7 +265,8 @@ def main():
                 continue
             met = metrics_by_policy[policy]
             row = {
-                "method": m, "policy": policy,
+                "method": m,
+                "policy": policy,
                 "mean_proj_zvf": round(met["mean_zvf"], 4),
                 "mean_proj_contrast": round(met["mean_contrast"], 4),
                 "mean_cost": round(met["mean_cost"], 4),
@@ -279,76 +287,125 @@ def main():
             ag8_g, ag8_z, ag8_p = traj_by_policy["AG8"]
             base_per_step_contrast = [1.0 - z for z in base_z]
             ag8_per_step_contrast = [1.0 - z for z in ag8_z]
-            diff = [a - b for a, b in zip(ag8_per_step_contrast, base_per_step_contrast)]
+            diff = [
+                a - b for a, b in zip(ag8_per_step_contrast, base_per_step_contrast, strict=False)
+            ]
             pt, lo, hi, _ = _bci(diff, statistics.mean, rng)
-            ci_rows.append({
-"method": m, "comparison": "AG8_minus_BASE_mean_contrast",
-                "point": round(pt, 4), "ci_lo": round(lo, 4), "ci_hi": round(hi, 4),
-                "n": len(diff), "B": B, "excl_zero": int(lo > 0.0),
-            })
+            ci_rows.append(
+                {
+                    "method": m,
+                    "comparison": "AG8_minus_BASE_mean_contrast",
+                    "point": round(pt, 4),
+                    "ci_lo": round(lo, 4),
+                    "ci_hi": round(hi, 4),
+                    "n": len(diff),
+                    "B": B,
+                    "excl_zero": int(lo > 0.0),
+                }
+            )
         if "AG8" in metrics_by_policy and "STATIC16" in metrics_by_policy:
             ag8_g, ag8_z, _ = traj_by_policy["AG8"]
             s16_g, s16_z, _ = traj_by_policy["STATIC16"]
             ag8_per_step_contrast = [1.0 - z for z in ag8_z]
             s16_per_step_contrast = [1.0 - z for z in s16_z]
-            diff_cost = [(s / G_BASE) - (a / G_BASE)
-                         for a, s in zip(ag8_g, s16_g)]
+            diff_cost = [(s / G_BASE) - (a / G_BASE) for a, s in zip(ag8_g, s16_g, strict=False)]
             pt, lo, hi, _ = _bci(diff_cost, statistics.mean, rng)
-            ci_rows.append({
-                "method": m, "comparison": "AG8_minus_STATIC16_mean_cost",
-                "point": round(pt, 4), "ci_lo": round(lo, 4), "ci_hi": round(hi, 4),
-                "n": len(diff_cost), "B": B, "excl_zero": int(lo > 0.0),
-                "note": "POS = AG8 cheaper than STATIC16",
-            })
+            ci_rows.append(
+                {
+                    "method": m,
+                    "comparison": "AG8_minus_STATIC16_mean_cost",
+                    "point": round(pt, 4),
+                    "ci_lo": round(lo, 4),
+                    "ci_hi": round(hi, 4),
+                    "n": len(diff_cost),
+                    "B": B,
+                    "excl_zero": int(lo > 0.0),
+                    "note": "POS = AG8 cheaper than STATIC16",
+                }
+            )
         if "AG_HYB" in metrics_by_policy and "AG8" in metrics_by_policy:
             hyb_g, hyb_z, hyb_p = traj_by_policy["AG_HYB"]
             ag8_g, ag8_z, _ = traj_by_policy["AG8"]
             hyb_per_step_contrast = [1.0 - z for z in hyb_z]
             ag8_per_step_contrast = [1.0 - z for z in ag8_z]
-            diff = [h - a for h, a in zip(hyb_per_step_contrast, ag8_per_step_contrast)]
+            diff = [
+                h - a for h, a in zip(hyb_per_step_contrast, ag8_per_step_contrast, strict=False)
+            ]
             pt, lo, hi, _ = _bci(diff, statistics.mean, rng)
-            ci_rows.append({
-                "method": m, "comparison": "HYB_minus_AG8_mean_contrast",
-                "point": round(pt, 4), "ci_lo": round(lo, 4), "ci_hi": round(hi, 4),
-                "n": len(diff), "B": B, "excl_zero": int(lo > 0.0),
-            })
+            ci_rows.append(
+                {
+                    "method": m,
+                    "comparison": "HYB_minus_AG8_mean_contrast",
+                    "point": round(pt, 4),
+                    "ci_lo": round(lo, 4),
+                    "ci_hi": round(hi, 4),
+                    "n": len(diff),
+                    "B": B,
+                    "excl_zero": int(lo > 0.0),
+                }
+            )
         if "AG8" in metrics_by_policy and "STATIC16" in metrics_by_policy:
             ag8_g, ag8_z, _ = traj_by_policy["AG8"]
             s16_g, s16_z, _ = traj_by_policy["STATIC16"]
             ag8_contrast = [1.0 - z for z in ag8_z]
             s16_contrast = [1.0 - z for z in s16_z]
             # net_benefit per-step = contrast_diff - 0.5 * cost_infl
-            nb = [(a - s) - 0.5 * ((g_a / G_BASE) - (g_s / G_BASE))
-                  for a, s, g_a, g_s in zip(ag8_contrast, s16_contrast,
-                                            ag8_g, s16_g)]
+            nb = [
+                (a - s) - 0.5 * ((g_a / G_BASE) - (g_s / G_BASE))
+                for a, s, g_a, g_s in zip(ag8_contrast, s16_contrast, ag8_g, s16_g, strict=False)
+            ]
             pt, lo, hi, _ = _bci(nb, statistics.mean, rng)
-            ci_rows.append({
-                "method": m, "comparison": "AG8_minus_STATIC16_net_benefit",
-                "point": round(pt, 4), "ci_lo": round(lo, 4), "ci_hi": round(hi, 4),
-                "n": len(nb), "B": B, "excl_zero": int(lo > 0.0),
-            })
+            ci_rows.append(
+                {
+                    "method": m,
+                    "comparison": "AG8_minus_STATIC16_net_benefit",
+                    "point": round(pt, 4),
+                    "ci_lo": round(lo, 4),
+                    "ci_hi": round(hi, 4),
+                    "n": len(nb),
+                    "B": B,
+                    "excl_zero": int(lo > 0.0),
+                }
+            )
 
     # write outputs
-    fields_step = ["method", "policy", "step", "G_t", "cost_t",
-                   "obs_zvf", "proj_zvf", "proj_contrast"]
+    fields_step = [
+        "method",
+        "policy",
+        "step",
+        "G_t",
+        "cost_t",
+        "obs_zvf",
+        "proj_zvf",
+        "proj_contrast",
+    ]
     with open(os.path.join(OUT_DIR, "p7_iter199_per_step.tsv"), "w") as fh:
         w = csv.DictWriter(fh, fieldnames=fields_step, delimiter="\t")
         w.writeheader()
         for r in per_step_rows:
             w.writerow(r)
 
-    fields_method = ["method", "policy", "mean_proj_zvf", "mean_proj_contrast",
-                     "mean_cost", "cumulative_contrast", "cumulative_cost",
-                     "restored_vs_base", "restored_vs_static16",
-                     "net_benefit_vs_static16", "n_fire_steps", "n_total_steps"]
+    fields_method = [
+        "method",
+        "policy",
+        "mean_proj_zvf",
+        "mean_proj_contrast",
+        "mean_cost",
+        "cumulative_contrast",
+        "cumulative_cost",
+        "restored_vs_base",
+        "restored_vs_static16",
+        "net_benefit_vs_static16",
+        "n_fire_steps",
+        "n_total_steps",
+    ]
     with open(os.path.join(OUT_DIR, "p7_iter199_per_method.tsv"), "w") as fh:
         w = csv.DictWriter(fh, fieldnames=fields_method, delimiter="\t")
         w.writeheader()
         for r in per_method_rows:
             w.writerow(r)
 
-    fields_ci = ["method", "comparison", "point", "ci_lo", "ci_hi",
-                 "n", "B", "excl_zero", "note"]
+    fields_ci = ["method", "comparison", "point", "ci_lo", "ci_hi", "n", "B", "excl_zero", "note"]
     # Build JSON summary
     summary = {
         "ts": "2026-07-06",
@@ -373,20 +430,28 @@ def main():
             "H5_AG_HYB_more_contrast_than_AG8_4of4": 0,
         },
         "per_method": [
-            {"method": r["method"], "policy": r["policy"],
-             "mean_proj_zvf": r["mean_proj_zvf"],
-             "mean_proj_contrast": r["mean_proj_contrast"],
-             "mean_cost": r["mean_cost"],
-             "restored_vs_base": r["restored_vs_base"],
-             "restored_vs_static16": r["restored_vs_static16"],
-             "net_benefit_vs_static16": r["net_benefit_vs_static16"],
-             "n_fire_steps": r["n_fire_steps"]}
+            {
+                "method": r["method"],
+                "policy": r["policy"],
+                "mean_proj_zvf": r["mean_proj_zvf"],
+                "mean_proj_contrast": r["mean_proj_contrast"],
+                "mean_cost": r["mean_cost"],
+                "restored_vs_base": r["restored_vs_base"],
+                "restored_vs_static16": r["restored_vs_static16"],
+                "net_benefit_vs_static16": r["net_benefit_vs_static16"],
+                "n_fire_steps": r["n_fire_steps"],
+            }
             for r in per_method_rows
         ],
         "cis": [
-            {"method": r["method"], "comparison": r["comparison"],
-             "point": r["point"], "ci_lo": r["ci_lo"],
-             "ci_hi": r["ci_hi"], "excl_zero": r["excl_zero"]}
+            {
+                "method": r["method"],
+                "comparison": r["comparison"],
+                "point": r["point"],
+                "ci_lo": r["ci_lo"],
+                "ci_hi": r["ci_hi"],
+                "excl_zero": r["excl_zero"],
+            }
             for r in ci_rows
         ],
     }
@@ -399,47 +464,58 @@ def main():
         if ag8_res and base_res:
             _, ag8_z, _ = ag8_res
             _, base_z, _ = base_res
-            diff_zvf = [a - b for a, b in zip(ag8_z, base_z)]
+            diff_zvf = [a - b for a, b in zip(ag8_z, base_z, strict=False)]
             pt, lo, hi, _ = _bci(diff_zvf, statistics.mean, rng)
-            ci_rows.append({
-                "method": m, "comparison": "AG8_minus_BASE_mean_zvf",
-                "point": round(pt, 4), "ci_lo": round(lo, 4), "ci_hi": round(hi, 4),
-                "n": len(diff_zvf), "B": B, "excl_zero": int(hi < 0.0),
-                "note": "NEG = AG8 lowers mean zvf (expected)",
-            })
+            ci_rows.append(
+                {
+                    "method": m,
+                    "comparison": "AG8_minus_BASE_mean_zvf",
+                    "point": round(pt, 4),
+                    "ci_lo": round(lo, 4),
+                    "ci_hi": round(hi, 4),
+                    "n": len(diff_zvf),
+                    "B": B,
+                    "excl_zero": int(hi < 0.0),
+                    "note": "NEG = AG8 lowers mean zvf (expected)",
+                }
+            )
 
     # H1 — AG8 lowers zvf vs BASE (want CI_hi < 0)
-    ag8_lowers_zvf = [r for r in ci_rows
-                      if r["comparison"] == "AG8_minus_BASE_mean_zvf"]
-    summary["verdicts"]["H1_AG8_lowers_mean_zvf_vs_BASE_4of4"] = \
-        sum(1 for r in ag8_lowers_zvf if r["ci_hi"] < 0.0)
+    ag8_lowers_zvf = [r for r in ci_rows if r["comparison"] == "AG8_minus_BASE_mean_zvf"]
+    summary["verdicts"]["H1_AG8_lowers_mean_zvf_vs_BASE_4of4"] = sum(
+        1 for r in ag8_lowers_zvf if r["ci_hi"] < 0.0
+    )
 
     # H2 — AG8 raises mean contrast vs BASE (want CI_lo > 0)
-    ag8_raises_contrast = [r for r in ci_rows
-                           if r["comparison"] == "AG8_minus_BASE_mean_contrast"]
-    summary["verdicts"]["H2_AG8_raises_mean_contrast_vs_BASE_4of4"] = \
-        sum(1 for r in ag8_raises_contrast if r["excl_zero"])
+    ag8_raises_contrast = [r for r in ci_rows if r["comparison"] == "AG8_minus_BASE_mean_contrast"]
+    summary["verdicts"]["H2_AG8_raises_mean_contrast_vs_BASE_4of4"] = sum(
+        1 for r in ag8_raises_contrast if r["excl_zero"]
+    )
 
     # H3 — AG8 cheaper than STATIC16 (cost diff = ST16 - AG8; want CI_lo > 0)
-    ag8_cheaper = [r for r in ci_rows
-                   if r["comparison"] == "AG8_minus_STATIC16_mean_cost"
-                   and r.get("note") == "POS = AG8 cheaper than STATIC16"]
-    summary["verdicts"]["H3_AG8_cheaper_than_STATIC16_CI95_excludes_zero_4of4"] = \
-        sum(1 for r in ag8_cheaper if r["ci_lo"] > 0.0)
+    ag8_cheaper = [
+        r
+        for r in ci_rows
+        if r["comparison"] == "AG8_minus_STATIC16_mean_cost"
+        and r.get("note") == "POS = AG8 cheaper than STATIC16"
+    ]
+    summary["verdicts"]["H3_AG8_cheaper_than_STATIC16_CI95_excludes_zero_4of4"] = sum(
+        1 for r in ag8_cheaper if r["ci_lo"] > 0.0
+    )
 
     # H4 — AG8 net_benefit vs ST16 non-negative (CI_lo >= -0.005)
-    ag8_nb = [r for r in ci_rows
-              if r["comparison"] == "AG8_minus_STATIC16_net_benefit"]
-    summary["verdicts"]["H4_AG8_net_benefit_vs_STATIC16_nonneg_4of4"] = \
-        sum(1 for r in ag8_nb if r["ci_lo"] >= -0.005)
+    ag8_nb = [r for r in ci_rows if r["comparison"] == "AG8_minus_STATIC16_net_benefit"]
+    summary["verdicts"]["H4_AG8_net_benefit_vs_STATIC16_nonneg_4of4"] = sum(
+        1 for r in ag8_nb if r["ci_lo"] >= -0.005
+    )
 
     # H5 — AG_HYB more contrast than AG8 (HYB picks G=12 on τ≥0.70; we expect
     # LESS contrast since G=12 < G=16 — H5 is the FAIL side that demonstrates
     # the AG_HYB cost-saving design works)
-    hyb_more = [r for r in ci_rows
-                if r["comparison"] == "HYB_minus_AG8_mean_contrast"]
-    summary["verdicts"]["H5_AG_HYB_more_contrast_than_AG8_4of4"] = \
-        sum(1 for r in hyb_more if r["excl_zero"])
+    hyb_more = [r for r in ci_rows if r["comparison"] == "HYB_minus_AG8_mean_contrast"]
+    summary["verdicts"]["H5_AG_HYB_more_contrast_than_AG8_4of4"] = sum(
+        1 for r in hyb_more if r["excl_zero"]
+    )
 
     with open(os.path.join(OUT_DIR, "p7_iter199_ci.tsv"), "w") as fh:
         w = csv.DictWriter(fh, fieldnames=fields_ci, delimiter="\t")
@@ -454,14 +530,18 @@ def main():
 
     # quick stdout summary
     print("\n[iter199] per-method summary (means over 40 steps)")
-    print(f"  {'method':<8} {'policy':<10} {'mean_zvf':>9} {'mean_contrast':>14} "
-          f"{'mean_cost':>10} {'restored_vs_base':>18} {'restored_vs_S16':>16} "
-          f"{'net_benefit':>12} {'fires':>6}")
+    print(
+        f"  {'method':<8} {'policy':<10} {'mean_zvf':>9} {'mean_contrast':>14} "
+        f"{'mean_cost':>10} {'restored_vs_base':>18} {'restored_vs_S16':>16} "
+        f"{'net_benefit':>12} {'fires':>6}"
+    )
     for r in per_method_rows:
-        print(f"  {r['method']:<8} {r['policy']:<10} {r['mean_proj_zvf']:>9.4f} "
-              f"{r['mean_proj_contrast']:>14.4f} {r['mean_cost']:>10.4f} "
-              f"{r['restored_vs_base']:>18.4f} {r['restored_vs_static16']:>16.4f} "
-              f"{r['net_benefit_vs_static16']:>12.4f} {r['n_fire_steps']:>6}")
+        print(
+            f"  {r['method']:<8} {r['policy']:<10} {r['mean_proj_zvf']:>9.4f} "
+            f"{r['mean_proj_contrast']:>14.4f} {r['mean_cost']:>10.4f} "
+            f"{r['restored_vs_base']:>18.4f} {r['restored_vs_static16']:>16.4f} "
+            f"{r['net_benefit_vs_static16']:>12.4f} {r['n_fire_steps']:>6}"
+        )
     print(f"\n[iter199] verdicts: {summary['verdicts']}")
 
 

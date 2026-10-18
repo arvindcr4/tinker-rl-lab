@@ -58,7 +58,6 @@ import argparse
 import csv
 import json
 import math
-import random
 import statistics
 import sys
 from pathlib import Path
@@ -103,7 +102,7 @@ def _spearman(xs: Sequence[float], ys: Sequence[float]) -> float:
     ry = _rank(ys)
     sxx = sum((r - mx) ** 2 for r in rx)
     syy = sum((r - my) ** 2 for r in ry)
-    sxy = sum((rx_i - mx) * (ry_i - my) for rx_i, ry_i in zip(rx, ry))
+    sxy = sum((rx_i - mx) * (ry_i - my) for rx_i, ry_i in zip(rx, ry, strict=False))
     if sxx == 0 or syy == 0:
         return float("nan")
     return sxy / math.sqrt(sxx * syy)
@@ -157,7 +156,9 @@ def load_summary_rows() -> List[Dict[str, Any]]:
                     "experiment": r.get("experiment", ""),
                     "model": r.get("model", ""),
                     "task": r.get("task", ""),
-                    "group_size": int(r["group_size"]) if r.get("group_size") not in (None, "", "NA") else 0,
+                    "group_size": int(r["group_size"])
+                    if r.get("group_size") not in (None, "", "NA")
+                    else 0,
                     "mean_zvf": mz,
                     "last10_avg": la,
                     "peak": pk,
@@ -189,12 +190,16 @@ def load_by_library() -> List[Dict[str, Any]]:
                     "mean_zvf": float(r["mean_zvf"]) if r["mean_zvf"] != "NA" else float("nan"),
                     "max_zvf": float(r["max_zvf"]) if r["max_zvf"] != "NA" else float("nan"),
                     "mean_peak": float(r["mean_peak"]) if r["mean_peak"] != "NA" else float("nan"),
-                    "mean_last10": float(r["mean_last10"]) if r["mean_last10"] != "NA" else float("nan"),
+                    "mean_last10": float(r["mean_last10"])
+                    if r["mean_last10"] != "NA"
+                    else float("nan"),
                     "n_collapse": int(r["n_collapse"]) if r.get("n_collapse") else 0,
                     "n_drift": int(r["n_drift"]) if r.get("n_drift") else 0,
                     "n_plateau": int(r["n_plateau"]) if r.get("n_plateau") else 0,
                     "n_converged": int(r["n_converged"]) if r.get("n_converged") else 0,
-                    "collapse_rate": float(r["collapse_rate"]) if r["collapse_rate"] != "NA" else float("nan"),
+                    "collapse_rate": float(r["collapse_rate"])
+                    if r["collapse_rate"] != "NA"
+                    else float("nan"),
                 }
             )
     return rows
@@ -237,10 +242,17 @@ def per_step_p_proxy(rows: List[Dict[str, Any]]) -> Dict[Tuple[str, str], Tuple[
 
 def dose_response(rows: List[Dict[str, Any]], n_bins: int = 5) -> List[Dict[str, Any]]:
     """Bin rows by mean_zvf quantile and compute per-bin damage."""
-    usable = [r for r in rows if not math.isnan(r["mean_zvf"]) and not math.isnan(r["last10_avg"]) and not math.isnan(r["peak"])]
+    usable = [
+        r
+        for r in rows
+        if not math.isnan(r["mean_zvf"])
+        and not math.isnan(r["last10_avg"])
+        and not math.isnan(r["peak"])
+    ]
     if not usable:
         return []
     from _review28_statistics import quantile_partitions
+
     bins = quantile_partitions(usable, "mean_zvf", n_bins)
     out: List[Dict[str, Any]] = []
     for i, bin_rows in enumerate(bins):
@@ -253,7 +265,11 @@ def dose_response(rows: List[Dict[str, Any]], n_bins: int = 5) -> List[Dict[str,
         n_collapse = sum(1 for l in labels if l == "collapse")
         n_drift = sum(1 for l in labels if l == "drift")
         n_converged = sum(1 for l in labels if l == "converged")
-        severity_drop = statistics.fmean([p - l for p, l in zip(peak, last10)]) if peak else float("nan")
+        severity_drop = (
+            statistics.fmean([p - l for p, l in zip(peak, last10, strict=False)])
+            if peak
+            else float("nan")
+        )
         out.append(
             {
                 "bin": i + 1,
@@ -293,7 +309,9 @@ def monotonicity_test(bins: List[Dict[str, Any]]) -> Tuple[float, float]:
 # ---------------------------------------------------------------------------
 
 
-def delta_d_per_library(by_lib_rows: List[Dict[str, Any]], p_proxy: Dict[Tuple[str, str], Tuple[float, int]]) -> List[Dict[str, Any]]:
+def delta_d_per_library(
+    by_lib_rows: List[Dict[str, Any]], p_proxy: Dict[Tuple[str, str], Tuple[float, int]]
+) -> List[Dict[str, Any]]:
     """delta_d = mean_zvf_emp - zvf_iid(p_emp, G_emp).
 
     For variance_mitigation libraries we use the variance_mitigation.tsv
@@ -324,7 +342,7 @@ def delta_d_per_library(by_lib_rows: List[Dict[str, Any]], p_proxy: Dict[Tuple[s
             zvf_iid = float("nan")
             delta_d = float("nan")
         else:
-            zvf_iid = p ** g + (1.0 - p) ** g
+            zvf_iid = p**g + (1.0 - p) ** g
             delta_d = mz - zvf_iid
         out.append(
             {
@@ -338,9 +356,7 @@ def delta_d_per_library(by_lib_rows: List[Dict[str, Any]], p_proxy: Dict[Tuple[s
                 "delta_d": delta_d,
                 "n_collapse": r["n_collapse"],
                 "collapse_rate": r["collapse_rate"],
-                "interpretation": (
-                    "homogeneous_plugin_diagnostic_not_identified_dependence"
-                ),
+                "interpretation": ("homogeneous_plugin_diagnostic_not_identified_dependence"),
             }
         )
     return out
@@ -351,7 +367,9 @@ def delta_d_per_library(by_lib_rows: List[Dict[str, Any]], p_proxy: Dict[Tuple[s
 # ---------------------------------------------------------------------------
 
 
-def write_figure(bins: List[Dict[str, Any]], delta_d: List[Dict[str, Any]], out_path: Path) -> Optional[str]:
+def write_figure(
+    bins: List[Dict[str, Any]], delta_d: List[Dict[str, Any]], out_path: Path
+) -> Optional[str]:
     plt = _maybe_matplotlib()
     if plt is None:
         return None
@@ -364,8 +382,10 @@ def write_figure(bins: List[Dict[str, Any]], delta_d: List[Dict[str, Any]], out_
     sevs = [b["severity_drop"] for b in bins]
     fracs = [b["frac_collapse"] for b in bins]
     axL.plot(bin_zvfs, sevs, "o-", color="#34495e", linewidth=1.5, markersize=8)
-    for x, y, fr in zip(bin_zvfs, sevs, fracs):
-        axL.scatter([x], [y], s=70 + 350 * fr, color="#c0392b", alpha=0.55, edgecolor="white", linewidth=0.7)
+    for x, y, fr in zip(bin_zvfs, sevs, fracs, strict=False):
+        axL.scatter(
+            [x], [y], s=70 + 350 * fr, color="#c0392b", alpha=0.55, edgecolor="white", linewidth=0.7
+        )
     axL.set_xlabel("Mean-ZVF quantile bin midpoint")
     axL.set_ylabel("Severity = mean(peak - last10_avg)")
     axL.set_title("Dose-response: ZVF quantile -> severity drop")
@@ -444,8 +464,12 @@ def write_delta_d_tsv(rows: List[Dict[str, Any]], out_path: Path) -> None:
     with out_path.open("w") as fh:
         fh.write("# Iter 114 cross-library delta_d (anti-herding bonus)\n")
         fh.write("# delta_d = ZVF_emp - (p^G + (1-p)^G)\n")
-        fh.write("# p = variance_mitigation trajectory-mean heldout_acc for the variance_mitigation\n")
-        fh.write("#     libraries; p = mean_last10 for non-mitigation libraries (canonical p_x proxy).\n")
+        fh.write(
+            "# p = variance_mitigation trajectory-mean heldout_acc for the variance_mitigation\n"
+        )
+        fh.write(
+            "#     libraries; p = mean_last10 for non-mitigation libraries (canonical p_x proxy).\n"
+        )
         fh.write("# Negative delta_d = anti-herding (sampler creates more contrast than i.i.d.);\n")
         fh.write("# Positive delta_d = herding / mode collapse.\n")
         fh.write("# Source: platform_modal/scripts/zvf_diagnostic_iter114.py\n")
@@ -495,10 +519,18 @@ def write_meta(meta: Dict[str, Any], out_path: Path) -> None:
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--out-dose", type=Path, default=RESULTS / "zvf_iter114_dose_response_review28_v2.tsv")
-    parser.add_argument("--out-delta-d", type=Path, default=RESULTS / "zvf_iter114_delta_d_review28_v2.tsv")
-    parser.add_argument("--out-figure", type=Path, default=FIGURES / "zvf_iter114_dose_response_review28_v2.pdf")
-    parser.add_argument("--out-meta", type=Path, default=RESULTS / "zvf_iter114_meta_review28_v2.json")
+    parser.add_argument(
+        "--out-dose", type=Path, default=RESULTS / "zvf_iter114_dose_response_review28_v2.tsv"
+    )
+    parser.add_argument(
+        "--out-delta-d", type=Path, default=RESULTS / "zvf_iter114_delta_d_review28_v2.tsv"
+    )
+    parser.add_argument(
+        "--out-figure", type=Path, default=FIGURES / "zvf_iter114_dose_response_review28_v2.pdf"
+    )
+    parser.add_argument(
+        "--out-meta", type=Path, default=RESULTS / "zvf_iter114_meta_review28_v2.json"
+    )
     parser.add_argument("--n-bins", type=int, default=5)
     args = parser.parse_args()
 
@@ -521,8 +553,12 @@ def main() -> int:
         "dose_response_rho_severity_vs_bin": rho_severity,
         "dose_response_rho_frac_collapse_vs_bin": rho_frac_collapse,
         "n_libraries_delta_d": len(delta_d),
-        "anti_herding_libraries": [r["library"] for r in delta_d if not math.isnan(r["delta_d"]) and r["delta_d"] < 0],
-        "herding_libraries": [r["library"] for r in delta_d if not math.isnan(r["delta_d"]) and r["delta_d"] > 0],
+        "anti_herding_libraries": [
+            r["library"] for r in delta_d if not math.isnan(r["delta_d"]) and r["delta_d"] < 0
+        ],
+        "herding_libraries": [
+            r["library"] for r in delta_d if not math.isnan(r["delta_d"]) and r["delta_d"] > 0
+        ],
         "out_dose": str(args.out_dose.relative_to(REPO_ROOT)),
         "out_delta_d": str(args.out_delta_d.relative_to(REPO_ROOT)),
         "out_figure": str(args.out_figure.relative_to(REPO_ROOT)) if fig_path else None,
@@ -531,12 +567,18 @@ def main() -> int:
     }
     write_meta(meta, args.out_meta)
 
-    print(f"[zvf-iter114] dose-response bins: {len(bins)}; "
-          f"rho(severity,bin) = {rho_severity:.3f}, rho(frac_collapse, bin) = {rho_frac_collapse:.3f}")
-    print(f"[zvf-iter114] delta_d libraries: {len(delta_d)}; "
-          f"anti-herding = {meta['anti_herding_libraries']}; herding = {meta['herding_libraries']}")
-    print(f"[zvf-iter114] wrote {args.out_dose.relative_to(REPO_ROOT)}, "
-          f"{args.out_delta_d.relative_to(REPO_ROOT)}, {args.out_meta.relative_to(REPO_ROOT)}")
+    print(
+        f"[zvf-iter114] dose-response bins: {len(bins)}; "
+        f"rho(severity,bin) = {rho_severity:.3f}, rho(frac_collapse, bin) = {rho_frac_collapse:.3f}"
+    )
+    print(
+        f"[zvf-iter114] delta_d libraries: {len(delta_d)}; "
+        f"anti-herding = {meta['anti_herding_libraries']}; herding = {meta['herding_libraries']}"
+    )
+    print(
+        f"[zvf-iter114] wrote {args.out_dose.relative_to(REPO_ROOT)}, "
+        f"{args.out_delta_d.relative_to(REPO_ROOT)}, {args.out_meta.relative_to(REPO_ROOT)}"
+    )
     if fig_path:
         print(f"[zvf-iter114] wrote figure {fig_path}")
     return 0

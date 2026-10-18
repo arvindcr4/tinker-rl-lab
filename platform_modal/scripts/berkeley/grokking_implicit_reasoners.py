@@ -38,8 +38,8 @@ convergence.tsv G in {2,4,8,16}; retention curve G in {4,32}):
      (bootstrap SE tiny) but moves strongly with G -> the RATIO knob dominates the
      SIZE knob, exactly Yu Su's claim.
 """
+
 import json, glob, math, os
-from collections import defaultdict
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 RES = os.path.join(ROOT, "experiments", "results")
@@ -80,7 +80,7 @@ def zvf_at_G(ks, g):
             tot += p_allc + p_allw
         else:
             p = k / nativeG
-            tot += p ** g + (1.0 - p) ** g
+            tot += p**g + (1.0 - p) ** g
         n += 1
     return tot / n  # ZVF; Y = 1 - ZVF
 
@@ -99,9 +99,10 @@ def spearman(xs, ys):
                 r[order[t]] = avg
             i = j + 1
         return r
+
     rx, ry = rank(xs), rank(ys)
     mx, my = sum(rx) / len(rx), sum(ry) / len(ry)
-    num = sum((a - mx) * (b - my) for a, b in zip(rx, ry))
+    num = sum((a - mx) * (b - my) for a, b in zip(rx, ry, strict=False))
     dx = math.sqrt(sum((a - mx) ** 2 for a in rx))
     dy = math.sqrt(sum((b - my) ** 2 for b in ry))
     return num / (dx * dy) if dx * dy else 0.0
@@ -117,10 +118,16 @@ def main():
     with open(os.path.join(RES, "group_size_convergence.tsv")) as fh:
         hdr = fh.readline().rstrip("\n").split("\t")
         for line in fh:
-            r = dict(zip(hdr, line.rstrip("\n").split("\t")))
+            r = dict(zip(hdr, line.rstrip("\n").split("\t"), strict=False))
             if abs(float(r["threshold"]) - 0.95) < 1e-9:
-                conv.append((int(r["G"]), int(r["seed"]), int(r["first_step"]),
-                             float(r["last_step_mean_reward"])))
+                conv.append(
+                    (
+                        int(r["G"]),
+                        int(r["seed"]),
+                        int(r["first_step"]),
+                        float(r["last_step_mean_reward"]),
+                    )
+                )
     Gs_conv = sorted(set(g for g, _, _, _ in conv))
     t_mem_by_G = {g: [s for gg, _, s, _ in conv if gg == g] for g in Gs_conv}
     all_tmem = [s for _, _, s, _ in conv]
@@ -134,20 +141,22 @@ def main():
     with open(os.path.join(RES, "group_size_iter103_retention_curve.tsv")) as fh:
         hdr = fh.readline().rstrip("\n").split("\t")
         for line in fh:
-            r = dict(zip(hdr, line.rstrip("\n").split("\t")))
+            r = dict(zip(hdr, line.rstrip("\n").split("\t"), strict=False))
             ret.append((int(r["budget_tokens"]), float(r["acc_G4"]), float(r["acc_G32"])))
     ret.sort()
     budgets = [b for b, _, _ in ret]
     accG4 = [a for _, a, _ in ret]
     accG32 = [a for _, _, a in ret]
-    gap = [b - a for a, b in zip(accG4, accG32)]  # G32 - G4
+    gap = [b - a for a, b in zip(accG4, accG32, strict=False)]  # G32 - G4
     # generalization slope vs log10(budget)
     lb = [math.log10(b) for b in budgets]
+
     def slope(xs, ys):
         mx, my = sum(xs) / len(xs), sum(ys) / len(ys)
-        num = sum((x - mx) * (y - my) for x, y in zip(xs, ys))
+        num = sum((x - mx) * (y - my) for x, y in zip(xs, ys, strict=False))
         den = sum((x - mx) ** 2 for x in xs)
         return num / den if den else 0.0
+
     slopeG4, slopeG32 = slope(lb, accG4), slope(lb, accG32)
 
     # ---- contrastive yield Y(G) exact ----
@@ -165,10 +174,11 @@ def main():
     def Y_folds(g, N):
         vals = []
         for i in range(0, len(ks) - N + 1, N):
-            vals.append(1 - zvf_at_G(ks[i:i + N], g))
+            vals.append(1 - zvf_at_G(ks[i : i + N], g))
         m = sum(vals) / len(vals)
         sd = math.sqrt(sum((v - m) ** 2 for v in vals) / max(1, len(vals) - 1))
         return m, sd / math.sqrt(len(vals)), len(vals)
+
     size_test = {}
     for g in (4, 32):
         for N in (50, 100, 200):
@@ -185,7 +195,7 @@ def main():
 
     with open(os.path.join(OUT, "grokking_generalization_curve.tsv"), "w") as f:
         f.write("budget_tokens\tacc_G4\tacc_G32\tgen_gap_G32_minus_G4\n")
-        for (b, a4, a32), gp in zip(ret, gap):
+        for (b, a4, a32), gp in zip(ret, gap, strict=False):
             f.write(f"{b}\t{a4}\t{a32}\t{gp:.4f}\n")
 
     with open(os.path.join(OUT, "grokking_contrastive_yield.tsv"), "w") as f:
@@ -214,8 +224,10 @@ def main():
     # H2 memorization structure-invariance -- magnitude test: memorization time is
     # far LESS G-sensitive than the generalization ceiling (Yu Su's core dissociation).
     mean_all_tmem = sum(all_tmem) / len(all_tmem)
-    cv_tmem = (math.sqrt(sum((s - mean_all_tmem) ** 2 for s in all_tmem)
-                         / (len(all_tmem) - 1)) / mean_all_tmem)
+    cv_tmem = (
+        math.sqrt(sum((s - mean_all_tmem) ** 2 for s in all_tmem) / (len(all_tmem) - 1))
+        / mean_all_tmem
+    )
     mem_G_sens = (max(mean_tmem_by_G.values()) - min(mean_tmem_by_G.values())) / mean_all_tmem
     gen_ceiling_mean = (accG4[-1] + accG32[-1]) / 2
     gen_G_sens = (accG32[-1] - accG4[-1]) / gen_ceiling_mean
@@ -245,7 +257,8 @@ def main():
     }
     # H4 contrastive-yield mediation
     findings["H4_contrastive_yield_mediates"] = {
-        "Y_G4": round(y4, 4), "Y_G32": round(y32, 4),
+        "Y_G4": round(y4, 4),
+        "Y_G32": round(y32, 4),
         "heldout_ceiling_G4": heldout_ceiling[4],
         "heldout_ceiling_G32": heldout_ceiling[32],
         "direction_consistent": dir_consistent,
@@ -265,11 +278,13 @@ def main():
     n_sug = sum(1 for v in findings.values() if v["verdict"] == "SUGGESTIVE")
     summary = {
         "paper": "Grokked Transformers are Implicit Reasoners (Wang, Yue, Su, Sun; "
-                 "NeurIPS 2024, arXiv:2405.15071)",
+        "NeurIPS 2024, arXiv:2405.15071)",
         "lecture": "SP25 L3 Yu Su",
         "target": "A3 + Pillar 1/3",
         "n_native_prompt_seeds": n_native,
-        "decisive": n_dec, "suggestive": n_sug, "n_hyp": len(findings),
+        "decisive": n_dec,
+        "suggestive": n_sug,
+        "n_hyp": len(findings),
         "hypotheses": findings,
     }
     json.dump(summary, open(os.path.join(OUT, "grokking_summary.json"), "w"), indent=2)

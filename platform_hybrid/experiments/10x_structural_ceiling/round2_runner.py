@@ -12,19 +12,34 @@ from __future__ import annotations
 
 import sys as _sys
 from pathlib import Path as _Path
-_sys.path.insert(0, str(next(p for p in _Path(__file__).resolve().parents if (p / "platform_hybrid").is_dir())))
+
+_sys.path.insert(
+    0, str(next(p for p in _Path(__file__).resolve().parents if (p / "platform_hybrid").is_dir()))
+)
 from platform_hybrid.experiments.research_contracts import EvidenceUnavailable
 
 
 import sys as _sys
 from pathlib import Path as _Path
-_sys.path.insert(0, str(next(p for p in _Path(__file__).resolve().parents if (p / "platform_hybrid").is_dir())))
-from platform_hybrid.experiments.research_contracts import gsm8k_reward, math_reward, humaneval_reward, tool_score, completion_alignment, GRADER_VERSION, PROTOCOL_VERSION
+
+_sys.path.insert(
+    0, str(next(p for p in _Path(__file__).resolve().parents if (p / "platform_hybrid").is_dir()))
+)
+from platform_hybrid.experiments.research_contracts import (
+    gsm8k_reward,
+    math_reward,
+    humaneval_reward,
+    completion_alignment,
+    GRADER_VERSION,
+    PROTOCOL_VERSION,
+)
 
 
 import atexit
+
 try:
     from codecarbon import EmissionsTracker
+
     _tracker = EmissionsTracker()
     _tracker.start()
     atexit.register(_tracker.stop)
@@ -33,11 +48,9 @@ except ImportError:
 
 import argparse
 import json
-import math
 import os
 import random
 import re
-import time
 import warnings
 from pathlib import Path
 
@@ -55,8 +68,10 @@ def load_config(path: str) -> dict:
 
 # ── Benchmark loaders (reused from grpo_10x_runner) ──────────────────────
 
+
 def load_gsm8k_prompts(tokenizer, max_examples: int = 500) -> list[dict]:
     from datasets import load_dataset
+
     ds = load_dataset("openai/gsm8k", "main", split="train")
     examples = []
     for item in ds.select(range(min(len(ds), max_examples))):
@@ -68,17 +83,20 @@ def load_gsm8k_prompts(tokenizer, max_examples: int = 500) -> list[dict]:
             f"Show your work and put your final answer after ####."
         )
         prompt_ids = tokenizer.encode(prompt, add_special_tokens=False)
-        examples.append({
-            "prompt_text": prompt,
-            "prompt_ids": prompt_ids,
-            "answer": answer,
-            "benchmark": "gsm8k",
-        })
+        examples.append(
+            {
+                "prompt_text": prompt,
+                "prompt_ids": prompt_ids,
+                "answer": answer,
+                "benchmark": "gsm8k",
+            }
+        )
     return examples
 
 
 def load_math_prompts(tokenizer, max_examples: int = 500) -> list[dict]:
     from datasets import load_dataset
+
     ds = load_dataset("math-ai/MATH-500", split="test")
     examples = []
     for item in ds.select(range(min(len(ds), max_examples))):
@@ -86,7 +104,7 @@ def load_math_prompts(tokenizer, max_examples: int = 500) -> list[dict]:
         solution = item["solution"]
         answer = item.get("answer", "")
         if not answer:
-            m = re.search(r'\\boxed\{(.+?)\}', solution)
+            m = re.search(r"\\boxed\{(.+?)\}", solution)
             answer = m.group(1) if m else solution.split()[-1]
         prompt = (
             f"Solve the following math competition problem.\n\n"
@@ -94,34 +112,40 @@ def load_math_prompts(tokenizer, max_examples: int = 500) -> list[dict]:
             f"Put your final answer in \\boxed{{}}."
         )
         prompt_ids = tokenizer.encode(prompt, add_special_tokens=False)
-        examples.append({
-            "prompt_text": prompt,
-            "prompt_ids": prompt_ids,
-            "answer": answer,
-            "benchmark": "math",
-        })
+        examples.append(
+            {
+                "prompt_text": prompt,
+                "prompt_ids": prompt_ids,
+                "answer": answer,
+                "benchmark": "math",
+            }
+        )
     return examples
 
 
 def load_humaneval_prompts(tokenizer, max_examples: int = 164) -> list[dict]:
     from datasets import load_dataset
+
     ds = load_dataset("openai/openai_humaneval", split="test")
     examples = []
     for item in ds.select(range(min(len(ds), max_examples))):
         prompt = item["prompt"]
         prompt_ids = tokenizer.encode(prompt, add_special_tokens=False)
-        examples.append({
-            "prompt_text": prompt,
-            "prompt_ids": prompt_ids,
-            "answer": item["canonical_solution"],
-            "test": item["test"],
-            "entry_point": item["entry_point"],
-            "benchmark": "humaneval",
-        })
+        examples.append(
+            {
+                "prompt_text": prompt,
+                "prompt_ids": prompt_ids,
+                "answer": item["canonical_solution"],
+                "test": item["test"],
+                "entry_point": item["entry_point"],
+                "benchmark": "humaneval",
+            }
+        )
     return examples
 
 
 # ── Reward functions ─────────────────────────────────────────────────────
+
 
 def reward_gsm8k(response: str, answer: str) -> float:
     return gsm8k_reward(response, answer)
@@ -131,11 +155,15 @@ def reward_math(response: str, answer: str) -> float:
     return math_reward(response, answer, require_box=True)
 
 
-def reward_humaneval_binary(response: str, test_code: str, entry_point: str, prompt: str = "") -> float:
+def reward_humaneval_binary(
+    response: str, test_code: str, entry_point: str, prompt: str = ""
+) -> float:
     return humaneval_reward(response, test_code, entry_point, prompt)
 
 
-def reward_humaneval_dense(response: str, test_code: str, entry_point: str, prompt: str = "") -> float:
+def reward_humaneval_dense(
+    response: str, test_code: str, entry_point: str, prompt: str = ""
+) -> float:
     return humaneval_reward(response, test_code, entry_point, prompt)
 
 
@@ -143,20 +171,27 @@ def get_reward(example: dict, response: str, dense_code: bool = False) -> float:
     benchmark = example["benchmark"]
     if benchmark == "gsm8k":
         return reward_gsm8k(response, example["answer"])
-    elif benchmark == "math":
+    if benchmark == "math":
         return reward_math(response, example["answer"])
-    elif benchmark == "humaneval":
+    if benchmark == "humaneval":
         if dense_code:
             return reward_humaneval_dense(
-                response, example.get("test", ""), example.get("entry_point", ""), example.get("prompt_text", "")
+                response,
+                example.get("test", ""),
+                example.get("entry_point", ""),
+                example.get("prompt_text", ""),
             )
         return reward_humaneval_binary(
-            response, example.get("test", ""), example.get("entry_point", ""), example.get("prompt_text", "")
+            response,
+            example.get("test", ""),
+            example.get("entry_point", ""),
+            example.get("prompt_text", ""),
         )
     raise ValueError(f"Unknown benchmark: {benchmark}")
 
 
 # ── Difficulty binning for phase diagram ─────────────────────────────────
+
 
 def bin_prompts_by_difficulty(
     examples: list[dict],
@@ -198,8 +233,10 @@ def bin_prompts_by_difficulty(
             bins["hard"].append(ex)
 
         if (i + 1) % 50 == 0:
-            print(f"  Binned {i+1}/{len(examples)}: "
-                  f"easy={len(bins['easy'])}, mid={len(bins['mid'])}, hard={len(bins['hard'])}")
+            print(
+                f"  Binned {i + 1}/{len(examples)}: "
+                f"easy={len(bins['easy'])}, mid={len(bins['mid'])}, hard={len(bins['hard'])}"
+            )
 
     print(f"Final bins: easy={len(bins['easy'])}, mid={len(bins['mid'])}, hard={len(bins['hard'])}")
     return bins
@@ -207,11 +244,12 @@ def bin_prompts_by_difficulty(
 
 # ── Main training loop ───────────────────────────────────────────────────
 
+
 def detect_benchmark(config: dict) -> str:
     name = config.get("tinker", {}).get("wandb_run_name", "")
     if "math" in name.lower() and "gsm" not in name.lower():
         return "math"
-    elif "humaneval" in name.lower() or "dense" in name.lower():
+    if "humaneval" in name.lower() or "dense" in name.lower():
         return "humaneval"
     return "gsm8k"
 
@@ -252,7 +290,7 @@ def run_experiment(config_path: str, dry_run: bool = False, resume: bool = False
     log_path = str(Path(tinker_cfg.get("checkpoint_dir", "./checkpoints/")).resolve())
     os.makedirs(log_path, exist_ok=True)
 
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
     print(f"Round 2: Extended Experiment Runner")
     print(f"Config:      {config_path}")
     print(f"Model:       {model_name}")
@@ -267,7 +305,7 @@ def run_experiment(config_path: str, dry_run: bool = False, resume: bool = False
     print(f"Reward mode: {reward_mode}")
     print(f"Log path:    {log_path}")
     print(f"Resume:      {resume}")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
 
     if dry_run:
         print("[DRY RUN] Would run experiment with above config. Exiting.")
@@ -276,16 +314,24 @@ def run_experiment(config_path: str, dry_run: bool = False, resume: bool = False
     # Init W&B
     if env_cfg.get("use_wandb"):
         import wandb
+
         try:
             import torch, wandb
-            if not getattr(wandb, '_vram_patched', False):
+
+            if not getattr(wandb, "_vram_patched", False):
                 _old_log = wandb.log
+
                 def _vram_log(data, *args, **kwargs):
                     if torch.cuda.is_available():
-                        data['system/vram_peak_allocated_gb'] = torch.cuda.max_memory_allocated() / (1024**3)
-                        data['system/vram_reserved_gb'] = torch.cuda.max_memory_reserved() / (1024**3)
+                        data["system/vram_peak_allocated_gb"] = (
+                            torch.cuda.max_memory_allocated() / (1024**3)
+                        )
+                        data["system/vram_reserved_gb"] = torch.cuda.max_memory_reserved() / (
+                            1024**3
+                        )
                         torch.cuda.reset_peak_memory_stats()
                     _old_log(data, *args, **kwargs)
+
                 wandb.log = _vram_log
                 wandb._vram_patched = True
         except ImportError:
@@ -345,8 +391,11 @@ def run_experiment(config_path: str, dry_run: bool = False, resume: bool = False
         tc = svc.create_lora_training_client(base_model=tinker_model, rank=lora_rank)
         print(f"Run ID: {tc.model_id}")
         checkpoint_utils.save_checkpoint(
-            training_client=tc, name="step_000", log_path=log_path,
-            kind="both", loop_state={"batch": 0, "step": 0},
+            training_client=tc,
+            name="step_000",
+            log_path=log_path,
+            kind="both",
+            loop_state={"batch": 0, "step": 0},
         )
         sc = tc.save_weights_and_get_sampling_client()
         print(f"Sampler ready")
@@ -358,12 +407,17 @@ def run_experiment(config_path: str, dry_run: bool = False, resume: bool = False
             # Use pre-computed bins (from prebin_gsm8k.py)
             print(f"Loading pre-computed bins from {bins_file}")
             bin_data = json.loads(bins_file.read_text())
-            if bin_data.get("protocol_version") != PROTOCOL_VERSION or bin_data.get("grader_version") != GRADER_VERSION:
-                raise EvidenceUnavailable("Legacy phase bins lack generating contract; explicit v2 remeasurement required")
+            if (
+                bin_data.get("protocol_version") != PROTOCOL_VERSION
+                or bin_data.get("grader_version") != GRADER_VERSION
+            ):
+                raise EvidenceUnavailable(
+                    "Legacy phase bins lack generating contract; explicit v2 remeasurement required"
+                )
             indices = bin_data["bins"][difficulty_bin]["indices"]
             rates = bin_data["bins"][difficulty_bin]["rates"]
             examples = [examples[i] for i in indices if i < len(examples)]
-            for ex, rate in zip(examples, rates):
+            for ex, rate in zip(examples, rates, strict=False):
                 ex["base_success_rate"] = rate
             print(f"Loaded {len(examples)} examples from '{difficulty_bin}' bin (pre-computed)")
         else:
@@ -379,11 +433,16 @@ def run_experiment(config_path: str, dry_run: bool = False, resume: bool = False
 
         # Save bin stats
         bin_stats_path = Path(log_path) / "bin_stats.json"
-        bin_stats_path.write_text(json.dumps({
-            "bin": difficulty_bin,
-            "n_examples": len(examples),
-            "success_rates": [ex.get("base_success_rate", -1) for ex in examples],
-        }, indent=2))
+        bin_stats_path.write_text(
+            json.dumps(
+                {
+                    "bin": difficulty_bin,
+                    "n_examples": len(examples),
+                    "success_rates": [ex.get("base_success_rate", -1) for ex in examples],
+                },
+                indent=2,
+            )
+        )
 
     # REINFORCE baseline tracking
     reinforce_baseline = 0.0
@@ -396,7 +455,11 @@ def run_experiment(config_path: str, dry_run: bool = False, resume: bool = False
         losses = []
         for i, logprobs in enumerate(logprobs_list):
             adv = _advantages[i]
-            mask = torch.tensor(data[i].loss_fn_inputs["completion_mask"].data, device=logprobs.device, dtype=logprobs.dtype)
+            mask = torch.tensor(
+                data[i].loss_fn_inputs["completion_mask"].data,
+                device=logprobs.device,
+                dtype=logprobs.dtype,
+            )
             losses.append(-adv * (logprobs * mask).sum())
         loss = torch.stack(losses).mean()
         return loss, {"grpo_loss": loss.item()}
@@ -441,8 +504,7 @@ def run_experiment(config_path: str, dry_run: bool = False, resume: bool = False
                 # Update running baseline
                 batch_mean = sum(rewards) / len(rewards)
                 reinforce_baseline = (
-                    reinforce_alpha * batch_mean
-                    + (1 - reinforce_alpha) * reinforce_baseline
+                    reinforce_alpha * batch_mean + (1 - reinforce_alpha) * reinforce_baseline
                 )
             else:
                 # GRPO: group-normalized advantages
@@ -452,7 +514,7 @@ def run_experiment(config_path: str, dry_run: bool = False, resume: bool = False
 
             batch_rewards.extend(rewards)
 
-            for resp, adv in zip(responses.sequences, advs):
+            for resp, adv in zip(responses.sequences, advs, strict=False):
                 resp_ids = list(resp.tokens)
                 input_ids, target_ids, completion_mask = completion_alignment(prompt_ids, resp_ids)
                 full_ids = prompt_ids + resp_ids
@@ -465,7 +527,9 @@ def run_experiment(config_path: str, dry_run: bool = False, resume: bool = False
                         "target_tokens": T.TensorData(
                             data=target_ids, dtype="int64", shape=[len(target_ids)]
                         ),
-                        "completion_mask": T.TensorData(data=completion_mask, dtype="float32", shape=[len(completion_mask)]),
+                        "completion_mask": T.TensorData(
+                            data=completion_mask, dtype="float32", shape=[len(completion_mask)]
+                        ),
                     },
                 )
                 all_data.append(datum)
@@ -502,23 +566,31 @@ def run_experiment(config_path: str, dry_run: bool = False, resume: bool = False
             extra += f" | bin={difficulty_bin}"
 
         print(
-            f"Step {step+1:3d}/{total_steps} | "
+            f"Step {step + 1:3d}/{total_steps} | "
             f"loss={grpo_loss:.4f} | reward={avg_r:.3f} | "
             f"zvf={zvf:.2f} | gu={gu:.2f}{extra}"
         )
 
         if env_cfg.get("use_wandb"):
             import wandb
+
             try:
                 import torch, wandb
-                if not getattr(wandb, '_vram_patched', False):
+
+                if not getattr(wandb, "_vram_patched", False):
                     _old_log = wandb.log
+
                     def _vram_log(data, *args, **kwargs):
                         if torch.cuda.is_available():
-                            data['system/vram_peak_allocated_gb'] = torch.cuda.max_memory_allocated() / (1024**3)
-                            data['system/vram_reserved_gb'] = torch.cuda.max_memory_reserved() / (1024**3)
+                            data["system/vram_peak_allocated_gb"] = (
+                                torch.cuda.max_memory_allocated() / (1024**3)
+                            )
+                            data["system/vram_reserved_gb"] = torch.cuda.max_memory_reserved() / (
+                                1024**3
+                            )
                             torch.cuda.reset_peak_memory_stats()
                         _old_log(data, *args, **kwargs)
+
                     wandb.log = _vram_log
                     wandb._vram_patched = True
             except ImportError:
@@ -535,26 +607,44 @@ def run_experiment(config_path: str, dry_run: bool = False, resume: bool = False
 
         if save_interval and (step + 1) % save_interval == 0:
             checkpoint_utils.save_checkpoint(
-                training_client=tc, name=f"step_{step+1:03d}",
-                log_path=log_path, kind="both",
+                training_client=tc,
+                name=f"step_{step + 1:03d}",
+                log_path=log_path,
+                kind="both",
                 loop_state={"batch": step + 1, "step": step + 1},
             )
             sc = tc.save_weights_and_get_sampling_client()
-            print(f"  -> Checkpoint: step_{step+1}")
+            print(f"  -> Checkpoint: step_{step + 1}")
 
     # Final checkpoint
     checkpoint_utils.save_checkpoint(
-        training_client=tc, name="final", log_path=log_path,
-        kind="both", loop_state={"batch": total_steps, "step": total_steps},
+        training_client=tc,
+        name="final",
+        log_path=log_path,
+        kind="both",
+        loop_state={"batch": total_steps, "step": total_steps},
     )
     print(f"\nFinal checkpoint saved to: {log_path}")
     last10 = step_rewards[-10:] if step_rewards else [0]
-    print(f"Avg reward last 10: {sum(last10)/len(last10):.3f}")
+    print(f"Avg reward last 10: {sum(last10) / len(last10):.3f}")
 
     # Save saturation diagnostic
     ckpt_dir = Path(log_path)
     tracker.save(ckpt_dir / "group_saturation.json")
-    (ckpt_dir / "study_scope_v2.json").write_text(json.dumps({"protocol_version": PROTOCOL_VERSION, "grader_version": GRADER_VERSION, "resolved_config": cfg, "evaluation_scope": "training_adaptation_only", "heldout_measured": False, "claim_eligible": False, "optimizer_updates_requested": total_steps}, indent=2))
+    (ckpt_dir / "study_scope_v2.json").write_text(
+        json.dumps(
+            {
+                "protocol_version": PROTOCOL_VERSION,
+                "grader_version": GRADER_VERSION,
+                "resolved_config": cfg,
+                "evaluation_scope": "training_adaptation_only",
+                "heldout_measured": False,
+                "claim_eligible": False,
+                "optimizer_updates_requested": total_steps,
+            },
+            indent=2,
+        )
+    )
 
     summary = tracker.summary()
     print(f"\nGroup Saturation Summary:")
@@ -565,16 +655,24 @@ def run_experiment(config_path: str, dry_run: bool = False, resume: bool = False
 
     if env_cfg.get("use_wandb"):
         import wandb
+
         try:
             import torch, wandb
-            if not getattr(wandb, '_vram_patched', False):
+
+            if not getattr(wandb, "_vram_patched", False):
                 _old_log = wandb.log
+
                 def _vram_log(data, *args, **kwargs):
                     if torch.cuda.is_available():
-                        data['system/vram_peak_allocated_gb'] = torch.cuda.max_memory_allocated() / (1024**3)
-                        data['system/vram_reserved_gb'] = torch.cuda.max_memory_reserved() / (1024**3)
+                        data["system/vram_peak_allocated_gb"] = (
+                            torch.cuda.max_memory_allocated() / (1024**3)
+                        )
+                        data["system/vram_reserved_gb"] = torch.cuda.max_memory_reserved() / (
+                            1024**3
+                        )
                         torch.cuda.reset_peak_memory_stats()
                     _old_log(data, *args, **kwargs)
+
                 wandb.log = _vram_log
                 wandb._vram_patched = True
         except ImportError:

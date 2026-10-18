@@ -503,9 +503,15 @@ def main(argv: list[str] | None = None) -> int:
         ),
     )
     from trl_sampler_adapter import make_optimizer_observer
-    trainer.add_callback(make_optimizer_observer(
-        trainer, TrainerCallback, torch,
-        stop_on_applied=args.preflight_class == "seam_verification"))
+
+    trainer.add_callback(
+        make_optimizer_observer(
+            trainer,
+            TrainerCallback,
+            torch,
+            stop_on_applied=args.preflight_class == "seam_verification",
+        )
+    )
 
     try:
         trainer.train()
@@ -544,14 +550,19 @@ def main(argv: list[str] | None = None) -> int:
             "rollout_groups": rollout_groups,
             "telemetry_version": "generated-and-optimizer-observed-v2",
             "update_eligible_groups": int(cumulative["update_eligible_groups"]),
-            "updated_groups": sum(o["update_eligible_groups"] for o in trainer._next_update_observations if o["update_applied"]),
+            "updated_groups": sum(
+                o["update_eligible_groups"]
+                for o in trainer._next_update_observations
+                if o["update_applied"]
+            ),
             "update_observations": trainer._next_update_observations,
             "truncated_generated_rollouts": int(cumulative["truncated_generated_rollouts"]),
             "unknown_finish_rollouts": int(cumulative["unknown_finish_rollouts"]),
             "all_wrong_fraction": cumulative["all_wrong_groups"] / rollout_groups,
             "all_correct_fraction": cumulative["all_correct_groups"] / rollout_groups,
             "mixed_fraction": cumulative["mixed_groups"] / rollout_groups,
-            "completion_clipped_fraction": cumulative["truncated_generated_rollouts"] / cumulative["generated_rollouts"],
+            "completion_clipped_fraction": cumulative["truncated_generated_rollouts"]
+            / cumulative["generated_rollouts"],
         }
         run_config = {
             "task": args.task,

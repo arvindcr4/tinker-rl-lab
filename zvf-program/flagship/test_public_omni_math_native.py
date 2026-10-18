@@ -1,4 +1,5 @@
 """Native Omni-MATH integration checks; all model responses here are fixtures."""
+
 import base64
 import copy
 import json
@@ -27,35 +28,65 @@ def scorer():
 
 @pytest.fixture
 def wandb():
-    return {"mode": "online", "run_id": "fixture", "url": "https://wandb.ai/fixture/p/runs/fixture",
-            "initialized_before_model_work": True}
+    return {
+        "mode": "online",
+        "run_id": "fixture",
+        "url": "https://wandb.ai/fixture/p/runs/fixture",
+        "initialized_before_model_work": True,
+    }
 
 
 @pytest.fixture
 def actor():
-    return {"served_model": "fixture-actor", "model_loaded": True, "adapter_loaded": True,
-            "base_model": {"repo_id": "Qwen/Qwen3.6-35B-A3B", "revision": "995ad96eacd98c81ed38be0c5b274b04031597b0"},
-            "adapter": {"repo_id": "arvindcr4/pavlov-portfolio-qwen36-seed809-stepfinal-tinker-cf0ad8c1-1f1b-5ff-9f777c4018b6",
-                        "revision": "64444133c55d88c3f1bf0df8a2f5d7ac646125c8"},
-            "deployment_receipt_sha256": "a" * 64, "deployment_verified_at": "fixture"}
+    return {
+        "served_model": "fixture-actor",
+        "model_loaded": True,
+        "adapter_loaded": True,
+        "base_model": {
+            "repo_id": "Qwen/Qwen3.6-35B-A3B",
+            "revision": "995ad96eacd98c81ed38be0c5b274b04031597b0",
+        },
+        "adapter": {
+            "repo_id": "arvindcr4/pavlov-portfolio-qwen36-seed809-stepfinal-tinker-cf0ad8c1-1f1b-5ff-9f777c4018b6",
+            "revision": "64444133c55d88c3f1bf0df8a2f5d7ac646125c8",
+        },
+        "deployment_receipt_sha256": "a" * 64,
+        "deployment_verified_at": "fixture",
+    }
 
 
 @pytest.fixture
 def judge():
-    return {"served_model": "fixture-judge", "model_loaded": True,
-            "model": {"repo_id": runner.JUDGE_REPO, "revision": runner.JUDGE_REVISION},
-            "deployment_receipt_sha256": "b" * 64, "deployment_verified_at": "fixture"}
+    return {
+        "served_model": "fixture-judge",
+        "model_loaded": True,
+        "model": {"repo_id": runner.JUDGE_REPO, "revision": runner.JUDGE_REVISION},
+        "deployment_receipt_sha256": "b" * 64,
+        "deployment_verified_at": "fixture",
+    }
 
 
 def response_from_request(request, text, model=None):
     if request["kind"] == "actor":
-        choice = {"index": 0, "message": {"role": "assistant", "content": text}, "finish_reason": "stop"}
+        choice = {
+            "index": 0,
+            "message": {"role": "assistant", "content": text},
+            "finish_reason": "stop",
+        }
     else:
         choice = {"index": 0, "text": text, "finish_reason": "stop"}
     raw = json.dumps({"model": model or request["payload"]["model"], "choices": [choice]}).encode()
-    response = {k: request[k] for k in ("task_id", "kind", "batch_id", "contract_sha256", "request_sha256")}
-    response.update({"http_status": 200, "raw_body_base64": base64.b64encode(raw).decode(),
-                     "started_at": "fixture-start", "received_at": "fixture-end"})
+    response = {
+        k: request[k] for k in ("task_id", "kind", "batch_id", "contract_sha256", "request_sha256")
+    }
+    response.update(
+        {
+            "http_status": 200,
+            "raw_body_base64": base64.b64encode(raw).decode(),
+            "started_at": "fixture-start",
+            "received_at": "fixture-end",
+        }
+    )
     return response
 
 
@@ -66,7 +97,16 @@ def save_response(path, row):
 
 def export_actor(prepared, actor, wandb, tmp_path, max_new=1):
     batch = tmp_path / "actor-batch.jsonl"
-    runner.export_requests(runner.DEFAULT_SETUP, prepared[0], tmp_path / "run", "actor", actor, wandb, batch, max_new=max_new)
+    runner.export_requests(
+        runner.DEFAULT_SETUP,
+        prepared[0],
+        tmp_path / "run",
+        "actor",
+        actor,
+        wandb,
+        batch,
+        max_new=max_new,
+    )
     return [json.loads(line) for line in batch.read_text().splitlines()]
 
 
@@ -82,7 +122,10 @@ def test_full_split_denominator_retains_native_duplicates(prepared):
 def test_actor_prompt_contains_only_problem_and_official_system(prepared):
     for task in prepared[1]["tasks"]:
         row = prepared[2]["rows"][task["task_id"]]
-        assert task["messages"] == [{"role": "system", "content": runner.SYSTEM_PROMPT}, {"role": "user", "content": row["problem"]}]
+        assert task["messages"] == [
+            {"role": "system", "content": runner.SYSTEM_PROMPT},
+            {"role": "user", "content": row["problem"]},
+        ]
         assert not {"answer", "solution", "reference_answer"} & set(task)
 
 
@@ -109,19 +152,27 @@ def test_online_wandb_and_separate_pinned_judge(prepared, actor, judge, wandb):
 
 
 def test_native_actor_and_judge_sampling_cannot_be_overridden(prepared, actor, judge, wandb):
-    assert runner.create_contract(prepared[1], "actor", actor, wandb)["sampling"]["max_tokens"] == 2048
-    assert runner.create_contract(prepared[1], "judge", judge, wandb)["sampling"]["max_tokens"] == 300
+    assert (
+        runner.create_contract(prepared[1], "actor", actor, wandb)["sampling"]["max_tokens"] == 2048
+    )
+    assert (
+        runner.create_contract(prepared[1], "judge", judge, wandb)["sampling"]["max_tokens"] == 300
+    )
     with pytest.raises(runner.ContractError, match="override"):
         runner.create_contract(prepared[1], "actor", actor, wandb, {"n": 2})
     with pytest.raises(runner.ContractError, match="judge accepts no"):
-        runner.create_contract(prepared[1], "judge", judge, wandb, {"chat_template_kwargs": {"enable_thinking": False}})
+        runner.create_contract(
+            prepared[1], "judge", judge, wandb, {"chat_template_kwargs": {"enable_thinking": False}}
+        )
 
 
 def test_native_judge_context_uses_actual_tokenizer(tokenizer, prepared, judge, wandb):
     row = next(iter(prepared[2]["rows"].values()))
     contract = runner.create_contract(prepared[1], "judge", judge, wandb)
     payload = runner.judge_payload(row, "FIXTURE STUDENT SOLUTION", contract, tokenizer)
-    assert payload["prompt"] == tokenizer.get_context(row["problem"], row["answer"], "FIXTURE STUDENT SOLUTION")
+    assert payload["prompt"] == tokenizer.get_context(
+        row["problem"], row["answer"], "FIXTURE STUDENT SOLUTION"
+    )
     assert payload["prompt"].startswith("<|begin_of_text|>")
     assert payload["prompt"].endswith("## Student Final Answer")
     assert payload["stop"] == [tokenizer.eos_token, "<|eot_id|>"]
@@ -129,7 +180,9 @@ def test_native_judge_context_uses_actual_tokenizer(tokenizer, prepared, judge, 
 
 
 def test_native_report_parser_behavior_and_malformed_gate(scorer):
-    valid = "## Student Final Answer\n42\n\n## Equivalence Judgement\nTRUE\n\n## Justification\nSame."
+    valid = (
+        "## Student Final Answer\n42\n\n## Equivalence Judgement\nTRUE\n\n## Justification\nSame."
+    )
     assert scorer.parse_report(valid)["Equivalence Judgement"] == "TRUE"
     rows = [{"omni_judge": valid} for _ in range(4428)]
     runner.validate_native_reports(rows, scorer)
@@ -139,8 +192,18 @@ def test_native_report_parser_behavior_and_malformed_gate(scorer):
 
 
 def test_native_full_scorer_denominator_exact(scorer, tmp_path):
-    rows = [{"domain": ["fixture"], "difficulty": 1, "source": "fixture", "problem": "fixture", "answer": "fixture",
-             "model_generation": "fixture", "omni_judge": f"## Equivalence Judgement\n{'TRUE' if i == 0 else 'FALSE'}"} for i in range(4428)]
+    rows = [
+        {
+            "domain": ["fixture"],
+            "difficulty": 1,
+            "source": "fixture",
+            "problem": "fixture",
+            "answer": "fixture",
+            "model_generation": "fixture",
+            "omni_judge": f"## Equivalence Judgement\n{'TRUE' if i == 0 else 'FALSE'}",
+        }
+        for i in range(4428)
+    ]
     score, stdout, _ = runner.native_score(rows, scorer, tmp_path)
     assert score == 1 / 4428
     assert stdout.startswith("Total Accuracy:")
@@ -151,31 +214,80 @@ def test_native_full_scorer_denominator_exact(scorer, tmp_path):
 def test_export_reserves_once_and_skips_uncertain_samples(prepared, actor, wandb, tmp_path):
     first = export_actor(prepared, actor, wandb, tmp_path)[0]
     second_path = tmp_path / "second.jsonl"
-    runner.export_requests(runner.DEFAULT_SETUP, prepared[0], tmp_path / "run", "actor", actor, wandb, second_path, max_new=1)
+    runner.export_requests(
+        runner.DEFAULT_SETUP,
+        prepared[0],
+        tmp_path / "run",
+        "actor",
+        actor,
+        wandb,
+        second_path,
+        max_new=1,
+    )
     second = json.loads(second_path.read_text())
     assert first["task_id"] != second["task_id"]
     with pytest.raises(runner.ContractError, match="already exported"):
-        runner.export_requests(runner.DEFAULT_SETUP, prepared[0], tmp_path / "run", "actor", actor, wandb, second_path, max_new=1)
+        runner.export_requests(
+            runner.DEFAULT_SETUP,
+            prepared[0],
+            tmp_path / "run",
+            "actor",
+            actor,
+            wandb,
+            second_path,
+            max_new=1,
+        )
 
 
 def test_resume_rejects_model_and_sampling_mismatch(prepared, actor, wandb, tmp_path):
     export_actor(prepared, actor, wandb, tmp_path)
     with pytest.raises(runner.ContractError, match="collision"):
-        runner.export_requests(runner.DEFAULT_SETUP, prepared[0], tmp_path / "run", "actor", {**actor, "served_model": "other"}, wandb,
-                               tmp_path / "second.jsonl", max_new=1)
+        runner.export_requests(
+            runner.DEFAULT_SETUP,
+            prepared[0],
+            tmp_path / "run",
+            "actor",
+            {**actor, "served_model": "other"},
+            wandb,
+            tmp_path / "second.jsonl",
+            max_new=1,
+        )
     with pytest.raises(runner.ContractError, match="collision"):
-        runner.export_requests(runner.DEFAULT_SETUP, prepared[0], tmp_path / "run", "actor", actor, wandb,
-                               tmp_path / "second.jsonl", max_new=1, extra_body={"seed": 200})
+        runner.export_requests(
+            runner.DEFAULT_SETUP,
+            prepared[0],
+            tmp_path / "run",
+            "actor",
+            actor,
+            wandb,
+            tmp_path / "second.jsonl",
+            max_new=1,
+            extra_body={"seed": 200},
+        )
 
 
 def test_actor_response_idempotence_and_changed_sample_collision(prepared, actor, wandb, tmp_path):
     request = export_actor(prepared, actor, wandb, tmp_path)[0]
-    response_path = save_response(tmp_path / "response.jsonl", response_from_request(request, "ACTOR FIXTURE"))
-    assert runner.ingest_responses(runner.DEFAULT_SETUP, prepared[0], tmp_path / "run", "actor", response_path)["count"] == 1
-    assert runner.ingest_responses(runner.DEFAULT_SETUP, prepared[0], tmp_path / "run", "actor", response_path)["count"] == 1
+    response_path = save_response(
+        tmp_path / "response.jsonl", response_from_request(request, "ACTOR FIXTURE")
+    )
+    assert (
+        runner.ingest_responses(
+            runner.DEFAULT_SETUP, prepared[0], tmp_path / "run", "actor", response_path
+        )["count"]
+        == 1
+    )
+    assert (
+        runner.ingest_responses(
+            runner.DEFAULT_SETUP, prepared[0], tmp_path / "run", "actor", response_path
+        )["count"]
+        == 1
+    )
     save_response(response_path, response_from_request(request, "SECOND DRAW"))
     with pytest.raises(runner.ContractError, match="collision"):
-        runner.ingest_responses(runner.DEFAULT_SETUP, prepared[0], tmp_path / "run", "actor", response_path)
+        runner.ingest_responses(
+            runner.DEFAULT_SETUP, prepared[0], tmp_path / "run", "actor", response_path
+        )
 
 
 def test_duplicate_response_task_rejected(prepared, actor, wandb, tmp_path):
@@ -187,27 +299,54 @@ def test_duplicate_response_task_rejected(prepared, actor, wandb, tmp_path):
         runner.ingest_responses(runner.DEFAULT_SETUP, prepared[0], tmp_path / "run", "actor", path)
 
 
-def test_actor_to_judge_to_partial_score_keeps_full_score_null(prepared, actor, judge, wandb, tmp_path):
+def test_actor_to_judge_to_partial_score_keeps_full_score_null(
+    prepared, actor, judge, wandb, tmp_path
+):
     request = export_actor(prepared, actor, wandb, tmp_path)[0]
-    actor_response = save_response(tmp_path / "actor-response.jsonl", response_from_request(request, "ACTOR FIXTURE"))
-    runner.ingest_responses(runner.DEFAULT_SETUP, prepared[0], tmp_path / "run", "actor", actor_response)
+    actor_response = save_response(
+        tmp_path / "actor-response.jsonl", response_from_request(request, "ACTOR FIXTURE")
+    )
+    runner.ingest_responses(
+        runner.DEFAULT_SETUP, prepared[0], tmp_path / "run", "actor", actor_response
+    )
     judge_batch = tmp_path / "judge-batch.jsonl"
-    runner.export_requests(runner.DEFAULT_SETUP, prepared[0], tmp_path / "run", "judge", judge, wandb, judge_batch, max_new=1)
+    runner.export_requests(
+        runner.DEFAULT_SETUP,
+        prepared[0],
+        tmp_path / "run",
+        "judge",
+        judge,
+        wandb,
+        judge_batch,
+        max_new=1,
+    )
     judge_request = json.loads(judge_batch.read_text())
     assert judge_request["task_id"] == request["task_id"]
     assert judge_request["api_path"] == "/v1/completions"
     assert "ACTOR FIXTURE" in judge_request["payload"]["prompt"]
-    judge_response = save_response(tmp_path / "judge-response.jsonl", response_from_request(judge_request,
-                                   "42\n\n## Equivalence Judgement\nTRUE\n\n## Justification\nFixture only."))
-    runner.ingest_responses(runner.DEFAULT_SETUP, prepared[0], tmp_path / "run", "judge", judge_response)
-    receipt = runner.score(runner.DEFAULT_SETUP, prepared[0], tmp_path / "run", tmp_path / "partial.json")
-    assert receipt["actor_samples"] == 1 and receipt["native_judged_samples"] == 1
-    assert receipt["score"] is None and receipt["expected_total"] == 4428
+    judge_response = save_response(
+        tmp_path / "judge-response.jsonl",
+        response_from_request(
+            judge_request, "42\n\n## Equivalence Judgement\nTRUE\n\n## Justification\nFixture only."
+        ),
+    )
+    runner.ingest_responses(
+        runner.DEFAULT_SETUP, prepared[0], tmp_path / "run", "judge", judge_response
+    )
+    receipt = runner.score(
+        runner.DEFAULT_SETUP, prepared[0], tmp_path / "run", tmp_path / "partial.json"
+    )
+    assert receipt["actor_samples"] == 1
+    assert receipt["native_judged_samples"] == 1
+    assert receipt["score"] is None
+    assert receipt["expected_total"] == 4428
 
 
 def test_wrong_model_response_is_preserved_but_not_validated(prepared, actor, wandb, tmp_path):
     request = export_actor(prepared, actor, wandb, tmp_path)[0]
-    response = save_response(tmp_path / "wrong.jsonl", response_from_request(request, "fixture", model="wrong"))
+    response = save_response(
+        tmp_path / "wrong.jsonl", response_from_request(request, "fixture", model="wrong")
+    )
     runner.ingest_responses(runner.DEFAULT_SETUP, prepared[0], tmp_path / "run", "actor", response)
     contract = runner.read_json(tmp_path / "run/actor/contract.json")
     with pytest.raises(runner.ContractError, match="served model mismatch"):

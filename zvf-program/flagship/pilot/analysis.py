@@ -30,10 +30,16 @@ def _full_record(receipt: Mapping[str, Any]) -> Mapping[str, Any]:
     obtained from the independent verifier; hashes alone are not signatures.
     """
     try:
-        if receipt.get("schema_version") != "flagship-pilot-acceptance-v1" or receipt.get("status") != "accepted":
+        if (
+            receipt.get("schema_version") != "flagship-pilot-acceptance-v1"
+            or receipt.get("status") != "accepted"
+        ):
             raise AnalysisContractError("independently verified accepted receipt required")
         record = receipt["full_record"]
-        if record.get("schema_version") != "flagship-pilot-unit-v1" or record.get("status") != "completed":
+        if (
+            record.get("schema_version") != "flagship-pilot-unit-v1"
+            or record.get("status") != "completed"
+        ):
             raise AnalysisContractError("completed full record required")
         payload = dict(record)
         fingerprint = payload.pop("fingerprint", None)
@@ -63,8 +69,12 @@ def _full_record(receipt: Mapping[str, Any]) -> Mapping[str, Any]:
         normalized_auc(record)
         for evaluation in record["evaluations"]:
             if evaluation.get("heldout_n") != 128 or type(evaluation.get("correct")) is not int:
-                raise AnalysisContractError("evaluation requires heldout_n=128 and integer correct count")
-            if not 0 <= evaluation["correct"] <= 128 or not math.isclose(evaluation["accuracy"], evaluation["correct"]/128, abs_tol=1e-12):
+                raise AnalysisContractError(
+                    "evaluation requires heldout_n=128 and integer correct count"
+                )
+            if not 0 <= evaluation["correct"] <= 128 or not math.isclose(
+                evaluation["accuracy"], evaluation["correct"] / 128, abs_tol=1e-12
+            ):
                 raise AnalysisContractError("evaluation correct count/accuracy mismatch")
         _receipts(record)
         return record
@@ -74,7 +84,8 @@ def _full_record(receipt: Mapping[str, Any]) -> Mapping[str, Any]:
 
 def _record_map(
     records: Sequence[Mapping[str, Any]],
-    *, regimes: Sequence[str] = REGIME_ORDER,
+    *,
+    regimes: Sequence[str] = REGIME_ORDER,
 ) -> dict[tuple[str, str, int], Mapping[str, Any]]:
     mapped: dict[tuple[str, str, int], Mapping[str, Any]] = {}
     identities = set()
@@ -103,18 +114,29 @@ def _record_map(
         )
     for regime in regimes:
         for seed in SCREENING_SEEDS:
-            groups = {tuple(r["group_fingerprint"] for r in _receipts(mapped[(c, regime, seed)])) for c in CONDITION_ORDER}
+            groups = {
+                tuple(r["group_fingerprint"] for r in _receipts(mapped[(c, regime, seed)]))
+                for c in CONDITION_ORDER
+            }
             if len(groups) != 1:
-                raise AnalysisContractError("paired conditions have different replay group identities")
+                raise AnalysisContractError(
+                    "paired conditions have different replay group identities"
+                )
     return mapped
 
 
 def _receipts(record: Mapping[str, Any]) -> list[Mapping[str, Any]]:
     receipts = record["manifest"]["gradient_receipts"]
-    if len(receipts) != 100 or any(type(item.get("step")) is not int for item in receipts) or [item["step"] for item in receipts] != list(range(1, 101)):
+    if (
+        len(receipts) != 100
+        or any(type(item.get("step")) is not int for item in receipts)
+        or [item["step"] for item in receipts] != list(range(1, 101))
+    ):
         raise AnalysisContractError("unit gradient receipts are not contiguous 1..100")
     for item in receipts:
-        if item.get("condition") != record["condition"] or not _digest(item.get("group_fingerprint")):
+        if item.get("condition") != record["condition"] or not _digest(
+            item.get("group_fingerprint")
+        ):
             raise AnalysisContractError("gradient receipt condition/group identity mismatch")
         for key in ("intended_gradient_norm", "native_gradient_norm", "selected_gradient_norm"):
             value = item.get(key)
@@ -200,7 +222,8 @@ def _comparison_equivalent(
         return True
     if relation != "nonzero":
         return False
-    assert cosine is not None and relative_l2 is not None
+    assert cosine is not None
+    assert relative_l2 is not None
     return cosine >= 0.999 and relative_l2 <= 0.01
 
 
@@ -210,7 +233,8 @@ def _comparison_diverges(receipt: Mapping[str, Any]) -> bool:
         return False
     if relation != "nonzero":
         return True
-    assert cosine is not None and relative_l2 is not None
+    assert cosine is not None
+    assert relative_l2 is not None
     return cosine <= 0.99 and relative_l2 >= 0.05
 
 
@@ -329,13 +353,25 @@ def screening_gate(records: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
             "pass": learning_pass,
         },
         "matched_compute_pass": matched_compute_pass,
-        "absolute_evaluations": [{"condition": key[0], "regime": key[1], "seed": key[2],
-                                  "evaluations": value["evaluations"]} for key, value in mapped.items()],
-        "auc_seed_summaries": {regime: {"mean": statistics.fmean(values),
-            "sd": statistics.stdev(values), "n": len(values),
-            "standard_error": statistics.stdev(values)/math.sqrt(len(values)),
-            "interpretation": "descriptive independent-seed uncertainty, not a formal efficacy test"}
-            for regime, values in auc_differences.items()},
+        "absolute_evaluations": [
+            {
+                "condition": key[0],
+                "regime": key[1],
+                "seed": key[2],
+                "evaluations": value["evaluations"],
+            }
+            for key, value in mapped.items()
+        ],
+        "auc_seed_summaries": {
+            regime: {
+                "mean": statistics.fmean(values),
+                "sd": statistics.stdev(values),
+                "n": len(values),
+                "standard_error": statistics.stdev(values) / math.sqrt(len(values)),
+                "interpretation": "descriptive independent-seed uncertainty, not a formal efficacy test",
+            }
+            for regime, values in auc_differences.items()
+        },
     }
 
 
@@ -358,18 +394,23 @@ def _monte_carlo(
         raise AnalysisContractError("power gate is frozen to n=5 and alpha=0.0125")
     if type(draws) is not int or draws <= 0:
         raise AnalysisContractError("draws must be a positive integer")
-    if equivalence_margin is not None and (not math.isfinite(equivalence_margin) or equivalence_margin <= 0):
+    if equivalence_margin is not None and (
+        not math.isfinite(equivalence_margin) or equivalence_margin <= 0
+    ):
         raise AnalysisContractError("equivalence margin must be positive and finite")
     from scipy.stats import t
-    two_sided_critical = float(t.ppf(1-alpha/2, df=n-1))
-    one_sided_critical = float(t.ppf(1-alpha, df=n-1))
+
+    two_sided_critical = float(t.ppf(1 - alpha / 2, df=n - 1))
+    one_sided_critical = float(t.ppf(1 - alpha, df=n - 1))
     observed = np.asarray(values, dtype=np.float64)
     if observed.shape != (3,) or not np.isfinite(observed).all():
         raise AnalysisContractError("power input must contain three finite screening effects")
     mean = float(observed.mean())
     sd = float(observed.std(ddof=1))
     if sd == 0.0:
-        raise AnalysisContractError("DEGENERATE_VARIANCE: plug-in studentized power is not estimable")
+        raise AnalysisContractError(
+            "DEGENERATE_VARIANCE: plug-in studentized power is not estimable"
+        )
     generator = np.random.Generator(np.random.PCG64(seed))
     simulations = generator.normal(loc=mean, scale=sd, size=(draws, n))
     simulated_mean = simulations.mean(axis=1)
@@ -401,40 +442,72 @@ def confirmatory_power_gate(
 ) -> dict[str, Any]:
     if screening_report.get("verdict") != "GO":
         raise AnalysisContractError("confirmatory power cannot be estimated after a KILL gate")
-    if screening_report.get("schema_version") != "flagship-pilot-screening-gate-v3-corrected-direction":
-        raise AnalysisContractError("power sensitivity requires corrected two-regime screening report")
+    if (
+        screening_report.get("schema_version")
+        != "flagship-pilot-screening-gate-v3-corrected-direction"
+    ):
+        raise AnalysisContractError(
+            "power sensitivity requires corrected two-regime screening report"
+        )
     # Never average scientifically different regimes into one effect.
     results = {}
     from scipy.stats import chi2
+
     for offset, regime in enumerate(REGIME_ORDER):
         values = screening_report["learning"]["auc_differences"][regime]
         array = np.asarray(values, dtype=float)
         if array.shape != (3,) or not np.isfinite(array).all():
             raise AnalysisContractError("three finite effects required per regime")
         sd = float(array.std(ddof=1))
-        variance_interval = [2*sd**2/float(chi2.ppf(.975, 2)), 2*sd**2/float(chi2.ppf(.025, 2))]
+        variance_interval = [
+            2 * sd**2 / float(chi2.ppf(0.975, 2)),
+            2 * sd**2 / float(chi2.ppf(0.025, 2)),
+        ]
         scenarios = []
         # Sensitivity grid, not a selected scientifically meaningful alternative.
         for mean_scale in (0.0, 0.5, 1.0):
             for sd_scale in (1.0, 2.0):
-                mean = float(array.mean())*mean_scale
-                centered = (array-array.mean())*sd_scale + mean
+                mean = float(array.mean()) * mean_scale
+                centered = (array - array.mean()) * sd_scale + mean
                 try:
-                    estimate = _monte_carlo(centered, n=n, draws=draws, alpha=alpha,
-                        seed=seed+offset, equivalence_margin=None)
-                    scenarios.append({"mean": mean, "sd": sd*sd_scale, "effect_power": estimate.effect_power})
+                    estimate = _monte_carlo(
+                        centered,
+                        n=n,
+                        draws=draws,
+                        alpha=alpha,
+                        seed=seed + offset,
+                        equivalence_margin=None,
+                    )
+                    scenarios.append(
+                        {"mean": mean, "sd": sd * sd_scale, "effect_power": estimate.effect_power}
+                    )
                 except AnalysisContractError as exc:
                     if "DEGENERATE_VARIANCE" not in str(exc):
                         raise
-                    scenarios.append({"mean": mean, "sd": sd*sd_scale, "effect_power": None,
-                                      "status": "DEGENERATE_VARIANCE"})
-        results[regime] = {"observed_effects": list(values), "normal_variance_ci95": variance_interval,
-                           "sensitivity": scenarios}
-    return {"schema_version": "flagship-pilot-power-sensitivity-v2",
-        "verdict": "EXPLORATORY_ONLY", "regime_specific": results,
-        "n": n, "draws": draws, "alpha": alpha, "seed": seed,
+                    scenarios.append(
+                        {
+                            "mean": mean,
+                            "sd": sd * sd_scale,
+                            "effect_power": None,
+                            "status": "DEGENERATE_VARIANCE",
+                        }
+                    )
+        results[regime] = {
+            "observed_effects": list(values),
+            "normal_variance_ci95": variance_interval,
+            "sensitivity": scenarios,
+        }
+    return {
+        "schema_version": "flagship-pilot-power-sensitivity-v2",
+        "verdict": "EXPLORATORY_ONLY",
+        "regime_specific": results,
+        "n": n,
+        "draws": draws,
+        "alpha": alpha,
+        "seed": seed,
         "final_quality_equivalence": "NOT_APPROVED: prespecified margin and variance sensitivity required",
-        "limitations": "Three-seed normal plug-in sensitivity, not confirmatory approval. Effects/margins and heldout sample size must be prespecified independently. Zero variance is not estimable; no nonexistent regime pooling."}
+        "limitations": "Three-seed normal plug-in sensitivity, not confirmatory approval. Effects/margins and heldout sample size must be prespecified independently. Zero variance is not estimable; no nonexistent regime pooling.",
+    }
 
 
 BALANCED_CANDIDATE_PROTOCOL = {
@@ -462,25 +535,45 @@ def balanced_candidate_report(records: Sequence[Mapping[str, Any]]) -> dict[str,
         if len({r["token_flop_ledger"]["charged_generated_tokens"] for r in block}) != 1:
             raise AnalysisContractError("unmatched balanced compute")
         intended, native = (mapped[(c, regime, seed)] for c in ("intended_full", "native_trl"))
-        effects.append(normalized_auc(intended)-normalized_auc(native))
-        finals.append({"seed": seed, "intended": intended["evaluations"][-1],
-                       "native": native["evaluations"][-1]})
+        effects.append(normalized_auc(intended) - normalized_auc(native))
+        finals.append(
+            {
+                "seed": seed,
+                "intended": intended["evaluations"][-1],
+                "native": native["evaluations"][-1],
+            }
+        )
         receipts = _receipts(intended)
-        diagnostics.append({"seed": seed, "relations": _relation_counts(receipts),
-            "cosines": [r["gradient_cosine"] for r in receipts],
-            "relative_l2": [r["gradient_relative_l2"] for r in receipts],
-            "intended_norms": [r.get("intended_gradient_norm") for r in receipts],
-            "native_norms": [r.get("native_gradient_norm") for r in receipts]})
+        diagnostics.append(
+            {
+                "seed": seed,
+                "relations": _relation_counts(receipts),
+                "cosines": [r["gradient_cosine"] for r in receipts],
+                "relative_l2": [r["gradient_relative_l2"] for r in receipts],
+                "intended_norms": [r.get("intended_gradient_norm") for r in receipts],
+                "native_norms": [r.get("native_gradient_norm") for r in receipts],
+            }
+        )
     from scipy.stats import t
+
     mean = statistics.fmean(effects)
-    half = float(t.ppf(.975, len(effects)-1))*statistics.stdev(effects)/math.sqrt(len(effects))
-    return {"schema_version": BALANCED_CANDIDATE_PROTOCOL["schema_version"],
+    half = (
+        float(t.ppf(0.975, len(effects) - 1)) * statistics.stdev(effects) / math.sqrt(len(effects))
+    )
+    return {
+        "schema_version": BALANCED_CANDIDATE_PROTOCOL["schema_version"],
         "analysis_protocol_fingerprint": canonical_fingerprint(BALANCED_CANDIDATE_PROTOCOL),
         "verdict": "DESCRIPTIVE_ONLY_PENDING_PROTOCOL_AUTHORIZATION",
-        "regimes": [regime], "paired_seed_auc_differences": effects,
-        "mean_auc_difference": mean, "exploratory_normal_seed_mean_ci95": [mean-half, mean+half],
-        "final_evaluations": finals, "gradient_diagnostics": diagnostics,
-        "limitations": ["Three seeds cannot establish broad generalization; interval assumes independent normal seed effects.",
+        "regimes": [regime],
+        "paired_seed_auc_differences": effects,
+        "mean_auc_difference": mean,
+        "exploratory_normal_seed_mean_ci95": [mean - half, mean + half],
+        "final_evaluations": finals,
+        "gradient_diagnostics": diagnostics,
+        "limitations": [
+            "Three seeds cannot establish broad generalization; interval assumes independent normal seed effects.",
             "128 shared heldout examples have 1/128 accuracy resolution; paired example evidence is required for paired uncertainty.",
             "Repeated checkpoint evaluation is not a separate final test set.",
-            "No filtered-regime claim, power approval, formal equivalence or original pilot GO."]}
+            "No filtered-regime claim, power approval, formal equivalence or original pilot GO.",
+        ],
+    }

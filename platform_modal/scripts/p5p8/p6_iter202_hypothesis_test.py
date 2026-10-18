@@ -10,6 +10,7 @@ Outputs:
 
 Stdlib only. Run: python3 platform_modal/scripts/p5p8/p6_iter202_hypothesis_test.py
 """
+
 import csv
 import json
 import pathlib
@@ -92,7 +93,9 @@ def main():
         "claim": "grpo cross-framework MIN-REPORT shows ≥1 disagreeing field",
         "n_disagree_fields": n_disagree_fields,
         "n_total_fields": n_total_grpo_fields,
-        "disagree_rate_overall": round(n_disagree_fields / n_total_grpo_fields, 4) if n_total_grpo_fields else 0,
+        "disagree_rate_overall": round(n_disagree_fields / n_total_grpo_fields, 4)
+        if n_total_grpo_fields
+        else 0,
         "result": "PASS" if n_disagree_fields >= 1 else "FAIL",
         "worst_disagree_fields": sorted(
             [r for r in grpo_div if int(r["cross_fw_disagree_pairs"]) > 0],
@@ -136,7 +139,14 @@ def main():
     h8 = {
         "id": "H8",
         "claim": "top-3 unmined cells are all zvf130 (cross-method extension of single-batch harness)",
-        "top3": [{"framework": r["framework"], "method": r["method"], "priority": int(r["priority_score"])} for r in top3],
+        "top3": [
+            {
+                "framework": r["framework"],
+                "method": r["method"],
+                "priority": int(r["priority_score"]),
+            }
+            for r in top3
+        ],
         "all_zvf130": all_zvf130,
         "result": "PASS" if all_zvf130 else "FAIL",
     }
@@ -160,9 +170,7 @@ def main():
     # framework coverage, broadening the cross-framework reproducibility
     # surface from 1 method (grpo) to 6 methods. PASS=monoculture-confirmed,
     # FAIL=monoculture-broader-than-expected (the informative outcome here).
-    methods_with_multi_fw = sorted(
-        [m for m, c in by_method_count.items() if c > 1]
-    )
+    methods_with_multi_fw = sorted([m for m, c in by_method_count.items() if c > 1])
     n_methods_with_multi_fw = len(methods_with_multi_fw)
     h10 = {
         "id": "H10",
@@ -184,12 +192,16 @@ def main():
         w = csv.DictWriter(f, fieldnames=fields, delimiter="\t")
         w.writeheader()
         for h in hypotheses:
-            w.writerow({
-                "id": h["id"],
-                "claim": h["claim"],
-                "value": json.dumps({k: v for k, v in h.items() if k not in ("id", "claim", "result")}),
-                "result": h["result"],
-            })
+            w.writerow(
+                {
+                    "id": h["id"],
+                    "claim": h["claim"],
+                    "value": json.dumps(
+                        {k: v for k, v in h.items() if k not in ("id", "claim", "result")}
+                    ),
+                    "result": h["result"],
+                }
+            )
 
     summary = {
         "iter": 202,

@@ -30,6 +30,7 @@ from e13_openreward_games_local_runner import (
     prove_seed_separation,
     verify_episodes,
 )
+import pytest
 
 SYNTHETIC_ENV = "SYNTHETIC-FIXTURE/DoNotScore"
 SYNTHETIC_REV = "0" * 40
@@ -65,49 +66,49 @@ def synthetic_manifest(
 class TaskSpecSchemaTests(unittest.TestCase):
     def test_parses_a_well_formed_task(self):
         spec = parse_task_spec({"id": "A_seed3", "env_id": "A", "seed": 3, "variant": "A"})
-        self.assertEqual(spec, GameTaskSpec(id="A_seed3", env_id="A", seed=3, variant="A"))
+        assert spec == GameTaskSpec(id="A_seed3", env_id="A", seed=3, variant="A")
 
     def test_variant_defaults_to_env_id(self):
-        self.assertEqual(parse_task_spec({"id": "A_seed0", "env_id": "A", "seed": 0}).variant, "A")
+        assert parse_task_spec({"id": "A_seed0", "env_id": "A", "seed": 0}).variant == "A"
 
     def test_rejects_unknown_keys(self):
-        with self.assertRaises(GameManifestError):
+        with pytest.raises(GameManifestError):
             parse_task_spec({"id": "A", "env_id": "A", "seed": 0, "answer": "leaked"})
 
     def test_rejects_boolean_seed(self):
-        with self.assertRaises(GameManifestError):
+        with pytest.raises(GameManifestError):
             parse_task_spec({"id": "A", "env_id": "A", "seed": True})
 
     def test_rejects_negative_seed(self):
-        with self.assertRaises(GameManifestError):
+        with pytest.raises(GameManifestError):
             parse_task_spec({"id": "A", "env_id": "A", "seed": -1})
 
     def test_rejects_empty_id(self):
-        with self.assertRaises(GameManifestError):
+        with pytest.raises(GameManifestError):
             parse_task_spec({"id": "  ", "env_id": "A", "seed": 0})
 
 
 class SplitManifestSchemaTests(unittest.TestCase):
     def test_parses_synthetic_manifest(self):
         manifest = parse_split_manifest(synthetic_manifest("train", offset=0))
-        self.assertEqual(len(manifest.tasks), PER_VARIANT * len(VARIANTS))
-        self.assertEqual(manifest.variants, frozenset(VARIANTS))
-        self.assertTrue(manifest.synthetic)
+        assert len(manifest.tasks) == PER_VARIANT * len(VARIANTS)
+        assert manifest.variants == frozenset(VARIANTS)
+        assert manifest.synthetic
 
     def test_rejects_bad_environment_name(self):
         payload = synthetic_manifest("train", offset=0, environment="NoSlash")
-        with self.assertRaises(GameManifestError):
+        with pytest.raises(GameManifestError):
             parse_split_manifest(payload)
 
     def test_rejects_non_hex_revision(self):
         payload = synthetic_manifest("train", offset=0, revision="not-a-commit")
-        with self.assertRaises(GameManifestError):
+        with pytest.raises(GameManifestError):
             parse_split_manifest(payload)
 
     def test_rejects_empty_task_list(self):
         payload = synthetic_manifest("train", offset=0)
         payload["tasks"] = []
-        with self.assertRaises(GameManifestError):
+        with pytest.raises(GameManifestError):
             parse_split_manifest(payload)
 
     def test_same_seed_across_variants_is_allowed(self):
@@ -116,28 +117,23 @@ class SplitManifestSchemaTests(unittest.TestCase):
         seeds_per_variant = {}
         for task in manifest.tasks:
             seeds_per_variant.setdefault(task.seed, set()).add(task.variant)
-        self.assertEqual(seeds_per_variant[0], set(VARIANTS))
-        self.assertEqual(len(manifest.instance_keys), PER_VARIANT * len(VARIANTS))
+        assert seeds_per_variant[0] == set(VARIANTS)
+        assert len(manifest.instance_keys) == PER_VARIANT * len(VARIANTS)
 
     def test_rejects_duplicate_instance_keys(self):
         payload = synthetic_manifest("train", offset=0)
         payload["tasks"][1] = dict(payload["tasks"][0], id="different-id")
-        with self.assertRaises(GameManifestError):
+        with pytest.raises(GameManifestError):
             parse_split_manifest(payload)
 
     def test_digest_is_order_independent_and_content_sensitive(self):
         base = synthetic_manifest("train", offset=0)
         shuffled = dict(base, tasks=list(reversed(base["tasks"])))
-        self.assertEqual(
-            parse_split_manifest(base).digest(),
-            parse_split_manifest(shuffled).digest(),
-        )
+        assert parse_split_manifest(base).digest() == parse_split_manifest(shuffled).digest()
         mutated = json.loads(json.dumps(base))
         mutated["tasks"][0]["seed"] = 9999
         mutated["tasks"][0]["id"] = "DoNotScore-v0_seed9999"
-        self.assertNotEqual(
-            parse_split_manifest(base).digest(), parse_split_manifest(mutated).digest()
-        )
+        assert parse_split_manifest(base).digest() != parse_split_manifest(mutated).digest()
 
 
 class SeedSeparationTests(unittest.TestCase):
@@ -145,20 +141,20 @@ class SeedSeparationTests(unittest.TestCase):
         train = parse_split_manifest(synthetic_manifest("train", offset=0))
         evaluation = parse_split_manifest(synthetic_manifest("test", offset=10000))
         proof = prove_seed_separation(train, evaluation)
-        self.assertTrue(proof.holds)
-        self.assertEqual(proof.shared_instances, ())
-        self.assertEqual(proof.shared_seeds, ())
-        self.assertEqual(proof.shared_task_ids, ())
-        self.assertTrue(proof.variant_coverage_matches)
-        self.assertEqual(proof.eval_instance_count, PER_VARIANT * len(VARIANTS))
+        assert proof.holds
+        assert proof.shared_instances == ()
+        assert proof.shared_seeds == ()
+        assert proof.shared_task_ids == ()
+        assert proof.variant_coverage_matches
+        assert proof.eval_instance_count == PER_VARIANT * len(VARIANTS)
 
     def test_overlapping_instances_break_the_proof(self):
         train = parse_split_manifest(synthetic_manifest("train", offset=0))
         evaluation = parse_split_manifest(synthetic_manifest("test", offset=PER_VARIANT - 1))
         proof = prove_seed_separation(train, evaluation)
-        self.assertFalse(proof.holds)
-        self.assertTrue(proof.shared_instances)
-        self.assertTrue(any("instance" in v for v in proof.violations))
+        assert not proof.holds
+        assert proof.shared_instances
+        assert any("instance" in v for v in proof.violations)
 
     def test_revision_mismatch_breaks_the_proof(self):
         train = parse_split_manifest(synthetic_manifest("train", offset=0))
@@ -166,15 +162,15 @@ class SeedSeparationTests(unittest.TestCase):
             synthetic_manifest("test", offset=10000, revision="1" * 40)
         )
         proof = prove_seed_separation(train, evaluation)
-        self.assertFalse(proof.holds)
-        self.assertTrue(any("source_revision" in v for v in proof.violations))
+        assert not proof.holds
+        assert any("source_revision" in v for v in proof.violations)
 
     def test_environment_mismatch_breaks_the_proof(self):
         train = parse_split_manifest(synthetic_manifest("train", offset=0))
         evaluation = parse_split_manifest(
             synthetic_manifest("test", offset=10000, environment="SYNTHETIC-FIXTURE/Other")
         )
-        self.assertFalse(prove_seed_separation(train, evaluation).holds)
+        assert not prove_seed_separation(train, evaluation).holds
 
     def test_variant_coverage_mismatch_breaks_the_proof(self):
         train = parse_split_manifest(synthetic_manifest("train", offset=0))
@@ -182,13 +178,13 @@ class SeedSeparationTests(unittest.TestCase):
             synthetic_manifest("test", offset=10000, variants=(VARIANTS[0],))
         )
         proof = prove_seed_separation(train, evaluation)
-        self.assertFalse(proof.holds)
-        self.assertFalse(proof.variant_coverage_matches)
+        assert not proof.holds
+        assert not proof.variant_coverage_matches
 
     def test_same_split_name_breaks_the_proof(self):
         train = parse_split_manifest(synthetic_manifest("train", offset=0))
         evaluation = parse_split_manifest(synthetic_manifest("train", offset=10000))
-        self.assertFalse(prove_seed_separation(train, evaluation).holds)
+        assert not prove_seed_separation(train, evaluation).holds
 
 
 TASK = GameTaskSpec(
@@ -204,40 +200,40 @@ class VerifierTests(unittest.TestCase):
         outcome = self.verifier.verify(
             EpisodeRecord(task=TASK, steps=4, finished=True, terminal_reward=1.0)
         )
-        self.assertTrue(outcome.accepted)
-        self.assertEqual(outcome.reward, 1.0)
+        assert outcome.accepted
+        assert outcome.reward == 1.0
 
     def test_rejects_unfinished_episode(self):
         outcome = self.verifier.verify(
             EpisodeRecord(task=TASK, steps=6, finished=False, terminal_reward=0.5)
         )
-        self.assertFalse(outcome.accepted)
-        self.assertIsNone(outcome.reward)
+        assert not outcome.accepted
+        assert outcome.reward is None
 
     def test_rejects_missing_reward(self):
         outcome = self.verifier.verify(
             EpisodeRecord(task=TASK, steps=6, finished=True, terminal_reward=None)
         )
-        self.assertFalse(outcome.accepted)
+        assert not outcome.accepted
 
     def test_rejects_out_of_band_reward(self):
         outcome = self.verifier.verify(
             EpisodeRecord(task=TASK, steps=1, finished=True, terminal_reward=7.5)
         )
-        self.assertFalse(outcome.accepted)
-        self.assertTrue(any("outside declared band" in r for r in outcome.reasons))
+        assert not outcome.accepted
+        assert any("outside declared band" in r for r in outcome.reasons)
 
     def test_rejects_nan_reward(self):
         outcome = self.verifier.verify(
             EpisodeRecord(task=TASK, steps=1, finished=True, terminal_reward=float("nan"))
         )
-        self.assertFalse(outcome.accepted)
+        assert not outcome.accepted
 
     def test_rejects_zero_step_episode(self):
         outcome = self.verifier.verify(
             EpisodeRecord(task=TASK, steps=0, finished=True, terminal_reward=1.0)
         )
-        self.assertFalse(outcome.accepted)
+        assert not outcome.accepted
 
     def test_verify_episodes_maps_over_the_batch(self):
         episodes = [
@@ -245,7 +241,7 @@ class VerifierTests(unittest.TestCase):
             EpisodeRecord(task=TASK, steps=2, finished=False, terminal_reward=1.0),
         ]
         outcomes = verify_episodes(self.verifier, episodes)
-        self.assertEqual([o.accepted for o in outcomes], [True, False])
+        assert [o.accepted for o in outcomes] == [True, False]
 
 
 class ReceiptTests(unittest.TestCase):
@@ -270,10 +266,10 @@ class ReceiptTests(unittest.TestCase):
             is_model_score=False,
             synthetic=True,
         )
-        self.assertIsNone(receipt["score"])
-        self.assertFalse(receipt["is_model_score"])
-        self.assertEqual(receipt["synthetic_fixture"], SYNTHETIC_FIXTURE_MARKER)
-        self.assertTrue(receipt["score_withheld_because"])
+        assert receipt["score"] is None
+        assert not receipt["is_model_score"]
+        assert receipt["synthetic_fixture"] == SYNTHETIC_FIXTURE_MARKER
+        assert receipt["score_withheld_because"]
 
     def test_blocked_status_withholds_score(self):
         receipt = build_receipt(
@@ -286,8 +282,8 @@ class ReceiptTests(unittest.TestCase):
             is_model_score=True,
             synthetic=False,
         )
-        self.assertIsNone(receipt["score"])
-        self.assertIn("status is BLOCKED", receipt["score_withheld_because"])
+        assert receipt["score"] is None
+        assert "status is BLOCKED" in receipt["score_withheld_because"]
 
     def test_missing_separation_proof_withholds_score(self):
         receipt = build_receipt(
@@ -299,8 +295,8 @@ class ReceiptTests(unittest.TestCase):
             run_kind="model_rollout",
             is_model_score=True,
         )
-        self.assertIsNone(receipt["score"])
-        self.assertIn("no seed-separation proof supplied", receipt["score_withheld_because"])
+        assert receipt["score"] is None
+        assert "no seed-separation proof supplied" in receipt["score_withheld_because"]
 
     def test_broken_separation_proof_withholds_score(self):
         bad = prove_seed_separation(
@@ -315,7 +311,7 @@ class ReceiptTests(unittest.TestCase):
             run_kind="model_rollout",
             is_model_score=True,
         )
-        self.assertIsNone(receipt["score"])
+        assert receipt["score"] is None
 
     def test_rejected_episode_withholds_score(self):
         rejected = ProgrammaticRewardVerifier().verify(
@@ -330,7 +326,7 @@ class ReceiptTests(unittest.TestCase):
             run_kind="model_rollout",
             is_model_score=True,
         )
-        self.assertIsNone(receipt["score"])
+        assert receipt["score"] is None
 
     def test_all_local_gates_passing_remains_blocked_and_unscored(self):
         receipt = build_receipt(
@@ -343,14 +339,14 @@ class ReceiptTests(unittest.TestCase):
             is_model_score=True,
             synthetic=False,
         )
-        self.assertIsNone(receipt["score"])
-        self.assertIn(
-            "local verifier outcomes are not a provider-signed native OpenReward result",
-            receipt["score_withheld_because"],
+        assert receipt["score"] is None
+        assert (
+            "local verifier outcomes are not a provider-signed native OpenReward result"
+            in receipt["score_withheld_because"]
         )
 
     def test_is_model_score_requires_model_rollout(self):
-        with self.assertRaises(ReceiptIntegrityError):
+        with pytest.raises(ReceiptIntegrityError):
             build_receipt(
                 lane="E13",
                 suite="openreward_games_eval",
@@ -362,7 +358,7 @@ class ReceiptTests(unittest.TestCase):
             )
 
     def test_synthetic_run_cannot_be_a_model_score(self):
-        with self.assertRaises(ReceiptIntegrityError):
+        with pytest.raises(ReceiptIntegrityError):
             build_receipt(
                 lane="E13",
                 suite="openreward_games_eval",
@@ -375,7 +371,7 @@ class ReceiptTests(unittest.TestCase):
             )
 
     def test_invalid_status_is_rejected(self):
-        with self.assertRaises(ReceiptIntegrityError):
+        with pytest.raises(ReceiptIntegrityError):
             build_receipt(
                 lane="E13",
                 suite="openreward_games_eval",
@@ -397,7 +393,7 @@ class ReceiptTests(unittest.TestCase):
         )
         receipt["score"] = 0.99  # hand-edited after the fact
         with tempfile.TemporaryDirectory() as tmp:
-            with self.assertRaises(ReceiptIntegrityError):
+            with pytest.raises(ReceiptIntegrityError):
                 emit_receipt(Path(tmp) / "receipt.json", receipt)
 
     def test_emit_refuses_caller_supplied_local_model_score(self):
@@ -413,7 +409,7 @@ class ReceiptTests(unittest.TestCase):
         )
         receipt["score"] = 1.0
         with tempfile.TemporaryDirectory() as tmp:
-            with self.assertRaises(ReceiptIntegrityError):
+            with pytest.raises(ReceiptIntegrityError):
                 emit_receipt(Path(tmp) / "receipt.json", receipt)
 
     def test_emit_writes_a_clean_receipt(self):
@@ -428,8 +424,8 @@ class ReceiptTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             path = emit_receipt(Path(tmp) / "nested" / "receipt.json", receipt)
             written = json.loads(path.read_text())
-        self.assertIsNone(written["score"])
-        self.assertEqual(written["synthetic_fixture"], SYNTHETIC_FIXTURE_MARKER)
+        assert written["score"] is None
+        assert written["synthetic_fixture"] == SYNTHETIC_FIXTURE_MARKER
 
 
 class CliTests(unittest.TestCase):
@@ -444,12 +440,12 @@ class CliTests(unittest.TestCase):
             train = self._write(d, "train.json", synthetic_manifest("train", offset=0))
             evaluation = self._write(d, "test.json", synthetic_manifest("test", offset=10000))
             out = str(d / "receipt.json")
-            self.assertEqual(
-                main(["--train-manifest", train, "--eval-manifest", evaluation, "--out", out]), 0
+            assert (
+                main(["--train-manifest", train, "--eval-manifest", evaluation, "--out", out]) == 0
             )
             receipt = json.loads(Path(out).read_text())
-        self.assertIsNone(receipt["score"])
-        self.assertTrue(receipt["seed_separation"]["holds"])
+        assert receipt["score"] is None
+        assert receipt["seed_separation"]["holds"]
 
     def test_cli_returns_nonzero_on_overlap(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -457,12 +453,12 @@ class CliTests(unittest.TestCase):
             train = self._write(d, "train.json", synthetic_manifest("train", offset=0))
             evaluation = self._write(d, "test.json", synthetic_manifest("test", offset=0))
             out = str(d / "receipt.json")
-            self.assertEqual(
-                main(["--train-manifest", train, "--eval-manifest", evaluation, "--out", out]), 1
+            assert (
+                main(["--train-manifest", train, "--eval-manifest", evaluation, "--out", out]) == 1
             )
             receipt = json.loads(Path(out).read_text())
-        self.assertIsNone(receipt["score"])
-        self.assertEqual(receipt["status"], "BLOCKED")
+        assert receipt["score"] is None
+        assert receipt["status"] == "BLOCKED"
 
 
 if __name__ == "__main__":  # pragma: no cover

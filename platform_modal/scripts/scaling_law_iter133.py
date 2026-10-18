@@ -51,6 +51,7 @@ References (verified):
   - hartigan1985dip + silverman1981using (Hartigan dip approximation).
   - burnham2002model (AICc model selection) + kass1995bayes (Bayes factors).
 """
+
 from __future__ import annotations
 
 import json
@@ -60,11 +61,11 @@ from pathlib import Path
 import matplotlib
 
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt  # noqa: E402
-import numpy as np  # noqa: E402
-from scipy.cluster.hierarchy import fcluster, linkage  # noqa: E402
-from scipy.optimize import curve_fit  # noqa: E402
-from scipy.stats import binomtest, spearmanr  # noqa: E402
+import matplotlib.pyplot as plt
+import numpy as np
+from scipy.cluster.hierarchy import fcluster, linkage
+from scipy.optimize import curve_fit
+from scipy.stats import spearmanr
 from _analysis_common import saturation, write_rows_tsv as _write_tsv
 
 REPO = Path(__file__).resolve().parents[2] / "platform_hybrid"
@@ -80,22 +81,22 @@ FIG_DIR = REPO / "figures" / "review26_v2"
 #    diagnoses these as "perfect-zero collapse").
 RELIABLE_ANCHORS: dict[str, tuple[str, float, str, str]] = {
     # name: (file, params_B, arch, family)
-    "Qwen3.5-4B":            ("scale_gsm8k_qwen3.5-4b.json",       4.0,   "dense", "qwen"),
-    "Qwen3-8B":              ("scale_gsm8k_qwen3-8b.json",         8.0,   "dense", "qwen"),
-    "Llama-3.1-8B-Instruct": ("scale_gsm8k_llama-8b-inst.json",    8.0,   "dense", "llama"),
-    "gpt-oss-20B":           ("arch_gsm8k_gpt-oss-20b.json",       20.0,  "moe",   "gpt-oss"),
-    "DeepSeek-V3.1":         ("frontier_gsm8k_deepseek-v3.1.json", 685.0, "moe",   "deepseek"),
-    "Nemotron-120B":         ("frontier_gsm8k_nemotron-120b.json", 120.0, "dense", "nemotron"),
-    "Kimi-K2-Thinking":      ("arch_gsm8k_kimi-k2.json",           1000.0,"moe",   "kimi"),
+    "Qwen3.5-4B": ("scale_gsm8k_qwen3.5-4b.json", 4.0, "dense", "qwen"),
+    "Qwen3-8B": ("scale_gsm8k_qwen3-8b.json", 8.0, "dense", "qwen"),
+    "Llama-3.1-8B-Instruct": ("scale_gsm8k_llama-8b-inst.json", 8.0, "dense", "llama"),
+    "gpt-oss-20B": ("arch_gsm8k_gpt-oss-20b.json", 20.0, "moe", "gpt-oss"),
+    "DeepSeek-V3.1": ("frontier_gsm8k_deepseek-v3.1.json", 685.0, "moe", "deepseek"),
+    "Nemotron-120B": ("frontier_gsm8k_nemotron-120b.json", 120.0, "dense", "nemotron"),
+    "Kimi-K2-Thinking": ("arch_gsm8k_kimi-k2.json", 1000.0, "moe", "kimi"),
 }
 
 # Add the short probes -- only mean-reward diagnostic is meaningful for n<=5.
 SHORT_PROBES: dict[str, tuple[str, float, str, str]] = {
-    "Qwen3-32B":             ("scale_gsm8k_qwen3-32b.json",        32.0,  "dense", "qwen"),
-    "Qwen3.5-27B":           ("scale_gsm8k_qwen3.5-27b.json",      27.0,  "dense", "qwen"),
-    "Qwen3-30B-MoE":         ("moe_gsm8k_qwen3-30b-moe.json",      30.0,  "moe",   "qwen"),
-    "Qwen3-30B-MoE-Inst":    ("moe_gsm8k_qwen3-30b-inst.json",     30.0,  "moe",   "qwen"),
-    "Qwen3-235B-MoE":        ("frontier_gsm8k_qwen3-235b.json",    235.0, "moe",   "qwen"),
+    "Qwen3-32B": ("scale_gsm8k_qwen3-32b.json", 32.0, "dense", "qwen"),
+    "Qwen3.5-27B": ("scale_gsm8k_qwen3.5-27b.json", 27.0, "dense", "qwen"),
+    "Qwen3-30B-MoE": ("moe_gsm8k_qwen3-30b-moe.json", 30.0, "moe", "qwen"),
+    "Qwen3-30B-MoE-Inst": ("moe_gsm8k_qwen3-30b-inst.json", 30.0, "moe", "qwen"),
+    "Qwen3-235B-MoE": ("frontier_gsm8k_qwen3-235b.json", 235.0, "moe", "qwen"),
 }
 
 ALL_ANCHORS: dict[str, tuple[str, float, str, str]] = {**RELIABLE_ANCHORS, **SHORT_PROBES}
@@ -106,6 +107,7 @@ N_BOOT = 5000
 
 # ---------- core helpers (lifted from iter125/iter129) ----------
 
+
 def fit_saturation_or_mean(rt: list[float]) -> dict:
     """For long traces (n>=10), fit R(t)=R_max*(1-exp(-lambda*t)); for
     short probes (n<=5), saturation is degenerate so use the mean as the
@@ -114,25 +116,42 @@ def fit_saturation_or_mean(rt: list[float]) -> dict:
     y = np.asarray(rt, dtype=float)
     n = len(y)
     if n < 10:
-        return dict(R_max=float(y.mean()), lam=float("nan"),
-                    lam_at_bound=1, r2=float("nan"), n=n, mean=float(y.mean()))
+        return dict(
+            R_max=float(y.mean()),
+            lam=float("nan"),
+            lam_at_bound=1,
+            r2=float("nan"),
+            n=n,
+            mean=float(y.mean()),
+        )
     t = np.arange(1, n + 1, dtype=float)
     try:
-        popt, _ = curve_fit(saturation, t, y,
-                            p0=[float(np.mean(y[-min(5, n):])), 0.1],
-                            bounds=([0.0, 1e-4], [1.05, 10.0]),
-                            maxfev=20000)
+        popt, _ = curve_fit(
+            saturation,
+            t,
+            y,
+            p0=[float(np.mean(y[-min(5, n) :])), 0.1],
+            bounds=([0.0, 1e-4], [1.05, 10.0]),
+            maxfev=20000,
+        )
         r_max, lam = float(popt[0]), float(popt[1])
         pred = saturation(t, r_max, lam)
         ss_res = float(np.sum((y - pred) ** 2))
         ss_tot = float(np.sum((y - y.mean()) ** 2))
         r2 = 1.0 - ss_res / ss_tot if ss_tot > 0 else float("nan")
         lam_at_bound = int(lam >= 9.999)
-        return dict(R_max=r_max, lam=lam, lam_at_bound=lam_at_bound,
-                    r2=r2, n=n, mean=float(y.mean()))
-    except Exception:  # noqa: BLE001
-        return dict(R_max=float(y.mean()), lam=float("nan"),
-                    lam_at_bound=1, r2=float("nan"), n=n, mean=float(y.mean()))
+        return dict(
+            R_max=r_max, lam=lam, lam_at_bound=lam_at_bound, r2=r2, n=n, mean=float(y.mean())
+        )
+    except Exception:
+        return dict(
+            R_max=float(y.mean()),
+            lam=float("nan"),
+            lam_at_bound=1,
+            r2=float("nan"),
+            n=n,
+            mean=float(y.mean()),
+        )
 
 
 def monotonicity_violations(rt: list[float]) -> dict:
@@ -141,8 +160,7 @@ def monotonicity_violations(rt: list[float]) -> dict:
     n = len(y)
     n_pairs = n * (n - 1) // 2
     if n_pairs == 0:
-        return dict(violation_rate=float("nan"), max_drop=float("nan"),
-                    n_viol=0, n_pairs=0)
+        return dict(violation_rate=float("nan"), max_drop=float("nan"), n_viol=0, n_pairs=0)
     n_viol = 0
     max_drop = 0.0
     for i in range(n - 1):
@@ -151,8 +169,7 @@ def monotonicity_violations(rt: list[float]) -> dict:
                 n_viol += 1
                 if y[i] - y[j] > max_drop:
                     max_drop = float(y[i] - y[j])
-    return dict(violation_rate=n_viol / n_pairs, max_drop=max_drop,
-                n_viol=n_viol, n_pairs=n_pairs)
+    return dict(violation_rate=n_viol / n_pairs, max_drop=max_drop, n_viol=n_viol, n_pairs=n_pairs)
 
 
 def three_phase_diagnostic(rt: list[float]) -> dict:
@@ -162,20 +179,24 @@ def three_phase_diagnostic(rt: list[float]) -> dict:
     n = len(y)
     third = max(n // 3, 1)
     early = y[:third]
-    middle = y[third:2 * third]
-    late = y[2 * third:]
+    middle = y[third : 2 * third]
+    late = y[2 * third :]
     p1 = int(late.mean() > early.mean() + 0.05)
     p2 = int(middle.var() < 0.05)
     p3 = int((y.max() - late.mean()) > 0.10)
-    return dict(early_mean=float(early.mean()),
-                middle_mean=float(middle.mean()),
-                late_mean=float(late.mean()),
-                middle_var=float(middle.var()),
-                peak=float(y.max()),
-                p1=p1, p2=p2, p3=p3,
-                phase_combo=f"({p1},{p2},{p3})",
-                collapse_only=int(p1 == 0 and p3 == 1),
-                three_phase_full=int(p1 == 1 and p2 == 1 and p3 == 1))
+    return dict(
+        early_mean=float(early.mean()),
+        middle_mean=float(middle.mean()),
+        late_mean=float(late.mean()),
+        middle_var=float(middle.var()),
+        peak=float(y.max()),
+        p1=p1,
+        p2=p2,
+        p3=p3,
+        phase_combo=f"({p1},{p2},{p3})",
+        collapse_only=int(p1 == 0 and p3 == 1),
+        three_phase_full=int(p1 == 1 and p2 == 1 and p3 == 1),
+    )
 
 
 def uniform_cdf_deviation(values, rng=None, n_boot=0, n_grid=256):
@@ -189,10 +210,8 @@ def uniform_cdf_deviation(values, rng=None, n_boot=0, n_grid=256):
         return float("nan"), float("nan")
     u = (x - x[0]) / (x[-1] - x[0])
     n = len(x)
-    distance = max(np.max(np.arange(1, n + 1) / n - u),
-                   np.max(u - np.arange(n) / n))
+    distance = max(np.max(np.arange(1, n + 1) / n - u), np.max(u - np.arange(n) / n))
     return float(distance), float("nan")
-
 
 
 def higher_mean_cluster(values, labels):
@@ -223,6 +242,7 @@ def ward_linkage_split(values: np.ndarray) -> np.ndarray:
 
 # ---------- AICc + Bayes factor helpers (from iter129) ----------
 
+
 def aicc(rss: float, n: int, k: int) -> float:
     if n - k - 1 <= 0:
         return float("nan")
@@ -246,6 +266,7 @@ def kass_raftery_bf(loglik2: float, loglik1: float) -> str:
 
 # ---------- main ----------
 
+
 def main() -> None:
     FIG_DIR.mkdir(parents=True, exist_ok=True)
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
@@ -261,36 +282,60 @@ def main() -> None:
         if not rt:
             raise RuntimeError(f"missing reward_trace in {fn}")
         traces[name] = [float(x) for x in rt]
-        metas[name] = dict(params_B=params_B, arch=arch, family=family,
-                           trace_file=fn, n_steps=len(rt))
+        metas[name] = dict(
+            params_B=params_B, arch=arch, family=family, trace_file=fn, n_steps=len(rt)
+        )
 
     # Pool definitions
     pools = {
-        "n=5 (iter125/129)": ["Qwen3.5-4B", "Qwen3-8B", "Llama-3.1-8B-Instruct",
-                              "DeepSeek-V3.1", "Nemotron-120B"],
+        "n=5 (iter125/129)": [
+            "Qwen3.5-4B",
+            "Qwen3-8B",
+            "Llama-3.1-8B-Instruct",
+            "DeepSeek-V3.1",
+            "Nemotron-120B",
+        ],
         "n=7 (reliable n>=20)": list(RELIABLE_ANCHORS.keys()),
-        "n=10 (reliable+probes)": list(RELIABLE_ANCHORS.keys()) +
-                                  ["Qwen3-32B", "Qwen3.5-27B",
-                                   "Qwen3-30B-MoE", "Qwen3-30B-MoE-Inst"],
+        "n=10 (reliable+probes)": list(RELIABLE_ANCHORS.keys())
+        + ["Qwen3-32B", "Qwen3.5-27B", "Qwen3-30B-MoE", "Qwen3-30B-MoE-Inst"],
         "n=12 (all anchors)": list(ALL_ANCHORS.keys()),
     }
 
     # ---------- (1) Per-anchor R_max + monotonicity + three-phase ----------
     print("\n--- (1) per-anchor diagnostics ---")
-    pool_rows= []
+    pool_rows = []
     for pname, pnames in pools.items():
         for n in pnames:
             rt = traces[n]
             fit = fit_saturation_or_mean(rt)
-            pool_rows.append([pname, n, f"{metas[n]['params_B']:.1f}",
-                              metas[n]["arch"], metas[n]["family"],
-                              fit["n"], f"{fit['R_max']:.4f}",
-                              f"{fit['lam']:.4f}" if not math.isnan(fit["lam"]) else "NA",
-                              fit["lam_at_bound"], f"{fit['mean']:.4f}"])
+            pool_rows.append(
+                [
+                    pname,
+                    n,
+                    f"{metas[n]['params_B']:.1f}",
+                    metas[n]["arch"],
+                    metas[n]["family"],
+                    fit["n"],
+                    f"{fit['R_max']:.4f}",
+                    f"{fit['lam']:.4f}" if not math.isnan(fit["lam"]) else "NA",
+                    fit["lam_at_bound"],
+                    f"{fit['mean']:.4f}",
+                ]
+            )
     _write_tsv(
         RESULTS_DIR / "scaling_law_iter133_pool_sizes.tsv",
-        ["pool", "model", "params_B", "arch", "family",
-         "n_steps", "R_max", "lambda", "lam_at_bound", "r_mean"],
+        [
+            "pool",
+            "model",
+            "params_B",
+            "arch",
+            "family",
+            "n_steps",
+            "R_max",
+            "lambda",
+            "lam_at_bound",
+            "r_mean",
+        ],
         pool_rows,
     )
 
@@ -301,29 +346,73 @@ def main() -> None:
         rt = traces[n]
         m = monotonicity_violations(rt)
         p_mono = float("nan")  # dependent pairs: descriptive only
-        mono_rows.append([n, f"{metas[n]['params_B']:.1f}", metas[n]["arch"],
-                          len(rt), m["n_viol"], m["n_pairs"],
-                          f"{m['violation_rate']:.4f}", f"{m['max_drop']:.4f}",
-                          f"{p_mono:.4f}"])
+        mono_rows.append(
+            [
+                n,
+                f"{metas[n]['params_B']:.1f}",
+                metas[n]["arch"],
+                len(rt),
+                m["n_viol"],
+                m["n_pairs"],
+                f"{m['violation_rate']:.4f}",
+                f"{m['max_drop']:.4f}",
+                f"{p_mono:.4f}",
+            ]
+        )
         tp = three_phase_diagnostic(rt)
-        tp_rows.append([n, f"{metas[n]['params_B']:.1f}", metas[n]["arch"],
-                        len(rt), f"{tp['early_mean']:.4f}", f"{tp['middle_mean']:.4f}",
-                        f"{tp['late_mean']:.4f}", f"{tp['middle_var']:.4f}",
-                        f"{tp['peak']:.4f}",
-                        tp["p1"], tp["p2"], tp["p3"], tp["phase_combo"],
-                        tp["three_phase_full"], tp["collapse_only"]])
+        tp_rows.append(
+            [
+                n,
+                f"{metas[n]['params_B']:.1f}",
+                metas[n]["arch"],
+                len(rt),
+                f"{tp['early_mean']:.4f}",
+                f"{tp['middle_mean']:.4f}",
+                f"{tp['late_mean']:.4f}",
+                f"{tp['middle_var']:.4f}",
+                f"{tp['peak']:.4f}",
+                tp["p1"],
+                tp["p2"],
+                tp["p3"],
+                tp["phase_combo"],
+                tp["three_phase_full"],
+                tp["collapse_only"],
+            ]
+        )
     _write_tsv(
         RESULTS_DIR / "scaling_law_iter133_monotonicity.tsv",
-        ["model", "params_B", "arch", "n_steps",
-         "n_violations", "n_pairs", "violation_rate", "max_drop", "pair_inference_unavailable"],
+        [
+            "model",
+            "params_B",
+            "arch",
+            "n_steps",
+            "n_violations",
+            "n_pairs",
+            "violation_rate",
+            "max_drop",
+            "pair_inference_unavailable",
+        ],
         mono_rows,
     )
     _write_tsv(
         RESULTS_DIR / "scaling_law_iter133_three_phase.tsv",
-        ["model", "params_B", "arch", "n_steps",
-         "early_mean", "middle_mean", "late_mean", "middle_var", "peak",
-         "p1_improvement", "p2_plateau", "p3_collapse", "phase_combo",
-         "three_phase_full", "collapse_only"],
+        [
+            "model",
+            "params_B",
+            "arch",
+            "n_steps",
+            "early_mean",
+            "middle_mean",
+            "late_mean",
+            "middle_var",
+            "peak",
+            "p1_improvement",
+            "p2_plateau",
+            "p3_collapse",
+            "phase_combo",
+            "three_phase_full",
+            "collapse_only",
+        ],
         tp_rows,
     )
 
@@ -332,13 +421,14 @@ def main() -> None:
     bimod_rows = []
     pool_class_assignments: dict[str, dict[str, int]] = {}
     for pname, pnames in pools.items():
-        rmax_vals = np.array([fit_saturation_or_mean(traces[n])["R_max"]
-                              for n in pnames], dtype=float)
+        rmax_vals = np.array(
+            [fit_saturation_or_mean(traces[n])["R_max"] for n in pnames], dtype=float
+        )
         log_n = np.array([math.log10(metas[n]["params_B"]) for n in pnames], dtype=float)
         # largest gap split
         loc, gap = largest_gap_split(rmax_vals)
-        capable_lg = sorted(rmax_vals)[loc + 1:]
-        incapable_lg = sorted(rmax_vals)[:loc + 1]
+        capable_lg = sorted(rmax_vals)[loc + 1 :]
+        incapable_lg = sorted(rmax_vals)[: loc + 1]
         # ward k=2 split
         cl = ward_linkage_split(rmax_vals)
         cap_mask = higher_mean_cluster(rmax_vals, cl)
@@ -363,24 +453,46 @@ def main() -> None:
         else:
             gap_obs, p_perm = float("nan"), float("nan")
         # Map each model to a class label (largest gap split)
-        for n, v in zip(pnames, rmax_vals):
+        for n, v in zip(pnames, rmax_vals, strict=False):
             cls = "capable" if v > sorted(rmax_vals)[loc] else "incapable"
             pool_class_assignments.setdefault(pname, {})[n] = 1 if cls == "capable" else 0
-        bimod_rows.append([
-            pname, len(pnames), f"{rmax_vals.min():.4f}", f"{rmax_vals.max():.4f}",
-            f"{gap:.4f}", loc, dip, f"{dip_p:.4f}",
-            f"{a.mean() if len(ward_classes)==2 else float('nan'):.4f}",
-            f"{b.mean() if len(ward_classes)==2 else float('nan'):.4f}",
-            f"{gap_obs:.4f}", f"{p_perm:.4f}",
-            ";".join(f"({ci}:rho={within_rho[ci][0]:.3f},p={within_rho[ci][1]:.3f})"
-                     for ci in sorted(within_rho)),
-        ])
+        bimod_rows.append(
+            [
+                pname,
+                len(pnames),
+                f"{rmax_vals.min():.4f}",
+                f"{rmax_vals.max():.4f}",
+                f"{gap:.4f}",
+                loc,
+                dip,
+                f"{dip_p:.4f}",
+                f"{a.mean() if len(ward_classes) == 2 else float('nan'):.4f}",
+                f"{b.mean() if len(ward_classes) == 2 else float('nan'):.4f}",
+                f"{gap_obs:.4f}",
+                f"{p_perm:.4f}",
+                ";".join(
+                    f"({ci}:rho={within_rho[ci][0]:.3f},p={within_rho[ci][1]:.3f})"
+                    for ci in sorted(within_rho)
+                ),
+            ]
+        )
     _write_tsv(
         RESULTS_DIR / "scaling_law_iter133_bimodality.tsv",
-        ["pool", "n_anchors", "R_max_min", "R_max_max",
-         "largest_gap", "largest_gap_loc", "uniform_cdf_deviation", "unimodality_p_unavailable",
-         "ward_class0_mean", "ward_class1_mean", "ward_gap", "perm_p_ward_gap",
-         "within_class_spearman"],
+        [
+            "pool",
+            "n_anchors",
+            "R_max_min",
+            "R_max_max",
+            "largest_gap",
+            "largest_gap_loc",
+            "uniform_cdf_deviation",
+            "unimodality_p_unavailable",
+            "ward_class0_mean",
+            "ward_class1_mean",
+            "ward_gap",
+            "perm_p_ward_gap",
+            "within_class_spearman",
+        ],
         bimod_rows,
     )
 
@@ -389,12 +501,15 @@ def main() -> None:
     interaction_rows = []
     loocv_rows = []
     for pname, pnames in pools.items():
-        rmax_vals = np.array([fit_saturation_or_mean(traces[n])["R_max"]
-                              for n in pnames], dtype=float)
+        rmax_vals = np.array(
+            [fit_saturation_or_mean(traces[n])["R_max"] for n in pnames], dtype=float
+        )
         log_n = np.array([math.log10(metas[n]["params_B"]) for n in pnames], dtype=float)
         # Ward cluster assignment is the canonical "capability" label.
         cl = ward_linkage_split(rmax_vals)
-        capable = higher_mean_cluster(rmax_vals, cl).astype(float)  # use the higher-mean cluster as "capable"
+        capable = higher_mean_cluster(rmax_vals, cl).astype(
+            float
+        )  # use the higher-mean cluster as "capable"
         n = len(pnames)
         # OLS models (intercept, params_only, capability_only, params+capability,
         # params*capability interaction).
@@ -430,12 +545,11 @@ def main() -> None:
         def loglik_gaussian(rss: float, nn: int) -> float:
             return -nn / 2.0 * math.log(rss / nn + 1e-12)
 
-        bf_interaction_vs_main = kass_raftery_bf(
-            loglik_gaussian(rss4, n), loglik_gaussian(rss3, n))
+        bf_interaction_vs_main = kass_raftery_bf(loglik_gaussian(rss4, n), loglik_gaussian(rss3, n))
         bf_capability_vs_params = kass_raftery_bf(
-            loglik_gaussian(rss2, n), loglik_gaussian(rss1, n))
-        bf_full_vs_params = kass_raftery_bf(
-            loglik_gaussian(rss3, n), loglik_gaussian(rss1, n))
+            loglik_gaussian(rss2, n), loglik_gaussian(rss1, n)
+        )
+        bf_full_vs_params = kass_raftery_bf(loglik_gaussian(rss3, n), loglik_gaussian(rss1, n))
 
         # Spearman rho(log N, R_max) for the pool, with capability_class as a covariate.
         rho_pool, p_pool = spearmanr(log_n, rmax_vals)
@@ -449,19 +563,38 @@ def main() -> None:
         else:
             rinc, pinc = float("nan"), float("nan")
 
-        interaction_rows.append([
-            pname, n,
-            f"{aic0:.4f}", f"{rss0:.4f}",
-            f"{aic1:.4f}", f"{rss1:.4f}", f"{b1[1]:.4f}",
-            f"{aic2:.4f}", f"{rss2:.4f}", f"{b2[1]:.4f}",
-            f"{aic3:.4f}", f"{rss3:.4f}", f"{b3[1]:.4f}", f"{b3[2]:.4f}",
-            f"{aic4:.4f}", f"{rss4:.4f}", f"{b4[1]:.4f}", f"{b4[2]:.4f}", f"{b4[3]:.4f}",
-            f"{rho_pool:.4f}", f"{p_pool:.4f}",
-            f"{rcap:.4f}", f"{pcap:.4f}", f"{rinc:.4f}", f"{pinc:.4f}",
-            bf_interaction_vs_main,
-            bf_capability_vs_params,
-            bf_full_vs_params,
-        ])
+        interaction_rows.append(
+            [
+                pname,
+                n,
+                f"{aic0:.4f}",
+                f"{rss0:.4f}",
+                f"{aic1:.4f}",
+                f"{rss1:.4f}",
+                f"{b1[1]:.4f}",
+                f"{aic2:.4f}",
+                f"{rss2:.4f}",
+                f"{b2[1]:.4f}",
+                f"{aic3:.4f}",
+                f"{rss3:.4f}",
+                f"{b3[1]:.4f}",
+                f"{b3[2]:.4f}",
+                f"{aic4:.4f}",
+                f"{rss4:.4f}",
+                f"{b4[1]:.4f}",
+                f"{b4[2]:.4f}",
+                f"{b4[3]:.4f}",
+                f"{rho_pool:.4f}",
+                f"{p_pool:.4f}",
+                f"{rcap:.4f}",
+                f"{pcap:.4f}",
+                f"{rinc:.4f}",
+                f"{pinc:.4f}",
+                bf_interaction_vs_main,
+                bf_capability_vs_params,
+                bf_full_vs_params,
+            ]
+        )
 
         # LOOCV: drop each anchor, refit capability_class on the remainder via
         # largest-gap rule, check if the held-out anchor keeps its class.
@@ -476,37 +609,53 @@ def main() -> None:
             full_class = int(rmax_vals[i] >= sorted(rmax_vals)[largest_gap_split(rmax_vals)[0]])
             if held_class == full_class:
                 n_loocv_agree += 1
-        loocv_rows.append([pname, n, n_loocv_agree,
-                           f"{n_loocv_agree / n:.4f}"])
+        loocv_rows.append([pname, n, n_loocv_agree, f"{n_loocv_agree / n:.4f}"])
 
     _write_tsv(
         RESULTS_DIR / "scaling_law_iter133_interaction_aic.tsv",
-        ["pool", "n",
-         "AICc_intercept", "RSS_intercept",
-         "AICc_params", "RSS_params", "beta_params",
-         "AICc_capability", "RSS_capability", "beta_capability",
-         "AICc_params+cap", "RSS_params+cap", "beta_params", "beta_capability",
-         "AICc_interaction", "RSS_interaction",
-         "beta_params", "beta_capability", "beta_interaction",
-         "rho_pool", "p_pool",
-         "rho_capable", "p_capable", "rho_incapable", "p_incapable",
-         "BF_interaction_vs_main",
-         "BF_capability_vs_params",
-         "BF_full_vs_params"],
+        [
+            "pool",
+            "n",
+            "AICc_intercept",
+            "RSS_intercept",
+            "AICc_params",
+            "RSS_params",
+            "beta_params",
+            "AICc_capability",
+            "RSS_capability",
+            "beta_capability",
+            "AICc_params+cap",
+            "RSS_params+cap",
+            "beta_params",
+            "beta_capability",
+            "AICc_interaction",
+            "RSS_interaction",
+            "beta_params",
+            "beta_capability",
+            "beta_interaction",
+            "rho_pool",
+            "p_pool",
+            "rho_capable",
+            "p_capable",
+            "rho_incapable",
+            "p_incapable",
+            "BF_interaction_vs_main",
+            "BF_capability_vs_params",
+            "BF_full_vs_params",
+        ],
         interaction_rows,
     )
     _write_tsv(
         RESULTS_DIR / "scaling_law_iter133_loocv.tsv",
-        ["pool", "n_anchors", "n_loocv_agree", "frac_agree"], loocv_rows,
+        ["pool", "n_anchors", "n_loocv_agree", "frac_agree"],
+        loocv_rows,
     )
 
     # ---------- (4) meta JSON ----------
     # Final structured summary
     best_pool = "n=10 (reliable+probes)"
-    rmax10 = np.array([fit_saturation_or_mean(traces[n])["R_max"]
-                       for n in pools[best_pool]])
-    log_n10 = np.array([math.log10(metas[n]["params_B"])
-                        for n in pools[best_pool]])
+    rmax10 = np.array([fit_saturation_or_mean(traces[n])["R_max"] for n in pools[best_pool]])
+    log_n10 = np.array([math.log10(metas[n]["params_B"]) for n in pools[best_pool]])
     cl10 = ward_linkage_split(rmax10)
     capable10 = (cl10 == 1).astype(float)
     # Per-class Spearman.
@@ -528,15 +677,21 @@ def main() -> None:
         iter=133,
         pillar="P1-ScalingLaws",
         pools={p: v for p, v in pools.items()},
-        n_anchors=dict(reliable=len(RELIABLE_ANCHORS),
-                       short_probes=len(SHORT_PROBES),
-                       all=len(ALL_ANCHORS)),
+        n_anchors=dict(
+            reliable=len(RELIABLE_ANCHORS), short_probes=len(SHORT_PROBES), all=len(ALL_ANCHORS)
+        ),
         monotonicity_summary={
             "method": "iter125 violation rate at >=20-step traces, binomial vs H0=0.05",
             "per_anchor": [
-                dict(model=row[0], params_B=float(row[1]), arch=row[2],
-                     n_steps=int(row[3]), violation_rate=float(row[6]),
-                     max_drop=float(row[7]), binom_p=float(row[8]))
+                dict(
+                    model=row[0],
+                    params_B=float(row[1]),
+                    arch=row[2],
+                    n_steps=int(row[3]),
+                    violation_rate=float(row[6]),
+                    max_drop=float(row[7]),
+                    binom_p=float(row[8]),
+                )
                 for row in mono_rows
             ],
         },
@@ -545,23 +700,39 @@ def main() -> None:
             "n_three_phase_full": sum(int(r[13]) for r in tp_rows),
             "n_collapse_only": sum(int(r[14]) for r in tp_rows),
             "per_anchor": [
-                dict(model=row[0], params_B=float(row[1]), arch=row[2],
-                     phase_combo=row[12], three_phase_full=bool(int(row[13])),
-                     collapse_only=bool(int(row[14])))
+                dict(
+                    model=row[0],
+                    params_B=float(row[1]),
+                    arch=row[2],
+                    phase_combo=row[12],
+                    three_phase_full=bool(int(row[13])),
+                    collapse_only=bool(int(row[14])),
+                )
                 for row in tp_rows
             ],
         },
         bimodality_summary=[
-            dict(pool=row[0], n=int(row[1]), largest_gap=float(row[4]),
-                 uniform_cdf_deviation=float(row[6]), unimodality_p_unavailable=float(row[7]),
-                 ward_gap=float(row[10]), perm_p=float(row[11]))
+            dict(
+                pool=row[0],
+                n=int(row[1]),
+                largest_gap=float(row[4]),
+                uniform_cdf_deviation=float(row[6]),
+                unimodality_p_unavailable=float(row[7]),
+                ward_gap=float(row[10]),
+                perm_p=float(row[11]),
+            )
             for row in bimod_rows
         ],
         interaction_summary=[
-            dict(pool=row[0], n=int(row[1]),
-                 AICc_params=float(row[4]), AICc_capability=float(row[7]),
-                 AICc_full=float(row[10]), AICc_interaction=float(row[13]),
-                 BF_full_vs_params=row[27])
+            dict(
+                pool=row[0],
+                n=int(row[1]),
+                AICc_params=float(row[4]),
+                AICc_capability=float(row[7]),
+                AICc_full=float(row[10]),
+                AICc_interaction=float(row[13]),
+                BF_full_vs_params=row[27],
+            )
             for row in interaction_rows
         ],
         frontier_synthesis=(
@@ -580,8 +751,7 @@ def main() -> None:
             "the ZVF cross-experiment diagnostic (iter118/iter122)."
         ),
     )
-    (RESULTS_DIR / "scaling_law_iter133_meta.json").write_text(
-        json.dumps(meta, indent=2))
+    (RESULTS_DIR / "scaling_law_iter133_meta.json").write_text(json.dumps(meta, indent=2))
     print(f"wrote {RESULTS_DIR / 'scaling_law_iter133_meta.json'}")
 
     # ---------- (5) Figure: 4-panel ----------
@@ -592,14 +762,16 @@ def main() -> None:
     pool_names = list(pools.keys())
     for pi, pname in enumerate(pool_names):
         pnames = pools[pname]
-        rmax_vals = np.array([fit_saturation_or_mean(traces[n])["R_max"]
-                              for n in pnames], dtype=float)
+        rmax_vals = np.array(
+            [fit_saturation_or_mean(traces[n])["R_max"] for n in pnames], dtype=float
+        )
         cl = ward_linkage_split(rmax_vals)
         ypos = pi
-        for j, (n, v) in enumerate(zip(pnames, rmax_vals)):
+        for j, (n, v) in enumerate(zip(pnames, rmax_vals, strict=False)):
             col = "tab:blue" if cl[j] == 1 else "tab:orange"
-            ax0.scatter(v, ypos + (j - len(pnames) / 2) * 0.08,
-                        s=70, c=col, edgecolor="black", zorder=3)
+            ax0.scatter(
+                v, ypos + (j - len(pnames) / 2) * 0.08, s=70, c=col, edgecolor="black", zorder=3
+            )
         ax0.hlines(ypos, 0, 1.05, color="lightgrey", linewidth=1, zorder=1)
         ax0.text(1.07, ypos, pname, fontsize=7, va="center")
     ax0.set_yticks([])
@@ -625,16 +797,17 @@ def main() -> None:
     ax2 = axes[1, 0]
     x = np.arange(len(pool_names))
     width = 0.18
-    for i, (label, col) in enumerate([
+    for i, (label, col) in enumerate(
+        [
             ("params", "tab:blue"),
             ("capability", "tab:green"),
             ("params+cap", "tab:purple"),
-            ("interaction", "tab:red")]):
-        col_idx = {"params": 4, "capability": 7, "params+cap": 10,
-                   "interaction": 13}[label]
+            ("interaction", "tab:red"),
+        ]
+    ):
+        col_idx = {"params": 4, "capability": 7, "params+cap": 10, "interaction": 13}[label]
         vals = [float(r[col_idx]) for r in interaction_rows]
-        ax2.bar(x + (i - 1.5) * width, vals, width, label=label, color=col,
-                edgecolor="black")
+        ax2.bar(x + (i - 1.5) * width, vals, width, label=label, color=col, edgecolor="black")
     ax2.set_xticks(x)
     ax2.set_xticklabels(pool_names, fontsize=7, rotation=15, ha="right")
     ax2.set_ylabel("AICc (lower = better)")
@@ -645,9 +818,8 @@ def main() -> None:
     ax3 = axes[1, 1]
     loocv_n = [int(r[1]) for r in loocv_rows]
     loocv_frac = [float(r[3]) for r in loocv_rows]
-    bars = ax3.bar(range(len(pool_names)), loocv_frac, color="tab:cyan",
-                   edgecolor="black")
-    for i, (n, f) in enumerate(zip(loocv_n, loocv_frac)):
+    bars = ax3.bar(range(len(pool_names)), loocv_frac, color="tab:cyan", edgecolor="black")
+    for i, (n, f) in enumerate(zip(loocv_n, loocv_frac, strict=False)):
         ax3.text(i, f + 0.02, f"{int(f * n)}/{n}", ha="center", fontsize=8)
     ax3.set_xticks(range(len(pool_names)))
     ax3.set_xticklabels(pool_names, fontsize=7, rotation=15, ha="right")
@@ -659,7 +831,8 @@ def main() -> None:
         f"Pillar 1 (iter 133) GRPO Scaling Laws: capability-bimodality at "
         f"n=7/10/12 | {len(RELIABLE_ANCHORS)} reliable + "
         f"{len(SHORT_PROBES)} short probes",
-        fontsize=11)
+        fontsize=11,
+    )
     fig.tight_layout(rect=[0, 0, 1, 0.96])
     for ext in ("pdf", "png"):
         out = FIG_DIR / f"scaling_law_iter133.{ext}"
@@ -670,12 +843,16 @@ def main() -> None:
     # ---------- Console digest ----------
     print("\n=== iter 133 Pillar 1 summary ===")
     for row in bimod_rows:
-        print(f"  {row[0]:30s} n={row[1]:2d} largest_gap={float(row[4]):.3f} "
-              f"dip={float(row[6]):.3f} perm_p={float(row[11]):.3f}")
+        print(
+            f"  {row[0]:30s} n={row[1]:2d} largest_gap={float(row[4]):.3f} "
+            f"dip={float(row[6]):.3f} perm_p={float(row[11]):.3f}"
+        )
     print()
     for row in interaction_rows:
-        print(f"  {row[0]:30s} AICc_params={float(row[4]):.2f} AICc_cap={float(row[7]):.2f} "
-              f"AICc_full={float(row[10]):.2f} AICc_int={float(row[13]):.2f}")
+        print(
+            f"  {row[0]:30s} AICc_params={float(row[4]):.2f} AICc_cap={float(row[7]):.2f} "
+            f"AICc_full={float(row[10]):.2f} AICc_int={float(row[13]):.2f}"
+        )
     print()
     for row in loocv_rows:
         print(f"  {row[0]:30s} LOOCV {row[2]}/{row[1]}")

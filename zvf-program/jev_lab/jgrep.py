@@ -21,7 +21,7 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 
-from usecases import AbstainPolicy, judged  # noqa: E402
+from usecases import judged
 
 
 def prefilter(text: str, predicate: str) -> bool:
@@ -59,7 +59,9 @@ def main() -> int:
     if hits:
         return 0
     if abstains:
-        print(f"jgrep: {abstains} file(s) abstained or service out; failing closed", file=sys.stderr)
+        print(
+            f"jgrep: {abstains} file(s) abstained or service out; failing closed", file=sys.stderr
+        )
         return 2
     return 1
 

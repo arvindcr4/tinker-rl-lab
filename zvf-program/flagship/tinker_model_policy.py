@@ -123,8 +123,11 @@ def main() -> int:
 
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--check", metavar="MODEL_ID", help="assert one model is an allowed candidate")
-    ap.add_argument("--allow-unauthorized", action="store_true",
-                    help="permit any Tinker-served model, not just contract candidates")
+    ap.add_argument(
+        "--allow-unauthorized",
+        action="store_true",
+        help="permit any Tinker-served model, not just contract candidates",
+    )
     args = ap.parse_args()
 
     if args.check:
@@ -137,12 +140,17 @@ def main() -> int:
         return 0
 
     reg = load_registry()
-    print(json.dumps({
-        "served_model_count": reg["served_model_count"],
-        "authorized_candidates": AUTHORIZED_CANDIDATES,
-        "registry_sha256": reg["registry_sha256"],
-        "upstream_judge_bindings_not_rewritten": UPSTREAM_JUDGE_BINDINGS,
-    }, indent=2))
+    print(
+        json.dumps(
+            {
+                "served_model_count": reg["served_model_count"],
+                "authorized_candidates": AUTHORIZED_CANDIDATES,
+                "registry_sha256": reg["registry_sha256"],
+                "upstream_judge_bindings_not_rewritten": UPSTREAM_JUDGE_BINDINGS,
+            },
+            indent=2,
+        )
+    )
     return 0
 
 

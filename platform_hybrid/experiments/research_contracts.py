@@ -55,14 +55,19 @@ def inherit_evidence(record, parent, *, inherit_missing=True):
     Identity fields remain row-local unless explicitly supplied by the parent.
     """
     result = dict(record)
-    expected = {"execution_kind": "empirical", "measured": True,
-                "claim_eligible": True, "status": "completed"}
+    expected = {
+        "execution_kind": "empirical",
+        "measured": True,
+        "claim_eligible": True,
+        "status": "completed",
+    }
     for field in (*expected, "run_id", "receipt_id"):
         if inherit_missing and field in parent:
             result.setdefault(field, parent[field])
     for field, value in expected.items():
-        if field in parent and (parent[field] is not value if isinstance(value, bool)
-                                else parent[field] != value):
+        if field in parent and (
+            parent[field] is not value if isinstance(value, bool) else parent[field] != value
+        ):
             result[field] = parent[field]
     return result
 
@@ -226,7 +231,9 @@ def exact_json_equal(left, right):
             exact_json_equal(left[k], right[k]) for k in left
         )
     if isinstance(left, list) and isinstance(right, list):
-        return len(left) == len(right) and all(exact_json_equal(a, b) for a, b in zip(left, right))
+        return len(left) == len(right) and all(
+            exact_json_equal(a, b) for a, b in zip(left, right, strict=False)
+        )
     return (
         type(left) is type(right)
         and left == right
@@ -380,7 +387,6 @@ def distillation_loss(
     temperature=2.0,
     alpha=0.5,
 ):
-    import torch
     import torch.nn.functional as F
 
     if student_logits.shape != teacher_logits.shape:

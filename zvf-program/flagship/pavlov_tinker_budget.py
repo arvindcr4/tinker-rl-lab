@@ -194,9 +194,7 @@ def _normalise_status(receipt: Mapping[str, Any]) -> str:
 def _receipt_model(receipt: Mapping[str, Any]) -> str | None:
     pricing = receipt.get("pricing")
     nested_model = (
-        (pricing.get("model") or pricing.get("model_id"))
-        if isinstance(pricing, Mapping)
-        else None
+        (pricing.get("model") or pricing.get("model_id")) if isinstance(pricing, Mapping) else None
     )
     for key in (
         "pricing_model",
@@ -237,9 +235,7 @@ def validate_budget(budget: Mapping[str, Any], *, enforce_pavlov_caps: bool = Tr
         operational = _decimal(
             budget.get("operational_cap_usd"), "operational_cap_usd", allow_zero=False
         )
-        reserve = _decimal(
-            budget.get("safety_reserve_usd"), "safety_reserve_usd", allow_zero=False
-        )
+        reserve = _decimal(budget.get("safety_reserve_usd"), "safety_reserve_usd", allow_zero=False)
     except BudgetError as exc:
         errors.append(str(exc))
     else:
@@ -309,7 +305,9 @@ def _extract_number(mapping: Mapping[str, Any], keys: Sequence[str], field: str)
     return parsed[0]
 
 
-def _nested_number(mapping: Mapping[str, Any], section: str, keys: Sequence[str], field: str) -> Decimal | None:
+def _nested_number(
+    mapping: Mapping[str, Any], section: str, keys: Sequence[str], field: str
+) -> Decimal | None:
     nested = mapping.get(section)
     if not isinstance(nested, Mapping):
         return None
@@ -442,9 +440,13 @@ def _portfolio_from_contract(contract: Mapping[str, Any]) -> dict[str, Any]:
         if isinstance(suite, Mapping) and suite.get("role") == PRIMARY_EVAL_ROLE
     ]
     if len(training) != 12:
-        raise BudgetError(f"portfolio must contain exactly 12 training suites, found {len(training)}")
+        raise BudgetError(
+            f"portfolio must contain exactly 12 training suites, found {len(training)}"
+        )
     if len(primary) != 14:
-        raise BudgetError(f"portfolio must contain exactly 14 primary_eval suites, found {len(primary)}")
+        raise BudgetError(
+            f"portfolio must contain exactly 14 primary_eval suites, found {len(primary)}"
+        )
     domain_set = set(domains)
     suite_domains: dict[str, tuple[str, ...]] = {}
     for sid, suite in suites.items():
@@ -476,14 +478,8 @@ def _portfolio_from_contract(contract: Mapping[str, Any]) -> dict[str, Any]:
             f"E{index}": suite_id for index, suite_id in enumerate(primary, start=1)
         },
         "suite_labels": {
-            **{
-                f"T{index}": suite_id
-                for index, suite_id in enumerate(training, start=1)
-            },
-            **{
-                f"E{index}": suite_id
-                for index, suite_id in enumerate(primary, start=1)
-            },
+            **{f"T{index}": suite_id for index, suite_id in enumerate(training, start=1)},
+            **{f"E{index}": suite_id for index, suite_id in enumerate(primary, start=1)},
         },
         "required_suite_ids": tuple(training + primary),
     }
@@ -497,7 +493,8 @@ def load_portfolio_contract(path: Path = DEFAULT_PORTFOLIO_PATH) -> dict[str, An
 
 
 def _portfolio_for_budget(
-    budget: Mapping[str, Any], portfolio_contract: Mapping[str, Any] | None,
+    budget: Mapping[str, Any],
+    portfolio_contract: Mapping[str, Any] | None,
 ) -> dict[str, Any] | None:
     if portfolio_contract is not None:
         # Callers may pass a raw contract or an already normalized report.
@@ -515,9 +512,7 @@ def _portfolio_for_budget(
     return None
 
 
-def _normalise_suite_id(
-    suite: str | None, portfolio: Mapping[str, Any] | None
-) -> str | None:
+def _normalise_suite_id(suite: str | None, portfolio: Mapping[str, Any] | None) -> str | None:
     if suite is None or portfolio is None:
         return suite
     return portfolio.get("suite_labels", {}).get(suite, suite)
@@ -552,9 +547,7 @@ def _validate_receipt_model(receipt: Mapping[str, Any], budget: Mapping[str, Any
         for name, keys in aliases.items():
             supplied = _extract_number(pricing, keys, f"receipt.pricing.{name}")
             if supplied is not None and supplied != prices[name]:
-                raise BudgetError(
-                    f"receipt pricing for {name} is not authorized for {expected!r}"
-                )
+                raise BudgetError(f"receipt pricing for {name} is not authorized for {expected!r}")
 
 
 def _receipt_suite(receipt: Mapping[str, Any]) -> str | None:
@@ -575,7 +568,9 @@ def _receipt_domains(receipt: Mapping[str, Any]) -> tuple[str, ...]:
         value = receipt.get(key)
         if value is None:
             continue
-        if not isinstance(value, list) or any(not isinstance(x, str) or not x.strip() for x in value):
+        if not isinstance(value, list) or any(
+            not isinstance(x, str) or not x.strip() for x in value
+        ):
             raise BudgetError(f"receipt {key} must be a list of non-empty strings")
         values.extend(x.strip() for x in value)
     return tuple(sorted(set(values)))
@@ -587,10 +582,7 @@ def _canonical_json_value(value: Any) -> Any:
     if isinstance(value, Decimal):
         return {"__decimal__": format(value, "f")}
     if isinstance(value, Mapping):
-        return {
-            str(key): _canonical_json_value(value[key])
-            for key in sorted(value, key=str)
-        }
+        return {str(key): _canonical_json_value(value[key]) for key in sorted(value, key=str)}
     if isinstance(value, (list, tuple)):
         return [_canonical_json_value(item) for item in value]
     return value
@@ -708,9 +700,7 @@ def _claim_requested(value: Any, field: str) -> bool:
             "primary-eval",
         }:
             return True
-    raise BudgetError(
-        f"{field} must be a boolean or an explicit held-out claim value"
-    )
+    raise BudgetError(f"{field} must be a boolean or an explicit held-out claim value")
 
 
 def _mapping_claim_requested(mapping: Mapping[str, Any], field: str) -> bool:
@@ -737,16 +727,43 @@ def _receipt_is_primary_eval(
 
 
 def _receipt_tokens(receipt: Mapping[str, Any]) -> dict[str, int] | None:
-    prefill = _token_value(receipt, ("prefill_tokens", "prompt_tokens", "input_tokens"), "prefill_tokens")
-    cached = _token_value(receipt, ("cached_prefill_tokens", "cached_prompt_tokens"), "cached_prefill_tokens")
-    sample = _token_value(receipt, ("sample_tokens", "completion_tokens", "output_tokens"), "sample_tokens")
-    train = _token_value(receipt, ("train_tokens", "training_tokens", "trained_tokens"), "train_tokens")
+    prefill = _token_value(
+        receipt, ("prefill_tokens", "prompt_tokens", "input_tokens"), "prefill_tokens"
+    )
+    cached = _token_value(
+        receipt, ("cached_prefill_tokens", "cached_prompt_tokens"), "cached_prefill_tokens"
+    )
+    sample = _token_value(
+        receipt, ("sample_tokens", "completion_tokens", "output_tokens"), "sample_tokens"
+    )
+    train = _token_value(
+        receipt, ("train_tokens", "training_tokens", "trained_tokens"), "train_tokens"
+    )
     steps = _token_value(receipt, ("steps", "training_steps", "step_count"), "steps")
-    per_step = _token_value(receipt, ("train_tokens_per_step", "tokens_per_step"), "train_tokens_per_step")
+    per_step = _token_value(
+        receipt, ("train_tokens_per_step", "tokens_per_step"), "train_tokens_per_step"
+    )
     samples = _token_value(receipt, ("samples", "examples", "num_samples"), "samples")
-    max_prompt = _token_value(receipt, ("max_prompt_tokens", "max_input_tokens"), "max_prompt_tokens")
-    max_output = _token_value(receipt, ("max_output_tokens", "max_response_tokens"), "max_output_tokens")
-    if all(value is None for value in (prefill, cached, sample, train, steps, per_step, samples, max_prompt, max_output)):
+    max_prompt = _token_value(
+        receipt, ("max_prompt_tokens", "max_input_tokens"), "max_prompt_tokens"
+    )
+    max_output = _token_value(
+        receipt, ("max_output_tokens", "max_response_tokens"), "max_output_tokens"
+    )
+    if all(
+        value is None
+        for value in (
+            prefill,
+            cached,
+            sample,
+            train,
+            steps,
+            per_step,
+            samples,
+            max_prompt,
+            max_output,
+        )
+    ):
         return None
     train_total = train or 0
     if per_step is not None:
@@ -1137,9 +1154,7 @@ def _projection_mapping(
     primary_values = (
         _mapping_decimal_values(projection[primary], field) if primary_present else None
     )
-    alias_values = (
-        _mapping_decimal_values(projection[alias], field) if alias_present else None
-    )
+    alias_values = _mapping_decimal_values(projection[alias], field) if alias_present else None
     if primary_values is not None and alias_values is not None:
         if primary_values != alias_values:
             raise BudgetError(f"{field} and legacy alias {alias} disagree")
@@ -1180,7 +1195,9 @@ def _add_amount(target: dict[str, Decimal], key: str, amount: Decimal) -> None:
 
 
 def _projection_parts(
-    budget: Mapping[str, Any], projection: Mapping[str, Any] | None, portfolio: Mapping[str, Any] | None,
+    budget: Mapping[str, Any],
+    projection: Mapping[str, Any] | None,
+    portfolio: Mapping[str, Any] | None,
 ) -> dict[str, Any]:
     if projection is None:
         # A future revision of the budget may carry frozen portfolio/phase
@@ -1225,12 +1242,8 @@ def _projection_parts(
     claim_heldout = _mapping_claim_requested(projection, "projection held-out claim")
     if "heldout_suite_ids" in projection and "heldout_suites" in projection:
         if projection["heldout_suite_ids"] != projection["heldout_suites"]:
-            raise BudgetError(
-                "projection heldout_suite_ids and heldout_suites aliases disagree"
-            )
-    heldout_values = projection.get(
-        "heldout_suite_ids", projection.get("heldout_suites")
-    )
+            raise BudgetError("projection heldout_suite_ids and heldout_suites aliases disagree")
+    heldout_values = projection.get("heldout_suite_ids", projection.get("heldout_suites"))
     if heldout_values is None:
         heldout_suite_ids: tuple[str, ...] = (
             tuple(portfolio["primary_eval_suite_ids"]) if claim_heldout and portfolio else ()
@@ -1240,9 +1253,7 @@ def _projection_parts(
             raise BudgetError("projection.heldout_suite_ids must be a list of strings")
         normalised_heldout: list[str] = []
         heldout_iterable = (
-            sorted(heldout_values, key=str)
-            if isinstance(heldout_values, set)
-            else heldout_values
+            sorted(heldout_values, key=str) if isinstance(heldout_values, set) else heldout_values
         )
         for index, value in enumerate(heldout_iterable):
             if not isinstance(value, str) or not value.strip():
@@ -1338,9 +1349,7 @@ def _projection_parts(
                 budget, entry, field=f"projection.domains[{index}]"
             )
 
-    suite_costs = _normalise_suite_allocations(
-        suite_costs, portfolio, "projection.suite_costs"
-    )
+    suite_costs = _normalise_suite_allocations(suite_costs, portfolio, "projection.suite_costs")
     suite_reservations = _normalise_suite_allocations(
         suite_reservations, portfolio, "projection.suite_reservations"
     )
@@ -1366,32 +1375,27 @@ def _projection_parts(
     if explicit_cost is not None:
         direct_cost = max(explicit_cost, evidence_cost)
         if allocation_total and direct_cost != allocation_total:
-            raise BudgetError(
-                "projection cost_usd disagrees with suite/domain allocation"
-            )
+            raise BudgetError("projection cost_usd disagrees with suite/domain allocation")
     elif evidence_cost:
         if allocation_total:
-            raise BudgetError(
-                "projection token inputs and suite/domain allocation are ambiguous"
-            )
+            raise BudgetError("projection token inputs and suite/domain allocation are ambiguous")
         direct_cost = evidence_cost
     else:
         direct_cost = allocation_total
     suite_reservation_total = sum(suite_reservations.values(), Decimal("0"))
     domain_reservation_total = sum(domain_reservations.values(), Decimal("0"))
-    if suite_reservations and domain_reservations and suite_reservation_total != domain_reservation_total:
+    if (
+        suite_reservations
+        and domain_reservations
+        and suite_reservation_total != domain_reservation_total
+    ):
         raise BudgetError(
             "projection suite_reservations and domain_reservations disagree; "
             "provide one allocation or matching breakdowns"
         )
     reservation_total = (
-        (
-            suite_reservation_total
-            if suite_reservations
-            else domain_reservation_total
-        )
-        + sum(phase_reservations.values(), Decimal("0"))
-    )
+        suite_reservation_total if suite_reservations else domain_reservation_total
+    ) + sum(phase_reservations.values(), Decimal("0"))
     arm = projection.get("arm", projection.get("arm_name"))
     if arm is not None and not isinstance(arm, str):
         raise BudgetError("projection arm must be a string")
@@ -1409,13 +1413,17 @@ def _projection_parts(
     if phase is not None and not isinstance(phase, str):
         raise BudgetError("projection phase must be a string")
     required_domains_value = projection.get(
-        "required_domains", portfolio["domains"] if portfolio and (
+        "required_domains",
+        portfolio["domains"]
+        if portfolio
+        and (
             projection.get("enforce_domain_coverage", False)
             or suite_costs
             or domain_costs
             or suite_reservations
             or domain_reservations
-        ) else ()
+        )
+        else (),
     )
     if not isinstance(required_domains_value, (list, tuple, set)) or any(
         not isinstance(value, str) or not value.strip() for value in required_domains_value
@@ -1463,21 +1471,17 @@ def _projection_parts(
         heldout_unknown = set(heldout_suite_ids) - set(portfolio["primary_eval_suite_ids"])
         if heldout_unknown:
             raise BudgetError(
-                "projection held-out claim names non-primary_eval suites "
-                f"{sorted(heldout_unknown)}"
+                f"projection held-out claim names non-primary_eval suites {sorted(heldout_unknown)}"
             )
         if allocation_complete_required:
             required_suites = set(portfolio["required_suite_ids"])
             required_domains = set(portfolio["domains"])
             if not suite_allocation_supplied:
                 raise BudgetError(
-                    "complete portfolio allocation is missing suite allocations "
-                    "for T1-T12/E1-E14"
+                    "complete portfolio allocation is missing suite allocations for T1-T12/E1-E14"
                 )
             if not domain_allocation_supplied:
-                raise BudgetError(
-                    "complete portfolio allocation is missing domain allocations"
-                )
+                raise BudgetError("complete portfolio allocation is missing domain allocations")
             missing_suites = sorted(required_suites - set(suite_costs))
             extra_suites = sorted(set(suite_costs) - required_suites)
             missing_domains = sorted(required_domains - set(domain_costs))
@@ -1517,7 +1521,8 @@ def _projection_parts(
 
 
 def _coverage_issues(
-    parts: Mapping[str, Any], portfolio: Mapping[str, Any] | None,
+    parts: Mapping[str, Any],
+    portfolio: Mapping[str, Any] | None,
 ) -> list[str]:
     if portfolio is None or not parts.get("coverage_required"):
         return []
@@ -1555,10 +1560,7 @@ def _coverage_issues(
         covered.update(name for name, amount in parts.get(key, {}).items() if amount > 0)
     missing = sorted(required_domains - covered)
     if missing:
-        return [
-            "projection would crowd out required domain coverage: "
-            + ", ".join(missing)
-        ]
+        return ["projection would crowd out required domain coverage: " + ", ".join(missing)]
     return []
 
 
@@ -1588,7 +1590,7 @@ def build_ledger(
         raise BudgetError("receipt_sources length must match receipts")
     breakdowns: list[dict[str, Any]] = []
     seen_receipts: set[str] = set()
-    for item, source in zip(receipt_items, sources):
+    for item, source in zip(receipt_items, sources, strict=False):
         receipt = (
             load_receipt(Path(item), budget, portfolio=portfolio)
             if isinstance(item, (str, Path))
@@ -1963,7 +1965,9 @@ def authorize_arm(
     )
     report = guard_launch(ledger)
     if not report["allowed"]:
-        raise LaunchRejected("Pavlov Tinker launch rejected: " + "; ".join(report["reasons"]), report)
+        raise LaunchRejected(
+            "Pavlov Tinker launch rejected: " + "; ".join(report["reasons"]), report
+        )
     return report
 
 
@@ -1982,7 +1986,9 @@ def _parse_name_amount(values: Sequence[str], field: str) -> dict[str, Decimal]:
     return parsed
 
 
-def _parse_cli_projection(args: argparse.Namespace, budget: Mapping[str, Any]) -> dict[str, Any] | None:
+def _parse_cli_projection(
+    args: argparse.Namespace, budget: Mapping[str, Any]
+) -> dict[str, Any] | None:
     projection: dict[str, Any] = {}
     if args.projection:
         raw = _json_load(Path(args.projection), "projection JSON")
@@ -2089,7 +2095,12 @@ def _display(value: Any) -> Any:
 
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("paths", nargs="*", type=Path, help="budget path (when --budget is omitted), then receipt paths")
+    parser.add_argument(
+        "paths",
+        nargs="*",
+        type=Path,
+        help="budget path (when --budget is omitted), then receipt paths",
+    )
     parser.add_argument("--budget", "--budget-json", dest="budget", type=Path)
     parser.add_argument(
         "--receipt",
@@ -2100,24 +2111,62 @@ def _parser() -> argparse.ArgumentParser:
         type=Path,
         default=[],
     )
-    parser.add_argument("--portfolio-contract", "--portfolio", dest="portfolio_contract", type=Path, default=DEFAULT_PORTFOLIO_PATH)
-    parser.add_argument("--projection", type=Path, help="JSON object containing projected portfolio/token reservations")
+    parser.add_argument(
+        "--portfolio-contract",
+        "--portfolio",
+        dest="portfolio_contract",
+        type=Path,
+        default=DEFAULT_PORTFOLIO_PATH,
+    )
+    parser.add_argument(
+        "--projection",
+        type=Path,
+        help="JSON object containing projected portfolio/token reservations",
+    )
     parser.add_argument(
         "--projected-tokens-json",
         "--token-inputs",
         dest="projected_tokens_json",
         help="path or inline JSON object containing projected token/step inputs",
     )
-    parser.add_argument("--projected-prefill-tokens", "--prefill-tokens", dest="projected_prefill_tokens", type=int)
-    parser.add_argument("--projected-cached-prefill-tokens", "--cached-prefill-tokens", dest="projected_cached_prefill_tokens", type=int)
-    parser.add_argument("--projected-sample-tokens", "--sample-tokens", dest="projected_sample_tokens", type=int)
-    parser.add_argument("--projected-train-tokens", "--train-tokens", dest="projected_train_tokens", type=int)
+    parser.add_argument(
+        "--projected-prefill-tokens", "--prefill-tokens", dest="projected_prefill_tokens", type=int
+    )
+    parser.add_argument(
+        "--projected-cached-prefill-tokens",
+        "--cached-prefill-tokens",
+        dest="projected_cached_prefill_tokens",
+        type=int,
+    )
+    parser.add_argument(
+        "--projected-sample-tokens", "--sample-tokens", dest="projected_sample_tokens", type=int
+    )
+    parser.add_argument(
+        "--projected-train-tokens", "--train-tokens", dest="projected_train_tokens", type=int
+    )
     parser.add_argument("--projected-steps", "--steps", dest="projected_steps", type=int)
-    parser.add_argument("--projected-train-tokens-per-step", "--train-tokens-per-step", dest="projected_train_tokens_per_step", type=int)
+    parser.add_argument(
+        "--projected-train-tokens-per-step",
+        "--train-tokens-per-step",
+        dest="projected_train_tokens_per_step",
+        type=int,
+    )
     parser.add_argument("--projected-samples", "--samples", dest="projected_samples", type=int)
-    parser.add_argument("--projected-max-prompt-tokens", "--max-prompt-tokens", dest="projected_max_prompt_tokens", type=int)
-    parser.add_argument("--projected-max-output-tokens", "--max-output-tokens", dest="projected_max_output_tokens", type=int)
-    parser.add_argument("--projected-cost-usd", "--cost-usd", dest="projected_cost_usd", type=Decimal)
+    parser.add_argument(
+        "--projected-max-prompt-tokens",
+        "--max-prompt-tokens",
+        dest="projected_max_prompt_tokens",
+        type=int,
+    )
+    parser.add_argument(
+        "--projected-max-output-tokens",
+        "--max-output-tokens",
+        dest="projected_max_output_tokens",
+        type=int,
+    )
+    parser.add_argument(
+        "--projected-cost-usd", "--cost-usd", dest="projected_cost_usd", type=Decimal
+    )
     parser.add_argument("--arm", help="planned arm name for the proposed projection")
     parser.add_argument("--phase", help="portfolio phase for the proposed projection")
     parser.add_argument("--suite-cost", action="append", default=[], metavar="SUITE=USD")
@@ -2173,7 +2222,12 @@ def main(argv: Sequence[str] | None = None) -> int:
         print(json.dumps(_display(report), indent=2, sort_keys=True))
         return 0 if report["allowed"] else 1
     except BudgetError as exc:
-        error = {"schema_version": "pavlov-tinker-budget-ledger-v1", "status": "ERROR", "allowed": False, "errors": [str(exc)]}
+        error = {
+            "schema_version": "pavlov-tinker-budget-ledger-v1",
+            "status": "ERROR",
+            "allowed": False,
+            "errors": [str(exc)],
+        }
         print(json.dumps(error, indent=2, sort_keys=True))
         return 2
 

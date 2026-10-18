@@ -30,6 +30,7 @@ Outputs (platform_hybrid/experiments/results/p5p8/):
 
 Stdlib + numpy + xgboost + sklearn (already in venv).
 """
+
 from __future__ import annotations
 import json
 import sys
@@ -38,8 +39,8 @@ from pathlib import Path
 import numpy as np
 
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
-from _p8_common import (  # noqa: E402
+from _paths import REPO_ROOT
+from _p8_common import (
     RAW20,
     AGG4,
     ALL24,
@@ -48,13 +49,14 @@ from _p8_common import (  # noqa: E402
     load_v2 as load,
     fit_xgb,
 )
+
 ROOT = REPO_ROOT
 RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8/corrected-review21-v2"
 RES.mkdir(parents=True, exist_ok=True)
 
 FEATURE_SETS = {
-    "20raw":   RAW20,
-    "24full":  ALL24,
+    "20raw": RAW20,
+    "24full": ALL24,
     "4sensor": AGG4,
 }
 SEEDS = [42, 179, 316, 453, 590]
@@ -62,13 +64,15 @@ N_BOOT = 2000
 K_BUDGETS_PCT = [1.0, 2.0]
 
 
-def platt_calibrate(p_train_uncal,y_train):
+def platt_calibrate(p_train_uncal, y_train):
     """Platt scaling: logistic regression on logit(p). Returns the fitted
     LogisticRegression object. Caller applies it to test p."""
     from sklearn.linear_model import LogisticRegression
+
     eps = 1e-9
-    z = np.log(np.clip(p_train_uncal, eps, 1 - eps) /
-               np.clip(1 - p_train_uncal, eps, 1 - eps)).reshape(-1, 1)
+    z = np.log(
+        np.clip(p_train_uncal, eps, 1 - eps) / np.clip(1 - p_train_uncal, eps, 1 - eps)
+    ).reshape(-1, 1)
     clf = LogisticRegression(C=1.0, solver="lbfgs", max_iter=200)
     clf.fit(z, y_train)
     return clf
@@ -76,13 +80,13 @@ def platt_calibrate(p_train_uncal,y_train):
 
 def apply_platt(platt, p_test):
     eps = 1e-9
-    z = np.log(np.clip(p_test, eps, 1 - eps) /
-               np.clip(1 - p_test, eps, 1 - eps)).reshape(-1, 1)
+    z = np.log(np.clip(p_test, eps, 1 - eps) / np.clip(1 - p_test, eps, 1 - eps)).reshape(-1, 1)
     return platt.predict_proba(z)[:, 1]
 
 
 def isotonic_calibrate(p_train_uncal, y_train):
     from sklearn.isotonic import IsotonicRegression
+
     iso = IsotonicRegression(out_of_bounds="clip", y_min=0.0, y_max=1.0)
     iso.fit(p_train_uncal, y_train)
     return iso
@@ -94,6 +98,7 @@ def apply_isotonic(iso, p_test):
 
 def brier(y, p):
     from sklearn.metrics import brier_score_loss
+
     return float(brier_score_loss(y, p))
 
 
@@ -121,21 +126,30 @@ def reliability_slope(y, p):
     """Binomial calibration logit(P(Y=1)) = intercept + slope*logit(p)."""
     from scipy.optimize import minimize
     from scipy.special import expit
-    y = np.asarray(y, dtype=float); p = np.asarray(p, dtype=float)
+
+    y = np.asarray(y, dtype=float)
+    p = np.asarray(p, dtype=float)
     if len(y) != len(p) or len(set(y)) < 2 or not np.isfinite(p).all():
         return float("nan"), float("nan")
-    x = np.log(np.clip(p, 1e-12, 1-1e-12) / np.clip(1-p, 1e-12, 1-1e-12))
-    if np.ptp(x) < 1e-12 or max(x[y==0]) <= min(x[y==1]) or max(x[y==1]) <= min(x[y==0]):
+    x = np.log(np.clip(p, 1e-12, 1 - 1e-12) / np.clip(1 - p, 1e-12, 1 - 1e-12))
+    if np.ptp(x) < 1e-12 or max(x[y == 0]) <= min(x[y == 1]) or max(x[y == 1]) <= min(x[y == 0]):
         return float("nan"), float("nan")  # constant scores or separation
     X = np.column_stack([np.ones(len(x)), x])
+
     def objective(beta):
         z = X @ beta
-        return np.logaddexp(0,z).sum() - y @ z
-    result = minimize(objective, [0.,1.], jac=lambda b:X.T @ (expit(X @ b)-y), method="BFGS", options={"gtol":1e-8})
+        return np.logaddexp(0, z).sum() - y @ z
+
+    result = minimize(
+        objective,
+        [0.0, 1.0],
+        jac=lambda b: X.T @ (expit(X @ b) - y),
+        method="BFGS",
+        options={"gtol": 1e-8},
+    )
     if not result.success or not np.isfinite(result.x).all():
         return float("nan"), float("nan")
     return float(result.x[1]), float(result.x[0])
-
 
 
 def calibration_gap_within_k(y, p, k_pct):
@@ -190,13 +204,15 @@ def main():
     print("[p8-iter180] loading data", file=sys.stderr)
     Xtr, ytr = load(TRAIN)
     Xte, yte = load(TEST)
-    print(f"[p8-iter180] train n={len(ytr)} pos={int(ytr.sum())} test n={len(yte)} pos={int(yte.sum())}",
-          file=sys.stderr)
+    print(
+        f"[p8-iter180] train n={len(ytr)} pos={int(ytr.sum())} test n={len(yte)} pos={int(yte.sum())}",
+        file=sys.stderr,
+    )
 
-    cal_rows = []        # 30 rows: 3 fsets x 2 calibrators x 5 seeds -> actually 3 fsets x 3 states x 5 seeds (pre/platt/iso)
-    rel_rows = []        # 30 rows: per-(fset, seed) slope + intercept (pre only)
-    curv_rows = []       # 30 rows: per-(fset, calibrator, seed)
-    per_fset_pre = {}    # fset -> list[dict] (per seed)
+    cal_rows = []  # 30 rows: 3 fsets x 2 calibrators x 5 seeds -> actually 3 fsets x 3 states x 5 seeds (pre/platt/iso)
+    rel_rows = []  # 30 rows: per-(fset, seed) slope + intercept (pre only)
+    curv_rows = []  # 30 rows: per-(fset, calibrator, seed)
+    per_fset_pre = {}  # fset -> list[dict] (per seed)
 
     for fset_name, feats in FEATURE_SETS.items():
         print(f"[p8-iter180] fset={fset_name}", file=sys.stderr)
@@ -205,11 +221,11 @@ def main():
             p_test_uncal = fit_xgb(Xtr, ytr, Xte, feats, s)
             # also need training predictions for calibrator fit (use OOF)
             from sklearn.model_selection import KFold
+
             kf = KFold(n_splits=5, shuffle=True, random_state=s)
             p_train_oof = np.zeros(len(ytr), dtype=np.float64)
             for tr_idx, vl_idx in kf.split(Xtr):
-                p_train_oof[vl_idx] = fit_xgb(Xtr[tr_idx], ytr[tr_idx],
-                                              Xtr[vl_idx], feats, s)
+                p_train_oof[vl_idx] = fit_xgb(Xtr[tr_idx], ytr[tr_idx], Xtr[vl_idx], feats, s)
             platt = platt_calibrate(p_train_oof, ytr)
             iso = isotonic_calibrate(p_train_oof, ytr)
             p_platt = apply_platt(platt, p_test_uncal)
@@ -227,24 +243,58 @@ def main():
             curv_iso_K1 = calibration_gap_within_k(yte, p_iso, 1.0)
             slope, intercept = reliability_slope(yte, p_test_uncal)
 
-            cal_rows.append([fset_name, "pre",   s, round(pre_brier, 5),
-                             round(pre_ece_K1, 5), round(curv_pre_K1, 5)])
-            cal_rows.append([fset_name, "platt", s, round(platt_brier, 5),
-                             round(platt_ece_K1, 5), round(curv_platt_K1, 5)])
-            cal_rows.append([fset_name, "iso",   s, round(iso_brier, 5),
-                             round(iso_ece_K1, 5), round(curv_iso_K1, 5)])
-            rel_rows.append([fset_name, s,
-                             round(slope, 5), round(intercept, 5),
-                             round(pre_brier, 5)])
-            curv_rows.append([fset_name, "pre",   s, round(curv_pre_K1, 5)])
+            cal_rows.append(
+                [
+                    fset_name,
+                    "pre",
+                    s,
+                    round(pre_brier, 5),
+                    round(pre_ece_K1, 5),
+                    round(curv_pre_K1, 5),
+                ]
+            )
+            cal_rows.append(
+                [
+                    fset_name,
+                    "platt",
+                    s,
+                    round(platt_brier, 5),
+                    round(platt_ece_K1, 5),
+                    round(curv_platt_K1, 5),
+                ]
+            )
+            cal_rows.append(
+                [
+                    fset_name,
+                    "iso",
+                    s,
+                    round(iso_brier, 5),
+                    round(iso_ece_K1, 5),
+                    round(curv_iso_K1, 5),
+                ]
+            )
+            rel_rows.append(
+                [fset_name, s, round(slope, 5), round(intercept, 5), round(pre_brier, 5)]
+            )
+            curv_rows.append([fset_name, "pre", s, round(curv_pre_K1, 5)])
             curv_rows.append([fset_name, "platt", s, round(curv_platt_K1, 5)])
-            curv_rows.append([fset_name, "iso",   s, round(curv_iso_K1, 5)])
-            per_seed.append(dict(seed=s, pre=pre_brier, platt=platt_brier,
-                                 iso=iso_brier, pre_ece=pre_ece_K1,
-                                 platt_ece=platt_ece_K1, iso_ece=iso_ece_K1,
-                                 curv_pre=curv_pre_K1, curv_platt=curv_platt_K1,
-                                 curv_iso=curv_iso_K1, slope=slope,
-                                 intercept=intercept))
+            curv_rows.append([fset_name, "iso", s, round(curv_iso_K1, 5)])
+            per_seed.append(
+                dict(
+                    seed=s,
+                    pre=pre_brier,
+                    platt=platt_brier,
+                    iso=iso_brier,
+                    pre_ece=pre_ece_K1,
+                    platt_ece=platt_ece_K1,
+                    iso_ece=iso_ece_K1,
+                    curv_pre=curv_pre_K1,
+                    curv_platt=curv_platt_K1,
+                    curv_iso=curv_iso_K1,
+                    slope=slope,
+                    intercept=intercept,
+                )
+            )
         per_fset_pre[fset_name] = per_seed
 
     # Write per-fset calibration table
@@ -274,21 +324,27 @@ def main():
     for fset_name in FEATURE_SETS:
         ps = per_fset_pre[fset_name]
         mean_pre = float(np.mean([r["pre"] for r in ps]))
-        mean_platt = float(np.mean([r["platt"]for r in ps]))
+        mean_platt = float(np.mean([r["platt"] for r in ps]))
         mean_iso = float(np.mean([r["iso"] for r in ps]))
         mean_slope = float(np.mean([r["slope"] for r in ps]))
         mean_curv_pre = float(np.mean([abs(r["curv_pre"]) for r in ps]))
         mean_curv_iso = float(np.mean([abs(r["curv_iso"]) for r in ps]))
-        pre_summary.append([fset_name,
-                            round(mean_pre, 5),
-                            round(mean_platt, 5),
-                            round(mean_iso, 5),
-                            round(mean_slope, 5),
-                            round(mean_curv_pre, 5),
-                            round(mean_curv_iso, 5)])
+        pre_summary.append(
+            [
+                fset_name,
+                round(mean_pre, 5),
+                round(mean_platt, 5),
+                round(mean_iso, 5),
+                round(mean_slope, 5),
+                round(mean_curv_pre, 5),
+                round(mean_curv_iso, 5),
+            ]
+        )
     out_curve = RES / "p8_iter180_calibration_curve.tsv"
     with out_curve.open("w") as f:
-        f.write("fset\tmean_pre_brier\tmean_platt_brier\tmean_iso_brier\tmean_slope\tmean_abs_curv_K1_pre\tmean_abs_curv_K1_iso\n")
+        f.write(
+            "fset\tmean_pre_brier\tmean_platt_brier\tmean_iso_brier\tmean_slope\tmean_abs_curv_K1_pre\tmean_abs_curv_K1_iso\n"
+        )
         for r in pre_summary:
             f.write("\t".join(str(c) for c in r) + "\n")
     print(f"[p8-iter180] wrote {out_curve}", file=sys.stderr)
@@ -304,16 +360,18 @@ def main():
     for fset_name, feats in FEATURE_SETS.items():
         p_test_uncal = fit_xgb(Xtr, ytr, Xte, feats, 42)
         from sklearn.model_selection import KFold
+
         kf = KFold(n_splits=5, shuffle=True, random_state=42)
         p_train_oof = np.zeros(len(ytr), dtype=np.float64)
         for tr_idx, vl_idx in kf.split(Xtr):
-            p_train_oof[vl_idx] = fit_xgb(Xtr[tr_idx], ytr[tr_idx],
-                                          Xtr[vl_idx], feats, 42)
+            p_train_oof[vl_idx] = fit_xgb(Xtr[tr_idx], ytr[tr_idx], Xtr[vl_idx], feats, 42)
         platt = platt_calibrate(p_train_oof, ytr)
         iso = isotonic_calibrate(p_train_oof, ytr)
         headline_pred[fset_name] = dict(
-            pre=p_test_uncal, platt=apply_platt(platt, p_test_uncal),
-            iso=apply_isotonic(iso, p_test_uncal))
+            pre=p_test_uncal,
+            platt=apply_platt(platt, p_test_uncal),
+            iso=apply_isotonic(iso, p_test_uncal),
+        )
 
     # CIs
     ci_rows = []
@@ -334,48 +392,96 @@ def main():
 
     # (a) iso-lowers-brier: 24full
     pt, lo, hi = paired_boot_diff_brier(yte, pre_24full, iso_24full)
-    ci_rows.append(["pre_minus_iso_brier_24full", round(pt, 5),
-                    round(lo, 5), round(hi, 5),
-                    "positive=iso lowers Brier (lower=better); CI excludes 0"])
+    ci_rows.append(
+        [
+            "pre_minus_iso_brier_24full",
+            round(pt, 5),
+            round(lo, 5),
+            round(hi, 5),
+            "positive=iso lowers Brier (lower=better); CI excludes 0",
+        ]
+    )
     pt, lo, hi = paired_boot_diff_brier(yte, pre_20raw, iso_20raw)
-    ci_rows.append(["pre_minus_iso_brier_20raw", round(pt, 5),
-                    round(lo, 5), round(hi, 5),
-                    "iso lowers Brier on raw-20 too"])
+    ci_rows.append(
+        [
+            "pre_minus_iso_brier_20raw",
+            round(pt, 5),
+            round(lo, 5),
+            round(hi, 5),
+            "iso lowers Brier on raw-20 too",
+        ]
+    )
     pt, lo, hi = paired_boot_diff_brier(yte, pre_4sensor, iso_4sensor)
-    ci_rows.append(["pre_minus_iso_brier_4sensor", round(pt, 5),
-                    round(lo, 5), round(hi, 5),
-                    "iso lowers Brier on LLM-as-sensor surrogate"])
+    ci_rows.append(
+        [
+            "pre_minus_iso_brier_4sensor",
+            round(pt, 5),
+            round(lo, 5),
+            round(hi, 5),
+            "iso lowers Brier on LLM-as-sensor surrogate",
+        ]
+    )
 
     # (b) iso vs platt brier on 24full (iso typically wins at top-K)
     pt, lo, hi = paired_boot_diff_brier(yte, platt_24full, iso_24full)
-    ci_rows.append(["platt_minus_iso_brier_24full", round(pt, 5),
-                    round(lo, 5), round(hi, 5),
-                    "positive=platt higher Brier than iso"])
+    ci_rows.append(
+        [
+            "platt_minus_iso_brier_24full",
+            round(pt, 5),
+            round(lo, 5),
+            round(hi, 5),
+            "positive=platt higher Brier than iso",
+        ]
+    )
 
     # (c) iso-K1%-reliability-gap: 24full
     pt, lo, hi = paired_boot_diff_scalar(yte, pre_24full, iso_24full, ece_within_k_1)
-    ci_rows.append(["pre_minus_iso_eceK1_24full", round(pt, 5),
-                    round(lo, 5), round(hi, 5),
-                    "positive=iso lowers within-budget ECE@K=1% on 24full"])
+    ci_rows.append(
+        [
+            "pre_minus_iso_eceK1_24full",
+            round(pt, 5),
+            round(lo, 5),
+            round(hi, 5),
+            "positive=iso lowers within-budget ECE@K=1% on 24full",
+        ]
+    )
 
     # (d) iso-24full brier vs iso-20raw brier (delta = 24full - 20raw so
     # negative means 24full wins)
     pt, lo, hi = paired_boot_diff_brier(yte, iso_24full, iso_20raw)
-    ci_rows.append(["iso_24full_minus_iso_20raw_brier", round(pt, 5),
-                    round(lo, 5), round(hi, 5),
-                    "negative=24full lower Brier than 20raw after iso"])
+    ci_rows.append(
+        [
+            "iso_24full_minus_iso_20raw_brier",
+            round(pt, 5),
+            round(lo, 5),
+            round(hi, 5),
+            "negative=24full lower Brier than 20raw after iso",
+        ]
+    )
 
     # (e) iso-24full brier vs iso-4sensor brier (delta = 24full - 4sensor)
     pt, lo, hi = paired_boot_diff_brier(yte, iso_24full, iso_4sensor)
-    ci_rows.append(["iso_24full_minus_iso_4sensor_brier", round(pt, 5),
-                    round(lo, 5), round(hi, 5),
-                    "negative=24full lower Brier than 4sensor after iso"])
+    ci_rows.append(
+        [
+            "iso_24full_minus_iso_4sensor_brier",
+            round(pt, 5),
+            round(lo, 5),
+            round(hi, 5),
+            "negative=24full lower Brier than 4sensor after iso",
+        ]
+    )
 
     # (f) iso-K1%-curvature: 24full absolute curv reduction
     pt, lo, hi = paired_boot_diff_scalar(yte, pre_24full, iso_24full, abs_curv_K1)
-    ci_rows.append(["abs_curv_K1_pre_minus_iso_24full", round(pt, 5),
-                    round(lo, 5), round(hi, 5),
-                    "positive=|curv| shrinks after iso; smaller=|better|"])
+    ci_rows.append(
+        [
+            "abs_curv_K1_pre_minus_iso_24full",
+            round(pt, 5),
+            round(lo, 5),
+            round(hi, 5),
+            "positive=|curv| shrinks after iso; smaller=|better|",
+        ]
+    )
 
     out_ci = RES / "p8_iter180_headline_cis.tsv"
     with out_ci.open("w") as f:
@@ -400,26 +506,28 @@ def main():
     # H5: |curvature| shrinks on 24full under iso (idx 7)
     h5 = bool(ci_rows[7][2] > 0)
     # additional: monotone — pre-brier 4sensor > 20raw > 24full
-    pre_brier_means = {fset: float(np.mean([r["pre"] for r in per_fset_pre[fset]]))
-                       for fset in FEATURE_SETS}
-    h_monotone_pre = (pre_brier_means["4sensor"]
-                      > pre_brier_means["20raw"]
-                      > pre_brier_means["24full"])
+    pre_brier_means = {
+        fset: float(np.mean([r["pre"] for r in per_fset_pre[fset]])) for fset in FEATURE_SETS
+    }
+    h_monotone_pre = (
+        pre_brier_means["4sensor"] > pre_brier_means["20raw"] > pre_brier_means["24full"]
+    )
     # slope deviation from 1.0 monotone (4sensor > 20raw > 24full)
-    slope_means = {fset: float(np.mean([r["slope"] for r in per_fset_pre[fset]]))
-                   for fset in FEATURE_SETS}
+    slope_means = {
+        fset: float(np.mean([r["slope"] for r in per_fset_pre[fset]])) for fset in FEATURE_SETS
+    }
     slope_dev = {fset: abs(1.0 - s) for fset, s in slope_means.items()}
-    h_monotone_slope = (slope_dev["4sensor"]
-                        > slope_dev["20raw"]
-                        > slope_dev["24full"])
+    h_monotone_slope = slope_dev["4sensor"] > slope_dev["20raw"] > slope_dev["24full"]
 
     summary = {
         "iter": 180,
         "job": "P8 calibration slope + curvature analysis",
         "n_seeds": len(SEEDS),
         "n_boot": N_BOOT,
-        "n_train": int(len(Xtr)), "n_test": int(len(Xte)),
-        "pos_train": int(ytr.sum()), "pos_test": int(yte.sum()),
+        "n_train": int(len(Xtr)),
+        "n_test": int(len(Xte)),
+        "pos_train": int(ytr.sum()),
+        "pos_test": int(yte.sum()),
         "pre_brier_means": pre_brier_means,
         "slope_means": slope_means,
         "slope_dev_from_1": slope_dev,
@@ -427,10 +535,11 @@ def main():
         "monotone_slope_dev": h_monotone_slope,
         "ci_rows": [
             {"comparison": r[0], "point": r[1], "lo": r[2], "hi": r[3], "note": r[4]}
-            for r in ci_rows],
+            for r in ci_rows
+        ],
         "hypotheses": {
             "H1_isotonic_lowers_brier_on_3of3": h1,
-"H2_isotonic_lowers_eceK1_24full": h2,
+            "H2_isotonic_lowers_eceK1_24full": h2,
             "H3_post_iso_24full_brier_le_20raw": h3,
             "H4_post_iso_24full_brier_lt_4sensor": h4,
             "H5_abs_curv_K1_shrinks_24full": h5,

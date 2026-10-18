@@ -32,6 +32,7 @@ Outputs:
   platform_hybrid/experiments/results/p5p8/p5_iter161_stack_factorization.tsv
   platform_hybrid/experiments/results/p5p8/p5_iter161_stack_factorization.json
 """
+
 from __future__ import annotations
 
 import csv
@@ -44,12 +45,13 @@ from statistics import fmean
 from _p5p7_common import axis_variance_fraction
 
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))  # for _stats
-from _stats import cohens_d_pstdev_pooled as cohens_d, wilson_p_factored  # noqa: E402
+from _stats import cohens_d_pstdev_pooled as cohens_d, wilson_p_factored
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-RES  = os.path.join(ROOT, "experiments", "results")
-OUT  = os.path.join(RES, "p5p8")
+RES = os.path.join(ROOT, "experiments", "results")
+OUT = os.path.join(RES, "p5p8")
 os.makedirs(OUT, exist_ok=True)
+
 
 def wilson_ci(p, n, z=1.96):
     if n == 0:
@@ -58,6 +60,7 @@ def wilson_ci(p, n, z=1.96):
 
 
 # ---- loaders ----
+
 
 def load_n2():
     """Return list[dict] of per-(method, step) terminal reward stats from N2 panel.
@@ -69,15 +72,17 @@ def load_n2():
     with open(p) as f:
         rdr = csv.DictReader(f, delimiter="\t")
         for r in rdr:
-            rows.append({
-                "method":      r["method"],
-                "step":        int(r["step"]),
-                "reward_mean": float(r["reward_mean"]),
-                "zvf":         float(r["zvf"]),
-                "pcd":         float(r["pcd"]),
-                "larq":        float(r["larq"]),
-                "mean_len":    float(r["mean_len"]),
-            })
+            rows.append(
+                {
+                    "method": r["method"],
+                    "step": int(r["step"]),
+                    "reward_mean": float(r["reward_mean"]),
+                    "zvf": float(r["zvf"]),
+                    "pcd": float(r["pcd"]),
+                    "larq": float(r["larq"]),
+                    "mean_len": float(r["mean_len"]),
+                }
+            )
     return rows
 
 
@@ -95,18 +100,20 @@ def load_mega():
                 mr = float(r["mean_reward"])
             except (ValueError, KeyError):
                 continue
-            rows.append({
-                "cell_id":     r["cell_id"],
-                "model":       r["model"],
-                "task_slice":  r["task_slice"],
-                "G":           int(r["G"]),
-                "temperature": float(r["temperature"]),
-                "seed":        int(r["seed"]),
-                "mean_reward": mr,
-                "zvf":         float(r["zvf"]) if r["zvf"] not in ("", "nan") else float("nan"),
-                "pcd":         float(r["pcd"]) if r["pcd"] not in ("", "nan") else float("nan"),
-                "n_groups":    int(r["n_groups"]) if r["n_groups"] not in ("", "nan") else 0,
-            })
+            rows.append(
+                {
+                    "cell_id": r["cell_id"],
+                    "model": r["model"],
+                    "task_slice": r["task_slice"],
+                    "G": int(r["G"]),
+                    "temperature": float(r["temperature"]),
+                    "seed": int(r["seed"]),
+                    "mean_reward": mr,
+                    "zvf": float(r["zvf"]) if r["zvf"] not in ("", "nan") else float("nan"),
+                    "pcd": float(r["pcd"]) if r["pcd"] not in ("", "nan") else float("nan"),
+                    "n_groups": int(r["n_groups"]) if r["n_groups"] not in ("", "nan") else 0,
+                }
+            )
     return rows
 
 
@@ -126,72 +133,82 @@ def load_n2_method_terminal():
 
 # ---- computations ----
 
+
 def main():
     findings = []
 
     # ---- A: N2 same-stack (algorithm axis) ----
     n2_rows = load_n2()
     print(f"\n=== A: N2 same-stack algorithm-axis decomposition ===")
-    print(f"  loaded {len(n2_rows)} (method, step) rows; "
-          f"methods={sorted(set(r['method'] for r in n2_rows))}")
+    print(
+        f"  loaded {len(n2_rows)} (method, step) rows; "
+        f"methods={sorted(set(r['method'] for r in n2_rows))}"
+    )
     eta2_method, ss_m_axis, ss_m_within, ng_m, gm_m = axis_variance_fraction(
         n2_rows, "method", "reward_mean"
     )
-    eta2_step,  ss_s_axis, ss_s_within, ng_s, gm_s = axis_variance_fraction(
-        n2_rows, "step",   "reward_mean"
+    eta2_step, ss_s_axis, ss_s_within, ng_s, gm_s = axis_variance_fraction(
+        n2_rows, "step", "reward_mean"
     )
-    eta2_zvf,  _, _, _, _ = axis_variance_fraction(
-        n2_rows, "method", "zvf"
-    )
+    eta2_zvf, _, _, _, _ = axis_variance_fraction(n2_rows, "method", "zvf")
     per_method = defaultdict(list)
     for r in n2_rows:
         per_method[r["method"]].append(r["reward_mean"])
     per_method_mean = {m: fmean(vs) for m, vs in per_method.items()}
-    method_spread = (max(per_method_mean.values())
-                     - min(per_method_mean.values()))
-    print(f"  eta^2(method -> reward_mean) = {eta2_method:.4f}  "
-          f"(SS_axis={ss_m_axis:.4f}, SS_within={ss_m_within:.4f}, n_groups={ng_m})")
-    print(f"  eta^2(step   -> reward_mean) = {eta2_step:.4f}  "
-          f"(SS_axis={ss_s_axis:.4f}, SS_within={ss_s_within:.4f}, n_groups={ng_s})")
-    print(f"  per-method reward_mean:       { {m: round(v, 4) for m, v in per_method_mean.items()} }")
+    method_spread = max(per_method_mean.values()) - min(per_method_mean.values())
+    print(
+        f"  eta^2(method -> reward_mean) = {eta2_method:.4f}  "
+        f"(SS_axis={ss_m_axis:.4f}, SS_within={ss_m_within:.4f}, n_groups={ng_m})"
+    )
+    print(
+        f"  eta^2(step   -> reward_mean) = {eta2_step:.4f}  "
+        f"(SS_axis={ss_s_axis:.4f}, SS_within={ss_s_within:.4f}, n_groups={ng_s})"
+    )
+    print(
+        f"  per-method reward_mean:       { {m: round(v, 4) for m, v in per_method_mean.items()} }"
+    )
     print(f"  spread (max - min method mean) = {method_spread:.4f}")
 
     # Cohen's d across methods for sensitivity
     pair_d = {}
     methods = sorted(per_method.keys())
     for i, mi in enumerate(methods):
-        for mj in methods[i + 1:]:
+        for mj in methods[i + 1 :]:
             d = cohens_d(per_method[mi], per_method[mj])
             pair_d[f"{mi}_vs_{mj}"] = d
     # pick the most-distant pair
     max_pair = max(pair_d.items(), key=lambda kv: abs(kv[1]))
     print(f"  max Cohen's d: {max_pair[0]} = {max_pair[1]:+.3f}")
 
-    h1_decisive = (eta2_method <= 0.05)
+    h1_decisive = eta2_method <= 0.05
     h1_verdict = "DECISIVE" if h1_decisive else "SUGGESTIVE" if eta2_method <= 0.10 else "NULL"
-    h7_decisive = (eta2_step <= 0.10)
+    h7_decisive = eta2_step <= 0.10
     h7_verdict = "DECISIVE" if h7_decisive else "SUGGESTIVE" if eta2_step <= 0.20 else "NULL"
 
-    findings.append({
-        "hypothesis": "H1: eta^2(method|stack) <= 0.05 on N2 same-stack panel",
-        "n_rows": len(n2_rows),
-        "n_groups": ng_m,
-        "eta2": round(eta2_method, 4),
-        "ss_axis": round(ss_m_axis, 4),
-        "ss_within": round(ss_m_within, 4),
-        "method_spread": round(method_spread, 4),
-        "max_cohens_d_pair": max_pair[0],
-        "max_cohens_d": round(max_pair[1], 3),
-        "per_method_mean": {m: round(v, 4) for m, v in per_method_mean.items()},
-        "verdict": h1_verdict,
-    })
+    findings.append(
+        {
+            "hypothesis": "H1: eta^2(method|stack) <= 0.05 on N2 same-stack panel",
+            "n_rows": len(n2_rows),
+            "n_groups": ng_m,
+            "eta2": round(eta2_method, 4),
+            "ss_axis": round(ss_m_axis, 4),
+            "ss_within": round(ss_m_within, 4),
+            "method_spread": round(method_spread, 4),
+            "max_cohens_d_pair": max_pair[0],
+            "max_cohens_d": round(max_pair[1], 3),
+            "per_method_mean": {m: round(v, 4) for m, v in per_method_mean.items()},
+            "verdict": h1_verdict,
+        }
+    )
 
-    findings.append({
-        "hypothesis": "H7: eta^2(step -> reward_mean) <= 0.10 (within-run drift is flat)",
-        "n_steps": ng_s,
-        "eta2": round(eta2_step, 4),
-        "verdict": h7_verdict,
-    })
+    findings.append(
+        {
+            "hypothesis": "H7: eta^2(step -> reward_mean) <= 0.10 (within-run drift is flat)",
+            "n_steps": ng_s,
+            "eta2": round(eta2_step, 4),
+            "verdict": h7_verdict,
+        }
+    )
 
     # ---- B: mega stack-axis decomposition ----
     mega_rows = load_mega()
@@ -202,8 +219,9 @@ def main():
     for axis in axes:
         e2, ss_a, ss_w, ng, gm = axis_variance_fraction(mega_rows, axis, "mean_reward")
         eta2_axes[axis] = e2
-        print(f"  eta^2({axis:<12} -> mean_reward) = {e2:.4f}  "
-              f"(n_groups={ng}, grand_mean={gm:.4f})")
+        print(
+            f"  eta^2({axis:<12} -> mean_reward) = {e2:.4f}  (n_groups={ng}, grand_mean={gm:.4f})"
+        )
 
     # Union-stack eta^2: variance of per-(model, task, G, T) cell-mean over grand mean
     stack_key = lambda r: (r["model"], r["task_slice"], r["G"], r["temperature"])
@@ -215,8 +233,10 @@ def main():
     ss_total_all = sum((r["mean_reward"] - gm_all) ** 2 for r in mega_rows)
     ss_stack = sum(len(vs) * (fmean(vs) - gm_all) ** 2 for vs in stack_cells.values())
     eta2_union = ss_stack / ss_total_all if ss_total_all > 1e-12 else float("nan")
-    print(f"  eta^2((model,task,G,T) -> mean_reward) = {eta2_union:.4f}  "
-          f"(n_stack_cells={len(stack_cells)})")
+    print(
+        f"  eta^2((model,task,G,T) -> mean_reward) = {eta2_union:.4f}  "
+        f"(n_stack_cells={len(stack_cells)})"
+    )
 
     # mega cell coverage: number of (model, task, G, T) stacks with BOTH seed 0 and seed 1
     seed_groups = defaultdict(set)
@@ -226,46 +246,55 @@ def main():
     n_stacks = len(seed_groups)
     pct_paired = paired_stacks / n_stacks if n_stacks else 0.0
     pct_lo, pct_hi = wilson_ci(pct_paired, n_stacks)
-    print(f"  stack coverage: {paired_stacks}/{n_stacks} stacks have BOTH seeds "
-          f"({pct_paired:.4f}, Wilson [{pct_lo:.4f}, {pct_hi:.4f}])")
+    print(
+        f"  stack coverage: {paired_stacks}/{n_stacks} stacks have BOTH seeds "
+        f"({pct_paired:.4f}, Wilson [{pct_lo:.4f}, {pct_hi:.4f}])"
+    )
 
     # H2 union-stack decisive
-    h2_decisive = (eta2_union >= 0.50)
+    h2_decisive = eta2_union >= 0.50
     h2_verdict = "DECISIVE" if h2_decisive else "SUGGESTIVE" if eta2_union >= 0.30 else "NULL"
-    findings.append({
-        "hypothesis": "H2: eta^2_union(stack) >= 0.50 on mega cells",
-        "n_stack_cells": len(stack_cells),
-        "eta2_union": round(eta2_union, 4),
-        "verdict": h2_verdict,
-    })
+    findings.append(
+        {
+            "hypothesis": "H2: eta^2_union(stack) >= 0.50 on mega cells",
+            "n_stack_cells": len(stack_cells),
+            "eta2_union": round(eta2_union, 4),
+            "verdict": h2_verdict,
+        }
+    )
 
     # H3..H6: per-axis comparisons against the N2 algorithm axis baseline
     for axis in axes:
         e2 = eta2_axes[axis]
         if axis == "seed":
             # H6: seed axis is SMALL (stable)
-            h_decisive = (e2 <= 0.10)
+            h_decisive = e2 <= 0.10
             h_verdict = "DECISIVE" if h_decisive else "SUGGESTIVE" if e2 <= 0.20 else "NULL"
             tag = "H6"
         else:
             # H3..H5: stack axis dominates algorithm axis
-            h_decisive = (e2 >= eta2_method)
-            h_verdict = "DECISIVE" if h_decisive else "SUGGESTIVE" if e2 >= 0.5 * eta2_method else "NULL"
+            h_decisive = e2 >= eta2_method
+            h_verdict = (
+                "DECISIVE" if h_decisive else "SUGGESTIVE" if e2 >= 0.5 * eta2_method else "NULL"
+            )
             tag = {"G": "H3", "temperature": "H4", "model": "H5", "task_slice": "H5b"}[axis]
-        print(f"  [{tag}] eta^2({axis}) = {e2:.4f}  vs eta^2(N2 method) = {eta2_method:.4f}  → {h_verdict}")
-        findings.append({
-            "hypothesis": f"{tag}: eta^2({axis}) vs eta^2(method) on mega stack",
-            "axis": axis,
-            "eta2_axis": round(e2, 4),
-            "eta2_method_baseline": round(eta2_method, 4),
-            "ratio": round(e2 / eta2_method, 3) if eta2_method > 1e-12 else float("nan"),
-            "verdict": h_verdict,
-        })
+        print(
+            f"  [{tag}] eta^2({axis}) = {e2:.4f}  vs eta^2(N2 method) = {eta2_method:.4f}  → {h_verdict}"
+        )
+        findings.append(
+            {
+                "hypothesis": f"{tag}: eta^2({axis}) vs eta^2(method) on mega stack",
+                "axis": axis,
+                "eta2_axis": round(e2, 4),
+                "eta2_method_baseline": round(eta2_method, 4),
+                "ratio": round(e2 / eta2_method, 3) if eta2_method > 1e-12 else float("nan"),
+                "verdict": h_verdict,
+            }
+        )
 
     # ---- C: head-to-head summary ----
     # How many axes dominate algorithm?
-    n_axes_dom = sum(1 for a in axes if a != "seed"
-                     and eta2_axes[a] >= eta2_method)
+    n_axes_dom = sum(1 for a in axes if a != "seed" and eta2_axes[a] >= eta2_method)
     print(f"\n=== C: head-to-head summary ===")
     print(f"  eta^2(N2 method)              = {eta2_method:.4f}")
     print(f"  eta^2(mega G)                 = {eta2_axes['G']:.4f}")
@@ -286,16 +315,18 @@ def main():
         "iteration": 161,
         "pillar": "P5",
         "vein": "(b) stack-conditioning factorization: N2 same-stack + mega cells",
-        "framework": ("Ivison et al. 2024 (Unpacking DPO and PPO, NeurIPS 2024, "
-                      "arXiv:2406.09279) 4-axis decomposition; for verifiable "
-                      "RL stacks (data, prompts pinned), testableaxes = "
-                      "algorithm + reward-intervention; here we extend to "
-                      "stack axes (model, task, G, temperature, seed) at scale."),
+        "framework": (
+            "Ivison et al. 2024 (Unpacking DPO and PPO, NeurIPS 2024, "
+            "arXiv:2406.09279) 4-axis decomposition; for verifiable "
+            "RL stacks (data, prompts pinned), testableaxes = "
+            "algorithm + reward-intervention; here we extend to "
+            "stack axes (model, task, G, temperature, seed) at scale."
+        ),
         "data_sources": {
             "n2_panel": "platform_hybrid/experiments/results/n2_reward_tensor_resume/n2_metrics.tsv "
-                        "(4 methods × 40 steps × 1 seed × G=8 = 160 rows)",
+            "(4 methods × 40 steps × 1 seed × G=8 = 160 rows)",
             "mega_cells": "platform_hybrid/experiments/results/mega_20260704/cells.tsv "
-                          "(98 cells spanning 2 models × 3 tasks × 5 G × 2 T × 2 seeds)",
+            "(98 cells spanning 2 models × 3 tasks × 5 G × 2 T × 2 seeds)",
             "manifests": "platform_hybrid/experiments/results/mega_20260704/manifests/*.json (98)",
         },
         "hypotheses": findings,
@@ -325,22 +356,28 @@ def main():
     # TSV row per hypothesis
     out_tsv = os.path.join(OUT, "p5_iter161_stack_factorization.tsv")
     with open(out_tsv, "w") as f:
-        f.write("hypothesis\taxis\tn_groups\tn_rows\teta2\teta2_method_baseline\t"
-                "ratio\tverdict\n")
+        f.write("hypothesis\taxis\tn_groups\tn_rows\teta2\teta2_method_baseline\tratio\tverdict\n")
         for h in findings:
-            f.write("\t".join([
-                h.get("hypothesis", ""),
-                h.get("axis", ""),
-                str(h.get("n_groups", h.get("n_steps", h.get("n_stack_cells", "")))),
-                str(h.get("n_rows", h.get("n_paired", ""))),
-                str(h.get("eta2", h.get("eta2_axis", h.get("eta2_union", "")))),
-                str(h.get("eta2_method_baseline", "")),
-                str(h.get("ratio", "")),
-                h.get("verdict", ""),
-            ]) + "\n")
+            f.write(
+                "\t".join(
+                    [
+                        h.get("hypothesis", ""),
+                        h.get("axis", ""),
+                        str(h.get("n_groups", h.get("n_steps", h.get("n_stack_cells", "")))),
+                        str(h.get("n_rows", h.get("n_paired", ""))),
+                        str(h.get("eta2", h.get("eta2_axis", h.get("eta2_union", "")))),
+                        str(h.get("eta2_method_baseline", "")),
+                        str(h.get("ratio", "")),
+                        h.get("verdict", ""),
+                    ]
+                )
+                + "\n"
+            )
 
-    print(f"\n=== HEADLINE: {n_decisive}/{n_total} hypotheses DECISIVE "
-          f"(+{n_suggestive} suggestive) ===")
+    print(
+        f"\n=== HEADLINE: {n_decisive}/{n_total} hypotheses DECISIVE "
+        f"(+{n_suggestive} suggestive) ==="
+    )
     print(f"  outputs:")
     print(f"    {out_json}")
     print(f"    {out_tsv}")

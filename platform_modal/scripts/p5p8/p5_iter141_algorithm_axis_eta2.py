@@ -24,11 +24,11 @@ Outputs (4 files, all to platform_hybrid/experiments/results/p5p8/):
 
 Stdlib only; deterministic; B=2000 bootstrap seed=20260705 (canonical Miller recipe).
 """
+
 from __future__ import annotations
 
 import csv
 import json
-import math
 import os
 import random
 from collections import defaultdict
@@ -134,13 +134,15 @@ def main() -> None:
         boot.sort()
         lo = boot[int(0.025 * BOOT_B)]
         hi = boot[int(0.975 * BOOT_B) - 1]
-        per_method.append({
-            "method": method,
-            "reward_mean": mu,
-            "ci_lo": lo,
-            "ci_hi": hi,
-            "p95_len_step": sorted(per_step)[int(0.95 * n) - 1],
-        })
+        per_method.append(
+            {
+                "method": method,
+                "reward_mean": mu,
+                "ci_lo": lo,
+                "ci_hi": hi,
+                "p95_len_step": sorted(per_step)[int(0.95 * n) - 1],
+            }
+        )
 
     # 3) Pairwise η² ratio CIs by bootstrap over rows
     # For each bootstrap resample, recompute eta2(method), eta2(step), eta2(prompt) on the resampled cell_rows
@@ -194,8 +196,11 @@ def main() -> None:
         w = csv.writer(fh, delimiter="\t")
         w.writerow(["factor", "eta2", "ci_lo", "ci_hi", "rank"])
         for i, (factor, val) in enumerate(sorted(eta2.items(), key=lambda x: -x[1])):
-            ci_lo, ci_hi = {"method": eta2_method_ci, "step": eta2_step_ci,
-                            "prompt": eta2_prompt_ci}[factor]
+            ci_lo, ci_hi = {
+                "method": eta2_method_ci,
+                "step": eta2_step_ci,
+                "prompt": eta2_prompt_ci,
+            }[factor]
             w.writerow([factor, f"{val:.6f}", f"{ci_lo:.6f}", f"{ci_hi:.6f}", i + 1])
 
     # 2) Per-method reward
@@ -204,9 +209,16 @@ def main() -> None:
         w = csv.writer(fh, delimiter="\t")
         w.writerow(["method", "n_steps", "reward_mean", "ci_lo", "ci_hi", "p95_len_step"])
         for r in per_method:
-            w.writerow([r["method"], n_steps, f"{r['reward_mean']:.4f}",
-                        f"{r['ci_lo']:.4f}", f"{r['ci_hi']:.4f}",
-                        f"{r['p95_len_step']:.4f}"])
+            w.writerow(
+                [
+                    r["method"],
+                    n_steps,
+                    f"{r['reward_mean']:.4f}",
+                    f"{r['ci_lo']:.4f}",
+                    f"{r['ci_hi']:.4f}",
+                    f"{r['p95_len_step']:.4f}",
+                ]
+            )
 
     # 3) Factor ratios
     fr_path = os.path.join(OUT_DIR, "p5_iter141_factor_ratio.tsv")
@@ -248,9 +260,7 @@ def main() -> None:
         "hypotheses": {
             "H1_method_under_identified": eta2["method"] < 0.05,
             "H2_step_dominates": eta2["step"] > eta2["method"],
-            "H3_step_over_method_ratio_greater_than_2": (
-                ratios["step_over_method"][0] > 2.0
-            ),
+            "H3_step_over_method_ratio_greater_than_2": (ratios["step_over_method"][0] > 2.0),
         },
         "frontier_synthesis_round1": (
             "ChatGPT-Pro-Extended: 'algorithm is under-identified unless it changes the "
@@ -267,14 +277,17 @@ def main() -> None:
     print("η² decomposition on N2 same-stack four-method tensors:")
     for factor in ["method", "step", "prompt"]:
         v = eta2[factor]
-        ci_lo, ci_hi = {"method": eta2_method_ci, "step": eta2_step_ci,
-                        "prompt": eta2_prompt_ci}[factor]
+        ci_lo, ci_hi = {"method": eta2_method_ci, "step": eta2_step_ci, "prompt": eta2_prompt_ci}[
+            factor
+        ]
         print(f"  η²({factor:6s}) = {v:.4f}  CI [{ci_lo:.4f}, {ci_hi:.4f}]")
     print()
     print("Per-method reward (paired-step bootstrap B=2000, seed=20260705):")
     for r in per_method:
-        print(f"  {r['method']:6s}  mean={r['reward_mean']:.4f}  "
-              f"CI [{r['ci_lo']:.4f}, {r['ci_hi']:.4f}]")
+        print(
+            f"  {r['method']:6s}  mean={r['reward_mean']:.4f}  "
+            f"CI [{r['ci_lo']:.4f}, {r['ci_hi']:.4f}]"
+        )
     print()
     print("Factor ratios (bootstrap CI, paired-resample seed=20260707):")
     for nm, (lo, hi) in ratios.items():

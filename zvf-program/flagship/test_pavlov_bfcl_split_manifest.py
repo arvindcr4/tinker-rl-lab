@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING
 import sys
 
 if TYPE_CHECKING:
-    from . import pavlov_bfcl_split_manifest as split_validator  # noqa: F401
+    from . import pavlov_bfcl_split_manifest as split_validator
 else:
     try:
         from . import pavlov_bfcl_split_manifest as split_validator
@@ -78,138 +78,149 @@ class BFCLSplitManifestBoundaryTests(unittest.TestCase):
     def test_valid_manifest_builds_ready_and_disables_launch(self) -> None:
         report = split_validator.build_split_manifest_record(_valid_manifest())
 
-        self.assertEqual(report["status"], "READY")
-        self.assertTrue(report["split_ready"])
-        self.assertFalse(report["paid_launch_allowed"])
-        self.assertFalse(report["launch"]["allowed"])
-        self.assertIn("launch is intentionally disabled", report["launch"]["reasons"])
-        self.assertEqual(len(report["split"]["train"]["task_hashes"]), 2)
-        self.assertEqual(report["split"]["train"]["count"], 2)
-        self.assertEqual(report["split"]["train"]["aggregate_sha256"], report["split_hashes"]["train"].removeprefix("sha256:"))
-        self.assertEqual(len(report["split"]["primary_eval"]["task_hashes"]), 2)
+        assert report["status"] == "READY"
+        assert report["split_ready"]
+        assert not report["paid_launch_allowed"]
+        assert not report["launch"]["allowed"]
+        assert "launch is intentionally disabled" in report["launch"]["reasons"]
+        assert len(report["split"]["train"]["task_hashes"]) == 2
+        assert report["split"]["train"]["count"] == 2
+        assert report["split"]["train"]["aggregate_sha256"] == report["split_hashes"][
+            "train"
+        ].removeprefix("sha256:")
+        assert len(report["split"]["primary_eval"]["task_hashes"]) == 2
 
     def test_non_bfcl_suite_is_blocked(self) -> None:
         manifest = _valid_manifest()
         manifest["suite_id"] = "openreward_train"
         report = split_validator.build_split_manifest_record(manifest)
 
-        self.assertEqual(report["status"], "BLOCKED")
-        self.assertFalse(report["split_ready"])
-        self.assertIn("suite_id must be 'bfcl_train'", " ".join(report["blockers"]))
+        assert report["status"] == "BLOCKED"
+        assert not report["split_ready"]
+        assert "suite_id must be 'bfcl_train'" in " ".join(report["blockers"])
 
     def test_e_suite_is_blocked(self) -> None:
         manifest = _valid_manifest()
         manifest["suite_id"] = "swe_bench_pro_eval"
         report = split_validator.build_split_manifest_record(manifest)
 
-        self.assertEqual(report["status"], "BLOCKED")
-        self.assertFalse(report["split_ready"])
-        self.assertTrue(any("not valid for T4 split validation" in item for item in report["blockers"]))
+        assert report["status"] == "BLOCKED"
+        assert not report["split_ready"]
+        assert any("not valid for T4 split validation" in item for item in report["blockers"])
 
     def test_rejects_scope_e_suite_reference(self) -> None:
         manifest = _valid_manifest()
         manifest["scope"] = {"e_suite_ids": ["swe_bench_pro_eval", "other"]}
         report = split_validator.build_split_manifest_record(manifest)
 
-        self.assertEqual(report["status"], "BLOCKED")
-        self.assertTrue(any("manifest scope includes E-suite entries" in item for item in report["blockers"]))
+        assert report["status"] == "BLOCKED"
+        assert any("manifest scope includes E-suite entries" in item for item in report["blockers"])
 
     def test_rejects_banned_dataset_markers(self) -> None:
         manifest = _valid_manifest()
         manifest["dataset"]["source"] = "Glaive synthetic function calling corpus"
         report = split_validator.build_split_manifest_record(manifest)
 
-        self.assertEqual(report["status"], "BLOCKED")
-        self.assertTrue(any("dataset/source references synthetic simulator or Glaive evidence" in item for item in report["blockers"]))
+        assert report["status"] == "BLOCKED"
+        assert any(
+            "dataset/source references synthetic simulator or Glaive evidence" in item
+            for item in report["blockers"]
+        )
 
         manifest = _valid_manifest()
         manifest["notes"] = "Uses bfclv4_tool_use.py simulator"
         report = split_validator.build_split_manifest_record(manifest)
-        self.assertEqual(report["status"], "BLOCKED")
-        self.assertTrue(any("manifest notes references synthetic/Glaive sources" in item for item in report["blockers"]))
+        assert report["status"] == "BLOCKED"
+        assert any(
+            "manifest notes references synthetic/Glaive sources" in item
+            for item in report["blockers"]
+        )
 
     def test_split_hash_checks(self) -> None:
         manifest = _valid_manifest()
         manifest["split_hashes"]["train"] = f"sha256:{'c' * 64}"
         report = split_validator.build_split_manifest_record(manifest)
 
-        self.assertEqual(report["status"], "BLOCKED")
-        self.assertTrue(any("split_hashes.train does not match observed train aggregate" in item for item in report["blockers"]))
+        assert report["status"] == "BLOCKED"
+        assert any(
+            "split_hashes.train does not match observed train aggregate" in item
+            for item in report["blockers"]
+        )
 
         manifest = _valid_manifest()
         manifest["split_hashes"] = {}
         report = split_validator.build_split_manifest_record(manifest)
-        self.assertEqual(report["status"], "BLOCKED")
-        self.assertTrue(any("split_hashes.train is required" in item for item in report["blockers"]))
-        self.assertTrue(any("split_hashes.primary_eval is required" in item for item in report["blockers"]))
+        assert report["status"] == "BLOCKED"
+        assert any("split_hashes.train is required" in item for item in report["blockers"])
+        assert any("split_hashes.primary_eval is required" in item for item in report["blockers"])
 
     def test_split_manifest_hash_validation(self) -> None:
         manifest = _valid_manifest()
         manifest["split_manifest_hash"] = "sha256:" + ("e" * 64)
         report = split_validator.build_split_manifest_record(manifest)
 
-        self.assertEqual(report["status"], "BLOCKED")
-        self.assertIn("split_manifest_hash does not match observed split aggregates", report["blockers"])
+        assert report["status"] == "BLOCKED"
+        assert "split_manifest_hash does not match observed split aggregates" in report["blockers"]
 
     def test_decontamination_requires_verified_or_clean_status(self) -> None:
         manifest = _valid_manifest()
         manifest["decontamination"]["status"] = "reviewed"
         report = split_validator.build_split_manifest_record(manifest)
 
-        self.assertEqual(report["status"], "BLOCKED")
-        self.assertIn("decontamination.status is invalid", report["blockers"])
+        assert report["status"] == "BLOCKED"
+        assert "decontamination.status is invalid" in report["blockers"]
 
     def test_overlap_and_nondeterministic_split_are_rejected(self) -> None:
         manifest = _valid_manifest()
         manifest["split"]["train"] = ["3" * 64, "1" * 64]
         report = split_validator.build_split_manifest_record(manifest)
-        self.assertEqual(report["status"], "BLOCKED")
-        self.assertTrue(any("split.train must be sorted deterministically" in item for item in report["blockers"]))
+        assert report["status"] == "BLOCKED"
+        assert any(
+            "split.train must be sorted deterministically" in item for item in report["blockers"]
+        )
 
         manifest = _valid_manifest()
         manifest["split"]["primary_eval"][1] = "1" * 64
         report = split_validator.build_split_manifest_record(manifest)
-        self.assertEqual(report["status"], "BLOCKED")
-        self.assertTrue(any("train and primary_eval task IDs overlap" in item for item in report["blockers"]))
+        assert report["status"] == "BLOCKED"
+        assert any("train and primary_eval task IDs overlap" in item for item in report["blockers"])
 
     def test_no_network_and_no_credentials(self) -> None:
         manifest = _valid_manifest()
         manifest["requires_network"] = True
         blocked = split_validator.build_split_manifest_record(manifest)
-        self.assertEqual(blocked["status"], "BLOCKED")
-        self.assertIn("dataset download/network is disallowed in this boundary", " ".join(blocked["blockers"]))
+        assert blocked["status"] == "BLOCKED"
+        assert "dataset download/network is disallowed in this boundary" in " ".join(
+            blocked["blockers"]
+        )
 
         manifest = _valid_manifest()
         manifest["api_key"] = "secret-token"
         blocked = split_validator.build_split_manifest_record(manifest)
-        self.assertEqual(blocked["status"], "BLOCKED")
-        self.assertTrue(any("api_key is not allowed in offline split validation" in item for item in blocked["blockers"]))
+        assert blocked["status"] == "BLOCKED"
+        assert any(
+            "api_key is not allowed in offline split validation" in item
+            for item in blocked["blockers"]
+        )
 
     def test_validate_record_helper_matches_status(self) -> None:
         ready = split_validator.build_split_manifest_record(_valid_manifest())
-        self.assertEqual(
-            split_validator.validate_split_manifest_record(ready, _valid_manifest()),
-            [],
-        )
+        assert split_validator.validate_split_manifest_record(ready, _valid_manifest()) == []
 
         blocked = split_validator.build_split_manifest_record({"suite_id": "openreward_train"})
-        self.assertNotEqual(blocked["status"], "READY")
-        self.assertEqual(
-            split_validator.validate_split_manifest_record(blocked),
-            blocked["blockers"],
-        )
+        assert blocked["status"] != "READY"
+        assert split_validator.validate_split_manifest_record(blocked) == blocked["blockers"]
 
     def test_main_reports_status_exit_code(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             temporary = Path(directory) / "manifest.json"
             manifest = _valid_manifest()
             temporary.write_text(json.dumps(manifest), encoding="utf-8")
-            self.assertEqual(split_validator.main(["--manifest", str(temporary)]), 0)
+            assert split_validator.main(["--manifest", str(temporary)]) == 0
 
             manifest["suite_id"] = "wrong_suite"
             temporary.write_text(json.dumps(manifest), encoding="utf-8")
-            self.assertEqual(split_validator.main(["--manifest", str(temporary)]), 1)
-
+            assert split_validator.main(["--manifest", str(temporary)]) == 1
 
 
 if __name__ == "__main__":

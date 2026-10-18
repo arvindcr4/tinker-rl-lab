@@ -23,6 +23,7 @@ Usage:
         --max-steps 10 --group-size 1 \\
         --out results_shard_0.jsonl --shard 0/1
 """
+
 from __future__ import annotations
 
 import argparse
@@ -79,7 +80,7 @@ class StepRecord:
 class EpisodeResult:
     env_id: str
     seed: int
-    score: float | None       # None means invalid native evidence, never a failure score
+    score: float | None  # None means invalid native evidence, never a failure score
     total_reward: float | None
     terminated: bool
     truncated: bool
@@ -95,18 +96,19 @@ class EpisodeResult:
 # BrowserGym helpers
 # ---------------------------------------------------------------------------
 
+
 def _import_benchmark(benchmark: str) -> None:
     """Lazy-register the gym environment ids for a benchmark."""
     if benchmark == "miniwob":
-        import browsergym.miniwob  # noqa: F401
+        import browsergym.miniwob
     elif benchmark == "webarena":
         import browsergym.webarena
     elif benchmark == "webarena_verified":
         import browsergym.webarena_verified
     elif benchmark == "workarena":
-        import browsergym.workarena  # noqa: F401
+        import browsergym.workarena
     elif benchmark == "visualwebarena":
-        import browsergym.visualwebarena  # noqa: F401
+        import browsergym.visualwebarena
     elif benchmark == "assistantbench":
         import browsergym.assistantbench  # noqa: F401
     else:
@@ -115,6 +117,7 @@ def _import_benchmark(benchmark: str) -> None:
 
 def _make_env(env_id: str, headless: bool = True) -> Any:
     import gymnasium as gym
+
     try:
         return gym.make(env_id, headless=headless)
     except TypeError:
@@ -168,6 +171,7 @@ def _parse_response(text: str) -> tuple[str, Optional[str]]:
 # Tinker sampling wrapper
 # ---------------------------------------------------------------------------
 
+
 class TinkerChatSampler:
     """Minimal wrapper: render chat messages -> tokens -> sc.sample -> decode."""
 
@@ -175,6 +179,7 @@ class TinkerChatSampler:
         import tinker
         from tinker.types import SamplingParams, ModelInput
         from transformers import AutoTokenizer
+
         self._SamplingParams = SamplingParams
         self._ModelInput = ModelInput
         self.model = model
@@ -205,7 +210,9 @@ class TinkerChatSampler:
         # episode driver runs without asyncio. Tinker's .sample() returns a
         # future; block on .result() directly.
         future = self.sc.sample(
-            prompt=model_input, num_samples=1, sampling_params=params,
+            prompt=model_input,
+            num_samples=1,
+            sampling_params=params,
         )
         result = future.result(timeout=120)
         completion_ids = result.sequences[0].tokens
@@ -215,6 +222,7 @@ class TinkerChatSampler:
 # ---------------------------------------------------------------------------
 # Rollout
 # ---------------------------------------------------------------------------
+
 
 class InvalidNativeRewardError(ValueError):
     """The native outcome cannot be interpreted as benchmark evidence."""
@@ -255,8 +263,11 @@ def run_episode(
             axtree = _axtree_to_str(obs, max_axtree_chars)
             error_block = f"Last action error:\n{last_error}\n\n" if last_error else ""
             user_msg = USER_TEMPLATE.format(
-                goal=goal, axtree=axtree, error_block=error_block,
-                step=step, max_steps=max_steps,
+                goal=goal,
+                axtree=axtree,
+                error_block=error_block,
+                step=step,
+                max_steps=max_steps,
             )
             messages.append({"role": "user", "content": user_msg})
             response = sampler.sample(messages)
@@ -265,12 +276,19 @@ def run_episode(
             step_error: Optional[str] = None
             if not action:
                 step_error = "no_action_parsed"
-                steps.append(StepRecord(step, len(axtree), thought, "", 0.0, False, False, step_error))
+                steps.append(
+                    StepRecord(step, len(axtree), thought, "", 0.0, False, False, step_error)
+                )
                 last_error = step_error
                 break
             try:
                 obs, reward, terminated, truncated, info = env.step(action)
-                if isinstance(reward, bool) or not isinstance(reward, Real) or not math.isfinite(reward) or not 0 <= reward <= 1:
+                if (
+                    isinstance(reward, bool)
+                    or not isinstance(reward, Real)
+                    or not math.isfinite(reward)
+                    or not 0 <= reward <= 1
+                ):
                     raise InvalidNativeRewardError(f"invalid native reward: {reward!r}")
                 reward_f = float(reward)
                 step_error = obs.get("last_action_error") or info.get("action_exec_error")
@@ -285,10 +303,18 @@ def run_episode(
                 step_error = repr(exc)
                 last_error = step_error
                 reward_f = 0.0
-            steps.append(StepRecord(
-                step=step, observation_len=len(axtree), thought=thought, action=action,
-                reward=reward_f, terminated=terminated, truncated=truncated, error=step_error,
-            ))
+            steps.append(
+                StepRecord(
+                    step=step,
+                    observation_len=len(axtree),
+                    thought=thought,
+                    action=action,
+                    reward=reward_f,
+                    terminated=terminated,
+                    truncated=truncated,
+                    error=step_error,
+                )
+            )
             if terminated or truncated:
                 break
             if len(messages) > 14:
@@ -300,12 +326,17 @@ def run_episode(
         except Exception as e:
             logger.warning("Failed to close env after crash env_id=%s: %s", env_id, e)
         return EpisodeResult(
-            env_id=env_id, seed=seed,
+            env_id=env_id,
+            seed=seed,
             score=None if isinstance(exc, InvalidNativeRewardError) else 0.0,
             total_reward=None if isinstance(exc, InvalidNativeRewardError) else 0.0,
-            terminated=False, truncated=False, num_steps=len(steps),
-            valid_action_count=valid_action_count, steps=steps,
-            wall_time_sec=time.time() - t0, error=repr(exc),
+            terminated=False,
+            truncated=False,
+            num_steps=len(steps),
+            valid_action_count=valid_action_count,
+            steps=steps,
+            wall_time_sec=time.time() - t0,
+            error=repr(exc),
         )
     finally:
         try:
@@ -317,10 +348,17 @@ def run_episode(
     # Versioned maximum task-reward contract; never sum partial rewards into success.
     score = max_reward
     return EpisodeResult(
-        env_id=env_id, seed=seed, score=score, total_reward=total_reward,
-        terminated=terminated, truncated=truncated, num_steps=len(steps),
-        valid_action_count=valid_action_count, steps=steps,
-        wall_time_sec=time.time() - t0, error=last_error,
+        env_id=env_id,
+        seed=seed,
+        score=score,
+        total_reward=total_reward,
+        terminated=terminated,
+        truncated=truncated,
+        num_steps=len(steps),
+        valid_action_count=valid_action_count,
+        steps=steps,
+        wall_time_sec=time.time() - t0,
+        error=last_error,
     )
 
 
@@ -328,9 +366,11 @@ def run_episode(
 # Driver
 # ---------------------------------------------------------------------------
 
+
 def _parse_tasks(spec: str, benchmark: str) -> List[str]:
     """Accept either a comma list or 'all' for benchmark's registered tasks."""
     import gymnasium as gym
+
     # webarena_verified is a semantic alias; tasks are registered under browsergym/webarena.
     prefix_name = "webarena" if benchmark == "webarena_verified" else benchmark
     if spec == "all":
@@ -362,31 +402,55 @@ def _main_sync(args: argparse.Namespace) -> int:
         raise ValueError("Only sequential execution (--concurrency 1) is supported")
     if args.max_steps <= 0:
         raise ValueError("max_steps must be positive")
-    config = {k: getattr(args, k) for k in ("benchmark", "model", "seed", "max_steps", "max_axtree_chars", "action_tokens", "temperature")}
+    config = {
+        k: getattr(args, k)
+        for k in (
+            "benchmark",
+            "model",
+            "seed",
+            "max_steps",
+            "max_axtree_chars",
+            "action_tokens",
+            "temperature",
+        )
+    }
     config.update(protocol="browsergym-max-task-reward-v2", tasks=tasks)
     evaluation_id = hashlib.sha256(json.dumps(config, sort_keys=True).encode()).hexdigest()
-    seeds = {task: int.from_bytes(hashlib.sha256(f"{args.seed}:{task}".encode()).digest()[:4], "big") for task in tasks}
+    seeds = {
+        task: int.from_bytes(hashlib.sha256(f"{args.seed}:{task}".encode()).digest()[:4], "big")
+        for task in tasks
+    }
     tasks = _shard(tasks, args.shard)
     if args.limit:
         tasks = tasks[: args.limit]
-    logger.info("shard=%s tasks=%d benchmark=%s model=%s",
-                args.shard, len(tasks), args.benchmark, args.model)
+    logger.info(
+        "shard=%s tasks=%d benchmark=%s model=%s",
+        args.shard,
+        len(tasks),
+        args.benchmark,
+        args.model,
+    )
 
     # --- Optional: Weights & Biases ---
     wandb_run = None
     if args.wandb_project:
         try:
             import wandb
+
             run_name = f"{args.benchmark}-{args.model.replace('/', '_')}-shard{args.shard.replace('/', 'of')}"
             wandb_run = wandb.init(
                 project=args.wandb_project,
                 name=args.run_name or run_name,
                 group=args.run_name or args.benchmark,
                 config={
-                    "benchmark": args.benchmark, "model": args.model,
-                    "max_steps": args.max_steps, "shard": args.shard,
-                    "temperature": args.temperature, "concurrency": args.concurrency,
-                    "max_axtree_chars": args.max_axtree_chars, "num_tasks": len(tasks),
+                    "benchmark": args.benchmark,
+                    "model": args.model,
+                    "max_steps": args.max_steps,
+                    "shard": args.shard,
+                    "temperature": args.temperature,
+                    "concurrency": args.concurrency,
+                    "max_axtree_chars": args.max_axtree_chars,
+                    "num_tasks": len(tasks),
                 },
                 tags=["webarena-eval", args.benchmark],
                 reinit=True,
@@ -402,43 +466,53 @@ def _main_sync(args: argparse.Namespace) -> int:
     completed = {"n": 0, "sum_score": 0.0, "sum_steps": 0, "invalid_scores": 0}
 
     def one(env_id: str, seed: int, idx: int) -> None:
-            res = run_episode(
-                sampler, env_id, seed,
-                max_steps=args.max_steps,
-                max_axtree_chars=args.max_axtree_chars,
-                benchmark=args.benchmark,
-            )
-            res.evaluation_id = evaluation_id
-            with out_path.open("a") as f:
-                f.write(json.dumps(asdict(res), default=str) + "\n")
-            completed["n"] += 1
-            completed["invalid_scores"] += int(res.score is None)
-            completed["sum_score"] += res.score if res.score is not None else 0.0
-            completed["sum_steps"] += res.num_steps
-            logger.info(
-                "done[%d/%d] env=%s score=%s steps=%d err=%s",
-                completed["n"], len(tasks), env_id, res.score, res.num_steps, res.error,
-            )
-            if wandb_run is not None:
-                try:
-                    import wandb as _wb  # noqa: F401
-                    wandb_run.log(
-                        {
-                            "episode/score": res.score,
-                            "episode/num_steps": res.num_steps,
-                            "episode/valid_actions": res.valid_action_count,
-                            "episode/wall_time_sec": res.wall_time_sec,
-                            "episode/terminated": int(res.terminated),
-                            "episode/truncated": int(res.truncated),
-                            "episode/error": int(bool(res.error)),
-                            "running/mean_score": None if completed["invalid_scores"] else completed["sum_score"] / completed["n"],
-                            "running/mean_steps": completed["sum_steps"] / completed["n"],
-                            "running/completed": completed["n"],
-                        },
-                        step=idx,
-                    )
-                except Exception as exc:
-                    logger.warning("wandb.log failed: %r", exc)
+        res = run_episode(
+            sampler,
+            env_id,
+            seed,
+            max_steps=args.max_steps,
+            max_axtree_chars=args.max_axtree_chars,
+            benchmark=args.benchmark,
+        )
+        res.evaluation_id = evaluation_id
+        with out_path.open("a") as f:
+            f.write(json.dumps(asdict(res), default=str) + "\n")
+        completed["n"] += 1
+        completed["invalid_scores"] += int(res.score is None)
+        completed["sum_score"] += res.score if res.score is not None else 0.0
+        completed["sum_steps"] += res.num_steps
+        logger.info(
+            "done[%d/%d] env=%s score=%s steps=%d err=%s",
+            completed["n"],
+            len(tasks),
+            env_id,
+            res.score,
+            res.num_steps,
+            res.error,
+        )
+        if wandb_run is not None:
+            try:
+                import wandb as _wb  # noqa: F401
+
+                wandb_run.log(
+                    {
+                        "episode/score": res.score,
+                        "episode/num_steps": res.num_steps,
+                        "episode/valid_actions": res.valid_action_count,
+                        "episode/wall_time_sec": res.wall_time_sec,
+                        "episode/terminated": int(res.terminated),
+                        "episode/truncated": int(res.truncated),
+                        "episode/error": int(bool(res.error)),
+                        "running/mean_score": None
+                        if completed["invalid_scores"]
+                        else completed["sum_score"] / completed["n"],
+                        "running/mean_steps": completed["sum_steps"] / completed["n"],
+                        "running/completed": completed["n"],
+                    },
+                    step=idx,
+                )
+            except Exception as exc:
+                logger.warning("wandb.log failed: %r", exc)
 
     if out_path.exists() and not args.resume:
         raise ValueError("output already exists; choose a new versioned path or --resume")
@@ -448,7 +522,11 @@ def _main_sync(args: argparse.Namespace) -> int:
             if not line.strip():
                 continue
             row = json.loads(line)
-            if row.get("evaluation_id") != evaluation_id or row.get("seed") != seeds.get(row["env_id"]) or row["env_id"] not in tasks:
+            if (
+                row.get("evaluation_id") != evaluation_id
+                or row.get("seed") != seeds.get(row["env_id"])
+                or row["env_id"] not in tasks
+            ):
                 raise ValueError("resume configuration mismatch; use a new output path")
             if row["env_id"] in done_ids:
                 raise ValueError("duplicate resume episode")
@@ -461,10 +539,27 @@ def _main_sync(args: argparse.Namespace) -> int:
         logger.info("resuming: %d already done", len(done_ids))
 
     receipt_path = out_path.with_suffix(out_path.suffix + ".receipt.json")
-    receipt_path.write_text(json.dumps({"evaluation_id": evaluation_id, "effective_config": config, "actual_concurrency": 1, "sampling_mode": "synchronous", "sampling_timeout_seconds": 120, "coverage": [{"evaluation_id": evaluation_id, "env_id": task, "seed": seeds[task]} for task in tasks]}, indent=2))
+    receipt_path.write_text(
+        json.dumps(
+            {
+                "evaluation_id": evaluation_id,
+                "effective_config": config,
+                "actual_concurrency": 1,
+                "sampling_mode": "synchronous",
+                "sampling_timeout_seconds": 120,
+                "coverage": [
+                    {"evaluation_id": evaluation_id, "env_id": task, "seed": seeds[task]}
+                    for task in tasks
+                ],
+            },
+            indent=2,
+        )
+    )
 
     sampler = TinkerChatSampler(
-        model=args.model, temperature=args.temperature, max_tokens=args.action_tokens,
+        model=args.model,
+        temperature=args.temperature,
+        max_tokens=args.action_tokens,
     )
 
     for i, env_id in enumerate(tasks):
@@ -476,9 +571,13 @@ def _main_sync(args: argparse.Namespace) -> int:
     if args.hf_repo:
         try:
             from huggingface_hub import HfApi, create_repo
+
             api = HfApi()
             create_repo(
-                args.hf_repo, repo_type="dataset", exist_ok=True, private=args.hf_private,
+                args.hf_repo,
+                repo_type="dataset",
+                exist_ok=True,
+                private=args.hf_private,
             )
             remote_name = f"{args.run_name or args.benchmark}/{out_path.name}"
             api.upload_file(
@@ -496,11 +595,16 @@ def _main_sync(args: argparse.Namespace) -> int:
         try:
             wandb_run.summary["final/n_completed"] = completed["n"]
             wandb_run.summary["final/mean_score"] = (
-                None if completed["invalid_scores"] else completed["sum_score"] / completed["n"] if completed["n"] else 0.0
+                None
+                if completed["invalid_scores"]
+                else completed["sum_score"] / completed["n"]
+                if completed["n"]
+                else 0.0
             )
             wandb_run.summary["final/shard"] = args.shard
             # Log the JSONL as a W&B artifact for later reruns/diffs
             import wandb as _wb
+
             art = _wb.Artifact(
                 name=f"results-{args.benchmark}-{args.shard.replace('/', '-of-')}",
                 type="eval-results",
@@ -516,11 +620,23 @@ def _main_sync(args: argparse.Namespace) -> int:
 
 def main() -> int:
     p = argparse.ArgumentParser()
-    p.add_argument("--benchmark", required=True,
-                   choices=["miniwob", "webarena", "webarena_verified",
-                            "workarena", "visualwebarena", "assistantbench"])
-    p.add_argument("--tasks", default="all",
-                   help="Comma-separated task names, or 'all' for benchmark's full registry")
+    p.add_argument(
+        "--benchmark",
+        required=True,
+        choices=[
+            "miniwob",
+            "webarena",
+            "webarena_verified",
+            "workarena",
+            "visualwebarena",
+            "assistantbench",
+        ],
+    )
+    p.add_argument(
+        "--tasks",
+        default="all",
+        help="Comma-separated task names, or 'all' for benchmark's full registry",
+    )
     p.add_argument("--model", default="Qwen/Qwen3-8B")
     p.add_argument("--out", required=True)
     p.add_argument("--shard", default="0/1", help="'k/N' -> every N-th task from k")
@@ -530,20 +646,28 @@ def main() -> int:
     p.add_argument("--max-axtree-chars", type=int, default=24000)
     p.add_argument("--action-tokens", type=int, default=256)
     p.add_argument("--temperature", type=float, default=0.0)
-    p.add_argument("--concurrency", type=int, default=1,
-                   help="Max concurrent browsergym envs / Chromiums")
-    p.add_argument("--resume", action="store_true",
-                   help="Skip env_ids already present in --out")
+    p.add_argument(
+        "--concurrency", type=int, default=1, help="Max concurrent browsergym envs / Chromiums"
+    )
+    p.add_argument("--resume", action="store_true", help="Skip env_ids already present in --out")
     p.add_argument("--log-level", default="INFO")
 
-    p.add_argument("--wandb-project", default=os.environ.get("WANDB_PROJECT"),
-                   help="Enable W&B logging to this project (requires WANDB_API_KEY)")
-    p.add_argument("--run-name", default=os.environ.get("WANDB_RUN_NAME"),
-                   help="Override default W&B run name / HF subdir")
-    p.add_argument("--hf-repo", default=os.environ.get("HF_RESULTS_REPO"),
-                   help="Upload results to this HF dataset repo (e.g. 'user/webarena-results'). Requires HF_TOKEN")
-    p.add_argument("--hf-private", action="store_true",
-                   help="Create/use private HF repo")
+    p.add_argument(
+        "--wandb-project",
+        default=os.environ.get("WANDB_PROJECT"),
+        help="Enable W&B logging to this project (requires WANDB_API_KEY)",
+    )
+    p.add_argument(
+        "--run-name",
+        default=os.environ.get("WANDB_RUN_NAME"),
+        help="Override default W&B run name / HF subdir",
+    )
+    p.add_argument(
+        "--hf-repo",
+        default=os.environ.get("HF_RESULTS_REPO"),
+        help="Upload results to this HF dataset repo (e.g. 'user/webarena-results'). Requires HF_TOKEN",
+    )
+    p.add_argument("--hf-private", action="store_true", help="Create/use private HF repo")
 
     args = p.parse_args()
 
@@ -551,7 +675,10 @@ def main() -> int:
         level=args.log_level,
         format="%(asctime)s %(levelname)s %(name)s %(message)s",
     )
-    if not os.environ.get("TINKER_API_KEY") and not Path(os.path.expanduser("~/.tinker_api_key")).exists():
+    if (
+        not os.environ.get("TINKER_API_KEY")
+        and not Path(os.path.expanduser("~/.tinker_api_key")).exists()
+    ):
         logger.error("TINKER_API_KEY not set and ~/.tinker_api_key missing")
         return 2
     return _main_sync(args)

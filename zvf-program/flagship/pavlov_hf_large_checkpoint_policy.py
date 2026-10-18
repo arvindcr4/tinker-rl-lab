@@ -178,7 +178,9 @@ def _canonical_checkpoint_payload(checkpoint: Mapping[str, Any]) -> dict[str, An
     }
 
 
-def _extract_run_id_fields(record: Mapping[str, Any], errors: list[str], prefix: str) -> tuple[str | None, str | None]:
+def _extract_run_id_fields(
+    record: Mapping[str, Any], errors: list[str], prefix: str
+) -> tuple[str | None, str | None]:
     direct = _first_value(
         record,
         (
@@ -193,8 +195,12 @@ def _extract_run_id_fields(record: Mapping[str, Any], errors: list[str], prefix:
     else:
         direct = None
 
-    wandb = _validate_wandb_identity(_first_value(record, ("wandb_run_identity", "wandb", "wandb_receipt")),
-                                    errors, f"{prefix}.wandb_run_identity", direct)
+    wandb = _validate_wandb_identity(
+        _first_value(record, ("wandb_run_identity", "wandb", "wandb_receipt")),
+        errors,
+        f"{prefix}.wandb_run_identity",
+        direct,
+    )
     tinker = _validate_tinker_identity(
         _first_value(record, ("tinker_run_identity", "tinker", "tinker_receipt")),
         errors,
@@ -249,9 +255,7 @@ def _validate_wandb_identity(
             errors.append(f"{prefix}.run_url must have exact wandb host/path shape")
         else:
             if run_id is not None and run_id != match.group("run_id"):
-                errors.append(
-                    f"{prefix}.run_id must match wandb run_url path segment"
-                )
+                errors.append(f"{prefix}.run_id must match wandb run_url path segment")
             entity = _first_value(receipt, ("entity",))
             project = _first_value(receipt, ("project",))
             if _nonempty_text(entity) and str(entity).strip() != match.group("entity"):
@@ -261,9 +265,7 @@ def _validate_wandb_identity(
 
     state = _first_value(receipt, ("state", "status"))
     if not _nonempty_text(state) or str(state).strip().lower() not in WANDB_TERMINAL_STATES:
-        errors.append(
-            f"{prefix}.state must be terminal: {sorted(WANDB_TERMINAL_STATES)}"
-        )
+        errors.append(f"{prefix}.state must be terminal: {sorted(WANDB_TERMINAL_STATES)}")
 
     return run_id
 
@@ -340,8 +342,14 @@ def _extract_precreated_revision(record: Mapping[str, Any]) -> str | None:
     return None
 
 
-def _normalize_checkpoint(checkpoint: Any, prefix: str, record_precreated: str | None, run_id: str,
-                          errors: list[str], pair_seen: set[tuple[str, int]]) -> dict[str, Any] | None:
+def _normalize_checkpoint(
+    checkpoint: Any,
+    prefix: str,
+    record_precreated: str | None,
+    run_id: str,
+    errors: list[str],
+    pair_seen: set[tuple[str, int]],
+) -> dict[str, Any] | None:
     if not isinstance(checkpoint, Mapping):
         errors.append(f"{prefix} must be a JSON object")
         return None
@@ -396,9 +404,7 @@ def _normalize_checkpoint(checkpoint: Any, prefix: str, record_precreated: str |
 
     kind = _normalise_checkpoint_kind(_first_value(checkpoint, ("kind", "stage", "phase")))
     if kind is None:
-        errors.append(
-            f"{prefix}.kind must be one of: {list(REQUIRED_CHECKPOINT_KINDS)}"
-        )
+        errors.append(f"{prefix}.kind must be one of: {list(REQUIRED_CHECKPOINT_KINDS)}")
         return None
 
     step = checkpoint.get("step")
@@ -442,9 +448,7 @@ def _normalize_checkpoint(checkpoint: Any, prefix: str, record_precreated: str |
 
     content_digest = _first_value(checkpoint, ("content_digest", "checkpoint_digest"))
     if not _sha256(content_digest):
-        errors.append(
-            f"{prefix}.content_digest must be a lowercase 64-char SHA-256 hex string"
-        )
+        errors.append(f"{prefix}.content_digest must be a lowercase 64-char SHA-256 hex string")
     else:
         expected_digest = compute_large_checkpoint_content_digest(checkpoint)
         if str(content_digest).strip().lower() != expected_digest:
@@ -459,7 +463,9 @@ def _normalize_checkpoint(checkpoint: Any, prefix: str, record_precreated: str |
         "url": checkpoint_url,
         "visibility": visibility,
         "safe_public_artifact": safe_public_artifact,
-        "precreated_revision": str(record_precreated).strip() if _nonempty_text(record_precreated) else None,
+        "precreated_revision": str(record_precreated).strip()
+        if _nonempty_text(record_precreated)
+        else None,
     }
 
 
@@ -496,9 +502,7 @@ def _normalise_records(records: Any) -> tuple[list[str], list[dict[str, Any]]]:
         else:
             status = str(status).strip().lower()
         if status not in _ALL_RECORD_STATUSES:
-            errors.append(
-                f"{record_prefix}.status must be one of: {sorted(_ALL_RECORD_STATUSES)}"
-            )
+            errors.append(f"{record_prefix}.status must be one of: {sorted(_ALL_RECORD_STATUSES)}")
 
         run_id, canonical_run_id = _extract_run_id_fields(record, errors, record_prefix)
         if not _nonempty_text(run_id):
@@ -549,9 +553,7 @@ def _normalise_records(records: Any) -> tuple[list[str], list[dict[str, Any]]]:
             kinds_for_record.add(normalized["kind"])
             repo_to_run.setdefault(repo, run_id)
             if repo in repo_to_run and repo_to_run[repo] != run_id:
-                errors.append(
-                    f"{checkpoint_prefix} reuses repo {repo} from another run"
-                )
+                errors.append(f"{checkpoint_prefix} reuses repo {repo} from another run")
             existing_run = repo_to_kinds.setdefault(repo, set())
             existing_run.update(kinds_for_record)
             checkpoint_run_entries.append(normalized)
@@ -559,9 +561,7 @@ def _normalise_records(records: Any) -> tuple[list[str], list[dict[str, Any]]]:
         if kinds_for_record and kinds_for_record != set(REQUIRED_CHECKPOINT_KINDS):
             missing = sorted(set(REQUIRED_CHECKPOINT_KINDS) - kinds_for_record)
             if missing:
-                errors.append(
-                    f"{record_prefix}.checkpoint lifecycle missing kinds: {missing}"
-                )
+                errors.append(f"{record_prefix}.checkpoint lifecycle missing kinds: {missing}")
 
         if status in COMPLETED_STATUSES and not kinds_for_record:
             errors.append(f"{record_prefix}.complete runs require checkpoint coverage")
@@ -585,7 +585,9 @@ def _normalise_records(records: Any) -> tuple[list[str], list[dict[str, Any]]]:
         run_by_id[run_id] = {
             "record_prefix": record_prefix,
             "status": status,
-            "precreated_revision": str(precreated_revision).strip() if _nonempty_text(precreated_revision) else None,
+            "precreated_revision": str(precreated_revision).strip()
+            if _nonempty_text(precreated_revision)
+            else None,
             "parent_run_id": str(parent_run_id).strip() if _nonempty_text(parent_run_id) else None,
             "checkpoints": checkpoint_run_entries,
             "final_revision": final_revision,
@@ -594,8 +596,12 @@ def _normalise_records(records: Any) -> tuple[list[str], list[dict[str, Any]]]:
             {
                 "run_id": run_id,
                 "status": status,
-                "precreated_revision": str(precreated_revision).strip() if _nonempty_text(precreated_revision) else None,
-                "parent_run_id": str(parent_run_id).strip() if _nonempty_text(parent_run_id) else None,
+                "precreated_revision": str(precreated_revision).strip()
+                if _nonempty_text(precreated_revision)
+                else None,
+                "parent_run_id": str(parent_run_id).strip()
+                if _nonempty_text(parent_run_id)
+                else None,
                 "checkpoints": checkpoint_run_entries,
             }
         )
@@ -608,13 +614,17 @@ def _normalise_records(records: Any) -> tuple[list[str], list[dict[str, Any]]]:
         parent_map[run_id] = parent_run_id
         parent = run_by_id.get(parent_run_id)
         if parent is None:
-            errors.append(f"{record['record_prefix']}.retry_parent_run_id does not reference an existing run")
+            errors.append(
+                f"{record['record_prefix']}.retry_parent_run_id does not reference an existing run"
+            )
             continue
         if parent["status"] not in COMPLETED_STATUSES:
             errors.append(f"{record['record_prefix']}.retry parent run must be completed")
         if parent.get("final_revision") is None:
             errors.append(f"{record['record_prefix']}.retry parent has no final checkpoint")
-        if _nonempty_text(record["precreated_revision"]) and _nonempty_text(parent.get("final_revision")):
+        if _nonempty_text(record["precreated_revision"]) and _nonempty_text(
+            parent.get("final_revision")
+        ):
             if str(record["precreated_revision"]) != str(parent.get("final_revision")):
                 errors.append(
                     f"{record['record_prefix']}.precreated_revision must match parent final revision"
@@ -637,7 +647,9 @@ def _normalise_records(records: Any) -> tuple[list[str], list[dict[str, Any]]]:
     for repo, kinds in repo_to_kinds.items():
         if kinds != set(REQUIRED_CHECKPOINT_KINDS):
             missing = sorted(set(REQUIRED_CHECKPOINT_KINDS) - kinds)
-            errors.append(f"repository {repo} has incomplete checkpoint lifecycle; missing kinds: {missing}")
+            errors.append(
+                f"repository {repo} has incomplete checkpoint lifecycle; missing kinds: {missing}"
+            )
 
     return errors, normalised_records
 

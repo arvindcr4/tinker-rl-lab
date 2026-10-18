@@ -31,6 +31,7 @@ No network, provider SDK, or billing call exists in this module. Keys are
 direction-separated domains so a supervisor receipt replayed as a renewal
 is rejected.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -74,8 +75,12 @@ class NeverExecutedError(SupervisorError):
 
 
 def canonical(value) -> bytes:
-    return (json.dumps(value, sort_keys=True, separators=(",", ":"),
-                       ensure_ascii=False, allow_nan=False) + "\n").encode()
+    return (
+        json.dumps(
+            value, sort_keys=True, separators=(",", ":"), ensure_ascii=False, allow_nan=False
+        )
+        + "\n"
+    ).encode()
 
 
 def digest(data: bytes) -> str:
@@ -187,15 +192,22 @@ class ModalCancellationStub:
     def execute(self, request: dict):
         raise NeverExecutedError(
             "live cancellation is not implemented in this artifact; "
-            "only --dry-run intent receipts exist (E13 amendment acceptance 2026-09-19)")
+            "only --dry-run intent receipts exist (E13 amendment acceptance 2026-09-19)"
+        )
 
 
 class HostedSupervisor:
     """Polls the lease volume; fires cancellation intent exactly once (dry-run only)."""
 
-    def __init__(self, volume, requester_key: bytes, supervisor_key: bytes,
-                 clock=real_clock, observation_seconds: int = DEFAULT_OBSERVATION_SECONDS,
-                 max_skew_seconds: float = DEFAULT_MAX_SKEW_SECONDS):
+    def __init__(
+        self,
+        volume,
+        requester_key: bytes,
+        supervisor_key: bytes,
+        clock=real_clock,
+        observation_seconds: int = DEFAULT_OBSERVATION_SECONDS,
+        max_skew_seconds: float = DEFAULT_MAX_SKEW_SECONDS,
+    ):
         self.volume = Path(volume)
         self.requester_key = requester_key
         self.supervisor_key = supervisor_key
@@ -224,10 +236,14 @@ class HostedSupervisor:
         return self.volume / "supervisor-state.json"
 
     # ---------- arm ----------
-    def arm(self, resource: dict, requester: dict | None = None,
-            lease_seconds: int = DEFAULT_LEASE_SECONDS,
-            cleanup_reserve_seconds: int = DEFAULT_CLEANUP_RESERVE_SECONDS,
-            total_lease_seconds: int = STRICT_TOTAL_LEASE_SECONDS) -> dict:
+    def arm(
+        self,
+        resource: dict,
+        requester: dict | None = None,
+        lease_seconds: int = DEFAULT_LEASE_SECONDS,
+        cleanup_reserve_seconds: int = DEFAULT_CLEANUP_RESERVE_SECONDS,
+        total_lease_seconds: int = STRICT_TOTAL_LEASE_SECONDS,
+    ) -> dict:
         wall, mono = self.clock()
         lease = {
             "schema": LEASE_SCHEMA,
@@ -248,12 +264,17 @@ class HostedSupervisor:
         write_once(self.lease_path, lease)
         self._last_wall = wall
         self._persist_state(wall)
-        self._receipt(KIND_ARMED, {
-            "lease_id": lease["lease_id"], "t0_epoch": lease["t0_epoch"],
-            "deadline_epoch": lease["deadline_epoch"],
-            "lease_seconds": lease_seconds,
-            "cleanup_reserve_seconds": cleanup_reserve_seconds,
-            "resource": lease["resource"]})
+        self._receipt(
+            KIND_ARMED,
+            {
+                "lease_id": lease["lease_id"],
+                "t0_epoch": lease["t0_epoch"],
+                "deadline_epoch": lease["deadline_epoch"],
+                "lease_seconds": lease_seconds,
+                "cleanup_reserve_seconds": cleanup_reserve_seconds,
+                "resource": lease["resource"],
+            },
+        )
         return lease
 
     # ---------- renewals (requester side helper writes; supervisor verifies) ----------
@@ -281,12 +302,20 @@ class HostedSupervisor:
         expected_seq = (latest["seq"] + 1) if latest else 1
         self._check_renewal(record, lease, wall, expected_seq)
         write_once(self.renewals_dir / f"ren-{record['seq']:010d}.json", record)
-        accepted = {"record": record, "accepted_epoch": wall, "accepted_monotonic": mono,
-                    "supervisor_boot_id": self._boot_id}
+        accepted = {
+            "record": record,
+            "accepted_epoch": wall,
+            "accepted_monotonic": mono,
+            "supervisor_boot_id": self._boot_id,
+        }
         accepted["signature"] = sign(b"accepted-renewal-v2", self.supervisor_key, accepted)
         write_once(self.volume / "accepted-renewals" / f"ren-{record['seq']:010d}.json", accepted)
-        return {"accepted": True, "seq": record["seq"],
-                "deadline_epoch": lease["deadline_epoch"], "note": "deadline unchanged by renewal"}
+        return {
+            "accepted": True,
+            "seq": record["seq"],
+            "deadline_epoch": lease["deadline_epoch"],
+            "note": "deadline unchanged by renewal",
+        }
 
     def _verify_renewal_authentic(self, record: dict, lease: dict) -> None:
         """Authenticity checks valid both at submission and on historical re-read."""
@@ -313,8 +342,13 @@ class HostedSupervisor:
         issued = record["issued_epoch"]
         if abs(wall - issued) > self.max_skew_seconds:
             raise SupervisorError("renewal: issued_epoch outside clock-skew bound")
-        if issued > lease["deadline_epoch"] - lease["cleanup_reserve_seconds"] + self.max_skew_seconds:
-            raise SupervisorError("renewal: past early-cleanup cutoff; deadline cannot be held open")
+        if (
+            issued
+            > lease["deadline_epoch"] - lease["cleanup_reserve_seconds"] + self.max_skew_seconds
+        ):
+            raise SupervisorError(
+                "renewal: past early-cleanup cutoff; deadline cannot be held open"
+            )
 
     def latest_verified_renewal(self, lease: dict) -> dict | None:
         best = None
@@ -380,8 +414,13 @@ class HostedSupervisor:
         self.receipts_dir.mkdir(parents=True, exist_ok=True)
         seq = len(list(self.receipts_dir.glob("*.json"))) + 1
         wall, _ = self.clock()
-        payload = {"schema": RECEIPT_SCHEMA, "kind": kind, "seq": seq,
-                   "recorded_epoch": wall, **body}
+        payload = {
+            "schema": RECEIPT_SCHEMA,
+            "kind": kind,
+            "seq": seq,
+            "recorded_epoch": wall,
+            **body,
+        }
         payload["hmac"] = sign(DOMAIN_RECEIPT, self.supervisor_key, payload)
         path = self.receipts_dir / f"{seq:06d}-{kind}.json"
         write_once(path, payload)
@@ -420,9 +459,12 @@ class HostedSupervisor:
             "reason": reason,
             "resource": lease["resource"],
             "api_call": request,
-            "execution": {"mode": "dry-run", "executed": False,
-                          "executor": "ModalCancellationStub",
-                          "live_execution": "NOT_IMPLEMENTED_IN_THIS_ARTIFACT"},
+            "execution": {
+                "mode": "dry-run",
+                "executed": False,
+                "executor": "ModalCancellationStub",
+                "live_execution": "NOT_IMPLEMENTED_IN_THIS_ARTIFACT",
+            },
             "t0_epoch": lease["t0_epoch"],
             "deadline_epoch": lease["deadline_epoch"],
             "clock_rebased": False,
@@ -437,18 +479,24 @@ class HostedSupervisor:
             return
         if self.intent_receipt() is None:
             return
-        window_end = max(lease["deadline_epoch"],
-                         self.intent_receipt()["recorded_epoch"]) + self.observation_seconds
+        window_end = (
+            max(lease["deadline_epoch"], self.intent_receipt()["recorded_epoch"])
+            + self.observation_seconds
+        )
         if wall >= window_end:
-            self._receipt(KIND_CLEANUP_UNVERIFIED, {
-                "lease_id": lease["lease_id"],
-                "resource": lease["resource"],
-                "observation_window_seconds": self.observation_seconds,
-                "last_observation_epoch": wall,
-                "provider_absence_observed": False,
-                "billing_closure_observed": False,
-                "possible_continuing_charges": True,
-                "note": "no verified provider absence/billing closure inside the supervision window; unknown, not success"})
+            self._receipt(
+                KIND_CLEANUP_UNVERIFIED,
+                {
+                    "lease_id": lease["lease_id"],
+                    "resource": lease["resource"],
+                    "observation_window_seconds": self.observation_seconds,
+                    "last_observation_epoch": wall,
+                    "provider_absence_observed": False,
+                    "billing_closure_observed": False,
+                    "possible_continuing_charges": True,
+                    "note": "no verified provider absence/billing closure inside the supervision window; unknown, not success",
+                },
+            )
 
     def run_once(self, dry_run: bool = True) -> dict:
         """One poll of the lease volume; may fire intent and terminal receipts."""
@@ -458,14 +506,25 @@ class HostedSupervisor:
             if not dry_run:
                 raise NeverExecutedError("live cancellation execution is not implemented")
             self.fire_cancellation(lease, "SUPERVISOR_RESTART_UNRECONCILED", wall)
-            return {"status": "CANCELLATION_INTENT_ISSUED", "intent": self.intent_receipt(),
-                    "terminal": self.terminal_receipt(), "now_epoch": wall, "monotonic": mono,
-                    "deadline_epoch": lease["deadline_epoch"]}
+            return {
+                "status": "CANCELLATION_INTENT_ISSUED",
+                "intent": self.intent_receipt(),
+                "terminal": self.terminal_receipt(),
+                "now_epoch": wall,
+                "monotonic": mono,
+                "deadline_epoch": lease["deadline_epoch"],
+            }
         if self._rollback_check(wall):
-            self._receipt(KIND_ROLLBACK, {
-                "lease_id": lease["lease_id"], "detected_epoch": wall,
-                "last_wall": self._last_wall, "max_skew_seconds": self.max_skew_seconds,
-                "action": "fail-closed: cancellation intent issued; clocks are never rebased"})
+            self._receipt(
+                KIND_ROLLBACK,
+                {
+                    "lease_id": lease["lease_id"],
+                    "detected_epoch": wall,
+                    "last_wall": self._last_wall,
+                    "max_skew_seconds": self.max_skew_seconds,
+                    "action": "fail-closed: cancellation intent issued; clocks are never rebased",
+                },
+            )
             # the persisted high-water mark is never lowered; history is not rewritten
             if not dry_run:
                 raise NeverExecutedError("live cancellation execution is not implemented")
@@ -479,10 +538,18 @@ class HostedSupervisor:
                 self._last_wall = wall
             self._persist_state(self._last_wall)
             latest = self.latest_verified_renewal(lease)
-            expiry = latest["expires_epoch"] if latest else lease["t0_epoch"] + lease["lease_seconds"]
+            expiry = (
+                latest["expires_epoch"] if latest else lease["t0_epoch"] + lease["lease_seconds"]
+            )
             cutoff = lease["deadline_epoch"] - lease["cleanup_reserve_seconds"]
-            monotonic_cutoff = lease["armed_monotonic"] + lease["total_lease_seconds"] - lease["cleanup_reserve_seconds"]
-            monotonic_expiry = (latest["accepted_monotonic"] if latest else lease["armed_monotonic"]) + lease["lease_seconds"]
+            monotonic_cutoff = (
+                lease["armed_monotonic"]
+                + lease["total_lease_seconds"]
+                - lease["cleanup_reserve_seconds"]
+            )
+            monotonic_expiry = (
+                latest["accepted_monotonic"] if latest else lease["armed_monotonic"]
+            ) + lease["lease_seconds"]
             if self.intent_receipt() is not None:
                 status = "CANCELLATION_INTENT_ISSUED"
             elif wall >= cutoff or mono >= monotonic_cutoff:
@@ -501,27 +568,43 @@ class HostedSupervisor:
         terminal = self.terminal_receipt()
         if terminal is not None:
             status = terminal["kind"]
-        return {"status": status, "now_epoch": wall, "monotonic": mono,
-                "deadline_epoch": lease["deadline_epoch"],
-                "intent": self.intent_receipt(), "terminal": terminal}
+        return {
+            "status": status,
+            "now_epoch": wall,
+            "monotonic": mono,
+            "deadline_epoch": lease["deadline_epoch"],
+            "intent": self.intent_receipt(),
+            "terminal": terminal,
+        }
 
     # ---------- observation / amendment reporting ----------
-    def record_completion_observation(self, observed_epoch: float, provider_absent: bool,
-                                      billing_closed: bool, evidence: dict) -> dict:
+    def record_completion_observation(
+        self, observed_epoch: float, provider_absent: bool, billing_closed: bool, evidence: dict
+    ) -> dict:
         """Independently recorded provider/billing observation -> amendment statuses."""
         lease = self.load_lease()
         if self.terminal_receipt() is not None:
             return self.terminal_receipt()
-        self._receipt(KIND_OBSERVATION, {
-            "lease_id": lease["lease_id"], "observed_epoch": observed_epoch,
-            "provider_absent": bool(provider_absent),
-            "billing_closed": bool(billing_closed), "evidence": evidence,
-            "observation_source": "manual_attestation_unverified"})
+        self._receipt(
+            KIND_OBSERVATION,
+            {
+                "lease_id": lease["lease_id"],
+                "observed_epoch": observed_epoch,
+                "provider_absent": bool(provider_absent),
+                "billing_closed": bool(billing_closed),
+                "evidence": evidence,
+                "observation_source": "manual_attestation_unverified",
+            },
+        )
         # This prototype has no provider-observation adapter. Caller assertions
         # are manual attestations, never independently verified cleanup.
-        return {"status": "MANUAL_ATTESTATION_UNVERIFIED", "provider_absent": provider_absent,
-                "billing_closed": billing_closed, "possible_continuing_charges": True,
-                "note": "provider-bound retained observations are required for cleanup verification"}
+        return {
+            "status": "MANUAL_ATTESTATION_UNVERIFIED",
+            "provider_absent": provider_absent,
+            "billing_closed": billing_closed,
+            "possible_continuing_charges": True,
+            "note": "provider-bound retained observations are required for cleanup verification",
+        }
 
 
 def require_resource(resource: dict) -> None:
@@ -537,7 +620,8 @@ def _open_supervisor(args) -> HostedSupervisor:
         args.volume,
         load_key(Path(args.volume) / "requester.key"),
         load_key(Path(args.volume) / "supervisor.key"),
-        observation_seconds=args.observation_seconds)
+        observation_seconds=args.observation_seconds,
+    )
 
 
 def main(argv=None) -> int:
@@ -556,8 +640,11 @@ def main(argv=None) -> int:
     parser.add_argument("--seq", type=int)
     parser.add_argument("--provider-absent", action="store_true")
     parser.add_argument("--billing-closed", action="store_true")
-    parser.add_argument("--dry-run", action="store_true",
-                        help="mandatory safety mode; the cancellation API call is stubbed and never executed")
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="mandatory safety mode; the cancellation API call is stubbed and never executed",
+    )
     parser.add_argument("--poll-interval", type=float, default=1.0)
     parser.add_argument("--once", action="store_true")
     args = parser.parse_args(argv)
@@ -573,17 +660,30 @@ def main(argv=None) -> int:
 
     if args.command == "arm":
         wall, _ = real_clock()
-        resource = {"provider": "modal", "operation": "FunctionCallCancel",
-                    "object_id": args.object_id or "fc-UNASSIGNED-AT-ARM",
-                    "nonce": args.nonce or digest(secrets.token_bytes(32)),
-                    "account_digest": args.account_digest,
-                    "credential_digest": args.credential_digest}
+        resource = {
+            "provider": "modal",
+            "operation": "FunctionCallCancel",
+            "object_id": args.object_id or "fc-UNASSIGNED-AT-ARM",
+            "nonce": args.nonce or digest(secrets.token_bytes(32)),
+            "account_digest": args.account_digest,
+            "credential_digest": args.credential_digest,
+        }
         requester = {"boot_id": args.requester_boot} if args.requester_boot else {}
-        lease = supervisor.arm(resource, requester, args.lease_seconds,
-                               args.cleanup_reserve, args.total_lease_seconds)
-        print(json.dumps({"status": "ARMED", "lease_id": lease["lease_id"],
-                          "t0_epoch": lease["t0_epoch"], "deadline_epoch": lease["deadline_epoch"],
-                          "sha256": fingerprint(lease)}, indent=2))
+        lease = supervisor.arm(
+            resource, requester, args.lease_seconds, args.cleanup_reserve, args.total_lease_seconds
+        )
+        print(
+            json.dumps(
+                {
+                    "status": "ARMED",
+                    "lease_id": lease["lease_id"],
+                    "t0_epoch": lease["t0_epoch"],
+                    "deadline_epoch": lease["deadline_epoch"],
+                    "sha256": fingerprint(lease),
+                },
+                indent=2,
+            )
+        )
         return 0
 
     if args.command == "renew":
@@ -599,30 +699,49 @@ def main(argv=None) -> int:
 
     if args.command == "run":
         if not args.dry_run:
-            print("refusing: live cancellation execution is not implemented in this artifact; "
-                  "pass --dry-run to record cancellation intent only", file=sys.stderr)
+            print(
+                "refusing: live cancellation execution is not implemented in this artifact; "
+                "pass --dry-run to record cancellation intent only",
+                file=sys.stderr,
+            )
             return 2
         while True:
             outcome = supervisor.run_once(dry_run=True)
             if args.once or outcome["status"] in TERMINAL_KINDS:
-                print(json.dumps({"status": outcome["status"],
-                                  "deadline_epoch": outcome["deadline_epoch"],
-                                  "intent_issued": outcome["intent"] is not None}, indent=2))
+                print(
+                    json.dumps(
+                        {
+                            "status": outcome["status"],
+                            "deadline_epoch": outcome["deadline_epoch"],
+                            "intent_issued": outcome["intent"] is not None,
+                        },
+                        indent=2,
+                    )
+                )
                 return 0
             time.sleep(args.poll_interval)
 
     if args.command == "observe":
         wall, _ = real_clock()
         result = supervisor.record_completion_observation(
-            wall, args.provider_absent, args.billing_closed, {"source": "manual CLI observation"})
+            wall, args.provider_absent, args.billing_closed, {"source": "manual CLI observation"}
+        )
         print(json.dumps(result, indent=2))
         return 0
 
     if args.command == "status":
         lease = supervisor.load_lease()
         outcome = supervisor.run_once(dry_run=True)
-        print(json.dumps({"lease_id": lease["lease_id"], "status": outcome["status"],
-                          "receipt_count": len(supervisor.receipts())}, indent=2))
+        print(
+            json.dumps(
+                {
+                    "lease_id": lease["lease_id"],
+                    "status": outcome["status"],
+                    "receipt_count": len(supervisor.receipts()),
+                },
+                indent=2,
+            )
+        )
         return 0
     return 1
 

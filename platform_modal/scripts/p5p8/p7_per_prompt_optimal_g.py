@@ -33,18 +33,21 @@ Outputs (under platform_hybrid/experiments/results/p5p8/):
 
 Stdlib only (with matplotlib for figures).
 """
+
 from __future__ import annotations
 import argparse
 import csv
 import json
-import math
 import pathlib
-import statistics
 
 import sys
-sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
-from _p5p7_common import load_tensors_c  # noqa: E402
+
+sys.path.append(
+    str(pathlib.Path(__file__).resolve().parents[1])
+)  # platform_modal/scripts, for _paths
+from _paths import REPO_ROOT
+from _p5p7_common import load_tensors_c
+
 WORKTREE = REPO_ROOT
 N2 = WORKTREE / "platform_hybrid/experiments" / "results" / "n2_reward_tensor_resume"
 OUT = WORKTREE / "platform_hybrid/experiments" / "results" / "p5p8"
@@ -100,8 +103,11 @@ def optimal_gstar(k: int, g_base: int = G_BASE) -> int:
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--write", action="store_true",
-                    help="Write outputs to platform_hybrid/experiments/results/p5p8/")
+    ap.add_argument(
+        "--write",
+        action="store_true",
+        help="Write outputs to platform_hybrid/experiments/results/p5p8/",
+    )
     args = ap.parse_args()
     OUT.mkdir(parents=True, exist_ok=True)
     FIG.mkdir(parents=True, exist_ok=True)
@@ -144,8 +150,11 @@ def main():
                 # (or 0 if we use 0/0 -> treat as saturated)
                 if k == 0 or k == G_BASE:
                     zvf_at_g_base = 1.0
-                zvf_at_gstar = zvf_iid(p_hat, g_star) if 0 < k < G_BASE else (
-                    zvf_iid(p_hat, g_star) if g_star != G_BASE else 1.0)
+                zvf_at_gstar = (
+                    zvf_iid(p_hat, g_star)
+                    if 0 < k < G_BASE
+                    else (zvf_iid(p_hat, g_star) if g_star != G_BASE else 1.0)
+                )
                 if k == 0 or k == G_BASE:
                     # saturated -- no contrast at any G
                     zvf_at_gstar = 1.0
@@ -153,7 +162,7 @@ def main():
                 contrast_lost = max(0.0, zvf_at_gstar - zvf_at_g_base)
                 step_gstar_total += g_star
                 step_g_base_total += G_BASE
-                step_contrast += (zvf_at_g_base - zvf_at_gstar)
+                step_contrast += zvf_at_g_base - zvf_at_gstar
                 step_contrast_lost += contrast_lost
                 step_dist[g_star] = step_dist.get(g_star, 0) + 1
                 gstar_dist[g_star] = gstar_dist.get(g_star, 0) + 1
@@ -162,43 +171,49 @@ def main():
                 total_contrast_restored += contrast_restored
                 total_contrast_lost += contrast_lost
                 total_prompts += 1
-                per_prompt_rows.append({
+                per_prompt_rows.append(
+                    {
+                        "method": m,
+                        "step": step,
+                        "prompt_index": pi,
+                        "k_observed": k,
+                        "p_hat": round(p_hat, 4),
+                        "is_saturated": bool(is_saturated(k)),
+                        "g_star": g_star,
+                        "zvf_at_g_base": round(zvf_at_g_base, 6),
+                        "zvf_at_g_star": round(zvf_at_gstar, 6),
+                        "contrast_restored": round(contrast_restored, 6),
+                        "contrast_lost_to_gstar": round(contrast_lost, 6),
+                    }
+                )
+            per_step_stats.append(
+                {
+                    "step": step,
+                    "rollouts_per_prompt_gstar": step_gstar_total,
+                    "rollouts_per_prompt_g_base": step_g_base_total,
+                    "mean_contrast_restored": step_contrast / N_PROMPTS,
+                    "mean_contrast_lost_to_gstar": step_contrast_lost / N_PROMPTS,
+                    "gstar_distribution": dict(step_dist),
+                    "n_saturated": step_dist.get(G_BASE, 0),
+                }
+            )
+            per_step_rows.append(
+                {
                     "method": m,
                     "step": step,
-                    "prompt_index": pi,
-                    "k_observed": k,
-                    "p_hat": round(p_hat, 4),
-                    "is_saturated": bool(is_saturated(k)),
-                    "g_star": g_star,
-                    "zvf_at_g_base": round(zvf_at_g_base, 6),
-                    "zvf_at_g_star": round(zvf_at_gstar, 6),
-                    "contrast_restored": round(contrast_restored, 6),
-                    "contrast_lost_to_gstar": round(contrast_lost, 6),
-                })
-            per_step_stats.append({
-                "step": step,
-                "rollouts_per_prompt_gstar": step_gstar_total,
-                "rollouts_per_prompt_g_base": step_g_base_total,
-                "mean_contrast_restored": step_contrast / N_PROMPTS,
-                "mean_contrast_lost_to_gstar": step_contrast_lost / N_PROMPTS,
-                "gstar_distribution": dict(step_dist),
-                "n_saturated": step_dist.get(G_BASE, 0),
-            })
-            per_step_rows.append({
-                "method": m,
-                "step": step,
-                "n_prompts": N_PROMPTS,
-                "rollouts_optimal_g": step_gstar_total,
-                "rollouts_fixed_g8": step_g_base_total,
-                "cost_ratio": round(step_gstar_total / step_g_base_total, 4),
-                "mean_contrast_restored": round(step_contrast / N_PROMPTS, 6),
-                "mean_contrast_lost_to_gstar": round(step_contrast_lost / N_PROMPTS, 6),
-                "n_at_g8": step_dist.get(G_BASE, 0),
-                "n_at_g10": step_dist.get(10, 0),
-                "n_at_g12": step_dist.get(12, 0),
-                "n_at_g16": step_dist.get(16, 0),
-                "n_at_g24": step_dist.get(24, 0),
-            })
+                    "n_prompts": N_PROMPTS,
+                    "rollouts_optimal_g": step_gstar_total,
+                    "rollouts_fixed_g8": step_g_base_total,
+                    "cost_ratio": round(step_gstar_total / step_g_base_total, 4),
+                    "mean_contrast_restored": round(step_contrast / N_PROMPTS, 6),
+                    "mean_contrast_lost_to_gstar": round(step_contrast_lost / N_PROMPTS, 6),
+                    "n_at_g8": step_dist.get(G_BASE, 0),
+                    "n_at_g10": step_dist.get(10, 0),
+                    "n_at_g12": step_dist.get(12, 0),
+                    "n_at_g16": step_dist.get(16, 0),
+                    "n_at_g24": step_dist.get(24, 0),
+                }
+            )
             # Pareto fixed-G: count how many prompts would be non-degenerate at fixed G
             for g in (4, 6, 8, 12, 16, 24, 32):
                 # At fixed G, a prompt-step is "saved" if it would be non-degenerate.
@@ -243,16 +258,21 @@ def main():
     # Aggregate across methods (equal-weight per method = 40 steps x 16 prompts x 4 methods)
     agg = {}
     agg["n_prompt_steps_total"] = sum(s["total_prompts"] for s in method_stats.values())
-    agg["rollouts_optimal_total"] = sum(s["total_rollouts_optimal_g"] for s in method_stats.values())
-    agg["rollouts_fixed_g8_total"] = sum(s["total_rollouts_fixed_g8"] for s in method_stats.values())
+    agg["rollouts_optimal_total"] = sum(
+        s["total_rollouts_optimal_g"] for s in method_stats.values()
+    )
+    agg["rollouts_fixed_g8_total"] = sum(
+        s["total_rollouts_fixed_g8"] for s in method_stats.values()
+    )
     agg["mean_gstar"] = agg["rollouts_optimal_total"] / agg["n_prompt_steps_total"]
     agg["mean_cost_ratio"] = agg["rollouts_optimal_total"] / agg["rollouts_fixed_g8_total"]
-    agg["mean_contrast_restored"] = sum(
-        s["total_contrast_restored"] for s in method_stats.values()
-    ) / agg["n_prompt_steps_total"]
-    agg["mean_contrast_lost"] = sum(
-        s["total_contrast_lost"] for s in method_stats.values()
-    ) / agg["n_prompt_steps_total"]
+    agg["mean_contrast_restored"] = (
+        sum(s["total_contrast_restored"] for s in method_stats.values())
+        / agg["n_prompt_steps_total"]
+    )
+    agg["mean_contrast_lost"] = (
+        sum(s["total_contrast_lost"] for s in method_stats.values()) / agg["n_prompt_steps_total"]
+    )
     # Fraction of prompts that are saturated (k=0 or k=8)
     agg["n_saturated_total"] = sum(
         s["gstar_distribution"].get(G_BASE, 0) for s in method_stats.values()
@@ -279,28 +299,38 @@ def main():
         total_cost = sum(s["fixed_g_pareto"][g]["rollouts_total"] for s in method_stats.values())
         total_saved = sum(s["fixed_g_pareto"][g]["n_prompts_saved"] for s in method_stats.values())
         total_sat_count = sum(s["gstar_distribution"].get(G_BASE, 0) for s in method_stats.values())
-        pareto.append({
-            "candidate_G": g,
-            "rollouts_total": total_cost,
-            "cost_ratio_vs_g8": round(total_cost / agg["rollouts_fixed_g8_total"], 4),
-            "prompts_saved": total_saved,
-            "save_rate": round(total_saved / agg["n_prompt_steps_total"], 4),
-        })
-    pareto.append({
-        "candidate_G": "optimal_gstar",
-        "rollouts_total": agg["rollouts_optimal_total"],
-        "cost_ratio_vs_g8": round(agg["mean_cost_ratio"], 4),
-        "prompts_saved": int(sum(
-            1 for r in per_prompt_rows
-            if r["contrast_restored"] > 1e-9 and r["g_star"] != G_BASE
-        )),
-        "save_rate": round(
-            sum(
-                1 for r in per_prompt_rows
-                if r["contrast_restored"] > 1e-9 and r["g_star"] != G_BASE
-            ) / len(per_prompt_rows), 4
-        ),
-    })
+        pareto.append(
+            {
+                "candidate_G": g,
+                "rollouts_total": total_cost,
+                "cost_ratio_vs_g8": round(total_cost / agg["rollouts_fixed_g8_total"], 4),
+                "prompts_saved": total_saved,
+                "save_rate": round(total_saved / agg["n_prompt_steps_total"], 4),
+            }
+        )
+    pareto.append(
+        {
+            "candidate_G": "optimal_gstar",
+            "rollouts_total": agg["rollouts_optimal_total"],
+            "cost_ratio_vs_g8": round(agg["mean_cost_ratio"], 4),
+            "prompts_saved": int(
+                sum(
+                    1
+                    for r in per_prompt_rows
+                    if r["contrast_restored"] > 1e-9 and r["g_star"] != G_BASE
+                )
+            ),
+            "save_rate": round(
+                sum(
+                    1
+                    for r in per_prompt_rows
+                    if r["contrast_restored"] > 1e-9 and r["g_star"] != G_BASE
+                )
+                / len(per_prompt_rows),
+                4,
+            ),
+        }
+    )
     agg["pareto_frontier"] = pareto
 
     # ----- Write outputs ----------------------------------------------------
@@ -311,57 +341,98 @@ def main():
             stats = method_stats[m]
             for g in (4, 6, 8, 12, 16, 24, 32):
                 fg = stats["fixed_g_pareto"][g]
-                summary_rows.append({
+                summary_rows.append(
+                    {
+                        "method": m,
+                        "controller": f"fixed_g{g}",
+                        "g_used": g,
+                        "rollouts_total": fg["rollouts_total"],
+                        "cost_ratio_vs_g8": round(
+                            fg["rollouts_total"] / stats["total_rollouts_fixed_g8"], 4
+                        ),
+                        "prompts_saved_vs_g8_observed": fg["n_prompts_saved"],
+                        "save_rate": round(fg["save_rate"], 4),
+                        "mean_contrast_restored": "",
+                    }
+                )
+            summary_rows.append(
+                {
                     "method": m,
-                    "controller": f"fixed_g{g}",
-                    "g_used": g,
-                    "rollouts_total": fg["rollouts_total"],
-                    "cost_ratio_vs_g8": round(fg["rollouts_total"] / stats["total_rollouts_fixed_g8"], 4),
-                    "prompts_saved_vs_g8_observed": fg["n_prompts_saved"],
-                    "save_rate": round(fg["save_rate"], 4),
-                    "mean_contrast_restored": "",
-                })
-            summary_rows.append({
-                "method": m,
-                "controller": "per_prompt_optimal_gstar",
-                "g_used": "varying",
-                "rollouts_total": stats["total_rollouts_optimal_g"],
-                "cost_ratio_vs_g8": round(stats["cost_ratio_optimal_vs_g8"], 4),
-                "prompts_saved_vs_g8_observed": sum(
-                    1 for r in per_prompt_rows if r["method"] == m
-                    and r["contrast_restored"] > 1e-9
-                    and r["g_star"] != G_BASE
-                ),
-                "save_rate": round(
-                    sum(
-                        1 for r in per_prompt_rows if r["method"] == m
-                        and r["contrast_restored"] > 1e-9 and r["g_star"] != G_BASE
-                    ) / stats["total_prompts"], 4
-                ),
-                "mean_contrast_restored": round(stats["mean_contrast_restored"], 6),
-            })
-        cols = ["method", "controller", "g_used", "rollouts_total",
-                "cost_ratio_vs_g8", "prompts_saved_vs_g8_observed",
-                "save_rate", "mean_contrast_restored"]
+                    "controller": "per_prompt_optimal_gstar",
+                    "g_used": "varying",
+                    "rollouts_total": stats["total_rollouts_optimal_g"],
+                    "cost_ratio_vs_g8": round(stats["cost_ratio_optimal_vs_g8"], 4),
+                    "prompts_saved_vs_g8_observed": sum(
+                        1
+                        for r in per_prompt_rows
+                        if r["method"] == m
+                        and r["contrast_restored"] > 1e-9
+                        and r["g_star"] != G_BASE
+                    ),
+                    "save_rate": round(
+                        sum(
+                            1
+                            for r in per_prompt_rows
+                            if r["method"] == m
+                            and r["contrast_restored"] > 1e-9
+                            and r["g_star"] != G_BASE
+                        )
+                        / stats["total_prompts"],
+                        4,
+                    ),
+                    "mean_contrast_restored": round(stats["mean_contrast_restored"], 6),
+                }
+            )
+        cols = [
+            "method",
+            "controller",
+            "g_used",
+            "rollouts_total",
+            "cost_ratio_vs_g8",
+            "prompts_saved_vs_g8_observed",
+            "save_rate",
+            "mean_contrast_restored",
+        ]
         with (OUT / "p7_per_prompt_optimal_g_summary.tsv").open("w") as f:
             w = csv.DictWriter(f, fieldnames=cols, delimiter="\t")
             w.writeheader()
             for r in summary_rows:
                 w.writerow(r)
 
-        cols_ps = ["method", "step", "n_prompts", "rollouts_optimal_g",
-                   "rollouts_fixed_g8", "cost_ratio", "mean_contrast_restored",
-                   "mean_contrast_lost_to_gstar",
-                   "n_at_g8", "n_at_g10", "n_at_g12", "n_at_g16", "n_at_g24"]
+        cols_ps = [
+            "method",
+            "step",
+            "n_prompts",
+            "rollouts_optimal_g",
+            "rollouts_fixed_g8",
+            "cost_ratio",
+            "mean_contrast_restored",
+            "mean_contrast_lost_to_gstar",
+            "n_at_g8",
+            "n_at_g10",
+            "n_at_g12",
+            "n_at_g16",
+            "n_at_g24",
+        ]
         with (OUT / "p7_per_prompt_optimal_g_per_step.tsv").open("w") as f:
             w = csv.DictWriter(f, fieldnames=cols_ps, delimiter="\t")
             w.writeheader()
             for r in per_step_rows:
                 w.writerow(r)
 
-        cols_pp = ["method", "step", "prompt_index", "k_observed", "p_hat",
-                   "is_saturated", "g_star", "zvf_at_g_base", "zvf_at_g_star",
-                   "contrast_restored", "contrast_lost_to_gstar"]
+        cols_pp = [
+            "method",
+            "step",
+            "prompt_index",
+            "k_observed",
+            "p_hat",
+            "is_saturated",
+            "g_star",
+            "zvf_at_g_base",
+            "zvf_at_g_star",
+            "contrast_restored",
+            "contrast_lost_to_gstar",
+        ]
         with (OUT / "p7_per_prompt_optimal_g_per_prompt.tsv").open("w") as f:
             w = csv.DictWriter(f, fieldnames=cols_pp, delimiter="\t")
             w.writeheader()
@@ -411,11 +482,15 @@ def main():
         # Figure: distribution of gstar per method
         try:
             import matplotlib
+
             matplotlib.use("Agg")
             import matplotlib.pyplot as plt
+
             fig, ax = plt.subplots(figsize=(8, 5))
             width = 0.18
-            all_gs = sorted({g for s in method_stats.values() for g in s["gstar_distribution"].keys()})
+            all_gs = sorted(
+                {g for s in method_stats.values() for g in s["gstar_distribution"].keys()}
+            )
             x = list(range(len(all_gs)))
             for i, m in enumerate(METHODS):
                 counts = [method_stats[m]["gstar_distribution"].get(g, 0) for g in all_gs]
@@ -439,34 +514,46 @@ def main():
 
     # ----- Console headline ------------------------------------------------
     print(f"=== P7 per-prompt hindsight-optimal G* on N2 four-method tensors ===")
-    print(f"n_methods = {len(METHODS)}, n_steps = {N_STEPS}, "
-          f"n_prompts/step = {N_PROMPTS}, total prompt-steps = "
-          f"{agg['n_prompt_steps_total']}")
-    print(f"pooled mean G* = {agg['mean_gstar']:.3f} (cost ratio vs G=8 = "
-          f"{agg['mean_cost_ratio']:.3f})")
-    print(f"pooled mean contrast restored per prompt = "
-          f"{agg['mean_contrast_restored']:.4f} (ZVF units)")
-    print(f"pooled mean contrast lost to G* per prompt = "
-          f"{agg['mean_contrast_lost']:.4f} (ZVF units)")
-    print(f"frac_saturated = {agg['frac_saturated']:.3f}, "
-          f"frac_economized (G*=2) = {agg['frac_economized']:.3f}")
+    print(
+        f"n_methods = {len(METHODS)}, n_steps = {N_STEPS}, "
+        f"n_prompts/step = {N_PROMPTS}, total prompt-steps = "
+        f"{agg['n_prompt_steps_total']}"
+    )
+    print(
+        f"pooled mean G* = {agg['mean_gstar']:.3f} (cost ratio vs G=8 = "
+        f"{agg['mean_cost_ratio']:.3f})"
+    )
+    print(
+        f"pooled mean contrast restored per prompt = "
+        f"{agg['mean_contrast_restored']:.4f} (ZVF units)"
+    )
+    print(
+        f"pooled mean contrast lost to G* per prompt = {agg['mean_contrast_lost']:.4f} (ZVF units)"
+    )
+    print(
+        f"frac_saturated = {agg['frac_saturated']:.3f}, "
+        f"frac_economized (G*=2) = {agg['frac_economized']:.3f}"
+    )
     print(f"\nG* distribution (pooled across methods):")
     for g, c in sorted(agg["pooled_gstar_distribution"].items()):
-        print(f"  G*={g:>3d}: {c:5d} prompt-steps "
-              f"({100*c/agg['n_prompt_steps_total']:5.1f}%)")
+        print(f"  G*={g:>3d}: {c:5d} prompt-steps ({100 * c / agg['n_prompt_steps_total']:5.1f}%)")
     print(f"\nPareto frontier (fixed G vs per-prompt optimal):")
     for p in pareto:
-        cg = str(p['candidate_G'])
-        print(f"  G={cg:>14s}  rollouts={p['rollouts_total']:6d}  "
-              f"cost_ratio={p['cost_ratio_vs_g8']:.3f}  "
-              f"saved={p['prompts_saved']:4d}  "
-              f"save_rate={p['save_rate']:.3f}")
+        cg = str(p["candidate_G"])
+        print(
+            f"  G={cg:>14s}  rollouts={p['rollouts_total']:6d}  "
+            f"cost_ratio={p['cost_ratio_vs_g8']:.3f}  "
+            f"saved={p['prompts_saved']:4d}  "
+            f"save_rate={p['save_rate']:.3f}"
+        )
     print(f"\nPer-method mean G*:")
     for m, s in method_stats.items():
-        print(f"  {m:6s}: mean G* = {s['mean_gstar']:.3f},  "
-              f"cost_ratio = {s['cost_ratio_optimal_vs_g8']:.3f},  "
-              f"saturated = {s['gstar_distribution'].get(G_BASE, 0)} "
-              f"of {s['total_prompts']}")
+        print(
+            f"  {m:6s}: mean G* = {s['mean_gstar']:.3f},  "
+            f"cost_ratio = {s['cost_ratio_optimal_vs_g8']:.3f},  "
+            f"saturated = {s['gstar_distribution'].get(G_BASE, 0)} "
+            f"of {s['total_prompts']}"
+        )
     if args.write:
         print(f"\nwrote {OUT}/p7_per_prompt_optimal_g_*.{{tsv,json}}")
         print(f"wrote {FIG}/p7_per_prompt_g_distribution.{{png,pdf}}")

@@ -22,6 +22,7 @@ Writes three artifacts to platform_hybrid/experiments/results/p5p8/:
 The script is stdlib + jsonschema only. Exit code is 0 if every entry
 passes schema validation, 1 otherwise (CI-friendly).
 """
+
 import hashlib
 import json
 import pathlib
@@ -30,8 +31,7 @@ import sys
 try:
     import jsonschema  # type: ignore
 except ImportError:
-    print("FATAL: jsonschema not installed; pip install jsonschema",
-          file=sys.stderr)
+    print("FATAL: jsonschema not installed; pip install jsonschema", file=sys.stderr)
     sys.exit(2)
 
 REPO_ROOT = pathlib.Path(__file__).resolve().parents[3]
@@ -55,11 +55,17 @@ for p in sorted((REG / "entries").glob("*.json")):
     elif rec["record_type"] == "variant_delta":
         deltas[rec["id"]] = rec
     else:
-        print(f"WARN: unknown record_type={rec.get('record_type')} in {p.name}",
-              file=sys.stderr)
+        print(f"WARN: unknown record_type={rec.get('record_type')} in {p.name}", file=sys.stderr)
 
-ITEMS = ["loss_form", "reference_kl", "sampler_backend", "telemetry",
-         "group_size_schedule", "heldout_split", "decontamination"]
+ITEMS = [
+    "loss_form",
+    "reference_kl",
+    "sampler_backend",
+    "telemetry",
+    "group_size_schedule",
+    "heldout_split",
+    "decontamination",
+]
 
 
 def leaf_null_rate(d):
@@ -103,26 +109,27 @@ for rid, rec in {**stacks, **deltas}.items():
 rows = []
 for rid, rec in stacks.items():
     pct, scores = badge(rec)
-    null_rates = {it: round(leaf_null_rate(rec["min_report"][it]), 4)
-                  for it in ITEMS}
+    null_rates = {it: round(leaf_null_rate(rec["min_report"][it]), 4) for it in ITEMS}
     has_outcomes = any(v is not None for v in (rec.get("outcomes") or {}).values())
     has_ci = bool((rec.get("outcomes") or {}).get("ci_method"))
     n_variants = len(rec.get("variant_deltas_applied") or [])
-    rows.append({
-        "entry_id": rid,
-        "record_type": "stack",
-        "framework": rec["framework"]["name"],
-        "openness": rec["framework"]["openness"],
-        "label_claimed": rec["label_claimed"],
-        "min_report_badge": pct,
-        **{f"score_{it}": round(scores[it], 4) for it in ITEMS},
-        **{f"null_rate_{it}": null_rates[it] for it in ITEMS},
-        "n_variant_deltas": n_variants,
-        "has_outcomes": has_outcomes,
-        "has_ci_method": has_ci,
-        "schema_pass": rid not in {eid for eid, _ in schema_errors},
-        "schema_err": next((m for eid, m in schema_errors if eid == rid), ""),
-    })
+    rows.append(
+        {
+            "entry_id": rid,
+            "record_type": "stack",
+            "framework": rec["framework"]["name"],
+            "openness": rec["framework"]["openness"],
+            "label_claimed": rec["label_claimed"],
+            "min_report_badge": pct,
+            **{f"score_{it}": round(scores[it], 4) for it in ITEMS},
+            **{f"null_rate_{it}": null_rates[it] for it in ITEMS},
+            "n_variant_deltas": n_variants,
+            "has_outcomes": has_outcomes,
+            "has_ci_method": has_ci,
+            "schema_pass": rid not in {eid for eid, _ in schema_errors},
+            "schema_err": next((m for eid, m in schema_errors if eid == rid), ""),
+        }
+    )
 
 for rid, rec in deltas.items():
     measured = rec.get("measured") or []
@@ -131,39 +138,54 @@ for rid, rec in deltas.items():
     verdict_counts = {"SUPPORTS": 0, "NEUTRAL": 0, "CONTRADICTS": 0, "UNCLAIMED": 0}
     for row in cv:
         verdict_counts[row["verdict"]] = verdict_counts.get(row["verdict"], 0) + 1
-    rows.append({
-        "entry_id": rid,
-        "record_type": "variant_delta",
-        "framework": "",
-        "openness": "",
-        "label_claimed": "",
-        "min_report_badge": "",
-        **{f"score_{it}": "" for it in ITEMS},
-        **{f"null_rate_{it}": "" for it in ITEMS},
-        "n_variant_deltas": len(rec.get("deltas") or []),
-        "has_outcomes": len(measured) > 0,
-        "has_ci_method": any(
-            (m.get("ci_method") or {}).get("method") not in (None, "", "point_no_perseed_sd")
-            for m in measured),
-        "schema_pass": rid not in {eid for eid, _ in schema_errors},
-        "schema_err": next((m for eid, m in schema_errors if eid == rid), ""),
-        "n_measured": len(measured),
-        "n_expected_effects": len(expected),
-        "n_claim_validation": len(cv),
-        "n_supports": verdict_counts["SUPPORTS"],
-        "n_neutral": verdict_counts["NEUTRAL"],
-        "n_contradicts": verdict_counts["CONTRADICTS"],
-        "n_unclaimed": verdict_counts["UNCLAIMED"],
-    })
+    rows.append(
+        {
+            "entry_id": rid,
+            "record_type": "variant_delta",
+            "framework": "",
+            "openness": "",
+            "label_claimed": "",
+            "min_report_badge": "",
+            **{f"score_{it}": "" for it in ITEMS},
+            **{f"null_rate_{it}": "" for it in ITEMS},
+            "n_variant_deltas": len(rec.get("deltas") or []),
+            "has_outcomes": len(measured) > 0,
+            "has_ci_method": any(
+                (m.get("ci_method") or {}).get("method") not in (None, "", "point_no_perseed_sd")
+                for m in measured
+            ),
+            "schema_pass": rid not in {eid for eid, _ in schema_errors},
+            "schema_err": next((m for eid, m in schema_errors if eid == rid), ""),
+            "n_measured": len(measured),
+            "n_expected_effects": len(expected),
+            "n_claim_validation": len(cv),
+            "n_supports": verdict_counts["SUPPORTS"],
+            "n_neutral": verdict_counts["NEUTRAL"],
+            "n_contradicts": verdict_counts["CONTRADICTS"],
+            "n_unclaimed": verdict_counts["UNCLAIMED"],
+        }
+    )
 
 # Write per-entry TSV (long format)
-cols = ["entry_id", "record_type", "framework", "openness", "label_claimed",
-        "min_report_badge"] + [f"score_{it}" for it in ITEMS] + \
-       [f"null_rate_{it}" for it in ITEMS] + \
-       ["n_variant_deltas", "has_outcomes", "has_ci_method",
-        "schema_pass", "schema_err",
-        "n_measured", "n_expected_effects", "n_claim_validation",
-        "n_supports", "n_neutral", "n_contradicts", "n_unclaimed"]
+cols = (
+    ["entry_id", "record_type", "framework", "openness", "label_claimed", "min_report_badge"]
+    + [f"score_{it}" for it in ITEMS]
+    + [f"null_rate_{it}" for it in ITEMS]
+    + [
+        "n_variant_deltas",
+        "has_outcomes",
+        "has_ci_method",
+        "schema_pass",
+        "schema_err",
+        "n_measured",
+        "n_expected_effects",
+        "n_claim_validation",
+        "n_supports",
+        "n_neutral",
+        "n_contradicts",
+        "n_unclaimed",
+    ]
+)
 with open(OUT / "p6_registry_health.tsv", "w") as f:
     f.write("\t".join(cols) + "\n")
     for r in rows:
@@ -202,8 +224,9 @@ stack_null_rates = {it: [] for it in ITEMS}
 for r in stacks.values():
     for it in ITEMS:
         stack_null_rates[it].append(leaf_null_rate(r["min_report"][it]))
-mean_null_rate_per_item = {it: round(sum(v) / len(v), 4) if v else 0.0
-                           for it, v in stack_null_rates.items()}
+mean_null_rate_per_item = {
+    it: round(sum(v) / len(v), 4) if v else 0.0 for it, v in stack_null_rates.items()
+}
 
 badges = [badge(r)[0] for r in stacks.values()]
 overall_badge = round(sum(badges) / len(badges), 2) if badges else 0.0
@@ -215,14 +238,18 @@ all_verdicts = []
 for rec in deltas.values():
     for row in rec.get("claim_validation") or []:
         all_verdicts.append(row["verdict"])
-verdict_dist = {v: all_verdicts.count(v) for v in
-                ("SUPPORTS", "NEUTRAL", "CONTRADICTS", "UNCLAIMED")}
+verdict_dist = {
+    v: all_verdicts.count(v) for v in ("SUPPORTS", "NEUTRAL", "CONTRADICTS", "UNCLAIMED")
+}
+
 
 # Cross-delta verdict signature (short hash)
 def sig(rec):
-    s = "|".join(f"{r['metric']}/{r['panel']}={r['verdict']}"
-                 for r in (rec.get("claim_validation") or []))
+    s = "|".join(
+        f"{r['metric']}/{r['panel']}={r['verdict']}" for r in (rec.get("claim_validation") or [])
+    )
     return hashlib.sha1(s.encode()).hexdigest()[:10]
+
 
 sigs = {did: sig(d) for did, d in deltas.items()}
 sig_clusters = {}
@@ -249,21 +276,21 @@ summary = {
     "badge_min": min(badges) if badges else 0,
     "badge_max": max(badges) if badges else 0,
     "mean_null_rate_per_item": mean_null_rate_per_item,
-    "top5_null_fields": [{"item": it, "mean_null_rate": v}
-                         for it, v in field_null_pairs[:5]],
-    "stacks_with_outcomes": sum(1 for r in stacks.values()
-                                if any(v is not None
-                                       for v in (r.get("outcomes") or {}).values())),
+    "top5_null_fields": [{"item": it, "mean_null_rate": v} for it, v in field_null_pairs[:5]],
+    "stacks_with_outcomes": sum(
+        1 for r in stacks.values() if any(v is not None for v in (r.get("outcomes") or {}).values())
+    ),
     "stacks_with_ci_method": sum(
-        1 for r in stacks.values()
-        if (r.get("outcomes") or {}).get("ci_method")),
+        1 for r in stacks.values() if (r.get("outcomes") or {}).get("ci_method")
+    ),
     "claim_validation_total": len(all_verdicts),
     "claim_validation_distribution": verdict_dist,
     "claim_validation_significant_share": round(
-        (verdict_dist["SUPPORTS"] + verdict_dist["CONTRADICTS"]) / len(all_verdicts), 4)
-        if all_verdicts else 0.0,
-    "verdict_signature_clusters": {s: ids for s, ids in sig_clusters.items()
-                                   if len(ids) > 1},
+        (verdict_dist["SUPPORTS"] + verdict_dist["CONTRADICTS"]) / len(all_verdicts), 4
+    )
+    if all_verdicts
+    else 0.0,
+    "verdict_signature_clusters": {s: ids for s, ids in sig_clusters.items() if len(ids) > 1},
     "frameworks": frameworks,
     "methods": methods,
 }
@@ -275,22 +302,28 @@ with open(OUT / "p6_registry_health_summary.json", "w") as f:
 # 6. Stdout report (CI-friendly, also useful for human inspection)
 # -------------------------------------------------------------------------
 print(f"P6 registry health audit — iter 50")
-print(f"  entries: {len(stacks)} stack + {len(deltas)} delta "
-      f"= {len(stacks) + len(deltas)} total")
-print(f"  schema: {summary['schema_pass_count']}/{summary['n_entries_total']} PASS, "
-      f"{summary['schema_fail_count']} FAIL")
-print(f"  frameworks: {len(frameworks)}  methods: {len(methods)}  "
-      f"cells: {cells_with_entry}/{cells_total} populated "
-      f"({summary['coverage_rate']*100:.1f}%)")
-print(f"  mean MIN-REPORT badge: {overall_badge}/100 "
-      f"(min={summary['badge_min']}, max={summary['badge_max']})")
+print(f"  entries: {len(stacks)} stack + {len(deltas)} delta = {len(stacks) + len(deltas)} total")
+print(
+    f"  schema: {summary['schema_pass_count']}/{summary['n_entries_total']} PASS, "
+    f"{summary['schema_fail_count']} FAIL"
+)
+print(
+    f"  frameworks: {len(frameworks)}  methods: {len(methods)}  "
+    f"cells: {cells_with_entry}/{cells_total} populated "
+    f"({summary['coverage_rate'] * 100:.1f}%)"
+)
+print(
+    f"  mean MIN-REPORT badge: {overall_badge}/100 "
+    f"(min={summary['badge_min']}, max={summary['badge_max']})"
+)
 print(f"  null-rate per MIN-REPORT item:")
 for it in ITEMS:
-    print(f"    {it:24s} {mean_null_rate_per_item[it]*100:5.1f}%")
-print(f"  claim_validation total: {len(all_verdicts)} rows; "
-      f"distribution: {verdict_dist}")
-print(f"  significant share (SUPPORTS+CONTRADICTS): "
-      f"{summary['claim_validation_significant_share']*100:.1f}%")
+    print(f"    {it:24s} {mean_null_rate_per_item[it] * 100:5.1f}%")
+print(f"  claim_validation total: {len(all_verdicts)} rows; distribution: {verdict_dist}")
+print(
+    f"  significant share (SUPPORTS+CONTRADICTS): "
+    f"{summary['claim_validation_significant_share'] * 100:.1f}%"
+)
 print(f"  verdict-signature clusters (>1 delta sharing a signature):")
 for s, ids in sig_clusters.items():
     if len(ids) > 1:

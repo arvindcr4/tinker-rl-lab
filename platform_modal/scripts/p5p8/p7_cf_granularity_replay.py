@@ -31,31 +31,33 @@ Outputs (worktree-relative):
 
 Stdlib only.
 """
+
 from __future__ import annotations
 
 import csv
 import json
-import math
 import pathlib
 from _review_replay import stable_seed
 import random
-import statistics
-from typing import Iterable
 
 import sys
-sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
-from _stats import bootstrap_ci_rng  # noqa: E402
+
+sys.path.append(
+    str(pathlib.Path(__file__).resolve().parents[1])
+)  # platform_modal/scripts, for _paths
+from _paths import REPO_ROOT
+from _stats import bootstrap_ci_rng
+
 ROOT = REPO_ROOT
 N2_DIR = ROOT / "platform_hybrid/experiments" / "results" / "n2_reward_tensor_resume"
 OUT = ROOT / "platform_hybrid/experiments" / "results" / "p5p8/corrected-review19-v2"
 OUT.mkdir(parents=True, exist_ok=True)
 
 # Stack-conditional constants
-G_ACTUAL = 8             # what the actual N2 rollouts used
-G_ESC = 16               # escalation (would have restored contrast?)
-G_DES = 4                # de-escalation (compute-saving)
-G_ORACLE_CONTRAST = 2    # oracle minimum for contrast prompts
+G_ACTUAL = 8  # what the actual N2 rollouts used
+G_ESC = 16  # escalation (would have restored contrast?)
+G_DES = 4  # de-escalation (compute-saving)
+G_ORACLE_CONTRAST = 2  # oracle minimum for contrast prompts
 N_STEPS = 40
 N_PROMPTS_PER_STEP = 16
 N_BOOT = 2000
@@ -73,6 +75,7 @@ TAU_DES_STEP = 0.95
 # ============================================================================
 # Data loading
 # ----------------------------------------------------------------------------
+
 
 def load_n2_tensors(methods=("grpo", "aero", "gift", "areal")) -> dict:
     """Return dict[method] -> list[step_dict].
@@ -96,19 +99,23 @@ def load_n2_tensors(methods=("grpo", "aero", "gift", "areal")) -> dict:
                 k = int(sum(g))
                 # Binary per-prompt boundary indicator: 1 if k=0 or k=G, else 0
                 zvf_p = 1.0 if (k == 0 or k == len(g)) else 0.0
-                prompts.append({
-                    "k_actual": k,
-                    "rewards": [float(x) for x in g],
-                    "zvf_actual": zvf_p,
-                })
-            steps.append({
-                "step": int(r["step"]),
-                "zvf_step": float(r["zvf"]),
-                "pcd_step": float(r["pcd"]),
-                "frac_all_zero": float(r["frac_all_zero"]),
-                "frac_all_one": float(r["frac_all_one"]),
-                "prompts": prompts,
-            })
+                prompts.append(
+                    {
+                        "k_actual": k,
+                        "rewards": [float(x) for x in g],
+                        "zvf_actual": zvf_p,
+                    }
+                )
+            steps.append(
+                {
+                    "step": int(r["step"]),
+                    "zvf_step": float(r["zvf"]),
+                    "pcd_step": float(r["pcd"]),
+                    "frac_all_zero": float(r["frac_all_zero"]),
+                    "frac_all_one": float(r["frac_all_one"]),
+                    "prompts": prompts,
+                }
+            )
         out[m] = steps
     return out
 
@@ -117,14 +124,14 @@ def load_n2_tensors(methods=("grpo", "aero", "gift", "areal")) -> dict:
 # Policy computations
 # ----------------------------------------------------------------------------
 
+
 def per_step_policy(zvf_step: float) -> int:
     """One G per step using step-level ZVF scalar (iter-51 controller)."""
     if zvf_step >= TAU_DES_STEP:
         return G_DES
-    elif zvf_step >= TAU_ESC_STEP:
+    if zvf_step >= TAU_ESC_STEP:
         return G_ESC
-    else:
-        return G_ACTUAL
+    return G_ACTUAL
 
 
 def per_prompt_policy(zvf_p: float) -> int:
@@ -139,10 +146,9 @@ def per_prompt_policy(zvf_p: float) -> int:
     """
     if zvf_p < 0.5:
         return G_ESC
-    elif zvf_p >= 0.99:
+    if zvf_p >= 0.99:
         return G_DES
-    else:
-        return G_ACTUAL
+    return G_ACTUAL
 
 
 def oracle_policy(zvf_p: float) -> int:
@@ -159,8 +165,8 @@ def oracle_policy(zvf_p: float) -> int:
 # Counterfactual contrast-restoration simulation
 # ----------------------------------------------------------------------------
 
-def bootstrap_contrast_at_g(rewards: list[float], G_target: int,
-                            rng: random.Random) -> float:
+
+def bootstrap_contrast_at_g(rewards: list[float], G_target: int, rng: random.Random) -> float:
     """Estimate contrast probability at G_target by bootstrapping the
     observed G_actual=8 rollouts to size G_target.
 
@@ -197,6 +203,7 @@ def bootstrap_contrast_at_g(rewards: list[float], G_target: int,
 # Per-step aggregation
 # ----------------------------------------------------------------------------
 
+
 def compute_step_metrics(method: str, step: dict) -> dict:
     """Compute per-step metrics for all four policies + headroom estimate."""
     zvf_step = step["zvf_step"]
@@ -214,7 +221,8 @@ def compute_step_metrics(method: str, step: dict) -> dict:
     g_per_prompt_list = [per_prompt_policy(p["zvf_actual"]) for p in prompts]
     g_per_prompt_total = sum(g_per_prompt_list)
     contrast_per_prompt = sum(
-        1 for p, gp in zip(prompts, g_per_prompt_list)
+        1
+        for p, gp in zip(prompts, g_per_prompt_list, strict=False)
         if p["zvf_actual"] < 0.5 and gp >= G_ACTUAL  # escalated
     )
 
@@ -230,8 +238,7 @@ def compute_step_metrics(method: str, step: dict) -> dict:
 
     if boundary_prompts:
         restore_rates_boundary = [
-            bootstrap_contrast_at_g(p["rewards"], G_ESC, rng)
-            for p in boundary_prompts
+            bootstrap_contrast_at_g(p["rewards"], G_ESC, rng) for p in boundary_prompts
         ]
         mean_restore_rate_boundary = sum(restore_rates_boundary) / len(restore_rates_boundary)
         # How many boundary prompts would likely become contrast at G_ESC?
@@ -243,8 +250,7 @@ def compute_step_metrics(method: str, step: dict) -> dict:
 
     if contrast_prompts:
         preserve_rates_contrast = [
-            bootstrap_contrast_at_g(p["rewards"], G_DES, rng)
-            for p in contrast_prompts
+            bootstrap_contrast_at_g(p["rewards"], G_DES, rng) for p in contrast_prompts
         ]
         mean_preserve_rate_des = sum(preserve_rates_contrast) / len(preserve_rates_contrast)
     else:
@@ -282,6 +288,7 @@ def compute_step_metrics(method: str, step: dict) -> dict:
 # Main
 # ----------------------------------------------------------------------------
 
+
 def main() -> None:
     rng = random.Random(RNG_SEED)
     n2 = load_n2_tensors()
@@ -311,47 +318,59 @@ def main() -> None:
         n_boundary = sum(r["n_boundary_prompts"] for r in rows)
         n_contrast = sum(r["n_contrast_prompts"] for r in rows)
         n_restored_at_esc = sum(
-            int(r["restore_rate_at_esc"] * r["n_boundary_prompts"])
-            for r in rows
+            int(r["restore_rate_at_esc"] * r["n_boundary_prompts"]) for r in rows
         )
-        m_savings_pp, m_savings_pp_lo, m_savings_pp_hi = bootstrap_ci_rng(savings_pp, N_BOOT, 0.05, rng)
+        m_savings_pp, m_savings_pp_lo, m_savings_pp_hi = bootstrap_ci_rng(
+            savings_pp, N_BOOT, 0.05, rng
+        )
         m_regret_pp, m_regret_pp_lo, m_regret_pp_hi = bootstrap_ci_rng(regret_pp, N_BOOT, 0.05, rng)
         m_restore, m_restore_lo, m_restore_hi = bootstrap_ci_rng(restore_rates, N_BOOT, 0.05, rng)
-        summary_rows.append({
-            "method": m,
-            "n_steps": len(rows),
-            "total_rollouts_actual": total_actual,
-            "total_rollouts_per_step": total_per_step,
-            "total_rollouts_per_prompt": total_per_prompt,
-            "total_rollouts_oracle": total_oracle,
-            "savings_per_step_pct": round(
-                (total_actual - total_per_step) / total_actual * 100, 2),
-            "savings_per_prompt_pct": round(
-                (total_actual - total_per_prompt) / total_actual * 100, 2),
-            "regret_per_prompt_pct": round(
-                (total_per_prompt - total_oracle) / total_actual * 100, 2),
-            "savings_per_prompt_mean": round(m_savings_pp, 4),
-            "savings_per_prompt_ci_lo": round(m_savings_pp_lo, 4),
-            "savings_per_prompt_ci_hi": round(m_savings_pp_hi, 4),
-            "regret_per_prompt_mean": round(m_regret_pp, 4),
-            "regret_per_prompt_ci_lo": round(m_regret_pp_lo, 4),
-            "regret_per_prompt_ci_hi": round(m_regret_pp_hi, 4),
-            "n_boundary_prompts_total": n_boundary,
-            "n_contrast_prompts_total": n_contrast,
-            "n_restored_at_esc": n_restored_at_esc,
-            "restore_rate_at_esc_mean": round(m_restore, 4),
-            "restore_rate_at_esc_ci_lo": round(m_restore_lo, 4),
-            "restore_rate_at_esc_ci_hi": round(m_restore_hi, 4),
-            "headroom_dollar_per_step": round(mean_restore_rate, 4),
-        })
+        summary_rows.append(
+            {
+                "method": m,
+                "n_steps": len(rows),
+                "total_rollouts_actual": total_actual,
+                "total_rollouts_per_step": total_per_step,
+                "total_rollouts_per_prompt": total_per_prompt,
+                "total_rollouts_oracle": total_oracle,
+                "savings_per_step_pct": round(
+                    (total_actual - total_per_step) / total_actual * 100, 2
+                ),
+                "savings_per_prompt_pct": round(
+                    (total_actual - total_per_prompt) / total_actual * 100, 2
+                ),
+                "regret_per_prompt_pct": round(
+                    (total_per_prompt - total_oracle) / total_actual * 100, 2
+                ),
+                "savings_per_prompt_mean": round(m_savings_pp, 4),
+                "savings_per_prompt_ci_lo": round(m_savings_pp_lo, 4),
+                "savings_per_prompt_ci_hi": round(m_savings_pp_hi, 4),
+                "regret_per_prompt_mean": round(m_regret_pp, 4),
+                "regret_per_prompt_ci_lo": round(m_regret_pp_lo, 4),
+                "regret_per_prompt_ci_hi": round(m_regret_pp_hi, 4),
+                "n_boundary_prompts_total": n_boundary,
+                "n_contrast_prompts_total": n_contrast,
+                "n_restored_at_esc": n_restored_at_esc,
+                "restore_rate_at_esc_mean": round(m_restore, 4),
+                "restore_rate_at_esc_ci_lo": round(m_restore_lo, 4),
+                "restore_rate_at_esc_ci_hi": round(m_restore_hi, 4),
+                "headroom_dollar_per_step": round(mean_restore_rate, 4),
+            }
+        )
 
     # 3) Overall (pooled across methods) headline
     pooled_savings = [r["savings_per_prompt"] for r in per_step_rows]
     pooled_regret = [r["regret_per_prompt"] for r in per_step_rows]
     pooled_restore = [r["restore_rate_at_esc"] for r in per_step_rows]
-    pooled_mean_sav, pooled_sav_lo, pooled_sav_hi = bootstrap_ci_rng(pooled_savings, N_BOOT, 0.05, rng)
-    pooled_mean_reg, pooled_reg_lo, pooled_reg_hi = bootstrap_ci_rng(pooled_regret, N_BOOT, 0.05, rng)
-    pooled_mean_rest, pooled_rest_lo, pooled_rest_hi = bootstrap_ci_rng(pooled_restore, N_BOOT, 0.05, rng)
+    pooled_mean_sav, pooled_sav_lo, pooled_sav_hi = bootstrap_ci_rng(
+        pooled_savings, N_BOOT, 0.05, rng
+    )
+    pooled_mean_reg, pooled_reg_lo, pooled_reg_hi = bootstrap_ci_rng(
+        pooled_regret, N_BOOT, 0.05, rng
+    )
+    pooled_mean_rest, pooled_rest_lo, pooled_rest_hi = bootstrap_ci_rng(
+        pooled_restore, N_BOOT, 0.05, rng
+    )
     total_actual_all = sum(r["total_rollouts_actual"] for r in summary_rows)
     total_pp_all = sum(r["total_rollouts_per_prompt"] for r in summary_rows)
     total_oracle_all = sum(r["total_rollouts_oracle"] for r in summary_rows)
@@ -367,11 +386,16 @@ def main() -> None:
         "total_rollouts_oracle": total_oracle_all,
         "savings_per_step_pct": round(
             (total_actual_all - sum(r["total_rollouts_per_step"] for r in summary_rows))
-            / total_actual_all * 100, 2),
+            / total_actual_all
+            * 100,
+            2,
+        ),
         "savings_per_prompt_pct": round(
-            (total_actual_all - total_pp_all) / total_actual_all * 100, 2),
+            (total_actual_all - total_pp_all) / total_actual_all * 100, 2
+        ),
         "regret_per_prompt_pct": round(
-            (total_pp_all - total_oracle_all) / total_actual_all * 100, 2),
+            (total_pp_all - total_oracle_all) / total_actual_all * 100, 2
+        ),
         "savings_per_prompt_mean": round(pooled_mean_sav, 4),
         "savings_per_prompt_ci_lo": round(pooled_sav_lo, 4),
         "savings_per_prompt_ci_hi": round(pooled_sav_hi, 4),
@@ -404,14 +428,16 @@ def main() -> None:
         diffs_boot.sort()
         diff_lo = diffs_boot[int(0.025 * N_BOOT)]
         diff_hi = diffs_boot[int(0.975 * N_BOOT) - 1]
-        boot_rows.append({
-            "method": m,
-            "metric": "per_prompt_minus_oracle_rollouts",
-            "obs_mean": round(obs_mean, 2),
-            "boot_ci_lo": round(diff_lo, 2),
-            "boot_ci_hi": round(diff_hi, 2),
-            "ci_excludes_zero": "yes" if (diff_lo > 0 or diff_hi < 0) else "no",
-        })
+        boot_rows.append(
+            {
+                "method": m,
+                "metric": "per_prompt_minus_oracle_rollouts",
+                "obs_mean": round(obs_mean, 2),
+                "boot_ci_lo": round(diff_lo, 2),
+                "boot_ci_hi": round(diff_hi, 2),
+                "ci_excludes_zero": "yes" if (diff_lo > 0 or diff_hi < 0) else "no",
+            }
+        )
 
     # 5) Write outputs
     def write_tsv(path, rows, fields):
@@ -422,27 +448,51 @@ def main() -> None:
                 w.writerow({k: r.get(k, "") for k in fields})
 
     per_step_fields = [
-        "method", "step", "zvf_step", "pcd_step",
-        "n_boundary_prompts", "n_contrast_prompts",
-        "g_actual_total", "g_per_step", "g_per_step_total",
-        "g_per_prompt_total", "g_oracle_total",
-        "savings_per_step", "savings_per_prompt", "regret_per_prompt",
-        "contrast_actual", "contrast_per_prompt", "contrast_oracle",
-        "mean_restore_rate_boundary_esc", "restore_rate_at_esc",
+        "method",
+        "step",
+        "zvf_step",
+        "pcd_step",
+        "n_boundary_prompts",
+        "n_contrast_prompts",
+        "g_actual_total",
+        "g_per_step",
+        "g_per_step_total",
+        "g_per_prompt_total",
+        "g_oracle_total",
+        "savings_per_step",
+        "savings_per_prompt",
+        "regret_per_prompt",
+        "contrast_actual",
+        "contrast_per_prompt",
+        "contrast_oracle",
+        "mean_restore_rate_boundary_esc",
+        "restore_rate_at_esc",
         "mean_preserve_rate_contrast_des",
     ]
     write_tsv(OUT / "p7_cf_granularity_per_step.tsv", per_step_rows, per_step_fields)
 
     summary_fields = [
-        "method", "n_steps",
-        "total_rollouts_actual", "total_rollouts_per_step",
-        "total_rollouts_per_prompt", "total_rollouts_oracle",
-        "savings_per_step_pct", "savings_per_prompt_pct", "regret_per_prompt_pct",
-        "savings_per_prompt_mean", "savings_per_prompt_ci_lo", "savings_per_prompt_ci_hi",
-        "regret_per_prompt_mean", "regret_per_prompt_ci_lo", "regret_per_prompt_ci_hi",
-        "n_boundary_prompts_total", "n_contrast_prompts_total",
+        "method",
+        "n_steps",
+        "total_rollouts_actual",
+        "total_rollouts_per_step",
+        "total_rollouts_per_prompt",
+        "total_rollouts_oracle",
+        "savings_per_step_pct",
+        "savings_per_prompt_pct",
+        "regret_per_prompt_pct",
+        "savings_per_prompt_mean",
+        "savings_per_prompt_ci_lo",
+        "savings_per_prompt_ci_hi",
+        "regret_per_prompt_mean",
+        "regret_per_prompt_ci_lo",
+        "regret_per_prompt_ci_hi",
+        "n_boundary_prompts_total",
+        "n_contrast_prompts_total",
         "n_restored_at_esc",
-        "restore_rate_at_esc_mean", "restore_rate_at_esc_ci_lo", "restore_rate_at_esc_ci_hi",
+        "restore_rate_at_esc_mean",
+        "restore_rate_at_esc_ci_lo",
+        "restore_rate_at_esc_ci_hi",
         "headroom_dollar_per_step",
     ]
     write_tsv(OUT / "p7_cf_granularity_summary.tsv", summary_rows, summary_fields)
@@ -460,25 +510,35 @@ def main() -> None:
                 g_or = oracle_policy(p["zvf_actual"])
                 restore_esc = bootstrap_contrast_at_g(p["rewards"], G_ESC, rng2)
                 restore_des = bootstrap_contrast_at_g(p["rewards"], G_DES, rng2)
-                per_prompt_rows.append({
-                    "method": m,
-                    "step": step["step"],
-                    "prompt_idx": i,
-                    "k_actual": p["k_actual"],
-                    "zvf_actual": p["zvf_actual"],
-                    "g_actual": G_ACTUAL,
-                    "g_per_prompt": g_pp,
-                    "g_oracle": g_or,
-                    "restore_at_g_esc": round(restore_esc, 3),
-                    "restore_at_g_des": round(restore_des, 3),
-                    "is_boundary": 1 if p["zvf_actual"] >= 0.5 else 0,
-                    "is_contrast": 1 if p["zvf_actual"] < 0.5 else 0,
-                })
+                per_prompt_rows.append(
+                    {
+                        "method": m,
+                        "step": step["step"],
+                        "prompt_idx": i,
+                        "k_actual": p["k_actual"],
+                        "zvf_actual": p["zvf_actual"],
+                        "g_actual": G_ACTUAL,
+                        "g_per_prompt": g_pp,
+                        "g_oracle": g_or,
+                        "restore_at_g_esc": round(restore_esc, 3),
+                        "restore_at_g_des": round(restore_des, 3),
+                        "is_boundary": 1 if p["zvf_actual"] >= 0.5 else 0,
+                        "is_contrast": 1 if p["zvf_actual"] < 0.5 else 0,
+                    }
+                )
     per_prompt_fields = [
-        "method", "step", "prompt_idx",
-        "k_actual", "zvf_actual", "is_boundary", "is_contrast",
-        "g_actual", "g_per_prompt", "g_oracle",
-        "restore_at_g_esc", "restore_at_g_des",
+        "method",
+        "step",
+        "prompt_idx",
+        "k_actual",
+        "zvf_actual",
+        "is_boundary",
+        "is_contrast",
+        "g_actual",
+        "g_per_prompt",
+        "g_oracle",
+        "restore_at_g_esc",
+        "restore_at_g_des",
     ]
     write_tsv(OUT / "p7_cf_granularity_per_prompt.tsv", per_prompt_rows, per_prompt_fields)
 
@@ -494,11 +554,11 @@ def main() -> None:
         "policies": {
             "actual": "always G=8 (the empirical N2 rollout count)",
             "per_step": "one G per (method, step) from zvf_step scalar; "
-                        f"tau_esc={TAU_ESC_STEP}, tau_des={TAU_DES_STEP}",
+            f"tau_esc={TAU_ESC_STEP}, tau_des={TAU_DES_STEP}",
             "per_prompt": "one G per prompt using per-prompt boundary "
-                          "indicator; contrast->G_ESC, boundary->G_DES",
+            "indicator; contrast->G_ESC, boundary->G_DES",
             "oracle": "G=2 for contrast prompts, G=8 for boundary prompts "
-                      "(perfect-information lower bound)",
+            "(perfect-information lower bound)",
         },
         "trigger_thresholds": {
             "tau_esc_step": TAU_ESC_STEP,
@@ -525,12 +585,9 @@ def main() -> None:
             ],
             "total_boundary_prompts": total_boundary_all,
             "total_restored_at_esc": total_restored_all,
-            "restore_rate_aggregate": round(
-                total_restored_all / max(1, total_boundary_all), 4),
+            "restore_rate_aggregate": round(total_restored_all / max(1, total_boundary_all), 4),
         },
-        "per_method_summary": [
-            {k: v for k, v in r.items()} for r in summary_rows
-        ],
+        "per_method_summary": [{k: v for k, v in r.items()} for r in summary_rows],
         "bootstrap_paired_tests": boot_rows,
         "headline_text": (
             f"Counterfactual replay on N2 tensors ({len(per_prompt_rows)} "
@@ -551,16 +608,19 @@ def main() -> None:
             f"would have been RESTORED by escalating to G=16."
         ),
     }
-    (OUT / "p7_cf_granularity_summary.json").write_text(
-        json.dumps(out_json, indent=2))
+    (OUT / "p7_cf_granularity_summary.json").write_text(json.dumps(out_json, indent=2))
 
     print(out_json["headline_text"])
     print(f"\nWrote:")
-    print(f"  per_step      -> {OUT/'p7_cf_granularity_per_step.tsv'} ({len(per_step_rows)} rows)")
-    print(f"  per_prompt    -> {OUT/'p7_cf_granularity_per_prompt.tsv'} ({len(per_prompt_rows)} rows)")
-    print(f"  summary       -> {OUT/'p7_cf_granularity_summary.tsv'} ({len(summary_rows)} rows)")
-    print(f"  boot          -> {OUT/'p7_cf_granularity_boot.tsv'} ({len(boot_rows)} rows)")
-    print(f"  json          -> {OUT/'p7_cf_granularity_summary.json'}")
+    print(
+        f"  per_step      -> {OUT / 'p7_cf_granularity_per_step.tsv'} ({len(per_step_rows)} rows)"
+    )
+    print(
+        f"  per_prompt    -> {OUT / 'p7_cf_granularity_per_prompt.tsv'} ({len(per_prompt_rows)} rows)"
+    )
+    print(f"  summary       -> {OUT / 'p7_cf_granularity_summary.tsv'} ({len(summary_rows)} rows)")
+    print(f"  boot          -> {OUT / 'p7_cf_granularity_boot.tsv'} ({len(boot_rows)} rows)")
+    print(f"  json          -> {OUT / 'p7_cf_granularity_summary.json'}")
 
 
 if __name__ == "__main__":

@@ -89,12 +89,20 @@ def category_for(path: Path) -> str:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--source", default="artifacts/local_copies/latest")
-    parser.add_argument("--dest", default="artifacts/local_copies/nia_index_payload/tinker-rl-lab-artifacts")
+    parser.add_argument(
+        "--dest", default="artifacts/local_copies/nia_index_payload/tinker-rl-lab-artifacts"
+    )
     parser.add_argument("--max-text-mb", type=float, default=25.0)
     args = parser.parse_args()
 
-    source = (REPO_ROOT / args.source).resolve() if not Path(args.source).is_absolute() else Path(args.source)
-    dest = (REPO_ROOT / args.dest).resolve() if not Path(args.dest).is_absolute() else Path(args.dest)
+    source = (
+        (REPO_ROOT / args.source).resolve()
+        if not Path(args.source).is_absolute()
+        else Path(args.source)
+    )
+    dest = (
+        (REPO_ROOT / args.dest).resolve() if not Path(args.dest).is_absolute() else Path(args.dest)
+    )
     if not source.exists():
         raise SystemExit(f"source does not exist: {source}")
 
@@ -126,7 +134,11 @@ def main() -> int:
             try:
                 stat = path.stat()
             except OSError as exc:
-                record = {"path": str(path.relative_to(source)), "error": str(exc), "included_in_search": False}
+                record = {
+                    "path": str(path.relative_to(source)),
+                    "error": str(exc),
+                    "included_in_search": False,
+                }
                 inventory.write(json.dumps(record, sort_keys=True) + "\n")
                 continue
 
@@ -189,7 +201,7 @@ def main() -> int:
 
     readme = f"""# Tinker RL Lab Artifact Index Payload
 
-Created: {summary['created_at']}
+Created: {summary["created_at"]}
 
 Source archive: `{source}`
 
@@ -203,11 +215,11 @@ and hashes for small files where practical.
 
 Counts:
 
-- Files seen: {counts['files_seen']}
-- Files copied for search: {counts['files_copied_for_search']}
-- Inventory-only files: {counts['files_inventory_only']}
-- Bytes represented: {counts['bytes_seen']}
-- Bytes copied for search: {counts['bytes_copied_for_search']}
+- Files seen: {counts["files_seen"]}
+- Files copied for search: {counts["files_copied_for_search"]}
+- Inventory-only files: {counts["files_inventory_only"]}
+- Bytes represented: {counts["bytes_seen"]}
+- Bytes copied for search: {counts["bytes_copied_for_search"]}
 """
     (dest / "README.md").write_text(readme)
     print(json.dumps(summary, indent=2, sort_keys=True))

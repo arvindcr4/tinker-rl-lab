@@ -51,15 +51,14 @@ files `p8_single_sensor_seed_stability.py` reads.
 
 Stdlib + numpy + pandas + xgboost + matplotlib. <=290 lines.
 """
+
 from __future__ import annotations
 
 import argparse
 import csv
 import json
-import math
 import hashlib
 import random
-import statistics
 from itertools import combinations
 from pathlib import Path
 
@@ -69,13 +68,15 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 import sys
+
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
-from _p8_common import (  # noqa: E402
+from _paths import REPO_ROOT
+from _p8_common import (
     RAW20,
     AGG4,
     ALL24,
 )
+
 ROOT = REPO_ROOT
 RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8/corrected-review21-v2"
 FIG = RES / "figures"
@@ -85,8 +86,8 @@ FIG.mkdir(parents=True, exist_ok=True)
 SEED = 20260705
 N_BOOT = 600
 K_BUDGETS = [0.5, 1.0, 2.0, 3.0, 5.0]  # percent of test alerted
-COST_XGB = 0.0001   # dollars per decision for tree
-COST_LLM = 0.0010   # dollars per decision for LLM sensor (once per row)
+COST_XGB = 0.0001  # dollars per decision for tree
+COST_LLM = 0.0010  # dollars per decision for LLM sensor (once per row)
 
 
 def load(path: Path):
@@ -103,14 +104,14 @@ def load(path: Path):
 
 def auc_roc(scores, labels):
     from sklearn.metrics import roc_auc_score
+
     if len(set(labels)) < 2:
         return float("nan")
     return float(roc_auc_score(labels, scores))
 
 
-
 def brier(scores, labels):
-    return sum((s - y) ** 2 for s, y in zip(scores, labels)) / len(labels)
+    return sum((s - y) ** 2 for s, y in zip(scores, labels, strict=False)) / len(labels)
 
 
 def precision_at_k(scores, labels, k_pct):
@@ -189,10 +190,17 @@ def cost_per_caught(scores, labels, k_pct, cost_per_decision):
 
 def parse_args(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    ap.add_argument("--seed", type=int, default=SEED,
-                    help="XGB + bootstrap seed (default %(default)s; 42 for the seed-stability rerun)")
-    ap.add_argument("--suffix", default="",
-                    help="appended to every output stem, e.g. _seed42 -> p8_single_sensor_seed42.tsv")
+    ap.add_argument(
+        "--seed",
+        type=int,
+        default=SEED,
+        help="XGB + bootstrap seed (default %(default)s; 42 for the seed-stability rerun)",
+    )
+    ap.add_argument(
+        "--suffix",
+        default="",
+        help="appended to every output stem, e.g. _seed42 -> p8_single_sensor_seed42.tsv",
+    )
     return ap.parse_args(argv)
 
 
@@ -220,8 +228,8 @@ def main(argv=None):
 
     # Fit
     print(f"[p8_single_sensor] fitting {len(variants)} trees")
-    X_tr_all = [dict(zip(ALL24, r)) for r in tr_rows]
-    X_te_all= [dict(zip(ALL24, r)) for r in te_rows]
+    X_tr_all = [dict(zip(ALL24, r, strict=False)) for r in tr_rows]
+    X_te_all = [dict(zip(ALL24, r, strict=False)) for r in te_rows]
     scores = {}
     for name, feats, cost_d in variants:
         X_tr = [[row[c] for c in feats] for row in X_tr_all]
@@ -234,8 +242,9 @@ def main(argv=None):
         s, _ = scores[name]
         a = auc_roc(s, te_labels)
         b = brier(s, te_labels)
-        abl_rows.append({"variant": name, "auc": round(a, 4), "brier": round(b, 4),
-                         "n_features": len(feats)})
+        abl_rows.append(
+            {"variant": name, "auc": round(a, 4), "brier": round(b, 4), "n_features": len(feats)}
+        )
 
     with (RES / f"p8_single_sensor{sfx}.tsv").open("w") as f:
         f.write("variant\tn_features\tauc\tbrier\n")
@@ -259,14 +268,23 @@ def main(argv=None):
             {"scores": base_s, "labels": te_labels, "fn": auc_roc},
             seed,
         )
-        boot_rows.append({"variant": name, "auc": round(a0, 4),
-                          "auc_24full": round(b0, 4), "delta_auc": round(d, 4),
-                          "ci_lo": round(lo, 4), "ci_hi": round(hi, 4),
-                          "excludes_zero": "yes" if (lo > 0 or hi < 0) else "no"})
+        boot_rows.append(
+            {
+                "variant": name,
+                "auc": round(a0, 4),
+                "auc_24full": round(b0, 4),
+                "delta_auc": round(d, 4),
+                "ci_lo": round(lo, 4),
+                "ci_hi": round(hi, 4),
+                "excludes_zero": "yes" if (lo > 0 or hi < 0) else "no",
+            }
+        )
     with (RES / f"p8_single_pair_boot{sfx}.tsv").open("w") as f:
         f.write("variant\tauc\tauc_24full\tdelta_auc\tci_lo\tci_hi\texcludes_zero\n")
         for r in boot_rows:
-            f.write(f"{r['variant']}\t{r['auc']}\t{r['auc_24full']}\t{r['delta_auc']}\t{r['ci_lo']}\t{r['ci_hi']}\t{r['excludes_zero']}\n")
+            f.write(
+                f"{r['variant']}\t{r['auc']}\t{r['auc_24full']}\t{r['delta_auc']}\t{r['ci_lo']}\t{r['ci_hi']}\t{r['excludes_zero']}\n"
+            )
 
     # ---- Cost-per-decision at 5 K budgets -------------------------------
     cost_rows = []
@@ -297,14 +315,23 @@ def main(argv=None):
             cpc, tp, k = cost_per_caught(s, te_labels, k_pct, cost_d)
             p, _ = precision_at_k(s, te_labels, k_pct)
             r, _ = recall_at_k(s, te_labels, k_pct)
-            cost_rows.append({"model": model, "k_pct": k_pct, "k_alerts": k,
-                              "true_pos": tp, "precision": round(p, 4),
-                              "recall": round(r, 4),
-                              "cost_per_caught_dollars": round(cpc, 4)})
+            cost_rows.append(
+                {
+                    "model": model,
+                    "k_pct": k_pct,
+                    "k_alerts": k,
+                    "true_pos": tp,
+                    "precision": round(p, 4),
+                    "recall": round(r, 4),
+                    "cost_per_caught_dollars": round(cpc, 4),
+                }
+            )
     with (RES / f"p8_cost_per_decision{sfx}.tsv").open("w") as f:
         f.write("model\tk_pct\tk_alerts\ttrue_pos\tprecision\trecall\tcost_per_caught_dollars\n")
         for r in cost_rows:
-            f.write(f"{r['model']}\t{r['k_pct']}\t{r['k_alerts']}\t{r['true_pos']}\t{r['precision']}\t{r['recall']}\t{r['cost_per_caught_dollars']}\n")
+            f.write(
+                f"{r['model']}\t{r['k_pct']}\t{r['k_alerts']}\t{r['true_pos']}\t{r['precision']}\t{r['recall']}\t{r['cost_per_caught_dollars']}\n"
+            )
 
     # ---- Cost-per-decision bootstrap CIs (XGB-24full vs others at each K) -
     for k_pct in K_BUDGETS:
@@ -320,7 +347,11 @@ def main(argv=None):
                 s_a, cost_d_a = scores["XGB-24full"]
                 s_b, cost_d_b = scores[model]
             # Bootstrap cost-per-caught
-            rng = random.Random(seed + int(k_pct * 10) + int.from_bytes(hashlib.sha256(model.encode()).digest()[:8], "big") % 1000)
+            rng = random.Random(
+                seed
+                + int(k_pct * 10)
+                + int.from_bytes(hashlib.sha256(model.encode()).digest()[:8], "big") % 1000
+            )
             n = len(te_labels)
             diffs = []
             for _ in range(N_BOOT):
@@ -340,20 +371,35 @@ def main(argv=None):
                     diffs.append(ca - cb)
             diffs.sort()
             if len(diffs) != N_BOOT:
-                cost_boot.append({"model": model, "k_pct": k_pct,
-                                  "delta_cost_per_caught": None, "ci_lo": None, "ci_hi": None,
-                                  "excludes_zero": "undefined_no_catches"})
+                cost_boot.append(
+                    {
+                        "model": model,
+                        "k_pct": k_pct,
+                        "delta_cost_per_caught": None,
+                        "ci_lo": None,
+                        "ci_hi": None,
+                        "excludes_zero": "undefined_no_catches",
+                    }
+                )
                 continue
             lo = diffs[int(0.025 * len(diffs))]
             hi = diffs[max(0, int(0.975 * len(diffs)) - 1)]
-            cost_boot.append({"model": model, "k_pct": k_pct,
-                              "delta_cost_per_caught": round(diffs[len(diffs) // 2], 4),
-                              "ci_lo": round(lo, 4), "ci_hi": round(hi, 4),
-                              "excludes_zero": "yes" if (lo > 0 or hi < 0) else "no"})
+            cost_boot.append(
+                {
+                    "model": model,
+                    "k_pct": k_pct,
+                    "delta_cost_per_caught": round(diffs[len(diffs) // 2], 4),
+                    "ci_lo": round(lo, 4),
+                    "ci_hi": round(hi, 4),
+                    "excludes_zero": "yes" if (lo > 0 or hi < 0) else "no",
+                }
+            )
     with (RES / f"p8_cost_per_decision_boot{sfx}.tsv").open("w") as f:
         f.write("model\tk_pct\tdelta_cost_per_caught\tci_lo\tci_hi\texcludes_zero\n")
         for r in cost_boot:
-            f.write(f"{r['model']}\t{r['k_pct']}\t{r['delta_cost_per_caught']}\t{r['ci_lo']}\t{r['ci_hi']}\t{r['excludes_zero']}\n")
+            f.write(
+                f"{r['model']}\t{r['k_pct']}\t{r['delta_cost_per_caught']}\t{r['ci_lo']}\t{r['ci_hi']}\t{r['excludes_zero']}\n"
+            )
 
     # ---- Figures --------------------------------------------------------
     # Figure 1: AUC bar chart with bootstrap CIs
@@ -384,8 +430,9 @@ def main(argv=None):
     ax.set_xticklabels(labels_x, rotation=45, ha="right", fontsize=8)
     ax.set_ylabel("AUC (test split)")
     ax.set_title("P8 single-sensor ablation — AUC with 95% paired bootstrap CI vs XGB-24full")
-    ax.axhline(vals[labels_x.index("XGB-24full")], color="red", linestyle="--",
-               label="XGB-24full baseline")
+    ax.axhline(
+        vals[labels_x.index("XGB-24full")], color="red", linestyle="--", label="XGB-24full baseline"
+    )
     ax.legend(loc="lower right", fontsize=8)
     fig.tight_layout()
     fig.savefig(FIG / f"p8_single_sensor{sfx}.png", dpi=150)
@@ -394,9 +441,13 @@ def main(argv=None):
 
     # Figure 2: cost-per-decision vs K budget for each model
     fig, ax = plt.subplots(figsize=(8.5, 4.5))
-    colors = {"XGB-20raw": "tab:blue", "XGB-24full": "tab:red",
-best_single: "tab:green", best_pair: "tab:purple",
-              "LLM-scribe-surrogate": "tab:orange"}
+    colors = {
+        "XGB-20raw": "tab:blue",
+        "XGB-24full": "tab:red",
+        best_single: "tab:green",
+        best_pair: "tab:purple",
+        "LLM-scribe-surrogate": "tab:orange",
+    }
     for model in base_models:
         ks = [r["k_pct"] for r in cost_rows if r["model"] == model]
         cs = [r["cost_per_caught_dollars"] for r in cost_rows if r["model"] == model]
@@ -415,8 +466,11 @@ best_single: "tab:green", best_pair: "tab:purple",
 
     # ---- Summary JSON ---------------------------------------------------
     summary = {
-        "n_train": len(tr_rows), "n_test": len(te_rows),
-        "n_pos_test": sum(te_labels), "seed": seed, "n_boot": N_BOOT,
+        "n_train": len(tr_rows),
+        "n_test": len(te_rows),
+        "n_pos_test": sum(te_labels),
+        "seed": seed,
+        "n_boot": N_BOOT,
         "k_budgets": K_BUDGETS,
         "abl_rows": len(abl_rows),
         "boot_rows": len(boot_rows),

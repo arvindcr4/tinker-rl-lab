@@ -91,11 +91,17 @@ class VERLZVFAdapter(BaseZVFAdapter):
         tensors = batch.batch
         ids = batch.non_tensor_batch[self.uid_key]
         if "token_level_scores" in tensors:
-            decision.verifier_zvf = core.zvf(self._reduce_to_per_sequence(tensors["token_level_scores"]), ids,
-                                              self.callback.controller.var_eps)
+            decision.verifier_zvf = core.zvf(
+                self._reduce_to_per_sequence(tensors["token_level_scores"]),
+                ids,
+                self.callback.controller.var_eps,
+            )
         if "token_level_rewards" in tensors:
-            decision.effective_training_reward_zvf = core.zvf(self._reduce_to_per_sequence(tensors["token_level_rewards"]), ids,
-                                                                self.callback.controller.var_eps)
+            decision.effective_training_reward_zvf = core.zvf(
+                self._reduce_to_per_sequence(tensors["token_level_rewards"]),
+                ids,
+                self.callback.controller.var_eps,
+            )
         decision.reward_reduction = "token_sum"
         return decision
 
@@ -125,7 +131,7 @@ class VERLZVFAdapter(BaseZVFAdapter):
         if uids is None:
             raise KeyError(
                 f"verl DataProto.non_tensor_batch has no {self.uid_key!r} key "
-                f"(available: {list(getattr(non_tensor, 'keys', lambda: [])())}). "
+                f"(available: {list(getattr(non_tensor, 'keys', list)())}). "
                 "GRPO requires per-prompt uids to group rollouts."
             )
         uids = np.asarray(uids).ravel()
@@ -218,6 +224,7 @@ class VERLZVFAdapter(BaseZVFAdapter):
                 # the trainer's result unchanged.
                 import sys as _sys
                 import traceback as _traceback
+
                 print(
                     f"[zvf-triage] WARN: VERLZVFAdapter.process_step raised "
                     f"{type(exc).__name__}: {exc}. Training continues; "
@@ -227,11 +234,11 @@ class VERLZVFAdapter(BaseZVFAdapter):
                 )
                 _traceback.print_exc(file=_sys.stderr)
                 return result
-            setattr(trainer, "zvf_should_stop", adapter.should_stop)
+            trainer.zvf_should_stop = adapter.should_stop
             return result
 
         setattr(trainer, hook_name, _wrapped)
-        setattr(trainer, "zvf_should_stop", False)
+        trainer.zvf_should_stop = False
 
 
 # --------------------------------------------------------------------- helpers

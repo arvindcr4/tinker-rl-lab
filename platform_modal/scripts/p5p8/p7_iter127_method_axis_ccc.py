@@ -35,19 +35,21 @@ Outputs:
       (4 methods x 3 regimes = 12 rows)
   - platform_hybrid/experiments/results/p5p8/p7_iter127_summary.json
 """
+
 from __future__ import annotations
 
 from _review19_policy import adaptive_target
 import json
-import math
 from _review_replay import stable_seed
 import random
 from collections import Counter
 from pathlib import Path
 
 import sys
+
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
+from _paths import REPO_ROOT
+
 ROOT = REPO_ROOT
 P5P8 = ROOT / "platform_hybrid/experiments/results/p5p8/corrected-review19-v4"
 P5P8.mkdir(parents=True, exist_ok=True)
@@ -66,7 +68,7 @@ def invert_p0(zvf_obs: float, G_obs: int = 8, tol: float = 1e-10) -> float:
     lo, hi = 0.0, 0.5
     for _ in range(80):
         mid = 0.5 * (lo + hi)
-        z_mid = mid ** G_obs + (1.0 - mid) ** G_obs
+        z_mid = mid**G_obs + (1.0 - mid) ** G_obs
         if z_mid > zvf_obs:
             lo = mid
         else:
@@ -77,7 +79,7 @@ def invert_p0(zvf_obs: float, G_obs: int = 8, tol: float = 1e-10) -> float:
 
 
 def z_at(p0: float, G: int) -> float:
-    return p0 ** G + (1.0 - p0) ** G
+    return p0**G + (1.0 - p0) ** G
 
 
 def _fmt(v) -> str:
@@ -101,6 +103,7 @@ def dualformer_auto_acc(reward_mean: float) -> int:
 
 def adaptive_gstar(zvf_obs: float, G_obs: int = 8) -> int:
     return adaptive_target(zvf_obs, G_obs, G_CANDIDATES)
+
 
 def regime(zvf_obs: float) -> str:
     if zvf_obs < FAST_TAU:
@@ -137,18 +140,22 @@ def ccc_recommend(zvf_obs: float, reward_mean: float) -> dict:
 # ---- data load + per-row application ----------------------------------------
 def load_n2() -> list[dict]:
     rows = []
-    with open(ROOT / "platform_hybrid/experiments/results/n2_reward_tensor_resume/n2_metrics.tsv") as f:
+    with open(
+        ROOT / "platform_hybrid/experiments/results/n2_reward_tensor_resume/n2_metrics.tsv"
+    ) as f:
         header = f.readline().rstrip("\n").split("\t")
         idx = {k: i for i, k in enumerate(header)}
         for line in f:
             parts = line.rstrip("\n").split("\t")
-            rows.append({
-                "method": parts[idx["method"]],
-                "step": int(parts[idx["step"]]),
-                "zvf": float(parts[idx["zvf"]]),
-                "reward_mean": float(parts[idx["reward_mean"]]),
-                "pcd": float(parts[idx["pcd"]]),
-            })
+            rows.append(
+                {
+                    "method": parts[idx["method"]],
+                    "step": int(parts[idx["step"]]),
+                    "zvf": float(parts[idx["zvf"]]),
+                    "reward_mean": float(parts[idx["reward_mean"]]),
+                    "pcd": float(parts[idx["pcd"]]),
+                }
+            )
     return rows
 
 
@@ -167,7 +174,7 @@ def bootstrap_ci(values: list[float], n: int, seed: int, B: int = B) -> tuple:
 
 def main():
     rows = load_n2()
-    methods = sorted(set(r["method"] for r in rows))   # aero, areal, gift, grpo
+    methods = sorted(set(r["method"] for r in rows))  # aero, areal, gift, grpo
     assert len(methods) == 4, f"expected 4 N2 methods, got {methods}"
     assert len(rows) == 160, f"expected 160 rows, got {len(rows)}"
 
@@ -179,9 +186,21 @@ def main():
 
     # Write per-step recommendation
     step_path = P5P8 / "p7_iter127_method_step_recommendation.tsv"
-    cols = ["method", "step", "zvf", "reward_mean", "pcd",
-            "p_hat", "regime", "G_ccc", "G_dualformer", "G_adaptive",
-            "z_base", "z_after", "contrast_delta"]
+    cols = [
+        "method",
+        "step",
+        "zvf",
+        "reward_mean",
+        "pcd",
+        "p_hat",
+        "regime",
+        "G_ccc",
+        "G_dualformer",
+        "G_adaptive",
+        "z_base",
+        "z_after",
+        "contrast_delta",
+    ]
     with open(step_path, "w") as f:
         f.write("\t".join(cols) + "\n")
         for r in rec_rows:
@@ -206,26 +225,28 @@ def main():
         n_escalate = sum(1 for r in per_method if r["G_ccc"] > G_BASE)
         n_save = sum(1 for r in per_method if r["G_ccc"] < G_BASE)
         n_equal = n - n_escalate - n_save
-        method_summary.append({
-            "method": m,
-            "n_steps": n,
-            "mean_G_ccc": mean_G,
-            "mean_G_ccc_ci_lo": G_lo,
-            "mean_G_ccc_ci_hi": G_hi,
-            "mean_contrast_delta": mean_dG,
-            "contrast_delta_ci_lo": dG_lo,
-            "contrast_delta_ci_hi": dG_hi,
-            "n_fast": reg_mix["FAST"],
-            "n_baseline": reg_mix["BASELINE"],
-            "n_degenerate": reg_mix["DEGENERATE"],
-            "frac_fast": reg_mix["FAST"] / n,
-            "frac_degenerate": reg_mix["DEGENERATE"] / n,
-            "n_escalate": n_escalate,
-            "n_save": n_save,
-            "n_equal": n_equal,
-            "n_pcd": sum(1 for r in per_method if r["pcd"] > 0.07),
-            "mean_reward": sum(r["reward_mean"] for r in per_method) / n,
-        })
+        method_summary.append(
+            {
+                "method": m,
+                "n_steps": n,
+                "mean_G_ccc": mean_G,
+                "mean_G_ccc_ci_lo": G_lo,
+                "mean_G_ccc_ci_hi": G_hi,
+                "mean_contrast_delta": mean_dG,
+                "contrast_delta_ci_lo": dG_lo,
+                "contrast_delta_ci_hi": dG_hi,
+                "n_fast": reg_mix["FAST"],
+                "n_baseline": reg_mix["BASELINE"],
+                "n_degenerate": reg_mix["DEGENERATE"],
+                "frac_fast": reg_mix["FAST"] / n,
+                "frac_degenerate": reg_mix["DEGENERATE"] / n,
+                "n_escalate": n_escalate,
+                "n_save": n_save,
+                "n_equal": n_equal,
+                "n_pcd": sum(1 for r in per_method if r["pcd"] > 0.07),
+                "mean_reward": sum(r["reward_mean"] for r in per_method) / n,
+            }
+        )
         for rname in ("FAST", "BASELINE", "DEGENERATE"):
             regime_mix_rows.append((m, rname, reg_mix[rname]))
 
@@ -251,15 +272,17 @@ def main():
         other = [r for r in rec_rows if r["method"] == m]
         for r in other:
             a = aero_lookup[r["step"]]
-            paired.append({
-                "step": r["step"],
-                "method": m,
-                "G_diff_aero_minus_other": a["G_ccc"] - r["G_ccc"],
-                "contrast_diff": a["contrast_delta"] - r["contrast_delta"],
-                "regime_match": a["regime"] == r["regime"],
-                "regime_aero": a["regime"],
-                "regime_other": r["regime"],
-            })
+            paired.append(
+                {
+                    "step": r["step"],
+                    "method": m,
+                    "G_diff_aero_minus_other": a["G_ccc"] - r["G_ccc"],
+                    "contrast_diff": a["contrast_delta"] - r["contrast_delta"],
+                    "regime_match": a["regime"] == r["regime"],
+                    "regime_aero": a["regime"],
+                    "regime_other": r["regime"],
+                }
+            )
     paired_n = len(paired)
     mean_G_diff = sum(p["G_diff_aero_minus_other"] for p in paired) / paired_n
     mean_contrast_diff = sum(p["contrast_diff"] for p in paired) / paired_n
@@ -280,7 +303,7 @@ def main():
     # H4 -- Bootstrap CI on mean_G_ccc per method does NOT overlap most vs least.
     # Pairwise: ranks differ at [0] (top) and [-1] (bottom) -- check non-overlap.
     top, bot = rank[0], rank[-1]
-    h4_pass = (top["mean_G_ccc_ci_lo"] > bot["mean_G_ccc_ci_hi"])
+    h4_pass = top["mean_G_ccc_ci_lo"] > bot["mean_G_ccc_ci_hi"]
 
     summary = {
         "iter": 127,
@@ -327,9 +350,7 @@ def main():
             "regime_match_fraction": regime_match,
         },
         "per_method": method_summary,
-        "regime_mix": [
-            {"method": m, "regime": r, "n": n} for m, r, n in regime_mix_rows
-        ],
+        "regime_mix": [{"method": m, "regime": r, "n": n} for m, r, n in regime_mix_rows],
         "bootstrap_seed": SEED,
         "B": B,
     }
@@ -347,7 +368,9 @@ def main():
     print(f"  most_aggressive: {most_agg}  (n_escalate={most_agg_n_escal})")
     print(f"  top vs bottom 95% CI non-overlap: {h4_pass}")
     print(f"  regime-match (aero vs other):    {regime_match:.3f}")
-    print(f"  n_most_agg_degenerate > others:  top.n_degenerate={top['n_degenerate']}, bottom.n_degenerate={bot['n_degenerate']}")
+    print(
+        f"  n_most_agg_degenerate > others:  top.n_degenerate={top['n_degenerate']}, bottom.n_degenerate={bot['n_degenerate']}"
+    )
 
 
 if __name__ == "__main__":

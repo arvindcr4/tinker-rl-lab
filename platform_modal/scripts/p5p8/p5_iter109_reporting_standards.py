@@ -29,10 +29,10 @@ the script records UNVERIFIED and continues. All other work is stdlib.
 
 Author: TinkerRL-Bench, iter 109, 2026-07-05.
 """
+
 from __future__ import annotations
 
 import json
-import os
 import re
 import ssl
 import time
@@ -113,7 +113,9 @@ def crossref_lookup(doi: str, timeout: int = 12) -> dict:
     """Return parsed JSON for the DOI, or {"error": ...} on failure."""
     url = f"https://api.crossref.org/works/{doi}"
     ctx = ssl.create_default_context()
-    req = urllib.request.Request(url, headers={"User-Agent": "TinkerRL-Bench/iter109 (mailto:claude@anthropic.com)"})
+    req = urllib.request.Request(
+        url, headers={"User-Agent": "TinkerRL-Bench/iter109 (mailto:claude@anthropic.com)"}
+    )
     try:
         with urllib.request.urlopen(req, timeout=timeout, context=ctx) as r:
             data = json.load(r)
@@ -153,29 +155,40 @@ def audit_bib(bib_text: str) -> list[dict]:
     """For each paper, check whether its bib entry matches CrossRef record."""
     bib = parse_bib(bib_text)
     rows = []
-    for key, doi, expected_authors, expected_year, expected_venue in PAPERS:
+    for key, doi, _expected_authors, expected_year, _expected_venue in PAPERS:
         crossref = crossref_lookup(doi)
         in_bib = key in bib
         if not in_bib:
-            rows.append({
-                "cite_key": key,
-                "doi": doi,
-                "in_bib": False,
-                "matches": False,
-                "bib_year": "",
-                "bib_title": "",
-                "bib_authors": "",
-                "crossref_year": crossref.get("issued", {}).get("date-parts", [[None]])[0][0] if "issued" in crossref else "",
-                "crossref_title": (crossref.get("title", [""])[0] if crossref.get("title") else ""),
-                "crossref_authors": norm_authors(crossref.get("author", [])),
-                "verdict": "MISSING_FROM_BIB",
-            })
+            rows.append(
+                {
+                    "cite_key": key,
+                    "doi": doi,
+                    "in_bib": False,
+                    "matches": False,
+                    "bib_year": "",
+                    "bib_title": "",
+                    "bib_authors": "",
+                    "crossref_year": crossref.get("issued", {}).get("date-parts", [[None]])[0][0]
+                    if "issued" in crossref
+                    else "",
+                    "crossref_title": (
+                        crossref.get("title", [""])[0] if crossref.get("title") else ""
+                    ),
+                    "crossref_authors": norm_authors(crossref.get("author", [])),
+                    "verdict": "MISSING_FROM_BIB",
+                }
+            )
             continue
         fields = bib[key]["fields"]
         bib_year = fields.get("year", "")
         bib_title = fields.get("title", "")
         bib_authors = fields.get("author", "")
-        bib_authors_norm = " ".join(re.split(r"\s+and\s+|\s*,\s*", bib_authors.replace("{", "").replace("}", "").replace("\\", "")))
+        bib_authors_norm = " ".join(
+            re.split(
+                r"\s+and\s+|\s*,\s*",
+                bib_authors.replace("{", "").replace("}", "").replace("\\", ""),
+            )
+        )
         bib_authors_norm = re.sub(r"[^A-Za-z ]", " ", bib_authors_norm)
         bib_authors_norm = " ".join(sorted(bib_authors_norm.split()))  # canonicalise
         crossref_year = ""
@@ -195,7 +208,7 @@ def audit_bib(bib_text: str) -> list[dict]:
         cr_fams = set(w.lower() for w in crossref_authors.split() if w)
         author_overlap = len(bib_fams & cr_fams) / max(1, len(cr_fams))
 
-        year_match = (bib_year == str(expected_year) and str(expected_year) == crossref_year)
+        year_match = bib_year == str(expected_year) and str(expected_year) == crossref_year
         title_match = (
             bib_title.lower().split()[0:5] == crossref_title.lower().split()[0:5]
             if bib_title and crossref_title
@@ -203,23 +216,25 @@ def audit_bib(bib_text: str) -> list[dict]:
         )
         author_match = author_overlap >= 0.6
         matches = year_match and title_match and author_match
-        rows.append({
-            "cite_key": key,
-            "doi": doi,
-            "in_bib": True,
-            "matches": matches,
-            "bib_year": bib_year,
-            "bib_title": bib_title,
-            "bib_authors": bib_authors,
-            "crossref_year": crossref_year,
-            "crossref_title": crossref_title,
-            "crossref_authors": crossref_authors,
-            "author_overlap": round(author_overlap, 3),
-            "year_match": year_match,
-            "title_match": title_match,
-            "author_match": author_match,
-            "verdict": "OK" if matches else "DRIFT",
-        })
+        rows.append(
+            {
+                "cite_key": key,
+                "doi": doi,
+                "in_bib": True,
+                "matches": matches,
+                "bib_year": bib_year,
+                "bib_title": bib_title,
+                "bib_authors": bib_authors,
+                "crossref_year": crossref_year,
+                "crossref_title": crossref_title,
+                "crossref_authors": crossref_authors,
+                "author_overlap": round(author_overlap, 3),
+                "year_match": year_match,
+                "title_match": title_match,
+                "author_match": author_match,
+                "verdict": "OK" if matches else "DRIFT",
+            }
+        )
         time.sleep(0.2)
     return rows
 
@@ -236,14 +251,16 @@ def build_coupling() -> list[dict]:
     rows = []
     for key, mapping in REPORTS_STANDARDS_TO_MINREPORT.items():
         for item_no, item_desc in mapping:
-            rows.append({
-                "cite_key": key,
-                "minreport_item": item_no,
-                "minreport_role": item_desc,
-                "paper_inspires_item": True,
-                "minreport_has_evidence": True,
-                "category": "LITERATURE_GROUNDING",
-            })
+            rows.append(
+                {
+                    "cite_key": key,
+                    "minreport_item": item_no,
+                    "minreport_role": item_desc,
+                    "paper_inspires_item": True,
+                    "minreport_has_evidence": True,
+                    "category": "LITERATURE_GROUNDING",
+                }
+            )
     return rows
 
 
@@ -263,9 +280,23 @@ def main() -> dict:
     write_tsv(
         RESULTS / "p5_iter109_crossref_verify.tsv",
         rows,
-        ["cite_key", "doi", "in_bib", "matches", "bib_year", "crossref_year",
-         "bib_title", "crossref_title", "bib_authors", "crossref_authors",
-         "author_overlap", "year_match", "title_match", "author_match", "verdict"],
+        [
+            "cite_key",
+            "doi",
+            "in_bib",
+            "matches",
+            "bib_year",
+            "crossref_year",
+            "bib_title",
+            "crossref_title",
+            "bib_authors",
+            "crossref_authors",
+            "author_overlap",
+            "year_match",
+            "title_match",
+            "author_match",
+            "verdict",
+        ],
     )
 
     # Bib audit: whether each cite_key is present, has DOI, and has matching fields
@@ -284,41 +315,66 @@ def main() -> dict:
             has_volume = bool(f.get("volume", "") or f.get("number", ""))
             has_pages = bool(f.get("pages", ""))
         in_related = cited_in_related(related_text, key)
-        audit_rows.append({
-            "cite_key": key,
-            "doi": doi,
-            "present_in_bib": present,
-            "has_doi": has_doi,
-            "has_year": has_year,
-            "has_volume_or_number": has_volume,
-            "has_pages": has_pages,
-            "cited_in_p5_related": in_related,
-            "missing_fields": ",".join(
-                x for x, v in [
-                    ("doi", has_doi), ("year", has_year),
-                    ("volume_or_number", has_volume), ("pages", has_pages)
-                ] if not v and present
-            ),
-            "verdict": (
-                "NEW" if not present and not in_related else
-                "ALREADY_PRESENT_NOT_CITED" if present and not in_related else
-                "CITED_OK" if present and in_related else "PARTIAL"
-            ),
-        })
+        audit_rows.append(
+            {
+                "cite_key": key,
+                "doi": doi,
+                "present_in_bib": present,
+                "has_doi": has_doi,
+                "has_year": has_year,
+                "has_volume_or_number": has_volume,
+                "has_pages": has_pages,
+                "cited_in_p5_related": in_related,
+                "missing_fields": ",".join(
+                    x
+                    for x, v in [
+                        ("doi", has_doi),
+                        ("year", has_year),
+                        ("volume_or_number", has_volume),
+                        ("pages", has_pages),
+                    ]
+                    if not v and present
+                ),
+                "verdict": (
+                    "NEW"
+                    if not present and not in_related
+                    else "ALREADY_PRESENT_NOT_CITED"
+                    if present and not in_related
+                    else "CITED_OK"
+                    if present and in_related
+                    else "PARTIAL"
+                ),
+            }
+        )
     write_tsv(
         RESULTS / "p5_iter109_bib_audit.tsv",
         audit_rows,
-        ["cite_key", "doi", "present_in_bib", "has_doi", "has_year",
-         "has_volume_or_number", "has_pages", "cited_in_p5_related",
-         "missing_fields", "verdict"],
+        [
+            "cite_key",
+            "doi",
+            "present_in_bib",
+            "has_doi",
+            "has_year",
+            "has_volume_or_number",
+            "has_pages",
+            "cited_in_p5_related",
+            "missing_fields",
+            "verdict",
+        ],
     )
 
     coupling_rows = build_coupling()
     write_tsv(
         RESULTS / "p5_iter109_minreport_coupling.tsv",
         coupling_rows,
-        ["cite_key", "minreport_item", "minreport_role", "paper_inspires_item",
-         "minreport_has_evidence", "category"],
+        [
+            "cite_key",
+            "minreport_item",
+            "minreport_role",
+            "paper_inspires_item",
+            "minreport_has_evidence",
+            "category",
+        ],
     )
 
     n_in_bib = sum(1 for r in rows if r["in_bib"])
@@ -340,11 +396,11 @@ def main() -> dict:
         "n_coupling_rows": len(coupling_rows),
         "headline": {
             "H1": "P5 reporting-standards citation gap: %d/%d papers in bib, %d/%d cited in p5_related.tex; %d papers to add, %d papers already-in-bib-but-not-cited"
-                  % (n_in_bib, len(PAPERS), n_already_cited, len(PAPERS), n_to_add, n_to_cite),
+            % (n_in_bib, len(PAPERS), n_already_cited, len(PAPERS), n_to_add, n_to_cite),
             "H2": "Cross-coupling to MIN-REPORT: %d unique MIN-REPORT items covered by these 4 reporting-standards papers (of 18 in the manifest)"
-                  % n_minreport_items_cited,
+            % n_minreport_items_cited,
             "H3": "Drift detection: %d/%d verified entries match CrossRef metadata (year + title-5-grams + author-family-overlap>=0.6)"
-                  % (n_match, n_in_bib),
+            % (n_match, n_in_bib),
         },
         "rows": rows,
         "audit": audit_rows,
@@ -352,10 +408,14 @@ def main() -> dict:
     with open(RESULTS / "p5_iter109_summary.json", "w") as f:
         json.dump(summary, f, indent=2, default=str)
 
-    print(f"n_papers={len(PAPERS)} n_in_bib={n_in_bib} n_match={n_match} "
-          f"n_already_cited={n_already_cited} n_to_add={n_to_add} n_to_cite={n_to_cite}")
-    print("wrote: p5_iter109_crossref_verify.tsv, p5_iter109_bib_audit.tsv, "
-          "p5_iter109_minreport_coupling.tsv, p5_iter109_summary.json")
+    print(
+        f"n_papers={len(PAPERS)} n_in_bib={n_in_bib} n_match={n_match} "
+        f"n_already_cited={n_already_cited} n_to_add={n_to_add} n_to_cite={n_to_cite}"
+    )
+    print(
+        "wrote: p5_iter109_crossref_verify.tsv, p5_iter109_bib_audit.tsv, "
+        "p5_iter109_minreport_coupling.tsv, p5_iter109_summary.json"
+    )
     return summary
 
 

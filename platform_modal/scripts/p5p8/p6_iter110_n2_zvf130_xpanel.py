@@ -23,18 +23,18 @@ Outputs:
 
 Stdlib only. ~200 lines.
 """
+
 import csv
 import json
-import math
 import pathlib
-import random
-import statistics
 from collections import defaultdict
 
 import sys
+
 sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))
 from _paths import REPO_ROOT
 from review17_contract import keyed_rows, paired_result
+
 ROOT = REPO_ROOT
 N2_DIR = ROOT / "platform_hybrid/experiments/results/n2_reward_tensor_resume"
 ZV130_TSV = ROOT / "platform_hybrid/experiments/results/zvf_iter130_risk_index.tsv"
@@ -46,8 +46,17 @@ SEED = 20260705
 B = 4000
 METHODS = ["aero", "gift", "areal"]
 BASE = "grpo"
-N2_METRICS = ["zvf", "reward_mean", "frac_all_zero", "frac_all_one",
-              "mean_len", "cv_len", "pcd", "larq", "loss"]
+N2_METRICS = [
+    "zvf",
+    "reward_mean",
+    "frac_all_zero",
+    "frac_all_one",
+    "mean_len",
+    "cv_len",
+    "pcd",
+    "larq",
+    "loss",
+]
 ZV_METRICS = ["zvf_risk", "mean_zvf", "risk_mag", "risk_csd", "risk_drift"]
 
 
@@ -92,7 +101,7 @@ def paired_bootstrap_diff(vals, base_vals, B=4000, seed=20260705, ci=0.95):
     """Paired bootstrap: at each draw, resample step indices 1..n with
     replacement, then compute mean over steps of (variant[step] - base[step]).
     Returns (point_estimate, ci_low, ci_high, n, sig)."""
-    if ci != .95:
+    if ci != 0.95:
         raise ValueError("Only declared 95% interval supported")
     result = paired_result(base_vals, vals, B, seed)
     return result["delta"], result["ci_low"], result["ci_high"], result["n"], result["significant"]
@@ -186,12 +195,21 @@ def cross_panel_verdict(n2_panel_rows, zv_panel_rows):
                     verdict = "PARTIAL_ONE_SIG"
                 else:
                     verdict = "BOTH_NONSIG"
-            verdicts.append({
-                "variant": v, "metric_pair": descr,
-                "verdict": verdict,
-                "n2_point": n2_pt, "n2_ci_lo": n2_lo, "n2_ci_hi": n2_hi, "n2_sig": n2_sig,
-                "zv_point": zv_pt, "zv_ci_lo": zv_lo, "zv_ci_hi": zv_hi, "zv_sig": zv_sig,
-            })
+            verdicts.append(
+                {
+                    "variant": v,
+                    "metric_pair": descr,
+                    "verdict": verdict,
+                    "n2_point": n2_pt,
+                    "n2_ci_lo": n2_lo,
+                    "n2_ci_hi": n2_hi,
+                    "n2_sig": n2_sig,
+                    "zv_point": zv_pt,
+                    "zv_ci_lo": zv_lo,
+                    "zv_ci_hi": zv_hi,
+                    "zv_sig": zv_sig,
+                }
+            )
     return verdicts
 
 
@@ -205,8 +223,10 @@ def patch_registry(verdicts):
     the JSON summary file (and TSV). The verdict counts are summarised in
     `p6_iter110_xpanel_summary.json` and the per-row audit in
     `p6_iter110_xpanel_verdict.tsv` -- both keyed by delta_id (= filename)."""
-    print("registry patch skipped (schema `claim_validation` is strict); "
-          "verdicts emitted only to summary JSON + verdict TSV.")
+    print(
+        "registry patch skipped (schema `claim_validation` is strict); "
+        "verdicts emitted only to summary JSON + verdict TSV."
+    )
 
 
 # ----------------------------------------------------------------------------
@@ -237,9 +257,19 @@ def main():
 
     verdicts = cross_panel_verdict(n2_rows, zv_rows)
     v_tsv = OUT / "p6_iter110_xpanel_verdict.tsv"
-    cols = ["variant", "metric_pair", "verdict",
-            "n2_point", "n2_ci_lo", "n2_ci_hi", "n2_sig",
-            "zv_point", "zv_ci_lo", "zv_ci_hi", "zv_sig"]
+    cols = [
+        "variant",
+        "metric_pair",
+        "verdict",
+        "n2_point",
+        "n2_ci_lo",
+        "n2_ci_hi",
+        "n2_sig",
+        "zv_point",
+        "zv_ci_lo",
+        "zv_ci_hi",
+        "zv_sig",
+    ]
     with v_tsv.open("w") as f:
         f.write("\t".join(cols) + "\n")
         for r in verdicts:

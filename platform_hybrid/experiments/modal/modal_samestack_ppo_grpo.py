@@ -24,6 +24,7 @@ arm evaluated different items and PPO's eval set overlapped its training draws
 Usage:
   modal run experiments/modal/modal_samestack_ppo_grpo.py
 """
+
 import modal
 import json
 import os
@@ -33,27 +34,24 @@ app = modal.App("tinkerrl-samestack-ppo-grpo")
 results_vol = modal.Volume.from_name("tinkerrl-results", create_if_missing=True)
 RESULTS_DIR = "/results"
 
-image = (
-    modal.Image.debian_slim(python_version="3.11")
-    .pip_install(
-        "torch>=2.3.0",
-        "transformers>=4.46.0",
-        "peft>=0.13.0",
-        "numpy>=1.26.0,<2.0.0",
-        "accelerate>=1.0.0",
-        "safetensors>=0.4.0",
-        "huggingface-hub>=0.26.0",
-        "wandb>=0.16.0",
-    )
+image = modal.Image.debian_slim(python_version="3.11").pip_install(
+    "torch>=2.3.0",
+    "transformers>=4.46.0",
+    "peft>=0.13.0",
+    "numpy>=1.26.0,<2.0.0",
+    "accelerate>=1.0.0",
+    "safetensors>=0.4.0",
+    "huggingface-hub>=0.26.0",
+    "wandb>=0.16.0",
 )
 
 SEEDS = [42, 123, 456, 789, 1024]
 ALGOS = ["grpo", "ppo"]
 MODEL = "Qwen/Qwen2.5-0.5B"
 N_STEPS = 40
-N_GEN = 128       # total generations per optimizer step (identical for both arms)
-GROUP = 8         # GRPO group size  -> N_GEN/GROUP = 16 prompts x 8 completions
-K_EPOCHS = 2      # inner PPO/GRPO epochs over each rollout batch
+N_GEN = 128  # total generations per optimizer step (identical for both arms)
+GROUP = 8  # GRPO group size  -> N_GEN/GROUP = 16 prompts x 8 completions
+K_EPOCHS = 2  # inner PPO/GRPO epochs over each rollout batch
 CLIP = 0.2
 MAX_NEW = 10
 EPS = 1e-6
@@ -62,7 +60,14 @@ N_EVAL = 200
 EVAL_SEED_OFFSET = 10_000
 
 
-@app.function(image=image, gpu="A10G", timeout=3600, volumes={RESULTS_DIR: results_vol}, retries=1, secrets=[modal.Secret.from_name("huggingface-secret"), modal.Secret.from_name("wandb-secret")])
+@app.function(
+    image=image,
+    gpu="A10G",
+    timeout=3600,
+    volumes={RESULTS_DIR: results_vol},
+    retries=1,
+    secrets=[modal.Secret.from_name("huggingface-secret"), modal.Secret.from_name("wandb-secret")],
+)
 def run_arm(algo: str, seed: int) -> dict:
     os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
     import random
@@ -74,21 +79,36 @@ def run_arm(algo: str, seed: int) -> dict:
     from transformers import AutoModelForCausalLM, AutoTokenizer
     from peft import LoraConfig, get_peft_model
 
-    random.seed(seed); np.random.seed(seed); torch.manual_seed(seed)
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
     if torch.cuda.is_available():
         torch.cuda.manual_seed_all(seed)
     device = "cuda" if torch.cuda.is_available() else "cpu"
 
     import wandb
-    wandb.init(project="tinkerrl-samestack-ppo-grpo", name=f"{algo}_s{seed}", config={"algo": algo, "seed": seed, "model": MODEL})
+
+    wandb.init(
+        project="tinkerrl-samestack-ppo-grpo",
+        name=f"{algo}_s{seed}",
+        config={"algo": algo, "seed": seed, "model": MODEL},
+    )
 
     tok = AutoTokenizer.from_pretrained(MODEL, trust_remote_code=True)
     if tok.pad_token is None:
         tok.pad_token = tok.eos_token
     tok.padding_side = "left"
 
-    base = AutoModelForCausalLM.from_pretrained(MODEL, torch_dtype=torch.bfloat16, trust_remote_code=True).to(device)
-    lora = LoraConfig(r=16, lora_alpha=32, lora_dropout=0.0, target_modules=["q_proj", "v_proj"], task_type="CAUSAL_LM")
+    base = AutoModelForCausalLM.from_pretrained(
+        MODEL, torch_dtype=torch.bfloat16, trust_remote_code=True
+    ).to(device)
+    lora = LoraConfig(
+        r=16,
+        lora_alpha=32,
+        lora_dropout=0.0,
+        target_modules=["q_proj", "v_proj"],
+        task_type="CAUSAL_LM",
+    )
     model = get_peft_model(base, lora)
     model.train()
     H = model.config.hidden_size
@@ -135,18 +155,19 @@ def run_arm(algo: str, seed: int) -> dict:
                 logits = out.logits[:, :-1, :].float()
                 tgt = f[:, 1:]
                 cm = torch.zeros_like(tgt, dtype=torch.float32)
-                cm[:, plen - 1:] = 1.0
+                cm[:, plen - 1 :] = 1.0
                 cm = cm * (tgt != tok.pad_token_id).float()
                 logp = F.log_softmax(logits, dim=-1)
                 tlp = logp.gather(-1, tgt.unsqueeze(-1)).squeeze(-1)
                 slp = (tlp * cm).sum(dim=1) / cm.sum(dim=1).clamp(min=1.0)
                 logps.append(slp)
                 if want_value:
-                    h_last = out.hidden_states[-1][:, plen - 1, :]   # state = prompt-end hidden
+                    h_last = out.hidden_states[-1][:, plen - 1, :]  # state = prompt-end hidden
                     vals.append(vhead(h_last).squeeze(-1).float())
                 with torch.no_grad():
                     et = -(logp.exp() * logp).sum(dim=-1)
-                    ent_sum += float((et * cm).sum().item()); ent_cnt += float(cm.sum().item())
+                    ent_sum += float((et * cm).sum().item())
+                    ent_cnt += float(cm.sum().item())
                 del out, logits, logp, tlp
         seq_logp = torch.cat(logps)
         value = torch.cat(vals) if want_value else None
@@ -159,9 +180,10 @@ def run_arm(algo: str, seed: int) -> dict:
             P = N_GEN // GROUP
             probs = sample_batch(P)
             prompts, meta = [], []
-            for (a, b) in probs:
+            for a, b in probs:
                 for _ in range(GROUP):
-                    prompts.append(make_prompt(a, b)); meta.append((a, b))
+                    prompts.append(make_prompt(a, b))
+                    meta.append((a, b))
         else:
             meta = sample_batch(N_GEN)
             prompts = [make_prompt(a, b) for (a, b) in meta]
@@ -169,18 +191,31 @@ def run_arm(algo: str, seed: int) -> dict:
         enc = tok(prompts, return_tensors="pt", padding=True).to(device)
         plen = enc["input_ids"].shape[1]
         with torch.no_grad():
-            gen = model.generate(**enc, max_new_tokens=MAX_NEW, do_sample=True, temperature=1.0,
-                                 top_p=1.0, pad_token_id=tok.pad_token_id)
+            gen = model.generate(
+                **enc,
+                max_new_tokens=MAX_NEW,
+                do_sample=True,
+                temperature=1.0,
+                top_p=1.0,
+                pad_token_id=tok.pad_token_id,
+            )
         comp_ids = gen[:, plen:]
         comp_texts = tok.batch_decode(comp_ids, skip_special_tokens=True)
-        rewards = np.array([1.0 if (parse(t) is not None and parse(t) == a + b) else 0.0
-                            for t, (a, b) in zip(comp_texts, meta)], dtype=np.float32)
+        rewards = np.array(
+            [
+                1.0 if (parse(t) is not None and parse(t) == a + b) else 0.0
+                for t, (a, b) in zip(comp_texts, meta, strict=False)
+            ],
+            dtype=np.float32,
+        )
         rew_t = torch.tensor(rewards, device=device)
         full = torch.cat([enc["input_ids"], comp_ids], dim=1)
         attn = (full != tok.pad_token_id).long()
 
         # old logp (+ old value) under the rollout policy
-        old_logp, V_old, _ = forward_logp(full, attn, plen, want_grad=False, want_value=(algo == "ppo"))
+        old_logp, V_old, _ = forward_logp(
+            full, attn, plen, want_grad=False, want_value=(algo == "ppo")
+        )
 
         # advantage
         if algo == "grpo":
@@ -192,12 +227,14 @@ def run_arm(algo: str, seed: int) -> dict:
         else:
             adv = rew_t - V_old.detach()
             adv = (adv - adv.mean()) / (adv.std() + EPS)
-            zvf = float('nan')
+            zvf = float("nan")
 
         # inner clipped-surrogate epochs (identical objective for both arms)
         for _ep in range(K_EPOCHS):
             opt.zero_grad()
-            new_logp, V_new, entropy = forward_logp(full, attn, plen, want_grad=True, want_value=(algo == "ppo"))
+            new_logp, V_new, entropy = forward_logp(
+                full, attn, plen, want_grad=True, want_value=(algo == "ppo")
+            )
             ratio = torch.exp(new_logp - old_logp.detach())
             surr = torch.min(ratio * adv, torch.clamp(ratio, 1 - CLIP, 1 + CLIP) * adv)
             ploss = -surr.mean()
@@ -206,29 +243,53 @@ def run_arm(algo: str, seed: int) -> dict:
             gnorm = float(torch.nn.utils.clip_grad_norm_(params, 1.0))
             opt.step()
 
-        step_log.append({"step": step, "mean_reward": float(rewards.mean()),
-                         "zvf": zvf, "entropy": entropy, "grad_norm": gnorm})
+        step_log.append(
+            {
+                "step": step,
+                "mean_reward": float(rewards.mean()),
+                "zvf": zvf,
+                "entropy": entropy,
+                "grad_norm": gnorm,
+            }
+        )
         wandb.log(step_log[-1])
 
     # measured held-out eval (greedy)
     model.eval()
     correct, total = 0, len(held)
     for i in range(0, total, 32):
-        ch = held[i:i + 32]
+        ch = held[i : i + 32]
         e = tok([make_prompt(a, b) for (a, b) in ch], return_tensors="pt", padding=True).to(device)
         with torch.no_grad():
-            g = model.generate(**e, max_new_tokens=MAX_NEW, do_sample=False, pad_token_id=tok.pad_token_id)
-        for t, (a, b) in zip(tok.batch_decode(g[:, e["input_ids"].shape[1]:], skip_special_tokens=True), ch):
+            g = model.generate(
+                **e, max_new_tokens=MAX_NEW, do_sample=False, pad_token_id=tok.pad_token_id
+            )
+        for t, (a, b) in zip(
+            tok.batch_decode(g[:, e["input_ids"].shape[1] :], skip_special_tokens=True),
+            ch,
+            strict=False,
+        ):
             if parse(t) is not None and parse(t) == a + b:
                 correct += 1
     heldout = correct / total
     last10 = float(np.mean([s["mean_reward"] for s in step_log[-10:]]))
 
-    res = {"experiment": "samestack_ppo_grpo", "algo": algo, "seed": seed, "model": MODEL,
-           "n_steps": N_STEPS, "n_gen": N_GEN, "k_epochs": K_EPOCHS,
-           "heldout_acc": heldout, "last10_avg": last10,
-           "eval_items": "fixed_disjoint_v2", "eval_seed": EVAL_SEED_OFFSET + seed, "n_eval": total,
-           "elapsed_seconds": time.time() - t0, "step_log": step_log}
+    res = {
+        "experiment": "samestack_ppo_grpo",
+        "algo": algo,
+        "seed": seed,
+        "model": MODEL,
+        "n_steps": N_STEPS,
+        "n_gen": N_GEN,
+        "k_epochs": K_EPOCHS,
+        "heldout_acc": heldout,
+        "last10_avg": last10,
+        "eval_items": "fixed_disjoint_v2",
+        "eval_seed": EVAL_SEED_OFFSET + seed,
+        "n_eval": total,
+        "elapsed_seconds": time.time() - t0,
+        "step_log": step_log,
+    }
     os.makedirs(f"{RESULTS_DIR}/samestack", exist_ok=True)
     with open(f"{RESULTS_DIR}/samestack/{algo}_s{seed}.json", "w") as f:
         json.dump(res, f, indent=2)
@@ -253,6 +314,7 @@ def run_arm(algo: str, seed: int) -> dict:
 @app.local_entrypoint()
 def main():
     import numpy as np
+
     jobs = [(algo, s) for algo in ALGOS for s in SEEDS]
     print(f"Same-stack PPO vs GRPO: {len(jobs)} runs ({ALGOS} x {SEEDS})")
     results = list(run_arm.starmap(jobs))
@@ -276,45 +338,79 @@ def main():
     diffs = [g[s] - p[s] for s in common]
     if len(diffs) >= 2:
         import math
-        md = float(np.mean(diffs)); sd = float(np.std(diffs, ddof=1))
-        t = md / (sd / math.sqrt(len(diffs))) if sd > 0 else float('inf')
+
+        md = float(np.mean(diffs))
+        sd = float(np.std(diffs, ddof=1))
+        t = md / (sd / math.sqrt(len(diffs))) if sd > 0 else float("inf")
         df = len(diffs) - 1
+
         # exact two-sided Student-t tail
         def betacf(aa, bb, x):
             MAXIT, E, FP = 200, 3e-12, 1e-300
             qab, qap, qam = aa + bb, aa + 1, aa - 1
-            c = 1.0; d = 1 - qab * x / qap
-            d = 1 / (FP if abs(d) < FP else d); h = d
+            c = 1.0
+            d = 1 - qab * x / qap
+            d = 1 / (FP if abs(d) < FP else d)
+            h = d
             for m in range(1, MAXIT):
                 m2 = 2 * m
-                aA = m * (bb - m) * x / ((qam + m2) * (aa + m2)); d = 1 + aA * d
-                d = 1 / (FP if abs(d) < FP else d); c = 1 + aA / c
-                if abs(c) < FP: c = FP
+                aA = m * (bb - m) * x / ((qam + m2) * (aa + m2))
+                d = 1 + aA * d
+                d = 1 / (FP if abs(d) < FP else d)
+                c = 1 + aA / c
+                if abs(c) < FP:
+                    c = FP
                 h *= d * c
-                aA = -(aa + m) * (qab + m) * x / ((aa + m2) * (qap + m2)); d = 1 + aA * d
-                d = 1 / (FP if abs(d) < FP else d); c = 1 + aA / c
-                if abs(c) < FP: c = FP
-                de = d * c; h *= de
-                if abs(de - 1) < E: break
+                aA = -(aa + m) * (qab + m) * x / ((aa + m2) * (qap + m2))
+                d = 1 + aA * d
+                d = 1 / (FP if abs(d) < FP else d)
+                c = 1 + aA / c
+                if abs(c) < FP:
+                    c = FP
+                de = d * c
+                h *= de
+                if abs(de - 1) < E:
+                    break
             return h
+
         def betai(aa, bb, x):
             if x <= 0 or x >= 1:
                 return 0.0 if x <= 0 else 1.0
-            bt = math.exp(math.lgamma(aa + bb) - math.lgamma(aa) - math.lgamma(bb)
-                          + aa * math.log(x) + bb * math.log(1 - x))
-            return bt * betacf(aa, bb, x) / aa if x < (aa + 1) / (aa + bb + 2) else 1 - bt * betacf(bb, aa, 1 - x) / bb
-        pval = betai(df / 2.0, 0.5, df / (df + t * t)) if t != float('inf') else 0.0
-        paired = {"metric": "heldout_acc", "n_seeds": len(diffs),
-                  "mean_diff_grpo_minus_ppo": md, "t": t, "df": df, "p_two_sided": pval}
+            bt = math.exp(
+                math.lgamma(aa + bb)
+                - math.lgamma(aa)
+                - math.lgamma(bb)
+                + aa * math.log(x)
+                + bb * math.log(1 - x)
+            )
+            return (
+                bt * betacf(aa, bb, x) / aa
+                if x < (aa + 1) / (aa + bb + 2)
+                else 1 - bt * betacf(bb, aa, 1 - x) / bb
+            )
+
+        pval = betai(df / 2.0, 0.5, df / (df + t * t)) if t != float("inf") else 0.0
+        paired = {
+            "metric": "heldout_acc",
+            "n_seeds": len(diffs),
+            "mean_diff_grpo_minus_ppo": md,
+            "t": t,
+            "df": df,
+            "p_two_sided": pval,
+        }
 
     out = {"summary": summ, "paired_grpo_vs_ppo": paired, "runs": results}
     with open("experiments/results/samestack_ppo_grpo.json", "w") as f:
         json.dump(out, f, indent=2)
     print("\n=== SAME-STACK PPO vs GRPO (measured) ===")
     for a in ALGOS:
-        print(f"  {a.upper()}: heldout={summ[a]['heldout_mean']:.3f}+/-{summ[a]['heldout_se']:.3f} "
-              f"last10={summ[a]['last10_mean']:.3f}+/-{summ[a]['last10_se']:.3f} (n={summ[a]['n_seeds']})")
+        print(
+            f"  {a.upper()}: heldout={summ[a]['heldout_mean']:.3f}+/-{summ[a]['heldout_se']:.3f} "
+            f"last10={summ[a]['last10_mean']:.3f}+/-{summ[a]['last10_se']:.3f} (n={summ[a]['n_seeds']})"
+        )
     if paired:
-        print(f"  paired GRPO-PPO heldout diff={paired['mean_diff_grpo_minus_ppo']:+.3f} "
-              f"t={paired['t']:.3f} df={paired['df']} p={paired['p_two_sided']:.3f}")
+        print(
+            f"  paired GRPO-PPO heldout diff={paired['mean_diff_grpo_minus_ppo']:+.3f} "
+            f"t={paired['t']:.3f} df={paired['df']} p={paired['p_two_sided']:.3f}"
+        )
     print("Saved experiments/results/samestack_ppo_grpo.json")

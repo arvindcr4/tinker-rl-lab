@@ -170,7 +170,12 @@ def _split_overview(value: Any, split_name: str, blockers: list[str]) -> dict[st
         declared = value.get("aggregate_sha256") or value.get("split_hash")
     else:
         blockers.append(f"split.{split_name} must be a list or an object")
-        return {"task_hashes": [], "aggregate_sha256": None, "declared_aggregate_sha256": None, "count": 0}
+        return {
+            "task_hashes": [],
+            "aggregate_sha256": None,
+            "declared_aggregate_sha256": None,
+            "count": 0,
+        }
 
     observed = _sha256("\n".join(task_hashes))
     declared_hash = None
@@ -215,7 +220,9 @@ def _validate_decontamination(value: Any) -> dict[str, Any]:
     receipt_id = _require_hash(receipt, "decontamination.receipt_id", _HEX40_RE)
     visibility = value.get("visibility", "private")
     if visibility == "public" and value.get("safe_public_artifact") is not True:
-        raise BFCLSplitManifestError("public decontamination receipt must be safe_public_artifact=True")
+        raise BFCLSplitManifestError(
+            "public decontamination receipt must be safe_public_artifact=True"
+        )
     return {
         "status": status,
         "receipt_id": receipt_id,
@@ -232,7 +239,9 @@ def build_split_manifest_record(manifest: Mapping[str, Any]) -> dict[str, Any]:
         if suite_id != SUITE_ID:
             blockers.append(f"suite_id must be {SUITE_ID!r}")
         if suite_id in _E_SUITES:
-            blockers.append(f"suite_id {suite_id!r} is an E-suite and is not valid for T4 split validation")
+            blockers.append(
+                f"suite_id {suite_id!r} is an E-suite and is not valid for T4 split validation"
+            )
 
         role = manifest.get("role", ROLE_TRAIN)
         if role != ROLE_TRAIN:
@@ -272,7 +281,9 @@ def build_split_manifest_record(manifest: Mapping[str, Any]) -> dict[str, Any]:
                     set(train_overview["task_hashes"]).intersection(primary_overview["task_hashes"])
                 )
                 if overlap:
-                    blockers.append(f"train and primary_eval task IDs overlap: {', '.join(overlap)}")
+                    blockers.append(
+                        f"train and primary_eval task IDs overlap: {', '.join(overlap)}"
+                    )
 
         if manifest.get("requires_network") is True:
             blockers.append("dataset download/network is disallowed in this boundary")
@@ -299,14 +310,22 @@ def build_split_manifest_record(manifest: Mapping[str, Any]) -> dict[str, Any]:
             declared_train = split_hashes.get("train")
             if declared_train is None:
                 blockers.append("split_hashes.train is required")
-            elif _require_sha256_identity(declared_train, "split_hashes.train") != f"sha256:{train_expected}":
+            elif (
+                _require_sha256_identity(declared_train, "split_hashes.train")
+                != f"sha256:{train_expected}"
+            ):
                 blockers.append("split_hashes.train does not match observed train aggregate")
         if primary_expected is not None:
             declared_primary = split_hashes.get("primary_eval")
             if declared_primary is None:
                 blockers.append("split_hashes.primary_eval is required")
-            elif _require_sha256_identity(declared_primary, "split_hashes.primary_eval") != f"sha256:{primary_expected}":
-                blockers.append("split_hashes.primary_eval does not match observed primary_eval aggregate")
+            elif (
+                _require_sha256_identity(declared_primary, "split_hashes.primary_eval")
+                != f"sha256:{primary_expected}"
+            ):
+                blockers.append(
+                    "split_hashes.primary_eval does not match observed primary_eval aggregate"
+                )
 
         split_manifest_hash_payload = canonical_json(
             {
@@ -316,7 +335,9 @@ def build_split_manifest_record(manifest: Mapping[str, Any]) -> dict[str, Any]:
         )
         split_manifest_hash = f"sha256:{_sha256(split_manifest_hash_payload)}"
         if manifest.get("split_manifest_hash") is not None:
-            declared_manifest = _require_sha256_identity(manifest["split_manifest_hash"], "split_manifest_hash")
+            declared_manifest = _require_sha256_identity(
+                manifest["split_manifest_hash"], "split_manifest_hash"
+            )
             if declared_manifest != split_manifest_hash:
                 blockers.append("split_manifest_hash does not match observed split aggregates")
 
@@ -335,7 +356,11 @@ def build_split_manifest_record(manifest: Mapping[str, Any]) -> dict[str, Any]:
 
         if isinstance(manifest.get("scope"), Mapping):
             scope_e = manifest.get("scope", {}).get("e_suite_ids")
-            if scope_e is not None and isinstance(scope_e, list) and any(item in _E_SUITES for item in scope_e):
+            if (
+                scope_e is not None
+                and isinstance(scope_e, list)
+                and any(item in _E_SUITES for item in scope_e)
+            ):
                 blockers.append("manifest scope includes E-suite entries")
         if manifest.get("e_suite_ids") is not None:
             e_values = manifest.get("e_suite_ids")
@@ -357,7 +382,10 @@ def build_split_manifest_record(manifest: Mapping[str, Any]) -> dict[str, Any]:
             canonical_json(
                 {
                     "suite_id": suite_id,
-                    "split": {"train": train_overview["aggregate_sha256"], "primary_eval": primary_overview["aggregate_sha256"]},
+                    "split": {
+                        "train": train_overview["aggregate_sha256"],
+                        "primary_eval": primary_overview["aggregate_sha256"],
+                    },
                     "decontamination_receipt_id": decontamination["receipt_id"],
                 }
             )
@@ -429,7 +457,8 @@ def build_split_manifest_record(manifest: Mapping[str, Any]) -> dict[str, Any]:
 
 
 def validate_split_manifest_record(
-    record: Mapping[str, Any], source_manifest: Mapping[str, Any] | None = None,
+    record: Mapping[str, Any],
+    source_manifest: Mapping[str, Any] | None = None,
 ) -> list[str]:
     """Recompute against separately supplied source; READY is never authority.
 
@@ -442,7 +471,9 @@ def validate_split_manifest_record(
         return ["unsupported schema"]
     if record.get("status") != "READY":
         blockers = record.get("blockers")
-        return list(blockers) if isinstance(blockers, list) and blockers else ["record is not READY"]
+        return (
+            list(blockers) if isinstance(blockers, list) and blockers else ["record is not READY"]
+        )
     if not isinstance(source_manifest, Mapping):
         return ["trusted source manifest required to revalidate READY record"]
     expected = build_split_manifest_record(source_manifest)

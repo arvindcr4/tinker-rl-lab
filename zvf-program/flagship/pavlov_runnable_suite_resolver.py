@@ -153,7 +153,10 @@ def _receipt_is_proof(value: Any) -> bool:
         return False
     normalized = value.strip()
     lowered = normalized.lower()
-    if any(marker in {part for part in re.split(r"[/:?#._-]+", lowered) if part} for marker in _MUTABLE_MARKERS):
+    if any(
+        marker in {part for part in re.split(r"[/:?#._-]+", lowered) if part}
+        for marker in _MUTABLE_MARKERS
+    ):
         return False
     if any(character.isspace() for character in normalized):
         return False
@@ -236,7 +239,9 @@ def _extract_receipts(record: Mapping[str, Any]) -> tuple[dict[str, str], list[s
     for name, keys in aliases.items():
         value = _first(source, keys)
         if value is None:
-            record_keys = keys if name != "held_out" else tuple(key for key in keys if key != "held_out")
+            record_keys = (
+                keys if name != "held_out" else tuple(key for key in keys if key != "held_out")
+            )
             value = _first(record, record_keys)
         if value is None:
             continue
@@ -363,7 +368,9 @@ def _suite_records(registry: Mapping[str, Any]) -> tuple[dict[str, Mapping[str, 
             continue
         role = item.get("role", item.get("suite_role", item.get("split_role")))
         if role != expected_by_id[suite_id]:
-            errors.append(f"{suite_id} role does not match contract role {expected_by_id[suite_id]!r}")
+            errors.append(
+                f"{suite_id} role does not match contract role {expected_by_id[suite_id]!r}"
+            )
             continue
         records[suite_id] = item
     missing = sorted(set(expected_by_id) - set(records))
@@ -372,7 +379,9 @@ def _suite_records(registry: Mapping[str, Any]) -> tuple[dict[str, Mapping[str, 
     return records, errors
 
 
-def _runtime_records(bundle: Any) -> tuple[list[Mapping[str, Any]], Mapping[str, Any] | None, list[str]]:
+def _runtime_records(
+    bundle: Any,
+) -> tuple[list[Mapping[str, Any]], Mapping[str, Any] | None, list[str]]:
     if isinstance(bundle, (str, Path)):
         bundle = _read_json(bundle)
     if not isinstance(bundle, Mapping) and not _is_sequence(bundle):
@@ -387,17 +396,27 @@ def _runtime_records(bundle: Any) -> tuple[list[Mapping[str, Any]], Mapping[str,
         value: Any = _first(bundle, ("runtime_receipts", "receipts", "suites", "suite_receipts"))
         if value is None:
             # An ID-keyed mapping is also a useful local fixture format.
-            value = [dict(item, suite_id=str(key)) for key, item in bundle.items() if isinstance(item, Mapping)]
+            value = [
+                dict(item, suite_id=str(key))
+                for key, item in bundle.items()
+                if isinstance(item, Mapping)
+            ]
         elif isinstance(value, Mapping):
-            value = [dict(item, suite_id=str(key)) for key, item in value.items() if isinstance(item, Mapping)]
+            value = [
+                dict(item, suite_id=str(key))
+                for key, item in value.items()
+                if isinstance(item, Mapping)
+            ]
     else:
         value = bundle
     if not _is_sequence(value):
         return [], xlam, ["runtime receipt bundle is missing runtime_receipts"]
     records = [item for item in value if isinstance(item, Mapping)]
-    errors = ["runtime receipt bundle contains a non-object receipt"] if any(
-        not isinstance(item, Mapping) for item in value
-    ) else []
+    errors = (
+        ["runtime receipt bundle contains a non-object receipt"]
+        if any(not isinstance(item, Mapping) for item in value)
+        else []
+    )
     return records, xlam, errors
 
 
@@ -460,7 +479,14 @@ def _resolve_one(
     for key in _REQUIRED_RUNTIME_RECEIPTS:
         if key not in receipts:
             blockers.append(f"missing {key} runtime receipt")
-    for key in ("revision", "license", "container", "decontamination", "verifier", "split_manifest"):
+    for key in (
+        "revision",
+        "license",
+        "container",
+        "decontamination",
+        "verifier",
+        "split_manifest",
+    ):
         expected = registry_refs.get(key)
         if expected is not None and receipts.get(key) != expected:
             blockers.append(f"{key} receipt mismatch")
@@ -470,23 +496,38 @@ def _resolve_one(
         blockers.append("registry task hashes are missing")
     if runtime_hashes is not None and registry_hashes != runtime_hashes:
         blockers.append("runtime task hashes mismatch registry order")
-    runtime_aggregate = _aggregate(runtime_record, role, runtime_hashes or []) if runtime_hashes else ""
-    registry_aggregate = _aggregate(registry_record, role, registry_hashes or []) if registry_hashes else ""
+    runtime_aggregate = (
+        _aggregate(runtime_record, role, runtime_hashes or []) if runtime_hashes else ""
+    )
+    registry_aggregate = (
+        _aggregate(registry_record, role, registry_hashes or []) if registry_hashes else ""
+    )
     if not registry_aggregate:
         blockers.append("registry aggregate hash is invalid")
     if runtime_hashes is None and runtime_record.get("aggregate_sha256") is None:
         blockers.append("runtime task hash or aggregate receipt is missing")
     declared_runtime_aggregate = runtime_record.get("aggregate_sha256")
-    if declared_runtime_aggregate is None and isinstance(runtime_record.get("aggregate_hashes"), Mapping):
+    if declared_runtime_aggregate is None and isinstance(
+        runtime_record.get("aggregate_hashes"), Mapping
+    ):
         declared_runtime_aggregate = runtime_record["aggregate_hashes"].get(role)
     if declared_runtime_aggregate is not None and declared_runtime_aggregate != registry_aggregate:
         blockers.append("runtime aggregate hash mismatch")
     if runtime_hashes is not None and runtime_aggregate != registry_aggregate:
         blockers.append("runtime aggregate does not match registry")
-    if runtime_record.get("registry_sha256") is not None and runtime_record["registry_sha256"] != registry_sha256:
+    if (
+        runtime_record.get("registry_sha256") is not None
+        and runtime_record["registry_sha256"] != registry_sha256
+    ):
         blockers.append("runtime registry digest mismatch")
     runtime_status = runtime_record.get("status", runtime_record.get("state"))
-    if runtime_status is not None and str(runtime_status).lower() not in {"ready", "verified", "complete", "completed", "runnable"}:
+    if runtime_status is not None and str(runtime_status).lower() not in {
+        "ready",
+        "verified",
+        "complete",
+        "completed",
+        "runnable",
+    }:
         blockers.append("runtime receipt is not verified-ready")
     explicit_held = bool(
         runtime_record.get("held_out")
@@ -543,7 +584,9 @@ def _xlam_resolution(component: Mapping[str, Any] | None) -> dict[str, Any]:
             "portfolio_suite": False,
             "status": "BLOCKED",
             "runnable": False,
-            "blockers": ["xLAM runtime receipt missing; component is not part of the 26-suite count"],
+            "blockers": [
+                "xLAM runtime receipt missing; component is not part of the 26-suite count"
+            ],
         }
     receipts, errors = _extract_receipts(component)
     blockers = list(errors)
@@ -557,7 +600,13 @@ def _xlam_resolution(component: Mapping[str, Any] | None) -> dict[str, Any]:
         blockers.append("xLAM runtime revision is missing or mutable")
     if "runtime" not in receipts:
         blockers.append("xLAM runtime receipt missing")
-    if component.get("status") is not None and str(component["status"]).upper() not in {"READY", "VERIFIED", "COMPLETE", "COMPLETED", "RUNNABLE"}:
+    if component.get("status") is not None and str(component["status"]).upper() not in {
+        "READY",
+        "VERIFIED",
+        "COMPLETE",
+        "COMPLETED",
+        "RUNNABLE",
+    }:
         blockers.append("xLAM component preflight is not verified-ready")
     return {
         "suite_id": str(component.get("suite_id", XLAM_SUITE_ID)),
@@ -617,7 +666,12 @@ def resolve_runnable_suites(
         errors.append("extra runtime receipt suite IDs: " + ", ".join(unknown))
     global_blockers = _registry_global_blockers(registry_value)
     resolutions = [
-        _resolve_one(suite_id, registry_records[suite_id], by_id.get(suite_id), registry_value.get("registry_sha256"))
+        _resolve_one(
+            suite_id,
+            registry_records[suite_id],
+            by_id.get(suite_id),
+            registry_value.get("registry_sha256"),
+        )
         for role in ROLES
         for suite_id in EXPECTED_SUITE_IDS[role]
     ]
@@ -629,9 +683,7 @@ def resolve_runnable_suites(
             resolution["blockers"] = sorted(set(resolution["blockers"] + errors))
     runnable = {
         role: sorted(
-            item["suite_id"]
-            for item in resolutions
-            if item["role"] == role and item["runnable"]
+            item["suite_id"] for item in resolutions if item["role"] == role and item["runnable"]
         )
         for role in ROLES
     }
@@ -649,7 +701,9 @@ def resolve_runnable_suites(
     primary_only = sorted(
         item["suite_id"]
         for item in resolutions
-        if item["runnable"] and item["role"] == PRIMARY_EVAL_ROLE and not item.get("held_out_private")
+        if item["runnable"]
+        and item["role"] == PRIMARY_EVAL_ROLE
+        and not item.get("held_out_private")
     )
     xlam = _xlam_resolution(xlam_record)
     blocked = any(not item["runnable"] for item in resolutions)
@@ -766,7 +820,9 @@ def main(argv: Sequence[str] | None = None) -> int:
         )
         return 0
     except RunnableSuiteResolverError as exc:
-        print(json.dumps({"status": "INVALID", "errors": [str(exc)]}, sort_keys=True), file=sys.stderr)
+        print(
+            json.dumps({"status": "INVALID", "errors": [str(exc)]}, sort_keys=True), file=sys.stderr
+        )
         return 2
 
 

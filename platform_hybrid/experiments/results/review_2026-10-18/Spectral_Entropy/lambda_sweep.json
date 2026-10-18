@@ -1,0 +1,453 @@
+{
+ "lambdas": [
+  0.0,
+  0.0001,
+  0.001,
+  0.01,
+  0.1,
+  1.0
+ ],
+ "configs": [
+  {
+   "G": 4,
+   "L": 512,
+   "reward_grad_norm": 0.019178795535904503,
+   "rows": [
+    {
+     "lambda": 0.0,
+     "homogeneous_grad_norm": 0.0,
+     "heterogeneous_cos_vs_reward": 1.0000000000000009,
+     "one_minus_cos": -8.881784197001252e-16
+    },
+    {
+     "lambda": 0.0001,
+     "homogeneous_grad_norm": 1.8784798904390585e-06,
+     "heterogeneous_cos_vs_reward": 0.9999999952249242,
+     "one_minus_cos": 4.7750757792286436e-09
+    },
+    {
+     "lambda": 0.001,
+     "homogeneous_grad_norm": 1.8784798904390577e-05,
+     "heterogeneous_cos_vs_reward": 0.9999995224361062,
+     "one_minus_cos": 4.775638937637439e-07
+    },
+    {
+     "lambda": 0.01,
+     "homogeneous_grad_norm": 0.00018784798904390582,
+     "heterogeneous_cos_vs_reward": 0.9999521903691557,
+     "one_minus_cos": 4.7809630844275475e-05
+    },
+    {
+     "lambda": 0.1,
+     "homogeneous_grad_norm": 0.0018784798904390582,
+     "heterogeneous_cos_vs_reward": 0.9951963353433939,
+     "one_minus_cos": 0.004803664656606088
+    },
+    {
+     "lambda": 1.0,
+     "homogeneous_grad_norm": 0.01878479890439058,
+     "heterogeneous_cos_vs_reward": 0.6910000845090393,
+     "one_minus_cos": 0.30899991549096073
+    }
+   ],
+   "max_relative_linearity_error": 1.8036561404047245e-16,
+   "gate_row_entropy_min": 6.237939066668362,
+   "gate_row_entropy_max": 6.2382385653696435,
+   "gate_tau": 0.5,
+   "log_L": 6.238324625039508,
+   "gated_equals_ungated_homogeneous_grad": true
+  },
+  {
+   "G": 4,
+   "L": 1024,
+   "reward_grad_norm": 0.013560116478379094,
+   "rows": [
+    {
+     "lambda": 0.0,
+     "homogeneous_grad_norm": 0.0,
+     "heterogeneous_cos_vs_reward": 0.999999999999999,
+     "one_minus_cos": 9.992007221626409e-16
+    },
+    {
+     "lambda": 0.0001,
+     "homogeneous_grad_norm": 1.3315102225310142e-06,
+     "heterogeneous_cos_vs_reward": 0.9999999952154411,
+     "one_minus_cos": 4.784558860215782e-09
+    },
+    {
+     "lambda": 0.001,
+     "homogeneous_grad_norm": 1.331510222531014e-05,
+     "heterogeneous_cos_vs_reward": 0.9999995214709316,
+     "one_minus_cos": 4.785290683706478e-07
+    },
+    {
+     "lambda": 0.01,
+     "homogeneous_grad_norm": 0.00013315102225310133,
+     "heterogeneous_cos_vs_reward": 0.9999520768509207,
+     "one_minus_cos": 4.7923149079309724e-05
+    },
+    {
+     "lambda": 0.1,
+     "homogeneous_grad_norm": 0.0013315102225310129,
+     "heterogeneous_cos_vs_reward": 0.9951679921989636,
+     "one_minus_cos": 0.004832007801036431
+    },
+    {
+     "lambda": 1.0,
+     "homogeneous_grad_norm": 0.01331510222531013,
+     "heterogeneous_cos_vs_reward": 0.6829569012052572,
+     "one_minus_cos": 0.3170430987947428
+    }
+   ],
+   "max_relative_linearity_error": 7.951806648958825e-16,
+   "gate_row_entropy_min": 6.931071137141256,
+   "gate_row_entropy_max": 6.931382471924722,
+   "gate_tau": 0.5,
+   "log_L": 6.931471805599453,
+   "gated_equals_ungated_homogeneous_grad": true
+  },
+  {
+   "G": 4,
+   "L": 2048,
+   "reward_grad_norm": 0.0095894912000571,
+   "rows": [
+    {
+     "lambda": 0.0,
+     "homogeneous_grad_norm": 0.0,
+     "heterogeneous_cos_vs_reward": 1.0000000000000002,
+     "one_minus_cos": -2.220446049250313e-16
+    },
+    {
+     "lambda": 0.0001,
+     "homogeneous_grad_norm": 9.404075766502823e-07,
+     "heterogeneous_cos_vs_reward": 0.9999999952170113,
+     "one_minus_cos": 4.7829886717920544e-09
+    },
+    {
+     "lambda": 0.001,
+     "homogeneous_grad_norm": 9.404075766502813e-06,
+     "heterogeneous_cos_vs_reward": 0.9999995216398189,
+     "one_minus_cos": 4.783601811331195e-07
+    },
+    {
+     "lambda": 0.01,
+     "homogeneous_grad_norm": 9.404075766502805e-05,
+     "heterogeneous_cos_vs_reward": 0.9999521057180029,
+     "one_minus_cos": 4.789428199714063e-05
+    },
+    {
+     "lambda": 0.1,
+     "homogeneous_grad_norm": 0.000940407576650282,
+     "heterogeneous_cos_vs_reward": 0.9951829268930927,
+     "one_minus_cos": 0.004817073106907266
+    },
+    {
+     "lambda": 1.0,
+     "homogeneous_grad_norm": 0.009404075766502812,
+     "heterogeneous_cos_vs_reward": 0.6884777795168925,
+     "one_minus_cos": 0.3115222204831075
+    }
+   ],
+   "max_relative_linearity_error": 1.1258854249550764e-15,
+   "gate_row_entropy_min": 7.624218604968381,
+   "gate_row_entropy_max": 7.624537061477895,
+   "gate_tau": 0.5,
+   "log_L": 7.6246189861593985,
+   "gated_equals_ungated_homogeneous_grad": true
+  },
+  {
+   "G": 8,
+   "L": 512,
+   "reward_grad_norm": 0.014639535614045653,
+   "rows": [
+    {
+     "lambda": 0.0,
+     "homogeneous_grad_norm": 0.0,
+     "heterogeneous_cos_vs_reward": 0.9999999999999999,
+     "one_minus_cos": 1.1102230246251565e-16
+    },
+    {
+     "lambda": 0.0001,
+     "homogeneous_grad_norm": 1.4267282429545153e-06,
+     "heterogeneous_cos_vs_reward": 0.9999999952659733,
+     "one_minus_cos": 4.7340267261830604e-09
+    },
+    {
+     "lambda": 0.001,
+     "homogeneous_grad_norm": 1.426728242954515e-05,
+     "heterogeneous_cos_vs_reward": 0.9999995265510458,
+     "one_minus_cos": 4.734489541524667e-07
+    },
+    {
+     "lambda": 0.01,
+     "homogeneous_grad_norm": 0.00014267282429545152,
+     "heterogeneous_cos_vs_reward": 0.9999526117580987,
+     "one_minus_cos": 4.7388241901313854e-05
+    },
+    {
+     "lambda": 0.1,
+     "homogeneous_grad_norm": 0.0014267282429545156,
+     "heterogeneous_cos_vs_reward": 0.9952478652726262,
+     "one_minus_cos": 0.004752134727373791
+    },
+    {
+     "lambda": 1.0,
+     "homogeneous_grad_norm": 0.014267282429545152,
+     "heterogeneous_cos_vs_reward": 0.69679834573789,
+     "one_minus_cos": 0.30320165426211
+    }
+   ],
+   "max_relative_linearity_error": 2.3747562338858226e-16,
+   "gate_row_entropy_min": 6.237930264453831,
+   "gate_row_entropy_max": 6.238268487181882,
+   "gate_tau": 0.5,
+   "log_L": 6.238324625039508,
+   "gated_equals_ungated_homogeneous_grad": true
+  },
+  {
+   "G": 8,
+   "L": 1024,
+   "reward_grad_norm": 0.010352983699553859,
+   "rows": [
+    {
+     "lambda": 0.0,
+     "homogeneous_grad_norm": 0.0,
+     "heterogeneous_cos_vs_reward": 1.0000000000000009,
+     "one_minus_cos": -8.881784197001252e-16
+    },
+    {
+     "lambda": 0.0001,
+     "homogeneous_grad_norm": 1.0067969868116739e-06,
+     "heterogeneous_cos_vs_reward": 0.9999999952781465,
+     "one_minus_cos": 4.721853463784953e-09
+    },
+    {
+     "lambda": 0.001,
+     "homogeneous_grad_norm": 1.0067969868116744e-05,
+     "heterogeneous_cos_vs_reward": 0.9999995277839309,
+     "one_minus_cos": 4.7221606913616654e-07
+    },
+    {
+     "lambda": 0.01,
+     "homogeneous_grad_norm": 0.00010067969868116745,
+     "heterogeneous_cos_vs_reward": 0.9999527506376793,
+     "one_minus_cos": 4.724936232070043e-05
+    },
+    {
+     "lambda": 0.1,
+     "homogeneous_grad_norm": 0.0010067969868116746,
+     "heterogeneous_cos_vs_reward": 0.995277158294638,
+     "one_minus_cos": 0.004722841705361969
+    },
+    {
+     "lambda": 1.0,
+     "homogeneous_grad_norm": 0.010067969868116746,
+     "heterogeneous_cos_vs_reward": 0.7040606555455495,
+     "one_minus_cos": 0.29593934445445047
+    }
+   ],
+   "max_relative_linearity_error": 8.413145433983516e-16,
+   "gate_row_entropy_min": 6.931076644807414,
+   "gate_row_entropy_max": 6.93141971985853,
+   "gate_tau": 0.5,
+   "log_L": 6.931471805599453,
+   "gated_equals_ungated_homogeneous_grad": true
+  },
+  {
+   "G": 8,
+   "L": 2048,
+   "reward_grad_norm": 0.007320037808800088,
+   "rows": [
+    {
+     "lambda": 0.0,
+     "homogeneous_grad_norm": 0.0,
+     "heterogeneous_cos_vs_reward": 1.0000000000000004,
+     "one_minus_cos": -4.440892098500626e-16
+    },
+    {
+     "lambda": 0.0001,
+     "homogeneous_grad_norm": 7.112188376308436e-07,
+     "heterogeneous_cos_vs_reward": 0.9999999952844693,
+     "one_minus_cos": 4.715530743659713e-09
+    },
+    {
+     "lambda": 0.001,
+     "homogeneous_grad_norm": 7.112188376308439e-06,
+     "heterogeneous_cos_vs_reward": 0.9999995284216345,
+     "one_minus_cos": 4.7157836546851684e-07
+    },
+    {
+     "lambda": 0.01,
+     "homogeneous_grad_norm": 7.112188376308439e-05,
+     "heterogeneous_cos_vs_reward": 0.9999528197562538,
+     "one_minus_cos": 4.7180243746169914e-05
+    },
+    {
+     "lambda": 0.1,
+     "homogeneous_grad_norm": 0.0007112188376308435,
+     "heterogeneous_cos_vs_reward": 0.9952893087061178,
+     "one_minus_cos": 0.004710691293882241
+    },
+    {
+     "lambda": 1.0,
+     "homogeneous_grad_norm": 0.00711218837630844,
+     "heterogeneous_cos_vs_reward": 0.7065920742333754,
+     "one_minus_cos": 0.29340792576662456
+    }
+   ],
+   "max_relative_linearity_error": 7.622141843831871e-16,
+   "gate_row_entropy_min": 7.624218604968381,
+   "gate_row_entropy_max": 7.624562203692761,
+   "gate_tau": 0.5,
+   "log_L": 7.6246189861593985,
+   "gated_equals_ungated_homogeneous_grad": true
+  },
+  {
+   "G": 16,
+   "L": 512,
+   "reward_grad_norm": 0.010714279641223828,
+   "rows": [
+    {
+     "lambda": 0.0,
+     "homogeneous_grad_norm": 0.0,
+     "heterogeneous_cos_vs_reward": 0.999999999999998,
+     "one_minus_cos": 1.9984014443252818e-15
+    },
+    {
+     "lambda": 0.0001,
+     "homogeneous_grad_norm": 1.0355093529587648e-06,
+     "heterogeneous_cos_vs_reward": 0.9999999953322789,
+     "one_minus_cos": 4.667721098527977e-09
+    },
+    {
+     "lambda": 0.001,
+     "homogeneous_grad_norm": 1.0355093529587651e-05,
+     "heterogeneous_cos_vs_reward": 0.9999995332089048,
+     "one_minus_cos": 4.667910952216303e-07
+    },
+    {
+     "lambda": 0.01,
+     "homogeneous_grad_norm": 0.00010355093529587644,
+     "heterogeneous_cos_vs_reward": 0.9999533046670404,
+     "one_minus_cos": 4.669533295964534e-05
+    },
+    {
+     "lambda": 0.1,
+     "homogeneous_grad_norm": 0.0010355093529587655,
+     "heterogeneous_cos_vs_reward": 0.9953433406638116,
+     "one_minus_cos": 0.004656659336188418
+    },
+    {
+     "lambda": 1.0,
+     "homogeneous_grad_norm": 0.01035509352958763,
+     "heterogeneous_cos_vs_reward": 0.7109706479500776,
+     "one_minus_cos": 0.2890293520499224
+    }
+   ],
+   "max_relative_linearity_error": 2.3034507343200183e-15,
+   "gate_row_entropy_min": 6.237927589780174,
+   "gate_row_entropy_max": 6.238278224804276,
+   "gate_tau": 0.5,
+   "log_L": 6.238324625039508,
+   "gated_equals_ungated_homogeneous_grad": true
+  },
+  {
+   "G": 16,
+   "L": 1024,
+   "reward_grad_norm": 0.007575546240249849,
+   "rows": [
+    {
+     "lambda": 0.0,
+     "homogeneous_grad_norm": 0.0,
+     "heterogeneous_cos_vs_reward": 0.9999999999999996,
+     "one_minus_cos": 4.440892098500626e-16
+    },
+    {
+     "lambda": 0.0001,
+     "homogeneous_grad_norm": 7.309579383871332e-07,
+     "heterogeneous_cos_vs_reward": 0.9999999953455568,
+     "one_minus_cos": 4.654443164220368e-09
+    },
+    {
+     "lambda": 0.001,
+     "homogeneous_grad_norm": 7.309579383871344e-06,
+     "heterogeneous_cos_vs_reward": 0.9999995345465131,
+     "one_minus_cos": 4.6545348686422017e-07
+    },
+    {
+     "lambda": 0.01,
+     "homogeneous_grad_norm": 7.30957938387134e-05,
+     "heterogeneous_cos_vs_reward": 0.9999534483551743,
+     "one_minus_cos": 4.6551644825698624e-05
+    },
+    {
+     "lambda": 0.1,
+     "homogeneous_grad_norm": 0.0007309579383871341,
+     "heterogeneous_cos_vs_reward": 0.9953673718094286,
+     "one_minus_cos": 0.0046326281905714195
+    },
+    {
+     "lambda": 1.0,
+     "homogeneous_grad_norm": 0.00730957938387133,
+     "heterogeneous_cos_vs_reward": 0.715676195316245,
+     "one_minus_cos": 0.28432380468375495
+    }
+   ],
+   "max_relative_linearity_error": 1.9699574143891095e-15,
+   "gate_row_entropy_min": 6.931076885790645,
+   "gate_row_entropy_max": 6.931419501340551,
+   "gate_tau": 0.5,
+   "log_L": 6.931471805599453,
+   "gated_equals_ungated_homogeneous_grad": true
+  },
+  {
+   "G": 16,
+   "L": 2048,
+   "reward_grad_norm": 0.005357214919380694,
+   "rows": [
+    {
+     "lambda": 0.0,
+     "homogeneous_grad_norm": 0.0,
+     "heterogeneous_cos_vs_reward": 0.9999999999999992,
+     "one_minus_cos": 7.771561172376096e-16
+    },
+    {
+     "lambda": 0.0001,
+     "homogeneous_grad_norm": 5.169985298952503e-07,
+     "heterogeneous_cos_vs_reward": 0.9999999953443011,
+     "one_minus_cos": 4.655698937483521e-09
+    },
+    {
+     "lambda": 0.001,
+     "homogeneous_grad_norm": 5.169985298952493e-06,
+     "heterogeneous_cos_vs_reward": 0.9999995344190621,
+     "one_minus_cos": 4.655809379139342e-07
+    },
+    {
+     "lambda": 0.01,
+     "homogeneous_grad_norm": 5.169985298952488e-05,
+     "heterogeneous_cos_vs_reward": 0.9999534336885402,
+     "one_minus_cos": 4.6566311459828036e-05
+    },
+    {
+     "lambda": 0.1,
+     "homogeneous_grad_norm": 0.0005169985298952496,
+     "heterogeneous_cos_vs_reward": 0.9953640212410139,
+     "one_minus_cos": 0.004635978758986137
+    },
+    {
+     "lambda": 1.0,
+     "homogeneous_grad_norm": 0.005169985298952501,
+     "heterogeneous_cos_vs_reward": 0.714818574076736,
+     "one_minus_cos": 0.285181425923264
+    }
+   ],
+   "max_relative_linearity_error": 2.4903167134486766e-15,
+   "gate_row_entropy_min": 7.624218604968381,
+   "gate_row_entropy_max": 7.624567991897224,
+   "gate_tau": 0.5,
+   "log_L": 7.6246189861593985,
+   "gated_equals_ungated_homogeneous_grad": true
+  }
+ ]
+}

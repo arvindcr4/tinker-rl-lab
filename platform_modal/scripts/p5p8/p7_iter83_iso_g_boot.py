@@ -9,6 +9,7 @@ Writes:
 
 Step-level resample with replacement (n_boot=2000, seed=20260705).
 """
+
 import csv
 import json
 import random
@@ -16,8 +17,10 @@ from collections import defaultdict
 from pathlib import Path
 
 import sys
+
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
+from _paths import REPO_ROOT
+
 WORK = REPO_ROOT
 OUT = WORK / "platform_hybrid/experiments/results/p5p8"
 G_BASE = 8
@@ -93,48 +96,69 @@ def main():
             },
         }
         b = boot_results[m]
-        print(f"  {m}: iso={b['iso_g_0.90']['yield_per_1k_mean']:.2f}/1k "
-              f"[{b['iso_g_0.90']['ci95_lo']:.2f},{b['iso_g_0.90']['ci95_hi']:.2f}] ; "
-              f"zvf={b['zvf_triage_0.70']['yield_per_1k_mean']:.2f}/1k "
-              f"[{b['zvf_triage_0.70']['ci95_lo']:.2f},{b['zvf_triage_0.70']['ci95_hi']:.2f}] ; "
-              f"ratio={b['ratio_iso_over_zvf']['mean']:.2f}x "
-              f"[{b['ratio_iso_over_zvf']['ci95_lo']:.2f}x,{b['ratio_iso_over_zvf']['ci95_hi']:.2f}x] "
-              f"excl1.0={b['ratio_iso_over_zvf']['excludes_1.0']}")
+        print(
+            f"  {m}: iso={b['iso_g_0.90']['yield_per_1k_mean']:.2f}/1k "
+            f"[{b['iso_g_0.90']['ci95_lo']:.2f},{b['iso_g_0.90']['ci95_hi']:.2f}] ; "
+            f"zvf={b['zvf_triage_0.70']['yield_per_1k_mean']:.2f}/1k "
+            f"[{b['zvf_triage_0.70']['ci95_lo']:.2f},{b['zvf_triage_0.70']['ci95_hi']:.2f}] ; "
+            f"ratio={b['ratio_iso_over_zvf']['mean']:.2f}x "
+            f"[{b['ratio_iso_over_zvf']['ci95_lo']:.2f}x,{b['ratio_iso_over_zvf']['ci95_hi']:.2f}x] "
+            f"excl1.0={b['ratio_iso_over_zvf']['excludes_1.0']}"
+        )
 
     # TSV summary
     tsv_path = OUT / "p7_iter83_iso_g_boot.tsv"
-    cols = ["method", "iso_yield_mean", "iso_ci_lo", "iso_ci_hi",
-            "zvf_yield_mean", "zvf_ci_lo", "zvf_ci_hi",
-            "ratio_mean", "ratio_ci_lo", "ratio_ci_hi", "excludes_1.0"]
+    cols = [
+        "method",
+        "iso_yield_mean",
+        "iso_ci_lo",
+        "iso_ci_hi",
+        "zvf_yield_mean",
+        "zvf_ci_lo",
+        "zvf_ci_hi",
+        "ratio_mean",
+        "ratio_ci_lo",
+        "ratio_ci_hi",
+        "excludes_1.0",
+    ]
     with open(tsv_path, "w") as f:
         f.write("\t".join(cols) + "\n")
         for m in METHODS:
             b = boot_results[m]
-            f.write("\t".join([
-                m,
-                f"{b['iso_g_0.90']['yield_per_1k_mean']:.4f}",
-                f"{b['iso_g_0.90']['ci95_lo']:.4f}",
-                f"{b['iso_g_0.90']['ci95_hi']:.4f}",
-                f"{b['zvf_triage_0.70']['yield_per_1k_mean']:.4f}",
-                f"{b['zvf_triage_0.70']['ci95_lo']:.4f}",
-                f"{b['zvf_triage_0.70']['ci95_hi']:.4f}",
-                f"{b['ratio_iso_over_zvf']['mean']:.4f}",
-                f"{b['ratio_iso_over_zvf']['ci95_lo']:.4f}",
-                f"{b['ratio_iso_over_zvf']['ci95_hi']:.4f}",
-                "yes" if b["ratio_iso_over_zvf"]["excludes_1.0"] else "no",
-            ]) + "\n")
+            f.write(
+                "\t".join(
+                    [
+                        m,
+                        f"{b['iso_g_0.90']['yield_per_1k_mean']:.4f}",
+                        f"{b['iso_g_0.90']['ci95_lo']:.4f}",
+                        f"{b['iso_g_0.90']['ci95_hi']:.4f}",
+                        f"{b['zvf_triage_0.70']['yield_per_1k_mean']:.4f}",
+                        f"{b['zvf_triage_0.70']['ci95_lo']:.4f}",
+                        f"{b['zvf_triage_0.70']['ci95_hi']:.4f}",
+                        f"{b['ratio_iso_over_zvf']['mean']:.4f}",
+                        f"{b['ratio_iso_over_zvf']['ci95_lo']:.4f}",
+                        f"{b['ratio_iso_over_zvf']['ci95_hi']:.4f}",
+                        "yes" if b["ratio_iso_over_zvf"]["excludes_1.0"] else "no",
+                    ]
+                )
+                + "\n"
+            )
     print(f"[write] {tsv_path}")
 
     json_path = OUT / "p7_iter83_iso_g_boot.json"
     with open(json_path, "w") as f:
-        json.dump({
-            "iter": 83,
-            "pillar": "P7",
-            "n_boot": N_BOOT,
-            "rng_seed": RNG_SEED,
-            "method": "step-level resample with replacement",
-            "results": boot_results,
-        }, f, indent=2)
+        json.dump(
+            {
+                "iter": 83,
+                "pillar": "P7",
+                "n_boot": N_BOOT,
+                "rng_seed": RNG_SEED,
+                "method": "step-level resample with replacement",
+                "results": boot_results,
+            },
+            f,
+            indent=2,
+        )
     print(f"[write] {json_path}")
 
 

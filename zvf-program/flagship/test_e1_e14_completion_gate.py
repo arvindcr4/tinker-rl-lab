@@ -29,6 +29,7 @@ from flagship.e1_e14_completion_gate import (
     main,
     validate_package,
 )
+import pytest
 
 
 def digest(value: bytes) -> str:
@@ -164,26 +165,30 @@ class CompletionGateTests(unittest.TestCase):
     def save_manifest(self, path: Path, manifest: dict[str, object]) -> None:
         path.write_text(json.dumps(manifest), encoding="utf-8")
 
-    @unittest.skipUnless(DEFAULT_STATUS.is_file() and DEFAULT_FOLLOWUP.is_file(), "historical audit artifacts excluded from repository; synthetic v2 regressions cover input validation")
+    @unittest.skipUnless(
+        DEFAULT_STATUS.is_file() and DEFAULT_FOLLOWUP.is_file(),
+        "historical audit artifacts excluded from repository; synthetic v2 regressions cover input validation",
+    )
     def test_all_unfinished_lanes_are_enumerated_without_e11(self) -> None:
         receipt = audit(DEFAULT_STATUS, DEFAULT_FOLLOWUP)
-        self.assertEqual([row["lane"] for row in receipt["lanes"]], list(LANE_SPECS))
-        self.assertEqual(receipt["excluded_complete_lanes"], [])
-        self.assertEqual(receipt["excluded_declared_lanes"], ["E11"])
-        self.assertIn("E1 is also complete exact", receipt["claim_boundary"])
-        self.assertIn("outside this gate's scope", receipt["claim_boundary"])
-        self.assertTrue(all(row["score"] is None for row in receipt["lanes"]))
-        self.assertTrue(all(row["evidence_class"] in EVIDENCE_CLASSES for row in receipt["lanes"]))
-        self.assertEqual(receipt["mode"], "READ_ONLY_AUDIT_NO_NETWORK_NO_SPEND_NO_LAUNCH")
+        assert [row["lane"] for row in receipt["lanes"]] == list(LANE_SPECS)
+        assert receipt["excluded_complete_lanes"] == []
+        assert receipt["excluded_declared_lanes"] == ["E11"]
+        assert "E1 is also complete exact" in receipt["claim_boundary"]
+        assert "outside this gate's scope" in receipt["claim_boundary"]
+        assert all(row["score"] is None for row in receipt["lanes"])
+        assert all(row["evidence_class"] in EVIDENCE_CLASSES for row in receipt["lanes"])
+        assert receipt["mode"] == "READ_ONLY_AUDIT_NO_NETWORK_NO_SPEND_NO_LAUNCH"
         for row in receipt["lanes"]:
-            self.assertEqual(
-                {surface["kind"] for surface in row["local_surfaces"]},
-                {"adapter", "runner", "test"},
-            )
-            self.assertTrue(row["required_inputs"])
+            assert {surface["kind"] for surface in row["local_surfaces"]} == {
+                "adapter",
+                "runner",
+                "test",
+            }
+            assert row["required_inputs"]
 
     def test_all_evidence_classes_are_known_but_unknown_status_fails_closed(self) -> None:
-        self.assertEqual(
+        assert (
             set(
                 classify_evidence(status)
                 for status in (
@@ -193,36 +198,37 @@ class CompletionGateTests(unittest.TestCase):
                     "BLOCKED_EXTERNAL",
                     "LOCAL_SETUP_READY_PROVIDER_INPUT_REQUIRED",
                 )
-            ),
-            EVIDENCE_CLASSES,
+            )
+            == EVIDENCE_CLASSES
         )
-        with self.assertRaises(PackageValidationError):
+        with pytest.raises(PackageValidationError):
             classify_evidence("PUBLIC_SAMPLE")
 
-    @unittest.skipUnless(DEFAULT_STATUS.is_file() and DEFAULT_FOLLOWUP.is_file(), "historical audit artifacts excluded from repository; synthetic v2 regressions cover input validation")
+    @unittest.skipUnless(
+        DEFAULT_STATUS.is_file() and DEFAULT_FOLLOWUP.is_file(),
+        "historical audit artifacts excluded from repository; synthetic v2 regressions cover input validation",
+    )
     def test_audit_cli_writes_receipt_atomically(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             output = Path(directory) / "nested" / "receipt.json"
-            self.assertEqual(main(["audit", "--output", str(output)]), 0)
+            assert main(["audit", "--output", str(output)]) == 0
             receipt = json.loads(output.read_text(encoding="utf-8"))
-            self.assertEqual(receipt["schema_version"], "e1-e14-completion-gate-v1")
-            self.assertFalse(list(output.parent.glob(".receipt.json.*")))
+            assert receipt["schema_version"] == "e1-e14-completion-gate-v1"
+            assert not list(output.parent.glob(".receipt.json.*"))
 
     def test_valid_package_is_inputs_only(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             manifest, trust_roots = self.make_signed_package(root)
             result = validate_package("E3", manifest, root, trust_roots)
-            self.assertEqual(result["task_count"], 80)
-            self.assertEqual(result["expected_task_count"], 80)
-            self.assertEqual(result["split_ids"], ["held-out"])
-            self.assertEqual(
-                result["validation"], "VALIDATED_INPUTS_ONLY_NOT_A_SCORE_OR_LAUNCH_AUTHORIZATION"
+            assert result["task_count"] == 80
+            assert result["expected_task_count"] == 80
+            assert result["split_ids"] == ["held-out"]
+            assert (
+                result["validation"] == "VALIDATED_INPUTS_ONLY_NOT_A_SCORE_OR_LAUNCH_AUTHORIZATION"
             )
-            self.assertNotIn("score", result)
-            self.assertEqual(
-                result["trust_root_sha256"], result["provider_grant"]["trust_root_sha256"]
-            )
+            assert "score" not in result
+            assert result["trust_root_sha256"] == result["provider_grant"]["trust_root_sha256"]
 
     def test_rejects_partial_package_for_fixed_full_suite(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -232,8 +238,8 @@ class CompletionGateTests(unittest.TestCase):
             data["tasks"].pop()
             self.save_manifest(manifest, data)
             trust_roots = self.sign_manifest(root, manifest)
-            with self.assertRaisesRegex(
-                PackageValidationError, "exact E3 full suite of 80 tasks; got 79"
+            with pytest.raises(
+                PackageValidationError, match="exact E3 full suite of 80 tasks; got 79"
             ):
                 validate_package("E3", manifest, root, trust_roots)
 
@@ -242,7 +248,7 @@ class CompletionGateTests(unittest.TestCase):
             root = Path(directory)
             manifest, trust_roots = self.make_signed_package(root, "E14")
             output = root / "validated.json"
-            self.assertEqual(
+            assert (
                 main(
                     [
                         "validate-package",
@@ -257,10 +263,10 @@ class CompletionGateTests(unittest.TestCase):
                         "--output",
                         str(output),
                     ]
-                ),
-                0,
+                )
+                == 0
             )
-            self.assertEqual(json.loads(output.read_text())["lane"], "E14")
+            assert json.loads(output.read_text())["lane"] == "E14"
 
     def test_rejects_manifest_schema_adversaries(self) -> None:
         cases = {
@@ -270,7 +276,9 @@ class CompletionGateTests(unittest.TestCase):
             "bool_budget": lambda data: data.__setitem__("budget_usd", True),
             "nonfinite_budget": lambda data: data.__setitem__("budget_usd", math.inf),
             "missing_hash": lambda data: data["runtime"].__setitem__("sha256", "not-a-hash"),
-            "duplicate_task": lambda data: data["tasks"][1].__setitem__("task_id", data["tasks"][0]["task_id"]),
+            "duplicate_task": lambda data: data["tasks"][1].__setitem__(
+                "task_id", data["tasks"][0]["task_id"]
+            ),
             "path_traversal": lambda data: data["native_grader"].__setitem__(
                 "path", "../grader.py"
             ),
@@ -284,7 +292,10 @@ class CompletionGateTests(unittest.TestCase):
                 self.save_manifest(manifest_path, manifest)
                 if name != "grant_unknown":
                     trust_roots = self.sign_manifest(root, manifest_path)
-                with self.assertRaisesRegex(PackageValidationError, "unexpected|suite|grant|budget|sha256|duplicate|path|relative|hash|fields"):
+                with pytest.raises(
+                    PackageValidationError,
+                    match="unexpected|suite|grant|budget|sha256|duplicate|path|relative|hash|fields",
+                ):
                     validate_package("E3", manifest_path, root, trust_roots)
 
     def test_rejects_file_hash_and_license_text_hash_mismatches(self) -> None:
@@ -294,13 +305,13 @@ class CompletionGateTests(unittest.TestCase):
             manifest = self.load_manifest(manifest_path)
             manifest["license"]["text_sha256"] = "0" * 64
             self.save_manifest(manifest_path, manifest)
-            with self.assertRaisesRegex(PackageValidationError, "license.text_sha256"):
+            with pytest.raises(PackageValidationError, match="license.text_sha256"):
                 validate_package("E3", manifest_path, root, trust_roots)
             manifest = self.load_manifest(manifest_path)
             manifest["license"]["text_sha256"] = digest((root / "LICENSE.txt").read_bytes())
             (root / "assets/tasks.json").write_bytes(b"tampered")
             self.save_manifest(manifest_path, manifest)
-            with self.assertRaisesRegex(PackageValidationError, "SHA-256 mismatch"):
+            with pytest.raises(PackageValidationError, match="SHA-256 mismatch"):
                 validate_package("E3", manifest_path, root, trust_roots)
 
     def test_rejects_symlinks_and_root_symlink(self) -> None:
@@ -312,25 +323,25 @@ class CompletionGateTests(unittest.TestCase):
             target.write_text("external", encoding="utf-8")
             (root / "assets/tasks.json").unlink()
             os.symlink(target, root / "assets/tasks.json")
-            with self.assertRaisesRegex(PackageValidationError, "symlinks"):
+            with pytest.raises(PackageValidationError, match="symlinks"):
                 validate_package("E3", manifest_path, root, trust_roots)
             link_root = Path(directory) / "package-link"
             os.symlink(root, link_root)
-            with self.assertRaisesRegex(PackageValidationError, "non-symlink"):
+            with pytest.raises(PackageValidationError, match="non-symlink"):
                 validate_package("E3", manifest_path, link_root, trust_roots)
 
     def test_package_does_not_accept_a_complete_lane(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             manifest, trust_roots = self.make_signed_package(root)
-            with self.assertRaisesRegex(PackageValidationError, "unknown or complete"):
+            with pytest.raises(PackageValidationError, match="unknown or complete"):
                 validate_package("E11", manifest, root, trust_roots)
 
     def test_requires_pinned_trust_roots(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             manifest = self.make_package(root)
-            with self.assertRaisesRegex(PackageValidationError, "trust-roots is required"):
+            with pytest.raises(PackageValidationError, match="trust-roots is required"):
                 validate_package("E3", manifest, root)
 
     def test_rejects_attacker_key_modified_payload_wrong_key_and_invalid_times(self) -> None:
@@ -378,7 +389,7 @@ class CompletionGateTests(unittest.TestCase):
                     else:
                         manifest["provider_grant"]["key_id"] = "wrong-key-id"
                     self.save_manifest(manifest_path, manifest)
-                with self.assertRaises(PackageValidationError):
+                with pytest.raises(PackageValidationError):
                     validate_package("E3", manifest_path, root, trust_roots)
 
     def test_rejects_trust_root_document_metadata_change_with_same_key(self) -> None:
@@ -388,7 +399,7 @@ class CompletionGateTests(unittest.TestCase):
             document = json.loads(trust_roots.read_text(encoding="utf-8"))
             document["trust_roots"][0]["accepted_grant_ids"].append("different-valid-grant")
             trust_roots.write_text(json.dumps(document), encoding="utf-8")
-            with self.assertRaisesRegex(PackageValidationError, "trust_root_sha256"):
+            with pytest.raises(PackageValidationError, match="trust_root_sha256"):
                 validate_package("E3", manifest_path, root, trust_roots)
 
     def test_rejects_mixed_lane_trust_root_document(self) -> None:
@@ -399,10 +410,13 @@ class CompletionGateTests(unittest.TestCase):
             document["trust_roots"][0]["lane"] = "E14"
             document["trust_roots"][0]["suite_id"] = LANE_SPECS["E14"]["suite_id"]
             trust_roots.write_text(json.dumps(document), encoding="utf-8")
-            with self.assertRaisesRegex(PackageValidationError, "must be scoped to E3"):
+            with pytest.raises(PackageValidationError, match="must be scoped to E3"):
                 validate_package("E3", manifest_path, root, trust_roots)
 
-    @unittest.skipUnless(DEFAULT_STATUS.is_file() and DEFAULT_FOLLOWUP.is_file(), "historical audit artifacts excluded from repository; synthetic v2 regressions cover input validation")
+    @unittest.skipUnless(
+        DEFAULT_STATUS.is_file() and DEFAULT_FOLLOWUP.is_file(),
+        "historical audit artifacts excluded from repository; synthetic v2 regressions cover input validation",
+    )
     def test_audit_rejects_invalid_exact_claim_sources(self) -> None:
         source_status = json.loads(DEFAULT_STATUS.read_text(encoding="utf-8"))
         cases = {
@@ -431,7 +445,7 @@ class CompletionGateTests(unittest.TestCase):
                 mutate(status["lanes"])
                 status_path = Path(directory) / "status.json"
                 status_path.write_text(json.dumps(status), encoding="utf-8")
-                with self.assertRaises(PackageValidationError):
+                with pytest.raises(PackageValidationError):
                     audit(status_path, DEFAULT_FOLLOWUP)
 
 

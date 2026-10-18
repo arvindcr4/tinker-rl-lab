@@ -44,6 +44,7 @@ Outputs:
 
 Cost ratios: 1, 10, 100, 1000. Default cost-optimal headline at c=100.
 """
+
 from __future__ import annotations
 import json
 from pathlib import Path
@@ -51,11 +52,12 @@ from pathlib import Path
 import numpy as np
 
 import sys
+
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
 from _review02_contracts import stable_seed, finite_json
 from _analysis_common import auc_rank
-from _paths import REPO_ROOT  # noqa: E402
-from _p8_common import (  # noqa: E402
+from _paths import REPO_ROOT
+from _p8_common import (
     RAW20,
     AGG4,
     ALL24,
@@ -65,6 +67,7 @@ from _p8_common import (  # noqa: E402
     fit_xgb,
     paired_bootstrap_ci,
 )
+
 ROOT = REPO_ROOT
 RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8"
 RES.mkdir(parents=True, exist_ok=True)
@@ -116,9 +119,11 @@ def operating_rates(s, y, threshold):
     n = len(y)
     fp = int((flags & (y == 0)).sum())
     negatives = int((y == 0).sum())
-    return dict(flag_rate=float(flags.mean()) if n else float('nan'),
-                fp_per_transaction=fp/n if n else float('nan'),
-                false_positive_rate=fp/negatives if negatives else float('nan'))
+    return dict(
+        flag_rate=float(flags.mean()) if n else float("nan"),
+        fp_per_transaction=fp / n if n else float("nan"),
+        false_positive_rate=fp / negatives if negatives else float("nan"),
+    )
 
 
 def min_cost(s, y, c):
@@ -128,8 +133,14 @@ def min_cost(s, y, c):
     the frozen threshold on test labels using cost_at_threshold.
     """
     s, y = np.asarray(s, float), np.asarray(y)
-    if len(s) != len(y) or not len(s) or not np.isfinite(s).all() or not np.isin(y, [0, 1]).all() or c < 0:
-        raise ValueError('finite scores, binary labels, and nonnegative costs required')
+    if (
+        len(s) != len(y)
+        or not len(s)
+        or not np.isfinite(s).all()
+        or not np.isin(y, [0, 1]).all()
+        or c < 0
+    ):
+        raise ValueError("finite scores, binary labels, and nonnegative costs required")
     thresholds = np.r_[np.unique(s), np.nextafter(s.max(), np.inf)]
     costs = [cost_at_threshold(s, y, c, t) for t in thresholds]
     i = int(np.argmin(costs))
@@ -139,7 +150,7 @@ def min_cost(s, y, c):
 def cost_at_threshold(s, y, c, threshold):
     flagged = np.asarray(s) >= threshold
     y = np.asarray(y)
-    return float((c*((~flagged) & (y == 1)).sum() + (flagged & (y == 0)).sum()) / len(y))
+    return float((c * ((~flagged) & (y == 1)).sum() + (flagged & (y == 0)).sum()) / len(y))
 
 
 def recall_at_flag_budget(s, y, flag_budget=0.01):
@@ -147,18 +158,24 @@ def recall_at_flag_budget(s, y, flag_budget=0.01):
     s, y = np.asarray(s), np.asarray(y)
     n_pos = int((y == 1).sum())
     if not len(y) or n_pos == 0:
-        return float('nan')
-    k = min(len(s), max(0, int(np.floor(len(s)*flag_budget))))
-    top_idx = np.argsort(-s, kind='stable')[:k]
-    return float(y[top_idx].sum())/n_pos
+        return float("nan")
+    k = min(len(s), max(0, int(np.floor(len(s) * flag_budget))))
+    top_idx = np.argsort(-s, kind="stable")[:k]
+    return float(y[top_idx].sum()) / n_pos
 
 
 def most_damaging_features(auc_full, loo_aucs):
-    if not np.isfinite(auc_full) or not loo_aucs or not all(np.isfinite(x) for x in loo_aucs.values()):
+    if (
+        not np.isfinite(auc_full)
+        or not loo_aucs
+        or not all(np.isfinite(x) for x in loo_aucs.values())
+    ):
         return []
-    drops = {key: auc_full-value for key, value in loo_aucs.items()}
+    drops = {key: auc_full - value for key, value in loo_aucs.items()}
     maximum = max(drops.values())
-    return sorted(key for key, value in drops.items() if np.isclose(value, maximum, rtol=0, atol=1e-12))
+    return sorted(
+        key for key, value in drops.items() if np.isclose(value, maximum, rtol=0, atol=1e-12)
+    )
 
 
 def brier(s, y):
@@ -173,8 +190,8 @@ def main():
     print("Loading data...", flush=True)
     Xtr, ytr = load(TRAIN)
     Xte, yte = load(TEST)
-    print(f"  train: {Xtr.shape} pos={int((ytr==1).sum())}", flush=True)
-    print(f"  test:  {Xte.shape} pos={int((yte==1).sum())}", flush=True)
+    print(f"  train: {Xtr.shape} pos={int((ytr == 1).sum())}", flush=True)
+    print(f"  test:  {Xte.shape} pos={int((yte == 1).sum())}", flush=True)
 
     # Fit all 7 fsets × 5 seeds
     print("Fitting XGB...", flush=True)
@@ -183,7 +200,10 @@ def main():
         for sd in SEEDS:
             s = fit_xgb(Xtr, ytr, Xte, feats, sd)
             probas[(fset, sd)] = s
-            print(f"  {fset} s{sd} mean={float(s.mean()):.4f} top1%={float(np.partition(s, -int(0.01*s.shape[0]))[-int(0.01*s.shape[0]):].mean()):.4f}", flush=True)
+            print(
+                f"  {fset} s{sd} mean={float(s.mean()):.4f} top1%={float(np.partition(s, -int(0.01 * s.shape[0]))[-int(0.01 * s.shape[0]) :].mean()):.4f}",
+                flush=True,
+            )
 
     # Per-(fset, c, seed) min-cost and threshold
     print("Computing cost curves and metrics...", flush=True)
@@ -202,8 +222,11 @@ def main():
             catches[(fset, sd, c)] = recall_at_flag_budget(s, yte, flag_budget=0.01)
 
     # Per-(fset, c) mean across seeds
-    minc_mean = {(fset, c): float(np.mean([minc[(fset, sd, c)] for sd in SEEDS]))
-                 for fset in FEATURE_SETS for c in COST_RATIOS}
+    minc_mean = {
+        (fset, c): float(np.mean([minc[(fset, sd, c)] for sd in SEEDS]))
+        for fset in FEATURE_SETS
+        for c in COST_RATIOS
+    }
 
     # Baseline: full 24full cost at c=100
     full_lift_c100 = minc_mean[("20raw", 100)] - minc_mean[("24full", 100)]
@@ -212,41 +235,47 @@ def main():
     out_cell = RES / "p8_iter196_loo_min_cost.tsv"
     with out_cell.open("w") as f:
         f.write("fset\tseed\tc\tmin_cost\topt_threshold\tfraud_base_rate\n")
-        for (fset, sd, c) in sorted(minc.keys()):
+        for fset, sd, c in sorted(minc.keys()):
             t_opt = optt[(fset, sd, c)]
-            f.write(f"{fset}\t{sd}\t{c}\t{minc[(fset,sd,c)]:.6f}\t{t_opt:.4f}\t"
-                    f"{float((yte==1).mean()):.4f}\n")
+            f.write(
+                f"{fset}\t{sd}\t{c}\t{minc[(fset, sd, c)]:.6f}\t{t_opt:.4f}\t"
+                f"{float((yte == 1).mean()):.4f}\n"
+            )
 
     # ----- TSV: cost curves -----
     out_curve = RES / "p8_iter196_loo_cost_curve.tsv"
     with out_curve.open("w") as f:
-        f.write("fset\tc\tseed\tthreshold\tcost_per_tx\tflagged_frac\tfp_per_transaction\tfalse_positive_rate\n")
-        for (fset, sd) in sorted(probas.keys()):
+        f.write(
+            "fset\tc\tseed\tthreshold\tcost_per_tx\tflagged_frac\tfp_per_transaction\tfalse_positive_rate\n"
+        )
+        for fset, sd in sorted(probas.keys()):
             s = probas[(fset, sd)]
             for c in COST_RATIOS:
                 th, costs, fps = cost_curve(s, yte, c)
                 for i in range(len(th)):
                     rates = operating_rates(s, yte, th[i])
-                    f.write(f"{fset}\t{c}\t{sd}\t{th[i]:.4f}\t{costs[i]:.6f}\t{fps[i]:.4f}\t{rates['fp_per_transaction']:.4f}\t{rates['false_positive_rate']:.4f}\n")
+                    f.write(
+                        f"{fset}\t{c}\t{sd}\t{th[i]:.4f}\t{costs[i]:.6f}\t{fps[i]:.4f}\t{rates['fp_per_transaction']:.4f}\t{rates['false_positive_rate']:.4f}\n"
+                    )
 
     # ----- TSV: catches -----
     out_catch = RES / "p8_iter196_loo_catch.tsv"
     with out_catch.open("w") as f:
         f.write("fset\tc\tseed\tcatch_frac\n")
-        for (fset, sd, c) in sorted(catches.keys()):
-            f.write(f"{fset}\t{c}\t{sd}\t{catches[(fset,sd,c)]:.4f}\n")
+        for fset, sd, c in sorted(catches.keys()):
+            f.write(f"{fset}\t{c}\t{sd}\t{catches[(fset, sd, c)]:.4f}\n")
 
     # ----- TSV: Brier & AUC -----
     out_brier = RES / "p8_iter196_loo_brier.tsv"
     with out_brier.open("w") as f:
         f.write("fset\tseed\tbrier\n")
-        for (fset, sd) in sorted(briers.keys()):
-            f.write(f"{fset}\t{sd}\t{briers[(fset,sd)]:.6f}\n")
+        for fset, sd in sorted(briers.keys()):
+            f.write(f"{fset}\t{sd}\t{briers[(fset, sd)]:.6f}\n")
     out_auc = RES / "p8_iter196_loo_auc.tsv"
     with out_auc.open("w") as f:
         f.write("fset\tseed\tauc\n")
-        for (fset, sd) in sorted(aucs.keys()):
-            f.write(f"{fset}\t{sd}\t{aucs[(fset,sd)]:.6f}\n")
+        for fset, sd in sorted(aucs.keys()):
+            f.write(f"{fset}\t{sd}\t{aucs[(fset, sd)]:.6f}\n")
 
     # ----- LOO gap at c=100 vs 20raw (paired-seed bootstrap) -----
     out_gap = RES / "p8_iter196_loo_min_cost_gap.tsv"
@@ -279,8 +308,10 @@ def main():
                 gaps_per_c[label][c] = d
                 if c == 100:
                     gaps_c100[fset] = d
-                f.write(f"{label}\t{c}\t{ci['mean']:+.6f}\t{ci['lo']:+.6f}\t"
-                        f"{m_20:.6f}\t{m_loo:.6f}\t{int(h_pass)}\t{lift_frac:+.4f}\n")
+                f.write(
+                    f"{label}\t{c}\t{ci['mean']:+.6f}\t{ci['lo']:+.6f}\t"
+                    f"{m_20:.6f}\t{m_loo:.6f}\t{int(h_pass)}\t{lift_frac:+.4f}\n"
+                )
 
     # ----- LOO contributions at c=100 -----
     # per-feature lift retained = (cost_20raw - cost_23_min_f) / (cost_20raw - cost_24full)
@@ -314,11 +345,13 @@ def main():
 
     # H5: dropping V_std produces the LARGEST AUC drop among LOO sets
     # AUC gap: per-(LOO set) mean AUC vs 20raw AUC, the most negative
-    auc_per_fset = {fset: float(np.mean([aucs[(fset, sd)] for sd in SEEDS]))
-                    for fset in FEATURE_SETS}
-    loo_auc_drops = {f: auc_per_fset["24full"] - auc_per_fset[LOO_KEY[f]]
-                     for f in AGG4}
-    worst = most_damaging_features(auc_per_fset["24full"], {f: auc_per_fset[LOO_KEY[f]] for f in AGG4})
+    auc_per_fset = {
+        fset: float(np.mean([aucs[(fset, sd)] for sd in SEEDS])) for fset in FEATURE_SETS
+    }
+    loo_auc_drops = {f: auc_per_fset["24full"] - auc_per_fset[LOO_KEY[f]] for f in AGG4}
+    worst = most_damaging_features(
+        auc_per_fset["24full"], {f: auc_per_fset[LOO_KEY[f]] for f in AGG4}
+    )
     h5 = worst == ["V_std"]
 
     # H6: linearity gap <= 50% of full lift (features are roughly additive)
@@ -329,7 +362,10 @@ def main():
         "selection": "test-label empirical oracle; no prospective performance claim",
         "uncertainty": "paired training seeds conditional on fixed reused test set; not example-population uncertainty",
         "auc_most_damaging_tied_set": worst,
-        "resampling_seeds": {label: {str(c): 20260706+c+stable_seed(0, label) for c in COST_RATIOS} for label, _ in loo_specs},
+        "resampling_seeds": {
+            label: {str(c): 20260706 + c + stable_seed(0, label) for c in COST_RATIOS}
+            for label, _ in loo_specs
+        },
         "data": {
             "n_train": int(Xtr.shape[0]),
             "n_test": int(Xte.shape[0]),
@@ -356,8 +392,9 @@ def main():
         },
         "auc_drops_per_loo": loo_auc_drops,
         "auc_per_fset": auc_per_fset,
-        "brier_per_fset": {fset: float(np.mean([briers[(fset, sd)] for sd in SEEDS]))
-                           for fset in FEATURE_SETS},
+        "brier_per_fset": {
+            fset: float(np.mean([briers[(fset, sd)] for sd in SEEDS])) for fset in FEATURE_SETS
+        },
         "hypotheses": {
             "H1_drop_Vmean_preserves_le_50pct_full_lift": bool(h1),
             "H2_drop_Vstd_preserves_le_50pct_full_lift": bool(h2),
@@ -367,23 +404,29 @@ def main():
             "H6_linearity_gap_le_50pct_full_lift": bool(h6),
         },
         "ci_per_loo_per_c": {
-            label: {str(c): paired_bootstrap_ci(gaps_per_c[label][c], N_BOOT,
-                                                seed=20260706 + c + stable_seed(0, label))
-                    for c in COST_RATIOS}
+            label: {
+                str(c): paired_bootstrap_ci(
+                    gaps_per_c[label][c], N_BOOT, seed=20260706 + c + stable_seed(0, label)
+                )
+                for c in COST_RATIOS
+            }
             for label, _ in loo_specs
         },
     }
     summary["descriptive_hypothesis_count"] = sum(int(v) for v in summary["hypotheses"].values())
-    summary["contribution_ranking"] = sorted(contributions.keys(),
-                                              key=lambda f: contributions[f]["lift_loo_minus_full"],
-                                              reverse=True)
+    summary["contribution_ranking"] = sorted(
+        contributions.keys(), key=lambda f: contributions[f]["lift_loo_minus_full"], reverse=True
+    )
     out_sum = RES / "p8_iter196_loo_summary.json"
     out_sum.write_text(json.dumps(finite_json(summary), indent=2, default=float, allow_nan=False))
     print(f"Wrote {out_sum}", flush=True)
     print(f"H1..H6: {summary['hypotheses']}", flush=True)
     print(f"Headline at c=100: {summary['headline_at_c100']}", flush=True)
     print(f"Contributions: {contributions}", flush=True)
-    print(f"Linearity gap: {linearity_gap} (sum_loo_losses={sum_loo_losses}, full_lift={full_lift_c100})", flush=True)
+    print(
+        f"Linearity gap: {linearity_gap} (sum_loo_losses={sum_loo_losses}, full_lift={full_lift_c100})",
+        flush=True,
+    )
 
 
 if __name__ == "__main__":

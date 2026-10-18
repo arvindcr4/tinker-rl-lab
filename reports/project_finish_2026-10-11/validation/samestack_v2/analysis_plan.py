@@ -5,6 +5,7 @@ An explicit plan binds the cohort. Historical records without evidence remain
 excluded, not repaired into apparently verified provenance. A repaired plan is
 not evidence of prospective registration, even when its endpoint is complete.
 """
+
 from copy import deepcopy
 import hashlib
 import json
@@ -18,13 +19,24 @@ except ImportError:
 
 ARMS = ("grpo_g8", "grpo_g2", "ppo", "ppo_8x8")
 SEEDS = (42, 123, 456, 789, 1024, 2048, 3141, 4096, 5555, 7777)
-PRIMARY = {"g8-ppo": ("grpo_g8", "ppo"), "g8-ppo_8x8": ("grpo_g8", "ppo_8x8"),
-           "g8-g2": ("grpo_g8", "grpo_g2")}
+PRIMARY = {
+    "g8-ppo": ("grpo_g8", "ppo"),
+    "g8-ppo_8x8": ("grpo_g8", "ppo_8x8"),
+    "g8-g2": ("grpo_g8", "grpo_g2"),
+}
 EXPLORATORY = {"g2-ppo": ("grpo_g2", "ppo")}
-IDENTITY_FIELDS = ("run_id", "environment", "environment_hash", "protocol_hash",
-                   "ordered_test_item_hash", "shared_stack_hash")
+IDENTITY_FIELDS = (
+    "run_id",
+    "environment",
+    "environment_hash",
+    "protocol_hash",
+    "ordered_test_item_hash",
+    "shared_stack_hash",
+)
 # These are intentional treatment/replicate differences, not shared stack fields.
-ARM_SEED_CONFIG_FIELDS = frozenset(("arm", "seed", "group", "prompts_per_step", "critic", "advantage_normalization"))
+ARM_SEED_CONFIG_FIELDS = frozenset(
+    ("arm", "seed", "group", "prompts_per_step", "critic", "advantage_normalization")
+)
 
 
 def shared_stack_fingerprint(record):
@@ -39,53 +51,90 @@ def shared_stack_fingerprint(record):
     manifest = record["manifest"]
     source, revisions = manifest.get("source"), manifest.get("revisions")
     config, generation = manifest.get("effective_config"), manifest.get("generation")
-    is_hash = lambda value: isinstance(value, str) and re.fullmatch(r"[0-9a-f]{64}", value) is not None
-    if not all(isinstance(value, dict) and value for value in (source, revisions, config, generation)):
+    is_hash = lambda value: (
+        isinstance(value, str) and re.fullmatch(r"[0-9a-f]{64}", value) is not None
+    )
+    if not all(
+        isinstance(value, dict) and value for value in (source, revisions, config, generation)
+    ):
         return None
-    if (source.get("status") != "observed" or type(source.get("dirty")) is not bool
-            or not isinstance(source.get("commit"), str)
-            or re.fullmatch(r"[0-9a-f]{40,64}", source["commit"]) is None
-            or not is_hash(source.get("dirty_hash"))):
+    if (
+        source.get("status") != "observed"
+        or type(source.get("dirty")) is not bool
+        or not isinstance(source.get("commit"), str)
+        or re.fullmatch(r"[0-9a-f]{40,64}", source["commit"]) is None
+        or not is_hash(source.get("dirty_hash"))
+    ):
         return None
     files = source.get("source_files")
-    if (not isinstance(files, dict) or not files
-            or not all(isinstance(path, str) and path and is_hash(digest) for path, digest in files.items())):
+    if (
+        not isinstance(files, dict)
+        or not files
+        or not all(
+            isinstance(path, str) and path and is_hash(digest) for path, digest in files.items()
+        )
+    ):
         return None
     for component in ("model", "tokenizer", "dataset"):
         revision = revisions.get(component)
-        if (not isinstance(revision, dict) or not isinstance(revision.get("revision"), str)
-                or re.fullmatch(r"[0-9a-f]{40,64}", revision["revision"]) is None
-                or revision["revision"] != config.get(component + "_revision")):
+        if (
+            not isinstance(revision, dict)
+            or not isinstance(revision.get("revision"), str)
+            or re.fullmatch(r"[0-9a-f]{40,64}", revision["revision"]) is None
+            or revision["revision"] != config.get(component + "_revision")
+        ):
             return None
     if not is_hash(manifest.get("chat_template_hash")):
         return None
-    if generation != config.get("generation") or any(not isinstance(generation.get(mode), dict) or not generation[mode] for mode in ("train", "eval")):
+    if generation != config.get("generation") or any(
+        not isinstance(generation.get(mode), dict) or not generation[mode]
+        for mode in ("train", "eval")
+    ):
         return None
     for key in ("train_item_ids", "test_item_ids"):
         ids = manifest.get(key)
-        if (not isinstance(ids, list) or not ids or not all(isinstance(value, str) and value for value in ids)
-                or len(set(ids)) != len(ids)):
+        if (
+            not isinstance(ids, list)
+            or not ids
+            or not all(isinstance(value, str) and value for value in ids)
+            or len(set(ids)) != len(ids)
+        ):
             return None
-    payload = {"fingerprint_schema": "samestack-shared-stack-v1",
-               "source": {key: source[key] for key in ("commit", "dirty", "dirty_hash", "source_files")},
-               "revisions": revisions, "chat_template_hash": manifest["chat_template_hash"],
-               "generation": generation, "train_item_ids": manifest["train_item_ids"],
-               "test_item_ids": manifest["test_item_ids"],
-               "shared_effective_config": {key: value for key, value in config.items() if key not in ARM_SEED_CONFIG_FIELDS}}
+    payload = {
+        "fingerprint_schema": "samestack-shared-stack-v1",
+        "source": {key: source[key] for key in ("commit", "dirty", "dirty_hash", "source_files")},
+        "revisions": revisions,
+        "chat_template_hash": manifest["chat_template_hash"],
+        "generation": generation,
+        "train_item_ids": manifest["train_item_ids"],
+        "test_item_ids": manifest["test_item_ids"],
+        "shared_effective_config": {
+            key: value for key, value in config.items() if key not in ARM_SEED_CONFIG_FIELDS
+        },
+    }
     try:
-        return hashlib.sha256(json.dumps(payload, sort_keys=True, separators=(",", ":"), allow_nan=False).encode()).hexdigest()
+        return hashlib.sha256(
+            json.dumps(payload, sort_keys=True, separators=(",", ":"), allow_nan=False).encode()
+        ).hexdigest()
     except (ValueError, TypeError):
         return None
 
 
 def default_plan():
-    return {"plan_id": "samestack-v3-seed-paired-analysis-v1", "planned_seeds": list(SEEDS),
-            "environment": None, "environment_hash": None, "shared_stack_hash": None,
-            "protocol_hash": None, "ordered_test_item_hash": None,
-            "primary_contrast_ids": list(PRIMARY),
-            "endpoint": {"declared": False, "description": "All four arms at every planned seed"},
-            "equivalence_margin": .02, "margin_justification": None,
-            "prespecification_status": "retrospective_repair"}
+    return {
+        "plan_id": "samestack-v3-seed-paired-analysis-v1",
+        "planned_seeds": list(SEEDS),
+        "environment": None,
+        "environment_hash": None,
+        "shared_stack_hash": None,
+        "protocol_hash": None,
+        "ordered_test_item_hash": None,
+        "primary_contrast_ids": list(PRIMARY),
+        "endpoint": {"declared": False, "description": "All four arms at every planned seed"},
+        "equivalence_margin": 0.02,
+        "margin_justification": None,
+        "prespecification_status": "retrospective_repair",
+    }
 
 
 def validate_plan(plan):
@@ -103,7 +152,12 @@ def validate_plan(plan):
     if not isinstance(endpoint, dict) or type(endpoint.get("declared")) is not bool:
         raise ValueError("endpoint.declared must be an explicit boolean")
     margin = plan.get("equivalence_margin")
-    if isinstance(margin, bool) or not isinstance(margin, (int, float)) or not math.isfinite(margin) or margin <= 0:
+    if (
+        isinstance(margin, bool)
+        or not isinstance(margin, (int, float))
+        or not math.isfinite(margin)
+        or margin <= 0
+    ):
         raise ValueError("equivalence_margin must be finite and positive")
     for field in IDENTITY_FIELDS[1:]:
         value = plan.get(field)
@@ -120,9 +174,12 @@ def _record_identity(record):
     manifest = record.get("manifest") or {}
     if not isinstance(manifest, dict):
         raise ValueError("manifest must be an object")
-    return {"arm": record.get("arm"), "seed": record.get("seed"),
-            **{key: manifest.get(key) for key in IDENTITY_FIELDS},
-            "shared_stack_hash": shared_stack_fingerprint(record)}
+    return {
+        "arm": record.get("arm"),
+        "seed": record.get("seed"),
+        **{key: manifest.get(key) for key in IDENTITY_FIELDS},
+        "shared_stack_hash": shared_stack_fingerprint(record),
+    }
 
 
 def _validate_values(record):
@@ -135,38 +192,70 @@ def _validate_values(record):
             raise ValueError(f"{field} length must equal n_eval")
         if any(type(v) not in (int, bool) or v not in (0, 1) for v in values):
             raise ValueError(f"{field} must contain binary verdicts")
-    for field, values in (("heldout_pre_acc", record["pre_correct"]),
-                          ("heldout_post_acc", record["post_correct"])):
+    for field, values in (
+        ("heldout_pre_acc", record["pre_correct"]),
+        ("heldout_post_acc", record["post_correct"]),
+    ):
         if field in record:
             value = record[field]
-            if (isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value)
-                    or not math.isclose(value, sum(values) / n, rel_tol=0, abs_tol=1e-12)):
+            if (
+                isinstance(value, bool)
+                or not isinstance(value, (int, float))
+                or not math.isfinite(value)
+                or not math.isclose(value, sum(values) / n, rel_tol=0, abs_tol=1e-12)
+            ):
                 raise ValueError(f"{field} disagrees with verdicts")
 
 
 def _contrast(key, arms, selected, plan):
     a, b = arms
     seeds = [s for s in plan["planned_seeds"] if (a, s) in selected and (b, s) in selected]
-    result = {"id": key, "arms": list(arms), "n": len(seeds), "seeds": seeds,
-              "missing_seeds": [s for s in plan["planned_seeds"] if s not in seeds],
-              "pairs": [{"seed": s, "a_run_id": _record_identity(selected[a, s])["run_id"],
-                         "b_run_id": _record_identity(selected[b, s])["run_id"]} for s in seeds],
-              "status": "available" if len(seeds) >= 2 else "unavailable",
-              "mean": None, "sd": None, "diffs": [], "t_ci": None, "tost_ci90": None,
-              "p_t": 1.0, "p_signflip": 1.0, "tost_p": 1.0,
-              "equivalence_claim_eligible": False}
+    result = {
+        "id": key,
+        "arms": list(arms),
+        "n": len(seeds),
+        "seeds": seeds,
+        "missing_seeds": [s for s in plan["planned_seeds"] if s not in seeds],
+        "pairs": [
+            {
+                "seed": s,
+                "a_run_id": _record_identity(selected[a, s])["run_id"],
+                "b_run_id": _record_identity(selected[b, s])["run_id"],
+            }
+            for s in seeds
+        ],
+        "status": "available" if len(seeds) >= 2 else "unavailable",
+        "mean": None,
+        "sd": None,
+        "diffs": [],
+        "t_ci": None,
+        "tost_ci90": None,
+        "p_t": 1.0,
+        "p_signflip": 1.0,
+        "tost_p": 1.0,
+        "equivalence_claim_eligible": False,
+    }
     for seed in seeds:
         x, y = selected[a, seed], selected[b, seed]
         xi, yi = _record_identity(x), _record_identity(y)
-        if any(xi[field] != yi[field] for field in IDENTITY_FIELDS[1:]) or x["n_eval"] != y["n_eval"]:
-            raise ValueError(f"unmatched environment/shared stack/protocol/items for {key}, seed {seed}")
+        if (
+            any(xi[field] != yi[field] for field in IDENTITY_FIELDS[1:])
+            or x["n_eval"] != y["n_eval"]
+        ):
+            raise ValueError(
+                f"unmatched environment/shared stack/protocol/items for {key}, seed {seed}"
+            )
     if len(seeds) >= 2:
-        accuracies = lambda arm: {s: sum(selected[arm, s]["post_correct"]) / selected[arm, s]["n_eval"] for s in seeds}
+        accuracies = lambda arm: {
+            s: sum(selected[arm, s]["post_correct"]) / selected[arm, s]["n_eval"] for s in seeds
+        }
         result.update(paired(accuracies(a), accuracies(b), margin=plan["equivalence_margin"]))
     return result
 
 
-def analyze_runs(records, plan=None, *, completion_validated_run_ids=(), input_artifact_exclusions=()):
+def analyze_runs(
+    records, plan=None, *, completion_validated_run_ids=(), input_artifact_exclusions=()
+):
     """Analyze a materialized list of raw records without filesystem/CLI effects.
 
     Duplicate identities are errors. Out-of-plan, unverified or incompatible
@@ -179,8 +268,12 @@ def analyze_runs(records, plan=None, *, completion_validated_run_ids=(), input_a
         raise ValueError("completion-validated run IDs must be nonempty strings")
     loader_exclusions = deepcopy(list(input_artifact_exclusions))
     for exclusion in loader_exclusions:
-        if (not isinstance(exclusion, dict) or not isinstance(exclusion.get("reasons"), list)
-                or not exclusion["reasons"] or not all(isinstance(reason, str) and reason for reason in exclusion["reasons"])):
+        if (
+            not isinstance(exclusion, dict)
+            or not isinstance(exclusion.get("reasons"), list)
+            or not exclusion["reasons"]
+            or not all(isinstance(reason, str) and reason for reason in exclusion["reasons"])
+        ):
             raise ValueError("input artifact exclusions require nonempty string reasons")
     json.dumps(loader_exclusions, allow_nan=False)
     selected, excluded = {}, []
@@ -220,6 +313,7 @@ def analyze_runs(records, plan=None, *, completion_validated_run_ids=(), input_a
             elif identity[field] != plan[field]:
                 reasons.append(f"{field} does not match plan")
         from platform_hybrid.experiments.samestack_contract import validate_run
+
         validation = validate_run(record, filename=record.get("source_path"), require_texts=False)
         if not validation["verified"]:
             reasons.extend(validation["errors"] + validation["unverified"])
@@ -236,10 +330,18 @@ def analyze_runs(records, plan=None, *, completion_validated_run_ids=(), input_a
         if (arm, seed) in selected:
             raise ValueError(f"duplicate selected arm/seed: {arm}, {seed}")
         selected[arm, seed] = record
-    missing = [{"arm": arm, "seed": seed} for arm in ARMS for seed in plan["planned_seeds"]
-               if (arm, seed) not in selected]
+    missing = [
+        {"arm": arm, "seed": seed}
+        for arm in ARMS
+        for seed in plan["planned_seeds"]
+        if (arm, seed) not in selected
+    ]
     primary = {key: _contrast(key, arms, selected, plan) for key, arms in PRIMARY.items()}
-    for raw, adjusted in (("p_t", "holm_p_t"), ("p_signflip", "holm_p_signflip"), ("tost_p", "holm_tost_p")):
+    for raw, adjusted in (
+        ("p_t", "holm_p_t"),
+        ("p_signflip", "holm_p_signflip"),
+        ("tost_p", "holm_tost_p"),
+    ):
         corrected = holm({key: value[raw] for key, value in primary.items()})
         for key, value in primary.items():
             value[adjusted] = corrected[key]
@@ -256,24 +358,44 @@ def analyze_runs(records, plan=None, *, completion_validated_run_ids=(), input_a
         raise ValueError("a run cannot be selected and excluded by artifact validation")
     for identity in identities:
         identity["completion_bundle_validated"] = identity["run_id"] in checked_ids
-    return {"schema_version": 1, "status": "interim" if interim else "endpoint_complete",
-            "final_eligible": False, "interim_reasons": interim, "plan": plan,
-            "plan_hash": hashlib.sha256(json.dumps(plan, sort_keys=True, separators=(",", ":"), allow_nan=False).encode()).hexdigest(),
-            "selected_runs": identities,
-            "missing_planned_runs": missing, "excluded_runs": excluded + loader_exclusions,
-            "artifact_validation": {"scope": "Pure API validates record schema; completion checks are explicitly supplied by the file-boundary caller",
-                                    "completion_validated_selected_run_ids": sorted(selected_ids & checked_ids),
-                                    "unchecked_selected_run_ids": sorted(selected_ids - checked_ids),
-                                    "input_artifact_exclusion_count": len(loader_exclusions)},
-            "completion": {"planned": len(planned), "selected": len(selected), "missing": len(missing)},
-            "primary_contrasts": primary,
-            "exploratory_contrasts": {key: _contrast(key, arms, selected, plan) for key, arms in EXPLORATORY.items()},
-            "inference": {"primary_unit": "training seed", "primary_test": "paired t, Holm across fixed three contrasts",
-                          "paired_t_assumptions": "Independent training-seed pairs and approximately normal paired differences; many test items do not increase seed replication",
-                          "signflip": "Sensitivity test requiring independent paired seeds and symmetric/exchangeable signs; not a treatment-randomization test",
-                          "five_pair_minimum_two_sided_signflip_p": .0625,
-                          "item_only": "Conditional on observed training seeds; not training-run uncertainty",
-                          "pooled_mcnemar": "Nonprimary descriptive diagnostic; repeated seed-item observations are not independent",
-                          "equivalence": f"90% TOST CI and combined max(one-sided p) Holm-adjusted across the fixed family; +/-{plan['equivalence_margin'] * 100:g}pp margin; " + (f"justification: {plan['margin_justification']}" if plan.get("margin_justification") else "no supplied scientific justification"),
-                          "prespecification": "Retrospective repair; no prospective registration claim",
-                          "power": "Pilot unadjusted paired-t sensitivity only; actual-design joint seed/item, family and TOST simulation remains unmet without justified variance/correlation assumptions"}}
+    return {
+        "schema_version": 1,
+        "status": "interim" if interim else "endpoint_complete",
+        "final_eligible": False,
+        "interim_reasons": interim,
+        "plan": plan,
+        "plan_hash": hashlib.sha256(
+            json.dumps(plan, sort_keys=True, separators=(",", ":"), allow_nan=False).encode()
+        ).hexdigest(),
+        "selected_runs": identities,
+        "missing_planned_runs": missing,
+        "excluded_runs": excluded + loader_exclusions,
+        "artifact_validation": {
+            "scope": "Pure API validates record schema; completion checks are explicitly supplied by the file-boundary caller",
+            "completion_validated_selected_run_ids": sorted(selected_ids & checked_ids),
+            "unchecked_selected_run_ids": sorted(selected_ids - checked_ids),
+            "input_artifact_exclusion_count": len(loader_exclusions),
+        },
+        "completion": {"planned": len(planned), "selected": len(selected), "missing": len(missing)},
+        "primary_contrasts": primary,
+        "exploratory_contrasts": {
+            key: _contrast(key, arms, selected, plan) for key, arms in EXPLORATORY.items()
+        },
+        "inference": {
+            "primary_unit": "training seed",
+            "primary_test": "paired t, Holm across fixed three contrasts",
+            "paired_t_assumptions": "Independent training-seed pairs and approximately normal paired differences; many test items do not increase seed replication",
+            "signflip": "Sensitivity test requiring independent paired seeds and symmetric/exchangeable signs; not a treatment-randomization test",
+            "five_pair_minimum_two_sided_signflip_p": 0.0625,
+            "item_only": "Conditional on observed training seeds; not training-run uncertainty",
+            "pooled_mcnemar": "Nonprimary descriptive diagnostic; repeated seed-item observations are not independent",
+            "equivalence": f"90% TOST CI and combined max(one-sided p) Holm-adjusted across the fixed family; +/-{plan['equivalence_margin'] * 100:g}pp margin; "
+            + (
+                f"justification: {plan['margin_justification']}"
+                if plan.get("margin_justification")
+                else "no supplied scientific justification"
+            ),
+            "prespecification": "Retrospective repair; no prospective registration claim",
+            "power": "Pilot unadjusted paired-t sensitivity only; actual-design joint seed/item, family and TOST simulation remains unmet without justified variance/correlation assumptions",
+        },
+    }

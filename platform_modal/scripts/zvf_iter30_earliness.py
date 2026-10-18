@@ -62,16 +62,16 @@ AUC without telling us whether ZVF carries independent
 information. The headline finding is a comparison of the four ZVF
 features against each other.
 """
+
 from __future__ import annotations
 
 import csv
 import math
-import random
 import statistics
 import sys
 from collections import defaultdict
 from pathlib import Path
-from typing import Dict, Iterable, List, Sequence, Tuple
+from typing import Dict, List, Sequence, Tuple
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 RESULTS = REPO_ROOT / "experiments" / "results"
@@ -160,7 +160,7 @@ def _featurise_trajectory(
         sxx = sum((x - mx) ** 2 for x in xs)
         if sxx == 0:
             return 0.0
-        sxy = sum((x - mx) * (y - my) for x, y in zip(xs, ys))
+        sxy = sum((x - mx) * (y - my) for x, y in zip(xs, ys, strict=False))
         return sxy / sxx
 
     # Protocol v2: strictly future first onset in recorded training-step units.
@@ -187,7 +187,9 @@ def _featurise_trajectory(
             else:
                 y = None  # censored or already collapsed
             record[f"y_K{K}"] = y
-            record[f"lead_to_collapse_K{K}"] = onset-step if onset is not None and step < onset else None
+            record[f"lead_to_collapse_K{K}"] = (
+                onset - step if onset is not None and step < onset else None
+            )
         out.append(record)
     return out
 
@@ -214,7 +216,7 @@ def _univar_logreg_fit(xs: Sequence[float], ys: Sequence[int]) -> Tuple[float, f
     b0, b1 = 0.0, 0.0
     for _ in range(40):
         g0 = g1 = h00 = h01 = h11 = 0.0
-        for x, y in zip(xs, ys):
+        for x, y in zip(xs, ys, strict=False):
             p = _sigmoid(b0 + b1 * x)
             r = p - y
             g0 += r
@@ -245,7 +247,7 @@ def _predict(b0: float, b1: float, x: float) -> float:
 
 
 def _roc_auc(scores: Sequence[float], labels: Sequence[int]) -> float:
-    pairs = sorted(zip(scores, labels), key=lambda t: t[0])
+    pairs = sorted(zip(scores, labels, strict=False), key=lambda t: t[0])
     pos = sum(labels)
     neg = len(labels) - pos
     if pos == 0 or neg == 0:
@@ -274,6 +276,7 @@ def _roc_auc(scores: Sequence[float], labels: Sequence[int]) -> float:
 
 def _pr_auc(scores, labels):
     from _review28_statistics import average_precision
+
     return average_precision(scores, labels)
 
 
@@ -281,7 +284,7 @@ def _brier(probs: Sequence[float], labels: Sequence[int]) -> float:
     n = len(probs)
     if n == 0:
         return float("nan")
-    return sum((p - y) ** 2 for p, y in zip(probs, labels)) / n
+    return sum((p - y) ** 2 for p, y in zip(probs, labels, strict=False)) / n
 
 
 def _ece(probs: Sequence[float], labels: Sequence[int], n_bins: int = 5) -> float:
@@ -289,7 +292,7 @@ def _ece(probs: Sequence[float], labels: Sequence[int], n_bins: int = 5) -> floa
     if n == 0:
         return float("nan")
     bins = [[] for _ in range(n_bins)]
-    for p, y in zip(probs, labels):
+    for p, y in zip(probs, labels, strict=False):
         idx = min(n_bins - 1, int(p * n_bins))
         bins[idx].append((p, y))
     err = 0.0
@@ -328,7 +331,9 @@ def _cv_score(
         train = [r for k, rows in by_traj.items() if k != hold for r in rows]
         test = by_traj[hold]
         xs = [r[feat] for r in train if not (isinstance(r[feat], float) and math.isnan(r[feat]))]
-        ys = [r[label_key] for r in train if not (isinstance(r[feat], float) and math.isnan(r[feat]))]
+        ys = [
+            r[label_key] for r in train if not (isinstance(r[feat], float) and math.isnan(r[feat]))
+        ]
         if not xs or len(set(ys)) < 2:
             continue
         b0, b1 = _univar_logreg_fit(xs, ys)
@@ -419,7 +424,13 @@ def main() -> int:
         # Use holdout predictions for calibration
         all_cal_rows: List[Tuple[float, int]] = []
         for hold in traj_keys:
-            train = [r for k, rows in by_traj.items() if k != hold for r in rows if r.get(label) is not None]
+            train = [
+                r
+                for k, rows in by_traj.items()
+                if k != hold
+                for r in rows
+                if r.get(label) is not None
+            ]
             test = [r for r in by_traj[hold] if r.get(label) is not None]
             xs = [r["trailing_mean_25"] for r in train if not math.isnan(r["trailing_mean_25"])]
             ys = [r[label] for r in train if not math.isnan(r["trailing_mean_25"])]
@@ -494,6 +505,7 @@ def main() -> int:
     # Build ROC figure (matplotlib optional)
     try:
         import matplotlib
+
         matplotlib.use("Agg")
         import matplotlib.pyplot as plt
 
@@ -517,19 +529,12 @@ def main() -> int:
                         r
                         for k, rows in by_traj2.items()
                         if k != hold
-                        for r in rows if r.get(label) is not None
+                        for r in rows
+                        if r.get(label) is not None
                     ]
                     test = [r for r in by_traj2[hold] if r.get(label) is not None]
-                    xs = [
-                        r[feat]
-                        for r in train
-                        if not math.isnan(r[feat])
-                    ]
-                    ys = [
-                        r[label]
-                        for r in train
-                        if not math.isnan(r[feat])
-                    ]
+                    xs = [r[feat] for r in train if not math.isnan(r[feat])]
+                    ys = [r[label] for r in train if not math.isnan(r[feat])]
                     if not xs or len(set(ys)) < 2:
                         continue
                     b0, b1 = _univar_logreg_fit(xs, ys)
@@ -554,7 +559,7 @@ def main() -> int:
                 fp = 0
                 fpr: List[float] = []
                 tpr: List[float] = []
-                for s, y in order:
+                for _s, y in order:
                     if y == 1:
                         tp += 1
                     else:
@@ -586,7 +591,9 @@ def main() -> int:
         pass
 
     # Stdout report
-    print(f"# rows = {sum(len(rows) for rows in by_traj.values())} over {len(by_traj)} trajectories")
+    print(
+        f"# rows = {sum(len(rows) for rows in by_traj.values())} over {len(by_traj)} trajectories"
+    )
     for r in sorted(feat_imp_rows, key=lambda r: -r[4]):
         print(f"  K={r[0]:>2}  feat={r[1]:<22}  ROC={r[3]:.3f}  PR={r[4]:.3f}")
     return 0

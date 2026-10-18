@@ -48,15 +48,17 @@ def load_n10():
         for sl in d["step_log"]:
             step = sl["step"]
             band = (step - 1) // 3  # 0-indexed band 0..4
-            rows.append({
-                "seed": s,
-                "step": step,
-                "band": band,
-                "loss": float(sl.get("loss", float("nan"))),
-                "reward": float(sl.get("reward", float("nan"))),
-                "zvf": float(sl.get("zvf", float("nan"))),
-                "mean_len": float(sl.get("mean_len", float("nan"))),
-            })
+            rows.append(
+                {
+                    "seed": s,
+                    "step": step,
+                    "band": band,
+                    "loss": float(sl.get("loss", float("nan"))),
+                    "reward": float(sl.get("reward", float("nan"))),
+                    "zvf": float(sl.get("zvf", float("nan"))),
+                    "mean_len": float(sl.get("mean_len", float("nan"))),
+                }
+            )
     return rows
 
 
@@ -79,7 +81,7 @@ def axis_variance_fraction(rows, channel, axis):
     for r in rows:
         groups[r[axis]].append(r[channel])
     axis_ss = 0.0
-    for g, group_vals in groups.items():
+    for _g, group_vals in groups.items():
         n_g = len(group_vals)
         mean_g = sum(group_vals) / n_g
         axis_ss += n_g * (mean_g - grand) ** 2
@@ -110,12 +112,12 @@ def bootstrap_ci_eta2(rows, channel, axis, B=B_BOOT, seed=BOOT_SEED):
         for r in boot_rows:
             groups[r[axis]].append(r[channel])
         axis_ss = 0.0
-        for g, gv in groups.items():
+        for _g, gv in groups.items():
             mg = sum(gv) / len(gv)
             axis_ss += len(gv) * (mg - grand) ** 2
         boot_vals.append(axis_ss / total_ss)
     boot_vals.sort()
-    return boot_vals[int(B * ALPHA / 2)], boot_vals[int(B * (1 - ALPHA / 2))]  # noqa: E501
+    return boot_vals[int(B * ALPHA / 2)], boot_vals[int(B * (1 - ALPHA / 2))]
 
 
 def main():
@@ -129,28 +131,40 @@ def main():
         for axis in ["seed", "band"]:
             point = axis_variance_fraction(rows, ch, axis)
             lo, hi = bootstrap_ci_eta2(rows, ch, axis)
-            per_axis.append({
-                "channel": ch, "axis": axis,
-                "eta2_point": round(point, 4),
-                "ci_lo": round(lo, 4), "ci_hi": round(hi, 4),
-                "n_obs": n_rows, "B": B_BOOT,
-            })
+            per_axis.append(
+                {
+                    "channel": ch,
+                    "axis": axis,
+                    "eta2_point": round(point, 4),
+                    "ci_lo": round(lo, 4),
+                    "ci_hi": round(hi, 4),
+                    "n_obs": n_rows,
+                    "B": B_BOOT,
+                }
+            )
     # Residual = 1 - η²(seed) - η²(band) is the II-class share NOT attributed to either axis.
     for ch in CHANNELS:
         e_seed = axis_variance_fraction(rows, ch, "seed")
         e_band = axis_variance_fraction(rows, ch, "band")
         resid = max(0.0, 1.0 - e_seed - e_band)
-        per_axis.append({
-            "channel": ch, "axis": "residual",
-            "eta2_point": round(resid, 4),
-            "ci_lo": round(resid, 4), "ci_hi": round(resid, 4),
-            "n_obs": n_rows, "B": B_BOOT,
-        })
+        per_axis.append(
+            {
+                "channel": ch,
+                "axis": "residual",
+                "eta2_point": round(resid, 4),
+                "ci_lo": round(resid, 4),
+                "ci_hi": round(resid, 4),
+                "n_obs": n_rows,
+                "B": B_BOOT,
+            }
+        )
     per_axis_path = OUT / "p5_iter133_per_axis_eta2.tsv"
     with open(per_axis_path, "w", newline="") as f:
-        w = csv.DictWriter(f, fieldnames=[
-            "channel", "axis", "eta2_point", "ci_lo", "ci_hi", "n_obs", "B"
-        ], delimiter="\t")
+        w = csv.DictWriter(
+            f,
+            fieldnames=["channel", "axis", "eta2_point", "ci_lo", "ci_hi", "n_obs", "B"],
+            delimiter="\t",
+        )
         w.writeheader()
         for r in per_axis:
             w.writerow(r)
@@ -163,19 +177,21 @@ def main():
             band_vals = [r[ch] for r in rows if r["band"] == band]
             mn = sum(band_vals) / len(band_vals)
             sd = statistics.stdev(band_vals) if len(band_vals) > 1 else float("nan")
-            by_band.append({
-                "band": band,
-                "band_label": f"steps_{band*3+1}-{band*3+3}",
-                "channel": ch,
-                "n_obs": len(band_vals),
-                "mean": round(mn, 4),
-                "sd": round(sd, 4) if not math.isnan(sd) else "nan",
-            })
+            by_band.append(
+                {
+                    "band": band,
+                    "band_label": f"steps_{band * 3 + 1}-{band * 3 + 3}",
+                    "channel": ch,
+                    "n_obs": len(band_vals),
+                    "mean": round(mn, 4),
+                    "sd": round(sd, 4) if not math.isnan(sd) else "nan",
+                }
+            )
     band_path = OUT / "p5_iter133_step_band.tsv"
     with open(band_path, "w", newline="") as f:
-        w = csv.DictWriter(f, fieldnames=[
-            "band", "band_label", "channel", "n_obs", "mean", "sd"
-        ], delimiter="\t")
+        w = csv.DictWriter(
+            f, fieldnames=["band", "band_label", "channel", "n_obs", "mean", "sd"], delimiter="\t"
+        )
         w.writeheader()
         for r in by_band:
             w.writerow(r)
@@ -205,64 +221,105 @@ def main():
         R_lo = R_boot[int(B_BOOT * ALPHA / 2)]
         R_hi = R_boot[int(B_BOOT * (1 - ALPHA / 2))]
         p_gt_1 = sum(1 for v in R_boot if v > 1.0) / len(R_boot)
-        chained.append({
-            "channel": ch,
-            "eta2_step_band": round(eb0, 4),
-            "eta2_seed": round(es0, 4),
-            "R_step_over_seed": round(R0, 4) if not math.isnan(R0) else "nan",
-            "R_ci_lo": round(R_lo, 4),
-            "R_ci_hi": round(R_hi, 4),
-            "P_R_gt_1": round(p_gt_1, 4),
-            "n_obs": n_rows, "B": B_BOOT,
-        })
+        chained.append(
+            {
+                "channel": ch,
+                "eta2_step_band": round(eb0, 4),
+                "eta2_seed": round(es0, 4),
+                "R_step_over_seed": round(R0, 4) if not math.isnan(R0) else "nan",
+                "R_ci_lo": round(R_lo, 4),
+                "R_ci_hi": round(R_hi, 4),
+                "P_R_gt_1": round(p_gt_1, 4),
+                "n_obs": n_rows,
+                "B": B_BOOT,
+            }
+        )
     chained_path = OUT / "p5_iter133_chained_R.tsv"
     with open(chained_path, "w", newline="") as f:
-        w = csv.DictWriter(f, fieldnames=[
-            "channel", "eta2_step_band", "eta2_seed",
-            "R_step_over_seed", "R_ci_lo", "R_ci_hi", "P_R_gt_1",
-            "n_obs", "B"
-        ], delimiter="\t")
+        w = csv.DictWriter(
+            f,
+            fieldnames=[
+                "channel",
+                "eta2_step_band",
+                "eta2_seed",
+                "R_step_over_seed",
+                "R_ci_lo",
+                "R_ci_hi",
+                "P_R_gt_1",
+                "n_obs",
+                "B",
+            ],
+            delimiter="\t",
+        )
         w.writeheader()
         for r in chained:
             w.writerow(r)
     print(f"[N10] wrote {chained_path} ({len(chained)} rows)")
 
-        # ---------- H hypothesis verdicts ----------
+    # ---------- H hypothesis verdicts ----------
     eta2_map = {(r["channel"], r["axis"]): r["eta2_point"] for r in per_axis}
     band_dom = [ch for ch in CHANNELS if eta2_map[(ch, "band")] > eta2_map[(ch, "seed")]]
-    h2_pass = sum(1 for r in chained if isinstance(r["R_step_over_seed"], (int, float))
-                  and r["R_step_over_seed"] >= 1 and r["R_ci_lo"] > 1) >= 2
+    h2_pass = (
+        sum(
+            1
+            for r in chained
+            if isinstance(r["R_step_over_seed"], (int, float))
+            and r["R_step_over_seed"] >= 1
+            and r["R_ci_lo"] > 1
+        )
+        >= 2
+    )
     verdicts = {
-        "H1": {"claim": "η²(step_band) > η²(seed) on ≥ 2/4 channels (curriculum)",
-                "verdict": "PASS" if len(band_dom) >= 2 else "FAIL",
-                "band_dominant_channels": band_dom},
-        "H2": {"claim": "R ≥ 1 with CI-lo > 1 on ≥ 2/4 channels",
-                "verdict": "PASS" if h2_pass else "FAIL"},
-        "H3": {"claim": "iter-125 R≥4 generalises to N10 (cross-corpus portability)",
-                "verdict": "REFUTED",
-                "R_per_channel": {r["channel"]: r["R_step_over_seed"] for r in chained},
-                "interpretation": ("iter-125 multi-stack R(zvf, stack/algo)=10.32 is corpus-shape-dependent, "
-                                     "NOT corpus-agnostic. On N10 single-stack/single-algo, zvf is SEED-dominated (R=0.34). "
-                                     "Reward+mean_len carry the cross-corpus invariant; zvf/stack behaviour is corpus-shaping-dependent.")},
-        "H4": {"claim": "η²(step_band, zvf) ≥ 0.1 ⇒ controller-eligibility coherence",
-                "verdict": "PASS" if eta2_map[("zvf", "band")] >= 0.10 else "INSUFFICIENT",
-                "eta2_step_band_zvf": round(eta2_map[("zvf", "band")], 4),
-                "interpretation": ("On N10 zvf is seed-dominated, not step-band. Any P7 controller should require "
-                                    "η²(step_band, zvf)≥0.10 as an operational gate; N10 panel fails this gate.")},
+        "H1": {
+            "claim": "η²(step_band) > η²(seed) on ≥ 2/4 channels (curriculum)",
+            "verdict": "PASS" if len(band_dom) >= 2 else "FAIL",
+            "band_dominant_channels": band_dom,
+        },
+        "H2": {
+            "claim": "R ≥ 1 with CI-lo > 1 on ≥ 2/4 channels",
+            "verdict": "PASS" if h2_pass else "FAIL",
+        },
+        "H3": {
+            "claim": "iter-125 R≥4 generalises to N10 (cross-corpus portability)",
+            "verdict": "REFUTED",
+            "R_per_channel": {r["channel"]: r["R_step_over_seed"] for r in chained},
+            "interpretation": (
+                "iter-125 multi-stack R(zvf, stack/algo)=10.32 is corpus-shape-dependent, "
+                "NOT corpus-agnostic. On N10 single-stack/single-algo, zvf is SEED-dominated (R=0.34). "
+                "Reward+mean_len carry the cross-corpus invariant; zvf/stack behaviour is corpus-shaping-dependent."
+            ),
+        },
+        "H4": {
+            "claim": "η²(step_band, zvf) ≥ 0.1 ⇒ controller-eligibility coherence",
+            "verdict": "PASS" if eta2_map[("zvf", "band")] >= 0.10 else "INSUFFICIENT",
+            "eta2_step_band_zvf": round(eta2_map[("zvf", "band")], 4),
+            "interpretation": (
+                "On N10 zvf is seed-dominated, not step-band. Any P7 controller should require "
+                "η²(step_band, zvf)≥0.10 as an operational gate; N10 panel fails this gate."
+            ),
+        },
     }
 
-# ---------- summary JSON ----------
+    # ---------- summary JSON ----------
     summary = {
-        "iter": 133, "pillar": "P5",
+        "iter": 133,
+        "pillar": "P5",
         "corpus": "platform_hybrid/experiments/results/n10_seed_expansion/",
-        "n_seeds_used": len(SEEDS), "seeds": SEEDS, "n_obs": n_rows,
-        "channels": CHANNELS, "B_bootstrap": B_BOOT, "boot_seed": BOOT_SEED,
+        "n_seeds_used": len(SEEDS),
+        "seeds": SEEDS,
+        "n_obs": n_rows,
+        "channels": CHANNELS,
+        "B_bootstrap": B_BOOT,
+        "boot_seed": BOOT_SEED,
         "hypotheses": verdicts,
-        "per_axis_eta2": per_axis, "chained_R": chained,
+        "per_axis_eta2": per_axis,
+        "chained_R": chained,
         "cross_corpus_portability": {
             "iter_125_chain_R_zvf_task_slice": "10.32 [4.11, 32.14]",
             "iter_125_chain_R_zvf_G": "9.77 [3.51, 32.19]",
-            "iter_133_R_step_band_over_seed_zvf": str(next(r["R_step_over_seed"] for r in chained if r["channel"] == "zvf")),
+            "iter_133_R_step_band_over_seed_zvf": str(
+                next(r["R_step_over_seed"] for r in chained if r["channel"] == "zvf")
+            ),
             "interpretation": "iter-125 R≥4 is corpus-shape-dependent; N10 single-stack reverts zvf R < 1.",
         },
         "operational_recommendation": "Report absolute η² (corpus-comparable) AND R (corpus-shape-relative); cross-corpus claims must specify which axes are swept.",
@@ -279,4 +336,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

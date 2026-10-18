@@ -19,6 +19,7 @@ from unittest import mock
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 import driver
+import pytest
 
 
 H = 2_000_000
@@ -65,24 +66,24 @@ def make_tmp(test):
 class TestSchedule(unittest.TestCase):
     def test_offsets_and_tail_constraint(self):
         sched = driver.compute_schedule(H, A)
-        self.assertEqual(sched["target_cutoff"], A + 1590)
-        self.assertEqual(sched["target_budget_end"], A + 1800)
-        self.assertEqual(sched["helper_delete_at"], H + 2610)
-        self.assertEqual(sched["helper_budget_end"], H + 2700)
+        assert sched["target_cutoff"] == A + 1590
+        assert sched["target_budget_end"] == A + 1800
+        assert sched["helper_delete_at"] == H + 2610
+        assert sched["helper_budget_end"] == H + 2700
 
     def test_boundary_accepts_equal(self):
         sched = driver.compute_schedule(H, H + 210)
-        self.assertEqual(sched["target_arm_epoch_A"], H + 210)
+        assert sched["target_arm_epoch_A"] == H + 210
 
     def test_tail_violation_rejected(self):
-        with self.assertRaises(driver.ScheduleError):
+        with pytest.raises(driver.ScheduleError):
             driver.compute_schedule(H, H + 211)
 
     def test_admission_strict_cutoff(self):
         sched = driver.compute_schedule(H, A)
-        self.assertTrue(driver.admission_open(sched, A + 1590 - 0.001))
-        self.assertFalse(driver.admission_open(sched, A + 1590))
-        self.assertFalse(driver.admission_open(sched, A + 1590 + 100))
+        assert driver.admission_open(sched, A + 1590 - 0.001)
+        assert not driver.admission_open(sched, A + 1590)
+        assert not driver.admission_open(sched, A + 1590 + 100)
 
 
 class TestWatchdog(unittest.TestCase):
@@ -91,32 +92,42 @@ class TestWatchdog(unittest.TestCase):
         tmp = make_tmp(self)
         provider = driver.FakeComputeProvider()
         watch = driver.Watchdog(sched, "tgt", "hlp", tmp)
-        self.assertEqual(watch.due(A + 1589), [])
-        self.assertEqual(watch.due(A + 1590), ["target"])
+        assert watch.due(A + 1589) == []
+        assert watch.due(A + 1590) == ["target"]
         watch.fire(provider, "target", A + 1590)
-        self.assertEqual(watch.due(A + 1591), [])
-        self.assertEqual(watch.due(H + 2609), [])
-        self.assertEqual(watch.due(H + 2610), ["helper"])
+        assert watch.due(A + 1591) == []
+        assert watch.due(H + 2609) == []
+        assert watch.due(H + 2610) == ["helper"]
         watch.fire(provider, "helper", H + 2610)
-        self.assertEqual(watch.due(H + 9999), [])
-        self.assertTrue((tmp / "delete_intent_target.json").is_file())
-        self.assertTrue((tmp / "delete_result_helper.json").is_file())
+        assert watch.due(H + 9999) == []
+        assert (tmp / "delete_intent_target.json").is_file()
+        assert (tmp / "delete_result_helper.json").is_file()
         kinds = [c[0] for c in provider.calls]
-        self.assertEqual(kinds, ["delete_instance", "delete_instance"])
+        assert kinds == ["delete_instance", "delete_instance"]
 
 
 class MissionBase(unittest.TestCase):
     def run_mission(self, provider, clock, runner=None, disks=None):
         tmp = make_tmp(self)
         sched = driver.compute_schedule(H, A)
+
         # Advance the fake clock through real sleeps: patch sleep to step it.
         def advance(_s):
             clock.now_value += clock.step
+
         with mock.patch.object(driver.time, "sleep", side_effect=advance):
             terminal = driver.run_mission(
-                provider, sched, clock, tmp, "tgt", "hlp",
-                target_disks=(disks or []), helper_disks=[],
-                capsule_runner=runner, poll_s=0)
+                provider,
+                sched,
+                clock,
+                tmp,
+                "tgt",
+                "hlp",
+                target_disks=(disks or []),
+                helper_disks=[],
+                capsule_runner=runner,
+                poll_s=0,
+            )
         return terminal, tmp, sched
 
 
@@ -126,14 +137,14 @@ class TestMissionClean(MissionBase):
         clock = FakeClock(A - 500)
         runner = ScriptRunner(["cap-1", "cap-2"])
         terminal, tmp, sched = self.run_mission(provider, clock, runner)
-        self.assertEqual(terminal["status"], "COMPLETE_CLEAN")
-        self.assertEqual(terminal["verdict"], "CLEAN")
-        self.assertEqual(runner.ran, ["cap-1", "cap-2"])
-        self.assertTrue((tmp / "mission_terminal.json").is_file())
-        self.assertTrue((tmp / "absence_observations.json").is_file())
+        assert terminal["status"] == "COMPLETE_CLEAN"
+        assert terminal["verdict"] == "CLEAN"
+        assert runner.ran == ["cap-1", "cap-2"]
+        assert (tmp / "mission_terminal.json").is_file()
+        assert (tmp / "absence_observations.json").is_file()
         # Schedule epochs immutable: no clock rebasing through the run.
-        self.assertEqual(sched["target_arm_epoch_A"], A)
-        self.assertEqual(sched["helper_epoch_H"], H)
+        assert sched["target_arm_epoch_A"] == A
+        assert sched["helper_epoch_H"] == H
 
 
 class TestMissionCutoff(MissionBase):
@@ -142,10 +153,10 @@ class TestMissionCutoff(MissionBase):
         clock = FakeClock(A + 1590 + 10)
         runner = ScriptRunner(["cap-1"])
         terminal, tmp, sched = self.run_mission(provider, clock, runner)
-        self.assertEqual(runner.ran, [])
+        assert runner.ran == []
         events = [e["event"] for e in terminal["events"]]
-        self.assertIn("admission_refused_cutoff", events)
-        self.assertEqual(terminal["status"], "COMPLETE_CLEAN")
+        assert "admission_refused_cutoff" in events
+        assert terminal["status"] == "COMPLETE_CLEAN"
 
 
 class TestMissionUnverified(MissionBase):
@@ -153,12 +164,12 @@ class TestMissionUnverified(MissionBase):
         provider = driver.FakeComputeProvider()  # deletes accepted, never effective
         clock = FakeClock(A - 100)
         terminal, tmp, sched = self.run_mission(provider, clock)
-        self.assertEqual(terminal["verdict"], "CLEANUP_UNVERIFIED")
-        self.assertEqual(terminal["status"], "COMPLETE_CLEANUP_UNVERIFIED")
+        assert terminal["verdict"] == "CLEANUP_UNVERIFIED"
+        assert terminal["status"] == "COMPLETE_CLEANUP_UNVERIFIED"
         events = [e["event"] for e in terminal["events"]]
-        self.assertIn("root_notified", events)
+        assert "root_notified" in events
         obs = json.loads((tmp / "absence_observations.json").read_text())
-        self.assertTrue(obs["observations"]["target_vm"]["present"])
+        assert obs["observations"]["target_vm"]["present"]
 
 
 class TestMissionUncertain(MissionBase):
@@ -167,17 +178,19 @@ class TestMissionUncertain(MissionBase):
         provider.uncertain_ops.add(("create_instance", "hlp"))
         clock = FakeClock(A - 100)
         terminal, tmp, sched = self.run_mission(provider, clock)
-        self.assertEqual(terminal["status"], "STOP_UNCERTAIN_NO_REPLAY")
+        assert terminal["status"] == "STOP_UNCERTAIN_NO_REPLAY"
         kinds = [c[0] for c in provider.calls]
-        self.assertNotIn("delete_instance", kinds)  # no further mutations
-        self.assertEqual(kinds.count("create_instance"), 2)  # target ok, helper raised
+        assert "delete_instance" not in kinds  # no further mutations
+        assert kinds.count("create_instance") == 2  # target ok, helper raised
 
 
 class TestIamGate(unittest.TestCase):
     def write_binding(self, tmp, **over):
-        binding = {"permissions": list(driver.REQUIRED_IAM_PERMISSIONS),
-                   "project": driver.ENVELOPE["project"],
-                   "valid_until_epoch": 9_999_999_999}
+        binding = {
+            "permissions": list(driver.REQUIRED_IAM_PERMISSIONS),
+            "project": driver.ENVELOPE["project"],
+            "valid_until_epoch": 9_999_999_999,
+        }
         binding.update(over)
         path = tmp / "binding.json"
         path.write_text(json.dumps(binding))
@@ -185,30 +198,30 @@ class TestIamGate(unittest.TestCase):
 
     def test_gate_refusals(self):
         tmp = make_tmp(self)
-        with self.assertRaises(driver.IamGateError):
+        with pytest.raises(driver.IamGateError):
             driver.check_iam_binding(tmp / "missing.json")
         bad = self.write_binding(tmp, permissions=["compute.instances.get"])
-        with self.assertRaises(driver.IamGateError):
+        with pytest.raises(driver.IamGateError):
             driver.check_iam_binding(bad)
         expired = self.write_binding(tmp, valid_until_epoch=1)
-        with self.assertRaises(driver.IamGateError):
+        with pytest.raises(driver.IamGateError):
             driver.check_iam_binding(expired)
         wrong_proj = self.write_binding(tmp, project="other")
-        with self.assertRaises(driver.IamGateError):
+        with pytest.raises(driver.IamGateError):
             driver.check_iam_binding(wrong_proj)
 
     def test_gate_accepts_before_any_sdk_import(self):
         tmp = make_tmp(self)
         good = self.write_binding(tmp)
         binding = driver.check_iam_binding(good)
-        self.assertEqual(binding["project"], driver.ENVELOPE["project"])
+        assert binding["project"] == driver.ENVELOPE["project"]
         # Live provider refuses before importing the (absent) SDK.
-        with self.assertRaises(driver.IamGateError):
+        with pytest.raises(driver.IamGateError):
             driver.GcpComputeProvider(tmp / "missing.json")
 
     def test_validate_offline(self):
         report = driver.validate_offline()
-        self.assertTrue(report["ok"], report["findings"])
+        assert report["ok"], report["findings"]
 
 
 if __name__ == "__main__":

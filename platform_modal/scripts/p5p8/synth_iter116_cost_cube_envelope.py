@@ -26,13 +26,16 @@ The recall-preservation-cost ratio at the LOWEST cost_llm sweep
 0.8-5.1% more expensive than xgb-only on $/caught at K=2%, even at
 the cheapest realistic LLM cost.
 """
+
 from __future__ import annotations
 import csv, json
 from pathlib import Path
 
 import sys
+
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
+from _paths import REPO_ROOT
+
 ROOT = REPO_ROOT
 RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8"
 RES.mkdir(parents=True, exist_ok=True)
@@ -45,7 +48,7 @@ def load(path):
     with path.open() as f:
         rdr = csv.reader(f, delimiter="\t")
         header = next(rdr)
-        return [dict(zip(header, r)) for r in rdr]
+        return [dict(zip(header, r, strict=False)) for r in rdr]
 
 
 def main():
@@ -88,19 +91,23 @@ def main():
             best_cpd_rule = min(sub, key=lambda s: s["cpd_avg"])["rule"]
             best_cpf_rule = min(sub, key=lambda s: s["cpf_avg"])["rule"]
             by_rule = {s["rule"]: s for s in sub}
-            best_rows.append(dict(
-                rate=rate, cost_llm=cost_llm, cost_ratio=cost_llm / 0.0001,
-                best_cpd_rule=best_cpd_rule,
-                best_cpf_rule=best_cpf_rule,
-                cpd_xgb=by_rule["xgb_only"]["cpd_avg"],
-                cpd_grad=by_rule["gradient_band"]["cpd_avg"],
-                cpd_abs=by_rule["absolute_band"]["cpd_avg"],
-                cpf_xgb=by_rule["xgb_only"]["cpf_avg"],
-                cpf_grad=by_rule["gradient_band"]["cpf_avg"],
-                cpf_abs=by_rule["absolute_band"]["cpf_avg"],
-                n_llm_grad=by_rule["gradient_band"]["n_llm_avg"],
-                n_llm_abs=by_rule["absolute_band"]["n_llm_avg"],
-            ))
+            best_rows.append(
+                dict(
+                    rate=rate,
+                    cost_llm=cost_llm,
+                    cost_ratio=cost_llm / 0.0001,
+                    best_cpd_rule=best_cpd_rule,
+                    best_cpf_rule=best_cpf_rule,
+                    cpd_xgb=by_rule["xgb_only"]["cpd_avg"],
+                    cpd_grad=by_rule["gradient_band"]["cpd_avg"],
+                    cpd_abs=by_rule["absolute_band"]["cpd_avg"],
+                    cpf_xgb=by_rule["xgb_only"]["cpf_avg"],
+                    cpf_grad=by_rule["gradient_band"]["cpf_avg"],
+                    cpf_abs=by_rule["absolute_band"]["cpf_avg"],
+                    n_llm_grad=by_rule["gradient_band"]["n_llm_avg"],
+                    n_llm_abs=by_rule["absolute_band"]["n_llm_avg"],
+                )
+            )
     cols_best = list(best_rows[0].keys())
     with (RES / "synth_iter116_cost_cube_best_rule.tsv").open("w") as f:
         w = csv.DictWriter(f, fieldnames=cols_best, delimiter="\t")
@@ -115,12 +122,16 @@ def main():
             sub = [avg[(rate, cost_llm, r)] for r in ("xgb_only", "gradient_band")]
             grad_cpf = sub[1]["cpf_avg"]
             xgb_cpf = sub[0]["cpf_avg"]
-            recall_cost_ratio.append(dict(
-                rate=rate, cost_llm=cost_llm, cost_ratio=cost_llm / 0.0001,
-                cpf_xgb=xgb_cpf,
-                cpf_grad=grad_cpf,
-                cpf_ratio_grad_over_xgb=grad_cpf / max(1e-12, xgb_cpf),
-            ))
+            recall_cost_ratio.append(
+                dict(
+                    rate=rate,
+                    cost_llm=cost_llm,
+                    cost_ratio=cost_llm / 0.0001,
+                    cpf_xgb=xgb_cpf,
+                    cpf_grad=grad_cpf,
+                    cpf_ratio_grad_over_xgb=grad_cpf / max(1e-12, xgb_cpf),
+                )
+            )
     cols_rcr = list(recall_cost_ratio[0].keys())
     with (RES / "synth_iter116_cpf_ratio_grad_xgb.tsv").open("w") as f:
         w = csv.DictWriter(f, fieldnames=cols_rcr, delimiter="\t")
@@ -137,8 +148,12 @@ def main():
     ratios_flat = [r["cpf_ratio_grad_over_xgb"] for r in recall_cost_ratio]
     ratios_min = min(ratios_flat)
     ratios_max = max(ratios_flat)
-    ratios_at_low_cost = [r["cpf_ratio_grad_over_xgb"] for r in recall_cost_ratio if r["cost_llm"] == 0.001]
-    ratios_at_high_cost = [r["cpf_ratio_grad_over_xgb"] for r in recall_cost_ratio if r["cost_llm"] == 0.100]
+    ratios_at_low_cost = [
+        r["cpf_ratio_grad_over_xgb"] for r in recall_cost_ratio if r["cost_llm"] == 0.001
+    ]
+    ratios_at_high_cost = [
+        r["cpf_ratio_grad_over_xgb"] for r in recall_cost_ratio if r["cost_llm"] == 0.100
+    ]
 
     summary = {
         "iter": 116,
@@ -149,8 +164,14 @@ def main():
         "n_xgb_only_best_cpd": n_xgb_only_cpd,
         "n_xgb_only_best_cpf": n_xgb_only_cpf,
         "cpf_ratio_grad_over_xgb_range": [ratios_min, ratios_max],
-        "cpf_ratio_grad_over_xgb_at_lowest_cost": [min(ratios_at_low_cost), max(ratios_at_low_cost)],
-        "cpf_ratio_grad_over_xgb_at_highest_cost": [min(ratios_at_high_cost), max(ratios_at_high_cost)],
+        "cpf_ratio_grad_over_xgb_at_lowest_cost": [
+            min(ratios_at_low_cost),
+            max(ratios_at_low_cost),
+        ],
+        "cpf_ratio_grad_over_xgb_at_highest_cost": [
+            min(ratios_at_high_cost),
+            max(ratios_at_high_cost),
+        ],
         "p8_iter116_link": "platform_hybrid/experiments/results/p5p8/p8_iter116_cost_llm_sweep.tsv",
         "p8_iter108_link": "platform_hybrid/experiments/results/p5p8/p8_iter108_cost_decision_cis_summary.json",
         "p8_iter112_link": "platform_hybrid/experiments/results/p5p8/p8_iter112_cost_cis_realistic_rates_summary.json",
@@ -159,14 +180,20 @@ def main():
         json.dumps(summary, indent=2)
     )
 
-    print(f"[synth-iter116] {n_total} envelope cells: "
-          f"xgb_only best cpd in {n_xgb_only_cpd}/{n_total}, "
-          f"best cpf in {n_xgb_only_cpf}/{n_total}")
+    print(
+        f"[synth-iter116] {n_total} envelope cells: "
+        f"xgb_only best cpd in {n_xgb_only_cpd}/{n_total}, "
+        f"best cpf in {n_xgb_only_cpf}/{n_total}"
+    )
     print(f"[synth-iter116] cpf ratio grad/xgb range: [{ratios_min:.4f}, {ratios_max:.4f}]")
-    print(f"[synth-iter116] cpf ratio at lowest cost_llm=$0.001: "
-          f"[{min(ratios_at_low_cost):.4f}, {max(ratios_at_low_cost):.4f}]")
-    print(f"[synth-iter116] cpf ratio at highest cost_llm=$0.100: "
-          f"[{min(ratios_at_high_cost):.4f}, {max(ratios_at_high_cost):.4f}]")
+    print(
+        f"[synth-iter116] cpf ratio at lowest cost_llm=$0.001: "
+        f"[{min(ratios_at_low_cost):.4f}, {max(ratios_at_low_cost):.4f}]"
+    )
+    print(
+        f"[synth-iter116] cpf ratio at highest cost_llm=$0.100: "
+        f"[{min(ratios_at_high_cost):.4f}, {max(ratios_at_high_cost):.4f}]"
+    )
 
 
 if __name__ == "__main__":

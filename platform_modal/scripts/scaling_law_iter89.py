@@ -43,6 +43,7 @@ Citations (verified):
   - kaplan2020scaling -- Chinchilla step axis baseline.
   - bishop2006pattern (PRML sec 1.3 / 4.3) -- LOOCV model selection.
 """
+
 from __future__ import annotations
 
 import csv
@@ -54,8 +55,8 @@ from pathlib import Path
 import matplotlib
 
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt  # noqa: E402
-import numpy as np  # noqa: E402
+import matplotlib.pyplot as plt
+import numpy as np
 
 REPO = Path(__file__).resolve().parents[2] / "platform_hybrid"
 TRACE_DIR = REPO / "experiments" / "tinker-runs" / "results"
@@ -92,8 +93,7 @@ def fit_constant(y: np.ndarray) -> dict:
     n = len(y)
     mu = float(np.mean(y))
     rss = float(np.sum((y - mu) ** 2))
-    return {"name": "constant", "k": 2, "rss": rss, "pred": np.full(n, mu),
-            "params": {"mu": mu}}
+    return {"name": "constant", "k": 2, "rss": rss, "pred": np.full(n, mu), "params": {"mu": mu}}
 
 
 def fit_1seg(y: np.ndarray) -> dict:
@@ -103,35 +103,56 @@ def fit_1seg(y: np.ndarray) -> dict:
     sl, ic = np.polyfit(x, y, 1)
     pred = sl * x + ic
     rss = float(np.sum((y - pred) ** 2))
-    return {"name": "1seg_ols", "k": 3, "rss": rss,
-            "pred": pred, "params": {"slope": float(sl), "intercept": float(ic)}}
+    return {
+        "name": "1seg_ols",
+        "k": 3,
+        "rss": rss,
+        "pred": pred,
+        "params": {"slope": float(sl), "intercept": float(ic)},
+    }
 
 
 def fit_saturation(y: np.ndarray) -> dict:
     """Original-scale constrained least squares with the exact dispatcher predictor."""
-    return fit_family('saturation',y)
+    return fit_family("saturation", y)
 
 
 def fit_3seg(y: np.ndarray, x=None) -> dict:
     """Continuous hinge regression; search knots in original time coordinates."""
     from itertools import combinations
+
     x = np.arange(len(y), dtype=float) if x is None else np.asarray(x, float)
     best = None
-    for i, j in combinations(range(2, len(y)-1), 2):
-        if j-i < 2: continue
+    for i, j in combinations(range(2, len(y) - 1), 2):
+        if j - i < 2:
+            continue
         c1, c2 = x[i], x[j]
-        A = np.column_stack([np.ones(len(x)), x, np.maximum(x-c1,0), np.maximum(x-c2,0)])
+        A = np.column_stack([np.ones(len(x)), x, np.maximum(x - c1, 0), np.maximum(x - c2, 0)])
         coef, _, rank, _ = np.linalg.lstsq(A, y, rcond=None)
-        if rank < 4: continue
-        pred=A@coef; rss=float(np.sum((y-pred)**2))
-        if best is None or rss < best['rss']:
-            a,b,d,e=coef
-            best={'name':'3seg', 'k':7, 'rss':rss, 'pred':pred,
-                  'params':{'cp1':float(c1),'cp2':float(c2),
-                            'slope1':float(b),'slope2':float(b+d),'slope3':float(b+d+e),
-                            'intercept1':float(a),'intercept2':float(a-d*c1),
-                            'intercept3':float(a-d*c1-e*c2)}}
-    if best is None: raise ValueError('insufficient observations for three segments')
+        if rank < 4:
+            continue
+        pred = A @ coef
+        rss = float(np.sum((y - pred) ** 2))
+        if best is None or rss < best["rss"]:
+            a, b, d, e = coef
+            best = {
+                "name": "3seg",
+                "k": 7,
+                "rss": rss,
+                "pred": pred,
+                "params": {
+                    "cp1": float(c1),
+                    "cp2": float(c2),
+                    "slope1": float(b),
+                    "slope2": float(b + d),
+                    "slope3": float(b + d + e),
+                    "intercept1": float(a),
+                    "intercept2": float(a - d * c1),
+                    "intercept3": float(a - d * c1 - e * c2),
+                },
+            }
+    if best is None:
+        raise ValueError("insufficient observations for three segments")
     return best
 
 
@@ -139,54 +160,88 @@ FAMILIES = ["constant", "1seg_ols", "saturation", "3seg"]
 
 
 def fit_family(name: str, y: np.ndarray, x=None) -> dict:
-    x=np.arange(len(y),dtype=float) if x is None else np.asarray(x,float)
-    if len(y)<2 or not np.all(np.isfinite(y)): raise ValueError('invalid trace')
-    if name=='constant': return fit_constant(y)
-    if name=='3seg': return fit_3seg(y,x)
-    if name=='1seg_ols':
-        sl,ic=np.polyfit(x,y,1); pred=sl*x+ic
-        return dict(name=name,k=3,rss=float(np.sum((y-pred)**2)),pred=pred,
-                    params={'slope':float(sl),'intercept':float(ic)})
-    if name=='saturation':
+    x = np.arange(len(y), dtype=float) if x is None else np.asarray(x, float)
+    if len(y) < 2 or not np.all(np.isfinite(y)):
+        raise ValueError("invalid trace")
+    if name == "constant":
+        return fit_constant(y)
+    if name == "3seg":
+        return fit_3seg(y, x)
+    if name == "1seg_ols":
+        sl, ic = np.polyfit(x, y, 1)
+        pred = sl * x + ic
+        return dict(
+            name=name,
+            k=3,
+            rss=float(np.sum((y - pred) ** 2)),
+            pred=pred,
+            params={"slope": float(sl), "intercept": float(ic)},
+        )
+    if name == "saturation":
         from scipy.optimize import curve_fit
-        pars,_=curve_fit(lambda t,r,l:r*(-np.expm1(-l*t)),x,y,
-                         p0=(max(float(np.max(y)),.1),.1),bounds=([0,1e-9],[1.5,100]),maxfev=10000)
-        pred=pars[0]*(-np.expm1(-pars[1]*x))
-        return dict(name=name,k=3,rss=float(np.sum((y-pred)**2)),pred=pred,
-                    params={'R_max':float(pars[0]),'lam':float(pars[1])})
+
+        pars, _ = curve_fit(
+            lambda t, r, l: r * (-np.expm1(-l * t)),
+            x,
+            y,
+            p0=(max(float(np.max(y)), 0.1), 0.1),
+            bounds=([0, 1e-9], [1.5, 100]),
+            maxfev=10000,
+        )
+        pred = pars[0] * (-np.expm1(-pars[1] * x))
+        return dict(
+            name=name,
+            k=3,
+            rss=float(np.sum((y - pred) ** 2)),
+            pred=pred,
+            params={"R_max": float(pars[0]), "lam": float(pars[1])},
+        )
     raise ValueError(name)
 
 
 # ---------------------------------------------------------------------------
 # information criteria
 # ---------------------------------------------------------------------------
-def aic_bic(rss: float, n: int, k: int) -> tuple[float,float]:
+def aic_bic(rss: float, n: int, k: int) -> tuple[float, float]:
     from _review27_models import information_criteria
-    return information_criteria(rss,n,k)
+
+    return information_criteria(rss, n, k)
 
 
 # ---------------------------------------------------------------------------
 # LOOCV (Bishop PRML 4.3 / Efron 1983)
 # ---------------------------------------------------------------------------
 def loocv(y: np.ndarray, family: str) -> dict:
-    errors=[]; x=np.arange(len(y),dtype=float)
+    errors = []
+    x = np.arange(len(y), dtype=float)
     for i in range(len(y)):
-        mask=np.arange(len(y))!=i
-        try: errors.append(float(y[i])-_predict_at(fit_family(family,y[mask],x[mask]),x[i]))
-        except (ValueError, RuntimeError): pass
-    return {'cv_rmse':float(np.sqrt(np.mean(np.square(errors)))) if len(errors)==len(y) else float('nan'),
-            'cv_mae':float(np.mean(np.abs(errors))) if len(errors)==len(y) else float('nan'),
-            'n_attempted':len(y),'n_success':len(errors)}
+        mask = np.arange(len(y)) != i
+        try:
+            errors.append(float(y[i]) - _predict_at(fit_family(family, y[mask], x[mask]), x[i]))
+        except (ValueError, RuntimeError):
+            pass
+    return {
+        "cv_rmse": float(np.sqrt(np.mean(np.square(errors))))
+        if len(errors) == len(y)
+        else float("nan"),
+        "cv_mae": float(np.mean(np.abs(errors))) if len(errors) == len(y) else float("nan"),
+        "n_attempted": len(y),
+        "n_success": len(errors),
+    }
 
 
 def _predict_at(fit: dict, idx: float) -> float:
-    p=fit['params']; name=fit['name']
-    if name=='constant': return p['mu']
-    if name=='1seg_ols': return p['slope']*idx+p['intercept']
-    if name=='saturation': return p['R_max']*(-math.expm1(-p['lam']*idx))
-    if name=='3seg':
-        s=1 if idx<p['cp1'] else 2 if idx<p['cp2'] else 3
-        return p[f'slope{s}']*idx+p[f'intercept{s}']
+    p = fit["params"]
+    name = fit["name"]
+    if name == "constant":
+        return p["mu"]
+    if name == "1seg_ols":
+        return p["slope"] * idx + p["intercept"]
+    if name == "saturation":
+        return p["R_max"] * (-math.expm1(-p["lam"] * idx))
+    if name == "3seg":
+        s = 1 if idx < p["cp1"] else 2 if idx < p["cp2"] else 3
+        return p[f"slope{s}"] * idx + p[f"intercept{s}"]
     raise ValueError(name)
 
 
@@ -194,18 +249,27 @@ def _predict_at(fit: dict, idx: float) -> float:
 # k-fold forecast on last k steps
 # ---------------------------------------------------------------------------
 def kfold_forecast(y: np.ndarray, k_hold: int = 4) -> dict:
-    if not 0<k_hold<len(y): raise ValueError('invalid forecast horizon')
-    train=y[:-k_hold]; test=y[-k_hold:]; out={}
+    if not 0 < k_hold < len(y):
+        raise ValueError("invalid forecast horizon")
+    train = y[:-k_hold]
+    test = y[-k_hold:]
+    out = {}
     for fam in FAMILIES:
         try:
-            fit=fit_family(fam,train)
-            preds=np.array([_predict_at(fit,i) for i in range(len(train),len(y))])
-            status='ok'
-        except (ValueError,RuntimeError):
-            preds=np.full(k_hold,np.nan); status='fit_failed'
-        err=test-preds
-        out[fam]={'mae':float(np.mean(np.abs(err))),'rmse':float(np.sqrt(np.mean(err**2))),
-                  'preds':preds.tolist(),'test':test.tolist(),'status':status}
+            fit = fit_family(fam, train)
+            preds = np.array([_predict_at(fit, i) for i in range(len(train), len(y))])
+            status = "ok"
+        except (ValueError, RuntimeError):
+            preds = np.full(k_hold, np.nan)
+            status = "fit_failed"
+        err = test - preds
+        out[fam] = {
+            "mae": float(np.mean(np.abs(err))),
+            "rmse": float(np.sqrt(np.mean(err**2))),
+            "preds": preds.tolist(),
+            "test": test.tolist(),
+            "status": status,
+        }
     return out
 
 
@@ -216,7 +280,6 @@ def bootstrap_3seg(y: np.ndarray, n_boot: int = N_BOOT) -> dict:
     """Resample trace with replacement; refit 3-segment;
     collect CP1/CP2 distribution and slope distributions.
     """
-    from scaling_law_iter85 import fit_piecewise_linear
 
     n = len(y)
     cp1s, cp2s = [], []
@@ -225,22 +288,22 @@ def bootstrap_3seg(y: np.ndarray, n_boot: int = N_BOOT) -> dict:
     spurt_largest_count = 0
     failed = 0
     try:
-        fitted = fit_3seg(y)['pred']
+        fitted = fit_3seg(y)["pred"]
     except ValueError:
-        fitted = np.asarray(y,float).copy()  # all short refits report failure below
-    residual = y-fitted
+        fitted = np.asarray(y, float).copy()  # all short refits report failure below
+    residual = y - fitted
     residual -= residual.mean()
     rng = np.random.default_rng(42)
-    block = max(2, int(round(n**(1/3))))
+    block = max(2, int(round(n ** (1 / 3))))
     for _ in range(n_boot):
-        starts = rng.integers(0,n,size=math.ceil(n/block))
-        idx = np.concatenate([(s+np.arange(block))%n for s in starts])[:n]
+        starts = rng.integers(0, n, size=math.ceil(n / block))
+        idx = np.concatenate([(s + np.arange(block)) % n for s in starts])[:n]
         boot = fitted + residual[idx]
         try:
             fit = fit_3seg(boot)
-            pp = fit['params']
-            cps = [pp['cp1'],pp['cp2']]
-            sls = [pp['slope1'],pp['slope2'],pp['slope3']]
+            pp = fit["params"]
+            cps = [pp["cp1"], pp["cp2"]]
+            sls = [pp["slope1"], pp["slope2"], pp["slope3"]]
             if len(cps) != 2 or len(sls) != 3:
                 failed += 1
                 continue
@@ -250,8 +313,11 @@ def bootstrap_3seg(y: np.ndarray, n_boot: int = N_BOOT) -> dict:
             sl2s.append(float(sls[1]))
             sl3s.append(float(sls[2]))
             from _review27_models import signed_phases
-            if signed_phases(sls): canon_orders += 1
-            if sls[1] > max(sls[0],sls[2]) and sls[1] > 0: spurt_largest_count += 1
+
+            if signed_phases(sls):
+                canon_orders += 1
+            if sls[1] > max(sls[0], sls[2]) and sls[1] > 0:
+                spurt_largest_count += 1
         except Exception:
             failed += 1
     n_eff = len(cp1s)
@@ -305,8 +371,14 @@ def main() -> None:
             try:
                 fits[fam] = fit_family(fam, rt)
             except Exception as e:
-                fits[fam] = {"name": fam, "k": 0, "rss": float("nan"),
-                             "pred": np.zeros(n), "params": {}, "err": str(e)}
+                fits[fam] = {
+                    "name": fam,
+                    "k": 0,
+                    "rss": float("nan"),
+                    "pred": np.zeros(n),
+                    "params": {},
+                    "err": str(e),
+                }
 
         # AIC/BIC table
         aics, bics = {}, {}
@@ -317,82 +389,103 @@ def main() -> None:
             bics[fam] = b
         best_aic = aics.get(best_candidate(aics), float("nan"))
         best_bic = bics.get(best_candidate(bics), float("nan"))
-        bic_rows.append({
-            "model": model_name, "model_short": short, "params_B": params_b,
-            "n_steps": n,
-            "n_params_const": fits["constant"]["k"],
-            "n_params_1seg": fits["1seg_ols"]["k"],
-            "n_params_sat": fits["saturation"]["k"],
-            "n_params_3seg": fits["3seg"]["k"],
-            "aic_const": round(aics["constant"], 3),
-            "aic_1seg": round(aics["1seg_ols"], 3),
-            "aic_sat": round(aics["saturation"], 3),
-            "aic_3seg": round(aics["3seg"], 3),
-            "bic_const": round(bics["constant"], 3),
-            "bic_1seg": round(bics["1seg_ols"], 3),
-            "bic_sat": round(bics["saturation"], 3),
-            "bic_3seg": round(bics["3seg"], 3),
-            "best_aic_family": best_candidate(aics),
-            "best_bic_family": best_candidate(bics),
-            "delta_aic_3v1": round(aics["3seg"] - aics["1seg_ols"], 3),
-            "delta_aic_3v0": round(aics["3seg"] - aics["constant"], 3),
-            "delta_bic_3v1": round(bics["3seg"] - bics["1seg_ols"], 3),
-            "delta_bic_3v0": round(bics["3seg"] - bics["constant"], 3),
-            "delta_bic_3vsat": round(bics["3seg"] - bics["saturation"], 3),
-            "best_aic_aic": round(best_aic, 3),
-            "best_bic_aic": round(best_bic, 3),
-        })
+        bic_rows.append(
+            {
+                "model": model_name,
+                "model_short": short,
+                "params_B": params_b,
+                "n_steps": n,
+                "n_params_const": fits["constant"]["k"],
+                "n_params_1seg": fits["1seg_ols"]["k"],
+                "n_params_sat": fits["saturation"]["k"],
+                "n_params_3seg": fits["3seg"]["k"],
+                "aic_const": round(aics["constant"], 3),
+                "aic_1seg": round(aics["1seg_ols"], 3),
+                "aic_sat": round(aics["saturation"], 3),
+                "aic_3seg": round(aics["3seg"], 3),
+                "bic_const": round(bics["constant"], 3),
+                "bic_1seg": round(bics["1seg_ols"], 3),
+                "bic_sat": round(bics["saturation"], 3),
+                "bic_3seg": round(bics["3seg"], 3),
+                "best_aic_family": best_candidate(aics),
+                "best_bic_family": best_candidate(bics),
+                "delta_aic_3v1": round(aics["3seg"] - aics["1seg_ols"], 3),
+                "delta_aic_3v0": round(aics["3seg"] - aics["constant"], 3),
+                "delta_bic_3v1": round(bics["3seg"] - bics["1seg_ols"], 3),
+                "delta_bic_3v0": round(bics["3seg"] - bics["constant"], 3),
+                "delta_bic_3vsat": round(bics["3seg"] - bics["saturation"], 3),
+                "best_aic_aic": round(best_aic, 3),
+                "best_bic_aic": round(best_bic, 3),
+            }
+        )
 
         # LOOCV (only if n is large enough)
         if n >= N_LOOCV_MIN:
             for fam in FAMILIES:
                 res = loocv(rt, fam)
-                loocv_rows.append({
-                    "model": model_name, "model_short": short, "params_B": params_b,
-                    "n_steps": n, "family": fam,
-                    "cv_rmse": round(res["cv_rmse"], 4),
-                    "cv_mae": round(res["cv_mae"], 4),
-                })
+                loocv_rows.append(
+                    {
+                        "model": model_name,
+                        "model_short": short,
+                        "params_B": params_b,
+                        "n_steps": n,
+                        "family": fam,
+                        "cv_rmse": round(res["cv_rmse"], 4),
+                        "cv_mae": round(res["cv_mae"], 4),
+                    }
+                )
 
         # Bootstrap stability of change-points (3-segment)
         bs = bootstrap_3seg(rt)
-        bs_rows.append({
-            "model": model_name, "model_short": short, "params_B": params_b,
-            "n_steps": n,
-            "cp1_mean": round(bs["cp1_mean"], 2),
-            "cp1_sd": round(bs["cp1_sd"], 2),
-            "cp1_cv": round(bs["cp1_cv"], 3),
-            "cp2_mean": round(bs["cp2_mean"], 2),
-            "cp2_sd": round(bs["cp2_sd"], 2),
-            "cp2_cv": round(bs["cp2_cv"], 3),
-            "slope1_mean": round(bs["slope1_mean"], 4),
-            "slope2_mean": round(bs["slope2_mean"], 4),
-            "slope3_mean": round(bs["slope3_mean"], 4),
-            "slope1_sd": round(bs["slope1_sd"], 4),
-            "slope2_sd": round(bs["slope2_sd"], 4),
-            "slope3_sd": round(bs["slope3_sd"], 4),
-            "canon_order_rate": round(bs["canon_order_rate"], 3),
-            "spurt_largest_rate": round(bs["spurt_largest_rate"], 3),
-            "n_boot_succeeded": bs["n_boot_succeeded"],
-        })
+        bs_rows.append(
+            {
+                "model": model_name,
+                "model_short": short,
+                "params_B": params_b,
+                "n_steps": n,
+                "cp1_mean": round(bs["cp1_mean"], 2),
+                "cp1_sd": round(bs["cp1_sd"], 2),
+                "cp1_cv": round(bs["cp1_cv"], 3),
+                "cp2_mean": round(bs["cp2_mean"], 2),
+                "cp2_sd": round(bs["cp2_sd"], 2),
+                "cp2_cv": round(bs["cp2_cv"], 3),
+                "slope1_mean": round(bs["slope1_mean"], 4),
+                "slope2_mean": round(bs["slope2_mean"], 4),
+                "slope3_mean": round(bs["slope3_mean"], 4),
+                "slope1_sd": round(bs["slope1_sd"], 4),
+                "slope2_sd": round(bs["slope2_sd"], 4),
+                "slope3_sd": round(bs["slope3_sd"], 4),
+                "canon_order_rate": round(bs["canon_order_rate"], 3),
+                "spurt_largest_rate": round(bs["spurt_largest_rate"], 3),
+                "n_boot_succeeded": bs["n_boot_succeeded"],
+            }
+        )
 
         # k-fold forecast (last 4 steps)
         if n >= 12:
             kfold = kfold_forecast(rt, k_hold=4)
             for fam, r in kfold.items():
-                kfold_rows.append({
-                    "model": model_name, "model_short": short, "params_B": params_b,
-                    "n_steps": n, "family": fam,
-                    "forecast_mae": round(r["mae"], 4),
-                    "forecast_rmse": round(r["rmse"], 4),
-                    "test_steps": ",".join(str(t) for t in r["test"]),
-                    "pred_steps": ",".join(str(p) for p in r["preds"]),
-                })
+                kfold_rows.append(
+                    {
+                        "model": model_name,
+                        "model_short": short,
+                        "params_B": params_b,
+                        "n_steps": n,
+                        "family": fam,
+                        "forecast_mae": round(r["mae"], 4),
+                        "forecast_rmse": round(r["rmse"], 4),
+                        "test_steps": ",".join(str(t) for t in r["test"]),
+                        "pred_steps": ",".join(str(p) for p in r["preds"]),
+                    }
+                )
 
         anchor_data[model_name] = {
-            "rt": rt, "fits": {k: {kk: vv for kk, vv in v.items() if kk != "pred"}
-                                | ({"last_pred": float(v["pred"][-1])} if "pred" in v else {})
-                                for k, v in fits.items()},
+            "rt": rt,
+            "fits": {
+                k: {kk: vv for kk, vv in v.items() if kk != "pred"}
+                | ({"last_pred": float(v["pred"][-1])} if "pred" in v else {})
+                for k, v in fits.items()
+            },
         }
 
     # ----- write outputs -----
@@ -444,8 +537,10 @@ def main() -> None:
     for r in loocv_rows:
         anchor = r["model"]
         if anchor not in loo_winners or r["cv_rmse"] < next(
-                x["cv_rmse"] for x in loocv_rows
-                if x["model"] == anchor and x["family"] == loo_winners[anchor]):
+            x["cv_rmse"]
+            for x in loocv_rows
+            if x["model"] == anchor and x["family"] == loo_winners[anchor]
+        ):
             loo_winners[anchor] = r["family"]
     # actually we need to find min properly across rows for the anchor
     by_anchor_loocv: dict[str, dict[str, float]] = {}
@@ -477,20 +572,28 @@ def main() -> None:
         "n_loocv_anchors": len(by_anchor_loocv),
         "n_kfold_anchors": len(by_anchor_kf),
         "AIC_winner_counts": {
-            "constant": n_aic_const, "1seg_ols": n_aic_1seg,
-            "saturation": n_aic_sat, "3seg": n_aic_3seg,
+            "constant": n_aic_const,
+            "1seg_ols": n_aic_1seg,
+            "saturation": n_aic_sat,
+            "3seg": n_aic_3seg,
         },
-"BIC_winner_counts": {
-            "constant": n_bic_const, "1seg_ols": n_bic_1seg,
-            "saturation": n_bic_sat, "3seg": n_bic_3seg,
+        "BIC_winner_counts": {
+            "constant": n_bic_const,
+            "1seg_ols": n_bic_1seg,
+            "saturation": n_bic_sat,
+            "3seg": n_bic_3seg,
         },
         "LOOCV_winner_counts": {
-            "constant": n_loo_const, "1seg_ols": n_loo_1seg,
-            "saturation": n_loo_sat, "3seg": n_loo_3seg,
+            "constant": n_loo_const,
+            "1seg_ols": n_loo_1seg,
+            "saturation": n_loo_sat,
+            "3seg": n_loo_3seg,
         },
         "kfold_forecast_winner_counts": {
-            "constant": n_kf_const, "1seg_ols": n_kf_1seg,
-            "saturation": n_kf_sat, "3seg": n_kf_3seg,
+            "constant": n_kf_const,
+            "1seg_ols": n_kf_1seg,
+            "saturation": n_kf_sat,
+            "3seg": n_kf_3seg,
         },
         "n_bic_3seg_winners": n_bic_3seg,
         "n_aic_3seg_winners": n_aic_3seg,
@@ -553,8 +656,13 @@ def main() -> None:
         ax.set_ylabel("CP2 SD (steps)")
         ax.set_title("(C) Bootstrap SD of 3-seg changepoint #2", fontsize=10)
         for r in bs_long:
-            ax.annotate(r["model_short"][:8], (r["n_steps"], r["cp2_sd"]),
-                        fontsize=7, xytext=(3, 3), textcoords="offset points")
+            ax.annotate(
+                r["model_short"][:8],
+                (r["n_steps"], r["cp2_sd"]),
+                fontsize=7,
+                xytext=(3, 3),
+                textcoords="offset points",
+            )
 
     # Panel D: k-fold forecast MAE winners
     ax = axes[1, 1]
@@ -571,8 +679,10 @@ def main() -> None:
         ax.set_title("(D) Forecast MAE -- fit on first (n-4), predict last 4", fontsize=10)
         ax.legend(fontsize=7, ncol=4, loc="upper left")
 
-    fig.suptitle(f"Iter89 -- LOOCV / BIC / bootstrap / k-fold on iter81 anchor pool (12 anchors; N_BOOT={N_BOOT})",
-                 fontsize=11)
+    fig.suptitle(
+        f"Iter89 -- LOOCV / BIC / bootstrap / k-fold on iter81 anchor pool (12 anchors; N_BOOT={N_BOOT})",
+        fontsize=11,
+    )
     fig.tight_layout(rect=[0, 0, 1, 0.97])
     fig.savefig(FIG_DIR / "scaling_law_iter89_v3.png", dpi=120)
     fig.savefig(FIG_DIR / "scaling_law_iter89_v3.pdf")
@@ -591,7 +701,9 @@ def main() -> None:
     print(f"k-fold 3-phase winners:            {n_kf_3seg}/{len(by_anchor_kf)}")
     if canon_rates:
         print(f"Bootstrap canon-order rate (mean): {meta['bootstrap_canon_order_rate_mean']:.3f}")
-        print(f"Bootstrap spurt-largest rate (mean): {meta['bootstrap_spurt_largest_rate_mean']:.3f}")
+        print(
+            f"Bootstrap spurt-largest rate (mean): {meta['bootstrap_spurt_largest_rate_mean']:.3f}"
+        )
         print(f"Bootstrap CP2 CV  (mean):          {meta['bootstrap_cp2_cv_mean']:.3f}")
     print(f"LOOCV winners: {loo_winners}")
     print(f"k-fold winners: {kf_winners}")
@@ -599,7 +711,9 @@ def main() -> None:
 
 if __name__ == "__main__":
     from _review27_models import configure_paths
+
     configure_paths(globals())
     main()
     from _review27_models import write_manifest
+
     write_manifest(__file__, TRACE_DIR, RESULTS_DIR)

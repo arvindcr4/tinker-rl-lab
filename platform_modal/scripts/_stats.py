@@ -32,7 +32,6 @@ class Interval(NamedTuple):
         return "ok" if all(math.isfinite(v) for v in self) else "insufficient_data"
 
 
-
 def _validate_resamples(count):
     if isinstance(count, bool) or not isinstance(count, Integral) or count <= 0:
         raise ValueError("resample count must be a positive integer")
@@ -179,7 +178,7 @@ def paired_boot_pct(dv, dg, n_boot, seed):
         raise ValueError("paired samples must have equal lengths")
     if len(dv) == 0:
         raise ValueError("paired samples must be nonempty")
-    d = [a - b for a, b in zip(dv, dg)]
+    d = [a - b for a, b in zip(dv, dg, strict=False)]
     rng = random.Random(seed)
     n = len(d)
     means = []
@@ -201,7 +200,11 @@ def paired_step_bootstrap(rows, fn, b, seed, *, block_length=1):
     Returns the non-None, non-nan values of ``fn(sample)`` over ``b`` resamples.
     """
     _validate_resamples(b)
-    if isinstance(block_length, bool) or not isinstance(block_length, Integral) or block_length <= 0:
+    if (
+        isinstance(block_length, bool)
+        or not isinstance(block_length, Integral)
+        or block_length <= 0
+    ):
         raise ValueError("block_length must be a positive integer")
     rng = random.Random(seed)
     by_step = defaultdict(list)
@@ -217,7 +220,7 @@ def paired_step_bootstrap(rows, fn, b, seed, *, block_length=1):
             pick = []
             while len(pick) < n_steps:
                 start = rng.randrange(n_steps)
-                pick.extend(steps[(start+j) % n_steps] for j in range(min(block_length, n_steps)))
+                pick.extend(steps[(start + j) % n_steps] for j in range(min(block_length, n_steps)))
             pick = pick[:n_steps]
         sample = []
         for s in pick:
@@ -232,5 +235,8 @@ def cohens_d_sample_pooled(a, b):
     """Conventional independent-arm Cohen d using sample variances."""
     if min(len(a), len(b)) < 2:
         return float("nan")
-    pooled = math.sqrt(((len(a)-1)*statistics.variance(a) + (len(b)-1)*statistics.variance(b)) / (len(a)+len(b)-2))
-    return (fmean(a)-fmean(b))/pooled if pooled else float("nan")
+    pooled = math.sqrt(
+        ((len(a) - 1) * statistics.variance(a) + (len(b) - 1) * statistics.variance(b))
+        / (len(a) + len(b) - 2)
+    )
+    return (fmean(a) - fmean(b)) / pooled if pooled else float("nan")

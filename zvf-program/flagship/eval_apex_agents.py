@@ -456,14 +456,21 @@ def _local_dataset_gate(dataset_dir: Path) -> tuple[Gate, dict[str, Path] | None
     expected = TRUSTED_LOCAL_DATASET_SHA256
     if set(expected) != set(DATASET_ACCESS_FILES.values()) or any(
         not re.fullmatch(r"[0-9a-f]{64}", str(expected.get(name, "")))
-        or receipts[name]["sha256"] != expected[name] for name in receipts
+        or receipts[name]["sha256"] != expected[name]
+        for name in receipts
     ):
-        return Gate("benchmark_access", "BLOCKED", {
-            "dataset_id": DATASET_ID, "dataset_revision": DATASET_REVISION,
-            "source": "local_dataset_dir", "files": receipts,
-            "message": "independently trusted expected-content manifest missing or bytes mismatch",
-            "content_verified": False,
-        }), None
+        return Gate(
+            "benchmark_access",
+            "BLOCKED",
+            {
+                "dataset_id": DATASET_ID,
+                "dataset_revision": DATASET_REVISION,
+                "source": "local_dataset_dir",
+                "files": receipts,
+                "message": "independently trusted expected-content manifest missing or bytes mismatch",
+                "content_verified": False,
+            },
+        ), None
     return Gate(
         "benchmark_access",
         "PASS",
@@ -1016,11 +1023,13 @@ def _native_verifier_gate(archipelago_dir: Path) -> Gate:
         ).strip()
         status = subprocess.check_output(
             ["git", "-C", str(archipelago_dir), "status", "--porcelain", "--untracked-files=all"],
-            text=True, stderr=subprocess.STDOUT,
+            text=True,
+            stderr=subprocess.STDOUT,
         )
         if status.strip():
-            return Gate("native_verifier", "BLOCKED",
-                        {"reason": "checkout contains local modifications"})
+            return Gate(
+                "native_verifier", "BLOCKED", {"reason": "checkout contains local modifications"}
+            )
         tree = subprocess.check_output(
             ["git", "-C", str(archipelago_dir), "ls-tree", "-r", "HEAD", "--", "grading"],
             text=True,
@@ -1092,7 +1101,7 @@ def _runtime_gate(
         missing_commands.append("official Archipelago environment")
     if environment_backend == "modal":
         try:
-            import modal  # noqa: F401 - presence is the preflight condition
+            import modal
         except ImportError:
             missing_commands.append("modal Python client")
     if missing_commands:

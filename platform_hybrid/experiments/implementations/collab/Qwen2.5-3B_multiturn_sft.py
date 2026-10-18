@@ -1,7 +1,9 @@
-
 import sys as _sys
 from pathlib import Path as _Path
-_sys.path.insert(0, str(next(p for p in _Path(__file__).resolve().parents if (p / "platform_hybrid").is_dir())))
+
+_sys.path.insert(
+    0, str(next(p for p in _Path(__file__).resolve().parents if (p / "platform_hybrid").is_dir()))
+)
 from platform_hybrid.experiments.research_contracts import json_objects
 
 # ============================================================
@@ -26,6 +28,7 @@ from platform_hybrid.experiments.research_contracts import json_objects
 # !pip install -q transformers datasets peft trl accelerate bitsandbytes
 
 from huggingface_hub import login
+
 login(token="hf_YOUR_TOKEN_HERE")
 
 import json, os, re, torch
@@ -36,16 +39,16 @@ from peft import LoraConfig, TaskType
 from trl import SFTTrainer, SFTConfig
 
 # ── CONFIG ───────────────────────────────────────────────────
-MODEL_ID    = "Qwen/Qwen2.5-3B-Instruct"
-OUTPUT_DIR  = "/content/qwen3b-toolbench-sft"
+MODEL_ID = "Qwen/Qwen2.5-3B-Instruct"
+OUTPUT_DIR = "/content/qwen3b-toolbench-sft"
 NUM_SAMPLES = 200
 MAX_SEQ_LEN = 512
-LORA_RANK   = 8
-LORA_ALPHA  = 16
-EPOCHS      = 1
-BATCH_SIZE  = 1
-GRAD_ACCUM  = 8
-LR          = 2e-4
+LORA_RANK = 8
+LORA_ALPHA = 16
+EPOCHS = 1
+BATCH_SIZE = 1
+GRAD_ACCUM = 8
+LR = 2e-4
 
 # ── SYSTEM PROMPT ────────────────────────────────────────────
 SYSTEM_PROMPT = """You are a helpful AI assistant with access to real-world APIs and tools.
@@ -71,6 +74,7 @@ tokenizer = AutoTokenizer.from_pretrained(MODEL_ID, trust_remote_code=True)
 tokenizer.pad_token = tokenizer.eos_token
 tokenizer.padding_side = "right"
 
+
 # ── PARSE TOOLBENCH FORMAT ───────────────────────────────────
 def parse_toolbench_example(row):
     convs = row.get("conversations")
@@ -78,7 +82,7 @@ def parse_toolbench_example(row):
         roles, values = convs.get("from", []), convs.get("value", [])
         if len(roles) != len(values):
             return None
-        convs = [{"from": r, "value": v} for r, v in zip(roles, values)]
+        convs = [{"from": r, "value": v} for r, v in zip(roles, values, strict=False)]
     if not isinstance(convs, list):
         return None
     messages = [{"role": "system", "content": SYSTEM_PROMPT}]
@@ -88,10 +92,11 @@ def parse_toolbench_example(row):
         if role == "user":
             messages.append({"role": "user", "content": value})
         elif role in ("tool", "function", "observation"):
-            messages.append({"role": "tool", "content": value}); has_result = True
+            messages.append({"role": "tool", "content": value})
+            has_result = True
         elif role == "assistant":
             match = re.search(r"Action:\s*(\w+)\s*\nAction Input:\s*", value)
-            objects = json_objects(value[match.end():]) if match else []
+            objects = json_objects(value[match.end() :]) if match else []
             if not objects:
                 return None
             args = objects[0]
@@ -99,12 +104,20 @@ def parse_toolbench_example(row):
                 final = args.get("final_answer")
                 if not isinstance(final, str) or not final.strip():
                     return None
-                messages.append({"role": "assistant", "content": final}); has_final = True
+                messages.append({"role": "assistant", "content": final})
+                has_final = True
             else:
-                messages.append({"role": "assistant", "content": json.dumps({"name": match[1], "arguments": args})}); has_call = True
+                messages.append(
+                    {
+                        "role": "assistant",
+                        "content": json.dumps({"name": match[1], "arguments": args}),
+                    }
+                )
+                has_call = True
     if not (has_call and has_result and has_final):
         return None
     return tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=False)
+
 
 # ── PARSE DATASET ────────────────────────────────────────────
 print("Parsing ToolBench examples (strict: tool_call+result+answer required) ...")
@@ -129,84 +142,177 @@ SYNTHETIC = [
     # ── Single-tool chain ──────────────────────────────────────
     {
         "messages": [
-            {"role": "system",    "content": SYSTEM_PROMPT},
-            {"role": "user",      "content": "What is the weather in Paris today?"},
-            {"role": "assistant", "content": '{"name": "get_weather", "arguments": {"location": "Paris"}}'},
-            {"role": "tool",      "content": '{"location": "Paris", "temperature": 15, "condition": "Cloudy", "humidity": "72%"}'},
-            {"role": "assistant", "content": "The weather in Paris today is 15°C and cloudy with 72% humidity. You may want to bring a light jacket."},
+            {"role": "system", "content": SYSTEM_PROMPT},
+            {"role": "user", "content": "What is the weather in Paris today?"},
+            {
+                "role": "assistant",
+                "content": '{"name": "get_weather", "arguments": {"location": "Paris"}}',
+            },
+            {
+                "role": "tool",
+                "content": '{"location": "Paris", "temperature": 15, "condition": "Cloudy", "humidity": "72%"}',
+            },
+            {
+                "role": "assistant",
+                "content": "The weather in Paris today is 15°C and cloudy with 72% humidity. You may want to bring a light jacket.",
+            },
         ]
     },
     {
         "messages": [
-            {"role": "system",    "content": SYSTEM_PROMPT},
-            {"role": "user",      "content": "What is the square root of 144?"},
-            {"role": "assistant", "content": '{"name": "calculator", "arguments": {"expression": "144**0.5"}}'},
-            {"role": "tool",      "content": '{"expression": "144**0.5", "result": 12.0}'},
+            {"role": "system", "content": SYSTEM_PROMPT},
+            {"role": "user", "content": "What is the square root of 144?"},
+            {
+                "role": "assistant",
+                "content": '{"name": "calculator", "arguments": {"expression": "144**0.5"}}',
+            },
+            {"role": "tool", "content": '{"expression": "144**0.5", "result": 12.0}'},
             {"role": "assistant", "content": "The square root of 144 is 12."},
         ]
     },
     {
         "messages": [
-            {"role": "system",    "content": SYSTEM_PROMPT},
-            {"role": "user",      "content": "Search for the latest news about SpaceX."},
-            {"role": "assistant", "content": '{"name": "search_news", "arguments": {"query": "SpaceX latest news"}}'},
-            {"role": "tool",      "content": '{"results": ["SpaceX Starship completes orbital test", "SpaceX wins NASA contract", "Elon Musk discusses Mars mission timeline"]}'},
-            {"role": "assistant", "content": "Here are the latest SpaceX news: Starship completed an orbital test, SpaceX won a new NASA contract, and Elon Musk discussed the Mars mission timeline."},
+            {"role": "system", "content": SYSTEM_PROMPT},
+            {"role": "user", "content": "Search for the latest news about SpaceX."},
+            {
+                "role": "assistant",
+                "content": '{"name": "search_news", "arguments": {"query": "SpaceX latest news"}}',
+            },
+            {
+                "role": "tool",
+                "content": '{"results": ["SpaceX Starship completes orbital test", "SpaceX wins NASA contract", "Elon Musk discusses Mars mission timeline"]}',
+            },
+            {
+                "role": "assistant",
+                "content": "Here are the latest SpaceX news: Starship completed an orbital test, SpaceX won a new NASA contract, and Elon Musk discussed the Mars mission timeline.",
+            },
         ]
     },
     # ── Two-tool chain ─────────────────────────────────────────
     {
         "messages": [
-            {"role": "system",    "content": SYSTEM_PROMPT},
-            {"role": "user",      "content": "How is Apple stock doing and what's the latest news about them?"},
-            {"role": "assistant", "content": '{"name": "get_stock_price", "arguments": {"ticker": "AAPL"}}'},
-            {"role": "tool",      "content": '{"ticker": "AAPL", "price": 189.45, "change": "-0.8%", "market": "NASDAQ"}'},
-            {"role": "assistant", "content": '{"name": "search_news", "arguments": {"query": "Apple Inc latest news"}}'},
-            {"role": "tool",      "content": '{"results": ["Apple Vision Pro sales disappoint analysts", "iPhone 16 pre-orders strong", "Apple Services revenue up 14%"]}'},
-            {"role": "assistant", "content": "Apple (AAPL) is currently at $189.45, down 0.8%. Recent news: Vision Pro sales have disappointed analysts, though iPhone 16 pre-orders are strong and Services revenue is up 14%."},
+            {"role": "system", "content": SYSTEM_PROMPT},
+            {
+                "role": "user",
+                "content": "How is Apple stock doing and what's the latest news about them?",
+            },
+            {
+                "role": "assistant",
+                "content": '{"name": "get_stock_price", "arguments": {"ticker": "AAPL"}}',
+            },
+            {
+                "role": "tool",
+                "content": '{"ticker": "AAPL", "price": 189.45, "change": "-0.8%", "market": "NASDAQ"}',
+            },
+            {
+                "role": "assistant",
+                "content": '{"name": "search_news", "arguments": {"query": "Apple Inc latest news"}}',
+            },
+            {
+                "role": "tool",
+                "content": '{"results": ["Apple Vision Pro sales disappoint analysts", "iPhone 16 pre-orders strong", "Apple Services revenue up 14%"]}',
+            },
+            {
+                "role": "assistant",
+                "content": "Apple (AAPL) is currently at $189.45, down 0.8%. Recent news: Vision Pro sales have disappointed analysts, though iPhone 16 pre-orders are strong and Services revenue is up 14%.",
+            },
         ]
     },
     {
         "messages": [
-            {"role": "system",    "content": SYSTEM_PROMPT},
-            {"role": "user",      "content": "What's the weather in Tokyo and what are the top tourist spots there?"},
-            {"role": "assistant", "content": '{"name": "get_weather", "arguments": {"location": "Tokyo"}}'},
-            {"role": "tool",      "content": '{"location": "Tokyo", "temperature": 18, "condition": "Clear", "humidity": "55%"}'},
-            {"role": "assistant", "content": '{"name": "search_attractions", "arguments": {"city": "Tokyo"}}'},
-            {"role": "tool",      "content": '{"results": ["Senso-ji Temple", "Shibuya Crossing", "Tokyo Skytree", "Tsukiji Market"]}'},
-            {"role": "assistant", "content": "Tokyo has clear skies at 18°C — great weather for sightseeing! Top attractions include Senso-ji Temple, Shibuya Crossing, Tokyo Skytree, and Tsukiji Market."},
+            {"role": "system", "content": SYSTEM_PROMPT},
+            {
+                "role": "user",
+                "content": "What's the weather in Tokyo and what are the top tourist spots there?",
+            },
+            {
+                "role": "assistant",
+                "content": '{"name": "get_weather", "arguments": {"location": "Tokyo"}}',
+            },
+            {
+                "role": "tool",
+                "content": '{"location": "Tokyo", "temperature": 18, "condition": "Clear", "humidity": "55%"}',
+            },
+            {
+                "role": "assistant",
+                "content": '{"name": "search_attractions", "arguments": {"city": "Tokyo"}}',
+            },
+            {
+                "role": "tool",
+                "content": '{"results": ["Senso-ji Temple", "Shibuya Crossing", "Tokyo Skytree", "Tsukiji Market"]}',
+            },
+            {
+                "role": "assistant",
+                "content": "Tokyo has clear skies at 18°C — great weather for sightseeing! Top attractions include Senso-ji Temple, Shibuya Crossing, Tokyo Skytree, and Tsukiji Market.",
+            },
         ]
     },
     {
         "messages": [
-            {"role": "system",    "content": SYSTEM_PROMPT},
-            {"role": "user",      "content": "Find the population of New York and calculate the population density given area 783 km²."},
-            {"role": "assistant", "content": '{"name": "search", "arguments": {"query": "New York City population 2024"}}'},
-            {"role": "tool",      "content": '{"results": ["New York City population: 8.3 million (2024)"]}'},
-            {"role": "assistant", "content": '{"name": "calculator", "arguments": {"expression": "8300000 / 783"}}'},
-            {"role": "tool",      "content": '{"expression": "8300000 / 783", "result": 10601.5}'},
-            {"role": "assistant", "content": "New York City has a population of approximately 8.3 million. With an area of 783 km², the population density is about 10,602 people per km²."},
+            {"role": "system", "content": SYSTEM_PROMPT},
+            {
+                "role": "user",
+                "content": "Find the population of New York and calculate the population density given area 783 km².",
+            },
+            {
+                "role": "assistant",
+                "content": '{"name": "search", "arguments": {"query": "New York City population 2024"}}',
+            },
+            {
+                "role": "tool",
+                "content": '{"results": ["New York City population: 8.3 million (2024)"]}',
+            },
+            {
+                "role": "assistant",
+                "content": '{"name": "calculator", "arguments": {"expression": "8300000 / 783"}}',
+            },
+            {"role": "tool", "content": '{"expression": "8300000 / 783", "result": 10601.5}'},
+            {
+                "role": "assistant",
+                "content": "New York City has a population of approximately 8.3 million. With an area of 783 km², the population density is about 10,602 people per km².",
+            },
         ]
     },
     # ── Three-tool chain ───────────────────────────────────────
     {
         "messages": [
-            {"role": "system",    "content": SYSTEM_PROMPT},
-            {"role": "user",      "content": "Get Tesla stock price, search for their latest news, and tell me the stock-to-news sentiment."},
-            {"role": "assistant", "content": '{"name": "get_stock_price", "arguments": {"ticker": "TSLA"}}'},
-            {"role": "tool",      "content": '{"ticker": "TSLA", "price": 245.10, "change": "+3.2%"}'},
-            {"role": "assistant", "content": '{"name": "search_news", "arguments": {"query": "Tesla news today"}}'},
-            {"role": "tool",      "content": '{"results": ["Tesla Q4 earnings beat expectations", "New Model Y refresh announced", "Tesla expands Supercharger network"]}'},
-            {"role": "assistant", "content": "Tesla (TSLA) is up 3.2% at $245.10. The news is positive: Q4 earnings beat expectations, a new Model Y refresh was announced, and the Supercharger network is expanding. The sentiment aligns well with the price increase."},
+            {"role": "system", "content": SYSTEM_PROMPT},
+            {
+                "role": "user",
+                "content": "Get Tesla stock price, search for their latest news, and tell me the stock-to-news sentiment.",
+            },
+            {
+                "role": "assistant",
+                "content": '{"name": "get_stock_price", "arguments": {"ticker": "TSLA"}}',
+            },
+            {"role": "tool", "content": '{"ticker": "TSLA", "price": 245.10, "change": "+3.2%"}'},
+            {
+                "role": "assistant",
+                "content": '{"name": "search_news", "arguments": {"query": "Tesla news today"}}',
+            },
+            {
+                "role": "tool",
+                "content": '{"results": ["Tesla Q4 earnings beat expectations", "New Model Y refresh announced", "Tesla expands Supercharger network"]}',
+            },
+            {
+                "role": "assistant",
+                "content": "Tesla (TSLA) is up 3.2% at $245.10. The news is positive: Q4 earnings beat expectations, a new Model Y refresh was announced, and the Supercharger network is expanding. The sentiment aligns well with the price increase.",
+            },
         ]
     },
     # ── Edge cases: model should answer directly without tools ──
     {
         "messages": [
-            {"role": "system",    "content": SYSTEM_PROMPT},
-            {"role": "user",      "content": "Translate 'Good morning' to French."},
-            {"role": "assistant", "content": '{"name": "translate", "arguments": {"text": "Good morning", "target_language": "French"}}'},
-            {"role": "tool",      "content": '{"original": "Good morning", "translated": "Bonjour", "language": "French"}'},
+            {"role": "system", "content": SYSTEM_PROMPT},
+            {"role": "user", "content": "Translate 'Good morning' to French."},
+            {
+                "role": "assistant",
+                "content": '{"name": "translate", "arguments": {"text": "Good morning", "target_language": "French"}}',
+            },
+            {
+                "role": "tool",
+                "content": '{"original": "Good morning", "translated": "Bonjour", "language": "French"}',
+            },
             {"role": "assistant", "content": "'Good morning' in French is 'Bonjour'."},
         ]
     },
@@ -214,9 +320,7 @@ SYNTHETIC = [
 
 print(f"\nAdding {len(SYNTHETIC)} synthetic chain examples ...")
 for ex in SYNTHETIC:
-    t = tokenizer.apply_chat_template(
-        ex["messages"], tokenize=False, add_generation_prompt=False
-    )
+    t = tokenizer.apply_chat_template(ex["messages"], tokenize=False, add_generation_prompt=False)
     texts.append(t)
 
 print(f"Total training examples: {len(texts)}")
@@ -271,8 +375,7 @@ lora_config = LoraConfig(
     lora_alpha=LORA_ALPHA,
     lora_dropout=0.05,
     bias="none",
-    target_modules=["q_proj", "k_proj", "v_proj", "o_proj",
-                    "gate_proj", "up_proj", "down_proj"],
+    target_modules=["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"],
 )
 
 # ── TRAIN ────────────────────────────────────────────────────
@@ -334,13 +437,15 @@ wandb.finish()
 # ── MULTI-TURN INFERENCE TEST ─────────────────────────────────
 print("\n── Multi-turn inference test ──")
 
+
 def run_multiturn(conversation_history):
     model.eval()
     prompt = tokenizer.apply_chat_template(
         conversation_history, tokenize=False, add_generation_prompt=True
     )
-    inputs = tokenizer(prompt, return_tensors="pt",
-                       truncation=True, max_length=512).to(model.device)
+    inputs = tokenizer(prompt, return_tensors="pt", truncation=True, max_length=512).to(
+        model.device
+    )
     with torch.no_grad():
         outputs = model.generate(
             **inputs,
@@ -350,14 +455,15 @@ def run_multiturn(conversation_history):
             eos_token_id=tokenizer.eos_token_id,
         )
     return tokenizer.decode(
-        outputs[0][inputs["input_ids"].shape[1]:], skip_special_tokens=True
+        outputs[0][inputs["input_ids"].shape[1] :], skip_special_tokens=True
     ).strip()
+
 
 print("\n[Simulating multi-turn tool call chain]")
 print("=" * 60)
 
 history = [{"role": "system", "content": SYSTEM_PROMPT}]
-user_q  = "What's the weather in Tokyo and what are the top tourist attractions there?"
+user_q = "What's the weather in Tokyo and what are the top tourist attractions there?"
 history.append({"role": "user", "content": user_q})
 
 print(f"User   : {user_q}")
@@ -365,13 +471,23 @@ r1 = run_multiturn(history)
 print(f"Model  : {r1}")
 
 history.append({"role": "assistant", "content": r1})
-history.append({"role": "tool", "content": '{"location": "Tokyo", "temperature": 18, "condition": "Clear", "humidity": "55%"}'})
+history.append(
+    {
+        "role": "tool",
+        "content": '{"location": "Tokyo", "temperature": 18, "condition": "Clear", "humidity": "55%"}',
+    }
+)
 r2 = run_multiturn(history)
 print(f"\nTool   : weather result injected")
 print(f"Model  : {r2}")
 
 history.append({"role": "assistant", "content": r2})
-history.append({"role": "tool", "content": '{"results": ["Senso-ji Temple", "Shibuya Crossing", "Tokyo Skytree", "Tsukiji Market"]}'})
+history.append(
+    {
+        "role": "tool",
+        "content": '{"results": ["Senso-ji Temple", "Shibuya Crossing", "Tokyo Skytree", "Tsukiji Market"]}',
+    }
+)
 r3 = run_multiturn(history)
 print(f"\nTool   : attractions result injected")
 print(f"Model  : {r3}")

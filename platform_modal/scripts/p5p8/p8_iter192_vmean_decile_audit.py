@@ -28,6 +28,7 @@ Outputs (platform_hybrid/experiments/results/p5p8/):
   p8_iter192_decile_lift.tsv      10 deciles x 4 metrics = 40 rows
   p8_iter192_per_decile_summary.json
 """
+
 from __future__ import annotations
 import json
 import sys
@@ -36,8 +37,8 @@ from pathlib import Path
 import numpy as np
 
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
-from _p8_common import (  # noqa: E402
+from _paths import REPO_ROOT
+from _p8_common import (
     RAW20,
     AGG4,
     ALL24,
@@ -48,6 +49,7 @@ from _p8_common import (  # noqa: E402
     fit_xgb,
     paired_bootstrap_ci,
 )
+
 ROOT = REPO_ROOT
 RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8/corrected-review21-v2"
 RES.mkdir(parents=True, exist_ok=True)
@@ -80,10 +82,10 @@ def ece(prob, y, n_bins=10):
 
 def auc_quick(s, y):
     from sklearn.metrics import roc_auc_score
+
     if len(set(y)) < 2:
         return float("nan")
     return float(roc_auc_score(y, s))
-
 
 
 def main():
@@ -92,9 +94,12 @@ def main():
     Xte, yte = load(TEST)
     v_mean = Xte[:, COL_IDX["V_mean"]]
     v_std = Xte[:, COL_IDX["V_std"]]
-    print(f"  train: {Xtr.shape} pos={int((ytr==1).sum())}", flush=True)
-    print(f"  test:  {Xte.shape} pos={int((yte==1).sum())} "
-          f"V_mean range [{v_mean.min():.3f}, {v_mean.max():.3f}]", flush=True)
+    print(f"  train: {Xtr.shape} pos={int((ytr == 1).sum())}", flush=True)
+    print(
+        f"  test:  {Xte.shape} pos={int((yte == 1).sum())} "
+        f"V_mean range [{v_mean.min():.3f}, {v_mean.max():.3f}]",
+        flush=True,
+    )
 
     # V_mean deciles (stratification)
     decile_edges = np.quantile(v_mean, np.linspace(0.0, 1.0, N_DECILES + 1))
@@ -125,18 +130,27 @@ def main():
                 brier = float(((p - yy) ** 2).mean())
                 ec = ece(p, yy, N_ECE_BINS)
                 a = auc_quick(p, yy) if yy.sum() > 0 and yy.sum() < len(yy) else float("nan")
-                cell_rows.append((fset, d + 1, sd, n_total, n_pos,
-                                  base, brier, ec, a))
+                cell_rows.append((fset, d + 1, sd, n_total, n_pos, base, brier, ec, a))
 
     with out_cell.open("w") as f:
-        f.write("fset\tdecile\tseed\tn_total\tn_pos\thit_rate\t"
-                "brier\tece\tauc\n")
+        f.write("fset\tdecile\tseed\tn_total\tn_pos\thit_rate\tbrier\tece\tauc\n")
         for r in cell_rows:
-            f.write("\t".join([
-                r[0], str(r[1]), str(r[2]), str(r[3]), str(r[4]),
-                f"{r[5]:.4f}", f"{r[6]:.6f}", f"{r[7]:.6f}",
-                f"{r[8]:.6f}" if r[8] == r[8] else "nan"
-            ]) + "\n")
+            f.write(
+                "\t".join(
+                    [
+                        r[0],
+                        str(r[1]),
+                        str(r[2]),
+                        str(r[3]),
+                        str(r[4]),
+                        f"{r[5]:.4f}",
+                        f"{r[6]:.6f}",
+                        f"{r[7]:.6f}",
+                        f"{r[8]:.6f}" if r[8] == r[8] else "nan",
+                    ]
+                )
+                + "\n"
+            )
 
     # Aggregate to per-(fset, decile) means across seeds
     by_fd = {}
@@ -148,7 +162,9 @@ def main():
         agg[(fset, d)] = {
             "brier_mean": float(np.mean([x[6] for x in rows])),
             "ece_mean": float(np.mean([x[7] for x in rows])),
-            "auc_mean": float(np.mean([x[8] for x in rows])) if all(x[8] == x[8] for x in rows) else float("nan"),
+            "auc_mean": float(np.mean([x[8] for x in rows]))
+            if all(x[8] == x[8] for x in rows)
+            else float("nan"),
             "hit_rate": float(rows[0][5]),
             "n_total": int(rows[0][3]),
             "n_pos": int(rows[0][4]),
@@ -159,69 +175,78 @@ def main():
     lift_rows = []
     for d in range(1, N_DECILES + 1):
         # 24full vs 20raw per-seed diff
-        d_brier =np.array([
-            agg[("24full", d)]["brier_mean"] - agg[("20raw", d)]["brier_mean"]
-        ])
+        d_brier = np.array([agg[("24full", d)]["brier_mean"] - agg[("20raw", d)]["brier_mean"]])
         # paired per-seed
-        b_24 = np.array([r[6] for r in cell_rows
-                          if r[0] == "24full" and r[1] == d])
-        b_20 = np.array([r[6] for r in cell_rows
-                          if r[0] == "20raw" and r[1] == d])
-        e_24 = np.array([r[7] for r in cell_rows
-                          if r[0] == "24full" and r[1] == d])
-        e_20 = np.array([r[7] for r in cell_rows
-                          if r[0] == "20raw" and r[1] == d])
-        a_24 = np.array([r[8] for r in cell_rows
-                          if r[0] == "24full" and r[1] == d])
-        a_20 = np.array([r[8] for r in cell_rows
-                          if r[0] == "20raw" and r[1] == d])
+        b_24 = np.array([r[6] for r in cell_rows if r[0] == "24full" and r[1] == d])
+        b_20 = np.array([r[6] for r in cell_rows if r[0] == "20raw" and r[1] == d])
+        e_24 = np.array([r[7] for r in cell_rows if r[0] == "24full" and r[1] == d])
+        e_20 = np.array([r[7] for r in cell_rows if r[0] == "20raw" and r[1] == d])
+        a_24 = np.array([r[8] for r in cell_rows if r[0] == "24full" and r[1] == d])
+        a_20 = np.array([r[8] for r in cell_rows if r[0] == "20raw" and r[1] == d])
         brier_gap = b_24 - b_20
         ece_gap = e_24 - e_20
         auc_gap = a_24 - a_20
         ci_b = paired_bootstrap_ci(brier_gap, N_BOOT, seed=20260706 + d)
         ci_e = paired_bootstrap_ci(ece_gap, N_BOOT, seed=20260706 + 100 + d)
         ci_a = paired_bootstrap_ci(auc_gap, N_BOOT, seed=20260706 + 200 + d)
-        lift_rows.append({
-            "decile": d,
-            "n": agg[("24full", d)]["n_total"],
-            "n_pos": agg[("24full", d)]["n_pos"],
-            "hit_rate": agg[("24full", d)]["hit_rate"],
-            "brier_20raw": float(b_20.mean()),
-            "brier_24full": float(b_24.mean()),
-            "brier_gap_mean": ci_b["mean"],
-            "brier_gap_lo": ci_b["lo"],
-            "brier_gap_hi": ci_b["hi"],
-            "ece_20raw": float(e_20.mean()),
-            "ece_24full": float(e_24.mean()),
-            "ece_gap_mean": ci_e["mean"],
-            "ece_gap_lo": ci_e["lo"],
-            "ece_gap_hi": ci_e["hi"],
-            "auc_20raw": float(a_20.mean()),
-            "auc_24full": float(a_24.mean()),
-            "auc_gap_mean": ci_a["mean"],
-            "auc_gap_lo": ci_a["lo"],
-            "auc_gap_hi": ci_a["hi"],
-        })
+        lift_rows.append(
+            {
+                "decile": d,
+                "n": agg[("24full", d)]["n_total"],
+                "n_pos": agg[("24full", d)]["n_pos"],
+                "hit_rate": agg[("24full", d)]["hit_rate"],
+                "brier_20raw": float(b_20.mean()),
+                "brier_24full": float(b_24.mean()),
+                "brier_gap_mean": ci_b["mean"],
+                "brier_gap_lo": ci_b["lo"],
+                "brier_gap_hi": ci_b["hi"],
+                "ece_20raw": float(e_20.mean()),
+                "ece_24full": float(e_24.mean()),
+                "ece_gap_mean": ci_e["mean"],
+                "ece_gap_lo": ci_e["lo"],
+                "ece_gap_hi": ci_e["hi"],
+                "auc_20raw": float(a_20.mean()),
+                "auc_24full": float(a_24.mean()),
+                "auc_gap_mean": ci_a["mean"],
+                "auc_gap_lo": ci_a["lo"],
+                "auc_gap_hi": ci_a["hi"],
+            }
+        )
 
     with out_lift.open("w") as f:
-        f.write("decile\tn\tn_pos\thit_rate\t"
-                "brier_20raw\tbrier_24full\tbrier_gap_mean\tbrier_gap_lo\tbrier_gap_hi\t"
-                "ece_20raw\tece_24full\tece_gap_mean\tece_gap_lo\tece_gap_hi\t"
-                "auc_20raw\tauc_24full\tauc_gap_mean\tauc_gap_lo\tauc_gap_hi\n")
+        f.write(
+            "decile\tn\tn_pos\thit_rate\t"
+            "brier_20raw\tbrier_24full\tbrier_gap_mean\tbrier_gap_lo\tbrier_gap_hi\t"
+            "ece_20raw\tece_24full\tece_gap_mean\tece_gap_lo\tece_gap_hi\t"
+            "auc_20raw\tauc_24full\tauc_gap_mean\tauc_gap_lo\tauc_gap_hi\n"
+        )
         for r in lift_rows:
-            f.write("\t".join([
-                str(r["decile"]), str(r["n"]), str(r["n_pos"]),
-                f"{r['hit_rate']:.4f}",
-                f"{r['brier_20raw']:.6f}", f"{r['brier_24full']:.6f}",
-                f"{r['brier_gap_mean']:.6f}", f"{r['brier_gap_lo']:.6f}",
-                f"{r['brier_gap_hi']:.6f}",
-                f"{r['ece_20raw']:.6f}", f"{r['ece_24full']:.6f}",
-                f"{r['ece_gap_mean']:.6f}", f"{r['ece_gap_lo']:.6f}",
-                f"{r['ece_gap_hi']:.6f}",
-                f"{r['auc_20raw']:.6f}", f"{r['auc_24full']:.6f}",
-                f"{r['auc_gap_mean']:.6f}", f"{r['auc_gap_lo']:.6f}",
-                f"{r['auc_gap_hi']:.6f}",
-            ]) + "\n")
+            f.write(
+                "\t".join(
+                    [
+                        str(r["decile"]),
+                        str(r["n"]),
+                        str(r["n_pos"]),
+                        f"{r['hit_rate']:.4f}",
+                        f"{r['brier_20raw']:.6f}",
+                        f"{r['brier_24full']:.6f}",
+                        f"{r['brier_gap_mean']:.6f}",
+                        f"{r['brier_gap_lo']:.6f}",
+                        f"{r['brier_gap_hi']:.6f}",
+                        f"{r['ece_20raw']:.6f}",
+                        f"{r['ece_24full']:.6f}",
+                        f"{r['ece_gap_mean']:.6f}",
+                        f"{r['ece_gap_lo']:.6f}",
+                        f"{r['ece_gap_hi']:.6f}",
+                        f"{r['auc_20raw']:.6f}",
+                        f"{r['auc_24full']:.6f}",
+                        f"{r['auc_gap_mean']:.6f}",
+                        f"{r['auc_gap_lo']:.6f}",
+                        f"{r['auc_gap_hi']:.6f}",
+                    ]
+                )
+                + "\n"
+            )
 
     # ----- hypotheses -----
     print("Evaluating hypotheses...", flush=True)
@@ -229,10 +254,8 @@ def main():
     # H1: 24full helps MORE in LOW V_mean deciles (low-information regime).
     # Operationalized: brier_gap(24full - 20raw) is more negative in deciles
     # 1-3 than in deciles 8-10. (lower brier = better)
-    low_deciles_brier = np.array([r["brier_gap_mean"] for r in lift_rows
-                                   if r["decile"] <= 3])
-    high_deciles_brier = np.array([r["brier_gap_mean"] for r in lift_rows
-                                    if r["decile"] >= 8])
+    low_deciles_brier = np.array([r["brier_gap_mean"] for r in lift_rows if r["decile"] <= 3])
+    high_deciles_brier = np.array([r["brier_gap_mean"] for r in lift_rows if r["decile"] >= 8])
     h1 = low_deciles_brier.mean() < high_deciles_brier.mean()
 
     # H2 uses actual V_std strata, not V_mean as a proxy.
@@ -241,12 +264,24 @@ def main():
     low_std, high_std = std_decile < 3, std_decile >= 7
     std_gaps = {}
     for label, mask in [("low", low_std), ("high", high_std)]:
-        std_gaps[label] = float(np.mean([
-            np.mean((probas[("24full", sd)][mask] - yte[mask]) ** 2)
-            - np.mean((probas[("20raw", sd)][mask] - yte[mask]) ** 2)
-            for sd in SEEDS])) if mask.any() else None
-    h2 = (std_gaps["high"] < std_gaps["low"]
-          if all(v is not None for v in std_gaps.values()) else None)
+        std_gaps[label] = (
+            float(
+                np.mean(
+                    [
+                        np.mean((probas[("24full", sd)][mask] - yte[mask]) ** 2)
+                        - np.mean((probas[("20raw", sd)][mask] - yte[mask]) ** 2)
+                        for sd in SEEDS
+                    ]
+                )
+            )
+            if mask.any()
+            else None
+        )
+    h2 = (
+        std_gaps["high"] < std_gaps["low"]
+        if all(v is not None for v in std_gaps.values())
+        else None
+    )
 
     # H3: Per-decile Brier is lower for 24full in >=8/10 deciles.
     # (broad lift: V-stat helps in most deciles)
@@ -264,8 +299,7 @@ def main():
     # Among deciles with at least some fraud, the one with hit_rate closest to 0.5
     candidates = [r for r in lift_rows if r["n_pos"] >= 5]
     if candidates:
-        maxent_decile = min(candidates,
-                            key=lambda r: abs(r["hit_rate"] - target_rate))
+        maxent_decile = min(candidates, key=lambda r: abs(r["hit_rate"] - target_rate))
     else:
         maxent_decile = lift_rows[0]
     h5 = best_decile["decile"] == maxent_decile["decile"]

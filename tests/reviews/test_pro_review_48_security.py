@@ -26,7 +26,7 @@ def test_colab_launch_rejects_invalid_concurrency(value):
     with pytest.raises(
         ValueError, match="Concurrency must be between 1 and 16|invalid literal for int\\(\\)"
     ):
-        ctl.launch_code("/tmp/jobs.json", value)  # noqa: S108 - Dummy reward/command argument; no filesystem access.
+        ctl.launch_code("/tmp/jobs.json", value)
 
 
 def test_colab_launch_path_stays_literal(monkeypatch):

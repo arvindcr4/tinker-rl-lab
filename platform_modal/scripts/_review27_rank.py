@@ -1,4 +1,5 @@
 """Tie-aware finite rank statistics for exploratory observed cohorts."""
+
 import math
 
 import numpy as np
@@ -32,7 +33,9 @@ def spearman(x, y, b=2000, seed=20260702):
     rx, ry = rx - rx.mean(), ry - ry.mean()
     denominator = np.linalg.norm(rx) * np.linalg.norm(ry)
     rng = np.random.default_rng(seed)
-    count = sum(abs(float(rx @ rng.permutation(ry) / denominator)) >= abs(obs) - 1e-12 for _ in range(b))
+    count = sum(
+        abs(float(rx @ rng.permutation(ry) / denominator)) >= abs(obs) - 1e-12 for _ in range(b)
+    )
     return obs, (count + 1) / (b + 1)
 
 
@@ -50,7 +53,13 @@ def observed_trace(row, source_root):
     from pathlib import Path
 
     if not all(row.get(key) for key in ("trace_file", "trace_sha256", "run_id")):
-        return None, {"status": "unavailable", "reason": "missing_explicit_trace_identity", "trace_file": "", "trace_sha256": "", "run_id": ""}
+        return None, {
+            "status": "unavailable",
+            "reason": "missing_explicit_trace_identity",
+            "trace_file": "",
+            "trace_sha256": "",
+            "run_id": "",
+        }
     root = Path(source_root).resolve()
     path = (root / row["trace_file"]).resolve()
     if not path.is_relative_to(root):
@@ -62,24 +71,40 @@ def observed_trace(row, source_root):
     record = json.loads(raw)
     for metadata in (row, record):
         kind = str(metadata.get("evidence_kind", "")).lower()
-        if ("synthetic" in kind or "reconstruct" in kind or
-                any(metadata.get(key) in (True, 1, "true", "True", "1")
-                    for key in ("synthetic", "is_synthetic", "reconstructed"))):
+        if (
+            "synthetic" in kind
+            or "reconstruct" in kind
+            or any(
+                metadata.get(key) in (True, 1, "true", "True", "1")
+                for key in ("synthetic", "is_synthetic", "reconstructed")
+            )
+        ):
             raise ValueError("synthetic or reconstructed traces are not measured evidence")
     if record.get("run_id") != row["run_id"]:
         raise ValueError("trace run identity mismatch")
     values = np.asarray(record.get("reward_trace"), dtype=float)
     if values.ndim != 1 or len(values) < 4 or not np.isfinite(values).all():
         raise ValueError("ordered finite reward trace required")
-    if isinstance(row["n_steps"], bool) or not math.isfinite(float(row["n_steps"])) or float(row["n_steps"]) != len(values):
+    if (
+        isinstance(row["n_steps"], bool)
+        or not math.isfinite(float(row["n_steps"]))
+        or float(row["n_steps"]) != len(values)
+    ):
         raise ValueError("trace length disagrees with cohort row")
-    return values, {"status": "observed", "reason": "", "trace_file": str(path.relative_to(root)), "trace_sha256": digest, "run_id": row["run_id"]}
+    return values, {
+        "status": "observed",
+        "reason": "",
+        "trace_file": str(path.relative_to(root)),
+        "trace_sha256": digest,
+        "run_id": row["run_id"],
+    }
 
 
 def load_reward_trace(path):
     """Read ordered rewards without inventing zeros or compressing missing steps."""
     import json
     from pathlib import Path
+
     path = Path(path)
     if not path.exists():
         return []
@@ -104,23 +129,39 @@ def write_manifest(script_file, output_dir, input_paths, *, seed=20260702):
     import json
     from pathlib import Path
     import subprocess
+
     script = Path(script_file).resolve()
     try:
         revision = subprocess.check_output(
-            ["git", "rev-parse", "HEAD"], cwd=script.parents[2], text=True,
-            stderr=subprocess.DEVNULL).strip()
+            ["git", "rev-parse", "HEAD"],
+            cwd=script.parents[2],
+            text=True,
+            stderr=subprocess.DEVNULL,
+        ).strip()
     except (OSError, subprocess.CalledProcessError):
         revision = "unavailable"
     sources = []
     for path in sorted({Path(p).resolve() for p in input_paths}):
-        sources.append(dict(path=str(path), status="observed" if path.is_file() else "unavailable",
-                            sha256=hashlib.sha256(path.read_bytes()).hexdigest() if path.is_file() else None))
-    payload = dict(analysis_version="review27_v3", script=script.name,
-                   script_sha256=hashlib.sha256(script.read_bytes()).hexdigest(),
-                   helper_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
-                   code_revision=revision, seed=seed, inputs=sources,
-                   dependencies={name: importlib.metadata.version(name) for name in ("numpy", "scipy", "matplotlib")},
-                   interpretation="Exploratory candidate analysis; historical artifacts are not replaced")
+        sources.append(
+            dict(
+                path=str(path),
+                status="observed" if path.is_file() else "unavailable",
+                sha256=hashlib.sha256(path.read_bytes()).hexdigest() if path.is_file() else None,
+            )
+        )
+    payload = dict(
+        analysis_version="review27_v3",
+        script=script.name,
+        script_sha256=hashlib.sha256(script.read_bytes()).hexdigest(),
+        helper_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
+        code_revision=revision,
+        seed=seed,
+        inputs=sources,
+        dependencies={
+            name: importlib.metadata.version(name) for name in ("numpy", "scipy", "matplotlib")
+        },
+        interpretation="Exploratory candidate analysis; historical artifacts are not replaced",
+    )
     target = Path(output_dir) / (script.stem + "_manifest.json")
     target.write_text(json.dumps(payload, indent=2, allow_nan=False) + "\n")
     return target

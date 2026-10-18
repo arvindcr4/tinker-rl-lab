@@ -202,7 +202,12 @@ def _as_gate_result(gates: Mapping[str, Any] | None) -> dict[str, Any]:
     if isinstance(no_regression, Mapping) and isinstance(safety, Mapping):
         nr = no_regression.get("by_domain")
         sf = safety.get("by_domain")
-        if not isinstance(nr, Mapping) or not nr or not isinstance(sf, Mapping) or set(nr) != set(sf):
+        if (
+            not isinstance(nr, Mapping)
+            or not nr
+            or not isinstance(sf, Mapping)
+            or set(nr) != set(sf)
+        ):
             raise StopRuleInputError("domain gates require complete domain measurements")
         calculated = evaluate_domain_gates(
             {k: v["delta"] for k, v in nr.items()},
@@ -225,9 +230,7 @@ def _as_gate_result(gates: Mapping[str, Any] | None) -> dict[str, Any]:
         if not isinstance(gates.get("passed"), bool):
             raise StopRuleInputError("domain_gates needs a boolean passed field")
         result = _json_value(dict(gates))
-        result["passed"] = bool(
-            result["passed"] and no_regression["passed"] and safety["passed"]
-        )
+        result["passed"] = bool(result["passed"] and no_regression["passed"] and safety["passed"])
         result["status"] = "reported"
         return result
 
@@ -486,7 +489,9 @@ def _normalise_arm(record: Mapping[str, Any] | PairedArmMetrics) -> _ArmView:
     # caller-provided counts.  This prevents a stale summary from being used
     # for selection.
     raw_base = _field(record, "base_scores", "base_metrics", default=_MISSING)
-    raw_candidate = _field(record, "candidate_scores", "arm_scores", "trained_scores", default=_MISSING)
+    raw_candidate = _field(
+        record, "candidate_scores", "arm_scores", "trained_scores", default=_MISSING
+    )
     if raw_base is not _MISSING or raw_candidate is not _MISSING:
         if raw_base is _MISSING or raw_candidate is _MISSING:
             raise StopRuleInputError("both base_scores and candidate_scores are required")
@@ -496,12 +501,16 @@ def _normalise_arm(record: Mapping[str, Any] | PairedArmMetrics) -> _ArmView:
             raw_candidate,
             learning_rate=_field(record, "learning_rate", "lr"),
             estimated_cost_usd=_field(record, "estimated_cost_usd", "cost_usd", "cost"),
-            split_id=_field(record, "split_id", "selection_split_id", default=DEFAULT_SELECTION_SPLIT_ID),
+            split_id=_field(
+                record, "split_id", "selection_split_id", default=DEFAULT_SELECTION_SPLIT_ID
+            ),
             split_role=_field(record, "split_role", default="selection"),
             claim_scope=_field(record, "claim_scope", default=COMPONENT_ONLY_CLAIM),
             domain_gates=_field(record, "domain_gates", default=None),
             final_split_id=_field(record, "final_split_id", default=DEFAULT_FINAL_SPLIT_ID),
-            bootstrap_resamples=_field(record, "bootstrap_resamples", default=DEFAULT_BOOTSTRAP_RESAMPLES),
+            bootstrap_resamples=_field(
+                record, "bootstrap_resamples", default=DEFAULT_BOOTSTRAP_RESAMPLES
+            ),
             bootstrap_seed=_field(record, "bootstrap_seed", default=DEFAULT_BOOTSTRAP_SEED),
         )
         return _normalise_arm(derived)
@@ -535,18 +544,23 @@ def _normalise_arm(record: Mapping[str, Any] | PairedArmMetrics) -> _ArmView:
             raise StopRuleInputError("perfect_call_rate does not match perfect_call_count/trials")
 
     split_id = _string(
-        "split_id", _field(record, "split_id", "selection_split_id", default=DEFAULT_SELECTION_SPLIT_ID)
+        "split_id",
+        _field(record, "split_id", "selection_split_id", default=DEFAULT_SELECTION_SPLIT_ID),
     )
     split_role = _string("split_role", _field(record, "split_role", default="selection"))
     split_role_normalized = split_role.lower().replace("-", "_")
     if split_role_normalized not in {"selection", "selection_slice"}:
-        raise StopRuleInputError("arm metrics must be on the selection split, never the final split")
+        raise StopRuleInputError(
+            "arm metrics must be on the selection split, never the final split"
+        )
     final_split = _field(record, "final_split_id", default=DEFAULT_FINAL_SPLIT_ID)
     if final_split is not None and _string("final_split_id", final_split) == split_id:
         raise StopRuleInputError("selection split and final split must be different")
     if record.get("final_used_for_selection") is True:
         raise StopRuleInputError("final split metrics must not be used for selection")
-    claim_scope = _normalise_claim_scope(_field(record, "claim_scope", default=COMPONENT_ONLY_CLAIM))
+    claim_scope = _normalise_claim_scope(
+        _field(record, "claim_scope", default=COMPONENT_ONLY_CLAIM)
+    )
     gates = _field(record, "domain_gates", default=None)
     if gates is None:
         direct_gate_keys = {"deltas", "delta_intervals", "safety_increases", "safety_intervals"}
@@ -707,7 +721,9 @@ def validate_selection_vs_final_split(
         "final_split_id": final_split_id,
         "selection_examples": None if selection_ids is None else len(selection_ids),
         "final_examples": None if final_ids is None else len(final_ids),
-        "overlap_examples": len(overlap) if selection_ids is not None and final_ids is not None else None,
+        "overlap_examples": len(overlap)
+        if selection_ids is not None and final_ids is not None
+        else None,
         "final_used_for_selection": False,
         "selection_only": True,
         "final_evaluation_required": True,
@@ -739,7 +755,9 @@ def budget_aware_stop(
     if cap > hard:
         raise StopRuleInputError("operational_cap_usd cannot exceed hard_max_usd")
     if reserve > hard - cap:
-        raise StopRuleInputError("reserve_usd must fit between the operational cap and hard maximum")
+        raise StopRuleInputError(
+            "reserve_usd must fit between the operational cap and hard maximum"
+        )
     projected = spent + next_cost
     if spent > hard or projected > hard:
         stop = True
@@ -775,7 +793,10 @@ def _eligibility(
     details: list[dict[str, Any]] = []
     for arm in arms:
         reasons: list[str] = []
-        if arm.baseline_count is not None and (arm.baseline_count != base.perfect_call_count or not math.isclose(arm.baseline_mean, base.mean_strict_reward, abs_tol=1e-15)):
+        if arm.baseline_count is not None and (
+            arm.baseline_count != base.perfect_call_count
+            or not math.isclose(arm.baseline_mean, base.mean_strict_reward, abs_tol=1e-15)
+        ):
             reasons.append("paired_baseline_differs_from_frozen_base")
         if arm.trials != base.trials:
             reasons.append("paired_trial_count_differs_from_base")
@@ -1033,7 +1054,9 @@ def successive_halving(
         if keep_values is None:
             keep_count = max(1, math.ceil(len(ordered_views) / 2))
         else:
-            keep_count = _integer(f"keep_counts[{round_index}]", keep_values[round_index], minimum=1)
+            keep_count = _integer(
+                f"keep_counts[{round_index}]", keep_values[round_index], minimum=1
+            )
         if budget["stop"]:
             round_receipts.append(
                 {

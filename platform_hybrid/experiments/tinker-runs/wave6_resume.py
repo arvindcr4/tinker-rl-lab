@@ -3,9 +3,15 @@
 
 import sys as _contract_sys
 from pathlib import Path as _ContractPath
+
 if len(_ContractPath(__file__).resolve().parents) > 3:
     _contract_sys.path.insert(0, str(_ContractPath(__file__).resolve().parents[3]))
-from platform_hybrid.experiments.framework_contracts import wave6_spec, validate_resume, require_completed, wave6_failure_receipt
+from platform_hybrid.experiments.framework_contracts import (
+    wave6_spec,
+    validate_resume,
+    require_completed,
+    wave6_failure_receipt,
+)
 
 
 import json
@@ -17,13 +23,25 @@ from datetime import datetime, timezone
 
 def _compute_rerun_plan(existing, base_rank, base_temp, base_batch, steps=30):
     candidates = {}
-    for sweep, values, key in (("temperature", [.2, .4, .6, .8, 1.], "temperature"),
-                                ("rank", [4, 8, 16, 32, 64], "rank"),
-                                ("batch", [1, 2, 4, 8], "batch")):
+    for sweep, values, key in (
+        ("temperature", [0.2, 0.4, 0.6, 0.8, 1.0], "temperature"),
+        ("rank", [4, 8, 16, 32, 64], "rank"),
+        ("batch", [1, 2, 4, 8], "batch"),
+    ):
         for value in values:
-            exp = {"rank": base_rank, "temperature": base_temp, "batch": base_batch,
-                   "steps": steps, "sweep": sweep, key: value}
-            if exp["rank"] == base_rank and exp["temperature"] == base_temp and exp["batch"] == base_batch:
+            exp = {
+                "rank": base_rank,
+                "temperature": base_temp,
+                "batch": base_batch,
+                "steps": steps,
+                "sweep": sweep,
+                key: value,
+            }
+            if (
+                exp["rank"] == base_rank
+                and exp["temperature"] == base_temp
+                and exp["batch"] == base_batch
+            ):
                 tag = f"w6_base_r{base_rank}_t{base_temp}_b{base_batch}"
             elif sweep == "temperature":
                 tag = f"w6_temp{value}_r{base_rank}_b{base_batch}"
@@ -61,8 +79,7 @@ def main():
 
     if not os.path.exists(results_path):
         print(
-            f"No existing results file at {results_path}; "
-            f"run wave6_ablations.py first.",
+            f"No existing results file at {results_path}; run wave6_ablations.py first.",
             file=sys.stderr,
         )
         sys.exit(1)
@@ -95,7 +112,7 @@ def main():
 
     # Only now do we import the heavy runner (triggers GSM8K + Tinker).
     sys.path.insert(0, here)
-    from wave6_ablations import run_one  # noqa: E402
+    from wave6_ablations import run_one
 
     new_results = []
     max_parallel = int(sys.argv[1]) if len(sys.argv) > 1 else 6
@@ -106,9 +123,7 @@ def main():
                 new_results.append(fut.result())
             except Exception as e:
                 exp = futures[fut]
-                new_results.append(
-                    wave6_failure_receipt(exp, e, status="crashed")
-                )
+                new_results.append(wave6_failure_receipt(exp, e, status="crashed"))
 
     # Merge: only successful reruns replace existing entries.
     all_runs_by_tag = dict(existing)
@@ -175,9 +190,7 @@ def main():
         return rows
 
     completed = sum(1 for r in merged_runs if r.get("status") == "completed")
-    failed = sum(
-        1 for r in merged_runs if r.get("status") in ("failed", "crashed")
-    )
+    failed = sum(1 for r in merged_runs if r.get("status") in ("failed", "crashed"))
 
     out = {
         "metadata": {
@@ -200,13 +213,10 @@ def main():
             "failed": failed,
             "finalized": True,
             "wandb_project": (
-                "https://wandb.ai/arvindcr4-pes-university/"
-                "tinker-rl-lab-world-class"
+                "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-world-class"
             ),
         },
-        "temperature_sweep": _collect(
-            "temperature", "temperature", [0.2, 0.4, 0.6, 0.8, 1.0]
-        ),
+        "temperature_sweep": _collect("temperature", "temperature", [0.2, 0.4, 0.6, 0.8, 1.0]),
         "rank_sweep": _collect("rank", "rank", [4, 8, 16, 32, 64]),
         "batch_sweep": _collect("batch", "batch", [1, 2, 4, 8]),
         "runs": merged_runs,

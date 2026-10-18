@@ -185,12 +185,11 @@ def make_record(source: Path, subpath: str, rec: dict[str, Any]) -> RunRecord | 
     early_zvf_mean = float(np.mean(early_zvfs))
     collapse = int(late_mean <= COLLAPSE_THRESHOLD)
     useful = int(late_mean >= USEFUL_THRESHOLD)
-    rule = int(
-        early_zvf_mean >= RULE_ZVF_THRESHOLD
-        and early_reward_mean <= RULE_REWARD_THRESHOLD
-    )
+    rule = int(early_zvf_mean >= RULE_ZVF_THRESHOLD and early_reward_mean <= RULE_REWARD_THRESHOLD)
 
-    peak_reward = as_float(rec.get("peak_reward"), as_float(rec.get("peak"), float(np.max(rewards))))
+    peak_reward = as_float(
+        rec.get("peak_reward"), as_float(rec.get("peak"), float(np.max(rewards)))
+    )
     zero_reward_pct = as_float(rec.get("zero_reward_pct"), float(np.mean(rewards == 0.0) * 100.0))
     zero_loss_pct = as_float(rec.get("zero_loss_pct"))
 

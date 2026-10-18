@@ -58,10 +58,7 @@ TASKS = [
     BrowserTask(
         task_id="inventory_search",
         path="/inventory.html",
-        objective=(
-            "Find the Qwen3-8B model in the inventory and open/select its "
-            "details."
-        ),
+        objective=("Find the Qwen3-8B model in the inventory and open/select its details."),
         max_steps=7,
     ),
     BrowserTask(
@@ -403,8 +400,7 @@ def resolve_model(client: Groq) -> tuple[str, str | None]:
     for fallback in FALLBACK_MODELS:
         if fallback in available:
             return fallback, (
-                f"Preferred Groq model {PREFERRED_MODEL!r} is unavailable; "
-                f"using {fallback!r}."
+                f"Preferred Groq model {PREFERRED_MODEL!r} is unavailable; using {fallback!r}."
             )
     raise RuntimeError(
         "No configured Groq controller model is available. "
@@ -511,7 +507,9 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--output", default="experiments/results/browser_control_smoke.json")
     parser.add_argument("--site-dir", default="experiments/results/browser_control_site")
-    parser.add_argument("--screenshot-dir", default="experiments/results/browser_control_screenshots")
+    parser.add_argument(
+        "--screenshot-dir", default="experiments/results/browser_control_screenshots"
+    )
     parser.add_argument("--wandb", action="store_true")
     parser.add_argument("--session", default=f"browser-control-smoke-{int(time.time())}")
     args = parser.parse_args()

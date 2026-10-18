@@ -21,9 +21,9 @@ Inputs:
 Outputs:
   figures/group_size_iter59.{pdf,png}
 """
+
 from __future__ import annotations
 
-import math
 from pathlib import Path
 
 import matplotlib
@@ -43,7 +43,7 @@ def load_equivalence():
     with open(RES / "group_size_iter59_equivalence.tsv") as f:
         header = f.readline().rstrip("\n").split("\t")
         for line in f:
-            row = dict(zip(header, line.rstrip("\n").split("\t")))
+            row = dict(zip(header, line.rstrip("\n").split("\t"), strict=False))
             if row["threshold_name"].startswith("R_observed"):
                 obs_rows.append(
                     {
@@ -59,7 +59,7 @@ def load_decomp():
     with open(RES / "group_size_iter59_decomp.tsv") as f:
         header = f.readline().rstrip("\n").split("\t")
         for line in f:
-            row = dict(zip(header, line.rstrip("\n").split("\t")))
+            row = dict(zip(header, line.rstrip("\n").split("\t"), strict=False))
             try:
                 T = int(row["T_tokens"])
             except (ValueError, TypeError):
@@ -79,8 +79,15 @@ def panel_a(ax, obs):
     Ts = [r["T_M"] for r in obs]
     Rs = [r["R"] for r in obs]
     # Plot retention curve
-    ax.plot(Ts, Rs, "o-", color="#1f77b4", linewidth=2.2, markersize=10,
-            label=r"Empirical $R(T) = \mathrm{acc}(G{=}4)/\mathrm{acc}(G{=}32)$")
+    ax.plot(
+        Ts,
+        Rs,
+        "o-",
+        color="#1f77b4",
+        linewidth=2.2,
+        markersize=10,
+        label=r"Empirical $R(T) = \mathrm{acc}(G{=}4)/\mathrm{acc}(G{=}32)$",
+    )
     # Threshold lines
     thresholds = [
         (0.85, "Pragmatic equiv.", "#2ca02c", "-"),
@@ -88,26 +95,38 @@ def panel_a(ax, obs):
         (0.70, "Hard divergence", "#d62728", ":"),
     ]
     for thr, lab, col, ls in thresholds:
-        ax.axhline(thr, color=col, linestyle=ls, linewidth=1.4, alpha=0.85,
-                   label=f"{lab} ($R \\geq {thr:.2f}$)")
+        ax.axhline(
+            thr,
+            color=col,
+            linestyle=ls,
+            linewidth=1.4,
+            alpha=0.85,
+            label=f"{lab} ($R \\geq {thr:.2f}$)",
+        )
     # Shade cells above/below thresholds (vertical bands)
-    for i, (T, R) in enumerate(zip(Ts, Rs)):
-        col = "#2ca02c" if R >= 0.85 else ("#ff7f0e" if R >= 0.75 else
-                                            ("#d62728" if R < 0.70 else "#bcbd22"))
-        ax.scatter([T], [R], s=220, color=col, edgecolor="black",
-                   linewidth=0.8, zorder=5)
+    for _i, (T, R) in enumerate(zip(Ts, Rs, strict=False)):
+        col = (
+            "#2ca02c"
+            if R >= 0.85
+            else ("#ff7f0e" if R >= 0.75 else ("#d62728" if R < 0.70 else "#bcbd22"))
+        )
+        ax.scatter([T], [R], s=220, color=col, edgecolor="black", linewidth=0.8, zorder=5)
         # Annotate R value above each point
-        ax.annotate(f"{R:.3f}", xy=(T, R), xytext=(0, 12),
-                    textcoords="offset points", ha="center", fontsize=9,
-                    color="black")
+        ax.annotate(
+            f"{R:.3f}",
+            xy=(T, R),
+            xytext=(0, 12),
+            textcoords="offset points",
+            ha="center",
+            fontsize=9,
+            color="black",
+        )
     ax.set_xscale("log")
     ax.set_xticks(Ts)
     ax.set_xticklabels([f"{t}M" for t in Ts], fontsize=10)
     ax.set_xlabel(r"Iso-token budget $T$ (tokens, log scale)", fontsize=11)
-    ax.set_ylabel(r"Retention $R = \mathrm{acc}(G{=}4) / \mathrm{acc}(G{=}32)$",
-                  fontsize=11)
-    ax.set_title("(a) Equivalence regions in the $(T, R)$ plane",
-                 fontsize=12, fontweight="bold")
+    ax.set_ylabel(r"Retention $R = \mathrm{acc}(G{=}4) / \mathrm{acc}(G{=}32)$", fontsize=11)
+    ax.set_title("(a) Equivalence regions in the $(T, R)$ plane", fontsize=12, fontweight="bold")
     ax.set_ylim(0.65, 1.02)
     ax.grid(True, alpha=0.3, linestyle=":")
     ax.legend(loc="lower left", fontsize=8.5, framealpha=0.95)
@@ -123,35 +142,66 @@ def panel_b(ax, decomp):
     x = np.arange(len(Ts))
 
     # Bars: empirical R vs structural upper bound R_struct
-    b1 = ax.bar(x - width / 2, R_emp, width, color="#1f77b4", alpha=0.85,
-                edgecolor="black", linewidth=0.6,
-                label=r"Empirical $R(T)$")
-    b2 = ax.bar(x + width / 2, R_struct, width, color="#ff7f0e", alpha=0.55,
-                edgecolor="black", linewidth=0.6,
-                label=r"Structural $R_{\mathrm{struct}} = (Y_4/Y_{32}) \cdot (s_4/s_{32})$")
+    b1 = ax.bar(
+        x - width / 2,
+        R_emp,
+        width,
+        color="#1f77b4",
+        alpha=0.85,
+        edgecolor="black",
+        linewidth=0.6,
+        label=r"Empirical $R(T)$",
+    )
+    b2 = ax.bar(
+        x + width / 2,
+        R_struct,
+        width,
+        color="#ff7f0e",
+        alpha=0.55,
+        edgecolor="black",
+        linewidth=0.6,
+        label=r"Structural $R_{\mathrm{struct}} = (Y_4/Y_{32}) \cdot (s_4/s_{32})$",
+    )
 
     # Annotate empirical R values on top of each bar
     for i, v in enumerate(R_emp):
-        ax.annotate(f"{v:.3f}", xy=(x[i] - width / 2, v),
-                    xytext=(0, 4), textcoords="offset points",
-                    ha="center", fontsize=9)
+        ax.annotate(
+            f"{v:.3f}",
+            xy=(x[i] - width / 2, v),
+            xytext=(0, 4),
+            textcoords="offset points",
+            ha="center",
+            fontsize=9,
+        )
 
     # Annotate the noise residual at each budget (below the x-axis or as text)
     for i, n in enumerate(noise):
-        ax.annotate(f"noise={n:+.3f}", xy=(x[i], -0.06),
-                    ha="center", va="top", fontsize=8.5, color="#d62728")
+        ax.annotate(
+            f"noise={n:+.3f}",
+            xy=(x[i], -0.06),
+            ha="center",
+            va="top",
+            fontsize=8.5,
+            color="#d62728",
+        )
 
     # Horizontal line at R=1 for reference
     ax.axhline(1.0, color="black", linestyle=":", linewidth=1.0, alpha=0.6)
-    ax.text(0.02, 1.02, "$R=1$ (no retention loss)", transform=ax.get_yaxis_transform(),
-            fontsize=8, color="black", va="bottom")
+    ax.text(
+        0.02,
+        1.02,
+        "$R=1$ (no retention loss)",
+        transform=ax.get_yaxis_transform(),
+        fontsize=8,
+        color="black",
+        va="bottom",
+    )
 
     ax.set_xticks(x)
     ax.set_xticklabels([f"{t}M" for t in Ts], fontsize=10)
     ax.set_xlabel(r"Iso-token budget $T$", fontsize=11)
     ax.set_ylabel(r"Retention", fontsize=11)
-    ax.set_title("(b) Multiplicative decomposition of $R(T)$",
-                 fontsize=12, fontweight="bold")
+    ax.set_title("(b) Multiplicative decomposition of $R(T)$", fontsize=12, fontweight="bold")
     ax.set_ylim(-0.10, 5.0)
     ax.grid(True, alpha=0.3, axis="y", linestyle=":")
     ax.legend(loc="upper right", fontsize=8.5, framealpha=0.95)
@@ -167,7 +217,9 @@ def main():
     panel_b(ax_b, decomp)
     fig.suptitle(
         "Iter 59 — Pillar 3: Equivalence regions and multiplicative decomposition of $G{=}4/G{=}32$ retention",
-        fontsize=12.5, fontweight="bold", y=1.00,
+        fontsize=12.5,
+        fontweight="bold",
+        y=1.00,
     )
     fig.tight_layout(rect=(0, 0, 1, 0.97))
 

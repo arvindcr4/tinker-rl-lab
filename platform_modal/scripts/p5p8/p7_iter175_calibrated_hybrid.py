@@ -41,14 +41,16 @@ Outputs (platform_hybrid/experiments/results/p5p8/p7_iter175_*):
   sweep.tsv          (5 zvf_tau x 4 methods: C6 Pareto wins + cost)
   summary.json       (verdicts + cross-paper coupling)
 """
+
 from __future__ import annotations
 import csv, glob, json, math, os, random
-from typing import Dict, List
 
 import sys
 from pathlib import Path
+
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
+from _paths import REPO_ROOT
+
 WORKTREE = str(REPO_ROOT)
 DATA_DIR = os.path.join(WORKTREE, "platform_hybrid/experiments/results/n2_reward_tensor_resume")
 OUT_DIR = os.path.join(WORKTREE, "platform_hybrid/experiments/results/p5p8/corrected-review19-v3")
@@ -60,20 +62,24 @@ METHODS = ["aero", "areal", "gift", "grpo"]
 
 # ---------- pure-math helpers (identical to iter-167 for direct comparability) ----------
 
+
 def zvf_iid(p, G):
     if p <= 0.0:
         return 1.0 if G >= 1 else 0.0
     if p >= 1.0:
         return 1.0
-    return p ** G + (1.0 - p) ** G
+    return p**G + (1.0 - p) ** G
+
 
 def yield_iid(p, G):
     return 1.0 - zvf_iid(p, G)
+
 
 def per_prompt_delta_y(p_hat, g_prime):
     if p_hat <= 0.0 or p_hat >= 1.0:
         return 0.0
     return yield_iid(p_hat, g_prime) - yield_iid(p_hat, G_BASE)
+
 
 def oracle_g_star(p_hat):
     """Raw-yield oracle on G_MENU; same objective as capture and regret."""
@@ -95,6 +101,7 @@ def oracle_g_star(p_hat):
 
 
 # ---------- Berkeley row 01 Dualformer auto-G ----------
+
 
 def dualformer_g_target(p_hat):
     """Berkeley row 01 auto-G band:
@@ -120,6 +127,7 @@ def dualformer_g_target(p_hat):
 
 # ---------- C6 Calibrated-Hybrid: intersection-and-fallback ----------
 
+
 def c6_decision(p_hat, step_zvf, zvf_tau=0.70):
     """Return (G_C6, fire_dual_bool, fire_zvf_bool, G_dual_target). The decision tree:
 
@@ -138,21 +146,23 @@ def c6_decision(p_hat, step_zvf, zvf_tau=0.70):
     fire_due_to_zvf = step_zvf >= zvf_tau
     if fire_due_to_dualformer and fire_due_to_zvf:
         return g_dual, fire_due_to_dualformer, fire_due_to_zvf, g_dual
-    elif fire_due_to_zvf:
+    if fire_due_to_zvf:
         return 16, fire_due_to_dualformer, fire_due_to_zvf, g_dual
-    else:
-        return G_BASE, fire_due_to_dualformer, fire_due_to_zvf, g_dual
+    return G_BASE, fire_due_to_dualformer, fire_due_to_zvf, g_dual
 
 
 # ---------- existing empirical controllers (verbatim from iter-167) ----------
 
+
 def ctrl_zvf_triage(step_zvf, tau=0.70):
     return 16 if step_zvf >= tau else G_BASE
+
 
 def ctrl_hybrid(step_zvf, tau_low=0.70, tau_high=0.90):
     if tau_low <= step_zvf < tau_high:
         return 16
     return G_BASE
+
 
 def ctrl_iso_g(p_hat, tau_y=0.90):
     if p_hat <= 0.0 or p_hat >= 1.0:
@@ -162,16 +172,18 @@ def ctrl_iso_g(p_hat, tau_y=0.90):
             return g
     return G_BASE
 
+
 EMPIRICAL = {
-    "C0_fixed_G8":   lambda p_hat, step_zvf: G_BASE,
+    "C0_fixed_G8": lambda p_hat, step_zvf: G_BASE,
     "C1_zvf_triage": lambda p_hat, step_zvf: ctrl_zvf_triage(step_zvf),
     "C2_dualformer": lambda p_hat, step_zvf: dualformer_g_target(p_hat),
-    "C3_hybrid":     lambda p_hat, step_zvf: ctrl_hybrid(step_zvf),
-    "C5_isog_y090":  lambda p_hat, step_zvf: ctrl_iso_g(p_hat, 0.90),
+    "C3_hybrid": lambda p_hat, step_zvf: ctrl_hybrid(step_zvf),
+    "C5_isog_y090": lambda p_hat, step_zvf: ctrl_iso_g(p_hat, 0.90),
 }
 
 
 # ---------- corpus ----------
+
 
 def load_corpus():
     rows = []
@@ -187,19 +199,22 @@ def load_corpus():
                 for pi, prompt_rewards in enumerate(d["rewards"]):
                     k = int(sum(prompt_rewards))
                     p_hat = k / G_BASE
-                    rows.append({
-                        "method": method,
-                        "seed": d.get("seed", 0),
-                        "step": step,
-                        "prompt_idx": pi,
-                        "k": k,
-                        "p_hat": p_hat,
-                        "step_zvf": step_zvf,
-                    })
+                    rows.append(
+                        {
+                            "method": method,
+                            "seed": d.get("seed", 0),
+                            "step": step,
+                            "prompt_idx": pi,
+                            "k": k,
+                            "p_hat": p_hat,
+                            "step_zvf": step_zvf,
+                        }
+                    )
     return rows
 
 
 # ---------- per-observation evaluation ----------
+
 
 def obs_table(corpus, zvf_tau=0.70):
     out = []
@@ -214,40 +229,69 @@ def obs_table(corpus, zvf_tau=0.70):
             g_c = fn(p_hat, zvf_step)
             ctrl_g[cname] = g_c
             ctrl_dy[cname] = per_prompt_delta_y(p_hat, g_c)
-        out.append({
-            "method": r["method"], "step": r["step"], "prompt_idx": r["prompt_idx"],
-            "k": r["k"], "p_hat": p_hat, "step_zvf": zvf_step,
-            "oracle_g": g_star, "oracle_dy": dY_star,
-            "g_dualformer_target": g_dual, "dy_dualformer_target": dY_dual_target,
-            "fire_due_to_dualformer": int(fire_d),
-            "fire_due_to_zvf": int(fire_z),
-            "g_c6": g_c6, "dy_c6": dY_c6,
-            "g_c0": ctrl_g["C0_fixed_G8"], "dy_c0": ctrl_dy["C0_fixed_G8"],
-            "g_c1": ctrl_g["C1_zvf_triage"], "dy_c1": ctrl_dy["C1_zvf_triage"],
-            "g_c2": ctrl_g["C2_dualformer"], "dy_c2": ctrl_dy["C2_dualformer"],
-            "g_c3": ctrl_g["C3_hybrid"], "dy_c3": ctrl_dy["C3_hybrid"],
-            "g_c5": ctrl_g["C5_isog_y090"], "dy_c5": ctrl_dy["C5_isog_y090"],
-        })
+        out.append(
+            {
+                "method": r["method"],
+                "step": r["step"],
+                "prompt_idx": r["prompt_idx"],
+                "k": r["k"],
+                "p_hat": p_hat,
+                "step_zvf": zvf_step,
+                "oracle_g": g_star,
+                "oracle_dy": dY_star,
+                "g_dualformer_target": g_dual,
+                "dy_dualformer_target": dY_dual_target,
+                "fire_due_to_dualformer": int(fire_d),
+                "fire_due_to_zvf": int(fire_z),
+                "g_c6": g_c6,
+                "dy_c6": dY_c6,
+                "g_c0": ctrl_g["C0_fixed_G8"],
+                "dy_c0": ctrl_dy["C0_fixed_G8"],
+                "g_c1": ctrl_g["C1_zvf_triage"],
+                "dy_c1": ctrl_dy["C1_zvf_triage"],
+                "g_c2": ctrl_g["C2_dualformer"],
+                "dy_c2": ctrl_dy["C2_dualformer"],
+                "g_c3": ctrl_g["C3_hybrid"],
+                "dy_c3": ctrl_dy["C3_hybrid"],
+                "g_c5": ctrl_g["C5_isog_y090"],
+                "dy_c5": ctrl_dy["C5_isog_y090"],
+            }
+        )
     return out
 
 
 # ---------- aggregation ----------
+
 
 def per_method_summary(obs):
     rows = []
     by_method = {}
     for o in obs:
         by_method.setdefault(o["method"], []).append(o)
-    cn_order = ["C0_fixed_G8", "C1_zvf_triage", "C2_dualformer",
-                "C3_hybrid", "C5_isog_y090", "C6_calibrated"]
-    cn_dy_key = {"C6_calibrated": "dy_c6",
-                 "C0_fixed_G8": "dy_c0", "C1_zvf_triage": "dy_c1",
-                 "C2_dualformer": "dy_c2", "C3_hybrid": "dy_c3",
-                 "C5_isog_y090": "dy_c5"}
-    cn_g_key = {"C6_calibrated": "g_c6",
-                "C0_fixed_G8": "g_c0", "C1_zvf_triage": "g_c1",
-                "C2_dualformer": "g_c2", "C3_hybrid": "g_c3",
-                "C5_isog_y090": "g_c5"}
+    cn_order = [
+        "C0_fixed_G8",
+        "C1_zvf_triage",
+        "C2_dualformer",
+        "C3_hybrid",
+        "C5_isog_y090",
+        "C6_calibrated",
+    ]
+    cn_dy_key = {
+        "C6_calibrated": "dy_c6",
+        "C0_fixed_G8": "dy_c0",
+        "C1_zvf_triage": "dy_c1",
+        "C2_dualformer": "dy_c2",
+        "C3_hybrid": "dy_c3",
+        "C5_isog_y090": "dy_c5",
+    }
+    cn_g_key = {
+        "C6_calibrated": "g_c6",
+        "C0_fixed_G8": "g_c0",
+        "C1_zvf_triage": "g_c1",
+        "C2_dualformer": "g_c2",
+        "C3_hybrid": "g_c3",
+        "C5_isog_y090": "g_c5",
+    }
     for m, lst in by_method.items():
         oracle_total = sum(o["oracle_dy"] for o in lst)
         for cn in cn_order:
@@ -255,15 +299,17 @@ def per_method_summary(obs):
             ctrl_dy = sum(o[dy_key] for o in lst)
             extras = sum(o[g_key] - G_BASE for o in lst)
             pct = (ctrl_dy / oracle_total * 100.0) if oracle_total > 1e-12 else 0.0
-            rows.append({
-                "method": m,
-                "controller": cn,
-                "oracle_total_abs_dy": oracle_total,
-                "controller_total_dy": ctrl_dy,
-                "ctrl_total_extras": extras,
-                "pct_oracle_captured": pct,
-                "n_obs": len(lst),
-            })
+            rows.append(
+                {
+                    "method": m,
+                    "controller": cn,
+                    "oracle_total_abs_dy": oracle_total,
+                    "controller_total_dy": ctrl_dy,
+                    "ctrl_total_extras": extras,
+                    "pct_oracle_captured": pct,
+                    "n_obs": len(lst),
+                }
+            )
     return rows
 
 
@@ -280,10 +326,14 @@ def pareto_per_method(per_method_rows):
             for rj in lst:
                 if ri is rj:
                     continue
-                if (rj["ctrl_total_extras"] <= ri["ctrl_total_extras"]
-                        and rj["controller_total_dy"] >= ri["controller_total_dy"]
-                        and (rj["ctrl_total_extras"] < ri["ctrl_total_extras"]
-                              or rj["controller_total_dy"] > ri["controller_total_dy"])):
+                if (
+                    rj["ctrl_total_extras"] <= ri["ctrl_total_extras"]
+                    and rj["controller_total_dy"] >= ri["controller_total_dy"]
+                    and (
+                        rj["ctrl_total_extras"] < ri["ctrl_total_extras"]
+                        or rj["controller_total_dy"] > ri["controller_total_dy"]
+                    )
+                ):
                     dominated = True
                     break
             out.append({**ri, "pareto_optimal": int(not dominated)})
@@ -295,10 +345,14 @@ def pareto_per_method(per_method_rows):
 
 def bootstrap_pct_ci(obs, cn, B=2000, seed=20260705):
     rng = random.Random(seed)
-    cn_dy = {"C6_calibrated": "dy_c6",
-             "C0_fixed_G8": "dy_c0", "C1_zvf_triage": "dy_c1",
-             "C2_dualformer": "dy_c2", "C3_hybrid": "dy_c3",
-             "C5_isog_y090": "dy_c5"}
+    cn_dy = {
+        "C6_calibrated": "dy_c6",
+        "C0_fixed_G8": "dy_c0",
+        "C1_zvf_triage": "dy_c1",
+        "C2_dualformer": "dy_c2",
+        "C3_hybrid": "dy_c3",
+        "C5_isog_y090": "dy_c5",
+    }
     by_method = {}
     for o in obs:
         by_method.setdefault(o["method"], []).append(o)
@@ -307,8 +361,16 @@ def bootstrap_pct_ci(obs, cn, B=2000, seed=20260705):
         oracle_total = sum(o["oracle_dy"] for o in lst)
         n = len(lst)
         if oracle_total < 1e-12:
-            rows.append({"method": m, "controller": cn,
-                         "pct_point": 0.0, "ci_lo": 0.0, "ci_hi": 0.0, "B": B})
+            rows.append(
+                {
+                    "method": m,
+                    "controller": cn,
+                    "pct_point": 0.0,
+                    "ci_lo": 0.0,
+                    "ci_hi": 0.0,
+                    "B": B,
+                }
+            )
             continue
         dy_arr = [o[cn_dy[cn]] for o in lst]
         oracle_arr = [o["oracle_dy"] for o in lst]
@@ -321,15 +383,21 @@ def bootstrap_pct_ci(obs, cn, B=2000, seed=20260705):
             boots.append(pct)
         boots.sort()
         pt = sum(dy_arr) / oracle_total * 100.0
-        rows.append({"method": m, "controller": cn,
-                     "pct_point": pt,
-                     "ci_lo": boots[int(0.025 * B)],
-                     "ci_hi": boots[int(0.975 * B)],
-                     "B": B})
+        rows.append(
+            {
+                "method": m,
+                "controller": cn,
+                "pct_point": pt,
+                "ci_lo": boots[int(0.025 * B)],
+                "ci_hi": boots[int(0.975 * B)],
+                "B": B,
+            }
+        )
     return rows
 
 
 # ---------- main ----------
+
 
 def main(B=2000, seed=20260705):
     print(f"[iter175 v2] intersection C6 with zvf_tau=0.70 default, B={B}")
@@ -377,17 +445,24 @@ def main(B=2000, seed=20260705):
         sw_obs = obs_table(corpus, zvf_tau=zt)
         sw_summary = per_method_summary(sw_obs)
         sw_pareto, sw_pareto_by_method = pareto_per_method(sw_summary)
-        c6_wins = sum(1 for r in sw_pareto if r["controller"] == "C6_calibrated" and r["pareto_optimal"] == 1)
+        c6_wins = sum(
+            1 for r in sw_pareto if r["controller"] == "C6_calibrated" and r["pareto_optimal"] == 1
+        )
         for m in METHODS:
-            r6 = next(r for r in sw_summary if r["controller"] == "C6_calibrated" and r["method"] == m)
-            sweeps.append({
-                "zvf_tau": zt, "method": m,
-                "c6_pct_oracle_captured": r6["pct_oracle_captured"],
-                "c6_total_extras": r6["ctrl_total_extras"],
-                "c6_total_dy": r6["controller_total_dy"],
-                "c6_pareto_wins_total": c6_wins,
-                "pareto_set": ";".join(sorted(set(sw_pareto_by_method.get(m, [])))),
-            })
+            r6 = next(
+                r for r in sw_summary if r["controller"] == "C6_calibrated" and r["method"] == m
+            )
+            sweeps.append(
+                {
+                    "zvf_tau": zt,
+                    "method": m,
+                    "c6_pct_oracle_captured": r6["pct_oracle_captured"],
+                    "c6_total_extras": r6["ctrl_total_extras"],
+                    "c6_total_dy": r6["controller_total_dy"],
+                    "c6_pareto_wins_total": c6_wins,
+                    "pareto_set": ";".join(sorted(set(sw_pareto_by_method.get(m, [])))),
+                }
+            )
     sweep_path = os.path.join(OUT_DIR, "p7_iter175_sweep.tsv")
     with open(sweep_path, "w") as fh:
         w = csv.DictWriter(fh, fieldnames=list(sweeps[0].keys()), delimiter="\t")
@@ -400,20 +475,42 @@ def main(B=2000, seed=20260705):
         "oracle_objective": "raw_delta_y_on_common_G_MENU; cost efficiency is descriptive only",
         "n_obs": len(obs),
         "zvf_tau_default": 0.70,
-        "per_method_c6_pct": {r["method"]: r["pct_oracle_captured"]
-                                for r in per_m if r["controller"] == "C6_calibrated"},
-        "per_method_c6_extras": {r["method"]: r["ctrl_total_extras"]
-                                   for r in per_m if r["controller"] == "C6_calibrated"},
-        "per_method_c2_pct": {r["method"]: r["pct_oracle_captured"]
-                                for r in per_m if r["controller"] == "C2_dualformer"},
-        "per_method_c1_pct": {r["method"]: r["pct_oracle_captured"]
-                                for r in per_m if r["controller"] == "C1_zvf_triage"},
-        "per_method_c5_pct": {r["method"]: r["pct_oracle_captured"]
-                                for r in per_m if r["controller"] == "C5_isog_y090"},
+        "per_method_c6_pct": {
+            r["method"]: r["pct_oracle_captured"]
+            for r in per_m
+            if r["controller"] == "C6_calibrated"
+        },
+        "per_method_c6_extras": {
+            r["method"]: r["ctrl_total_extras"] for r in per_m if r["controller"] == "C6_calibrated"
+        },
+        "per_method_c2_pct": {
+            r["method"]: r["pct_oracle_captured"]
+            for r in per_m
+            if r["controller"] == "C2_dualformer"
+        },
+        "per_method_c1_pct": {
+            r["method"]: r["pct_oracle_captured"]
+            for r in per_m
+            if r["controller"] == "C1_zvf_triage"
+        },
+        "per_method_c5_pct": {
+            r["method"]: r["pct_oracle_captured"]
+            for r in per_m
+            if r["controller"] == "C5_isog_y090"
+        },
         "pareto_by_method": pareto_by_method,
-        "n_c6_pareto_wins_default": sum(1 for r in pareto_rows if r["controller"] == "C6_calibrated" and r["pareto_optimal"] == 1),
-        "sweep_best_zt": max({s["zvf_tau"] for s in sweeps}, key=lambda z: sum(s["c6_pct_oracle_captured"] for s in sweeps if s["zvf_tau"] == z)),
-        "sweep_summary_per_zt": {z: [s for s in sweeps if s["zvf_tau"] == z] for z in [0.55, 0.65, 0.70, 0.75, 0.85]},
+        "n_c6_pareto_wins_default": sum(
+            1
+            for r in pareto_rows
+            if r["controller"] == "C6_calibrated" and r["pareto_optimal"] == 1
+        ),
+        "sweep_best_zt": max(
+            {s["zvf_tau"] for s in sweeps},
+            key=lambda z: sum(s["c6_pct_oracle_captured"] for s in sweeps if s["zvf_tau"] == z),
+        ),
+        "sweep_summary_per_zt": {
+            z: [s for s in sweeps if s["zvf_tau"] == z] for z in [0.55, 0.65, 0.70, 0.75, 0.85]
+        },
     }
     summary_path = os.path.join(OUT_DIR, "p7_iter175_summary.json")
     with open(summary_path, "w") as fh:

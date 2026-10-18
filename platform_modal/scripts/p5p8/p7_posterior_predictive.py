@@ -35,10 +35,14 @@ import statistics
 from typing import Dict, List
 
 import sys
-sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
-from _p5p7_common import load_tensors_d  # noqa: E402
-from _stats import bootstrap_ci_statmean, log_beta as betaln  # noqa: E402
+
+sys.path.append(
+    str(pathlib.Path(__file__).resolve().parents[1])
+)  # platform_modal/scripts, for _paths
+from _paths import REPO_ROOT
+from _p5p7_common import load_tensors_d
+from _stats import bootstrap_ci_statmean, log_beta as betaln
+
 WORKTREE = REPO_ROOT
 TENSOR_DIR = WORKTREE / "platform_hybrid/experiments/results/n2_reward_tensor_resume"
 OUT_DIR = WORKTREE / "platform_hybrid/experiments/results/p5p8/corrected-review20-v2"
@@ -73,9 +77,8 @@ def restore_prob(k: int, n: int = G_BASE, gp: int = G_NEW) -> float:
         raise ValueError("invalid observed/target group")
     if 0 < k < n or gp == n:
         return 0.0
-    extra = gp-n
-    return max(0.0, min(1.0, 1-bb_postpred(k,n,0 if k==0 else extra,extra)))
-
+    extra = gp - n
+    return max(0.0, min(1.0, 1 - bb_postpred(k, n, 0 if k == 0 else extra, extra)))
 
 
 def midrange_prob(k: int, n: int = G_BASE, alpha: float = 1.0, beta: float = 1.0) -> float:
@@ -112,19 +115,27 @@ def main():
                 k = int(round(sum(rewards)))
                 k_dist[k] += 1
                 rp, mr = restore_prob(k), midrange_prob(k)
-                step_restore.append(rp); step_midrange.append(mr)
-                per_prompt_restore.append(rp); per_prompt_midrange.append(mr)
+                step_restore.append(rp)
+                step_midrange.append(mr)
+                per_prompt_restore.append(rp)
+                per_prompt_midrange.append(mr)
                 if k == 0 or k == 8:
                     step_degen += 1
             n_degenerate += step_degen
-            rows_per_step.append({
-                "method": method, "step": step_rec["step"],
-                "n_prompts": len(step_rec["rewards"]), "n_degenerate": step_degen,
-                "zvf_obs": step_rec["zvf"], "reward_mean": step_rec["reward_mean"],
-                "mean_restore_prob": statistics.mean(step_restore),
-                "mean_midrange_prob": statistics.mean(step_midrange),
-                "n_k0": sum(sum(r)==0 for r in step_rec["rewards"]), "n_k8": sum(sum(r)==G_BASE for r in step_rec["rewards"]),
-            })
+            rows_per_step.append(
+                {
+                    "method": method,
+                    "step": step_rec["step"],
+                    "n_prompts": len(step_rec["rewards"]),
+                    "n_degenerate": step_degen,
+                    "zvf_obs": step_rec["zvf"],
+                    "reward_mean": step_rec["reward_mean"],
+                    "mean_restore_prob": statistics.mean(step_restore),
+                    "mean_midrange_prob": statistics.mean(step_midrange),
+                    "n_k0": sum(sum(r) == 0 for r in step_rec["rewards"]),
+                    "n_k8": sum(sum(r) == G_BASE for r in step_rec["rewards"]),
+                }
+            )
         # Controller A: Bayesian at tau_post (per-prompt, currently degenerate)
         restore_bayes_pareto = {}
         for tau_post in (0.60, 0.65, 0.70, 0.80, 0.90):
@@ -184,7 +195,9 @@ def main():
     header = "method\tstep\tn_prompts\tn_degenerate\tzvf_obs\treward_mean\tmean_restore_prob\tmean_midrange_prob\tn_k0\tn_k8\n"
     lines = [header]
     for r in rows_per_step:
-        lines.append(f"{r['method']}\t{r['step']}\t{r['n_prompts']}\t{r['n_degenerate']}\t{r['zvf_obs']:.4f}\t{r['reward_mean']:.4f}\t{r['mean_restore_prob']:.4f}\t{r['mean_midrange_prob']:.4f}\t{r['n_k0']}\t{r['n_k8']}\n")
+        lines.append(
+            f"{r['method']}\t{r['step']}\t{r['n_prompts']}\t{r['n_degenerate']}\t{r['zvf_obs']:.4f}\t{r['reward_mean']:.4f}\t{r['mean_restore_prob']:.4f}\t{r['mean_midrange_prob']:.4f}\t{r['n_k0']}\t{r['n_k8']}\n"
+        )
     per_step_fp.write_text("".join(lines))
     print(f"wrote {per_step_fp}")
 
@@ -202,22 +215,37 @@ def main():
     }
     for method in METHODS:
         pm = per_method[method]
-        m_restore, lo_restore, hi_restore = bootstrap_ci_statmean(pm["_all_restore"], BOOT, RNG_SEED)
+        m_restore, lo_restore, hi_restore = bootstrap_ci_statmean(
+            pm["_all_restore"], BOOT, RNG_SEED
+        )
         m_mid, lo_mid, hi_mid = bootstrap_ci_statmean(pm["_all_midrange"], BOOT, RNG_SEED)
         cevs = {}
         for tau_post in (0.60, 0.65, 0.70, 0.80, 0.90):
             ev = pm["bayes_tau_post"][tau_post]
             rpf = round(ev["expected_restore_sum"] / ev["fires"], 4) if ev["fires"] else 0.0
-            cevs[f"bayes_tau_post_{tau_post}"] = {"fires": ev["fires"], "expected_restore_sum": round(ev["expected_restore_sum"], 2), "restore_per_fire": rpf}
+            cevs[f"bayes_tau_post_{tau_post}"] = {
+                "fires": ev["fires"],
+                "expected_restore_sum": round(ev["expected_restore_sum"], 2),
+                "restore_per_fire": rpf,
+            }
         for tau in (0.50, 0.70, 0.90):
             ev = pm["zvf_triage"][tau]
             rpf = round(ev["expected_restore_sum"] / ev["fires"], 4) if ev["fires"] else 0.0
-            cevs[f"zvf_triage_tau_{tau}"] = {"fires": ev["fires"], "expected_restore_sum": round(ev["expected_restore_sum"], 2), "restore_per_fire": rpf}
+            cevs[f"zvf_triage_tau_{tau}"] = {
+                "fires": ev["fires"],
+                "expected_restore_sum": round(ev["expected_restore_sum"], 2),
+                "restore_per_fire": rpf,
+            }
         ev = pm["dualformer"]
         rpf = round(ev["expected_restore_sum"] / ev["fires"], 4) if ev["fires"] > 0 else 0.0
-        cevs["dualformer_auto"] = {"fires": ev["fires"], "expected_restore_sum": round(ev["expected_restore_sum"], 2), "restore_per_fire": rpf}
+        cevs["dualformer_auto"] = {
+            "fires": ev["fires"],
+            "expected_restore_sum": round(ev["expected_restore_sum"], 2),
+            "restore_per_fire": rpf,
+        }
         summary["per_method"][method] = {
-            "n_steps": pm["n_steps"], "n_prompts_total": pm["n_prompts_total"],
+            "n_steps": pm["n_steps"],
+            "n_prompts_total": pm["n_prompts_total"],
             "n_degenerate_total": pm["n_degenerate_total"],
             "mean_restore_prob_all": round(m_restore, 4),
             "mean_restore_prob_ci": [round(lo_restore, 4), round(hi_restore, 4)],
@@ -241,14 +269,20 @@ def main():
         for tau_post in (0.60, 0.65, 0.70, 0.80, 0.90):
             ev = pm["bayes_tau_post"][tau_post]
             rpf = (ev["expected_restore_sum"] / ev["fires"]) if ev["fires"] > 0 else 0.0
-            rows.append(f"{method}\tbayes\t{tau_post}\t{ev['fires']}\t{ev['expected_restore_sum']:.2f}\t{rpf:.4f}")
+            rows.append(
+                f"{method}\tbayes\t{tau_post}\t{ev['fires']}\t{ev['expected_restore_sum']:.2f}\t{rpf:.4f}"
+            )
         for tau in (0.50, 0.70, 0.90):
             ev = pm["zvf_triage"][tau]
             rpf = (ev["expected_restore_sum"] / ev["fires"]) if ev["fires"] > 0 else 0.0
-            rows.append(f"{method}\tzvf_triage\t{tau}\t{ev['fires']}\t{ev['expected_restore_sum']:.2f}\t{rpf:.4f}")
+            rows.append(
+                f"{method}\tzvf_triage\t{tau}\t{ev['fires']}\t{ev['expected_restore_sum']:.2f}\t{rpf:.4f}"
+            )
         ev = pm["dualformer"]
         rpf = (ev["expected_restore_sum"] / ev["fires"]) if ev["fires"] > 0 else 0.0
-        rows.append(f"{method}\tdualformer\t-\t{ev['fires']}\t{ev['expected_restore_sum']:.2f}\t{rpf:.4f}")
+        rows.append(
+            f"{method}\tdualformer\t-\t{ev['fires']}\t{ev['expected_restore_sum']:.2f}\t{rpf:.4f}"
+        )
     summary_tsv_fp.write_text("\n".join(rows) + "\n")
     print(f"wrote {summary_tsv_fp}")
 
@@ -258,8 +292,12 @@ def main():
     print("Method: Beta-Binomial posterior predictive under Beta(1,1) prior\n")
     print(f"{'method':<8}{'mean_restore':>14}{'95% CI':>22}{'degen':>8}")
     for method in METHODS:
-        m_restore, lo, hi = bootstrap_ci_statmean(per_method[method]["_all_restore"], BOOT, RNG_SEED)
-        print(f"{method:<8}{m_restore:>14.4f}  [{lo:.4f}, {hi:.4f}]   {per_method[method]['n_degenerate_total']:>8}")
+        m_restore, lo, hi = bootstrap_ci_statmean(
+            per_method[method]["_all_restore"], BOOT, RNG_SEED
+        )
+        print(
+            f"{method:<8}{m_restore:>14.4f}  [{lo:.4f}, {hi:.4f}]   {per_method[method]['n_degenerate_total']:>8}"
+        )
 
     print("\n=== Controller compare: expected restore per fire (per method) ===")
     print(f"{'method':<8}{'controller':<14}{'tau':>6}{'fires':>8}{'restore_per_fire':>20}")

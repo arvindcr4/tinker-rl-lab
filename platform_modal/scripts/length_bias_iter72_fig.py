@@ -5,12 +5,13 @@ Three panels:
   (b) Residual-variance ratio (Dr.GRPO / GRPO), with bootstrap CI
   (c) Lag-2 cross-correlation bar pairs
 """
+
 from __future__ import annotations
 
-import json
 import os
 import math
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
@@ -49,17 +50,24 @@ def main():
 
     # Panel (a): AR(1) phi boxplots
     ax = axes[0]
-    for i, (data, label, color) in enumerate([
-        (gsm_persist, "GSM8K CoT\n(3 seeds)", "#ffe0b2"),
-        (arith_persist, "Arith-easy\n(5 seeds)", "#c8e6c9"),
-    ]):
+    for i, (data, label, color) in enumerate(
+        [
+            (gsm_persist, "GSM8K CoT\n(3 seeds)", "#ffe0b2"),
+            (arith_persist, "Arith-easy\n(5 seeds)", "#c8e6c9"),
+        ]
+    ):
         gr_phis = [f(r["phi"]) for r in data if r["algo"] == "grpo"]
         dr_phis = [f(r["phi"]) for r in data if r["algo"] == "drgrpo"]
         positions = [i * 4 + 1, i * 4 + 2]
         vals = [gr_phis, dr_phis]
-        bp = ax.boxplot(vals, positions=positions, widths=0.6, patch_artist=True,
-                        boxprops=dict(facecolor=color),
-                        medianprops=dict(color="black"))
+        bp = ax.boxplot(
+            vals,
+            positions=positions,
+            widths=0.6,
+            patch_artist=True,
+            boxprops=dict(facecolor=color),
+            medianprops=dict(color="black"),
+        )
         for j, vlist in enumerate(vals):
             xs = [positions[j] + (k - (len(vlist) - 1) / 2) * 0.06 for k in range(len(vlist))]
             ax.scatter(xs, vlist, color="black", s=22, zorder=4)
@@ -77,45 +85,57 @@ def main():
         lo = f(s["resid_var_lo"])
         hi = f(s["resid_var_hi"])
         # plot on log scale
-        ax.errorbar(i, math.log(ratio),
-                    yerr=[[math.log(ratio) - lo], [hi - math.log(ratio)]],
-                    fmt="o", markersize=10, color="#b71c1c",
-                    capsize=6, linewidth=2)
+        ax.errorbar(
+            i,
+            math.log(ratio),
+            yerr=[[math.log(ratio) - lo], [hi - math.log(ratio)]],
+            fmt="o",
+            markersize=10,
+            color="#b71c1c",
+            capsize=6,
+            linewidth=2,
+        )
     ax.axhline(0, color="grey", linewidth=0.7, linestyle="--")
     ax.axhline(math.log(1.0), color="black", linewidth=1.0)
     ax.set_xticks(range(len(summary)))
     ax.set_xticklabels([r["experiment"] for r in summary], fontsize=9)
-    ax.set_ylabel(r"$\log(\sigma^2_{\varepsilon,\mathrm{Dr}} / \sigma^2_{\varepsilon,\mathrm{GR}})$")
+    ax.set_ylabel(
+        r"$\log(\sigma^2_{\varepsilon,\mathrm{Dr}} / \sigma^2_{\varepsilon,\mathrm{GR}})$"
+    )
     ax.set_title("(b) Residual-variance ratio\n($<0$: Dr.GRPO less noisy after AR(1)+dR fit)")
 
     # Panel (c): Lag-2 cross-correlation paired bars
     ax = axes[2]
     width = 0.35
-    for i, (data, label, color) in enumerate([
-        (gsm_lag, "GSM8K CoT\nlag-2 corr", "#ffe0b2"),
-        (arith_lag, "Arith-easy\nlag-2 corr", "#c8e6c9"),
-    ]):
+    for i, (data, label, color) in enumerate(
+        [
+            (gsm_lag, "GSM8K CoT\nlag-2 corr", "#ffe0b2"),
+            (arith_lag, "Arith-easy\nlag-2 corr", "#c8e6c9"),
+        ]
+    ):
         gr_vals = [f(r["r_corr"]) for r in data if r["algo"] == "grpo"]
         dr_vals = [f(r["r_corr"]) for r in data if r["algo"] == "drgrpo"]
         x = i * 1.5
         ax.bar(x - width / 2, np.mean(gr_vals), width, color="#90a4ae", label="GRPO")
-        ax.bar(x + width / 2, np.mean(dr_vals), width, color=color, edgecolor="black",
-               label="Dr.GRPO")
+        ax.bar(
+            x + width / 2, np.mean(dr_vals), width, color=color, edgecolor="black", label="Dr.GRPO"
+        )
         # paired scatter
-        for k, (g, d) in enumerate(zip(gr_vals, dr_vals)):
+        for _k, (g, d) in enumerate(zip(gr_vals, dr_vals, strict=False)):
             ax.scatter([x - width / 2], [g], color="black", s=18, zorder=5)
             ax.scatter([x + width / 2], [d], color="black", s=18, zorder=5)
-            ax.plot([x - width / 2, x + width / 2], [g, d], color="grey",
-                    linewidth=0.6, zorder=3)
-        ax.text(x, max(gr_vals + dr_vals) + 0.04, label, ha="center",
-                fontsize=9)
+            ax.plot([x - width / 2, x + width / 2], [g, d], color="grey", linewidth=0.6, zorder=3)
+        ax.text(x, max(gr_vals + dr_vals) + 0.04, label, ha="center", fontsize=9)
     ax.axhline(0, color="grey", linewidth=0.7, linestyle="--")
     ax.set_xticks([])
     ax.set_ylabel(r"Pearson $r(dL_t, dR_{t-2})$")
     ax.set_title("(c) Lag-2 dR->dL correlation\n(positive = dR leads dL by 2 steps)")
 
-    fig.suptitle("Iter 72 — Length-shock persistence: AR(1) of $\\Delta L$ on $\\Delta R, \\Delta L_{t-1}$",
-                 fontsize=12, y=1.02)
+    fig.suptitle(
+        "Iter 72 — Length-shock persistence: AR(1) of $\\Delta L$ on $\\Delta R, \\Delta L_{t-1}$",
+        fontsize=12,
+        y=1.02,
+    )
     fig.tight_layout()
 
     out_pdf = os.path.join(FIG_DIR, "length_bias_iter72_persistence.pdf")
@@ -127,6 +147,7 @@ def main():
 
     # Also copy into paper/figures for the LaTeX build
     import shutil
+
     for ext in ("pdf", "png"):
         src = os.path.join(FIG_DIR, f"length_bias_iter72_persistence.{ext}")
         dst = os.path.join(PAPER_FIG_DIR, f"length_bias_iter72_persistence.{ext}")

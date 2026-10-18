@@ -107,9 +107,7 @@ def _canonical_checkpoint_payload(checkpoint: Mapping[str, Any]) -> dict[str, An
         "step": checkpoint.get("step"),
         "visibility": _first_value(checkpoint, ("visibility",)),
         "safe_public_artifact": checkpoint.get("safe_public_artifact"),
-        "url": _first_value(
-            checkpoint, ("url", "checkpoint_url", "repo_revision_url")
-        ),
+        "url": _first_value(checkpoint, ("url", "checkpoint_url", "repo_revision_url")),
     }
 
 
@@ -153,9 +151,7 @@ def _validate_wandb_receipt(receipt: Any, errors: list[str]) -> None:
 
     state = _first_value(receipt, ("state", "status"))
     if not _nonempty_text(state) or str(state).strip().lower() not in WANDB_TERMINAL_STATES:
-        errors.append(
-            f"wandb_run_identity.state must be terminal: {sorted(WANDB_TERMINAL_STATES)}"
-        )
+        errors.append(f"wandb_run_identity.state must be terminal: {sorted(WANDB_TERMINAL_STATES)}")
 
 
 def _validate_tinker_receipt(receipt: Any, errors: list[str]) -> None:
@@ -191,9 +187,7 @@ def _validate_hf_checkpoint_list(checkpoints: Any, errors: list[str]) -> None:
             errors.append(f"{prefix} must be a JSON object")
             continue
 
-        repo_url = _first_value(
-            checkpoint, ("repo_url", "repo", "repository", "huggingface_repo")
-        )
+        repo_url = _first_value(checkpoint, ("repo_url", "repo", "repository", "huggingface_repo"))
         if not isinstance(repo_url, str) or not _HF_REPO_URL_RE.fullmatch(repo_url.strip()):
             errors.append(f"{prefix}.repo_url must be an https Hugging Face repository URL")
             continue
@@ -203,10 +197,12 @@ def _validate_hf_checkpoint_list(checkpoints: Any, errors: list[str]) -> None:
             errors.append(f"{prefix}.revision must be an immutable 40-hex commit")
             continue
 
-        checkpoint_url = _first_value(
-            checkpoint, ("url", "checkpoint_url", "repo_revision_url")
+        checkpoint_url = _first_value(checkpoint, ("url", "checkpoint_url", "repo_revision_url"))
+        commit_match = (
+            _HF_COMMIT_URL_RE.fullmatch(str(checkpoint_url).strip())
+            if isinstance(checkpoint_url, str)
+            else None
         )
-        commit_match = _HF_COMMIT_URL_RE.fullmatch(str(checkpoint_url).strip()) if isinstance(checkpoint_url, str) else None
         if not commit_match:
             errors.append(
                 f"{prefix}.url must be an https Hugging Face commit URL for the same repo"
@@ -234,19 +230,13 @@ def _validate_hf_checkpoint_list(checkpoints: Any, errors: list[str]) -> None:
             errors.append(f"{prefix}.safe_public_artifact must be a boolean")
             continue
         if visibility == "public" and safe_public_artifact is not True:
-            errors.append(
-                f"{prefix}.safe_public_artifact must be true when visibility is public"
-            )
+            errors.append(f"{prefix}.safe_public_artifact must be true when visibility is public")
         if visibility == "private" and safe_public_artifact is not False:
-            errors.append(
-                f"{prefix}.safe_public_artifact must be false when visibility is private"
-            )
+            errors.append(f"{prefix}.safe_public_artifact must be false when visibility is private")
 
         kind = _first_value(checkpoint, ("kind", "stage"))
         if not isinstance(kind, str) or kind.strip().lower() not in HUGGING_FACE_CHECKPOINT_KINDS:
-            errors.append(
-                f"{prefix}.kind must be one of: {sorted(HUGGING_FACE_CHECKPOINT_KINDS)}"
-            )
+            errors.append(f"{prefix}.kind must be one of: {sorted(HUGGING_FACE_CHECKPOINT_KINDS)}")
             continue
         kind = kind.strip().lower()
 
@@ -263,15 +253,11 @@ def _validate_hf_checkpoint_list(checkpoints: Any, errors: list[str]) -> None:
 
         content_digest = _first_value(checkpoint, ("content_digest", "checkpoint_digest"))
         if not _sha256(content_digest):
-            errors.append(
-                f"{prefix}.content_digest must be a lowercase 64-char sha256 hex string"
-            )
+            errors.append(f"{prefix}.content_digest must be a lowercase 64-char sha256 hex string")
             continue
         expected = compute_checkpoint_content_digest(checkpoint)
         if str(content_digest).lower() != expected:
-            errors.append(
-                f"{prefix}.content_digest must match canonical content digest binding"
-            )
+            errors.append(f"{prefix}.content_digest must match canonical content digest binding")
 
     if kinds_seen != HUGGING_FACE_CHECKPOINT_KINDS:
         missing = sorted(HUGGING_FACE_CHECKPOINT_KINDS - kinds_seen)
@@ -310,7 +296,9 @@ def validate_tracking_attestation(record: Mapping[str, Any] | None) -> list[str]
     return errors
 
 
-def validate_tracking_records(records: Iterable[Mapping[str, Any]] | Mapping[str, Any]) -> list[str]:
+def validate_tracking_records(
+    records: Iterable[Mapping[str, Any]] | Mapping[str, Any],
+) -> list[str]:
     """Validate one or many records and return all errors."""
 
     if isinstance(records, Mapping):

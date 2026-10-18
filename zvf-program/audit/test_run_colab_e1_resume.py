@@ -2,6 +2,7 @@ import importlib.util
 from pathlib import Path
 import sys
 import unittest
+import pytest
 
 
 HERE = Path(__file__).resolve().parent
@@ -33,14 +34,11 @@ class E1ExactResumeTests(unittest.TestCase):
             },
             "updated_at": "now",
         }
-        self.assertEqual(
-            RESUME.fingerprint_payload(source),
-            {
-                "schema_version": "colab-e1-confirmatory-unit-v1",
-                "arm": "grpo",
-                "seed": 71,
-            },
-        )
+        assert RESUME.fingerprint_payload(source) == {
+            "schema_version": "colab-e1-confirmatory-unit-v1",
+            "arm": "grpo",
+            "seed": 71,
+        }
 
     def test_remote_result_is_reconstructed_from_manifest_provenance(self):
         manifest = {
@@ -51,24 +49,21 @@ class E1ExactResumeTests(unittest.TestCase):
                 "run_url": "https://wandb.ai/entity/project/runs/c0d53921",
             },
         }
-        self.assertEqual(
-            RESUME.remote_result_from_manifest(
-                manifest, hf_repo="owner/repo", hf_commit="commit"
-            ),
-            {
-                "evidence_class": "confirmatory",
-                "audit_record": {"arm": "dapo", "seed": 23},
-                "remote": {
-                    "hf_repo": "owner/repo",
-                    "hf_commit": "commit",
-                    "wandb_run_id": "c0d53921",
-                    "wandb_run_url": "https://wandb.ai/entity/project/runs/c0d53921",
-                },
+        assert RESUME.remote_result_from_manifest(
+            manifest, hf_repo="owner/repo", hf_commit="commit"
+        ) == {
+            "evidence_class": "confirmatory",
+            "audit_record": {"arm": "dapo", "seed": 23},
+            "remote": {
+                "hf_repo": "owner/repo",
+                "hf_commit": "commit",
+                "wandb_run_id": "c0d53921",
+                "wandb_run_url": "https://wandb.ai/entity/project/runs/c0d53921",
             },
-        )
+        }
 
     def test_remote_result_requires_complete_wandb_provenance(self):
-        with self.assertRaisesRegex(RuntimeError, "W&B run URL"):
+        with pytest.raises(RuntimeError, match="W&B run URL"):
             RESUME.remote_result_from_manifest(
                 {
                     "evidence_class": "confirmatory",

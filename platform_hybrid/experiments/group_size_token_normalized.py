@@ -1,10 +1,14 @@
 #!/usr/bin/env python3
 """Token-budget analysis, protocol v2. Requires empirical run receipts, measured held-out endpoints and actual total_tokens at the requested budget. Missing evidence yields no rows; no reconstructed appendix points or illustrative confidence bands are emitted."""
+
 from __future__ import annotations
 
 import sys as _sys
 from pathlib import Path as _Path
-_sys.path.insert(0, str(next(p for p in _Path(__file__).resolve().parents if (p / "platform_hybrid").is_dir())))
+
+_sys.path.insert(
+    0, str(next(p for p in _Path(__file__).resolve().parents if (p / "platform_hybrid").is_dir()))
+)
 from platform_hybrid.experiments.research_contracts import require_empirical, EvidenceUnavailable
 
 
@@ -12,7 +16,6 @@ import argparse
 import csv
 import json
 import math
-import statistics
 import sys
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Tuple
@@ -22,7 +25,7 @@ DEFAULT_OUT = REPO_ROOT / "experiments" / "results" / "group_size_token_normaliz
 ABLATION_DIR = REPO_ROOT / "grpo_ablation_results"
 MASTER_RESULTS = REPO_ROOT / "experiments" / "master_results.json"
 
-L_BAR = 384.0   # mean rollout length used in the paper
+L_BAR = 384.0  # mean rollout length used in the paper
 K_ROLLOUTS = 1  # K (rollouts per prompt) for the Qwen3-8B GSM8K sweep
 # GU is proportional (see Eq. eq:gu); we calibrate the proportionality
 # constant once so the committed appendix table (Table
@@ -39,23 +42,23 @@ GU_SCALE = 55_000.0
 # match the bold/non-bold cells of the appendix table so stdout can
 # reproduce it deterministically.
 FALLBACK_ROWS: Dict[Tuple[int, int], Dict[str, float]] = {
-    (1_000_000, 4):  {"acc": 0.41, "zvf": 0.74, "var_a": 0.185},
-    (1_000_000, 8):  {"acc": 0.48, "zvf": 0.68, "var_a": 0.195},
+    (1_000_000, 4): {"acc": 0.41, "zvf": 0.74, "var_a": 0.185},
+    (1_000_000, 8): {"acc": 0.48, "zvf": 0.68, "var_a": 0.195},
     (1_000_000, 16): {"acc": 0.47, "zvf": 0.61, "var_a": 0.188},
     (1_000_000, 32): {"acc": 0.42, "zvf": 0.55, "var_a": 0.170},
     (1_000_000, 64): {"acc": 0.35, "zvf": 0.49, "var_a": 0.150},
-    (4_000_000, 4):  {"acc": 0.55, "zvf": 0.71, "var_a": 0.205},
-    (4_000_000, 8):  {"acc": 0.67, "zvf": 0.63, "var_a": 0.220},
+    (4_000_000, 4): {"acc": 0.55, "zvf": 0.71, "var_a": 0.205},
+    (4_000_000, 8): {"acc": 0.67, "zvf": 0.63, "var_a": 0.220},
     (4_000_000, 16): {"acc": 0.69, "zvf": 0.57, "var_a": 0.225},
     (4_000_000, 32): {"acc": 0.66, "zvf": 0.51, "var_a": 0.217},
     (4_000_000, 64): {"acc": 0.58, "zvf": 0.45, "var_a": 0.200},
-    (16_000_000, 4):  {"acc": 0.63, "zvf": 0.69, "var_a": 0.210},
-    (16_000_000, 8):  {"acc": 0.78, "zvf": 0.61, "var_a": 0.230},
+    (16_000_000, 4): {"acc": 0.63, "zvf": 0.69, "var_a": 0.210},
+    (16_000_000, 8): {"acc": 0.78, "zvf": 0.61, "var_a": 0.230},
     (16_000_000, 16): {"acc": 0.82, "zvf": 0.55, "var_a": 0.238},
     (16_000_000, 32): {"acc": 0.84, "zvf": 0.49, "var_a": 0.245},
     (16_000_000, 64): {"acc": 0.80, "zvf": 0.43, "var_a": 0.230},
-    (64_000_000, 4):  {"acc": 0.64, "zvf": 0.68, "var_a": 0.211},
-    (64_000_000, 8):  {"acc": 0.80, "zvf": 0.60, "var_a": 0.232},
+    (64_000_000, 4): {"acc": 0.64, "zvf": 0.68, "var_a": 0.211},
+    (64_000_000, 8): {"acc": 0.80, "zvf": 0.60, "var_a": 0.232},
     (64_000_000, 16): {"acc": 0.85, "zvf": 0.54, "var_a": 0.241},
     (64_000_000, 32): {"acc": 0.88, "zvf": 0.48, "var_a": 0.250},
     (64_000_000, 64): {"acc": 0.87, "zvf": 0.42, "var_a": 0.245},
@@ -88,6 +91,7 @@ def parse_budgets(arg: str) -> List[int]:
 # ---------------------------------------------------------------------------
 # Data loading
 # ---------------------------------------------------------------------------
+
 
 def _iter_json_records(root: Path) -> Iterable[Dict[str, Any]]:
     if not root.exists():
@@ -186,6 +190,7 @@ def _row_token_budget(rec):
 # Statistics
 # ---------------------------------------------------------------------------
 
+
 def _bootstrap_ci(values, n_boot=1000, alpha=0.05):
     if not values:
         return None, None, None
@@ -193,12 +198,19 @@ def _bootstrap_ci(values, n_boot=1000, alpha=0.05):
     if len(values) < 2:
         return mean, None, None
     import random
+
     rng = random.Random(0)
     means = sorted(sum(rng.choices(values, k=len(values))) / len(values) for _ in range(n_boot))
-    return mean, means[int(n_boot * alpha / 2)], means[min(n_boot - 1, int(n_boot * (1 - alpha / 2))) ]
+    return (
+        mean,
+        means[int(n_boot * alpha / 2)],
+        means[min(n_boot - 1, int(n_boot * (1 - alpha / 2)))],
+    )
 
 
-def gu_estimate(zvf: float, var_a: float, G: int, K: int = K_ROLLOUTS, L_bar: float = L_BAR) -> float:
+def gu_estimate(
+    zvf: float, var_a: float, G: int, K: int = K_ROLLOUTS, L_bar: float = L_BAR
+) -> float:
     """Sample-variance-proxy estimator of Eq.~(eq:gu).
 
     GU_hat(G, B) proportional to (1 - ZVF) * Var_A / (G * K * L_bar).
@@ -212,6 +224,7 @@ def gu_estimate(zvf: float, var_a: float, G: int, K: int = K_ROLLOUTS, L_bar: fl
 # ---------------------------------------------------------------------------
 # Row construction
 # ---------------------------------------------------------------------------
+
 
 def _canonical_budget_filter(budget: int) -> Tuple[int, ...]:
     """Round budget to the nearest canonical {1M, 4M, 16M, 64M} so the
@@ -228,17 +241,33 @@ def build_rows(budgets, sweep, g_values):
     rows = []
     for budget in budgets:
         for g in g_values:
-            selected = [r for r in sweep.get(g, []) if _row_token_budget(r) == budget and _row_heldout_acc(r) is not None]
+            selected = [
+                r
+                for r in sweep.get(g, [])
+                if _row_token_budget(r) == budget and _row_heldout_acc(r) is not None
+            ]
             ids = [r["run_id"] for r in selected]
             if len(ids) != len(set(ids)):
                 raise EvidenceUnavailable("Duplicate run_id in token-normalized analysis")
             if not selected:
                 continue
             mean, low, high = _bootstrap_ci([_row_heldout_acc(r) for r in selected])
-            rows.append(dict(budget_tokens=budget, G=g, heldout_acc_mean=mean,
-                heldout_acc_ci_low=low, heldout_acc_ci_high=high, gu_estimate=None,
-                best_in_row="", source="measured_run_receipts", run_ids=json.dumps(ids),
-                interval_type="independent_run_bootstrap" if len(ids)>1 else "none_single_run"))
+            rows.append(
+                dict(
+                    budget_tokens=budget,
+                    G=g,
+                    heldout_acc_mean=mean,
+                    heldout_acc_ci_low=low,
+                    heldout_acc_ci_high=high,
+                    gu_estimate=None,
+                    best_in_row="",
+                    source="measured_run_receipts",
+                    run_ids=json.dumps(ids),
+                    interval_type="independent_run_bootstrap"
+                    if len(ids) > 1
+                    else "none_single_run",
+                )
+            )
     return rows
 
 
@@ -251,7 +280,10 @@ def write_tsv(rows: List[Dict[str, Any]], out: Path) -> None:
         "heldout_acc_ci_low",
         "heldout_acc_ci_high",
         "gu_estimate",
-        "best_in_row", "source", "run_ids", "interval_type",
+        "best_in_row",
+        "source",
+        "run_ids",
+        "interval_type",
     ]
     with out.open("w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=fields, delimiter="\t")
@@ -291,13 +323,13 @@ def emit_latex_body(rows: List[Dict[str, Any]]) -> str:
             acc_cells.append(f"${acc}$")
             gu_cells.append(f"${gu}$")
         out.append(
-            f"\\multirow{{2}}{{*}}{{${label}$}}  & heldout acc. & "
-            + " & ".join(acc_cells) + r" \\"
+            f"\\multirow{{2}}{{*}}{{${label}$}}  & heldout acc. & " + " & ".join(acc_cells) + r" \\"
         )
         out.append(
             r"                               & $\widehat{\mathrm{GU}}$ "
             + r"($\times 10^{-3}$) & "
-            + " & ".join(gu_cells) + r" \\"
+            + " & ".join(gu_cells)
+            + r" \\"
         )
     return "\n".join(out)
 
@@ -305,6 +337,7 @@ def emit_latex_body(rows: List[Dict[str, Any]]) -> str:
 # ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------
+
 
 def main(argv: Optional[List[str]] = None) -> int:
     p = argparse.ArgumentParser(

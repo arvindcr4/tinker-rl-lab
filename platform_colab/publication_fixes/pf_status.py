@@ -1,8 +1,9 @@
 """Print last training step per job log on each Colab session (local helper)."""
+
 import subprocess, sys
 
 COLAB = "/Users/arvind/.local/bin/colab"
-REMOTE = r'''
+REMOTE = r"""
 import glob, json, os, re, subprocess
 for st in sorted(glob.glob("/content/pf/**/status.json", recursive=True)):
     d = json.load(open(st))
@@ -15,7 +16,14 @@ for st in sorted(glob.glob("/content/pf/**/status.json", recursive=True)):
             last = lines[-1][:150] if lines else ""
         print(f"{k:16s} {v.get('state'):12s} {last}")
 print(subprocess.run("nvidia-smi --query-gpu=utilization.gpu,memory.used --format=csv,noheader", shell=True, capture_output=True, text=True).stdout)
-'''
+"""
 for s in sys.argv[1:]:
-    r = subprocess.run([COLAB, "exec", "-s", s, "--timeout", "120"], input=REMOTE, capture_output=True, text=True, timeout=200)
-    print("==", s); print(r.stdout[-4000:], r.stderr[-500:])
+    r = subprocess.run(
+        [COLAB, "exec", "-s", s, "--timeout", "120"],
+        input=REMOTE,
+        capture_output=True,
+        text=True,
+        timeout=200,
+    )
+    print("==", s)
+    print(r.stdout[-4000:], r.stderr[-500:])

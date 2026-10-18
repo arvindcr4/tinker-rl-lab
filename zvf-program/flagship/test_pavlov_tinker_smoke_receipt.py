@@ -24,6 +24,7 @@ from flagship.pavlov_tinker_smoke_receipt import (
     parse_completed_checkpoint,
     validate_completed_checkpoint,
 )
+import pytest
 
 
 def _receipt(index: int, step: int | str) -> dict[str, Any]:
@@ -126,31 +127,30 @@ class PavlovTinkerSmokeReceiptTests(unittest.TestCase):
             expected_wandb_run_id="wandb-smoke-809",
             expected_tinker_run_id="tinker-smoke-809:train:0",
         )
-        self.assertEqual(accepted["wandb_run_id"], "wandb-smoke-809")
-        self.assertEqual(accepted["tinker_run_id"], "tinker-smoke-809:train:0")
-        self.assertEqual(accepted["scope"], XLAM_COMPONENT_SCOPE)
-        self.assertEqual(
-            [receipt["step"] for receipt in accepted["checkpoint_receipts"]],
-            [0, 5, 10, "final"],
+        assert accepted["wandb_run_id"] == "wandb-smoke-809"
+        assert accepted["tinker_run_id"] == "tinker-smoke-809:train:0"
+        assert accepted["scope"] == XLAM_COMPONENT_SCOPE
+        assert [receipt["step"] for receipt in accepted["checkpoint_receipts"]] == [
+            0,
+            5,
+            10,
+            "final",
+        ]
+        assert len(accepted["config"]["training_suite_ids"]) == 12
+        assert len(accepted["config"]["heldout_suite_ids"]) == 6
+        assert len(accepted["config"]["primary_evaluation_suite_ids"]) == 14
+        assert set(accepted["config"]["heldout_suite_ids"]) != set(
+            accepted["config"]["primary_evaluation_suite_ids"]
         )
-        self.assertEqual(len(accepted["config"]["training_suite_ids"]), 12)
-        self.assertEqual(len(accepted["config"]["heldout_suite_ids"]), 6)
-        self.assertEqual(len(accepted["config"]["primary_evaluation_suite_ids"]), 14)
-        self.assertNotEqual(
-            set(accepted["config"]["heldout_suite_ids"]),
-            set(accepted["config"]["primary_evaluation_suite_ids"]),
+        assert len(accepted["config"]["declared_domains"]) == 16
+        assert set(accepted["config"]["training_domain_union"]) == set(
+            accepted["config"]["declared_domains"]
         )
-        self.assertEqual(len(accepted["config"]["declared_domains"]), 16)
-        self.assertEqual(
-            set(accepted["config"]["training_domain_union"]),
-            set(accepted["config"]["declared_domains"]),
+        assert set(accepted["config"]["primary_evaluation_domain_union"]) == set(
+            accepted["config"]["declared_domains"]
         )
-        self.assertEqual(
-            set(accepted["config"]["primary_evaluation_domain_union"]),
-            set(accepted["config"]["declared_domains"]),
-        )
-        self.assertEqual(accepted["config"]["dataset_revision"], DATASET_REVISION)
-        self.assertEqual(accepted["config"]["model_revision"], MODEL_REVISION)
+        assert accepted["config"]["dataset_revision"] == DATASET_REVISION
+        assert accepted["config"]["model_revision"] == MODEL_REVISION
 
     def test_file_parser_round_trip_is_standard_library_only(self) -> None:
         payload = _valid_payload()
@@ -158,18 +158,18 @@ class PavlovTinkerSmokeReceiptTests(unittest.TestCase):
             path = Path(directory) / "completed.json"
             path.write_text(json.dumps(payload), encoding="utf-8")
             accepted = parse_completed_checkpoint(path)
-        self.assertEqual(accepted["tinker_run_id"], payload["tinker_run_id"])
+        assert accepted["tinker_run_id"] == payload["tinker_run_id"]
 
     def test_duplicate_keys_and_trailing_json_are_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             duplicate = Path(directory) / "duplicate.json"
             duplicate.write_text('{"status":"completed","status":"success"}')
-            with self.assertRaises(ReceiptValidationError):
+            with pytest.raises(ReceiptValidationError):
                 parse_completed_checkpoint(duplicate)
 
             trailing = Path(directory) / "trailing.json"
             trailing.write_text('{"status":"completed"}{"status":"success"}')
-            with self.assertRaises(ReceiptValidationError):
+            with pytest.raises(ReceiptValidationError):
                 parse_completed_checkpoint(trailing)
 
     def test_config_is_immutable_and_exact(self) -> None:
@@ -204,12 +204,10 @@ class PavlovTinkerSmokeReceiptTests(unittest.TestCase):
 
     def test_custom_expected_config_is_supported_but_still_exact(self) -> None:
         payload = _valid_payload()
-        expected = canonical_pavlov_xlam_smoke_config(
-            checkpoint_dir="/tmp/immutable-checkpoints"
-        )
+        expected = canonical_pavlov_xlam_smoke_config(checkpoint_dir="/tmp/immutable-checkpoints")
         payload["config"] = copy.deepcopy(expected)
         accepted = validate_completed_checkpoint(payload, expected_config=expected)
-        self.assertEqual(accepted["config"]["checkpoint_dir"], expected["checkpoint_dir"])
+        assert accepted["config"]["checkpoint_dir"] == expected["checkpoint_dir"]
         self.assert_rejected(payload)  # the default fingerprint differs
 
     def test_run_ids_are_required_and_aliases_must_agree(self) -> None:
@@ -232,10 +230,8 @@ class PavlovTinkerSmokeReceiptTests(unittest.TestCase):
         payload = _valid_payload()
         payload["run_id"] = "different-tinker-run"
         self.assert_rejected(payload)
-        with self.assertRaises(ReceiptValidationError):
-            validate_completed_checkpoint(
-                _valid_payload(), expected_wandb_run_id="wrong-wandb"
-            )
+        with pytest.raises(ReceiptValidationError):
+            validate_completed_checkpoint(_valid_payload(), expected_wandb_run_id="wrong-wandb")
 
     def test_all_four_checkpoint_classes_require_immutable_hf_receipts(self) -> None:
         payload = _valid_payload()
@@ -255,7 +251,9 @@ class PavlovTinkerSmokeReceiptTests(unittest.TestCase):
         self.assert_rejected(payload)
 
         payload = _valid_payload()
-        payload["checkpoint_receipts"][3]["commit_sha"] = payload["checkpoint_receipts"][0]["commit_sha"]
+        payload["checkpoint_receipts"][3]["commit_sha"] = payload["checkpoint_receipts"][0][
+            "commit_sha"
+        ]
         self.assert_rejected(payload)
 
         payload = _valid_payload()
@@ -380,7 +378,7 @@ class PavlovTinkerSmokeReceiptTests(unittest.TestCase):
 
         payload = _valid_payload()
         payload["scope"] = XLAM_COMPONENT_SCOPE
-        self.assertEqual(validate_completed_checkpoint(payload)["scope"], XLAM_COMPONENT_SCOPE)
+        assert validate_completed_checkpoint(payload)["scope"] == XLAM_COMPONENT_SCOPE
 
     def test_cli_accepts_valid_receipt_and_rejects_without_echoing_payload(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -388,7 +386,7 @@ class PavlovTinkerSmokeReceiptTests(unittest.TestCase):
             path.write_text(json.dumps(_valid_payload()), encoding="utf-8")
             output = io.StringIO()
             with contextlib.redirect_stdout(output):
-                self.assertEqual(
+                assert (
                     main(
                         [
                             str(path),
@@ -397,21 +395,21 @@ class PavlovTinkerSmokeReceiptTests(unittest.TestCase):
                             "--expected-tinker-run-id",
                             "tinker-smoke-809:train:0",
                         ]
-                    ),
-                    0,
+                    )
+                    == 0
                 )
-            self.assertIn('"status": "accepted"', output.getvalue())
-            self.assertNotIn("estimated_cost_usd", output.getvalue())
-            self.assertNotIn("prompt_tokens", output.getvalue())
+            assert '"status": "accepted"' in output.getvalue()
+            assert "estimated_cost_usd" not in output.getvalue()
+            assert "prompt_tokens" not in output.getvalue()
 
             payload = _valid_payload()
             payload["scope"]["companies"] = ["company-marker"]
             path.write_text(json.dumps(payload), encoding="utf-8")
             error = io.StringIO()
             with contextlib.redirect_stderr(error):
-                self.assertEqual(main([str(path)]), 1)
-            self.assertIn("REJECTED:", error.getvalue())
-            self.assertNotIn("company-marker", error.getvalue())
+                assert main([str(path)]) == 1
+            assert "REJECTED:" in error.getvalue()
+            assert "company-marker" not in error.getvalue()
 
 
 if __name__ == "__main__":

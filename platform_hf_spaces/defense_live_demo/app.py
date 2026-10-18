@@ -99,9 +99,14 @@ def _message_dict(message: Any) -> dict[str, Any]:
 
 def _execute_tool(name: str, arguments: dict[str, Any]) -> Any:
     if name == "lookup_run_evidence":
-        return evidence_for_groups(arguments.get("group_sizes", [2, 16]), arguments.get("seed", 123))
+        return evidence_for_groups(
+            arguments.get("group_sizes", [2, 16]), arguments.get("seed", 123)
+        )
     if name == "calculator":
-        return {"expression": arguments["expression"], "result": safe_calculate(arguments["expression"])}
+        return {
+            "expression": arguments["expression"],
+            "result": safe_calculate(arguments["expression"]),
+        }
     return {"error": f"Unknown tool: {name}"}
 
 
@@ -218,7 +223,9 @@ def hosted_math(prompt: str) -> tuple[str, str]:
 def run_offline_verification() -> tuple[str, str]:
     result = verify()
     badge = "✅ **OFFLINE PASS**" if result["status"] == "PASS" else "❌ **OFFLINE FAIL**"
-    return badge + " — standard-library checks completed with no network request.", json.dumps(result, indent=2)
+    return badge + " — standard-library checks completed with no network request.", json.dumps(
+        result, indent=2
+    )
 
 
 def snapshot_rows() -> list[list[Any]]:
@@ -310,8 +317,16 @@ with gr.Blocks(title="Tinker RL Defense Demo", css=CSS) as demo:
             "**19** claim-critical gold rows."
         )
         with gr.Row():
-            gr.Image(str(ROOT / "wandb_claim2.png"), label="Claim 2 · matched rollout budget", interactive=False)
-            gr.Image(str(ROOT / "wandb_run_hygiene.png"), label="Run hygiene and evidence scale", interactive=False)
+            gr.Image(
+                str(ROOT / "wandb_claim2.png"),
+                label="Claim 2 · matched rollout budget",
+                interactive=False,
+            )
+            gr.Image(
+                str(ROOT / "wandb_run_hygiene.png"),
+                label="Run hygiene and evidence scale",
+                interactive=False,
+            )
         gr.Dataframe(
             value=snapshot_rows(),
             headers=["Evidence row", "G", "W&B run", "Interpretation"],

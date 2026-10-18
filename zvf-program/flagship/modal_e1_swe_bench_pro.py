@@ -26,8 +26,7 @@ APP_NAME = "pavlov-e1-swe-bench-pro"
 RUN_DATE = "2026-08-16"
 INSTANCE_ID = "instance_NodeBB__NodeBB-04998908ba6721d64eba79ae3b65a351dcfbc5b5-vnan"
 IMAGE_URI = (
-    "jefzda/sweap-images:"
-    "nodebb.nodebb-NodeBB__NodeBB-04998908ba6721d64eba79ae3b65a351dcfbc5b5"
+    "jefzda/sweap-images:nodebb.nodebb-NodeBB__NodeBB-04998908ba6721d64eba79ae3b65a351dcfbc5b5"
 )
 IMAGE_DIGEST = "sha256:e49637ebe82a479ca43b4663525955bc9cdd58c457140ee31c20958d621d3cf7"
 DATASET_ID = "ScaleAI/SWE-bench_Pro"
@@ -36,13 +35,9 @@ EVALUATOR_REVISION = "ca10a60a5fcae51e6948ffe1485d4153d421e6c5"
 
 MODEL_ID = "Qwen/Qwen3.6-35B-A3B"
 MODEL_REVISION = "995ad96eacd98c81ed38be0c5b274b04031597b0"
-SAMPLER_PATH = (
-    "tinker://cf0ad8c1-1f1b-5ff3-8bd7-2a0bf232657b:train:0/"
-    "sampler_weights/seed809_final"
-)
+SAMPLER_PATH = "tinker://cf0ad8c1-1f1b-5ff3-8bd7-2a0bf232657b:train:0/sampler_weights/seed809_final"
 HF_REPO = (
-    "arvindcr4/pavlov-portfolio-qwen36-seed809-stepfinal-"
-    "tinker-cf0ad8c1-1f1b-5ff-9f777c4018b6"
+    "arvindcr4/pavlov-portfolio-qwen36-seed809-stepfinal-tinker-cf0ad8c1-1f1b-5ff-9f777c4018b6"
 )
 HF_REVISION = "checkpoint-seed809-stepfinal-9f777c4018b6"
 HF_COMMIT = "64444133c55d88c3f1bf0df8a2f5d7ac646125c8"
@@ -168,9 +163,7 @@ def _validate_unified_diff(patch: str) -> tuple[bool, str]:
     if not blocks:
         return False, "patch contains no file diff"
 
-    concrete_hunk = re.compile(
-        r"(?m)^@@ -\d+(?:,\d+)? \+\d+(?:,\d+)? @@(?: .*)?$"
-    )
+    concrete_hunk = re.compile(r"(?m)^@@ -\d+(?:,\d+)? \+\d+(?:,\d+)? @@(?: .*)?$")
     for block in blocks:
         lines = block.splitlines()
         header = lines[0]
@@ -227,13 +220,13 @@ Every hunk header must contain real line ranges such as `@@ -12,7 +12,9 @@`;
 placeholder headers such as `@@ ... @@` are invalid. Include every changed file
 in full unified-diff form. Make the smallest complete production fix. Preserve
 the public APIs and project style. The patch must apply to base commit
-{task['base_commit']} and satisfy the task requirements.
+{task["base_commit"]} and satisfy the task requirements.
 
 PROBLEM STATEMENT
-{task['problem_statement']}
+{task["problem_statement"]}
 
 REQUIREMENTS
-{task['requirements']}
+{task["requirements"]}
 
 FROZEN BASE-CHECKOUT SOURCE CONTEXT
 {source_text}
@@ -297,10 +290,7 @@ def generate_patch(
         ),
         add_special_tokens=False,
     )
-    projected_usd = (
-        len(prompt_ids) / 1e6 * USD_PER_M_PREFILL
-        + max_tokens / 1e6 * USD_PER_M_SAMPLE
-    )
+    projected_usd = len(prompt_ids) / 1e6 * USD_PER_M_PREFILL + max_tokens / 1e6 * USD_PER_M_SAMPLE
     if projected_usd > MAX_TINKER_USD:
         raise RuntimeError(
             f"projected Tinker spend ${projected_usd:.6f} exceeds ${MAX_TINKER_USD:.2f}"
@@ -368,10 +358,7 @@ def generate_patch(
     )
     patch_valid, patch_validation_reason = _validate_unified_diff(extracted_patch)
     patch = extracted_patch if patch_valid else ""
-    estimated_usd = (
-        len(prompt_ids) / 1e6 * USD_PER_M_PREFILL
-        + len(tokens) / 1e6 * USD_PER_M_SAMPLE
-    )
+    estimated_usd = len(prompt_ids) / 1e6 * USD_PER_M_PREFILL + len(tokens) / 1e6 * USD_PER_M_SAMPLE
     run.log(
         {
             "generation/prompt_tokens": len(prompt_ids),
@@ -420,9 +407,7 @@ def fetch_generation_evidence(run_id: str) -> str:
 
     import wandb
 
-    run = wandb.Api().run(
-        f"arvindcr4-pes-university/tinker-rl-lab-pavlov/{run_id}"
-    )
+    run = wandb.Api().run(f"arvindcr4-pes-university/tinker-rl-lab-pavlov/{run_id}")
     return json.dumps(
         {
             "config": dict(run.config),
@@ -485,9 +470,7 @@ def _evaluate_candidate(
         test_stderr = _read_sandbox_text_optional(sandbox, "/workspace/stderr.log")
 
         passed = {
-            item.get("name")
-            for item in output.get("tests", [])
-            if item.get("status") == "PASSED"
+            item.get("name") for item in output.get("tests", []) if item.get("status") == "PASSED"
         }
         fail_to_pass = set(ast.literal_eval(task["fail_to_pass"]))
         pass_to_pass = set(ast.literal_eval(task["pass_to_pass"]))
@@ -531,9 +514,7 @@ def main(
     row_path = root / "outputs/e1_swe_bench_pro/selected_sample_nodebb.jsonl"
     task_with_gold = json.loads(row_path.read_text(encoding="utf-8"))
     task = {
-        key: value
-        for key, value in task_with_gold.items()
-        if key not in {"patch", "test_patch"}
+        key: value for key, value in task_with_gold.items() if key not in {"patch", "test_patch"}
     }
     if set(task_with_gold) - set(task) != {"patch", "test_patch"}:
         raise RuntimeError("unexpected E1 gold-field sanitization result")

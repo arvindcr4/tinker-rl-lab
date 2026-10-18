@@ -15,9 +15,9 @@ Outputs: platform_hybrid/experiments/results/p5p8/p7_iter147_*.{tsv,json}
 
 Pillar: P7 (Pillar 3 — adaptive-G controller / signal-starvation theory)
 """
+
 from __future__ import annotations
-import json, math, os, sys, statistics
-from collections import defaultdict
+import json, statistics
 from functools import partial
 from pathlib import Path
 
@@ -32,8 +32,8 @@ METHODS = ["grpo", "aero", "gift", "areal"]
 G_BASE = 8
 G_CANDIDATES = [4, 8, 16, 32]
 TAU_DEGEN = 0.70  # DEGENERATE threshold (iter119)
-GAMMA_STAR = 0.0   # AlphaProof gamma*=0 (iter119)
-RHO_SAT = 0.85     # Dualformer saturation threshold (iter119)
+GAMMA_STAR = 0.0  # AlphaProof gamma*=0 (iter119)
+RHO_SAT = 0.85  # Dualformer saturation threshold (iter119)
 SEED = 0
 
 
@@ -48,18 +48,21 @@ def contrast_mag(p_hat: float, G: int) -> float:
 def c_static_g8(p_hat, z_obs):
     return G_BASE
 
+
 def c_static_g16(p_hat, z_obs):
     return 16
 
+
 def c_dualformer_pp(p_hat, z_obs):
     """Berkeley row 01 Dualformer auto-G rule: difficulty-gated G.
-       Escalate when contrast is low, drop when saturated, base otherwise."""
+    Escalate when contrast is low, drop when saturated, base otherwise."""
     if z_obs < 0.50:
         # fast regime — task learned, drop G
         return 2 if is_boundary(p_hat) else 4
     if z_obs >= TAU_DEGEN:
         return min(G_BASE, 8)  # DEGENERATE: drop to base
     return G_BASE  # baseline regime
+
 
 def c_adaptive_pp_oracle(p_hat, z_obs):
     """Per-prompt oracle: pick G that minimises z(p_hat, G)."""
@@ -71,6 +74,7 @@ def c_adaptive_pp_oracle(p_hat, z_obs):
         if z < best_z - 1e-9:
             best_z, best_g = z, g
     return best_g
+
 
 CONTROLLERS = {
     "STATIC_G8": c_static_g8,
@@ -95,9 +99,13 @@ def evaluate_cell(method, step, prompt_idx, rewards_row, z_obs):
     # baseline per-prompt contrast magnitude (at G=8)
     cm_base = contrast_mag(p_hat, G_BASE)
     out = {
-        "method": method, "step": step, "prompt_idx": prompt_idx,
-        "k_p": per_prompt_k(rewards_row), "p_hat": p_hat,
-        "z_obs": z_obs, "cm_base": cm_base,
+        "method": method,
+        "step": step,
+        "prompt_idx": prompt_idx,
+        "k_p": per_prompt_k(rewards_row),
+        "p_hat": p_hat,
+        "z_obs": z_obs,
+        "cm_base": cm_base,
         "is_boundary": is_boundary(p_hat),
     }
     for cname, cfn in CONTROLLERS.items():
@@ -113,6 +121,7 @@ def evaluate_cell(method, step, prompt_idx, rewards_row, z_obs):
 def aggregate(cells, n_boot=1000):
     """Aggregate metrics across cells with bootstrap CIs (resample cells with replacement)."""
     import random
+
     random.seed(42)
     n = len(cells)
     summary = {}
@@ -161,7 +170,7 @@ def main():
     all_cells = []
     for m, steps in by_method.items():
         for srec in steps:
-            step =srec["step"]
+            step = srec["step"]
             z_obs = srec["zvf"]
             for p_idx, rewards_row in enumerate(srec["rewards"]):
                 cell = evaluate_cell(m, step, p_idx, rewards_row, z_obs)
@@ -179,33 +188,40 @@ def main():
     # ---- Write TSV: per-controller headline row ----
     headline_path = OUT_DIR / "p7_iter147_headline.tsv"
     with open(headline_path, "w") as f:
-        f.write("controller\tn_cells\tmean_cost\tci95_cost_lo\tci95_cost_hi\t"
-                "contrast_retention\tci95_ret_lo\tci95_ret_hi\tmag_per_cost\n")
+        f.write(
+            "controller\tn_cells\tmean_cost\tci95_cost_lo\tci95_cost_hi\t"
+            "contrast_retention\tci95_ret_lo\tci95_ret_hi\tmag_per_cost\n"
+        )
         for cname, s in overall.items():
-            f.write(f"{cname}\t{s['n_cells']}\t"
-                    f"{s['mean_cost_ratio']:.4f}\t{s['ci95_cost'][0]:.4f}\t{s['ci95_cost'][1]:.4f}\t"
-                    f"{s['contrast_retention']:.4f}\t{s['ci95_retention'][0]:.4f}\t{s['ci95_retention'][1]:.4f}\t"
-                    f"{s['mag_per_cost']:.4f}\n")
+            f.write(
+                f"{cname}\t{s['n_cells']}\t"
+                f"{s['mean_cost_ratio']:.4f}\t{s['ci95_cost'][0]:.4f}\t{s['ci95_cost'][1]:.4f}\t"
+                f"{s['contrast_retention']:.4f}\t{s['ci95_retention'][0]:.4f}\t{s['ci95_retention'][1]:.4f}\t"
+                f"{s['mag_per_cost']:.4f}\n"
+            )
     print(f"Wrote {headline_path}")
 
     # ---- Write TSV: per-method × per-controller ----
     permethod_path = OUT_DIR / "p7_iter147_per_method.tsv"
     with open(permethod_path, "w") as f:
-        f.write("method\tcontroller\tmean_cost\tci95_cost_lo\tci95_cost_hi\t"
-                "contrast_retention\tci95_ret_lo\tci95_ret_hi\tmean_cm\tmag_per_cost\n")
+        f.write(
+            "method\tcontroller\tmean_cost\tci95_cost_lo\tci95_cost_hi\t"
+            "contrast_retention\tci95_ret_lo\tci95_ret_hi\tmean_cm\tmag_per_cost\n"
+        )
         for m in METHODS:
             for cname, s in by_m[m].items():
-                f.write(f"{m}\t{cname}\t"
-                        f"{s['mean_cost_ratio']:.4f}\t{s['ci95_cost'][0]:.4f}\t{s['ci95_cost'][1]:.4f}\t"
-                        f"{s['contrast_retention']:.4f}\t{s['ci95_retention'][0]:.4f}\t{s['ci95_retention'][1]:.4f}\t"
-                        f"{s['mean_contrast_mag']:.4f}\t{s['mag_per_cost']:.4f}\n")
+                f.write(
+                    f"{m}\t{cname}\t"
+                    f"{s['mean_cost_ratio']:.4f}\t{s['ci95_cost'][0]:.4f}\t{s['ci95_cost'][1]:.4f}\t"
+                    f"{s['contrast_retention']:.4f}\t{s['ci95_retention'][0]:.4f}\t{s['ci95_retention'][1]:.4f}\t"
+                    f"{s['mean_contrast_mag']:.4f}\t{s['mag_per_cost']:.4f}\n"
+                )
     print(f"Wrote {permethod_path}")
 
     # ---- Write TSV: per-cell (2560 rows) ----
     percell_path = OUT_DIR / "p7_iter147_per_cell.tsv"
     with open(percell_path, "w") as f:
-        header = ["method", "step", "prompt_idx", "k_p", "p_hat", "z_obs",
-                  "is_boundary", "cm_base"]
+        header = ["method", "step", "prompt_idx", "k_p", "p_hat", "z_obs", "is_boundary", "cm_base"]
         for cname in CONTROLLERS:
             header += [f"g_{cname}", f"cm_{cname}", f"cost_{cname}"]
         f.write("\t".join(header) + "\n")
@@ -244,7 +260,9 @@ def main():
         "g8_retention": s8["contrast_retention"],
         "c4_ci95": c4["ci95_retention"],
         "g8_ci95": s8["ci95_retention"],
-        "verdict": "PASS" if c4["contrast_retention"] >= s8["contrast_retention"] - 0.001 else "FAIL",
+        "verdict": "PASS"
+        if c4["contrast_retention"] >= s8["contrast_retention"] - 0.001
+        else "FAIL",
     }
     claims.append(h1)
     # H2: UNIFIED_C4 mean cost < STATIC_G16 cost (=2.0)
@@ -308,8 +326,10 @@ def main():
     print()
     print("=== HEADLINE (overall, n=2560 cells) ===")
     for cname, s in overall.items():
-        print(f"  {cname:24s} cost={s['mean_cost_ratio']:.4f} ret={s['contrast_retention']:.4f} "
-              f"mag_per_cost={s['mag_per_cost']:.4f}")
+        print(
+            f"  {cname:24s} cost={s['mean_cost_ratio']:.4f} ret={s['contrast_retention']:.4f} "
+            f"mag_per_cost={s['mag_per_cost']:.4f}"
+        )
     print()
     print("=== FALSIFIABLE CLAIMS ===")
     for c in claims:

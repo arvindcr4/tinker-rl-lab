@@ -31,7 +31,8 @@ Outputs (platform_hybrid/experiments/results/berkeley/):
 
 All CIs computed from REAL repo data. Deterministic (numpy default_rng(0)).
 """
-import csv, json, os, math
+
+import csv, json, os
 from collections import defaultdict
 import numpy as np
 
@@ -57,13 +58,21 @@ def icc_oneway(groups):
     msb = sum(len(g) * (g.mean() - grand) ** 2 for g in groups) / (k - 1)
     msw = sum(((g - g.mean()) ** 2).sum() for g in groups) / (N - k)
     # m0 (average cluster size, harmonic-style correction for unbalanced)
-    m0 = (N - sum(n ** 2 for n in ni) / N) / (k - 1)
+    m0 = (N - sum(n**2 for n in ni) / N) / (k - 1)
     var_b = max(0.0, (msb - msw) / m0)
     icc = var_b / (var_b + msw) if (var_b + msw) > 0 else 0.0
     m_bar = N / k
     deff = 1.0 + (m_bar - 1.0) * icc
-    return dict(icc=icc, deff=deff, m_bar=m_bar, N=N, k=k,
-                var_between=var_b, var_within=msw, n_eff=N / deff if deff > 0 else N)
+    return dict(
+        icc=icc,
+        deff=deff,
+        m_bar=m_bar,
+        N=N,
+        k=k,
+        var_between=var_b,
+        var_within=msw,
+        n_eff=N / deff if deff > 0 else N,
+    )
 
 
 def boot_ci_pooled(pooled):
@@ -109,14 +118,19 @@ def load_samestack():
     for run in d["runs"]:
         algo, seed = run["algo"], str(run["seed"])
         rewards = [s["mean_reward"] for s in run["step_log"]]
-        out[algo][seed] = dict(all=rewards, last10=rewards[-10:],
-                               heldout=run["heldout_acc"], last10_avg=run["last10_avg"])
+        out[algo][seed] = dict(
+            all=rewards,
+            last10=rewards[-10:],
+            heldout=run["heldout_acc"],
+            last10_avg=run["last10_avg"],
+        )
     return out
 
 
 def load_group_size(metric):
-    rows = list(csv.DictReader(open(os.path.join(RES, "group_size_advantage_variance.tsv")),
-                               delimiter="\t"))
+    rows = list(
+        csv.DictReader(open(os.path.join(RES, "group_size_advantage_variance.tsv")), delimiter="\t")
+    )
     by = defaultdict(lambda: defaultdict(list))  # G -> seed -> [metric over steps]
     for r in rows:
         by[r["G"]][r["seed"]].append(float(r[metric]))
@@ -124,9 +138,9 @@ def load_group_size(metric):
 
 
 def load_bfcl():
-    rows = list(csv.DictReader(open(os.path.join(RES, "bfclv4_tool_use.tsv")),
-                               delimiter="\t"))
-    dense = defaultdict(list); sparse = defaultdict(list)
+    rows = list(csv.DictReader(open(os.path.join(RES, "bfclv4_tool_use.tsv")), delimiter="\t"))
+    dense = defaultdict(list)
+    sparse = defaultdict(list)
     for r in rows:
         dense[r["seed"]].append(float(r["reward_dense"]))
         sparse[r["seed"]].append(float(r["reward_sparse"]))
@@ -136,7 +150,7 @@ def load_bfcl():
 # ----------------------------------------------------------------------------
 # audit rows
 # ----------------------------------------------------------------------------
-audit = []   # master table
+audit = []  # master table
 icc_rows = []
 
 
@@ -148,33 +162,58 @@ def add_mean_headline(mid, pillar, claim, groups_dict, window_key=None):
     lo_n, hi_n = boot_ci_pooled(pooled)
     lo_c, hi_c = boot_ci_cluster(groups)
     ic = icc_oneway(groups)
-    w_n = hi_n - lo_n; w_c = hi_c - lo_c
+    w_n = hi_n - lo_n
+    w_c = hi_c - lo_c
     infl = w_c / w_n if w_n > 0 else float("nan")
-    audit.append(dict(
-        metric_id=mid, pillar=pillar, headline=claim, point=round(point, 5),
-        n_seeds=len(groups), n_pooled=len(pooled),
-        ci_naive=f"[{lo_n:.4f}, {hi_n:.4f}]", w_naive=round(w_n, 5),
-        ci_cluster=f"[{lo_c:.4f}, {hi_c:.4f}]", w_cluster=round(w_c, 5),
-        icc=round(ic["icc"], 4), deff=round(ic["deff"], 3),
-        n_eff=round(ic["n_eff"], 2), width_inflation=round(infl, 3),
-        verdict=verdict(ic["deff"])))
-    icc_rows.append(dict(metric_id=mid, pillar=pillar,
-                         var_between=round(ic["var_between"], 6),
-                         var_within=round(ic["var_within"], 6),
-                         icc=round(ic["icc"], 4), m_bar=round(ic["m_bar"], 1),
-                         deff=round(ic["deff"], 3), n_eff=round(ic["n_eff"], 2)))
+    audit.append(
+        dict(
+            metric_id=mid,
+            pillar=pillar,
+            headline=claim,
+            point=round(point, 5),
+            n_seeds=len(groups),
+            n_pooled=len(pooled),
+            ci_naive=f"[{lo_n:.4f}, {hi_n:.4f}]",
+            w_naive=round(w_n, 5),
+            ci_cluster=f"[{lo_c:.4f}, {hi_c:.4f}]",
+            w_cluster=round(w_c, 5),
+            icc=round(ic["icc"], 4),
+            deff=round(ic["deff"], 3),
+            n_eff=round(ic["n_eff"], 2),
+            width_inflation=round(infl, 3),
+            verdict=verdict(ic["deff"]),
+        )
+    )
+    icc_rows.append(
+        dict(
+            metric_id=mid,
+            pillar=pillar,
+            var_between=round(ic["var_between"], 6),
+            var_within=round(ic["var_within"], 6),
+            icc=round(ic["icc"], 4),
+            m_bar=round(ic["m_bar"], 1),
+            deff=round(ic["deff"], 3),
+            n_eff=round(ic["n_eff"], 2),
+        )
+    )
 
 
 # ---- Pillar 1: same-stack PPO vs GRPO (last-10 mean_reward per seed) ----
 ss = load_samestack()
 grpo10 = {s: v["last10"] for s, v in ss["grpo"].items()}
 ppo10 = {s: v["last10"] for s, v in ss["ppo"].items()}
-add_mean_headline("P1_grpo_last10", "P1",
-                  "GRPO same-stack last-10 mean_reward = 0.979 (paper: 0.9789+/-0.0067)",
-                  grpo10)
-add_mean_headline("P1_ppo_last10", "P1",
-                  "PPO same-stack last-10 mean_reward = 0.918 (paper: 0.9181+/-0.0497)",
-                  ppo10)
+add_mean_headline(
+    "P1_grpo_last10",
+    "P1",
+    "GRPO same-stack last-10 mean_reward = 0.979 (paper: 0.9789+/-0.0067)",
+    grpo10,
+)
+add_mean_headline(
+    "P1_ppo_last10",
+    "P1",
+    "PPO same-stack last-10 mean_reward = 0.918 (paper: 0.9181+/-0.0497)",
+    ppo10,
+)
 
 # paired GRPO-PPO delta (the p=0.75 headline) -- correct unit is the seed
 seeds = sorted(set(grpo10) & set(ppo10))
@@ -182,57 +221,88 @@ a = [np.mean(grpo10[s]) for s in seeds]
 b = [np.mean(ppo10[s]) for s in seeds]
 pd_pt, pd_lo, pd_hi = paired_cluster_ci(a, b)
 # naive pooled paired: pool all step-level diffs as if iid (5x10=50)
-pooled_diff = [x - y for s in seeds
-               for x, y in zip(grpo10[s], ppo10[s])]
+pooled_diff = [x - y for s in seeds for x, y in zip(grpo10[s], ppo10[s], strict=False)]
 lo_pn, hi_pn = boot_ci_pooled(pooled_diff)
-audit.append(dict(
-    metric_id="P1_grpo_minus_ppo_paired", pillar="P1",
-    headline="GRPO-PPO paired last10 delta = +0.061 pt (equivalence claim, p=0.75 in paper on heldout)",
-    point=round(pd_pt, 5), n_seeds=len(seeds), n_pooled=len(pooled_diff),
-    ci_naive=f"[{lo_pn:.4f}, {hi_pn:.4f}]", w_naive=round(hi_pn - lo_pn, 5),
-    ci_cluster=f"[{pd_lo:.4f}, {pd_hi:.4f}]", w_cluster=round(pd_hi - pd_lo, 5),
-    icc="paired", deff=round((hi_pn - lo_pn) and (pd_hi - pd_lo) / (hi_pn - lo_pn), 3),
-    n_eff=len(seeds), width_inflation=round((pd_hi - pd_lo) / (hi_pn - lo_pn), 3)
-    if (hi_pn - lo_pn) > 0 else float("nan"),
-    verdict="CLUSTER_REQUIRED (delta CI must straddle 0 for equivalence)"))
+audit.append(
+    dict(
+        metric_id="P1_grpo_minus_ppo_paired",
+        pillar="P1",
+        headline="GRPO-PPO paired last10 delta = +0.061 pt (equivalence claim, p=0.75 in paper on heldout)",
+        point=round(pd_pt, 5),
+        n_seeds=len(seeds),
+        n_pooled=len(pooled_diff),
+        ci_naive=f"[{lo_pn:.4f}, {hi_pn:.4f}]",
+        w_naive=round(hi_pn - lo_pn, 5),
+        ci_cluster=f"[{pd_lo:.4f}, {pd_hi:.4f}]",
+        w_cluster=round(pd_hi - pd_lo, 5),
+        icc="paired",
+        deff=round((hi_pn - lo_pn) and (pd_hi - pd_lo) / (hi_pn - lo_pn), 3),
+        n_eff=len(seeds),
+        width_inflation=round((pd_hi - pd_lo) / (hi_pn - lo_pn), 3)
+        if (hi_pn - lo_pn) > 0
+        else float("nan"),
+        verdict="CLUSTER_REQUIRED (delta CI must straddle 0 for equivalence)",
+    )
+)
 
 # ---- Pillar 3: group-size headline metrics (per-seed step traces) ----
 gz_reward = load_group_size("mean_reward")
 gz_zvf = load_group_size("zvf")
-add_mean_headline("P3_reward_G2", "P3",
-                  "Group-size G=2 mean_reward (low-G endpoint of +24% swing claim)",
-                  gz_reward["2"])
-add_mean_headline("P3_reward_G16", "P3",
-                  "Group-size G=16 mean_reward (high-G endpoint of +24% swing claim)",
-                  gz_reward["16"])
-add_mean_headline("P3_zvf_G2", "P3",
-                  "ZVF at G=2 = 0.845 (frontier r2 ZVF-decay endpoint)",
-                  gz_zvf["2"])
-add_mean_headline("P3_zvf_G16", "P3",
-                  "ZVF at G=16 = 0.631 (frontier r2 ZVF-decay endpoint)",
-                  gz_zvf["16"])
+add_mean_headline(
+    "P3_reward_G2",
+    "P3",
+    "Group-size G=2 mean_reward (low-G endpoint of +24% swing claim)",
+    gz_reward["2"],
+)
+add_mean_headline(
+    "P3_reward_G16",
+    "P3",
+    "Group-size G=16 mean_reward (high-G endpoint of +24% swing claim)",
+    gz_reward["16"],
+)
+add_mean_headline(
+    "P3_zvf_G2", "P3", "ZVF at G=2 = 0.845 (frontier r2 ZVF-decay endpoint)", gz_zvf["2"]
+)
+add_mean_headline(
+    "P3_zvf_G16", "P3", "ZVF at G=16 = 0.631 (frontier r2 ZVF-decay endpoint)", gz_zvf["16"]
+)
 
 # ---- Pillar 4: bfclv4 dense vs sparse tool-use reward ----
 dense, sparse = load_bfcl()
-add_mean_headline("P4_bfcl_dense", "P4",
-                  "bfclv4 dense-shaped tool-use reward = 0.186 (ReAct row-13 H1)", dense)
-add_mean_headline("P4_bfcl_sparse", "P4",
-                  "bfclv4 sparse tool-use reward = 0.113 (ReAct row-13 H1)", sparse)
+add_mean_headline(
+    "P4_bfcl_dense", "P4", "bfclv4 dense-shaped tool-use reward = 0.186 (ReAct row-13 H1)", dense
+)
+add_mean_headline(
+    "P4_bfcl_sparse", "P4", "bfclv4 sparse tool-use reward = 0.113 (ReAct row-13 H1)", sparse
+)
 
 # ----------------------------------------------------------------------------
 # write outputs
 # ----------------------------------------------------------------------------
-cols = ["metric_id", "pillar", "headline", "point", "n_seeds", "n_pooled",
-        "ci_naive", "w_naive", "ci_cluster", "w_cluster", "icc", "deff",
-        "n_eff", "width_inflation", "verdict"]
+cols = [
+    "metric_id",
+    "pillar",
+    "headline",
+    "point",
+    "n_seeds",
+    "n_pooled",
+    "ci_naive",
+    "w_naive",
+    "ci_cluster",
+    "w_cluster",
+    "icc",
+    "deff",
+    "n_eff",
+    "width_inflation",
+    "verdict",
+]
 with open(os.path.join(OUT, "headline_ci_clustering.tsv"), "w", newline="") as f:
     w = csv.DictWriter(f, fieldnames=cols, delimiter="\t")
     w.writeheader()
     for r in audit:
         w.writerow(r)
 
-icc_cols = ["metric_id", "pillar", "var_between", "var_within", "icc", "m_bar",
-            "deff", "n_eff"]
+icc_cols = ["metric_id", "pillar", "var_between", "var_within", "icc", "m_bar", "deff", "n_eff"]
 with open(os.path.join(OUT, "headline_ci_clustering_icc.tsv"), "w", newline="") as f:
     w = csv.DictWriter(f, fieldnames=icc_cols, delimiter="\t")
     w.writeheader()
@@ -248,18 +318,26 @@ summary = dict(
     method="seed-clustering design-effect audit (ICC + Kish DEFF + cluster bootstrap)",
     n_headlines_audited=len(audit),
     n_pooled_CI_inflated=len(inflated),
-    max_deff=dict(metric=max_infl["metric_id"], deff=max_infl["deff"],
-                  icc=max_infl["icc"], width_inflation=max_infl["width_inflation"],
-                  ci_naive=max_infl["ci_naive"], ci_cluster=max_infl["ci_cluster"]),
+    max_deff=dict(
+        metric=max_infl["metric_id"],
+        deff=max_infl["deff"],
+        icc=max_infl["icc"],
+        width_inflation=max_infl["width_inflation"],
+        ci_naive=max_infl["ci_naive"],
+        ci_cluster=max_infl["ci_cluster"],
+    ),
     mean_deff=round(float(np.mean([r["deff"] for r in mean_rows])), 3),
-    mean_icc=round(float(np.mean([r["icc"] for r in mean_rows
-                                  if isinstance(r["icc"], (int, float))])), 4),
+    mean_icc=round(
+        float(np.mean([r["icc"] for r in mean_rows if isinstance(r["icc"], (int, float))])), 4
+    ),
     paired_delta_equivalence=dict(
-        metric="P1_grpo_minus_ppo_paired", point=round(pd_pt, 5),
+        metric="P1_grpo_minus_ppo_paired",
+        point=round(pd_pt, 5),
         cluster_ci=[round(pd_lo, 5), round(pd_hi, 5)],
         straddles_zero=bool(pd_lo <= 0 <= pd_hi),
         naive_pooled_ci=[round(lo_pn, 5), round(hi_pn, 5)],
-        naive_straddles_zero=bool(lo_pn <= 0 <= hi_pn)),
+        naive_straddles_zero=bool(lo_pn <= 0 <= hi_pn),
+    ),
     key_finding=(
         "Training-step metrics carry high within-seed autocorrelation: pooling "
         "S seeds x M steps as i.i.d. understates headline-CI width by up to "
@@ -268,21 +346,25 @@ summary = dict(
         "Every TinkerRL-Bench headline must report SEED-CLUSTERED error bars; "
         "the papers that already aggregate per-seed then take seed-SE are correct, "
         "and this audit quantifies the trap for any pooled-CI reporting (closes "
-        "row-07 H6 cluster-sensitivity thread)."),
+        "row-07 H6 cluster-sensitivity thread)."
+    ),
 )
-json.dump(summary, open(os.path.join(OUT, "headline_ci_clustering_summary.json"), "w"),
-          indent=2)
+json.dump(summary, open(os.path.join(OUT, "headline_ci_clustering_summary.json"), "w"), indent=2)
 
 # console
 print("=== HEADLINE CI CLUSTERING AUDIT ===")
 for r in audit:
-    print(f"{r['metric_id']:28s} {r['pillar']:3s} pt={r['point']:<9} "
-          f"naive={r['ci_naive']:20s} cluster={r['ci_cluster']:20s} "
-          f"DEFF={r['deff']} infl={r['width_inflation']}x -> {r['verdict']}")
+    print(
+        f"{r['metric_id']:28s} {r['pillar']:3s} pt={r['point']:<9} "
+        f"naive={r['ci_naive']:20s} cluster={r['ci_cluster']:20s} "
+        f"DEFF={r['deff']} infl={r['width_inflation']}x -> {r['verdict']}"
+    )
 print("\n--- ICC / variance components ---")
 for r in icc_rows:
-    print(f"{r['metric_id']:28s} ICC={r['icc']:<7} DEFF={r['deff']:<6} "
-          f"n_eff={r['n_eff']:<6} (var_b={r['var_between']}, var_w={r['var_within']})")
+    print(
+        f"{r['metric_id']:28s} ICC={r['icc']:<7} DEFF={r['deff']:<6} "
+        f"n_eff={r['n_eff']:<6} (var_b={r['var_between']}, var_w={r['var_within']})"
+    )
 print("\nSUMMARY:", json.dumps(summary["max_deff"], indent=0))
 print("paired equivalence:", summary["paired_delta_equivalence"])
 print(f"\n{len(inflated)}/{len(mean_rows)} pooled-CI headlines are >=1.5x DEFF-inflated")

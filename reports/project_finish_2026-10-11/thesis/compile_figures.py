@@ -7,6 +7,7 @@ compiles are fast. Reports per-figure status and a summary.
 
 Usage:  python3 compile_figures.py [--only name1,name2] [-j N] [--force]
 """
+
 from __future__ import annotations
 
 import argparse
@@ -41,16 +42,42 @@ def compile_one(name: str, force: bool = False, engine: str | None = None) -> tu
     pdf = os.path.join(FIGDIR, name + ".pdf")
     if not os.path.isfile(tex):
         return name, False, "missing source"
-    if (not force and os.path.isfile(pdf) and os.path.getsize(pdf) > 0
-            and os.path.getmtime(pdf) > os.path.getmtime(tex)):
+    if (
+        not force
+        and os.path.isfile(pdf)
+        and os.path.getsize(pdf) > 0
+        and os.path.getmtime(pdf) > os.path.getmtime(tex)
+    ):
         return name, True, "cached"
     try:
         with tempfile.TemporaryDirectory(prefix=f".{name}-", dir=FIGDIR) as outdir:
-            command = (["tectonic", "-X", "compile", tex, "--outdir", outdir, "--only-cached", "--untrusted"] if engine == "tectonic" else
-                       ["latexmk", "-pdf", "-interaction=nonstopmode", "-halt-on-error", "-no-shell-escape", f"-outdir={outdir}", tex])
+            command = (
+                [
+                    "tectonic",
+                    "-X",
+                    "compile",
+                    tex,
+                    "--outdir",
+                    outdir,
+                    "--only-cached",
+                    "--untrusted",
+                ]
+                if engine == "tectonic"
+                else [
+                    "latexmk",
+                    "-pdf",
+                    "-interaction=nonstopmode",
+                    "-halt-on-error",
+                    "-no-shell-escape",
+                    f"-outdir={outdir}",
+                    tex,
+                ]
+            )
             r = subprocess.run(
                 command,
-                capture_output=True, timeout=600, cwd=FIGDIR,
+                capture_output=True,
+                timeout=600,
+                cwd=FIGDIR,
             )
             built = os.path.join(outdir, name + ".pdf")
             if r.returncode == 0:
@@ -58,16 +85,17 @@ def compile_one(name: str, force: bool = False, engine: str | None = None) -> tu
                     return name, False, "no nonempty PDF produced"
                 size = os.path.getsize(built)
                 os.replace(built, pdf)
-                return name, True, f"{size//1024}KB"
+                return name, True, f"{size // 1024}KB"
     except subprocess.TimeoutExpired:
         return name, False, "timeout"
     except OSError as exc:
         return name, False, str(exc)
     err = (r.stderr or r.stdout).decode(errors="replace")
     # pull the first genuinely useful error line
-    lines = [l for l in err.splitlines()
-             if l.strip().startswith("!") or "error" in l.lower()]
-    msg = lines[0][:160] if lines else err.strip().splitlines()[-1][:160] if err.strip() else "failed"
+    lines = [l for l in err.splitlines() if l.strip().startswith("!") or "error" in l.lower()]
+    msg = (
+        lines[0][:160] if lines else err.strip().splitlines()[-1][:160] if err.strip() else "failed"
+    )
     return name, False, msg
 
 

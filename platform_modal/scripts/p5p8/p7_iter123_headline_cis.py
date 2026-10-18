@@ -36,12 +36,12 @@ Output:
 Citations verified locally against the section file paths; no external
 fetches. Manuscript rebuild NOT touched.
 """
+
 from __future__ import annotations
 
 import csv
 import json
 import math
-import os
 import pathlib
 from _review_replay import stable_seed
 import random
@@ -64,12 +64,12 @@ G_OBS = 8  # n10 base group size; iter-115 STATIC_G8 reference
 
 # ---------- closed-form Bernoulli inversion (carried from iter-111/115) ----
 def z_bernoulli(p: float, g: int) -> float:
-    return p ** g + (1 - p) ** g
+    return p**g + (1 - p) ** g
 
 
 def invert_p(z_obs: float, g_obs: int = G_OBS, iters: int = 80) -> float:
     """Recover p0 in [0, 0.5] s.t. z(p0, g_obs) ~= z_obs (symmetric root)."""
-    if not 2.0 ** (1-g_obs) <= z_obs <= 1.0:
+    if not 2.0 ** (1 - g_obs) <= z_obs <= 1.0:
         raise ValueError("ZVF outside homogeneous Bernoulli model range")
     lo, hi = 0.0, 0.5
     for _ in range(iters):
@@ -102,8 +102,14 @@ def paired_seed_bootstrap(
     arr = [values_per_seed[s] for s in seeds]
     n = len(arr)
     if n < 2:
-        return {"n": n, "point": stat_fn(arr), "ci_lo": float("nan"),
-                "ci_hi": float("nan"), "sd": float("nan"), "b": 0}
+        return {
+            "n": n,
+            "point": stat_fn(arr),
+            "ci_lo": float("nan"),
+            "ci_hi": float("nan"),
+            "sd": float("nan"),
+            "b": 0,
+        }
     boots = []
     for _ in range(b):
         sample = [arr[rng.randrange(n)] for _ in range(n)]
@@ -127,8 +133,14 @@ def audit_n10_multi_seed() -> list[dict]:
     seeds_files = sorted(N10_DIR.glob("n10_grpo_s*.json"))
     rows: list[dict] = []
     # gather
-    per = {"mean_zvf": {}, "heldout_acc": {}, "last10_avg_reward": {},
-           "first5_avg_reward": {}, "mean_len_first5": {}, "mean_len_last5": {}}
+    per = {
+        "mean_zvf": {},
+        "heldout_acc": {},
+        "last10_avg_reward": {},
+        "first5_avg_reward": {},
+        "mean_len_first5": {},
+        "mean_len_last5": {},
+    }
     for fp in seeds_files:
         d = json.load(open(fp))
         seed = d["seed"]
@@ -148,21 +160,23 @@ def audit_n10_multi_seed() -> list[dict]:
     ]:
         b = paired_seed_bootstrap(per[metric], statistics.fmean)
         verdict = _verdict(b, published)
-        rows.append({
-            "class": "C1_N10_multiseed",
-            "section": "p7_iter115_adaptive_gstar_n10_multiseed",
-            "headline": f"per-seed mean {metric} across n10 5-seed panel",
-            "metric": metric,
-            "n_boot_units": b["n"],
-            "published_point": published,
-            "recomputed_point": round(b["point"], 4),
-            "ci_lo": round(b["ci_lo"], 4),
-            "ci_hi": round(b["ci_hi"], 4),
-            "sd_across_seeds": round(b["sd"], 4),
-            "b": b["b"],
-            "verdict": verdict,
-            "note": "B=2000 paired-seed bootstrap; unit=seed; ci=0.95",
-        })
+        rows.append(
+            {
+                "class": "C1_N10_multiseed",
+                "section": "p7_iter115_adaptive_gstar_n10_multiseed",
+                "headline": f"per-seed mean {metric} across n10 5-seed panel",
+                "metric": metric,
+                "n_boot_units": b["n"],
+                "published_point": published,
+                "recomputed_point": round(b["point"], 4),
+                "ci_lo": round(b["ci_lo"], 4),
+                "ci_hi": round(b["ci_hi"], 4),
+                "sd_across_seeds": round(b["sd"], 4),
+                "b": b["b"],
+                "verdict": verdict,
+                "note": "B=2000 paired-seed bootstrap; unit=seed; ci=0.95",
+            }
+        )
     return rows
 
 
@@ -226,22 +240,24 @@ def audit_n10_salvage_rate_cv() -> list[dict]:
         verdict = "TENSION"  # procedure differs from iter-115 pool
     else:
         verdict = "PASS" if boots_cv[lo_i] <= 0.198 <= boots_cv[hi_i] else "TENSION"
-    return [{
-        "class": "C1_N10_multiseed",
-        "section": "p7_iter115_adaptive_gstar_n10_multiseed",
-        "headline": f"per-seed Bernoulli salvage rate at tau={TAU}, "
-                    f"G_obs={G_OBS}, g_max=64 over {per_step_decisions} step-decisions",
-        "metric": "salvage_rate",
-        "n_boot_units": b_mean["n"],
-        "published_point": 0.198,
-        "recomputed_point": round(cv, 4),
-        "ci_lo": round(boots_cv[lo_i], 4),
-        "ci_hi": round(boots_cv[hi_i], 4),
-        "sd_across_seeds": round(statistics.stdev(rates), 4),
-        "b": B,
-        "verdict": verdict,
-        "note": f"per-seed rates={per_seed_match}; published seed rates={published_rates}",
-    }]
+    return [
+        {
+            "class": "C1_N10_multiseed",
+            "section": "p7_iter115_adaptive_gstar_n10_multiseed",
+            "headline": f"per-seed Bernoulli salvage rate at tau={TAU}, "
+            f"G_obs={G_OBS}, g_max=64 over {per_step_decisions} step-decisions",
+            "metric": "salvage_rate",
+            "n_boot_units": b_mean["n"],
+            "published_point": 0.198,
+            "recomputed_point": round(cv, 4),
+            "ci_lo": round(boots_cv[lo_i], 4),
+            "ci_hi": round(boots_cv[hi_i], 4),
+            "sd_across_seeds": round(statistics.stdev(rates), 4),
+            "b": B,
+            "verdict": verdict,
+            "note": f"per-seed rates={per_seed_match}; published seed rates={published_rates}",
+        }
+    ]
 
 
 def audit_n2_four_method() -> list[dict]:
@@ -273,46 +289,56 @@ def audit_n2_four_method() -> list[dict]:
         # published heuristic from iter-111 narrative: grpo ~0.69 (highest), gift ~0.65 (lowest after inversion)
         # We mark each method's point with NO artificial published; we simply report
         # the (mean, CI) and let REGRESS comparison be against nothing (verdict: REPORTED).
-        out.append({
-            "class": "C2_N2_four_method",
-            "section": "p7_iter111_target_g_selection / p7_iter119_calibrated_controller_unification",
-            "headline": f"per-step mean ZVF for method={m} on N2 (40 steps)",
-            "metric": f"zvf_{m}",
-            "n_boot_units": n,
-            "published_point": round(pt, 4),
-            "recomputed_point": round(pt, 4),
-            "ci_lo": round(boots[lo_i], 4),
-            "ci_hi": round(boots[hi_i], 4),
-            "sd_across_seeds": round(statistics.stdev(zvf), 4),
-            "b": B,
-            "verdict": "REPORTED",
-            "note": "no canonical published point; raw CI for downstream per-method nb derivation",
-        })
+        out.append(
+            {
+                "class": "C2_N2_four_method",
+                "section": "p7_iter111_target_g_selection / p7_iter119_calibrated_controller_unification",
+                "headline": f"per-step mean ZVF for method={m} on N2 (40 steps)",
+                "metric": f"zvf_{m}",
+                "n_boot_units": n,
+                "published_point": round(pt, 4),
+                "recomputed_point": round(pt, 4),
+                "ci_lo": round(boots[lo_i], 4),
+                "ci_hi": round(boots[hi_i], 4),
+                "sd_across_seeds": round(statistics.stdev(zvf), 4),
+                "b": B,
+                "verdict": "REPORTED",
+                "note": "no canonical published point; raw CI for downstream per-method nb derivation",
+            }
+        )
     # GIFT per-method gap: zvf(aero)+zvf(areal) - zvf(gift) since iter-111
     # characterized GIFT as the lowest-ZVF method on per-prompt k_p decision data.
     # At step-aggregate (per-step zvf), the relationship is reversed: GIFT has
     # higher step-aggregate ZVF than the group-mean methods.
     n2_method_means = {m: statistics.fmean(by_method[m]) for m in methods}
-    out.append({
-        "class": "C2_N2_four_method",
-        "section": "p7_iter111_target_g_selection",
-        "headline": "Iter-111 N2 panel qualitative claim: GIFT is the SALVAGE method on per-prompt data (lower per-prompt k_p ZVF, not step-aggregate ZVF)",
-        "metric": "n2_step_zvf_inversion",
-        "n_boot_units": 40,
-        "published_point": round(n2_method_means["grpo"], 4),
-        "recomputed_point": round(n2_method_means["grpo"], 4),
-        "ci_lo": round(_quick_perc_ci(by_method["grpo"], B, SEED + 7)[0], 4),
-        "ci_hi": round(_quick_perc_ci(by_method["grpo"], B, SEED + 7)[1], 4),
-        "sd_across_seeds": round(statistics.stdev(by_method["grpo"]), 4),
-        "b": B,
-        "verdict": "REPORTED",
-        "note": ("step-aggregate N2 ZVF: grpo=" + str(round(n2_method_means['grpo'],3)) +
-                 " aero=" + str(round(n2_method_means['aero'],3)) +
-                 " gift=" + str(round(n2_method_means['gift'],3)) +
-                 " areal=" + str(round(n2_method_means['areal'],3)) +
-                 " -- step-aggregate does NOT reproduce the per-prompt "
-                 "iter-111 GIFT-salvage ordering; measurement-scope limitation"),
-    })
+    out.append(
+        {
+            "class": "C2_N2_four_method",
+            "section": "p7_iter111_target_g_selection",
+            "headline": "Iter-111 N2 panel qualitative claim: GIFT is the SALVAGE method on per-prompt data (lower per-prompt k_p ZVF, not step-aggregate ZVF)",
+            "metric": "n2_step_zvf_inversion",
+            "n_boot_units": 40,
+            "published_point": round(n2_method_means["grpo"], 4),
+            "recomputed_point": round(n2_method_means["grpo"], 4),
+            "ci_lo": round(_quick_perc_ci(by_method["grpo"], B, SEED + 7)[0], 4),
+            "ci_hi": round(_quick_perc_ci(by_method["grpo"], B, SEED + 7)[1], 4),
+            "sd_across_seeds": round(statistics.stdev(by_method["grpo"]), 4),
+            "b": B,
+            "verdict": "REPORTED",
+            "note": (
+                "step-aggregate N2 ZVF: grpo="
+                + str(round(n2_method_means["grpo"], 3))
+                + " aero="
+                + str(round(n2_method_means["aero"], 3))
+                + " gift="
+                + str(round(n2_method_means["gift"], 3))
+                + " areal="
+                + str(round(n2_method_means["areal"], 3))
+                + " -- step-aggregate does NOT reproduce the per-prompt "
+                "iter-111 GIFT-salvage ordering; measurement-scope limitation"
+            ),
+        }
+    )
     return out
 
 
@@ -340,107 +366,124 @@ def audit_single_seed_or_rule() -> list[dict]:
     out = []
     # E3 audit (single-seed 4 arms): values from p7_controller.tex
     e3 = [
-        ("grpo",          +0.500, 0.25, 120),
-        ("drgrpo",        +0.575, 0.27, 120),
-        ("dapo",          +0.550, 0.00, 174),
-        ("grpo_adaptiveG",+0.575, 0.23, 186),
+        ("grpo", +0.500, 0.25, 120),
+        ("drgrpo", +0.575, 0.27, 120),
+        ("dapo", +0.550, 0.00, 174),
+        ("grpo_adaptiveG", +0.575, 0.23, 186),
     ]
     for arm, d_acc, mean_zvf, rollouts in e3:
-        out.append({
+        out.append(
+            {
+                "class": "C3_single_seed",
+                "section": "p7_controller",
+                "headline": f"E3 audit arm={arm}: held-out Delta={d_acc}, mean ZVF={mean_zvf}, rollouts={rollouts}",
+                "metric": f"e3_{arm}",
+                "n_boot_units": 1,
+                "published_point": round(d_acc, 4),
+                "recomputed_point": round(d_acc, 4),
+                "ci_lo": float("nan"),
+                "ci_hi": float("nan"),
+                "sd_across_seeds": float("nan"),
+                "b": 0,
+                "verdict": "INSUFFICIENT_N",
+                "note": "single-seed runs (n=1 per arm); CI requires replication budget",
+            }
+        )
+    # Berkeley row 01 Dualformer-auto: 56.2% saving on iter-127 (5x4 cells)
+    out.append(
+        {
             "class": "C3_single_seed",
-            "section": "p7_controller",
-            "headline": f"E3 audit arm={arm}: held-out Delta={d_acc}, mean ZVF={mean_zvf}, rollouts={rollouts}",
-            "metric": f"e3_{arm}",
-            "n_boot_units": 1,
-            "published_point": round(d_acc, 4),
-            "recomputed_point": round(d_acc, 4),
+            "section": "p7_iter119_calibrated_controller_unification (Berkeley row 01)",
+            "headline": "Dualformer-auto compute saving on iter-127 5x4 cell panel",
+            "metric": "dualformer_auto_saving",
+            "n_boot_units": 20,
+            "published_point": 0.562,
+            "recomputed_point": None,
+            "source_status": "UNVERIFIED_SOURCE",
             "ci_lo": float("nan"),
             "ci_hi": float("nan"),
             "sd_across_seeds": float("nan"),
             "b": 0,
             "verdict": "INSUFFICIENT_N",
-            "note": "single-seed runs (n=1 per arm); CI requires replication budget",
-        })
-    # Berkeley row 01 Dualformer-auto: 56.2% saving on iter-127 (5x4 cells)
-    out.append({
-        "class": "C3_single_seed",
-        "section": "p7_iter119_calibrated_controller_unification (Berkeley row 01)",
-        "headline": "Dualformer-auto compute saving on iter-127 5x4 cell panel",
-        "metric": "dualformer_auto_saving",
-        "n_boot_units": 20,
-        "published_point": 0.562,
-        "recomputed_point": None, "source_status": "UNVERIFIED_SOURCE",
-        "ci_lo": float("nan"),
-        "ci_hi": float("nan"),
-        "sd_across_seeds": float("nan"),
-        "b": 0,
-        "verdict": "INSUFFICIENT_N",
-        "note": "ratio statistic on (5 G x 4 seeds) cells; not a stochastic mean",
-    })
+            "note": "ratio statistic on (5 G x 4 seeds) cells; not a stochastic mean",
+        }
+    )
     # Berkeley row 19 AlphaProof gamma*=0: 12/12 DECISIVE
-    out.append({
-        "class": "C3_single_seed",
-        "section": "p7_iter119_calibrated_controller_unification (Berkeley row 19)",
-        "headline": "Alphaproof gamma*=0 tree-advantage proxy DECISIVE on 12/12 (G,seed) cells",
-        "metric": "alphaproof_gamma0_decisive",
-        "n_boot_units": 12,
-        "published_point": 1.000,
-        "recomputed_point": None, "source_status": "UNVERIFIED_SOURCE",
-        "ci_lo": float("nan"),
-        "ci_hi": float("nan"),
-        "sd_across_seeds": float("nan"),
-        "b": 0,
-        "verdict": "INSUFFICIENT_N",
-        "note": "concordance 12/12; no CI on a concordance count",
-    })
+    out.append(
+        {
+            "class": "C3_single_seed",
+            "section": "p7_iter119_calibrated_controller_unification (Berkeley row 19)",
+            "headline": "Alphaproof gamma*=0 tree-advantage proxy DECISIVE on 12/12 (G,seed) cells",
+            "metric": "alphaproof_gamma0_decisive",
+            "n_boot_units": 12,
+            "published_point": 1.000,
+            "recomputed_point": None,
+            "source_status": "UNVERIFIED_SOURCE",
+            "ci_lo": float("nan"),
+            "ci_hi": float("nan"),
+            "sd_across_seeds": float("nan"),
+            "b": 0,
+            "verdict": "INSUFFICIENT_N",
+            "note": "concordance 12/12; no CI on a concordance count",
+        }
+    )
     # iter-119 CCC Pareto-front 100% (single observable)
-    out.append({
-        "class": "C3_single_seed",
-        "section": "p7_iter119_calibrated_controller_unification",
-        "headline": "CCC Pareto-front (CCC never picks worst rule) on N2 (160 decisions)",
-        "metric": "ccc_pareto_front",
-        "n_boot_units": 160,
-        "published_point": 1.000,
-        "recomputed_point": None, "source_status": "UNVERIFIED_SOURCE",
-        "ci_lo": float("nan"),
-        "ci_hi": float("nan"),
-        "sd_across_seeds": float("nan"),
-        "b": 0,
-        "verdict": "INSUFFICIENT_N",
-        "note": "structural property (complementarity bound), not an estimated rate",
-    })
+    out.append(
+        {
+            "class": "C3_single_seed",
+            "section": "p7_iter119_calibrated_controller_unification",
+            "headline": "CCC Pareto-front (CCC never picks worst rule) on N2 (160 decisions)",
+            "metric": "ccc_pareto_front",
+            "n_boot_units": 160,
+            "published_point": 1.000,
+            "recomputed_point": None,
+            "source_status": "UNVERIFIED_SOURCE",
+            "ci_lo": float("nan"),
+            "ci_hi": float("nan"),
+            "sd_across_seeds": float("nan"),
+            "b": 0,
+            "verdict": "INSUFFICIENT_N",
+            "note": "structural property (complementarity bound), not an estimated rate",
+        }
+    )
     # iter-119 CCC preservation 0.9969 (point estimate from N2 mean reward prediction)
-    out.append({
-        "class": "C3_single_seed",
-        "section": "p7_iter119_calibrated_controller_unification",
-        "headline": "CCC reward preservation ratio on N2 (predicted reward mean under CCC / baseline 0.834)",
-        "metric": "ccc_preservation",
-        "n_boot_units": 160,
-        "published_point": 0.9969,
-        "recomputed_point": None, "source_status": "UNVERIFIED_SOURCE",
-        "ci_lo": float("nan"),
-        "ci_hi": float("nan"),
-        "sd_across_seeds": float("nan"),
-        "b": 0,
-        "verdict": "INSUFFICIENT_N",
-        "note": "deterministic reconstruction from N2 step-method series; structural",
-    })
+    out.append(
+        {
+            "class": "C3_single_seed",
+            "section": "p7_iter119_calibrated_controller_unification",
+            "headline": "CCC reward preservation ratio on N2 (predicted reward mean under CCC / baseline 0.834)",
+            "metric": "ccc_preservation",
+            "n_boot_units": 160,
+            "published_point": 0.9969,
+            "recomputed_point": None,
+            "source_status": "UNVERIFIED_SOURCE",
+            "ci_lo": float("nan"),
+            "ci_hi": float("nan"),
+            "sd_across_seeds": float("nan"),
+            "b": 0,
+            "verdict": "INSUFFICIENT_N",
+            "note": "deterministic reconstruction from N2 step-method series; structural",
+        }
+    )
     # iter-107 tau-transfer kappa range 0.19--0.55 across method pairs
-    out.append({
-        "class": "C3_single_seed",
-        "section": "p7_iter107_tautransfer",
-        "headline": "Cross-method tau-transfer Fleiss kappa range at tau=0.70 (3 method pairs)",
-        "metric": "kappa_range",
-        "n_boot_units": 3,
-        "published_point": 0.370,  # midpoint of 0.19--0.55
-        "recomputed_point": None, "source_status": "UNVERIFIED_SOURCE",
-        "ci_lo": float("nan"),
-        "ci_hi": float("nan"),
-        "sd_across_seeds": float("nan"),
-        "b": 0,
-        "verdict": "INSUFFICIENT_N",
-        "note": "range statistic on 3 pairwise kappa values; not a stochastic mean",
-    })
+    out.append(
+        {
+            "class": "C3_single_seed",
+            "section": "p7_iter107_tautransfer",
+            "headline": "Cross-method tau-transfer Fleiss kappa range at tau=0.70 (3 method pairs)",
+            "metric": "kappa_range",
+            "n_boot_units": 3,
+            "published_point": 0.370,  # midpoint of 0.19--0.55
+            "recomputed_point": None,
+            "source_status": "UNVERIFIED_SOURCE",
+            "ci_lo": float("nan"),
+            "ci_hi": float("nan"),
+            "sd_across_seeds": float("nan"),
+            "b": 0,
+            "verdict": "INSUFFICIENT_N",
+            "note": "range statistic on 3 pairwise kappa values; not a stochastic mean",
+        }
+    )
     return out
 
 
@@ -451,9 +494,21 @@ def main() -> None:
     rows += audit_n2_four_method()
     rows += audit_single_seed_or_rule()
     OUT_DIR.mkdir(parents=True, exist_ok=True)
-    cols = ["class", "section", "headline", "metric", "n_boot_units",
-            "published_point", "recomputed_point", "ci_lo", "ci_hi",
-            "sd_across_seeds", "b", "verdict", "note"]
+    cols = [
+        "class",
+        "section",
+        "headline",
+        "metric",
+        "n_boot_units",
+        "published_point",
+        "recomputed_point",
+        "ci_lo",
+        "ci_hi",
+        "sd_across_seeds",
+        "b",
+        "verdict",
+        "note",
+    ]
     with open(OUT_TSV, "w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=cols, delimiter="\t")
         w.writeheader()

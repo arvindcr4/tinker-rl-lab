@@ -10,6 +10,7 @@ Usage:
 
 Defaults to results/e2_prod.log if LOG_FILE not given.
 """
+
 import json, re, sys, pathlib
 import datetime as _dt
 
@@ -24,20 +25,24 @@ README = OUT / "README_E2_PROD.md"
 
 def parse_log(path: pathlib.Path):
     if not path.exists():
-        print(f"[persist] log {path} missing"); return None
+        print(f"[persist] log {path} missing")
+        return None
     m = re.search(r"^E2_RESULT (\{.*\})\s*$", path.read_text(), re.M)
     if not m:
-        print(f"[persist] E2_RESULT line not found in {path}"); return None
+        print(f"[persist] E2_RESULT line not found in {path}")
+        return None
     return json.loads(m.group(1))
 
 
 def headline(o):
     l, f = o["lora"], o["full"]
     n = l["n_seeds"]
-    return (f"{n}-seed mean heldout_delta: LoRA {l['mean_heldout_delta']:+.3f} "
-            f"(std {l['std_heldout_delta']:.3f}) vs full-FT {f['mean_heldout_delta']:+.3f} "
-            f"(std {f['std_heldout_delta']:.3f}); LoRA-full gap {o['delta_lora_minus_full']:+.3f}; "
-            f"mean ZVF: LoRA {l['mean_zvf']:.3f} vs full-FT {f['mean_zvf']:.3f}")
+    return (
+        f"{n}-seed mean heldout_delta: LoRA {l['mean_heldout_delta']:+.3f} "
+        f"(std {l['std_heldout_delta']:.3f}) vs full-FT {f['mean_heldout_delta']:+.3f} "
+        f"(std {f['std_heldout_delta']:.3f}); LoRA-full gap {o['delta_lora_minus_full']:+.3f}; "
+        f"mean ZVF: LoRA {l['mean_zvf']:.3f} vs full-FT {f['mean_zvf']:.3f}"
+    )
 
 
 def main():
@@ -86,8 +91,11 @@ def main():
         project=WANDB_PROJECT,
         name="E2_lora_vs_fullft_4b",
         reinit=True,
-        config={k: v for k, v in obj.items()
-                if isinstance(v, (int, float, str, list)) and k != "trajectory"},
+        config={
+            k: v
+            for k, v in obj.items()
+            if isinstance(v, (int, float, str, list)) and k != "trajectory"
+        },
         tags=["colab", "zvf", "qwen3-4b-2507", "P4", "e2-prod"],
     )
     summary = {
@@ -105,8 +113,12 @@ def main():
     # Per-seed trajectories
     for arm_name in ("lora", "full"):
         for r in obj[arm_name]["per_seed"]:
-            wandb.log({f"{arm_name}/seed{r['seed']}/heldout_delta": r["heldout_delta"],
-                       f"{arm_name}/seed{r['seed']}/mean_zvf": r["mean_zvf"]})
+            wandb.log(
+                {
+                    f"{arm_name}/seed{r['seed']}/heldout_delta": r["heldout_delta"],
+                    f"{arm_name}/seed{r['seed']}/mean_zvf": r["mean_zvf"],
+                }
+            )
     print(f"[wandb] logged E2_lora_vs_fullft_4b: {run.url}")
     wandb.finish()
 

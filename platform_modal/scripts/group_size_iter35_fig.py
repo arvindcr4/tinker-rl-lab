@@ -13,6 +13,7 @@ Panels:
 
 The figure is saved as figures/group_size_iter35.{pdf,png}.
 """
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -53,8 +54,7 @@ def main() -> None:
         c = cmap(i / max(len(budgets) - 1, 1))
         ax.plot(x, y, "o-", color=c, label=f"T={T // 1_000_000}M", lw=2, ms=6)
         ax.fill_between(x, ylo, yhi, color=c, alpha=0.18)
-    ax.axhline(WU_RETENTION, color="k", linestyle="--", lw=1.4,
-               label=f"Wu 97.6%")
+    ax.axhline(WU_RETENTION, color="k", linestyle="--", lw=1.4, label=f"Wu 97.6%")
     ax.axhline(0.90, color="gray", linestyle=":", lw=1.0, label="90% threshold")
     ax.set_xscale("log", base=2)
     ax.set_xticks([4, 8, 16, 32])
@@ -91,11 +91,22 @@ def main() -> None:
         for j in range(n):
             if not np.isnan(dpo[i, j]):
                 txt = f"{dpo[i, j]:.2f}"
-                ax.text(j, i, txt, ha="center", va="center",
-                        fontsize=7,
-                        color="white" if dpo[i, j] < 0.78 else "black")
-    plt.colorbar(im, ax=ax, fraction=0.046, pad=0.04,
-                 label=r"DPO-eq $= 1 - 2|\Delta|/(\mathrm{acc}_a + \mathrm{acc}_b)$")
+                ax.text(
+                    j,
+                    i,
+                    txt,
+                    ha="center",
+                    va="center",
+                    fontsize=7,
+                    color="white" if dpo[i, j] < 0.78 else "black",
+                )
+    plt.colorbar(
+        im,
+        ax=ax,
+        fraction=0.046,
+        pad=0.04,
+        label=r"DPO-eq $= 1 - 2|\Delta|/(\mathrm{acc}_a + \mathrm{acc}_b)$",
+    )
 
     # ----- Right panel: Pareto cost-effectiveness frontier -----
     ax = axes[2]
@@ -110,11 +121,14 @@ def main() -> None:
         # annotate rank-1 cell
         best_row = sub[sub["rank_by_acc_per_M"] == 1]
         if not best_row.empty:
-            ax.annotate(f"G={int(best_row['G'].iloc[0])} (best)",
-                        xy=(int(best_row["G"].iloc[0]),
-                            float(best_row["acc_per_M_tokens"].iloc[0])),
-                        xytext=(5, 8), textcoords="offset points",
-                        fontsize=7, color=c)
+            ax.annotate(
+                f"G={int(best_row['G'].iloc[0])} (best)",
+                xy=(int(best_row["G"].iloc[0]), float(best_row["acc_per_M_tokens"].iloc[0])),
+                xytext=(5, 8),
+                textcoords="offset points",
+                fontsize=7,
+                color=c,
+            )
     ax.set_xscale("log", base=2)
     ax.set_xticks([4, 8, 16, 32, 64])
     ax.set_xticklabels(["4", "8", "16", "32", "64"])

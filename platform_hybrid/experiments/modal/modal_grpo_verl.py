@@ -24,9 +24,7 @@ app = modal.App("tinker-rl-verl-grpo")
 # WARNING (security): HF/W&B tokens previously were baked into the image via .env()/Secret.from_dict(); they now come from named Modal secrets. Rotate tokens if old images exist.
 
 image = (
-    modal.Image.from_registry(
-        "nvidia/cuda:12.1.1-devel-ubuntu22.04", add_python="3.11"
-    )
+    modal.Image.from_registry("nvidia/cuda:12.1.1-devel-ubuntu22.04", add_python="3.11")
     .apt_install("git", "build-essential")
     .env({"CUDA_HOME": "/usr/local/cuda"})
     .pip_install("packaging", "wheel", "ninja", "setuptools")
@@ -48,9 +46,11 @@ image = (
         "wandb",
         "huggingface_hub",
     )
-    .env({
-        "WANDB_PROJECT": "tinker-rl-lab-world-class",
-    })
+    .env(
+        {
+            "WANDB_PROJECT": "tinker-rl-lab-world-class",
+        }
+    )
 )
 
 
@@ -61,9 +61,11 @@ image = (
     secrets=[
         modal.Secret.from_name("huggingface-secret"),
         modal.Secret.from_name("wandb-secret"),
-        modal.Secret.from_dict({
-            "WANDB_PROJECT": "tinker-rl-lab-world-class",
-        })
+        modal.Secret.from_dict(
+            {
+                "WANDB_PROJECT": "tinker-rl-lab-world-class",
+            }
+        ),
     ],
 )
 def run_verl_qwen3_8b():
@@ -76,16 +78,22 @@ def run_verl_qwen3_8b():
     from datasets import load_dataset
     import numpy as np
     import wandb
+
     try:
         import torch, wandb
-        if not getattr(wandb, '_vram_patched', False):
+
+        if not getattr(wandb, "_vram_patched", False):
             _old_log = wandb.log
+
             def _vram_log(data, *args, **kwargs):
                 if torch.cuda.is_available():
-                    data['system/vram_peak_allocated_gb'] = torch.cuda.max_memory_allocated() / (1024**3)
-                    data['system/vram_reserved_gb'] = torch.cuda.max_memory_reserved() / (1024**3)
+                    data["system/vram_peak_allocated_gb"] = torch.cuda.max_memory_allocated() / (
+                        1024**3
+                    )
+                    data["system/vram_reserved_gb"] = torch.cuda.max_memory_reserved() / (1024**3)
                     torch.cuda.reset_peak_memory_stats()
                 _old_log(data, *args, **kwargs)
+
             wandb.log = _vram_log
             wandb._vram_patched = True
     except ImportError:
@@ -107,12 +115,13 @@ def run_verl_qwen3_8b():
             "method": "verl-GRPO",
             "task": "gsm8k-500",
             "platform": "modal_h100",
-        }
+        },
     )
 
     # ---- GSM8K[:500] -> verl-compatible parquet (prompt + reward_model) ----
     SYS = "You are a math assistant. Solve step by step, then give your final answer inside \\boxed{}."
     ds = load_dataset("openai/gsm8k", "main", split="train[:500]")
+
     def to_verl(row):
         m = re.search(r"####\s*([\-\d,\.]+)", row["answer"])
         gt = m.group(1).replace(",", "").strip() if m else ""
@@ -120,18 +129,24 @@ def run_verl_qwen3_8b():
             "data_source": "gsm8k",
             "prompt": [
                 {"role": "system", "content": SYS},
-                {"role": "user", "content": row["question"] + " Give a numerical answer inside \\boxed{}."},
+                {
+                    "role": "user",
+                    "content": row["question"] + " Give a numerical answer inside \\boxed{}.",
+                },
             ],
             "ability": "math",
             "reward_model": {"style": "rule", "ground_truth": gt},
             "extra_info": {"question": row["question"]},
         }
+
     parquet_path = f"{WORK}/gsm8k_train500.parquet"
     ds.map(to_verl, remove_columns=ds.column_names).to_parquet(parquet_path)
 
     # ---- launch verl's Hydra CLI ----
     cmd = [
-        sys.executable, "-m", "verl.trainer.main_ppo",
+        sys.executable,
+        "-m",
+        "verl.trainer.main_ppo",
         "algorithm.adv_estimator=grpo",
         f"data.train_files=[{parquet_path}]",
         f"data.val_files=[{parquet_path}]",
@@ -176,6 +191,7 @@ def run_verl_qwen3_8b():
     env = os.environ.copy()
     env["PYTHONPATH"] = ""
     from uuid import uuid4
+
     trainer_run_id = uuid4().hex
     env["WANDB_RUN_ID"] = trainer_run_id
     proc = subprocess.run(cmd, cwd=WORK, env=env)
@@ -184,10 +200,19 @@ def run_verl_qwen3_8b():
 
     if proc.returncode:
         run.finish(exit_code=1)
-        return {"framework": "verl", "status": "failed", "subprocess_exit": proc.returncode,
-                "successful_updates": None, "requested_updates": 30, "trainer_run_id": trainer_run_id,
-                "final_checkpoint": None, "last10_avg": None, "evidence_error": "trainer_subprocess_failed",
-                "completion_contract_satisfied": False, "comparison_contract_satisfied": False}
+        return {
+            "framework": "verl",
+            "status": "failed",
+            "subprocess_exit": proc.returncode,
+            "successful_updates": None,
+            "requested_updates": 30,
+            "trainer_run_id": trainer_run_id,
+            "final_checkpoint": None,
+            "last10_avg": None,
+            "evidence_error": "trainer_subprocess_failed",
+            "completion_contract_satisfied": False,
+            "comparison_contract_satisfied": False,
+        }
 
     # ---- pull reward trace from W&B ----
     reward_trace = []
@@ -207,11 +232,18 @@ def run_verl_qwen3_8b():
 
     if not reward_trace:
         run.finish(exit_code=1)
-        return {"framework": "verl", "status": "partial", "last10_avg": None,
-                "trainer_run_id": trainer_run_id, "successful_updates": None,
-                "requested_updates": 30, "final_checkpoint": None,
-                "evidence_error": "reward_history_missing", "completion_contract_satisfied": False,
-                "comparison_contract_satisfied": False}
+        return {
+            "framework": "verl",
+            "status": "partial",
+            "last10_avg": None,
+            "trainer_run_id": trainer_run_id,
+            "successful_updates": None,
+            "requested_updates": 30,
+            "final_checkpoint": None,
+            "evidence_error": "reward_history_missing",
+            "completion_contract_satisfied": False,
+            "comparison_contract_satisfied": False,
+        }
     last10 = float(np.mean(reward_trace[-10:]))
     peak = float(max(reward_trace))
     first5 = float(np.mean(reward_trace[:5]))
@@ -224,12 +256,13 @@ def run_verl_qwen3_8b():
     hf_model_pushed = None
     try:
         from huggingface_hub import HfApi
+
         hf_api = HfApi(token=os.environ.get("HF_TOKEN"))
         hf_api.create_repo(hf_model_id, exist_ok=True, private=True)
         hf_api.upload_folder(
             folder_path="/root/verl-run/checkpoints",
             repo_id=hf_model_id,
-            commit_message="Final GRPO model training complete"
+            commit_message="Final GRPO model training complete",
         )
         hf_model_pushed = hf_model_id
         print(f"  Pushed to HF: {hf_model_id}")
@@ -278,4 +311,6 @@ def main():
     with open(out, "w") as f:
         json.dump(result, f, indent=2)
     print(f"Done. Wrote {out}.")
-    print(f"peak={result.get('peak_reward')}  last10={result.get('last10_avg')}  steps={result.get('steps')}  exit={result.get('subprocess_exit')}")
+    print(
+        f"peak={result.get('peak_reward')}  last10={result.get('last10_avg')}  steps={result.get('steps')}  exit={result.get('subprocess_exit')}"
+    )

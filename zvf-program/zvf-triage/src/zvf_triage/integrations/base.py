@@ -84,13 +84,24 @@ class BaseZVFAdapter:
         shaped = source in ("token_level_rewards", "token_level_reward")
         if shaped or np.any((values < 0) | (values > 1)):
             z = core.zvf(values, group_ids, self.callback.controller.var_eps)
-            decision = StepDecision(len(self.callback.decisions)+1, z, 1-z, float(values.mean()),
-                Regime.DIAGNOSTIC_ONLY, "noop", self.callback.controller.G0, z,
-                n_groups=len(set(np.asarray(group_ids).tolist())), observation_kind="raw_rewards_diagnostic_only",
-                reward_source=source, reward_reduction="token_sum", reward_scale="unbounded",
+            decision = StepDecision(
+                len(self.callback.decisions) + 1,
+                z,
+                1 - z,
+                float(values.mean()),
+                Regime.DIAGNOSTIC_ONLY,
+                "noop",
+                self.callback.controller.G0,
+                z,
+                n_groups=len(set(np.asarray(group_ids).tolist())),
+                observation_kind="raw_rewards_diagnostic_only",
+                reward_source=source,
+                reward_reduction="token_sum",
+                reward_scale="unbounded",
                 effective_training_reward_zvf=z if shaped else None,
                 verifier_zvf=None if shaped else z,
-                notes="unbounded/shaped reward scale; unit-interval controls disabled")
+                notes="unbounded/shaped reward scale; unit-interval controls disabled",
+            )
             self.callback.decisions.append(decision)
             return decision
         decision = self.callback.on_step(rewards, group_ids)

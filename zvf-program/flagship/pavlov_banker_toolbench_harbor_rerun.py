@@ -49,7 +49,9 @@ def _task_id_hash(task_id: str) -> str:
 
 def _read_jsonl_tasks(path: Path) -> list[Mapping[str, Any]]:
     try:
-        records = [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line]
+        records = [
+            json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line
+        ]
     except (OSError, json.JSONDecodeError) as exc:
         raise HarborRerunReceiptError(f"cannot read public task manifest {path}: {exc}") from exc
     if not records or any(not isinstance(record, Mapping) for record in records):
@@ -59,7 +61,9 @@ def _read_jsonl_tasks(path: Path) -> list[Mapping[str, Any]]:
 
 def _credential_presence(environment: Mapping[str, str] | None = None) -> dict[str, str]:
     values = os.environ if environment is None else environment
-    return {name: "PRESENT" if bool(values.get(name)) else "ABSENT" for name in REQUIRED_CREDENTIALS}
+    return {
+        name: "PRESENT" if bool(values.get(name)) else "ABSENT" for name in REQUIRED_CREDENTIALS
+    }
 
 
 def _read_native_contract(task_dir: Path) -> dict[str, Any]:
@@ -67,7 +71,9 @@ def _read_native_contract(task_dir: Path) -> dict[str, Any]:
     grader_toml = task_dir / "tests" / "grader.toml"
     compose = task_dir / "environment" / "docker-compose.yaml"
     if not all(path.is_file() for path in (task_toml, grader_toml, compose)):
-        raise HarborRerunReceiptError("generated native task is missing task.toml, grader.toml, or compose file")
+        raise HarborRerunReceiptError(
+            "generated native task is missing task.toml, grader.toml, or compose file"
+        )
     task = tomllib.loads(task_toml.read_text(encoding="utf-8"))
     grader = tomllib.loads(grader_toml.read_text(encoding="utf-8"))
     try:
@@ -86,7 +92,9 @@ def _read_native_contract(task_dir: Path) -> dict[str, Any]:
             },
         }
     except (KeyError, TypeError) as exc:
-        raise HarborRerunReceiptError(f"generated native task lacks exact Harbor contract fields: {exc}") from exc
+        raise HarborRerunReceiptError(
+            f"generated native task lacks exact Harbor contract fields: {exc}"
+        ) from exc
 
 
 def build_harbor_rerun_receipt(
@@ -104,7 +112,9 @@ def build_harbor_rerun_receipt(
     records = _read_jsonl_tasks(manifest_path)
     task_ids = [record.get("task_id") for record in records]
     if len(records) != EXPECTED_TASK_COUNT or any(not isinstance(value, str) for value in task_ids):
-        raise HarborRerunReceiptError("public manifest must contain exactly 100 deterministic task IDs")
+        raise HarborRerunReceiptError(
+            "public manifest must contain exactly 100 deterministic task IDs"
+        )
     if len(set(task_ids)) != EXPECTED_TASK_COUNT or PINNED_TASK_ID not in task_ids:
         raise HarborRerunReceiptError("public manifest does not contain the exact selected E4 task")
     if harbor_version != "0.20.0":

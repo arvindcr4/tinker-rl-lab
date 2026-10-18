@@ -28,8 +28,8 @@ class ReceiptCombinationTests(unittest.TestCase):
             verl = dict(base, stack="verl", fixture_digest="different")
             verl_path.write_text(json.dumps(verl))
             manifest = combine(trl_path, verl_path)
-        self.assertEqual(manifest["status"], "S1_FAIL")
-        self.assertIn("cross-stack field differs: fixture_digest", manifest["errors"])
+        assert manifest["status"] == "S1_FAIL"
+        assert "cross-stack field differs: fixture_digest" in manifest["errors"]
 
     def test_combiner_rejects_two_matching_incomplete_receipts(self) -> None:
         base = {
@@ -49,8 +49,8 @@ class ReceiptCombinationTests(unittest.TestCase):
             trl_path.write_text(json.dumps(base))
             verl_path.write_text(json.dumps(dict(base, stack="verl")))
             manifest = combine(trl_path, verl_path)
-        self.assertEqual(manifest["status"], "S1_FAIL")
-        self.assertTrue(manifest["errors"])
+        assert manifest["status"] == "S1_FAIL"
+        assert manifest["errors"]
 
 
 if __name__ == "__main__":

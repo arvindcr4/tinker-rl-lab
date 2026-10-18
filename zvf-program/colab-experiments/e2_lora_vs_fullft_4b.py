@@ -27,6 +27,7 @@ Run:
 Output: prints E2_RESULT {json} on stdout at end; persist_e2_e7.py reads
 this back into results/e2_lora_vs_fullft_4b.json + W&B.
 """
+
 import json, re, random, statistics, subprocess, sys
 
 # peft pulls torchao as a dep; 0.10.0 is incompatible with Colab's torch.
@@ -45,7 +46,10 @@ HELDOUT_N = 50
 DEV = "cuda" if torch.cuda.is_available() else "cpu"
 
 print(f"[e2-prod] MODEL={MODEL} SEEDS={SEEDS} STEPS={STEPS} HELDOUT_N={HELDOUT_N}", flush=True)
-print(f"[e2-prod] BATCH={BATCH} G={G} MAX_NEW={MAX_NEW} LR_LORA={LR_LORA} LR_FULL={LR_FULL}", flush=True)
+print(
+    f"[e2-prod] BATCH={BATCH} G={G} MAX_NEW={MAX_NEW} LR_LORA={LR_LORA} LR_FULL={LR_FULL}",
+    flush=True,
+)
 print(f"[e2-prod] device={DEV}", flush=True)
 
 tok = AutoTokenizer.from_pretrained(MODEL)
@@ -54,16 +58,26 @@ if tok.pad_token is None:
 tok.padding_side = "left"
 PAD = tok.pad_token_id
 
+
 def problem():
     """Mixed-difficulty synthetic arithmetic. a+b in [22,119] = mid range
     where ZVF dynamics are live for 4B (cold-start at extremes)."""
     a, b = random.randint(11, 60), random.randint(11, 60)
     return f"{a} + {b}", a + b
 
+
 def prompt_of(q):
     return tok.apply_chat_template(
-        [{"role": "user", "content": f"Compute {q}. Reason briefly, then put the final integer after '####'."}],
-        tokenize=False, add_generation_prompt=True)
+        [
+            {
+                "role": "user",
+                "content": f"Compute {q}. Reason briefly, then put the final integer after '####'.",
+            }
+        ],
+        tokenize=False,
+        add_generation_prompt=True,
+    )
+
 
 def parse(text):
     """Qwen3-4B-2507 is non-thinking mode (no <think> blocks), but be defensive."""
@@ -72,16 +86,23 @@ def parse(text):
     m = re.findall(r"-?\d+", t.split("####")[-1])
     return int(m[0]) if m else None
 
+
 def gen_group(model, prompt, gold):
     model.eval()
     enc = tok([prompt] * G, return_tensors="pt", padding=True).to(DEV)
     with torch.no_grad():
-        out = model.generate(**enc, do_sample=True, temperature=1.0, top_p=0.95,
-                             max_new_tokens=MAX_NEW, pad_token_id=PAD)
-    gens = out[:, enc.input_ids.shape[1]:]
-    rewards = [1.0 if parse(tok.decode(g, skip_special_tokens=True)) == gold else 0.0
-               for g in gens]
+        out = model.generate(
+            **enc,
+            do_sample=True,
+            temperature=1.0,
+            top_p=0.95,
+            max_new_tokens=MAX_NEW,
+            pad_token_id=PAD,
+        )
+    gens = out[:, enc.input_ids.shape[1] :]
+    rewards = [1.0 if parse(tok.decode(g, skip_special_tokens=True)) == gold else 0.0 for g in gens]
     return enc.input_ids[0], gens, rewards
+
 
 def seq_logprob(model, pids, gen_row):
     model.train()
@@ -92,7 +113,8 @@ def seq_logprob(model, pids, gen_row):
     logits = model(ids).logits[:, :-1, :].float()
     tgt = ids[:, 1:]
     lp = F.log_softmax(logits, -1).gather(-1, tgt.unsqueeze(-1)).squeeze(-1)
-    return lp[:, pids.shape[0] - 1:].sum()
+    return lp[:, pids.shape[0] - 1 :].sum()
+
 
 @torch.no_grad()
 def heldout_acc(model, evalset):
@@ -101,26 +123,34 @@ def heldout_acc(model, evalset):
     for q, gold in evalset:
         enc = tok([prompt_of(q)], return_tensors="pt", padding=True).to(DEV)
         out = model.generate(**enc, do_sample=False, max_new_tokens=MAX_NEW, pad_token_id=PAD)
-        pred = parse(tok.decode(out[0, enc.input_ids.shape[1]:], skip_special_tokens=True))
+        pred = parse(tok.decode(out[0, enc.input_ids.shape[1] :], skip_special_tokens=True))
         if pred == gold:
             correct += 1
     return correct / len(evalset)
 
+
 def run(mode, seed):
     print(f"[e2-prod] === seed={seed} mode={mode} ===", flush=True)
-    random.seed(seed); torch.manual_seed(seed)
+    random.seed(seed)
+    torch.manual_seed(seed)
     evalset = [problem() for _ in range(HELDOUT_N)]
 
     base = AutoModelForCausalLM.from_pretrained(MODEL, dtype=torch.bfloat16).to(DEV)
 
     if mode == "lora":
-        cfg = LoraConfig(r=16, lora_alpha=32, lora_dropout=0.0,
-                         target_modules=["q_proj", "k_proj", "v_proj", "o_proj"],
-                         task_type="CAUSAL_LM")
-        model = get_peft_model(base, cfg); lr = LR_LORA
+        cfg = LoraConfig(
+            r=16,
+            lora_alpha=32,
+            lora_dropout=0.0,
+            target_modules=["q_proj", "k_proj", "v_proj", "o_proj"],
+            task_type="CAUSAL_LM",
+        )
+        model = get_peft_model(base, cfg)
+        lr = LR_LORA
         n_train = sum(p.numel() for p in model.parameters() if p.requires_grad)
     else:
-        model = base; lr = LR_FULL
+        model = base
+        lr = LR_FULL
         n_train = sum(p.numel() for p in model.parameters())
 
     print(f"[e2-prod] seed={seed} mode={mode} trainable_params={n_train:,}", flush=True)
@@ -139,9 +169,10 @@ def run(mode, seed):
             rewards_all += rewards
             m = sum(rewards) / G
             v = statistics.pvariance(rewards)
-            s = v ** 0.5
+            s = v**0.5
             if v == 0.0:
-                zv += 1; continue
+                zv += 1
+                continue
             for i in range(G):
                 adv = (rewards[i] - m) / (s + 1e-6)
                 if adv:
@@ -149,32 +180,46 @@ def run(mode, seed):
                     if lp is not None:
                         losses.append(-adv * lp)
         if losses:
-            torch.stack(losses).sum().backward(); opt.step()
+            torch.stack(losses).sum().backward()
+            opt.step()
         zvf = zv / BATCH
         p_mean = sum(rewards_all) / len(rewards_all) if rewards_all else 0.0
-        traj.append({"step": step, "p": round(p_mean, 3),
-                     "zvf": round(zvf, 3), "gu": round(1 - zvf, 3)})
-        print(f"[e2:{mode}:s{seed}] step={step:2d}/{STEPS} p={p_mean:.2f} ZVF={zvf:.2f}",
-              flush=True)
+        traj.append(
+            {"step": step, "p": round(p_mean, 3), "zvf": round(zvf, 3), "gu": round(1 - zvf, 3)}
+        )
+        print(
+            f"[e2:{mode}:s{seed}] step={step:2d}/{STEPS} p={p_mean:.2f} ZVF={zvf:.2f}", flush=True
+        )
 
     post = heldout_acc(model, evalset)
-    print(f"[e2-prod] seed={seed} mode={mode} heldout_post={post:.3f} delta={post-pre:+.3f}", flush=True)
+    print(
+        f"[e2-prod] seed={seed} mode={mode} heldout_post={post:.3f} delta={post - pre:+.3f}",
+        flush=True,
+    )
 
-    out = {"mode": mode, "seed": seed, "trainable_params": n_train,
-           "heldout_pre": round(pre, 3), "heldout_post": round(post, 3),
-           "heldout_delta": round(post - pre, 3),
-           "mean_zvf": round(statistics.mean(t["zvf"] for t in traj), 3),
-           "first3_p": round(statistics.mean(t["p"] for t in traj[:3]), 3),
-           "last3_p": round(statistics.mean(t["p"] for t in traj[-3:]), 3),
-           "trajectory": traj}
-    del base, model, opt; torch.cuda.empty_cache()
+    out = {
+        "mode": mode,
+        "seed": seed,
+        "trainable_params": n_train,
+        "heldout_pre": round(pre, 3),
+        "heldout_post": round(post, 3),
+        "heldout_delta": round(post - pre, 3),
+        "mean_zvf": round(statistics.mean(t["zvf"] for t in traj), 3),
+        "first3_p": round(statistics.mean(t["p"] for t in traj[:3]), 3),
+        "last3_p": round(statistics.mean(t["p"] for t in traj[-3:]), 3),
+        "trajectory": traj,
+    }
+    del base, model, opt
+    torch.cuda.empty_cache()
     return out
+
 
 # Run all 6 arms: {lora, full} x {0, 1, 2}
 results = []
 for mode in ("lora", "full"):
     for seed in SEEDS:
         results.append(run(mode, seed))
+
 
 # Aggregate per-mode
 def aggregate(arm_results):
@@ -187,6 +232,7 @@ def aggregate(arm_results):
         "mean_zvf": round(statistics.mean(zvfs), 3),
         "per_seed": arm_results,
     }
+
 
 lora_arms = [r for r in results if r["mode"] == "lora"]
 full_arms = [r for r in results if r["mode"] == "full"]
@@ -205,9 +251,18 @@ summary = {
     "lora": aggregate(lora_arms),
     "full": aggregate(full_arms),
     "delta_lora_minus_full": round(
-        aggregate(lora_arms)["mean_heldout_delta"] - aggregate(full_arms)["mean_heldout_delta"], 3),
+        aggregate(lora_arms)["mean_heldout_delta"] - aggregate(full_arms)["mean_heldout_delta"], 3
+    ),
 }
 from protocol_stats import fingerprint
-summary["runtime_fingerprint"] = fingerprint(__file__, {k:v for k,v in globals().copy().items() if k.isupper() and isinstance(v,(int,float,str,list,dict))})
+
+summary["runtime_fingerprint"] = fingerprint(
+    __file__,
+    {
+        k: v
+        for k, v in globals().copy().items()
+        if k.isupper() and isinstance(v, (int, float, str, list, dict))
+    },
+)
 summary["evidence_tier"] = "legacy_pilot_variant"
 print("E2_RESULT " + json.dumps(summary), flush=True)

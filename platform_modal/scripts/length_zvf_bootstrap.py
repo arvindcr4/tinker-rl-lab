@@ -7,7 +7,7 @@ Tests:
   T2: paired Δρ(len, ZVF) between Dr.GRPO and GRPO with paired bootstrap CI
   T3: length-bin conditional ZVF paired delta (L1 vs L3) per (task, algo)
 """
-import json
+
 import csv
 import numpy as np
 from pathlib import Path
@@ -26,7 +26,11 @@ def bootstrap_ci(values, n_boot=2000, alpha=0.05, seed=0):
     for _ in range(n_boot):
         idx = rng.integers(0, len(vals), size=len(vals))
         boots.append(vals[idx].mean())
-    return float(vals.mean()), float(np.quantile(boots, alpha / 2)), float(np.quantile(boots, 1 - alpha / 2))
+    return (
+        float(vals.mean()),
+        float(np.quantile(boots, alpha / 2)),
+        float(np.quantile(boots, 1 - alpha / 2)),
+    )
 
 
 def paired_bootstrap_ci(diff_values, n_boot=2000, alpha=0.05, seed=0):
@@ -39,7 +43,11 @@ def paired_bootstrap_ci(diff_values, n_boot=2000, alpha=0.05, seed=0):
     for _ in range(n_boot):
         idx = rng.integers(0, len(vals), size=len(vals))
         boots.append(vals[idx].mean())
-    return float(vals.mean()), float(np.quantile(boots, alpha / 2)), float(np.quantile(boots, 1 - alpha / 2))
+    return (
+        float(vals.mean()),
+        float(np.quantile(boots, alpha / 2)),
+        float(np.quantile(boots, 1 - alpha / 2)),
+    )
 
 
 def main():
@@ -78,8 +86,12 @@ def main():
             continue
         diffs = []
         for seed in common:
-            grpo_v = next((r["rho_len_zvf"] for r in grp[(task, "grpo")] if r["seed"] == seed), None)
-            drgrpo_v = next((r["rho_len_zvf"] for r in grp[(task, "dr_grpo")] if r["seed"] == seed), None)
+            grpo_v = next(
+                (r["rho_len_zvf"] for r in grp[(task, "grpo")] if r["seed"] == seed), None
+            )
+            drgrpo_v = next(
+                (r["rho_len_zvf"] for r in grp[(task, "dr_grpo")] if r["seed"] == seed), None
+            )
             if grpo_v is None or drgrpo_v is None:
                 continue
             diffs.append(float(drgrpo_v) - float(grpo_v))
@@ -112,10 +124,12 @@ def main():
             common = min(len(l1), len(l3))
             if common == 0:
                 continue
-            diffs = [a - b for a, b in zip(l3[:common], l1[:common])]
+            diffs = [a - b for a, b in zip(l3[:common], l1[:common], strict=False)]
             m, lo, hi = paired_bootstrap_ci(diffs, seed=7)
             sig = "**" if (lo > 0 or hi < 0) else " "
-            print(f"  {(task, algo)}: n={common} Δ(ZVF_L3−ZVF_L1)={m:+.3f} CI=[{lo:+.3f},{hi:+.3f}] {sig}")
+            print(
+                f"  {(task, algo)}: n={common} Δ(ZVF_L3−ZVF_L1)={m:+.3f} CI=[{lo:+.3f},{hi:+.3f}] {sig}"
+            )
 
     # Save summary
     out = RESULTS / "length_zvf_bootstrap_summary.tsv"
@@ -123,10 +137,14 @@ def main():
         f.write("test\tkey\tmetric\tn\tmean\tci_lo\tci_hi\tsig\n")
         for key, s in summary.items():
             sig = "yes" if (s["lo"] > 0 or s["hi"] < 0) else "no"
-            f.write(f"T1\t{key}\trho_len_zvf\t{s['n']}\t{s['mean']:.4f}\t{s['lo']:.4f}\t{s['hi']:.4f}\t{sig}\n")
+            f.write(
+                f"T1\t{key}\trho_len_zvf\t{s['n']}\t{s['mean']:.4f}\t{s['lo']:.4f}\t{s['hi']:.4f}\t{sig}\n"
+            )
         for task, s in deltas_t2.items():
             sig = "yes" if (s["lo"] > 0 or s["hi"] < 0) else "no"
-            f.write(f"T2\t{task}\tdelta_rho\t{s['n']}\t{s['mean']:.4f}\t{s['lo']:.4f}\t{s['hi']:.4f}\t{sig}\n")
+            f.write(
+                f"T2\t{task}\tdelta_rho\t{s['n']}\t{s['mean']:.4f}\t{s['lo']:.4f}\t{s['hi']:.4f}\t{sig}\n"
+            )
         for key, (m, lo, hi, n) in bin_means.items():
             f.write(f"T3\t{key}\tzvf\t{n}\t{m:.4f}\t{lo:.4f}\t{hi:.4f}\t-\n")
     print(f"\nwrote {out}")

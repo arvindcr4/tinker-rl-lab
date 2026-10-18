@@ -19,6 +19,7 @@ iter-66 zvf_antiherding / measured_yield_residual patterns):
     variant_delta_record.controller_predicted_savings_per_rollout
 - audit_source / audit_date stamp the producer script
 """
+
 import argparse
 import csv
 import json
@@ -30,7 +31,9 @@ WORKTREE = HERE.parent.parent
 REGISTRY = WORKTREE / "registry" / "entries"
 SUMMARY = WORKTREE / "experiments" / "results" / "p5p8" / "p7_antiherding_controller_cf_summary.tsv"
 OUT_TSV = WORKTREE / "experiments" / "results" / "p5p8" / "p6_controller_predicted_savings.tsv"
-OUT_JSON = WORKTREE / "experiments" / "results" / "p5p8" / "p6_controller_predicted_savings_summary.json"
+OUT_JSON = (
+    WORKTREE / "experiments" / "results" / "p5p8" / "p6_controller_predicted_savings_summary.json"
+)
 SCHEMA = WORKTREE / "registry" / "schema.json"
 AUDIT_DATE = "2026-07-05"
 AUDIT_SOURCE = "platform_modal/scripts/p5p8/p6_controller_predicted_savings.py"
@@ -71,18 +74,20 @@ def to_controller_block(rows_for_method):
     """Convert iter-67 TSV rows for one method → registry block (array)."""
     block = []
     for r in rows_for_method:
-        block.append({
-            "trigger": r["controller"],
-            "threshold": float(r["threshold"]),
-            "fires": int(r["fires"]),
-            "saved": int(r["saved"]),
-            "missed": int(r["missed"]),
-            "saved_per_fire": float(r["saved_per_fire"]),
-            "savings_per_rollout_pt": float(r["savings_per_rollout_pt"]),
-            "savings_per_rollout_lo": float(r["savings_per_rollout_lo"]),
-            "savings_per_rollout_hi": float(r["savings_per_rollout_hi"]),
-            "cost_ratio_pt": float(r["cost_ratio_pt"]),
-        })
+        block.append(
+            {
+                "trigger": r["controller"],
+                "threshold": float(r["threshold"]),
+                "fires": int(r["fires"]),
+                "saved": int(r["saved"]),
+                "missed": int(r["missed"]),
+                "saved_per_fire": float(r["saved_per_fire"]),
+                "savings_per_rollout_pt": float(r["savings_per_rollout_pt"]),
+                "savings_per_rollout_lo": float(r["savings_per_rollout_lo"]),
+                "savings_per_rollout_hi": float(r["savings_per_rollout_hi"]),
+                "cost_ratio_pt": float(r["cost_ratio_pt"]),
+            }
+        )
     return block
 
 
@@ -113,10 +118,19 @@ def patch_entry(entry_path, where, block):
 def write_outputs(all_per_method):
     """Write the iter-70 outputs."""
     OUT_TSV.parent.mkdir(parents=True, exist_ok=True)
-    cols = ["method", "trigger", "threshold", "fires", "saved", "missed",
-            "saved_per_fire", "savings_per_rollout_pt",
-            "savings_per_rollout_lo", "savings_per_rollout_hi",
-            "cost_ratio_pt"]
+    cols = [
+        "method",
+        "trigger",
+        "threshold",
+        "fires",
+        "saved",
+        "missed",
+        "saved_per_fire",
+        "savings_per_rollout_pt",
+        "savings_per_rollout_lo",
+        "savings_per_rollout_hi",
+        "cost_ratio_pt",
+    ]
     with OUT_TSV.open("w") as f:
         f.write("\t".join(cols) + "\n")
         for method, rows in all_per_method.items():
@@ -164,11 +178,11 @@ def patch_schema():
         "predictions": {
             "type": ["array", "null"],
             "description": "Per-(trigger, threshold) controller prediction. "
-                           "Each element: trigger (str), threshold (num), "
-                           "fires/saved/missed (int), saved_per_fire (num), "
-                           "savings_per_rollout_pt/lo/hi (num, bootstrap "
-                           "percentile), cost_ratio_pt (num). Source: "
-                           "iter-67 p7_antiherding_controller_cf_summary.tsv.",
+            "Each element: trigger (str), threshold (num), "
+            "fires/saved/missed (int), saved_per_fire (num), "
+            "savings_per_rollout_pt/lo/hi (num, bootstrap "
+            "percentile), cost_ratio_pt (num). Source: "
+            "iter-67 p7_antiherding_controller_cf_summary.tsv.",
             "items": {
                 "type": "object",
                 "properties": {
@@ -193,10 +207,10 @@ def patch_schema():
         stack_props["controller_predicted_savings_per_rollout"] = {
             "type": ["object", "null"],
             "description": "Iter-70: per-(method × trigger × threshold) "
-                           "controller savings predictions for the iter-51 "
-                           "adaptive-G controller on this stack. All fields "
-                           "nullable; null = not yet audited. Sourced from "
-                           "iter-67 p7_antiherding_controller_cf_summary.tsv.",
+            "controller savings predictions for the iter-51 "
+            "adaptive-G controller on this stack. All fields "
+            "nullable; null = not yet audited. Sourced from "
+            "iter-67 p7_antiherding_controller_cf_summary.tsv.",
             "properties": pred_props,
             "additionalProperties": False,
         }
@@ -206,11 +220,11 @@ def patch_schema():
         delta_props["controller_predicted_savings_per_rollout"] = {
             "type": ["object", "null"],
             "description": "Iter-70: per-(trigger × threshold) controller "
-                           "savings predictions for the variant on the N2 "
-                           "same-stack corpus. Inherits from the variant's "
-                           "measured method; predictions carry the iter-67 "
-                           "saved_per_fire and savings_per_rollout paired-"
-                           "bootstrap estimates.",
+            "savings predictions for the variant on the N2 "
+            "same-stack corpus. Inherits from the variant's "
+            "measured method; predictions carry the iter-67 "
+            "saved_per_fire and savings_per_rollout paired-"
+            "bootstrap estimates.",
             "properties": pred_props,
             "additionalProperties": False,
         }
@@ -219,23 +233,23 @@ def patch_schema():
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--apply", action="store_true",
-                    help="Patch registry entries + schema (default: dry-run)")
-    ap.add_argument("--validate", action="store_true",
-                    help="Run canonical validator after patching")
+    ap.add_argument(
+        "--apply", action="store_true", help="Patch registry entries + schema (default: dry-run)"
+    )
+    ap.add_argument(
+        "--validate", action="store_true", help="Run canonical validator after patching"
+    )
     args = ap.parse_args()
 
     rows = load_summary()
     if len(rows) != 60:
-        print(f"WARN: expected 60 rows from iter-67 summary, got {len(rows)}",
-              file=sys.stderr)
+        print(f"WARN: expected 60 rows from iter-67 summary, got {len(rows)}", file=sys.stderr)
     per_method = {m: per_method_rows(rows, m) for m in STACK_TO_ENTRY}
 
     # Validate each method has 15 predictions (3 triggers x 5 thresholds)
     for m, rs in per_method.items():
         if len(rs) != 15:
-            print(f"WARN: method {m} has {len(rs)} rows, expected 15",
-                  file=sys.stderr)
+            print(f"WARN: method {m} has {len(rs)} rows, expected 15", file=sys.stderr)
 
     write_outputs(per_method)
 
@@ -258,8 +272,13 @@ def main():
     if args.validate:
         # Run canonical validator
         import subprocess
-        r = subprocess.run([sys.executable, "registry_validate.py"],
-                           cwd=str(WORKTREE), capture_output=True, text=True)
+
+        r = subprocess.run(
+            [sys.executable, "registry_validate.py"],
+            cwd=str(WORKTREE),
+            capture_output=True,
+            text=True,
+        )
         print(r.stdout[-2000:])
         print(r.stderr[-1000:])
 

@@ -82,9 +82,17 @@ def aggregate(audits: list[dict], *, seed: int, n_bootstrap: int) -> dict:
         validate_identity(source.get("analysis_contract"))
 
     compatibility_keys = (
-        "analysis_contract", "sampling_completeness", "zvf_definition",
-        "model", "checkpoint_identity", "split", "temperature", "top_p",
-        "rollouts_per_prompt", "n_prompts", "max_tokens"
+        "analysis_contract",
+        "sampling_completeness",
+        "zvf_definition",
+        "model",
+        "checkpoint_identity",
+        "split",
+        "temperature",
+        "top_p",
+        "rollouts_per_prompt",
+        "n_prompts",
+        "max_tokens",
     )
     reference = audits[0]["source"]
     mismatches = []
@@ -109,9 +117,7 @@ def aggregate(audits: list[dict], *, seed: int, n_bootstrap: int) -> dict:
     summaries = {}
     for index, metric in enumerate(CORE_METRICS):
         values = [float(audit["core_metrics"][metric]) for audit in audits]
-        summaries[metric] = summarize(
-            values, seed=seed + index, n_bootstrap=n_bootstrap
-        )
+        summaries[metric] = summarize(values, seed=seed + index, n_bootstrap=n_bootstrap)
 
     length_summaries = {}
     for index, metric in enumerate(LENGTH_METRICS):

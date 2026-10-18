@@ -15,47 +15,48 @@ PATCH_LINES = [
     "        wandb.log = _vram_log",
     "        wandb._vram_patched = True",
     "except ImportError:",
-    "    pass"
+    "    pass",
 ]
 
+
 def process_file(filepath):
-    with open(filepath, 'r') as f:
+    with open(filepath, "r") as f:
         content = f.read()
 
     if "wandb._vram_patched" in content:
         return False
-        
-    lines = content.split('\n')
+
+    lines = content.split("\n")
     new_lines = []
     patched = False
-    
+
     for line in lines:
         # Find the first wandb.init or wandb.login or wandb.log
-        if not patched and re.search(r'\bwandb\.(init|login|log)\(', line):
-            indent = line[:len(line) - len(line.lstrip())]
+        if not patched and re.search(r"\bwandb\.(init|login|log)\(", line):
+            indent = line[: len(line) - len(line.lstrip())]
             for p_line in PATCH_LINES:
                 new_lines.append(indent + p_line)
             patched = True
         # Also patch before GRPOTrainer or SFTTrainer if wandb is used via report_to
-        elif not patched and re.search(r'\b(GRPOTrainer|SFTTrainer|PPOTrainer|Trainer)\(', line):
-            indent = line[:len(line) - len(line.lstrip())]
+        elif not patched and re.search(r"\b(GRPOTrainer|SFTTrainer|PPOTrainer|Trainer)\(", line):
+            indent = line[: len(line) - len(line.lstrip())]
             for p_line in PATCH_LINES:
                 new_lines.append(indent + p_line)
             patched = True
-            
+
         new_lines.append(line)
-        
+
     if patched:
-        with open(filepath, 'w') as f:
-            f.write('\n'.join(new_lines))
+        with open(filepath, "w") as f:
+            f.write("\n".join(new_lines))
         print(f"Patched {filepath}")
         return True
     return False
 
-for root, dirs, files in os.walk('.'):
-    if '.git' in root or '.system_generated' in root:
+
+for root, _dirs, files in os.walk("."):
+    if ".git" in root or ".system_generated" in root:
         continue
     for f in files:
-        if f.endswith('.py'):
+        if f.endswith(".py"):
             process_file(os.path.join(root, f))
-

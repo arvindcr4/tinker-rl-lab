@@ -39,6 +39,7 @@ Outputs:
   figures/group_size_iter83.pdf
   figures/group_size_iter83.png
 """
+
 from __future__ import annotations
 
 import csv
@@ -47,6 +48,7 @@ import math
 from pathlib import Path
 
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
@@ -72,14 +74,16 @@ def load_token_normalized() -> list[dict]:
     with (RESULTS / "group_size_token_normalized.tsv").open() as fh:
         rdr = csv.DictReader(fh, delimiter="\t")
         for r in rdr:
-            rows.append({
-                "budget_tokens": int(r["budget_tokens"]),
-                "G": int(r["G"]),
-                "acc": float(r["heldout_acc_mean"]),
-                "acc_lo": float(r["heldout_acc_ci_low"]),
-                "acc_hi": float(r["heldout_acc_ci_high"]),
-                "gu": float(r["gu_estimate"]),
-            })
+            rows.append(
+                {
+                    "budget_tokens": int(r["budget_tokens"]),
+                    "G": int(r["G"]),
+                    "acc": float(r["heldout_acc_mean"]),
+                    "acc_lo": float(r["heldout_acc_ci_low"]),
+                    "acc_hi": float(r["heldout_acc_ci_high"]),
+                    "gu": float(r["gu_estimate"]),
+                }
+            )
     return rows
 
 
@@ -91,16 +95,18 @@ def load_zvf_sweep() -> list[dict]:
     with p.open() as fh:
         rdr = csv.DictReader(fh, delimiter="\t")
         for r in rdr:
-            rows.append({
-                "G": int(r["G"]),
-                "n_seeds": int(r["n_seeds"]),
-                "acc": float(r["heldout_acc_mean"]),
-                "acc_se": float(r["heldout_acc_se"]),
-                "last10_mean": float(r["last10_mean"]),
-                "mean_zvf": float(r["mean_zvf"]),
-                "mean_reward_train": float(r["mean_reward_train"]),
-                "zvf_theory_at_mean_p": float(r["zvf_theory_at_mean_p"]),
-            })
+            rows.append(
+                {
+                    "G": int(r["G"]),
+                    "n_seeds": int(r["n_seeds"]),
+                    "acc": float(r["heldout_acc_mean"]),
+                    "acc_se": float(r["heldout_acc_se"]),
+                    "last10_mean": float(r["last10_mean"]),
+                    "mean_zvf": float(r["mean_zvf"]),
+                    "mean_reward_train": float(r["mean_reward_train"]),
+                    "zvf_theory_at_mean_p": float(r["zvf_theory_at_mean_p"]),
+                }
+            )
     return rows
 
 
@@ -109,15 +115,17 @@ def load_iter75_scaling() -> list[dict]:
     with (RESULTS / "group_size_iter75_scaling.tsv").open() as fh:
         rdr = csv.DictReader(fh, delimiter="\t")
         for r in rdr:
-            rows.append({
-                "T_M": float(r["T_M"]),
-                "G_max": int(r["G_max"]),
-                "acc_at_G_max": float(r["acc_at_G_max"]),
-                "k_hat": float(r["k_hat"]),
-                "c_hat": float(r["c_hat"]),
-                "c_boot_lo": float(r["c_boot_lo"]),
-                "c_boot_hi": float(r["c_boot_hi"]),
-            })
+            rows.append(
+                {
+                    "T_M": float(r["T_M"]),
+                    "G_max": int(r["G_max"]),
+                    "acc_at_G_max": float(r["acc_at_G_max"]),
+                    "k_hat": float(r["k_hat"]),
+                    "c_hat": float(r["c_hat"]),
+                    "c_boot_lo": float(r["c_boot_lo"]),
+                    "c_boot_hi": float(r["c_boot_hi"]),
+                }
+            )
     return rows
 
 
@@ -136,18 +144,20 @@ def compute_egt(tnorm: list[dict]) -> list[dict]:
         # Normalize by G_max to get per-step "useful groups" if every group
         # at G_max is used (i.e., a hypothetical 100%-efficient estimator).
         egt_norm = egt / G_REF
-        out.append({
-            "T_tokens": r["budget_tokens"],
-            "T_M": r["budget_tokens"] / 1e6,
-            "G": G,
-            "gu_empirical": gu,
-            "acc": r["acc"],
-            "acc_lo": r["acc_lo"],
-            "acc_hi": r["acc_hi"],
-            "egt": egt,
-            "egt_per_Gmax": egt_norm,
-            "gu_times_acc": gu * r["acc"],  # EGT weighted by accuracy
-        })
+        out.append(
+            {
+                "T_tokens": r["budget_tokens"],
+                "T_M": r["budget_tokens"] / 1e6,
+                "G": G,
+                "gu_empirical": gu,
+                "acc": r["acc"],
+                "acc_lo": r["acc_lo"],
+                "acc_hi": r["acc_hi"],
+                "egt": egt,
+                "egt_per_Gmax": egt_norm,
+                "gu_times_acc": gu * r["acc"],  # EGT weighted by accuracy
+            }
+        )
     return out
 
 
@@ -175,8 +185,9 @@ def find_g_peak_and_iso(egt_rows: list[dict]) -> list[dict]:
 
         # Iso-EGT: smallest G >= ISO_EGT_FRACTION * EGT_peak
         threshold = ISO_EGT_FRACTION * egt_peak
-        iso_candidates = [(int(G_arr[i]), float(egt_arr[i])) for i in range(len(G_arr))
-                          if egt_arr[i] >= threshold]
+        iso_candidates = [
+            (int(G_arr[i]), float(egt_arr[i])) for i in range(len(G_arr)) if egt_arr[i] >= threshold
+        ]
         if iso_candidates:
             G_iso = min(c[0] for c in iso_candidates)
             egt_at_G_iso = next(c[1] for c in iso_candidates if c[0] == G_iso)
@@ -195,18 +206,20 @@ def find_g_peak_and_iso(egt_rows: list[dict]) -> list[dict]:
         else:
             steps_ratio_iso_over_peak = float("nan")
 
-        out.append({
-            "T_M": T_M,
-            "n_G_observed": len(G_arr),
-            "G_peak": G_peak,
-            "egt_peak": egt_peak,
-            "acc_at_G_peak": acc_peak,
-            "G_iso_egt": G_iso,
-            "egt_at_G_iso": egt_at_G_iso,
-            "iso_threshold": threshold,
-            "steps_ratio_iso_over_peak": steps_ratio_iso_over_peak,
-            "steps_ratio_peak_over_iso": G_iso / G_peak if G_peak > 0 else float("nan"),
-        })
+        out.append(
+            {
+                "T_M": T_M,
+                "n_G_observed": len(G_arr),
+                "G_peak": G_peak,
+                "egt_peak": egt_peak,
+                "acc_at_G_peak": acc_peak,
+                "G_iso_egt": G_iso,
+                "egt_at_G_iso": egt_at_G_iso,
+                "iso_threshold": threshold,
+                "steps_ratio_iso_over_peak": steps_ratio_iso_over_peak,
+                "steps_ratio_peak_over_iso": G_iso / G_peak if G_peak > 0 else float("nan"),
+            }
+        )
     return out
 
 
@@ -239,25 +252,30 @@ def iso_compute_egt(egt_rows: list[dict]) -> list[dict]:
         ratio_compensated = egt_s_compensated / egt_l if egt_l > 0 else float("nan")
         # Accuracy retention for reference
         acc_ratio = s["acc"] / l["acc"] if l["acc"] > 0 else float("nan")
-        out.append({
-            "T_M": T_M,
-            "acc_G4": s["acc"],
-            "acc_G32": l["acc"],
-            "acc_retention_R": acc_ratio,
-            "egt_G4": egt_s,
-            "egt_G32": egt_l,
-            "egt_ratio_raw": ratio_raw,
-            "egt_G4_compensated_8x": egt_s_compensated,
-            "egt_ratio_compensated": ratio_compensated,
-            "token_multiplier_G32_over_G4": token_mult,
-            "iso_compute_advantage_G32_over_G4_pct":
+        out.append(
+            {
+                "T_M": T_M,
+                "acc_G4": s["acc"],
+                "acc_G32": l["acc"],
+                "acc_retention_R": acc_ratio,
+                "egt_G4": egt_s,
+                "egt_G32": egt_l,
+                "egt_ratio_raw": ratio_raw,
+                "egt_G4_compensated_8x": egt_s_compensated,
+                "egt_ratio_compensated": ratio_compensated,
+                "token_multiplier_G32_over_G4": token_mult,
+                "iso_compute_advantage_G32_over_G4_pct":
                 # If egt_ratio_compensated < 1, G=32 wins even at iso-rollout
                 # (G=4 with 8x steps still cannot match G=32's quality).
                 # If > 1, G=4 wins at iso-rollout (raw quantity dominates).
-                100 * (1.0 - ratio_compensated) if not math.isnan(ratio_compensated) else float("nan"),
-            "iso_compute_verdict":
-                "G32_still_wins" if ratio_compensated < 1 else "G4_wins_at_iso_rollout",
-        })
+                100 * (1.0 - ratio_compensated)
+                if not math.isnan(ratio_compensated)
+                else float("nan"),
+                "iso_compute_verdict": "G32_still_wins"
+                if ratio_compensated < 1
+                else "G4_wins_at_iso_rollout",
+            }
+        )
     return out
 
 
@@ -284,17 +302,24 @@ def difficulty_band_retention(tnorm: list[dict]) -> list[dict]:
         G_peak_gu = int(G_arr[idx_peak])
         for i, G in enumerate(G_arr):
             ratio_to_peak = G / G_peak_gu
-            band = "below_peak" if ratio_to_peak < 0.5 else \
-                "near_peak" if ratio_to_peak <= 1.5 else "above_peak"
-            out.append({
-                "T_M": T_M,
-                "G": G,
-                "G_peak_GU": G_peak_gu,
-                "G_over_Gpeak_GU": ratio_to_peak,
-                "band": band,
-                "gu": gu_arr[i],
-                "acc": acc_arr[i],
-            })
+            band = (
+                "below_peak"
+                if ratio_to_peak < 0.5
+                else "near_peak"
+                if ratio_to_peak <= 1.5
+                else "above_peak"
+            )
+            out.append(
+                {
+                    "T_M": T_M,
+                    "G": G,
+                    "G_peak_GU": G_peak_gu,
+                    "G_over_Gpeak_GU": ratio_to_peak,
+                    "band": band,
+                    "gu": gu_arr[i],
+                    "acc": acc_arr[i],
+                }
+            )
     return out
 
 
@@ -317,12 +342,17 @@ def make_plots(egt_rows, gstar_rows, iso_compute_rows, outpath):
         rows = sorted(rows, key=lambda r: r["G"])
         Gs = [r["G"] for r in rows]
         egts = [r["egt"] for r in rows]
-        ax.plot(Gs, egts, "o-", color=cmap(i / max(1, len(Ts_unique) - 1)),
-                lw=2, label=f"T={T_M:.0f}M", markersize=6)
-    ax.axvline(G_SMALL, color="C3", ls="--", lw=1.5,
-               label=f"G={G_SMALL} (small)")
-    ax.axvline(G_LARGE, color="C0", ls="--", lw=1.5,
-               label=f"G={G_LARGE} (large)")
+        ax.plot(
+            Gs,
+            egts,
+            "o-",
+            color=cmap(i / max(1, len(Ts_unique) - 1)),
+            lw=2,
+            label=f"T={T_M:.0f}M",
+            markersize=6,
+        )
+    ax.axvline(G_SMALL, color="C3", ls="--", lw=1.5, label=f"G={G_SMALL} (small)")
+    ax.axvline(G_LARGE, color="C0", ls="--", lw=1.5, label=f"G={G_LARGE} (large)")
     ax.set_xscale("log", base=2)
     ax.set_xlabel("Group size $G$")
     ax.set_ylabel("EGT(G, T) = gu $\\cdot G$")
@@ -333,8 +363,14 @@ def make_plots(egt_rows, gstar_rows, iso_compute_rows, outpath):
     # --- Panel 2: G_peak(T) and G_iso(T) ---
     ax = axes[1]
     ax.plot(Ts, G_peak_arr, "o-", color="C2", lw=2, label="$G_\\mathrm{peak}(T)$")
-    ax.plot(Ts, G_iso_arr, "s--", color="C1", lw=2,
-            label=f"$G_\\mathrm{{iso}}(T)$ @ {ISO_EGT_FRACTION:.0%}$\\cdot$EGT$_\\mathrm{{peak}}$")
+    ax.plot(
+        Ts,
+        G_iso_arr,
+        "s--",
+        color="C1",
+        lw=2,
+        label=f"$G_\\mathrm{{iso}}(T)$ @ {ISO_EGT_FRACTION:.0%}$\\cdot$EGT$_\\mathrm{{peak}}$",
+    )
     ax.axhline(G_SMALL, color="C3", ls=":", lw=1, label=f"G={G_SMALL}")
     ax.axhline(G_LARGE, color="C0", ls=":", lw=1, label=f"G={G_LARGE}")
     ax.set_xscale("log")
@@ -354,15 +390,18 @@ def make_plots(egt_rows, gstar_rows, iso_compute_rows, outpath):
         ratio_raw = np.array([r["egt_ratio_raw"] for r in iso_compute_rows])
         ratio_comp = np.array([r["egt_ratio_compensated"] for r in iso_compute_rows])
         ratio_acc = np.array([r["acc_retention_R"] for r in iso_compute_rows])
-        ax.plot(cT, ratio_raw, "o-", color="C0", lw=2,
-                label="EGT ratio raw $G{=}4 / G{=}32$")
-        ax.plot(cT, ratio_comp, "s--", color="C2", lw=2,
-                label="EGT ratio G=4 $\\cdot 8\\times$ / G=32 (iso-rollout)")
-        ax.plot(cT, ratio_acc, "^-", color="C4", lw=2,
-                label="Accuracy retention $R(G{=}4/G{=}32)$")
+        ax.plot(cT, ratio_raw, "o-", color="C0", lw=2, label="EGT ratio raw $G{=}4 / G{=}32$")
+        ax.plot(
+            cT,
+            ratio_comp,
+            "s--",
+            color="C2",
+            lw=2,
+            label="EGT ratio G=4 $\\cdot 8\\times$ / G=32 (iso-rollout)",
+        )
+        ax.plot(cT, ratio_acc, "^-", color="C4", lw=2, label="Accuracy retention $R(G{=}4/G{=}32)$")
         ax.axhline(1.0, color="grey", ls=":", lw=1)
-        ax.axhline(0.976, color="C3", ls="--", lw=1.5,
-                   label="Wu 2025: $R{=}0.976$")
+        ax.axhline(0.976, color="C3", ls="--", lw=1.5, label="Wu 2025: $R{=}0.976$")
         ax.set_xscale("log")
         ax.set_xlabel("Token budget $T$ (M)")
         ax.set_ylabel("Ratio")
@@ -376,7 +415,7 @@ def make_plots(egt_rows, gstar_rows, iso_compute_rows, outpath):
         r"$G_\mathrm{peak}(T)$ shifts from $G{\sim}8$ at $T{=}1$M to "
         r"$G{=}32$ at $T{\geq}16$M; at iso-rollout-cost $G{=}4$ delivers "
         r"$\leq 50\%$ of $G{=}32$'s throughput at large $T$.",
-        fontsize=9
+        fontsize=9,
     )
     fig.tight_layout(rect=[0, 0, 1, 0.94])
     fig.savefig(outpath, dpi=140)
@@ -440,39 +479,47 @@ def main():
     g_peak_T64 = gstar[-1]["G_peak"] if gstar else float("nan")
     iso_at_T64 = gstar[-1]["G_iso_egt"] if gstar else float("nan")
     # EGT advantage at the largest budget
-    iso_adv_T64 = iso_compute[-1]["iso_compute_advantage_G32_over_G4_pct"] \
-        if iso_compute else float("nan")
-    iso_verdict_T64 = iso_compute[-1].get("iso_compute_verdict", "") \
-        if iso_compute else ""
+    iso_adv_T64 = (
+        iso_compute[-1]["iso_compute_advantage_G32_over_G4_pct"] if iso_compute else float("nan")
+    )
+    iso_verdict_T64 = iso_compute[-1].get("iso_compute_verdict", "") if iso_compute else ""
     acc_ret_T1 = iso_compute[0]["acc_retention_R"] if iso_compute else float("nan")
     acc_ret_T64 = iso_compute[-1]["acc_retention_R"] if iso_compute else float("nan")
-    egt_comp_T64 = iso_compute[-1]["egt_ratio_compensated"] \
-        if iso_compute else float("nan")
-    egt_raw_T64 = iso_compute[-1]["egt_ratio_raw"] \
-        if iso_compute else float("nan")
+    egt_comp_T64 = iso_compute[-1]["egt_ratio_compensated"] if iso_compute else float("nan")
+    egt_raw_T64 = iso_compute[-1]["egt_ratio_raw"] if iso_compute else float("nan")
 
     summary = [
         {"metric": "n_T_observed", "value": len(gstar)},
         {"metric": "G_peak_at_T_1M", "value": g_peak_T1},
         {"metric": "G_peak_at_T_64M", "value": g_peak_T64},
         {"metric": "G_iso_egt_at_T_64M", "value": iso_at_T64},
-        {"metric": "egt_ratio_raw_per_step_G4_over_G32_at_T_64M",
-         "value": f"{egt_raw_T64:.4f}" if not math.isnan(egt_raw_T64) else "nan"},
-        {"metric": "egt_ratio_compensated_8x_G4_vs_G32_at_T_64M",
-         "value": f"{egt_comp_T64:.4f}" if not math.isnan(egt_comp_T64) else "nan"},
+        {
+            "metric": "egt_ratio_raw_per_step_G4_over_G32_at_T_64M",
+            "value": f"{egt_raw_T64:.4f}" if not math.isnan(egt_raw_T64) else "nan",
+        },
+        {
+            "metric": "egt_ratio_compensated_8x_G4_vs_G32_at_T_64M",
+            "value": f"{egt_comp_T64:.4f}" if not math.isnan(egt_comp_T64) else "nan",
+        },
         {"metric": "iso_compute_verdict_at_T_64M", "value": iso_verdict_T64},
-        {"metric": "accuracy_retention_G4_over_G32_at_T_1M",
-         "value": f"{acc_ret_T1:.4f}" if not math.isnan(acc_ret_T1) else "nan"},
-        {"metric": "accuracy_retention_G4_over_G32_at_T_64M",
-         "value": f"{acc_ret_T64:.4f}" if not math.isnan(acc_ret_T64) else "nan"},
+        {
+            "metric": "accuracy_retention_G4_over_G32_at_T_1M",
+            "value": f"{acc_ret_T1:.4f}" if not math.isnan(acc_ret_T1) else "nan",
+        },
+        {
+            "metric": "accuracy_retention_G4_over_G32_at_T_64M",
+            "value": f"{acc_ret_T64:.4f}" if not math.isnan(acc_ret_T64) else "nan",
+        },
         {"metric": "iso_egt_fraction_threshold", "value": ISO_EGT_FRACTION},
-        {"metric": "interpretation", "value":
-            "G_peak shifts rightward with T (G=32 at T=1M, G=64 at T>=4M).  "
+        {
+            "metric": "interpretation",
+            "value": "G_peak shifts rightward with T (G=32 at T=1M, G=64 at T>=4M).  "
             "Per-step EGT ratio G=4/G=32 falls from 0.63 at T=1M to 0.52 at "
             "T=64M.  At iso-rollout-cost (G=4 with 8x steps), G=4 actually "
             "delivers 4x more total raw EGT than G=32 yet still loses on "
             "accuracy (R=0.727 at T=64M), confirming that per-step gradient "
-            "quality -- not raw signal quantity -- drives the G=32 advantage."},
+            "quality -- not raw signal quantity -- drives the G=32 advantage.",
+        },
     ]
     write_summary(summary, RESULTS / "group_size_iter83_summary.tsv")
 

@@ -140,7 +140,9 @@ def _require_enforced_budget() -> None:
     enforcement. This is intentionally not configurable through a bypass flag.
     Offline receipt construction and historical inspection remain available.
     """
-    raise RuntimeError("paid execution blocked: enforced reservation/settlement budget contract unavailable")
+    raise RuntimeError(
+        "paid execution blocked: enforced reservation/settlement budget contract unavailable"
+    )
 
 
 def canonical_json(value: Any) -> str:
@@ -240,10 +242,11 @@ def maximum_sdab_eval_cost(
     actions = _positive_int("max_actions", max_actions)
     prompts = _positive_int("max_prompt_tokens", max_prompt_tokens)
     responses = _positive_int("max_response_tokens", max_response_tokens)
-    cost = Decimal(tasks * actions) * (
-        Decimal(prompts) * PREFILL_USD_PER_MILLION
-        + Decimal(responses) * SAMPLE_USD_PER_MILLION
-    ) / Decimal(1_000_000)
+    cost = (
+        Decimal(tasks * actions)
+        * (Decimal(prompts) * PREFILL_USD_PER_MILLION + Decimal(responses) * SAMPLE_USD_PER_MILLION)
+        / Decimal(1_000_000)
+    )
     return float(cost)
 
 
@@ -287,9 +290,10 @@ def validate_native_manifest(
         raise SDABGateError("native_verifier must be the boolean true")
     if not isinstance(manifest.get("stateful"), bool) or manifest.get("stateful") is not True:
         raise SDABGateError("SDAB runtime must declare stateful=true")
-    if not isinstance(manifest.get("artifact_or_side_effect"), bool) or manifest.get(
-        "artifact_or_side_effect"
-    ) is not True:
+    if (
+        not isinstance(manifest.get("artifact_or_side_effect"), bool)
+        or manifest.get("artifact_or_side_effect") is not True
+    ):
         raise SDABGateError("SDAB runtime must declare artifact_or_side_effect=true")
 
     benchmark_revision = _revision("benchmark_revision", manifest.get("benchmark_revision"))
@@ -307,9 +311,7 @@ def validate_native_manifest(
     eval_hash = _sha256("task_id_sha256", manifest.get("task_id_sha256"))
     if train_hash == eval_hash:
         raise SDABGateError("training and evaluation task-ID hashes must be disjoint")
-    disjointness_receipt = _text(
-        "disjointness_receipt", manifest.get("disjointness_receipt")
-    )
+    disjointness_receipt = _text("disjointness_receipt", manifest.get("disjointness_receipt"))
 
     container_digest = _digest("container_digest", manifest.get("container_digest"))
     environment_digest = _digest("environment_digest", manifest.get("environment_digest"))
@@ -403,7 +405,9 @@ def load_native_runtime(
     for method in ("list_tasks", "evaluate_task", "verify_result"):
         if not callable(getattr(runtime, method, None)):
             raise SDABGateError(f"native SDAB adapter must expose {method}()")
-    return RuntimeBundle(manifest=manifest, runtime=runtime, entrypoint=manifest["adapter_entrypoint"])
+    return RuntimeBundle(
+        manifest=manifest, runtime=runtime, entrypoint=manifest["adapter_entrypoint"]
+    )
 
 
 def _environment_gate(worktree_root: str | Path, environment_root: str | Path) -> dict[str, Any]:
@@ -430,12 +434,17 @@ def _environment_gate(worktree_root: str | Path, environment_root: str | Path) -
 
 
 def _dependency_gate() -> dict[str, Any]:
-    dependencies = {name: importlib.util.find_spec(name) is not None for name in ("wandb", "tinker")}
+    dependencies = {
+        name: importlib.util.find_spec(name) is not None for name in ("wandb", "tinker")
+    }
     blockers = [name for name, present in dependencies.items() if not present]
     return {
         "status": "PASS" if not blockers else "BLOCKED",
         "dependencies": dependencies,
-        "blockers": [f"required package is unavailable in the isolated environment: {name}" for name in blockers],
+        "blockers": [
+            f"required package is unavailable in the isolated environment: {name}"
+            for name in blockers
+        ],
     }
 
 
@@ -644,9 +653,7 @@ def preflight(
     if probe_dependencies:
         gates.append({"name": "isolated_dependencies", **_dependency_gate()})
     blockers = [
-        f"{gate['name']}: {reason}"
-        for gate in gates
-        for reason in gate.get("blockers", [])
+        f"{gate['name']}: {reason}" for gate in gates for reason in gate.get("blockers", [])
     ]
     return {
         "schema_version": "pavlov-sdab-e3-preflight-v1",
@@ -678,11 +685,19 @@ def preflight(
 
 def _receipt_from_preflight(report: Mapping[str, Any]) -> dict[str, Any]:
     model_gate = next(
-        (gate for gate in report.get("gates", []) if gate.get("name") == "authorized_model_revision"),
+        (
+            gate
+            for gate in report.get("gates", [])
+            if gate.get("name") == "authorized_model_revision"
+        ),
         {},
     )
     runtime_gate = next(
-        (gate for gate in report.get("gates", []) if gate.get("name") == "exact_native_sdab_runtime"),
+        (
+            gate
+            for gate in report.get("gates", [])
+            if gate.get("name") == "exact_native_sdab_runtime"
+        ),
         {},
     )
     return {
@@ -716,7 +731,11 @@ def _receipt_from_preflight(report: Mapping[str, Any]) -> dict[str, Any]:
             "native_verifier": runtime_gate.get("status") == "PASS",
         },
         "budget": next(
-            (gate for gate in report.get("gates", []) if gate.get("name") == "tinker_cost_envelope"),
+            (
+                gate
+                for gate in report.get("gates", [])
+                if gate.get("name") == "tinker_cost_envelope"
+            ),
             {},
         ),
         "gates": report.get("gates", []),
@@ -727,7 +746,12 @@ def _receipt_from_preflight(report: Mapping[str, Any]) -> dict[str, Any]:
             "training_sha256": runtime_gate.get("train_task_id_sha256"),
             "disjointness_receipt": None,
         },
-        "wandb": {"online": False, "initialized_before_tinker": False, "run_id": None, "run_url": None},
+        "wandb": {
+            "online": False,
+            "initialized_before_tinker": False,
+            "run_id": None,
+            "run_url": None,
+        },
         "tinker": {"calls": 0, "run_id": None},
         "hf": {
             "eval_only": True,
@@ -750,7 +774,9 @@ def _write_receipt(receipt: Mapping[str, Any], path: str | Path) -> dict[str, An
     output = Path(path).expanduser().resolve()
     output.parent.mkdir(parents=True, exist_ok=True)
     payload = dict(receipt)
-    payload["receipt_sha256"] = sha256_json({key: value for key, value in payload.items() if key != "receipt_sha256"})
+    payload["receipt_sha256"] = sha256_json(
+        {key: value for key, value in payload.items() if key != "receipt_sha256"}
+    )
     output.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     return payload
 
@@ -807,13 +833,23 @@ def _create_tinker_sampler(
     if not callable(create):
         raise RuntimeError("Tinker service does not expose create_sampling_client")
     if model_gate["source_kind"] == "sampler_path":
-        candidates = {"model_path": args.sampler_path, "revision": model_gate["evaluated_hf_commit"]}
+        candidates = {
+            "model_path": args.sampler_path,
+            "revision": model_gate["evaluated_hf_commit"],
+        }
     else:
-        candidates = {"base_model": model_gate["model_id"], "revision": model_gate["base_model_revision"]}
+        candidates = {
+            "base_model": model_gate["model_id"],
+            "revision": model_gate["base_model_revision"],
+        }
     try:
         signature = inspect.signature(create)
-        if not any(parameter.kind is parameter.VAR_KEYWORD for parameter in signature.parameters.values()):
-            candidates = {key: value for key, value in candidates.items() if key in signature.parameters}
+        if not any(
+            parameter.kind is parameter.VAR_KEYWORD for parameter in signature.parameters.values()
+        ):
+            candidates = {
+                key: value for key, value in candidates.items() if key in signature.parameters
+            }
     except (TypeError, ValueError):
         pass
     return service, create(**candidates)
@@ -835,7 +871,11 @@ def _native_verified(runtime: NativeSDABRuntime, result: Mapping[str, Any]) -> M
 def _result_row(result: Mapping[str, Any], verification: Mapping[str, Any]) -> dict[str, Any]:
     task_id = _text("result.task_id", result.get("task_id"))
     score = result.get("score", result.get("composite_score"))
-    if isinstance(score, bool) or not isinstance(score, (int, float)) or not math.isfinite(float(score)):
+    if (
+        isinstance(score, bool)
+        or not isinstance(score, (int, float))
+        or not math.isfinite(float(score))
+    ):
         raise RuntimeError("native result score must be a finite number")
     for field in ("prompt_tokens", "sample_tokens", "tool_calls"):
         if type(result.get(field)) is not int or result[field] < 0:
@@ -869,7 +909,9 @@ def run_evaluation(
     if report.get("status") != "READY":
         return _write_receipt(_receipt_from_preflight(report), out)
     bundle = load_native_runtime(args.runtime_manifest, required_tasks=args.limit)
-    model_gate = next(gate for gate in report["gates"] if gate["name"] == "authorized_model_revision")
+    model_gate = next(
+        gate for gate in report["gates"] if gate["name"] == "authorized_model_revision"
+    )
     budget_gate = next(gate for gate in report["gates"] if gate["name"] == "tinker_cost_envelope")
     config = {
         "schema_version": "pavlov-sdab-e3-config-v1",
@@ -897,7 +939,11 @@ def run_evaluation(
     receipt.update(
         {
             "status": "RUNNING",
-            "benchmark": {**receipt["benchmark"], **bundle.manifest, "license_id": bundle.manifest["license_id"]},
+            "benchmark": {
+                **receipt["benchmark"],
+                **bundle.manifest,
+                "license_id": bundle.manifest["license_id"],
+            },
             "runtime": {**receipt["runtime"], "native_verifier": True},
             "task_ids": {
                 "evaluation_sha256": bundle.manifest["task_id_sha256"],
@@ -920,13 +966,19 @@ def run_evaluation(
         }
         import tinker
 
-        tasks = list(bundle.runtime.list_tasks(split=SDAB_EVALUATION_SPLIT, limit=args.limit, seed=args.seed))
+        tasks = list(
+            bundle.runtime.list_tasks(split=SDAB_EVALUATION_SPLIT, limit=args.limit, seed=args.seed)
+        )
         if len(tasks) != args.limit:
             raise RuntimeError("native SDAB adapter returned a task count different from --limit")
-        selected_ids = [task.get("task_id") if isinstance(task, Mapping) else None for task in tasks]
-        if (any(not isinstance(value, str) for value in selected_ids) or
-            len(set(selected_ids)) != len(selected_ids) or
-            not set(selected_ids) <= set(bundle.manifest["task_ids"])):
+        selected_ids = [
+            task.get("task_id") if isinstance(task, Mapping) else None for task in tasks
+        ]
+        if (
+            any(not isinstance(value, str) for value in selected_ids)
+            or len(set(selected_ids)) != len(selected_ids)
+            or not set(selected_ids) <= set(bundle.manifest["task_ids"])
+        ):
             raise RuntimeError("native SDAB selected task IDs must be unique manifest members")
         service, sampler = _create_tinker_sampler(tinker, model_gate=model_gate, args=args)
         rows: list[dict[str, Any]] = []
@@ -946,7 +998,13 @@ def run_evaluation(
             if row["task_id"] != task["task_id"]:
                 raise RuntimeError("native SDAB result task identity mismatch")
             rows.append(row)
-            observed = sum((Decimal(item["prompt_tokens"]) * PREFILL_USD_PER_MILLION + Decimal(item["sample_tokens"]) * SAMPLE_USD_PER_MILLION) for item in rows) / Decimal(1_000_000)
+            observed = sum(
+                (
+                    Decimal(item["prompt_tokens"]) * PREFILL_USD_PER_MILLION
+                    + Decimal(item["sample_tokens"]) * SAMPLE_USD_PER_MILLION
+                )
+                for item in rows
+            ) / Decimal(1_000_000)
             if observed > Decimal(str(budget_gate["requested_cap_usd"])):
                 raise RuntimeError("observed token cost exceeded the E3 cap; further tasks blocked")
         actual_cost = sum(
@@ -963,7 +1021,9 @@ def run_evaluation(
             {
                 "status": "COMPLETED",
                 "result": {"task_count": len(rows), "mean_composite_score": score},
-                "evaluation_scope": "full" if len(rows) == len(bundle.manifest["task_ids"]) else "subset",
+                "evaluation_scope": "full"
+                if len(rows) == len(bundle.manifest["task_ids"])
+                else "subset",
                 "benchmark_score": score if len(rows) == len(bundle.manifest["task_ids"]) else None,
                 "score": score,
                 "rows": rows,
@@ -983,11 +1043,19 @@ def run_evaluation(
         receipt = _write_receipt(receipt, out)
         run_log = getattr(wandb_run, "log", None)
         if callable(run_log):
-            run_log({"eval/mean_composite_score": score, "eval/task_count": len(rows), "eval/cost_usd": float(actual_cost)})
+            run_log(
+                {
+                    "eval/mean_composite_score": score,
+                    "eval/task_count": len(rows),
+                    "eval/cost_usd": float(actual_cost),
+                }
+            )
         artifact_factory = getattr(wandb, "Artifact", None)
         log_artifact = getattr(wandb_run, "log_artifact", None)
         if callable(artifact_factory) and callable(log_artifact):
-            artifact = artifact_factory(name=f"{args.wandb_name}-sdab-receipt", type="evaluation-receipt")
+            artifact = artifact_factory(
+                name=f"{args.wandb_name}-sdab-receipt", type="evaluation-receipt"
+            )
             artifact.add_file(str(Path(out).resolve()), name="receipt.json")
             log_artifact(artifact)
         _finish_wandb(wandb_run, exit_code=0)
@@ -1004,7 +1072,9 @@ def run_evaluation(
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     mode = parser.add_mutually_exclusive_group()
-    mode.add_argument("--preflight", action="store_true", help="run zero-side-effect gates (default)")
+    mode.add_argument(
+        "--preflight", action="store_true", help="run zero-side-effect gates (default)"
+    )
     mode.add_argument("--run", action="store_true", help="run one exact SDAB task after gates pass")
     parser.add_argument("--runtime-manifest", type=Path)
     parser.add_argument("--worktree-root", type=Path, default=REPO_ROOT)
@@ -1050,7 +1120,11 @@ def main(argv: Sequence[str] | None = None) -> int:
     else:
         receipt = _write_receipt(_receipt_from_preflight(report), args.out)
     print(json.dumps(receipt, indent=2, sort_keys=True))
-    return 0 if report["status"] == "READY" and args.run else (0 if args.preflight or not args.run else 2)
+    return (
+        0
+        if report["status"] == "READY" and args.run
+        else (0 if args.preflight or not args.run else 2)
+    )
 
 
 if __name__ == "__main__":

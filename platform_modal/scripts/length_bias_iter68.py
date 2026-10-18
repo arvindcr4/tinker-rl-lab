@@ -21,13 +21,13 @@ Outputs:
   platform_hybrid/experiments/results/length_bias_iter68_summary_v2.tsv
   platform_hybrid/experiments/results/length_bias_iter68_meta_v2.json
 """
+
 from __future__ import annotations
 
 import json
 import math
 import os
 import random
-from collections import defaultdict
 from typing import Dict, List, Tuple
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -41,7 +41,9 @@ RNG = random.Random(20260703)
 Z975 = 1.959963984540054  # two-sided 95% normal
 
 
-def load_runs(path: str, algo_map: Dict[str, str] | None = None) -> Dict[Tuple[str, int], List[dict]]:
+def load_runs(
+    path: str, algo_map: Dict[str, str] | None = None
+) -> Dict[Tuple[str, int], List[dict]]:
     """Return {(algo, seed): [step_dict, ...]} keyed by (algo, seed)."""
     with open(path) as fh:
         d = json.load(fh)
@@ -78,7 +80,9 @@ def trajectory_features(steps: List[dict]) -> dict:
     return dict(L=L, R=R, dL=dL, dR=dR, sigma_dL=sigma, n_reversals=rev, reversal_rate=rev_rate)
 
 
-def first_divergence_step(L_a: List[float], L_b: List[float], frac: float = 0.5, min_hold: int = 2) -> int:
+def first_divergence_step(
+    L_a: List[float], L_b: List[float], frac: float = 0.5, min_hold: int = 2
+) -> int:
     """First step index t where |L_a[t] - L_b[t]| > frac * sigma(L_pooled) for >= min_hold steps.
 
     If never satisfied, returns len(L_a) - 1.
@@ -105,7 +109,9 @@ def first_divergence_step(L_a: List[float], L_b: List[float], frac: float = 0.5,
     return n - 1
 
 
-def bootstrap_paired_diff(values_a: List[float], values_b: List[float], statistic="mean") -> Tuple[float, float, float, float]:
+def bootstrap_paired_diff(
+    values_a: List[float], values_b: List[float], statistic="mean"
+) -> Tuple[float, float, float, float]:
     """Return (mean_diff, ci_lo, ci_hi, p_le0) via paired bootstrap.
 
     statistic='mean' tests H0: mean(B) - mean(A) <= 0 vs H1: > 0.
@@ -128,7 +134,9 @@ def bootstrap_paired_diff(values_a: List[float], values_b: List[float], statisti
     return obs, lo, hi, p_le0
 
 
-def bootstrap_paired_ratio(values_a: List[float], values_b: List[float]) -> Tuple[float, float, float, float]:
+def bootstrap_paired_ratio(
+    values_a: List[float], values_b: List[float]
+) -> Tuple[float, float, float, float]:
     """Return (ratio B/A, log-ratio CI, p_le0 for log-ratio <= 0).
 
     A zero-safe ratio: replace zeros in A with mean(A) (only if all-zero fallback).
@@ -206,12 +214,14 @@ def trajectory_auc(L_a: List[float], L_b: List[float], steps=None) -> float:
     steps = list(range(n)) if steps is None else list(steps)
     if len(steps) != n or any(not math.isfinite(x) for x in [*steps, *L_a, *L_b]):
         raise ValueError("finite aligned trajectories and steps required")
-    if any(b <= a for a, b in zip(steps, steps[1:])):
+    if any(b <= a for a, b in zip(steps, steps[1:], strict=False)):
         raise ValueError("steps must increase strictly")
     if n < 2:
         return float("nan")
-    return sum(.5 * ((L_a[t]-L_b[t]) + (L_a[t+1]-L_b[t+1])) *
-               (steps[t+1]-steps[t]) for t in range(n-1))
+    return sum(
+        0.5 * ((L_a[t] - L_b[t]) + (L_a[t + 1] - L_b[t + 1])) * (steps[t + 1] - steps[t])
+        for t in range(n - 1)
+    )
 
 
 def signed_auc_summary(values):
@@ -219,7 +229,9 @@ def signed_auc_summary(values):
     return bootstrap_paired_diff(values, [0.0] * len(values))
 
 
-def analyse(experiment: str, runs: Dict[Tuple[str, int], List[dict]], algo_a: str, algo_b: str) -> dict:
+def analyse(
+    experiment: str, runs: Dict[Tuple[str, int], List[dict]], algo_a: str, algo_b: str
+) -> dict:
     """Run all three paired diagnostics for one experiment."""
     # group seeds by algo
     seeds_a = sorted({seed for (a, seed) in runs if a == algo_a})
@@ -247,64 +259,82 @@ def analyse(experiment: str, runs: Dict[Tuple[str, int], List[dict]], algo_a: st
             if grid != [row["step"] for row in log_b]:
                 raise ValueError("paired step grids must match")
         auc = trajectory_auc(L_a, L_b, grid)
-        raw_rows.append(dict(
-            experiment=experiment,
-            seed=seed,
-            algo=algo_a,
-            sigma_dL=feat_a["sigma_dL"],
-            reversal_rate=feat_a["reversal_rate"],
-            n_reversals=feat_a["n_reversals"],
-            n_steps=len(L_a),
-        ))
-        raw_rows.append(dict(
-            experiment=experiment,
-            seed=seed,
-            algo=algo_b,
-            sigma_dL=feat_b["sigma_dL"],
-            reversal_rate=feat_b["reversal_rate"],
-            n_reversals=feat_b["n_reversals"],
-            n_steps=len(L_b),
-        ))
-        first_div_rows.append(dict(
-            experiment=experiment,
-            seed=seed,
-            fds=fds,
-            n_steps=len(L_a),
-        ))
-        vol_rows.append(dict(
-            experiment=experiment,
-            seed=seed,
-            sigma_dL_grpo=feat_a["sigma_dL"],
-            sigma_dL_drgrpo=feat_b["sigma_dL"],
-        ))
-        rev_rows.append(dict(
-            experiment=experiment,
-            seed=seed,
-            rev_rate_grpo=feat_a["reversal_rate"],
-            rev_rate_drgrpo=feat_b["reversal_rate"],
-        ))
-        auc_rows.append(dict(
-            experiment=experiment,
-            seed=seed,
-            auc_grpo_minus_drgrpo=auc,
-            L_mean_grpo=sum(L_a) / len(L_a),
-            L_mean_drgrpo=sum(L_b) / len(L_b),
-        ))
+        raw_rows.append(
+            dict(
+                experiment=experiment,
+                seed=seed,
+                algo=algo_a,
+                sigma_dL=feat_a["sigma_dL"],
+                reversal_rate=feat_a["reversal_rate"],
+                n_reversals=feat_a["n_reversals"],
+                n_steps=len(L_a),
+            )
+        )
+        raw_rows.append(
+            dict(
+                experiment=experiment,
+                seed=seed,
+                algo=algo_b,
+                sigma_dL=feat_b["sigma_dL"],
+                reversal_rate=feat_b["reversal_rate"],
+                n_reversals=feat_b["n_reversals"],
+                n_steps=len(L_b),
+            )
+        )
+        first_div_rows.append(
+            dict(
+                experiment=experiment,
+                seed=seed,
+                fds=fds,
+                n_steps=len(L_a),
+            )
+        )
+        vol_rows.append(
+            dict(
+                experiment=experiment,
+                seed=seed,
+                sigma_dL_grpo=feat_a["sigma_dL"],
+                sigma_dL_drgrpo=feat_b["sigma_dL"],
+            )
+        )
+        rev_rows.append(
+            dict(
+                experiment=experiment,
+                seed=seed,
+                rev_rate_grpo=feat_a["reversal_rate"],
+                rev_rate_drgrpo=feat_b["reversal_rate"],
+            )
+        )
+        auc_rows.append(
+            dict(
+                experiment=experiment,
+                seed=seed,
+                auc_grpo_minus_drgrpo=auc,
+                L_mean_grpo=sum(L_a) / len(L_a),
+                L_mean_drgrpo=sum(L_b) / len(L_b),
+            )
+        )
         # conditional reversals on (pos_dR, neg_dR) steps
         steps_a = runs[(algo_a, seed)]
         steps_b = runs[(algo_b, seed)]
-        rev_cond_rows.append(dict(
-            experiment=experiment, seed=seed,
-            cell="rev_on_pos_dR",
-            rev_grpo=reversal_rate_conditional(steps_a, 1),
-            rev_drgrpo=reversal_rate_conditional(steps_b, 1),
-        ))
-        rev_cond_rows.append(dict(
-            experiment=experiment, seed=seed,
-            cell="rev_on_neg_dR",
-            rev_grpo=reversal_rate_conditional(steps_a, -1),
-            rev_drgrpo=reversal_rate_conditional(steps_b, -1),
-        ))
+        rev_cond_rows.append(
+            dict(
+                experiment=experiment,
+                seed=seed,
+                cell="rev_on_pos_dR",
+                rev_grpo=reversal_rate_conditional(steps_a, 1),
+                rev_drgrpo=reversal_rate_conditional(steps_b, 1),
+            )
+        )
+        rev_cond_rows.append(
+            dict(
+                experiment=experiment,
+                seed=seed,
+                cell="rev_on_neg_dR",
+                rev_grpo=reversal_rate_conditional(steps_a, -1),
+                rev_drgrpo=reversal_rate_conditional(steps_b, -1),
+            )
+        )
     # paired bootstrap stats
     fds_vals = [r["fds"] for r in first_div_rows]
     sigma_a = [r["sigma_dL_grpo"] for r in vol_rows]
@@ -326,20 +356,42 @@ def analyse(experiment: str, runs: Dict[Tuple[str, int], List[dict]], algo_a: st
     # reversals: paired diff Dr.GRPO - GRPO
     rev_obs, rev_lo, rev_hi, rev_p = bootstrap_paired_diff(rev_a, rev_b)
     summary_rows = [
-        dict(experiment=experiment, metric="fds_mean",
-             n_pairs=len(seeds), mean_grpo=float("nan"), mean_drgrpo=float("nan"),
-             mean_diff=float("nan"), ci_lo=fds_ci_lo, ci_hi=fds_ci_hi,
-             p_le0=float("nan"), interpretation=f"descriptive pair-level mean FDS={fds_mean}; percentile CI; no algorithm contrast or p-value"),
-        dict(experiment=experiment, metric="volatility_ratio_drgrpo_over_grpo",
-             n_pairs=len(seeds), mean_grpo=sum(sigma_a) / len(sigma_a),
-             mean_drgrpo=sum(sigma_b) / len(sigma_b),
-             mean_diff=vol_obs, ci_lo=vol_lo, ci_hi=vol_hi,
-             p_le0=vol_p, interpretation="ratio > 1 means Dr.GRPO length trajectory is more volatile"),
-        dict(experiment=experiment, metric="reversal_rate_diff_drgrpo_minus_grpo",
-             n_pairs=len(seeds), mean_grpo=sum(rev_a) / len(rev_a),
-             mean_drgrpo=sum(rev_b) / len(rev_b),
-             mean_diff=rev_obs, ci_lo=rev_lo, ci_hi=rev_hi,
-             p_le0=rev_p, interpretation="positive = Dr.GRPO flips sign(dL) more often"),
+        dict(
+            experiment=experiment,
+            metric="fds_mean",
+            n_pairs=len(seeds),
+            mean_grpo=float("nan"),
+            mean_drgrpo=float("nan"),
+            mean_diff=float("nan"),
+            ci_lo=fds_ci_lo,
+            ci_hi=fds_ci_hi,
+            p_le0=float("nan"),
+            interpretation=f"descriptive pair-level mean FDS={fds_mean}; percentile CI; no algorithm contrast or p-value",
+        ),
+        dict(
+            experiment=experiment,
+            metric="volatility_ratio_drgrpo_over_grpo",
+            n_pairs=len(seeds),
+            mean_grpo=sum(sigma_a) / len(sigma_a),
+            mean_drgrpo=sum(sigma_b) / len(sigma_b),
+            mean_diff=vol_obs,
+            ci_lo=vol_lo,
+            ci_hi=vol_hi,
+            p_le0=vol_p,
+            interpretation="ratio > 1 means Dr.GRPO length trajectory is more volatile",
+        ),
+        dict(
+            experiment=experiment,
+            metric="reversal_rate_diff_drgrpo_minus_grpo",
+            n_pairs=len(seeds),
+            mean_grpo=sum(rev_a) / len(rev_a),
+            mean_drgrpo=sum(rev_b) / len(rev_b),
+            mean_diff=rev_obs,
+            ci_lo=rev_lo,
+            ci_hi=rev_hi,
+            p_le0=rev_p,
+            interpretation="positive = Dr.GRPO flips sign(dL) more often",
+        ),
     ]
     for row in summary_rows:
         row["estimate"] = fds_mean if row["metric"] == "fds_mean" else row["mean_diff"]
@@ -387,16 +439,20 @@ def main() -> None:
         auc_a = [r["auc_grpo_minus_drgrpo"] for r in res["auc"]]
         # Negate the GRPO-minus-Dr.GRPO area exactly once.
         auc_obs, auc_lo, auc_hi, auc_p = signed_auc_summary(auc_a)
-        res["summary"].append(dict(
-            experiment=res["summary"][0]["experiment"],
-            metric="auc_drgrpo_minus_grpo",
-            n_pairs=len(auc_a),
-            mean_grpo=float("nan"),
-            mean_drgrpo=float("nan"),
-            mean_diff=auc_obs, ci_lo=auc_lo, ci_hi=auc_hi,
-            p_le0=auc_p,
-            interpretation="signed area (Dr.GRPO - GRPO); positive = Dr.GRPO trace lies above GRPO",
-        ))
+        res["summary"].append(
+            dict(
+                experiment=res["summary"][0]["experiment"],
+                metric="auc_drgrpo_minus_grpo",
+                n_pairs=len(auc_a),
+                mean_grpo=float("nan"),
+                mean_drgrpo=float("nan"),
+                mean_diff=auc_obs,
+                ci_lo=auc_lo,
+                ci_hi=auc_hi,
+                p_le0=auc_p,
+                interpretation="signed area (Dr.GRPO - GRPO); positive = Dr.GRPO trace lies above GRPO",
+            )
+        )
         # conditional reversals: pooled over (pos_dR, neg_dR)
         for cell in ("rev_on_pos_dR", "rev_on_neg_dR"):
             sub = [r for r in res["rev_cond"] if r["cell"] == cell]
@@ -404,33 +460,44 @@ def main() -> None:
             b_vals = [r["rev_drgrpo"] for r in sub]
             if not any(math.isnan(x) for x in a_vals + b_vals):
                 obs, lo, hi, p = bootstrap_paired_diff(a_vals, b_vals)
-                res["summary"].append(dict(
-                    experiment=res["summary"][0]["experiment"],
-                    metric=f"{cell}_diff_drgrpo_minus_grpo",
-                    n_pairs=len(sub),
-                    mean_grpo=sum(a_vals) / len(a_vals),
-                    mean_drgrpo=sum(b_vals) / len(b_vals),
-                    mean_diff=obs, ci_lo=lo, ci_hi=hi, p_le0=p,
-                    interpretation="positive = Dr.GRPO flips dL direction more on this reward-sign stratum",
-                ))
+                res["summary"].append(
+                    dict(
+                        experiment=res["summary"][0]["experiment"],
+                        metric=f"{cell}_diff_drgrpo_minus_grpo",
+                        n_pairs=len(sub),
+                        mean_grpo=sum(a_vals) / len(a_vals),
+                        mean_drgrpo=sum(b_vals) / len(b_vals),
+                        mean_diff=obs,
+                        ci_lo=lo,
+                        ci_hi=hi,
+                        p_le0=p,
+                        interpretation="positive = Dr.GRPO flips dL direction more on this reward-sign stratum",
+                    )
+                )
     for row in res_gsm["summary"] + res_arith["summary"]:
         row.setdefault("estimate", row["mean_diff"])
     write_tsv(out_paths["summary"], res_gsm["summary"] + res_arith["summary"])
-    meta["experiments"].append(dict(
-        name="drgrpo_gsm8k_cot",
-        summary_rows=res_gsm["summary"],
-    ))
-    meta["experiments"].append(dict(
-        name="drgrpo_vs_grpo",
-        summary_rows=res_arith["summary"],
-    ))
+    meta["experiments"].append(
+        dict(
+            name="drgrpo_gsm8k_cot",
+            summary_rows=res_gsm["summary"],
+        )
+    )
+    meta["experiments"].append(
+        dict(
+            name="drgrpo_vs_grpo",
+            summary_rows=res_arith["summary"],
+        )
+    )
     meta["outputs"] = out_paths
     with open(os.path.join(OUT_DIR, "length_bias_iter68_meta_v2.json"), "w") as fh:
         json.dump(meta, fh, indent=2)
     print("[iter68] wrote:", json.dumps(out_paths, indent=2))
     # print headline
     for row in res_gsm["summary"] + res_arith["summary"]:
-        print(f"  {row['experiment']:24s} {row['metric']:48s} grpo={row['mean_grpo']:.4f} drgrpo={row['mean_drgrpo']:.4f} diff={row['mean_diff']:.4f} CI=[{row['ci_lo']:.4f},{row['ci_hi']:.4f}] p_le0={row['p_le0']:.4f}")
+        print(
+            f"  {row['experiment']:24s} {row['metric']:48s} grpo={row['mean_grpo']:.4f} drgrpo={row['mean_drgrpo']:.4f} diff={row['mean_diff']:.4f} CI=[{row['ci_lo']:.4f},{row['ci_hi']:.4f}] p_le0={row['p_le0']:.4f}"
+        )
 
 
 if __name__ == "__main__":

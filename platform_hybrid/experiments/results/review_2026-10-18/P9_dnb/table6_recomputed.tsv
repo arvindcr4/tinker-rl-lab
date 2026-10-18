@@ -1,0 +1,38 @@
+block	label	source	n_steps	peak	last10	extra
+tinker_single	Qwen3-8B	scale_gsm8k_qwen3-8b.json:reward_trace (model=Qwen/Qwen3-8B, run_id=3154dee5-4fd7-59b6-ba3b-721eef675bfc:train:0)	30	0.625	0.34375	
+tinker_single	Qwen3.5-4B	scale_gsm8k_qwen3.5-4b.json:reward_trace (model=Qwen/Qwen3.5-4B, run_id=200e4983-3e9d-5176-87d0-c55dd3c73539:train:0)	30	1.0	0.85	
+tinker_single	Llama-3.1-8B-Inst	scale_gsm8k_llama-8b-inst.json:reward_trace (model=meta-llama/Llama-3.1-8B-Instruct, run_id=488bbb2e-aa35-5431-b4a5-793f68b6bc49:train:0)	30	1.0	0.84375	
+tinker_single	DeepSeek-V3.1	frontier_gsm8k_deepseek-v3.1.json:reward_trace (model=deepseek-ai/DeepSeek-V3.1, run_id=56b99b24-03bd-5d00-ae23-831933ef53b2:train:0)	20	1.0	0.85	
+tinker_single	Nemotron-120B	frontier_gsm8k_nemotron-120b.json:reward_trace (model=nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-BF16, run_id=657a920a-9e74-55d2-9354-71a6ec2f1f61:train:0)	20	0.875	0.1625	
+tinker_single	Kimi-K2-Thinking (arch run)	arch_gsm8k_kimi-k2.json:reward_trace (model=moonshotai/Kimi-K2-Thinking, run_id=51a8ef9e-15ef-5f8f-bda1-78ee51387a12:train:0)	20	1.0	0.8	
+tinker_single	GPT-OSS-20B	arch_gsm8k_gpt-oss-20b.json:reward_trace (model=openai/gpt-oss-20b, run_id=c465d654-a00f-5821-9c11-0e40f0eecf9f:train:0)	30	1.0	0.875	
+tinker_single	Qwen3-32B tool-use	cross_tool_qwen3-32b.json:reward_trace (model=Qwen/Qwen3-32B, run_id=73ff186a-d8e3-50c3-afb8-2b863cd09579:train:0)	30	0.0	0.0	
+tinker_single	Llama-3.1-8B-Inst tool-use	cross_tool_llama-8b-inst.json:reward_trace (model=meta-llama/Llama-3.1-8B-Instruct, run_id=ca2e3a24-7401-5770-af34-a0d27177aeaa:train:0)	30	0.0	0.0	
+campaign_111623	w1_qwen3-8b-base	campaign_v2_20260419_111623.json:w1_qwen3-8b-base (model=Qwen/Qwen3-8B-Base, G=8, run_id=9f27c001-b92c-55a7-9e12-1a8bd858e16d:train:0)	30	1.0	0.9875	
+campaign_111623	w1_gpt-oss-120b	campaign_v2_20260419_111623.json:w1_gpt-oss-120b (model=openai/gpt-oss-120b, G=8, run_id=a0d96a00-54e1-569c-a56c-98520819f14f:train:0)	30	1.0	0.91875	
+campaign_111623	w1_kimi-k25	campaign_v2_20260419_111623.json:w1_kimi-k25 (model=moonshotai/Kimi-K2.5, G=8, run_id=a1d398a3-cea7-55fd-97d9-8b61001550b2:train:0)	30	1.0	0.7625	
+campaign_111623	w1_llama31-70b-base	campaign_v2_20260419_111623.json:w1_llama31-70b-base (model=meta-llama/Llama-3.1-70B, G=8, run_id=b39ea661-c094-5ecb-bed7-925c3e22f285:train:0)	30	0.75	0.45	
+campaign_111623	w1_llama31-8b-base	campaign_v2_20260419_111623.json:w1_llama31-8b-base (model=meta-llama/Llama-3.1-8B, G=8, run_id=57f4d068-2997-577c-895e-05f2265935a5:train:0)	30	0.3125	0.0875	
+campaign_111623	w1_kimi-k2-thinking	campaign_v2_20260419_111623.json:w1_kimi-k2-thinking (model=moonshotai/Kimi-K2-Thinking, G=8, run_id=a5715c67-65ef-5db8-a5ce-6d115a04b874:train:0)	30	1.0	0.83125	
+campaign_111623	w2_qwen3-8b_G2	campaign_v2_20260419_111623.json:w2_qwen3-8b_G2 (model=Qwen/Qwen3-8B, G=2, run_id=de39d965-b3f3-5317-b4e7-259a9472f2e0:train:0)	30	0.75	0.35	
+campaign_111623	w2_qwen3-8b_G4	campaign_v2_20260419_111623.json:w2_qwen3-8b_G4 (model=Qwen/Qwen3-8B, G=4, run_id=16d810a0-9818-5f4c-820c-23fc91270769:train:0)	30	0.875	0.2875	
+campaign_111623	w1_deepseek-v31-base	campaign_v2_20260419_111623.json:w1_deepseek-v31-base (model=deepseek-ai/DeepSeek-V3.1-Base, G=8, run_id=200252fc-0649-5b39-8030-ba0fa5d07e84:train:0)	30	0.9375	0.65625	
+campaign_111623	w2_qwen3-8b_G32	campaign_v2_20260419_111623.json:w2_qwen3-8b_G32 (model=Qwen/Qwen3-8B, G=32, run_id=5761c236-774f-5b29-926e-13bd6af310b1:train:0)	30	0.67188	0.3875	
+campaign_111623	w2_qwen3-8b_G16	campaign_v2_20260419_111623.json:w2_qwen3-8b_G16 (model=Qwen/Qwen3-8B, G=16, run_id=c82c876f-b1ff-517c-b19b-472b3df8e4b4:train:0)	30	0.625	0.325	
+campaign_111623	w1_qwen35-397b	campaign_v2_20260419_111623.json:w1_qwen35-397b (model=Qwen/Qwen3.5-397B-A17B, G=8, run_id=7040f210-e755-5f8d-bd1a-5cb6f3ab33f8:train:0)	30	1.0	0.91875	
+campaign_111623	w3_dsv31_s123	campaign_v2_20260419_111623.json:w3_dsv31_s123 (model=deepseek-ai/DeepSeek-V3.1, G=8, run_id=c589e374-95d8-520d-8a4e-1b688bc5550f:train:0)	30	1.0	0.90625	
+campaign_111623	w3_dsv31_s456	campaign_v2_20260419_111623.json:w3_dsv31_s456 (model=deepseek-ai/DeepSeek-V3.1, G=8, run_id=0416d5d1-161b-5264-8b69-4612314d3b41:train:0)	30	1.0	0.7875	
+campaign_111623	w3_dsv31_s789	campaign_v2_20260419_111623.json:w3_dsv31_s789 (model=deepseek-ai/DeepSeek-V3.1, G=8, run_id=3fd600fd-6982-5061-8edc-c2da2c7f2f0e:train:0)	30	1.0	0.90625	
+framework_comparison	Tinker	results/framework_comparison.json (Qwen/Qwen3-8B-Base, source=bitter_lesson_campaign_v2)	30	1.0	0.85625	
+framework_comparison	TRL	results/framework_comparison.json (Qwen/Qwen3-8B, source=modal_trl_grpo_campaign)	30	0.375	0.05	
+trl_modal	Qwen/Qwen3-8B	master_results.json:experiments[60].reward_trace (platform=Modal-H100)	30	0.375	0.05	
+trl_modal	meta-llama/Llama-3.2-3B-Instruct	master_results.json:experiments[61].reward_trace (platform=Modal-H100)	30	1.0	0.7125	
+trl_modal	meta-llama/Llama-3.2-1B-Instruct	master_results.json:experiments[62].reward_trace (platform=Modal-H100)	30	0.875	0.3625	
+llama33_70b_seeds	seed 42	llama33_70b_seeds.json (run_id=55b12edb-e3af-5bfe-b0f8-7134ea717f5f:train:0)	30	1.0	0.95	
+llama33_70b_seeds	seed 123	llama33_70b_seeds.json (run_id=782afa1d-7715-5de8-b1d6-7c3d8c075682:train:0)	30	1.0	0.96875	
+llama33_70b_seeds	seed 456	llama33_70b_seeds.json (run_id=63e1c283-bd11-57eb-b8b1-538a91226d1d:train:0)	30	1.0	0.98125	
+llama33_70b_seeds	seed 789	llama33_70b_seeds.json (run_id=0b72cafc-0123-5405-8034-b69f9e64c2ec:train:0)	30	1.0	0.95625	
+er2b	G=2 s123	er2b_g2_s123.json	160	1.0	0.9	status=completed; G=2; batch=8; steps=160; zvf_max=1.000; zvf_final=1.000; zvf_last10=0.975
+er2b	G=2 s456	er2b_g2_s456.json	160	1.0	0.9625	status=completed; G=2; batch=8; steps=160; zvf_max=1.000; zvf_final=1.000; zvf_last10=0.975
+er2b	G=16 s123	er2b_g16_s123.json	20	0.50781	0.32188	status=completed; G=16; batch=8; steps=20; zvf_max=0.500; zvf_final=0.250; zvf_last10=0.150
+er2b	G=16 s456	er2b_g16_s456.json	20	0.53906	0.38906	status=completed; G=16; batch=8; steps=20; zvf_max=0.375; zvf_final=0.125; zvf_last10=0.100

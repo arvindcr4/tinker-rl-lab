@@ -27,6 +27,7 @@ H3 -- at the smallest rate (0.05%, top-1% K=100), no rule catches
 
 Stdlib + numpy + xgboost. <= 300 lines.
 """
+
 from __future__ import annotations
 
 import csv
@@ -37,8 +38,10 @@ import numpy as np
 import xgboost as xgb
 
 import sys
+
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
+from _paths import REPO_ROOT
+
 ROOT = REPO_ROOT
 RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8/corrected-review21-v2"
 RES.mkdir(parents=True, exist_ok=True)
@@ -81,9 +84,14 @@ def downsample_pos(y, target, rng):
 
 def fit_xgb(X_tr, y_tr, X_te, seed):
     m = xgb.XGBClassifier(
-        n_estimators=300, max_depth=5, learning_rate=0.1,
-        subsample=0.8, colsample_bytree=0.8, eval_metric="logloss",
-        random_state=seed, n_jobs=4,
+        n_estimators=300,
+        max_depth=5,
+        learning_rate=0.1,
+        subsample=0.8,
+        colsample_bytree=0.8,
+        eval_metric="logloss",
+        random_state=seed,
+        n_jobs=4,
     )
     m.fit(X_tr, y_tr)
     return m.predict_proba(X_te)[:, 1]
@@ -101,7 +109,9 @@ def apply_rules(scores, y, K_pct, second_stage_scores=None):
     """Apply xgb-only / gradient-band / absolute-band (mirrors iter-108 logic).
     Returns dict rule -> tuple (n_llm, pos_at_K, cpd, cpf)."""
     if second_stage_scores is None:
-        raise ValueError("second_stage_scores required; unchanged-score overhead is not a hybrid outcome")
+        raise ValueError(
+            "second_stage_scores required; unchanged-score overhead is not a hybrid outcome"
+        )
     if len(second_stage_scores) != len(scores):
         raise ValueError("second-stage scores must align by row")
     n = len(y)
@@ -150,13 +160,14 @@ def paired_boot_ci(y, scores, rules, n_boot, seed, second_stage_scores=None):
         ("absolute_band", "xgb_only"),
     ]
     diffs = {p: {"cpd": [], "cpf": []} for p in pairs}
-    for b in range(n_boot):
+    for _b in range(n_boot):
         idx = rng.integers(0, n, size=n)
         rb = apply_rules(scores[idx], y[idx], K_PCT, second_stage_scores[idx])
         for p in pairs:
             for metric in ("cpd", "cpf"):
-                diffs[p][metric].append(rb[p[0]][2 + (metric == "cpf")]
-                                         - rb[p[1]][2 + (metric == "cpf")])
+                diffs[p][metric].append(
+                    rb[p[0]][2 + (metric == "cpf")] - rb[p[1]][2 + (metric == "cpf")]
+                )
     out = {}
     for p in pairs:
         cpd_arr = np.array(diffs[p]["cpd"])
@@ -190,7 +201,9 @@ def main():
     p20 = fit_xgb(Xtr[:, :20], ytr, Xte[:, :20], SEED)
     p24 = fit_xgb(Xtr, ytr, Xte, SEED)
     p4 = fit_xgb(Xtr[:, 20:], ytr, Xte[:, 20:], SEED)
-    print(f"[iter112] p20 AUC={_auc(yte, p20):.5f} p24 AUC={_auc(yte, p24):.5f} p4 AUC={_auc(yte, p4):.5f}")
+    print(
+        f"[iter112] p20 AUC={_auc(yte, p20):.5f} p24 AUC={_auc(yte, p24):.5f} p4 AUC={_auc(yte, p4):.5f}"
+    )
 
     rng_down = np.random.default_rng(SEED)
     per_cell_rows = []
@@ -200,10 +213,14 @@ def main():
     for tgt in RATES:
         mask, _ = downsample_pos(yte, tgt, rng_down)
         y_d = yte[mask]
-        for tree_name, scores in (("XGB-20raw", p20[mask]),
-                                   ("XGB-24full", p24[mask]),
-                                   ("XGB-4sensor", p4[mask])):
-            pair_ci, base = paired_boot_ci(y_d, scores, None, N_BOOT, SEED + int(tgt * 1e7), p24[mask])
+        for tree_name, scores in (
+            ("XGB-20raw", p20[mask]),
+            ("XGB-24full", p24[mask]),
+            ("XGB-4sensor", p4[mask]),
+        ):
+            pair_ci, base = paired_boot_ci(
+                y_d, scores, None, N_BOOT, SEED + int(tgt * 1e7), p24[mask]
+            )
             for p, ci in pair_ci.items():
                 cpd_excl = ci["cpd_excl_zero"]
                 cpf_excl = ci["cpf_excl_zero"]
@@ -211,27 +228,39 @@ def main():
                     sig_count["cpd"] += 1
                 if cpf_excl:
                     sig_count["cpf"] += 1
-                pair_rows.append(dict(
-                    rate=tgt, tree=tree_name, pair="_vs_".join(p),
-                    cpd_delta=ci["cpd_delta"],
-                    cpd_ci_lo=ci["cpd_ci_lo"], cpd_ci_hi=ci["cpd_ci_hi"],
-                    cpd_excl_zero=cpd_excl,
-                    cpf_delta=ci["cpf_delta"],
-                    cpf_ci_lo=ci["cpf_ci_lo"], cpf_ci_hi=ci["cpf_ci_hi"],
-                    cpf_excl_zero=cpf_excl,
-                    n_pos=int(y_d.sum()),
-                ))
+                pair_rows.append(
+                    dict(
+                        rate=tgt,
+                        tree=tree_name,
+                        pair="_vs_".join(p),
+                        cpd_delta=ci["cpd_delta"],
+                        cpd_ci_lo=ci["cpd_ci_lo"],
+                        cpd_ci_hi=ci["cpd_ci_hi"],
+                        cpd_excl_zero=cpd_excl,
+                        cpf_delta=ci["cpf_delta"],
+                        cpf_ci_lo=ci["cpf_ci_lo"],
+                        cpf_ci_hi=ci["cpf_ci_hi"],
+                        cpf_excl_zero=cpf_excl,
+                        n_pos=int(y_d.sum()),
+                    )
+                )
             for rule, vals in base.items():
                 n_llm, pos_at_K, cpd, cpf = vals
-                per_cell_rows.append(dict(
-                    rate=tgt, tree=tree_name, rule=rule,
-                    n_test=len(y_d), actual_rate=float(y_d.mean()),
-                    outcome_kind="composed_XGB24_feature_proxy",
-                    n_pos=int(y_d.sum()),
-                    n_pos_caught_at_K=pos_at_K,
-                    n_llm_calls=n_llm,
-                    cpd_usd=cpd, cpf_usd=cpf,
-                ))
+                per_cell_rows.append(
+                    dict(
+                        rate=tgt,
+                        tree=tree_name,
+                        rule=rule,
+                        n_test=len(y_d),
+                        actual_rate=float(y_d.mean()),
+                        outcome_kind="composed_XGB24_feature_proxy",
+                        n_pos=int(y_d.sum()),
+                        n_pos_caught_at_K=pos_at_K,
+                        n_llm_calls=n_llm,
+                        cpd_usd=cpd,
+                        cpf_usd=cpf,
+                    )
+                )
 
     cols_cell = list(per_cell_rows[0].keys())
     with (RES / "p8_iter112_cost_per_rate_cell.tsv").open("w") as f:
@@ -249,27 +278,48 @@ def main():
     # --- H1: gradient vs absolute cpd excl_zero at each rate ---
     h1 = []
     for tgt in RATES:
-        sub = [r for r in pair_rows if r["rate"] == tgt
-               and r["pair"] == "gradient_band_vs_absolute_band"
-               and r["tree"] == "XGB-24full"]
+        sub = [
+            r
+            for r in pair_rows
+            if r["rate"] == tgt
+            and r["pair"] == "gradient_band_vs_absolute_band"
+            and r["tree"] == "XGB-24full"
+        ]
         if sub:
             r = sub[0]
-            h1.append(dict(rate=tgt, cpd_delta=r["cpd_delta"],
-                            ci_lo=r["cpd_ci_lo"], ci_hi=r["cpd_ci_hi"],
-                            excl_zero=r["cpd_excl_zero"]))
+            h1.append(
+                dict(
+                    rate=tgt,
+                    cpd_delta=r["cpd_delta"],
+                    ci_lo=r["cpd_ci_lo"],
+                    ci_hi=r["cpd_ci_hi"],
+                    excl_zero=r["cpd_excl_zero"],
+                )
+            )
     # --- H2: gradient vs absolute cpf excl_zero at each rate ---
     h2 = []
     for tgt in RATES:
-        sub = [r for r in pair_rows if r["rate"] == tgt
-               and r["pair"] == "gradient_band_vs_absolute_band"
-               and r["tree"] == "XGB-24full"]
+        sub = [
+            r
+            for r in pair_rows
+            if r["rate"] == tgt
+            and r["pair"] == "gradient_band_vs_absolute_band"
+            and r["tree"] == "XGB-24full"
+        ]
         if sub:
             r = sub[0]
-            h2.append(dict(rate=tgt, cpf_delta=r["cpf_delta"],
-                            ci_lo=r["cpf_ci_lo"], ci_hi=r["cpf_ci_hi"],
-                            excl_zero=r["cpf_excl_zero"]))
+            h2.append(
+                dict(
+                    rate=tgt,
+                    cpf_delta=r["cpf_delta"],
+                    ci_lo=r["cpf_ci_lo"],
+                    ci_hi=r["cpf_ci_hi"],
+                    excl_zero=r["cpf_excl_zero"],
+                )
+            )
     summary = {
-        "iter": 112, "protocol_version": "review21-v2",
+        "iter": 112,
+        "protocol_version": "review21-v2",
         "second_stage_kind": "XGB-24full feature proxy; not measured LLM outputs",
         "n_train": int(len(ytr)),
         "n_test": int(len(yte)),
@@ -292,18 +342,25 @@ def main():
     (RES / "p8_iter112_cost_cis_realistic_rates_summary.json").write_text(
         json.dumps(summary, indent=2)
     )
-    print(f"[iter112] done. n_pair_cells={len(pair_rows)} "
-          f"n_sig_cpd={sig_count['cpd']} n_sig_cpf={sig_count['cpf']}")
+    print(
+        f"[iter112] done. n_pair_cells={len(pair_rows)} "
+        f"n_sig_cpd={sig_count['cpd']} n_sig_cpf={sig_count['cpf']}"
+    )
     print(f"[iter112] h1 (cpd) exclude_zero per rate:")
     for h in h1:
-        print(f"  rate={h['rate']:.4f} delta={h['cpd_delta']:+.6f} CI=[{h['ci_lo']:+.6f},{h['ci_hi']:+.6f}] excl={h['excl_zero']}")
+        print(
+            f"  rate={h['rate']:.4f} delta={h['cpd_delta']:+.6f} CI=[{h['ci_lo']:+.6f},{h['ci_hi']:+.6f}] excl={h['excl_zero']}"
+        )
     print(f"[iter112] h2 (cpf) exclude_zero per rate:")
     for h in h2:
-        print(f"  rate={h['rate']:.4f} delta={h['cpf_delta']:+.4e} CI=[{h['ci_lo']:+.4e},{h['ci_hi']:+.4e}] excl={h['excl_zero']}")
+        print(
+            f"  rate={h['rate']:.4f} delta={h['cpf_delta']:+.4e} CI=[{h['ci_lo']:+.4e},{h['ci_hi']:+.4e}] excl={h['excl_zero']}"
+        )
 
 
 def _auc(y, p):
     from sklearn.metrics import roc_auc_score
+
     return roc_auc_score(y, p)
 
 

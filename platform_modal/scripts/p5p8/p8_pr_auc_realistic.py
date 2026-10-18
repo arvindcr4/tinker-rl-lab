@@ -34,14 +34,14 @@ Outputs
 platform_hybrid/experiments/results/p5p8/p8_pr_auc_realistic.tsv
 platform_hybrid/experiments/results/p5p8/p8_pr_auc_realistic.json
 """
+
 from __future__ import annotations
 import json
-import sys
 from pathlib import Path
 import numpy as np
 import pandas as pd
 import xgboost as xgb
-from sklearn.metrics import average_precision_score, precision_recall_curve
+from sklearn.metrics import average_precision_score
 
 ROOT = Path(__file__).resolve().parents[3]
 TRAIN = ROOT / "fraud_data.csv"
@@ -68,7 +68,9 @@ def load_data() -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, list[st
     return (
         feat_20_tr,
         y_tr,
-        np.column_stack([feat_20_te, df_te[V_AGG].to_numpy(dtype=np.float64)]) if False else feat_full_te,
+        np.column_stack([feat_20_te, df_te[V_AGG].to_numpy(dtype=np.float64)])
+        if False
+        else feat_full_te,
         y_te,
         [feat_20_te, feat_full_te, feat_4_te],
     )
@@ -162,13 +164,11 @@ def main() -> None:
     trees = {
         "XGB-20raw": fit_tree(X20_tr, y_tr),
         "XGB-24full": fit_tree(X24_tr, y_tr),
-        "XGB-4sensor": fit_tree(
-            pd.read_csv(TRAIN)[V_AGG].to_numpy(dtype=np.float64), y_tr
-        ),
+        "XGB-4sensor": fit_tree(pd.read_csv(TRAIN)[V_AGG].to_numpy(dtype=np.float64), y_tr),
     }
     feature_sets = {"XGB-20raw": X20_te, "XGB-24full": X24_te, "XGB-4sensor": X4_te}
     retained_masks = {tgt: downsample_positives(y_te, tgt, rng_down) for tgt in target_rates}
-    for tgt, lbl in zip(target_rates, rate_labels):
+    for tgt, lbl in zip(target_rates, rate_labels, strict=False):
         mask = retained_masks[tgt]
         y_sub = y_te[mask]
         for name, X in feature_sets.items():
@@ -181,19 +181,24 @@ def main() -> None:
                     "rate_label": lbl,
                     "target_rate": tgt,
                     "actual_rate": float(y_sub.mean()),
-                    "n_test": len(y_sub), "n_pos": int(y_sub.sum()),
+                    "n_test": len(y_sub),
+                    "n_pos": int(y_sub.sum()),
                     **met,
                 }
             )
     # Paired bootstrap CIs for XGB-24full - XGB-20raw at each rate.
     boot_rows = []
-    for tgt, lbl in zip(target_rates, rate_labels):
+    for tgt, lbl in zip(target_rates, rate_labels, strict=False):
         mask = retained_masks[tgt]
         y_sub = y_te[mask]
         p_full = trees["XGB-24full"].predict_proba(feature_sets["XGB-24full"])[:, 1][mask]
         p_raw = trees["XGB-20raw"].predict_proba(feature_sets["XGB-20raw"])[:, 1][mask]
         p_4 = trees["XGB-4sensor"].predict_proba(feature_sets["XGB-4sensor"])[:, 1][mask]
-        for a, b in [("XGB-24full", "XGB-20raw"), ("XGB-24full", "XGB-4sensor"), ("XGB-20raw", "XGB-4sensor")]:
+        for a, b in [
+            ("XGB-24full", "XGB-20raw"),
+            ("XGB-24full", "XGB-4sensor"),
+            ("XGB-20raw", "XGB-4sensor"),
+        ]:
             pa = {"XGB-24full": p_full, "XGB-20raw": p_raw, "XGB-4sensor": p_4}[a]
             pb = {"XGB-24full": p_full, "XGB-20raw": p_raw, "XGB-4sensor": p_4}[b]
             for mname, mfn in [
@@ -216,7 +221,8 @@ def main() -> None:
                         "rate_label": lbl,
                         "target_rate": tgt,
                         "actual_rate": float(y_sub.mean()),
-                        "n_test": len(y_sub), "n_pos": int(y_sub.sum()),
+                        "n_test": len(y_sub),
+                        "n_pos": int(y_sub.sum()),
                         "a_minus_b": f"{a}-{b}",
                         "metric": mname,
                         "point_diff": base,
@@ -229,8 +235,10 @@ def main() -> None:
     df.to_csv(OUT_DIR / "p8_pr_auc_realistic.tsv", sep="\t", index=False)
     pd.DataFrame(boot_rows).to_csv(OUT_DIR / "p8_pr_auc_boot.tsv", sep="\t", index=False)
     summary = {
-        "rates": list(zip(rate_labels, target_rates)),
-        "retained_row_ids": {str(tgt): np.flatnonzero(mask).tolist() for tgt, mask in retained_masks.items()},
+        "rates": list(zip(rate_labels, target_rates, strict=False)),
+        "retained_row_ids": {
+            str(tgt): np.flatnonzero(mask).tolist() for tgt, mask in retained_masks.items()
+        },
         "per_cell": rows,
         "bootstrap": boot_rows,
     }
@@ -241,7 +249,7 @@ def main() -> None:
     for r in rows:
         print(
             f"  {r['model']:>11s} rate={r['rate_label']:>8s} pos={r['n_pos']:>5d} "
-            f"pr_auc={r['pr_auc']:.4f} p@top1%={r['p_at_top']*100:.2f}% r@top1%={r['r_at_top']*100:.2f}%"
+            f"pr_auc={r['pr_auc']:.4f} p@top1%={r['p_at_top'] * 100:.2f}% r@top1%={r['r_at_top'] * 100:.2f}%"
         )
 
 

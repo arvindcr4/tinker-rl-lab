@@ -39,6 +39,7 @@ H4 -- per-method zvf contrast density at per-prompt granularity:
 Operationally this answers: does the iter-124 super-domain claim
 ({P5,P7}-step / {P8}) survive the inclusion of P7-prompt granularity?
 """
+
 from __future__ import annotations
 import json
 from pathlib import Path
@@ -46,8 +47,10 @@ from pathlib import Path
 import numpy as np
 
 import sys
+
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
+from _paths import REPO_ROOT
+
 ROOT = REPO_ROOT
 RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8"
 RES.mkdir(parents=True, exist_ok=True)
@@ -67,20 +70,23 @@ def compute_d4_from_iter131():
     of the iter-124 P5 D3 (zvf == 1.0) and iter-124 P7 D2 (zvf >= 0.7)."""
     path = RES / "p7_iter131_per_prompt_gstar.tsv"
     import csv
+
     rows = []
     with path.open() as f:
         rdr = csv.DictReader(f, delimiter="\t")
         for r in rdr:
             try:
-                rows.append({
-                    "method": r["method"],
-                    "step": int(r["step"]),
-                    "prompt": int(r["prompt"]),
-                    "k_obs": int(r["k_obs"]),
-                    "is_boundary": int(r["is_boundary"]),
-                    "zvf_obs": float(r["zvf_obs"]),
-                    "ADAPTIVE_PP_Gstar": int(r["ADAPTIVE_PP_Gstar"]),
-                })
+                rows.append(
+                    {
+                        "method": r["method"],
+                        "step": int(r["step"]),
+                        "prompt": int(r["prompt"]),
+                        "k_obs": int(r["k_obs"]),
+                        "is_boundary": int(r["is_boundary"]),
+                        "zvf_obs": float(r["zvf_obs"]),
+                        "ADAPTIVE_PP_Gstar": int(r["ADAPTIVE_PP_Gstar"]),
+                    }
+                )
             except (KeyError, ValueError):
                 continue
     return rows
@@ -91,6 +97,7 @@ from review22_contract import highest_density
 
 def main():
     from review22_contract import require_independent_unit_contract
+
     require_independent_unit_contract()
     print(f"[iter132 SYNTH] loading iter-131 per-prompt table ...")
     cells_pp = compute_d4_from_iter131()
@@ -98,14 +105,16 @@ def main():
     n_boundary = sum(1 for r in cells_pp if r["is_boundary"] == 1)
     n_high_zvf = sum(1 for r in cells_pp if r["zvf_obs"] >= 0.7)
     n_high_gstar = sum(1 for r in cells_pp if r["ADAPTIVE_PP_Gstar"] >= 16)
-    print(f"[iter132 SYNTH] n_total={n_total}, n_boundary={n_boundary}, "
-          f"n_high_zvf={n_high_zvf}, n_high_gstar={n_high_gstar}")
+    print(
+        f"[iter132 SYNTH] n_total={n_total}, n_boundary={n_boundary}, "
+        f"n_high_zvf={n_high_zvf}, n_high_gstar={n_high_gstar}"
+    )
 
     # --- Domain definitions ---
     # D1, D2, D3 anchored from iter-124 (re-imported literals)
     D1 = {"n_fire": 84, "n_total": 10000}  # P8 grad-band: 84 fires on 10k test rows
-    D2 = {"n_fire": 20, "n_total": 40}     # P7 zvf-triage: 20/40 steps at zvf>=0.7
-    D3 = {"n_fire": 36, "n_total": 98}     # P5 mega-corpus: 36 cells with zvf==1.0 (iter-124 H4)
+    D2 = {"n_fire": 20, "n_total": 40}  # P7 zvf-triage: 20/40 steps at zvf>=0.7
+    D3 = {"n_fire": 36, "n_total": 98}  # P5 mega-corpus: 36 cells with zvf==1.0 (iter-124 H4)
     D4 = {"n_fire": n_boundary, "n_total": n_total}  # NEW: P7 per-prompt boundary density
 
     D1_ci = density_ci(D1["n_fire"], D1["n_total"], seed=SEED)
@@ -114,41 +123,45 @@ def main():
     D4_ci = density_ci(D4["n_fire"], D4["n_total"], seed=SEED + 3)
 
     domains = [
-        ("D1_P8_grad_band",        D1_ci),
-        ("D2_P7_step_zvf_triage",  D2_ci),
-        ("D3_P5_mega_zvf_eq_1",    D3_ci),
+        ("D1_P8_grad_band", D1_ci),
+        ("D2_P7_step_zvf_triage", D2_ci),
+        ("D3_P5_mega_zvf_eq_1", D3_ci),
         ("D4_P7_perprompt_boundary", D4_ci),
     ]
     out_d = RES / "synth_iter132_four_domain_density.tsv"
     with out_d.open("w") as f:
         f.write("domain\tn_fire\tn_total\trate\tci_lo\tci_hi\trule\n")
         rules = {
-            "D1_P8_grad_band":        "P8 grad-band: row in top-K AND consecutive gradient small",
-            "D2_P7_step_zvf_triage":  "P7 step zvf>=0.7 (DEGENERATE regime)",
-            "D3_P5_mega_zvf_eq_1":    "P5 mega cell per-step zvf == 1.0",
+            "D1_P8_grad_band": "P8 grad-band: row in top-K AND consecutive gradient small",
+            "D2_P7_step_zvf_triage": "P7 step zvf>=0.7 (DEGENERATE regime)",
+            "D3_P5_mega_zvf_eq_1": "P5 mega cell per-step zvf == 1.0",
             "D4_P7_perprompt_boundary": "P7 per-prompt is_boundary==1 (k in {0,8})",
         }
         for k, d in domains:
-            f.write(f"{k}\t{d['n_fire']}\t{d['n_total']}\t{d['rate']:.6f}\t{d['lo']:.6f}\t{d['hi']:.6f}\t{rules[k]}\n")
+            f.write(
+                f"{k}\t{d['n_fire']}\t{d['n_total']}\t{d['rate']:.6f}\t{d['lo']:.6f}\t{d['hi']:.6f}\t{rules[k]}\n"
+            )
     print(f"[iter132] wrote {out_d}")
 
     # --- H1: 4-domain ratio matrix (6 ordered pairs) ---
     pairs = [
-        ("P5_over_P7step",  D3_ci, D2_ci),
-        ("P5_over_P7pp",    D3_ci, D4_ci),
-        ("P5_over_P8",      D3_ci, D1_ci),
-        ("P8_over_P7step",  D1_ci, D2_ci),
-        ("P8_over_P7pp",    D1_ci, D4_ci),
+        ("P5_over_P7step", D3_ci, D2_ci),
+        ("P5_over_P7pp", D3_ci, D4_ci),
+        ("P5_over_P8", D3_ci, D1_ci),
+        ("P8_over_P7step", D1_ci, D2_ci),
+        ("P8_over_P7pp", D1_ci, D4_ci),
         ("P7pp_over_P7step", D4_ci, D2_ci),
-        ("P7pp_over_P5",    D4_ci, D3_ci),
-        ("P7step_over_P5",  D2_ci, D3_ci),
-        ("P7pp_over_P8",    D4_ci, D1_ci),
+        ("P7pp_over_P5", D4_ci, D3_ci),
+        ("P7step_over_P5", D2_ci, D3_ci),
+        ("P7pp_over_P8", D4_ci, D1_ci),
     ]
     ratios = {label: ratio_ci(num, den) for label, num, den in pairs}
     print(f"[iter132 H1] 4-domain ratio matrix:")
     for k, v in ratios.items():
-        print(f"   {k}: ratio={v['ratio']:.4f} "
-              f"CI=[{v['lo']:.4f}, {v['hi']:.4f}] excludes_1.0={v['excludes_1.0']}")
+        print(
+            f"   {k}: ratio={v['ratio']:.4f} "
+            f"CI=[{v['lo']:.4f}, {v['hi']:.4f}] excludes_1.0={v['excludes_1.0']}"
+        )
 
     out_r = RES / "synth_iter132_four_domain_density_ratios.tsv"
     with out_r.open("w") as f:
@@ -160,8 +173,7 @@ def main():
     # --- H2: density rank ---
     densities = {k.split("_")[0]: v["rate"] for k, v in domains}
     rank = sorted(densities.items(), key=lambda kv: -kv[1])
-    print(f"[iter132 H2] density rank: " +
-          ", ".join(f"{k}={v:.4f}" for k, v in rank))
+    print(f"[iter132 H2] density rank: " + ", ".join(f"{k}={v:.4f}" for k, v in rank))
 
     # --- H3: per-method boundary density on D4 ---
     methods = ["grpo", "aero", "gift", "areal"]
@@ -185,20 +197,28 @@ def main():
         [method_density[m] for m in methods],
     )[0, 1]
     print(f"[iter132 H3] per-method boundary density: {method_density}")
-    print(f"[iter132 H3] rho (iter-131 rank, density) = {rho_h3:.4f} (negative => lower-rank => higher density expected)")
+    print(
+        f"[iter132 H3] rho (iter-131 rank, density) = {rho_h3:.4f} (negative => lower-rank => higher density expected)"
+    )
 
     out_h3 = RES / "synth_iter132_per_method_boundary.tsv"
     with out_h3.open("w") as f:
-        f.write("method\tn\tn_boundary\tboundary_density\titer127_rank_step_ccc\titer131_rank_per_prompt\n")
+        f.write(
+            "method\tn\tn_boundary\tboundary_density\titer127_rank_step_ccc\titer131_rank_per_prompt\n"
+        )
         for m in methods:
-            f.write(f"{m}\t{per_method[m]['n']}\t{per_method[m]['n_boundary']}\t"
-                    f"{method_density[m]:.6f}\t{iter127_rank[m]}\t{iter131_rank[m]}\n")
+            f.write(
+                f"{m}\t{per_method[m]['n']}\t{per_method[m]['n_boundary']}\t"
+                f"{method_density[m]:.6f}\t{iter127_rank[m]}\t{iter131_rank[m]}\n"
+            )
     print(f"[iter132] wrote {out_h3}")
 
     # --- H4: rate of prompts with non-zero contrast (k strict between 0 and 8) ---
     n_nonzero_contrast = sum(1 for r in cells_pp if 0 < r["k_obs"] < 8)
     p_nonzero = n_nonzero_contrast / n_total
-    print(f"[iter132 H4] prompts with non-zero contrast (0<k<8): {n_nonzero_contrast}/{n_total} = {p_nonzero:.4f}")
+    print(
+        f"[iter132 H4] prompts with non-zero contrast (0<k<8): {n_nonzero_contrast}/{n_total} = {p_nonzero:.4f}"
+    )
 
     # Summary JSON
     summary = {
@@ -216,8 +236,8 @@ def main():
         "rate_prompts_with_nonzero_contrast": p_nonzero,
         "h_falsifiable": {
             "H1_d4_in_P5_P7step_superdomain": bool(
-                ratios["P7pp_over_P7step"]["excludes_1.0"] is False and
-                ratios["P7pp_over_P5"]["excludes_1.0"] is False
+                ratios["P7pp_over_P7step"]["excludes_1.0"] is False
+                and ratios["P7pp_over_P5"]["excludes_1.0"] is False
             ),
             "H2_d4_highest_density": highest_density(densities, "D4"),
             "H3_method_rank_inverts_iter127_vs_iter131": bool(rho_h3 < -0.5),

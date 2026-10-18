@@ -47,6 +47,7 @@ def _mixed(n_groups=4, group_size=2):
 
 # ----------------------------------------------------------------- base adapter
 
+
 def test_base_adapter_builds_callback_from_kwargs():
     a = _ListAdapter(zvf_max=0.85, adaptive_G=True, G0=8)
     assert isinstance(a.callback, ZVFCallback)
@@ -123,6 +124,7 @@ def test_not_implemented_message_is_actionable(cls):
 
 
 # ----------------------------------------------------------- lazy import contract
+
 
 def test_integrations_import_is_dependency_free():
     # Importing the package must not import verl / openrlhf / nemo / torch.

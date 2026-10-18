@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Mechanical evidence-boundary checks for the Reviewer #36320 corpus revision."""
+
 from __future__ import annotations
 
 import re
@@ -8,7 +9,7 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from publication_worthiness_check import ACTIVE_ROSTER, ABSORBED_ARCHIVED  # noqa: E402
+from publication_worthiness_check import ACTIVE_ROSTER, ABSORBED_ARCHIVED
 
 DESCENDANT = "platform_hybrid/paper/paper.tex"
 MANIFEST = "platform_hybrid/paper/REVIEWER_36320_CORRECTION_MANIFEST.md"
@@ -67,7 +68,7 @@ def qwen_ppo_derived_errors(text: str) -> list[str]:
     for raw_row in re.split(r"\\\\", text.lower()):
         row = re.sub(r"\s+", " ", raw_row)
         for qwen in re.finditer(r"qwen3[-_ ]8b", row):
-            window = row[max(0, qwen.start() - 100):min(len(row), qwen.end() + 180)]
+            window = row[max(0, qwen.start() - 100) : min(len(row), qwen.end() + 180)]
             if not re.search(r"\bppo\b|\bppo(?=[_\s-])", window):
                 continue
             derived_statistic = re.search(
@@ -78,10 +79,17 @@ def qwen_ppo_derived_errors(text: str) -> list[str]:
                 r"|\b(?:ppo|grpo)\b[^.\n]{0,24}\b0\.\d+\b",
                 window,
             )
-            quarantined = any(marker in window for marker in ("provenance conflict", "not estimable", "quarantined"))
-            comparison = re.search(r"(?:ppo\s+vs\s+grpo|grpo\s+vs\s+ppo|ppo[_\s-]+qwen3[-_ ]8b|ppo\s+trace)", window)
+            quarantined = any(
+                marker in window
+                for marker in ("provenance conflict", "not estimable", "quarantined")
+            )
+            comparison = re.search(
+                r"(?:ppo\s+vs\s+grpo|grpo\s+vs\s+ppo|ppo[_\s-]+qwen3[-_ ]8b|ppo\s+trace)", window
+            )
             if derived_statistic or (comparison and not quarantined):
-                errors.append("#36320 inclusion closure retains a derived Qwen PPO comparison statistic")
+                errors.append(
+                    "#36320 inclusion closure retains a derived Qwen PPO comparison statistic"
+                )
                 break
         if errors:
             break
@@ -97,18 +105,20 @@ def comparison_claim_scope(text: str, match: re.Match[str]) -> str:
     row_start = text.rfind("\\\\", paragraph_start, match.start()) + 2
     row_end = text.find("\\\\", match.end(), paragraph_end)
     if row_end != -1:
-        return text[max(paragraph_start, row_start):row_end]
+        return text[max(paragraph_start, row_start) : row_end]
 
     sentence_start = max(paragraph_start, text.rfind(";", paragraph_start, match.start()) + 1)
-    for boundary in re.finditer(r"(?<!\d)[.!?](?=\s|$)", text[paragraph_start:match.start()]):
+    for boundary in re.finditer(r"(?<!\d)[.!?](?=\s|$)", text[paragraph_start : match.start()]):
         sentence_start = paragraph_start + boundary.end()
-    sentence_end_match = re.search(r"(?:;|(?<!\d)[.!?](?=\s|$))", text[match.end():paragraph_end])
+    sentence_end_match = re.search(r"(?:;|(?<!\d)[.!?](?=\s|$))", text[match.end() : paragraph_end])
     sentence_end = match.end() + sentence_end_match.end() if sentence_end_match else paragraph_end
     while sentence_end < paragraph_end:
         continuation = re.match(r"\s*(?:its|it|this|that)\b", text[sentence_end:paragraph_end])
         if not continuation:
             break
-        next_end = re.search(r"(?<!\d)[.!?](?=\s|$)", text[sentence_end + continuation.end():paragraph_end])
+        next_end = re.search(
+            r"(?<!\d)[.!?](?=\s|$)", text[sentence_end + continuation.end() : paragraph_end]
+        )
         if not next_end:
             sentence_end = paragraph_end
             break
@@ -139,15 +149,17 @@ def descendant_claim_errors(text: str) -> list[str]:
         if phrase in lowered:
             errors.append(f"#36320 inclusion closure retains forbidden claim: {phrase}")
     for match in re.finditer(r"gradient vanishes", lowered):
-        prefix = lowered[max(0, match.start() - 80):match.start()]
+        prefix = lowered[max(0, match.start() - 80) : match.start()]
         if "does not assert that the total " not in prefix:
             errors.append("#36320 inclusion closure retains forbidden claim: gradient vanishes")
             break
     if re.search(r"qwen3-8b.{0,300}(22\.5|35\.0)", text, flags=re.IGNORECASE | re.DOTALL):
         errors.append("#36320 inclusion closure retains a live Qwen PPO numeric comparison")
     errors.extend(qwen_ppo_derived_errors(text))
-    for match in re.finditer(r"\badopt\b.{0,160}\b(?:controller|deployment|default)\b", lowered, flags=re.DOTALL):
-        prefix = lowered[max(0, match.start() - 40):match.start()]
+    for match in re.finditer(
+        r"\badopt\b.{0,160}\b(?:controller|deployment|default)\b", lowered, flags=re.DOTALL
+    ):
+        prefix = lowered[max(0, match.start() - 40) : match.start()]
         if "rather than " not in prefix and "do not " not in prefix:
             errors.append("#36320 inclusion closure retains an adoption prescription")
             break
@@ -174,7 +186,9 @@ def descendant_claim_errors(text: str) -> list[str]:
             errors.append("#36320 inclusion closure has an unsafe local 82.0-to-83.3 statement")
             break
     if re.search(r"primary inferential claims?.{0,500}held-out 5-seed", lowered, flags=re.DOTALL):
-        errors.append("#36320 inclusion closure treats a held-out 5-seed comparison as a primary inferential claim")
+        errors.append(
+            "#36320 inclusion closure treats a held-out 5-seed comparison as a primary inferential claim"
+        )
     return errors
 
 
@@ -202,12 +216,15 @@ def p7_operational_errors(text: str) -> list[str]:
         match = re.search(pattern, lowered, flags=re.DOTALL)
         if not match:
             continue
-        clause_start = max(
-            lowered.rfind(".", 0, match.start()),
-            lowered.rfind(";", 0, match.start()),
-            lowered.rfind("\n", 0, match.start()),
-        ) + 1
-        negated = re.search(r"\b(?:do\s+not|not|never)\b", lowered[clause_start:match.start()])
+        clause_start = (
+            max(
+                lowered.rfind(".", 0, match.start()),
+                lowered.rfind(";", 0, match.start()),
+                lowered.rfind("\n", 0, match.start()),
+            )
+            + 1
+        )
+        negated = re.search(r"\b(?:do\s+not|not|never)\b", lowered[clause_start : match.start()])
         if not negated:
             return ["#36320 P7 inclusion closure retains an operational imperative"]
     return []
@@ -225,9 +242,11 @@ def p10_centered_contribution_errors(text: str) -> list[str]:
         r"|rollouts\s*to\s*(?:potentially\s*)?non\s*zero[^\n]{0,100}(?:gradient|update))"
     )
     for match in shorthand.finditer(semantic):
-        local = semantic[max(0, match.start() - 180):min(len(semantic), match.end() + 260)]
+        local = semantic[max(0, match.start() - 180) : min(len(semantic), match.end() + 260)]
         if "potentially nonzero centered reward contrast contribution" not in local:
-            return ["#36320 P10 inclusion closure retains an unscoped nonzero update/gradient shorthand"]
+            return [
+                "#36320 P10 inclusion closure retains an unscoped nonzero update/gradient shorthand"
+            ]
     return []
 
 
@@ -279,7 +298,12 @@ def check() -> list[str]:
         if forbidden in descendant:
             errors.append(f"#36320 descendant retains withdrawn aggregate/conflict: {forbidden}")
     method = read("platform_hybrid/paper/sections/diagnostic_method.tex")
-    for marker in ("not canonical GRPO", "centered reward-contrast term", "completion-only token masking", "future-paper evidence"):
+    for marker in (
+        "not canonical GRPO",
+        "centered reward-contrast term",
+        "completion-only token masking",
+        "future-paper evidence",
+    ):
         if marker not in method:
             errors.append(f"diagnostic method missing scope marker: {marker}")
     return errors

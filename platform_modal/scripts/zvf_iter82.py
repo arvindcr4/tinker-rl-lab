@@ -31,6 +31,7 @@ import math
 from collections import defaultdict
 from pathlib import Path
 
+
 def main():
     ROOT = Path(__file__).resolve().parents[2]
     RES = ROOT / "platform_hybrid" / "experiments" / "results"
@@ -56,11 +57,12 @@ def main():
                 header = s.split("\t")
                 continue
             toks = s.split("\t")
-            feat_rows.append(dict(zip(header, toks)))
+            feat_rows.append(dict(zip(header, toks, strict=False)))
 
     # Per-trace
-    traces = defaultdict(lambda: {"method": "", "step": [], "zvf": [], "acc": [],
-                                  "is_failure": [], "composite": []})
+    traces = defaultdict(
+        lambda: {"method": "", "step": [], "zvf": [], "acc": [], "is_failure": [], "composite": []}
+    )
     for r in feat_rows:
         key = (r["source"], r["method"], r["seed"], r["trace_id"])
         t = traces[key]
@@ -73,7 +75,9 @@ def main():
         t["zvf"].append(float(r["zvf"]))
         t["acc"].append(float(r["heldout_acc"]))
         if r.get("protocol_id") != PROTOCOL_ID:
-            raise ValueError("Regenerate features with the versioned explicit endpoint; legacy is_failure is ambiguous")
+            raise ValueError(
+                "Regenerate features with the versioned explicit endpoint; legacy is_failure is ambiguous"
+            )
         t["is_failure"].append(int(r["accuracy_failure"]))
         t["composite"].append(float(r["composite_ews"]))
 
@@ -88,7 +92,7 @@ def main():
         acc_seq = t["acc"]
         fail_seq = t["is_failure"]
         comp_seq = t["composite"]
-        t_fail = next((s for s, f in zip(t["step"], fail_seq) if f == 1), None)
+        t_fail = next((s for s, f in zip(t["step"], fail_seq, strict=False) if f == 1), None)
         n_steps = max(t["step"]) + 1 if t["step"] else 0
         mean_zvf = sum(zvf_seq) / len(zvf_seq) if zvf_seq else 0.0
         peak_zvf = max(zvf_seq) if zvf_seq else 0.0
@@ -101,7 +105,7 @@ def main():
             else:
                 run_cur = 0
         # Inter-arrival time between alarm crossings (mean)
-        crossings = [s for s, z in zip(t["step"], zvf_seq) if z > ALARM_THRESH]
+        crossings = [s for s, z in zip(t["step"], zvf_seq, strict=False) if z > ALARM_THRESH]
         if len(crossings) >= 2:
             iat = (crossings[-1] - crossings[0]) / (len(crossings) - 1)
         else:
@@ -109,9 +113,11 @@ def main():
         # Pre-failure drift: slope of acc over last 30 steps before t_fail
         if t_fail is not None and t_fail >= 5:
             win_start = max(0, t_fail - 30)
-            win = [(s, a) for s, a in zip(t["step"], acc_seq) if win_start <= s < t_fail]
+            win = [
+                (s, a) for s, a in zip(t["step"], acc_seq, strict=False) if win_start <= s < t_fail
+            ]
         else:
-            win = [(s, a) for s, a in zip(t["step"], acc_seq)]
+            win = [(s, a) for s, a in zip(t["step"], acc_seq, strict=False)]
         if len(win) >= 2:
             nw = len(win)
             sx = sum(s for s, _ in win)
@@ -123,24 +129,26 @@ def main():
         else:
             slope = 0.0
         # Mean composite EWS while alive
-        alive_comp = [c for c, f in zip(comp_seq, fail_seq) if f == 0]
+        alive_comp = [c for c, f in zip(comp_seq, fail_seq, strict=False) if f == 0]
         mean_comp = sum(alive_comp) / len(alive_comp) if alive_comp else 0.0
-        trace_table.append({
-            "trace_id": trace_id,
-            "source": source,
-            "method": method,
-            "seed": seed,
-            "n_steps": n_steps,
-            "t_fail": -1 if t_fail is None else int(t_fail),
-            "failed": 0 if t_fail is None else 1,
-            "mean_zvf": mean_zvf,
-            "peak_zvf": peak_zvf,
-            "zvf_run_max": run_max,
-            "zvf_iat": iat,
-            "acc_pre_drift": slope,
-            "mean_acc": sum(acc_seq) / len(acc_seq) if acc_seq else 0.0,
-            "mean_composite_ews": mean_comp,
-        })
+        trace_table.append(
+            {
+                "trace_id": trace_id,
+                "source": source,
+                "method": method,
+                "seed": seed,
+                "n_steps": n_steps,
+                "t_fail": -1 if t_fail is None else int(t_fail),
+                "failed": 0 if t_fail is None else 1,
+                "mean_zvf": mean_zvf,
+                "peak_zvf": peak_zvf,
+                "zvf_run_max": run_max,
+                "zvf_iat": iat,
+                "acc_pre_drift": slope,
+                "mean_acc": sum(acc_seq) / len(acc_seq) if acc_seq else 0.0,
+                "mean_composite_ews": mean_comp,
+            }
+        )
 
     # ---------------------------------------------------------------------------
     # 2. Pooled hazard computation (per-step, per-method)
@@ -151,12 +159,17 @@ def main():
     HORIZON = 300
     VM_TRACES = [(s, m, sd, tid) for (s, m, sd, tid) in traces if s == "variance_mitigation"]
 
-
     def compute_hazard_by_method(thresh=ALARM_THRESH):
         """For each method, return arrays of t, h_alarm(t), h_noalarm(t)."""
-        by_method = defaultdict(lambda: {"alarm_num": [0] * HORIZON, "alarm_den": [0] * HORIZON,
-                                          "noalarm_num": [0] * HORIZON, "noalarm_den": [0] * HORIZON})
-        for (source, method, seed, trace_id) in VM_TRACES:
+        by_method = defaultdict(
+            lambda: {
+                "alarm_num": [0] * HORIZON,
+                "alarm_den": [0] * HORIZON,
+                "noalarm_num": [0] * HORIZON,
+                "noalarm_den": [0] * HORIZON,
+            }
+        )
+        for source, method, seed, trace_id in VM_TRACES:
             t = traces[(source, method, seed, trace_id)]
             zvf_seq = t["zvf"]
             fail_seq = t["is_failure"]
@@ -191,7 +204,9 @@ def main():
         h_noalarm = n_num / n_den if n_den else 0.0
         hr = h_alarm / h_noalarm_smooth if h_noalarm_smooth > 0 else float("inf")
         # Precision/recall framing: alarm's value as a collapse predictor
-        alarm_coverage = a_num / max(1, a_num + n_num)  # recall: fraction of failures preceded by alarm
+        alarm_coverage = a_num / max(
+            1, a_num + n_num
+        )  # recall: fraction of failures preceded by alarm
         false_alarm_rate = 1 - h_alarm  # fraction of alarms NOT followed by failure
         # E-score: 1 - false_alarm_rate if recall=1, else weighted
         if a_num + n_num > 0:
@@ -202,22 +217,24 @@ def main():
             precision = 0.0
             recall = 0.0
             f1 = 0.0
-        hr_table.append({
-            "method": method,
-            "n_alarm_obs": a_den,
-            "n_noalarm_obs": n_den,
-            "failures_preceded_by_alarm": a_num,
-            "failures_not_preceded_by_alarm": n_num,
-            "h_alarm": h_alarm,
-            "h_noalarm": h_noalarm,
-            "h_noalarm_smoothed": h_noalarm_smooth,
-            "hazard_ratio": hr,
-            "log_hr": math.log(hr) if 0 < hr < 1e9 else float("nan"),
-            "alarm_coverage_recall": alarm_coverage,
-            "false_alarm_rate": false_alarm_rate,
-            "precision": precision,
-            "f1": f1,
-        })
+        hr_table.append(
+            {
+                "method": method,
+                "n_alarm_obs": a_den,
+                "n_noalarm_obs": n_den,
+                "failures_preceded_by_alarm": a_num,
+                "failures_not_preceded_by_alarm": n_num,
+                "h_alarm": h_alarm,
+                "h_noalarm": h_noalarm,
+                "h_noalarm_smoothed": h_noalarm_smooth,
+                "hazard_ratio": hr,
+                "log_hr": math.log(hr) if 0 < hr < 1e9 else float("nan"),
+                "alarm_coverage_recall": alarm_coverage,
+                "false_alarm_rate": false_alarm_rate,
+                "precision": precision,
+                "f1": f1,
+            }
+        )
 
     # ---------------------------------------------------------------------------
     # 3. Survival S(t) by method and ZVF quartile
@@ -267,18 +284,57 @@ def main():
             fh.write(f"# Alarm threshold: ZVF > {ALARM_THRESH}\n")
             fh.write("\t".join(header) + "\n")
             for r in rows:
-                fh.write("\t".join(f"{r.get(h, ''):g}" if isinstance(r.get(h, 0.0), float) else str(r.get(h, ""))
-                                  for h in header) + "\n")
+                fh.write(
+                    "\t".join(
+                        f"{r.get(h, ''):g}"
+                        if isinstance(r.get(h, 0.0), float)
+                        else str(r.get(h, ""))
+                        for h in header
+                    )
+                    + "\n"
+                )
 
-    write_tsv(RES / "zvf_iter82_traces.tsv", trace_table,
-              ["source", "method", "seed", "trace_id", "n_steps", "t_fail", "failed", "mean_zvf",
-               "peak_zvf", "zvf_run_max", "zvf_iat", "acc_pre_drift", "mean_acc",
-               "mean_composite_ews", "zvf_quartile"])
-    write_tsv(RES / "zvf_iter82_hazard_ratio.tsv", hr_table,
-              ["method", "n_alarm_obs", "n_noalarm_obs", "failures_preceded_by_alarm",
-               "failures_not_preceded_by_alarm", "h_alarm", "h_noalarm",
-               "h_noalarm_smoothed", "hazard_ratio", "log_hr", "alarm_coverage_recall",
-               "false_alarm_rate", "precision", "f1"])
+    write_tsv(
+        RES / "zvf_iter82_traces.tsv",
+        trace_table,
+        [
+            "source",
+            "method",
+            "seed",
+            "trace_id",
+            "n_steps",
+            "t_fail",
+            "failed",
+            "mean_zvf",
+            "peak_zvf",
+            "zvf_run_max",
+            "zvf_iat",
+            "acc_pre_drift",
+            "mean_acc",
+            "mean_composite_ews",
+            "zvf_quartile",
+        ],
+    )
+    write_tsv(
+        RES / "zvf_iter82_hazard_ratio.tsv",
+        hr_table,
+        [
+            "method",
+            "n_alarm_obs",
+            "n_noalarm_obs",
+            "failures_preceded_by_alarm",
+            "failures_not_preceded_by_alarm",
+            "h_alarm",
+            "h_noalarm",
+            "h_noalarm_smoothed",
+            "hazard_ratio",
+            "log_hr",
+            "alarm_coverage_recall",
+            "false_alarm_rate",
+            "precision",
+            "f1",
+        ],
+    )
 
     # Per-step hazard pooled
     with (RES / "zvf_iter82_hazard.tsv").open("w") as fh:
@@ -303,7 +359,11 @@ def main():
                 fh.write(f"{gname}:{sub}\t{t}\t{s:.4f}\t{risk}\n")
 
     # Headline summary
-    methods_with_failures = [r for r in hr_table if r["failures_preceded_by_alarm"] + r["failures_not_preceded_by_alarm"] > 0]
+    methods_with_failures = [
+        r
+        for r in hr_table
+        if r["failures_preceded_by_alarm"] + r["failures_not_preceded_by_alarm"] > 0
+    ]
     methods_with_alarm = [r for r in hr_table if r["n_alarm_obs"] > 0]
     summary = {
         "n_traces": len(trace_table),
@@ -315,8 +375,12 @@ def main():
         "median_alarm_coverage_recall": (lambda s: s[len(s) // 2] if s else float("nan"))(
             sorted(r["alarm_coverage_recall"] for r in methods_with_failures)
         ),
-        "min_alarm_coverage_recall": min((r["alarm_coverage_recall"] for r in methods_with_failures), default=0.0),
-        "max_false_alarm_rate_across_methods": max((r["false_alarm_rate"] for r in methods_with_alarm), default=0.0),
+        "min_alarm_coverage_recall": min(
+            (r["alarm_coverage_recall"] for r in methods_with_failures), default=0.0
+        ),
+        "max_false_alarm_rate_across_methods": max(
+            (r["false_alarm_rate"] for r in methods_with_alarm), default=0.0
+        ),
         "median_false_alarm_rate": (lambda s: s[len(s) // 2] if s else float("nan"))(
             sorted(r["false_alarm_rate"] for r in methods_with_alarm)
         ),
@@ -342,6 +406,7 @@ def main():
     def render_figure():
         try:
             import matplotlib
+
             matplotlib.use("Agg")
             import matplotlib.pyplot as plt
         except ImportError:
@@ -354,12 +419,17 @@ def main():
             h = hazard_by_method[method]
             ts = list(range(HORIZON - 1))
             ha = [h["alarm_num"][t] / h["alarm_den"][t] if h["alarm_den"][t] else 0.0 for t in ts]
-            hn = [h["noalarm_num"][t] / h["noalarm_den"][t] if h["noalarm_den"][t] else 0.0 for t in ts]
+            hn = [
+                h["noalarm_num"][t] / h["noalarm_den"][t] if h["noalarm_den"][t] else 0.0
+                for t in ts
+            ]
             c = cmap(i % 10)
             ax1.plot(ts, ha, color=c, label=method, lw=1.0)
             ax2.plot(ts, hn, color=c, label=method, lw=1.0)
         ax1.set_ylabel(r"$h(t\mid\mathrm{alarm})$")
-        ax1.set_title("ZVF alarm fires: per-step collapse hazard by method (variance_mitigation, 100 steps)")
+        ax1.set_title(
+            "ZVF alarm fires: per-step collapse hazard by method (variance_mitigation, 100 steps)"
+        )
         ax1.set_ylim(0, 0.6)
         ax1.grid(True, alpha=0.3)
         ax1.legend(fontsize=7, ncol=2, loc="upper right")
@@ -397,13 +467,15 @@ def main():
     render_figure()
 
     # Print one-liner
-    print(f"iter82: n_traces={summary['n_traces']} n_failed={summary['n_failed']} "
-          f"methods_with_failure={summary['n_methods_with_any_failure']}/9 "
-          f"median_alarm_coverage={summary['median_alarm_coverage_recall']:.3f} "
-          f"min_alarm_coverage={summary['min_alarm_coverage_recall']:.3f} "
-          f"median_F1={summary['median_f1']:.3f} "
-          f"median_FAR={summary['median_false_alarm_rate']:.3f} "
-          f"max_FAR_method={max(methods_with_alarm, key=lambda r: r['false_alarm_rate'])['method'] if methods_with_alarm else 'NA'}")
+    print(
+        f"iter82: n_traces={summary['n_traces']} n_failed={summary['n_failed']} "
+        f"methods_with_failure={summary['n_methods_with_any_failure']}/9 "
+        f"median_alarm_coverage={summary['median_alarm_coverage_recall']:.3f} "
+        f"min_alarm_coverage={summary['min_alarm_coverage_recall']:.3f} "
+        f"median_F1={summary['median_f1']:.3f} "
+        f"median_FAR={summary['median_false_alarm_rate']:.3f} "
+        f"max_FAR_method={max(methods_with_alarm, key=lambda r: r['false_alarm_rate'])['method'] if methods_with_alarm else 'NA'}"
+    )
     print(f"  -> wrote {RES}/zvf_iter82_*.tsv and {FIG}/zvf_iter82_*.pdf")
 
 

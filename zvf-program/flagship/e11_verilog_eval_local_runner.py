@@ -193,9 +193,7 @@ def resolve_icarus_runtime(iverilog: Path, explicit_vvp: Path | None = None) -> 
     return runtime, selection
 
 
-def validate_icarus_pair(
-    iverilog: Path, vvp: Path, *, cwd: Path, selection: str
-) -> dict[str, Any]:
+def validate_icarus_pair(iverilog: Path, vvp: Path, *, cwd: Path, selection: str) -> dict[str, Any]:
     """Fail closed unless the compiler and runtime report the same Icarus version."""
 
     compiler = _tool_version([str(iverilog), "-V"], cwd=cwd)
@@ -368,10 +366,7 @@ def _official_makefile_probe(
 
         scored = analyzed["exit_code"] == 0 and summary_text is not None
         passed = (
-            made["exit_code"] == 0
-            and log_text is not None
-            and PASS_MARKER in log_text
-            and scored
+            made["exit_code"] == 0 and log_text is not None and PASS_MARKER in log_text and scored
         )
         return {
             "status": "OFFICIAL_MAKE_TARGET_PASSES" if passed else "OFFICIAL_MAKE_TARGET_FAILED",
@@ -648,7 +643,7 @@ def sweep_all_problems(
                 task = futures[done]
                 try:
                     results.append(compact_result(done.result()))
-                except Exception as exc:  # noqa: BLE001 - recorded, never swallowed
+                except Exception as exc:
                     results.append(
                         {
                             "task_id": task,
@@ -720,15 +715,12 @@ def summarize_findings(sweep: dict[str, Any] | None) -> list[dict[str, Any]]:
 
     findings: list[dict[str, Any]] = []
     for dataset_name, dataset in sweep["datasets"].items():
-        failures = sorted(
-            set(dataset["iverilog_failures"]) | set(dataset["verilator_failures"])
-        )
+        failures = sorted(set(dataset["iverilog_failures"]) | set(dataset["verilator_failures"]))
         by_id = {row["task_id"]: row for row in dataset["results"]}
         for task_id in failures:
             row = by_id.get(task_id, {})
             both = (
-                task_id in dataset["iverilog_failures"]
-                and task_id in dataset["verilator_failures"]
+                task_id in dataset["iverilog_failures"] and task_id in dataset["verilator_failures"]
             )
             findings.append(
                 {
@@ -879,7 +871,9 @@ def build_receipt(
         raise ValueError("cannot determine pinned NVLabs checkout commit")
     revision = observed_commit["stdout"].strip()
     if revision != UPSTREAM_COMMIT:
-        raise ValueError(f"pinned checkout revision mismatch: expected {UPSTREAM_COMMIT}, found {revision}")
+        raise ValueError(
+            f"pinned checkout revision mismatch: expected {UPSTREAM_COMMIT}, found {revision}"
+        )
 
     resolved_vvp, runtime_selection = resolve_icarus_runtime(iverilog, vvp)
     icarus_pair = validate_icarus_pair(
@@ -889,9 +883,7 @@ def build_receipt(
     makefile_probe = _official_makefile_probe(
         checkout, iverilog=iverilog, gnu_make=gnu_make, gnu_coreutils_bin=gnu_coreutils_bin
     )
-    smoke = run_reference_smoke(
-        checkout, iverilog=iverilog, vvp=resolved_vvp, verilator=verilator
-    )
+    smoke = run_reference_smoke(checkout, iverilog=iverilog, vvp=resolved_vvp, verilator=verilator)
     simulator_passed = (
         smoke["iverilog"]["status"] == "PASS" and smoke["verilator"]["status"] == "PASS"
     )

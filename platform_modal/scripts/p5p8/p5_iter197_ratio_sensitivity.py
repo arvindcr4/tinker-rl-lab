@@ -40,6 +40,7 @@ stack axis instead of the BEST?"
 
 stdlib only. Outputs -> platform_hybrid/experiments/results/p5p8/p5_iter197_*.tsv|json
 """
+
 from __future__ import annotations
 import csv, json, os, random
 from collections import defaultdict
@@ -60,6 +61,7 @@ CI = 0.95
 from p5_review17_stats import additive_r2, ratio_interval
 
 from p5_review17_stats import json_safe
+
 
 def eta2(groups):
     """groups: dict[label -> list[float]]. Returns (eta2, k, N) -- omega^2 not needed here."""
@@ -131,11 +133,17 @@ def paired_ratio_bootstrap(algo_groups, stack_groups, rng):
     ratios = []
     for _ in range(B):
         # Resample algorithm axis (within-method resampling)
-        a_bs = {lab: [vals[rng.randrange(len(vals))] for _ in range(len(vals))]
-                for lab, vals in algo_groups.items() if vals}
+        a_bs = {
+            lab: [vals[rng.randrange(len(vals))] for _ in range(len(vals))]
+            for lab, vals in algo_groups.items()
+            if vals
+        }
         # Resample stack axis (within-level resampling)
-        s_bs = {lab: [vals[rng.randrange(len(vals))] for _ in range(len(vals))]
-                for lab, vals in stack_groups.items() if vals}
+        s_bs = {
+            lab: [vals[rng.randrange(len(vals))] for _ in range(len(vals))]
+            for lab, vals in stack_groups.items()
+            if vals
+        }
         e_a, _, _ = eta2(a_bs)
         e_s, _, _ = eta2(s_bs)
         if e_a == e_a and e_s == e_s and e_a > 1e-9:
@@ -170,7 +178,9 @@ def worst_stack_axis_eta2(mega_ch, factors, drop_axis):
 
 # ----------------- main -----------------
 def main():
-    print("Protocol review17-p5-v2: exploratory descriptive associations; no independent-run, causal, equivalence, or held-out prediction claim")
+    print(
+        "Protocol review17-p5-v2: exploratory descriptive associations; no independent-run, causal, equivalence, or held-out prediction claim"
+    )
     os.makedirs(OUT, exist_ok=True)
     rng = random.Random(SEED)
     n2 = load_n2()
@@ -192,21 +202,37 @@ def main():
             ci_excludes_1 = bool(lo > 1.0)
             ci_excludes_3 = bool(lo > 3.0)
             median_r = sorted(ratios)[len(ratios) // 2]
-            paired_rows.append(dict(
-                channel=ch, stack_axis=fac,
-                point_ratio=pt,
-                algo_eta2=e_a0, stack_eta2=e_s0,
-                boot_lo=lo, boot_hi=hi, boot_median=median_r,
-                boot_n=len(ratios),
-                ci_excludes_1=ci_excludes_1,
-                ci_excludes_3=ci_excludes_3,
-            ))
+            paired_rows.append(
+                dict(
+                    channel=ch,
+                    stack_axis=fac,
+                    point_ratio=pt,
+                    algo_eta2=e_a0,
+                    stack_eta2=e_s0,
+                    boot_lo=lo,
+                    boot_hi=hi,
+                    boot_median=median_r,
+                    boot_n=len(ratios),
+                    ci_excludes_1=ci_excludes_1,
+                    ci_excludes_3=ci_excludes_3,
+                )
+            )
 
     paired_path = os.path.join(OUT, "p5_iter197_paired_boot.tsv")
     with open(paired_path, "w", newline="") as f:
-        cols = ["channel", "stack_axis", "point_ratio", "algo_eta2", "stack_eta2",
-                "boot_lo", "boot_hi", "boot_median", "boot_n",
-                "ci_excludes_1", "ci_excludes_3"]
+        cols = [
+            "channel",
+            "stack_axis",
+            "point_ratio",
+            "algo_eta2",
+            "stack_eta2",
+            "boot_lo",
+            "boot_hi",
+            "boot_median",
+            "boot_n",
+            "ci_excludes_1",
+            "ci_excludes_3",
+        ]
         w = csv.DictWriter(f, fieldnames=cols, delimiter="\t")
         w.writeheader()
         for r in paired_rows:
@@ -220,23 +246,34 @@ def main():
         algo_e, _, _ = eta2(n2[ch])
         # Paired bootstrap using the WORST axis
         ratios_worst = paired_ratio_bootstrap(n2[ch], mega[ch][worst_fac], rng)
-        lo, hi = (ci_of_list(ratios_worst) if ratios_worst else (float("nan"), float("nan")))
-        worst_rows.append(dict(
-            channel=ch,
-            worst_axis=worst_fac,
-            worst_axis_eta2=worst_e,
-            algo_eta2=algo_e,
-            point_ratio_worst=worst_e / algo_e if algo_e > 1e-9 else float("inf"),
-            boot_lo=lo, boot_hi=hi,
-            boot_n=len(ratios_worst),
-            ci_excludes_1=bool(lo > 1.0) if lo == lo else False,
-        ))
+        lo, hi = ci_of_list(ratios_worst) if ratios_worst else (float("nan"), float("nan"))
+        worst_rows.append(
+            dict(
+                channel=ch,
+                worst_axis=worst_fac,
+                worst_axis_eta2=worst_e,
+                algo_eta2=algo_e,
+                point_ratio_worst=worst_e / algo_e if algo_e > 1e-9 else float("inf"),
+                boot_lo=lo,
+                boot_hi=hi,
+                boot_n=len(ratios_worst),
+                ci_excludes_1=bool(lo > 1.0) if lo == lo else False,
+            )
+        )
 
     worst_path = os.path.join(OUT, "p5_iter197_worst_axis_stress.tsv")
     with open(worst_path, "w", newline="") as f:
-        cols = ["channel", "worst_axis", "worst_axis_eta2", "algo_eta2",
-                "point_ratio_worst", "boot_lo", "boot_hi", "boot_n",
-                "ci_excludes_1"]
+        cols = [
+            "channel",
+            "worst_axis",
+            "worst_axis_eta2",
+            "algo_eta2",
+            "point_ratio_worst",
+            "boot_lo",
+            "boot_hi",
+            "boot_n",
+            "ci_excludes_1",
+        ]
         w = csv.DictWriter(f, fieldnames=cols, delimiter="\t")
         w.writeheader()
         for r in worst_rows:
@@ -253,23 +290,34 @@ def main():
             pt = worst_e / algo_e if algo_e > 1e-9 else float("inf")
             # Paired bootstrap using worst-axis after drop
             ratios = paired_ratio_bootstrap(n2[ch], mega[ch][worst_fac], rng)
-            lo, hi = (ci_of_list(ratios) if ratios else (float("nan"), float("nan")))
-            jack_rows.append(dict(
-                channel=ch,
-                dropped_axis=dropped,
-                worst_remaining_axis=worst_fac,
-                worst_remaining_eta2=worst_e,
-                point_ratio_after_drop=pt,
-                boot_lo=lo, boot_hi=hi,
-                boot_n=len(ratios),
-                ci_excludes_1=bool(lo > 1.0) if lo == lo else False,
-            ))
+            lo, hi = ci_of_list(ratios) if ratios else (float("nan"), float("nan"))
+            jack_rows.append(
+                dict(
+                    channel=ch,
+                    dropped_axis=dropped,
+                    worst_remaining_axis=worst_fac,
+                    worst_remaining_eta2=worst_e,
+                    point_ratio_after_drop=pt,
+                    boot_lo=lo,
+                    boot_hi=hi,
+                    boot_n=len(ratios),
+                    ci_excludes_1=bool(lo > 1.0) if lo == lo else False,
+                )
+            )
 
     jack_path = os.path.join(OUT, "p5_iter197_jackknife_axis.tsv")
     with open(jack_path, "w", newline="") as f:
-        cols = ["channel", "dropped_axis", "worst_remaining_axis",
-                "worst_remaining_eta2", "point_ratio_after_drop",
-                "boot_lo", "boot_hi", "boot_n", "ci_excludes_1"]
+        cols = [
+            "channel",
+            "dropped_axis",
+            "worst_remaining_axis",
+            "worst_remaining_eta2",
+            "point_ratio_after_drop",
+            "boot_lo",
+            "boot_hi",
+            "boot_n",
+            "ci_excludes_1",
+        ]
         w = csv.DictWriter(f, fieldnames=cols, delimiter="\t")
         w.writeheader()
         for r in jack_rows:
@@ -298,8 +346,11 @@ def main():
     # the stack axis is varied in the experiment.
     dominant = {"model_family", "task_slice", "G"}
     verdicts["H3_dominant_axes_CI_excludes_1_zvf_reward"] = all(
-        any(r["ci_excludes_1"] for r in paired_rows
-            if r["channel"] == ch and r["stack_axis"] in dominant)
+        any(
+            r["ci_excludes_1"]
+            for r in paired_rows
+            if r["channel"] == ch and r["stack_axis"] in dominant
+        )
         for ch in ("zvf", "reward")
     )
     # H4 (PASS expected — scope boundary): noisy axes (seed, temperature)
@@ -308,17 +359,20 @@ def main():
     # comparison is degenerate and the ratio collapses to noise.
     noisy = {"seed", "temperature"}
     verdicts["H4_noisy_axes_DO_NOT_exclude_1_any"] = all(
-        not any(r["ci_excludes_1"] for r in paired_rows
-                if r["channel"] == ch and r["stack_axis"] in noisy)
+        not any(
+            r["ci_excludes_1"]
+            for r in paired_rows
+            if r["channel"] == ch and r["stack_axis"] in noisy
+        )
         for ch in channels
     )
     # H5 (PASS expected — stronger than iter-193): the worst REMAINING axis
     # after jackknifing the DOMINANT axis still excludes 1 on zvf and reward.
     # Concretely: drop task_slice — does G still beat algorithm? Drop model_family
     # — does task_slice still beat algorithm? Drop G — does task_slice still?
-    jack_dominant = [r for r in jack_rows
-                     if r["channel"] in ("zvf", "reward")
-                     and r["dropped_axis"] in dominant]
+    jack_dominant = [
+        r for r in jack_rows if r["channel"] in ("zvf", "reward") and r["dropped_axis"] in dominant
+    ]
     verdicts["H5_jackknife_dominant_drops_still_exclude_1"] = all(
         r["ci_excludes_1"] for r in jack_dominant
     )
@@ -333,10 +387,12 @@ def main():
             if fac is not None:
                 draws = paired_ratio_bootstrap(n2[ch], mega[ch][fac], rng)
                 lo, hi = ratio_interval(draws, B)
-                jack_drop_dominant.append({"channel": ch, "dropped_axis": dropped,
-                                          "ci_excludes_1": lo > 1})
-    verdicts["H5p_drop_dominant_remaining_dominant_still_excludes_1"] = (
-        len(jack_drop_dominant) == 6 and all(r["ci_excludes_1"] for r in jack_drop_dominant))
+                jack_drop_dominant.append(
+                    {"channel": ch, "dropped_axis": dropped, "ci_excludes_1": lo > 1}
+                )
+    verdicts["H5p_drop_dominant_remaining_dominant_still_excludes_1"] = len(
+        jack_drop_dominant
+    ) == 6 and all(r["ci_excludes_1"] for r in jack_drop_dominant)
     # Exploratory joint categorical main-effects OLS, refitted per cell draw.
     composite_rows = []
     for ch in channels:
@@ -360,8 +416,14 @@ def main():
         eta2_composite = additive_r2([r for r, _ in per_cell], all_vals, factors)
         algo_e, _, _ = eta2(n2[ch])
         composite_ratio = eta2_composite / algo_e if algo_e > 1e-9 else float("inf")
-        composite_rows.append(dict(channel=ch, eta2_composite_5axes=eta2_composite,
-                                   algo_eta2=algo_e, composite_ratio=composite_ratio))
+        composite_rows.append(
+            dict(
+                channel=ch,
+                eta2_composite_5axes=eta2_composite,
+                algo_eta2=algo_e,
+                composite_ratio=composite_ratio,
+            )
+        )
         # bootstrap the composite ratio: resample cells with replacement and
         # recompute the full composite pipeline
         ratios_comp = []
@@ -373,8 +435,11 @@ def main():
                 continue
             eta2_comp_b = additive_r2([per_cell[i][0] for i in idx], vals_b, factors)
             # resample algorithm axis too
-            algo_bs = {lab: [vs[rng.randrange(len(vs))] for _ in range(len(vs))]
-                       for lab, vs in n2[ch].items() if vs}
+            algo_bs = {
+                lab: [vs[rng.randrange(len(vs))] for _ in range(len(vs))]
+                for lab, vs in n2[ch].items()
+                if vs
+            }
             e_a_b, _, _ = eta2(algo_bs)
             if e_a_b == e_a_b and e_a_b > 1e-9:
                 ratios_comp.append(eta2_comp_b / e_a_b)
@@ -383,8 +448,7 @@ def main():
         composite_rows[-1]["composite_boot_hi"] = hi
         composite_rows[-1]["composite_ci_excludes_1"] = bool(lo > 1.0) if lo == lo else False
     verdicts["H6_composite_5axis_CI_excludes_1_zvf_reward"] = all(
-        r["composite_ci_excludes_1"] for r in composite_rows
-        if r["channel"] in ("zvf", "reward")
+        r["composite_ci_excludes_1"] for r in composite_rows if r["channel"] in ("zvf", "reward")
     )
     # H6' (alternative — average only the DOMINANT 3 axes): this isolates the
     # question "does the iter-193 'top stack axis' survive when you average
@@ -412,8 +476,9 @@ def main():
         eta2_dom3 = additive_r2([r for r, _ in per_cell], all_vals, dom3)
         algo_e, _, _ = eta2(n2[ch])
         ratio_dom3 = eta2_dom3 / algo_e if algo_e > 1e-9 else float("inf")
-        dom3_rows.append(dict(channel=ch, eta2_dom3=eta2_dom3,
-                              algo_eta2=algo_e, ratio_dom3=ratio_dom3))
+        dom3_rows.append(
+            dict(channel=ch, eta2_dom3=eta2_dom3, algo_eta2=algo_e, ratio_dom3=ratio_dom3)
+        )
         # bootstrap
         ratios_dom3 = []
         for _ in range(B):
@@ -423,8 +488,11 @@ def main():
             if ss_total_b <= 1e-12:
                 continue
             eta2_dom3_b = additive_r2([per_cell[i][0] for i in idx], vals_b, dom3)
-            algo_bs = {lab: [vs[rng.randrange(len(vs))] for _ in range(len(vs))]
-                       for lab, vs in n2[ch].items() if vs}
+            algo_bs = {
+                lab: [vs[rng.randrange(len(vs))] for _ in range(len(vs))]
+                for lab, vs in n2[ch].items()
+                if vs
+            }
             e_a_b, _, _ = eta2(algo_bs)
             if e_a_b == e_a_b and e_a_b > 1e-9:
                 ratios_dom3.append(eta2_dom3_b / e_a_b)
@@ -438,8 +506,15 @@ def main():
     # also write the dom3 rows
     dom3_path = os.path.join(OUT, "p5_iter197_composite_dominant3.tsv")
     with open(dom3_path, "w", newline="") as f:
-        cols = ["channel", "eta2_dom3", "algo_eta2", "ratio_dom3",
-                "dom3_boot_lo", "dom3_boot_hi", "dom3_ci_excludes_1"]
+        cols = [
+            "channel",
+            "eta2_dom3",
+            "algo_eta2",
+            "ratio_dom3",
+            "dom3_boot_lo",
+            "dom3_boot_hi",
+            "dom3_ci_excludes_1",
+        ]
         w = csv.DictWriter(f, fieldnames=cols, delimiter="\t")
         w.writeheader()
         for r in dom3_rows:
@@ -447,17 +522,29 @@ def main():
     # also write the composite rows
     comp_path = os.path.join(OUT, "p5_iter197_composite_5axis.tsv")
     with open(comp_path, "w", newline="") as f:
-        cols = ["channel", "eta2_composite_5axes", "algo_eta2", "composite_ratio",
-                "composite_boot_lo", "composite_boot_hi", "composite_ci_excludes_1"]
+        cols = [
+            "channel",
+            "eta2_composite_5axes",
+            "algo_eta2",
+            "composite_ratio",
+            "composite_boot_lo",
+            "composite_boot_hi",
+            "composite_ci_excludes_1",
+        ]
         w = csv.DictWriter(f, fieldnames=cols, delimiter="\t")
         w.writeheader()
         for r in composite_rows:
             w.writerow({k: (f"{v:.5f}" if isinstance(v, float) else v) for k, v in r.items()})
 
     summary = dict(
-        analysis_protocol="review17-p5-v2", inference_scope="exploratory descriptive cross-corpus comparison; not causal or prospective",
+        analysis_protocol="review17-p5-v2",
+        inference_scope="exploratory descriptive cross-corpus comparison; not causal or prospective",
         ratio_invalid_draws="B minus boot_n; any invalid draw suppresses interval",
-        channels=channels, stack_factors=factors, B=B, seed=SEED, ci=CI,
+        channels=channels,
+        stack_factors=factors,
+        B=B,
+        seed=SEED,
+        ci=CI,
         n_paired_rows=len(paired_rows),
         n_worst_rows=len(worst_rows),
         n_jack_rows=len(jack_rows),
@@ -465,7 +552,8 @@ def main():
         worst=worst_rows,
         jackknife=jack_rows,
         verdicts=verdicts,
-        n_pass=sum(verdicts.values()), n_total=len(verdicts),
+        n_pass=sum(verdicts.values()),
+        n_total=len(verdicts),
         files=dict(
             paired=os.path.basename(paired_path),
             worst=os.path.basename(worst_path),
@@ -478,49 +566,60 @@ def main():
 
     # ----- print -----
     print(f"B={B} seed={SEED} ci={CI}")
-    print(f"paired: {len(paired_rows)} (ch x axis), worst: {len(worst_rows)}, "
-          f"jack: {len(jack_rows)}")
+    print(
+        f"paired: {len(paired_rows)} (ch x axis), worst: {len(worst_rows)}, jack: {len(jack_rows)}"
+    )
     print("\n=== Independent-corpus descriptive bootstrap ratio CI (point vs CI lo/hi) ===")
     for r in paired_rows:
         marker1 = " >1" if r["ci_excludes_1"] else ""
         marker3 = " >3" if r["ci_excludes_3"] else ""
-        print(f"{r['channel']:7s} vs {r['stack_axis']:13s}  "
-              f"pt={r['point_ratio']:6.2f}x  "
-              f"CI=[{r['boot_lo']:6.2f},{r['boot_hi']:6.2f}]  "
-              f"n={r['boot_n']}{marker1}{marker3}")
+        print(
+            f"{r['channel']:7s} vs {r['stack_axis']:13s}  "
+            f"pt={r['point_ratio']:6.2f}x  "
+            f"CI=[{r['boot_lo']:6.2f},{r['boot_hi']:6.2f}]  "
+            f"n={r['boot_n']}{marker1}{marker3}"
+        )
 
     print("\n=== Worst-axis stress test ===")
     for r in worst_rows:
         marker = " >1" if r["ci_excludes_1"] else ""
-        print(f"{r['channel']:7s}  worst={r['worst_axis']:13s} "
-              f"({r['worst_axis_eta2']:.4f}) "
-              f"pt={r['point_ratio_worst']:6.2f}x "
-              f"CI=[{r['boot_lo']:6.2f},{r['boot_hi']:6.2f}]  "
-              f"n={r['boot_n']}{marker}")
+        print(
+            f"{r['channel']:7s}  worst={r['worst_axis']:13s} "
+            f"({r['worst_axis_eta2']:.4f}) "
+            f"pt={r['point_ratio_worst']:6.2f}x "
+            f"CI=[{r['boot_lo']:6.2f},{r['boot_hi']:6.2f}]  "
+            f"n={r['boot_n']}{marker}"
+        )
 
     print("\n=== Jackknife (drop one axis at a time) ===")
     for r in jack_rows:
         marker = " >1" if r["ci_excludes_1"] else ""
-        print(f"{r['channel']:7s} drop {r['dropped_axis']:13s} -> "
-              f"worst_remain={r['worst_remaining_axis']:13s} "
-              f"({r['worst_remaining_eta2']:.4f}) "
-              f"pt={r['point_ratio_after_drop']:6.2f}x "
-              f"CI=[{r['boot_lo']:6.2f},{r['boot_hi']:6.2f}]  "
-              f"n={r['boot_n']}{marker}")
+        print(
+            f"{r['channel']:7s} drop {r['dropped_axis']:13s} -> "
+            f"worst_remain={r['worst_remaining_axis']:13s} "
+            f"({r['worst_remaining_eta2']:.4f}) "
+            f"pt={r['point_ratio_after_drop']:6.2f}x "
+            f"CI=[{r['boot_lo']:6.2f},{r['boot_hi']:6.2f}]  "
+            f"n={r['boot_n']}{marker}"
+        )
 
     print("\n=== Composite 5-axis eta^2 vs algorithm-axis eta^2 ===")
     for r in composite_rows:
         marker = " >1" if r["composite_ci_excludes_1"] else ""
-        print(f"{r['channel']:7s}  eta^2_composite5={r['eta2_composite_5axes']:.4f}  "
-              f"algo={r['algo_eta2']:.4f}  pt={r['composite_ratio']:6.2f}x  "
-              f"CI=[{r['composite_boot_lo']:6.2f},{r['composite_boot_hi']:6.2f}]{marker}")
+        print(
+            f"{r['channel']:7s}  eta^2_composite5={r['eta2_composite_5axes']:.4f}  "
+            f"algo={r['algo_eta2']:.4f}  pt={r['composite_ratio']:6.2f}x  "
+            f"CI=[{r['composite_boot_lo']:6.2f},{r['composite_boot_hi']:6.2f}]{marker}"
+        )
 
     print("\n=== Composite DOMINANT-3-axis (model+task+G) eta^2 vs algorithm ===")
     for r in dom3_rows:
         marker = " >1" if r["dom3_ci_excludes_1"] else ""
-        print(f"{r['channel']:7s}  eta^2_dom3={r['eta2_dom3']:.4f}  "
-              f"algo={r['algo_eta2']:.4f}  pt={r['ratio_dom3']:6.2f}x  "
-              f"CI=[{r['dom3_boot_lo']:6.2f},{r['dom3_boot_hi']:6.2f}]{marker}")
+        print(
+            f"{r['channel']:7s}  eta^2_dom3={r['eta2_dom3']:.4f}  "
+            f"algo={r['algo_eta2']:.4f}  pt={r['ratio_dom3']:6.2f}x  "
+            f"CI=[{r['dom3_boot_lo']:6.2f},{r['dom3_boot_hi']:6.2f}]{marker}"
+        )
 
     print("\n=== verdicts ===")
     for h, v in verdicts.items():

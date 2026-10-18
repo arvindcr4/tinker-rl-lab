@@ -46,8 +46,7 @@ EVALUATION_CODE_LICENSE_URL = (
     f"{OFFICIAL_EVAL_REPO_REVISION}/LICENSE"
 )
 DATASET_CARD_URL = (
-    "https://huggingface.co/datasets/ScaleAI/SWE-bench_Pro/"
-    f"raw/{DATASET_REVISION}/README.md"
+    f"https://huggingface.co/datasets/ScaleAI/SWE-bench_Pro/raw/{DATASET_REVISION}/README.md"
 )
 RUNTIME = "docker"
 CONTAINER_IMAGE_REGISTRY = "jefzda/sweap-images"
@@ -136,7 +135,7 @@ def _same_json(left: Any, right: Any, path: str = "$") -> None:
     if isinstance(left, list):
         if len(left) != len(right):
             raise BoundaryValidationError(f"{path} length differs")
-        for index, (actual, expected) in enumerate(zip(left, right)):
+        for index, (actual, expected) in enumerate(zip(left, right, strict=False)):
             _same_json(actual, expected, f"{path}[{index}]")
         return
     if left != right:
@@ -469,7 +468,9 @@ def _validate_heldout_proof(
         for receipt_key in ("source_revision", "receipt_sha256"):
             if receipt_key not in receipt:
                 raise BoundaryValidationError(f"heldout_proof.{key}.{receipt_key} is required")
-        receipt_revision = _string(receipt["source_revision"], f"heldout_proof.{key}.source_revision")
+        receipt_revision = _string(
+            receipt["source_revision"], f"heldout_proof.{key}.source_revision"
+        )
         if not _HEX40_RE.fullmatch(receipt_revision):
             raise BoundaryValidationError(f"heldout_proof.{key}.source_revision is not immutable")
         if receipt_revision != source_revision:
@@ -567,9 +568,7 @@ def validate_manifest(payload: Mapping[str, Any]) -> dict[str, Any]:
         )
         if heldout_proof["subset"] != subset:
             raise BoundaryValidationError("heldout proof subset disagrees with split")
-        maximum_tasks = (
-            HELDOUT_TASK_COUNT if subset == HELDOUT_SUBSET else PRIVATE_TASK_COUNT
-        )
+        maximum_tasks = HELDOUT_TASK_COUNT if subset == HELDOUT_SUBSET else PRIVATE_TASK_COUNT
         if len(tasks) > maximum_tasks:
             raise BoundaryValidationError(
                 f"{subset} receipt cannot exceed its pinned task count ({maximum_tasks})"
@@ -767,8 +766,15 @@ def validate_result_receipt(
         or type(verifier.get("pass_to_pass_passed")) is not bool
     ):
         raise BoundaryValidationError("native fail-to-pass and pass-to-pass receipts are required")
-    for field, test_field in (("fail_to_pass_passed", "fail_to_pass"), ("pass_to_pass_passed", "pass_to_pass")):
-        expected = all(set(_official_test_names(task[test_field], test_field)) <= {test["name"] for test in result["tests"] if test["status"] == "PASSED"} for task, result in zip(checked_manifest["tasks"], task_results))
+    for field, test_field in (
+        ("fail_to_pass_passed", "fail_to_pass"),
+        ("pass_to_pass_passed", "pass_to_pass"),
+    ):
+        expected = all(
+            set(_official_test_names(task[test_field], test_field))
+            <= {test["name"] for test in result["tests"] if test["status"] == "PASSED"}
+            for task, result in zip(checked_manifest["tasks"], task_results, strict=False)
+        )
         if verifier[field] is not expected:
             raise BoundaryValidationError("verifier aggregate disagrees with task evidence")
     if manifest_role == RECEIPT_PROVEN_HELDOUT:

@@ -26,20 +26,30 @@ Outputs (written to platform_hybrid/experiments/results/p5p8/):
 
 Stdlib only. <= 300 LoC.
 """
+
 from __future__ import annotations
 import csv
 import json
-import math
 import pathlib
 import random
 import statistics
 
 import sys
-sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
+
+sys.path.append(
+    str(pathlib.Path(__file__).resolve().parents[1])
+)  # platform_modal/scripts, for _paths
+from _paths import REPO_ROOT
+
 WORKTREE = REPO_ROOT
 N2 = WORKTREE / "platform_hybrid/experiments" / "results" / "n2_reward_tensor_resume"
-OUT = WORKTREE / "platform_hybrid/experiments" / "experiments" / "results" / "p5p8/corrected-review19-v2"
+OUT = (
+    WORKTREE
+    / "platform_hybrid/experiments"
+    / "experiments"
+    / "results"
+    / "p5p8/corrected-review19-v2"
+)
 OUT = WORKTREE / "platform_hybrid/experiments" / "results" / "p5p8/corrected-review19-v2"
 OUT.mkdir(parents=True, exist_ok=True)
 METHODS = ("grpo", "aero", "gift", "areal")
@@ -113,7 +123,7 @@ def contrast_intent_at_g(per_p, g_new):
     wasted = 0
     for p in per_p:
         pp = min(max(p, 1e-9), 1 - 1e-9)
-        zvf = (1 - pp) ** g_new + pp ** g_new
+        zvf = (1 - pp) ** g_new + pp**g_new
         if zvf < 0.99:
             saved += 1
         else:
@@ -166,12 +176,14 @@ def main():
             meta = tensors[(m, s, "_meta")]
             rewards = tensors[(m, s)]
             per_p = per_prompt_means(rewards)
-            step_info.append({
-                "step": s,
-                "zvf": meta["zvf"],
-                "pcd": meta["pcd"],
-                "per_p": per_p,
-            })
+            step_info.append(
+                {
+                    "step": s,
+                    "zvf": meta["zvf"],
+                    "pcd": meta["pcd"],
+                    "per_p": per_p,
+                }
+            )
 
         # Pre-compute 3-step trailing mean zvf (for C4 = gamma=1 contrast)
         win = 3
@@ -216,48 +228,52 @@ def main():
                 ci_saved = 0
                 ci_wasted = 0
                 ci_magnitude = 0.0
-                for p_i, g_i in zip(per_p, gs):
+                for p_i, g_i in zip(per_p, gs, strict=False):
                     pp = min(max(p_i, 1e-9), 1 - 1e-9)
-                    zvf_i = (1 - pp) ** g_i + pp ** g_i
+                    zvf_i = (1 - pp) ** g_i + pp**g_i
                     if zvf_i < 0.99:
                         ci_saved += 1
                     else:
                         ci_wasted += 1
-                    ci_magnitude += (1.0 - zvf_i)
+                    ci_magnitude += 1.0 - zvf_i
                 ci_magnitude_total += ci_magnitude
                 contrast_intent += ci_saved
                 saved += ci_saved
                 wasted += ci_wasted
                 if fired:
                     fired_steps += 1
-                per_step_rows.append({
-                    "method": m,
-                    "controller": cname,
-                    "step": s["step"],
-                    "zvf": s["zvf"],
-                    "pcd": s["pcd"],
-                    "step_rollouts": step_rollouts,
-                    "fired": int(fired),
-                    "saved": ci_saved,
-                    "wasted": ci_wasted,
-                    "contrast_intent": ci_saved,
-                    "contrast_magnitude": ci_magnitude,
-                })
+                per_step_rows.append(
+                    {
+                        "method": m,
+                        "controller": cname,
+                        "step": s["step"],
+                        "zvf": s["zvf"],
+                        "pcd": s["pcd"],
+                        "step_rollouts": step_rollouts,
+                        "fired": int(fired),
+                        "saved": ci_saved,
+                        "wasted": ci_wasted,
+                        "contrast_intent": ci_saved,
+                        "contrast_magnitude": ci_magnitude,
+                    }
+                )
 
             baseline_rollouts = N_PROMPTS * G_BASE * len(steps)
             savings_frac = (baseline_rollouts - rollouts) / baseline_rollouts
-            summary_rows.append({
-                "method": m,
-                "controller": cname,
-                "rollouts": rollouts,
-                "baseline_rollouts": baseline_rollouts,
-                "savings_frac": savings_frac,
-                "fired_steps": fired_steps,
-                "saved_prompts": saved,
-                "wasted_prompts": wasted,
-                "contrast_intent": contrast_intent,
-                "contrast_magnitude": ci_magnitude_total,
-            })
+            summary_rows.append(
+                {
+                    "method": m,
+                    "controller": cname,
+                    "rollouts": rollouts,
+                    "baseline_rollouts": baseline_rollouts,
+                    "savings_frac": savings_frac,
+                    "fired_steps": fired_steps,
+                    "saved_prompts": saved,
+                    "wasted_prompts": wasted,
+                    "contrast_intent": contrast_intent,
+                    "contrast_magnitude": ci_magnitude_total,
+                }
+            )
 
     # Write per-step tsv
     with (OUT / "p7_iter103_unified_controller_per_step.tsv").open("w") as f:
@@ -292,15 +308,17 @@ def main():
         boots.sort()
         lo = boots[int(0.025 * N_BOOT)]
         hi = boots[int(0.975 * N_BOOT)]
-        ci_rows.append({
-            "controller": ctrl,
-            "mean_savings": sum(vals) / n,
-            "ci_lo": lo,
-            "ci_hi": hi,
-            "cross_method_sd": (statistics.pstdev(vals) if n > 1 else 0.0),
-            "ci_excludes_zero": int(lo > 0 or hi < 0),
-            "n_methods": n,
-        })
+        ci_rows.append(
+            {
+                "controller": ctrl,
+                "mean_savings": sum(vals) / n,
+                "ci_lo": lo,
+                "ci_hi": hi,
+                "cross_method_sd": (statistics.pstdev(vals) if n > 1 else 0.0),
+                "ci_excludes_zero": int(lo > 0 or hi < 0),
+                "n_methods": n,
+            }
+        )
     with (OUT / "p7_iter103_unified_controller_ci.tsv").open("w") as f:
         w = csv.DictWriter(f, fieldnames=list(ci_rows[0].keys()), delimiter="\t")
         w.writeheader()
@@ -310,12 +328,14 @@ def main():
     # Pareto front over (savings, contrast_intent) — per (controller, method)
     pareto_rows = []
     for r in summary_rows:
-        pareto_rows.append({
-            "method": r["method"],
-            "controller": r["controller"],
-            "savings_frac": r["savings_frac"],
-            "contrast_intent": r["contrast_intent"],
-        })
+        pareto_rows.append(
+            {
+                "method": r["method"],
+                "controller": r["controller"],
+                "savings_frac": r["savings_frac"],
+                "contrast_intent": r["contrast_intent"],
+            }
+        )
     # Identify Pareto-dominant cells: no other cell dominates on (higher savings, higher intent)
     pareto_sorted = sorted(pareto_rows, key=lambda x: (-x["savings_frac"], -x["contrast_intent"]))
     pareto_set = []
@@ -387,11 +407,15 @@ def main():
     }
     with (OUT / "p7_iter103_unified_controller_summary.json").open("w") as f:
         json.dump(summary, f, indent=2)
-    print(f"wrote {len(per_step_rows)} per-step rows, {len(summary_rows)} summary rows, "
-          f"{len(ci_rows)} CI rows, {len(pareto_sorted)} pareto rows")
-    print(f"aggregate: C3@0.7 savings = {agg['C3_ucc@0.7_savings']:.4f}, "
-          f"C4@0.7 savings = {agg['C4_ucg@0.7_savings']:.4f}, "
-          f"C1 DA savings = {agg['C1_da_savings']:.4f}")
+    print(
+        f"wrote {len(per_step_rows)} per-step rows, {len(summary_rows)} summary rows, "
+        f"{len(ci_rows)} CI rows, {len(pareto_sorted)} pareto rows"
+    )
+    print(
+        f"aggregate: C3@0.7 savings = {agg['C3_ucc@0.7_savings']:.4f}, "
+        f"C4@0.7 savings = {agg['C4_ucg@0.7_savings']:.4f}, "
+        f"C1 DA savings = {agg['C1_da_savings']:.4f}"
+    )
     print(f"C4 vs C1 delta = {agg['C4_vs_C1_delta']:.4f} (UCG strictly dominates DA?)")
 
 

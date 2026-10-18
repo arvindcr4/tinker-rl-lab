@@ -72,6 +72,7 @@ USAGE
 -----
 python3 platform_modal/scripts/length_bias_iter104.py [--K 3] [--n_q 5] [--B 2000]
 """
+
 from __future__ import annotations
 
 import argparse
@@ -84,7 +85,7 @@ from typing import Any
 
 import numpy as np
 from scipy import stats
-from _analysis_common import ccf_at_lags, load_step_log
+from _analysis_common import load_step_log
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 RESULTS = os.path.join(ROOT, "experiments", "results")
@@ -96,6 +97,7 @@ DRGRPO_GSM8K_PATH = os.path.join(RESULTS, "drgrpo_gsm8k_cot_full.json")
 # ---------------------------------------------------------------------------
 #  I/O helpers
 # ---------------------------------------------------------------------------
+
 
 def fit_ar1(x: np.ndarray) -> tuple[float, float, np.ndarray]:
     x_lag = x[:-1]
@@ -115,10 +117,14 @@ def lag_label(k: int) -> str:
 #  Per-run, per-quantile CCF
 # ---------------------------------------------------------------------------
 
-from _review24_statistics import conditional_ccf, stable_seed, paired_available as paired_bootstrap_delta
+from _review24_statistics import (
+    conditional_ccf,
+    stable_seed,
+    paired_available as paired_bootstrap_delta,
+)
 
-def per_run_quantile_icca(L: np.ndarray, R: np.ndarray, K: int,
-                          n_q: int) -> dict[str, Any]:
+
+def per_run_quantile_icca(L: np.ndarray, R: np.ndarray, K: int, n_q: int) -> dict[str, Any]:
     """Return innovations, bin assignments, per-quantile CCF summaries."""
     phi_L, c_L, e_L = fit_ar1(L)
     phi_R, c_R, e_R = fit_ar1(R)
@@ -140,8 +146,10 @@ def per_run_quantile_icca(L: np.ndarray, R: np.ndarray, K: int,
                 edges[i] = edges[i - 1] + 1e-12
         bins = np.digitize(R_for_bin, edges[1:-1])  # 0..n_q-1
     rec: dict[str, Any] = {
-        "phi_L": phi_L, "phi_R": phi_R,
-        "c_L": c_L, "c_R": c_R,
+        "phi_L": phi_L,
+        "phi_R": phi_R,
+        "c_L": c_L,
+        "c_R": c_R,
         "e_L_std": float(e_L.std()),
         "e_R_std": float(e_R.std()),
         "q": {},  # q_idx -> {size, ccf (2K+1), fwd, bwd, fwd_signed, bwd_signed}
@@ -155,7 +163,8 @@ def per_run_quantile_icca(L: np.ndarray, R: np.ndarray, K: int,
         fwd_signed = float(np.sum(cc[K + 1 :]))
         bwd_signed = float(np.sum(cc[:K]))
         rec["q"][q_idx] = {
-            "size": n_in_bin, "pair_counts": pair_counts,
+            "size": n_in_bin,
+            "pair_counts": pair_counts,
             "ccf": [float(cc[i]) for i in range(2 * K + 1)],
             "fwd": fwd,
             "bwd": bwd,
@@ -168,6 +177,7 @@ def per_run_quantile_icca(L: np.ndarray, R: np.ndarray, K: int,
 # ---------------------------------------------------------------------------
 #  Trend tests
 # ---------------------------------------------------------------------------
+
 
 def page_l_trend(values: np.ndarray, monotone: str = "decreasing") -> dict:
     """Page's L trend test (Page, 1963).  Exact p-values via the standard
@@ -196,7 +206,7 @@ def page_l_trend(values: np.ndarray, monotone: str = "decreasing") -> dict:
     # Variance for the standard Page L (no ties approx):
     sigma_L = math.sqrt(n * (n + 1) * (n + 2) * (2 * n + 3) / 6.0 / 12.0)
     # Use exact small-sample variance factor /12 -> /36 below; use the canonical:
-    sigma_L = math.sqrt(n ** 2 * (n + 1) * (n + 2) ** 2 / 36.0)
+    sigma_L = math.sqrt(n**2 * (n + 1) * (n + 2) ** 2 / 36.0)
     Z = (L - mu_L) / sigma_L if sigma_L > 0 else 0.0
     p_one = float(1.0 - stats.norm.cdf(Z))  # upper-tail
     return {"L": L, "mu_L": mu_L, "sigma_L": sigma_L, "Z": Z, "p_one": p_one}
@@ -206,6 +216,7 @@ def page_l_trend(values: np.ndarray, monotone: str = "decreasing") -> dict:
 #  Main
 # ---------------------------------------------------------------------------
 
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Iter104 -- C-ICCA-Q")
     parser.add_argument("--K", type=int, default=3)
@@ -214,11 +225,14 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--seed_base", type=int, default=20260703)
     args = parser.parse_args(argv)
 
-    K = int(args.K); n_q = int(args.n_q); B = int(args.B)
+    K = int(args.K)
+    n_q = int(args.n_q)
+    B = int(args.B)
     seed_base = int(args.seed_base)
 
-    runs = ([(r, "arithmetic_easy") for r in load_step_log(DRGRPO_VS_GRPO_PATH)]
-            + [(r, "gsm8k_cot") for r in load_step_log(DRGRPO_GSM8K_PATH)])
+    runs = [(r, "arithmetic_easy") for r in load_step_log(DRGRPO_VS_GRPO_PATH)] + [
+        (r, "gsm8k_cot") for r in load_step_log(DRGRPO_GSM8K_PATH)
+    ]
 
     perrun_rows: list[dict[str, Any]] = []
     by_task: dict[str, dict[str, list[dict[str, Any]]]] = {}
@@ -232,11 +246,16 @@ def main(argv: list[str] | None = None) -> int:
         by_task.setdefault(task, {"grpo": [], "dr_grpo": []})[r["algo"]].append(rec)
 
     # Write per-run TSV (wide: per-quantile CCF summaries)
-    keys = ["task", "algo", "seed", "n",
-            "phi_L", "phi_R", "c_L", "c_R", "e_L_std", "e_R_std"]
+    keys = ["task", "algo", "seed", "n", "phi_L", "phi_R", "c_L", "c_R", "e_L_std", "e_R_std"]
     for q in range(n_q):
-        keys += [f"q{q}_size", f"q{q}_pair_counts", f"q{q}_fwd", f"q{q}_bwd",
-                 f"q{q}_fwd_signed", f"q{q}_bwd_signed"]
+        keys += [
+            f"q{q}_size",
+            f"q{q}_pair_counts",
+            f"q{q}_fwd",
+            f"q{q}_bwd",
+            f"q{q}_fwd_signed",
+            f"q{q}_bwd_signed",
+        ]
     perrun_path = os.path.join(RESULTS, "length_bias_iter104_perrun_v2.tsv")
     with open(perrun_path, "w", newline="") as fh:
         w = csv.DictWriter(fh, fieldnames=keys, delimiter="\t")
@@ -266,23 +285,39 @@ def main(argv: list[str] | None = None) -> int:
             for side in ["fwd", "bwd", "fwd_signed", "bwd_signed"]:
                 g = [float(seeds_g[s]["q"][q][side]) for s in common]
                 d = [float(seeds_d[s]["q"][q][side]) for s in common]
-                stat = paired_bootstrap_delta(g, d, B=B, seed=stable_seed(seed_base, task, q, side), statistic=np.median)
-                paired_rows.append({
-                    "task": task, "q": q, "side": side, **stat,
-                })
+                stat = paired_bootstrap_delta(
+                    g, d, B=B, seed=stable_seed(seed_base, task, q, side), statistic=np.median
+                )
+                paired_rows.append(
+                    {
+                        "task": task,
+                        "q": q,
+                        "side": side,
+                        **stat,
+                    }
+                )
             for i in range(2 * K + 1):
                 lag = i - K
                 g = [float(seeds_g[s]["q"][q]["ccf"][i]) for s in common]
                 d = [float(seeds_d[s]["q"][q]["ccf"][i]) for s in common]
-                stat = paired_bootstrap_delta(g, d, B=B, seed=stable_seed(seed_base, task, q, lag), statistic=np.median)
-                paired_rows.append({
-                    "task": task, "q": q, "side": lag_label(lag), **stat,
-                })
+                stat = paired_bootstrap_delta(
+                    g, d, B=B, seed=stable_seed(seed_base, task, q, lag), statistic=np.median
+                )
+                paired_rows.append(
+                    {
+                        "task": task,
+                        "q": q,
+                        "side": lag_label(lag),
+                        **stat,
+                    }
+                )
     paired_path = os.path.join(RESULTS, "length_bias_iter104_paired_v2.tsv")
     with open(paired_path, "w", newline="") as fh:
-        w = csv.DictWriter(fh, fieldnames=["task", "q", "side", "delta",
-                                            "ci_lo", "ci_hi", "p", "n", "n_excluded"],
-                           delimiter="\t")
+        w = csv.DictWriter(
+            fh,
+            fieldnames=["task", "q", "side", "delta", "ci_lo", "ci_hi", "p", "n", "n_excluded"],
+            delimiter="\t",
+        )
         w.writeheader()
         for r in paired_rows:
             w.writerow(r)
@@ -298,24 +333,37 @@ def main(argv: list[str] | None = None) -> int:
                 for q in range(n_q):
                     fwd_q[q] += r["q"][q]["fwd"]
                     bwd_q[q] += r["q"][q]["bwd"]
-            tot_fwd = fwd_q.sum()+ 1e-300
+            tot_fwd = fwd_q.sum() + 1e-300
             tot_bwd = bwd_q.sum() + 1e-300
             for q in range(n_q):
-                summary_rows.append({
-                    "task": task, "algo": algo,
-                    "q": q,
-                    "n_seeds": len(recs),
-                    "fwd_abs_mean": float(fwd_q[q] / max(1, len(recs))),
-                    "bwd_abs_mean": float(bwd_q[q] / max(1, len(recs))),
-                    "fwd_ratio": float(fwd_q[q] / tot_fwd),
-                    "bwd_ratio": float(bwd_q[q] / tot_bwd),
-                })
+                summary_rows.append(
+                    {
+                        "task": task,
+                        "algo": algo,
+                        "q": q,
+                        "n_seeds": len(recs),
+                        "fwd_abs_mean": float(fwd_q[q] / max(1, len(recs))),
+                        "bwd_abs_mean": float(bwd_q[q] / max(1, len(recs))),
+                        "fwd_ratio": float(fwd_q[q] / tot_fwd),
+                        "bwd_ratio": float(bwd_q[q] / tot_bwd),
+                    }
+                )
     summary_path = os.path.join(RESULTS, "length_bias_iter104_summary_v2.tsv")
     with open(summary_path, "w", newline="") as fh:
-        w = csv.DictWriter(fh, fieldnames=["task", "algo", "q", "n_seeds",
-                                            "fwd_abs_mean", "bwd_abs_mean",
-                                            "fwd_ratio", "bwd_ratio"],
-                           delimiter="\t")
+        w = csv.DictWriter(
+            fh,
+            fieldnames=[
+                "task",
+                "algo",
+                "q",
+                "n_seeds",
+                "fwd_abs_mean",
+                "bwd_abs_mean",
+                "fwd_ratio",
+                "bwd_ratio",
+            ],
+            delimiter="\t",
+        )
         w.writeheader()
         for r in summary_rows:
             w.writerow(r)
@@ -327,29 +375,43 @@ def main(argv: list[str] | None = None) -> int:
     for task, by_algo in by_task.items():
         for algo, recs in by_algo.items():
             for side in ["fwd", "bwd", "fwd_signed", "bwd_signed"]:
-                vals = np.array([sum(r["q"][q][side] for r in recs)
-                                 / max(1, len(recs))
-                                 for q in range(n_q)])
+                vals = np.array(
+                    [sum(r["q"][q][side] for r in recs) / max(1, len(recs)) for q in range(n_q)]
+                )
                 page = page_l_trend(vals, monotone="decreasing")
                 sp = stats.spearmanr(np.arange(1, n_q + 1), vals)
-                trend_rows.append({
-                    "task": task, "algo": algo, "side": side,
-                    "vals_q0": float(vals[0]),
-                    "vals_q_last": float(vals[-1]),
-                    "page_L": page["L"],
-                    "page_Z": page["Z"],
-                    "page_p_decreasing": page["p_one"],
-                    "spearman_rho": float(sp.statistic),
-                    "spearman_p": float(sp.pvalue),
-                })
+                trend_rows.append(
+                    {
+                        "task": task,
+                        "algo": algo,
+                        "side": side,
+                        "vals_q0": float(vals[0]),
+                        "vals_q_last": float(vals[-1]),
+                        "page_L": page["L"],
+                        "page_Z": page["Z"],
+                        "page_p_decreasing": page["p_one"],
+                        "spearman_rho": float(sp.statistic),
+                        "spearman_p": float(sp.pvalue),
+                    }
+                )
     trend_path = os.path.join(RESULTS, "length_bias_iter104_trendtest_v2.tsv")
     with open(trend_path, "w", newline="") as fh:
-        w = csv.DictWriter(fh, fieldnames=["task", "algo", "side",
-                                            "vals_q0", "vals_q_last",
-                                            "page_L", "page_Z",
-                                            "page_p_decreasing",
-                                            "spearman_rho", "spearman_p"],
-                           delimiter="\t")
+        w = csv.DictWriter(
+            fh,
+            fieldnames=[
+                "task",
+                "algo",
+                "side",
+                "vals_q0",
+                "vals_q_last",
+                "page_L",
+                "page_Z",
+                "page_p_decreasing",
+                "spearman_rho",
+                "spearman_p",
+            ],
+            delimiter="\t",
+        )
         w.writeheader()
         for r in trend_rows:
             w.writerow(r)
@@ -357,8 +419,12 @@ def main(argv: list[str] | None = None) -> int:
 
     # Meta
     meta = {
-        "iter": 104, "pillar": "P4-LengthBias",
-        "K": K, "n_q": n_q, "B": B, "seed_base": seed_base,
+        "iter": 104,
+        "pillar": "P4-LengthBias",
+        "K": K,
+        "n_q": n_q,
+        "B": B,
+        "seed_base": seed_base,
         "n_runs": len(perrun_rows),
         "tasks": sorted(set(r["task"] for r in perrun_rows)),
         "algos": sorted(set(r["algo"] for r in perrun_rows)),
@@ -375,9 +441,11 @@ def main(argv: list[str] | None = None) -> int:
         for q in range(n_q):
             g = next(r for r in sub if r["algo"] == "grpo" and r["q"] == q)
             d = next(r for r in sub if r["algo"] == "dr_grpo" and r["q"] == q)
-            print(f"  {task:14s} q={q}: GR bwd={g['bwd_abs_mean']:.4f} "
-                  f"Dr.GRPO bwd={d['bwd_abs_mean']:.4f} "
-                  f"diff={d['bwd_abs_mean'] - g['bwd_abs_mean']:+.4f}")
+            print(
+                f"  {task:14s} q={q}: GR bwd={g['bwd_abs_mean']:.4f} "
+                f"Dr.GRPO bwd={d['bwd_abs_mean']:.4f} "
+                f"diff={d['bwd_abs_mean'] - g['bwd_abs_mean']:+.4f}"
+            )
 
     return 0
 

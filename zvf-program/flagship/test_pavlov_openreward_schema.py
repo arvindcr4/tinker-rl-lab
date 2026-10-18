@@ -4,6 +4,7 @@ import copy
 import unittest
 
 from . import pavlov_openreward_schema as schema
+import pytest
 
 
 _VALID_HASH = "a" * 64
@@ -45,70 +46,70 @@ class OpenrewardSchemaTests(unittest.TestCase):
 
     def test_valid_contract_passes(self) -> None:
         result = self._validate()
-        self.assertFalse(result["paid_launch_allowed"])
-        self.assertTrue(result["stateful_trajectory"])
-        self.assertEqual(result["openreward_train"]["revision"], _VALID_REVISION)
-        self.assertEqual(result["openreward_train"]["role"], "train")
-        self.assertEqual(result["openreward_games_eval"]["role"], "primary_eval")
-        self.assertEqual(result["openreward_train"]["task_hashes"][0], _VALID_HASH)
-        self.assertEqual(result["openreward_games_eval"]["task_hashes"][0], "c" * 64)
+        assert not result["paid_launch_allowed"]
+        assert result["stateful_trajectory"]
+        assert result["openreward_train"]["revision"] == _VALID_REVISION
+        assert result["openreward_train"]["role"] == "train"
+        assert result["openreward_games_eval"]["role"] == "primary_eval"
+        assert result["openreward_train"]["task_hashes"][0] == _VALID_HASH
+        assert result["openreward_games_eval"]["task_hashes"][0] == "c" * 64
 
     def test_paid_launch_allowed_must_be_false(self) -> None:
         bad = copy.deepcopy(self.contract)
         bad["paid_launch_allowed"] = True
-        with self.assertRaisesRegex(schema.OpenrewardSchemaError, "paid_launch_allowed must be False"):
+        with pytest.raises(schema.OpenrewardSchemaError, match="paid_launch_allowed must be False"):
             schema.validate_openreward_contract(bad)
 
     def test_train_and_eval_must_be_present(self) -> None:
         del self.contract["openreward_train"]
-        with self.assertRaisesRegex(schema.OpenrewardSchemaError, "openreward_train"):
+        with pytest.raises(schema.OpenrewardSchemaError, match="openreward_train"):
             schema.validate_openreward_contract(self.contract)
 
     def test_revisions_must_be_40_hex(self) -> None:
         self.contract["openreward_train"]["revision"] = "g" * 39
-        with self.assertRaisesRegex(schema.OpenrewardSchemaError, "openreward_train.revision"):
+        with pytest.raises(schema.OpenrewardSchemaError, match="openreward_train.revision"):
             schema.validate_openreward_contract(self.contract)
 
     def test_roles_must_be_explicit(self) -> None:
         self.contract["openreward_train"]["role"] = "primary_eval"
-        with self.assertRaisesRegex(schema.OpenrewardSchemaError, "openreward_train.role"):
+        with pytest.raises(schema.OpenrewardSchemaError, match="openreward_train.role"):
             schema.validate_openreward_contract(self.contract)
 
     def test_task_hashes_must_be_non_overlapping(self) -> None:
         self.contract["openreward_games_eval"]["task_hashes"] = [_VALID_HASH, "e" * 64]
-        with self.assertRaisesRegex(schema.OpenrewardSchemaError, "non-overlapping"):
+        with pytest.raises(schema.OpenrewardSchemaError, match="non-overlapping"):
             schema.validate_openreward_contract(self.contract)
 
     def test_task_hashes_must_be_64_hex_and_unique(self) -> None:
         self.contract["openreward_train"]["task_hashes"] = ["g" * 64, "g" * 64]
-        with self.assertRaisesRegex(schema.OpenrewardSchemaError, "must contain unique"):
+        with pytest.raises(schema.OpenrewardSchemaError, match="must contain unique"):
             schema.validate_openreward_contract(self.contract)
 
     def test_trajectory_must_be_stateful(self) -> None:
         self.contract["stateful_trajectory"] = False
-        with self.assertRaisesRegex(schema.OpenrewardSchemaError, "stateful_trajectory must be true"):
+        with pytest.raises(schema.OpenrewardSchemaError, match="stateful_trajectory must be true"):
             schema.validate_openreward_contract(self.contract)
 
     def test_artifact_and_state_receipts_are_required(self) -> None:
         del self.contract["artifact_verifier_receipt"]
-        with self.assertRaisesRegex(schema.OpenrewardSchemaError, "artifact_verifier_receipt"):
+        with pytest.raises(schema.OpenrewardSchemaError, match="artifact_verifier_receipt"):
             schema.validate_openreward_contract(self.contract)
 
         del self.contract["state_verifier_receipt"]
-        with self.assertRaisesRegex(schema.OpenrewardSchemaError, "state_verifier_receipt"):
+        with pytest.raises(schema.OpenrewardSchemaError, match="state_verifier_receipt"):
             schema.validate_openreward_contract(self.contract)
 
     def test_license_container_and_decontamination_hashes_required(self) -> None:
         del self.contract["license"]
-        with self.assertRaisesRegex(schema.OpenrewardSchemaError, "license"):
+        with pytest.raises(schema.OpenrewardSchemaError, match="license"):
             schema.validate_openreward_contract(self.contract)
 
         del self.contract["container"]
-        with self.assertRaisesRegex(schema.OpenrewardSchemaError, "container"):
+        with pytest.raises(schema.OpenrewardSchemaError, match="container"):
             schema.validate_openreward_contract(self.contract)
 
         del self.contract["decontamination"]
-        with self.assertRaisesRegex(schema.OpenrewardSchemaError, "decontamination"):
+        with pytest.raises(schema.OpenrewardSchemaError, match="decontamination"):
             schema.validate_openreward_contract(self.contract)
 
 

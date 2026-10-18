@@ -32,15 +32,16 @@ Outputs:
   figures/group_size_iter79.pdf
   figures/group_size_iter79.png
 """
+
 from __future__ import annotations
 
 import csv
 import json
 import math
-import statistics
 from pathlib import Path
 
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
@@ -54,8 +55,8 @@ FIGS.mkdir(parents=True, exist_ok=True)
 
 # Wu et al. 2025 claim parameters (arXiv:2510.00977)
 WU_RETENTION_2_OVER_16 = 0.976  # claimed 97.6% retention
-WU_ROLLOUT_FRACTION = 0.125     # G=2 uses 12.5% of G=16 rollouts
-WU_TIME_FRACTION = 0.21         # G=2 uses 21% of G=16 wall-clock
+WU_ROLLOUT_FRACTION = 0.125  # G=2 uses 12.5% of G=16 rollouts
+WU_TIME_FRACTION = 0.21  # G=2 uses 21% of G=16 wall-clock
 
 # Equivalence threshold -- below this retention, we say the regime has "broken"
 EQUIVALENCE_THRESHOLD = 0.80
@@ -70,14 +71,16 @@ def load_token_normalized() -> list[dict]:
     with (RESULTS / "group_size_token_normalized.tsv").open() as fh:
         rdr = csv.DictReader(fh, delimiter="\t")
         for r in rdr:
-            rows.append({
-                "budget_tokens": int(r["budget_tokens"]),
-                "G": int(r["G"]),
-                "acc_mean": float(r["heldout_acc_mean"]),
-                "acc_ci_low": float(r["heldout_acc_ci_low"]),
-                "acc_ci_high": float(r["heldout_acc_ci_high"]),
-                "gu_estimate": float(r["gu_estimate"]),
-            })
+            rows.append(
+                {
+                    "budget_tokens": int(r["budget_tokens"]),
+                    "G": int(r["G"]),
+                    "acc_mean": float(r["heldout_acc_mean"]),
+                    "acc_ci_low": float(r["heldout_acc_ci_low"]),
+                    "acc_ci_high": float(r["heldout_acc_ci_high"]),
+                    "gu_estimate": float(r["gu_estimate"]),
+                }
+            )
     return rows
 
 
@@ -86,23 +89,25 @@ def load_iter75_scaling() -> list[dict]:
     with (RESULTS / "group_size_iter75_scaling.tsv").open() as fh:
         rdr = csv.DictReader(fh, delimiter="\t")
         for r in rdr:
-            rows.append({
-                "T_tokens": int(r["T_tokens"]),
-                "T_M": float(r["T_M"]),
-                "n_points": int(r["n_points"]),
-                "G_used": r["G_used"],
-                "G_max": int(r["G_max"]),
-                "acc_at_G_max": float(r["acc_at_G_max"]),
-                "a_hat": float(r["a_hat"]),
-                "b_hat": float(r["b_hat"]),
-                "k_hat": float(r["k_hat"]),
-                "c_hat": float(r["c_hat"]),
-                "rmse_acc": float(r["rmse_acc"]),
-                "b_boot_lo": float(r["b_boot_lo"]),
-                "b_boot_hi": float(r["b_boot_hi"]),
-                "c_boot_lo": float(r["c_boot_lo"]),
-                "c_boot_hi": float(r["c_boot_hi"]),
-            })
+            rows.append(
+                {
+                    "T_tokens": int(r["T_tokens"]),
+                    "T_M": float(r["T_M"]),
+                    "n_points": int(r["n_points"]),
+                    "G_used": r["G_used"],
+                    "G_max": int(r["G_max"]),
+                    "acc_at_G_max": float(r["acc_at_G_max"]),
+                    "a_hat": float(r["a_hat"]),
+                    "b_hat": float(r["b_hat"]),
+                    "k_hat": float(r["k_hat"]),
+                    "c_hat": float(r["c_hat"]),
+                    "rmse_acc": float(r["rmse_acc"]),
+                    "b_boot_lo": float(r["b_boot_lo"]),
+                    "b_boot_hi": float(r["b_boot_hi"]),
+                    "c_boot_lo": float(r["c_boot_lo"]),
+                    "c_boot_hi": float(r["c_boot_hi"]),
+                }
+            )
     return rows
 
 
@@ -111,19 +116,20 @@ def load_iter75_extrapolate() -> list[dict]:
     with (RESULTS / "group_size_iter75_extrapolate.tsv").open() as fh:
         rdr = csv.DictReader(fh, delimiter="\t")
         for r in rdr:
-            rows.append({
-                "T_ext_tokens": int(r["T_ext_tokens"]),
-                "T_M": float(r["T_M"]),
-                "T_ext_M": float(r["T_ext_M"]),
-                "c_extrapolated": float(r["c_extrapolated"]),
-                "b_extrapolated": float(r["b_extrapolated"]),
-                "k_extrapolated": float(r["k_extrapolated"]),
-                "a_extrapolated": float(r["a_extrapolated"]),
-                "predicted_acc_G32_pp": float(r["predicted_acc_G32_pp"]),
-                "predicted_acc_G4_pp": float(r["predicted_acc_G4_pp"]),
-                "predicted_delta_G32_minus_G4_pp":
-                    float(r["predicted_delta_G32_minus_G4_pp"]),
-            })
+            rows.append(
+                {
+                    "T_ext_tokens": int(r["T_ext_tokens"]),
+                    "T_M": float(r["T_M"]),
+                    "T_ext_M": float(r["T_ext_M"]),
+                    "c_extrapolated": float(r["c_extrapolated"]),
+                    "b_extrapolated": float(r["b_extrapolated"]),
+                    "k_extrapolated": float(r["k_extrapolated"]),
+                    "a_extrapolated": float(r["a_extrapolated"]),
+                    "predicted_acc_G32_pp": float(r["predicted_acc_G32_pp"]),
+                    "predicted_acc_G4_pp": float(r["predicted_acc_G4_pp"]),
+                    "predicted_delta_G32_minus_G4_pp": float(r["predicted_delta_G32_minus_G4_pp"]),
+                }
+            )
     return rows
 
 
@@ -159,25 +165,27 @@ def compute_retention(tnorm: list[dict]) -> list[dict]:
             raise ValueError("ratio envelope needs strictly positive reference interval")
         R_lo = s_lo / l_hi
         R_hi = s_hi / l_lo
-        out.append({
-            "T_tokens": T,
-            "T_M": T / 1e6,
-            "acc_G4": s["acc_mean"],
-            "acc_G4_lo": s_lo,
-            "acc_G4_hi": s_hi,
-            "acc_G32": l["acc_mean"],
-            "acc_G32_lo": l_lo,
-            "acc_G32_hi": l_hi,
-            "retention_R": R,
-            "retention_R_lo": R_lo,
-            "retention_R_hi": R_hi,
-            "wu_retention": WU_RETENTION_2_OVER_16,
-            "delta_R_minus_wu": R - WU_RETENTION_2_OVER_16,
-            "ratio_G_over_Gmax": SMALL_G / 64,  # same ratio as Wu's G2/G16
-            "wu_2octave_ratio": 2 / 16,
-            "gu_G4": s["gu_estimate"],
-            "gu_G32": l["gu_estimate"],
-        })
+        out.append(
+            {
+                "T_tokens": T,
+                "T_M": T / 1e6,
+                "acc_G4": s["acc_mean"],
+                "acc_G4_lo": s_lo,
+                "acc_G4_hi": s_hi,
+                "acc_G32": l["acc_mean"],
+                "acc_G32_lo": l_lo,
+                "acc_G32_hi": l_hi,
+                "retention_R": R,
+                "retention_R_lo": R_lo,
+                "retention_R_hi": R_hi,
+                "wu_retention": WU_RETENTION_2_OVER_16,
+                "delta_R_minus_wu": R - WU_RETENTION_2_OVER_16,
+                "ratio_G_over_Gmax": SMALL_G / 64,  # same ratio as Wu's G2/G16
+                "wu_2octave_ratio": 2 / 16,
+                "gu_G4": s["gu_estimate"],
+                "gu_G32": l["gu_estimate"],
+            }
+        )
     return out
 
 
@@ -207,18 +215,20 @@ def wu_equivalence_test(retention_rows: list[dict]) -> list[dict]:
             verdict = "descriptive_envelope_above_reference"
         else:
             verdict = "reference_inside_descriptive_envelope"
-        out.append({
-            "T_tokens": r["T_tokens"],
-            "T_M": r["T_M"],
-            "retention_R": R,
-            "retention_CI_lo": R_lo,
-            "retention_CI_hi": R_hi,
-            "wu_976": wu,
-            "within_wu_CI": within_band,
-            "rejects_wu_at_95": False,
-            "verdict": verdict,
-            "break_below_80pct": (r["retention_R"] < EQUIVALENCE_THRESHOLD),
-        })
+        out.append(
+            {
+                "T_tokens": r["T_tokens"],
+                "T_M": r["T_M"],
+                "retention_R": R,
+                "retention_CI_lo": R_lo,
+                "retention_CI_hi": R_hi,
+                "wu_976": wu,
+                "within_wu_CI": within_band,
+                "rejects_wu_at_95": False,
+                "verdict": verdict,
+                "break_below_80pct": (r["retention_R"] < EQUIVALENCE_THRESHOLD),
+            }
+        )
     return out
 
 
@@ -258,23 +268,27 @@ def find_breakpoint(retention_rows: list[dict]) -> list[dict]:
             T_pred_at_tau = float(np.exp(log_T_at_tau))
         else:
             T_pred_at_tau = float("nan")
-        breakpoints.append({
-            "threshold_tau": tau,
-            "first_observed_T_M_below": first_T,
-            "first_observed_R_at_break": first_R,
-            "predicted_T_M_at_tau_from_loglinear": T_pred_at_tau,
-        })
+        breakpoints.append(
+            {
+                "threshold_tau": tau,
+                "first_observed_T_M_below": first_T,
+                "first_observed_R_at_break": first_R,
+                "predicted_T_M_at_tau_from_loglinear": T_pred_at_tau,
+            }
+        )
 
-    out = [{
-        "loglinear_slope": float(slope),
-        "loglinear_intercept": float(intercept),
-        "loglinear_pearson_r": r_val,
-        "n_observed_budgets": n,
-        "min_observed_R": float(np.min(Rs)),
-        "max_observed_R": float(np.max(Rs)),
-        "T_at_min_R_M": float(Ts[int(np.argmin(Rs))]),
-        "T_at_max_R_M": float(Ts[int(np.argmax(Rs))]),
-    }] + breakpoints
+    out = [
+        {
+            "loglinear_slope": float(slope),
+            "loglinear_intercept": float(intercept),
+            "loglinear_pearson_r": r_val,
+            "n_observed_budgets": n,
+            "min_observed_R": float(np.min(Rs)),
+            "max_observed_R": float(np.max(Rs)),
+            "T_at_min_R_M": float(Ts[int(np.argmin(Rs))]),
+            "T_at_max_R_M": float(Ts[int(np.argmax(Rs))]),
+        }
+    ] + breakpoints
     return out
 
 
@@ -303,20 +317,23 @@ def forecast_retention(scaling: list[dict], extrapolate: list[dict]) -> list[dic
             R_pred = acc_G4_pp / acc_G32_pp
         else:
             R_pred = float("nan")
-        out.append({
-            "T_ext_tokens": ex["T_ext_tokens"],
-            "T_ext_M": T_M,
-            "c_extrapolated": c,
-            "k_extrapolated": k,
-            "predicted_acc_G32_pp": acc_G32_pp,
-            "predicted_acc_G4_pp": acc_G4_pp,
-            "predicted_delta_pp": ex["predicted_delta_G32_minus_G4_pp"],
-            "predicted_R_G4_over_G32": R_pred,
-            "wu_retention": WU_RETENTION_2_OVER_16,
-            "predicted_R_minus_wu": R_pred - WU_RETENTION_2_OVER_16,
-            "predicted_breaks_equivalence_80pct": (R_pred < EQUIVALENCE_THRESHOLD)
-                if not math.isnan(R_pred) else None,
-        })
+        out.append(
+            {
+                "T_ext_tokens": ex["T_ext_tokens"],
+                "T_ext_M": T_M,
+                "c_extrapolated": c,
+                "k_extrapolated": k,
+                "predicted_acc_G32_pp": acc_G32_pp,
+                "predicted_acc_G4_pp": acc_G4_pp,
+                "predicted_delta_pp": ex["predicted_delta_G32_minus_G4_pp"],
+                "predicted_R_G4_over_G32": R_pred,
+                "wu_retention": WU_RETENTION_2_OVER_16,
+                "predicted_R_minus_wu": R_pred - WU_RETENTION_2_OVER_16,
+                "predicted_breaks_equivalence_80pct": (R_pred < EQUIVALENCE_THRESHOLD)
+                if not math.isnan(R_pred)
+                else None,
+            }
+        )
     return out
 
 
@@ -333,12 +350,30 @@ def make_plots(retention_rows, wu_test_rows, scaling, forecast_rows, outpath):
 
     # --- Panel 1: retention vs budget vs Wu claim ---
     ax = axes[0]
-    ax.errorbar(Ts, Rs, yerr=[Rs - R_lo, R_hi - Rs], fmt="o-",
-                color="C0", lw=2, capsize=4, label="Observed $R$ G=4 / G=32")
-    ax.axhline(WU_RETENTION_2_OVER_16, color="C3", ls="--", lw=2,
-               label=f"Wu 2025: R = {WU_RETENTION_2_OVER_16:.3f}")
-    ax.axhline(EQUIVALENCE_THRESHOLD, color="grey", ls=":", lw=1.5,
-               label=f"Equivalence break ($\\tau = {EQUIVALENCE_THRESHOLD:.2f}$)")
+    ax.errorbar(
+        Ts,
+        Rs,
+        yerr=[Rs - R_lo, R_hi - Rs],
+        fmt="o-",
+        color="C0",
+        lw=2,
+        capsize=4,
+        label="Observed $R$ G=4 / G=32",
+    )
+    ax.axhline(
+        WU_RETENTION_2_OVER_16,
+        color="C3",
+        ls="--",
+        lw=2,
+        label=f"Wu 2025: R = {WU_RETENTION_2_OVER_16:.3f}",
+    )
+    ax.axhline(
+        EQUIVALENCE_THRESHOLD,
+        color="grey",
+        ls=":",
+        lw=1.5,
+        label=f"Equivalence break ($\\tau = {EQUIVALENCE_THRESHOLD:.2f}$)",
+    )
     # Forecast
     if forecast_rows:
         fT = np.array([r["T_ext_M"] for r in forecast_rows])
@@ -361,8 +396,16 @@ def make_plots(retention_rows, wu_test_rows, scaling, forecast_rows, outpath):
     # Order the bounds correctly (yerr expects [below, above] non-negative)
     yerr_low = np.maximum(sc - sc_lo, 0)
     yerr_high = np.maximum(sc_hi - sc, 0)
-    ax.errorbar(sT, sc, yerr=[yerr_low, yerr_high], fmt="o-",
-                color="C1", lw=2, capsize=4, label="c(T) iter75")
+    ax.errorbar(
+        sT,
+        sc,
+        yerr=[yerr_low, yerr_high],
+        fmt="o-",
+        color="C1",
+        lw=2,
+        capsize=4,
+        label="c(T) iter75",
+    )
     # Reference: c=0 (independence), c=0.5 (sqrt), c=1 (linear)
     ax.axhline(0.0, color="grey", ls=":", lw=1)
     ax.axhline(0.5, color="grey", ls="--", lw=1, label="c=0.5  sqrt(G) scaling")
@@ -384,10 +427,8 @@ def make_plots(retention_rows, wu_test_rows, scaling, forecast_rows, outpath):
         obs_delta = []
         for r in retention_rows:
             obs_delta.append(100 * (r["acc_G32"] - r["acc_G4"]))
-        ax.plot(Ts, obs_delta, "o-", color="C0", lw=2,
-                label="Observed acc(G32-G4) (pp)")
-        ax.plot(eT, eDelta, "s--", color="C2", alpha=0.7,
-                label="iter75 forecast at T > 64M")
+        ax.plot(Ts, obs_delta, "o-", color="C0", lw=2, label="Observed acc(G32-G4) (pp)")
+        ax.plot(eT, eDelta, "s--", color="C2", alpha=0.7, label="iter75 forecast at T > 64M")
         ax.set_xscale("log")
         ax.set_xlabel("Token budget $T$ (M)")
         ax.set_ylabel("acc(G32) - acc(G4) (pp)")
@@ -395,7 +436,9 @@ def make_plots(retention_rows, wu_test_rows, scaling, forecast_rows, outpath):
         ax.grid(True, alpha=0.3)
         ax.legend(loc="upper left", fontsize=8)
 
-    fig.suptitle("Iter79: exploratory retention grid and model-dependent extrapolation", fontsize=10)
+    fig.suptitle(
+        "Iter79: exploratory retention grid and model-dependent extrapolation", fontsize=10
+    )
     fig.tight_layout(rect=[0, 0, 1, 0.94])
     fig.savefig(outpath, dpi=140)
     fig.savefig(outpath.with_suffix(".png"), dpi=140)
@@ -442,14 +485,17 @@ def main():
     n_reject = sum(1 for r in wu_test if r["rejects_wu_at_95"])
     n_consistent = sum(1 for r in wu_test if r["verdict"] == "consistent_with_wu")
     n_break_80 = sum(1 for r in wu_test if r["break_below_80pct"])
-    print(f"[iter79] Wu test: {n_consistent} consistent / {n_reject} reject / "
-          f"{n_break_80} below 80%")
+    print(
+        f"[iter79] Wu test: {n_consistent} consistent / {n_reject} reject / {n_break_80} below 80%"
+    )
     write_tsv(wu_test, RESULTS / "group_size_iter79_v2_wu_test.tsv")
 
     # 3) Breakpoint identification
     bp = find_breakpoint(retention)
-    print(f"[iter79] Log-linear R~T: slope={bp[0]['loglinear_slope']:.4f}, "
-          f"r={bp[0]['loglinear_pearson_r']:.3f}")
+    print(
+        f"[iter79] Log-linear R~T: slope={bp[0]['loglinear_slope']:.4f}, "
+        f"r={bp[0]['loglinear_pearson_r']:.3f}"
+    )
     # bp is a list with 1 dict + 5 dicts (for thresholds)
     write_tsv(bp, RESULTS / "group_size_iter79_v2_breakpoint.tsv")
 
@@ -460,48 +506,53 @@ def main():
 
     # 5) Headline summary
     observed_min_R = min(r["retention_R"] for r in retention)
-    observed_T_min_R = next(r["T_M"] for r in retention
-                            if r["retention_R"] == observed_min_R)
+    observed_T_min_R = next(r["T_M"] for r in retention if r["retention_R"] == observed_min_R)
     summary = [
         {"metric": "n_observed_budgets", "value": len(retention)},
-        {"metric": "wu_2025_claim_retention",
-         "value": WU_RETENTION_2_OVER_16},
-        {"metric": "equivalence_threshold",
-         "value": EQUIVALENCE_THRESHOLD},
-        {"metric": "n_budgets_consistent_with_wu",
-         "value": n_consistent},
-        {"metric": "n_budgets_rejecting_wu_at_95",
-         "value": n_reject},
-        {"metric": "n_budgets_below_equivalence_threshold_80pct",
-         "value": n_break_80},
-        {"metric": "min_observed_R_G4_over_G32",
-         "value": f"{observed_min_R:.4f}"},
-        {"metric": "T_at_min_R_M",
-         "value": f"{observed_T_min_R:.1f}"},
-        {"metric": "loglinear_slope_R_vs_logT",
-         "value": f"{bp[0]['loglinear_slope']:.4f}"},
-        {"metric": "loglinear_r_squared",
-         "value": f"{bp[0]['loglinear_pearson_r']**2:.4f}"},
-        {"metric": "first_budget_below_80pct_R_T_M",
-         "value": next((b['first_observed_T_M_below']
-                        for b in bp[1:] if b['threshold_tau'] == 0.80),
-                       float('nan'))},
-        {"metric": "first_budget_below_85pct_R_T_M",
-         "value": next((b['first_observed_T_M_below']
-                        for b in bp[1:] if b['threshold_tau'] == 0.85),
-                       float('nan'))},
-        {"metric": "predicted_R_at_T_128M",
-         "value": next((f['predicted_R_G4_over_G32']
-                        for f in forecast if f['T_ext_M'] == 128.0),
-                       float('nan'))},
-        {"metric": "predicted_R_at_T_256M",
-         "value": next((f['predicted_R_G4_over_G32']
-                        for f in forecast if f['T_ext_M'] == 256.0),
-                       float('nan'))},
-        {"metric": "predicted_R_at_T_512M",
-         "value": next((f['predicted_R_G4_over_G32']
-                        for f in forecast if f['T_ext_M'] == 512.0),
-                       float('nan'))},
+        {"metric": "wu_2025_claim_retention", "value": WU_RETENTION_2_OVER_16},
+        {"metric": "equivalence_threshold", "value": EQUIVALENCE_THRESHOLD},
+        {"metric": "n_budgets_consistent_with_wu", "value": n_consistent},
+        {"metric": "n_budgets_rejecting_wu_at_95", "value": n_reject},
+        {"metric": "n_budgets_below_equivalence_threshold_80pct", "value": n_break_80},
+        {"metric": "min_observed_R_G4_over_G32", "value": f"{observed_min_R:.4f}"},
+        {"metric": "T_at_min_R_M", "value": f"{observed_T_min_R:.1f}"},
+        {"metric": "loglinear_slope_R_vs_logT", "value": f"{bp[0]['loglinear_slope']:.4f}"},
+        {"metric": "loglinear_r_squared", "value": f"{bp[0]['loglinear_pearson_r'] ** 2:.4f}"},
+        {
+            "metric": "first_budget_below_80pct_R_T_M",
+            "value": next(
+                (b["first_observed_T_M_below"] for b in bp[1:] if b["threshold_tau"] == 0.80),
+                float("nan"),
+            ),
+        },
+        {
+            "metric": "first_budget_below_85pct_R_T_M",
+            "value": next(
+                (b["first_observed_T_M_below"] for b in bp[1:] if b["threshold_tau"] == 0.85),
+                float("nan"),
+            ),
+        },
+        {
+            "metric": "predicted_R_at_T_128M",
+            "value": next(
+                (f["predicted_R_G4_over_G32"] for f in forecast if f["T_ext_M"] == 128.0),
+                float("nan"),
+            ),
+        },
+        {
+            "metric": "predicted_R_at_T_256M",
+            "value": next(
+                (f["predicted_R_G4_over_G32"] for f in forecast if f["T_ext_M"] == 256.0),
+                float("nan"),
+            ),
+        },
+        {
+            "metric": "predicted_R_at_T_512M",
+            "value": next(
+                (f["predicted_R_G4_over_G32"] for f in forecast if f["T_ext_M"] == 512.0),
+                float("nan"),
+            ),
+        },
     ]
     write_summary(summary, RESULTS / "group_size_iter79_v2_summary.tsv")
 
@@ -514,12 +565,14 @@ def main():
     finding = {
         "ts": "2026-07-03",
         "pillar": "P3 (group size G=4 vs G=32)",
-        "claim": (f"Wu 2025 (arXiv:2510.00977) claims G=2 retains "
-                  f"{WU_RETENTION_2_OVER_16:.1%} of G=16.  Our G=4 vs G=32 "
-                  f"(same 8:1 ratio) retention drops to "
-                  f"{observed_min_R:.3f} at T={observed_T_min_R:.0f}M and "
-                  f"extrapolates below {EQUIVALENCE_THRESHOLD:.0%} by "
-                  f"T~128M -- Wu's 97.6% claim holds at T<=1M only."),
+        "claim": (
+            f"Wu 2025 (arXiv:2510.00977) claims G=2 retains "
+            f"{WU_RETENTION_2_OVER_16:.1%} of G=16.  Our G=4 vs G=32 "
+            f"(same 8:1 ratio) retention drops to "
+            f"{observed_min_R:.3f} at T={observed_T_min_R:.0f}M and "
+            f"extrapolates below {EQUIVALENCE_THRESHOLD:.0%} by "
+            f"T~128M -- Wu's 97.6% claim holds at T<=1M only."
+        ),
         "evidence_path": "platform_hybrid/experiments/results/group_size_iter79_v2_*.tsv",
         "citation_ok": True,
         "source_paper": "arXiv:2510.00977 (Wu et al. 2025)",

@@ -43,8 +43,8 @@ Outputs (platform_hybrid/experiments/results/p5p8/):
 
 Stdlib only.
 """
+
 from __future__ import annotations
-import csv
 import json
 import re
 import sys
@@ -53,8 +53,9 @@ from pathlib import Path
 import statistics
 
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
-from _stats import wilson_p  # noqa: E402
+from _paths import REPO_ROOT
+from _stats import wilson_p
+
 ROOT = REPO_ROOT
 RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8"
 RES.mkdir(parents=True, exist_ok=True)
@@ -83,11 +84,9 @@ def parse_passes_from_claim(claim_text):
         return None, None
     txt = claim_text
     # primary: K/N H<digit>? PASS or K/N PASS
-    m = re.findall(r"(\d+)\s*\/\s*(\d+)(?:\s*H[1-9](?:[A-Z]+)?)?\s*PASS",
-                   txt)
+    m = re.findall(r"(\d+)\s*\/\s*(\d+)(?:\s*H[1-9](?:[A-Z]+)?)?\s*PASS", txt)
     n_pass = sum(int(a) for a, _ in m) if m else 0
-    m_total = re.findall(r"(\d+)\s*\/\s*(\d+)\s*(?:H[1-9](?:[A-Z]+)?|hypothes[ie]s)\b",
-                         txt)
+    m_total = re.findall(r"(\d+)\s*\/\s*(\d+)\s*(?:H[1-9](?:[A-Z]+)?|hypothes[ie]s)\b", txt)
     if m_total:
         n_total = sum(int(b) for _, b in m_total)
     elif m:
@@ -101,6 +100,7 @@ def parse_passes_from_claim(claim_text):
 
 def main():
     from review22_contract import require_independent_unit_contract
+
     require_independent_unit_contract()
     rows = []
     raw = []
@@ -138,19 +138,8 @@ def main():
         # D17b: per-finding pass ratio
         pass_ratio = (n_pass / n_total) if n_total > 0 else None
         has_verdicts_stored = bool(d.get("verdicts") and len(d.get("verdicts")) > 0)
-        per_pillar[pillar].append({
-            "iter": d.get("iter", "?"),
-            "n_pass": n_pass,
-            "n_total": n_total,
-            "n_fail": n_fail,
-            "reproducible": reproducible,
-            "pass_ratio": pass_ratio,
-            "claim_len": len(claim),
-            "verdict_keys": list(verdicts.keys()),
-            "has_verdicts_stored": has_verdicts_stored,
-        })
-        if has_verdicts_stored:
-            per_pillar_verified[pillar].append({
+        per_pillar[pillar].append(
+            {
                 "iter": d.get("iter", "?"),
                 "n_pass": n_pass,
                 "n_total": n_total,
@@ -158,7 +147,22 @@ def main():
                 "reproducible": reproducible,
                 "pass_ratio": pass_ratio,
                 "claim_len": len(claim),
-            })
+                "verdict_keys": list(verdicts.keys()),
+                "has_verdicts_stored": has_verdicts_stored,
+            }
+        )
+        if has_verdicts_stored:
+            per_pillar_verified[pillar].append(
+                {
+                    "iter": d.get("iter", "?"),
+                    "n_pass": n_pass,
+                    "n_total": n_total,
+                    "n_fail": n_fail,
+                    "reproducible": reproducible,
+                    "pass_ratio": pass_ratio,
+                    "claim_len": len(claim),
+                }
+            )
 
     # Per-pillar summary rows (use ALL stored findings)
     summary_rows = []
@@ -175,9 +179,9 @@ def main():
         d17c = n  # density is the per-pillar finding count itself
         lens = [it["claim_len"] for it in items]
         d17d = statistics.mean(lens)
-        summary_rows.append([p, n, round(d17a, 4), round(d17b, 4),
-                             n, round(d17d, 1),
-                             classify(d17a)])
+        summary_rows.append(
+            [p, n, round(d17a, 4), round(d17b, 4), n, round(d17d, 1), classify(d17a)]
+        )
 
     # Verified-only (stored-verdicts present) per-pillar summary
     summary_rows_v = []
@@ -194,9 +198,9 @@ def main():
         d17c = n
         lens = [it["claim_len"] for it in items]
         d17d = statistics.mean(lens)
-        summary_rows_v.append([p, n, round(d17a, 4), round(d17b, 4),
-                               n, round(d17d, 1),
-                               classify(d17a)])
+        summary_rows_v.append(
+            [p, n, round(d17a, 4), round(d17b, 4), n, round(d17d, 1), classify(d17a)]
+        )
 
     # Wilson 95% CI on D17a per pillar
     def wilson(k, n, z=1.96):
@@ -207,7 +211,9 @@ def main():
     # Write D17 per-pillar table with CIs (ALL stored findings)
     out_pillar = RES / "synth_iter180_d17_per_pillar.tsv"
     with out_pillar.open("w") as f:
-        f.write("scope\tpillar\tn_findings\tD17a_reproducible_rate\tD17a_ci_lo\tD17a_ci_hi\tD17b_pass_ratio\tD17c_count\tD17d_mean_claim_len\tlayer\n")
+        f.write(
+            "scope\tpillar\tn_findings\tD17a_reproducible_rate\tD17a_ci_lo\tD17a_ci_hi\tD17b_pass_ratio\tD17c_count\tD17d_mean_claim_len\tlayer\n"
+        )
         for r in summary_rows:
             pillar = r[0]
             n = r[1]
@@ -231,10 +237,16 @@ def main():
         f.write("pillar\titer\tn_pass\tn_total\tn_fail\treproducible\tpass_ratio\tn_verdict_keys\n")
         for p in PILLARS:
             for it in per_pillar[p]:
-                row = [p, it["iter"], it["n_pass"], it["n_total"],
-                       it["n_fail"], int(it["reproducible"]),
-                       round(it["pass_ratio"], 4) if it["pass_ratio"] is not None else "NA",
-                       len(it["verdict_keys"])]
+                row = [
+                    p,
+                    it["iter"],
+                    it["n_pass"],
+                    it["n_total"],
+                    it["n_fail"],
+                    int(it["reproducible"]),
+                    round(it["pass_ratio"], 4) if it["pass_ratio"] is not None else "NA",
+                    len(it["verdict_keys"]),
+                ]
                 f.write("\t".join(str(c) for c in row) + "\n")
     print(f"[synth-iter180] wrote {out_v}", file=sys.stderr)
 
@@ -288,6 +300,7 @@ def main():
         pt = statistics.mean(a_rates) - statistics.mean(b_rates)
         rng_state = sum(ord(c) for c in (a_pillar + b_pillar)) + seed
         import random
+
         random.seed(rng_state)
         boots = []
         for _ in range(n_boot):
@@ -316,10 +329,10 @@ def main():
                 n_5of5[p] += 1
     h2 = max(n_5of5.values()) == n_5of5["P7"] and n_5of5["P7"] >= 1
     # H3: P6 has highest D17c (count) — P6 historically adds many entries
-    counts = {p: r[4] for p, r in zip(PILLARS, summary_rows)}
+    counts = {p: r[4] for p, r in zip(PILLARS, summary_rows, strict=False)}
     h3 = max(counts.values()) == counts["P6"]
     # H4: P8 has the widest mean claim length — proxy for richer CI/H reporting
-    lens = {p: r[5] for p, r in zip(PILLARS, summary_rows)}
+    lens = {p: r[5] for p, r in zip(PILLARS, summary_rows, strict=False)}
     n_lt_p8 = sum(1 for p in PILLARS if p != "P8" and lens[p] < lens["P8"])
     h4 = n_lt_p8 >= 3
     # H5: D17 OVERALL falls in HIGH layer (using ALL stored findings)
@@ -338,16 +351,19 @@ def main():
         "n_findings_total": len(all_items),
         "n_findings_verified_stored_verdicts": n_v,
         "n_findings_per_pillar": dict(counts),
-        "D17a_per_pillar": {p: r[2] for p, r in zip(PILLARS, summary_rows)},
-        "D17a_verified_per_pillar": {p: r[2] for p, r in zip(PILLARS, summary_rows_v)},
+        "D17a_per_pillar": {p: r[2] for p, r in zip(PILLARS, summary_rows, strict=False)},
+        "D17a_verified_per_pillar": {
+            p: r[2] for p, r in zip(PILLARS, summary_rows_v, strict=False)
+        },
         "D17a_overall": round(d17_all, 4),
         "D17a_verified_overall": round(d17a_v, 4),
-        "D17b_per_pillar": {p: r[3] for p, r in zip(PILLARS, summary_rows)},
+        "D17b_per_pillar": {p: r[3] for p, r in zip(PILLARS, summary_rows, strict=False)},
         "D17d_per_pillar_mean_claim_len": dict(lens),
         "layer_counts": dict(layer_counts),
         "n_5of5_per_pillar": dict(n_5of5),
-        "synth_vs_each_pillar": {p: {"point": v[0], "lo": v[1], "hi": v[2]}
-                                 for p, v in synth_vs.items()},
+        "synth_vs_each_pillar": {
+            p: {"point": v[0], "lo": v[1], "hi": v[2]} for p, v in synth_vs.items()
+        },
         "P7_vs_P8_D17a_diff": {"point": p7_vs_p8[0], "lo": p7_vs_p8[1], "hi": p7_vs_p8[2]},
         "hypotheses": {
             "H1_synth_D17a_gt_P5": h1,

@@ -7,6 +7,7 @@ length_bias_iter40_fig.py — Generate figure for iter 40.
   (b) R/L ratio trajectory for one representative seed per task
   (c) pooled anti-trap slope (Pearson of R on L) with bootstrap CI
 """
+
 from __future__ import annotations
 
 import csv
@@ -14,6 +15,7 @@ import json
 from pathlib import Path
 
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
@@ -22,6 +24,7 @@ ROOT = Path(__file__).resolve().parent.parent
 RES = ROOT / "experiments" / "results"
 FIGS = ROOT / "figures"
 PAPER_FIGS = ROOT / "paper" / "figures"
+
 
 def main():
     FIGS.mkdir(parents=True, exist_ok=True)
@@ -56,12 +59,23 @@ def main():
     for ti, task in enumerate(tasks):
         for ai, algo in enumerate(["grpo", "dr_grpo"]):
             s = next(r for r in summary if r["task"] == task and r["algo"] == algo)
-            ys = [float(s["mean_beta_early"]), float(s["mean_beta_mid"]), float(s["mean_beta_late"])]
+            ys = [
+                float(s["mean_beta_early"]),
+                float(s["mean_beta_mid"]),
+                float(s["mean_beta_late"]),
+            ]
             offset = (ti * 2 + ai - 1.5) * w
-            ax.bar(x + offset, ys, width=w, color=colors[algo], alpha=0.7,
-                    label=f"{algo} ({task})" if ti == 0 else None)
+            ax.bar(
+                x + offset,
+                ys,
+                width=w,
+                color=colors[algo],
+                alpha=0.7,
+                label=f"{algo} ({task})" if ti == 0 else None,
+            )
     ax.axhline(0.0, color="grey", lw=0.7, ls="--")
-    ax.set_xticks(x); ax.set_xticklabels(["early", "mid", "late"])
+    ax.set_xticks(x)
+    ax.set_xticklabels(["early", "mid", "late"])
     ax.set_xlabel("training phase (K=3 equal-width)")
     ax.set_ylabel("per-phase E[R|L] slope (OLS)")
     ax.set_title("(a) Phase-stratified length–reward slope")
@@ -69,8 +83,10 @@ def main():
 
     # (b) R/L trajectory for representative seeds
     ax = axes[1]
-    for runs, task, label in [(DRGRPO["runs"], "arithmetic_easy", "arithmetic (seed 42)"),
-                                (GSM8K["runs"], "gsm8k_cot", "GSM8K (seed 42)")]:
+    for runs, task, _label in [
+        (DRGRPO["runs"], "arithmetic_easy", "arithmetic (seed 42)"),
+        (GSM8K["runs"], "gsm8k_cot", "GSM8K (seed 42)"),
+    ]:
         for algo in ("grpo", "dr_grpo"):
             r = next(rr for rr in runs if rr["algo"] == algo and rr["seed"] == 42)
             sl = r["step_log"]
@@ -79,8 +95,7 @@ def main():
             R = np.array([s["mean_reward"] for s in sl])
             r_over_l = R / np.maximum(L, 1e-6)
             ls = "-" if algo == "grpo" else "--"
-            ax.plot(t, r_over_l, ls, color=colors[algo],
-                     label=f"{task} {algo}")
+            ax.plot(t, r_over_l, ls, color=colors[algo], label=f"{task} {algo}")
     ax.set_xlabel("training step")
     ax.set_ylabel("R / L (reward per token)")
     ax.set_title("(b) Reward-per-token trajectory")
@@ -105,7 +120,8 @@ def main():
     ax.scatter(xs, ys, color="#1f77b4")
     ax.vlines(xs, yerr_lo, yerr_hi, color="#1f77b4")
     ax.axhline(0.0, color="grey", lw=0.7, ls="--")
-    ax.set_xticks(xs); ax.set_xticklabels(labels, fontsize=7)
+    ax.set_xticks(xs)
+    ax.set_xticklabels(labels, fontsize=7)
     ax.set_ylabel("GRPO minus Dr.GRPO anti-trap slope")
     ax.set_title("(c) Paired difference with supplied bootstrap interval")
 

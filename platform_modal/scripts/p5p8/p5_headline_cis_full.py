@@ -26,9 +26,7 @@ Outputs:
 from __future__ import annotations
 import csv
 import json
-import math
 import random
-import statistics
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]  # repo root
@@ -73,7 +71,10 @@ def eta_squared(groups: list[list[float]]) -> float:
 
 
 def bootstrap_eta_squared(
-    groups: list[list[float]], B=N_BOOT, alpha=0.05, seed=SEED,
+    groups: list[list[float]],
+    B=N_BOOT,
+    alpha=0.05,
+    seed=SEED,
 ) -> tuple[float, float, float]:
     """Resample within each group (preserving group sizes), then compute eta^2.
 
@@ -119,17 +120,19 @@ def headline_h4_eta_squared_algorithm(by_method: dict) -> list[dict]:
     for metric_name, idx in [("zvf", 1), ("reward_mean", 2)]:
         groups = [[row[idx] for row in by_method[m]] for m in sorted(by_method)]
         point, lo, hi = bootstrap_eta_squared(groups)
-        out.append({
-            "claim": "H4",
-            "metric": f"eta2_algorithm_{metric_name}",
-            "n_groups": len(groups),
-            "n_per_group": len(groups[0]) if groups else 0,
-            "point": round(point, 4),
-            "ci_lo": round(lo, 4),
-            "ci_hi": round(hi, 4),
-            "verdict": "DECISIVE" if hi < 0.10 else ("SUGGESTIVE" if hi < 0.30 else "DOMINANT"),
-            "note": "stratified (within-method) step bootstrap, n=10000; ignores step autocorrelation",
-        })
+        out.append(
+            {
+                "claim": "H4",
+                "metric": f"eta2_algorithm_{metric_name}",
+                "n_groups": len(groups),
+                "n_per_group": len(groups[0]) if groups else 0,
+                "point": round(point, 4),
+                "ci_lo": round(lo, 4),
+                "ci_hi": round(hi, 4),
+                "verdict": "DECISIVE" if hi < 0.10 else ("SUGGESTIVE" if hi < 0.30 else "DOMINANT"),
+                "note": "stratified (within-method) step bootstrap, n=10000; ignores step autocorrelation",
+            }
+        )
     return out
 
 
@@ -149,56 +152,69 @@ def headline_h5_method_spread(by_method: dict) -> list[dict]:
             last_rows = last_rows[-last_n:]
         arm_means[m] = [r[2] for r in last_rows]
     point_spread = max(arm_means.values(), key=lambda x: sum(x) / len(x))
-    point_spread_val = (
-        sum(point_spread) / len(point_spread) - sum(min(arm_means.values(), key=lambda x: sum(x) / len(x))) /
-        len(min(arm_means.values(), key=lambda x: sum(x) / len(x)))
-    )
+    point_spread_val = sum(point_spread) / len(point_spread) - sum(
+        min(arm_means.values(), key=lambda x: sum(x) / len(x))
+    ) / len(min(arm_means.values(), key=lambda x: sum(x) / len(x)))
     # Bootstrap spread
     spreads = []
     for _ in range(N_BOOT):
         boot_means = {}
         for m, vals in arm_means.items():
-            boot_means[m] = sum(vals[rng.randrange(len(vals))] for _ in range(len(vals))) / len(vals)
+            boot_means[m] = sum(vals[rng.randrange(len(vals))] for _ in range(len(vals))) / len(
+                vals
+            )
         m_list = list(boot_means.values())
         spreads.append(max(m_list) - min(m_list))
     spreads.sort()
     lo = spreads[int(N_BOOT * 0.025)]
     hi = spreads[int(N_BOOT * 0.975)]
-    return [{
-        "claim": "H5",
-        "metric": "spread_last10_reward",
-        "n_groups": len(arm_means),
-        "n_per_group": last_n,
-        "point": round(point_spread_val, 4),
-        "ci_lo": round(lo, 4),
-        "ci_hi": round(hi, 4),
-        "verdict": "FLAT" if hi < 0.05 else ("TINY" if hi < 0.10 else "VARIED"),
-        "note": f"spread = max(arm_mean)-min(arm_mean) over {len(arm_means)} method arms, last-10 step window",
-    }]
+    return [
+        {
+            "claim": "H5",
+            "metric": "spread_last10_reward",
+            "n_groups": len(arm_means),
+            "n_per_group": last_n,
+            "point": round(point_spread_val, 4),
+            "ci_lo": round(lo, 4),
+            "ci_hi": round(hi, 4),
+            "verdict": "FLAT" if hi < 0.05 else ("TINY" if hi < 0.10 else "VARIED"),
+            "note": f"spread = max(arm_mean)-min(arm_mean) over {len(arm_means)} method arms, last-10 step window",
+        }
+    ]
 
 
 def main() -> int:
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     by_method = read_n2()
-    print(f"loaded N2: methods={sorted(by_method)}, "
-          f"steps_per_method={[len(v) for v in by_method.values()]}")
+    print(
+        f"loaded N2: methods={sorted(by_method)}, "
+        f"steps_per_method={[len(v) for v in by_method.values()]}"
+    )
 
     rows = headline_h4_eta_squared_algorithm(by_method)
     rows += headline_h5_method_spread(by_method)
 
     out_tsv = OUT_DIR / "p5_headline_cis_full.tsv"
     with out_tsv.open("w", newline="") as f:
-        cols = ["claim", "metric", "n_groups", "n_per_group", "point",
-                "ci_lo", "ci_hi", "verdict", "note"]
-        w = csv.DictWriter(f, fieldnames=cols, delimiter="\t",
-                           extrasaction="ignore")
+        cols = [
+            "claim",
+            "metric",
+            "n_groups",
+            "n_per_group",
+            "point",
+            "ci_lo",
+            "ci_hi",
+            "verdict",
+            "note",
+        ]
+        w = csv.DictWriter(f, fieldnames=cols, delimiter="\t", extrasaction="ignore")
         w.writeheader()
         for r in rows:
             w.writerow(r)
 
     summary = {
         "n_bootstrap": N_BOOT,
-"alpha": 0.05,
+        "alpha": 0.05,
         "rows": rows,
         "interpretation": [
             "H4: algorithm-axis eta^2 on ZVF and on reward_mean with bootstrap CIs.",
@@ -210,8 +226,10 @@ def main() -> int:
 
     print(f"\n=== P5 headline CIs (item 02 extended) ===")
     for r in rows:
-        print(f"  {r['claim']:>3} {r['metric']:<28} n=({r['n_groups']}x{r['n_per_group']})  "
-              f"point={r['point']:.4f}  CI=[{r['ci_lo']:.4f}, {r['ci_hi']:.4f}]  verdict={r['verdict']}")
+        print(
+            f"  {r['claim']:>3} {r['metric']:<28} n=({r['n_groups']}x{r['n_per_group']})  "
+            f"point={r['point']:.4f}  CI=[{r['ci_lo']:.4f}, {r['ci_hi']:.4f}]  verdict={r['verdict']}"
+        )
     return 0
 
 

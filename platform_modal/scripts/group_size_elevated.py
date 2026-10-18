@@ -42,6 +42,7 @@ artifacts (group_size_effect.tsv, group_size_effect_theory.tsv,
 group_size_effect_dpo_check.tsv, group_size_g4_vs_g32_broader_scale.tsv,
 group_size.pdf, group_size_extended.pdf).
 """
+
 from __future__ import annotations
 
 import csv
@@ -52,8 +53,8 @@ from typing import Iterable
 import matplotlib
 
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt  # noqa: E402
-import numpy as np  # noqa: E402
+import matplotlib.pyplot as plt
+import numpy as np
 
 REPO = Path(__file__).resolve().parent.parent
 RESULTS = REPO / "experiments" / "results"
@@ -68,15 +69,16 @@ def zvf_iid(p: float, G: int) -> float:
     """Bernoulli-independent ZVF: p^G + (1-p)^G."""
     if G <= 0:
         return float("nan")
-    return float(p ** G + (1.0 - p) ** G)
+    return float(p**G + (1.0 - p) ** G)
 
 
 def gu_iid(p: float, G: int) -> float:
     return 1.0 - zvf_iid(p, G)
 
 
-def bootstrap_mean_ci(values: Iterable[float], b: int = BOOT_B, alpha: float = 0.05
-                     ) -> tuple[float, float, float]:
+def bootstrap_mean_ci(
+    values: Iterable[float], b: int = BOOT_B, alpha: float = 0.05
+) -> tuple[float, float, float]:
     rng = np.random.default_rng(RNG_SEED)
     arr = np.asarray(list(values), dtype=float)
     if arr.size == 0:
@@ -97,11 +99,11 @@ def load_sweep() -> dict:
 # 1. Per-step advantage_variance × G
 # ---------------------------------------------------------------------------
 
+
 def write_advantage_variance_tsv(sweep: dict) -> Path:
     """Per-step advantage_variance averaged across seeds, per G."""
     out = RESULTS / "group_size_advantage_variance.tsv"
-    cols = ["G", "seed", "step", "zvf", "advantage_variance",
-            "mean_reward", "entropy", "grad_norm"]
+    cols = ["G", "seed", "step", "zvf", "advantage_variance", "mean_reward", "entropy", "grad_norm"]
     by_G_seed: dict[int, dict[int, list[dict]]] = {}
     for run in sweep["runs"]:
         by_G_seed.setdefault(int(run["group_size"]), {})[int(run["seed"])] = run["step_log"]
@@ -109,14 +111,18 @@ def write_advantage_variance_tsv(sweep: dict) -> Path:
     for G in sorted(by_G_seed.keys()):
         for seed in sorted(by_G_seed[G].keys()):
             for s in by_G_seed[G][seed]:
-                rows_out.append({
-                    "G": G, "seed": seed, "step": int(s["step"]),
-                    "zvf": round(float(s["zvf"]), 6),
-                    "advantage_variance": round(float(s["advantage_variance"]), 6),
-                    "mean_reward": round(float(s["mean_reward"]), 6),
-                    "entropy": round(float(s["entropy"]), 6),
-                    "grad_norm": round(float(s["grad_norm"]), 6),
-                })
+                rows_out.append(
+                    {
+                        "G": G,
+                        "seed": seed,
+                        "step": int(s["step"]),
+                        "zvf": round(float(s["zvf"]), 6),
+                        "advantage_variance": round(float(s["advantage_variance"]), 6),
+                        "mean_reward": round(float(s["mean_reward"]), 6),
+                        "entropy": round(float(s["entropy"]), 6),
+                        "grad_norm": round(float(s["grad_norm"]), 6),
+                    }
+                )
     with open(out, "w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=cols, delimiter="\t")
         w.writeheader()
@@ -127,6 +133,7 @@ def write_advantage_variance_tsv(sweep: dict) -> Path:
 # ---------------------------------------------------------------------------
 # 2. delta_div decomposition per G with bootstrap CIs
 # ---------------------------------------------------------------------------
+
 
 def write_deltadiv_decomp_tsv(sweep: dict) -> Path:
     """delta_div = ZVF_iid - ZVF_emp per G, with bootstrap CI.
@@ -143,9 +150,18 @@ def write_deltadiv_decomp_tsv(sweep: dict) -> Path:
     (seed, step) pool for a CI on the population mean.
     """
     out = RESULTS / "group_size_deltadiv_decomp.tsv"
-    cols = ["G", "n_obs", "delta_div_mean", "delta_div_ci_low",
-            "delta_div_ci_high", "p_emp_mean", "zvf_emp_mean",
-            "zvf_iid_mean", "in_frontier_band", "verdict"]
+    cols = [
+        "G",
+        "n_obs",
+        "delta_div_mean",
+        "delta_div_ci_low",
+        "delta_div_ci_high",
+        "p_emp_mean",
+        "zvf_emp_mean",
+        "zvf_iid_mean",
+        "in_frontier_band",
+        "verdict",
+    ]
     rows_out = []
     by_G_seed: dict[int, dict[int, list[dict]]] = {}
     for run in sweep["runs"]:
@@ -176,18 +192,20 @@ def write_deltadiv_decomp_tsv(sweep: dict) -> Path:
             verdict = "herd (emp ZVF > iid)"
         else:
             verdict = "near-iid"
-        rows_out.append({
-            "G": G,
-            "n_obs": len(deltas),
-            "delta_div_mean": round(float(mean), 4),
-            "delta_div_ci_low": round(float(lo), 4),
-            "delta_div_ci_high": round(float(hi), 4),
-            "p_emp_mean": round(float(ps.mean()), 4),
-            "zvf_emp_mean": round(float(zvfe.mean()), 4),
-            "zvf_iid_mean": round(float(zvfi.mean()), 4),
-            "in_frontier_band": in_band,
-            "verdict": verdict,
-        })
+        rows_out.append(
+            {
+                "G": G,
+                "n_obs": len(deltas),
+                "delta_div_mean": round(float(mean), 4),
+                "delta_div_ci_low": round(float(lo), 4),
+                "delta_div_ci_high": round(float(hi), 4),
+                "p_emp_mean": round(float(ps.mean()), 4),
+                "zvf_emp_mean": round(float(zvfe.mean()), 4),
+                "zvf_iid_mean": round(float(zvfi.mean()), 4),
+                "in_frontier_band": in_band,
+                "verdict": verdict,
+            }
+        )
     with open(out, "w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=cols, delimiter="\t")
         w.writeheader()
@@ -198,6 +216,7 @@ def write_deltadiv_decomp_tsv(sweep: dict) -> Path:
 # ---------------------------------------------------------------------------
 # 3. Empirical Iso-G sizing: smallest G satisfying GU(p_emp, G) >= Y_target
 # ---------------------------------------------------------------------------
+
 
 def write_isog_sizing_tsv(sweep: dict) -> Path:
     """Exploratory projected Iso-G sizing from the measured p_emp distribution.
@@ -212,9 +231,21 @@ def write_isog_sizing_tsv(sweep: dict) -> Path:
     the empirical sampler produces more contrast (anti-herd).
     """
     out = RESULTS / "group_size_isog_sizing_v2.tsv"
-    cols = ["Y_target", "p_bin", "n_in_bin", "G_min_iid", "G_min_projected",
-            "G_min_observed", "sizing_kind", "delta_G", "p_emp_mean", "delta_div_bin",
-            "iid_meets_target", "emp_meets_target", "interpretation"]
+    cols = [
+        "Y_target",
+        "p_bin",
+        "n_in_bin",
+        "G_min_iid",
+        "G_min_projected",
+        "G_min_observed",
+        "sizing_kind",
+        "delta_G",
+        "p_emp_mean",
+        "delta_div_bin",
+        "iid_meets_target",
+        "emp_meets_target",
+        "interpretation",
+    ]
     rows_out = []
     # Pool per-step (p, zvf) pairs across all (G, seed)
     per_step: list[tuple[int, float, float]] = []
@@ -228,9 +259,12 @@ def write_isog_sizing_tsv(sweep: dict) -> Path:
     bins = [(0.0, 0.25), (0.25, 0.5), (0.5, 0.75), (0.75, 1.0)]
     y_targets = [0.50, 0.60, 0.70, 0.80, 0.90]
 
-    for (p_lo, p_hi) in bins:
-        in_bin = [(G, p, z) for G, p, z in per_step if p_lo <= p < p_hi or (
-            p_hi == 1.0 and p_lo <= p <= p_hi)]
+    for p_lo, p_hi in bins:
+        in_bin = [
+            (G, p, z)
+            for G, p, z in per_step
+            if p_lo <= p < p_hi or (p_hi == 1.0 and p_lo <= p <= p_hi)
+        ]
         if not in_bin:
             continue
         n = len(in_bin)
@@ -265,25 +299,34 @@ def write_isog_sizing_tsv(sweep: dict) -> Path:
             else:
                 dg = float("nan")
                 interp = "one or both did not meet Y_target in [2,128]"
-            rows_out.append({
-                "Y_target": Y,
-                "p_bin": f"[{p_lo:.2f}, {p_hi:.2f}]",
-                "n_in_bin": n,
-                "G_min_iid": G_min_iid if G_min_iid is not None else ">128",
-                "G_min_projected": G_min_emp if G_min_emp is not None else ">128",
-                "G_min_observed": min((g for g in sorted({g for g,_,_ in in_bin}) if np.mean([1-z for gg,_,z in in_bin if gg==g]) >= Y), default="unavailable"),
-                "sizing_kind": "pooled_residual_projection_not_measured",
-                "delta_G": (
-                    (G_min_emp - G_min_iid)
-                    if (G_min_emp is not None and G_min_iid is not None)
-                    else float("nan")
-                ),
-                "p_emp_mean": round(p_mean, 4),
-                "delta_div_bin": round(delta_div, 4),
-                "iid_meets_target": "yes" if (G_min_iid is not None) else "no",
-                "emp_meets_target": "yes" if (G_min_emp is not None) else "no",
-                "interpretation": interp,
-            })
+            rows_out.append(
+                {
+                    "Y_target": Y,
+                    "p_bin": f"[{p_lo:.2f}, {p_hi:.2f}]",
+                    "n_in_bin": n,
+                    "G_min_iid": G_min_iid if G_min_iid is not None else ">128",
+                    "G_min_projected": G_min_emp if G_min_emp is not None else ">128",
+                    "G_min_observed": min(
+                        (
+                            g
+                            for g in sorted({g for g, _, _ in in_bin})
+                            if np.mean([1 - z for gg, _, z in in_bin if gg == g]) >= Y
+                        ),
+                        default="unavailable",
+                    ),
+                    "sizing_kind": "pooled_residual_projection_not_measured",
+                    "delta_G": (
+                        (G_min_emp - G_min_iid)
+                        if (G_min_emp is not None and G_min_iid is not None)
+                        else float("nan")
+                    ),
+                    "p_emp_mean": round(p_mean, 4),
+                    "delta_div_bin": round(delta_div, 4),
+                    "iid_meets_target": "yes" if (G_min_iid is not None) else "no",
+                    "emp_meets_target": "yes" if (G_min_emp is not None) else "no",
+                    "interpretation": interp,
+                }
+            )
 
     with open(out, "w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=cols, delimiter="\t")
@@ -299,6 +342,7 @@ def write_isog_sizing_tsv(sweep: dict) -> Path:
 # mean_reward is the within-training accuracy).
 # ---------------------------------------------------------------------------
 
+
 def write_convergence_tsv(sweep: dict) -> Path:
     """Per-G step-to-X%-threshold on the per-step mean_reward trajectory.
 
@@ -307,8 +351,15 @@ def write_convergence_tsv(sweep: dict) -> Path:
     seeds for a per-G convergence-step number.
     """
     out = RESULTS / "group_size_convergence.tsv"
-    cols = ["G", "seed", "threshold", "first_step", "reached",
-            "last_step_mean_reward", "observation_horizon"]
+    cols = [
+        "G",
+        "seed",
+        "threshold",
+        "first_step",
+        "reached",
+        "last_step_mean_reward",
+        "observation_horizon",
+    ]
     rows_out = []
     by_G_seed: dict[int, dict[int, list[dict]]] = {}
     for run in sweep["runs"]:
@@ -323,13 +374,17 @@ def write_convergence_tsv(sweep: dict) -> Path:
                     if mr >= X:
                         first_step = int(steps[t]["step"])
                         break
-                rows_out.append({
-                    "G": G, "seed": seed, "threshold": X,
-                    "first_step": first_step if first_step is not None else "never",
-                    "reached": "yes" if first_step is not None else "no",
-                    "last_step_mean_reward": round(mean_rewards[-1], 4),
-                    "observation_horizon": int(steps[-1]["step"]),
-                })
+                rows_out.append(
+                    {
+                        "G": G,
+                        "seed": seed,
+                        "threshold": X,
+                        "first_step": first_step if first_step is not None else "never",
+                        "reached": "yes" if first_step is not None else "no",
+                        "last_step_mean_reward": round(mean_rewards[-1], 4),
+                        "observation_horizon": int(steps[-1]["step"]),
+                    }
+                )
     with open(out, "w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=cols, delimiter="\t")
         w.writeheader()
@@ -340,6 +395,7 @@ def write_convergence_tsv(sweep: dict) -> Path:
 # ---------------------------------------------------------------------------
 # 5. Figure: per-step advantage_variance × G trajectory + last-10 boxplot
 # ---------------------------------------------------------------------------
+
 
 def write_advantage_variance_figure(sweep: dict) -> Path:
     out_pdf = FIG / "group_size_advantage_variance.pdf"
@@ -361,8 +417,9 @@ def write_advantage_variance_figure(sweep: dict) -> Path:
             per_seed_traj.append(traj)
         n = min(len(t) for t in per_seed_traj)
         avg = np.mean([t[:n] for t in per_seed_traj], axis=0)
-        ax.plot(range(n), avg, "-", color=cmap(i / max(len(Gs) - 1, 1)),
-                linewidth=2.0, label=f"G={G}")
+        ax.plot(
+            range(n), avg, "-", color=cmap(i / max(len(Gs) - 1, 1)), linewidth=2.0, label=f"G={G}"
+        )
     ax.set_xlabel("Optimizer step")
     ax.set_ylabel("Advantage variance (per step)")
     ax.set_title(
@@ -382,15 +439,15 @@ def write_advantage_variance_figure(sweep: dict) -> Path:
             traj = [float(s["advantage_variance"]) for s in by_G_seed[G][seed]]
             per_seed.append(np.mean(traj[-10:]))
         last10.append(per_seed)
-    bp = ax.boxplot(last10, tick_labels=[f"G={g}" for g in Gs], patch_artist=True,
-                    showmeans=True, meanline=True)
+    bp = ax.boxplot(
+        last10, tick_labels=[f"G={g}" for g in Gs], patch_artist=True, showmeans=True, meanline=True
+    )
     for i, patch in enumerate(bp["boxes"]):
         patch.set_facecolor(cmap(i / max(len(Gs) - 1, 1)))
         patch.set_alpha(0.5)
     ax.set_ylabel("Last-10-step mean advantage variance")
     ax.set_title(
-        "Last-10-step advantage variance by G\n"
-        "(Wu et al. 2025 'G=2 ~ G=16' predicts flat boxplot)"
+        "Last-10-step advantage variance by G\n(Wu et al. 2025 'G=2 ~ G=16' predicts flat boxplot)"
     )
     ax.grid(True, alpha=0.3, axis="y")
 
@@ -409,6 +466,7 @@ def write_advantage_variance_figure(sweep: dict) -> Path:
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
+
 
 def main() -> None:
     sweep = load_sweep()
@@ -441,7 +499,7 @@ def main() -> None:
     print("Empirical Iso-G sizing (smallest G satisfying GU >= Y_target):")
     with open(p3) as f:
         for r in csv.DictReader(f, delimiter="\t"):
-            dg = r['delta_G']
+            dg = r["delta_G"]
             try:
                 dg_str = f"{float(dg):+.0f}"
             except (TypeError, ValueError):
@@ -456,6 +514,7 @@ def main() -> None:
     print()
     print("Convergence step (first step mean_reward >= X; mean across seeds):")
     import statistics as st
+
     by_G_X: dict[tuple[int, float], list[int]] = {}
     with open(p4) as f:
         for r in csv.DictReader(f, delimiter="\t"):

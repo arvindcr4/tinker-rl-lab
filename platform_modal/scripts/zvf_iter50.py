@@ -49,6 +49,7 @@ This script does NOT touch the existing zvf_diagnostic.py outputs;
 it reads the same input file and writes fresh TSV outputs. Stdlib
 only; no numpy / pandas. B=2000 bootstrap CIs.
 """
+
 from __future__ import annotations
 
 import csv
@@ -77,13 +78,26 @@ BOOTSTRAP_B = 2000
 SEED = 20240702  # deterministic RNG
 
 METHOD_ORDER = [
-    "grpo", "aero", "cppo", "ngrpo", "scafgrpo",
-    "mcgrpo", "gift", "areal", "es",
+    "grpo",
+    "aero",
+    "cppo",
+    "ngrpo",
+    "scafgrpo",
+    "mcgrpo",
+    "gift",
+    "areal",
+    "es",
 ]
 METHOD_DISPLAY = {
-    "grpo": "GRPO", "aero": "AERO", "cppo": "CPPO", "ngrpo": "NGRPO",
-    "scafgrpo": "SCAF-GRPO", "mcgrpo": "MCGRPO", "gift": "GIFT",
-    "areal": "AREAL", "es": "ES",
+    "grpo": "GRPO",
+    "aero": "AERO",
+    "cppo": "CPPO",
+    "ngrpo": "NGRPO",
+    "scafgrpo": "SCAF-GRPO",
+    "mcgrpo": "MCGRPO",
+    "gift": "GIFT",
+    "areal": "AREAL",
+    "es": "ES",
 }
 
 
@@ -136,13 +150,15 @@ def load_variance_mitigation(path):
         reader = csv.DictReader(f, delimiter="\t")
         for row in reader:
             key = (row["method"], int(row["seed"]))
-            by_ms[key].append({
-                "step": int(row["step"]),
-                "zvf": float(row["zvf"]),
-                "reward_mean": float(row["reward_mean"]),
-                "heldout_acc": float(row["heldout_acc"]),
-                "collapse": int(row["collapse"]),
-            })
+            by_ms[key].append(
+                {
+                    "step": int(row["step"]),
+                    "zvf": float(row["zvf"]),
+                    "reward_mean": float(row["reward_mean"]),
+                    "heldout_acc": float(row["heldout_acc"]),
+                    "collapse": int(row["collapse"]),
+                }
+            )
     # sort each trajectory by step
     for k in by_ms:
         by_ms[k].sort(key=lambda r: r["step"])
@@ -173,13 +189,15 @@ def compute_lagged_corr(by_ms):
                     xs.append(rewards[t])
                     ys.append(zvfs[idx])
             r = pearson(xs, ys)
-            rows.append({
-                "method": method,
-                "seed": seed,
-                "lag": lag,
-                "r": r,
-                "n_pairs": len(xs),
-            })
+            rows.append(
+                {
+                    "method": method,
+                    "seed": seed,
+                    "lag": lag,
+                    "r": r,
+                    "n_pairs": len(xs),
+                }
+            )
     return rows
 
 
@@ -200,11 +218,11 @@ def aggregate_lagged_corr(lagged_rows):
 # ---------------------------------------------------------------------------
 def phase_integrals(by_ms):
     """For each (method, seed), compute:
-       - peak_step = argmax of heldout_acc
-       - phase1 = [0, peak]
-       - phase2 = [peak+1, peak+50]  (or end if shorter)
-       - phase3 = [peak+51, end]
-       - int_phase_k = mean over phase_k of max(ZVF - THRESHOLD, 0)
+    - peak_step = argmax of heldout_acc
+    - phase1 = [0, peak]
+    - phase2 = [peak+1, peak+50]  (or end if shorter)
+    - phase3 = [peak+51, end]
+    - int_phase_k = mean over phase_k of max(ZVF - THRESHOLD, 0)
     """
     rows = []
     for (method, seed), traj in sorted(by_ms.items()):
@@ -226,21 +244,23 @@ def phase_integrals(by_ms):
                 return float("nan")
             return safe_mean([max(t["zvf"] - THRESHOLD, 0.0) for t in seg])
 
-        rows.append({
-            "method": method,
-            "seed": seed,
-            "n_steps_total": n,
-            "peak_step": peak_step,
-            "peak_heldout_acc": best_acc,
-            "n_steps_phase1": len(p1),
-            "n_steps_phase2": len(p2),
-            "n_steps_phase3": len(p3),
-            "int_phase1": integ(p1),
-            "int_phase2": integ(p2),
-            "int_phase3": integ(p3),
-            "zvf_mean_phase2": safe_mean([t["zvf"] for t in p2]) if p2 else float("nan"),
-            "zvf_mean_phase3": safe_mean([t["zvf"] for t in p3]) if p3 else float("nan"),
-        })
+        rows.append(
+            {
+                "method": method,
+                "seed": seed,
+                "n_steps_total": n,
+                "peak_step": peak_step,
+                "peak_heldout_acc": best_acc,
+                "n_steps_phase1": len(p1),
+                "n_steps_phase2": len(p2),
+                "n_steps_phase3": len(p3),
+                "int_phase1": integ(p1),
+                "int_phase2": integ(p2),
+                "int_phase3": integ(p3),
+                "zvf_mean_phase2": safe_mean([t["zvf"] for t in p2]) if p2 else float("nan"),
+                "zvf_mean_phase3": safe_mean([t["zvf"] for t in p3]) if p3 else float("nan"),
+            }
+        )
     return rows
 
 
@@ -251,14 +271,18 @@ def aggregate_phase_integrals(integ_rows):
         grouped[r["method"]].append(r)
     out = {}
     for method, runs in grouped.items():
-        keys = ["int_phase1", "int_phase2", "int_phase3",
-                "zvf_mean_phase2", "zvf_mean_phase3",
-                "peak_step", "peak_heldout_acc"]
+        keys = [
+            "int_phase1",
+            "int_phase2",
+            "int_phase3",
+            "zvf_mean_phase2",
+            "zvf_mean_phase3",
+            "peak_step",
+            "peak_heldout_acc",
+        ]
         row = {"method": method, "n_runs": len(runs)}
         for k in keys:
-            vals = [r[k] for r in runs if not (
-                isinstance(r[k], float) and math.isnan(r[k])
-            )]
+            vals = [r[k] for r in runs if not (isinstance(r[k], float) and math.isnan(r[k]))]
             if not vals:
                 row[f"{k}_mean"] = float("nan")
                 row[f"{k}_ci_lo"] = float("nan")
@@ -294,32 +318,32 @@ def write_predictions(out_path, lagged_agg, integ_agg, last10_map, by_ms, integ_
     # P1: the cross-correlation r(reward_t, ZVF_t+1) - "reward leads ZVF by 1 step"
     # is STRICTLY POSITIVE for vanilla GRPO (peak > 0).
     grpo_at_p1 = lagged_agg.get(("grpo", 1), {}).get("mean", float("nan"))
-    preds.append({
-        "id": "P1_reward_leads_zvf_lag1_grpo",
-        "claim": (
-            "vanilla GRPO Pearson(reward_t, ZVF_{t+1}) > 0 "
-            "(reward leads ZVF by 1 step)"
-        ),
-        "value": grpo_at_p1,
-        "pass": grpo_at_p1 > 0.0,
-        "n_seeds": lagged_agg.get(("grpo", 1), {}).get("n", 0),
-    })
+    preds.append(
+        {
+            "id": "P1_reward_leads_zvf_lag1_grpo",
+            "claim": ("vanilla GRPO Pearson(reward_t, ZVF_{t+1}) > 0 (reward leads ZVF by 1 step)"),
+            "value": grpo_at_p1,
+            "pass": grpo_at_p1 > 0.0,
+            "n_seeds": lagged_agg.get(("grpo", 1), {}).get("n", 0),
+        }
+    )
 
     # P2: AERO exhibits STRICTLY LOWER r than vanilla GRPO at lag +1
     # (the variance-mitigation mechanism DELAYS ZVF rise relative to reward
     # decline by intervening in the gradient update).
     aero_at_p1 = lagged_agg.get(("aero", 1), {}).get("mean", float("nan"))
     diff_p2 = grpo_at_p1 - aero_at_p1
-    preds.append({
-        "id": "P2_aero_lower_lag1_corr_than_grpo",
-        "claim": (
-            "AERO r(lag=+1) < GRPO r(lag=+1) "
-            "(variance mitigation lowers reward→ZVF cross-corr)"
-        ),
-        "value": diff_p2,
-        "pass": diff_p2 > 0.0,
-        "n_seeds": lagged_agg.get(("aero", 1), {}).get("n", 0),
-    })
+    preds.append(
+        {
+            "id": "P2_aero_lower_lag1_corr_than_grpo",
+            "claim": (
+                "AERO r(lag=+1) < GRPO r(lag=+1) (variance mitigation lowers reward→ZVF cross-corr)"
+            ),
+            "value": diff_p2,
+            "pass": diff_p2 > 0.0,
+            "n_seeds": lagged_agg.get(("aero", 1), {}).get("n", 0),
+        }
+    )
 
     # P3: phase-2 integral of (ZVF - 0.5)+ is LARGER on collapsing seeds
     # (collapse=1 at any step) than on non-collapsing seeds in vanilla GRPO.
@@ -329,57 +353,67 @@ def write_predictions(out_path, lagged_agg, integ_agg, last10_map, by_ms, integ_
         p2_int = integ_map.get((m, s), float("nan"))
         by_m[m].append((collapsed, p2_int))
     grpo_p2 = by_m["grpo"]
-    grpo_coll = [v for c, v in grpo_p2 if c and not (
-        isinstance(v, float) and math.isnan(v)
-    )]
-    grpo_non = [v for c, v in grpo_p2 if not c and not (
-        isinstance(v, float) and math.isnan(v)
-    )]
+    grpo_coll = [v for c, v in grpo_p2 if c and not (isinstance(v, float) and math.isnan(v))]
+    grpo_non = [v for c, v in grpo_p2 if not c and not (isinstance(v, float) and math.isnan(v))]
     p3_diff = (safe_mean(grpo_coll) if grpo_coll else float("nan")) - (
         safe_mean(grpo_non) if grpo_non else float("nan")
     )
-    preds.append({
-        "id": "P3_grpo_p2_int_coll_minus_noncoll",
-        "claim": (
-            "vanilla GRPO post-peak ZVF>0.5 integral is LARGER on "
-            "collapsing seeds than on non-collapsing seeds"
-        ),
-        "value": p3_diff,
-        "pass": p3_diff > 0.0 if math.isfinite(p3_diff) else "NOT_EVALUABLE",
-        "n_collapsed": len(grpo_coll),
-        "n_noncoll": len(grpo_non),
-    })
+    preds.append(
+        {
+            "id": "P3_grpo_p2_int_coll_minus_noncoll",
+            "claim": (
+                "vanilla GRPO post-peak ZVF>0.5 integral is LARGER on "
+                "collapsing seeds than on non-collapsing seeds"
+            ),
+            "value": p3_diff,
+            "pass": p3_diff > 0.0 if math.isfinite(p3_diff) else "NOT_EVALUABLE",
+            "n_collapsed": len(grpo_coll),
+            "n_noncoll": len(grpo_non),
+        }
+    )
 
     # P4: the cross-correlation peak lag is POSITIVE in vanilla GRPO
     # (the peak lag is the argmax of |r| over LAGS).
     grpo_curve = [lagged_agg.get(("grpo", L), {}).get("mean", float("nan")) for L in LAGS]
-    available = [(L,r) for L,r in zip(LAGS,grpo_curve) if math.isfinite(r)]
-    peak_lag = max(available,key=lambda item:(abs(item[1]),-item[0]))[0] if available else float("nan")
-    preds.append({
-        "id": "P4_grpo_peak_lag_positive",
-        "claim": (
-            "argmax over LAGS of vanilla GRPO |r(reward_t, ZVF_t+L)| "
-            "is POSITIVE (reward leads ZVF)"
-        ),
-        "value": peak_lag,
-        "pass": peak_lag > 0 if math.isfinite(peak_lag) else "NOT_EVALUABLE",
-        "all_lags_signed": dict(zip(LAGS, [round(r, 4) for r in grpo_curve])),
-    })
+    available = [(L, r) for L, r in zip(LAGS, grpo_curve, strict=False) if math.isfinite(r)]
+    peak_lag = (
+        max(available, key=lambda item: (abs(item[1]), -item[0]))[0] if available else float("nan")
+    )
+    preds.append(
+        {
+            "id": "P4_grpo_peak_lag_positive",
+            "claim": (
+                "argmax over LAGS of vanilla GRPO |r(reward_t, ZVF_t+L)| "
+                "is POSITIVE (reward leads ZVF)"
+            ),
+            "value": peak_lag,
+            "pass": peak_lag > 0 if math.isfinite(peak_lag) else "NOT_EVALUABLE",
+            "all_lags_signed": dict(zip(LAGS, [round(r, 4) for r in grpo_curve], strict=False)),
+        }
+    )
 
     with open(out_path, "w", newline="") as f:
         w = csv.writer(f, delimiter="\t")
         w.writerow(["id", "claim", "value", "pass", "extras_json"])
         for p in preds:
-            extras = {k: v for k, v in p.items()
-                      if k not in ("id", "claim", "value", "pass")}
+            extras = {k: v for k, v in p.items() if k not in ("id", "claim", "value", "pass")}
             extras_json = __import__("json").dumps(extras)
-            w.writerow([
-                p["id"], p["claim"],
-                f"{p['value']:.6f}" if isinstance(p["value"], float) else str(p["value"]),
-                ("NOT_EVALUABLE" if p["pass"] == "NOT_EVALUABLE" or (isinstance(p["value"], float) and not math.isfinite(p["value"]))
-                 else "PASS" if p["pass"] else "FAIL"),
-                extras_json,
-            ])
+            w.writerow(
+                [
+                    p["id"],
+                    p["claim"],
+                    f"{p['value']:.6f}" if isinstance(p["value"], float) else str(p["value"]),
+                    (
+                        "NOT_EVALUABLE"
+                        if p["pass"] == "NOT_EVALUABLE"
+                        or (isinstance(p["value"], float) and not math.isfinite(p["value"]))
+                        else "PASS"
+                        if p["pass"]
+                        else "FAIL"
+                    ),
+                    extras_json,
+                ]
+            )
 
 
 # ---------------------------------------------------------------------------
@@ -388,8 +422,10 @@ def write_predictions(out_path, lagged_agg, integ_agg, last10_map, by_ms, integ_
 def main():
     by_ms = load_variance_mitigation(INPUT)
     os.makedirs(OUT_DIR, exist_ok=True)
-    print(f"[iter50] loaded {sum(len(v) for v in by_ms.values())} per-step rows "
-          f"across {len(by_ms)} (method, seed) pairs")
+    print(
+        f"[iter50] loaded {sum(len(v) for v in by_ms.values())} per-step rows "
+        f"across {len(by_ms)} (method, seed) pairs"
+    )
 
     # (A) lagged cross-correlation
     lagged_rows = compute_lagged_corr(by_ms)
@@ -398,10 +434,7 @@ def main():
         w = csv.writer(f, delimiter="\t")
         w.writerow(["method", "seed", "lag", "r", "n_pairs"])
         for r in lagged_rows:
-            w.writerow([
-                r["method"], r["seed"], r["lag"],
-                f"{r['r']:.6f}", r["n_pairs"]
-            ])
+            w.writerow([r["method"], r["seed"], r["lag"], f"{r['r']:.6f}", r["n_pairs"]])
     print(f"[iter50] wrote {OUT_LAGGED} ({len(lagged_rows)} rows)")
 
     # (B) phase integrals
@@ -410,20 +443,41 @@ def main():
     integ_agg = aggregate_phase_integrals(integ_rows)
     with open(OUT_INTEGRALS, "w", newline="") as f:
         w = csv.writer(f, delimiter="\t")
-        w.writerow([
-            "method", "seed", "n_steps_total", "peak_step",
-            "peak_heldout_acc", "n_steps_phase1", "n_steps_phase2",
-            "n_steps_phase3", "int_phase1", "int_phase2", "int_phase3",
-            "zvf_mean_phase2", "zvf_mean_phase3",
-        ])
+        w.writerow(
+            [
+                "method",
+                "seed",
+                "n_steps_total",
+                "peak_step",
+                "peak_heldout_acc",
+                "n_steps_phase1",
+                "n_steps_phase2",
+                "n_steps_phase3",
+                "int_phase1",
+                "int_phase2",
+                "int_phase3",
+                "zvf_mean_phase2",
+                "zvf_mean_phase3",
+            ]
+        )
         for r in integ_rows:
-            w.writerow([
-                r["method"], r["seed"], r["n_steps_total"], r["peak_step"],
-                f"{r['peak_heldout_acc']:.4f}",
-                r["n_steps_phase1"], r["n_steps_phase2"], r["n_steps_phase3"],
-                f"{r['int_phase1']:.6f}", f"{r['int_phase2']:.6f}", f"{r['int_phase3']:.6f}",
-                f"{r['zvf_mean_phase2']:.6f}", f"{r['zvf_mean_phase3']:.6f}",
-            ])
+            w.writerow(
+                [
+                    r["method"],
+                    r["seed"],
+                    r["n_steps_total"],
+                    r["peak_step"],
+                    f"{r['peak_heldout_acc']:.4f}",
+                    r["n_steps_phase1"],
+                    r["n_steps_phase2"],
+                    r["n_steps_phase3"],
+                    f"{r['int_phase1']:.6f}",
+                    f"{r['int_phase2']:.6f}",
+                    f"{r['int_phase3']:.6f}",
+                    f"{r['zvf_mean_phase2']:.6f}",
+                    f"{r['zvf_mean_phase3']:.6f}",
+                ]
+            )
     print(f"[iter50] wrote {OUT_INTEGRALS} ({len(integ_rows)} rows)")
 
     # last10 map for predictions
@@ -439,31 +493,43 @@ def main():
         m_last10 = safe_mean([v for (m, s), v in last10_map.items() if m == method])
         # Mean r at lag +1
         l1 = lagged_agg.get((method, 1), {})
-        summary_rows.append({
-            "method": method,
-            "n_runs": agg["n_runs"],
-            "mean_last10_acc": m_last10,
-            "mean_r_lag_minus10": lagged_agg.get((method, -10), {}).get("mean", float("nan")),
-            "mean_r_lag_minus5": lagged_agg.get((method, -5), {}).get("mean", float("nan")),
-            "mean_r_lag_minus1": lagged_agg.get((method, -1), {}).get("mean", float("nan")),
-            "mean_r_lag_0": lagged_agg.get((method, 0), {}).get("mean", float("nan")),
-            "mean_r_lag_1": lagged_agg.get((method, 1), {}).get("mean", float("nan")),
-            "mean_r_lag_5": lagged_agg.get((method, 5), {}).get("mean", float("nan")),
-            "mean_r_lag_10": lagged_agg.get((method, 10), {}).get("mean", float("nan")),
-            "int_phase1_mean": agg["int_phase1_mean"],
-            "int_phase2_mean": agg["int_phase2_mean"],
-            "int_phase3_mean": agg["int_phase3_mean"],
-            "zvf_mean_phase2_mean": agg["zvf_mean_phase2_mean"],
-            "zvf_mean_phase3_mean": agg["zvf_mean_phase3_mean"],
-            "peak_step_mean": agg["peak_step_mean"],
-        })
+        summary_rows.append(
+            {
+                "method": method,
+                "n_runs": agg["n_runs"],
+                "mean_last10_acc": m_last10,
+                "mean_r_lag_minus10": lagged_agg.get((method, -10), {}).get("mean", float("nan")),
+                "mean_r_lag_minus5": lagged_agg.get((method, -5), {}).get("mean", float("nan")),
+                "mean_r_lag_minus1": lagged_agg.get((method, -1), {}).get("mean", float("nan")),
+                "mean_r_lag_0": lagged_agg.get((method, 0), {}).get("mean", float("nan")),
+                "mean_r_lag_1": lagged_agg.get((method, 1), {}).get("mean", float("nan")),
+                "mean_r_lag_5": lagged_agg.get((method, 5), {}).get("mean", float("nan")),
+                "mean_r_lag_10": lagged_agg.get((method, 10), {}).get("mean", float("nan")),
+                "int_phase1_mean": agg["int_phase1_mean"],
+                "int_phase2_mean": agg["int_phase2_mean"],
+                "int_phase3_mean": agg["int_phase3_mean"],
+                "zvf_mean_phase2_mean": agg["zvf_mean_phase2_mean"],
+                "zvf_mean_phase3_mean": agg["zvf_mean_phase3_mean"],
+                "peak_step_mean": agg["peak_step_mean"],
+            }
+        )
     with open(OUT_SUMMARY, "w", newline="") as f:
         cols = [
-            "method", "n_runs", "mean_last10_acc",
-            "mean_r_lag_minus10", "mean_r_lag_minus5", "mean_r_lag_minus1",
-            "mean_r_lag_0", "mean_r_lag_1", "mean_r_lag_5", "mean_r_lag_10",
-            "int_phase1_mean", "int_phase2_mean", "int_phase3_mean",
-            "zvf_mean_phase2_mean", "zvf_mean_phase3_mean",
+            "method",
+            "n_runs",
+            "mean_last10_acc",
+            "mean_r_lag_minus10",
+            "mean_r_lag_minus5",
+            "mean_r_lag_minus1",
+            "mean_r_lag_0",
+            "mean_r_lag_1",
+            "mean_r_lag_5",
+            "mean_r_lag_10",
+            "int_phase1_mean",
+            "int_phase2_mean",
+            "int_phase3_mean",
+            "zvf_mean_phase2_mean",
+            "zvf_mean_phase3_mean",
             "peak_step_mean",
         ]
         w = csv.writer(f, delimiter="\t")

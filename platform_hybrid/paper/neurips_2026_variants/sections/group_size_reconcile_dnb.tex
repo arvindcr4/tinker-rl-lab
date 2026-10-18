@@ -1,0 +1,94 @@
+% =============================================================================
+% P9 (DNB) fork of ../../sections/group_size_reconcile.tex, rewritten for the
+% 2026-10-18 Deep Review pass. Removed: the token-budget-normalized G x T table
+% (hand-entered FALLBACK_ROWS in experiments/group_size_token_normalized.py),
+% the GE_tok estimator with its GU_SCALE=55000 constant (tuned to reproduce
+% that table), and every claim built on them (G~32 optimum, rightward shift).
+% Kept: the measured Qwen2.5-0.5B sweep and the 505-task audit, both recomputed.
+% =============================================================================
+\section{Group-Size Evidence}
+\label{sec:appendix:group-size-reconcile}
+
+\paragraph{What was removed.}
+Earlier drafts included a token-budget-normalized $G\times T$ table for
+Qwen3-8B/GSM8K and a ``token-budget gradient efficiency'' estimator. The
+table's cells were a hand-entered dictionary (\texttt{FALLBACK\_ROWS} in
+\texttt{experiments/\allowbreak{}group\_size\_token\_normalized.py}) rather than measured
+runs, no $G{=}64$ run exists, and the estimator's $55000$ constant was tuned
+so the script reproduced that table. Both are withdrawn together with the
+claims built on them (a $G{\approx}32$ optimum at large token budgets and a
+budget-dependent rightward shift of the optimal $G$). No measured
+matched-token-budget $G$ sweep exists in this artifact.
+
+\paragraph{What is measured.}
+Two measured group-size results remain. (i) The single-run Qwen3-8B/GSM8K
+sweep on Tinker ($G\in\{2,4,8,16,32\}$, 30 steps, training reward only;
+$G{=}8$ is the identically configured Wave-6 baseline run;
+Table~\ref{tab:main_results}): peak training reward is
+$75.0/87.5/68.8/62.5/67.2\%$ and last-10 is $35.0/28.8/33.8/32.5/38.8\%$, so neither
+metric is monotone in $G$ and no held-out accuracy exists for these runs.
+(ii) The small Qwen2.5-0.5B arithmetic sweep below, which is a different
+model and task and must not be read as a Qwen3-8B/GSM8K result.
+
+\subsection{Measured Small-Scale Sweep (Qwen2.5-0.5B, arithmetic)}
+\label{sec:appendix:group-size-measured}
+
+Driver \texttt{experiments/\allowbreak{}modal/\allowbreak{}modal\_groupsize\_zvf\_sweep.py}; per-seed
+step logs in
+\texttt{experiments/\allowbreak{}results/\allowbreak{}modal\_registry/\allowbreak{}modal\_artifacts/\allowbreak{}tinkerrl-results/\allowbreak{}groupsize\_zvf/\allowbreak{}G\{2,4,8,16\}\_s\{42,123,456\}.json};
+summary \texttt{experiments/\allowbreak{}results/\allowbreak{}group\_size\_effect.tsv}. On
+\texttt{Qwen2.5-0.5B} with a verifiable correctness reward on two-operand
+addition, $G\in\{2,4,8,16\}$ at three seeds each (40 steps), held-out
+accuracy on 200 freshly sampled addition problems is
+$0.982\to0.988\to0.990\to0.978$ (Table~\ref{tab:groupsize-measured}). The
+numerical maximum at $G{=}8$ is not separable from its neighbours at $n{=}3$
+seeds (overlapping SEs), so the supported statement is only that the
+best observed $G$ is interior. Last-10 training reward is nearly flat
+($0.971$--$0.984$; numerically highest at $G{=}16$). Mean ZVF falls
+monotonically with $G$ ($0.84\to0.76\to0.69\to0.63$), the direction
+$p^{G}+(1-p)^{G}$ predicts for fixed $p$. Accuracies are near ceiling on
+this easy task, so effect sizes are small.
+
+\begin{table}[ht]
+\centering
+\small
+\begin{tabular}{lcccc}
+\toprule
+Metric & $G{=}2$ & $G{=}4$ & $G{=}8$ & $G{=}16$ \\
+\midrule
+Held-out acc.\ (mean $\pm$ SE, $n{=}3$ seeds) & $0.982{\pm}.004$ & $0.988{\pm}.002$ & $0.990{\pm}.003$ & $0.978{\pm}.006$ \\
+Last-10 training reward (seed mean) & $0.977$ & $0.971$ & $0.973$ & $0.984$ \\
+Mean ZVF (seed mean) & $0.84$ & $0.76$ & $0.69$ & $0.63$ \\
+\bottomrule
+\end{tabular}
+\caption{Measured group-size sweep on \texttt{Qwen2.5-0.5B} / two-operand
+addition (correctness reward, 40 steps, 3 seeds per $G$; SE uses seeds as
+the unit). Small-scale and near ceiling; not a GSM8K-scale claim.}
+\label{tab:groupsize-measured}
+\end{table}
+
+\subsection{Per-Prompt Conditional-Utility Audit (Qwen3-8B, GSM8K)}
+
+This audit uses measured per-task success rates, not training runs. For 200
+GSM8K problems $\times$ 3 seeds, Tinker sampled 8 completions per task at
+temperature 1.0 from Qwen3-8B
+(\texttt{experiments/\allowbreak{}results/\allowbreak{}tinker\_gsm8k\_zvf\_s\{42,123,456\}.json};
+generator \texttt{experiments/\allowbreak{}tinker\_direct\_eval.py}); $p_x$ is the
+fraction correct. Dropping the 95 tasks with $p_x\in\{0,1\}$ leaves 505
+(seed, problem) tasks over 199 problems
+(\texttt{experiments/\allowbreak{}results/\allowbreak{}zvf\_iter46\_per\_prompt\_isog.tsv}; mean
+$p_x{=}0.674$). For a candidate group size the plug-in conditional utility is
+$U(G)=\mathbb{E}_x\!\left[1-p_x^G-(1-p_x)^G\right]/\sqrt{G}$, the mean
+expected non-degenerate yield per $\sqrt{G}$ cost unit; the $\sqrt{G}$ cost
+proxy is a declared modelling choice, not a measured cost. On the filtered
+cohort $U(4){=}0.32914$ and $U(5){=}0.32737$ ($\arg\max_{G\le32}U{=}4$;
+difference $0.00177$, 95\% problem-cluster bootstrap interval
+$[0.00083,0.00268]$, 10{,}000 resamples of problems). On all 600 tasks
+$U(4){=}0.277$ and $U(5){=}0.276$. Because $p_x$ is estimated from 8 samples
+(values $k/8$), evaluating $U$ at $G\gg8$ extrapolates the Bernoulli model.
+Within $p_x$ bins the expected yield gain $Y_{32}-Y_4$ is $+0.29$
+($p_x<0.5$, $n{=}62$), $+0.15$ ($0.5\le p_x<0.75$, $n{=}157$), and $+0.45$
+($p_x\ge0.75$, $n{=}286$). Recomputed by
+\texttt{tools/\allowbreak{}review\_ledger/\allowbreak{}P9\_dnb\_u505.py}. This is an objective- and
+cohort-conditional calculation, not a training result and not a group-size
+recommendation.

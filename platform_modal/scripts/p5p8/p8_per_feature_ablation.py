@@ -46,9 +46,7 @@ from __future__ import annotations
 
 import csv
 import json
-import math
 import random
-import statistics
 from itertools import combinations
 from pathlib import Path
 
@@ -58,8 +56,10 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 import sys
+
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
+from _paths import REPO_ROOT
+
 ROOT = REPO_ROOT
 RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8/corrected-review21-v2"
 FIG = RES / "figures"
@@ -118,7 +118,6 @@ def metrics(y: list[int], p: list[float]) -> dict:
         roc_auc_score,
         average_precision_score,
         brier_score_loss,
-        log_loss,
     )
 
     auc = float(roc_auc_score(y, p))
@@ -127,15 +126,15 @@ def metrics(y: list[int], p: list[float]) -> dict:
     n = len(y)
     n_pos = sum(y)
     pred_pos = sum(1 for pi in p if pi >= 0.5)
-    tp = sum(1 for yi, pi in zip(y, p) if pi >= 0.5 and yi == 1)
-    fp = sum(1 for yi, pi in zip(y, p) if pi >= 0.5 and yi == 0)
-    fn = sum(1 for yi, pi in zip(y, p) if pi < 0.5 and yi == 1)
+    tp = sum(1 for yi, pi in zip(y, p, strict=False) if pi >= 0.5 and yi == 1)
+    fp = sum(1 for yi, pi in zip(y, p, strict=False) if pi >= 0.5 and yi == 0)
+    fn = sum(1 for yi, pi in zip(y, p, strict=False) if pi < 0.5 and yi == 1)
     precision = tp / max(tp + fp, 1)
     recall = tp / max(tp + fn, 1)
     f1 = 2 * precision * recall / max(precision + recall, 1e-9)
     # ECE-10
     bins = [[] for _ in range(DECILES)]
-    for yi, pi in zip(y, p):
+    for yi, pi in zip(y, p, strict=False):
         b = min(int(pi * DECILES), DECILES - 1)
         bins[b].append((yi, pi))
     ece = 0.0
@@ -182,15 +181,14 @@ def paired_bootstrap_ci(
                 return None
             return roc_auc_score(yv, pa) - roc_auc_score(yv, pb)
         if metric == "brier":
-            return (
-                sum((pi - yi) ** 2 for yi, pi in zip(yv, pa)) / len(yv)
-                - sum((pi - yi) ** 2 for yi, pi in zip(yv, pb)) / len(yv)
-            )
+            return sum((pi - yi) ** 2 for yi, pi in zip(yv, pa, strict=False)) / len(yv) - sum(
+                (pi - yi) ** 2 for yi, pi in zip(yv, pb, strict=False)
+            ) / len(yv)
         if metric == "f1":
-            ta = sum(1 for yi, pi in zip(yv, pa) if pi >= 0.5 and yi == 1)
-            fa = sum(1 for yi, pi in zip(yv, pa) if pi >= 0.5 and yi == 0)
-            tb = sum(1 for yi, pi in zip(yv, pb) if pi >= 0.5 and yi == 1)
-            fb = sum(1 for yi, pi in zip(yv, pb) if pi >= 0.5 and yi == 0)
+            ta = sum(1 for yi, pi in zip(yv, pa, strict=False) if pi >= 0.5 and yi == 1)
+            fa = sum(1 for yi, pi in zip(yv, pa, strict=False) if pi >= 0.5 and yi == 0)
+            tb = sum(1 for yi, pi in zip(yv, pb, strict=False) if pi >= 0.5 and yi == 1)
+            fb = sum(1 for yi, pi in zip(yv, pb, strict=False) if pi >= 0.5 and yi == 0)
             pa_p = ta / max(ta + fa, 1)
             ra = ta / max(sum(yv), 1)
             pb_p = tb / max(tb + fb, 1)
@@ -199,9 +197,10 @@ def paired_bootstrap_ci(
             fb_f1 = 2 * pb_p * rb / max(pb_p + rb, 1e-9)
             return fa_f1 - fb_f1
         if metric == "ece10":
+
             def ece(pv):
                 bins = [[] for _ in range(DECILES)]
-                for yi, pi in zip(yv, pv):
+                for yi, pi in zip(yv, pv, strict=False):
                     b = min(int(pi * DECILES), DECILES - 1)
                     bins[b].append((yi, pi))
                 e = 0.0
@@ -212,6 +211,7 @@ def paired_bootstrap_ci(
                     acc = sum(yi for yi, _ in bb) / len(bb)
                     e += (len(bb) / len(yv)) * abs(acc - conf)
                 return e
+
             return ece(pa) - ece(pb)
         raise ValueError(metric)
 
@@ -364,7 +364,7 @@ def main() -> None:
 
     def reliability(y, p, decile):
         bins = [[] for _ in range(decile)]
-        for yi, pi in zip(y, p):
+        for yi, pi in zip(y, p, strict=False):
             b = min(int(pi * decile), decile - 1)
             bins[b].append((yi, pi))
         out = []
@@ -453,7 +453,10 @@ def main() -> None:
             for r in rows
             if r["metric"] == metric
             and r["excludes_zero"]
-            and ((sign == "pos" and r["direction"] == "pos") or (sign == "neg" and r["direction"] == "neg"))
+            and (
+                (sign == "pos" and r["direction"] == "pos")
+                or (sign == "neg" and r["direction"] == "neg")
+            )
         )
 
     summary = {

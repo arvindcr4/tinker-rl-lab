@@ -1,18 +1,20 @@
 #!/usr/bin/env python3
 """Iter 47 figure: 3-panel summary of T* and monotonicity results.
 
-  (a) Critical-budget T*(Ga, R): horizontal bar chart of T* at R=0.976 for
-      G_a in {4, 8, 16, 32} with bootstrap 95% CI whiskers.
-  (b) Retention vs log(T) for G_a in {4, 8, 16, 32}, with the 0.976 Wu
-      threshold drawn as a red dashed horizontal line and the T* markers
-      as vertical lines.
-  (c) Per-difficulty T*(R=0.976) horizontal bars with bootstrap.
+(a) Critical-budget T*(Ga, R): horizontal bar chart of T* at R=0.976 for
+    G_a in {4, 8, 16, 32} with bootstrap 95% CI whiskers.
+(b) Retention vs log(T) for G_a in {4, 8, 16, 32}, with the 0.976 Wu
+    threshold drawn as a red dashed horizontal line and the T* markers
+    as vertical lines.
+(c) Per-difficulty T*(R=0.976) horizontal bars with bootstrap.
 """
+
 from __future__ import annotations
 
 from pathlib import Path
 
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
@@ -36,14 +38,28 @@ def main() -> None:
     ax = axes[0]
     rows_a = [r for r in crit if float(r["R_target"]) == 0.976]
     Gas = [int(r["G_a"]) for r in rows_a]
-    Ts_star = [float(r["T_star_M_tokens"]) if r["T_star_M_tokens"] not in ("inf", "no_crossover") else np.nan
-                for r in rows_a]
+    Ts_star = [
+        float(r["T_star_M_tokens"])
+        if r["T_star_M_tokens"] not in ("inf", "no_crossover")
+        else np.nan
+        for r in rows_a
+    ]
     lo = [float(r["T_star_ci_low_M"]) if r["T_star_ci_low_M"] else np.nan for r in rows_a]
     hi = [float(r["T_star_ci_high_M"]) if r["T_star_ci_high_M"] else np.nan for r in rows_a]
-    err_lo = [t - l if not (np.isnan(t) or np.isnan(l)) else 0 for t, l in zip(Ts_star, lo)]
-    err_hi = [h - t if not (np.isnan(t) or np.isnan(h)) else 0 for t, h in zip(Ts_star, hi)]
-    ax.bar(range(len(Gas)), [t if not np.isnan(t) else 0 for t in Ts_star],
-            yerr=[err_lo, err_hi], color="#5fa8d3", edgecolor="black", capsize=4)
+    err_lo = [
+        t - l if not (np.isnan(t) or np.isnan(l)) else 0 for t, l in zip(Ts_star, lo, strict=False)
+    ]
+    err_hi = [
+        h - t if not (np.isnan(t) or np.isnan(h)) else 0 for t, h in zip(Ts_star, hi, strict=False)
+    ]
+    ax.bar(
+        range(len(Gas)),
+        [t if not np.isnan(t) else 0 for t in Ts_star],
+        yerr=[err_lo, err_hi],
+        color="#5fa8d3",
+        edgecolor="black",
+        capsize=4,
+    )
     ax.set_xticks(range(len(Gas)))
     ax.set_xticklabels([f"G={g}" for g in Gas])
     ax.set_ylabel(r"$T^*$ (M tokens) at $R = 0.976$ (Wu threshold)")
@@ -58,14 +74,26 @@ def main() -> None:
     ax = axes[1]
     Ts = sorted({int(r["budget_tokens"]) for r in raw})
     G_set = sorted({int(r["G"]) for r in raw})
-    anchor = {T: next(float(r["heldout_acc_mean"]) for r in raw if int(r["budget_tokens"]) == T and int(r["G"]) == max(G_set))
-               for T in Ts}
+    anchor = {
+        T: next(
+            float(r["heldout_acc_mean"])
+            for r in raw
+            if int(r["budget_tokens"]) == T and int(r["G"]) == max(G_set)
+        )
+        for T in Ts
+    }
     cmap = plt.cm.viridis
     for j, G in enumerate(G_set):
         Rs = []
         for T in Ts:
-            acc = next((float(r["heldout_acc_mean"]) for r in raw
-                          if int(r["budget_tokens"]) == T and int(r["G"]) == G), np.nan)
+            acc = next(
+                (
+                    float(r["heldout_acc_mean"])
+                    for r in raw
+                    if int(r["budget_tokens"]) == T and int(r["G"]) == G
+                ),
+                np.nan,
+            )
             Rs.append(acc / anchor[T])
         ax.plot(Ts, Rs, "-o", color=cmap(j / len(G_set)), label=f"G={G}")
     ax.axhline(0.976, color="red", linestyle="--", linewidth=1.5, label="Wu 2025 R=0.976")
@@ -78,8 +106,11 @@ def main() -> None:
 
     # --- (c) Per-bin T* at R=0.976 ---
     ax = axes[2]
-    rows_c = [r for r in diff if float(r["R_target"]) == 0.976
-               and r["T_star_M_tokens"] not in ("n/a", "no_crossover")]
+    rows_c = [
+        r
+        for r in diff
+        if float(r["R_target"]) == 0.976 and r["T_star_M_tokens"] not in ("n/a", "no_crossover")
+    ]
     bins = [r["bin"] for r in rows_c]
     Ts_b = [float(r["T_star_M_tokens"]) for r in rows_c]
     ax.bar(range(len(bins)), Ts_b, color="#a4d29e", edgecolor="black")
@@ -93,7 +124,9 @@ def main() -> None:
     ax.legend(loc="upper left", fontsize=8)
     ax.grid(alpha=0.3, axis="y")
 
-    fig.suptitle("Iter 47 -- Pillar 3: Wu Retention Critical-Budget $T^*$ Decomposition", fontsize=12)
+    fig.suptitle(
+        "Iter 47 -- Pillar 3: Wu Retention Critical-Budget $T^*$ Decomposition", fontsize=12
+    )
     fig.tight_layout(rect=[0, 0, 1, 0.96])
     out = FIG / "group_size_iter47_v2.pdf"
     fig.savefig(out)

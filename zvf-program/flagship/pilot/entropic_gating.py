@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import math
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -116,7 +115,9 @@ class GivensEntropyGate(nn.Module):
         mask: torch.Tensor | None = None,
     ) -> torch.Tensor:
         if x.ndim < 2:
-            raise EntropicGatingError(f"input tensor x must have at least 2 dimensions, got ndim={x.ndim}")
+            raise EntropicGatingError(
+                f"input tensor x must have at least 2 dimensions, got ndim={x.ndim}"
+            )
 
         if attention_logits is not None:
             h = compute_attention_entropy(attention_logits, mask=mask, dim=-1)

@@ -21,21 +21,26 @@ from typing import List, Optional
 import torch
 import wandb
 from datasets import Dataset
-from transformers import AutoModelForCausalLM, AutoTokenizer, EarlyStoppingCallback, HfArgumentParser
+from transformers import (
+    AutoModelForCausalLM,
+    AutoTokenizer,
+    EarlyStoppingCallback,
+    HfArgumentParser,
+)
 from trl import GRPOTrainer, GRPOConfig
 
 from utils.seed import set_global_seed, log_experiment_metadata
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(name)s - %(message)s"
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(name)s - %(message)s"
 )
 
 
 @dataclass
 class MathProblem:
     """Arithmetic problem with ground truth answer."""
+
     prompt: str
     answer: int
 
@@ -43,35 +48,48 @@ class MathProblem:
 @dataclass
 class ScriptArguments:
     """Arguments for the GRPO Math RL Experiment."""
-    model_name: str = field(default="meta-llama/Llama-3.2-1B", metadata={"help": "The model to train."})
+
+    model_name: str = field(
+        default="meta-llama/Llama-3.2-1B", metadata={"help": "The model to train."}
+    )
     seed: int = field(default=42, metadata={"help": "Random seed for reproducibility."})
-    num_train_problems: int = field(default=1000, metadata={"help": "Number of problems in the train dataset."})
-    num_eval_problems: int = field(default=200, metadata={"help": "Number of problems in the eval dataset."})
-    output_dir: str = field(default="./grpo_math_output", metadata={"help": "Output directory for the model."})
-    
+    num_train_problems: int = field(
+        default=1000, metadata={"help": "Number of problems in the train dataset."}
+    )
+    num_eval_problems: int = field(
+        default=200, metadata={"help": "Number of problems in the eval dataset."}
+    )
+    output_dir: str = field(
+        default="./grpo_math_output", metadata={"help": "Output directory for the model."}
+    )
+
     # Batch settings
     per_device_train_batch_size: int = field(default=4, metadata={"help": "Batch size per device."})
-    gradient_accumulation_steps: int = field(default=25, metadata={"help": "Gradient accumulation steps."})
-    
+    gradient_accumulation_steps: int = field(
+        default=25, metadata={"help": "Gradient accumulation steps."}
+    )
+
     # GRPO-specific
     num_generations: int = field(default=4, metadata={"help": "Number of generations per prompt."})
     beta: float = field(default=0.1, metadata={"help": "KL penalty coefficient."})
-    
+
     # Learning rate
     learning_rate: float = field(default=1e-4, metadata={"help": "Learning rate."})
-    
+
     # LoRA settings
     use_peft: bool = field(default=True, metadata={"help": "Whether to use PEFT."})
     lora_r: int = field(default=32, metadata={"help": "LoRA rank."})
     lora_alpha: int = field(default=64, metadata={"help": "LoRA alpha."})
     lora_dropout: float = field(default=0.05, metadata={"help": "LoRA dropout."})
-    
+
     # Generation settings
     max_new_tokens: int = field(default=5, metadata={"help": "Max new tokens to generate."})
     temperature: float = field(default=1.0, metadata={"help": "Sampling temperature."})
-    
+
     # Training
-    max_steps: int = field(default=-1, metadata={"help": "Maximum optimizer updates; -1 uses epochs."})
+    max_steps: int = field(
+        default=-1, metadata={"help": "Maximum optimizer updates; -1 uses epochs."}
+    )
     num_train_epochs: int = field(default=1, metadata={"help": "Number of training epochs."})
     logging_steps: int = field(default=1, metadata={"help": "Logging steps."})
     save_steps: int = field(default=10, metadata={"help": "Save steps."})
@@ -79,14 +97,18 @@ class ScriptArguments:
     eval_steps: int = field(default=10, metadata={"help": "Evaluation steps."})
     save_strategy: str = field(default="steps", metadata={"help": "Save strategy."})
     load_best_model_at_end: bool = field(default=True, metadata={"help": "Load best model at end."})
-    metric_for_best_model: str = field(default="eval_reward/mean", metadata={"help": "Metric for best model."})
-    
+    metric_for_best_model: str = field(
+        default="eval_reward/mean", metadata={"help": "Metric for best model."}
+    )
+
     # Optimization
     max_grad_norm: float = field(default=1.0, metadata={"help": "Max gradient norm."})
     warmup_ratio: float = field(default=0.1, metadata={"help": "Warmup ratio."})
-    
+
     # Wandb & Hub Settings
-    wandb_project: Optional[str] = field(default="trl_grpo_math", metadata={"help": "Wandb project name."})
+    wandb_project: Optional[str] = field(
+        default="trl_grpo_math", metadata={"help": "Wandb project name."}
+    )
     wandb_entity: Optional[str] = field(default=None, metadata={"help": "Wandb entity name."})
     push_to_hub: bool = field(default=False, metadata={"help": "Whether to push to HF Hub."})
     hub_model_id: Optional[str] = field(default=None, metadata={"help": "Hub model ID."})
@@ -101,10 +123,12 @@ def generate_arithmetic_dataset(num_problems: int = 1000, max_num: int = 99) -> 
         b = random.randint(1, max_num)
         prompt = f"What is {a} + {b}? Answer with just the number."
         answer = a + b
-        problems.append({
-            "prompt": prompt,
-            "answer": str(answer),
-        })
+        problems.append(
+            {
+                "prompt": prompt,
+                "answer": str(answer),
+            }
+        )
 
     return Dataset.from_list(problems)
 
@@ -112,13 +136,15 @@ def generate_arithmetic_dataset(num_problems: int = 1000, max_num: int = 99) -> 
 def extract_answer(completion: str) -> Optional[int]:
     """Extract numeric answer from model completion."""
     # Look for numbers in the response
-    numbers = re.findall(r'\b\d+\b', completion)
+    numbers = re.findall(r"\b\d+\b", completion)
     if numbers:
         return int(numbers[-1])  # Take last number
     return None
 
 
-def math_reward_function(completions: List[str], prompts: List[str], answers: List[str]) -> List[float]:
+def math_reward_function(
+    completions: List[str], prompts: List[str], answers: List[str]
+) -> List[float]:
     """
     Verifiable binary reward function.
 
@@ -129,7 +155,7 @@ def math_reward_function(completions: List[str], prompts: List[str], answers: Li
     """
     rewards = []
 
-    for completion, answer in zip(completions, answers):
+    for completion, answer in zip(completions, answers, strict=False):
         predicted = extract_answer(completion)
         expected = int(answer)
 
@@ -148,7 +174,7 @@ def math_reward_function(completions: List[str], prompts: List[str], answers: Li
 
 def main():
     parser = HfArgumentParser((ScriptArguments,))
-    args, = parser.parse_args_into_dataclasses()
+    (args,) = parser.parse_args_into_dataclasses()
 
     # Setup wandb
     if args.wandb_project:

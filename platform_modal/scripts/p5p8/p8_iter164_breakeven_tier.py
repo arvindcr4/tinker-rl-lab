@@ -21,6 +21,7 @@ Outputs:
 
 Stdlib only. <= 280 lines.
 """
+
 from __future__ import annotations
 import csv
 import json
@@ -28,18 +29,20 @@ from collections import defaultdict
 from pathlib import Path
 
 import sys
+
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
+from _paths import REPO_ROOT
+
 ROOT = REPO_ROOT
 RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8"
 
 # Tier cost (matches iter-160 / p8_iter160_operating_point_utility.py)
 TIERS = [
     ("cheap_heuristic", 0.0001),
-    ("small_open",      0.0006),
+    ("small_open", 0.0006),
     ("iter120_default", 0.0010),
-    ("mid_tier",        0.0050),
-    ("frontier_gpt4",   0.0300),
+    ("mid_tier", 0.0050),
+    ("frontier_gpt4", 0.0300),
 ]
 RATES = [1.44, 1.00, 0.50, 0.10, 0.05]
 FSETS = ["20raw", "20raw+minmax", "20raw+stat", "24full"]
@@ -103,17 +106,21 @@ def main():
                         be_cost = tier_cost
                         be_util = tier_means[tier_name]
                         break
-                breakeven_rows.append({
-                    "rate_pct": rate, "fset": fset, "target": target,
-                    "breakeven_tier": be_tier if be_tier else "NONE",
-                    "breakeven_cost_per_call": be_cost if be_cost is not None else "",
-                    "breakeven_mean_util": be_util if be_util is not None else "",
-                    "mean_util_cheap": tier_means["cheap_heuristic"],
-                    "mean_util_small": tier_means["small_open"],
-                    "mean_util_iter120": tier_means["iter120_default"],
-                    "mean_util_mid": tier_means["mid_tier"],
-                    "mean_util_frontier": tier_means["frontier_gpt4"],
-                })
+                breakeven_rows.append(
+                    {
+                        "rate_pct": rate,
+                        "fset": fset,
+                        "target": target,
+                        "breakeven_tier": be_tier if be_tier else "NONE",
+                        "breakeven_cost_per_call": be_cost if be_cost is not None else "",
+                        "breakeven_mean_util": be_util if be_util is not None else "",
+                        "mean_util_cheap": tier_means["cheap_heuristic"],
+                        "mean_util_small": tier_means["small_open"],
+                        "mean_util_iter120": tier_means["iter120_default"],
+                        "mean_util_mid": tier_means["mid_tier"],
+                        "mean_util_frontier": tier_means["frontier_gpt4"],
+                    }
+                )
                 # H1: cheap_heuristic clears target on this cell (bar 80%)
                 if tier_means["cheap_heuristic"] >= target:
                     H1_pass += 1
@@ -157,15 +164,18 @@ def main():
             if mono:
                 H4_pass += 1
             H4_total += 1
-            tau_rows_out.append({
-                "rate_pct": rate, "fset": fset,
-                "tau_cheap": tier_means_tau["cheap_heuristic"],
-                "tau_small_open": tier_means_tau["small_open"],
-                "tau_iter120": tier_means_tau["iter120_default"],
-                "tau_mid": tier_means_tau["mid_tier"],
-                "tau_frontier": tier_means_tau["frontier_gpt4"],
-                "monotone_increasing": int(mono),
-            })
+            tau_rows_out.append(
+                {
+                    "rate_pct": rate,
+                    "fset": fset,
+                    "tau_cheap": tier_means_tau["cheap_heuristic"],
+                    "tau_small_open": tier_means_tau["small_open"],
+                    "tau_iter120": tier_means_tau["iter120_default"],
+                    "tau_mid": tier_means_tau["mid_tier"],
+                    "tau_frontier": tier_means_tau["frontier_gpt4"],
+                    "monotone_increasing": int(mono),
+                }
+            )
 
     # ----- write outputs -----
     print("\nWriting outputs...", flush=True)
@@ -198,39 +208,51 @@ def main():
         "vein": "iter-161 mint vein #2 — breakeven tier extension",
         "h1_cheap_clears_target": {
             "pass": H1_verdict == "PASS",
-            "n_pass": H1_pass, "n_total": H1_total,
+            "n_pass": H1_pass,
+            "n_total": H1_total,
             "fraction": round(H1_pass / max(1, H1_total), 4),
-            "bar": 0.80, "verdict": H1_verdict,
+            "bar": 0.80,
+            "verdict": H1_verdict,
         },
         "h2_small_open_clears_target": {
             "pass": H2_verdict == "PASS",
-            "n_pass": H2_pass, "n_total": H2_total,
+            "n_pass": H2_pass,
+            "n_total": H2_total,
             "fraction": round(H2_pass / max(1, H2_total), 4),
-            "bar": 0.80, "verdict": H2_verdict,
+            "bar": 0.80,
+            "verdict": H2_verdict,
         },
         "h3_frontier_recovers_0p95": {
             "pass": H3_verdict == "PASS",
-            "n_pass": H3_pass, "n_total": H3_total,
+            "n_pass": H3_pass,
+            "n_total": H3_total,
             "fraction": round(H3_pass / max(1, H3_total), 4),
-            "bar": 0.90, "verdict": H3_verdict,
+            "bar": 0.90,
+            "verdict": H3_verdict,
         },
         "h4_tau_monotone_in_tier": {
             "pass": H4_verdict == "PASS",
-            "n_pass": H4_pass, "n_total": H4_total,
+            "n_pass": H4_pass,
+            "n_total": H4_total,
             "fraction": round(H4_pass / max(1, H4_total), 4),
-            "bar": 0.80, "verdict": H4_verdict,
+            "bar": 0.80,
+            "verdict": H4_verdict,
         },
         "h4a_breakeven_is_cheapest": {
             "pass": H4a_verdict == "PASS",
-            "n_pass": H4a_pass, "n_total": H4a_total,
+            "n_pass": H4a_pass,
+            "n_total": H4a_total,
             "fraction": round(H4a_pass / max(1, H4a_total), 4),
-            "bar": 0.80, "verdict": H4a_verdict,
+            "bar": 0.80,
+            "verdict": H4a_verdict,
         },
         "h5_frontier_matches_cheap_on_target": {
             "pass": H5_verdict == "PASS",
-            "n_pass": H5_pass, "n_total": H5_total,
+            "n_pass": H5_pass,
+            "n_total": H5_total,
             "fraction": round(H5_pass / max(1, H5_total), 4),
-            "bar": 0.80, "verdict": H5_verdict,
+            "bar": 0.80,
+            "verdict": H5_verdict,
         },
     }
     out_sum = RES / "p8_iter164_summary.json"
@@ -240,7 +262,9 @@ def main():
     print("\n=== Hypothesis verdicts ===")
     for k, v in summary.items():
         if k.startswith("h"):
-            print(f"  {k}: {v['verdict']}  ({v['n_pass']}/{v['n_total']} = {v['fraction']*100:.1f}%)")
+            print(
+                f"  {k}: {v['verdict']}  ({v['n_pass']}/{v['n_total']} = {v['fraction'] * 100:.1f}%)"
+            )
 
 
 if __name__ == "__main__":

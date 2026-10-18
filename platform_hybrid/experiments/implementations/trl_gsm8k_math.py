@@ -12,11 +12,13 @@ Unlike arithmetic, this requires:
 
 import sys as _sys
 from pathlib import Path as _Path
-_sys.path.insert(0, str(next(p for p in _Path(__file__).resolve().parents if (p / "platform_hybrid").is_dir())))
+
+_sys.path.insert(
+    0, str(next(p for p in _Path(__file__).resolve().parents if (p / "platform_hybrid").is_dir()))
+)
 from platform_hybrid.experiments.research_contracts import final_numeric
 
 
-import re
 import sys
 import os
 import torch
@@ -27,15 +29,16 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 from trl import GRPOTrainer, GRPOConfig
 
 # Add project root to path for utils
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
-from utils.seed import set_global_seed, get_seed_from_args, log_experiment_metadata
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 
 
 def extract_gsm8k_answer(text):
     return final_numeric(text)
 
 
-def verify_gsm8k_answer(predicted: Optional[float], expected: float, tolerance: float = 0.01) -> bool:
+def verify_gsm8k_answer(
+    predicted: Optional[float], expected: float, tolerance: float = 0.01
+) -> bool:
     """Verify if predicted answer matches expected (with tolerance)."""
     if predicted is None:
         return False
@@ -58,7 +61,7 @@ def gsm8k_reward_function(
     """
     rewards = []
 
-    for completion, expected in zip(completions, answers):
+    for completion, expected in zip(completions, answers, strict=False):
         predicted = extract_gsm8k_answer(completion)
 
         # Check for chain-of-thought (has some reasoning)
@@ -125,28 +128,22 @@ def main():
     # GRPO Configuration for GSM8K
     grpo_config = GRPOConfig(
         output_dir=os.environ.get("RESULTS_DIR", "./grpo_gsm8k_output"),
-
         # Batch settings
         per_device_train_batch_size=2,
         gradient_accumulation_steps=16,
-
         # GRPO-specific
         num_generations=4,
         beta=0.1,
-
         # Learning rate
         learning_rate=5e-5,
-
         # LoRA settings
         use_peft=True,
         lora_r=32,
         lora_alpha=64,
         lora_dropout=0.05,
-
         # Generation - longer for chain-of-thought
         max_new_tokens=256,
         temperature=0.7,
-
         # Training
         num_train_epochs=2,
         logging_steps=1,
@@ -156,11 +153,9 @@ def main():
         save_strategy="steps",
         load_best_model_at_end=True,
         metric_for_best_model="eval_reward/mean",
-
         # Optimization
         max_grad_norm=1.0,
         warmup_ratio=0.1,
-
         # Logging & Hub
         report_to="wandb",
         push_to_hub=True,
@@ -175,13 +170,16 @@ def main():
             answers = [a[0] for a in answers]
         rewards = gsm8k_reward_function(completions, prompts, answers)
         if wandb.run is not None:
-            wandb.log({
-                "custom_reward/mean": sum(rewards) / len(rewards) if rewards else 0.0,
-                "custom_reward/max": max(rewards) if rewards else 0.0,
-            })
+            wandb.log(
+                {
+                    "custom_reward/mean": sum(rewards) / len(rewards) if rewards else 0.0,
+                    "custom_reward/max": max(rewards) if rewards else 0.0,
+                }
+            )
         return rewards
 
     from transformers import EarlyStoppingCallback
+
     print("Initializing GRPOTrainer for GSM8K...")
     trainer = GRPOTrainer(
         model=model,

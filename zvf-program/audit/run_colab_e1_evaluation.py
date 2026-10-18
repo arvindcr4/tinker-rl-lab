@@ -54,11 +54,15 @@ def run_recovery(args: argparse.Namespace) -> dict[str, Any]:
     # A v1 training request cannot bind evaluation code, progress provenance and
     # an immutable checkpoint revision. Do not silently manufacture that approval.
     if source.get("schema_version") == "colab-e1-confirmatory-unit-v1":
-        raise RuntimeError("v1 evaluation recovery disabled: approved v2 evaluation/checkpoint/progress contract required")
+        raise RuntimeError(
+            "v1 evaluation recovery disabled: approved v2 evaluation/checkpoint/progress contract required"
+        )
     # Evaluation code was not included in historical source requests. Fail closed
     # until a separately approved evaluation contract binds its immutable hash.
     contract = source.get("evaluation_contract")
-    if not isinstance(contract, dict) or contract.get("evaluator_sha256") != shared.sha256_file(EVALUATOR):
+    if not isinstance(contract, dict) or contract.get("evaluator_sha256") != shared.sha256_file(
+        EVALUATOR
+    ):
         raise RuntimeError("a versioned evaluation contract binding this evaluator is required")
     if not contract.get("checkpoint_revision"):
         raise RuntimeError("evaluation recovery requires an exact checkpoint revision")
@@ -89,38 +93,104 @@ def run_recovery(args: argparse.Namespace) -> dict[str, Any]:
     request_path = args.output_dir / "requests" / f"{unit}__eval__{recovery_fingerprint[:12]}.json"
     log_path = args.output_dir / "logs" / f"{unit}__eval__{recovery_fingerprint[:12]}.log"
     script_args = [
-        "--arm", arm,
-        "--seed", str(seed),
-        "--unit-fingerprint", unit_fingerprint,
-        "--stack-fingerprint", stack_fingerprint,
-        "--hf-repo", hf_repo,
-        "--checkpoint-step", "30",
-        "--heldout-n", "500",
-        "--max-completion-length", "1024",
-        "--eval-batch-size", str(args.eval_batch_size),
-        "--progress-save-every", str(args.progress_save_every),
-        "--wandb-project", tracking["wandb_project"],
-        "--wandb-group", tracking["wandb_group"],
-        "--wandb-run-name", wandb_run_name,
+        "--arm",
+        arm,
+        "--seed",
+        str(seed),
+        "--unit-fingerprint",
+        unit_fingerprint,
+        "--stack-fingerprint",
+        stack_fingerprint,
+        "--hf-repo",
+        hf_repo,
+        "--checkpoint-step",
+        "30",
+        "--heldout-n",
+        "500",
+        "--max-completion-length",
+        "1024",
+        "--eval-batch-size",
+        str(args.eval_batch_size),
+        "--progress-save-every",
+        str(args.progress_save_every),
+        "--wandb-project",
+        tracking["wandb_project"],
+        "--wandb-group",
+        tracking["wandb_group"],
+        "--wandb-run-name",
+        wandb_run_name,
     ]
     if tracking.get("wandb_entity"):
         script_args.extend(["--wandb-entity", tracking["wandb_entity"]])
 
     execution_plan = [
         ["colab", f"--auth={args.auth}", "new", "--gpu", args.gpu, "--session", session],
-        ["colab", f"--auth={args.auth}", "upload", "--session", session,
-         str(paths[frozen.CANONICAL_REMOTE_SCRIPT]), "/content/e1_grpo_confirmatory.py"],
-        ["colab", f"--auth={args.auth}", "upload", "--session", session,
-         str(EVALUATOR), "/content/e1_evaluate_checkpoint.py"],
-        ["colab", f"--auth={args.auth}", "install", "--session", session, *source["runtime_packages"]],
-        ["colab", f"--auth={args.auth}", "exec", "--session", session,
-         "--file", str(ENVIRONMENT_CHECK), "--timeout", "120"],
-        ["colab", f"--auth={args.auth}", "upload", "--session", session,
-         "<ephemeral-secret-file>", "/content/.e1-eval-secrets.json"],
-        ["colab", f"--auth={args.auth}", "upload", "--session", session,
-         "<ephemeral-request-file>", "/content/e1-evaluation-request.json"],
-        ["colab", f"--auth={args.auth}", "exec", "--session", session,
-         "--file", str(SECURE_EXEC), "--timeout", str(args.timeout)],
+        [
+            "colab",
+            f"--auth={args.auth}",
+            "upload",
+            "--session",
+            session,
+            str(paths[frozen.CANONICAL_REMOTE_SCRIPT]),
+            "/content/e1_grpo_confirmatory.py",
+        ],
+        [
+            "colab",
+            f"--auth={args.auth}",
+            "upload",
+            "--session",
+            session,
+            str(EVALUATOR),
+            "/content/e1_evaluate_checkpoint.py",
+        ],
+        [
+            "colab",
+            f"--auth={args.auth}",
+            "install",
+            "--session",
+            session,
+            *source["runtime_packages"],
+        ],
+        [
+            "colab",
+            f"--auth={args.auth}",
+            "exec",
+            "--session",
+            session,
+            "--file",
+            str(ENVIRONMENT_CHECK),
+            "--timeout",
+            "120",
+        ],
+        [
+            "colab",
+            f"--auth={args.auth}",
+            "upload",
+            "--session",
+            session,
+            "<ephemeral-secret-file>",
+            "/content/.e1-eval-secrets.json",
+        ],
+        [
+            "colab",
+            f"--auth={args.auth}",
+            "upload",
+            "--session",
+            session,
+            "<ephemeral-request-file>",
+            "/content/e1-evaluation-request.json",
+        ],
+        [
+            "colab",
+            f"--auth={args.auth}",
+            "exec",
+            "--session",
+            session,
+            "--file",
+            str(SECURE_EXEC),
+            "--timeout",
+            str(args.timeout),
+        ],
         ["colab", f"--auth={args.auth}", "stop", "--session", session],
     ]
     recovery_request = {
@@ -169,10 +239,24 @@ def run_recovery(args: argparse.Namespace) -> dict[str, Any]:
                 execution_plan[2],
                 execution_plan[3],
                 execution_plan[4],
-                ["colab", f"--auth={args.auth}", "upload", "--session", session,
-                 str(secret_path), "/content/.e1-eval-secrets.json"],
-                ["colab", f"--auth={args.auth}", "upload", "--session", session,
-                 str(invocation_path), "/content/e1-evaluation-request.json"],
+                [
+                    "colab",
+                    f"--auth={args.auth}",
+                    "upload",
+                    "--session",
+                    session,
+                    str(secret_path),
+                    "/content/.e1-eval-secrets.json",
+                ],
+                [
+                    "colab",
+                    f"--auth={args.auth}",
+                    "upload",
+                    "--session",
+                    session,
+                    str(invocation_path),
+                    "/content/e1-evaluation-request.json",
+                ],
                 execution_plan[7],
             ]
             try:

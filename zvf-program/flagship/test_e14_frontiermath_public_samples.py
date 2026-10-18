@@ -17,6 +17,7 @@ import tempfile
 import unittest
 from pathlib import Path
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+import pytest
 
 try:
     from . import e14_frontiermath_public_samples as mod
@@ -54,8 +55,11 @@ VALID_TRANSCRIPT = [
     },
 ]
 TEST_ROOT = {
-    "schema_version": mod.E14_TRUST_ROOT_SCHEMA, "lane": "E14", "suite_id": "frontiermath_eval",
-    "provider": "Epoch AI", "key_id": "epoch-test-e14",
+    "schema_version": mod.E14_TRUST_ROOT_SCHEMA,
+    "lane": "E14",
+    "suite_id": "frontiermath_eval",
+    "provider": "Epoch AI",
+    "key_id": "epoch-test-e14",
     "public_key_hex": "d75a980182b10ab7d54bfed3c964073a0ee172f3daa62325af021a68f707511a",
 }
 
@@ -69,17 +73,17 @@ def write_transcript(directory: Path, filename: str, messages: list[dict]) -> Pa
 class TestFilenameParsing(unittest.TestCase):
     def test_parses_model_problem_run(self) -> None:
         ident = mod.parse_transcript_filename("gpt-4o-2024-08-06_CWA2_run-2.jsonl")
-        self.assertEqual(ident.model, "gpt-4o-2024-08-06")
-        self.assertEqual(ident.problem_token, "CWA2")
-        self.assertEqual(ident.run_index, 2)
+        assert ident.model == "gpt-4o-2024-08-06"
+        assert ident.problem_token == "CWA2"
+        assert ident.run_index == 2
 
     def test_handles_model_names_containing_underscores_free_hyphens(self) -> None:
         ident = mod.parse_transcript_filename("claude-3-5-sonnet-20241022_CWD31_run-5.jsonl")
-        self.assertEqual(ident.model, "claude-3-5-sonnet-20241022")
-        self.assertEqual(ident.problem_token, "CWD31")
+        assert ident.model == "claude-3-5-sonnet-20241022"
+        assert ident.problem_token == "CWD31"
 
     def test_rejects_unconventional_filename(self) -> None:
-        with self.assertRaises(mod.TranscriptSchemaError):
+        with pytest.raises(mod.TranscriptSchemaError):
             mod.parse_transcript_filename("not-a-transcript.txt")
 
 
@@ -121,17 +125,20 @@ class TestHostedOfferGuards(unittest.TestCase):
         request = mod.build_hosted_evaluation_request(
             offer, model_revision="a" * 40, budget_authorized=True, trust_root=TEST_ROOT
         )
-        self.assertIsNone(request["score"])
-        with self.assertRaises(mod.ScoreProhibited):
+        assert request["score"] is None
+        with pytest.raises(mod.ScoreProhibited):
             mod.validate_hosted_evaluation_offer(offer)
         offer["provider"] = "not-epoch"
-        with self.assertRaisesRegex(mod.ScoreProhibited, "invalid hosted FrontierMath offer"):
+        with pytest.raises(mod.ScoreProhibited, match="invalid hosted FrontierMath offer"):
             mod.validate_hosted_evaluation_offer(offer, trust_root=TEST_ROOT)
 
 
 class TestHostedSignedResults(unittest.TestCase):
     @staticmethod
-    def _sign(payload: dict, private_hex: str = "9d61b19deffd5a60ba844af492ec2cc44449c5697b326919703bac031cae7f60") -> dict:
+    def _sign(
+        payload: dict,
+        private_hex: str = "9d61b19deffd5a60ba844af492ec2cc44449c5697b326919703bac031cae7f60",
+    ) -> dict:
         signed = dict(payload)
         signed["signature_key_id"] = TEST_ROOT["key_id"]
         signed["signature"] = base64.b64encode(
@@ -195,39 +202,58 @@ class TestHostedSignedResults(unittest.TestCase):
     def test_trusted_result_completes_only_for_exact_request(self) -> None:
         offer, request, result = self._request_and_result()
         receipt = mod.collect_hosted_signed_result(offer, request, result, trust_root=TEST_ROOT)
-        self.assertEqual(receipt["status"], "COMPLETED")
-        self.assertEqual(receipt["score"], 0.5)
-        self.assertIn("created_at", request)
+        assert receipt["status"] == "COMPLETED"
+        assert receipt["score"] == 0.5
+        assert "created_at" in request
 
     def test_modified_created_at_replay_and_wrong_model_are_rejected(self) -> None:
         offer, request, result = self._request_and_result()
         modified_request = dict(request)
         modified_request["created_at"] = "2026-01-01T00:00:01Z"
-        with self.assertRaises(mod.ScoreProhibited):
+        with pytest.raises(mod.ScoreProhibited):
             mod.collect_hosted_signed_result(offer, modified_request, result, trust_root=TEST_ROOT)
 
         wrong_model = dict(result)
         wrong_model["model_revision"] = "b" * 40
-        wrong_model = self._sign({key: value for key, value in wrong_model.items() if key not in {"signature", "signature_key_id"}})
-        with self.assertRaises(mod.ScoreProhibited):
+        wrong_model = self._sign(
+            {
+                key: value
+                for key, value in wrong_model.items()
+                if key not in {"signature", "signature_key_id"}
+            }
+        )
+        with pytest.raises(mod.ScoreProhibited):
             mod.collect_hosted_signed_result(offer, request, wrong_model, trust_root=TEST_ROOT)
 
     def test_forged_key_and_invalid_numeric_or_time_values_are_rejected(self) -> None:
         offer, request, result = self._request_and_result()
         forged = self._sign(
-            {key: value for key, value in result.items() if key not in {"signature", "signature_key_id"}},
+            {
+                key: value
+                for key, value in result.items()
+                if key not in {"signature", "signature_key_id"}
+            },
             "4ccd089b28ff96da9db6c346ec114e0f5b8a319f35aba624da8cf6ed4fb8a6fb",
         )
-        with self.assertRaises(mod.ScoreProhibited):
+        with pytest.raises(mod.ScoreProhibited):
             mod.collect_hosted_signed_result(offer, request, forged, trust_root=TEST_ROOT)
 
-        for key, value in (("score", True), ("score", float("nan")), ("score", 1.1), ("completed_at", "2026-01-01T00:00:00Z")):
+        for key, value in (
+            ("score", True),
+            ("score", float("nan")),
+            ("score", 1.1),
+            ("completed_at", "2026-01-01T00:00:00Z"),
+        ):
             invalid = dict(result)
             invalid[key] = value
             invalid = self._sign(
-                {field: item for field, item in invalid.items() if field not in {"signature", "signature_key_id"}}
+                {
+                    field: item
+                    for field, item in invalid.items()
+                    if field not in {"signature", "signature_key_id"}
+                }
             )
-            with self.assertRaises(mod.ScoreProhibited):
+            with pytest.raises(mod.ScoreProhibited):
                 mod.collect_hosted_signed_result(offer, request, invalid, trust_root=TEST_ROOT)
 
     def test_offer_task_count_and_result_count_are_signed_exact_bindings(self) -> None:
@@ -235,34 +261,41 @@ class TestHostedSignedResults(unittest.TestCase):
         wrong_count = dict(result)
         wrong_count["evaluated_task_count"] = 99
         wrong_count = self._sign(
-            {key: value for key, value in wrong_count.items() if key not in {"signature", "signature_key_id"}}
+            {
+                key: value
+                for key, value in wrong_count.items()
+                if key not in {"signature", "signature_key_id"}
+            }
         )
-        with self.assertRaises(mod.ScoreProhibited):
+        with pytest.raises(mod.ScoreProhibited):
             mod.collect_hosted_signed_result(offer, request, wrong_count, trust_root=TEST_ROOT)
 
         tampered_offer = dict(offer)
         tampered_offer["expected_full_suite_task_count"] = 99
-        with self.assertRaises(mod.ScoreProhibited):
+        with pytest.raises(mod.ScoreProhibited):
             mod.build_hosted_evaluation_request(
-                tampered_offer, model_revision="a" * 40, budget_authorized=True, trust_root=TEST_ROOT
+                tampered_offer,
+                model_revision="a" * 40,
+                budget_authorized=True,
+                trust_root=TEST_ROOT,
             )
 
 
 class TestSchemaValidation(unittest.TestCase):
     def test_valid_transcript_has_no_errors(self) -> None:
-        self.assertEqual(mod.validate_transcript(VALID_TRANSCRIPT), [])
+        assert mod.validate_transcript(VALID_TRANSCRIPT) == []
 
     def test_empty_transcript_is_invalid(self) -> None:
-        self.assertEqual(mod.validate_transcript([]), ["transcript is empty"])
+        assert mod.validate_transcript([]) == ["transcript is empty"]
 
     def test_extra_key_is_rejected(self) -> None:
         bad = [dict(VALID_TRANSCRIPT[0], verdict="correct"), VALID_TRANSCRIPT[1]]
         errors = mod.validate_transcript(bad)
-        self.assertTrue(any("unexpected key" in e for e in errors), errors)
+        assert any("unexpected key" in e for e in errors), errors
 
     def test_missing_content_is_rejected(self) -> None:
         errors = mod.validate_transcript([{"role": "user"}])
-        self.assertTrue(any("missing key" in e for e in errors), errors)
+        assert any("missing key" in e for e in errors), errors
 
     def test_non_alternating_roles_rejected(self) -> None:
         bad = [
@@ -271,120 +304,117 @@ class TestSchemaValidation(unittest.TestCase):
             {"role": "assistant", "content": "c"},
         ]
         errors = mod.validate_transcript(bad)
-        self.assertTrue(any("must alternate" in e for e in errors), errors)
+        assert any("must alternate" in e for e in errors), errors
 
     def test_must_start_user_and_end_assistant(self) -> None:
         errors = mod.validate_transcript([{"role": "assistant", "content": "hi"}])
-        self.assertIn("first message must be the user task prompt", errors)
+        assert "first message must be the user task prompt" in errors
 
     def test_bad_role_rejected(self) -> None:
         errors = mod.validate_transcript([{"role": "system", "content": "x"}])
-        self.assertTrue(any("role must be one of" in e for e in errors), errors)
+        assert any("role must be one of" in e for e in errors), errors
 
     def test_non_string_content_rejected(self) -> None:
         errors = mod.validate_transcript([{"role": "user", "content": [{"text": "x"}]}])
-        self.assertTrue(any("content must be str" in e for e in errors), errors)
+        assert any("content must be str" in e for e in errors), errors
 
 
 class TestHarnessTurnClassification(unittest.TestCase):
     def test_first_turn_is_task_prompt(self) -> None:
-        self.assertEqual(mod.classify_harness_turn(PROMPT, is_first=True), mod.TURN_TASK_PROMPT)
+        assert mod.classify_harness_turn(PROMPT, is_first=True) == mod.TURN_TASK_PROMPT
 
     def test_code_result(self) -> None:
-        self.assertEqual(
-            mod.classify_harness_turn("Results from executing code block 1:\nstdout"),
-            mod.TURN_CODE_RESULT,
+        assert (
+            mod.classify_harness_turn("Results from executing code block 1:\nstdout")
+            == mod.TURN_CODE_RESULT
         )
 
     def test_final_answer_failed_timeout(self) -> None:
-        self.assertEqual(
-            mod.classify_harness_turn("Final answer failed: timed out\nKeep working."),
-            mod.TURN_FINAL_ANSWER_FAILED_TIMEOUT,
+        assert (
+            mod.classify_harness_turn("Final answer failed: timed out\nKeep working.")
+            == mod.TURN_FINAL_ANSWER_FAILED_TIMEOUT
         )
 
     def test_final_answer_failed_stderr(self) -> None:
-        self.assertEqual(
-            mod.classify_harness_turn("Final answer failed: error in stderr: Traceback"),
-            mod.TURN_FINAL_ANSWER_FAILED_STDERR,
+        assert (
+            mod.classify_harness_turn("Final answer failed: error in stderr: Traceback")
+            == mod.TURN_FINAL_ANSWER_FAILED_STDERR
         )
 
     def test_unknown_turn(self) -> None:
-        self.assertEqual(
-            mod.classify_harness_turn("Your answer was correct. Score: 1.0"),
-            mod.TURN_UNKNOWN,
-        )
+        assert mod.classify_harness_turn("Your answer was correct. Score: 1.0") == mod.TURN_UNKNOWN
 
 
 class TestAnswerExtraction(unittest.TestCase):
     def test_finds_marker_block(self) -> None:
         blocks = mod.extract_final_answer_blocks(VALID_TRANSCRIPT)
-        self.assertEqual(len(blocks), 1)
-        self.assertIn(mod.FINAL_ANSWER_PICKLE, blocks[0])
+        assert len(blocks) == 1
+        assert mod.FINAL_ANSWER_PICKLE in blocks[0]
 
     def test_ignores_non_marker_blocks(self) -> None:
         msgs = [
             {"role": "user", "content": PROMPT},
             {"role": "assistant", "content": "```python\nprint(1)\n```"},
         ]
-        self.assertEqual(mod.extract_final_answer_blocks(msgs), [])
+        assert mod.extract_final_answer_blocks(msgs) == []
 
     def test_ignores_marker_in_user_turn(self) -> None:
         msgs = [
             {"role": "user", "content": f"```python\n{mod.FINAL_ANSWER_MARKER}\n```"},
         ]
-        self.assertEqual(mod.extract_final_answer_blocks(msgs), [])
+        assert mod.extract_final_answer_blocks(msgs) == []
 
     def test_splits_task_prompt(self) -> None:
         preamble, statement, return_type = mod.split_task_prompt(PROMPT)
-        self.assertEqual(preamble, PREAMBLE)
-        self.assertEqual(statement, STATEMENT)
-        self.assertEqual(return_type, "Python integer")
+        assert preamble == PREAMBLE
+        assert statement == STATEMENT
+        assert return_type == "Python integer"
 
 
 class TestGroundTruthDetection(unittest.TestCase):
     def test_clean_transcript_has_no_ground_truth(self) -> None:
-        self.assertFalse(mod.detect_ground_truth(VALID_TRANSCRIPT))
-        self.assertFalse(mod.detect_grader_verdict(VALID_TRANSCRIPT))
+        assert not mod.detect_ground_truth(VALID_TRANSCRIPT)
+        assert not mod.detect_grader_verdict(VALID_TRANSCRIPT)
 
     def test_out_of_schema_field_fails_loud(self) -> None:
         msgs = [dict(VALID_TRANSCRIPT[0], ground_truth=42)]
-        self.assertTrue(mod.detect_ground_truth(msgs))
+        assert mod.detect_ground_truth(msgs)
 
     def test_unrecognised_harness_turn_fails_loud(self) -> None:
         msgs = list(VALID_TRANSCRIPT) + [
             {"role": "user", "content": "Grader says: incorrect, expected 12."}
         ]
-        self.assertTrue(mod.detect_ground_truth(msgs))
+        assert mod.detect_ground_truth(msgs)
 
 
 class TestHashing(unittest.TestCase):
     def test_corpus_digest_is_order_independent(self) -> None:
         a = {"b.jsonl": "22", "a.jsonl": "11"}
         b = {"a.jsonl": "11", "b.jsonl": "22"}
-        self.assertEqual(mod.corpus_digest(a), mod.corpus_digest(b))
+        assert mod.corpus_digest(a) == mod.corpus_digest(b)
 
     def test_corpus_digest_changes_with_content(self) -> None:
         a = {"a.jsonl": "11"}
         b = {"a.jsonl": "12"}
-        self.assertNotEqual(mod.corpus_digest(a), mod.corpus_digest(b))
+        assert mod.corpus_digest(a) != mod.corpus_digest(b)
 
     def test_corpus_digest_changes_with_membership(self) -> None:
         a = {"a.jsonl": "11"}
         b = {"a.jsonl": "11", "b.jsonl": "22"}
-        self.assertNotEqual(mod.corpus_digest(a), mod.corpus_digest(b))
+        assert mod.corpus_digest(a) != mod.corpus_digest(b)
 
     def test_sha256_file_matches_bytes(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "x.bin"
             path.write_bytes(b"hello")
-            self.assertEqual(mod.sha256_file(path), mod.sha256_bytes(b"hello"))
+            assert mod.sha256_file(path) == mod.sha256_bytes(b"hello")
 
 
 class TestFailClosedGuards(unittest.TestCase):
     def test_compute_score_always_raises(self) -> None:
-        with self.assertRaises(mod.ScoreProhibited):
+        with pytest.raises(mod.ScoreProhibited):
             mod.compute_frontiermath_score()
-        with self.assertRaises(mod.ScoreProhibited):
+        with pytest.raises(mod.ScoreProhibited):
             mod.compute_frontiermath_score(correct=5, total=5)
 
     def test_receipt_is_blocked_with_null_score(self) -> None:
@@ -395,11 +425,11 @@ class TestFailClosedGuards(unittest.TestCase):
             receipt = mod.build_blocked_receipt(
                 manifest, recorded_at="2026-08-09", checkout=str(d), commit="deadbeef"
             )
-        self.assertEqual(receipt["status"], "BLOCKED")
-        self.assertIsNone(receipt["score"])
-        self.assertFalse(receipt["is_model_score"])
-        self.assertTrue(receipt["score_refusal"]["refused"])
-        self.assertEqual(receipt["public_sample_asset"]["artifact_label"], mod.ARTIFACT_LABEL)
+        assert receipt["status"] == "BLOCKED"
+        assert receipt["score"] is None
+        assert not receipt["is_model_score"]
+        assert receipt["score_refusal"]["refused"]
+        assert receipt["public_sample_asset"]["artifact_label"] == mod.ARTIFACT_LABEL
 
     def test_assert_rejects_injected_score(self) -> None:
         receipt = {
@@ -408,7 +438,7 @@ class TestFailClosedGuards(unittest.TestCase):
             "experiment": {},
             "public_sample_asset": {"artifact_label": mod.ARTIFACT_LABEL},
         }
-        with self.assertRaises(mod.ScoreProhibited):
+        with pytest.raises(mod.ScoreProhibited):
             mod.assert_receipt_emits_no_score(receipt)
 
     def test_assert_rejects_non_blocked_status(self) -> None:
@@ -418,7 +448,7 @@ class TestFailClosedGuards(unittest.TestCase):
             "experiment": {},
             "public_sample_asset": {"artifact_label": mod.ARTIFACT_LABEL},
         }
-        with self.assertRaises(mod.ScoreProhibited):
+        with pytest.raises(mod.ScoreProhibited):
             mod.assert_receipt_emits_no_score(receipt)
 
     def test_assert_rejects_benchmark_substitution(self) -> None:
@@ -428,12 +458,12 @@ class TestFailClosedGuards(unittest.TestCase):
             "experiment": {"measured_metrics": None, "related_benchmark_substitution": True},
             "public_sample_asset": {"artifact_label": mod.ARTIFACT_LABEL},
         }
-        with self.assertRaises(mod.ScoreProhibited):
+        with pytest.raises(mod.ScoreProhibited):
             mod.assert_receipt_emits_no_score(receipt)
 
     def test_assert_rejects_missing_label(self) -> None:
         receipt = {"status": "BLOCKED", "score": None, "experiment": {}, "public_sample_asset": {}}
-        with self.assertRaises(mod.ScoreProhibited):
+        with pytest.raises(mod.ScoreProhibited):
             mod.assert_receipt_emits_no_score(receipt)
 
     def test_manifest_carries_label_and_null_score(self) -> None:
@@ -441,11 +471,11 @@ class TestFailClosedGuards(unittest.TestCase):
             d = Path(tmp)
             write_transcript(d, "m-1_ALL3_run-1.jsonl", VALID_TRANSCRIPT)
             manifest = mod.build_public_sample_manifest(d)
-        self.assertEqual(manifest["artifact_label"], mod.ARTIFACT_LABEL)
-        self.assertIsNone(manifest["score"])
-        self.assertFalse(manifest["is_benchmark_split"])
-        self.assertFalse(manifest["is_model_score"])
-        self.assertFalse(manifest["gradability"]["gradable_locally"])
+        assert manifest["artifact_label"] == mod.ARTIFACT_LABEL
+        assert manifest["score"] is None
+        assert not manifest["is_benchmark_split"]
+        assert not manifest["is_model_score"]
+        assert not manifest["gradability"]["gradable_locally"]
 
     def test_manifest_has_no_accuracy_style_keys(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -454,15 +484,15 @@ class TestFailClosedGuards(unittest.TestCase):
             manifest = mod.build_public_sample_manifest(d)
         blob = json.dumps(manifest).lower()
         for banned in ('"accuracy"', '"pass_rate"', '"correct"', '"reward"', '"pass@1"'):
-            self.assertNotIn(banned, blob, f"manifest leaked a score-like key: {banned}")
+            assert banned not in blob, f"manifest leaked a score-like key: {banned}"
 
     def test_missing_dir_raises(self) -> None:
-        with self.assertRaises(FileNotFoundError):
+        with pytest.raises(FileNotFoundError):
             mod.build_public_sample_manifest("/nonexistent/e14/samples")
 
     def test_empty_dir_raises(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
-            with self.assertRaises(FileNotFoundError):
+            with pytest.raises(FileNotFoundError):
                 mod.build_public_sample_manifest(tmp)
 
 
@@ -472,8 +502,8 @@ class TestManifestOnSynthetic(unittest.TestCase):
             d = Path(tmp)
             write_transcript(d, "m-1_ALL3_run-1.jsonl", VALID_TRANSCRIPT)
             manifest = mod.build_public_sample_manifest(d)
-        self.assertFalse(manifest["corpus"]["grid_is_complete"])
-        self.assertEqual(manifest["corpus"]["transcript_count"], 1)
+        assert not manifest["corpus"]["grid_is_complete"]
+        assert manifest["corpus"]["transcript_count"] == 1
 
     def test_invalid_transcript_surfaces_in_manifest(self) -> None:
         broken = [{"role": "user", "content": PROMPT, "verdict": "correct"}]
@@ -481,8 +511,8 @@ class TestManifestOnSynthetic(unittest.TestCase):
             d = Path(tmp)
             write_transcript(d, "m-1_ALL3_run-1.jsonl", broken)
             manifest = mod.build_public_sample_manifest(d)
-        self.assertFalse(manifest["schema_validation"]["all_transcripts_valid"])
-        self.assertTrue(manifest["gradability"]["ground_truth_present_anywhere"])
+        assert not manifest["schema_validation"]["all_transcripts_valid"]
+        assert manifest["gradability"]["ground_truth_present_anywhere"]
 
 
 @unittest.skipUnless(SAMPLES_DIR.is_dir(), f"public sample corpus not present at {SAMPLES_DIR}")
@@ -494,65 +524,61 @@ class TestRealPublicCorpus(unittest.TestCase):
         cls.manifest = mod.build_public_sample_manifest(SAMPLES_DIR)
 
     def test_exactly_150_transcripts(self) -> None:
-        self.assertEqual(self.manifest["corpus"]["transcript_count"], 150)
+        assert self.manifest["corpus"]["transcript_count"] == 150
 
     def test_grid_is_6_models_by_5_problems_by_5_runs(self) -> None:
         corpus = self.manifest["corpus"]
-        self.assertTrue(corpus["grid_is_complete"])
-        self.assertEqual(sorted(corpus["models"]), sorted(mod.EXPECTED_MODELS))
-        self.assertEqual(sorted(corpus["problem_tokens"]), sorted(mod.EXPECTED_PROBLEM_TOKENS))
-        self.assertTrue(all(v == 25 for v in corpus["models"].values()))
-        self.assertTrue(all(v == 30 for v in corpus["problem_tokens"].values()))
+        assert corpus["grid_is_complete"]
+        assert sorted(corpus["models"]) == sorted(mod.EXPECTED_MODELS)
+        assert sorted(corpus["problem_tokens"]) == sorted(mod.EXPECTED_PROBLEM_TOKENS)
+        assert all(v == 25 for v in corpus["models"].values())
+        assert all(v == 30 for v in corpus["problem_tokens"].values())
 
     def test_every_transcript_matches_the_schema(self) -> None:
-        self.assertTrue(
-            self.manifest["schema_validation"]["all_transcripts_valid"],
-            self.manifest["schema_validation"]["invalid_transcripts"],
-        )
+        assert self.manifest["schema_validation"]["all_transcripts_valid"], self.manifest[
+            "schema_validation"
+        ]["invalid_transcripts"]
 
     def test_no_ground_truth_and_no_grader_verdict_anywhere(self) -> None:
-        self.assertFalse(self.manifest["gradability"]["ground_truth_present_anywhere"])
-        self.assertFalse(self.manifest["gradability"]["grader_verdict_present_anywhere"])
-        self.assertFalse(self.manifest["gradability"]["gradable_locally"])
+        assert not self.manifest["gradability"]["ground_truth_present_anywhere"]
+        assert not self.manifest["gradability"]["grader_verdict_present_anywhere"]
+        assert not self.manifest["gradability"]["gradable_locally"]
 
     def test_prompt_preamble_is_uniform_across_all_150(self) -> None:
-        self.assertTrue(self.manifest["prompt_contract"]["preamble_is_uniform"])
+        assert self.manifest["prompt_contract"]["preamble_is_uniform"]
 
     def test_one_canonical_statement_per_problem(self) -> None:
         for token, hashes in self.manifest["prompt_contract"]["problem_statement_hashes"].items():
-            self.assertEqual(len(hashes), 1, f"{token} has {len(hashes)} distinct statements")
+            assert len(hashes) == 1, f"{token} has {len(hashes)} distinct statements"
 
     def test_all_five_problems_declare_integer_return_types(self) -> None:
         for token, types in self.manifest["prompt_contract"]["declared_return_types"].items():
-            self.assertEqual(len(types), 1, f"{token}: {types}")
-            self.assertIn("integer", types[0].lower(), f"{token}: {types}")
+            assert len(types) == 1, f"{token}: {types}"
+            assert "integer" in types[0].lower(), f"{token}: {types}"
 
     def test_harness_turn_taxonomy_is_exhaustive(self) -> None:
         totals = self.manifest["harness_turn_totals"]
-        self.assertNotIn(mod.TURN_UNKNOWN, totals, f"unclassified harness turns: {totals}")
-        self.assertEqual(totals[mod.TURN_TASK_PROMPT], 150)
-        self.assertEqual(totals[mod.TURN_CODE_RESULT], 265)
-        self.assertEqual(totals[mod.TURN_FINAL_ANSWER_FAILED_STDERR], 6)
-        self.assertEqual(totals[mod.TURN_FINAL_ANSWER_FAILED_TIMEOUT], 4)
+        assert mod.TURN_UNKNOWN not in totals, f"unclassified harness turns: {totals}"
+        assert totals[mod.TURN_TASK_PROMPT] == 150
+        assert totals[mod.TURN_CODE_RESULT] == 265
+        assert totals[mod.TURN_FINAL_ANSWER_FAILED_STDERR] == 6
+        assert totals[mod.TURN_FINAL_ANSWER_FAILED_TIMEOUT] == 4
 
     def test_final_answer_block_coverage(self) -> None:
         gradability = self.manifest["gradability"]
-        self.assertEqual(gradability["transcripts_with_final_answer_block"], 149)
-        self.assertEqual(
-            gradability["transcripts_without_final_answer_block"],
-            ["o1-mini_TIK2_run-4.jsonl"],
-        )
+        assert gradability["transcripts_with_final_answer_block"] == 149
+        assert gradability["transcripts_without_final_answer_block"] == ["o1-mini_TIK2_run-4.jsonl"]
 
     def test_corpus_hash_is_stable(self) -> None:
         again = mod.build_public_sample_manifest(SAMPLES_DIR)
-        self.assertEqual(self.manifest["hashes"]["corpus_sha256"], again["hashes"]["corpus_sha256"])
-        self.assertEqual(len(self.manifest["hashes"]["file_sha256"]), 150)
+        assert self.manifest["hashes"]["corpus_sha256"] == again["hashes"]["corpus_sha256"]
+        assert len(self.manifest["hashes"]["file_sha256"]) == 150
 
     @unittest.skipUnless(ARCHIVE.is_file(), "public sample archive not present")
     def test_archive_hash_matches_recorded_download(self) -> None:
-        self.assertEqual(
-            mod.sha256_file(ARCHIVE),
-            "7bdf3231086cc7de000ea57380c36a64abdf2644f1111b044d1bab0b383b0ff8",
+        assert (
+            mod.sha256_file(ARCHIVE)
+            == "7bdf3231086cc7de000ea57380c36a64abdf2644f1111b044d1bab0b383b0ff8"
         )
 
     def test_receipt_from_real_corpus_is_blocked(self) -> None:
@@ -560,8 +586,8 @@ class TestRealPublicCorpus(unittest.TestCase):
             self.manifest, recorded_at="2026-08-09", checkout=str(REPO_ROOT), commit="test"
         )
         mod.assert_receipt_emits_no_score(receipt)
-        self.assertIsNone(receipt["score"])
-        self.assertEqual(receipt["status"], "BLOCKED")
+        assert receipt["score"] is None
+        assert receipt["status"] == "BLOCKED"
 
 
 if __name__ == "__main__":  # pragma: no cover

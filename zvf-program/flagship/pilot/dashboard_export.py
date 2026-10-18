@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import json
-import math
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any, Mapping, Sequence
@@ -10,7 +9,7 @@ import numpy as np
 import torch
 
 from pilot.entropic_gating import compute_entropy_density, eliminate_noise_components
-from pilot.spectral_attention import legendre_spectral_projection, spectral_pairwise_distance
+from pilot.spectral_attention import spectral_pairwise_distance
 
 
 class DashboardExportError(RuntimeError):
@@ -81,7 +80,9 @@ def prepare_spectral_trajectory_data(
     spectral_coeffs: Tensor or array of shape [B, N, D] or [N, D]
     """
     coeffs_arr = _to_numpy(spectral_coeffs)
-    _require(coeffs_arr.ndim in {2, 3}, f"spectral_coeffs must be 2D or 3D, got shape {coeffs_arr.shape}")
+    _require(
+        coeffs_arr.ndim in {2, 3}, f"spectral_coeffs must be 2D or 3D, got shape {coeffs_arr.shape}"
+    )
 
     if coeffs_arr.ndim == 2:
         # Shape [N, D] - treat rows as modes
@@ -92,7 +93,7 @@ def prepare_spectral_trajectory_data(
         # Continuous L2 weighting for legendre modes if applicable
         n_idx = np.arange(n_modes)
         scale_n = 1.0 / (2.0 * n_idx + 1.0)
-        dist_matrix = np.sqrt(np.sum((diffs ** 2) * scale_n[None, :, None], axis=-1))
+        dist_matrix = np.sqrt(np.sum((diffs**2) * scale_n[None, :, None], axis=-1))
         mode_coeffs = coeffs_arr.tolist()
     else:
         # Shape [B, N, D] - compute pairwise trajectory distances between batch items
@@ -110,7 +111,10 @@ def prepare_spectral_trajectory_data(
     if labels is None:
         item_labels = [f"Item_{i}" for i in range(batch_size)]
     else:
-        _require(len(labels) == batch_size, f"labels length {len(labels)} mismatch with count {batch_size}")
+        _require(
+            len(labels) == batch_size,
+            f"labels length {len(labels)} mismatch with count {batch_size}",
+        )
         item_labels = list(labels)
 
     meta = {
@@ -135,9 +139,14 @@ def prepare_entropic_gating_data(
 ) -> EntropicGatingData:
     """Prepare pre and post Givens entropic gating density heatmap payload."""
     data_arr = _to_numpy(logits_or_probs)
-    _require(data_arr.ndim == 2, f"logits_or_probs must be 2D [B, L] or [L, D], got shape {data_arr.shape}")
+    _require(
+        data_arr.ndim == 2,
+        f"logits_or_probs must be 2D [B, L] or [L, D], got shape {data_arr.shape}",
+    )
     rows, cols = data_arr.shape
-    _require(1 <= n_noise_dims < cols, f"n_noise_dims={n_noise_dims} invalid for feature dim {cols}")
+    _require(
+        1 <= n_noise_dims < cols, f"n_noise_dims={n_noise_dims} invalid for feature dim {cols}"
+    )
 
     t_data = torch.as_tensor(data_arr, dtype=torch.float32)
     # Check if probabilities or logits
@@ -155,7 +164,7 @@ def prepare_entropic_gating_data(
 
     # Mask showing rotated out noise coordinates
     mask = np.zeros((rows, cols), dtype=np.float64)
-    mask[:, (cols - n_noise_dims):] = 1.0
+    mask[:, (cols - n_noise_dims) :] = 1.0
 
     if pre_entropy.ndim == 1:
         # Map into a 2D grid for heatmap rendering
@@ -168,7 +177,10 @@ def prepare_entropic_gating_data(
     if token_labels is None:
         t_labels = [f"Token_{i}" for i in range(rows)]
     else:
-        _require(len(token_labels) == rows, f"token_labels length {len(token_labels)} mismatch with {rows}")
+        _require(
+            len(token_labels) == rows,
+            f"token_labels length {len(token_labels)} mismatch with {rows}",
+        )
         t_labels = list(token_labels)
 
     meta = {
@@ -214,7 +226,11 @@ def prepare_gradient_recovery_data(
 
         for r in receipts:
             # Gradient norm / retention percentage
-            norm = r.get("gradient_norm") or r.get("intended_gradient_norm") or r.get("selected_vs_intended_cosine")
+            norm = (
+                r.get("gradient_norm")
+                or r.get("intended_gradient_norm")
+                or r.get("selected_vs_intended_cosine")
+            )
             if norm is None:
                 # Calculate retention from relative_l2 or fallback
                 rel_l2 = r.get("gradient_relative_l2")
@@ -931,9 +947,19 @@ def export_comparative_dashboard_html(
     title: str = "ZVF Pilot Conformance Comparative Dashboard",
 ) -> str:
     """Generate single standalone HTML dashboard containing all three interactive visualizers."""
-    spec_dict = spectral_data.to_dict() if isinstance(spectral_data, SpectralTrajectoryData) else dict(spectral_data)
-    gate_dict = gating_data.to_dict() if isinstance(gating_data, EntropicGatingData) else dict(gating_data)
-    grad_dict = gradient_data.to_dict() if isinstance(gradient_data, GradientRecoveryData) else dict(gradient_data)
+    spec_dict = (
+        spectral_data.to_dict()
+        if isinstance(spectral_data, SpectralTrajectoryData)
+        else dict(spectral_data)
+    )
+    gate_dict = (
+        gating_data.to_dict() if isinstance(gating_data, EntropicGatingData) else dict(gating_data)
+    )
+    grad_dict = (
+        gradient_data.to_dict()
+        if isinstance(gradient_data, GradientRecoveryData)
+        else dict(gradient_data)
+    )
 
     spec_json = json.dumps(spec_dict, indent=2)
     gate_json = json.dumps(gate_dict, indent=2)

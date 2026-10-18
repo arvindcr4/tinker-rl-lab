@@ -41,11 +41,21 @@ Outputs
   measured coverage rollups + missing-field list + ambiguous-field
   list)
 """
+
 from __future__ import annotations
 import csv
 import json
 import random
-from _minreport_contract import (literal_field, valid_literal, verify_trajectory, PRECISIONS, load_inventory_manifests, inventory_counts, field_report, VERSION)
+from _minreport_contract import (
+    literal_field,
+    valid_literal,
+    verify_trajectory,
+    PRECISIONS,
+    load_inventory_manifests,
+    inventory_counts,
+    field_report,
+    VERSION,
+)
 from collections import defaultdict
 from pathlib import Path
 
@@ -54,8 +64,10 @@ N_BOOT = 2000
 SEED = 20260706
 
 import sys
+
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
+from _paths import REPO_ROOT
+
 WORKTREE = REPO_ROOT
 MANIFEST_DIR = WORKTREE / "platform_hybrid/experiments/results/mega_20260704/manifests"
 CELLS_TSV = WORKTREE / "platform_hybrid/experiments/results/mega_20260704/cells.tsv"
@@ -126,21 +138,23 @@ def parse_group_size_schedule(s: str) -> dict:
 def parse_sampler_backend_precision(s: str) -> dict:
     if not isinstance(s, str) or not s:
         return {}
-    parts = s.split('-', 1)
-    result = {'backend': parts[0]}
+    parts = s.split("-", 1)
+    result = {"backend": parts[0]}
     if len(parts) == 2 and parts[1] in PRECISIONS:
-        result['precision'] = parts[1]
+        result["precision"] = parts[1]
     return result
 
 
 def parse_heldout_split(s: str) -> dict:
-    return {'description': s} if isinstance(s, str) and s else {}
+    return {"description": s} if isinstance(s, str) and s else {}
 
 
 def parse_decontamination_notes(s: str) -> dict:
     if not isinstance(s, str):
         return {}
-    return {'performed': False} if s.strip().lower() in {'not performed', 'not done', 'none'} else {}
+    return (
+        {"performed": False} if s.strip().lower() in {"not performed", "not done", "none"} else {}
+    )
 
 
 def parse_loss_form(s: str) -> dict:
@@ -175,10 +189,10 @@ def parse_ref_policy_kl(s: str) -> dict:
 
 def parse_per_step_zvf_path(s: str) -> dict:
     result = verify_trajectory(s, WORKTREE)
-    out = {'source': s} if result['reported'] else {}
-    if result['verified']:
-        out['per_step_zvf'] = result['per_step_zvf']
-        out['per_step_gu'] = result['per_step_gu']
+    out = {"source": s} if result["reported"] else {}
+    if result["verified"]:
+        out["per_step_zvf"] = result["per_step_zvf"]
+        out["per_step_gu"] = result["per_step_gu"]
     return out
 
 
@@ -221,27 +235,27 @@ def extract_subfield(manifest, item, sub_field, parser_key, cells_index):
     """One typed validation gate for literal, parsed and inventory values."""
     present, value = literal_field(manifest, item, sub_field)
     if present:
-        kind = 'EXTRACTABLE_LITERAL'
-    elif parser_key == 'cells_tsv':
-        cell_row = cells_index.get(manifest.get('cell_id', ''), {})
+        kind = "EXTRACTABLE_LITERAL"
+    elif parser_key == "cells_tsv":
+        cell_row = cells_index.get(manifest.get("cell_id", ""), {})
         present = sub_field in cell_row
         value = cell_row.get(sub_field)
-        kind = 'EXTRACTABLE_PARSED'
+        kind = "EXTRACTABLE_PARSED"
     else:
         raw = manifest.get(parser_key) if parser_key else None
         parser = PARSERS.get(parser_key)
         if raw is None or parser is None:
-            return 'MISSING', None
+            return "MISSING", None
         parsed = parser(raw) if isinstance(raw, str) else {}
         present = sub_field in parsed
         value = parsed.get(sub_field)
-        kind = 'EXTRACTABLE_PARSED'
+        kind = "EXTRACTABLE_PARSED"
         if not present:
-            return 'AMBIGUOUS', None
+            return "AMBIGUOUS", None
     if not present:
-        return 'MISSING', None
+        return "MISSING", None
     if not valid_literal(sub_field, value):
-        return 'AMBIGUOUS', None
+        return "AMBIGUOUS", None
     return kind, value
 
 
@@ -259,7 +273,11 @@ def normalized_min_report(manifest, cells_index=None):
     normalized = {}
     for item, field, parser_key in MIN_REPORT_FIELDS:
         kind, value = extract_subfield(manifest, item, field, parser_key, cells_index or {})
-        normalized.setdefault(item, {})[field] = (value if field_report(value)['applicable'] is False else field_report(value)['value']) if kind.startswith('EXTRACTABLE_') else None
+        normalized.setdefault(item, {})[field] = (
+            (value if field_report(value)["applicable"] is False else field_report(value)["value"])
+            if kind.startswith("EXTRACTABLE_")
+            else None
+        )
     return normalized
 
 
@@ -286,16 +304,18 @@ def main() -> None:
         miss = counts.get("MISSING", 0)
         covered = lit + par  # recoverable sub-field
         cov_pct = 100 * covered / n_manifests
-        subfield_rows.append({
-            "item": item,
-            "sub_field": sub,
-            "n_extract_literal": lit,
-            "n_extract_parsed": par,
-            "n_ambiguous": amb,
-            "n_missing": miss,
-            "n_covered": covered,
-            "coverage_pct": round(cov_pct, 2),
-        })
+        subfield_rows.append(
+            {
+                "item": item,
+                "sub_field": sub,
+                "n_extract_literal": lit,
+                "n_extract_parsed": par,
+                "n_ambiguous": amb,
+                "n_missing": miss,
+                "n_covered": covered,
+                "coverage_pct": round(cov_pct, 2),
+            }
+        )
 
     subfield_rows.sort(key=lambda r: (r["item"], r["sub_field"]))
 
@@ -316,20 +336,21 @@ def main() -> None:
 
     item_rows: list[dict] = []
     for item in sorted(by_item.keys()):
-        item_total_subfields = sum(
-            1 for it, _, _ in MIN_REPORT_FIELDS if it == item
-        )
+        item_total_subfields = sum(1 for it, _, _ in MIN_REPORT_FIELDS if it == item)
         manifests_passing_item = sum(
-            1 for m in manifests
+            1
+            for m in manifests
             if item_pass_by_manifest[(m.get("cell_id", ""), item)] == item_total_subfields
         )
-        item_rows.append({
-            "item": item,
-            "n_subfields": item_total_subfields,
-            "n_subfields_full_coverage": by_item[item]["covered"],
-            "manifests_passing_item": manifests_passing_item,
-            "manifests_passing_pct": round(100 * manifests_passing_item / n_manifests, 2),
-        })
+        item_rows.append(
+            {
+                "item": item,
+                "n_subfields": item_total_subfields,
+                "n_subfields_full_coverage": by_item[item]["covered"],
+                "manifests_passing_item": manifests_passing_item,
+                "manifests_passing_pct": round(100 * manifests_passing_item / n_manifests, 2),
+            }
+        )
 
     # --- (c) per-manifest coverage ---
     manifest_rows: list[dict] = []
@@ -360,19 +381,25 @@ def main() -> None:
             tier = "gold-partial"
         else:
             tier = "platinum"
-        manifest_rows.append({
-            "cell_id": manifest.get("cell_id", ""),
-            "model_family": cells_index.get(manifest.get("cell_id", ""), {}).get("model_family", ""),
-            "task_slice": cells_index.get(manifest.get("cell_id", ""), {}).get("task_slice", ""),
-            "n_literal": n_lit,
-            "n_parsed": n_par,
-            "n_ambiguous": n_amb,
-            "n_missing": n_mis,
-            "n_covered": covered,
-            "missing": missing,
-            "ambiguous": ambiguous,
-            "tier": tier,
-        })
+        manifest_rows.append(
+            {
+                "cell_id": manifest.get("cell_id", ""),
+                "model_family": cells_index.get(manifest.get("cell_id", ""), {}).get(
+                    "model_family", ""
+                ),
+                "task_slice": cells_index.get(manifest.get("cell_id", ""), {}).get(
+                    "task_slice", ""
+                ),
+                "n_literal": n_lit,
+                "n_parsed": n_par,
+                "n_ambiguous": n_amb,
+                "n_missing": n_mis,
+                "n_covered": covered,
+                "missing": missing,
+                "ambiguous": ambiguous,
+                "tier": tier,
+            }
+        )
 
     # --- (d) per-(model_family, task_slice) coverage with bootstrap CI ---
     by_cell: dict = defaultdict(list)
@@ -392,15 +419,17 @@ def main() -> None:
         boots.sort()
         ci_lo = boots[int(0.025 * N_BOOT)]
         ci_hi = boots[int(0.975 * N_BOOT)]
-        stratified_rows.append({
-            "model_family": mf,
-            "task_slice": ts,
-            "n_manifests": n,
-            "mean_subfields_covered": round(point_mean, 2),
-            "ci_lo": round(ci_lo, 2),
-            "ci_hi": round(ci_hi, 2),
-            "frac_above_15": round(sum(1 for c in coverages if c >= 15) / n, 4),
-        })
+        stratified_rows.append(
+            {
+                "model_family": mf,
+                "task_slice": ts,
+                "n_manifests": n,
+                "mean_subfields_covered": round(point_mean, 2),
+                "ci_lo": round(ci_lo, 2),
+                "ci_hi": round(ci_hi, 2),
+                "frac_above_15": round(sum(1 for c in coverages if c >= 15) / n, 4),
+            }
+        )
 
     # --- Hypotheses ---
     # H1: per-Item pass rate is non-zero on EVERY of the 7 items
@@ -428,11 +457,11 @@ def main() -> None:
     h7_pass = n_ambiguous_perm >= 5
     # H8: schema-impossibility — ZERO manifests atomically pass all 7 items
     n_atomically_pass = sum(
-        1 for m in manifests
+        1
+        for m in manifests
         if all(
-            item_pass_by_manifest[(m.get("cell_id", ""), item)] == sum(
-                1 for it, _, _ in MIN_REPORT_FIELDS if it == item
-            )
+            item_pass_by_manifest[(m.get("cell_id", ""), item)]
+            == sum(1 for it, _, _ in MIN_REPORT_FIELDS if it == item)
             for item in {it for it, _, _ in MIN_REPORT_FIELDS}
         )
     )
@@ -442,19 +471,23 @@ def main() -> None:
     missing_fields: list[dict] = []
     for r in subfield_rows:
         if r["n_missing"] == n_manifests:
-            missing_fields.append({
-                "item": r["item"],
-                "sub_field": r["sub_field"],
-                "n_missing": r["n_missing"],
-            })
+            missing_fields.append(
+                {
+                    "item": r["item"],
+                    "sub_field": r["sub_field"],
+                    "n_missing": r["n_missing"],
+                }
+            )
     ambiguous_fields: list[dict] = []
     for r in subfield_rows:
         if r["n_ambiguous"] > 0:
-            ambiguous_fields.append({
-                "item": r["item"],
-                "sub_field": r["sub_field"],
-                "n_ambiguous": r["n_ambiguous"],
-            })
+            ambiguous_fields.append(
+                {
+                    "item": r["item"],
+                    "sub_field": r["sub_field"],
+                    "n_ambiguous": r["n_ambiguous"],
+                }
+            )
 
     summary = {
         "contract_version": VERSION,
@@ -489,8 +522,16 @@ def main() -> None:
     with (OUT_DIR / "p5_iter205_subfield_class.tsv").open("w", newline="") as fh:
         wr = csv.DictWriter(
             fh,
-            fieldnames=["item", "sub_field", "n_extract_literal", "n_extract_parsed",
-                        "n_ambiguous", "n_missing", "n_covered", "coverage_pct"],
+            fieldnames=[
+                "item",
+                "sub_field",
+                "n_extract_literal",
+                "n_extract_parsed",
+                "n_ambiguous",
+                "n_missing",
+                "n_covered",
+                "coverage_pct",
+            ],
             delimiter="\t",
         )
         wr.writeheader()
@@ -500,8 +541,13 @@ def main() -> None:
     with (OUT_DIR / "p5_iter205_item_coverage.tsv").open("w", newline="") as fh:
         wr = csv.DictWriter(
             fh,
-            fieldnames=["item", "n_subfields", "n_subfields_full_coverage",
-                        "manifests_passing_item", "manifests_passing_pct"],
+            fieldnames=[
+                "item",
+                "n_subfields",
+                "n_subfields_full_coverage",
+                "manifests_passing_item",
+                "manifests_passing_pct",
+            ],
             delimiter="\t",
         )
         wr.writeheader()
@@ -511,9 +557,19 @@ def main() -> None:
     with (OUT_DIR / "p5_iter205_per_manifest_coverage.tsv").open("w", newline="") as fh:
         wr = csv.DictWriter(
             fh,
-            fieldnames=["cell_id", "model_family", "task_slice", "n_literal",
-                        "n_parsed", "n_ambiguous", "n_missing", "n_covered",
-                        "missing", "ambiguous", "tier"],
+            fieldnames=[
+                "cell_id",
+                "model_family",
+                "task_slice",
+                "n_literal",
+                "n_parsed",
+                "n_ambiguous",
+                "n_missing",
+                "n_covered",
+                "missing",
+                "ambiguous",
+                "tier",
+            ],
             delimiter="\t",
         )
         wr.writeheader()
@@ -523,9 +579,15 @@ def main() -> None:
     with (OUT_DIR / "p5_iter205_stratified_coverage.tsv").open("w", newline="") as fh:
         wr = csv.DictWriter(
             fh,
-            fieldnames=["model_family", "task_slice", "n_manifests",
-                        "mean_subfields_covered", "ci_lo", "ci_hi",
-                        "frac_above_15"],
+            fieldnames=[
+                "model_family",
+                "task_slice",
+                "n_manifests",
+                "mean_subfields_covered",
+                "ci_lo",
+                "ci_hi",
+                "frac_above_15",
+            ],
             delimiter="\t",
         )
         wr.writeheader()
@@ -537,17 +599,24 @@ def main() -> None:
 
     # --- Console summary ---
     print(f"[iter205] Wrote 4 TSVs + summary.json to {OUT_DIR}")
-    print(f"[iter205] Mean coverage = {mean_cov:.2f} / 23 ({100*mean_cov/23:.1f}%)")
-    print(f"[iter205] Hypotheses: H1={h1_pass} H2={h2_pass} H3={h3_pass} "
-          f"H4={h4_pass} H5={h5_pass} H6={h6_pass} H7={h7_pass} H8={h8_pass}")
-    print(f"[iter205] Per-Item pass: " +
-          ", ".join(f"{r['item']}={r['manifests_passing_pct']:.0f}%" for r in item_rows))
+    print(f"[iter205] Mean coverage = {mean_cov:.2f} / 23 ({100 * mean_cov / 23:.1f}%)")
+    print(
+        f"[iter205] Hypotheses: H1={h1_pass} H2={h2_pass} H3={h3_pass} "
+        f"H4={h4_pass} H5={h5_pass} H6={h6_pass} H7={h7_pass} H8={h8_pass}"
+    )
+    print(
+        f"[iter205] Per-Item pass: "
+        + ", ".join(f"{r['item']}={r['manifests_passing_pct']:.0f}%" for r in item_rows)
+    )
     print(f"[iter205] Platinum manifests: {n_platinum}, FAIL manifests: {n_fail}")
-    print(f"[iter205] Missing fields (0/{n_manifests}): " +
-          ", ".join(f"{m['item']}/{m['sub_field']}" for m in missing_fields))
-    print(f"[iter205] Ambiguous fields: " +
-          ", ".join(f"{a['item']}/{a['sub_field']}({a['n_ambiguous']})"
-                    for a in ambiguous_fields))
+    print(
+        f"[iter205] Missing fields (0/{n_manifests}): "
+        + ", ".join(f"{m['item']}/{m['sub_field']}" for m in missing_fields)
+    )
+    print(
+        f"[iter205] Ambiguous fields: "
+        + ", ".join(f"{a['item']}/{a['sub_field']}({a['n_ambiguous']})" for a in ambiguous_fields)
+    )
 
 
 if __name__ == "__main__":

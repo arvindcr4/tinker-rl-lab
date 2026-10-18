@@ -11,6 +11,7 @@ Outputs:
   experiments/results/p2_length_bias_<model>.{json,csv}
   paper/figures/v2/p2_length_bias.png (combined figure)
 """
+
 from __future__ import annotations
 
 import argparse
@@ -64,13 +65,26 @@ def reward_gsm8k(response, answer):
 
 
 def build_prompt(user):
-    return (IMS + "system\n" + GSM8K_SYSTEM + IME + "\n"
-            + IMS + "user\n" + user + GSM8K_SUFFIX + IME + "\n"
-            + IMS + "assistant\n")
+    return (
+        IMS
+        + "system\n"
+        + GSM8K_SYSTEM
+        + IME
+        + "\n"
+        + IMS
+        + "user\n"
+        + user
+        + GSM8K_SUFFIX
+        + IME
+        + "\n"
+        + IMS
+        + "assistant\n"
+    )
 
 
 def load_gsm8k(limit, seed):
     from datasets import load_dataset
+
     ds = load_dataset("openai/gsm8k", "main", split="train")
     examples = []
     for row in ds:
@@ -139,13 +153,15 @@ def run(args):
             if (i + 1) % 10 == 0:
                 print("[" + tag + "] " + str(i + 1) + "/" + str(len(examples)), flush=True)
 
-        result.update({
-            "status": "completed",
-            "n_rollouts": len(rollouts),
-            "rollouts": rollouts,
-            "wall_clock_sec": time.time() - t0,
-            "completed_at": datetime.now(timezone.utc).isoformat(),
-        })
+        result.update(
+            {
+                "status": "completed",
+                "n_rollouts": len(rollouts),
+                "rollouts": rollouts,
+                "wall_clock_sec": time.time() - t0,
+                "completed_at": datetime.now(timezone.utc).isoformat(),
+            }
+        )
         out_json.write_text(json.dumps(result, indent=2) + "\n")
 
         with open(out_csv, "w", newline="") as f:
@@ -156,13 +172,34 @@ def run(args):
 
         pos = [r["length"] for r in rollouts if r["reward"] > 0.5]
         neg = [r["length"] for r in rollouts if r["reward"] <= 0.5]
+
         def stats(xs):
-            if not xs: return (0, 0.0, 0.0)
+            if not xs:
+                return (0, 0.0, 0.0)
             return (len(xs), sum(xs) / len(xs), sorted(xs)[len(xs) // 2])
+
         ns, ms, meds = stats(pos)
         nf, mf, medf = stats(neg)
-        print("[" + tag + "] rewarded: n=" + str(ns) + " mean_len=" + ("{:.1f}".format(ms)) + " median=" + str(meds))
-        print("[" + tag + "] failed  : n=" + str(nf) + " mean_len=" + ("{:.1f}".format(mf)) + " median=" + str(medf))
+        print(
+            "["
+            + tag
+            + "] rewarded: n="
+            + str(ns)
+            + " mean_len="
+            + ("{:.1f}".format(ms))
+            + " median="
+            + str(meds)
+        )
+        print(
+            "["
+            + tag
+            + "] failed  : n="
+            + str(nf)
+            + " mean_len="
+            + ("{:.1f}".format(mf))
+            + " median="
+            + str(medf)
+        )
         print("wrote " + str(out_json))
         print("wrote " + str(out_csv))
 

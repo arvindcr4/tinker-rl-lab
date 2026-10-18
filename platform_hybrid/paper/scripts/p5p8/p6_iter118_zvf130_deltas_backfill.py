@@ -16,6 +16,7 @@ each delta entry.
 
 Output: registry/entries/{delta_ngrpo,delta_cppo,delta_mcgrpo,delta_es,delta_scafgrpo}.json
 """
+
 import csv
 import json
 import pathlib
@@ -73,7 +74,7 @@ def synth_per_seed(mean, sd, n, rng):
 
 def bootstrap_paired(a, b, n_boot, rng):
     """Paired bootstrap on (a - b)."""
-    diffs = [x - y for x, y in zip(a, b)]
+    diffs = [x - y for x, y in zip(a, b, strict=False)]
     n = len(diffs)
     samples = []
     for _ in range(n_boot):
@@ -90,18 +91,17 @@ def main():
     rng = random.Random(SEED)
     table = load_risk_table()
     base = table[BASELINE]
-    base_per_seed = synth_per_seed(base["zvf_risk_mean"],
-                                   base["zvf_risk_sd"] or 0.01,
-                                   base["n_seeds"], rng)
+    base_per_seed = synth_per_seed(
+        base["zvf_risk_mean"], base["zvf_risk_sd"] or 0.01, base["n_seeds"], rng
+    )
 
     summary_rows = []
     for v in VARIANTS:
         v_data = table[v]
-        v_per_seed = synth_per_seed(v_data["zvf_risk_mean"],
-                                    v_data["zvf_risk_sd"] or 0.01,
-                                    v_data["n_seeds"], rng)
-        mean, lo, hi, sig, n = bootstrap_paired(v_per_seed, base_per_seed,
-                                                N_BOOT, rng)
+        v_per_seed = synth_per_seed(
+            v_data["zvf_risk_mean"], v_data["zvf_risk_sd"] or 0.01, v_data["n_seeds"], rng
+        )
+        mean, lo, hi, sig, n = bootstrap_paired(v_per_seed, base_per_seed, N_BOOT, rng)
         # also write a mag_mean delta
         mag_a = base["mag_mean"]
         mag_b = v_data["mag_mean"]
@@ -131,37 +131,40 @@ def main():
                     "source": "platform_modal/scripts/p5p8/p6_iter118_zvf130_deltas_backfill.py",
                 },
                 "source": "experiments/results/zvf_iter130_method_risk.tsv",
-                "note": (f"5-seed zvf130 risk index; backfill iter118 "
-                         f"({v_data['zvf_risk_sd']:.4f} sd); "
-                         f"synth_from_agg: per-seed observations inferred "
-                         f"from (mean, sd) Gaussian"),
+                "note": (
+                    f"5-seed zvf130 risk index; backfill iter118 "
+                    f"({v_data['zvf_risk_sd']:.4f} sd); "
+                    f"synth_from_agg: per-seed observations inferred "
+                    f"from (mean, sd) Gaussian"
+                ),
                 "synth_from_agg": True,
             },
         ]
         if mag_delta is not None:
-            new_measured_rows.append({
-                "metric": "mag_mean",
-                "panel": "zvf130_5seed",
-                "base": BASELINE,
-                "delta": round(mag_delta, 6),
-                "ci_low": None,
-                "ci_high": None,
-                "n": n,
-                "significant": None,
-                "ci_method": {
-                    "method": "point_no_perseed_sd",
-                    "n_boot": None,
-                    "seed": None,
-                    "ci_level": None,
-                    "source": "platform_modal/scripts/p5p8/p6_iter118_zvf130_deltas_backfill.py",
-                },
-                "source": "experiments/results/zvf_iter130_method_risk.tsv",
-                "note": "mag_mean: per-seed sd not stored; point estimate only",
-                "synth_from_agg": True,
-            })
+            new_measured_rows.append(
+                {
+                    "metric": "mag_mean",
+                    "panel": "zvf130_5seed",
+                    "base": BASELINE,
+                    "delta": round(mag_delta, 6),
+                    "ci_low": None,
+                    "ci_high": None,
+                    "n": n,
+                    "significant": None,
+                    "ci_method": {
+                        "method": "point_no_perseed_sd",
+                        "n_boot": None,
+                        "seed": None,
+                        "ci_level": None,
+                        "source": "platform_modal/scripts/p5p8/p6_iter118_zvf130_deltas_backfill.py",
+                    },
+                    "source": "experiments/results/zvf_iter130_method_risk.tsv",
+                    "note": "mag_mean: per-seed sd not stored; point estimate only",
+                    "synth_from_agg": True,
+                }
+            )
 
-        existing_keys = {(m.get("metric"), m.get("panel"))
-                         for m in rec.get("measured", [])}
+        existing_keys = {(m.get("metric"), m.get("panel")) for m in rec.get("measured", [])}
         for nm in new_measured_rows:
             if (nm["metric"], nm["panel"]) not in existing_keys:
                 rec.setdefault("measured", []).append(nm)
@@ -169,8 +172,9 @@ def main():
         # map zvf_risk_mean observed to claim_validation
         for nm in new_measured_rows:
             key = (nm["metric"], nm["panel"])
-            existing_cv_keys = {(c.get("metric"), c.get("panel"))
-                                for c in rec.get("claim_validation", [])}
+            existing_cv_keys = {
+                (c.get("metric"), c.get("panel")) for c in rec.get("claim_validation", [])
+            }
             if key in existing_cv_keys:
                 continue
             # determine predicted_sign from expected_effects
@@ -185,9 +189,11 @@ def main():
             elif pred == ">0" and nm["delta"] is not None:
                 sign_matches = bool(nm["delta"] > 0)
             elif pred in (">=0", "<=0", "==0") and nm["delta"] is not None:
-                sign_matches = bool({"<=0": nm["delta"] <= 0,
-                                     ">=0": nm["delta"] >= 0,
-                                     "==0": nm["delta"] == 0}[pred])
+                sign_matches = bool(
+                    {"<=0": nm["delta"] <= 0, ">=0": nm["delta"] >= 0, "==0": nm["delta"] == 0}[
+                        pred
+                    ]
+                )
             if pred is None or sign_matches is None:
                 verdict = "UNCLAIMED"
             elif nm["significant"]:
@@ -199,37 +205,39 @@ def main():
                 if (ee.get("metric"), ee.get("panel")) == key:
                     rationale = ee.get("rationale", "")[:80]
                     break
-            rec.setdefault("claim_validation", []).append({
-                "metric": nm["metric"],
-                "panel": nm["panel"],
-                "predicted_sign": pred,
-                "observed_delta": round(nm["delta"], 6) if nm["delta"] is not None else None,
-                "ci_low": nm["ci_low"],
-                "ci_high": nm["ci_high"],
-                "significant": nm["significant"],
-                "verdict": verdict,
-                "rationale": rationale,
-                "audit_source": "platform_modal/scripts/p5p8/p6_iter118_zvf130_deltas_backfill.py",
-                "audit_date": "2026-07-05",
-                "synth_from_agg": True,
-            })
+            rec.setdefault("claim_validation", []).append(
+                {
+                    "metric": nm["metric"],
+                    "panel": nm["panel"],
+                    "predicted_sign": pred,
+                    "observed_delta": round(nm["delta"], 6) if nm["delta"] is not None else None,
+                    "ci_low": nm["ci_low"],
+                    "ci_high": nm["ci_high"],
+                    "significant": nm["significant"],
+                    "verdict": verdict,
+                    "rationale": rationale,
+                    "audit_source": "platform_modal/scripts/p5p8/p6_iter118_zvf130_deltas_backfill.py",
+                    "audit_date": "2026-07-05",
+                    "synth_from_agg": True,
+                }
+            )
 
         # write back
         path.write_text(json.dumps(rec, indent=2) + "\n")
-        summary_rows.append({
-            "variant": v,
-            "zvf_risk_mean_pt": round(mean, 4),
-            "ci_lo": round(lo, 4),
-            "ci_hi": round(hi, 4),
-            "significant": bool(sig),
-            "mag_mean_delta": (round(mag_delta, 4)
-                                if mag_delta is not None else None),
-        })
+        summary_rows.append(
+            {
+                "variant": v,
+                "zvf_risk_mean_pt": round(mean, 4),
+                "ci_lo": round(lo, 4),
+                "ci_hi": round(hi, 4),
+                "significant": bool(sig),
+                "mag_mean_delta": (round(mag_delta, 4) if mag_delta is not None else None),
+            }
+        )
 
     out_path = RESULTS / "p6_iter118_zvf130_backfill_summary.tsv"
     RESULTS.mkdir(parents=True, exist_ok=True)
-    cols = ["variant", "zvf_risk_mean_pt", "ci_lo", "ci_hi",
-            "significant", "mag_mean_delta"]
+    cols = ["variant", "zvf_risk_mean_pt", "ci_lo", "ci_hi", "significant", "mag_mean_delta"]
     with out_path.open("w") as f:
         w = csv.DictWriter(f, fieldnames=cols, delimiter="\t")
         w.writeheader()
@@ -239,8 +247,10 @@ def main():
     print(f"  source: {ZVFRISK}")
     for r in summary_rows:
         sig = "YES" if r["significant"] else "no"
-        print(f"  {r['variant']:10s} Δ={r['zvf_risk_mean_pt']:+.4f}  "
-              f"CI=[{r['ci_lo']:+.4f},{r['ci_hi']:+.4f}]  sig={sig}")
+        print(
+            f"  {r['variant']:10s} Δ={r['zvf_risk_mean_pt']:+.4f}  "
+            f"CI=[{r['ci_lo']:+.4f},{r['ci_hi']:+.4f}]  sig={sig}"
+        )
     print(f"  wrote {out_path}")
 
 

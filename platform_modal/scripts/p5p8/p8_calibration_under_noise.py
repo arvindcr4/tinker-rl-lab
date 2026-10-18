@@ -32,6 +32,7 @@ platform_hybrid/experiments/results/p5p8/figures/p8_calib_noise.{png,pdf}
 
 Stdlib + numpy + pandas + xgboost + matplotlib. <=290 lines.
 """
+
 from __future__ import annotations
 
 import json
@@ -47,8 +48,10 @@ import xgboost as xgb
 
 # ---------------------------------------------------------------- paths
 import sys
+
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
+from _paths import REPO_ROOT
+
 ROOT = REPO_ROOT
 OUT = ROOT / "platform_hybrid/experiments" / "results" / "p5p8/corrected-review20-v2"
 FIG = OUT / "figures"
@@ -62,7 +65,7 @@ TEST = ROOT / "test_data.csv"
 SEED = 20260705
 N_BOOT = 400
 SIGMAS = [0.0, 0.05, 0.10, 0.20, 0.50, 1.00]
-K_PCTS = [0.5, 1.0, 2.0, 5.0]   # alert budget as % of test
+K_PCTS = [0.5, 1.0, 2.0, 5.0]  # alert budget as % of test
 RAW20 = [f"V{i}" for i in range(1, 21)]
 AGG4 = ["V_mean", "V_std", "V_max", "V_min"]
 ALL24 = RAW20 + AGG4
@@ -130,8 +133,9 @@ def main():
 
     # Pre-compute noisy test sets for each sigma
     print("[p8_calib_noise] precomputing noisy variants...")
-    Xte_24_noisy = {s: add_noise(pd.DataFrame(X_te_24, columns=ALL24),
-                                  s, sigma_rng).values for s in SIGMAS}
+    Xte_24_noisy = {
+        s: add_noise(pd.DataFrame(X_te_24, columns=ALL24), s, sigma_rng).values for s in SIGMAS
+    }
     Xte_20_clean = X_te_20  # 20raw has no sensor features, so noise does not apply
 
     # Fit 4 trees ONCE on the clean training set
@@ -162,19 +166,20 @@ def main():
             for tree in ("20raw", "24full", "4sensor"):
                 probs = pred_cache[(tree, s)]
                 mp, obs, br, gap = operational_calibration(probs, y_te, k_pct)
-                rows.append({
-                    "sigma": s,
-                    "k_pct": k_pct,
-                    "tree": tree,
-                    "mean_pred": mp,
-                    "obs_rate": obs,
-                    "brier_topk": br,
-                    "calib_gap": gap,
-                    "n_alerts": int(round(len(y_te) * k_pct / 100.0)),
-                })
+                rows.append(
+                    {
+                        "sigma": s,
+                        "k_pct": k_pct,
+                        "tree": tree,
+                        "mean_pred": mp,
+                        "obs_rate": obs,
+                        "brier_topk": br,
+                        "calib_gap": gap,
+                        "n_alerts": int(round(len(y_te) * k_pct / 100.0)),
+                    }
+                )
     pt_df = pd.DataFrame(rows)
-    pt_df.to_csv(OUT / "p8_calib_noise.tsv", sep="\t", index=False,
-                 float_format="%.6f")
+    pt_df.to_csv(OUT / "p8_calib_noise.tsv", sep="\t", index=False, float_format="%.6f")
     print(f"[p8_calib_noise] point estimates written: {len(pt_df)} rows")
 
     # --------------------------------------------------------- paired bootstrap
@@ -185,8 +190,7 @@ def main():
     boot_rows = []
     for s in SIGMAS:
         for k_pct in K_PCTS:
-            for tree_a, tree_b in (("24full", "20raw"),
-                                    ("24full", "4sensor")):
+            for tree_a, tree_b in (("24full", "20raw"), ("24full", "4sensor")):
                 pa = pred_cache[(tree_a, s)]
                 pb = pred_cache[(tree_b, s)]
                 # bootstrap paired samples
@@ -210,30 +214,29 @@ def main():
 
                 d_gap = gap_a - gap_b
                 d_brier = brier_a - brier_b
-                boot_rows.append({
-                    "sigma": s,
-                    "k_pct": k_pct,
-                    "tree_a": tree_a,
-                    "tree_b": tree_b,
-                    "delta_gap": float(d_gap.mean()),
-                    "gap_lo": float(np.percentile(d_gap, 2.5)),
-                    "gap_hi": float(np.percentile(d_gap, 97.5)),
-                    "excl_zero_gap": bool(
-                        np.percentile(d_gap, 2.5) > 0
-                        or np.percentile(d_gap, 97.5) < 0
-                    ),
-                    "delta_brier": float(d_brier.mean()),
-                    "brier_lo": float(np.percentile(d_brier, 2.5)),
-                    "brier_hi": float(np.percentile(d_brier, 97.5)),
-                    "excl_zero_brier": bool(
-                        np.percentile(d_brier, 2.5) > 0
-                        or np.percentile(d_brier, 97.5) < 0
-                    ),
-                })
+                boot_rows.append(
+                    {
+                        "sigma": s,
+                        "k_pct": k_pct,
+                        "tree_a": tree_a,
+                        "tree_b": tree_b,
+                        "delta_gap": float(d_gap.mean()),
+                        "gap_lo": float(np.percentile(d_gap, 2.5)),
+                        "gap_hi": float(np.percentile(d_gap, 97.5)),
+                        "excl_zero_gap": bool(
+                            np.percentile(d_gap, 2.5) > 0 or np.percentile(d_gap, 97.5) < 0
+                        ),
+                        "delta_brier": float(d_brier.mean()),
+                        "brier_lo": float(np.percentile(d_brier, 2.5)),
+                        "brier_hi": float(np.percentile(d_brier, 97.5)),
+                        "excl_zero_brier": bool(
+                            np.percentile(d_brier, 2.5) > 0 or np.percentile(d_brier, 97.5) < 0
+                        ),
+                    }
+                )
 
     boot_df = pd.DataFrame(boot_rows)
-    boot_df.to_csv(OUT / "p8_calib_noise_boot.tsv", sep="\t", index=False,
-                   float_format="%.6f")
+    boot_df.to_csv(OUT / "p8_calib_noise_boot.tsv", sep="\t", index=False, float_format="%.6f")
     print(f"[p8_calib_noise] bootstrap written: {len(boot_df)} rows")
 
     # ------------------------------------------------------------ summary
@@ -276,8 +279,7 @@ def main():
     sub = pt_df[pt_df.k_pct == 2.0]
     for tree in ("20raw", "24full", "4sensor"):
         ss = sub[sub.tree == tree]
-        ax.plot(ss.sigma, ss.calib_gap, "-o", color=colors[tree],
-                label=f"XGB-{tree}", linewidth=2)
+        ax.plot(ss.sigma, ss.calib_gap, "-o", color=colors[tree], label=f"XGB-{tree}", linewidth=2)
     ax.axhline(0, color="grey", lw=0.7, ls="--")
     ax.set_xlabel(r"$\sigma_{\text{mult}}$ (sensor noise scaling)")
     ax.set_ylabel(r"Calib gap = $\bar p_{\text{top-K}} - \pi_{\text{top-K}}$ at $K{=}2\%$")
@@ -289,8 +291,7 @@ def main():
     sub = pt_df[pt_df.sigma == 0.10]
     for tree in ("20raw", "24full", "4sensor"):
         ss = sub[sub.tree == tree]
-        ax.plot(ss.k_pct, ss.calib_gap, "-o", color=colors[tree],
-                label=f"XGB-{tree}", linewidth=2)
+        ax.plot(ss.k_pct, ss.calib_gap, "-o", color=colors[tree], label=f"XGB-{tree}", linewidth=2)
     ax.axhline(0, color="grey", lw=0.7, ls="--")
     ax.set_xlabel(r"$K$ budget (\% of test alerted)")
     ax.set_ylabel(r"Calib gap at $\sigma{=}0.10$")

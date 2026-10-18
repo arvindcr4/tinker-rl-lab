@@ -241,7 +241,11 @@ REPLACEMENTS: list[tuple[str, str, str]] = [
     # Semester 4 project guide.
     (r"Ramesh Prakash Guledgudd", "Anonymous", "name Ramesh Prakash Guledgudd -> Anonymous"),
     (r"Guledgudd", "Anonymous", "name Guledgudd -> Anonymous"),
-    (r"rameshpg@pes\.edu", "anonymous@example.com", "email rameshpg@pes.edu -> anonymous@example.com"),
+    (
+        r"rameshpg@pes\.edu",
+        "anonymous@example.com",
+        "email rameshpg@pes.edu -> anonymous@example.com",
+    ),
     (_LB + r"ArumugamKrishnan" + _LA, "anonymous", "handle ArumugamKrishnan -> anonymous"),
     # Local home-directory paths (machine/user identity).
     (r"/Users/arvind", "/home/anon", "home path /Users/arvind -> /home/anon"),
@@ -352,8 +356,12 @@ def _git_archive_into(dst: Path, revision: str | None = None) -> None:
 def _excluded(relpath: str) -> bool:
     parts = Path(relpath).parts
     name = Path(relpath).name.lower()
-    if (name == ".env" or name.startswith(".env.") or name in {"credentials", "credentials.json", "id_rsa", "id_ed25519"}
-            or Path(relpath).suffix.lower() in {".pem", ".key", ".p12", ".pfx"}):
+    if (
+        name == ".env"
+        or name.startswith(".env.")
+        or name in {"credentials", "credentials.json", "id_rsa", "id_ed25519"}
+        or Path(relpath).suffix.lower() in {".pem", ".key", ".p12", ".pfx"}
+    ):
         return True
     # Uninspectable content is excluded, including previously allowed binaries.
     if Path(relpath).suffix.lower() not in TEXT_EXTS or Path(relpath).suffix.lower() in BINARY_EXTS:
@@ -534,8 +542,14 @@ def _post_scan(root: Path) -> list[str]:
             text = data.decode("utf-8", errors="ignore")
         except Exception:
             text = data.decode("latin-1", errors="ignore")
-        credential = re.search(r"(?:hf_[A-Za-z0-9]{20,}|sk-[A-Za-z0-9_-]{20,}|gh[pousr]_[A-Za-z0-9]{20,}|-----BEGIN [A-Z ]*PRIVATE KEY-----)", text)
-        assignment = re.search(r"(?im)^\s*(?:[A-Z_]*(?:API_KEY|TOKEN|PASSWORD|SECRET))\s*=\s*['\"]?[A-Za-z0-9_/-]{8,}", text)
+        credential = re.search(
+            r"(?:hf_[A-Za-z0-9]{20,}|sk-[A-Za-z0-9_-]{20,}|gh[pousr]_[A-Za-z0-9]{20,}|-----BEGIN [A-Z ]*PRIVATE KEY-----)",
+            text,
+        )
+        assignment = re.search(
+            r"(?im)^\s*(?:[A-Z_]*(?:API_KEY|TOKEN|PASSWORD|SECRET))\s*=\s*['\"]?[A-Za-z0-9_/-]{8,}",
+            text,
+        )
         if _excluded(rel) or path.is_symlink() or credential or assignment or pattern.search(text):
             leaks.append(rel)
             continue
@@ -549,10 +563,15 @@ def _credential_scan(root: Path) -> None:
     scanner = shutil.which("gitleaks")
     if scanner is None:
         raise RuntimeError("Packaging blocked: gitleaks is required for credential scanning")
-    result = subprocess.run([scanner, "dir", "--no-banner", "--redact", "--exit-code", "2", str(root)],
-                            capture_output=True, text=True)
+    result = subprocess.run(
+        [scanner, "dir", "--no-banner", "--redact", "--exit-code", "2", str(root)],
+        capture_output=True,
+        text=True,
+    )
     if result.returncode != 0:
-        raise RuntimeError("Packaging blocked: credential scan failed or detected potential credentials; review locally with redaction")
+        raise RuntimeError(
+            "Packaging blocked: credential scan failed or detected potential credentials; review locally with redaction"
+        )
 
 
 def main() -> None:
@@ -561,6 +580,7 @@ def main() -> None:
     if STAGING.exists():
         shutil.rmtree(STAGING)
     import argparse
+
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--revision", required=True, help="Reviewed full commit SHA")
     args = parser.parse_args()

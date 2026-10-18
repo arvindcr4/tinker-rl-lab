@@ -7,6 +7,7 @@ Per-step (ΔR_t, ΔL_t) trajectory; condition E[ΔL | sign(ΔR), ZVF tier].
 Headline: on GSM8K CoT, GRPO's length growth is reward-aligned
 (positive E[ΔL | ΔR>0] − E[ΔL | ΔR<0]); Dr.GRPO's is uniformly shrunk.
 """
+
 import json
 import csv
 from pathlib import Path
@@ -16,15 +17,15 @@ RES = ROOT / "experiments" / "results"
 SRC = ROOT / "experiments" / "results"
 
 DATA_FILES = [
-    SRC / "drgrpo_gsm8k_cot_full.json",   # GSM8K CoT, G=16, 3 seeds each
-    SRC / "drgrpo_vs_grpo.json",          # arithmetic-easy, G=8, 5 seeds each
+    SRC / "drgrpo_gsm8k_cot_full.json",  # GSM8K CoT, G=16, 3 seeds each
+    SRC / "drgrpo_vs_grpo.json",  # arithmetic-easy, G=8, 5 seeds each
 ]
 
 # ZVF tier cuts (per-step zvf value)
-ZVF_HIGH = 0.70   # groups mostly homogeneous
-ZVF_LOW = 0.30    # groups mostly heterogeneous
+ZVF_HIGH = 0.70  # groups mostly homogeneous
+ZVF_LOW = 0.30  # groups mostly heterogeneous
 
-SMOOTH_K = 3      # centred moving-average window for R and L trajectories
+SMOOTH_K = 3  # centred moving-average window for R and L trajectories
 N_BOOT = 2000
 SEED = 20260702
 
@@ -65,11 +66,13 @@ def deltas(recs):
     """Compute (ΔR, ΔL) per consecutive pair, drop the first sample."""
     out = []
     for i in range(1, len(recs)):
-        out.append({
-            "dR": recs[i]["R"] - recs[i - 1]["R"],
-            "dL": recs[i]["L"] - recs[i - 1]["L"],
-            "Z": recs[i]["Z"],
-        })
+        out.append(
+            {
+                "dR": recs[i]["R"] - recs[i - 1]["R"],
+                "dL": recs[i]["L"] - recs[i - 1]["L"],
+                "Z": recs[i]["Z"],
+            }
+        )
     return out
 
 
@@ -104,6 +107,7 @@ def _safe(v):
 def paired_bootstrap(per_seed_grpo, per_seed_drgrpo, fn, n_boot=N_BOOT, seed=SEED):
     """Generic paired bootstrap across seeds. fn(list_of_dlist) -> scalar or None."""
     import random
+
     rng = random.Random(seed)
     seeds = list(range(len(per_seed_grpo)))
     diffs = []
@@ -118,7 +122,7 @@ def paired_bootstrap(per_seed_grpo, per_seed_drgrpo, fn, n_boot=N_BOOT, seed=SEE
     n = len(diffs)
     lo = diffs[int(0.025 * n)]
     hi = diffs[int(0.975 * n) - 1]
-    mean_diff = sum(d - g for g, d in zip(g_means, d_means)) / len(g_means)
+    mean_diff = sum(d - g for g, d in zip(g_means, d_means, strict=False)) / len(g_means)
     p_le0 = sum(1 for x in diffs if x <= 0) / n
     return {
         "n_pairs": len(g_means),
@@ -166,60 +170,72 @@ def main():
         common, g_lists, d_lists = align_pairs(grpo, drgrpo)
 
         # ---- per-run rows
-        for seed, glist, dlist in zip(common, g_lists, d_lists):
-            for algo_name, lst, full_run in (("grpo", glist, None),
-                                            ("dr_grpo", dlist, None)):
+        for seed, glist, dlist in zip(common, g_lists, d_lists, strict=False):
+            for algo_name, lst, _full_run in (("grpo", glist, None), ("dr_grpo", dlist, None)):
                 pass  # filled below
 
-        for seed, glist, dlist in zip(common, g_lists, d_lists):
+        for seed, glist, dlist in zip(common, g_lists, d_lists, strict=False):
             for algo_name, lst in (("grpo", glist), ("dr_grpo", dlist)):
                 # cells
-                for cond_label, sign in (("all", None),
-                                          ("pos", "pos"),
-                                          ("neg", "neg"),
-                                          ("zero", "zero")):
+                for cond_label, sign in (
+                    ("all", None),
+                    ("pos", "pos"),
+                    ("neg", "neg"),
+                    ("zero", "zero"),
+                ):
                     for tier_label in (None, "high", "mid", "low"):
                         key = f"{cond_label}_{tier_label or 'all'}"
                         m = cell_mean(lst, key_dR_sign=sign, zvf_tier=tier_label)
-                        per_run_rows.append({
-                            "experiment": exp,
-                            "algo": algo_name,
-                            "seed": seed,
-                            "cell": key,
-                            "mean_dL": round(m, 6) if m is not None else "",
-                            "n_steps": sum(
-                                1 for x in lst
-                                if (sign is None
-                                    or (sign == "pos" and x["dR"] > 0)
-                                    or (sign == "neg" and x["dR"] < 0)
-                                    or (sign == "zero" and abs(x["dR"]) <= 1e-9))
-                                and (tier_label is None
-                                     or (tier_label == "high" and x["Z"] >= ZVF_HIGH)
-                                     or (tier_label == "mid" and ZVF_LOW <= x["Z"] < ZVF_HIGH)
-                                     or (tier_label == "low" and x["Z"] < ZVF_LOW))
-                            ),
-                        })
+                        per_run_rows.append(
+                            {
+                                "experiment": exp,
+                                "algo": algo_name,
+                                "seed": seed,
+                                "cell": key,
+                                "mean_dL": round(m, 6) if m is not None else "",
+                                "n_steps": sum(
+                                    1
+                                    for x in lst
+                                    if (
+                                        sign is None
+                                        or (sign == "pos" and x["dR"] > 0)
+                                        or (sign == "neg" and x["dR"] < 0)
+                                        or (sign == "zero" and abs(x["dR"]) <= 1e-9)
+                                    )
+                                    and (
+                                        tier_label is None
+                                        or (tier_label == "high" and x["Z"] >= ZVF_HIGH)
+                                        or (tier_label == "mid" and ZVF_LOW <= x["Z"] < ZVF_HIGH)
+                                        or (tier_label == "low" and x["Z"] < ZVF_LOW)
+                                    )
+                                ),
+                            }
+                        )
 
         # ---- paired GRPO vs Dr.GRPO bootstrap on key cells
-        for cond_label, sign in (("all", None), ("pos", "pos"),
-                                  ("neg", "neg")):
+        for cond_label, sign in (("all", None), ("pos", "pos"), ("neg", "neg")):
             for tier_label in (None, "high", "mid", "low"):
                 key = f"{cond_label}_{tier_label or 'all'}"
                 b = paired_bootstrap(
-                    g_lists, d_lists,
+                    g_lists,
+                    d_lists,
                     lambda lst, s=sign, t=tier_label: cell_mean(lst, s, t),
                 )
-                paired_rows.append({
-                    "experiment": exp,
-                    "cell": key,
-                    "n_pairs": b["n_pairs"],
-                    "mean_grpo": round(b["mean_grpo"], 6) if b["mean_grpo"] is not None else "",
-                    "mean_drgrpo": round(b["mean_drgrpo"], 6) if b["mean_drgrpo"] is not None else "",
-                    "mean_diff": round(b["mean_diff"], 6),
-                    "ci_lo": round(b["ci_lo"], 6),
-                    "ci_hi": round(b["ci_hi"], 6),
-                    "p_le0": round(b["p_le0"], 4),
-                })
+                paired_rows.append(
+                    {
+                        "experiment": exp,
+                        "cell": key,
+                        "n_pairs": b["n_pairs"],
+                        "mean_grpo": round(b["mean_grpo"], 6) if b["mean_grpo"] is not None else "",
+                        "mean_drgrpo": round(b["mean_drgrpo"], 6)
+                        if b["mean_drgrpo"] is not None
+                        else "",
+                        "mean_diff": round(b["mean_diff"], 6),
+                        "ci_lo": round(b["ci_lo"], 6),
+                        "ci_hi": round(b["ci_hi"], 6),
+                        "p_le0": round(b["p_le0"], 4),
+                    }
+                )
 
     # ---- The headline statistics:
     # alignment = E[dL | dR>0] - E[dL | dR<0]
@@ -282,50 +298,125 @@ def main():
         b_comp_neg = paired_bootstrap(g_lists, d_lists, compression_on_neg)
 
         for label, bres, interp_fn in (
-            ("alignment_all", b_align,
-             lambda x: "GRPO more reward-responsive than Dr.GRPO"
-                       if x["mean_diff"] < 0 else "inconclusive"),
-            ("|alignment|_all", b_abs_align,
-             lambda x: "Dr.GRPO has weaker reward-direction coupling"
-                       if x["mean_diff"] < 0 else "inconclusive"),
-            ("alignment_low_zvf", b_low,
-             lambda x: "Dr.GRPO loses alignment in low-ZVF (heterogeneous groups)"
-                       if x["mean_diff"] < 0 else "inconclusive"),
-            ("alignment_high_zvf", b_high,
-             lambda x: "Dr.GRPO loses alignment in high-ZVF (homogeneous groups)"
-                       if x["mean_diff"] < 0 else "inconclusive"),
-            ("raw_drift_all", b_drift,
-             lambda x: "Dr.GRPO has higher baseline length drift (less compression)"
-                       if x["mean_diff"] > 0 else "inconclusive"),
-            ("compression_on_pos_dR", b_comp_pos,
-             lambda x: "GRPO compresses more on reward-up steps"
-                       if x["mean_diff"] > 0 else "inconclusive"),
-            ("compression_on_neg_dR", b_comp_neg,
-             lambda x: "Dr.GRPO compresses less on reward-down steps"
-                       if x["mean_diff"] < 0 else "inconclusive"),
+            (
+                "alignment_all",
+                b_align,
+                lambda x: (
+                    "GRPO more reward-responsive than Dr.GRPO"
+                    if x["mean_diff"] < 0
+                    else "inconclusive"
+                ),
+            ),
+            (
+                "|alignment|_all",
+                b_abs_align,
+                lambda x: (
+                    "Dr.GRPO has weaker reward-direction coupling"
+                    if x["mean_diff"] < 0
+                    else "inconclusive"
+                ),
+            ),
+            (
+                "alignment_low_zvf",
+                b_low,
+                lambda x: (
+                    "Dr.GRPO loses alignment in low-ZVF (heterogeneous groups)"
+                    if x["mean_diff"] < 0
+                    else "inconclusive"
+                ),
+            ),
+            (
+                "alignment_high_zvf",
+                b_high,
+                lambda x: (
+                    "Dr.GRPO loses alignment in high-ZVF (homogeneous groups)"
+                    if x["mean_diff"] < 0
+                    else "inconclusive"
+                ),
+            ),
+            (
+                "raw_drift_all",
+                b_drift,
+                lambda x: (
+                    "Dr.GRPO has higher baseline length drift (less compression)"
+                    if x["mean_diff"] > 0
+                    else "inconclusive"
+                ),
+            ),
+            (
+                "compression_on_pos_dR",
+                b_comp_pos,
+                lambda x: (
+                    "GRPO compresses more on reward-up steps"
+                    if x["mean_diff"] > 0
+                    else "inconclusive"
+                ),
+            ),
+            (
+                "compression_on_neg_dR",
+                b_comp_neg,
+                lambda x: (
+                    "Dr.GRPO compresses less on reward-down steps"
+                    if x["mean_diff"] < 0
+                    else "inconclusive"
+                ),
+            ),
         ):
-            summary_rows.append({
-                "experiment": exp,
-                "metric": label,
-                "n_pairs": bres["n_pairs"],
-                "mean_grpo": round(bres["mean_grpo"], 6) if bres["mean_grpo"] is not None else "",
-                "mean_drgrpo": round(bres["mean_drgrpo"], 6) if bres["mean_drgrpo"] is not None else "",
-                "mean_diff": round(bres["mean_diff"], 6),
-                "ci_lo": round(bres["ci_lo"], 6),
-                "ci_hi": round(bres["ci_hi"], 6),
-                "p_le0": round(bres["p_le0"], 4),
-                "interpretation": interp_fn(bres),
-            })
+            summary_rows.append(
+                {
+                    "experiment": exp,
+                    "metric": label,
+                    "n_pairs": bres["n_pairs"],
+                    "mean_grpo": round(bres["mean_grpo"], 6)
+                    if bres["mean_grpo"] is not None
+                    else "",
+                    "mean_drgrpo": round(bres["mean_drgrpo"], 6)
+                    if bres["mean_drgrpo"] is not None
+                    else "",
+                    "mean_diff": round(bres["mean_diff"], 6),
+                    "ci_lo": round(bres["ci_lo"], 6),
+                    "ci_hi": round(bres["ci_hi"], 6),
+                    "p_le0": round(bres["p_le0"], 4),
+                    "interpretation": interp_fn(bres),
+                }
+            )
 
-    write_tsv(RES / "length_bias_iter64_per_run.tsv", per_run_rows,
-              fieldnames=["experiment", "algo", "seed", "cell", "mean_dL", "n_steps"])
-    write_tsv(RES / "length_bias_iter64_paired.tsv", paired_rows,
-              fieldnames=["experiment", "cell", "n_pairs", "mean_grpo",
-                          "mean_drgrpo", "mean_diff", "ci_lo", "ci_hi", "p_le0"])
-    write_tsv(RES / "length_bias_iter64_summary.tsv", summary_rows,
-              fieldnames=["experiment", "metric", "n_pairs", "mean_grpo",
-                          "mean_drgrpo", "mean_diff", "ci_lo", "ci_hi",
-                          "p_le0", "interpretation"])
+    write_tsv(
+        RES / "length_bias_iter64_per_run.tsv",
+        per_run_rows,
+        fieldnames=["experiment", "algo", "seed", "cell", "mean_dL", "n_steps"],
+    )
+    write_tsv(
+        RES / "length_bias_iter64_paired.tsv",
+        paired_rows,
+        fieldnames=[
+            "experiment",
+            "cell",
+            "n_pairs",
+            "mean_grpo",
+            "mean_drgrpo",
+            "mean_diff",
+            "ci_lo",
+            "ci_hi",
+            "p_le0",
+        ],
+    )
+    write_tsv(
+        RES / "length_bias_iter64_summary.tsv",
+        summary_rows,
+        fieldnames=[
+            "experiment",
+            "metric",
+            "n_pairs",
+            "mean_grpo",
+            "mean_drgrpo",
+            "mean_diff",
+            "ci_lo",
+            "ci_hi",
+            "p_le0",
+            "interpretation",
+        ],
+    )
 
     print("=== iter64 CLRRD summary ===")
     for r in summary_rows:

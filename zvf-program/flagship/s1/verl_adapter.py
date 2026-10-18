@@ -164,7 +164,9 @@ def load_pinned_runtime() -> tuple[Any, Any, VerlProvenance]:
     core_source = Path(inspect.getsourcefile(core_algos) or "").resolve()
     functional_source = Path(inspect.getsourcefile(verl_functional) or "").resolve()
     if _repo_root() in core_source.parents or _repo_root() in functional_source.parents:
-        raise VerlPinError("import resolved the repository-local verl wrapper, not the external distribution")
+        raise VerlPinError(
+            "import resolved the repository-local verl wrapper, not the external distribution"
+        )
 
     dist = distribution("verl")
     metadata_source = Path(dist._path) / "METADATA"  # type: ignore[attr-defined]
@@ -257,7 +259,9 @@ def verl_trace(
         raise VerlPinError("S1 fixture harness must run on CPU")
 
     rewards_t = torch.as_tensor(rewards, dtype=torch.float64, device="cpu")
-    logps_t = torch.as_tensor(logps, dtype=torch.float64, device="cpu").detach().requires_grad_(True)
+    logps_t = (
+        torch.as_tensor(logps, dtype=torch.float64, device="cpu").detach().requires_grad_(True)
+    )
     old_t = torch.as_tensor(old_logps, dtype=torch.float64, device="cpu")
     mask_t = torch.as_tensor(mask, dtype=torch.float64, device="cpu")
     _validate_fixture(rewards_t, logps_t, old_t, mask_t)
@@ -320,7 +324,9 @@ def verl_intended_trace(
         raise ValueError(f"unknown objective arm: {arm}")
 
     rewards_t = torch.as_tensor(rewards, dtype=torch.float64, device="cpu")
-    logps_t = torch.as_tensor(logps, dtype=torch.float64, device="cpu").detach().requires_grad_(True)
+    logps_t = (
+        torch.as_tensor(logps, dtype=torch.float64, device="cpu").detach().requires_grad_(True)
+    )
     old_t = torch.as_tensor(old_logps, dtype=torch.float64, device="cpu")
     mask_t = torch.as_tensor(mask, dtype=torch.float64, device="cpu")
     _validate_fixture(rewards_t, logps_t, old_t, mask_t)

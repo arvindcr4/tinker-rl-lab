@@ -16,33 +16,27 @@ import time
 app = modal.App("tinkerrl-benchmark")
 results_vol = modal.Volume.from_name("tinkerrl-results", create_if_missing=True)
 
-llm_image = (
-    modal.Image.debian_slim(python_version="3.11")
-    .pip_install(
-        # Pinned to the uv.lock frozen versions (see requirements.txt).
-        "torch==2.7.1",
-        "transformers==5.5.4",
-        "trl==1.2.0",
-        "datasets==4.8.4",
-        "accelerate==1.13.0",
-        "peft==0.19.1",
-        "safetensors==0.7.0",
-        "huggingface-hub==1.11.0",
-        "numpy==2.2.6",
-        "scipy==1.17.1",
-    )
+llm_image = modal.Image.debian_slim(python_version="3.11").pip_install(
+    # Pinned to the uv.lock frozen versions (see requirements.txt).
+    "torch==2.7.1",
+    "transformers==5.5.4",
+    "trl==1.2.0",
+    "datasets==4.8.4",
+    "accelerate==1.13.0",
+    "peft==0.19.1",
+    "safetensors==0.7.0",
+    "huggingface-hub==1.11.0",
+    "numpy==2.2.6",
+    "scipy==1.17.1",
 )
 
-rl_image = (
-    modal.Image.debian_slim(python_version="3.11")
-    .pip_install(
-        # Pinned to the uv.lock frozen versions (see requirements.txt).
-        "torch==2.7.1",
-        "numpy==2.2.6",
-        "scipy==1.17.1",
-        "gymnasium==1.2.3",
-        "stable-baselines3==2.8.0",
-    )
+rl_image = modal.Image.debian_slim(python_version="3.11").pip_install(
+    # Pinned to the uv.lock frozen versions (see requirements.txt).
+    "torch==2.7.1",
+    "numpy==2.2.6",
+    "scipy==1.17.1",
+    "gymnasium==1.2.3",
+    "stable-baselines3==2.8.0",
 )
 
 SEEDS = [42, 123, 456, 789, 1024]  # 5 seeds, matching the paper's cross-library table
@@ -81,7 +75,9 @@ def run_grpo_math(seed: int) -> dict:
         tokenizer.pad_token = tokenizer.eos_token
 
     model = AutoModelForCausalLM.from_pretrained(
-        model_name, torch_dtype=torch.bfloat16, device_map=None if "LOCAL_RANK" in os.environ else "auto",
+        model_name,
+        torch_dtype=torch.bfloat16,
+        device_map=None if "LOCAL_RANK" in os.environ else "auto",
         trust_remote_code=True,
     )
 
@@ -90,10 +86,12 @@ def run_grpo_math(seed: int) -> dict:
     for _ in range(500):
         a = random.randint(1, 99)
         b = random.randint(1, 99)
-        problems.append({
-            "prompt": f"What is {a} + {b}? Answer with just the number.",
-            "answer": str(a + b),
-        })
+        problems.append(
+            {
+                "prompt": f"What is {a} + {b}? Answer with just the number.",
+                "answer": str(a + b),
+            }
+        )
     dataset = Dataset.from_list(problems)
 
     # Reward function — TRL passes list of completions as strings or list of dicts
@@ -106,7 +104,7 @@ def run_grpo_math(seed: int) -> dict:
                 text = comp.get("content", str(comp))
             else:
                 text = str(comp)
-            numbers = re.findall(r'\b\d+\b', text)
+            numbers = re.findall(r"\b\d+\b", text)
             rewards.append(1.0 if numbers else 0.0)
         return rewards
 
@@ -161,8 +159,8 @@ def run_grpo_math(seed: int) -> dict:
         inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
         with torch.no_grad():
             out = model.generate(**inputs, max_new_tokens=8, temperature=0.1, do_sample=True)
-        text = tokenizer.decode(out[0][inputs["input_ids"].shape[1]:], skip_special_tokens=True)
-        numbers = re.findall(r'\b\d+\b', text)
+        text = tokenizer.decode(out[0][inputs["input_ids"].shape[1] :], skip_special_tokens=True)
+        numbers = re.findall(r"\b\d+\b", text)
         if numbers and int(numbers[-1]) == a + b:
             correct += 1
 
@@ -171,8 +169,8 @@ def run_grpo_math(seed: int) -> dict:
         "experiment": "trl_grpo_math",
         "seed": seed,
         "final_accuracy": accuracy,
-        "train_loss": train_result.training_loss if hasattr(train_result, 'training_loss') else 0,
-        "train_steps": train_result.global_step if hasattr(train_result, 'global_step') else 0,
+        "train_loss": train_result.training_loss if hasattr(train_result, "training_loss") else 0,
+        "train_steps": train_result.global_step if hasattr(train_result, "global_step") else 0,
         "elapsed_seconds": elapsed,
         "gpu": torch.cuda.get_device_name(0) if torch.cuda.is_available() else "cpu",
         "model": model_name,
@@ -211,18 +209,30 @@ def run_sb3_math(seed: int) -> dict:
             self.observation_space = spaces.Box(low=0, high=max_num, shape=(2,), dtype=np.float32)
             self.action_space = spaces.Discrete(max_num * 2 + 1)
             self.a, self.b = 0, 0
+
         def reset(self, seed=None, **kw):
             super().reset(seed=seed)
             self.a = np.random.randint(1, self.max_num + 1)
             self.b = np.random.randint(1, self.max_num + 1)
             return np.array([self.a, self.b], dtype=np.float32), {}
+
         def step(self, action):
             correct = self.a + self.b
             r = 1.0 if int(action) == correct else 0.0
-            return np.array([self.a, self.b], dtype=np.float32), r, True, False, {"correct": int(action)==correct}
+            return (
+                np.array([self.a, self.b], dtype=np.float32),
+                r,
+                True,
+                False,
+                {"correct": int(action) == correct},
+            )
 
     class AccuracyTracker(BaseCallback):
-        def __init__(self): super().__init__(); self.accuracies = []; self.step_at_95 = None
+        def __init__(self):
+            super().__init__()
+            self.accuracies = []
+            self.step_at_95 = None
+
         def _on_step(self):
             if self.n_calls % 2048 == 0:
                 env = ArithmeticEnv()
@@ -231,7 +241,8 @@ def run_sb3_math(seed: int) -> dict:
                     o, _ = env.reset()
                     a, _ = self.model.predict(o, deterministic=True)
                     _, _, _, _, i = env.step(a)
-                    if i["correct"]: c += 1
+                    if i["correct"]:
+                        c += 1
                 acc = c / 200
                 self.accuracies.append((self.num_timesteps, acc))
                 if acc >= 0.95 and self.step_at_95 is None:
@@ -239,7 +250,16 @@ def run_sb3_math(seed: int) -> dict:
             return True
 
     env = DummyVecEnv([lambda: ArithmeticEnv()])
-    model = PPO("MlpPolicy", env, learning_rate=1e-4, n_steps=2048, batch_size=64, n_epochs=10, seed=seed, verbose=0)
+    model = PPO(
+        "MlpPolicy",
+        env,
+        learning_rate=1e-4,
+        n_steps=2048,
+        batch_size=64,
+        n_epochs=10,
+        seed=seed,
+        verbose=0,
+    )
     tracker = AccuracyTracker()
 
     t0 = time.time()
@@ -253,12 +273,16 @@ def run_sb3_math(seed: int) -> dict:
         obs, _ = test_env.reset()
         action, _ = model.predict(obs, deterministic=True)
         _, _, _, _, info = test_env.step(action)
-        if info["correct"]: correct += 1
+        if info["correct"]:
+            correct += 1
 
     accuracy = correct / 1000
     result = {
-        "experiment": "sb3_ppo_math", "seed": seed, "final_accuracy": accuracy,
-        "steps_to_95": tracker.step_at_95, "elapsed_seconds": elapsed,
+        "experiment": "sb3_ppo_math",
+        "seed": seed,
+        "final_accuracy": accuracy,
+        "steps_to_95": tracker.step_at_95,
+        "elapsed_seconds": elapsed,
         "learning_curve": tracker.accuracies,
     }
 
@@ -283,7 +307,9 @@ def run_cleanrl_math(seed: int) -> dict:
     import torch.optim as optim
     from torch.distributions.categorical import Categorical
 
-    random.seed(seed); np.random.seed(seed); torch.manual_seed(seed)
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     max_num = 99
     max_answer = max_num * 2 + 1
@@ -294,10 +320,16 @@ def run_cleanrl_math(seed: int) -> dict:
             self.net = nn.Sequential(nn.Linear(2, 256), nn.ReLU(), nn.Linear(256, 256), nn.ReLU())
             self.actor = nn.Linear(256, max_answer)
             self.critic = nn.Linear(256, 1)
-        def get_value(self, x): return self.critic(self.net(x))
+
+        def get_value(self, x):
+            return self.critic(self.net(x))
+
         def get_action_and_value(self, x, action=None):
-            h = self.net(x); logits = self.actor(h); probs = Categorical(logits=logits)
-            if action is None: action = probs.sample()
+            h = self.net(x)
+            logits = self.actor(h)
+            probs = Categorical(logits=logits)
+            if action is None:
+                action = probs.sample()
             return action, probs.log_prob(action), probs.entropy(), self.critic(h)
 
     agent = Agent().to(device)
@@ -308,7 +340,9 @@ def run_cleanrl_math(seed: int) -> dict:
     gamma, gae_lambda = 0.99, 0.95
     num_updates = total_timesteps // (num_steps * num_envs)
 
-    accuracies = []; step_at_95 = None; global_step = 0
+    accuracies = []
+    step_at_95 = None
+    global_step = 0
     t0 = time.time()
 
     for update in range(1, num_updates + 1):
@@ -319,66 +353,94 @@ def run_cleanrl_math(seed: int) -> dict:
         val_buf = torch.zeros((num_steps, num_envs)).to(device)
 
         for step in range(num_steps):
-            a = np.random.randint(1, max_num+1, size=num_envs)
-            b = np.random.randint(1, max_num+1, size=num_envs)
-            obs = torch.FloatTensor(np.stack([a,b], axis=1)).to(device)
+            a = np.random.randint(1, max_num + 1, size=num_envs)
+            b = np.random.randint(1, max_num + 1, size=num_envs)
+            obs = torch.FloatTensor(np.stack([a, b], axis=1)).to(device)
             with torch.no_grad():
                 action, logprob, _, value = agent.get_action_and_value(obs)
-            rewards = (action.cpu().numpy() == a+b).astype(np.float32)
-            obs_buf[step]=obs; act_buf[step]=action; logp_buf[step]=logprob
-            rew_buf[step]=torch.FloatTensor(rewards).to(device); val_buf[step]=value.flatten()
+            rewards = (action.cpu().numpy() == a + b).astype(np.float32)
+            obs_buf[step] = obs
+            act_buf[step] = action
+            logp_buf[step] = logprob
+            rew_buf[step] = torch.FloatTensor(rewards).to(device)
+            val_buf[step] = value.flatten()
             global_step += num_envs
 
         with torch.no_grad():
-            advantages = torch.zeros_like(rew_buf); lastgaelam = 0
+            advantages = torch.zeros_like(rew_buf)
+            lastgaelam = 0
             for t in reversed(range(num_steps)):
-                nv = val_buf[t+1] if t+1 < num_steps else torch.zeros(num_envs).to(device)
-                delta = rew_buf[t] + gamma*nv - val_buf[t]
-                advantages[t] = lastgaelam = delta + gamma*gae_lambda*lastgaelam
+                nv = val_buf[t + 1] if t + 1 < num_steps else torch.zeros(num_envs).to(device)
+                delta = rew_buf[t] + gamma * nv - val_buf[t]
+                advantages[t] = lastgaelam = delta + gamma * gae_lambda * lastgaelam
             returns = advantages + val_buf
 
-        b_obs=obs_buf.reshape(-1,2); b_act=act_buf.reshape(-1); b_logp=logp_buf.reshape(-1)
-        b_adv=advantages.reshape(-1); b_ret=returns.reshape(-1)
-        batch_size=num_steps*num_envs; b_inds=np.arange(batch_size)
+        b_obs = obs_buf.reshape(-1, 2)
+        b_act = act_buf.reshape(-1)
+        b_logp = logp_buf.reshape(-1)
+        b_adv = advantages.reshape(-1)
+        b_ret = returns.reshape(-1)
+        batch_size = num_steps * num_envs
+        b_inds = np.arange(batch_size)
 
         for _ in range(update_epochs):
             np.random.shuffle(b_inds)
             for start in range(0, batch_size, minibatch_size):
-                mb = b_inds[start:start+minibatch_size]
-                _, newlogprob, entropy, newvalue = agent.get_action_and_value(b_obs[mb], b_act[mb].long())
+                mb = b_inds[start : start + minibatch_size]
+                _, newlogprob, entropy, newvalue = agent.get_action_and_value(
+                    b_obs[mb], b_act[mb].long()
+                )
                 ratio = (newlogprob - b_logp[mb]).exp()
-                mb_adv = b_adv[mb]; mb_adv = (mb_adv - mb_adv.mean())/(mb_adv.std()+1e-8)
-                loss = torch.max(-mb_adv*ratio, -mb_adv*torch.clamp(ratio,1-clip_coef,1+clip_coef)).mean()
-                loss += 0.5*((newvalue.flatten()-b_ret[mb])**2).mean() - 0.01*entropy.mean()
-                optimizer.zero_grad(); loss.backward()
-                nn.utils.clip_grad_norm_(agent.parameters(), 0.5); optimizer.step()
+                mb_adv = b_adv[mb]
+                mb_adv = (mb_adv - mb_adv.mean()) / (mb_adv.std() + 1e-8)
+                loss = torch.max(
+                    -mb_adv * ratio, -mb_adv * torch.clamp(ratio, 1 - clip_coef, 1 + clip_coef)
+                ).mean()
+                loss += 0.5 * ((newvalue.flatten() - b_ret[mb]) ** 2).mean() - 0.01 * entropy.mean()
+                optimizer.zero_grad()
+                loss.backward()
+                nn.utils.clip_grad_norm_(agent.parameters(), 0.5)
+                optimizer.step()
 
         # Track accuracy every 5 updates
         if update % 5 == 0:
-            agent.eval(); c = 0
+            agent.eval()
+            c = 0
             for _ in range(200):
-                aa = np.random.randint(1, max_num+1); bb = np.random.randint(1, max_num+1)
-                o = torch.FloatTensor([[aa,bb]]).to(device)
-                with torch.no_grad(): act, _, _, _ = agent.get_action_and_value(o)
-                if act.item() == aa+bb: c += 1
-            acc = c/200; accuracies.append((global_step, acc))
-            if acc >= 0.95 and step_at_95 is None: step_at_95 = global_step
+                aa = np.random.randint(1, max_num + 1)
+                bb = np.random.randint(1, max_num + 1)
+                o = torch.FloatTensor([[aa, bb]]).to(device)
+                with torch.no_grad():
+                    act, _, _, _ = agent.get_action_and_value(o)
+                if act.item() == aa + bb:
+                    c += 1
+            acc = c / 200
+            accuracies.append((global_step, acc))
+            if acc >= 0.95 and step_at_95 is None:
+                step_at_95 = global_step
             agent.train()
 
     elapsed = time.time() - t0
 
     # Final eval
-    agent.eval(); correct = 0
+    agent.eval()
+    correct = 0
     for _ in range(1000):
-        a = np.random.randint(1, max_num+1); b = np.random.randint(1, max_num+1)
-        o = torch.FloatTensor([[a,b]]).to(device)
-        with torch.no_grad(): act, _, _, _ = agent.get_action_and_value(o)
-        if act.item() == a+b: correct += 1
+        a = np.random.randint(1, max_num + 1)
+        b = np.random.randint(1, max_num + 1)
+        o = torch.FloatTensor([[a, b]]).to(device)
+        with torch.no_grad():
+            act, _, _, _ = agent.get_action_and_value(o)
+        if act.item() == a + b:
+            correct += 1
 
-    accuracy = correct/1000
+    accuracy = correct / 1000
     result = {
-        "experiment": "cleanrl_ppo_math", "seed": seed, "final_accuracy": accuracy,
-        "steps_to_95": step_at_95, "elapsed_seconds": elapsed,
+        "experiment": "cleanrl_ppo_math",
+        "seed": seed,
+        "final_accuracy": accuracy,
+        "steps_to_95": step_at_95,
+        "elapsed_seconds": elapsed,
         "learning_curve": accuracies,
     }
 
@@ -401,17 +463,28 @@ def run_tianshou_math(seed: int) -> dict:
     import torch
     import torch.nn as nn
 
-    random.seed(seed); np.random.seed(seed); torch.manual_seed(seed)
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    max_num = 99; max_answer = max_num*2+1
+    max_num = 99
+    max_answer = max_num * 2 + 1
 
     # Tianshou-style network (wider)
     class TianshouAgent(nn.Module):
         def __init__(self):
             super().__init__()
-            self.net = nn.Sequential(nn.Linear(2,512), nn.ReLU(), nn.Linear(512,512), nn.ReLU(), nn.Linear(512,256), nn.ReLU())
+            self.net = nn.Sequential(
+                nn.Linear(2, 512),
+                nn.ReLU(),
+                nn.Linear(512, 512),
+                nn.ReLU(),
+                nn.Linear(512, 256),
+                nn.ReLU(),
+            )
             self.actor = nn.Linear(256, max_answer)
             self.critic = nn.Linear(256, 1)
+
         def forward(self, x):
             h = self.net(x)
             return self.actor(h), self.critic(h)
@@ -419,14 +492,16 @@ def run_tianshou_math(seed: int) -> dict:
     agent = TianshouAgent().to(device)
     optimizer = torch.optim.Adam(agent.parameters(), lr=3e-4)
 
-    accuracies = []; step_at_95 = None; global_step = 0
+    accuracies = []
+    step_at_95 = None
+    global_step = 0
     t0 = time.time()
 
     for epoch in range(100):
         batch_size = 1000
-        a = np.random.randint(1, max_num+1, size=batch_size)
-        b = np.random.randint(1, max_num+1, size=batch_size)
-        obs = torch.FloatTensor(np.stack([a,b], axis=1)).to(device)
+        a = np.random.randint(1, max_num + 1, size=batch_size)
+        b = np.random.randint(1, max_num + 1, size=batch_size)
+        obs = torch.FloatTensor(np.stack([a, b], axis=1)).to(device)
         answers = a + b
 
         logits, values = agent(obs)
@@ -445,7 +520,8 @@ def run_tianshou_math(seed: int) -> dict:
         entropy_loss = -dist.entropy().mean()
         loss = pg_loss + 0.5 * v_loss + 0.01 * entropy_loss
 
-        optimizer.zero_grad(); loss.backward()
+        optimizer.zero_grad()
+        loss.backward()
         torch.nn.utils.clip_grad_norm_(agent.parameters(), 0.5)
         optimizer.step()
         global_step += batch_size
@@ -455,28 +531,40 @@ def run_tianshou_math(seed: int) -> dict:
             agent.eval()
             c = 0
             for _ in range(200):
-                aa = np.random.randint(1, max_num+1); bb = np.random.randint(1, max_num+1)
-                o = torch.FloatTensor([[aa,bb]]).to(device)
-                with torch.no_grad(): lo, _ = agent(o)
-                if lo.argmax().item() == aa+bb: c += 1
-            acc = c/200; accuracies.append((global_step, acc))
-            if acc >= 0.95 and step_at_95 is None: step_at_95 = global_step
+                aa = np.random.randint(1, max_num + 1)
+                bb = np.random.randint(1, max_num + 1)
+                o = torch.FloatTensor([[aa, bb]]).to(device)
+                with torch.no_grad():
+                    lo, _ = agent(o)
+                if lo.argmax().item() == aa + bb:
+                    c += 1
+            acc = c / 200
+            accuracies.append((global_step, acc))
+            if acc >= 0.95 and step_at_95 is None:
+                step_at_95 = global_step
             agent.train()
 
     elapsed = time.time() - t0
 
     # Final eval
-    agent.eval(); correct = 0
+    agent.eval()
+    correct = 0
     for _ in range(1000):
-        aa = np.random.randint(1, max_num+1); bb = np.random.randint(1, max_num+1)
-        o = torch.FloatTensor([[aa,bb]]).to(device)
-        with torch.no_grad(): lo, _ = agent(o)
-        if lo.argmax().item() == aa+bb: correct += 1
+        aa = np.random.randint(1, max_num + 1)
+        bb = np.random.randint(1, max_num + 1)
+        o = torch.FloatTensor([[aa, bb]]).to(device)
+        with torch.no_grad():
+            lo, _ = agent(o)
+        if lo.argmax().item() == aa + bb:
+            correct += 1
 
-    accuracy = correct/1000
+    accuracy = correct / 1000
     result = {
-        "experiment": "tianshou_ppo_math", "seed": seed, "final_accuracy": accuracy,
-        "steps_to_95": step_at_95, "elapsed_seconds": elapsed,
+        "experiment": "tianshou_ppo_math",
+        "seed": seed,
+        "final_accuracy": accuracy,
+        "steps_to_95": step_at_95,
+        "elapsed_seconds": elapsed,
         "learning_curve": accuracies,
     }
 
@@ -534,7 +622,9 @@ def main():
             ci_lo = mean_acc - 1.96 * se_acc
             ci_hi = mean_acc + 1.96 * se_acc
             steps_str = f", steps_to_95={np.mean(steps):.0f}" if steps else ""
-            print(f"  {exp_name}: {mean_acc:.3f} ± {se_acc:.3f}  95%CI=[{ci_lo:.3f}, {ci_hi:.3f}]{steps_str}")
+            print(
+                f"  {exp_name}: {mean_acc:.3f} ± {se_acc:.3f}  95%CI=[{ci_lo:.3f}, {ci_hi:.3f}]{steps_str}"
+            )
 
     # Save combined results
     with open("modal_results_all.json", "w") as f:

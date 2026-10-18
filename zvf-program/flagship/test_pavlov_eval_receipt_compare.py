@@ -8,6 +8,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from flagship import pavlov_eval_receipt_compare as compare
+import pytest
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -18,7 +19,9 @@ def _hex(char: str, length: int) -> str:
     return char * length
 
 
-def _receipt(*, source_kind: str, successes: set[int], adapter: str | None = None) -> dict[str, object]:
+def _receipt(
+    *, source_kind: str, successes: set[int], adapter: str | None = None
+) -> dict[str, object]:
     base_revision = _hex("a", 40)
     tokenizer_revision = _hex("b", 40)
     adapter_revision = adapter
@@ -53,7 +56,9 @@ def _receipt(*, source_kind: str, successes: set[int], adapter: str | None = Non
     receipt: dict[str, object] = {
         "schema_version": "pavlov-xlam-eval-v1",
         "source_kind": source_kind,
-        "evaluated_path": "Qwen/Qwen3.6-35B-A3B" if source_kind == "base_model" else "org/xlam-adapter",
+        "evaluated_path": "Qwen/Qwen3.6-35B-A3B"
+        if source_kind == "base_model"
+        else "org/xlam-adapter",
         "tokenizer_model": "Qwen/Qwen3.6-35B-A3B",
         "dataset_id": "Salesforce/xlam-function-calling-60k",
         "dataset_split": "frozen-xlam-100",
@@ -90,7 +95,9 @@ def _receipt(*, source_kind: str, successes: set[int], adapter: str | None = Non
             "model_id": "Qwen/Qwen3.6-35B-A3B",
         },
         "hf": {
-            "repo_id": "Qwen/Qwen3.6-35B-A3B" if source_kind == "base_model" else "org/xlam-adapter",
+            "repo_id": "Qwen/Qwen3.6-35B-A3B"
+            if source_kind == "base_model"
+            else "org/xlam-adapter",
             "revision": base_revision if source_kind == "base_model" else adapter,
             "base_model_revision": base_revision,
         },
@@ -106,7 +113,7 @@ class PavlovEvalReceiptCompareTests(unittest.TestCase):
         self.assertAlmostEqual(compare.wilson_uncertainty(0, 100)["wilson_low"], 0)
         self.assertAlmostEqual(compare.wilson_uncertainty(100, 100)["wilson_high"], 1)
         for k, n in ((-1, 100), (101, 100), (0, 0)):
-            with self.assertRaises(ValueError):
+            with pytest.raises(ValueError):
                 compare.wilson_uncertainty(k, n)
 
     def test_valid_paired_component_comparison_passes(self) -> None:
@@ -115,13 +122,13 @@ class PavlovEvalReceiptCompareTests(unittest.TestCase):
             source_kind="sampler_path", successes=set(range(10)), adapter=_hex("4", 40)
         )
         result = compare.compare_receipts(base, trained)
-        self.assertEqual(result["status"], "PASS")
-        self.assertEqual(result["base"]["successes"], 7)
-        self.assertEqual(result["trained"]["successes"], 10)
-        self.assertEqual(result["paired"]["trained_only_successes"], 3)
-        self.assertEqual(result["paired"]["base_only_successes"], 0)
-        self.assertEqual(result["claim_boundary"]["component_only"], True)
-        self.assertEqual(result["claim_boundary"]["domains"], ["tool_use"])
+        assert result["status"] == "PASS"
+        assert result["base"]["successes"] == 7
+        assert result["trained"]["successes"] == 10
+        assert result["paired"]["trained_only_successes"] == 3
+        assert result["paired"]["base_only_successes"] == 0
+        assert result["claim_boundary"]["component_only"] == True
+        assert result["claim_boundary"]["domains"] == ["tool_use"]
 
     def test_frozen_live_base_is_counted_but_blocked_without_new_provenance_contract(self) -> None:
         base = json.loads(BASE_RECEIPT.read_text(encoding="utf-8"))
@@ -129,11 +136,11 @@ class PavlovEvalReceiptCompareTests(unittest.TestCase):
             source_kind="sampler_path", successes=set(range(10)), adapter=_hex("4", 40)
         )
         result = compare.compare_receipts(base, trained)
-        self.assertEqual(result["base"]["examples"], 100)
-        self.assertEqual(result["base"]["successes"], 7)
-        self.assertEqual(result["status"], "BLOCKED")
-        self.assertTrue(any("base.provenance" in error for error in result["errors"]))
-        self.assertTrue(any("base.uncertainty" in error for error in result["errors"]))
+        assert result["base"]["examples"] == 100
+        assert result["base"]["successes"] == 7
+        assert result["status"] == "BLOCKED"
+        assert any("base.provenance" in error for error in result["errors"])
+        assert any("base.uncertainty" in error for error in result["errors"])
 
     def test_example_id_mismatch_blocks_pairing(self) -> None:
         base = _receipt(source_kind="base_model", successes=set(range(7)))
@@ -142,8 +149,8 @@ class PavlovEvalReceiptCompareTests(unittest.TestCase):
         )
         trained["rows"][0]["example_id"] = "different-example"
         result = compare.compare_receipts(base, trained)
-        self.assertEqual(result["status"], "BLOCKED")
-        self.assertIn("paired example IDs/order differ", result["errors"])
+        assert result["status"] == "BLOCKED"
+        assert "paired example IDs/order differ" in result["errors"]
 
     def test_prompt_or_target_identity_mismatch_blocks_pairing(self) -> None:
         base = _receipt(source_kind="base_model", successes=set(range(7)))
@@ -152,11 +159,16 @@ class PavlovEvalReceiptCompareTests(unittest.TestCase):
         )
         trained["rows"][4]["target_sha256"] = _hex("5", 64)
         result = compare.compare_receipts(base, trained)
-        self.assertEqual(result["status"], "BLOCKED")
-        self.assertIn("paired prompt/target identities differ", result["errors"])
+        assert result["status"] == "BLOCKED"
+        assert "paired prompt/target identities differ" in result["errors"]
 
     def test_dataset_split_task_and_verifier_mismatches_block(self) -> None:
-        for key in ("dataset_revision", "split_manifest_sha256", "task_id_sha256", "verifier_sha256"):
+        for key in (
+            "dataset_revision",
+            "split_manifest_sha256",
+            "task_id_sha256",
+            "verifier_sha256",
+        ):
             with self.subTest(key=key):
                 base = _receipt(source_kind="base_model", successes=set(range(7)))
                 trained = _receipt(
@@ -164,8 +176,8 @@ class PavlovEvalReceiptCompareTests(unittest.TestCase):
                 )
                 trained["provenance"][key] = _hex("6", 64 if key.endswith("sha256") else 40)
                 result = compare.compare_receipts(base, trained)
-                self.assertEqual(result["status"], "BLOCKED")
-                self.assertIn(f"paired provenance mismatch: {key}", result["errors"])
+                assert result["status"] == "BLOCKED"
+                assert f"paired provenance mismatch: {key}" in result["errors"]
 
     def test_uncertainty_output_must_be_exact(self) -> None:
         base = _receipt(source_kind="base_model", successes=set(range(7)))
@@ -174,8 +186,8 @@ class PavlovEvalReceiptCompareTests(unittest.TestCase):
         )
         trained["uncertainty"]["wilson_high"] = 0.123
         result = compare.compare_receipts(base, trained)
-        self.assertEqual(result["status"], "BLOCKED")
-        self.assertTrue(any("exact deterministic Wilson" in error for error in result["errors"]))
+        assert result["status"] == "BLOCKED"
+        assert any("exact deterministic Wilson" in error for error in result["errors"])
 
     def test_missing_wandb_tinker_or_hf_provenance_blocks(self) -> None:
         for field in ("wandb", "tinker", "hf"):
@@ -186,8 +198,8 @@ class PavlovEvalReceiptCompareTests(unittest.TestCase):
                 )
                 del trained[field]
                 result = compare.compare_receipts(base, trained)
-                self.assertEqual(result["status"], "BLOCKED")
-                self.assertTrue(any(f"trained.{field}" in error for error in result["errors"]))
+                assert result["status"] == "BLOCKED"
+                assert any(f"trained.{field}" in error for error in result["errors"])
 
     def test_placeholder_immutable_provenance_blocks(self) -> None:
         base = _receipt(source_kind="base_model", successes=set(range(7)))
@@ -196,8 +208,8 @@ class PavlovEvalReceiptCompareTests(unittest.TestCase):
         )
         trained["provenance"]["verifier_sha256"] = "placeholder"
         result = compare.compare_receipts(base, trained)
-        self.assertEqual(result["status"], "BLOCKED")
-        self.assertTrue(any("trained.provenance.verifier_sha256" in error for error in result["errors"]))
+        assert result["status"] == "BLOCKED"
+        assert any("trained.provenance.verifier_sha256" in error for error in result["errors"])
 
     def test_wandb_project_mismatch_blocks_even_with_valid_run_ids(self) -> None:
         base = _receipt(source_kind="base_model", successes=set(range(7)))
@@ -206,8 +218,8 @@ class PavlovEvalReceiptCompareTests(unittest.TestCase):
         )
         trained["wandb"]["project"] = "different-project"
         result = compare.compare_receipts(base, trained)
-        self.assertEqual(result["status"], "BLOCKED")
-        self.assertIn("paired W&B provenance mismatch: project", result["errors"])
+        assert result["status"] == "BLOCKED"
+        assert "paired W&B provenance mismatch: project" in result["errors"]
 
     def test_wandb_and_tinker_run_identity_must_not_be_reused(self) -> None:
         base = _receipt(source_kind="base_model", successes=set(range(7)))
@@ -217,9 +229,9 @@ class PavlovEvalReceiptCompareTests(unittest.TestCase):
         trained["wandb"]["id"] = base["wandb"]["id"]
         trained["tinker"]["run_id"] = base["tinker"]["run_id"]
         result = compare.compare_receipts(base, trained)
-        self.assertEqual(result["status"], "BLOCKED")
-        self.assertIn("paired W&B runs must have distinct run IDs", result["errors"])
-        self.assertIn("paired Tinker runs must have distinct run IDs", result["errors"])
+        assert result["status"] == "BLOCKED"
+        assert "paired W&B runs must have distinct run IDs" in result["errors"]
+        assert "paired Tinker runs must have distinct run IDs" in result["errors"]
 
     def test_non_finite_metric_blocks_without_hashing_failure(self) -> None:
         base = _receipt(source_kind="base_model", successes=set(range(7)))
@@ -228,8 +240,8 @@ class PavlovEvalReceiptCompareTests(unittest.TestCase):
         )
         trained["mean_strict_reward"] = float("nan")
         result = compare.compare_receipts(base, trained)
-        self.assertEqual(result["status"], "BLOCKED")
-        self.assertTrue(any("mean_strict_reward must be finite" in error for error in result["errors"]))
+        assert result["status"] == "BLOCKED"
+        assert any("mean_strict_reward must be finite" in error for error in result["errors"])
 
     def test_component_boundary_rejects_broad_claims_and_unknown_domains(self) -> None:
         base = _receipt(source_kind="base_model", successes=set(range(7)))
@@ -240,10 +252,10 @@ class PavlovEvalReceiptCompareTests(unittest.TestCase):
         trained["portfolio"]["suite_ids"][0] = "unknown_suite"
         trained["portfolio"]["coverage_claim"] = "covers all Pavlov domains"
         result = compare.compare_receipts(base, trained)
-        self.assertEqual(result["status"], "BLOCKED")
-        self.assertTrue(any("domains must be exactly" in error for error in result["errors"]))
-        self.assertTrue(any("suite_ids must be the exact" in error for error in result["errors"]))
-        self.assertTrue(any("claim exceeds" in error for error in result["errors"]))
+        assert result["status"] == "BLOCKED"
+        assert any("domains must be exactly" in error for error in result["errors"])
+        assert any("suite_ids must be the exact" in error for error in result["errors"])
+        assert any("claim exceeds" in error for error in result["errors"])
 
     def test_trained_adapter_revision_must_be_distinct_from_base(self) -> None:
         base = _receipt(source_kind="base_model", successes=set(range(7)))
@@ -253,8 +265,8 @@ class PavlovEvalReceiptCompareTests(unittest.TestCase):
             adapter=_hex("a", 40),
         )
         result = compare.compare_receipts(base, trained)
-        self.assertEqual(result["status"], "BLOCKED")
-        self.assertTrue(any("trained adapter revision" in error for error in result["errors"]))
+        assert result["status"] == "BLOCKED"
+        assert any("trained adapter revision" in error for error in result["errors"])
 
     def test_require_comparable_raises_on_blocked_pair(self) -> None:
         base = _receipt(source_kind="base_model", successes=set(range(7)))
@@ -262,7 +274,7 @@ class PavlovEvalReceiptCompareTests(unittest.TestCase):
             source_kind="sampler_path", successes=set(range(10)), adapter=_hex("4", 40)
         )
         trained["provenance"]["verifier_sha256"] = _hex("6", 64)
-        with self.assertRaises(compare.ReceiptComparisonError):
+        with pytest.raises(compare.ReceiptComparisonError):
             compare.require_comparable(base, trained)
 
     def test_cli_is_local_and_writes_passing_component_comparison(self) -> None:
@@ -277,12 +289,9 @@ class PavlovEvalReceiptCompareTests(unittest.TestCase):
             output_path = root / "comparison.json"
             base_path.write_text(json.dumps(base), encoding="utf-8")
             trained_path.write_text(json.dumps(trained), encoding="utf-8")
-            self.assertEqual(
-                compare.main([str(base_path), str(trained_path), "--out", str(output_path)]),
-                0,
-            )
+            assert compare.main([str(base_path), str(trained_path), "--out", str(output_path)]) == 0
             output = json.loads(output_path.read_text(encoding="utf-8"))
-            self.assertEqual(output["status"], "PASS")
+            assert output["status"] == "PASS"
 
     def test_comparator_does_not_open_network_sockets(self) -> None:
         base = _receipt(source_kind="base_model", successes=set(range(7)))
@@ -291,7 +300,7 @@ class PavlovEvalReceiptCompareTests(unittest.TestCase):
         )
         with patch.object(socket, "socket", side_effect=AssertionError("network forbidden")):
             result = compare.compare_receipts(base, trained)
-        self.assertEqual(result["status"], "PASS")
+        assert result["status"] == "PASS"
 
 
 if __name__ == "__main__":

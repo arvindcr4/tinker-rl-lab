@@ -21,7 +21,11 @@ SUITES = (
     ("E2", "frontier_swe", "outputs/e2_frontier_swe/e2_frontier_swe_lane_receipt_2026-08-09.json"),
     ("E3", "sdab", "outputs/e3_sdab/receipt_2026-08-09.json"),
     ("E4", "banker_toolbench", "outputs/e4_banker_toolbench/e4_harbor_rerun_receipt.json"),
-    ("E5", "apex_agents", "outputs/e5_apex_agents/harness_validation/out/harness_validation_receipt.json"),
+    (
+        "E5",
+        "apex_agents",
+        "outputs/e5_apex_agents/harness_validation/out/harness_validation_receipt.json",
+    ),
     ("E6", "webbench", "outputs/e6_webbench/e6_lane_receipt_2026-08-09.json"),
     ("E7", "binaryaudit", "outputs/e7_binaryaudit/e7_binaryaudit_receipt_2026-08-09.json"),
     ("E8", "lifescibench", "outputs/e8_lifescibench/lane_receipt_2026-08-09.json"),
@@ -60,12 +64,17 @@ def _blockers(receipt: dict[str, Any]) -> list[str]:
 SUITE_RESULT_VALIDATORS: dict[str, Any] = {}
 
 
-def validate_suite_result(lane: str, source: dict[str, Any], training: dict[str, Any], checkpoint: dict[str, Any]) -> list[str]:
+def validate_suite_result(
+    lane: str, source: dict[str, Any], training: dict[str, Any], checkpoint: dict[str, Any]
+) -> list[str]:
     validator = SUITE_RESULT_VALIDATORS.get(lane)
     if validator is None:
         return [f"{lane}: no supported native model-result validator"]
     errors = list(validator(source))
-    if source.get("status") not in {"COMPLETE", "SCORED"} or source.get("is_model_score") is not True:
+    if (
+        source.get("status") not in {"COMPLETE", "SCORED"}
+        or source.get("is_model_score") is not True
+    ):
         errors.append("source is not a completed model result")
     score = source.get("score")
     if isinstance(score, bool) or not isinstance(score, (int, float)) or not math.isfinite(score):
@@ -78,7 +87,9 @@ def validate_suite_result(lane: str, source: dict[str, Any], training: dict[str,
         "model_identity": checkpoint.get("repo_url"),
     }
     model = source.get("model")
-    if not isinstance(model, dict) or any(not value or model.get(key) != value for key, value in expected.items()):
+    if not isinstance(model, dict) or any(
+        not value or model.get(key) != value for key, value in expected.items()
+    ):
         errors.append("result does not bind the final training checkpoint identity")
     return errors
 
@@ -119,13 +130,17 @@ def build_ledger(training_receipt_path: Path) -> dict[str, Any]:
             {
                 "lane": lane,
                 "suite_id": suite_id,
-                "status": "SCORED" if model_executed and score is not None else "BLOCKED_BEFORE_MODEL_SCORE",
+                "status": "SCORED"
+                if model_executed and score is not None
+                else "BLOCKED_BEFORE_MODEL_SCORE",
                 "model_executed": model_executed,
                 "is_model_score": model_executed and score is not None,
                 "score": score,
                 "source_status": source.get("status") or source.get("final_status"),
                 "source_evidence_class": source.get("evidence_class"),
-                "blockers": [] if model_executed and score is not None else sorted(set(_blockers(source) + validation_errors)),
+                "blockers": []
+                if model_executed and score is not None
+                else sorted(set(_blockers(source) + validation_errors)),
                 "receipt_path": relative,
                 "receipt_sha256": _sha256(path),
                 "evaluated_sampler": (
@@ -185,7 +200,11 @@ def main() -> int:
     args.out.write_text(json.dumps(ledger, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     run.summary.update(ledger["summary"])
     run.finish(exit_code=0)
-    print(json.dumps({"status": ledger["status"], **ledger["summary"], "wandb": ledger["wandb"]}, indent=2))
+    print(
+        json.dumps(
+            {"status": ledger["status"], **ledger["summary"], "wandb": ledger["wandb"]}, indent=2
+        )
+    )
     return 0
 
 

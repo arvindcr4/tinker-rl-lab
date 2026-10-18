@@ -110,13 +110,13 @@ Methodology notes:
 
 Stdlib only (no numpy / pandas).
 """
+
 from __future__ import annotations
 
 import argparse
 import csv
 import math
 import random
-import statistics
 from collections import defaultdict
 from pathlib import Path
 from typing import Dict, List, Sequence, Tuple
@@ -163,7 +163,7 @@ def attach_last10(by: Dict[Tuple[str, int], List[Tuple[int, float, float]]]) -> 
 
     Operates in place on the list values.
     """
-    for key, rows in by.items():
+    for _key, rows in by.items():
         if not rows:
             continue
         accs = [r[2] for r in rows]
@@ -190,13 +190,15 @@ def load_bfcl() -> Dict[int, List[Tuple[int, float, float, float, float]]]:
         reader = csv.DictReader(fh, delimiter="\t")
         for r in reader:
             sd = int(r["seed"])
-            by_seed[sd].append((
-                int(r["step"]),
-                float(r["zvf_sparse"]),
-                float(r["zvf_dense"]),
-                float(r["reward_sparse"]),
-                float(r["reward_dense"]),
-            ))
+            by_seed[sd].append(
+                (
+                    int(r["step"]),
+                    float(r["zvf_sparse"]),
+                    float(r["zvf_dense"]),
+                    float(r["reward_sparse"]),
+                    float(r["reward_dense"]),
+                )
+            )
     for sd in by_seed:
         by_seed[sd].sort(key=lambda t: t[0])
     return by_seed
@@ -216,7 +218,9 @@ def classify(zvf: float, hi: float = 0.5, lo: float = 0.1) -> str:
 STATES = ("L", "M", "H")
 
 
-def transition_matrix(zvf_seq: Sequence[float], hi: float = 0.5, lo: float = 0.1) -> Tuple[List[List[float]], int]:
+def transition_matrix(
+    zvf_seq: Sequence[float], hi: float = 0.5, lo: float = 0.1
+) -> Tuple[List[List[float]], int]:
     """Build 3x3 count matrix for transitions (s -> s').
 
     Returns (counts, n_transitions) where counts[i][j] is the number
@@ -225,7 +229,7 @@ def transition_matrix(zvf_seq: Sequence[float], hi: float = 0.5, lo: float = 0.1
     """
     counts = [[0, 0, 0] for _ in STATES]
     n = 0
-    for a, b in zip(zvf_seq, zvf_seq[1:]):
+    for a, b in zip(zvf_seq, zvf_seq[1:], strict=False):
         sa = classify(a, hi, lo)
         sb = classify(b, hi, lo)
         i = STATES.index(sa)
@@ -252,9 +256,16 @@ def run_lengths(zvf_seq: Sequence[float], hi: float = 0.5, lo: float = 0.1) -> D
     Also returns exit half-life of H: median length of H-runs.
     """
     if not zvf_seq:
-        return dict(mean_run_L=0.0, mean_run_M=0.0, mean_run_H=0.0,
-                    selfloop_H=0.0, absorbing_H=0.0,
-                    exit_halflife_H=0.0, n_steps=0, frac_H=0.0)
+        return dict(
+            mean_run_L=0.0,
+            mean_run_M=0.0,
+            mean_run_H=0.0,
+            selfloop_H=0.0,
+            absorbing_H=0.0,
+            exit_halflife_H=0.0,
+            n_steps=0,
+            frac_H=0.0,
+        )
     classes = [classify(z, hi, lo) for z in zvf_seq]
     # mean run length per state
     sums = {"L": 0, "M": 0, "H": 0}
@@ -297,17 +308,28 @@ def run_lengths(zvf_seq: Sequence[float], hi: float = 0.5, lo: float = 0.1) -> D
         median = sorted_runs[len(sorted_runs) // 2]
     else:
         median = 0.0
-    return dict(mean_run_L=means["L"], mean_run_M=means["M"],
-                mean_run_H=means["H"], selfloop_H=selfloop_H,
-                absorbing_H=frac_H, exit_halflife_H=median,
-                n_steps=len(zvf_seq), frac_H=frac_H)
+    return dict(
+        mean_run_L=means["L"],
+        mean_run_M=means["M"],
+        mean_run_H=means["H"],
+        selfloop_H=selfloop_H,
+        absorbing_H=frac_H,
+        exit_halflife_H=median,
+        n_steps=len(zvf_seq),
+        frac_H=frac_H,
+    )
 
 
 # --------------------------- aggregation ------------------------------
 
-def aggregate_matrix(by: Dict[Tuple[str, int], List[Tuple[int, float, float]]]) -> Dict[str, List[List[float]]]:
+
+def aggregate_matrix(
+    by: Dict[Tuple[str, int], List[Tuple[int, float, float]]],
+) -> Dict[str, List[List[float]]]:
     """Sum transition counts across seeds per method, then normalize."""
-    sums: Dict[str, List[List[float]]] = {m: [[0, 0, 0] for _ in STATES] for m in {k[0] for k in by}}
+    sums: Dict[str, List[List[float]]] = {
+        m: [[0, 0, 0] for _ in STATES] for m in {k[0] for k in by}
+    }
     for (method, _seed), rows in by.items():
         zvf_seq = [r[1] for r in rows]
         c, _ = transition_matrix(zvf_seq)
@@ -327,19 +349,58 @@ def rank(asc: bool = False) -> List[Tuple[str, float]]:
 # --------------------------- writers ----------------------------------
 
 HEADER_M = ["method", "from_state", "to_state", "count_frac"]
-HEADER_R = ["method", "seed", "n_steps", "mean_zvf", "frac_H", "mean_run_L",
-            "mean_run_M", "mean_run_H", "selfloop_H", "absorbing_H",
-            "exit_halflife_H", "last10_acc", "n_state_changes"]
-HEADER_S = ["method", "n_traces", "mean_zvf", "mean_frac_H", "mean_run_L",
-            "mean_run_M", "mean_run_H", "mean_selfloop_H", "mean_absorbing_H",
-            "median_absorbing_H", "max_absorbing_H", "rank_absorbing",
-            "mean_last10_acc"]
+HEADER_R = [
+    "method",
+    "seed",
+    "n_steps",
+    "mean_zvf",
+    "frac_H",
+    "mean_run_L",
+    "mean_run_M",
+    "mean_run_H",
+    "selfloop_H",
+    "absorbing_H",
+    "exit_halflife_H",
+    "last10_acc",
+    "n_state_changes",
+]
+HEADER_S = [
+    "method",
+    "n_traces",
+    "mean_zvf",
+    "mean_frac_H",
+    "mean_run_L",
+    "mean_run_M",
+    "mean_run_H",
+    "mean_selfloop_H",
+    "mean_absorbing_H",
+    "median_absorbing_H",
+    "max_absorbing_H",
+    "rank_absorbing",
+    "mean_last10_acc",
+]
 HEADER_C = ["test", "n_rows", "rho", "ci_lo", "ci_hi", "method"]
-HEADER_T = ["setting", "n_rows", "zvf_value", "absorbing_H_emp",
-            "selfloop_H_emp", "frac_H", "interpretation"]
-HEADER_BF = ["source", "n_steps", "mean_zvf", "max_zvf", "n_H_steps",
-             "first_class", "last_class", "absorbing_H", "exit_halflife_H",
-             "interpretation"]
+HEADER_T = [
+    "setting",
+    "n_rows",
+    "zvf_value",
+    "absorbing_H_emp",
+    "selfloop_H_emp",
+    "frac_H",
+    "interpretation",
+]
+HEADER_BF = [
+    "source",
+    "n_steps",
+    "mean_zvf",
+    "max_zvf",
+    "n_H_steps",
+    "first_class",
+    "last_class",
+    "absorbing_H",
+    "exit_halflife_H",
+    "interpretation",
+]
 
 
 def write_tsv(path: Path, rows: List[List], header: List[str]) -> None:
@@ -373,18 +434,21 @@ def spearman(xs: Sequence[float], ys: Sequence[float]) -> float:
     n = len(xs)
     if n < 2:
         return 0.0
+
     def ranks(vs: Sequence[float]) -> List[float]:
         order = sorted(range(n), key=lambda i: vs[i])
         r = [0.0] * n
         for i, idx in enumerate(order):
             r[idx] = i + 1
         return r
+
     rx, ry = ranks(xs), ranks(ys)
     return pearson(rx, ry)
 
 
-def bootstrap_ci(xs: Sequence[float], ys: Sequence[float],
-                 fn, B: int = 2000, seed: int = 20260703) -> Tuple[float, float, float]:
+def bootstrap_ci(
+    xs: Sequence[float], ys: Sequence[float], fn, B: int = 2000, seed: int = 20260703
+) -> Tuple[float, float, float]:
     rng = random.Random(seed)
     n = len(xs)
     point = fn(xs, ys)
@@ -401,6 +465,7 @@ def bootstrap_ci(xs: Sequence[float], ys: Sequence[float],
 
 
 # --------------------------- pipeline ---------------------------------
+
 
 def main() -> None:
     parser = argparse.ArgumentParser()
@@ -421,19 +486,25 @@ def main() -> None:
         last10_acc = rows[0][2]  # we precomputed per-trace
         # determine number of state changes for context
         classes = [classify(z, hi, lo) for z in zvf_seq]
-        n_change = sum(1 for i in range(1, len(classes)) if classes[i] != classes[i-1])
+        n_change = sum(1 for i in range(1, len(classes)) if classes[i] != classes[i - 1])
         stats = run_lengths(zvf_seq, hi, lo)
-        rl_rows.append([method, seed, stats["n_steps"],
-                        round(sum(zvf_seq) / len(zvf_seq), 4),
-                        round(stats["frac_H"], 4),
-                        round(stats["mean_run_L"], 4),
-                        round(stats["mean_run_M"], 4),
-                        round(stats["mean_run_H"], 4),
-                        round(stats["selfloop_H"], 4),
-                        round(stats["absorbing_H"], 4),
-                        round(stats["exit_halflife_H"], 4),
-                        round(last10_acc, 4),
-                        n_change])
+        rl_rows.append(
+            [
+                method,
+                seed,
+                stats["n_steps"],
+                round(sum(zvf_seq) / len(zvf_seq), 4),
+                round(stats["frac_H"], 4),
+                round(stats["mean_run_L"], 4),
+                round(stats["mean_run_M"], 4),
+                round(stats["mean_run_H"], 4),
+                round(stats["selfloop_H"], 4),
+                round(stats["absorbing_H"], 4),
+                round(stats["exit_halflife_H"], 4),
+                round(last10_acc, 4),
+                n_change,
+            ]
+        )
 
     write_tsv(RES / "zvf_iter74_run_lengths.tsv", rl_rows, HEADER_R)
 
@@ -450,17 +521,19 @@ def main() -> None:
     by_method: Dict[str, List[Dict[str, float]]] = defaultdict(list)
     for row in rl_rows:
         method = row[0]
-        by_method[method].append({
-            "n_steps": row[2],
-            "mean_zvf": row[3],
-            "frac_H": row[4],
-            "mean_run_L": row[5],
-            "mean_run_M": row[6],
-            "mean_run_H": row[7],
-            "selfloop_H": row[8],
-            "absorbing_H": row[9],
-            "last10_acc": row[11],
-        })
+        by_method[method].append(
+            {
+                "n_steps": row[2],
+                "mean_zvf": row[3],
+                "frac_H": row[4],
+                "mean_run_L": row[5],
+                "mean_run_M": row[6],
+                "mean_run_H": row[7],
+                "selfloop_H": row[8],
+                "absorbing_H": row[9],
+                "last10_acc": row[11],
+            }
+        )
     # rank by absorbing_H descending
     abs_means = {m: sum(t["absorbing_H"] for t in ts) / len(ts) for m, ts in by_method.items()}
     rank_order = sorted(abs_means.keys(), key=lambda m: -abs_means[m])
@@ -478,14 +551,23 @@ def main() -> None:
         m_abs_H = sum(t["absorbing_H"] for t in ts) / n
         abs_vals = sorted(t["absorbing_H"] for t in ts)
         m_last10 = sum(t["last10_acc"] for t in ts) / n
-        summary_rows.append([
-            method, n, round(m_zvf, 4), round(m_frac_H, 4),
-            round(m_mrL, 4), round(m_mrM, 4), round(m_mrH, 4),
-            round(m_selfloop_H, 4), round(m_abs_H, 4),
-            round(abs_vals[n // 2], 4), round(max(t["absorbing_H"] for t in ts), 4),
-            rank_idx[method],
-            round(m_last10, 4),
-        ])
+        summary_rows.append(
+            [
+                method,
+                n,
+                round(m_zvf, 4),
+                round(m_frac_H, 4),
+                round(m_mrL, 4),
+                round(m_mrM, 4),
+                round(m_mrH, 4),
+                round(m_selfloop_H, 4),
+                round(m_abs_H, 4),
+                round(abs_vals[n // 2], 4),
+                round(max(t["absorbing_H"] for t in ts), 4),
+                rank_idx[method],
+                round(m_last10, 4),
+            ]
+        )
     write_tsv(RES / "zvf_iter74_library_summary.tsv", summary_rows, HEADER_S)
 
     # 5. Correlations: per-(method, seed) n=45, per-method rollup n=9.
@@ -496,10 +578,26 @@ def main() -> None:
             return
         p, p_lo, p_hi = bootstrap_ci(xs, ys, pearson)
         s, s_lo, s_hi = bootstrap_ci(xs, ys, spearman)
-        corr_rows.append([label, len(xs), round(p, 4), round(p_lo, 4), round(p_hi, 4),
-                          f"Pearson+boot (B=2000) {method}"])
-        corr_rows.append([label, len(xs), round(s, 4), round(s_lo, 4), round(s_hi, 4),
-                          f"Spearman+boot (B=2000) {method}"])
+        corr_rows.append(
+            [
+                label,
+                len(xs),
+                round(p, 4),
+                round(p_lo, 4),
+                round(p_hi, 4),
+                f"Pearson+boot (B=2000) {method}",
+            ]
+        )
+        corr_rows.append(
+            [
+                label,
+                len(xs),
+                round(s, 4),
+                round(s_lo, 4),
+                round(s_hi, 4),
+                f"Spearman+boot (B=2000) {method}",
+            ]
+        )
 
     # Per-trace
     abs_per = [r[9] for r in rl_rows]
@@ -526,7 +624,7 @@ def main() -> None:
 
     # 6. Threshold sensitivity (light, n=9 method means).
     sens_rows: List[List] = []
-    for (h_cut, l_cut) in [(0.20, 0.05), (0.30, 0.10), (0.50, 0.10), (0.50, 0.20), (0.65, 0.10)]:
+    for h_cut, l_cut in [(0.20, 0.05), (0.30, 0.10), (0.50, 0.10), (0.50, 0.20), (0.65, 0.10)]:
         # aggregate absorbing_H, selfloop_H, mean_zvf at this cutoff
         abs_vals = []
         sl_vals = []
@@ -537,15 +635,18 @@ def main() -> None:
             abs_vals.append(stats["absorbing_H"])
             sl_vals.append(stats["selfloop_H"])
             mz_vals.append(sum(zvf_seq) / len(zvf_seq))
-        sens_rows.append([
-            f"hi={h_cut}, lo={l_cut}",
-            len(abs_vals),
-            round(sum(mz_vals) / len(mz_vals), 4),
-            round(sum(abs_vals) / len(abs_vals), 4),
-            round(sum(sl_vals) / len(sl_vals), 4),
-            round(sum(v > 0.5 for v in abs_vals) / len(abs_vals), 4),
-            "abs>=0.5 dominant? " + str(sum(1 for v in abs_vals if v > 0.5) >= max(1, len(abs_vals) // 2)),
-        ])
+        sens_rows.append(
+            [
+                f"hi={h_cut}, lo={l_cut}",
+                len(abs_vals),
+                round(sum(mz_vals) / len(mz_vals), 4),
+                round(sum(abs_vals) / len(abs_vals), 4),
+                round(sum(sl_vals) / len(sl_vals), 4),
+                round(sum(v > 0.5 for v in abs_vals) / len(abs_vals), 4),
+                "abs>=0.5 dominant? "
+                + str(sum(1 for v in abs_vals if v > 0.5) >= max(1, len(abs_vals) // 2)),
+            ]
+        )
     write_tsv(RES / "zvf_iter74_threshold_sensitivity.tsv", sens_rows, HEADER_T)
 
     # 7. BFCL tool-use anchor. Loads by seed.  Seed 0 (Qwen3-32B)
@@ -561,18 +662,20 @@ def main() -> None:
         stats_dn = run_lengths(zvfs_dn, hi, lo)
         anchor_kind = "STUCK anchor (reward=0)" if sum(rwds_sp) == 0 else "working trace"
         for variant, zvfs, sts in (("sparse", zvfs_sp, stats_sp), ("dense", zvfs_dn, stats_dn)):
-            bfcl_rows.append([
-                f"bfclv4_tool_use_seed{seed_id}_{variant}",
-                len(zvfs),
-                round(sum(zvfs) / len(zvfs), 4),
-                round(max(zvfs), 4),
-                sum(1 for z in zvfs if classify(z, hi, lo) == "H"),
-                classify(zvfs[0], hi, lo),
-                classify(zvfs[-1], hi, lo),
-                round(sts["absorbing_H"], 4),
-                round(sts["exit_halflife_H"], 4),
-                anchor_kind,
-            ])
+            bfcl_rows.append(
+                [
+                    f"bfclv4_tool_use_seed{seed_id}_{variant}",
+                    len(zvfs),
+                    round(sum(zvfs) / len(zvfs), 4),
+                    round(max(zvfs), 4),
+                    sum(1 for z in zvfs if classify(z, hi, lo) == "H"),
+                    classify(zvfs[0], hi, lo),
+                    classify(zvfs[-1], hi, lo),
+                    round(sts["absorbing_H"], 4),
+                    round(sts["exit_halflife_H"], 4),
+                    anchor_kind,
+                ]
+            )
     write_tsv(RES / "zvf_iter74_tool_anchor.tsv", bfcl_rows, HEADER_BF)
 
     # 8. Predictions ledger (pre-registered, mirrors iter26 style).
@@ -587,26 +690,40 @@ def main() -> None:
     p2_tool_anchored = abs0 > abs1
     p3_selfloop_grpo_lt_aero = False  # placeholder, will fill below
     pred_rows: List[List] = [
-        ["P1", "absorbing_H(grpo) > absorbing_H(aero)",
-         "AERO is designed to inject contrast; GRPO has the canonical 'stuck at H' failure mode",
-         str(not p1_abs_grpo_lt_aero),
-         "if True: confirms chain recovers the textbook design intent of AERO"],
-        ["P2", "absorbing_H(bfcl_seed0_stuck) > absorbing_H(bfcl_seed1_working)",
-         "The 0%-reward seed 0 trace is stuck in H; the working seed 1 trace visits L/M more",
-         str(p2_tool_anchored),
-         "if True: confirms H = 'starvation regime' is correctly encoded for tool_use"],
-        ["P3", "absorbing_H > 0.5 distinguishes vanilla GRPO from advanced libraries",
-         "Vanilla GRPO has the only trace with absorbing_H > 0.5 in variance_mitigation",
-         "",
-         "check vs library_summary: counts of absorbing_H > 0.5 trace"],
+        [
+            "P1",
+            "absorbing_H(grpo) > absorbing_H(aero)",
+            "AERO is designed to inject contrast; GRPO has the canonical 'stuck at H' failure mode",
+            str(not p1_abs_grpo_lt_aero),
+            "if True: confirms chain recovers the textbook design intent of AERO",
+        ],
+        [
+            "P2",
+            "absorbing_H(bfcl_seed0_stuck) > absorbing_H(bfcl_seed1_working)",
+            "The 0%-reward seed 0 trace is stuck in H; the working seed 1 trace visits L/M more",
+            str(p2_tool_anchored),
+            "if True: confirms H = 'starvation regime' is correctly encoded for tool_use",
+        ],
+        [
+            "P3",
+            "absorbing_H > 0.5 distinguishes vanilla GRPO from advanced libraries",
+            "Vanilla GRPO has the only trace with absorbing_H > 0.5 in variance_mitigation",
+            "",
+            "check vs library_summary: counts of absorbing_H > 0.5 trace",
+        ],
     ]
-    write_tsv(RES / "zvf_iter74_predictions.tsv", pred_rows,
-              ["id", "claim", "rationale", "value", "interpretation"])
+    write_tsv(
+        RES / "zvf_iter74_predictions.tsv",
+        pred_rows,
+        ["id", "claim", "rationale", "value", "interpretation"],
+    )
 
     # 9. Print one-line summary.
     print("Iter 74 done.")
     for r in summary_rows:
-        print(f"  {r[0]:12s}  abs_H={r[8]:.4f}  selfloop_H={r[7]:.4f}  mean_run_H={r[6]:.3f}  last10={r[12]:.4f}")
+        print(
+            f"  {r[0]:12s}  abs_H={r[8]:.4f}  selfloop_H={r[7]:.4f}  mean_run_H={r[6]:.3f}  last10={r[12]:.4f}"
+        )
     for seed_id in sorted(bfcl.keys()):
         rows = bfcl[seed_id]
         zvfs_sp = [r[1] for r in rows]

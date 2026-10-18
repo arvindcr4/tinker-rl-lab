@@ -41,18 +41,22 @@ Hypotheses (declared, then tested):
 
 Stdlib only.
 """
+
 from __future__ import annotations
 import argparse
 import csv
 import json
 import math
 import pathlib
-import statistics
 
 import sys
-sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
-from _stats import log_beta as lbeta  # noqa: E402
+
+sys.path.append(
+    str(pathlib.Path(__file__).resolve().parents[1])
+)  # platform_modal/scripts, for _paths
+from _paths import REPO_ROOT
+from _stats import log_beta as lbeta
+
 WORKTREE = REPO_ROOT
 N2 = WORKTREE / "platform_hybrid/experiments" / "results" / "n2_reward_tensor_resume"
 OUT = WORKTREE / "platform_hybrid/experiments" / "results" / "p5p8/corrected-review20-v2"
@@ -70,8 +74,12 @@ def beta_binom_cdf(k: int, n: int, alpha: float, beta: float) -> float:
     """P(K <= k) for Beta-Binomial(n, alpha, beta)."""
     s = 0.0
     for j in range(k + 1):
-        log_p = (lbeta(alpha + j, beta + (n - j)) - lbeta(j + 1, n - j + 1)
-                 - lbeta(alpha, beta) - math.log(n + 1))
+        log_p = (
+            lbeta(alpha + j, beta + (n - j))
+            - lbeta(j + 1, n - j + 1)
+            - lbeta(alpha, beta)
+            - math.log(n + 1)
+        )
         s += math.exp(log_p)
     return min(max(s, 0.0), 1.0)
 
@@ -83,8 +91,9 @@ def gu_iid(p: float, g: int) -> float:
     return max(0.0, min(1.0, 1.0 - p**g - (1.0 - p) ** g))
 
 
-def gu_post(p_hat: float, g_base: int, g_new: int,
-            alpha0: float = 1.0, beta0: float = 1.0) -> float:
+def gu_post(
+    p_hat: float, g_base: int, g_new: int, alpha0: float = 1.0, beta0: float = 1.0
+) -> float:
     """Predictive P(0 < K' < g_new) integrating over Beta-Binomial posterior
     with prior Beta(alpha0, beta0), having observed k = p_hat * g_base successes.
 
@@ -104,8 +113,7 @@ def gu_post(p_hat: float, g_base: int, g_new: int,
     return max(0.0, min(1.0, p_hi - p_lo))
 
 
-def optimal_gstar_post(k: int, g_base: int = G_BASE,
-                       target: float = TARGET_GU) -> int:
+def optimal_gstar_post(k: int, g_base: int = G_BASE, target: float = TARGET_GU) -> int:
     """Smallest G' ∈ G_CANDIDATES such that GU_post >= target.  Returns
     g_base if no candidate qualifies or if k is saturated (k=0 or k=g_base).
     """
@@ -145,8 +153,7 @@ def load_rewards():
     return out
 
 
-def all_k_buckets(rewards_2d, n_prompts: int = N_PROMPTS,
-                  g_base: int = G_BASE) -> list[int]:
+def all_k_buckets(rewards_2d, n_prompts: int = N_PROMPTS, g_base: int = G_BASE) -> list[int]:
     """Return the list of k values (one per prompt) for the 2D rewards tensor."""
     out = []
     for prompt_vec in rewards_2d[:n_prompts]:
@@ -154,10 +161,10 @@ def all_k_buckets(rewards_2d, n_prompts: int = N_PROMPTS,
     return out
 
 
-def bootstrap_ci_diff(xs_a, xs_b, n_boot: int = N_BOOT, seed: int = SEED,
-                      alpha: float = 0.05):
+def bootstrap_ci_diff(xs_a, xs_b, n_boot: int = N_BOOT, seed: int = SEED, alpha: float = 0.05):
     """Bootstrap CI on mean(xs_a) - mean(xs_b) at 1-alpha level, percentile method."""
     import random
+
     rng = random.Random(seed)
     n = min(len(xs_a), len(xs_b))
     if n == 0:
@@ -195,13 +202,20 @@ def main():
                 k = int(round(sum(vec[:G_BASE])))
                 g_star = optimal_gstar_post(k, G_BASE, target)
                 cr = gu_post(k / G_BASE, G_BASE, g_star) - gu_post(k / G_BASE, G_BASE, G_BASE)
-                rows_per_obs.append({
-                    "method": m, "step": step_idx,
-                    "prompt_index": prompt_idx, "k": k,
-                    "target_status": "target_met" if gu_post(k/G_BASE, G_BASE, g_star) >= target else "target_unreachable",
-                    "g_star": g_star, "contrast_restored": cr,
-                    "cost_ratio": g_star / G_BASE,
-                })
+                rows_per_obs.append(
+                    {
+                        "method": m,
+                        "step": step_idx,
+                        "prompt_index": prompt_idx,
+                        "k": k,
+                        "target_status": "target_met"
+                        if gu_post(k / G_BASE, G_BASE, g_star) >= target
+                        else "target_unreachable",
+                        "g_star": g_star,
+                        "contrast_restored": cr,
+                        "cost_ratio": g_star / G_BASE,
+                    }
+                )
 
     # Bucket-level distribution: per (method, k), how often, mean g*, mean cost
     bucket_table = {}  # (method, k) -> {n, g_star_dist, mean_g_star, mean_contrast_restored}
@@ -214,14 +228,18 @@ def main():
         n = len(entries)
         g_stars = [e["g_star"] for e in entries]
         crs = [e["contrast_restored"] for e in entries]
-        per_bucket_rows.append({
-            "method": m, "k": k, "n_obs": n,
-            "bucket_freq": n / sum(1 for r in rows_per_obs if r["method"] == m),
-            "mean_g_star": sum(g_stars) / n,
-            "mean_contrast_restored": sum(crs) / n,
-            "frac_down_shift": sum(1 for g in g_stars if g < G_BASE) / n,
-            "frac_up_shift": sum(1 for g in g_stars if g > G_BASE) / n,
-        })
+        per_bucket_rows.append(
+            {
+                "method": m,
+                "k": k,
+                "n_obs": n,
+                "bucket_freq": n / sum(1 for r in rows_per_obs if r["method"] == m),
+                "mean_g_star": sum(g_stars) / n,
+                "mean_contrast_restored": sum(crs) / n,
+                "frac_down_shift": sum(1 for g in g_stars if g < G_BASE) / n,
+                "frac_up_shift": sum(1 for g in g_stars if g > G_BASE) / n,
+            }
+        )
 
     # Method-level summary: average G*, contrast restored per G_BASE=8 prompt
     method_summary = {}
@@ -230,15 +248,15 @@ def main():
         n = len(m_rows)
         method_summary[m] = {
             "n_prompt_steps": n,
-            "bucket_freq_dist": {k: sum(1 for r in m_rows if r["k"] == k) / n
-                                  for k in range(G_BASE + 1)},
+            "bucket_freq_dist": {
+                k: sum(1 for r in m_rows if r["k"] == k) / n for k in range(G_BASE + 1)
+            },
             "mean_g_star": sum(r["g_star"] for r in m_rows) / n,
             "mean_contrast_restored": sum(r["contrast_restored"] for r in m_rows) / n,
             "mean_cost_ratio": sum(r["cost_ratio"] for r in m_rows) / n,
-            "n_buckets_with_benefit": len(set(
-                r["k"] for r in m_rows
-                if r["contrast_restored"] > 1e-9
-            )),
+            "n_buckets_with_benefit": len(
+                set(r["k"] for r in m_rows if r["contrast_restored"] > 1e-9)
+            ),
         }
 
     # Test H1: bucket-resolved mean G* vs single fixed-G mean G* across non-sat
@@ -305,8 +323,7 @@ def main():
     # Per-observation TSV
     obs_tsv = out_prefix.with_name(out_prefix.name + "_per_obs.tsv")
     with open(obs_tsv, "w", newline="") as f:
-        w = csv.DictWriter(f, fieldnames=list(rows_per_obs[0].keys()),
-                           delimiter="\t")
+        w = csv.DictWriter(f, fieldnames=list(rows_per_obs[0].keys()), delimiter="\t")
         w.writeheader()
         for r in rows_per_obs:
             w.writerow(r)
@@ -314,8 +331,7 @@ def main():
     # Per-bucket TSV
     bucket_tsv = out_prefix.with_name(out_prefix.name + "_per_bucket.tsv")
     with open(bucket_tsv, "w", newline="") as f:
-        w = csv.DictWriter(f, fieldnames=list(per_bucket_rows[0].keys()),
-                           delimiter="\t")
+        w = csv.DictWriter(f, fieldnames=list(per_bucket_rows[0].keys()), delimiter="\t")
         w.writeheader()
         for r in per_bucket_rows:
             w.writerow(r)
@@ -340,11 +356,12 @@ def main():
         "global": {
             "n_prompt_steps": len(rows_per_obs),
             "mean_g_star": sum(r["g_star"] for r in rows_per_obs) / len(rows_per_obs),
-            "mean_contrast_restored": sum(r["contrast_restored"] for r in rows_per_obs) / len(rows_per_obs),
+            "mean_contrast_restored": sum(r["contrast_restored"] for r in rows_per_obs)
+            / len(rows_per_obs),
             "mean_cost_ratio": sum(r["cost_ratio"] for r in rows_per_obs) / len(rows_per_obs),
-            "n_buckets_with_benefit_global": len(set(
-                r["k"] for r in rows_per_obs if r["contrast_restored"] > 1e-9
-            )),
+            "n_buckets_with_benefit_global": len(
+                set(r["k"] for r in rows_per_obs if r["contrast_restored"] > 1e-9)
+            ),
         },
         "verdicts": {
             "H1_resolvable_pass": bool(h1_pass),
@@ -358,11 +375,15 @@ def main():
         },
         "bootstrap_ci": {
             "cost_ratio_diff_ctrl_minus_base": {
-                "point": cost_diff[0], "ci_lo": cost_diff[1], "ci_hi": cost_diff[2],
+                "point": cost_diff[0],
+                "ci_lo": cost_diff[1],
+                "ci_hi": cost_diff[2],
                 "excl_zero": 1 if (cost_diff[1] > 0 or cost_diff[2] < 0) else 0,
             },
             "contrast_restored_diff_ctrl_minus_zero": {
-                "point": cr_diff[0], "ci_lo": cr_diff[1], "ci_hi": cr_diff[2],
+                "point": cr_diff[0],
+                "ci_lo": cr_diff[1],
+                "ci_hi": cr_diff[2],
                 "excl_zero": 1 if (cr_diff[1] > 0 or cr_diff[2] < 0) else 0,
             },
         },
@@ -386,10 +407,12 @@ def main():
     print("Per-method mean G*:")
     for m in METHODS:
         s = method_summary[m]
-        print(f"  {m:>6s}: G*={s['mean_g_star']:.4f}, "
-              f"contrast_restored={s['mean_contrast_restored']:.6f}, "
-              f"cost_ratio={s['mean_cost_ratio']:.4f}, "
-              f"beneficial_buckets={s['n_buckets_with_benefit']}")
+        print(
+            f"  {m:>6s}: G*={s['mean_g_star']:.4f}, "
+            f"contrast_restored={s['mean_contrast_restored']:.6f}, "
+            f"cost_ratio={s['mean_cost_ratio']:.4f}, "
+            f"beneficial_buckets={s['n_buckets_with_benefit']}"
+        )
     print()
     print("Per-bucket distribution (freq per method):")
     print(f"  {'k':>2s}  ", end="")
@@ -404,22 +427,33 @@ def main():
         print()
     print()
     print("V E R D I C T S")
-    print(f"  H1_resolvable:        {'PASS' if h1_pass else 'FAIL'}"
-          f"   ({h1_pass_count}/{len(non_sat_buckets)} non-saturated buckets"
-          f" with mean G* != G_BASE)")
-    print(f"  H2_pareto:            {'PASS' if h2_pass else 'FAIL'}"
-          f"   ({h2_pass_count}/{len(non_sat_buckets)} non-saturated buckets"
-          f" Pareto-dominate G=8)")
-    print(f"  H3_uniformity:        {'PASS' if h3_pass else 'FAIL'}"
-          f"   (method-mean G* spread = {spread:.4f}; < {G_BASE} = uniform)")
-    print(f"  H4_signal_efficiency: {'PASS' if h4_pass else 'FAIL'}"
-          f"   ({h4_buckets_le_base}/{G_BASE + 1} buckets with mean G* ≤ G_BASE)")
+    print(
+        f"  H1_resolvable:        {'PASS' if h1_pass else 'FAIL'}"
+        f"   ({h1_pass_count}/{len(non_sat_buckets)} non-saturated buckets"
+        f" with mean G* != G_BASE)"
+    )
+    print(
+        f"  H2_pareto:            {'PASS' if h2_pass else 'FAIL'}"
+        f"   ({h2_pass_count}/{len(non_sat_buckets)} non-saturated buckets"
+        f" Pareto-dominate G=8)"
+    )
+    print(
+        f"  H3_uniformity:        {'PASS' if h3_pass else 'FAIL'}"
+        f"   (method-mean G* spread = {spread:.4f}; < {G_BASE} = uniform)"
+    )
+    print(
+        f"  H4_signal_efficiency: {'PASS' if h4_pass else 'FAIL'}"
+        f"   ({h4_buckets_le_base}/{G_BASE + 1} buckets with mean G* ≤ G_BASE)"
+    )
     print()
     print(f"Bootstrap CI (n_boot={N_BOOT}, seed={SEED})")
-    print(f"  cost_ratio (ctrl - base): "
-          f"{cost_diff[0]:+.4f}  [{cost_diff[1]:+.4f}, {cost_diff[2]:+.4f}]")
-    print(f"  contrast_restored (ctrl - 0): "
-          f"{cr_diff[0]:+.6f}  [{cr_diff[1]:+.6f}, {cr_diff[2]:+.6f}]")
+    print(
+        f"  cost_ratio (ctrl - base): "
+        f"{cost_diff[0]:+.4f}  [{cost_diff[1]:+.4f}, {cost_diff[2]:+.4f}]"
+    )
+    print(
+        f"  contrast_restored (ctrl - 0): {cr_diff[0]:+.6f}  [{cr_diff[1]:+.6f}, {cr_diff[2]:+.6f}]"
+    )
     print()
     print(f"Outputs:")
     print(f"  {obs_tsv}")

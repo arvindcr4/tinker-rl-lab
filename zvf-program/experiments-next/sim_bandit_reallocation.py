@@ -48,7 +48,7 @@ def true_J(stratum: list[dict], G: int) -> float:
     tot = 0.0
     for pr in stratum:
         p = pr["p_hat"]
-        h = p ** G + (1 - p) ** G
+        h = p**G + (1 - p) ** G
         tot += (1 - h) * p * (1 - p)
     return tot / len(stratum)
 
@@ -85,8 +85,12 @@ def main() -> None:
     ap.add_argument("--pool", required=True, type=Path)
     ap.add_argument("--group-size", type=int, default=8)
     ap.add_argument("--n-strata", type=int, default=6)
-    ap.add_argument("--groups-budget", type=int, default=250,
-                    help="groups per simulation (x G = rollout budget)")
+    ap.add_argument(
+        "--groups-budget",
+        type=int,
+        default=250,
+        help="groups per simulation (x G = rollout budget)",
+    )
     ap.add_argument("--sims", type=int, default=500)
     ap.add_argument("--seed", type=int, default=0)
     args = ap.parse_args()
@@ -98,7 +102,7 @@ def main() -> None:
 
     ordered = sorted(prompts, key=lambda p: p["p_hat"])
     k = max(1, len(ordered) // args.n_strata)
-    strata = [ordered[i:i + k] for i in range(0, len(ordered), k)][:args.n_strata]
+    strata = [ordered[i : i + k] for i in range(0, len(ordered), k)][: args.n_strata]
     Js = [true_J(s, G) for s in strata]
     oracle_idx = max(range(len(strata)), key=lambda i: Js[i])
     hardest_idx = 0  # lowest p_hat stratum
@@ -110,47 +114,54 @@ def main() -> None:
         j_tot = 0.0
         for s in range(args.sims):
             srng = random.Random(args.seed * 1_000_003 + s)
-            i, j = simulate(srng, strata, G, args.groups_budget, policy,
-                            oracle_idx, hardest_idx)
+            i, j = simulate(srng, strata, G, args.groups_budget, policy, oracle_idx, hardest_idx)
             inf_tot += i
             j_tot += j
         results[policy] = {
-            "informative_groups_per_1k_rollouts":
-                round(1000 * inf_tot / (args.sims * rollouts), 3),
-            "J_signal_per_1k_rollouts":
-                round(1000 * j_tot / (args.sims * rollouts), 4),
+            "informative_groups_per_1k_rollouts": round(1000 * inf_tot / (args.sims * rollouts), 3),
+            "J_signal_per_1k_rollouts": round(1000 * j_tot / (args.sims * rollouts), 4),
         }
         r = results[policy]
-        print(f"{policy:>15}: GU/1k={r['informative_groups_per_1k_rollouts']:7.3f} "
-              f"J/1k={r['J_signal_per_1k_rollouts']:7.4f}", flush=True)
+        print(
+            f"{policy:>15}: GU/1k={r['informative_groups_per_1k_rollouts']:7.3f} "
+            f"J/1k={r['J_signal_per_1k_rollouts']:7.4f}",
+            flush=True,
+        )
 
     th = results["thompson-gu"]["informative_groups_per_1k_rollouts"]
     orc = results["static-oracle"]["informative_groups_per_1k_rollouts"]
     uni = results["uniform"]["informative_groups_per_1k_rollouts"]
-    verdict = ("GO: thompson within 5% of oracle and beats uniform"
-               if th >= 0.95 * orc and th > uni else
-               "NO-GO or investigate: thompson did not meet the bar")
+    verdict = (
+        "GO: thompson within 5% of oracle and beats uniform"
+        if th >= 0.95 * orc and th > uni
+        else "NO-GO or investigate: thompson did not meet the bar"
+    )
     print(verdict)
 
     out = RESULTS_DIR / f"bandit_realloc_{pool['tag']}_G{G}.json"
-    write_result(out, {
-        "kind": "bandit_reallocation_sim",
-        "status": "complete",
-        "pool": str(args.pool),
-        "pool_tag": pool["tag"],
-        "model": pool["model"],
-        "G": G, "n_strata": args.n_strata,
-        "groups_budget": args.groups_budget, "sims": args.sims,
-        "seed": args.seed,
-        "stratum_true_J": [round(j, 5) for j in Js],
-        "oracle_stratum": oracle_idx,
-        "results": results,
-        "verdict": verdict,
-        "caveat": "offline simulation on a frozen pool; a training-time "
-                  "pilot must confirm under distribution shift (p_hat "
-                  "drifts as the policy learns)",
-        "generated_at": utc_now(),
-    })
+    write_result(
+        out,
+        {
+            "kind": "bandit_reallocation_sim",
+            "status": "complete",
+            "pool": str(args.pool),
+            "pool_tag": pool["tag"],
+            "model": pool["model"],
+            "G": G,
+            "n_strata": args.n_strata,
+            "groups_budget": args.groups_budget,
+            "sims": args.sims,
+            "seed": args.seed,
+            "stratum_true_J": [round(j, 5) for j in Js],
+            "oracle_stratum": oracle_idx,
+            "results": results,
+            "verdict": verdict,
+            "caveat": "offline simulation on a frozen pool; a training-time "
+            "pilot must confirm under distribution shift (p_hat "
+            "drifts as the policy learns)",
+            "generated_at": utc_now(),
+        },
+    )
     print(f"-> {out}")
 
 

@@ -55,10 +55,12 @@ MAPPING ASSUMPTIONS (please confirm — see README at bottom of run_sweep docstr
                   TRL/DAPO/GSPO. The arm is always recorded in the output so the
                   audit can stratify by it.
 """
+
 from __future__ import annotations
 
 import sys as _contract_sys
 from pathlib import Path as _ContractPath
+
 if len(_ContractPath(__file__).resolve().parents) > 3:
     _contract_sys.path.insert(0, str(_ContractPath(__file__).resolve().parents[3]))
 from platform_hybrid.experiments.framework_contracts import objective_identity, response_logprobs
@@ -73,17 +75,31 @@ import traceback
 from datetime import datetime, timezone
 from pathlib import Path
 
-HERE = Path(__file__).resolve().parent                 # .../experiments/tinker-runs
-REPO_ROOT = HERE.parents[1]                             # .../tinker-rl-lab
+HERE = Path(__file__).resolve().parent  # .../experiments/tinker-runs
+REPO_ROOT = HERE.parents[1]  # .../tinker-rl-lab
 MASTER_CSV = REPO_ROOT / "experiments" / "master_results.csv"
 
 # Column order MUST match the existing experiments/master_results.csv header so
 # aggregate_results.py and run_sweep.py's resume logic keep working.
 MASTER_COLS = [
-    "group", "experiment_id", "experiment_name", "model", "model_short",
-    "method", "task", "platform", "seed", "steps_completed", "peak_reward",
-    "last10_avg", "first5_avg", "status", "error_message", "finding",
-    "wandb_run_url", "hf_checkpoint_url",
+    "group",
+    "experiment_id",
+    "experiment_name",
+    "model",
+    "model_short",
+    "method",
+    "task",
+    "platform",
+    "seed",
+    "steps_completed",
+    "peak_reward",
+    "last10_avg",
+    "first5_avg",
+    "status",
+    "error_message",
+    "finding",
+    "wandb_run_url",
+    "hf_checkpoint_url",
 ]
 
 # Loss arms we accept. Anything else is a hard error (no silent fallback).
@@ -306,11 +322,13 @@ def parse_args(argv=None) -> argparse.Namespace:
     ap.add_argument("--tag", required=True, help="unique per-cell id (== experiment_id)")
     ap.add_argument("--model", required=True, help="HF model id, e.g. Qwen/Qwen3-8B")
     ap.add_argument("--task", required=True, help="training task (gsm8k)")
-    ap.add_argument("--loss", required=True, choices=sorted(VALID_LOSSES),
-                    help="loss/advantage surrogate arm")
+    ap.add_argument(
+        "--loss", required=True, choices=sorted(VALID_LOSSES), help="loss/advantage surrogate arm"
+    )
     ap.add_argument("--seed", required=True, type=int)
-    ap.add_argument("--group-size", dest="group_size", required=True, type=int,
-                    help="GRPO group size G")
+    ap.add_argument(
+        "--group-size", dest="group_size", required=True, type=int, help="GRPO group size G"
+    )
     ap.add_argument("--lr", required=True, type=float)
     ap.add_argument("--steps", required=True, type=int)
     ap.add_argument("--rank", required=True, type=int, help="LoRA rank")
@@ -318,8 +336,12 @@ def parse_args(argv=None) -> argparse.Namespace:
     ap.add_argument("--out", required=True, help="path to write the result JSON")
     # Optional pass-throughs (sweep doesn't emit these today; sane defaults
     # mirror live_zvf_probe.parse_args()).
-    ap.add_argument("--batch", type=int, default=2,
-                    help="prompts per GRPO step (default 2, matches in-repo loops)")
+    ap.add_argument(
+        "--batch",
+        type=int,
+        default=2,
+        help="prompts per GRPO step (default 2, matches in-repo loops)",
+    )
     ap.add_argument("--temperature", type=float, default=0.8)
     ap.add_argument("--top-p", dest="top_p", type=float, default=0.95)
     ap.add_argument("--max-tokens", type=int, default=512)
@@ -348,9 +370,15 @@ def main(argv=None) -> int:
         raise FileExistsError("Refusing to overwrite a prior cell attempt; select a new output/tag")
 
     cell = {
-        "tag": args.tag, "model": args.model, "task": args.task,
-        "loss": args.loss, "seed": args.seed, "group_size": args.group_size,
-        "lr": args.lr, "steps": args.steps, "rank": args.rank,
+        "tag": args.tag,
+        "model": args.model,
+        "task": args.task,
+        "loss": args.loss,
+        "seed": args.seed,
+        "group_size": args.group_size,
+        "lr": args.lr,
+        "steps": args.steps,
+        "rank": args.rank,
         "difficulty": args.difficulty,
     }
 
@@ -379,7 +407,7 @@ def main(argv=None) -> int:
         seed=args.seed,
         rank=args.rank,
         steps=args.steps,
-        group=args.group_size,          # runner calls it `group`
+        group=args.group_size,  # runner calls it `group`
         batch=args.batch,
         lr=args.lr,
         temperature=args.temperature,

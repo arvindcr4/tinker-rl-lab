@@ -27,12 +27,12 @@ Outputs:
   platform_hybrid/experiments/results/p5p8/p5_manifest_outcome_coupling_boot.tsv
   platform_hybrid/experiments/results/p5p8/p5_manifest_outcome_coupling_summary.json
 """
+
 from __future__ import annotations
 
 import csv
 import json
 import math
-import os
 import random
 import statistics
 import sys
@@ -53,7 +53,7 @@ ITEMS = [
     "ref_policy_kl",
     "sampler_backend_precision",
     "per_step_zvf_path",
-"group_size_schedule",
+    "group_size_schedule",
     "heldout_split",
     "decontamination_notes",
 ]
@@ -71,6 +71,7 @@ ITEM_WEIGHTS = {
 
 
 from p5_review17_stats import json_safe
+
 
 def load_cells() -> list[dict]:
     rows = []
@@ -120,6 +121,7 @@ def shannon_entropy_bits(values: list[str]) -> float:
 def badge_for(manifest: dict) -> tuple[float, dict[str, float]]:
     """Canonical v2 completeness score, independent of outcome significance."""
     from p5_mve_empirical import score_one
+
     result = score_one(manifest or {}, {}, include_mve=False)
     return result["total"], {item["name"]: item["score"] for item in result["items"]}
 
@@ -131,7 +133,7 @@ def fingerprint(manifest: dict) -> tuple:
 
 
 def hamming(a: tuple, b: tuple) -> int:
-    return sum(1 for x, y in zip(a, b) if x != y)
+    return sum(1 for x, y in zip(a, b, strict=False) if x != y)
 
 
 def manhattan(a: tuple, b: tuple) -> int:
@@ -182,8 +184,9 @@ def bootstrap_ci(values: list[float], stat_fn, n_boot: int = N_BOOT) -> tuple[fl
     return stat_fn(values), lo, hi
 
 
-def permutation_p(diff_obs: float, group_a: list[float], group_b: list[float],
-                   n_perm: int = 5000) -> float:
+def permutation_p(
+    diff_obs: float, group_a: list[float], group_b: list[float], n_perm: int = 5000
+) -> float:
     """Unavailable: flattened pairs are dependent and lack cell identities.
 
     Keep descriptive differences, but never return an invalid pair-level p-value.
@@ -193,7 +196,9 @@ def permutation_p(diff_obs: float, group_a: list[float], group_b: list[float],
 
 
 def main() -> int:
-    print("Protocol review17-p5-v2: exploratory descriptive associations; no independent-run, causal, equivalence, or held-out prediction claim")
+    print(
+        "Protocol review17-p5-v2: exploratory descriptive associations; no independent-run, causal, equivalence, or held-out prediction claim"
+    )
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     cells = load_cells()
     manifests = load_manifests()
@@ -216,19 +221,23 @@ def main() -> int:
         n_unique = len(set(vals))
         h_bits = shannon_entropy_bits(vals)
         n_na = sum(1 for v in vals if v.startswith("n/a") or v == "MISSING")
-        h2_rows.append({
-            "item": item,
-            "n_unique_values": n_unique,
-            "entropy_bits": round(h_bits, 4),
-            "n_na_or_missing": n_na,
-            "fraction_na": round(n_na / len(vals), 4),
-            "max_entropy_possible_bits": round(math.log2(len(vals)), 4),
-            "placebo": n_unique <= 1,
-        })
+        h2_rows.append(
+            {
+                "item": item,
+                "n_unique_values": n_unique,
+                "entropy_bits": round(h_bits, 4),
+                "n_na_or_missing": n_na,
+                "fraction_na": round(n_na / len(vals), 4),
+                "max_entropy_possible_bits": round(math.log2(len(vals)), 4),
+                "placebo": n_unique <= 1,
+            }
+        )
     # Total info budget
     total_bits = sum(r["entropy_bits"] for r in h2_rows)
-    info_share = {r["item"]: round(r["entropy_bits"] / total_bits, 4)
-                  if total_bits > 0 else 0.0 for r in h2_rows}
+    info_share = {
+        r["item"]: round(r["entropy_bits"] / total_bits, 4) if total_bits > 0 else 0.0
+        for r in h2_rows
+    }
 
     # ===== H1: badge vs seed-pair reproducibility =====
     cell_groups: dict[tuple, list[dict]] = defaultdict(list)
@@ -252,12 +261,18 @@ def main() -> int:
                     continue
                 d = abs(ci["mean_reward"] - cj["mean_reward"])
                 h1_pair_diffs.append((ci["badge"], d, key))
-                h1_rows.append({
-                    "model": key[0], "task": key[1], "G": key[2],
-                    "temperature": key[3], "seed_i": seeds[i], "seed_j": seeds[j],
-                    "badge": ci["badge"],  # same group -> same badge
-                    "abs_delta_reward": round(d, 6),
-                })
+                h1_rows.append(
+                    {
+                        "model": key[0],
+                        "task": key[1],
+                        "G": key[2],
+                        "temperature": key[3],
+                        "seed_i": seeds[i],
+                        "seed_j": seeds[j],
+                        "badge": ci["badge"],  # same group -> same badge
+                        "abs_delta_reward": round(d, 6),
+                    }
+                )
 
     # Spearman on (badge, |delta_reward|)
     if h1_pair_diffs:
@@ -301,10 +316,13 @@ def main() -> int:
         rho_p = spearman(obs_distances, [x[2] for x in obs_deltas])
         # Close-vs-far: median split, compare |delta_telemetry|
         med = statistics.median(obs_distances)
-        close_d = [d for h, d in zip(obs_distances, obs_deltas) if h <= med]
-        far_d = [d for h, d in zip(obs_distances, obs_deltas) if h > med]
+        close_d = [d for h, d in zip(obs_distances, obs_deltas, strict=False) if h <= med]
+        far_d = [d for h, d in zip(obs_distances, obs_deltas, strict=False) if h > med]
+
         # For each telemetry channel, permutation test close_mean - far_mean
-        def m(seq): return statistics.mean(seq) if seq else float("nan")
+        def m(seq):
+            return statistics.mean(seq) if seq else float("nan")
+
         diff_r_obs = m([x[0] for x in close_d]) - m([x[0] for x in far_d])
         diff_z_obs = m([x[1] for x in close_d]) - m([x[1] for x in far_d])
         diff_p_obs = m([x[2] for x in close_d]) - m([x[2] for x in far_d])
@@ -324,30 +342,35 @@ def main() -> int:
         vals = [str(manifests.get(c["cell_id"], {}).get(item, "MISSING")) for c in enriched]
         uniq = sorted(set(vals))
         if len(uniq) < 2:
-            item_outcome_rows.append({
-                "item": item, "n_unique": len(uniq),
-                "p_value_mean_reward": float("nan"),
-                "p_value_zvf": float("nan"),
-                "p_value_pcd": float("nan"),
-                "note": "placebo (<=1 unique value on live corpus)",
-            })
+            item_outcome_rows.append(
+                {
+                    "item": item,
+                    "n_unique": len(uniq),
+                    "p_value_mean_reward": float("nan"),
+                    "p_value_zvf": float("nan"),
+                    "p_value_pcd": float("nan"),
+                    "note": "placebo (<=1 unique value on live corpus)",
+                }
+            )
             continue
         # Group cells by value
         per_val: dict[str, list[dict]] = defaultdict(list)
-        for c, v in zip(enriched, vals):
+        for c, v in zip(enriched, vals, strict=False):
             per_val[v].append(c)
+
         # Use Kruskal-Wallis-like approximation: max abs pairwise mean diff
         # vs permutation null
         def ch(scalar):
-            groups = [[c[scalar] for c in per_val[v] if c[scalar] is not None]
-                      for v in uniq]
+            groups = [[c[scalar] for c in per_val[v] if c[scalar] is not None] for v in uniq]
             groups = [g for g in groups if g]
             if len(groups) < 2:
                 return float("nan")
             max_abs = 0.0
             for i in range(len(groups)):
                 for j in range(i + 1, len(groups)):
-                    max_abs = max(max_abs, abs(statistics.mean(groups[i]) - statistics.mean(groups[j])))
+                    max_abs = max(
+                        max_abs, abs(statistics.mean(groups[i]) - statistics.mean(groups[j]))
+                    )
             combined = [v for g in groups for v in g]
             n_each = [len(g) for g in groups]
             null = []
@@ -356,7 +379,7 @@ def main() -> int:
                 idx = 0
                 ms = []
                 for ne in n_each:
-                    ms.append(statistics.mean(combined[idx:idx + ne]))
+                    ms.append(statistics.mean(combined[idx : idx + ne]))
                     idx += ne
                 mmax = 0.0
                 for i in range(len(ms)):
@@ -367,14 +390,16 @@ def main() -> int:
             rank = sum(1 for x in null if x >= max_abs)
             return (rank + 1) / (len(null) + 1)
 
-        item_outcome_rows.append({
-            "item": item,
-            "n_unique": len(uniq),
-            "p_value_mean_reward": round(ch("mean_reward"), 4),
-            "p_value_zvf": round(ch("zvf"), 4),
-            "p_value_pcd": round(ch("pcd"), 4),
-            "note": "",
-        })
+        item_outcome_rows.append(
+            {
+                "item": item,
+                "n_unique": len(uniq),
+                "p_value_mean_reward": round(ch("mean_reward"), 4),
+                "p_value_zvf": round(ch("zvf"), 4),
+                "p_value_pcd": round(ch("pcd"), 4),
+                "note": "",
+            }
+        )
 
     # ===== Write outputs =====
     # p5_manifest_outcome_coupling.tsv — H1 + H3 + per-item outcome rows
@@ -383,41 +408,130 @@ def main() -> int:
         w = csv.writer(f, delimiter="\t")
         w.writerow(["section", "k1", "k2", "k3", "k4", "k5", "k6", "k7", "value"])
         for r in h1_rows:
-            w.writerow(["H1_pair", r["model"], r["task"], r["G"], r["temperature"],
-                        r["seed_i"], r["seed_j"],
-                        f"badge={r['badge']:.1f},|dR|={r['abs_delta_reward']:.6f}", ""])
+            w.writerow(
+                [
+                    "H1_pair",
+                    r["model"],
+                    r["task"],
+                    r["G"],
+                    r["temperature"],
+                    r["seed_i"],
+                    r["seed_j"],
+                    f"badge={r['badge']:.1f},|dR|={r['abs_delta_reward']:.6f}",
+                    "",
+                ]
+            )
         for r in h2_rows:
             share = info_share[r["item"]]
-            w.writerow(["H2_info", r["item"], f"n_unique={r['n_unique_values']}",
-                        f"H={r['entropy_bits']:.4f}", f"Hmax={r['max_entropy_possible_bits']:.4f}",
-                        f"n_na={r['n_na_or_missing']}", f"frac_na={r['fraction_na']:.4f}",
-                        f"share={share:.4f}", f"placebo={r['placebo']}"])
+            w.writerow(
+                [
+                    "H2_info",
+                    r["item"],
+                    f"n_unique={r['n_unique_values']}",
+                    f"H={r['entropy_bits']:.4f}",
+                    f"Hmax={r['max_entropy_possible_bits']:.4f}",
+                    f"n_na={r['n_na_or_missing']}",
+                    f"frac_na={r['fraction_na']:.4f}",
+                    f"share={share:.4f}",
+                    f"placebo={r['placebo']}",
+                ]
+            )
         for r in item_outcome_rows:
-            w.writerow(["H3_perm", r["item"], f"n_unique={r['n_unique']}",
-                        f"p_reward={r['p_value_mean_reward']}",
-                        f"p_zvf={r['p_value_zvf']}",
-                        f"p_pcd={r['p_value_pcd']}",
-                        r["note"], ""])
+            w.writerow(
+                [
+                    "H3_perm",
+                    r["item"],
+                    f"n_unique={r['n_unique']}",
+                    f"p_reward={r['p_value_mean_reward']}",
+                    f"p_zvf={r['p_value_zvf']}",
+                    f"p_pcd={r['p_value_pcd']}",
+                    r["note"],
+                    "",
+                ]
+            )
 
     # p5_manifest_outcome_coupling_boot.tsv — bootstrap summary
     out_boot = OUT_DIR / "p5_manifest_outcome_coupling_boot.tsv"
     with out_boot.open("w", newline="") as f:
         w = csv.writer(f, delimiter="\t")
         w.writerow(["claim", "statistic", "point_estimate", "ci_low", "ci_high", "p_value", "n"])
-        w.writerow(["H1_spearman_badge_vs_|dR|", "spearman_rho", round(rho, 4),
-                    round(rho_lo, 4), round(rho_hi, 4), "", len(h1_pair_diffs)])
-        w.writerow(["H3_spearman_hamming_vs_|dR|", "spearman_rho", round(rho_r, 4),
-                    "", "", "", len(obs_deltas)])
-        w.writerow(["H3_spearman_hamming_vs_|dZVF|", "spearman_rho", round(rho_z, 4),
-                    "", "", "", len(obs_deltas)])
-        w.writerow(["H3_spearman_hamming_vs_|dPCD|", "spearman_rho", round(rho_p, 4),
-                    "", "", "", len(obs_deltas)])
-        w.writerow(["H3_close_vs_far_|dR|", "mean_diff", round(diff_r_obs, 6),
-                    "", "", round(p_r, 4), len(close_d) + len(far_d)])
-        w.writerow(["H3_close_vs_far_|dZVF|", "mean_diff", round(diff_z_obs, 6),
-                    "", "", round(p_z, 4), len(close_d) +len(far_d)])
-        w.writerow(["H3_close_vs_far_|dPCD|", "mean_diff", round(diff_p_obs, 6),
-                    "", "", round(p_p, 4), len(close_d) + len(far_d)])
+        w.writerow(
+            [
+                "H1_spearman_badge_vs_|dR|",
+                "spearman_rho",
+                round(rho, 4),
+                round(rho_lo, 4),
+                round(rho_hi, 4),
+                "",
+                len(h1_pair_diffs),
+            ]
+        )
+        w.writerow(
+            [
+                "H3_spearman_hamming_vs_|dR|",
+                "spearman_rho",
+                round(rho_r, 4),
+                "",
+                "",
+                "",
+                len(obs_deltas),
+            ]
+        )
+        w.writerow(
+            [
+                "H3_spearman_hamming_vs_|dZVF|",
+                "spearman_rho",
+                round(rho_z, 4),
+                "",
+                "",
+                "",
+                len(obs_deltas),
+            ]
+        )
+        w.writerow(
+            [
+                "H3_spearman_hamming_vs_|dPCD|",
+                "spearman_rho",
+                round(rho_p, 4),
+                "",
+                "",
+                "",
+                len(obs_deltas),
+            ]
+        )
+        w.writerow(
+            [
+                "H3_close_vs_far_|dR|",
+                "mean_diff",
+                round(diff_r_obs, 6),
+                "",
+                "",
+                round(p_r, 4),
+                len(close_d) + len(far_d),
+            ]
+        )
+        w.writerow(
+            [
+                "H3_close_vs_far_|dZVF|",
+                "mean_diff",
+                round(diff_z_obs, 6),
+                "",
+                "",
+                round(p_z, 4),
+                len(close_d) + len(far_d),
+            ]
+        )
+        w.writerow(
+            [
+                "H3_close_vs_far_|dPCD|",
+                "mean_diff",
+                round(diff_p_obs, 6),
+                "",
+                "",
+                round(p_p, 4),
+                len(close_d) + len(far_d),
+            ]
+        )
 
     # p5_manifest_outcome_coupling_summary.json
     summary = {
@@ -437,10 +551,7 @@ def main() -> int:
         },
         "h2": {
             "claim": "Per-item info content on live 98-cell corpus (bits).",
-            "items": [
-                {**r, "info_share": info_share[r["item"]]}
-                for r in h2_rows
-            ],
+            "items": [{**r, "info_share": info_share[r["item"]]} for r in h2_rows],
             "total_bits": round(total_bits, 4),
             "n_placebo_items": sum(1 for r in h2_rows if r["placebo"]),
         },
@@ -462,21 +573,31 @@ def main() -> int:
         json.dump(json_safe(summary), f, indent=2)
 
     # ----- Console digest
-    print(f"[p5_manifest_outcome_coupling] cells={len(enriched)} "
-          f"pairs={len(h1_pair_diffs)} cell_pairs_sampled={len(obs_deltas)}")
-    print(f"H1  spearman(badge, |dR|) = {rho:+.3f} "
-          f"[{rho_lo:+.3f}, {rho_hi:+.3f}]  n={len(h1_pair_diffs)}")
+    print(
+        f"[p5_manifest_outcome_coupling] cells={len(enriched)} "
+        f"pairs={len(h1_pair_diffs)} cell_pairs_sampled={len(obs_deltas)}"
+    )
+    print(
+        f"H1  spearman(badge, |dR|) = {rho:+.3f} "
+        f"[{rho_lo:+.3f}, {rho_hi:+.3f}]  n={len(h1_pair_diffs)}"
+    )
     print(f"H2  total bits={total_bits:.3f} across 7 items")
     for r in h2_rows:
-        print(f"   {r['item']:32s} n_unique={r['n_unique_values']:>3d}  "
-              f"H={r['entropy_bits']:.3f} bits  share={info_share[r['item']]:.3f}  "
-              f"placebo={r['placebo']}")
-    print(f"H3  spearman(hamming, |dR|) = {rho_r:+.3f}, "
-          f"close-far p_reward={p_r:.3f} zvf={p_z:.3f} pcd={p_p:.3f}")
+        print(
+            f"   {r['item']:32s} n_unique={r['n_unique_values']:>3d}  "
+            f"H={r['entropy_bits']:.3f} bits  share={info_share[r['item']]:.3f}  "
+            f"placebo={r['placebo']}"
+        )
+    print(
+        f"H3  spearman(hamming, |dR|) = {rho_r:+.3f}, "
+        f"close-far p_reward={p_r:.3f} zvf={p_z:.3f} pcd={p_p:.3f}"
+    )
     print(f"   per-item perm-p (reward / zvf / pcd):")
     for r in item_outcome_rows:
-        print(f"     {r['item']:32s} p=({r['p_value_mean_reward']}, "
-              f"{r['p_value_zvf']}, {r['p_value_pcd']})  {r['note']}")
+        print(
+            f"     {r['item']:32s} p=({r['p_value_mean_reward']}, "
+            f"{r['p_value_zvf']}, {r['p_value_pcd']})  {r['note']}"
+        )
     return 0
 
 

@@ -28,6 +28,7 @@ Outputs:
   - platform_hybrid/experiments/results/group_size_iter39_claim_strength_v2.tsv
   - platform_hybrid/experiments/results/group_size_iter39_summary_v2.tsv
 """
+
 from __future__ import annotations
 
 import csv
@@ -71,14 +72,22 @@ def write_tsv(path: Path, header: list[str], rows: list[dict]) -> None:
 def fit_exponential(T: np.ndarray, R: np.ndarray) -> tuple[float, float, float]:
     """Fit R(T) = R_inf + (1-R_inf) * exp(-T/Tau), minimize SSE."""
     from scipy.optimize import least_squares
-    T=np.asarray(T,float); R=np.asarray(R,float)
-    if len(T)<2 or not np.all(np.isfinite(T)) or not np.all(np.isfinite(R)):
+
+    T = np.asarray(T, float)
+    R = np.asarray(R, float)
+    if len(T) < 2 or not np.all(np.isfinite(T)) or not np.all(np.isfinite(R)):
         raise ValueError("need finite retention observations")
-    scale=max(float(np.max(T)),1.)
-    def residual(p): return p[0]+(1-p[0])*np.exp(-(T/scale)/p[1])-R
-    fit=least_squares(residual,[max(0,min(.99,float(R.min()))),.5],bounds=([0,1e-9],[1,1e6]))
-    if not fit.success: raise ValueError("exponential fit failed")
-    return float(fit.x[0]),float(fit.x[1]*scale),float(np.sum(fit.fun**2))
+    scale = max(float(np.max(T)), 1.0)
+
+    def residual(p):
+        return p[0] + (1 - p[0]) * np.exp(-(T / scale) / p[1]) - R
+
+    fit = least_squares(
+        residual, [max(0, min(0.99, float(R.min()))), 0.5], bounds=([0, 1e-9], [1, 1e6])
+    )
+    if not fit.success:
+        raise ValueError("exponential fit failed")
+    return float(fit.x[0]), float(fit.x[1] * scale), float(np.sum(fit.fun**2))
 
 
 def fit_sigmoid(T: np.ndarray, R: np.ndarray) -> tuple[float, float, float, float, float]:
@@ -92,7 +101,7 @@ def fit_sigmoid(T: np.ndarray, R: np.ndarray) -> tuple[float, float, float, floa
     best = (R_inf, R_max, T_min, T_max, np.inf)
     for T0 in np.linspace(T_min, T_max, 12):
         for k in np.geomspace(1e5, 1e8, 12):
-            sig = 1.0 / (1.0 + np.exp(np.clip((T - T0) / k,-700,700)))
+            sig = 1.0 / (1.0 + np.exp(np.clip((T - T0) / k, -700, 700)))
             pred = R_inf + (R_max - R_inf) * sig
             sse = float(np.sum((R - pred) ** 2))
             if sse < best[4]:
@@ -125,7 +134,9 @@ def aic(sse: float, n: int, k_params: int) -> float:
 def bootstrap_ci(values: np.ndarray, q: float = 0.025) -> tuple[float, float]:
     if len(values) == 0:
         return float("nan"), float("nan")
-    return float(np.quantile(values, q, method="inverted_cdf")), float(np.quantile(values, 1 - q, method="inverted_cdf"))
+    return float(np.quantile(values, q, method="inverted_cdf")), float(
+        np.quantile(values, 1 - q, method="inverted_cdf")
+    )
 
 
 def bootstrap_t_critical(
@@ -202,15 +213,17 @@ def main() -> None:
 
     # ---- Analysis 1: critical-budget detection ----
     audit_iter31 = fit_and_audit_pair(T31, R31, R31_lo, R31_hi)
-    audit_rows = [{
-        "pair": "G=4 vs G=32",
-        "source": "iter31_iso_token",
-        "n_budgets": int(len(T31)),
-        "T_max_M": float(T31.max() / 1e6),
-        "R_min": float(R31.min()),
-        "R_max": float(R31.max()),
-        **audit_iter31,
-    }]
+    audit_rows = [
+        {
+            "pair": "G=4 vs G=32",
+            "source": "iter31_iso_token",
+            "n_budgets": int(len(T31)),
+            "T_max_M": float(T31.max() / 1e6),
+            "R_min": float(R31.min()),
+            "R_max": float(R31.max()),
+            **audit_iter31,
+        }
+    ]
     # Per (G_a, G_b) pair at all 4 budgets from iter35
     pairs = sorted({(int(r["G_a"]), int(r["G_b"])) for r in rows35})
     for g_a, g_b in pairs:
@@ -225,15 +238,17 @@ def main() -> None:
         if np.std(R_arr) < 1e-6:
             continue
         audit = fit_and_audit_pair(T_arr, R_arr, R_lo, R_hi)
-        audit_rows.append({
-            "pair": f"G={g_a} vs G={g_b}",
-            "source": "iter35_pair_sweep",
-            "n_budgets": int(len(T_arr)),
-            "T_max_M": float(T_arr.max() / 1e6),
-            "R_min": float(R_arr.min()),
-            "R_max": float(R_arr.max()),
-            **audit,
-        })
+        audit_rows.append(
+            {
+                "pair": f"G={g_a} vs G={g_b}",
+                "source": "iter35_pair_sweep",
+                "n_budgets": int(len(T_arr)),
+                "T_max_M": float(T_arr.max() / 1e6),
+                "R_min": float(R_arr.min()),
+                "R_max": float(R_arr.max()),
+                **audit,
+            }
+        )
     header = list(audit_rows[0].keys())
     write_tsv(RESULTS / "group_size_iter39_t_critical_v2.tsv", header, audit_rows)
 
@@ -250,15 +265,17 @@ def main() -> None:
         n = len(T_arr)
         aic_exp = aic(sse_exp, n, 2)
         aic_sig = aic(sse_sig, n, 4)
-        aic_rows.append({
-            "G_a": g_a,
-            "G_b": g_b,
-            "n_budgets": n,
-            "AIC_exp": round(aic_exp, 3),
-            "AIC_sig": round(aic_sig, 3),
-            "winner": "exp" if aic_exp <= aic_sig else "sig",
-            "delta_AIC_sig_minus_exp": round(aic_sig - aic_exp, 3),
-        })
+        aic_rows.append(
+            {
+                "G_a": g_a,
+                "G_b": g_b,
+                "n_budgets": n,
+                "AIC_exp": round(aic_exp, 3),
+                "AIC_sig": round(aic_sig, 3),
+                "winner": "exp" if aic_exp <= aic_sig else "sig",
+                "delta_AIC_sig_minus_exp": round(aic_sig - aic_exp, 3),
+            }
+        )
     header = list(aic_rows[0].keys())
     write_tsv(RESULTS / "group_size_iter39_aic_v2.tsv", header, aic_rows)
 
@@ -274,7 +291,8 @@ def main() -> None:
 
     # (b) Worst-cell (G=4 vs G=32, T=64M, R=0.727): upper CI on R vs Wu.
     worst = next(
-        r for r in rows35
+        r
+        for r in rows35
         if int(r["G_a"]) == 4 and int(r["G_b"]) == 32 and int(r["T_tokens"]) == 64000000
     )
     R_worst = float(worst["retention"])
@@ -284,21 +302,67 @@ def main() -> None:
     # (c) Of 18 passing cells, how many pass under stricter eps tests?
     # 4 levels: Wu 97.6% in CI, TOST eps=0.02, TOST eps=0.05, TOST eps=0.10
     eps_levels = [0.02, 0.05, 0.10]
-    tost_counts = {e: sum(1 for r in rows35 if r.get("tost_p_eps0.02") and float(r.get("tost_p_eps0.02", 1.0)) < 0.05)
-                   for e in eps_levels}
+    tost_counts = {
+        e: sum(
+            1
+            for r in rows35
+            if r.get("tost_p_eps0.02") and float(r.get("tost_p_eps0.02", 1.0)) < 0.05
+        )
+        for e in eps_levels
+    }
     # The TOST p-value column is "tost_p_eps0.02" -- so this counts cells at eps=0.02.
     n_tost_002 = sum(1 for r in rows35 if r.get("tost_equivalent") == "True")
     n_above_wu = sum(1 for r in rows35 if r["above_wu_97_6pct"] == "True")
 
     claim_rows = [
-        {"claim": "n_cells_point_above_wu", "value": n_above_wu, "denominator": n_total, "fraction": n_above_wu / n_total},
-        {"claim": "n_cells_tost_equivalent_eps0.02", "value": n_tost_002, "denominator": n_total, "fraction": n_tost_002 / n_total},
-        {"claim": "worst_cell_G4_vs_G32_T64M_R", "value": R_worst, "denominator": "", "fraction": ""},
-        {"claim": "worst_cell_upper_CI_minus_Wu_threshold", "value": round(gap_to_Wu, 4), "denominator": "", "fraction": ""},
-        {"claim": "worst_cell_upper_CI_excludes_Wu", "value": bool(gap_to_Wu < 0), "denominator": "", "fraction": ""},
-        {"claim": "pass_fraction_bootstrap_CI_low", "value": round(float(frac_lo), 4), "denominator": n_total, "fraction": ""},
-        {"claim": "pass_fraction_bootstrap_CI_high", "value": round(float(frac_hi), 4), "denominator": n_total, "fraction": ""},
-        {"claim": "pass_fraction_significantly_below_half", "value": bool(frac_hi < 0.5), "denominator": "", "fraction": ""},
+        {
+            "claim": "n_cells_point_above_wu",
+            "value": n_above_wu,
+            "denominator": n_total,
+            "fraction": n_above_wu / n_total,
+        },
+        {
+            "claim": "n_cells_tost_equivalent_eps0.02",
+            "value": n_tost_002,
+            "denominator": n_total,
+            "fraction": n_tost_002 / n_total,
+        },
+        {
+            "claim": "worst_cell_G4_vs_G32_T64M_R",
+            "value": R_worst,
+            "denominator": "",
+            "fraction": "",
+        },
+        {
+            "claim": "worst_cell_upper_CI_minus_Wu_threshold",
+            "value": round(gap_to_Wu, 4),
+            "denominator": "",
+            "fraction": "",
+        },
+        {
+            "claim": "worst_cell_upper_CI_excludes_Wu",
+            "value": bool(gap_to_Wu < 0),
+            "denominator": "",
+            "fraction": "",
+        },
+        {
+            "claim": "pass_fraction_bootstrap_CI_low",
+            "value": round(float(frac_lo), 4),
+            "denominator": n_total,
+            "fraction": "",
+        },
+        {
+            "claim": "pass_fraction_bootstrap_CI_high",
+            "value": round(float(frac_hi), 4),
+            "denominator": n_total,
+            "fraction": "",
+        },
+        {
+            "claim": "pass_fraction_significantly_below_half",
+            "value": bool(frac_hi < 0.5),
+            "denominator": "",
+            "fraction": "",
+        },
     ]
     header = list(claim_rows[0].keys())
     write_tsv(RESULTS / "group_size_iter39_claim_strength_v2.tsv", header, claim_rows)
@@ -309,14 +373,22 @@ def main() -> None:
         "pairs_with_T_star_below_max_T": sum(1 for r in audit_rows if r["T_star_below_max_T"]),
         "iter31_G4_vs_G32_R_inf_exp": round(audit_iter31["R_inf_exp"], 4),
         "iter31_G4_vs_G32_Tau_M": round(audit_iter31["Tau_M"], 3),
-        "iter31_G4_vs_G32_T_star_M": round(audit_iter31["T_star_M"], 3) if audit_iter31["T_star_M"] != float("inf") else "inf",
+        "iter31_G4_vs_G32_T_star_M": round(audit_iter31["T_star_M"], 3)
+        if audit_iter31["T_star_M"] != float("inf")
+        else "inf",
         "iter31_G4_vs_G32_T_star_lo_M": round(audit_iter31["T_star_lo_M"], 3),
         "iter31_G4_vs_G32_T_star_hi_M": round(audit_iter31["T_star_hi_M"], 3),
-        "iter31_G4_vs_G32_AIC_exp_minus_AIC_sig": round(audit_iter31["AIC_exp"] - audit_iter31["AIC_sig"], 3),
+        "iter31_G4_vs_G32_AIC_exp_minus_AIC_sig": round(
+            audit_iter31["AIC_exp"] - audit_iter31["AIC_sig"], 3
+        ),
         "iter35_40_cell_pass_fraction": n_pass / n_total,
         "iter35_40_cell_pass_fraction_CI95": [round(float(frac_lo), 4), round(float(frac_hi), 4)],
         "iter35_40_cell_tost_equivalent_eps0.02": n_tost_002,
-        "worst_cell_G4_vs_G32_T64M": {"R": R_worst, "R_upper_CI": R_worst_hi, "above_Wu": gap_to_Wu >= 0},
+        "worst_cell_G4_vs_G32_T64M": {
+            "R": R_worst,
+            "R_upper_CI": R_worst_hi,
+            "above_Wu": gap_to_Wu >= 0,
+        },
         "claim_significantly_below_50pct_pass": bool(frac_hi < 0.5),
     }
     with (RESULTS / "group_size_iter39_summary_v2.json").open("w") as f:
@@ -327,7 +399,9 @@ def main() -> None:
         for k, v in summary.items()
         if not isinstance(v, (dict, list))
     ]
-    one_row.append({"metric": "iter35_pass_fraction_CI95", "value": f"[{frac_lo:.4f}, {frac_hi:.4f}]"})
+    one_row.append(
+        {"metric": "iter35_pass_fraction_CI95", "value": f"[{frac_lo:.4f}, {frac_hi:.4f}]"}
+    )
     write_tsv(
         RESULTS / "group_size_iter39_summary_v2.tsv",
         ["metric", "value"],
@@ -336,15 +410,21 @@ def main() -> None:
 
     # Console summary
     print(f"[iter39] Fit {len(audit_rows)} retention curves")
-    print(f"[iter39] G=4 vs G=32 R_inf = {audit_iter31['R_inf_exp']:.4f}, "
-          f"Tau = {audit_iter31['Tau_M']:.3f}M, T* = {audit_iter31['T_star_M']:.3f}M "
-          f"[{audit_iter31['T_star_lo_M']:.3f}, {audit_iter31['T_star_hi_M']:.3f}]")
-    print(f"[iter39] AIC exp={audit_iter31['AIC_exp']:.2f} vs sig={audit_iter31['AIC_sig']:.2f} "
-          f"(delta_sig_minus_exp={audit_iter31['delta_AIC_sig_minus_exp']:.2f})")
-    print(f"[iter39] Iter35 40-cell pass fraction = {n_pass}/{n_total} = {n_pass/n_total:.3f}")
+    print(
+        f"[iter39] G=4 vs G=32 R_inf = {audit_iter31['R_inf_exp']:.4f}, "
+        f"Tau = {audit_iter31['Tau_M']:.3f}M, T* = {audit_iter31['T_star_M']:.3f}M "
+        f"[{audit_iter31['T_star_lo_M']:.3f}, {audit_iter31['T_star_hi_M']:.3f}]"
+    )
+    print(
+        f"[iter39] AIC exp={audit_iter31['AIC_exp']:.2f} vs sig={audit_iter31['AIC_sig']:.2f} "
+        f"(delta_sig_minus_exp={audit_iter31['delta_AIC_sig_minus_exp']:.2f})"
+    )
+    print(f"[iter39] Iter35 40-cell pass fraction = {n_pass}/{n_total} = {n_pass / n_total:.3f}")
     print(f"[iter39] Pass fraction 95% CI = [{frac_lo:.3f}, {frac_hi:.3f}]")
-    print(f"[iter39] Worst cell R={R_worst:.3f}, upper CI={R_worst_hi:.3f} "
-          f"(gap to Wu {gap_to_Wu:+.3f}; excludes Wu: {gap_to_Wu < 0})")
+    print(
+        f"[iter39] Worst cell R={R_worst:.3f}, upper CI={R_worst_hi:.3f} "
+        f"(gap to Wu {gap_to_Wu:+.3f}; excludes Wu: {gap_to_Wu < 0})"
+    )
 
 
 if __name__ == "__main__":

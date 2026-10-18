@@ -65,7 +65,7 @@ def _grouped_rewards(
             f"got {rewards.shape[0]} and {group_ids.shape[0]}"
         )
     groups: "dict[object, list]" = {}
-    for gid, r in zip(group_ids.tolist(), rewards.tolist()):
+    for gid, r in zip(group_ids.tolist(), rewards.tolist(), strict=False):
         groups.setdefault(gid, []).append(r)
     return groups
 
@@ -97,10 +97,7 @@ def n_nan_groups(rewards: ArrayLike, group_ids: ArrayLike) -> int:
     """
     # Bucket by group and check finiteness
     groups = _grouped_rewards(rewards, group_ids)
-    return sum(
-        1 for g in groups.values()
-        if not np.isfinite(np.asarray(g, dtype=float)).all()
-    )
+    return sum(1 for g in groups.values() if not np.isfinite(np.asarray(g, dtype=float)).all())
 
 
 def zvf(
@@ -248,7 +245,4 @@ def per_prompt_zvf(
     rollouts all collapsed to the same outcome maps to 1.0, otherwise 0.0.
     """
     groups = _grouped_rewards(rewards, group_ids)
-    return {
-        gid: (1.0 if _group_variance(g) <= eps else 0.0)
-        for gid, g in groups.items()
-    }
+    return {gid: (1.0 if _group_variance(g) <= eps else 0.0) for gid, g in groups.items()}

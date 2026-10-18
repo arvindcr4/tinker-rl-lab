@@ -56,6 +56,7 @@ Outputs:
   figures/scaling_law_iter17.{pdf,png}
   paper/figures/scaling_law_iter17.{pdf,png}
 """
+
 from __future__ import annotations
 
 import csv
@@ -64,10 +65,11 @@ import math
 from pathlib import Path
 
 import matplotlib
+
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt  # noqa: E402
-import numpy as np  # noqa: E402
-from scipy.optimize import curve_fit  # noqa: E402
+import matplotlib.pyplot as plt
+import numpy as np
+from scipy.optimize import curve_fit
 
 REPO = Path(__file__).resolve().parent.parent
 TRACE_DIR = REPO / "experiments" / "tinker-runs" / "results"
@@ -108,24 +110,28 @@ MODELS_12: dict[str, str] = {
     "Kimi-K2-Thinking": "arch_gsm8k_kimi-k2.json",
     "GPT-OSS-20B": "arch_gsm8k_gpt-oss-20b.json",
 }
-PARAM_B.update({
-    "Qwen3.5-27B": 27.0,
-    "Qwen3-32B": 32.0,
-    "Qwen3-30B-MoE": 30.0,
-    "Qwen3-30B-MoE-Inst": 30.0,
-    "Qwen3-235B": 235.0,
-    "Kimi-K2-Thinking": 1000.0,
-    "GPT-OSS-20B": 20.0,
-})
-ARCH.update({
-    "Qwen3.5-27B": "dense",
-    "Qwen3-32B": "dense",
-    "Qwen3-30B-MoE": "MoE",
-    "Qwen3-30B-MoE-Inst": "MoE",
-    "Qwen3-235B": "MoE",
-    "Kimi-K2-Thinking": "MoE",
-    "GPT-OSS-20B": "MoE",
-})
+PARAM_B.update(
+    {
+        "Qwen3.5-27B": 27.0,
+        "Qwen3-32B": 32.0,
+        "Qwen3-30B-MoE": 30.0,
+        "Qwen3-30B-MoE-Inst": 30.0,
+        "Qwen3-235B": 235.0,
+        "Kimi-K2-Thinking": 1000.0,
+        "GPT-OSS-20B": 20.0,
+    }
+)
+ARCH.update(
+    {
+        "Qwen3.5-27B": "dense",
+        "Qwen3-32B": "dense",
+        "Qwen3-30B-MoE": "MoE",
+        "Qwen3-30B-MoE-Inst": "MoE",
+        "Qwen3-235B": "MoE",
+        "Kimi-K2-Thinking": "MoE",
+        "GPT-OSS-20B": "MoE",
+    }
+)
 
 SEED = 42
 N_BOOT = 2000
@@ -135,6 +141,7 @@ N_PERM = 5000
 # --------------------------------------------------------------------------
 # Functional forms
 # --------------------------------------------------------------------------
+
 
 def _linear(t, a, b):
     return a + b * t
@@ -151,6 +158,7 @@ def _logistic(t, L, k, t0):
 # --------------------------------------------------------------------------
 # Model-fitting helpers
 # --------------------------------------------------------------------------
+
 
 def aic_bic(n: int, k: int, rss: float) -> tuple[float, float]:
     """AIC and BIC under Gaussian-likelihood assumption.
@@ -181,12 +189,15 @@ def fit_models(y: np.ndarray) -> list[dict]:
     c = float(y.mean())
     rss = float(np.sum((y - c) ** 2))
     a, b = aic_bic(n, 1, rss)
-    rows.append(dict(model="constant", n_params=1, rss=rss, aic=a, bic=b,
-                     converged=True, params=dict(c=c)))
+    rows.append(
+        dict(model="constant", n_params=1, rss=rss, aic=a, bic=b, converged=True, params=dict(c=c))
+    )
 
     # linear
     p = _safe_curve_fit(
-        _linear, t, y,
+        _linear,
+        t,
+        y,
         p0=(float(y.mean()), 0.0),
         bounds=([-2.0, -1.0], [3.0, 1.0]),
     )
@@ -194,17 +205,35 @@ def fit_models(y: np.ndarray) -> list[dict]:
         yhat = _linear(t, *p)
         rss = float(np.sum((y - yhat) ** 2))
         a, b = aic_bic(n, 2, rss)
-        rows.append(dict(model="linear", n_params=2, rss=rss, aic=a, bic=b,
-                         converged=True,
-                         params=dict(a=float(p[0]), b=float(p[1]))))
+        rows.append(
+            dict(
+                model="linear",
+                n_params=2,
+                rss=rss,
+                aic=a,
+                bic=b,
+                converged=True,
+                params=dict(a=float(p[0]), b=float(p[1])),
+            )
+        )
     else:
-        rows.append(dict(model="linear", n_params=2, rss=float("nan"),
-                         aic=float("nan"), bic=float("nan"),
-                         converged=False, params=dict()))
+        rows.append(
+            dict(
+                model="linear",
+                n_params=2,
+                rss=float("nan"),
+                aic=float("nan"),
+                bic=float("nan"),
+                converged=False,
+                params=dict(),
+            )
+        )
 
     # saturation
     p = _safe_curve_fit(
-        _saturation, t, y,
+        _saturation,
+        t,
+        y,
         p0=(max(0.9 * float(np.max(y)) + 0.05, 0.05), 0.3),
         bounds=([0.0, 1e-4], [1.5, 10.0]),
     )
@@ -212,17 +241,35 @@ def fit_models(y: np.ndarray) -> list[dict]:
         yhat = _saturation(t, *p)
         rss = float(np.sum((y - yhat) ** 2))
         a, b = aic_bic(n, 2, rss)
-        rows.append(dict(model="saturation", n_params=2, rss=rss, aic=a, bic=b,
-                         converged=True,
-                         params=dict(R_max=float(p[0]), lam=float(p[1]))))
+        rows.append(
+            dict(
+                model="saturation",
+                n_params=2,
+                rss=rss,
+                aic=a,
+                bic=b,
+                converged=True,
+                params=dict(R_max=float(p[0]), lam=float(p[1])),
+            )
+        )
     else:
-        rows.append(dict(model="saturation", n_params=2, rss=float("nan"),
-                         aic=float("nan"), bic=float("nan"),
-                         converged=False, params=dict()))
+        rows.append(
+            dict(
+                model="saturation",
+                n_params=2,
+                rss=float("nan"),
+                aic=float("nan"),
+                bic=float("nan"),
+                converged=False,
+                params=dict(),
+            )
+        )
 
     # logistic (k=3)
     p = _safe_curve_fit(
-        _logistic, t, y,
+        _logistic,
+        t,
+        y,
         p0=(float(np.max(y) + 0.05), 0.5, float(n / 2.0)),
         bounds=([0.0, 1e-3, 0.0], [2.0, 5.0, float(n) + 5]),
     )
@@ -230,13 +277,29 @@ def fit_models(y: np.ndarray) -> list[dict]:
         yhat = _logistic(t, *p)
         rss = float(np.sum((y - yhat) ** 2))
         a, b = aic_bic(n, 3, rss)
-        rows.append(dict(model="logistic", n_params=3, rss=rss, aic=a, bic=b,
-                         converged=True,
-                         params=dict(L=float(p[0]), k=float(p[1]), t0=float(p[2]))))
+        rows.append(
+            dict(
+                model="logistic",
+                n_params=3,
+                rss=rss,
+                aic=a,
+                bic=b,
+                converged=True,
+                params=dict(L=float(p[0]), k=float(p[1]), t0=float(p[2])),
+            )
+        )
     else:
-        rows.append(dict(model="logistic", n_params=3, rss=float("nan"),
-                         aic=float("nan"), bic=float("nan"),
-                         converged=False, params=dict()))
+        rows.append(
+            dict(
+                model="logistic",
+                n_params=3,
+                rss=float("nan"),
+                aic=float("nan"),
+                bic=float("nan"),
+                converged=False,
+                params=dict(),
+            )
+        )
 
     return rows
 
@@ -244,6 +307,7 @@ def fit_models(y: np.ndarray) -> list[dict]:
 # --------------------------------------------------------------------------
 # Binary-segmentation changepoint + permutation-test p-value
 # --------------------------------------------------------------------------
+
 
 def _contrast_at(y: np.ndarray, tau: int) -> float:
     n = len(y)
@@ -271,8 +335,9 @@ def best_changepoint(y: np.ndarray) -> int | None:
     return best_tau
 
 
-def changepoint_significance(y: np.ndarray, n_perm: int = N_PERM,
-                              rng: np.random.Generator | None = None) -> tuple[int, float, float]:
+def changepoint_significance(
+    y: np.ndarray, n_perm: int = N_PERM, rng: np.random.Generator | None = None
+) -> tuple[int, float, float]:
     """Permutation test: probability of seeing |contrast| >= observed under
     the exchangeability null.  Returns (tau_hat, observed_contrast, perm_p).
     """
@@ -299,10 +364,12 @@ def changepoint_significance(y: np.ndarray, n_perm: int = N_PERM,
     return (int(tau_hat), float(obs), float(p))
 
 
-def changepoint_bootstrap_ci(y: np.ndarray, n_boot: int = N_BOOT,
-                              block_size: int | None = None,
-                              rng: np.random.Generator | None = None
-                              ) -> tuple[int, int, int, float, float]:
+def changepoint_bootstrap_ci(
+    y: np.ndarray,
+    n_boot: int = N_BOOT,
+    block_size: int | None = None,
+    rng: np.random.Generator | None = None,
+) -> tuple[int, int, int, float, float]:
     """Circular block-bootstrap CI on tau. block_size default n//6."""
     n = len(y)
     if rng is None:
@@ -319,8 +386,7 @@ def changepoint_bootstrap_ci(y: np.ndarray, n_boot: int = N_BOOT,
     for _ in range(n_boot):
         starts = rng.integers(0, n, size=n_blocks)
         # circular block sampling: wrap indices modulo n
-        sample = np.array([y[(s + i) % n] for s in starts
-                           for i in range(block_size)])[:n]
+        sample = np.array([y[(s + i) % n] for s in starts for i in range(block_size)])[:n]
         if len(sample) < 4:
             continue
         bcp = best_changepoint(sample)
@@ -338,8 +404,8 @@ def changepoint_bootstrap_ci(y: np.ndarray, n_boot: int = N_BOOT,
 # Effective plateau horizon T_eps
 # --------------------------------------------------------------------------
 
-def t_eps(y: np.ndarray, eps: float, window: int = 5,
-          min_step: int = 5) -> int | None:
+
+def t_eps(y: np.ndarray, eps: float, window: int = 5, min_step: int = 5) -> int | None:
     """Earliest step T such that |y(t') - rolling_window_mean| < eps for
     all t' >= T.  Returns None if unbounded within trace."""
     n = len(y)
@@ -365,6 +431,7 @@ def t_eps(y: np.ndarray, eps: float, window: int = 5,
 # --------------------------------------------------------------------------
 # Phase label by 3 methods
 # --------------------------------------------------------------------------
+
 
 def phase_heuristic(y: np.ndarray) -> str:
     """Reproduce iter5's hand-cut early->late mean contrast."""
@@ -417,8 +484,7 @@ def phase_aic(y: np.ndarray) -> str:
     is statistically indistinguishable from a flat line at its mean.
     """
     fits = fit_models(y)
-    fits_ok = [f for f in fits if f["converged"]
-               and math.isfinite(f["aic"])]
+    fits_ok = [f for f in fits if f["converged"] and math.isfinite(f["aic"])]
     if not fits_ok:
         return "plateau"
     fits_ok.sort(key=lambda f: f["aic"])
@@ -443,7 +509,7 @@ def cohens_kappa(a: list[str], b: list[str]) -> float:
     if len(a) != len(b) or not a:
         return float("nan")
     n = len(a)
-    po = float(np.mean([1.0 if ai == bj else 0.0 for ai, bj in zip(a, b)]))
+    po = float(np.mean([1.0 if ai == bj else 0.0 for ai, bj in zip(a, b, strict=False)]))
     labels = sorted(set(a) | set(b))
     pe = 0.0
     for l in labels:
@@ -459,6 +525,7 @@ def cohens_kappa(a: list[str], b: list[str]) -> float:
 # --------------------------------------------------------------------------
 # Trace loading
 # --------------------------------------------------------------------------
+
 
 def load_reward_per_step(path: Path) -> np.ndarray | None:
     """Extract the per-step mean reward from a tinker-trace JSON file.
@@ -490,8 +557,7 @@ def load_reward_per_step(path: Path) -> np.ndarray | None:
                 return arr
     if "step_log" in d and isinstance(d["step_log"], list):
         try:
-            rs = [s.get("reward") for s in d["step_log"]
-                  if isinstance(s, dict) and "reward" in s]
+            rs = [s.get("reward") for s in d["step_log"] if isinstance(s, dict) and "reward" in s]
             rs = [r for r in rs if isinstance(r, (int, float))]
             if rs:
                 return np.asarray(rs, float)
@@ -517,6 +583,7 @@ def load_reward_per_step(path: Path) -> np.ndarray | None:
 # Main
 # --------------------------------------------------------------------------
 
+
 def main() -> None:
     rng = np.random.default_rng(SEED)
 
@@ -534,69 +601,123 @@ def main() -> None:
 
         # (A) multi-model AIC
         fits = fit_models(y)
-        fits_ok = [f for f in fits if f["converged"]
-                   and math.isfinite(f["aic"])]
+        fits_ok = [f for f in fits if f["converged"] and math.isfinite(f["aic"])]
         fits_ok.sort(key=lambda f: f["aic"])
         best_aic = fits_ok[0]["aic"]
         for fit in fits:
             if not fit["converged"] or not math.isfinite(fit["aic"]):
                 continue
-            aic_rows.append([
-                label, PARAM_B[label], ARCH[label], len(y),
-                fit["model"], fit["n_params"], fit["rss"], fit["aic"],
-                fit["bic"], fit["aic"] - best_aic,
-                1 if fit["model"] == fits_ok[0]["model"] else 0,
-                json.dumps({k: float(v) for k, v in fit["params"].items()},
-                           sort_keys=True),
-            ])
+            aic_rows.append(
+                [
+                    label,
+                    PARAM_B[label],
+                    ARCH[label],
+                    len(y),
+                    fit["model"],
+                    fit["n_params"],
+                    fit["rss"],
+                    fit["aic"],
+                    fit["bic"],
+                    fit["aic"] - best_aic,
+                    1 if fit["model"] == fits_ok[0]["model"] else 0,
+                    json.dumps({k: float(v) for k, v in fit["params"].items()}, sort_keys=True),
+                ]
+            )
 
         # (B) changepoint with permutation-test p-value
-        tau_hat, tau_lo, tau_hi, pre_m, post_m = changepoint_bootstrap_ci(
-            y, n_boot=N_BOOT, rng=rng)
-        tau_sig, contrast_obs, perm_p = changepoint_significance(
-            y, n_perm=N_PERM, rng=rng)
+        tau_hat, tau_lo, tau_hi, pre_m, post_m = changepoint_bootstrap_ci(y, n_boot=N_BOOT, rng=rng)
+        tau_sig, contrast_obs, perm_p = changepoint_significance(y, n_perm=N_PERM, rng=rng)
         early_cut = max(1, len(y) // 3)
         delta_early_late = float(np.mean(y[early_cut:]) - np.mean(y[:early_cut]))
         peak_step = int(np.argmax(y)) + 1
         peak_val = float(np.max(y))
         peak_minus_late = peak_val - float(np.mean(y[early_cut:]))
         zero_frac = float(np.mean(y == 0.0))
-        cp_rows.append([
-            label, PARAM_B[label], ARCH[label], len(y),
-            tau_hat, tau_lo, tau_hi, pre_m, post_m, post_m - pre_m,
-            delta_early_late, peak_step, peak_val, peak_minus_late,
-            zero_frac, contrast_obs, perm_p,
-        ])
+        cp_rows.append(
+            [
+                label,
+                PARAM_B[label],
+                ARCH[label],
+                len(y),
+                tau_hat,
+                tau_lo,
+                tau_hi,
+                pre_m,
+                post_m,
+                post_m - pre_m,
+                delta_early_late,
+                peak_step,
+                peak_val,
+                peak_minus_late,
+                zero_frac,
+                contrast_obs,
+                perm_p,
+            ]
+        )
 
         # (C) T_eps
         for eps in (0.05, 0.10, 0.20):
             t = t_eps(y, eps)
-            t_eps_rows.append([
-                label, PARAM_B[label], ARCH[label], len(y),
-                eps, t if t is not None else -1, peak_step,
-            ])
+            t_eps_rows.append(
+                [
+                    label,
+                    PARAM_B[label],
+                    ARCH[label],
+                    len(y),
+                    eps,
+                    t if t is not None else -1,
+                    peak_step,
+                ]
+            )
 
     with open(RESULTS_DIR / "scaling_law_iter17_aic.tsv", "w", newline="") as f:
         w = csv.writer(f, delimiter="\t")
-        w.writerow(["model", "params_B", "arch", "n_steps",
-                    "model_form", "n_params", "rss", "aic", "bic",
-                    "delta_aic_vs_best", "is_best_aic", "params_json"])
+        w.writerow(
+            [
+                "model",
+                "params_B",
+                "arch",
+                "n_steps",
+                "model_form",
+                "n_params",
+                "rss",
+                "aic",
+                "bic",
+                "delta_aic_vs_best",
+                "is_best_aic",
+                "params_json",
+            ]
+        )
         w.writerows(aic_rows)
 
     with open(RESULTS_DIR / "scaling_law_iter17_changepoint.tsv", "w", newline="") as f:
         w = csv.writer(f, delimiter="\t")
-        w.writerow(["model", "params_B", "arch", "n_steps",
-                    "tau_hat", "tau_lo_2p5", "tau_hi_97p5",
-                    "pre_mean", "post_mean", "tau_contrast",
-                    "early_minus_late_delta", "peak_step", "peak_val",
-                    "peak_minus_late", "zero_frac",
-                    "contrast_obs", "perm_p"])
+        w.writerow(
+            [
+                "model",
+                "params_B",
+                "arch",
+                "n_steps",
+                "tau_hat",
+                "tau_lo_2p5",
+                "tau_hi_97p5",
+                "pre_mean",
+                "post_mean",
+                "tau_contrast",
+                "early_minus_late_delta",
+                "peak_step",
+                "peak_val",
+                "peak_minus_late",
+                "zero_frac",
+                "contrast_obs",
+                "perm_p",
+            ]
+        )
         w.writerows(cp_rows)
 
     with open(RESULTS_DIR / "scaling_law_iter17_t_eps.tsv", "w", newline="") as f:
         w = csv.writer(f, delimiter="\t")
-        w.writerow(["model", "params_B", "arch", "n_steps",
-                    "eps", "t_eps", "peak_step"])
+        w.writerow(["model", "params_B", "arch", "n_steps", "eps", "t_eps", "peak_step"])
         w.writerows(t_eps_rows)
 
     # (D) phase-label agreement
@@ -606,15 +727,17 @@ def main() -> None:
             y = load_reward_per_step(TRACE_DIR / fname)
             if y is None or len(y) < 3:
                 continue
-            out.append({
-                "model": label,
-                "params_B": PARAM_B[label],
-                "arch": ARCH[label],
-                "n_steps": len(y),
-                "phase_heuristic": phase_heuristic(y),
-                "phase_changepoint": phase_changepoint(y),
-                "phase_aic": phase_aic(y),
-            })
+            out.append(
+                {
+                    "model": label,
+                    "params_B": PARAM_B[label],
+                    "arch": ARCH[label],
+                    "n_steps": len(y),
+                    "phase_heuristic": phase_heuristic(y),
+                    "phase_changepoint": phase_changepoint(y),
+                    "phase_aic": phase_aic(y),
+                }
+            )
         return out
 
     p5 = phase_table(list(MODELS_5.items()))
@@ -623,16 +746,44 @@ def main() -> None:
     # per-trace phase labels
     with open(RESULTS_DIR / "scaling_law_iter17_phase_kappa.tsv", "w", newline="") as f:
         w = csv.writer(f, delimiter="\t")
-        w.writerow(["set", "model", "params_B", "arch", "n_steps",
-                    "phase_heuristic", "phase_changepoint", "phase_aic"])
+        w.writerow(
+            [
+                "set",
+                "model",
+                "params_B",
+                "arch",
+                "n_steps",
+                "phase_heuristic",
+                "phase_changepoint",
+                "phase_aic",
+            ]
+        )
         for r in p5:
-            w.writerow(["5anchor", r["model"], r["params_B"], r["arch"],
-                        r["n_steps"], r["phase_heuristic"],
-                        r["phase_changepoint"], r["phase_aic"]])
+            w.writerow(
+                [
+                    "5anchor",
+                    r["model"],
+                    r["params_B"],
+                    r["arch"],
+                    r["n_steps"],
+                    r["phase_heuristic"],
+                    r["phase_changepoint"],
+                    r["phase_aic"],
+                ]
+            )
         for r in p12:
-            w.writerow(["12anchor", r["model"], r["params_B"], r["arch"],
-                        r["n_steps"], r["phase_heuristic"],
-                        r["phase_changepoint"], r["phase_aic"]])
+            w.writerow(
+                [
+                    "12anchor",
+                    r["model"],
+                    r["params_B"],
+                    r["arch"],
+                    r["n_steps"],
+                    r["phase_heuristic"],
+                    r["phase_changepoint"],
+                    r["phase_aic"],
+                ]
+            )
 
     # Cohen's kappa
     def kappa_block(p_set: list[dict], tag: str) -> list[list]:
@@ -655,8 +806,11 @@ def main() -> None:
 
     # ----- figure -----
     fig, axes = plt.subplots(2, 2, figsize=(13, 9))
-    fig.suptitle("Pillar 1 iter-17 elevation: AIC profile, changepoint significance, "
-                 "plateau horizon, phase-label agreement", fontsize=11)
+    fig.suptitle(
+        "Pillar 1 iter-17 elevation: AIC profile, changepoint significance, "
+        "plateau horizon, phase-label agreement",
+        fontsize=11,
+    )
 
     # Panel A: delta-AIC stacked bars for each trace
     axA = axes[0, 0]
@@ -666,16 +820,14 @@ def main() -> None:
     for i, mname in enumerate(model_order):
         vals = []
         for r in p5:
-            rows_for_model = [row for row in aic_rows
-                              if row[0] == r["model"] and row[4] == mname]
+            rows_for_model = [row for row in aic_rows if row[0] == r["model"] and row[4] == mname]
             if rows_for_model and math.isfinite(rows_for_model[0][9]):
                 vals.append(rows_for_model[0][9])
             else:
                 vals.append(float("nan"))
         axA.bar(x + i * bar_width, vals, bar_width, label=mname)
     axA.set_xticks(x + 1.5 * bar_width)
-    axA.set_xticklabels([r["model"].replace("-Instruct", "") for r in p5],
-                        rotation=15, ha="right")
+    axA.set_xticklabels([r["model"].replace("-Instruct", "") for r in p5], rotation=15, ha="right")
     axA.set_ylabel("delta-AIC vs best (lower = better)")
     axA.set_title("(A) Multi-model AIC profile, 5 anchors")
     axA.legend(fontsize=8, loc="upper right")
@@ -699,8 +851,13 @@ def main() -> None:
         taus = [c[1] for c in cps]
         errs_lo = [c[4] for c in cps]
         errs_hi = [c[5] for c in cps]
-        axB.bar(cpx, taus, yerr=[errs_lo, errs_hi], capsize=4,
-                color=["red" if c[6] < 0.05 else "C0" for c in cps])
+        axB.bar(
+            cpx,
+            taus,
+            yerr=[errs_lo, errs_hi],
+            capsize=4,
+            color=["red" if c[6] < 0.05 else "C0" for c in cps],
+        )
         axB.set_xticks(cpx)
         axB.set_xticklabels(labels, rotation=15, ha="right")
     axB.set_ylabel("Changepoint tau [step]")
@@ -714,31 +871,27 @@ def main() -> None:
     for i, eps in enumerate(eps_levels):
         vals = []
         for r in p5:
-            rows = [t for t in t_eps_rows
-                    if t[0] == r["model"] and t[4] == eps and t[5] >= 0]
+            rows = [t for t in t_eps_rows if t[0] == r["model"] and t[4] == eps and t[5] >= 0]
             vals.append(rows[0][5] if rows else float("nan"))
         axC.bar(cx + i * width, vals, width, label=f"eps={eps}")
     axC.set_xticks(cx + width)
-    axC.set_xticklabels([r["model"].replace("-Instruct", "") for r in p5],
-                        rotation=15, ha="right")
+    axC.set_xticklabels([r["model"].replace("-Instruct", "") for r in p5], rotation=15, ha="right")
     axC.set_ylabel("T_eps [step]")
     axC.set_title("(C) Effective plateau horizon (model-free)")
     axC.legend(fontsize=8)
 
     # Panel D: kappa agreement
     axD = axes[1, 1]
-    kappas5 = (cohens_kappa([r["phase_heuristic"] for r in p5],
-                            [r["phase_changepoint"] for r in p5]),
-               cohens_kappa([r["phase_heuristic"] for r in p5],
-                            [r["phase_aic"] for r in p5]),
-               cohens_kappa([r["phase_changepoint"] for r in p5],
-                            [r["phase_aic"] for r in p5]))
-    kappas12 = (cohens_kappa([r["phase_heuristic"] for r in p12],
-                             [r["phase_changepoint"] for r in p12]),
-                cohens_kappa([r["phase_heuristic"] for r in p12],
-                             [r["phase_aic"] for r in p12]),
-                cohens_kappa([r["phase_changepoint"] for r in p12],
-                             [r["phase_aic"] for r in p12]))
+    kappas5 = (
+        cohens_kappa([r["phase_heuristic"] for r in p5], [r["phase_changepoint"] for r in p5]),
+        cohens_kappa([r["phase_heuristic"] for r in p5], [r["phase_aic"] for r in p5]),
+        cohens_kappa([r["phase_changepoint"] for r in p5], [r["phase_aic"] for r in p5]),
+    )
+    kappas12 = (
+        cohens_kappa([r["phase_heuristic"] for r in p12], [r["phase_changepoint"] for r in p12]),
+        cohens_kappa([r["phase_heuristic"] for r in p12], [r["phase_aic"] for r in p12]),
+        cohens_kappa([r["phase_changepoint"] for r in p12], [r["phase_aic"] for r in p12]),
+    )
     labels4d = ["heur-vs-cp", "heur-vs-aic", "cp-vs-aic"]
     cx4 = np.arange(3)
     axD.bar(cx4 - 0.18, kappas5, 0.35, label="5-anchor set")
@@ -774,16 +927,18 @@ def main() -> None:
             winners[row[0]] = (row[4], row[9])
     for r in p5:
         m, da = winners.get(r["model"], ("?", float("nan")))
-        runner_up = sorted([(row[4], row[9]) for row in aic_rows
-                            if row[0] == r["model"] and row[10] == 0],
-                           key=lambda x: x[1])[0]
-        print(f"  {r['model']:30s}: best={m:12s}  delta_2nd={runner_up[1]:.2f} "
-              f"(runner-up = {runner_up[0]})")
+        runner_up = sorted(
+            [(row[4], row[9]) for row in aic_rows if row[0] == r["model"] and row[10] == 0],
+            key=lambda x: x[1],
+        )[0]
+        print(
+            f"  {r['model']:30s}: best={m:12s}  delta_2nd={runner_up[1]:.2f} "
+            f"(runner-up = {runner_up[0]})"
+        )
 
     print("\n=== Changepoint tau + perm-test p-value (5 anchors) ===")
     for row in cp_rows:
-        print(f"  {row[0]:30s}: tau={row[4]:>3d}  contrast={row[15]:.3f}  "
-              f"perm_p={row[16]:.4f}")
+        print(f"  {row[0]:30s}: tau={row[4]:>3d}  contrast={row[15]:.3f}  perm_p={row[16]:.4f}")
 
 
 if __name__ == "__main__":

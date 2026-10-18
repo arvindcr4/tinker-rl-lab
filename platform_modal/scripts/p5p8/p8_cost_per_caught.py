@@ -20,15 +20,17 @@ platform_hybrid/experiments/results/p5p8/figures/p8_cost_per_caught.{png,pdf}
 
 Stdlib + numpy + pandas + xgboost + matplotlib. <=300 lines.
 """
+
 import json
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-from _p8_common import (  # noqa: E402
+from _p8_common import (
     load_split,
 )
 
@@ -61,9 +63,14 @@ FEATS = {
 
 def argmin_cost(p, y, C_inv, L, c_sense):
     from _review_policy import optimal_threshold
-    r = optimal_threshold(p, y, C_inv, L, c_sense)
-    return r["cost_per_dec"], (r["cost_per_caught"] if r["cost_per_caught"] is not None else float("inf")), r["tau"], r["tp"]
 
+    r = optimal_threshold(p, y, C_inv, L, c_sense)
+    return (
+        r["cost_per_dec"],
+        (r["cost_per_caught"] if r["cost_per_caught"] is not None else float("inf")),
+        r["tau"],
+        r["tp"],
+    )
 
 
 def grid_eval(scores, y):
@@ -73,16 +80,18 @@ def grid_eval(scores, y):
         for L in L_GRID:
             for name in MODELS:
                 cpd, cpc, tau, tp = argmin_cost(scores[name], y, c_inv, L, SENSES[name])
-                rows.append({
-                    "model": name,
-                    "C_inv": c_inv,
-                    "L": L,
-                    "rho": L / c_inv,
-                    "tau_star": tau,
-                    "tp_at_tau_star": tp,
-                    "cost_per_dec_usd": cpd,
-                    "cost_per_caught_usd": cpc if np.isfinite(cpc) else None,
-                })
+                rows.append(
+                    {
+                        "model": name,
+                        "C_inv": c_inv,
+                        "L": L,
+                        "rho": L / c_inv,
+                        "tau_star": tau,
+                        "tp_at_tau_star": tp,
+                        "cost_per_dec_usd": cpd,
+                        "cost_per_caught_usd": cpc if np.isfinite(cpc) else None,
+                    }
+                )
     return rows
 
 
@@ -101,9 +110,15 @@ def boot_grid(scores, y, n_boot=N_BOOT):
                 # filter rows where at least 1 positive exists
                 if y_b.sum() == 0:
                     continue
-                _, cpc_raw, _, tp_raw = argmin_cost(scores["XGB-20raw"][idx], y_b, c_inv, L, SENSES["XGB-20raw"])
-                _, cpc_full, _, tp_full = argmin_cost(scores["XGB-24full"][idx], y_b, c_inv, L, SENSES["XGB-24full"])
-                _, cpc_4s, _, tp_4s = argmin_cost(scores["XGB-4sensor"][idx], y_b, c_inv, L, SENSES["XGB-4sensor"])
+                _, cpc_raw, _, tp_raw = argmin_cost(
+                    scores["XGB-20raw"][idx], y_b, c_inv, L, SENSES["XGB-20raw"]
+                )
+                _, cpc_full, _, tp_full = argmin_cost(
+                    scores["XGB-24full"][idx], y_b, c_inv, L, SENSES["XGB-24full"]
+                )
+                _, cpc_4s, _, tp_4s = argmin_cost(
+                    scores["XGB-4sensor"][idx], y_b, c_inv, L, SENSES["XGB-4sensor"]
+                )
                 # If any tree caught 0 positives on the bootstrap, treat that cell as missing
                 if tp_raw == 0 or tp_full == 0 or tp_4s == 0:
                     continue
@@ -113,29 +128,38 @@ def boot_grid(scores, y, n_boot=N_BOOT):
                 deltas_4s_vs_raw.append(cpc_4s - cpc_raw)
             if deltas_vs_raw:
                 arr = np.array(deltas_vs_raw)
-                rows.append({
-                    "C_inv": c_inv,
-                    "L": L,
-                    "rho": L / c_inv,
-                    "delta_24full_minus_20raw_mean": float(arr.mean()),
-                    "delta_24full_minus_20raw_ci_low": float(np.percentile(arr, 2.5)),
-                    "delta_24full_minus_20raw_ci_high": float(np.percentile(arr, 97.5)),
-                    "delta_24full_minus_20raw_excl0": bool(arr.mean() > 0 and
-                                                            np.percentile(arr, 2.5) > 0),
-                    "delta_4sensor_minus_20raw_mean": float(np.mean(deltas_4s_vs_raw)),
-                    "delta_4sensor_minus_20raw_ci_low": float(np.percentile(deltas_4s_vs_raw, 2.5)),
-                    "delta_4sensor_minus_20raw_ci_high": float(np.percentile(deltas_4s_vs_raw, 97.5)),
-                    "delta_4sensor_minus_20raw_excl0": bool(np.mean(deltas_4s_vs_raw) > 0 and
-                                                            np.percentile(deltas_4s_vs_raw, 2.5) > 0),
-                    "n_boot_used": len(deltas_vs_raw),
-                })
+                rows.append(
+                    {
+                        "C_inv": c_inv,
+                        "L": L,
+                        "rho": L / c_inv,
+                        "delta_24full_minus_20raw_mean": float(arr.mean()),
+                        "delta_24full_minus_20raw_ci_low": float(np.percentile(arr, 2.5)),
+                        "delta_24full_minus_20raw_ci_high": float(np.percentile(arr, 97.5)),
+                        "delta_24full_minus_20raw_excl0": bool(
+                            arr.mean() > 0 and np.percentile(arr, 2.5) > 0
+                        ),
+                        "delta_4sensor_minus_20raw_mean": float(np.mean(deltas_4s_vs_raw)),
+                        "delta_4sensor_minus_20raw_ci_low": float(
+                            np.percentile(deltas_4s_vs_raw, 2.5)
+                        ),
+                        "delta_4sensor_minus_20raw_ci_high": float(
+                            np.percentile(deltas_4s_vs_raw, 97.5)
+                        ),
+                        "delta_4sensor_minus_20raw_excl0": bool(
+                            np.mean(deltas_4s_vs_raw) > 0
+                            and np.percentile(deltas_4s_vs_raw, 2.5) > 0
+                        ),
+                        "n_boot_used": len(deltas_vs_raw),
+                    }
+                )
     return rows
 
 
 def plot_grid(grid_rows, out_png, out_pdf):
     """3-panel heatmap: cost_per_caught for each model."""
     fig, axes = plt.subplots(1, 3, figsize=(14, 4.2))
-    for ax, name in zip(axes, MODELS):
+    for ax, name in zip(axes, MODELS, strict=False):
         z = np.full((len(C_INV_GRID), len(L_GRID)), np.nan)
         for r in grid_rows:
             if r["model"] != name or r["cost_per_caught_usd"] is None:
@@ -154,8 +178,15 @@ def plot_grid(grid_rows, out_png, out_pdf):
         for i in range(z.shape[0]):
             for j in range(z.shape[1]):
                 if np.isfinite(z[i, j]):
-                    ax.text(j, i, f"{z[i, j]:.0f}", ha="center", va="center", fontsize=7,
-                            color="white" if z[i, j] > z[~np.isnan(z)].mean() else "black")
+                    ax.text(
+                        j,
+                        i,
+                        f"{z[i, j]:.0f}",
+                        ha="center",
+                        va="center",
+                        fontsize=7,
+                        color="white" if z[i, j] > z[~np.isnan(z)].mean() else "black",
+                    )
         fig.colorbar(im, ax=ax, fraction=0.046)
     plt.tight_layout()
     plt.savefig(out_png, dpi=150)
@@ -167,15 +198,15 @@ def plot_grid(grid_rows, out_png, out_pdf):
 def main():
     print("Fitting trees on V20 / V20+V_AGG / V_AGG feature sets ...")
     scores, y = load_split(TRAIN, TEST, FEATS, TREE_SEED)
-    print(f"test n = {len(y)}, positives = {int(y.sum())} ({y.mean()*100:.3f}%)")
+    print(f"test n = {len(y)}, positives = {int(y.sum())} ({y.mean() * 100:.3f}%)")
     print("\nEvaluating cost-per-caught on (C_inv x L) grid ...")
     grid_rows = grid_eval(scores, y)
     pd.DataFrame(grid_rows).to_csv(OUT / "p8_cost_per_caught.tsv", sep="\t", index=False)
-    print(f"Wrote {OUT/'p8_cost_per_caught.tsv'} ({len(grid_rows)} cells)")
+    print(f"Wrote {OUT / 'p8_cost_per_caught.tsv'} ({len(grid_rows)} cells)")
     print("\nPaired bootstrap (B=1000, over test rows) ...")
     boot_rows = boot_grid(scores, y)
     pd.DataFrame(boot_rows).to_csv(OUT / "p8_cost_per_caught_boot.tsv", sep="\t", index=False)
-    print(f"Wrote {OUT/'p8_cost_per_caught_boot.tsv'} ({len(boot_rows)} cells)")
+    print(f"Wrote {OUT / 'p8_cost_per_caught_boot.tsv'} ({len(boot_rows)} cells)")
     plot_grid(grid_rows, FIG / "p8_cost_per_caught.png", FIG / "p8_cost_per_caught.pdf")
     summary = {
         "n_test": int(len(y)),
@@ -190,8 +221,14 @@ def main():
         "c_sense": C_SENSE,
         # Cost/Caught at the canonical c_inv=0.50, L=100: which tree is sharpest.
         "canonical_cinv_05_l100": {
-            name: next((r["cost_per_caught_usd"] for r in grid_rows
-                         if r["model"] == name and r["C_inv"] == 0.50 and r["L"] == 100.0), None)
+            name: next(
+                (
+                    r["cost_per_caught_usd"]
+                    for r in grid_rows
+                    if r["model"] == name and r["C_inv"] == 0.50 and r["L"] == 100.0
+                ),
+                None,
+            )
             for name in MODELS
         },
         "cells_with_24full_minus_20raw_ci_excl0_positive": sum(
@@ -203,14 +240,18 @@ def main():
     }
     with open(OUT / "p8_cost_per_caught_summary.json", "w") as f:
         json.dump(summary, f, indent=2)
-    print(f"Wrote {OUT/'p8_cost_per_caught_summary.json'}")
+    print(f"Wrote {OUT / 'p8_cost_per_caught_summary.json'}")
     print("\nHeadline (canonical $0.50 / $100):")
     for name, v in summary["canonical_cinv_05_l100"].items():
         print(f"  {name:12s}  $/fraud_caught = ${v:.2f}")
-    print(f"\nCells where adding the sensor augments the tree (24full vs 20raw cost-per-caught) have CI excluding 0 (positive direction): "
-          f"{summary['cells_with_24full_minus_20raw_ci_excl0_positive']}/{len(boot_rows)}")
-    print(f"Cells where the sensor-only surrogate (4sensor) loses CI-excluding-0 to raw: "
-          f"{summary['cells_with_4sensor_minus_20raw_ci_excl0_positive']}/{len(boot_rows)}")
+    print(
+        f"\nCells where adding the sensor augments the tree (24full vs 20raw cost-per-caught) have CI excluding 0 (positive direction): "
+        f"{summary['cells_with_24full_minus_20raw_ci_excl0_positive']}/{len(boot_rows)}"
+    )
+    print(
+        f"Cells where the sensor-only surrogate (4sensor) loses CI-excluding-0 to raw: "
+        f"{summary['cells_with_4sensor_minus_20raw_ci_excl0_positive']}/{len(boot_rows)}"
+    )
 
 
 if __name__ == "__main__":

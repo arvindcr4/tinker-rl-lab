@@ -17,6 +17,7 @@ Outputs: platform_hybrid/experiments/results/p5p8/p6_iter150_recompute.tsv
          platform_hybrid/experiments/results/p5p8/p6_iter150_per_entry.tsv
          platform_hybrid/experiments/results/p5p8/p6_iter150_summary.json
 """
+
 import csv
 import json
 import math
@@ -24,13 +25,23 @@ import os
 from collections import defaultdict
 
 WORKTREE = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-ENT_DIR  = os.path.join(WORKTREE, "registry", "entries")
-N2_TSV   = os.path.join(WORKTREE, "experiments", "results",
-                        "n2_reward_tensor_resume", "n2_metrics.tsv")
-OUT_DIR  = os.path.join(WORKTREE, "experiments", "results", "p5p8")
+ENT_DIR = os.path.join(WORKTREE, "registry", "entries")
+N2_TSV = os.path.join(
+    WORKTREE, "experiments", "results", "n2_reward_tensor_resume", "n2_metrics.tsv"
+)
+OUT_DIR = os.path.join(WORKTREE, "experiments", "results", "p5p8")
 
-METRIC_KEYS = ("zvf", "reward_mean", "pcd", "mean_len", "cv_len",
-               "lag1_autocorr", "loss", "frac_all_zero", "frac_all_one")
+METRIC_KEYS = (
+    "zvf",
+    "reward_mean",
+    "pcd",
+    "mean_len",
+    "cv_len",
+    "lag1_autocorr",
+    "loss",
+    "frac_all_zero",
+    "frac_all_one",
+)
 WINDOWS = {"last10": (30, 40), "full40": (0, 40)}
 
 
@@ -78,8 +89,12 @@ def recompute(variant_rows, grpo_rows, metrics):
         # crude percentile CI from diffs (no bootstrap) - registry stores
         # bootstrap CIs; we record the *recompute point* only and compare.
         sd = (sum((d - mean) ** 2 for d in diffs) / max(len(diffs) - 1, 1)) ** 0.5
-        out[m] = (mean, mean - 1.96 * sd / max(len(diffs), 1) ** 0.5,
-                  mean + 1.96 * sd / max(len(diffs), 1) ** 0.5, len(diffs))
+        out[m] = (
+            mean,
+            mean - 1.96 * sd / max(len(diffs), 1) ** 0.5,
+            mean + 1.96 * sd / max(len(diffs), 1) ** 0.5,
+            len(diffs),
+        )
     return out
 
 
@@ -130,7 +145,12 @@ PROSE_RULES = [
     ("kl_beta", "loss", +1, "KL term -> +loss"),
     ("clip", "loss", +1, "asymmetric clip shifts loss surface"),
     ("overlong", "mean_len", -1, "soft length penalty -> -mean_len"),
-    ("reward shaping", "reward_mean", +1, "extra shaping -> +reward shaping but reward_mean opaque"),
+    (
+        "reward shaping",
+        "reward_mean",
+        +1,
+        "extra shaping -> +reward shaping but reward_mean opaque",
+    ),
     ("perturbation", "zvf", 0, "ES perturbation orthogonal"),
     ("mcts", "zvf", +1, "MCTS value bias -> +zvf via injected variance"),
     ("mcts-derived", "zvf", +1, "MCTS value bias -> +zvf"),
@@ -160,7 +180,7 @@ def main():
 
     # ---------- pass 1: recompute N2 panels and compare to stored ----------
     entries = sorted(glob_pat := __import__("glob").glob(os.path.join(ENT_DIR, "delta_*.json")))
-    per_entry = {}   # id -> dict
+    per_entry = {}  # id -> dict
     rows_recompute = []
     rows_prose = []
 
@@ -206,22 +226,27 @@ def main():
             elif klass == "DRIFT":
                 ent_summary["n_drift"] += 1
             elif klass.startswith("SHIFT"):
-                ent_summary["n_shift" if klass == "SHIFT" else "_small"] = \
+                ent_summary["n_shift" if klass == "SHIFT" else "_small"] = (
                     ent_summary.get("n_shift" if klass == "SHIFT" else "n_shift_small", 0) + 1
+                )
             else:
                 ent_summary["n_other"] += 1
-            rows_recompute.append({
-                "id": eid, "metric": metric, "panel": panel,
-                "stored_delta": m.get("delta"),
-                "recomputed_delta": rec[0],
-                "stored_ci_lo": m.get("ci_low"),
-                "stored_ci_hi": m.get("ci_high"),
-                "recomp_ci_lo": rec[1],
-                "recomp_ci_hi": rec[2],
-                "n_steps": rec[3],
-                "classification": klass,
-                "stored_sig": m.get("significant"),
-            })
+            rows_recompute.append(
+                {
+                    "id": eid,
+                    "metric": metric,
+                    "panel": panel,
+                    "stored_delta": m.get("delta"),
+                    "recomputed_delta": rec[0],
+                    "stored_ci_lo": m.get("ci_low"),
+                    "stored_ci_hi": m.get("ci_high"),
+                    "recomp_ci_lo": rec[1],
+                    "recomp_ci_hi": rec[2],
+                    "n_steps": rec[3],
+                    "classification": klass,
+                    "stored_sig": m.get("significant"),
+                }
+            )
 
         # --- prose-vs-measured direction ---
         # Find measured zvf/reward_mean/mean_len/loss rows for n2_same_stack_last10
@@ -234,37 +259,56 @@ def main():
         for comp in ent.get("deltas", []):
             prose = comp.get("change", "")
             hits = prose_expected(prose)
-            comp_row = {"id": eid, "component": comp.get("component", ""),
-                        "prose": prose[:80], "hits": "; ".join(h[0] for h in hits)}
+            comp_row = {
+                "id": eid,
+                "component": comp.get("component", ""),
+                "prose": prose[:80],
+                "hits": "; ".join(h[0] for h in hits),
+            }
             if not hits:
                 ent_summary["n_components_no_measurable_link"] += 1
-            for label, metric, edir in hits:
+            for _label, metric, edir in hits:
                 if edir == 0:
                     ent_summary["n_prose_orthogonal"] += 1
-                    rows_prose.append({**comp_row, "metric": metric,
-                                       "expected_dir": "ORTHOGONAL",
-                                       "measured_delta": "",
-                                       "measured_sig": "",
-                                       "verdict": "ORTHOGONAL"})
+                    rows_prose.append(
+                        {
+                            **comp_row,
+                            "metric": metric,
+                            "expected_dir": "ORTHOGONAL",
+                            "measured_delta": "",
+                            "measured_sig": "",
+                            "verdict": "ORTHOGONAL",
+                        }
+                    )
                     continue
                 ent_summary["n_prose_measurable"] += 1
                 ms = meas_by_metric.get(metric, [])
                 if not ms:
-                    rows_prose.append({**comp_row, "metric": metric,
-                                       "expected_dir": "+" if edir > 0 else "-",
-                                       "measured_delta": "NO_MEAS",
-                                       "measured_sig": "",
-                                       "verdict": "PROSE_HAS_NO_MEASURE"})
+                    rows_prose.append(
+                        {
+                            **comp_row,
+                            "metric": metric,
+                            "expected_dir": "+" if edir > 0 else "-",
+                            "measured_delta": "NO_MEAS",
+                            "measured_sig": "",
+                            "verdict": "PROSE_HAS_NO_MEASURE",
+                        }
+                    )
                     continue
                 # use the first matching measured row
                 m0 = ms[0]
                 d = m0.get("delta")
                 if d is None:
-                    rows_prose.append({**comp_row, "metric": metric,
-                                       "expected_dir": "+" if edir > 0 else "-",
-                                       "measured_delta": "NULL",
-                                       "measured_sig": "",
-                                       "verdict": "NULL_MEAS"})
+                    rows_prose.append(
+                        {
+                            **comp_row,
+                            "metric": metric,
+                            "expected_dir": "+" if edir > 0 else "-",
+                            "measured_delta": "NULL",
+                            "measured_sig": "",
+                            "verdict": "NULL_MEAS",
+                        }
+                    )
                     continue
                 measured_dir = (d > 0) - (d < 0)
                 if measured_dir == edir:
@@ -273,11 +317,16 @@ def main():
                 else:
                     ent_summary["n_prose_disagree"] += 1
                     verdict = "DISAGREE"
-                rows_prose.append({**comp_row, "metric": metric,
-                                   "expected_dir": "+" if edir > 0 else "-",
-                                   "measured_delta": f"{d:+.5f}",
-                                   "measured_sig": str(m0.get("significant")),
-                                   "verdict": verdict})
+                rows_prose.append(
+                    {
+                        **comp_row,
+                        "metric": metric,
+                        "expected_dir": "+" if edir > 0 else "-",
+                        "measured_delta": f"{d:+.5f}",
+                        "measured_sig": str(m0.get("significant")),
+                        "verdict": verdict,
+                    }
+                )
             ent_summary["components"].append(comp_row)
         per_entry[eid] = ent_summary
 
@@ -290,11 +339,23 @@ def main():
 
     per_path = os.path.join(OUT_DIR, "p6_iter150_per_entry.tsv")
     with open(per_path, "w", newline="") as f:
-        cols = ["id", "base", "n_components", "n_components_no_measurable_link",
-                "n_measured_n2", "n_match", "n_sign_flip", "n_drift",
-                "n_shift", "n_shift_small", "n_other",
-                "n_prose_measurable", "n_prose_agree", "n_prose_disagree",
-                "n_prose_orthogonal"]
+        cols = [
+            "id",
+            "base",
+            "n_components",
+            "n_components_no_measurable_link",
+            "n_measured_n2",
+            "n_match",
+            "n_sign_flip",
+            "n_drift",
+            "n_shift",
+            "n_shift_small",
+            "n_other",
+            "n_prose_measurable",
+            "n_prose_agree",
+            "n_prose_disagree",
+            "n_prose_orthogonal",
+        ]
         w = csv.DictWriter(f, fieldnames=cols, delimiter="\t")
         w.writeheader()
         for eid, s in sorted(per_entry.items()):
@@ -302,8 +363,17 @@ def main():
 
     prose_path = os.path.join(OUT_DIR, "p6_iter150_prose_vs_measured.tsv")
     with open(prose_path, "w", newline="") as f:
-        cols = ["id", "component", "metric", "expected_dir",
-                "measured_delta", "measured_sig", "verdict", "prose", "hits"]
+        cols = [
+            "id",
+            "component",
+            "metric",
+            "expected_dir",
+            "measured_delta",
+            "measured_sig",
+            "verdict",
+            "prose",
+            "hits",
+        ]
         w = csv.DictWriter(f, fieldnames=cols, delimiter="\t")
         w.writeheader()
         w.writerows(rows_prose)
@@ -319,15 +389,20 @@ def main():
         "n_prose_agree": sum(s["n_prose_agree"] for s in per_entry.values()),
         "n_prose_disagree": sum(s["n_prose_disagree"] for s in per_entry.values()),
         "n_prose_orthogonal": sum(s["n_prose_orthogonal"] for s in per_entry.values()),
-        "per_entry": {k: {kk: v for kk, v in vv.items() if kk != "components"}
-                      for k, vv in per_entry.items()},
+        "per_entry": {
+            k: {kk: v for kk, v in vv.items() if kk != "components"} for k, vv in per_entry.items()
+        },
         "disagree_entries": sorted(
-            [(k, v["n_prose_disagree"]) for k, v in per_entry.items()
-             if v["n_prose_disagree"] > 0],
-            key=lambda x: -x[1]),
+            [(k, v["n_prose_disagree"]) for k, v in per_entry.items() if v["n_prose_disagree"] > 0],
+            key=lambda x: -x[1],
+        ),
         "no_link_entries": sorted(
-            [(k, v["n_components_no_measurable_link"]) for k, v in per_entry.items()
-             if v["n_components_no_measurable_link"] >= v["n_components"]]),
+            [
+                (k, v["n_components_no_measurable_link"])
+                for k, v in per_entry.items()
+                if v["n_components_no_measurable_link"] >= v["n_components"]
+            ]
+        ),
     }
     sum_path = os.path.join(OUT_DIR, "p6_iter150_summary.json")
     with open(sum_path, "w") as f:
@@ -336,9 +411,11 @@ def main():
     print(f"[write] {per_path} ({len(per_entry)} entries)")
     print(f"[write] {prose_path} ({len(rows_prose)} rows)")
     print(f"[write] {sum_path}")
-    print(f"[summary] MATCH={summary['n_match']}  SIGN_FLIP={summary['n_sign_flip']}  "
-          f"DRIFT={summary['n_drift']}  AGREE={summary['n_prose_agree']}  "
-          f"DISAGREE={summary['n_prose_disagree']}  ORTHOGONAL={summary['n_prose_orthogonal']}")
+    print(
+        f"[summary] MATCH={summary['n_match']}  SIGN_FLIP={summary['n_sign_flip']}  "
+        f"DRIFT={summary['n_drift']}  AGREE={summary['n_prose_agree']}  "
+        f"DISAGREE={summary['n_prose_disagree']}  ORTHOGONAL={summary['n_prose_orthogonal']}"
+    )
     print(f"[disagree] {summary['disagree_entries']}")
     print(f"[no_link]  {summary['no_link_entries']}")
 

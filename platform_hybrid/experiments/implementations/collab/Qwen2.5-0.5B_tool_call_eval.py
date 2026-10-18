@@ -5,7 +5,8 @@
 # !pip install -q transformers peft accelerate bitsandbytes
 
 from huggingface_hub import login
-login(token="hf_YOUR_TOKEN_HERE")   
+
+login(token="hf_YOUR_TOKEN_HERE")
 
 import json
 import torch
@@ -16,19 +17,22 @@ from peft import PeftModel
 # ────────────────────────────────────────────────────────────
 # 1. CONFIG
 # ────────────────────────────────────────────────────────────
-BASE_MODEL_ID  = "Qwen/Qwen2.5-0.5B-Instruct"
-USE_4BIT       = True
+BASE_MODEL_ID = "Qwen/Qwen2.5-0.5B-Instruct"
+USE_4BIT = True
 
 
 import os, subprocess
-_result = subprocess.run(["find", "/content", "-name", "adapter_config.json"], capture_output=True, text=True)
-_paths  = [p.replace("/adapter_config.json", "") for p in _result.stdout.strip().splitlines() if p]
+
+_result = subprocess.run(
+    ["find", "/content", "-name", "adapter_config.json"], capture_output=True, text=True
+)
+_paths = [p.replace("/adapter_config.json", "") for p in _result.stdout.strip().splitlines() if p]
 if not _paths:
     raise FileNotFoundError(
         "No adapter_config.json found under /content.\n"
         "Please re-run the training script first, making sure OUTPUT_DIR is set to an absolute path like /content/qwen25-tool-lora-final"
     )
-ADAPTER_PATH = sorted(_paths)[-1]   
+ADAPTER_PATH = sorted(_paths)[-1]
 print(f"Auto-detected adapter at: {ADAPTER_PATH}")
 
 SYSTEM_PROMPT = (
@@ -61,7 +65,10 @@ EVAL_EXAMPLES = [
     {
         "split": "train-dist",
         "user": "Find me some Python tutorials for beginners.",
-        "ground_truth": {"tool": "search_web", "arguments": {"query": "Python tutorials for beginners", "max_results": 3}},
+        "ground_truth": {
+            "tool": "search_web",
+            "arguments": {"query": "Python tutorials for beginners", "max_results": 3},
+        },
     },
     {
         "split": "train-dist",
@@ -72,7 +79,10 @@ EVAL_EXAMPLES = [
     {
         "split": "out-of-dist",
         "user": "What is the weather in Sydney?",
-        "ground_truth": {"tool": "get_weather", "arguments": {"city": "Sydney", "units": "celsius"}},
+        "ground_truth": {
+            "tool": "get_weather",
+            "arguments": {"city": "Sydney", "units": "celsius"},
+        },
     },
     {
         "split": "out-of-dist",
@@ -82,7 +92,10 @@ EVAL_EXAMPLES = [
     {
         "split": "out-of-dist",
         "user": "Search for news about electric vehicles.",
-        "ground_truth": {"tool": "search_web", "arguments": {"query": "news about electric vehicles", "max_results": 3}},
+        "ground_truth": {
+            "tool": "search_web",
+            "arguments": {"query": "news about electric vehicles", "max_results": 3},
+        },
     },
     {
         "split": "out-of-dist",
@@ -92,7 +105,10 @@ EVAL_EXAMPLES = [
     {
         "split": "out-of-dist",
         "user": "How hot is it in Singapore right now?",
-        "ground_truth": {"tool": "get_weather", "arguments": {"city": "Singapore", "units": "celsius"}},
+        "ground_truth": {
+            "tool": "get_weather",
+            "arguments": {"city": "Singapore", "units": "celsius"},
+        },
     },
 ]
 
@@ -104,12 +120,16 @@ tokenizer = AutoTokenizer.from_pretrained(BASE_MODEL_ID, trust_remote_code=True)
 tokenizer.pad_token = tokenizer.eos_token
 
 print("Loading base model ...")
-bnb_config = BitsAndBytesConfig(
-    load_in_4bit=True,
-    bnb_4bit_quant_type="nf4",
-    bnb_4bit_compute_dtype=torch.bfloat16,
-    bnb_4bit_use_double_quant=True,
-) if USE_4BIT else None
+bnb_config = (
+    BitsAndBytesConfig(
+        load_in_4bit=True,
+        bnb_4bit_quant_type="nf4",
+        bnb_4bit_compute_dtype=torch.bfloat16,
+        bnb_4bit_use_double_quant=True,
+    )
+    if USE_4BIT
+    else None
+)
 
 base_model = AutoModelForCausalLM.from_pretrained(
     BASE_MODEL_ID,
@@ -124,17 +144,16 @@ model = PeftModel.from_pretrained(base_model, ADAPTER_PATH)
 model.eval()
 print("Model ready.\n")
 
+
 # ────────────────────────────────────────────────────────────
 # 4. INFERENCE HELPER
 # ────────────────────────────────────────────────────────────
 def get_model_output(user_query: str) -> str:
     messages = [
         {"role": "system", "content": SYSTEM_PROMPT},
-        {"role": "user",   "content": user_query},
+        {"role": "user", "content": user_query},
     ]
-    prompt = tokenizer.apply_chat_template(
-        messages, tokenize=False, add_generation_prompt=True
-    )
+    prompt = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
     inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
     with torch.no_grad():
         outputs = model.generate(
@@ -145,8 +164,9 @@ def get_model_output(user_query: str) -> str:
             eos_token_id=tokenizer.eos_token_id,
         )
     return tokenizer.decode(
-        outputs[0][inputs["input_ids"].shape[1]:], skip_special_tokens=True
+        outputs[0][inputs["input_ids"].shape[1] :], skip_special_tokens=True
     ).strip()
+
 
 # ────────────────────────────────────────────────────────────
 # 5. SCORING FUNCTIONS
@@ -157,103 +177,124 @@ def parse_json_output(text: str):
     # Find the first { ... } block
     try:
         start = text.index("{")
-        end   = text.rindex("}") + 1
+        end = text.rindex("}") + 1
         return json.loads(text[start:end])
     except (ValueError, json.JSONDecodeError):
         return None
+
 
 def score_prediction(predicted: dict | None, ground_truth: dict) -> dict:
     """Score a single prediction against ground truth."""
     if predicted is None:
         return {
-            "json_valid":    False,
-            "tool_correct":  False,
-            "args_correct":  False,
+            "json_valid": False,
+            "tool_correct": False,
+            "args_correct": False,
             "partial_score": 0.0,
-            "full_score":    False,
+            "full_score": False,
         }
 
     tool_correct = predicted.get("tool") == ground_truth.get("tool")
 
     # Check args: all required keys present with correct values
-    gt_args   = ground_truth.get("arguments", {})
+    gt_args = ground_truth.get("arguments", {})
     pred_args = predicted.get("arguments", {})
-    args_correct = all(
-        pred_args.get(k) == v for k, v in gt_args.items()
-    )
+    args_correct = all(pred_args.get(k) == v for k, v in gt_args.items())
 
     partial = (0.4 * tool_correct) + (0.6 * args_correct)
 
     return {
-        "json_valid":    True,
-        "tool_correct":  tool_correct,
-        "args_correct":  args_correct,
+        "json_valid": True,
+        "tool_correct": tool_correct,
+        "args_correct": args_correct,
         "partial_score": round(partial, 2),
-        "full_score":    tool_correct and args_correct,
+        "full_score": tool_correct and args_correct,
     }
+
 
 # ────────────────────────────────────────────────────────────
 # 6. RUN EVALUATION
 # ────────────────────────────────────────────────────────────
 wandb.init(project="tool-call-eval", name="qwen2.5-0.5b-lora")
-eval_table = wandb.Table(columns=["split", "query", "expected", "raw_output", "parsed", "json_valid", "tool_ok", "args_ok", "full_match"])
+eval_table = wandb.Table(
+    columns=[
+        "split",
+        "query",
+        "expected",
+        "raw_output",
+        "parsed",
+        "json_valid",
+        "tool_ok",
+        "args_ok",
+        "full_match",
+    ]
+)
 
 print("=" * 65)
 print(f"{'TOOL CALL EVALUATION RESULTS':^65}")
 print("=" * 65)
 
-results     = []
-seen_pass   = 0
+results = []
+seen_pass = 0
 unseen_pass = 0
-seen_total  = 0
-unseen_total= 0
+seen_total = 0
+unseen_total = 0
 
-for i, ex in enumerate(EVAL_EXAMPLES):
+for _i, ex in enumerate(EVAL_EXAMPLES):
     raw_output = get_model_output(ex["user"])
-    parsed     = parse_json_output(raw_output)
-    scores     = score_prediction(parsed, ex["ground_truth"])
+    parsed = parse_json_output(raw_output)
+    scores = score_prediction(parsed, ex["ground_truth"])
 
     results.append({**ex, "raw_output": raw_output, "parsed": parsed, **scores})
 
     tag = "[TRAIN]" if ex["split"] == "train-dist" else "[UNSEEN]"
-    ok  = "PASS" if scores["full_score"] else "FAIL"
+    ok = "PASS" if scores["full_score"] else "FAIL"
     print(f"\n{tag} Q: {ex['user']}")
     print(f"  Expected : {json.dumps(ex['ground_truth'])}")
     print(f"  Got      : {raw_output[:120]}")
-    print(f"  JSON OK  : {scores['json_valid']} | Tool OK: {scores['tool_correct']} | Args OK: {scores['args_correct']} | [{ok}]")
+    print(
+        f"  JSON OK  : {scores['json_valid']} | Tool OK: {scores['tool_correct']} | Args OK: {scores['args_correct']} | [{ok}]"
+    )
 
     if ex["split"] == "train-dist":
         seen_total += 1
-        seen_pass  += scores["full_score"]
+        seen_pass += scores["full_score"]
     else:
         unseen_total += 1
-        unseen_pass  += scores["full_score"]
-        
+        unseen_pass += scores["full_score"]
+
     eval_table.add_data(
-        ex["split"], ex["user"], json.dumps(ex["ground_truth"]),
-        raw_output, json.dumps(parsed) if parsed else "",
-        scores["json_valid"], scores["tool_correct"],
-        scores["args_correct"], scores["full_score"]
+        ex["split"],
+        ex["user"],
+        json.dumps(ex["ground_truth"]),
+        raw_output,
+        json.dumps(parsed) if parsed else "",
+        scores["json_valid"],
+        scores["tool_correct"],
+        scores["args_correct"],
+        scores["full_score"],
     )
 
 # ────────────────────────────────────────────────────────────
 # 7. SUMMARY
 # ────────────────────────────────────────────────────────────
-total      = len(results)
+total = len(results)
 total_pass = sum(r["full_score"] for r in results)
-json_pass  = sum(r["json_valid"] for r in results)
-tool_pass  = sum(r["tool_correct"] for r in results)
-args_pass  = sum(r["args_correct"] for r in results)
+json_pass = sum(r["json_valid"] for r in results)
+tool_pass = sum(r["tool_correct"] for r in results)
+args_pass = sum(r["args_correct"] for r in results)
 
 print("\n" + "=" * 65)
 print(f"{'SUMMARY':^65}")
 print("=" * 65)
-print(f"  JSON Valid Outputs  : {json_pass}/{total}  ({100*json_pass/total:.1f}%)")
-print(f"  Correct Tool Name   : {tool_pass}/{total}  ({100*tool_pass/total:.1f}%)")
-print(f"  Correct Arguments   : {args_pass}/{total}  ({100*args_pass/total:.1f}%)")
-print(f"  Full Match (Strict) : {total_pass}/{total}  ({100*total_pass/total:.1f}%)")
-print(f"\n  In-distribution     : {seen_pass}/{seen_total}  ({100*seen_pass/seen_total:.1f}%)")
-print(f"  Out-of-distribution : {unseen_pass}/{unseen_total}  ({100*unseen_pass/unseen_total:.1f}%)")
+print(f"  JSON Valid Outputs  : {json_pass}/{total}  ({100 * json_pass / total:.1f}%)")
+print(f"  Correct Tool Name   : {tool_pass}/{total}  ({100 * tool_pass / total:.1f}%)")
+print(f"  Correct Arguments   : {args_pass}/{total}  ({100 * args_pass / total:.1f}%)")
+print(f"  Full Match (Strict) : {total_pass}/{total}  ({100 * total_pass / total:.1f}%)")
+print(f"\n  In-distribution     : {seen_pass}/{seen_total}  ({100 * seen_pass / seen_total:.1f}%)")
+print(
+    f"  Out-of-distribution : {unseen_pass}/{unseen_total}  ({100 * unseen_pass / unseen_total:.1f}%)"
+)
 print("=" * 65)
 print("\nInterpretation:")
 print(f"  JSON Valid  → Can the model output parseable tool calls?")
@@ -262,15 +303,17 @@ print(f"  Arguments   → Does it know HOW to call the tool?")
 print(f"  Full Match  → Both tool + args exactly right")
 print(f"  Out-of-dist → Generalization beyond training examples")
 
-wandb.log({
-    "eval_results_table": eval_table,
-    "metrics/json_valid_pct": 100 * json_pass / total if total else 0,
-    "metrics/tool_correct_pct": 100 * tool_pass / total if total else 0,
-    "metrics/args_correct_pct": 100 * args_pass / total if total else 0,
-    "metrics/full_match_pct": 100 * total_pass / total if total else 0,
-    "metrics/in_dist_pct": 100 * seen_pass / seen_total if seen_total else 0,
-    "metrics/out_of_dist_pct": 100 * unseen_pass / unseen_total if unseen_total else 0,
-})
+wandb.log(
+    {
+        "eval_results_table": eval_table,
+        "metrics/json_valid_pct": 100 * json_pass / total if total else 0,
+        "metrics/tool_correct_pct": 100 * tool_pass / total if total else 0,
+        "metrics/args_correct_pct": 100 * args_pass / total if total else 0,
+        "metrics/full_match_pct": 100 * total_pass / total if total else 0,
+        "metrics/in_dist_pct": 100 * seen_pass / seen_total if seen_total else 0,
+        "metrics/out_of_dist_pct": 100 * unseen_pass / unseen_total if unseen_total else 0,
+    }
+)
 
 print("\nPushing adapter and tokenizer to Hugging Face Hub...")
 repo_name = "qwen2.5-0.5b-tool-call-lora"

@@ -378,7 +378,7 @@ def main() -> None:
         chunk_counts: list[int] = []
         if grade_mode == "mbpp":
             jobs, spans = [], []
-            for (_, tests), out in zip(chunk, outs):
+            for (_, tests), out in zip(chunk, outs, strict=False):
                 job_start = len(jobs)
                 jobs.extend((extract_code(o.text), tests) for o in out.outputs)
                 spans.append((job_start, len(jobs)))
@@ -387,7 +387,7 @@ def main() -> None:
             chunk_counts = [sum(flags[a:b]) for a, b in spans]
         else:
             fn = gsm8k_reward if grade_mode == "gsm8k" else math_reward
-            for (_, answer), out in zip(chunk, outs):
+            for (_, answer), out in zip(chunk, outs, strict=False):
                 chunk_counts.append(sum(int(fn(o.text, answer)) for o in out.outputs))
 
         cs.extend(chunk_counts)

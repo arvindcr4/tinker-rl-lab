@@ -42,10 +42,10 @@ Reads:
   platform_hybrid/experiments/results/drgrpo_vs_grpo.json   (arithmetic_easy: 5 seeds)
   platform_hybrid/experiments/results/drgrpo_gsm8k_cot_full.json (gsm8k_cot: 3 seeds)
 """
+
 from __future__ import annotations
 import json
 import math
-import os
 import random
 import statistics
 from pathlib import Path
@@ -58,8 +58,8 @@ GSM_JSON = RES / "drgrpo_gsm8k_cot_full.json"
 
 RNG_SEED = 48
 N_BOOT = 4000
-PLATEAU_FRAC = 0.90        # smoothed_R_t >= 0.90 * R_max counts as plateau
-SMOOTH_WIN = 3             # 3-step centered moving average
+PLATEAU_FRAC = 0.90  # smoothed_R_t >= 0.90 * R_max counts as plateau
+SMOOTH_WIN = 3  # 3-step centered moving average
 ZVF_BINS = ("low", "mid", "high")  # low<0.2, mid [0.2,0.5), high>=0.5
 
 
@@ -111,15 +111,17 @@ def load_runs(path: Path, task: str) -> list[dict]:
         rs = [float(s["mean_reward"]) for s in sl]
         ls = [float(s["mean_comp_len"]) for s in sl]
         zs = [float(s.get("zvf", float("nan"))) for s in sl]
-        out.append({
-            "task": task,
-            "algo": algo,
-            "seed": seed,
-            "t": ts,
-            "R": rs,
-            "L": ls,
-            "zvf": zs,
-        })
+        out.append(
+            {
+                "task": task,
+                "algo": algo,
+                "seed": seed,
+                "t": ts,
+                "R": rs,
+                "L": ls,
+                "zvf": zs,
+            }
+        )
     return out
 
 
@@ -141,7 +143,10 @@ def detect_plateau(rs: list[float]) -> tuple[int, float, float]:
 
 
 def per_run_signature(row: dict) -> dict:
-    t = row["t"]; R = row["R"]; L = row["L"]; Z = row["zvf"]
+    t = row["t"]
+    R = row["R"]
+    L = row["L"]
+    Z = row["zvf"]
     t_plat, r_at_plat, r_max = detect_plateau(R)
     # rising phase [0, t_plat]; plateau phase [t_plat, T)
     # always include at least one point on each side
@@ -154,7 +159,9 @@ def per_run_signature(row: dict) -> dict:
     signature = plat_slope - rise_slope
     zvf_at_plat = Z[t_plat] if 0 <= t_plat < len(Z) else float("nan")
     return {
-        "task": row["task"], "algo": row["algo"], "seed": row["seed"],
+        "task": row["task"],
+        "algo": row["algo"],
+        "seed": row["seed"],
         "n_steps": len(t),
         "R_max": round(r_max, 6),
         "t_plat": t_plat,
@@ -169,20 +176,29 @@ def per_run_signature(row: dict) -> dict:
     }
 
 
-def paired_bootstrap(grpo_vals: list[float], drgrpo_vals: list[float],
-                     n_boot: int = N_BOOT, rng: random.Random | None = None
-                     ) -> dict:
+def paired_bootstrap(
+    grpo_vals: list[float],
+    drgrpo_vals: list[float],
+    n_boot: int = N_BOOT,
+    rng: random.Random | None = None,
+) -> dict:
     """Paired bootstrap on the per-seed difference drgrpo - grpo.
 
     Returns dict with mean_diff, sd_diff, ci_lo, ci_hi, p_le0, n_pairs.
     """
     rng = rng or random.Random(RNG_SEED)
-    pairs = list(zip(grpo_vals, drgrpo_vals))
+    pairs = list(zip(grpo_vals, drgrpo_vals, strict=False))
     diffs = [d - g for d, g in pairs]
     n = len(diffs)
     if n == 0:
-        return {"mean_diff": 0.0, "sd_diff": 0.0, "ci_lo": 0.0, "ci_hi": 0.0,
-                "p_le0": 1.0, "n_pairs": 0}
+        return {
+            "mean_diff": 0.0,
+            "sd_diff": 0.0,
+            "ci_lo": 0.0,
+            "ci_hi": 0.0,
+            "p_le0": 1.0,
+            "n_pairs": 0,
+        }
     mean_diff = sum(diffs) / n
     var = sum((d - mean_diff) ** 2 for d in diffs) / max(1, n - 1)
     sd_diff = math.sqrt(var)
@@ -213,8 +229,7 @@ def main() -> None:
     rows.extend(load_runs(GSM_JSON, "gsm8k_cot"))
 
     sig_rows = [per_run_signature(r) for r in rows]
-    write_tsv(RES / "length_bias_iter48_plateau.tsv", sig_rows,
-              fieldnames=list(sig_rows[0].keys()))
+    write_tsv(RES / "length_bias_iter48_plateau.tsv", sig_rows, fieldnames=list(sig_rows[0].keys()))
 
     # paired GRPO vs Dr.GRPO per task
     paired_rows = []
@@ -230,19 +245,24 @@ def main() -> None:
             gv = [grpo_by_seed[s][metric] for s in common]
             dv = [drgrpo_by_seed[s][metric] for s in common]
             boot = paired_bootstrap(gv, dv, rng=rng)
-            paired_rows.append({
-                "task": task,
-                "metric": metric,
-                "n_pairs": boot["n_pairs"],
-                "mean_grpo": round(sum(gv) / max(1, len(gv)), 6),
-                "mean_drgrpo": round(sum(dv) / max(1, len(dv)), 6),
-                "mean_diff": boot["mean_diff"],
-                "ci_lo": boot["ci_lo"],
-                "ci_hi": boot["ci_hi"],
-                "p_le0": boot["p_le0"],
-            })
-    write_tsv(RES / "length_bias_iter48_grpo_vs_drgrpo.tsv", paired_rows,
-              fieldnames=list(paired_rows[0].keys()))
+            paired_rows.append(
+                {
+                    "task": task,
+                    "metric": metric,
+                    "n_pairs": boot["n_pairs"],
+                    "mean_grpo": round(sum(gv) / max(1, len(gv)), 6),
+                    "mean_drgrpo": round(sum(dv) / max(1, len(dv)), 6),
+                    "mean_diff": boot["mean_diff"],
+                    "ci_lo": boot["ci_lo"],
+                    "ci_hi": boot["ci_hi"],
+                    "p_le0": boot["p_le0"],
+                }
+            )
+    write_tsv(
+        RES / "length_bias_iter48_grpo_vs_drgrpo.tsv",
+        paired_rows,
+        fieldnames=list(paired_rows[0].keys()),
+    )
 
     # within-algo: rising vs plateau slope per seed
     rp_rows = []
@@ -250,55 +270,77 @@ def main() -> None:
         for algo in ("grpo", "dr_grpo"):
             sub = [r for r in sig_rows if r["task"] == task and r["algo"] == algo]
             for r in sub:
-                rp_rows.append({
-                    "task": task, "algo": algo, "seed": r["seed"],
-                    "rise_slope": r["rise_slope"],
-                    "plat_slope": r["plat_slope"],
-                    "diff_plat_minus_rise": round(r["plat_slope"] - r["rise_slope"], 6),
-                })
-    write_tsv(RES / "length_bias_iter48_rising_vs_plateau.tsv", rp_rows,
-              fieldnames=list(rp_rows[0].keys()))
+                rp_rows.append(
+                    {
+                        "task": task,
+                        "algo": algo,
+                        "seed": r["seed"],
+                        "rise_slope": r["rise_slope"],
+                        "plat_slope": r["plat_slope"],
+                        "diff_plat_minus_rise": round(r["plat_slope"] - r["rise_slope"], 6),
+                    }
+                )
+    write_tsv(
+        RES / "length_bias_iter48_rising_vs_plateau.tsv",
+        rp_rows,
+        fieldnames=list(rp_rows[0].keys()),
+    )
 
     # zvf-anchored: bin the plateau step's ZVF and aggregate signature
     zvf_rows = []
     for task in ("arithmetic_easy", "gsm8k_cot"):
         for algo in ("grpo", "dr_grpo"):
             for zb in ZVF_BINS:
-                sub = [r for r in sig_rows if r["task"] == task
-                       and r["algo"] == algo and r["zvf_bin_at_plat"] == zb]
+                sub = [
+                    r
+                    for r in sig_rows
+                    if r["task"] == task and r["algo"] == algo and r["zvf_bin_at_plat"] == zb
+                ]
                 if not sub:
                     continue
                 sigs = [r["signature"] for r in sub]
-                zvf_rows.append({
-                    "task": task, "algo": algo, "zvf_bin_at_plat": zb,
-                    "n_runs": len(sub),
-                    "mean_signature": round(sum(sigs) / len(sigs), 6),
-                    "sd_signature": round(statistics.pstdev(sigs) if len(sigs) > 1 else 0.0, 6),
-                })
-    write_tsv(RES / "length_bias_iter48_zvf_anchored.tsv", zvf_rows,
-              fieldnames=list(zvf_rows[0].keys()))
+                zvf_rows.append(
+                    {
+                        "task": task,
+                        "algo": algo,
+                        "zvf_bin_at_plat": zb,
+                        "n_runs": len(sub),
+                        "mean_signature": round(sum(sigs) / len(sigs), 6),
+                        "sd_signature": round(statistics.pstdev(sigs) if len(sigs) > 1 else 0.0, 6),
+                    }
+                )
+    write_tsv(
+        RES / "length_bias_iter48_zvf_anchored.tsv", zvf_rows, fieldnames=list(zvf_rows[0].keys())
+    )
 
     # one-line rollup
     summary_rows = []
     for pr in paired_rows:
-        summary_rows.append({
-            "task": pr["task"],
-            "metric": pr["metric"],
-            "n_pairs": pr["n_pairs"],
-            "mean_grpo": pr["mean_grpo"],
-            "mean_drgrpo": pr["mean_drgrpo"],
-            "mean_diff_drgrpo_minus_grpo": pr["mean_diff"],
-            "ci_lo": pr["ci_lo"],
-            "ci_hi": pr["ci_hi"],
-            "p_le0": pr["p_le0"],
-            "interpretation": (
-                "Dr.GRPO > GRPO" if pr["mean_diff"] > 0 and pr["ci_lo"] > 0
-                else "GRPO > Dr.GRPO" if pr["mean_diff"] < 0 and pr["ci_hi"] < 0
-                else "inconclusive"
-            ),
-        })
-    write_tsv(RES / "length_bias_iter48_summary.tsv", summary_rows,
-              fieldnames=list(summary_rows[0].keys()))
+        summary_rows.append(
+            {
+                "task": pr["task"],
+                "metric": pr["metric"],
+                "n_pairs": pr["n_pairs"],
+                "mean_grpo": pr["mean_grpo"],
+                "mean_drgrpo": pr["mean_drgrpo"],
+                "mean_diff_drgrpo_minus_grpo": pr["mean_diff"],
+                "ci_lo": pr["ci_lo"],
+                "ci_hi": pr["ci_hi"],
+                "p_le0": pr["p_le0"],
+                "interpretation": (
+                    "Dr.GRPO > GRPO"
+                    if pr["mean_diff"] > 0 and pr["ci_lo"] > 0
+                    else "GRPO > Dr.GRPO"
+                    if pr["mean_diff"] < 0 and pr["ci_hi"] < 0
+                    else "inconclusive"
+                ),
+            }
+        )
+    write_tsv(
+        RES / "length_bias_iter48_summary.tsv",
+        summary_rows,
+        fieldnames=list(summary_rows[0].keys()),
+    )
 
     print("=== iter48 summary ===")
     for row in summary_rows:

@@ -89,14 +89,12 @@ def compare(
         post_values = [pass_at_k(n, count, k) for count in post_counts]
         paired_deltas = [
             post_value - base_value
-            for base_value, post_value in zip(base_values, post_values)
+            for base_value, post_value in zip(base_values, post_values, strict=False)
         ]
         bootstrap_deltas = []
         for _ in range(n_bootstrap):
             indices = [rng.randrange(len(paired_deltas)) for _ in paired_deltas]
-            bootstrap_deltas.append(
-                sum(paired_deltas[index] for index in indices) / len(indices)
-            )
+            bootstrap_deltas.append(sum(paired_deltas[index] for index in indices) / len(indices))
         bootstrap_deltas.sort()
         metrics[str(k)] = {
             "base": sum(base_values) / len(base_values),

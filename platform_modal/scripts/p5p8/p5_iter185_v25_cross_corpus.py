@@ -49,18 +49,20 @@ Outputs
   (13 rows: per-field portability verdict)
 - platform_hybrid/experiments/results/p5p8/p5_iter185_summary.json
 """
+
 from __future__ import annotations
 import csv
 import json
 import math
-import re
 import statistics
 from collections import Counter
 from pathlib import Path
 
 import sys
+
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
+from _paths import REPO_ROOT
+
 ROOT = REPO_ROOT
 RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8/review17_v2"
 MEGA = ROOT / "platform_hybrid/experiments" / "results" / "mega_20260704"
@@ -70,24 +72,25 @@ N2 = ROOT / "platform_hybrid/experiments" / "results" / "n2_reward_tensor_resume
 
 # v2.5 spec from iter-181
 V25_NEW_FIELDS = {
-    "model":              {"family": "identity",        "type": str},
-    "task_slice":         {"family": "identity",        "type": str},
-    "G":                  {"family": "identity",        "type": int},
-    "temperature":        {"family": "identity",        "type": float},
-    "seed":               {"family": "identity",        "type": int},
-    "mean_reward":        {"family": "rollout_outcomes","type": float, "range": (0.0, 1.0)},
-    "zvf":                {"family": "rollout_outcomes","type": float, "range": (0.0, 1.0)},
-    "pcd":                {"family": "rollout_outcomes","type": float, "range": (0.0, 1.0)},
-    "n_groups":           {"family": "rollout_outcomes","type": int},
-    "sample_errors":      {"family": "rollout_outcomes","type": int},
-    "mean_completion_len":{"family": "rollout_outcomes","type": float, "range": (0.0, 10000.0)},
-    "std_completion_len": {"family": "rollout_outcomes","type": float, "range": (0.0, 1000.0)},
-    "sampled_tokens":     {"family": "operational",     "type": int},
+    "model": {"family": "identity", "type": str},
+    "task_slice": {"family": "identity", "type": str},
+    "G": {"family": "identity", "type": int},
+    "temperature": {"family": "identity", "type": float},
+    "seed": {"family": "identity", "type": int},
+    "mean_reward": {"family": "rollout_outcomes", "type": float, "range": (0.0, 1.0)},
+    "zvf": {"family": "rollout_outcomes", "type": float, "range": (0.0, 1.0)},
+    "pcd": {"family": "rollout_outcomes", "type": float, "range": (0.0, 1.0)},
+    "n_groups": {"family": "rollout_outcomes", "type": int},
+    "sample_errors": {"family": "rollout_outcomes", "type": int},
+    "mean_completion_len": {"family": "rollout_outcomes", "type": float, "range": (0.0, 10000.0)},
+    "std_completion_len": {"family": "rollout_outcomes", "type": float, "range": (0.0, 1000.0)},
+    "sampled_tokens": {"family": "operational", "type": int},
 }
 FAMILIES = ("identity", "rollout_outcomes", "operational")
 
 
 from p5_review17_stats import json_safe
+
 
 def wilson(k, n, z=1.959963984540054):
     if n == 0:
@@ -234,8 +237,12 @@ def load_n2_v25_manifests():
         # Counts cover all observed groups and completions. Without raw lengths
         # the pooled SD and token total are unknown, rather than fabricated.
         ng = sum(len(s.get("rewards", s.get("prompt_indices", []))) for s in steps)
-        lengths = [v for step in steps for group in step.get("completion_lengths", [])
-                   for v in (group if isinstance(group, list) else [group])]
+        lengths = [
+            v
+            for step in steps
+            for group in step.get("completion_lengths", [])
+            for v in (group if isinstance(group, list) else [group])
+        ]
         std_len = statistics.pstdev(lengths) if lengths else None
         sampled_tokens = sum(lengths) if lengths else None
         if lengths:
@@ -355,10 +362,16 @@ def audit_value_correctness_mega():
             if not rv or any(not group or any(v not in (0, 1) for v in group) for group in rv):
                 raise ValueError("Binary reward groups required")
             flat = [value for group in rv for value in group]
-            recomputed.update(zvf=recompute_zvf_from_reward_vectors(rv),
-                              mean_reward=statistics.mean(flat), n_groups=len(rv))
-            lengths = [v for group in doc.get("completion_lengths", [])
-                       for v in (group if isinstance(group, list) else [group])]
+            recomputed.update(
+                zvf=recompute_zvf_from_reward_vectors(rv),
+                mean_reward=statistics.mean(flat),
+                n_groups=len(rv),
+            )
+            lengths = [
+                v
+                for group in doc.get("completion_lengths", [])
+                for v in (group if isinstance(group, list) else [group])
+            ]
             if lengths and len(lengths) == len(flat):
                 recomputed["mean_completion_len"] = statistics.mean(lengths)
         except (OSError, ValueError, KeyError, TypeError):
@@ -368,8 +381,8 @@ def audit_value_correctness_mega():
                 declared, actual = float(row[field]), float(recomputed[field])
                 if not math.isfinite(declared) or not math.isfinite(actual):
                     raise ValueError("Nonfinite evidence")
-                residual = abs(declared-actual)
-                tolerance = .05 if field in ("zvf", "mean_reward") else 0
+                residual = abs(declared - actual)
+                tolerance = 0.05 if field in ("zvf", "mean_reward") else 0
                 out.append((field, cid, declared, actual, residual, residual <= tolerance))
             except (ValueError, KeyError, TypeError):
                 out.append((field, cid, float("nan"), float("nan"), float("nan"), False))
@@ -394,20 +407,27 @@ def audit_cross_corpus_matrix(corpus_data):
             row[f"{corpus_name}_n"] = n
             row[f"{corpus_name}_fill"] = round(fill, 4)
             row[f"{corpus_name}_entropy"] = round(ent, 4)
-            row[f"{corpus_name}_verdict"] = "STRONG" if (fill >= 0.80 and ent >= 1.5) else \
-                                            ("OK" if (fill >= 0.50 and ent >= 0.5) else "GAP")
+            row[f"{corpus_name}_verdict"] = (
+                "STRONG"
+                if (fill >= 0.80 and ent >= 1.5)
+                else ("OK" if (fill >= 0.50 and ent >= 0.5) else "GAP")
+            )
         out.append(row)
     return out
 
 
 def main():
-    print("Protocol review17-p5-v2: exploratory descriptive associations; no independent-run, causal, equivalence, or held-out prediction claim")
+    print(
+        "Protocol review17-p5-v2: exploratory descriptive associations; no independent-run, causal, equivalence, or held-out prediction claim"
+    )
     RES.mkdir(parents=True, exist_ok=True)
     print("[iter185] loading 3 corpora...")
     manifests_mega = load_mega_v25_manifests()
     manifests_n10 = load_n10_v25_manifests()
     manifests_n2 = load_n2_v25_manifests()
-    print(f"[iter185] corpus sizes: mega={len(manifests_mega)} n10={len(manifests_n10)} n2={len(manifests_n2)}")
+    print(
+        f"[iter185] corpus sizes: mega={len(manifests_mega)} n10={len(manifests_n10)} n2={len(manifests_n2)}"
+    )
 
     corpus_data = {
         "mega": manifests_mega,
@@ -419,12 +439,22 @@ def main():
     fill_out_path = RES / "p5_iter185_v25_field_fill_per_corpus.tsv"
     with open(fill_out_path, "w") as fp:
         w = csv.writer(fp, delimiter="\t")
-        w.writerow(["field", "family", "corpus", "n", "k_filled", "fill_p", "fill_lo","fill_hi"])
+        w.writerow(["field", "family", "corpus", "n", "k_filled", "fill_p", "fill_lo", "fill_hi"])
         for corpus_name, ms in corpus_data.items():
             fill_audit = audit_fill(ms)
             for fld, (k, n, lo, p, hi) in fill_audit.items():
-                w.writerow([fld, V25_NEW_FIELDS[fld]["family"], corpus_name, n, k,
-                            f"{p:.4f}", f"{lo:.4f}", f"{hi:.4f}"])
+                w.writerow(
+                    [
+                        fld,
+                        V25_NEW_FIELDS[fld]["family"],
+                        corpus_name,
+                        n,
+                        k,
+                        f"{p:.4f}",
+                        f"{lo:.4f}",
+                        f"{hi:.4f}",
+                    ]
+                )
     print(f"[iter185] wrote {fill_out_path}")
 
     # ---- Output 2: per-corpus discriminative entropy ----
@@ -436,8 +466,17 @@ def main():
             ent_audit = audit_discriminative_entropy(ms)
             for fld, (h, n_unique, n_filled) in ent_audit.items():
                 verdict = "STRONG" if h >= 1.5 else ("WEAK" if h >= 0.5 else "PLACEBO")
-                w.writerow([fld, V25_NEW_FIELDS[fld]["family"], corpus_name, n_filled, n_unique,
-                            f"{h:.4f}", verdict])
+                w.writerow(
+                    [
+                        fld,
+                        V25_NEW_FIELDS[fld]["family"],
+                        corpus_name,
+                        n_filled,
+                        n_unique,
+                        f"{h:.4f}",
+                        verdict,
+                    ]
+                )
     print(f"[iter185] wrote {entropy_out_path}")
 
     # ---- Output 3: value-correctness audit on mega ----
@@ -445,14 +484,28 @@ def main():
     vc_out_path = RES / "p5_iter185_v25_value_correctness.tsv"
     with open(vc_out_path, "w") as fp:
         w = csv.writer(fp, delimiter="\t")
-        w.writerow(["field", "cell_id", "declared", "recomputed", "abs_residual", "pass01", "status"])
+        w.writerow(
+            ["field", "cell_id", "declared", "recomputed", "abs_residual", "pass01", "status"]
+        )
         for field, cid, dec, rec, resid, ok in vc_rows:
-            w.writerow([field, cid, f"{dec:.6f}", f"{rec:.6f}", f"{resid:.6f}", int(ok), "UNVERIFIABLE" if not math.isfinite(rec) else ("PASS" if ok else "FAIL")])
+            w.writerow(
+                [
+                    field,
+                    cid,
+                    f"{dec:.6f}",
+                    f"{rec:.6f}",
+                    f"{resid:.6f}",
+                    int(ok),
+                    "UNVERIFIABLE" if not math.isfinite(rec) else ("PASS" if ok else "FAIL"),
+                ]
+            )
     zvf_rows = [r for r in vc_rows if r[0] == "zvf"]
     n_total = len(zvf_rows)
     n_pass = sum(1 for r in zvf_rows if r[5])
     pass_rate = n_pass / n_total if n_total else 0.0
-    print(f"[iter185] value-correctness: {n_pass}/{n_total} ({pass_rate:.4f}) cells pass |residual|<=0.05 on zvf")
+    print(
+        f"[iter185] value-correctness: {n_pass}/{n_total} ({pass_rate:.4f}) cells pass |residual|<=0.05 on zvf"
+    )
 
     # ---- Output 4: cross-corpus portability matrix ----
     matrix_rows = audit_cross_corpus_matrix(corpus_data)
@@ -478,8 +531,10 @@ def main():
         h1_per_corpus[cp] = (len(ks), ks)
     h1_pass = all(v[0] >= 10 for v in h1_per_corpus.values())
     h1_verdict = "PASS" if h1_pass else "FAIL"
-    print(f"[iter185] H1: per-corpus fields at fill>=0.80: "
-          f"mega={h1_per_corpus['mega'][0]}, n10={h1_per_corpus['n10'][0]}, n2={h1_per_corpus['n2'][0]}  -> {h1_verdict}")
+    print(
+        f"[iter185] H1: per-corpus fields at fill>=0.80: "
+        f"mega={h1_per_corpus['mega'][0]}, n10={h1_per_corpus['n10'][0]}, n2={h1_per_corpus['n2'][0]}  -> {h1_verdict}"
+    )
 
     h2_pass = pass_rate >= 0.90
     h2_verdict = "PASS" if h2_pass else "FAIL"
@@ -493,7 +548,11 @@ def main():
             total_ent_per_corpus.setdefault(cp, 0.0)
             total_ent_per_corpus[cp] += float(row["entropy_bits"])
     print(f"[iter185] H3: total entropy bits per corpus: {total_ent_per_corpus}")
-    h3_pass = (total_ent_per_corpus.get("mega", 0) >= total_ent_per_corpus.get("n10", 0) >= total_ent_per_corpus.get("n2", 0))
+    h3_pass = (
+        total_ent_per_corpus.get("mega", 0)
+        >= total_ent_per_corpus.get("n10", 0)
+        >= total_ent_per_corpus.get("n2", 0)
+    )
     h3_verdict = "PASS" if h3_pass else "FAIL"
     print(f"[iter185] H3: monotone mega>=n10>=n2 -> {h3_verdict}")
 
@@ -519,7 +578,8 @@ def main():
         sd_r = statistics.stdev(seeds_rewards) if len(seeds_rewards) > 1 else 0.0
         # Wilson-style: use half-width = 1.96 * sd/sqrt(n)
         from scipy.stats import t
-        hw = float(t.ppf(.975, len(seeds_rewards)-1)) * sd_r / math.sqrt(len(seeds_rewards))
+
+        hw = float(t.ppf(0.975, len(seeds_rewards) - 1)) * sd_r / math.sqrt(len(seeds_rewards))
     else:
         mean_r = seeds_rewards[0] if seeds_rewards else 0.0
         hw = float("nan")
@@ -536,12 +596,24 @@ def main():
         "vein": "brief vein (a) at cross-corpus portability layer",
         "extends_iter181_recommendation": "EXTEND iter-181 to additional corpora",
         "corpora": {
-            "mega_20260704":     {"n": len(manifests_mega), "fields_filled": sum(1 for fld in V25_NEW_FIELDS
-                                                    if any(fld in m for m in manifests_mega))},
-            "n10_seed_expansion":{"n": len(manifests_n10), "fields_filled": sum(1 for fld in V25_NEW_FIELDS
-                                                    if any(fld in m for m in manifests_n10))},
-            "n2_reward_tensor_resume": {"n": len(manifests_n2), "fields_filled": sum(1 for fld in V25_NEW_FIELDS
-                                                    if any(fld in m for m in manifests_n2))},
+            "mega_20260704": {
+                "n": len(manifests_mega),
+                "fields_filled": sum(
+                    1 for fld in V25_NEW_FIELDS if any(fld in m for m in manifests_mega)
+                ),
+            },
+            "n10_seed_expansion": {
+                "n": len(manifests_n10),
+                "fields_filled": sum(
+                    1 for fld in V25_NEW_FIELDS if any(fld in m for m in manifests_n10)
+                ),
+            },
+            "n2_reward_tensor_resume": {
+                "n": len(manifests_n2),
+                "fields_filled": sum(
+                    1 for fld in V25_NEW_FIELDS if any(fld in m for m in manifests_n2)
+                ),
+            },
         },
         "total_v25_fields": len(V25_NEW_FIELDS),
         "h1_fill_at_least_0_80_on_at_least_10_fields_per_corpus": {
@@ -551,7 +623,9 @@ def main():
         },
         "h2_value_correctness_zvf_residual_le_0_05": {
             "verdict": h2_verdict,
-            "all_fields_evidence_coverage": sum(math.isfinite(r[3]) for r in vc_rows) / len(vc_rows) if vc_rows else 0,
+            "all_fields_evidence_coverage": sum(math.isfinite(r[3]) for r in vc_rows) / len(vc_rows)
+            if vc_rows
+            else 0,
             "full_original_hypothesis_status": "UNVERIFIABLE_PCD_DEFINITION_REQUIRED",
             "executed_scope": "ZVF only; PCD and length are explicitly UNVERIFIABLE without their raw measurements",
             "n_total": n_total,
@@ -575,13 +649,15 @@ def main():
         "headline": {
             "n_corpora": 3,
             "n_total_cells": len(manifests_mega) + len(manifests_n10) + len(manifests_n2),
-            "n_hypotheses_passed": sum([
-                h1_verdict == "PASS",
-                h2_verdict == "PASS",
-                h3_verdict == "PASS",
-                h4_verdict == "PASS",
-                h5_verdict == "PASS",
-            ]),
+            "n_hypotheses_passed": sum(
+                [
+                    h1_verdict == "PASS",
+                    h2_verdict == "PASS",
+                    h3_verdict == "PASS",
+                    h4_verdict == "PASS",
+                    h5_verdict == "PASS",
+                ]
+            ),
         },
     }
     summary_path = RES / "p5_iter185_summary.json"

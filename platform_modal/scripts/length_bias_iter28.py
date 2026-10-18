@@ -37,7 +37,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 from pathlib import Path
 from typing import Dict, List, Tuple
 
@@ -138,9 +137,7 @@ def _bootstrap_mean(xs: List[float], n_boot: int = 2000, seed: int = 20260702):
     for i in range(n_boot):
         idx = rng.integers(0, arr.size, size=arr.size)
         means[i] = arr[idx].mean()
-    return float(arr.mean()), float(np.quantile(means, 0.025)), float(
-        np.quantile(means, 0.975)
-    )
+    return float(arr.mean()), float(np.quantile(means, 0.025)), float(np.quantile(means, 0.975))
 
 
 def _drgrpo_signature(scatter: List[Tuple[float, float]]) -> Dict[str, float]:
@@ -277,7 +274,7 @@ def aggregate_signature(
             }
         )
         # signature: corr(L_slope, R_slope) across seeds
-        sig[(task, algo)] = _drgrpo_signature(list(zip(L_slopes, R_slopes)))
+        sig[(task, algo)] = _drgrpo_signature(list(zip(L_slopes, R_slopes, strict=False)))
     return summary, sig
 
 
@@ -409,9 +406,7 @@ def main():
         )
     ax.axhline(0.0, color="grey", linestyle="--", linewidth=0.8)
     ax.set_xticks(x_pos)
-    ax.set_xticklabels(
-        [f"{r['task']}\n{r['algo']}" for r in summary], rotation=30, fontsize=8
-    )
+    ax.set_xticklabels([f"{r['task']}\n{r['algo']}" for r in summary], rotation=30, fontsize=8)
     ax.set_ylabel("L slope per step (tokens)")
     ax.set_title("(A) Length trend slope")
 
@@ -431,9 +426,7 @@ def main():
         )
     ax.axhline(0.0, color="grey", linestyle="--", linewidth=0.8)
     ax.set_xticks(x_pos)
-    ax.set_xticklabels(
-        [f"{r['task']}\n{r['algo']}" for r in summary], rotation=30, fontsize=8
-    )
+    ax.set_xticklabels([f"{r['task']}\n{r['algo']}" for r in summary], rotation=30, fontsize=8)
     ax.set_ylabel(r"$\rho(L,ZVF)$ within-step")
     ax.set_title("(B) Length-ZVF coupling")
 
@@ -453,9 +446,7 @@ def main():
         )
     ax.axhline(0.0, color="grey", linestyle="--", linewidth=0.8)
     ax.set_xticks(x_pos)
-    ax.set_xticklabels(
-        [f"{r['task']}\n{r['algo']}" for r in summary], rotation=30, fontsize=8
-    )
+    ax.set_xticklabels([f"{r['task']}\n{r['algo']}" for r in summary], rotation=30, fontsize=8)
     ax.set_ylabel(r"$\rho(L,R)$ within-step")
     ax.set_title("(C) Length-Reward coupling")
 
@@ -517,9 +508,7 @@ def main():
         )
     print("\nDr.GRPO signature (corr(L_slope, R_slope) across seeds):")
     for (task, algo), s in sig.items():
-        print(
-            f"  {task:10s} {algo:6s} n={s['n']} pearson={s['pearson']:.3f} p={s['p']:.4f}"
-        )
+        print(f"  {task:10s} {algo:6s} n={s['n']} pearson={s['pearson']:.3f} p={s['p']:.4f}")
 
 
 if __name__ == "__main__":

@@ -33,6 +33,7 @@ Data: platform_hybrid/experiments/results/drgrpo_vs_grpo.json (Qwen2.5-0.5B arit
   40 steps, 5 seeds per algo) and drgrpo_gsm8k_cot_full.json
   (Qwen2.5-1.5B GSM8K CoT, 30 steps, 3 seeds per algo).
 """
+
 from __future__ import annotations
 
 import csv
@@ -121,7 +122,7 @@ def spearman(x, y):
     ry = np.argsort(np.argsort(y))
     rx = rx - rx.mean()
     ry = ry - ry.mean()
-    denom = math.sqrt(float((rx ** 2).sum() * (ry ** 2).sum()))
+    denom = math.sqrt(float((rx**2).sum() * (ry**2).sum()))
     if denom == 0:
         return float("nan")
     return float((rx * ry).sum() / denom)
@@ -199,18 +200,22 @@ def main():
             per_algo_resid_rho[algo].append(resid_rho)
         # paired bootstrap on lambda ratio: GRPO vs Dr.GRPO (mean + median)
         boot = paired_bootstrap_diff(per_algo_lam["grpo"], per_algo_lam["dr_grpo"])
-        out_cross.append(dict(
-            task=task,
-            metric="lam_ratio (L/R)",
-            grpo_mean=round(float(np.mean(per_algo_lam["grpo"])), 4),
-            grpo_median=round(float(np.median(per_algo_lam["grpo"])), 4),
-            drgrpo_mean=round(float(np.mean(per_algo_lam["dr_grpo"])), 4),
-            drgrpo_median=round(float(np.median(per_algo_lam["dr_grpo"])), 4),
-            diff_grpo_minus_drgrpo=round(float(np.mean(per_algo_lam["grpo"]) - np.mean(per_algo_lam["dr_grpo"])), 4),
-            diff_lo=round(boot["lo"], 4),
-            diff_hi=round(boot["hi"], 4),
-            p_le0=round(boot["p_le0"], 4),
-        ))
+        out_cross.append(
+            dict(
+                task=task,
+                metric="lam_ratio (L/R)",
+                grpo_mean=round(float(np.mean(per_algo_lam["grpo"])), 4),
+                grpo_median=round(float(np.median(per_algo_lam["grpo"])), 4),
+                drgrpo_mean=round(float(np.mean(per_algo_lam["dr_grpo"])), 4),
+                drgrpo_median=round(float(np.median(per_algo_lam["dr_grpo"])), 4),
+                diff_grpo_minus_drgrpo=round(
+                    float(np.mean(per_algo_lam["grpo"]) - np.mean(per_algo_lam["dr_grpo"])), 4
+                ),
+                diff_lo=round(boot["lo"], 4),
+                diff_hi=round(boot["hi"], 4),
+                p_le0=round(boot["p_le0"], 4),
+            )
+        )
         # per-algo summary (use median for robustness to boundary fits)
         for algo in ("grpo", "dr_grpo"):
             n = len(per_algo_lam[algo])
@@ -222,19 +227,21 @@ def main():
             ident_L = [r for r in rows_a if r["L_ident"] == 1]
             mean_R = float(np.median([r["lam_R"] for r in ident_R])) if ident_R else float("nan")
             mean_L = float(np.median([r["lam_L"] for r in ident_L])) if ident_L else float("nan")
-            out_summary.append(dict(
-                task=task,
-                algo=algo,
-                n_seeds=n,
-                n_R_ident=len(ident_R),
-                n_L_ident=len(ident_L),
-                median_lam_R=round(mean_R, 4),
-                median_lam_L=round(mean_L, 4),
-                median_t80_R=round(float(np.median(per_algo_t80_R[algo])), 2),
-                median_t80_L=round(float(np.median(per_algo_t80_L[algo])), 2),
-                median_lam_ratio=round(float(np.median(per_algo_lam[algo])), 4),
-                median_resid_rho=round(float(np.median(per_algo_resid_rho[algo])), 4),
-            ))
+            out_summary.append(
+                dict(
+                    task=task,
+                    algo=algo,
+                    n_seeds=n,
+                    n_R_ident=len(ident_R),
+                    n_L_ident=len(ident_L),
+                    median_lam_R=round(mean_R, 4),
+                    median_lam_L=round(mean_L, 4),
+                    median_t80_R=round(float(np.median(per_algo_t80_R[algo])), 2),
+                    median_t80_L=round(float(np.median(per_algo_t80_L[algo])), 2),
+                    median_lam_ratio=round(float(np.median(per_algo_lam[algo])), 4),
+                    median_resid_rho=round(float(np.median(per_algo_resid_rho[algo])), 4),
+                )
+            )
     # write outputs
     p1 = OUT_DIR / "length_bias_iter36_per_run.tsv"
     with open(p1, "w", newline="") as f:
@@ -268,18 +275,22 @@ def main():
         n_d_L = sum(1 for r in d if r["L_ident"] == 1)
         n_g_R = sum(1 for r in g if r["R_ident"] == 1)
         n_d_R = sum(1 for r in d if r["R_ident"] == 1)
-        findings.append(dict(
-            task=task,
-            median_lam_ratio_GRPO=round(ratio_g, 4),
-            median_lam_ratio_DrGRPO=round(ratio_d, 4),
-            median_resid_rho_GRPO=round(rho_g, 4),
-            median_resid_rho_DrGRPO=round(rho_d, 4),
-            n_L_ident_GRPO=n_g_L,
-            n_L_ident_DrGRPO=n_d_L,
-            n_R_ident_GRPO=n_g_R,
-            n_R_ident_DrGRPO=n_d_R,
-            joint_saturation_holds=("yes" if abs(ratio_g - 1) < 0.5 and abs(ratio_d - 1) < 0.5 else "no"),
-        ))
+        findings.append(
+            dict(
+                task=task,
+                median_lam_ratio_GRPO=round(ratio_g, 4),
+                median_lam_ratio_DrGRPO=round(ratio_d, 4),
+                median_resid_rho_GRPO=round(rho_g, 4),
+                median_resid_rho_DrGRPO=round(rho_d, 4),
+                n_L_ident_GRPO=n_g_L,
+                n_L_ident_DrGRPO=n_d_L,
+                n_R_ident_GRPO=n_g_R,
+                n_R_ident_DrGRPO=n_d_R,
+                joint_saturation_holds=(
+                    "yes" if abs(ratio_g - 1) < 0.5 and abs(ratio_d - 1) < 0.5 else "no"
+                ),
+            )
+        )
     with open(p4, "w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=list(findings[0].keys()), delimiter="\t")
         w.writeheader()

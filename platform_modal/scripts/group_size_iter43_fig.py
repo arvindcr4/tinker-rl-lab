@@ -9,6 +9,7 @@ Panel (b): ZVF-implied retention vs measured retention (scatter); points
 Panel (c): TOST p-value curves across epsilons, one line per (G_a, G_b)
            pair at T=64M, showing the Wu claim's verification threshold.
 """
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -18,7 +19,6 @@ import matplotlib
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-import numpy as np
 from _analysis_common import read_tsv
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -41,8 +41,15 @@ def panel_a(ax, eff_rows: list[dict]) -> None:
         rows = sorted(by_g[G], key=lambda r: int(r["T_tokens"]))
         Ts = [int(r["T_tokens"]) / 1e6 for r in rows]
         Rs = [float(r["retention_vs_max_G"]) for r in rows]
-        ax.plot(Ts, Rs, color=COLORS_G[G], marker=MARKERS_G[G],
-                label=f"G={G}", linewidth=2.0, markersize=7)
+        ax.plot(
+            Ts,
+            Rs,
+            color=COLORS_G[G],
+            marker=MARKERS_G[G],
+            label=f"G={G}",
+            linewidth=2.0,
+            markersize=7,
+        )
     ax.axhline(WU, color="red", linestyle="--", linewidth=1.5, label=f"Wu 2025 ({WU})")
     ax.set_xscale("log")
     ax.set_xlabel("Token budget $T$ (M, log scale)")
@@ -60,9 +67,16 @@ def panel_b(ax, eff_rows: list[dict]) -> None:
     Gs = [int(r["G"]) for r in eff_rows]
     for G in sorted(set(Gs)):
         idx = [i for i, g in enumerate(Gs) if g == G]
-        ax.scatter([Rs_zvf[i] for i in idx], [Rs[i] for i in idx],
-                   color=COLORS_G[G], marker=MARKERS_G[G], s=70,
-                   edgecolors="black", linewidths=0.5, label=f"G={G}")
+        ax.scatter(
+            [Rs_zvf[i] for i in idx],
+            [Rs[i] for i in idx],
+            color=COLORS_G[G],
+            marker=MARKERS_G[G],
+            s=70,
+            edgecolors="black",
+            linewidths=0.5,
+            label=f"G={G}",
+        )
     ax.plot([0.5, 1.05], [0.5, 1.05], "k--", alpha=0.5, label="Identity")
     ax.set_xlabel("ZVF-implied retention (1 - ZVF/$ZVF_{max}$)")
     ax.set_ylabel("Measured retention $R$")
@@ -92,9 +106,9 @@ def panel_c(ax, tost_rows: list[dict]) -> None:
             p_lower = norm_cdf((-eps - diff) / se)
             p_upper = norm_cdf((diff - eps) / se)
             p_tost.append(max(p_lower, p_upper))
-        ax.plot(eps_levels, p_tost,
-                marker="o", markersize=4,
-                label=f"G={G_a} vs G={G_b}", linewidth=1.5)
+        ax.plot(
+            eps_levels, p_tost, marker="o", markersize=4, label=f"G={G_a} vs G={G_b}", linewidth=1.5
+        )
     ax.axhline(0.05, color="red", linestyle="--", linewidth=1.2, label="$p=0.05$")
     ax.set_xscale("log")
     ax.set_yscale("log")
@@ -112,8 +126,9 @@ def main() -> None:
     panel_a(axes[0], eff_rows)
     panel_b(axes[1], eff_rows)
     panel_c(axes[2], tost_rows)
-    fig.suptitle("Iter 43 Pillar 3: G=4 vs G=32 ZVF-Decomposed Equivalence",
-                 fontsize=12, fontweight="bold")
+    fig.suptitle(
+        "Iter 43 Pillar 3: G=4 vs G=32 ZVF-Decomposed Equivalence", fontsize=12, fontweight="bold"
+    )
     fig.tight_layout(rect=[0, 0, 1, 0.96])
     out_pdf = FIG / "group_size_iter43.pdf"
     out_png = FIG / "group_size_iter43.png"

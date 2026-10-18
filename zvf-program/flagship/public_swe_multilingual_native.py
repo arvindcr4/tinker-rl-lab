@@ -4,6 +4,7 @@ This module never calls a model, starts Docker, downloads container layers, or
 reruns a terminal attempt. `plan` writes a command for a separately authorized
 runtime; `ingest` verifies that runtime's existing native artifacts.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -27,7 +28,10 @@ COUNT = 300
 ACTOR_FIELDS = ("instance_id", "repo", "base_commit", "problem_statement")
 GENERATION_STATUSES = {"GENERATED", "GENERATION_FAILED"}
 IDENTITY_FIELDS = {"model_id", "model_revision", "hf_repo", "hf_commit", "served_model_id"}
-DEFAULT_SETUP = Path(__file__).resolve().parents[2] / "outputs/public_portfolio_2026-09-05/swe_multilingual_setup"
+DEFAULT_SETUP = (
+    Path(__file__).resolve().parents[2]
+    / "outputs/public_portfolio_2026-09-05/swe_multilingual_setup"
+)
 
 
 class BoundaryError(ValueError):
@@ -65,7 +69,9 @@ def immutable(path: Path, raw: bytes) -> None:
 
 
 def write(path: Path, value: Any) -> None:
-    immutable(path, (json.dumps(value, indent=2, sort_keys=True, ensure_ascii=False) + "\n").encode())
+    immutable(
+        path, (json.dumps(value, indent=2, sort_keys=True, ensure_ascii=False) + "\n").encode()
+    )
 
 
 def write_lines(path: Path, values: list[dict]) -> None:
@@ -120,8 +126,15 @@ def actor_task(raw: dict) -> dict:
     return {key: raw[key] for key in ACTOR_FIELDS}
 
 
-def build_actor_request(task: dict, sources: dict[str, str], served_model: str,
-                        *, max_tokens: int, temperature: float, seed: int) -> dict:
+def build_actor_request(
+    task: dict,
+    sources: dict[str, str],
+    served_model: str,
+    *,
+    max_tokens: int,
+    temperature: float,
+    seed: int,
+) -> dict:
     """Adapt the original E1 patch-only prompt to an OpenAI-compatible actor.
 
     `sources` must be independently collected at the pinned base commit; this
@@ -134,32 +147,45 @@ def build_actor_request(task: dict, sources: dict[str, str], served_model: str,
     for path, content in sources.items():
         if not isinstance(content, str) or Path(path).is_absolute() or ".." in Path(path).parts:
             raise BoundaryError("Invalid base-commit source context")
-    context = "\n\n".join(f"===== {path} =====\n{content}" for path, content in sorted(sources.items()))
-    prompt = f"""Solve this frozen SWE-bench Multilingual task in repository {task['repo']}.
+    context = "\n\n".join(
+        f"===== {path} =====\n{content}" for path, content in sorted(sources.items())
+    )
+    prompt = f"""Solve this frozen SWE-bench Multilingual task in repository {task["repo"]}.
 
 Return only a valid unified git diff beginning with `diff --git`. Do not emit
 analysis, explanations, planning, ellipses, abbreviated context, or Markdown
 fences. Every hunk header must have concrete line ranges. Make the smallest
 complete production fix, preserve project style, and ensure the patch applies
-to base commit {task['base_commit']}.
+to base commit {task["base_commit"]}.
 
 PROBLEM STATEMENT
-{task['problem_statement']}
+{task["problem_statement"]}
 
 FROZEN BASE-COMMIT SOURCE CONTEXT
 {context}
 """
-    return {"model": served_model, "messages": [
-        {"role": "system", "content": "You are a deterministic source-code patch generator. Reply with the requested patch only."},
-        {"role": "user", "content": prompt}],
-        "max_tokens": max_tokens, "temperature": temperature, "top_p": 0.95, "seed": seed,
-        "chat_template_kwargs": {"enable_thinking": False}}
+    return {
+        "model": served_model,
+        "messages": [
+            {
+                "role": "system",
+                "content": "You are a deterministic source-code patch generator. Reply with the requested patch only.",
+            },
+            {"role": "user", "content": prompt},
+        ],
+        "max_tokens": max_tokens,
+        "temperature": temperature,
+        "top_p": 0.95,
+        "seed": seed,
+        "chat_template_kwargs": {"enable_thinking": False},
+    }
 
 
 def prepare(setup: Path) -> dict:
     check_hash(setup / "test.parquet", PARQUET_SHA256)
     utils, _ = native(setup)
     import pyarrow.parquet as pq
+
     raw = pq.read_table(setup / "test.parquet").to_pylist()
     if len(raw) != COUNT:
         raise BoundaryError("Pinned split must contain exactly 300 rows")
@@ -174,42 +200,74 @@ def prepare(setup: Path) -> dict:
             raise BoundaryError("Native parser or expected failing tests unavailable")
         native_spec = {**asdict(spec), "eval_script": spec.eval_script}
         public = actor_task(row)
-        tasks.append({"instance_id": row["instance_id"], "repo": row["repo"],
-                      "base_commit": row["base_commit"], "image": row["image"],
-                      "raw_task_sha256": object_hash(row), "actor_task_sha256": object_hash(public),
-                      "test_spec_sha256": object_hash(native_spec),
-                      "eval_script_sha256": digest(spec.eval_script.encode()),
-                      "test_patch_sha256": digest(row["test_patch"].encode()),
-                      "reference_patch_sha256": digest(row["patch"].encode()),
-                      "fail_to_pass_count": len(spec.FAIL_TO_PASS),
-                      "pass_to_pass_count": len(spec.PASS_TO_PASS), "log_parser": spec.log_parser})
+        tasks.append(
+            {
+                "instance_id": row["instance_id"],
+                "repo": row["repo"],
+                "base_commit": row["base_commit"],
+                "image": row["image"],
+                "raw_task_sha256": object_hash(row),
+                "actor_task_sha256": object_hash(public),
+                "test_spec_sha256": object_hash(native_spec),
+                "eval_script_sha256": digest(spec.eval_script.encode()),
+                "test_patch_sha256": digest(row["test_patch"].encode()),
+                "reference_patch_sha256": digest(row["patch"].encode()),
+                "fail_to_pass_count": len(spec.FAIL_TO_PASS),
+                "pass_to_pass_count": len(spec.PASS_TO_PASS),
+                "log_parser": spec.log_parser,
+            }
+        )
         specs.append(native_spec)
         actors.append(public)
     prepared = setup / "prepared"
     write_lines(prepared / "native_dataset.jsonl", raw)
     write_lines(prepared / "native_test_specs.jsonl", specs)
     write_lines(prepared / "actor_tasks.jsonl", actors)
-    files = {name: digest((prepared / name).read_bytes()) for name in
-             ["native_dataset.jsonl", "native_test_specs.jsonl", "actor_tasks.jsonl"]}
-    manifest = {"schema_version": "public-swe-multilingual-manifest-v1", "suite_id": "swe_bench_multilingual_eval",
-                "dataset": DATASET, "dataset_revision": DATASET_REVISION, "split": "test",
-                "source_revision": SOURCE_REVISION, "source_manifest_sha256": SOURCE_MANIFEST_SHA256,
-                "parquet_sha256": PARQUET_SHA256, "task_count": COUNT,
-                "tasks": tasks, "task_inventory_sha256": object_hash(tasks), "files_sha256": files,
-                "native_default_protocol": {"metric": "resolved_fraction", "samples_per_task": 1,
-                                            "workers": 4, "timeout_seconds": 1800, "split": "test"},
-                "image_digest_status": "NOT_RESOLVED_FROM_NATIVE_MUTABLE_TAGS",
-                "training_overlap_status": "UNVERIFIED_NO_CONSUMED_TASK_INVENTORY", "heldout_claim": False,
-                "status": "NATIVE_DATA_AND_TEST_SPECS_PREPARED_NO_EXECUTION", "score": None}
+    files = {
+        name: digest((prepared / name).read_bytes())
+        for name in ["native_dataset.jsonl", "native_test_specs.jsonl", "actor_tasks.jsonl"]
+    }
+    manifest = {
+        "schema_version": "public-swe-multilingual-manifest-v1",
+        "suite_id": "swe_bench_multilingual_eval",
+        "dataset": DATASET,
+        "dataset_revision": DATASET_REVISION,
+        "split": "test",
+        "source_revision": SOURCE_REVISION,
+        "source_manifest_sha256": SOURCE_MANIFEST_SHA256,
+        "parquet_sha256": PARQUET_SHA256,
+        "task_count": COUNT,
+        "tasks": tasks,
+        "task_inventory_sha256": object_hash(tasks),
+        "files_sha256": files,
+        "native_default_protocol": {
+            "metric": "resolved_fraction",
+            "samples_per_task": 1,
+            "workers": 4,
+            "timeout_seconds": 1800,
+            "split": "test",
+        },
+        "image_digest_status": "NOT_RESOLVED_FROM_NATIVE_MUTABLE_TAGS",
+        "training_overlap_status": "UNVERIFIED_NO_CONSUMED_TASK_INVENTORY",
+        "heldout_claim": False,
+        "status": "NATIVE_DATA_AND_TEST_SPECS_PREPARED_NO_EXECUTION",
+        "score": None,
+    }
     write(prepared / "manifest.json", manifest)
-    return {key: manifest[key] for key in ["status", "task_count", "task_inventory_sha256", "score"]}
+    return {
+        key: manifest[key] for key in ["status", "task_count", "task_inventory_sha256", "score"]
+    }
 
 
 def load_prepared(setup: Path) -> tuple[dict, dict[str, dict]]:
     verify_sources(setup)
     check_hash(setup / "test.parquet", PARQUET_SHA256)
     manifest = read(setup / "prepared/manifest.json")
-    if (manifest.get("dataset_revision"), manifest.get("source_revision"), manifest.get("task_count")) != (DATASET_REVISION, SOURCE_REVISION, COUNT):
+    if (
+        manifest.get("dataset_revision"),
+        manifest.get("source_revision"),
+        manifest.get("task_count"),
+    ) != (DATASET_REVISION, SOURCE_REVISION, COUNT):
         raise BoundaryError("Prepared identity is not the pinned 300-task suite")
     for name, expected in manifest["files_sha256"].items():
         check_hash(setup / "prepared" / name, expected)
@@ -220,10 +278,13 @@ def load_prepared(setup: Path) -> tuple[dict, dict[str, dict]]:
     for iid, row in raw.items():
         if object_hash(row) != tasks[iid]["raw_task_sha256"]:
             raise BoundaryError("Raw task hash mismatch")
-        if tasks[iid]["actor_task_sha256"] != object_hash(actor_task(row)) or any(tasks[iid][key] != row[key] for key in ["repo", "base_commit", "image"]):
+        if tasks[iid]["actor_task_sha256"] != object_hash(actor_task(row)) or any(
+            tasks[iid][key] != row[key] for key in ["repo", "base_commit", "image"]
+        ):
             raise BoundaryError("Actor task projection or source identity changed")
     # Rebuilding from the hard-pinned parquet prevents coordinated manifest edits.
     import pyarrow.parquet as pq
+
     official = indexed(pq.read_table(setup / "test.parquet").to_pylist(), set(tasks))
     if raw != official:
         raise BoundaryError("Prepared data differs from the pinned released rows")
@@ -238,7 +299,9 @@ def validate_identity(value: dict) -> None:
             raise BoundaryError("Actor revisions must be immutable commits")
 
 
-def collect_attempts(manifest: dict, attempt_root: Path, identity: dict) -> tuple[list[dict], list[dict]]:
+def collect_attempts(
+    manifest: dict, attempt_root: Path, identity: dict
+) -> tuple[list[dict], list[dict]]:
     """Read original E1-style per-task generation files with added suite binding.
 
     Genuine completed invalid model responses become empty native predictions.
@@ -258,7 +321,10 @@ def collect_attempts(manifest: dict, attempt_root: Path, identity: dict) -> tupl
             raise BoundaryError("Missing or nonterminal generation status")
         if receipt.get("sample_started") is not True or receipt.get("sample_completed") is not True:
             raise BoundaryError("Sampling outcome is incomplete; no implicit retry or empty patch")
-        if receipt.get("task_inventory_sha256") != manifest["task_inventory_sha256"] or receipt.get("actor_task_sha256") != task["actor_task_sha256"]:
+        if (
+            receipt.get("task_inventory_sha256") != manifest["task_inventory_sha256"]
+            or receipt.get("actor_task_sha256") != task["actor_task_sha256"]
+        ):
             raise BoundaryError("Generation is not bound to the frozen multilingual actor task")
         if receipt.get("model_identity_sha256") != object_hash(identity):
             raise BoundaryError("Generation actor identity mismatch")
@@ -276,12 +342,22 @@ def collect_attempts(manifest: dict, attempt_root: Path, identity: dict) -> tupl
         check_hash(request_path, receipt.get("request_sha256", ""))
         request = read(request_path)
         actor = {key: source["actor_task"][key] for key in ACTOR_FIELDS}
-        if object_hash(actor) != task["actor_task_sha256"] or set(source["actor_task"]) != set(ACTOR_FIELDS):
+        if object_hash(actor) != task["actor_task_sha256"] or set(source["actor_task"]) != set(
+            ACTOR_FIELDS
+        ):
             raise BoundaryError("Source context embeds a different actor task")
-        expected_request = build_actor_request(actor, source["files"], identity["served_model_id"],
-                                               max_tokens=request["max_tokens"], temperature=request["temperature"], seed=request["seed"])
+        expected_request = build_actor_request(
+            actor,
+            source["files"],
+            identity["served_model_id"],
+            max_tokens=request["max_tokens"],
+            temperature=request["temperature"],
+            seed=request["seed"],
+        )
         if request != expected_request:
-            raise BoundaryError("Actor request contains changed prompt or unexpected evaluation fields")
+            raise BoundaryError(
+                "Actor request contains changed prompt or unexpected evaluation fields"
+            )
         patch = receipt.get("patch") or ""
         if not isinstance(patch, str):
             raise BoundaryError("Patch must be a string")
@@ -292,11 +368,23 @@ def collect_attempts(manifest: dict, attempt_root: Path, identity: dict) -> tupl
                 raise BoundaryError("Candidate patch is absent from the retained model response")
         elif patch:
             raise BoundaryError("Failed generation cannot secretly contain a patch")
-        predictions.append({"instance_id": iid, "model_patch": patch,
-                            "model_name_or_path": identity["served_model_id"]})
-        receipts.append({"instance_id": iid, "generation_sha256": digest((directory / "generation.json").read_bytes()),
-                         "response_sha256": receipt["response_sha256"], "status": receipt["status"],
-                         "patch_sha256": digest(patch.encode()), "wandb_run_id": receipt["wandb_run_id"]})
+        predictions.append(
+            {
+                "instance_id": iid,
+                "model_patch": patch,
+                "model_name_or_path": identity["served_model_id"],
+            }
+        )
+        receipts.append(
+            {
+                "instance_id": iid,
+                "generation_sha256": digest((directory / "generation.json").read_bytes()),
+                "response_sha256": receipt["response_sha256"],
+                "status": receipt["status"],
+                "patch_sha256": digest(patch.encode()),
+                "wandb_run_id": receipt["wandb_run_id"],
+            }
+        )
     return predictions, receipts
 
 
@@ -317,13 +405,24 @@ def validate_images(images: dict, tasks: dict[str, dict]) -> dict[str, dict]:
             registry_manifest = json.loads(registry_raw)
         except (KeyError, ValueError, TypeError) as exc:
             raise BoundaryError("Raw registry manifest bytes are required") from exc
-        if digest(registry_raw) != row["manifest_sha256"] or registry_manifest.get("schemaVersion") != 2:
+        if (
+            digest(registry_raw) != row["manifest_sha256"]
+            or registry_manifest.get("schemaVersion") != 2
+        ):
             raise BoundaryError("Registry manifest bytes disagree with image digest")
     return rows
 
 
-def plan(setup: Path, output: Path, attempts: Path, identity_path: Path,
-         images_path: Path, run_id: str, workers: int = 4, timeout: int = 1800) -> dict:
+def plan(
+    setup: Path,
+    output: Path,
+    attempts: Path,
+    identity_path: Path,
+    images_path: Path,
+    run_id: str,
+    workers: int = 4,
+    timeout: int = 1800,
+) -> dict:
     manifest, raw = load_prepared(setup)
     if not re.fullmatch(r"[A-Za-z0-9_-]+", run_id) or workers < 1 or timeout < 1:
         raise BoundaryError("Safe unique run ID and positive native runtime limits required")
@@ -335,32 +434,72 @@ def plan(setup: Path, output: Path, attempts: Path, identity_path: Path,
     images = validate_images(images_value, raw)
     output = output.resolve()
     if (output / "logs/run_evaluation" / run_id).exists():
-        raise BoundaryError("Existing native run directory: refuse stale cache or automatic re-evaluation")
+        raise BoundaryError(
+            "Existing native run directory: refuse stale cache or automatic re-evaluation"
+        )
     runtime_rows = [{**row, "image": images[iid]["image"]} for iid, row in raw.items()]
     write_lines(output / "runtime_dataset.jsonl", runtime_rows)
     write_lines(output / "predictions.jsonl", predictions)
     write(output / "attempt_receipts.json", attempts_index)
     write(output / "model_identity.json", identity)
     write(output / "image_manifest.json", images_value)
-    command = [str((setup / ".venv/bin/swebench").resolve()), "eval", str(output / "runtime_dataset.jsonl"),
-               "-p", str(output / "predictions.jsonl"), "--run-id", run_id, "--split", "test",
-               "-j", str(workers), "--timeout", str(timeout), "--report-dir", str(output / "reports")]
-    artifact_names = ["runtime_dataset.jsonl", "predictions.jsonl", "attempt_receipts.json", "model_identity.json", "image_manifest.json"]
-    result = {"schema_version": "public-swe-multilingual-plan-v1", "status": "READY_FOR_SEPARATE_NATIVE_RUNTIME",
-              "run_id": run_id, "cwd": str(output), "argv": command,
-              "task_count": COUNT, "task_inventory_sha256": manifest["task_inventory_sha256"],
-              "source_revision": SOURCE_REVISION, "source_manifest_sha256": SOURCE_MANIFEST_SHA256,
-              "dataset_revision": DATASET_REVISION, "model_identity_sha256": object_hash(identity),
-              "files_sha256": {name: digest((output / name).read_bytes()) for name in artifact_names},
-              "workers": workers, "timeout_seconds": timeout, "score": None,
-              "materialization": "Only image references replaced by digest from registry receipts; task/test fields unchanged",
-              "execution_receipt_required": {"plan_sha256": "sha256 of native_plan.json", "returncode": 0,
-                                              "started_at": "UTC timestamp", "finished_at": "UTC timestamp",
-                                              "wandb_mode": "online", "wandb_run_id": "actual native runtime tracking run",
-                                              "native_artifacts": "map relative artifact path to SHA256, including aggregate/report/log/patch/eval/run metadata",
-                                              "image_observations": "map attempted nonempty instance ID to actual container image digest"}}
+    command = [
+        str((setup / ".venv/bin/swebench").resolve()),
+        "eval",
+        str(output / "runtime_dataset.jsonl"),
+        "-p",
+        str(output / "predictions.jsonl"),
+        "--run-id",
+        run_id,
+        "--split",
+        "test",
+        "-j",
+        str(workers),
+        "--timeout",
+        str(timeout),
+        "--report-dir",
+        str(output / "reports"),
+    ]
+    artifact_names = [
+        "runtime_dataset.jsonl",
+        "predictions.jsonl",
+        "attempt_receipts.json",
+        "model_identity.json",
+        "image_manifest.json",
+    ]
+    result = {
+        "schema_version": "public-swe-multilingual-plan-v1",
+        "status": "READY_FOR_SEPARATE_NATIVE_RUNTIME",
+        "run_id": run_id,
+        "cwd": str(output),
+        "argv": command,
+        "task_count": COUNT,
+        "task_inventory_sha256": manifest["task_inventory_sha256"],
+        "source_revision": SOURCE_REVISION,
+        "source_manifest_sha256": SOURCE_MANIFEST_SHA256,
+        "dataset_revision": DATASET_REVISION,
+        "model_identity_sha256": object_hash(identity),
+        "files_sha256": {name: digest((output / name).read_bytes()) for name in artifact_names},
+        "workers": workers,
+        "timeout_seconds": timeout,
+        "score": None,
+        "materialization": "Only image references replaced by digest from registry receipts; task/test fields unchanged",
+        "execution_receipt_required": {
+            "plan_sha256": "sha256 of native_plan.json",
+            "returncode": 0,
+            "started_at": "UTC timestamp",
+            "finished_at": "UTC timestamp",
+            "wandb_mode": "online",
+            "wandb_run_id": "actual native runtime tracking run",
+            "native_artifacts": "map relative artifact path to SHA256, including aggregate/report/log/patch/eval/run metadata",
+            "image_observations": "map attempted nonempty instance ID to actual container image digest",
+        },
+    }
     write(output / "native_plan.json", result)
-    immutable(output / "native_command.txt", ("cd " + shlex.quote(str(output)) + "\n" + shlex.join(command) + "\n").encode())
+    immutable(
+        output / "native_command.txt",
+        ("cd " + shlex.quote(str(output)) + "\n" + shlex.join(command) + "\n").encode(),
+    )
     return result
 
 
@@ -368,7 +507,10 @@ def ingest(setup: Path, output: Path, execution_path: Path) -> dict:
     """Validate native output, recomputing reports from retained native test logs."""
     manifest, raw = load_prepared(setup)
     runtime_plan = read(output / "native_plan.json")
-    if runtime_plan.get("task_inventory_sha256") != manifest["task_inventory_sha256"] or runtime_plan.get("source_revision") != SOURCE_REVISION:
+    if (
+        runtime_plan.get("task_inventory_sha256") != manifest["task_inventory_sha256"]
+        or runtime_plan.get("source_revision") != SOURCE_REVISION
+    ):
         raise BoundaryError("Native plan differs from pinned task/source identity")
     for name, expected in runtime_plan["files_sha256"].items():
         check_hash(output / name, expected)
@@ -384,10 +526,12 @@ def ingest(setup: Path, output: Path, execution_path: Path) -> dict:
         if Path(name).is_absolute() or ".." in Path(name).parts:
             raise BoundaryError("Native artifact path escapes the runtime output")
         check_hash(output / name, expected)
+
     def artifact(name: str) -> Path:
         if name not in artifacts:
             raise BoundaryError(f"Unrecorded native artifact: {name}")
         return output / name
+
     predictions = indexed(lines(output / "predictions.jsonl"), set(raw))
     attempt_index = indexed(read(output / "attempt_receipts.json"), set(raw))
     for iid, attempt in attempt_index.items():
@@ -397,7 +541,9 @@ def ingest(setup: Path, output: Path, execution_path: Path) -> dict:
             raise BoundaryError("Native predictions differ from terminal actor attempts")
         for field in ["generation_sha256", "response_sha256"]:
             if not re.fullmatch(r"[0-9a-f]{64}", attempt.get(field, "")):
-                raise BoundaryError("Actor attempt index lacks immutable generation/response hashes")
+                raise BoundaryError(
+                    "Actor attempt index lacks immutable generation/response hashes"
+                )
     identity = read(output / "model_identity.json")
     validate_identity(identity)
     if object_hash(identity) != runtime_plan["model_identity_sha256"]:
@@ -412,15 +558,36 @@ def ingest(setup: Path, output: Path, execution_path: Path) -> dict:
             raise BoundaryError("Prediction actor alias drift")
     run_id = runtime_plan["run_id"]
     metadata = read(artifact(f"logs/run_evaluation/{run_id}/run.json"))
-    if metadata.get("dataset") != str((output / "runtime_dataset.jsonl").resolve()) or metadata.get("split") != "test" or metadata.get("task_repo") is not None:
+    if (
+        metadata.get("dataset") != str((output / "runtime_dataset.jsonl").resolve())
+        or metadata.get("split") != "test"
+        or metadata.get("task_repo") is not None
+    ):
         raise BoundaryError("Native metadata names a different dataset or task repository")
     report_name = f"reports/{alias}.{run_id}.json"
     aggregate = read(artifact(report_name))
-    if aggregate.get("total_instances") != COUNT or aggregate.get("submitted_instances") != COUNT or set(aggregate.get("submitted_ids", [])) != set(raw):
+    if (
+        aggregate.get("total_instances") != COUNT
+        or aggregate.get("submitted_instances") != COUNT
+        or set(aggregate.get("submitted_ids", [])) != set(raw)
+    ):
         raise BoundaryError("Native aggregate does not cover all 300 patch attempts")
-    for field in ["submitted", "completed", "empty_patch", "resolved", "unresolved", "error", "infra_failure", "ambiguous_failure"]:
+    for field in [
+        "submitted",
+        "completed",
+        "empty_patch",
+        "resolved",
+        "unresolved",
+        "error",
+        "infra_failure",
+        "ambiguous_failure",
+    ]:
         ids = aggregate.get(field + "_ids", [])
-        if len(ids) != len(set(ids)) or not set(ids) <= set(raw) or aggregate.get(field + "_instances") != len(ids):
+        if (
+            len(ids) != len(set(ids))
+            or not set(ids) <= set(raw)
+            or aggregate.get(field + "_instances") != len(ids)
+        ):
             raise BoundaryError("Native aggregate counts or task IDs are inconsistent")
     if aggregate.get("incomplete_ids"):
         raise BoundaryError("Native harness declares missing model predictions")
@@ -436,7 +603,9 @@ def ingest(setup: Path, output: Path, execution_path: Path) -> dict:
             continue
         observed = execution.get("image_observations", {}).get(iid)
         if observed != image_rows[iid]["image"]:
-            pending.append({"instance_id": iid, "reason": "actual container image digest unverified"})
+            pending.append(
+                {"instance_id": iid, "reason": "actual container image digest unverified"}
+            )
             continue
         report_path = output / (prefix + "report.json")
         if not report_path.is_file():
@@ -448,8 +617,16 @@ def ingest(setup: Path, output: Path, execution_path: Path) -> dict:
                 log = artifact(log_name).read_text()
                 if ">>>>> Patch Apply Failed" in log and iid in aggregate.get("error_ids", []):
                     if artifact(patch_name).read_text() != pred["model_patch"]:
-                        raise BoundaryError("Rejected patch bytes differ from submitted model patch")
-                    outcomes.append({"instance_id": iid, "status": "NATIVE_PATCH_APPLY_FAILED", "resolved": False})
+                        raise BoundaryError(
+                            "Rejected patch bytes differ from submitted model patch"
+                        )
+                    outcomes.append(
+                        {
+                            "instance_id": iid,
+                            "status": "NATIVE_PATCH_APPLY_FAILED",
+                            "resolved": False,
+                        }
+                    )
                     continue
             pending.append({"instance_id": iid, "reason": "native final report absent"})
             continue
@@ -460,28 +637,52 @@ def ingest(setup: Path, output: Path, execution_path: Path) -> dict:
         if artifact(prefix + "eval.sh").read_text() != spec.eval_script:
             raise BoundaryError("Executed test script differs from native pinned specification")
         artifact(prefix + "run_instance.log")
-        recomputed = grading.get_eval_report(spec, pred, str(artifact(prefix + "test_output.txt")), include_tests_status=True)
+        recomputed = grading.get_eval_report(
+            spec, pred, str(artifact(prefix + "test_output.txt")), include_tests_status=True
+        )
         if saved != recomputed:
             raise BoundaryError("Saved native report disagrees with pinned grader on retained log")
         outcome = recomputed[iid]
-        if iid not in aggregate.get("completed_ids", []) or type(outcome.get("resolved")) is not bool:
+        if (
+            iid not in aggregate.get("completed_ids", [])
+            or type(outcome.get("resolved")) is not bool
+        ):
             raise BoundaryError("Native task report is not accounted for by aggregate")
         if outcome.get("infra_failure") is True or iid in aggregate.get("infra_failure_ids", []):
-            pending.append({"instance_id": iid, "reason": "native grader identifies infrastructure failure"})
+            pending.append(
+                {"instance_id": iid, "reason": "native grader identifies infrastructure failure"}
+            )
             continue
-        outcomes.append({"instance_id": iid, "status": "NATIVE_REPORT_VERIFIED", "resolved": outcome["resolved"]})
+        outcomes.append(
+            {
+                "instance_id": iid,
+                "status": "NATIVE_REPORT_VERIFIED",
+                "resolved": outcome["resolved"],
+            }
+        )
     resolved = {row["instance_id"] for row in outcomes if row["resolved"]}
-    if resolved != set(aggregate.get("resolved_ids", [])) or len(resolved) != aggregate.get("resolved_instances"):
+    if resolved != set(aggregate.get("resolved_ids", [])) or len(resolved) != aggregate.get(
+        "resolved_instances"
+    ):
         raise BoundaryError("Native aggregate resolved IDs disagree with verified native evidence")
     complete = len(outcomes) == COUNT and not pending and execution.get("returncode") == 0
-    result = {"schema_version": "public-swe-multilingual-result-v1", "status": "NATIVE_FULL_SUITE_COMPLETE" if complete else "PARTIAL_NATIVE_EVIDENCE",
-              "task_count": COUNT, "completed_attempts": len(outcomes), "resolved_count": len(resolved),
-              "score": len(resolved) / COUNT if complete else None,
-              "metric": "resolved_fraction", "outcomes": outcomes, "pending": pending,
-              "native_report_sha256": digest((output / report_name).read_bytes()),
-              "execution_receipt_sha256": digest(execution_path.read_bytes()),
-              "task_inventory_sha256": manifest["task_inventory_sha256"], "source_revision": SOURCE_REVISION,
-              "heldout_claim": False, "training_overlap_status": manifest["training_overlap_status"]}
+    result = {
+        "schema_version": "public-swe-multilingual-result-v1",
+        "status": "NATIVE_FULL_SUITE_COMPLETE" if complete else "PARTIAL_NATIVE_EVIDENCE",
+        "task_count": COUNT,
+        "completed_attempts": len(outcomes),
+        "resolved_count": len(resolved),
+        "score": len(resolved) / COUNT if complete else None,
+        "metric": "resolved_fraction",
+        "outcomes": outcomes,
+        "pending": pending,
+        "native_report_sha256": digest((output / report_name).read_bytes()),
+        "execution_receipt_sha256": digest(execution_path.read_bytes()),
+        "task_inventory_sha256": manifest["task_inventory_sha256"],
+        "source_revision": SOURCE_REVISION,
+        "heldout_claim": False,
+        "training_overlap_status": manifest["training_overlap_status"],
+    }
     return result
 
 
@@ -504,7 +705,16 @@ def main() -> None:
     if args.command == "prepare":
         result = prepare(args.setup)
     elif args.command == "plan":
-        result = plan(args.setup, args.output, args.attempts, args.model_identity, args.image_manifest, args.run_id, args.workers, args.timeout)
+        result = plan(
+            args.setup,
+            args.output,
+            args.attempts,
+            args.model_identity,
+            args.image_manifest,
+            args.run_id,
+            args.workers,
+            args.timeout,
+        )
     else:
         result = ingest(args.setup, args.output, args.execution_receipt)
         write(args.result, result)

@@ -19,11 +19,11 @@ manifest-complete" cell counts become evidence that the original 7-item
 MIN-REPORT is under-specified and should be expanded (item 11 eta^2
 already argued for adding model_family + task_slice + temperature).
 """
+
 from __future__ import annotations
 
 import csv
 import json
-import os
 import re
 import sys
 from collections import defaultdict
@@ -39,20 +39,37 @@ OUT_DIR = ROOT / "experiments" / "results" / "p5p8"
 
 # Original 7-item MIN-REPORT (from p5_stack.tex and iter-1 script)
 ITEMS_7 = [
-    (1, "loss_form", "loss_form",
-     [r"^(grpo|gspo|dapo|drgrpo|dpo|sequence|ppo|sft|n/a-sampling)$"], "manifest"),
-    (2, "ref_policy_kl", "ref_policy_kl",
-     [r"^(kl-[a-z]+(\d+(\.\d+)?)?|kl-est-[a-z]+|no-kl|n/a(?:-[a-z]+)?)$"], "manifest"),
-    (3, "sampler_backend_precision", "sampler_backend_precision",
-     [r"^(tinker-closed|vllm|sglang|hf|trtllm|openai|anthropic)[-@a-zA-Z0-9._/]*$"], "manifest"),
-    (4, "per_step_zvf_path", "per_step_zvf_path",
-     [r"/.*\.json$"], "manifest"),
-    (5, "group_size_schedule", "group_size_schedule",
-     [r"^(fixed-G=\d+|adaptive[-+a-zA-Z0-9=<>]*|escalating|decaying)$"], "manifest"),
-    (6, "heldout_split", "heldout_split",
-     [r"^[a-z0-9_]+$"], "manifest"),
-    (7, "decontamination_notes", "decontamination_notes",
-     [r".*"], "manifest"),
+    (
+        1,
+        "loss_form",
+        "loss_form",
+        [r"^(grpo|gspo|dapo|drgrpo|dpo|sequence|ppo|sft|n/a-sampling)$"],
+        "manifest",
+    ),
+    (
+        2,
+        "ref_policy_kl",
+        "ref_policy_kl",
+        [r"^(kl-[a-z]+(\d+(\.\d+)?)?|kl-est-[a-z]+|no-kl|n/a(?:-[a-z]+)?)$"],
+        "manifest",
+    ),
+    (
+        3,
+        "sampler_backend_precision",
+        "sampler_backend_precision",
+        [r"^(tinker-closed|vllm|sglang|hf|trtllm|openai|anthropic)[-@a-zA-Z0-9._/]*$"],
+        "manifest",
+    ),
+    (4, "per_step_zvf_path", "per_step_zvf_path", [r"/.*\.json$"], "manifest"),
+    (
+        5,
+        "group_size_schedule",
+        "group_size_schedule",
+        [r"^(fixed-G=\d+|adaptive[-+a-zA-Z0-9=<>]*|escalating|decaying)$"],
+        "manifest",
+    ),
+    (6, "heldout_split", "heldout_split", [r"^[a-z0-9_]+$"], "manifest"),
+    (7, "decontamination_notes", "decontamination_notes", [r".*"], "manifest"),
 ]
 
 # Extended MIN-REPORT — the measured-telemetry + run-level fields the
@@ -61,53 +78,37 @@ ITEMS_7 = [
 # temperature, seed), plus the LR / budget plumbing item 02/06 called
 # for under T1 statistical rigor.
 ITEMS_EXT = [
-    (8,  "model_family",  "model",
-     [r"^[\w\-./]+$"],                       # model id (also serves as family)
-     "cell"),
-    (9,  "task_slice",    "task_slice",
-     [r"^[a-z0-9_]+$"],
-     "cell"),
-    (10, "group_size",    "G",
-     [r"^\d+$"],
-     "cell"),
-    (11, "temperature",   "temperature",
-     [r"^[0-9.]+$"],
-     "cell"),
-    (12, "seed",          "seed",
-     [r"^\d+$"],
-     "cell"),
-    (13, "mean_reward",   "mean_reward",
-     [r"^-?[0-9.]+$"],
-     "cell"),
-    (14, "zvf",           "zvf",
-     [r"^[0-9.]+$"],
-     "cell"),
-    (15, "pcd",           "pcd",
-     [r"^[0-9.]+$"],
-     "cell"),
-    (16, "mean_completion_len", "mean_completion_len",
-     [r"^-?[0-9.]+$"],
-     "cell"),
-    (17, "std_completion_len",  "std_completion_len",
-     [r"^-?[0-9.]+$"],
-     "cell"),
-    (18, "sampled_tokens",      "sampled_tokens",
-     [r"^\d+$"],
-     "cell"),
+    (
+        8,
+        "model_family",
+        "model",
+        [r"^[\w\-./]+$"],  # model id (also serves as family)
+        "cell",
+    ),
+    (9, "task_slice", "task_slice", [r"^[a-z0-9_]+$"], "cell"),
+    (10, "group_size", "G", [r"^\d+$"], "cell"),
+    (11, "temperature", "temperature", [r"^[0-9.]+$"], "cell"),
+    (12, "seed", "seed", [r"^\d+$"], "cell"),
+    (13, "mean_reward", "mean_reward", [r"^-?[0-9.]+$"], "cell"),
+    (14, "zvf", "zvf", [r"^[0-9.]+$"], "cell"),
+    (15, "pcd", "pcd", [r"^[0-9.]+$"], "cell"),
+    (16, "mean_completion_len", "mean_completion_len", [r"^-?[0-9.]+$"], "cell"),
+    (17, "std_completion_len", "std_completion_len", [r"^-?[0-9.]+$"], "cell"),
+    (18, "sampled_tokens", "sampled_tokens", [r"^\d+$"], "cell"),
 ]
 
 # N10-specific run-level fields (LR plumbing, max_tokens, etc.)
 N10_ITEMS = [
-    (19, "model",     "model",     [r"^[\w\-./]+$"], "run"),
-    (20, "lr",        "lr",        [r"^-?[0-9.e-]+$"], "run"),
-    (21, "max_tokens","max_tokens",[r"^\d+$"], "run"),
-    (22, "group",     "group",     [r"^\d+$"], "run"),
-    (23, "batch",     "batch",     [r"^\d+$"], "run"),
-    (24, "rank",      "rank",      [r"^\d+$"], "run"),
-    (25, "n_eval",    "n_eval",    [r"^\d+$"], "run"),
-    (26, "heldout_acc","heldout_acc",[r"^-?[0-9.]+$"], "run"),
-    (27, "step_log",  "step_log",  [r"^\[.*\]$"], "run"),
-    (28, "mean_zvf",  "mean_zvf",  [r"^-?[0-9.]+$"], "run"),
+    (19, "model", "model", [r"^[\w\-./]+$"], "run"),
+    (20, "lr", "lr", [r"^-?[0-9.e-]+$"], "run"),
+    (21, "max_tokens", "max_tokens", [r"^\d+$"], "run"),
+    (22, "group", "group", [r"^\d+$"], "run"),
+    (23, "batch", "batch", [r"^\d+$"], "run"),
+    (24, "rank", "rank", [r"^\d+$"], "run"),
+    (25, "n_eval", "n_eval", [r"^\d+$"], "run"),
+    (26, "heldout_acc", "heldout_acc", [r"^-?[0-9.]+$"], "run"),
+    (27, "step_log", "step_log", [r"^\[.*\]$"], "run"),
+    (28, "mean_zvf", "mean_zvf", [r"^-?[0-9.]+$"], "run"),
     (29, "wandb_run_path", "wandb_run_path", [r"^[\w\-./]+$"], "run"),
 ]
 
@@ -192,11 +193,10 @@ def main() -> int:
 
     # Per-cell extended coverage
     cell_rows = []
-    field_counts = defaultdict(lambda: {"total": 0, "ok": 0, "missing": 0,
-                                         "na": 0, "unrec": 0})
+    field_counts = defaultdict(lambda: {"total": 0, "ok": 0, "missing": 0, "na": 0, "unrec": 0})
     # Fully-covered cells: every 7-item manifest field validated
     # AND every 11 measured-telemetry field validated
-    full_7 = 0   # all 7 manifest items ok
+    full_7 = 0  # all 7 manifest items ok
     full_18 = 0  # all 18 (7+11) items ok
     manifest_per_field = defaultdict(int)
     manifest_per_field_ok = defaultdict(int)
@@ -254,18 +254,19 @@ def main() -> int:
             full_7 += 1
         if manifest_ok and measured_ok:
             full_18 += 1
-        cell_rows.append({
-            "cell_id": cell_id,
-            "manifest_present": int(manifest is not None),
-            "manifest_all_7_ok": int(manifest_ok),
-            "measured_all_11_ok": int(measured_ok),
-            "combined_ok": int(manifest_ok and measured_ok),
-        })
+        cell_rows.append(
+            {
+                "cell_id": cell_id,
+                "manifest_present": int(manifest is not None),
+                "manifest_all_7_ok": int(manifest_ok),
+                "measured_all_11_ok": int(measured_ok),
+                "combined_ok": int(manifest_ok and measured_ok),
+            }
+        )
 
     # N10 audit
     n10_rows = []
-    n10_field_counts = defaultdict(lambda: {"total": 0, "ok": 0, "missing": 0,
-                                            "na": 0, "unrec": 0})
+    n10_field_counts = defaultdict(lambda: {"total": 0, "ok": 0, "missing": 0, "na": 0, "unrec": 0})
     for r in n10_runs:
         src = r["source"]
         d = r["data"]
@@ -282,58 +283,85 @@ def main() -> int:
                 c2["na"] += 1
             else:
                 c2["unrec"] += 1
-        n10_rows.append({
-            "source": src,
-            "algo": d.get("algo", ""),
-            "seed": d.get("seed", ""),
-            "status": d.get("status", ""),
-            "heldout_acc": d.get("heldout_acc", ""),
-            "n_items_ok": sum(
-                1 for it in N10_ITEMS
-                if _check(d.get(it[2]), it[3])[1] == "ok"
-            ),
-        })
+        n10_rows.append(
+            {
+                "source": src,
+                "algo": d.get("algo", ""),
+                "seed": d.get("seed", ""),
+                "status": d.get("status", ""),
+                "heldout_acc": d.get("heldout_acc", ""),
+                "n_items_ok": sum(1 for it in N10_ITEMS if _check(d.get(it[2]), it[3])[1] == "ok"),
+            }
+        )
 
     # ---------- write outputs ----------
     tsv = OUT_DIR / "minreport_extended_coverage.tsv"
     with tsv.open("w", newline="") as f:
         w = csv.writer(f, delimiter="\t")
-        w.writerow([
-            "item_no", "item_name", "key", "source",
-            "n_records", "ok", "missing", "na_or_empty", "unrecognized",
-            "pct_ok", "pct_missing",
-        ])
+        w.writerow(
+            [
+                "item_no",
+                "item_name",
+                "key",
+                "source",
+                "n_records",
+                "ok",
+                "missing",
+                "na_or_empty",
+                "unrecognized",
+                "pct_ok",
+                "pct_missing",
+            ]
+        )
         for (item_no, name, key), c in sorted(field_counts.items()):
             pct_ok = 100.0 * c["ok"] / max(1, c["total"])
             pct_m = 100.0 * c["missing"] / max(1, c["total"])
             src = "manifest" if item_no <= 7 else "cells.tsv"
-            w.writerow([
-                item_no, name, key, src, c["total"], c["ok"],
-                c["missing"], c["na"], c["unrec"],
-                f"{pct_ok:.1f}", f"{pct_m:.1f}",
-            ])
+            w.writerow(
+                [
+                    item_no,
+                    name,
+                    key,
+                    src,
+                    c["total"],
+                    c["ok"],
+                    c["missing"],
+                    c["na"],
+                    c["unrec"],
+                    f"{pct_ok:.1f}",
+                    f"{pct_m:.1f}",
+                ]
+            )
         for (item_no, name, key), c in sorted(n10_field_counts.items()):
             pct_ok = 100.0 * c["ok"] / max(1, c["total"])
             pct_m = 100.0 * c["missing"] / max(1, c["total"])
-            w.writerow([
-                item_no, name, key, "n10", c["total"], c["ok"],
-                c["missing"], c["na"], c["unrec"],
-                f"{pct_ok:.1f}", f"{pct_m:.1f}",
-            ])
+            w.writerow(
+                [
+                    item_no,
+                    name,
+                    key,
+                    "n10",
+                    c["total"],
+                    c["ok"],
+                    c["missing"],
+                    c["na"],
+                    c["unrec"],
+                    f"{pct_ok:.1f}",
+                    f"{pct_m:.1f}",
+                ]
+            )
 
     # Per-cell TSV (long format, one row per cell)
     cell_tsv = OUT_DIR / "minreport_extended_per_cell.tsv"
     with cell_tsv.open("w", newline="") as f:
-        w = csv.DictWriter(f, fieldnames=list(cell_rows[0].keys()),
-                           delimiter="\t")
+        w = csv.DictWriter(f, fieldnames=list(cell_rows[0].keys()), delimiter="\t")
         w.writeheader()
         for r in cell_rows:
             w.writerow(r)
 
     n10_tsv = OUT_DIR / "minreport_extended_n10.tsv"
     with n10_tsv.open("w", newline="") as f:
-        w = csv.DictWriter(f, fieldnames=list(n10_rows[0].keys()),
-                           delimiter="\t")
+        w = csv.DictWriter(f, fieldnames=list(n10_rows[0].keys()), delimiter="\t")
         w.writeheader()
         for r in n10_rows:
             w.writerow(r)
@@ -349,9 +377,7 @@ def main() -> int:
         "fully_covered_7_pct": round(100.0 * full_7 / n_cells, 1),
         "fully_covered_18_pct": round(100.0 * full_18 / n_cells, 1),
         "n_n10_runs_audited": len(n10_runs),
-        "n_n10_runs_all_ok": sum(
-            1 for r in n10_rows if r["n_items_ok"] == len(N10_ITEMS)
-        ),
+        "n_n10_runs_all_ok": sum(1 for r in n10_rows if r["n_items_ok"] == len(N10_ITEMS)),
         "new_ambiguity_flags": [
             "Item 2 (ref_policy_kl): 0/98 cells record a concrete kl value; "
             "the 7-item MIN-REPORT has 100% presence but 0% validated.",

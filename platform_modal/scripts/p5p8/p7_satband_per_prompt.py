@@ -49,22 +49,22 @@ Outputs:
 """
 
 import json
-import os
-import math
 from pathlib import Path
 from collections import Counter
 
 import sys
+
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
+from _paths import REPO_ROOT
+
 WORK = REPO_ROOT
-N2 = WORK / 'platform_hybrid/experiments/results/n2_reward_tensor_resume'
-OUT = WORK / 'platform_hybrid/experiments/results/p5p8/corrected-review20-v2'
+N2 = WORK / "platform_hybrid/experiments/results/n2_reward_tensor_resume"
+OUT = WORK / "platform_hybrid/experiments/results/p5p8/corrected-review20-v2"
 OUT.mkdir(parents=True, exist_ok=True)
-FIG = OUT / 'figures'
+FIG = OUT / "figures"
 FIG.mkdir(parents=True, exist_ok=True)
 
-METHODS = ['grpo', 'aero', 'gift', 'areal']
+METHODS = ["grpo", "aero", "gift", "areal"]
 G_BASE = 8
 
 # Saturation-band threshold (iter-31 calibration): zvf >= 0.9
@@ -72,15 +72,20 @@ SAT_BAND = 0.9
 # Controller tau (iter-31 unification): tau=0.70, delta=0.20
 TAU = 0.70
 DELTA = 0.20
+
+
 # Dualformer-Auto per-prompt rule (Berkeley row 01):
 #   G' = 2 if p_hat >= 0.95
 #   G' = 4 if p_hat >= 0.85
 #   G' = 8 if p_hat >= 0.70
 #   else G' = 16
 def dualformer_g(p_hat):
-    if p_hat >= 0.95: return 2
-    if p_hat >= 0.85: return 4
-    if p_hat >= 0.70: return 8
+    if p_hat >= 0.95:
+        return 2
+    if p_hat >= 0.85:
+        return 4
+    if p_hat >= 0.70:
+        return 8
     return 16
 
 
@@ -89,16 +94,16 @@ def iid_zvf(p_hat, G):
     ZVF = p^G + (1-p)^G."""
     if G <= 0:
         return 0.0
-    return p_hat ** G + (1 - p_hat) ** G
+    return p_hat**G + (1 - p_hat) ** G
 
 
 def classify_prompt(k, G=G_BASE):
     """Classify a prompt-step as saturated / boundary / mid based on observed k."""
     if k in (0, G):
-        return 'saturated'
+        return "saturated"
     if k in (1, G - 1):
-        return 'boundary'
-    return 'mid'
+        return "boundary"
+    return "mid"
 
 
 def main():
@@ -106,13 +111,13 @@ def main():
     data = {}
     for m in METHODS:
         rows = []
-        with open(N2 / f'{m}_s0_tensors.jsonl') as f:
+        with open(N2 / f"{m}_s0_tensors.jsonl") as f:
             for line in f:
                 rows.append(json.loads(line))
         data[m] = rows
 
     per_prompt = []  # one row per (method, step, prompt)
-    per_step = []    # one row per (method, step)
+    per_step = []  # one row per (method, step)
     per_method = []  # one row per method
 
     for m, rows in data.items():
@@ -142,8 +147,8 @@ def main():
         sat_band_dual_g_dist = Counter()
 
         for step_row in rows:
-            step = step_row['step']
-            rewards = step_row['rewards']  # 16 x 8 matrix of 0/1
+            step = step_row["step"]
+            rewards = step_row["rewards"]  # 16 x 8 matrix of 0/1
             ks = [int(round(sum(r))) for r in rewards]  # k per prompt
             n_prompts = len(ks)
             # Per-step zvf at G_base=8
@@ -201,24 +206,26 @@ def main():
                     sat_band_zvf70_g_dist[g_zvf70] += 1
                     sat_band_dual_g_dist[g_dual] += 1
 
-                per_prompt.append({
-                    'method': m,
-                    'step': step,
-                    'prompt': pi,
-                    'k': k,
-                    'p_hat': round(p_hat, 4),
-                    'regime': regime,
-                    'zvf_step': round(zvf_step, 4),
-                    'is_sat_band': is_sat_band,
-                    'g_baseline': g_base,
-                    'g_zvf70': g_zvf70,
-                    'g_dual': g_dual,
-                    'g_hybrid': g_hybrid,
-                    'zvf_baseline': round(zvf_base, 4),
-                    'zvf_zvf70': round(zvf_zvf70_prompt, 4),
-                    'zvf_dual': round(zvf_dual_prompt, 4),
-                    'zvf_hybrid': round(zvf_hybrid_prompt, 4),
-                })
+                per_prompt.append(
+                    {
+                        "method": m,
+                        "step": step,
+                        "prompt": pi,
+                        "k": k,
+                        "p_hat": round(p_hat, 4),
+                        "regime": regime,
+                        "zvf_step": round(zvf_step, 4),
+                        "is_sat_band": is_sat_band,
+                        "g_baseline": g_base,
+                        "g_zvf70": g_zvf70,
+                        "g_dual": g_dual,
+                        "g_hybrid": g_hybrid,
+                        "zvf_baseline": round(zvf_base, 4),
+                        "zvf_zvf70": round(zvf_zvf70_prompt, 4),
+                        "zvf_dual": round(zvf_dual_prompt, 4),
+                        "zvf_hybrid": round(zvf_hybrid_prompt, 4),
+                    }
+                )
 
                 step_baseline_g.append(g_base)
                 step_zvf70_g.append(g_zvf70)
@@ -244,23 +251,25 @@ def main():
             n_bnd = sum(1 for k in ks if k in (1, G_BASE - 1))
             n_mid = n_prompts - n_sat - n_bnd
 
-            per_step.append({
-                'method': m,
-                'step': step,
-                'zvf_step': round(zvf_step, 4),
-                'is_sat_band': is_sat_band,
-                'n_saturated': n_sat,
-                'n_boundary': n_bnd,
-                'n_mid': n_mid,
-                'g_baseline_sum': sb_sum,
-                'g_zvf70_sum': sz_sum,
-                'g_dual_sum': sd_sum,
-                'g_hybrid_sum': sh_sum,
-                'zvf_baseline_mean': round(sb_zvf, 4),
-                'zvf_zvf70_mean': round(sz_zvf, 4),
-                'zvf_dual_mean': round(sd_zvf, 4),
-                'zvf_hybrid_mean': round(sh_zvf, 4),
-            })
+            per_step.append(
+                {
+                    "method": m,
+                    "step": step,
+                    "zvf_step": round(zvf_step, 4),
+                    "is_sat_band": is_sat_band,
+                    "n_saturated": n_sat,
+                    "n_boundary": n_bnd,
+                    "n_mid": n_mid,
+                    "g_baseline_sum": sb_sum,
+                    "g_zvf70_sum": sz_sum,
+                    "g_dual_sum": sd_sum,
+                    "g_hybrid_sum": sh_sum,
+                    "zvf_baseline_mean": round(sb_zvf, 4),
+                    "zvf_zvf70_mean": round(sz_zvf, 4),
+                    "zvf_dual_mean": round(sd_zvf, 4),
+                    "zvf_hybrid_mean": round(sh_zvf, 4),
+                }
+            )
 
             # Accumulators
             rollouts_baseline += sb_sum
@@ -276,150 +285,197 @@ def main():
             mid_count_method += n_mid
 
         n_steps = len(rows)
-        per_method.append({
-            'method': m,
-            'n_steps': n_steps,
-            'n_sat_band_steps': sat_band_steps_m,
-            'n_saturated_prompts': sat_count_method,
-            'n_boundary_prompts': bnd_count_method,
-            'n_mid_prompts': mid_count_method,
-            'frac_saturated': round(sat_count_method / (n_steps * 16), 4),
-            'frac_boundary': round(bnd_count_method / (n_steps * 16), 4),
-            'frac_mid': round(mid_count_method / (n_steps * 16), 4),
-            'rollouts_baseline': rollouts_baseline,
-            'rollouts_zvf70': rollouts_zvf70,
-            'rollouts_dual': rollouts_dual,
-            'rollouts_hybrid': rollouts_hybrid,
-            'zvf_baseline_mean': round(zvf_baseline / n_steps, 4),
-            'zvf_zvf70_mean': round(zvf_zvf70 / n_steps, 4),
-            'zvf_dual_mean': round(zvf_dual / n_steps, 4),
-            'zvf_hybrid_mean': round(zvf_hybrid / n_steps, 4),
-            'sat_band_prompt_class': dict(sat_band_prompts_classified),
-            'sat_band_hybrid_g_dist': dict(sat_band_hybrid_g_dist),
-            'sat_band_zvf70_g_dist': dict(sat_band_zvf70_g_dist),
-            'sat_band_dual_g_dist': dict(sat_band_dual_g_dist),
-        })
+        per_method.append(
+            {
+                "method": m,
+                "n_steps": n_steps,
+                "n_sat_band_steps": sat_band_steps_m,
+                "n_saturated_prompts": sat_count_method,
+                "n_boundary_prompts": bnd_count_method,
+                "n_mid_prompts": mid_count_method,
+                "frac_saturated": round(sat_count_method / (n_steps * 16), 4),
+                "frac_boundary": round(bnd_count_method / (n_steps * 16), 4),
+                "frac_mid": round(mid_count_method / (n_steps * 16), 4),
+                "rollouts_baseline": rollouts_baseline,
+                "rollouts_zvf70": rollouts_zvf70,
+                "rollouts_dual": rollouts_dual,
+                "rollouts_hybrid": rollouts_hybrid,
+                "zvf_baseline_mean": round(zvf_baseline / n_steps, 4),
+                "zvf_zvf70_mean": round(zvf_zvf70 / n_steps, 4),
+                "zvf_dual_mean": round(zvf_dual / n_steps, 4),
+                "zvf_hybrid_mean": round(zvf_hybrid / n_steps, 4),
+                "sat_band_prompt_class": dict(sat_band_prompts_classified),
+                "sat_band_hybrid_g_dist": dict(sat_band_hybrid_g_dist),
+                "sat_band_zvf70_g_dist": dict(sat_band_zvf70_g_dist),
+                "sat_band_dual_g_dist": dict(sat_band_dual_g_dist),
+            }
+        )
 
     # Write tsvs
-    with open(OUT / 'p7_satband_per_prompt.tsv', 'w') as f:
-        cols = ['method', 'step', 'prompt', 'k', 'p_hat', 'regime',
-                'zvf_step', 'is_sat_band',
-                'g_baseline', 'g_zvf70', 'g_dual', 'g_hybrid',
-                'zvf_baseline', 'zvf_zvf70', 'zvf_dual', 'zvf_hybrid']
-        f.write('\t'.join(cols) + '\n')
+    with open(OUT / "p7_satband_per_prompt.tsv", "w") as f:
+        cols = [
+            "method",
+            "step",
+            "prompt",
+            "k",
+            "p_hat",
+            "regime",
+            "zvf_step",
+            "is_sat_band",
+            "g_baseline",
+            "g_zvf70",
+            "g_dual",
+            "g_hybrid",
+            "zvf_baseline",
+            "zvf_zvf70",
+            "zvf_dual",
+            "zvf_hybrid",
+        ]
+        f.write("\t".join(cols) + "\n")
         for r in per_prompt:
-            f.write('\t'.join(str(r[c]) for c in cols) + '\n')
+            f.write("\t".join(str(r[c]) for c in cols) + "\n")
 
-    with open(OUT / 'p7_satband_per_step.tsv', 'w') as f:
-        cols = ['method', 'step', 'zvf_step', 'is_sat_band',
-                'n_saturated', 'n_boundary', 'n_mid',
-                'g_baseline_sum', 'g_zvf70_sum', 'g_dual_sum', 'g_hybrid_sum',
-                'zvf_baseline_mean', 'zvf_zvf70_mean', 'zvf_dual_mean',
-                'zvf_hybrid_mean']
-        f.write('\t'.join(cols) + '\n')
+    with open(OUT / "p7_satband_per_step.tsv", "w") as f:
+        cols = [
+            "method",
+            "step",
+            "zvf_step",
+            "is_sat_band",
+            "n_saturated",
+            "n_boundary",
+            "n_mid",
+            "g_baseline_sum",
+            "g_zvf70_sum",
+            "g_dual_sum",
+            "g_hybrid_sum",
+            "zvf_baseline_mean",
+            "zvf_zvf70_mean",
+            "zvf_dual_mean",
+            "zvf_hybrid_mean",
+        ]
+        f.write("\t".join(cols) + "\n")
         for r in per_step:
-            f.write('\t'.join(str(r[c]) for c in cols) + '\n')
+            f.write("\t".join(str(r[c]) for c in cols) + "\n")
 
     # Per-method summary
-    with open(OUT / 'p7_satband_per_prompt_summary.tsv', 'w') as f:
-        cols = ['method', 'n_steps', 'n_sat_band_steps',
-                'n_saturated_prompts', 'n_boundary_prompts', 'n_mid_prompts',
-                'frac_saturated', 'frac_boundary', 'frac_mid',
-                'rollouts_baseline', 'rollouts_zvf70', 'rollouts_dual',
-                'rollouts_hybrid',
-                'zvf_baseline_mean', 'zvf_zvf70_mean', 'zvf_dual_mean',
-                'zvf_hybrid_mean']
-        f.write('\t'.join(cols) + '\n')
+    with open(OUT / "p7_satband_per_prompt_summary.tsv", "w") as f:
+        cols = [
+            "method",
+            "n_steps",
+            "n_sat_band_steps",
+            "n_saturated_prompts",
+            "n_boundary_prompts",
+            "n_mid_prompts",
+            "frac_saturated",
+            "frac_boundary",
+            "frac_mid",
+            "rollouts_baseline",
+            "rollouts_zvf70",
+            "rollouts_dual",
+            "rollouts_hybrid",
+            "zvf_baseline_mean",
+            "zvf_zvf70_mean",
+            "zvf_dual_mean",
+            "zvf_hybrid_mean",
+        ]
+        f.write("\t".join(cols) + "\n")
         for r in per_method:
-            f.write('\t'.join(str(r[c]) for c in cols) + '\n')
+            f.write("\t".join(str(r[c]) for c in cols) + "\n")
 
     # JSON summary
     summary = {
-        'iter': 43,
-        'pillar': 'P7',
-        'tau': TAU,
-        'delta': DELTA,
-        'sat_band_threshold': SAT_BAND,
-        'g_base': G_BASE,
-        'n_methods': len(METHODS),
-        'n_obs_per_method': 640,
-        'n_obs_total': 2560,
-        'controllers': {
-            'baseline_fixed_G=8': 'always G=8 (no controller)',
-            'zvf_triage@tau=0.70': 'step-level trigger, escalate to G=16',
-            'Dualformer_Auto': 'per-prompt difficulty-gated G in {2,4,8,16}',
-            'Hybrid': 'sat-band->G=4, tau+<=zvf<tau+delta->G=16, else G=8',
+        "iter": 43,
+        "pillar": "P7",
+        "tau": TAU,
+        "delta": DELTA,
+        "sat_band_threshold": SAT_BAND,
+        "g_base": G_BASE,
+        "n_methods": len(METHODS),
+        "n_obs_per_method": 640,
+        "n_obs_total": 2560,
+        "controllers": {
+            "baseline_fixed_G=8": "always G=8 (no controller)",
+            "zvf_triage@tau=0.70": "step-level trigger, escalate to G=16",
+            "Dualformer_Auto": "per-prompt difficulty-gated G in {2,4,8,16}",
+            "Hybrid": "sat-band->G=4, tau+<=zvf<tau+delta->G=16, else G=8",
         },
-        'per_method': per_method,
+        "per_method": per_method,
     }
-    with open(OUT / 'p7_satband_per_prompt.json', 'w') as f:
+    with open(OUT / "p7_satband_per_prompt.json", "w") as f:
         json.dump(summary, f, indent=2)
 
     # Print headline
-    print('=== Iter 43 P7 sat-band per-prompt analysis ===')
-    print(f'N2 four-method tensors: {len(METHODS)} methods x 40 steps x 16 prompts = 2560 prompt-step pairs')
+    print("=== Iter 43 P7 sat-band per-prompt analysis ===")
+    print(
+        f"N2 four-method tensors: {len(METHODS)} methods x 40 steps x 16 prompts = 2560 prompt-step pairs"
+    )
     print()
-    print('Per-method prompt-regime distribution:')
+    print("Per-method prompt-regime distribution:")
     for r in per_method:
-        print(f"  {r['method']:6s} sat={r['n_saturated_prompts']:4d} ({r['frac_saturated']*100:.1f}%) "
-              f"bnd={r['n_boundary_prompts']:3d} ({r['frac_boundary']*100:.1f}%) "
-              f"mid={r['n_mid_prompts']:3d} ({r['frac_mid']*100:.1f}%) "
-              f"sat_band_steps={r['n_sat_band_steps']}")
+        print(
+            f"  {r['method']:6s} sat={r['n_saturated_prompts']:4d} ({r['frac_saturated'] * 100:.1f}%) "
+            f"bnd={r['n_boundary_prompts']:3d} ({r['frac_boundary'] * 100:.1f}%) "
+            f"mid={r['n_mid_prompts']:3d} ({r['frac_mid'] * 100:.1f}%) "
+            f"sat_band_steps={r['n_sat_band_steps']}"
+        )
     print()
-    print('Per-method controller rollouts vs baseline (G_base=8 fixed):')
-    base_total = sum(r['rollouts_baseline'] for r in per_method)
-    zvf_total = sum(r['rollouts_zvf70'] for r in per_method)
-    dual_total = sum(r['rollouts_dual'] for r in per_method)
-    hyb_total = sum(r['rollouts_hybrid'] for r in per_method)
-    print(f'  baseline      = {base_total}  (ratio 1.000)')
-    print(f'  zvf-triage@0.7= {zvf_total}  (ratio {zvf_total/base_total:.3f})')
-    print(f'  Dualformer    = {dual_total}  (ratio {dual_total/base_total:.3f})')
-    print(f'  Hybrid        = {hyb_total}  (ratio {hyb_total/base_total:.3f})')
+    print("Per-method controller rollouts vs baseline (G_base=8 fixed):")
+    base_total = sum(r["rollouts_baseline"] for r in per_method)
+    zvf_total = sum(r["rollouts_zvf70"] for r in per_method)
+    dual_total = sum(r["rollouts_dual"] for r in per_method)
+    hyb_total = sum(r["rollouts_hybrid"] for r in per_method)
+    print(f"  baseline      = {base_total}  (ratio 1.000)")
+    print(f"  zvf-triage@0.7= {zvf_total}  (ratio {zvf_total / base_total:.3f})")
+    print(f"  Dualformer    = {dual_total}  (ratio {dual_total / base_total:.3f})")
+    print(f"  Hybrid        = {hyb_total}  (ratio {hyb_total / base_total:.3f})")
     print()
     # Sat-band breakdown
-    print('Saturation-band (zvf >= 0.9) prompt classification (pooled across methods):')
+    print("Saturation-band (zvf >= 0.9) prompt classification (pooled across methods):")
     sat_band_class_pooled = Counter()
     sat_band_hybrid_pooled = Counter()
     sat_band_zvf70_pooled = Counter()
     sat_band_dual_pooled = Counter()
     for r in per_method:
-        for k, v in r['sat_band_prompt_class'].items():
+        for k, v in r["sat_band_prompt_class"].items():
             sat_band_class_pooled[k] += v
-        for k, v in r['sat_band_hybrid_g_dist'].items():
+        for k, v in r["sat_band_hybrid_g_dist"].items():
             sat_band_hybrid_pooled[k] += v
-        for k, v in r['sat_band_zvf70_g_dist'].items():
+        for k, v in r["sat_band_zvf70_g_dist"].items():
             sat_band_zvf70_pooled[k] += v
-        for k, v in r['sat_band_dual_g_dist'].items():
+        for k, v in r["sat_band_dual_g_dist"].items():
             sat_band_dual_pooled[k] += v
     total_sat_band = sum(sat_band_class_pooled.values())
-    print(f'  Total sat-band prompt obs = {total_sat_band}')
-    for reg in ['saturated', 'boundary', 'mid']:
+    print(f"  Total sat-band prompt obs = {total_sat_band}")
+    for reg in ["saturated", "boundary", "mid"]:
         n = sat_band_class_pooled.get(reg, 0)
-        print(f"  {reg:10s} = {n} ({n/total_sat_band*100:.1f}%)")
+        print(f"  {reg:10s} = {n} ({n / total_sat_band * 100:.1f}%)")
     print()
-    print('Per-controller G chosen on sat-band prompts (pooled):')
-    print(f'  Hybrid      G-dist: {dict(sorted(sat_band_hybrid_pooled.items()))}')
-    print(f'  zvf-triage  G-dist: {dict(sorted(sat_band_zvf70_pooled.items()))}')
-    print(f'  Dualformer  G-dist: {dict(sorted(sat_band_dual_pooled.items()))}')
+    print("Per-controller G chosen on sat-band prompts (pooled):")
+    print(f"  Hybrid      G-dist: {dict(sorted(sat_band_hybrid_pooled.items()))}")
+    print(f"  zvf-triage  G-dist: {dict(sorted(sat_band_zvf70_pooled.items()))}")
+    print(f"  Dualformer  G-dist: {dict(sorted(sat_band_dual_pooled.items()))}")
 
     # Aggregate sat-band mean ZVF at G=8 (observed) vs Hybrid-de-escalated to G=4
     # vs zvf-triage escalated to G=16
     print()
-    print('Sat-band prompt iid-ZVF at the per-prompt G chosen:')
-    sat_obs = [r for r in per_prompt if r['is_sat_band']]
+    print("Sat-band prompt iid-ZVF at the per-prompt G chosen:")
+    sat_obs = [r for r in per_prompt if r["is_sat_band"]]
     import statistics
-    print(f'  n sat-band prompts: {len(sat_obs)}')
-    print(f'  baseline iid-ZVF at G=8 mean: {statistics.mean(r["zvf_baseline"] for r in sat_obs):.4f}')
-    print(f'  Hybrid    iid-ZVF mean: {statistics.mean(r["zvf_hybrid"] for r in sat_obs):.4f}')
-    print(f'  zvf-triage iid-ZVF mean: {statistics.mean(r["zvf_zvf70"] for r in sat_obs):.4f}')
-    print(f'  Dualformer iid-ZVF mean: {statistics.mean(r["zvf_dual"] for r in sat_obs):.4f}')
+
+    print(f"  n sat-band prompts: {len(sat_obs)}")
+    print(
+        f"  baseline iid-ZVF at G=8 mean: {statistics.mean(r['zvf_baseline'] for r in sat_obs):.4f}"
+    )
+    print(f"  Hybrid    iid-ZVF mean: {statistics.mean(r['zvf_hybrid'] for r in sat_obs):.4f}")
+    print(f"  zvf-triage iid-ZVF mean: {statistics.mean(r['zvf_zvf70'] for r in sat_obs):.4f}")
+    print(f"  Dualformer iid-ZVF mean: {statistics.mean(r['zvf_dual'] for r in sat_obs):.4f}")
     print()
-    print('Wrote:')
-    print(f'  {OUT}/p7_satband_per_prompt.tsv ({len(per_prompt)} rows)')
-    print(f'  {OUT}/p7_satband_per_step.tsv ({len(per_step)} rows)')
-    print(f'  {OUT}/p7_satband_per_prompt_summary.tsv ({len(per_method)} rows)')
-    print(f'  {OUT}/p7_satband_per_prompt.json')
+    print("Wrote:")
+    print(f"  {OUT}/p7_satband_per_prompt.tsv ({len(per_prompt)} rows)")
+    print(f"  {OUT}/p7_satband_per_step.tsv ({len(per_step)} rows)")
+    print(f"  {OUT}/p7_satband_per_prompt_summary.tsv ({len(per_method)} rows)")
+    print(f"  {OUT}/p7_satband_per_prompt.json")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

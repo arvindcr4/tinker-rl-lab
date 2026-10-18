@@ -13,6 +13,7 @@ heterogeneous closed form mean_x[p_x^G + (1-p_x)^G].
 Env vars: MODE=probe|train, TASK, GS (comma list), SEEDS, WHITEN (0/1),
 STEPS, ROLLOUTS, OUT (dir). One JSON per (G, seed, whiten) in OUT.
 """
+
 import json
 import os
 import random
@@ -57,7 +58,10 @@ def parse(text):
 
 
 def load(seed):
-    random.seed(seed); np.random.seed(seed); torch.manual_seed(seed); torch.cuda.manual_seed_all(seed)
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
     tok = AutoTokenizer.from_pretrained(MODEL)
     if tok.pad_token is None:
         tok.pad_token = tok.eos_token
@@ -72,18 +76,28 @@ def heldout_acc(tok, model, seed):
     probs = [problem(rng) for _ in range(N_HELDOUT)]
     correct = 0
     for i in range(0, N_HELDOUT, 64):
-        chunk = probs[i:i + 64]
+        chunk = probs[i : i + 64]
         enc = tok([q for q, _ in chunk], return_tensors="pt", padding=True).to(device)
-        gen = model.generate(**enc, max_new_tokens=MAX_NEW, do_sample=False, pad_token_id=tok.pad_token_id)
-        texts = tok.batch_decode(gen[:, enc["input_ids"].shape[1]:], skip_special_tokens=True)
-        correct += sum(parse(t) == ans for t, (_, ans) in zip(texts, chunk))
+        gen = model.generate(
+            **enc, max_new_tokens=MAX_NEW, do_sample=False, pad_token_id=tok.pad_token_id
+        )
+        texts = tok.batch_decode(gen[:, enc["input_ids"].shape[1] :], skip_special_tokens=True)
+        correct += sum(parse(t) == ans for t, (_, ans) in zip(texts, chunk, strict=False))
     return correct / N_HELDOUT
 
 
 def run(group_size, seed):
     tok, model = load(seed)
-    model = get_peft_model(model, LoraConfig(r=16, lora_alpha=32, lora_dropout=0.0,
-                                             target_modules=["q_proj", "v_proj"], task_type="CAUSAL_LM"))
+    model = get_peft_model(
+        model,
+        LoraConfig(
+            r=16,
+            lora_alpha=32,
+            lora_dropout=0.0,
+            target_modules=["q_proj", "v_proj"],
+            task_type="CAUSAL_LM",
+        ),
+    )
     params = [p for p in model.parameters() if p.requires_grad]
     opt = torch.optim.Adam(params, lr=1e-4)
     rng = random.Random(seed)
@@ -97,11 +111,20 @@ def run(group_size, seed):
         answers = [a for _, a in probs for _ in range(group_size)]
         enc = tok(prompts, return_tensors="pt", padding=True).to(device)
         with torch.no_grad():
-            gen = model.generate(**enc, max_new_tokens=MAX_NEW, do_sample=True, temperature=1.0,
-                                 top_p=1.0, pad_token_id=tok.pad_token_id)
-        comp = gen[:, enc["input_ids"].shape[1]:]
+            gen = model.generate(
+                **enc,
+                max_new_tokens=MAX_NEW,
+                do_sample=True,
+                temperature=1.0,
+                top_p=1.0,
+                pad_token_id=tok.pad_token_id,
+            )
+        comp = gen[:, enc["input_ids"].shape[1] :]
         texts = tok.batch_decode(comp, skip_special_tokens=True)
-        r = np.array([1.0 if parse(t) == a else 0.0 for t, a in zip(texts, answers)], dtype=np.float32)
+        r = np.array(
+            [1.0 if parse(t) == a else 0.0 for t, a in zip(texts, answers, strict=False)],
+            dtype=np.float32,
+        )
         R = r.reshape(n_prompts, group_size)
         gmean, gstd = R.mean(1, keepdims=True), R.std(1, keepdims=True)
         A = (R - gmean) / (gstd + EPS) if WHITEN else (R - gmean)
@@ -112,36 +135,57 @@ def run(group_size, seed):
         plen, B = enc["input_ids"].shape[1], full.shape[0]
         opt.zero_grad()
         for cs in range(0, B, 16):
-            f, a = full[cs:cs + 16], attn[cs:cs + 16]
+            f, a = full[cs : cs + 16], attn[cs : cs + 16]
             logits = model(input_ids=f, attention_mask=a).logits[:, :-1, :].float()
             tgt = f[:, 1:]
             cm = torch.zeros_like(tgt, dtype=torch.float32)
-            cm[:, plen - 1:] = 1.0
+            cm[:, plen - 1 :] = 1.0
             cm = cm * (tgt != tok.pad_token_id).float()
             tok_logp = F.log_softmax(logits, -1).gather(-1, tgt.unsqueeze(-1)).squeeze(-1)
             seq_logp = (tok_logp * cm).sum(1) / cm.sum(1).clamp(min=1.0)
-            (-(adv[cs:cs + 16] * seq_logp).sum() / B).backward()
+            (-(adv[cs : cs + 16] * seq_logp).sum() / B).backward()
             del logits, tok_logp
         gnorm = float(torch.nn.utils.clip_grad_norm_(params, 1.0))
         opt.step()
         p_x = R.mean(1)
-        log.append({"step": step, "mean_reward": float(r.mean()),
-                    "zvf": float((gstd[:, 0] <= EPS).mean()),
-                    "zvf_closed_form_hetero": float(np.mean(p_x ** group_size + (1 - p_x) ** group_size)),
-                    "grad_norm": gnorm, "p_x": [round(float(v), 4) for v in p_x]})
+        log.append(
+            {
+                "step": step,
+                "mean_reward": float(r.mean()),
+                "zvf": float((gstd[:, 0] <= EPS).mean()),
+                "zvf_closed_form_hetero": float(np.mean(p_x**group_size + (1 - p_x) ** group_size)),
+                "grad_norm": gnorm,
+                "p_x": [round(float(v), 4) for v in p_x],
+            }
+        )
     model.eval()
     post = heldout_acc(tok, model, seed)
-    out = {"experiment": "p3_isocompute_groupsize", "task": TASK, "model": MODEL, "group_size": group_size,
-           "seed": seed, "whiten": WHITEN, "steps": STEPS, "rollouts_per_step": ROLLOUTS,
-           "prompts_per_step": n_prompts, "heldout_pre": pre, "heldout_post": post,
-           "last10_avg": float(np.mean([s["mean_reward"] for s in log[-10:]])),
-           "mean_zvf": float(np.mean([s["zvf"] for s in log])),
-           "elapsed_s": time.time() - t0, "gpu": torch.cuda.get_device_name(0), "step_log": log}
+    out = {
+        "experiment": "p3_isocompute_groupsize",
+        "task": TASK,
+        "model": MODEL,
+        "group_size": group_size,
+        "seed": seed,
+        "whiten": WHITEN,
+        "steps": STEPS,
+        "rollouts_per_step": ROLLOUTS,
+        "prompts_per_step": n_prompts,
+        "heldout_pre": pre,
+        "heldout_post": post,
+        "last10_avg": float(np.mean([s["mean_reward"] for s in log[-10:]])),
+        "mean_zvf": float(np.mean([s["zvf"] for s in log])),
+        "elapsed_s": time.time() - t0,
+        "gpu": torch.cuda.get_device_name(0),
+        "step_log": log,
+    }
     os.makedirs(OUT, exist_ok=True)
     with open(f"{OUT}/{TASK}_G{group_size}_s{seed}_w{int(WHITEN)}.json", "w") as fh:
         json.dump(out, fh)
-    print(f"G={group_size} seed={seed} whiten={WHITEN} pre={pre:.3f} post={post:.3f} "
-          f"last10={out['last10_avg']:.3f} zvf={out['mean_zvf']:.3f} t={out['elapsed_s']:.0f}s", flush=True)
+    print(
+        f"G={group_size} seed={seed} whiten={WHITEN} pre={pre:.3f} post={post:.3f} "
+        f"last10={out['last10_avg']:.3f} zvf={out['mean_zvf']:.3f} t={out['elapsed_s']:.0f}s",
+        flush=True,
+    )
     del model, opt
     torch.cuda.empty_cache()
 

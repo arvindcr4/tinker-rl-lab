@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING
 from unittest.mock import patch
 
 if TYPE_CHECKING:
-    from . import mle_bench_eval as runner  # noqa: F401
+    from . import mle_bench_eval as runner
 else:
     try:
         from . import mle_bench_eval as runner
@@ -43,9 +43,20 @@ def _fake_checkout(root: Path) -> Path:
     (root / "experiments/splits/medium.txt").write_text("huge-comp\n", encoding="utf-8")
     (root / "experiments/splits/high.txt").write_text("", encoding="utf-8")
 
-    with (root / "experiments/competition_categories.csv").open("w", encoding="utf-8", newline="") as handle:
+    with (root / "experiments/competition_categories.csv").open(
+        "w", encoding="utf-8", newline=""
+    ) as handle:
         writer = csv.writer(handle)
-        writer.writerow(["competition_id", "category", "dataset_size_GB", "EnabledDate", "DeadlineDate", "Complexity"])
+        writer.writerow(
+            [
+                "competition_id",
+                "category",
+                "dataset_size_GB",
+                "EnabledDate",
+                "DeadlineDate",
+                "Complexity",
+            ]
+        )
         writer.writerow(["huge-comp", "Image Classification", "120.5", "", "", "Medium"])
         writer.writerow(["tiny-comp", "Text Classification", "0.002", "", "", "Low"])
 
@@ -60,7 +71,9 @@ def _fake_checkout(root: Path) -> Path:
             encoding="utf-8",
         )
         (comp_dir / "grade.py").write_text("def grade(s, a):\n    return 0.0\n", encoding="utf-8")
-        (comp_dir / "prepare.py").write_text("def prepare(raw, public, private):\n    return None\n", encoding="utf-8")
+        (comp_dir / "prepare.py").write_text(
+            "def prepare(raw, public, private):\n    return None\n", encoding="utf-8"
+        )
         (comp_dir / "checksums.yaml").write_text("zip: deadbeef\n", encoding="utf-8")
         (comp_dir / "leaderboard.csv").write_text("teamId,score\n1,0.1\n2,0.2\n", encoding="utf-8")
 
@@ -69,22 +82,22 @@ def _fake_checkout(root: Path) -> Path:
 
 class TaskIdHashTests(unittest.TestCase):
     def test_task_id_hash_is_order_independent(self) -> None:
-        self.assertEqual(runner.task_ids_sha256(["b", "a"]), runner.task_ids_sha256(["a", "b"]))
+        assert runner.task_ids_sha256(["b", "a"]) == runner.task_ids_sha256(["a", "b"])
 
     def test_task_id_hash_ignores_blank_and_whitespace_entries(self) -> None:
-        self.assertEqual(runner.task_ids_sha256(["a", "", " b ", "\n"]), runner.task_ids_sha256(["a", "b"]))
+        assert runner.task_ids_sha256(["a", "", " b ", "\n"]) == runner.task_ids_sha256(["a", "b"])
 
     def test_task_id_hash_changes_when_the_task_set_changes(self) -> None:
-        self.assertNotEqual(runner.task_ids_sha256(["a", "b"]), runner.task_ids_sha256(["a", "c"]))
+        assert runner.task_ids_sha256(["a", "b"]) != runner.task_ids_sha256(["a", "c"])
 
     def test_task_id_hash_matches_the_documented_algorithm(self) -> None:
         import hashlib
 
         expected = hashlib.sha256(b"a\nb\n").hexdigest()
-        self.assertEqual(runner.task_ids_sha256(["b", "a"]), expected)
+        assert runner.task_ids_sha256(["b", "a"]) == expected
 
     def test_sha256_file_returns_none_for_a_missing_file(self) -> None:
-        self.assertIsNone(runner.sha256_file(Path("/nonexistent/definitely/not/here.txt")))
+        assert runner.sha256_file(Path("/nonexistent/definitely/not/here.txt")) is None
 
 
 class SurveyTests(unittest.TestCase):
@@ -93,10 +106,10 @@ class SurveyTests(unittest.TestCase):
             checkout = _fake_checkout(Path(tmp))
             payload = runner.survey(checkout)
 
-        self.assertEqual(payload["sized_competition_count"], 2)
-        self.assertEqual(payload["smallest"]["competition_id"], "tiny-comp")
-        self.assertEqual([row["competition_id"] for row in payload["ranking"]], ["tiny-comp", "huge-comp"])
-        self.assertTrue(payload["sized_covers_eval_split"])
+        assert payload["sized_competition_count"] == 2
+        assert payload["smallest"]["competition_id"] == "tiny-comp"
+        assert [row["competition_id"] for row in payload["ranking"]] == ["tiny-comp", "huge-comp"]
+        assert payload["sized_covers_eval_split"]
 
     def test_survey_reports_the_total_download_size(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -106,17 +119,17 @@ class SurveyTests(unittest.TestCase):
     def test_survey_hashes_the_size_table_it_derived_the_pick_from(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             payload = runner.survey(_fake_checkout(Path(tmp)))
-        self.assertIsNotNone(payload["source"]["size_table_sha256"])
-        self.assertIsNotNone(payload["source"]["eval_split_sha256"])
+        assert payload["source"]["size_table_sha256"] is not None
+        assert payload["source"]["eval_split_sha256"] is not None
 
     def test_survey_on_the_pinned_checkout_finds_all_seventy_five_competitions(self) -> None:
         if not (_PINNED_CHECKOUT / "mlebench/registry.py").is_file():
             self.skipTest("pinned MLE-bench checkout is not present")
         payload = runner.survey(_PINNED_CHECKOUT)
-        self.assertEqual(payload["eval_split_competition_count"], 75)
-        self.assertEqual(payload["sized_competition_count"], 75)
-        self.assertTrue(payload["sized_covers_eval_split"])
-        self.assertEqual(payload["smallest"]["competition_id"], "spooky-author-identification")
+        assert payload["eval_split_competition_count"] == 75
+        assert payload["sized_competition_count"] == 75
+        assert payload["sized_covers_eval_split"]
+        assert payload["smallest"]["competition_id"] == "spooky-author-identification"
 
 
 class SplitManifestTests(unittest.TestCase):
@@ -124,16 +137,18 @@ class SplitManifestTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             manifest = runner.split_manifest(_fake_checkout(Path(tmp)))
 
-        self.assertEqual(manifest["task_id_kind"], "competition_id")
-        self.assertEqual(manifest["eval_split"]["count"], 2)
-        self.assertEqual(manifest["eval_split"]["task_ids_sha256"], runner.task_ids_sha256(["tiny-comp", "huge-comp"]))
-        self.assertEqual(manifest["complexity_splits"]["low"]["count"], 1)
-        self.assertIsNone(manifest["complexity_splits"]["high"]["task_ids_sha256"])
+        assert manifest["task_id_kind"] == "competition_id"
+        assert manifest["eval_split"]["count"] == 2
+        assert manifest["eval_split"]["task_ids_sha256"] == runner.task_ids_sha256(
+            ["tiny-comp", "huge-comp"]
+        )
+        assert manifest["complexity_splits"]["low"]["count"] == 1
+        assert manifest["complexity_splits"]["high"]["task_ids_sha256"] is None
 
     def test_split_manifest_does_not_claim_per_sample_task_hashes(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             manifest = runner.split_manifest(_fake_checkout(Path(tmp)))
-        self.assertIsNone(manifest["per_sample_task_hashes"])
+        assert manifest["per_sample_task_hashes"] is None
 
 
 class VerifierIdentityTests(unittest.TestCase):
@@ -142,31 +157,32 @@ class VerifierIdentityTests(unittest.TestCase):
             checkout = _fake_checkout(Path(tmp))
             verifier = runner.verifier_identity(checkout, "tiny-comp")
 
-        self.assertEqual(verifier["grader_name"], "log-loss")
-        self.assertEqual(verifier["grade_fn"], "mlebench.competitions.tiny-comp.grade:grade")
-        self.assertEqual(verifier["leaderboard_team_count"], 2)
-        self.assertIsNotNone(verifier["expected_data_checksums_sha256"])
-        self.assertTrue(verifier["resolved"])
+        assert verifier["grader_name"] == "log-loss"
+        assert verifier["grade_fn"] == "mlebench.competitions.tiny-comp.grade:grade"
+        assert verifier["leaderboard_team_count"] == 2
+        assert verifier["expected_data_checksums_sha256"] is not None
+        assert verifier["resolved"]
 
     def test_unresolved_git_lfs_leaderboard_pointer_fails_the_verifier_gate(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             checkout = _fake_checkout(Path(tmp))
             (checkout / "mlebench/competitions/tiny-comp/leaderboard.csv").write_text(
-                "version https://git-lfs.github.com/spec/v1\noid sha256:abc\nsize 10\n", encoding="utf-8"
+                "version https://git-lfs.github.com/spec/v1\noid sha256:abc\nsize 10\n",
+                encoding="utf-8",
             )
             verifier = runner.verifier_identity(checkout, "tiny-comp")
 
-        self.assertTrue(verifier["leaderboard_is_unresolved_lfs_pointer"])
-        self.assertIsNone(verifier["leaderboard_team_count"])
-        self.assertFalse(verifier["resolved"])
+        assert verifier["leaderboard_is_unresolved_lfs_pointer"]
+        assert verifier["leaderboard_team_count"] is None
+        assert not verifier["resolved"]
 
 
 class DatasetStateTests(unittest.TestCase):
     def test_dataset_state_is_unprepared_when_the_answers_file_is_missing(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             state = runner.dataset_state(Path(tmp), "tiny-comp")
-        self.assertFalse(state["prepared"])
-        self.assertIsNone(state["private_answers_sha256"])
+        assert not state["prepared"]
+        assert state["private_answers_sha256"] is None
 
     def test_dataset_state_is_prepared_and_hashed_when_both_files_exist(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -177,38 +193,40 @@ class DatasetStateTests(unittest.TestCase):
             (root / "public/sample_submission.csv").write_text("id,a\n1,0\n", encoding="utf-8")
             state = runner.dataset_state(Path(tmp), "tiny-comp")
 
-        self.assertTrue(state["prepared"])
-        self.assertIsNotNone(state["private_answers_sha256"])
+        assert state["prepared"]
+        assert state["private_answers_sha256"] is not None
 
 
 class KaggleRuleTests(unittest.TestCase):
     def test_rule_state_is_unknown_without_a_probe_and_carries_the_url(self) -> None:
         state = runner.kaggle_rule_acceptance("spooky-author-identification")
-        self.assertIsNone(state["accepted"])
-        self.assertEqual(state["rules_url"], "https://www.kaggle.com/c/spooky-author-identification/rules")
+        assert state["accepted"] is None
+        assert state["rules_url"] == "https://www.kaggle.com/c/spooky-author-identification/rules"
 
     def test_a_failed_probe_records_rules_as_not_accepted(self) -> None:
-        state = runner.kaggle_rule_acceptance("x", {"rules_accepted": False, "error": "403 Forbidden"})
-        self.assertFalse(state["accepted"])
-        self.assertEqual(state["accepted_evidence"], "403 Forbidden")
+        state = runner.kaggle_rule_acceptance(
+            "x", {"rules_accepted": False, "error": "403 Forbidden"}
+        )
+        assert not state["accepted"]
+        assert state["accepted_evidence"] == "403 Forbidden"
 
     def test_check_rules_output_shape_is_accepted_as_a_probe(self) -> None:
         state = runner.kaggle_rule_acceptance(
             "x", {"accepted": True, "download_endpoint_ok": True, "metadata_endpoint_ok": True}
         )
-        self.assertTrue(state["accepted"])
-        self.assertEqual(state["verified_via"], "download endpoint (the only gated one)")
+        assert state["accepted"]
+        assert state["verified_via"] == "download endpoint (the only gated one)"
 
     def test_metadata_only_success_does_not_count_as_acceptance(self) -> None:
         state = runner.kaggle_rule_acceptance(
             "x", {"accepted": False, "download_endpoint_ok": False, "metadata_endpoint_ok": True}
         )
-        self.assertFalse(state["accepted"])
+        assert not state["accepted"]
 
     def test_rule_state_warns_that_the_metadata_endpoint_is_not_a_check(self) -> None:
         state = runner.kaggle_rule_acceptance("x")
-        self.assertIn("competitions files", state["verification_warning"])
-        self.assertIn("NOT a valid acceptance check", state["verification_warning"])
+        assert "competitions files" in state["verification_warning"]
+        assert "NOT a valid acceptance check" in state["verification_warning"]
 
     def test_check_rules_reports_not_accepted_when_only_metadata_succeeds(self) -> None:
         """The exact false positive: metadata lists files, download is still 403."""
@@ -225,13 +243,16 @@ class KaggleRuleTests(unittest.TestCase):
                     "you'll be able to download files."
                 )
 
-        with patch.dict(sys.modules, {"mlebench.utils": type("M", (), {"authenticate_kaggle_api": lambda: FakeApi()})}):
+        with patch.dict(
+            sys.modules,
+            {"mlebench.utils": type("M", (), {"authenticate_kaggle_api": lambda: FakeApi()})},
+        ):
             result = runner.check_rules_accepted("spooky-author-identification")
 
-        self.assertTrue(result["metadata_endpoint_ok"])
-        self.assertFalse(result["download_endpoint_ok"])
-        self.assertFalse(result["accepted"])
-        self.assertTrue(result["blocked_on_rules"])
+        assert result["metadata_endpoint_ok"]
+        assert not result["download_endpoint_ok"]
+        assert not result["accepted"]
+        assert result["blocked_on_rules"]
 
     def test_check_rules_reports_accepted_only_when_the_download_succeeds(self) -> None:
         class FakeApi:
@@ -243,35 +264,49 @@ class KaggleRuleTests(unittest.TestCase):
             def competition_download_files(self, competition, path, quiet, force):
                 return None
 
-        with patch.dict(sys.modules, {"mlebench.utils": type("M", (), {"authenticate_kaggle_api": lambda: FakeApi()})}):
+        with patch.dict(
+            sys.modules,
+            {"mlebench.utils": type("M", (), {"authenticate_kaggle_api": lambda: FakeApi()})},
+        ):
             result = runner.check_rules_accepted("spooky-author-identification")
 
-        self.assertTrue(result["accepted"])
-        self.assertTrue(result["download_endpoint_ok"])
+        assert result["accepted"]
+        assert result["download_endpoint_ok"]
 
 
 class DockerDigestTests(unittest.TestCase):
     def test_a_missing_image_yields_no_digest_rather_than_an_exception(self) -> None:
         with patch.object(runner.subprocess, "run") as mocked:
-            mocked.return_value = type("R", (), {"returncode": 1, "stdout": "", "stderr": "No such image"})()
+            mocked.return_value = type(
+                "R", (), {"returncode": 1, "stdout": "", "stderr": "No such image"}
+            )()
             result = runner.docker_image_digest("mlebench-env")
-        self.assertFalse(result["present"])
-        self.assertIsNone(result["digest"])
+        assert not result["present"]
+        assert result["digest"] is None
 
     def test_a_present_image_reports_its_repo_digest(self) -> None:
-        payload = json.dumps({"RepoDigests": ["mlebench-env@sha256:abc"], "Id": "sha256:local", "Architecture": "amd64", "Os": "linux"})
+        payload = json.dumps(
+            {
+                "RepoDigests": ["mlebench-env@sha256:abc"],
+                "Id": "sha256:local",
+                "Architecture": "amd64",
+                "Os": "linux",
+            }
+        )
         with patch.object(runner.subprocess, "run") as mocked:
-            mocked.return_value = type("R", (), {"returncode": 0, "stdout": payload, "stderr": ""})()
+            mocked.return_value = type(
+                "R", (), {"returncode": 0, "stdout": payload, "stderr": ""}
+            )()
             result = runner.docker_image_digest("mlebench-env")
-        self.assertTrue(result["present"])
-        self.assertEqual(result["digest"], "mlebench-env@sha256:abc")
-        self.assertEqual(result["digest_kind"], "repo_digest")
+        assert result["present"]
+        assert result["digest"] == "mlebench-env@sha256:abc"
+        assert result["digest_kind"] == "repo_digest"
 
     def test_an_unavailable_docker_binary_fails_closed(self) -> None:
         with patch.object(runner.subprocess, "run", side_effect=OSError("no docker")):
             result = runner.docker_image_digest("mlebench-env")
-        self.assertFalse(result["present"])
-        self.assertIsNone(result["digest"])
+        assert not result["present"]
+        assert result["digest"] is None
 
 
 class FailClosedReceiptTests(unittest.TestCase):
@@ -280,7 +315,9 @@ class FailClosedReceiptTests(unittest.TestCase):
             checkout = _fake_checkout(Path(tmp) / "checkout")
             data_dir = Path(tmp) / "data"
             data_dir.mkdir()
-            with patch.object(runner, "verify_source_checkout", return_value={"verified": True, "test_only": True}):
+            with patch.object(
+                runner, "verify_source_checkout", return_value={"verified": True, "test_only": True}
+            ):
                 return runner.build_receipt(
                     checkout=checkout,
                     competition_id=kwargs.pop("competition_id", None),
@@ -292,15 +329,15 @@ class FailClosedReceiptTests(unittest.TestCase):
 
     def test_receipt_defaults_to_the_smallest_competition(self) -> None:
         receipt = self._receipt()
-        self.assertEqual(receipt["competition_binding"]["competition_id"], "tiny-comp")
+        assert receipt["competition_binding"]["competition_id"] == "tiny-comp"
         self.assertAlmostEqual(receipt["competition_binding"]["recorded_download_size_gb"], 0.002)
 
     def test_receipt_is_blocked_and_scoreless_when_gates_fail(self) -> None:
         receipt = self._receipt()
-        self.assertEqual(receipt["status"], "BLOCKED")
-        self.assertFalse(receipt["runnable_now"])
-        self.assertIsNone(receipt["metrics"]["score"])
-        self.assertFalse(receipt["metrics"]["is_model_score"])
+        assert receipt["status"] == "BLOCKED"
+        assert not receipt["runnable_now"]
+        assert receipt["metrics"]["score"] is None
+        assert not receipt["metrics"]["is_model_score"]
 
     def test_blockers_name_every_failing_gate(self) -> None:
         receipt = self._receipt()
@@ -311,88 +348,100 @@ class FailClosedReceiptTests(unittest.TestCase):
             "model_submission_artifact_present",
             "contamination_disjointness_receipt",
         ):
-            self.assertIn(gate, receipt["blockers"])
+            assert gate in receipt["blockers"]
 
     def test_revision_and_split_gates_pass_on_a_well_formed_checkout(self) -> None:
         receipt = self._receipt()
-        self.assertTrue(receipt["gates"]["upstream_revision_pinned"])
-        self.assertTrue(receipt["gates"]["split_manifest_resolved"])
-        self.assertTrue(receipt["gates"]["verifier_identity_resolved"])
+        assert receipt["gates"]["upstream_revision_pinned"]
+        assert receipt["gates"]["split_manifest_resolved"]
+        assert receipt["gates"]["verifier_identity_resolved"]
 
     def test_status_is_ready_only_when_every_required_gate_passes(self) -> None:
         gates = {name: True for name in runner.REQUIRED_GATES}
-        self.assertEqual(runner.fail_closed_status(gates), "READY")
+        assert runner.fail_closed_status(gates) == "READY"
         for name in runner.REQUIRED_GATES:
             broken = dict(gates)
             broken[name] = False
-            self.assertEqual(runner.fail_closed_status(broken), "BLOCKED", name)
+            assert runner.fail_closed_status(broken) == "BLOCKED", name
 
     def test_a_missing_gate_key_is_treated_as_a_failure(self) -> None:
-        self.assertEqual(runner.fail_closed_status({}), "BLOCKED")
+        assert runner.fail_closed_status({}) == "BLOCKED"
 
     def test_harness_validation_never_promotes_itself_to_a_suite_score(self) -> None:
-        harness = {"label": "harness_validation", "is_model_score": False, "status": "PASS", "suite_score": None}
+        harness = {
+            "label": "harness_validation",
+            "is_model_score": False,
+            "status": "PASS",
+            "suite_score": None,
+        }
         receipt = self._receipt(harness=harness)
-        self.assertEqual(receipt["harness_validation"]["status"], "PASS")
-        self.assertIsNone(receipt["metrics"]["score"])
-        self.assertEqual(receipt["status"], "BLOCKED")
+        assert receipt["harness_validation"]["status"] == "PASS"
+        assert receipt["metrics"]["score"] is None
+        assert receipt["status"] == "BLOCKED"
 
     def test_receipt_records_the_dataset_licence_position(self) -> None:
         receipt = self._receipt()
         position = receipt["authoritative_public_source"]["license_position"]
-        self.assertEqual(position["repository_code"], "MIT")
-        self.assertEqual(position["competition_datasets"], "not_covered_by_repository_license")
-        self.assertFalse(position["acceptance_is_automatable"])
+        assert position["repository_code"] == "MIT"
+        assert position["competition_datasets"] == "not_covered_by_repository_license"
+        assert not position["acceptance_is_automatable"]
 
     def test_receipt_pins_the_upstream_revision(self) -> None:
         receipt = self._receipt()
-        self.assertEqual(receipt["authoritative_public_source"]["revision"], runner.UPSTREAM_COMMIT)
-        self.assertEqual(len(runner.UPSTREAM_COMMIT), 40)
+        assert receipt["authoritative_public_source"]["revision"] == runner.UPSTREAM_COMMIT
+        assert len(runner.UPSTREAM_COMMIT) == 40
 
     def test_verifier_only_variant_never_satisfies_the_container_gate(self) -> None:
-        payload = json.dumps({"RepoDigests": [], "Id": "sha256:abc", "Architecture": "amd64", "Os": "linux"})
+        payload = json.dumps(
+            {"RepoDigests": [], "Id": "sha256:abc", "Architecture": "amd64", "Os": "linux"}
+        )
         with tempfile.TemporaryDirectory() as tmp:
             checkout = _fake_checkout(Path(tmp) / "checkout")
             with patch.object(runner, "docker_image_digest") as mocked:
                 mocked.side_effect = lambda image: (
                     {"image": image, "present": False, "digest": None, "error": "no such image"}
                     if image == runner.REQUIRED_IMAGE
-                    else json.loads(payload) | {"image": image, "present": True, "digest": "sha256:abc"}
+                    else json.loads(payload)
+                    | {"image": image, "present": True, "digest": "sha256:abc"}
                 )
-                receipt = runner.build_receipt(checkout=checkout, data_dir=Path(tmp), observed_at="2026-08-09")
+                receipt = runner.build_receipt(
+                    checkout=checkout, data_dir=Path(tmp), observed_at="2026-08-09"
+                )
 
         variant = receipt["environment"]["verifier_only_variant"]
-        self.assertTrue(variant["present"])
-        self.assertFalse(variant["satisfies_container_gate"])
-        self.assertFalse(receipt["gates"]["container_image_digest_present"])
-        self.assertEqual(receipt["status"], "BLOCKED")
+        assert variant["present"]
+        assert not variant["satisfies_container_gate"]
+        assert not receipt["gates"]["container_image_digest_present"]
+        assert receipt["status"] == "BLOCKED"
 
     def test_lane_status_is_partial_when_only_the_harness_ran(self) -> None:
         gates = {name: False for name in runner.REQUIRED_GATES}
-        self.assertEqual(runner.lane_status(gates, {"status": "PASS"}), "PARTIAL")
-        self.assertEqual(runner.lane_status(gates, None), "BLOCKED")
-        self.assertEqual(runner.lane_status({n: True for n in runner.REQUIRED_GATES}, None), "RUNNING")
+        assert runner.lane_status(gates, {"status": "PASS"}) == "PARTIAL"
+        assert runner.lane_status(gates, None) == "BLOCKED"
+        assert runner.lane_status({n: True for n in runner.REQUIRED_GATES}, None) == "RUNNING"
 
     def test_every_failing_gate_names_the_receipt_that_would_clear_it(self) -> None:
         receipt = self._receipt()
         details = {entry["gate"]: entry for entry in receipt["blocker_details"]}
-        self.assertEqual(set(details), set(receipt["blockers"]))
+        assert set(details) == set(receipt["blockers"])
         for entry in details.values():
-            self.assertTrue(entry["missing"])
-            self.assertTrue(entry["external_receipt"])
-            self.assertTrue(entry["action"])
+            assert entry["missing"]
+            assert entry["external_receipt"]
+            assert entry["action"]
 
     def test_licence_blocker_points_at_the_kaggle_rules_page(self) -> None:
         receipt = self._receipt()
         details = {entry["gate"]: entry for entry in receipt["blocker_details"]}
-        self.assertIn("kaggle.com/c/tiny-comp/rules", details["dataset_license_accepted"]["action"])
+        assert "kaggle.com/c/tiny-comp/rules" in details["dataset_license_accepted"]["action"]
 
     def test_receipt_declares_no_paid_side_effects(self) -> None:
         receipt = self._receipt()
-        self.assertEqual(
-            receipt["safety"],
-            {"paid_calls": False, "tinker_launched": False, "wandb_published": False, "checkpoints_pushed": False},
-        )
+        assert receipt["safety"] == {
+            "paid_calls": False,
+            "tinker_launched": False,
+            "wandb_published": False,
+            "checkpoints_pushed": False,
+        }
 
 
 class HarnessFixtureTests(unittest.TestCase):
@@ -401,37 +450,41 @@ class HarnessFixtureTests(unittest.TestCase):
             meta = runner.build_spooky_fixture(Path(tmp), rows=25, seed=1)
             answers = Path(meta["answers_path"]).read_text(encoding="utf-8").splitlines()
 
-        self.assertEqual(answers[0], "id,EAP,HPL,MWS")
-        self.assertEqual(len(answers), 26)
+        assert answers[0] == "id,EAP,HPL,MWS"
+        assert len(answers) == 26
         for row in answers[1:]:
             values = [int(v) for v in row.split(",")[1:]]
-            self.assertEqual(sum(values), 1)
+            assert sum(values) == 1
 
     def test_fixture_is_labelled_synthetic_not_official_data(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             meta = runner.build_spooky_fixture(Path(tmp), rows=5)
-        self.assertEqual(meta["provenance"], "synthetic_schema_conformant_fixture")
+        assert meta["provenance"] == "synthetic_schema_conformant_fixture"
 
     def test_fixture_is_deterministic_for_a_given_seed(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             a = runner.build_spooky_fixture(Path(tmp) / "a", rows=40, seed=7)["answers_sha256"]
             b = runner.build_spooky_fixture(Path(tmp) / "b", rows=40, seed=7)["answers_sha256"]
             c = runner.build_spooky_fixture(Path(tmp) / "c", rows=40, seed=8)["answers_sha256"]
-        self.assertEqual(a, b)
-        self.assertNotEqual(a, c)
+        assert a == b
+        assert a != c
 
     def test_harness_validate_refuses_competitions_without_a_fixture_builder(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
-            result = runner.harness_validate(_PINNED_CHECKOUT, "aerial-cactus-identification", Path(tmp), Path(tmp))
-        self.assertEqual(result["status"], "BLOCKED")
-        self.assertFalse(result["is_model_score"])
+            result = runner.harness_validate(
+                _PINNED_CHECKOUT, "aerial-cactus-identification", Path(tmp), Path(tmp)
+            )
+        assert result["status"] == "BLOCKED"
+        assert not result["is_model_score"]
 
     def test_harness_validate_result_is_never_a_model_score(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
-            result = runner.harness_validate(_PINNED_CHECKOUT, "not-a-real-competition", Path(tmp), Path(tmp))
-        self.assertEqual(result["label"], "harness_validation")
-        self.assertFalse(result["is_model_score"])
-        self.assertIsNone(result["suite_score"])
+            result = runner.harness_validate(
+                _PINNED_CHECKOUT, "not-a-real-competition", Path(tmp), Path(tmp)
+            )
+        assert result["label"] == "harness_validation"
+        assert not result["is_model_score"]
+        assert result["suite_score"] is None
 
 
 class UpstreamReproductionTests(unittest.TestCase):
@@ -439,25 +492,32 @@ class UpstreamReproductionTests(unittest.TestCase):
         if not (_PINNED_CHECKOUT / "tests/constants.py").is_file():
             self.skipTest("pinned MLE-bench checkout is not present")
         self.assertAlmostEqual(
-            runner.upstream_sample_submission_score(_PINNED_CHECKOUT, "spooky-author-identification"),
+            runner.upstream_sample_submission_score(
+                _PINNED_CHECKOUT, "spooky-author-identification"
+            ),
             1.08468,
         )
 
     def test_nan_entries_return_none_rather_than_a_bogus_float(self) -> None:
         if not (_PINNED_CHECKOUT / "tests/constants.py").is_file():
             self.skipTest("pinned MLE-bench checkout is not present")
-        self.assertIsNone(
-            runner.upstream_sample_submission_score(_PINNED_CHECKOUT, "us-patent-phrase-to-phrase-matching")
+        assert (
+            runner.upstream_sample_submission_score(
+                _PINNED_CHECKOUT, "us-patent-phrase-to-phrase-matching"
+            )
+            is None
         )
 
     def test_unknown_competition_returns_none(self) -> None:
         if not (_PINNED_CHECKOUT / "tests/constants.py").is_file():
             self.skipTest("pinned MLE-bench checkout is not present")
-        self.assertIsNone(runner.upstream_sample_submission_score(_PINNED_CHECKOUT, "not-a-competition"))
+        assert (
+            runner.upstream_sample_submission_score(_PINNED_CHECKOUT, "not-a-competition") is None
+        )
 
     def test_missing_constants_file_returns_none(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
-            self.assertIsNone(runner.upstream_sample_submission_score(Path(tmp), "anything"))
+            assert runner.upstream_sample_submission_score(Path(tmp), "anything") is None
 
 
 class InvalidControlTests(unittest.TestCase):
@@ -468,7 +528,7 @@ class InvalidControlTests(unittest.TestCase):
             control = runner.build_invalid_control(source, Path(tmp) / "controls")
             rows = control.read_text(encoding="utf-8").splitlines()
 
-        self.assertEqual(rows[0], "id,EAP,HPL,MWS")
+        assert rows[0] == "id,EAP,HPL,MWS"
         values = [float(v) for v in rows[1].split(",")[1:]]
         # Sum-to-one is the constraint this control reliably violates (2.5 != 1).
         # A [0, 1] range violation is not guaranteed for every source row, so it
@@ -485,15 +545,15 @@ class InvalidControlTests(unittest.TestCase):
             before = source.read_bytes()
             control = runner.build_invalid_control(source, Path(tmp) / "controls")
 
-            self.assertEqual(source.read_bytes(), before)
-            self.assertFalse(control.resolve().is_relative_to(prepared.resolve()))
+            assert source.read_bytes() == before
+            assert not control.resolve().is_relative_to(prepared.resolve())
 
     def test_control_preserves_non_numeric_id_column(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             source = Path(tmp) / "s.csv"
             source.write_text("id,a\nid00042,0.5\n", encoding="utf-8")
             control = runner.build_invalid_control(source, Path(tmp) / "c")
-            self.assertTrue(control.read_text(encoding="utf-8").splitlines()[1].startswith("id00042,"))
+            assert control.read_text(encoding="utf-8").splitlines()[1].startswith("id00042,")
 
 
 class CliTests(unittest.TestCase):
@@ -503,20 +563,29 @@ class CliTests(unittest.TestCase):
             out = Path(tmp) / "survey.json"
             code = runner.main(["--checkout", str(checkout), "survey", "--out", str(out)])
             payload = json.loads(out.read_text(encoding="utf-8"))
-        self.assertEqual(code, 0)
-        self.assertEqual(payload["smallest"]["competition_id"], "tiny-comp")
+        assert code == 0
+        assert payload["smallest"]["competition_id"] == "tiny-comp"
 
     def test_receipt_subcommand_writes_a_blocked_receipt(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             checkout = _fake_checkout(Path(tmp) / "checkout")
             out = Path(tmp) / "receipt.json"
             code = runner.main(
-                ["--checkout", str(checkout), "receipt", "--data-dir", tmp, "--no-docker", "--out", str(out)]
+                [
+                    "--checkout",
+                    str(checkout),
+                    "receipt",
+                    "--data-dir",
+                    tmp,
+                    "--no-docker",
+                    "--out",
+                    str(out),
+                ]
             )
             payload = json.loads(out.read_text(encoding="utf-8"))
-        self.assertEqual(code, 0)
-        self.assertEqual(payload["status"], "BLOCKED")
-        self.assertIsNone(payload["metrics"]["score"])
+        assert code == 0
+        assert payload["status"] == "BLOCKED"
+        assert payload["metrics"]["score"] is None
 
 
 if __name__ == "__main__":

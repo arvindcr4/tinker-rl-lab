@@ -34,17 +34,14 @@ Outputs:
         Three-panel: iso-yield curves (iid vs sensitivity-corrected);
         iso-yield cost bar plot; failure-mode confusion heatmap.
 """
+
 from __future__ import annotations
 
 import argparse
-import csv
-import json
 import math
 import statistics
-import sys
-from collections import defaultdict
 from pathlib import Path
-from typing import Any, Dict, List, Sequence, Tuple
+from typing import Any, Dict, List
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 RESULTS = REPO_ROOT / "experiments" / "results"
@@ -126,21 +123,31 @@ def load_contrastive_yield(path: Path) -> List[Dict[str, Any]]:
 
 def iso_yield_iid(p, y_target):
     """Projected sensitivity scenario; infinity means target not reached by G=1024."""
-    if not (0 <= p <= 1 and 0 <= y_target <= 1): raise ValueError("probability/target outside [0,1]")
-    if not math.isfinite(0.0): raise ValueError("nonfinite correction")
-    for G in range(1,1025):
-        value = 0.0 if G == 1 or p in (0,1) else min(1.,max(0.,1-p**G-(1-p)**G+0.0))
-        if value >= y_target: return G
+    if not (0 <= p <= 1 and 0 <= y_target <= 1):
+        raise ValueError("probability/target outside [0,1]")
+    if not math.isfinite(0.0):
+        raise ValueError("nonfinite correction")
+    for G in range(1, 1025):
+        value = 0.0 if G == 1 or p in (0, 1) else min(1.0, max(0.0, 1 - p**G - (1 - p) ** G + 0.0))
+        if value >= y_target:
+            return G
     return float("inf")
 
 
 def iso_yield_empirical(p, delta_div, y_target):
     """Projected sensitivity scenario; infinity means target not reached by G=1024."""
-    if not (0 <= p <= 1 and 0 <= y_target <= 1): raise ValueError("probability/target outside [0,1]")
-    if not math.isfinite(delta_div): raise ValueError("nonfinite correction")
-    for G in range(1,1025):
-        value = 0.0 if G == 1 or p in (0,1) else min(1.,max(0.,1-p**G-(1-p)**G+delta_div))
-        if value >= y_target: return G
+    if not (0 <= p <= 1 and 0 <= y_target <= 1):
+        raise ValueError("probability/target outside [0,1]")
+    if not math.isfinite(delta_div):
+        raise ValueError("nonfinite correction")
+    for G in range(1, 1025):
+        value = (
+            0.0
+            if G == 1 or p in (0, 1)
+            else min(1.0, max(0.0, 1 - p**G - (1 - p) ** G + delta_div))
+        )
+        if value >= y_target:
+            return G
     return float("inf")
 
 
@@ -169,16 +176,13 @@ def failure_class(r: Dict[str, Any]) -> str:
     return "converged"
 
 
-def knn_predict(
-    train: List[Dict[str, Any]], test_row: Dict[str, Any], k: int = 3
-) -> str:
+def knn_predict(train: List[Dict[str, Any]], test_row: Dict[str, Any], k: int = 3) -> str:
     """Heuristic-rule reproduction using the same quantities as the label rule."""
     feats = ["mean_zvf", "mean_last10", "mean_peak"]
     mus = {f: statistics.fmean(r[f] for r in train) for f in feats}
     sds = {f: max(1e-9, statistics.pstdev(r[f] for r in train)) for f in feats}
     z_train = [
-        {f: (r[f] - mus[f]) / sds[f] for f in feats} | {"label": failure_class(r)}
-        for r in train
+        {f: (r[f] - mus[f]) / sds[f] for f in feats} | {"label": failure_class(r)} for r in train
     ]
     z_test = {f: (test_row[f] - mus[f]) / sds[f] for f in feats}
     dists = sorted(
@@ -262,8 +266,17 @@ def main() -> None:
 
     isoyield_path = RESULTS / "zvf_iter38_isoyield_review28_v2.tsv"
     cols = [
-        "library", "model", "p_x", "y_target", "G_ref", "delta_div_lib",
-        "G_iid", "G_projected_scenario", "G_savings", "cost_iid", "cost_empirical",
+        "library",
+        "model",
+        "p_x",
+        "y_target",
+        "G_ref",
+        "delta_div_lib",
+        "G_iid",
+        "G_projected_scenario",
+        "G_savings",
+        "cost_iid",
+        "cost_empirical",
         "cost_savings_frac",
     ]
     with isoyield_path.open("w") as fh:
@@ -283,11 +296,7 @@ def main() -> None:
     # ------------------------------------------------------------------
     # Failure-mode classifier
     # ------------------------------------------------------------------
-    pool = [
-        r
-        for r in by_lib
-        if not math.isnan(r["mean_zvf"]) and r["mean_zvf"] >= 0
-    ]
+    pool = [r for r in by_lib if not math.isnan(r["mean_zvf"]) and r["mean_zvf"] >= 0]
     # Add the scaling-law rows but drop missing features.
     conf_rows: List[Dict[str, Any]] = []
     correct = 0
@@ -403,8 +412,7 @@ def main() -> None:
         {
             "metric": "per_class_recovery_collapse",
             "value": (
-                conf_mat["collapse"]["collapse"]
-                / max(1, sum(conf_mat["collapse"].values()))
+                conf_mat["collapse"]["collapse"] / max(1, sum(conf_mat["collapse"].values()))
             ),
             "detail": f"true collapse={sum(conf_mat['collapse'].values())}",
         }
@@ -412,20 +420,14 @@ def main() -> None:
     summary_rows.append(
         {
             "metric": "per_class_recovery_drift",
-            "value": (
-                conf_mat["drift"]["drift"]
-                / max(1, sum(conf_mat["drift"].values()))
-            ),
+            "value": (conf_mat["drift"]["drift"] / max(1, sum(conf_mat["drift"].values()))),
             "detail": f"true drift={sum(conf_mat['drift'].values())}",
         }
     )
     summary_rows.append(
         {
             "metric": "per_class_recovery_plateau",
-            "value": (
-                conf_mat["plateau"]["plateau"]
-                / max(1, sum(conf_mat["plateau"].values()))
-            ),
+            "value": (conf_mat["plateau"]["plateau"] / max(1, sum(conf_mat["plateau"].values()))),
             "detail": f"true plateau={sum(conf_mat['plateau'].values())}",
         }
     )
@@ -433,8 +435,7 @@ def main() -> None:
         {
             "metric": "per_class_recovery_converged",
             "value": (
-                conf_mat["converged"]["converged"]
-                / max(1, sum(conf_mat["converged"].values()))
+                conf_mat["converged"]["converged"] / max(1, sum(conf_mat["converged"].values()))
             ),
             "detail": f"true converged={sum(conf_mat['converged'].values())}",
         }
@@ -453,8 +454,12 @@ def main() -> None:
     # ------------------------------------------------------------------
     # Print
     # ------------------------------------------------------------------
-    print(f"Iter 38 Pillar 2 cross-library iso-yield: wrote {len(isoyield_rows)} rows to {isoyield_path}")
-    print(f"Iter 38 LOO classifier: {correct}/{len(pool)} = {accuracy:.3f} accuracy -> {class_path}")
+    print(
+        f"Iter 38 Pillar 2 cross-library iso-yield: wrote {len(isoyield_rows)} rows to {isoyield_path}"
+    )
+    print(
+        f"Iter 38 LOO classifier: {correct}/{len(pool)} = {accuracy:.3f} accuracy -> {class_path}"
+    )
     print(f"Summary -> {summary_path}")
     print()
     print("Per-library y=0.80 iso-yield:")

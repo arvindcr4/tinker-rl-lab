@@ -11,13 +11,20 @@ The TSV and JSON files are the source of truth. W&B logging runs in a background
 thread and falls back to grouped summary runs if per-cell run creation becomes
 the bottleneck.
 """
+
 from __future__ import annotations
 
 import sys as _contract_sys
 from pathlib import Path as _ContractPath
+
 if len(_ContractPath(__file__).resolve().parents) > 4:
     _contract_sys.path.insert(0, str(_ContractPath(__file__).resolve().parents[4]))
-from platform_hybrid.experiments.framework_contracts import score_gsm8k, SCORER_ID, content_hash, experiment_spec, validate_resume, stable_seed, validated_sample_sequences
+from platform_hybrid.experiments.framework_contracts import (
+    score_gsm8k,
+    SCORER_ID,
+    stable_seed,
+    validated_sample_sequences,
+)
 
 
 import argparse
@@ -32,13 +39,8 @@ import random
 import re
 import signal
 import statistics
-import subprocess
-import sys
-import tempfile
-import textwrap
 import threading
 import time
-import traceback
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any
@@ -174,7 +176,10 @@ class JsonWandbLogger:
                 wandb.finish()
                 if time.time() - t0 > 8:
                     self.use_summary = True
-                    print("[wandb] switching to grouped summary runs; per-cell init is slow", flush=True)
+                    print(
+                        "[wandb] switching to grouped summary runs; per-cell init is slow",
+                        flush=True,
+                    )
             except Exception as e:
                 self.per_cell_failures += 1
                 self._stash(row, cell)
@@ -194,7 +199,12 @@ class JsonWandbLogger:
                     entity=WANDB_ENTITY,
                     project=WANDB_PROJECT,
                     name=name,
-                    config={"model": model, "task_slice": task, "n_cells": len(rows), "fallback": "summary-table"},
+                    config={
+                        "model": model,
+                        "task_slice": task,
+                        "n_cells": len(rows),
+                        "fallback": "summary-table",
+                    },
                     tags=["mega_20260704", "summary-fallback", task],
                     reinit=True,
                     settings=wandb.Settings(start_method="thread"),
@@ -240,7 +250,9 @@ def humaneval_script(prompt, completion, test_code, entry_point):
     if not entry_point.isidentifier():
         raise ValueError("Invalid HumanEval entry point")
     code = extract_code(completion)
-    defines_entry_point = re.search(r"(?m)^(?:async )?def\s+" + re.escape(entry_point) + r"\s*\(", code)
+    defines_entry_point = re.search(
+        r"(?m)^(?:async )?def\s+" + re.escape(entry_point) + r"\s*\(", code
+    )
     full = code if defines_entry_point else prompt + "\n" + code
     prelude = "import math\nimport re\nimport sys\nfrom typing import *"
     return prelude + "\n" + full + "\n\n" + test_code + "\n\n" + f"check({entry_point})\n"
@@ -248,9 +260,12 @@ def humaneval_script(prompt, completion, test_code, entry_point):
 
 def run_humaneval_test(prompt, completion, test_code, entry_point, timeout=3.0):
     from platform_hybrid.experiments.research_contracts import IsolatedEvaluatorUnavailable
+
     # Compile only to distinguish assembly errors from candidate evaluation.
     compile(humaneval_script(prompt, completion, test_code, entry_point), "<humaneval>", "exec")
-    raise IsolatedEvaluatorUnavailable("Configure a trusted isolated evaluator before HumanEval execution")
+    raise IsolatedEvaluatorUnavailable(
+        "Configure a trusted isolated evaluator before HumanEval execution"
+    )
 
 
 def load_task_examples(seed: int) -> dict[str, list[dict[str, Any]]]:
@@ -305,11 +320,16 @@ def score_completion(task_slice: str, ex: dict[str, Any], completion: str) -> fl
     return run_humaneval_test(ex["prompt"], completion, ex["test"], ex["entry_point"])
 
 
-def metric_summary(reward_groups: list[list[float]], length_groups: list[list[int]], G: int) -> dict[str, float]:
-    if (G <= 0 or not reward_groups or len(reward_groups) != len(length_groups)
-            or any(len(group) != G for group in reward_groups)
-            or any(len(group) != G or any(length <= 0 for length in group)
-                   for group in length_groups)):
+def metric_summary(
+    reward_groups: list[list[float]], length_groups: list[list[int]], G: int
+) -> dict[str, float]:
+    if (
+        G <= 0
+        or not reward_groups
+        or len(reward_groups) != len(length_groups)
+        or any(len(group) != G for group in reward_groups)
+        or any(len(group) != G or any(length <= 0 for length in group) for group in length_groups)
+    ):
         raise ValueError("Complete fixed-size nonempty reward and length groups required")
     rewards = [r for group in reward_groups for r in group]
     lengths = [l for group in length_groups for l in group]
@@ -318,7 +338,11 @@ def metric_summary(reward_groups: list[list[float]], length_groups: list[list[in
     return {
         "mean_reward": sum(rewards) / len(rewards) if rewards else 0.0,
         "zvf": (sum(1 for g in reward_groups if len(set(g)) == 1) / n_groups) if n_groups else 0.0,
-        "scaled_plugin_bernoulli_variance": (((G - 1) / G) * (sum(p * (1 - p) for p in phats) / len(phats))) if phats else 0.0,
+        "scaled_plugin_bernoulli_variance": (
+            ((G - 1) / G) * (sum(p * (1 - p) for p in phats) / len(phats))
+        )
+        if phats
+        else 0.0,
         "mean_completion_len": sum(lengths) / len(lengths) if lengths else 0.0,
         "std_completion_len": statistics.pstdev(lengths) if len(lengths) > 1 else 0.0,
     }
@@ -334,7 +358,9 @@ def get_tokenizer(svc: tinker.ServiceClient, model: str):
         return AutoTokenizer.from_pretrained(model, trust_remote_code=True)
 
 
-def discover_models(svc: tinker.ServiceClient, target_cells: int, max_models: int | None) -> list[str]:
+def discover_models(
+    svc: tinker.ServiceClient, target_cells: int, max_models: int | None
+) -> list[str]:
     caps = svc.get_server_capabilities()
     names = [m.model_name for m in caps.supported_models]
     preferred = [
@@ -385,7 +411,11 @@ def inventory_covered() -> set[tuple[str, str, int, float]]:
                         model = row.get("model") or row.get("base_model") or row.get("model_name")
                         g = row.get("group_size") or row.get("G") or row.get("group")
                         task = row.get("task") or row.get("task_slice") or row.get("dataset") or ""
-                        temp = row.get("temperature") or row.get("temp") or row.get("sampling_temperature")
+                        temp = (
+                            row.get("temperature")
+                            or row.get("temp")
+                            or row.get("sampling_temperature")
+                        )
                         if not model or not g:
                             continue
                         try:
@@ -395,7 +425,11 @@ def inventory_covered() -> set[tuple[str, str, int, float]]:
                         task_norm = normalize_task(task)
                         if task_norm is None:
                             continue
-                        temps = [float(temp)] if temp not in (None, "") else ([1.0] if gi in {4, 8, 16} else [])
+                        temps = (
+                            [float(temp)]
+                            if temp not in (None, "")
+                            else ([1.0] if gi in {4, 8, 16} else [])
+                        )
                         for tv in temps:
                             covered.add((model_family(model), task_norm, gi, tv))
             except Exception as e:
@@ -430,7 +464,14 @@ def normalize_task(task: str) -> str | None:
     return None
 
 
-def ordered_cells(models: list[str], covered: set[tuple[str, str, int, float]], *, max_tokens=512, top_p=0.95, max_prompt_tokens=1024) -> tuple[list[Cell], list[tuple[Cell, str]]]:
+def ordered_cells(
+    models: list[str],
+    covered: set[tuple[str, str, int, float]],
+    *,
+    max_tokens=512,
+    top_p=0.95,
+    max_prompt_tokens=1024,
+) -> tuple[list[Cell], list[tuple[Cell, str]]]:
     tasks = ["humaneval_subset", "gsm8k_hard", "gsm8k_easy"]
     gs = [2, 32, 4, 8, 16]
     temps = [0.6, 1.0]
@@ -456,7 +497,16 @@ def write_skipped(skipped: list[tuple[Cell, str]]) -> None:
         writer = csv.DictWriter(
             f,
             delimiter="\t",
-            fieldnames=["cell_id", "model", "model_family", "task_slice", "G", "temperature", "seed", "reason"],
+            fieldnames=[
+                "cell_id",
+                "model",
+                "model_family",
+                "task_slice",
+                "G",
+                "temperature",
+                "seed",
+                "reason",
+            ],
         )
         if write_header:
             writer.writeheader()
@@ -552,14 +602,21 @@ class Campaign:
 
     async def run_cell(self, cell: Cell) -> None:
         tok = await self.tokenizer_for_async(cell.model)
-        rng = random.Random((cell.seed * 1_000_003) ^ int(hashlib.sha1(cell.id.encode()).hexdigest()[:8], 16))
+        rng = random.Random(
+            (cell.seed * 1_000_003) ^ int(hashlib.sha1(cell.id.encode()).hexdigest()[:8], 16)
+        )
         pool = list(self.examples[cell.task_slice])
         rng.shuffle(pool)
         selected = pool[:PROMPTS_PER_CELL]
         if not selected or len(selected) != PROMPTS_PER_CELL:
             raise ValueError("Fixed prompt population incomplete")
         sc = await asyncio.to_thread(lambda: self.svc.create_sampling_client(base_model=cell.model))
-        sp = T.SamplingParams(max_tokens=cell.max_tokens, temperature=cell.temperature, top_p=cell.top_p, seed=stable_seed(cell.id))
+        sp = T.SamplingParams(
+            max_tokens=cell.max_tokens,
+            temperature=cell.temperature,
+            top_p=cell.top_p,
+            seed=stable_seed(cell.id),
+        )
 
         reward_groups: list[list[float]] = []
         length_groups: list[list[int]] = []
@@ -628,7 +685,9 @@ class Campaign:
             "per_step_zvf_path": str(tensor_path),
             "group_size_schedule": f"fixed-G={cell.group_size}",
             "heldout_split": cell.task_slice,
-            "decontamination_notes": "gsm8k-train-slice" if cell.task_slice.startswith("gsm8k") else "humaneval-openai-subset",
+            "decontamination_notes": "gsm8k-train-slice"
+            if cell.task_slice.startswith("gsm8k")
+            else "humaneval-openai-subset",
         }
         row = {
             "cell_id": cell.id,
@@ -681,14 +740,27 @@ class Campaign:
                 f.flush()
                 os.fsync(f.fileno())
             with DONE_JSONL.open("a") as f:
-                f.write(json.dumps({"cell_id": cell.id, "cell": asdict(cell), "timestamp": time.time()}) + "\n")
+                f.write(
+                    json.dumps({"cell_id": cell.id, "cell": asdict(cell), "timestamp": time.time()})
+                    + "\n"
+                )
                 f.flush()
                 os.fsync(f.fileno())
 
     async def _record_failure(self, cell: Cell, reason: str) -> None:
         async with self.file_lock:
             with FAIL_JSONL.open("a") as f:
-                f.write(json.dumps({"cell_id": cell.id, "cell": asdict(cell), "reason": reason, "timestamp": time.time()}) + "\n")
+                f.write(
+                    json.dumps(
+                        {
+                            "cell_id": cell.id,
+                            "cell": asdict(cell),
+                            "reason": reason,
+                            "timestamp": time.time(),
+                        }
+                    )
+                    + "\n"
+                )
                 f.flush()
                 os.fsync(f.fileno())
         print(f"[failed] {cell.id}: {reason}", flush=True)
@@ -739,7 +811,13 @@ async def async_main() -> int:
     svc = tinker.ServiceClient(base_url=None)
     models = await asyncio.to_thread(discover_models, svc, args.target_cells, args.max_models)
     covered = await asyncio.to_thread(inventory_covered)
-    cells, skipped = ordered_cells(models, covered, max_tokens=args.max_tokens, top_p=args.top_p, max_prompt_tokens=args.max_prompt_tokens)
+    cells, skipped = ordered_cells(
+        models,
+        covered,
+        max_tokens=args.max_tokens,
+        top_p=args.top_p,
+        max_prompt_tokens=args.max_prompt_tokens,
+    )
     done_ids = load_done_ids()
     cells = [c for c in cells if c.id not in done_ids]
     if args.smoke:

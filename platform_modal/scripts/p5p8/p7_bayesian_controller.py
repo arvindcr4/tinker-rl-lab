@@ -17,10 +17,10 @@ Outputs:
 
 Stdlib only.
 """
+
 from __future__ import annotations
 
 import argparse
-import csv
 import json
 import math
 import pathlib
@@ -28,9 +28,13 @@ import random
 import statistics
 
 import sys
-sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
-from _p5p7_common import load_tensors_c  # noqa: E402
+
+sys.path.append(
+    str(pathlib.Path(__file__).resolve().parents[1])
+)  # platform_modal/scripts, for _paths
+from _paths import REPO_ROOT
+from _p5p7_common import load_tensors_c
+
 WORKTREE = REPO_ROOT
 N2 = WORKTREE / "platform_hybrid/experiments" / "results" / "n2_reward_tensor_resume"
 OUT = WORKTREE / "platform_hybrid/experiments" / "results" / "p5p8"
@@ -57,16 +61,8 @@ def _log_beta_pdf(p, alpha, beta):
     """log of Beta(alpha, beta) pdf at p in (0, 1)."""
     if p <= 0 or p >= 1:
         return float("-inf")
-    log_norm = (
-        math.lgamma(alpha + beta)
-        - math.lgamma(alpha)
-        - math.lgamma(beta)
-    )
-    return (
-        (alpha - 1) * math.log(p)
-        + (beta - 1) * math.log(1 - p)
-        + log_norm
-    )
+    log_norm = math.lgamma(alpha + beta) - math.lgamma(alpha) - math.lgamma(beta)
+    return (alpha - 1) * math.log(p) + (beta - 1) * math.log(1 - p) + log_norm
 
 
 def beta_cdf(alpha, beta, x, grid=GRID_N):
@@ -130,7 +126,7 @@ def zvf_triage_escalation(step_info, threshold):
     saved = 0
     wasted = 0
     rollouts = 0
-    for i, s in enumerate(step_info):
+    for _i, s in enumerate(step_info):
         if s["zvf"] >= threshold and s["pcd"] <= MAX_PCD:
             fires += 1
             # escalate this step to G'=16; check per-prompt
@@ -187,8 +183,8 @@ def dualformer_auto_escalation(step_info):
 
 def bayesian_escalation(step_info, tau_post):
     """Per-prompt Bayesian escalation:
-       G'=16 iff observed group at G=8 is degenerate AND posterior
-       P(p in [mid_lo, mid_hi]) > tau_post; else G=8.
+    G'=16 iff observed group at G=8 is degenerate AND posterior
+    P(p in [mid_lo, mid_hi]) > tau_post; else G=8.
     """
     fires = 0
     saved = 0
@@ -260,23 +256,27 @@ def bootstrap_ci(values, n_boot=10000, alpha=0.05, seed=0):
 # ---
 # Main
 # ---
-def _eval_controller(name, threshold, eval_fn, method_step_info,
-                     baseline, seed, per_step_rows, controller_label):
+def _eval_controller(
+    name, threshold, eval_fn, method_step_info, baseline, seed, per_step_rows, controller_label
+):
     """Run one controller over all methods; return summary row."""
     pm = []
     for m in METHODS:
         fires, saved, wasted, rollouts = eval_fn(method_step_info[m])
-        pm.append({"fires": fires, "saved": saved,
-                   "wasted": wasted, "rollouts": rollouts})
+        pm.append({"fires": fires, "saved": saved, "wasted": wasted, "rollouts": rollouts})
         if name == "zvf_triage":
             for s in method_step_info[m]:
                 if s["zvf"] >= threshold and s["pcd"] <= MAX_PCD:
-                    per_step_rows.append({
-                        "method": m, "controller": controller_label,
-                        "threshold": threshold, "step": s["step"],
-                        "trigger_zvf": round(s["zvf"], 4),
-                        "trigger_pcd": round(s["pcd"], 4),
-                    })
+                    per_step_rows.append(
+                        {
+                            "method": m,
+                            "controller": controller_label,
+                            "threshold": threshold,
+                            "step": s["step"],
+                            "trigger_zvf": round(s["zvf"], 4),
+                            "trigger_pcd": round(s["pcd"], 4),
+                        }
+                    )
     fires_v = [x["fires"] for x in pm]
     saved_v = [x["saved"] for x in pm]
     wasted_v = [x["wasted"] for x in pm]
@@ -291,7 +291,8 @@ def _eval_controller(name, threshold, eval_fn, method_step_info,
         "rollouts_per_method": json.dumps(roll_v),
         "fires_mean": round(statistics.mean(fires_v), 2),
         "saved_mean": round(statistics.mean(saved_v), 2),
-        "saved_lo": ci["lo"], "saved_hi": ci["hi"],
+        "saved_lo": ci["lo"],
+        "saved_hi": ci["hi"],
         "wasted_mean": round(statistics.mean(wasted_v), 2),
         "rollouts_mean": round(statistics.mean(roll_v), 1),
         "cost_ratio_mean": round(statistics.mean(roll_v) / baseline, 3),
@@ -300,8 +301,11 @@ def _eval_controller(name, threshold, eval_fn, method_step_info,
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--write", action="store_true",
-                    help="Write outputs under platform_hybrid/experiments/results/p5p8/")
+    ap.add_argument(
+        "--write",
+        action="store_true",
+        help="Write outputs under platform_hybrid/experiments/results/p5p8/",
+    )
     ap.add_argument("--seed", type=int, default=0)
     args = ap.parse_args()
 
@@ -316,8 +320,9 @@ def main():
         with (N2 / f"{m}_s0_tensors.jsonl").open() as f:
             for line in f:
                 d = json.loads(line)
-                info.append({"step": d["step"], "zvf": d["zvf"],
-                             "pcd": d["pcd"], "rewards": d["rewards"]})
+                info.append(
+                    {"step": d["step"], "zvf": d["zvf"], "pcd": d["pcd"], "rewards": d["rewards"]}
+                )
         info.sort(key=lambda x: x["step"])
         method_step_info[m] = info
 
@@ -327,73 +332,115 @@ def main():
 
     # A. zvf-triage threshold sweep
     for thr in THRESHOLDS:
-        summary_rows.append(_eval_controller(
-            "zvf_triage", thr,
-            lambda info, t=thr: zvf_triage_escalation(info, t),
-            method_step_info, baseline, args.seed, per_step_rows,
-            "zvf_triage"))
+        summary_rows.append(
+            _eval_controller(
+                "zvf_triage",
+                thr,
+                lambda info, t=thr: zvf_triage_escalation(info, t),
+                method_step_info,
+                baseline,
+                args.seed,
+                per_step_rows,
+                "zvf_triage",
+            )
+        )
 
     # B. Dualformer-Auto
-    summary_rows.append(_eval_controller(
-        "dualformer_auto", "point",
-        lambda info: dualformer_auto_escalation(info),
-        method_step_info, baseline, args.seed, per_step_rows,
-        "dualformer_auto"))
+    summary_rows.append(
+        _eval_controller(
+            "dualformer_auto",
+            "point",
+            lambda info: dualformer_auto_escalation(info),
+            method_step_info,
+            baseline,
+            args.seed,
+            per_step_rows,
+            "dualformer_auto",
+        )
+    )
 
     # C. Bayesian escalation (NEW) -- sweep tau_post
     for tp in TAU_POST:
-        summary_rows.append(_eval_controller(
-            "bayesian", tp,
-            lambda info, t=tp: bayesian_escalation(info, t),
-            method_step_info, baseline, args.seed, per_step_rows,
-            "bayesian"))
+        summary_rows.append(
+            _eval_controller(
+                "bayesian",
+                tp,
+                lambda info, t=tp: bayesian_escalation(info, t),
+                method_step_info,
+                baseline,
+                args.seed,
+                per_step_rows,
+                "bayesian",
+            )
+        )
 
     # D. Oracle
-    summary_rows.append(_eval_controller(
-        "oracle", "midrange",
-        lambda info: oracle_escalation(info),
-        method_step_info, baseline, args.seed, per_step_rows,
-        "oracle"))
+    summary_rows.append(
+        _eval_controller(
+            "oracle",
+            "midrange",
+            lambda info: oracle_escalation(info),
+            method_step_info,
+            baseline,
+            args.seed,
+            per_step_rows,
+            "oracle",
+        )
+    )
 
     # Write outputs
     if not args.write:
         print(json.dumps(summary_rows, indent=2))
         return
 
-    cols = ["controller", "threshold", "fires_mean", "saved_mean",
-            "saved_lo", "saved_hi", "wasted_mean", "rollouts_mean",
-            "cost_ratio_mean"]
+    cols = [
+        "controller",
+        "threshold",
+        "fires_mean",
+        "saved_mean",
+        "saved_lo",
+        "saved_hi",
+        "wasted_mean",
+        "rollouts_mean",
+        "cost_ratio_mean",
+    ]
     with (OUT / "p7_bayesian_summary.tsv").open("w") as f:
         f.write("\t".join(cols) + "\n")
         for r in summary_rows:
             f.write("\t".join(str(r[c]) for c in cols) + "\n")
 
     json_payload = {
-        "n_methods": len(METHODS), "n_steps": len(steps),
-        "n_prompts_per_step": N_PROMPTS, "g_base": G_BASE, "g_alt": G_ALT,
-        "baseline_rollouts_fixed_g": baseline, "summary_rows": summary_rows,
+        "n_methods": len(METHODS),
+        "n_steps": len(steps),
+        "n_prompts_per_step": N_PROMPTS,
+        "g_base": G_BASE,
+        "g_alt": G_ALT,
+        "baseline_rollouts_fixed_g": baseline,
+        "summary_rows": summary_rows,
         "interpretation": {
             "bayesian_threshold_meaning": (
                 "tau_post is the posterior mid-range probability "
                 "P(p in [0.05, 0.95]) above which the controller "
                 "escalates an observed-degenerate prompt from G=8 to "
-                "G'=16."),
+                "G'=16."
+            ),
             "alpha_proof_bridge": (
                 "The Beta(k+1, n-k+1) posterior over p is the exact "
                 "Bayesian analogue of AlphaProof's gamma*=0 smoothing: "
                 "both treat the empirical group statistic as a single "
                 "observation of a latent success probability and "
-                "regularize via a prior (Dirichlet(1,1) in both cases)."),
+                "regularize via a prior (Dirichlet(1,1) in both cases)."
+            ),
             "dualformer_bridge": (
                 "Controller B uses a point estimate of acc_pred (no "
-                "uncertainty); Controller C conditions on the posterior."),
+                "uncertainty); Controller C conditions on the posterior."
+            ),
         },
     }
     with (OUT / "p7_bayesian_summary.json").open("w") as f:
         json.dump(json_payload, f, indent=2)
 
-    cols2 = ["method", "controller", "threshold", "step",
-             "trigger_zvf", "trigger_pcd"]
+    cols2 = ["method", "controller", "threshold", "step", "trigger_zvf", "trigger_pcd"]
     with (OUT / "p7_bayesian_per_step.tsv").open("w") as f:
         f.write("\t".join(cols2) + "\n")
         for r in per_step_rows:

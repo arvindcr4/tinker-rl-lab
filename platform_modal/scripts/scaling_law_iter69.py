@@ -9,19 +9,19 @@ outputs go to review27_v3 or an explicitly supplied output directory.
 from __future__ import annotations
 
 import csv
-import json
 import math
 from pathlib import Path
 
 import matplotlib
 
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt  # noqa: E402
+import matplotlib.pyplot as plt
 import numpy as np
+
 try:
     from ._review27_rank import rank_correlation
 except ImportError:
-    from _review27_rank import rank_correlation  # noqa: E402
+    from _review27_rank import rank_correlation
 
 REPO = Path(__file__).resolve().parents[2] / "platform_hybrid"
 CANDIDATE = REPO / "experiments" / "results" / "review27_v3"
@@ -32,18 +32,26 @@ PAPER_SEC = CANDIDATE / "sections"
 PAPER_FIG = CANDIDATE / "paper_figures"
 
 MODELS: dict[str, dict] = {
-    "Qwen3.5-4B":            {"file": "scale_gsm8k_qwen3.5-4b.json",     "params":   4.0, "arch": "dense"},
-    "Qwen3-8B":              {"file": "scale_gsm8k_qwen3-8b.json",       "params":   8.0, "arch": "dense"},
-    "Llama-3.1-8B-Instruct": {"file": "scale_gsm8k_llama-8b-inst.json",  "params":   8.0, "arch": "dense"},
-    "Qwen3-32B":             {"file": "scale_gsm8k_qwen3-32b.json",      "params":  32.0, "arch": "dense"},
-    "Qwen3.5-27B":           {"file": "scale_gsm8k_qwen3.5-27b.json",    "params":  27.0, "arch": "dense"},
-    "gpt-oss-20B":           {"file": "arch_gsm8k_gpt-oss-20b.json",     "params":  20.0, "arch": "moe"},
-    "Qwen3-30B-MoE":         {"file": "moe_gsm8k_qwen3-30b-moe.json",    "params":  30.0, "arch": "moe"},
-    "Qwen3-30B-MoE-Inst":    {"file": "moe_gsm8k_qwen3-30b-inst.json",   "params":  30.0, "arch": "moe"},
-    "DeepSeek-V3.1":         {"file": "frontier_gsm8k_deepseek-v3.1.json","params": 685.0, "arch": "moe"},
-    "Nemotron-120B":         {"file": "frontier_gsm8k_nemotron-120b.json","params": 120.0, "arch": "dense"},
-    "Qwen3-235B-MoE":        {"file": "frontier_gsm8k_qwen3-235b.json",  "params": 235.0, "arch": "moe"},
-    "Kimi-K2-Thinking":      {"file": "arch_gsm8k_kimi-k2.json",         "params":1000.0, "arch": "moe"},
+    "Qwen3.5-4B": {"file": "scale_gsm8k_qwen3.5-4b.json", "params": 4.0, "arch": "dense"},
+    "Qwen3-8B": {"file": "scale_gsm8k_qwen3-8b.json", "params": 8.0, "arch": "dense"},
+    "Llama-3.1-8B-Instruct": {
+        "file": "scale_gsm8k_llama-8b-inst.json",
+        "params": 8.0,
+        "arch": "dense",
+    },
+    "Qwen3-32B": {"file": "scale_gsm8k_qwen3-32b.json", "params": 32.0, "arch": "dense"},
+    "Qwen3.5-27B": {"file": "scale_gsm8k_qwen3.5-27b.json", "params": 27.0, "arch": "dense"},
+    "gpt-oss-20B": {"file": "arch_gsm8k_gpt-oss-20b.json", "params": 20.0, "arch": "moe"},
+    "Qwen3-30B-MoE": {"file": "moe_gsm8k_qwen3-30b-moe.json", "params": 30.0, "arch": "moe"},
+    "Qwen3-30B-MoE-Inst": {"file": "moe_gsm8k_qwen3-30b-inst.json", "params": 30.0, "arch": "moe"},
+    "DeepSeek-V3.1": {"file": "frontier_gsm8k_deepseek-v3.1.json", "params": 685.0, "arch": "moe"},
+    "Nemotron-120B": {
+        "file": "frontier_gsm8k_nemotron-120b.json",
+        "params": 120.0,
+        "arch": "dense",
+    },
+    "Qwen3-235B-MoE": {"file": "frontier_gsm8k_qwen3-235b.json", "params": 235.0, "arch": "moe"},
+    "Kimi-K2-Thinking": {"file": "arch_gsm8k_kimi-k2.json", "params": 1000.0, "arch": "moe"},
 }
 
 
@@ -124,7 +132,8 @@ def _spectral_slope(y: np.ndarray) -> tuple[float, float, int]:
     p = S[keep]
     # Drop any zero-power bins (avoid log10(0)).
     pos = p > 0
-    f = f[pos]; p = p[pos]
+    f = f[pos]
+    p = p[pos]
     if len(f) < 3:
         return (math.nan, math.nan, 0)
     log_f = np.log10(f)
@@ -148,7 +157,7 @@ def _ar1_rho(y: np.ndarray) -> tuple[float, float]:
     rho = float(np.sum(y1 * y2) / denom)
     # SE of rho under AR(1) with n-1 used pairs: white-noise approx.
     res = y2 - rho * y1
-    sig2 = float(np.mean(res ** 2))
+    sig2 = float(np.mean(res**2))
     se = math.sqrt(sig2 / denom) if denom > 0 else math.nan
     return (rho, se)
 
@@ -156,18 +165,26 @@ def _ar1_rho(y: np.ndarray) -> tuple[float, float]:
 def _fit_saturation(y: np.ndarray) -> tuple[float, float, float]:
     """Fit the same saturation curve in original reward space; failures are missing."""
     from scipy.optimize import curve_fit
+
     y = np.asarray(y, dtype=float)
     if y.ndim != 1 or len(y) < 4 or not np.isfinite(y).all() or np.ptp(y) < 1e-8:
         return math.nan, math.nan, math.nan
     t = np.arange(1, len(y) + 1, dtype=float)
+
     def model(t, maximum, rate):
-        return maximum * (-np.expm1(-rate*t))
+        return maximum * (-np.expm1(-rate * t))
+
     try:
-        parameters, _ = curve_fit(model, t, y,
-                                  p0=[max(.01, min(float(y.max()), 1.4)), .1],
-                                  bounds=([0, 1e-4], [1.5, 10]), maxfev=20000)
+        parameters, _ = curve_fit(
+            model,
+            t,
+            y,
+            p0=[max(0.01, min(float(y.max()), 1.4)), 0.1],
+            bounds=([0, 1e-4], [1.5, 10]),
+            maxfev=20000,
+        )
         maximum, rate = map(float, parameters)
-        return maximum, rate, -math.log(.2)/rate
+        return maximum, rate, -math.log(0.2) / rate
     except (ValueError, RuntimeError, FloatingPointError):
         return math.nan, math.nan, math.nan
 
@@ -180,20 +197,18 @@ def _first_diff_var(y: np.ndarray) -> float:
 
 def _tau_int(acf_vals: list[float]) -> float:
     """Finite initial-positive paired autocorrelation sum (exploratory)."""
-    values=np.asarray(acf_vals,dtype=float)
-    if len(values)<2 or not np.isfinite(values).all():
+    values = np.asarray(acf_vals, dtype=float)
+    if len(values) < 2 or not np.isfinite(values).all():
         return math.nan
-    total=0.0
-    previous=math.inf
-    for k in range(0,len(values)-1,2):
-        pair=float(values[k]+values[k+1])
-        if pair<=0:
+    total = 0.0
+    previous = math.inf
+    for k in range(0, len(values) - 1, 2):
+        pair = float(values[k] + values[k + 1])
+        if pair <= 0:
             break
-        previous=min(previous,pair)
-        total+=previous
-    return max(1.0,-1.0+2.0*total)
-
-
+        previous = min(previous, pair)
+        total += previous
+    return max(1.0, -1.0 + 2.0 * total)
 
 
 def _eff_n(n: int, tau_int: float) -> float:
@@ -234,39 +249,93 @@ def main(output_dir=None, source_root=None):
         tau = _tau_int(acf_vals)
         n_eff = _eff_n(n, tau)
         # Persist rows
-        acf_rows.append({
-            "model": m, "params_B": cfg["params"], "arch": cfg["arch"],
-            "n": n, "mean_reward": float(y.mean()), "var_reward": float(y.var()),
-            **{f"acf{k}": acf_vals[k] for k in range(MAX_LAG + 1)},
-            "tau_int": tau, "n_eff": n_eff, "n_eff_frac": n_eff / n if n else 0.0,
-        })
-        spec_rows.append({
-            "model": m, "params_B": cfg["params"], "arch": cfg["arch"],
-            "n": n, "alpha": alpha, "spec_intercept": spec_intercept,
-            "n_pos_freq": n_pos, "dy_var": dy_var,
-        })
-        ar1_rows.append({
-            "model": m, "params_B": cfg["params"], "arch": cfg["arch"],
-            "n": n, "rho1": rho1, "rho1_se": rho1_se,
-            "rho1_zscore": rho1 / rho1_se if rho1_se and not math.isnan(rho1_se) and rho1_se > 1e-9 else math.nan,
-        })
-        cou_rows.append({
-            "model": m, "params_B": cfg["params"], "arch": cfg["arch"],
-            "n": n, "R_max": r_max, "lambda": lam, "t_80": t_80,
-            "fit_status": "unavailable" if not math.isfinite(lam) else "bound" if min(abs(lam - 10), abs(lam - 1e-4)) < 1e-3 else "interior",
-            "alpha": alpha, "rho1": rho1, "dy_var": dy_var, "tau_int": tau,
-            "n_eff_frac": n_eff / n if n else 0.0,
-            "log_params": math.log10(cfg["params"]),
-        })
+        acf_rows.append(
+            {
+                "model": m,
+                "params_B": cfg["params"],
+                "arch": cfg["arch"],
+                "n": n,
+                "mean_reward": float(y.mean()),
+                "var_reward": float(y.var()),
+                **{f"acf{k}": acf_vals[k] for k in range(MAX_LAG + 1)},
+                "tau_int": tau,
+                "n_eff": n_eff,
+                "n_eff_frac": n_eff / n if n else 0.0,
+            }
+        )
+        spec_rows.append(
+            {
+                "model": m,
+                "params_B": cfg["params"],
+                "arch": cfg["arch"],
+                "n": n,
+                "alpha": alpha,
+                "spec_intercept": spec_intercept,
+                "n_pos_freq": n_pos,
+                "dy_var": dy_var,
+            }
+        )
+        ar1_rows.append(
+            {
+                "model": m,
+                "params_B": cfg["params"],
+                "arch": cfg["arch"],
+                "n": n,
+                "rho1": rho1,
+                "rho1_se": rho1_se,
+                "rho1_zscore": rho1 / rho1_se
+                if rho1_se and not math.isnan(rho1_se) and rho1_se > 1e-9
+                else math.nan,
+            }
+        )
+        cou_rows.append(
+            {
+                "model": m,
+                "params_B": cfg["params"],
+                "arch": cfg["arch"],
+                "n": n,
+                "R_max": r_max,
+                "lambda": lam,
+                "t_80": t_80,
+                "fit_status": "unavailable"
+                if not math.isfinite(lam)
+                else "bound"
+                if min(abs(lam - 10), abs(lam - 1e-4)) < 1e-3
+                else "interior",
+                "alpha": alpha,
+                "rho1": rho1,
+                "dy_var": dy_var,
+                "tau_int": tau,
+                "n_eff_frac": n_eff / n if n else 0.0,
+                "log_params": math.log10(cfg["params"]),
+            }
+        )
         if cfg["arch"] == "dense":
-            arch_rows_dense.append({"alpha": alpha, "rho1": rho1, "dy_var": dy_var,
-                                     "tau_int": tau, "lambda": lam, "R_max": r_max})
+            arch_rows_dense.append(
+                {
+                    "alpha": alpha,
+                    "rho1": rho1,
+                    "dy_var": dy_var,
+                    "tau_int": tau,
+                    "lambda": lam,
+                    "R_max": r_max,
+                }
+            )
         else:
-            arch_rows_moe.append({"alpha": alpha, "rho1": rho1, "dy_var": dy_var,
-                                   "tau_int": tau, "lambda": lam, "R_max": r_max})
+            arch_rows_moe.append(
+                {
+                    "alpha": alpha,
+                    "rho1": rho1,
+                    "dy_var": dy_var,
+                    "tau_int": tau,
+                    "lambda": lam,
+                    "R_max": r_max,
+                }
+            )
 
     if not cou_rows:
         raise ValueError("no observed reward traces available")
+
     # Write per-tab TSVs
     def _dump(rows: list[dict], fname: str) -> None:
         path = RESULTS_DIR / fname
@@ -275,10 +344,10 @@ def main(output_dir=None, source_root=None):
             w.writeheader()
             w.writerows(rows)
 
-    _dump(acf_rows,  "scaling_law_iter69_acf.tsv")
+    _dump(acf_rows, "scaling_law_iter69_acf.tsv")
     _dump(spec_rows, "scaling_law_iter69_spectral.tsv")
-    _dump(ar1_rows,  "scaling_law_iter69_ar1.tsv")
-    _dump(cou_rows,  "scaling_law_iter69_coupling.tsv")
+    _dump(ar1_rows, "scaling_law_iter69_ar1.tsv")
+    _dump(cou_rows, "scaling_law_iter69_coupling.tsv")
 
     # Architecture-level summary
     def _arch_summary(group: list[dict], arch: str) -> dict:
@@ -289,7 +358,8 @@ def main(output_dir=None, source_root=None):
         lams = [r["lambda"] for r in group if not math.isnan(r["lambda"]) and r["lambda"] < 1e6]
         rms = [r["R_max"] for r in group]
         return {
-            "arch": arch, "n_anchors": len(group),
+            "arch": arch,
+            "n_anchors": len(group),
             "alpha_mean": float(np.mean(alphas)) if alphas else math.nan,
             "alpha_med": float(np.median(alphas)) if alphas else math.nan,
             "rho1_mean": float(np.mean(rhos)) if rhos else math.nan,
@@ -301,8 +371,7 @@ def main(output_dir=None, source_root=None):
             "R_max_mean": float(np.mean(rms)),
         }
 
-    arch_rows = [_arch_summary(arch_rows_dense, "dense"),
-                 _arch_summary(arch_rows_moe,   "moe")]
+    arch_rows = [_arch_summary(arch_rows_dense, "dense"), _arch_summary(arch_rows_moe, "moe")]
     _dump(arch_rows, "scaling_law_iter69_arch.tsv")
 
     # ---- Exploratory predictions (falsifiable battery calibrated
@@ -316,7 +385,7 @@ def main(output_dir=None, source_root=None):
     # P1: ACF(1) is NEGATIVE for >= 10/12 anchors (anti-persistent regime)
     acf1_neg = sum(1 for r in acf_rows if not math.isnan(r["acf1"]) and r["acf1"] < 0)
     p1_observed = f"{acf1_neg}/{n_total}"
-    p1_pass = acf1_neg / n_total >= 10/12
+    p1_pass = acf1_neg / n_total >= 10 / 12
 
     # P2: |ACF(1)| is the largest in magnitude among lags 1..4 (the
     # anti-persistence is concentrated at lag 1) for >= 8/12.
@@ -329,7 +398,7 @@ def main(output_dir=None, source_root=None):
         if a1 >= m_others:
             acf1_largest += 1
     p2_observed = f"{acf1_largest}/{n_total}"
-    p2_pass = acf1_largest / n_total >= 8/12
+    p2_pass = acf1_largest / n_total >= 8 / 12
 
     # P3: Spectral slope alpha finite and in [-2, 4] for >= 2/3 of pool.
     in_range = sum(1 for r in spec_rows if not math.isnan(r["alpha"]) and -2 <= r["alpha"] <= 4)
@@ -357,8 +426,9 @@ def main(output_dir=None, source_root=None):
         sp_alpha_lambda = float("nan")
     p5_observed = (
         f"spearman={sp_alpha_lambda:+.3f}, n={len(valid_coupl)}, "
-        f"captured_pairs={[(r['model'], round(r['alpha'],2), round(r['lambda'],3)) for r in valid_coupl]}"
-        if not math.isnan(sp_alpha_lambda) else "NA"
+        f"captured_pairs={[(r['model'], round(r['alpha'], 2), round(r['lambda'], 3)) for r in valid_coupl]}"
+        if not math.isnan(sp_alpha_lambda)
+        else "NA"
     )
     p5_pass = (not math.isnan(sp_alpha_lambda)) and sp_alpha_lambda > 0.5
 
@@ -375,18 +445,23 @@ def main(output_dir=None, source_root=None):
     # P7: |rho1| < 0.5 for >= 7/12 anchors (no random-walk regime).
     bounded_rho = sum(1 for r in ar1_rows if not math.isnan(r["rho1"]) and abs(r["rho1"]) < 0.5)
     p7_observed = f"{bounded_rho}/{n_total}"
-    p7_pass = bounded_rho / n_total >= 7/12
+    p7_pass = bounded_rho / n_total >= 7 / 12
 
     # P8: spectral slope alpha differs across dense vs MoE (Mann-Whitney p < 0.10).
-    alphas_dense = sorted([r["alpha"] for r in cou_rows if r["arch"] == "dense" and not math.isnan(r["alpha"])])
-    alphas_moe = sorted([r["alpha"] for r in cou_rows if r["arch"] == "moe" and not math.isnan(r["alpha"])])
+    alphas_dense = sorted(
+        [r["alpha"] for r in cou_rows if r["arch"] == "dense" and not math.isnan(r["alpha"])]
+    )
+    alphas_moe = sorted(
+        [r["alpha"] for r in cou_rows if r["arch"] == "moe" and not math.isnan(r["alpha"])]
+    )
     if len(alphas_dense) >= 2 and len(alphas_moe) >= 2:
         u_stat, p_mw = _mann_whitney_u(alphas_dense, alphas_moe)
     else:
         u_stat, p_mw = float("nan"), float("nan")
     p8_observed = (
         f"U={u_stat:.1f}, p={p_mw:.3f} (n\\_d={len(alphas_dense)}, n\\_m={len(alphas_moe)})"
-        if not math.isnan(p_mw) else "NA"
+        if not math.isnan(p_mw)
+        else "NA"
     )
     p8_pass = (not math.isnan(p_mw)) and p_mw < 0.10
 
@@ -406,38 +481,62 @@ def main(output_dir=None, source_root=None):
         beta_lam = np.array([float("nan"), float("nan"), float("nan")])
 
     pred_rows = [
-        {"prediction_id": "P1_acf1_negative",
-         "claim": "ACF(1) < 0 for >= 10/12 anchors (anti-persistent regime -- the headline finding).",
-         "observed": p1_observed,
-         "expected": ">= 10/12", "pass_fail": "PASS" if p1_pass else "FAIL"},
-        {"prediction_id": "P2_acf1_dominant",
-         "claim": "|ACF(1)| >= max(|ACF(2)|, |ACF(3)|, |ACF(4)|) for >= 8/12 (anti-persistence concentrated at lag 1).",
-         "observed": p2_observed,
-         "expected": ">= 8/12", "pass_fail": "PASS" if p2_pass else "FAIL"},
-        {"prediction_id": "P3_alpha_finite",
-         "claim": "Spectral slope alpha in [-2, 4] for >= 8/12 anchors (no NaN, no runaway 1/f noise).",
-         "observed": p3_observed,
-         "expected": ">= 8/12", "pass_fail": "PASS" if p3_pass else "FAIL"},
-        {"prediction_id": "P4_logparams_alpha_positive",
-         "claim": "Spearman(log params, alpha) > 0 across the n>=4 pool (bigger model => steeper spectrum).",
-         "observed": p4_observed,
-         "expected": "> 0", "pass_fail": "PASS" if p4_pass else "FAIL"},
-        {"prediction_id": "P5_alpha_lambda_rank_coupling",
-         "claim": "Spearman(alpha, lambda) > 0.5 across the pool (rank coupling -- the headline cheap-diagnostic test).",
-         "observed": p5_observed,
-         "expected": "> 0.5", "pass_fail": "PASS" if p5_pass else "FAIL"},
-        {"prediction_id": "P6_logparams_smoothness",
-         "claim": "Spearman(log params, dy_var) < 0 (larger models produce smoother traces).",
-         "observed": p6_observed,
-         "expected": "< 0", "pass_fail": "PASS" if p6_pass else "FAIL"},
-        {"prediction_id": "P7_rho1_bounded",
-         "claim": "|rho1| < 0.5 for >= 7/12 anchors (no random-walk regime).",
-         "observed": p7_observed,
-         "expected": ">= 7/12", "pass_fail": "PASS" if p7_pass else "FAIL"},
-        {"prediction_id": "P8_arch_alpha_differs",
-         "claim": "Mann-Whitney U: alpha differs across dense vs MoE (p < 0.10).",
-         "observed": p8_observed,
-         "expected": "p < 0.10", "pass_fail": "PASS" if p8_pass else "FAIL"},
+        {
+            "prediction_id": "P1_acf1_negative",
+            "claim": "ACF(1) < 0 for >= 10/12 anchors (anti-persistent regime -- the headline finding).",
+            "observed": p1_observed,
+            "expected": ">= 10/12",
+            "pass_fail": "PASS" if p1_pass else "FAIL",
+        },
+        {
+            "prediction_id": "P2_acf1_dominant",
+            "claim": "|ACF(1)| >= max(|ACF(2)|, |ACF(3)|, |ACF(4)|) for >= 8/12 (anti-persistence concentrated at lag 1).",
+            "observed": p2_observed,
+            "expected": ">= 8/12",
+            "pass_fail": "PASS" if p2_pass else "FAIL",
+        },
+        {
+            "prediction_id": "P3_alpha_finite",
+            "claim": "Spectral slope alpha in [-2, 4] for >= 8/12 anchors (no NaN, no runaway 1/f noise).",
+            "observed": p3_observed,
+            "expected": ">= 8/12",
+            "pass_fail": "PASS" if p3_pass else "FAIL",
+        },
+        {
+            "prediction_id": "P4_logparams_alpha_positive",
+            "claim": "Spearman(log params, alpha) > 0 across the n>=4 pool (bigger model => steeper spectrum).",
+            "observed": p4_observed,
+            "expected": "> 0",
+            "pass_fail": "PASS" if p4_pass else "FAIL",
+        },
+        {
+            "prediction_id": "P5_alpha_lambda_rank_coupling",
+            "claim": "Spearman(alpha, lambda) > 0.5 across the pool (rank coupling -- the headline cheap-diagnostic test).",
+            "observed": p5_observed,
+            "expected": "> 0.5",
+            "pass_fail": "PASS" if p5_pass else "FAIL",
+        },
+        {
+            "prediction_id": "P6_logparams_smoothness",
+            "claim": "Spearman(log params, dy_var) < 0 (larger models produce smoother traces).",
+            "observed": p6_observed,
+            "expected": "< 0",
+            "pass_fail": "PASS" if p6_pass else "FAIL",
+        },
+        {
+            "prediction_id": "P7_rho1_bounded",
+            "claim": "|rho1| < 0.5 for >= 7/12 anchors (no random-walk regime).",
+            "observed": p7_observed,
+            "expected": ">= 7/12",
+            "pass_fail": "PASS" if p7_pass else "FAIL",
+        },
+        {
+            "prediction_id": "P8_arch_alpha_differs",
+            "claim": "Mann-Whitney U: alpha differs across dense vs MoE (p < 0.10).",
+            "observed": p8_observed,
+            "expected": "p < 0.10",
+            "pass_fail": "PASS" if p8_pass else "FAIL",
+        },
     ]
     for result in pred_rows:
         if result["observed"] == "NA":
@@ -454,17 +553,26 @@ def main(output_dir=None, source_root=None):
     ax = axes[0, 0]
     wbar = 0.20
     for k, off in enumerate((-1.5, -0.5, 0.5, 1.5)):
-        vals = [r[f"acf{k+1}"] for r in acf_rows]
-        ax.bar(x + off * wbar, vals, wbar, color=palette, alpha=0.85,
-               edgecolor="black", linewidth=0.4,
-               label=f"ACF({k+1})" if k == 0 else None)
+        vals = [r[f"acf{k + 1}"] for r in acf_rows]
+        ax.bar(
+            x + off * wbar,
+            vals,
+            wbar,
+            color=palette,
+            alpha=0.85,
+            edgecolor="black",
+            linewidth=0.4,
+            label=f"ACF({k + 1})" if k == 0 else None,
+        )
     ax.axhline(0, color="black", linewidth=0.6)
     ax.set_xticks(x)
     ax.set_xticklabels(labels, rotation=60, ha="right", fontsize=7)
     ax.set_ylabel("sample autocorrelation")
     ax.set_title("(A) per-anchor ACF lags 1-4 (colour = arch)")
-    handles_a = [plt.Rectangle((0, 0), 1, 1, color=cm["dense"], label="dense"),
-                 plt.Rectangle((0, 0), 1, 1, color=cm["moe"],   label="moe")]
+    handles_a = [
+        plt.Rectangle((0, 0), 1, 1, color=cm["dense"], label="dense"),
+        plt.Rectangle((0, 0), 1, 1, color=cm["moe"], label="moe"),
+    ]
     ax.legend(handles=handles_a, fontsize=7, loc="upper right")
     # Panel B: spectral slope alpha per anchor (bars coloured by arch)
     ax = axes[0, 1]
@@ -483,15 +591,21 @@ def main(output_dir=None, source_root=None):
     if len(valid) >= 3:
         lp = np.array([r["log_params"] for r in valid])
         al = np.array([r["alpha"] for r in valid])
-        for i, r in enumerate(valid):
-            ax.scatter(r["log_params"], r["alpha"],
-                       color=cm[r["arch"]], edgecolor="black", s=40, zorder=3)
+        for _i, r in enumerate(valid):
+            ax.scatter(
+                r["log_params"], r["alpha"], color=cm[r["arch"]], edgecolor="black", s=40, zorder=3
+            )
         Xfit = np.column_stack([np.ones_like(lp), lp])
         beta = np.linalg.lstsq(Xfit, al, rcond=None)[0]
         xx = np.linspace(lp.min() - 0.2, lp.max() + 0.2, 100)
         yy = beta[0] + beta[1] * xx
-        ax.plot(xx, yy, color="black", linewidth=1.5,
-                label=f"OLS slope = {beta[1]:+.3f}, r = {sp_alpha:+.3f}")
+        ax.plot(
+            xx,
+            yy,
+            color="black",
+            linewidth=1.5,
+            label=f"OLS slope = {beta[1]:+.3f}, r = {sp_alpha:+.3f}",
+        )
         ax.legend(fontsize=7, loc="upper left")
     ax.set_xlabel("log10(params B)")
     ax.set_ylabel("spectral slope alpha")
@@ -584,12 +698,15 @@ def main(output_dir=None, source_root=None):
         from ._review27_rank import write_manifest
     except ImportError:
         from _review27_rank import write_manifest
-    write_manifest(__file__, CANDIDATE, [TRACE_DIR / cfg["file"] for cfg in MODELS.values()], seed=None)
+    write_manifest(
+        __file__, CANDIDATE, [TRACE_DIR / cfg["file"] for cfg in MODELS.values()], seed=None
+    )
 
 
 def _mann_whitney_u(xs: list[float], ys: list[float]) -> tuple[float, float]:
     """Two-sided tie-corrected asymptotic Mann-Whitney test."""
     from scipy.stats import mannwhitneyu
+
     if len(xs) < 2 or len(ys) < 2 or not np.isfinite(xs).all() or not np.isfinite(ys).all():
         return math.nan, math.nan
     result = mannwhitneyu(xs, ys, alternative="two-sided", method="asymptotic")

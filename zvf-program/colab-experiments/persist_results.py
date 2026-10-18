@@ -6,7 +6,8 @@ run (auth via ~/.netrc). E2 failed on the VM (torchao conflict) -> status note.
 
 Usage:  .venv/bin/python zvf-program/colab-experiments/persist_results.py
 """
-import json, re, pathlib, datetime
+
+import json, re, pathlib
 
 HERE = pathlib.Path(__file__).resolve().parent
 OUT = HERE / "results"
@@ -30,7 +31,8 @@ for tag, fname in [("E1_RESULT", "e1_grad_signal.json"), ("E3_RESULT", "e3_open_
 (OUT / "e2_lora_vs_fullft.STATUS.txt").write_text(
     "E2 FAILED on the Colab VM: peft pulled an incompatible torchao 0.10.0 "
     "(needs >0.16). Rerun after `pip install -U 'torchao>=0.16'` or removing the "
-    "peft->torchao import path.\n")
+    "peft->torchao import path.\n"
+)
 print("[persist] wrote results/e2_lora_vs_fullft.STATUS.txt")
 
 readme = f"""# Colab experiment results
@@ -39,7 +41,7 @@ Persisted from `colab run` stdout (job b58dzsrjs). Raw log: `colab_run_b58dzsrjs
 
 | Exp | Status | Headline |
 |-----|--------|----------|
-| E1 grad-signal | done | corr(grad_norm, p(1-p)) = {results.get('E1_RESULT',{}).get('pearson_gradnorm_vs_p1mp','?')} (validates Theory T3) |
+| E1 grad-signal | done | corr(grad_norm, p(1-p)) = {results.get("E1_RESULT", {}).get("pearson_gradnorm_vs_p1mp", "?")} (validates Theory T3) |
 | E2 LoRA vs full-FT | FAILED | torchao 0.10.0 incompatible (needs >0.16); rerun pending |
 | E3 open audit | done | DAPO drove ZVF->0 (+45% rollouts); adaptive-G + Dr.GRPO best held-out |
 
@@ -60,10 +62,13 @@ for tag, name in [("E1_RESULT", "E1_grad_signal"), ("E3_RESULT", "E3_open_audit"
     if tag not in results:
         continue
     obj = results[tag]
-    run = wandb.init(project=WANDB_PROJECT, name=name, reinit=True,
-                     config={k: v for k, v in obj.items()
-                             if isinstance(v, (int, float, str, list))},
-                     tags=["colab", "zvf", "toy-0.5B"])
+    run = wandb.init(
+        project=WANDB_PROJECT,
+        name=name,
+        reinit=True,
+        config={k: v for k, v in obj.items() if isinstance(v, (int, float, str, list))},
+        tags=["colab", "zvf", "toy-0.5B"],
+    )
     flat = {k: v for k, v in obj.items() if isinstance(v, (int, float))}
     wandb.summary.update(flat)
     if tag == "E1_RESULT":

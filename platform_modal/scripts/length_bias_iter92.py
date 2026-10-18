@@ -51,6 +51,7 @@ Outputs: platform_hybrid/experiments/results/length_bias_iter92_{perrun,paired,
          witness,summary}.tsv + meta.json
 Stdlib + numpy + scipy.stats.
 """
+
 import json, os, math
 from collections import defaultdict
 import numpy as np
@@ -58,14 +59,16 @@ from scipy import stats as scs
 
 import sys
 from pathlib import Path
+
 sys.path.append(str(Path(__file__).resolve().parent))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
+from _paths import REPO_ROOT
+
 W = str(REPO_ROOT)
 RES = os.path.join(W, "platform_hybrid/experiments", "results")
 B_BOOT = 2000
 N_SURR = 200
 RNG_SEED = 92
-N_BINS = 3                # ternary {low, mid, high} binning of L and R
+N_BINS = 3  # ternary {low, mid, high} binning of L and R
 
 
 # ============================================================ binned TE ====
@@ -105,13 +108,14 @@ def _te_binned(target_next: np.ndarray, src: np.ndarray, cond: np.ndarray) -> fl
     target-self predictability.
     """
     T = len(target_next)
-    assert len(src) == T and len(cond) == T
+    assert len(src) == T
+    assert len(cond) == T
     if T < 8:
         return float("nan")
 
-    jt = _joint(target_next, src, cond)             # p(a,b,c)
-    jtc = _joint(target_next, cond)                  # p(a,c)
-    jc = cond                                        # p(c)
+    jt = _joint(target_next, src, cond)  # p(a,b,c)
+    jtc = _joint(target_next, cond)  # p(a,c)
+    jc = cond  # p(c)
     n = float(T)
 
     cnt_full = defaultdict(int)
@@ -130,8 +134,7 @@ def _te_binned(target_next: np.ndarray, src: np.ndarray, cond: np.ndarray) -> fl
         p_c = cnt_c[c] / n
         # p(a|b,c) = p_abc / p(b,c)  and  p(a|c) = p_ac / p_c
         p_bc = (p_abc * p_ac) ** 0.0  # placeholder; we will compute directly
-        p_bc = (sum(v for (a2, b2, c2), v in cnt_full.items()
-                    if b2 == b and c2 == c) / n)
+        p_bc = sum(v for (a2, b2, c2), v in cnt_full.items() if b2 == b and c2 == c) / n
         if p_abc > 0 and p_ac > 0 and p_bc > 0 and p_c > 0:
             # p(a|b,c) = p_abc / p_bc
             p_a_given_bc = p_abc / p_bc
@@ -149,16 +152,15 @@ def te_pair(R: np.ndarray, L: np.ndarray) -> dict:
     """
     T = min(len(R), len(L))
     if T < 8:
-        return dict(te_lr=float("nan"), te_rl=float("nan"),
-                    delta=float("nan"), ratio=float("nan"))
+        return dict(te_lr=float("nan"), te_rl=float("nan"), delta=float("nan"), ratio=float("nan"))
     Rd = _discretise(R[:T])
     Ld = _discretise(L[:T])
     R_next = Rd[1:]
     L_next = Ld[1:]
     R_cur = Rd[:-1]
     L_cur = Ld[:-1]
-    te_lr = _te_binned(R_next, L_cur, R_cur)         # I(R_{t+1}; L_t | R_t)
-    te_rl = _te_binned(L_next, R_cur, L_cur)         # I(L_{t+1}; R_t | L_t)
+    te_lr = _te_binned(R_next, L_cur, R_cur)  # I(R_{t+1}; L_t | R_t)
+    te_rl = _te_binned(L_next, R_cur, L_cur)  # I(L_{t+1}; R_t | L_t)
     delta = te_lr - te_rl
     ratio = (te_lr / te_rl) if (te_rl is not None and te_rl > 1e-9) else float("nan")
     return dict(te_lr=te_lr, te_rl=te_rl, delta=delta, ratio=ratio)
@@ -176,9 +178,13 @@ def te_surrogate_p(R: np.ndarray, L: np.ndarray, n_surr: int = N_SURR) -> dict:
     obs = te_pair(R, L)
     T = min(len(R), len(L))
     if T < 8:
-        return dict(te_lr_obs=obs["te_lr"], te_rl_obs=obs["te_rl"],
-                    p_lr=float("nan"), p_rl=float("nan"),
-                    p_delta=float("nan"))
+        return dict(
+            te_lr_obs=obs["te_lr"],
+            te_rl_obs=obs["te_rl"],
+            p_lr=float("nan"),
+            p_rl=float("nan"),
+            p_delta=float("nan"),
+        )
     rng = np.random.default_rng(RNG_SEED)
     surr_lr = np.empty(n_surr, float)
     surr_rl = np.empty(n_surr, float)
@@ -195,8 +201,7 @@ def te_surrogate_p(R: np.ndarray, L: np.ndarray, n_surr: int = N_SURR) -> dict:
     p_lr = float((surr_lr >= obs["te_lr"]).sum() + 1) / (n_surr + 1)
     p_rl = float((surr_rl >= obs["te_rl"]).sum() + 1) / (n_surr + 1)
     p_d = float((surr_d >= obs["delta"]).sum() + 1) / (n_surr + 1)
-    return dict(te_lr_obs=obs["te_lr"], te_rl_obs=obs["te_rl"],
-                p_lr=p_lr, p_rl=p_rl, p_delta=p_d)
+    return dict(te_lr_obs=obs["te_lr"], te_rl_obs=obs["te_rl"], p_lr=p_lr, p_rl=p_rl, p_delta=p_d)
 
 
 def te_reversal_asymmetry(R: np.ndarray, L: np.ndarray) -> dict:
@@ -262,8 +267,7 @@ def witness_winner(R: np.ndarray, L: np.ndarray) -> dict:
                 p_a_bc = p_abc / p_bc
                 p_a_c = p_ac / p_c
                 if p_a_bc > 0 and p_a_c > 0:
-                    contrib[(b, c)] += p_abc * (
-                        math.log2(p_a_bc) - math.log2(p_a_c))
+                    contrib[(b, c)] += p_abc * (math.log2(p_a_bc) - math.log2(p_a_c))
         if not contrib:
             return "nan"
         # each (b,c) can be at most one cell; we report the median b
@@ -286,20 +290,34 @@ def load_runs() -> list:
         if len(sl) < 8:
             continue
         L = np.array([s["mean_comp_len"] for s in sl], float)
-        R = np.array([s["mean_reward"]  for s in sl], float)
-        runs.append({"task": "arithmetic_easy", "algo": r["algo"],
-                     "seed": r["seed"], "L": L, "R": R,
-                     "n": int(len(sl))})
+        R = np.array([s["mean_reward"] for s in sl], float)
+        runs.append(
+            {
+                "task": "arithmetic_easy",
+                "algo": r["algo"],
+                "seed": r["seed"],
+                "L": L,
+                "R": R,
+                "n": int(len(sl)),
+            }
+        )
     d2 = json.load(open(os.path.join(RES, "drgrpo_gsm8k_cot_full.json")))
     for r in d2["runs"]:
         sl = r.get("step_log", [])
         if len(sl) < 8:
             continue
         L = np.array([s["mean_comp_len"] for s in sl], float)
-        R = np.array([s["mean_reward"]  for s in sl], float)
-        runs.append({"task": "gsm8k_cot", "algo": r["algo"],
-                     "seed": r["seed"], "L": L, "R": R,
-                     "n": int(len(sl))})
+        R = np.array([s["mean_reward"] for s in sl], float)
+        runs.append(
+            {
+                "task": "gsm8k_cot",
+                "algo": r["algo"],
+                "seed": r["seed"],
+                "L": L,
+                "R": R,
+                "n": int(len(sl)),
+            }
+        )
     return runs
 
 
@@ -327,25 +345,27 @@ def analyse():
         te = te_pair(r["R"], r["L"])
         rev = te_reversal_asymmetry(r["R"], r["L"])
         wit = witness_winner(r["R"], r["L"])
-        perrun.append({
-            "task":   r["task"],
-            "algo":   r["algo"],
-            "seed":   r["seed"],
-            "n":      r["n"],
-            "L_mean": float(r["L"].mean()),
-            "R_mean": float(r["R"].mean()),
-            "te_lr":  te["te_lr"],
-            "te_rl":  te["te_rl"],
-            "delta":  te["delta"],
-            "ratio":  te["ratio"],
-            "p_lr":   surr["p_lr"],
-            "p_rl":   surr["p_rl"],
-            "p_delta": surr["p_delta"],
-            "a_lr":   rev["a_lr"],
-            "a_rl":   rev["a_rl"],
-            "witness_lr": wit["witness_lr"],
-            "witness_rl": wit["witness_rl"],
-        })
+        perrun.append(
+            {
+                "task": r["task"],
+                "algo": r["algo"],
+                "seed": r["seed"],
+                "n": r["n"],
+                "L_mean": float(r["L"].mean()),
+                "R_mean": float(r["R"].mean()),
+                "te_lr": te["te_lr"],
+                "te_rl": te["te_rl"],
+                "delta": te["delta"],
+                "ratio": te["ratio"],
+                "p_lr": surr["p_lr"],
+                "p_rl": surr["p_rl"],
+                "p_delta": surr["p_delta"],
+                "a_lr": rev["a_lr"],
+                "a_rl": rev["a_rl"],
+                "witness_lr": wit["witness_lr"],
+                "witness_rl": wit["witness_rl"],
+            }
+        )
     return perrun
 
 
@@ -356,15 +376,21 @@ def paired_diff(perrun, task, key):
             continue
         by_key[row["seed"]][row["algo"]] = row[key]
     pairs = []
-    for s, d in by_key.items():
+    for _s, d in by_key.items():
         if "grpo" in d and "dr_grpo" in d:
             a, b = d["dr_grpo"], d["grpo"]
             if not (math.isnan(a) or math.isnan(b)):
                 pairs.append((a, b))
     if len(pairs) < 2:
-        return {"task": task, "key": key, "n_pairs": len(pairs),
-                "mean_diff": float("nan"), "ci_lo": float("nan"),
-                "ci_hi": float("nan"), "p": float("nan")}
+        return {
+            "task": task,
+            "key": key,
+            "n_pairs": len(pairs),
+            "mean_diff": float("nan"),
+            "ci_lo": float("nan"),
+            "ci_hi": float("nan"),
+            "p": float("nan"),
+        }
     diffs = np.array([p[0] - p[1] for p in pairs], float)
     obs = float(diffs.mean())
     rng = np.random.default_rng(RNG_SEED)
@@ -381,19 +407,43 @@ def paired_diff(perrun, task, key):
         p = float(2.0 * (1.0 - scs.t.cdf(abs(t), df=n - 1)))
     else:
         p = 1.0
-    return {"task": task, "key": key, "n_pairs": n,
-            "mean_diff": obs, "ci_lo": lo, "ci_hi": hi, "p": p}
+    return {
+        "task": task,
+        "key": key,
+        "n_pairs": n,
+        "mean_diff": obs,
+        "ci_lo": lo,
+        "ci_hi": hi,
+        "p": p,
+    }
 
 
 def main():
     perrun = analyse()
     base = os.path.join(RES, "length_bias_iter92_")
-    write_tsv(base + "perrun.tsv", perrun,
-              ["task", "algo", "seed", "n", "L_mean", "R_mean",
-               "te_lr", "te_rl", "delta", "ratio",
-               "p_lr", "p_rl", "p_delta",
-               "a_lr", "a_rl",
-               "witness_lr", "witness_rl"])
+    write_tsv(
+        base + "perrun.tsv",
+        perrun,
+        [
+            "task",
+            "algo",
+            "seed",
+            "n",
+            "L_mean",
+            "R_mean",
+            "te_lr",
+            "te_rl",
+            "delta",
+            "ratio",
+            "p_lr",
+            "p_rl",
+            "p_delta",
+            "a_lr",
+            "a_rl",
+            "witness_lr",
+            "witness_rl",
+        ],
+    )
 
     paired_rows = []
     summary_rows = []
@@ -401,16 +451,22 @@ def main():
     for task in {"arithmetic_easy", "gsm8k_cot"}:
         for algo in ("grpo", "dr_grpo"):
             for k in keys:
-                vs = [r[k] for r in perrun
-                      if r["task"] == task and r["algo"] == algo
-                      and math.isfinite(r[k])]
+                vs = [
+                    r[k]
+                    for r in perrun
+                    if r["task"] == task and r["algo"] == algo and math.isfinite(r[k])
+                ]
                 if vs:
-                    summary_rows.append({
-                        "task": task, "algo": algo, "key": k,
-                        "n_seeds": len(vs),
-                        "mean": float(np.mean(vs)),
-                        "std": float(np.std(vs, ddof=1)) if len(vs) > 1 else 0.0,
-                    })
+                    summary_rows.append(
+                        {
+                            "task": task,
+                            "algo": algo,
+                            "key": k,
+                            "n_seeds": len(vs),
+                            "mean": float(np.mean(vs)),
+                            "std": float(np.std(vs, ddof=1)) if len(vs) > 1 else 0.0,
+                        }
+                    )
         for k in keys:
             paired_rows.append(paired_diff(perrun, task, k))
 
@@ -419,46 +475,70 @@ def main():
     detect_rows = []
     for task in {"arithmetic_easy", "gsm8k_cot"}:
         for algo in ("grpo", "dr_grpo"):
-            n_te = sum(1 for r in perrun
-                        if r["task"] == task and r["algo"] == algo
-                        and r["p_lr"] < 0.05)
-            n_rl = sum(1 for r in perrun
-                       if r["task"] == task and r["algo"] == algo
-                       and r["p_rl"] < 0.05)
-            n_d = sum(1 for r in perrun
-                      if r["task"] == task and r["algo"] == algo
-                      and r["p_delta"] < 0.05)
-            n_tot = sum(1 for r in perrun
-                        if r["task"] == task and r["algo"] == algo)
-            detect_rows.append({
-                "task": task, "algo": algo, "n_seeds": n_tot,
-                "frac_p_lr_lt_05": n_te / max(n_tot, 1),
-                "frac_p_rl_lt_05": n_rl / max(n_tot, 1),
-                "frac_p_delta_lt_05": n_d / max(n_tot, 1),
-            })
+            n_te = sum(
+                1 for r in perrun if r["task"] == task and r["algo"] == algo and r["p_lr"] < 0.05
+            )
+            n_rl = sum(
+                1 for r in perrun if r["task"] == task and r["algo"] == algo and r["p_rl"] < 0.05
+            )
+            n_d = sum(
+                1 for r in perrun if r["task"] == task and r["algo"] == algo and r["p_delta"] < 0.05
+            )
+            n_tot = sum(1 for r in perrun if r["task"] == task and r["algo"] == algo)
+            detect_rows.append(
+                {
+                    "task": task,
+                    "algo": algo,
+                    "n_seeds": n_tot,
+                    "frac_p_lr_lt_05": n_te / max(n_tot, 1),
+                    "frac_p_rl_lt_05": n_rl / max(n_tot, 1),
+                    "frac_p_delta_lt_05": n_d / max(n_tot, 1),
+                }
+            )
 
-    write_tsv(base + "paired.tsv", paired_rows,
-              ["task", "key", "n_pairs", "mean_diff", "ci_lo", "ci_hi", "p"])
-    write_tsv(base + "summary.tsv", summary_rows,
-              ["task", "algo", "key", "n_seeds", "mean", "std"])
-    write_tsv(base + "detect.tsv", detect_rows,
-              ["task", "algo", "n_seeds",
-               "frac_p_lr_lt_05", "frac_p_rl_lt_05", "frac_p_delta_lt_05"])
+    write_tsv(
+        base + "paired.tsv",
+        paired_rows,
+        ["task", "key", "n_pairs", "mean_diff", "ci_lo", "ci_hi", "p"],
+    )
+    write_tsv(base + "summary.tsv", summary_rows, ["task", "algo", "key", "n_seeds", "mean", "std"])
+    write_tsv(
+        base + "detect.tsv",
+        detect_rows,
+        ["task", "algo", "n_seeds", "frac_p_lr_lt_05", "frac_p_rl_lt_05", "frac_p_delta_lt_05"],
+    )
 
     # write witness list
-    wit_rows = [dict(task=r["task"], algo=r["algo"], seed=r["seed"],
-                     witness_lr=r["witness_lr"], witness_rl=r["witness_rl"])
-                for r in perrun]
-    write_tsv(base + "witness.tsv", wit_rows,
-              ["task", "algo", "seed", "witness_lr", "witness_rl"])
+    wit_rows = [
+        dict(
+            task=r["task"],
+            algo=r["algo"],
+            seed=r["seed"],
+            witness_lr=r["witness_lr"],
+            witness_rl=r["witness_rl"],
+        )
+        for r in perrun
+    ]
+    write_tsv(base + "witness.tsv", wit_rows, ["task", "algo", "seed", "witness_lr", "witness_rl"])
 
     meta = {
         "iter": 92,
         "pillar": "P4-LengthBias",
-        "task": ("Pillar 4 (Length Bias / Dr.GRPO): Transfer-entropy "
-                 "decomposition (TE_{L->R} vs TE_{R->L})"),
-        "stats": ["te_lr", "te_rl", "delta", "ratio", "p_lr", "p_rl",
-                  "p_delta", "witness_lr", "witness_rl"],
+        "task": (
+            "Pillar 4 (Length Bias / Dr.GRPO): Transfer-entropy "
+            "decomposition (TE_{L->R} vs TE_{R->L})"
+        ),
+        "stats": [
+            "te_lr",
+            "te_rl",
+            "delta",
+            "ratio",
+            "p_lr",
+            "p_rl",
+            "p_delta",
+            "witness_lr",
+            "witness_rl",
+        ],
         "n_bins": N_BINS,
         "n_surrogates": N_SURR,
         "lag": 1,
@@ -470,20 +550,23 @@ def main():
     with open(base + "meta.json", "w") as f:
         json.dump(meta, f, indent=2)
 
-    print(f"iter92 wrote {len(perrun)} per-run rows; "
-          f"{len(paired_rows)} paired bootstrap tests")
+    print(f"iter92 wrote {len(perrun)} per-run rows; {len(paired_rows)} paired bootstrap tests")
     for d in paired_rows:
         if d["key"] in ("te_lr", "te_rl", "delta", "ratio", "a_lr", "a_rl"):
-            print(f"  {d['task']:>15s}  {d['key']:>10s}  "
-                  f"diff={d['mean_diff']:+.4f}  "
-                  f"CI=[{d['ci_lo']:+.4f},{d['ci_hi']:+.4f}]  "
-                  f"p={d['p']:.4f}  n={d['n_pairs']}")
+            print(
+                f"  {d['task']:>15s}  {d['key']:>10s}  "
+                f"diff={d['mean_diff']:+.4f}  "
+                f"CI=[{d['ci_lo']:+.4f},{d['ci_hi']:+.4f}]  "
+                f"p={d['p']:.4f}  n={d['n_pairs']}"
+            )
     print("--- per-task detection rate (fraction of seeds with p<0.05) ---")
     for d in detect_rows:
-        print(f"  {d['task']:>15s}  {d['algo']:>8s}  "
-              f"TE_LR={d['frac_p_lr_lt_05']:.2f}  "
-              f"TE_RL={d['frac_p_rl_lt_05']:.2f}  "
-              f"Delta={d['frac_p_delta_lt_05']:.2f}  (n={d['n_seeds']})")
+        print(
+            f"  {d['task']:>15s}  {d['algo']:>8s}  "
+            f"TE_LR={d['frac_p_lr_lt_05']:.2f}  "
+            f"TE_RL={d['frac_p_rl_lt_05']:.2f}  "
+            f"Delta={d['frac_p_delta_lt_05']:.2f}  (n={d['n_seeds']})"
+        )
 
 
 if __name__ == "__main__":

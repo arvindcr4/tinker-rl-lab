@@ -22,6 +22,7 @@ Outputs:
   platform_hybrid/experiments/results/p5p8/mega_eta2.tsv
   platform_hybrid/experiments/results/p5p8/mega_eta2.json
 """
+
 from __future__ import annotations
 
 import csv
@@ -43,8 +44,7 @@ AXES = (
     ("temperature", 7),
     ("seed", 8),
 )
-METRICS = ("mean_reward", "zvf", "pcd",
-           "mean_completion_len", "std_completion_len")
+METRICS = ("mean_reward", "zvf", "pcd", "mean_completion_len", "std_completion_len")
 
 
 def load_cells():
@@ -55,7 +55,7 @@ def load_cells():
             parts = ln.rstrip("\n").split("\t")
             if not parts or parts[0] == "":
                 continue
-            d = dict(zip(header, parts))
+            d = dict(zip(header, parts, strict=False))
             try:
                 row = {
                     "model_family": d["model_family"],
@@ -95,13 +95,19 @@ def eta2_by_axis(rows, axis_name, metric_name):
         gm = sum(g) / len(g)
         ss_between += len(g) * (gm - grand) ** 2
         ss_within += sum((v - gm) ** 2 for v in g)
-        group_stats.append({"value": k, "n": len(g),
-                            "mean": round(gm, 6),
-                            "var_within": round(
-                                sum((v - gm) ** 2 for v in g) /
-                                max(1, len(g) - 1), 6)})
-    f_ratio = (ss_between / max(1, len(groups) - 1)) / (
-        ss_within / max(1, n_total - len(groups))) if ss_within > 0 else float("inf")
+        group_stats.append(
+            {
+                "value": k,
+                "n": len(g),
+                "mean": round(gm, 6),
+                "var_within": round(sum((v - gm) ** 2 for v in g) / max(1, len(g) - 1), 6),
+            }
+        )
+    f_ratio = (
+        (ss_between / max(1, len(groups) - 1)) / (ss_within / max(1, n_total - len(groups)))
+        if ss_within > 0
+        else float("inf")
+    )
     return ss_between / ss_total, group_stats, len(groups), n_total
 
 
@@ -146,25 +152,29 @@ def main() -> int:
         for metric in METRICS:
             eta2, group_stats, k, n = eta2_by_axis(rows, axis, metric)
             omega2 = omega2_by_axis(rows, axis, metric)
-            out_rows.append({
-                "axis": axis,
-                "metric": metric,
-                "n_cells": n,
-                "k_levels": k,
-                "eta2": round(eta2, 4) if not math.isnan(eta2) else "n/a",
-                "omega2": round(omega2, 4) if not math.isnan(omega2) else "n/a",
-                "verdict": ("DOMINANT" if isinstance(eta2, float) and eta2 >= 0.20
-                            else "MODERATE" if isinstance(eta2, float) and eta2 >= 0.05
-                            else "SMALL"),
-            })
+            out_rows.append(
+                {
+                    "axis": axis,
+                    "metric": metric,
+                    "n_cells": n,
+                    "k_levels": k,
+                    "eta2": round(eta2, 4) if not math.isnan(eta2) else "n/a",
+                    "omega2": round(omega2, 4) if not math.isnan(omega2) else "n/a",
+                    "verdict": (
+                        "DOMINANT"
+                        if isinstance(eta2, float) and eta2 >= 0.20
+                        else "MODERATE"
+                        if isinstance(eta2, float) and eta2 >= 0.05
+                        else "SMALL"
+                    ),
+                }
+            )
             detail[f"{axis}|{metric}"] = group_stats
 
     out_tsv = OUT_DIR / "mega_eta2.tsv"
     with out_tsv.open("w", newline="") as f:
-        cols = ["axis", "metric", "n_cells", "k_levels",
-                "eta2", "omega2", "verdict"]
-        w = csv.DictWriter(f, fieldnames=cols, delimiter="\t",
-                           extrasaction="ignore")
+        cols = ["axis", "metric", "n_cells", "k_levels", "eta2", "omega2", "verdict"]
+        w = csv.DictWriter(f, fieldnames=cols, delimiter="\t", extrasaction="ignore")
         w.writeheader()
         for r in out_rows:
             w.writerow(r)
@@ -179,26 +189,34 @@ def main() -> int:
             continue
         for metric in ("zvf", "mean_reward"):
             eta2_g, _, k, n = eta2_by_axis(sub, "G", metric)
-            per_task_g.append({
-                "task_slice": task,
-                "metric": metric,
-                "n_cells": n,
-                "k_G": k,
-                "eta2_G": round(eta2_g, 4) if not math.isnan(eta2_g) else "n/a",
-                "verdict": ("DOMINANT" if isinstance(eta2_g, float)
-                            and eta2_g >= 0.20
-                            else "MODERATE" if isinstance(eta2_g, float)
-                            and eta2_g >= 0.05
-                            else "SMALL"),
-            })
+            per_task_g.append(
+                {
+                    "task_slice": task,
+                    "metric": metric,
+                    "n_cells": n,
+                    "k_G": k,
+                    "eta2_G": round(eta2_g, 4) if not math.isnan(eta2_g) else "n/a",
+                    "verdict": (
+                        "DOMINANT"
+                        if isinstance(eta2_g, float) and eta2_g >= 0.20
+                        else "MODERATE"
+                        if isinstance(eta2_g, float) and eta2_g >= 0.05
+                        else "SMALL"
+                    ),
+                }
+            )
 
     # Headline: for each metric, compare "stack" eta^2 (model+task+G+temp) to
     # "noise" eta^2 (seed). Sum-of-SS form: stack_dominance ratio = SS_stack /
     # SS_total divided by SS_seed / SS_total.
-    headline = [{"metric": metric, "marginal_eta2": {
-        axis: eta2_by_axis(rows, axis, metric)[0] for axis, _ in AXES},
-        "interpretation": "Marginal associations overlap and are not additive; no stack/seed ratio."}
-        for metric in METRICS]
+    headline = [
+        {
+            "metric": metric,
+            "marginal_eta2": {axis: eta2_by_axis(rows, axis, metric)[0] for axis, _ in AXES},
+            "interpretation": "Marginal associations overlap and are not additive; no stack/seed ratio.",
+        }
+        for metric in METRICS
+    ]
 
     summary = {
         "n_cells": len(rows),
@@ -209,7 +227,9 @@ def main() -> int:
         "per_task_G": per_task_g,
         "per_axis_groups": detail,
         "protocol_version": 2,
-        "interpretation": ["Separate marginal associations only; correlated factors cannot be summed."],
+        "interpretation": [
+            "Separate marginal associations only; correlated factors cannot be summed."
+        ],
     }
     with (OUT_DIR / "mega_eta2.json").open("w") as f:
         json.dump(summary, f, indent=2)
@@ -217,14 +237,18 @@ def main() -> int:
     print("eta^2 table:")
     print(f"  {'axis':>14} | {'metric':>20} | {'eta2':>6} | {'omega2':>6} | verdict")
     for r in out_rows:
-        print(f"  {r['axis']:>14} | {r['metric']:>20} | "
-              f"{r['eta2']!s:>6} | {r['omega2']!s:>6} | {r['verdict']}")
+        print(
+            f"  {r['axis']:>14} | {r['metric']:>20} | "
+            f"{r['eta2']!s:>6} | {r['omega2']!s:>6} | {r['verdict']}"
+        )
     print("\nMarginal eta squared values are non-additive; no aggregate ratio reported.")
 
     print("\nper-task G-axis eta^2 (where does G dominate ZVF/reward?):")
     for p in per_task_g:
-        print(f"  {p['task_slice']:>20} | {p['metric']:>12} | "
-              f"eta^2(G) = {p['eta2_G']!s:>6} | verdict={p['verdict']}")
+        print(
+            f"  {p['task_slice']:>20} | {p['metric']:>12} | "
+            f"eta^2(G) = {p['eta2_G']!s:>6} | verdict={p['verdict']}"
+        )
     return 0
 
 

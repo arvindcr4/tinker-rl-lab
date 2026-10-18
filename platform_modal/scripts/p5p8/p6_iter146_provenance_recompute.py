@@ -11,6 +11,7 @@ Inputs: platform_hybrid/registry/entries/delta_*.json, n2_metrics.tsv, zvf_iter1
 Outputs: platform_hybrid/experiments/results/p5p8/p6_iter146_{audit,per_entry,summary}.{tsv,json}
          and p6_iter146_fix_plan.tsv (rows where source path is misattributed).
 """
+
 import csv
 import json
 import glob
@@ -57,8 +58,10 @@ def _read_tsv(path, group_by=None, drop_agg=False, cast_nums=False):
     if drop_agg:
         rows = [r for r in rows if str(r.get("seed", "")).lstrip("-").isdigit()]
     if cast_nums:
-        rows = [{k: (float(v) if k not in ("method", "seed", "arm") else v)
-                 for k, v in r.items()} for r in rows]
+        rows = [
+            {k: (float(v) if k not in ("method", "seed", "arm") else v) for k, v in r.items()}
+            for r in rows
+        ]
     if group_by is None:
         return rows
     out = defaultdict(list) if group_by == "list" else {}
@@ -73,21 +76,28 @@ def _read_tsv(path, group_by=None, drop_agg=False, cast_nums=False):
 
 
 def load_n2_metrics():
-    return _read_tsv(os.path.join(WORKTREE, "experiments", "results",
-                                  "n2_reward_tensor_resume", "n2_metrics.tsv"),
-                     group_by="list", cast_nums=True)
+    return _read_tsv(
+        os.path.join(
+            WORKTREE, "experiments", "results", "n2_reward_tensor_resume", "n2_metrics.tsv"
+        ),
+        group_by="list",
+        cast_nums=True,
+    )
 
 
 def load_zvf130():
-    return _read_tsv(os.path.join(WORKTREE, "experiments", "results",
-                                  "zvf_iter130_method_risk.tsv"),
-                     group_by="first")
+    return _read_tsv(
+        os.path.join(WORKTREE, "experiments", "results", "zvf_iter130_method_risk.tsv"),
+        group_by="first",
+    )
 
 
 def load_zvf130_risk_index():
-    return _read_tsv(os.path.join(WORKTREE, "experiments", "results",
-                                  "zvf_iter130_risk_index.tsv"),
-                     group_by="list", drop_agg=True)
+    return _read_tsv(
+        os.path.join(WORKTREE, "experiments", "results", "zvf_iter130_risk_index.tsv"),
+        group_by="list",
+        drop_agg=True,
+    )
 
 
 def _tsv_cols(path):
@@ -96,13 +106,13 @@ def _tsv_cols(path):
 
 
 def zvf130_columns():
-    return _tsv_cols(os.path.join(WORKTREE, "experiments", "results",
-                                  "zvf_iter130_method_risk.tsv"))
+    return _tsv_cols(
+        os.path.join(WORKTREE, "experiments", "results", "zvf_iter130_method_risk.tsv")
+    )
 
 
 def zvf130_risk_index_columns():
-    return _tsv_cols(os.path.join(WORKTREE, "experiments", "results",
-                                  "zvf_iter130_risk_index.tsv"))
+    return _tsv_cols(os.path.join(WORKTREE, "experiments", "results", "zvf_iter130_risk_index.tsv"))
 
 
 def recompute_n2_panel(panel, method_variant, metric, last_k):
@@ -125,7 +135,7 @@ def recompute_n2_panel(panel, method_variant, metric, last_k):
                     raise ValueError("Incomplete seed-specific N2 window")
         selected.append(keyed_metric(rows, metric, keys))
     g, v = paired_values(*selected)
-    diffs = [rv - rg for rv, rg in zip(v, g)]
+    diffs = [rv - rg for rv, rg in zip(v, g, strict=False)]
     point, lo, hi = paired_bootstrap(diffs)
     return point, lo, hi, len(diffs), (lo > 0) or (hi < 0)
 
@@ -135,10 +145,12 @@ def recompute_zvf130_risk_metric(metric, method_variant):
     zvf = load_zvf130_risk_index()
     if method_variant not in zvf or "grpo" not in zvf or metric not in zvf[method_variant][0]:
         return None
-    gs, vs = paired_values(keyed_metric(zvf["grpo"], metric, ("seed",)),
-                           keyed_metric(zvf[method_variant], metric, ("seed",)))
+    gs, vs = paired_values(
+        keyed_metric(zvf["grpo"], metric, ("seed",)),
+        keyed_metric(zvf[method_variant], metric, ("seed",)),
+    )
     n = len(gs)
-    diffs = [v - g for v, g in zip(vs, gs)]
+    diffs = [v - g for v, g in zip(vs, gs, strict=False)]
     point, lo, hi = paired_bootstrap(diffs)
     return point, lo, hi, n, (lo > 0) or (hi < 0)
 
@@ -146,9 +158,14 @@ def recompute_zvf130_risk_metric(metric, method_variant):
 def load_length_bias():
     """Load length_bias_iter60 → dict metric → list of mean_diff values."""
     out = defaultdict(list)
-    for row in csv.DictReader(open(os.path.join(WORKTREE, "experiments",
-                                  "results", "length_bias_iter60_grpo_vs_drgrpo.tsv")),
-                              delimiter="\t"):
+    for row in csv.DictReader(
+        open(
+            os.path.join(
+                WORKTREE, "experiments", "results", "length_bias_iter60_grpo_vs_drgrpo.tsv"
+            )
+        ),
+        delimiter="\t",
+    ):
         try:
             out[row["metric"]].append(float(row["mean_diff"]))
         except ValueError:
@@ -159,9 +176,12 @@ def load_length_bias():
 def load_qp7_adaptive():
     """Load qp7_adaptive.tsv → dict arm → list of step dicts."""
     out = defaultdict(list)
-    for row in csv.DictReader(open(os.path.join(WORKTREE, "experiments",
-                                  "results", "quick_20260704", "qp7_adaptive.tsv")),
-                              delimiter="\t"):
+    for row in csv.DictReader(
+        open(
+            os.path.join(WORKTREE, "experiments", "results", "quick_20260704", "qp7_adaptive.tsv")
+        ),
+        delimiter="\t",
+    ):
         try:
             out[row["arm"]].append({"step": int(row["step"]), **row})
         except (ValueError, KeyError):
@@ -193,8 +213,7 @@ def recompute_qp7_adaptive_metric(metric):
     if "A" not in qp or "B" not in qp or metric not in qp["A"][0]:
         return None
     a, b = {r["step"]: r for r in qp["A"]}, {r["step"]: r for r in qp["B"]}
-    diffs = [float(b[s][metric]) - float(a[s][metric])
-             for s in sorted(set(a) & set(b))]
+    diffs = [float(b[s][metric]) - float(a[s][metric]) for s in sorted(set(a) & set(b))]
     point, lo, hi = paired_bootstrap(diffs)
     return _pack(point, lo, hi, len(diffs))
 
@@ -211,8 +230,11 @@ def infer_recipe(measured_row):
     panel = measured_row.get("panel", "")
     metric = measured_row.get("metric", "")
     if "n2_reward_tensor_resume" in src and panel.startswith("n2_same_stack"):
-        last_k = 10 if "last10" in panel else (20 if "last20" in panel
-                  else (40 if "full40" in panel else 5))
+        last_k = (
+            10
+            if "last10" in panel
+            else (20 if "last20" in panel else (40 if "full40" in panel else 5))
+        )
         return ("n2", {"last_k": last_k, "metric": metric})
     if "zvf_iter130_risk_index.tsv" in src and panel == "zvf130_5seed":
         return ("zvf130_risk_index", {"metric": metric})
@@ -298,8 +320,8 @@ def classify(stored, recomputed, abs_tol=0.01, rel_tol=0.05):
     s_half = max(abs(s_hi - s_lo) / 2.0, 1e-9)
     r_half = max(abs(r_hi - r_lo) / 2.0, 1e-9)
     ci_overlap = (s_half + r_half) >= abs_drift
-    sig_match = (bool(s_sig) == bool(r_sig))
-    n_match = (s_n == r_n)
+    sig_match = bool(s_sig) == bool(r_sig)
+    n_match = s_n == r_n
     if abs_drift <= tol and ci_overlap and sig_match and n_match:
         return "MATCH", abs_drift
     if not sig_match:
@@ -313,36 +335,45 @@ def classify(stored, recomputed, abs_tol=0.01, rel_tol=0.05):
 
 def main():
     rows = []
-    per_entry = defaultdict(lambda: {"total": 0, "match": 0, "drift": 0,
-                                       "missing": 0, "drift_kinds": defaultdict(int)})
+    per_entry = defaultdict(
+        lambda: {"total": 0, "match": 0, "drift": 0, "missing": 0, "drift_kinds": defaultdict(int)}
+    )
 
     delta_files = sorted(glob.glob(os.path.join(REG_DIR, "delta_*.json")))
     for fpath in delta_files:
         d = json.load(open(fpath))
         eid = d.get("id", os.path.basename(fpath).replace(".json", ""))
         method_variant = eid.replace("delta_", "")
-        for m in (d.get("measured") or []):
+        for m in d.get("measured") or []:
             family, args = infer_recipe(m)
             d_stored, lo_stored, hi_stored = m.get("delta"), m.get("ci_low"), m.get("ci_high")
             per_entry[eid]["total"] += 1
             if d_stored is None:
                 # row carries no numeric delta (deferred / null CI)
                 per_entry[eid]["missing"] += 1
-                rows.append({
-                    "entry_id": eid,
-                    "metric": m.get("metric", ""),
-                    "panel": m.get("panel", ""),
-                    "stored_delta": "", "stored_ci_low": "", "stored_ci_high": "",
-                    "stored_n": int(m.get("n", 0)),
-                    "stored_sig": int(bool(m.get("significant", False))),
-                    "verdict": "NULL_DELTA_SKIPPED",
-                    "abs_drift": "",
-                    "source_family": family or "",
-                })
+                rows.append(
+                    {
+                        "entry_id": eid,
+                        "metric": m.get("metric", ""),
+                        "panel": m.get("panel", ""),
+                        "stored_delta": "",
+                        "stored_ci_low": "",
+                        "stored_ci_high": "",
+                        "stored_n": int(m.get("n", 0)),
+                        "stored_sig": int(bool(m.get("significant", False))),
+                        "verdict": "NULL_DELTA_SKIPPED",
+                        "abs_drift": "",
+                        "source_family": family or "",
+                    }
+                )
                 continue
-            stored = (float(d_stored), float(lo_stored) if lo_stored is not None else 0.0,
-                      float(hi_stored) if hi_stored is not None else 0.0,
-                      int(m["n"]), bool(m["significant"]))
+            stored = (
+                float(d_stored),
+                float(lo_stored) if lo_stored is not None else 0.0,
+                float(hi_stored) if hi_stored is not None else 0.0,
+                int(m["n"]),
+                bool(m["significant"]),
+            )
             if family is None:
                 verdict = "UNINFERABLE_SOURCE"
                 drift = None
@@ -358,8 +389,7 @@ def main():
                 alt_match = False
                 alt_verdict = ""
                 if alt_family is not None:
-                    alt_rec = recompute(alt_family, {"metric": alt_metric},
-                                        method_variant)
+                    alt_rec = recompute(alt_family, {"metric": alt_metric}, method_variant)
                     if alt_rec is not None:
                         r_d = alt_rec[0]
                         tol = max(0.01, 0.05 * max(abs(stored[0]), 1e-9))
@@ -386,26 +416,38 @@ def main():
                 else:
                     per_entry[eid]["drift"] += 1
                     per_entry[eid]["drift_kinds"][verdict] += 1
-            rows.append({
-                "entry_id": eid,
-                "metric": m.get("metric", ""),
-                "panel": m.get("panel", ""),
-                "stored_delta": float(m["delta"]),
-                "stored_ci_low": "" if m.get("ci_low") is None else float(m["ci_low"]),
-                "stored_ci_high": "" if m.get("ci_high") is None else float(m["ci_high"]),
-                "stored_n": int(m["n"]),
-                "stored_sig": int(bool(m["significant"])),
-                "verdict": verdict,
-                "abs_drift": "" if drift is None else f"{drift:.6f}",
-                "source_family": family or "",
-            })
+            rows.append(
+                {
+                    "entry_id": eid,
+                    "metric": m.get("metric", ""),
+                    "panel": m.get("panel", ""),
+                    "stored_delta": float(m["delta"]),
+                    "stored_ci_low": "" if m.get("ci_low") is None else float(m["ci_low"]),
+                    "stored_ci_high": "" if m.get("ci_high") is None else float(m["ci_high"]),
+                    "stored_n": int(m["n"]),
+                    "stored_sig": int(bool(m["significant"])),
+                    "verdict": verdict,
+                    "abs_drift": "" if drift is None else f"{drift:.6f}",
+                    "source_family": family or "",
+                }
+            )
 
     # write per-row audit
     out_tsv = os.path.join(OUT_DIR, "p6_iter146_audit.tsv")
     with open(out_tsv, "w") as f:
-        cols = ["entry_id", "metric", "panel", "stored_delta", "stored_ci_low",
-                "stored_ci_high", "stored_n", "stored_sig", "verdict",
-                "abs_drift", "source_family"]
+        cols = [
+            "entry_id",
+            "metric",
+            "panel",
+            "stored_delta",
+            "stored_ci_low",
+            "stored_ci_high",
+            "stored_n",
+            "stored_sig",
+            "verdict",
+            "abs_drift",
+            "source_family",
+        ]
         f.write("\t".join(cols) + "\n")
         for r in rows:
             f.write("\t".join(str(r.get(c, "")) for c in cols) + "\n")
@@ -423,23 +465,36 @@ def main():
             # the source_family tells us which file was cited; we want the OTHER one
             if r["source_family"] in src_map:
                 new_src = src_map[r["source_family"]]
-                fix_rows.append({
-                    "entry_id": r["entry_id"],
-                    "metric": r["metric"],
-                    "panel": r["panel"],
-                    "old_source": "(see registry)",
-                    "new_source": new_src,
-                    "stored_delta": r["stored_delta"],
-                    "verified_match": "yes",
-                })
+                fix_rows.append(
+                    {
+                        "entry_id": r["entry_id"],
+                        "metric": r["metric"],
+                        "panel": r["panel"],
+                        "old_source": "(see registry)",
+                        "new_source": new_src,
+                        "stored_delta": r["stored_delta"],
+                        "verified_match": "yes",
+                    }
+                )
     fix_tsv = os.path.join(OUT_DIR, "p6_iter146_fix_plan.tsv")
     with open(fix_tsv, "w") as f:
-        f.write("entry_id\tmetric\tpanel\told_source\tnew_source\t"
-                "stored_delta\tverified_match\n")
+        f.write("entry_id\tmetric\tpanel\told_source\tnew_source\tstored_delta\tverified_match\n")
         for fr in fix_rows:
-            f.write("\t".join(str(fr[c]) for c in
-                              ["entry_id", "metric", "panel", "old_source",
-                               "new_source", "stored_delta", "verified_match"]) + "\n")
+            f.write(
+                "\t".join(
+                    str(fr[c])
+                    for c in [
+                        "entry_id",
+                        "metric",
+                        "panel",
+                        "old_source",
+                        "new_source",
+                        "stored_delta",
+                        "verified_match",
+                    ]
+                )
+                + "\n"
+            )
 
     # write per-entry summary
     out_per = os.path.join(OUT_DIR, "p6_iter146_per_entry.tsv")
@@ -448,8 +503,7 @@ def main():
         for eid in sorted(per_entry):
             e = per_entry[eid]
             pct = (e["match"] / e["total"] * 100.0) if e["total"] else 0.0
-            f.write(f"{eid}\t{e['total']}\t{e['match']}\t{e['drift']}\t"
-                    f"{e['missing']}\t{pct:.1f}\n")
+            f.write(f"{eid}\t{e['total']}\t{e['match']}\t{e['drift']}\t{e['missing']}\t{pct:.1f}\n")
 
     # headline counts
     total = sum(e["total"] for e in per_entry.values())
@@ -460,8 +514,11 @@ def main():
     match_kinds = defaultdict(int)
     for r in rows:
         v = r["verdict"]
-        if v.startswith("DRIFT_") or v.startswith("POINT_") or v.startswith("SOURCE_") \
-           or v == "UNINFERABLE_SOURCE" or v == "MISSING_SOURCE":
+        if (
+            v.startswith(("DRIFT_", "POINT_", "SOURCE_"))
+            or v == "UNINFERABLE_SOURCE"
+            or v == "MISSING_SOURCE"
+        ):
             drift_kinds[v.split(" ")[0]] += 1
         else:
             match_kinds[v] += 1
@@ -480,10 +537,13 @@ def main():
         "drift_kinds": dict(drift_kinds),
         "match_kinds": dict(match_kinds),
         "source_family_counts": dict(families),
-        "entries_with_drift": [eid for eid, e in per_entry.items()
-                               if e["drift"] > 0],
-        "boot_recipe": {"seed": BOOT_SEED, "B": B_BOOT,
-                        "tolerance_abs": 0.01, "tolerance_rel": 0.05},
+        "entries_with_drift": [eid for eid, e in per_entry.items() if e["drift"] > 0],
+        "boot_recipe": {
+            "seed": BOOT_SEED,
+            "B": B_BOOT,
+            "tolerance_abs": 0.01,
+            "tolerance_rel": 0.05,
+        },
     }
     out_json = os.path.join(OUT_DIR, "p6_iter146_summary.json")
     with open(out_json, "w") as f:

@@ -165,18 +165,21 @@ def _immutable_reference(value: Any) -> bool:
         return False
     if _IMMUTABLE_SHA256.fullmatch(lowered) or _IMMUTABLE_DIGEST_URI.search(lowered):
         return True
-    return lowered.startswith(
-        (
-            "receipt://",
-            "receipt:",
-            "urn:receipt:",
-            "hf://",
-            "oci://",
-            "git://",
-            "https://",
-            "http://",
+    return (
+        lowered.startswith(
+            (
+                "receipt://",
+                "receipt:",
+                "urn:receipt:",
+                "hf://",
+                "oci://",
+                "git://",
+                "https://",
+                "http://",
+            )
         )
-    ) and len(reference.split(":", 1)[1].strip("/")) >= 2
+        and len(reference.split(":", 1)[1].strip("/")) >= 2
+    )
 
 
 def _require_exact_source(source_identity: Mapping[str, Any] | None) -> None:
@@ -197,7 +200,9 @@ def _require_exact_source(source_identity: Mapping[str, Any] | None) -> None:
             )
     substitute = source_identity.get("substitute_for", source_identity.get("related_benchmark"))
     if substitute:
-        raise BankerToolBenchBoundaryError("related benchmarks and substitutes are not BankerToolBench")
+        raise BankerToolBenchBoundaryError(
+            "related benchmarks and substitutes are not BankerToolBench"
+        )
 
 
 def _extract_task_ids(
@@ -296,9 +301,7 @@ def _validate_contract(
 def _result_receipt_fields(
     result_receipts: Mapping[str, Any] | None,
 ) -> tuple[dict[str, Any], list[str]]:
-    required_shape = {
-        provider: list(fields) for provider, fields in RESULT_RECEIPT_FIELDS.items()
-    }
+    required_shape = {provider: list(fields) for provider, fields in RESULT_RECEIPT_FIELDS.items()}
     if result_receipts is None:
         return {
             "status": "UNRECORDED",
@@ -343,7 +346,9 @@ def _result_receipt_fields(
                 if not isinstance(value, str) or not _PINNED_REVISION.fullmatch(value):
                     errors.append(f"{raw_provider}.{field} must be an immutable revision")
                     continue
-            provider_value[field] = str(value) if not isinstance(value, (int, float, bool)) else value
+            provider_value[field] = (
+                str(value) if not isinstance(value, (int, float, bool)) else value
+            )
         if provider_value:
             normalized["providers"][raw_provider] = provider_value
     if errors:
@@ -408,11 +413,26 @@ def _boundary_errors(boundary: Mapping[str, Any]) -> list[str]:
             if boundary.get("split_manifest_sha256") != split_manifest_hash(task_hashes):
                 errors.append("split_manifest_sha256 does not match the boundary")
     for name, required in (
-        ("environment_contract", ("environment_id", "environment_revision", "native", "stateful", "reset_protocol", "tool_api")),
+        (
+            "environment_contract",
+            (
+                "environment_id",
+                "environment_revision",
+                "native",
+                "stateful",
+                "reset_protocol",
+                "tool_api",
+            ),
+        ),
         ("artifact_contract", ("required", "artifact_types", "artifact_receipt_ref")),
-        ("verifier_contract", ("verifier_id", "verifier_revision", "deterministic", "checks", "verifier_receipt_ref")),
+        (
+            "verifier_contract",
+            ("verifier_id", "verifier_revision", "deterministic", "checks", "verifier_receipt_ref"),
+        ),
     ):
-        _, contract_errors = _validate_contract(boundary.get(name), name=name.removesuffix("_contract"), required=required)
+        _, contract_errors = _validate_contract(
+            boundary.get(name), name=name.removesuffix("_contract"), required=required
+        )
         errors.extend(contract_errors)
     result = boundary.get("result_receipts")
     if not isinstance(result, Mapping):
@@ -451,14 +471,20 @@ def build_banker_toolbench_eval_boundary(
     if role != ROLE:
         raise BankerToolBenchBoundaryError("BankerToolBench boundary role must be primary_eval")
     if not isinstance(revision, str) or not _PINNED_REVISION.fullmatch(revision):
-        raise BankerToolBenchBoundaryError("revision must be an immutable 40-character lower-case commit SHA")
+        raise BankerToolBenchBoundaryError(
+            "revision must be an immutable 40-character lower-case commit SHA"
+        )
     if _looks_placeholder(license_id):
         raise BankerToolBenchBoundaryError("license_id must be recorded, not a placeholder")
     if not _immutable_reference(license_receipt_ref):
-        raise BankerToolBenchBoundaryError("license_receipt_ref must be immutable and non-placeholder")
+        raise BankerToolBenchBoundaryError(
+            "license_receipt_ref must be immutable and non-placeholder"
+        )
     if task_ids is not None:
         if tasks is not None or task_id_hashes is not None:
-            raise BankerToolBenchBoundaryError("supply task_ids, tasks, or task_id_hashes, not multiple")
+            raise BankerToolBenchBoundaryError(
+                "supply task_ids, tasks, or task_id_hashes, not multiple"
+            )
         tasks = task_ids
     if held_out_claimed and held_out_receipt_ref is None:
         # A claim without proof is a contract error, not an implicit holdout.
@@ -469,7 +495,14 @@ def build_banker_toolbench_eval_boundary(
     environment, environment_errors = _validate_contract(
         environment_contract,
         name="environment",
-        required=("environment_id", "environment_revision", "native", "stateful", "reset_protocol", "tool_api"),
+        required=(
+            "environment_id",
+            "environment_revision",
+            "native",
+            "stateful",
+            "reset_protocol",
+            "tool_api",
+        ),
     )
     artifact, artifact_errors = _validate_contract(
         artifact_contract,
@@ -479,10 +512,22 @@ def build_banker_toolbench_eval_boundary(
     verifier, verifier_errors = _validate_contract(
         verifier_contract,
         name="verifier",
-        required=("verifier_id", "verifier_revision", "deterministic", "checks", "verifier_receipt_ref"),
+        required=(
+            "verifier_id",
+            "verifier_revision",
+            "deterministic",
+            "checks",
+            "verifier_receipt_ref",
+        ),
     )
     receipts, receipt_errors = _result_receipt_fields(result_receipts)
-    errors = [*task_errors, *environment_errors, *artifact_errors, *verifier_errors, *receipt_errors]
+    errors = [
+        *task_errors,
+        *environment_errors,
+        *artifact_errors,
+        *verifier_errors,
+        *receipt_errors,
+    ]
     if held_out_error:
         errors.append(held_out_error)
     held_out_ref_valid = held_out_receipt_ref is None or _immutable_reference(held_out_receipt_ref)
@@ -512,9 +557,13 @@ def build_banker_toolbench_eval_boundary(
         "task_count": len(task_hash_values),
         "task_id_hashes": task_hash_values,
         "task_hashes": task_hash_values,
-        "task_id_aggregate_sha256": _sha256("\n".join(task_hash_values)) if task_hash_values else None,
+        "task_id_aggregate_sha256": _sha256("\n".join(task_hash_values))
+        if task_hash_values
+        else None,
         "task_ids_sha256": _sha256("\n".join(task_hash_values)) if task_hash_values else None,
-        "split_manifest_sha256": split_manifest_hash(task_hash_values) if task_hash_values else None,
+        "split_manifest_sha256": split_manifest_hash(task_hash_values)
+        if task_hash_values
+        else None,
         "environment_contract": environment,
         "artifact_contract": artifact,
         "verifier_contract": verifier,

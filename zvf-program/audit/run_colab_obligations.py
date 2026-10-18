@@ -223,9 +223,7 @@ def verify_wandb_run(api_key: str, run_url: str) -> dict[str, str]:
     return {"run_id": run["name"], "state": run["state"], "url": run_url}
 
 
-def verify_remote_artifacts(
-    credentials: dict[str, str], result: dict[str, Any]
-) -> dict[str, Any]:
+def verify_remote_artifacts(credentials: dict[str, str], result: dict[str, Any]) -> dict[str, Any]:
     required = (
         "hf_repo",
         "hf_path",
@@ -252,15 +250,11 @@ def verify_remote_artifacts(
                 revision=result["hf_commit"],
             ):
                 raise RuntimeError(f"HF checkpoint manifest is missing: {manifest_name}")
-            wandb_record = verify_wandb_run(
-                credentials["WANDB_API_KEY"], result["wandb_run_url"]
-            )
+            wandb_record = verify_wandb_run(credentials["WANDB_API_KEY"], result["wandb_run_url"])
             if wandb_record["run_id"] != result["wandb_run_id"]:
                 raise RuntimeError("W&B run ID does not match emitted provenance")
             if wandb_record["state"] != "finished":
-                raise RuntimeError(
-                    f"W&B run is not finished: {wandb_record['state']}"
-                )
+                raise RuntimeError(f"W&B run is not finished: {wandb_record['state']}")
             model_candidates = (
                 f"{result['hf_path']}/model.safetensors",
                 f"{result['hf_path']}/model.safetensors.index.json",
@@ -385,15 +379,45 @@ def run_unit(args: argparse.Namespace, arm: str, seed: int, script_sha: str) -> 
         script_args.extend(["--wandb-entity", args.wandb_entity])
     execution_plan = [
         ["colab", f"--auth={args.auth}", "new", "--gpu", args.gpu, "--session", session],
-        ["colab", f"--auth={args.auth}", "upload", "--session", session,
-         str(REMOTE_SCRIPT), "/content/e3_open_audit.py"],
+        [
+            "colab",
+            f"--auth={args.auth}",
+            "upload",
+            "--session",
+            session,
+            str(REMOTE_SCRIPT),
+            "/content/e3_open_audit.py",
+        ],
         ["colab", f"--auth={args.auth}", "install", "--session", session, "wandb==0.25.1"],
-        ["colab", f"--auth={args.auth}", "upload", "--session", session,
-         "<ephemeral-secret-file>", "/content/.tinker-run-secrets.json"],
-        ["colab", f"--auth={args.auth}", "upload", "--session", session,
-         "<ephemeral-request-file>", "/content/tinker-unit-request.json"],
-        ["colab", f"--auth={args.auth}", "exec", "--session", session,
-         "--file", str(SECURE_EXEC), "--timeout", str(args.timeout)],
+        [
+            "colab",
+            f"--auth={args.auth}",
+            "upload",
+            "--session",
+            session,
+            "<ephemeral-secret-file>",
+            "/content/.tinker-run-secrets.json",
+        ],
+        [
+            "colab",
+            f"--auth={args.auth}",
+            "upload",
+            "--session",
+            session,
+            "<ephemeral-request-file>",
+            "/content/tinker-unit-request.json",
+        ],
+        [
+            "colab",
+            f"--auth={args.auth}",
+            "exec",
+            "--session",
+            session,
+            "--file",
+            str(SECURE_EXEC),
+            "--timeout",
+            str(args.timeout),
+        ],
         ["colab", f"--auth={args.auth}", "stop", "--session", session],
     ]
     launched = {
@@ -427,17 +451,29 @@ def run_unit(args: argparse.Namespace, arm: str, seed: int, script_sha: str) -> 
             invocation_path = staging_path / "request.json"
             secret_path.write_text(json.dumps(credentials), encoding="utf-8")
             secret_path.chmod(0o600)
-            invocation_path.write_text(
-                json.dumps({"script_args": script_args}), encoding="utf-8"
-            )
+            invocation_path.write_text(json.dumps({"script_args": script_args}), encoding="utf-8")
             commands = [
                 execution_plan[0],
                 execution_plan[1],
                 execution_plan[2],
-                ["colab", f"--auth={args.auth}", "upload", "--session", session,
-                 str(secret_path), "/content/.tinker-run-secrets.json"],
-                ["colab", f"--auth={args.auth}", "upload", "--session", session,
-                 str(invocation_path), "/content/tinker-unit-request.json"],
+                [
+                    "colab",
+                    f"--auth={args.auth}",
+                    "upload",
+                    "--session",
+                    session,
+                    str(secret_path),
+                    "/content/.tinker-run-secrets.json",
+                ],
+                [
+                    "colab",
+                    f"--auth={args.auth}",
+                    "upload",
+                    "--session",
+                    session,
+                    str(invocation_path),
+                    "/content/tinker-unit-request.json",
+                ],
                 execution_plan[5],
             ]
             try:

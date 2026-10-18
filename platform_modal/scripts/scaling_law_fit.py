@@ -29,6 +29,7 @@ References (verified):
   - schwarz1978bic (BIC-based model selection, justifies 1/2/3-segment compare).
   - hoffmann2022chinchilla (Chinchilla compute-optimal scaling, analogue for N).
 """
+
 from __future__ import annotations
 
 import json
@@ -39,9 +40,9 @@ from pathlib import Path
 import matplotlib
 
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt  # noqa: E402
-import numpy as np  # noqa: E402
-from scipy.optimize import curve_fit  # noqa: E402
+import matplotlib.pyplot as plt
+import numpy as np
+from scipy.optimize import curve_fit
 from _analysis_common import saturation, write_rows_tsv as _write_tsv, ols
 
 REPO = Path(__file__).resolve().parents[2] / "platform_hybrid"
@@ -51,11 +52,11 @@ FIG_DIR = REPO / "figures" / "review26_v2"
 
 MODELS: dict[str, tuple[str, float, str]] = {
     # name               : (trace_file,                       params_B, family)
-    "Qwen3.5-4B":            ("scale_gsm8k_qwen3.5-4b.json",      4.0,   "dense"),
-    "Qwen3-8B":              ("scale_gsm8k_qwen3-8b.json",        8.0,   "dense"),
-    "Llama-3.1-8B-Instruct": ("scale_gsm8k_llama-8b-inst.json",   8.0,   "dense"),
-    "DeepSeek-V3.1":         ("frontier_gsm8k_deepseek-v3.1.json", 685.0, "moe"),
-    "Nemotron-120B":         ("frontier_gsm8k_nemotron-120b.json", 120.0, "dense"),
+    "Qwen3.5-4B": ("scale_gsm8k_qwen3.5-4b.json", 4.0, "dense"),
+    "Qwen3-8B": ("scale_gsm8k_qwen3-8b.json", 8.0, "dense"),
+    "Llama-3.1-8B-Instruct": ("scale_gsm8k_llama-8b-inst.json", 8.0, "dense"),
+    "DeepSeek-V3.1": ("frontier_gsm8k_deepseek-v3.1.json", 685.0, "moe"),
+    "Nemotron-120B": ("frontier_gsm8k_nemotron-120b.json", 120.0, "dense"),
 }
 SEED = 1172026
 N_BOOT = 5000
@@ -68,25 +69,37 @@ def fit_one(t: np.ndarray, y: np.ndarray) -> dict:
     """
     n = len(y)
     if n < 4:
-        return dict(R_max=float("nan"), lam=float("nan"), t_80=float("nan"),
-                    rmse=float("nan"), r2=float("nan"), lam_at_bound=1)
+        return dict(
+            R_max=float("nan"),
+            lam=float("nan"),
+            t_80=float("nan"),
+            rmse=float("nan"),
+            r2=float("nan"),
+            lam_at_bound=1,
+        )
     try:
-        popt, _ = curve_fit(saturation, t, y,
-                            p0=[float(np.mean(y[-min(5, n):])), 0.1],
-                            bounds=([0.0, 1e-4], [1.05, 10.0]),
-                            maxfev=20000)
+        popt, _ = curve_fit(
+            saturation,
+            t,
+            y,
+            p0=[float(np.mean(y[-min(5, n) :])), 0.1],
+            bounds=([0.0, 1e-4], [1.05, 10.0]),
+            maxfev=20000,
+        )
         r_max, lam = float(popt[0]), float(popt[1])
         pred = saturation(t, r_max, lam)
         resid = y - pred
-        rmse = float(math.sqrt(np.mean(resid ** 2)))
-        ss_res = float(np.sum(resid ** 2))
+        rmse = float(math.sqrt(np.mean(resid**2)))
+        ss_res = float(np.sum(resid**2))
         ss_tot = float(np.sum((y - y.mean()) ** 2))
         r2 = 1.0 - ss_res / ss_tot if ss_tot > 0 else float("nan")
         lam_at_bound = int(lam >= 9.999)
-    except Exception:  # noqa: BLE001
+    except Exception:
         r_max, lam, rmse, r2 = float("nan"), float("nan"), float("nan"), float("nan")
         lam_at_bound = 1
-    t_80 = float(-math.log(0.2) / lam) if (lam and not math.isnan(lam) and lam > 0) else float("nan")
+    t_80 = (
+        float(-math.log(0.2) / lam) if (lam and not math.isnan(lam) and lam > 0) else float("nan")
+    )
     return dict(R_max=r_max, lam=lam, t_80=t_80, rmse=rmse, r2=r2, lam_at_bound=lam_at_bound)
 
 
@@ -151,16 +164,16 @@ def segment_bic(y: np.ndarray, k_max: int = 3) -> dict:
 
     # nimmaturi three-phase criterion: best_k==3 AND monotone_up
     # AND seg1_mean < 0.15 AND seg3_mean > 0.40.
-    nimm_ok = (
-        best_k == 3
-        and monotone_up
-        and (seg_means[0] < 0.15)
-        and (seg_means[-1] > 0.40)
-    )
+    nimm_ok = best_k == 3 and monotone_up and (seg_means[0] < 0.15) and (seg_means[-1] > 0.40)
 
     return dict(
-        bics=bics, best_k=best_k, seg_means=seg_means, seg_bounds=seg_bounds,
-        monotone_up=monotone_up, monotone_dn=monotone_dn, nimm_ok=nimm_ok,
+        bics=bics,
+        best_k=best_k,
+        seg_means=seg_means,
+        seg_bounds=seg_bounds,
+        monotone_up=monotone_up,
+        monotone_dn=monotone_dn,
+        nimm_ok=nimm_ok,
     )
 
 
@@ -209,23 +222,50 @@ def main() -> None:
         fit["params_B"] = params_B
         fit["family"] = family
         fits[name] = fit
-        rows.append([
-            name, f"{params_B:.4f}", family, n,
-            f"{fit['mean_reward']:.4f}", f"{fit['var_reward']:.4f}",
-            f"{fit['peak']:.4f}", f"{fit['trough']:.4f}",
-            f"{fit['early_mean']:.4f}", f"{fit['late_mean']:.4f}",
-            f"{fit['delta_late_minus_early']:.4f}",
-            f"{fit['R_max']:.4f}", f"{fit['lam']:.4f}",
-            f"{fit['t_80']:.4f}", f"{fit['rmse']:.4f}", f"{fit['r2']:.4f}",
-            fit["lam_at_bound"], fn,
-        ])
+        rows.append(
+            [
+                name,
+                f"{params_B:.4f}",
+                family,
+                n,
+                f"{fit['mean_reward']:.4f}",
+                f"{fit['var_reward']:.4f}",
+                f"{fit['peak']:.4f}",
+                f"{fit['trough']:.4f}",
+                f"{fit['early_mean']:.4f}",
+                f"{fit['late_mean']:.4f}",
+                f"{fit['delta_late_minus_early']:.4f}",
+                f"{fit['R_max']:.4f}",
+                f"{fit['lam']:.4f}",
+                f"{fit['t_80']:.4f}",
+                f"{fit['rmse']:.4f}",
+                f"{fit['r2']:.4f}",
+                fit["lam_at_bound"],
+                fn,
+            ]
+        )
     _write_tsv(
         RESULTS_DIR / "scaling_law_fits.tsv",
-        ["model", "params_B", "family", "n_steps",
-         "mean_reward", "var_reward", "peak", "trough",
-         "early_mean", "late_mean", "delta_late_minus_early",
-         "R_max", "lambda", "t_80", "rmse", "r2",
-         "lam_at_bound", "trace_file"],
+        [
+            "model",
+            "params_B",
+            "family",
+            "n_steps",
+            "mean_reward",
+            "var_reward",
+            "peak",
+            "trough",
+            "early_mean",
+            "late_mean",
+            "delta_late_minus_early",
+            "R_max",
+            "lambda",
+            "t_80",
+            "rmse",
+            "r2",
+            "lam_at_bound",
+            "trace_file",
+        ],
         rows,
     )
 
@@ -251,7 +291,11 @@ def main() -> None:
         elif not seg["monotone_up"] and not seg["monotone_dn"]:
             peak_mean_local = max(seg["seg_means"]) if seg["seg_means"] else 0.0
             late_mean_local = seg["seg_means"][-1] if seg["seg_means"] else 0.0
-            phase = "collapse" if (peak_mean_local > 0.5 and late_mean_local < peak_mean_local * 0.5) else "non_monotone"
+            phase = (
+                "collapse"
+                if (peak_mean_local > 0.5 and late_mean_local < peak_mean_local * 0.5)
+                else "non_monotone"
+            )
         else:
             phase = "non_monotone"
         if phase == "collapse":
@@ -263,15 +307,30 @@ def main() -> None:
         peak_mean = max(seg["seg_means"]) if seg["seg_means"] else float("nan")
         late_mean = seg["seg_means"][-1] if seg["seg_means"] else float("nan")
         early_mean = seg["seg_means"][0] if seg["seg_means"] else float("nan")
-        rows3.append([
-            name, f"{fit['params_B']:.4f}", seg["best_k"], len(seg["seg_means"]),
-            f"{bics[1]:.4f}", f"{bics[2]:.4f}", f"{bics[3]:.4f}",
-            f"{bics[3] - bics[1]:.4f}", f"{bics[3] - bics[2]:.4f}",
-            int(seg["monotone_up"]), int(seg["monotone_dn"]),
-            phase, int(seg["nimm_ok"]),
-            f"{peak_mean:.4f}", f"{late_mean:.4f}", f"{early_mean:.4f}", smj,
-            f"{fit['R_max']:.4f}", f"{fit['lam']:.4f}", f"{fit['t_80']:.4f}",
-        ])
+        rows3.append(
+            [
+                name,
+                f"{fit['params_B']:.4f}",
+                seg["best_k"],
+                len(seg["seg_means"]),
+                f"{bics[1]:.4f}",
+                f"{bics[2]:.4f}",
+                f"{bics[3]:.4f}",
+                f"{bics[3] - bics[1]:.4f}",
+                f"{bics[3] - bics[2]:.4f}",
+                int(seg["monotone_up"]),
+                int(seg["monotone_dn"]),
+                phase,
+                int(seg["nimm_ok"]),
+                f"{peak_mean:.4f}",
+                f"{late_mean:.4f}",
+                f"{early_mean:.4f}",
+                smj,
+                f"{fit['R_max']:.4f}",
+                f"{fit['lam']:.4f}",
+                f"{fit['t_80']:.4f}",
+            ]
+        )
         if name == "Nemotron-120B":
             nemotron_violation = (
                 f"Nemotron-120B is the only 5-anchor pool member classified "
@@ -285,12 +344,28 @@ def main() -> None:
             )
     _write_tsv(
         RESULTS_DIR / "scaling_law_three_phase.tsv",
-        ["model", "params_B", "best_k", "n_segments",
-         "bic_k1", "bic_k2", "bic_k3", "delta_bic_3v1", "delta_bic_3v2",
-         "monotone_up", "monotone_dn", "phase_nimmaturi",
-         "nimmaturi_three_phase_ok",
-         "peak_segment_mean", "late_segment_mean", "early_segment_mean",
-         "segment_means_joined", "R_max", "lambda", "t_80"],
+        [
+            "model",
+            "params_B",
+            "best_k",
+            "n_segments",
+            "bic_k1",
+            "bic_k2",
+            "bic_k3",
+            "delta_bic_3v1",
+            "delta_bic_3v2",
+            "monotone_up",
+            "monotone_dn",
+            "phase_nimmaturi",
+            "nimmaturi_three_phase_ok",
+            "peak_segment_mean",
+            "late_segment_mean",
+            "early_segment_mean",
+            "segment_means_joined",
+            "R_max",
+            "lambda",
+            "t_80",
+        ],
         rows3,
     )
 
@@ -302,30 +377,53 @@ def main() -> None:
         vals = np.array([fit[metric] for fit in fits.values()], dtype=float)
         mask = ~np.isnan(vals)
         if mask.sum() < 3:
-            rows4.append([metric, int(mask.sum()), "nan", "nan", "nan",
-                          "nan", "nan", "nan", 0, "nan"])
+            rows4.append(
+                [metric, int(mask.sum()), "nan", "nan", "nan", "nan", "nan", "nan", 0, "nan"]
+            )
             continue
         a, b, se_b = ols(log_n[mask], vals[mask])
         n_b = min(N_BOOT, 200 * mask.sum())
         slopes = []
         for _ in range(n_b):
             idx = rng.integers(0, mask.sum(), size=mask.sum())
-            slopes.append(ols(log_n[mask][idx],vals[mask][idx])[1])
+            slopes.append(ols(log_n[mask][idx], vals[mask][idx])[1])
         slopes = [s for s in slopes if not (math.isnan(s) or math.isinf(s))]
         if slopes:
             lo, hi = float(np.quantile(slopes, 0.025)), float(np.quantile(slopes, 0.975))
             mean_s = float(np.mean(slopes))
         else:
             lo, hi, mean_s = float("nan"), float("nan"), float("nan")
-        corr = float(np.corrcoef(log_n[mask], vals[mask])[0, 1]) if mask.sum() >= 3 else float("nan")
-        rows4.append([
-            metric, int(mask.sum()), f"{a:.6f}", f"{b:.6f}", f"{se_b:.6f}",
-            f"{mean_s:.6f}", f"{lo:.6f}", f"{hi:.6f}", len(slopes), f"{corr:.6f}",
-        ])
+        corr = (
+            float(np.corrcoef(log_n[mask], vals[mask])[0, 1]) if mask.sum() >= 3 else float("nan")
+        )
+        rows4.append(
+            [
+                metric,
+                int(mask.sum()),
+                f"{a:.6f}",
+                f"{b:.6f}",
+                f"{se_b:.6f}",
+                f"{mean_s:.6f}",
+                f"{lo:.6f}",
+                f"{hi:.6f}",
+                len(slopes),
+                f"{corr:.6f}",
+            ]
+        )
     _write_tsv(
         RESULTS_DIR / "scaling_law_cross_scale.tsv",
-        ["metric", "n_models", "intercept", "slope_per_log10N", "se_slope",
-         "boot_slope_mean", "boot_slope_lo", "boot_slope_hi", "n_boot", "corr_logN_metric"],
+        [
+            "metric",
+            "n_models",
+            "intercept",
+            "slope_per_log10N",
+            "se_slope",
+            "boot_slope_mean",
+            "boot_slope_lo",
+            "boot_slope_hi",
+            "n_boot",
+            "corr_logN_metric",
+        ],
         rows4,
     )
 
@@ -334,25 +432,44 @@ def main() -> None:
     for name, fit in fits.items():
         rt = traces[name]
         seg = segment_bic(np.asarray(rt, dtype=float))
-        for i, ((s, e), m) in enumerate(zip(seg["seg_bounds"], seg["seg_means"])):
-            rows5.append([
-                name, f"{fit['params_B']:.4f}", seg["best_k"], i + 1, s, e, e - s + 1,
-                f"{m:.4f}",
-            ])
+        for i, ((s, e), m) in enumerate(zip(seg["seg_bounds"], seg["seg_means"], strict=False)):
+            rows5.append(
+                [
+                    name,
+                    f"{fit['params_B']:.4f}",
+                    seg["best_k"],
+                    i + 1,
+                    s,
+                    e,
+                    e - s + 1,
+                    f"{m:.4f}",
+                ]
+            )
     _write_tsv(
         RESULTS_DIR / "scaling_law_changepoints.tsv",
-        ["model", "params_B", "best_k", "segment_idx", "start_step", "end_step",
-         "length", "mean_reward"],
+        [
+            "model",
+            "params_B",
+            "best_k",
+            "segment_idx",
+            "start_step",
+            "end_step",
+            "length",
+            "mean_reward",
+        ],
         rows5,
     )
 
     # ---------- 6. iter117 fresh angle: t_80-vs-N scaling-law ----------
     log_n_arr = np.array([math.log10(f["params_B"]) for f in fits.values()], dtype=float)
     log_t80_arr = np.array([math.log10(max(f["t_80"], 1e-3)) for f in fits.values()], dtype=float)
-    log_t80_free = np.array([
-        math.log10(max(f["t_80"], 1e-3)) if not f["lam_at_bound"] else float("nan")
-        for f in fits.values()
-    ], dtype=float)
+    log_t80_free = np.array(
+        [
+            math.log10(max(f["t_80"], 1e-3)) if not f["lam_at_bound"] else float("nan")
+            for f in fits.values()
+        ],
+        dtype=float,
+    )
     n_at_bound = int(sum(f["lam_at_bound"] for f in fits.values()))
     n_free = int(len(fits) - n_at_bound)
     full_a, full_b, full_se = ols(log_n_arr, log_t80_arr)
@@ -362,20 +479,42 @@ def main() -> None:
     else:
         free_a, free_b, free_se = float("nan"), float("nan"), float("nan")
     rows_t80: list[list] = []
-    rows_t80.append([
-        "log10(t_80) ~ log10(N)", len(fits), f"{full_a:.4f}", f"{full_b:.4f}",
-        f"{full_se:.4f}", n_at_bound, n_free,
-        "degenerate (4/5 anchored at lambda bound)",
-    ])
-    rows_t80.append([
-        "log10(t_80) ~ log10(N) [lambda-free]", int(free_mask.sum()),
-        f"{free_a:.4f}", f"{free_b:.4f}", f"{free_se:.4f}", n_at_bound, n_free,
-        "single-point regression (only Nemotron-120B has free lambda)",
-    ])
+    rows_t80.append(
+        [
+            "log10(t_80) ~ log10(N)",
+            len(fits),
+            f"{full_a:.4f}",
+            f"{full_b:.4f}",
+            f"{full_se:.4f}",
+            n_at_bound,
+            n_free,
+            "degenerate (4/5 anchored at lambda bound)",
+        ]
+    )
+    rows_t80.append(
+        [
+            "log10(t_80) ~ log10(N) [lambda-free]",
+            int(free_mask.sum()),
+            f"{free_a:.4f}",
+            f"{free_b:.4f}",
+            f"{free_se:.4f}",
+            n_at_bound,
+            n_free,
+            "single-point regression (only Nemotron-120B has free lambda)",
+        ]
+    )
     _write_tsv(
         RESULTS_DIR / "scaling_law_iter117_t80_scaling.tsv",
-        ["model", "n_anchors", "intercept", "slope_per_log10N", "se_slope",
-         "n_at_lambda_bound", "n_free_lambda", "note"],
+        [
+            "model",
+            "n_anchors",
+            "intercept",
+            "slope_per_log10N",
+            "se_slope",
+            "n_at_lambda_bound",
+            "n_free_lambda",
+            "note",
+        ],
         rows_t80,
     )
 
@@ -385,11 +524,17 @@ def main() -> None:
         pillar="P1-ScalingLaws",
         n_anchors=len(fits),
         anchors=[
-            dict(name=n, params_B=fit["params_B"], family=fit["family"],
-                 R_max=fit["R_max"], lambda_=fit["lam"], t_80=fit["t_80"],
-                 lam_at_bound=bool(fit["lam_at_bound"]),
-                 phase_nimmaturi=phase_by_name.get(n, ""),
-                 trace_file=MODELS[n][0])
+            dict(
+                name=n,
+                params_B=fit["params_B"],
+                family=fit["family"],
+                R_max=fit["R_max"],
+                lambda_=fit["lam"],
+                t_80=fit["t_80"],
+                lam_at_bound=bool(fit["lam_at_bound"]),
+                phase_nimmaturi=phase_by_name.get(n, ""),
+                trace_file=MODELS[n][0],
+            )
             for n, fit in fits.items()
         ],
         fit_form="R(t) = R_max * (1 - exp(-lambda * t))",
@@ -452,9 +597,14 @@ def main() -> None:
         ax_fit.plot(t, y, "o-", color=c, label=f"{name} (obs)", alpha=0.6, markersize=4)
         if not math.isnan(fit["R_max"]):
             t_fine = np.linspace(1, max(n, 30), 200)
-            ax_fit.plot(t_fine, saturation(t_fine, fit["R_max"], max(fit["lam"], 1e-4)),
-                        "--", color=c, alpha=0.8,
-                        label=f"{name} fit t_80={fit['t_80']:.2f}")
+            ax_fit.plot(
+                t_fine,
+                saturation(t_fine, fit["R_max"], max(fit["lam"], 1e-4)),
+                "--",
+                color=c,
+                alpha=0.8,
+                label=f"{name} fit t_80={fit['t_80']:.2f}",
+            )
     ax_fit.set_xlabel("Training step t")
     ax_fit.set_ylabel("Reward R(t)")
     ax_fit.set_title("Saturation model R(t)=R_max*(1-exp(-lambda t))")
@@ -469,9 +619,9 @@ def main() -> None:
     width = 0.25
     x = np.arange(len(names))
     for j, kk in enumerate([1, 2, 3]):
-        ax_bic.bar(x + (j - 1) * width,
-                   [bic_data[n][kk] for n in names],
-                   width=width, label=f"k={kk}")
+        ax_bic.bar(
+            x + (j - 1) * width, [bic_data[n][kk] for n in names], width=width, label=f"k={kk}"
+        )
     ax_bic.set_xticks(x)
     ax_bic.set_xticklabels(names, rotation=30, ha="right", fontsize=8)
     ax_bic.set_ylabel("BIC")
@@ -482,9 +632,8 @@ def main() -> None:
     ns = np.array([fits[n]["params_B"] for n in names], dtype=float)
     t80s = np.array([fits[n]["t_80"] for n in names], dtype=float)
     ax_t80.scatter(np.log10(ns), t80s, s=80, c="tab:blue", edgecolor="black")
-    for n, x_v, y_v in zip(names, np.log10(ns), t80s):
-        ax_t80.annotate(n, (x_v, y_v), fontsize=7, xytext=(5, 5),
-                        textcoords="offset points")
+    for n, x_v, y_v in zip(names, np.log10(ns), t80s, strict=False):
+        ax_t80.annotate(n, (x_v, y_v), fontsize=7, xytext=(5, 5), textcoords="offset points")
     ax_t80.axhline(0.161, color="red", linestyle=":", label="t_80 = 0.161 (lambda at bound)")
     ax_t80.set_xlabel("log10(params_B)")
     ax_t80.set_ylabel("t_80 = -ln(0.2)/lambda")
@@ -496,13 +645,19 @@ def main() -> None:
         rt = traces[n]
         seg = segment_bic(np.asarray(rt, dtype=float))
         y = np.asarray(rt, dtype=float)
-        ax_seg.plot(np.arange(1, len(y) + 1), y, "o-", alpha=0.4,
-                    color=cmap(i / max(len(names) - 1, 1)))
-        for (s, e), m in zip(seg["seg_bounds"], seg["seg_means"]):
-            ax_seg.hlines(m, s, e, color=cmap(i / max(len(names) - 1, 1)),
-                          linewidth=2.5)
-        ax_seg.text(len(y) / 2, max(y) - 0.05, n, fontsize=7,
-                    ha="center", color=cmap(i / max(len(names) - 1, 1)))
+        ax_seg.plot(
+            np.arange(1, len(y) + 1), y, "o-", alpha=0.4, color=cmap(i / max(len(names) - 1, 1))
+        )
+        for (s, e), m in zip(seg["seg_bounds"], seg["seg_means"], strict=False):
+            ax_seg.hlines(m, s, e, color=cmap(i / max(len(names) - 1, 1)), linewidth=2.5)
+        ax_seg.text(
+            len(y) / 2,
+            max(y) - 0.05,
+            n,
+            fontsize=7,
+            ha="center",
+            color=cmap(i / max(len(names) - 1, 1)),
+        )
 
     ax_seg.set_xlabel("Training step t")
     ax_seg.set_ylabel("Reward R(t)")
@@ -522,12 +677,16 @@ def main() -> None:
 
     # ---------- 9. Console digest ----------
     print("\n=== iter 117 Pillar 1 summary ===")
-    print(f"n_anchors = {len(fits)} | n_three_phase_pass = {n_three_phase_pass} | "
-          f"n_collapse = {n_collapse} | n_lam_at_bound = {n_lam_at_bound} | "
-          f"n_lambda_free = {len(fits) - n_lam_at_bound}")
+    print(
+        f"n_anchors = {len(fits)} | n_three_phase_pass = {n_three_phase_pass} | "
+        f"n_collapse = {n_collapse} | n_lam_at_bound = {n_lam_at_bound} | "
+        f"n_lambda_free = {len(fits) - n_lam_at_bound}"
+    )
     for n, fit in fits.items():
-        print(f"  {n:24s} R_max={fit['R_max']:.3f} lam={fit['lam']:.3f} t_80={fit['t_80']:.3f} "
-              f"lam_at_bound={bool(fit['lam_at_bound'])}")
+        print(
+            f"  {n:24s} R_max={fit['R_max']:.3f} lam={fit['lam']:.3f} t_80={fit['t_80']:.3f} "
+            f"lam_at_bound={bool(fit['lam_at_bound'])}"
+        )
 
 
 if __name__ == "__main__":

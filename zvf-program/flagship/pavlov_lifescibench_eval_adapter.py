@@ -82,8 +82,7 @@ UNPINNED = "UNPINNED_REQUIRED"
 # stratification taxonomy, carried on task rows as ``bio_domain``.
 # ---------------------------------------------------------------------------
 PUBLISHED_SOURCE_PAPER_URL = (
-    "https://cdn.openai.com/pdf/b4299379-0a97-4ffa-8b9b-c3fbb299caa9/"
-    "lifescibench_preprint.pdf"
+    "https://cdn.openai.com/pdf/b4299379-0a97-4ffa-8b9b-c3fbb299caa9/lifescibench_preprint.pdf"
 )
 PUBLISHED_ANNOUNCEMENT_DATE = "2026-06-17"
 PUBLISHED_TASK_COUNT = 750
@@ -244,9 +243,16 @@ def load_lifescibench_trust_root(document: Any) -> dict[str, str]:
         raise LifeSciBenchSchemaError("E8 provider trust roots must be a JSON object")
     data = dict(document)
     required = {
-        "schema_version", "provider_id", "lane", "suite_id", "key_id",
-        "key_fingerprint", "public_key_b64", "signature_algorithm",
-        "issued_at", "expires_at",
+        "schema_version",
+        "provider_id",
+        "lane",
+        "suite_id",
+        "key_id",
+        "key_fingerprint",
+        "public_key_b64",
+        "signature_algorithm",
+        "issued_at",
+        "expires_at",
     }
     if set(data) != required:
         raise LifeSciBenchSchemaError("E8 provider trust-root document has an invalid schema")
@@ -278,7 +284,9 @@ def load_lifescibench_trust_root(document: Any) -> dict[str, str]:
         ):
             raise ValueError
     except (KeyError, TypeError, ValueError):
-        raise LifeSciBenchSchemaError("E8 provider trust-root key or validity window is invalid") from None
+        raise LifeSciBenchSchemaError(
+            "E8 provider trust-root key or validity window is invalid"
+        ) from None
     return {
         "trust_root_sha256": sha256_json(data),
         "key_id": data["key_id"],
@@ -333,7 +341,11 @@ def _safe_reference(value: Any, label: str, errors: list[str], *, observed: bool
     reference = _nonempty(value, label, errors)
     if not reference or not observed:
         return bool(reference)
-    if reference.startswith("offline://") or "@" in reference or _SECRET_REFERENCE_RE.search(reference):
+    if (
+        reference.startswith("offline://")
+        or "@" in reference
+        or _SECRET_REFERENCE_RE.search(reference)
+    ):
         errors.append(f"{label} contains a placeholder or credential-like reference")
         return False
     return True
@@ -395,9 +407,7 @@ def build_task_row(
     if not isinstance(family, str) or not family:
         raise LifeSciBenchSchemaError("family must be a non-empty string")
     if domain not in ALLOWED_DOMAINS:
-        raise LifeSciBenchSchemaError(
-            f"domain must be one of {ALLOWED_DOMAINS!r}, got {domain!r}"
-        )
+        raise LifeSciBenchSchemaError(f"domain must be one of {ALLOWED_DOMAINS!r}, got {domain!r}")
     if workflow is not None and workflow not in PUBLISHED_WORKFLOWS:
         raise LifeSciBenchSchemaError(
             f"workflow must be a published LifeSciBench workflow, got {workflow!r}"
@@ -490,7 +500,11 @@ def build_heldout_proof(
     evaluation = _mapping(eval_manifest, "eval_manifest")
     for manifest, label in ((train, "train"), (evaluation, "eval")):
         rows = manifest.get("rows")
-        if not isinstance(rows, list) or not rows or any(not isinstance(row, Mapping) for row in rows):
+        if (
+            not isinstance(rows, list)
+            or not rows
+            or any(not isinstance(row, Mapping) for row in rows)
+        ):
             raise LifeSciBenchSchemaError(f"{label} manifest rows required")
         if manifest.get("manifest_hash") != task_manifest_hash(rows):
             raise LifeSciBenchSchemaError(f"{label} manifest hash does not match rows")
@@ -529,14 +543,10 @@ def build_heldout_proof(
     eval_ids, eval_families = _ids_and_families(evaluation, "eval_manifest")
     shared_ids = sorted(train_ids & eval_ids)
     if shared_ids:
-        raise LifeSciBenchSchemaError(
-            f"train/evaluation task_ids overlap: {shared_ids[:5]}"
-        )
+        raise LifeSciBenchSchemaError(f"train/evaluation task_ids overlap: {shared_ids[:5]}")
     shared_families = sorted(train_families & eval_families)
     if shared_families:
-        raise LifeSciBenchSchemaError(
-            f"train/evaluation families overlap: {shared_families[:5]}"
-        )
+        raise LifeSciBenchSchemaError(f"train/evaluation families overlap: {shared_families[:5]}")
     proof: dict[str, Any] = {
         "train_manifest": train,
         "eval_manifest": evaluation,
@@ -696,15 +706,11 @@ def build_synthetic_fixture() -> dict[str, Any]:
             "bio_domain": "chemistry_medchem",
         },
     ]
-    eval_manifest = build_split_manifest(
-        eval_specs, dataset_revision=dataset_revision, split=SPLIT
-    )
+    eval_manifest = build_split_manifest(eval_specs, dataset_revision=dataset_revision, split=SPLIT)
     train_manifest = build_split_manifest(
         train_specs, dataset_revision=dataset_revision, split="train"
     )
-    heldout_proof = build_heldout_proof(
-        train_manifest=train_manifest, eval_manifest=eval_manifest
-    )
+    heldout_proof = build_heldout_proof(train_manifest=train_manifest, eval_manifest=eval_manifest)
     boundary = build_pinned_boundary(
         dataset_revision=dataset_revision,
         license_id=license_id,
@@ -725,7 +731,8 @@ def build_synthetic_fixture() -> dict[str, Any]:
             "artifact_digest": _synthetic_digest(f"artifact::{row['task_id']}"),
             # Always False: the fixture must never look like a measurement.
             "task_success": False,
-            "reward": 0.0, "action_count": 0,
+            "reward": 0.0,
+            "action_count": 0,
         }
         for row in eval_manifest["rows"]
     ]
@@ -901,7 +908,9 @@ def _validate_task_manifest(
         else:
             ids.add(task_id)
         expected_hash = _task_hash(task_id, dataset_revision) if isinstance(task_id, str) else ""
-        if row.get("task_id_hash") != expected_hash or not _digest(row.get("task_id_hash"), f"task_manifest[{index}].task_id_hash", errors):
+        if row.get("task_id_hash") != expected_hash or not _digest(
+            row.get("task_id_hash"), f"task_manifest[{index}].task_id_hash", errors
+        ):
             errors.append(f"task_manifest[{index}] task hash is not deterministic")
             valid = False
         elif row["task_id_hash"] in hashes:
@@ -923,11 +932,15 @@ def _validate_task_manifest(
             valid = False
         workflow = row.get("workflow")
         if workflow is not None and workflow not in PUBLISHED_WORKFLOWS:
-            errors.append(f"task_manifest[{index}].workflow is not a published LifeSciBench workflow")
+            errors.append(
+                f"task_manifest[{index}].workflow is not a published LifeSciBench workflow"
+            )
             valid = False
         bio_domain = row.get("bio_domain")
         if bio_domain is not None and bio_domain not in PUBLISHED_BIO_DOMAINS:
-            errors.append(f"task_manifest[{index}].bio_domain is not a published LifeSciBench domain")
+            errors.append(
+                f"task_manifest[{index}].bio_domain is not a published LifeSciBench domain"
+            )
             valid = False
     return valid, rows
 
@@ -1001,7 +1014,9 @@ def validate_e8_boundary(boundary: Mapping[str, Any]) -> BoundaryValidationResul
         environment_data = dict(environment)
         if environment_data.get("name") != NATIVE_ENVIRONMENT_NAME:
             errors.append("native_environment.name is not pinned")
-        environment_valid = _immutable_revision(environment_data.get("revision"), "native_environment.revision", errors)
+        environment_valid = _immutable_revision(
+            environment_data.get("revision"), "native_environment.revision", errors
+        )
         for field_name in ("reset_per_task", "stateful", "artifact_or_side_effect"):
             if environment_data.get(field_name) is not True:
                 errors.append(f"native_environment.{field_name} must be true")
@@ -1017,7 +1032,9 @@ def validate_e8_boundary(boundary: Mapping[str, Any]) -> BoundaryValidationResul
         verifier_data = dict(verifier)
         if verifier_data.get("name") != NATIVE_VERIFIER_NAME:
             errors.append("native_verifier.name is not the E8 native verifier")
-        verifier_valid = _immutable_revision(verifier_data.get("revision"), "native_verifier.revision", errors)
+        verifier_valid = _immutable_revision(
+            verifier_data.get("revision"), "native_verifier.revision", errors
+        )
         if verifier_data.get("artifact_required") is not True:
             errors.append("native_verifier must require artifacts")
         for field_name in (
@@ -1117,7 +1134,12 @@ def validate_e8_boundary(boundary: Mapping[str, Any]) -> BoundaryValidationResul
         if claims_data.get("primary_eval") is not True:
             errors.append("claims.primary_eval must be true")
             claims_valid = False
-        for field_name in ("receipt_proven_heldout", "portfolio_evidence", "e6_substitute", "xlam_substitute"):
+        for field_name in (
+            "receipt_proven_heldout",
+            "portfolio_evidence",
+            "e6_substitute",
+            "xlam_substitute",
+        ):
             if claims_data.get(field_name) is not False:
                 errors.append(f"claims.{field_name} must remain false at protocol stage")
                 claims_valid = False
@@ -1131,8 +1153,11 @@ def validate_e8_boundary(boundary: Mapping[str, Any]) -> BoundaryValidationResul
 
     metrics = {
         "schema_valid": not errors,
-        "source_identity_valid": _is_mapping(source) and not any(error.startswith("source.") for error in errors),
-        "immutable_revision_valid": bool(dataset_revision and _IMMUTABLE_REVISION_RE.fullmatch(str(dataset_revision)))
+        "source_identity_valid": _is_mapping(source)
+        and not any(error.startswith("source.") for error in errors),
+        "immutable_revision_valid": bool(
+            dataset_revision and _IMMUTABLE_REVISION_RE.fullmatch(str(dataset_revision))
+        )
         and environment_valid
         and verifier_valid
         and train_hash_valid,
@@ -1320,7 +1345,10 @@ def validate_e8_receipt(
     else:
         proof = dict(heldout)
         try:
-            rebuilt = build_heldout_proof(train_manifest=proof.get("train_manifest", {}), eval_manifest=proof.get("eval_manifest", {}))
+            rebuilt = build_heldout_proof(
+                train_manifest=proof.get("train_manifest", {}),
+                eval_manifest=proof.get("eval_manifest", {}),
+            )
             if rebuilt != proof:
                 raise LifeSciBenchSchemaError("heldout proof differs from verified manifests")
         except LifeSciBenchSchemaError as exc:
@@ -1378,16 +1406,24 @@ def validate_e8_receipt(
             if native_data.get(field_name) != expected:
                 errors.append(f"native_verifier.{field_name} is not pinned")
                 native_valid = False
-        _immutable_revision(native_data.get("environment_revision"), "native_verifier.environment_revision", errors)
-        _immutable_revision(native_data.get("verifier_revision"), "native_verifier.verifier_revision", errors)
+        _immutable_revision(
+            native_data.get("environment_revision"), "native_verifier.environment_revision", errors
+        )
+        _immutable_revision(
+            native_data.get("verifier_revision"), "native_verifier.verifier_revision", errors
+        )
         if boundary is not None:
             boundary_data = dict(boundary)
             boundary_environment = boundary_data.get("native_environment")
             boundary_verifier = boundary_data.get("native_verifier")
-            if _is_mapping(boundary_environment) and native_data.get("environment_revision") != boundary_environment.get("revision"):
+            if _is_mapping(boundary_environment) and native_data.get(
+                "environment_revision"
+            ) != boundary_environment.get("revision"):
                 errors.append("result environment revision differs from boundary")
                 native_valid = False
-            if _is_mapping(boundary_verifier) and native_data.get("verifier_revision") != boundary_verifier.get("revision"):
+            if _is_mapping(boundary_verifier) and native_data.get(
+                "verifier_revision"
+            ) != boundary_verifier.get("revision"):
                 errors.append("result verifier revision differs from boundary")
                 native_valid = False
         if native_data.get("checked") is not True:
@@ -1399,9 +1435,7 @@ def validate_e8_receipt(
                 native_valid = False
         rows = native_data.get("episode_rows")
         manifest_by_id = {
-            row.get("task_id"): row
-            for row in task_rows
-            if isinstance(row.get("task_id"), str)
+            row.get("task_id"): row for row in task_rows if isinstance(row.get("task_id"), str)
         }
         if not isinstance(rows, list) or not rows:
             errors.append("native_verifier.episode_rows are required")
@@ -1416,7 +1450,9 @@ def validate_e8_receipt(
                 row_data = dict(row)
                 task_id = row_data.get("task_id")
                 if not isinstance(task_id, str) or task_id in seen_ids:
-                    errors.append(f"native_verifier.episode_rows[{index}] task_id is missing or duplicated")
+                    errors.append(
+                        f"native_verifier.episode_rows[{index}] task_id is missing or duplicated"
+                    )
                     native_valid = False
                 else:
                     seen_ids.add(task_id)
@@ -1424,12 +1460,21 @@ def validate_e8_receipt(
                 if manifest_row is None:
                     errors.append(f"episode_rows[{index}].task_id is not in task_manifest")
                     native_valid = False
-                expected_hash = _task_hash(task_id, dataset_revision) if isinstance(task_id, str) else ""
+                expected_hash = (
+                    _task_hash(task_id, dataset_revision) if isinstance(task_id, str) else ""
+                )
                 if row_data.get("task_id_hash") != expected_hash:
                     errors.append(f"native_verifier.episode_rows[{index}] task hash mismatch")
                     native_valid = False
-                for field_name in ("observation_hash", "action_hash", "state_hash", "artifact_digest"):
-                    if not _digest(row_data.get(field_name), f"episode_rows[{index}].{field_name}", errors):
+                for field_name in (
+                    "observation_hash",
+                    "action_hash",
+                    "state_hash",
+                    "artifact_digest",
+                ):
+                    if not _digest(
+                        row_data.get(field_name), f"episode_rows[{index}].{field_name}", errors
+                    ):
                         native_valid = False
                 if type(row_data.get("task_success")) is not bool:
                     errors.append(f"episode_rows[{index}].task_success must be boolean")
@@ -1454,7 +1499,15 @@ def validate_e8_receipt(
     wandb_valid = _validate_evidence_block(
         data.get("wandb"),
         name="wandb",
-        required_fields=("observed", "run_id", "url", "project", "config_hash", "metrics", "sample_manifest_hash"),
+        required_fields=(
+            "observed",
+            "run_id",
+            "url",
+            "project",
+            "config_hash",
+            "metrics",
+            "sample_manifest_hash",
+        ),
         errors=errors,
     )
     wandb = data.get("wandb")
@@ -1477,17 +1530,42 @@ def validate_e8_receipt(
                     except (InvalidOperation, ValueError):
                         errors.append(f"wandb.metrics.{metric_name} must be finite")
 
-    if _is_mapping(wandb) and _is_mapping(native) and isinstance(native.get("episode_rows"), list) and native["episode_rows"]:
+    if (
+        _is_mapping(wandb)
+        and _is_mapping(native)
+        and isinstance(native.get("episode_rows"), list)
+        and native["episode_rows"]
+    ):
         episode_rows = native["episode_rows"]
-        measures = {"eval/lifescibench_success_rate": "task_success", "eval/lifescibench_reward_mean": "reward", "eval/lifescibench_action_count_mean": "action_count"}
+        measures = {
+            "eval/lifescibench_success_rate": "task_success",
+            "eval/lifescibench_reward_mean": "reward",
+            "eval/lifescibench_action_count_mean": "action_count",
+        }
         for metric, field in measures.items():
             values = [row.get(field) for row in episode_rows if isinstance(row, Mapping)]
-            valid = len(values) == len(episode_rows) and all(type(v) is bool if field == "task_success" else type(v) in (int, float) and math.isfinite(v) and v >= 0 and (v <= 1 if field == "reward" else float(v).is_integer()) for v in values)
+            valid = len(values) == len(episode_rows) and all(
+                type(v) is bool
+                if field == "task_success"
+                else type(v) in (int, float)
+                and math.isfinite(v)
+                and v >= 0
+                and (v <= 1 if field == "reward" else float(v).is_integer())
+                for v in values
+            )
             supplied = wandb.get("metrics", {}).get(metric)
-            if not valid or type(supplied) not in (int, float) or not math.isclose(float(supplied), sum(values)/len(values), abs_tol=1e-9):
+            if (
+                not valid
+                or type(supplied) not in (int, float)
+                or not math.isclose(float(supplied), sum(values) / len(values), abs_tol=1e-9)
+            ):
                 errors.append(f"{metric} does not match native episode outcomes")
         for row in episode_rows:
-            if isinstance(row, Mapping) and type(row.get("reward")) in (int, float) and row.get("task_success") is not (row["reward"] >= .7):
+            if (
+                isinstance(row, Mapping)
+                and type(row.get("reward")) in (int, float)
+                and row.get("task_success") is not (row["reward"] >= 0.7)
+            ):
                 errors.append("task success must follow the 70% rubric threshold")
 
     tinker_valid = _validate_evidence_block(
@@ -1518,7 +1596,13 @@ def validate_e8_receipt(
         try:
             charged_d = Decimal(str(charged))
             cap_d = Decimal(str(cap))
-            if not charged_d.is_finite() or charged_d < 0 or not cap_d.is_finite() or cap_d <= 0 or charged_d > cap_d:
+            if (
+                not charged_d.is_finite()
+                or charged_d < 0
+                or not cap_d.is_finite()
+                or cap_d <= 0
+                or charged_d > cap_d
+            ):
                 raise InvalidOperation
         except (InvalidOperation, ValueError):
             errors.append("cost charged_usd/cap_usd must be finite and within cap")
@@ -1586,7 +1670,23 @@ def _verify_e8_provider_grant(
     except LifeSciBenchSchemaError as exc:
         errors.append(str(exc))
         return None
-    data = _strict_object(grant, {"lane", "suite_id", "key_id", "key_fingerprint", "trust_root_sha256", "signature_algorithm", "issued_at", "expires_at", "binding", "detached_signature"}, "provider_grant", errors)
+    data = _strict_object(
+        grant,
+        {
+            "lane",
+            "suite_id",
+            "key_id",
+            "key_fingerprint",
+            "trust_root_sha256",
+            "signature_algorithm",
+            "issued_at",
+            "expires_at",
+            "binding",
+            "detached_signature",
+        },
+        "provider_grant",
+        errors,
+    )
     if (
         data.get("lane") != LIFESCIBENCH_GRANT_LANE
         or data.get("suite_id") != SUITE_ID
@@ -1596,23 +1696,42 @@ def _verify_e8_provider_grant(
         or data.get("signature_algorithm") != "ed25519"
         or data.get("binding") != dict(binding)
     ):
-        errors.append("provider_grant does not bind the supplied E8 lane, suite, trust root, and package")
+        errors.append(
+            "provider_grant does not bind the supplied E8 lane, suite, trust root, and package"
+        )
         return None
     try:
-        issued = datetime.fromisoformat(str(data["issued_at"]).replace("Z", "+00:00")); expires = datetime.fromisoformat(str(data["expires_at"]).replace("Z", "+00:00")); now = datetime.now(timezone.utc)
-        if issued.tzinfo is None or expires.tzinfo is None or issued > now or expires <= now or expires <= issued: raise ValueError
+        issued = datetime.fromisoformat(str(data["issued_at"]).replace("Z", "+00:00"))
+        expires = datetime.fromisoformat(str(data["expires_at"]).replace("Z", "+00:00"))
+        now = datetime.now(timezone.utc)
+        if (
+            issued.tzinfo is None
+            or expires.tzinfo is None
+            or issued > now
+            or expires <= now
+            or expires <= issued
+        ):
+            raise ValueError
         signed = {key: value for key, value in data.items() if key != "detached_signature"}
         Ed25519PublicKey.from_public_bytes(
             base64.b64decode(root["public_key_b64"], validate=True)
-        ).verify(base64.b64decode(data["detached_signature"], validate=True), _canonical_json(signed).encode("utf-8"))
+        ).verify(
+            base64.b64decode(data["detached_signature"], validate=True),
+            _canonical_json(signed).encode("utf-8"),
+        )
     except (KeyError, ValueError, TypeError, InvalidSignature):
-        errors.append("provider_grant signature or time window does not verify against the supplied E8 trust root")
+        errors.append(
+            "provider_grant signature or time window does not verify against the supplied E8 trust root"
+        )
         return None
     return root
 
 
 def validate_provider_package_intake(
-    package: Mapping[str, Any], *, boundary: Mapping[str, Any], trust_root: Mapping[str, Any] | None = None
+    package: Mapping[str, Any],
+    *,
+    boundary: Mapping[str, Any],
+    trust_root: Mapping[str, Any] | None = None,
 ) -> ReceiptValidationResult:
     """Validate an access-gated E8 package without reading task content.
 
@@ -1628,11 +1747,39 @@ def validate_provider_package_intake(
     boundary_result = validate_e8_boundary(boundary)
     if not boundary_result.ok:
         errors.append("provider package requires a pinned protocol-valid E8 boundary")
-    data = _strict_object(package, {"schema_version", "suite_id", "package_revision", "package_sha256", "license_id", "license_sha256", "grant_sha256", "boundary_sha256", "container_digest", "runtime_digest", "verifier_revision", "deployment_attestation", "provider_grant"}, "provider package", errors)
+    data = _strict_object(
+        package,
+        {
+            "schema_version",
+            "suite_id",
+            "package_revision",
+            "package_sha256",
+            "license_id",
+            "license_sha256",
+            "grant_sha256",
+            "boundary_sha256",
+            "container_digest",
+            "runtime_digest",
+            "verifier_revision",
+            "deployment_attestation",
+            "provider_grant",
+        },
+        "provider package",
+        errors,
+    )
     required = (
-        "schema_version", "suite_id", "package_revision", "package_sha256", "license_id",
-        "license_sha256", "grant_sha256", "boundary_sha256", "container_digest", "runtime_digest",
-        "verifier_revision", "deployment_attestation",
+        "schema_version",
+        "suite_id",
+        "package_revision",
+        "package_sha256",
+        "license_id",
+        "license_sha256",
+        "grant_sha256",
+        "boundary_sha256",
+        "container_digest",
+        "runtime_digest",
+        "verifier_revision",
+        "deployment_attestation",
     )
     for field_name in required:
         if field_name not in data:
@@ -1642,7 +1789,14 @@ def validate_provider_package_intake(
     if data.get("suite_id") != SUITE_ID:
         errors.append("provider package suite_id is not lifescibench_eval")
     _immutable_revision(data.get("package_revision"), "provider package_revision", errors)
-    for field_name in ("package_sha256", "license_sha256", "grant_sha256", "boundary_sha256", "container_digest", "runtime_digest"):
+    for field_name in (
+        "package_sha256",
+        "license_sha256",
+        "grant_sha256",
+        "boundary_sha256",
+        "container_digest",
+        "runtime_digest",
+    ):
         _digest(data.get(field_name), f"provider {field_name}", errors)
     _nonempty(data.get("license_id"), "provider license_id", errors)
     _immutable_revision(data.get("verifier_revision"), "provider verifier_revision", errors)
@@ -1660,7 +1814,20 @@ def validate_provider_package_intake(
         errors.append("pinned boundary must contain provider_package_contract")
         package_contract = {}
     else:
-        package_contract = _strict_object(package_contract, {"package_sha256", "license_sha256", "grant_sha256", "container_digest", "runtime_digest", "verifier_revision", "deployment_attestation_sha256"}, "provider_package_contract", errors)
+        package_contract = _strict_object(
+            package_contract,
+            {
+                "package_sha256",
+                "license_sha256",
+                "grant_sha256",
+                "container_digest",
+                "runtime_digest",
+                "verifier_revision",
+                "deployment_attestation_sha256",
+            },
+            "provider_package_contract",
+            errors,
+        )
     if isinstance(dataset, Mapping) and data.get("license_id") != dataset.get("license_id"):
         errors.append("provider license_id differs from pinned boundary")
     if data.get("package_sha256") != package_contract.get("package_sha256"):
@@ -1673,29 +1840,58 @@ def validate_provider_package_intake(
         errors.append("provider container_digest differs from pinned boundary")
     if data.get("runtime_digest") != package_contract.get("runtime_digest"):
         errors.append("provider runtime_digest differs from pinned boundary")
-    if data.get("verifier_revision") != package_contract.get("verifier_revision") or (isinstance(verifier, Mapping) and data.get("verifier_revision") != verifier.get("revision")):
+    if data.get("verifier_revision") != package_contract.get("verifier_revision") or (
+        isinstance(verifier, Mapping) and data.get("verifier_revision") != verifier.get("revision")
+    ):
         errors.append("provider verifier_revision differs from pinned boundary")
-    attestation = _strict_object(data.get("deployment_attestation"), {"provider_id", "deployment_id", "issued_at", "attestation_sha256"}, "deployment_attestation", errors)
+    attestation = _strict_object(
+        data.get("deployment_attestation"),
+        {"provider_id", "deployment_id", "issued_at", "attestation_sha256"},
+        "deployment_attestation",
+        errors,
+    )
     if attestation:
         for field_name in ("provider_id", "deployment_id", "issued_at", "attestation_sha256"):
-            if not isinstance(attestation.get(field_name), str) or not attestation[field_name].strip():
+            if (
+                not isinstance(attestation.get(field_name), str)
+                or not attestation[field_name].strip()
+            ):
                 errors.append(f"deployment_attestation.{field_name} is required")
-        _digest(attestation.get("attestation_sha256"), "deployment_attestation.attestation_sha256", errors)
+        _digest(
+            attestation.get("attestation_sha256"),
+            "deployment_attestation.attestation_sha256",
+            errors,
+        )
         try:
-            parsed = datetime.fromisoformat(str(attestation.get("issued_at", "")).replace("Z", "+00:00"))
+            parsed = datetime.fromisoformat(
+                str(attestation.get("issued_at", "")).replace("Z", "+00:00")
+            )
             if parsed.tzinfo is None:
                 raise ValueError
         except ValueError:
             errors.append("deployment_attestation.issued_at must be timezone-aware ISO-8601")
-        if attestation.get("attestation_sha256") != package_contract.get("deployment_attestation_sha256"):
+        if attestation.get("attestation_sha256") != package_contract.get(
+            "deployment_attestation_sha256"
+        ):
             errors.append("deployment attestation differs from pinned boundary")
-    grant_binding = {"suite_id": SUITE_ID, "lane": LIFESCIBENCH_GRANT_LANE, "package_sha256": data.get("package_sha256"), "grant_sha256": data.get("grant_sha256"), "boundary_sha256": data.get("boundary_sha256"), "container_digest": data.get("container_digest"), "runtime_digest": data.get("runtime_digest"), "verifier_revision": data.get("verifier_revision")}
+    grant_binding = {
+        "suite_id": SUITE_ID,
+        "lane": LIFESCIBENCH_GRANT_LANE,
+        "package_sha256": data.get("package_sha256"),
+        "grant_sha256": data.get("grant_sha256"),
+        "boundary_sha256": data.get("boundary_sha256"),
+        "container_digest": data.get("container_digest"),
+        "runtime_digest": data.get("runtime_digest"),
+        "verifier_revision": data.get("verifier_revision"),
+    }
     verified_root = _verify_e8_provider_grant(
         data.get("provider_grant"), binding=grant_binding, trust_root=trust_root, errors=errors
     )
     for forbidden in ("score", "metric", "result", "task_text", "tasks", "rubric"):
         if forbidden in data:
-            errors.append(f"provider package must not contain {forbidden}; intake is not an evaluation result")
+            errors.append(
+                f"provider package must not contain {forbidden}; intake is not an evaluation result"
+            )
     metrics = {
         "schema_valid": not errors,
         "package_intake": True,
@@ -1708,12 +1904,17 @@ def validate_provider_package_intake(
 
 
 def build_hosted_execution_request(
-    package: Mapping[str, Any], *, boundary: Mapping[str, Any], trust_root: Mapping[str, Any] | None = None
+    package: Mapping[str, Any],
+    *,
+    boundary: Mapping[str, Any],
+    trust_root: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Emit a provider execution request, never a score or execution result."""
     result = validate_provider_package_intake(package, boundary=boundary, trust_root=trust_root)
     if not result.ok:
-        raise LifeSciBenchSchemaError("provider package intake rejected: " + "; ".join(result.errors))
+        raise LifeSciBenchSchemaError(
+            "provider package intake rejected: " + "; ".join(result.errors)
+        )
     data = dict(package)
     request = {
         "schema_version": EXECUTION_REQUEST_SCHEMA_VERSION,
@@ -1755,11 +1956,17 @@ def main(argv: Sequence[str] | None = None) -> int:
         type=Path,
         help="external lane-scoped E8 provider trust-root JSON document",
     )
-    parser.add_argument("--hosted-submit", action="store_true", help="emit a local hosted execution request; never submit it")
+    parser.add_argument(
+        "--hosted-submit",
+        action="store_true",
+        help="emit a local hosted execution request; never submit it",
+    )
     args = parser.parse_args(argv)
     if args.intake_package is not None or args.hosted_submit:
         if args.intake_package is None or args.boundary is None or args.trust_roots is None:
-            parser.error("--intake-package, --boundary, and --trust-roots are required for provider package intake")
+            parser.error(
+                "--intake-package, --boundary, and --trust-roots are required for provider package intake"
+            )
         try:
             package = json.loads(args.intake_package.read_text(encoding="utf-8"))
             boundary = json.loads(args.boundary.read_text(encoding="utf-8"))
@@ -1768,7 +1975,11 @@ def main(argv: Sequence[str] | None = None) -> int:
             print(_canonical_json({"status": "ERROR", "errors": [f"malformed JSON: {exc}"]}))
             return 1
         intake = validate_provider_package_intake(package, boundary=boundary, trust_root=trust_root)
-        output: dict[str, Any] = {"intake": intake.to_dict(), "score": None, "paid_calls_executed": False}
+        output: dict[str, Any] = {
+            "intake": intake.to_dict(),
+            "score": None,
+            "paid_calls_executed": False,
+        }
         if intake.ok and args.hosted_submit:
             output["execution_request"] = build_hosted_execution_request(
                 package, boundary=boundary, trust_root=trust_root

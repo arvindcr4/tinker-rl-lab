@@ -49,6 +49,7 @@ Outputs (5 files in platform_hybrid/experiments/results/p5p8/):
 
 Stdlib + numpy + pandas + xgboost + matplotlib. <=290 lines.
 """
+
 from __future__ import annotations
 
 import hashlib
@@ -65,8 +66,10 @@ import xgboost as xgb
 
 # ------------------------------------------------------------------ paths
 import sys
+
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
+from _paths import REPO_ROOT
+
 ROOT = REPO_ROOT
 OUT = ROOT / "platform_hybrid/experiments" / "results" / "p5p8/corrected-review21-v2"
 FIG = OUT / "figures"
@@ -80,12 +83,16 @@ N_BINS = 5
 RAW_FEATURES = [f"V{i}" for i in range(1, 21)]
 SENSOR_FEATURES = ["V_mean", "V_std", "V_max", "V_min"]
 STRATA = {
-    "V_mean": ("V_mean",),                     # LLM-as-sensor aggregate
-    "V14":    ("V14",),                         # top-importance raw feature
+    "V_mean": ("V_mean",),  # LLM-as-sensor aggregate
+    "V14": ("V14",),  # top-importance raw feature
 }
 TREE_KWARGS = dict(
-    n_estimators=200, max_depth=4, learning_rate=0.1,
-    eval_metric="logloss", random_state=SEED, verbosity=0,
+    n_estimators=200,
+    max_depth=4,
+    learning_rate=0.1,
+    eval_metric="logloss",
+    random_state=SEED,
+    verbosity=0,
 )
 
 
@@ -96,14 +103,18 @@ def load_data() -> tuple[pd.DataFrame, pd.DataFrame]:
 
 
 def fit_and_score(model_kind: str, train: pd.DataFrame, test: pd.DataFrame) -> np.ndarray:
-    feats = (RAW_FEATURES if model_kind == "20raw"
-             else (RAW_FEATURES + SENSOR_FEATURES if model_kind == "24full"
-                   else SENSOR_FEATURES))
+    feats = (
+        RAW_FEATURES
+        if model_kind == "20raw"
+        else (RAW_FEATURES + SENSOR_FEATURES if model_kind == "24full" else SENSOR_FEATURES)
+    )
     X_tr, y_tr = train[feats].values, train["Class"].values
     X_te = test[feats].values
-    n_pos = int(y_tr.sum()); n_neg = len(y_tr) - n_pos
+    n_pos = int(y_tr.sum())
+    n_neg = len(y_tr) - n_pos
     clf = xgb.XGBClassifier(
-        **TREE_KWARGS, scale_pos_weight=n_neg / max(n_pos, 1),
+        **TREE_KWARGS,
+        scale_pos_weight=n_neg / max(n_pos, 1),
     )
     clf.fit(X_tr, y_tr)
     return clf.predict_proba(X_te)[:, 1]
@@ -120,8 +131,11 @@ def gini(values: np.ndarray) -> float:
 
 
 def stratified_metrics(
-    scores: np.ndarray, y: np.ndarray, stratum: np.ndarray,
-    k_pct: float, n_bins: int,
+    scores: np.ndarray,
+    y: np.ndarray,
+    stratum: np.ndarray,
+    k_pct: float,
+    n_bins: int,
 ) -> list[dict]:
     """For one tree, compute per-bin alert+fairness metrics under global K=2%."""
     n = len(scores)
@@ -132,7 +146,8 @@ def stratified_metrics(
     alerted_mask[top_idx] = True
     # Bin stratum into n_bins quintiles (by quantile)
     bins = np.quantile(stratum, np.linspace(0.0, 1.0, n_bins + 1))
-    bins[0] -= 1e-9; bins[-1] += 1e-9
+    bins[0] -= 1e-9
+    bins[-1] += 1e-9
     bin_id = np.digitize(stratum, bins[1:-1])  # 0..n_bins-1
     rows = []
     for b in range(n_bins):
@@ -147,17 +162,19 @@ def stratified_metrics(
         # lift = precision_b / p_base_test (overall positive rate, not p_b)
         p_base = float(y.sum()) / n
         lift_b = (precision_b / p_base) if (precision_b and p_base) else 0.0
-        rows.append({
-            "bin": b,
-            "n_bin": n_b,
-            "n_pos_bin": n_pos_b,
-            "p_bin": p_b,
-            "n_alert_bin": n_alert_b,
-            "alert_rate_bin": alert_rate_b,
-            "recall_bin": recall_b,
-            "precision_bin": precision_b,
-            "lift_bin": lift_b,
-        })
+        rows.append(
+            {
+                "bin": b,
+                "n_bin": n_b,
+                "n_pos_bin": n_pos_b,
+                "p_bin": p_b,
+                "n_alert_bin": n_alert_b,
+                "alert_rate_bin": alert_rate_b,
+                "recall_bin": recall_b,
+                "precision_bin": precision_b,
+                "lift_bin": lift_b,
+            }
+        )
     return rows
 
 
@@ -169,9 +186,10 @@ def heterogeneity_summary(per_bin: list[dict]) -> dict:
     arr_prate = np.array([r["p_bin"] for r in per_bin], dtype=float)
     arr_alert_rate = np.array([r["alert_rate_bin"] for r in per_bin], dtype=float)
     total_alerts = arr_alerts.sum()
-    actual_pos_rate = float(np.nansum([
-        r["n_pos_bin"] for r in per_bin
-    ]) / max(1, np.nansum([r["n_bin"] for r in per_bin])))
+    actual_pos_rate = float(
+        np.nansum([r["n_pos_bin"] for r in per_bin])
+        / max(1, np.nansum([r["n_bin"] for r in per_bin]))
+    )
     # Expected alert rate per bin if perfectly proportional to n_bin
     n_bins = len(per_bin)
     expected_alert_rate = np.full(n_bins, total_alerts / max(1, sum(r["n_bin"] for r in per_bin)))
@@ -187,9 +205,14 @@ def heterogeneity_summary(per_bin: list[dict]) -> dict:
 
 
 def paired_heterogeneity_bootstrap(
-    scores_a: np.ndarray, scores_b: np.ndarray,
-    y: np.ndarray, stratum: np.ndarray,
-    k_pct: float, n_bins: int, n_boot: int, seed: int,
+    scores_a: np.ndarray,
+    scores_b: np.ndarray,
+    y: np.ndarray,
+    stratum: np.ndarray,
+    k_pct: float,
+    n_bins: int,
+    n_boot: int,
+    seed: int,
 ) -> list[dict]:
     """Paired bootstrap on the heterogeneity-summary scalars (4 metrics).
 
@@ -202,8 +225,10 @@ def paired_heterogeneity_bootstrap(
     arr_b = {m: np.empty(n_boot) for m in metrics}
     for j in range(n_boot):
         idx = rng.integers(0, n, size=n)
-        sa = scores_a[idx]; sb = scores_b[idx]
-        ya = y[idx]; stratb = stratum[idx]
+        sa = scores_a[idx]
+        sb = scores_b[idx]
+        ya = y[idx]
+        stratb = stratum[idx]
         per_a = stratified_metrics(sa, ya, stratb, k_pct, n_bins)
         per_b = stratified_metrics(sb, ya, stratb, k_pct, n_bins)
         sum_a = heterogeneity_summary(per_a)
@@ -218,15 +243,17 @@ def paired_heterogeneity_bootstrap(
         dlo = float(np.percentile(delta, 2.5))
         dhi = float(np.percentile(delta, 97.5))
         excl = "YES" if (dlo > 0 or dhi < 0) else "no"
-        out.append({
-            "metric": m,
-            "mean_a": float(arr_a[m].mean()),
-            "mean_b": float(arr_b[m].mean()),
-            "delta": dmean,
-            "ci_lo": dlo,
-            "ci_hi": dhi,
-            "excludes_zero": excl,
-        })
+        out.append(
+            {
+                "metric": m,
+                "mean_a": float(arr_a[m].mean()),
+                "mean_b": float(arr_b[m].mean()),
+                "delta": dmean,
+                "ci_lo": dlo,
+                "ci_hi": dhi,
+                "excludes_zero": excl,
+            }
+        )
     return out
 
 
@@ -241,8 +268,10 @@ def main() -> None:
     y = test["Class"].values
     for kind in ("20raw", "24full", "4sensor"):
         scores[kind] = fit_and_score(kind, train, test)
-        print(f"  fitted {kind}: AUC proxy at top-1% recall = "
-              f"{stratified_metrics(scores[kind], y, test['V_mean'].values, 1.0, 5)[0]['recall_bin']:.4f}")
+        print(
+            f"  fitted {kind}: AUC proxy at top-1% recall = "
+            f"{stratified_metrics(scores[kind], y, test['V_mean'].values, 1.0, 5)[0]['recall_bin']:.4f}"
+        )
 
     # PART A: per-strata × per-bin × per-tree table
     rows = []
@@ -251,24 +280,34 @@ def main() -> None:
         for kind in ("20raw", "24full", "4sensor"):
             per_bin = stratified_metrics(scores[kind], y, stratum, K_GLOBAL_PCT, N_BINS)
             for r in per_bin:
-                rows.append({
-                    "stratum": strat_label,
-                    "model": f"XGB-{kind}",
-                    **r,
-                })
+                rows.append(
+                    {
+                        "stratum": strat_label,
+                        "model": f"XGB-{kind}",
+                        **r,
+                    }
+                )
             # also add the heterogeneity-scalar row
             hs = heterogeneity_summary(per_bin)
-            rows.append({
-                "stratum": strat_label,
-                "model": f"XGB-{kind}",
-                "bin": -1, "n_bin": -1, "n_pos_bin": -1, "p_bin": -1.0,
-                "n_alert_bin": -1, "alert_rate_bin": -1.0, "recall_bin": -1.0,
-                "precision_bin": -1.0, "lift_bin": -1.0,
-                "gini_alerts": hs["gini_alerts"],
-                "std_recall": hs["std_recall"],
-                "std_precision": hs["std_precision"],
-                "l1_alert_rate_gap_vs_global": hs["l1_alert_rate_gap_vs_global"],
-            })
+            rows.append(
+                {
+                    "stratum": strat_label,
+                    "model": f"XGB-{kind}",
+                    "bin": -1,
+                    "n_bin": -1,
+                    "n_pos_bin": -1,
+                    "p_bin": -1.0,
+                    "n_alert_bin": -1,
+                    "alert_rate_bin": -1.0,
+                    "recall_bin": -1.0,
+                    "precision_bin": -1.0,
+                    "lift_bin": -1.0,
+                    "gini_alerts": hs["gini_alerts"],
+                    "std_recall": hs["std_recall"],
+                    "std_precision": hs["std_precision"],
+                    "l1_alert_rate_gap_vs_global": hs["l1_alert_rate_gap_vs_global"],
+                }
+            )
     df_a = pd.DataFrame(rows)
     df_a.to_csv(OUT / "p8_subgroup_fairness.tsv", sep="\t", index=False)
     print(f"[p8_subgroup_fairness] wrote {OUT / 'p8_subgroup_fairness.tsv'} ({len(df_a)} rows)")
@@ -284,18 +323,32 @@ def main() -> None:
         stratum = test[col].values
         for ka, kb, na, nb in pair_defs:
             rows_b = paired_heterogeneity_bootstrap(
-                scores[ka], scores[kb], y, stratum,
-                K_GLOBAL_PCT, N_BINS, N_BOOT, SEED + int.from_bytes(hashlib.sha256(repr((strat_label, ka, kb)).encode()).digest()[:8], "big") % 100000,
+                scores[ka],
+                scores[kb],
+                y,
+                stratum,
+                K_GLOBAL_PCT,
+                N_BINS,
+                N_BOOT,
+                SEED
+                + int.from_bytes(
+                    hashlib.sha256(repr((strat_label, ka, kb)).encode()).digest()[:8], "big"
+                )
+                % 100000,
             )
             for rb in rows_b:
-                boot_rows.append({
-                    "stratum": strat_label,
-                    "pair": f"{na}-{nb}",
-                    **rb,
-                })
+                boot_rows.append(
+                    {
+                        "stratum": strat_label,
+                        "pair": f"{na}-{nb}",
+                        **rb,
+                    }
+                )
     df_b = pd.DataFrame(boot_rows)
     df_b.to_csv(OUT / "p8_subgroup_fairness_boot.tsv", sep="\t", index=False)
-    print(f"[p8_subgroup_fairness] wrote {OUT / 'p8_subgroup_fairness_boot.tsv'} ({len(df_b)} rows)")
+    print(
+        f"[p8_subgroup_fairness] wrote {OUT / 'p8_subgroup_fairness_boot.tsv'} ({len(df_b)} rows)"
+    )
 
     # PART C: summary
     headline = {
@@ -317,18 +370,26 @@ def main() -> None:
 
     # Figure: Gini vs stratum (V_mean, V14), three bars each, both pairs
     fig, axes = plt.subplots(1, 2, figsize=(11.5, 4.5))
-    for ax, stratum in zip(axes, STRATA.keys()):
+    for ax, stratum in zip(axes, STRATA.keys(), strict=False):
         sub = df_b[df_b["stratum"] == stratum]
         pair_names = sub["pair"].unique()
         metric_to_use = "gini_alerts"
         widths = np.arange(len(pair_names))
-        means = []; los = []; his = []
+        means = []
+        los = []
+        his = []
         for pn in pair_names:
             sel = sub[(sub["pair"] == pn) & (sub["metric"] == metric_to_use)]
             means.append(sel["delta"].iloc[0])
             los.append(sel["delta"].iloc[0] - sel["ci_lo"].iloc[0])
             his.append(sel["ci_hi"].iloc[0] - sel["delta"].iloc[0])
-        ax.bar(widths, means, yerr=[los, his], capsize=5, color=["#5a8", "#a55", "#57c"][:len(pair_names)])
+        ax.bar(
+            widths,
+            means,
+            yerr=[los, his],
+            capsize=5,
+            color=["#5a8", "#a55", "#57c"][: len(pair_names)],
+        )
         ax.axhline(0, color="k", lw=0.7)
         ax.set_xticks(widths)
         ax.set_xticklabels(pair_names, rotation=20, ha="right", fontsize=8)

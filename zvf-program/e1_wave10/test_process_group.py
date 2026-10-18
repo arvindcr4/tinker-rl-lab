@@ -50,7 +50,10 @@ class GroupFinalizationTests(unittest.TestCase):
         self.workdir = Path(
             os.environ.get(
                 "E1_WAVE10_TMP",
-                os.path.join(tempfile_dir(), f"e1_wave10_group_{self.id().rsplit('.', 1)[-1][:40]}_{os.getpid()}"),
+                os.path.join(
+                    tempfile_dir(),
+                    f"e1_wave10_group_{self.id().rsplit('.', 1)[-1][:40]}_{os.getpid()}",
+                ),
             )
         )
         self.workdir.mkdir(parents=True, exist_ok=True)
@@ -76,24 +79,22 @@ class GroupFinalizationTests(unittest.TestCase):
     def _run_exit_worker(self, exit_code):
         command = support.worker_exit_argv(self.workdir, exit_code)
         started = time.monotonic()
-        outcome = support.call_run_child(self, command, self.workdir / "result.json", self.workdir, self.WORKER_TIMEOUT)
+        outcome = support.call_run_child(
+            self, command, self.workdir / "result.json", self.workdir, self.WORKER_TIMEOUT
+        )
         elapsed = time.monotonic() - started
         return outcome, elapsed
 
     def _assert_group_leader_fixture_shape(self, process_info, before):
-        self.assertEqual(
-            process_info.get("pgid"),
-            process_info.get("pid"),
-            "worker must lead its own process group (fixture process.json pid==pgid)",
+        assert process_info.get("pgid") == process_info.get("pid"), (
+            "worker must lead its own process group (fixture process.json pid==pgid)"
         )
-        self.assertEqual(before["worker_pid"], process_info["pid"])
-        self.assertEqual(before["worker_pgid"], process_info["pgid"])
-        self.assertEqual(
-            before["child_pgid"],
-            before["worker_pgid"],
-            "the sleeper must be in the worker's process group",
+        assert before["worker_pid"] == process_info["pid"]
+        assert before["worker_pgid"] == process_info["pgid"]
+        assert before["child_pgid"] == before["worker_pgid"], (
+            "the sleeper must be in the worker's process group"
         )
-        self.assertEqual(before["child_alive"], True)
+        assert before["child_alive"] == True
 
     def _register_group_cleanup(self, pgid):
         self.addCleanup(lambda: support.kill_group_hard(pgid))
@@ -102,19 +103,15 @@ class GroupFinalizationTests(unittest.TestCase):
         # Independent observation (mirrors independent_observation.json):
         # after the controller returns, the original group and the child must
         # be gone even though the child was designed to sleep for 60s.
-        self.assertTrue(
-            support.group_absent(pgid, timeout=5.0),
-            "original owned PGID {} still observable after return".format(pgid),
+        assert support.group_absent(pgid, timeout=5.0), (
+            "original owned PGID {} still observable after return".format(pgid)
         )
-        self.assertTrue(
-            support.pid_dead(child_pid, timeout=5.0),
-            "same-group child {} still alive/reaped-late after return".format(child_pid),
+        assert support.pid_dead(child_pid, timeout=5.0), (
+            "same-group child {} still alive/reaped-late after return".format(child_pid)
         )
-        self.assertLess(
-            elapsed,
-            self.MAX_RUN_SECONDS,
+        assert elapsed < self.MAX_RUN_SECONDS, (
             "controller returned in {:.1f}s; a 60s sleeper inside the group can only "
-            "have been removed by a real group SIGKILL during finalization".format(elapsed),
+            "have been removed by a real group SIGKILL during finalization".format(elapsed)
         )
 
     # -- test 1 ------------------------------------------------------------
@@ -122,15 +119,12 @@ class GroupFinalizationTests(unittest.TestCase):
     def test_worker_exit_zero_with_live_same_group_child_is_finalized_before_success(self):
         outcome, elapsed = self._run_exit_worker(0)
 
-        self.assertTrue(
-            support.is_success(outcome),
-            "exit-0 worker with verified group finalization must succeed, got {!r}".format(outcome),
+        assert support.is_success(outcome), (
+            "exit-0 worker with verified group finalization must succeed, got {!r}".format(outcome)
         )
-        self.assertEqual(
-            {k:v for k,v in support.outcome_result(outcome).items() if k != "attempt_nonce"},
-            {"returned": True},
-            "result.json must be read only after verified group absence",
-        )
+        assert {
+            k: v for k, v in support.outcome_result(outcome).items() if k != "attempt_nonce"
+        } == {"returned": True}, "result.json must be read only after verified group absence"
 
         process_info = support.load_json(self, self.workdir / "process.json")
         before = support.load_json(self, self.workdir / "t_before.json")
@@ -140,21 +134,17 @@ class GroupFinalizationTests(unittest.TestCase):
         self._register_group_cleanup(pgid)
 
         receipt = support.load_json(self, self.workdir / "group_finalization.json")
-        support.assert_finalization_receipt(
-            self, receipt, expected_returncode=0
-        )
-        self.assertEqual(receipt["pgid"], pgid)
-        self.assertTrue(
-            receipt["group_sigkill_sent"],
+        support.assert_finalization_receipt(self, receipt, expected_returncode=0)
+        assert receipt["pgid"] == pgid
+        assert receipt["group_sigkill_sent"], (
             "a live same-group child existed, so finalization must have sent the "
-            "group SIGKILL before success was established",
+            "group SIGKILL before success was established"
         )
-        self.assertTrue(receipt["original_group_absent"])
-        self.assertTrue(receipt["verified"])
+        assert receipt["original_group_absent"]
+        assert receipt["verified"]
 
-        self.assertFalse(
-            (self.workdir / "unknown.json").exists(),
-            "verified success path must not retain an unknown receipt",
+        assert not (self.workdir / "unknown.json").exists(), (
+            "verified success path must not retain an unknown receipt"
         )
         self._assert_independent_absence(pgid, child_pid, elapsed)
 
@@ -163,13 +153,13 @@ class GroupFinalizationTests(unittest.TestCase):
     def test_worker_failure_with_live_same_group_child_is_finalized_before_unknown(self):
         outcome, elapsed = self._run_exit_worker(7)
 
-        self.assertTrue(
-            support.is_unknown(outcome),
-            "nonzero worker must stay UNKNOWN even with verified group cleanup, got {!r}".format(outcome),
+        assert support.is_unknown(outcome), (
+            "nonzero worker must stay UNKNOWN even with verified group cleanup, got {!r}".format(
+                outcome
+            )
         )
-        self.assertIsNone(
-            support.outcome_result(outcome),
-            "no successful result may be returned for a failing worker",
+        assert support.outcome_result(outcome) is None, (
+            "no successful result may be returned for a failing worker"
         )
 
         process_info = support.load_json(self, self.workdir / "process.json")
@@ -180,20 +170,17 @@ class GroupFinalizationTests(unittest.TestCase):
         self._register_group_cleanup(pgid)
 
         receipt = support.load_json(self, self.workdir / "group_finalization.json")
-        support.assert_finalization_receipt(
-            self, receipt, expected_returncode=7
-        )
-        self.assertEqual(receipt["pgid"], pgid)
-        self.assertTrue(receipt["group_sigkill_sent"])
-        self.assertTrue(receipt["original_group_absent"])
-        self.assertTrue(receipt["verified"])
+        support.assert_finalization_receipt(self, receipt, expected_returncode=7)
+        assert receipt["pgid"] == pgid
+        assert receipt["group_sigkill_sent"]
+        assert receipt["original_group_absent"]
+        assert receipt["verified"]
 
         unknown = support.load_json(self, self.workdir / "unknown.json")
-        self.assertEqual(unknown.get("returncode"), 7)
-        self.assertTrue(unknown.get("reaped"), "unknown receipt must record the reaped worker")
-        self.assertTrue(
-            unknown.get("replay_forbidden"),
-            "UNKNOWN must be immutable/no-replay (fixture_exit_7 unknown.json)",
+        assert unknown.get("returncode") == 7
+        assert unknown.get("reaped"), "unknown receipt must record the reaped worker"
+        assert unknown.get("replay_forbidden"), (
+            "UNKNOWN must be immutable/no-replay (fixture_exit_7 unknown.json)"
         )
         self._assert_independent_absence(pgid, child_pid, elapsed)
 
@@ -205,7 +192,9 @@ class GroupFinalizationTests(unittest.TestCase):
                 self.skipTest(
                     "no deterministic unresolved-verification seam on bounded_procgroup "
                     "(tried {}, inject_fault/set_fault, env {}); cannot force the "
-                    "'group remains present' branch offline".format(support.WAIT_SEAM_CANDIDATES, tuple(support.FAULT_ENV))
+                    "'group remains present' branch offline".format(
+                        support.WAIT_SEAM_CANDIDATES, tuple(support.FAULT_ENV)
+                    )
                 )
             outcome, elapsed = self._run_exit_worker(exit_code)
         return outcome, elapsed
@@ -213,55 +202,51 @@ class GroupFinalizationTests(unittest.TestCase):
     def test_unresolved_group_verification_blocks_success_and_preserves_unknown(self):
         outcome, elapsed = self._run_unresolved(0)
 
-        self.assertFalse(
-            support.is_success(outcome),
+        assert not support.is_success(outcome), (
             "exit-0 worker whose group absence cannot be verified must NOT produce a "
-            "successful result (UNKNOWN/no-replay), got {!r}".format(outcome),
+            "successful result (UNKNOWN/no-replay), got {!r}".format(outcome)
         )
-        self.assertTrue(
-            support.is_unknown(outcome),
-            "unresolved verification must preserve UNKNOWN, got {!r}".format(outcome),
+        assert support.is_unknown(outcome), (
+            "unresolved verification must preserve UNKNOWN, got {!r}".format(outcome)
         )
-        self.assertIsNone(support.outcome_result(outcome))
+        assert support.outcome_result(outcome) is None
 
         process_info = support.load_json(self, self.workdir / "process.json")
         self._register_group_cleanup(process_info["pgid"])
 
         unknown = support.load_json(self, self.workdir / "unknown.json")
-        self.assertTrue(
-            unknown.get("replay_forbidden"),
-            "unresolved verification must retain unknown.json with no-replay",
+        assert unknown.get("replay_forbidden"), (
+            "unresolved verification must retain unknown.json with no-replay"
         )
         receipt = support.load_json(self, self.workdir / "group_finalization.json")
-        self.assertIn("verified", receipt)
-        self.assertFalse(
-            bool(receipt["verified"]),
-            "receipt must record that group verification did not resolve: {}".format(receipt),
+        assert "verified" in receipt
+        assert not bool(receipt["verified"]), (
+            "receipt must record that group verification did not resolve: {}".format(receipt)
         )
         # Elapsed time still bounded by the controller deadline + cleanup budget.
-        self.assertLess(elapsed, self.MAX_RUN_SECONDS)
+        assert elapsed < self.MAX_RUN_SECONDS
 
     def test_unresolved_failure_also_preserves_unknown(self):
         outcome, elapsed = self._run_unresolved(7)
 
-        self.assertTrue(
-            support.is_unknown(outcome),
-            "unresolved verification on a failing worker must stay UNKNOWN, got {!r}".format(outcome),
+        assert support.is_unknown(outcome), (
+            "unresolved verification on a failing worker must stay UNKNOWN, got {!r}".format(
+                outcome
+            )
         )
-        self.assertIsNone(support.outcome_result(outcome))
+        assert support.outcome_result(outcome) is None
 
         process_info = support.load_json(self, self.workdir / "process.json")
         self._register_group_cleanup(process_info["pgid"])
 
         unknown = support.load_json(self, self.workdir / "unknown.json")
-        self.assertEqual(unknown.get("returncode"), 7)
-        self.assertTrue(unknown.get("replay_forbidden"))
+        assert unknown.get("returncode") == 7
+        assert unknown.get("replay_forbidden")
         receipt = support.load_json(self, self.workdir / "group_finalization.json")
-        self.assertFalse(
-            bool(receipt["verified"]),
-            "receipt must record unresolved verification: {}".format(receipt),
+        assert not bool(receipt["verified"]), (
+            "receipt must record unresolved verification: {}".format(receipt)
         )
-        self.assertLess(elapsed, self.MAX_RUN_SECONDS)
+        assert elapsed < self.MAX_RUN_SECONDS
 
 
 def tempfile_dir():

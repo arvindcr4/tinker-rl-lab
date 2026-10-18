@@ -4,7 +4,9 @@ import os
 import re
 
 SENSITIVE = re.compile(r"password|secret|token|api.?key|authorization|credential", re.I)
-TOKEN_METRIC = re.compile(r"(?:train|eval)/(?:num|response|prompt|completion|total|generated|input|output)_tokens(?:_.*)?$")
+TOKEN_METRIC = re.compile(
+    r"(?:train|eval)/(?:num|response|prompt|completion|total|generated|input|output)_tokens(?:_.*)?$"
+)
 PATTERNS = [
     r"(?:wandb_v1_|tml-|hf_|sk-)[A-Za-z0-9_-]+",
     r"(?i)(?:bearer|basic)\s+[A-Za-z0-9+/=_-]+",
@@ -21,8 +23,14 @@ def sanitize(value, credentials=()):
     if isinstance(value, dict):
         return {
             sanitize(str(k), secrets): "<REDACTED>"
-            if (SENSITIVE.search(str(k)) and not (TOKEN_METRIC.fullmatch(str(k))
-                and isinstance(v, (int, float)) and not isinstance(v, bool)))
+            if (
+                SENSITIVE.search(str(k))
+                and not (
+                    TOKEN_METRIC.fullmatch(str(k))
+                    and isinstance(v, (int, float))
+                    and not isinstance(v, bool)
+                )
+            )
             else sanitize(v, secrets)
             for k, v in value.items()
         }

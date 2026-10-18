@@ -1,4 +1,5 @@
 """Generate a bounded, explicitly routed pilot; never launch training on generation."""
+
 import argparse
 import copy
 import hashlib
@@ -20,9 +21,18 @@ def main(argv=None):
     parser.add_argument("--base-config", required=True)
     parser.add_argument("--output-dir", default="sweep_configs")
     parser.add_argument("--run-script-name", default="run_sweep.sh")
-    parser.add_argument("--backend", required=True, choices=["tinker-atropos"],
-                        help="Only the implemented Tinker/Atropos route is supported")
-    parser.add_argument("--max-configs", type=int, default=3, help="Bounded pilot size; larger campaigns require an explicit limit")
+    parser.add_argument(
+        "--backend",
+        required=True,
+        choices=["tinker-atropos"],
+        help="Only the implemented Tinker/Atropos route is supported",
+    )
+    parser.add_argument(
+        "--max-configs",
+        type=int,
+        default=3,
+        help="Bounded pilot size; larger campaigns require an explicit limit",
+    )
     parser.add_argument("--seeds", nargs="+", type=int, default=[42])
     args = parser.parse_args(argv)
     if args.max_configs <= 0 or len(set(args.seeds)) != len(args.seeds):
@@ -41,7 +51,9 @@ def main(argv=None):
     output.mkdir(parents=True, exist_ok=True)
     commands, entries = [], []
     runner = Path(__file__).with_name("_sweep_attempt.py").resolve()
-    for lr, rank, batch, group in list(product([1e-5, 3e-5, 1e-4], [8, 16, 32, 64], [64, 128, 256], [8, 16, 32]))[:args.max_configs]:
+    for lr, rank, batch, group in list(
+        product([1e-5, 3e-5, 1e-4], [8, 16, 32, 64], [64, 128, 256], [8, 16, 32])
+    )[: args.max_configs]:
         actual = copy.deepcopy(cfg)
         actual.setdefault("env", {}).update(group_size=group, batch_size=batch)
         actual.setdefault("tinker", {}).update(lora_rank=rank, learning_rate=lr)
@@ -55,23 +67,59 @@ def main(argv=None):
             config_path.write_text(yaml.safe_dump(seeded, sort_keys=False))
             config_hash = hashlib.sha256(config_path.read_bytes()).hexdigest()
             manifest = output / "attempts" / f"{config_hash}_{seed}.json"
-            command = [sys.executable, str(runner), "--manifest", str(manifest),
-                       "--config-hash", config_hash, "--seed", str(seed), "--",
-                       sys.executable, str(training_script), "--config", str(config_path), "--seed", str(seed)]
+            command = [
+                sys.executable,
+                str(runner),
+                "--manifest",
+                str(manifest),
+                "--config-hash",
+                config_hash,
+                "--seed",
+                str(seed),
+                "--",
+                sys.executable,
+                str(training_script),
+                "--config",
+                str(config_path),
+                "--seed",
+                str(seed),
+            ]
             commands.append(shell_command(command))
-            entries.append({"config_hash": config_hash, "treatment_hash": digest, "seed": seed, "backend": args.backend,
-                            "command": command, "attempt_manifest": str(manifest),
-                            "checkpoint_dir": str(checkpoint_dir), "wandb_run_name": run_name})
-    plan = {"protocol": "grpo-sweep-pilot-v3", "backend": args.backend,
-            "stage": "pilot", "screening": "requires held-out validation before expansion",
-            "confirmation_seeds": "must be selected independently after screening",
-            "training_started": False, "planned_attempts": entries}
-    (output / "sweep_manifest.json").write_text(json.dumps(plan, indent=2)+"\n")
+            entries.append(
+                {
+                    "config_hash": config_hash,
+                    "treatment_hash": digest,
+                    "seed": seed,
+                    "backend": args.backend,
+                    "command": command,
+                    "attempt_manifest": str(manifest),
+                    "checkpoint_dir": str(checkpoint_dir),
+                    "wandb_run_name": run_name,
+                }
+            )
+    plan = {
+        "protocol": "grpo-sweep-pilot-v3",
+        "backend": args.backend,
+        "stage": "pilot",
+        "screening": "requires held-out validation before expansion",
+        "confirmation_seeds": "must be selected independently after screening",
+        "training_started": False,
+        "planned_attempts": entries,
+    }
+    (output / "sweep_manifest.json").write_text(json.dumps(plan, indent=2) + "\n")
     script = output / args.run_script_name
-    script.write_text("#!/bin/bash\nset -euo pipefail\n" + "\n".join(
-        "printf '%s\\n' " + shlex.quote("Running: " + command) + "\n" + command for command in commands)+"\n")
+    script.write_text(
+        "#!/bin/bash\nset -euo pipefail\n"
+        + "\n".join(
+            "printf '%s\\n' " + shlex.quote("Running: " + command) + "\n" + command
+            for command in commands
+        )
+        + "\n"
+    )
     os.chmod(script, 0o700)
-    print(f"Generated {len(entries)} planned attempts for {args.backend}; no training launched. Script: {script}")
+    print(
+        f"Generated {len(entries)} planned attempts for {args.backend}; no training launched. Script: {script}"
+    )
     return plan
 
 

@@ -57,6 +57,7 @@ Outputs (worktree-relative):
   platform_hybrid/experiments/results/p5p8/p5_stack_conditioning_zvf_iid.tsv
   platform_hybrid/experiments/results/p5p8/p5_stack_conditioning_summary.json
 """
+
 from __future__ import annotations
 import csv
 import json
@@ -86,6 +87,7 @@ ETA2_ALGO_THRESHOLD = 0.10  # P5 falsifiable: eta^2(method) <= 0.10
 # ----------------------------------------------------------------------------
 from p5_review17_stats import json_safe
 
+
 def load_n2_long() -> list[dict]:
     """Return one row per (method, step, prompt, group_position)."""
     out = []
@@ -98,13 +100,15 @@ def load_n2_long() -> list[dict]:
                 # rewards is list of N_PROMPTS lists of G floats
                 for p_idx, group in enumerate(d["rewards"]):
                     for g_idx, r in enumerate(group):
-                        out.append({
-                            "method": method,
-                            "step": step,
-                            "prompt": p_idx,
-                            "g_pos": g_idx,
-                            "reward": float(r),
-                        })
+                        out.append(
+                            {
+                                "method": method,
+                                "step": step,
+                                "prompt": p_idx,
+                                "g_pos": g_idx,
+                                "reward": float(r),
+                            }
+                        )
     return out
 
 
@@ -114,7 +118,8 @@ def load_n2_metrics() -> dict:
     with (N2_DIR / "n2_metrics.tsv").open() as fh:
         reader = csv.DictReader(fh, delimiter="\t")
         for row in reader:
-            m = row["method"]; s = int(row["step"])
+            m = row["method"]
+            s = int(row["step"])
             out[m][s] = {
                 "zvf": float(row["zvf"]),
                 "reward_mean": float(row["reward_mean"]),
@@ -136,8 +141,13 @@ def eta2_one_way(rows: list[dict], axis_key: str, value_key: str) -> dict:
       SS_axis  = sum_a n_a * (mean_a - grand_mean)^2
     """
     if not rows:
-        return {"eta2": float("nan"), "ss_axis": float("nan"),
-                "ss_within": float("nan"), "n": 0, "k": 0}
+        return {
+            "eta2": float("nan"),
+            "ss_axis": float("nan"),
+            "ss_within": float("nan"),
+            "n": 0,
+            "k": 0,
+        }
     grand = [r[value_key] for r in rows if r.get(value_key) is not None]
     grand_mean = statistics.fmean(grand)
     ss_total = sum((v - grand_mean) ** 2 for v in grand)
@@ -167,27 +177,38 @@ def cell_means(rows: list[dict]) -> list[dict]:
         by_cell[(r["method"], r["step"], r["prompt"])].append(r["reward"])
     out = []
     for (m, s, p), vs in by_cell.items():
-        out.append({
-            "method": m, "step": s, "prompt": p,
-            "cell_mean": statistics.fmean(vs),
-            "n_g": len(vs),
-        })
+        out.append(
+            {
+                "method": m,
+                "step": s,
+                "prompt": p,
+                "cell_mean": statistics.fmean(vs),
+                "n_g": len(vs),
+            }
+        )
     return out
 
 
 # ----------------------------------------------------------------------------
 # Bootstrap CI on eta^2 -- resample at the (method, step, prompt) cell level
 # ----------------------------------------------------------------------------
-def boot_eta2(cell_rows: list[dict], axis_key: str, n_boot: int = N_BOOT,
-              seed: int = RNG_SEED) -> dict:
+def boot_eta2(
+    cell_rows: list[dict], axis_key: str, n_boot: int = N_BOOT, seed: int = RNG_SEED
+) -> dict:
     """Bootstrap CI on eta^2 by resampling cell-mean OBSERVATIONS with
     replacement. Each cell has multiple G positions; we resample the
     underlying flat list (g_pos nested in cell) by cell.
     """
     if not cell_rows:
-        return {"mean": float("nan"), "lo": float("nan"),
-                "hi": float("nan"), "sd": float("nan"),
-                "n_boot": 0, "n_invalid": n_boot, "status": "DEGENERATE"}
+        return {
+            "mean": float("nan"),
+            "lo": float("nan"),
+            "hi": float("nan"),
+            "sd": float("nan"),
+            "n_boot": 0,
+            "n_invalid": n_boot,
+            "status": "DEGENERATE",
+        }
     # We need access to per-cell g-level rewards for resampling
     # Re-build from cell_rows by tracking the original sample count
     rng = random.Random(seed)
@@ -212,37 +233,50 @@ def boot_eta2(cell_rows: list[dict], axis_key: str, n_boot: int = N_BOOT,
         if not math.isnan(res["eta2"]):
             etas.append(res["eta2"])
     if not etas:
-        return {"mean": float("nan"), "lo": float("nan"),
-                "hi": float("nan"), "sd": float("nan"),
-                "n_boot": 0, "n_invalid": n_boot, "status": "DEGENERATE"}
+        return {
+            "mean": float("nan"),
+            "lo": float("nan"),
+            "hi": float("nan"),
+            "sd": float("nan"),
+            "n_boot": 0,
+            "n_invalid": n_boot,
+            "status": "DEGENERATE",
+        }
     etas.sort()
     return {
         "mean": statistics.fmean(etas),
-        "lo": etas[int(0.025 * len(etas))] if len(etas) >= .95 * n_boot else float("nan"),
-        "hi": etas[min(len(etas)-1, int(0.975 * len(etas)))] if len(etas) >= .95 * n_boot else float("nan"),
+        "lo": etas[int(0.025 * len(etas))] if len(etas) >= 0.95 * n_boot else float("nan"),
+        "hi": etas[min(len(etas) - 1, int(0.975 * len(etas)))]
+        if len(etas) >= 0.95 * n_boot
+        else float("nan"),
         "sd": statistics.pstdev(etas) if len(etas) > 1 else 0.0,
-        "n_boot": len(etas), "n_invalid": n_boot - len(etas),
-        "status": "VALID" if len(etas) >= .95*n_boot else "DEGENERATE",
+        "n_boot": len(etas),
+        "n_invalid": n_boot - len(etas),
+        "status": "VALID" if len(etas) >= 0.95 * n_boot else "DEGENERATE",
     }
 
 
 # Patch: import math after using it
-import math  # noqa: E402
+import math
 
 
 # ----------------------------------------------------------------------------
 # Main
 # ----------------------------------------------------------------------------
 def main():
-    print("Protocol review17-p5-v2: exploratory descriptive associations; no independent-run, causal, equivalence, or held-out prediction claim")
+    print(
+        "Protocol review17-p5-v2: exploratory descriptive associations; no independent-run, causal, equivalence, or held-out prediction claim"
+    )
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     findings = []
 
     # Load
     rows = load_n2_long()
     metrics_map = load_n2_metrics()
-    print(f"Loaded {len(rows)} (m,s,p,g) rows, {len(metrics_map)} methods "
-          f"each with {len(next(iter(metrics_map.values())))} steps")
+    print(
+        f"Loaded {len(rows)} (m,s,p,g) rows, {len(metrics_map)} methods "
+        f"each with {len(next(iter(metrics_map.values())))} steps"
+    )
 
     # ----------------------------------------------------------------
     # 1) Variance factorization on per-cell-means (best estimator:
@@ -251,14 +285,14 @@ def main():
     cells = cell_means(rows)
     # one-way on each axis
     method_levels = eta2_one_way(
-        [{"method": r["method"], "v": r["cell_mean"]} for r in cells],
-        "method", "v")
+        [{"method": r["method"], "v": r["cell_mean"]} for r in cells], "method", "v"
+    )
     step_levels = eta2_one_way(
-        [{"step": r["step"], "v": r["cell_mean"]} for r in cells],
-        "step", "v")
+        [{"step": r["step"], "v": r["cell_mean"]} for r in cells], "step", "v"
+    )
     prompt_levels = eta2_one_way(
-        [{"prompt": r["prompt"], "v": r["cell_mean"]} for r in cells],
-        "prompt", "v")
+        [{"prompt": r["prompt"], "v": r["cell_mean"]} for r in cells], "prompt", "v"
+    )
 
     print(f"\n--- ONE-WAY eta^2 on per-(method, step, prompt) cell means ---")
     print(f"  eta^2(method, k=4)            = {method_levels['eta2']:.4f}")
@@ -271,7 +305,7 @@ def main():
     #    includes G-axis noise variance)
     # ----------------------------------------------------------------
     raw_method = eta2_one_way(rows, "method", "reward")
-    raw_step   = eta2_one_way(rows, "step",   "reward")
+    raw_step = eta2_one_way(rows, "step", "reward")
     raw_prompt = eta2_one_way(rows, "prompt", "reward")
 
     print(f"\n--- ONE-WAY eta^2 on raw 5120-obs (g_pos is the 'noise' axis) ---")
@@ -284,38 +318,51 @@ def main():
     # 3) Bootstrap CI on each eta^2(cell-mean) value
     # ----------------------------------------------------------------
     print(f"\n--- BOOTSTRAP CIs on eta^2(cell means) (B={N_BOOT}) ---")
-    boot_method  = boot_eta2(cells, "method",  n_boot=N_BOOT, seed=RNG_SEED)
-    boot_step    = boot_eta2(cells, "step",    n_boot=N_BOOT, seed=RNG_SEED + 1)
-    boot_prompt  = boot_eta2(cells, "prompt",  n_boot=N_BOOT, seed=RNG_SEED + 2)
-    print(f"  eta^2(method):  {boot_method['mean']:.4f}  95% CI [{boot_method['lo']:.4f}, {boot_method['hi']:.4f}]")
-    print(f"  eta^2(step):    {boot_step['mean']:.4f}  95% CI [{boot_step['lo']:.4f}, {boot_step['hi']:.4f}]")
-    print(f"  eta^2(prompt):  {boot_prompt['mean']:.4f}  95% CI [{boot_prompt['lo']:.4f}, {boot_prompt['hi']:.4f}]")
+    boot_method = boot_eta2(cells, "method", n_boot=N_BOOT, seed=RNG_SEED)
+    boot_step = boot_eta2(cells, "step", n_boot=N_BOOT, seed=RNG_SEED + 1)
+    boot_prompt = boot_eta2(cells, "prompt", n_boot=N_BOOT, seed=RNG_SEED + 2)
+    print(
+        f"  eta^2(method):  {boot_method['mean']:.4f}  95% CI [{boot_method['lo']:.4f}, {boot_method['hi']:.4f}]"
+    )
+    print(
+        f"  eta^2(step):    {boot_step['mean']:.4f}  95% CI [{boot_step['lo']:.4f}, {boot_step['hi']:.4f}]"
+    )
+    print(
+        f"  eta^2(prompt):  {boot_prompt['mean']:.4f}  95% CI [{boot_prompt['lo']:.4f}, {boot_prompt['hi']:.4f}]"
+    )
 
     # Falsifiable verdict
-    h_decisive = (method_levels["eta2"] <= ETA2_ALGO_THRESHOLD and
-                  boot_method["hi"] <= ETA2_ALGO_THRESHOLD)
-    h_verdict = "DECISIVE" if h_decisive else "SUGGESTIVE" if method_levels["eta2"] <= 0.15 else "NULL"
+    h_decisive = (
+        method_levels["eta2"] <= ETA2_ALGO_THRESHOLD and boot_method["hi"] <= ETA2_ALGO_THRESHOLD
+    )
+    h_verdict = (
+        "DECISIVE" if h_decisive else "SUGGESTIVE" if method_levels["eta2"] <= 0.15 else "NULL"
+    )
     print(f"\n--- HEADLINE (falsifiable) ---")
     print(f"  P5 claim: eta^2(method) <= {ETA2_ALGO_THRESHOLD} on per-cell-mean reward")
-    print(f"  observed eta^2(method)={method_levels['eta2']:.4f}, "
-          f"boot-CI hi={boot_method['hi']:.4f}; verdict={h_verdict}")
+    print(
+        f"  observed eta^2(method)={method_levels['eta2']:.4f}, "
+        f"boot-CI hi={boot_method['hi']:.4f}; verdict={h_verdict}"
+    )
 
-    findings.append({
-        "hypothesis": "P5 FALSIFIABLE: eta^2(method axis) <= 0.10 (algorithm label "
-                      "explains <=10% of variance on a fixed stack -- i.e. "
-                      "'Report the Stack, Not the Label')",
-        "eta2_method_cell_means": method_levels["eta2"],
-        "eta2_method_boot_lo": boot_method["lo"],
-        "eta2_method_boot_hi": boot_method["hi"],
-        "eta2_step_cell_means": step_levels["eta2"],
-        "eta2_step_boot_lo": boot_step["lo"],
-        "eta2_step_boot_hi": boot_step["hi"],
-        "eta2_prompt_cell_means": prompt_levels["eta2"],
-        "eta2_prompt_boot_lo": boot_prompt["lo"],
-        "eta2_prompt_boot_hi": boot_prompt["hi"],
-        "threshold": ETA2_ALGO_THRESHOLD,
-        "verdict": h_verdict,
-    })
+    findings.append(
+        {
+            "hypothesis": "P5 FALSIFIABLE: eta^2(method axis) <= 0.10 (algorithm label "
+            "explains <=10% of variance on a fixed stack -- i.e. "
+            "'Report the Stack, Not the Label')",
+            "eta2_method_cell_means": method_levels["eta2"],
+            "eta2_method_boot_lo": boot_method["lo"],
+            "eta2_method_boot_hi": boot_method["hi"],
+            "eta2_step_cell_means": step_levels["eta2"],
+            "eta2_step_boot_lo": boot_step["lo"],
+            "eta2_step_boot_hi": boot_step["hi"],
+            "eta2_prompt_cell_means": prompt_levels["eta2"],
+            "eta2_prompt_boot_lo": boot_prompt["lo"],
+            "eta2_prompt_boot_hi": boot_prompt["hi"],
+            "threshold": ETA2_ALGO_THRESHOLD,
+            "verdict": h_verdict,
+        }
+    )
 
     # ----------------------------------------------------------------
     # 4) Per-method headline contrast (grpo baseline vs each)
@@ -329,14 +376,20 @@ def main():
     grpo_mean = method_means["grpo"]
     for m, mu in sorted(method_means.items()):
         delta = mu - grpo_mean
-        print(f"  {m:>6}: mean={mu:.4f} (n={len(by_method_means[m])} cells, "
-              f"delta_vs_grpo={delta:+.4f})")
-    findings.append({
-        "hypothesis": "P5 PER-METHOD DELTAS on per-cell-mean reward (same stack)",
-        "grpo_mean": grpo_mean,
-        "per_method_means": {m: round(v, 4) for m, v in method_means.items()},
-        "per_method_delta_vs_grpo": {m: round(v - grpo_mean, 4) for m, v in method_means.items()},
-    })
+        print(
+            f"  {m:>6}: mean={mu:.4f} (n={len(by_method_means[m])} cells, "
+            f"delta_vs_grpo={delta:+.4f})"
+        )
+    findings.append(
+        {
+            "hypothesis": "P5 PER-METHOD DELTAS on per-cell-mean reward (same stack)",
+            "grpo_mean": grpo_mean,
+            "per_method_means": {m: round(v, 4) for m, v in method_means.items()},
+            "per_method_delta_vs_grpo": {
+                m: round(v - grpo_mean, 4) for m, v in method_means.items()
+            },
+        }
+    )
 
     # ----------------------------------------------------------------
     # 5) IID-baseline ZVF decomposition (Gemini Deep Think frontier synthesis)
@@ -364,47 +417,66 @@ def main():
                 if not vs:
                     continue
                 p_p = statistics.fmean(vs)
-                zvf_iid_per_prompt.append(p_p ** G_GROUP + (1.0 - p_p) ** G_GROUP)
+                zvf_iid_per_prompt.append(p_p**G_GROUP + (1.0 - p_p) ** G_GROUP)
                 p_per_prompt.append(p_p)
             zvf_iid = statistics.fmean(zvf_iid_per_prompt) if zvf_iid_per_prompt else 0.0
             p_step_mean = statistics.fmean(p_per_prompt) if p_per_prompt else 0.0
             delta = obs["zvf"] - zvf_iid
-            zvf_rows.append({
-                "method": m, "step": s,
-                "zvf_obs": round(obs["zvf"], 6),
-                "zvf_iid": round(zvf_iid, 6),
-                "zvf_delta": round(delta, 6),
-                "reward_mean": round(p_step_mean, 6),
-            })
+            zvf_rows.append(
+                {
+                    "method": m,
+                    "step": s,
+                    "zvf_obs": round(obs["zvf"], 6),
+                    "zvf_iid": round(zvf_iid, 6),
+                    "zvf_delta": round(delta, 6),
+                    "reward_mean": round(p_step_mean, 6),
+                }
+            )
             delta_panels[m].append(delta)
     print(f"\n--- IID-BASELINE ZVF decomposition (per-prompt p^G+(1-p)^G, G={G_GROUP}) ---")
     for m, deltas in delta_panels.items():
         d = sorted(deltas)
         mean = statistics.fmean(deltas)
         sd = statistics.pstdev(deltas)
-        print(f"  {m:>6}: delta mean={mean:+.4f}  sd={sd:.4f}  "
-              f"min={min(d):+.4f}  max={max(d):+.4f}  N={len(d)}")
+        print(
+            f"  {m:>6}: delta mean={mean:+.4f}  sd={sd:.4f}  "
+            f"min={min(d):+.4f}  max={max(d):+.4f}  N={len(d)}"
+        )
 
     panel_deltas = []
     for m, deltas in delta_panels.items():
         panel_deltas.append((m, statistics.fmean(deltas), statistics.pstdev(deltas), len(deltas)))
     panel_mean_deltas = [d[1] for d in panel_deltas]
-    print(f"  panel-mean delta range: "
-          f"[{min(panel_mean_deltas):+.4f}, {max(panel_mean_deltas):+.4f}]")
+    print(
+        f"  panel-mean delta range: [{min(panel_mean_deltas):+.4f}, {max(panel_mean_deltas):+.4f}]"
+    )
     # frontier synthesis stated |delta| in [0.13, 0.23] for the panel-mean
-    in_synthesis_band = bool(panel_mean_deltas) and all(0.13 <= abs(d) <= 0.23 for d in panel_mean_deltas)
-    print(f"  synthesised frontier band (|panel_delta| in [0.13, 0.23]): "
-          f"{'CONFIRMED' if in_synthesis_band else 'PARTIAL' if any(0.05 <= abs(d) <= 0.30 for d in panel_mean_deltas) else 'NOT MET'}")
+    in_synthesis_band = bool(panel_mean_deltas) and all(
+        0.13 <= abs(d) <= 0.23 for d in panel_mean_deltas
+    )
+    print(
+        f"  synthesised frontier band (|panel_delta| in [0.13, 0.23]): "
+        f"{'CONFIRMED' if in_synthesis_band else 'PARTIAL' if any(0.05 <= abs(d) <= 0.30 for d in panel_mean_deltas) else 'NOT MET'}"
+    )
 
-    findings.append({
-        "hypothesis": "Descriptive same-sample plug-in ZVF residual",
-        "dependence_inference": "NOT_IDENTIFIED: same-sample plug-in residual is negative even under iid",
-        "G_group": G_GROUP,
-        "per_method_delta_mean": {m: round(statistics.fmean(d), 4) for m, d in delta_panels.items()},
-        "per_method_delta_sd":   {m: round(statistics.pstdev(d), 4) for m, d in delta_panels.items()},
-        "panel_delta_range": [round(min(panel_mean_deltas), 4), round(max(panel_mean_deltas), 4)],
-        "synthesis_band_confirmed": in_synthesis_band,
-    })
+    findings.append(
+        {
+            "hypothesis": "Descriptive same-sample plug-in ZVF residual",
+            "dependence_inference": "NOT_IDENTIFIED: same-sample plug-in residual is negative even under iid",
+            "G_group": G_GROUP,
+            "per_method_delta_mean": {
+                m: round(statistics.fmean(d), 4) for m, d in delta_panels.items()
+            },
+            "per_method_delta_sd": {
+                m: round(statistics.pstdev(d), 4) for m, d in delta_panels.items()
+            },
+            "panel_delta_range": [
+                round(min(panel_mean_deltas), 4),
+                round(max(panel_mean_deltas), 4),
+            ],
+            "synthesis_band_confirmed": in_synthesis_band,
+        }
+    )
 
     # ----------------------------------------------------------------
     # Write TSVs + summary
@@ -412,24 +484,62 @@ def main():
     per_axis_path = OUT_DIR / "p5_stack_conditioning_eta2_per_axis.tsv"
     with per_axis_path.open("w", newline="") as fh:
         w = csv.writer(fh, delimiter="\t")
-        w.writerow(["axis", "level", "eta2", "ss_axis", "ss_within", "ss_total", "n", "k", "grand_mean"])
-        for axis_name, res in [("method", method_levels), ("step", step_levels), ("prompt", prompt_levels)]:
-            w.writerow([axis_name, "cell_means", f"{res['eta2']:.6f}", f"{res['ss_axis']:.6f}",
-                        f"{res['ss_within']:.6f}", f"{res['ss_total']:.6f}",
-                        res["n"], res["k"], f"{res['grand_mean']:.6f}"])
+        w.writerow(
+            ["axis", "level", "eta2", "ss_axis", "ss_within", "ss_total", "n", "k", "grand_mean"]
+        )
+        for axis_name, res in [
+            ("method", method_levels),
+            ("step", step_levels),
+            ("prompt", prompt_levels),
+        ]:
+            w.writerow(
+                [
+                    axis_name,
+                    "cell_means",
+                    f"{res['eta2']:.6f}",
+                    f"{res['ss_axis']:.6f}",
+                    f"{res['ss_within']:.6f}",
+                    f"{res['ss_total']:.6f}",
+                    res["n"],
+                    res["k"],
+                    f"{res['grand_mean']:.6f}",
+                ]
+            )
         for axis_name, res in [("method", raw_method), ("step", raw_step), ("prompt", raw_prompt)]:
-            w.writerow([axis_name, "raw_5120", f"{res['eta2']:.6f}", f"{res['ss_axis']:.6f}",
-                        f"{res['ss_within']:.6f}", f"{res['ss_total']:.6f}",
-                        res["n"], res["k"], f"{res['grand_mean']:.6f}"])
+            w.writerow(
+                [
+                    axis_name,
+                    "raw_5120",
+                    f"{res['eta2']:.6f}",
+                    f"{res['ss_axis']:.6f}",
+                    f"{res['ss_within']:.6f}",
+                    f"{res['ss_total']:.6f}",
+                    res["n"],
+                    res["k"],
+                    f"{res['grand_mean']:.6f}",
+                ]
+            )
     print(f"\n[OK] wrote {per_axis_path}")
 
     boot_path = OUT_DIR / "p5_stack_conditioning_eta2_boot.tsv"
     with boot_path.open("w", newline="") as fh:
         w = csv.writer(fh, delimiter="\t")
         w.writerow(["axis", "mean", "lo", "hi", "sd", "n_boot"])
-        for axis_name, res in [("method", boot_method), ("step", boot_step), ("prompt", boot_prompt)]:
-            w.writerow([axis_name, f"{res['mean']:.6f}", f"{res['lo']:.6f}",
-                        f"{res['hi']:.6f}", f"{res['sd']:.6f}", res["n_boot"]])
+        for axis_name, res in [
+            ("method", boot_method),
+            ("step", boot_step),
+            ("prompt", boot_prompt),
+        ]:
+            w.writerow(
+                [
+                    axis_name,
+                    f"{res['mean']:.6f}",
+                    f"{res['lo']:.6f}",
+                    f"{res['hi']:.6f}",
+                    f"{res['sd']:.6f}",
+                    res["n_boot"],
+                ]
+            )
     print(f"[OK] wrote {boot_path}")
 
     zvf_path = OUT_DIR / "p5_stack_conditioning_zvf_iid.tsv"
@@ -437,8 +547,16 @@ def main():
         w = csv.writer(fh, delimiter="\t")
         w.writerow(["method", "step", "zvf_obs", "zvf_iid", "zvf_delta", "reward_mean"])
         for row in zvf_rows:
-            w.writerow([row["method"], row["step"], row["zvf_obs"], row["zvf_iid"],
-                        row["zvf_delta"], row["reward_mean"]])
+            w.writerow(
+                [
+                    row["method"],
+                    row["step"],
+                    row["zvf_obs"],
+                    row["zvf_iid"],
+                    row["zvf_delta"],
+                    row["reward_mean"],
+                ]
+            )
     print(f"[OK] wrote {zvf_path}")
 
     summary = {
@@ -451,20 +569,23 @@ def main():
         "n_cells": len(cells),
         "per_axis_eta2_cell_means": {
             "method": round(method_levels["eta2"], 4),
-            "step":   round(step_levels["eta2"],   4),
+            "step": round(step_levels["eta2"], 4),
             "prompt": round(prompt_levels["eta2"], 4),
         },
         "per_axis_eta2_raw": {
             "method": round(raw_method["eta2"], 4),
-            "step":   round(raw_step["eta2"],   4),
+            "step": round(raw_step["eta2"], 4),
             "prompt": round(raw_prompt["eta2"], 4),
         },
-        "boot_ci_method":  boot_method,
-        "boot_ci_step":    boot_step,
-        "boot_ci_prompt":  boot_prompt,
+        "boot_ci_method": boot_method,
+        "boot_ci_step": boot_step,
+        "boot_ci_prompt": boot_prompt,
         "per_method_means": {m: round(v, 4) for m, v in method_means.items()},
         "per_method_delta_vs_grpo": {m: round(v - grpo_mean, 4) for m, v in method_means.items()},
-        "panel_zvf_delta_range": [round(min(panel_mean_deltas), 4), round(max(panel_mean_deltas), 4)],
+        "panel_zvf_delta_range": [
+            round(min(panel_mean_deltas), 4),
+            round(max(panel_mean_deltas), 4),
+        ],
         "frontier_synthesis_band_confirmed": bool(in_synthesis_band),
         "headline_verdict": h_verdict,
         "findings": findings,

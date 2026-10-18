@@ -1,0 +1,117 @@
+% =============================================================================
+% Run manifest appendix --- P9 (DNB) fork of run_manifest.tex, rebuilt
+% 2026-10-18 for the Deep Review pass from the run JSON actually in the
+% repository (the earlier header cited experiments/master_results.csv, which
+% is no longer tracked). Sources per block are named in the caption; every
+% Tinker/Modal number in tab:main_results is recomputed by
+% tools/review_ledger/P9_dnb_table6.py.
+% =============================================================================
+\section{Run Manifest}
+\label{sec:run-manifest}
+
+This manifest lists every cell for which the repository holds a run
+record, plus planned cells that never started. Tier A denotes completed LM
+cells with at least three independent seeds at a fixed configuration, B completed
+cells with one or two runs (including configuration sweeps, which are not
+seed replication), and C failed, partial, quarantined, or never-started
+cells. These labels do not by themselves authorize inference: task, endpoint
+and independence must also be verified. Column $N$ counts run records (a
+never-started cell has $N{=}0$); it sums to 79 (Tier A 12, Tier B 43,
+Tier C 9, and 15 non-LM PPO sanity-floor runs outside the tiers), and six
+planned cells never started. ``Trace'' means a
+step-level reward trace is in the repository; ``ZVF'' means the step log also
+records ZVF. No cell has certified raw per-group rollout JSONL, and no
+LoRA adapter is released for any cell.
+
+\begin{table}[htbp]
+\centering\scriptsize
+\setlength{\tabcolsep}{3pt}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{lllllrrrcccc}
+\toprule
+Tier & Backend & Model & Task & Algo & N & Seeds & Steps & Reward & Held-out & Trace & ZVF \\
+\midrule
+\multicolumn{12}{l}{\textit{Non-LM sanity floors (outside the LM tiers)}} \\
+\midrule
+floor & Modal    & MLP policy (CleanRL)      & addition env.$^a$   & PPO  & 5 & 5 & 97280  & BV & ---        & \checkmark & --- \\
+floor & Modal    & MLP policy (SB3)          & addition env.$^a$   & PPO  & 5 & 5 & 100352 & BV & ---        & \checkmark & --- \\
+floor & Modal    & MLP policy (Tianshou)     & addition env.$^a$   & PPO  & 5 & 5 & 100000 & BV & ---        & \checkmark & --- \\
+\midrule
+\multicolumn{12}{l}{\textit{Tier A --- completed LM cells, $\ge3$ seeds at fixed configuration (replication metadata; inference requires eligibility)}} \\
+\midrule
+A & Modal L4    & Qwen2.5-0.5B (TRL)        & addition (gen.)$^b$ & GRPO & 5 & 5 & 125    & BV & \checkmark & ---        & --- \\
+A & Tinker      & Llama-3.3-70B-Inst        & GSM8K               & GRPO & 4 & 4 & 30     & BV & ---        & \checkmark & --- \\
+A & Tinker      & DeepSeek-V3.1             & GSM8K               & GRPO & 3 & 3 & 30     & BV & ---        & \checkmark & --- \\
+\midrule
+\multicolumn{12}{l}{\textit{Tier B --- single-run Tinker case studies (individual run files)}} \\
+\midrule
+B & Tinker      & Qwen3-8B                  & GSM8K               & GRPO & 1 & 1 & 30 & BV & --- & \checkmark & \checkmark \\
+B & Tinker      & Qwen3.5-4B                & GSM8K               & GRPO & 1 & 1 & 30 & BV & --- & \checkmark & \checkmark \\
+B & Tinker      & Llama-3.1-8B-Inst         & GSM8K               & GRPO & 1 & 1 & 30 & BV & --- & \checkmark & \checkmark \\
+B & Tinker      & GPT-OSS-20B               & GSM8K               & GRPO & 1 & 1 & 30 & BV & --- & \checkmark & \checkmark \\
+B & Tinker      & DeepSeek-V3.1             & GSM8K               & GRPO & 1 & 1 & 20 & BV & --- & \checkmark & \checkmark \\
+B & Tinker      & Nemotron-3-Super-120B     & GSM8K               & GRPO & 1 & 1 & 20 & BV & --- & \checkmark & \checkmark \\
+B & Tinker      & Kimi-K2-Thinking          & GSM8K               & GRPO & 1 & 1 & 20 & BV & --- & \checkmark & \checkmark \\
+B & Tinker      & Qwen3-32B (tool-use)      & synthetic tool-use  & GRPO & 1 & 1 & 30 & SH & --- & \checkmark & \checkmark \\
+B & Tinker      & Llama-3.1-8B-Inst (tool-use) & synthetic tool-use & GRPO & 1 & 1 & 30 & SH & --- & \checkmark & \checkmark \\
+B & Tinker      & Qwen3-8B Wave-6 (12 configs: temperature/rank/batch) & GSM8K & GRPO & 12 & 1 & 30 & BV & --- & \checkmark & \checkmark \\
+\midrule
+\multicolumn{12}{l}{\textit{Tier B --- single-run Tinker frontier and group-size runs (one 30-step campaign batch)}} \\
+\midrule
+B & Tinker      & Qwen3-8B-Base             & GSM8K               & GRPO & 1 & 1 & 30 & BV & --- & \checkmark & --- \\
+B & Tinker      & Kimi-K2-Thinking          & GSM8K               & GRPO & 1 & 1 & 30 & BV & --- & \checkmark & --- \\
+B & Tinker      & Kimi-K2.5                 & GSM8K               & GRPO & 1 & 1 & 30 & BV & --- & \checkmark & --- \\
+B & Tinker      & GPT-OSS-120B              & GSM8K               & GRPO & 1 & 1 & 30 & BV & --- & \checkmark & --- \\
+B & Tinker      & Qwen3.5-397B              & GSM8K               & GRPO & 1 & 1 & 30 & BV & --- & \checkmark & --- \\
+B & Tinker      & Llama-3.1-70B             & GSM8K               & GRPO & 1 & 1 & 30 & BV & --- & \checkmark & --- \\
+B & Tinker      & DeepSeek-V3.1-Base        & GSM8K               & GRPO & 1 & 1 & 30 & BV & --- & \checkmark & --- \\
+B & Tinker      & Llama-3.1-8B              & GSM8K               & GRPO & 1 & 1 & 30 & BV & --- & \checkmark & --- \\
+B & Tinker      & Qwen3-8B, $G\in\{2,4,16,32\}$ & GSM8K           & GRPO & 4 & 1 & 30 & BV & --- & \checkmark & --- \\
+\midrule
+\multicolumn{12}{l}{\textit{Tier B --- other completed runs}} \\
+\midrule
+B & Tinker      & Qwen3-8B matched budget, $G{=}2\times160$ / $G{=}16\times20$ & GSM8K & GRPO & 4 & 2 & 160/20 & BV & --- & \checkmark & \checkmark \\
+B & Tinker      & Qwen3-8B-Base (launcher comparison) & GSM8K     & GRPO & 1 & 1 & 30 & BV & --- & \checkmark & --- \\
+B & Modal H100  & Qwen3-8B (TRL)            & GSM8K               & GRPO & 1 & 1 & 30 & BV & --- & \checkmark & --- \\
+B & Modal H100  & Llama-3.2-3B-Inst (TRL)   & GSM8K               & GRPO & 1 & 1 & 30 & BV & --- & \checkmark & --- \\
+B & Modal H100  & Llama-3.2-1B-Inst (TRL)   & GSM8K               & GRPO & 1 & 1 & 30 & BV & --- & \checkmark & --- \\
+B & Modal H100  & Llama-3.1-8B-Inst         & GSM8K               & PPO  & 2 & 1 & 30 & BV & --- & ---        & --- \\
+\midrule
+\multicolumn{12}{l}{\textit{Tier C --- failed, partial, quarantined, or never-started cells (listed for honesty; no numbers reported)}} \\
+\midrule
+C & Modal H100  & Qwen3-8B                  & GSM8K (quarantined) & PPO  & 2 & 1 & 30 & BV & --- & --- & --- \\
+C & Modal H100  & Qwen3-8B                  & HumanEval (failed)  & GRPO & 1 & 1 & 0  & BV & --- & --- & --- \\
+C & Modal H100  & Qwen3-8B                  & KL tracking (failed)& GRPO & 1 & 1 & 0  & --- & --- & --- & --- \\
+C & Tinker      & Qwen3-235B-A22B-Inst      & GSM8K (partial)$^c$ & GRPO & 1 & 1 & 15 & BV & --- & --- & --- \\
+C & Tinker      & Qwen3-30B-A3B             & GSM8K (partial)$^c$ & GRPO & 1 & 1 & 20 & BV & --- & --- & --- \\
+C & Tinker      & Qwen3-30B-A3B-Inst        & GSM8K (partial)$^c$ & GRPO & 1 & 1 & 10 & BV & --- & --- & --- \\
+C & Tinker      & Qwen3-32B                 & GSM8K (partial)$^c$ & GRPO & 1 & 1 & 10 & BV & --- & --- & --- \\
+C & Tinker      & Qwen3.5-27B               & GSM8K (partial)$^c$ & GRPO & 1 & 1 & 10 & BV & --- & --- & --- \\
+C & Modal H100  & Llama-3.2-1B / 3B (alt.\ runs) & GSM8K (not started) & GRPO & 0 & 0 & 0 & BV & --- & --- & --- \\
+C & External    & 0.5B-DPO / 3B-tool / Qwen3-4B / Qwen3-8B & misc.\ (not started) & --- & 0 & 0 & 0 & --- & --- & --- & --- \\
+\bottomrule
+\end{tabular}
+}
+\caption{Per-(backend, model, task) run manifest. Sources:
+classic-RL and Qwen2.5-0.5B rows,
+\texttt{experiments/\allowbreak{}results/\allowbreak{}modal\_registry/\allowbreak{}modal\_artifacts/\allowbreak{}tinkerrl-results/\allowbreak{}\{cleanrl,sb3,tianshou,grpo\}\_math/\allowbreak{}seed*.json};
+Llama-3.3-70B, \texttt{tinker-runs/\allowbreak{}results/\allowbreak{}llama33\_70b\_seeds.json};
+DeepSeek-V3.1 (3 seeds), frontier and group-size rows,
+\texttt{tinker-runs/\allowbreak{}results/\allowbreak{}campaign\_v2\_20260419\_111623.json};
+individual Tinker rows, \texttt{tinker-runs/\allowbreak{}results/\allowbreak{}\{scale,frontier,arch,cross\_tool\}\_*.json};
+Wave-6, \texttt{tinker-runs/\allowbreak{}results/\allowbreak{}wave6\_ablations.json};
+matched budget, \texttt{tinker-runs/\allowbreak{}results/\allowbreak{}er2b\_g\{2,16\}\_s\{123,456\}.json};
+launcher comparison, \texttt{results/\allowbreak{}framework\_comparison.json};
+Modal TRL rows, \texttt{master\_results.json} (W\&B-exported traces);
+PPO rows, W\&B project export (two same-name seed-42 runs per model, with
+conflicting last-10 values for Qwen3-8B). Reward: BV binary verifiable, SH
+shaped. All Tinker rows depend on a closed-source backend.
+$^a$~Gym environment for adding two integers in $[1,99]$ with a discrete-action
+MLP policy (not a language model); final accuracy is near zero (0.2--1.4\% per seed),
+so these cells are sanity floors, not learning results.
+$^b$~Generated two-number addition (``What is $a{+}b$?''; 1{,}000 train / 200
+generated evaluation problems); one final accuracy per seed, no step trace.
+$^c$~Step counts are the last logged step; only 3--5 reward values were
+reconstructed from console output, so no metric is reported.}
+\label{tab:run-manifest}
+\end{table}

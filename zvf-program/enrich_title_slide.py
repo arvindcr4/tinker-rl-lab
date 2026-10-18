@@ -2,8 +2,8 @@ from pptx import Presentation
 from pptx.util import Inches, Pt
 from pptx.dml.color import RGBColor
 from pptx.enum.shapes import MSO_SHAPE
-from pptx.enum.text import PP_ALIGN, MSO_ANCHOR
-import sys
+from pptx.enum.text import PP_ALIGN
+
 
 def main():
     pptx_path = "/Users/arvind/Developer/tinker-rl-lab/zvf-program/ZVF_Program_Progress_2026-06-14_lightning.pptx"
@@ -49,10 +49,13 @@ def main():
         pill_sp.adjustments[0] = 0.5
     except Exception:
         pass
-    
+
     tf = pill_sp.text_frame
     tf.word_wrap = False
-    tf.margin_left = 0; tf.margin_right = 0; tf.margin_top = 0; tf.margin_bottom = 0
+    tf.margin_left = 0
+    tf.margin_right = 0
+    tf.margin_top = 0
+    tf.margin_bottom = 0
     p = tf.paragraphs[0]
     p.alignment = PP_ALIGN.CENTER
     r = p.add_run()
@@ -73,12 +76,21 @@ def main():
     # 4. Add a small logo-like circle in the top left or a dot matrix pattern
     # Let's add three small dots to the right of the top eyebrow text
     for i in range(3):
-        rect(slide, 4.0 + i*0.15, 0.72, 0.08, 0.08, fill=PANEL if i < 2 else TEAL, shape=MSO_SHAPE.OVAL)
+        rect(
+            slide,
+            4.0 + i * 0.15,
+            0.72,
+            0.08,
+            0.08,
+            fill=PANEL if i < 2 else TEAL,
+            shape=MSO_SHAPE.OVAL,
+        )
 
     # Save the modified presentation
     out_path = pptx_path.replace(".pptx", "_enriched.pptx")
     prs.save(out_path)
     print(f"Slide 1 enriched and saved to: {out_path}")
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()

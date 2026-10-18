@@ -59,13 +59,13 @@ OUTPUTS (5 TSV + meta) under platform_hybrid/experiments/results/length_bias_ite
 
 USAGE  : python3 platform_modal/scripts/length_bias_iter128.py [--B_perm 50000]
 """
+
 from __future__ import annotations
 
 import argparse
 import csv
 import json
 import os
-import sys
 from typing import Any
 
 import numpy as np
@@ -94,21 +94,23 @@ def load_drgrpo_arith() -> list[dict[str, Any]]:
         m_len_last5 = float(np.mean([s["mean_comp_len"] for s in sl[-5:]]))
         m_rwd_first5 = float(np.mean([s["mean_reward"] for s in sl[:5]]))
         m_rwd_last5 = float(np.mean([s["mean_reward"] for s in sl[-5:]]))
-        out.append({
-            "task": "arithmetic_easy",
-            "algo": r["algo"],
-            "seed": int(r["seed"]),
-            "n_steps": len(sl),
-            "len_first5": m_len_first5,
-            "len_last5": m_len_last5,
-            "rwd_first5": m_rwd_first5,
-            "rwd_last5": m_rwd_last5,
-            "dL_within": m_len_first5 - m_len_last5,
-            "dR_within": m_rwd_last5 - m_rwd_first5,
-            # arithmetic_easy has no heldout pre/post in this file
-            "pre_acc": float("nan"),
-            "post_acc": float("nan"),
-        })
+        out.append(
+            {
+                "task": "arithmetic_easy",
+                "algo": r["algo"],
+                "seed": int(r["seed"]),
+                "n_steps": len(sl),
+                "len_first5": m_len_first5,
+                "len_last5": m_len_last5,
+                "rwd_first5": m_rwd_first5,
+                "rwd_last5": m_rwd_last5,
+                "dL_within": m_len_first5 - m_len_last5,
+                "dR_within": m_rwd_last5 - m_rwd_first5,
+                # arithmetic_easy has no heldout pre/post in this file
+                "pre_acc": float("nan"),
+                "post_acc": float("nan"),
+            }
+        )
     return out
 
 
@@ -117,21 +119,23 @@ def load_drgrpo_gsm8k() -> list[dict[str, Any]]:
     d = json.load(open(DRGR_GSM8K))
     out = []
     for r in d["runs"]:
-        out.append({
-            "task": "gsm8k_cot",
-            "algo": r["algo"],
-            "seed": int(r["seed"]),
-            "n_steps": len(r["step_log"]),
-            "len_first5": r["mean_comp_len_first5"],
-            "len_last5": r["mean_comp_len_last5"],
-            "rwd_first5": float("nan"),   # not summarised
-            "rwd_last5": float("nan"),
-            "dL_within": r["mean_comp_len_first5"] - r["mean_comp_len_last5"],
-            "dR_within": float("nan"),
-            "pre_acc": r["heldout_pre_acc"],
-            "post_acc": r["heldout_post_acc"],
-            "dacc_heldout": r["heldout_post_acc"] - r["heldout_pre_acc"],
-        })
+        out.append(
+            {
+                "task": "gsm8k_cot",
+                "algo": r["algo"],
+                "seed": int(r["seed"]),
+                "n_steps": len(r["step_log"]),
+                "len_first5": r["mean_comp_len_first5"],
+                "len_last5": r["mean_comp_len_last5"],
+                "rwd_first5": float("nan"),  # not summarised
+                "rwd_last5": float("nan"),
+                "dL_within": r["mean_comp_len_first5"] - r["mean_comp_len_last5"],
+                "dR_within": float("nan"),
+                "pre_acc": r["heldout_pre_acc"],
+                "post_acc": r["heldout_post_acc"],
+                "dacc_heldout": r["heldout_post_acc"] - r["heldout_pre_acc"],
+            }
+        )
     return out
 
 
@@ -141,13 +145,12 @@ def load_iter108_signed_ccf() -> list[dict[str, Any]]:
         hdr = fh.readline().rstrip().split("\t")
         for line in fh:
             f = line.rstrip().split("\t")
-            row = dict(zip(hdr, f))
+            row = dict(zip(hdr, f, strict=False))
             row["window"] = int(row["window"])
             row["seed"] = int(row["seed"])
             row["n_total"] = int(row["n_total"])
             row["n_in_window"] = int(row["n_in_window"])
-            for k in ("phi_L", "phi_R", "bwd", "fwd",
-                      "bwd_signed", "fwd_signed"):
+            for k in ("phi_L", "phi_R", "bwd", "fwd", "bwd_signed", "fwd_signed"):
                 row[k] = float(row[k])
             rows.append(row)
     return rows
@@ -178,11 +181,13 @@ def efficiency_frontier(runs: list[dict]) -> list[dict]:
             num = float("nan")
             metric = "none"
         eff = num / dL if (dL > 0 and not np.isnan(num)) else float("nan")
-        out.append({
-            **r,
-            "efficiency": eff,
-            "efficiency_metric": metric,
-        })
+        out.append(
+            {
+                **r,
+                "efficiency": eff,
+                "efficiency_metric": metric,
+            }
+        )
     return out
 
 
@@ -194,10 +199,12 @@ def paired_efficiency_test(
     tasks = sorted({r["task"] for r in runs_with_eff})
     for task in tasks:
         sub = [r for r in runs_with_eff if r["task"] == task]
-        gr_e = [r["efficiency"] for r in sub if r["algo"] == "grpo"
-                and not np.isnan(r["efficiency"])]
-        dr_e = [r["efficiency"] for r in sub if r["algo"] == "dr_grpo"
-                and not np.isnan(r["efficiency"])]
+        gr_e = [
+            r["efficiency"] for r in sub if r["algo"] == "grpo" and not np.isnan(r["efficiency"])
+        ]
+        dr_e = [
+            r["efficiency"] for r in sub if r["algo"] == "dr_grpo" and not np.isnan(r["efficiency"])
+        ]
         # align by seed
         seeds = sorted({r["seed"] for r in sub})
         gr_by_seed = {r["seed"]: r["efficiency"] for r in sub if r["algo"] == "grpo"}
@@ -245,11 +252,9 @@ def paired_signed_ccf_test(
         # group by (seed, window), take |bwd_signed| per algo
         keys = sorted({(r["seed"], r["window"]) for r in sub})
         deltas = []
-        for (s, w) in keys:
-            gr = [r for r in sub if r["seed"] == s and r["window"] == w
-                  and r["algo"] == "grpo"]
-            dr = [r for r in sub if r["seed"] == s and r["window"] == w
-                  and r["algo"] == "dr_grpo"]
+        for s, w in keys:
+            gr = [r for r in sub if r["seed"] == s and r["window"] == w and r["algo"] == "grpo"]
+            dr = [r for r in sub if r["seed"] == s and r["window"] == w and r["algo"] == "dr_grpo"]
             if gr and dr:
                 delta = abs(dr[0]["bwd_signed"]) - abs(gr[0]["bwd_signed"])
                 deltas.append(delta)
@@ -260,10 +265,12 @@ def paired_signed_ccf_test(
             d = mean_delta / sd_delta if sd_delta > 0 else float("nan")
             out[task] = {
                 "n_pairs": len(deltas),
-                "mean_abs_bwd_gr": float(np.mean([abs(r["bwd_signed"]) for r in sub
-                                                  if r["algo"] == "grpo"])),
-                "mean_abs_bwd_dr": float(np.mean([abs(r["bwd_signed"]) for r in sub
-                                                  if r["algo"] == "dr_grpo"])),
+                "mean_abs_bwd_gr": float(
+                    np.mean([abs(r["bwd_signed"]) for r in sub if r["algo"] == "grpo"])
+                ),
+                "mean_abs_bwd_dr": float(
+                    np.mean([abs(r["bwd_signed"]) for r in sub if r["algo"] == "dr_grpo"])
+                ),
                 "mean_delta_dr_minus_gr": mean_delta,
                 "wilcoxon_W": float(w.statistic),
                 "wilcoxon_p_one_sided": float(w.pvalue),
@@ -305,7 +312,7 @@ def permutation_null_paired(
         obs_abs = abs(obs_mean)
     count = 0
     for _ in range(B):
-        flip = rng.integers(0, 2, size=n) * 2 - 1   # +/-1
+        flip = rng.integers(0, 2, size=n) * 2 - 1  # +/-1
         perm_mean = float(np.mean(obs_deltas * flip))
         if alternative == "greater":
             if perm_mean >= obs_abs:
@@ -328,9 +335,11 @@ def cross_task_envelope(
         out[task] = {
             "mean_eff_gr": vals["mean_eff_gr"],
             "mean_eff_dr": vals["mean_eff_dr"],
-            "ratio_dr_over_gr": (vals["mean_eff_dr"] / vals["mean_eff_gr"]
-                                 if vals["mean_eff_gr"] != 0
-                                 else float("nan")),
+            "ratio_dr_over_gr": (
+                vals["mean_eff_dr"] / vals["mean_eff_gr"]
+                if vals["mean_eff_gr"] != 0
+                else float("nan")
+            ),
             "dr_minus_gr": vals["mean_eff_dr"] - vals["mean_eff_gr"],
         }
     return out
@@ -348,15 +357,21 @@ def sign_test(
         for s in seeds:
             gr = [r for r in sub if r["seed"] == s and r["algo"] == "grpo"]
             dr = [r for r in sub if r["seed"] == s and r["algo"] == "dr_grpo"]
-            if gr and dr and not np.isnan(gr[0]["efficiency"]) \
-                    and not np.isnan(dr[0]["efficiency"]):
-                cells.append({
-                    "task": task,
-                    "seed": s,
-                    "eff_gr": gr[0]["efficiency"],
-                    "eff_dr": dr[0]["efficiency"],
-                    "delta_dr_minus_gr": dr[0]["efficiency"] - gr[0]["efficiency"],
-                })
+            if (
+                gr
+                and dr
+                and not np.isnan(gr[0]["efficiency"])
+                and not np.isnan(dr[0]["efficiency"])
+            ):
+                cells.append(
+                    {
+                        "task": task,
+                        "seed": s,
+                        "eff_gr": gr[0]["efficiency"],
+                        "eff_dr": dr[0]["efficiency"],
+                        "delta_dr_minus_gr": dr[0]["efficiency"] - gr[0]["efficiency"],
+                    }
+                )
     n = len(cells)
     n_dr_wins = sum(1 for c in cells if c["delta_dr_minus_gr"] > 0)
     n_gr_wins = sum(1 for c in cells if c["delta_dr_minus_gr"] < 0)
@@ -364,8 +379,7 @@ def sign_test(
     if n > 0 and (n_dr_wins + n_gr_wins) > 0:
         # one-sided binomial p: P(X >= n_dr_wins | n_eff, p=0.5)
         n_eff = n_dr_wins + n_gr_wins
-        p_one_sided = float(stats.binomtest(n_dr_wins, n_eff, 0.5,
-                                            alternative="greater").pvalue)
+        p_one_sided = float(stats.binomtest(n_dr_wins, n_eff, 0.5, alternative="greater").pvalue)
     else:
         p_one_sided = float("nan")
     return {
@@ -428,8 +442,11 @@ def main() -> None:
     # ------------------------------------------------------------------
     # 5. H4 -- heldout (GSM8K) frontier: per-seed (dL, dacc)
     # ------------------------------------------------------------------
-    gsm_rows = [r for r in runs_with_eff if r["task"] == "gsm8k_cot"
-                and not np.isnan(r.get("dacc_heldout", float("nan")))]
+    gsm_rows = [
+        r
+        for r in runs_with_eff
+        if r["task"] == "gsm8k_cot" and not np.isnan(r.get("dacc_heldout", float("nan")))
+    ]
 
     # ------------------------------------------------------------------
     # 6. H5 -- sign test across (task, seed)
@@ -441,103 +458,169 @@ def main() -> None:
     # ------------------------------------------------------------------
     # H1 permutation null: paired (dr_eff, gr_eff) per (task, seed)
     h1_pairs = [(c["eff_dr"], c["eff_gr"]) for c in h5["cells"]]
-    h1_perm_p = permutation_null_paired(h1_pairs, alternative="greater",
-                                        B=args.B_perm, seed=args.seed_base)
+    h1_perm_p = permutation_null_paired(
+        h1_pairs, alternative="greater", B=args.B_perm, seed=args.seed_base
+    )
 
     # H2 permutation null: paired |bwd_signed| per (task, seed, window)
     h2_pairs = []
     for r in signed:
         # match by (task, seed, window)
-        match = [s for s in signed
-                 if s["task"] == r["task"] and s["seed"] == r["seed"]
-                 and s["window"] == r["window"]
-                 and s["algo"] != r["algo"]]
+        match = [
+            s
+            for s in signed
+            if s["task"] == r["task"]
+            and s["seed"] == r["seed"]
+            and s["window"] == r["window"]
+            and s["algo"] != r["algo"]
+        ]
         if match:
             other = match[0]
             if r["algo"] == "dr_grpo":
-                h2_pairs.append((abs(r["bwd_signed"]),
-                                 abs(other["bwd_signed"])))
-    h2_perm_p = permutation_null_paired(h2_pairs, alternative="less",
-                                        B=args.B_perm, seed=args.seed_base + 1)
+                h2_pairs.append((abs(r["bwd_signed"]), abs(other["bwd_signed"])))
+    h2_perm_p = permutation_null_paired(
+        h2_pairs, alternative="less", B=args.B_perm, seed=args.seed_base + 1
+    )
 
     # ------------------------------------------------------------------
     # 8. Write outputs
     # ------------------------------------------------------------------
     # (a) efficiency frontier table -- one row per (algo, seed, task)
-    ef_header = ["task", "algo", "seed", "n_steps", "len_first5", "len_last5",
-                 "dL_within", "rwd_first5", "rwd_last5", "dR_within",
-                 "pre_acc", "post_acc", "dacc_heldout",
-                 "efficiency", "efficiency_metric"]
+    ef_header = [
+        "task",
+        "algo",
+        "seed",
+        "n_steps",
+        "len_first5",
+        "len_last5",
+        "dL_within",
+        "rwd_first5",
+        "rwd_last5",
+        "dR_within",
+        "pre_acc",
+        "post_acc",
+        "dacc_heldout",
+        "efficiency",
+        "efficiency_metric",
+    ]
     ef_rows = []
     for r in runs_with_eff:
-        ef_rows.append([
-            r["task"], r["algo"], r["seed"], r["n_steps"],
-            f"{r['len_first5']:.6f}", f"{r['len_last5']:.6f}",
-            f"{r['dL_within']:.6f}",
-            f"{r.get('rwd_first5', float('nan')):.6f}",
-            f"{r.get('rwd_last5', float('nan')):.6f}",
-            f"{r.get('dR_within', float('nan')):.6f}",
-            f"{r.get('pre_acc', float('nan')):.6f}",
-            f"{r.get('post_acc', float('nan')):.6f}",
-            f"{r.get('dacc_heldout', float('nan')):.6f}",
-            f"{r.get('efficiency', float('nan')):.6f}",
-            r.get("efficiency_metric", "none"),
-        ])
-    write_tsv(os.path.join(RES, "length_bias_iter128_efficiency_frontier.tsv"),
-              ef_header, ef_rows)
+        ef_rows.append(
+            [
+                r["task"],
+                r["algo"],
+                r["seed"],
+                r["n_steps"],
+                f"{r['len_first5']:.6f}",
+                f"{r['len_last5']:.6f}",
+                f"{r['dL_within']:.6f}",
+                f"{r.get('rwd_first5', float('nan')):.6f}",
+                f"{r.get('rwd_last5', float('nan')):.6f}",
+                f"{r.get('dR_within', float('nan')):.6f}",
+                f"{r.get('pre_acc', float('nan')):.6f}",
+                f"{r.get('post_acc', float('nan')):.6f}",
+                f"{r.get('dacc_heldout', float('nan')):.6f}",
+                f"{r.get('efficiency', float('nan')):.6f}",
+                r.get("efficiency_metric", "none"),
+            ]
+        )
+    write_tsv(os.path.join(RES, "length_bias_iter128_efficiency_frontier.tsv"), ef_header, ef_rows)
 
     # (b) signed CCF table -- one row per (algo, seed, task, window)
-    cc_header = ["task", "algo", "seed", "window", "n_in_window",
-                 "phi_L", "phi_R", "bwd", "fwd", "bwd_signed", "fwd_signed",
-                 "abs_bwd_signed"]
+    cc_header = [
+        "task",
+        "algo",
+        "seed",
+        "window",
+        "n_in_window",
+        "phi_L",
+        "phi_R",
+        "bwd",
+        "fwd",
+        "bwd_signed",
+        "fwd_signed",
+        "abs_bwd_signed",
+    ]
     cc_rows = []
-    for r in sorted(signed,
-                    key=lambda x: (x["task"], x["algo"], x["seed"], x["window"])):
-        cc_rows.append([
-            r["task"], r["algo"], r["seed"], r["window"], r["n_in_window"],
-            f"{r['phi_L']:.4f}", f"{r['phi_R']:.4f}",
-            f"{r['bwd']:.4f}", f"{r['fwd']:.4f}",
-            f"{r['bwd_signed']:.4f}", f"{r['fwd_signed']:.4f}",
-            f"{abs(r['bwd_signed']):.4f}",
-        ])
-    write_tsv(os.path.join(RES, "length_bias_iter128_signed_ccf.tsv"),
-              cc_header, cc_rows)
+    for r in sorted(signed, key=lambda x: (x["task"], x["algo"], x["seed"], x["window"])):
+        cc_rows.append(
+            [
+                r["task"],
+                r["algo"],
+                r["seed"],
+                r["window"],
+                r["n_in_window"],
+                f"{r['phi_L']:.4f}",
+                f"{r['phi_R']:.4f}",
+                f"{r['bwd']:.4f}",
+                f"{r['fwd']:.4f}",
+                f"{r['bwd_signed']:.4f}",
+                f"{r['fwd_signed']:.4f}",
+                f"{abs(r['bwd_signed']):.4f}",
+            ]
+        )
+    write_tsv(os.path.join(RES, "length_bias_iter128_signed_ccf.tsv"), cc_header, cc_rows)
 
     # (c) pooled H1 efficiency table -- per-task paired tests
-    pool_header = ["task", "n_pairs", "mean_eff_gr", "mean_eff_dr",
-                   "mean_delta_dr_minus_gr", "wilcoxon_W",
-                   "wilcoxon_p_one_sided", "cohens_d"]
+    pool_header = [
+        "task",
+        "n_pairs",
+        "mean_eff_gr",
+        "mean_eff_dr",
+        "mean_delta_dr_minus_gr",
+        "wilcoxon_W",
+        "wilcoxon_p_one_sided",
+        "cohens_d",
+    ]
     pool_rows = []
     for task, vals in h1_by_task.items():
-        pool_rows.append([
-            task, vals["n_pairs"],
-            f"{vals['mean_eff_gr']:.6f}",
-            f"{vals['mean_eff_dr']:.6f}",
-            f"{vals['mean_delta_dr_minus_gr']:.6f}",
-            f"{vals['wilcoxon_W']:.4f}",
-            f"{vals['wilcoxon_p_one_sided']:.6f}",
-            f"{vals['cohens_d']:.4f}",
-        ])
-    write_tsv(os.path.join(RES, "length_bias_iter128_pooled_h1_efficiency.tsv"),
-              pool_header, pool_rows)
+        pool_rows.append(
+            [
+                task,
+                vals["n_pairs"],
+                f"{vals['mean_eff_gr']:.6f}",
+                f"{vals['mean_eff_dr']:.6f}",
+                f"{vals['mean_delta_dr_minus_gr']:.6f}",
+                f"{vals['wilcoxon_W']:.4f}",
+                f"{vals['wilcoxon_p_one_sided']:.6f}",
+                f"{vals['cohens_d']:.4f}",
+            ]
+        )
+    write_tsv(
+        os.path.join(RES, "length_bias_iter128_pooled_h1_efficiency.tsv"), pool_header, pool_rows
+    )
 
     # (d) permutation null table -- one row per hypothesis
-    perm_header = ["hypothesis", "alternative", "n_pairs",
-                   "observed_stat", "B", "permutation_p"]
+    perm_header = ["hypothesis", "alternative", "n_pairs", "observed_stat", "B", "permutation_p"]
     perm_rows = []
     # compute observed stats
-    obs_mean_delta_h1 = float(np.mean([c[0] - c[1] for c in h1_pairs])) \
-        if h1_pairs else float("nan")
-    obs_mean_delta_h2 = float(np.mean([c[0] - c[1] for c in h2_pairs])) \
-        if h2_pairs else float("nan")
-    perm_rows.append(["H1_efficiency_pairwise", "greater",
-                      len(h1_pairs), f"{obs_mean_delta_h1:.6f}",
-                      args.B_perm, f"{h1_perm_p:.6f}"])
-    perm_rows.append(["H2_signed_ccf_pairwise", "less",
-                      len(h2_pairs), f"{obs_mean_delta_h2:.6f}",
-                      args.B_perm, f"{h2_perm_p:.6f}"])
-    write_tsv(os.path.join(RES, "length_bias_iter128_permutation_null.tsv"),
-              perm_header, perm_rows)
+    obs_mean_delta_h1 = (
+        float(np.mean([c[0] - c[1] for c in h1_pairs])) if h1_pairs else float("nan")
+    )
+    obs_mean_delta_h2 = (
+        float(np.mean([c[0] - c[1] for c in h2_pairs])) if h2_pairs else float("nan")
+    )
+    perm_rows.append(
+        [
+            "H1_efficiency_pairwise",
+            "greater",
+            len(h1_pairs),
+            f"{obs_mean_delta_h1:.6f}",
+            args.B_perm,
+            f"{h1_perm_p:.6f}",
+        ]
+    )
+    perm_rows.append(
+        [
+            "H2_signed_ccf_pairwise",
+            "less",
+            len(h2_pairs),
+            f"{obs_mean_delta_h2:.6f}",
+            args.B_perm,
+            f"{h2_perm_p:.6f}",
+        ]
+    )
+    write_tsv(os.path.join(RES, "length_bias_iter128_permutation_null.tsv"), perm_header, perm_rows)
 
     # (e) summary table -- one headline per test
     sum_header = ["test", "description", "result", "p", "n"]
@@ -545,35 +628,39 @@ def main() -> None:
     # H1: per-task
     for task, vals in h1_by_task.items():
         verdict = "FAVOURS Dr.GR" if vals["mean_delta_dr_minus_gr"] > 0 else "FAVOURS GR"
-        sum_rows.append([
-            f"H1_efficiency[{task}]",
-            f"Wilcoxon paired Dr.GR eff vs GR eff (one-sided, alt=greater)",
-            verdict,
-            f"{vals['wilcoxon_p_one_sided']:.6f}",
-            vals["n_pairs"],
-        ])
+        sum_rows.append(
+            [
+                f"H1_efficiency[{task}]",
+                f"Wilcoxon paired Dr.GR eff vs GR eff (one-sided, alt=greater)",
+                verdict,
+                f"{vals['wilcoxon_p_one_sided']:.6f}",
+                vals["n_pairs"],
+            ]
+        )
     # H2: per-task
     for task, vals in h2_by_task.items():
-        verdict = "FAVOURS Dr.GR (tighter)" if vals["mean_delta_dr_minus_gr"] < 0 \
-            else "FAVOURS GR"
-        sum_rows.append([
-            f"H2_signed_ccf[{task}]",
-            f"Wilcoxon paired |bwd_signed| Dr.GR vs GR (one-sided, alt=less)",
-            verdict,
-            f"{vals['wilcoxon_p_one_sided']:.6f}",
-            vals["n_pairs"],
-        ])
+        verdict = "FAVOURS Dr.GR (tighter)" if vals["mean_delta_dr_minus_gr"] < 0 else "FAVOURS GR"
+        sum_rows.append(
+            [
+                f"H2_signed_ccf[{task}]",
+                f"Wilcoxon paired |bwd_signed| Dr.GR vs GR (one-sided, alt=less)",
+                verdict,
+                f"{vals['wilcoxon_p_one_sided']:.6f}",
+                vals["n_pairs"],
+            ]
+        )
     # H3: envelope ratio
     for task, vals in h3_envelope.items():
-        verdict = "Dr.GR >= GR" if vals["ratio_dr_over_gr"] >= 1.0 \
-            else "Dr.GR < GR"
-        sum_rows.append([
-            f"H3_envelope_ratio[{task}]",
-            "Cross-task envelope of eff(Dr.GR)/eff(GR)",
-            verdict,
-            "n/a",
-            "all_seeds",
-        ])
+        verdict = "Dr.GR >= GR" if vals["ratio_dr_over_gr"] >= 1.0 else "Dr.GR < GR"
+        sum_rows.append(
+            [
+                f"H3_envelope_ratio[{task}]",
+                "Cross-task envelope of eff(Dr.GR)/eff(GR)",
+                verdict,
+                "n/a",
+                "all_seeds",
+            ]
+        )
     # H4: GSM8K heldout frontier (qualitative)
     if gsm_rows:
         # mean within-task frontier
@@ -584,27 +671,32 @@ def main() -> None:
             m_dL_gr = float(np.mean([r["dL_within"] for r in sub_gr]))
             m_da_dr = float(np.mean([r["dacc_heldout"] for r in sub_dr]))
             m_da_gr = float(np.mean([r["dacc_heldout"] for r in sub_gr]))
-            verdict = "Dr.GR shorter at comparable acc" \
-                if (m_dL_dr < m_dL_gr and abs(m_da_dr - m_da_gr) < 0.02) \
+            verdict = (
+                "Dr.GR shorter at comparable acc"
+                if (m_dL_dr < m_dL_gr and abs(m_da_dr - m_da_gr) < 0.02)
                 else "trade-off visible"
-            sum_rows.append([
-                "H4_heldout_frontier[gsm8k_cot]",
-                f"mean dL(DR)={m_dL_dr:.2f} vs dL(GR)={m_dL_gr:.2f}; "
-                f"mean dacc(DR)={m_da_dr:+.4f} vs dacc(GR)={m_da_gr:+.4f}",
-                verdict,
-                "n/a",
-                len(gsm_rows),
-            ])
+            )
+            sum_rows.append(
+                [
+                    "H4_heldout_frontier[gsm8k_cot]",
+                    f"mean dL(DR)={m_dL_dr:.2f} vs dL(GR)={m_dL_gr:.2f}; "
+                    f"mean dacc(DR)={m_da_dr:+.4f} vs dacc(GR)={m_da_gr:+.4f}",
+                    verdict,
+                    "n/a",
+                    len(gsm_rows),
+                ]
+            )
     # H5: sign test
-    sum_rows.append([
-        "H5_sign_test",
-        f"Binomial P(Dr.GR wins | n={h5['n_dr_wins'] + h5['n_gr_wins']}, p=0.5)",
-        f"Dr.GR wins {h5['n_dr_wins']}/{h5['n_dr_wins'] + h5['n_gr_wins']}",
-        f"{h5['binom_p_one_sided']:.6f}",
-        h5["n_cells"],
-    ])
-    write_tsv(os.path.join(RES, "length_bias_iter128_summary.tsv"),
-              sum_header, sum_rows)
+    sum_rows.append(
+        [
+            "H5_sign_test",
+            f"Binomial P(Dr.GR wins | n={h5['n_dr_wins'] + h5['n_gr_wins']}, p=0.5)",
+            f"Dr.GR wins {h5['n_dr_wins']}/{h5['n_dr_wins'] + h5['n_gr_wins']}",
+            f"{h5['binom_p_one_sided']:.6f}",
+            h5["n_cells"],
+        ]
+    )
+    write_tsv(os.path.join(RES, "length_bias_iter128_summary.tsv"), sum_header, sum_rows)
 
     # (f) meta JSON
     meta = {
@@ -635,23 +727,29 @@ def main() -> None:
     print("Iter 128 -- Length-Efficiency Frontier")
     print("=" * 72)
     for task, vals in h1_by_task.items():
-        print(f"  H1 efficiency[{task:14s}]: "
-              f"GR eff={vals['mean_eff_gr']:+.4f}  "
-              f"DR eff={vals['mean_eff_dr']:+.4f}  "
-              f"delta={vals['mean_delta_dr_minus_gr']:+.4f}  "
-              f"p={vals['wilcoxon_p_one_sided']:.4f}  "
-              f"d={vals['cohens_d']:+.2f}")
+        print(
+            f"  H1 efficiency[{task:14s}]: "
+            f"GR eff={vals['mean_eff_gr']:+.4f}  "
+            f"DR eff={vals['mean_eff_dr']:+.4f}  "
+            f"delta={vals['mean_delta_dr_minus_gr']:+.4f}  "
+            f"p={vals['wilcoxon_p_one_sided']:.4f}  "
+            f"d={vals['cohens_d']:+.2f}"
+        )
     for task, vals in h2_by_task.items():
-        print(f"  H2 |bwd_signed|[{task:14s}]: "
-              f"GR={vals['mean_abs_bwd_gr']:.3f}  "
-              f"DR={vals['mean_abs_bwd_dr']:.3f}  "
-              f"delta={vals['mean_delta_dr_minus_gr']:+.3f}  "
-              f"p={vals['wilcoxon_p_one_sided']:.4f}")
+        print(
+            f"  H2 |bwd_signed|[{task:14s}]: "
+            f"GR={vals['mean_abs_bwd_gr']:.3f}  "
+            f"DR={vals['mean_abs_bwd_dr']:.3f}  "
+            f"delta={vals['mean_delta_dr_minus_gr']:+.3f}  "
+            f"p={vals['wilcoxon_p_one_sided']:.4f}"
+        )
     print(f"  H3 envelope ratios:")
     for task, vals in h3_envelope.items():
         print(f"    [{task:14s}] ratio={vals['ratio_dr_over_gr']:+.3f}")
-    print(f"  H5 sign test: Dr.GR wins {h5['n_dr_wins']}/{h5['n_dr_wins'] + h5['n_gr_wins']}, "
-          f"binomial p={h5['binom_p_one_sided']:.4f}")
+    print(
+        f"  H5 sign test: Dr.GR wins {h5['n_dr_wins']}/{h5['n_dr_wins'] + h5['n_gr_wins']}, "
+        f"binomial p={h5['binom_p_one_sided']:.4f}"
+    )
     print(f"  H1 permutation p={h1_perm_p:.4f}")
     print(f"  H2 permutation p={h2_perm_p:.4f}")
 

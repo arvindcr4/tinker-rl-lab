@@ -111,7 +111,9 @@ def generate_design(plan: dict) -> dict:
     if seed_plan is not None:
         required = ("type", "target", "required_num_seeds", "calculation", "experimental_unit")
         if not isinstance(seed_plan, dict) or any(not seed_plan.get(k) for k in required):
-            raise ValueError("seed_plan requires type, target, required_num_seeds, calculation, experimental_unit")
+            raise ValueError(
+                "seed_plan requires type, target, required_num_seeds, calculation, experimental_unit"
+            )
         if seed_plan["type"] not in ("power", "precision"):
             raise ValueError("seed_plan type must be power or precision")
         minimum = seed_plan["required_num_seeds"]
@@ -123,7 +125,9 @@ def generate_design(plan: dict) -> dict:
         if type(num_seeds) is not int or num_seeds < 1:
             raise ValueError("num_seeds must be a positive integer")
         if seed_plan is None or num_seeds < seed_plan["required_num_seeds"]:
-            raise ValueError("num_seeds requires a power/precision plan and must meet its calculated minimum")
+            raise ValueError(
+                "num_seeds requires a power/precision plan and must meet its calculated minimum"
+            )
 
     # Select metrics
     metrics = custom_metrics or DEFAULT_METRICS.get(task_type, DEFAULT_METRICS["general"])
@@ -146,8 +150,11 @@ def generate_design(plan: dict) -> dict:
     n_datasets = max(len(datasets), 1)
     n_ablations = len(ablations)
     n_baselines = max(len(baselines), 1)
-    total_runs = ((n_hp_configs + n_ablations + n_baselines) * n_datasets * num_seeds
-                  if num_seeds is not None else None)
+    total_runs = (
+        (n_hp_configs + n_ablations + n_baselines) * n_datasets * num_seeds
+        if num_seeds is not None
+        else None
+    )
 
     design = {
         "method": method,
@@ -241,8 +248,12 @@ def main():
     parser.add_argument("--plan", help="Research plan JSON file")
     parser.add_argument("--method", help="Method name (if no plan file)")
     parser.add_argument("--task", help="Task type: classification, regression, generation, etc.")
-    parser.add_argument("--format", choices=["json", "markdown"], default="json",
-                        help="Output format (default: json)")
+    parser.add_argument(
+        "--format",
+        choices=["json", "markdown"],
+        default="json",
+        help="Output format (default: json)",
+    )
     parser.add_argument("--output", "-o", help="Output file")
     args = parser.parse_args()
 

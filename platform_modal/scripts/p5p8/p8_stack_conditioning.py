@@ -23,6 +23,7 @@ platform_hybrid/experiments/results/p5p8/figures/p8_stack_audit.{png,pdf}
 
 Stdlib + numpy + pandas + xgboost + sklearn + matplotlib. <=300 lines.
 """
+
 import json
 from itertools import product
 from pathlib import Path
@@ -31,9 +32,12 @@ import numpy as np
 import pandas as pd
 import xgboost as xgb
 from sklearn.metrics import (
-    brier_score_loss, f1_score, log_loss, roc_auc_score,
+    brier_score_loss,
+    f1_score,
+    roc_auc_score,
 )
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
@@ -55,10 +59,10 @@ BOOT_SEED = 20260704
 # n_estimators capped at 200 so the factorial finishes in <1min on the
 # 50k-row fraud split; all five axes get full coverage at 2 levels each.
 STACK = {
-    "n_estimators":     [100, 200],
-    "max_depth":        [3, 5],
-    "learning_rate":    [0.05, 0.2],
-    "subsample":        [0.7, 1.0],
+    "n_estimators": [100, 200],
+    "max_depth": [3, 5],
+    "learning_rate": [0.05, 0.2],
+    "subsample": [0.7, 1.0],
     "scale_pos_weight": [1, 5],  # minority re-weighting
 }
 
@@ -113,7 +117,7 @@ def run_full_factorial(X_tr, y_tr, X_te, y_te):
     combos = list(product(*levels))
     rows = []
     for combo in combos:
-        params = dict(zip(keys, combo))
+        params = dict(zip(keys, combo, strict=False))
         params["colsample_bytree"] = 0.8  # fixed
         p_te = fit_predict(X_tr, y_tr, X_te, params)
         auc, f1, brier, ece = score_row(y_te, p_te)
@@ -128,9 +132,11 @@ def eta2_one_way(df, axis, metric):
     ss_total = ((df[metric] - grand_mean) ** 2).sum()
     if ss_total == 0:
         return float("nan"), grand_mean
-    ss_between = df.groupby(axis)[metric].agg(
-        n="count", mean="mean"
-    ).assign(_=lambda d: d["n"] * (d["mean"] - grand_mean) ** 2)
+    ss_between = (
+        df.groupby(axis)[metric]
+        .agg(n="count", mean="mean")
+        .assign(_=lambda d: d["n"] * (d["mean"] - grand_mean) ** 2)
+    )
     ss_between_val = ss_between["_"].sum()
     return float(ss_between_val / ss_total), float(grand_mean)
 
@@ -169,21 +175,25 @@ def main():
         for metric in metrics:
             eta, mean = eta2_one_way(df, axis, metric)
             em, lo, hi = bootstrap_eta2(df, axis, metric)
-            rows.append({
-                "axis": axis,
-                "metric": metric,
-                "eta2": eta,
-                "metric_mean": mean,
-                "n_levels": len(STACK[axis]),
-            })
-            boot_rows.append({
-                "axis": axis,
-                "metric": metric,
-                "eta2_boot_mean": em,
-                "eta2_ci025": lo,
-                "eta2_ci975": hi,
-                "ci_excludes_zero": bool(lo > 0.0),
-            })
+            rows.append(
+                {
+                    "axis": axis,
+                    "metric": metric,
+                    "eta2": eta,
+                    "metric_mean": mean,
+                    "n_levels": len(STACK[axis]),
+                }
+            )
+            boot_rows.append(
+                {
+                    "axis": axis,
+                    "metric": metric,
+                    "eta2_boot_mean": em,
+                    "eta2_ci025": lo,
+                    "eta2_ci975": hi,
+                    "ci_excludes_zero": bool(lo > 0.0),
+                }
+            )
     pd.DataFrame(rows).to_csv(OUT / "p8_stack_audit_axes.tsv", sep="\t", index=False)
     pd.DataFrame(boot_rows).to_csv(OUT / "p8_stack_audit_boot.tsv", sep="\t", index=False)
 
@@ -225,8 +235,15 @@ def main():
     ax.set_title(r"P8 stack-conditioning $\eta^2$ per (axis, metric)")
     for i in range(len(STACK)):
         for j in range(len(metrics)):
-            ax.text(j, i, f"{matrix[i, j]:.2f}", ha="center", va="center",
-                    color="white" if matrix[i, j] < 0.5 else "black", fontsize=9)
+            ax.text(
+                j,
+                i,
+                f"{matrix[i, j]:.2f}",
+                ha="center",
+                va="center",
+                color="white" if matrix[i, j] < 0.5 else "black",
+                fontsize=9,
+            )
     plt.colorbar(im, ax=ax, label=r"$\eta^2$")
     plt.tight_layout()
     plt.savefig(FIG / "p8_stack_audit.png", dpi=150)
@@ -239,7 +256,9 @@ def main():
         line = f"{ax:<22}"
         for m in metrics:
             r = next(b for b in boot_rows if b["axis"] == ax and b["metric"] == m)
-            line += f" {r['eta2_boot_mean']:>4.3f} [{r['eta2_ci025']:>4.3f},{r['eta2_ci975']:>4.3f}]"
+            line += (
+                f" {r['eta2_boot_mean']:>4.3f} [{r['eta2_ci025']:>4.3f},{r['eta2_ci975']:>4.3f}]"
+            )
         print(line)
     print(f"\nHeadline: {summary['headline']}")
 

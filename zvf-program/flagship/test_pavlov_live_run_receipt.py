@@ -34,7 +34,7 @@ def valid_receipt() -> dict:
             "private_artifact_safe": stage == "periodic",
             "receipt_hash": "a" * 64,
         }
-        for stage, revision in zip(("initial", "periodic", "final"), revisions)
+        for stage, revision in zip(("initial", "periodic", "final"), revisions, strict=False)
     ]
     receipt = {
         "schema_version": SCHEMA_VERSION,
@@ -50,8 +50,16 @@ def valid_receipt() -> dict:
             "status": "succeeded",
             "run_id": "xlam-run-809",
         },
-        "model": {"model_id": "Qwen/Qwen3.6-35B-A3B", "revision": "a" * 40, "receipt_hash": "b" * 64},
-        "dataset": {"dataset_id": "xlam-component-slice", "revision": "b" * 40, "receipt_hash": "c" * 64},
+        "model": {
+            "model_id": "Qwen/Qwen3.6-35B-A3B",
+            "revision": "a" * 40,
+            "receipt_hash": "b" * 64,
+        },
+        "dataset": {
+            "dataset_id": "xlam-component-slice",
+            "revision": "b" * 40,
+            "receipt_hash": "c" * 64,
+        },
         "wandb": {
             "online": True,
             "entity": "example",
@@ -128,22 +136,32 @@ class PavlovLiveRunReceiptTests(unittest.TestCase):
 
     def test_complete_paid_xlam_receipt_is_observed_component_only(self) -> None:
         receipt = valid_receipt()
-        self.assertEqual(validate_live_run_receipt(receipt, self.contract), [])
-        self.assertTrue(is_valid_live_run_receipt(receipt, self.contract))
+        assert validate_live_run_receipt(receipt, self.contract) == []
+        assert is_valid_live_run_receipt(receipt, self.contract)
 
     def test_missing_fields_are_enumerated_fail_closed(self) -> None:
         errors = validate_live_run_receipt({})
-        self.assertTrue(errors)
-        for field in ("claims", "run", "model", "dataset", "wandb", "tinker", "sampler_checkpoints", "budget", "evaluator_provenance"):
-            self.assertTrue(any(error.startswith(field) for error in errors), field)
+        assert errors
+        for field in (
+            "claims",
+            "run",
+            "model",
+            "dataset",
+            "wandb",
+            "tinker",
+            "sampler_checkpoints",
+            "budget",
+            "evaluator_provenance",
+        ):
+            assert any(error.startswith(field) for error in errors), field
 
     def test_model_and_dataset_branches_are_not_immutable_revisions(self) -> None:
         receipt = valid_receipt()
         receipt["model"]["revision"] = "main"
         receipt["dataset"]["revision"] = "v1"
         errors = validate_live_run_receipt(receipt)
-        self.assertTrue(any("model.revision" in error for error in errors))
-        self.assertTrue(any("dataset.revision" in error for error in errors))
+        assert any("model.revision" in error for error in errors)
+        assert any("dataset.revision" in error for error in errors)
 
     def test_wandb_requires_online_run_url_and_success(self) -> None:
         for mutation in (
@@ -154,93 +172,98 @@ class PavlovLiveRunReceiptTests(unittest.TestCase):
             receipt = valid_receipt()
             mutation(receipt["wandb"])
             errors = validate_live_run_receipt(receipt)
-            self.assertTrue(any(error.startswith("wandb") for error in errors))
+            assert any(error.startswith("wandb") for error in errors)
 
     def test_tinker_run_id_is_required(self) -> None:
         receipt = valid_receipt()
         del receipt["tinker"]["run_id"]
         errors = validate_live_run_receipt(receipt)
-        self.assertTrue(any("tinker.run_id" in error for error in errors))
+        assert any("tinker.run_id" in error for error in errors)
 
     def test_checkpoints_require_all_stages_unique_commits_and_verified_urls(self) -> None:
         receipt = valid_receipt()
         del receipt["sampler_checkpoints"][2]
         errors = validate_live_run_receipt(receipt)
-        self.assertTrue(any("missing stages: final" in error for error in errors))
+        assert any("missing stages: final" in error for error in errors)
 
         receipt = valid_receipt()
-        receipt["sampler_checkpoints"][1]["revision"] = receipt["sampler_checkpoints"][0]["revision"]
+        receipt["sampler_checkpoints"][1]["revision"] = receipt["sampler_checkpoints"][0][
+            "revision"
+        ]
         errors = validate_live_run_receipt(receipt)
-        self.assertTrue(any("duplicate HF repo+commit identity" in error for error in errors))
+        assert any("duplicate HF repo+commit identity" in error for error in errors)
 
         receipt = valid_receipt()
         receipt["sampler_checkpoints"][0]["url_verified"] = False
         receipt["sampler_checkpoints"][0]["url"] = "https://example.invalid/checkpoint"
         errors = validate_live_run_receipt(receipt)
-        self.assertTrue(any("sampler_checkpoints[0].url" in error for error in errors))
-        self.assertTrue(any("sampler_checkpoints[0].url_verified" in error for error in errors))
+        assert any("sampler_checkpoints[0].url" in error for error in errors)
+        assert any("sampler_checkpoints[0].url_verified" in error for error in errors)
 
     def test_budget_debits_are_exact_and_capped(self) -> None:
         receipt = valid_receipt()
         receipt["budget"]["total_debited_usd"] = "1.24"
         errors = validate_live_run_receipt(receipt, self.contract)
-        self.assertTrue(any("budget.total_debited_usd" in error for error in errors))
+        assert any("budget.total_debited_usd" in error for error in errors)
 
         receipt = valid_receipt()
         receipt["budget"]["authorized_cap_usd"] = "18.01"
         errors = validate_live_run_receipt(receipt, self.contract)
-        self.assertTrue(any("authorized_cap_usd" in error for error in errors))
+        assert any("authorized_cap_usd" in error for error in errors)
 
         receipt = valid_receipt()
         receipt["budget"]["debits"][0]["status"] = "estimated"
         errors = validate_live_run_receipt(receipt)
-        self.assertTrue(any("budget.debits[0].status" in error for error in errors))
+        assert any("budget.debits[0].status" in error for error in errors)
 
     def test_evaluator_provenance_and_primary_eval_claims_are_separate(self) -> None:
         receipt = valid_receipt()
         receipt["evaluator_provenance"]["split_manifest_hash"] = "status-complete"
         errors = validate_live_run_receipt(receipt)
-        self.assertTrue(any("split_manifest_hash" in error for error in errors))
+        assert any("split_manifest_hash" in error for error in errors)
 
         receipt = valid_receipt()
         receipt["claims"]["primary_eval_heldout"] = True
         errors = validate_live_run_receipt(receipt)
-        self.assertTrue(any("claims.primary_eval_heldout" in error for error in errors))
+        assert any("claims.primary_eval_heldout" in error for error in errors)
 
         receipt = valid_receipt()
         receipt["evidence"]["portfolio_evidence"] = True
         errors = validate_live_run_receipt(receipt)
-        self.assertTrue(any("evidence.portfolio_evidence" in error for error in errors))
+        assert any("evidence.portfolio_evidence" in error for error in errors)
 
     def test_required_receipt_hash_detects_mutation(self) -> None:
         receipt = valid_receipt()
-        self.assertEqual(validate_live_run_receipt(receipt), [])
+        assert validate_live_run_receipt(receipt) == []
         receipt["run"]["run_id"] = "tampered"
         errors = validate_live_run_receipt(receipt)
-        self.assertTrue(any("receipt_hash" in error for error in errors))
+        assert any("receipt_hash" in error for error in errors)
 
     def test_adversarial_typed_booleans_caps_urls_and_safety_fail_closed(self) -> None:
         receipt = valid_receipt()
         receipt["run"]["paid"] = 1
-        self.assertTrue(any("run.paid" in error for error in validate_live_run_receipt(receipt)))
+        assert any("run.paid" in error for error in validate_live_run_receipt(receipt))
 
         receipt = valid_receipt()
         receipt["budget"]["operational_cap_usd"] = "16.51"
-        self.assertTrue(any("operational_cap_usd" in error for error in validate_live_run_receipt(receipt)))
+        assert any("operational_cap_usd" in error for error in validate_live_run_receipt(receipt))
 
         receipt = valid_receipt()
         receipt["wandb"]["run_url"] = "https://evil.example/wandb-run-809"
-        self.assertTrue(any("wandb.run_url" in error for error in validate_live_run_receipt(receipt)))
+        assert any("wandb.run_url" in error for error in validate_live_run_receipt(receipt))
 
         receipt = valid_receipt()
         del receipt["sampler_checkpoints"][0]["receipt_hash"]
-        self.assertTrue(any("sampler_checkpoints[0].receipt_hash" in error for error in validate_live_run_receipt(receipt)))
+        assert any(
+            "sampler_checkpoints[0].receipt_hash" in error
+            for error in validate_live_run_receipt(receipt)
+        )
 
         receipt = valid_receipt()
         receipt["sampler_checkpoints"][0]["visibility"] = "private"
         receipt["sampler_checkpoints"][0]["safe_public_artifact"] = False
         receipt["sampler_checkpoints"][0]["private_artifact_safe"] = False
-        self.assertTrue(any("private_artifact_safe" in error for error in validate_live_run_receipt(receipt)))
+        assert any("private_artifact_safe" in error for error in validate_live_run_receipt(receipt))
 
     def test_cli_returns_nonzero_for_invalid_and_zero_for_valid_local_receipt(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -249,15 +272,15 @@ class PavlovLiveRunReceiptTests(unittest.TestCase):
             output = io.StringIO()
             with redirect_stdout(output):
                 invalid_code = main(["--receipt", str(path)])
-            self.assertEqual(invalid_code, 1)
-            self.assertIn("run:", output.getvalue())
+            assert invalid_code == 1
+            assert "run:" in output.getvalue()
 
             path.write_text(json.dumps(valid_receipt()), encoding="utf-8")
             output = io.StringIO()
             with redirect_stdout(output):
                 valid_code = main(["--receipt", str(path)])
-            self.assertEqual(valid_code, 0)
-            self.assertIn("component-only receipt", output.getvalue())
+            assert valid_code == 0
+            assert "component-only receipt" in output.getvalue()
 
 
 if __name__ == "__main__":

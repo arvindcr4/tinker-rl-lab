@@ -9,11 +9,10 @@ Panel (D): cross-task envelope (mean dL/dt vs mean severship)
 Reads the iter124 TSV artefacts, mirrors to figures/ and
 paper/figures/, prints the headline and exits.
 """
+
 from __future__ import annotations
 
-import json
 import os
-import sys
 import csv
 
 import numpy as np
@@ -58,11 +57,18 @@ for task in TASKS:
     rows = per_seed[task]
     xs = [float(r["mean_dL_GR"]) for r in rows]
     ys = [float(r["mean_sever"]) for r in rows]
-    ax.scatter(xs, ys, color=COL[task], s=42, alpha=0.7,
-               edgecolor="black", linewidth=0.6, label=task)
-    ax.scatter(float(np.mean(xs)), float(np.mean(ys)),
-               color=COL[task], marker="*", s=240, edgecolor="black",
-               linewidth=0.8)
+    ax.scatter(
+        xs, ys, color=COL[task], s=42, alpha=0.7, edgecolor="black", linewidth=0.6, label=task
+    )
+    ax.scatter(
+        float(np.mean(xs)),
+        float(np.mean(ys)),
+        color=COL[task],
+        marker="*",
+        s=240,
+        edgecolor="black",
+        linewidth=0.8,
+    )
 ax.axhline(0, color="grey", lw=0.5, ls="--")
 ax.set_xlabel(r"baseline GR  $\,dL/dt$  (tokens / window)")
 ax.set_ylabel(r"severship  $-\delta\mathrm{bwd}$")
@@ -70,12 +76,17 @@ ax.set_title(r"(A)  sever vs baseline $dL/dt$")
 ax.legend(loc="best", fontsize=8)
 
 ax = axes[1]
-labels = [r"H1: sever $\to dL^{\mathrm{GR}}/dt$",
-          r"H2: sever $\to dR^{\mathrm{GR}}/dt$"]
-rho_h1 = float(pooled_h1[0]["spearman_sever_vs_dL_GR"]) if pooled_h1[0]["task"] == TASKS[0] \
+labels = [r"H1: sever $\to dL^{\mathrm{GR}}/dt$", r"H2: sever $\to dR^{\mathrm{GR}}/dt$"]
+rho_h1 = (
+    float(pooled_h1[0]["spearman_sever_vs_dL_GR"])
+    if pooled_h1[0]["task"] == TASKS[0]
     else float(pooled_h1[1]["spearman_sever_vs_dL_GR"])
-rho_h2 = float(pooled_h2[0]["spearman_sever_vs_dR_GR"]) if pooled_h2[0]["task"] == TASKS[0] \
+)
+rho_h2 = (
+    float(pooled_h2[0]["spearman_sever_vs_dR_GR"])
+    if pooled_h2[0]["task"] == TASKS[0]
     else float(pooled_h2[1]["spearman_sever_vs_dR_GR"])
+)
 ci_lo_h1 = float(boot_by_h["H1_sever_vs_dL_GR"][0]["ci_lo"])
 ci_hi_h1 = float(boot_by_h["H1_sever_vs_dL_GR"][0]["ci_hi"])
 ci_lo_h2 = float(boot_by_h["H2_sever_vs_dR_GR"][0]["ci_lo"])
@@ -97,8 +108,7 @@ W = sorted({int(r["window"]) for r in per_window})
 for task in TASKS:
     rhos = []
     for w in W:
-        match = [r for r in per_window
-                 if r["task"] == task and int(r["window"]) == w]
+        match = [r for r in per_window if r["task"] == task and int(r["window"]) == w]
         if match:
             rhos.append(float(match[0]["rho_sever_vs_dL_GR"]))
         else:
@@ -115,12 +125,14 @@ ax = axes[3]
 xs = [float(r["mean_dL_GR"]) for r in envelope]
 ys = [float(r["mean_sever"]) for r in envelope]
 labels = [r["task"] for r in envelope]
-for x, y, lbl in zip(xs, ys, labels):
-    ax.scatter(x, y, s=180, color=COL[lbl],
-               edgecolor="black", linewidth=0.8, label=lbl)
-ax.annotate("", xy=(xs[1], ys[1]), xytext=(xs[0], ys[0]),
-            arrowprops=dict(arrowstyle="->", color="black",
-                            lw=1.0, ls="--"))
+for x, y, lbl in zip(xs, ys, labels, strict=False):
+    ax.scatter(x, y, s=180, color=COL[lbl], edgecolor="black", linewidth=0.8, label=lbl)
+ax.annotate(
+    "",
+    xy=(xs[1], ys[1]),
+    xytext=(xs[0], ys[0]),
+    arrowprops=dict(arrowstyle="->", color="black", lw=1.0, ls="--"),
+)
 ax.set_xscale("symlog")
 ax.set_xlabel(r"task mean  $\,dL^{\mathrm{GR}}/dt$")
 ax.set_ylabel(r"task mean severship  $-\delta\mathrm{bwd}$")
@@ -130,8 +142,7 @@ ax.axhline(0, color="grey", lw=0.5, ls="--")
 plt.tight_layout()
 out = os.path.join(FIG, "length_bias_iter124_static_vs_dynamic.pdf")
 plt.savefig(out, dpi=160)
-plt.savefig(os.path.join(PFIG, "length_bias_iter124_static_vs_dynamic.pdf"),
-            dpi=160)
+plt.savefig(os.path.join(PFIG, "length_bias_iter124_static_vs_dynamic.pdf"), dpi=160)
 plt.savefig(out.replace(".pdf", ".png"), dpi=160)
 print(f"[iter124 fig] wrote {out}")
 print(f"[iter124 fig] wrote {out.replace('.pdf', '.png')}")

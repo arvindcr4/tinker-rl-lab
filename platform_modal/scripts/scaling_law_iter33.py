@@ -35,20 +35,20 @@ Outputs:
   platform_hybrid/experiments/results/scaling_law_iter33_summary.tsv
   figures/scaling_law_iter33.{pdf,png}
 """
+
 from __future__ import annotations
 
 import csv
-import json
 import math
 from pathlib import Path
 
 import matplotlib
 
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt  # noqa: E402
-import numpy as np  # noqa: E402
-from scipy.optimize import curve_fit  # noqa: E402
-from scipy.stats import binomtest, mannwhitneyu, pearsonr  # noqa: E402
+import matplotlib.pyplot as plt
+import numpy as np
+from scipy.optimize import curve_fit
+from scipy.stats import binomtest, mannwhitneyu, pearsonr
 
 REPO = Path(__file__).resolve().parent.parent
 DATA = REPO / "experiments" / "results" / "scaling_law_extended_frontier.tsv"
@@ -74,8 +74,12 @@ def lin(t, a, b):
 def fit_sat(t, r, lam_bound=10.0):
     try:
         popt, _ = curve_fit(
-            sat, t, r, p0=[0.8, 1.0],
-            bounds=([0.0, 1e-3], [2.0, lam_bound]), maxfev=5000,
+            sat,
+            t,
+            r,
+            p0=[0.8, 1.0],
+            bounds=([0.0, 1e-3], [2.0, lam_bound]),
+            maxfev=5000,
         )
         return float(popt[0]), float(popt[1]), False
     except Exception:
@@ -205,31 +209,38 @@ def main() -> None:
         t80 = -math.log(0.2) / lam if (not math.isnan(lam) and lam > 0) else float("inf")
         a, b = fit_lin(t, trace)
         phase = phase_classifier(
-            t, trace, peak, r["r_peak"],
-            r["zero_frac"], r["late_mean"], r["early_mean"],
+            t,
+            trace,
+            peak,
+            r["r_peak"],
+            r["zero_frac"],
+            r["late_mean"],
+            r["early_mean"],
         )
-        phase_rows.append({
-            "model": r["model"],
-            "params_B": r["params_B"],
-            "arch": r["arch"],
-            "n_steps": int(r["n_steps"]),
-            "mean_reward": round(r["r_mean"], 4),
-            "var_reward": round(r["r_var"], 4),
-            "peak_val": round(r["r_peak"], 4),
-            "peak_step": peak,
-            "peak_frac": round(peak / max(int(r["n_steps"]) - 1, 1), 4),
-            "early_mean": round(r["early_mean"], 4),
-            "late_mean": round(r["late_mean"], 4),
-            "delta_late_minus_early": round(r["delta_late_early"], 4),
-            "zero_frac": round(r["zero_frac"], 4),
-            "phase_score": round(score, 4),
-            "R_max": round(rmax, 4) if not math.isnan(rmax) else "NaN",
-            "lambda": round(lam, 4) if not math.isnan(lam) else "NaN",
-            "lam_at_bound": hit,
-            "t_80": round(t80, 4) if math.isfinite(t80) else "inf",
-            "ols_slope_per_step": round(b, 6),
-            "phase_classifier": phase,
-        })
+        phase_rows.append(
+            {
+                "model": r["model"],
+                "params_B": r["params_B"],
+                "arch": r["arch"],
+                "n_steps": int(r["n_steps"]),
+                "mean_reward": round(r["r_mean"], 4),
+                "var_reward": round(r["r_var"], 4),
+                "peak_val": round(r["r_peak"], 4),
+                "peak_step": peak,
+                "peak_frac": round(peak / max(int(r["n_steps"]) - 1, 1), 4),
+                "early_mean": round(r["early_mean"], 4),
+                "late_mean": round(r["late_mean"], 4),
+                "delta_late_minus_early": round(r["delta_late_early"], 4),
+                "zero_frac": round(r["zero_frac"], 4),
+                "phase_score": round(score, 4),
+                "R_max": round(rmax, 4) if not math.isnan(rmax) else "NaN",
+                "lambda": round(lam, 4) if not math.isnan(lam) else "NaN",
+                "lam_at_bound": hit,
+                "t_80": round(t80, 4) if math.isfinite(t80) else "inf",
+                "ols_slope_per_step": round(b, 6),
+                "phase_classifier": phase,
+            }
+        )
 
     # ---- (2) Pre-registered predictions ----
     # P1: peak_step / n_steps > 0.10 (rapid improvement >10% in)
@@ -244,7 +255,8 @@ def main() -> None:
 
     # P3: late_mean within 1 SE of peak (plateau holds); use r_var as proxy
     p3_pass = sum(
-        1 for r in phase_rows
+        1
+        for r in phase_rows
         if abs(r["late_mean"] - r["peak_val"]) <= math.sqrt(r["var_reward"]) + 0.05
     )
     p3_rate = p3_pass / len(phase_rows)
@@ -252,8 +264,9 @@ def main() -> None:
 
     # P4: phase_score predicts mean_reward (rank correlation)
     # Filter NaN phase_scores (traces with n_steps<5 cannot be classified)
-    valid = [(r["phase_score"], r["mean_reward"]) for r in phase_rows
-             if not math.isnan(r["phase_score"])]
+    valid = [
+        (r["phase_score"], r["mean_reward"]) for r in phase_rows if not math.isnan(r["phase_score"])
+    ]
     if len(valid) >= 3:
         scores = np.array([v[0] for v in valid])
         means = np.array([v[1] for v in valid])
@@ -270,9 +283,7 @@ def main() -> None:
     # collapse), but its mean (0.44) is far above Nemotron's 0.175.
     nemotron = next(r for r in phase_rows if r["model"] == "Nemotron-120B")
     others = [r for r in phase_rows if r["model"] != "Nemotron-120B"]
-    nemotron_unique = all(
-        not (o["zero_frac"] > 0.50 and o["mean_reward"] < 0.20) for o in others
-    )
+    nemotron_unique = all(not (o["zero_frac"] > 0.50 and o["mean_reward"] < 0.20) for o in others)
 
     pred_rows = [
         {
@@ -305,7 +316,9 @@ def main() -> None:
             "pass": f"rho={rho:.3f}" if not math.isnan(rho) else "n/a",
             "rate": round(float(rho), 4) if not math.isnan(rho) else "NaN",
             "p_value": round(p4_p, 4),
-            "verdict": "sustained" if (not math.isnan(rho) and p4_p < 0.05 and rho > 0) else "falsified",
+            "verdict": "sustained"
+            if (not math.isnan(rho) and p4_p < 0.05 and rho > 0)
+            else "falsified",
         },
         {
             "prediction": "P5_nemotron_unique_extreme_collapse",
@@ -333,11 +346,17 @@ def main() -> None:
             # bootstrap class: re-evaluate the three-feature rule on resampled
             zf_b = float(np.mean(tr == 0.0))
             mean_b = float(np.mean(tr))
-            late_b = float(np.mean(tr[max(0, len(tr) // 2):]))
+            late_b = float(np.mean(tr[max(0, len(tr) // 2) :]))
             early_b = float(np.mean(tr[: max(1, len(tr) // 2)]))
             peak_b = float(np.max(tr))
             cls = phase_classifier(
-                t_b, tr, int(np.argmax(tr)), peak_b, zf_b, late_b, early_b,
+                t_b,
+                tr,
+                int(np.argmax(tr)),
+                peak_b,
+                zf_b,
+                late_b,
+                early_b,
             )
             labels.append(cls)
             scores.append(sc)
@@ -345,15 +364,17 @@ def main() -> None:
         agree = float(np.mean(labels_arr == r["phase_classifier"]))
         score_med = float(np.median(scores))
         score_iqr = float(np.quantile(scores, 0.75) - np.quantile(scores, 0.25))
-        stability_rows.append({
-            "model": r["model"],
-            "params_B": r["params_B"],
-            "phase_classifier": r["phase_classifier"],
-            "phase_score_median": round(score_med, 4),
-            "phase_score_iqr": round(score_iqr, 4),
-            "stability_loo_agreement": round(agree, 4),
-            "n_boot": B_BOOT,
-        })
+        stability_rows.append(
+            {
+                "model": r["model"],
+                "params_B": r["params_B"],
+                "phase_classifier": r["phase_classifier"],
+                "phase_score_median": round(score_med, 4),
+                "phase_score_iqr": round(score_iqr, 4),
+                "stability_loo_agreement": round(agree, 4),
+                "n_boot": B_BOOT,
+            }
+        )
 
     # ---- (4) Nemotron collapse root-cause decomposition ----
     nem_rows = []
@@ -376,20 +397,22 @@ def main() -> None:
         c3 = peak_val < 0.95
         n_criteria = int(c1) + int(c2) + int(c3)
         is_collapse = n_criteria >= 2
-        nem_rows.append({
-            "model": r["model"],
-            "params_B": r["params_B"],
-            "pre_peak_mean": round(pre_mean, 4),
-            "post_peak_mean": round(post_mean, 4),
-            "post_peak_slope": round(post_slope, 5),
-            "zero_frac": round(zero_frac, 4),
-            "peak_val": round(peak_val, 4),
-            "criterion_zero_frac_gt_0p3": c1,
-            "criterion_post_slope_neg": c2,
-            "criterion_peak_below_0p95": c3,
-            "n_criteria_met": n_criteria,
-            "is_collapse_by_rule": is_collapse,
-        })
+        nem_rows.append(
+            {
+                "model": r["model"],
+                "params_B": r["params_B"],
+                "pre_peak_mean": round(pre_mean, 4),
+                "post_peak_mean": round(post_mean, 4),
+                "post_peak_slope": round(post_slope, 5),
+                "zero_frac": round(zero_frac, 4),
+                "peak_val": round(peak_val, 4),
+                "criterion_zero_frac_gt_0p3": c1,
+                "criterion_post_slope_neg": c2,
+                "criterion_peak_below_0p95": c3,
+                "n_criteria_met": n_criteria,
+                "is_collapse_by_rule": is_collapse,
+            }
+        )
 
     # ---- (5) Cross-architecture phase distribution ----
     arch_phase = {}
@@ -398,10 +421,16 @@ def main() -> None:
         arch_phase[r["arch"]][r["phase_classifier"]] += 1
 
     # Mann-Whitney: phase_score(dense) vs phase_score(MoE)
-    dense_scores = [r["phase_score"] for r in phase_rows
-                    if r["arch"] == "dense" and not math.isnan(r["phase_score"])]
-    moe_scores = [r["phase_score"] for r in phase_rows
-                  if r["arch"] == "moe" and not math.isnan(r["phase_score"])]
+    dense_scores = [
+        r["phase_score"]
+        for r in phase_rows
+        if r["arch"] == "dense" and not math.isnan(r["phase_score"])
+    ]
+    moe_scores = [
+        r["phase_score"]
+        for r in phase_rows
+        if r["arch"] == "moe" and not math.isnan(r["phase_score"])
+    ]
     if len(dense_scores) >= 2 and len(moe_scores) >= 2:
         u, mw_p = mannwhitneyu(dense_scores, moe_scores, alternative="two-sided")
     else:
@@ -451,7 +480,12 @@ def main() -> None:
     # ---- figure: phase_score vs mean_reward, coloured by phase ----
     fig, axes = plt.subplots(1, 2, figsize=(11.5, 4.6))
     ax = axes[0]
-    cmap = {"plateau": "#2b8cbe", "saturation": "#fdae61", "drift": "#636363", "collapse": "#b2182b"}
+    cmap = {
+        "plateau": "#2b8cbe",
+        "saturation": "#fdae61",
+        "drift": "#636363",
+        "collapse": "#b2182b",
+    }
     for ph, col in cmap.items():
         sub = [r for r in phase_rows if r["phase_classifier"] == ph]
         if not sub:
@@ -460,23 +494,46 @@ def main() -> None:
             [r["phase_score"] for r in sub],
             [r["mean_reward"] for r in sub],
             s=[40 + 8 * r["params_B"] ** 0.3 for r in sub],
-            c=col, edgecolor="black", linewidth=0.6, alpha=0.85, label=f"{ph} (n={len(sub)})",
+            c=col,
+            edgecolor="black",
+            linewidth=0.6,
+            alpha=0.85,
+            label=f"{ph} (n={len(sub)})",
         )
     ax.set_xlabel("phase score (1 = pure saturation, 0 = linear)")
     ax.set_ylabel("mean reward")
     ax.set_title("Three-phase hypothesis: phase score vs mean reward")
     ax.legend(loc="lower right", fontsize=8)
     if not math.isnan(rho):
-        ax.text(0.04, 0.95, f"ρ = {rho:.3f}\np = {p4_p:.3g}", transform=ax.transAxes, va="top", fontsize=9)
+        ax.text(
+            0.04,
+            0.95,
+            f"ρ = {rho:.3f}\np = {p4_p:.3g}",
+            transform=ax.transAxes,
+            va="top",
+            fontsize=9,
+        )
 
     ax = axes[1]
     for r in phase_rows:
-        ax.scatter(r["peak_frac"], r["delta_late_minus_early"],
-                   s=40 + 6 * r["params_B"] ** 0.3, c=cmap[r["phase_classifier"]],
-                   edgecolor="black", linewidth=0.5, alpha=0.85)
+        ax.scatter(
+            r["peak_frac"],
+            r["delta_late_minus_early"],
+            s=40 + 6 * r["params_B"] ** 0.3,
+            c=cmap[r["phase_classifier"]],
+            edgecolor="black",
+            linewidth=0.5,
+            alpha=0.85,
+        )
         if r["params_B"] >= 100:
-            ax.annotate(r["model"], (r["peak_frac"], r["delta_late_minus_early"]),
-                        fontsize=7, alpha=0.75, xytext=(3, 3), textcoords="offset points")
+            ax.annotate(
+                r["model"],
+                (r["peak_frac"], r["delta_late_minus_early"]),
+                fontsize=7,
+                alpha=0.75,
+                xytext=(3, 3),
+                textcoords="offset points",
+            )
     ax.axhline(0, color="grey", lw=0.7, ls="--")
     ax.axvline(0.10, color="grey", lw=0.7, ls=":")
     ax.set_xlabel("peak step / n_steps")

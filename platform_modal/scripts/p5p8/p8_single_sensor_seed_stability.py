@@ -19,16 +19,18 @@ Outputs:
   platform_hybrid/experiments/results/p5p8/p8_single_sensor_seed_stability.json
   platform_hybrid/experiments/results/p5p8/p8_single_sensor_seed_stability.tsv
 """
+
 from __future__ import annotations
 
 import csv
 import json
-import statistics
 from pathlib import Path
 
 import sys
+
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
+from _paths import REPO_ROOT
+
 ROOT = REPO_ROOT
 RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8/corrected-review21-v2"
 RES.mkdir(parents=True, exist_ok=True)
@@ -52,10 +54,10 @@ def load(path):
 
 def auc_roc(scores, labels):
     from sklearn.metrics import roc_auc_score
+
     if len(set(labels)) < 2:
         return float("nan")
     return float(roc_auc_score(labels, scores))
-
 
 
 def recall_at_k(scores, labels, k_pct):
@@ -94,12 +96,14 @@ def main():
     for variant in orig:
         if variant not in new:
             continue
-        rows.append({
-            "variant": variant,
-            "auc_seed_20260705": orig[variant]["auc"],
-            "auc_seed_42": new[variant]["auc"],
-            "delta_auc": round(new[variant]["auc"] - orig[variant]["auc"], 5),
-        })
+        rows.append(
+            {
+                "variant": variant,
+                "auc_seed_20260705": orig[variant]["auc"],
+                "auc_seed_42": new[variant]["auc"],
+                "delta_auc": round(new[variant]["auc"] - orig[variant]["auc"], 5),
+            }
+        )
 
     # Per-variant recall@K=2% for both seeds (read from existing TSVs)
     # We need to re-compute recall@K=2% since the original cost_per_decision.tsv is from
@@ -123,8 +127,10 @@ def main():
                 cost_42["v_std_v_max"] = float(parts[5])
 
     headline_pass = (
-        "v_std_v_max" in cost_42 and abs(cost_42["v_std_v_max"] - 1.0) < 1e-9
-        and "v_std_v_max" in cost_orig and abs(cost_orig["v_std_v_max"] - 1.0) < 1e-9
+        "v_std_v_max" in cost_42
+        and abs(cost_42["v_std_v_max"] - 1.0) < 1e-9
+        and "v_std_v_max" in cost_orig
+        and abs(cost_orig["v_std_v_max"] - 1.0) < 1e-9
     )
 
     summary = {
@@ -140,7 +146,9 @@ def main():
     with (RES / "p8_single_sensor_seed_stability.tsv").open("w") as f:
         f.write("variant\tauc_seed_20260705\tauc_seed_42\tdelta_auc\n")
         for r in rows:
-            f.write(f"{r['variant']}\t{r['auc_seed_20260705']}\t{r['auc_seed_42']}\t{r['delta_auc']}\n")
+            f.write(
+                f"{r['variant']}\t{r['auc_seed_20260705']}\t{r['auc_seed_42']}\t{r['delta_auc']}\n"
+            )
     print(json.dumps(summary, indent=2))
 
 

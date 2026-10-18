@@ -65,19 +65,19 @@ References (verified):
   - silverman1981using (Silverman bandwidth bootstrap for dip test).
   - kaplan2020scaling, hoffmann2022chinchilla (scaling-law baseline).
 """
+
 from __future__ import annotations
 
 import json
 import math
-from itertools import combinations
 from pathlib import Path
 
 import matplotlib
 
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt  # noqa: E402
-import numpy as np  # noqa: E402
-from scipy.optimize import curve_fit  # noqa: E402
+import matplotlib.pyplot as plt
+import numpy as np
+from scipy.optimize import curve_fit
 from _analysis_common import saturation, write_rows_tsv as _write_tsv
 
 REPO = Path(__file__).resolve().parents[2] / "platform_hybrid"
@@ -86,11 +86,11 @@ RESULTS_DIR = REPO / "experiments" / "results" / "review26_v2"
 FIG_DIR = REPO / "figures" / "review26_v2"
 
 MODELS: dict[str, tuple[str, float, str]] = {
-    "Qwen3.5-4B":            ("scale_gsm8k_qwen3.5-4b.json",      4.0,   "dense-instruct"),
-    "Qwen3-8B":              ("scale_gsm8k_qwen3-8b.json",        8.0,   "dense-base"),
-    "Llama-3.1-8B-Instruct": ("scale_gsm8k_llama-8b-inst.json",   8.0,   "dense-instruct"),
-    "DeepSeek-V3.1":         ("frontier_gsm8k_deepseek-v3.1.json", 685.0, "moe-instruct"),
-    "Nemotron-120B":         ("frontier_gsm8k_nemotron-120b.json", 120.0, "dense-base"),
+    "Qwen3.5-4B": ("scale_gsm8k_qwen3.5-4b.json", 4.0, "dense-instruct"),
+    "Qwen3-8B": ("scale_gsm8k_qwen3-8b.json", 8.0, "dense-base"),
+    "Llama-3.1-8B-Instruct": ("scale_gsm8k_llama-8b-inst.json", 8.0, "dense-instruct"),
+    "DeepSeek-V3.1": ("frontier_gsm8k_deepseek-v3.1.json", 685.0, "moe-instruct"),
+    "Nemotron-120B": ("frontier_gsm8k_nemotron-120b.json", 120.0, "dense-base"),
 }
 SEED = 1252026
 N_BOOT = 5000
@@ -99,29 +99,42 @@ N_PERM = 10000
 
 # ---------- core helpers ----------
 
-def fit_saturation(t: np.ndarray, y: np.ndarray,
-                   lam_max: float = 10.0) -> dict:
+
+def fit_saturation(t: np.ndarray, y: np.ndarray, lam_max: float = 10.0) -> dict:
     n = len(y)
     try:
-        popt, _ = curve_fit(saturation, t, y,
-                            p0=[float(np.mean(y[-min(5, n):])), 0.1],
-                            bounds=([0.0, 1e-4], [1.05, lam_max]),
-                            maxfev=20000)
+        popt, _ = curve_fit(
+            saturation,
+            t,
+            y,
+            p0=[float(np.mean(y[-min(5, n) :])), 0.1],
+            bounds=([0.0, 1e-4], [1.05, lam_max]),
+            maxfev=20000,
+        )
         r_max, lam = float(popt[0]), float(popt[1])
         pred = saturation(t, r_max, lam)
         resid = y - pred
-        rmse = float(math.sqrt(np.mean(resid ** 2)))
-        ss_res = float(np.sum(resid ** 2))
+        rmse = float(math.sqrt(np.mean(resid**2)))
+        ss_res = float(np.sum(resid**2))
         ss_tot = float(np.sum((y - y.mean()) ** 2))
         r2 = 1.0 - ss_res / ss_tot if ss_tot > 0 else float("nan")
         lam_at_bound = int(lam >= lam_max - 1e-3)
-    except Exception:  # noqa: BLE001
+    except Exception:
         r_max, lam, rmse, r2 = float("nan"), float("nan"), float("nan"), float("nan")
         lam_at_bound = 1
-    t_80 = float(-math.log(0.2) / lam) if (lam and not math.isnan(lam) and lam > 0) else float("nan")
-    return dict(R_max=r_max, lam=lam, t_80=t_80, rmse=rmse, r2=r2,
-                lam_at_bound=lam_at_bound, resid=resid if not math.isnan(r2) else None,
-                pred=pred if not math.isnan(r2) else None)
+    t_80 = (
+        float(-math.log(0.2) / lam) if (lam and not math.isnan(lam) and lam > 0) else float("nan")
+    )
+    return dict(
+        R_max=r_max,
+        lam=lam,
+        t_80=t_80,
+        rmse=rmse,
+        r2=r2,
+        lam_at_bound=lam_at_bound,
+        resid=resid if not math.isnan(r2) else None,
+        pred=pred if not math.isnan(r2) else None,
+    )
 
 
 def monotonicity_violations(rt: list[float]) -> dict:
@@ -134,8 +147,9 @@ def monotonicity_violations(rt: list[float]) -> dict:
     n = len(y)
     n_pairs = n * (n - 1) // 2
     if n_pairs == 0:
-        return dict(violation_rate=float("nan"), max_drop=float("nan"),
-                    max_drop_loc=int(-1), n_pairs=0)
+        return dict(
+            violation_rate=float("nan"), max_drop=float("nan"), max_drop_loc=int(-1), n_pairs=0
+        )
     n_viol = 0
     max_drop = 0.0
     max_drop_loc = -1
@@ -146,11 +160,13 @@ def monotonicity_violations(rt: list[float]) -> dict:
                 if y[i] - y[j] > max_drop:
                     max_drop = float(y[i] - y[j])
                     max_drop_loc = int(i)
-    return dict(violation_rate=n_viol / n_pairs,
-                max_drop=max_drop,
-                max_drop_loc=max_drop_loc,
-                n_viol=int(n_viol),
-                n_pairs=int(n_pairs))
+    return dict(
+        violation_rate=n_viol / n_pairs,
+        max_drop=max_drop,
+        max_drop_loc=max_drop_loc,
+        n_viol=int(n_viol),
+        n_pairs=int(n_pairs),
+    )
 
 
 def changepoint_3segment(rt: list[float]) -> dict:
@@ -158,8 +174,13 @@ def changepoint_3segment(rt: list[float]) -> dict:
     For n <= 30 this is cheap.  Returns segment means and total RSS."""
     y = np.asarray(rt, dtype=float)
     n = len(y)
-    best = {"k": 1, "bic": float("inf"), "segments": [(0, n)],
-            "means": [float(y.mean())], "rss": float(np.sum((y - y.mean()) ** 2))}
+    best = {
+        "k": 1,
+        "bic": float("inf"),
+        "segments": [(0, n)],
+        "means": [float(y.mean())],
+        "rss": float(np.sum((y - y.mean()) ** 2)),
+    }
     for k in (1, 2, 3):
         # Enumerate all splits of n into k contiguous segments.
         if k == 1:
@@ -199,24 +220,29 @@ def three_phase_diagnostic(rt: list[float]) -> dict:
     n = len(y)
     third = max(n // 3, 1)
     early = y[:third]
-    middle = y[third:2 * third]
-    late = y[2 * third:]
+    middle = y[third : 2 * third]
+    late = y[2 * third :]
     early_mean = float(early.mean())
     middle_mean = float(middle.mean())
     late_mean = float(late.mean())
     middle_var = float(middle.var())
     peak = float(y.max())
-    eps_imp = 0.05   # improvement threshold
+    eps_imp = 0.05  # improvement threshold
     eps_plat = 0.05  # plateau variance threshold
-    eps_col = 0.10   # collapse threshold
+    eps_col = 0.10  # collapse threshold
     p1 = int(late_mean > early_mean + eps_imp)
     p2 = int(middle_var < eps_plat)
     p3 = int((peak - late_mean) > eps_col)
     phase_combo = f"({p1},{p2},{p3})"
     return dict(
-        early_mean=early_mean, middle_mean=middle_mean, late_mean=late_mean,
-        middle_var=middle_var, peak=peak,
-        phase1_improvement=p1, phase2_plateau=p2, phase3_collapse=p3,
+        early_mean=early_mean,
+        middle_mean=middle_mean,
+        late_mean=late_mean,
+        middle_var=middle_var,
+        peak=peak,
+        phase1_improvement=p1,
+        phase2_plateau=p2,
+        phase3_collapse=p3,
         phase_combo=phase_combo,
         monotone_or_plateau=int(p1 == 0 and p2 == 1),
         collapse_only=int(p1 == 0 and p3 == 1),
@@ -235,13 +261,12 @@ def uniform_cdf_deviation(values, rng=None, n_boot=0, n_grid=256):
         return float("nan"), float("nan")
     u = (x - x[0]) / (x[-1] - x[0])
     n = len(x)
-    distance = max(np.max(np.arange(1, n + 1) / n - u),
-                   np.max(u - np.arange(n) / n))
+    distance = max(np.max(np.arange(1, n + 1) / n - u), np.max(u - np.arange(n) / n))
     return float(distance), float("nan")
 
 
-
 # ---------- main ----------
+
 
 def main() -> None:
     FIG_DIR.mkdir(parents=True, exist_ok=True)
@@ -265,21 +290,40 @@ def main() -> None:
         m = monotonicity_violations(rt)
         # Binomial test of violation_rate vs 0.05 (i.i.d. nominal noise floor).
         from scipy.stats import binomtest
+
         p_mono = float("nan")  # dependent pairs: descriptive only
         # Changepoint BIC-selected structure.
         cp = changepoint_3segment(rt)
         monotone = (m["violation_rate"] < 0.05) and (cp["k"] == 1)
-        cp_pattern = ("monotone" if cp["k"] == 1
-                      else ("collapse" if cp["means"][0] > cp["means"][1] and cp["means"][1] > cp["means"][2]
-                            else "non_monotone"))
-        mono_rows.append([
-            name, params_B, family, len(rt),
-            m["n_viol"], m["n_pairs"], f"{m['violation_rate']:.4f}",
-            f"{m['max_drop']:.4f}", m["max_drop_loc"],
-            cp["k"], f"{cp['bic']:.4f}", f"{cp['rss']:.4f}",
-            ";".join(f"{a:.4f}" for a in cp["means"]),
-            cp_pattern, f"{p_mono:.4f}", int(monotone),
-        ])
+        cp_pattern = (
+            "monotone"
+            if cp["k"] == 1
+            else (
+                "collapse"
+                if cp["means"][0] > cp["means"][1] and cp["means"][1] > cp["means"][2]
+                else "non_monotone"
+            )
+        )
+        mono_rows.append(
+            [
+                name,
+                params_B,
+                family,
+                len(rt),
+                m["n_viol"],
+                m["n_pairs"],
+                f"{m['violation_rate']:.4f}",
+                f"{m['max_drop']:.4f}",
+                m["max_drop_loc"],
+                cp["k"],
+                f"{cp['bic']:.4f}",
+                f"{cp['rss']:.4f}",
+                ";".join(f"{a:.4f}" for a in cp["means"]),
+                cp_pattern,
+                f"{p_mono:.4f}",
+                int(monotone),
+            ]
+        )
         mono_summary[name] = dict(
             violation_rate=m["violation_rate"],
             max_drop=m["max_drop"],
@@ -290,17 +334,29 @@ def main() -> None:
         )
     _write_tsv(
         RESULTS_DIR / "scaling_law_iter125_monotonicity.tsv",
-        ["model", "params_B", "family", "n_steps",
-         "n_violations", "n_pairs", "violation_rate",
-         "max_drop", "max_drop_loc",
-         "cp_k", "cp_bic", "cp_rss", "cp_means", "cp_pattern",
-         "pair_inference_unavailable", "monotone"],
+        [
+            "model",
+            "params_B",
+            "family",
+            "n_steps",
+            "n_violations",
+            "n_pairs",
+            "violation_rate",
+            "max_drop",
+            "max_drop_loc",
+            "cp_k",
+            "cp_bic",
+            "cp_rss",
+            "cp_means",
+            "cp_pattern",
+            "pair_inference_unavailable",
+            "monotone",
+        ],
         mono_rows,
     )
     n_violators = sum(1 for r in mono_rows if int(r[15]) == 0)
     # Binomial test against H0: P(monotone) = 0.5 (would need majority).
-    p_majority_violate = binomtest(n_violators, len(mono_rows), 0.5,
-                                   alternative="greater").pvalue
+    p_majority_violate = binomtest(n_violators, len(mono_rows), 0.5, alternative="greater").pvalue
 
     # ---------- (2) Residual decomposition ----------
     res_rows: list[list] = []
@@ -318,7 +374,7 @@ def main() -> None:
         cp = changepoint_3segment(rt)
         seg_deviations = []
         seg_resid_var = []
-        for (lo, hi), mean_seg in zip(cp["segments"], cp["means"]):
+        for (lo, hi), mean_seg in zip(cp["segments"], cp["means"], strict=False):
             seg_resid = resid[lo:hi]
             seg_deviations.append(mean_seg - float(y.mean()))
             seg_resid_var.append(float(np.var(seg_resid, ddof=1)) if hi - lo > 1 else 0.0)
@@ -326,49 +382,100 @@ def main() -> None:
         iid_var = float(np.mean(seg_resid_var))
         total_var = float(np.var(resid, ddof=1))
         structural_share = structural_var / (structural_var + iid_var + 1e-12)
-        res_rows.append([
-            name, params_B, family, n,
-            f"{fit['R_max']:.4f}", f"{fit['lam']:.4f}", fit["lam_at_bound"],
-            f"{fit['rmse']:.4f}", f"{fit['r2']:.4f}",
-            f"{total_var:.4f}", f"{structural_var:.4f}", f"{iid_var:.4f}",
-            f"{structural_share:.4f}",
-        ])
+        res_rows.append(
+            [
+                name,
+                params_B,
+                family,
+                n,
+                f"{fit['R_max']:.4f}",
+                f"{fit['lam']:.4f}",
+                fit["lam_at_bound"],
+                f"{fit['rmse']:.4f}",
+                f"{fit['r2']:.4f}",
+                f"{total_var:.4f}",
+                f"{structural_var:.4f}",
+                f"{iid_var:.4f}",
+                f"{structural_share:.4f}",
+            ]
+        )
     _write_tsv(
         RESULTS_DIR / "scaling_law_iter125_residual_decomp.tsv",
-        ["model", "params_B", "family", "n_steps",
-         "R_max", "lambda", "lam_at_bound",
-         "rmse", "r2", "total_resid_var",
-         "structural_var", "iid_var", "structural_share"],
+        [
+            "model",
+            "params_B",
+            "family",
+            "n_steps",
+            "R_max",
+            "lambda",
+            "lam_at_bound",
+            "rmse",
+            "r2",
+            "total_resid_var",
+            "structural_var",
+            "iid_var",
+            "structural_share",
+        ],
         res_rows,
     )
 
     # ---------- (3) Three-phase hypothesis formal test ----------
     tp_rows: list[list] = []
-    phase_counts = {"phase1_improvement": 0, "phase2_plateau": 0,
-                    "phase3_collapse": 0, "monotone_or_plateau": 0,
-                    "collapse_only": 0, "three_phase_full": 0}
+    phase_counts = {
+        "phase1_improvement": 0,
+        "phase2_plateau": 0,
+        "phase3_collapse": 0,
+        "monotone_or_plateau": 0,
+        "collapse_only": 0,
+        "three_phase_full": 0,
+    }
     tp_details = {}
     for name, (fn, params_B, family) in MODELS.items():
         rt = traces[name]
         d = three_phase_diagnostic(rt)
         for k in phase_counts:
             phase_counts[k] += int(d[k])
-        tp_rows.append([
-            name, params_B, family, len(rt),
-            f"{d['early_mean']:.4f}", f"{d['middle_mean']:.4f}", f"{d['late_mean']:.4f}",
-            f"{d['middle_var']:.4f}", f"{d['peak']:.4f}",
-            d["phase1_improvement"], d["phase2_plateau"], d["phase3_collapse"],
-            d["phase_combo"],
-            d["monotone_or_plateau"], d["collapse_only"], d["three_phase_full"],
-        ])
+        tp_rows.append(
+            [
+                name,
+                params_B,
+                family,
+                len(rt),
+                f"{d['early_mean']:.4f}",
+                f"{d['middle_mean']:.4f}",
+                f"{d['late_mean']:.4f}",
+                f"{d['middle_var']:.4f}",
+                f"{d['peak']:.4f}",
+                d["phase1_improvement"],
+                d["phase2_plateau"],
+                d["phase3_collapse"],
+                d["phase_combo"],
+                d["monotone_or_plateau"],
+                d["collapse_only"],
+                d["three_phase_full"],
+            ]
+        )
         tp_details[name] = d
     _write_tsv(
         RESULTS_DIR / "scaling_law_iter125_three_phase.tsv",
-        ["model", "params_B", "family", "n_steps",
-         "early_mean", "middle_mean", "late_mean", "middle_var", "peak",
-         "phase1_improvement", "phase2_plateau", "phase3_collapse",
-         "phase_combo",
-         "monotone_or_plateau", "collapse_only", "three_phase_full"],
+        [
+            "model",
+            "params_B",
+            "family",
+            "n_steps",
+            "early_mean",
+            "middle_mean",
+            "late_mean",
+            "middle_var",
+            "peak",
+            "phase1_improvement",
+            "phase2_plateau",
+            "phase3_collapse",
+            "phase_combo",
+            "monotone_or_plateau",
+            "collapse_only",
+            "three_phase_full",
+        ],
         tp_rows,
     )
     summary_rows = []
@@ -376,7 +483,8 @@ def main() -> None:
         summary_rows.append([k, v, len(MODELS), f"{v / len(MODELS):.4f}"])
     _write_tsv(
         RESULTS_DIR / "scaling_law_iter125_three_phase_summary.tsv",
-        ["phase", "n_anchors", "n_total", "frac"], summary_rows,
+        ["phase", "n_anchors", "n_total", "frac"],
+        summary_rows,
     )
 
     # ---------- (4) Bimodality of R_max ----------
@@ -402,20 +510,31 @@ def main() -> None:
     dip, dip_p = uniform_cdf_deviation(rmax_arr, rng, n_boot=N_BOOT)
     # Bimodality: cluster the 5 anchors via 2-means (1-D).
     from scipy.cluster.hierarchy import fcluster, linkage
+
     Z = linkage(rmax_arr.reshape(-1, 1), method="ward")
     clusters = fcluster(Z, t=2, criterion="maxclust")
-    capable_ids = [name for name, c in zip(MODELS, clusters)
-                   if rmax_map[name] >= np.median(rmax_arr)]
-    incapable_ids = [name for name, c in zip(MODELS, clusters)
-                     if rmax_map[name] < np.median(rmax_arr)]
+    capable_ids = [
+        name
+        for name, c in zip(MODELS, clusters, strict=False)
+        if rmax_map[name] >= np.median(rmax_arr)
+    ]
+    incapable_ids = [
+        name
+        for name, c in zip(MODELS, clusters, strict=False)
+        if rmax_map[name] < np.median(rmax_arr)
+    ]
     bimod_rows = [
         ["n_anchors", len(rmax_arr), ""],
         ["sorted_R_max", ";".join(f"{v:.4f}" for v in sorted_rmax), ""],
         ["gaps", ";".join(f"{g:.4f}" for g in gaps), ""],
         ["largest_gap", f"{largest_gap:.4f}", int(largest_gap_loc)],
-        ["largest_gap_split_low_high",
-         ";".join(f"{v:.4f}" for v in sorted_rmax[:largest_gap_loc + 1]) + "|" +
-         ";".join(f"{v:.4f}" for v in sorted_rmax[largest_gap_loc + 1:]), ""],
+        [
+            "largest_gap_split_low_high",
+            ";".join(f"{v:.4f}" for v in sorted_rmax[: largest_gap_loc + 1])
+            + "|"
+            + ";".join(f"{v:.4f}" for v in sorted_rmax[largest_gap_loc + 1 :]),
+            "",
+        ],
         ["uniform_cdf_deviation", f"{dip:.4f}", ""],
         ["unimodality_p_unavailable", f"{dip_p:.4f}", N_BOOT],
         ["cluster_capable", ";".join(capable_ids), ""],
@@ -423,7 +542,8 @@ def main() -> None:
     ]
     _write_tsv(
         RESULTS_DIR / "scaling_law_iter125_bimodality.tsv",
-        ["stat", "value", "n_or_loc"], bimod_rows,
+        ["stat", "value", "n_or_loc"],
+        bimod_rows,
     )
 
     # ---------- meta JSON ----------
@@ -431,10 +551,19 @@ def main() -> None:
         iter=125,
         pillar="P1-ScalingLaws",
         n_anchors=len(MODELS),
-        anchors=[dict(name=n, params_B=params_B, family=family, n_steps=len(traces[n]),
-                      R_max=fit_saturation(np.arange(1, len(traces[n]) + 1, dtype=float),
-                                            np.asarray(traces[n], dtype=float))["R_max"])
-                 for n, (_, params_B, family) in MODELS.items()],
+        anchors=[
+            dict(
+                name=n,
+                params_B=params_B,
+                family=family,
+                n_steps=len(traces[n]),
+                R_max=fit_saturation(
+                    np.arange(1, len(traces[n]) + 1, dtype=float),
+                    np.asarray(traces[n], dtype=float),
+                )["R_max"],
+            )
+            for n, (_, params_B, family) in MODELS.items()
+        ],
         monotonicity=dict(
             n_violators=int(n_violators),
             n_total=len(mono_rows),
@@ -443,9 +572,13 @@ def main() -> None:
         ),
         three_phase_counts=phase_counts,
         bimodality=dict(
-            uniform_cdf_deviation=dip, unimodality_p_unavailable=dip_p, n_boot=N_BOOT,
-            largest_gap=largest_gap, largest_gap_loc=largest_gap_loc,
-            cluster_capable=capable_ids, cluster_incapable=incapable_ids,
+            uniform_cdf_deviation=dip,
+            unimodality_p_unavailable=dip_p,
+            n_boot=N_BOOT,
+            largest_gap=largest_gap,
+            largest_gap_loc=largest_gap_loc,
+            cluster_capable=capable_ids,
+            cluster_incapable=incapable_ids,
         ),
         frontier_synthesis=(
             "Exploratory protocol review26_v2. Outcome-selected clusters and pair-violation "
@@ -454,8 +587,7 @@ def main() -> None:
             "identifiability. Historical fixed conclusions are superseded."
         ),
     )
-    (RESULTS_DIR / "scaling_law_iter125_meta.json").write_text(
-        json.dumps(meta, indent=2))
+    (RESULTS_DIR / "scaling_law_iter125_meta.json").write_text(json.dumps(meta, indent=2))
     print(f"wrote {RESULTS_DIR / 'scaling_law_iter125_meta.json'}")
 
     # ---------- Figure: 4-panel ----------
@@ -471,8 +603,7 @@ def main() -> None:
         y = np.asarray(rt, dtype=float)
         fit = fit_saturation(t, y)
         col = cmap(i)
-        ax0.plot(t, y, "o-", color=col, label=f"{name} (R_max={fit['R_max']:.3f})",
-                 markersize=4)
+        ax0.plot(t, y, "o-", color=col, label=f"{name} (R_max={fit['R_max']:.3f})", markersize=4)
         if fit["pred"] is not None:
             ax0.plot(t, fit["pred"], "--", color=col, alpha=0.5)
     ax0.set_xlabel("Step")
@@ -487,22 +618,20 @@ def main() -> None:
     vrates = [mono_summary[n]["violation_rate"] for n in names]
     colors = ["tab:green" if mono_summary[n]["monotone"] else "tab:red" for n in names]
     bars = ax1.bar(range(len(names)), vrates, color=colors, edgecolor="black")
-    ax1.axhline(0.05, color="black", linestyle="--",
-                label="5% i.i.d. noise floor")
+    ax1.axhline(0.05, color="black", linestyle="--", label="5% i.i.d. noise floor")
     ax1.set_xticks(range(len(names)))
-    ax1.set_xticklabels([n.replace("Llama-3.1-", "L-") for n in names],
-                        rotation=20, fontsize=8)
+    ax1.set_xticklabels([n.replace("Llama-3.1-", "L-") for n in names], rotation=20, fontsize=8)
     ax1.set_ylabel("Pair-monotonicity violation rate")
-    ax1.set_title(f"(2) Monotonicity violations | {n_violators}/{len(mono_rows)} "
-                  f"reject monotonicity")
+    ax1.set_title(
+        f"(2) Monotonicity violations | {n_violators}/{len(mono_rows)} reject monotonicity"
+    )
     ax1.set_ylim(0, 1.05)
     ax1.legend(fontsize=7)
 
     # (1,0) Three-phase diagnostic: phase_combo counts.
     ax2 = axes[1, 0]
     combos = sorted(set(d["phase_combo"] for d in tp_details.values()))
-    counts = [sum(1 for d in tp_details.values() if d["phase_combo"] == c)
-              for c in combos]
+    counts = [sum(1 for d in tp_details.values() if d["phase_combo"] == c) for c in combos]
     ax2.bar(range(len(combos)), counts, color="tab:purple", edgecolor="black")
     ax2.set_xticks(range(len(combos)))
     ax2.set_xticklabels(combos, fontsize=9)
@@ -517,18 +646,18 @@ def main() -> None:
     colors_rmax = []
     for n in MODELS:
         rmax_map_n = rmax_map[n]
-        colors_rmax.append("tab:blue" if rmax_map_n >= np.median(rmax_arr)
-                           else "tab:orange")
-    bars = ax3.bar(range(len(MODELS)), rmax_arr, color=colors_rmax,
-                   edgecolor="black")
-    ax3.axhline(np.median(rmax_arr), color="black", linestyle=":",
-                label=f"median R_max = {np.median(rmax_arr):.3f}")
+        colors_rmax.append("tab:blue" if rmax_map_n >= np.median(rmax_arr) else "tab:orange")
+    bars = ax3.bar(range(len(MODELS)), rmax_arr, color=colors_rmax, edgecolor="black")
+    ax3.axhline(
+        np.median(rmax_arr),
+        color="black",
+        linestyle=":",
+        label=f"median R_max = {np.median(rmax_arr):.3f}",
+    )
     for i, n in enumerate(MODELS):
-        ax3.text(i, rmax_arr[i] + 0.02, f"{rmax_arr[i]:.2f}",
-                 ha="center", fontsize=8)
+        ax3.text(i, rmax_arr[i] + 0.02, f"{rmax_arr[i]:.2f}", ha="center", fontsize=8)
     ax3.set_xticks(range(len(MODELS)))
-    ax3.set_xticklabels([n.replace("Llama-3.1-", "L-") for n in MODELS],
-                        rotation=20, fontsize=8)
+    ax3.set_xticklabels([n.replace("Llama-3.1-", "L-") for n in MODELS], rotation=20, fontsize=8)
     ax3.set_ylabel("R_max (saturation fit)")
     ax3.set_title(f"(4) R_max bimodality | dip={dip:.3f}, p={dip_p:.3f}")
     ax3.set_ylim(0, 1.05)
@@ -537,7 +666,7 @@ def main() -> None:
     fig.suptitle(
         f"Pillar 1 (iter 125) GRPO Scaling Laws: MONOTONICITY FALSIFICATION + "
         f"THREE-PHASE TEST | n={len(MODELS)} anchors",
-fontsize=11,
+        fontsize=11,
     )
     fig.tight_layout(rect=[0, 0, 1, 0.96])
     for ext in ("pdf", "png"):
@@ -549,8 +678,10 @@ fontsize=11,
     # ---------- Console digest ----------
     print("\n=== iter 125 Pillar 1 summary ===")
     print(f"n_anchors = {len(MODELS)}")
-    print(f"Monotonicity violators: {n_violators}/{len(mono_rows)} "
-          f"(majority-violate binomial p = {p_majority_violate:.4f})")
+    print(
+        f"Monotonicity violators: {n_violators}/{len(mono_rows)} "
+        f"(majority-violate binomial p = {p_majority_violate:.4f})"
+    )
     print(f"Three-phase counts: {phase_counts}")
     print(f"R_max distribution: {sorted_rmax.tolist()}")
     print(f"Largest gap: {largest_gap:.4f} at index {largest_gap_loc}")

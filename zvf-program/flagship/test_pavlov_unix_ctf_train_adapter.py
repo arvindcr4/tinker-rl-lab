@@ -22,6 +22,7 @@ from flagship.pavlov_unix_ctf_train_adapter import (
     validate_unix_ctf_training_boundary,
     validate_unix_ctf_training_receipt,
 )
+import pytest
 
 
 SOURCE_REVISION = "a" * 40
@@ -118,8 +119,12 @@ def _receipt() -> dict[str, object]:
         "source_identity": copy.deepcopy(boundary["source_identity"]),
         "procedural_generation": copy.deepcopy(boundary["procedural_generation"]),
         "disjointness_receipt": {
-            "binaryaudit_eval_task_id_manifest_sha256": boundary["disjointness"]["binaryaudit_eval"]["task_id_manifest_sha256"],  # type: ignore[index]
-            "primary_eval_task_id_manifest_sha256": boundary["disjointness"]["primary_evals"]["task_id_manifest_sha256"],  # type: ignore[index]
+            "binaryaudit_eval_task_id_manifest_sha256": boundary["disjointness"][
+                "binaryaudit_eval"
+            ]["task_id_manifest_sha256"],  # type: ignore[index]
+            "primary_eval_task_id_manifest_sha256": boundary["disjointness"]["primary_evals"][
+                "task_id_manifest_sha256"
+            ],  # type: ignore[index]
             "verified": True,
             "overlap_count": 0,
         },
@@ -172,64 +177,82 @@ def _receipt() -> dict[str, object]:
 class BoundaryTests(unittest.TestCase):
     def test_valid_boundary_pins_procedure_native_sandbox_and_budget(self) -> None:
         result = validate_unix_ctf_training_boundary(_boundary())
-        self.assertEqual(result["source_identity"]["id"], AUTHORITATIVE_SOURCE_ID)
-        self.assertEqual(result["procedural_generation"]["seed"], 809)
-        self.assertEqual(result["native_environment"]["shell_sandbox"]["network"], "disabled")
-        self.assertEqual(result["budget_gate"]["operational_cap_usd"], 16.5)
-        self.assertFalse(result["primary_eval_claim_permitted"])
+        assert result["source_identity"]["id"] == AUTHORITATIVE_SOURCE_ID
+        assert result["procedural_generation"]["seed"] == 809
+        assert result["native_environment"]["shell_sandbox"]["network"] == "disabled"
+        assert result["budget_gate"]["operational_cap_usd"] == 16.5
+        assert not result["primary_eval_claim_permitted"]
 
     def test_overlapping_training_ids_are_rejected_against_both_registries(self) -> None:
         item = _boundary()
-        item["procedural_generation"]["task_ids"] = ["binaryaudit-101", "unix-train-002", "unix-train-003"]  # type: ignore[index]
-        item["procedural_generation"]["task_id_manifest_sha256"] = task_id_manifest_sha256(item["procedural_generation"]["task_ids"])  # type: ignore[index]
-        with self.assertRaises(UnixCtfTrainBoundaryError) as raised:
+        item["procedural_generation"]["task_ids"] = [
+            "binaryaudit-101",
+            "unix-train-002",
+            "unix-train-003",
+        ]  # type: ignore[index]
+        item["procedural_generation"]["task_id_manifest_sha256"] = task_id_manifest_sha256(
+            item["procedural_generation"]["task_ids"]
+        )  # type: ignore[index]
+        with pytest.raises(UnixCtfTrainBoundaryError) as raised:
             validate_unix_ctf_training_boundary(item)
-        self.assertTrue(any("BinaryAudit" in message for message in raised.exception.diagnostics))
+        assert any("BinaryAudit" in message for message in raised.value.diagnostics)
 
         item = _boundary()
-        item["procedural_generation"]["task_ids"] = ["primary-001", "unix-train-002", "unix-train-003"]  # type: ignore[index]
-        item["procedural_generation"]["task_id_manifest_sha256"] = task_id_manifest_sha256(item["procedural_generation"]["task_ids"])  # type: ignore[index]
-        with self.assertRaises(UnixCtfTrainBoundaryError) as raised:
+        item["procedural_generation"]["task_ids"] = [
+            "primary-001",
+            "unix-train-002",
+            "unix-train-003",
+        ]  # type: ignore[index]
+        item["procedural_generation"]["task_id_manifest_sha256"] = task_id_manifest_sha256(
+            item["procedural_generation"]["task_ids"]
+        )  # type: ignore[index]
+        with pytest.raises(UnixCtfTrainBoundaryError) as raised:
             validate_unix_ctf_training_boundary(item)
-        self.assertTrue(any("primary-evaluation" in message for message in raised.exception.diagnostics))
+        assert any("primary-evaluation" in message for message in raised.value.diagnostics)
 
     def test_revision_seed_hash_sandbox_and_budget_mutations_fail_closed(self) -> None:
         mutations = (
             (lambda item: item["source_identity"].update(revision="main"), "mutable tag/branch"),
             (lambda item: item["procedural_generation"].update(seed=810), "procedural seed"),
-            (lambda item: item["native_environment"]["shell_sandbox"].update(network="enabled"), "network must be disabled"),
-            (lambda item: item["budget_gate"].update(operational_cap_usd=17.0), "authorized $18/$16.50/$1.50"),
+            (
+                lambda item: item["native_environment"]["shell_sandbox"].update(network="enabled"),
+                "network must be disabled",
+            ),
+            (
+                lambda item: item["budget_gate"].update(operational_cap_usd=17.0),
+                "authorized $18/$16.50/$1.50",
+            ),
         )
         for mutate, expected in mutations:
             with self.subTest(expected=expected):
                 item = _boundary()
                 mutate(item)
-                with self.assertRaises(UnixCtfTrainBoundaryError) as raised:
+                with pytest.raises(UnixCtfTrainBoundaryError) as raised:
                     validate_unix_ctf_training_boundary(item)
-                self.assertTrue(any(expected in message for message in raised.exception.diagnostics))
+                assert any(expected in message for message in raised.value.diagnostics)
 
     def test_missing_native_receipts_and_disjointness_metadata_block(self) -> None:
         item = _boundary()
         del item["native_environment"]["shell_sandbox"]  # type: ignore[index]
-        with self.assertRaises(UnixCtfTrainBoundaryError) as raised:
+        with pytest.raises(UnixCtfTrainBoundaryError) as raised:
             validate_unix_ctf_training_boundary(item)
-        self.assertTrue(any("shell_sandbox is required" in message for message in raised.exception.diagnostics))
+        assert any("shell_sandbox is required" in message for message in raised.value.diagnostics)
 
         item = _boundary()
         del item["disjointness"]["primary_evals"]  # type: ignore[index]
-        with self.assertRaises(UnixCtfTrainBoundaryError) as raised:
+        with pytest.raises(UnixCtfTrainBoundaryError) as raised:
             validate_unix_ctf_training_boundary(item)
-        self.assertTrue(any("primary_evals is required" in message for message in raised.exception.diagnostics))
+        assert any("primary_evals is required" in message for message in raised.value.diagnostics)
 
 
 class ReceiptTests(unittest.TestCase):
     def test_valid_training_receipt_is_not_primary_evidence(self) -> None:
         result = validate_unix_ctf_training_receipt(_boundary(), _receipt())
-        self.assertEqual(result["status"], "admissible_training_receipt")
-        self.assertTrue(result["training_only"])
-        self.assertFalse(result["primary_eval"])
-        self.assertFalse(result["primary_eval_claim_permitted"])
-        self.assertEqual(result["tracking_receipts"]["wandb"]["mode"], "online")
+        assert result["status"] == "admissible_training_receipt"
+        assert result["training_only"]
+        assert not result["primary_eval"]
+        assert not result["primary_eval_claim_permitted"]
+        assert result["tracking_receipts"]["wandb"]["mode"] == "online"
 
     def test_receipt_cannot_claim_primary_or_holdout(self) -> None:
         for mutation in (
@@ -239,48 +262,65 @@ class ReceiptTests(unittest.TestCase):
         ):
             receipt = _receipt()
             mutation(receipt)
-            with self.assertRaises(UnixCtfTrainBoundaryError):
+            with pytest.raises(UnixCtfTrainBoundaryError):
                 validate_unix_ctf_training_receipt(_boundary(), receipt)
 
     def test_missing_or_unsafe_tracking_and_budget_fail_closed(self) -> None:
         mutations = (
             (lambda item: item["wandb"].update(mode="offline"), "W&B receipt mode"),
             (lambda item: item["hf"].update(visibility="public"), "visibility"),
-            (lambda item: item["budget_receipt"].update(projected_next_cost_usd=20.0), "operational cap"),
+            (
+                lambda item: item["budget_receipt"].update(projected_next_cost_usd=20.0),
+                "operational cap",
+            ),
         )
         for mutate, expected in mutations:
             with self.subTest(expected=expected):
                 receipt = _receipt()
                 mutate(receipt)
-                with self.assertRaises(UnixCtfTrainBoundaryError) as raised:
+                with pytest.raises(UnixCtfTrainBoundaryError) as raised:
                     validate_unix_ctf_training_receipt(_boundary(), receipt)
-                self.assertTrue(any(expected in message for message in raised.exception.diagnostics))
+                assert any(expected in message for message in raised.value.diagnostics)
 
         receipt = _receipt()
         del receipt["tinker"]
-        with self.assertRaises(UnixCtfTrainBoundaryError) as raised:
+        with pytest.raises(UnixCtfTrainBoundaryError) as raised:
             validate_unix_ctf_training_receipt(_boundary(), receipt)
-        self.assertTrue(any("missing Tinker" in message for message in raised.exception.diagnostics))
+        assert any("missing Tinker" in message for message in raised.value.diagnostics)
 
     def test_provenance_environment_verifier_and_task_hash_drift_rejected(self) -> None:
         mutations = (
-            (lambda item: item["procedural_generation"].update(generator_revision="main"), "differs from boundary"),
-            (lambda item: item["disjointness_receipt"].update(verified=False), "disjointness must be verified"),
-            (lambda item: item["native_environment_receipt"]["shell_sandbox"].update(network="enabled"), "shell_sandbox.network differs"),
-            (lambda item: item["verifier_receipt"].update(revision="8" * 40), "verifier receipt revision differs"),
+            (
+                lambda item: item["procedural_generation"].update(generator_revision="main"),
+                "differs from boundary",
+            ),
+            (
+                lambda item: item["disjointness_receipt"].update(verified=False),
+                "disjointness must be verified",
+            ),
+            (
+                lambda item: item["native_environment_receipt"]["shell_sandbox"].update(
+                    network="enabled"
+                ),
+                "shell_sandbox.network differs",
+            ),
+            (
+                lambda item: item["verifier_receipt"].update(revision="8" * 40),
+                "verifier receipt revision differs",
+            ),
         )
         for mutate, expected in mutations:
             with self.subTest(expected=expected):
                 receipt = _receipt()
                 mutate(receipt)
-                with self.assertRaises(UnixCtfTrainBoundaryError) as raised:
+                with pytest.raises(UnixCtfTrainBoundaryError) as raised:
                     validate_unix_ctf_training_receipt(_boundary(), receipt)
-                self.assertTrue(any(expected in message for message in raised.exception.diagnostics))
+                assert any(expected in message for message in raised.value.diagnostics)
 
     def test_nonfinite_metric_is_not_an_admissible_receipt(self) -> None:
         receipt = _receipt()
         receipt["metrics"]["episode_success_rate"] = float("nan")  # type: ignore[index]
-        with self.assertRaises(UnixCtfTrainBoundaryError):
+        with pytest.raises(UnixCtfTrainBoundaryError):
             validate_unix_ctf_training_receipt(_boundary(), receipt)
 
 

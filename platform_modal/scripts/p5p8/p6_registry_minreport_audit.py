@@ -30,6 +30,7 @@ docs/p5p8_improvements/71_p6_registry_minreport_audit.md
 
 Stdlib + json + math + collections. <=290 lines.
 """
+
 from __future__ import annotations
 
 import json
@@ -38,8 +39,10 @@ from collections import Counter, defaultdict
 from pathlib import Path
 
 import sys
+
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
+from _paths import REPO_ROOT
+
 ROOT = REPO_ROOT
 REG = ROOT / "platform_hybrid/registry" / "entries"
 OUT = ROOT / "platform_hybrid/experiments" / "results" / "p5p8"
@@ -157,7 +160,11 @@ def shannon_entropy_bits(values: list) -> float:
 
 
 def eligible_stack_entries(entries):
-    return [e for e in entries if e.get('record_type') != 'delta' and not e.get('_path', '').startswith('delta_')]
+    return [
+        e
+        for e in entries
+        if e.get("record_type") != "delta" and not e.get("_path", "").startswith("delta_")
+    ]
 
 
 def main() -> None:
@@ -189,18 +196,24 @@ def main() -> None:
         pop_rate = n_pop / n_total if n_total else 0.0
         unique_vals = len({str(v) for v in sub_values[(item, sub)] if is_populated(v)})
         h = shannon_entropy_bits([v for v in sub_values[(item, sub)] if is_populated(v)])
-        subfield_rows.append({
-            "item": item, "sub_field": sub,
-            "n_total": n_total, "n_populated": n_pop,
-            "pop_rate": round(pop_rate, 4),
-            "n_unique_values": unique_vals,
-            "entropy_bits": round(h, 4),
-        })
+        subfield_rows.append(
+            {
+                "item": item,
+                "sub_field": sub,
+                "n_total": n_total,
+                "n_populated": n_pop,
+                "pop_rate": round(pop_rate, 4),
+                "n_unique_values": unique_vals,
+                "entropy_bits": round(h, 4),
+            }
+        )
     out_a = OUT / "p6_registry_minreport_subfield.tsv"
     with out_a.open("w") as fp:
         fp.write("item\tsub_field\tn_total\tn_populated\tpop_rate\tn_unique_values\tentropy_bits\n")
         for r in subfield_rows:
-            fp.write(f"{r['item']}\t{r['sub_field']}\t{r['n_total']}\t{r['n_populated']}\t{r['pop_rate']}\t{r['n_unique_values']}\t{r['entropy_bits']}\n")
+            fp.write(
+                f"{r['item']}\t{r['sub_field']}\t{r['n_total']}\t{r['n_populated']}\t{r['pop_rate']}\t{r['n_unique_values']}\t{r['entropy_bits']}\n"
+            )
     print(f"[p6_registry_minreport_audit] wrote {out_a} ({len(subfield_rows)} rows)")
 
     # PART B: per-entry 22-bit fingerprint uniqueness
@@ -219,7 +232,9 @@ def main() -> None:
     with out_b.open("w") as fp:
         fp.write("entry\trecord_type\tn_populated\tn_total\tfingerprint\tn_entries_with_same_fp\n")
         for entry_path, info in sorted(fingerprints.items()):
-            fp.write(f"{entry_path}\t{info['record_type']}\t{info['n_pop']}\t{info['n_total']}\t{info['fingerprint']}\t{fp_counter[info['fingerprint']]}\n")
+            fp.write(
+                f"{entry_path}\t{info['record_type']}\t{info['n_pop']}\t{info['n_total']}\t{info['fingerprint']}\t{fp_counter[info['fingerprint']]}\n"
+            )
     print(f"[p6_registry_minreport_audit] wrote {out_b} ({len(fingerprints)} rows)")
 
     # PART C: per-item (parent) population summary — collapse sub-fields into 7 items
@@ -233,7 +248,7 @@ def main() -> None:
             sub_val = ib.get(sub) if isinstance(ib, dict) else None
             item_tot[item] += 1
             if is_populated(sub_val):
-                item_pop[item] += 1   # count per-sub-field population
+                item_pop[item] += 1  # count per-sub-field population
     item_rows = []
     for item in {it for it, _ in SUBFIELDS}:
         # An item is "populated" for an entry if AT LEAST ONE sub-field is populated
@@ -247,18 +262,26 @@ def main() -> None:
             any_pop = any(is_populated(subfield_value(entry, item, s)) for s in sub_fields_for_item)
             if any_pop:
                 per_entry_items[item] += 1
-        item_rows.append({
-            "item": item,
-            "n_entries_with_any_sub_pop": per_entry_items[item],
-            "n_entries": per_entry_totals[item],
-            "pop_rate_at_least_one": round(per_entry_items[item] / per_entry_totals[item], 4) if per_entry_totals[item] else 0,
-            "n_total_subfields": len([s for it, s in SUBFIELDS if it == item]),
-        })
+        item_rows.append(
+            {
+                "item": item,
+                "n_entries_with_any_sub_pop": per_entry_items[item],
+                "n_entries": per_entry_totals[item],
+                "pop_rate_at_least_one": round(per_entry_items[item] / per_entry_totals[item], 4)
+                if per_entry_totals[item]
+                else 0,
+                "n_total_subfields": len([s for it, s in SUBFIELDS if it == item]),
+            }
+        )
     out_e = OUT / "p6_registry_minreport_item_summary.tsv"
     with out_e.open("w") as fp:
-        fp.write("item\tn_entries\tn_entries_with_any_sub_pop\tpop_rate_at_least_one\tn_total_subfields\n")
+        fp.write(
+            "item\tn_entries\tn_entries_with_any_sub_pop\tpop_rate_at_least_one\tn_total_subfields\n"
+        )
         for r in item_rows:
-            fp.write(f"{r['item']}\t{r['n_entries']}\t{r['n_entries_with_any_sub_pop']}\t{r['pop_rate_at_least_one']}\t{r['n_total_subfields']}\n")
+            fp.write(
+                f"{r['item']}\t{r['n_entries']}\t{r['n_entries_with_any_sub_pop']}\t{r['pop_rate_at_least_one']}\t{r['n_total_subfields']}\n"
+            )
     print(f"[p6_registry_minreport_audit] wrote {out_e} ({len(item_rows)} rows)")
 
     # PART D: summary JSON + headline
@@ -278,15 +301,28 @@ def main() -> None:
             "n_subfields_with_2plus_unique_values": n_informative_subfields,
             "n_unique_fingerprints": len(fp_counter),
             "max_fingerprint_count": max(fp_counter.values()) if fp_counter else 0,
-            "n_entries_with_same_fingerprint_as_largest_cluster": max(fp_counter.values()) if fp_counter else 0,
+            "n_entries_with_same_fingerprint_as_largest_cluster": max(fp_counter.values())
+            if fp_counter
+            else 0,
         },
         "top3_null_subfields": sorted(
-            [{"item": r["item"], "sub_field": r["sub_field"], "pop_rate": r["pop_rate"]} for r in subfield_rows],
-            key=lambda x: x["pop_rate"]
+            [
+                {"item": r["item"], "sub_field": r["sub_field"], "pop_rate": r["pop_rate"]}
+                for r in subfield_rows
+            ],
+            key=lambda x: x["pop_rate"],
         )[:3],
         "top3_informative_subfields": sorted(
-            [{"item": r["item"], "sub_field": r["sub_field"], "n_unique_values": r["n_unique_values"], "entropy_bits": r["entropy_bits"]} for r in subfield_rows],
-            key=lambda x: -x["n_unique_values"]
+            [
+                {
+                    "item": r["item"],
+                    "sub_field": r["sub_field"],
+                    "n_unique_values": r["n_unique_values"],
+                    "entropy_bits": r["entropy_bits"],
+                }
+                for r in subfield_rows
+            ],
+            key=lambda x: -x["n_unique_values"],
         )[:3],
     }
     out_d = OUT / "p6_registry_minreport_summary.json"
@@ -299,13 +335,17 @@ def main() -> None:
     print(f"  n_subfields at 0% pop rate: {n_null_subfields} / {len(SUBFIELDS)}")
     print(f"  n_subfields with 2+ unique values: {n_informative_subfields} / {len(SUBFIELDS)}")
     print(f"  n_unique fingerprints across 20 entries: {len(fp_counter)}")
-    print(f"  largest fingerprint cluster: {max(fp_counter.values()) if fp_counter else 0} entries share")
+    print(
+        f"  largest fingerprint cluster: {max(fp_counter.values()) if fp_counter else 0} entries share"
+    )
     print(f"  Top-3 most-empty sub-fields:")
     for r in summary["top3_null_subfields"]:
         print(f"    {r['item']}.{r['sub_field']}: pop_rate={r['pop_rate']}")
     print(f"  Top-3 most-informative sub-fields:")
     for r in summary["top3_informative_subfields"]:
-        print(f"    {r['item']}.{r['sub_field']}: unique_values={r['n_unique_values']} entropy={r['entropy_bits']}")
+        print(
+            f"    {r['item']}.{r['sub_field']}: unique_values={r['n_unique_values']} entropy={r['entropy_bits']}"
+        )
     print("[p6_registry_minreport_audit] done")
 
 

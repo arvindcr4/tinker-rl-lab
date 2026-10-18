@@ -95,4 +95,3 @@ __all__ = [
     "spectral_legendre_grpo",
     "spectral_pairwise_distance",
 ]
-

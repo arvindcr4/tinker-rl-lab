@@ -5,7 +5,7 @@ Every untested model × GSM8K, plus base-vs-instruct pairs, group-size sweep,
 multi-seed replication, and cross-task experiments.
 """
 
-import json, time, os, sys, traceback
+import json, os, sys, traceback
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
@@ -45,9 +45,13 @@ GSM8K_PROBLEMS = [
     "Ken created a care package to send to his brother, who was away at boarding school. Ken placed a box on a scale, and then expression the following items into the box: a 1.5 pounds textbook, a box of mass 0.3 pounds, and a bag of peanuts mass of 0.5 pounds. What is the weight of Ken's care package, in pounds?",
 ]
 
+
 def make_gsm8k_prompts():
-    return [{"role": "system", "content": GSM8K_SYSTEM},
-            *[{"role": "user", "content": p} for p in GSM8K_PROBLEMS[:2]]]
+    return [
+        {"role": "system", "content": GSM8K_SYSTEM},
+        *[{"role": "user", "content": p} for p in GSM8K_PROBLEMS[:2]],
+    ]
+
 
 # ═══════════════════════════════════════════════════════════════════════════
 # WAVE 1: New Model Frontier (all untested models on GSM8K)
@@ -73,29 +77,33 @@ WAVE1_MODELS = [
 ]
 
 for tag, model, priority in WAVE1_MODELS:
-    EXPERIMENTS.append({
-        "tag": f"wave1_{tag}_gsm8k",
-        "model": model,
-        "wave": "1-frontier",
-        "priority": priority,
-        **DEFAULT_CONFIG,
-    })
+    EXPERIMENTS.append(
+        {
+            "tag": f"wave1_{tag}_gsm8k",
+            "model": model,
+            "wave": "1-frontier",
+            "priority": priority,
+            **DEFAULT_CONFIG,
+        }
+    )
 
 # ═══════════════════════════════════════════════════════════════════════════
 # WAVE 2: Group-Size Sweep on Qwen3-8B (test 2-GRPO=DPO)
 # ═══════════════════════════════════════════════════════════════════════════
 
 for G in [2, 4, 16, 32]:
-    EXPERIMENTS.append({
-        "tag": f"wave2_qwen3-8b_G{G}_gsm8k",
-        "model": "Qwen/Qwen3-8B",
-        "wave": "2-groupsize",
-        "priority": "HIGH",
-        "num_steps": 30,
-        "group_size": G,
-        "learning_rate": 1e-5,
-        "seed": 42,
-    })
+    EXPERIMENTS.append(
+        {
+            "tag": f"wave2_qwen3-8b_G{G}_gsm8k",
+            "model": "Qwen/Qwen3-8B",
+            "wave": "2-groupsize",
+            "priority": "HIGH",
+            "num_steps": 30,
+            "group_size": G,
+            "learning_rate": 1e-5,
+            "seed": 42,
+        }
+    )
 
 # ═══════════════════════════════════════════════════════════════════════════
 # WAVE 3: Multi-Seed Replication (frontier models)
@@ -109,58 +117,66 @@ MULTI_SEED_MODELS = [
 
 for tag, model in MULTI_SEED_MODELS:
     for seed in [123, 456, 789]:
-        EXPERIMENTS.append({
-            "tag": f"wave3_{tag}_seed{seed}_gsm8k",
-            "model": model,
-            "wave": "3-multiseed",
-            "priority": "HIGH",
-            "num_steps": 30,
-            "group_size": 8,
-            "learning_rate": 1e-5,
-            "seed": seed,
-        })
+        EXPERIMENTS.append(
+            {
+                "tag": f"wave3_{tag}_seed{seed}_gsm8k",
+                "model": model,
+                "wave": "3-multiseed",
+                "priority": "HIGH",
+                "num_steps": 30,
+                "group_size": 8,
+                "learning_rate": 1e-5,
+                "seed": seed,
+            }
+        )
 
 # ═══════════════════════════════════════════════════════════════════════════
 # WAVE 4: LR Sweep on Qwen3-8B
 # ═══════════════════════════════════════════════════════════════════════════
 
 for lr in [5e-6, 3e-5, 1e-4, 3e-4]:
-    EXPERIMENTS.append({
-        "tag": f"wave4_qwen3-8b_lr{lr}_gsm8k",
-        "model": "Qwen/Qwen3-8B",
-        "wave": "4-lr-sweep",
-        "priority": "MEDIUM",
-        "num_steps": 30,
-        "group_size": 8,
-        "learning_rate": lr,
-        "seed": 42,
-    })
+    EXPERIMENTS.append(
+        {
+            "tag": f"wave4_qwen3-8b_lr{lr}_gsm8k",
+            "model": "Qwen/Qwen3-8B",
+            "wave": "4-lr-sweep",
+            "priority": "MEDIUM",
+            "num_steps": 30,
+            "group_size": 8,
+            "learning_rate": lr,
+            "seed": 42,
+        }
+    )
 
 # ═══════════════════════════════════════════════════════════════════════════
 # WAVE 5: Longer Training (100 steps)
 # ═══════════════════════════════════════════════════════════════════════════
 
-EXPERIMENTS.append({
-    "tag": "wave5_qwen3-8b_100steps_gsm8k",
-    "model": "Qwen/Qwen3-8B",
-    "wave": "5-longrun",
-    "priority": "HIGH",
-    "num_steps": 100,
-    "group_size": 8,
-    "learning_rate": 1e-5,
-    "seed": 42,
-})
+EXPERIMENTS.append(
+    {
+        "tag": "wave5_qwen3-8b_100steps_gsm8k",
+        "model": "Qwen/Qwen3-8B",
+        "wave": "5-longrun",
+        "priority": "HIGH",
+        "num_steps": 100,
+        "group_size": 8,
+        "learning_rate": 1e-5,
+        "seed": 42,
+    }
+)
 
-EXPERIMENTS.append({
-    "tag": "wave5_llama31-8b-inst_100steps_gsm8k",
-    "model": "meta-llama/Llama-3.1-8B-Instruct",
-    "wave": "5-longrun",
-    "priority": "HIGH",
-    "num_steps": 100,
-    "group_size": 8,
-    "learning_rate": 1e-5,
-    "seed": 42,
-})
+EXPERIMENTS.append(
+    {
+        "tag": "wave5_llama31-8b-inst_100steps_gsm8k",
+        "model": "meta-llama/Llama-3.1-8B-Instruct",
+        "wave": "5-longrun",
+        "priority": "HIGH",
+        "num_steps": 100,
+        "group_size": 8,
+        "learning_rate": 1e-5,
+        "seed": 42,
+    }
+)
 
 
 print(f"Total experiments planned: {len(EXPERIMENTS)}")
@@ -168,6 +184,7 @@ print()
 
 # Group by wave
 from collections import Counter
+
 wave_counts = Counter(e["wave"] for e in EXPERIMENTS)
 for w, c in sorted(wave_counts.items()):
     print(f"  {w}: {c} experiments")
@@ -175,21 +192,24 @@ for w, c in sorted(wave_counts.items()):
 print()
 print("Experiment list:")
 for i, e in enumerate(EXPERIMENTS):
-    print(f"  {i+1:3d}. [{e['wave']:15s}] {e['tag']:45s} model={e['model']:50s} G={e.get('group_size',8)} LR={e.get('learning_rate',1e-5)} steps={e.get('num_steps',30)} seed={e.get('seed',42)}")
+    print(
+        f"  {i + 1:3d}. [{e['wave']:15s}] {e['tag']:45s} model={e['model']:50s} G={e.get('group_size', 8)} LR={e.get('learning_rate', 1e-5)} steps={e.get('num_steps', 30)} seed={e.get('seed', 42)}"
+    )
 
 
 # ═══════════════════════════════════════════════════════════════════════════
 # LAUNCHER
 # ═══════════════════════════════════════════════════════════════════════════
 
+
 def run_single_experiment(exp):
     """Run a single Tinker experiment and return results."""
     tag = exp["tag"]
     model = exp["model"]
-    
+
     try:
         client = ServiceClient(api_key=API_KEY)
-        
+
         training = client.create_lora_training_client(
             model=model,
             train_method="grpo",
@@ -203,36 +223,38 @@ def run_single_experiment(exp):
                 "lora_config": {"rank": 32},
             },
         )
-        
+
         # Training loop
         num_steps = exp.get("num_steps", 30)
         rewards = []
-        
+
         for step in range(num_steps):
             # Sample 2 GSM8K problems per step
-            problems = GSM8K_PROBLEMS[step % len(GSM8K_PROBLEMS): step % len(GSM8K_PROBLEMS) + 2]
+            problems = GSM8K_PROBLEMS[step % len(GSM8K_PROBLEMS) : step % len(GSM8K_PROBLEMS) + 2]
             if len(problems) < 2:
                 problems = GSM8K_PROBLEMS[:2]
-            
+
             prompts = []
             for p in problems:
-                prompts.append([
-                    {"role": "system", "content": GSM8K_SYSTEM},
-                    {"role": "user", "content": p},
-                ])
-            
+                prompts.append(
+                    [
+                        {"role": "system", "content": GSM8K_SYSTEM},
+                        {"role": "user", "content": p},
+                    ]
+                )
+
             result = training.step(prompts=prompts)
-            step_reward = result.mean_reward if hasattr(result, 'mean_reward') else 0
+            step_reward = result.mean_reward if hasattr(result, "mean_reward") else 0
             rewards.append(float(step_reward))
-            
+
             if step % 10 == 0:
                 print(f"  [{tag}] Step {step}/{num_steps}: reward={step_reward:.4f}")
-        
+
         # Compute metrics
         peak = max(rewards)
         last10 = sum(rewards[-10:]) / min(10, len(rewards))
         first5 = sum(rewards[:5]) / min(5, len(rewards))
-        
+
         result_data = {
             "tag": tag,
             "model": model,
@@ -248,10 +270,10 @@ def run_single_experiment(exp):
             "reward_trace": rewards,
             "timestamp": datetime.utcnow().isoformat(),
         }
-        
+
         print(f"  ✓ [{tag}] DONE: peak={peak:.3f}, last10={last10:.3f}")
         return result_data
-        
+
     except Exception as e:
         print(f"  ✗ [{tag}] FAILED: {e}")
         traceback.print_exc()
@@ -270,65 +292,74 @@ def launch_campaign(max_parallel=8):
     results = []
     timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
     results_file = f"/home/user/workspace/tinker-rl-lab/experiments/tinker-runs/results/campaign_{timestamp}.json"
-    
-    print(f"\n{'='*70}")
+
+    print(f"\n{'=' * 70}")
     print(f"LAUNCHING BITTER LESSON CAMPAIGN — {len(EXPERIMENTS)} experiments")
     print(f"Max parallel: {max_parallel}")
     print(f"Results file: {results_file}")
-    print(f"{'='*70}\n")
-    
+    print(f"{'=' * 70}\n")
+
     # Sort by priority: CRITICAL first, then HIGH, then MEDIUM
     priority_order = {"CRITICAL": 0, "HIGH": 1, "MEDIUM": 2}
-    sorted_exps = sorted(EXPERIMENTS, key=lambda e: priority_order.get(e.get("priority", "MEDIUM"), 2))
-    
+    sorted_exps = sorted(
+        EXPERIMENTS, key=lambda e: priority_order.get(e.get("priority", "MEDIUM"), 2)
+    )
+
     with ThreadPoolExecutor(max_workers=max_parallel) as executor:
         futures = {executor.submit(run_single_experiment, exp): exp for exp in sorted_exps}
-        
-        for i, future in enumerate(as_completed(futures)):
+
+        for _i, future in enumerate(as_completed(futures)):
             exp = futures[future]
             try:
                 result = future.result()
                 results.append(result)
-                
+
                 # Save incrementally
                 with open(results_file, "w") as f:
-                    json.dump({
-                        "campaign": "bitter_lesson",
-                        "timestamp": timestamp,
-                        "total_planned": len(EXPERIMENTS),
-                        "completed": len(results),
-                        "results": results,
-                    }, f, indent=2)
-                
+                    json.dump(
+                        {
+                            "campaign": "bitter_lesson",
+                            "timestamp": timestamp,
+                            "total_planned": len(EXPERIMENTS),
+                            "completed": len(results),
+                            "results": results,
+                        },
+                        f,
+                        indent=2,
+                    )
+
                 completed = len([r for r in results if r.get("status") == "completed"])
                 failed = len([r for r in results if r.get("status") == "failed"])
-                print(f"\n  Progress: {len(results)}/{len(EXPERIMENTS)} "
-                      f"(✓{completed} ✗{failed})\n")
-                
+                print(f"\n  Progress: {len(results)}/{len(EXPERIMENTS)} (✓{completed} ✗{failed})\n")
+
             except Exception as e:
                 print(f"  Future error for {exp['tag']}: {e}")
-    
+
     # Final summary
-    print(f"\n{'='*70}")
+    print(f"\n{'=' * 70}")
     print(f"CAMPAIGN COMPLETE")
-    print(f"{'='*70}")
+    print(f"{'=' * 70}")
     completed = [r for r in results if r.get("status") == "completed"]
     failed = [r for r in results if r.get("status") == "failed"]
     print(f"Completed: {len(completed)}/{len(EXPERIMENTS)}")
     print(f"Failed: {len(failed)}/{len(EXPERIMENTS)}")
-    
+
     if completed:
         print(f"\nTop results:")
         for r in sorted(completed, key=lambda x: x.get("last10_avg", 0), reverse=True)[:10]:
             print(f"  {r['tag']:45s} peak={r['peak_reward']:.3f} last10={r['last10_avg']:.3f}")
-    
+
     print(f"\nResults saved to: {results_file}")
     return results
 
 
 if __name__ == "__main__":
     if "--launch" in sys.argv:
-        max_p = int(sys.argv[sys.argv.index("--launch") + 1]) if len(sys.argv) > sys.argv.index("--launch") + 1 else 8
+        max_p = (
+            int(sys.argv[sys.argv.index("--launch") + 1])
+            if len(sys.argv) > sys.argv.index("--launch") + 1
+            else 8
+        )
         launch_campaign(max_parallel=max_p)
     else:
         print("\nDry run complete. Use --launch [N] to start (N = max parallel workers)")

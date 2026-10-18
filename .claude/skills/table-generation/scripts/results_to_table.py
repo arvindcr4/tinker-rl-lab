@@ -29,9 +29,18 @@ def load_data(path: str) -> tuple[list[str], list[str], list[list[str]]]:
 
         if isinstance(data, list) and len(data) > 0 and isinstance(data[0], dict):
             # List of dicts: [{method: X, metric1: Y, ...}, ...]
-            col_headers = [k for k in data[0].keys() if k.lower() not in ("method", "model", "name", "variant")]
-            method_key = next((k for k in data[0].keys() if k.lower() in ("method", "model", "name", "variant")), None)
-            row_headers = [str(d.get(method_key, f"Row {i}")) for i, d in enumerate(data)] if method_key else [f"Row {i}" for i in range(len(data))]
+            col_headers = [
+                k for k in data[0].keys() if k.lower() not in ("method", "model", "name", "variant")
+            ]
+            method_key = next(
+                (k for k in data[0].keys() if k.lower() in ("method", "model", "name", "variant")),
+                None,
+            )
+            row_headers = (
+                [str(d.get(method_key, f"Row {i}")) for i, d in enumerate(data)]
+                if method_key
+                else [f"Row {i}" for i in range(len(data))]
+            )
             values = [[str(d.get(c, "")) for c in col_headers] for d in data]
         elif isinstance(data, dict):
             # Nested dict: {method: {metric: value, ...}, ...}
@@ -41,7 +50,13 @@ def load_data(path: str) -> tuple[list[str], list[str], list[list[str]]]:
                 if isinstance(v, dict):
                     all_cols.update(v.keys())
             col_headers = sorted(all_cols)
-            values = [[str(data[r].get(c, "")) if isinstance(data[r], dict) else str(data[r]) for c in col_headers] for r in row_headers]
+            values = [
+                [
+                    str(data[r].get(c, "")) if isinstance(data[r], dict) else str(data[r])
+                    for c in col_headers
+                ]
+                for r in row_headers
+            ]
         else:
             raise ValueError(f"Unsupported JSON structure: expected list of dicts or nested dict")
 
@@ -75,8 +90,9 @@ def parse_numeric(val: str) -> float | None:
         return None
 
 
-def find_best_indices(values: list[list[str]], col_headers: list[str],
-                      bold_best: str) -> dict[int, int]:
+def find_best_indices(
+    values: list[list[str]], col_headers: list[str], bold_best: str
+) -> dict[int, int]:
     """Find the best value index in each column. Returns {col_idx: row_idx}."""
     best = {}
     if bold_best not in ("max", "min"):
@@ -120,8 +136,9 @@ def escape_latex(text: str) -> str:
     return text
 
 
-def generate_comparison_table(col_headers, row_headers, values,
-                              caption, label, bold_best, wide=False):
+def generate_comparison_table(
+    col_headers, row_headers, values, caption, label, bold_best, wide=False
+):
     """Generate a comparison table."""
     best = find_best_indices(values, col_headers, bold_best)
 
@@ -146,7 +163,7 @@ def generate_comparison_table(col_headers, row_headers, values,
     lines.append("    \\midrule")
 
     # Data rows
-    for row_idx, (row_name, row_vals) in enumerate(zip(row_headers, values)):
+    for row_idx, (row_name, row_vals) in enumerate(zip(row_headers, values, strict=False)):
         cells = [escape_latex(row_name)]
         for col_idx, val in enumerate(row_vals):
             val_str = escape_latex(val)
@@ -162,8 +179,7 @@ def generate_comparison_table(col_headers, row_headers, values,
     return "\n".join(lines)
 
 
-def generate_ablation_table(col_headers, row_headers, values,
-                            caption, label, bold_best):
+def generate_ablation_table(col_headers, row_headers, values, caption, label, bold_best):
     """Generate an ablation table (first row assumed to be full model)."""
     best = find_best_indices(values, col_headers, bold_best)
 
@@ -186,7 +202,7 @@ def generate_ablation_table(col_headers, row_headers, values,
     lines.append("    \\midrule")
 
     # Data rows
-    for row_idx, (row_name, row_vals) in enumerate(zip(row_headers, values)):
+    for row_idx, (row_name, row_vals) in enumerate(zip(row_headers, values, strict=False)):
         cells = []
         name = escape_latex(row_name)
         if row_idx == 0:
@@ -208,8 +224,7 @@ def generate_ablation_table(col_headers, row_headers, values,
     return "\n".join(lines)
 
 
-def generate_descriptive_table(col_headers, row_headers, values,
-                               caption, label):
+def generate_descriptive_table(col_headers, row_headers, values, caption, label):
     """Generate a descriptive/statistics table (no bolding)."""
     num_cols = len(col_headers)
     align = "l" + "r" * num_cols
@@ -228,7 +243,7 @@ def generate_descriptive_table(col_headers, row_headers, values,
     lines.append(header)
     lines.append("    \\midrule")
 
-    for row_name, row_vals in zip(row_headers, values):
+    for row_name, row_vals in zip(row_headers, values, strict=False):
         cells = [escape_latex(row_name)]
         for val in row_vals:
             cells.append(escape_latex(val))
@@ -271,9 +286,9 @@ def find_second_best_indices(values, col_headers, bold_best):
     return second
 
 
-def generate_multi_dataset_table(col_headers, row_headers, values,
-                                  caption, label, bold_best,
-                                  underline_second=False):
+def generate_multi_dataset_table(
+    col_headers, row_headers, values, caption, label, bold_best, underline_second=False
+):
     """Generate a multi-dataset table (methods x datasets x metrics)."""
     best = find_best_indices(values, col_headers, bold_best)
     second = find_second_best_indices(values, col_headers, bold_best) if underline_second else {}
@@ -295,7 +310,7 @@ def generate_multi_dataset_table(col_headers, row_headers, values,
     lines.append(header)
     lines.append("    \\midrule")
 
-    for row_idx, (row_name, row_vals) in enumerate(zip(row_headers, values)):
+    for row_idx, (row_name, row_vals) in enumerate(zip(row_headers, values, strict=False)):
         cells = [escape_latex(row_name)]
         for col_idx, val in enumerate(row_vals):
             val_str = escape_latex(val)
@@ -316,40 +331,53 @@ def generate_multi_dataset_table(col_headers, row_headers, values,
 def main():
     parser = argparse.ArgumentParser(description="Convert results to LaTeX table")
     parser.add_argument("--input", required=True, help="Input file (.json or .csv)")
-    parser.add_argument("--type", choices=["comparison", "ablation", "descriptive", "multi-dataset"],
-                        default="comparison", help="Table type (default: comparison)")
-    parser.add_argument("--bold-best", choices=["max", "min", "none"],
-                        default="none", help="Bold best values (default: none)")
+    parser.add_argument(
+        "--type",
+        choices=["comparison", "ablation", "descriptive", "multi-dataset"],
+        default="comparison",
+        help="Table type (default: comparison)",
+    )
+    parser.add_argument(
+        "--bold-best",
+        choices=["max", "min", "none"],
+        default="none",
+        help="Bold best values (default: none)",
+    )
     parser.add_argument("--caption", type=str, default="", help="Table caption")
     parser.add_argument("--label", type=str, default="", help="Table label (e.g., tab:main)")
     parser.add_argument("--wide", action="store_true", help="Use table* for two-column layout")
     parser.add_argument("--output", type=str, help="Output .tex file (default: stdout)")
-    parser.add_argument("--significance", action="store_true", help="Add p-value significance stars")
-    parser.add_argument("--underline-second", action="store_true", help="Underline second-best results")
+    parser.add_argument(
+        "--significance", action="store_true", help="Add p-value significance stars"
+    )
+    parser.add_argument(
+        "--underline-second", action="store_true", help="Underline second-best results"
+    )
     args = parser.parse_args()
 
     col_headers, row_headers, values = load_data(args.input)
 
     if args.type == "comparison":
         latex = generate_comparison_table(
-            col_headers, row_headers, values,
-            args.caption, args.label, args.bold_best, args.wide
+            col_headers, row_headers, values, args.caption, args.label, args.bold_best, args.wide
         )
     elif args.type == "ablation":
         latex = generate_ablation_table(
-            col_headers, row_headers, values,
-            args.caption, args.label, args.bold_best
+            col_headers, row_headers, values, args.caption, args.label, args.bold_best
         )
     elif args.type == "descriptive":
         latex = generate_descriptive_table(
-            col_headers, row_headers, values,
-            args.caption, args.label
+            col_headers, row_headers, values, args.caption, args.label
         )
     elif args.type == "multi-dataset":
         latex = generate_multi_dataset_table(
-            col_headers, row_headers, values,
-            args.caption, args.label, args.bold_best,
-            underline_second=args.underline_second
+            col_headers,
+            row_headers,
+            values,
+            args.caption,
+            args.label,
+            args.bold_best,
+            underline_second=args.underline_second,
         )
 
     if args.output:

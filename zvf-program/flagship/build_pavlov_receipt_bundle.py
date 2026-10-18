@@ -106,7 +106,11 @@ def _contract_suite_entries(contract: Mapping[str, Any]) -> list[tuple[str, Mapp
 
     registry = contract.get("suite_registry")
     if isinstance(registry, Mapping):
-        return [(str(suite_id), suite) for suite_id, suite in registry.items() if isinstance(suite, Mapping)]
+        return [
+            (str(suite_id), suite)
+            for suite_id, suite in registry.items()
+            if isinstance(suite, Mapping)
+        ]
     if isinstance(registry, list):
         entries: list[tuple[str, Mapping[str, Any]]] = []
         for suite in registry:
@@ -124,15 +128,9 @@ def _expected_suite_specs(
     duplicate_ids = sorted(suite_id for suite_id, count in Counter(ids).items() if count > 1)
     if duplicate_ids:
         raise ValueError("duplicate suite IDs in contract: " + ", ".join(duplicate_ids))
-    training = {
-        suite_id: suite
-        for suite_id, suite in entries
-        if suite.get("role") == "train"
-    }
+    training = {suite_id: suite for suite_id, suite in entries if suite.get("role") == "train"}
     primary_eval = {
-        suite_id: suite
-        for suite_id, suite in entries
-        if suite.get("role") == "primary_eval"
+        suite_id: suite for suite_id, suite in entries if suite.get("role") == "primary_eval"
     }
     domains = sorted(str(domain) for domain in contract.get("domains", []))
     if len(training) != EXPECTED_TRAINING_SUITE_COUNT:
@@ -290,10 +288,17 @@ def _receipt_completeness(record: Mapping[str, Any]) -> dict[str, bool]:
 
     dataset_revision = _first_value(
         record,
-        ("dataset_or_source_revision", "dataset_source_revision", "dataset_revision", "source_revision"),
+        (
+            "dataset_or_source_revision",
+            "dataset_source_revision",
+            "dataset_revision",
+            "source_revision",
+        ),
     )
     license_value = _first_value(record, ("license_or_approval", "license", "approval"))
-    container = _first_value(record, ("container_runtime_digest", "container_digest", "runtime_digest"))
+    container = _first_value(
+        record, ("container_runtime_digest", "container_digest", "runtime_digest")
+    )
     verifier = _first_value(record, ("verifier_hash", "verifier_digest", "verifier_revision"))
     model_revision = _first_value(record, ("model_revision", "model_revision_receipt"))
     decontamination = _first_value(record, ("decontamination_status", "decontamination"))
@@ -404,8 +409,13 @@ def _apply_receipt_overrides(
             continue
         updated[key] = value
     complete = _receipt_completeness(updated)
-    updated["launchable"] = all(complete.values()) and updated.get("evidence_status") in EVIDENCE_STATUSES - {"rejected"}
-    updated["admissible"] = updated["launchable"] and updated.get("evidence_status") in {"observed", "admissible"}
+    updated["launchable"] = all(complete.values()) and updated.get(
+        "evidence_status"
+    ) in EVIDENCE_STATUSES - {"rejected"}
+    updated["admissible"] = updated["launchable"] and updated.get("evidence_status") in {
+        "observed",
+        "admissible",
+    }
     updated["blockers"] = _record_blockers(updated)
     updated["entry_hash"] = sha256_json(_record_entry_hash_payload(updated))
     return updated
@@ -425,13 +435,17 @@ def _company_domain_coverage(
         required = sorted(str(domain) for domain in company.get("domains", []))
         train_by_domain = {
             domain: sorted(
-                suite_id for suite_id, suite in training.items() if domain in suite.get("domains", [])
+                suite_id
+                for suite_id, suite in training.items()
+                if domain in suite.get("domains", [])
             )
             for domain in required
         }
         eval_by_domain = {
             domain: sorted(
-                suite_id for suite_id, suite in primary_eval.items() if domain in suite.get("domains", [])
+                suite_id
+                for suite_id, suite in primary_eval.items()
+                if domain in suite.get("domains", [])
             )
             for domain in required
         }
@@ -515,8 +529,12 @@ def build_bundle(
     if contract_errors:
         raise ValueError("invalid Pavlov domain contract: " + "; ".join(contract_errors))
     training, primary_eval, domains = _expected_suite_specs(contract)
-    train_domain_union = sorted({str(domain) for suite in training.values() for domain in suite.get("domains", [])})
-    eval_domain_union = sorted({str(domain) for suite in primary_eval.values() for domain in suite.get("domains", [])})
+    train_domain_union = sorted(
+        {str(domain) for suite in training.values() for domain in suite.get("domains", [])}
+    )
+    eval_domain_union = sorted(
+        {str(domain) for suite in primary_eval.values() for domain in suite.get("domains", [])}
+    )
     if train_domain_union != domains:
         raise ValueError("training suite domain union does not cover all declared domains")
     if eval_domain_union != domains:
@@ -526,21 +544,13 @@ def build_bundle(
         raise ValueError("invalid Pavlov company coverage: " + "; ".join(coverage_errors))
     company_train_coverage = {
         company: sorted(
-            {
-                suite_id
-                for suite_ids in details["training"].values()
-                for suite_id in suite_ids
-            }
+            {suite_id for suite_ids in details["training"].values() for suite_id in suite_ids}
         )
         for company, details in company_coverage.items()
     }
     company_eval_coverage = {
         company: sorted(
-            {
-                suite_id
-                for suite_ids in details["primary_eval"].values()
-                for suite_id in suite_ids
-            }
+            {suite_id for suite_ids in details["primary_eval"].values() for suite_id in suite_ids}
         )
         for company, details in company_coverage.items()
     }
@@ -586,9 +596,7 @@ def build_bundle(
         for record in records
         if record["suite_id"] in structural_held_out and record["launchable"]
     )
-    primary_eval_not_designated_held_out = sorted(
-        set(primary_ids) - set(structural_held_out)
-    )
+    primary_eval_not_designated_held_out = sorted(set(primary_ids) - set(structural_held_out))
     entry_payload = {
         "schema_version": SCHEMA_VERSION,
         "contract_schema_version": contract.get("schema_version"),
@@ -609,9 +617,7 @@ def build_bundle(
         "domain_to_primary_eval_suite_ids": domain_to_primary_eval,
         "suites": records,
         "training_suites": [record for record in records if record["role"] == "train"],
-        "primary_eval_suites": [
-            record for record in records if record["role"] == "primary_eval"
-        ],
+        "primary_eval_suites": [record for record in records if record["role"] == "primary_eval"],
         "receipts": {record["suite_id"]: record for record in records},
         "suite_receipts": {record["suite_id"]: record for record in records},
         "budget_guard": budget_guard,
@@ -628,7 +634,11 @@ def build_bundle(
             "observed_slice": "seed-809 7/100 only; not frozen portfolio evidence",
             "admissible": False,
             "launchable": False,
-            "required_receipts": ["model_revision", "split_task_id_hash", "dataset_or_source_revision"],
+            "required_receipts": [
+                "model_revision",
+                "split_task_id_hash",
+                "dataset_or_source_revision",
+            ],
         },
         "gsm8k": {
             "suite_id": "gsm8k_calibration",

@@ -4,7 +4,6 @@ Modal decoration is stubbed at import; no remote, billing, training or network
 calls are possible. All signer keys, checkpoint files and ledgers are temporary.
 """
 
-# ruff: noqa: PT009, PT027
 # Keep this suite executable with stdlib unittest like adjacent offline tests.
 from __future__ import annotations
 import asyncio
@@ -113,6 +112,7 @@ class Review04Tests(unittest.TestCase):
             zip(
                 evidence.IDENTITY_FIELDS,
                 ["campaign", "phase", "suite", "run", "checkpoint", "plan"],
+                strict=False,
             )
         )
 
@@ -714,7 +714,7 @@ class Review04Tests(unittest.TestCase):
             "training_task_ids": train_ids,
             "evaluation_task_ids": eval_ids,
             "training_suite_ids": [f"train-suite-{i}" for i in range(12)],
-            "evaluation_tasks": dict(zip(eval_ids, suites)),
+            "evaluation_tasks": dict(zip(eval_ids, suites, strict=False)),
             "checkpoint_steps": [5],
             "final_step": 5,
             "base_checkpoint": "a" * 64,
@@ -772,7 +772,7 @@ class Review04Tests(unittest.TestCase):
                     "base_result": 0,
                     "final_result": 1,
                 }
-                for task, suite in zip(eval_ids, suites)
+                for task, suite in zip(eval_ids, suites, strict=False)
             ],
             "infrastructure_errors": 0,
         }

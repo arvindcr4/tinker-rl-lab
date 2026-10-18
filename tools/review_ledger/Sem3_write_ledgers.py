@@ -1,0 +1,57 @@
+"""Write claim ledgers (TSV) for the Sem3 cluster. Usage: python3 tools/review_ledger/Sem3_write_ledgers.py"""
+from pathlib import Path
+
+REPO = Path(__file__).resolve().parents[2]
+OUT = REPO / "reports/deepreview/ledgers"
+H = "location\tclaim_text\tvalue\tsource_artifact\tgenerator_script\tstatus"
+MR = "platform_hybrid/experiments/results/review_2026-10-18/Sem3_Group6_Original_Report/measured_runs.json"
+GEN = "tools/review_ledger/Sem3_Group6_Original_Report_measured_runs.py"
+WB = "W&B export wandb_runs.json (tinker-rl-scaling, pulled 2026-10-18)"
+HO = "platform_tinker/reports/final/gsm8k_heldout_seed{042,137,256,512,999}.json; gsm8k_base_control_200.json"
+MRJ = "platform_hybrid/experiments/master_results.json"
+CS = "platform_hybrid/experiments/compute_statistics.py (GSM8K_SCALING hand-entered dict)"
+
+g6 = [
+("base_final Ch5 tab:measured_runs", "Qwen3-8B seed042/137/256/512/999 peak, last-10 training reward", "0.625/0.625/0.625/0.875/0.875; 0.275/0.275/0.325/0.300/0.350", WB + "; " + MR, GEN, "verified"),
+("base_final Ch5 tab:measured_runs", "rank8/rank16/rank64/100-step/4B runs", "peak 0.625/0.750/0.875/0.750/1.000; last-10 0.2125/0.1875/0.250/0.275/0.825", WB + "; " + MR, GEN, "verified"),
+("base_final Ch5 seed-level summary", "last-10 training reward across 5 seeds", "mean 0.305, SD 0.033, n=5", MR, GEN, "recomputed"),
+("base_final Ch5 held-out; abstract", "held-out GSM8K base vs five GRPO seeds", "82.0% (164/200); 83.0/82.5/80.5/84.0/86.5%, mean 83.3%, SD 2.2pp, t(4)=1.32, p=0.256", HO, GEN, "recomputed"),
+("base_final Infrastructure", "W&B config lr/rank/steps", "lr 3e-5 (5e-6 100-step), rank 32 (8/16/64), 50 steps (100)", WB, GEN, "verified"),
+("base_final Block C", "config rank/lr by size", "0.6B r16 lr6e-5; 1.7B r16 lr5e-5; 8B r32 lr4e-5", "platform_tinker/atropos/configs/gsm8k_qwen_{0_6b,1_7b,8b}.yaml", "-", "verified"),
+("base_final Table E.2", "papers per cluster", "8/0/10/31/10; total 59", "base_final.tex Appendix E mapping table", "tools/review_ledger/Sem3_Group6_Original_Report_taxonomy_counts.py", "recomputed"),
+("base_final Table 5.2 / Fig 5.2 (old)", "Qwen3-8B 7%->100%, 30B MoE 99.2%, Llama 79%->100%, 3B 2%", "various", "none (hand-entered pgfplots coordinates)", "-", "removed"),
+("base_final Fig 5.3 (old)", "MATH curves Qwen3-8B ~14%, Llama 50-87%", "various", "none", "-", "removed"),
+("base_final Tables 5.3-5.7 (old)", "bootstrap CIs, z=14.91/32.93, Spearman, Chow F=32.35, d=5.65, U tests", "various", "none (reconstructed binary obs; stats_utils.py absent)", "-", "removed"),
+("base_final HumanEval (old)", "Qwen3-3.8B pass@1 32%->40%", "32/40", "none", "-", "removed"),
+("base_final Fig 5.1 (old)", "illustrative PPO/DPO/GRPO curves", "synthetic", "none (comment: 'Illustrative data')", "-", "removed"),
+("base_final Sec 2.6.2/Table 2.1/Fig 2.9 (old)", "80 variants: 31/18/8/23 (39/22/10/29%), kappa 0.85; architectures 52/28/20%", "various", "none (no catalog retained)", "-", "removed"),
+("base_final Fig 3.4/3.5 (old)", "SFT bars 30.2/19.4/32.5; trajectory points 12, 15, 34.2, 44", "various", "none", "-", "removed"),
+("base_final Table 3.1", "WebArena-Lite WebAgent-R1", "Llama-3.1-8B 8.5->44.8; Qwen2.5-3B 6.1->33.9", "arXiv:2505.16421 abstract", "-", "verified"),
+("base_final Table 3.1; Fig 3.3", "OSWorld best model / human", "12.2% / 72.4%", "arXiv:2404.07972 abstract (12.24/72.36)", "-", "verified"),
+("base_final Table 3.1", "Mobile-Agent-v3 OSWorld", "37.7 (73.3 is AndroidWorld)", "arXiv:2508.15144 abstract", "-", "verified"),
+("base_final Table 3.1", "DeepAgent-32B GAIA", "53.3", "arXiv:2510.21618 (html results)", "-", "verified"),
+("base_final Sec 3.3", "OS-Harm task count", "150", "arXiv:2506.14866 abstract", "-", "verified"),
+("base_final Table 3.1 notes", "95% half-widths", "+-4.4 (n=500,p=.49); +-14 (n=30,p=.80)", "binomial 1.96*sqrt(p(1-p)/n)", "-", "recomputed"),
+("base_final Table 3.1 (old rows)", "Early RL agents 20.0; SFT-only 34.2; Agent-FLAN 32.1/45.1; GPT-4V 18.4; o1-preview 74.4; GAIA GPT-4 30.2", "various", "none attributable", "-", "removed"),
+]
+
+nt = [
+("paper.tex Sec 8.2", "held-out GSM8K base vs five GRPO seeds", "82.0% (164/200); 83.0/82.5/80.5/84.0/86.5%, t(4)=1.32, p=0.256", HO, GEN, "recomputed"),
+("paper.tex Table 9 Nemotron", "peak/last-10, model id, G", "87.5%/16.2%; NVIDIA-Nemotron-3-Super-120B-A12B-BF16; G=4, 20 steps", MRJ, "-", "verified"),
+("paper.tex Table 9 group-size block", "campaign_v2_w2 G=2/4/16/32 peak, last-10", "50.0/75.0/71.9/45.3%; 37.5/52.1/38.0/43.8%; logged 26/26/26/11", MRJ, "-", "verified"),
+("paper.tex Table 9 G=8 row (old)", "Qwen3-8B G=8 100%/84.4%", "100/84.4", "no matching run in master_results.json", "-", "removed"),
+("paper.tex Table 9 campaign rows", "Kimi-K2-Thinking 95.8, Kimi-K2.5 62.5, Qwen3.5-397B 97.9, Llama-3.1-70B 36.4, DS-V3.1-Base 57.3, Llama-3.1-8B 11.5", "as listed", MRJ, "-", "verified"),
+("paper.tex Table 9 Modal TRL rows", "Qwen3-8B 37.5/5.0; Llama-3.2-3B 100/71.3; Llama-3.2-1B 87.5/36.2", "as listed", MRJ, "-", "verified"),
+("paper.tex Table 11 (old)", "GSM8K scale summary 59.6->73.5 ... 91.8->95.4", "7 rows", CS, "-", "removed"),
+("paper.tex Sec 6.16 (old)", "N=15 ZVF r=-0.769, rho=-0.784, GSM8K ZVF 8.5%, scale r=-0.257, F(4,10)=0.949", "various", "none (verify_claims_offline.py: no cohort contract)", "-", "removed"),
+("paper.tex Table 18", "lagged partial r at lags 1/3/5/10; N", "0.050/-0.006/0.059/0.080; 927/861/795/630; 33 runs", "platform_hybrid/experiments/zvf_lagged_regression_results.json", "platform_hybrid/experiments/zvf_lagged_regression.py", "verified"),
+("paper.tex Sec 6.7 (old)", "R2 0.210 vs 0.170; 44/28 traces; 53.6%/73%/62%; r=0.468/0.533/-0.088; Rmax 0.83/0.01; R2 0.797", "various", "none reproducible (fit_saturation_model.py differs, no R2)", "-", "removed"),
+("paper.tex Fig 4 scale scatter (old)", "reward vs size points", "various", "figures/v2/scaling.pdf (no matching ledger)", "-", "removed"),
+("paper.tex Fig sensitivity heatmap (old)", "max-over-runs cells (Llama 0.97, Qwen3-8B 0.35)", "various", "mixed Modal PPO / non-max", "-", "removed"),
+("paper.tex Sec 6.8.1", "Wave 6 peak range, T=0.4 last-10, batch peaks", "[0.688,0.812]; 0.425; 0.875/0.688/0.594/0.547", MRJ + " (wave6_* rows)", "-", "verified"),
+("paper.tex Sec 6.18", "GU gain G 8->16 at p=0.2", "13.96 pp", "analytic: (0.8^8+0.2^8)-(0.8^16+0.2^16)", "-", "recomputed"),
+]
+
+for name, rows in (("Sem3_Group6_Original_Report", g6), ("Sem3_NeurIPS_Main_Track", nt)):
+    (OUT / f"{name}.tsv").write_text(H + "\n" + "\n".join("\t".join(r) for r in rows) + "\n")
+    print(name, len(rows))

@@ -22,28 +22,25 @@ class ActionReversalTests(unittest.TestCase):
 
     def test_primary_observation_is_the_same_all_failure_state(self) -> None:
         observation = matched_primary_observation(self.construction)
-        self.assertEqual(observation["p_hat"], 0.0)
-        self.assertEqual(observation["homogeneous_group_rate"], 1.0)
-        self.assertEqual(observation["rewards"], [0] * self.construction.group_size)
+        assert observation["p_hat"] == 0.0
+        assert observation["homogeneous_group_rate"] == 1.0
+        assert observation["rewards"] == [0] * self.construction.group_size
 
     def test_optimal_action_reverses_across_latent_regimes(self) -> None:
-        self.assertEqual(clean_hard_utilities(self.construction).optimal_action, "retry")
-        self.assertEqual(broken_verifier_utilities(self.construction).optimal_action, "recheck")
-        self.assertTrue(action_reversal_holds(self.construction))
-        self.assertTrue(all(value > 0 for value in reversal_margins(self.construction).values()))
+        assert clean_hard_utilities(self.construction).optimal_action == "retry"
+        assert broken_verifier_utilities(self.construction).optimal_action == "recheck"
+        assert action_reversal_holds(self.construction)
+        assert all(value > 0 for value in reversal_margins(self.construction).values())
 
     def test_every_outcome_only_policy_has_positive_minimax_regret(self) -> None:
         regret = minimax_outcome_only_regret(self.construction)
         retry_probability = minimax_retry_probability(self.construction)
-        self.assertGreater(regret, 0.0)
-        self.assertGreater(retry_probability, 0.0)
-        self.assertLess(retry_probability, 1.0)
+        assert regret > 0.0
+        assert retry_probability > 0.0
+        assert retry_probability < 1.0
 
     def test_perfect_probe_resolves_ambiguity_but_still_charges_probe_cost(self) -> None:
-        self.assertEqual(
-            probe_policy_regret_bound(self.construction, 0.0),
-            self.construction.probe_cost,
-        )
+        assert probe_policy_regret_bound(self.construction, 0.0) == self.construction.probe_cost
 
     def test_imperfect_probe_regret_scales_with_error(self) -> None:
         low = probe_policy_regret_bound(self.construction, 0.05)
@@ -66,7 +63,7 @@ class ActionReversalTests(unittest.TestCase):
                     probe_cost=probe_cost,
                     repaired_signal_value=repaired_value,
                 )
-                self.assertTrue(action_reversal_holds(construction))
+                assert action_reversal_holds(construction)
 
 
 if __name__ == "__main__":

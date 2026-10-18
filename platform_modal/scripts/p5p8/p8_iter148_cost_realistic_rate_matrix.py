@@ -30,51 +30,53 @@ H3 -- fset sensitivity at realistic rates: is the iter-140 H2 finding
 
 Stdlib + numpy + xgboost.  <= 300 lines.
 """
+
 from __future__ import annotations
 import csv
 import json
-import random
 from pathlib import Path
 
 import numpy as np
 import xgboost as xgb
 
 import sys
+
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
-from _p8_common import (  # noqa: E402
+from _paths import REPO_ROOT
+from _p8_common import (
     RAW20,
     ALL24,
     load,
     recall_at_K,
     downsample_positives,
 )
+
 ROOT = REPO_ROOT
 RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8/corrected-review21-v2"
 RES.mkdir(parents=True, exist_ok=True)
 SEED = 20260706
 N_BOOT = 1000
-COST_XGB = 0.0001   # per-decision XGB inference cost ($)
+COST_XGB = 0.0001  # per-decision XGB inference cost ($)
 K_PCT = 2.0
-G_THR = 0.001       # iter-80 gradient-band threshold
+G_THR = 0.001  # iter-80 gradient-band threshold
 
 # 5 LLM price tiers, $ per call.  Real 2026 prices vary 500x.
 LLM_PRICE_TIERS = [
     ("cheap_heuristic", 0.0001),
-    ("small_open",      0.0006),
+    ("small_open", 0.0006),
     ("iter120_default", 0.0010),
-    ("mid_tier",        0.0050),
-    ("frontier_gpt4",   0.0300),
+    ("mid_tier", 0.0050),
+    ("frontier_gpt4", 0.0300),
 ]
 
 # 5 realistic positive rates (fraud-ops deployment envelope)
 RATES_PCT = [1.44, 1.00, 0.50, 0.10, 0.05]
 
 FEATURE_SETS = {
-    "24full":       ALL24,
-    "20raw":        RAW20,
+    "24full": ALL24,
+    "20raw": RAW20,
     "20raw+minmax": RAW20 + ["V_min", "V_max"],
-    "20raw+stat":   RAW20 + ["V_mean", "V_std"],
+    "20raw+stat": RAW20 + ["V_mean", "V_std"],
 }
 
 
@@ -87,11 +89,15 @@ def fit_predict(Xtr, ytr, Xte, feats):
     n_neg_tr = max(1, len(ytr) - n_pos_tr)
     spw = n_neg_tr / n_pos_tr
     m = xgb.XGBClassifier(
-        n_estimators=180, max_depth=5, learning_rate=0.1,
-        subsample=0.8, colsample_bytree=0.8,
+        n_estimators=180,
+        max_depth=5,
+        learning_rate=0.1,
+        subsample=0.8,
+        colsample_bytree=0.8,
         scale_pos_weight=spw,
         eval_metric="auc",
-        random_state=SEED, n_jobs=4,
+        random_state=SEED,
+        n_jobs=4,
     )
     m.fit(Xtr_s, ytr)
     return m.predict_proba(Xte_s)[:, 1]
@@ -101,14 +107,15 @@ def gradient_band_fire(scores, top_k_mask, g_thr=G_THR):
     sorted_idx = np.argsort(-scores)
     sorted_scores = scores[sorted_idx]
     grad = np.abs(np.diff(sorted_scores, prepend=sorted_scores[0] + 1.0))
-    fire_sorted = (grad < g_thr)
+    fire_sorted = grad < g_thr
     fire = np.zeros(len(scores), dtype=bool)
     fire[sorted_idx] = fire_sorted
     return fire & top_k_mask
 
 
-def bootstrap_acd(fire_grad, n_test_q, cost_xgb=COST_XGB, cost_llm=0.0010,
-                  n_boot=N_BOOT, seed=SEED):
+def bootstrap_acd(
+    fire_grad, n_test_q, cost_xgb=COST_XGB, cost_llm=0.0010, n_boot=N_BOOT, seed=SEED
+):
     """Bootstrap the average cost ratio cpd_grad/cpd_xgb at a price tier."""
     rng = np.random.default_rng(seed)
     ratios = np.empty(n_boot)
@@ -117,25 +124,32 @@ def bootstrap_acd(fire_grad, n_test_q, cost_xgb=COST_XGB, cost_llm=0.0010,
         n_llm_s = int(fire_grad[idx].sum())
         cpd_grad = (n_test_q * cost_xgb + n_llm_s * cost_llm) / n_test_q
         ratios[bi] = cpd_grad / cost_xgb
-    return float(ratios.mean()), float(np.percentile(ratios, 2.5)), float(np.percentile(ratios, 97.5))
+    return (
+        float(ratios.mean()),
+        float(np.percentile(ratios, 2.5)),
+        float(np.percentile(ratios, 97.5)),
+    )
 
 
-def sweet_spot_price(fire_grad, n_test_q, n_pos_recalled_xgb,
-                     cost_xgb=COST_XGB):
+def sweet_spot_price(fire_grad, n_test_q, n_pos_recalled_xgb, cost_xgb=COST_XGB):
     """Closed-form max LLM price where cppr(grad-band) <= cppr(xgb-only)."""
     n_llm = int(fire_grad.sum())
     if n_llm == 0:
         return float("inf")
     pos_caught = n_pos_recalled_xgb
-    return 0.0 if n_pos_recalled_xgb > 0 else float("nan")  # additive cascade, equal catches assumed
+    return (
+        0.0 if n_pos_recalled_xgb > 0 else float("nan")
+    )  # additive cascade, equal catches assumed
 
 
 def main():
     print(f"[iter148] loading train/test ...")
     Xtr_full, ytr_full = load(ROOT / "train_data.csv")
     Xte_full, yte_full = load(ROOT / "test_data.csv")
-    print(f"[iter148] Xtr={Xtr_full.shape} ytr_pos={ytr_full.sum()} | "
-          f"Xte={Xte_full.shape} yte_pos={yte_full.sum()}")
+    print(
+        f"[iter148] Xtr={Xtr_full.shape} ytr_pos={ytr_full.sum()} | "
+        f"Xte={Xte_full.shape} yte_pos={yte_full.sum()}"
+    )
 
     rng = np.random.default_rng(SEED)
 
@@ -163,15 +177,17 @@ def main():
             fire_grad = gradient_band_fire(scores, top_k_mask)
             n_llm = int(fire_grad.sum())
             sweet = sweet_spot_price(fire_grad, n_te, pos_caught_xgb)
-            sweet_rows.append({
-                "rate_pct": rate_pct,
-                "fset": fset_name,
-                "n_test": n_te,
-                "n_pos": n_pos_te,
-                "xgb_caught_K2": pos_caught_xgb,
-                "n_llm_grad": n_llm,
-                "sweet_spot_price_per_call": sweet,
-            })
+            sweet_rows.append(
+                {
+                    "rate_pct": rate_pct,
+                    "fset": fset_name,
+                    "n_test": n_te,
+                    "n_pos": n_pos_te,
+                    "xgb_caught_K2": pos_caught_xgb,
+                    "n_llm_grad": n_llm,
+                    "sweet_spot_price_per_call": sweet,
+                }
+            )
             for tier_name, cost_llm in LLM_PRICE_TIERS:
                 cpd_xgb = COST_XGB
                 cpd_grad = (n_te * COST_XGB + n_llm * cost_llm) / n_te
@@ -179,27 +195,30 @@ def main():
                 cppr_grad = (n_te * COST_XGB + n_llm * cost_llm) / max(1, pos_caught_xgb)
                 acd = cpd_grad / cpd_xgb
                 acd_mean, acd_lo, acd_hi = bootstrap_acd(
-                    fire_grad, n_te, COST_XGB, cost_llm, N_BOOT, SEED)
-                matrix_rows.append({
-                    "rate_pct": rate_pct,
-                    "tier": tier_name,
-                    "fset": fset_name,
-                    "cost_llm_per_call": cost_llm,
-                    "n_test": n_te,
-                    "n_pos": n_pos_te,
-                    "xgb_caught_K2": pos_caught_xgb,
-                    "n_llm_grad": n_llm,
-                    "cpd_xgb": cpd_xgb,
-                    "cpd_grad": cpd_grad,
-                    "cppr_xgb": cppr_xgb,
-                    "cppr_grad": cppr_grad,
-                    "acd": acd,
-                    "acd_boot_mean": acd_mean,
-                    "acd_boot_lo": acd_lo,
-                    "acd_boot_hi": acd_hi,
-                    "sweet_spot_price_per_call": sweet,
-                    "grad_cheaper_at_cppr": cppr_grad <= cppr_xgb,
-                })
+                    fire_grad, n_te, COST_XGB, cost_llm, N_BOOT, SEED
+                )
+                matrix_rows.append(
+                    {
+                        "rate_pct": rate_pct,
+                        "tier": tier_name,
+                        "fset": fset_name,
+                        "cost_llm_per_call": cost_llm,
+                        "n_test": n_te,
+                        "n_pos": n_pos_te,
+                        "xgb_caught_K2": pos_caught_xgb,
+                        "n_llm_grad": n_llm,
+                        "cpd_xgb": cpd_xgb,
+                        "cpd_grad": cpd_grad,
+                        "cppr_xgb": cppr_xgb,
+                        "cppr_grad": cppr_grad,
+                        "acd": acd,
+                        "acd_boot_mean": acd_mean,
+                        "acd_boot_lo": acd_lo,
+                        "acd_boot_hi": acd_hi,
+                        "sweet_spot_price_per_call": sweet,
+                        "grad_cheaper_at_cppr": cppr_grad <= cppr_xgb,
+                    }
+                )
 
     # ----------------------------------------------------------------
     # H1 -- per-tier per-rate cppr(grad) vs cppr(xgb): replicate iter-124 H1
@@ -208,25 +227,26 @@ def main():
     h1_rows = []
     for rate_pct in RATES_PCT:
         for tier_name, cost_llm in LLM_PRICE_TIERS:
-            rows = [r for r in matrix_rows
-                    if r["rate_pct"] == rate_pct and r["tier"] == tier_name]
+            rows = [r for r in matrix_rows if r["rate_pct"] == rate_pct and r["tier"] == tier_name]
             # average across 4 fsets
             mean_cppr_xgb = float(np.mean([r["cppr_xgb"] for r in rows]))
             mean_cppr_grad = float(np.mean([r["cppr_grad"] for r in rows]))
             mean_acd = float(np.mean([r["acd"] for r in rows]))
             mean_acd_lo = float(np.mean([r["acd_boot_lo"] for r in rows]))
             mean_acd_hi = float(np.mean([r["acd_boot_hi"] for r in rows]))
-            h1_rows.append({
-                "rate_pct": rate_pct,
-                "tier": tier_name,
-                "cost_llm_per_call": cost_llm,
-                "cppr_xgb_mean_across_fsets": mean_cppr_xgb,
-                "cppr_grad_mean_across_fsets": mean_cppr_grad,
-                "acd_mean": mean_acd,
-                "acd_boot_lo": mean_acd_lo,
-                "acd_boot_hi": mean_acd_hi,
-                "grad_cheaper": mean_cppr_grad <= mean_cppr_xgb,
-            })
+            h1_rows.append(
+                {
+                    "rate_pct": rate_pct,
+                    "tier": tier_name,
+                    "cost_llm_per_call": cost_llm,
+                    "cppr_xgb_mean_across_fsets": mean_cppr_xgb,
+                    "cppr_grad_mean_across_fsets": mean_cppr_grad,
+                    "acd_mean": mean_acd,
+                    "acd_boot_lo": mean_acd_lo,
+                    "acd_boot_hi": mean_acd_hi,
+                    "grad_cheaper": mean_cppr_grad <= mean_cppr_xgb,
+                }
+            )
 
     out_h1 = RES / "p8_iter148_h1_rate_tier.tsv"
     with out_h1.open("w") as f:
@@ -245,8 +265,10 @@ def main():
         w = csv.DictWriter(f, fieldnames=list(h2_rows[0].keys()), delimiter="\t")
         w.writeheader()
         w.writerows(h2_rows)
-    print(f"[iter148] H2 cheapest cell: rate={h2_row['rate_pct']}% "
-          f"tier={h2_row['tier']} fset={h2_row['fset']} acd={h2_row['acd']:.4f}")
+    print(
+        f"[iter148] H2 cheapest cell: rate={h2_row['rate_pct']}% "
+        f"tier={h2_row['tier']} fset={h2_row['fset']} acd={h2_row['acd']:.4f}"
+    )
 
     # ----------------------------------------------------------------
     # H3 -- fset sensitivity at realistic rates: per-fset average cppr_grad.
@@ -254,16 +276,17 @@ def main():
     h3_rows = []
     for fset_name in FEATURE_SETS:
         for rate_pct in RATES_PCT:
-            rows = [r for r in matrix_rows
-                    if r["fset"] == fset_name and r["rate_pct"] == rate_pct]
+            rows = [r for r in matrix_rows if r["fset"] == fset_name and r["rate_pct"] == rate_pct]
             mean_cppr_grad = float(np.mean([r["cppr_grad"] for r in rows]))
             mean_acd = float(np.mean([r["acd"] for r in rows]))
-            h3_rows.append({
-                "fset": fset_name,
-                "rate_pct": rate_pct,
-                "cppr_grad_mean_across_tiers": mean_cppr_grad,
-                "acd_mean_across_tiers": mean_acd,
-            })
+            h3_rows.append(
+                {
+                    "fset": fset_name,
+                    "rate_pct": rate_pct,
+                    "cppr_grad_mean_across_tiers": mean_cppr_grad,
+                    "acd_mean_across_tiers": mean_acd,
+                }
+            )
 
     out_h3 = RES / "p8_iter148_h3_fset_rate.tsv"
     with out_h3.open("w") as f:

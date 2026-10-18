@@ -17,6 +17,7 @@ Performs a complete health check on registry/entries/*.json:
 
 Stdlib + jsonschema + matplotlib. Designed to be cheap and to fit in CI.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -32,6 +33,7 @@ except ImportError as exc:  # pragma: no cover
     raise
 
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
@@ -45,8 +47,15 @@ FIGS = OUT / "figures"
 OUT.mkdir(parents=True, exist_ok=True)
 FIGS.mkdir(parents=True, exist_ok=True)
 
-ITEMS = ["loss_form", "reference_kl", "sampler_backend", "telemetry",
-         "group_size_schedule", "heldout_split", "decontamination"]
+ITEMS = [
+    "loss_form",
+    "reference_kl",
+    "sampler_backend",
+    "telemetry",
+    "group_size_schedule",
+    "heldout_split",
+    "decontamination",
+]
 
 
 def load_all():
@@ -108,7 +117,9 @@ def main():
                 "record_type": kind,
                 "schema_ok": len(errors) == 0,
                 "n_errors": len(errors),
-                "errors": [f"{'/'.join(map(str, e.absolute_path))}: {e.message}" for e in errors[:5]],
+                "errors": [
+                    f"{'/'.join(map(str, e.absolute_path))}: {e.message}" for e in errors[:5]
+                ],
             }
 
     # Per-entry per-item coverage (stacks only)
@@ -131,16 +142,18 @@ def main():
             framework_buckets[fw][it][1] += t
             openness_buckets[op][it][0] += f
             openness_buckets[op][it][1] += t
-            coverage_rows.append({
-                "entry_id": rid,
-                "framework": fw,
-                "openness": op,
-                "label_claimed": rec["label_claimed"],
-                "item": it,
-                "frac_reported": round(s, 3),
-                "schema_ok": int(schema_results[rid]["schema_ok"]),
-                "badge": badge,
-            })
+            coverage_rows.append(
+                {
+                    "entry_id": rid,
+                    "framework": fw,
+                    "openness": op,
+                    "label_claimed": rec["label_claimed"],
+                    "item": it,
+                    "frac_reported": round(s, 3),
+                    "schema_ok": int(schema_results[rid]["schema_ok"]),
+                    "badge": badge,
+                }
+            )
 
     # Variant-delta cross-reference
     delta_xref = defaultdict(list)  # delta_id -> list of (entry_id, status)
@@ -164,8 +177,16 @@ def main():
     # ---- Write TSV (one row per (entry, item))
     tsv_path = pathlib.Path(args.out_dir) / "registry_audit.tsv"
     with tsv_path.open("w") as f:
-        cols = ["entry_id", "framework", "openness", "label_claimed",
-                "item", "frac_reported", "schema_ok", "badge"]
+        cols = [
+            "entry_id",
+            "framework",
+            "openness",
+            "label_claimed",
+            "item",
+            "frac_reported",
+            "schema_ok",
+            "badge",
+        ]
         f.write("\t".join(cols) + "\n")
         for row in coverage_rows:
             f.write("\t".join(str(row[c]) for c in cols) + "\n")
@@ -176,15 +197,20 @@ def main():
             "n_total": sum(len(recs[k]) for k in recs),
             "n_ok": sum(1 for r in schema_results.values() if r["schema_ok"]),
             "n_fail": sum(1 for r in schema_results.values() if not r["schema_ok"]),
-            "failures": [{"entry_id": k, **{kk: vv for kk, vv in v.items() if kk != "record_type"}}
-                         for k, v in schema_results.items() if not v["schema_ok"]],
+            "failures": [
+                {"entry_id": k, **{kk: vv for kk, vv in v.items() if kk != "record_type"}}
+                for k, v in schema_results.items()
+                if not v["schema_ok"]
+            ],
         },
         "min_report_coverage": {
             "per_item": {
                 it: {
                     "filled_leaves": per_item_totals[it][0],
                     "total_leaves": per_item_totals[it][1],
-                    "frac": round(per_item_totals[it][0] / per_item_totals[it][1], 4) if per_item_totals[it][1] else 0.0,
+                    "frac": round(per_item_totals[it][0] / per_item_totals[it][1], 4)
+                    if per_item_totals[it][1]
+                    else 0.0,
                 }
                 for it in ITEMS
             },
@@ -193,10 +219,14 @@ def main():
                     it: {
                         "filled_leaves": framework_buckets[fw][it][0],
                         "total_leaves": framework_buckets[fw][it][1],
-                        "frac": round(framework_buckets[fw][it][0] / framework_buckets[fw][it][1], 4) if framework_buckets[fw][it][1] else 0.0,
+                        "frac": round(
+                            framework_buckets[fw][it][0] / framework_buckets[fw][it][1], 4
+                        )
+                        if framework_buckets[fw][it][1]
+                        else 0.0,
                     }
                     for it in ITEMS
-}
+                }
                 for fw in framework_buckets
             },
             "per_openness": {
@@ -204,7 +234,9 @@ def main():
                     it: {
                         "filled_leaves": openness_buckets[op][it][0],
                         "total_leaves": openness_buckets[op][it][1],
-                        "frac": round(openness_buckets[op][it][0] / openness_buckets[op][it][1], 4) if openness_buckets[op][it][1] else 0.0,
+                        "frac": round(openness_buckets[op][it][0] / openness_buckets[op][it][1], 4)
+                        if openness_buckets[op][it][1]
+                        else 0.0,
                     }
                     for it in ITEMS
                 }
@@ -246,15 +278,24 @@ def main():
             f, t = leaf_coverage(recs["stack"][rid]["min_report"][it])
             row.append(f / t if t else 0.0)
         matrix.append(row)
-    matrix = list(zip(*matrix))  # transpose -> items × entries
+    matrix = list(zip(*matrix, strict=False))  # transpose -> items × entries
 
     fig, ax = plt.subplots(figsize=(11.0, 4.0))
     cmap = plt.get_cmap("viridis")
     im = ax.imshow(matrix, aspect="auto", cmap=cmap, vmin=0.0, vmax=1.0)
     ax.set_xticks(range(len(entry_ids)))
-    ax.set_xticklabels([eid.replace("_qwen3.5-4b_gsm8k", "").replace("_qwen3-8b_gsm8k", "")
-                        .replace("_e3", "").replace("zvf130_", "") for eid in entry_ids],
-                       rotation=55, ha="right", fontsize=7)
+    ax.set_xticklabels(
+        [
+            eid.replace("_qwen3.5-4b_gsm8k", "")
+            .replace("_qwen3-8b_gsm8k", "")
+            .replace("_e3", "")
+            .replace("zvf130_", "")
+            for eid in entry_ids
+        ],
+        rotation=55,
+        ha="right",
+        fontsize=7,
+    )
     ax.set_yticks(range(len(items)))
     ax.set_yticklabels(items)
     ax.set_title("GRPO-Registry: per-entry MIN-REPORT coverage (fraction of leaves reported)")
@@ -267,18 +308,24 @@ def main():
 
     # ---- Console summary
     if not args.quiet:
-        print(f"[registry-audit] schema: {summary['schema_validation']['n_ok']}/"
-              f"{summary['schema_validation']['n_total']} PASS")
+        print(
+            f"[registry-audit] schema: {summary['schema_validation']['n_ok']}/"
+            f"{summary['schema_validation']['n_total']} PASS"
+        )
         if summary["schema_validation"]["n_fail"]:
             print("  FAIL:", summary["schema_validation"]["failures"])
-        print(f"[registry-audit] variant-delta cross-ref: "
-              f"{len(delta_xref)}/{len(delta_ids)} deltas claimed; "
-              f"{len(broken_refs)} broken refs")
+        print(
+            f"[registry-audit] variant-delta cross-ref: "
+            f"{len(delta_xref)}/{len(delta_ids)} deltas claimed; "
+            f"{len(broken_refs)} broken refs"
+        )
         print("[registry-audit] per-item coverage (overall):")
         for it in ITEMS:
             d = summary["min_report_coverage"]["per_item"][it]
-            print(f"  {it:24s} {d['filled_leaves']:>3d}/{d['total_leaves']:<3d}  "
-                  f"{100 * d['frac']:>5.1f}%")
+            print(
+                f"  {it:24s} {d['filled_leaves']:>3d}/{d['total_leaves']:<3d}  "
+                f"{100 * d['frac']:>5.1f}%"
+            )
         print(f"[registry-audit] wrote {tsv_path}")
         print(f"[registry-audit] wrote {json_path}")
         print(f"[registry-audit] wrote {FIGS / 'registry_coverage.png'}")

@@ -17,6 +17,7 @@ from pilot.artifacts import (
     with_fingerprint,
 )
 from pilot.protocol import build_screening_plan, load_protocol
+import pytest
 
 
 HASH = "a" * 64
@@ -246,19 +247,19 @@ class ArtifactValidationTests(unittest.TestCase):
             regime=self.plan["unit"]["regime"],
             seed=self.plan["unit"]["seed"],
         )
-        self.assertEqual(corpus_checkpoint["completed_groups"], 20)
+        assert corpus_checkpoint["completed_groups"] == 20
         checkpoint = validate_checkpoint_manifest(
             self.checkpoint(20), plan=self.plan, corpus=self.corpus
         )
-        self.assertEqual(checkpoint["step"], 20)
+        assert checkpoint["step"] == 20
         record = validate_full_record(self.full_record(), plan=self.plan, corpus=self.corpus)
-        self.assertEqual(record["status"], "completed")
+        assert record["status"] == "completed"
 
     def test_corpus_checkpoint_rejects_tampering_and_non_cadence_prefix(self) -> None:
         wrong_order = self.corpus_checkpoint()
         wrong_order["train_order_hash"] = HASH
         wrong_order = with_fingerprint(wrong_order)
-        with self.assertRaisesRegex(ArtifactValidationError, "train-order hash mismatch"):
+        with pytest.raises(ArtifactValidationError, match="train-order hash mismatch"):
             validate_corpus_checkpoint_manifest(
                 wrong_order,
                 protocol=self.protocol,
@@ -269,7 +270,7 @@ class ArtifactValidationTests(unittest.TestCase):
         non_cadence["completed_groups"] = 19
         non_cadence["groups"] = non_cadence["groups"][:19]
         non_cadence = with_fingerprint(non_cadence)
-        with self.assertRaisesRegex(ArtifactValidationError, "amended cadence"):
+        with pytest.raises(ArtifactValidationError, match="amended cadence"):
             validate_corpus_checkpoint_manifest(
                 non_cadence,
                 protocol=self.protocol,
@@ -281,7 +282,7 @@ class ArtifactValidationTests(unittest.TestCase):
         stale = copy.deepcopy(self.corpus)
         stale["protocol_sha256"] = HASH
         stale = with_fingerprint(stale)
-        with self.assertRaisesRegex(ArtifactValidationError, "protocol hash mismatch"):
+        with pytest.raises(ArtifactValidationError, match="protocol hash mismatch"):
             validate_corpus_manifest(
                 stale,
                 protocol=self.protocol,
@@ -291,7 +292,7 @@ class ArtifactValidationTests(unittest.TestCase):
         bad_ledger = copy.deepcopy(self.corpus)
         bad_ledger["charged_generated_tokens"] += 1
         bad_ledger = with_fingerprint(bad_ledger)
-        with self.assertRaisesRegex(ArtifactValidationError, "does not sum"):
+        with pytest.raises(ArtifactValidationError, match="does not sum"):
             validate_corpus_manifest(
                 bad_ledger,
                 protocol=self.protocol,
@@ -303,12 +304,12 @@ class ArtifactValidationTests(unittest.TestCase):
         wrong = self.checkpoint(20)
         wrong["corpus_fingerprint"] = HASH
         wrong = with_fingerprint(wrong)
-        with self.assertRaisesRegex(ArtifactValidationError, "corpus hash mismatch"):
+        with pytest.raises(ArtifactValidationError, match="corpus hash mismatch"):
             validate_checkpoint_manifest(wrong, plan=self.plan, corpus=self.corpus)
         incomplete = self.checkpoint(20)
         del incomplete["files"]["rng_state.pt"]
         incomplete = with_fingerprint(incomplete)
-        with self.assertRaisesRegex(ArtifactValidationError, "file set"):
+        with pytest.raises(ArtifactValidationError, match="file set"):
             validate_checkpoint_manifest(incomplete, plan=self.plan, corpus=self.corpus)
 
     def test_resume_selects_greatest_valid_checkpoint_and_reports_invalid(self) -> None:
@@ -320,20 +321,20 @@ class ArtifactValidationTests(unittest.TestCase):
             plan=self.plan,
             corpus=self.corpus,
         )
-        self.assertEqual(selected["step"], 60)
-        self.assertEqual(len(errors), 1)
-        self.assertIn("replay cursor", errors[0])
+        assert selected["step"] == 60
+        assert len(errors) == 1
+        assert "replay cursor" in errors[0]
 
     def test_full_record_rejects_unfinished_wandb_or_missing_evaluation(self) -> None:
         unfinished = self.full_record()
         unfinished["wandb"]["state"] = "running"
         unfinished = with_fingerprint(unfinished)
-        with self.assertRaisesRegex(ArtifactValidationError, "not finished"):
+        with pytest.raises(ArtifactValidationError, match="not finished"):
             validate_full_record(unfinished, plan=self.plan, corpus=self.corpus)
         missing = self.full_record()
         missing["evaluations"].pop()
         missing = with_fingerprint(missing)
-        with self.assertRaisesRegex(ArtifactValidationError, "evaluation set"):
+        with pytest.raises(ArtifactValidationError, match="evaluation set"):
             validate_full_record(missing, plan=self.plan, corpus=self.corpus)
 
     def test_full_record_rejects_invalid_gradient_diagnostics(self) -> None:
@@ -349,7 +350,7 @@ class ArtifactValidationTests(unittest.TestCase):
                 invalid = self.full_record()
                 invalid["manifest"]["gradient_receipts"][0][field] = value
                 invalid = with_fingerprint(invalid)
-                with self.assertRaisesRegex(ArtifactValidationError, error):
+                with pytest.raises(ArtifactValidationError, match=error):
                     validate_full_record(invalid, plan=self.plan, corpus=self.corpus)
 
     def test_full_record_accepts_explicit_joint_zero_receipt(self) -> None:
@@ -372,10 +373,7 @@ class ArtifactValidationTests(unittest.TestCase):
         validated = validate_full_record(
             with_fingerprint(record), plan=self.plan, corpus=self.corpus
         )
-        self.assertEqual(
-            validated["manifest"]["gradient_receipts"][0]["gradient_relation"],
-            "joint_zero",
-        )
+        assert validated["manifest"]["gradient_receipts"][0]["gradient_relation"] == "joint_zero"
 
     def test_full_record_rejects_fabricated_zero_vector_cosine(self) -> None:
         record = self.full_record()
@@ -389,7 +387,7 @@ class ArtifactValidationTests(unittest.TestCase):
                 "native_gradient_norm": 0.0,
             }
         )
-        with self.assertRaisesRegex(ArtifactValidationError, "null diagnostics"):
+        with pytest.raises(ArtifactValidationError, match="null diagnostics"):
             validate_full_record(with_fingerprint(record), plan=self.plan, corpus=self.corpus)
 
     def test_full_record_accepts_explicit_one_sided_zero_receipt(self) -> None:
@@ -412,10 +410,7 @@ class ArtifactValidationTests(unittest.TestCase):
         validated = validate_full_record(
             with_fingerprint(record), plan=self.plan, corpus=self.corpus
         )
-        self.assertEqual(
-            validated["manifest"]["gradient_receipts"][0]["gradient_relation"],
-            "intended_zero",
-        )
+        assert validated["manifest"]["gradient_receipts"][0]["gradient_relation"] == "intended_zero"
 
 
 if __name__ == "__main__":

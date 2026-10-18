@@ -29,8 +29,9 @@ Outputs
 
 Stdlib only. ≤300 LoC.
 """
+
 from __future__ import annotations
-import csv, json, pathlib, sys
+import csv, json, pathlib
 from collections import defaultdict
 
 HERE = pathlib.Path(__file__).resolve().parent.parent.parent  # repo root
@@ -100,15 +101,17 @@ def build_matrix(stacks, deltas):
                 status = "unknown_status"
             else:
                 status = claimed_status
-            rows.append({
-                "delta_id": did,
-                "component": comp,
-                "stack_id": sid,
-                "framework": srec["framework"]["name"],
-                "openness": srec["framework"]["openness"],
-                "label_claimed": srec["label_claimed"],
-                "status": status,
-            })
+            rows.append(
+                {
+                    "delta_id": did,
+                    "component": comp,
+                    "stack_id": sid,
+                    "framework": srec["framework"]["name"],
+                    "openness": srec["framework"]["openness"],
+                    "label_claimed": srec["label_claimed"],
+                    "status": status,
+                }
+            )
     return rows, delta_components
 
 
@@ -143,13 +146,20 @@ def summarise(rows, delta_components, stacks, measured):
         if r["status"] in ("implemented", "surrogate"):
             for panel in ("n2_same_stack_last10", "zvf130_5seed"):
                 for m in measured.get((r["delta_id"], panel), []):
-                    measured_linkage.append({
-                        "delta_id": r["delta_id"], "panel": panel,
-                        "stack_status": r["status"], "stack_id": r["stack_id"],
-                        "metric": m["metric"], "delta": m["delta"],
-                        "ci_low": m["ci_low"], "ci_high": m["ci_high"],
-                        "n": m["n"], "significant": m["significant"],
-                    })
+                    measured_linkage.append(
+                        {
+                            "delta_id": r["delta_id"],
+                            "panel": panel,
+                            "stack_status": r["status"],
+                            "stack_id": r["stack_id"],
+                            "metric": m["metric"],
+                            "delta": m["delta"],
+                            "ci_low": m["ci_low"],
+                            "ci_high": m["ci_high"],
+                            "n": m["n"],
+                            "significant": m["significant"],
+                        }
+                    )
     summary = {
         "n_delta_records": len({did for did, _ in delta_components}),
         "n_delta_components": len(delta_components),
@@ -183,8 +193,15 @@ def main():
     summary, measured_linkage = summarise(rows, delta_components, stacks, measured)
     # Write TSV
     out_tsv = OUTDIR / "p6_delta_implementation_matrix.tsv"
-    fields = ["delta_id", "component", "stack_id", "framework", "openness",
-              "label_claimed", "status"]
+    fields = [
+        "delta_id",
+        "component",
+        "stack_id",
+        "framework",
+        "openness",
+        "label_claimed",
+        "status",
+    ]
     with out_tsv.open("w", newline="") as fh:
         w = csv.DictWriter(fh, fieldnames=fields, delimiter="\t")
         w.writeheader()
@@ -194,8 +211,7 @@ def main():
     out_link = OUTDIR / "p6_delta_implementation_matrix_measured_linkage.tsv"
     if measured_linkage:
         with out_link.open("w", newline="") as fh:
-            w = csv.DictWriter(fh, fieldnames=list(measured_linkage[0].keys()),
-                               delimiter="\t")
+            w = csv.DictWriter(fh, fieldnames=list(measured_linkage[0].keys()), delimiter="\t")
             w.writeheader()
             for r in measured_linkage:
                 w.writerow(r)
@@ -204,28 +220,32 @@ def main():
     out_json.write_text(json.dumps(summary, indent=2, sort_keys=True))
     # Headline report
     print(f"[iter 38 P6] delta-implementation matrix")
-    print(f"  delta records: {summary['n_delta_records']}, "
-          f"(delta, component) pairs: {summary['n_delta_components']}, "
-          f"stacks: {summary['n_stacks']}")
+    print(
+        f"  delta records: {summary['n_delta_records']}, "
+        f"(delta, component) pairs: {summary['n_delta_components']}, "
+        f"stacks: {summary['n_stacks']}"
+    )
     print(f"  cells (cross product): {summary['n_cells']}")
-    print(f"  applicable cells: {summary['n_applicable_cells']}  "
-          f"not_applicable cells: {summary['n_not_applicable_cells']}")
-    print(f"  implemented={summary['n_implemented']}  "
-          f"surrogate={summary['n_surrogate']}  "
-          f"absent={summary['n_absent']}  "
-          f"unknown={summary['n_unknown']}")
-    print(f"  registry-gap pairs (zero claims): "
-          f"{summary['n_registry_gap_pairs']}/{summary['n_delta_components']}")
+    print(
+        f"  applicable cells: {summary['n_applicable_cells']}  "
+        f"not_applicable cells: {summary['n_not_applicable_cells']}"
+    )
+    print(
+        f"  implemented={summary['n_implemented']}  "
+        f"surrogate={summary['n_surrogate']}  "
+        f"absent={summary['n_absent']}  "
+        f"unknown={summary['n_unknown']}"
+    )
+    print(
+        f"  registry-gap pairs (zero claims): "
+        f"{summary['n_registry_gap_pairs']}/{summary['n_delta_components']}"
+    )
     print(f"  measured-linkage rows: {summary['n_measured_linkage_rows']}")
-    print(f"  claim rate (impl/appl): "
-          f"{summary['claim_rate_implemented']:.4f}")
-    print(f"  wrote: {out_tsv.relative_to(HERE)}  "
-          f"({out_tsv.stat().st_size}B)")
-    print(f"  wrote: {out_json.relative_to(HERE)}  "
-          f"({out_json.stat().st_size}B)")
+    print(f"  claim rate (impl/appl): {summary['claim_rate_implemented']:.4f}")
+    print(f"  wrote: {out_tsv.relative_to(HERE)}  ({out_tsv.stat().st_size}B)")
+    print(f"  wrote: {out_json.relative_to(HERE)}  ({out_json.stat().st_size}B)")
     if measured_linkage:
-        print(f"  wrote: {out_link.relative_to(HERE)}  "
-              f"({out_link.stat().st_size}B)")
+        print(f"  wrote: {out_link.relative_to(HERE)}  ({out_link.stat().st_size}B)")
 
 
 if __name__ == "__main__":

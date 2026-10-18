@@ -11,10 +11,12 @@ sd, t-based 95% CI, paired difference vs grpo (paired t, df=7) and a
 seed-level paired TOST at eps=0.02, plus mean ZVF, last-10 reward, rollouts
 and generated tokens.
 """
+
 import csv
 from pathlib import Path
 
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
@@ -29,7 +31,9 @@ ARMS = ("grpo", "aero", "dapo", "drgrpo", "gspo")
 
 
 def load():
-    rows = [r for r in csv.DictReader((l for l in open(SRC) if not l.startswith("#")), delimiter="\t")]
+    rows = [
+        r for r in csv.DictReader((l for l in open(SRC) if not l.startswith("#")), delimiter="\t")
+    ]
     by = {a: {int(r["seed"]): r for r in rows if r["arm"] == a} for a in ARMS}
     seeds = sorted(by["grpo"])
     assert all(sorted(by[a]) == seeds for a in ARMS), "arms must share seeds"
@@ -48,21 +52,33 @@ def main():
     out = []
     for arm in ARMS:
         h = col(by, arm, seeds, "heldout_score")
-        row = {"arm": arm, "n_seeds": n, "heldout_mean": h.mean(), "heldout_sd": h.std(ddof=1),
-               "heldout_ci_low": h.mean() - tcrit * h.std(ddof=1) / np.sqrt(n),
-               "heldout_ci_high": h.mean() + tcrit * h.std(ddof=1) / np.sqrt(n),
-               "mean_zvf": col(by, arm, seeds, "mean_zvf").mean(),
-               "last10_reward": col(by, arm, seeds, "last10_reward").mean(),
-               "rollouts": col(by, arm, seeds, "rollouts").mean(),
-               "num_tokens": col(by, arm, seeds, "num_tokens").mean()}
+        row = {
+            "arm": arm,
+            "n_seeds": n,
+            "heldout_mean": h.mean(),
+            "heldout_sd": h.std(ddof=1),
+            "heldout_ci_low": h.mean() - tcrit * h.std(ddof=1) / np.sqrt(n),
+            "heldout_ci_high": h.mean() + tcrit * h.std(ddof=1) / np.sqrt(n),
+            "mean_zvf": col(by, arm, seeds, "mean_zvf").mean(),
+            "last10_reward": col(by, arm, seeds, "last10_reward").mean(),
+            "rollouts": col(by, arm, seeds, "rollouts").mean(),
+            "num_tokens": col(by, arm, seeds, "num_tokens").mean(),
+        }
         if arm != "grpo":
             d = h - base
             se = d.std(ddof=1) / np.sqrt(n)
-            row.update({"diff_vs_grpo": d.mean(), "diff_ci_low": d.mean() - tcrit * se,
-                        "diff_ci_high": d.mean() + tcrit * se,
-                        "paired_t_p": stats.ttest_rel(h, base).pvalue,
-                        "tost_p_eps0.02": max(stats.t.sf((d.mean() + EPS) / se, n - 1),
-                                              stats.t.cdf((d.mean() - EPS) / se, n - 1))})
+            row.update(
+                {
+                    "diff_vs_grpo": d.mean(),
+                    "diff_ci_low": d.mean() - tcrit * se,
+                    "diff_ci_high": d.mean() + tcrit * se,
+                    "paired_t_p": stats.ttest_rel(h, base).pvalue,
+                    "tost_p_eps0.02": max(
+                        stats.t.sf((d.mean() + EPS) / se, n - 1),
+                        stats.t.cdf((d.mean() - EPS) / se, n - 1),
+                    ),
+                }
+            )
         out.append(row)
     keys = list(out[1])
     with open(OUT, "w", newline="") as fh:
@@ -79,14 +95,20 @@ def main():
         h = col(by, arm, seeds, "heldout_score")
         ax_a.scatter(np.full(n, i) + np.linspace(-0.15, 0.15, n), h, s=14, alpha=0.6)
         r = out[i]
-        ax_a.errorbar(i, r["heldout_mean"], yerr=r["heldout_mean"] - r["heldout_ci_low"], fmt="ko", capsize=4)
+        ax_a.errorbar(
+            i, r["heldout_mean"], yerr=r["heldout_mean"] - r["heldout_ci_low"], fmt="ko", capsize=4
+        )
         z = col(by, arm, seeds, "mean_zvf")
         ax_b.scatter(np.full(n, i) + np.linspace(-0.15, 0.15, n), z, s=14, alpha=0.6)
         ax_b.plot([i - 0.25, i + 0.25], [z.mean()] * 2, "k-")
-    for ax, lab, t in ((ax_a, "Held-out GSM8K accuracy (n=500)", "(A) Held-out accuracy, 8 seeds"),
-                       (ax_b, "Mean ZVF over training", "(B) Mean zero-variance fraction")):
+    for ax, lab, t in (
+        (ax_a, "Held-out GSM8K accuracy (n=500)", "(A) Held-out accuracy, 8 seeds"),
+        (ax_b, "Mean ZVF over training", "(B) Mean zero-variance fraction"),
+    ):
         ax.set_xticks(range(len(ARMS)), ARMS)
-        ax.set_ylabel(lab); ax.set_title(t); ax.grid(alpha=0.3)
+        ax.set_ylabel(lab)
+        ax.set_title(t)
+        ax.grid(alpha=0.3)
     fig.tight_layout()
     fig.savefig(FIG, dpi=200)
     print(f"wrote {FIG.name}")

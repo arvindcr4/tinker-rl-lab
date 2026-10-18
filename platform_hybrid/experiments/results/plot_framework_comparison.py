@@ -12,6 +12,7 @@ import json
 from pathlib import Path
 
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
@@ -39,34 +40,50 @@ def main() -> None:
     fig, ax = plt.subplots(figsize=(7.0, 4.4), dpi=150)
     x = np.arange(len(names))
     bars = []
-    for i, (name, val, mode) in enumerate(zip(names, last10, modes)):
+    for i, (name, val, mode) in enumerate(zip(names, last10, modes, strict=False)):
         color = COLORS.get(name, "#555")
         hatch = "////" if mode == "dryrun" else None
         alpha = 0.55 if mode == "dryrun" else 0.95
         edge = "#222"
         b = ax.bar(
-            x[i], val, width=0.62,
-            color=color, alpha=alpha,
-            edgecolor=edge, linewidth=1.0, hatch=hatch,
+            x[i],
+            val,
+            width=0.62,
+            color=color,
+            alpha=alpha,
+            edgecolor=edge,
+            linewidth=1.0,
+            hatch=hatch,
         )
         bars.append(b)
 
     ax.set_xticks(x)
     ax.set_xticklabels(names, fontsize=11)
     ax.set_ylabel("Last-10 reward (GSM8K-500, G=8, lr=1e-5, 30 steps)", fontsize=10)
-    ax.set_title("Framework gap: Qwen3-8B GRPO, identical config across launchers",
-                 fontsize=12, fontweight="bold")
+    ax.set_title(
+        "Framework gap: Qwen3-8B GRPO, identical config across launchers",
+        fontsize=12,
+        fontweight="bold",
+    )
     ax.set_ylim(0, max(1.0, max(last10) * 1.25))
     ax.grid(axis="y", alpha=0.25, linestyle="--")
     ax.set_axisbelow(True)
 
     # Value labels
-    for xi, val, mode in zip(x, last10, modes):
+    for xi, val, mode in zip(x, last10, modes, strict=False):
         label = f"{val:.3f}"
         if mode == "dryrun":
             label += "\n[awaiting H100]"
-        ax.text(xi, val + 0.02, label, ha="center", va="bottom", fontsize=9,
-                color="#222", fontweight="bold" if mode == "real" else "normal")
+        ax.text(
+            xi,
+            val + 0.02,
+            label,
+            ha="center",
+            va="bottom",
+            fontsize=9,
+            color="#222",
+            fontweight="bold" if mode == "real" else "normal",
+        )
 
     # Footer / legend
     has_dry = any(m == "dryrun" for m in modes)

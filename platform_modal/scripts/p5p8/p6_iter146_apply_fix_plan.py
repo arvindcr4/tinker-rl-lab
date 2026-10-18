@@ -14,6 +14,7 @@ For each row in p6_iter146_fix_plan.tsv:
 Output: platform_hybrid/experiments/results/p5p8/p6_iter146_patch_log.tsv
         platform_hybrid/experiments/results/p5p8/p6_iter146_post_patch_summary.json
 """
+
 import csv
 import json
 import glob
@@ -22,8 +23,7 @@ import sys
 
 WORKTREE = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 REG_DIR = os.path.join(WORKTREE, "registry", "entries")
-FIX_TSV = os.path.join(WORKTREE, "experiments", "results", "p5p8",
-                       "p6_iter146_fix_plan.tsv")
+FIX_TSV = os.path.join(WORKTREE, "experiments", "results", "p5p8", "p6_iter146_fix_plan.tsv")
 OUT_DIR = os.path.join(WORKTREE, "experiments", "results", "p5p8")
 
 
@@ -57,29 +57,33 @@ def main():
             continue
         d = json.load(open(fpath))
         changed = False
-        for m in (d.get("measured") or []):
+        for m in d.get("measured") or []:
             if m.get("metric") == metric and m.get("panel") == panel:
                 old = m.get("source", "")
                 m["source"] = new_src
                 # Append fix note (preserving any prior note)
                 prior = m.get("note", "")
-                fix_note = ("iter-146 provenance-recompute audit: stored delta "
-                            f"matches recompute from {new_src}; source path was "
-                            f"misattributed to {old}; patched in iter-146")
+                fix_note = (
+                    "iter-146 provenance-recompute audit: stored delta "
+                    f"matches recompute from {new_src}; source path was "
+                    f"misattributed to {old}; patched in iter-146"
+                )
                 if prior:
                     m["note"] = prior + " | " + fix_note
                 else:
                     m["note"] = fix_note
                 changed = True
-                log.append({
-                    "entry": eid,
-                    "metric": metric,
-                    "panel": panel,
-                    "old_source": old,
-                    "new_source": new_src,
-                    "stored_delta": m.get("delta"),
-                    "status": "PATCHED",
-                })
+                log.append(
+                    {
+                        "entry": eid,
+                        "metric": metric,
+                        "panel": panel,
+                        "old_source": old,
+                        "new_source": new_src,
+                        "stored_delta": m.get("delta"),
+                        "status": "PATCHED",
+                    }
+                )
                 patched += 1
         if changed:
             with open(fpath, "w") as f:
@@ -101,12 +105,23 @@ def main():
 
     out_log = os.path.join(OUT_DIR, "p6_iter146_patch_log.tsv")
     with open(out_log, "w") as f:
-        f.write("entry\tmetric\tpanel\told_source\tnew_source\t"
-                "stored_delta\tstatus\n")
+        f.write("entry\tmetric\tpanel\told_source\tnew_source\tstored_delta\tstatus\n")
         for r in log:
-            f.write("\t".join(str(r.get(c, "")) for c in
-                              ["entry", "metric", "panel", "old_source",
-                               "new_source", "stored_delta", "status"]) + "\n")
+            f.write(
+                "\t".join(
+                    str(r.get(c, ""))
+                    for c in [
+                        "entry",
+                        "metric",
+                        "panel",
+                        "old_source",
+                        "new_source",
+                        "stored_delta",
+                        "status",
+                    ]
+                )
+                + "\n"
+            )
 
     out_json = os.path.join(OUT_DIR, "p6_iter146_post_patch_summary.json")
     summary = {

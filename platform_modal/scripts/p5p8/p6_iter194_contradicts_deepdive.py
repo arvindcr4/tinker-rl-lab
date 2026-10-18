@@ -22,12 +22,12 @@ bootstrap RNG seeds on one dataset, not independent training seeds.
 Outputs are versioned under p5p8/review18_v2; original entries are preserved
 inside each uniquely named proposal record for provenance.
 """
+
 from __future__ import annotations
 import csv
 import json
 import math
 import random
-import statistics
 from collections import defaultdict
 from pathlib import Path
 
@@ -82,7 +82,7 @@ def paired_step_bootstrap_pct(a, b, n_boot=N_BOOT, seed=DEFAULT_SEED):
     rng = random.Random(seed)
     n = min(len(a), len(b))
     a, b = a[:n], b[:n]
-    diffs = [bi - ai for ai, bi in zip(a, b)]
+    diffs = [bi - ai for ai, bi in zip(a, b, strict=False)]
     point = sum(diffs) / len(diffs)
     boots = []
     for _ in range(n_boot):
@@ -100,7 +100,7 @@ def bca_bootstrap_ci(a, b, n_boot=N_BOOT, seed=DEFAULT_SEED, alpha=0.05):
     rng = random.Random(seed)
     n = min(len(a), len(b))
     a, b = a[:n], b[:n]
-    diffs = [bi - ai for ai, bi in zip(a, b)]
+    diffs = [bi - ai for ai, bi in zip(a, b, strict=False)]
     point = sum(diffs) / len(diffs)
     # bias-correction z0
     boots_for_z0 = []
@@ -110,46 +110,70 @@ def bca_bootstrap_ci(a, b, n_boot=N_BOOT, seed=DEFAULT_SEED, alpha=0.05):
     prop_less = sum(1 for b_ in boots_for_z0 if b_ < point) / n_boot
     # numerical safety: clip prop_less away from {0, 1} to avoid ndtri -> inf
     prop_less = max(min(prop_less, 1 - 1e-6), 1e-6)
+
     # bias-correction: use normal-approx inverse-CDF
     def ndtri(p):
         # Beasley-Springer-Moro normal quantile (good to ~1e-9)
         if p <= 0 or p >= 1:
             return float("-inf") if p <= 0 else float("inf")
-        a_ = [-3.969683028665376e+01, 2.209460984245205e+02,
-              -2.759285104469687e+02, 1.383577518672690e+02,
-              -3.066479806614716e+01, 2.506628277459239e+00]
-        b_ = [-5.447609879822406e+01, 1.615858368580409e+02,
-              -1.556989798598866e+02, 6.680131188771972e+01,
-              -1.328068155288572e+01]
-        c_ = [-7.784894002430293e-03, -3.223964580411365e-01,
-              -2.400758277161838e+00, -2.549732539343734e+00,
-              4.374664141464968e+00, 2.938163982698783e+00]
-        d_ = [7.784695709041462e-03, 3.224671290700398e-01,
-              2.445134137142996e+00, 3.754408661907416e+00]
+        a_ = [
+            -3.969683028665376e01,
+            2.209460984245205e02,
+            -2.759285104469687e02,
+            1.383577518672690e02,
+            -3.066479806614716e01,
+            2.506628277459239e00,
+        ]
+        b_ = [
+            -5.447609879822406e01,
+            1.615858368580409e02,
+            -1.556989798598866e02,
+            6.680131188771972e01,
+            -1.328068155288572e01,
+        ]
+        c_ = [
+            -7.784894002430293e-03,
+            -3.223964580411365e-01,
+            -2.400758277161838e00,
+            -2.549732539343734e00,
+            4.374664141464968e00,
+            2.938163982698783e00,
+        ]
+        d_ = [
+            7.784695709041462e-03,
+            3.224671290700398e-01,
+            2.445134137142996e00,
+            3.754408661907416e00,
+        ]
         plow = 0.02425
         phigh = 1 - plow
         if p < plow:
             q = math.sqrt(-2 * math.log(p))
-            return (((((c_[0]*q+c_[1])*q+c_[2])*q+c_[3])*q+c_[4])*q+c_[5]) / \
-                   ((((d_[0]*q+d_[1])*q+d_[2])*q+d_[3])*q+1)
+            return (((((c_[0] * q + c_[1]) * q + c_[2]) * q + c_[3]) * q + c_[4]) * q + c_[5]) / (
+                (((d_[0] * q + d_[1]) * q + d_[2]) * q + d_[3]) * q + 1
+            )
         if p <= phigh:
             q = p - 0.5
             r = q * q
-            return (((((a_[0]*r+a_[1])*r+a_[2])*r+a_[3])*r+a_[4])*r+a_[5])*q / \
-                   (((((b_[0]*r+b_[1])*r+b_[2])*r+b_[3])*r+b_[4])*r+1)
+            return (
+                (((((a_[0] * r + a_[1]) * r + a_[2]) * r + a_[3]) * r + a_[4]) * r + a_[5])
+                * q
+                / (((((b_[0] * r + b_[1]) * r + b_[2]) * r + b_[3]) * r + b_[4]) * r + 1)
+            )
         q = math.sqrt(-2 * math.log(1 - p))
-        return -(((((c_[0]*q+c_[1])*q+c_[2])*q+c_[3])*q+c_[4])*q+c_[5]) / \
-                ((((d_[0]*q+d_[1])*q+d_[2])*q+d_[3])*q+1)
+        return -(((((c_[0] * q + c_[1]) * q + c_[2]) * q + c_[3]) * q + c_[4]) * q + c_[5]) / (
+            (((d_[0] * q + d_[1]) * q + d_[2]) * q + d_[3]) * q + 1
+        )
 
     z0 = ndtri(prop_less)
     # acceleration jackknife (leave-one-step-out)
     jk = []
     for i in range(n):
-        rest = diffs[:i] + diffs[i+1:]
+        rest = diffs[:i] + diffs[i + 1 :]
         jk.append(sum(rest) / len(rest))
     jk_mean = sum(jk) / len(jk)
     num = sum((jk_mean - j) ** 3 for j in jk)
-    den = (sum((jk_mean - j) ** 2 for j in jk) ** 1.5)
+    den = sum((jk_mean - j) ** 2 for j in jk) ** 1.5
     a_acc = num / (6 * den) if den > 0 else 0.0
     z_lo = ndtri(alpha / 2)
     z_hi = ndtri(1 - alpha / 2)
@@ -174,7 +198,7 @@ def cohen_d_paired(a, b):
     """Cohen's d for paired samples: mean(b-a) / sd(b-a)."""
     n = min(len(a), len(b))
     a, b = a[:n], b[:n]
-    diffs = [bi - ai for ai, bi in zip(a, b)]
+    diffs = [bi - ai for ai, bi in zip(a, b, strict=False)]
     m = sum(diffs) / len(diffs)
     var = sum((d - m) ** 2 for d in diffs) / max(1, len(diffs) - 1)
     sd = math.sqrt(var) if var > 0 else 0.0
@@ -199,11 +223,11 @@ def leave_one_out_jackknife(a, b):
     """Leave-one-step-out jackknife on mean(b - a). Returns (mean, se, lo, hi)."""
     n = min(len(a), len(b))
     a, b = a[:n], b[:n]
-    diffs = [bi - ai for ai, bi in zip(a, b)]
+    diffs = [bi - ai for ai, bi in zip(a, b, strict=False)]
     point = sum(diffs) / len(diffs)
     jk = []
     for i in range(len(diffs)):
-        rest = diffs[:i] + diffs[i+1:]
+        rest = diffs[:i] + diffs[i + 1 :]
         jk.append(sum(rest) / len(rest))
     jk_mean = sum(jk) / len(jk)
     var = sum((j - jk_mean) ** 2 for j in jk) / max(1, len(jk) - 1)
@@ -213,12 +237,19 @@ def leave_one_out_jackknife(a, b):
 
 def amendment_proposal(checks, evidence_complete):
     required = {"h1", "h2b", "h3", "h4", "h5"}
-    eligible = evidence_complete and set(checks) == required and all(v is True for v in checks.values())
-    return {"protocol_version": "review18-v2", "robustness": checks,
-            "eligible_for_human_review": bool(eligible),
-            "status": "PROPOSED_REQUIRES_INDEPENDENT_VALIDATION" if eligible else "FAILED_OR_INCONCLUSIVE",
-            "proposed_sign": "<=0" if eligible else None,
-            "registry_mutated": False}
+    eligible = (
+        evidence_complete and set(checks) == required and all(v is True for v in checks.values())
+    )
+    return {
+        "protocol_version": "review18-v2",
+        "robustness": checks,
+        "eligible_for_human_review": bool(eligible),
+        "status": "PROPOSED_REQUIRES_INDEPENDENT_VALIDATION"
+        if eligible
+        else "FAILED_OR_INCONCLUSIVE",
+        "proposed_sign": "<=0" if eligible else None,
+        "registry_mutated": False,
+    }
 
 
 def main():
@@ -235,16 +266,18 @@ def main():
         a, b = last10[BASE], last10[variant]
         for seed in MULTISEED_SEEDS:
             d, lo, hi = paired_step_bootstrap_pct(a, b, seed=seed)
-            multiseed_rows.append({
-                "variant": variant,
-                "metric": "reward_mean",
-                "panel": "n2_same_stack_last10",
-                "seed": seed,
-                "delta": round(d, 6),
-                "ci_low": round(lo, 6),
-                "ci_high": round(hi, 6),
-                "significant": bool(hi < 0),
-            })
+            multiseed_rows.append(
+                {
+                    "variant": variant,
+                    "metric": "reward_mean",
+                    "panel": "n2_same_stack_last10",
+                    "seed": seed,
+                    "delta": round(d, 6),
+                    "ci_low": round(lo, 6),
+                    "ci_high": round(hi, 6),
+                    "significant": bool(hi < 0),
+                }
+            )
 
     # ----- R2: BCa bootstrap CIs -----
     bca_rows = []
@@ -256,22 +289,24 @@ def main():
         d_pct, lo_pct, hi_pct = paired_step_bootstrap_pct(a, b)
         # jackknife for acceleration
         pt_jk, se_jk, lo_jk, hi_jk = leave_one_out_jackknife(a, b)
-        bca_rows.append({
-            "variant": variant,
-            "metric": "reward_mean",
-            "panel": "n2_same_stack_last10",
-            "point": round(d_pct, 6),
-            "pct_ci_low": round(lo_pct, 6),
-            "pct_ci_high": round(hi_pct, 6),
-            "bca_ci_low": round(lo_bca, 6),
-            "bca_ci_high": round(hi_bca, 6),
-            "jk_ci_low": round(lo_jk, 6),
-            "jk_ci_high": round(hi_jk, 6),
-            "jk_se": round(se_jk, 6),
-            "cohens_d": round(cohen_d_paired(a, b), 4),
-            "cliffs_delta": round(cliffs_delta(a, b), 4),
-            "n_steps": len(b),
-        })
+        bca_rows.append(
+            {
+                "variant": variant,
+                "metric": "reward_mean",
+                "panel": "n2_same_stack_last10",
+                "point": round(d_pct, 6),
+                "pct_ci_low": round(lo_pct, 6),
+                "pct_ci_high": round(hi_pct, 6),
+                "bca_ci_low": round(lo_bca, 6),
+                "bca_ci_high": round(hi_bca, 6),
+                "jk_ci_low": round(lo_jk, 6),
+                "jk_ci_high": round(hi_jk, 6),
+                "jk_se": round(se_jk, 6),
+                "cohens_d": round(cohen_d_paired(a, b), 4),
+                "cliffs_delta": round(cliffs_delta(a, b), 4),
+                "n_steps": len(b),
+            }
+        )
 
     # ----- R3: leave-one-step-out jackknife on each step -----
     jackknife_rows = []
@@ -279,17 +314,19 @@ def main():
         last10 = slice_metric(n2, "reward_mean", 30, 39)
         a, b = last10[BASE], last10[variant]
         for i in range(len(b)):
-            a_loo = a[:i] + a[i+1:]
-            b_loo = b[:i] + b[i+1:]
+            a_loo = a[:i] + a[i + 1 :]
+            b_loo = b[:i] + b[i + 1 :]
             d, _, _ = paired_step_bootstrap_pct(a_loo, b_loo)
-            jackknife_rows.append({
-                "variant": variant,
-                "metric": "reward_mean",
-                "panel": "n2_same_stack_last10_loo",
-                "left_out_step": 30 + i,
-                "loo_delta": round(d, 6),
-                "loo_sign_consistent_with_full": bool(d < 0),  # full deltas are negative
-            })
+            jackknife_rows.append(
+                {
+                    "variant": variant,
+                    "metric": "reward_mean",
+                    "panel": "n2_same_stack_last10_loo",
+                    "left_out_step": 30 + i,
+                    "loo_delta": round(d, 6),
+                    "loo_sign_consistent_with_full": bool(d < 0),  # full deltas are negative
+                }
+            )
 
     # ----- R4: multi-window sensitivity -----
     window_rows = []
@@ -302,20 +339,24 @@ def main():
             if not a or not b:
                 continue
             d, lo, hi = paired_step_bootstrap_pct(a, b)
-            window_rows.append({
-                "variant": variant,
-                "metric": "reward_mean",
-                "panel": f"n2_same_stack_last{w}",
-                "window": w,
-                "step_lo": step_lo,
-                "step_hi": step_hi,
-                "delta": round(d, 6),
-                "ci_low": round(lo, 6),
-                "ci_high": round(hi, 6),
-                "significant": bool(hi < 0 or lo > 0),
-                "direction": "negative" if d < 0 else ("positive" if d > 0 else "zero"),
-                "contradicts_predicted_sign_ge_0": bool(hi < 0),  # predicted ">=0" but actually <0
-            })
+            window_rows.append(
+                {
+                    "variant": variant,
+                    "metric": "reward_mean",
+                    "panel": f"n2_same_stack_last{w}",
+                    "window": w,
+                    "step_lo": step_lo,
+                    "step_hi": step_hi,
+                    "delta": round(d, 6),
+                    "ci_low": round(lo, 6),
+                    "ci_high": round(hi, 6),
+                    "significant": bool(hi < 0 or lo > 0),
+                    "direction": "negative" if d < 0 else ("positive" if d > 0 else "zero"),
+                    "contradicts_predicted_sign_ge_0": bool(
+                        hi < 0
+                    ),  # predicted ">=0" but actually <0
+                }
+            )
 
     # ----- R5: cross-panel consistency (zvf130) -----
     cross_panel_rows = []
@@ -326,60 +367,64 @@ def main():
         sd_a = float(zvr[BASE]["zvf_risk_sd"] or 0)
         sd_b = float(zvr[variant]["zvf_risk_sd"] or 0)
         delta = b - a
-        se = math.sqrt((sd_a ** 2 + sd_b ** 2) / 5)
+        se = math.sqrt((sd_a**2 + sd_b**2) / 5)
         ci_lo = delta - 1.96 * se
         ci_hi = delta + 1.96 * se
         # also for mag_mean
         ma = float(zvr[BASE]["mag_mean"])
         mb = float(zvr[variant]["mag_mean"])
-        cross_panel_rows.append({
-            "variant": variant,
-            "metric_zvf_risk_mean": round(delta, 6),
-            "zvf_risk_ci": [round(ci_lo, 6), round(ci_hi, 6)],
-            "zvf_risk_significant_negative": bool(ci_hi < 0),
-            "mag_mean_delta": round(mb - ma, 6),
-            "mag_mean_base": round(ma, 6),
-            "mag_mean_variant": round(mb, 6),
-            "interpretation": (
-                f"zvf_risk_mean is significantly LOWER for {variant} than grpo "
-                f"(delta={delta:.4f}, CI=[{ci_lo:.4f},{ci_hi:.4f}]), but "
-                f"reward_mean is significantly LOWER on n2_same_stack_last10 — "
-                f"i.e. {variant} trades reward for zvf reduction."
-            ),
-        })
+        cross_panel_rows.append(
+            {
+                "variant": variant,
+                "metric_zvf_risk_mean": round(delta, 6),
+                "zvf_risk_ci": [round(ci_lo, 6), round(ci_hi, 6)],
+                "zvf_risk_significant_negative": bool(ci_hi < 0),
+                "mag_mean_delta": round(mb - ma, 6),
+                "mag_mean_base": round(ma, 6),
+                "mag_mean_variant": round(mb, 6),
+                "interpretation": (
+                    f"zvf_risk_mean is significantly LOWER for {variant} than grpo "
+                    f"(delta={delta:.4f}, CI=[{ci_lo:.4f},{ci_hi:.4f}]), but "
+                    f"reward_mean is significantly LOWER on n2_same_stack_last10 — "
+                    f"i.e. {variant} trades reward for zvf reduction."
+                ),
+            }
+        )
 
     # ----- Write outputs -----
     out1 = RES / "p6_iter194_robustness_multiseed.tsv"
     with open(out1, "w") as f:
         w = csv.DictWriter(f, fieldnames=list(multiseed_rows[0].keys()), delimiter="\t")
-        w.writeheader(); w.writerows(multiseed_rows)
+        w.writeheader()
+        w.writerows(multiseed_rows)
 
     out2 = RES / "p6_iter194_robustness_bca.tsv"
     with open(out2, "w") as f:
         w = csv.DictWriter(f, fieldnames=list(bca_rows[0].keys()), delimiter="\t")
-        w.writeheader(); w.writerows(bca_rows)
+        w.writeheader()
+        w.writerows(bca_rows)
 
     out3 = RES / "p6_iter194_robustness_jackknife.tsv"
     with open(out3, "w") as f:
         w = csv.DictWriter(f, fieldnames=list(jackknife_rows[0].keys()), delimiter="\t")
-        w.writeheader(); w.writerows(jackknife_rows)
+        w.writeheader()
+        w.writerows(jackknife_rows)
 
     out4 = RES / "p6_iter194_robustness_window.tsv"
     with open(out4, "w") as f:
         w = csv.DictWriter(f, fieldnames=list(window_rows[0].keys()), delimiter="\t")
-        w.writeheader(); w.writerows(window_rows)
+        w.writeheader()
+        w.writerows(window_rows)
 
     out5 = RES / "p6_iter194_robustness_cross_panel.tsv"
     with open(out5, "w") as f:
         w = csv.DictWriter(f, fieldnames=list(cross_panel_rows[0].keys()), delimiter="\t")
-        w.writeheader(); w.writerows(cross_panel_rows)
+        w.writeheader()
+        w.writerows(cross_panel_rows)
 
     # ----- Aggregate stats for hypotheses -----
     # H1: All 5 multi-seed bootstraps have CI_high < 0 for both variants.
-    h1_pass = all(
-        r["ci_high"] < 0
-        for r in multiseed_rows
-    )
+    h1_pass = all(r["ci_high"] < 0 for r in multiseed_rows)
     # H2a: BCa lower bound < 0 for both variants (point estimate below CI center).
     h2a_pass = all(r["bca_ci_low"] < 0 for r in bca_rows)
     # H2b: BCa upper bound < 0 for both variants (strict exclusion of 0).
@@ -392,10 +437,7 @@ def main():
     by_variant_jk = defaultdict(list)
     for r in jackknife_rows:
         by_variant_jk[r["variant"]].append(r["loo_delta"])
-    h3_pass = all(
-        all(d < 0 for d in by_variant_jk[v])
-        for v in VARIANTS
-    )
+    h3_pass = all(all(d < 0 for d in by_variant_jk[v]) for v in VARIANTS)
     # H4: Multi-window — at least 3 of 5 windows have significant negative direction.
     by_variant_win = defaultdict(list)
     for r in window_rows:
@@ -405,21 +447,19 @@ def main():
         for v in VARIANTS
     )
     # H5: Cross-panel — zvf_risk_mean is significantly NEGATIVE for both variants (lower risk = lower zvf = success on that channel).
-    h5_pass = all(
-        r["zvf_risk_significant_negative"]
-        for r in cross_panel_rows
-    )
+    h5_pass = all(r["zvf_risk_significant_negative"] for r in cross_panel_rows)
 
     # Protocol v2: analysis is read-only with respect to claims and verdicts.
     # Passing same-data robustness tests can motivate a proposal, not validate
     # a retrospective prediction. Original claims remain untouched.
     checks = dict(h1=h1_pass, h2b=h2b_pass, h3=h3_pass, h4=h4_pass, h5=h5_pass)
-    evidence_complete = all((multiseed_rows, bca_rows, jackknife_rows,
-                             window_rows, cross_panel_rows))
+    evidence_complete = all(
+        (multiseed_rows, bca_rows, jackknife_rows, window_rows, cross_panel_rows)
+    )
     proposal = amendment_proposal(checks, evidence_complete)
     proposal["original_entries"] = {
-        variant: json.loads((ENT / f"delta_{variant}.json").read_text())
-        for variant in VARIANTS}
+        variant: json.loads((ENT / f"delta_{variant}.json").read_text()) for variant in VARIANTS
+    }
     # Append-only audit: never overwrite a previous proposal or registry claim.
     audit_path = RES / ("p6_iter194_proposal_" + __import__("uuid").uuid4().hex + ".json")
     with audit_path.open("x") as f:

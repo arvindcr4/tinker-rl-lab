@@ -6,6 +6,7 @@ are distinct estimands. Missing measurements remain unavailable. Conditions
 are never treated as independent experimental units for inferential intervals
 without a documented sampling design.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -15,7 +16,7 @@ import math
 import statistics
 import sys
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple
+from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 RESULTS = REPO_ROOT / "platform_hybrid" / "experiments" / "results"
@@ -40,14 +41,19 @@ def load_tinker_gsm8k() -> List[Dict[str, Any]]:
     summary_path = RESULTS / "tinker_gsm8k_zvf_summary.json"
     summary = json.loads(summary_path.read_text())
     rows: List[Dict[str, Any]] = []
-    if len({len(summary[k]) for k in ("seeds", "zvf_per_seed", "sampling_accuracy_per_seed")}) != 1 or len(set(summary["seeds"])) != len(summary["seeds"]):
+    if len(
+        {len(summary[k]) for k in ("seeds", "zvf_per_seed", "sampling_accuracy_per_seed")}
+    ) != 1 or len(set(summary["seeds"])) != len(summary["seeds"]):
         raise ValueError("inconsistent or duplicate sampling seed identities")
-    for seed, zvf_val, acc in zip(
-        summary["seeds"], summary["zvf_per_seed"], summary["sampling_accuracy_per_seed"]
+    for seed, _zvf_val, acc in zip(
+        summary["seeds"],
+        summary["zvf_per_seed"],
+        summary["sampling_accuracy_per_seed"],
+        strict=False,
     ):
-        per_problem = json.loads(
-            (RESULTS / f"tinker_gsm8k_zvf_s{seed}.json").read_text()
-        )["per_problem"]
+        per_problem = json.loads((RESULTS / f"tinker_gsm8k_zvf_s{seed}.json").read_text())[
+            "per_problem"
+        ]
         zvf_per_problem = [p["zvf"] for p in per_problem]
         zvf_mean, zvf_min, zvf_max = _stat(zvf_per_problem)
         rows.append(
@@ -66,9 +72,7 @@ def load_tinker_gsm8k() -> List[Dict[str, Any]]:
                 "last10_avg": None,
                 "n_problems": len(per_problem),
                 "n_steps": None,
-                "evidence_path": str(
-                    (RESULTS / f"tinker_gsm8k_zvf_s{seed}.json").resolve()
-                ),
+                "evidence_path": str((RESULTS / f"tinker_gsm8k_zvf_s{seed}.json").resolve()),
                 "seed": seed,
             }
         )
@@ -156,7 +160,9 @@ def load_variance_mitigation() -> List[Dict[str, Any]]:
     rows: List[Dict[str, Any]] = []
     for (method, seed), recs in rows_by_method.items():
         recs = sorted(recs, key=lambda r: int(r["step"]))
-        if len({int(r["step"]) for r in recs}) != len(recs) or any(r["collapse"] not in ("0", "1") for r in recs):
+        if len({int(r["step"]) for r in recs}) != len(recs) or any(
+            r["collapse"] not in ("0", "1") for r in recs
+        ):
             raise ValueError("duplicate step or invalid collapse flag")
         zvfs = [float(r["zvf"]) for r in recs]
         rewards = [float(r["reward_mean"]) for r in recs]
@@ -368,7 +374,7 @@ def _pearson(xs: Sequence[float], ys: Sequence[float]) -> float:
     my = statistics.fmean(ys)
     sxx = sum((x - mx) ** 2 for x in xs)
     syy = sum((y - my) ** 2 for y in ys)
-    sxy = sum((x - mx) * (y - my) for x, y in zip(xs, ys))
+    sxy = sum((x - mx) * (y - my) for x, y in zip(xs, ys, strict=False))
     if sxx == 0 or syy == 0:
         return float("nan")
     return sxy / math.sqrt(sxx * syy)
@@ -408,6 +414,7 @@ def bootstrap_ci(
     Resamples (xs[i], ys[i]) rows to respect paired structure.
     """
     import random
+
     rng = random.Random(seed)
     n = len(xs)
     if n < 3:
@@ -464,9 +471,19 @@ def observation(row):
     r = dict(row)
     r.setdefault("algorithm", r.get("algo", "unknown"))
     r.setdefault("row_kind", "aggregate" if r.get("seed") == "agg" else "run")
-    r.setdefault("metric_definition", "sampling_accuracy" if r.get("experiment") == "tinker_gsm8k_zvf" else "source_reported_training_reward")
-    r.setdefault("condition_id", "|".join(str(r.get(k, "unknown")) for k in
-                 ("experiment", "model", "task", "group_size", "algorithm", "metric_definition")))
+    r.setdefault(
+        "metric_definition",
+        "sampling_accuracy"
+        if r.get("experiment") == "tinker_gsm8k_zvf"
+        else "source_reported_training_reward",
+    )
+    r.setdefault(
+        "condition_id",
+        "|".join(
+            str(r.get(k, "unknown"))
+            for k in ("experiment", "model", "task", "group_size", "algorithm", "metric_definition")
+        ),
+    )
     return r
 
 
@@ -474,7 +491,9 @@ def independent_rows(rows):
     """Exclude a condition aggregate whenever constituent runs are available."""
     rows = [observation(r) for r in rows]
     run_conditions = {r["condition_id"] for r in rows if r["row_kind"] == "run"}
-    result = [r for r in rows if r["row_kind"] != "aggregate" or r["condition_id"] not in run_conditions]
+    result = [
+        r for r in rows if r["row_kind"] != "aggregate" or r["condition_id"] not in run_conditions
+    ]
     identities = [(r["condition_id"], r["row_kind"], str(r.get("seed"))) for r in result]
     if len(identities) != len(set(identities)):
         raise ValueError("duplicate condition/run identity")
@@ -499,7 +518,19 @@ def _write_records(path, records, fields):
 
 def write_summary(rows, out_path):
     records = [dict(observation(r), failure_label=classify(r)) for r in rows]
-    fields = list(SUMMARY_HEADERS) + ["algorithm", "condition_id", "row_kind", "metric_definition", "sampling_accuracy", "peak_segment_mean", "late_segment_mean", "heldout_accuracy", "heldout_accuracy_se", "collapse_steps", "observed_steps"]
+    fields = list(SUMMARY_HEADERS) + [
+        "algorithm",
+        "condition_id",
+        "row_kind",
+        "metric_definition",
+        "sampling_accuracy",
+        "peak_segment_mean",
+        "late_segment_mean",
+        "heldout_accuracy",
+        "heldout_accuracy_se",
+        "collapse_steps",
+        "observed_steps",
+    ]
     _write_records(out_path, records, fields)
 
 
@@ -512,21 +543,47 @@ def write_by_library(rows, out_path):
         first = recs[0]
         labels = [classify(r) for r in recs]
         classified = sum(label != "unknown" for label in labels)
+
         def avg(key):
             values = [r[key] for r in recs if _finite(r.get(key))]
             return statistics.fmean(values) if values else None
-        counted = [r for r in recs if type(r.get("collapse_steps")) is int and type(r.get("observed_steps")) is int and 0 <= r["collapse_steps"] <= r["observed_steps"] and r["observed_steps"] > 0]
+
+        counted = [
+            r
+            for r in recs
+            if type(r.get("collapse_steps")) is int
+            and type(r.get("observed_steps")) is int
+            and 0 <= r["collapse_steps"] <= r["observed_steps"]
+            and r["observed_steps"] > 0
+        ]
         steps = sum(r["observed_steps"] for r in counted)
         collapsed = sum(r["collapse_steps"] for r in counted)
-        seeds = {str(r["seed"]) for r in recs if r["row_kind"] == "run" and r.get("seed") is not None}
-        record = dict(condition_id=condition, library=first.get("algorithm", "unknown"), model=first.get("model"), algorithm=first["algorithm"], row_kind=first["row_kind"], n_rows=len(recs), n_seeds=len(seeds), n_classified=classified,
-            mean_zvf=avg("mean_zvf"), mean_peak=avg("peak"), mean_last10=avg("last10_avg"), collapse_steps=collapsed, observed_steps=steps,
-            per_step_collapse_rate=collapsed/steps if steps else None,
-            run_ever_collapsed_rate=sum(r["collapse_steps"] > 0 for r in counted)/len(counted) if counted else None,
-            evidence_path=";".join(sorted({r.get("evidence_path", "") for r in recs})))
+        seeds = {
+            str(r["seed"]) for r in recs if r["row_kind"] == "run" and r.get("seed") is not None
+        }
+        record = dict(
+            condition_id=condition,
+            library=first.get("algorithm", "unknown"),
+            model=first.get("model"),
+            algorithm=first["algorithm"],
+            row_kind=first["row_kind"],
+            n_rows=len(recs),
+            n_seeds=len(seeds),
+            n_classified=classified,
+            mean_zvf=avg("mean_zvf"),
+            mean_peak=avg("peak"),
+            mean_last10=avg("last10_avg"),
+            collapse_steps=collapsed,
+            observed_steps=steps,
+            per_step_collapse_rate=collapsed / steps if steps else None,
+            run_ever_collapsed_rate=sum(r["collapse_steps"] > 0 for r in counted) / len(counted)
+            if counted
+            else None,
+            evidence_path=";".join(sorted({r.get("evidence_path", "") for r in recs})),
+        )
         for label in ("collapse", "drift", "plateau", "converged"):
-            record["n_"+label] = labels.count(label)
-            record[label+"_rate"] = labels.count(label)/classified if classified else None
+            record["n_" + label] = labels.count(label)
+            record[label + "_rate"] = labels.count(label) / classified if classified else None
         output.append(record)
     fields = list(output[0]) if output else ["condition_id", "n_rows"]
     _write_records(out_path, output, fields)
@@ -547,19 +604,48 @@ def write_correlation(rows, out_path):
         for outcome in ("last10_avg", "is_collapse"):
             buckets = {}
             for r in subset:
-                y = r.get("last10_avg") if outcome == "last10_avg" else (None if classify(r) == "unknown" else float(classify(r) == "collapse"))
+                y = (
+                    r.get("last10_avg")
+                    if outcome == "last10_avg"
+                    else (None if classify(r) == "unknown" else float(classify(r) == "collapse"))
+                )
                 if _finite(r.get("mean_zvf")) and _finite(y):
                     buckets.setdefault(r["condition_id"], []).append((r["mean_zvf"], y))
-            pairs = [(statistics.fmean(x for x,y in values), statistics.fmean(y for x,y in values)) for values in buckets.values()]
+            pairs = [
+                (statistics.fmean(x for x, y in values), statistics.fmean(y for x, y in values))
+                for values in buckets.values()
+            ]
             xs, ys = [p[0] for p in pairs], [p[1] for p in pairs]
             for name, metric in (("Pearson", _pearson), ("Spearman", _spearman)):
-                output.append(dict(test="mean_zvf vs "+outcome, metric_definition=stratum, n_pooled_rows=len(pairs), n_complete_run_rows=sum(map(len,buckets.values())), rho=metric(xs, ys), ci_lo=None, ci_hi=None, method=name+" descriptive; independent sampling design unavailable"))
+                output.append(
+                    dict(
+                        test="mean_zvf vs " + outcome,
+                        metric_definition=stratum,
+                        n_pooled_rows=len(pairs),
+                        n_complete_run_rows=sum(map(len, buckets.values())),
+                        rho=metric(xs, ys),
+                        ci_lo=None,
+                        ci_hi=None,
+                        method=name + " descriptive; independent sampling design unavailable",
+                    )
+                )
     _write_records(out_path, output, list(output[0]))
+
     # Compatibility fields are unavailable when multiple estimands exist;
     # callers must consume the explicit per-stratum records instead of mixing.
     def value(index):
         return output[index]["rho"] if len(strata) == 1 else float("nan")
-    return dict(rows=output, n_pooled_rows=output[0]["n_pooled_rows"] if len(strata)==1 else None, pearson_mean_zvf_last10=value(0), spearman_mean_zvf_last10=value(1), pearson_mean_zvf_collapse_binary=value(2), spearman_mean_zvf_collapse_binary=value(3), ci_pearson=(float("nan"),)*2, ci_spearman=(float("nan"),)*2)
+
+    return dict(
+        rows=output,
+        n_pooled_rows=output[0]["n_pooled_rows"] if len(strata) == 1 else None,
+        pearson_mean_zvf_last10=value(0),
+        spearman_mean_zvf_last10=value(1),
+        pearson_mean_zvf_collapse_binary=value(2),
+        spearman_mean_zvf_collapse_binary=value(3),
+        ci_pearson=(float("nan"),) * 2,
+        ci_spearman=(float("nan"),) * 2,
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -570,6 +656,7 @@ def write_correlation(rows, out_path):
 def _maybe_matplotlib():
     try:
         import matplotlib
+
         matplotlib.use("Agg")
         import matplotlib.pyplot as plt
 
@@ -598,7 +685,7 @@ def write_figure(rows: List[Dict[str, Any]], out_path: Path) -> Optional[str]:
         if _finite(r.get("mean_zvf")) and _finite(r.get("last10_avg")):
             pooled.setdefault(r["condition_id"], []).append(r)
     plotted = 0
-    for key, recs in pooled.items():
+    for _key, recs in pooled.items():
         mz = statistics.fmean(r["mean_zvf"] for r in recs)
         la = statistics.fmean(r["last10_avg"] for r in recs)
         peaks = [r["peak"] for r in recs if _finite(r.get("peak"))]
@@ -618,8 +705,7 @@ def write_figure(rows: List[Dict[str, Any]], out_path: Path) -> Optional[str]:
     ax.set_xlabel("Mean ZVF across training trajectory")
     ax.set_ylabel("Source-reported last-10 outcome (heterogeneous metrics)")
     ax.set_title(
-        "ZVF vs training outcome across %d condition cells\n"
-        "color = collapse taxonomy" % plotted
+        "ZVF vs training outcome across %d condition cells\ncolor = collapse taxonomy" % plotted
     )
     # Inline legend without overlapping points.
     from matplotlib.lines import Line2D  # local import keeps top-level tidy
@@ -650,9 +736,7 @@ def write_figure(rows: List[Dict[str, Any]], out_path: Path) -> Optional[str]:
 AERO_HIGHLIGHT = "#8e44ad"  # purple so it stands out against the four failure colours.
 
 
-def write_by_library_figure(
-    by_lib_rows: List[Dict[str, Any]], out_path: Path
-) -> Optional[str]:
+def write_by_library_figure(by_lib_rows: List[Dict[str, Any]], out_path: Path) -> Optional[str]:
     """Two-panel cross-library bar chart.
 
     Left panel: mean-ZVF per library. AERO is drawn in purple so the
@@ -672,7 +756,19 @@ def write_by_library_figure(
     # GRPO are immediately adjacent; then non-mitigation libraries.
     method_keys = {"grpo", "aero", "cppo", "ngrpo", "scafgrpo", "mcgrpo", "gift", "areal", "es"}
     methods = [r for r in by_lib_rows if r["library"] in method_keys]
-    methods.sort(key=lambda r: ["grpo", "aero", "cppo", "ngrpo", "scafgrpo", "mcgrpo", "gift", "areal", "es"].index(r["library"]))
+    methods.sort(
+        key=lambda r: [
+            "grpo",
+            "aero",
+            "cppo",
+            "ngrpo",
+            "scafgrpo",
+            "mcgrpo",
+            "gift",
+            "areal",
+            "es",
+        ].index(r["library"])
+    )
     others = [r for r in by_lib_rows if r["library"] not in method_keys]
     others.sort(key=lambda r: r["library"])
     ordered = methods + others
@@ -696,7 +792,7 @@ def write_by_library_figure(
     axL.set_title("Mean ZVF per condition")
     axL.set_ylim(0, max(0.6, max(mean_zvfs) * 1.18) if mean_zvfs else 0.6)
     axL.tick_params(axis="x", rotation=45, labelsize=8)
-    for bar, val in zip(bars, mean_zvfs):
+    for bar, val in zip(bars, mean_zvfs, strict=False):
         if math.isnan(val):
             continue
         axL.text(
@@ -718,7 +814,7 @@ def write_by_library_figure(
         (n_plateau, COLOR_BY_LABEL["plateau"], "plateau"),
         (n_converged, COLOR_BY_LABEL["converged"], "converged"),
     ]:
-        rates = [n / nr for n, nr in zip(n_list, n_rows)]
+        rates = [n / nr for n, nr in zip(n_list, n_rows, strict=False)]
         axR.bar(
             labels,
             rates,
@@ -728,7 +824,7 @@ def write_by_library_figure(
             linewidth=0.5,
             label=name,
         )
-        bottom = [b + r for b, r in zip(bottom, rates)]
+        bottom = [b + r for b, r in zip(bottom, rates, strict=False)]
     axR.set_ylabel("Fraction of (run, seed) rows")
     axR.set_title("Failure taxonomy per library")
     axR.set_ylim(0, 1.05)
@@ -753,9 +849,7 @@ def write_by_library_figure(
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--out-summary", type=Path, default=RESULTS / "zvf_summary_v3.tsv"
-    )
+    parser.add_argument("--out-summary", type=Path, default=RESULTS / "zvf_summary_v3.tsv")
     parser.add_argument(
         "--out-correlation", type=Path, default=RESULTS / "zvf_failure_correlation_v3.tsv"
     )
@@ -774,18 +868,15 @@ def main() -> int:
         default=REPO_ROOT / "figures" / "zvf_by_library_v3.pdf",
         help="Per-library bar chart emphasising AERO vs GRPO contrast",
     )
-    parser.add_argument(
-        "--self-test", action="store_true", help="Run on a small synthetic slice"
-    )
+    parser.add_argument("--self-test", action="store_true", help="Run on a small synthetic slice")
     parser.add_argument("--input-dir", type=Path, default=RESULTS)
     args = parser.parse_args()
     globals()["RESULTS"] = args.input_dir
     if args.self_test:
-        assert _pearson([1.,2.,3.],[2.,4.,6.]) > .999
-        assert _pearson([1.,2.,3.],[6.,4.,2.]) < -.999
+        assert _pearson([1.0, 2.0, 3.0], [2.0, 4.0, 6.0]) > 0.999
+        assert _pearson([1.0, 2.0, 3.0], [6.0, 4.0, 2.0]) < -0.999
         print("synthetic numerical self-test passed; no inputs loaded or artifacts written")
         return 0
-
 
     rows: List[Dict[str, Any]] = []
     rows += load_tinker_gsm8k()

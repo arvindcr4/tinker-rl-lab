@@ -37,13 +37,13 @@ from __future__ import annotations
 import csv
 import json
 import math
-import os
 import random
 import sys
 from pathlib import Path
 
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
+from _paths import REPO_ROOT
+
 ROOT = REPO_ROOT
 RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8/corrected-review21-v2"
 RES.mkdir(parents=True, exist_ok=True)
@@ -68,12 +68,21 @@ def read_csv(path: Path) -> tuple[list[list[float]], list[int]]:
 def fit_predict(X_tr, y_tr, X_te, feature_idx, seed=42):
     """Fit a small XGBoost and return test-side predicted probabilities."""
     import xgboost as xgb
+
     Xtr = [[r[i] for i in feature_idx] for r in X_tr]
     Xte = [[r[i] for i in feature_idx] for r in X_te]
     m = xgb.XGBClassifier(
-        n_estimators=200, max_depth=6, learning_rate=0.05,
-        subsample=0.8, colsample_bytree=0.8, scale_pos_weight=7.0,
-        eval_metric="logloss", random_state=seed, tree_method="hist", n_jobs=4)
+        n_estimators=200,
+        max_depth=6,
+        learning_rate=0.05,
+        subsample=0.8,
+        colsample_bytree=0.8,
+        scale_pos_weight=7.0,
+        eval_metric="logloss",
+        random_state=seed,
+        tree_method="hist",
+        n_jobs=4,
+    )
     m.fit(Xtr, y_tr, verbose=False)
     return m.predict_proba(Xte)[:, 1].tolist()
 
@@ -85,6 +94,7 @@ def paired_bootstrap_ci(preds_a, preds_b, y_full, n_boot=1000, seed=2026):
     a per-row metric like (AUC_a - AUC_b) computed over a fixed test split.
     """
     from sklearn.metrics import roc_auc_score
+
     rng = random.Random(seed)
     n = len(y_full)
     auc_a = roc_auc_score(y_full, preds_a)
@@ -122,7 +132,7 @@ def add_noise_to_aggregates(rows, sigma_mult, seed=2026):
     # Compute per-column stddev across all rows for the 4 aggregates.
     n = len(rows)
     out = [list(r) for r in rows]
-    for j, name in zip(range(20, 24), AGG_4):
+    for j, _name in zip(range(20, 24), AGG_4, strict=False):
         col = [r[j] for r in rows]
         mu = sum(col) / n
         var = sum((c - mu) ** 2 for c in col) / n
@@ -137,8 +147,10 @@ def main():
     print("[p8-noise] reading data", file=sys.stderr)
     Xtr, ytr = read_csv(ROOT / "fraud_data.csv")
     Xte, yte = read_csv(ROOT / "test_data.csv")
-    print(f"[p8-noise] train={len(Xtr)} pos={sum(ytr)}  test={len(Xte)} pos={sum(yte)}",
-          file=sys.stderr)
+    print(
+        f"[p8-noise] train={len(Xtr)} pos={sum(ytr)}  test={len(Xte)} pos={sum(yte)}",
+        file=sys.stderr,
+    )
 
     feat_all = {c: i for i, c in enumerate(ALL_24)}
     idx_20 = [feat_all[c] for c in FEATURES_20]
@@ -151,17 +163,22 @@ def main():
     # 20-feature tree (no aggregates).
     preds_20 = fit_predict(Xtr, ytr, Xte, idx_20)
     from sklearn.metrics import roc_auc_score
+
     auc_24_clean = roc_auc_score(yte, preds_24_clean)
     auc_20 = roc_auc_score(yte, preds_20)
-    print(f"[p8-noise] AUC baseline: 20feat={auc_20:.4f}  24feat_clean={auc_24_clean:.4f}",
-          file=sys.stderr)
+    print(
+        f"[p8-noise] AUC baseline: 20feat={auc_20:.4f}  24feat_clean={auc_24_clean:.4f}",
+        file=sys.stderr,
+    )
 
     sigma_grid = [0.05, 0.10, 0.25, 0.50, 0.75, 1.00, 1.50, 2.00]
-    noise_rows = [["sigma_mult", "auc_24_noisy", "delta_auc_vs_clean",
-                   "ci_lo", "ci_hi", "ci_excludes_zero"]]
-    summary_noise = {"baseline": {"auc_24_clean": round(auc_24_clean, 4),
-                                  "auc_20": round(auc_20, 4)},
-                     "sweep": []}
+    noise_rows = [
+        ["sigma_mult", "auc_24_noisy", "delta_auc_vs_clean", "ci_lo", "ci_hi", "ci_excludes_zero"]
+    ]
+    summary_noise = {
+        "baseline": {"auc_24_clean": round(auc_24_clean, 4), "auc_20": round(auc_20, 4)},
+        "sweep": [],
+    }
 
     for sigma in sigma_grid:
         Xtr_n = add_noise_to_aggregates(Xtr, sigma, seed=42)
@@ -169,23 +186,34 @@ def main():
         # Refit on the noisy training set, then score on the noisy test set.
         preds_n = fit_predict(Xtr_n, ytr, Xte_n, idx_24)
         auc_n = roc_auc_score(yte, preds_n)
-        _, _, lo, hi = paired_bootstrap_ci(preds_n, preds_24_clean, yte,
-                                           n_boot=400, seed=2026)
+        _, _, lo, hi = paired_bootstrap_ci(preds_n, preds_24_clean, yte, n_boot=400, seed=2026)
         excl = "yes" if (lo > 0 or hi < 0) else "no"
-        noise_rows.append([sigma, round(auc_n, 4),
-                           round(auc_n - auc_24_clean, 4),
-                           round(lo, 4), round(hi, 4), excl])
-        summary_noise["sweep"].append({
-            "sigma_mult": sigma,
-            "auc_24_noisy": round(auc_n, 4),
-            "delta_auc_vs_clean": round(auc_n - auc_24_clean, 4),
-            "ci_lo": round(lo, 4),
-            "ci_hi": round(hi, 4),
-            "ci_excludes_zero": excl,
-        })
-        print(f"[p8-noise] sigma={sigma:.2f}  AUC={auc_n:.4f}  "
-              f"delta={auc_n - auc_24_clean:+.4f}  CI=[{lo:+.4f},{hi:+.4f}]  "
-              f"excl_zero={excl}", file=sys.stderr)
+        noise_rows.append(
+            [
+                sigma,
+                round(auc_n, 4),
+                round(auc_n - auc_24_clean, 4),
+                round(lo, 4),
+                round(hi, 4),
+                excl,
+            ]
+        )
+        summary_noise["sweep"].append(
+            {
+                "sigma_mult": sigma,
+                "auc_24_noisy": round(auc_n, 4),
+                "delta_auc_vs_clean": round(auc_n - auc_24_clean, 4),
+                "ci_lo": round(lo, 4),
+                "ci_hi": round(hi, 4),
+                "ci_excludes_zero": excl,
+            }
+        )
+        print(
+            f"[p8-noise] sigma={sigma:.2f}  AUC={auc_n:.4f}  "
+            f"delta={auc_n - auc_24_clean:+.4f}  CI=[{lo:+.4f},{hi:+.4f}]  "
+            f"excl_zero={excl}",
+            file=sys.stderr,
+        )
 
     write_tsv(RES / "p8_sensor_noise_sweep.tsv", noise_rows[0], noise_rows[1:])
 
@@ -198,36 +226,55 @@ def main():
     # then sees a 25-feature table where the new feature has AUC(strength)
     # in the low-AUC range.
     strength_grid = [0.0, 0.05, 0.10, 0.20, 0.40, 0.80, 1.50, 3.00]
-    info_rows = [["strength", "auc_25", "delta_auc_vs_24clean",
-                  "ci_lo", "ci_hi", "ci_excludes_zero"]]
-    summary_info = {"baseline": {"auc_24_clean": round(auc_24_clean, 4)},
-                    "sweep": []}
+    info_rows = [
+        ["strength", "auc_25", "delta_auc_vs_24clean", "ci_lo", "ci_hi", "ci_excludes_zero"]
+    ]
+    summary_info = {"baseline": {"auc_24_clean": round(auc_24_clean, 4)}, "sweep": []}
 
     noise_rng = random.Random(2026)
-    noise_tr = [noise_rng.gauss(0,1) for _ in ytr]
-    noise_te = [noise_rng.gauss(0,1) for _ in yte]
+    noise_tr = [noise_rng.gauss(0, 1) for _ in ytr]
+    noise_te = [noise_rng.gauss(0, 1) for _ in yte]
     for strength in strength_grid:
-        Xtr_i = [list(r) + [strength * (2*y - 1) + noise] for r, y, noise in zip(Xtr, ytr, noise_tr)]
-        Xte_i = [list(r) + [strength * (2*y - 1) + noise] for r, y, noise in zip(Xte, yte, noise_te)]
+        Xtr_i = [
+            list(r) + [strength * (2 * y - 1) + noise]
+            for r, y, noise in zip(Xtr, ytr, noise_tr, strict=False)
+        ]
+        Xte_i = [
+            list(r) + [strength * (2 * y - 1) + noise]
+            for r, y, noise in zip(Xte, yte, noise_te, strict=False)
+        ]
         preds_i = fit_predict(Xtr_i, ytr, Xte_i, idx_24 + [24])
         auc_i = roc_auc_score(yte, preds_i)
-        _, _, lo, hi = paired_bootstrap_ci(preds_i, preds_24_clean, yte,
-                                           n_boot=400, seed=2026)
+        _, _, lo, hi = paired_bootstrap_ci(preds_i, preds_24_clean, yte, n_boot=400, seed=2026)
         excl = "yes" if (lo > 0 or hi < 0) else "no"
-        info_rows.append([strength, round(auc_i, 4),
-                          round(auc_i - auc_24_clean, 4),
-                          round(lo, 4), round(hi, 4), excl])
-        summary_info["sweep"].append({
-            "strength": strength, "standalone_sensor_auc": float(roc_auc_score(yte, [r[-1] for r in Xte_i])), "status": "label_conditioned_simulation",
-            "auc_25": round(auc_i, 4),
-            "delta_auc_vs_24clean": round(auc_i - auc_24_clean, 4),
-            "ci_lo": round(lo, 4),
-            "ci_hi": round(hi, 4),
-            "ci_excludes_zero": excl,
-        })
-        print(f"[p8-info] strength={strength:.2f}  AUC={auc_i:.4f}  "
-              f"delta={auc_i - auc_24_clean:+.4f}  CI=[{lo:+.4f},{hi:+.4f}]  "
-              f"excl_zero={excl}", file=sys.stderr)
+        info_rows.append(
+            [
+                strength,
+                round(auc_i, 4),
+                round(auc_i - auc_24_clean, 4),
+                round(lo, 4),
+                round(hi, 4),
+                excl,
+            ]
+        )
+        summary_info["sweep"].append(
+            {
+                "strength": strength,
+                "standalone_sensor_auc": float(roc_auc_score(yte, [r[-1] for r in Xte_i])),
+                "status": "label_conditioned_simulation",
+                "auc_25": round(auc_i, 4),
+                "delta_auc_vs_24clean": round(auc_i - auc_24_clean, 4),
+                "ci_lo": round(lo, 4),
+                "ci_hi": round(hi, 4),
+                "ci_excludes_zero": excl,
+            }
+        )
+        print(
+            f"[p8-info] strength={strength:.2f}  AUC={auc_i:.4f}  "
+            f"delta={auc_i - auc_24_clean:+.4f}  CI=[{lo:+.4f},{hi:+.4f}]  "
+            f"excl_zero={excl}",
+            file=sys.stderr,
+        )
 
     write_tsv(RES / "p8_required_info_gain.tsv", info_rows[0], info_rows[1:])
 
@@ -235,16 +282,19 @@ def main():
     summary = {
         "noise_budget": summary_noise,
         "info_gain_required": summary_info,
-        "n_train": len(ytr), "n_test": len(yte),
-        "pos_train": sum(ytr), "pos_test": sum(yte),
-        "note": ("Noise budget Q1: how much Gaussian noise can a hypothetical "
-                 "LLM sensor add to the 4 aggregates before the tree's AUC "
-                 "drops measurably? Info gain Q2: what 25th-feature "
-                 "monotone signal strength is needed for the bootstrap CI "
-                 "on AUC(25) - AUC(24_clean) to first exclude zero?"),
+        "n_train": len(ytr),
+        "n_test": len(yte),
+        "pos_train": sum(ytr),
+        "pos_test": sum(yte),
+        "note": (
+            "Noise budget Q1: how much Gaussian noise can a hypothetical "
+            "LLM sensor add to the 4 aggregates before the tree's AUC "
+            "drops measurably? Info gain Q2: what 25th-feature "
+            "monotone signal strength is needed for the bootstrap CI "
+            "on AUC(25) - AUC(24_clean) to first exclude zero?"
+        ),
     }
-    (RES / "p8_sensor_noise_summary.json").write_text(
-        json.dumps(summary, indent=2, sort_keys=True))
+    (RES / "p8_sensor_noise_summary.json").write_text(json.dumps(summary, indent=2, sort_keys=True))
     print("[p8-noise] done.", file=sys.stderr)
 
 

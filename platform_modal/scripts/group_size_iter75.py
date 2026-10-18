@@ -37,14 +37,15 @@ Outputs:
   figures/group_size_iter75_scaling_v2.pdf
   figures/group_size_iter75_scaling_v2.png
 """
+
 from __future__ import annotations
 
 import json
 import math
-import statistics
 from pathlib import Path
 
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
@@ -62,7 +63,10 @@ NULL_EXPONENTS = (0.0, 0.5, 1.0)
 
 
 def fit_power_law(
-    Gs: list[int], acc: list[float], ci_lo: list[float], ci_hi: list[float],
+    Gs: list[int],
+    acc: list[float],
+    ci_lo: list[float],
+    ci_hi: list[float],
 ) -> tuple[float, float, float, float]:
     """Fit  acc(G) = a - b * G^(-c)  on n points by grid search + simplex.
 
@@ -72,9 +76,11 @@ def fit_power_law(
     """
     Gs_arr = np.asarray(Gs, dtype=float)
     y = np.asarray(acc, dtype=float)
-    sig = np.asarray([(hi - lo) / (2*1.96) for lo, hi in zip(ci_lo, ci_hi)], dtype=float)
+    sig = np.asarray(
+        [(hi - lo) / (2 * 1.96) for lo, hi in zip(ci_lo, ci_hi, strict=False)], dtype=float
+    )
     sig = np.where(sig > 0, sig, 0.01)
-    w = 1.0 / sig ** 2
+    w = 1.0 / sig**2
 
     def loss(params):
         a, b, c = params
@@ -85,7 +91,7 @@ def fit_power_law(
         except (ValueError, OverflowError):
             return 1e6
         resid = y - pred
-        return float(np.sum(w * resid ** 2))
+        return float(np.sum(w * resid**2))
 
     # Grid search over (a, b, c).  c in [0.01, 2.5], b in [0.001, 2.0],
     # a in [0.3, 1.0].
@@ -125,30 +131,40 @@ def fit_power_law(
 
 
 def bootstrap_ci(
-    Gs: list[int], acc: list[float], ci_lo: list[float], ci_hi: list[float],
-    n_boot: int = N_BOOT, seed: int = RNG_SEED,
+    Gs: list[int],
+    acc: list[float],
+    ci_lo: list[float],
+    ci_hi: list[float],
+    n_boot: int = N_BOOT,
+    seed: int = RNG_SEED,
 ) -> tuple[float, float, float, tuple[float, float], tuple[float, float]]:
     """Parametric sensitivity from summary 95% intervals, refitting same estimator.
 
     These are not seed-bootstrap confidence intervals. Correlations between
     summary estimates are unknown; no calibrated hypothesis rejection follows.
     """
-    sig = np.asarray([(hi-lo)/(2*1.96) for lo,hi in zip(ci_lo,ci_hi)])
+    sig = np.asarray([(hi - lo) / (2 * 1.96) for lo, hi in zip(ci_lo, ci_hi, strict=False)])
     if np.any(sig < 0) or not np.all(np.isfinite(sig)):
         raise ValueError("invalid summary intervals")
     rng = np.random.default_rng(seed)
-    a_hat,b_hat,c_hat,_ = fit_power_law(Gs,acc,ci_lo,ci_hi)
-    fits=[]
+    a_hat, b_hat, c_hat, _ = fit_power_law(Gs, acc, ci_lo, ci_hi)
+    fits = []
     for _ in range(n_boot):
-        sample=rng.normal(np.asarray(acc),sig)
-        fit=fit_power_law(Gs,sample.tolist(),ci_lo,ci_hi)
+        sample = rng.normal(np.asarray(acc), sig)
+        fit = fit_power_law(Gs, sample.tolist(), ci_lo, ci_hi)
         if not all(np.isfinite(fit)):
             raise ValueError("sensitivity fit failed; partial draws cannot certify interval")
         fits.append(fit)
-    if len(fits)<2:
+    if len(fits) < 2:
         raise ValueError("need two sensitivity draws")
-    fits=np.asarray(fits)
-    return a_hat,b_hat,c_hat,tuple(np.quantile(fits[:,2],[.025,.975])),tuple(np.quantile(fits[:,1],[.025,.975]))
+    fits = np.asarray(fits)
+    return (
+        a_hat,
+        b_hat,
+        c_hat,
+        tuple(np.quantile(fits[:, 2], [0.025, 0.975])),
+        tuple(np.quantile(fits[:, 1], [0.025, 0.975])),
+    )
 
 
 def test_null(c_hat: float, c_ci: tuple[float, float], null_c: float) -> tuple[bool, str]:
@@ -185,40 +201,44 @@ def main() -> None:
         a_hat, b_hat, c_hat, rmse = fit_power_law(G_sub, acc_sub, ci_lo_sub, ci_hi_sub)
         _, _, _, c_ci, b_ci = bootstrap_ci(G_sub, acc_sub, ci_lo_sub, ci_hi_sub)
 
-        fit_rows.append({
-            "T_tokens": T,
-            "T_M": T / 1e6,
-            "n_points": len(G_sub),
-            "G_used": ",".join(str(g) for g in G_sub),
-            "G_max": 64,
-            "acc_at_G_max": d[64]["acc"],
-            "a_hat": round(a_hat, 4),
-            "b_hat": round(b_hat, 4),
-            "k_hat": round(b_hat, 4),
-            "c_hat": round(c_hat, 4),
-            "rmse_acc": round(rmse, 4),
-            "b_boot_lo": round(b_ci[0], 4),
-            "b_boot_hi": round(b_ci[1], 4),
-            "c_boot_lo": round(c_ci[0], 4),
-            "c_boot_hi": round(c_ci[1], 4),
-        })
+        fit_rows.append(
+            {
+                "T_tokens": T,
+                "T_M": T / 1e6,
+                "n_points": len(G_sub),
+                "G_used": ",".join(str(g) for g in G_sub),
+                "G_max": 64,
+                "acc_at_G_max": d[64]["acc"],
+                "a_hat": round(a_hat, 4),
+                "b_hat": round(b_hat, 4),
+                "k_hat": round(b_hat, 4),
+                "c_hat": round(c_hat, 4),
+                "rmse_acc": round(rmse, 4),
+                "b_boot_lo": round(b_ci[0], 4),
+                "b_boot_hi": round(b_ci[1], 4),
+                "c_boot_lo": round(c_ci[0], 4),
+                "c_boot_hi": round(c_ci[1], 4),
+            }
+        )
         # Hypothesis tests at the three null exponents
         for null_c in NULL_EXPONENTS:
             rejected, decision = test_null(c_hat, c_ci, null_c)
-            hypoth_rows.append({
-                "T_tokens": T,
-                "null_exponent_c": null_c,
-                "null_interpretation": {
-                    0.0: "H0_a: c=0 means acc independent of G (DPO-equivalence)",
-                    0.5: "H0_b: c=0.5 means canonical sqrt(G) MC scaling",
-                    1.0: "H0_c: c=1.0 means perfect linear G-amortization",
-                }[null_c],
-                "c_hat": round(c_hat, 4),
-                "c_ci_lo": round(c_ci[0], 4),
-                "c_ci_hi": round(c_ci[1], 4),
-                "verdict": decision,
-                "rejected_at_5pct": "yes" if rejected else "no",
-            })
+            hypoth_rows.append(
+                {
+                    "T_tokens": T,
+                    "null_exponent_c": null_c,
+                    "null_interpretation": {
+                        0.0: "H0_a: c=0 means acc independent of G (DPO-equivalence)",
+                        0.5: "H0_b: c=0.5 means canonical sqrt(G) MC scaling",
+                        1.0: "H0_c: c=1.0 means perfect linear G-amortization",
+                    }[null_c],
+                    "c_hat": round(c_hat, 4),
+                    "c_ci_lo": round(c_ci[0], 4),
+                    "c_ci_hi": round(c_ci[1], 4),
+                    "verdict": decision,
+                    "rejected_at_5pct": "yes" if rejected else "no",
+                }
+            )
 
     # ---- (B) Counterfactual forward projection ----
     # If c(T) is approximately monotone, fit c(T) ~ c0 + c1 * log10(T) and
@@ -256,20 +276,22 @@ def main() -> None:
         acc_32 = float(np.clip(a_safe - b_safe * (32.0) ** (-c_safe), 0.0, 1.0))
         acc_4 = float(np.clip(a_safe - b_safe * (4.0) ** (-c_safe), 0.0, 1.0))
         delta_32_4 = (acc_32 - acc_4) * 100
-        extra_rows.append({
-            "T_ext_tokens": int(T_ext),
-            "T_M": T_ext / 1e6,
-            "T_ext_M": T_ext / 1e6,
-            "c_extrapolated": round(c_pred, 4),
-            "b_extrapolated": round(b_pred, 4),
-            "k_extrapolated": round(b_pred, 4),
-            "a_extrapolated": round(a_pred, 4),
-            "predicted_acc_G32_pp": round(acc_32 * 100, 2),
-            "predicted_acc_G4_pp": round(acc_4 * 100, 2),
-            "predicted_delta_G32_minus_G4_pp": round(delta_32_4, 2),
-            "monotone_c_decreasing_with_T": "yes" if c_slope < 0 else "no",
-            "monotone_c_increasing_with_T": "yes" if c_slope > 0 else "no",
-        })
+        extra_rows.append(
+            {
+                "T_ext_tokens": int(T_ext),
+                "T_M": T_ext / 1e6,
+                "T_ext_M": T_ext / 1e6,
+                "c_extrapolated": round(c_pred, 4),
+                "b_extrapolated": round(b_pred, 4),
+                "k_extrapolated": round(b_pred, 4),
+                "a_extrapolated": round(a_pred, 4),
+                "predicted_acc_G32_pp": round(acc_32 * 100, 2),
+                "predicted_acc_G4_pp": round(acc_4 * 100, 2),
+                "predicted_delta_G32_minus_G4_pp": round(delta_32_4, 2),
+                "monotone_c_decreasing_with_T": "yes" if c_slope < 0 else "no",
+                "monotone_c_increasing_with_T": "yes" if c_slope > 0 else "no",
+            }
+        )
 
     # ---- (C) Effective-Gradient-per-Token (EGT) ---
     # A different way to surface the same scaling: EG(G, T) = GU(G) * sqrt(G) / (T).
@@ -293,22 +315,27 @@ def main() -> None:
             gu = float(zr["gu_theoretical"]) if zr else 1.0
             acc = d[G]["acc"]
             egt = gu * math.sqrt(G) / (T / 1e6)
-            egt_rows.append({
-                "T_M": T / 1e6,
-                "G": G,
-                "GU": round(gu, 4),
-                "acc": acc,
-                "sqrt_G": round(math.sqrt(G), 4),
-                "EGT_proxy": round(egt, 6),
-            })
+            egt_rows.append(
+                {
+                    "T_M": T / 1e6,
+                    "G": G,
+                    "GU": round(gu, 4),
+                    "acc": acc,
+                    "sqrt_G": round(math.sqrt(G), 4),
+                    "EGT_proxy": round(egt, 6),
+                }
+            )
 
     # ---- (D) Headline summary ----
-    n_reject_dpo_eq = sum(1 for r in hypoth_rows
-                          if r["null_exponent_c"] == 0.0 and r["rejected_at_5pct"] == "yes")
-    n_reject_sqrt = sum(1 for r in hypoth_rows
-                        if r["null_exponent_c"] == 0.5 and r["rejected_at_5pct"] == "yes")
-    n_reject_linear = sum(1 for r in hypoth_rows
-                          if r["null_exponent_c"] == 1.0 and r["rejected_at_5pct"] == "yes")
+    n_reject_dpo_eq = sum(
+        1 for r in hypoth_rows if r["null_exponent_c"] == 0.0 and r["rejected_at_5pct"] == "yes"
+    )
+    n_reject_sqrt = sum(
+        1 for r in hypoth_rows if r["null_exponent_c"] == 0.5 and r["rejected_at_5pct"] == "yes"
+    )
+    n_reject_linear = sum(
+        1 for r in hypoth_rows if r["null_exponent_c"] == 1.0 and r["rejected_at_5pct"] == "yes"
+    )
     n_total_budgets = len(fit_rows)
     best_T = min(fit_rows, key=lambda r: r["c_hat"])["T_tokens"]
     worst_T = max(fit_rows, key=lambda r: r["c_hat"])["T_tokens"]
@@ -331,33 +358,48 @@ def main() -> None:
         "n_budgets_rejecting_c_eq_1_linear": n_reject_linear,
         "c_slope_with_log_T": round(float(c_slope), 4),
         "k_log_slope_with_log_T": round(float(b_at_64), 4),
-        "predicted_acc_G32_at_T_128M_pp":
-            next((r["predicted_acc_G32_pp"] for r in extra_rows
-                  if abs(r["T_ext_M"] - 128) < 0.5), None),
-        "predicted_acc_G4_at_T_128M_pp":
-            next((r["predicted_acc_G4_pp"] for r in extra_rows
-                  if abs(r["T_ext_M"] - 128) < 0.5), None),
-        "predicted_delta_G32_minus_G4_at_T_128M_pp":
-            next((r["predicted_delta_G32_minus_G4_pp"] for r in extra_rows
-                  if abs(r["T_ext_M"] - 128) < 0.5), None),
-        "predicted_acc_G32_at_T_256M_pp":
-            next((r["predicted_acc_G32_pp"] for r in extra_rows
-                  if abs(r["T_ext_M"] - 256) < 0.5), None),
-        "predicted_acc_G4_at_T_256M_pp":
-            next((r["predicted_acc_G4_pp"] for r in extra_rows
-                  if abs(r["T_ext_M"] - 256) < 0.5), None),
-        "predicted_delta_G32_minus_G4_at_T_256M_pp":
-            next((r["predicted_delta_G32_minus_G4_pp"] for r in extra_rows
-                  if abs(r["T_ext_M"] - 256) < 0.5), None),
-        "predicted_acc_G32_at_T_512M_pp":
-            next((r["predicted_acc_G32_pp"] for r in extra_rows
-                  if abs(r["T_ext_M"] - 512) < 0.5), None),
-        "predicted_acc_G4_at_T_512M_pp":
-            next((r["predicted_acc_G4_pp"] for r in extra_rows
-                  if abs(r["T_ext_M"] - 512) < 0.5), None),
-        "predicted_delta_G32_minus_G4_at_T_512M_pp":
-            next((r["predicted_delta_G32_minus_G4_pp"] for r in extra_rows
-                  if abs(r["T_ext_M"] - 512) < 0.5), None),
+        "predicted_acc_G32_at_T_128M_pp": next(
+            (r["predicted_acc_G32_pp"] for r in extra_rows if abs(r["T_ext_M"] - 128) < 0.5), None
+        ),
+        "predicted_acc_G4_at_T_128M_pp": next(
+            (r["predicted_acc_G4_pp"] for r in extra_rows if abs(r["T_ext_M"] - 128) < 0.5), None
+        ),
+        "predicted_delta_G32_minus_G4_at_T_128M_pp": next(
+            (
+                r["predicted_delta_G32_minus_G4_pp"]
+                for r in extra_rows
+                if abs(r["T_ext_M"] - 128) < 0.5
+            ),
+            None,
+        ),
+        "predicted_acc_G32_at_T_256M_pp": next(
+            (r["predicted_acc_G32_pp"] for r in extra_rows if abs(r["T_ext_M"] - 256) < 0.5), None
+        ),
+        "predicted_acc_G4_at_T_256M_pp": next(
+            (r["predicted_acc_G4_pp"] for r in extra_rows if abs(r["T_ext_M"] - 256) < 0.5), None
+        ),
+        "predicted_delta_G32_minus_G4_at_T_256M_pp": next(
+            (
+                r["predicted_delta_G32_minus_G4_pp"]
+                for r in extra_rows
+                if abs(r["T_ext_M"] - 256) < 0.5
+            ),
+            None,
+        ),
+        "predicted_acc_G32_at_T_512M_pp": next(
+            (r["predicted_acc_G32_pp"] for r in extra_rows if abs(r["T_ext_M"] - 512) < 0.5), None
+        ),
+        "predicted_acc_G4_at_T_512M_pp": next(
+            (r["predicted_acc_G4_pp"] for r in extra_rows if abs(r["T_ext_M"] - 512) < 0.5), None
+        ),
+        "predicted_delta_G32_minus_G4_at_T_512M_pp": next(
+            (
+                r["predicted_delta_G32_minus_G4_pp"]
+                for r in extra_rows
+                if abs(r["T_ext_M"] - 512) < 0.5
+            ),
+            None,
+        ),
         "monotone_trend_c_with_T": "increasing" if c_slope > 0 else "decreasing",
     }
 
@@ -366,8 +408,10 @@ def main() -> None:
     write_tsv(RES / "group_size_iter75_hypothesis_v2.tsv", hypoth_rows)
     write_tsv(RES / "group_size_iter75_extrapolate_v2.tsv", extra_rows)
     write_tsv(RES / "group_size_iter75_egt_v2.tsv", egt_rows)
-    write_tsv(RES / "group_size_iter75_summary_v2.tsv",
-              [{"metric": k, "value": v} for k, v in headline.items()])
+    write_tsv(
+        RES / "group_size_iter75_summary_v2.tsv",
+        [{"metric": k, "value": v} for k, v in headline.items()],
+    )
 
     meta = {
         "iteration": 75,
@@ -406,17 +450,25 @@ def main() -> None:
     c_hats = [r["c_hat"] for r in fit_rows]
     c_los = [r["c_boot_lo"] for r in fit_rows]
     c_his = [r["c_boot_hi"] for r in fit_rows]
-    yerr_lo = [max(0.0, c - lo) for c, lo in zip(c_hats, c_los)]
-    yerr_hi = [max(0.0, hi - c) for c, hi in zip(c_hats, c_his)]
-    ax[0].errorbar(Ts_M, c_hats, yerr=[yerr_lo, yerr_hi],
-                   fmt="o-", color="#1f77b4", capsize=4, linewidth=1.6,
-                   label="fitted c(T) ± 95% CI")
-    ax[0].axhline(0.0, color="gray", linestyle="--", linewidth=0.8,
-                  label="H0_a: c=0 (DPO-equivalence)")
-    ax[0].axhline(0.5, color="#d62728", linestyle=":", linewidth=1.2,
-                  label="H0_b: c=0.5 (sqrt-scaling)")
-    ax[0].axhline(1.0, color="#2ca02c", linestyle="-.", linewidth=0.8,
-                  label="H0_c: c=1.0 (linear)")
+    yerr_lo = [max(0.0, c - lo) for c, lo in zip(c_hats, c_los, strict=False)]
+    yerr_hi = [max(0.0, hi - c) for c, hi in zip(c_hats, c_his, strict=False)]
+    ax[0].errorbar(
+        Ts_M,
+        c_hats,
+        yerr=[yerr_lo, yerr_hi],
+        fmt="o-",
+        color="#1f77b4",
+        capsize=4,
+        linewidth=1.6,
+        label="fitted c(T) ± 95% CI",
+    )
+    ax[0].axhline(
+        0.0, color="gray", linestyle="--", linewidth=0.8, label="H0_a: c=0 (DPO-equivalence)"
+    )
+    ax[0].axhline(
+        0.5, color="#d62728", linestyle=":", linewidth=1.2, label="H0_b: c=0.5 (sqrt-scaling)"
+    )
+    ax[0].axhline(1.0, color="#2ca02c", linestyle="-.", linewidth=0.8, label="H0_c: c=1.0 (linear)")
     ax[0].set_xscale("log")
     ax[0].set_xlabel("token budget $T$ (M, log scale)")
     ax[0].set_ylabel(r"fitted exponent $c(T)$ in $G{=}64/G{-}1$ scaling")
@@ -439,10 +491,16 @@ def main() -> None:
         y_pred = r["a_hat"] - b_safe * x_pred ** (-c_safe)
         label_data = f"T={T:.0f}M data"
         label_fit = f"T={T:.0f}M c={r['c_hat']:.3f}"
-        ax[1].scatter(x, y, color=colors_T.get(int(T), "gray"), s=40, alpha=0.85,
-                      label=label_data)
-        ax[1].plot(x_pred, y_pred, color=colors_T.get(int(T), "gray"), linestyle="--",
-                   linewidth=1.0, alpha=0.7, label=label_fit)
+        ax[1].scatter(x, y, color=colors_T.get(int(T), "gray"), s=40, alpha=0.85, label=label_data)
+        ax[1].plot(
+            x_pred,
+            y_pred,
+            color=colors_T.get(int(T), "gray"),
+            linestyle="--",
+            linewidth=1.0,
+            alpha=0.7,
+            label=label_fit,
+        )
     ax[1].set_xscale("log")
     ax[1].set_xlabel(r"group size $G$ (log scale)")
     ax[1].set_ylabel(r"held-out accuracy")
@@ -463,8 +521,12 @@ def main() -> None:
         if 4 in d and 32 in d:
             obs_Ts_out.append(r["T_M"])
             obs_delta.append(abs(d[32]["acc"] - d[4]["acc"]) * 100)
-    ax[2].plot(observed_Ts, obs_delta, "o-", color="#1f77b4", label="observed Δacc(G32–G4)", linewidth=1.6)
-    ax[2].plot(T_ext_arr, delta_pp, "s--", color="#d62728", label="power-law extrapolation", linewidth=1.4)
+    ax[2].plot(
+        observed_Ts, obs_delta, "o-", color="#1f77b4", label="observed Δacc(G32–G4)", linewidth=1.6
+    )
+    ax[2].plot(
+        T_ext_arr, delta_pp, "s--", color="#d62728", label="power-law extrapolation", linewidth=1.4
+    )
     ax[2].set_xscale("log")
     ax[2].set_xlabel("token budget $T$ (M, log scale)")
     ax[2].set_ylabel(r"|$\Delta$acc(G$=$32 $-$ G$=$4)| (pp)")
@@ -479,16 +541,22 @@ def main() -> None:
 
     print("[iter75] fitted (a, b, c) at the 4 observed budgets (with 95% boot CI on c):")
     for r in fit_rows:
-        print(f"  T={r['T_M']:6.1f}M  a={r['a_hat']:.3f}  b={r['b_hat']:.3f}  "
-              f"c={r['c_hat']:.3f}  CI=[{r['c_boot_lo']:.3f}, {r['c_boot_hi']:.3f}]  "
-              f"rmse={r['rmse_acc']:.4f}")
-    print(f"[iter75] c slope vs log10(T): {c_slope:.4f}; "
-          f"b at T=64M anchor: {b_at_64:.4f}; a at T=64M anchor: {a_at_64:.4f}")
+        print(
+            f"  T={r['T_M']:6.1f}M  a={r['a_hat']:.3f}  b={r['b_hat']:.3f}  "
+            f"c={r['c_hat']:.3f}  CI=[{r['c_boot_lo']:.3f}, {r['c_boot_hi']:.3f}]  "
+            f"rmse={r['rmse_acc']:.4f}"
+        )
+    print(
+        f"[iter75] c slope vs log10(T): {c_slope:.4f}; "
+        f"b at T=64M anchor: {b_at_64:.4f}; a at T=64M anchor: {a_at_64:.4f}"
+    )
     for r in extra_rows:
-        print(f"[iter75] T={r['T_ext_M']:.0f}M  predicted c={r['c_extrapolated']:.4f}  "
-              f"acc(G=32)={r['predicted_acc_G32_pp']:.1f}pp  "
-              f"acc(G=4)={r['predicted_acc_G4_pp']:.1f}pp  "
-              f"Δ={r['predicted_delta_G32_minus_G4_pp']:.2f}pp")
+        print(
+            f"[iter75] T={r['T_ext_M']:.0f}M  predicted c={r['c_extrapolated']:.4f}  "
+            f"acc(G=32)={r['predicted_acc_G32_pp']:.1f}pp  "
+            f"acc(G=4)={r['predicted_acc_G4_pp']:.1f}pp  "
+            f"Δ={r['predicted_delta_G32_minus_G4_pp']:.2f}pp"
+        )
     print(f"[iter75] {n_reject_dpo_eq}/{n_total_budgets} budgets reject c=0 (DPO-eq)")
     print(f"[iter75] {n_reject_sqrt}/{n_total_budgets} budgets reject c=0.5 (sqrt-scaling)")
     print(f"[iter75] {n_reject_linear}/{n_total_budgets} budgets reject c=1.0 (linear)")

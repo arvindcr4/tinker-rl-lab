@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import sys as _contract_sys
 from pathlib import Path as _ContractPath
+
 if len(_ContractPath(__file__).resolve().parents) > 3:
     _contract_sys.path.insert(0, str(_ContractPath(__file__).resolve().parents[3]))
 from platform_hybrid.experiments.framework_contracts import observed_updates
@@ -178,9 +179,7 @@ def build_rows() -> tuple[list[dict[str, str]], dict[str, Any]]:
                 f"{len(set(p1_tinker_ids))} Tinker IDs"
             ),
             seed_count=f"1 per anchor (seed 42; {len(p1_clean)} selected runs)",
-            steps=(
-                f"{min(p1_steps)}-{max(p1_steps)} per run" if p1_steps else "UNKNOWN"
-            ),
+            steps=(f"{min(p1_steps)}-{max(p1_steps)} per run" if p1_steps else "UNKNOWN"),
             heldout_metric="NONE in the exact-linked W&B summaries; claim uses training reward traces",
             evidence_tier="C",
             source_artifact="platform_hybrid/experiments/results/scaling_law_fits.tsv",
@@ -199,8 +198,7 @@ def build_rows() -> tuple[list[dict[str, str]], dict[str, Any]]:
             run_ids=join_refs([f"tinker:{nemotron_tid}", wandb_ref(nemotron)]),
             wandb_links=nemotron["url"],
             model_consistency=(
-                "CONFLICT: W&B labels Nemotron-120B but exact Tinker ID reports "
-                f"{nemotron_actual}"
+                f"CONFLICT: W&B labels Nemotron-120B but exact Tinker ID reports {nemotron_actual}"
             ),
             seed_count="1 (seed 42)",
             steps="20",
@@ -225,15 +223,8 @@ def build_rows() -> tuple[list[dict[str, str]], dict[str, Any]]:
         for index, row in enumerate(zvf_rows, start=1)
     ]
     zvf_steps = [int(row["n_steps"]) for row in zvf_rows if row.get("n_steps", "").isdigit()]
-    zvf_cells = {
-        (row["experiment"], row["model"], row["group_size"])
-        for row in zvf_rows
-    }
-    zvf_max_seeds = max(
-        int(row["n_seeds"])
-        for row in zvf_rows
-        if row.get("n_seeds", "").isdigit()
-    )
+    zvf_cells = {(row["experiment"], row["model"], row["group_size"]) for row in zvf_rows}
+    zvf_max_seeds = max(int(row["n_seeds"]) for row in zvf_rows if row.get("n_seeds", "").isdigit())
     p2_shared = dict(
         paper="P2",
         run_ids=join_refs(zvf_local_ids),
@@ -269,9 +260,18 @@ def build_rows() -> tuple[list[dict[str, str]], dict[str, Any]]:
 
     # P3: powered-by-seed but extremely short W&B-only group-size sweep.
     p3_ids = [
-        "l22x3tca", "pi494jq6", "9619su2v", "itm8rucn",
-        "69r2fxq7", "w0kdbyme", "eiphi8fy", "m3pw5try",
-        "t9ccvd9f", "ho2sh257", "zlbow9m5", "x6d3i1yq",
+        "l22x3tca",
+        "pi494jq6",
+        "9619su2v",
+        "itm8rucn",
+        "69r2fxq7",
+        "w0kdbyme",
+        "eiphi8fy",
+        "m3pw5try",
+        "t9ccvd9f",
+        "ho2sh257",
+        "zlbow9m5",
+        "x6d3i1yq",
     ]
     p3_runs = [run_by_id(wandb_runs, run_id) for run_id in p3_ids]
     gains_by_g: defaultdict[int, list[float]] = defaultdict(list)
@@ -300,7 +300,8 @@ def build_rows() -> tuple[list[dict[str, str]], dict[str, Any]]:
     )
 
     p3_g32 = [
-        run for run in wandb_runs
+        run
+        for run in wandb_runs
         if run.get("project") == "zvf-audit-v2" and (run.get("config") or {}).get("G") == 32
     ]
     rows.append(
@@ -323,8 +324,7 @@ def build_rows() -> tuple[list[dict[str, str]], dict[str, Any]]:
     # P4: the local artifact is internally coherent but does not match the model named in the abstract.
     p4 = json.loads((RESULTS / "drgrpo_gsm8k_cot.json").read_text())
     p4_ids = [
-        local_ref("drgrpo_gsm8k_cot", run["algo"], f"seed{run['seed']}")
-        for run in p4["runs"]
+        local_ref("drgrpo_gsm8k_cot", run["algo"], f"seed{run['seed']}") for run in p4["runs"]
     ]
     p4_models = sorted({run["model"] for run in p4["runs"]})
     grpo = p4["summary"]["grpo"]
@@ -337,8 +337,7 @@ def build_rows() -> tuple[list[dict[str, str]], dict[str, Any]]:
             run_ids=join_refs(p4_ids),
             wandb_links="NONE",
             model_consistency=(
-                "CONFLICT: abstract says Qwen3-8B; mapped local runs say "
-                + ", ".join(p4_models)
+                "CONFLICT: abstract says Qwen3-8B; mapped local runs say " + ", ".join(p4_models)
             ),
             seed_count="3 per arm (42,123,456; 6 local runs)",
             steps="30 per run",
@@ -411,7 +410,10 @@ def build_rows() -> tuple[list[dict[str, str]], dict[str, Any]]:
 
     # P6: deterministic resource/audit claims.
     registry_pass, registry_total, registry_failures = registry_validation()
-    registry_ids = [f"registry:{path.stem}" for path in sorted((REPO / "platform_hybrid/registry/entries").glob("*.json"))]
+    registry_ids = [
+        f"registry:{path.stem}"
+        for path in sorted((REPO / "platform_hybrid/registry/entries").glob("*.json"))
+    ]
     rows.append(
         make_row(
             paper="P6",
@@ -447,9 +449,7 @@ def build_rows() -> tuple[list[dict[str, str]], dict[str, Any]]:
         tinker_id for tinker_id, pairs in exact_by_tinker.items() if any(ok for _, ok in pairs)
     )
     conflicting_tinker = sorted(set(exact_by_tinker) - set(consistent_tinker))
-    exact_wandb = unique(
-        run["url"] for pairs in exact_by_tinker.values() for run, _ in pairs
-    )
+    exact_wandb = unique(run["url"] for pairs in exact_by_tinker.values() for run, _ in pairs)
     exact_wandb_refs = unique(
         wandb_ref(run) for pairs in exact_by_tinker.values() for run, _ in pairs
     )
@@ -459,8 +459,7 @@ def build_rows() -> tuple[list[dict[str, str]], dict[str, Any]]:
             claim_id="P6-C2-NEW-AUDIT",
             claim="The live Tinker-to-W&B identity audit separates exact model-consistent links from exact-ID/model-conflicting links.",
             run_ids=join_refs(
-                [f"tinker:{tinker_id}" for tinker_id in sorted(exact_by_tinker)]
-                + exact_wandb_refs
+                [f"tinker:{tinker_id}" for tinker_id in sorted(exact_by_tinker)] + exact_wandb_refs
             ),
             wandb_links=join_refs(exact_wandb),
             model_consistency=(
@@ -490,7 +489,9 @@ def build_rows() -> tuple[list[dict[str, str]], dict[str, Any]]:
             wandb_links=join_refs(run["url"] for run in zvf_audit),
             model_consistency="W&B-ONLY multi-model audit; 0 exact Tinker IDs",
             seed_count=f"{len(audit_seeds)} logged seed labels ({','.join(audit_seeds)}), not a fixed-cell replication count",
-            steps=f"{min(audit_steps)}-{max(audit_steps)} observed updates" if audit_steps else "UNKNOWN observed updates",
+            steps=f"{min(audit_steps)}-{max(audit_steps)} observed updates"
+            if audit_steps
+            else "UNKNOWN observed updates",
             heldout_metric="NONE; W&B summaries contain no held-out/eval metric",
             evidence_tier="C",
             source_artifact="W&B project zvf-audit",
@@ -694,7 +695,9 @@ def write_outputs(rows: list[dict[str, str]], metadata: dict[str, Any]) -> None:
             "## Audit summary",
             "",
             f"- {len(rows)} headline/resource claims across all eight papers.",
-            "- Tier counts: " + ", ".join(f"{tier}={tier_counts[tier]}" for tier in sorted(tier_counts)) + ".",
+            "- Tier counts: "
+            + ", ".join(f"{tier}={tier_counts[tier]}" for tier in sorted(tier_counts))
+            + ".",
             f"- Exact live provenance: {metadata['exact_model_consistent_tinker_ids']}/{metadata['exact_tinker_ids']} "
             "referenced Tinker IDs have at least one model-consistent W&B link; "
             f"{metadata['exact_model_conflicting_tinker_ids']} have only conflicting model labels.",
@@ -716,7 +719,9 @@ def write_outputs(rows: list[dict[str, str]], metadata: dict[str, Any]) -> None:
         "claim_count": len(rows),
         "paper_counts": dict(sorted(Counter(row["paper"] for row in rows).items())),
         "tier_counts": dict(sorted(tier_counts.items())),
-        "validation": "SCHEMA_FAIL" if metadata["registry_validation_failures"] else "SCHEMA_PASS_ONLY",
+        "validation": "SCHEMA_FAIL"
+        if metadata["registry_validation_failures"]
+        else "SCHEMA_PASS_ONLY",
         "schema_valid": not bool(metadata["registry_validation_failures"]),
         "provenance_verified": None,
         "completion_contract_satisfied": None,

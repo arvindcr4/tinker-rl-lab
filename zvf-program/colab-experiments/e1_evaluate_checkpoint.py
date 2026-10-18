@@ -139,7 +139,9 @@ def load_remote_progress(api: Any, args: argparse.Namespace) -> dict[str, Any]:
     )
 
 
-def upload_progress(api: Any, args: argparse.Namespace, progress: dict[str, Any], path: Path) -> str:
+def upload_progress(
+    api: Any, args: argparse.Namespace, progress: dict[str, Any], path: Path
+) -> str:
     return upload_evaluation_progress(
         api,
         progress,
@@ -164,7 +166,9 @@ def main() -> int:
     if missing:
         raise SystemExit("missing required secret environment: " + ", ".join(missing))
     if args.heldout_n != 500 or args.checkpoint_step != 30 or args.max_completion_length != 1024:
-        raise SystemExit("confirmatory recovery requires checkpoint=30, heldout_n=500, max_completion_length=1024")
+        raise SystemExit(
+            "confirmatory recovery requires checkpoint=30, heldout_n=500, max_completion_length=1024"
+        )
 
     import torch
     from datasets import load_dataset
@@ -212,7 +216,9 @@ def main() -> int:
     zvf = metric_series(history, "frac_reward_zero_std", "train/frac_reward_zero_std")
     step_times = metric_series(history, "step_time", "train/step_time")
     if len(rewards) != 30 or len(zvf) != 30:
-        raise RuntimeError(f"checkpoint telemetry is incomplete: rewards={len(rewards)} zvf={len(zvf)}")
+        raise RuntimeError(
+            f"checkpoint telemetry is incomplete: rewards={len(rewards)} zvf={len(zvf)}"
+        )
 
     dataset = load_dataset(DATASET_ID, "main", revision=DATASET_REVISION, trust_remote_code=False)
     heldout = dataset["test"].select(range(args.heldout_n))

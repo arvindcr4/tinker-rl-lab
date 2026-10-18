@@ -30,16 +30,9 @@ RESULTS_ROOT = Path("/results")
 LICENSE_RISK_CONTAINER_PATH = Path("/receipts/LICENSE_RISK_ACCEPTANCE_2026-08-09.md")
 LICENSE_RISK_REPO_PATH = "outputs/_setup/LICENSE_RISK_ACCEPTANCE_2026-08-09.md"
 
-E2_IMAGE_MANIFEST_DIGEST = (
-    "sha256:675d298493278f891a50e41ed31ffdb71590d4583dfc1987385a48d872f25103"
-)
-E2_IMAGE_CONFIG_DIGEST = (
-    "sha256:291ff2584113385f988a5594c3d7979ac72a071fa77a1a3752c6766110cdd73b"
-)
-E2_IMAGE_REF = (
-    "ghcr.io/proximal-labs/frontier-swe/revideo-perf-opt@"
-    + E2_IMAGE_MANIFEST_DIGEST
-)
+E2_IMAGE_MANIFEST_DIGEST = "sha256:675d298493278f891a50e41ed31ffdb71590d4583dfc1987385a48d872f25103"
+E2_IMAGE_CONFIG_DIGEST = "sha256:291ff2584113385f988a5594c3d7979ac72a071fa77a1a3752c6766110cdd73b"
+E2_IMAGE_REF = "ghcr.io/proximal-labs/frontier-swe/revideo-perf-opt@" + E2_IMAGE_MANIFEST_DIGEST
 E2_CHECKOUT_REVISION = "422b9bb95deb8efe436becb0ed3c44be23611e10"
 
 E7_CHECKOUT_REVISION = "cbd86c7cd8519f01ae6b7ad7db7fdb653ea54f23"
@@ -56,22 +49,21 @@ gemini_secret = modal.Secret.from_name("pavlov-gemini")
 if modal.is_local():
     HERE = Path(__file__).resolve().parent
     REPO_ROOT = HERE.parents[1]
-    E2_TASK_ROOT = (
-        REPO_ROOT / "outputs/e2_frontier_swe/frontier-swe/tasks/revideo-perf-opt"
-    )
-    E7_TASK_ROOT = (
-        REPO_ROOT
-        / "outputs/e7_binaryaudit/BinaryAudit/tasks/dnsmasq-backdoor-detect"
-    )
+    E2_TASK_ROOT = REPO_ROOT / "outputs/e2_frontier_swe/frontier-swe/tasks/revideo-perf-opt"
+    E7_TASK_ROOT = REPO_ROOT / "outputs/e7_binaryaudit/BinaryAudit/tasks/dnsmasq-backdoor-detect"
     LICENSE_RISK_LOCAL_PATH = REPO_ROOT / LICENSE_RISK_REPO_PATH
-    e2_image = modal.Image.from_registry(E2_IMAGE_REF, add_python="3.11").add_local_dir(
-        E2_TASK_ROOT / "tests",
-        "/tests",
-        copy=True,
-    ).add_local_file(
-        LICENSE_RISK_LOCAL_PATH,
-        str(LICENSE_RISK_CONTAINER_PATH),
-        copy=True,
+    e2_image = (
+        modal.Image.from_registry(E2_IMAGE_REF, add_python="3.11")
+        .add_local_dir(
+            E2_TASK_ROOT / "tests",
+            "/tests",
+            copy=True,
+        )
+        .add_local_file(
+            LICENSE_RISK_LOCAL_PATH,
+            str(LICENSE_RISK_CONTAINER_PATH),
+            copy=True,
+        )
     )
     e7_image = modal.Image.from_dockerfile(
         HERE / "e7_binaryaudit_modal.Dockerfile",

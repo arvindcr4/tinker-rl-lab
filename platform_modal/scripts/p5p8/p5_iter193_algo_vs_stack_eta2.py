@@ -16,8 +16,9 @@ label-to-stack variance ratio side-by-side.
 
 stdlib only. Outputs -> platform_hybrid/experiments/results/p5p8/p5_iter193_*.tsv|json
 """
+
 from __future__ import annotations
-import csv, json, math, os, random
+import csv, json, os, random
 from collections import defaultdict
 from statistics import fmean
 
@@ -34,6 +35,7 @@ CI = 0.95
 
 # ----------------- variance decomposition -----------------
 from p5_review17_stats import json_safe
+
 
 def eta2_omega2(groups):
     """groups: dict[label -> list[float]]. Returns (eta2, omega2, k, N)."""
@@ -133,7 +135,9 @@ def load_mega():
 
 # ----------------- main -----------------
 def main():
-    print("Protocol review17-p5-v2: exploratory descriptive associations; no independent-run, causal, equivalence, or held-out prediction claim")
+    print(
+        "Protocol review17-p5-v2: exploratory descriptive associations; no independent-run, causal, equivalence, or held-out prediction claim"
+    )
     os.makedirs(OUT, exist_ok=True)
     rng = random.Random(SEED)
     n2, n_methods, n_steps = load_n2()
@@ -146,26 +150,59 @@ def main():
         g = n2[ch]
         e, w, k, N = eta2_omega2(g)
         lo, hi = boot_ci_eta2(g, rng)
-        rows.append(dict(corpus="n2_samestack", axis="algorithm", channel=ch,
-                         eta2=e, omega2=w, ci_lo=lo, ci_hi=hi, k_levels=k, n_obs=N))
+        rows.append(
+            dict(
+                corpus="n2_samestack",
+                axis="algorithm",
+                channel=ch,
+                eta2=e,
+                omega2=w,
+                ci_lo=lo,
+                ci_hi=hi,
+                k_levels=k,
+                n_obs=N,
+            )
+        )
     # Stack axes (mega)
     for ch in channels:
         for fac in factors:
             g = mega[ch][fac]
             e, w, k, N = eta2_omega2(g)
             lo, hi = boot_ci_eta2(g, rng)
-            rows.append(dict(corpus="mega", axis=fac, channel=ch,
-                             eta2=e, omega2=w, ci_lo=lo, ci_hi=hi, k_levels=k, n_obs=N))
+            rows.append(
+                dict(
+                    corpus="mega",
+                    axis=fac,
+                    channel=ch,
+                    eta2=e,
+                    omega2=w,
+                    ci_lo=lo,
+                    ci_hi=hi,
+                    k_levels=k,
+                    n_obs=N,
+                )
+            )
 
     # write per-axis TSV
     with open(os.path.join(OUT, "p5_iter193_axis_eta2.tsv"), "w", newline="") as f:
-        w = csv.DictWriter(f, fieldnames=["corpus", "axis", "channel", "eta2",
-                           "omega2", "ci_lo", "ci_hi", "k_levels", "n_obs"],
-                           delimiter="\t")
+        w = csv.DictWriter(
+            f,
+            fieldnames=[
+                "corpus",
+                "axis",
+                "channel",
+                "eta2",
+                "omega2",
+                "ci_lo",
+                "ci_hi",
+                "k_levels",
+                "n_obs",
+            ],
+            delimiter="\t",
+        )
         w.writeheader()
         for r in rows:
-            w.writerow({k: (f"{v:.5f}" if isinstance(v, float) else v)
-                        for k, v in r.items()})
+            w.writerow({k: (f"{v:.5f}" if isinstance(v, float) else v) for k, v in r.items()})
 
     # ratio table: per channel, max stack eta2 vs algorithm eta2
     ratio_rows = []
@@ -174,63 +211,93 @@ def main():
         stack = [r for r in rows if r["corpus"] == "mega" and r["channel"] == ch]
         best = max(stack, key=lambda r: r["eta2"] if r["eta2"] == r["eta2"] else -1)
         ratio = (best["eta2"] / alg["eta2"]) if alg["eta2"] > 1e-9 else float("inf")
-        ratio_rows.append(dict(channel=ch, algo_eta2=alg["eta2"],
-                               algo_ci_lo=alg["ci_lo"], algo_ci_hi=alg["ci_hi"],
-                               top_stack_axis=best["axis"], top_stack_eta2=best["eta2"],
-                               top_stack_ci_lo=best["ci_lo"], top_stack_ci_hi=best["ci_hi"],
-                               stack_to_label_ratio=ratio,
-                               ci_disjoint=bool(alg["ci_hi"] < best["ci_lo"])))
+        ratio_rows.append(
+            dict(
+                channel=ch,
+                algo_eta2=alg["eta2"],
+                algo_ci_lo=alg["ci_lo"],
+                algo_ci_hi=alg["ci_hi"],
+                top_stack_axis=best["axis"],
+                top_stack_eta2=best["eta2"],
+                top_stack_ci_lo=best["ci_lo"],
+                top_stack_ci_hi=best["ci_hi"],
+                stack_to_label_ratio=ratio,
+                ci_disjoint=bool(alg["ci_hi"] < best["ci_lo"]),
+            )
+        )
     with open(os.path.join(OUT, "p5_iter193_ratio.tsv"), "w", newline="") as f:
-        cols = ["channel", "algo_eta2", "algo_ci_lo", "algo_ci_hi", "top_stack_axis",
-                "top_stack_eta2", "top_stack_ci_lo", "top_stack_ci_hi",
-                "stack_to_label_ratio", "ci_disjoint"]
+        cols = [
+            "channel",
+            "algo_eta2",
+            "algo_ci_lo",
+            "algo_ci_hi",
+            "top_stack_axis",
+            "top_stack_eta2",
+            "top_stack_ci_lo",
+            "top_stack_ci_hi",
+            "stack_to_label_ratio",
+            "ci_disjoint",
+        ]
         w = csv.DictWriter(f, fieldnames=cols, delimiter="\t")
         w.writeheader()
         for r in ratio_rows:
-            w.writerow({k: (f"{v:.5f}" if isinstance(v, float) else v)
-                        for k, v in r.items()})
+            w.writerow({k: (f"{v:.5f}" if isinstance(v, float) else v) for k, v in r.items()})
 
     # ---- hypotheses ----
     verdicts = {}
     # H1: algorithm-axis eta2 < 0.10 on every channel (label explains <10%)
     verdicts["H1_algo_eta2_lt_0.10_all"] = all(
-        r["eta2"] < 0.10 for r in rows if r["axis"] == "algorithm")
+        r["eta2"] < 0.10 for r in rows if r["axis"] == "algorithm"
+    )
     # H2: for zvf & reward, top stack axis eta2 CI strictly above algorithm CI (disjoint)
     verdicts["H2_stack_ci_above_algo_zvf_reward"] = all(
-        rr["ci_disjoint"] for rr in ratio_rows if rr["channel"] in ("zvf", "reward"))
+        rr["ci_disjoint"] for rr in ratio_rows if rr["channel"] in ("zvf", "reward")
+    )
     # H3: G is the single dominant stack axis for zvf (highest eta2 among stack)
     zvf_stack = [r for r in rows if r["corpus"] == "mega" and r["channel"] == "zvf"]
-    verdicts["H3_G_top_for_zvf"] = (max(zvf_stack, key=lambda r: r["eta2"])["axis"] == "G")
+    verdicts["H3_G_top_for_zvf"] = max(zvf_stack, key=lambda r: r["eta2"])["axis"] == "G"
     # H4: seed axis eta2 < 0.10 on every channel (seed noise is small vs stack)
     verdicts["H4_seed_eta2_lt_0.10_all"] = all(
-        r["eta2"] < 0.10 for r in rows if r["axis"] == "seed")
+        r["eta2"] < 0.10 for r in rows if r["axis"] == "seed"
+    )
     # H5: stack-to-label ratio > 3x on zvf and reward
     verdicts["H5_ratio_gt_3x_zvf_reward"] = all(
-        rr["stack_to_label_ratio"] > 3.0 for rr in ratio_rows
-        if rr["channel"] in ("zvf", "reward"))
+        rr["stack_to_label_ratio"] > 3.0 for rr in ratio_rows if rr["channel"] in ("zvf", "reward")
+    )
 
     summary = dict(
-        analysis_protocol="review17-p5-v2", inference_scope="exploratory descriptive cross-corpus comparison; not causal or prospective",
-        n2_methods=n_methods, n2_steps_per_method=n_steps, mega_cells=n_cells,
-        stack_factors=factors, channels=channels,
+        analysis_protocol="review17-p5-v2",
+        inference_scope="exploratory descriptive cross-corpus comparison; not causal or prospective",
+        n2_methods=n_methods,
+        n2_steps_per_method=n_steps,
+        mega_cells=n_cells,
+        stack_factors=factors,
+        channels=channels,
         algorithm_axis_eta2={r["channel"]: r["eta2"] for r in rows if r["axis"] == "algorithm"},
-        ratio_table=ratio_rows, verdicts=verdicts,
-        n_pass=sum(verdicts.values()), n_total=len(verdicts),
-        params=dict(B=B, seed=SEED, ci=CI))
+        ratio_table=ratio_rows,
+        verdicts=verdicts,
+        n_pass=sum(verdicts.values()),
+        n_total=len(verdicts),
+        params=dict(B=B, seed=SEED, ci=CI),
+    )
     with open(os.path.join(OUT, "p5_iter193_summary.json"), "w") as f:
         json.dump(json_safe(summary), f, indent=2)
 
     print(f"N2: {n_methods} methods x ~{n_steps} steps | mega: {n_cells} cells")
     print("\n=== eta^2 by axis ===")
     for r in rows:
-        print(f"{r['corpus']:13s} {r['axis']:12s} {r['channel']:7s} "
-              f"eta2={r['eta2']:.4f} [{r['ci_lo']:.4f},{r['ci_hi']:.4f}] "
-              f"omega2={r['omega2']:.4f} k={r['k_levels']} N={r['n_obs']}")
+        print(
+            f"{r['corpus']:13s} {r['axis']:12s} {r['channel']:7s} "
+            f"eta2={r['eta2']:.4f} [{r['ci_lo']:.4f},{r['ci_hi']:.4f}] "
+            f"omega2={r['omega2']:.4f} k={r['k_levels']} N={r['n_obs']}"
+        )
     print("\n=== stack-to-label ratio ===")
     for rr in ratio_rows:
-        print(f"{rr['channel']:7s} algo={rr['algo_eta2']:.4f} "
-              f"top={rr['top_stack_axis']}({rr['top_stack_eta2']:.4f}) "
-              f"ratio={rr['stack_to_label_ratio']:.1f}x disjoint={rr['ci_disjoint']}")
+        print(
+            f"{rr['channel']:7s} algo={rr['algo_eta2']:.4f} "
+            f"top={rr['top_stack_axis']}({rr['top_stack_eta2']:.4f}) "
+            f"ratio={rr['stack_to_label_ratio']:.1f}x disjoint={rr['ci_disjoint']}"
+        )
     print("\n=== verdicts ===")
     for h, v in verdicts.items():
         print(f"  {'PASS' if v else 'FAIL'}  {h}")

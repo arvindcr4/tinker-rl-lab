@@ -16,6 +16,7 @@ not GU=1-ZVF (which is monotone in difficulty). We report both correlations.
 
 Run:  colab run --gpu T4 --timeout 900 e1_grad_signal.py
 """
+
 import json, re, random, statistics
 import torch, torch.nn.functional as F
 from transformers import AutoModelForCausalLM, AutoTokenizer
@@ -25,10 +26,10 @@ SEEDS = [0, 1, 2]
 G, BATCH, MAX_NEW, LR = 6, 4, 40, 2e-6
 # magnitude ranges chosen to span p from ~1 (trivial) to ~0 (impossible)
 DIFFS = {
-    "trivial":    (1, 9,    1, 9),
-    "easy":       (5, 20,   5, 20),
-    "medium":     (11, 60,  11, 60),
-    "hard":       (50, 300, 50, 300),
+    "trivial": (1, 9, 1, 9),
+    "easy": (5, 20, 5, 20),
+    "medium": (11, 60, 11, 60),
+    "hard": (50, 300, 50, 300),
     "impossible": (200, 999, 200, 999),
 }
 ROUNDS = 2  # passes over all difficulties per seed
@@ -40,32 +41,51 @@ if tok.pad_token is None:
 tok.padding_side = "left"
 PAD = tok.pad_token_id
 
+
 def problem(diff):
     lo1, hi1, lo2, hi2 = DIFFS[diff]
     a, b = random.randint(lo1, hi1), random.randint(lo2, hi2)
     return f"{a} + {b}", a + b
 
+
 def prompt_of(q):
     return tok.apply_chat_template(
-        [{"role": "user", "content": f"Compute {q}. Reason briefly, then put the final integer after '####'."}],
-        tokenize=False, add_generation_prompt=True)
+        [
+            {
+                "role": "user",
+                "content": f"Compute {q}. Reason briefly, then put the final integer after '####'.",
+            }
+        ],
+        tokenize=False,
+        add_generation_prompt=True,
+    )
+
 
 def parse(text):
     m = re.findall(r"-?\d+", text.split("####")[-1])
     return (int(m[0]) if m else None), (1.0 if m else 0.0)  # (answer, format_ok)
 
+
 def gen_group(model, prompt, gold):
     model.eval()
     enc = tok([prompt] * G, return_tensors="pt", padding=True).to(DEV)
     with torch.no_grad():
-        out = model.generate(**enc, do_sample=True, temperature=1.0, top_p=0.95,
-                             max_new_tokens=MAX_NEW, pad_token_id=PAD)
-    gens = out[:, enc.input_ids.shape[1]:]
+        out = model.generate(
+            **enc,
+            do_sample=True,
+            temperature=1.0,
+            top_p=0.95,
+            max_new_tokens=MAX_NEW,
+            pad_token_id=PAD,
+        )
+    gens = out[:, enc.input_ids.shape[1] :]
     rewards, fmt = [], []
     for t in tok.batch_decode(gens, skip_special_tokens=True):
         ans, ok = parse(t)
-        rewards.append(1.0 if ans == gold else 0.0); fmt.append(ok)
+        rewards.append(1.0 if ans == gold else 0.0)
+        fmt.append(ok)
     return enc.input_ids[0], gens, rewards, fmt
+
 
 def seq_logprob(model, pids, gen_row):
     model.train()
@@ -76,17 +96,26 @@ def seq_logprob(model, pids, gen_row):
     logits = model(ids).logits[:, :-1, :].float()
     tgt = ids[:, 1:]
     lp = F.log_softmax(logits, -1).gather(-1, tgt.unsqueeze(-1)).squeeze(-1)
-    return lp[:, pids.shape[0] - 1:].sum()
+    return lp[:, pids.shape[0] - 1 :].sum()
+
 
 def grad_norm(model):
-    return sum(p.grad.detach().float().pow(2).sum().item()
-               for p in model.parameters() if p.grad is not None) ** 0.5
+    return (
+        sum(
+            p.grad.detach().float().pow(2).sum().item()
+            for p in model.parameters()
+            if p.grad is not None
+        )
+        ** 0.5
+    )
 
-from protocol_stats import pearson, clustered_correlation
+
+from protocol_stats import clustered_correlation
 
 all_rows = []
 for seed in SEEDS:
-    random.seed(seed); torch.manual_seed(seed)
+    random.seed(seed)
+    torch.manual_seed(seed)
     model = AutoModelForCausalLM.from_pretrained(MODEL, dtype=torch.bfloat16).to(DEV)
     opt = torch.optim.AdamW(model.parameters(), lr=LR)
     step = 0
@@ -98,10 +127,14 @@ for seed in SEEDS:
             for _ in range(BATCH):
                 q, gold = problem(diff)
                 pids, gens, rewards, fmt = gen_group(model, prompt_of(q), gold)
-                rewards_all += rewards; fmt_all += fmt
-                m = sum(rewards) / G; v = statistics.pvariance(rewards); s = v ** 0.5
+                rewards_all += rewards
+                fmt_all += fmt
+                m = sum(rewards) / G
+                v = statistics.pvariance(rewards)
+                s = v**0.5
                 if v == 0.0:
-                    zv += 1; continue
+                    zv += 1
+                    continue
                 for i in range(G):
                     adv = (rewards[i] - m) / (s + 1e-6)
                     if adv:
@@ -109,34 +142,54 @@ for seed in SEEDS:
                         if lp is not None:
                             losses.append(-adv * lp)
             if losses:
-                torch.stack(losses).sum().backward()   # SUMMED, not averaged
+                torch.stack(losses).sum().backward()  # SUMMED, not averaged
                 gn = grad_norm(model)
             else:
                 gn = 0.0
             opt.step()
             p = sum(rewards_all) / len(rewards_all)
             zvf = zv / BATCH
-            row = {"seed": seed, "step": step, "difficulty": diff, "p": p,
-                   "zvf": zvf, "gu": 1-zvf,
-                   "erf": sum(fmt_all)/len(fmt_all),
-                   "p1mp": p*(1-p), "grad_norm": gn,
-                   "signal_per_rollout": round(gn / (BATCH * G), 4)}
+            row = {
+                "seed": seed,
+                "step": step,
+                "difficulty": diff,
+                "p": p,
+                "zvf": zvf,
+                "gu": 1 - zvf,
+                "erf": sum(fmt_all) / len(fmt_all),
+                "p1mp": p * (1 - p),
+                "grad_norm": gn,
+                "signal_per_rollout": round(gn / (BATCH * G), 4),
+            }
             all_rows.append(row)
-            print(f"[e1] s{seed} st{step:2d} {diff:10s} p={p:.2f} ZVF={zvf:.2f} "
-                  f"ERF={row['erf']:.2f} |g|={gn:8.2f} spr={row['signal_per_rollout']:.3f}", flush=True)
-    del model, opt; torch.cuda.empty_cache()
+            print(
+                f"[e1] s{seed} st{step:2d} {diff:10s} p={p:.2f} ZVF={zvf:.2f} "
+                f"ERF={row['erf']:.2f} |g|={gn:8.2f} spr={row['signal_per_rollout']:.3f}",
+                flush=True,
+            )
+    del model, opt
+    torch.cuda.empty_cache()
 
 gn_all = [r["grad_norm"] for r in all_rows]
 summary = {
-    "experiment": "E1_grad_signal", "model": MODEL, "seeds": SEEDS,
+    "experiment": "E1_grad_signal",
+    "model": MODEL,
+    "seeds": SEEDS,
     "n_steps": len(all_rows),
     "pearson_gradnorm_vs_p1mp": clustered_correlation(all_rows, "p1mp", "grad_norm"),
-    "pearson_gradnorm_vs_GU":   clustered_correlation(all_rows, "gu", "grad_norm"),
-    "pearson_gradnorm_vs_ERF":  clustered_correlation(all_rows, "erf", "grad_norm"),
-    "by_difficulty": {d: {
-        "mean_p": round(statistics.mean([r["p"] for r in all_rows if r["difficulty"] == d]), 3),
-        "mean_ZVF": round(statistics.mean([r["zvf"] for r in all_rows if r["difficulty"] == d]), 3),
-        "mean_grad_norm": round(statistics.mean([r["grad_norm"] for r in all_rows if r["difficulty"] == d]), 2),
-    } for d in DIFFS},
+    "pearson_gradnorm_vs_GU": clustered_correlation(all_rows, "gu", "grad_norm"),
+    "pearson_gradnorm_vs_ERF": clustered_correlation(all_rows, "erf", "grad_norm"),
+    "by_difficulty": {
+        d: {
+            "mean_p": round(statistics.mean([r["p"] for r in all_rows if r["difficulty"] == d]), 3),
+            "mean_ZVF": round(
+                statistics.mean([r["zvf"] for r in all_rows if r["difficulty"] == d]), 3
+            ),
+            "mean_grad_norm": round(
+                statistics.mean([r["grad_norm"] for r in all_rows if r["difficulty"] == d]), 2
+            ),
+        }
+        for d in DIFFS
+    },
 }
 print("E1_RESULT " + json.dumps(summary), flush=True)

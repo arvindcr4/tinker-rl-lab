@@ -16,13 +16,16 @@ release rate** but **absolute-band at low (<0.10%) rate**.
 
 Reads existing tsv artifacts -- no model retraining.
 """
+
 from __future__ import annotations
 import csv, json
 from pathlib import Path
 
 import sys
+
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
+from _paths import REPO_ROOT
+
 ROOT = REPO_ROOT
 RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8"
 
@@ -31,7 +34,7 @@ def load(path):
     with path.open() as f:
         rdr = csv.reader(f, delimiter="\t")
         header = next(rdr)
-        return [dict(zip(header, r)) for r in rdr]
+        return [dict(zip(header, r, strict=False)) for r in rdr]
 
 
 def main():
@@ -59,13 +62,15 @@ def main():
     for r in rates:
         per_rate = [avg[(r, rule)] for rule in rule_set if (r, rule) in avg]
         per_rate.sort(key=lambda x: x["mean_cpf_usd"])
-        envelope.append(dict(
-            rate=r,
-            best_cpd=min(x["mean_cpd_usd"] for x in per_rate),
-            best_cpd_rule=min(per_rate, key=lambda x: x["mean_cpd_usd"])["rule"],
-            best_cpf=per_rate[0]["mean_cpf_usd"],
-            best_cpf_rule=per_rate[0]["rule"],
-        ))
+        envelope.append(
+            dict(
+                rate=r,
+                best_cpd=min(x["mean_cpd_usd"] for x in per_rate),
+                best_cpd_rule=min(per_rate, key=lambda x: x["mean_cpd_usd"])["rule"],
+                best_cpf=per_rate[0]["mean_cpf_usd"],
+                best_cpf_rule=per_rate[0]["rule"],
+            )
+        )
     out_path = RES / "synth_iter112_cost_rate_envelope.tsv"
     with out_path.open("w") as f:
         w = csv.DictWriter(f, fieldnames=list(envelope[0].keys()), delimiter="\t")
@@ -98,8 +103,10 @@ def main():
     )
     print(f"[synth-iter112] wrote {out_path.name} and {proj_path.name}")
     for env in envelope:
-        print(f"  rate={env['rate']:.4f} best_cpd={env['best_cpd']:.7f} ({env['best_cpd_rule']}) "
-              f"best_cpf={env['best_cpf']:.5f} ({env['best_cpf_rule']})")
+        print(
+            f"  rate={env['rate']:.4f} best_cpd={env['best_cpd']:.7f} ({env['best_cpd_rule']}) "
+            f"best_cpf={env['best_cpf']:.5f} ({env['best_cpf_rule']})"
+        )
 
 
 if __name__ == "__main__":

@@ -23,15 +23,16 @@ Outputs:
     n12_meta.json
     figures/*.png + figures/*.pdf
 """
+
 from __future__ import annotations
 
 import json
 import math
-import os
 from pathlib import Path
 from typing import Any
 
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
@@ -46,6 +47,7 @@ OUT.mkdir(parents=True, exist_ok=True)
 FIG.mkdir(parents=True, exist_ok=True)
 
 RNG = np.random.default_rng(20260704)
+
 
 # ---------------------------------------------------------------------------
 # Logistic axis transforms (same anchors as iter130, plus new length channel)
@@ -130,16 +132,18 @@ for json_path in [INP / "drgrpo_vs_grpo.json", INP / "drgrpo_gsm8k_cot_full.json
         d_z = np.diff(zvf)
         d_l = np.diff(length)
         rho, pval = stats.spearmanr(d_z, d_l)
-        real_rho_rows.append({
-            "task": run.get("experiment", ""),
-            "method": run["algo"],
-            "seed": str(run["seed"]),
-            "model": run.get("model", ""),
-            "n_steps": len(step_log),
-            "rho_dZ_dL": float(rho),
-            "rho_pval": float(pval),
-            "abs_rho_dZ_dL": float(abs(rho)),
-        })
+        real_rho_rows.append(
+            {
+                "task": run.get("experiment", ""),
+                "method": run["algo"],
+                "seed": str(run["seed"]),
+                "model": run.get("model", ""),
+                "n_steps": len(step_log),
+                "rho_dZ_dL": float(rho),
+                "rho_pval": float(pval),
+                "abs_rho_dZ_dL": float(abs(rho)),
+            }
+        )
 
 real_rho = pd.DataFrame(real_rho_rows)
 real_rho.to_csv(OUT / "n12_real_length_traces_rho.tsv", sep="\t", index=False)
@@ -166,7 +170,9 @@ def length_prior(method: str) -> float:
 
 risk["rho_dZ_dL"] = risk["method"].apply(length_prior)
 risk["length_channel_source"] = risk["method"].apply(
-    lambda m: "grpo_real" if m == "grpo" else ("mitigated_proxy" if m in mitigated_methods else "none")
+    lambda m: (
+        "grpo_real" if m == "grpo" else ("mitigated_proxy" if m in mitigated_methods else "none")
+    )
 )
 risk["risk_len"] = risk["rho_dZ_dL"].apply(axis_len)
 
@@ -188,7 +194,9 @@ risk["zvf_risk_4ch"] = (
 # ---------------------------------------------------------------------------
 # 5. AUROC comparison
 # ---------------------------------------------------------------------------
-y_within = risk[~risk["method"].str.startswith(("tool_use", "scaling_law"))]["failure_bin"].to_numpy()
+y_within = risk[~risk["method"].str.startswith(("tool_use", "scaling_law"))][
+    "failure_bin"
+].to_numpy()
 y_cross = risk["failure_bin"].to_numpy()
 
 # Within-methods panel (n=45 variance_mitigation seeds)
@@ -218,43 +226,74 @@ aurocs_cross = auroc_block(axes_cross, y_cross)
 
 axis_rows = []
 for name, v in aurocs_cross.items():
-    axis_rows.append({"scope": "cross_experiment", "axis": name,
-                      "auroc": v["auroc"], "ci_lo": v["ci_lo"], "ci_hi": v["ci_hi"]})
+    axis_rows.append(
+        {
+            "scope": "cross_experiment",
+            "axis": name,
+            "auroc": v["auroc"],
+            "ci_lo": v["ci_lo"],
+            "ci_hi": v["ci_hi"],
+        }
+    )
 for name, v in aurocs_within.items():
-    axis_rows.append({"scope": "variance_mitigation_only", "axis": name,
-                      "auroc": v["auroc"], "ci_lo": v["ci_lo"], "ci_hi": v["ci_hi"]})
+    axis_rows.append(
+        {
+            "scope": "variance_mitigation_only",
+            "axis": name,
+            "auroc": v["auroc"],
+            "ci_lo": v["ci_lo"],
+            "ci_hi": v["ci_hi"],
+        }
+    )
 pd.DataFrame(axis_rows).to_csv(OUT / "n12_axis_aurocs.tsv", sep="\t", index=False)
 
 # ---------------------------------------------------------------------------
 # 6. Per-method aggregate
 # ---------------------------------------------------------------------------
-agg = (risk.groupby("method", as_index=False)
-       .agg(zvf_risk_mean=("zvf_risk", "mean"),
-            zvf_risk_max_mean=("zvf_risk_max", "mean"),
-            zvf_risk_4ch_mean=("zvf_risk_4ch", "mean"),
-            zvf_risk_max_4ch_mean=("zvf_risk_max_4ch", "mean"),
-            risk_len_mean=("risk_len", "mean"),
-            rho_dZ_dL_mean=("rho_dZ_dL", "mean"),
-            mag_mean=("mean_zvf", "mean"),
-            csd_mean=("lag1_zvf_rolling_w15", "mean"),
-            drift_mean=("slope", "mean"),
-            failure_rate=("failure_bin", "mean"),
-            n_seeds=("seed", "count"))
-       .sort_values("zvf_risk_max_4ch_mean", ascending=False))
+agg = (
+    risk.groupby("method", as_index=False)
+    .agg(
+        zvf_risk_mean=("zvf_risk", "mean"),
+        zvf_risk_max_mean=("zvf_risk_max", "mean"),
+        zvf_risk_4ch_mean=("zvf_risk_4ch", "mean"),
+        zvf_risk_max_4ch_mean=("zvf_risk_max_4ch", "mean"),
+        risk_len_mean=("risk_len", "mean"),
+        rho_dZ_dL_mean=("rho_dZ_dL", "mean"),
+        mag_mean=("mean_zvf", "mean"),
+        csd_mean=("lag1_zvf_rolling_w15", "mean"),
+        drift_mean=("slope", "mean"),
+        failure_rate=("failure_bin", "mean"),
+        n_seeds=("seed", "count"),
+    )
+    .sort_values("zvf_risk_max_4ch_mean", ascending=False)
+)
 agg.to_csv(OUT / "n12_method_risk.tsv", sep="\t", index=False)
 
 # ---------------------------------------------------------------------------
 # 7. Outputs
 # ---------------------------------------------------------------------------
 keep_cols = [
-    "method", "seed", "failure_label", "failure_bin",
-    "mean_zvf", "lag1_zvf_rolling_w15", "slope",
-    "risk_mag", "risk_csd", "risk_drift", "risk_len",
-    "rho_dZ_dL", "length_channel_source",
-    "zvf_risk", "zvf_risk_max", "zvf_risk_4ch", "zvf_risk_max_4ch",
+    "method",
+    "seed",
+    "failure_label",
+    "failure_bin",
+    "mean_zvf",
+    "lag1_zvf_rolling_w15",
+    "slope",
+    "risk_mag",
+    "risk_csd",
+    "risk_drift",
+    "risk_len",
+    "rho_dZ_dL",
+    "length_channel_source",
+    "zvf_risk",
+    "zvf_risk_max",
+    "zvf_risk_4ch",
+    "zvf_risk_max_4ch",
 ]
 risk_out = risk[keep_cols].sort_values("zvf_risk_max_4ch", ascending=False)
 risk_out.to_csv(OUT / "n12_risk_index.tsv", sep="\t", index=False)
+
 
 # ---------------------------------------------------------------------------
 # 8. Figures
@@ -263,6 +302,7 @@ def savefig(name: str) -> None:
     plt.savefig(FIG / f"{name}.png", bbox_inches="tight", dpi=150)
     plt.savefig(FIG / f"{name}.pdf", bbox_inches="tight")
     plt.close()
+
 
 # --- Figure 1: AUROC comparison bar chart ---
 fig, ax = plt.subplots(figsize=(10, 5))
@@ -285,7 +325,7 @@ ax.set_xticklabels(names, rotation=15, ha="right")
 ax.set_ylabel("AUROC")
 ax.set_ylim(0, 1.05)
 ax.set_title("N12: cross-experiment AUROC — adding rho(dZ,dL) channel")
-for bar, v, n in zip(bars, vals, names):
+for bar, v, _n in zip(bars, vals, names, strict=False):
     ax.text(bar.get_x() + bar.get_width() / 2, v + 0.03, f"{v:.3f}", ha="center", fontsize=9)
 savefig("n12_auroc_comparison")
 
@@ -298,8 +338,27 @@ ax.set_xlabel("3-channel max-fusion risk")
 ax.set_ylabel("4-channel max-fusion risk")
 ax.set_title("N12: 3ch vs 4ch max-fusion (red = failure)")
 from matplotlib.lines import Line2D
-legend = [Line2D([0], [0], marker="o", color="w", markerfacecolor="#d62728", markeredgecolor="k", label="failure"),
-          Line2D([0], [0], marker="o", color="w", markerfacecolor="#1f77b4", markeredgecolor="k", label="safe")]
+
+legend = [
+    Line2D(
+        [0],
+        [0],
+        marker="o",
+        color="w",
+        markerfacecolor="#d62728",
+        markeredgecolor="k",
+        label="failure",
+    ),
+    Line2D(
+        [0],
+        [0],
+        marker="o",
+        color="w",
+        markerfacecolor="#1f77b4",
+        markeredgecolor="k",
+        label="safe",
+    ),
+]
 ax.legend(handles=legend, loc="lower right")
 savefig("n12_risk_scatter")
 
@@ -312,8 +371,12 @@ roc_axes = {
     "4ch weighted": risk["zvf_risk_4ch"].to_numpy(),
     "length-only": risk["risk_len"].to_numpy(),
 }
-palette = {"3ch max-fusion": "#1f77b4", "4ch max-fusion": "#9467bd",
-           "4ch weighted": "#d62728", "length-only": "#2ca02c"}
+palette = {
+    "3ch max-fusion": "#1f77b4",
+    "4ch max-fusion": "#9467bd",
+    "4ch weighted": "#d62728",
+    "length-only": "#2ca02c",
+}
 for name, s in roc_axes.items():
     order = np.argsort(-s)
     fpr, tpr = [0.0], [0.0]
@@ -324,9 +387,19 @@ for name, s in roc_axes.items():
         fp = ((pred == 1) & (y_x == 0)).sum()
         tpr.append(tp / max((y_x == 1).sum(), 1))
         fpr.append(fp / max((y_x == 0).sum(), 1))
-    auc = aurocs_cross["zvf_risk_max_3ch"]["auroc"] if name == "3ch max-fusion" else (
-          aurocs_cross["zvf_risk_max_4ch"]["auroc"] if name == "4ch max-fusion" else (
-          aurocs_cross["zvf_risk_4ch"]["auroc"] if name == "4ch weighted" else aurocs_cross["risk_len"]["auroc"]))
+    auc = (
+        aurocs_cross["zvf_risk_max_3ch"]["auroc"]
+        if name == "3ch max-fusion"
+        else (
+            aurocs_cross["zvf_risk_max_4ch"]["auroc"]
+            if name == "4ch max-fusion"
+            else (
+                aurocs_cross["zvf_risk_4ch"]["auroc"]
+                if name == "4ch weighted"
+                else aurocs_cross["risk_len"]["auroc"]
+            )
+        )
+    )
     ax.plot(fpr, tpr, label=f"{name} (AUC={auc:.3f})", color=palette[name], linewidth=2)
 ax.plot([0, 1], [0, 1], "k:", alpha=0.4)
 ax.set_xlabel("false positive rate")
@@ -382,7 +455,12 @@ print("=== Per-method (top 10 by 4ch max-fusion) ===")
 print(agg.head(10).to_string(index=False))
 print()
 print("Outputs:")
-for p in ["n12_risk_index.tsv", "n12_axis_aurocs.tsv", "n12_method_risk.tsv",
-          "n12_real_length_traces_rho.tsv", "n12_meta.json"]:
+for p in [
+    "n12_risk_index.tsv",
+    "n12_axis_aurocs.tsv",
+    "n12_method_risk.tsv",
+    "n12_real_length_traces_rho.tsv",
+    "n12_meta.json",
+]:
     print(f"  {OUT / p}")
 print(f"  {FIG}")

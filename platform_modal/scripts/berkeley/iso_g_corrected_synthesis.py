@@ -52,8 +52,9 @@ Outputs (platform_hybrid/experiments/results/berkeley/):
   iso_g_corrected_practitioner.tsv      (H5)
   iso_g_corrected_summary.json
 """
+
 from __future__ import annotations
-import csv, json, math, os, sys, datetime
+import csv, json, math, sys, datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -69,6 +70,7 @@ def _read_tsv(path: Path) -> list[dict]:
         # Skip comment lines starting with '#'
         lines = [ln for ln in fh if not ln.lstrip().startswith("#")]
     import io
+
     return list(csv.DictReader(io.StringIO("".join(lines)), delimiter="\t"))
 
 
@@ -96,19 +98,21 @@ def h1_overherding(per_G):
         G = int(row["G"])
         zvf_obs = float(row["mean_zvf_mean"])
         p = float(row["reward_mean"])
-        zvf_iid = p ** G + (1 - p) ** G
-        delta_div = zvf_iid - zvf_obs   # negative = over-herding
+        zvf_iid = p**G + (1 - p) ** G
+        delta_div = zvf_iid - zvf_obs  # negative = over-herding
         deltas.append(delta_div)
-        rows.append({
-            "G": G,
-            "p_emp": f"{p:.4f}",
-            "zvf_iid": f"{zvf_iid:.4f}",
-            "zvf_obs": f"{zvf_obs:.4f}",
-            "delta_div": f"{delta_div:+.4f}",
-            "overherd": "yes" if delta_div < 0 else "no",
-        })
+        rows.append(
+            {
+                "G": G,
+                "p_emp": f"{p:.4f}",
+                "zvf_iid": f"{zvf_iid:.4f}",
+                "zvf_obs": f"{zvf_obs:.4f}",
+                "delta_div": f"{delta_div:+.4f}",
+                "overherd": "yes" if delta_div < 0 else "no",
+            }
+        )
     n_negative = sum(1 for d in deltas if d < 0)
-    monotone = all(deltas[i] >= deltas[i+1] for i in range(len(deltas)-1))
+    monotone = all(deltas[i] >= deltas[i + 1] for i in range(len(deltas) - 1))
     return rows, n_negative, monotone, deltas
 
 
@@ -134,16 +138,18 @@ def h2_tip_savings():
                 continue
             overshoot = -dG  # G_emp - G_iid
             overshoots.append(overshoot)
-            rows.append({
-                "Y_target": Y_target,
-                "mean_dG_iid_minus_emp": f"{dG:+.4f}",
-                "overshoot_correction": f"{overshoot:+.4f}",
-                "tip_savings": "yes" if overshoot > 0 else "no",
-                "n_prompts": int(r["n_prompts_or_G"]),
-            })
+            rows.append(
+                {
+                    "Y_target": Y_target,
+                    "mean_dG_iid_minus_emp": f"{dG:+.4f}",
+                    "overshoot_correction": f"{overshoot:+.4f}",
+                    "tip_savings": "yes" if overshoot > 0 else "no",
+                    "n_prompts": int(r["n_prompts_or_G"]),
+                }
+            )
     # monotonicity of overshoot across Y_target (should grow as Y rises)
     if len(overshoots) >= 2:
-        monotone = all(overshoots[i] <= overshoots[i+1] for i in range(len(overshoots)-1))
+        monotone = all(overshoots[i] <= overshoots[i + 1] for i in range(len(overshoots) - 1))
     else:
         monotone = False
     return rows, sum(1 for o in overshoots if o > 0), monotone
@@ -165,39 +171,50 @@ def h3_league_coupling(per_G, deltas_h1):
     log_abs_d = [math.log10(abs(d)) for d in deltas_h1]
     # least-squares fit
     n = len(log_G)
-    sx = sum(log_G); sy = sum(log_abs_d)
-    sxx = sum(x*x for x in log_G); sxy = sum(x*y for x, y in zip(log_G, log_abs_d))
-    slope = (n*sxy - sx*sy) / (n*sxx - sx*sx)
-    intercept = (sy - slope*sx) / n
+    sx = sum(log_G)
+    sy = sum(log_abs_d)
+    sxx = sum(x * x for x in log_G)
+    sxy = sum(x * y for x, y in zip(log_G, log_abs_d, strict=False))
+    slope = (n * sxy - sx * sy) / (n * sxx - sx * sx)
+    intercept = (sy - slope * sx) / n
     # extrapolate to G=64
     log64 = math.log10(64)
     abs_d64 = 10 ** (intercept + slope * log64)
     abs_d2 = abs(deltas_h1[0])
     ratio = abs_d64 / abs_d2 if abs_d2 > 0 else float("inf")
-    rows = [{
-        "G_fit": G,
-        "delta_div": f"{d:+.4f}",
-        "abs_delta_div": f"{abs(d):.4f}",
-        "log10_abs": f"{math.log10(abs(d)):.4f}",
-    } for G, d in zip([int(r['G']) for r in per_G], deltas_h1)]
-    rows.append({
-        "G_fit": 64,
-        "delta_div": f"{-abs_d64:+.4f}",
-        "abs_delta_div": f"{abs_d64:.4f}",
-        "log10_abs": f"{math.log10(abs_d64):.4f}",
-    })
-    rows.append({
-        "G_fit": "slope_per_decade_G",
-        "delta_div": "—",
-        "abs_delta_div": "—",
-        "log10_abs": f"{slope:+.4f}",
-    })
-    rows.append({
-        "G_fit": "ratio_G64_over_G2",
-        "delta_div": "—",
-        "abs_delta_div": f"{ratio:.3f}",
-        "log10_abs": "DECISIVE" if ratio > 4.0 else "NULL",
-    })
+    rows = [
+        {
+            "G_fit": G,
+            "delta_div": f"{d:+.4f}",
+            "abs_delta_div": f"{abs(d):.4f}",
+            "log10_abs": f"{math.log10(abs(d)):.4f}",
+        }
+        for G, d in zip([int(r["G"]) for r in per_G], deltas_h1, strict=False)
+    ]
+    rows.append(
+        {
+            "G_fit": 64,
+            "delta_div": f"{-abs_d64:+.4f}",
+            "abs_delta_div": f"{abs_d64:.4f}",
+            "log10_abs": f"{math.log10(abs_d64):.4f}",
+        }
+    )
+    rows.append(
+        {
+            "G_fit": "slope_per_decade_G",
+            "delta_div": "—",
+            "abs_delta_div": "—",
+            "log10_abs": f"{slope:+.4f}",
+        }
+    )
+    rows.append(
+        {
+            "G_fit": "ratio_G64_over_G2",
+            "delta_div": "—",
+            "abs_delta_div": f"{ratio:.3f}",
+            "log10_abs": "DECISIVE" if ratio > 4.0 else "NULL",
+        }
+    )
     return rows, ratio
 
 
@@ -215,38 +232,43 @@ def h4_cross_pillar():
         m = r.get("method", "")
         if m in ("grpo", "ngrpo", "cppo", "scafgrpo", "aero", "mcgrpo", "areal", "gift", "es"):
             try:
-                methods.append({
-                    "method": m,
-                    "mag": float(r["mag_mean"]),
-                    "zvf_risk": float(r["zvf_risk_mean"]),
-                })
+                methods.append(
+                    {
+                        "method": m,
+                        "mag": float(r["mag_mean"]),
+                        "zvf_risk": float(r["zvf_risk_mean"]),
+                    }
+                )
             except (ValueError, KeyError):
                 continue
     if len(methods) < 5:
         return [], 0.0, 1.0
     sorted_by_mag = sorted(methods, key=lambda r: r["mag"])
     n = len(sorted_by_mag)
-    rank_mag = {r["method"]: i+1 for i, r in enumerate(sorted_by_mag)}
+    rank_mag = {r["method"]: i + 1 for i, r in enumerate(sorted_by_mag)}
     sorted_by_zvf = sorted(methods, key=lambda r: r["zvf_risk"])
-    rank_zvf = {r["method"]: i+1 for i, r in enumerate(sorted_by_zvf)}
-    d_sq = sum((rank_mag[m["method"]] - rank_zvf[m["method"]])**2 for m in methods)
-    rho = 1 - (6*d_sq) / (n*(n*n - 1))
+    rank_zvf = {r["method"]: i + 1 for i, r in enumerate(sorted_by_zvf)}
+    d_sq = sum((rank_mag[m["method"]] - rank_zvf[m["method"]]) ** 2 for m in methods)
+    rho = 1 - (6 * d_sq) / (n * (n * n - 1))
     if abs(rho) < 0.9999:
-        from math import erf, sqrt
-        t = rho * math.sqrt((n-2) / (1 - rho*rho + 1e-12))
+        from math import erf
+
+        t = rho * math.sqrt((n - 2) / (1 - rho * rho + 1e-12))
         p_one_sided = 0.5 * (1 - erf(t / math.sqrt(2)))
     else:
         p_one_sided = 0.0
     rows = []
     for r in methods:
-        rows.append({
-            "method": r["method"],
-            "mag": f"{r['mag']:.4f}",
-            "zvf_risk": f"{r['zvf_risk']:.4f}",
-            "rank_mag": rank_mag[r["method"]],
-            "rank_zvf": rank_zvf[r["method"]],
-            "overherd_proxy": f"{-r['zvf_risk']:+.4f}",
-        })
+        rows.append(
+            {
+                "method": r["method"],
+                "mag": f"{r['mag']:.4f}",
+                "zvf_risk": f"{r['zvf_risk']:.4f}",
+                "rank_mag": rank_mag[r["method"]],
+                "rank_zvf": rank_zvf[r["method"]],
+                "overherd_proxy": f"{-r['zvf_risk']:+.4f}",
+            }
+        )
     return rows, rho, p_one_sided
 
 
@@ -273,7 +295,7 @@ def h5_practitioner_iso_g():
     # Test the stated empirical median plus correction without hidden rounding.
     G_emp_median = 4
     G_correction = 1
-    G_iso_corrected = G_emp_median + G_correction   # = 5, the tested minimum
+    G_iso_corrected = G_emp_median + G_correction  # = 5, the tested minimum
     # The corrected synthesis interprets G_iso_corrected as the minimum
     # contrast-budget; G*_raw is the compute-budget optimum and must
     # be >= G_iso_corrected to satisfy both constraints.
@@ -284,13 +306,15 @@ def h5_practitioner_iso_g():
         ok = "yes" if G_iso_floor <= G_raw else "no"
         if ok == "yes":
             n_floor_ok += 1
-        rows.append({
-            "T": T,
-            "G_raw_GRPO": G_raw,
-            "G_iso_corrected_policy": G_iso_floor,
-            "delta_G_raw_minus_iso": f"{G_raw - G_iso_floor:+d}",
-            "iso_is_lower_bound": ok,
-        })
+        rows.append(
+            {
+                "T": T,
+                "G_raw_GRPO": G_raw,
+                "G_iso_corrected_policy": G_iso_floor,
+                "delta_G_raw_minus_iso": f"{G_raw - G_iso_floor:+d}",
+                "iso_is_lower_bound": ok,
+            }
+        )
     return rows, n_floor_ok, G_iso_floor
 
 
@@ -303,15 +327,17 @@ def main():
 
     per_G = _load_per_G()
     if not per_G:
-        print("[iso_g_corrected] FATAL: no per_G table found"); sys.exit(1)
+        print("[iso_g_corrected] FATAL: no per_G table found")
+        sys.exit(1)
 
     # ---- H1 ----
     h1_rows, n_neg, monotone, deltas = h1_overherding(per_G)
     h1_path = OUT / "iso_g_corrected_overherding.tsv"
     with h1_path.open("w", newline="") as fh:
         w = csv.DictWriter(fh, fieldnames=list(h1_rows[0].keys()), delimiter="\t")
-        w.writeheader(); w.writerows(h1_rows)
-    h1_decisive = (n_neg == 4 and monotone)
+        w.writeheader()
+        w.writerows(h1_rows)
+    h1_decisive = n_neg == 4 and monotone
     print(f"[h1] over-herding delta_div < 0 in {n_neg}/4 cells, monotone={monotone}")
 
     # ---- H2 ----
@@ -319,17 +345,21 @@ def main():
     h2_path = OUT / "iso_g_corrected_tip_savings.tsv"
     with h2_path.open("w", newline="") as fh:
         w = csv.DictWriter(fh, fieldnames=list(h2_rows[0].keys()), delimiter="\t")
-        w.writeheader(); w.writerows(h2_rows)
-    h2_decisive = (n_pos_tip == len(h2_rows) and monotone_h2)
-    print(f"[h2] tip savings overshoots in {n_pos_tip}/{len(h2_rows)} Y_targets, monotone={monotone_h2}")
+        w.writeheader()
+        w.writerows(h2_rows)
+    h2_decisive = n_pos_tip == len(h2_rows) and monotone_h2
+    print(
+        f"[h2] tip savings overshoots in {n_pos_tip}/{len(h2_rows)} Y_targets, monotone={monotone_h2}"
+    )
 
     # ---- H3 ----
     h3_rows, ratio = h3_league_coupling(per_G, deltas)
     h3_path = OUT / "iso_g_corrected_league_coupling.tsv"
     with h3_path.open("w", newline="") as fh:
         w = csv.DictWriter(fh, fieldnames=list(h3_rows[0].keys()), delimiter="\t")
-        w.writeheader(); w.writerows(h3_rows)
-    h3_decisive = (ratio > 4.0)
+        w.writeheader()
+        w.writerows(h3_rows)
+    h3_decisive = ratio > 4.0
     print(f"[h3] over-herding ratio G=64/G=2 = {ratio:.3f}, decisive={h3_decisive}")
 
     # ---- H4 ----
@@ -338,8 +368,9 @@ def main():
     with h4_path.open("w", newline="") as fh:
         if h4_rows:
             w = csv.DictWriter(fh, fieldnames=list(h4_rows[0].keys()), delimiter="\t")
-            w.writeheader(); w.writerows(h4_rows)
-    h4_decisive = (rho > 0.50 and p_one_sided < 0.05)
+            w.writeheader()
+            w.writerows(h4_rows)
+    h4_decisive = rho > 0.50 and p_one_sided < 0.05
     print(f"[h4] cross-pillar Spearman ρ={rho:+.3f} p={p_one_sided:.4f}")
 
     # ---- H5 ----
@@ -348,8 +379,9 @@ def main():
     with h5_path.open("w", newline="") as fh:
         if h5_rows:
             w = csv.DictWriter(fh, fieldnames=list(h5_rows[0].keys()), delimiter="\t")
-            w.writeheader(); w.writerows(h5_rows)
-    h5_decisive = (n_floor_ok == 4)
+            w.writeheader()
+            w.writerows(h5_rows)
+    h5_decisive = n_floor_ok == 4
     print(f"[h5] Iso-G floor {g_iso} <= G*_raw at {n_floor_ok}/4 T")
 
     n_decisive = sum([h1_decisive, h2_decisive, h3_decisive, h4_decisive, h5_decisive])
@@ -366,12 +398,15 @@ def main():
         ),
         "hypotheses": {
             "H1_overherding_monotone": {
-                "n_negative": n_neg, "n_total": 4, "monotone": monotone,
+                "n_negative": n_neg,
+                "n_total": 4,
+                "monotone": monotone,
                 "deltas": deltas,
                 "verdict": "DECISIVE" if h1_decisive else "NULL",
             },
             "H2_tip_savings_monotone": {
-                "n_positive": n_pos_tip, "n_total": len(h2_rows),
+                "n_positive": n_pos_tip,
+                "n_total": len(h2_rows),
                 "monotone": monotone_h2,
                 "verdict": "DECISIVE" if h2_decisive else "NULL",
             },
@@ -387,7 +422,8 @@ def main():
             },
             "H5_practitioner_iso_g": {
                 "G_iso_floor": g_iso,
-                "n_floor_ok": n_floor_ok, "n_total": 4,
+                "n_floor_ok": n_floor_ok,
+                "n_total": 4,
                 "verdict": "DECISIVE" if h5_decisive else "NULL",
             },
         },

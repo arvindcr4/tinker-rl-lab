@@ -11,6 +11,7 @@ from pilot.objective import (
     condition_trace,
     gradient_diagnostic,
 )
+import pytest
 
 
 def fixture(
@@ -47,9 +48,9 @@ class ObjectiveTests(unittest.TestCase):
         intended = condition_trace(condition="intended_full", **data)
         native = condition_trace(condition="native_trl", **data)
         diagnostic = gradient_diagnostic(intended, native)
-        self.assertEqual(diagnostic.relation, "nonzero")
-        self.assertGreaterEqual(diagnostic.cosine, 0.999999)
-        self.assertLess(diagnostic.relative_l2, 0.001)
+        assert diagnostic.relation == "nonzero"
+        assert diagnostic.cosine >= 0.999999
+        assert diagnostic.relative_l2 < 0.001
 
     def test_filtered_variable_length_changes_native_gradient_direction(self) -> None:
         data = fixture(
@@ -60,8 +61,8 @@ class ObjectiveTests(unittest.TestCase):
         intended = condition_trace(condition="intended_full", **data)
         native = condition_trace(condition="native_trl", **data)
         diagnostic = gradient_diagnostic(intended, native)
-        self.assertLess(diagnostic.cosine, 0.99)
-        self.assertGreater(diagnostic.relative_l2, 0.05)
+        assert diagnostic.cosine < 0.99
+        assert diagnostic.relative_l2 > 0.05
 
     def test_reduction_ablation_changes_direction_but_epsilon_does_not(self) -> None:
         data = fixture(
@@ -81,8 +82,8 @@ class ObjectiveTests(unittest.TestCase):
         epsilon_cosine = torch.nn.functional.cosine_similarity(
             epsilon_gradient, intended_gradient, dim=0
         )
-        self.assertLess(float(reduction_cosine), 0.99)
-        self.assertGreater(float(epsilon_cosine), 0.999999)
+        assert float(reduction_cosine) < 0.99
+        assert float(epsilon_cosine) > 0.999999
 
     def test_all_equal_selected_rewards_produce_explicit_joint_zero_diagnostic(self) -> None:
         data = fixture(
@@ -93,11 +94,11 @@ class ObjectiveTests(unittest.TestCase):
         intended = condition_trace(condition="intended_full", **data)
         native = condition_trace(condition="native_trl", **data)
         diagnostic = gradient_diagnostic(intended, native)
-        self.assertEqual(diagnostic.relation, "joint_zero")
-        self.assertIsNone(diagnostic.cosine)
-        self.assertIsNone(diagnostic.relative_l2)
-        self.assertEqual(diagnostic.intended_gradient_norm, 0.0)
-        self.assertEqual(diagnostic.native_gradient_norm, 0.0)
+        assert diagnostic.relation == "joint_zero"
+        assert diagnostic.cosine is None
+        assert diagnostic.relative_l2 is None
+        assert diagnostic.intended_gradient_norm == 0.0
+        assert diagnostic.native_gradient_norm == 0.0
 
     def test_inactive_rows_must_have_zero_masks(self) -> None:
         data = fixture(
@@ -106,7 +107,7 @@ class ObjectiveTests(unittest.TestCase):
             active=[True, True, True, False, True, True, False, True],
         )
         data["completion_mask"][3, 0] = 1.0
-        with self.assertRaisesRegex(ObjectiveContractError, "inactive rows"):
+        with pytest.raises(ObjectiveContractError, match="inactive rows"):
             condition_trace(condition="intended_full", **data)
 
     def test_training_loss_preserves_autograd_to_supplied_logps(self) -> None:
@@ -125,11 +126,13 @@ class ObjectiveTests(unittest.TestCase):
             active_rows=data["active_rows"],
         )
         gradient = torch.autograd.grad(loss, logps)[0]
-        self.assertTrue(torch.isfinite(gradient).all())
-        self.assertTrue(advantages.is_leaf)
-        self.assertFalse(advantages.requires_grad)
+        assert torch.isfinite(gradient).all()
+        assert advantages.is_leaf
+        assert not advantages.requires_grad
 
-    def test_spectral_legendre_grpo_eliminates_zvf_starvation_under_zero_reward_variance(self) -> None:
+    def test_spectral_legendre_grpo_eliminates_zvf_starvation_under_zero_reward_variance(
+        self,
+    ) -> None:
         # All rewards equal 1.0 (zero reward variance / ZVF starvation)
         data = fixture(
             lengths=[2, 3, 4, 8, 16, 24, 32, 40],
@@ -139,7 +142,7 @@ class ObjectiveTests(unittest.TestCase):
         logps = data["logps"].detach().requires_grad_(True)
         # Under standard GRPO / intended_full, advantages collapse to 0
         intended_loss, intended_adv = condition_loss(condition="intended_full", **data)
-        self.assertTrue((intended_adv == 0).all())
+        assert (intended_adv == 0).all()
 
         # Under spectral_legendre_grpo, trajectory dispersion restores non-zero advantages and gradient flow
         spectral_loss, spectral_adv = condition_loss(
@@ -151,10 +154,10 @@ class ObjectiveTests(unittest.TestCase):
             active_rows=data["active_rows"],
         )
         gradient = torch.autograd.grad(spectral_loss, logps)[0]
-        self.assertTrue(torch.isfinite(spectral_loss))
-        self.assertTrue(torch.isfinite(gradient).all())
-        self.assertGreater(float(torch.linalg.vector_norm(gradient)), 0.0)
-        self.assertGreater(float(spectral_adv.std()), 0.0)
+        assert torch.isfinite(spectral_loss)
+        assert torch.isfinite(gradient).all()
+        assert float(torch.linalg.vector_norm(gradient)) > 0.0
+        assert float(spectral_adv.std()) > 0.0
 
     def test_entropic_givens_grpo_eliminates_zvf_starvation(self) -> None:
         data = fixture(
@@ -172,10 +175,10 @@ class ObjectiveTests(unittest.TestCase):
             active_rows=data["active_rows"],
         )
         gradient = torch.autograd.grad(givens_loss, logps)[0]
-        self.assertTrue(torch.isfinite(givens_loss))
-        self.assertTrue(torch.isfinite(gradient).all())
-        self.assertGreater(float(torch.linalg.vector_norm(gradient)), 0.0)
-        self.assertGreater(float(givens_adv.std()), 0.0)
+        assert torch.isfinite(givens_loss)
+        assert torch.isfinite(gradient).all()
+        assert float(torch.linalg.vector_norm(gradient)) > 0.0
+        assert float(givens_adv.std()) > 0.0
 
     def test_spectral_and_givens_condition_trace(self) -> None:
         data = fixture(
@@ -185,14 +188,13 @@ class ObjectiveTests(unittest.TestCase):
         )
         trace_spec = condition_trace(condition="spectral_legendre", **data)
         trace_givens = condition_trace(condition="entropic_givens", **data)
-        self.assertEqual(trace_spec.condition, "spectral_legendre")
-        self.assertEqual(trace_givens.condition, "entropic_givens")
-        self.assertTrue(math.isfinite(trace_spec.loss))
-        self.assertTrue(math.isfinite(trace_givens.loss))
-        self.assertEqual(len(trace_spec.gradient), data["logps"].numel())
-        self.assertEqual(len(trace_givens.gradient), data["logps"].numel())
+        assert trace_spec.condition == "spectral_legendre"
+        assert trace_givens.condition == "entropic_givens"
+        assert math.isfinite(trace_spec.loss)
+        assert math.isfinite(trace_givens.loss)
+        assert len(trace_spec.gradient) == data["logps"].numel()
+        assert len(trace_givens.gradient) == data["logps"].numel()
 
 
 if __name__ == "__main__":
     unittest.main()
-

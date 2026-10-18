@@ -37,13 +37,15 @@ Pipeline (≤300 LoC, stdlib only):
       (ii) ambiguous_fields.tsv — manifest keys whose value-string is
            not uniquely machine-parseable into the underlying axis value
 """
+
 import json, csv, glob, os, math, random, re
-from collections import defaultdict, Counter
 
 import sys
 from pathlib import Path
+
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
+from _paths import REPO_ROOT
+
 ROOT = str(REPO_ROOT)
 MAN_DIR = f"{ROOT}/platform_hybrid/experiments/results/mega_20260704/manifests"
 CELLS = f"{ROOT}/platform_hybrid/experiments/results/mega_20260704/cells.tsv"
@@ -54,6 +56,7 @@ random.seed(20260705)
 
 
 from p5_review17_stats import json_safe
+
 
 def shannon(counter):
     n = sum(counter.values())
@@ -68,10 +71,14 @@ def shannon(counter):
 
 
 def main():
-    print("Protocol review17-p5-v2: exploratory descriptive associations; no independent-run, causal, equivalence, or held-out prediction claim")
+    print(
+        "Protocol review17-p5-v2: exploratory descriptive associations; no independent-run, causal, equivalence, or held-out prediction claim"
+    )
     os.makedirs(OUT, exist_ok=True)
     # ---- Load manifest schema (from disk, not registry) ----
-    sample_manifest = json.load(open(f"{MAN_DIR}/Qwen-Qwen3-5-4B_gsm8k_easy_G2_t0.6_s0_923b060d59.json"))
+    sample_manifest = json.load(
+        open(f"{MAN_DIR}/Qwen-Qwen3-5-4B_gsm8k_easy_G2_t0.6_s0_923b060d59.json")
+    )
     manifest_keys = sorted(sample_manifest.keys())
     # ---- Load all manifests ----
     manifests = []
@@ -85,17 +92,25 @@ def main():
     with open(CELLS) as f:
         rows = list(csv.DictReader(f, delimiter="\t"))
     cell_axis_cols = ["model_family", "task_slice", "G", "temperature", "seed"]
-    tel_cols = ["n_groups", "mean_reward", "zvf", "pcd", "mean_completion_len",
-                "std_completion_len", "sampled_tokens", "cumulative_sampled_tokens",
-                "sample_errors"]
+    tel_cols = [
+        "n_groups",
+        "mean_reward",
+        "zvf",
+        "pcd",
+        "mean_completion_len",
+        "std_completion_len",
+        "sampled_tokens",
+        "cumulative_sampled_tokens",
+        "sample_errors",
+    ]
 
     # ---- PART A: manifest <-> cells.tsv axis mapping ----
     manifest_equiv = {
-        "model_family": None,        # NOT in manifest
+        "model_family": None,  # NOT in manifest
         "task_slice": "heldout_split",  # semantically equivalent
-        "G": "group_size_schedule",     # semantically equivalent (fixed-G=N)
-        "temperature": None,            # NOT in manifest
-        "seed": None,                   # NOT in manifest
+        "G": "group_size_schedule",  # semantically equivalent (fixed-G=N)
+        "temperature": None,  # NOT in manifest
+        "seed": None,  # NOT in manifest
     }
     # ----------------------------------------------------------------
     # PART A rows
@@ -105,22 +120,25 @@ def main():
         n_unique_cells = len(set(r[axis] for r in rows))
         equiv_key = manifest_equiv[axis]
         if equiv_key is None:
-            schema_table.append({
-                "axis": axis,
-                "manifest_key": "<MISSING>",
-                "captured": False,
-                "recoverable_via_cell_id": True,
-                "n_unique_cells": n_unique_cells,
-                "n_unique_manifest_equiv": 0,
-                "captured_fraction": 0.0,
-                "equiv_classifier": "ABSENT",
-            })
+            schema_table.append(
+                {
+                    "axis": axis,
+                    "manifest_key": "<MISSING>",
+                    "captured": False,
+                    "recoverable_via_cell_id": True,
+                    "n_unique_cells": n_unique_cells,
+                    "n_unique_manifest_equiv": 0,
+                    "captured_fraction": 0.0,
+                    "equiv_classifier": "ABSENT",
+                }
+            )
         else:
             # try to recover values from manifest
             cell_vals = set(r[axis] for r in rows)
             man_vals = set(m.get(equiv_key) for m in manifests)
             # group_size_schedule values: "fixed-G=2" — extract N from string
             if equiv_key == "group_size_schedule":
+
                 def extract(man_v, cell_v):
                     m = re.match(r"fixed-G=(\d+)", str(man_v))
                     if not m:
@@ -129,25 +147,36 @@ def main():
                         return int(m.group(1)) == int(cell_v)
                     except Exception:
                         return False
+
                 # fraction of cells whose G matches the manifest's group_size_schedule
-                n_match = sum(1 for r in rows for m in manifests
-                              if r["cell_id"] in m["_name"] and extract(m[equiv_key], r["G"]))
+                n_match = sum(
+                    1
+                    for r in rows
+                    for m in manifests
+                    if r["cell_id"] in m["_name"] and extract(m[equiv_key], r["G"])
+                )
             elif equiv_key == "heldout_split":
-                n_match = sum(1 for r in rows for m in manifests
-                              if r["cell_id"] in m["_name"] and str(m[equiv_key]) == str(r["task_slice"]))
+                n_match = sum(
+                    1
+                    for r in rows
+                    for m in manifests
+                    if r["cell_id"] in m["_name"] and str(m[equiv_key]) == str(r["task_slice"])
+                )
             else:
                 n_match = 0
             frac = n_match / len(rows) if rows else 0.0
-            schema_table.append({
-                "axis": axis,
-                "manifest_key": equiv_key,
-                "captured": True,
-                "recoverable_via_cell_id": False,
-                "n_unique_cells": n_unique_cells,
-                "n_unique_manifest_equiv": len(man_vals),
-                "captured_fraction": round(frac, 4),
-                "equiv_classifier": "EQUIV_PRESENT",
-            })
+            schema_table.append(
+                {
+                    "axis": axis,
+                    "manifest_key": equiv_key,
+                    "captured": True,
+                    "recoverable_via_cell_id": False,
+                    "n_unique_cells": n_unique_cells,
+                    "n_unique_manifest_equiv": len(man_vals),
+                    "captured_fraction": round(frac, 4),
+                    "equiv_classifier": "EQUIV_PRESENT",
+                }
+            )
     # ----------------------------------------------------------------
     # PART B: per-axis coverage with bootstrap CI on captured_fraction
     # ----------------------------------------------------------------
@@ -170,7 +199,9 @@ def main():
                 for r in rows:
                     mp = next((m for m in manifests if r["cell_id"] in m["_name"]), None)
                     if mp:
-                        ind.append(1 if str(mp[entry["manifest_key"]]) == str(r[entry["axis"]]) else 0)
+                        ind.append(
+                            1 if str(mp[entry["manifest_key"]]) == str(r[entry["axis"]]) else 0
+                        )
                     else:
                         ind.append(0)
             else:
@@ -187,7 +218,9 @@ def main():
             lo, hi = 0.0, 0.0
         entry["captured_fraction_ci_lo"] = round(lo, 4)
         entry["captured_fraction_ci_hi"] = round(hi, 4)
-        entry["captured_fraction_ci_excludes_zero"] = (lo > 0.0) if entry["captured_fraction"] > 0 else False
+        entry["captured_fraction_ci_excludes_zero"] = (
+            (lo > 0.0) if entry["captured_fraction"] > 0 else False
+        )
         boot_rows.append(entry)
 
     # ----------------------------------------------------------------
@@ -209,8 +242,10 @@ def main():
     # (cell_id is a unique pointer; per_step_zvf_path is unique per cell)
     # these act as cell identifiers, not stack descriptors
     descriptor_keys = sorted(set(manifest_present) - {"cell_id", "per_step_zvf_path"})
+
     def manifest_str(m):
         return "|".join(str(m.get(k, "<NA>")) for k in descriptor_keys)
+
     base_strs = [manifest_str(m) for m in manifests]
     n_distinct_base = len(set(base_strs))
 
@@ -218,28 +253,35 @@ def main():
     def extended_str(m):
         # parse cell_id like Qwen-Qwen3-5-4B_gsm8k_easy_G2_t0.6_s0_xxx
         cid = m["_name"]
+
         # recover model_family from prefix before first '_'
         # parse G, temperature, seed
         def recover_g(cid):
             mm = re.search(r"_G(\d+)_", cid)
             return mm.group(1) if mm else "?"
+
         def recover_temp(cid):
             mm = re.search(r"_t([\d.]+)_", cid)
             return mm.group(1) if mm else "?"
+
         def recover_seed(cid):
             mm = re.search(r"_s(\d+)_", cid)
             return mm.group(1) if mm else "?"
+
         def recover_task(cid):
             # task is between model_family and _G
             mm = re.search(r"_(gsm8k_(?:easy|hard)|humaneval_subset)_G\d+(?:_|$)", cid)
             return mm.group(1) if mm else "?"
+
         def recover_model_family(cid):
             # model_family is the leading prefix before the task
             mm = re.search(r"^(.+?)_(gsm8k_\w+|humaneval_subset)_", cid)
             return mm.group(1) if mm else "?"
+
         ext = "|".join(str(m.get(k, "<NA>")) for k in descriptor_keys)
         ext += f"|{recover_model_family(cid)}|{recover_task(cid)}|{recover_g(cid)}|{recover_temp(cid)}|{recover_seed(cid)}"
         return ext
+
     ext_strs = [extended_str(m) for m in manifests]
     n_distinct_ext = len(set(ext_strs))
 
@@ -250,17 +292,25 @@ def main():
     for axis in cell_axis_cols + tel_cols:
         n_unique = len(set(str(r[axis]) for r in rows))
         # is this axis in the manifest schema at all?
-        in_manifest = (manifest_equiv.get(axis) is not None)
+        in_manifest = manifest_equiv.get(axis) is not None
         # is it recoverable from cell_id?
-        recoverable = axis in {"model_family", "task_slice", "G", "temperature", "seed"}  # telemetry cannot be parsed from identity
-        missing_rows.append({
-            "field": axis,
-            "field_class": "stack_axis" if axis in cell_axis_cols else "telemetry",
-            "in_manifest_schema": in_manifest,
-            "recoverable_via_cell_id": recoverable,
-            "n_unique_values_in_corpus": n_unique,
-            "gap_class": "OK" if in_manifest else ("RECOVERABLE" if recoverable else "MISSING"),
-        })
+        recoverable = axis in {
+            "model_family",
+            "task_slice",
+            "G",
+            "temperature",
+            "seed",
+        }  # telemetry cannot be parsed from identity
+        missing_rows.append(
+            {
+                "field": axis,
+                "field_class": "stack_axis" if axis in cell_axis_cols else "telemetry",
+                "in_manifest_schema": in_manifest,
+                "recoverable_via_cell_id": recoverable,
+                "n_unique_values_in_corpus": n_unique,
+                "gap_class": "OK" if in_manifest else ("RECOVERABLE" if recoverable else "MISSING"),
+            }
+        )
 
     ambiguous_rows = []
     # for each manifest key, evaluate "ambiguity" = how many cells.tsv axes are
@@ -277,54 +327,70 @@ def main():
                 mm = re.match(r"fixed-G=(\d+)", v)
                 if mm:
                     g_vals.add(int(mm.group(1)))
-            ambiguous_rows.append({
-                "field": k,
-                "n_unique_manifest_values": len(vals),
-                "encodes_axes": "G",
-                "uniquely_parseable": (len(vals) == 5 and all(re.match(r"fixed-G=\d+", v) for v in vals)),
-                "parseable_to_axis": "G (clean)",
-            })
+            ambiguous_rows.append(
+                {
+                    "field": k,
+                    "n_unique_manifest_values": len(vals),
+                    "encodes_axes": "G",
+                    "uniquely_parseable": (
+                        len(vals) == 5 and all(re.match(r"fixed-G=\d+", v) for v in vals)
+                    ),
+                    "parseable_to_axis": "G (clean)",
+                }
+            )
         elif k == "heldout_split":
-            ambiguous_rows.append({
-                "field": k,
-                "n_unique_manifest_values": len(vals),
-                "encodes_axes": "task_slice",
-                "uniquely_parseable": all(v in {"gsm8k_easy", "gsm8k_hard", "humaneval_subset"} for v in vals),
-                "parseable_to_axis": "task_slice (clean)",
-            })
+            ambiguous_rows.append(
+                {
+                    "field": k,
+                    "n_unique_manifest_values": len(vals),
+                    "encodes_axes": "task_slice",
+                    "uniquely_parseable": all(
+                        v in {"gsm8k_easy", "gsm8k_hard", "humaneval_subset"} for v in vals
+                    ),
+                    "parseable_to_axis": "task_slice (clean)",
+                }
+            )
         elif k == "decontamination_notes":
             # does this also encode task_slice?
-            ambiguous_rows.append({
-                "field": k,
-                "n_unique_manifest_values": len(vals),
-                "encodes_axes": "task_slice (implicit)",
-                "uniquely_parseable": False,
-                "parseable_to_axis": "task_slice (implicit via prefix)",
-            })
+            ambiguous_rows.append(
+                {
+                    "field": k,
+                    "n_unique_manifest_values": len(vals),
+                    "encodes_axes": "task_slice (implicit)",
+                    "uniquely_parseable": False,
+                    "parseable_to_axis": "task_slice (implicit via prefix)",
+                }
+            )
         elif k == "loss_form":
-            ambiguous_rows.append({
-                "field": k,
-                "n_unique_manifest_values": len(vals),
-                "encodes_axes": "none",
-                "uniquely_parseable": True,
-                "parseable_to_axis": "placeholder",
-            })
+            ambiguous_rows.append(
+                {
+                    "field": k,
+                    "n_unique_manifest_values": len(vals),
+                    "encodes_axes": "none",
+                    "uniquely_parseable": True,
+                    "parseable_to_axis": "placeholder",
+                }
+            )
         elif k == "ref_policy_kl":
-            ambiguous_rows.append({
-                "field": k,
-                "n_unique_manifest_values": len(vals),
-                "encodes_axes": "none",
-                "uniquely_parseable": True,
-                "parseable_to_axis": "placeholder (n/a)",
-            })
+            ambiguous_rows.append(
+                {
+                    "field": k,
+                    "n_unique_manifest_values": len(vals),
+                    "encodes_axes": "none",
+                    "uniquely_parseable": True,
+                    "parseable_to_axis": "placeholder (n/a)",
+                }
+            )
         elif k == "sampler_backend_precision":
-            ambiguous_rows.append({
-                "field": k,
-                "n_unique_manifest_values": len(vals),
-                "encodes_axes": "openness",
-                "uniquely_parseable": True,
-                "parseable_to_axis": "openness (single value)",
-            })
+            ambiguous_rows.append(
+                {
+                    "field": k,
+                    "n_unique_manifest_values": len(vals),
+                    "encodes_axes": "openness",
+                    "uniquely_parseable": True,
+                    "parseable_to_axis": "openness (single value)",
+                }
+            )
 
     # ----------------------------------------------------------------
     # Write outputs
@@ -383,10 +449,12 @@ def main():
     print()
     print("=== H1 (axis coverage gap) ===")
     for r in boot_rows:
-        print(f"  {r['axis']:14s} manifest_key={r['manifest_key']:25s} "
-              f"captured_frac={r['captured_fraction']:.3f} "
-              f"CI=[{r['captured_fraction_ci_lo']:.3f}, {r['captured_fraction_ci_hi']:.3f}] "
-              f"class={r['equiv_classifier']}")
+        print(
+            f"  {r['axis']:14s} manifest_key={r['manifest_key']:25s} "
+            f"captured_frac={r['captured_fraction']:.3f} "
+            f"CI=[{r['captured_fraction_ci_lo']:.3f}, {r['captured_fraction_ci_hi']:.3f}] "
+            f"class={r['equiv_classifier']}"
+        )
     print()
     print("=== H2 (augmentation value) ===")
     print(f"  baseline distinct manifest strings: {n_distinct_base}")

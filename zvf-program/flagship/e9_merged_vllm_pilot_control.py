@@ -222,7 +222,9 @@ def _validate_v3_success_evidence(receipt: dict[str, Any], launch: dict[str, Any
     ):
         raise ValueError("v3 attestation reservation does not match the launch")
     checkpoint = receipt.get("checkpoint_verification")
-    attested_checkpoint = payload.get("checkpoint_verification") if isinstance(payload, dict) else None
+    attested_checkpoint = (
+        payload.get("checkpoint_verification") if isinstance(payload, dict) else None
+    )
     if (
         not isinstance(checkpoint, dict)
         or checkpoint != allocation_gate.get("checkpoint_verification")
@@ -242,7 +244,10 @@ def _validate_v3_success_evidence(receipt: dict[str, Any], launch: dict[str, Any
     if not isinstance(generation, dict):
         raise ValueError("v3 generation evidence is absent")
     load_receipt = generation.get("load_receipt")
-    if not isinstance(load_receipt, dict) or load_receipt.get("checkpoint_verification") != checkpoint:
+    if (
+        not isinstance(load_receipt, dict)
+        or load_receipt.get("checkpoint_verification") != checkpoint
+    ):
         raise ValueError("v3 GPU load evidence does not match the checkpoint")
     for label, evidence, paid_started_at in (
         ("load", load_receipt.get("wandb_receipt"), load_receipt.get("paid_load_started_at")),
@@ -641,7 +646,8 @@ def recover_orphaned_spawns(*, output_dir: Path = OUTPUT_DIR) -> list[Path]:
             if stored_hash != _canonical_sha256(unhashed):
                 raise ValueError("spawn intent self-hash is invalid")
             if (
-                launch.get("status") not in {
+                launch.get("status")
+                not in {
                     SPAWN_INTENT_STATUS,
                     SPAWN_CALL_ID_STATUS,
                     SPAWN_ORPHAN_STATUS,

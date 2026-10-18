@@ -28,9 +28,7 @@ Outputs: platform_hybrid/experiments/results/p5p8/p5_iter165_per_step_eta2.tsv (
 import csv
 import json
 import math
-import statistics
 import random
-from collections import defaultdict
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -73,12 +71,8 @@ def compute_per_method_prompt_means(tensors):
             lengths = row["lengths"]  # list[16] of list[8]
             n_p = len(rewards)
             means = {}
-            means["reward_mean"] = [
-                sum(r) / len(r) if r else 0.0 for r in rewards
-            ]
-            means["mean_len"] = [
-                sum(l) / len(l) if l else 0.0 for l in lengths
-            ]
+            means["reward_mean"] = [sum(r) / len(r) if r else 0.0 for r in rewards]
+            means["mean_len"] = [sum(l) / len(l) if l else 0.0 for l in lengths]
             means["cv_len"] = []
             for l in lengths:
                 mu = sum(l) / len(l) if l else 0.0
@@ -113,9 +107,7 @@ def eta2_from_groups(groups):
         n_total += len(vals)
     grand_mean = sum(all_vals) / n_total if n_total else 0.0
     ss_total = sum((v - grand_mean) ** 2 for v in all_vals)
-    ss_between = sum(
-        len(vals) * (group_means[g] - grand_mean) ** 2 for g, vals in groups.items()
-    )
+    ss_between = sum(len(vals) * (group_means[g] - grand_mean) ** 2 for g, vals in groups.items())
     return ss_between / ss_total if ss_total > 0 else float("nan")
 
 
@@ -178,20 +170,41 @@ def main():
 
     # Per-step TSV (point + CI + band)
     bands = {
-        "early": list(range(0, 14)),       # 0..13
-        "mid":   list(range(14, 27)),      # 14..26
-        "late":  list(range(27, 40)),      # 27..39
+        "early": list(range(14)),  # 0..13
+        "mid": list(range(14, 27)),  # 14..26
+        "late": list(range(27, 40)),  # 27..39
     }
     with open(OUT / "p5_iter165_per_step_eta2.tsv", "w") as f:
         w = csv.writer(f, delimiter="\t")
-        w.writerow(["step", "band", "channel", "eta2_point", "ci_lo", "ci_hi", "mean_boot", "ci_excludes_0p05"])
+        w.writerow(
+            [
+                "step",
+                "band",
+                "channel",
+                "eta2_point",
+                "ci_lo",
+                "ci_hi",
+                "mean_boot",
+                "ci_excludes_0p05",
+            ]
+        )
         for c in CHANNELS:
             for s in range(N_STEPS):
                 band = next(b for b, steps in bands.items() if s in steps)
                 e = per_step[c][s]
                 lo, hi, mb = boot[c][s]
-                w.writerow([s, band, c, f"{e:.6f}", f"{lo:.6f}", f"{hi:.6f}", f"{mb:.6f}",
-                            "1" if hi < 0.05 else "0"])
+                w.writerow(
+                    [
+                        s,
+                        band,
+                        c,
+                        f"{e:.6f}",
+                        f"{lo:.6f}",
+                        f"{hi:.6f}",
+                        f"{mb:.6f}",
+                        "1" if hi < 0.05 else "0",
+                    ]
+                )
 
     # Boot-only TSV (same content, lighter for downstream loading)
     with open(OUT / "p5_iter165_per_step_eta2_boot.tsv", "w") as f:
@@ -206,18 +219,26 @@ def main():
     # Step-band summary: 3 bands x 6 channels -> mean (point) and mean (CI mean)
     with open(OUT / "p5_iter165_step_band_summary.tsv", "w") as f:
         w = csv.writer(f, delimiter="\t")
-        w.writerow(["band", "n_steps", "channel", "mean_eta2", "mean_boot", "ci_lo_max", "ci_hi_min"])
+        w.writerow(
+            ["band", "n_steps", "channel", "mean_eta2", "mean_boot", "ci_lo_max", "ci_hi_min"]
+        )
         for band, steps in bands.items():
             for c in CHANNELS:
                 pts = [per_step[c][s] for s in steps]
                 mpts = [boot[c][s][2] for s in steps]
                 los = [boot[c][s][0] for s in steps]
                 his = [boot[c][s][1] for s in steps]
-                w.writerow([band, len(steps), c,
-                            f"{sum(pts)/len(pts):.6f}",
-                            f"{sum(mpts)/len(mpts):.6f}",
-                            f"{min(los):.6f}",
-                            f"{max(his):.6f}"])
+                w.writerow(
+                    [
+                        band,
+                        len(steps),
+                        c,
+                        f"{sum(pts) / len(pts):.6f}",
+                        f"{sum(mpts) / len(mpts):.6f}",
+                        f"{min(los):.6f}",
+                        f"{max(his):.6f}",
+                    ]
+                )
 
     # ---- HYPOTHESES ----
     summary = {"iter": 165, "pillar": "P5", "vein": "per-step algorithm-axis eta^2 trajectory"}
@@ -305,24 +326,28 @@ def main():
             ms = METHODS
         else:
             ms = [m for m in METHODS if m != exclude]
-        groups = {m: [per_mp[m][s]["reward_mean"][p]
-                      for s in range(N_STEPS) for p in range(16)] for m in ms}
+        groups = {
+            m: [per_mp[m][s]["reward_mean"][p] for s in range(N_STEPS) for p in range(16)]
+            for m in ms
+        }
         return eta2_from_groups(groups)
+
     full_pool = pooled_method_eta2()
     lomo = {m: pooled_method_eta2(exclude=m) for m in METHODS}
     summary["H4"] = {
         "description": "GIFT dominates algorithm axis: LOMO(GIFT)/full ratio < 0.5 on reward_mean",
         "full_pooled_eta2": full_pool,
         "lomo_eta2": lomo,
-        "lomo_ratios": {m: (lomo[m] / full_pool if full_pool > 0 else float("nan"))
-                        for m in METHODS},
+        "lomo_ratios": {
+            m: (lomo[m] / full_pool if full_pool > 0 else float("nan")) for m in METHODS
+        },
         "verdict": "PASS" if (lomo["gift"] / full_pool if full_pool > 0 else 1.0) < 0.5 else "FAIL",
     }
     # Compute gift_d_per_step for the console output (gift vs grpo on reward_mean)
-    gift_d_per_step = [abs(cohens_d(
-        per_mp["gift"][s]["reward_mean"],
-        per_mp["grpo"][s]["reward_mean"]
-    )) for s in range(N_STEPS)]
+    gift_d_per_step = [
+        abs(cohens_d(per_mp["gift"][s]["reward_mean"], per_mp["grpo"][s]["reward_mean"]))
+        for s in range(N_STEPS)
+    ]
     summary["gift_d_per_step_mean"] = sum(gift_d_per_step) / N_STEPS
 
     # H5: late-band mean eta^2(zvf) within +/- 0.02 of early-band mean eta^2(zvf)
@@ -338,8 +363,7 @@ def main():
     }
 
     summary["per_step_eta2_pool"] = {
-        c: sum(per_step[c][s] for s in range(N_STEPS)) / N_STEPS
-        for c in CHANNELS
+        c: sum(per_step[c][s] for s in range(N_STEPS)) / N_STEPS for c in CHANNELS
     }
 
     with open(OUT / "p5_iter165_summary.json", "w") as f:
@@ -350,24 +374,30 @@ def main():
     for c in CHANNELS:
         vals = [per_step[c][s] for s in range(N_STEPS)]
         m = sum(vals) / N_STEPS
-        print(f"  {c:14s}  mean={m:.4f}  min={min(vals):.4f}  max={max(vals):.4f}  "
-              f"spearman={spearman_per_channel[c]:+.3f}")
+        print(
+            f"  {c:14s}  mean={m:.4f}  min={min(vals):.4f}  max={max(vals):.4f}  "
+            f"spearman={spearman_per_channel[c]:+.3f}"
+        )
     print("\n[p5_iter165] PER-STEP BAND SUMMARY (mean eta^2 per channel per band)")
     for band, steps in bands.items():
         print(f"  band={band}  steps={len(steps)}")
         for c in CHANNELS:
             vals = [per_step[c][s] for s in steps]
-            print(f"    {c:14s}  mean={sum(vals)/len(vals):.4f}  "
-                  f"min={min(vals):.4f}  max={max(vals):.4f}")
+            print(
+                f"    {c:14s}  mean={sum(vals) / len(vals):.4f}  "
+                f"min={min(vals):.4f}  max={max(vals):.4f}"
+            )
     print("\n[p5_iter165] HYPOTHESES")
     for h, body in summary.items():
         if h.startswith("H"):
             print(f"  {h}: {body['verdict']}  -- {body['description']}")
     print(f"  gift_d_per_step_mean: {summary['gift_d_per_step_mean']:.3f}")
-    print(f"  H4 LOMO ratios: grpo={summary['H4']['lomo_ratios']['grpo']:.3f} "
-          f"aero={summary['H4']['lomo_ratios']['aero']:.3f} "
-          f"gift={summary['H4']['lomo_ratios']['gift']:.3f} "
-          f"areal={summary['H4']['lomo_ratios']['areal']:.3f}")
+    print(
+        f"  H4 LOMO ratios: grpo={summary['H4']['lomo_ratios']['grpo']:.3f} "
+        f"aero={summary['H4']['lomo_ratios']['aero']:.3f} "
+        f"gift={summary['H4']['lomo_ratios']['gift']:.3f} "
+        f"areal={summary['H4']['lomo_ratios']['areal']:.3f}"
+    )
     print("\n[p5_iter165] done.")
 
 

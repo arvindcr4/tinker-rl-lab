@@ -147,9 +147,7 @@ def _contains_banned_markers(value: Any) -> bool:
         lowered = value.lower()
         return any(marker in lowered for marker in _BANNED_MARKERS)
     if isinstance(value, Mapping):
-        return any(
-            _contains_banned_markers(item) for item in value.values() if item is not None
-        )
+        return any(_contains_banned_markers(item) for item in value.values() if item is not None)
     if isinstance(value, Sequence) and not isinstance(value, (bytes, str, bytearray)):
         return any(_contains_banned_markers(item) for item in value)
     return False
@@ -157,15 +155,15 @@ def _contains_banned_markers(value: Any) -> bool:
 
 def _load_authority(contract_path: str | Path | None = None) -> Mapping[str, Any]:
     base = Path(__file__).resolve().parent
-    path = Path(contract_path) if contract_path is not None else base / "pavlovs_domain_contract.json"
+    path = (
+        Path(contract_path) if contract_path is not None else base / "pavlovs_domain_contract.json"
+    )
     try:
         payload = json.loads(path.read_text(encoding="utf-8"))
     except OSError as exc:
         raise VerilogEvalSplitManifestError(f"cannot read authority contract: {exc}") from exc
     except json.JSONDecodeError as exc:
-        raise VerilogEvalSplitManifestError(
-            f"authority contract is not valid JSON: {exc}"
-        ) from exc
+        raise VerilogEvalSplitManifestError(f"authority contract is not valid JSON: {exc}") from exc
 
     if not isinstance(payload, Mapping):
         raise VerilogEvalSplitManifestError("authority contract must be a JSON object")
@@ -186,9 +184,7 @@ def _validate_source(value: Any, authority: Mapping[str, Any]) -> str:
     source = _require_url(value, "source")
     authoritative_source = _require_url(authority.get("url"), "authority suite url")
     if source.rstrip("/").lower() != authoritative_source.rstrip("/").lower():
-        raise VerilogEvalSplitManifestError(
-            "source must match authoritative verilog_eval source"
-        )
+        raise VerilogEvalSplitManifestError("source must match authoritative verilog_eval source")
     return source
 
 
@@ -223,9 +219,7 @@ def _validate_category(value: Any) -> str:
 def _validate_role(value: Any) -> str:
     role = _require_text(value, "role")
     if role != SUITE_ROLE:
-        raise VerilogEvalSplitManifestError(
-            f"role must be {SUITE_ROLE!r}, found {role!r}"
-        )
+        raise VerilogEvalSplitManifestError(f"role must be {SUITE_ROLE!r}, found {role!r}")
     return role
 
 
@@ -251,9 +245,7 @@ def _validate_task_hashes(value: Any, field: str = "task_id_hashes") -> list[str
 def _validate_split(value: Any, task_ids: list[str]) -> tuple[list[str], str, str]:
     if not isinstance(value, Mapping):
         raise VerilogEvalSplitManifestError("split must be an object")
-    split_task_ids = _validate_task_hashes(
-        value.get("primary_eval"), "split.primary_eval"
-    )
+    split_task_ids = _validate_task_hashes(value.get("primary_eval"), "split.primary_eval")
     if split_task_ids != task_ids:
         raise VerilogEvalSplitManifestError("split.primary_eval must match task_id_hashes")
 
@@ -274,9 +266,7 @@ def _validate_split_hashes(value: Mapping[str, Any], aggregate: str) -> dict[str
     split_hashes = value.get("split_hashes")
     if not isinstance(split_hashes, Mapping):
         raise VerilogEvalSplitManifestError("split_hashes must be an object")
-    declared = _require_sha256(
-        split_hashes.get("primary_eval"), "split_hashes.primary_eval"
-    )
+    declared = _require_sha256(split_hashes.get("primary_eval"), "split_hashes.primary_eval")
     expected = f"sha256:{aggregate}"
     if declared != expected:
         raise VerilogEvalSplitManifestError(
@@ -285,9 +275,7 @@ def _validate_split_hashes(value: Mapping[str, Any], aggregate: str) -> dict[str
     return {"primary_eval": declared}
 
 
-def _validate_split_manifest_hash(
-    manifest: Mapping[str, Any], aggregate: str
-) -> tuple[str, str]:
+def _validate_split_manifest_hash(manifest: Mapping[str, Any], aggregate: str) -> tuple[str, str]:
     payload = canonical_json({"primary_eval": aggregate})
     observed = f"sha256:{_sha256(payload)}"
     declared = _require_sha256(manifest.get("split_manifest_hash"), "split_manifest_hash")
@@ -317,9 +305,7 @@ def _validate_decontamination(value: Any) -> dict[str, Any]:
     status = _require_status(value.get("status"), "decontamination.status").lower()
     if status not in _ALLOWED_DECONTAMINATION_STATUS:
         raise VerilogEvalSplitManifestError("decontamination.status is invalid")
-    receipt_id = _require_hex40(
-        value.get("receipt_id"), "decontamination.receipt_id"
-    )
+    receipt_id = _require_hex40(value.get("receipt_id"), "decontamination.receipt_id")
     visibility = _require_text(value.get("visibility", "private"), "decontamination.visibility")
     if visibility.lower() == "public" and not bool(value.get("safe_public_artifact")):
         raise VerilogEvalSplitManifestError(
@@ -361,9 +347,7 @@ def build_split_manifest_record(
         if authority.get("stateful") is not _EXPECTED_STATEFUL:
             raise VerilogEvalSplitManifestError("contract stateful value changed")
         if authority.get("artifact_or_side_effect") is not EXPECTED_ARTIFACT_OR_SIDE_EFFECT:
-            raise VerilogEvalSplitManifestError(
-                "contract artifact_or_side_effect value changed"
-            )
+            raise VerilogEvalSplitManifestError("contract artifact_or_side_effect value changed")
 
         suite_id = _require_text(manifest.get("suite_id"), "suite_id")
         if suite_id != SUITE_ID:
@@ -376,9 +360,7 @@ def build_split_manifest_record(
             manifest.get("dataset"), authority
         )
         task_ids = _validate_task_hashes(manifest.get("task_id_hashes"), "task_id_hashes")
-        split_ids, aggregate, aggregate_digest = _validate_split(
-            manifest.get("split"), task_ids
-        )
+        split_ids, aggregate, aggregate_digest = _validate_split(manifest.get("split"), task_ids)
         split_hashes = _validate_split_hashes(manifest, aggregate)
         split_manifest_hash, split_manifest_receipt_ref = _validate_split_manifest_hash(
             manifest, aggregate
@@ -473,13 +455,17 @@ def build_split_manifest_record(
             "category": manifest.get("category", "<missing>")
             if isinstance(manifest, Mapping)
             else "<missing>",
-            "role": manifest.get("role", "<missing>") if isinstance(manifest, Mapping) else "<missing>",
+            "role": manifest.get("role", "<missing>")
+            if isinstance(manifest, Mapping)
+            else "<missing>",
             "dataset_revision": None,
             "dataset_license": None,
             "dataset_source": None,
             "split": {"primary_eval": {}},
             "split_hashes": {},
-            "split_manifest_hash": manifest.get("split_manifest_hash") if isinstance(manifest, Mapping) else None,
+            "split_manifest_hash": manifest.get("split_manifest_hash")
+            if isinstance(manifest, Mapping)
+            else None,
             "declared_split_manifest_hash": manifest.get("split_manifest_hash")
             if isinstance(manifest, Mapping)
             else None,
@@ -613,9 +599,15 @@ def build_task_table(checkout: Path, dataset_name: str) -> list[dict[str, Any]]:
 
 def _verify_checkout_identity(checkout: Path, revision: str) -> None:
     import subprocess
+
     try:
-        head = subprocess.check_output(["git", "-C", str(checkout), "rev-parse", "HEAD"], text=True).strip()
-        dirty = subprocess.check_output(["git", "-C", str(checkout), "status", "--porcelain", "--untracked-files=all"], text=True).strip()
+        head = subprocess.check_output(
+            ["git", "-C", str(checkout), "rev-parse", "HEAD"], text=True
+        ).strip()
+        dirty = subprocess.check_output(
+            ["git", "-C", str(checkout), "status", "--porcelain", "--untracked-files=all"],
+            text=True,
+        ).strip()
     except (OSError, subprocess.CalledProcessError) as exc:
         raise VerilogEvalSplitManifestError("checkout provenance cannot be verified") from exc
     if head != revision or dirty:
@@ -639,8 +631,14 @@ def build_manifest_from_checkout(
     """
 
     checkout = Path(checkout)
-    if revision != PINNED_REVISION or dataset_license != DATASET_LICENSE or tuple(datasets) != tuple(DATASET_NAMES):
-        raise VerilogEvalSplitManifestError("unapproved benchmark revision, license, or dataset roster")
+    if (
+        revision != PINNED_REVISION
+        or dataset_license != DATASET_LICENSE
+        or tuple(datasets) != tuple(DATASET_NAMES)
+    ):
+        raise VerilogEvalSplitManifestError(
+            "unapproved benchmark revision, license, or dataset roster"
+        )
     _verify_checkout_identity(checkout, revision)
     tasks: list[dict[str, Any]] = []
     per_dataset: dict[str, Any] = {}

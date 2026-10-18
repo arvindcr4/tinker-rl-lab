@@ -34,18 +34,19 @@ from __future__ import annotations
 
 import sys as _sys
 from pathlib import Path as _Path
-_sys.path.insert(0, str(next(p for p in _Path(__file__).resolve().parents if (p / "platform_hybrid").is_dir())))
+
+_sys.path.insert(
+    0, str(next(p for p in _Path(__file__).resolve().parents if (p / "platform_hybrid").is_dir()))
+)
 from platform_hybrid.experiments.research_contracts import EvidenceUnavailable, SIMULATION_METADATA
 
 
 import argparse
 import math
-import os
 import random
-import sys
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Callable, Dict, List, Optional, Sequence, Tuple
+from typing import List, Optional, Sequence, Tuple
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 RESULTS_DIR = REPO_ROOT / "experiments" / "results"
@@ -153,9 +154,11 @@ def _median_mad(values: Sequence[float]) -> Tuple[float, float]:
     med = s[n // 2] if n % 2 else (s[n // 2 - 1] + s[n // 2]) / 2.0
     abs_dev = [abs(v - med) for v in s]
     abs_dev_s = sorted(abs_dev)
-    mad = abs_dev_s[len(abs_dev_s) // 2] if len(abs_dev_s) % 2 else (
-        abs_dev_s[len(abs_dev_s) // 2 - 1] + abs_dev_s[len(abs_dev_s) // 2]
-    ) / 2.0
+    mad = (
+        abs_dev_s[len(abs_dev_s) // 2]
+        if len(abs_dev_s) % 2
+        else (abs_dev_s[len(abs_dev_s) // 2 - 1] + abs_dev_s[len(abs_dev_s) // 2]) / 2.0
+    )
     mad = max(mad, 1e-6)  # avoid div-by-zero
     return med, mad
 
@@ -197,7 +200,7 @@ def advantage_computation(
         # GIFT: match normalized implicit reward (from reference policy logits)
         # Simplified: treat baseline as implicit reward, blend with explicit
         implicit = [baseline + cfg.gift_lambda * a for a in adv]
-        adv = [(a + i) / 2.0 for a, i in zip(adv, implicit)]
+        adv = [(a + i) / 2.0 for a, i in zip(adv, implicit, strict=False)]
     return adv, running_mean
 
 
@@ -206,10 +209,12 @@ def reward_shaping(cfg: MethodConfig, rewards: Sequence[float], entropy) -> List
     if not cfg.entropy_bonus:
         return list(rewards)
     if isinstance(entropy, (int, float)):
-        raise ValueError("Shared entropy cancels under group centering; provide rollout-specific bonuses")
+        raise ValueError(
+            "Shared entropy cancels under group centering; provide rollout-specific bonuses"
+        )
     if len(entropy) != len(rewards):
         raise ValueError("One entropy bonus per rollout required")
-    return [r + cfg.beta_e * h for r, h in zip(rewards, entropy)]
+    return [r + cfg.beta_e * h for r, h in zip(rewards, entropy, strict=False)]
 
 
 # ---------------------------------------------------------------------------
@@ -232,7 +237,9 @@ def _try_import_baseline():
 
 
 def run_real(cfg: MethodConfig, config_path: str, seed: int) -> List[dict]:
-    raise EvidenceUnavailable("No real trainer integration exists. Use --dry-run for explicitly quarantined simulations.")
+    raise EvidenceUnavailable(
+        "No real trainer integration exists. Use --dry-run for explicitly quarantined simulations."
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -244,15 +251,15 @@ def run_real(cfg: MethodConfig, config_path: str, seed: int) -> List[dict]:
 # (Table variance-head2head). Order: (last10_reward_mean, heldout_acc,
 # mean_zvf_at_50, time_to_collapse_median).
 _PROJECTION_TARGETS = {
-    "grpo":      (0.412, 0.418, 0.71, 62),
-    "aero":      (0.448, 0.441, 0.58, 83),
-    "cppo":      (0.439, 0.433, 0.64, 78),
-    "ngrpo":     (0.431, 0.427, 0.60, 74),
-    "scafgrpo":  (0.460, 0.452, 0.37, 110),  # >100 rendered as 110
-    "mcgrpo":    (0.445, 0.438, 0.52, 95),   # median-centering robustifies small G
-    "gift":      (0.451, 0.444, 0.48, 102),  # implicit-reward matching lowers ZVF
-    "areal":     (0.454, 0.446, 0.45, 98),   # async decoupling reduces ZVF via larger effective batch
-    "es":        (0.438, 0.431, 0.15, 150),  # population-level fitness avoids zero-variance collapse
+    "grpo": (0.412, 0.418, 0.71, 62),
+    "aero": (0.448, 0.441, 0.58, 83),
+    "cppo": (0.439, 0.433, 0.64, 78),
+    "ngrpo": (0.431, 0.427, 0.60, 74),
+    "scafgrpo": (0.460, 0.452, 0.37, 110),  # >100 rendered as 110
+    "mcgrpo": (0.445, 0.438, 0.52, 95),  # median-centering robustifies small G
+    "gift": (0.451, 0.444, 0.48, 102),  # implicit-reward matching lowers ZVF
+    "areal": (0.454, 0.446, 0.45, 98),  # async decoupling reduces ZVF via larger effective batch
+    "es": (0.438, 0.431, 0.15, 150),  # population-level fitness avoids zero-variance collapse
 }
 
 
@@ -270,10 +277,26 @@ def synthesize_rows(cfg: MethodConfig, seed: int) -> List[dict]:
             # bonus suppresses ZVF -> roughly flat low
             return max(0.0, min(1.0, 0.22 + 0.002 * step + rng.gauss(0, 0.03)))
         # sigmoidal rise, centered near step 50, final plateau near zvf50 target
-        plateau = {"grpo": 0.88, "aero": 0.72, "cppo": 0.78, "ngrpo": 0.75,
-                   "mcgrpo": 0.65, "gift": 0.60, "areal": 0.58, "es": 0.25}[cfg.name]
-        mid = {"grpo": 45, "aero": 70, "cppo": 62, "ngrpo": 60,
-           "mcgrpo": 78, "gift": 82, "areal": 80, "es": 55}[cfg.name]
+        plateau = {
+            "grpo": 0.88,
+            "aero": 0.72,
+            "cppo": 0.78,
+            "ngrpo": 0.75,
+            "mcgrpo": 0.65,
+            "gift": 0.60,
+            "areal": 0.58,
+            "es": 0.25,
+        }[cfg.name]
+        mid = {
+            "grpo": 45,
+            "aero": 70,
+            "cppo": 62,
+            "ngrpo": 60,
+            "mcgrpo": 78,
+            "gift": 82,
+            "areal": 80,
+            "es": 55,
+        }[cfg.name]
         sig = 1.0 / (1.0 + math.exp(-(step - mid) / 8.0))
         return max(0.0, min(1.0, plateau * sig + rng.gauss(0, 0.03)))
 
@@ -297,8 +320,7 @@ def synthesize_rows(cfg: MethodConfig, seed: int) -> List[dict]:
                 zvf=round(z, 4),
                 reward_mean=round(reward_curve(step), 4),
                 heldout_acc=round(
-                    heldout_final * (1 - math.exp(-step / 40.0))
-                    + rng.gauss(0, 0.003),
+                    heldout_final * (1 - math.exp(-step / 40.0)) + rng.gauss(0, 0.003),
                     4,
                 ),
                 collapse=collapse_flag,
@@ -308,8 +330,15 @@ def synthesize_rows(cfg: MethodConfig, seed: int) -> List[dict]:
     # collapse_rate column (approximate ratios):
     #   grpo 3/5, aero 2/5, cppo 2/5, ngrpo 3/5, scafgrpo 1/5
     collapse_quota = {
-        "grpo": 3, "aero": 2, "cppo": 2, "ngrpo": 3, "scafgrpo": 1,
-        "mcgrpo": 2, "gift": 1, "areal": 1, "es": 0,
+        "grpo": 3,
+        "aero": 2,
+        "cppo": 2,
+        "ngrpo": 3,
+        "scafgrpo": 1,
+        "mcgrpo": 2,
+        "gift": 1,
+        "areal": 1,
+        "es": 0,
     }[cfg.name]
     # deterministic: keep collapse for seeds < quota
     if seed >= collapse_quota:
@@ -323,7 +352,20 @@ def synthesize_rows(cfg: MethodConfig, seed: int) -> List[dict]:
 # ---------------------------------------------------------------------------
 
 
-TSV_HEADER = ["method", "seed", "step", "zvf", "reward_mean", "heldout_acc", "collapse", "execution_kind", "measured", "claim_eligible", "artifact_type", "protocol_version"]
+TSV_HEADER = [
+    "method",
+    "seed",
+    "step",
+    "zvf",
+    "reward_mean",
+    "heldout_acc",
+    "collapse",
+    "execution_kind",
+    "measured",
+    "claim_eligible",
+    "artifact_type",
+    "protocol_version",
+]
 
 
 def write_tsv(rows: List[dict], path: Path = OUT_TSV, append: bool = True) -> None:

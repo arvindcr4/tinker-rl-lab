@@ -6,6 +6,7 @@ AG is observed ZVF thresholding; DF is a mixed-group indicator; AP is an
 always-off diagnostic from an impossible inequality. These are not validated
 implementations of the named research systems. Cross-system verdicts are null.
 """
+
 from __future__ import annotations
 
 import csv
@@ -16,8 +17,12 @@ import random
 import statistics
 
 import sys
-sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
+
+sys.path.append(
+    str(pathlib.Path(__file__).resolve().parents[1])
+)  # platform_modal/scripts, for _paths
+from _paths import REPO_ROOT
+
 WORK = REPO_ROOT
 N2_DIR = WORK / "platform_hybrid/experiments/results/n2_reward_tensor_resume"
 OUT = WORK / "platform_hybrid/experiments/results/p5p8/corrected-review19-v3"
@@ -35,7 +40,7 @@ def kappa(a, b):
     n = len(a)
     if not n or len(b) != n:
         raise ValueError("kappa requires nonempty aligned vectors")
-    p0 = sum(1 for x, y in zip(a, b) if x == y) / n
+    p0 = sum(1 for x, y in zip(a, b, strict=False) if x == y) / n
     p1 = sum(a) / n
     p2 = sum(b) / n
     pe = p1 * p2 + (1 - p1) * (1 - p2)
@@ -118,66 +123,99 @@ def main():
         for na, nb in (("ag", "df"), ("ag", "ap"), ("df", "ap")):
             a = [c[na] for c in sub]
             b = [c[nb] for c in sub]
-            pair_rows.append({
-                "method": m, "pair": f"{na}x{nb}", "n": len(sub),
-                "kappa": kappa(a, b),
-                "agree": sum(1 for x, y in zip(a, b) if x == y),
-                "fA": sum(a), "fB": sum(b),
-            })
-    pair_rows.append({"method": "POOLED", "pair": "agxdf",
-                      "n": len(all_cells),
-                      "kappa": kappa([c["ag"] for c in all_cells],
-                                     [c["df"] for c in all_cells]),
-                      "agree": sum(1 for c in all_cells if c["ag"] == c["df"]),
-                      "fA": sum(c["ag"] for c in all_cells),
-                      "fB": sum(c["df"] for c in all_cells)})
-    pair_rows.append({"method": "POOLED", "pair": "agxap",
-                      "n": len(all_cells),
-                      "kappa": kappa([c["ag"] for c in all_cells],
-                                     [c["ap"] for c in all_cells]),
-                      "agree": sum(1 for c in all_cells if c["ag"] == c["ap"]),
-                      "fA": sum(c["ag"] for c in all_cells),
-                      "fB": sum(c["ap"] for c in all_cells)})
-    pair_rows.append({"method": "POOLED", "pair": "dfxap",
-                      "n": len(all_cells),
-                      "kappa": kappa([c["df"] for c in all_cells],
-                                     [c["ap"] for c in all_cells]),
-                      "agree": sum(1 for c in all_cells if c["df"] == c["ap"]),
-                      "fA": sum(c["df"] for c in all_cells),
-                      "fB": sum(c["ap"] for c in all_cells)})
+            pair_rows.append(
+                {
+                    "method": m,
+                    "pair": f"{na}x{nb}",
+                    "n": len(sub),
+                    "kappa": kappa(a, b),
+                    "agree": sum(1 for x, y in zip(a, b, strict=False) if x == y),
+                    "fA": sum(a),
+                    "fB": sum(b),
+                }
+            )
+    pair_rows.append(
+        {
+            "method": "POOLED",
+            "pair": "agxdf",
+            "n": len(all_cells),
+            "kappa": kappa([c["ag"] for c in all_cells], [c["df"] for c in all_cells]),
+            "agree": sum(1 for c in all_cells if c["ag"] == c["df"]),
+            "fA": sum(c["ag"] for c in all_cells),
+            "fB": sum(c["df"] for c in all_cells),
+        }
+    )
+    pair_rows.append(
+        {
+            "method": "POOLED",
+            "pair": "agxap",
+            "n": len(all_cells),
+            "kappa": kappa([c["ag"] for c in all_cells], [c["ap"] for c in all_cells]),
+            "agree": sum(1 for c in all_cells if c["ag"] == c["ap"]),
+            "fA": sum(c["ag"] for c in all_cells),
+            "fB": sum(c["ap"] for c in all_cells),
+        }
+    )
+    pair_rows.append(
+        {
+            "method": "POOLED",
+            "pair": "dfxap",
+            "n": len(all_cells),
+            "kappa": kappa([c["df"] for c in all_cells], [c["ap"] for c in all_cells]),
+            "agree": sum(1 for c in all_cells if c["df"] == c["ap"]),
+            "fA": sum(c["df"] for c in all_cells),
+            "fB": sum(c["ap"] for c in all_cells),
+        }
+    )
 
     with open(OUT / "p7_iter195_concordance_pair.tsv", "w") as f:
-        w = csv.DictWriter(f, fieldnames=("method", "pair", "n", "kappa",
-                                          "agree", "fA", "fB"),
-                           delimiter="\t")
+        w = csv.DictWriter(
+            f, fieldnames=("method", "pair", "n", "kappa", "agree", "fA", "fB"), delimiter="\t"
+        )
         w.writeheader()
         for r in pair_rows:
-            w.writerow({k: (f"{v:.4f}" if isinstance(v, float) else v)
-                        for k, v in r.items()})
+            w.writerow({k: (f"{v:.4f}" if isinstance(v, float) else v) for k, v in r.items()})
     print(f"Wrote {OUT}/p7_iter195_concordance_pair.tsv")
 
     # Per-step detail TSV
     with open(OUT / "p7_iter195_concordance_per_step.tsv", "w") as f:
         w = csv.writer(f, delimiter="\t")
-        w.writerow(["method", "step", "zvf_step", "n_boundary", "n_contrast",
-                    "kbar", "smoothed", "naive", "ag", "df", "ap"])
+        w.writerow(
+            [
+                "method",
+                "step",
+                "zvf_step",
+                "n_boundary",
+                "n_contrast",
+                "kbar",
+                "smoothed",
+                "naive",
+                "ag",
+                "df",
+                "ap",
+            ]
+        )
         for c in all_cells:
-            w.writerow([c["method"], c["step"], f"{c['zvf_step']:.4f}",
-                        c["n_boundary"], c["n_contrast"],
-                        f"{c['kbar']:.4f}" if not math.isnan(c["kbar"])
-                            else "nan",
-                        f"{c['smoothed']:.4f}" if not math.isnan(c["smoothed"])
-                            else "nan",
-                        f"{c['naive']:.4f}" if not math.isnan(c["naive"])
-                            else "nan",
-                        c["ag"], c["df"], c["ap"]])
+            w.writerow(
+                [
+                    c["method"],
+                    c["step"],
+                    f"{c['zvf_step']:.4f}",
+                    c["n_boundary"],
+                    c["n_contrast"],
+                    f"{c['kbar']:.4f}" if not math.isnan(c["kbar"]) else "nan",
+                    f"{c['smoothed']:.4f}" if not math.isnan(c["smoothed"]) else "nan",
+                    f"{c['naive']:.4f}" if not math.isnan(c["naive"]) else "nan",
+                    c["ag"],
+                    c["df"],
+                    c["ap"],
+                ]
+            )
     print(f"Wrote {OUT}/p7_iter195_concordance_per_step.tsv")
 
     boot_rows = []
     n = len(all_cells)
-    for label, na, nb in (("agxdf", "ag", "df"),
-                          ("agxap", "ag", "ap"),
-                          ("dfxap","df", "ap")):
+    for label, na, nb in (("agxdf", "ag", "df"), ("agxap", "ag", "ap"), ("dfxap", "df", "ap")):
         a = [c[na] for c in all_cells]
         b = [c[nb] for c in all_cells]
         kp = kappa(a, b)
@@ -193,56 +231,85 @@ def main():
         boots.sort()
         lo = boots[int(0.025 * len(boots))] if boots else None
         hi = boots[min(len(boots) - 1, int(0.975 * len(boots)))] if boots else None
-        boot_rows.append({"pair": label, "point": kp, "lo": lo, "hi": hi,
-                          "n": n, "B": N_BOOT,
-                          "excl_zero": int(lo > 0 or hi < 0) if boots else None})
+        boot_rows.append(
+            {
+                "pair": label,
+                "point": kp,
+                "lo": lo,
+                "hi": hi,
+                "n": n,
+                "B": N_BOOT,
+                "excl_zero": int(lo > 0 or hi < 0) if boots else None,
+            }
+        )
     with open(OUT / "p7_iter195_concordance_boot.tsv", "w") as f:
-        w = csv.DictWriter(f, fieldnames=("pair", "point", "lo", "hi", "n",
-                                          "B", "excl_zero"),
-                           delimiter="\t")
+        w = csv.DictWriter(
+            f, fieldnames=("pair", "point", "lo", "hi", "n", "B", "excl_zero"), delimiter="\t"
+        )
         w.writeheader()
         for r in boot_rows:
-            w.writerow({k: (f"{v:.4f}" if isinstance(v, float) else v)
-                        for k, v in r.items()})
+            w.writerow({k: (f"{v:.4f}" if isinstance(v, float) else v) for k, v in r.items()})
     print(f"Wrote {OUT}/p7_iter195_concordance_boot.tsv")
 
     # Stratified fire rates
     rate_rows = []
     for m in METHODS:
         sub = [c for c in all_cells if c["method"] == m]
-        rate_rows.append({"method": m, "metric": "ag_rate",
-                          "value": sum(c["ag"] for c in sub) / len(sub),
-                          "n": len(sub)})
-        rate_rows.append({"method": m, "metric": "df_rate",
-                          "value": sum(c["df"] for c in sub) / len(sub),
-                          "n": len(sub)})
-        rate_rows.append({"method": m, "metric": "ap_rate",
-                          "value": sum(c["ap"] for c in sub) / len(sub),
-                          "n": len(sub)})
+        rate_rows.append(
+            {
+                "method": m,
+                "metric": "ag_rate",
+                "value": sum(c["ag"] for c in sub) / len(sub),
+                "n": len(sub),
+            }
+        )
+        rate_rows.append(
+            {
+                "method": m,
+                "metric": "df_rate",
+                "value": sum(c["df"] for c in sub) / len(sub),
+                "n": len(sub),
+            }
+        )
+        rate_rows.append(
+            {
+                "method": m,
+                "metric": "ap_rate",
+                "value": sum(c["ap"] for c in sub) / len(sub),
+                "n": len(sub),
+            }
+        )
 
-    verdicts = {key: None for key in (
-        "H1_AG_step_fires_when_zvf_high", "H2_DF_AP_concordant_at_step_level",
-        "H3_AG_DF_concordant_at_step_level", "H4_AG_AP_concordant_at_step_level",
-        "H5_pooled_AG_DF_kappa_excludes_zero", "H6_pooled_AG_AP_kappa_excludes_zero",
-        "H7_pooled_DF_AP_kappa_excludes_zero")}
+    verdicts = {
+        key: None
+        for key in (
+            "H1_AG_step_fires_when_zvf_high",
+            "H2_DF_AP_concordant_at_step_level",
+            "H3_AG_DF_concordant_at_step_level",
+            "H4_AG_AP_concordant_at_step_level",
+            "H5_pooled_AG_DF_kappa_excludes_zero",
+            "H6_pooled_AG_AP_kappa_excludes_zero",
+            "H7_pooled_DF_AP_kappa_excludes_zero",
+        )
+    }
 
     summary = {
         "ts": "2026-07-06",
         "iter": 195,
         "pillar": "P7",
         "n_cells_total": len(all_cells),
-        "per_method_n": {m: sum(1 for c in all_cells if c["method"] == m)
-                         for m in METHODS},
-        "settings": {"TAU": TAU, "G_BASE": G_BASE, "G_ESC": G_ESC,
-                     "N_BOOT": N_BOOT, "SEED": SEED},
+        "per_method_n": {m: sum(1 for c in all_cells if c["method"] == m) for m in METHODS},
+        "settings": {"TAU": TAU, "G_BASE": G_BASE, "G_ESC": G_ESC, "N_BOOT": N_BOOT, "SEED": SEED},
         "stratified_rates": rate_rows,
         "boots": boot_rows,
         "verdicts": {key: None for key in verdicts},
         "verdict_status": "NOT_EVALUATED_SYNTHETIC_DIAGNOSTICS",
         "protocol": "corrected-review19-v3",
-        "rule_identity": {"ag": "observed_zvf_threshold",
-                          "df": "mixed_group_indicator",
-                          "ap": "always_off_impossible_inequality"},
+        "rule_identity": {
+            "ag": "observed_zvf_threshold",
+            "df": "mixed_group_indicator",
+            "ap": "always_off_impossible_inequality",
+        },
     }
     with open(OUT / "p7_iter195_summary.json", "w") as f:
         json.dump(summary, f, indent=2, allow_nan=False)

@@ -13,7 +13,7 @@ import json
 import math
 import sys
 from pathlib import Path
-from typing import Dict, List, Tuple, Any
+from typing import Dict, List, Any
 import argparse
 
 # Base directory
@@ -62,7 +62,7 @@ FIELD_ALIASES = {
 
 def load_json(path: Path) -> Dict:
     """Load JSON file."""
-    with open(path, 'r') as f:
+    with open(path, "r") as f:
         return json.load(f)
 
 
@@ -71,8 +71,8 @@ def normalize_row(row: Dict) -> Dict:
     normalized = {}
     for key, value in row.items():
         new_key = FIELD_ALIASES.get(key, key)
-        if new_key == "source_files" and key != "source_files" and isinstance(value,str):
-            value=[value]
+        if new_key == "source_files" and key != "source_files" and isinstance(value, str):
+            value = [value]
         if new_key in normalized and normalized[new_key] != value:
             raise ValueError(f"conflicting aliases for {new_key}")
         normalized[new_key] = value
@@ -90,12 +90,12 @@ def validate_row(row: Dict, row_num: int) -> List[str]:
     for alias in FIELD_ALIASES:
         if alias in row:
             issues.append(f"Row {row_num}: legacy alias {alias}; use explicit migrate command")
-    
+
     # Check required fields
     for field, expected_type in CANONICAL_SCHEMA.items():
         if field not in row:
             issues.append(f"Row {row_num}: Missing field '{field}'")
-    
+
     # Check type mismatches
     for field, expected_type in CANONICAL_SCHEMA.items():
         if field in row:
@@ -105,43 +105,60 @@ def validate_row(row: Dict, row_num: int) -> List[str]:
                     continue
                 issues.append(f"Row {row_num}: null required field {field}")
                 continue
-            valid_type = (not isinstance(value, bool) and isinstance(value, (int, float))) if expected_type is float else (type(value) is int if expected_type is int else isinstance(value, expected_type))
+            valid_type = (
+                (not isinstance(value, bool) and isinstance(value, (int, float)))
+                if expected_type is float
+                else (
+                    type(value) is int if expected_type is int else isinstance(value, expected_type)
+                )
+            )
             if not valid_type:
                 issues.append(
                     f"Row {row_num}: Field '{field}' has type {type(value).__name__}, "
                     f"expected {expected_type.__name__}"
                 )
-    
-    for field in ("paper_claim_ids","source_files"):
-        value=row.get(field)
-        if isinstance(value,list) and any(not isinstance(x,str) or not x.strip() for x in value):
+
+    for field in ("paper_claim_ids", "source_files"):
+        value = row.get(field)
+        if isinstance(value, list) and any(not isinstance(x, str) or not x.strip() for x in value):
             issues.append(f"Row {row_num}: invalid {field} member")
-    for field in ("peak_reward","last10_avg","learning_rate"):
-        value=row.get(field)
-        if isinstance(value,bool) or isinstance(value,(int,float)) and not math.isfinite(value):
+    for field in ("peak_reward", "last10_avg", "learning_rate"):
+        value = row.get(field)
+        if isinstance(value, bool) or isinstance(value, (int, float)) and not math.isfinite(value):
             issues.append(f"Row {row_num}: nonfinite/boolean {field}")
-    for field, minimum in (("seed",0),("steps_completed",0),("group_size",1)):
+    for field, minimum in (("seed", 0), ("steps_completed", 0), ("group_size", 1)):
         if type(row.get(field)) is int and row[field] < minimum:
             issues.append(f"Row {row_num}: invalid range {field}")
-    if isinstance(row.get("learning_rate"),(int,float)) and row["learning_rate"] <= 0:
+    if isinstance(row.get("learning_rate"), (int, float)) and row["learning_rate"] <= 0:
         issues.append(f"Row {row_num}: learning_rate must be positive")
     if row.get("source_files") == []:
         issues.append(f"Row {row_num}: source_files must identify evidence")
-    if row.get("status") == "unavailable" and (row.get("steps_completed") != 0 or any(row.get(k) is not None for k in NULLABLE_WHEN_UNAVAILABLE)):
+    if row.get("status") == "unavailable" and (
+        row.get("steps_completed") != 0
+        or any(row.get(k) is not None for k in NULLABLE_WHEN_UNAVAILABLE)
+    ):
         issues.append(f"Row {row_num}: unavailable requires zero steps and null trace/summaries")
-    trace=row.get("reward_trace")
-    if isinstance(trace,list):
-        if not trace or any(isinstance(x,bool) or not isinstance(x,(int,float)) or not math.isfinite(x) for x in trace):
+    trace = row.get("reward_trace")
+    if isinstance(trace, list):
+        if not trace or any(
+            isinstance(x, bool) or not isinstance(x, (int, float)) or not math.isfinite(x)
+            for x in trace
+        ):
             issues.append(f"Row {row_num}: invalid reward_trace")
         else:
             if row.get("steps_completed") != len(trace):
                 issues.append(f"Row {row_num}: trace/step count mismatch")
-            for key,actual in (("peak_reward",max(trace)),("last10_avg",sum(trace[-10:])/len(trace[-10:]))):
-                value=row.get(key)
-                if isinstance(value,(int,float)) and not math.isclose(value,actual,rel_tol=1e-6,abs_tol=1e-9):
+            for key, actual in (
+                ("peak_reward", max(trace)),
+                ("last10_avg", sum(trace[-10:]) / len(trace[-10:])),
+            ):
+                value = row.get(key)
+                if isinstance(value, (int, float)) and not math.isclose(
+                    value, actual, rel_tol=1e-6, abs_tol=1e-9
+                ):
                     issues.append(f"Row {row_num}: {key} inconsistent with trace")
-    for field in ("run_id","model","method","task","split","status"):
-        if not isinstance(row.get(field),str) or not row[field].strip():
+    for field in ("run_id", "model", "method", "task", "split", "status"):
+        if not isinstance(row.get(field), str) or not row[field].strip():
             issues.append(f"Row {row_num}: empty identity {field}")
     return issues
 
@@ -150,18 +167,18 @@ def analyze_schema(data: List[Dict]) -> Dict[str, Any]:
     """Analyze the schema of all rows."""
     field_counts = {}
     type_variations = {}
-    
-    for i, row in enumerate(data):
+
+    for _i, row in enumerate(data):
         normalized = row
-        
+
         for key, value in normalized.items():
             if key not in field_counts:
                 field_counts[key] = 0
                 type_variations[key] = set()
-            
+
             field_counts[key] += 1
             type_variations[key].add(type(value).__name__)
-    
+
     return {
         "field_counts": field_counts,
         "type_variations": type_variations,
@@ -170,10 +187,14 @@ def analyze_schema(data: List[Dict]) -> Dict[str, Any]:
 
 
 def main(argv=None):
-    parser = argparse.ArgumentParser(description="Strict validation; migration is an explicit separate operation")
+    parser = argparse.ArgumentParser(
+        description="Strict validation; migration is an explicit separate operation"
+    )
     parser.add_argument("command", choices=("validate", "migrate"), nargs="?", default="validate")
     parser.add_argument("--input", type=Path, default=MASTER_RESULTS)
-    parser.add_argument("--output", type=Path, help="Required new migration destination; never overwrites input")
+    parser.add_argument(
+        "--output", type=Path, help="Required new migration destination; never overwrites input"
+    )
     args = parser.parse_args(argv)
     try:
         data = load_json(args.input)
@@ -181,12 +202,18 @@ def main(argv=None):
         if not isinstance(rows, list) or not rows:
             raise ValueError("expected nonempty list of rows")
         if args.command == "migrate":
-            if not args.output or args.output.resolve() == args.input.resolve() or args.output.exists():
+            if (
+                not args.output
+                or args.output.resolve() == args.input.resolve()
+                or args.output.exists()
+            ):
                 raise ValueError("migration requires a new distinct --output file")
             rows = [normalize_row(row) for row in rows]
-        issues = [issue for i,row in enumerate(rows,1) for issue in validate_row(row,i)]
-        ids = [r.get("run_id") for r in rows if isinstance(r,dict)]
-        if any(not isinstance(i,str) for i in ids) or len(set(i for i in ids if isinstance(i,str))) != len(ids):
+        issues = [issue for i, row in enumerate(rows, 1) for issue in validate_row(row, i)]
+        ids = [r.get("run_id") for r in rows if isinstance(r, dict)]
+        if any(not isinstance(i, str) for i in ids) or len(
+            set(i for i in ids if isinstance(i, str))
+        ) != len(ids):
             issues.append("invalid or duplicate run identities")
         if issues:
             print("\n".join(issues))

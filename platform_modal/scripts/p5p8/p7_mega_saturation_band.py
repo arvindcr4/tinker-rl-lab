@@ -19,6 +19,7 @@ docs/p5p8_improvements/<NN>_p7_mega_saturation_band.md
 
 Stdlib + numpy + pandas + matplotlib. <=300 lines.
 """
+
 import json
 from pathlib import Path
 
@@ -38,7 +39,7 @@ BOOT_SEED = 20260704
 # Controller params (mirror iter-31 Hybrid C3): tau = 0.70, delta = 0.20
 TAU = 0.70
 DELTA = 0.20
-G_BASE = 8          # baseline group size; controller chooses G = 8 or 16
+G_BASE = 8  # baseline group size; controller chooses G = 8 or 16
 G_ESCAL = 16
 G_DESCAL = 4
 
@@ -116,7 +117,7 @@ def main():
 
     per_cell = []
     sat_band_count = 0
-    for i, row in df.iterrows():
+    for _i, row in df.iterrows():
         rv = json.loads(row["reward_vectors_json"])
         # Per-cell G is constant (set at config time); the trajectory is
         # (n_steps, G_per_step).
@@ -130,26 +131,30 @@ def main():
         sat_flag = has_sat_step(per_step_z, TAU + DELTA)
         if sat_flag:
             sat_band_count += 1
-        per_cell.append({
-            "cell_id": row["cell_id"],
-            "model": row["model_family"],
-            "task_slice": row["task_slice"],
-            "G": int(g_const),
-            "mean_reward": float(row["mean_reward"]),
-            "zvf_overall": float(row["zvf"]),
-            "max_step_zvf": float(per_step_z.max()),
-            "n_sat_band_steps": int((per_step_z >= TAU + DELTA).sum()),
-            "sat_band_cell": sat_flag,
-            "rollouts_baseline": baseline,
-            "rollouts_C1": int(result["C1"]),
-            "rollouts_C2": int(result["C2"]),
-            "rollouts_C3": int(result["C3"]),
-        })
+        per_cell.append(
+            {
+                "cell_id": row["cell_id"],
+                "model": row["model_family"],
+                "task_slice": row["task_slice"],
+                "G": int(g_const),
+                "mean_reward": float(row["mean_reward"]),
+                "zvf_overall": float(row["zvf"]),
+                "max_step_zvf": float(per_step_z.max()),
+                "n_sat_band_steps": int((per_step_z >= TAU + DELTA).sum()),
+                "sat_band_cell": sat_flag,
+                "rollouts_baseline": baseline,
+                "rollouts_C1": int(result["C1"]),
+                "rollouts_C2": int(result["C2"]),
+                "rollouts_C3": int(result["C3"]),
+            }
+        )
 
     pcd = pd.DataFrame(per_cell)
     pcd.to_csv(OUT / "p7_mega_saturation_band_per_cell.tsv", sep="\t", index=False)
     print(f"  -> p7_mega_saturation_band_per_cell.tsv ({len(pcd)} rows)")
-    print(f"  cells with >=1 saturation-band step (zvf >= {TAU + DELTA:.2f}): {sat_band_count}/{n_cells}")
+    print(
+        f"  cells with >=1 saturation-band step (zvf >= {TAU + DELTA:.2f}): {sat_band_count}/{n_cells}"
+    )
 
     # Compute pooled contrasts (C3 - C1, C2 - C1, C3 - C2) and per-stratum
     def pooled_ci(diff):
@@ -160,7 +165,11 @@ def main():
             idx = rng.integers(0, n, size=n)
             boots.append(np.mean(diff.iloc[idx]))
         boots = np.array(boots)
-        return float(diff.mean()), float(np.quantile(boots, 0.025)), float(np.quantile(boots, 0.975))
+        return (
+            float(diff.mean()),
+            float(np.quantile(boots, 0.025)),
+            float(np.quantile(boots, 0.975)),
+        )
 
     pcd["c3_minus_c1"] = pcd["rollouts_C3"] - pcd["rollouts_C1"]
     pcd["c2_minus_c1"] = pcd["rollouts_C2"] - pcd["rollouts_C1"]
@@ -222,8 +231,10 @@ def main():
         ),
         "headline": {
             "pooled_c3_minus_c1_mean": pooled["c3_minus_c1"]["mean"],
-            "pooled_c3_minus_c1_ci": [pooled["c3_minus_c1"]["ci025"],
-                                       pooled["c3_minus_c1"]["ci975"]],
+            "pooled_c3_minus_c1_ci": [
+                pooled["c3_minus_c1"]["ci025"],
+                pooled["c3_minus_c1"]["ci975"],
+            ],
             "pooled_c3_minus_c1_excludes_zero": pooled["c3_minus_c1"]["ci_excludes_zero"],
             "sat_band_c3_minus_c1_mean": strata.get("sat_band__c3_minus_c1", {}).get("mean"),
             "sat_band_c3_minus_c1_ci": [
@@ -238,14 +249,20 @@ def main():
 
     print("\n=== Pooled contrasts (n={}) ===".format(n_cells))
     for k, v in pooled.items():
-        print(f"  {k}: mean={v['mean']:>7.1f} CI=[{v['ci025']:>7.1f}, {v['ci975']:>7.1f}]"
-              f" excl0={v['ci_excludes_zero']}")
+        print(
+            f"  {k}: mean={v['mean']:>7.1f} CI=[{v['ci025']:>7.1f}, {v['ci975']:>7.1f}]"
+            f" excl0={v['ci_excludes_zero']}"
+        )
     print("\n=== Per-stratum contrasts ===")
     for k, v in strata.items():
-        print(f"  {k}: n={v['n_cells']:>3} mean={v['mean']:>7.1f} CI=[{v['ci025']:>7.1f}, {v['ci975']:>7.1f}]"
-              f" excl0={v['ci_excludes_zero']}")
-    print(f"\nCollapse test: C3==C1 on {c3_eq_c1}/{n_cells} cells; "
-          f"C3<C1 on {c3_lt_c1}; C3>C1 on {c3_gt_c1}")
+        print(
+            f"  {k}: n={v['n_cells']:>3} mean={v['mean']:>7.1f} CI=[{v['ci025']:>7.1f}, {v['ci975']:>7.1f}]"
+            f" excl0={v['ci_excludes_zero']}"
+        )
+    print(
+        f"\nCollapse test: C3==C1 on {c3_eq_c1}/{n_cells} cells; "
+        f"C3<C1 on {c3_lt_c1}; C3>C1 on {c3_gt_c1}"
+    )
 
 
 if __name__ == "__main__":

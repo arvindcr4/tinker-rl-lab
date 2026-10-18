@@ -15,6 +15,7 @@ Outputs (platform_hybrid/experiments/results/p5p8/):
   p6_crossref_summary.json      pass/fail counts + coverage gap list
 No third-party deps (stdlib only).
 """
+
 import json, glob, os, math, csv
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -66,13 +67,27 @@ def welch(m1, s1, n1, m0, s0, n0):
 
 
 def t_crit_95(df):
-    tbl = {1: 12.706, 2: 4.303, 3: 3.182, 4: 2.776, 5: 2.571, 6: 2.447,
-           7: 2.365, 8: 2.306, 9: 2.262, 10: 2.228, 12: 2.179, 15: 2.131,
-           20: 2.086, 30: 2.042, 1e9: 1.960}
+    tbl = {
+        1: 12.706,
+        2: 4.303,
+        3: 3.182,
+        4: 2.776,
+        5: 2.571,
+        6: 2.447,
+        7: 2.365,
+        8: 2.306,
+        9: 2.262,
+        10: 2.228,
+        12: 2.179,
+        15: 2.131,
+        20: 2.086,
+        30: 2.042,
+        1e9: 1.960,
+    }
     keys = sorted(tbl)
     if df <= keys[0]:
         return tbl[keys[0]]
-    for a, b in zip(keys, keys[1:]):
+    for a, b in zip(keys, keys[1:], strict=False):
         if a <= df <= b:
             fr = (df - a) / (b - a)
             return tbl[a] + fr * (tbl[b] - tbl[a])
@@ -129,28 +144,43 @@ def main():
             g_delta, g_lo, g_hi, g_sig = 0.0, 0.0, 0.0, False
         else:
             g_delta, g_lo, g_hi, g_sig, _ = welch(
-                gt["zvf_risk_mean"], gt["zvf_risk_sd"], gt["n"],
-                base["zvf_risk_mean"], base["zvf_risk_sd"], base["n"])
+                gt["zvf_risk_mean"],
+                gt["zvf_risk_sd"],
+                gt["n"],
+                base["zvf_risk_mean"],
+                base["zvf_risk_sd"],
+                base["n"],
+            )
 
         # ---- STACK-entry checks ----
         if mth in stacks:
             coverage["stack_present"].append(mth)
             _, se = stacks[mth]
             oc = se.get("outcomes", {}) or {}
-            rec(mth, "stack.zvf_risk_mean_vs_tsv",
+            rec(
+                mth,
+                "stack.zvf_risk_mean_vs_tsv",
                 "PASS" if approx(oc.get("zvf_risk_mean"), gt["zvf_risk_mean"]) else "FAIL",
-                f"stored={oc.get('zvf_risk_mean')} tsv={round(gt['zvf_risk_mean'],6)}")
-            rec(mth, "stack.delta_vs_grpo_vs_recompute",
+                f"stored={oc.get('zvf_risk_mean')} tsv={round(gt['zvf_risk_mean'], 6)}",
+            )
+            rec(
+                mth,
+                "stack.delta_vs_grpo_vs_recompute",
                 "PASS" if approx(oc.get("delta_vs_grpo_mean"), g_delta) else "FAIL",
-                f"stored={oc.get('delta_vs_grpo_mean')} recomputed={round(g_delta,6)}")
+                f"stored={oc.get('delta_vs_grpo_mean')} recomputed={round(g_delta, 6)}",
+            )
             if mth != BASE:
                 # stored sig comes from paired Gaussian-residual bootstrap (iter90);
                 # g_sig here is the CONSERVATIVE Welch two-sample verdict.  A divergence
                 # is NOT a data bug -- it is a CI-method robustness signal, recorded as
                 # sig_robust = (bootstrap_sig AND welch_sig).
                 status = "PASS" if oc.get("delta_vs_grpo_sig") == g_sig else "SIG_DIVERGE"
-                rec(mth, "stack.sig_robust_bootstrap_vs_welch", status,
-                    f"bootstrap_sig={oc.get('delta_vs_grpo_sig')} welch_sig={g_sig}")
+                rec(
+                    mth,
+                    "stack.sig_robust_bootstrap_vs_welch",
+                    status,
+                    f"bootstrap_sig={oc.get('delta_vs_grpo_sig')} welch_sig={g_sig}",
+                )
         else:
             coverage["stack_missing"].append(mth)
             rec(mth, "stack.coverage", "FAIL", "no zvf130_ stack entry for this real 5-seed method")
@@ -161,15 +191,21 @@ def main():
         dm = delta_z130(deltas[mth][1]) if mth in deltas else None
         if dm is not None:
             coverage["delta_present"].append(mth)
-            rec(mth, "delta.z130_vs_recompute",
+            rec(
+                mth,
+                "delta.z130_vs_recompute",
                 "PASS" if approx(dm.get("delta"), g_delta) else "FAIL",
-                f"stored={dm.get('delta')} recomputed={round(g_delta,6)}")
+                f"stored={dm.get('delta')} recomputed={round(g_delta, 6)}",
+            )
             # cross-representation: delta entry vs stack entry (if both exist)
             if mth in stacks:
                 oc = stacks[mth][1].get("outcomes", {}) or {}
-                rec(mth, "crossref.delta_eq_stack",
+                rec(
+                    mth,
+                    "crossref.delta_eq_stack",
                     "PASS" if approx(dm.get("delta"), oc.get("delta_vs_grpo_mean")) else "FAIL",
-                    f"delta_entry={dm.get('delta')} stack_entry={oc.get('delta_vs_grpo_mean')}")
+                    f"delta_entry={dm.get('delta')} stack_entry={oc.get('delta_vs_grpo_mean')}",
+                )
         else:
             coverage["delta_missing"].append(mth)
             rec(mth, "delta.coverage", "FAIL", "no zvf130_5seed measured block in delta entry")
@@ -188,43 +224,103 @@ def main():
         "checks_fail": checks["fail"],
         "stack_coverage": f"{len(coverage['stack_present'])}/{len(methods)}",
         "stack_present": coverage["stack_present"],
-"stack_missing": coverage["stack_missing"],
-        "delta_coverage": f"{len(coverage['delta_present'])}/{len(methods)-1}",
+        "stack_missing": coverage["stack_missing"],
+        "delta_coverage": f"{len(coverage['delta_present'])}/{len(methods) - 1}",
         "delta_missing": coverage["delta_missing"],
         "ground_truth": TSV,
         "sig_robustness": {
             m: {
-                "delta_vs_grpo": round(welch(tsv[m]["zvf_risk_mean"], tsv[m]["zvf_risk_sd"], 5,
-                                             base["zvf_risk_mean"], base["zvf_risk_sd"], 5)[0], 6),
-                "welch_lo": round(welch(tsv[m]["zvf_risk_mean"], tsv[m]["zvf_risk_sd"], 5,
-                                        base["zvf_risk_mean"], base["zvf_risk_sd"], 5)[1], 6),
-                "welch_hi": round(welch(tsv[m]["zvf_risk_mean"], tsv[m]["zvf_risk_sd"], 5,
-                                        base["zvf_risk_mean"], base["zvf_risk_sd"], 5)[2], 6),
-                "welch_sig": welch(tsv[m]["zvf_risk_mean"], tsv[m]["zvf_risk_sd"], 5,
-                                   base["zvf_risk_mean"], base["zvf_risk_sd"], 5)[3],
+                "delta_vs_grpo": round(
+                    welch(
+                        tsv[m]["zvf_risk_mean"],
+                        tsv[m]["zvf_risk_sd"],
+                        5,
+                        base["zvf_risk_mean"],
+                        base["zvf_risk_sd"],
+                        5,
+                    )[0],
+                    6,
+                ),
+                "welch_lo": round(
+                    welch(
+                        tsv[m]["zvf_risk_mean"],
+                        tsv[m]["zvf_risk_sd"],
+                        5,
+                        base["zvf_risk_mean"],
+                        base["zvf_risk_sd"],
+                        5,
+                    )[1],
+                    6,
+                ),
+                "welch_hi": round(
+                    welch(
+                        tsv[m]["zvf_risk_mean"],
+                        tsv[m]["zvf_risk_sd"],
+                        5,
+                        base["zvf_risk_mean"],
+                        base["zvf_risk_sd"],
+                        5,
+                    )[2],
+                    6,
+                ),
+                "welch_sig": welch(
+                    tsv[m]["zvf_risk_mean"],
+                    tsv[m]["zvf_risk_sd"],
+                    5,
+                    base["zvf_risk_mean"],
+                    base["zvf_risk_sd"],
+                    5,
+                )[3],
                 "bootstrap_sig": bool((delta_z130(deltas[m][1]) or {}).get("significant"))
-                if m in deltas else None,
-            } for m in methods if m != BASE
+                if m in deltas
+                else None,
+            }
+            for m in methods
+            if m != BASE
         },
         "welch_recompute": {
             m: {
                 "zvf_risk_mean": round(tsv[m]["zvf_risk_mean"], 6),
-                "delta_vs_grpo": 0.0 if m == BASE else round(
-                    welch(tsv[m]["zvf_risk_mean"], tsv[m]["zvf_risk_sd"], 5,
-                          base["zvf_risk_mean"], base["zvf_risk_sd"], 5)[0], 6),
-                "sig": False if m == BASE else welch(
-                    tsv[m]["zvf_risk_mean"], tsv[m]["zvf_risk_sd"], 5,
-                    base["zvf_risk_mean"], base["zvf_risk_sd"], 5)[3],
-            } for m in methods
+                "delta_vs_grpo": 0.0
+                if m == BASE
+                else round(
+                    welch(
+                        tsv[m]["zvf_risk_mean"],
+                        tsv[m]["zvf_risk_sd"],
+                        5,
+                        base["zvf_risk_mean"],
+                        base["zvf_risk_sd"],
+                        5,
+                    )[0],
+                    6,
+                ),
+                "sig": False
+                if m == BASE
+                else welch(
+                    tsv[m]["zvf_risk_mean"],
+                    tsv[m]["zvf_risk_sd"],
+                    5,
+                    base["zvf_risk_mean"],
+                    base["zvf_risk_sd"],
+                    5,
+                )[3],
+            }
+            for m in methods
         },
     }
     spath = os.path.join(OUTDIR, "p6_crossref_summary.json")
     json.dump(summary, open(spath, "w"), indent=2)
-    print(f"[integrity] {checks['pass']} PASS / {checks['fail']} FAIL / {checks['sig_diverge']} SIG_DIVERGE")
+    print(
+        f"[integrity] {checks['pass']} PASS / {checks['fail']} FAIL / {checks['sig_diverge']} SIG_DIVERGE"
+    )
     print(f"[coverage ] stack {summary['stack_coverage']}  missing={coverage['stack_missing']}")
     print(f"[coverage ] delta {summary['delta_coverage']}  missing={coverage['delta_missing']}")
     sr = summary["sig_robustness"]
-    flips = [m for m, v in sr.items() if v["bootstrap_sig"] is not None and v["welch_sig"] != v["bootstrap_sig"]]
+    flips = [
+        m
+        for m, v in sr.items()
+        if v["bootstrap_sig"] is not None and v["welch_sig"] != v["bootstrap_sig"]
+    ]
     robust = [m for m, v in sr.items() if v["welch_sig"] and v["bootstrap_sig"]]
     print(f"[sig-robust] {len(robust)}/{len(sr)} sig under BOTH bootstrap+Welch: {robust}")
     print(f"[sig-flip ] bootstrap-sig but Welch-NS: {flips}")
@@ -241,16 +337,35 @@ def main():
     srpath = os.path.join(OUTDIR, "p6_sig_robustness.tsv")
     with open(srpath, "w", newline="") as f:
         w = csv.writer(f, delimiter="\t")
-        w.writerow(["method", "delta_vs_grpo", "welch_lo", "welch_hi",
-                    "welch_sig", "bootstrap_sig", "sig_robust"])
+        w.writerow(
+            [
+                "method",
+                "delta_vs_grpo",
+                "welch_lo",
+                "welch_hi",
+                "welch_sig",
+                "bootstrap_sig",
+                "sig_robust",
+            ]
+        )
         for m, v in sr.items():
             robust = bool(v["welch_sig"]) and bool(v["bootstrap_sig"])
-            w.writerow([m, v["delta_vs_grpo"], v["welch_lo"], v["welch_hi"],
-                        v["welch_sig"], v["bootstrap_sig"], robust])
+            w.writerow(
+                [
+                    m,
+                    v["delta_vs_grpo"],
+                    v["welch_lo"],
+                    v["welch_hi"],
+                    v["welch_sig"],
+                    v["bootstrap_sig"],
+                    robust,
+                ]
+            )
     print(f"[wrote] {srpath}")
 
     # CI-style exit code: nonzero only on HARD (point-estimate) failures
     import sys
+
     sys.exit(1 if hard else 0)
 
 

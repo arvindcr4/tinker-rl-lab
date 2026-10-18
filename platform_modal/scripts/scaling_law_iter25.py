@@ -26,6 +26,7 @@ Outputs:
   platform_hybrid/experiments/results/scaling_law_iter25_summary.tsv         (headline rollup)
   figures/scaling_law_iter25.{pdf,png}  (+ mirror into paper/figures/)
 """
+
 from __future__ import annotations
 
 import csv
@@ -37,10 +38,10 @@ from pathlib import Path
 import matplotlib
 
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt  # noqa: E402
-import numpy as np  # noqa: E402
-from scipy.optimize import curve_fit  # noqa: E402
-from _analysis_common import saturation  # noqa: E402
+import matplotlib.pyplot as plt
+import numpy as np
+from scipy.optimize import curve_fit
+from _analysis_common import saturation
 
 REPO = Path(__file__).resolve().parent.parent
 TRACE_DIR = REPO / "experiments" / "tinker-runs" / "results"
@@ -85,9 +86,12 @@ def infer_batch_n(y: np.ndarray, cap: int = 64) -> int:
 def fit_sat(t, y):
     try:
         popt, _ = curve_fit(
-            saturation, t, y,
+            saturation,
+            t,
+            y,
             p0=(max(0.9 * float(np.max(y)) + 0.05, 0.05), 0.3),
-            bounds=([0.0, LAM_LO], [1.5, LAM_HI]), maxfev=20000,
+            bounds=([0.0, LAM_LO], [1.5, LAM_HI]),
+            maxfev=20000,
         )
         return float(popt[0]), float(popt[1])
     except Exception:
@@ -154,14 +158,15 @@ def detect_T(rmax, lam, n_batch, power=0.8, alpha=0.05, tmax=200):
         # analytic OLS-slope power under heteroskedastic binomial noise
         xm = t.mean()
         sxx = float(np.sum((t - xm) ** 2))
-        var_slope = float(np.sum((t - xm) ** 2 * (mu * (1 - mu) / n_batch))) / sxx ** 2
+        var_slope = float(np.sum((t - xm) ** 2 * (mu * (1 - mu) / n_batch))) / sxx**2
         b_true = float(np.sum((t - xm) * (mu - mu.mean())) / sxx)
         if var_slope <= 0:
             continue
         ncp = abs(b_true) / math.sqrt(var_slope)
         # power for two-sided z-test
-        powr = 0.5 * (math.erfc((zc - ncp) / math.sqrt(2))) + \
-            0.5 * (math.erfc((zc + ncp) / math.sqrt(2)))
+        powr = 0.5 * (math.erfc((zc - ncp) / math.sqrt(2))) + 0.5 * (
+            math.erfc((zc + ncp) / math.sqrt(2))
+        )
         if powr >= power:
             return T
     return tmax + 1  # censored: not detectable within tmax steps
@@ -191,7 +196,12 @@ def main():
             identifiable = (frac_bound < 0.5) and (span_frac < 0.5)
         else:
             frac_bound, lam_lo, lam_hi, span_frac, identifiable = (
-                float("nan"), float("nan"), float("nan"), float("nan"), False)
+                float("nan"),
+                float("nan"),
+                float("nan"),
+                float("nan"),
+                False,
+            )
         if len(t80s):
             t80_lo, t80_hi = np.percentile(t80s, [10, 90])
         else:
@@ -203,32 +213,49 @@ def main():
         n_identifiable += int(identifiable)
         n_sat_supported += int(sat_supported)
         T_star_disp = f">{T_star - 1}" if T_star == 201 else T_star
-        T_star_gt_len = (T_star > len(y))
+        T_star_gt_len = T_star > len(y)
 
-        per_rows.append({
-            "model": name, "params_B": pb, "n_steps": len(y), "batch_n": n_batch,
-            "sigma_step": round(sigma, 4), "R_max": round(rmax, 4),
-            "lambda": round(lam, 4), "lam_at_bound": lam_at_bound,
-            "t80_point": round(t80_point, 4) if not math.isnan(t80_point) else "nan",
-            "identifiable": identifiable, "aicc_best": best,
-            "sat_supported": sat_supported,
-            "T_star_power80": T_star_disp,
-            "T_star_gt_len": T_star_gt_len,
-        })
-        boot_rows.append({
-            "model": name, "boot_frac_lambda_at_bound": round(frac_bound, 4),
-            "lambda_ci10": round(lam_lo, 4), "lambda_ci90": round(lam_hi, 4),
-            "lambda_ci_span_frac": round(span_frac, 4),
-            "t80_ci10": round(t80_lo, 4) if not math.isnan(t80_lo) else "nan",
-            "t80_ci90": round(t80_hi, 4) if not math.isnan(t80_hi) else "nan",
-        })
-        ms_rows.append({
-            "model": name, "aicc_constant": round(aiccs["constant"], 3),
-            "aicc_linear": round(aiccs["linear"], 3),
-            "aicc_saturation": round(aiccs["saturation"], 3),
-            "w_constant": round(w["constant"], 4), "w_linear": round(w["linear"], 4),
-            "w_saturation": round(w["saturation"], 4), "aicc_best": best,
-        })
+        per_rows.append(
+            {
+                "model": name,
+                "params_B": pb,
+                "n_steps": len(y),
+                "batch_n": n_batch,
+                "sigma_step": round(sigma, 4),
+                "R_max": round(rmax, 4),
+                "lambda": round(lam, 4),
+                "lam_at_bound": lam_at_bound,
+                "t80_point": round(t80_point, 4) if not math.isnan(t80_point) else "nan",
+                "identifiable": identifiable,
+                "aicc_best": best,
+                "sat_supported": sat_supported,
+                "T_star_power80": T_star_disp,
+                "T_star_gt_len": T_star_gt_len,
+            }
+        )
+        boot_rows.append(
+            {
+                "model": name,
+                "boot_frac_lambda_at_bound": round(frac_bound, 4),
+                "lambda_ci10": round(lam_lo, 4),
+                "lambda_ci90": round(lam_hi, 4),
+                "lambda_ci_span_frac": round(span_frac, 4),
+                "t80_ci10": round(t80_lo, 4) if not math.isnan(t80_lo) else "nan",
+                "t80_ci90": round(t80_hi, 4) if not math.isnan(t80_hi) else "nan",
+            }
+        )
+        ms_rows.append(
+            {
+                "model": name,
+                "aicc_constant": round(aiccs["constant"], 3),
+                "aicc_linear": round(aiccs["linear"], 3),
+                "aicc_saturation": round(aiccs["saturation"], 3),
+                "w_constant": round(w["constant"], 4),
+                "w_linear": round(w["linear"], 4),
+                "w_saturation": round(w["saturation"], 4),
+                "aicc_best": best,
+            }
+        )
 
     def write_tsv(path, rows):
         with open(path, "w", newline="") as f:
@@ -243,16 +270,16 @@ def main():
     n = len(per_rows)
     summary = [
         {"metric": "n_traces", "value": n},
-        {"metric": "n_lam_at_bound_pointfit",
-         "value": sum(r["lam_at_bound"] for r in per_rows)},
+        {"metric": "n_lam_at_bound_pointfit", "value": sum(r["lam_at_bound"] for r in per_rows)},
         {"metric": "n_identifiable", "value": n_identifiable},
         {"metric": "frac_identifiable", "value": round(n_identifiable / n, 4)},
         {"metric": "n_saturation_supported", "value": n_sat_supported},
         {"metric": "frac_saturation_supported", "value": round(n_sat_supported / n, 4)},
-        {"metric": "n_aicc_best_constant",
-         "value": sum(r["aicc_best"] == "constant" for r in per_rows)},
-        {"metric": "median_batch_n",
-         "value": float(np.median([r["batch_n"] for r in per_rows]))},
+        {
+            "metric": "n_aicc_best_constant",
+            "value": sum(r["aicc_best"] == "constant" for r in per_rows),
+        },
+        {"metric": "median_batch_n", "value": float(np.median([r["batch_n"] for r in per_rows]))},
     ]
     write_tsv(RESULTS / "scaling_law_iter25_summary.tsv", summary)
 
@@ -260,7 +287,7 @@ def main():
     fig, axes = plt.subplots(1, 2, figsize=(11, 4.2))
     names = [r["model"] for r in per_rows]
     ax = axes[0]
-    for i, (pr, br) in enumerate(zip(per_rows, boot_rows)):
+    for i, (pr, br) in enumerate(zip(per_rows, boot_rows, strict=False)):
         lo, hi = br["lambda_ci10"], br["lambda_ci90"]
         col = "#2a7" if pr["identifiable"] else "#c33"
         ax.plot([lo, hi], [i, i], color=col, lw=3, solid_capstyle="round")
@@ -270,7 +297,9 @@ def main():
     ax.set_yticks(range(len(names)))
     ax.set_yticklabels(names, fontsize=8)
     ax.set_xlabel(r"$\hat\lambda$ (bootstrap 80% CI)")
-    ax.set_title("Saturation rate identifiability\n(green=identifiable, red=degenerate)", fontsize=9)
+    ax.set_title(
+        "Saturation rate identifiability\n(green=identifiable, red=degenerate)", fontsize=9
+    )
     ax = axes[1]
     ind = np.arange(len(names))
     wc = [r["w_constant"] for r in ms_rows]
@@ -292,8 +321,17 @@ def main():
 
     print(f"traces={n} identifiable={n_identifiable} sat_supported={n_sat_supported}")
     for r in per_rows:
-        print(r["model"], "batch_n", r["batch_n"], "ident", r["identifiable"],
-              "best", r["aicc_best"], "T*", r["T_star_power80"])
+        print(
+            r["model"],
+            "batch_n",
+            r["batch_n"],
+            "ident",
+            r["identifiable"],
+            "best",
+            r["aicc_best"],
+            "T*",
+            r["T_star_power80"],
+        )
 
 
 if __name__ == "__main__":

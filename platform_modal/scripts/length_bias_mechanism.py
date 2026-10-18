@@ -23,10 +23,10 @@ Outputs:
 Usage:
   python platform_modal/scripts/length_bias_mechanism.py
 """
+
 from __future__ import annotations
 
 import json
-import math
 import shutil
 import sys
 from pathlib import Path
@@ -44,6 +44,7 @@ PAPER_FIGS.mkdir(parents=True, exist_ok=True)
 
 # ----------------------------- data loading -----------------------------------
 
+
 def load_runs() -> list[dict]:
     """Load and normalise all per-step runs across the two Dr.GRPO experiments."""
     runs = []
@@ -53,18 +54,21 @@ def load_runs() -> list[dict]:
     ]:
         d = json.loads(src.read_text())
         for r in d["runs"]:
-            runs.append({
-                "task": task_alias,
-                "algo": r["algo"],
-                "seed": r["seed"],
-                "model": r["model"],
-                "step_log": r["step_log"],
-                "mean_zvf": r.get("mean_zvf", float("nan")),
-            })
+            runs.append(
+                {
+                    "task": task_alias,
+                    "algo": r["algo"],
+                    "seed": r["seed"],
+                    "model": r["model"],
+                    "step_log": r["step_log"],
+                    "mean_zvf": r.get("mean_zvf", float("nan")),
+                }
+            )
     return runs
 
 
 # ----------------------------- regression diagnostics -------------------------
+
 
 def ols_slope(x: np.ndarray, y: np.ndarray) -> tuple[float, float]:
     """Ordinary least squares slope of y on x, plus residual std."""
@@ -127,6 +131,7 @@ def paired_bootstrap_diff(a: np.ndarray, b: np.ndarray, n_boot: int = 5000, seed
 
 # ----------------------------- per-run diagnostics ----------------------------
 
+
 def per_run_diagnostics(run: dict) -> dict:
     sl = run["step_log"]
     steps = np.array([s["step"] for s in sl], float)
@@ -186,6 +191,7 @@ def per_run_diagnostics(run: dict) -> dict:
 
 # ----------------------------- ZVF mediation ----------------------------------
 
+
 def mediation_analysis(run: dict) -> dict:
     """Decompose the step-level mean_reward ~ mean_comp_len coupling into:
         - direct path (mean_reward ~ mean_comp_len | mean_zvf)
@@ -214,8 +220,12 @@ def mediation_analysis(run: dict) -> dict:
     lens_resid = lens - zvfs * (np.cov(lens, zvfs, ddof=0)[0, 1] / max(np.var(zvfs, ddof=0), 1e-12))
     direct = std_beta(lens_resid, rews_resid)
     # indirect path: reward ~ zvf | length
-    rews_resid2 = rews - lens * (np.cov(rews, lens, ddof=0)[0, 1] / max(np.var(lens, ddof=0), 1e-12))
-    zvfs_resid2 = zvfs - lens * (np.cov(zvfs, lens, ddof=0)[0, 1] / max(np.var(lens, ddof=0), 1e-12))
+    rews_resid2 = rews - lens * (
+        np.cov(rews, lens, ddof=0)[0, 1] / max(np.var(lens, ddof=0), 1e-12)
+    )
+    zvfs_resid2 = zvfs - lens * (
+        np.cov(zvfs, lens, ddof=0)[0, 1] / max(np.var(lens, ddof=0), 1e-12)
+    )
     indirect_reward_on_zvf = std_beta(zvfs_resid2, rews_resid2)
     # length ~ zvf (mediator), then chain through reward
     length_on_zvf = std_beta(zvfs, lens)
@@ -237,6 +247,7 @@ def mediation_analysis(run: dict) -> dict:
 
 # ----------------------------- summary tables ---------------------------------
 
+
 def per_task_summary(per_run: list[dict]) -> list[dict]:
     out = []
     for task in sorted({r["task"] for r in per_run}):
@@ -250,19 +261,25 @@ def per_task_summary(per_run: list[dict]) -> list[dict]:
             lag1 = np.array([r["lag1_dL_autocorr"] for r in sub])
             le = np.array([r["len_late_minus_early"] for r in sub])
             sp_lz = np.array([r["spearman_L_Z"] for r in sub])
-            out.append({
-                "task": task,
-                "algo": algo,
-                "n_seeds": len(sub),
-                "mean_ols_dL_dR": round(float(slopes_ols.mean()), 4),
-                "sd_ols_dL_dR": round(float(slopes_ols.std(ddof=1)) if len(slopes_ols) > 1 else 0.0, 4),
-                "mean_ts_dL_dR": round(float(slopes_ts.mean()), 4),
-                "sd_ts_dL_dR": round(float(slopes_ts.std(ddof=1)) if len(slopes_ts) > 1 else 0.0, 4),
-                "mean_spearman_L_R": round(float(sp.mean()), 4),
-                "mean_lag1_dL_autocorr": round(float(np.nanmean(lag1)), 4),
-                "mean_len_late_minus_early": round(float(le.mean()), 4),
-                "mean_spearman_L_Z": round(float(sp_lz.mean()), 4),
-            })
+            out.append(
+                {
+                    "task": task,
+                    "algo": algo,
+                    "n_seeds": len(sub),
+                    "mean_ols_dL_dR": round(float(slopes_ols.mean()), 4),
+                    "sd_ols_dL_dR": round(
+                        float(slopes_ols.std(ddof=1)) if len(slopes_ols) > 1 else 0.0, 4
+                    ),
+                    "mean_ts_dL_dR": round(float(slopes_ts.mean()), 4),
+                    "sd_ts_dL_dR": round(
+                        float(slopes_ts.std(ddof=1)) if len(slopes_ts) > 1 else 0.0, 4
+                    ),
+                    "mean_spearman_L_R": round(float(sp.mean()), 4),
+                    "mean_lag1_dL_autocorr": round(float(np.nanmean(lag1)), 4),
+                    "mean_len_late_minus_early": round(float(le.mean()), 4),
+                    "mean_spearman_L_Z": round(float(sp_lz.mean()), 4),
+                }
+            )
     # paired delta: dr_grpo - grpo per seed, per task
     for task in sorted({r["task"] for r in per_run}):
         grpo_seeds = {r["seed"] for r in per_run if r["task"] == task and r["algo"] == "grpo"}
@@ -270,16 +287,76 @@ def per_task_summary(per_run: list[dict]) -> list[dict]:
         common = sorted(grpo_seeds & dr_seeds)
         if not common:
             continue
-        g_slopes = np.array([r["ols_dL_dR"] for r in per_run if r["task"] == task and r["algo"] == "grpo" and r["seed"] in common])
-        d_slopes = np.array([r["ols_dL_dR"] for r in per_run if r["task"] == task and r["algo"] == "dr_grpo" and r["seed"] in common])
-        g_ts = np.array([r["theil_sen_dL_dR"] for r in per_run if r["task"] == task and r["algo"] == "grpo" and r["seed"] in common])
-        d_ts = np.array([r["theil_sen_dL_dR"] for r in per_run if r["task"] == task and r["algo"] == "dr_grpo" and r["seed"] in common])
-        g_sp = np.array([r["spearman_L_R"] for r in per_run if r["task"] == task and r["algo"] == "grpo" and r["seed"] in common])
-        d_sp = np.array([r["spearman_L_R"] for r in per_run if r["task"] == task and r["algo"] == "dr_grpo" and r["seed"] in common])
-        g_lag = np.array([r["lag1_dL_autocorr"] for r in per_run if r["task"] == task and r["algo"] == "grpo" and r["seed"] in common])
-        d_lag = np.array([r["lag1_dL_autocorr"] for r in per_run if r["task"] == task and r["algo"] == "dr_grpo" and r["seed"] in common])
-        g_le = np.array([r["len_late_minus_early"] for r in per_run if r["task"] == task and r["algo"] == "grpo" and r["seed"] in common])
-        d_le = np.array([r["len_late_minus_early"] for r in per_run if r["task"] == task and r["algo"] == "dr_grpo" and r["seed"] in common])
+        g_slopes = np.array(
+            [
+                r["ols_dL_dR"]
+                for r in per_run
+                if r["task"] == task and r["algo"] == "grpo" and r["seed"] in common
+            ]
+        )
+        d_slopes = np.array(
+            [
+                r["ols_dL_dR"]
+                for r in per_run
+                if r["task"] == task and r["algo"] == "dr_grpo" and r["seed"] in common
+            ]
+        )
+        g_ts = np.array(
+            [
+                r["theil_sen_dL_dR"]
+                for r in per_run
+                if r["task"] == task and r["algo"] == "grpo" and r["seed"] in common
+            ]
+        )
+        d_ts = np.array(
+            [
+                r["theil_sen_dL_dR"]
+                for r in per_run
+                if r["task"] == task and r["algo"] == "dr_grpo" and r["seed"] in common
+            ]
+        )
+        g_sp = np.array(
+            [
+                r["spearman_L_R"]
+                for r in per_run
+                if r["task"] == task and r["algo"] == "grpo" and r["seed"] in common
+            ]
+        )
+        d_sp = np.array(
+            [
+                r["spearman_L_R"]
+                for r in per_run
+                if r["task"] == task and r["algo"] == "dr_grpo" and r["seed"] in common
+            ]
+        )
+        g_lag = np.array(
+            [
+                r["lag1_dL_autocorr"]
+                for r in per_run
+                if r["task"] == task and r["algo"] == "grpo" and r["seed"] in common
+            ]
+        )
+        d_lag = np.array(
+            [
+                r["lag1_dL_autocorr"]
+                for r in per_run
+                if r["task"] == task and r["algo"] == "dr_grpo" and r["seed"] in common
+            ]
+        )
+        g_le = np.array(
+            [
+                r["len_late_minus_early"]
+                for r in per_run
+                if r["task"] == task and r["algo"] == "grpo" and r["seed"] in common
+            ]
+        )
+        d_le = np.array(
+            [
+                r["len_late_minus_early"]
+                for r in per_run
+                if r["task"] == task and r["algo"] == "dr_grpo" and r["seed"] in common
+            ]
+        )
 
         boot_ols = paired_bootstrap_diff(g_slopes, d_slopes, seed=task.__hash__() & 0xFFFF)
         boot_ts = paired_bootstrap_diff(g_ts, d_ts, seed=task.__hash__() & 0xBEEF)
@@ -287,41 +364,45 @@ def per_task_summary(per_run: list[dict]) -> list[dict]:
         boot_lag = paired_bootstrap_diff(g_lag, d_lag, seed=task.__hash__() & 0xDEAD)
         boot_le = paired_bootstrap_diff(g_le, d_le, seed=task.__hash__() & 0xBABE)
 
-        out.append({
-            "task": task,
-            "algo": "drgrpo_minus_grpo",
-            "n_seeds": len(common),
-            "mean_ols_dL_dR": round(boot_ols["mean"], 4),
-            "sd_ols_dL_dR": round(float(g_slopes.mean() - d_slopes.mean()) * 0 + 0.0, 4),
-            "mean_ts_dL_dR": round(boot_ts["mean"], 4),
-            "sd_ts_dL_dR": round(0.0, 4),
-            "mean_spearman_L_R": round(boot_sp["mean"], 4),
-            "mean_lag1_dL_autocorr": round(boot_lag["mean"], 4),
-            "mean_len_late_minus_early": round(boot_le["mean"], 4),
-            "mean_spearman_L_Z": float("nan"),
-            "_ci_ols_lo": round(boot_ols["lo"], 4),
-            "_ci_ols_hi": round(boot_ols["hi"], 4),
-            "_p_ols": round(boot_ols["p"], 4),
-            "_ci_ts_lo": round(boot_ts["lo"], 4),
-            "_ci_ts_hi": round(boot_ts["hi"], 4),
-            "_p_ts": round(boot_ts["p"], 4),
-            "_ci_sp_lo": round(boot_sp["lo"], 4),
-            "_ci_sp_hi": round(boot_sp["hi"], 4),
-            "_p_sp": round(boot_sp["p"], 4),
-            "_ci_lag_lo": round(boot_lag["lo"], 4),
-            "_ci_lag_hi": round(boot_lag["hi"], 4),
-            "_p_lag": round(boot_lag["p"], 4),
-            "_ci_le_lo": round(boot_le["lo"], 4),
-            "_ci_le_hi": round(boot_le["hi"], 4),
-            "_p_le": round(boot_le["p"], 4),
-        })
+        out.append(
+            {
+                "task": task,
+                "algo": "drgrpo_minus_grpo",
+                "n_seeds": len(common),
+                "mean_ols_dL_dR": round(boot_ols["mean"], 4),
+                "sd_ols_dL_dR": round(float(g_slopes.mean() - d_slopes.mean()) * 0 + 0.0, 4),
+                "mean_ts_dL_dR": round(boot_ts["mean"], 4),
+                "sd_ts_dL_dR": round(0.0, 4),
+                "mean_spearman_L_R": round(boot_sp["mean"], 4),
+                "mean_lag1_dL_autocorr": round(boot_lag["mean"], 4),
+                "mean_len_late_minus_early": round(boot_le["mean"], 4),
+                "mean_spearman_L_Z": float("nan"),
+                "_ci_ols_lo": round(boot_ols["lo"], 4),
+                "_ci_ols_hi": round(boot_ols["hi"], 4),
+                "_p_ols": round(boot_ols["p"], 4),
+                "_ci_ts_lo": round(boot_ts["lo"], 4),
+                "_ci_ts_hi": round(boot_ts["hi"], 4),
+                "_p_ts": round(boot_ts["p"], 4),
+                "_ci_sp_lo": round(boot_sp["lo"], 4),
+                "_ci_sp_hi": round(boot_sp["hi"], 4),
+                "_p_sp": round(boot_sp["p"], 4),
+                "_ci_lag_lo": round(boot_lag["lo"], 4),
+                "_ci_lag_hi": round(boot_lag["hi"], 4),
+                "_p_lag": round(boot_lag["p"], 4),
+                "_ci_le_lo": round(boot_le["lo"], 4),
+                "_ci_le_hi": round(boot_le["hi"], 4),
+                "_p_le": round(boot_le["p"], 4),
+            }
+        )
     return out
 
 
 # ----------------------------- figure -----------------------------------------
 
+
 def make_figure(per_run: list[dict], summary: list[dict], mediation: list[dict]) -> None:
     import matplotlib
+
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
 
@@ -338,15 +419,40 @@ def make_figure(per_run: list[dict], summary: list[dict], mediation: list[dict])
         rews = [s["mean_reward"] for s in sl]
         c = colors.get(r["algo"], "#888888")
         marker = "o" if "gsm8k" in r["task"] else "s"
-        ax.scatter(lens, rews, c=c, alpha=0.5, marker=marker, s=18,
-                   label=f"{r['algo']} {'(GSM8K)' if 'gsm8k' in r['task'] else '(arithmetic)'}")
+        ax.scatter(
+            lens,
+            rews,
+            c=c,
+            alpha=0.5,
+            marker=marker,
+            s=18,
+            label=f"{r['algo']} {'(GSM8K)' if 'gsm8k' in r['task'] else '(arithmetic)'}",
+        )
     ax.set_xlabel("step-level mean completion length (tokens)")
     ax.set_ylabel("step-level mean reward")
     ax.set_title("(A) L_t vs R_t trajectories")
     ax.grid(alpha=0.25)
-    handles = [plt.Line2D([0], [0], marker='o', color='w', markerfacecolor=colors['grpo'], markersize=8, label='GRPO'),
-               plt.Line2D([0], [0], marker='o', color='w', markerfacecolor=colors['dr_grpo'], markersize=8, label='Dr. GRPO')]
-    ax.legend(handles=handles, loc='upper right', framealpha=0.9)
+    handles = [
+        plt.Line2D(
+            [0],
+            [0],
+            marker="o",
+            color="w",
+            markerfacecolor=colors["grpo"],
+            markersize=8,
+            label="GRPO",
+        ),
+        plt.Line2D(
+            [0],
+            [0],
+            marker="o",
+            color="w",
+            markerfacecolor=colors["dr_grpo"],
+            markersize=8,
+            label="Dr. GRPO",
+        ),
+    ]
+    ax.legend(handles=handles, loc="upper right", framealpha=0.9)
 
     # panel B: OLS slope dL/dR per task per algo (with paired error bars)
     ax = axes[1]
@@ -358,7 +464,9 @@ def make_figure(per_run: list[dict], summary: list[dict], mediation: list[dict])
         for task in tasks:
             sub = [r["ols_dL_dR"] for r in per_run if r["task"] == task and r["algo"] == algo]
             if not sub:
-                means.append(0.0); lo_err.append(0.0); hi_err.append(0.0)
+                means.append(0.0)
+                lo_err.append(0.0)
+                hi_err.append(0.0)
             else:
                 means.append(float(np.mean(sub)))
                 # bootstrap CI on the per-seed mean
@@ -369,15 +477,22 @@ def make_figure(per_run: list[dict], summary: list[dict], mediation: list[dict])
                 means[-1] = float(np.mean(sub))
                 lo_err.append(means[-1] - lo)
                 hi_err.append(hi - means[-1])
-        ax.bar(xpos + (j - 0.5) * width, means, width, yerr=[lo_err, hi_err],
-               color=colors[algo], alpha=0.85, label=algo)
+        ax.bar(
+            xpos + (j - 0.5) * width,
+            means,
+            width,
+            yerr=[lo_err, hi_err],
+            color=colors[algo],
+            alpha=0.85,
+            label=algo,
+        )
     ax.set_xticks(xpos)
     ax.set_xticklabels([t.replace("_qwen2.5-", "\nQwen2.5-") for t in tasks], fontsize=8)
     ax.set_ylabel("OLS slope dL/dR per run (tokens / reward)")
     ax.set_title("(B) length-reward coupling: lower = flatter")
-    ax.axhline(0.0, color='black', linewidth=0.5)
+    ax.axhline(0.0, color="black", linewidth=0.5)
     ax.legend(framealpha=0.9)
-    ax.grid(alpha=0.25, axis='y')
+    ax.grid(alpha=0.25, axis="y")
 
     # panel C: mediation direct vs indirect (averaged per (task, algo))
     ax = axes[2]
@@ -393,19 +508,31 @@ def make_figure(per_run: list[dict], summary: list[dict], mediation: list[dict])
             pairs.append((task, algo, direct, indirect, total))
     xpos = np.arange(len(pairs))
     width = 0.27
-    for j, (key, color) in enumerate([("direct", "#1f77b4"), ("indirect_via_Z", "#d62728"), ("total", "#2ca02c")]):
+    for j, (key, color) in enumerate(
+        [("direct", "#1f77b4"), ("indirect_via_Z", "#d62728"), ("total", "#2ca02c")]
+    ):
         vals = [p[2 + j] for p in pairs]
-        ax.bar(xpos + (j - 1) * width, vals, width, color=color, alpha=0.85, label=key.replace("_", " "))
+        ax.bar(
+            xpos + (j - 1) * width,
+            vals,
+            width,
+            color=color,
+            alpha=0.85,
+            label=key.replace("_", " "),
+        )
     ax.set_xticks(xpos)
     ax.set_xticklabels([f"{p[0].split('_')[0]}\n{p[1]}" for p in pairs], fontsize=7, rotation=0)
     ax.set_ylabel("standardised slope (Pearson r on standardised vars)")
     ax.set_title("(C) ZVF mediation of length→reward coupling")
-    ax.axhline(0.0, color='black', linewidth=0.5)
+    ax.axhline(0.0, color="black", linewidth=0.5)
     ax.legend(framealpha=0.9, fontsize=8)
-    ax.grid(alpha=0.25, axis='y')
+    ax.grid(alpha=0.25, axis="y")
 
-    fig.suptitle("Dr. GRPO mechanism test: length–reward coupling, slope, and ZVF mediation",
-                 fontsize=12, y=1.02)
+    fig.suptitle(
+        "Dr. GRPO mechanism test: length–reward coupling, slope, and ZVF mediation",
+        fontsize=12,
+        y=1.02,
+    )
     plt.tight_layout()
     pdf_path = FIGS / "length_bias_mechanism.pdf"
     png_path = FIGS / "length_bias_mechanism.png"
@@ -418,6 +545,7 @@ def make_figure(per_run: list[dict], summary: list[dict], mediation: list[dict])
 
 # ----------------------------- tsv writers ------------------------------------
 
+
 def write_tsv(path: Path, rows: list[dict], cols: list[str]) -> None:
     with path.open("w") as f:
         f.write("\t".join(cols) + "\n")
@@ -428,39 +556,75 @@ def write_tsv(path: Path, rows: list[dict], cols: list[str]) -> None:
 
 # ----------------------------- main -------------------------------------------
 
+
 def main() -> int:
     runs = load_runs()
     print(f"loaded {len(runs)} runs across {len({r['task'] for r in runs})} tasks")
     for r in runs:
-        print(f"  task={r['task']:36s} algo={r['algo']:8s} seed={r['seed']:>5d} steps={len(r['step_log'])}")
+        print(
+            f"  task={r['task']:36s} algo={r['algo']:8s} seed={r['seed']:>5d} steps={len(r['step_log'])}"
+        )
 
     per_run = [per_run_diagnostics(r) for r in runs]
     mediation = [mediation_analysis(r) for r in runs]
     summary = per_task_summary(per_run)
 
     # ---- per-run regression diagnostics -----------------------------------
-    per_run_cols = ["task", "algo", "seed", "n_steps",
-                    "ols_dL_dR", "ols_resid", "theil_sen_dL_dR", "spearman_L_R",
-                    "lag1_dL_autocorr",
-                    "early_half_mean_len", "late_half_mean_len", "len_late_minus_early",
-                    "spearman_L_Z"]
+    per_run_cols = [
+        "task",
+        "algo",
+        "seed",
+        "n_steps",
+        "ols_dL_dR",
+        "ols_resid",
+        "theil_sen_dL_dR",
+        "spearman_L_R",
+        "lag1_dL_autocorr",
+        "early_half_mean_len",
+        "late_half_mean_len",
+        "len_late_minus_early",
+        "spearman_L_Z",
+    ]
     write_tsv(RES / "length_bias_mechanism_per_run.tsv", per_run, per_run_cols)
 
     # ---- per-task summary -------------------------------------------------
-    summary_cols = ["task", "algo", "n_seeds",
-                    "mean_ols_dL_dR", "sd_ols_dL_dR", "mean_ts_dL_dR", "sd_ts_dL_dR",
-                    "mean_spearman_L_R", "mean_lag1_dL_autocorr",
-                    "mean_len_late_minus_early", "mean_spearman_L_Z"]
-    write_tsv(RES / "length_bias_mechanism_summary.tsv",
-              [{k: v for k, v in r.items() if k in summary_cols} for r in summary],
-              summary_cols)
+    summary_cols = [
+        "task",
+        "algo",
+        "n_seeds",
+        "mean_ols_dL_dR",
+        "sd_ols_dL_dR",
+        "mean_ts_dL_dR",
+        "sd_ts_dL_dR",
+        "mean_spearman_L_R",
+        "mean_lag1_dL_autocorr",
+        "mean_len_late_minus_early",
+        "mean_spearman_L_Z",
+    ]
+    write_tsv(
+        RES / "length_bias_mechanism_summary.tsv",
+        [{k: v for k, v in r.items() if k in summary_cols} for r in summary],
+        summary_cols,
+    )
 
     # ---- paired delta (with bootstrap CI) ---------------------------------
-    paired_cols = summary_cols + ["ci_ols_lo", "ci_ols_hi", "p_ols",
-                                  "ci_ts_lo", "ci_ts_hi", "p_ts",
-                                  "ci_sp_lo", "ci_sp_hi", "p_sp",
-                                  "ci_lag_lo", "ci_lag_hi", "p_lag",
-                                  "ci_le_lo", "ci_le_hi", "p_le"]
+    paired_cols = summary_cols + [
+        "ci_ols_lo",
+        "ci_ols_hi",
+        "p_ols",
+        "ci_ts_lo",
+        "ci_ts_hi",
+        "p_ts",
+        "ci_sp_lo",
+        "ci_sp_hi",
+        "p_sp",
+        "ci_lag_lo",
+        "ci_lag_hi",
+        "p_lag",
+        "ci_le_lo",
+        "ci_le_hi",
+        "p_le",
+    ]
     paired_rows = []
     for r in summary:
         if r["algo"] != "drgrpo_minus_grpo":
@@ -470,16 +634,24 @@ def main() -> int:
         out = dict(r)
         for k, v in r.items():
             if k.startswith("_ci_"):
-                out["ci_" + k[len("_ci_"):]] = v
+                out["ci_" + k[len("_ci_") :]] = v
             if k.startswith("_p_"):
-                out["p_" + k[len("_p_"):]] = v
+                out["p_" + k[len("_p_") :]] = v
         paired_rows.append(out)
     write_tsv(RES / "length_bias_mechanism_paired.tsv", paired_rows, paired_cols)
 
     # ---- mediation --------------------------------------------------------
-    med_cols = ["task", "algo", "seed",
-                "total_effect_L_R", "direct_effect_L_R_given_Z", "indirect_via_Z",
-                "length_on_zvf", "rew_on_zvf_given_L", "prop_mediated"]
+    med_cols = [
+        "task",
+        "algo",
+        "seed",
+        "total_effect_L_R",
+        "direct_effect_L_R_given_Z",
+        "indirect_via_Z",
+        "length_on_zvf",
+        "rew_on_zvf_given_L",
+        "prop_mediated",
+    ]
     write_tsv(RES / "length_bias_mechanism_mediation.tsv", mediation, med_cols)
 
     # ---- figure -----------------------------------------------------------
@@ -490,22 +662,26 @@ def main() -> int:
     for r in summary:
         if r["algo"] == "drgrpo_minus_grpo":
             continue
-        print(f"  {r['task']:36s} {r['algo']:8s} "
-              f"OLS(dL/dR)={r['mean_ols_dL_dR']:+.2f}  "
-              f"TS(dL/dR)={r['mean_ts_dL_dR']:+.2f}  "
-              f"rho(L,R)={r['mean_spearman_L_R']:+.2f}  "
-              f"lag1(dL)={r['mean_lag1_dL_autocorr']:+.2f}  "
-              f"L(late-early)={r['mean_len_late_minus_early']:+.2f}  "
-              f"rho(L,Z)={r['mean_spearman_L_Z']:+.2f}")
+        print(
+            f"  {r['task']:36s} {r['algo']:8s} "
+            f"OLS(dL/dR)={r['mean_ols_dL_dR']:+.2f}  "
+            f"TS(dL/dR)={r['mean_ts_dL_dR']:+.2f}  "
+            f"rho(L,R)={r['mean_spearman_L_R']:+.2f}  "
+            f"lag1(dL)={r['mean_lag1_dL_autocorr']:+.2f}  "
+            f"L(late-early)={r['mean_len_late_minus_early']:+.2f}  "
+            f"rho(L,Z)={r['mean_spearman_L_Z']:+.2f}"
+        )
     print("\n=== paired delta dr_grpo - grpo (negative = Dr.GRPO decouples length-reward) ===")
     for r in summary:
         if r["algo"] != "drgrpo_minus_grpo":
             continue
-        print(f"  {r['task']:36s} "
-              f"Delta_OLS={r['mean_ols_dL_dR']:+.2f}  "
-              f"Delta_rho={r['mean_spearman_L_R']:+.2f}  "
-              f"Delta_lag1={r['mean_lag1_dL_autocorr']:+.2f}  "
-              f"Delta_L_LE={r['mean_len_late_minus_early']:+.2f}")
+        print(
+            f"  {r['task']:36s} "
+            f"Delta_OLS={r['mean_ols_dL_dR']:+.2f}  "
+            f"Delta_rho={r['mean_spearman_L_R']:+.2f}  "
+            f"Delta_lag1={r['mean_lag1_dL_autocorr']:+.2f}  "
+            f"Delta_L_LE={r['mean_len_late_minus_early']:+.2f}"
+        )
 
     print("\n=== mediation (ZVF as mediator of length -> reward coupling) ===")
     for task in sorted({r["task"] for r in mediation}):
@@ -517,7 +693,9 @@ def main() -> int:
             dire = np.mean([m["direct_effect_L_R_given_Z"] for m in sub])
             ind = np.mean([m["indirect_via_Z"] for m in sub])
             pm = np.mean([m["prop_mediated"] for m in sub])
-            print(f"  {task:36s} {algo:8s} total={tot:+.3f} direct={dire:+.3f} indirect(Z)={ind:+.3f} prop_med={pm:+.3f}")
+            print(
+                f"  {task:36s} {algo:8s} total={tot:+.3f} direct={dire:+.3f} indirect(Z)={ind:+.3f} prop_med={pm:+.3f}"
+            )
 
     return 0
 

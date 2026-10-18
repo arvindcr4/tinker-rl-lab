@@ -16,6 +16,7 @@ For every delta_*.json in the registry, audit:
 Writes TSVs + JSON to platform_hybrid/experiments/results/p5p8/, plus a regeneratable
 sidecar audit file next to the registry. Stdlib only.
 """
+
 import csv
 import datetime as _dt
 import json
@@ -111,8 +112,7 @@ def main():
         src_missing = []
         for m in m_rows:
             status, age = _resolve(m.get("source", ""))
-            src_resolved.append({"path": m.get("source", ""), "status": status,
-                                 "age_days": age})
+            src_resolved.append({"path": m.get("source", ""), "status": status, "age_days": age})
             if status == "missing":
                 src_missing.append(m.get("source", ""))
 
@@ -155,16 +155,19 @@ def main():
 
         # Empty-measured gap
         if len(m_rows) == 0 and rec.get("deltas"):
-            summary["empty_measured_gap"].append({
-                "delta_id": eid, "name": rec.get("name", ""),
-                "arxiv": rec.get("citation", {}).get("arxiv") or "NR",
-                "n_components": len(rec.get("deltas", [])),
-                "gap_class": "n2_panel_only",
-            })
+            summary["empty_measured_gap"].append(
+                {
+                    "delta_id": eid,
+                    "name": rec.get("name", ""),
+                    "arxiv": rec.get("citation", {}).get("arxiv") or "NR",
+                    "n_components": len(rec.get("deltas", [])),
+                    "gap_class": "n2_panel_only",
+                }
+            )
 
-        summary["panel_metric_grid"][eid] = {f"{pn}|{mn}": grid.get((pn, mn), 0)
-                                            for pn in KNOWN_PANELS
-                                            for mn in KNOWN_METRICS}
+        summary["panel_metric_grid"][eid] = {
+            f"{pn}|{mn}": grid.get((pn, mn), 0) for pn in KNOWN_PANELS for mn in KNOWN_METRICS
+        }
 
     # Cross-panel agreement: entries with zvf in n2 AND zvf_risk_mean in zvf130
     # both predict <0 risk reduction; here we check raw sign agreement only.
@@ -172,24 +175,36 @@ def main():
         rec = json.load(open(p))
         eid = rec["id"]
         m_rows = rec.get("measured", [])
-        n2_zvf = next((r for r in m_rows
-                       if r.get("panel") == "n2_same_stack_last10"
-                       and r.get("metric") == "zvf"), None)
-        z130_risk = next((r for r in m_rows
-                          if r.get("panel") == "zvf130_5seed"
-                           and r.get("metric") == "zvf_risk_mean"), None)
+        n2_zvf = next(
+            (
+                r
+                for r in m_rows
+                if r.get("panel") == "n2_same_stack_last10" and r.get("metric") == "zvf"
+            ),
+            None,
+        )
+        z130_risk = next(
+            (
+                r
+                for r in m_rows
+                if r.get("panel") == "zvf130_5seed" and r.get("metric") == "zvf_risk_mean"
+            ),
+            None,
+        )
         if n2_zvf and z130_risk:
             ds = _sign(n2_zvf["delta"])
             dr = _sign(z130_risk["delta"])
             same = ds == dr
-            summary["cross_panel_agreement"].append({
-                "delta_id": eid,
-                "n2_zvf_delta": round(n2_zvf["delta"], 6),
-                "zvf130_risk_delta": round(z130_risk["delta"], 6),
-                "same_sign": bool(same),
-                "n2_significant": bool(n2_zvf.get("significant")),
-                "zvf130_significant": bool(z130_risk.get("significant")),
-            })
+            summary["cross_panel_agreement"].append(
+                {
+                    "delta_id": eid,
+                    "n2_zvf_delta": round(n2_zvf["delta"], 6),
+                    "zvf130_risk_delta": round(z130_risk["delta"], 6),
+                    "same_sign": bool(same),
+                    "n2_significant": bool(n2_zvf.get("significant")),
+                    "zvf130_significant": bool(z130_risk.get("significant")),
+                }
+            )
 
     summary["n_mismatch_audit"] = sum(1 for r in summary["per_entry"] if r["n_src_missing"] > 0)
 
@@ -222,12 +237,27 @@ def main():
     x_path = OUT / "p6_measured_cross_panel.tsv"
     with open(x_path, "w", newline="") as f:
         w = csv.writer(f, delimiter="\t", lineterminator="\n")
-        w.writerow(["delta_id", "n2_zvf_delta", "zvf130_risk_delta", "same_sign",
-                    "n2_significant", "zvf130_significant"])
+        w.writerow(
+            [
+                "delta_id",
+                "n2_zvf_delta",
+                "zvf130_risk_delta",
+                "same_sign",
+                "n2_significant",
+                "zvf130_significant",
+            ]
+        )
         for r in summary["cross_panel_agreement"]:
-            w.writerow([r["delta_id"], r["n2_zvf_delta"], r["zvf130_risk_delta"],
-                        int(r["same_sign"]), int(r["n2_significant"]),
-                        int(r["zvf130_significant"])])
+            w.writerow(
+                [
+                    r["delta_id"],
+                    r["n2_zvf_delta"],
+                    r["zvf130_risk_delta"],
+                    int(r["same_sign"]),
+                    int(r["n2_significant"]),
+                    int(r["zvf130_significant"]),
+                ]
+            )
 
     json_path = OUT / "p6_measured_coverage_summary.json"
     json.dump(summary, open(json_path, "w"), indent=2)

@@ -25,6 +25,7 @@ Outputs: platform_hybrid/experiments/results/p5p8/p7_exact_finite_pool_{per_prom
          p7_exact_finite_pool_summary.json
 Stdlib only. ~1-2 min on 4 cores (single-thread fine).
 """
+
 import json, math, os, random
 from itertools import combinations
 
@@ -34,8 +35,8 @@ ODIR = os.path.join(ROOT, "experiments", "results", "p5p8")
 METHODS = ["grpo", "aero", "gift", "areal"]
 NBOOT = 2000
 SEED = 20260705
-TAU_C = [0.3, 0.5, 0.7]        # target within-pool contrast probability
-GCAND = [2, 3, 4, 5, 6, 7]     # candidate reduced group sizes (< N=8)
+TAU_C = [0.3, 0.5, 0.7]  # target within-pool contrast probability
+GCAND = [2, 3, 4, 5, 6, 7]  # candidate reduced group sizes (< N=8)
 
 
 def cp_exact(k, N, g):
@@ -51,7 +52,7 @@ def cp_exact(k, N, g):
 def cp_binom(k, N, g):
     """i.i.d. binomial model used by iter-47: 1 - (p^g + (1-p)^g), p=k/N."""
     p = k / N
-    return 1.0 - (p ** g + (1.0 - p) ** g)
+    return 1.0 - (p**g + (1.0 - p) ** g)
 
 
 def brute_cp(rewards, g):
@@ -117,12 +118,16 @@ def main():
         for r in rows:
             step = r["step"]
             N = r["group_size"]
-            per_step_tau = {tau: dict(roll_ex=0, roll_bin=0, presv_ex=0.0,
-                                      presv_bin_actual=0.0, np=0, phantom=0) for tau in TAU_C}
+            per_step_tau = {
+                tau: dict(
+                    roll_ex=0, roll_bin=0, presv_ex=0.0, presv_bin_actual=0.0, np=0, phantom=0
+                )
+                for tau in TAU_C
+            }
             for pi, rw in enumerate(r["rewards"]):
                 rw = [int(x) for x in rw]
                 k = sum(rw)
-                degenerate = (k == 0 or k == N)  # no G can create contrast
+                degenerate = k == 0 or k == N  # no G can create contrast
                 for tau in TAU_C:
                     g_ex, cpx_ex, econ_ex = alloc_gstar(k, N, tau, use_exact=True)
                     g_bin, cpx_bin, econ_bin = alloc_gstar(k, N, tau, use_exact=False)
@@ -139,10 +144,20 @@ def main():
                     if tau == 0.5 and not degenerate:
                         # per-prompt delta at a common g=2 for the anti-herding table
                         delta_ex_all.append(cp_exact(k, N, 2) - cp_binom(k, N, 2))
-                    per_prompt_rows.append((method, step, pi, k, tau, g_ex, g_bin,
-                                            round(cp_exact(k, N, g_ex), 6),
-                                            round(cp_exact(k, N, g_bin), 6),
-                                            int(degenerate)))
+                    per_prompt_rows.append(
+                        (
+                            method,
+                            step,
+                            pi,
+                            k,
+                            tau,
+                            g_ex,
+                            g_bin,
+                            round(cp_exact(k, N, g_ex), 6),
+                            round(cp_exact(k, N, g_bin), 6),
+                            int(degenerate),
+                        )
+                    )
             for tau in TAU_C:
                 step_agg[(method, tau)].append(per_step_tau[tau])
 
@@ -170,15 +185,22 @@ def main():
             lo = gaps[int(0.025 * NBOOT)]
             hi = gaps[int(0.975 * NBOOT)]
             extra_saves = tot_bin - tot_ex
-            row = dict(method=method, tau=tau, n_prompts=npr,
-                       rollouts_exact=tot_ex, rollouts_binom=tot_bin, rollouts_g8=tot_g8,
-                       cost_ratio_exact=round(tot_ex / tot_g8, 4),
-                       cost_ratio_binom=round(tot_bin / tot_g8, 4),
-                       extra_saves_exact_vs_binom=extra_saves,
-                       extra_saves_ci_lo=lo, extra_saves_ci_hi=hi,
-                       preserved_contrast_exact=round(presv_ex, 3),
-                       preserved_contrast_binom=round(presv_bin, 3),
-                       phantom_starved_prompts=phantom)
+            row = dict(
+                method=method,
+                tau=tau,
+                n_prompts=npr,
+                rollouts_exact=tot_ex,
+                rollouts_binom=tot_bin,
+                rollouts_g8=tot_g8,
+                cost_ratio_exact=round(tot_ex / tot_g8, 4),
+                cost_ratio_binom=round(tot_bin / tot_g8, 4),
+                extra_saves_exact_vs_binom=extra_saves,
+                extra_saves_ci_lo=lo,
+                extra_saves_ci_hi=hi,
+                preserved_contrast_exact=round(presv_ex, 3),
+                preserved_contrast_binom=round(presv_bin, 3),
+                phantom_starved_prompts=phantom,
+            )
             summary_rows.append(row)
             method_stats[method][str(tau)] = row
 
@@ -195,14 +217,28 @@ def main():
 
     # ---- 3. write outputs
     with open(os.path.join(ODIR, "p7_exact_finite_pool_per_prompt.tsv"), "w") as f:
-        f.write("method\tstep\tprompt\tk\ttau\tg_exact\tg_binom\tcp_at_g_exact\tcp_at_g_binom\tdegenerate\n")
+        f.write(
+            "method\tstep\tprompt\tk\ttau\tg_exact\tg_binom\tcp_at_g_exact\tcp_at_g_binom\tdegenerate\n"
+        )
         for r in per_prompt_rows:
             f.write("\t".join(str(x) for x in r) + "\n")
 
-    cols = ["method", "tau", "n_prompts", "rollouts_exact", "rollouts_binom", "rollouts_g8",
-            "cost_ratio_exact", "cost_ratio_binom", "extra_saves_exact_vs_binom",
-            "extra_saves_ci_lo", "extra_saves_ci_hi", "preserved_contrast_exact",
-            "preserved_contrast_binom", "phantom_starved_prompts"]
+    cols = [
+        "method",
+        "tau",
+        "n_prompts",
+        "rollouts_exact",
+        "rollouts_binom",
+        "rollouts_g8",
+        "cost_ratio_exact",
+        "cost_ratio_binom",
+        "extra_saves_exact_vs_binom",
+        "extra_saves_ci_lo",
+        "extra_saves_ci_hi",
+        "preserved_contrast_exact",
+        "preserved_contrast_binom",
+        "phantom_starved_prompts",
+    ]
     with open(os.path.join(ODIR, "p7_exact_finite_pool_summary.tsv"), "w") as f:
         f.write("\t".join(cols) + "\n")
         for r in summary_rows:
@@ -215,34 +251,52 @@ def main():
         tb = sum(r["rollouts_binom"] for r in summary_rows if r["tau"] == tau)
         tg8 = sum(r["rollouts_g8"] for r in summary_rows if r["tau"] == tau)
         ph = sum(r["phantom_starved_prompts"] for r in summary_rows if r["tau"] == tau)
-        pooled[str(tau)] = dict(rollouts_exact=te, rollouts_binom=tb, rollouts_g8=tg8,
-                                cost_ratio_exact=round(te / tg8, 4),
-                                cost_ratio_binom=round(tb / tg8, 4),
-                                extra_saves_exact_vs_binom=tb - te,
-                                pct_extra_saving=round(100 * (tb - te) / tg8, 3),
-                                phantom_starved_prompts=ph)
+        pooled[str(tau)] = dict(
+            rollouts_exact=te,
+            rollouts_binom=tb,
+            rollouts_g8=tg8,
+            cost_ratio_exact=round(te / tg8, 4),
+            cost_ratio_binom=round(tb / tg8, 4),
+            extra_saves_exact_vs_binom=tb - te,
+            pct_extra_saving=round(100 * (tb - te) / tg8, 3),
+            phantom_starved_prompts=ph,
+        )
 
     summary = dict(
-        n_methods=len(METHODS), n_steps=40, n_prompts_per_step=16, N_pool=8,
-        candidate_g=GCAND, tau_c=TAU_C, nboot=NBOOT, seed=SEED,
+        n_methods=len(METHODS),
+        n_steps=40,
+        n_prompts_per_step=16,
+        N_pool=8,
+        candidate_g=GCAND,
+        tau_c=TAU_C,
+        nboot=NBOOT,
+        seed=SEED,
         exact_formula_max_err_vs_bruteforce=val_max_err,
         anti_herding_bonus_g2=dict(
-            n_nondegenerate=n_d, mean_delta_exact_minus_binom=round(mean_d, 6),
+            n_nondegenerate=n_d,
+            mean_delta_exact_minus_binom=round(mean_d, 6),
             ci95=[round(d_lo, 6), round(d_hi, 6)],
-            interpretation="CP_exact - CP_binom at G'=2, pooled over non-degenerate prompts; >0 confirms finite-pool anti-herding"),
-        pooled=pooled, method_stats=method_stats)
+            interpretation="CP_exact - CP_binom at G'=2, pooled over non-degenerate prompts; >0 confirms finite-pool anti-herding",
+        ),
+        pooled=pooled,
+        method_stats=method_stats,
+    )
     with open(os.path.join(ODIR, "p7_exact_finite_pool_summary.json"), "w") as f:
         json.dump(summary, f, indent=2)
 
     # ---- console
     print(f"[validate] exact vs brute-force max err = {val_max_err:.2e} (must be ~0)")
-    print(f"[anti-herding] mean(CP_exact-CP_binom) at G'=2 = {mean_d:+.4f} "
-          f"[{d_lo:+.4f},{d_hi:+.4f}] over {n_d} non-degenerate prompts")
+    print(
+        f"[anti-herding] mean(CP_exact-CP_binom) at G'=2 = {mean_d:+.4f} "
+        f"[{d_lo:+.4f},{d_hi:+.4f}] over {n_d} non-degenerate prompts"
+    )
     for tau in TAU_C:
         p = pooled[str(tau)]
-        print(f"[tau={tau}] cost_ratio exact={p['cost_ratio_exact']} binom={p['cost_ratio_binom']} "
-              f"| extra saving {p['pct_extra_saving']}% ({p['extra_saves_exact_vs_binom']} rollouts) "
-              f"| phantom-starved prompts recovered={p['phantom_starved_prompts']}")
+        print(
+            f"[tau={tau}] cost_ratio exact={p['cost_ratio_exact']} binom={p['cost_ratio_binom']} "
+            f"| extra saving {p['pct_extra_saving']}% ({p['extra_saves_exact_vs_binom']} rollouts) "
+            f"| phantom-starved prompts recovered={p['phantom_starved_prompts']}"
+        )
 
 
 if __name__ == "__main__":

@@ -31,10 +31,10 @@ from pathlib import Path
 import matplotlib
 
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt  # noqa: E402
-import numpy as np  # noqa: E402
-from scipy.optimize import curve_fit  # noqa: E402
-from _analysis_common import saturation as model_saturation  # noqa: E402
+import matplotlib.pyplot as plt
+import numpy as np
+from scipy.optimize import curve_fit
+from _analysis_common import saturation as model_saturation
 
 REPO = Path(__file__).resolve().parent.parent
 DATA = REPO / "experiments" / "results" / "scaling_law_extended_frontier.tsv"
@@ -84,28 +84,46 @@ def synth_trace(r, rc_lookup):
 
 def fit_at(t, y):
     """Fit saturation model with safe fallbacks. Returns dict of params + ss_res."""
-    if len(t) <4:
-        return {"r_max": float("nan"), "lam": float("nan"),
-                "t_80": float("nan"), "s0": float("nan"),
-                "ss_res": float("nan"), "ok": False}
+    if len(t) < 4:
+        return {
+            "r_max": float("nan"),
+            "lam": float("nan"),
+            "t_80": float("nan"),
+            "s0": float("nan"),
+            "ss_res": float("nan"),
+            "ok": False,
+        }
     try:
         popt, _ = curve_fit(
-            model_saturation, t, y,
+            model_saturation,
+            t,
+            y,
             p0=[float(np.max(y)) * 1.1, 0.3],
             bounds=([0.0, 1e-3], [2.0, 5.0]),
             maxfev=8000,
         )
         r_max, lam = float(popt[0]), float(popt[1])
     except Exception:
-        return {"r_max": float("nan"), "lam": float("nan"),
-                "t_80": float("nan"), "s0": float("nan"),
-                "ss_res": float("nan"), "ok": False}
+        return {
+            "r_max": float("nan"),
+            "lam": float("nan"),
+            "t_80": float("nan"),
+            "s0": float("nan"),
+            "ss_res": float("nan"),
+            "ok": False,
+        }
     t_80 = -math.log(0.2) / lam if lam > 1e-9 else float("inf")
     y_hat = model_saturation(t, r_max, lam)
     resid = y - y_hat
     ss_res = float(np.sum(resid * resid))
-    return {"r_max": r_max, "lam": lam, "t_80": t_80, "s0": r_max * lam,
-            "ss_res": ss_res, "ok": True}
+    return {
+        "r_max": r_max,
+        "lam": lam,
+        "t_80": t_80,
+        "s0": r_max * lam,
+        "ss_res": ss_res,
+        "ok": True,
+    }
 
 
 def main() -> None:
@@ -125,8 +143,12 @@ def main() -> None:
     full_fits = {}  # model -> (t, y, full_fit)
     for r in rows:
         t, y, peak = synth_trace(r, rc_lookup)
-        per = {"model": r["model"], "params_B": r["params_B"],
-               "arch": r["arch"], "n_steps": int(r["n_steps"])}
+        per = {
+            "model": r["model"],
+            "params_B": r["params_B"],
+            "arch": r["arch"],
+            "n_steps": int(r["n_steps"]),
+        }
         for frac in TRUNCATIONS:
             k = max(4, int(round(frac * len(t))))
             t_use = t[:k]
@@ -137,7 +159,9 @@ def main() -> None:
             row["k_used"] = k
             row["r_max"] = round(fit["r_max"], 6) if fit["ok"] else float("nan")
             row["lam"] = round(fit["lam"], 6) if fit["ok"] else float("nan")
-            row["t_80"] = round(fit["t_80"], 4) if fit["ok"] and math.isfinite(fit["t_80"]) else float("nan")
+            row["t_80"] = (
+                round(fit["t_80"], 4) if fit["ok"] and math.isfinite(fit["t_80"]) else float("nan")
+            )
             row["s0"] = round(fit["s0"], 6) if fit["ok"] else float("nan")
             row["ss_res"] = round(fit["ss_res"], 6) if fit["ok"] else float("nan")
             row["ok"] = fit["ok"]
@@ -163,43 +187,66 @@ def main() -> None:
         s0_full = full["s0"]
         # skip unstable models
         if not math.isfinite(lam_full) or lam_full < 1e-3:
-            stab_rows.append({"model": model, "params_B": full["params_B"],
-                              "arch": full["arch"], "n_steps": full["n_steps"],
-                              "lam_full": float("nan"), "rmax_full": float("nan"),
-                              "t80_full": float("nan"), "s0_full": float("nan"),
-                              "max_dlam_rel": float("nan"),
-                              "max_drmax_rel": float("nan"),
-                              "max_ds0_rel": float("nan"),
-                              "n_truncations_ok": 0,
-                              "verdict": "degenerate"})
+            stab_rows.append(
+                {
+                    "model": model,
+                    "params_B": full["params_B"],
+                    "arch": full["arch"],
+                    "n_steps": full["n_steps"],
+                    "lam_full": float("nan"),
+                    "rmax_full": float("nan"),
+                    "t80_full": float("nan"),
+                    "s0_full": float("nan"),
+                    "max_dlam_rel": float("nan"),
+                    "max_drmax_rel": float("nan"),
+                    "max_ds0_rel": float("nan"),
+                    "n_truncations_ok": 0,
+                    "verdict": "degenerate",
+                }
+            )
             continue
-        rel_lam = [abs(rec["lam"] - lam_full) / max(lam_full, 1e-9)
-                   for rec in recs_sorted[:-1] if math.isfinite(rec["lam"])]
-        rel_rmax = [abs(rec["r_max"] - rmax_full) / max(abs(rmax_full), 1e-9)
-                    for rec in recs_sorted[:-1] if math.isfinite(rec["r_max"])]
-        rel_s0 = [abs(rec["s0"] - s0_full) / max(abs(s0_full), 1e-9)
-                  for rec in recs_sorted[:-1] if math.isfinite(rec["s0"])]
+        rel_lam = [
+            abs(rec["lam"] - lam_full) / max(lam_full, 1e-9)
+            for rec in recs_sorted[:-1]
+            if math.isfinite(rec["lam"])
+        ]
+        rel_rmax = [
+            abs(rec["r_max"] - rmax_full) / max(abs(rmax_full), 1e-9)
+            for rec in recs_sorted[:-1]
+            if math.isfinite(rec["r_max"])
+        ]
+        rel_s0 = [
+            abs(rec["s0"] - s0_full) / max(abs(s0_full), 1e-9)
+            for rec in recs_sorted[:-1]
+            if math.isfinite(rec["s0"])
+        ]
         max_dlam = max(rel_lam) if rel_lam else float("nan")
         max_drmax = max(rel_rmax) if rel_rmax else float("nan")
         max_ds0 = max(rel_s0) if rel_s0 else float("nan")
         # stable if any two relative deviations < 50%
         n_ok = sum(1 for x in rel_lam if x < 0.5)
-        verdict = "stable" if (max_dlam < 0.5) else (
-            "marginally_stable" if max_dlam < 1.0 else "unstable"
+        verdict = (
+            "stable"
+            if (max_dlam < 0.5)
+            else ("marginally_stable" if max_dlam < 1.0 else "unstable")
         )
-        stab_rows.append({
-            "model": model, "params_B": full["params_B"], "arch": full["arch"],
-            "n_steps": full["n_steps"],
-            "lam_full": round(lam_full, 6),
-            "rmax_full": round(rmax_full, 6),
-            "t80_full": round(full["t_80"], 4) if math.isfinite(full["t_80"]) else float("nan"),
-            "s0_full": round(s0_full, 6),
-            "max_dlam_rel": round(max_dlam, 4),
-            "max_drmax_rel": round(max_drmax, 4),
-            "max_ds0_rel": round(max_ds0, 4),
-            "n_truncations_ok": n_ok,
-            "verdict": verdict,
-        })
+        stab_rows.append(
+            {
+                "model": model,
+                "params_B": full["params_B"],
+                "arch": full["arch"],
+                "n_steps": full["n_steps"],
+                "lam_full": round(lam_full, 6),
+                "rmax_full": round(rmax_full, 6),
+                "t80_full": round(full["t_80"], 4) if math.isfinite(full["t_80"]) else float("nan"),
+                "s0_full": round(s0_full, 6),
+                "max_dlam_rel": round(max_dlam, 4),
+                "max_drmax_rel": round(max_drmax, 4),
+                "max_ds0_rel": round(max_ds0, 4),
+                "n_truncations_ok": n_ok,
+                "verdict": verdict,
+            }
+        )
 
     with open(RESULTS / "scaling_law_iter41_stability.tsv", "w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=list(stab_rows[0].keys()), delimiter="\t")
@@ -236,20 +283,24 @@ def main() -> None:
             params_B = next(r for r in rows if r["model"] == model)["params_B"]
             arch = next(r for r in rows if r["model"] == model)["arch"]
             n_steps = n
-            pred_rows.append({
-                "model": model, "params_B": params_B, "arch": arch, "n_steps": n_steps,
-                "early_frac": round(frac, 2), "k_used": k,
-                "rmax_predicted": round(rmax_pred, 6),
-                "rmax_actual_full": round(rmax_actual, 6),
-                "abs_err": round(err, 6),
-                "rel_err": round(rel_err, 4),
-                "boot_med_err": round(med, 6),
-                "boot_ci_lo": round(ci_lo, 6),
-                "boot_ci_hi": round(ci_hi, 6),
-                "ci_contains_zero": bool(
-                    math.isfinite(ci_lo) and ci_lo <= 0 <= ci_hi
-                ),
-            })
+            pred_rows.append(
+                {
+                    "model": model,
+                    "params_B": params_B,
+                    "arch": arch,
+                    "n_steps": n_steps,
+                    "early_frac": round(frac, 2),
+                    "k_used": k,
+                    "rmax_predicted": round(rmax_pred, 6),
+                    "rmax_actual_full": round(rmax_actual, 6),
+                    "abs_err": round(err, 6),
+                    "rel_err": round(rel_err, 4),
+                    "boot_med_err": round(med, 6),
+                    "boot_ci_lo": round(ci_lo, 6),
+                    "boot_ci_hi": round(ci_hi, 6),
+                    "ci_contains_zero": bool(math.isfinite(ci_lo) and ci_lo <= 0 <= ci_hi),
+                }
+            )
 
     with open(RESULTS / "scaling_law_iter41_early_predicts.tsv", "w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=list(pred_rows[0].keys()), delimiter="\t")
@@ -280,9 +331,7 @@ def main() -> None:
 
     pct60 = [r for r in pred_rows if abs(r["early_frac"] - 0.60) < 1e-9]
     pct60_ci = sum(1 for r in pct60 if r["ci_contains_zero"])
-    pct60_within10pct = sum(
-        1 for r in pct60 if abs(r["rel_err"]) < 0.10
-    )
+    pct60_within10pct = sum(1 for r in pct60 if abs(r["rel_err"]) < 0.10)
 
     summary = {
         "n_anchors": len(stab_rows),
@@ -293,14 +342,16 @@ def main() -> None:
         "n_degenerate": len(degenerate),
         "median_max_dlam_rel_stable": (
             round(float(np.median([r["max_dlam_rel"] for r in stable])), 4)
-            if stable else float("nan")
+            if stable
+            else float("nan")
         ),
         "spearman_logP_s0_dense": round(spear, 4),
         "anchors_60pct_within_10pct_rmax": pct60_within10pct,
         "anchors_60pct_ci_contains_zero": pct60_ci,
         "median_rel_err_60pct": (
             round(float(np.median([abs(r["rel_err"]) for r in pct60])), 4)
-            if pct60 else float("nan")
+            if pct60
+            else float("nan")
         ),
     }
     with open(RESULTS / "scaling_law_iter41_summary.tsv", "w", newline="") as f:
@@ -314,9 +365,9 @@ def main() -> None:
     frac_axis = [r["frac"] for r in trunc_rows]
     lam_axis = [r["lam"] for r in trunc_rows]
     model_axis = [r["model"] for r in trunc_rows]
-    models = sorted(set(model_axis), key=lambda m: dict(
-        (r["model"], r["params_B"]) for r in rows
-    ).get(m, 0))
+    models = sorted(
+        set(model_axis), key=lambda m: dict((r["model"], r["params_B"]) for r in rows).get(m, 0)
+    )
     cmap = plt.get_cmap("viridis")
     for i, m in enumerate(models):
         recs = [r for r in trunc_rows if r["model"] == m]
@@ -324,8 +375,15 @@ def main() -> None:
         ys = [r["lam"] for r in recs]
         xs = [r["frac"] for r in recs]
         label = f"{m} ({dict((r['model'], r['params_B']) for r in rows)[m]}B)"
-        ax.plot(xs, ys, "o-", color=cmap(i / max(1, len(models) - 1)),
-                label=label, linewidth=1.5, markersize=5)
+        ax.plot(
+            xs,
+            ys,
+            "o-",
+            color=cmap(i / max(1, len(models) - 1)),
+            label=label,
+            linewidth=1.5,
+            markersize=5,
+        )
     ax.set_xlabel("Trace truncation fraction")
     ax.set_ylabel(r"Fitted $\lambda$")
     ax.set_title("Lambda stability under trace truncation")
@@ -343,9 +401,9 @@ def main() -> None:
     ax2.plot([lo, hi], [lo, hi], "k--", linewidth=1, label="y = x")
     for r in pred60:
         if abs(r["rel_err"]) > 0.20:
-            ax2.annotate(r["model"][:8], (r["rmax_actual_full"],
-                                          r["rmax_predicted"]),
-                         fontsize=6, alpha=0.7)
+            ax2.annotate(
+                r["model"][:8], (r["rmax_actual_full"], r["rmax_predicted"]), fontsize=6, alpha=0.7
+            )
     ax2.set_xlabel(r"$R_{max}^{\mathrm{full}}$ (fit on full trace)")
     ax2.set_ylabel(r"$R_{max}^{\mathrm{early}}$ (fit on 60% of trace)")
     ax2.set_title("Early-trace R_max predicts full R_max")
@@ -387,9 +445,11 @@ def main() -> None:
     lines.append(r"\centering\small")
     lines.append(r"\begin{tabular}{lrrrrrl}")
     lines.append(r"\toprule")
-    lines.append(r"model & $\lambda_{\rm full}$ & $R_{\max,\rm full}$ & "
-                 r"$t_{80,\rm full}$ & $\max|\Delta\lambda|/\lambda$ & "
-                 r"$\max|\Delta s_0|/s_0$ & verdict \\")
+    lines.append(
+        r"model & $\lambda_{\rm full}$ & $R_{\max,\rm full}$ & "
+        r"$t_{80,\rm full}$ & $\max|\Delta\lambda|/\lambda$ & "
+        r"$\max|\Delta s_0|/s_0$ & verdict \\"
+    )
     lines.append(r"\midrule")
     for r in stab_rows:
         lines.append(
@@ -399,10 +459,12 @@ def main() -> None:
         )
     lines.append(r"\bottomrule")
     lines.append(r"\end{tabular}")
-    lines.append(r"\caption{Stability of the saturation-model fit under trace "
-                 r"truncation. $\max|\Delta\lambda|/\lambda$ is the largest "
-                 r"relative difference between the truncated $\lambda$ and "
-                 r"$\lambda_{\rm full}$.}")
+    lines.append(
+        r"\caption{Stability of the saturation-model fit under trace "
+        r"truncation. $\max|\Delta\lambda|/\lambda$ is the largest "
+        r"relative difference between the truncated $\lambda$ and "
+        r"$\lambda_{\rm full}$.}"
+    )
     lines.append(r"\end{table}")
     lines.append(r"\paragraph{Early $\to$ late prediction.}")
     lines.append(
@@ -422,8 +484,10 @@ def main() -> None:
     )
     sec_path = PAPER_SEC / "scaling_law_iter41.tex"
     sec_path.write_text("\n".join(lines) + "\n")
-    print(f"iter41 done. stable={len(stable)} marginal={len(marginal)} "
-          f"unstable={len(unstable)} degenerate={len(degenerate)}")
+    print(
+        f"iter41 done. stable={len(stable)} marginal={len(marginal)} "
+        f"unstable={len(unstable)} degenerate={len(degenerate)}"
+    )
 
 
 if __name__ == "__main__":

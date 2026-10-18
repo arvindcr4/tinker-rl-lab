@@ -50,17 +50,18 @@ RESULTS = str(Path(__file__).resolve().parents[2] / "platform_hybrid/experiments
 NOW = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 PROTOCOL_ID = "zvf-ews-v2-independent-endpoint-warmup"
 SEED = 20260703
-W = 10                 # trailing window for EWS features
-STUCK_W = 20           # window to detect "stuck" failure
-STUCK_CUTOFF = 0.50    # ZVF >= 0.50 => stuck (iter74 H cutoff)
-H_CUTOFF = 0.50        # iter74 H/M/L threshold (L<=0.10, M<=0.50, H>0.50)
-H_LO = 0.10            # iter74 M/L boundary
+W = 10  # trailing window for EWS features
+STUCK_W = 20  # window to detect "stuck" failure
+STUCK_CUTOFF = 0.50  # ZVF >= 0.50 => stuck (iter74 H cutoff)
+H_CUTOFF = 0.50  # iter74 H/M/L threshold (L<=0.10, M<=0.50, H>0.50)
+H_LO = 0.10  # iter74 M/L boundary
 
 # Alarm thresholds swept
 THRESHOLDS = [0.50, 0.60, 0.70, 0.80, 0.90]
 
 
 # ----------------------- core statistics (closed-form) -----------------------
+
 
 def ar1_coef(xs: list[float]) -> float:
     """Closed-form AR(1) coefficient rho = Cov(x_t, x_{t+1}) / Var(x_t)."""
@@ -132,6 +133,7 @@ def variance_ratio(xs: list[float]) -> float:
 
 # ----------------------- trace loading -----------------------
 
+
 def load_variance_mitigation() -> list[dict]:
     """Return list of {method, seed, steps:[{step,zvf,reward,heldout,collapse}]}."""
     f = os.path.join(RESULTS, "variance_mitigation.tsv")
@@ -142,7 +144,7 @@ def load_variance_mitigation() -> list[dict]:
             parts = line.rstrip("\n").split("\t")
             if len(parts) < len(header):
                 continue
-            d = dict(zip(header, parts))
+            d = dict(zip(header, parts, strict=False))
             try:
                 row = {
                     "step": int(d["step"]),
@@ -157,13 +159,15 @@ def load_variance_mitigation() -> list[dict]:
     out = []
     for (method, seed), rows in by_run.items():
         rows.sort(key=lambda r: r["step"])
-        out.append({
-            "source": "variance_mitigation",
-            "method": method,
-            "seed": seed,
-            "n_steps": len(rows),
-            "steps": rows,
-        })
+        out.append(
+            {
+                "source": "variance_mitigation",
+                "method": method,
+                "seed": seed,
+                "n_steps": len(rows),
+                "steps": rows,
+            }
+        )
     return out
 
 
@@ -175,23 +179,29 @@ def load_groupsize_sweep() -> list[dict]:
         sl = run.get("step_log", [])
         rows = []
         for s in sl:
-            rows.append({
-                "step": int(s.get("step", 0)),
-                "zvf": float(s.get("zvf", 0.0)),
-                "reward_mean": float(s.get("mean_reward", 0.0)),
-                "heldout_acc": float(s["heldout_acc"]) if s.get("heldout_acc") is not None else None,
-                "collapse": 0,
-            })
+            rows.append(
+                {
+                    "step": int(s.get("step", 0)),
+                    "zvf": float(s.get("zvf", 0.0)),
+                    "reward_mean": float(s.get("mean_reward", 0.0)),
+                    "heldout_acc": float(s["heldout_acc"])
+                    if s.get("heldout_acc") is not None
+                    else None,
+                    "collapse": 0,
+                }
+            )
         if not rows:
             continue
-        out.append({
-            "source": "groupsize_zvf_sweep",
-            "method": "groupsize",
-            "seed": str(run.get("seed", 0)),
-            "group_size": int(run.get("group_size", 0)),
-            "n_steps": len(rows),
-            "steps": rows,
-        })
+        out.append(
+            {
+                "source": "groupsize_zvf_sweep",
+                "method": "groupsize",
+                "seed": str(run.get("seed", 0)),
+                "group_size": int(run.get("group_size", 0)),
+                "n_steps": len(rows),
+                "steps": rows,
+            }
+        )
     return out
 
 
@@ -205,23 +215,27 @@ def load_tinker_gsm8k() -> list[dict]:
         d = json.load(open(f))
         seed = int(d.get("seed", 0))
         per = d.get("per_problem", [])
-        out.append({
-            "source": "tinker_gsm8k_zvf",
-            "endpoint_unavailable": "cross-prompt aggregate is not a heldout time series",
-            "method": "tinker_gsm8k",
-            "seed": str(seed),
-            "n_steps": 1,  # single-shot experiment
-            "steps": [{
-                "step": 0,
-                "zvf": float(d.get("overall_zvf", 0.0)),
-                "reward_mean": float(d.get("overall_accuracy", 0.0)),
-                "heldout_acc": float(d.get("overall_accuracy", 0.0)),
-                "collapse": 0,
-            }],
-            "per_problem_zvf": [float(p.get("zvf", 0.0)) for p in per],
-            "n_problems": len(per),
-            "group_size": int(d.get("group_size", 8)),
-        })
+        out.append(
+            {
+                "source": "tinker_gsm8k_zvf",
+                "endpoint_unavailable": "cross-prompt aggregate is not a heldout time series",
+                "method": "tinker_gsm8k",
+                "seed": str(seed),
+                "n_steps": 1,  # single-shot experiment
+                "steps": [
+                    {
+                        "step": 0,
+                        "zvf": float(d.get("overall_zvf", 0.0)),
+                        "reward_mean": float(d.get("overall_accuracy", 0.0)),
+                        "heldout_acc": float(d.get("overall_accuracy", 0.0)),
+                        "collapse": 0,
+                    }
+                ],
+                "per_problem_zvf": [float(p.get("zvf", 0.0)) for p in per],
+                "n_problems": len(per),
+                "group_size": int(d.get("group_size", 8)),
+            }
+        )
     return out
 
 
@@ -243,7 +257,7 @@ def load_tool_use_anchors() -> list[dict]:
             parts = line.rstrip("\n").split("\t")
             if len(parts) < len(header):
                 continue
-            d = dict(zip(header, parts))
+            d = dict(zip(header, parts, strict=False))
             try:
                 row = {
                     "step": int(d.get("step", 0)),
@@ -257,18 +271,21 @@ def load_tool_use_anchors() -> list[dict]:
             by_run[str(d.get("seed", "?"))].append(row)
     for seed, rows in by_run.items():
         rows.sort(key=lambda r: r["step"])
-        out.append({
-            "source": "bfclv4_tool_use",
-            "endpoint_unavailable": "training reward proxy is not heldout accuracy",
-            "method": "tool_use",
-            "seed": seed,
-            "n_steps": len(rows),
-            "steps": rows,
-        })
+        out.append(
+            {
+                "source": "bfclv4_tool_use",
+                "endpoint_unavailable": "training reward proxy is not heldout accuracy",
+                "method": "tool_use",
+                "seed": seed,
+                "n_steps": len(rows),
+                "steps": rows,
+            }
+        )
     return out
 
 
 # ----------------------- per-trace EWS features -----------------------
+
 
 def classify_state(zvf: float) -> str:
     if zvf > H_CUTOFF:
@@ -292,9 +309,12 @@ def per_step_features(trace: dict) -> list[dict]:
         return []
 
     warmup = W
-    if any(s.get("step") != i for i,s in enumerate(steps)):
+    if any(s.get("step") != i for i, s in enumerate(steps)):
         raise ValueError("complete consecutive steps starting at zero required")
-    if not all(isinstance(v,(int,float)) and math.isfinite(v) and 0 <= v <= 1 for v in zvf_series + held_series):
+    if not all(
+        isinstance(v, (int, float)) and math.isfinite(v) and 0 <= v <= 1
+        for v in zvf_series + held_series
+    ):
         raise ValueError("finite observed ZVF and per-step heldout accuracy required")
     baseline_mean = sum(zvf_series[:warmup]) / warmup if n >= warmup else None
     out_rows = []
@@ -306,7 +326,7 @@ def per_step_features(trace: dict) -> list[dict]:
         held_t = held_series[t]
         # trailing window (length up to W)
         lo = max(0, t - W + 1)
-        w = zvf_series[lo:t + 1]
+        w = zvf_series[lo : t + 1]
         # Markov H run-length
         if zvf_t > H_CUTOFF:
             cur_H_run += 1
@@ -316,7 +336,11 @@ def per_step_features(trace: dict) -> list[dict]:
             max_H_run = cur_H_run
 
         rho = ar1_coef(w)
-        cs = cusum_step(w, baseline_mean=baseline_mean, k=0.05) if t >= warmup and baseline_mean is not None else 0.0
+        cs = (
+            cusum_step(w, baseline_mean=baseline_mean, k=0.05)
+            if t >= warmup and baseline_mean is not None
+            else 0.0
+        )
         vr = variance_ratio(w)
         kurt = window_kurt(w)
 
@@ -325,34 +349,37 @@ def per_step_features(trace: dict) -> list[dict]:
         # at ZVF=1.0 is the actual failure mode we want to alarm on, NOT a
         # low heldout_acc at the start of training.
         zvf_lo = max(0, t - STUCK_W + 1)
-        zvf_window = zvf_series[zvf_lo:t + 1]
+        zvf_window = zvf_series[zvf_lo : t + 1]
         zvf_mean_window = sum(zvf_window) / len(zvf_window)
         is_failure = 1 if (zvf_mean_window >= STUCK_CUTOFF and t >= STUCK_W - 1) else 0
         held_lo = max(0, t - 9)
-        held_window = held_series[held_lo:t + 1]
+        held_window = held_series[held_lo : t + 1]
         held_mean = sum(held_window) / len(held_window)
 
-        out_rows.append({
-            "step": t,
-            "zvf": zvf_t,
-            "heldout_acc": held_t,
-            "held_mean_10": held_mean,
-            "zvf_stuck": is_failure,
-            "accuracy_failure": int(held_mean < 0.10),
-            "is_failure": int(held_mean < 0.10),  # versioned compatibility alias
-            "alarm_eligible": t >= warmup,
-            "h_run": cur_H_run,
-            "h_run_frac": cur_H_run / W,
-            "ar1": rho,
-            "cusum": cs,
-            "variance_ratio": vr,
-            "kurtosis": kurt,
-            "max_H_run": max_H_run,
-        })
+        out_rows.append(
+            {
+                "step": t,
+                "zvf": zvf_t,
+                "heldout_acc": held_t,
+                "held_mean_10": held_mean,
+                "zvf_stuck": is_failure,
+                "accuracy_failure": int(held_mean < 0.10),
+                "is_failure": int(held_mean < 0.10),  # versioned compatibility alias
+                "alarm_eligible": t >= warmup,
+                "h_run": cur_H_run,
+                "h_run_frac": cur_H_run / W,
+                "ar1": rho,
+                "cusum": cs,
+                "variance_ratio": vr,
+                "kurtosis": kurt,
+                "max_H_run": max_H_run,
+            }
+        )
     return out_rows
 
 
 # ----------------------- alarm + lead-time -----------------------
+
 
 def composite_ews(row: dict) -> float:
     """Composite EWS = max(ar1_max, cusum, h_run_frac).
@@ -391,8 +418,10 @@ def find_failure(features: list[dict], endpoint: str = "accuracy_failure") -> in
 
 # ----------------------- writer -----------------------
 
-def write_tsv(path: str, rows: list[dict], fieldnames: list[str] | None = None,
-              header_comment: str = "") -> None:
+
+def write_tsv(
+    path: str, rows: list[dict], fieldnames: list[str] | None = None, header_comment: str = ""
+) -> None:
     if not rows:
         with open(path, "w") as f:
             if header_comment:
@@ -423,6 +452,7 @@ def _fmt(v) -> str:
 
 
 # ----------------------- main -----------------------
+
 
 def main() -> int:
     print(f"[iter78] start {NOW}", flush=True)
@@ -457,7 +487,9 @@ def main() -> int:
         enriched.append(tr)
 
     if not enriched:
-        raise ValueError("no eligible observed heldout-accuracy traces: " + json.dumps(excluded_traces))
+        raise ValueError(
+            "no eligible observed heldout-accuracy traces: " + json.dumps(excluded_traces)
+        )
 
     # 1) per-step features dump
     per_step_rows: list[dict] = []
@@ -466,36 +498,54 @@ def main() -> int:
         seed = tr["seed"]
         src = tr["source"]
         for r in tr["features"]:
-            per_step_rows.append({
-                "source": src,
-                "method": method,
-                "seed": seed,
-                "step": r["step"],
-                "zvf": r["zvf"],
-                "heldout_acc": r["heldout_acc"],
-                "held_mean_10": r["held_mean_10"],
-                "is_failure": r["is_failure"],
-                "accuracy_failure": r["accuracy_failure"],
-                "zvf_stuck": r["zvf_stuck"],
-                "alarm_eligible": int(r["alarm_eligible"]),
-                "protocol_id": PROTOCOL_ID,
-                "trace_id": tr["trace_id"],
-                "group_size": tr.get("group_size"),
-                "h_run": r["h_run"],
-                "ar1": r["ar1"],
-                "cusum": r["cusum"],
-                "variance_ratio": r["variance_ratio"],
-                "kurtosis": r["kurtosis"],
-                "composite_ews": composite_ews(r),
-            })
+            per_step_rows.append(
+                {
+                    "source": src,
+                    "method": method,
+                    "seed": seed,
+                    "step": r["step"],
+                    "zvf": r["zvf"],
+                    "heldout_acc": r["heldout_acc"],
+                    "held_mean_10": r["held_mean_10"],
+                    "is_failure": r["is_failure"],
+                    "accuracy_failure": r["accuracy_failure"],
+                    "zvf_stuck": r["zvf_stuck"],
+                    "alarm_eligible": int(r["alarm_eligible"]),
+                    "protocol_id": PROTOCOL_ID,
+                    "trace_id": tr["trace_id"],
+                    "group_size": tr.get("group_size"),
+                    "h_run": r["h_run"],
+                    "ar1": r["ar1"],
+                    "cusum": r["cusum"],
+                    "variance_ratio": r["variance_ratio"],
+                    "kurtosis": r["kurtosis"],
+                    "composite_ews": composite_ews(r),
+                }
+            )
     write_tsv(
         os.path.join(RESULTS, "zvf_iter78_per_step_features.tsv"),
         per_step_rows,
         fieldnames=[
-            "source", "method", "seed", "step", "zvf", "heldout_acc",
-            "held_mean_10", "is_failure", "h_run", "ar1", "cusum",
-            "variance_ratio", "kurtosis", "composite_ews",
-            "accuracy_failure", "zvf_stuck", "alarm_eligible", "protocol_id", "trace_id", "group_size",
+            "source",
+            "method",
+            "seed",
+            "step",
+            "zvf",
+            "heldout_acc",
+            "held_mean_10",
+            "is_failure",
+            "h_run",
+            "ar1",
+            "cusum",
+            "variance_ratio",
+            "kurtosis",
+            "composite_ews",
+            "accuracy_failure",
+            "zvf_stuck",
+            "alarm_eligible",
+            "protocol_id",
+            "trace_id",
+            "group_size",
         ],
         header_comment=(
             "# Pillar 2 iter78 per-step EWS features.\n"
@@ -510,18 +560,25 @@ def main() -> int:
     # We only evaluate traces that BOTH have a detected failure AND have
     # at least STUCK_W steps (so failure detection is well-defined).
     per_threshold: dict[tuple[str, str], dict] = {}
-    evaluable = [tr for tr in enriched
-                 if tr.get("t_fail") is not None and tr["n_steps"] >= STUCK_W]
+    evaluable = [tr for tr in enriched if tr.get("t_fail") is not None and tr["n_steps"] >= STUCK_W]
     for tr in evaluable:
         method = tr["method"]
         for th in THRESHOLDS:
             t_alarm = find_alarm(tr["features"], th)
             key = (method, f"th{th:.2f}")
-            slot = per_threshold.setdefault(key, {
-                "method": method, "threshold": th, "n": 0,
-                "n_alarm_before_fail": 0, "n_alarm_after_fail": 0,
-                "lead_times": [], "n_late_alarm": 0, "n_miss": 0,
-            })
+            slot = per_threshold.setdefault(
+                key,
+                {
+                    "method": method,
+                    "threshold": th,
+                    "n": 0,
+                    "n_alarm_before_fail": 0,
+                    "n_alarm_after_fail": 0,
+                    "lead_times": [],
+                    "n_late_alarm": 0,
+                    "n_miss": 0,
+                },
+            )
             slot["n"] += 1
             if t_alarm is None:
                 slot["n_miss"] += 1
@@ -536,32 +593,43 @@ def main() -> int:
 
     # Aggregate to per-(method, threshold) summary
     threshold_rows: list[dict] = []
-    for (method, thkey), slot in sorted(per_threshold.items()):
+    for (method, _thkey), slot in sorted(per_threshold.items()):
         lt = slot["lead_times"]
-        threshold_rows.append({
-            "method": slot["method"],
-            "threshold": slot["threshold"],
-            "n_traces": slot["n"],
-            "n_alarm": slot["n_alarm_before_fail"] + slot["n_alarm_after_fail"],
-            "n_alarm_before_fail": slot["n_alarm_before_fail"],
-            "n_late_alarm": slot["n_alarm_after_fail"],
-            "n_miss": slot["n_miss"],
-            "true_alarm_rate": round(slot["n_alarm_before_fail"] / max(1, slot["n"]), 4),
-            "late_alarm_rate": round(slot["n_late_alarm"] / max(1, slot["n"]), 4),
-            "miss_rate": round(slot["n_miss"] / max(1, slot["n"]), 4),
-            "mean_lead_time": round(sum(lt) / len(lt), 3) if lt else "NA",
-            "median_lead_time": round(statistics.median(lt), 3) if lt else "NA",
-            "min_lead_time": min(lt) if lt else "NA",
-            "max_lead_time": max(lt) if lt else "NA",
-        })
+        threshold_rows.append(
+            {
+                "method": slot["method"],
+                "threshold": slot["threshold"],
+                "n_traces": slot["n"],
+                "n_alarm": slot["n_alarm_before_fail"] + slot["n_alarm_after_fail"],
+                "n_alarm_before_fail": slot["n_alarm_before_fail"],
+                "n_late_alarm": slot["n_alarm_after_fail"],
+                "n_miss": slot["n_miss"],
+                "true_alarm_rate": round(slot["n_alarm_before_fail"] / max(1, slot["n"]), 4),
+                "late_alarm_rate": round(slot["n_late_alarm"] / max(1, slot["n"]), 4),
+                "miss_rate": round(slot["n_miss"] / max(1, slot["n"]), 4),
+                "mean_lead_time": round(sum(lt) / len(lt), 3) if lt else "NA",
+                "median_lead_time": round(statistics.median(lt), 3) if lt else "NA",
+                "min_lead_time": min(lt) if lt else "NA",
+                "max_lead_time": max(lt) if lt else "NA",
+            }
+        )
     write_tsv(
         os.path.join(RESULTS, "zvf_iter78_alarm_thresholds.tsv"),
         threshold_rows,
         fieldnames=[
-            "method", "threshold", "n_traces", "n_alarm",
-            "n_alarm_before_fail", "n_late_alarm", "n_miss",
-            "true_alarm_rate", "late_alarm_rate", "miss_rate",
-            "mean_lead_time", "median_lead_time", "min_lead_time",
+            "method",
+            "threshold",
+            "n_traces",
+            "n_alarm",
+            "n_alarm_before_fail",
+            "n_late_alarm",
+            "n_miss",
+            "true_alarm_rate",
+            "late_alarm_rate",
+            "miss_rate",
+            "mean_lead_time",
+            "median_lead_time",
+            "min_lead_time",
             "max_lead_time",
         ],
         header_comment=(
@@ -584,10 +652,12 @@ def main() -> int:
         # Prefer: higher true_alarm_rate, then higher mean_lead_time
         if row["true_alarm_rate"] > prev["true_alarm_rate"]:
             best_per_method[m] = row
-        elif (row["true_alarm_rate"] == prev["true_alarm_rate"]
-              and isinstance(row["mean_lead_time"], float)
-              and isinstance(prev["mean_lead_time"], float)
-              and row["mean_lead_time"] > prev["mean_lead_time"]):
+        elif (
+            row["true_alarm_rate"] == prev["true_alarm_rate"]
+            and isinstance(row["mean_lead_time"], float)
+            and isinstance(prev["mean_lead_time"], float)
+            and row["mean_lead_time"] > prev["mean_lead_time"]
+        ):
             best_per_method[m] = row
 
     leadtime_rows: list[dict] = []
@@ -597,10 +667,19 @@ def main() -> int:
         os.path.join(RESULTS, "zvf_iter78_leadtime_summary.tsv"),
         leadtime_rows,
         fieldnames=[
-            "method", "threshold", "n_traces", "n_alarm",
-            "n_alarm_before_fail", "n_late_alarm", "n_miss",
-            "true_alarm_rate", "late_alarm_rate", "miss_rate",
-            "mean_lead_time", "median_lead_time", "min_lead_time",
+            "method",
+            "threshold",
+            "n_traces",
+            "n_alarm",
+            "n_alarm_before_fail",
+            "n_late_alarm",
+            "n_miss",
+            "true_alarm_rate",
+            "late_alarm_rate",
+            "miss_rate",
+            "mean_lead_time",
+            "median_lead_time",
+            "min_lead_time",
             "max_lead_time",
         ],
         header_comment=(
@@ -620,36 +699,67 @@ def main() -> int:
         seed = tr["seed"]
         src = tr["source"]
         # AR(1) alarm: positive persistence > TH
-        ar1_alarm = next((r["step"] for r in tr["features"] if r["alarm_eligible"] and max(0.0, r["ar1"]) > TH_SINGLE), None)
+        ar1_alarm = next(
+            (
+                r["step"]
+                for r in tr["features"]
+                if r["alarm_eligible"] and max(0.0, r["ar1"]) > TH_SINGLE
+            ),
+            None,
+        )
         # CUSUM alarm
-        cs_alarm = next((r["step"] for r in tr["features"] if r["alarm_eligible"] and r["cusum"] > TH_SINGLE), None)
+        cs_alarm = next(
+            (r["step"] for r in tr["features"] if r["alarm_eligible"] and r["cusum"] > TH_SINGLE),
+            None,
+        )
         # H-run alarm
-        h_alarm = next((r["step"] for r in tr["features"] if r["alarm_eligible"] and r["h_run_frac"] > TH_SINGLE), None)
+        h_alarm = next(
+            (
+                r["step"]
+                for r in tr["features"]
+                if r["alarm_eligible"] and r["h_run_frac"] > TH_SINGLE
+            ),
+            None,
+        )
         t_fail = tr["t_fail"]
         for channel, t_alarm in [("ar1", ar1_alarm), ("cusum", cs_alarm), ("h_run", h_alarm)]:
             lt = (t_fail - t_alarm) if (t_alarm is not None and t_alarm < t_fail) else "NA"
-            single_rows.append({
-                "source": src, "method": method, "seed": seed,
-                "channel": channel, "threshold": TH_SINGLE,
-                "t_alarm": t_alarm if t_alarm is not None else "NA",
-                "t_fail": t_fail,
-                "lead_time": lt,
-                "true_alarm": int(lt != "NA"),
-            })
+            single_rows.append(
+                {
+                    "source": src,
+                    "method": method,
+                    "seed": seed,
+                    "channel": channel,
+                    "threshold": TH_SINGLE,
+                    "t_alarm": t_alarm if t_alarm is not None else "NA",
+                    "t_fail": t_fail,
+                    "lead_time": lt,
+                    "true_alarm": int(lt != "NA"),
+                }
+            )
     # Aggregate per-channel detection rate
     by_channel: dict[str, list[int]] = defaultdict(list)
     for r in single_rows:
         by_channel[r["channel"]].append(r["true_alarm"])
     for ch, lst in by_channel.items():
         det = sum(lst) / max(1, len(lst))
-        print(f"[iter78] single-channel detection rate ({ch}): {det:.3f} "
-              f"({sum(lst)}/{len(lst)})", flush=True)
+        print(
+            f"[iter78] single-channel detection rate ({ch}): {det:.3f} ({sum(lst)}/{len(lst)})",
+            flush=True,
+        )
     write_tsv(
         os.path.join(RESULTS, "zvf_iter78_single_channel.tsv"),
         single_rows,
         fieldnames=[
-            "source", "method", "seed", "channel", "threshold",
-            "t_alarm", "t_fail", "lead_time", "true_alarm",
+            "source",
+            "method",
+            "seed",
+            "channel",
+            "threshold",
+            "t_alarm",
+            "t_fail",
+            "lead_time",
+            "true_alarm",
         ],
         header_comment=(
             "# Pillar 2 iter78 per-channel (AR1, CUSUM, H-run) alarm at th=0.70.\n"
@@ -668,28 +778,43 @@ def main() -> int:
             trough_held = min(s["heldout_acc"] for s in tr["steps"])
             last_held = tr["steps"][-1]["heldout_acc"]
             first_held = tr["steps"][0]["heldout_acc"]
-            anchor_rows.append({
-                "source": tr["source"],
-                "method": tr["method"],
-                "seed": tr["seed"],
-                "n_steps": tr["n_steps"],
-                "peak_zvf": round(peak_zvf, 4),
-                "trough_heldout_acc": round(trough_held, 4),
-                "first_heldout_acc": round(first_held, 4),
-                "last_heldout_acc": round(last_held, 4),
-                "t_alarm": t_alarm if t_alarm is not None else "NA",
-                "t_fail": t_fail if t_fail is not None else "NA",
-                "lead_time": (t_fail - t_alarm) if (t_alarm is not None and t_fail is not None and t_alarm < t_fail) else "NA",
-                "alarm_threshold": best["threshold"] if best else "NA",
-                "protocol_works": int(t_alarm is not None and t_fail is not None and t_alarm < t_fail),
-            })
+            anchor_rows.append(
+                {
+                    "source": tr["source"],
+                    "method": tr["method"],
+                    "seed": tr["seed"],
+                    "n_steps": tr["n_steps"],
+                    "peak_zvf": round(peak_zvf, 4),
+                    "trough_heldout_acc": round(trough_held, 4),
+                    "first_heldout_acc": round(first_held, 4),
+                    "last_heldout_acc": round(last_held, 4),
+                    "t_alarm": t_alarm if t_alarm is not None else "NA",
+                    "t_fail": t_fail if t_fail is not None else "NA",
+                    "lead_time": (t_fail - t_alarm)
+                    if (t_alarm is not None and t_fail is not None and t_alarm < t_fail)
+                    else "NA",
+                    "alarm_threshold": best["threshold"] if best else "NA",
+                    "protocol_works": int(
+                        t_alarm is not None and t_fail is not None and t_alarm < t_fail
+                    ),
+                }
+            )
     write_tsv(
         os.path.join(RESULTS, "zvf_iter78_anchors.tsv"),
         anchor_rows,
         fieldnames=[
-            "source", "method", "seed", "n_steps", "peak_zvf",
-            "trough_heldout_acc", "first_heldout_acc", "last_heldout_acc",
-            "t_alarm", "t_fail", "lead_time", "alarm_threshold",
+            "source",
+            "method",
+            "seed",
+            "n_steps",
+            "peak_zvf",
+            "trough_heldout_acc",
+            "first_heldout_acc",
+            "last_heldout_acc",
+            "t_alarm",
+            "t_fail",
+            "lead_time",
+            "alarm_threshold",
             "protocol_works",
         ],
         header_comment=(
@@ -754,8 +879,7 @@ def main() -> int:
     write_tsv(
         os.path.join(RESULTS, "zvf_iter78_ews_protocol.tsv"),
         protocol_rows,
-        fieldnames=["rule_id", "method", "threshold", "true_alarm_rate",
-                    "miss_rate", "rationale"],
+        fieldnames=["rule_id", "method", "threshold", "true_alarm_rate", "miss_rate", "rationale"],
         header_comment=(
             "# Pillar 2 iter78 recommended ZVF EWS protocol.\n"
             "# R1: global recommended threshold; R2: composite definition;\n"
@@ -767,7 +891,9 @@ def main() -> int:
     # 7) Top-level summary
     n_total = sum(1 for tr in enriched)
     n_failure = sum(1 for tr in enriched if tr.get("t_fail") is not None)
-    n_alarm = sum(1 for tr in enriched if find_alarm(tr["features"], recommended_threshold) is not None)
+    n_alarm = sum(
+        1 for tr in enriched if find_alarm(tr["features"], recommended_threshold) is not None
+    )
     n_protocol_works = sum(1 for r in anchor_rows if r["protocol_works"] == 1)
     summary_rows = [
         {"key": "n_traces_total", "value": n_total},
@@ -789,14 +915,14 @@ def main() -> int:
         summary_rows,
         fieldnames=["key", "value"],
         header_comment=(
-            "# Pillar 2 iter78 top-level summary.\n"
-            "# Source: platform_modal/scripts/zvf_iter78.py"
+            "# Pillar 2 iter78 top-level summary.\n# Source: platform_modal/scripts/zvf_iter78.py"
         ),
     )
 
     # 8) meta
     meta = {
-        "iter": 78, "protocol_id": PROTOCOL_ID,
+        "iter": 78,
+        "protocol_id": PROTOCOL_ID,
         "excluded_traces": excluded_traces,
         "baseline": "first W observations; alarms disabled until step W",
         "endpoint": "accuracy_failure",
@@ -825,9 +951,11 @@ def main() -> int:
     }
     with open(os.path.join(RESULTS, "zvf_iter78_meta.json"), "w") as f:
         json.dump(meta, f, indent=2)
-    print(f"[iter78] done. {n_total} traces, {n_failure} with failure, "
-          f"recommended th={recommended_threshold} tar={recommended_tar:.3f}",
-          flush=True)
+    print(
+        f"[iter78] done. {n_total} traces, {n_failure} with failure, "
+        f"recommended th={recommended_threshold} tar={recommended_tar:.3f}",
+        flush=True,
+    )
     return 0
 
 

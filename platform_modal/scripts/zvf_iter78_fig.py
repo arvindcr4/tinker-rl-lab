@@ -26,15 +26,12 @@ Outputs:
 
 from __future__ import annotations
 
-import csv
-import json
-import math
 import os
 from pathlib import Path
-import statistics
 from collections import defaultdict
 
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
@@ -88,8 +85,11 @@ def panel_leadtime(ax, leadtime_rows: list[dict]) -> None:
 
 
 def panel_grpo_trace(ax, per_step: list[dict]) -> None:
-    grpo = [r for r in per_step if r["source"] == "variance_mitigation"
-            and r["method"] == "grpo" and r["seed"] == "0"]
+    grpo = [
+        r
+        for r in per_step
+        if r["source"] == "variance_mitigation" and r["method"] == "grpo" and r["seed"] == "0"
+    ]
     if not grpo:
         ax.text(0.5, 0.5, "no GRPO seed 0 trace", ha="center", va="center")
         ax.set_title("(2) GRPO seed 0 — no data")
@@ -113,8 +113,7 @@ def panel_grpo_trace(ax, per_step: list[dict]) -> None:
             t_alarm = r["step"]
             break
     if t_alarm is not None:
-        ax.axvline(t_alarm, color="#9467bd", linestyle="--", lw=1.0,
-                   label=f"alarm t={t_alarm}")
+        ax.axvline(t_alarm, color="#9467bd", linestyle="--", lw=1.0, label=f"alarm t={t_alarm}")
     # Find t_fail (first t with is_failure==1)
     t_fail = None
     for r in grpo:
@@ -122,8 +121,9 @@ def panel_grpo_trace(ax, per_step: list[dict]) -> None:
             t_fail = r["step"]
             break
     if t_fail is not None:
-        ax.axvline(t_fail, color="black", linestyle="-", lw=1.0,
-                   label=f"accuracy failure t={t_fail}")
+        ax.axvline(
+            t_fail, color="black", linestyle="-", lw=1.0, label=f"accuracy failure t={t_fail}"
+        )
     ax.set_xlabel("step")
     ax.set_ylabel("value")
     ax.set_title("(2) GRPO seed 0: EWS components + alarm/failure")
@@ -132,8 +132,11 @@ def panel_grpo_trace(ax, per_step: list[dict]) -> None:
 
 
 def panel_aero_trace(ax, per_step: list[dict]) -> None:
-    aero = [r for r in per_step if r["source"] == "variance_mitigation"
-            and r["method"] == "aero" and r["seed"] == "0"]
+    aero = [
+        r
+        for r in per_step
+        if r["source"] == "variance_mitigation" and r["method"] == "aero" and r["seed"] == "0"
+    ]
     if not aero:
         ax.text(0.5, 0.5, "no AERO seed 0 trace", ha="center", va="center")
         ax.set_title("(3) AERO seed 0 — no data")
@@ -157,11 +160,11 @@ def panel_aero_trace(ax, per_step: list[dict]) -> None:
             t_fail = r["step"]
             break
     if t_alarm is not None:
-        ax.axvline(t_alarm, color="#9467bd", linestyle="--", lw=1.0,
-                   label=f"alarm t={t_alarm}")
+        ax.axvline(t_alarm, color="#9467bd", linestyle="--", lw=1.0, label=f"alarm t={t_alarm}")
     if t_fail is not None:
-        ax.axvline(t_fail, color="black", linestyle="-", lw=1.0,
-                   label=f"accuracy failure t={t_fail}")
+        ax.axvline(
+            t_fail, color="black", linestyle="-", lw=1.0, label=f"accuracy failure t={t_fail}"
+        )
     ax.set_xlabel("step")
     ax.set_ylabel("value")
     ax.set_title("(3) AERO seed 0: observed EWS and accuracy endpoint")
@@ -192,18 +195,24 @@ def main() -> int:
         if len(r) < 18 or r[17] != "zvf-ews-v2-independent-endpoint-warmup":
             raise ValueError("Figure requires versioned explicit-endpoint features")
         try:
-            per_step.append({
-                "source": r[0], "method": r[1], "seed": r[2],
-                "step": int(r[3]), "zvf": to_float(r[4]),
-                "heldout_acc": to_float(r[5]),
-                "held_mean_10": to_float(r[6]),
-                "is_failure": int(float(r[7])),
-                "h_run": int(float(r[8])),
-                "ar1": to_float(r[9]), "cusum": to_float(r[10]),
-                "variance_ratio": to_float(r[11]),
-                "kurtosis": to_float(r[12]),
-"composite_ews": to_float(r[13]),
-            })
+            per_step.append(
+                {
+                    "source": r[0],
+                    "method": r[1],
+                    "seed": r[2],
+                    "step": int(r[3]),
+                    "zvf": to_float(r[4]),
+                    "heldout_acc": to_float(r[5]),
+                    "held_mean_10": to_float(r[6]),
+                    "is_failure": int(float(r[7])),
+                    "h_run": int(float(r[8])),
+                    "ar1": to_float(r[9]),
+                    "cusum": to_float(r[10]),
+                    "variance_ratio": to_float(r[11]),
+                    "kurtosis": to_float(r[12]),
+                    "composite_ews": to_float(r[13]),
+                }
+            )
         except (ValueError, IndexError):
             continue
 
@@ -211,13 +220,17 @@ def main() -> int:
     leadtime_rows = []
     for r in raw_lt:
         try:
-            leadtime_rows.append({
-                "method": r[0], "threshold": to_float(r[1]),
-                "n_traces": int(r[2]), "true_alarm_rate": to_float(r[7]),
-                "mean_lead_time": r[10] if r[10] != "NA" else "NA",
-                "min_lead_time": to_float(r[12]) if r[12] != "NA" else float("nan"),
-                "max_lead_time": to_float(r[13]) if r[13] != "NA" else float("nan"),
-            })
+            leadtime_rows.append(
+                {
+                    "method": r[0],
+                    "threshold": to_float(r[1]),
+                    "n_traces": int(r[2]),
+                    "true_alarm_rate": to_float(r[7]),
+                    "mean_lead_time": r[10] if r[10] != "NA" else "NA",
+                    "min_lead_time": to_float(r[12]) if r[12] != "NA" else float("nan"),
+                    "max_lead_time": to_float(r[13]) if r[13] != "NA" else float("nan"),
+                }
+            )
         except (ValueError, IndexError):
             continue
 
@@ -225,14 +238,19 @@ def main() -> int:
     single_rows = []
     for r in raw_sc:
         try:
-            single_rows.append({
-                "source": r[0], "method": r[1], "seed": r[2],
-                "channel": r[3], "threshold": to_float(r[4]),
-                "t_alarm": r[5] if r[5] != "NA" else None,
-                "t_fail": r[6] if r[6] != "NA" else None,
-                "lead_time": r[7] if r[7] != "NA" else None,
-                "true_alarm": int(r[8]),
-            })
+            single_rows.append(
+                {
+                    "source": r[0],
+                    "method": r[1],
+                    "seed": r[2],
+                    "channel": r[3],
+                    "threshold": to_float(r[4]),
+                    "t_alarm": r[5] if r[5] != "NA" else None,
+                    "t_fail": r[6] if r[6] != "NA" else None,
+                    "lead_time": r[7] if r[7] != "NA" else None,
+                    "true_alarm": int(r[8]),
+                }
+            )
         except (ValueError, IndexError):
             continue
 
@@ -241,9 +259,11 @@ def main() -> int:
     panel_grpo_trace(axes[0, 1], per_step)
     panel_aero_trace(axes[1, 0], per_step)
     panel_single_channel(axes[1, 1], single_rows)
-    fig.suptitle("Iter 78 — ZVF as a real-time online EWS protocol "
-                 "(composite = max(AR1+, CUSUM, H-run frac), alarm > 0.50)",
-                 fontsize=11)
+    fig.suptitle(
+        "Iter 78 — ZVF as a real-time online EWS protocol "
+        "(composite = max(AR1+, CUSUM, H-run frac), alarm > 0.50)",
+        fontsize=11,
+    )
     fig.tight_layout(rect=[0, 0, 1, 0.96])
     for d in (FIG_DIR, PAPER_FIG_DIR):
         os.makedirs(d, exist_ok=True)
@@ -252,11 +272,12 @@ def main() -> int:
     fig.savefig(out_pdf, bbox_inches="tight")
     fig.savefig(out_png, dpi=150, bbox_inches="tight")
     fig.savefig(os.path.join(PAPER_FIG_DIR, "zvf_iter78.pdf"), bbox_inches="tight")
-    fig.savefig(os.path.join(PAPER_FIG_DIR, "zvf_iter78.png"), dpi=150,
-                bbox_inches="tight")
+    fig.savefig(os.path.join(PAPER_FIG_DIR, "zvf_iter78.png"), dpi=150, bbox_inches="tight")
     plt.close(fig)
-    print(f"[iter78-fig] wrote {out_pdf}, {out_png}, "
-          f"and {PAPER_FIG_DIR}/zvv_iter78.{{pdf,png}}", flush=True)
+    print(
+        f"[iter78-fig] wrote {out_pdf}, {out_png}, and {PAPER_FIG_DIR}/zvv_iter78.{{pdf,png}}",
+        flush=True,
+    )
     return 0
 
 

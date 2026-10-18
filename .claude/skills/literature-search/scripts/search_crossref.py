@@ -48,14 +48,48 @@ BIBTEX_FIELDS = {
 }
 
 COMMON_WORDS = {
-    "a", "an", "the", "of", "in", "on", "at", "to", "for", "and", "or",
-    "is", "are", "was", "were", "be", "been", "with", "from", "by", "as",
-    "its", "it", "this", "that", "via", "using", "through", "between",
+    "a",
+    "an",
+    "the",
+    "of",
+    "in",
+    "on",
+    "at",
+    "to",
+    "for",
+    "and",
+    "or",
+    "is",
+    "are",
+    "was",
+    "were",
+    "be",
+    "been",
+    "with",
+    "from",
+    "by",
+    "as",
+    "its",
+    "it",
+    "this",
+    "that",
+    "via",
+    "using",
+    "through",
+    "between",
 }
 
 FORBIDDEN_IDS = {
-    "none", "introduction", "references", "abstract", "conclusion",
-    "method", "methods", "results", "discussion", "appendix",
+    "none",
+    "introduction",
+    "references",
+    "abstract",
+    "conclusion",
+    "method",
+    "methods",
+    "results",
+    "discussion",
+    "appendix",
 }
 
 
@@ -195,7 +229,7 @@ def query_crossref(query: str, rows: int = 10, timeout: int = 30) -> list[dict]:
             return data.get("message", {}).get("items", [])
         except (urllib.error.URLError, urllib.error.HTTPError, TimeoutError) as e:
             if attempt < 2:
-                time.sleep(2 ** attempt)
+                time.sleep(2**attempt)
             else:
                 print(f"CrossRef API error after 3 attempts: {e}", file=sys.stderr)
                 return []

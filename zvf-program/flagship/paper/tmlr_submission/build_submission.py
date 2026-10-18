@@ -7,7 +7,6 @@ import argparse
 import copy
 import hashlib
 import json
-import re
 import zipfile
 from collections import Counter
 from pathlib import Path
@@ -23,9 +22,7 @@ CANONICAL_BUNDLE = PAPER_DIR / "review_bundle.zip"
 OUTPUT_ZIP = TMLR_DIR / "anonymous_supplement.zip"
 OUTPUT_DIGEST = TMLR_DIR / "ANONYMOUS_SUPPLEMENT.sha256"
 ZIP_TIME = (2026, 8, 2, 0, 0, 0)
-EXECUTED_OBJECTIVE_SHA256 = (
-    "980a56a1651299a5adbe7a0927c13b12d42d9d7e1a36205500a24d5eeba9b61b"
-)
+EXECUTED_OBJECTIVE_SHA256 = "980a56a1651299a5adbe7a0927c13b12d42d9d7e1a36205500a24d5eeba9b61b"
 IDENTITY_MARKERS = (
     b"arvind",
     b"pes university",
@@ -55,8 +52,7 @@ def make_tmlr_source() -> str:
         "\\usepackage{tmlr}",
     )
     source = source.replace(
-        "\\author{Arvind C R\\\\\nPES University\\\\\n"
-        "\\texttt{arvindcr4@gmail.com}}",
+        "\\author{Arvind C R\\\\\nPES University\\\\\n\\texttt{arvindcr4@gmail.com}}",
         "\\author{Anonymous Authors}",
     )
     source = source.replace("\\path{verify_claims.py}", "\\path{verify_anonymous_claims.py}")
@@ -145,13 +141,15 @@ def project_design() -> dict[str, Any]:
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     state = json.loads(state_path.read_text(encoding="utf-8"))
     job_statuses = {key: value["status"] for key, value in sorted(state["jobs"].items())}
-    assert Counter(job_statuses.values()) == Counter({
-        "accepted": 10,
-        "descoped_contract_infeasible": 14,
-        "failed_infrastructure": 2,
-        "failed_validation": 1,
-        "pending_quota_reset": 4,
-    })
+    assert Counter(job_statuses.values()) == Counter(
+        {
+            "accepted": 10,
+            "descoped_contract_infeasible": 14,
+            "failed_infrastructure": 2,
+            "failed_validation": 1,
+            "pending_quota_reset": 4,
+        }
+    )
     return {
         "schema_version": "anonymous-r4-2-design-v1",
         "job_count": manifest["job_count"],
@@ -176,16 +174,26 @@ def project_design() -> dict[str, Any]:
 
 def collect_payloads() -> dict[str, bytes]:
     required = (
-        "main.tex", "main.pdf", "flagship.bib", "tmlr.sty", "tmlr.bst",
-        "README.md", "ANONYMITY_AND_PROVENANCE.md",
-        "ANONYMOUS_CLAIM_LEDGER.md", "verify_anonymous_claims.py",
+        "main.tex",
+        "main.pdf",
+        "flagship.bib",
+        "tmlr.sty",
+        "tmlr.bst",
+        "README.md",
+        "ANONYMITY_AND_PROVENANCE.md",
+        "ANONYMOUS_CLAIM_LEDGER.md",
+        "verify_anonymous_claims.py",
     )
     payloads: dict[str, bytes] = {}
     for name in required:
         path = TMLR_DIR / name
         if not path.is_file():
             raise SystemExit(f"missing submission file: {path}")
-        target = f"paper/{name}" if name in {"main.tex", "main.pdf", "flagship.bib", "tmlr.sty", "tmlr.bst"} else name
+        target = (
+            f"paper/{name}"
+            if name in {"main.tex", "main.pdf", "flagship.bib", "tmlr.sty", "tmlr.bst"}
+            else name
+        )
         payloads[target] = path.read_bytes()
 
     s1_root = REPO_ROOT / "zvf-program/flagship/s1"
@@ -197,7 +205,9 @@ def collect_payloads() -> dict[str, bytes]:
         relative = path.relative_to(s1_root).as_posix()
         payloads[f"evidence/s1/source/{relative}"] = path.read_bytes()
     for stack in ("trl", "verl"):
-        payloads[f"evidence/s1/{stack}_receipt.anonymous.json"] = json_bytes(project_s1_receipt(stack))
+        payloads[f"evidence/s1/{stack}_receipt.anonymous.json"] = json_bytes(
+            project_s1_receipt(stack)
+        )
 
     campaign_acceptance = (
         REPO_ROOT / "zvf-program/flagship/pilot/launch-v2-corpus-resume-r4-2/acceptance"
@@ -209,7 +219,9 @@ def collect_payloads() -> dict[str, bytes]:
         acceptance_digests[unit_id] = projected["original_acceptance_sha256"]
         payloads[f"evidence/r4_2/units/{unit_id}.json"] = json_bytes(projected)
     if len(acceptance_digests) != 6:
-        raise SystemExit(f"expected six scientific acceptance records, found {len(acceptance_digests)}")
+        raise SystemExit(
+            f"expected six scientific acceptance records, found {len(acceptance_digests)}"
+        )
 
     design = project_design()
     payloads["evidence/r4_2/design_and_disposition.json"] = json_bytes(design)
@@ -258,10 +270,19 @@ def build_supplement() -> None:
     manifest = "".join(
         f"{sha256_bytes(payloads[name])}  {name}\n" for name in sorted(payloads)
     ).encode("utf-8")
-    with zipfile.ZipFile(OUTPUT_ZIP, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=9) as archive:
+    with zipfile.ZipFile(
+        OUTPUT_ZIP, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=9
+    ) as archive:
         for name in sorted(payloads):
-            archive.writestr(zip_info(name), payloads[name], compress_type=zipfile.ZIP_DEFLATED, compresslevel=9)
-        archive.writestr(zip_info("MANIFEST.sha256"), manifest, compress_type=zipfile.ZIP_DEFLATED, compresslevel=9)
+            archive.writestr(
+                zip_info(name), payloads[name], compress_type=zipfile.ZIP_DEFLATED, compresslevel=9
+            )
+        archive.writestr(
+            zip_info("MANIFEST.sha256"),
+            manifest,
+            compress_type=zipfile.ZIP_DEFLATED,
+            compresslevel=9,
+        )
     digest = sha256(OUTPUT_ZIP)
     OUTPUT_DIGEST.write_text(f"{digest}  {OUTPUT_ZIP.name}\n", encoding="utf-8")
     print(f"{OUTPUT_ZIP} ({OUTPUT_ZIP.stat().st_size} bytes)")

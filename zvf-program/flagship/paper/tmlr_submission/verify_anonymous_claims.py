@@ -37,7 +37,8 @@ def verify_manifest() -> dict[str, Any]:
 
 
 def homogeneous_probability(p: float, group_size: int) -> float:
-    assert 0.0 <= p <= 1.0 and group_size >= 2
+    assert 0.0 <= p <= 1.0
+    assert group_size >= 2
     return p**group_size + (1.0 - p) ** group_size
 
 
@@ -52,7 +53,9 @@ def verify_math() -> dict[str, Any]:
     for group_size in (2, 4, 8, 16, 32):
         for p in (1e-8, 0.001, 0.1, 0.5, 0.9, 1.0 - 1e-8):
             q = informative_probability(p, group_size)
-            assert math.isclose(q, 1.0 - homogeneous_probability(p, group_size), rel_tol=1e-9, abs_tol=2e-15)
+            assert math.isclose(
+                q, 1.0 - homogeneous_probability(p, group_size), rel_tol=1e-9, abs_tol=2e-15
+            )
     epsilon = 1e-8
     for group_size in (2, 4, 8, 16, 32):
         q = informative_probability(epsilon, group_size)
@@ -75,18 +78,30 @@ def verify_s1() -> dict[str, Any]:
     fixture_digests = set()
     for stack in ("trl", "verl"):
         receipt = load_json(ROOT / f"evidence/s1/{stack}_receipt.anonymous.json")
-        assert receipt["stack"] == stack and receipt["status"] == "PASS"
+        assert receipt["stack"] == stack
+        assert receipt["status"] == "PASS"
         assert receipt["tolerances"] == {"atol": 1e-8, "dtype": "float64", "rtol": 1e-6}
         assert len(receipt["original_receipt_sha256"]) == 64
         assert len(receipt["intended_cases"]) == 14
-        assert all(item["conforms"] and item["verdict"] == "PASS" for item in receipt["intended_cases"])
+        assert all(
+            item["conforms"] and item["verdict"] == "PASS" for item in receipt["intended_cases"]
+        )
         assert len(receipt["controller_matrix"]) == 36
         assert {item["policy"] for item in receipt["controller_matrix"]} == {
-            "static_g8", "static_g16", "symmetric_zvf", "failure_only",
-            "boundary_aware", "full_triage",
+            "static_g8",
+            "static_g16",
+            "symmetric_zvf",
+            "failure_only",
+            "boundary_aware",
+            "full_triage",
         }
         assert {item["case"] for item in receipt["controller_matrix"]} == {
-            "all_wrong", "all_correct", "mixed", "noisy", "missing", "delayed",
+            "all_wrong",
+            "all_correct",
+            "mixed",
+            "noisy",
+            "missing",
+            "delayed",
         }
         native = dict(Counter(item["verdict"] for item in receipt["native_cases"]))
         assert native == expected_native[stack]
@@ -102,7 +117,9 @@ def verify_s1() -> dict[str, Any]:
     return {"status": "PASS", "stacks": summaries}
 
 
-def equivalent_steps(receipts: list[dict[str, Any]]) -> tuple[int, Counter[str], list[dict[str, Any]]]:
+def equivalent_steps(
+    receipts: list[dict[str, Any]],
+) -> tuple[int, Counter[str], list[dict[str, Any]]]:
     counts: Counter[str] = Counter()
     nonzero = []
     accepted = 0
@@ -111,11 +128,13 @@ def equivalent_steps(receipts: list[dict[str, Any]]) -> tuple[int, Counter[str],
         counts[relation] += 1
         if relation == "joint_zero":
             assert item["intended_gradient_norm"] == item["native_gradient_norm"] == 0.0
-            assert item["gradient_cosine"] is None and item["gradient_relative_l2"] is None
+            assert item["gradient_cosine"] is None
+            assert item["gradient_relative_l2"] is None
             accepted += 1
         else:
             assert relation == "nonzero"
-            assert item["intended_gradient_norm"] > 0.0 and item["native_gradient_norm"] > 0.0
+            assert item["intended_gradient_norm"] > 0.0
+            assert item["native_gradient_norm"] > 0.0
             assert -1.0 <= item["gradient_cosine"] <= 1.0
             assert item["gradient_relative_l2"] >= 0.0
             nonzero.append(item)
@@ -139,45 +158,97 @@ def verify_r4_2() -> dict[str, Any]:
     assert sha256(source) == design["executed_objective_sha256"]
 
     expected = {
-        "fpilot__epsilon_only__balanced_equal_length__s11": (20, 17, 62, 0.999858, 0.016844, 396672),
-        "fpilot__reduction_only__balanced_equal_length__s11": (20, 19, 62, 0.999844, 0.017681, 396672),
-        "fpilot__epsilon_only__balanced_equal_length__s23": (20, 17, 65, 0.999894, 0.014576, 400448),
-        "fpilot__intended_full__balanced_equal_length__s23": (20, 20, 65, 0.999881, 0.015440, 400448),
+        "fpilot__epsilon_only__balanced_equal_length__s11": (
+            20,
+            17,
+            62,
+            0.999858,
+            0.016844,
+            396672,
+        ),
+        "fpilot__reduction_only__balanced_equal_length__s11": (
+            20,
+            19,
+            62,
+            0.999844,
+            0.017681,
+            396672,
+        ),
+        "fpilot__epsilon_only__balanced_equal_length__s23": (
+            20,
+            17,
+            65,
+            0.999894,
+            0.014576,
+            400448,
+        ),
+        "fpilot__intended_full__balanced_equal_length__s23": (
+            20,
+            20,
+            65,
+            0.999881,
+            0.015440,
+            400448,
+        ),
         "fpilot__native_trl__balanced_equal_length__s23": (20, 17, 65, 0.999894, 0.014576, 400448),
-        "fpilot__reduction_only__balanced_equal_length__s23": (20, 20, 65, 0.999881, 0.015440, 400448),
+        "fpilot__reduction_only__balanced_equal_length__s23": (
+            20,
+            20,
+            65,
+            0.999881,
+            0.015440,
+            400448,
+        ),
     }
     summaries = []
     for path in sorted((ROOT / "evidence/r4_2/units").glob("*.json")):
         unit = load_json(path)
         unit_id = unit["unit"]["id"]
-        assert unit_id == path.stem and unit_id in expected
-        assert unit["status"] == "accepted" and len(unit["original_acceptance_sha256"]) == 64
+        assert unit_id == path.stem
+        assert unit_id in expected
+        assert unit["status"] == "accepted"
+        assert len(unit["original_acceptance_sha256"]) == 64
         receipts = unit["gradient_receipts"]
         assert len(receipts) == 100
         registered, counts, nonzero = equivalent_steps(receipts)
         evaluations = unit["evaluations"]
         assert [item["step"] for item in evaluations] == [0, 20, 40, 60, 80, 100]
-        assert all(item["heldout_n"] == 128 and item["accuracy"] == item["correct"] / 128 for item in evaluations)
+        assert all(
+            item["heldout_n"] == 128 and item["accuracy"] == item["correct"] / 128
+            for item in evaluations
+        )
         ledger = unit["token_flop_ledger"]
         start, final, zeros, min_cos, max_l2, tokens = expected[unit_id]
-        assert evaluations[0]["correct"] == start and evaluations[-1]["correct"] == final
+        assert evaluations[0]["correct"] == start
+        assert evaluations[-1]["correct"] == final
         assert counts == Counter({"joint_zero": zeros, "nonzero": 100 - zeros})
         assert math.isclose(min(item["gradient_cosine"] for item in nonzero), min_cos, abs_tol=5e-7)
-        assert math.isclose(max(item["gradient_relative_l2"] for item in nonzero), max_l2, abs_tol=5e-7)
+        assert math.isclose(
+            max(item["gradient_relative_l2"] for item in nonzero), max_l2, abs_tol=5e-7
+        )
         assert ledger["charged_generated_tokens"] == tokens
         summaries.append({"id": unit_id, "registered_equivalent_steps": registered})
     assert {item["id"] for item in summaries} == set(expected)
     intended = next(item for item in summaries if "intended_full" in item["id"])
     assert intended["registered_equivalent_steps"] == 69 < 95
-    return {"status": "PASS", "units": len(summaries), "gradient_relations": 600, "intended_full_gate": "69/100 < 95/100"}
+    return {
+        "status": "PASS",
+        "units": len(summaries),
+        "gradient_relations": 600,
+        "intended_full_gate": "69/100 < 95/100",
+    }
 
 
 def verify_anchors() -> dict[str, Any]:
     anchors = load_json(ROOT / "evidence/provenance_anchors.json")
     for key, value in anchors.items():
         if key.endswith("sha256"):
-            assert isinstance(value, str) and len(value) == 64
-    return {"status": "PASS", "note": "format checked; unredacted source objects are withheld during double-blind review"}
+            assert isinstance(value, str)
+            assert len(value) == 64
+    return {
+        "status": "PASS",
+        "note": "format checked; unredacted source objects are withheld during double-blind review",
+    }
 
 
 def main() -> None:

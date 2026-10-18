@@ -21,6 +21,7 @@ Outputs: platform_hybrid/experiments/results/p5p8/p6_iter166_per_entry.tsv
          platform_hybrid/experiments/results/p5p8/p6_iter166_summary.json
 Stdlib only.
 """
+
 import csv
 import json
 import os
@@ -97,13 +98,12 @@ def classify(artifact: str):
         if "/" not in m:
             canon = os.path.join(WORKTREE, "experiments", "results", m)
             if os.path.exists(canon):
-                resolved.append(canon[len(WORKTREE) + 1:])
+                resolved.append(canon[len(WORKTREE) + 1 :])
     if len(resolved) == len(candidates):
         return ("DESC_PATH_OK", resolved)
-    elif len(resolved) == 0:
+    if len(resolved) == 0:
         return ("DESC_PATH_MISSING", [])
-    else:
-        return ("DESC_PATH_PARTIAL", resolved)
+    return ("DESC_PATH_PARTIAL", resolved)
 
 
 def main():
@@ -133,22 +133,34 @@ def main():
             t, paths = classify(a)
             type_counts[t] += 1
             record_type_counts[record_type][t] += 1
-            if t == "PATH_OK": n_path_ok += 1
-            elif t == "PATH_MISSING": n_path_missing += 1
-            elif t == "WANDB": n_wandb += 1
-            elif t == "DESC": n_desc += 1
-            elif t == "DESC_PATH_OK": n_desc_path_ok += 1
-            elif t == "DESC_PATH_PARTIAL": n_desc_path_partial += 1
-            elif t == "DESC_PATH_MISSING": n_desc_path_missing += 1
-            elif t == "EMPTY": n_empty += 1
+            if t == "PATH_OK":
+                n_path_ok += 1
+            elif t == "PATH_MISSING":
+                n_path_missing += 1
+            elif t == "WANDB":
+                n_wandb += 1
+            elif t == "DESC":
+                n_desc += 1
+            elif t == "DESC_PATH_OK":
+                n_desc_path_ok += 1
+            elif t == "DESC_PATH_PARTIAL":
+                n_desc_path_partial += 1
+            elif t == "DESC_PATH_MISSING":
+                n_desc_path_missing += 1
+            elif t == "EMPTY":
+                n_empty += 1
 
-            per_artifact.append({
-                "entry_id": eid, "record_type": record_type,
-                "artifact": a, "type": t,
-                "n_paths_in_artifact": len(paths),
-                "all_paths_resolve": int(len(paths) > 0 and t.endswith("OK")),
-                "resolved_paths": "|".join(paths),
-            })
+            per_artifact.append(
+                {
+                    "entry_id": eid,
+                    "record_type": record_type,
+                    "artifact": a,
+                    "type": t,
+                    "n_paths_in_artifact": len(paths),
+                    "all_paths_resolve": int(len(paths) > 0 and t.endswith("OK")),
+                    "resolved_paths": "|".join(paths),
+                }
+            )
 
         # provenance_completeness_score: fraction of declared artifacts whose
         # type-token resolves to a real file on disk. PATH_OK and DESC_PATH_OK
@@ -156,11 +168,7 @@ def main():
         if n_arts == 0:
             score = None
         else:
-            score = (
-                n_path_ok
-                + n_desc_path_ok
-                + 0.5 * n_desc_path_partial
-            ) / n_arts
+            score = (n_path_ok + n_desc_path_ok + 0.5 * n_desc_path_partial) / n_arts
 
         # Detect citation channel (used by variant_delta entries).
         cite = ent.get("citation", {}) or {}
@@ -182,32 +190,47 @@ def main():
         else:
             combined_score = 0.7 * score + 0.3 * citation_score
 
-        per_entry.append({
-            "entry_id": eid, "record_type": record_type,
-            "n_artifacts": n_arts,
-            "n_path_ok": n_path_ok, "n_path_missing": n_path_missing,
-            "n_desc_path_ok": n_desc_path_ok,
-            "n_desc_path_partial": n_desc_path_partial,
-            "n_desc_path_missing": n_desc_path_missing,
-            "n_desc": n_desc, "n_wandb": n_wandb, "n_empty": n_empty,
-            "artifact_resolvability_score": (
-                None if score is None else round(score, 4)),
-            "citation_score": round(citation_score, 4),
-            "has_cite_bibkey": int(has_cite_bibkey),
-            "has_cite_arxiv": int(has_cite_arxiv),
-            "provenance_completeness_score": round(combined_score, 4),
-        })
+        per_entry.append(
+            {
+                "entry_id": eid,
+                "record_type": record_type,
+                "n_artifacts": n_arts,
+                "n_path_ok": n_path_ok,
+                "n_path_missing": n_path_missing,
+                "n_desc_path_ok": n_desc_path_ok,
+                "n_desc_path_partial": n_desc_path_partial,
+                "n_desc_path_missing": n_desc_path_missing,
+                "n_desc": n_desc,
+                "n_wandb": n_wandb,
+                "n_empty": n_empty,
+                "artifact_resolvability_score": (None if score is None else round(score, 4)),
+                "citation_score": round(citation_score, 4),
+                "has_cite_bibkey": int(has_cite_bibkey),
+                "has_cite_arxiv": int(has_cite_arxiv),
+                "provenance_completeness_score": round(combined_score, 4),
+            }
+        )
 
     # Write per-entry
     pe_cols = [
-        "entry_id", "record_type", "n_artifacts", "n_path_ok", "n_path_missing",
-        "n_desc_path_ok", "n_desc_path_partial", "n_desc_path_missing",
-        "n_desc", "n_wandb", "n_empty", "artifact_resolvability_score",
-        "citation_score", "has_cite_bibkey", "has_cite_arxiv",
+        "entry_id",
+        "record_type",
+        "n_artifacts",
+        "n_path_ok",
+        "n_path_missing",
+        "n_desc_path_ok",
+        "n_desc_path_partial",
+        "n_desc_path_missing",
+        "n_desc",
+        "n_wandb",
+        "n_empty",
+        "artifact_resolvability_score",
+        "citation_score",
+        "has_cite_bibkey",
+        "has_cite_arxiv",
         "provenance_completeness_score",
     ]
-    with open(os.path.join(OUT_DIR, "p6_iter166_per_entry.tsv"), "w",
-              newline="") as f:
+    with open(os.path.join(OUT_DIR, "p6_iter166_per_entry.tsv"), "w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=pe_cols, delimiter="\t")
         w.writeheader()
         for row in per_entry:
@@ -215,27 +238,30 @@ def main():
 
     # Write per-artifact
     pa_cols = [
-        "entry_id", "record_type", "artifact", "type",
-        "n_paths_in_artifact", "all_paths_resolve", "resolved_paths",
+        "entry_id",
+        "record_type",
+        "artifact",
+        "type",
+        "n_paths_in_artifact",
+        "all_paths_resolve",
+        "resolved_paths",
     ]
-    with open(os.path.join(OUT_DIR, "p6_iter166_per_artifact.tsv"), "w",
-              newline="") as f:
+    with open(os.path.join(OUT_DIR, "p6_iter166_per_artifact.tsv"), "w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=pa_cols, delimiter="\t")
         w.writeheader()
         for row in per_artifact:
             w.writerow({k: row.get(k, "") for k in pa_cols})
 
     # Type counts overall + per record_type
-    tc_rows = [{"scope": "ALL", "record_type": "*", "type": t, "n": n}
-               for t, n in sorted(type_counts.items())]
+    tc_rows = [
+        {"scope": "ALL", "record_type": "*", "type": t, "n": n}
+        for t, n in sorted(type_counts.items())
+    ]
     for rt, ctr in sorted(record_type_counts.items()):
         for t, n in sorted(ctr.items()):
-            tc_rows.append({"scope": "BY_RECORD_TYPE", "record_type": rt,
-                            "type": t, "n": n})
-    with open(os.path.join(OUT_DIR, "p6_iter166_type_counts.tsv"), "w",
-              newline="") as f:
-        w = csv.DictWriter(f, fieldnames=["scope", "record_type", "type", "n"],
-                           delimiter="\t")
+            tc_rows.append({"scope": "BY_RECORD_TYPE", "record_type": rt, "type": t, "n": n})
+    with open(os.path.join(OUT_DIR, "p6_iter166_type_counts.tsv"), "w", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=["scope", "record_type", "type", "n"], delimiter="\t")
         w.writeheader()
         w.writerows(tc_rows)
 
@@ -252,30 +278,37 @@ def main():
         "n_entries_with_zero_artifact_list": n_entries - n_entries_with_artifacts,
         "type_counts_overall": dict(type_counts),
         "n_entries_with_combined_score_1.0": sum(
-            1 for r in per_entry if r["provenance_completeness_score"] == 1.0),
+            1 for r in per_entry if r["provenance_completeness_score"] == 1.0
+        ),
         "n_entries_with_combined_score_0.0": sum(
-            1 for r in per_entry if r["provenance_completeness_score"] == 0.0),
+            1 for r in per_entry if r["provenance_completeness_score"] == 0.0
+        ),
         "mean_combined_provenance_completeness_score": round(
-            sum(r["provenance_completeness_score"] for r in per_entry)
-            / max(1, len(per_entry)), 4),
+            sum(r["provenance_completeness_score"] for r in per_entry) / max(1, len(per_entry)), 4
+        ),
         "mean_citation_score": round(
-            sum(r["citation_score"] for r in per_entry)
-            / max(1, len(per_entry)), 4),
+            sum(r["citation_score"] for r in per_entry) / max(1, len(per_entry)), 4
+        ),
         "n_wandb_handles": n_wandb,
         "n_path_missing_clean_paths": n_path_missing,
         "n_desc_path_missing_prose": n_desc_path_missing,
         "headline": {
             "H1_pct_entries_with_at_least_one_artifact": round(
-                100 * n_entries_with_artifacts / n_entries, 2),
+                100 * n_entries_with_artifacts / n_entries, 2
+            ),
             "H2_pct_entries_with_full_combined_score_1.0": round(
-                100 * sum(1 for r in per_entry
-                          if r["provenance_completeness_score"] == 1.0)
-                / n_entries, 2),
+                100
+                * sum(1 for r in per_entry if r["provenance_completeness_score"] == 1.0)
+                / n_entries,
+                2,
+            ),
             "H3_pct_wandb_handles_among_declared": round(
-                100 * n_wandb / max(1, sum(type_counts.values())), 2),
+                100 * n_wandb / max(1, sum(type_counts.values())), 2
+            ),
             "H4_mean_combined_score_all_entries": round(
-                sum(r["provenance_completeness_score"] for r in per_entry)
-                / max(1, len(per_entry)), 4),
+                sum(r["provenance_completeness_score"] for r in per_entry) / max(1, len(per_entry)),
+                4,
+            ),
         },
     }
     with open(os.path.join(OUT_DIR, "p6_iter166_summary.json"), "w") as f:
@@ -285,8 +318,7 @@ def main():
     print(f"  entries: {n_entries}")
     print(f"  entries with ≥1 source_artifacts: {n_entries_with_artifacts}")
     print(f"  type counts: {dict(type_counts)}")
-    mean_score = (sum(r["provenance_completeness_score"] for r in per_entry)
-                  / n_entries)
+    mean_score = sum(r["provenance_completeness_score"] for r in per_entry) / n_entries
     print(f"  mean combined provenance_completeness_score: {mean_score:.4f}")
 
 

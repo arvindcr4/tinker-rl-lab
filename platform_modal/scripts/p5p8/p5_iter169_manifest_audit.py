@@ -22,6 +22,7 @@ Outputs (in ``platform_hybrid/experiments/results/p5p8/``):
 * ``p5_iter169_manifest_audit_cells_join.tsv`` (98 rows)
 * ``p5_iter169_summary.json`` (H1-H5 verdicts + per-key entropy + v2 expansion)
 """
+
 from __future__ import annotations
 
 import csv
@@ -35,8 +36,10 @@ from collections import Counter, defaultdict
 from typing import Any, Dict, List, Tuple
 
 from pathlib import Path
+
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
+from _paths import REPO_ROOT
+
 WORKTREE = str(REPO_ROOT)
 MANIFESTS_DIR = f"{WORKTREE}/platform_hybrid/experiments/results/mega_20260704/manifests"
 CELLS_TSV = f"{WORKTREE}/platform_hybrid/experiments/results/mega_20260704/cells.tsv"
@@ -90,7 +93,13 @@ def parse_cell_id(cid: str) -> Dict[str, str]:
         prefix = prefix[: prefix.rfind("_")]
     for task in KNOWN_TASKS:
         if prefix.endswith("_" + task):
-            return {"model": prefix[: -len(task) - 1], "task": task, "G": g, "temp": temp, "seed": seed}
+            return {
+                "model": prefix[: -len(task) - 1],
+                "task": task,
+                "G": g,
+                "temp": temp,
+                "seed": seed,
+            }
     return {"model": prefix, "task": "", "G": g, "temp": temp, "seed": seed}
 
 
@@ -102,7 +111,9 @@ def _vendor(model_str: str) -> str:
     return m.group("v") if m else model_str.split("-")[0]
 
 
-def audit_v1_keys(files: List[str]) -> Tuple[List[Dict[str, Any]], Dict[str, Dict[str, Any]], List[Dict[str, str]]]:
+def audit_v1_keys(
+    files: List[str],
+) -> Tuple[List[Dict[str, Any]], Dict[str, Dict[str, Any]], List[Dict[str, str]]]:
     """Per-cell and per-key v1 audit. Returns (per_cell, per_key_summary, parsed_axes)."""
     per_cell: List[Dict[str, Any]] = []
     per_key_values: Dict[str, List[str]] = defaultdict(list)
@@ -110,11 +121,18 @@ def audit_v1_keys(files: List[str]) -> Tuple[List[Dict[str, Any]], Dict[str, Dic
     for fp in files:
         try:
             obj = json.load(open(fp, "r", encoding="utf-8"))
-        except Exception as exc:  # noqa: BLE001
-            per_cell.append({"file": os.path.basename(fp), "cell_id": "", "json_ok": "0", "parse_err": str(exc)})
+        except Exception as exc:
+            per_cell.append(
+                {"file": os.path.basename(fp), "cell_id": "", "json_ok": "0", "parse_err": str(exc)}
+            )
             continue
         cid = obj.get("cell_id", "")
-        row: Dict[str, Any] = {"file": os.path.basename(fp), "cell_id": cid, "json_ok": "1", "parse_err": ""}
+        row: Dict[str, Any] = {
+            "file": os.path.basename(fp),
+            "cell_id": cid,
+            "json_ok": "1",
+            "parse_err": "",
+        }
         n_present = 0
         for k in V1_KEYS:
             present = k in obj
@@ -132,7 +150,9 @@ def audit_v1_keys(files: List[str]) -> Tuple[List[Dict[str, Any]], Dict[str, Dic
         row["n_v1_present"] = n_present
         p = obj.get("per_step_zvf_path", "")
         row["path_exists"] = "1" if (p and os.path.exists(p)) else "0"
-        row["path_basename_matches_cell_id"] = "1" if (os.path.basename(p).replace(".json", "") == cid) else "0"
+        row["path_basename_matches_cell_id"] = (
+            "1" if (os.path.basename(p).replace(".json", "") == cid) else "0"
+        )
         m = re.search(r"_G(\d+)_", cid)
         g_from_cid = m.group(1) if m else ""
         gs = obj.get("group_size_schedule", "")
@@ -143,7 +163,9 @@ def audit_v1_keys(files: List[str]) -> Tuple[List[Dict[str, Any]], Dict[str, Dic
         axes["cell_id"] = cid  # type: ignore[assignment]
         row["task_from_cid"] = axes.get("task", "")
         row["heldout_decl"] = obj.get("heldout_split", "")
-        row["heldout_matches_task"] = "1" if (axes.get("task", "") == obj.get("heldout_split", "")) else "0"
+        row["heldout_matches_task"] = (
+            "1" if (axes.get("task", "") == obj.get("heldout_split", "")) else "0"
+        )
         parsed_axes.append(axes)
         per_cell.append(row)
 
@@ -154,7 +176,7 @@ def audit_v1_keys(files: List[str]) -> Tuple[List[Dict[str, Any]], Dict[str, Dic
         per_key_summary[k] = {
             "n_populated": len(vals),
             "n_unique": len(unique_vals),
-"h_bits": _shannon_h_bits(vals),
+            "h_bits": _shannon_h_bits(vals),
             "is_placebo": len(unique_vals) <= 1,
             "top_value": (Counter(vals).most_common(1)[0][0] if vals else ""),
             "top_value_freq": (Counter(vals).most_common(1)[0][1] / max(1, len(vals))),
@@ -185,12 +207,19 @@ def join_to_cells(
         manifest_model = axes.get("model", "")
         cells_model = cells_row.get("model_family", "")
         manifest_vendor = _vendor(manifest_model)
-        cells_vendor = cells_model.split("/")[0] if "/" in cells_model else cells_model.split("-")[0]
+        cells_vendor = (
+            cells_model.split("/")[0] if "/" in cells_model else cells_model.split("-")[0]
+        )
         match_model = "1" if (manifest_vendor and manifest_vendor == cells_vendor) else "0"
         match_task = "1" if cells_row.get("task_slice", "") == axes.get("task", "") else "0"
         match_G = "1" if cells_row.get("G", "") == axes.get("G", "") else "0"
         try:
-            match_temp = "1" if abs(float(cells_row.get("temperature", "0")) - float(axes.get("temp", "0"))) < 1e-9 else "0"
+            match_temp = (
+                "1"
+                if abs(float(cells_row.get("temperature", "0")) - float(axes.get("temp", "0")))
+                < 1e-9
+                else "0"
+            )
         except (TypeError, ValueError):
             match_temp = "1" if cells_row.get("temperature", "") == axes.get("temp", "") else "0"
         match_seed = "1" if cells_row.get("seed", "") == axes.get("seed", "") else "0"
@@ -198,38 +227,52 @@ def join_to_cells(
         f = per_cell_lookup.get(cid, {}).get("file")
         if f:
             try:
-                manifest_path = json.loads(open(f"{MANIFESTS_DIR}/{f}", "r", encoding="utf-8").read()).get("per_step_zvf_path", "")
-            except Exception:  # noqa: BLE001
+                manifest_path = json.loads(
+                    open(f"{MANIFESTS_DIR}/{f}", "r", encoding="utf-8").read()
+                ).get("per_step_zvf_path", "")
+            except Exception:
                 pass
         cells_basename = os.path.basename(cells_row.get("tensor_path", ""))
         manifest_basename = os.path.basename(manifest_path)
-        match_zvf_path = "1" if (cells_basename and manifest_basename and cells_basename == manifest_basename) else "0"
-        out.append({
-            "cell_id": cid,
-            "match_model_vendor": match_model,
-            "match_task": match_task,
-            "match_G": match_G,
-            "match_temp": match_temp,
-            "match_seed": match_seed,
-            "match_zvf_path_basename": match_zvf_path,
-            "cells_model_family": cells_model,
-            "cells_task_slice": cells_row.get("task_slice", ""),
-            "cells_G": cells_row.get("G", ""),
-            "cells_temperature": cells_row.get("temperature", ""),
-            "cells_seed": cells_row.get("seed", ""),
-            "manifest_model": manifest_model,
-            "manifest_task": axes.get("task", ""),
-            "manifest_G": axes.get("G", ""),
-            "manifest_temp": axes.get("temp", ""),
-            "manifest_seed": axes.get("seed", ""),
-        })
+        match_zvf_path = (
+            "1"
+            if (cells_basename and manifest_basename and cells_basename == manifest_basename)
+            else "0"
+        )
+        out.append(
+            {
+                "cell_id": cid,
+                "match_model_vendor": match_model,
+                "match_task": match_task,
+                "match_G": match_G,
+                "match_temp": match_temp,
+                "match_seed": match_seed,
+                "match_zvf_path_basename": match_zvf_path,
+                "cells_model_family": cells_model,
+                "cells_task_slice": cells_row.get("task_slice", ""),
+                "cells_G": cells_row.get("G", ""),
+                "cells_temperature": cells_row.get("temperature", ""),
+                "cells_seed": cells_row.get("seed", ""),
+                "manifest_model": manifest_model,
+                "manifest_task": axes.get("task", ""),
+                "manifest_G": axes.get("G", ""),
+                "manifest_temp": axes.get("temp", ""),
+                "manifest_seed": axes.get("seed", ""),
+            }
+        )
     return out
 
 
 def v2_axis_values(parsed_axes: List[Dict[str, str]]) -> Dict[str, Dict[str, Any]]:
     summary: Dict[str, Dict[str, Any]] = {}
     for axis in V2_AXIS_KEYS:
-        keymap = {"model_family": "model", "task_slice": "task", "G": "G", "temperature": "temp", "seed": "seed"}
+        keymap = {
+            "model_family": "model",
+            "task_slice": "task",
+            "G": "G",
+            "temperature": "temp",
+            "seed": "seed",
+        }
         vals = [a.get(keymap[axis], "") for a in parsed_axes]
         summary[axis] = {
             "n_populated": len(vals),
@@ -271,12 +314,22 @@ def main() -> int:
     out_pk = f"{OUT_DIR}/p5_iter169_manifest_audit_per_key.tsv"
     out_join = f"{OUT_DIR}/p5_iter169_manifest_audit_cells_join.tsv"
     _write_dictrows(out_pc, per_cell)
-    _write_tsv(out_pk, ["key", "n_populated", "n_unique", "h_bits", "is_placebo", "top_value", "top_value_freq"], [
-        [k, per_key_summary[k]["n_populated"], per_key_summary[k]["n_unique"],
-         f"{per_key_summary[k]['h_bits']:.6f}", "1" if per_key_summary[k]["is_placebo"] else "0",
-         per_key_summary[k]["top_value"], f"{per_key_summary[k]['top_value_freq']:.6f}"]
-        for k in V1_KEYS
-    ])
+    _write_tsv(
+        out_pk,
+        ["key", "n_populated", "n_unique", "h_bits", "is_placebo", "top_value", "top_value_freq"],
+        [
+            [
+                k,
+                per_key_summary[k]["n_populated"],
+                per_key_summary[k]["n_unique"],
+                f"{per_key_summary[k]['h_bits']:.6f}",
+                "1" if per_key_summary[k]["is_placebo"] else "0",
+                per_key_summary[k]["top_value"],
+                f"{per_key_summary[k]['top_value_freq']:.6f}",
+            ]
+            for k in V1_KEYS
+        ],
+    )
     print(f"# wrote {out_pk}", file=sys.stderr)
     join_rows = join_to_cells(parsed_axes, cells, per_cell)
     _write_dictrows(out_join, join_rows)
@@ -289,7 +342,9 @@ def main() -> int:
     h2_placebo_keys = [k for k, r in per_key_summary.items() if r["is_placebo"]]
     h2_pass = len(h2_placebo_keys) >= 3
     n_path_exists = sum(1 for r in per_cell if r.get("path_exists", "0") == "1")
-    n_basename_match = sum(1 for r in per_cell if r.get("path_basename_matches_cell_id", "0") == "1")
+    n_basename_match = sum(
+        1 for r in per_cell if r.get("path_basename_matches_cell_id", "0") == "1"
+    )
     h3_pass = n_path_exists >= bar
     n_gs_match = sum(1 for r in per_cell if r.get("gs_matches_g", "0") == "1")
     n_heldout_match = sum(1 for r in per_cell if r.get("heldout_matches_task", "0") == "1")
@@ -304,11 +359,14 @@ def main() -> int:
 
     v1_total_h = sum(per_key_summary[k]["h_bits"] for k in V1_KEYS)
     v1_discriminative_h = sum(
-        per_key_summary[k]["h_bits"] for k in V1_KEYS
+        per_key_summary[k]["h_bits"]
+        for k in V1_KEYS
         if (not per_key_summary[k]["is_placebo"]) and (k != "per_step_zvf_path")
     )
     v2_total_h = sum(v["h_bits"] for v in v2_summary.values())
-    v2_truly_fresh = {a: v2_summary[a]["h_bits"] for a in v2_summary if a not in {"task_slice", "G"}}
+    v2_truly_fresh = {
+        a: v2_summary[a]["h_bits"] for a in v2_summary if a not in {"task_slice", "G"}
+    }
     v2_truly_fresh_total_h = sum(v2_truly_fresh.values())
 
     summary = {
@@ -354,7 +412,9 @@ def main() -> int:
     print(f"H3 path_exists >=98%: {'PASS' if h3_pass else 'FAIL'} ({n_path_exists}/{n_files})")
     print(f"H4 gs_matches_g heldout_matches_task: {'PASS' if h4_pass else 'FAIL'}")
     print(f"H5 cells.tsv axis match (5 axes): {'PASS' if h5_pass else 'FAIL'} {cells_match_counts}")
-    print(f"v1 total_h={v1_total_h:.3f} bits / v1_discriminative_h={v1_discriminative_h:.3f} bits / v2_total_h={v2_total_h:.3f} bits / v2_truly_fresh_h={v2_truly_fresh_total_h:.3f} bits")
+    print(
+        f"v1 total_h={v1_total_h:.3f} bits / v1_discriminative_h={v1_discriminative_h:.3f} bits / v2_total_h={v2_total_h:.3f} bits / v2_truly_fresh_h={v2_truly_fresh_total_h:.3f} bits"
+    )
     return 0
 
 

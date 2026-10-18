@@ -4,11 +4,13 @@ Canonicalization is Python-json-sortkeys-ascii/1.0, not RFC 8785/JCS. Inputs
 must use unique property names, string object keys, finite JSON numbers, and
 Unicode scalar strings. No consumer may parse permissively before verification.
 """
+
 from __future__ import annotations
 
 import json
 import math
 from pathlib import Path
+
 
 def _validate_json(value):
     if value is None or type(value) in (bool, int):
@@ -32,6 +34,7 @@ def _validate_json(value):
 
 def strict_json_loads(text):
     """Reject duplicate names, NaN/Infinity, overflow to infinity and surrogates."""
+
     def pairs(items):
         result = {}
         for key, value in items:
@@ -55,5 +58,6 @@ def load_json(path):
 def canonical_bytes(record):
     """Python JSON v1, deliberately not advertised as RFC 8785/JCS."""
     _validate_json(record)
-    return json.dumps(record, sort_keys=True, separators=(",", ":"),
-                      ensure_ascii=True, allow_nan=False).encode("ascii")
+    return json.dumps(
+        record, sort_keys=True, separators=(",", ":"), ensure_ascii=True, allow_nan=False
+    ).encode("ascii")

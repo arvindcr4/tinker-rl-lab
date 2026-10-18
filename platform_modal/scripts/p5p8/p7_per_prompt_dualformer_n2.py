@@ -26,18 +26,21 @@ Outputs:
 
 Stdlib only.
 """
+
 from __future__ import annotations
 
 import csv
 import json
-import math
 import pathlib
 import random
-import statistics
 
 import sys
-sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
+
+sys.path.append(
+    str(pathlib.Path(__file__).resolve().parents[1])
+)  # platform_modal/scripts, for _paths
+from _paths import REPO_ROOT
+
 WORK = REPO_ROOT
 N2_DIR = WORK / "platform_hybrid/experiments/results/n2_reward_tensor_resume"
 OUT_DIR = WORK / "platform_hybrid/experiments/results/p5p8/corrected-review20-v2"
@@ -61,7 +64,7 @@ def iid_zvf(p_hat: float, G: int) -> float:
     """
     if p_hat <= 0.0 or p_hat >= 1.0:
         return 1.0
-    return p_hat ** G + (1.0 - p_hat) ** G
+    return p_hat**G + (1.0 - p_hat) ** G
 
 
 def load_n2() -> dict[str, list[dict]]:
@@ -160,9 +163,7 @@ def ddiv_per_prompt(records: list[dict], tau: float) -> dict:
                 n_recovered_g16 += 1
             else:
                 n_wasted_g16 += 1
-    cost_ratio = (n_fires * G_ESC + (len(records) - n_fires) * G_BASE) / (
-        len(records) * G_BASE
-    )
+    cost_ratio = (n_fires * G_ESC + (len(records) - n_fires) * G_BASE) / (len(records) * G_BASE)
     saved_per_fire = n_saves / n_fires if n_fires > 0 else 0.0
     return {
         "tau": tau,
@@ -179,8 +180,9 @@ def ddiv_per_prompt(records: list[dict], tau: float) -> dict:
 # --- Bootstrap CIs ---
 
 
-def bootstrap_ci(values: list[float], B: int, seed: int,
-                 alpha: float = 0.05) -> tuple[float, float, float]:
+def bootstrap_ci(
+    values: list[float], B: int, seed: int, alpha: float = 0.05
+) -> tuple[float, float, float]:
     """Percentile bootstrap CI on the mean of values."""
     rng = random.Random(seed)
     n = len(values)
@@ -197,8 +199,9 @@ def bootstrap_ci(values: list[float], B: int, seed: int,
     return pt, lo, hi
 
 
-def paired_bootstrap_diff_ci(a: list[float], b: list[float], B: int,
-                             seed: int, alpha: float = 0.05) -> tuple[float, float, float, float]:
+def paired_bootstrap_diff_ci(
+    a: list[float], b: list[float], B: int, seed: int, alpha: float = 0.05
+) -> tuple[float, float, float, float]:
     """Paired bootstrap CI on (mean(a) - mean(b)).
 
     Resamples indices jointly so the diff distribution reflects the
@@ -323,7 +326,7 @@ def main() -> None:
             # Per-prompt "saved" outcome: fire AND recovered (zvf_iid_g16 < 0.10)
             fires_arr = [1 if h else 0 for h in headroom_ok]
             saves_arr = [
-                1 if (h and z < 0.10) else 0 for h, z in zip(headroom_ok, zvf_g16)
+                1 if (h and z < 0.10) else 0 for h, z in zip(headroom_ok, zvf_g16, strict=False)
             ]
             spf_samples = []
             for _ in range(N_BOOT):
@@ -419,7 +422,7 @@ def main() -> None:
             headroom_ok = [r["headroom_g8_to_g16"] >= tau for r in records]
             zvf_g16 = [r["zvf_iid_g16"] for r in records]
             saves_arr = [
-                1 if (h and z < 0.10) else 0 for h, z in zip(headroom_ok, zvf_g16)
+                1 if (h and z < 0.10) else 0 for h, z in zip(headroom_ok, zvf_g16, strict=False)
             ]
             rates = []
             for _ in range(N_BOOT):
@@ -479,17 +482,13 @@ def main() -> None:
         "n_methods": 4,
         "n_obs_per_method": 16 * 40,
         "n_boot": N_BOOT,
-        "dualformer_per_method_saving_pt": {
-            m: dualformer_by_method[m]["saving"] for m in METHODS
-        },
+        "dualformer_per_method_saving_pt": {m: dualformer_by_method[m]["saving"] for m in METHODS},
         "dualformer_per_method_saving_ci": {
             m: bootstrap_ci(per_step_savings[m], N_BOOT, SEED) for m in METHODS
         },
         "berkeley_row01_claim": 0.562,
         "ddiv_tau_grid": list(DDIV_TAU_GRID),
-        "ddiv_at_tau_0.05_by_method": {
-            m: ddiv_by_method_tau[(m, 0.05)] for m in METHODS
-        },
+        "ddiv_at_tau_0.05_by_method": {m: ddiv_by_method_tau[(m, 0.05)] for m in METHODS},
     }
     with (OUT_DIR / "p7_per_prompt_dualformer_summary.json").open("w") as f:
         json.dump(out_json, f, indent=2, default=str)

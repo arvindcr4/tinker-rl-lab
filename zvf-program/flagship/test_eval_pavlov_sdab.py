@@ -9,6 +9,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from flagship import eval_pavlov_sdab as harness
+import pytest
 
 
 class _FakeRuntime:
@@ -116,7 +117,11 @@ class PavlovSDABServiceLifetimeTests(unittest.TestCase):
                 patch.object(harness, "load_native_runtime", return_value=bundle),
                 patch.object(harness, "_start_wandb", return_value=_FakeRun()),
                 patch.object(harness, "_finish_wandb"),
-                patch.object(harness, "_create_tinker_sampler", return_value=(service, sampler if sampler is not None else object())),
+                patch.object(
+                    harness,
+                    "_create_tinker_sampler",
+                    return_value=(service, sampler if sampler is not None else object()),
+                ),
             ):
                 receipt = harness.run_evaluation(report=report, args=args, out=out)
 
@@ -124,26 +129,34 @@ class PavlovSDABServiceLifetimeTests(unittest.TestCase):
 
     def test_completed_receipt_retains_tinker_service_run_id(self) -> None:
         receipt = self._run_fixture()
-        self.assertEqual(receipt["status"], "COMPLETED")
-        self.assertEqual(receipt["tinker"], {"calls": 1, "run_id": "tinker-run-1"})
+        assert receipt["status"] == "COMPLETED"
+        assert receipt["tinker"] == {"calls": 1, "run_id": "tinker-run-1"}
 
     def test_sampled_output_controls_score_and_native_rejection_blocks_acceptance(self):
         class CounterexampleRuntime(_FakeRuntime):
             accepted = True
+
             def evaluate_task(self, task, sampler, *, max_actions, seed):
                 output = sampler()
-                return {"task_id": task["task_id"], "score": float(output == "correct"),
-                        "prompt_tokens": 1, "sample_tokens": 1, "tool_calls": 1,
-                        "candidate": output}
+                return {
+                    "task_id": task["task_id"],
+                    "score": float(output == "correct"),
+                    "prompt_tokens": 1,
+                    "sample_tokens": 1,
+                    "tool_calls": 1,
+                    "candidate": output,
+                }
+
             def verify_result(self, result):
                 return {"verified": self.accepted, "verifier": "synthetic-native-fixture"}
+
         runtime = CounterexampleRuntime()
         correct = self._run_fixture(runtime, lambda: "correct")
         incorrect = self._run_fixture(runtime, lambda: "wrong")
-        self.assertEqual(correct["result"], {"task_count": 1, "mean_composite_score": 1.0})
-        self.assertEqual(incorrect["result"], {"task_count": 1, "mean_composite_score": 0.0})
+        assert correct["result"] == {"task_count": 1, "mean_composite_score": 1.0}
+        assert incorrect["result"] == {"task_count": 1, "mean_composite_score": 0.0}
         runtime.accepted = False
-        with self.assertRaisesRegex(RuntimeError, "verifier did not acknowledge"):
+        with pytest.raises(RuntimeError, match="verifier did not acknowledge"):
             self._run_fixture(runtime, lambda: "correct")
 
 

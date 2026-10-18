@@ -42,6 +42,7 @@ Outputs:
     platform_hybrid/experiments/results/zvf_summary.tsv                 (RE-EMIT, 9 rows)
     figures/zvf_vs_failure.pdf                          (RE-EMIT, 5-panel)
 """
+
 from __future__ import annotations
 
 import json
@@ -50,7 +51,11 @@ import pathlib
 import sys
 
 import numpy as np
-from _analysis_common import auc_rank as _auc_rank, bootstrap_ci_xy as _bootstrap_ci, write_hash_commented_tsv as _write_tsv
+from _analysis_common import (
+    auc_rank as _auc_rank,
+    bootstrap_ci_xy as _bootstrap_ci,
+    write_hash_commented_tsv as _write_tsv,
+)
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 RES = ROOT / "experiments" / "results"
@@ -78,7 +83,7 @@ def _spearman(x: np.ndarray, y: np.ndarray) -> float:
     ry = np.argsort(np.argsort(y)).astype(float)
     rx -= rx.mean()
     ry -= ry.mean()
-    denom = math.sqrt(float((rx ** 2).sum() * (ry ** 2).sum()))
+    denom = math.sqrt(float((rx**2).sum() * (ry**2).sum()))
     if denom < EPS:
         return float("nan")
     return float((rx * ry).sum() / denom)
@@ -94,22 +99,33 @@ def load_sweep_perstep():
         zvf = np.array([s["zvf"] for s in sl], dtype=float)
         rew = np.array([s["mean_reward"] for s in sl], dtype=float)
         G = int(r["group_size"])
-        zvf_iid = rew ** G + (1.0 - rew) ** G
+        zvf_iid = rew**G + (1.0 - rew) ** G
         rho = np.where(zvf_iid > EPS, zvf / np.maximum(zvf_iid, EPS), np.nan)
         log_rho = np.log(np.clip(rho, EPS, None))
-        out.append(dict(
-            model=r["model"], group_size=G, seed=r["seed"],
-            n_steps=r["n_steps"], last10=r["last10_avg"],
-            heldout_acc=r["heldout_acc"], mean_zvf=r["mean_zvf"],
-            rho_mean=float(np.nanmean(rho)),
-            rho_std=float(np.nanstd(rho)),
-            rho_lag1=float(np.corrcoef(rho[:-1], rho[1:])[0, 1]) if len(rho) > 2 else float("nan"),
-            frac_above_1=float(np.nanmean(rho > 1.0)),
-            frac_below_1=float(np.nanmean(rho < 1.0)),
-            auc_rho_gt_1=float(np.nanmean(np.maximum(rho - 1.0, 0.0))),
-            log_rho_mean=float(np.nanmean(log_rho)),
-            rho=rho, log_rho=log_rho, rew=rew, zvf_iid=zvf_iid,
-        ))
+        out.append(
+            dict(
+                model=r["model"],
+                group_size=G,
+                seed=r["seed"],
+                n_steps=r["n_steps"],
+                last10=r["last10_avg"],
+                heldout_acc=r["heldout_acc"],
+                mean_zvf=r["mean_zvf"],
+                rho_mean=float(np.nanmean(rho)),
+                rho_std=float(np.nanstd(rho)),
+                rho_lag1=float(np.corrcoef(rho[:-1], rho[1:])[0, 1])
+                if len(rho) > 2
+                else float("nan"),
+                frac_above_1=float(np.nanmean(rho > 1.0)),
+                frac_below_1=float(np.nanmean(rho < 1.0)),
+                auc_rho_gt_1=float(np.nanmean(np.maximum(rho - 1.0, 0.0))),
+                log_rho_mean=float(np.nanmean(log_rho)),
+                rho=rho,
+                log_rho=log_rho,
+                rew=rew,
+                zvf_iid=zvf_iid,
+            )
+        )
     return out
 
 
@@ -119,7 +135,7 @@ def load_nemotron():
         header = f.readline().split()
         for line in f:
             fields = line.rstrip("\n").split("\t")
-            rows.append(dict(zip(header, fields)))
+            rows.append(dict(zip(header, fields, strict=False)))
     return rows
 
 
@@ -129,26 +145,30 @@ def load_tool_use():
         header = f.readline().split()
         for line in f:
             fields = line.rstrip("\n").split("\t")
-            rows.append(dict(zip(header, fields)))
+            rows.append(dict(zip(header, fields, strict=False)))
     return rows
 
 
 def rho_perstep_table(perstep):
     out = []
     for r in perstep:
-        out.append(dict(
-            model=r["model"], G=r["group_size"], seed=r["seed"],
-            last10_acc=round(r["last10"], 4),
-            heldout_acc=round(r["heldout_acc"], 4),
-            mean_zvf=round(r["mean_zvf"], 4),
-            rho_mean=round(r["rho_mean"], 4),
-            rho_std=round(r["rho_std"], 4),
-            rho_lag1=round(r["rho_lag1"], 4),
-            frac_above_1=round(r["frac_above_1"], 4),
-            frac_below_1=round(r["frac_below_1"], 4),
-            auc_rho_gt_1=round(r["auc_rho_gt_1"], 4),
-            log_rho_mean=round(r["log_rho_mean"], 4),
-        ))
+        out.append(
+            dict(
+                model=r["model"],
+                G=r["group_size"],
+                seed=r["seed"],
+                last10_acc=round(r["last10"], 4),
+                heldout_acc=round(r["heldout_acc"], 4),
+                mean_zvf=round(r["mean_zvf"], 4),
+                rho_mean=round(r["rho_mean"], 4),
+                rho_std=round(r["rho_std"], 4),
+                rho_lag1=round(r["rho_lag1"], 4),
+                frac_above_1=round(r["frac_above_1"], 4),
+                frac_below_1=round(r["frac_below_1"], 4),
+                auc_rho_gt_1=round(r["auc_rho_gt_1"], 4),
+                log_rho_mean=round(r["log_rho_mean"], 4),
+            )
+        )
     return out
 
 
@@ -159,27 +179,33 @@ def nemotron_proxy_table(nemotron_rows):
             first5 = float(r["first5_avg"])
             last10 = float(r["last10_avg"])
         except (KeyError, ValueError):
-            first5 = float("nan"); last10 = float("nan")
+            first5 = float("nan")
+            last10 = float("nan")
         phase = r.get("phase_label", "unknown")
         p_proxy = (first5 + last10) / 2.0
         G = NEMOTRON_G_DEFAULT
-        zvf_iid = p_proxy ** G + (1.0 - p_proxy) ** G
+        zvf_iid = p_proxy**G + (1.0 - p_proxy) ** G
         obs_zvf = PHASE_PRIOR_ZVF.get(phase, 0.7)
         rho_proxy = _safe_div(obs_zvf, max(zvf_iid, EPS))
         try:
             collapse_delta = float(r["collapse_delta"])
         except (KeyError, ValueError):
             collapse_delta = float("nan")
-        out.append(dict(
-            model=r["model"], model_short=r["model_short"],
-            params_B=r["params_B"], phase=phase,
-            first5_avg=first5, last10_avg=last10,
-            collapse_delta=collapse_delta,
-            p_proxy=round(p_proxy, 4),
-            zvf_iid_assumed_G8=round(zvf_iid, 6),
-            observed_zvf_prior=obs_zvf,
-            rho_proxy=round(rho_proxy, 4),
-        ))
+        out.append(
+            dict(
+                model=r["model"],
+                model_short=r["model_short"],
+                params_B=r["params_B"],
+                phase=phase,
+                first5_avg=first5,
+                last10_avg=last10,
+                collapse_delta=collapse_delta,
+                p_proxy=round(p_proxy, 4),
+                zvf_iid_assumed_G8=round(zvf_iid, 6),
+                observed_zvf_prior=obs_zvf,
+                rho_proxy=round(rho_proxy, 4),
+            )
+        )
     return out
 
 
@@ -196,22 +222,28 @@ def tool_use_table(tool_rows):
         except (KeyError, ValueError):
             continue
         G = n_total  # bfclv4 uses G=n_total=8
-        zvf_iid_sparse = p_sparse ** G + (1.0 - p_sparse) ** G
-        zvf_iid_dense = p_dense ** G + (1.0 - p_dense) ** G
+        zvf_iid_sparse = p_sparse**G + (1.0 - p_sparse) ** G
+        zvf_iid_dense = p_dense**G + (1.0 - p_dense) ** G
         rho_sparse = _safe_div(zvf_sparse, max(zvf_iid_sparse, EPS))
         rho_dense = _safe_div(zvf_dense, max(zvf_iid_dense, EPS))
         success_rate = n_correct / max(n_total, 1)
-        out.append(dict(
-            seed=int(r["seed"]), step=int(r["step"]),
-            n_correct=n_correct, n_total=n_total,
-            success_rate=round(success_rate, 4),
-            p_sparse=round(p_sparse, 4), p_dense=round(p_dense, 4),
-            zvf_sparse=round(zvf_sparse, 4), zvf_dense=round(zvf_dense, 4),
-            zvf_iid_sparse=round(zvf_iid_sparse, 6),
-            zvf_iid_dense=round(zvf_iid_dense, 6),
-            rho_sparse=round(rho_sparse, 4),
-            rho_dense=round(rho_dense, 4),
-        ))
+        out.append(
+            dict(
+                seed=int(r["seed"]),
+                step=int(r["step"]),
+                n_correct=n_correct,
+                n_total=n_total,
+                success_rate=round(success_rate, 4),
+                p_sparse=round(p_sparse, 4),
+                p_dense=round(p_dense, 4),
+                zvf_sparse=round(zvf_sparse, 4),
+                zvf_dense=round(zvf_dense, 4),
+                zvf_iid_sparse=round(zvf_iid_sparse, 6),
+                zvf_iid_dense=round(zvf_iid_dense, 6),
+                rho_sparse=round(rho_sparse, 4),
+                rho_dense=round(rho_dense, 4),
+            )
+        )
     return out
 
 
@@ -233,43 +265,54 @@ def auc_sweep(nemotron_rows):
     y = np.array(ys)
     r = np.array(rs)
     out = []
-    out.append(dict(
-        threshold_kind="rho_proxy", threshold_value=1.0,
-        auc=round(_auc_rank(y, r), 4),
-        n=int(len(y)),
-        n_pos=int(y.sum()),
-    ))
-    for t in [0.5, 1.0, 1.5, 2.0, 3.0, 5.0]:
-        out.append(dict(
-            threshold_kind="rho_proxy>=",
-            threshold_value=t,
-            auc=round(_auc_rank(y, r >= t), 4),
+    out.append(
+        dict(
+            threshold_kind="rho_proxy",
+            threshold_value=1.0,
+            auc=round(_auc_rank(y, r), 4),
             n=int(len(y)),
             n_pos=int(y.sum()),
-        ))
+        )
+    )
+    for t in [0.5, 1.0, 1.5, 2.0, 3.0, 5.0]:
+        out.append(
+            dict(
+                threshold_kind="rho_proxy>=",
+                threshold_value=t,
+                auc=round(_auc_rank(y, r >= t), 4),
+                n=int(len(y)),
+                n_pos=int(y.sum()),
+            )
+        )
     rho_spearman = _spearman(r, x)
     lo, med, hi = _bootstrap_ci(r, x, _spearman, B=2000, seed=0)
-    out.append(dict(
-        threshold_kind="spearman_rho_vs_collapse_delta",
-        threshold_value="",
-        auc=round(rho_spearman, 4),
-        n=int(len(y)),
-        n_pos=int(y.sum()),
-    ))
-    out.append(dict(
-        threshold_kind="spearman_ci_lo",
-        threshold_value="",
-        auc=round(lo, 4),
-        n=int(len(y)),
-        n_pos=int(y.sum()),
-    ))
-    out.append(dict(
-        threshold_kind="spearman_ci_hi",
-        threshold_value="",
-        auc=round(hi, 4),
-        n=int(len(y)),
-        n_pos=int(y.sum()),
-    ))
+    out.append(
+        dict(
+            threshold_kind="spearman_rho_vs_collapse_delta",
+            threshold_value="",
+            auc=round(rho_spearman, 4),
+            n=int(len(y)),
+            n_pos=int(y.sum()),
+        )
+    )
+    out.append(
+        dict(
+            threshold_kind="spearman_ci_lo",
+            threshold_value="",
+            auc=round(lo, 4),
+            n=int(len(y)),
+            n_pos=int(y.sum()),
+        )
+    )
+    out.append(
+        dict(
+            threshold_kind="spearman_ci_hi",
+            threshold_value="",
+            auc=round(hi, 4),
+            n=int(len(y)),
+            n_pos=int(y.sum()),
+        )
+    )
     return out
 
 
@@ -281,7 +324,7 @@ def load_iter94_summary():
     header = lines[0].rstrip("\n").split("\t")
     for line in lines[1:]:
         fields = line.rstrip("\n").split("\t")
-        rows.append(dict(zip(header, fields)))
+        rows.append(dict(zip(header, fields, strict=False)))
     return rows
 
 
@@ -323,6 +366,7 @@ def reemit_summary(perstep_summary, nemotron_proxy, auc_rows, iter94_rows):
 
 def make_figure(perstep, nemotron_rows, tool_rows, auc_rows, out_pdf, out_png):
     import matplotlib
+
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
 
@@ -358,8 +402,7 @@ def make_figure(perstep, nemotron_rows, tool_rows, auc_rows, out_pdf, out_png):
     rhos = [r["rho_proxy"] for r in rs]
     deltas = [r["collapse_delta"] for r in rs]
     short = [r["model_short"] for r in rs]
-    color_map = {"collapse": "red", "drift": "orange",
-                 "saturation": "gold", "plateau": "green"}
+    color_map = {"collapse": "red", "drift": "orange", "saturation": "gold", "plateau": "green"}
     colors = [color_map.get(p, "gray") for p in phases]
     ax.bar(range(len(rs)), rhos, color=colors)
     ax.axhline(1.0, color="k", ls="--", lw=1)
@@ -367,10 +410,10 @@ def make_figure(perstep, nemotron_rows, tool_rows, auc_rows, out_pdf, out_png):
     ax.set_xticklabels(short, rotation=60, ha="right", fontsize=7)
     ax.set_ylabel(r"$\rho_{\mathrm{proxy}}$")
     ax.set_title(r"$\rho_{\mathrm{proxy}}$ — 12 models 4B–1000B")
-    handles = [plt.Rectangle((0, 0), 1, 1, color=c) for c in
-               ["red", "orange", "gold", "green"]]
-    ax.legend(handles, ["collapse", "drift", "saturation", "plateau"],
-              fontsize=7, loc="upper right")
+    handles = [plt.Rectangle((0, 0), 1, 1, color=c) for c in ["red", "orange", "gold", "green"]]
+    ax.legend(
+        handles, ["collapse", "drift", "saturation", "plateau"], fontsize=7, loc="upper right"
+    )
 
     # Panel 4: AUC sweep
     ax = axes[1, 0]
@@ -389,8 +432,7 @@ def make_figure(perstep, nemotron_rows, tool_rows, auc_rows, out_pdf, out_png):
     rs_dense = [r["rho_dense"] for r in tool_rows]
     ax.scatter(rs_sparse, rs_dense)
     for r in tool_rows:
-        ax.annotate(f"s{r['seed']}.{r['step']}",
-                    (r["rho_sparse"], r["rho_dense"]), fontsize=6)
+        ax.annotate(f"s{r['seed']}.{r['step']}", (r["rho_sparse"], r["rho_dense"]), fontsize=6)
     ax.axhline(1.0, color="k", ls="--", lw=1)
     ax.axvline(1.0, color="k", ls="--", lw=1)
     ax.set_xlabel(r"$\rho_{\mathrm{sparse}}$ (tool-use)")
@@ -410,8 +452,7 @@ def make_figure(perstep, nemotron_rows, tool_rows, auc_rows, out_pdf, out_png):
         ax.set_title(f"G=4 seed=42 (last10={target['last10']:.3f})")
         ax.legend(fontsize=8)
 
-    fig.suptitle("Iter 98 — ZVF over-dispersion decomposition & failure tracking",
-                 fontsize=12)
+    fig.suptitle("Iter 98 — ZVF over-dispersion decomposition & failure tracking", fontsize=12)
     fig.tight_layout()
     fig.savefig(out_pdf)
     fig.savefig(out_png, dpi=130)
@@ -430,39 +471,54 @@ def main():
     auc_rows = auc_sweep(nemotron_proxy)
     new_summary = reemit_summary(rho_rows, nemotron_proxy, auc_rows, iter94_rows)
 
-    _write_tsv(RES / "zvf_iter98_rho_perstep.tsv", rho_rows,
-header_comment=(
-                   "zvf_iter98_rho_perstep.tsv — over-dispersion ratio rho per run.\n"
-                   "rho_t = zvf_emp_t / (p_t^G + (1-p_t)^G). rho>1 = herding, rho<1 = anti-herding.\n"
-                   "Aggregated over the 40-step trajectory of each (Qwen2.5-0.5B, G, seed)."
-               ))
-    _write_tsv(RES / "zvf_iter98_nemotron_proxy.tsv", nemotron_proxy,
-               header_comment=(
-                   "zvf_iter98_nemotron_proxy.tsv — rho_proxy for 12 models in\n"
-                   "scaling_law_iter85_nemotron.tsv. p_proxy = (first5+last10)/2;\n"
-                   "zvf_iid_assumed = p_proxy^8 + (1-p_proxy)^8 (G=8 default);\n"
-                   "observed_zvf_prior is a phase-conditional prior calibrated from\n"
-                   "the iter94 sweep (collapse=0.95, drift=0.85, sat=0.78, plateau=0.50)."
-               ))
-    _write_tsv(RES / "zvf_iter98_tooluse.tsv", tool_use,
-               header_comment=(
-                   "zvf_iter98_tooluse.tsv — bfclv4 tool-use rho decomposition.\n"
-                   "G = n_total = 8. Tool-use 0% -> p_sparse = 0 -> zvf_iid_sparse = 1\n"
-                   "-> rho_sparse = 1.0 (herding-end collapsed)."
-               ))
-    _write_tsv(RES / "zvf_iter98_auc.tsv", auc_rows,
-               header_comment=(
-                   "zvf_iter98_auc.tsv — AUC sweep: (rho_proxy > t) -> collapse.\n"
-                   "Also Spearman rho_proxy vs collapse_delta with bootstrap 95% CI."
-               ))
-    _write_tsv(RES / "zvf_summary.tsv", new_summary,
-               header_comment=(
-                   "# zvf_summary.tsv — Pillar 2 headline ZVF dashboard (Iter 98).\n"
-                   "# Re-emitted: iter94 columns + iter98 rho_global_mean/std,\n"
-                   "# iter98_frac_above_1_global, iter98_auc_rho_gt_1_global,\n"
-                   "# iter98_nemotron_rho_proxy_mean, iter98_collapse_auc_rho_proxy.\n"
-                   "# rho_global_* averages over the 12 (Qwen2.5-0.5B, G, seed) runs."
-               ))
+    _write_tsv(
+        RES / "zvf_iter98_rho_perstep.tsv",
+        rho_rows,
+        header_comment=(
+            "zvf_iter98_rho_perstep.tsv — over-dispersion ratio rho per run.\n"
+            "rho_t = zvf_emp_t / (p_t^G + (1-p_t)^G). rho>1 = herding, rho<1 = anti-herding.\n"
+            "Aggregated over the 40-step trajectory of each (Qwen2.5-0.5B, G, seed)."
+        ),
+    )
+    _write_tsv(
+        RES / "zvf_iter98_nemotron_proxy.tsv",
+        nemotron_proxy,
+        header_comment=(
+            "zvf_iter98_nemotron_proxy.tsv — rho_proxy for 12 models in\n"
+            "scaling_law_iter85_nemotron.tsv. p_proxy = (first5+last10)/2;\n"
+            "zvf_iid_assumed = p_proxy^8 + (1-p_proxy)^8 (G=8 default);\n"
+            "observed_zvf_prior is a phase-conditional prior calibrated from\n"
+            "the iter94 sweep (collapse=0.95, drift=0.85, sat=0.78, plateau=0.50)."
+        ),
+    )
+    _write_tsv(
+        RES / "zvf_iter98_tooluse.tsv",
+        tool_use,
+        header_comment=(
+            "zvf_iter98_tooluse.tsv — bfclv4 tool-use rho decomposition.\n"
+            "G = n_total = 8. Tool-use 0% -> p_sparse = 0 -> zvf_iid_sparse = 1\n"
+            "-> rho_sparse = 1.0 (herding-end collapsed)."
+        ),
+    )
+    _write_tsv(
+        RES / "zvf_iter98_auc.tsv",
+        auc_rows,
+        header_comment=(
+            "zvf_iter98_auc.tsv — AUC sweep: (rho_proxy > t) -> collapse.\n"
+            "Also Spearman rho_proxy vs collapse_delta with bootstrap 95% CI."
+        ),
+    )
+    _write_tsv(
+        RES / "zvf_summary.tsv",
+        new_summary,
+        header_comment=(
+            "# zvf_summary.tsv — Pillar 2 headline ZVF dashboard (Iter 98).\n"
+            "# Re-emitted: iter94 columns + iter98 rho_global_mean/std,\n"
+            "# iter98_frac_above_1_global, iter98_auc_rho_gt_1_global,\n"
+            "# iter98_nemotron_rho_proxy_mean, iter98_collapse_auc_rho_proxy.\n"
+            "# rho_global_* averages over the 12 (Qwen2.5-0.5B, G, seed) runs."
+        ),
+    )
 
     out_pdf = FIG / "zvf_vs_failure.pdf"
     out_png = FIG / "zvf_vs_failure.png"

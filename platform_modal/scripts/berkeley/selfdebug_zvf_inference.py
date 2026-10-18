@@ -53,12 +53,11 @@ Stdlib only. Outputs:
   platform_hybrid/experiments/results/berkeley/selfdebug_calibration.tsv
   platform_hybrid/experiments/results/berkeley/selfdebug_summary.json
 """
+
 from __future__ import annotations
 
 import csv
 import json
-import math
-import os
 import statistics
 from collections import defaultdict
 from pathlib import Path
@@ -72,18 +71,19 @@ VAR_MIT = ["grpo", "ngrpo", "aero", "cppo", "mcgrpo", "areal", "gift", "es", "sc
 
 # 3-bucket partition from row 11 (eval_protocol_clusters.tsv)
 BUCKET = {
-    "ngrpo":   "low_risk",
-    "cppo":    "low_risk",
-    "scafgrpo":"low_risk",
-    "aero":    "mid_risk",
-    "mcgrpo":  "mid_risk",
-    "areal":   "mid_risk",
-    "grpo":    "high_risk",
-    "gift":    "high_risk",
-    "es":      "high_risk",
+    "ngrpo": "low_risk",
+    "cppo": "low_risk",
+    "scafgrpo": "low_risk",
+    "aero": "mid_risk",
+    "mcgrpo": "mid_risk",
+    "areal": "mid_risk",
+    "grpo": "high_risk",
+    "gift": "high_risk",
+    "es": "high_risk",
 }
 
 # ----------------------- data loaders -----------------------
+
 
 def load_per_seed():
     by_m = defaultdict(list)
@@ -93,17 +93,20 @@ def load_per_seed():
             m = row["method"].strip()
             if m not in VAR_MIT:
                 continue
-            by_m[m].append({
-                "seed":              int(row["seed"]),
-                "zvf_risk_max":      float(row["zvf_risk_max"]),
-                "zvf_risk":          float(row["zvf_risk"]),
-                "risk_mag":          float(row["risk_mag"]),
-                "risk_csd":          float(row["risk_csd"]),
-                "risk_drift":        float(row["risk_drift"]),
-            })
+            by_m[m].append(
+                {
+                    "seed": int(row["seed"]),
+                    "zvf_risk_max": float(row["zvf_risk_max"]),
+                    "zvf_risk": float(row["zvf_risk"]),
+                    "risk_mag": float(row["risk_mag"]),
+                    "risk_csd": float(row["risk_csd"]),
+                    "risk_drift": float(row["risk_drift"]),
+                }
+            )
     for m in by_m:
         by_m[m].sort(key=lambda r: r["seed"])
     return by_m
+
 
 def channel_fractions(mag, csd, drift):
     total = mag + csd + drift
@@ -111,9 +114,11 @@ def channel_fractions(mag, csd, drift):
         return (0.0, 0.0, 0.0)
     return (mag / total, csd / total, drift / total)
 
+
 def rank_lower_is_better(values):
     """values: dict method -> scalar (mean already taken). Lower = better."""
     return sorted(values.keys(), key=lambda m: values[m])
+
 
 def spearman(r1, r2):
     assert set(r1) == set(r2)
@@ -123,7 +128,9 @@ def spearman(r1, r2):
     d2 = sum((pos1[m] - pos2[m]) ** 2 for m in r1)
     return 1.0 - 6.0 * d2 / (n * (n * n - 1))
 
+
 # ----------------------- Self-Debug reformulation -----------------------
+
 
 def critique_filter(mag, csd, drift, epsilon):
     """Simulate Self-Debug's critique pass: epsilon of the mag channel is
@@ -146,6 +153,7 @@ def critique_filter(mag, csd, drift, epsilon):
     # denominator shrinks: total' = total - eps_mag.
     return (new_mag, csd, drift)
 
+
 def inverse_critique_filter(mag, csd, drift, epsilon):
     """Negative Self-Debug: an 'intrinsic self-correction' that, per Huang
     et al. 2310.01798, often DEGRADES rather than helps. Simulate by
@@ -153,7 +161,9 @@ def inverse_critique_filter(mag, csd, drift, epsilon):
     execution feedback)."""
     return (mag * (1 + epsilon), csd, drift)
 
+
 # ----------------------- hypotheses -----------------------
+
 
 def h1_selfdebug_mechanism(by_m, eps=0.12):
     """frac_mag drops on >= 5/9 methods by a *predicted-magnitude* amount.
@@ -174,22 +184,32 @@ def h1_selfdebug_mechanism(by_m, eps=0.12):
         m2, c2, d2 = critique_filter(mag_b, csd_b, drf_b, eps)
         fa_m, fa_c, fa_d = channel_fractions(m2, c2, d2)
         drop = fb_m - fa_m
-        rows.append({"method": m, "frac_mag_pre": round(fb_m, 4),
-                     "frac_mag_post": round(fa_m, 4), "drop_pp": round(drop, 4)})
+        rows.append(
+            {
+                "method": m,
+                "frac_mag_pre": round(fb_m, 4),
+                "frac_mag_post": round(fa_m, 4),
+                "drop_pp": round(drop, 4),
+            }
+        )
         drops.append(drop)
     drop_flag = sum(1 for r in rows if r["drop_pp"] >= 0.02)
     decisive = drop_flag >= 5
-    return {"n_methods_dropping_>=2pp": drop_flag, "rows": rows,
-            "mean_drop_pp": round(statistics.mean(drops), 4),
-            "predicted_drop_pp_target": 0.02,
-            "verdict_DECISIVE": decisive}
+    return {
+        "n_methods_dropping_>=2pp": drop_flag,
+        "rows": rows,
+        "mean_drop_pp": round(statistics.mean(drops), 4),
+        "predicted_drop_pp_target": 0.02,
+        "verdict_DECISIVE": decisive,
+    }
+
 
 def h2_no_self_correct(by_m, eps=0.12):
     """Inverse critique (intrinsic self-correction) does NOT lower frac_mag
     on any method (Huang et al.'s negative result). Test: zero methods
     should see frac_mag drop after the inverse reformulation."""
     drops = []
-    for m, runs in by_m.items():
+    for _m, runs in by_m.items():
         mag_b = statistics.mean(r["risk_mag"] for r in runs)
         csd_b = statistics.mean(r["risk_csd"] for r in runs)
         drf_b = statistics.mean(r["risk_drift"] for r in runs)
@@ -199,8 +219,12 @@ def h2_no_self_correct(by_m, eps=0.12):
         drops.append(fb_m - fa_m)
     n_drop = sum(1 for d in drops if d > 1e-6)
     decisive = n_drop == 0
-    return {"n_methods_with_frac_mag_drop": n_drop, "drops": [round(d, 4) for d in drops],
-            "verdict_DECISIVE": decisive}
+    return {
+        "n_methods_with_frac_mag_drop": n_drop,
+        "drops": [round(d, 4) for d in drops],
+        "verdict_DECISIVE": decisive,
+    }
+
 
 def h3_opro_stability(by_m, eps=0.12):
     """Spearman between pre- and post-critique method rankings >= 0.85."""
@@ -211,9 +235,15 @@ def h3_opro_stability(by_m, eps=0.12):
     post_rank = rank_lower_is_better(post)
     rho = spearman(pre_rank, post_rank)
     decisive = rho >= 0.85
-    return {"pre_top1": pre_rank[0], "post_top1": post_rank[0],
-            "pre_ranking": pre_rank, "post_ranking": post_rank,
-            "spearman": round(rho, 4), "verdict_DECISIVE": decisive}
+    return {
+        "pre_top1": pre_rank[0],
+        "post_top1": post_rank[0],
+        "pre_ranking": pre_rank,
+        "post_ranking": post_rank,
+        "spearman": round(rho, 4),
+        "verdict_DECISIVE": decisive,
+    }
+
 
 def h4_compositional(by_m, eps=0.12):
     """3-bucket partition preserved on >= 8/9 methods under Self-Debug
@@ -234,9 +264,15 @@ def h4_compositional(by_m, eps=0.12):
         if pre_in == post_in:
             n_pres += len(members)
     decisive = n_pres >= 8
-    return {"n_methods_preserved_in_bucket": n_pres,
-            "bucket_counts": {b: sum(1 for m in BUCKET if BUCKET[m] == b) for b in {"low_risk","mid_risk","high_risk"}},
-            "verdict_DECISIVE": decisive}
+    return {
+        "n_methods_preserved_in_bucket": n_pres,
+        "bucket_counts": {
+            b: sum(1 for m in BUCKET if BUCKET[m] == b)
+            for b in {"low_risk", "mid_risk", "high_risk"}
+        },
+        "verdict_DECISIVE": decisive,
+    }
+
 
 def h5_calibration(by_m):
     """At epsilon = 0 the post-critique metric reverts to pre-critique
@@ -247,11 +283,15 @@ def h5_calibration(by_m):
     decisive = max_dev <= 1e-6
     return {"max_abs_deviation_at_eps0": max_dev, "verdict_DECISIVE": decisive}
 
+
 # ----------------------- epsilon sweep -----------------------
+
 
 def eps_sweep(by_m, epsilons=(0.0, 0.05, 0.12, 0.20, 0.30)):
     rows = []
-    pre_rank = rank_lower_is_better({m: statistics.mean(r["zvf_risk_max"] for r in runs) for m, runs in by_m.items()})
+    pre_rank = rank_lower_is_better(
+        {m: statistics.mean(r["zvf_risk_max"] for r in runs) for m, runs in by_m.items()}
+    )
     for eps in epsilons:
         post = {}
         for m, runs in by_m.items():
@@ -271,16 +311,23 @@ def eps_sweep(by_m, epsilons=(0.0, 0.05, 0.12, 0.20, 0.30)):
                 statistics.mean(r["risk_mag"] for r in runs),
                 statistics.mean(r["risk_csd"] for r in runs),
                 statistics.mean(r["risk_drift"] for r in runs),
-                eps)
+                eps,
+            )
             f_m, _, _ = channel_fractions(mag2, csd2, drf2)
             frac_mag_means.append(f_m)
-        rows.append({"epsilon": eps,
-                     "spearman_vs_pre": round(rho, 4),
-                     "mean_frac_mag_across_9": round(statistics.mean(frac_mag_means), 4),
-                     "top1_method": post_rank[0]})
+        rows.append(
+            {
+                "epsilon": eps,
+                "spearman_vs_pre": round(rho, 4),
+                "mean_frac_mag_across_9": round(statistics.mean(frac_mag_means), 4),
+                "top1_method": post_rank[0],
+            }
+        )
     return rows
 
+
 # ----------------------- main -----------------------
+
 
 def main():
     by_m = load_per_seed()
@@ -296,14 +343,20 @@ def main():
     # write TSVs
     out1 = OUT / "selfdebug_method_reformulation.tsv"
     with open(out1, "w", newline="") as f:
-        w = csv.DictWriter(f, fieldnames=["method", "frac_mag_pre", "frac_mag_post", "drop_pp"], delimiter="\t")
+        w = csv.DictWriter(
+            f, fieldnames=["method", "frac_mag_pre", "frac_mag_post", "drop_pp"], delimiter="\t"
+        )
         w.writeheader()
         for r in h1["rows"]:
             w.writerow(r)
 
     out2 = OUT / "selfdebug_eps_sweep.tsv"
     with open(out2, "w", newline="") as f:
-        w = csv.DictWriter(f, fieldnames=["epsilon", "spearman_vs_pre", "mean_frac_mag_across_9", "top1_method"], delimiter="\t")
+        w = csv.DictWriter(
+            f,
+            fieldnames=["epsilon", "spearman_vs_pre", "mean_frac_mag_across_9", "top1_method"],
+            delimiter="\t",
+        )
         w.writeheader()
         for r in sweep:
             w.writerow(r)
@@ -313,32 +366,63 @@ def main():
         w = csv.writer(f, delimiter="\t")
         w.writerow(["hypothesis", "metric", "pre_value", "post_value", "verdict"])
         w.writerow(["H3_OPRO_stability", "spearman", "1.0", h3["spearman"], h3["verdict_DECISIVE"]])
-        w.writerow(["H4_compositional_bucket", "n_methods_preserved", "9", h4["n_methods_preserved_in_bucket"], h4["verdict_DECISIVE"]])
-        w.writerow(["H5_calibration_eps0", "max_abs_dev", "0.0", h5["max_abs_deviation_at_eps0"], h5["verdict_DECISIVE"]])
+        w.writerow(
+            [
+                "H4_compositional_bucket",
+                "n_methods_preserved",
+                "9",
+                h4["n_methods_preserved_in_bucket"],
+                h4["verdict_DECISIVE"],
+            ]
+        )
+        w.writerow(
+            [
+                "H5_calibration_eps0",
+                "max_abs_dev",
+                "0.0",
+                h5["max_abs_deviation_at_eps0"],
+                h5["verdict_DECISIVE"],
+            ]
+        )
 
     out4 = OUT / "selfdebug_calibration.tsv"
     with open(out4, "w", newline="") as f:
         w = csv.writer(f, delimiter="\t")
         w.writerow(["test_id", "description", "expected", "observed", "verdict"])
-        w.writerow(["H5_eps0_identity", "zvf_risk_max at eps=0 matches pre", "abs_diff<=1e-6", h5["max_abs_deviation_at_eps0"], h5["verdict_DECISIVE"]])
+        w.writerow(
+            [
+                "H5_eps0_identity",
+                "zvf_risk_max at eps=0 matches pre",
+                "abs_diff<=1e-6",
+                h5["max_abs_deviation_at_eps0"],
+                h5["verdict_DECISIVE"],
+            ]
+        )
 
     summary = {
-        "iteration":           149,
-        "lectures":            "SP25 L1 (Xinyun Chen)",
-        "citations":           ["2304.05128", "2309.03409 (OPRO, ICLR 2024)", "2310.01798 (Huang, ICLR 2024)"],
-        "data":                "zvf_iter130_risk_index.tsv (9 methods x 5 seeds = 45 rows)",
+        "iteration": 149,
+        "lectures": "SP25 L1 (Xinyun Chen)",
+        "citations": [
+            "2304.05128",
+            "2309.03409 (OPRO, ICLR 2024)",
+            "2310.01798 (Huang, ICLR 2024)",
+        ],
+        "data": "zvf_iter130_risk_index.tsv (9 methods x 5 seeds = 45 rows)",
         "epsilon_calibration": 0.12,
         "calibration_rationale": "Self-Debug achieves +12% pass@1 on MBPP (Chen et al. 2304.05128) — used as the format-only-variance ceiling for the magnitude channel",
         "hypotheses": {
-            "H1_selfdebug_mechanism":    h1,
-            "H2_huang_no_self_correct":  h2,
-            "H3_opro_stability":         h3,
-            "H4_compositional":          h4,
-            "H5_calibration":            h5,
+            "H1_selfdebug_mechanism": h1,
+            "H2_huang_no_self_correct": h2,
+            "H3_opro_stability": h3,
+            "H4_compositional": h4,
+            "H5_calibration": h5,
         },
-        "epsilon_sweep":         sweep,
+        "epsilon_sweep": sweep,
         "outputs": [
-            str(out1), str(out2), str(out3), str(out4),
+            str(out1),
+            str(out2),
+            str(out3),
+            str(out4),
         ],
     }
 
@@ -348,14 +432,35 @@ def main():
 
     # terminal summary
     print("\n=== Iter 149 — SP25 L1 — Self-Debug ZVF reformulation ===")
-    print(f"H1 Self-Debug mechanism (frac_mag drops >=2pp on >=5/9 methods): {h1['n_methods_dropping_>=2pp']}/9 mean_drop_pp={h1['mean_drop_pp']:.4f} -> {h1['verdict_DECISIVE']}")
-    print(f"H2 Huang no-self-correct (inverse critique does NOT drop frac_mag on 0 methods): {h2['n_methods_with_frac_mag_drop']}/9 -> {h2['verdict_DECISIVE']}")
-    print(f"H3 OPRO stability (Spearman pre-post >= 0.85): rho={h3['spearman']:.4f} -> {h3['verdict_DECISIVE']}")
-    print(f"H4 Compositional (3-bucket preserved on >=8/9 methods): {h4['n_methods_preserved_in_bucket']}/9 -> {h4['verdict_DECISIVE']}")
-    print(f"H5 Calibration at eps=0 (max abs dev <= 1e-6): {h5['max_abs_deviation_at_eps0']:.2e} -> {h5['verdict_DECISIVE']}")
-    n_decisive = sum(1 for k in ["H1_selfdebug_mechanism","H2_huang_no_self_correct","H3_opro_stability","H4_compositional","H5_calibration"] if summary["hypotheses"][k]["verdict_DECISIVE"])
+    print(
+        f"H1 Self-Debug mechanism (frac_mag drops >=2pp on >=5/9 methods): {h1['n_methods_dropping_>=2pp']}/9 mean_drop_pp={h1['mean_drop_pp']:.4f} -> {h1['verdict_DECISIVE']}"
+    )
+    print(
+        f"H2 Huang no-self-correct (inverse critique does NOT drop frac_mag on 0 methods): {h2['n_methods_with_frac_mag_drop']}/9 -> {h2['verdict_DECISIVE']}"
+    )
+    print(
+        f"H3 OPRO stability (Spearman pre-post >= 0.85): rho={h3['spearman']:.4f} -> {h3['verdict_DECISIVE']}"
+    )
+    print(
+        f"H4 Compositional (3-bucket preserved on >=8/9 methods): {h4['n_methods_preserved_in_bucket']}/9 -> {h4['verdict_DECISIVE']}"
+    )
+    print(
+        f"H5 Calibration at eps=0 (max abs dev <= 1e-6): {h5['max_abs_deviation_at_eps0']:.2e} -> {h5['verdict_DECISIVE']}"
+    )
+    n_decisive = sum(
+        1
+        for k in [
+            "H1_selfdebug_mechanism",
+            "H2_huang_no_self_correct",
+            "H3_opro_stability",
+            "H4_compositional",
+            "H5_calibration",
+        ]
+        if summary["hypotheses"][k]["verdict_DECISIVE"]
+    )
     print(f"\nAggregate: {n_decisive}/5 DECISIVE")
     print(f"Outputs: {out1.name}, {out2.name}, {out3.name}, {out4.name}, {out5.name}")
+
 
 if __name__ == "__main__":
     main()

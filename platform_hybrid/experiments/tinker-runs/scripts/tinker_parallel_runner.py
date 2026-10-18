@@ -4,21 +4,36 @@ Launches all experiments concurrently via ProcessPoolExecutor.
 
 import sys as _contract_sys
 from pathlib import Path as _ContractPath
+
 if len(_ContractPath(__file__).resolve().parents) > 4:
     _contract_sys.path.insert(0, str(_ContractPath(__file__).resolve().parents[4]))
-from platform_hybrid.experiments.framework_contracts import score_gsm8k, SCORER_ID, PROTOCOL_VERSION, aligned_datum, response_logprobs, group_zvf, stable_seed, experiment_spec, validate_resume, objective_identity, completion_receipt, require_completed, token_advantage
+from platform_hybrid.experiments.framework_contracts import (
+    score_gsm8k,
+    SCORER_ID,
+    PROTOCOL_VERSION,
+    aligned_datum,
+    response_logprobs,
+    group_zvf,
+    stable_seed,
+    experiment_spec,
+    validate_resume,
+    completion_receipt,
+    require_completed,
+)
 
 
 import atexit
+
 try:
     from codecarbon import EmissionsTracker
+
     _tracker = EmissionsTracker()
     _tracker.start()
     atexit.register(_tracker.stop)
 except ImportError:
     pass
 
-import os, json, re, random, time, traceback, threading, shutil
+import os, json, re, random, threading, shutil
 from datetime import datetime
 from concurrent.futures import ProcessPoolExecutor, as_completed
 
@@ -32,6 +47,7 @@ import torch, tinker, tinker.types as T
 from transformers import AutoTokenizer
 from datasets import load_dataset
 import wandb
+
 # No process-global W&B log monkeypatch. Managed VRAM is unavailable.
 from huggingface_hub import HfApi, create_repo
 
@@ -56,6 +72,7 @@ Respond with JSON: {"name":"tool_name","arguments":{...}}"""
 _gsm8k_cache = None
 _gsm8k_lock = threading.Lock()
 
+
 def get_gsm8k():
     global _gsm8k_cache
     with _gsm8k_lock:
@@ -64,33 +81,62 @@ def get_gsm8k():
             ds = load_dataset("openai/gsm8k", "main", split="train")
             examples = []
             for row in ds:
-                m = re.search(r'####\s*([\-\d,\.]+)', row["answer"])
-                if not m: continue
-                ans = m.group(1).replace(",","").strip()
+                m = re.search(r"####\s*([\-\d,\.]+)", row["answer"])
+                if not m:
+                    continue
+                ans = m.group(1).replace(",", "").strip()
                 prompt = f"<|im_start|>system\n{SYSTEM_PROMPT_MATH}<|im_end|>\n<|im_start|>user\n{row['question']}<|im_end|>\n<|im_start|>assistant\n"
                 examples.append((prompt, ans, "gsm8k"))
             _gsm8k_cache = examples
             print(f"[DATA] GSM8K: {len(examples)} examples")
     return list(_gsm8k_cache)
 
+
 def get_tool_use():
     tasks = [
         ("What is 234 * 567?", '{"name":"calculator","arguments":{"expression":"234 * 567"}}'),
         ("What's the weather in Tokyo?", '{"name":"weather","arguments":{"city":"Tokyo"}}'),
-        ("Search for recent advances in RLHF", '{"name":"search","arguments":{"query":"recent advances in RLHF"}}'),
-        ("Remind me to submit the paper at 5pm", '{"name":"reminder","arguments":{"message":"submit the paper","time":"5pm"}}'),
-        ("Translate 'hello world' to French", '{"name":"translate","arguments":{"text":"hello world","target_lang":"French"}}'),
+        (
+            "Search for recent advances in RLHF",
+            '{"name":"search","arguments":{"query":"recent advances in RLHF"}}',
+        ),
+        (
+            "Remind me to submit the paper at 5pm",
+            '{"name":"reminder","arguments":{"message":"submit the paper","time":"5pm"}}',
+        ),
+        (
+            "Translate 'hello world' to French",
+            '{"name":"translate","arguments":{"text":"hello world","target_lang":"French"}}',
+        ),
         ("Calculate sqrt(144)", '{"name":"calculator","arguments":{"expression":"sqrt(144)"}}'),
         ("What's the weather in New York?", '{"name":"weather","arguments":{"city":"New York"}}'),
-        ("Search for NeurIPS 2026 deadline", '{"name":"search","arguments":{"query":"NeurIPS 2026 deadline"}}'),
-        ("Remind me about the meeting at 9am", '{"name":"reminder","arguments":{"message":"meeting","time":"9am"}}'),
-        ("Translate 'good morning' to Japanese", '{"name":"translate","arguments":{"text":"good morning","target_lang":"Japanese"}}'),
+        (
+            "Search for NeurIPS 2026 deadline",
+            '{"name":"search","arguments":{"query":"NeurIPS 2026 deadline"}}',
+        ),
+        (
+            "Remind me about the meeting at 9am",
+            '{"name":"reminder","arguments":{"message":"meeting","time":"9am"}}',
+        ),
+        (
+            "Translate 'good morning' to Japanese",
+            '{"name":"translate","arguments":{"text":"good morning","target_lang":"Japanese"}}',
+        ),
     ]
-    return [(f"<|im_start|>system\n{SYSTEM_PROMPT_TOOL}<|im_end|>\n<|im_start|>user\n{q}<|im_end|>\n<|im_start|>assistant\n", a, "tool_use") for q,a in tasks]
+    return [
+        (
+            f"<|im_start|>system\n{SYSTEM_PROMPT_TOOL}<|im_end|>\n<|im_start|>user\n{q}<|im_end|>\n<|im_start|>assistant\n",
+            a,
+            "tool_use",
+        )
+        for q, a in tasks
+    ]
+
 
 # ── Rewards ──────────────────────────────────────────────────────────────
 def reward_math(response, answer):
     return score_gsm8k(response, answer)
+
 
 def reward_tool(response, expected):
     score = 0.0
@@ -98,10 +144,16 @@ def reward_tool(response, expected):
         parsed = json.loads(response.strip())
         score += 0.3
         exp = json.loads(expected)
-        if parsed.get("name") == exp.get("name"): score += 0.4
-        if "arguments" in parsed and set(exp.get("arguments",{}).keys()).issubset(set(parsed.get("arguments",{}).keys())): score += 0.3
-    except: pass
+        if parsed.get("name") == exp.get("name"):
+            score += 0.4
+        if "arguments" in parsed and set(exp.get("arguments", {}).keys()).issubset(
+            set(parsed.get("arguments", {}).keys())
+        ):
+            score += 0.3
+    except:
+        pass
     return score
+
 
 # ── HuggingFace upload helper ────────────────────────────────────────────
 def upload_to_hf(exp_tag, model_id, results, step_log):
@@ -125,11 +177,16 @@ def upload_to_hf(exp_tag, model_id, results, step_log):
         # Upload model card and results
         tmp_dir = f"/tmp/hf_upload_{exp_tag}"
         os.makedirs(tmp_dir, exist_ok=True)
-        with open(f"{tmp_dir}/README.md", "w") as f: f.write(card)
-        with open(f"{tmp_dir}/results.json", "w") as f: json.dump(results, f, indent=2)
-        with open(f"{tmp_dir}/step_log.json", "w") as f: json.dump(step_log, f, indent=2)
+        with open(f"{tmp_dir}/README.md", "w") as f:
+            f.write(card)
+        with open(f"{tmp_dir}/results.json", "w") as f:
+            json.dump(results, f, indent=2)
+        with open(f"{tmp_dir}/step_log.json", "w") as f:
+            json.dump(step_log, f, indent=2)
 
-        api.upload_folder(folder_path=tmp_dir, repo_id=repo_id, repo_type="model", token=os.environ["HF_TOKEN"])
+        api.upload_folder(
+            folder_path=tmp_dir, repo_id=repo_id, repo_type="model", token=os.environ["HF_TOKEN"]
+        )
         shutil.rmtree(tmp_dir, ignore_errors=True)
         print(f"[HF] ✓ Uploaded {repo_id}")
         return repo_id
@@ -137,18 +194,33 @@ def upload_to_hf(exp_tag, model_id, results, step_log):
         print(f"[HF] ✗ Upload failed for {exp_tag}: {e}")
         return None
 
+
 # ── Single experiment runner ─────────────────────────────────────────────
-def run_single(model_name, model_id, task, seed=42, rank=32, lr=3e-5, group=8, steps=200, batch=2, tag=""):
+def run_single(
+    model_name, model_id, task, seed=42, rank=32, lr=3e-5, group=8, steps=200, batch=2, tag=""
+):
     exp = tag or f"{task}_{model_name}_s{seed}"
     rng = random.Random(seed)
 
     # ── W&B init ──
     wb_run = wandb.init(
-        project=WANDB_PROJECT, entity=WANDB_ENTITY, name=exp,
-        config={"model": model_id, "model_short": model_name, "task": task,
-                "seed": seed, "rank": rank, "lr": lr, "group": group,
-                "steps": steps, "batch": batch, "platform": "tinker"},
-        reinit="create_new", tags=["tinker", task, model_name],
+        project=WANDB_PROJECT,
+        entity=WANDB_ENTITY,
+        name=exp,
+        config={
+            "model": model_id,
+            "model_short": model_name,
+            "task": task,
+            "seed": seed,
+            "rank": rank,
+            "lr": lr,
+            "group": group,
+            "steps": steps,
+            "batch": batch,
+            "platform": "tinker",
+        },
+        reinit="create_new",
+        tags=["tinker", task, model_name],
     )
 
     print(f"[{exp}] ▶ START model={model_id} task={task}")
@@ -166,57 +238,82 @@ def run_single(model_name, model_id, task, seed=42, rank=32, lr=3e-5, group=8, s
     except Exception as e:
         print(f"[{exp}] ✗ INIT FAILED: {e}")
         wb_run.finish(exit_code=1)
-        return {**completion_receipt(steps, 0, None, None, error=str(e)), "experiment": exp, "model": model_id, "error": str(e), "stage": "init"}
+        return {
+            **completion_receipt(steps, 0, None, None, error=str(e)),
+            "experiment": exp,
+            "model": model_id,
+            "error": str(e),
+            "stage": "init",
+        }
 
     print(f"[{exp}] Connected: {tc.model_id}")
     wb_run.config.update({"tinker_run_id": tc.model_id}, allow_val_change=True)
 
     _adv = []
+
     def loss_fn(data, lp):
         losses = [(-_adv[i] * response_logprobs(data[i], lp[i]).sum()) for i in range(len(lp))]
         return torch.stack(losses).mean(), {"loss": torch.stack(losses).mean().item()}
 
     step_rewards, step_log = [], []
+
     def failed(error):
         wb_run.finish(exit_code=1)
-        return {**completion_receipt(steps, len(step_log), tc.model_id, None, error=str(error)),
-                "experiment": exp, "model": model_id, "error": str(error),
-                "step_log": step_log, "reward_trace": step_rewards, "last10_avg": None}
+        return {
+            **completion_receipt(steps, len(step_log), tc.model_id, None, error=str(error)),
+            "experiment": exp,
+            "model": model_id,
+            "error": str(error),
+            "step_log": step_log,
+            "reward_trace": step_rewards,
+            "last10_avg": None,
+        }
 
     zl, zr = 0, 0
     cumulative_rewards = []
 
     for step in range(steps):
-        bex = [examples[i % len(examples)] for i in rng.sample(range(len(examples)), min(batch, len(examples)))]
+        bex = [
+            examples[i % len(examples)]
+            for i in rng.sample(range(len(examples)), min(batch, len(examples)))
+        ]
         all_data, all_advs, batch_r = [], [], []
         reward_groups = []
 
         for prompt_text, ans, _ in bex:
             pid = tok.encode(prompt_text, add_special_tokens=False)[:1024]
-            sp = T.SamplingParams(max_tokens=512, temperature=0.8, top_p=0.95, seed=stable_seed(seed, step, pid))
+            sp = T.SamplingParams(
+                max_tokens=512, temperature=0.8, top_p=0.95, seed=stable_seed(seed, step, pid)
+            )
             try:
-                resp = sc.sample(T.ModelInput.from_ints(pid), num_samples=group, sampling_params=sp).result()
+                resp = sc.sample(
+                    T.ModelInput.from_ints(pid), num_samples=group, sampling_params=sp
+                ).result()
             except Exception as e:
                 print(f"[{exp}] Sample err step {step}: {e}")
                 return failed(e)
 
             if len(resp.sequences) != group:
                 return failed("Incomplete requested sample group")
-            rews = [rfn(tok.decode(list(r.tokens), skip_special_tokens=True), ans) for r in resp.sequences]
-            mr = sum(rews)/len(rews)
-            sr = (sum((r-mr)**2 for r in rews)/len(rews))**0.5 + 1e-8
-            advs = [(r-mr)/sr for r in rews]
+            rews = [
+                rfn(tok.decode(list(r.tokens), skip_special_tokens=True), ans)
+                for r in resp.sequences
+            ]
+            mr = sum(rews) / len(rews)
+            sr = (sum((r - mr) ** 2 for r in rews) / len(rews)) ** 0.5 + 1e-8
+            advs = [(r - mr) / sr for r in rews]
             batch_r.extend(rews)
             reward_groups.append(rews)
 
-            for r, a in zip(resp.sequences, advs):
+            for r, a in zip(resp.sequences, advs, strict=False):
                 rid = list(r.tokens)
                 fid = pid + rid
                 tid = fid[1:]
                 all_data.append(aligned_datum(T, pid, rid))
                 all_advs.append(a)
 
-        if not all_data: return failed("No rollout data")
+        if not all_data:
+            return failed("No rollout data")
         _adv = all_advs
 
         try:
@@ -226,38 +323,43 @@ def run_single(model_name, model_id, task, seed=42, rank=32, lr=3e-5, group=8, s
             print(f"[{exp}] Train err step {step}: {e}")
             return failed(e)
 
-        avg = sum(batch_r)/len(batch_r) if batch_r else 0
+        avg = sum(batch_r) / len(batch_r) if batch_r else 0
         step_rewards.append(avg)
-        cumulative_rewards.append(sum(step_rewards)/len(step_rewards))
+        cumulative_rewards.append(sum(step_rewards) / len(step_rewards))
         lv = result.metrics.get("loss", 0)
-        if abs(lv) < 1e-6: zl += 1
-        if avg == 0: zr += 1
+        if abs(lv) < 1e-6:
+            zl += 1
+        if avg == 0:
+            zr += 1
 
         # ZVF = fraction of groups where all completions got same reward
         zvf = group_zvf(reward_groups)
         gu = 1.0 - zvf
 
-        step_log.append({"step": step+1, "loss": lv, "reward": avg, "zvf": zvf, "gu": gu})
+        step_log.append({"step": step + 1, "loss": lv, "reward": avg, "zvf": zvf, "gu": gu})
 
         # ── W&B log ──
-        wb_run.log({
-            "step": step + 1,
-            "train/loss": lv,
-            "train/reward": avg,
-            "train/cumulative_reward": cumulative_rewards[-1],
-            "train/peak_reward": max(step_rewards),
-            "train/zvf": zvf,
-            "train/gradient_utilization": gu,
-            "train/zero_loss_frac": zl / (step + 1),
-            "train/zero_reward_frac": zr / (step + 1),
-        }, step=step + 1)
+        wb_run.log(
+            {
+                "step": step + 1,
+                "train/loss": lv,
+                "train/reward": avg,
+                "train/cumulative_reward": cumulative_rewards[-1],
+                "train/peak_reward": max(step_rewards),
+                "train/zvf": zvf,
+                "train/gradient_utilization": gu,
+                "train/zero_loss_frac": zl / (step + 1),
+                "train/zero_reward_frac": zr / (step + 1),
+            },
+            step=step + 1,
+        )
 
-        if (step+1) % 5 == 0 or step == 0:
-            print(f"[{exp}] {step+1:3d}/{steps} loss={lv:.4f} reward={avg:.3f} zvf={zvf:.1f}")
+        if (step + 1) % 5 == 0 or step == 0:
+            print(f"[{exp}] {step + 1:3d}/{steps} loss={lv:.4f} reward={avg:.3f} zvf={zvf:.1f}")
 
         if True:  # v3: sampler refresh after every update
             try:
-                ckpt = tc.save_weights_for_sampler(name=f"s{step+1}").result()
+                ckpt = tc.save_weights_for_sampler(name=f"s{step + 1}").result()
                 sc = tc.create_sampling_client(model_path=ckpt.path)
             except Exception as error:
                 return failed(error)
@@ -273,32 +375,62 @@ def run_single(model_name, model_id, task, seed=42, rank=32, lr=3e-5, group=8, s
     first5 = step_rewards[:5] if len(step_rewards) >= 5 else step_rewards
 
     summary = {
-        **completion_receipt(steps, len(step_log), tc.model_id, None if ckpt_path == "save_failed" else ckpt_path, error="checkpoint_save_failed" if ckpt_path == "save_failed" else None),
-        **experiment_spec(dict(model=model_id, task=task, seed=seed, rank=rank, lr=lr, group=group, steps=steps, batch=batch, scorer_id=SCORER_ID)),
+        **completion_receipt(
+            steps,
+            len(step_log),
+            tc.model_id,
+            None if ckpt_path == "save_failed" else ckpt_path,
+            error="checkpoint_save_failed" if ckpt_path == "save_failed" else None,
+        ),
+        **experiment_spec(
+            dict(
+                model=model_id,
+                task=task,
+                seed=seed,
+                rank=rank,
+                lr=lr,
+                group=group,
+                steps=steps,
+                batch=batch,
+                scorer_id=SCORER_ID,
+            )
+        ),
         "objective_id": "group_standardized_pg_response_sum_v3",
         "scorer_id": SCORER_ID,
         "sampler_refresh_every": 1,
-        "experiment": exp, "model": model_id, "model_short": model_name,
-        "task": task, "seed": seed, "rank": rank, "lr": lr, "group": group, "steps": steps,
-        "run_id": tc.model_id, "checkpoint": ckpt_path,
-        "first5_avg": sum(first5)/len(first5) if first5 else 0,
-        "last10_avg": sum(last10)/len(last10) if last10 else 0,
+        "experiment": exp,
+        "model": model_id,
+        "model_short": model_name,
+        "task": task,
+        "seed": seed,
+        "rank": rank,
+        "lr": lr,
+        "group": group,
+        "steps": steps,
+        "run_id": tc.model_id,
+        "checkpoint": ckpt_path,
+        "first5_avg": sum(first5) / len(first5) if first5 else 0,
+        "last10_avg": sum(last10) / len(last10) if last10 else 0,
         "peak": max(step_rewards) if step_rewards else 0,
-        "zero_loss_pct": zl/max(steps,1)*100, "zero_reward_pct": zr/max(steps,1)*100,
-        "reward_trace": [round(r,4) for r in step_rewards],
-        "step_log": step_log, "timestamp": datetime.now().isoformat(),
+        "zero_loss_pct": zl / max(steps, 1) * 100,
+        "zero_reward_pct": zr / max(steps, 1) * 100,
+        "reward_trace": [round(r, 4) for r in step_rewards],
+        "step_log": step_log,
+        "timestamp": datetime.now().isoformat(),
     }
 
     # ── W&B summary ──
-    wb_run.summary.update({
-        "final/first5_avg": summary["first5_avg"],
-        "final/last10_avg": summary["last10_avg"],
-        "final/peak": summary["peak"],
-        "final/zero_loss_pct": summary["zero_loss_pct"],
-        "final/zero_reward_pct": summary["zero_reward_pct"],
-        "final/tinker_run_id": summary["run_id"],
-        "final/checkpoint": ckpt_path,
-    })
+    wb_run.summary.update(
+        {
+            "final/first5_avg": summary["first5_avg"],
+            "final/last10_avg": summary["last10_avg"],
+            "final/peak": summary["peak"],
+            "final/zero_loss_pct": summary["zero_loss_pct"],
+            "final/zero_reward_pct": summary["zero_reward_pct"],
+            "final/tinker_run_id": summary["run_id"],
+            "final/checkpoint": ckpt_path,
+        }
+    )
 
     # ── Save to disk ──
     with open(os.path.join(RESULTS_DIR, f"{exp}.json"), "w") as f:
@@ -312,41 +444,188 @@ def run_single(model_name, model_id, task, seed=42, rank=32, lr=3e-5, group=8, s
 
     # ── W&B artifacts ──
     try:
-        artifact = wandb.Artifact(name=exp.replace("/","-"), type="experiment-results", description=f"Results for {exp}")
+        artifact = wandb.Artifact(
+            name=exp.replace("/", "-"), type="experiment-results", description=f"Results for {exp}"
+        )
         artifact.add_file(os.path.join(RESULTS_DIR, f"{exp}.json"))
         wb_run.log_artifact(artifact)
-    except: pass
+    except:
+        pass
 
     wb_run.finish()
 
-    print(f"[{exp}] ✓ DONE | last10={summary['last10_avg']*100:.1f}% peak={summary['peak']*100:.1f}%")
+    print(
+        f"[{exp}] ✓ DONE | last10={summary['last10_avg'] * 100:.1f}% peak={summary['peak'] * 100:.1f}%"
+    )
     return summary
+
 
 # ── Experiment configs ───────────────────────────────────────────────────
 EXPERIMENTS = [
     # === SCALING (GSM8K across model sizes) ===
-    {"model_name":"qwen3-8b","model_id":"Qwen/Qwen3-8B","task":"gsm8k","seed":42,"rank":32,"lr":3e-5,"group":8,"steps":30,"tag":"scale_gsm8k_qwen3-8b"},
-    {"model_name":"qwen3-32b","model_id":"Qwen/Qwen3-32B","task":"gsm8k","seed":42,"rank":32,"lr":3e-5,"group":8,"steps":30,"tag":"scale_gsm8k_qwen3-32b"},
-    {"model_name":"qwen3.5-4b","model_id":"Qwen/Qwen3.5-4B","task":"gsm8k","seed":42,"rank":32,"lr":3e-5,"group":8,"steps":30,"tag":"scale_gsm8k_qwen3.5-4b"},
-    {"model_name":"qwen3.5-27b","model_id":"Qwen/Qwen3.5-27B","task":"gsm8k","seed":42,"rank":32,"lr":3e-5,"group":8,"steps":30,"tag":"scale_gsm8k_qwen3.5-27b"},
-    {"model_name":"llama-8b-inst","model_id":"meta-llama/Llama-3.1-8B-Instruct","task":"gsm8k","seed":42,"rank":32,"lr":3e-5,"group":8,"steps":30,"tag":"scale_gsm8k_llama-8b-inst"},
+    {
+        "model_name": "qwen3-8b",
+        "model_id": "Qwen/Qwen3-8B",
+        "task": "gsm8k",
+        "seed": 42,
+        "rank": 32,
+        "lr": 3e-5,
+        "group": 8,
+        "steps": 30,
+        "tag": "scale_gsm8k_qwen3-8b",
+    },
+    {
+        "model_name": "qwen3-32b",
+        "model_id": "Qwen/Qwen3-32B",
+        "task": "gsm8k",
+        "seed": 42,
+        "rank": 32,
+        "lr": 3e-5,
+        "group": 8,
+        "steps": 30,
+        "tag": "scale_gsm8k_qwen3-32b",
+    },
+    {
+        "model_name": "qwen3.5-4b",
+        "model_id": "Qwen/Qwen3.5-4B",
+        "task": "gsm8k",
+        "seed": 42,
+        "rank": 32,
+        "lr": 3e-5,
+        "group": 8,
+        "steps": 30,
+        "tag": "scale_gsm8k_qwen3.5-4b",
+    },
+    {
+        "model_name": "qwen3.5-27b",
+        "model_id": "Qwen/Qwen3.5-27B",
+        "task": "gsm8k",
+        "seed": 42,
+        "rank": 32,
+        "lr": 3e-5,
+        "group": 8,
+        "steps": 30,
+        "tag": "scale_gsm8k_qwen3.5-27b",
+    },
+    {
+        "model_name": "llama-8b-inst",
+        "model_id": "meta-llama/Llama-3.1-8B-Instruct",
+        "task": "gsm8k",
+        "seed": 42,
+        "rank": 32,
+        "lr": 3e-5,
+        "group": 8,
+        "steps": 30,
+        "tag": "scale_gsm8k_llama-8b-inst",
+    },
     # === FRONTIER (largest models) ===
-    {"model_name":"qwen3-235b-moe","model_id":"Qwen/Qwen3-235B-A22B-Instruct-2507","task":"gsm8k","seed":42,"rank":16,"lr":1e-5,"group":4,"steps":20,"tag":"frontier_gsm8k_qwen3-235b"},
-    {"model_name":"deepseek-v3.1","model_id":"deepseek-ai/DeepSeek-V3.1","task":"gsm8k","seed":42,"rank":16,"lr":1e-5,"group":4,"steps":20,"tag":"frontier_gsm8k_deepseek-v3.1"},
-    {"model_name":"nemotron-120b","model_id":"nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-BF16","task":"gsm8k","seed":42,"rank":16,"lr":1e-5,"group":4,"steps":20,"tag":"frontier_gsm8k_nemotron-120b"},
+    {
+        "model_name": "qwen3-235b-moe",
+        "model_id": "Qwen/Qwen3-235B-A22B-Instruct-2507",
+        "task": "gsm8k",
+        "seed": 42,
+        "rank": 16,
+        "lr": 1e-5,
+        "group": 4,
+        "steps": 20,
+        "tag": "frontier_gsm8k_qwen3-235b",
+    },
+    {
+        "model_name": "deepseek-v3.1",
+        "model_id": "deepseek-ai/DeepSeek-V3.1",
+        "task": "gsm8k",
+        "seed": 42,
+        "rank": 16,
+        "lr": 1e-5,
+        "group": 4,
+        "steps": 20,
+        "tag": "frontier_gsm8k_deepseek-v3.1",
+    },
+    {
+        "model_name": "nemotron-120b",
+        "model_id": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-BF16",
+        "task": "gsm8k",
+        "seed": 42,
+        "rank": 16,
+        "lr": 1e-5,
+        "group": 4,
+        "steps": 20,
+        "tag": "frontier_gsm8k_nemotron-120b",
+    },
     # === MOE vs DENSE ===
-    {"model_name":"qwen3-30b-moe","model_id":"Qwen/Qwen3-30B-A3B","task":"gsm8k","seed":42,"rank":32,"lr":3e-5,"group":8,"steps":30,"tag":"moe_gsm8k_qwen3-30b-moe"},
-    {"model_name":"qwen3-30b-moe-inst","model_id":"Qwen/Qwen3-30B-A3B-Instruct-2507","task":"gsm8k","seed":42,"rank":32,"lr":3e-5,"group":8,"steps":30,"tag":"moe_gsm8k_qwen3-30b-inst"},
+    {
+        "model_name": "qwen3-30b-moe",
+        "model_id": "Qwen/Qwen3-30B-A3B",
+        "task": "gsm8k",
+        "seed": 42,
+        "rank": 32,
+        "lr": 3e-5,
+        "group": 8,
+        "steps": 30,
+        "tag": "moe_gsm8k_qwen3-30b-moe",
+    },
+    {
+        "model_name": "qwen3-30b-moe-inst",
+        "model_id": "Qwen/Qwen3-30B-A3B-Instruct-2507",
+        "task": "gsm8k",
+        "seed": 42,
+        "rank": 32,
+        "lr": 3e-5,
+        "group": 8,
+        "steps": 30,
+        "tag": "moe_gsm8k_qwen3-30b-inst",
+    },
     # === CROSS-TASK (Tool-use) ===
-    {"model_name":"qwen3-32b","model_id":"Qwen/Qwen3-32B","task":"tool_use","seed":42,"rank":32,"lr":3e-5,"group":8,"steps":30,"tag":"cross_tool_qwen3-32b"},
-    {"model_name":"llama-8b-inst","model_id":"meta-llama/Llama-3.1-8B-Instruct","task":"tool_use","seed":42,"rank":32,"lr":3e-5,"group":8,"steps":30,"tag":"cross_tool_llama-8b-inst"},
+    {
+        "model_name": "qwen3-32b",
+        "model_id": "Qwen/Qwen3-32B",
+        "task": "tool_use",
+        "seed": 42,
+        "rank": 32,
+        "lr": 3e-5,
+        "group": 8,
+        "steps": 30,
+        "tag": "cross_tool_qwen3-32b",
+    },
+    {
+        "model_name": "llama-8b-inst",
+        "model_id": "meta-llama/Llama-3.1-8B-Instruct",
+        "task": "tool_use",
+        "seed": 42,
+        "rank": 32,
+        "lr": 3e-5,
+        "group": 8,
+        "steps": 30,
+        "tag": "cross_tool_llama-8b-inst",
+    },
     # === NEW ARCHITECTURES ===
-    {"model_name":"gpt-oss-20b","model_id":"openai/gpt-oss-20b","task":"gsm8k","seed":42,"rank":32,"lr":3e-5,"group":8,"steps":30,"tag":"arch_gsm8k_gpt-oss-20b"},
-    {"model_name":"kimi-k2","model_id":"moonshotai/Kimi-K2-Thinking","task":"gsm8k","seed":42,"rank":16,"lr":1e-5,"group":4,"steps":20,"tag":"arch_gsm8k_kimi-k2"},
+    {
+        "model_name": "gpt-oss-20b",
+        "model_id": "openai/gpt-oss-20b",
+        "task": "gsm8k",
+        "seed": 42,
+        "rank": 32,
+        "lr": 3e-5,
+        "group": 8,
+        "steps": 30,
+        "tag": "arch_gsm8k_gpt-oss-20b",
+    },
+    {
+        "model_name": "kimi-k2",
+        "model_id": "moonshotai/Kimi-K2-Thinking",
+        "task": "gsm8k",
+        "seed": 42,
+        "rank": 16,
+        "lr": 1e-5,
+        "group": 4,
+        "steps": 20,
+        "tag": "arch_gsm8k_kimi-k2",
+    },
 ]
 
 if __name__ == "__main__":
     import argparse
+
     parser = argparse.ArgumentParser()
     parser.add_argument("--max-parallel", type=int, default=6)
     parser.add_argument("--filter", default="")
@@ -359,31 +638,41 @@ if __name__ == "__main__":
     # Skip already-completed experiments
     completed_tags = set()
     for fname in os.listdir(RESULTS_DIR):
-        if fname.endswith('.json'):
-            tag = fname.replace('.json', '')
+        if fname.endswith(".json"):
+            tag = fname.replace(".json", "")
             try:
                 with open(os.path.join(RESULTS_DIR, fname)) as f:
                     data = json.load(f)
                 if require_completed(data):
                     planned = next((e for e in exps if e["tag"] == tag), None)
                     if planned is not None:
-                        expected = experiment_spec(dict(model=planned["model_id"], task=planned["task"],
-                            seed=planned.get("seed",42), rank=planned.get("rank",32), lr=planned.get("lr",3e-5),
-                            group=planned.get("group",8), steps=planned.get("steps",200), batch=planned.get("batch",2), scorer_id=SCORER_ID))
+                        expected = experiment_spec(
+                            dict(
+                                model=planned["model_id"],
+                                task=planned["task"],
+                                seed=planned.get("seed", 42),
+                                rank=planned.get("rank", 32),
+                                lr=planned.get("lr", 3e-5),
+                                group=planned.get("group", 8),
+                                steps=planned.get("steps", 200),
+                                batch=planned.get("batch", 2),
+                                scorer_id=SCORER_ID,
+                            )
+                        )
                         validate_resume(expected, data)
                         completed_tags.add(tag)
             except Exception:
                 pass
     before = len(exps)
-    exps = [e for e in exps if e['tag'] not in completed_tags]
+    exps = [e for e in exps if e["tag"] not in completed_tags]
     if before != len(exps):
         print(f"Skipping {before - len(exps)} already-completed experiments: {completed_tags}")
         print(f"Running {len(exps)} remaining experiments")
 
-    print(f"\n{'='*70}")
+    print(f"\n{'=' * 70}")
     print(f"LAUNCHING {len(exps)} TINKER EXPERIMENTS (max {args.max_parallel} parallel)")
     print(f"W&B: {WANDB_PROJECT} | HF: {HF_USER}/tinker-rl-bench-*")
-    print(f"{'='*70}\n")
+    print(f"{'=' * 70}\n")
 
     get_gsm8k()  # pre-load
 
@@ -391,7 +680,7 @@ if __name__ == "__main__":
     with ProcessPoolExecutor(max_workers=args.max_parallel) as pool:
         futures = {}
         for exp in exps:
-            f = pool.submit(run_single, **{k:v for k,v in exp.items()}, batch=2)
+            f = pool.submit(run_single, **{k: v for k, v in exp.items()}, batch=2)
             futures[f] = exp["tag"]
 
         for f in as_completed(futures):
@@ -401,24 +690,30 @@ if __name__ == "__main__":
                 all_results.append(r)
                 status = r.get("status") == "completed"
                 sym = "★" if status else "✗"
-                msg = f"last10={r['last10_avg']*100:.1f}% peak={r['peak']*100:.1f}%" if status else r.get("error","unknown")[:60]
+                msg = (
+                    f"last10={r['last10_avg'] * 100:.1f}% peak={r['peak'] * 100:.1f}%"
+                    if status
+                    else r.get("error", "unknown")[:60]
+                )
                 print(f"\n{sym} [{tag}] {'COMPLETED' if status else 'FAILED'}: {msg}\n")
             except Exception as e:
                 print(f"\n✗ [{tag}] EXCEPTION: {e}\n")
                 all_results.append({"experiment": tag, "error": str(e)})
 
-    ts = datetime.now().strftime('%Y%m%d_%H%M%S')
+    ts = datetime.now().strftime("%Y%m%d_%H%M%S")
     combined = os.path.join(RESULTS_DIR, f"tinker_parallel_{ts}.json")
     with open(combined, "w") as f:
         json.dump(all_results, f, indent=2)
 
-    print(f"\n{'='*70}")
+    print(f"\n{'=' * 70}")
     print(f"ALL {len(all_results)} EXPERIMENTS COMPLETE")
     print(f"Results: {combined}")
-    print(f"{'='*70}")
+    print(f"{'=' * 70}")
     for r in all_results:
         if "error" in r:
             print(f"  ✗ {r['experiment']}: {r['error'][:80]}")
         else:
-            hf = r.get('hf_repo', 'N/A')
-            print(f"  ✓ {r['experiment']}: last10={r['last10_avg']*100:.1f}% peak={r['peak']*100:.1f}% HF={hf}")
+            hf = r.get("hf_repo", "N/A")
+            print(
+                f"  ✓ {r['experiment']}: last10={r['last10_avg'] * 100:.1f}% peak={r['peak'] * 100:.1f}% HF={hf}"
+            )

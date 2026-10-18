@@ -62,6 +62,7 @@ References (verified):
   - burnham2002model (AICc model selection).
   - snyder1962fitting (3-parameter exponential fit with offset).
 """
+
 from __future__ import annotations
 
 import csv
@@ -72,10 +73,10 @@ from pathlib import Path
 import matplotlib
 
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt  # noqa: E402
-import numpy as np  # noqa: E402
-from scipy.optimize import curve_fit  # noqa: E402
-from scipy.stats import mannwhitneyu, spearmanr  # noqa: E402
+import matplotlib.pyplot as plt
+import numpy as np
+from scipy.optimize import curve_fit
+from scipy.stats import mannwhitneyu, spearmanr
 from _analysis_common import ols
 
 REPO = Path(__file__).resolve().parents[2] / "platform_hybrid"
@@ -85,12 +86,13 @@ FIG_DIR = REPO / "figures" / "review26_v2"
 
 MODELS: dict[str, tuple[str, float, str, str]] = {
     # name               : (trace_file,                       params_B, family, capability)
-    "Qwen3.5-4B":            ("scale_gsm8k_qwen3.5-4b.json",      4.0,   "dense",  "capable"),
-    "Qwen3-8B":              ("scale_gsm8k_qwen3-8b.json",        8.0,   "dense",  "incapable"),
-    "Llama-3.1-8B-Instruct": ("scale_gsm8k_llama-8b-inst.json",   8.0,   "dense",  "capable"),
-    "DeepSeek-V3.1":         ("frontier_gsm8k_deepseek-v3.1.json", 685.0, "moe",    "capable"),
-    "Nemotron-120B":         ("frontier_gsm8k_nemotron-120b.json", 120.0, "dense",  "incapable"),
+    "Qwen3.5-4B": ("scale_gsm8k_qwen3.5-4b.json", 4.0, "dense", "capable"),
+    "Qwen3-8B": ("scale_gsm8k_qwen3-8b.json", 8.0, "dense", "incapable"),
+    "Llama-3.1-8B-Instruct": ("scale_gsm8k_llama-8b-inst.json", 8.0, "dense", "capable"),
+    "DeepSeek-V3.1": ("frontier_gsm8k_deepseek-v3.1.json", 685.0, "moe", "capable"),
+    "Nemotron-120B": ("frontier_gsm8k_nemotron-120b.json", 120.0, "dense", "incapable"),
 }
+
 
 # Reproduce iter117 helpers inline so the iter137 script is standalone.
 def saturation_2p(t: np.ndarray, r_max: float, lam: float) -> np.ndarray:
@@ -118,34 +120,53 @@ def fit_2p(t: np.ndarray, y: np.ndarray) -> dict:
     n = len(t)
     try:
         popt, _ = curve_fit(
-            saturation_2p, t, y,
-            p0=[float(np.mean(y[-min(5, n):])), 0.1],
+            saturation_2p,
+            t,
+            y,
+            p0=[float(np.mean(y[-min(5, n) :])), 0.1],
             bounds=([0.0, 1e-4], [1.05, 10.0]),
             maxfev=20000,
         )
         r_max, lam = float(popt[0]), float(popt[1])
         pred = saturation_2p(t, r_max, lam)
         resid = y - pred
-        rmse = float(math.sqrt(np.mean(resid ** 2)))
-        ss_res = float(np.sum(resid ** 2))
+        rmse = float(math.sqrt(np.mean(resid**2)))
+        ss_res = float(np.sum(resid**2))
         ss_tot = float(np.sum((y - y.mean()) ** 2))
         r2 = 1.0 - ss_res / ss_tot if ss_tot > 0 else float("nan")
         lam_at_bound = int(lam >= 9.999)
-    except Exception:  # noqa: BLE001
-        return dict(R_max=float("nan"), lam=float("nan"), t_80=float("nan"),
-                    rmse=float("nan"), r2=float("nan"), lam_at_bound=1,
-                    aicc=float("nan"), status="fit_failed")
-    t_80 = float(-math.log(0.2) / lam) if (lam and not math.isnan(lam) and lam > 0) else float("nan")
+    except Exception:
+        return dict(
+            R_max=float("nan"),
+            lam=float("nan"),
+            t_80=float("nan"),
+            rmse=float("nan"),
+            r2=float("nan"),
+            lam_at_bound=1,
+            aicc=float("nan"),
+            status="fit_failed",
+        )
+    t_80 = (
+        float(-math.log(0.2) / lam) if (lam and not math.isnan(lam) and lam > 0) else float("nan")
+    )
     # AICc (Gaussian residual assumption)
     k = 2
     if ss_res > 0:
-        ll= -n / 2.0 * (math.log(2 * math.pi) + 1 + math.log(ss_res / n))
+        ll = -n / 2.0 * (math.log(2 * math.pi) + 1 + math.log(ss_res / n))
     else:
         ll = float("inf")
     aic = 2 * k - 2 * ll
     aicc = aic + (2 * k * (k + 1)) / max(n - k - 1, 1)
-    return dict(R_max=r_max, lam=lam, t_80=t_80, rmse=rmse, r2=r2,
-                lam_at_bound=lam_at_bound, aicc=aicc, status="available")
+    return dict(
+        R_max=r_max,
+        lam=lam,
+        t_80=t_80,
+        rmse=rmse,
+        r2=r2,
+        lam_at_bound=lam_at_bound,
+        aicc=aicc,
+        status="available",
+    )
 
 
 def fit_3p(t: np.ndarray, y: np.ndarray) -> dict:
@@ -158,13 +179,15 @@ def fit_3p(t: np.ndarray, y: np.ndarray) -> dict:
     starts = [
         [float(np.min(y)), float(np.max(y)), 0.1],
         [0.0, float(np.mean(y)), 0.5],
-        [float(np.median(y)), float(np.mean(y[-min(5, n):])), 0.2],
+        [float(np.median(y)), float(np.mean(y[-min(5, n) :])), 0.2],
     ]
     best = None
     for p0 in starts:
         try:
             popt, pcov = curve_fit(
-                saturation_3p, t, y,
+                saturation_3p,
+                t,
+                y,
                 p0=p0,
                 bounds=([0.0, 0.0, 1e-4], [1.0, 1.05, 10.0]),
                 maxfev=20000,
@@ -175,14 +198,17 @@ def fit_3p(t: np.ndarray, y: np.ndarray) -> dict:
                 c, r_max = r_max, c
             pred = saturation_3p(t, c, r_max, lam)
             resid = y - pred
-            ss_res = float(np.sum(resid ** 2))
-            rmse = float(math.sqrt(np.mean(resid ** 2)))
+            ss_res = float(np.sum(resid**2))
+            rmse = float(math.sqrt(np.mean(resid**2)))
             ss_tot = float(np.sum((y - y.mean()) ** 2))
             r2 = 1.0 - ss_res / ss_tot if ss_tot > 0 else float("nan")
             lam_at_bound = int(lam >= 9.999 or lam <= 1.001e-4)
-            covariance_condition = float(np.linalg.cond(pcov)) if np.isfinite(pcov).all() else float("inf")
-            identifiable = bool(covariance_condition < 1e10 and not lam_at_bound
-                                and abs(r_max - c) > 1e-4 and n > 4)
+            covariance_condition = (
+                float(np.linalg.cond(pcov)) if np.isfinite(pcov).all() else float("inf")
+            )
+            identifiable = bool(
+                covariance_condition < 1e10 and not lam_at_bound and abs(r_max - c) > 1e-4 and n > 4
+            )
             k = 3
             if ss_res > 0:
                 ll = -n / 2.0 * (math.log(2 * math.pi) + 1 + math.log(ss_res / n))
@@ -190,17 +216,34 @@ def fit_3p(t: np.ndarray, y: np.ndarray) -> dict:
                 ll = float("inf")
             aic = 2 * k - 2 * ll
             aicc = aic + (2 * k * (k + 1)) / max(n - k - 1, 1)
-            cand = dict(c=c, R_max=r_max, lam=lam, rmse=rmse, r2=r2,
-                        identifiable=identifiable, covariance_condition=covariance_condition,
-                        lam_at_bound=lam_at_bound, aicc=aicc)
+            cand = dict(
+                c=c,
+                R_max=r_max,
+                lam=lam,
+                rmse=rmse,
+                r2=r2,
+                identifiable=identifiable,
+                covariance_condition=covariance_condition,
+                lam_at_bound=lam_at_bound,
+                aicc=aicc,
+            )
             if best is None or cand["rmse"] < best["rmse"]:
                 best = cand
-        except Exception:  # noqa: BLE001
+        except Exception:
             continue
     if best is None:
-        return dict(c=float("nan"), R_max=float("nan"), lam=float("nan"),
-                    rmse=float("nan"), r2=float("nan"), lam_at_bound=1,
-                    aicc=float("nan"), t_80=float("nan"), identifiable=False, covariance_condition=float("inf"))
+        return dict(
+            c=float("nan"),
+            R_max=float("nan"),
+            lam=float("nan"),
+            rmse=float("nan"),
+            r2=float("nan"),
+            lam_at_bound=1,
+            aicc=float("nan"),
+            t_80=float("nan"),
+            identifiable=False,
+            covariance_condition=float("inf"),
+        )
     # t_80_offset: time to reach R_max - 0.2*(R_max - c).
     # Solving R(t) = R_max - 0.2*(R_max - c)
     #   c + (R_max - c)(1 - e^-lt) = R_max - 0.2*(R_max - c)
@@ -208,7 +251,9 @@ def fit_3p(t: np.ndarray, y: np.ndarray) -> dict:
     #   e^-lt = 0.2
     #   t = -ln(0.2) / lambda = same as iter117!
     lam = best["lam"]
-    t_80 = float(-math.log(0.2) / lam) if (lam and not math.isnan(lam) and lam > 0) else float("nan")
+    t_80 = (
+        float(-math.log(0.2) / lam) if (lam and not math.isnan(lam) and lam > 0) else float("nan")
+    )
     best["t_80"] = t_80 if best["identifiable"] else float("nan")
     return best
 
@@ -232,9 +277,13 @@ def main() -> None:
         if not path.exists():
             raise FileNotFoundError(f"trace missing for {name}: {path}")
         obj = json.loads(path.read_text())
-        rt = (obj.get("per_step_reward") or obj.get("rewards")
-              or obj.get("trace") or obj.get("reward_trace")
-              or obj.get("reward_curve"))
+        rt = (
+            obj.get("per_step_reward")
+            or obj.get("rewards")
+            or obj.get("trace")
+            or obj.get("reward_trace")
+            or obj.get("reward_curve")
+        )
         if rt is None:
             raise KeyError(f"no per_step_reward in {trace_file}")
         traces[name] = [float(x) for x in rt]
@@ -275,31 +324,68 @@ def main() -> None:
             t80_ratio = f3["t_80"] / f2["t_80"]
         else:
             t80_ratio = float("nan")
-        offset_rows.append([
-            name, f"{params_B:.4f}", family, capability, len(rt),
-            f"{np.mean(rt):.4f}", f"{np.std(rt):.4f}",
-            # 2-param
-            f"{f2['R_max']:.4f}", f"{f2['lam']:.4f}", f"{f2['t_80']:.4f}",
-            f"{f2['rmse']:.4f}", f"{f2['r2']:.4f}", int(f2["lam_at_bound"]),
-            f"{f2['aicc']:.2f}",
-            # 3-param
-            f"{f3['c']:.4f}", f"{f3['R_max']:.4f}", f"{f3['lam']:.4f}",
-            f"{f3['t_80']:.4f}", f"{f3['rmse']:.4f}", f"{f3['r2']:.4f}",
-            int(f3["lam_at_bound"]),
-            f"{f3['aicc']:.2f}",
-            # comparison
-            f"{delta_rmse:+.4f}", f"{delta_aicc:+.2f}", f"{t80_ratio:.4f}",
-            f3["identifiable"], f3["covariance_condition"],
-        ])
+        offset_rows.append(
+            [
+                name,
+                f"{params_B:.4f}",
+                family,
+                capability,
+                len(rt),
+                f"{np.mean(rt):.4f}",
+                f"{np.std(rt):.4f}",
+                # 2-param
+                f"{f2['R_max']:.4f}",
+                f"{f2['lam']:.4f}",
+                f"{f2['t_80']:.4f}",
+                f"{f2['rmse']:.4f}",
+                f"{f2['r2']:.4f}",
+                int(f2["lam_at_bound"]),
+                f"{f2['aicc']:.2f}",
+                # 3-param
+                f"{f3['c']:.4f}",
+                f"{f3['R_max']:.4f}",
+                f"{f3['lam']:.4f}",
+                f"{f3['t_80']:.4f}",
+                f"{f3['rmse']:.4f}",
+                f"{f3['r2']:.4f}",
+                int(f3["lam_at_bound"]),
+                f"{f3['aicc']:.2f}",
+                # comparison
+                f"{delta_rmse:+.4f}",
+                f"{delta_aicc:+.2f}",
+                f"{t80_ratio:.4f}",
+                f3["identifiable"],
+                f3["covariance_condition"],
+            ]
+        )
     cols = [
-        "model", "params_B", "family", "capability", "n_steps",
-        "mean_reward", "var_reward",
-        "R_max_2p", "lambda_2p", "t80_2p", "rmse_2p", "r2_2p",
-        "lam_at_bound_2p", "aicc_2p",
-        "c_3p", "R_max_3p", "lambda_3p", "t80_3p", "rmse_3p", "r2_3p",
-        "lam_at_bound_3p", "aicc_3p",
-        "delta_rmse_3p_minus_2p", "delta_aicc_3p_minus_2p", "t80_ratio_3p_over_2p",
-        "identifiable_screen", "covariance_condition",
+        "model",
+        "params_B",
+        "family",
+        "capability",
+        "n_steps",
+        "mean_reward",
+        "var_reward",
+        "R_max_2p",
+        "lambda_2p",
+        "t80_2p",
+        "rmse_2p",
+        "r2_2p",
+        "lam_at_bound_2p",
+        "aicc_2p",
+        "c_3p",
+        "R_max_3p",
+        "lambda_3p",
+        "t80_3p",
+        "rmse_3p",
+        "r2_3p",
+        "lam_at_bound_3p",
+        "aicc_3p",
+        "delta_rmse_3p_minus_2p",
+        "delta_aicc_3p_minus_2p",
+        "t80_ratio_3p_over_2p",
+        "identifiable_screen",
+        "covariance_condition",
     ]
     out_path = RESULTS_DIR / "scaling_law_iter137_offset_fit.tsv"
     with out_path.open("w", newline="") as f:
@@ -317,16 +403,26 @@ def main() -> None:
         f2 = fits_2p[name]
         f3 = fits_3p[name]
         winner = comparison_winner(f2, f3)
-        aic_rows.append([
-            name, f"{f2['aicc']:.2f}", f"{f3['aicc']:.2f}",
-            f"{f3['aicc'] - f2['aicc']:.2f}",
-            winner,
-        ])
+        aic_rows.append(
+            [
+                name,
+                f"{f2['aicc']:.2f}",
+                f"{f3['aicc']:.2f}",
+                f"{f3['aicc'] - f2['aicc']:.2f}",
+                winner,
+            ]
+        )
     # Summary row: how many anchors prefer 3p?
     n_3p_wins = sum(1 for r in aic_rows if r[4] == "3p")
-    aic_rows.append([
-        "SUMMARY", "", "", "", f"{n_3p_wins}/{len(MODELS)} anchors prefer 3p",
-    ])
+    aic_rows.append(
+        [
+            "SUMMARY",
+            "",
+            "",
+            "",
+            f"{n_3p_wins}/{len(MODELS)} anchors prefer 3p",
+        ]
+    )
     aic_path = RESULTS_DIR / "scaling_law_iter137_aic_compare.tsv"
     with aic_path.open("w", newline="") as f:
         w = csv.writer(f, delimiter="\t")
@@ -340,12 +436,8 @@ def main() -> None:
     #     longer bound-anchored, so the 5-row regression is informative.
     # ------------------------------------------------------------------
     log_n = np.array([math.log10(MODELS[n][1]) for n in MODELS], dtype=float)
-    log_t80_3p = np.array([
-        math.log10(max(fits_3p[n]["t_80"], 1e-3)) for n in MODELS
-    ], dtype=float)
-    log_t80_2p = np.array([
-        math.log10(max(fits_2p[n]["t_80"], 1e-3)) for n in MODELS
-    ], dtype=float)
+    log_t80_3p = np.array([math.log10(max(fits_3p[n]["t_80"], 1e-3)) for n in MODELS], dtype=float)
+    log_t80_2p = np.array([math.log10(max(fits_2p[n]["t_80"], 1e-3)) for n in MODELS], dtype=float)
     eligible = np.isfinite(log_t80_3p)
     a_3p, b_3p, se_3p = ols(log_n[eligible], log_t80_3p[eligible])
     a_2p, b_2p, se_2p = ols(log_n, log_t80_2p)
@@ -362,36 +454,60 @@ def main() -> None:
     # Capability-class Spearman rho(R_max, log10(N))
     rho_r, p_r = spearmanr(log_n, r_max_3p)
     t80_rows: list[list] = []
-    t80_rows.append([
-        "log10(t80) ~ log10(N) | 2p", f"{a_2p:.4f}", f"{b_2p:.4f}", f"{se_2p:.4f}",
-        f"{(b_2p / se_2p) if se_2p > 0 else float('nan'):.4f}",
-        "4/5 anchored at lambda bound (iter117 verdict)",
-    ])
-    t80_rows.append([
-        "log10(t80) ~ log10(N) | 3p", f"{a_3p:.4f}", f"{b_3p:.4f}", f"{se_3p:.4f}",
-        f"{(b_3p / se_3p) if se_3p > 0 else float('nan'):.4f}",
-        "Only covariance-conditioned, non-bound fits are eligible; offset does not identify lambda",
-    ])
-    t80_rows.append([
-        "R_max ~ log10(N) | 3p", f"{a_rmax:.4f}", f"{b_rmax:.4f}", f"{se_rmax:.4f}",
-        f"{(b_rmax / se_rmax) if se_rmax > 0 else float('nan'):.4f}",
-        "Spearman rho = {:.3f}, p = {:.3g}".format(rho_r, p_r),
-    ])
-    t80_rows.append([
-        "c (baseline) ~ log10(N) | 3p", f"{a_c:.4f}", f"{b_c:.4f}", f"{se_c:.4f}",
-        f"{(b_c / se_c) if se_c > 0 else float('nan'):.4f}",
-        "baseline floor vs scale",
-    ])
-    t80_rows.append([
-        "lambda ~ log10(N) | 3p", f"{a_lam:.4f}", f"{b_lam:.4f}", f"{se_lam:.4f}",
-        f"{(b_lam / se_lam) if se_lam > 0 else float('nan'):.4f}",
-        "learning rate vs scale",
-    ])
+    t80_rows.append(
+        [
+            "log10(t80) ~ log10(N) | 2p",
+            f"{a_2p:.4f}",
+            f"{b_2p:.4f}",
+            f"{se_2p:.4f}",
+            f"{(b_2p / se_2p) if se_2p > 0 else float('nan'):.4f}",
+            "4/5 anchored at lambda bound (iter117 verdict)",
+        ]
+    )
+    t80_rows.append(
+        [
+            "log10(t80) ~ log10(N) | 3p",
+            f"{a_3p:.4f}",
+            f"{b_3p:.4f}",
+            f"{se_3p:.4f}",
+            f"{(b_3p / se_3p) if se_3p > 0 else float('nan'):.4f}",
+            "Only covariance-conditioned, non-bound fits are eligible; offset does not identify lambda",
+        ]
+    )
+    t80_rows.append(
+        [
+            "R_max ~ log10(N) | 3p",
+            f"{a_rmax:.4f}",
+            f"{b_rmax:.4f}",
+            f"{se_rmax:.4f}",
+            f"{(b_rmax / se_rmax) if se_rmax > 0 else float('nan'):.4f}",
+            "Spearman rho = {:.3f}, p = {:.3g}".format(rho_r, p_r),
+        ]
+    )
+    t80_rows.append(
+        [
+            "c (baseline) ~ log10(N) | 3p",
+            f"{a_c:.4f}",
+            f"{b_c:.4f}",
+            f"{se_c:.4f}",
+            f"{(b_c / se_c) if se_c > 0 else float('nan'):.4f}",
+            "baseline floor vs scale",
+        ]
+    )
+    t80_rows.append(
+        [
+            "lambda ~ log10(N) | 3p",
+            f"{a_lam:.4f}",
+            f"{b_lam:.4f}",
+            f"{se_lam:.4f}",
+            f"{(b_lam / se_lam) if se_lam > 0 else float('nan'):.4f}",
+            "learning rate vs scale",
+        ]
+    )
     t80_path = RESULTS_DIR / "scaling_law_iter137_t80_scaling.tsv"
     with t80_path.open("w", newline="") as f:
         w = csv.writer(f, delimiter="\t")
-        w.writerow(["relation", "intercept", "slope_per_log10N", "se_slope",
-                    "t_slope", "note"])
+        w.writerow(["relation", "intercept", "slope_per_log10N", "se_slope", "t_slope", "note"])
         for row in t80_rows:
             w.writerow(row)
     print(f"wrote {t80_path}")
@@ -413,34 +529,67 @@ def main() -> None:
     # Within-capable Spearman rho(R_max, log N)
     log_n_cap = np.array([math.log10(MODELS[n][1]) for n in capable], dtype=float)
     log_n_inc = np.array([math.log10(MODELS[n][1]) for n in incapable], dtype=float)
-    rho_cap, p_cap = spearmanr(log_n_cap, rmax_cap) if len(capable) >= 3 else (float("nan"), float("nan"))
-    rho_inc, p_inc = spearmanr(log_n_inc, rmax_inc) if len(incapable) >= 3 else (float("nan"), float("nan"))
+    rho_cap, p_cap = (
+        spearmanr(log_n_cap, rmax_cap) if len(capable) >= 3 else (float("nan"), float("nan"))
+    )
+    rho_inc, p_inc = (
+        spearmanr(log_n_inc, rmax_inc) if len(incapable) >= 3 else (float("nan"), float("nan"))
+    )
     cap_rows: list[list] = []
-    cap_rows.append([
-        "R_max: capable vs incapable", f"{rmax_cap.mean():.4f}", f"{rmax_inc.mean():.4f}",
-        f"{u_rmax:.3f}", f"{p_rmax:.4f}", "iter133 cross-class gap propagates",
-    ])
-    cap_rows.append([
-        "c (baseline): capable vs incapable", f"{c_cap.mean():.4f}", f"{c_inc.mean():.4f}",
-        f"{u_c:.3f}", f"{p_c:.4f}", "offset diagnostic per class",
-    ])
-    cap_rows.append([
-        "lambda: capable vs incapable", f"{lam_cap.mean():.4f}", f"{lam_inc.mean():.4f}",
-        f"{u_lam:.3f}", f"{p_lam:.4f}", "learning rate diagnostic per class",
-    ])
-    cap_rows.append([
-        "rho(R_max, log N) within capable", f"{rho_cap:.4f}", f"{p_cap:.4f}", "", "",
-        f"n={len(capable)} capable anchors",
-    ])
-    cap_rows.append([
-        "rho(R_max, log N) within incapable", f"{rho_inc:.4f}", f"{p_inc:.4f}", "", "",
-        f"n={len(incapable)} incapable anchors",
-    ])
+    cap_rows.append(
+        [
+            "R_max: capable vs incapable",
+            f"{rmax_cap.mean():.4f}",
+            f"{rmax_inc.mean():.4f}",
+            f"{u_rmax:.3f}",
+            f"{p_rmax:.4f}",
+            "iter133 cross-class gap propagates",
+        ]
+    )
+    cap_rows.append(
+        [
+            "c (baseline): capable vs incapable",
+            f"{c_cap.mean():.4f}",
+            f"{c_inc.mean():.4f}",
+            f"{u_c:.3f}",
+            f"{p_c:.4f}",
+            "offset diagnostic per class",
+        ]
+    )
+    cap_rows.append(
+        [
+            "lambda: capable vs incapable",
+            f"{lam_cap.mean():.4f}",
+            f"{lam_inc.mean():.4f}",
+            f"{u_lam:.3f}",
+            f"{p_lam:.4f}",
+            "learning rate diagnostic per class",
+        ]
+    )
+    cap_rows.append(
+        [
+            "rho(R_max, log N) within capable",
+            f"{rho_cap:.4f}",
+            f"{p_cap:.4f}",
+            "",
+            "",
+            f"n={len(capable)} capable anchors",
+        ]
+    )
+    cap_rows.append(
+        [
+            "rho(R_max, log N) within incapable",
+            f"{rho_inc:.4f}",
+            f"{p_inc:.4f}",
+            "",
+            "",
+            f"n={len(incapable)} incapable anchors",
+        ]
+    )
     cap_path = RESULTS_DIR / "scaling_law_iter137_capability_link.tsv"
     with cap_path.open("w", newline="") as f:
         w = csv.writer(f, delimiter="\t")
-        w.writerow(["test", "capable_mean", "incapable_mean", "U_stat", "p_value",
-                    "note"])
+        w.writerow(["test", "capable_mean", "incapable_mean", "U_stat", "p_value", "note"])
         for row in cap_rows:
             w.writerow(row)
     print(f"wrote {cap_path}")
@@ -455,8 +604,15 @@ def main() -> None:
             lines = f.read().splitlines()
         header = lines[0].split("\t")
         extras = [
-            "c_3p", "R_max_3p", "lambda_3p", "t80_3p", "rmse_3p", "r2_3p",
-            "aicc_3p", "lam_at_bound_3p", "delta_aicc_3p_vs_2p",
+            "c_3p",
+            "R_max_3p",
+            "lambda_3p",
+            "t80_3p",
+            "rmse_3p",
+            "r2_3p",
+            "aicc_3p",
+            "lam_at_bound_3p",
+            "delta_aicc_3p_vs_2p",
         ]
         for c in extras:
             if c not in header:
@@ -493,9 +649,13 @@ def main() -> None:
         n_anchors=len(MODELS),
         anchors=[
             dict(
-                name=n, params_B=MODELS[n][1], family=MODELS[n][2],
-                capability=MODELS[n][3], n_steps=len(traces[n]),
-                fit_2p=fits_2p[n], fit_3p=fits_3p[n],
+                name=n,
+                params_B=MODELS[n][1],
+                family=MODELS[n][2],
+                capability=MODELS[n][3],
+                n_steps=len(traces[n]),
+                fit_2p=fits_2p[n],
+                fit_3p=fits_3p[n],
             )
             for n in MODELS
         ],
@@ -507,17 +667,23 @@ def main() -> None:
         t80_scaling=dict(
             log_t80_vs_log_N_2p=dict(intercept=a_2p, slope=b_2p, se=se_2p),
             log_t80_vs_log_N_3p=dict(intercept=a_3p, slope=b_3p, se=se_3p),
-            R_max_3p_vs_log_N=dict(intercept=a_rmax, slope=b_rmax, se=se_rmax,
-                                   spearman_rho=float(rho_r), p=float(p_r)),
+            R_max_3p_vs_log_N=dict(
+                intercept=a_rmax, slope=b_rmax, se=se_rmax, spearman_rho=float(rho_r), p=float(p_r)
+            ),
             c_3p_vs_log_N=dict(intercept=a_c, slope=b_c, se=se_c),
             lambda_3p_vs_log_N=dict(intercept=a_lam, slope=b_lam, se=se_lam),
         ),
         capability_link=dict(
-            r_max_mw_u=float(u_rmax), r_max_mw_p=float(p_rmax),
-            c_mw_u=float(u_c), c_mw_p=float(p_c),
-            lambda_mw_u=float(u_lam), lambda_mw_p=float(p_lam),
-            within_capable_rho=float(rho_cap), within_capable_p=float(p_cap),
-            within_incapable_rho=float(rho_inc), within_incapable_p=float(p_inc),
+            r_max_mw_u=float(u_rmax),
+            r_max_mw_p=float(p_rmax),
+            c_mw_u=float(u_c),
+            c_mw_p=float(p_c),
+            lambda_mw_u=float(u_lam),
+            lambda_mw_p=float(p_lam),
+            within_capable_rho=float(rho_cap),
+            within_capable_p=float(p_cap),
+            within_incapable_rho=float(rho_inc),
+            within_incapable_p=float(p_inc),
         ),
         iter117_verdict_relativisation=(
             "iter117 2-param fit R(t)=R_max*(1-exp(-lambda*t)) forced 4/5 anchors "
@@ -579,14 +745,18 @@ def main() -> None:
         n = len(rt)
         t = np.arange(1, n + 1, dtype=float)
         c = cmap(i / max(len(names) - 1, 1))
-        ax_2p.plot(t, rt, "o-", color=c, alpha=0.55, markersize=4,
-                   label=f"{name} (obs)")
+        ax_2p.plot(t, rt, "o-", color=c, alpha=0.55, markersize=4, label=f"{name} (obs)")
         f2 = fits_2p[name]
         if not math.isnan(f2["R_max"]):
             t_fine = np.linspace(1, max(n, 30), 200)
-            ax_2p.plot(t_fine, saturation_2p(t_fine, f2["R_max"], max(f2["lam"], 1e-4)),
-                       "--", color=c, alpha=0.85,
-                       label=f"{name} 2p t80={f2['t_80']:.2f}")
+            ax_2p.plot(
+                t_fine,
+                saturation_2p(t_fine, f2["R_max"], max(f2["lam"], 1e-4)),
+                "--",
+                color=c,
+                alpha=0.85,
+                label=f"{name} 2p t80={f2['t_80']:.2f}",
+            )
     ax_2p.set_xlabel("Training step t")
     ax_2p.set_ylabel("Reward R(t)")
     ax_2p.set_title("(a) iter117 2-param fit: 4/5 anchors hit lambda bound")
@@ -602,10 +772,14 @@ def main() -> None:
         f3 = fits_3p[name]
         if not math.isnan(f3["R_max"]):
             t_fine = np.linspace(1, max(n, 30), 200)
-            ax_3p.plot(t_fine, saturation_3p(t_fine, f3["c"], f3["R_max"],
-                                            max(f3["lam"], 1e-4)),
-                       "--", color=c, alpha=0.85,
-                       label=f"{name} 3p c={f3['c']:.2f} Rmax={f3['R_max']:.2f}")
+            ax_3p.plot(
+                t_fine,
+                saturation_3p(t_fine, f3["c"], f3["R_max"], max(f3["lam"], 1e-4)),
+                "--",
+                color=c,
+                alpha=0.85,
+                label=f"{name} 3p c={f3['c']:.2f} Rmax={f3['R_max']:.2f}",
+            )
     ax_3p.set_xlabel("Training step t")
     ax_3p.set_ylabel("Reward R(t)")
     ax_3p.set_title("(b) iter137 3-param fit: lambda un-bound on every anchor")
@@ -616,17 +790,24 @@ def main() -> None:
     log_ns = np.log10(ns)
     t80_2p = np.array([fits_2p[n]["t_80"] for n in names], dtype=float)
     t80_3p = np.array([fits_3p[n]["t_80"] for n in names], dtype=float)
-    ax_t80.scatter(log_ns, t80_2p, s=80, c="tab:red", edgecolor="black",
-                   marker="x", label="2p (lambda bound)")
-    ax_t80.scatter(log_ns, t80_3p, s=80, c="tab:blue", edgecolor="black",
-                   marker="o", label="3p (lambda free)")
-    for name, x_v, y_v in zip(names, log_ns, t80_3p):
-        ax_t80.annotate(name, (x_v, y_v), fontsize=7,
-                        xytext=(5, 5), textcoords="offset points")
+    ax_t80.scatter(
+        log_ns, t80_2p, s=80, c="tab:red", edgecolor="black", marker="x", label="2p (lambda bound)"
+    )
+    ax_t80.scatter(
+        log_ns, t80_3p, s=80, c="tab:blue", edgecolor="black", marker="o", label="3p (lambda free)"
+    )
+    for name, x_v, y_v in zip(names, log_ns, t80_3p, strict=False):
+        ax_t80.annotate(name, (x_v, y_v), fontsize=7, xytext=(5, 5), textcoords="offset points")
     # OLS line for 3p
     x_fit = np.linspace(log_ns.min(), log_ns.max(), 50)
-    ax_t80.plot(x_fit, a_3p + b_3p * x_fit, "-", color="tab:blue", alpha=0.5,
-                label=f"3p OLS slope={b_3p:.3f}")
+    ax_t80.plot(
+        x_fit,
+        a_3p + b_3p * x_fit,
+        "-",
+        color="tab:blue",
+        alpha=0.5,
+        label=f"3p OLS slope={b_3p:.3f}",
+    )
     ax_t80.set_xlabel("log10(params_B)")
     ax_t80.set_ylabel("t_80 = -ln(0.2)/lambda")
     ax_t80.set_title("(c) t_80 vs N: 3p un-binds the regression")
@@ -638,22 +819,42 @@ def main() -> None:
     for i, name in enumerate(names):
         f3 = fits_3p[name]
         n_b = MODELS[name][1]
-        ax_cap.scatter(np.log10(n_b), f3["R_max"], s=120,
-                       c=color_map[caps[i]], edgecolor="black", zorder=3)
-        ax_cap.annotate(name, (np.log10(n_b), f3["R_max"]), fontsize=7,
-                        xytext=(5, 5), textcoords="offset points")
+        ax_cap.scatter(
+            np.log10(n_b), f3["R_max"], s=120, c=color_map[caps[i]], edgecolor="black", zorder=3
+        )
+        ax_cap.annotate(
+            name,
+            (np.log10(n_b), f3["R_max"]),
+            fontsize=7,
+            xytext=(5, 5),
+            textcoords="offset points",
+        )
     ax_cap.set_xlabel("log10(params_B)")
     ax_cap.set_ylabel("R_max (3-param)")
     ax_cap.set_title("(d) Capability axis preserved in 3-param fit")
-    ax_cap.axhline(0.7, color="grey", linestyle=":", alpha=0.7,
-                   label="capable/incapable boundary")
+    ax_cap.axhline(0.7, color="grey", linestyle=":", alpha=0.7, label="capable/incapable boundary")
     # Manual legend for capability
     from matplotlib.lines import Line2D
+
     legend_handles = [
-        Line2D([0], [0], marker="o", color="w", markerfacecolor="tab:green",
-               markersize=10, label="capable"),
-        Line2D([0], [0], marker="o", color="w", markerfacecolor="tab:orange",
-               markersize=10, label="incapable"),
+        Line2D(
+            [0],
+            [0],
+            marker="o",
+            color="w",
+            markerfacecolor="tab:green",
+            markersize=10,
+            label="capable",
+        ),
+        Line2D(
+            [0],
+            [0],
+            marker="o",
+            color="w",
+            markerfacecolor="tab:orange",
+            markersize=10,
+            label="incapable",
+        ),
     ]
     ax_cap.legend(handles=legend_handles, fontsize=8, loc="lower right")
 
@@ -675,12 +876,18 @@ def main() -> None:
     # ------------------------------------------------------------------
     print("\n=== iter 137 Pillar 1 summary ===")
     print(f"n_anchors = {len(MODELS)} | AICc: 3p wins on {n_3p_wins}/{len(MODELS)}")
-    print(f"log(t80) ~ log(N): 2p slope={b_2p:.3f} (4/5 bound) "
-          f"| 3p slope={b_3p:.3f}+-{se_3p:.3f} (informative)")
-    print(f"R_max(3p) ~ log(N): slope={b_rmax:.3f}+-{se_rmax:.3f}, "
-          f"Spearman rho={rho_r:.3f}, p={p_r:.3g}")
-    print(f"Capability MWU: R_max U={u_rmax:.1f} p={p_rmax:.3g}, "
-          f"c U={u_c:.1f} p={p_c:.3g}, lambda U={u_lam:.1f} p={p_lam:.3g}")
+    print(
+        f"log(t80) ~ log(N): 2p slope={b_2p:.3f} (4/5 bound) "
+        f"| 3p slope={b_3p:.3f}+-{se_3p:.3f} (informative)"
+    )
+    print(
+        f"R_max(3p) ~ log(N): slope={b_rmax:.3f}+-{se_rmax:.3f}, "
+        f"Spearman rho={rho_r:.3f}, p={p_r:.3g}"
+    )
+    print(
+        f"Capability MWU: R_max U={u_rmax:.1f} p={p_rmax:.3g}, "
+        f"c U={u_c:.1f} p={p_c:.3g}, lambda U={u_lam:.1f} p={p_lam:.3g}"
+    )
 
 
 if __name__ == "__main__":

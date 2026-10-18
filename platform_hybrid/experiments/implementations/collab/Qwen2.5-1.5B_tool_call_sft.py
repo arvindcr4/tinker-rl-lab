@@ -6,10 +6,12 @@
 # !pip install -q transformers datasets peft trl accelerate bitsandbytes
 
 from huggingface_hub import login
-login(token="TOKEN")   
 
-import json, os, re, torch
+login(token="TOKEN")
+
+import os, re, torch
 import wandb
+
 wandb.login()
 wandb.init(project="qwen1.5b-tool-call-sft")
 
@@ -19,22 +21,23 @@ from peft import LoraConfig, TaskType
 from trl import SFTTrainer, SFTConfig
 
 # ── CONFIG ───────────────────────────────────────────────────
-MODEL_ID    = "Qwen/Qwen2.5-1.5B-Instruct"
-OUTPUT_DIR  = "/content/qwen15b-glaive-sft"
+MODEL_ID = "Qwen/Qwen2.5-1.5B-Instruct"
+OUTPUT_DIR = "/content/qwen15b-glaive-sft"
 HUB_MODEL_ID = "YOUR_HF_USERNAME/qwen15b-glaive-sft"
-NUM_SAMPLES = 500       
+NUM_SAMPLES = 500
 MAX_SEQ_LEN = 512
-LORA_RANK   = 16
-LORA_ALPHA  = 32
-EPOCHS      = 2
-BATCH_SIZE  = 2
-GRAD_ACCUM  = 8
-LR          = 2e-4
+LORA_RANK = 16
+LORA_ALPHA = 32
+EPOCHS = 2
+BATCH_SIZE = 2
+GRAD_ACCUM = 8
+LR = 2e-4
 
 # ── LOAD & PARSE GLAIVE DATASET ──────────────────────────────
 print("Loading glaive-function-calling-v2 dataset ...")
 raw = load_dataset("glaiveai/glaive-function-calling-v2", split="train")
 print(f"Total examples in dataset: {len(raw)}")
+
 
 def parse_glaive_example(row):
     """
@@ -45,10 +48,9 @@ def parse_glaive_example(row):
     """
     try:
         system_raw = row.get("system", "")
-        chat_raw   = row.get("chat", "")
+        chat_raw = row.get("chat", "")
 
-
-        func_match = re.search(r'\{.*\}', system_raw, re.DOTALL)
+        func_match = re.search(r"\{.*\}", system_raw, re.DOTALL)
         func_schema = func_match.group(0).strip() if func_match else ""
 
         # Build system prompt with schema
@@ -64,13 +66,13 @@ def parse_glaive_example(row):
 
         # Parse the chat turns
         # Split on USER:/ASSISTANT:/FUNCTION RESPONSE: markers
-        turns = re.split(r'(USER:|ASSISTANT:|FUNCTION RESPONSE:)', chat_raw)
+        turns = re.split(r"(USER:|ASSISTANT:|FUNCTION RESPONSE:)", chat_raw)
         turns = [t.strip() for t in turns if t.strip()]
 
         i = 0
         while i < len(turns):
             marker = turns[i]
-            content = turns[i+1].strip() if i+1 < len(turns) else ""
+            content = turns[i + 1].strip() if i + 1 < len(turns) else ""
             # clean <|endoftext|> tokens
             content = content.replace("<|endoftext|>", "").strip()
 
@@ -78,7 +80,7 @@ def parse_glaive_example(row):
                 messages.append({"role": "user", "content": content})
             elif marker == "ASSISTANT:" and content:
                 # strip <functioncall> tag, keep the JSON
-                content = re.sub(r'<functioncall>\s*', '', content)
+                content = re.sub(r"<functioncall>\s*", "", content)
                 messages.append({"role": "assistant", "content": content})
             elif marker == "FUNCTION RESPONSE:" and content:
                 messages.append({"role": "tool", "content": content})
@@ -151,13 +153,13 @@ lora_config = LoraConfig(
     lora_alpha=LORA_ALPHA,
     lora_dropout=0.05,
     bias="none",
-    target_modules=["q_proj", "k_proj", "v_proj", "o_proj",
-                    "gate_proj", "up_proj", "down_proj"],
+    target_modules=["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"],
 )
 
 # ── TRAIN ────────────────────────────────────────────────────
 # Auto-detect GPU availability
 import torch
+
 has_gpu = torch.cuda.is_available()
 print(f"GPU available: {has_gpu}  |  Device: {torch.cuda.get_device_name(0) if has_gpu else 'CPU'}")
 if not has_gpu:
@@ -215,19 +217,31 @@ tokenizer.push_to_hub(HUB_MODEL_ID)
 print(f"\n✅ SFT adapter pushed to Hub: {HUB_MODEL_ID}")
 wandb.finish()
 
+
 # ── QUICK INFERENCE ──────────────────────────────────────────
 def run_inference(query):
     model.eval()
     msgs = [
-        {"role": "system", "content": "You are a helpful assistant. When calling a tool respond ONLY with valid JSON: {\"name\": \"<tool>\", \"arguments\": {<args>}}"},
-        {"role": "user",   "content": query},
+        {
+            "role": "system",
+            "content": 'You are a helpful assistant. When calling a tool respond ONLY with valid JSON: {"name": "<tool>", "arguments": {<args>}}',
+        },
+        {"role": "user", "content": query},
     ]
     prompt = tokenizer.apply_chat_template(msgs, tokenize=False, add_generation_prompt=True)
     inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
     with torch.no_grad():
-        out = model.generate(**inputs, max_new_tokens=128, temperature=0.1,
-                             do_sample=True, eos_token_id=tokenizer.eos_token_id)
-    return tokenizer.decode(out[0][inputs["input_ids"].shape[1]:], skip_special_tokens=True).strip()
+        out = model.generate(
+            **inputs,
+            max_new_tokens=128,
+            temperature=0.1,
+            do_sample=True,
+            eos_token_id=tokenizer.eos_token_id,
+        )
+    return tokenizer.decode(
+        out[0][inputs["input_ids"].shape[1] :], skip_special_tokens=True
+    ).strip()
+
 
 print("\n-- SFT Inference samples --")
 for q in ["Get the weather in Paris", "Calculate 25 * 48", "Search for Python tutorials"]:

@@ -121,7 +121,9 @@ def _shorten(text: str, limit: int = 4000) -> str:
     return text[: limit - 3] + "..."
 
 
-def _run_cmd(cmd: List[str], cwd: Optional[Path] = None, env: Optional[Dict[str, str]] = None) -> Tuple[int, str]:
+def _run_cmd(
+    cmd: List[str], cwd: Optional[Path] = None, env: Optional[Dict[str, str]] = None
+) -> Tuple[int, str]:
     proc = subprocess.run(
         cmd,
         cwd=str(cwd) if cwd else None,
@@ -160,8 +162,17 @@ def ensure_repo(repo_dir: Path, repo_url: str, branch: Optional[str] = None) -> 
 
 
 # Positive allowlist: endpoints, paths and future credential options stay private.
-PUBLIC_CONFIG_FIELDS = ("envs", "seeds", "agent", "agent_model", "max_rounds",
-                        "concurrency", "limit_per_env_seed", "skip_verify")
+PUBLIC_CONFIG_FIELDS = (
+    "envs",
+    "seeds",
+    "agent",
+    "agent_model",
+    "max_rounds",
+    "concurrency",
+    "limit_per_env_seed",
+    "skip_verify",
+)
+
 
 def public_config(args: argparse.Namespace) -> dict:
     return {key: getattr(args, key) for key in PUBLIC_CONFIG_FIELDS if hasattr(args, key)}
@@ -312,7 +323,7 @@ def _resolve_trajectory_dir(run_root: Path, output_root: Path, run_id: str, task
         return direct
 
     # Fallback if harness layout diverges.
-    matches = list((output_root.rglob(f"*{run_id}*")) )
+    matches = list((output_root.rglob(f"*{run_id}*")))
     for p in matches:
         cand = p / task_id
         if cand.exists():
@@ -374,7 +385,9 @@ def batch_run(
     # back to count-only selection or a credential-bearing command argument.
     rc, help_text = _run_cmd(["python", "-m", "harness.eval.batch", "--help"], cwd=repo_dir)
     if rc or "--task-ids-file" not in help_text or "--agent-api-key-env" not in help_text:
-        raise RuntimeError("Harness needs --task-ids-file and --agent-api-key-env support before execution")
+        raise RuntimeError(
+            "Harness needs --task-ids-file and --agent-api-key-env support before execution"
+        )
     manifest = run_root.parent / f"{run_id}.tasks.json"
     manifest.write_text(json.dumps(task_ids), encoding="utf-8")
     cmd += ["--task-ids-file", str(manifest), "--agent-api-key-env", "ECHOVERSE_AGENT_API_KEY"]
@@ -604,7 +617,9 @@ def run_matrix(args: argparse.Namespace) -> List[RunResult]:
         raise FileNotFoundError(f"Echoverse envs directory not found: {envs_root}")
 
     requested_envs = [e.strip() for e in args.envs.split(",") if e.strip()]
-    selected_envs = [e for e in requested_envs if e in EMBEDDED_ENVS] if requested_envs else EMBEDDED_ENVS
+    selected_envs = (
+        [e for e in requested_envs if e in EMBEDDED_ENVS] if requested_envs else EMBEDDED_ENVS
+    )
     ignored = [e for e in requested_envs if e not in EMBEDDED_ENVS]
     if ignored:
         LOG.warning("Ignoring unsupported env names: %s", ",".join(ignored))
@@ -638,8 +653,13 @@ def run_matrix(args: argparse.Namespace) -> List[RunResult]:
             if args.limit_per_env_seed and len(task_ids) > args.limit_per_env_seed:
                 task_ids = task_ids[: args.limit_per_env_seed]
 
-            identity = {"tasks": task_ids, "seed": seed, "config": public_config(args),
-                        "endpoint": args.agent_base_url, "endpoints": args.agent_base_urls}
+            identity = {
+                "tasks": task_ids,
+                "seed": seed,
+                "config": public_config(args),
+                "endpoint": args.agent_base_url,
+                "endpoints": args.agent_base_urls,
+            }
             digest = hashlib.sha256(json.dumps(identity, sort_keys=True).encode()).hexdigest()[:16]
             run_id = f"{env_name}_seed{seed}_{digest}"
             rc, batch_runtime, batch_output, run_root = batch_run(
@@ -727,7 +747,11 @@ def _parse_args(argv: Optional[Iterable[str]] = None) -> argparse.Namespace:
     parser.add_argument("--agent-base-url", default=None)
     parser.add_argument("--agent-base-urls", default=None)
     parser.add_argument("--agent-model", default="Fara1.5-9B")
-    parser.add_argument("--agent-api-key-env", default="ECHOVERSE_AGENT_API_KEY", help="Environment variable containing the agent credential; never pass its value on the CLI")
+    parser.add_argument(
+        "--agent-api-key-env",
+        default="ECHOVERSE_AGENT_API_KEY",
+        help="Environment variable containing the agent credential; never pass its value on the CLI",
+    )
     parser.add_argument("--max-rounds", type=int, default=120)
     parser.add_argument("--concurrency", type=int, default=None)
     parser.add_argument("--headful", action="store_true")
@@ -776,9 +800,7 @@ def _parse_args(argv: Optional[Iterable[str]] = None) -> argparse.Namespace:
         else None
     )
     if args.agent_base_urls and args.agent_base_url:
-        raise ValueError(
-            "Provide either --agent-base-url or --agent-base-urls, not both."
-        )
+        raise ValueError("Provide either --agent-base-url or --agent-base-urls, not both.")
 
     return args
 

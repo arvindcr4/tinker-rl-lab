@@ -43,6 +43,7 @@ from pathlib import Path
 
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
 from _paths import REPO_ROOT
+
 ROOT = REPO_ROOT
 RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8/corrected-review20-v2"
 
@@ -126,7 +127,7 @@ def expected_calibration_error(y, p, n_bins=10):
     bins = [0.0] * n_bins
     confs = [0.0] * n_bins
     counts = [0] * n_bins
-    for yi, pi in zip(y, p):
+    for yi, pi in zip(y, p, strict=False):
         b = min(int(pi * n_bins), n_bins - 1)
         bins[b] += yi
         confs[b] += pi
@@ -168,9 +169,13 @@ def write_tsv(path: Path, header, rows):
             f.write("\t".join(str(c) for c in r) + "\n")
 
 
-def cost_accounting_rows(timing_record, cpu_usd_per_hour=None,
-                         llm_usd_per_invocation=0.0035, batch_rows=10_000,
-                         sensor_coverage=0.10):
+def cost_accounting_rows(
+    timing_record,
+    cpu_usd_per_hour=None,
+    llm_usd_per_invocation=0.0035,
+    batch_rows=10_000,
+    sensor_coverage=0.10,
+):
     """Separate measured batch duration from explicitly assumed dollar rates.
 
     No CPU billing rate is supplied by the timing artifact, so tree and hybrid
@@ -190,8 +195,11 @@ def cost_accounting_rows(timing_record, cpu_usd_per_hour=None,
             raise ValueError("Cost rates must be finite and nonnegative")
     duration_10k = None
     duration_source = None
-    for key, scale in (("infer_time_sec_per_10k", 1.0),
-                       ("inference_us_per_10k", 1e-6), ("inf_us_10k", 1e-6)):
+    for key, scale in (
+        ("infer_time_sec_per_10k", 1.0),
+        ("inference_us_per_10k", 1e-6),
+        ("inf_us_10k", 1e-6),
+    ):
         value = timing_record.get(key)
         if value is not None:
             duration_10k = float(value) * scale
@@ -200,8 +208,11 @@ def cost_accounting_rows(timing_record, cpu_usd_per_hour=None,
             duration_source = key
             break
     duration_batch = duration_10k * batch_rows / 10_000 if duration_10k is not None else None
-    tree_cost = (duration_batch * cpu_usd_per_hour / 3600
-                 if duration_batch is not None and cpu_usd_per_hour is not None else None)
+    tree_cost = (
+        duration_batch * cpu_usd_per_hour / 3600
+        if duration_batch is not None and cpu_usd_per_hour is not None
+        else None
+    )
     sensor_rows = int(round(batch_rows * sensor_coverage))
 
     def row(role, n, tree_rows, sensor_calls, comment):
@@ -215,8 +226,11 @@ def cost_accounting_rows(timing_record, cpu_usd_per_hour=None,
             "llm_invocations": sensor_calls,
             "tree_inference_s_batch": duration_batch if tree_rows else None,
             "tree_timing_source": duration_source if tree_rows else None,
-            "timing_status": ("reported_batch_throughput" if tree_rows and duration_batch is not None
-                              else "unavailable"),
+            "timing_status": (
+                "reported_batch_throughput"
+                if tree_rows and duration_batch is not None
+                else "unavailable"
+            ),
             "cpu_usd_per_hour": cpu_usd_per_hour if tree_rows else None,
             "llm_usd_per_invocation": llm_usd_per_invocation if sensor_calls else None,
             "llm_input_tokens_batch": sensor_calls * 120,
@@ -225,21 +239,42 @@ def cost_accounting_rows(timing_record, cpu_usd_per_hour=None,
             "llm_cost_usd_batch": sensor_component,
             "cost_usd_batch": total,
             "cost_usd_per_decision": total / n if total is not None else None,
-            "cost_status": "assumption_based_estimate" if total is not None else "partial_tree_cost_unavailable",
+            "cost_status": "assumption_based_estimate"
+            if total is not None
+            else "partial_tree_cost_unavailable",
             "comment": comment,
         }
 
     return [
-        row("XGBoost (scorer)", batch_rows, batch_rows, 0,
-            "Tree duration is reported throughput, not measured per-request latency"),
-        row("Qwen3.5-4B SFT (sensor surrogate)", 1, 0, 1,
-            "Assumed token bill and token counts; sensor latency is unmeasured"),
-        row("Qwen3.5-4B SFT (synchronous scorer surrogate)", 1, 0, 1,
-            "Assumed token bill; synchronous latency is unmeasured"),
-        row(f"Hybrid: XGB+LLM sensor on {sensor_coverage:.0%} of rows", batch_rows,
-            batch_rows, sensor_rows,
+        row(
+            "XGBoost (scorer)",
+            batch_rows,
+            batch_rows,
+            0,
+            "Tree duration is reported throughput, not measured per-request latency",
+        ),
+        row(
+            "Qwen3.5-4B SFT (sensor surrogate)",
+            1,
+            0,
+            1,
+            "Assumed token bill and token counts; sensor latency is unmeasured",
+        ),
+        row(
+            "Qwen3.5-4B SFT (synchronous scorer surrogate)",
+            1,
+            0,
+            1,
+            "Assumed token bill; synchronous latency is unmeasured",
+        ),
+        row(
+            f"Hybrid: XGB+LLM sensor on {sensor_coverage:.0%} of rows",
+            batch_rows,
+            batch_rows,
+            sensor_rows,
             f"LLM component: ${sensor_rows * llm_usd_per_invocation:g} / {batch_rows} rows; "
-            "add tree cost when an explicit CPU rate is available"),
+            "add tree cost when an explicit CPU rate is available",
+        ),
     ]
 
 
@@ -248,8 +283,7 @@ def main():
     print("[p8] reading data", file=sys.stderr)
     Xtr, ytr, _ = read_csv(ROOT / "fraud_data.csv")
     Xte, yte, _ = read_csv(ROOT / "test_data.csv")
-    print(f"[p8] train={len(Xtr)} pos={sum(ytr)}  test={len(Xte)} pos={sum(yte)}",
-          file=sys.stderr)
+    print(f"[p8] train={len(Xtr)} pos={sum(ytr)}  test={len(Xte)} pos={sum(yte)}", file=sys.stderr)
 
     # Feature index maps
     feat_all = {c: i for i, c in enumerate(ALL_24)}
@@ -262,55 +296,90 @@ def main():
     res_24 = fit_eval(Xtr, ytr, Xte, yte, idx_24)
     res_4 = fit_eval(Xtr, ytr, Xte, yte, idx_4)
 
-    summary = {"full_20": res_20, "full_24": res_24, "agg_4_sensor": res_4,
-               "n_train": len(ytr), "n_test": len(yte), "pos_train": sum(ytr),
-               "pos_test": sum(yte), "features": ALL_24,
-               "feature_groups": {"raw_20": FEATURES_20, "agg_4": AGG_4,
-                                  "full_24": ALL_24},
-               "headline_deltas": {
-                   "delta_auc_24_vs_20": round(res_24["auc"] - res_20["auc"], 4),
-                   "delta_auc_24_vs_4":  round(res_24["auc"] - res_4["auc"], 4),
-"delta_brier_4_vs_24": round(res_4["brier"] - res_24["brier"], 4),
-                   "delta_ece_4_vs_24":   round(res_4["ece10"] - res_24["ece10"], 4),
-               }}
+    summary = {
+        "full_20": res_20,
+        "full_24": res_24,
+        "agg_4_sensor": res_4,
+        "n_train": len(ytr),
+        "n_test": len(yte),
+        "pos_train": sum(ytr),
+        "pos_test": sum(yte),
+        "features": ALL_24,
+        "feature_groups": {"raw_20": FEATURES_20, "agg_4": AGG_4, "full_24": ALL_24},
+        "headline_deltas": {
+            "delta_auc_24_vs_20": round(res_24["auc"] - res_20["auc"], 4),
+            "delta_auc_24_vs_4": round(res_24["auc"] - res_4["auc"], 4),
+            "delta_brier_4_vs_24": round(res_4["brier"] - res_24["brier"], 4),
+            "delta_ece_4_vs_24": round(res_4["ece10"] - res_24["ece10"], 4),
+        },
+    }
 
     # ---- Calibration table ----
     cal_rows = []
-    for label, r in [("XGB-20raw", res_20), ("XGB-24full", res_24),
-                     ("XGB-4sensor", res_4)]:
-        cal_rows.append([label, r["n_test"], r["pos_test"],
-                         round(r["auc"], 4), round(r["accuracy"], 4),
-                         round(r["precision"], 4), round(r["recall"], 4),
-                         round(r["f1"], 4), round(r["brier"], 4),
-                         round(r["ece10"], 4), round(r["thr_best_f1"], 3)])
-    write_tsv(RES / "p8_calibration_full.tsv",
-              ["model", "n_test", "pos_test", "auc", "accuracy", "precision",
-               "recall", "f1", "brier", "ece10", "thr_best_f1"], cal_rows)
+    for label, r in [("XGB-20raw", res_20), ("XGB-24full", res_24), ("XGB-4sensor", res_4)]:
+        cal_rows.append(
+            [
+                label,
+                r["n_test"],
+                r["pos_test"],
+                round(r["auc"], 4),
+                round(r["accuracy"], 4),
+                round(r["precision"], 4),
+                round(r["recall"], 4),
+                round(r["f1"], 4),
+                round(r["brier"], 4),
+                round(r["ece10"], 4),
+                round(r["thr_best_f1"], 3),
+            ]
+        )
+    write_tsv(
+        RES / "p8_calibration_full.tsv",
+        [
+            "model",
+            "n_test",
+            "pos_test",
+            "auc",
+            "accuracy",
+            "precision",
+            "recall",
+            "f1",
+            "brier",
+            "ece10",
+            "thr_best_f1",
+        ],
+        cal_rows,
+    )
 
     # ---- Feature ablation: which of the 4 aggregates matters? ----
-    print("[p8] running feature-group ablation (4-aggregate leave-one-out)",
-          file=sys.stderr)
+    print("[p8] running feature-group ablation (4-aggregate leave-one-out)", file=sys.stderr)
     abl_rows = []
-    abl_rows.append(["ALL_24", 24] + [round(res_24[k], 4) for k in
-                                      ("auc", "accuracy", "f1", "brier", "ece10")])
-    abl_rows.append(["RAW_20_ONLY", 20] + [round(res_20[k], 4) for k in
-                                          ("auc", "accuracy", "f1", "brier", "ece10")])
-    abl_rows.append(["AGG_4_ONLY", 4] + [round(res_4[k], 4) for k in
-                                        ("auc", "accuracy", "f1", "brier", "ece10")])
+    abl_rows.append(
+        ["ALL_24", 24] + [round(res_24[k], 4) for k in ("auc", "accuracy", "f1", "brier", "ece10")]
+    )
+    abl_rows.append(
+        ["RAW_20_ONLY", 20]
+        + [round(res_20[k], 4) for k in ("auc", "accuracy", "f1", "brier", "ece10")]
+    )
+    abl_rows.append(
+        ["AGG_4_ONLY", 4]
+        + [round(res_4[k], 4) for k in ("auc", "accuracy", "f1", "brier", "ece10")]
+    )
     for drop in AGG_4:
         sub = [c for c in ALL_24 if c != drop]
         idx_sub = [feat_all[c] for c in sub]
         r = fit_eval(Xtr, ytr, Xte, yte, idx_sub)
-        abl_rows.append([f"drop_{drop}", len(sub)] +
-                        [round(r[k], 4) for k in ("auc", "accuracy", "f1",
-                                                  "brier", "ece10")])
-    write_tsv(RES / "p8_feature_ablation.tsv",
-              ["variant", "n_feat", "auc", "accuracy", "f1", "brier", "ece10"],
-              abl_rows)
+        abl_rows.append(
+            [f"drop_{drop}", len(sub)]
+            + [round(r[k], 4) for k in ("auc", "accuracy", "f1", "brier", "ece10")]
+        )
+    write_tsv(
+        RES / "p8_feature_ablation.tsv",
+        ["variant", "n_feat", "auc", "accuracy", "f1", "brier", "ece10"],
+        abl_rows,
+    )
 
     # ---- Paired bootstrap CIs on headline deltas ----
-    print("[p8] running paired bootstrap (1000 resamples, test split)",
-          file=sys.stderr)
+    print("[p8] running paired bootstrap (1000 resamples, test split)", file=sys.stderr)
     from sklearn.metrics import (
         roc_auc_score,
         accuracy_score,
@@ -326,27 +395,39 @@ def main():
         Xte2 = [[r[i] for i in feature_idx] for r in Xte]
         spw = 7.0
         m = xgb.XGBClassifier(
-            n_estimators=200, max_depth=6, learning_rate=0.05,
-            subsample=0.8, colsample_bytree=0.8, scale_pos_weight=spw,
-            eval_metric="logloss", random_state=seed, tree_method="hist", n_jobs=4)
+            n_estimators=200,
+            max_depth=6,
+            learning_rate=0.05,
+            subsample=0.8,
+            colsample_bytree=0.8,
+            scale_pos_weight=spw,
+            eval_metric="logloss",
+            random_state=seed,
+            tree_method="hist",
+            n_jobs=4,
+        )
         m.fit(Xtr2, ytr, verbose=False)
         return m.predict_proba(Xte2)[:, 1].tolist()
 
     def auc_te_factory(preds):
         # idx is a list of indices; we expect the bootstrap loop to pass idx.
         return lambda idx_or_x, y: roc_auc_score(
-            y, [preds[i] for i in (idx_or_x if isinstance(idx_or_x, list)
-                                   else range(len(y)))])
+            y, [preds[i] for i in (idx_or_x if isinstance(idx_or_x, list) else range(len(y)))]
+        )
 
     def acc_te_factory(preds, thr):
         return lambda idx_or_x, y: accuracy_score(
-            y, [int(preds[i] >= thr) for i in (
-                idx_or_x if isinstance(idx_or_x, list) else range(len(y)))])
+            y,
+            [
+                int(preds[i] >= thr)
+                for i in (idx_or_x if isinstance(idx_or_x, list) else range(len(y)))
+            ],
+        )
 
     def brier_te_factory(preds):
         return lambda idx_or_x, y: brier_score_loss(
-            y, [preds[i] for i in (
-                idx_or_x if isinstance(idx_or_x, list) else range(len(y)))])
+            y, [preds[i] for i in (idx_or_x if isinstance(idx_or_x, list) else range(len(y)))]
+        )
 
     print("[p8] refitting for bootstrap preds", file=sys.stderr)
     preds_20 = refit_preds(idx_20)
@@ -358,15 +439,15 @@ def main():
     auc4 = roc_auc_score(yte, preds_4)
 
     metrics = {
-        "auc_20":       (auc20, auc_te_factory(preds_20)),
-        "auc_24":       (auc24, auc_te_factory(preds_24)),
-        "auc_4":        (auc4,  auc_te_factory(preds_4)),
-        "acc_20":       (res_20["accuracy"], acc_te_factory(preds_20, res_20["thr_best_f1"])),
-        "acc_24":       (res_24["accuracy"], acc_te_factory(preds_24, res_24["thr_best_f1"])),
-        "acc_4":        (res_4["accuracy"],  acc_te_factory(preds_4,  res_4["thr_best_f1"])),
-        "brier_20":     (res_20["brier"], brier_te_factory(preds_20)),
-        "brier_24":     (res_24["brier"], brier_te_factory(preds_24)),
-        "brier_4":      (res_4["brier"],  brier_te_factory(preds_4)),
+        "auc_20": (auc20, auc_te_factory(preds_20)),
+        "auc_24": (auc24, auc_te_factory(preds_24)),
+        "auc_4": (auc4, auc_te_factory(preds_4)),
+        "acc_20": (res_20["accuracy"], acc_te_factory(preds_20, res_20["thr_best_f1"])),
+        "acc_24": (res_24["accuracy"], acc_te_factory(preds_24, res_24["thr_best_f1"])),
+        "acc_4": (res_4["accuracy"], acc_te_factory(preds_4, res_4["thr_best_f1"])),
+        "brier_20": (res_20["brier"], brier_te_factory(preds_20)),
+        "brier_24": (res_24["brier"], brier_te_factory(preds_24)),
+        "brier_4": (res_4["brier"], brier_te_factory(preds_4)),
     }
     boots = {}
     for name, (pt, fn) in metrics.items():
@@ -389,21 +470,23 @@ def main():
 
     print("[p8] computing paired deltas", file=sys.stderr)
     pair_rows = []
-    for (hi, lo, name) in [
+    for hi, lo, name in [
         ("auc_24", "auc_20", "AUC delta, 24features - 20raw"),
-        ("auc_24", "auc_4",  "AUC delta, 24features - 4sensor (LLM surrogate)"),
+        ("auc_24", "auc_4", "AUC delta, 24features - 4sensor (LLM surrogate)"),
         ("acc_24", "acc_20", "Acc delta, 24 - 20 (thr-tuned)"),
-        ("acc_24", "acc_4",  "Acc delta, 24 - 4sensor"),
+        ("acc_24", "acc_4", "Acc delta, 24 - 4sensor"),
         ("brier_4", "brier_24", "Brier delta, 4sensor - 24features (less=better)"),
     ]:
         pt = round(metrics[hi][0] - metrics[lo][0], 4)
         lo_, hi_ = paired_delta(metrics[hi][1], metrics[lo][1])
         pair_rows.append([name, pt, round(lo_, 4), round(hi_, 4)])
-        summary["headline_deltas"][name] = {"point": pt, "lo": round(lo_, 4),
-                                            "hi": round(hi_, 4)}
+        summary["headline_deltas"][name] = {"point": pt, "lo": round(lo_, 4), "hi": round(hi_, 4)}
 
-    write_tsv(RES / "p8_headline_cis.tsv",
-              ["comparison", "point_estimate", "ci_lo_025", "ci_hi_975"], pair_rows)
+    write_tsv(
+        RES / "p8_headline_cis.tsv",
+        ["comparison", "point_estimate", "ci_lo_025", "ci_hi_975"],
+        pair_rows,
+    )
     summary["bootstrap_individual"] = boots
 
     # ---- Cost-per-decision accounting ----
@@ -416,8 +499,11 @@ def main():
         xgb_json = {}
     cost_rows = cost_accounting_rows(xgb_json)
     cost_columns = list(cost_rows[0])
-    write_tsv(RES / "p8_cost_accounting.tsv", cost_columns,
-              [[r[c] if r[c] is not None else "" for c in cost_columns] for r in cost_rows])
+    write_tsv(
+        RES / "p8_cost_accounting.tsv",
+        cost_columns,
+        [[r[c] if r[c] is not None else "" for c in cost_columns] for r in cost_rows],
+    )
     summary["cost_accounting"] = cost_rows
     summary["cost_assumptions"] = {
         "llm_usd_per_invocation": 0.0035,
@@ -431,6 +517,7 @@ def main():
     def _coerce(o):
         try:
             import numpy as np
+
             if isinstance(o, (np.floating,)):
                 return float(o)
             if isinstance(o, (np.integer,)):
@@ -447,13 +534,16 @@ def main():
         return _coerce(d)
 
     (RES / "p8_calibration_summary.json").write_text(
-        json.dumps(_scrub(summary), indent=2, sort_keys=True))
+        json.dumps(_scrub(summary), indent=2, sort_keys=True)
+    )
 
     print("[p8] done.", file=sys.stderr)
-    summary["_scrubbed_for_log"] = _scrub({"headline_deltas":
-                                          summary["headline_deltas"],
-                                          "individual":
-                                          summary["bootstrap_individual"]})
+    summary["_scrubbed_for_log"] = _scrub(
+        {
+            "headline_deltas": summary["headline_deltas"],
+            "individual": summary["bootstrap_individual"],
+        }
+    )
     print(json.dumps(summary["_scrubbed_for_log"], indent=2))
 
 

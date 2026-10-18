@@ -29,6 +29,7 @@ Outputs:
   platform_hybrid/experiments/results/p5p8/p6_delta_field_drift.tsv          (per-row)
   platform_hybrid/experiments/results/p5p8/p6_delta_field_drift_summary.json  (machine-readable)
 """
+
 from __future__ import annotations
 
 import json, pathlib, datetime, warnings
@@ -103,8 +104,7 @@ def classify(field: str) -> tuple[str, str]:
     if block not in block_leaves:
         return ("BLOCK_NOT_IN_MIN_REPORT", f"block {block!r} not in MIN-REPORT")
     if leaf not in block_leaves[block]:
-        return ("LEAF_NOT_IN_SCHEMA",
-                f"leaf {leaf!r} missing from MIN-REPORT.{block}")
+        return ("LEAF_NOT_IN_SCHEMA", f"leaf {leaf!r} missing from MIN-REPORT.{block}")
     return ("OK", f"{block}.{leaf}")
 
 
@@ -120,14 +120,16 @@ for f in sorted((ROOT / "entries").glob("delta_*.json")):
         counts[verdict] += 1
         if verdict != "OK" and verdict != "SEE_CITATION":
             per_delta_drift[delta_id].append((comp, field, verdict, reason))
-        rows.append({
-            "delta_id": delta_id,
-            "component": comp,
-            "field_claim": field,
-            "verdict": verdict,
-            "reason": reason,
-            "change_text": c.get("change", "")[:120],
-        })
+        rows.append(
+            {
+                "delta_id": delta_id,
+                "component": comp,
+                "field_claim": field,
+                "verdict": verdict,
+                "reason": reason,
+                "change_text": c.get("change", "")[:120],
+            }
+        )
 
 # ------------------------------------------------------------------
 # (3) Write TSV + JSON summary.
@@ -137,8 +139,7 @@ with open(tsv, "w") as fh:
     cols = ["delta_id", "component", "field_claim", "verdict", "reason", "change_text"]
     fh.write("\t".join(cols) + "\n")
     for r in rows:
-        fh.write("\t".join(str(r[c]).replace("\t", " ").replace("\n", " ")
-                          for c in cols) + "\n")
+        fh.write("\t".join(str(r[c]).replace("\t", " ").replace("\n", " ") for c in cols) + "\n")
 print(f"wrote {tsv}  ({len(rows)} rows)")
 
 # Repair proposals (the canonical iter-41 mapping for known drifts).
@@ -149,11 +150,11 @@ print(f"wrote {tsv}  ({len(rows)} rows)")
 # 3. gspo's sequence-level clip has no MIN-REPORT leaf (no schema bump yet);
 #    honestly mark it as SEE_CITATION (the deferred-surface pattern).
 repair_table: dict[tuple[str, str], str] = {
-    ("delta_dapo", "dynamic_sampling"):         "loss_form.sampling_dynamic_filter",
-    ("delta_dapo", "token_level_loss"):         "loss_form.token_aggregation",
-    ("delta_dapo", "overlong_reward_shaping"):  "loss_form.reward_shaping_type",
-    ("delta_dapo", "kl_removed"):               "reference_kl.kl_beta",
-    ("delta_gspo", "sequence_level_clip"):      "see delta-list and citation",
+    ("delta_dapo", "dynamic_sampling"): "loss_form.sampling_dynamic_filter",
+    ("delta_dapo", "token_level_loss"): "loss_form.token_aggregation",
+    ("delta_dapo", "overlong_reward_shaping"): "loss_form.reward_shaping_type",
+    ("delta_dapo", "kl_removed"): "reference_kl.kl_beta",
+    ("delta_gspo", "sequence_level_clip"): "see delta-list and citation",
 }
 
 # JSON summary
@@ -163,11 +164,15 @@ summary = {
     "verdict_counts": dict(counts),
     "per_delta_drift": {k: v for k, v in per_delta_drift.items()},
     "repair_proposals": [
-        {"delta_id": di, "component": co,
-         "current_field": next(
-             (r["field_claim"] for r in rows
-              if r["delta_id"] == di and r["component"] == co), ""),
-         "proposed_field": pf, "rationale": "iter-42 drift audit"}
+        {
+            "delta_id": di,
+            "component": co,
+            "current_field": next(
+                (r["field_claim"] for r in rows if r["delta_id"] == di and r["component"] == co), ""
+            ),
+            "proposed_field": pf,
+            "rationale": "iter-42 drift audit",
+        }
         for (di, co), pf in repair_table.items()
     ],
     "schema_block_leaf_counts": {k: len(v) for k, v in block_leaves.items()},
@@ -181,8 +186,7 @@ print(f"wrote {out_json}")
 # ------------------------------------------------------------------
 ok = counts.get("OK", 0)
 see_cit = counts.get("SEE_CITATION", 0)
-drift = sum(v for k, v in counts.items()
-            if k not in ("OK", "SEE_CITATION", "EMPTY"))
+drift = sum(v for k, v in counts.items() if k not in ("OK", "SEE_CITATION", "EMPTY"))
 total = ok + see_cit + drift
 print()
 print(f"=== Iter 42 — Delta field: drift audit ===")
@@ -190,7 +194,7 @@ print(f"Total (delta, component) pairs: {total}")
 print(f"  OK (schema-anchored):        {ok}")
 print(f"  SEE_CITATION (deferred):     {see_cit}")
 print(f"  DRIFT (needs repair):        {drift}")
-print(f"  drift rate:                  {drift/max(1, total):.3f}")
+print(f"  drift rate:                  {drift / max(1, total):.3f}")
 print()
 print("Per-verdict breakdown:")
 for v, n in sorted(counts.items()):

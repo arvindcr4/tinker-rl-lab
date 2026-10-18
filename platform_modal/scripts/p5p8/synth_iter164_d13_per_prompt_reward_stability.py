@@ -23,15 +23,18 @@ Outputs:
 
 Stdlib only. <= 280 lines.
 """
+
 from __future__ import annotations
 import csv
 import json
 from pathlib import Path
 
 import sys
+
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
-from _stats import wilson_centre_half  # noqa: E402
+from _paths import REPO_ROOT
+from _stats import wilson_centre_half
+
 ROOT = REPO_ROOT
 RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8"
 TENSOR_DIR = ROOT / "platform_hybrid/experiments" / "results" / "n2_reward_tensor_resume"
@@ -72,17 +75,19 @@ def main():
                 hw = wilson_ci_half_width(k, n)
                 for eps in EPSILONS:
                     stable = int(hw < eps)
-                    per_cell_rows.append({
-                        "method": m,
-                        "step": step_idx,
-                        "prompt": prompt_idx,
-                        "k_success": k,
-                        "n_rollout": n,
-                        "p_hat": k / n,
-                        "ci_half_width": hw,
-                        "eps": eps,
-                        "stable": stable,
-                    })
+                    per_cell_rows.append(
+                        {
+                            "method": m,
+                            "step": step_idx,
+                            "prompt": prompt_idx,
+                            "k_success": k,
+                            "n_rollout": n,
+                            "p_hat": k / n,
+                            "ci_half_width": hw,
+                            "eps": eps,
+                            "stable": stable,
+                        }
+                    )
                 # record half-width once at canonical eps for per-method aggregation
                 cell_halfs_by_method[m].append(hw)
 
@@ -91,10 +96,7 @@ def main():
     per_eps_rows = []
     n_total = len(METHODS) * 40 * 16  # 2560
     for eps in EPSILONS:
-        n_stable = sum(
-            1 for r in per_cell_rows
-            if r["eps"] == eps and r["stable"] == 1
-        )
+        n_stable = sum(1 for r in per_cell_rows if r["eps"] == eps and r["stable"] == 1)
         density = n_stable / n_total
         # Wilson CI on the density
         half_w = wilson_ci_half_width(n_stable, n_total)
@@ -107,17 +109,20 @@ def main():
             layer = "MID"
         else:
             layer = "HIGH"
-        per_eps_rows.append({
-            "eps": eps,
-            "n_stable": n_stable,
-            "n_total": n_total,
-            "density": density,
-            "wilson_lo": lo,
-            "wilson_hi": hi,
-            "layer": layer,
-        })
-        print(f"  ε={eps}: {n_stable}/{n_total} = {density:.4f}  "
-              f"[{lo:.4f}, {hi:.4f}]  layer={layer}")
+        per_eps_rows.append(
+            {
+                "eps": eps,
+                "n_stable": n_stable,
+                "n_total": n_total,
+                "density": density,
+                "wilson_lo": lo,
+                "wilson_hi": hi,
+                "layer": layer,
+            }
+        )
+        print(
+            f"  ε={eps}: {n_stable}/{n_total} = {density:.4f}  [{lo:.4f}, {hi:.4f}]  layer={layer}"
+        )
 
     # ----- structural epsilon: half-width distribution -----
     print("\nComputing half-width distribution...", flush=True)
@@ -127,8 +132,10 @@ def main():
     median_hw = half_widths[n_hw // 2]
     p90_hw = half_widths[int(n_hw * 0.10)]  # 10th percentile = cells with hw < this
     p99_hw = half_widths[max(0, int(n_hw * 0.01))]  # 1st percentile
-    print(f"  n={n_hw}, min={half_widths[0]:.4f}, p1={p99_hw:.4f}, "
-          f"p10={p90_hw:.4f}, median={median_hw:.4f}, max={half_widths[-1]:.4f}")
+    print(
+        f"  n={n_hw}, min={half_widths[0]:.4f}, p1={p99_hw:.4f}, "
+        f"p10={p90_hw:.4f}, median={median_hw:.4f}, max={half_widths[-1]:.4f}"
+    )
 
     # ----- per-method density at canonical ε=0.05 -----
     print("\nComputing per-method density at ε=0.05...", flush=True)
@@ -141,14 +148,16 @@ def main():
         half_w = wilson_ci_half_width(n_stable, n_cells_m)
         lo = max(0.0, density - half_w)
         hi = min(1.0, density + half_w)
-        per_method_rows.append({
-            "method": m,
-            "n_cells": n_cells_m,
-            "n_stable": n_stable,
-            "density": density,
-            "wilson_lo": lo,
-            "wilson_hi": hi,
-        })
+        per_method_rows.append(
+            {
+                "method": m,
+                "n_cells": n_cells_m,
+                "n_stable": n_stable,
+                "density": density,
+                "wilson_lo": lo,
+                "wilson_hi": hi,
+            }
+        )
         print(f"  {m}: {n_stable}/{n_cells_m} = {density:.4f}")
 
     # ----- write outputs -----
@@ -195,8 +204,10 @@ def main():
     d13_density = h1_density
     h3_ratio = d13_density / max(1e-12, d12_density)
     h3_pass = h3_ratio < 1.0
-    print(f"H3 D13 < D12 (per-prompt granularity tighter): D13={d13_density:.4f} D12={d12_density:.4f} "
-          f"ratio={h3_ratio:.4f}  PASS={h3_pass}")
+    print(
+        f"H3 D13 < D12 (per-prompt granularity tighter): D13={d13_density:.4f} D12={d12_density:.4f} "
+        f"ratio={h3_ratio:.4f}  PASS={h3_pass}"
+    )
 
     # H4: D13@0.05 layer is consistent across all 4 methods (all in LOW)
     all_low = all(r["wilson_lo"] < 0.05 for r in per_method_rows)

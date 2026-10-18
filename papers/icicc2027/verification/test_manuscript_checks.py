@@ -1,7 +1,5 @@
 """Offline regression tests for editorial checks; no benchmark execution."""
 
-# ruff: noqa: PT009, PT027 -- Keep standalone source-package tests stdlib-only.
-
 from fractions import Fraction
 import importlib.util
 import json

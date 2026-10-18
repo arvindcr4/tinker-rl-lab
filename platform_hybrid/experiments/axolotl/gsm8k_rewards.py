@@ -7,9 +7,12 @@ Binary correctness reward matching the Tinker GRPO experiment:
 
 import sys as _contract_sys
 from pathlib import Path as _ContractPath
+
 if len(_ContractPath(__file__).resolve().parents) > 3:
     _contract_sys.path.insert(0, str(_ContractPath(__file__).resolve().parents[3]))
-from platform_hybrid.experiments.framework_contracts import score_batch, score_gsm8k, completion_text, SCORER_ID
+from platform_hybrid.experiments.framework_contracts import (
+    score_batch,
+)
 
 
 import re

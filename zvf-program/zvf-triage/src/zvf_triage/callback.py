@@ -236,8 +236,7 @@ def _make_trl_callback(
         from transformers import TrainerCallback  # type: ignore  # noqa: WPS433
     except Exception as exc:  # pragma: no cover - exercised only without transformers
         raise ImportError(
-            "as_trl_callback() requires the 'trl' extra "
-            "(pip install 'zvf-triage[trl]')."
+            "as_trl_callback() requires the 'trl' extra (pip install 'zvf-triage[trl]')."
         ) from exc
 
     class _TRLZVFCallback(TrainerCallback):  # type: ignore[misc, valid-type]
@@ -253,12 +252,12 @@ def _make_trl_callback(
             self._trainer = trainer
             self._last_observed_step = None
 
-        def on_train_begin(self, args, state, control, **kwargs):  # noqa: D401
+        def on_train_begin(self, args, state, control, **kwargs):
             # Discover the GRPO group size from a wired trainer if available.
             self._resolve_num_generations(kwargs)
             return control
 
-        def on_log(self, args, state, control, logs=None, **kwargs):  # noqa: D401
+        def on_log(self, args, state, control, logs=None, **kwargs):
             logs = logs or {}
             self._resolve_num_generations(kwargs)
             step_id = getattr(state, "global_step", None)
@@ -269,7 +268,8 @@ def _make_trl_callback(
                 if zvf_log_key not in logs or reward_mean_key not in logs:
                     return control
                 decision = self.inner.controller.observe_summary(
-                    float(logs[zvf_log_key]), float(logs[reward_mean_key]), step_id=step_id)
+                    float(logs[zvf_log_key]), float(logs[reward_mean_key]), step_id=step_id
+                )
                 self.inner.decisions.append(decision)
                 if self.inner.panel is not None:
                     self.inner.panel.log(decision)
@@ -277,13 +277,20 @@ def _make_trl_callback(
                     self.inner.on_decision(decision)
             else:
                 rewards, group_ids = extracted
-                decision = self.inner.on_step(rewards, group_ids, step_id=step_id,
-                    prompt_ids=_extract(logs, kwargs, "prompt_ids"))
+                decision = self.inner.on_step(
+                    rewards,
+                    group_ids,
+                    step_id=step_id,
+                    prompt_ids=_extract(logs, kwargs, "prompt_ids"),
+                )
             self._last_observed_step = step_id
-            if decision.observation_kind == "raw_rewards" and (decision.auto_stop or (
-                decision.regime is Regime.COLD_START_COLLAPSE
-                and self.inner.on_collapse == "abort"
-            )):
+            if decision.observation_kind == "raw_rewards" and (
+                decision.auto_stop
+                or (
+                    decision.regime is Regime.COLD_START_COLLAPSE
+                    and self.inner.on_collapse == "abort"
+                )
+            ):
                 control.should_training_stop = True
             return control
 

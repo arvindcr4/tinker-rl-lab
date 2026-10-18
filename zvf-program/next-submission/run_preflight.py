@@ -20,7 +20,13 @@ import time
 from typing import Any, Callable
 from urllib.request import Request, urlopen
 
-from preflight_evidence_contract import validate_diagnostic_seed, seal_request, validate_identity, validate_counts, completed_receipt as completed_receipt
+from preflight_evidence_contract import (
+    validate_diagnostic_seed,
+    seal_request,
+    validate_identity,
+    validate_counts,
+    completed_receipt as completed_receipt,
+)
 
 from huggingface_hub import HfApi, hf_hub_download
 
@@ -72,6 +78,7 @@ def seam_window(preflight_class: str, arm: str) -> tuple[int, int]:
             f"above the A004 cap of {SEAM_OPTIMIZER_STEP_CAP}"
         )
     return cap, steps
+
 
 ANSI_RE = re.compile(r"\x1b\[[0-?]*[ -/]*[@-~]")
 DECODER_CONTRACT = {
@@ -321,7 +328,9 @@ def validate_manifest(
     manifest: dict[str, Any],
     result: dict[str, Any],
     request: dict[str, Any],
-    *, protocol: dict[str, Any] | None = None, expected_source_files: dict[str, str] | None = None,
+    *,
+    protocol: dict[str, Any] | None = None,
+    expected_source_files: dict[str, str] | None = None,
 ) -> None:
     if request.get("contract_version") == "preflight-evidence-v2":
         validate_identity(request)
@@ -352,10 +361,14 @@ def validate_manifest(
     task = next((row for row in protocol["tasks"] if row["task_id"] == request["task"]), None)
     if task is None:
         raise RuntimeError("unregistered task")
-    expected_dataset = {"training_dataset": task["training_dataset"],
-                        "training_revision": task["training_dataset_revision"],
-                        "evaluation_dataset": task.get("evaluation_dataset", task["training_dataset"]),
-                        "evaluation_revision": task.get("evaluation_dataset_revision", task["training_dataset_revision"])}
+    expected_dataset = {
+        "training_dataset": task["training_dataset"],
+        "training_revision": task["training_dataset_revision"],
+        "evaluation_dataset": task.get("evaluation_dataset", task["training_dataset"]),
+        "evaluation_revision": task.get(
+            "evaluation_dataset_revision", task["training_dataset_revision"]
+        ),
+    }
     if run_config.get("dataset_bindings") != expected_dataset:
         raise RuntimeError("dataset bindings differ from registered experiment")
     if run_config.get("model_revision") != "b968826d9c46dd6066d109eabc6255188de91218":
@@ -888,7 +901,9 @@ def recover_request_artifact(args: argparse.Namespace) -> dict[str, Any]:
         raise RuntimeError(f"could not read recovery request: {request_path}")
     if request.get("status") not in {"launching", "dry-run", "failed", "completed"}:
         raise RuntimeError("recovery request does not contain a recognized launch status")
-    if not all(key in request for key in ("task", "arm", "seed", "fingerprint", "session", "tracking")):
+    if not all(
+        key in request for key in ("task", "arm", "seed", "fingerprint", "session", "tracking")
+    ):
         raise RuntimeError("recovery request is missing required preflight identity fields")
     _, result_path, expected_request_path, log_path = result_paths(output_dir, request)
     existing = helpers.read_json(result_path)
@@ -918,7 +933,9 @@ def recover_request_artifact(args: argparse.Namespace) -> dict[str, Any]:
         log_handle.seek(0, 2)
         cleanup = session_absence_verified(request["auth_strategy"], request["session"], log_handle)
         if not cleanup["session_absent_verified"]:
-            cleanup = stop_session_verified(request["auth_strategy"], request["session"], log_handle)
+            cleanup = stop_session_verified(
+                request["auth_strategy"], request["session"], log_handle
+            )
 
     return_code = 0
     failed_step: int | str | None = None
@@ -945,12 +962,23 @@ def recover_request_artifact(args: argparse.Namespace) -> dict[str, Any]:
         result, recovery = result_from_log_or_remote(lines, credentials, request)
         manifest, verification = verify_remote(credentials, result, request)
     except Exception as exc:
-        failed = {**base, "status": "failed", "return_code": 1, "failed_step": "recovery", "error": str(exc)}
+        failed = {
+            **base,
+            "status": "failed",
+            "return_code": 1,
+            "failed_step": "recovery",
+            "error": str(exc),
+        }
         helpers.atomic_json(result_path, failed)
         return {"status": "failed", "result_path": str(result_path)}
-    complete = completed_receipt(base, result=result, manifest=manifest,
-                                 verification=verification, cleanup=base["cleanup"],
-                                 return_code=base["return_code"])
+    complete = completed_receipt(
+        base,
+        result=result,
+        manifest=manifest,
+        verification=verification,
+        cleanup=base["cleanup"],
+        return_code=base["return_code"],
+    )
     if recovery is not None:
         complete["recovery"] = recovery
     helpers.atomic_json(result_path, complete)
@@ -1014,8 +1042,12 @@ def run_unit(args: argparse.Namespace) -> dict[str, Any]:
         "tracking": tracking,
         "source_snapshots": snapshots,
     }
-    request = seal_request(request, decoder=DECODER_CONTRACT, tracking=tracking,
-                           source_files={p.name: sha256_file(p) for p in (REMOTE_SCRIPT, SAMPLER, TRL_ADAPTER)})
+    request = seal_request(
+        request,
+        decoder=DECODER_CONTRACT,
+        tracking=tracking,
+        source_files={p.name: sha256_file(p) for p in (REMOTE_SCRIPT, SAMPLER, TRL_ADAPTER)},
+    )
     stack_fingerprint = request["stack_fingerprint"]
     session = f"next-pre-{args.task[:4]}-{args.arm[:8]}-{request['fingerprint'][:6]}"[:40]
     hf_repo = expected_hf_repo(request)
@@ -1169,9 +1201,14 @@ def run_unit(args: argparse.Namespace) -> dict[str, Any]:
         failed = {**base, "status": "failed", "error": str(exc)}
         helpers.atomic_json(result_path, failed)
         return {"status": "failed", "result_path": str(result_path)}
-    complete = completed_receipt(base, result=result, manifest=manifest,
-                                 verification=verification, cleanup=base["cleanup"],
-                                 return_code=base["return_code"])
+    complete = completed_receipt(
+        base,
+        result=result,
+        manifest=manifest,
+        verification=verification,
+        cleanup=base["cleanup"],
+        return_code=base["return_code"],
+    )
     if recovery is not None:
         complete["recovery"] = recovery
     helpers.atomic_json(result_path, complete)

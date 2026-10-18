@@ -20,6 +20,7 @@ from flagship.pavlov_banker_toolbench_eval_adapter import (
     validate_boundary,
     verify_boundary,
 )
+import pytest
 
 
 REVISION = "a" * 40
@@ -112,77 +113,90 @@ def build_valid(**overrides: object) -> dict[str, object]:
 class PavlovBankerToolBenchEvalAdapterTests(unittest.TestCase):
     def test_authoritative_identity_and_ready_boundary_are_metadata_only(self) -> None:
         boundary = build_valid()
-        self.assertEqual(boundary["status"], "READY")
-        self.assertEqual(boundary["suite_id"], SUITE_ID)
-        self.assertEqual(boundary["role"], ROLE)
-        self.assertEqual(boundary["source_identity"]["dataset_id"], DATASET_ID)
-        self.assertEqual(boundary["source_identity"]["url"], SOURCE_URL)
-        self.assertEqual(boundary["task_count"], 3)
+        assert boundary["status"] == "READY"
+        assert boundary["suite_id"] == SUITE_ID
+        assert boundary["role"] == ROLE
+        assert boundary["source_identity"]["dataset_id"] == DATASET_ID
+        assert boundary["source_identity"]["url"] == SOURCE_URL
+        assert boundary["task_count"] == 3
         expected_hashes = [
             task_id_hash("banker/task/001"),
             task_id_hash("banker/task/002"),
             task_id_hash("banker/task/003"),
         ]
-        self.assertEqual(boundary["task_id_hashes"], expected_hashes)
-        self.assertEqual(boundary["split_manifest_sha256"], split_manifest_hash(expected_hashes))
-        self.assertTrue(verify_boundary(boundary))
+        assert boundary["task_id_hashes"] == expected_hashes
+        assert boundary["split_manifest_sha256"] == split_manifest_hash(expected_hashes)
+        assert verify_boundary(boundary)
         rendered = json.dumps(boundary, sort_keys=True)
-        self.assertNotIn('"prompt"', rendered)
-        self.assertNotIn('"target"', rendered)
-        self.assertIsNone(boundary["result_claims"])
+        assert '"prompt"' not in rendered
+        assert '"target"' not in rendered
+        assert boundary["result_claims"] is None
 
     def test_task_order_is_canonical_and_hash_mutations_fail(self) -> None:
         first = build_valid(tasks=["z", "a", "m"])
         second = build_valid(tasks=["m", "z", "a"])
-        self.assertEqual(first, second)
+        assert first == second
         changed = copy.deepcopy(first)
         changed["task_id_hashes"][0] = digest("mutated")
-        self.assertTrue(any("task_id_aggregate" in error for error in validate_boundary(changed)))
-        self.assertTrue(any("split_manifest" in error for error in validate_boundary(changed)))
+        assert any("task_id_aggregate" in error for error in validate_boundary(changed))
+        assert any("split_manifest" in error for error in validate_boundary(changed))
 
     def test_missing_results_remain_blocked_without_fabricating_metrics(self) -> None:
         boundary = build_valid(result_receipts=None)
-        self.assertEqual(boundary["status"], "BLOCKED")
-        self.assertEqual(boundary["result_receipts"]["status"], "UNRECORDED")
-        self.assertFalse(boundary["result_receipts"]["recorded"])
-        self.assertIsNone(boundary["result_claims"])
-        self.assertTrue(any("result receipts are unrecorded" in error for error in boundary["errors"]))
-        with self.assertRaisesRegex(BankerToolBenchBoundaryError, "unrecorded"):
+        assert boundary["status"] == "BLOCKED"
+        assert boundary["result_receipts"]["status"] == "UNRECORDED"
+        assert not boundary["result_receipts"]["recorded"]
+        assert boundary["result_claims"] is None
+        assert any("result receipts are unrecorded" in error for error in boundary["errors"])
+        with pytest.raises(BankerToolBenchBoundaryError, match="unrecorded"):
             verify_boundary(boundary)
 
     def test_primary_eval_is_not_implicitly_held_out(self) -> None:
         boundary = build_valid()
-        self.assertEqual(boundary["held_out"]["receipt_proven"], False)
-        self.assertIsNone(boundary["held_out"]["receipt_ref"])
+        assert boundary["held_out"]["receipt_proven"] == False
+        assert boundary["held_out"]["receipt_ref"] is None
         claimed = build_valid(held_out_claimed=True)
-        self.assertEqual(claimed["status"], "BLOCKED")
-        self.assertTrue(any("held-out claim requires" in error for error in claimed["errors"]))
+        assert claimed["status"] == "BLOCKED"
+        assert any("held-out claim requires" in error for error in claimed["errors"])
         proven = build_valid(held_out_receipt_ref="receipt://heldout/" + digest("heldout"))
-        self.assertTrue(proven["held_out"]["receipt_proven"])
-        self.assertEqual(proven["role"], ROLE)
+        assert proven["held_out"]["receipt_proven"]
+        assert proven["role"] == ROLE
         invalid = build_valid(held_out_receipt_ref="UNRECORDED")
-        self.assertFalse(invalid["held_out"]["receipt_proven"])
-        self.assertTrue(any("held-out receipt reference" in error for error in invalid["errors"]))
+        assert not invalid["held_out"]["receipt_proven"]
+        assert any("held-out receipt reference" in error for error in invalid["errors"])
 
     def test_substitutes_and_related_benchmarks_are_rejected(self) -> None:
-        with self.assertRaisesRegex(BankerToolBenchBoundaryError, "authoritative BankerToolBench"):
-            build_valid(source_identity={"kind": "huggingface_dataset", "dataset_id": "Salesforce/xlam-function-calling-60k", "url": SOURCE_URL})
-        with self.assertRaisesRegex(BankerToolBenchBoundaryError, "related benchmarks"):
-            build_valid(source_identity={"kind": "huggingface_dataset", "dataset_id": DATASET_ID, "url": SOURCE_URL, "related_benchmark": "BFCL"})
-        with self.assertRaisesRegex(BankerToolBenchBoundaryError, "primary_eval"):
+        with pytest.raises(BankerToolBenchBoundaryError, match="authoritative BankerToolBench"):
+            build_valid(
+                source_identity={
+                    "kind": "huggingface_dataset",
+                    "dataset_id": "Salesforce/xlam-function-calling-60k",
+                    "url": SOURCE_URL,
+                }
+            )
+        with pytest.raises(BankerToolBenchBoundaryError, match="related benchmarks"):
+            build_valid(
+                source_identity={
+                    "kind": "huggingface_dataset",
+                    "dataset_id": DATASET_ID,
+                    "url": SOURCE_URL,
+                    "related_benchmark": "BFCL",
+                }
+            )
+        with pytest.raises(BankerToolBenchBoundaryError, match="primary_eval"):
             build_valid(role="held_out")
 
     def test_revision_license_and_task_id_gates_fail_closed(self) -> None:
-        with self.assertRaisesRegex(BankerToolBenchBoundaryError, "immutable 40-character"):
+        with pytest.raises(BankerToolBenchBoundaryError, match="immutable 40-character"):
             build_valid(revision="main")
-        with self.assertRaisesRegex(BankerToolBenchBoundaryError, "license_id"):
+        with pytest.raises(BankerToolBenchBoundaryError, match="license_id"):
             build_valid(license_id="UNRECORDED")
-        with self.assertRaisesRegex(BankerToolBenchBoundaryError, "license_receipt_ref"):
+        with pytest.raises(BankerToolBenchBoundaryError, match="license_receipt_ref"):
             build_valid(license_receipt_ref="latest")
         duplicate = build_valid(tasks=["same", "same"])
-        self.assertEqual(duplicate["status"], "BLOCKED")
-        self.assertTrue(any("duplicate authoritative task ID" in error for error in duplicate["errors"]))
-        with self.assertRaisesRegex(BankerToolBenchBoundaryError, "metadata-only"):
+        assert duplicate["status"] == "BLOCKED"
+        assert any("duplicate authoritative task ID" in error for error in duplicate["errors"])
+        with pytest.raises(BankerToolBenchBoundaryError, match="metadata-only"):
             build_valid(tasks=[{"prompt": "raw"}])
 
     def test_native_environment_artifact_and_verifier_contracts_are_required(self) -> None:
@@ -190,19 +204,19 @@ class PavlovBankerToolBenchEvalAdapterTests(unittest.TestCase):
         bad_environment["native"] = False
         bad_environment["environment_revision"] = "latest"
         boundary = build_valid(environment_contract=bad_environment)
-        self.assertEqual(boundary["status"], "BLOCKED")
-        self.assertTrue(any("native=true" in error for error in boundary["errors"]))
-        self.assertTrue(any("environment_revision" in error for error in boundary["errors"]))
+        assert boundary["status"] == "BLOCKED"
+        assert any("native=true" in error for error in boundary["errors"])
+        assert any("environment_revision" in error for error in boundary["errors"])
 
         bad_artifact = artifact_contract()
         bad_artifact["artifact_receipt_ref"] = "UNRECORDED"
         boundary = build_valid(artifact_contract=bad_artifact)
-        self.assertTrue(any("artifact_receipt_ref" in error for error in boundary["errors"]))
+        assert any("artifact_receipt_ref" in error for error in boundary["errors"])
 
         bad_verifier = verifier_contract()
         bad_verifier["deterministic"] = False
         boundary = build_valid(verifier_contract=bad_verifier)
-        self.assertTrue(any("deterministic=true" in error for error in boundary["errors"]))
+        assert any("deterministic=true" in error for error in boundary["errors"])
 
     def test_result_receipt_fields_are_required_and_hash_checked(self) -> None:
         receipts = result_receipts()
@@ -210,20 +224,20 @@ class PavlovBankerToolBenchEvalAdapterTests(unittest.TestCase):
         receipts["tinker"]["model_revision"] = "latest"
         receipts["hf"]["artifact_sha256"] = "not-a-hash"
         boundary = build_valid(result_receipts=receipts)
-        self.assertEqual(boundary["status"], "BLOCKED")
+        assert boundary["status"] == "BLOCKED"
         errors = "\n".join(boundary["errors"])
-        self.assertIn("wandb result receipt missing history_sha256", errors)
-        self.assertIn("tinker result receipt missing model_revision", errors)
-        self.assertIn("hf.artifact_sha256 must be a SHA-256 digest", errors)
+        assert "wandb result receipt missing history_sha256" in errors
+        assert "tinker result receipt missing model_revision" in errors
+        assert "hf.artifact_sha256 must be a SHA-256 digest" in errors
 
     def test_metadata_mutation_is_detected(self) -> None:
         boundary = build_valid()
         mutated = copy.deepcopy(boundary)
         mutated["source_identity"]["dataset_id"] = "Salesforce/xlam-function-calling-60k"
-        self.assertTrue(any("authoritative BankerToolBench" in error for error in validate_boundary(mutated)))
+        assert any("authoritative BankerToolBench" in error for error in validate_boundary(mutated))
         mutated = copy.deepcopy(boundary)
         mutated["environment_contract"]["environment_revision"] = "main"
-        self.assertTrue(any("environment_revision" in error for error in validate_boundary(mutated)))
+        assert any("environment_revision" in error for error in validate_boundary(mutated))
 
     def test_local_cli_generate_and_verify(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -240,7 +254,7 @@ class PavlovBankerToolBenchEvalAdapterTests(unittest.TestCase):
                 (results_path, result_receipts()),
             ):
                 path.write_text(json.dumps(value), encoding="utf-8")
-            self.assertEqual(
+            assert (
                 main(
                     [
                         "generate",
@@ -265,10 +279,10 @@ class PavlovBankerToolBenchEvalAdapterTests(unittest.TestCase):
                         "--out",
                         str(boundary_path),
                     ]
-                ),
-                0,
+                )
+                == 0
             )
-            self.assertEqual(main(["verify", "--boundary", str(boundary_path)]), 0)
+            assert main(["verify", "--boundary", str(boundary_path)]) == 0
 
 
 if __name__ == "__main__":

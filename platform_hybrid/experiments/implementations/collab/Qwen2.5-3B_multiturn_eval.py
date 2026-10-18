@@ -1,8 +1,14 @@
-
 import sys as _sys
 from pathlib import Path as _Path
-_sys.path.insert(0, str(next(p for p in _Path(__file__).resolve().parents if (p / "platform_hybrid").is_dir())))
-from platform_hybrid.experiments.research_contracts import json_object, tool_score, execute_fixture_tool, EvidenceUnavailable
+
+_sys.path.insert(
+    0, str(next(p for p in _Path(__file__).resolve().parents if (p / "platform_hybrid").is_dir()))
+)
+from platform_hybrid.experiments.research_contracts import (
+    json_object,
+    tool_score,
+    EvidenceUnavailable,
+)
 
 # ============================================================
 #  ADVANCED EXPERIMENT — STEP 3: Multi-Turn Evaluation
@@ -23,11 +29,13 @@ from platform_hybrid.experiments.research_contracts import json_object, tool_sco
 
 # !pip install -q transformers peft accelerate bitsandbytes
 
-from huggingface_hub import login
-if __name__ == "__main__":
-    raise EvidenceUnavailable("Legacy notebook scenarios lack frozen semantic fixtures; use the versioned offline evaluator contract")
 
-import json, os, re, torch
+if __name__ == "__main__":
+    raise EvidenceUnavailable(
+        "Legacy notebook scenarios lack frozen semantic fixtures; use the versioned offline evaluator contract"
+    )
+
+import json, os, torch
 import wandb
 from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
 from peft import PeftModel
@@ -35,8 +43,8 @@ from peft import PeftModel
 wandb.init(project="toolbench-multiturn-eval", name="Qwen2.5-3B-eval")
 
 # ── CONFIG ───────────────────────────────────────────────────
-MODEL_ID  = "Qwen/Qwen2.5-3B-Instruct"
-SFT_PATH  = "/content/qwen3b-toolbench-sft"
+MODEL_ID = "Qwen/Qwen2.5-3B-Instruct"
+SFT_PATH = "/content/qwen3b-toolbench-sft"
 GRPO_PATH = "/content/qwen3b-toolbench-grpo"
 
 SYSTEM_PROMPT = """You are a helpful AI assistant with access to real-world APIs and tools.
@@ -71,7 +79,7 @@ SCENARIOS = [
         "expected_chain": ["get_stock_price", "search_news", "final_answer"],
         "tool_responses": [
             '{"ticker": "TSLA", "price": 245.10, "change": "+3.2%"}',
-            '{"results": ["Tesla Q4 earnings beat expectations", "New Model Y refresh announced"]}'
+            '{"results": ["Tesla Q4 earnings beat expectations", "New Model Y refresh announced"]}',
         ],
     },
     {
@@ -81,7 +89,7 @@ SCENARIOS = [
         "expected_chain": ["search", "calculate", "final_answer"],
         "tool_responses": [
             '{"results": ["Tokyo population: 13.96 million (2023)"]}',
-            '{"result": 6362.8}'
+            '{"result": 6362.8}',
         ],
     },
     {
@@ -89,11 +97,10 @@ SCENARIOS = [
         "name": "Single Tool (Direct)",
         "user": "What is the square root of 1764?",
         "expected_chain": ["calculate", "final_answer"],
-        "tool_responses": [
-            '{"result": 42.0}'
-        ],
+        "tool_responses": ['{"result": 42.0}'],
     },
 ]
+
 
 # ── LOAD MODEL HELPER ─────────────────────────────────────────
 def load_model(adapter_path, label):
@@ -105,88 +112,127 @@ def load_model(adapter_path, label):
         bnb_4bit_use_double_quant=True,
     )
     base = AutoModelForCausalLM.from_pretrained(
-        MODEL_ID, quantization_config=bnb_config,
-        device_map=None if "LOCAL_RANK" in os.environ else "auto", trust_remote_code=True, dtype=torch.bfloat16,
+        MODEL_ID,
+        quantization_config=bnb_config,
+        device_map=None if "LOCAL_RANK" in os.environ else "auto",
+        trust_remote_code=True,
+        dtype=torch.bfloat16,
     )
     model = PeftModel.from_pretrained(base, adapter_path)
     model.eval()
     print(f"  {label} ready.")
     return model
 
+
 tokenizer = AutoTokenizer.from_pretrained(MODEL_ID, trust_remote_code=True)
 tokenizer.pad_token = tokenizer.eos_token
 
-sft_model  = load_model(SFT_PATH,  "SFT model")
+sft_model = load_model(SFT_PATH, "SFT model")
 grpo_model = load_model(GRPO_PATH, "GRPO model")
+
 
 # ── INFERENCE ────────────────────────────────────────────────
 def infer(model, history):
-    prompt = tokenizer.apply_chat_template(
-        history, tokenize=False, add_generation_prompt=True
+    prompt = tokenizer.apply_chat_template(history, tokenize=False, add_generation_prompt=True)
+    inputs = tokenizer(prompt, return_tensors="pt", truncation=True, max_length=512).to(
+        model.device
     )
-    inputs = tokenizer(prompt, return_tensors="pt",
-                       truncation=True, max_length=512).to(model.device)
     with torch.no_grad():
         out = model.generate(
-            **inputs, max_new_tokens=100, temperature=0.1,
-            do_sample=True, eos_token_id=tokenizer.eos_token_id,
+            **inputs,
+            max_new_tokens=100,
+            temperature=0.1,
+            do_sample=True,
+            eos_token_id=tokenizer.eos_token_id,
         )
     return tokenizer.decode(
-        out[0][inputs["input_ids"].shape[1]:], skip_special_tokens=True
+        out[0][inputs["input_ids"].shape[1] :], skip_special_tokens=True
     ).strip()
+
 
 # ── HELPERS ──────────────────────────────────────────────────
 def extract_json(text):
     try:
-        s = text.index("{");  e = text.rindex("}") + 1
+        s = text.index("{")
+        e = text.rindex("}") + 1
         return json.loads(text[s:e]), True
     except:
         return None, False
+
 
 def is_valid_tool_call(text):
     obj, valid = extract_json(text)
     return valid and "name" in obj and isinstance(obj.get("arguments"), dict)
 
+
 def is_clean_output(text):
     try:
-        s = text.index("{");  e = text.rindex("}") + 1
+        s = text.index("{")
+        e = text.rindex("}") + 1
         return len(text[:s].strip()) + len(text[e:].strip()) < 15
     except:
         return True
+
 
 def get_tool_name(text):
     obj, valid = extract_json(text)
     return obj.get("name", "") if valid else ""
 
+
 def get_args(text):
     obj, valid = extract_json(text)
     return obj.get("arguments", {}) if valid else {}
 
+
 # ── SCORING ──────────────────────────────────────────────────
 def score_chain(responses, scenario=None):
-    if scenario is not None and (not scenario.get("tool_calls") or not scenario.get("accepted_answers")):
+    if scenario is not None and (
+        not scenario.get("tool_calls") or not scenario.get("accepted_answers")
+    ):
         raise EvidenceUnavailable("Scenario lacks a frozen semantic endpoint")
     calls = [json_object(r) for r in responses]
-    valid = [c for c in calls if c and isinstance(c.get("name"), str) and isinstance(c.get("arguments"), dict)]
+    valid = [
+        c
+        for c in calls
+        if c and isinstance(c.get("name"), str) and isinstance(c.get("arguments"), dict)
+    ]
     fixtures = scenario.get("tool_calls", []) if scenario else []
-    chain_ok = bool(fixtures) and len(responses) == len(fixtures) + 1 and all(tool_score(responses[i], f["name"], f["arguments"]) for i, f in enumerate(fixtures))
+    chain_ok = (
+        bool(fixtures)
+        and len(responses) == len(fixtures) + 1
+        and all(tool_score(responses[i], f["name"], f["arguments"]) for i, f in enumerate(fixtures))
+    )
     final = responses[-1].strip().lower() if responses else ""
     # Exact normalized allowed answers are deliberately conservative.
-    grounded = bool(scenario and final in [a.strip().lower() for a in scenario.get("accepted_answers", [])])
+    grounded = bool(
+        scenario and final in [a.strip().lower() for a in scenario.get("accepted_answers", [])]
+    )
     success = bool(chain_ok and grounded)
-    return {"quality": float(success), "task_success": success, "chain_started": bool(valid),
-            "reached_answer": grounded, "valid_json_calls": len(valid),
-            "args_populated": sum(bool(c["arguments"]) for c in valid),
-            "repeated_calls": len(valid)-len({json.dumps(c, sort_keys=True) for c in valid}),
-            "tool_names": [c["name"] for c in valid], "tool_args": [c["arguments"] for c in valid],
-            "chain_length": len(responses), "clean_outputs": len(valid)}
+    return {
+        "quality": float(success),
+        "task_success": success,
+        "chain_started": bool(valid),
+        "reached_answer": grounded,
+        "valid_json_calls": len(valid),
+        "args_populated": sum(bool(c["arguments"]) for c in valid),
+        "repeated_calls": len(valid) - len({json.dumps(c, sort_keys=True) for c in valid}),
+        "tool_names": [c["name"] for c in valid],
+        "tool_args": [c["arguments"] for c in valid],
+        "chain_length": len(responses),
+        "clean_outputs": len(valid),
+    }
 
 
 # ── RUN SCENARIO ─────────────────────────────────────────────
 def run_scenario(model, scenario, max_turns=6):
     if not scenario.get("tool_calls") or not scenario.get("accepted_answers"):
-        raise EvidenceUnavailable("Freeze exact call fixtures and semantic answers before evaluating this scenario")
-    history = [{"role": "system", "content": SYSTEM_PROMPT}, {"role": "user", "content": scenario["user"]}]
+        raise EvidenceUnavailable(
+            "Freeze exact call fixtures and semantic answers before evaluating this scenario"
+        )
+    history = [
+        {"role": "system", "content": SYSTEM_PROMPT},
+        {"role": "user", "content": scenario["user"]},
+    ]
     responses, tool_idx = [], 0
     fixtures = scenario.get("tool_calls", [])
     for _ in range(max_turns):
@@ -211,7 +257,7 @@ print("\n" + "=" * 72)
 print(f"{'MULTI-TURN TOOL CALL EVALUATION: SFT vs GRPO':^72}")
 print("=" * 72)
 
-all_sft_scores  = []
+all_sft_scores = []
 all_grpo_scores = []
 
 for sc in SCENARIOS:
@@ -219,29 +265,38 @@ for sc in SCENARIOS:
     print(f"  User    : {sc['user'][:80]}")
     print(f"  Expected: {' → '.join(sc['expected_chain'])}")
 
-    sft_responses,  _ = run_scenario(sft_model,  sc)
+    sft_responses, _ = run_scenario(sft_model, sc)
     grpo_responses, _ = run_scenario(grpo_model, sc)
 
-    sft_scores  = score_chain(sft_responses, sc)
+    sft_scores = score_chain(sft_responses, sc)
     grpo_scores = score_chain(grpo_responses, sc)
 
     all_sft_scores.append(sft_scores["quality"])
     all_grpo_scores.append(grpo_scores["quality"])
 
-    winner = ("GRPO" if grpo_scores["quality"] > sft_scores["quality"] else
-              "SFT"  if sft_scores["quality"]  > grpo_scores["quality"] else "TIE")
+    winner = (
+        "GRPO"
+        if grpo_scores["quality"] > sft_scores["quality"]
+        else "SFT"
+        if sft_scores["quality"] > grpo_scores["quality"]
+        else "TIE"
+    )
 
-    for label, sc_scores, resps in [("SFT ", sft_scores, sft_responses),
-                                     ("GRPO", grpo_scores, grpo_responses)]:
+    for label, sc_scores, resps in [
+        ("SFT ", sft_scores, sft_responses),
+        ("GRPO", grpo_scores, grpo_responses),
+    ]:
         print(f"\n  {label} [{sc_scores['quality']:.2f}]")
         for i, r in enumerate(resps):
             obj, valid = extract_json(r)
             if valid and is_valid_tool_call(r):
                 args_str = json.dumps(obj.get("arguments", {}))
-                print(f"    Turn {i+1} [TOOL]  : {obj.get('name','')}({args_str[:60]})")
+                print(f"    Turn {i + 1} [TOOL]  : {obj.get('name', '')}({args_str[:60]})")
             else:
-                print(f"    Turn {i+1} [ANSWER]: {r[:90]}")
-        print(f"    Args populated : {sc_scores['args_populated']}/{sc_scores['valid_json_calls']} tool calls")
+                print(f"    Turn {i + 1} [ANSWER]: {r[:90]}")
+        print(
+            f"    Args populated : {sc_scores['args_populated']}/{sc_scores['valid_json_calls']} tool calls"
+        )
         print(f"    Repeated calls : {sc_scores['repeated_calls']}")
         print(f"    Got answer     : {sc_scores['reached_answer']}")
 
@@ -249,7 +304,7 @@ for sc in SCENARIOS:
     print("-" * 72)
 
 # ── FINAL SUMMARY ─────────────────────────────────────────────
-sft_avg  = round(sum(all_sft_scores)  / len(all_sft_scores),  2)
+sft_avg = round(sum(all_sft_scores) / len(all_sft_scores), 2)
 grpo_avg = round(sum(all_grpo_scores) / len(all_grpo_scores), 2)
 
 print(f"\n{'=' * 72}")
@@ -257,23 +312,29 @@ print(f"{'FINAL SUMMARY':^72}")
 print(f"{'=' * 72}")
 print(f"{'Scenario':<35} {'SFT':>8} {'GRPO':>8} {'Winner':>10}")
 print(f"{'-' * 72}")
-for sc, s, g in zip(SCENARIOS, all_sft_scores, all_grpo_scores):
+for sc, s, g in zip(SCENARIOS, all_sft_scores, all_grpo_scores, strict=False):
     w = "GRPO ✅" if g > s else "SFT ✅" if s > g else "TIE"
     print(f"{sc['name']:<35} {s:>8.2f} {g:>8.2f} {w:>10}")
 print(f"{'-' * 72}")
 print(f"{'AVERAGE':<35} {sft_avg:>8.2f} {grpo_avg:>8.2f}")
 print(f"{'=' * 72}")
-print(f"\n🏆 Overall Winner: {'GRPO' if grpo_avg > sft_avg else 'SFT' if sft_avg > grpo_avg else 'TIE'}")
+print(
+    f"\n🏆 Overall Winner: {'GRPO' if grpo_avg > sft_avg else 'SFT' if sft_avg > grpo_avg else 'TIE'}"
+)
 
-wandb.log({
-    "sft_avg_score": sft_avg,
-    "grpo_avg_score": grpo_avg,
-})
-for sc, s, g in zip(SCENARIOS, all_sft_scores, all_grpo_scores):
-    wandb.log({
-        f"sft_score_{sc['id']}": s,
-        f"grpo_score_{sc['id']}": g,
-    })
+wandb.log(
+    {
+        "sft_avg_score": sft_avg,
+        "grpo_avg_score": grpo_avg,
+    }
+)
+for sc, s, g in zip(SCENARIOS, all_sft_scores, all_grpo_scores, strict=False):
+    wandb.log(
+        {
+            f"sft_score_{sc['id']}": s,
+            f"grpo_score_{sc['id']}": g,
+        }
+    )
 
 if grpo_avg >= sft_avg:
     print("\nPushing GRPO model to Hub...")

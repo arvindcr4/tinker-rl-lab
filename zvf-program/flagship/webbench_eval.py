@@ -46,8 +46,7 @@ BENCHMARK_REVISION = "ea7a1628443321363989f354401f0653e0cba6f4"
 BENCHMARK_REVISION_URL = f"{BENCHMARK_REPO_URL}/tree/{BENCHMARK_REVISION}"
 DATASET_FILE = "webbenchfinal.csv"
 DATASET_RAW_URL = (
-    f"https://raw.githubusercontent.com/Halluminate/WebBench/{BENCHMARK_REVISION}/"
-    f"{DATASET_FILE}"
+    f"https://raw.githubusercontent.com/Halluminate/WebBench/{BENCHMARK_REVISION}/{DATASET_FILE}"
 )
 DATASET_SHA256 = "fd5311a38bdb6f941e8f544150735656c114d76fbfb17193da973d5de0165217"
 LICENSE_SHA256 = "96804aa272fe40cdfb8b5c8f4d1d94757bcfaf1bf5596fb829214843d2371e58"
@@ -80,9 +79,7 @@ GLOBAL_SAFETY_RESERVE_USD = 1.50
 PREFILL_USD_PER_MILLION = 0.54
 SAMPLE_USD_PER_MILLION = 1.335
 
-ALLOWED_CATEGORIES = frozenset(
-    {"READ", "CREATE", "UPDATE", "DELETE", "FILE_MANIPULATION"}
-)
+ALLOWED_CATEGORIES = frozenset({"READ", "CREATE", "UPDATE", "DELETE", "FILE_MANIPULATION"})
 REQUIRED_COLUMNS = ("ID", "Starting URL", "Category", "Task")
 HEX40_RE = re.compile(r"^[0-9a-fA-F]{40}$")
 HEX64_RE = re.compile(r"^[0-9a-fA-F]{64}$")
@@ -146,7 +143,9 @@ def _require_enforced_budget() -> None:
     enforcement. This is intentionally not configurable through a bypass flag.
     Offline receipt construction and historical inspection remain available.
     """
-    raise WebBenchError("paid execution blocked: enforced reservation/settlement budget contract unavailable")
+    raise WebBenchError(
+        "paid execution blocked: enforced reservation/settlement budget contract unavailable"
+    )
 
 
 def canonical_json(value: Any) -> str:
@@ -168,8 +167,8 @@ def sha256_json(value: Any) -> str:
 
 
 def _nonempty(value: Any) -> bool:
-    return isinstance(value, str) and value.strip().lower() not in PLACEHOLDERS and bool(
-        value.strip()
+    return (
+        isinstance(value, str) and value.strip().lower() not in PLACEHOLDERS and bool(value.strip())
     )
 
 
@@ -268,7 +267,9 @@ def load_tasks(path: Path, *, expected_sha256: str | None = None) -> list[Task]:
     return rows
 
 
-def select_tasks(tasks: Sequence[Task], task_ids: Sequence[int] | None = None, *, limit: int = 1) -> list[Task]:
+def select_tasks(
+    tasks: Sequence[Task], task_ids: Sequence[int] | None = None, *, limit: int = 1
+) -> list[Task]:
     """Select the smallest exact subset deterministically (default: one task)."""
 
     by_id = {task.task_id: task for task in tasks}
@@ -311,7 +312,10 @@ def load_task_id_manifest(path: Path) -> tuple[list[int], str | None]:
         raise WebBenchError("training task-ID manifest contains a non-integer ID") from exc
     computed = task_id_hash(ids)
     if declared_hash is not None:
-        if not _sha256(declared_hash) or str(declared_hash).replace("sha256:", "").lower() != computed:
+        if (
+            not _sha256(declared_hash)
+            or str(declared_hash).replace("sha256:", "").lower() != computed
+        ):
             raise WebBenchError(
                 f"training task-ID manifest hash mismatch: expected {computed}, got {declared_hash}"
             )
@@ -338,7 +342,9 @@ def validate_disjoint_ids(eval_ids: Sequence[int], train_ids: Sequence[int]) -> 
     return errors
 
 
-def validate_budget(*, projected_tinker_usd: float, global_budget: Mapping[str, Any] | None = None) -> list[str]:
+def validate_budget(
+    *, projected_tinker_usd: float, global_budget: Mapping[str, Any] | None = None
+) -> list[str]:
     errors: list[str] = []
     try:
         projected = float(projected_tinker_usd)
@@ -369,12 +375,21 @@ def validate_budget(*, projected_tinker_usd: float, global_budget: Mapping[str, 
             continue
         if abs(actual - value) > 1e-12:
             errors.append(f"global budget {key} must remain {value:.2f}, got {actual}")
-    if abs(expected["maximum_usd"] - expected["operational_cap_usd"] - expected["safety_reserve_usd"]) > 1e-12:
+    if (
+        abs(
+            expected["maximum_usd"]
+            - expected["operational_cap_usd"]
+            - expected["safety_reserve_usd"]
+        )
+        > 1e-12
+    ):
         errors.append("global budget cap/reserve arithmetic is inconsistent")
     return errors
 
 
-def estimate_tinker_cost(task_count: int, max_prompt_tokens: int = 2048, max_response_tokens: int = 256) -> float:
+def estimate_tinker_cost(
+    task_count: int, max_prompt_tokens: int = 2048, max_response_tokens: int = 256
+) -> float:
     """Conservative uncached estimate used before an optional Tinker seam."""
 
     if task_count < 1 or max_prompt_tokens < 1 or max_response_tokens < 1:
@@ -422,13 +437,22 @@ def validate_native_receipt(receipt: Mapping[str, Any] | None) -> list[str]:
     if not isinstance(env, Mapping):
         errors.append("native receipt environment object is required")
     else:
-        for key in ("environment_id", "environment_revision", "container_image_digest", "browser_revision"):
+        for key in (
+            "environment_id",
+            "environment_revision",
+            "container_image_digest",
+            "browser_revision",
+        ):
             if not _nonempty(env.get(key)):
                 errors.append(f"native receipt environment.{key} is required")
         if not _immutable_revision(env.get("environment_revision")):
-            errors.append("native receipt environment.environment_revision must be a 40-hex revision")
+            errors.append(
+                "native receipt environment.environment_revision must be a 40-hex revision"
+            )
         if not SHA256_DIGEST_RE.fullmatch(str(env.get("container_image_digest", ""))):
-            errors.append("native receipt environment.container_image_digest must be sha256:<64 hex>")
+            errors.append(
+                "native receipt environment.container_image_digest must be sha256:<64 hex>"
+            )
         for key in ("screenshot_capture", "dom_capture", "task_reset"):
             if env.get(key) is not True:
                 errors.append(f"native receipt environment.{key} must be true")
@@ -485,7 +509,9 @@ def validate_model_receipt(
         errors.append("sampler receipt model_id must match the experiment model")
     if not _immutable_revision(sampler.get("hf_commit")):
         errors.append("sampler receipt hf_commit must be an immutable 40-hex commit")
-    if not _nonempty(sampler.get("hf_repo")) or not str(sampler.get("hf_repo", "")).startswith("https://huggingface.co/"):
+    if not _nonempty(sampler.get("hf_repo")) or not str(sampler.get("hf_repo", "")).startswith(
+        "https://huggingface.co/"
+    ):
         errors.append("sampler receipt hf_repo must be an HTTPS Hugging Face URL")
     if not _nonempty(sampler.get("tinker_run_id")):
         errors.append("sampler receipt tinker_run_id is required")
@@ -494,7 +520,9 @@ def validate_model_receipt(
     selected = dict(sampler)
     selected["mode"] = "completed_compatible_tinker_sampler"
     selected["evaluated_hf_commit"] = sampler.get("hf_commit")
-    selected["evaluated_hf_commit_url"] = f"{str(sampler.get('hf_repo')).rstrip('/')}/commit/{sampler.get('hf_commit')}"
+    selected["evaluated_hf_commit_url"] = (
+        f"{str(sampler.get('hf_repo')).rstrip('/')}/commit/{sampler.get('hf_commit')}"
+    )
     return selected, errors
 
 
@@ -669,14 +697,25 @@ def build_receipt(
     tasks: list[Task] = []
     if dataset_path is None:
         dataset_blockers = [f"exact WebBench dataset file is not acquired locally: {DATASET_FILE}"]
-        gates.append(build_gate("authoritative_dataset", False, evidence=dataset_evidence, blockers=dataset_blockers))
+        gates.append(
+            build_gate(
+                "authoritative_dataset", False, evidence=dataset_evidence, blockers=dataset_blockers
+            )
+        )
         blockers.extend(dataset_blockers)
     else:
         try:
             tasks = load_tasks(dataset_path, expected_sha256=DATASET_SHA256)
         except WebBenchError as exc:
             dataset_blockers = [str(exc)]
-            gates.append(build_gate("authoritative_dataset", False, evidence=dataset_evidence, blockers=dataset_blockers))
+            gates.append(
+                build_gate(
+                    "authoritative_dataset",
+                    False,
+                    evidence=dataset_evidence,
+                    blockers=dataset_blockers,
+                )
+            )
             blockers.extend(dataset_blockers)
         else:
             dataset_evidence.update(
@@ -693,10 +732,19 @@ def build_receipt(
                 and dataset_evidence["task_id_hash"] == PUBLIC_TASK_ID_HASH
                 and dataset_evidence["manifest_hash"] == PUBLIC_MANIFEST_HASH
             )
-            dataset_blockers = [] if dataset_ok else [
-                "local WebBench task manifest does not match the pinned authoritative CSV"
-            ]
-            gates.append(build_gate("authoritative_dataset", dataset_ok, evidence=dataset_evidence, blockers=dataset_blockers))
+            dataset_blockers = (
+                []
+                if dataset_ok
+                else ["local WebBench task manifest does not match the pinned authoritative CSV"]
+            )
+            gates.append(
+                build_gate(
+                    "authoritative_dataset",
+                    dataset_ok,
+                    evidence=dataset_evidence,
+                    blockers=dataset_blockers,
+                )
+            )
             blockers.extend(dataset_blockers)
 
     selected: list[Task] = []
@@ -714,14 +762,18 @@ def build_receipt(
     }
     split_blockers: list[str] = []
     if training_task_ids is None or training_task_id_hash is None:
-        split_blockers.append("explicit training task-ID manifest/hash is required for disjointness")
+        split_blockers.append(
+            "explicit training task-ID manifest/hash is required for disjointness"
+        )
     else:
         if not _hash_matches(training_task_id_hash, task_id_hash(training_task_ids)):
             split_blockers.append("training task-ID hash does not match the supplied manifest")
         if selected:
             split_blockers.extend(validate_disjoint_ids(selected_ids, training_task_ids))
     split_ok = bool(selected) and not split_blockers
-    gates.append(build_gate("disjoint_task_ids", split_ok, evidence=split_evidence, blockers=split_blockers))
+    gates.append(
+        build_gate("disjoint_task_ids", split_ok, evidence=split_evidence, blockers=split_blockers)
+    )
     blockers.extend(split_blockers)
 
     env_path = env_path or worktree_root / ".venv-webbench"
@@ -739,7 +791,14 @@ def build_receipt(
     selected_model, model_blockers = validate_model_receipt(
         model_id=model_id, base_model_revision=base_model_revision, sampler=sampler
     )
-    gates.append(build_gate("model_or_sampler_binding", not model_blockers, evidence=selected_model, blockers=model_blockers))
+    gates.append(
+        build_gate(
+            "model_or_sampler_binding",
+            not model_blockers,
+            evidence=selected_model,
+            blockers=model_blockers,
+        )
+    )
     blockers.extend(model_blockers)
 
     native_blockers = validate_native_receipt(native_receipt)
@@ -753,7 +812,11 @@ def build_receipt(
     )
     blockers.extend(native_blockers)
 
-    projected = estimate_tinker_cost(len(selected)) if projected_tinker_usd is None and selected else (projected_tinker_usd or 0.0)
+    projected = (
+        estimate_tinker_cost(len(selected))
+        if projected_tinker_usd is None and selected
+        else (projected_tinker_usd or 0.0)
+    )
     budget_blockers = validate_budget(projected_tinker_usd=projected, global_budget=global_budget)
     gates.append(
         build_gate(
@@ -791,9 +854,20 @@ def build_receipt(
     blockers.extend(wandb_blockers)
 
     agent_blockers: list[str] = []
-    if launch_requested and (not agent_command or not all(_nonempty(item) for item in agent_command)):
-        agent_blockers.append("launch requires an agent command that emits screenshot/DOM trajectories")
-    gates.append(build_gate("native_agent_command", not agent_blockers, evidence={"command": list(agent_command or [])}, blockers=agent_blockers))
+    if launch_requested and (
+        not agent_command or not all(_nonempty(item) for item in agent_command)
+    ):
+        agent_blockers.append(
+            "launch requires an agent command that emits screenshot/DOM trajectories"
+        )
+    gates.append(
+        build_gate(
+            "native_agent_command",
+            not agent_blockers,
+            evidence={"command": list(agent_command or [])},
+            blockers=agent_blockers,
+        )
+    )
     blockers.extend(agent_blockers)
 
     status = "READY" if not blockers else "BLOCKED"
@@ -844,7 +918,9 @@ def build_receipt(
         },
         "evidence_boundary": {
             "score_is_claimable": False,
-            "reason": "No score is accepted without the official native verifier receipt and complete trajectory evidence." if blockers else "Awaiting launch receipt.",
+            "reason": "No score is accepted without the official native verifier receipt and complete trajectory evidence."
+            if blockers
+            else "Awaiting launch receipt.",
             "human_annotation_is_not_native_verification": True,
             "ground_truth_issue_url": GROUND_TRUTH_ISSUE_URL,
         },
@@ -858,7 +934,9 @@ def _write_json(path: Path, value: Mapping[str, Any]) -> None:
     path.write_text(json.dumps(value, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
 
-def start_wandb_online(config: Mapping[str, Any], wandb_module: Any | None = None) -> dict[str, Any]:
+def start_wandb_online(
+    config: Mapping[str, Any], wandb_module: Any | None = None
+) -> dict[str, Any]:
     """Initialize W&B online; this is intentionally the first provider side effect."""
 
     if os.environ.get("WANDB_MODE", "").strip().lower() in {"offline", "disabled"}:
@@ -896,15 +974,28 @@ class WebBenchTimeout(WebBenchError):
     pass
 
 
-def _run_command(command: Sequence[str], *, env: Mapping[str, str], cwd: Path, timeout_seconds: float = 300) -> subprocess.CompletedProcess[str]:
+def _run_command(
+    command: Sequence[str], *, env: Mapping[str, str], cwd: Path, timeout_seconds: float = 300
+) -> subprocess.CompletedProcess[str]:
     if not command or not all(_nonempty(item) for item in command):
         raise WebBenchError("external command must be a non-empty argv list")
-    if type(timeout_seconds) not in (int, float) or not math.isfinite(timeout_seconds) or timeout_seconds <= 0:
+    if (
+        type(timeout_seconds) not in (int, float)
+        or not math.isfinite(timeout_seconds)
+        or timeout_seconds <= 0
+    ):
         raise WebBenchError("command timeout must be positive and finite")
     if os.name != "posix":
         raise WebBenchError("process-tree cleanup requires a POSIX runtime")
-    process = subprocess.Popen(list(command), cwd=str(cwd), env=dict(env), text=True,
-                               stdout=subprocess.PIPE, stderr=subprocess.PIPE, start_new_session=True)
+    process = subprocess.Popen(
+        list(command),
+        cwd=str(cwd),
+        env=dict(env),
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        start_new_session=True,
+    )
     try:
         stdout, stderr = process.communicate(timeout=timeout_seconds)
     except BaseException as exc:
@@ -931,7 +1022,9 @@ def _validate_artifact(root: Path, path_value: Any, digest: Any) -> str:
     return str(path.relative_to(root))
 
 
-def _validate_verdict_rows(rows: Sequence[Mapping[str, Any]], tasks: Sequence[Task], output_dir: Path) -> list[dict[str, Any]]:
+def _validate_verdict_rows(
+    rows: Sequence[Mapping[str, Any]], tasks: Sequence[Task], output_dir: Path
+) -> list[dict[str, Any]]:
     expected_ids = {strict_task_id(task.task_id) for task in tasks}
     if len(expected_ids) != len(tasks):
         raise WebBenchError("requested task IDs must be unique")
@@ -982,7 +1075,9 @@ def run_native_evaluation(
     verdict_file = output_dir / "verdicts.jsonl"
     if trajectory_file.exists() or verdict_file.exists():
         raise WebBenchError("native evaluation requires a fresh evidence directory")
-    task_file.write_text("\n".join(canonical_json(task.as_dict()) for task in tasks) + "\n", encoding="utf-8")
+    task_file.write_text(
+        "\n".join(canonical_json(task.as_dict()) for task in tasks) + "\n", encoding="utf-8"
+    )
     child_env = os.environ.copy()
     child_env.update({str(key): str(value) for key, value in (env or {}).items()})
     child_env.update(
@@ -994,22 +1089,35 @@ def run_native_evaluation(
             "WEBBENCH_SUITE_ID": SUITE_ID,
         }
     )
-    agent = _run_command(agent_command, env=child_env, cwd=Path(worktree_root), timeout_seconds=agent_timeout_seconds)
+    agent = _run_command(
+        agent_command, env=child_env, cwd=Path(worktree_root), timeout_seconds=agent_timeout_seconds
+    )
     if agent.returncode != 0:
-        raise WebBenchError(f"native agent command failed ({agent.returncode}): {agent.stderr[-1000:]}")
+        raise WebBenchError(
+            f"native agent command failed ({agent.returncode}): {agent.stderr[-1000:]}"
+        )
     if not trajectory_file.is_file():
         raise WebBenchError("native agent did not emit trajectories.jsonl")
     child_env["WEBBENCH_VERDICT_FILE"] = str(verdict_file)
     verifier_env = dict(child_env)
     verifier_env["WEBBENCH_TRAJECTORY_FILE"] = str(trajectory_file)
-    verifier = _run_command(verifier_command, env=verifier_env, cwd=Path(worktree_root), timeout_seconds=verifier_timeout_seconds)
+    verifier = _run_command(
+        verifier_command,
+        env=verifier_env,
+        cwd=Path(worktree_root),
+        timeout_seconds=verifier_timeout_seconds,
+    )
     if verifier.returncode != 0:
-        raise WebBenchError(f"native verifier command failed ({verifier.returncode}): {verifier.stderr[-1000:]}")
+        raise WebBenchError(
+            f"native verifier command failed ({verifier.returncode}): {verifier.stderr[-1000:]}"
+        )
     if not verdict_file.is_file():
         raise WebBenchError("native verifier did not emit verdicts.jsonl")
     rows: list[dict[str, Any]] = []
     try:
-        for line_number, line in enumerate(verdict_file.read_text(encoding="utf-8").splitlines(), start=1):
+        for line_number, line in enumerate(
+            verdict_file.read_text(encoding="utf-8").splitlines(), start=1
+        ):
             if not line.strip():
                 continue
             value = json.loads(line)
@@ -1022,7 +1130,14 @@ def run_native_evaluation(
     for row in validated:
         if (output_dir / row["trajectory_path"]).resolve() != trajectory_file.resolve():
             raise WebBenchError("verdict trajectory is not the observed agent trajectory")
-    _write_json(output_dir / "evidence_manifest.json", {"schema_version": "webbench-local-evidence-v2", "benchmark_revision": BENCHMARK_REVISION, "rows": validated})
+    _write_json(
+        output_dir / "evidence_manifest.json",
+        {
+            "schema_version": "webbench-local-evidence-v2",
+            "benchmark_revision": BENCHMARK_REVISION,
+            "rows": validated,
+        },
+    )
     return validated
 
 
@@ -1074,18 +1189,43 @@ def launch(
         tinker_call_count = 1
     updated = json.loads(json.dumps(receipt))
     try:
-        rows = native_runner(tasks=tasks, agent_command=agent_command, verifier_command=verifier_command,
-                             worktree_root=worktree_root, output_dir=output_dir,
-                             agent_timeout_seconds=agent_timeout_seconds, verifier_timeout_seconds=verifier_timeout_seconds)
+        rows = native_runner(
+            tasks=tasks,
+            agent_command=agent_command,
+            verifier_command=verifier_command,
+            worktree_root=worktree_root,
+            output_dir=output_dir,
+            agent_timeout_seconds=agent_timeout_seconds,
+            verifier_timeout_seconds=verifier_timeout_seconds,
+        )
         rows = _validate_verdict_rows(rows, tasks, output_dir)
     except WebBenchError as exc:
-        updated.update(status="TIMED_OUT" if isinstance(exc, WebBenchTimeout) else "FAILED", score=None, benchmark_score=None, failure_kind=str(exc), expected_task_count=len(tasks), completed_task_count=0)
+        updated.update(
+            status="TIMED_OUT" if isinstance(exc, WebBenchTimeout) else "FAILED",
+            score=None,
+            benchmark_score=None,
+            failure_kind=str(exc),
+            expected_task_count=len(tasks),
+            completed_task_count=0,
+        )
         _write_json(output_dir / "terminal_receipt.json", updated)
         return updated
     score = sum(1 for row in rows if row["success"]) / len(rows)
     updated["status"] = "SMOKE_COMPLETED" if len(tasks) == 1 else "SUBSET_COMPLETED"
-    updated.update(evaluation_scope="smoke" if len(tasks) == 1 else "subset", expected_task_count=len(tasks), completed_task_count=len(rows), subset_score=score, benchmark_score=None, is_full_benchmark_result=False)
-    updated["billing_reconciliation"] = {"status": "UNVERIFIED", "observed_usd": None, "unreconciled_usd": None, "hard_spend_enforced": False}
+    updated.update(
+        evaluation_scope="smoke" if len(tasks) == 1 else "subset",
+        expected_task_count=len(tasks),
+        completed_task_count=len(rows),
+        subset_score=score,
+        benchmark_score=None,
+        is_full_benchmark_result=False,
+    )
+    updated["billing_reconciliation"] = {
+        "status": "UNVERIFIED",
+        "observed_usd": None,
+        "unreconciled_usd": None,
+        "hard_spend_enforced": False,
+    }
     updated["wandb_run_identity"] = dict(wandb_record)
     updated["launch"] = {
         "requested": True,
@@ -1124,12 +1264,24 @@ def _parse_task_ids(values: Sequence[str] | None) -> list[int] | None:
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--dataset", type=Path, help="pinned webbenchfinal.csv checkout")
-    parser.add_argument("--training-task-manifest", type=Path, help="JSON task-ID manifest used for disjointness")
-    parser.add_argument("--task-id", action="append", help="exact task ID(s), repeatable or comma-separated")
-    parser.add_argument("--env", type=Path, help="per-worktree virtualenv (default: .venv-webbench)")
-    parser.add_argument("--native-receipt", type=Path, help="Halluminate environment/native-verifier receipt JSON")
-    parser.add_argument("--wandb-receipt", type=Path, help="pre-initialized online W&B receipt JSON")
-    parser.add_argument("--sampler-receipt", type=Path, help="completed compatible public HF sampler receipt JSON")
+    parser.add_argument(
+        "--training-task-manifest", type=Path, help="JSON task-ID manifest used for disjointness"
+    )
+    parser.add_argument(
+        "--task-id", action="append", help="exact task ID(s), repeatable or comma-separated"
+    )
+    parser.add_argument(
+        "--env", type=Path, help="per-worktree virtualenv (default: .venv-webbench)"
+    )
+    parser.add_argument(
+        "--native-receipt", type=Path, help="Halluminate environment/native-verifier receipt JSON"
+    )
+    parser.add_argument(
+        "--wandb-receipt", type=Path, help="pre-initialized online W&B receipt JSON"
+    )
+    parser.add_argument(
+        "--sampler-receipt", type=Path, help="completed compatible public HF sampler receipt JSON"
+    )
     parser.add_argument("--model-revision", default=BASE_MODEL_REVISION)
     parser.add_argument("--projected-tinker-usd", type=float, default=None)
     parser.add_argument("--agent-timeout-seconds", type=float, default=300)
@@ -1137,7 +1289,9 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--agent-command", nargs="+", help="official environment agent command")
     parser.add_argument("--verifier-command", nargs="+", help="official native verifier command")
     parser.add_argument("--output-dir", type=Path, default=Path("outputs/e6-webbench"))
-    parser.add_argument("--receipt", type=Path, default=Path("zvf-program/flagship/webbench_eval_receipt.json"))
+    parser.add_argument(
+        "--receipt", type=Path, default=Path("zvf-program/flagship/webbench_eval_receipt.json")
+    )
     parser.add_argument("--launch", action="store_true", help="launch only after every gate passes")
     return parser
 
@@ -1196,7 +1350,11 @@ def main(argv: Sequence[str] | None = None) -> int:
             )
         _write_json(args.receipt, receipt)
         print(json.dumps(receipt, indent=2, sort_keys=True))
-        return EXIT_OK if receipt["status"] in {"READY", "COMPLETED", "SMOKE_COMPLETED", "SUBSET_COMPLETED"} else EXIT_BLOCKED
+        return (
+            EXIT_OK
+            if receipt["status"] in {"READY", "COMPLETED", "SMOKE_COMPLETED", "SUBSET_COMPLETED"}
+            else EXIT_BLOCKED
+        )
     except LaunchBlocked as exc:
         _write_json(args.receipt, exc.receipt)
         print(json.dumps(exc.receipt, indent=2, sort_keys=True))

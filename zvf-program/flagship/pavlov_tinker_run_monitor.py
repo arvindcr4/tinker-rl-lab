@@ -182,7 +182,7 @@ def _normalise_wandb_record(value: Any) -> tuple[dict[str, Any], list[str]]:
             "state": state,
             "mode": mode,
             "group": group,
-            "created_at": _coerce_int(raw.get("created_at") or raw.get("created") ),
+            "created_at": _coerce_int(raw.get("created_at") or raw.get("created")),
         }
     )
     return record, errors
@@ -207,12 +207,16 @@ def _normalise_checkpoints(value: Any) -> tuple[list[dict[str, Any]], list[str]]
     if not raw:
         return checkpoints, ["checkpoint JSON must contain initial, periodic, and final entries"]
 
-    payload_run_id = _first_text(
-        value,
-        "tinker_run_id",
-        "run_id",
-        "tinkerRunId",
-    ) if isinstance(value, Mapping) else None
+    payload_run_id = (
+        _first_text(
+            value,
+            "tinker_run_id",
+            "run_id",
+            "tinkerRunId",
+        )
+        if isinstance(value, Mapping)
+        else None
+    )
     seen_stages: set[str] = set()
     for index, item in enumerate(raw):
         if not isinstance(item, Mapping):
@@ -242,11 +246,13 @@ def _normalise_checkpoints(value: Any) -> tuple[list[dict[str, Any]], list[str]]
         if payload_run_id is not None and item_run_id is not None and item_run_id != payload_run_id:
             errors.append("checkpoint manifest run_id mismatch inside entries")
 
-        checkpoints.append({
-            "stage": stage,
-            "step": step,
-            "run_id": item_run_id,
-        })
+        checkpoints.append(
+            {
+                "stage": stage,
+                "step": step,
+                "run_id": item_run_id,
+            }
+        )
         seen_stages.add(stage)
 
     if not errors:
@@ -255,7 +261,9 @@ def _normalise_checkpoints(value: Any) -> tuple[list[dict[str, Any]], list[str]]
             missing = sorted(set(REQUIRED_STAGES) - observed)
             errors.append("checkpoint JSON missing stages: " + ", ".join(missing))
         elif len(checkpoints) != len(REQUIRED_STAGES):
-            errors.append("checkpoint JSON must contain exactly one initial, periodic, and final entry")
+            errors.append(
+                "checkpoint JSON must contain exactly one initial, periodic, and final entry"
+            )
 
     return checkpoints, errors
 
@@ -318,7 +326,9 @@ def _normalise_hf_receipts(value: Any) -> tuple[list[dict[str, Any]], list[str]]
             continue
         safe_public = item.get("safe_public_artifact")
         if visibility == "public" and safe_public is not True:
-            errors.append(f"hf_receipts[{index}] must set safe_public_artifact true for public visibility")
+            errors.append(
+                f"hf_receipts[{index}] must set safe_public_artifact true for public visibility"
+            )
             continue
 
         receipts.append(
@@ -386,7 +396,9 @@ def _normalise_terminal_receipt(value: Any) -> tuple[dict[str, Any], list[str]]:
     return record, errors
 
 
-def _normalise_attempt(value: Mapping[str, Any], fallback_attempt: int) -> tuple[dict[str, Any], list[str]]:
+def _normalise_attempt(
+    value: Mapping[str, Any], fallback_attempt: int
+) -> tuple[dict[str, Any], list[str]]:
     errors: list[str] = []
     attempt_no = _coerce_int(value.get("attempt", value.get("attempt_no", value.get("index"))))
     if attempt_no is None:
@@ -410,8 +422,12 @@ def _normalise_attempt(value: Mapping[str, Any], fallback_attempt: int) -> tuple
         "run_id": run_id,
         "parent_attempt": _coerce_int(value.get("parent_attempt")),
         "parent_run_id": _first_text(value, "parent_run_id", "previous_run_id", "previous_run"),
-        "started_at": _coerce_int(value.get("started_at") or value.get("started") or value.get("timestamp") ),
-        "steps": _to_list_of_ints(value.get("steps") or value.get("completed_steps") or value.get("step_history")),
+        "started_at": _coerce_int(
+            value.get("started_at") or value.get("started") or value.get("timestamp")
+        ),
+        "steps": _to_list_of_ints(
+            value.get("steps") or value.get("completed_steps") or value.get("step_history")
+        ),
     }
 
     run_url = _first_text(value, "run_url", "url", "link")
@@ -489,11 +505,12 @@ def _validate_attempt_lineage(attempts: Sequence[Mapping[str, Any]]) -> list[str
             previous = attempts[index - 1]
             previous_no = previous.get("attempt")
             if attempt.get("parent_attempt") not in {previous_no, None}:
-                errors.append(
-                    f"attempt {attempt_no} parent_attempt must be {previous_no}"
-                )
+                errors.append(f"attempt {attempt_no} parent_attempt must be {previous_no}")
             expected_parent_run = previous.get("run_id")
-            if expected_parent_run is not None and attempt.get("parent_run_id") not in {expected_parent_run, None}:
+            if expected_parent_run is not None and attempt.get("parent_run_id") not in {
+                expected_parent_run,
+                None,
+            }:
                 errors.append(
                     f"attempt {attempt_no} parent_run_id must match previous attempt run_id"
                 )
@@ -510,9 +527,7 @@ def _validate_attempt_lineage(attempts: Sequence[Mapping[str, Any]]) -> list[str
                 errors.append("final tinker attempt must be completed successfully")
         else:
             if status in TINKER_NON_RETRYABLE_STATES:
-                errors.append(
-                    f"attempt {attempt_no} cannot be retried after status {status}"
-                )
+                errors.append(f"attempt {attempt_no} cannot be retried after status {status}")
                 continue
             if status not in TINKER_RETRYABLE_STATES:
                 errors.append(
@@ -574,7 +589,7 @@ def _validate_required_steps(
     hf_receipts: Sequence[Mapping[str, Any]],
     errors: list[str],
 ) -> None:
-    expected_steps = dict(zip(REQUIRED_STAGES, REQUIRED_STEPS))
+    expected_steps = dict(zip(REQUIRED_STAGES, REQUIRED_STEPS, strict=False))
     terminal_steps = terminal.get("steps") or []
     if not terminal_steps and attempts:
         terminal_steps = attempts[-1].get("steps") or []
@@ -589,19 +604,27 @@ def _validate_required_steps(
             errors.append(f"terminal run must include step {step}")
 
     checkpoint_steps = {
-        entry["stage"]: entry["step"] for entry in checkpoints if entry.get("stage") in expected_steps
+        entry["stage"]: entry["step"]
+        for entry in checkpoints
+        if entry.get("stage") in expected_steps
     }
     hf_steps = {
-        entry["stage"]: entry["step"] for entry in hf_receipts if entry.get("stage") in expected_steps
+        entry["stage"]: entry["step"]
+        for entry in hf_receipts
+        if entry.get("stage") in expected_steps
     }
 
     for stage, expected in expected_steps.items():
         observed_cp = checkpoint_steps.get(stage)
         observed_hf = hf_steps.get(stage)
         if observed_cp != expected:
-            errors.append(f"checkpoint[{stage}] step mismatch: expected {expected}, got {observed_cp}")
+            errors.append(
+                f"checkpoint[{stage}] step mismatch: expected {expected}, got {observed_cp}"
+            )
         if observed_hf != expected:
-            errors.append(f"hf_receipts[{stage}] step mismatch: expected {expected}, got {observed_hf}")
+            errors.append(
+                f"hf_receipts[{stage}] step mismatch: expected {expected}, got {observed_hf}"
+            )
         if observed_cp is not None and observed_hf is not None and observed_cp != observed_hf:
             errors.append(f"checkpoint and hf step mismatch for stage {stage}")
 
@@ -622,7 +645,11 @@ def _build_lifecycle(
     hf_stages = {entry.get("stage") for entry in hf_receipts}
 
     state_ok = {
-        "wandb_sync": bool(wandb_record.get("run_id") and wandb_record.get("state", "").lower() in WANDB_SUCCESS_STATES and wandb_record.get("mode", "").lower() == "online"),
+        "wandb_sync": bool(
+            wandb_record.get("run_id")
+            and wandb_record.get("state", "").lower() in WANDB_SUCCESS_STATES
+            and wandb_record.get("mode", "").lower() == "online"
+        ),
         "tinker_identity": bool(attempts),
         "train_step_0": 0 in steps_seen,
         "hf_initial_export": "initial" in hf_stages,
@@ -630,7 +657,9 @@ def _build_lifecycle(
         "hf_periodic_export": "periodic" in hf_stages,
         "train_step_10": 10 in steps_seen,
         "hf_final_export": "final" in hf_stages,
-        "terminal_receipt": bool(terminal.get("status") in TINKER_SUCCESS_STATES and terminal.get("exit_code") == 0),
+        "terminal_receipt": bool(
+            terminal.get("status") in TINKER_SUCCESS_STATES and terminal.get("exit_code") == 0
+        ),
     }
 
     return [
@@ -662,12 +691,8 @@ def validate_tinker_run_monitor(
     if config_errors:
         blockers.extend([f"smoke config: {error}" for error in config_errors])
 
-    wandb_payload, wandb_load_errors = _load_payload(
-        wandb_sync, label="wandb sync metadata"
-    )
-    tinker_payload, tinker_load_errors = _load_payload(
-        tinker_attempts, label="tinker attempts"
-    )
+    wandb_payload, wandb_load_errors = _load_payload(wandb_sync, label="wandb sync metadata")
+    tinker_payload, tinker_load_errors = _load_payload(tinker_attempts, label="tinker attempts")
     checkpoint_payload, checkpoint_load_errors = _load_payload(
         checkpoint_json, label="checkpoint JSON"
     )

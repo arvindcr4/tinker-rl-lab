@@ -67,7 +67,7 @@ def build_loss_fns():
 
     def comp_only_sum(data, logprobs_list):
         losses = []
-        for lp, d in zip(logprobs_list, data):
+        for lp, d in zip(logprobs_list, data, strict=False):
             w = d.loss_fn_inputs["weights"].to_torch().to(lp.device)
             losses.append(-(lp * w).sum())
         stk = torch.stack(losses)
@@ -78,7 +78,7 @@ def build_loss_fns():
 
     def comp_only_mean(data, logprobs_list):
         losses = []
-        for lp, d in zip(logprobs_list, data):
+        for lp, d in zip(logprobs_list, data, strict=False):
             w = d.loss_fn_inputs["weights"].to_torch().to(lp.device)
             denom = w.sum().clamp(min=1.0)
             losses.append(-(lp * w).sum() / denom)
@@ -93,6 +93,7 @@ def build_loss_fns():
 
 def make_data(tok, prompt, response):
     import tinker.types as T
+
     prompt_ids = tok.encode(prompt, add_special_tokens=False)
     resp_ids = tok.encode(response, add_special_tokens=False)
     full_ids = prompt_ids + resp_ids
@@ -106,12 +107,8 @@ def make_data(tok, prompt, response):
     datum = T.Datum(
         model_input=T.ModelInput.from_ints(full_ids[:-1]),
         loss_fn_inputs={
-            "target_tokens": T.TensorData(
-                data=target_ids, dtype="int64", shape=[len(target_ids)]
-            ),
-            "weights": T.TensorData(
-                data=mask, dtype="float32", shape=[len(mask)]
-            ),
+            "target_tokens": T.TensorData(data=target_ids, dtype="int64", shape=[len(target_ids)]),
+            "weights": T.TensorData(data=mask, dtype="float32", shape=[len(mask)]),
         },
     )
     return {
@@ -168,20 +165,23 @@ def main():
         full_losses = out_full.metrics.get("per_seq_loss", [])
         comp_losses = out_comp_sum.metrics.get("per_seq_loss", [])
         attribution = []
-        for i, (f, c) in enumerate(zip(full_losses, comp_losses)):
+        for i, (f, c) in enumerate(zip(full_losses, comp_losses, strict=False)):
             denom = f if abs(f) > 1e-9 else 1e-9
-            attribution.append({
-                "seq": i,
-                "full_loss": f,
-                "completion_loss": c,
-                "prompt_contribution": f - c,
-                "prompt_frac_of_full": (f - c) / denom,
-            })
+            attribution.append(
+                {
+                    "seq": i,
+                    "full_loss": f,
+                    "completion_loss": c,
+                    "prompt_contribution": f - c,
+                    "prompt_frac_of_full": (f - c) / denom,
+                }
+            )
         result["prompt_attribution"] = attribution
 
         avg_prompt_frac = (
             sum(abs(a["prompt_frac_of_full"]) for a in attribution) / len(attribution)
-            if attribution else 0.0
+            if attribution
+            else 0.0
         )
         verdict = "LEAK" if avg_prompt_frac > 0.05 else "CLEAN"
         result["verdict"] = {
@@ -204,16 +204,34 @@ def main():
             "",
             "| seq | prompt_len | resp_len | total_len |",
             "|---|---:|---:|---:|",
-            "| short | " + str(short['prompt_len']) + " | " + str(short['resp_len']) + " | " + str(short['total_len']) + " |",
-            "| long  | " + str(long_['prompt_len']) + " | " + str(long_['resp_len']) + " | " + str(long_['total_len']) + " |",
+            "| short | "
+            + str(short["prompt_len"])
+            + " | "
+            + str(short["resp_len"])
+            + " | "
+            + str(short["total_len"])
+            + " |",
+            "| long  | "
+            + str(long_["prompt_len"])
+            + " | "
+            + str(long_["resp_len"])
+            + " | "
+            + str(long_["total_len"])
+            + " |",
             "",
             "## Loss comparison (same data, three mask formulations)",
             "",
             "| formulation | mean_loss |",
             "|---|---:|",
-            "| full_sequence_sum (current runner) | " + str(out_full.metrics.get('mean_loss', 'n/a')) + " |",
-            "| completion_only_sum (canonical) | " + str(out_comp_sum.metrics.get('mean_loss', 'n/a')) + " |",
-            "| completion_only_mean (length-norm) | " + str(out_comp_mean.metrics.get('mean_loss', 'n/a')) + " |",
+            "| full_sequence_sum (current runner) | "
+            + str(out_full.metrics.get("mean_loss", "n/a"))
+            + " |",
+            "| completion_only_sum (canonical) | "
+            + str(out_comp_sum.metrics.get("mean_loss", "n/a"))
+            + " |",
+            "| completion_only_mean (length-norm) | "
+            + str(out_comp_mean.metrics.get("mean_loss", "n/a"))
+            + " |",
             "",
             "## Prompt-gradient attribution",
             "",
@@ -222,18 +240,25 @@ def main():
         ]
         for a in attribution:
             lines.append(
-                "| " + str(a['seq']) + " | "
-                + ("{:.4f}".format(a['full_loss'])) + " | "
-                + ("{:.4f}".format(a['completion_loss'])) + " | "
-                + ("{:+.4f}".format(a['prompt_contribution'])) + " | "
-                + ("{:+.3f}".format(a['prompt_frac_of_full'])) + " |"
+                "| "
+                + str(a["seq"])
+                + " | "
+                + ("{:.4f}".format(a["full_loss"]))
+                + " | "
+                + ("{:.4f}".format(a["completion_loss"]))
+                + " | "
+                + ("{:+.4f}".format(a["prompt_contribution"]))
+                + " | "
+                + ("{:+.3f}".format(a["prompt_frac_of_full"]))
+                + " |"
             )
         lines += [
             "",
             "## Verdict: **" + verdict + "**",
             "",
             "Average |prompt fraction of full-sequence loss|: "
-            + ("{:.3f}".format(avg_prompt_frac)) + ". Threshold for CLEAN: < 0.05.",
+            + ("{:.3f}".format(avg_prompt_frac))
+            + ". Threshold for CLEAN: < 0.05.",
             "",
             "Current runner uses full_sequence_sum. If the prompt fraction is",
             "non-trivial (>5%), the recorded GRPO loss is contaminated by",
@@ -243,7 +268,13 @@ def main():
         OUT_MD.write_text("\n".join(lines) + "\n")
         print("wrote " + str(OUT_JSON))
         print("wrote " + str(OUT_MD))
-        print("verdict: " + verdict + " (avg abs prompt frac = " + ("{:.3f}".format(avg_prompt_frac)) + ")")
+        print(
+            "verdict: "
+            + verdict
+            + " (avg abs prompt frac = "
+            + ("{:.3f}".format(avg_prompt_frac))
+            + ")"
+        )
 
     except Exception as exc:
         result["status"] = "failed"

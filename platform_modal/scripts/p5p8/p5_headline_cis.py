@@ -19,18 +19,17 @@ Outputs:
 Stdlib only (re-implements the bootstrap primitives locally to keep this
 script ≤ 300 LoC and not depend on importing the Berkeley module).
 """
+
 from __future__ import annotations
 
 import csv
 import json
-import math
 import random
-import statistics
 import sys
 from pathlib import Path
 
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _stats
-from _stats import bootstrap_ci_mean_pct  # noqa: E402
+from _stats import bootstrap_ci_mean_pct
 
 ROOT = Path(__file__).resolve().parents[2]
 SWEEP = ROOT / "experiments" / "results" / "groupsize_zvf_sweep.tsv"
@@ -49,7 +48,7 @@ def bootstrap_ci_difference_paired(a, b, B=N_BOOT, alpha=0.05, seed=SEED):
         return float("nan"), float("nan"), float("nan"), 0
     rng = random.Random(seed)
     n = len(a)
-    diffs = [ai - bi for ai, bi in zip(a, b)]
+    diffs = [ai - bi for ai, bi in zip(a, b, strict=False)]
     base = sum(diffs) / n
     boots = []
     for _ in range(B):
@@ -82,15 +81,17 @@ def read_sweep():
             parts = ln.rstrip("\n").split("\t")
             if not parts or parts[0] == "":
                 continue
-            d = dict(zip(header, parts))
-            rows.append({
-                "G": int(d["G"]),
-                "n_seeds": int(d["n_seeds"]),
-                "heldout_acc_mean": float(d["heldout_acc_mean"]),
-                "heldout_acc_se": float(d["heldout_acc_se"]),
-                "mean_zvf": float(d["mean_zvf"]),
-                "mean_reward_train": float(d["mean_reward_train"]),
-            })
+            d = dict(zip(header, parts, strict=False))
+            rows.append(
+                {
+                    "G": int(d["G"]),
+                    "n_seeds": int(d["n_seeds"]),
+                    "heldout_acc_mean": float(d["heldout_acc_mean"]),
+                    "heldout_acc_se": float(d["heldout_acc_se"]),
+                    "mean_zvf": float(d["mean_zvf"]),
+                    "mean_reward_train": float(d["mean_reward_train"]),
+                }
+            )
     return rows
 
 
@@ -100,33 +101,54 @@ def read_delta():
         header = f.readline().rstrip("\n").split("\t")
         for ln in f:
             parts = ln.rstrip("\n").split("\t")
-            d = dict(zip(header, parts))
-            rows.append({
-                "budget_tokens": int(d["budget_tokens"]),
-                "delta_acc": float(d["delta_acc_G32_minus_G4"]),
-                "ci_lo": float(d["delta_boot_ci_low"]),
-                "ci_hi": float(d["delta_boot_ci_high"]),
-                "delta_se": float(d["delta_boot_se"]),
-                "p_le_zero": float(d["p_le_zero"]),
-            })
+            d = dict(zip(header, parts, strict=False))
+            rows.append(
+                {
+                    "budget_tokens": int(d["budget_tokens"]),
+                    "delta_acc": float(d["delta_acc_G32_minus_G4"]),
+                    "ci_lo": float(d["delta_boot_ci_low"]),
+                    "ci_hi": float(d["delta_boot_ci_high"]),
+                    "delta_se": float(d["delta_boot_se"]),
+                    "p_le_zero": float(d["p_le_zero"]),
+                }
+            )
     return rows
 
 
 def headline_h1_zvf_monotone(sweep):
     """Protocol v2: descriptive ZVF only until independent seed values exist."""
     rows = sorted(sweep, key=lambda r: r["G"])
-    out = [{"claim": "H1", "G": r["G"], "metric": "mean_zvf",
-            "n": r["n_seeds"], "point": r["mean_zvf"],
-            "ci_lo": "n/a", "ci_hi": "n/a", "verdict": "DESCRIPTIVE_ONLY",
-            "note": "v2: no per-seed ZVF; accuracy SE is not ZVF uncertainty"}
-           for r in rows]
+    out = [
+        {
+            "claim": "H1",
+            "G": r["G"],
+            "metric": "mean_zvf",
+            "n": r["n_seeds"],
+            "point": r["mean_zvf"],
+            "ci_lo": "n/a",
+            "ci_hi": "n/a",
+            "verdict": "DESCRIPTIVE_ONLY",
+            "note": "v2: no per-seed ZVF; accuracy SE is not ZVF uncertainty",
+        }
+        for r in rows
+    ]
     if len(rows) > 1:
-        decreasing = all(a["mean_zvf"] >= b["mean_zvf"] for a, b in zip(rows, rows[1:]))
-        out.append({"claim": "H1-monotone", "G": "all adjacent groups",
-            "metric": "zvf_gap", "n": sum(r["n_seeds"] for r in rows),
-            "point": rows[-1]["mean_zvf"] - rows[0]["mean_zvf"],
-            "ci_lo": "n/a", "ci_hi": "n/a", "verdict": "DESCRIPTIVE_ONLY",
-            "note": f"v2: observed nonincreasing means={decreasing}; no inferential monotonicity test"})
+        decreasing = all(
+            a["mean_zvf"] >= b["mean_zvf"] for a, b in zip(rows, rows[1:], strict=False)
+        )
+        out.append(
+            {
+                "claim": "H1-monotone",
+                "G": "all adjacent groups",
+                "metric": "zvf_gap",
+                "n": sum(r["n_seeds"] for r in rows),
+                "point": rows[-1]["mean_zvf"] - rows[0]["mean_zvf"],
+                "ci_lo": "n/a",
+                "ci_hi": "n/a",
+                "verdict": "DESCRIPTIVE_ONLY",
+                "note": f"v2: observed nonincreasing means={decreasing}; no inferential monotonicity test",
+            }
+        )
     return out
 
 
@@ -137,29 +159,39 @@ def headline_h2_heldout_flat(sweep):
         if r["n_seeds"] < 2:
             continue
         rng = random.Random(SEED + 1000 + r["G"])
-        draws = [r["heldout_acc_mean"] + rng.gauss(0, r["heldout_acc_se"])
-                 for _ in range(r["n_seeds"])]
+        draws = [
+            r["heldout_acc_mean"] + rng.gauss(0, r["heldout_acc_se"]) for _ in range(r["n_seeds"])
+        ]
         m, lo, hi, n = bootstrap_ci_mean_pct(draws, N_BOOT, 0.05, SEED)
-        out.append({
-            "claim": "H2", "G": r["G"], "metric": "heldout_acc",
-            "n": n, "point": round(m, 4),
-            "ci_lo": round(lo, 4), "ci_hi": round(hi, 4),
-"verdict": "ok",
-            "note": "Gaussian-approx per-seed draws",
-        })
+        out.append(
+            {
+                "claim": "H2",
+                "G": r["G"],
+                "metric": "heldout_acc",
+                "n": n,
+                "point": round(m, 4),
+                "ci_lo": round(lo, 4),
+                "ci_hi": round(hi, 4),
+                "verdict": "ok",
+                "note": "Gaussian-approx per-seed draws",
+            }
+        )
     # Range = max(ci_hi) - min(ci_lo) across G values
     pts = [x["point"] for x in out]
     rng = max(pts) - min(pts)
-    out.append({
-        "claim": "H2-flatness",
-        "G": "2..16",
-        "metric": "range_heldout",
-        "n": sum(x["n"] for x in out),
-        "point": round(rng, 4),
-        "ci_lo": "n/a", "ci_hi": "n/a",
-        "verdict": "FLAT" if rng < 0.02 else "VARIED",
-        "note": f"max-min over G; threshold 0.02 (Miller TOST equiv region)",
-    })
+    out.append(
+        {
+            "claim": "H2-flatness",
+            "G": "2..16",
+            "metric": "range_heldout",
+            "n": sum(x["n"] for x in out),
+            "point": round(rng, 4),
+            "ci_lo": "n/a",
+            "ci_hi": "n/a",
+            "verdict": "FLAT" if rng < 0.02 else "VARIED",
+            "note": f"max-min over G; threshold 0.02 (Miller TOST equiv region)",
+        }
+    )
     return out
 
 
@@ -171,17 +203,19 @@ def headline_h3_g32_vs_g4(delta):
         # add the equivalent-region verdict per Miller.
         null_v = 0.0
         v = verdict(r["delta_acc"], r["ci_lo"], r["ci_hi"], null_v)
-        out.append({
-            "claim": "H3",
-            "G": "G32-G4",
-            "metric": f"delta_acc@{r['budget_tokens']}tok",
-            "n": "from_iter107",
-            "point": round(r["delta_acc"], 4),
-            "ci_lo": round(r["ci_lo"], 4),
-            "ci_hi": round(r["ci_hi"], 4),
-            "verdict": v,
-            "note": f"p_le_zero={r['p_le_zero']}",
-        })
+        out.append(
+            {
+                "claim": "H3",
+                "G": "G32-G4",
+                "metric": f"delta_acc@{r['budget_tokens']}tok",
+                "n": "from_iter107",
+                "point": round(r["delta_acc"], 4),
+                "ci_lo": round(r["ci_lo"], 4),
+                "ci_hi": round(r["ci_hi"], 4),
+                "verdict": v,
+                "note": f"p_le_zero={r['p_le_zero']}",
+            }
+        )
     return out
 
 
@@ -196,10 +230,8 @@ def main() -> int:
 
     out_tsv = OUT_DIR / "p5_headline_cis.tsv"
     with out_tsv.open("w", newline="") as f:
-        cols = ["claim", "G", "metric", "n", "point",
-                "ci_lo", "ci_hi", "verdict", "note"]
-        w = csv.DictWriter(f, fieldnames=cols, delimiter="\t",
-                           extrasaction="ignore")
+        cols = ["claim", "G", "metric", "n", "point", "ci_lo", "ci_hi", "verdict", "note"]
+        w = csv.DictWriter(f, fieldnames=cols, delimiter="\t", extrasaction="ignore")
         w.writeheader()
         for r in rows:
             w.writerow(r)
@@ -220,8 +252,15 @@ def main() -> int:
         json.dump(summary, f, indent=2)
     print(f"rows: {len(rows)}")
     for r in rows:
-        print("  ", r["claim"], r["G"], r["metric"], r["point"],
-              f"[{r['ci_lo']}, {r['ci_hi']}]", r["verdict"])
+        print(
+            "  ",
+            r["claim"],
+            r["G"],
+            r["metric"],
+            r["point"],
+            f"[{r['ci_lo']}, {r['ci_hi']}]",
+            r["verdict"],
+        )
     return 0
 
 

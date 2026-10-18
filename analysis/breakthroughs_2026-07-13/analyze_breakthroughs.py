@@ -101,9 +101,7 @@ def duality_curve(probabilities: list[float]) -> tuple[list[dict[str, object]], 
     g4_minus_g5: list[float] = []
     for _ in range(BOOTSTRAPS):
         sample = [probabilities[rng.randrange(len(probabilities))] for _ in probabilities]
-        utilities = {
-            k: contrastive_yield(sample, k) / math.sqrt(k) for k in range(2, 17)
-        }
+        utilities = {k: contrastive_yield(sample, k) / math.sqrt(k) for k in range(2, 17)}
         best_counts[max(utilities, key=utilities.get)] += 1
         g4_minus_g5.append(utilities[4] - utilities[5])
     g4_minus_g5.sort()
@@ -218,8 +216,7 @@ def controller_summary_rows(
                 "share_of_fires": summary[boundary]["share_of_fires"],
                 "mean_recovered_contrast": summary[boundary]["mean_recovered_contrast"],
                 "mean_cost_ratio": sum(
-                    int(row["n_fires"]) * float(row["mean_cost_ratio"])
-                    for row in selected
+                    int(row["n_fires"]) * float(row["mean_cost_ratio"]) for row in selected
                 )
                 / n,
             }

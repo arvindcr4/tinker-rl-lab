@@ -3,6 +3,7 @@
 Selected definitions are unchanged from the retained source identified in
 PROVENANCE.json. This module alone cannot authenticate empirical evidence.
 """
+
 from __future__ import annotations
 
 from decimal import Decimal, InvalidOperation
@@ -21,7 +22,7 @@ def normalize_number(text: str) -> str | None:
         return None
     for left, right in (("$", "$"), (r"\(", r"\)")):
         if text.startswith(left) and text.endswith(right):
-            text = text[len(left):-len(right)].strip()
+            text = text[len(left) : -len(right)].strip()
     # Accept a simple LaTeX fraction; no expression evaluation or recursive parser.
     frac = re.fullmatch(r"\\(?:dfrac|tfrac|frac)\{([^{}]+)\}\{([^{}]+)\}", text)
     if frac:
@@ -45,7 +46,7 @@ def strip_terminal_tokens(text: str) -> str:
         before = text
         for token in ("<|im_end|>", "<|endoftext|>"):
             if text.endswith(token):
-                text = text[:-len(token)].rstrip()
+                text = text[: -len(token)].rstrip()
         if text == before:
             return text
 
@@ -82,8 +83,9 @@ def parse_answer(text: str) -> dict[str, str | None]:
                 return {**failed, "status": "malformed_marker"}
             candidates.append(("hash_marker", line.lstrip()[4:].strip()))
     last_line = text.splitlines()[-1].strip()
-    explicit = re.fullmatch(r"(?:final\s+answer|answer)\s*(?:is\s*|:\s*|=\s*)(.+)",
-                            last_line, flags=re.IGNORECASE)
+    explicit = re.fullmatch(
+        r"(?:final\s+answer|answer)\s*(?:is\s*|:\s*|=\s*)(.+)", last_line, flags=re.IGNORECASE
+    )
     if explicit:
         candidates.append(("explicit_final", explicit.group(1).strip().removesuffix(".")))
     if not candidates:
@@ -96,7 +98,11 @@ def parse_answer(text: str) -> dict[str, str | None]:
         return {**failed, "status": "invalid_numeric_answer"}
     if len({value for _, value in parsed}) != 1:
         return {**failed, "status": "ambiguous_final_answers"}
-    return {"status": "ok", "source": "+".join(dict.fromkeys(source for source, _ in parsed)),
-            "value": parsed[0][1]}
+    return {
+        "status": "ok",
+        "source": "+".join(dict.fromkeys(source for source, _ in parsed)),
+        "value": parsed[0][1],
+    }
+
 
 PARSER_VERSION = 1

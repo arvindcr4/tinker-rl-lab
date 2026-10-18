@@ -58,7 +58,6 @@ from __future__ import annotations
 import csv
 import json
 import math
-import os
 import statistics
 from collections import defaultdict
 from pathlib import Path
@@ -137,7 +136,7 @@ def half_life(rows: list[dict], kind: str) -> dict:
     """Relative reduction from first half to last half of rollout; per-seed."""
     per = per_seed_step_reward(rows, kind)
     deltas = []
-    for s, vals in per.items():
+    for _s, vals in per.items():
         n = len(vals)
         if n < 4:
             continue
@@ -156,12 +155,10 @@ def zero_floor_reduction(rows: list[dict]) -> dict:
     """Fraction of trajectories whose per-step reward is identically 0."""
     sparse = per_seed_step_reward(rows, "sparse")
     dense = per_seed_step_reward(rows, "dense")
-    sparse_zero_frac = sum(
-        1 for v in sparse.values() if all(r == 0 for r in v)
-    ) / max(1, len(sparse))
-    dense_zero_frac = sum(
-        1 for v in dense.values() if all(r == 0 for r in v)
-    ) / max(1, len(dense))
+    sparse_zero_frac = sum(1 for v in sparse.values() if all(r == 0 for r in v)) / max(
+        1, len(sparse)
+    )
+    dense_zero_frac = sum(1 for v in dense.values() if all(r == 0 for r in v)) / max(1, len(dense))
     return {
         "sparse_zero_frac": round(sparse_zero_frac, 4),
         "dense_zero_frac": round(dense_zero_frac, 4),
@@ -180,7 +177,7 @@ def zvf_reduction(rows: list[dict]) -> dict:
         "zvf_sparse_mean": round(statistics.mean(sp_means), 4),
         "zvf_dense_mean": round(statistics.mean(de_means), 4),
         "zvf_drop": round(statistics.mean(sp_means) - statistics.mean(de_means), 4),
-        "interpret":"DECISIVE"
+        "interpret": "DECISIVE"
         if (statistics.mean(sp_means) - statistics.mean(de_means)) > 0.05
         else "SUGGESTIVE",
     }
@@ -190,9 +187,7 @@ def write_step_tsv(rows: list[dict]) -> Path:
     p = OUT / "react_dense_vs_sparse_step.tsv"
     with p.open("w", newline="") as f:
         w = csv.writer(f, delimiter="\t")
-        w.writerow(
-            ["seed", "step", "reward_sparse", "reward_dense", "zvf_sparse", "zvf_dense"]
-        )
+        w.writerow(["seed", "step", "reward_sparse", "reward_dense", "zvf_sparse", "zvf_dense"])
         for r in rows:
             w.writerow(
                 [
@@ -230,7 +225,7 @@ def write_zvf_tsv(summary: dict) -> Path:
 def main() -> None:
     rows = read_bfclv4()
     print(f"Loaded {len(rows)} steps from {DATA.name}")
-    seeds = sorted({r['seed'] for r in rows})
+    seeds = sorted({r["seed"] for r in rows})
     print(f"Seeds: {seeds}")
 
     gap = intervention_gap(rows)
@@ -252,9 +247,7 @@ def main() -> None:
         "H1_intervention_gap": gap,
         "H2_half_life_sparse": hl_sparse,
         "H2_half_life_dense": hl_dense,
-        "H2_delta": round(
-            hl_dense["mean_delta"] - hl_sparse["mean_delta"], 4
-        ),
+        "H2_delta": round(hl_dense["mean_delta"] - hl_sparse["mean_delta"], 4),
         "H3_zero_floor": zero,
         "H4_zvf_reduction": zvf,
         "decisive_count": sum([H1, H2, H3, H4]),
@@ -281,10 +274,10 @@ def main() -> None:
     with sp.open("w") as f:
         json.dump(summary, f, indent=2)
     print("\nFinal summary:")
-    print(json.dumps({k: v for k, v in summary.items() if k != 'interpretation_summary'}, indent=2))
+    print(json.dumps({k: v for k, v in summary.items() if k != "interpretation_summary"}, indent=2))
     print("\nWrote:")
     print(f"  {sp}")
-    for k, v in paths.items():
+    for _k, v in paths.items():
         print(f"  {v}")
 
 

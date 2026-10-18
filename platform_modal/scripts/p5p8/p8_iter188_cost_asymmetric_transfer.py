@@ -44,6 +44,7 @@ Outputs (platform_hybrid/experiments/results/p5p8/):
   p8_iter188_thresholds.tsv     3 fsets x 4 c x 5 seeds (t*)
   p8_iter188_summary.json       H1..H6 verdicts + headline numbers
 """
+
 from __future__ import annotations
 import json
 import sys
@@ -52,8 +53,8 @@ from pathlib import Path
 import numpy as np
 
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
-from _p8_common import (  # noqa: E402
+from _paths import REPO_ROOT
+from _p8_common import (
     RAW20,
     AGG4,
     ALL24,
@@ -63,6 +64,7 @@ from _p8_common import (  # noqa: E402
     fit_xgb,
     paired_bootstrap_ci,
 )
+
 ROOT = REPO_ROOT
 RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8/corrected-review21-v2"
 RES.mkdir(parents=True, exist_ok=True)
@@ -105,9 +107,12 @@ def main():
     print("Loading data...", flush=True)
     Xtr, ytr = load(TRAIN)
     Xte, yte = load(TEST)
-    print(f"  train: {Xtr.shape} pos={int((ytr==1).sum())}", flush=True)
-    print(f"  test:  {Xte.shape} pos={int((yte==1).sum())} "
-          f"base_rate={float((yte==1).mean()):.4f}", flush=True)
+    print(f"  train: {Xtr.shape} pos={int((ytr == 1).sum())}", flush=True)
+    print(
+        f"  test:  {Xte.shape} pos={int((yte == 1).sum())} "
+        f"base_rate={float((yte == 1).mean()):.4f}",
+        flush=True,
+    )
 
     print("Fitting XGB...", flush=True)
     probas = {}
@@ -143,7 +148,7 @@ def main():
     out_cell = RES / "p8_iter188_min_cost.tsv"
     with out_cell.open("w") as f:
         f.write("fset\tseed\tc\tmin_cost\topt_threshold\tfraud_base_rate\n")
-        for (fset, sd, c) in sorted(minc.keys()):
+        for fset, sd, c in sorted(minc.keys()):
             mc = minc[(fset, sd, c)]
             t_opt = optt[(fset, sd, c)]
             base = float((yte == 1).mean())
@@ -153,7 +158,7 @@ def main():
     out_curve = RES / "p8_iter188_cost_curves.tsv"
     with out_curve.open("w") as f:
         f.write("fset\tc\tseed\tthreshold\tcost_per_tx\tflagged_frac\n")
-        for (fset, sd) in sorted(probas.keys()):
+        for fset, sd in sorted(probas.keys()):
             s = probas[(fset, sd)]
             for c in COST_RATIOS:
                 th, costs, fps = cost_curve(s, yte, c)
@@ -168,14 +173,8 @@ def main():
     with out_gap.open("w") as f:
         f.write("contrast\tc\tmean_gap\tlo\tmean_20raw\tmean_24full\th_pass\tn_pass\n")
         for c in COST_RATIOS:
-            d_24_20 = np.array([
-                minc[("24full", sd, c)] - minc[("20raw", sd, c)]
-                for sd in SEEDS
-            ])
-            d_4_20 = np.array([
-                minc[("4sensor", sd, c)] - minc[("20raw", sd, c)]
-                for sd in SEEDS
-            ])
+            d_24_20 = np.array([minc[("24full", sd, c)] - minc[("20raw", sd, c)] for sd in SEEDS])
+            d_4_20 = np.array([minc[("4sensor", sd, c)] - minc[("20raw", sd, c)] for sd in SEEDS])
             gaps_24_20[c] = d_24_20
             gaps_4_20[c] = d_4_20
             ci24 = paired_bootstrap_ci(d_24_20, N_BOOT, seed=20260706 + c)
@@ -183,32 +182,36 @@ def main():
             # 24full vs 20raw: PASS iff upper 95% CI is strictly < 0
             n_24_pass = int((d_24_20 < 0).sum())
             h24_pass = ci24["hi"] < 0.0
-            f.write(f"24full-20raw\t{c}\t{ci24['mean']:+.6f}\t{ci24['lo']:+.6f}\t"
-                    f"{float(np.mean([minc[('20raw',sd,c)] for sd in SEEDS])):.6f}\t"
-                    f"{float(np.mean([minc[('24full',sd,c)] for sd in SEEDS])):.6f}\t"
-                    f"{int(h24_pass)}\t{n_24_pass}\n")
+            f.write(
+                f"24full-20raw\t{c}\t{ci24['mean']:+.6f}\t{ci24['lo']:+.6f}\t"
+                f"{float(np.mean([minc[('20raw', sd, c)] for sd in SEEDS])):.6f}\t"
+                f"{float(np.mean([minc[('24full', sd, c)] for sd in SEEDS])):.6f}\t"
+                f"{int(h24_pass)}\t{n_24_pass}\n"
+            )
             n_4_pass = int((d_4_20 < 0).sum())
             h4_pass = ci4["hi"] < 0.0  # 4sensor worse: PASS iff LOWER CI > 0
             h4_worse = ci4["lo"] > 0.0
-            f.write(f"4sensor-20raw\t{c}\t{ci4['mean']:+.6f}\t{ci4['lo']:+.6f}\t"
-                    f"{float(np.mean([minc[('20raw',sd,c)] for sd in SEEDS])):.6f}\t"
-                    f"{float(np.mean([minc[('4sensor',sd,c)] for sd in SEEDS])):.6f}\t"
-                    f"{int(h4_worse)}\t{int((d_4_20 > 0).sum())}\n")
+            f.write(
+                f"4sensor-20raw\t{c}\t{ci4['mean']:+.6f}\t{ci4['lo']:+.6f}\t"
+                f"{float(np.mean([minc[('20raw', sd, c)] for sd in SEEDS])):.6f}\t"
+                f"{float(np.mean([minc[('4sensor', sd, c)] for sd in SEEDS])):.6f}\t"
+                f"{int(h4_worse)}\t{int((d_4_20 > 0).sum())}\n"
+            )
 
     # ----- catches @ fixed alert count budget 1% -----
     print("Writing catches TSV...", flush=True)
     out_catch = RES / "p8_iter188_catch_at_alert.tsv"
     with out_catch.open("w") as f:
         f.write("fset\tc\tseed\tcatch_frac\n")
-        for (fset, sd, c) in sorted(catches.keys()):
-            f.write(f"{fset}\t{c}\t{sd}\t{catches[(fset,sd,c)]:.4f}\n")
+        for fset, sd, c in sorted(catches.keys()):
+            f.write(f"{fset}\t{c}\t{sd}\t{catches[(fset, sd, c)]:.4f}\n")
 
     # ----- cost-optimal thresholds -----
     out_th = RES / "p8_iter188_thresholds.tsv"
     with out_th.open("w") as f:
         f.write("fset\tc\tseed\topt_threshold\n")
-        for (fset, sd, c) in sorted(optt.keys()):
-            f.write(f"{fset}\t{c}\t{sd}\t{optt[(fset,sd,c)]:.4f}\n")
+        for fset, sd, c in sorted(optt.keys()):
+            f.write(f"{fset}\t{c}\t{sd}\t{optt[(fset, sd, c)]:.4f}\n")
 
     # ----- transfer cost-degradation: train-side cost / test-side cost per (fset, c) -----
     # We approximate transfer ratio: 24full-vs-20raw train_mincost ratio / test ratio
@@ -217,9 +220,11 @@ def main():
     out_xfer = RES / "p8_iter188_transfer.tsv"
     with out_xfer.open("w") as f:
         f.write("fset\tc\tseed\tmin_cost_test\tn_pos_test\tn_tx_test\n")
-        for (fset, sd, c) in sorted(minc.keys()):
-            f.write(f"{fset}\t{c}\t{sd}\t{minc[(fset,sd,c)]:.6f}\t"
-                    f"{int((yte==1).sum())}\t{int(yte.shape[0])}\n")
+        for fset, sd, c in sorted(minc.keys()):
+            f.write(
+                f"{fset}\t{c}\t{sd}\t{minc[(fset, sd, c)]:.6f}\t"
+                f"{int((yte == 1).sum())}\t{int(yte.shape[0])}\n"
+            )
 
     # ----- hypotheses -----
     print("Evaluating hypotheses...", flush=True)
@@ -229,7 +234,9 @@ def main():
         return paired_bootstrap_ci(d, N_BOOT, seed=20260706 + c)
 
     def mean_max(sd, c):
-        return float(np.mean([minc[(fset, sd_, c)] for sd_ in SEEDS for fset in FEATURE_SETS.keys()]))
+        return float(
+            np.mean([minc[(fset, sd_, c)] for sd_ in SEEDS for fset in FEATURE_SETS.keys()])
+        )
 
     # H1: at c=100, gap(24full, c=100) < 0 strictly (LLM features REDUCE cost / tx)
     h1 = gap_ci(100, "24full-20raw")["hi"] < 0.0
@@ -260,8 +267,12 @@ def main():
     # H5: transfer cost-degradation test_cost vs (1 - cost/train proxy):
     #     we use variability across seeds as the proxy. Lower CV = more robust.
     #     24full CV < 20raw CV on test_data (test-data variance as proxy).
-    cv_24 = np.array([minc[("24full", sd, 100)] for sd in SEEDS]).std(ddof=1) / max(1e-9, np.mean([minc[("24full", sd, 100)] for sd in SEEDS]))
-    cv_20 = np.array([minc[("20raw", sd, 100)] for sd in SEEDS]).std(ddof=1) / max(1e-9, np.mean([minc[("20raw", sd, 100)] for sd in SEEDS]))
+    cv_24 = np.array([minc[("24full", sd, 100)] for sd in SEEDS]).std(ddof=1) / max(
+        1e-9, np.mean([minc[("24full", sd, 100)] for sd in SEEDS])
+    )
+    cv_20 = np.array([minc[("20raw", sd, 100)] for sd in SEEDS]).std(ddof=1) / max(
+        1e-9, np.mean([minc[("20raw", sd, 100)] for sd in SEEDS])
+    )
     h5 = cv_24 < cv_20
 
     # H6: 4sensor STRICTLY worse than 20raw at c in {10, 100}
@@ -274,7 +285,9 @@ def main():
         "20raw": float(np.mean([minc[("20raw", sd, 100)] for sd in SEEDS])),
         "24full": float(np.mean([minc[("24full", sd, 100)] for sd in SEEDS])),
         "4sensor": float(np.mean([minc[("4sensor", sd, 100)] for sd in SEEDS])),
-        "gap_24full_minus_20raw": float(np.mean([minc[("24full", sd, 100)] - minc[("20raw", sd, 100)] for sd in SEEDS])),
+        "gap_24full_minus_20raw": float(
+            np.mean([minc[("24full", sd, 100)] - minc[("20raw", sd, 100)] for sd in SEEDS])
+        ),
         "ci_gap_24full_minus_20raw": gap_ci(100, "24full-20raw"),
     }
     headline_catch = {
@@ -301,15 +314,12 @@ def main():
         },
         "headline_c100": headline_c100,
         "headline_catch_at_alert_budget_c100": headline_catch,
-        "ci_24full_minus_20raw_per_c": {
-            str(c): gap_ci(c, "24full-20raw") for c in COST_RATIOS
-        },
-        "ci_4sensor_minus_20raw_per_c": {
-            str(c): gap_ci(c, "4sensor-20raw") for c in COST_RATIOS
-        },
+        "ci_24full_minus_20raw_per_c": {str(c): gap_ci(c, "24full-20raw") for c in COST_RATIOS},
+        "ci_4sensor_minus_20raw_per_c": {str(c): gap_ci(c, "4sensor-20raw") for c in COST_RATIOS},
         "mean_opt_threshold_per_fset_c": {
-            fset: {str(c): float(np.mean([optt[(fset, sd, c)] for sd in SEEDS]))
-                   for c in COST_RATIOS}
+            fset: {
+                str(c): float(np.mean([optt[(fset, sd, c)] for sd in SEEDS])) for c in COST_RATIOS
+            }
             for fset in FEATURE_SETS.keys()
         },
         "cv_test_cost_at_c100": {

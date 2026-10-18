@@ -36,8 +36,7 @@ def wilson_ci(zvf: float, m: int) -> tuple[float, float]:
     return center - half, center + half
 
 
-def prompt_zv_prob(rng: random.Random, rewards: list[float], G: int,
-                   draws: int = 48) -> float:
+def prompt_zv_prob(rng: random.Random, rewards: list[float], G: int, draws: int = 48) -> float:
     return population_zvf([{"rewards": rewards}], G, rng)
 
 
@@ -53,7 +52,9 @@ def main() -> None:
     pool = load_pool(args.pool)
     prompts = pool["prompts"]
     G, M, B = args.group_size, args.batch_size, args.batches
-    validate_design(groups=[G], counts=[M,B], available=pool["rollouts_per_prompt"], n_prompts=len(prompts))
+    validate_design(
+        groups=[G], counts=[M, B], available=pool["rollouts_per_prompt"], n_prompts=len(prompts)
+    )
     if M > len(prompts):
         raise ValueError("batch size exceeds prompt population")
     rng = random.Random(args.seed)
@@ -67,9 +68,8 @@ def main() -> None:
     cov_local = cov_global = 0
     for _ in range(B):
         start = rng.randrange(0, len(order) - M + 1)
-        idx = order[start:start + M]
-        zvf = sum(zv_indicator(rng, prompts[i]["rewards"], G)
-                  for i in idx) / M
+        idx = order[start : start + M]
+        zvf = sum(zv_indicator(rng, prompts[i]["rewards"], G) for i in idx) / M
         lo, hi = wilson_ci(zvf, M)
         local_truth = sum(pz[i] for i in idx) / M
         cov_local += int(lo <= local_truth <= hi)
@@ -77,7 +77,7 @@ def main() -> None:
 
     # --- 3: stratified batches (one draw per difficulty slot) ---
     strata = strata_all(order, M)
-    weights = [len(st)/len(order) for st in strata]
+    weights = [len(st) / len(order) for st in strata]
     cov_strat = 0
     for _ in range(B):
         idx = [rng.choice(s) for s in strata]
@@ -91,7 +91,10 @@ def main() -> None:
         "pool": str(args.pool),
         "pool_tag": pool["tag"],
         "model": pool["model"],
-        "G": G, "M": M, "B": B, "seed": args.seed,
+        "G": G,
+        "M": M,
+        "B": B,
+        "seed": args.seed,
         "global_truth_zvf": round(global_truth, 4),
         "coverage_correlated_vs_local_truth": round(cov_local / B, 4),
         "coverage_correlated_vs_global_truth": round(cov_global / B, 4),
@@ -99,9 +102,11 @@ def main() -> None:
         "decision_contract": T1_DECISION,
         "truth_estimator": "exact hypergeometric conditional on finite binary pool",
         "stratified_interval": "weighted Hoeffding bound; independent one-draw strata",
-        "coverage_mc_ci95": {"local": wilson_ci(cov_local/B,B),
-                             "global": wilson_ci(cov_global/B,B),
-                             "stratified": wilson_ci(cov_strat/B,B)},
+        "coverage_mc_ci95": {
+            "local": wilson_ci(cov_local / B, B),
+            "global": wilson_ci(cov_global / B, B),
+            "stratified": wilson_ci(cov_strat / B, B),
+        },
         "interpretation": "Exploratory finite-pool coverage; no general controller validation",
         "generated_at": utc_now(),
     }

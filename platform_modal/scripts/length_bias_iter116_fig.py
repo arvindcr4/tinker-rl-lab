@@ -24,14 +24,15 @@ Reads : platform_hybrid/experiments/results/length_bias_iter116_*.tsv
 Writes: figures/length_bias_iter116_sever_zvf.{pdf,png};
         mirrored to paper/figures/.
 """
+
 from __future__ import annotations
 import csv
-import os
 import shutil
 from pathlib import Path
 
 import numpy as np
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
@@ -62,7 +63,7 @@ def to_float(xs):
 # Color palette matching iter112 figure style
 COL = {
     "arith": "#1f77b4",
-    "gsm":   "#d62728",
+    "gsm": "#d62728",
 }
 HATCH = {"arith": "//", "gsm": ".."}
 
@@ -90,20 +91,26 @@ def main() -> int:
     for task, n_seeds in tasks_seeds.items():
         sub = [r for r in per_window if r["task"] == task]
         for w_i, r in enumerate(sub):
-            sever = float(r["mean_sever"]) + np.random.default_rng(w_i).normal(
-                0, 0.04, n_seeds)
-            zvf = float(r["mean_baseline_ZVF"]) + np.random.default_rng(
-                w_i + 100).normal(0, 0.012, n_seeds)
+            sever = float(r["mean_sever"]) + np.random.default_rng(w_i).normal(0, 0.04, n_seeds)
+            zvf = float(r["mean_baseline_ZVF"]) + np.random.default_rng(w_i + 100).normal(
+                0, 0.012, n_seeds
+            )
             col = COL["arith"] if "arith" in task else COL["gsm"]
-            ax.scatter(sever, zvf, color=col, alpha=0.45, s=24, edgecolor="white",
-                       linewidths=0.4)
+            ax.scatter(sever, zvf, color=col, alpha=0.45, s=24, edgecolor="white", linewidths=0.4)
         # marker for the task-level mean
         env = next(e for e in envelope if e["task"] == task)
         col = COL["arith"] if "arith" in task else COL["gsm"]
-        ax.scatter(float(env["mean_sever"]), float(env["mean_baseline_ZVF"]),
-                   color=col, marker="*", s=240, edgecolor="black",
-                   linewidths=0.6, zorder=5,
-                   label=f"{task} (n_seeds={env['n_seeds']})")
+        ax.scatter(
+            float(env["mean_sever"]),
+            float(env["mean_baseline_ZVF"]),
+            color=col,
+            marker="*",
+            s=240,
+            edgecolor="black",
+            linewidths=0.6,
+            zorder=5,
+            label=f"{task} (n_seeds={env['n_seeds']})",
+        )
     ax.axhline(0.5, color="grey", linewidth=0.6, linestyle=":")
     ax.axvline(0.0, color="grey", linewidth=0.6, linestyle=":")
     ax.set_xlabel(r"severship intensity $-\Delta\mathrm{bwd}$ (Dr.GR $-$ GR)")
@@ -119,18 +126,26 @@ def main() -> int:
     lo = []
     hi = []
     colors = []
-    for hyp_name, pooled in (("H1 sever $\\to$ baseline ZVF", pooled_h1),
-                              ("H2 sever $\\to$ $-\\Delta$ZVF", pooled_h2)):
+    for hyp_name, pooled in (
+        ("H1 sever $\\to$ baseline ZVF", pooled_h1),
+        ("H2 sever $\\to$ $-\\Delta$ZVF", pooled_h2),
+    ):
         for r in pooled:
             labels.append(f"{hyp_name}\n{r['task']}")
-            obs.append(float(r["spearman_sever_vs_baseline_ZVF"])
-                       if "baseline" in hyp_name
-                       else float(r["spearman_sever_vs_neg_delta_ZVF"]))
-            ci = next(b for b in boot
-                      if b["task"] == r["task"]
-                      and (("baseline" in hyp_name and "H1" in b["hypothesis"])
-                           or ("H2" in b["hypothesis"] and "baseline" not in
-                               hyp_name)))
+            obs.append(
+                float(r["spearman_sever_vs_baseline_ZVF"])
+                if "baseline" in hyp_name
+                else float(r["spearman_sever_vs_neg_delta_ZVF"])
+            )
+            ci = next(
+                b
+                for b in boot
+                if b["task"] == r["task"]
+                and (
+                    ("baseline" in hyp_name and "H1" in b["hypothesis"])
+                    or ("H2" in b["hypothesis"] and "baseline" not in hyp_name)
+                )
+            )
             lo.append(float(ci["ci_lo"]))
             hi.append(float(ci["ci_hi"]))
             colors.append(COL["arith"] if "arith" in r["task"] else COL["gsm"])
@@ -138,8 +153,16 @@ def main() -> int:
     obs_arr = np.array(obs)
     err_lo = obs_arr - np.array(lo)
     err_hi = np.array(hi) - obs_arr
-    ax.bar(x, obs_arr, yerr=[err_lo, err_hi], color=colors, alpha=0.8,
-           edgecolor="black", linewidth=0.5, capsize=4)
+    ax.bar(
+        x,
+        obs_arr,
+        yerr=[err_lo, err_hi],
+        color=colors,
+        alpha=0.8,
+        edgecolor="black",
+        linewidth=0.5,
+        capsize=4,
+    )
     ax.axhline(0, color="black", linewidth=0.7)
     ax.set_xticks(x)
     ax.set_xticklabels(labels, fontsize=7, rotation=20, ha="right")
@@ -158,9 +181,17 @@ def main() -> int:
         rhos = [float(r["rho_sever_vs_baseline_ZVF"]) for r in sub]
         col = COL["arith"] if "arith" in task else COL["gsm"]
         hatch = HATCH["arith"] if "arith" in task else HATCH["gsm"]
-        ax.bar(x + (ti - 0.5) * width, rhos, width=width, color=col,
-               edgecolor="black", linewidth=0.5, hatch=hatch, alpha=0.85,
-               label=task)
+        ax.bar(
+            x + (ti - 0.5) * width,
+            rhos,
+            width=width,
+            color=col,
+            edgecolor="black",
+            linewidth=0.5,
+            hatch=hatch,
+            alpha=0.85,
+            label=task,
+        )
     ax.axhline(0, color="black", linewidth=0.7)
     ax.set_xticks(x)
     ax.set_xticklabels([f"w={w}" for w in range(4)])
@@ -174,26 +205,37 @@ def main() -> int:
     ax = axes[1, 1]
     for env in envelope:
         col = COL["arith"] if "arith" in env["task"] else COL["gsm"]
-        ax.errorbar(float(env["mean_baseline_ZVF"]),
-                    float(env["mean_sever"]),
-                    xerr=float(env["std_baseline_ZVF"]),
-                    yerr=float(env["std_sever"]),
-                    fmt="o", color=col, markersize=11, capsize=5,
-                    linewidth=1.4, label=env["task"])
+        ax.errorbar(
+            float(env["mean_baseline_ZVF"]),
+            float(env["mean_sever"]),
+            xerr=float(env["std_baseline_ZVF"]),
+            yerr=float(env["std_sever"]),
+            fmt="o",
+            color=col,
+            markersize=11,
+            capsize=5,
+            linewidth=1.4,
+            label=env["task"],
+        )
     # annotation: arrow from arith (high ZVF, low sever) to gsm(low ZVF, hi sever)
     if len(envelope) >= 2:
         arith = next(e for e in envelope if "arith" in e["task"])
         gsm = next(e for e in envelope if "gsm" in e["task"])
-        ax.annotate("",
-                    xy=(float(gsm["mean_baseline_ZVF"]),
-                        float(gsm["mean_sever"])),
-                    xytext=(float(arith["mean_baseline_ZVF"]),
-                            float(arith["mean_sever"])),
-                    arrowprops=dict(arrowstyle="->", color="black",
-                                    linestyle="--", linewidth=1.4))
-        ax.text(0.42, 0.05, "inverted dose-response",
-                transform=ax.transAxes, fontsize=9, color="black",
-                ha="center")
+        ax.annotate(
+            "",
+            xy=(float(gsm["mean_baseline_ZVF"]), float(gsm["mean_sever"])),
+            xytext=(float(arith["mean_baseline_ZVF"]), float(arith["mean_sever"])),
+            arrowprops=dict(arrowstyle="->", color="black", linestyle="--", linewidth=1.4),
+        )
+        ax.text(
+            0.42,
+            0.05,
+            "inverted dose-response",
+            transform=ax.transAxes,
+            fontsize=9,
+            color="black",
+            ha="center",
+        )
     ax.axhline(0, color="grey", linewidth=0.6, linestyle=":")
     ax.set_xlabel(r"mean baseline GR ZVF")
     ax.set_ylabel(r"mean severship intensity $-\overline{\Delta\mathrm{bwd}}$")
@@ -205,7 +247,9 @@ def main() -> int:
         r"Iter 116 --- Severship $\times$ ZVF cross-pillar unification" + "\n"
         r"H1 consensus $\rho=-0.496$, $p=0.004$ (inverted dose-response); "
         r"H2 $\rho=-0.086$, $p=0.638$ (lever does not reduce ZVF)",
-        fontsize=11, fontweight="bold")
+        fontsize=11,
+        fontweight="bold",
+    )
     fig.tight_layout(rect=[0, 0, 1, 0.95])
 
     out_pdf = FIGS / "length_bias_iter116_sever_zvf.pdf"

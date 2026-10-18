@@ -85,8 +85,9 @@ def binom_p_two_sided(n_pos: int, n: int) -> float:
     if n == 0:
         return 1.0
     from math import comb
-    p_hi = sum(comb(n, k) / (2 ** n) for k in range(n_pos, n + 1))
-    p_lo = sum(comb(n, k) / (2 ** n) for k in range(0, n_pos + 1))
+
+    p_hi = sum(comb(n, k) / (2**n) for k in range(n_pos, n + 1))
+    p_lo = sum(comb(n, k) / (2**n) for k in range(n_pos + 1))
     return min(1.0, 2 * min(p_hi, p_lo))
 
 
@@ -94,7 +95,7 @@ def spearman(xs: List[float], ys: List[float]) -> float:
     """Spearman rho with average ranks for ties (no SciPy)."""
     if len(xs) != len(ys) or len(xs) < 3:
         return float("nan")
-    pairs = list(zip(xs, ys))
+    pairs = list(zip(xs, ys, strict=False))
 
     def rankify(vs):
         sorted_idx = sorted(range(len(vs)), key=lambda i: vs[i])
@@ -170,22 +171,24 @@ for r in iter24:
     global_rho = safe_float(g["spearman_step_reward_rho"])
     global_len_rho = safe_float(g["spearman_step_len_rho"])
     mean_zvf = safe_float(g["mean_zvf"])
-    cells.append({
-        "task": r["task"],
-        "norm_task": key[0],
-        "algo": r["algo"],
-        "seed": r["seed"],
-        "win": win,
-        "n_windows": n_windows,
-        "rho_all": rho_all,
-        "rho_early": rho_early,
-        "rho_mid": rho_mid,
-        "rho_late": rho_late,
-        "frac_late_nonneg": frac_late_nonneg,
-        "global_rho": global_rho,
-        "global_len_rho": global_len_rho,
-        "mean_zvf": mean_zvf,
-    })
+    cells.append(
+        {
+            "task": r["task"],
+            "norm_task": key[0],
+            "algo": r["algo"],
+            "seed": r["seed"],
+            "win": win,
+            "n_windows": n_windows,
+            "rho_all": rho_all,
+            "rho_early": rho_early,
+            "rho_mid": rho_mid,
+            "rho_late": rho_late,
+            "frac_late_nonneg": frac_late_nonneg,
+            "global_rho": global_rho,
+            "global_len_rho": global_len_rho,
+            "mean_zvf": mean_zvf,
+        }
+    )
 
 # Filter to win=10 for primary analysis.
 primary = [c for c in cells if c["win"] == 10]
@@ -201,14 +204,19 @@ for c in primary:
     mono = abs(c["global_rho"])
     delta = tape - mono  # should be < 0 if hypothesis holds
     h1_deltas.append(delta)
-    h1_pairs.append({
-        "task": c["task"], "algo": c["algo"], "seed": c["seed"], "win": 10,
-        "tape_abs_rho": tape,
-        "global_abs_rho": mono,
-        "delta_tape_minus_global": delta,
-        "tape_smaller": 1 if delta < 0 else 0,
-        "mean_zvf": c["mean_zvf"],
-    })
+    h1_pairs.append(
+        {
+            "task": c["task"],
+            "algo": c["algo"],
+            "seed": c["seed"],
+            "win": 10,
+            "tape_abs_rho": tape,
+            "global_abs_rho": mono,
+            "delta_tape_minus_global": delta,
+            "tape_smaller": 1 if delta < 0 else 0,
+            "mean_zvf": c["mean_zvf"],
+        }
+    )
 
 n_pos_h1 = sum(1 for d in h1_deltas if d < 0)  # tape < global
 n_total_h1 = sum(1 for d in h1_deltas if d != 0)
@@ -227,11 +235,15 @@ for c in primary:
         continue
     var = st.variance(triple)
     h2_vars.append(var)
-    h2_pairs.append({
-        "task": c["task"], "algo": c["algo"], "seed": c["seed"],
-        "temporal_variance": var,
-        "temporal_variance_positive": 1 if var > 0 else 0,
-    })
+    h2_pairs.append(
+        {
+            "task": c["task"],
+            "algo": c["algo"],
+            "seed": c["seed"],
+            "temporal_variance": var,
+            "temporal_variance_positive": 1 if var > 0 else 0,
+        }
+    )
 
 n_pos_h2 = sum(1 for v in h2_vars if v > 0)
 n_total_h2 = len(h2_vars)
@@ -247,13 +259,17 @@ for c in primary:
     late = abs(c["rho_late"])
     delta = late - early  # < 0 if late < early
     h3_deltas.append(delta)
-    h3_pairs.append({
-        "task": c["task"], "algo": c["algo"], "seed": c["seed"],
-        "abs_rho_early": early,
-        "abs_rho_late": late,
-        "delta_late_minus_early": delta,
-        "late_smaller": 1 if delta < 0 else 0,
-    })
+    h3_pairs.append(
+        {
+            "task": c["task"],
+            "algo": c["algo"],
+            "seed": c["seed"],
+            "abs_rho_early": early,
+            "abs_rho_late": late,
+            "delta_late_minus_early": delta,
+            "late_smaller": 1 if delta < 0 else 0,
+        }
+    )
 
 n_pos_h3 = sum(1 for d in h3_deltas if d < 0)
 n_total_h3 = sum(1 for d in h3_deltas if d != 0)
@@ -279,20 +295,22 @@ large_global = [c for c in primary if abs(c["global_rho"]) >= 0.5]
 small_global = [c for c in primary if abs(c["global_rho"]) < 0.5]
 mean_frac_large = (
     sum(c["frac_late_nonneg"] for c in large_global) / len(large_global)
-    if large_global else float("nan")
+    if large_global
+    else float("nan")
 )
 mean_frac_small = (
     sum(c["frac_late_nonneg"] for c in small_global) / len(small_global)
-    if small_global else float("nan")
+    if small_global
+    else float("nan")
 )
 
 
 # ---------- write TSVs -----------------------------------------------------
 
+
 def write_tsv(path: pathlib.Path, rows: List[dict], fieldnames: List[str]) -> None:
     with path.open("w") as f:
-        w = csv.DictWriter(f, fieldnames=fieldnames, delimiter="\t",
-                           extrasaction="ignore")
+        w = csv.DictWriter(f, fieldnames=fieldnames, delimiter="\t", extrasaction="ignore")
         w.writeheader()
         for row in rows:
             w.writerow(row)
@@ -302,8 +320,11 @@ write_tsv(
     BERK / "tape_windowed_rho.tsv",
     [
         {
-            "task": c["task"], "algo": c["algo"], "seed": c["seed"],
-            "win": c["win"], "n_windows": c["n_windows"],
+            "task": c["task"],
+            "algo": c["algo"],
+            "seed": c["seed"],
+            "win": c["win"],
+            "n_windows": c["n_windows"],
             "rho_all": c["rho_all"],
             "rho_early": c["rho_early"],
             "rho_mid": c["rho_mid"],
@@ -315,23 +336,53 @@ write_tsv(
         }
         for c in cells
     ],
-    ["task", "algo", "seed", "win", "n_windows", "rho_all",
-     "rho_early", "rho_mid", "rho_late", "frac_late_nonneg",
-     "global_rho", "global_len_rho", "mean_zvf"],
+    [
+        "task",
+        "algo",
+        "seed",
+        "win",
+        "n_windows",
+        "rho_all",
+        "rho_early",
+        "rho_mid",
+        "rho_late",
+        "frac_late_nonneg",
+        "global_rho",
+        "global_len_rho",
+        "mean_zvf",
+    ],
 )
 
 write_tsv(
     BERK / "tape_vs_global.tsv",
     h1_pairs,
-    ["task", "algo", "seed", "win", "tape_abs_rho", "global_abs_rho",
-     "delta_tape_minus_global", "tape_smaller", "mean_zvf"],
+    [
+        "task",
+        "algo",
+        "seed",
+        "win",
+        "tape_abs_rho",
+        "global_abs_rho",
+        "delta_tape_minus_global",
+        "tape_smaller",
+        "mean_zvf",
+    ],
 )
 
 write_tsv(
     BERK / "tape_temporal_structure.tsv",
     h2_pairs + h3_pairs,
-    ["task", "algo", "seed", "temporal_variance", "temporal_variance_positive",
-     "abs_rho_early", "abs_rho_late", "delta_late_minus_early", "late_smaller"],
+    [
+        "task",
+        "algo",
+        "seed",
+        "temporal_variance",
+        "temporal_variance_positive",
+        "abs_rho_early",
+        "abs_rho_late",
+        "delta_late_minus_early",
+        "late_smaller",
+    ],
 )
 
 write_tsv(
@@ -339,17 +390,21 @@ write_tsv(
     [
         {
             "hypothesis": "H1_tape_lt_global",
-            "n_total": n_total_h1, "n_pos": n_pos_h1,
-            "binom_p_two_sided": p_h1, "mean_delta": mean_delta_h1,
+            "n_total": n_total_h1,
+            "n_pos": n_pos_h1,
+            "binom_p_two_sided": p_h1,
+            "mean_delta": mean_delta_h1,
         },
         {
             "hypothesis": "H2_temporal_variance_positive",
-            "n_total": n_total_h2, "n_pos": n_pos_h2,
+            "n_total": n_total_h2,
+            "n_pos": n_pos_h2,
             "binom_p_two_sided": p_h2,
         },
         {
             "hypothesis": "H3_late_lt_early",
-            "n_total": n_total_h3, "n_pos": n_pos_h3,
+            "n_total": n_total_h3,
+            "n_pos": n_pos_h3,
             "binom_p_two_sided": p_h3,
         },
         {
@@ -361,14 +416,23 @@ write_tsv(
             "mean_frac_late_nonneg_small_global": mean_frac_small,
         },
     ],
-    ["hypothesis", "n_total", "n_pos", "binom_p_two_sided", "mean_delta",
-     "spearman_rho", "spearman_p", "n",
-     "mean_frac_late_nonneg_large_global",
-     "mean_frac_late_nonneg_small_global"],
+    [
+        "hypothesis",
+        "n_total",
+        "n_pos",
+        "binom_p_two_sided",
+        "mean_delta",
+        "spearman_rho",
+        "spearman_p",
+        "n",
+        "mean_frac_late_nonneg_large_global",
+        "mean_frac_late_nonneg_small_global",
+    ],
 )
 
 
 # ---------- verdicts -------------------------------------------------------
+
 
 def verdict_h1() -> str:
     if n_total_h1 == 0:
@@ -419,11 +483,7 @@ H2 = verdict_h2()
 H3 = verdict_h3()
 H4 = verdict_h4()
 decisive = sum(1 for v in (H1, H2, H3, H4) if v == "DECISIVE")
-overall = (
-    "validated" if decisive >= 3
-    else "prototyped" if decisive >= 2
-    else "proposed"
-)
+overall = "validated" if decisive >= 3 else "prototyped" if decisive >= 2 else "proposed"
 
 
 summary = {
@@ -435,18 +495,21 @@ summary = {
     "hypotheses": {
         "H1_tape_windowed_rho_lt_global": {
             "verdict": H1,
-            "n_pos": n_pos_h1, "n_total": n_total_h1,
+            "n_pos": n_pos_h1,
+            "n_total": n_total_h1,
             "sign_test_p_two_sided": p_h1,
             "mean_delta_tape_minus_global": mean_delta_h1,
         },
         "H2_temporal_variance_positive": {
             "verdict": H2,
-            "n_pos": n_pos_h2, "n_total": n_total_h2,
+            "n_pos": n_pos_h2,
+            "n_total": n_total_h2,
             "sign_test_p_two_sided": p_h2,
         },
         "H3_abs_late_lt_abs_early": {
             "verdict": H3,
-            "n_pos": n_pos_h3, "n_total": n_total_h3,
+            "n_pos": n_pos_h3,
+            "n_total": n_total_h3,
             "sign_test_p_two_sided": p_h3,
         },
         "H4_frac_late_nonneg_corr_with_rho_all": {
@@ -471,7 +534,7 @@ summary = {
         "arxiv_id": "2412.08445",
         "title": "TapeAgents: a Holistic Framework for Agent Development and Optimization",
         "authors": "Bahdanau, Gontier, Huang, Kamalloo, Pardinas, Piché, Scholak, "
-                   "Shliazhko, Tremblay, Ghanem, Parikh, Tiwari, Vohra",
+        "Shliazhko, Tremblay, Ghanem, Parikh, Tiwari, Vohra",
         "year": 2024,
         "submitted": "2024-12-11",
         "venue": "arXiv preprint",
@@ -487,14 +550,22 @@ with (BERK / "tape_summary.json").open("w") as f:
 print("=== Row 17 — TapeAgents (F24 L7 / Chapados / Bahdanau et al. arXiv:2412.08445) ===")
 print(f"n primary cells (win=10): {len(primary)} ; n total cells (all wins): {len(cells)}")
 print()
-print(f"H1 per-window (tape) |rho|  <  trajectory-wide (monolithic) |rho|: "
-      f"frac_smaller={n_pos_h1}/{n_total_h1}  binom_p_2s={p_h1:.4f}  "
-      f"mean_delta_tape_minus_global={mean_delta_h1:+.4f}  → {H1}")
-print(f"H2 temporal_variance > 0:                                       "
-      f"frac_pos={n_pos_h2}/{n_total_h2}  binom_p_2s={p_h2:.4f}  → {H2}")
-print(f"H3 |rho_late|  <  |rho_early|:                                  "
-      f"frac_smaller={n_pos_h3}/{n_total_h3}  binom_p_2s={p_h3:.4f}  → {H3}")
-print(f"H4 Spearman(|rho_all|, frac_late_nonneg) < 0:                   "
-      f"rho={rho_h4:+.4f}  p={p_h4:.4f}  n={len(xs)}  → {H4}")
+print(
+    f"H1 per-window (tape) |rho|  <  trajectory-wide (monolithic) |rho|: "
+    f"frac_smaller={n_pos_h1}/{n_total_h1}  binom_p_2s={p_h1:.4f}  "
+    f"mean_delta_tape_minus_global={mean_delta_h1:+.4f}  → {H1}"
+)
+print(
+    f"H2 temporal_variance > 0:                                       "
+    f"frac_pos={n_pos_h2}/{n_total_h2}  binom_p_2s={p_h2:.4f}  → {H2}"
+)
+print(
+    f"H3 |rho_late|  <  |rho_early|:                                  "
+    f"frac_smaller={n_pos_h3}/{n_total_h3}  binom_p_2s={p_h3:.4f}  → {H3}"
+)
+print(
+    f"H4 Spearman(|rho_all|, frac_late_nonneg) < 0:                   "
+    f"rho={rho_h4:+.4f}  p={p_h4:.4f}  n={len(xs)}  → {H4}"
+)
 print()
 print(f"decisive_count={decisive}/4  → status={overall}")

@@ -53,10 +53,7 @@ def load_gsm8k_sft_dataset(num_samples=None, seed=42):
         formatted_solution = f"{reasoning}\n\\boxed{{{numeric_answer}}}"
 
         return {
-            "text": (
-                f"Question: {question}{question_suffix}\n\n"
-                f"Answer: {formatted_solution}"
-            ),
+            "text": (f"Question: {question}{question_suffix}\n\nAnswer: {formatted_solution}"),
         }
 
     return dataset.map(format_for_sft, remove_columns=dataset.column_names)
@@ -64,20 +61,37 @@ def load_gsm8k_sft_dataset(num_samples=None, seed=42):
 
 def parse_args():
     parser = argparse.ArgumentParser(description="SFT baseline for GSM8K (matched to GRPO setup)")
-    parser.add_argument("--model", type=str, default="Qwen/Qwen3-8B",
-                        help="Base model (must match GRPO experiment)")
-    parser.add_argument("--lora-rank", type=int, default=32,
-                        help="LoRA rank (must match GRPO experiment)")
-    parser.add_argument("--learning-rate", type=float, default=4e-5,
-                        help="Learning rate (must match GRPO experiment)")
-    parser.add_argument("--num-samples", type=int, default=None,
-                        help="Number of training examples (None = full dataset)")
-    parser.add_argument("--max-steps", type=int, default=50,
-                        help="Max training steps (match GRPO step budget)")
-    parser.add_argument("--output-dir", type=str, default="./checkpoints/sft_gsm8k_baseline/",
-                        help="Output directory")
+    parser.add_argument(
+        "--model", type=str, default="Qwen/Qwen3-8B", help="Base model (must match GRPO experiment)"
+    )
+    parser.add_argument(
+        "--lora-rank", type=int, default=32, help="LoRA rank (must match GRPO experiment)"
+    )
+    parser.add_argument(
+        "--learning-rate",
+        type=float,
+        default=4e-5,
+        help="Learning rate (must match GRPO experiment)",
+    )
+    parser.add_argument(
+        "--num-samples",
+        type=int,
+        default=None,
+        help="Number of training examples (None = full dataset)",
+    )
+    parser.add_argument(
+        "--max-steps", type=int, default=50, help="Max training steps (match GRPO step budget)"
+    )
+    parser.add_argument(
+        "--output-dir",
+        type=str,
+        default="./checkpoints/sft_gsm8k_baseline/",
+        help="Output directory",
+    )
     parser.add_argument("--seed", type=int, default=42, help="Random seed")
-    parser.add_argument("--wandb-project", type=str, default="tinker-rl-lab", help="WandB project name")
+    parser.add_argument(
+        "--wandb-project", type=str, default="tinker-rl-lab", help="WandB project name"
+    )
     parser.add_argument("--wandb-entity", type=str, default=None, help="WandB entity name")
     parser.add_argument("--push-to-hub", action="store_true", help="Push model to HuggingFace Hub")
     parser.add_argument("--hub-model-id", type=str, default=None, help="HuggingFace Hub model ID")
@@ -89,10 +103,7 @@ def main():
 
     run_name = f"sft-gsm8k-{args.model.split('/')[-1].lower()}"
     wandb.init(
-        project=args.wandb_project,
-        entity=args.wandb_entity,
-        name=run_name,
-        config=vars(args)
+        project=args.wandb_project, entity=args.wandb_entity, name=run_name, config=vars(args)
     )
 
     print(f"Loading model: {args.model}")
@@ -117,8 +128,15 @@ def main():
         r=args.lora_rank,
         lora_alpha=args.lora_rank * 2,
         lora_dropout=0.0,
-        target_modules=["q_proj", "k_proj", "v_proj", "o_proj",
-                         "gate_proj", "up_proj", "down_proj"],
+        target_modules=[
+            "q_proj",
+            "k_proj",
+            "v_proj",
+            "o_proj",
+            "gate_proj",
+            "up_proj",
+            "down_proj",
+        ],
         bias="none",
         task_type="CAUSAL_LM",
     )
@@ -126,41 +144,32 @@ def main():
     # SFT config — match GRPO compute budget
     sft_config = SFTConfig(
         output_dir=args.output_dir,
-
         # Match GRPO effective batch: 128 samples per step
         per_device_train_batch_size=8,
         gradient_accumulation_steps=16,  # 8 * 16 = 128
-
         # Match GRPO learning rate
         learning_rate=args.learning_rate,
-
         # Match GRPO step budget
         max_steps=args.max_steps,
         max_length=2048,
-
         # Logging to match GRPO eval frequency
         logging_steps=1,
         save_steps=10,
         eval_steps=25,
-
         # Optimization
         max_grad_norm=1.0,
         warmup_ratio=0.1,
         weight_decay=0.0,
         lr_scheduler_type="cosine",
-
         # Mixed precision
         bf16=True,
         fp16=False,
-
         # Misc
         seed=args.seed,
         report_to="wandb",
         run_name=run_name,
-
         push_to_hub=args.push_to_hub,
         hub_model_id=args.hub_model_id,
-
         # Packing for efficiency
         packing=True,
     )
@@ -188,13 +197,13 @@ def main():
     except Exception as e:
         print(f"Failed to resume from checkpoint, training from scratch: {e}")
         trainer.train()
-    
+
     trainer.save_model(args.output_dir + "/final")
     print(f"SFT baseline saved to {args.output_dir}/final")
 
     if args.push_to_hub:
         trainer.push_to_hub()
-    
+
     wandb.finish()
 
 

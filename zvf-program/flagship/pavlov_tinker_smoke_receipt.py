@@ -104,18 +104,14 @@ def _same_json(left: Any, right: Any, path: str = "$") -> None:
         if set(left) != set(right):
             missing = sorted(set(right) - set(left))
             extra = sorted(set(left) - set(right))
-            raise ReceiptValidationError(
-                f"{path} keys differ: missing={missing!r} extra={extra!r}"
-            )
+            raise ReceiptValidationError(f"{path} keys differ: missing={missing!r} extra={extra!r}")
         for key in sorted(left):
             _same_json(left[key], right[key], f"{path}.{key}")
         return
     if isinstance(left, list):
         if len(left) != len(right):
-            raise ReceiptValidationError(
-                f"{path} length differs: {len(left)} != {len(right)}"
-            )
-        for index, (actual, expected) in enumerate(zip(left, right)):
+            raise ReceiptValidationError(f"{path} length differs: {len(left)} != {len(right)}")
+        for index, (actual, expected) in enumerate(zip(left, right, strict=False)):
             _same_json(actual, expected, f"{path}[{index}]")
         return
     if left != right:
@@ -385,14 +381,16 @@ def _validate_receipts(payload: Mapping[str, Any]) -> list[dict[str, Any]]:
     seen_repos: set[str] = set()
     seen_revisions: set[str] = set()
     seen_commits: set[str] = set()
-    for index, (raw_receipt, expected_step) in enumerate(zip(raw, SMOKE_SAVE_STEPS)):
+    for index, (raw_receipt, expected_step) in enumerate(zip(raw, SMOKE_SAVE_STEPS, strict=False)):
         receipt = dict(_require_mapping(raw_receipt, f"checkpoint_receipts[{index}]"))
         step = receipt.get("step")
         if step != expected_step:
             raise ReceiptValidationError(
                 f"checkpoint_receipts[{index}].step must be {expected_step!r}"
             )
-        repo_id = _require_nonempty_string(receipt.get("repo_id"), f"checkpoint_receipts[{index}].repo_id")
+        repo_id = _require_nonempty_string(
+            receipt.get("repo_id"), f"checkpoint_receipts[{index}].repo_id"
+        )
         revision = _require_nonempty_string(
             receipt.get("revision"), f"checkpoint_receipts[{index}].revision"
         )
@@ -404,9 +402,13 @@ def _validate_receipts(payload: Mapping[str, Any]) -> list[dict[str, Any]]:
         if not _REVISION_RE.fullmatch(revision):
             raise ReceiptValidationError(f"checkpoint_receipts[{index}].revision is not sanitized")
         if not _COMMIT_RE.fullmatch(commit_sha):
-            raise ReceiptValidationError(f"checkpoint_receipts[{index}].commit_sha is not immutable")
+            raise ReceiptValidationError(
+                f"checkpoint_receipts[{index}].commit_sha is not immutable"
+            )
         if repo_id in seen_repos or revision in seen_revisions or commit_sha in seen_commits:
-            raise ReceiptValidationError("checkpoint repositories, revisions, and commits must be unique")
+            raise ReceiptValidationError(
+                "checkpoint repositories, revisions, and commits must be unique"
+            )
         seen_repos.add(repo_id)
         seen_revisions.add(revision)
         seen_commits.add(commit_sha)
@@ -444,7 +446,9 @@ def _validate_receipts(payload: Mapping[str, Any]) -> list[dict[str, Any]]:
 def _validate_reward_fields(payload: Mapping[str, Any], result: Mapping[str, Any]) -> list[float]:
     trace_value = result.get("reward_trace")
     if not isinstance(trace_value, list) or len(trace_value) != SMOKE_STEPS:
-        raise ReceiptValidationError(f"result.reward_trace must contain exactly {SMOKE_STEPS} values")
+        raise ReceiptValidationError(
+            f"result.reward_trace must contain exactly {SMOKE_STEPS} values"
+        )
     trace: list[float] = []
     for index, value in enumerate(trace_value):
         if isinstance(value, bool) or not isinstance(value, (int, float)):
@@ -501,7 +505,9 @@ def _validate_cost(payload: Mapping[str, Any], config: Mapping[str, Any]) -> dic
     maximum = _finite_number(
         values["maximum_authorized_cost_usd"], "cost.maximum_authorized_cost_usd", minimum=0.0
     )
-    operational = _finite_number(values["operational_cap_usd"], "cost.operational_cap_usd", minimum=0.0)
+    operational = _finite_number(
+        values["operational_cap_usd"], "cost.operational_cap_usd", minimum=0.0
+    )
     reserve = _finite_number(values["safety_reserve_usd"], "cost.safety_reserve_usd", minimum=0.0)
     if estimated > operational + 1e-12:
         raise ReceiptValidationError("cost.estimated_cost_usd exceeds operational cap")
@@ -540,11 +546,7 @@ def validate_completed_checkpoint(
         raise ReceiptValidationError("completed receipt must end at smoke step 10")
 
     config = _require_mapping(actual.get("config"), "config")
-    expected = (
-        _canonical_config()
-        if expected_config is None
-        else _json_copy(dict(expected_config))
-    )
+    expected = _canonical_config() if expected_config is None else _json_copy(dict(expected_config))
     _same_json(dict(config), expected, "$.config")
     for config_alias in ("immutable_config", "wandb_config"):
         if config_alias in actual:

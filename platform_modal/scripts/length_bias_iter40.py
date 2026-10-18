@@ -42,6 +42,7 @@ Outputs:
 Usage:
   python platform_modal/scripts/length_bias_iter40.py
 """
+
 from __future__ import annotations
 
 import csv
@@ -63,7 +64,8 @@ def load_runs(path):
 
 
 def ols_slope(x, y):
-    x = np.asarray(x, float); y = np.asarray(y, float)
+    x = np.asarray(x, float)
+    y = np.asarray(y, float)
     if len(x) < 3:
         return float("nan"), float("nan")
     xm, ym = x.mean(), y.mean()
@@ -74,7 +76,9 @@ def ols_slope(x, y):
     b = float((dx * dy).sum() / denom)
     a = ym - b * xm
     resid = y - (a + b * x)
-    rho = float(np.corrcoef(x, y)[0, 1]) if denom > 0 and float((dy * dy).sum()) > 0 else float("nan")
+    rho = (
+        float(np.corrcoef(x, y)[0, 1]) if denom > 0 and float((dy * dy).sum()) > 0 else float("nan")
+    )
     return b, rho
 
 
@@ -86,7 +90,8 @@ def phase_split(n, k=3):
 
 def paired_bootstrap_diff(a, b, n_boot=4000, seed=0):
     rng = np.random.default_rng(seed)
-    a = np.asarray(a, float); b = np.asarray(b, float)
+    a = np.asarray(a, float)
+    b = np.asarray(b, float)
     diffs = a - b
     obs = float(diffs.mean()) if len(diffs) else float("nan")
     n = len(diffs)
@@ -113,14 +118,31 @@ def main():
     K = 3
     for task, path in sources:
         runs = load_runs(path)
-        per_algo = {"grpo": {"slopes": [], "r_over_l_first": [], "r_over_l_last": [],
-                              "r_over_l_drift": [], "antitrap_slope": [], "late_minus_early": [],
-                              "late_minus_mid": [], "mid_minus_early": []},
-                    "dr_grpo": {"slopes": [], "r_over_l_first": [], "r_over_l_last": [],
-                                 "r_over_l_drift": [], "antitrap_slope": [], "late_minus_early": [],
-                                 "late_minus_mid": [], "mid_minus_early": []}}
+        per_algo = {
+            "grpo": {
+                "slopes": [],
+                "r_over_l_first": [],
+                "r_over_l_last": [],
+                "r_over_l_drift": [],
+                "antitrap_slope": [],
+                "late_minus_early": [],
+                "late_minus_mid": [],
+                "mid_minus_early": [],
+            },
+            "dr_grpo": {
+                "slopes": [],
+                "r_over_l_first": [],
+                "r_over_l_last": [],
+                "r_over_l_drift": [],
+                "antitrap_slope": [],
+                "late_minus_early": [],
+                "late_minus_mid": [],
+                "mid_minus_early": [],
+            },
+        }
         for run in runs:
-            algo = run["algo"]; seed = run["seed"]
+            algo = run["algo"]
+            seed = run["seed"]
             sl = run["step_log"]
             t = np.array([s["step"] for s in sl], dtype=float)
             R = np.array([s["mean_reward"] for s in sl], dtype=float)
@@ -136,36 +158,65 @@ def main():
                 Lp, Rp = L[lo:hi], R[lo:hi]
                 beta, rho = ols_slope(Lp, Rp)
                 slopes.append(beta)
-                out_phases.append(dict(
-                    task=task, algo=algo, seed=seed, phase=ph_i,
-                    n_steps=hi - lo, beta_R_on_L=round(beta, 6),
-                    pearson_r=round(rho, 4),
-                ))
+                out_phases.append(
+                    dict(
+                        task=task,
+                        algo=algo,
+                        seed=seed,
+                        phase=ph_i,
+                        n_steps=hi - lo,
+                        beta_R_on_L=round(beta, 6),
+                        pearson_r=round(rho, 4),
+                    )
+                )
             # (B) R/L trajectory
             r_over_l = R / np.maximum(L, 1e-6)
             r_over_l_first = float(r_over_l[: max(1, n // 10)].mean())
-            r_over_l_last = float(r_over_l[-max(1, n // 10):].mean())
+            r_over_l_last = float(r_over_l[-max(1, n // 10) :].mean())
             r_over_l_drift = r_over_l_last - r_over_l_first
             # (C) pooled anti-trap slope
             antitrap, antitrap_r = ols_slope(L, R)
             # Phase-delta metrics
-            late_minus_early = slopes[-1] - slopes[0] if (not math.isnan(slopes[-1]) and not math.isnan(slopes[0])) else float("nan")
-            late_minus_mid = slopes[-1] - slopes[1] if (not math.isnan(slopes[-1]) and not math.isnan(slopes[1])) else float("nan")
-            mid_minus_early = slopes[1] - slopes[0] if (not math.isnan(slopes[1]) and not math.isnan(slopes[0])) else float("nan")
-            out_per_run.append(dict(
-                task=task, algo=algo, seed=seed, n_steps=n,
-                beta_early=round(slopes[0], 6) if not math.isnan(slopes[0]) else "NA",
-                beta_mid=round(slopes[1], 6) if not math.isnan(slopes[1]) else "NA",
-                beta_late=round(slopes[2], 6) if not math.isnan(slopes[2]) else "NA",
-                late_minus_early=round(late_minus_early, 6) if not math.isnan(late_minus_early) else "NA",
-                late_minus_mid=round(late_minus_mid, 6) if not math.isnan(late_minus_mid) else "NA",
-                mid_minus_early=round(mid_minus_early, 6) if not math.isnan(mid_minus_early) else "NA",
-                r_over_l_first=round(r_over_l_first, 6),
-                r_over_l_last=round(r_over_l_last, 6),
-                r_over_l_drift=round(r_over_l_drift, 6),
-                antitrap_slope=round(antitrap, 6),
-                antitrap_pearson_r=round(antitrap_r, 4),
-            ))
+            late_minus_early = (
+                slopes[-1] - slopes[0]
+                if (not math.isnan(slopes[-1]) and not math.isnan(slopes[0]))
+                else float("nan")
+            )
+            late_minus_mid = (
+                slopes[-1] - slopes[1]
+                if (not math.isnan(slopes[-1]) and not math.isnan(slopes[1]))
+                else float("nan")
+            )
+            mid_minus_early = (
+                slopes[1] - slopes[0]
+                if (not math.isnan(slopes[1]) and not math.isnan(slopes[0]))
+                else float("nan")
+            )
+            out_per_run.append(
+                dict(
+                    task=task,
+                    algo=algo,
+                    seed=seed,
+                    n_steps=n,
+                    beta_early=round(slopes[0], 6) if not math.isnan(slopes[0]) else "NA",
+                    beta_mid=round(slopes[1], 6) if not math.isnan(slopes[1]) else "NA",
+                    beta_late=round(slopes[2], 6) if not math.isnan(slopes[2]) else "NA",
+                    late_minus_early=round(late_minus_early, 6)
+                    if not math.isnan(late_minus_early)
+                    else "NA",
+                    late_minus_mid=round(late_minus_mid, 6)
+                    if not math.isnan(late_minus_mid)
+                    else "NA",
+                    mid_minus_early=round(mid_minus_early, 6)
+                    if not math.isnan(mid_minus_early)
+                    else "NA",
+                    r_over_l_first=round(r_over_l_first, 6),
+                    r_over_l_last=round(r_over_l_last, 6),
+                    r_over_l_drift=round(r_over_l_drift, 6),
+                    antitrap_slope=round(antitrap, 6),
+                    antitrap_pearson_r=round(antitrap_r, 4),
+                )
+            )
             per_algo[algo]["slopes"].append(slopes)
             per_algo[algo]["r_over_l_first"].append(r_over_l_first)
             per_algo[algo]["r_over_l_last"].append(r_over_l_last)
@@ -179,20 +230,32 @@ def main():
             seeds = per_algo[algo]
             slopes_arr = np.array(seeds["slopes"], dtype=float)  # shape (n_seeds, K)
             n_eff = int(np.sum(~np.isnan(slopes_arr[:, 0])))
-            out_summary.append(dict(
-                task=task, algo=algo, n_seeds=len(seeds["r_over_l_first"]),
-                n_slopes_identified=n_eff,
-                mean_beta_early=round(float(np.nanmedian(slopes_arr[:, 0])), 6) if n_eff else float("nan"),
-                mean_beta_mid=round(float(np.nanmedian(slopes_arr[:, 1])), 6) if n_eff else float("nan"),
-                mean_beta_late=round(float(np.nanmedian(slopes_arr[:, 2])), 6) if n_eff else float("nan"),
-                median_late_minus_early=round(float(np.nanmedian(seeds["late_minus_early"])), 6),
-                median_late_minus_mid=round(float(np.nanmedian(seeds["late_minus_mid"])), 6),
-                median_mid_minus_early=round(float(np.nanmedian(seeds["mid_minus_early"])), 6),
-                median_r_over_l_first=round(float(np.median(seeds["r_over_l_first"])), 6),
-                median_r_over_l_last=round(float(np.median(seeds["r_over_l_last"])), 6),
-                median_r_over_l_drift=round(float(np.median(seeds["r_over_l_drift"])), 6),
-                median_antitrap_slope=round(float(np.median(seeds["antitrap_slope"])), 6),
-            ))
+            out_summary.append(
+                dict(
+                    task=task,
+                    algo=algo,
+                    n_seeds=len(seeds["r_over_l_first"]),
+                    n_slopes_identified=n_eff,
+                    mean_beta_early=round(float(np.nanmedian(slopes_arr[:, 0])), 6)
+                    if n_eff
+                    else float("nan"),
+                    mean_beta_mid=round(float(np.nanmedian(slopes_arr[:, 1])), 6)
+                    if n_eff
+                    else float("nan"),
+                    mean_beta_late=round(float(np.nanmedian(slopes_arr[:, 2])), 6)
+                    if n_eff
+                    else float("nan"),
+                    median_late_minus_early=round(
+                        float(np.nanmedian(seeds["late_minus_early"])), 6
+                    ),
+                    median_late_minus_mid=round(float(np.nanmedian(seeds["late_minus_mid"])), 6),
+                    median_mid_minus_early=round(float(np.nanmedian(seeds["mid_minus_early"])), 6),
+                    median_r_over_l_first=round(float(np.median(seeds["r_over_l_first"])), 6),
+                    median_r_over_l_last=round(float(np.median(seeds["r_over_l_last"])), 6),
+                    median_r_over_l_drift=round(float(np.median(seeds["r_over_l_drift"])), 6),
+                    median_antitrap_slope=round(float(np.median(seeds["antitrap_slope"])), 6),
+                )
+            )
         # paired bootstrap GRPO vs Dr.GRPO on multiple metrics
         for metric_name, key in [
             ("beta_early", "slopes"),  # use mean of per-seed K=3 slopes
@@ -208,32 +271,39 @@ def main():
                 a = per_algo["grpo"][key]
                 b = per_algo["dr_grpo"][key]
             boot = paired_bootstrap_diff(a, b)
-            out_cross.append(dict(
-                task=task, metric=metric_name,
-                grpo_mean=round(float(np.mean(a)), 6),
-                drgrpo_mean=round(float(np.mean(b)), 6),
-                diff_grpo_minus_drgrpo=round(boot["obs"], 6),
-                diff_lo=round(boot["lo"], 6),
-                diff_hi=round(boot["hi"], 6),
-                p_le0=round(boot["p_le0"], 4),
-            ))
+            out_cross.append(
+                dict(
+                    task=task,
+                    metric=metric_name,
+                    grpo_mean=round(float(np.mean(a)), 6),
+                    drgrpo_mean=round(float(np.mean(b)), 6),
+                    diff_grpo_minus_drgrpo=round(boot["obs"], 6),
+                    diff_lo=round(boot["lo"], 6),
+                    diff_hi=round(boot["hi"], 6),
+                    p_le0=round(boot["p_le0"], 4),
+                )
+            )
     # write outputs
     p1 = OUT_DIR / "length_bias_iter40_per_run.tsv"
     with open(p1, "w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=list(out_per_run[0].keys()), delimiter="\t")
-        w.writeheader(); w.writerows(out_per_run)
+        w.writeheader()
+        w.writerows(out_per_run)
     p2 = OUT_DIR / "length_bias_iter40_phases.tsv"
     with open(p2, "w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=list(out_phases[0].keys()), delimiter="\t")
-        w.writeheader(); w.writerows(out_phases)
+        w.writeheader()
+        w.writerows(out_phases)
     p3 = OUT_DIR / "length_bias_iter40_summary.tsv"
     with open(p3, "w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=list(out_summary[0].keys()), delimiter="\t")
-        w.writeheader(); w.writerows(out_summary)
+        w.writeheader()
+        w.writerows(out_summary)
     p4 = OUT_DIR / "length_bias_iter40_grpo_vs_drgrpo.tsv"
     with open(p4, "w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=list(out_cross[0].keys()), delimiter="\t")
-        w.writeheader(); w.writerows(out_cross)
+        w.writeheader()
+        w.writerows(out_cross)
     # findings table
     findings = []
     for task in ("arithmetic_easy", "gsm8k_cot"):
@@ -263,23 +333,26 @@ def main():
             verdict_d = "anti-trap"
         else:
             verdict_d = "mixed"
-        findings.append(dict(
-            task=task,
-            GRPO_late_beta=round(late_beta_g, 6),
-            DrGRPO_late_beta=round(late_beta_d, 6),
-            GRPO_antitrap_slope=round(anti_g, 6),
-            DrGRPO_antitrap_slope=round(anti_d, 6),
-            GRPO_r_over_l_drift=round(s_grpo["median_r_over_l_drift"], 6),
-            DrGRPO_r_over_l_drift=round(s_drg["median_r_over_l_drift"], 6),
-            drift_diff_p_le0=round(c_drift["p_le0"], 4),
-            antitrap_diff_p_le0=round(c_anti["p_le0"], 4),
-            GRPO_verdict=verdict_g,
-            DrGRPO_verdict=verdict_d,
-        ))
+        findings.append(
+            dict(
+                task=task,
+                GRPO_late_beta=round(late_beta_g, 6),
+                DrGRPO_late_beta=round(late_beta_d, 6),
+                GRPO_antitrap_slope=round(anti_g, 6),
+                DrGRPO_antitrap_slope=round(anti_d, 6),
+                GRPO_r_over_l_drift=round(s_grpo["median_r_over_l_drift"], 6),
+                DrGRPO_r_over_l_drift=round(s_drg["median_r_over_l_drift"], 6),
+                drift_diff_p_le0=round(c_drift["p_le0"], 4),
+                antitrap_diff_p_le0=round(c_anti["p_le0"], 4),
+                GRPO_verdict=verdict_g,
+                DrGRPO_verdict=verdict_d,
+            )
+        )
     p5 = OUT_DIR / "length_bias_iter40_findings.tsv"
     with open(p5, "w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=list(findings[0].keys()), delimiter="\t")
-        w.writeheader(); w.writerows(findings)
+        w.writeheader()
+        w.writerows(findings)
     print(f"Wrote {p1.name} ({len(out_per_run)} rows)")
     print(f"Wrote {p2.name} ({len(out_phases)} rows)")
     print(f"Wrote {p3.name} ({len(out_summary)} rows)")

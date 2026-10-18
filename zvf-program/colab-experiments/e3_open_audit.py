@@ -15,6 +15,7 @@ Arms (all share old-policy logprob caching + 2 inner epochs so ratio/clip engage
 
 Run:  colab run --gpu T4 --timeout 1200 e3_open_audit.py
 """
+
 import argparse
 import json, os, re, random, statistics, tempfile, time
 from pathlib import Path
@@ -91,18 +92,29 @@ if tok.pad_token is None:
 tok.padding_side = "left"
 PAD = tok.pad_token_id
 
+
 def problem():
     a, b = random.randint(11, 60), random.randint(11, 60)
     return f"{a} + {b}", a + b
 
+
 def prompt_of(q):
     return tok.apply_chat_template(
-        [{"role": "user", "content": f"Compute {q}. Reason briefly, then put the final integer after '####'."}],
-        tokenize=False, add_generation_prompt=True)
+        [
+            {
+                "role": "user",
+                "content": f"Compute {q}. Reason briefly, then put the final integer after '####'.",
+            }
+        ],
+        tokenize=False,
+        add_generation_prompt=True,
+    )
+
 
 def parse(text):
     m = re.findall(r"-?\d+", text.split("####")[-1])
     return int(m[0]) if m else None
+
 
 def seq_logprob(model, pids, gen_row, grad):
     gen_row = gen_row[gen_row != PAD]
@@ -114,38 +126,52 @@ def seq_logprob(model, pids, gen_row, grad):
         logits = model(ids).logits[:, :-1, :].float()
         tgt = ids[:, 1:]
         lp = F.log_softmax(logits, -1).gather(-1, tgt.unsqueeze(-1)).squeeze(-1)
-        return lp[:, pids.shape[0] - 1:].sum()
+        return lp[:, pids.shape[0] - 1 :].sum()
+
 
 def gen_group(model, prompt, gold, g):
     model.eval()
     enc = tok([prompt] * g, return_tensors="pt", padding=True).to(DEV)
     with torch.no_grad():
-        out = model.generate(**enc, do_sample=True, temperature=1.0, top_p=0.95,
-                             max_new_tokens=MAX_NEW, pad_token_id=PAD)
-    gens = out[:, enc.input_ids.shape[1]:]
-    rewards = [1.0 if parse(t) == gold else 0.0 for t in tok.batch_decode(gens, skip_special_tokens=True)]
+        out = model.generate(
+            **enc,
+            do_sample=True,
+            temperature=1.0,
+            top_p=0.95,
+            max_new_tokens=MAX_NEW,
+            pad_token_id=PAD,
+        )
+    gens = out[:, enc.input_ids.shape[1] :]
+    rewards = [
+        1.0 if parse(t) == gold else 0.0 for t in tok.batch_decode(gens, skip_special_tokens=True)
+    ]
     pids = enc.input_ids[0]
     old = [seq_logprob(model, pids, gens[i], grad=False) for i in range(g)]
     return pids, gens, rewards, old
 
+
 @torch.no_grad()
 def heldout_acc(model, evalset):
-    model.eval(); c = 0
+    model.eval()
+    c = 0
     for q, gold in evalset:
         enc = tok([prompt_of(q)], return_tensors="pt", padding=True).to(DEV)
         out = model.generate(**enc, do_sample=False, max_new_tokens=MAX_NEW, pad_token_id=PAD)
-        if parse(tok.decode(out[0, enc.input_ids.shape[1]:], skip_special_tokens=True)) == gold:
+        if parse(tok.decode(out[0, enc.input_ids.shape[1] :], skip_special_tokens=True)) == gold:
             c += 1
     return c / len(evalset)
 
+
 def advantages(rewards, arm):
     m = sum(rewards) / len(rewards)
-    v = statistics.pvariance(rewards); s = v ** 0.5
+    v = statistics.pvariance(rewards)
+    s = v**0.5
     if v == 0.0:
         return None
     if arm == "drgrpo":
-        return [r - m for r in rewards]                 # no /std
-    return [(r - m) / (s + 1e-6) for r in rewards]      # grpo / dapo
+        return [r - m for r in rewards]  # no /std
+    return [(r - m) / (s + 1e-6) for r in rewards]  # grpo / dapo
+
 
 def clipped_loss(new_lp, old_lp, adv, arm):
     ratio = torch.exp(new_lp - old_lp.detach())
@@ -196,7 +222,9 @@ def upload_checkpoint(model, optimizer, result, tracking_run):
             "wandb_run_url": tracking_run.url,
         }
         manifest_path = checkpoint_dir / "run_manifest.json"
-        manifest_path.write_text(json.dumps(state, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        manifest_path.write_text(
+            json.dumps(state, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+        )
 
         api = HfApi(token=os.environ["HF_TOKEN"])
         api.create_repo(repo_id=ARGS.hf_repo, repo_type="model", private=True, exist_ok=True)
@@ -206,8 +234,7 @@ def upload_checkpoint(model, optimizer, result, tracking_run):
             folder_path=checkpoint_dir,
             path_in_repo=ARGS.hf_path,
             commit_message=(
-                f"E1 pilot {result['arm']} seed {result['seed']} "
-                f"{ARGS.unit_fingerprint[:12]}"
+                f"E1 pilot {result['arm']} seed {result['seed']} {ARGS.unit_fingerprint[:12]}"
             ),
         )
         hf_url = f"https://huggingface.co/{ARGS.hf_repo}/tree/main/{ARGS.hf_path}"
@@ -233,10 +260,12 @@ def upload_checkpoint(model, optimizer, result, tracking_run):
             "wandb_run_url": tracking_run.url,
         }
 
+
 def run(arm, seed):
     started = time.monotonic()
     generated_tokens = training_tokens = updates = sampled_groups = 0
-    random.seed(seed); torch.manual_seed(seed)
+    random.seed(seed)
+    torch.manual_seed(seed)
     tracking_run = None
     if TRACK_REMOTE:
         tracking_run = wandb.init(
@@ -258,8 +287,12 @@ def run(arm, seed):
         if tracking_run:
             tracking_run.log({"eval/heldout_pre": pre}, step=0)
         for step in range(1, STEPS + 1):
-            if arm == "threshold_adaptiveG" and len(recent_zvf) >= 2 and statistics.mean(recent_zvf[-2:]) > 0.4:
-                g = min(GMAX, g + 2)                         # threshold policy, not packaged ZVFController
+            if (
+                arm == "threshold_adaptiveG"
+                and len(recent_zvf) >= 2
+                and statistics.mean(recent_zvf[-2:]) > 0.4
+            ):
+                g = min(GMAX, g + 2)  # threshold policy, not packaged ZVFController
             groups, zv = [], 0
             for _ in range(BATCH):
                 q, gold = problem()
@@ -272,9 +305,10 @@ def run(arm, seed):
                     adv = advantages(rewards, arm)
                     if adv is not None or arm != "dapo" or tries >= 2:
                         break
-                    tries += 1                               # DAPO dynamic sampling: resample dead group
+                    tries += 1  # DAPO dynamic sampling: resample dead group
                 if adv is None:
-                    zv += 1; continue
+                    zv += 1
+                    continue
                 groups.append((pids, gens, adv, old))
             for _ in range(INNER):
                 opt.zero_grad(set_to_none=True)
@@ -288,44 +322,65 @@ def run(arm, seed):
                             training_tokens += int((gens[i] != PAD).sum().item())
                             losses.append(clipped_loss(new, old[i], a, arm))
                 if losses:
-                    torch.stack(losses).sum().backward(); opt.step(); updates += 1
+                    torch.stack(losses).sum().backward()
+                    opt.step()
+                    updates += 1
             zvf = zv / BATCH
             recent_zvf.append(zvf)
             # rough mean reward proxy: recompute correctness count from last groups not stored; track via zvf-comp
             traj.append({"step": step, "zvf": round(zvf, 3), "G": g})
             if tracking_run:
-                tracking_run.log({
-                    "train/zvf": zvf,
-                    "train/group_size": g,
-                    "train/rollouts_cumulative": rollouts,
-                    "train/nonzero_groups": len(groups),
-                }, step=step)
+                tracking_run.log(
+                    {
+                        "train/zvf": zvf,
+                        "train/group_size": g,
+                        "train/rollouts_cumulative": rollouts,
+                        "train/nonzero_groups": len(groups),
+                    },
+                    step=step,
+                )
             print(f"[e3:{arm[:8]:8s} s{seed}] step={step:2d} G={g} ZVF={zvf:.2f}", flush=True)
         post = heldout_acc(model, evalset)
-        out = {"arm": arm, "seed": seed, "heldout_pre": round(pre, 3), "heldout_post": round(post, 3),
-               "heldout_delta": round(post - pre, 3), "mean_zvf": round(statistics.mean(t["zvf"] for t in traj), 3),
-               "final_G": g, "total_rollouts": rollouts,
-               "protocol_version": "colab-exploratory-v2", "budget_contract": "fixed_outer_steps_unmatched_compute",
-               "matched_compute": False, "generated_tokens": generated_tokens, "training_tokens": training_tokens,
-               "actual_updates": updates, "sampled_groups": sampled_groups, "wall_seconds": time.monotonic()-started}
+        out = {
+            "arm": arm,
+            "seed": seed,
+            "heldout_pre": round(pre, 3),
+            "heldout_post": round(post, 3),
+            "heldout_delta": round(post - pre, 3),
+            "mean_zvf": round(statistics.mean(t["zvf"] for t in traj), 3),
+            "final_G": g,
+            "total_rollouts": rollouts,
+            "protocol_version": "colab-exploratory-v2",
+            "budget_contract": "fixed_outer_steps_unmatched_compute",
+            "matched_compute": False,
+            "generated_tokens": generated_tokens,
+            "training_tokens": training_tokens,
+            "actual_updates": updates,
+            "sampled_groups": sampled_groups,
+            "wall_seconds": time.monotonic() - started,
+        }
         remote = upload_checkpoint(model, opt, out, tracking_run) if tracking_run else {}
         out.update(remote)
         if tracking_run:
-            tracking_run.summary.update({
-                "eval/heldout_post": post,
-                "eval/heldout_delta": post - pre,
-                "train/mean_zvf": out["mean_zvf"],
-                "train/final_group_size": g,
-                "train/total_rollouts": rollouts,
-                **remote,
-            })
+            tracking_run.summary.update(
+                {
+                    "eval/heldout_post": post,
+                    "eval/heldout_delta": post - pre,
+                    "train/mean_zvf": out["mean_zvf"],
+                    "train/final_group_size": g,
+                    "train/total_rollouts": rollouts,
+                    **remote,
+                }
+            )
             tracking_run.finish(exit_code=0)
-        del model, opt; torch.cuda.empty_cache()
+        del model, opt
+        torch.cuda.empty_cache()
         return out
     except BaseException:
         if tracking_run:
             tracking_run.finish(exit_code=1)
         raise
+
 
 results = []
 for arm in ARMS:
@@ -335,16 +390,34 @@ for arm in ARMS:
 agg = {}
 for arm in ARMS:
     rs = [r for r in results if r["arm"] == arm]
-    agg[arm] = {"mean_heldout_delta": round(statistics.mean(r["heldout_delta"] for r in rs), 3),
-                "mean_zvf": round(statistics.mean(r["mean_zvf"] for r in rs), 3),
-                "mean_rollouts": round(statistics.mean(r["total_rollouts"] for r in rs), 1)}
-print("E3_RESULT " + json.dumps({"experiment": "E3_open_audit", "model": MODEL,
-                                 "seeds": SEEDS, "arms": ARMS,
-                                 "run_config": {
-                                     "device": DEV, "dtype": str(MODEL_DTYPE),
-                                     "batch": BATCH, "g0": G0, "gmax": GMAX,
-                                     "max_new": MAX_NEW, "learning_rate": LR,
-                                     "steps": STEPS, "inner": INNER,
-                                     "heldout_n": HELDOUT_N,
-                                 },
-                                 "units": results, "by_arm": agg}), flush=True)
+    agg[arm] = {
+        "mean_heldout_delta": round(statistics.mean(r["heldout_delta"] for r in rs), 3),
+        "mean_zvf": round(statistics.mean(r["mean_zvf"] for r in rs), 3),
+        "mean_rollouts": round(statistics.mean(r["total_rollouts"] for r in rs), 1),
+    }
+print(
+    "E3_RESULT "
+    + json.dumps(
+        {
+            "experiment": "E3_open_audit",
+            "model": MODEL,
+            "seeds": SEEDS,
+            "arms": ARMS,
+            "run_config": {
+                "device": DEV,
+                "dtype": str(MODEL_DTYPE),
+                "batch": BATCH,
+                "g0": G0,
+                "gmax": GMAX,
+                "max_new": MAX_NEW,
+                "learning_rate": LR,
+                "steps": STEPS,
+                "inner": INNER,
+                "heldout_n": HELDOUT_N,
+            },
+            "units": results,
+            "by_arm": agg,
+        }
+    ),
+    flush=True,
+)

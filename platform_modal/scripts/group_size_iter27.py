@@ -36,6 +36,7 @@ Outputs:
 
 All numerics come from existing TSVs; this driver only re-aggregates.
 """
+
 from __future__ import annotations
 
 import json
@@ -43,6 +44,7 @@ import math
 from pathlib import Path
 
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
@@ -63,6 +65,7 @@ WU_RETENTION = 0.976  # canonical Wu et al. 2025 (arXiv 2510.00977)
 # ---------------------------------------------------------------------------
 # 0. Data loaders
 # ---------------------------------------------------------------------------
+
 
 def load_sweep() -> dict:
     """Load the per-step measured sweep (Qwen2.5-0.5B / arithmetic)."""
@@ -90,6 +93,7 @@ def load_retention_fit() -> pd.DataFrame:
 # 1. Per-G master row (mean reward, last10, retention vs G=2)
 # ---------------------------------------------------------------------------
 
+
 def per_g_master(sweep: dict) -> pd.DataFrame:
     """One row per G: measured mean_reward, last10_acc, retention vs G=2."""
     rows = []
@@ -100,12 +104,16 @@ def per_g_master(sweep: dict) -> pd.DataFrame:
 
     # reference G=2 last10
     ref_runs = by_g[2]
-    ref_last10 = np.array([np.mean([s["mean_reward"] for s in r["step_log"][-10:]]) for r in ref_runs])
+    ref_last10 = np.array(
+        [np.mean([s["mean_reward"] for s in r["step_log"][-10:]]) for r in ref_runs]
+    )
     ref_mean = float(np.mean(ref_last10))
 
     for g in G_VALUES:
         runs = by_g[g]
-        per_seed_last10 = np.array([np.mean([s["mean_reward"] for s in r["step_log"][-10:]]) for r in runs])
+        per_seed_last10 = np.array(
+            [np.mean([s["mean_reward"] for s in r["step_log"][-10:]]) for r in runs]
+        )
         per_seed_mean = np.array([np.mean([s["mean_reward"] for s in r["step_log"]]) for r in runs])
         mean_reward = float(np.mean(per_seed_mean))
         last10 = float(np.mean(per_seed_last10))
@@ -118,8 +126,12 @@ def per_g_master(sweep: dict) -> pd.DataFrame:
         shared = sorted(ref_by_seed.keys() & by_seed.keys())
         if not shared:
             raise ValueError("no shared seed identities")
-        numerator = np.array([np.mean([s["mean_reward"] for s in by_seed[k]["step_log"][-10:]]) for k in shared])
-        denominator = np.array([np.mean([s["mean_reward"] for s in ref_by_seed[k]["step_log"][-10:]]) for k in shared])
+        numerator = np.array(
+            [np.mean([s["mean_reward"] for s in by_seed[k]["step_log"][-10:]]) for k in shared]
+        )
+        denominator = np.array(
+            [np.mean([s["mean_reward"] for s in ref_by_seed[k]["step_log"][-10:]]) for k in shared]
+        )
         if np.any(denominator <= 0):
             raise ValueError("retention denominator must be positive")
         retention_vs_g2 = float(numerator.mean() / denominator.mean())
@@ -127,26 +139,30 @@ def per_g_master(sweep: dict) -> pd.DataFrame:
         indices = rng.integers(0, len(shared), (5000, len(shared)))
         boot = numerator[indices].mean(axis=1) / denominator[indices].mean(axis=1)
         ci_lo, ci_hi = float(np.quantile(boot, 0.025)), float(np.quantile(boot, 0.975))
-        rows.append({
-            "G": g,
-            "n_seeds": len(runs),
-            "mean_reward": mean_reward,
-            "last10_mean_reward": last10,
-            "last10_se": last10_se,
-            "retention_vs_G2": retention_vs_g2,
-            "numerator_G": g, "denominator_G": 2,
-            "metric": "last10_mean_training_reward",
-            "analysis_version": "review23-v2",
-            "retention_ci_low": ci_lo,
-            "retention_ci_high": ci_hi,
-            "above_wu_97_6pct": retention_vs_g2 >= WU_RETENTION,
-        })
+        rows.append(
+            {
+                "G": g,
+                "n_seeds": len(runs),
+                "mean_reward": mean_reward,
+                "last10_mean_reward": last10,
+                "last10_se": last10_se,
+                "retention_vs_G2": retention_vs_g2,
+                "numerator_G": g,
+                "denominator_G": 2,
+                "metric": "last10_mean_training_reward",
+                "analysis_version": "review23-v2",
+                "retention_ci_low": ci_lo,
+                "retention_ci_high": ci_hi,
+                "above_wu_97_6pct": retention_vs_g2 >= WU_RETENTION,
+            }
+        )
     return pd.DataFrame(rows)
 
 
 # ---------------------------------------------------------------------------
 # 2. Master synthesis TSV (per-G + per-(G, T) extended rows)
 # ---------------------------------------------------------------------------
+
 
 def write_synthesis_tsv(per_g: pd.DataFrame) -> Path:
     """Build the canonical 'reward vs G' synthesis TSV."""
@@ -160,8 +176,10 @@ def write_synthesis_tsv(per_g: pd.DataFrame) -> Path:
     for _, r in equiv_eps.iterrows():
         ga, gb = int(r["G_a"]), int(r["G_b"])
         if ga == 2:
-            tost_vs_g2[gb] = (bool(str(r["tost_equivalent_at_alpha_0.05"]).lower() == "yes"),
-                              float(r["tost_p_value"]))
+            tost_vs_g2[gb] = (
+                bool(str(r["tost_equivalent_at_alpha_0.05"]).lower() == "yes"),
+                float(r["tost_p_value"]),
+            )
 
     out_rows = []
     for _, r in per_g.iterrows():
@@ -171,24 +189,38 @@ def write_synthesis_tsv(per_g: pd.DataFrame) -> Path:
             tost_eq, tost_p = None, None
         else:
             tost_eq, tost_p = tost_vs_g2.get(g, (None, None))
-        out_rows.append({
-            "G": g,
-            "n_seeds": int(r["n_seeds"]),
-            "mean_reward": round(float(r["mean_reward"]), 4),
-            "last10_mean_reward": round(float(r["last10_mean_reward"]), 4),
-            "last10_se": round(float(r["last10_se"]), 4),
-            "retention_vs_G2": round(float(r["retention_vs_G2"]), 4),
-            "retention_ci_low": round(float(r["retention_ci_low"]), 4),
-            "retention_ci_high": round(float(r["retention_ci_high"]), 4),
-            "above_wu_97_6pct": bool(r["above_wu_97_6pct"]),
-            "snr_mean_advantage_variance": round(float(snr_r.get("mean_advantage_variance", float("nan"))), 4) if snr_r else None,
-            "snr_advantage_variance": round(float(snr_r.get("snr_advantage_variance", float("nan"))), 4) if snr_r else None,
-            "snr_ci_low": round(float(snr_r.get("snr_ci_low", float("nan"))), 4) if snr_r else None,
-            "snr_ci_high": round(float(snr_r.get("snr_ci_high", float("nan"))), 4) if snr_r else None,
-            "tost_equivalent_vs_G2_eps0.02": tost_eq,
-            "tost_p_vs_G2_eps0.02": round(float(tost_p), 4) if tost_p is not None else None,
-            "scope": "measured_Qwen2.5-0.5B_arithmetic",
-        })
+        out_rows.append(
+            {
+                "G": g,
+                "n_seeds": int(r["n_seeds"]),
+                "mean_reward": round(float(r["mean_reward"]), 4),
+                "last10_mean_reward": round(float(r["last10_mean_reward"]), 4),
+                "last10_se": round(float(r["last10_se"]), 4),
+                "retention_vs_G2": round(float(r["retention_vs_G2"]), 4),
+                "retention_ci_low": round(float(r["retention_ci_low"]), 4),
+                "retention_ci_high": round(float(r["retention_ci_high"]), 4),
+                "above_wu_97_6pct": bool(r["above_wu_97_6pct"]),
+                "snr_mean_advantage_variance": round(
+                    float(snr_r.get("mean_advantage_variance", float("nan"))), 4
+                )
+                if snr_r
+                else None,
+                "snr_advantage_variance": round(
+                    float(snr_r.get("snr_advantage_variance", float("nan"))), 4
+                )
+                if snr_r
+                else None,
+                "snr_ci_low": round(float(snr_r.get("snr_ci_low", float("nan"))), 4)
+                if snr_r
+                else None,
+                "snr_ci_high": round(float(snr_r.get("snr_ci_high", float("nan"))), 4)
+                if snr_r
+                else None,
+                "tost_equivalent_vs_G2_eps0.02": tost_eq,
+                "tost_p_vs_G2_eps0.02": round(float(tost_p), 4) if tost_p is not None else None,
+                "scope": "measured_Qwen2.5-0.5B_arithmetic",
+            }
+        )
     df = pd.DataFrame(out_rows)
     out_path = RES / "group_size_iter27_synthesis_v2.tsv"
     df.to_csv(out_path, sep="\t", index=False)
@@ -198,6 +230,7 @@ def write_synthesis_tsv(per_g: pd.DataFrame) -> Path:
 # ---------------------------------------------------------------------------
 # 3. DPO retention bands: Wu 97.6%, measured G=4 vs G=32, broader G=4 vs G=64
 # ---------------------------------------------------------------------------
+
 
 def write_dpo_bands() -> Path:
     """Three retention bands vs T on Qwen3-8B / GSM8K illustrative sweep.
@@ -225,57 +258,65 @@ def write_dpo_bands() -> Path:
         ret = float(r["retention_pct_of_Gb"]) / 100.0
         ret_lo = ret - (float(r["diff_a_minus_b"]) - float(r["diff_ci_low"])) / float(r["acc_G_b"])
         ret_hi = ret + (float(r["diff_ci_high"]) - float(r["diff_a_minus_b"])) / float(r["acc_G_b"])
-        rows.append({
-            "T_tokens": T,
-            "G_a": int(r["G_a"]),
-            "G_b": int(r["G_b"]),
-            "band": "measured_G4_vs_G32",
-            "retention": round(ret, 4),
-            "retention_ci_low": round(ret_lo, 4),
-            "retention_ci_high": round(ret_hi, 4),
-            "source": "iter7+iter15 illustrative reconstruction",
-        })
+        rows.append(
+            {
+                "T_tokens": T,
+                "G_a": int(r["G_a"]),
+                "G_b": int(r["G_b"]),
+                "band": "measured_G4_vs_G32",
+                "retention": round(ret, 4),
+                "retention_ci_low": round(ret_lo, 4),
+                "retention_ci_high": round(ret_hi, 4),
+                "source": "iter7+iter15 illustrative reconstruction",
+            }
+        )
 
     # Wu constant band (R = 0.976) at every T
     for T in T_BROADER:
-        rows.append({
-            "T_tokens": int(T),
-            "G_a": 2,
-            "G_b": 16,
-            "band": "wu_2025_constant_97.6",
-            "retention": round(WU_RETENTION, 4),
-            "retention_ci_low": float("nan"),
-            "retention_ci_high": float("nan"),
-            "source": "Wu et al. arXiv:2510.00977",
-        })
+        rows.append(
+            {
+                "T_tokens": int(T),
+                "G_a": 2,
+                "G_b": 16,
+                "band": "wu_2025_constant_97.6",
+                "retention": round(WU_RETENTION, 4),
+                "retention_ci_low": float("nan"),
+                "retention_ci_high": float("nan"),
+                "source": "Wu et al. arXiv:2510.00977",
+            }
+        )
 
     # Saturating fit evaluated inside the reconstructed grid, plus the
     # labeled out-of-grid extrapolation rows (projection, not measurement;
     # intervals are conditional on the reconstruction).
     for T in [256_000_000, 1024_000_000]:
         R = R_inf + (R0 - R_inf) * math.exp(-T / tau)
-        rows.append({
-            "T_tokens": int(T),
-            "G_a": 4,
-            "G_b": 32,
-            "band": "iter19_fit_extrapolation",
-            "retention": round(R, 4),
-            "retention_ci_low": round(R_inf_lo + (R0 - R_inf_lo) * math.exp(-T / tau), 4),
-            "retention_ci_high": round(R_inf_hi + (R0 - R_inf_hi) * math.exp(-T / tau), 4),
-            "source": "iter19 saturating fit (extrapolated projection)",
-        })
+        rows.append(
+            {
+                "T_tokens": int(T),
+                "G_a": 4,
+                "G_b": 32,
+                "band": "iter19_fit_extrapolation",
+                "retention": round(R, 4),
+                "retention_ci_low": round(R_inf_lo + (R0 - R_inf_lo) * math.exp(-T / tau), 4),
+                "retention_ci_high": round(R_inf_hi + (R0 - R_inf_hi) * math.exp(-T / tau), 4),
+                "source": "iter19 saturating fit (extrapolated projection)",
+            }
+        )
     for T in T_BROADER:
         R = R_inf + (R0 - R_inf) * math.exp(-T / tau)
-        rows.append({
-            "T_tokens": int(T),
-            "G_a": 4,
-            "G_b": 32,
-            "band": "iter19_fit_ingrid",
-            "retention": round(R, 4),
-            "retention_ci_low": float("nan"),
-            "retention_ci_high": float("nan"),
-            "source": "iter19 saturating fit (in-grid only)",
-        })
+        rows.append(
+            {
+                "T_tokens": int(T),
+                "G_a": 4,
+                "G_b": 32,
+                "band": "iter19_fit_ingrid",
+                "retention": round(R, 4),
+                "retention_ci_low": float("nan"),
+                "retention_ci_high": float("nan"),
+                "source": "iter19 saturating fit (in-grid only)",
+            }
+        )
 
     df = pd.DataFrame(rows).sort_values(["band", "T_tokens"]).reset_index(drop=True)
     out_path = RES / "group_size_iter27_dpo_bands_v2.tsv"
@@ -286,6 +327,7 @@ def write_dpo_bands() -> Path:
 # ---------------------------------------------------------------------------
 # 4. Four-panel synthesis figure
 # ---------------------------------------------------------------------------
+
 
 def build_figure(per_g: pd.DataFrame) -> Path:
     """Canonical reward-vs-G plot + 3 supporting panels.
@@ -310,19 +352,38 @@ def build_figure(per_g: pd.DataFrame) -> Path:
     last10 = per_g["last10_mean_reward"].to_numpy()
     se = per_g["last10_se"].to_numpy()
     ret = per_g["retention_vs_G2"].to_numpy()
-    ax.errorbar(g, last10, yerr=1.96 * se, fmt="o-", color="#1f77b4",
-                capsize=5, linewidth=2, markersize=9, label="measured last-10 mean_reward")
+    ax.errorbar(
+        g,
+        last10,
+        yerr=1.96 * se,
+        fmt="o-",
+        color="#1f77b4",
+        capsize=5,
+        linewidth=2,
+        markersize=9,
+        label="measured last-10 mean_reward",
+    )
     # Wu 97.6% retention line at G>2
     base = last10[0]  # G=2 reference
     wu_line = base * WU_RETENTION
-    ax.axhline(wu_line, color="gray", linestyle="--", linewidth=1.4,
-               label=f"Wu 2025 retention (97.6% of G=2): {wu_line:.3f}")
+    ax.axhline(
+        wu_line,
+        color="gray",
+        linestyle="--",
+        linewidth=1.4,
+        label=f"Wu 2025 retention (97.6% of G=2): {wu_line:.3f}",
+    )
     # Annotate retention %
     for gi, gi_val in enumerate(g):
-        ax.annotate(f"{ret[gi]*100:.1f}%",
-                    (gi_val, last10[gi]),
-                    xytext=(0, 12), textcoords="offset points",
-                    ha="center", fontsize=8, color="#1f77b4")
+        ax.annotate(
+            f"{ret[gi] * 100:.1f}%",
+            (gi_val, last10[gi]),
+            xytext=(0, 12),
+            textcoords="offset points",
+            ha="center",
+            fontsize=8,
+            color="#1f77b4",
+        )
     ax.set_xscale("log", base=2)
     ax.set_xticks(g)
     ax.set_xticklabels([str(x) for x in g])
@@ -342,13 +403,34 @@ def build_figure(per_g: pd.DataFrame) -> Path:
     # Reference laws normalized at G=2
     ref_sqrt = snr_adv[0] * np.sqrt(g_snr / g_snr[0])
     ref_flat = np.full_like(g_snr, snr_adv[0], dtype=float)
-    ax.plot(g_snr, snr_adv, "o-", color="#2ca02c", linewidth=2,
-            markersize=8, label="measured SNR (advantage_variance)")
+    ax.plot(
+        g_snr,
+        snr_adv,
+        "o-",
+        color="#2ca02c",
+        linewidth=2,
+        markersize=8,
+        label="measured SNR (advantage_variance)",
+    )
     ax.fill_between(g_snr, snr_lo, snr_hi, color="#2ca02c", alpha=0.18)
-    ax.plot(g_snr, ref_sqrt, "s--", color="#d62728", linewidth=1.4,
-            markersize=6, label="sqrt(G) MC-variance reference")
-    ax.plot(g_snr, ref_flat, "^:", color="#9467bd", linewidth=1.4,
-            markersize=6, label="flat (DPO-equivalence) reference")
+    ax.plot(
+        g_snr,
+        ref_sqrt,
+        "s--",
+        color="#d62728",
+        linewidth=1.4,
+        markersize=6,
+        label="sqrt(G) MC-variance reference",
+    )
+    ax.plot(
+        g_snr,
+        ref_flat,
+        "^:",
+        color="#9467bd",
+        linewidth=1.4,
+        markersize=6,
+        label="flat (DPO-equivalence) reference",
+    )
     ax.set_xscale("log", base=2)
     ax.set_xticks(g_snr)
     ax.set_xticklabels([str(int(x)) for x in g_snr])
@@ -364,28 +446,59 @@ def build_figure(per_g: pd.DataFrame) -> Path:
     meas_rows = bands[bands["band"] == "measured_G4_vs_G32"]
     fit_rows = bands[bands["band"] == "iter19_fit_ingrid"]
     # Wu band
-    ax.plot(wu_rows["T_tokens"] / 1e6, wu_rows["retention"], "s-",
-            color="gray", linewidth=2, markersize=8,
-            label="Wu 2025 R=0.976 (G=2 vs G=16, canonical)")
-    ax.fill_between(wu_rows["T_tokens"] / 1e6,
-                    wu_rows["retention_ci_low"], wu_rows["retention_ci_high"],
-                    color="gray", alpha=0.18)
+    ax.plot(
+        wu_rows["T_tokens"] / 1e6,
+        wu_rows["retention"],
+        "s-",
+        color="gray",
+        linewidth=2,
+        markersize=8,
+        label="Wu 2025 R=0.976 (G=2 vs G=16, canonical)",
+    )
+    ax.fill_between(
+        wu_rows["T_tokens"] / 1e6,
+        wu_rows["retention_ci_low"],
+        wu_rows["retention_ci_high"],
+        color="gray",
+        alpha=0.18,
+    )
     # Measured G=4 vs G=32
-    ax.errorbar(meas_rows["T_tokens"] / 1e6, meas_rows["retention"],
-                yerr=[meas_rows["retention"] - meas_rows["retention_ci_low"],
-                      meas_rows["retention_ci_high"] - meas_rows["retention"]],
-                fmt="o-", color="#1f77b4", capsize=4, linewidth=2, markersize=8,
-                label="reconstructed G=4 vs G=32 (iter7)")
+    ax.errorbar(
+        meas_rows["T_tokens"] / 1e6,
+        meas_rows["retention"],
+        yerr=[
+            meas_rows["retention"] - meas_rows["retention_ci_low"],
+            meas_rows["retention_ci_high"] - meas_rows["retention"],
+        ],
+        fmt="o-",
+        color="#1f77b4",
+        capsize=4,
+        linewidth=2,
+        markersize=8,
+        label="reconstructed G=4 vs G=32 (iter7)",
+    )
     # Iter19 fit: in-grid curve plus labeled extrapolated projection
     if len(fit_rows) > 0:
-        ax.plot(fit_rows["T_tokens"] / 1e6, fit_rows["retention"], "v--",
-                color="#ff7f0e", linewidth=1.6, markersize=8,
-                label="iter19 saturating fit (in-grid)")
+        ax.plot(
+            fit_rows["T_tokens"] / 1e6,
+            fit_rows["retention"],
+            "v--",
+            color="#ff7f0e",
+            linewidth=1.6,
+            markersize=8,
+            label="iter19 saturating fit (in-grid)",
+        )
     extrap_rows = bands[bands["band"] == "iter19_fit_extrapolation"]
     if len(extrap_rows) > 0:
-        ax.plot(extrap_rows["T_tokens"] / 1e6, extrap_rows["retention"], "v:",
-                color="#ff7f0e", linewidth=1.4, markersize=7,
-                label="iter19 fit extrapolation (projection)")
+        ax.plot(
+            extrap_rows["T_tokens"] / 1e6,
+            extrap_rows["retention"],
+            "v:",
+            color="#ff7f0e",
+            linewidth=1.4,
+            markersize=7,
+            label="iter19 fit extrapolation (projection)",
+        )
     ax.set_xscale("log")
     ax.set_xlabel("Token budget T (M)")
     ax.set_ylabel("Retention R = acc(G_a) / acc(G_b)")
@@ -418,16 +531,17 @@ def build_figure(per_g: pd.DataFrame) -> Path:
             v = pivot.values[i, j]
             if not np.isnan(v):
                 color = "white" if v < 0.65 else "black"
-                ax.text(j, i, f"{v:.2f}", ha="center", va="center",
-                        color=color, fontsize=9)
+                ax.text(j, i, f"{v:.2f}", ha="center", va="center", color=color, fontsize=9)
     ax.set_xlabel("Token budget T")
     ax.set_ylabel("Group size G")
     ax.set_title("(D) Illustrative Accuracy(T, G) reconstruction")
     plt.colorbar(im, ax=ax, fraction=0.046, pad=0.04, label="heldout acc")
 
-    fig.suptitle("Iter 27 — Pillar 3 unified synthesis: "
-                 "Reward vs Group Size + the Wu 2025 DPO framing",
-                 y=1.005, fontsize=11)
+    fig.suptitle(
+        "Iter 27 — Pillar 3 unified synthesis: Reward vs Group Size + the Wu 2025 DPO framing",
+        y=1.005,
+        fontsize=11,
+    )
     fig.tight_layout()
     out_pdf = FIG / "group_size_iter27_v2.pdf"
     fig.savefig(out_pdf, bbox_inches="tight")
@@ -439,6 +553,7 @@ def build_figure(per_g: pd.DataFrame) -> Path:
 # ---------------------------------------------------------------------------
 # Driver
 # ---------------------------------------------------------------------------
+
 
 def main() -> None:
     sweep = load_sweep()

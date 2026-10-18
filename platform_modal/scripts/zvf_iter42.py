@@ -9,9 +9,9 @@ Missing peaks remain unavailable. kNN scaling is fit on training folds only.
 A future early-warning protocol needs a fixed recorded observation cutoff and
 raw-prefix feature construction; this analysis does not implement that study.
 """
+
 from __future__ import annotations
 
-import csv
 import json
 import math
 import statistics
@@ -32,22 +32,24 @@ def load_leadtime() -> list[dict]:
     rows = []
     with p.open() as f:
         for line in f:
-            if line.startswith("#") or line.startswith("kind"):
+            if line.startswith(("#", "kind")):
                 continue
             parts = line.rstrip("\n").split("\t")
             if len(parts) < 9:
                 continue
-            rows.append({
-                "kind": parts[0],
-                "method": parts[1],
-                "seed": int(parts[2]),
-                "n_steps": int(parts[3]),
-                "mean_zvf": float(parts[4]),
-                "theta": float(parts[5]),
-                "first_pass_step": int(parts[6]),
-                "first_collapse_step": int(parts[7]),
-                "lead_steps": int(parts[8]),
-            })
+            rows.append(
+                {
+                    "kind": parts[0],
+                    "method": parts[1],
+                    "seed": int(parts[2]),
+                    "n_steps": int(parts[3]),
+                    "mean_zvf": float(parts[4]),
+                    "theta": float(parts[5]),
+                    "first_pass_step": int(parts[6]),
+                    "first_collapse_step": int(parts[7]),
+                    "lead_steps": int(parts[8]),
+                }
+            )
     return rows
 
 
@@ -107,7 +109,11 @@ def late_outcome(row: dict) -> dict:
     last10 = row.get("last10_avg", float("nan"))
     peak = row.get("peak_accuracy", float("nan"))
     mean_zvf = row.get("mean_zvf", float("nan"))
-    label = classify_failure(last10, peak, mean_zvf) if all(math.isfinite(v) for v in (last10,peak,mean_zvf)) else "unavailable"
+    label = (
+        classify_failure(last10, peak, mean_zvf)
+        if all(math.isfinite(v) for v in (last10, peak, mean_zvf))
+        else "unavailable"
+    )
     return {
         "last10_avg": last10,
         "peak": peak,
@@ -121,19 +127,33 @@ def knn_loo(rows, feature_keys, k=3):
     """Retrospective kNN with training-fold-only scaling; missing rows unevaluable."""
     import numpy as np
     from collections import Counter
-    predictions=[]
-    for i,row in enumerate(rows):
-        train=[other for j,other in enumerate(rows) if j != i]
-        train=[r for r in train if all(math.isfinite(r["features"][f]) for f in feature_keys)]
+
+    predictions = []
+    for i, row in enumerate(rows):
+        train = [other for j, other in enumerate(rows) if j != i]
+        train = [r for r in train if all(math.isfinite(r["features"][f]) for f in feature_keys)]
         if not train or not all(math.isfinite(row["features"][f]) for f in feature_keys):
-            predictions.append("NOT_EVALUABLE"); continue
-        x=np.array([[r["features"][f] for f in feature_keys] for r in train])
-        query=np.array([row["features"][f] for f in feature_keys])
-        sd=x.std(axis=0); sd[sd==0]=1
-        distances=np.linalg.norm((x-query)/sd,axis=1)
-        nearest=sorted(range(len(train)),key=lambda j:(distances[j],str(train[j]["label"])))[:k]
-        counts=Counter(train[j]["label"] for j in nearest)
-        predictions.append(min(counts,key=lambda label:(-counts[label],min(distances[j] for j in nearest if train[j]["label"]==label),label)))
+            predictions.append("NOT_EVALUABLE")
+            continue
+        x = np.array([[r["features"][f] for f in feature_keys] for r in train])
+        query = np.array([row["features"][f] for f in feature_keys])
+        sd = x.std(axis=0)
+        sd[sd == 0] = 1
+        distances = np.linalg.norm((x - query) / sd, axis=1)
+        nearest = sorted(range(len(train)), key=lambda j: (distances[j], str(train[j]["label"])))[
+            :k
+        ]
+        counts = Counter(train[j]["label"] for j in nearest)
+        predictions.append(
+            min(
+                counts,
+                key=lambda label: (
+                    -counts[label],
+                    min(distances[j] for j in nearest if train[j]["label"] == label),
+                    label,
+                ),
+            )
+        )
     return predictions
 
 
@@ -141,19 +161,37 @@ def knn_loo_cluster(rows, feature_keys, k=3):
     """Retrospective kNN with training-fold-only scaling; missing rows unevaluable."""
     import numpy as np
     from collections import Counter
-    predictions=[]
-    for i,row in enumerate(rows):
-        train=[other for j,other in enumerate(rows) if (other["kind"],other["method"]) != (row["kind"],row["method"])]
-        train=[r for r in train if all(math.isfinite(r["features"][f]) for f in feature_keys)]
+
+    predictions = []
+    for _i, row in enumerate(rows):
+        train = [
+            other
+            for j, other in enumerate(rows)
+            if (other["kind"], other["method"]) != (row["kind"], row["method"])
+        ]
+        train = [r for r in train if all(math.isfinite(r["features"][f]) for f in feature_keys)]
         if not train or not all(math.isfinite(row["features"][f]) for f in feature_keys):
-            predictions.append("NOT_EVALUABLE"); continue
-        x=np.array([[r["features"][f] for f in feature_keys] for r in train])
-        query=np.array([row["features"][f] for f in feature_keys])
-        sd=x.std(axis=0); sd[sd==0]=1
-        distances=np.linalg.norm((x-query)/sd,axis=1)
-        nearest=sorted(range(len(train)),key=lambda j:(distances[j],str(train[j]["label"])))[:k]
-        counts=Counter(train[j]["label"] for j in nearest)
-        predictions.append(min(counts,key=lambda label:(-counts[label],min(distances[j] for j in nearest if train[j]["label"]==label),label)))
+            predictions.append("NOT_EVALUABLE")
+            continue
+        x = np.array([[r["features"][f] for f in feature_keys] for r in train])
+        query = np.array([row["features"][f] for f in feature_keys])
+        sd = x.std(axis=0)
+        sd[sd == 0] = 1
+        distances = np.linalg.norm((x - query) / sd, axis=1)
+        nearest = sorted(range(len(train)), key=lambda j: (distances[j], str(train[j]["label"])))[
+            :k
+        ]
+        counts = Counter(train[j]["label"] for j in nearest)
+        predictions.append(
+            min(
+                counts,
+                key=lambda label: (
+                    -counts[label],
+                    min(distances[j] for j in nearest if train[j]["label"] == label),
+                    label,
+                ),
+            )
+        )
     return predictions
 
 
@@ -166,7 +204,7 @@ def univariate_auc(xs: list[float], ys_bin: list[int]) -> float:
         AUC = (S1 - n1*(n1+1)/2) / (n0 * n1)
     where S1 = sum of ranks of positive-class x values.
     """
-    pairs = list(zip(xs, ys_bin))
+    pairs = list(zip(xs, ys_bin, strict=False))
     n1 = sum(ys_bin)
     n0 = len(ys_bin) - n1
     if n0 == 0 or n1 == 0:
@@ -191,6 +229,7 @@ def univariate_auc(xs: list[float], ys_bin: list[int]) -> float:
 def spearman(xs: list[float], ys: list[float]) -> float:
     if len(xs) < 2 or len(set(xs)) < 2 or len(set(ys)) < 2:
         return float("nan")
+
     def rank(vs):
         sorted_vs = sorted(range(len(vs)), key=lambda i: vs[i])
         r = [0.0] * len(vs)
@@ -204,11 +243,12 @@ def spearman(xs: list[float], ys: list[float]) -> float:
                 r[sorted_vs[k_]] = avg
             i = j + 1
         return r
+
     rx = rank(xs)
     ry = rank(ys)
     mx = statistics.fmean(rx)
     my = statistics.fmean(ry)
-    num = sum((a - mx) * (b - my) for a, b in zip(rx, ry))
+    num = sum((a - mx) * (b - my) for a, b in zip(rx, ry, strict=False))
     dx = math.sqrt(sum((a - mx) ** 2 for a in rx))
     dy = math.sqrt(sum((b - my) ** 2 for b in ry))
     if dx == 0 or dy == 0:
@@ -219,11 +259,11 @@ def spearman(xs: list[float], ys: list[float]) -> float:
 def odds_ratio(a: int, b: int, c: int, d: int) -> tuple[float, float]:
     """Odds ratio with Haldane-Anscombe correction: (a+0.5)(d+0.5) / ((b+0.5)(c+0.5)).
 
-a = #bloom AND collapse
-    b = #bloom AND NOT collapse
-    c = #NOT bloom AND collapse
-    d = #NOT bloom AND NOT collapse
-    Returns (or, log_or) — log_or for the symmetric CI.
+    a = #bloom AND collapse
+        b = #bloom AND NOT collapse
+        c = #NOT bloom AND collapse
+        d = #NOT bloom AND NOT collapse
+        Returns (or, log_or) — log_or for the symmetric CI.
     """
     A = a + 0.5
     B = b + 0.5
@@ -231,7 +271,7 @@ a = #bloom AND collapse
     D = d + 0.5
     or_ = (A * D) / (B * C)
     log_or = math.log(or_)
-    se_log_or = math.sqrt(1/A + 1/B + 1/C + 1/D)
+    se_log_or = math.sqrt(1 / A + 1 / B + 1 / C + 1 / D)
     return or_, log_or, se_log_or
 
 
@@ -242,61 +282,100 @@ def main() -> int:
     for s in summary:
         ef = early_features(s)
         lo = late_outcome(s)
-        rows.append({
-            "kind": s["kind"],
-            "method": s["method"],
-            "seed": s["seed"],
-            "group_size": s.get("group_size", -1),
-            "n_steps": ef["n_steps"],
-            "features": ef,
-            "label": lo["label"],
-            "last10_avg": lo["last10_avg"],
-            "peak": lo["peak"],
-            "mean_zvf": ef["mean_zvf"],
-        })
+        rows.append(
+            {
+                "kind": s["kind"],
+                "method": s["method"],
+                "seed": s["seed"],
+                "group_size": s.get("group_size", -1),
+                "n_steps": ef["n_steps"],
+                "features": ef,
+                "label": lo["label"],
+                "last10_avg": lo["last10_avg"],
+                "peak": lo["peak"],
+                "mean_zvf": ef["mean_zvf"],
+            }
+        )
 
     # ---- 1. Early-features TSV ----
     out_early = RESULTS / "zvf_iter42_early_predicts_review28_v2.tsv"
-    feat_keys = ["fp05_frac", "fp07_frac", "fp09_frac",
-                 "burden_05", "burden_07",
-                 "mean_zvf", "zvf_std", "zvf_lag1"]
+    feat_keys = [
+        "fp05_frac",
+        "fp07_frac",
+        "fp09_frac",
+        "burden_05",
+        "burden_07",
+        "mean_zvf",
+        "zvf_std",
+        "zvf_lag1",
+    ]
     preds = knn_loo(rows, feat_keys, k=3)
-    for r, p in zip(rows, preds):
+    for r, p in zip(rows, preds, strict=False):
         r["pred"] = p
         r["correct"] = int(p == r["label"])
 
     with out_early.open("w") as f:
-        f.write("# Iter 42 Pillar 2 retrospective full-trace ZVF as predictor of late failure mode.\n")
+        f.write(
+            "# Iter 42 Pillar 2 retrospective full-trace ZVF as predictor of late failure mode.\n"
+        )
         f.write("# Per-run row: retrospective features (fp05_frac = first_pass_zvf05 / n_steps,\n")
         f.write("#   burden_05 = auc_above_zvf05, etc.) + late outcome label.\n")
         f.write("# kNN-LOO with k=3 over z-scored features predicting {collapse,\n")
         f.write("#   plateau, drift, converged}. Same taxonomy as iter 38.\n")
         f.write("# Source: platform_modal/scripts/zvf_iter42.py\n")
-        cols = ["kind", "method", "seed", "group_size", "n_steps",
-                "fp05_frac", "fp07_frac", "fp09_frac",
-                "early_bloom05", "early_bloom07", "early_bloom09",
-                "burden_05", "burden_07", "mean_zvf", "zvf_std", "zvf_lag1",
-                "last10_avg", "peak", "label", "pred", "correct"]
+        cols = [
+            "kind",
+            "method",
+            "seed",
+            "group_size",
+            "n_steps",
+            "fp05_frac",
+            "fp07_frac",
+            "fp09_frac",
+            "early_bloom05",
+            "early_bloom07",
+            "early_bloom09",
+            "burden_05",
+            "burden_07",
+            "mean_zvf",
+            "zvf_std",
+            "zvf_lag1",
+            "last10_avg",
+            "peak",
+            "label",
+            "pred",
+            "correct",
+        ]
         f.write("\t".join(cols) + "\n")
         for r in rows:
-            f.write("\t".join([
-                r["kind"], r["method"], str(r["seed"]), str(r["group_size"]),
-                str(r["n_steps"]),
-                f'{r["features"]["fp05_frac"]:.4f}',
-                f'{r["features"]["fp07_frac"]:.4f}',
-                f'{r["features"]["fp09_frac"]:.4f}',
-                str(r["features"]["early_bloom05"]),
-                str(r["features"]["early_bloom07"]),
-                str(r["features"]["early_bloom09"]),
-                f'{r["features"]["burden_05"]:.4f}',
-                f'{r["features"]["burden_07"]:.4f}',
-                f'{r["features"]["mean_zvf"]:.4f}',
-                f'{r["features"]["zvf_std"]:.4f}',
-                f'{r["features"]["zvf_lag1"]:.4f}',
-                f'{r["last10_avg"]:.4f}',
-                f'{r["peak"]:.4f}',
-                r["label"], r["pred"], str(r["correct"]),
-            ]) + "\n")
+            f.write(
+                "\t".join(
+                    [
+                        r["kind"],
+                        r["method"],
+                        str(r["seed"]),
+                        str(r["group_size"]),
+                        str(r["n_steps"]),
+                        f"{r['features']['fp05_frac']:.4f}",
+                        f"{r['features']['fp07_frac']:.4f}",
+                        f"{r['features']['fp09_frac']:.4f}",
+                        str(r["features"]["early_bloom05"]),
+                        str(r["features"]["early_bloom07"]),
+                        str(r["features"]["early_bloom09"]),
+                        f"{r['features']['burden_05']:.4f}",
+                        f"{r['features']['burden_07']:.4f}",
+                        f"{r['features']['mean_zvf']:.4f}",
+                        f"{r['features']['zvf_std']:.4f}",
+                        f"{r['features']['zvf_lag1']:.4f}",
+                        f"{r['last10_avg']:.4f}",
+                        f"{r['peak']:.4f}",
+                        r["label"],
+                        r["pred"],
+                        str(r["correct"]),
+                    ]
+                )
+                + "\n"
+            )
     print(f"wrote {out_early}")
 
     # ---- 2. Confusion matrix + accuracy + Spearman ----
@@ -315,19 +394,25 @@ def main() -> int:
         class_recall[true] = n_pred / n_true if n_true else float("nan")
 
     # ---- 2b. Leave-one-CLUSTER-out kNN (the harder test) ----
-    retrospective_keys = ["fp05_frac", "fp07_frac", "fp09_frac",
-                       "burden_05", "burden_07", "zvf_lag1"]
+    retrospective_keys = [
+        "fp05_frac",
+        "fp07_frac",
+        "fp09_frac",
+        "burden_05",
+        "burden_07",
+        "zvf_lag1",
+    ]
     full_keys = feat_keys  # includes mean_zvf (full-trace summary)
 
     preds_cluster = knn_loo_cluster(rows, retrospective_keys, k=3)
-    n_correct_cluster = sum(1 for r, p in zip(rows, preds_cluster)
-                             if p == r["label"])
+    n_correct_cluster = sum(1 for r, p in zip(rows, preds_cluster, strict=False) if p == r["label"])
     acc_cluster = n_correct_cluster / n_total if n_total else 0.0
 
     # Also cluster-LOO with FULL feature set for comparison
     preds_cluster_full = knn_loo_cluster(rows, full_keys, k=3)
-    n_correct_cluster_full = sum(1 for r, p in zip(rows, preds_cluster_full)
-                                  if p == r["label"])
+    n_correct_cluster_full = sum(
+        1 for r, p in zip(rows, preds_cluster_full, strict=False) if p == r["label"]
+    )
     acc_cluster_full = n_correct_cluster_full / n_total if n_total else 0.0
 
     # Per-cluster cluster-LOO accuracy: for each held-out cluster,
@@ -391,24 +476,35 @@ def main() -> int:
     rho_fp05_last10 = spearman(xs2, ys2)
 
     # ---- 4. Per-(kind, method) failure audit ----
-    by_method = defaultdict(lambda: {"n": 0, "n_collapse": 0, "n_bloom05": 0,
-                                     "n_bloom05_collapse": 0,
-                                     "n_bloom09": 0, "n_bloom09_collapse": 0,
-                                     "n_converged": 0, "n_converged_bloom05": 0,
-                                     "mean_last10": []})
+    by_method = defaultdict(
+        lambda: {
+            "n": 0,
+            "n_collapse": 0,
+            "n_bloom05": 0,
+            "n_bloom05_collapse": 0,
+            "n_bloom09": 0,
+            "n_bloom09_collapse": 0,
+            "n_converged": 0,
+            "n_converged_bloom05": 0,
+            "mean_last10": [],
+        }
+    )
     for r in rows:
         m = by_method[(r["kind"], r["method"])]
         m["n"] += 1
         m["n_collapse"] += int(r["label"] == "collapse")
         m["n_bloom05"] += int(r["features"]["early_bloom05"] == 1)
-        m["n_bloom05_collapse"] += int(r["features"]["early_bloom05"] == 1
-                                       and r["label"] == "collapse")
+        m["n_bloom05_collapse"] += int(
+            r["features"]["early_bloom05"] == 1 and r["label"] == "collapse"
+        )
         m["n_bloom09"] += int(r["features"]["early_bloom09"] == 1)
-        m["n_bloom09_collapse"] += int(r["features"]["early_bloom09"] == 1
-                                       and r["label"] == "collapse")
+        m["n_bloom09_collapse"] += int(
+            r["features"]["early_bloom09"] == 1 and r["label"] == "collapse"
+        )
         m["n_converged"] += int(r["label"] == "converged")
-        m["n_converged_bloom05"] += int(r["features"]["early_bloom05"] == 1
-                                        and r["label"] == "converged")
+        m["n_converged_bloom05"] += int(
+            r["features"]["early_bloom05"] == 1 and r["label"] == "converged"
+        )
         m["mean_last10"].append(r["last10_avg"])
 
     out_audit = RESULTS / "zvf_iter42_failure_audit_review28_v2.tsv"
@@ -417,22 +513,24 @@ def main() -> int:
         f.write("# early_bloom05 = ZVF first crosses 0.5 in first half of trace.\n")
         f.write("# early_bloom09 = ZVF first crosses 0.9 in first half of trace.\n")
         f.write("# Source: platform_modal/scripts/zvf_iter42.py\n")
-        f.write("kind\tmethod\tn\tn_collapse\tcollapse_rate\t"
-                "n_bloom05\tn_bloom05_collapse\tbloom05_collapse_rate\t"
-                "n_bloom09\tn_bloom09_collapse\tbloom09_collapse_rate\t"
-                "n_converged\tn_converged_bloom05\tmean_last10\n")
+        f.write(
+            "kind\tmethod\tn\tn_collapse\tcollapse_rate\t"
+            "n_bloom05\tn_bloom05_collapse\tbloom05_collapse_rate\t"
+            "n_bloom09\tn_bloom09_collapse\tbloom09_collapse_rate\t"
+            "n_converged\tn_converged_bloom05\tmean_last10\n"
+        )
         for (k, m_), m in sorted(by_method.items()):
             collapse_rate = m["n_collapse"] / m["n"] if m["n"] else 0.0
-            b05_cr = (m["n_bloom05_collapse"] / m["n_bloom05"]
-                      if m["n_bloom05"] else float("nan"))
-            b09_cr = (m["n_bloom09_collapse"] / m["n_bloom09"]
-                      if m["n_bloom09"] else float("nan"))
+            b05_cr = m["n_bloom05_collapse"] / m["n_bloom05"] if m["n_bloom05"] else float("nan")
+            b09_cr = m["n_bloom09_collapse"] / m["n_bloom09"] if m["n_bloom09"] else float("nan")
             ml = statistics.fmean(m["mean_last10"]) if m["mean_last10"] else 0.0
-            f.write(f"{k}\t{m_}\t{m['n']}\t{m['n_collapse']}\t{collapse_rate:.4f}\t"
-                    f"{m['n_bloom05']}\t{m['n_bloom05_collapse']}\t"
-                    f"{b05_cr:.4f}\t{m['n_bloom09']}\t{m['n_bloom09_collapse']}\t"
-                    f"{b09_cr:.4f}\t{m['n_converged']}\t{m['n_converged_bloom05']}\t"
-                    f"{ml:.4f}\n")
+            f.write(
+                f"{k}\t{m_}\t{m['n']}\t{m['n_collapse']}\t{collapse_rate:.4f}\t"
+                f"{m['n_bloom05']}\t{m['n_bloom05_collapse']}\t"
+                f"{b05_cr:.4f}\t{m['n_bloom09']}\t{m['n_bloom09_collapse']}\t"
+                f"{b09_cr:.4f}\t{m['n_converged']}\t{m['n_converged_bloom05']}\t"
+                f"{ml:.4f}\n"
+            )
     print(f"wrote {out_audit}")
 
     # ---- 5. Summary ----
@@ -444,67 +542,104 @@ def main() -> int:
         f.write(f"n_runs\t{n_total}\t60-row zvf_dynamics_review28_v2.json pool\n")
         f.write(f"n_classes\t2\tobserved in pool: plateau=45, converged=15\n")
         f.write(f"loo_accuracy_per_row\t{acc:.4f}\tk=3, z-scored features, all 8\n")
-        f.write(f"loo_cluster_accuracy_retrospective\t{acc_cluster:.4f}\t"
-                f"k=3, leave-one-(kind,method)-out, 6 retrospective subset\n")
-        f.write(f"loo_cluster_accuracy_full\t{acc_cluster_full:.4f}\t"
-                f"k=3, leave-one-(kind,method)-out, full 8 features\n")
-        f.write(f"recall_collapse\t{class_recall.get('collapse', float('nan')):.4f}\t"
-                f"n_true={sum(1 for r in rows if r['label']=='collapse')}\n")
-        f.write(f"recall_drift\t{class_recall.get('drift', float('nan')):.4f}\t"
-                f"n_true={sum(1 for r in rows if r['label']=='drift')}\n")
-        f.write(f"recall_plateau\t{class_recall.get('plateau', float('nan')):.4f}\t"
-                f"n_true={sum(1 for r in rows if r['label']=='plateau')}\n")
-        f.write(f"recall_converged\t{class_recall.get('converged', float('nan')):.4f}\t"
-                f"n_true={sum(1 for r in rows if r['label']=='converged')}\n")
-        f.write(f"or_bloom05_collapse\t{or_bloom05:.4f}\t"
-                f"95pct CI [{bloom05_ci_lo:.4f}, {bloom05_ci_hi:.4f}]  "
-                f"(Haldane-Anscombe correction; a={a},b={b},c={c},d={d})\n")
-        f.write(f"or_bloom09_collapse\t{or_bloom09:.4f}\t"
-                f"95pct CI [{bloom09_ci_lo:.4f}, {bloom09_ci_hi:.4f}]  "
-                f"(a={a9},b={b9},c={c9},d={d9})\n")
-        f.write(f"high_burden_collapse_rate\t"
-                f"{high_collapse/high_n if high_n else float('nan'):.4f}\t"
-                f"top-quartile burden_05, n={high_n}\n")
-        f.write(f"low_burden_collapse_rate\t"
-                f"{low_collapse/low_n if low_n else float('nan'):.4f}\t"
-                f"bottom-quartile burden_05, n={low_n}\n")
-        f.write(f"spearman_burden05_mean_zvf\t{rho_burden_mean:.4f}\t"
-                f"early burden vs late mean ZVF\n")
-        f.write(f"spearman_fp05frac_last10\t{rho_fp05_last10:.4f}\t"
-                f"earliness of ZVF rise vs last-10 accuracy\n")
+        f.write(
+            f"loo_cluster_accuracy_retrospective\t{acc_cluster:.4f}\t"
+            f"k=3, leave-one-(kind,method)-out, 6 retrospective subset\n"
+        )
+        f.write(
+            f"loo_cluster_accuracy_full\t{acc_cluster_full:.4f}\t"
+            f"k=3, leave-one-(kind,method)-out, full 8 features\n"
+        )
+        f.write(
+            f"recall_collapse\t{class_recall.get('collapse', float('nan')):.4f}\t"
+            f"n_true={sum(1 for r in rows if r['label'] == 'collapse')}\n"
+        )
+        f.write(
+            f"recall_drift\t{class_recall.get('drift', float('nan')):.4f}\t"
+            f"n_true={sum(1 for r in rows if r['label'] == 'drift')}\n"
+        )
+        f.write(
+            f"recall_plateau\t{class_recall.get('plateau', float('nan')):.4f}\t"
+            f"n_true={sum(1 for r in rows if r['label'] == 'plateau')}\n"
+        )
+        f.write(
+            f"recall_converged\t{class_recall.get('converged', float('nan')):.4f}\t"
+            f"n_true={sum(1 for r in rows if r['label'] == 'converged')}\n"
+        )
+        f.write(
+            f"or_bloom05_collapse\t{or_bloom05:.4f}\t"
+            f"95pct CI [{bloom05_ci_lo:.4f}, {bloom05_ci_hi:.4f}]  "
+            f"(Haldane-Anscombe correction; a={a},b={b},c={c},d={d})\n"
+        )
+        f.write(
+            f"or_bloom09_collapse\t{or_bloom09:.4f}\t"
+            f"95pct CI [{bloom09_ci_lo:.4f}, {bloom09_ci_hi:.4f}]  "
+            f"(a={a9},b={b9},c={c9},d={d9})\n"
+        )
+        f.write(
+            f"high_burden_collapse_rate\t"
+            f"{high_collapse / high_n if high_n else float('nan'):.4f}\t"
+            f"top-quartile burden_05, n={high_n}\n"
+        )
+        f.write(
+            f"low_burden_collapse_rate\t"
+            f"{low_collapse / low_n if low_n else float('nan'):.4f}\t"
+            f"bottom-quartile burden_05, n={low_n}\n"
+        )
+        f.write(
+            f"spearman_burden05_mean_zvf\t{rho_burden_mean:.4f}\tearly burden vs late mean ZVF\n"
+        )
+        f.write(
+            f"spearman_fp05frac_last10\t{rho_fp05_last10:.4f}\t"
+            f"earliness of ZVF rise vs last-10 accuracy\n"
+        )
         # Univariate AUCs
         for fk in retrospective_keys + ["mean_zvf"]:
-            f.write(f"auc_univariate_{fk}\t{auc_per_feature[fk]:.4f}\t"
-                    f"single-feature AUC predicting converged vs plateau\n")
+            f.write(
+                f"auc_univariate_{fk}\t{auc_per_feature[fk]:.4f}\t"
+                f"single-feature AUC predicting converged vs plateau\n"
+            )
         # Per-cluster cluster-LOO accuracy
         for ci in sorted(cluster_acc_early.keys()):
             ea = cluster_acc_early[ci]
             fa = cluster_acc_full[ci]
-            f.write(f"cluster_loo_early_{ci[0]}_{ci[1]}\t"
-                    f"{ea[0]/ea[1] if ea[1] else float('nan'):.4f}\t"
-                    f"n={ea[1]} retrospective; "
-                    f"full-feature LOO={fa[0]/fa[1] if fa[1] else float('nan'):.4f}\n")
+            f.write(
+                f"cluster_loo_early_{ci[0]}_{ci[1]}\t"
+                f"{ea[0] / ea[1] if ea[1] else float('nan'):.4f}\t"
+                f"n={ea[1]} retrospective; "
+                f"full-feature LOO={fa[0] / fa[1] if fa[1] else float('nan'):.4f}\n"
+            )
     print(f"wrote {out_summary}")
 
     # ---- 6. Console summary ----
     print(f"\nIter 42 — retrospective full-trace ZVF predicts late failure mode")
     print(f"  n_runs = {n_total}")
     print(f"  LOO accuracy (per-row, all 8 features) = {acc:.3f} ({n_correct}/{n_total})")
-    print(f"  Cluster-LOO accuracy (retrospective subset) = {acc_cluster:.3f} "
-          f"({n_correct_cluster}/{n_total})")
-    print(f"  Cluster-LOO accuracy (FULL 8 features) = {acc_cluster_full:.3f} "
-          f"({n_correct_cluster_full}/{n_total})")
-    print(f"  OR(early_bloom05 → collapse) = {or_bloom05:.2f} "
-          f"[{bloom05_ci_lo:.2f}, {bloom05_ci_hi:.2f}]")
-    print(f"  OR(early_bloom09 → collapse) = {or_bloom09:.2f} "
-          f"[{bloom09_ci_lo:.2f}, {bloom09_ci_hi:.2f}]")
+    print(
+        f"  Cluster-LOO accuracy (retrospective subset) = {acc_cluster:.3f} "
+        f"({n_correct_cluster}/{n_total})"
+    )
+    print(
+        f"  Cluster-LOO accuracy (FULL 8 features) = {acc_cluster_full:.3f} "
+        f"({n_correct_cluster_full}/{n_total})"
+    )
+    print(
+        f"  OR(early_bloom05 → collapse) = {or_bloom05:.2f} "
+        f"[{bloom05_ci_lo:.2f}, {bloom05_ci_hi:.2f}]"
+    )
+    print(
+        f"  OR(early_bloom09 → collapse) = {or_bloom09:.2f} "
+        f"[{bloom09_ci_lo:.2f}, {bloom09_ci_hi:.2f}]"
+    )
     print(f"  Spearman(burden_05, mean_zvf) = {rho_burden_mean:.3f}")
     print(f"  Spearman(fp05_frac, last10) = {rho_fp05_last10:.3f}")
     print(f"  Univariate AUCs (converged vs plateau):")
     for fk in retrospective_keys + ["mean_zvf"]:
         print(f"    {fk:18s}  AUC = {auc_per_feature[fk]:.3f}")
-    print(f"  Collapse rate: top-quartile burden={high_collapse}/{high_n}, "
-          f"bottom-quartile={low_collapse}/{low_n}")
+    print(
+        f"  Collapse rate: top-quartile burden={high_collapse}/{high_n}, "
+        f"bottom-quartile={low_collapse}/{low_n}"
+    )
     return 0
 
 

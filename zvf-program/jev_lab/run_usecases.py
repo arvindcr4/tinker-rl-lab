@@ -18,9 +18,12 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 
-from jev_judge import healthcheck  # noqa: E402
-from usecases import (  # noqa: E402
-    eval_judge, mine_ledgers, rerank_fuse, safety_gate,
+from jev_judge import healthcheck
+from usecases import (
+    eval_judge,
+    mine_ledgers,
+    rerank_fuse,
+    safety_gate,
 )
 
 REPO = HERE.parents[1]
@@ -41,10 +44,12 @@ def main() -> None:
     candidates = []
     finish = REPO / "outputs/PES_Phase2_Review_2026-09-12/finish"
     for name in (
-        "e6_continuation/REPORT_v1.md", "e9_completion/HANDOFF.md",
+        "e6_continuation/REPORT_v1.md",
+        "e9_completion/HANDOFF.md",
         "e2_completion/decision_v19/lifecycle_decision.md",
         "e13_continuation/decision_v11/DECISION.md",
-        "STATE_RECONCILIATION_2026-09-19.md", "DECISION_PACKAGE_2026-09-19.md",
+        "STATE_RECONCILIATION_2026-09-19.md",
+        "DECISION_PACKAGE_2026-09-19.md",
     ):
         p = finish / name
         if p.is_file():
@@ -74,8 +79,10 @@ def main() -> None:
     OUT.write_text(json.dumps(summary, indent=1, sort_keys=True) + "\n")
     print(json.dumps({k: v for k, v in summary.items() if k != "u7_mine_ledgers"}, indent=1)[:2500])
     mined = summary["u7_mine_ledgers"]
-    print(f"\nu7 mined {mined['mined']} ledgers; jev_used on "
-          f"{sum(1 for l in mined['ledgers'] if l['jev_used'])}")
+    print(
+        f"\nu7 mined {mined['mined']} ledgers; jev_used on "
+        f"{sum(1 for l in mined['ledgers'] if l['jev_used'])}"
+    )
     print("receipt:", OUT)
 
 

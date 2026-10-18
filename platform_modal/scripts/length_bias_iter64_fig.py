@@ -4,9 +4,11 @@ Iter 64 — Pillar 4 figure: Conditional Length Response to Reward Direction.
 sign-conditioned marginals; (b) compression-on-reward-up by ZVF tier;
 (c) raw-drift paired bar with CI.
 """
+
 import csv
 from pathlib import Path
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
@@ -55,8 +57,7 @@ def main():
     ax.axhline(0, color="black", lw=0.5)
     ax.set_xticks(x)
     ax.set_xticklabels(
-        [f"{t}/{s}" for t in zvf_tiers for s in sign_labels],
-        rotation=30, ha="right", fontsize=8
+        [f"{t}/{s}" for t in zvf_tiers for s in sign_labels], rotation=30, ha="right", fontsize=8
     )
     ax.set_ylabel("E[ΔL | sign(ΔR), ZVF tier] (tokens)")
     ax.set_title("(a) Length response by reward sign × ZVF\n(GSM8K CoT)")
@@ -69,7 +70,7 @@ def main():
         cell = f"pos_{tier}"
         row = next((r for r in gsm if r["cell"] == cell), None)
         if row:
-            g_pos.append(-float(row["mean_grpo"]))   # compression = -ΔL
+            g_pos.append(-float(row["mean_grpo"]))  # compression = -ΔL
             d_pos.append(-float(row["mean_drgrpo"]))
     x = np.arange(len(zvf_tiers))
     ax.bar(x - w / 2, g_pos, w, label="GRPO", color="#3a86ff")
@@ -85,9 +86,11 @@ def main():
     # ----- Panel (c): raw drift paired summary
     ax = axes[2]
     metrics = ["alignment_all", "raw_drift_all", "compression_on_pos_dR"]
-    short_labels = ["Alignment\n(E[dL|ΔR>0]−E[dL|ΔR<0])",
-                    "Raw drift\n(E[ΔL])",
-                    "Compression\non reward-up"]
+    short_labels = [
+        "Alignment\n(E[dL|ΔR>0]−E[dL|ΔR<0])",
+        "Raw drift\n(E[ΔL])",
+        "Compression\non reward-up",
+    ]
     g_v, d_v, err_lo, err_hi = [], [], [], []
     for m in metrics:
         row = next((r for r in gsm_sum if r["metric"] == m), None)
@@ -97,14 +100,14 @@ def main():
             err_lo.append(float(row["ci_lo"]))
             err_hi.append(float(row["ci_hi"]))
     x = np.arange(len(metrics))
-    g_err_lo = [abs(v - lo) for v, lo in zip(g_v, err_lo)]
-    g_err_hi = [abs(hi - v) for v, hi in zip(g_v, err_hi)]
-    d_err_lo = [abs(v - lo) for v, lo in zip(d_v, err_lo)]
-    d_err_hi = [abs(hi - v) for v, hi in zip(d_v, err_hi)]
-    ax.bar(x - w / 2, g_v, w, yerr=[g_err_lo, g_err_hi],
-           label="GRPO", color="#3a86ff", capsize=3)
-    ax.bar(x + w / 2, d_v, w, yerr=[d_err_lo, d_err_hi],
-           label="Dr.GRPO", color="#fb5607", capsize=3)
+    g_err_lo = [abs(v - lo) for v, lo in zip(g_v, err_lo, strict=False)]
+    g_err_hi = [abs(hi - v) for v, hi in zip(g_v, err_hi, strict=False)]
+    d_err_lo = [abs(v - lo) for v, lo in zip(d_v, err_lo, strict=False)]
+    d_err_hi = [abs(hi - v) for v, hi in zip(d_v, err_hi, strict=False)]
+    ax.bar(x - w / 2, g_v, w, yerr=[g_err_lo, g_err_hi], label="GRPO", color="#3a86ff", capsize=3)
+    ax.bar(
+        x + w / 2, d_v, w, yerr=[d_err_lo, d_err_hi], label="Dr.GRPO", color="#fb5607", capsize=3
+    )
     ax.axhline(0, color="black", lw=0.5)
     ax.set_xticks(x)
     ax.set_xticklabels(short_labels, fontsize=8)
@@ -114,7 +117,8 @@ def main():
     fig.suptitle(
         "Iter 64 — Conditional Length Response to Reward Direction (CLRRD):\n"
         "Dr.GRPO loses reward-direction coupling, esp. in heterogeneous-group (low-ZVF) regime",
-        fontsize=10, y=1.02,
+        fontsize=10,
+        y=1.02,
     )
     fig.tight_layout()
     out_pdf = FIG / "length_bias_iter64_clrrd.pdf"
@@ -127,6 +131,7 @@ def main():
     paper_fig = ROOT / "paper" / "figures"
     if paper_fig.exists():
         import shutil
+
         shutil.copyfile(out_pdf, paper_fig / "length_bias_iter64_clrrd.pdf")
         print(f"Mirrored to {paper_fig / 'length_bias_iter64_clrrd.pdf'}")
 

@@ -17,15 +17,17 @@ Outputs:
   platform_hybrid/experiments/results/p5p8/p7_iter87_hysteresis_summary.json
   platform_hybrid/experiments/results/p5p8/p7_iter87_hysteresis_boot.tsv
 """
+
 import json
 from collections import defaultdict
-from math import lgamma, log, exp
 from pathlib import Path
 import random
 
 import sys
+
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
+from _paths import REPO_ROOT
+
 WORK = REPO_ROOT
 N2_DIR = WORK / "platform_hybrid/experiments/results/n2_reward_tensor_resume"
 OUT = WORK / "platform_hybrid/experiments/results/p5p8"
@@ -37,7 +39,7 @@ N_STEPS = 40
 
 
 def yield_iid(p: float, G: int) -> float:
-    return 1.0 - (p ** G + (1.0 - p) ** G)
+    return 1.0 - (p**G + (1.0 - p) ** G)
 
 
 def load_step_zvf():
@@ -145,18 +147,18 @@ def main():
 
     # Configurations: (name, tau, k_up, k_dn)
     CONFIGS = [
-        ("C_raw_tau_0.70",        0.70, 1, 1),  # no hysteresis
-        ("C_hyst_0.70_2_2",       0.70, 2, 2),
-        ("C_hyst_0.70_3_2",       0.70, 3, 2),
-        ("C_hyst_0.70_3_3",       0.70, 3, 3),
-        ("C_hyst_0.70_4_3",       0.70, 4, 3),
-        ("C_hyst_0.75_2_2",       0.75, 2, 2),
-        ("C_hyst_0.75_3_2",       0.75, 3, 2),
-        ("C_hyst_0.75_3_3",       0.75, 3, 3),
-        ("C_hyst_0.75_4_3",       0.75, 4, 3),
-        ("C_hyst_0.80_2_2",       0.80, 2, 2),
-        ("C_hyst_0.80_3_2",       0.80, 3, 2),
-        ("C_hyst_0.80_3_3",       0.80, 3, 3),
+        ("C_raw_tau_0.70", 0.70, 1, 1),  # no hysteresis
+        ("C_hyst_0.70_2_2", 0.70, 2, 2),
+        ("C_hyst_0.70_3_2", 0.70, 3, 2),
+        ("C_hyst_0.70_3_3", 0.70, 3, 3),
+        ("C_hyst_0.70_4_3", 0.70, 4, 3),
+        ("C_hyst_0.75_2_2", 0.75, 2, 2),
+        ("C_hyst_0.75_3_2", 0.75, 3, 2),
+        ("C_hyst_0.75_3_3", 0.75, 3, 3),
+        ("C_hyst_0.75_4_3", 0.75, 4, 3),
+        ("C_hyst_0.80_2_2", 0.80, 2, 2),
+        ("C_hyst_0.80_3_2", 0.80, 3, 2),
+        ("C_hyst_0.80_3_3", 0.80, 3, 3),
     ]
 
     per_method_rows = []
@@ -177,30 +179,40 @@ def main():
             extra = total_rollouts - baseline_rollouts
             yp1k = dy / (extra / 1000.0) if extra > 0 else float("inf")
 
-            per_method_rows.append({
-                "method": m, "config": cfg_name, "tau": tau,
-                "k_up": k_up, "k_dn": k_dn,
-                "n_fires": fires, "n_flips": flips,
-                "flip_rate_per_fire": round(flips / fires, 3) if fires > 0 else "n/a",
-                "mean_dwell": round(mean_dwell, 2),
-                "n_dwell_segments": len(dwell_dist),
-                "total_rollouts": total_rollouts,
-                "baseline_rollouts": baseline_rollouts,
-                "cost_ratio": round(cost_ratio, 4),
-                "total_yield_base": round(y_base, 4),
-                "total_yield_ctrl": round(y_ctrl, 4),
-                "delta_yield": round(dy, 4),
-                "mean_delta_per_prompt": round(dy / (N_STEPS * n_prompts_per_step), 4),
-                "yield_per_1000_extra": round(yp1k, 3) if yp1k != float("inf") else "inf",
-            })
+            per_method_rows.append(
+                {
+                    "method": m,
+                    "config": cfg_name,
+                    "tau": tau,
+                    "k_up": k_up,
+                    "k_dn": k_dn,
+                    "n_fires": fires,
+                    "n_flips": flips,
+                    "flip_rate_per_fire": round(flips / fires, 3) if fires > 0 else "n/a",
+                    "mean_dwell": round(mean_dwell, 2),
+                    "n_dwell_segments": len(dwell_dist),
+                    "total_rollouts": total_rollouts,
+                    "baseline_rollouts": baseline_rollouts,
+                    "cost_ratio": round(cost_ratio, 4),
+                    "total_yield_base": round(y_base, 4),
+                    "total_yield_ctrl": round(y_ctrl, 4),
+                    "delta_yield": round(dy, 4),
+                    "mean_delta_per_prompt": round(dy / (N_STEPS * n_prompts_per_step), 4),
+                    "yield_per_1000_extra": round(yp1k, 3) if yp1k != float("inf") else "inf",
+                }
+            )
 
             for t in range(N_STEPS):
-                per_step_rows.append({
-                    "method": m, "config": cfg_name, "step": t,
-                    "zvf": round(zvf_seq[t], 4),
-                    "applied_G": applied[t],
-                    "fire_step": int(applied[t] != G_BASE),
-                })
+                per_step_rows.append(
+                    {
+                        "method": m,
+                        "config": cfg_name,
+                        "step": t,
+                        "zvf": round(zvf_seq[t], 4),
+                        "applied_G": applied[t],
+                        "fire_step": int(applied[t] != G_BASE),
+                    }
+                )
 
     # Write per-method TSV
     cols_m = list(per_method_rows[0].keys())
@@ -220,29 +232,35 @@ def main():
     print()
     print("=" * 100)
     print("HEADLINE — Hysteresis filter on zvf-triage trigger")
-    print(f"{'method':<8}{'config':<22}{'fires':>6}{'flips':>7}{'flip/fire':>10}"
-          f"{'cost':>8}{'deltaY':>10}{'Yp1k':>10}")
+    print(
+        f"{'method':<8}{'config':<22}{'fires':>6}{'flips':>7}{'flip/fire':>10}"
+        f"{'cost':>8}{'deltaY':>10}{'Yp1k':>10}"
+    )
     print("-" * 100)
     for r in per_method_rows:
         fr = r["flip_rate_per_fire"]
         fr_s = f"{fr:.2f}" if isinstance(fr, (int, float)) else fr
-        print(f"{r['method']:<8}{r['config']:<22}{r['n_fires']:>6}{r['n_flips']:>7}"
-              f"{fr_s:>10}{r['cost_ratio']:>8.3f}{r['delta_yield']:>10.3f}"
-              f"{str(r['yield_per_1000_extra']):>10}")
+        print(
+            f"{r['method']:<8}{r['config']:<22}{r['n_fires']:>6}{r['n_flips']:>7}"
+            f"{fr_s:>10}{r['cost_ratio']:>8.3f}{r['delta_yield']:>10.3f}"
+            f"{str(r['yield_per_1000_extra']):>10}"
+        )
     print("=" * 100)
 
     # Headline: at tau=0.70, the flip-count reduction H4 vs H0
     print()
     print("HEADLINE H1 — flip reduction vs raw zvf-triage@0.70")
-    print(f"{'method':<8}{'config':<22}{'flips':>7}{'flips/H0':>10}{'fires/H0':>10}{'deltaY_retention':>17}")
+    print(
+        f"{'method':<8}{'config':<22}{'flips':>7}{'flips/H0':>10}{'fires/H0':>10}{'deltaY_retention':>17}"
+    )
     for m in METHODS:
-        raw = next(r for r in per_method_rows
-                   if r["method"] == m and r["config"] == "C_raw_tau_0.70")
+        raw = next(
+            r for r in per_method_rows if r["method"] == m and r["config"] == "C_raw_tau_0.70"
+        )
         for cfg_name, tau, k_up, k_dn in CONFIGS:
             if tau != 0.70:
                 continue
-            r = next(x for x in per_method_rows
-                     if x["method"] == m and x["config"] == cfg_name)
+            r = next(x for x in per_method_rows if x["method"] == m and x["config"] == cfg_name)
             fr = r["n_flips"] / raw["n_flips"] if raw["n_flips"] else 0
             fir = r["n_fires"] / raw["n_fires"] if raw["n_fires"] else 0
             ret = r["delta_yield"] / raw["delta_yield"] if raw["delta_yield"] else 0
@@ -258,13 +276,17 @@ def main():
         if cfg_name == "C_raw_tau_0.70":
             continue  # reference
         for m in METHODS:
-            raw = next(r for r in per_method_rows
-                       if r["method"] == m and r["config"] == "C_raw_tau_0.70")
+            raw = next(
+                r for r in per_method_rows if r["method"] == m and r["config"] == "C_raw_tau_0.70"
+            )
             zvf_seq = [zvf_by[(m, s)] for s in range(N_STEPS)]
             raw_flips_per_step = [zvf_seq[t] >= 0.70 for t in range(N_STEPS)]
             # Pre-compute the raw n_flips
-            raw_n_flips = sum(1 for i in range(1, len(raw_flips_per_step))
-                              if raw_flips_per_step[i] != raw_flips_per_step[i - 1])
+            raw_n_flips = sum(
+                1
+                for i in range(1, len(raw_flips_per_step))
+                if raw_flips_per_step[i] != raw_flips_per_step[i - 1]
+            )
             # Apply hysteresis B times on bootstrap samples of step-indices
             boot_ratios = []
             for _ in range(B):
@@ -273,8 +295,7 @@ def main():
                 applied_b, _, flips_b = hysteresis_filter(seq_b, tau, k_up, k_dn)
                 # raw flips for this bootstrap
                 raw_b = [zvf_seq[i] >= 0.70 for i in idx]
-                raw_b_flips = sum(1 for i in range(1, len(raw_b))
-                                  if raw_b[i] != raw_b[i - 1])
+                raw_b_flips = sum(1 for i in range(1, len(raw_b)) if raw_b[i] != raw_b[i - 1])
                 if raw_b_flips > 0:
                     boot_ratios.append(flips_b / raw_b_flips)
             boot_ratios.sort()
@@ -283,8 +304,7 @@ def main():
             median = boot_ratios[len(boot_ratios) // 2]
             # also yield retention CI
             raw_dy = raw["delta_yield"]
-            r = next(x for x in per_method_rows
-                     if x["method"] == m and x["config"] == cfg_name)
+            r = next(x for x in per_method_rows if x["method"] == m and x["config"] == cfg_name)
             hyst_dy = r["delta_yield"]
             # bootstrap yield retention
             boot_yret = []
@@ -304,22 +324,30 @@ def main():
             ylo = boot_yret[int(0.025 * len(boot_yret))]
             yhi = boot_yret[int(0.975 * len(boot_yret))]
             ymed = boot_yret[len(boot_yret) // 2]
-            print(f"  {m} {cfg_name}: flip-ratio median={median:.3f} "
-                  f"[{lo:.3f},{hi:.3f}]  yield-ret median={ymed:.3f} "
-                  f"[{ylo:.3f},{yhi:.3f}]")
-            boot_rows.append({
-                "method": m, "config": cfg_name, "tau": tau,
-                "k_up": k_up, "k_dn": k_dn,
-                "raw_flips": raw_n_flips,
-                "hyst_flips": r["n_flips"],
-                "flip_ratio_median": round(median, 4),
-                "flip_ratio_lo": round(lo, 4),
-                "flip_ratio_hi": round(hi, 4),
-                "yield_retention_median": round(ymed, 4),
-                "yield_retention_lo": round(ylo, 4),
-                "yield_retention_hi": round(yhi, 4),
-                "B": B, "seed": 20260705,
-            })
+            print(
+                f"  {m} {cfg_name}: flip-ratio median={median:.3f} "
+                f"[{lo:.3f},{hi:.3f}]  yield-ret median={ymed:.3f} "
+                f"[{ylo:.3f},{yhi:.3f}]"
+            )
+            boot_rows.append(
+                {
+                    "method": m,
+                    "config": cfg_name,
+                    "tau": tau,
+                    "k_up": k_up,
+                    "k_dn": k_dn,
+                    "raw_flips": raw_n_flips,
+                    "hyst_flips": r["n_flips"],
+                    "flip_ratio_median": round(median, 4),
+                    "flip_ratio_lo": round(lo, 4),
+                    "flip_ratio_hi": round(hi, 4),
+                    "yield_retention_median": round(ymed, 4),
+                    "yield_retention_lo": round(ylo, 4),
+                    "yield_retention_hi": round(yhi, 4),
+                    "B": B,
+                    "seed": 20260705,
+                }
+            )
 
     # Write boot TSV
     cols_b = list(boot_rows[0].keys())
@@ -330,8 +358,11 @@ def main():
 
     # Summary JSON
     summary = {
-        "n_methods": len(METHODS), "n_steps": N_STEPS,
-        "n_configs": len(CONFIGS), "B": B, "seed": 20260705,
+        "n_methods": len(METHODS),
+        "n_steps": N_STEPS,
+        "n_configs": len(CONFIGS),
+        "B": B,
+        "seed": 20260705,
         "configs": [{"name": c[0], "tau": c[1], "k_up": c[2], "k_dn": c[3]} for c in CONFIGS],
         "by_method": {},
     }
@@ -339,8 +370,11 @@ def main():
         rows_m = [r for r in per_method_rows if r["method"] == m]
         summary["by_method"][m] = {
             r["config"]: {
-                "tau": r["tau"], "k_up": r["k_up"], "k_dn": r["k_dn"],
-                "n_fires": r["n_fires"], "n_flips": r["n_flips"],
+                "tau": r["tau"],
+                "k_up": r["k_up"],
+                "k_dn": r["k_dn"],
+                "n_fires": r["n_fires"],
+                "n_flips": r["n_flips"],
                 "flip_rate_per_fire": r["flip_rate_per_fire"],
                 "mean_dwell": r["mean_dwell"],
                 "cost_ratio": r["cost_ratio"],
@@ -353,12 +387,9 @@ def main():
         json.dump(summary, f, indent=2)
 
     print()
-    print(f"[write] {OUT}/p7_iter87_hysteresis_per_method.tsv "
-          f"({len(per_method_rows)} rows)")
-    print(f"[write] {OUT}/p7_iter87_hysteresis_per_step.tsv "
-          f"({len(per_step_rows)} rows)")
-    print(f"[write] {OUT}/p7_iter87_hysteresis_boot.tsv "
-          f"({len(boot_rows)} rows)")
+    print(f"[write] {OUT}/p7_iter87_hysteresis_per_method.tsv ({len(per_method_rows)} rows)")
+    print(f"[write] {OUT}/p7_iter87_hysteresis_per_step.tsv ({len(per_step_rows)} rows)")
+    print(f"[write] {OUT}/p7_iter87_hysteresis_boot.tsv ({len(boot_rows)} rows)")
     print(f"[write] {OUT}/p7_iter87_hysteresis_summary.json")
 
 

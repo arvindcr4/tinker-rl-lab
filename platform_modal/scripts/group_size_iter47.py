@@ -37,6 +37,7 @@ Deliverables (4 TSV + 1 paper section + 1 figure):
         Single rollup with 11 headline numbers.
     paper/sections/group_size_iter47_v2.tex + figures/group_size_iter47_v2.pdf.
 """
+
 from __future__ import annotations
 
 import csv
@@ -75,6 +76,7 @@ def write_tsv(path: Path, header: list[str], rows: list[dict]) -> None:
 # Data load + per-cell retention R(G_a, G_max, T)
 # ---------------------------------------------------------------------------
 
+
 def load_isotok() -> list[dict]:
     """Read group_size_token_normalized.tsv; per-row accuracy already gives
     us a proxy for 'heldout acc' at the (G, T) cell.  We treat T as the
@@ -97,25 +99,27 @@ def retention_per_cell(rows: list[dict]) -> list[dict]:
         G_max = max(gd)
         acc_anchor = gd[G_max]
         for G, acc in sorted(gd.items()):
-            cells.append({
-                "T": T,
-                "G": G,
-                "G_max": G_max,
-                "acc": acc,
-"acc_anchor": acc_anchor,
-                "retention": acc / acc_anchor if acc_anchor > 0 else 0.0,
-            })
+            cells.append(
+                {
+                    "T": T,
+                    "G": G,
+                    "G_max": G_max,
+                    "acc": acc,
+                    "acc_anchor": acc_anchor,
+                    "retention": acc / acc_anchor if acc_anchor > 0 else 0.0,
+                }
+            )
     return cells
-
-
 
 
 # ---------------------------------------------------------------------------
 # (1) Critical budget T*(Ga) via log-linear interpolation
 # ---------------------------------------------------------------------------
 
-def log_linear_interp_R_at_T(logT: np.ndarray, R: np.ndarray,
-                              logT_query: float) -> tuple[float, float]:
+
+def log_linear_interp_R_at_T(
+    logT: np.ndarray, R: np.ndarray, logT_query: float
+) -> tuple[float, float]:
     """Solve linear in log(T) for R = R_target at logT_query.  Returns
     (R_at_query, logT_at_target) for the line.  Uses np.polyfit."""
     if len(logT) < 2:
@@ -148,8 +152,7 @@ def main_critical_T(cells: list[dict]) -> list[dict]:
         if G == 64:
             continue
         # Anchor sigma: use CI half-width from raw row.
-        raw = next(r for r in load_isotok()
-                   if int(r["budget_tokens"]) == T and int(r["G"]) == G)
+        raw = next(r for r in load_isotok() if int(r["budget_tokens"]) == T and int(r["G"]) == G)
         sigma = (float(raw["heldout_acc_ci_high"]) - float(raw["heldout_acc_ci_low"])) / 4.0
         sigma = max(sigma, 0.01)
         samples[(G, T)] = (c["acc"], sigma, c["G_max"])
@@ -167,22 +170,34 @@ def main_critical_T(cells: list[dict]) -> list[dict]:
             Tstar = solve_Tstar_at_R(slope, intercept, R_tgt)
             Tstar_M = Tstar / 1e6
             # Determine bracket from raw R_obs at each T.
-            bracketing = next((f"[{Ts[i]/1e6:.1f}, {Ts[i+1]/1e6:.1f}]" for i in range(len(R_obs) - 1)
-                                if ((R_obs[i] - R_tgt) * (R_obs[i+1] - R_tgt)) <= 0), "outside")
-            rows.append({
-                "G_a": G,
-                "R_target": round(R_tgt, 4),
-                "slope": round(float(slope), 4),
-                "intercept": round(float(intercept), 4),
-                "T_star_M_tokens": round(Tstar_M, 4) if np.isfinite(Tstar) else "inf",
-                "T_star_ci_low_M": "",
-                "T_star_ci_high_M": "",
-                "bracketed_by_M": bracketing,
-                "direction": "decreasing" if slope < 0 else "increasing",
-            })
+            bracketing = next(
+                (
+                    f"[{Ts[i] / 1e6:.1f}, {Ts[i + 1] / 1e6:.1f}]"
+                    for i in range(len(R_obs) - 1)
+                    if ((R_obs[i] - R_tgt) * (R_obs[i + 1] - R_tgt)) <= 0
+                ),
+                "outside",
+            )
+            rows.append(
+                {
+                    "G_a": G,
+                    "R_target": round(R_tgt, 4),
+                    "slope": round(float(slope), 4),
+                    "intercept": round(float(intercept), 4),
+                    "T_star_M_tokens": round(Tstar_M, 4) if np.isfinite(Tstar) else "inf",
+                    "T_star_ci_low_M": "",
+                    "T_star_ci_high_M": "",
+                    "bracketed_by_M": bracketing,
+                    "direction": "decreasing" if slope < 0 else "increasing",
+                }
+            )
 
     # Bootstrap CI on T*.
-    boot_Tstar = {r["G_a"]: {r["R_target"]: [] for r in rows if r["G_a"] == r["G_a"]} for r in rows for _ in [0]}
+    boot_Tstar = {
+        r["G_a"]: {r["R_target"]: [] for r in rows if r["G_a"] == r["G_a"]}
+        for r in rows
+        for _ in [0]
+    }
     for G in Gas:
         for R_tgt in targets:
             ts = []
@@ -211,10 +226,21 @@ def main_critical_T(cells: list[dict]) -> list[dict]:
                         r["T_star_ci_high_M"] = round(float(np.quantile(arr, 0.975)), 4)
                         break
 
-    write_tsv(RES / "group_size_iter47_critical_T_v2.tsv",
-              ["G_a", "R_target", "slope", "intercept",
-               "T_star_M_tokens", "T_star_ci_low_M", "T_star_ci_high_M",
-               "bracketed_by_M", "direction"], rows)
+    write_tsv(
+        RES / "group_size_iter47_critical_T_v2.tsv",
+        [
+            "G_a",
+            "R_target",
+            "slope",
+            "intercept",
+            "T_star_M_tokens",
+            "T_star_ci_low_M",
+            "T_star_ci_high_M",
+            "bracketed_by_M",
+            "direction",
+        ],
+        rows,
+    )
     return rows
 
 
@@ -222,7 +248,10 @@ def main_critical_T(cells: list[dict]) -> list[dict]:
 # (2) Monotonicity: Kendall's tau on (T, R) per Ga
 # ---------------------------------------------------------------------------
 
-def kendall_tau_with_boot(x: np.ndarray, y: np.ndarray, n_boot: int = 2000) -> tuple[float, float, float]:
+
+def kendall_tau_with_boot(
+    x: np.ndarray, y: np.ndarray, n_boot: int = 2000
+) -> tuple[float, float, float]:
     """Compute Kendall's tau with bootstrap CI using sign-test.  For tiny
     samples we use the exact rank-counting formula and pair-bootstrap CI."""
     n = len(x)
@@ -271,31 +300,50 @@ def main_monotonicity(cells: list[dict]) -> list[dict]:
     rows = []
     logT = np.log(np.array(Ts, dtype=float))
     for G in Gas:
-        R = np.array([next(c["acc"] for c in cells if c["T"] == T and c["G"] == G)
-                       / anchor_acc[T] for T in Ts], dtype=float)
+        R = np.array(
+            [
+                next(c["acc"] for c in cells if c["T"] == T and c["G"] == G) / anchor_acc[T]
+                for T in Ts
+            ],
+            dtype=float,
+        )
         tau, lo, hi = kendall_tau_with_boot(logT, R)
         monotone = (lo > 0) or (hi < 0)
-        rows.append({
-            "G_a": G,
-            "n_budgets": len(Ts),
-            "budgets_M": ",".join(str(T // 1_000_000) for T in Ts),
-            "R_at_Ts": ",".join(f"{v:.3f}" for v in R),
-            "kendall_tau": round(tau, 4),
-            "tau_ci_low": round(lo, 4),
-            "tau_ci_high": round(hi, 4),
-            "monotone": "yes" if monotone else "no",
-            "direction": "decreasing" if tau < 0 else "increasing",
-        })
-    write_tsv(RES / "group_size_iter47_monotonicity_v2.tsv",
-              ["G_a", "n_budgets", "budgets_M", "R_at_Ts",
-               "kendall_tau", "tau_ci_low", "tau_ci_high",
-               "monotone", "direction"], rows)
+        rows.append(
+            {
+                "G_a": G,
+                "n_budgets": len(Ts),
+                "budgets_M": ",".join(str(T // 1_000_000) for T in Ts),
+                "R_at_Ts": ",".join(f"{v:.3f}" for v in R),
+                "kendall_tau": round(tau, 4),
+                "tau_ci_low": round(lo, 4),
+                "tau_ci_high": round(hi, 4),
+                "monotone": "yes" if monotone else "no",
+                "direction": "decreasing" if tau < 0 else "increasing",
+            }
+        )
+    write_tsv(
+        RES / "group_size_iter47_monotonicity_v2.tsv",
+        [
+            "G_a",
+            "n_budgets",
+            "budgets_M",
+            "R_at_Ts",
+            "kendall_tau",
+            "tau_ci_low",
+            "tau_ci_high",
+            "monotone",
+            "direction",
+        ],
+        rows,
+    )
     return rows
 
 
 # ---------------------------------------------------------------------------
 # (3) Per-difficulty T*: bin by accuracy, solve T* per bin
 # ---------------------------------------------------------------------------
+
 
 def main_diff_Tstar(cells: list[dict]) -> list[dict]:
     """Bin cells by acc(low/mid/high), compute R(Ga, T) per bin, solve T*."""
@@ -336,12 +384,24 @@ def main_diff_Tstar(cells: list[dict]) -> list[dict]:
         Rs = [float(np.mean(per_T[T])) if per_T[T] else float("nan") for T in Ts]
         counts = [len(per_T[T]) for T in Ts]
         # Drop nan budgets entirely.
-        valid = [(T, R, n) for T, R, n in zip(Ts, Rs, counts) if not math.isnan(R) and n > 0]
+        valid = [
+            (T, R, n)
+            for T, R, n in zip(Ts, Rs, counts, strict=False)
+            if not math.isnan(R) and n > 0
+        ]
         if len(valid) < 2:
             for R_tgt in targets:
-                rows.append({"bin": b, "R_target": R_tgt, "n_T_used": len(valid),
-                              "T_star_M_tokens": "n/a", "bracketed_by_M": "n/a",
-                              "slope": "n/a", "direction": "n/a"})
+                rows.append(
+                    {
+                        "bin": b,
+                        "R_target": R_tgt,
+                        "n_T_used": len(valid),
+                        "T_star_M_tokens": "n/a",
+                        "bracketed_by_M": "n/a",
+                        "slope": "n/a",
+                        "direction": "n/a",
+                    }
+                )
             continue
         logT_v = np.log(np.array([t for t, _, _ in valid], dtype=float))
         R_v = np.array([r for _, r, _ in valid], dtype=float)
@@ -349,25 +409,36 @@ def main_diff_Tstar(cells: list[dict]) -> list[dict]:
         for R_tgt in targets:
             Tstar = solve_Tstar_at_R(slope, intercept, R_tgt)
             Tstar_M = Tstar / 1e6 if np.isfinite(Tstar) else float("inf")
-            bracketing = next((f"[{valid[i][0]/1e6:.1f}, {valid[i+1][0]/1e6:.1f}]" for i in range(len(R_v) - 1)
-                                if ((R_v[i] - R_tgt) * (R_v[i+1] - R_tgt)) <= 0), "outside")
-            rows.append({
-                "bin": b,
-                "R_target": round(R_tgt, 4),
-                "n_T_used": len(valid),
-                "T_star_M_tokens": round(Tstar_M, 4) if np.isfinite(Tstar_M) else "no_crossover",
-                "bracketed_by_M": bracketing,
-                "slope": round(float(slope), 4),
-                "direction": "decreasing" if slope < 0 else "increasing",
-            })
-    write_tsv(RES / "group_size_iter47_diff_Tstar_v2.tsv",
-              ["bin", "R_target", "n_T_used", "T_star_M_tokens",
-               "bracketed_by_M", "slope", "direction"], rows)
+            bracketing = next(
+                (
+                    f"[{valid[i][0] / 1e6:.1f}, {valid[i + 1][0] / 1e6:.1f}]"
+                    for i in range(len(R_v) - 1)
+                    if ((R_v[i] - R_tgt) * (R_v[i + 1] - R_tgt)) <= 0
+                ),
+                "outside",
+            )
+            rows.append(
+                {
+                    "bin": b,
+                    "R_target": round(R_tgt, 4),
+                    "n_T_used": len(valid),
+                    "T_star_M_tokens": round(Tstar_M, 4)
+                    if np.isfinite(Tstar_M)
+                    else "no_crossover",
+                    "bracketed_by_M": bracketing,
+                    "slope": round(float(slope), 4),
+                    "direction": "decreasing" if slope < 0 else "increasing",
+                }
+            )
+    write_tsv(
+        RES / "group_size_iter47_diff_Tstar_v2.tsv",
+        ["bin", "R_target", "n_T_used", "T_star_M_tokens", "bracketed_by_M", "slope", "direction"],
+        rows,
+    )
     return rows
 
 
-def main_summary(crit_rows: list[dict], mono_rows: list[dict],
-                  diff_rows: list[dict]) -> list[dict]:
+def main_summary(crit_rows: list[dict], mono_rows: list[dict], diff_rows: list[dict]) -> list[dict]:
     rows = []
 
     def _g(r, k):
@@ -375,19 +446,21 @@ def main_summary(crit_rows: list[dict], mono_rows: list[dict],
 
     # Headline: T* (G_a, R=0.976).
     for G in [4, 8, 16, 32]:
-        rows.append({"metric": f"T_star_M_tokens_G{G}_at_R0.976",
-                      "value": _g(G, "T_star_M_tokens")})
+        rows.append(
+            {"metric": f"T_star_M_tokens_G{G}_at_R0.976", "value": _g(G, "T_star_M_tokens")}
+        )
 
     # All T* entries.
     for r in crit_rows:
-        rows.append({"metric": f"Tstar_G{r['G_a']}_R{r['R_target']}_M",
-                      "value": r["T_star_M_tokens"]})
+        rows.append(
+            {"metric": f"Tstar_G{r['G_a']}_R{r['R_target']}_M", "value": r["T_star_M_tokens"]}
+        )
 
     # Monotonicity headline: how many Ga have tau < 0 with CI excluding 0?
-    monotone_dec = sum(1 for r in mono_rows
-                        if r["direction"] == "decreasing" and r["monotone"] == "yes")
-    rows.append({"metric": "n_Ga_monotone_decreasing_CI_excludes_0",
-                  "value": monotone_dec})
+    monotone_dec = sum(
+        1 for r in mono_rows if r["direction"] == "decreasing" and r["monotone"] == "yes"
+    )
+    rows.append({"metric": "n_Ga_monotone_decreasing_CI_excludes_0", "value": monotone_dec})
 
     # Per-bin T* headline: which bin has the longest Wu 97.6% survival?
     bins_T = {r["bin"]: r["T_star_M_tokens"] for r in diff_rows if r["R_target"] == 0.976}
@@ -395,8 +468,12 @@ def main_summary(crit_rows: list[dict], mono_rows: list[dict],
         rows.append({"metric": f"T_star_bin{b}_R0.976_M", "value": v})
 
     # Wu claim operational verdict: at what ratio (T / T*) does Wu break?
-    rows.append({"metric": "wu_claim_operational_verdict",
-                  "value": f"Exploratory grid summary: {len(crit_rows)} threshold rows, {len(diff_rows)} stratum rows; no universal retention claim inferred."})
+    rows.append(
+        {
+            "metric": "wu_claim_operational_verdict",
+            "value": f"Exploratory grid summary: {len(crit_rows)} threshold rows, {len(diff_rows)} stratum rows; no universal retention claim inferred.",
+        }
+    )
 
     # Monotonicity direction counts.
     n_inc = sum(1 for r in mono_rows if r["direction"] == "increasing")
@@ -404,22 +481,25 @@ def main_summary(crit_rows: list[dict], mono_rows: list[dict],
     rows.append({"metric": "n_Ga_increasing_tau", "value": n_inc})
     rows.append({"metric": "n_Ga_decreasing_tau", "value": n_dec})
 
-    write_tsv(RES / "group_size_iter47_summary_v2.tsv",
-              ["metric", "value"], rows)
+    write_tsv(RES / "group_size_iter47_summary_v2.tsv", ["metric", "value"], rows)
     return rows
 
 
 def main() -> None:
     raw = load_isotok()
     cells = retention_per_cell(raw)
-    print(f"Loaded {len(cells)} (T, G) cells; {len({c['T'] for c in cells})} budgets x "
-          f"{len({c['G'] for c in cells})} G values.")
+    print(
+        f"Loaded {len(cells)} (T, G) cells; {len({c['T'] for c in cells})} budgets x "
+        f"{len({c['G'] for c in cells})} G values."
+    )
     crit_rows = main_critical_T(cells)
     mono_rows = main_monotonicity(cells)
     diff_rows = main_diff_Tstar(cells)
     sum_rows = main_summary(crit_rows, mono_rows, diff_rows)
-    print(f"Wrote {len(crit_rows)} critical-T rows, {len(mono_rows)} monotonicity rows, "
-          f"{len(diff_rows)} per-bin T* rows, {len(sum_rows)} summary rows.")
+    print(
+        f"Wrote {len(crit_rows)} critical-T rows, {len(mono_rows)} monotonicity rows, "
+        f"{len(diff_rows)} per-bin T* rows, {len(sum_rows)} summary rows."
+    )
 
 
 if __name__ == "__main__":

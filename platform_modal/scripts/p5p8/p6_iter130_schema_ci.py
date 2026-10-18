@@ -2,15 +2,18 @@
 """Review17-v2 canonical JSON Schema and finite-ordered-interval audit.
 Empty inputs and invalid records fail the CLI. Completeness badges do not reward
 significance counts and are not measures of scientific evidence quality."""
+
 from __future__ import annotations
 import json
 from pathlib import Path
 
 import sys
 import jsonschema
+
 sys.path.append(str(Path(__file__).resolve().parents[1]))
 from _paths import REPO_ROOT
 from review17_contract import validate_interval
+
 ROOT = REPO_ROOT
 ENTRIES = ROOT / "platform_hybrid/registry/entries"
 SCHEMA = ROOT / "platform_hybrid/registry/schema.json"
@@ -20,8 +23,13 @@ OUT_DIR = ROOT / "platform_hybrid/experiments/results/p5p8/review17_v2"
 REQ_STACK = ["record_type", "id", "label_claimed", "framework", "provenance", "min_report"]
 REQ_DELTA = ["record_type", "id", "name", "base", "deltas", "citation"]
 MIN_REPORT_ITEMS = [
-    "loss_form", "reference_kl", "sampler_backend", "telemetry",
-    "group_size_schedule", "heldout_split", "decontamination",
+    "loss_form",
+    "reference_kl",
+    "sampler_backend",
+    "telemetry",
+    "group_size_schedule",
+    "heldout_split",
+    "decontamination",
 ]
 MEASURED_DERIVED_REQD = ["metric", "panel", "base", "delta", "source"]
 # The 9 delta entries the iter-128 audit found with stale method=point_no_perseed_sd
@@ -82,9 +90,15 @@ def measured_health(rec):
     """Return dict: n_rows, n_sig, n_zero_ci, median_n, max_abs_delta,
     n_stale_method, n_point_zero_width, n_panels, n_metrics."""
     out = {
-        "n_rows": 0, "n_sig": 0, "n_zero_ci": 0, "median_n": 0,
-        "max_abs_delta": 0.0, "n_stale_method": 0, "n_point_zero_width": 0,
-        "n_panels": 0, "n_metrics": 0,
+        "n_rows": 0,
+        "n_sig": 0,
+        "n_zero_ci": 0,
+        "median_n": 0,
+        "max_abs_delta": 0.0,
+        "n_stale_method": 0,
+        "n_point_zero_width": 0,
+        "n_panels": 0,
+        "n_metrics": 0,
     }
     rows = rec.get("measured") or []
     if not rows:
@@ -108,7 +122,11 @@ def measured_health(rec):
         d = r.get("delta")
         if isinstance(d, (int, float)):
             abs_d.append(abs(d))
-        cm = (r.get("ci_method") or {}).get("method") if isinstance(r.get("ci_method"), dict) else None
+        cm = (
+            (r.get("ci_method") or {}).get("method")
+            if isinstance(r.get("ci_method"), dict)
+            else None
+        )
         if isinstance(cm, str) and cm in STALE_METHOD_VALUES:
             out["n_stale_method"] += 1
         if r.get("panel"):
@@ -137,10 +155,20 @@ def process(entry_path):
     rec_id = entry_path.stem
     row = {
         "entry_id": rec_id,
-        "parse_ok": 0, "schema_ok": 0, "badge": "?", "err": "",
-        "n_measured": 0, "n_significant": 0, "n_stale_method": 0,
-        "n_panels": 0, "n_metrics": 0, "median_n": 0, "max_abs_delta": 0.0,
-        "label_or_name": "", "framework": "", "openness": "",
+        "parse_ok": 0,
+        "schema_ok": 0,
+        "badge": "?",
+        "err": "",
+        "n_measured": 0,
+        "n_significant": 0,
+        "n_stale_method": 0,
+        "n_panels": 0,
+        "n_metrics": 0,
+        "median_n": 0,
+        "max_abs_delta": 0.0,
+        "label_or_name": "",
+        "framework": "",
+        "openness": "",
     }
     try:
         rec = json.loads(entry_path.read_text())
@@ -171,7 +199,7 @@ def process(entry_path):
         return row
     row["schema_ok"] = 1 if not errs else 0
     h = measured_health(rec)
-    for k, v in h.items():
+    for k, _v in h.items():
         row[f"n_{k}"] if False else None  # silence
     row["n_measured"] = h["n_rows"]
     row["n_significant"] = h["n_sig"]
@@ -190,10 +218,23 @@ def main():
     for p in sorted(ENTRIES.glob("*.json")):
         rows.append(process(p))
     # write tsv
-    cols = ["entry_id", "parse_ok", "schema_ok", "badge", "err",
-            "n_measured", "n_significant", "n_stale_method",
-            "n_panels", "n_metrics", "median_n", "max_abs_delta",
-            "label_or_name", "framework", "openness"]
+    cols = [
+        "entry_id",
+        "parse_ok",
+        "schema_ok",
+        "badge",
+        "err",
+        "n_measured",
+        "n_significant",
+        "n_stale_method",
+        "n_panels",
+        "n_metrics",
+        "median_n",
+        "max_abs_delta",
+        "label_or_name",
+        "framework",
+        "openness",
+    ]
     with (OUT_DIR / "p6_iter130_schema_ci.tsv").open("w") as f:
         f.write("\t".join(cols) + "\n")
         for r in rows:
@@ -243,12 +284,16 @@ def main():
     with (OUT_DIR / "p6_iter130_schema_ci_patch_plan.tsv").open("w") as f:
         f.write("entry_id\tn_stale_method\tn_measured\taction\n")
         for r in patch_rows:
-            f.write(f"{r['entry_id']}\t{r['n_stale_method']}\t{r['n_measured']}\t"
-                    f"recompute paired-step bootstrap per iter-128; "
-                    f"swap ci_method to bootstrap_paired_5seed\n")
-    print(f"iter-130: validated {len(rows)} entries; parse_ok={parse_ok}/{len(rows)}; "
-          f"schema_ok={schema_ok}/{len(rows)}; badges={badges}; "
-          f"stale_method_rows={n_total_stale}")
+            f.write(
+                f"{r['entry_id']}\t{r['n_stale_method']}\t{r['n_measured']}\t"
+                f"recompute paired-step bootstrap per iter-128; "
+                f"swap ci_method to bootstrap_paired_5seed\n"
+            )
+    print(
+        f"iter-130: validated {len(rows)} entries; parse_ok={parse_ok}/{len(rows)}; "
+        f"schema_ok={schema_ok}/{len(rows)}; badges={badges}; "
+        f"stale_method_rows={n_total_stale}"
+    )
 
     return 0 if rows and schema_ok == len(rows) else 1
 

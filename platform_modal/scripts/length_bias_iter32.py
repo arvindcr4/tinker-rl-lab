@@ -25,19 +25,18 @@ summary tests which hypothesis wins across seeds.
 Sister metric: length-stability CV_L = std(L)/mean(L) per run, as an
 operational "Dr.GRPO effect on length variance" number.
 """
+
 from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Dict, List, Tuple
 
 import numpy as np
 import pandas as pd
 import matplotlib
 
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt
-from scipy.stats import spearmanr, pearsonr, permutation_test
+from scipy.stats import spearmanr, pearsonr
 
 ROOT = Path(__file__).resolve().parents[1]
 RESULTS = ROOT / "experiments" / "results"
@@ -65,8 +64,9 @@ def _load_step_log(path: Path):
         else:
             task = exp
         for s in r.get("step_log", []):
-            out.append((task, algo, seed, s["step"],
-                        s["mean_comp_len"], s["mean_reward"], s["zvf"]))
+            out.append(
+                (task, algo, seed, s["step"], s["mean_comp_len"], s["mean_reward"], s["zvf"])
+            )
     return out
 
 
@@ -225,7 +225,11 @@ def main():
     print(drift.to_string(index=False))
     print()
     print("=== dominant_lag distribution ===")
-    print(profile.groupby(["task", "algo"])["dominant_lag"].agg(lambda x: dict(x.value_counts())).to_string())
+    print(
+        profile.groupby(["task", "algo"])["dominant_lag"]
+        .agg(lambda x: dict(x.value_counts()))
+        .to_string()
+    )
     return profile, summary, drift
 
 

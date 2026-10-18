@@ -27,6 +27,7 @@ Falsifiable headline H2 -- the three invariances share the same
 
 Stdlib only.  <= 200 lines.
 """
+
 from __future__ import annotations
 
 import csv
@@ -35,8 +36,10 @@ import math
 from pathlib import Path
 
 import sys
+
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
+from _paths import REPO_ROOT
+
 ROOT = REPO_ROOT
 RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8"
 RES.mkdir(parents=True, exist_ok=True)
@@ -46,11 +49,12 @@ def read_tsv(path):
     with path.open() as f:
         rdr = csv.reader(f, delimiter="\t")
         header = next(rdr)
-        return [dict(zip(header, row)) for row in rdr]
+        return [dict(zip(header, row, strict=False)) for row in rdr]
 
 
 def main():
     from review22_contract import require_independent_unit_contract
+
     require_independent_unit_contract()
     # ---- P7 invariance (cross-method tau-transfer) ----
     p7_corr = read_tsv(RES / "p7_iter107b_curve_correlation.tsv")
@@ -64,13 +68,19 @@ def main():
         z = 0.5 * math.log((1 + r) / (1 - r))
         z_lo = 0.5 * math.log((1 + lo) / (1 - lo))
         z_hi = 0.5 * math.log((1 + hi) / (1 - hi))
-        p7_pairs.append({
-            "pair": f"{row['method_a']}-{row['method_b']}",
-            "r_savings": r, "ci_lo": lo, "ci_hi": hi,
-            "z_fisher": z, "z_lo": z_lo, "z_hi": z_hi,
-            "ci_excludes_zero": bool(int(row["ci_excludes_zero"])),
-            "n_boot": int(row["n_boot"]),
-        })
+        p7_pairs.append(
+            {
+                "pair": f"{row['method_a']}-{row['method_b']}",
+                "r_savings": r,
+                "ci_lo": lo,
+                "ci_hi": hi,
+                "z_fisher": z,
+                "z_lo": z_lo,
+                "z_hi": z_hi,
+                "ci_excludes_zero": bool(int(row["ci_excludes_zero"])),
+                "n_boot": int(row["n_boot"]),
+            }
+        )
 
     # ---- P8 invariance (gradient-band seed stability) ----
     p8_seed = read_tsv(RES / "p8_iter100_score_gradient_seed_stability.tsv")
@@ -83,11 +93,15 @@ def main():
         # Use SE on the order of the CI half-width (rough but consistent)
         se = (hi - lo) / (2 * 1.96) if hi > lo else 1e-6
         z = dr / se if se > 0 else 0.0
-        p8_pairs.append({
-            "pair": f"{row['backbone']}-{row['rule']}",
-            "delta_recall": dr, "ci_lo": lo, "ci_hi": hi,
-            "z_standardized": z,
-        })
+        p8_pairs.append(
+            {
+                "pair": f"{row['backbone']}-{row['rule']}",
+                "delta_recall": dr,
+                "ci_lo": lo,
+                "ci_hi": hi,
+                "z_standardized": z,
+            }
+        )
 
     # ---- P5 invariance (algorithm-axis eta^2(per-step zvf)) ----
     # iter-89 row 106 headline H1: eta^2(per-step zvf) = 0.045
@@ -128,25 +142,41 @@ def main():
     z_summary = []
     for p in p7_pairs:
         z_below_1 = (1.0 - p["r_savings"]) / max(1e-6, (1.0 - p["ci_lo"]))
-        z_summary.append({
-            "source": "P7", "axis": "method", "pair": p["pair"],
-            "z_below_perfect_invariance": z_below_1,
-            "ci_excludes_perfect": (p["ci_hi"] < 1.0),
-        })
+        z_summary.append(
+            {
+                "source": "P7",
+                "axis": "method",
+                "pair": p["pair"],
+                "z_below_perfect_invariance": z_below_1,
+                "ci_excludes_perfect": (p["ci_hi"] < 1.0),
+            }
+        )
     for p in p8_pairs:
-        z_summary.append({
-            "source": "P8", "axis": "seed", "pair": p["pair"],
-            "z_below_perfect_invariance": abs(p["delta_recall"]) / max(1e-6, abs(p["ci_lo"]) if p["ci_lo"] != 0 else 0.02),
-            "ci_excludes_perfect": (p["ci_lo"] > 0 or p["ci_hi"] < 0),
-        })
+        z_summary.append(
+            {
+                "source": "P8",
+                "axis": "seed",
+                "pair": p["pair"],
+                "z_below_perfect_invariance": abs(p["delta_recall"])
+                / max(1e-6, abs(p["ci_lo"]) if p["ci_lo"] != 0 else 0.02),
+                "ci_excludes_perfect": (p["ci_lo"] > 0 or p["ci_hi"] < 0),
+            }
+        )
     # P5 z_below_perfect_invariance: (1 - eta2) / (1 - eta2_ci_lo)
-    for k, v in [("n2_algoperstep", p5_invariance["n2_algoperstep"]),
-                 ("n10_seedrisk", p5_invariance["n10_seedrisk"])]:
-        z_summary.append({
-            "source": "P5", "axis": v["axis"], "pair": k,
-            "z_below_perfect_invariance": (1.0 - v["eta2_point"]) / max(1e-6, (1.0 - v["ci_lo"])),
-            "ci_excludes_perfect": (v["ci_hi"] < 1.0),
-        })
+    for k, v in [
+        ("n2_algoperstep", p5_invariance["n2_algoperstep"]),
+        ("n10_seedrisk", p5_invariance["n10_seedrisk"]),
+    ]:
+        z_summary.append(
+            {
+                "source": "P5",
+                "axis": v["axis"],
+                "pair": k,
+                "z_below_perfect_invariance": (1.0 - v["eta2_point"])
+                / max(1e-6, (1.0 - v["ci_lo"])),
+                "ci_excludes_perfect": (v["ci_hi"] < 1.0),
+            }
+        )
 
     # ---- Invariance-magnitude scoreboard (H2) ----
     # For each invariance, compute "invariance magnitude" = 1 - |effect size|,
@@ -198,25 +228,37 @@ def main():
         "n_invariance_axes": len(inv_mag_vals),
         "min_invariance_magnitude": min(v["invariance_magnitude"] for v in inv_mag_vals),
         "max_invariance_magnitude": max(v["invariance_magnitude"] for v in inv_mag_vals),
-        "mean_invariance_magnitude": sum(v["invariance_magnitude"] for v in inv_mag_vals) / len(inv_mag_vals),
+        "mean_invariance_magnitude": sum(v["invariance_magnitude"] for v in inv_mag_vals)
+        / len(inv_mag_vals),
         "interpretation": "all 6 invariance axes have magnitude >= 0.94; mean 0.989; the operational rules are 94-99% invariant to the perturbation axis",
     }
 
     # ---- Write artifacts ----
-    inv_keys = ["P5_n2_algoperstep", "P5_n10_seedrisk", "P7_cross_method_min",
-                "P7_cross_method_mean", "P8_gradientband_seed", "P8_absolute_band_seed"]
+    inv_keys = [
+        "P5_n2_algoperstep",
+        "P5_n10_seedrisk",
+        "P7_cross_method_min",
+        "P7_cross_method_mean",
+        "P8_gradientband_seed",
+        "P8_absolute_band_seed",
+    ]
     inv_rows = []
     for k in inv_keys:
         v = inv_mag[k]
-        inv_rows.append({
-            "invariance_axis": k, "invariance_magnitude": v["invariance_magnitude"],
-            "interpretation": v["interpretation"],
-        })
+        inv_rows.append(
+            {
+                "invariance_axis": k,
+                "invariance_magnitude": v["invariance_magnitude"],
+                "interpretation": v["interpretation"],
+            }
+        )
     with (RES / "synth_iter108_invariance_magnitude.tsv").open("w") as f:
         w = csv.writer(f, delimiter="\t")
         w.writerow(["invariance_axis", "invariance_magnitude", "interpretation"])
         for r in inv_rows:
-            w.writerow([r["invariance_axis"], f"{r['invariance_magnitude']:.6f}", r["interpretation"]])
+            w.writerow(
+                [r["invariance_axis"], f"{r['invariance_magnitude']:.6f}", r["interpretation"]]
+            )
 
     z_keys = ["source", "axis", "pair", "z_below_perfect_invariance", "ci_excludes_perfect"]
     with (RES / "synth_iter108_z_below_perfect.tsv").open("w") as f:
@@ -244,8 +286,10 @@ def main():
         ),
     }
     (RES / "synth_iter108_invariance_summary.json").write_text(json.dumps(summary, indent=2))
-    print(f"# WROTE synth_iter108_invariance: {len(inv_rows)} invariance rows, "
-          f"{len(z_summary)} z-summary rows, 1 summary json")
+    print(
+        f"# WROTE synth_iter108_invariance: {len(inv_rows)} invariance rows, "
+        f"{len(z_summary)} z-summary rows, 1 summary json"
+    )
     print(json.dumps({"H1": h1, "H2": h2}, indent=2))
 
 

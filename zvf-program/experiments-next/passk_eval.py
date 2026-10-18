@@ -82,10 +82,7 @@ def summarize_pass_at_k(
         raise ValueError("cannot summarize pass@k without per-problem counts")
     if any(count < 0 or count > n for count in counts):
         raise ValueError("a per-problem correct count falls outside [0, n]")
-    point = {
-        str(k): sum(pass_at_k(n, count, k) for count in counts) / len(counts)
-        for k in ks
-    }
+    point = {str(k): sum(pass_at_k(n, count, k) for count in counts) / len(counts) for k in ks}
     rng = random.Random(seed)
     bootstrap = {str(k): [] for k in ks}
     for _ in range(n_bootstrap):
@@ -110,13 +107,14 @@ def summarize_pass_at_k(
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--model", default=None)
-    ap.add_argument("--sampler-path", default=None,
-                    help="tinker:// weights of a post-RL checkpoint "
-                         "(default: base model)")
+    ap.add_argument(
+        "--sampler-path",
+        default=None,
+        help="tinker:// weights of a post-RL checkpoint (default: base model)",
+    )
     ap.add_argument("--tag", default=None)
     ap.add_argument("--problems", type=int, default=200)
-    ap.add_argument("--n", type=int, default=32,
-                    help="completions per problem (>= max k)")
+    ap.add_argument("--n", type=int, default=32, help="completions per problem (>= max k)")
     ap.add_argument("--ks", type=int, nargs="+", default=[1, 8, 32])
     ap.add_argument("--split", default="test", choices=["test", "train"])
     ap.add_argument("--seed", type=int, default=42)
@@ -127,12 +125,21 @@ def main() -> None:
     ap.add_argument("--lora-rank", type=int, default=4)
     ap.add_argument("--bootstrap", type=int, default=2_000)
     ap.add_argument("--bootstrap-seed", type=int, default=20260711)
-    ap.add_argument("--from-result", type=Path, default=None,
-                    help="offline: add clustered CIs to an existing pass@k result")
-    ap.add_argument("--out", type=Path, default=None,
-                    help="output for --from-result (never overwrites the input)")
-    ap.add_argument("--resume", action="store_true",
-                    help="resume a compatible partial online evaluation")
+    ap.add_argument(
+        "--from-result",
+        type=Path,
+        default=None,
+        help="offline: add clustered CIs to an existing pass@k result",
+    )
+    ap.add_argument(
+        "--out",
+        type=Path,
+        default=None,
+        help="output for --from-result (never overwrites the input)",
+    )
+    ap.add_argument(
+        "--resume", action="store_true", help="resume a compatible partial online evaluation"
+    )
     ap.add_argument("--max-retries", type=int, default=3)
     ap.add_argument("--retry-backoff-seconds", type=float, default=2.0)
     ap.add_argument("--dry-run", action="store_true")
@@ -197,9 +204,12 @@ def main() -> None:
     )
     out_path = RESULTS_DIR / f"passk_{tag}.json"
     est_tokens = args.problems * args.n * 300
-    print(f"[passk:{tag}] plan: {args.problems} problems x {args.n} samples, "
-          f"T={args.temperature}, k={args.ks}, "
-          f"~{est_tokens/1e6:.1f}M output tokens", flush=True)
+    print(
+        f"[passk:{tag}] plan: {args.problems} problems x {args.n} samples, "
+        f"T={args.temperature}, k={args.ks}, "
+        f"~{est_tokens / 1e6:.1f}M output tokens",
+        flush=True,
+    )
     if args.dry_run:
         print(f"[passk:{tag}] DRY RUN — nothing sampled.", flush=True)
         return
@@ -210,9 +220,7 @@ def main() -> None:
         if previous.get("status") == "complete":
             sys.exit(f"[passk:{tag}] result already complete")
         if not args.resume:
-            sys.exit(
-                f"[passk:{tag}] partial result exists; pass --resume or use a new --tag"
-            )
+            sys.exit(f"[passk:{tag}] partial result exists; pass --resume or use a new --tag")
 
     load_repo_env()
     if not os.environ.get("TINKER_API_KEY"):
@@ -222,8 +230,7 @@ def main() -> None:
 
     examples = load_gsm8k(args.split, args.problems, args.seed)
     prompt_fingerprints = [
-        hashlib.sha256(prompt.encode("utf-8")).hexdigest()[:16]
-        for prompt, _ in examples
+        hashlib.sha256(prompt.encode("utf-8")).hexdigest()[:16] for prompt, _ in examples
     ]
     if previous is not None:
         expected = {
@@ -260,25 +267,27 @@ def main() -> None:
         counts = []
 
     result: dict = previous or {}
-    result.update({
-        "kind": "passk_eval",
-        "status": "started",
-        "tag": tag,
-        "model": args.model,
-        "which": which,
-        "split": args.split,
-        "n_problems": len(examples),
-        "n_per_problem": args.n,
-        "ks": args.ks,
-        "temperature": args.temperature,
-        "top_p": args.top_p,
-        "max_tokens": args.max_tokens,
-        "max_prompt_tokens": args.max_prompt_tokens,
-        "seed": args.seed,
-        "requested_sampler_path": args.sampler_path,
-        "prompt_fingerprints": prompt_fingerprints,
-        "per_problem_c": counts,
-    })
+    result.update(
+        {
+            "kind": "passk_eval",
+            "status": "started",
+            "tag": tag,
+            "model": args.model,
+            "which": which,
+            "split": args.split,
+            "n_problems": len(examples),
+            "n_per_problem": args.n,
+            "ks": args.ks,
+            "temperature": args.temperature,
+            "top_p": args.top_p,
+            "max_tokens": args.max_tokens,
+            "max_prompt_tokens": args.max_prompt_tokens,
+            "seed": args.seed,
+            "requested_sampler_path": args.sampler_path,
+            "prompt_fingerprints": prompt_fingerprints,
+            "per_problem_c": counts,
+        }
+    )
     result.setdefault("started_at", utc_now())
     result.setdefault("failure_events", [])
     result.setdefault("retry_count", 0)
@@ -286,8 +295,7 @@ def main() -> None:
         result["resumed_at"] = utc_now()
     write_result(out_path, result)
 
-    sc, tok, sampler_used = make_sampler(args.model, args.sampler_path,
-                                         args.lora_rank)
+    sc, tok, sampler_used = make_sampler(args.model, args.sampler_path, args.lora_rank)
     result["sampler_path"] = sampler_used
     t0 = time.time()
     for i, (prompt, answer) in enumerate(examples):
@@ -332,7 +340,7 @@ def main() -> None:
                 if attempt >= args.max_retries:
                     raise
                 result["retry_count"] += 1
-                delay = args.retry_backoff_seconds * (2 ** attempt)
+                delay = args.retry_backoff_seconds * (2**attempt)
                 print(
                     f"[passk:{tag}] problem {i} attempt {attempt + 1} failed; "
                     f"retrying in {delay:.1f}s",
@@ -345,14 +353,12 @@ def main() -> None:
                 f"{0 if sampled is None else len(sampled.sequences)}"
             )
         c = sum(
-            int(reward_fn(tok.decode(list(seq.tokens),
-                                     skip_special_tokens=True), answer))
+            int(reward_fn(tok.decode(list(seq.tokens), skip_special_tokens=True), answer))
             for seq in sampled.sequences
         )
         result["per_problem_c"].append(c)
         if (i + 1) % 25 == 0:
-            print(f"[passk:{tag}] {i+1}/{len(examples)} "
-                  f"({time.time()-t0:.0f}s)", flush=True)
+            print(f"[passk:{tag}] {i + 1}/{len(examples)} ({time.time() - t0:.0f}s)", flush=True)
             write_result(out_path, result)
 
     cs = result["per_problem_c"]
@@ -363,9 +369,7 @@ def main() -> None:
         n_bootstrap=args.bootstrap,
         seed=args.bootstrap_seed,
     )
-    result["pass_at_k"] = {
-        key: round(value, 4) for key, value in point.items()
-    }
+    result["pass_at_k"] = {key: round(value, 4) for key, value in point.items()}
     result["pass_at_k_95_ci"] = intervals
     # MIN-REPORT-RL item-8 block, ready to paste into the paper appendix.
     result["min_report_rl_item8"] = {
@@ -387,8 +391,7 @@ def main() -> None:
     result["failure_count"] = len(result["failure_events"])
     result["last_error"] = None
     write_result(out_path, result)
-    print(f"[passk:{tag}] pass@k = {result['pass_at_k']} -> {out_path}",
-          flush=True)
+    print(f"[passk:{tag}] pass@k = {result['pass_at_k']} -> {out_path}", flush=True)
 
 
 if __name__ == "__main__":

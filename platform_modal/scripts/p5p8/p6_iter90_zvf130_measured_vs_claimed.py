@@ -19,12 +19,11 @@ Outputs:
   - platform_hybrid/experiments/results/p5p8/p6_iter90_zvf130_measured_audit.json (machine-readable)
   - registry/entries/zvf130_<method>.json  (PATCHED: outcomes.measured_block_v2 populated)
 """
+
 import json
 import math
-import os
 import pathlib
 import random
-import statistics
 from itertools import combinations
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent.parent
@@ -56,7 +55,9 @@ def load_risk_tsv():
                 continue
             rows[method] = {
                 "zvf_risk_mean": float(parts[idx["zvf_risk_mean"]]),
-                "zvf_risk_sd": float(parts[idx["zvf_risk_sd"]]) if parts[idx["zvf_risk_sd"]] else None,
+                "zvf_risk_sd": float(parts[idx["zvf_risk_sd"]])
+                if parts[idx["zvf_risk_sd"]]
+                else None,
                 "mag_mean": float(parts[idx["mag_mean"]]),
                 "csd_mean": float(parts[idx["csd_mean"]]),
                 "drift_mean": float(parts[idx["drift_mean"]]),
@@ -145,14 +146,16 @@ def main():
     h3_pairs = []
     for a, b in combinations(methods, 2):
         d = paired_delta(a, baseline=b)
-        h3_pairs.append({
-            "method_a": a,
-            "method_b": b,
-            "delta_mean": d["delta_mean"],
-            "delta_lo": d["delta_lo"],
-            "delta_hi": d["delta_hi"],
-            "sig": d["sig"],
-        })
+        h3_pairs.append(
+            {
+                "method_a": a,
+                "method_b": b,
+                "delta_mean": d["delta_mean"],
+                "delta_lo": d["delta_lo"],
+                "delta_hi": d["delta_hi"],
+                "sig": d["sig"],
+            }
+        )
 
     # H4: claim count vs measured risk
     claim_counts = {m: len(claim_components(entries, m)) for m in methods}
@@ -205,31 +208,48 @@ def main():
     # per-method measured audit TSV
     rows = []
     for m in methods:
-        d = h2_per_method.get(m, {"delta_mean": 0.0, "delta_lo": 0.0, "delta_hi": 0.0, "sig": False})
-        rows.append({
-            "method": m,
-            "zvf_risk_mean": f"{risk[m]['zvf_risk_mean']:.6f}",
-            "zvf_risk_sd": f"{risk[m]['zvf_risk_sd']:.6f}" if risk[m]['zvf_risk_sd'] else "0.000000",
-            "n_seeds": risk[m]['n_seeds'],
-            "failure_rate": f"{risk[m]['failure_rate']:.4f}",
-            "delta_vs_grpo_mean": f"{d['delta_mean']:.6f}",
-            "delta_vs_grpo_lo": f"{d['delta_lo']:.6f}",
-            "delta_vs_grpo_hi": f"{d['delta_hi']:.6f}",
-            "delta_vs_grpo_sig": "1" if d["sig"] else "0",
-            "claim_delta_count": claim_counts[m],
-            "claim_components": ";".join(claim_components(entries, m)) or "(none)",
-            "zvf130_entry_present": "1" if f"zvf130_{m}" in entries else "0",
-            "registry_outcomes_zvf_risk_mean_populated": "1" if (
-                f"zvf130_{m}" in entries
-                and entries[f"zvf130_{m}"].get("outcomes", {}).get("zvf_risk_mean") is not None
-            ) else "0",
-        })
+        d = h2_per_method.get(
+            m, {"delta_mean": 0.0, "delta_lo": 0.0, "delta_hi": 0.0, "sig": False}
+        )
+        rows.append(
+            {
+                "method": m,
+                "zvf_risk_mean": f"{risk[m]['zvf_risk_mean']:.6f}",
+                "zvf_risk_sd": f"{risk[m]['zvf_risk_sd']:.6f}"
+                if risk[m]["zvf_risk_sd"]
+                else "0.000000",
+                "n_seeds": risk[m]["n_seeds"],
+                "failure_rate": f"{risk[m]['failure_rate']:.4f}",
+                "delta_vs_grpo_mean": f"{d['delta_mean']:.6f}",
+                "delta_vs_grpo_lo": f"{d['delta_lo']:.6f}",
+                "delta_vs_grpo_hi": f"{d['delta_hi']:.6f}",
+                "delta_vs_grpo_sig": "1" if d["sig"] else "0",
+                "claim_delta_count": claim_counts[m],
+                "claim_components": ";".join(claim_components(entries, m)) or "(none)",
+                "zvf130_entry_present": "1" if f"zvf130_{m}" in entries else "0",
+                "registry_outcomes_zvf_risk_mean_populated": "1"
+                if (
+                    f"zvf130_{m}" in entries
+                    and entries[f"zvf130_{m}"].get("outcomes", {}).get("zvf_risk_mean") is not None
+                )
+                else "0",
+            }
+        )
 
     cols = [
-        "method", "zvf_risk_mean", "zvf_risk_sd", "n_seeds", "failure_rate",
-        "delta_vs_grpo_mean", "delta_vs_grpo_lo", "delta_vs_grpo_hi", "delta_vs_grpo_sig",
-        "claim_delta_count", "claim_components",
-        "zvf130_entry_present", "registry_outcomes_zvf_risk_mean_populated",
+        "method",
+        "zvf_risk_mean",
+        "zvf_risk_sd",
+        "n_seeds",
+        "failure_rate",
+        "delta_vs_grpo_mean",
+        "delta_vs_grpo_lo",
+        "delta_vs_grpo_hi",
+        "delta_vs_grpo_sig",
+        "claim_delta_count",
+        "claim_components",
+        "zvf130_entry_present",
+        "registry_outcomes_zvf_risk_mean_populated",
     ]
     out_tsv = OUT / "p6_iter90_zvf130_measured_audit.tsv"
     with out_tsv.open("w") as f:
@@ -242,13 +262,19 @@ def main():
     with (OUT / "p6_iter90_zvf130_measured_pairs.tsv").open("w") as f:
         f.write("\t".join(pair_cols) + "\n")
         for p in h3_pairs:
-            f.write("\t".join([
-                p["method_a"], p["method_b"],
-                f"{p['delta_mean']:.6f}",
-                f"{p['delta_lo']:.6f}",
-                f"{p['delta_hi']:.6f}",
-                "1" if p["sig"] else "0",
-            ]) + "\n")
+            f.write(
+                "\t".join(
+                    [
+                        p["method_a"],
+                        p["method_b"],
+                        f"{p['delta_mean']:.6f}",
+                        f"{p['delta_lo']:.6f}",
+                        f"{p['delta_hi']:.6f}",
+                        "1" if p["sig"] else "0",
+                    ]
+                )
+                + "\n"
+            )
 
     # claim-vs-measured summary TSV
     with (OUT / "p6_iter90_zvf130_claim_vs_measured.tsv").open("w") as f:
@@ -267,7 +293,7 @@ def main():
         "n_zvf130_with_populated_outcomes": n_populated,
         "h1_gap_pct": round(h1_gap_pct, 2),
         "h1_headline": (
-            f"H1: {n_populated}/{n_zvf130_entries} ({100-h1_gap_pct:.0f}%) zvf130 stack entries have "
+            f"H1: {n_populated}/{n_zvf130_entries} ({100 - h1_gap_pct:.0f}%) zvf130 stack entries have "
             f"outcomes.zvf_risk_mean populated; {h1_gap_pct:.0f}% gap (entries exist, measured values "
             f"never recorded)."
         ),
@@ -277,7 +303,8 @@ def main():
                 "ci_lo": round(h2_per_method[m]["delta_lo"], 6),
                 "ci_hi": round(h2_per_method[m]["delta_hi"], 6),
                 "sig": h2_per_method[m]["sig"],
-            } for m in h2_per_method
+            }
+            for m in h2_per_method
         },
         "h3_n_pairs_sig": sum(1 for p in h3_pairs if p["sig"]),
         "h3_total_pairs": len(h3_pairs),
@@ -306,7 +333,9 @@ def main():
             continue
         e = entries[key]
         e["outcomes"]["zvf_risk_mean"] = round(risk[m]["zvf_risk_mean"], 6)
-        e["outcomes"]["zvf_risk_sd"] = round(risk[m]["zvf_risk_sd"], 6) if risk[m]["zvf_risk_sd"] else None
+        e["outcomes"]["zvf_risk_sd"] = (
+            round(risk[m]["zvf_risk_sd"], 6) if risk[m]["zvf_risk_sd"] else None
+        )
         e["outcomes"]["n_seeds"] = risk[m]["n_seeds"]
         e["outcomes"]["failure_rate"] = round(risk[m]["failure_rate"], 4)
         e["outcomes"]["mag_mean"] = round(risk[m]["mag_mean"], 6)
@@ -328,7 +357,9 @@ def main():
         # also bump coverage: min_report_coverage stays; add measured_coverage refresh
         e["outcomes"]["coverage"]["measured_coverage"] = 1.0
         e["outcomes"]["coverage"]["ci_method_present"] = True
-        e["outcomes"]["coverage"]["audit_source"] = "platform_modal/scripts/p5p8/p6_iter90_zvf130_measured_vs_claimed.py"
+        e["outcomes"]["coverage"]["audit_source"] = (
+            "platform_modal/scripts/p5p8/p6_iter90_zvf130_measured_vs_claimed.py"
+        )
         e["outcomes"]["coverage"]["audit_date"] = "2026-07-05"
         with (REG / f"{key}.json").open("w") as f:
             json.dump(e, f, indent=2)
@@ -343,19 +374,25 @@ def main():
     print(f"n measured methods (5-seed panel): {n}")
     print(f"n zvf130 stack entries:            {n_zvf130_entries}")
     print(f"n entries patched:                 {n_patched}")
-    print(f"H1 gap: {h1_gap_pct:.0f}% of zvf130 entries were missing measured zvf_risk_mean (now patched)")
+    print(
+        f"H1 gap: {h1_gap_pct:.0f}% of zvf130 entries were missing measured zvf_risk_mean (now patched)"
+    )
     print()
     print("Per-method measured delta vs grpo (paired bootstrap, n=5, B={}):".format(B))
     for m in methods:
         d = h2_per_method.get(m)
         if d:
             sig = "SIG" if d["sig"] else "  -"
-            print(f"  {m:10s}  Δ={d['delta_mean']:+.4f}  CI [{d['delta_lo']:+.4f}, {d['delta_hi']:+.4f}]  {sig}  claims={claim_counts[m]}  components={'/'.join(claim_components(entries, m))[:60]}")
+            print(
+                f"  {m:10s}  Δ={d['delta_mean']:+.4f}  CI [{d['delta_lo']:+.4f}, {d['delta_hi']:+.4f}]  {sig}  claims={claim_counts[m]}  components={'/'.join(claim_components(entries, m))[:60]}"
+            )
         else:
             print(f"  {m:10s}  (baseline grpo)")
     print()
     print(f"H3 pairwise matrix: {sum(1 for p in h3_pairs if p['sig'])}/{len(h3_pairs)} pairs SIG")
-    print(f"H4 Spearman(claim_delta_count, zvf_risk_mean) = {rho:+.4f}, CI [{rho_lo:+.4f}, {rho_hi:+.4f}]")
+    print(
+        f"H4 Spearman(claim_delta_count, zvf_risk_mean) = {rho:+.4f}, CI [{rho_lo:+.4f}, {rho_hi:+.4f}]"
+    )
     print(f"H5 methods with zvf130 entry but no measured data: {no_measured or '(none)'}")
     print()
     print(f"Wrote: {out_tsv}")

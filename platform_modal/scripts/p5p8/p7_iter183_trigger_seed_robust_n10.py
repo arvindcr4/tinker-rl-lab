@@ -49,6 +49,7 @@ Outputs:
 
 Stdlib only; deterministic LCG bootstrap B=2000 seed=20260705.
 """
+
 from __future__ import annotations
 import csv
 import json
@@ -60,8 +61,10 @@ from itertools import combinations
 
 import sys
 from pathlib import Path
+
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
+from _paths import REPO_ROOT
+
 WORKTREE = str(REPO_ROOT)
 N10_DIR = os.path.join(WORKTREE, "platform_hybrid/experiments/results/n10_seed_expansion")
 OUT_DIR = os.path.join(WORKTREE, "platform_hybrid/experiments/results/p5p8")
@@ -139,7 +142,7 @@ def main():
     rng = random.Random(SEED)
     panel = load_n10()
     n_steps = len(panel[0]["step_log"])
-    print(f"loaded {len(panel)} seeds × {n_steps} steps = {len(panel)*n_steps} obs")
+    print(f"loaded {len(panel)} seeds × {n_steps} steps = {len(panel) * n_steps} obs")
 
     # Build per-obs fire bit vector
     per_obs = []
@@ -176,16 +179,32 @@ def main():
         for t in TAU_GRID:
             v = fire_matrix[s][t]
             pt, lo, hi, b = bootstrap_ci(v, statistics.mean, rng)
-            per_seed_rate.append({
-                "seed": s, "tau": t, "n_steps": n_steps, "n_fires": sum(v),
-                "rate": pt, "ci_lo": lo, "ci_hi": hi
-            })
+            per_seed_rate.append(
+                {
+                    "seed": s,
+                    "tau": t,
+                    "n_steps": n_steps,
+                    "n_fires": sum(v),
+                    "rate": pt,
+                    "ci_lo": lo,
+                    "ci_hi": hi,
+                }
+            )
     with open(os.path.join(OUT_DIR, "p7_iter183_per_seed_rate.tsv"), "w", newline="") as fh:
         w = csv.writer(fh, delimiter="\t")
         w.writerow(["seed", "tau", "n_steps", "n_fires", "rate", "ci_lo", "ci_hi"])
         for r in per_seed_rate:
-            w.writerow([r["seed"], r["tau"], r["n_steps"], r["n_fires"],
-                        f"{r['rate']:.4f}", f"{r['ci_lo']:.4f}", f"{r['ci_hi']:.4f}"])
+            w.writerow(
+                [
+                    r["seed"],
+                    r["tau"],
+                    r["n_steps"],
+                    r["n_fires"],
+                    f"{r['rate']:.4f}",
+                    f"{r['ci_lo']:.4f}",
+                    f"{r['ci_hi']:.4f}",
+                ]
+            )
     print(f"wrote per_seed_rate.tsv ({len(per_seed_rate)} rows)")
 
     # Cross-seed aggregate + bootstrap CI of cross-seed mean
@@ -205,19 +224,42 @@ def main():
         lo = boots[int(ALPHA / 2 * B)]
         hi = boots[int((1 - ALPHA / 2) * B)]
         cross_sd = statistics.stdev(seed_rates) if len(seed_rates) > 1 else 0.0
-        cross_seed.append({
-            "tau": t, "mean_rate": mean_r, "cross_sd": cross_sd,
-            "cross_ci_lo": lo, "cross_ci_hi": hi,
-            "min_seed_rate": min(seed_rates), "max_seed_rate": max(seed_rates)
-        })
+        cross_seed.append(
+            {
+                "tau": t,
+                "mean_rate": mean_r,
+                "cross_sd": cross_sd,
+                "cross_ci_lo": lo,
+                "cross_ci_hi": hi,
+                "min_seed_rate": min(seed_rates),
+                "max_seed_rate": max(seed_rates),
+            }
+        )
     with open(os.path.join(OUT_DIR, "p7_iter183_cross_seed_ci.tsv"), "w", newline="") as fh:
         w = csv.writer(fh, delimiter="\t")
-        w.writerow(["tau", "mean_rate", "cross_sd", "cross_ci_lo", "cross_ci_hi",
-                    "min_seed_rate", "max_seed_rate"])
+        w.writerow(
+            [
+                "tau",
+                "mean_rate",
+                "cross_sd",
+                "cross_ci_lo",
+                "cross_ci_hi",
+                "min_seed_rate",
+                "max_seed_rate",
+            ]
+        )
         for r in cross_seed:
-            w.writerow([r["tau"], f"{r['mean_rate']:.4f}", f"{r['cross_sd']:.4f}",
-                        f"{r['cross_ci_lo']:.4f}", f"{r['cross_ci_hi']:.4f}",
-                        f"{r['min_seed_rate']:.4f}", f"{r['max_seed_rate']:.4f}"])
+            w.writerow(
+                [
+                    r["tau"],
+                    f"{r['mean_rate']:.4f}",
+                    f"{r['cross_sd']:.4f}",
+                    f"{r['cross_ci_lo']:.4f}",
+                    f"{r['cross_ci_hi']:.4f}",
+                    f"{r['min_seed_rate']:.4f}",
+                    f"{r['max_seed_rate']:.4f}",
+                ]
+            )
     print(f"wrote cross_seed_ci.tsv ({len(cross_seed)} rows)")
 
     # TOST across seed pairs × tau grid
@@ -242,17 +284,34 @@ def main():
             lo = boots[int(ALPHA / 2 * B)]
             hi = boots[int((1 - ALPHA / 2) * B)]
             tost_pass = (lo > -TOST_MARGIN) and (hi < TOST_MARGIN)
-            tost_rows.append({
-                "pair": f"{s1}-{s2}", "tau": t, "r1": r1, "r2": r2, "diff": diff,
-                "ci_lo": lo, "ci_hi": hi, "tost_pass": int(tost_pass)
-            })
+            tost_rows.append(
+                {
+                    "pair": f"{s1}-{s2}",
+                    "tau": t,
+                    "r1": r1,
+                    "r2": r2,
+                    "diff": diff,
+                    "ci_lo": lo,
+                    "ci_hi": hi,
+                    "tost_pass": int(tost_pass),
+                }
+            )
     with open(os.path.join(OUT_DIR, "p7_iter183_tost.tsv"), "w", newline="") as fh:
         w = csv.writer(fh, delimiter="\t")
         w.writerow(["pair", "tau", "r1", "r2", "diff", "ci_lo", "ci_hi", "tost_pass"])
         for r in tost_rows:
-            w.writerow([r["pair"], r["tau"], f"{r['r1']:.4f}", f"{r['r2']:.4f}",
-                        f"{r['diff']:.4f}", f"{r['ci_lo']:.4f}", f"{r['ci_hi']:.4f}",
-                        r["tost_pass"]])
+            w.writerow(
+                [
+                    r["pair"],
+                    r["tau"],
+                    f"{r['r1']:.4f}",
+                    f"{r['r2']:.4f}",
+                    f"{r['diff']:.4f}",
+                    f"{r['ci_lo']:.4f}",
+                    f"{r['ci_hi']:.4f}",
+                    r["tost_pass"],
+                ]
+            )
     print(f"wrote tost.tsv ({len(tost_rows)} rows = {len(pairs)} pairs × {len(TAU_GRID)} taus)")
 
     # Spearman rank correlation of per-step fire vector across seed pairs
@@ -277,7 +336,9 @@ def main():
         for r in spearman_grid_rows:
             w.writerow([r["tau"], r["pair"], f"{r['spearman_rho']:.4f}"])
     mean_spear = statistics.mean([r["spearman_rho"] for r in spearman_rows])
-    print(f"wrote spearman.tsv ({len(spearman_grid_rows)} rows); mean rho at tau=0.65: {mean_spear:.4f}")
+    print(
+        f"wrote spearman.tsv ({len(spearman_grid_rows)} rows); mean rho at tau=0.65: {mean_spear:.4f}"
+    )
 
     # Monotonicity test: per-seed, is firing rate monotone non-increasing in tau?
     monotone_pass = 0
@@ -337,11 +398,17 @@ def main():
     }
     with open(os.path.join(OUT_DIR, "p7_iter183_summary.json"), "w") as fh:
         json.dump(summary, fh, indent=2)
-    print(f"wrote summary.json — H1-H6 verdicts: "
-          f"{int(h1_pass)}{int(h2_pass)}{int(h3_pass)}{int(h4_pass)}{int(h5_pass)}{int(h6_pass)} "
-          f"({summary['n_pass']}/6 PASS)")
-    print(f"  H1 mean_rate(0.55) = {h1['mean_rate']:.4f} [CI {h1['cross_ci_lo']:.4f}, {h1['cross_ci_hi']:.4f}]")
-    print(f"  H2 mean_rate(0.80) = {h2['mean_rate']:.4f} [CI {h2['cross_ci_lo']:.4f}, {h2['cross_ci_hi']:.4f}]")
+    print(
+        f"wrote summary.json — H1-H6 verdicts: "
+        f"{int(h1_pass)}{int(h2_pass)}{int(h3_pass)}{int(h4_pass)}{int(h5_pass)}{int(h6_pass)} "
+        f"({summary['n_pass']}/6 PASS)"
+    )
+    print(
+        f"  H1 mean_rate(0.55) = {h1['mean_rate']:.4f} [CI {h1['cross_ci_lo']:.4f}, {h1['cross_ci_hi']:.4f}]"
+    )
+    print(
+        f"  H2 mean_rate(0.80) = {h2['mean_rate']:.4f} [CI {h2['cross_ci_lo']:.4f}, {h2['cross_ci_hi']:.4f}]"
+    )
     print(f"  H3 monotone seeds = {monotone_pass}/{monotone_total}")
     print(f"  H4 cross_sd(0.70) = {h4['cross_sd']:.4f}")
     print(f"  H5 TOST pass at 0.65 = {sum(r['tost_pass'] for r in h5_rows)}/{len(h5_rows)} pairs")

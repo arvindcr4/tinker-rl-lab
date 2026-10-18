@@ -13,6 +13,7 @@ side-check.
 
 Run:  colab run --gpu T4 --timeout 1800 e4_scaling_law.py
 """
+
 import json, re, random, statistics
 from protocol_stats import finite_pool_summary
 import torch
@@ -20,15 +21,15 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 
 MODEL = "Qwen/Qwen2.5-0.5B-Instruct"
 SEED = 0
-N_PROMPTS = 40        # calibrated prompts kept (p_hat in band)
-N_PILOT = 24          # rollouts to estimate p_hat during calibration
-N_POOL = 64           # rollouts per kept prompt for the scaling law
-N_CANDIDATES = 110    # candidates screened to find in-band prompts
-BAND = (0.4, 0.6)     # target p_hat band (centered on 0.5)
+N_PROMPTS = 40  # calibrated prompts kept (p_hat in band)
+N_PILOT = 24  # rollouts to estimate p_hat during calibration
+N_POOL = 64  # rollouts per kept prompt for the scaling law
+N_CANDIDATES = 110  # candidates screened to find in-band prompts
+BAND = (0.4, 0.6)  # target p_hat band (centered on 0.5)
 KS = [2, 4, 8, 16, 32]
-N_GROUPS = 256        # bootstrap groups per prompt per K
-MAX_NEW = 128         # unchoke reasoning: 24 truncated traces -> no '####' -> spurious p=0
-PREC_PROMPTS = 12     # subset re-generated at fp32 for the precision side-check
+N_GROUPS = 256  # bootstrap groups per prompt per K
+MAX_NEW = 128  # unchoke reasoning: 24 truncated traces -> no '####' -> spurious p=0
+PREC_PROMPTS = 12  # subset re-generated at fp32 for the precision side-check
 DEV = "cuda" if torch.cuda.is_available() else "cpu"
 
 tok = AutoTokenizer.from_pretrained(MODEL)
@@ -38,31 +39,42 @@ tok.padding_side = "left"
 PAD = tok.pad_token_id
 
 FEWSHOT = [
-    {"role": "user", "content": "Compute 3 + 4. Reason briefly, then put the final integer after '####'."},
+    {
+        "role": "user",
+        "content": "Compute 3 + 4. Reason briefly, then put the final integer after '####'.",
+    },
     {"role": "assistant", "content": "3 + 4 = 7.\n#### 7"},
 ]
+
 
 def candidate(rng):
     # mixed digit regimes so p_hat spans low..high; calibration keeps the middle
     r = rng.random()
-    if r < 0.34:            # 2-digit (usually easy -> high p)
+    if r < 0.34:  # 2-digit (usually easy -> high p)
         a, b = rng.randint(10, 99), rng.randint(10, 99)
-    elif r < 0.67:          # mixed 2+3 digit (the p~0.5 sweet spot)
+    elif r < 0.67:  # mixed 2+3 digit (the p~0.5 sweet spot)
         a, b = rng.randint(10, 99), rng.randint(100, 999)
-    else:                   # 3-digit (hard -> low p)
+    else:  # 3-digit (hard -> low p)
         a, b = rng.randint(100, 999), rng.randint(100, 999)
     return f"{a} + {b}", a + b
 
+
 def prompt_of(q):
-    msgs = FEWSHOT + [{"role": "user",
-                       "content": f"Compute {q}. Reason briefly, then put the final integer after '####'."}]
+    msgs = FEWSHOT + [
+        {
+            "role": "user",
+            "content": f"Compute {q}. Reason briefly, then put the final integer after '####'.",
+        }
+    ]
     return tok.apply_chat_template(msgs, tokenize=False, add_generation_prompt=True)
 
+
 def parse(text):
-    if "####" not in text:            # no marker -> not parseable (don't grab question digits)
+    if "####" not in text:  # no marker -> not parseable (don't grab question digits)
         return None
     m = re.findall(r"-?\d+", text.split("####")[-1])
     return int(m[0]) if m else None
+
 
 @torch.no_grad()
 def reward_pool(model, prompt, gold, n):
@@ -71,12 +83,21 @@ def reward_pool(model, prompt, gold, n):
     for i in range(0, n, B):
         k = min(B, n - i)
         enc = tok([prompt] * k, return_tensors="pt", padding=True).to(DEV)
-        out = model.generate(**enc, do_sample=True, temperature=1.0, top_p=0.95,
-                             max_new_tokens=MAX_NEW, pad_token_id=PAD)
-        gens = out[:, enc.input_ids.shape[1]:]
-        rewards += [1.0 if parse(t) == gold else 0.0
-                    for t in tok.batch_decode(gens, skip_special_tokens=True)]
+        out = model.generate(
+            **enc,
+            do_sample=True,
+            temperature=1.0,
+            top_p=0.95,
+            max_new_tokens=MAX_NEW,
+            pad_token_id=PAD,
+        )
+        gens = out[:, enc.input_ids.shape[1] :]
+        rewards += [
+            1.0 if parse(t) == gold else 0.0
+            for t in tok.batch_decode(gens, skip_special_tokens=True)
+        ]
     return rewards
+
 
 def empirical_zvf(pool, K, rng, n_groups):
     z, npool = 0, len(pool)
@@ -86,14 +107,17 @@ def empirical_zvf(pool, K, rng, n_groups):
             z += 1
     return z / n_groups
 
+
 def predicted_zvf(p, K):
-    return p ** K + (1 - p) ** K
+    return p**K + (1 - p) ** K
+
 
 def r2(emp, pred):
     mu = statistics.mean(emp)
-    ss_res = sum((e - p) ** 2 for e, p in zip(emp, pred))
+    ss_res = sum((e - p) ** 2 for e, p in zip(emp, pred, strict=False))
     ss_tot = sum((e - mu) ** 2 for e in emp) or 1e-12
     return 1 - ss_res / ss_tot
+
 
 def calibrate(model, rng):
     """Screen candidates; return prompts with p_hat in BAND (fallback: closest to 0.5)."""
@@ -110,15 +134,19 @@ def calibrate(model, rng):
     print(f"[e4] calibration: {len(in_band)}/{len(scored)} in band {BAND}; ok={ok}", flush=True)
     return [(q, gold) for _, _, q, gold in chosen], ok
 
+
 def build_pools(model, prompts):
     pools, ps = [], []
     for q, gold in prompts:
         pool = reward_pool(model, prompt_of(q), gold, N_POOL)
-        pools.append(pool); ps.append(sum(pool) / len(pool))
+        pools.append(pool)
+        ps.append(sum(pool) / len(pool))
     return pools, ps
 
+
 def main():
-    random.seed(SEED); torch.manual_seed(SEED)
+    random.seed(SEED)
+    torch.manual_seed(SEED)
     rng = random.Random(SEED)
     model = AutoModelForCausalLM.from_pretrained(MODEL, dtype=torch.bfloat16).to(DEV)
 
@@ -133,34 +161,49 @@ def main():
         per_pred = [predicted_zvf(p, K) for p in ps]
         emp, pred = statistics.mean(per_emp), statistics.mean(per_pred)
         by_K[K] = finite_pool_summary(pools, K, seed=SEED)
-        emp_curve.append(emp); pred_curve.append(pred)
+        emp_curve.append(emp)
+        pred_curve.append(pred)
         print(f"[e4] K={K:2d} emp={emp:.4f} pred={pred:.4f} ci={by_K[K]['emp_ci95']}", flush=True)
 
     # ---- precision side-check at K=8 ----
     sub = prompts[:PREC_PROMPTS]
     bf16_pools = pools[:PREC_PROMPTS]
-    del model; torch.cuda.empty_cache()
-    random.seed(SEED); torch.manual_seed(SEED)
+    del model
+    torch.cuda.empty_cache()
+    random.seed(SEED)
+    torch.manual_seed(SEED)
     model32 = AutoModelForCausalLM.from_pretrained(MODEL, dtype=torch.float32).to(DEV)
     fp32_pools, fp32_ps = build_pools(model32, sub)
     bf16_z8 = statistics.mean(empirical_zvf(p, 8, rng, N_GROUPS) for p in bf16_pools)
     fp32_z8 = statistics.mean(empirical_zvf(p, 8, rng, N_GROUPS) for p in fp32_pools)
-    del model32; torch.cuda.empty_cache()
+    del model32
+    torch.cuda.empty_cache()
 
     result = {
-        "experiment": "E4_scaling_law", "model": MODEL, "seed": SEED, "few_shot": True,
-        "calibrated_to_p0.5": calib_ok, "band": list(BAND),
-        "n_prompts": len(prompts), "n_pool": N_POOL, "n_groups_per_K": N_GROUPS,
-        "mean_p_hat": round(pbar, 4), "ks": KS, "by_K": by_K,
+        "experiment": "E4_scaling_law",
+        "model": MODEL,
+        "seed": SEED,
+        "few_shot": True,
+        "calibrated_to_p0.5": calib_ok,
+        "band": list(BAND),
+        "n_prompts": len(prompts),
+        "n_pool": N_POOL,
+        "n_groups_per_K": N_GROUPS,
+        "mean_p_hat": round(pbar, 4),
+        "ks": KS,
+        "by_K": by_K,
         "closed_form_r2": round(r2(emp_curve, pred_curve), 4),
         "worked_example_K8_pred_at_p0.5": round(predicted_zvf(0.5, 8), 5),
         "emp_zvf_at_K8": by_K[8]["emp_zvf"],
         "precision_side_check_K8": {
-            "bf16_zvf": round(bf16_z8, 4), "fp32_zvf": round(fp32_z8, 4),
+            "bf16_zvf": round(bf16_z8, 4),
+            "fp32_zvf": round(fp32_z8, 4),
             "delta_zvf_fp32_minus_bf16": round(fp32_z8 - bf16_z8, 4),
             "bf16_p_hat": round(statistics.mean(ps[:PREC_PROMPTS]), 4),
-            "fp32_p_hat": round(statistics.mean(fp32_ps), 4)},
+            "fp32_p_hat": round(statistics.mean(fp32_ps), 4),
+        },
     }
     print("E4_RESULT " + json.dumps(result), flush=True)
+
 
 main()

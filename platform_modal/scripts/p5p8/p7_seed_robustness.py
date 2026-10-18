@@ -44,6 +44,7 @@ platform_hybrid/experiments/results/p5p8/p7_seed_robust_summary.json  -- machine
 
 Stdlib only.
 """
+
 from __future__ import annotations
 import argparse
 import csv
@@ -54,8 +55,12 @@ import statistics
 import random
 
 import sys
-sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
+
+sys.path.append(
+    str(pathlib.Path(__file__).resolve().parents[1])
+)  # platform_modal/scripts, for _paths
+from _paths import REPO_ROOT
+
 WORKTREE = REPO_ROOT
 N10 = WORKTREE / "platform_hybrid/experiments" / "results" / "n10_seed_expansion"
 OUT = WORKTREE / "platform_hybrid/experiments" / "results" / "p5p8"
@@ -75,12 +80,8 @@ def load_seeds():
                 "mean_zvf": float(d["mean_zvf"]),
                 "heldout_acc": float(d["heldout_acc"]),
                 "steps": d["step_log"],
-                "first5_zvf": statistics.mean(
-                    s["zvf"] for s in d["step_log"][:5]
-                ),
-                "last10_zvf": statistics.mean(
-                    s["zvf"] for s in d["step_log"][5:]
-                ),
+                "first5_zvf": statistics.mean(s["zvf"] for s in d["step_log"][:5]),
+                "last10_zvf": statistics.mean(s["zvf"] for s in d["step_log"][5:]),
             }
         )
     return seeds
@@ -148,8 +149,7 @@ def main():
 
     seeds = load_seeds()
     assert seeds, f"no N10 seeds found in {N10}"
-    print(f"[seed_robust] loaded {len(seeds)} seeds: "
-          f"{[s['seed'] for s in seeds]}")
+    print(f"[seed_robust] loaded {len(seeds)} seeds: {[s['seed'] for s in seeds]}")
 
     per_seed = []
     summary_rows = []
@@ -183,7 +183,7 @@ def main():
             return float("nan")
         mx = statistics.mean(xs)
         my = statistics.mean(ys)
-        num = sum((x - mx) * (y - my) for x, y in zip(xs, ys))
+        num = sum((x - mx) * (y - my) for x, y in zip(xs, ys, strict=False))
         dx2 = sum((x - mx) ** 2 for x in xs)
         dy2 = sum((y - my) ** 2 for y in ys)
         den = math.sqrt(dx2 * dy2)
@@ -259,16 +259,10 @@ def main():
     summary_json["headline"] = {
         "n_seeds": len(seeds),
         "mean_zvf_mean": statistics.mean(h["mean_zvf"] for h in head),
-        "mean_zvf_sd": (
-            statistics.stdev(h["mean_zvf"] for h in head)
-            if len(head) > 1
-            else 0.0
-        ),
+        "mean_zvf_sd": (statistics.stdev(h["mean_zvf"] for h in head) if len(head) > 1 else 0.0),
         "heldout_acc_mean": statistics.mean(h["heldout_acc"] for h in head),
         "heldout_acc_sd": (
-            statistics.stdev(h["heldout_acc"] for h in head)
-            if len(head) > 1
-            else 0.0
+            statistics.stdev(h["heldout_acc"] for h in head) if len(head) > 1 else 0.0
         ),
         "per_seed": head,
     }
@@ -280,9 +274,7 @@ def main():
         headroom_per_seed = []
         per_seed_detail = []
         for s in seeds:
-            n_fire, headroom, n_steps = fire_count(
-                s["steps"], tau, pcd_max=1.0
-            )
+            n_fire, headroom, n_steps = fire_count(s["steps"], tau, pcd_max=1.0)
             fires_per_seed.append(n_fire)
             headroom_per_seed.append(headroom)
             per_seed_detail.append(
@@ -308,14 +300,8 @@ def main():
             )
 
         fire_mean, fire_lo, fire_hi = bootstrap_ci(fires_per_seed)
-        fire_sd = (
-            statistics.stdev(fires_per_seed)
-            if len(fires_per_seed) > 1
-            else 0.0
-        )
-        headroom_mean, headroom_lo, headroom_hi = bootstrap_ci(
-            headroom_per_seed
-        )
+        fire_sd = statistics.stdev(fires_per_seed) if len(fires_per_seed) > 1 else 0.0
+        headroom_mean, headroom_lo, headroom_hi = bootstrap_ci(headroom_per_seed)
         # Selectivity = fraction of (seed, step) pairs that DON'T fire
         total_steps = sum(d["n_steps"] for d in per_seed_detail)
         total_fires = sum(d["n_fire"] for d in per_seed_detail)

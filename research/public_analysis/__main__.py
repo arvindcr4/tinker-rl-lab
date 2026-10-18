@@ -1,4 +1,5 @@
 """Public-only command line for parser diagnostics and binomial arithmetic."""
+
 import argparse
 import json
 import sys
@@ -26,8 +27,13 @@ def main(argv=None):
             result = interval(args.events, args.denominator)
         except ValueError as exc:
             cli.error(str(exc))
-    print(json.dumps({"label": "ARITHMETIC_OR_PARSER_DIAGNOSTIC_ONLY", "result": result},
-                     sort_keys=True, allow_nan=False))
+    print(
+        json.dumps(
+            {"label": "ARITHMETIC_OR_PARSER_DIAGNOSTIC_ONLY", "result": result},
+            sort_keys=True,
+            allow_nan=False,
+        )
+    )
 
 
 if __name__ == "__main__":

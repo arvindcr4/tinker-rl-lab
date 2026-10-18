@@ -12,6 +12,7 @@ D1/D5, D1/D6 all EXCLUDE 1.0 by >5x.
 
 Stdlib + numpy only.  <= 200 lines.
 """
+
 from __future__ import annotations
 import csv
 import json
@@ -21,9 +22,11 @@ from pathlib import Path
 import numpy as np
 
 import sys
+
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
-from _stats import wilson_p  # noqa: E402
+from _paths import REPO_ROOT
+from _stats import wilson_p
+
 ROOT = REPO_ROOT
 RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8"
 
@@ -34,15 +37,15 @@ RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8"
 # ------------------------------------------------------------------
 DOMAINS = {
     # Iter-120 row 135 D1 anchor
-    "D1": {"domain": "P8 grad-band firing (per-row)",  "n": 840,    "k": 7,     "source": "iter-120 table"},
+    "D1": {"domain": "P8 grad-band firing (per-row)", "n": 840, "k": 7, "source": "iter-120 table"},
     # Iter-124 row 140 D2 anchor
-    "D2": {"domain": "P7 step rejection (per-step)",   "n": 160,    "k": 80,    "source": "iter-124"},
+    "D2": {"domain": "P7 step rejection (per-step)", "n": 160, "k": 80, "source": "iter-124"},
     # Iter-124 row 140 D3 anchor
-    "D3": {"domain": "P5 cells (per-cell)",            "n": 98,     "k": 36,    "source": "iter-124 cells.tsv"},
+    "D3": {"domain": "P5 cells (per-cell)", "n": 98, "k": 36, "source": "iter-124 cells.tsv"},
     # Iter-132 row 148 D4 anchor
-    "D4": {"domain": "P7 per-prompt boundary",         "n": 2560,   "k": 1867,  "source": "iter-131"},
+    "D4": {"domain": "P7 per-prompt boundary", "n": 2560, "k": 1867, "source": "iter-131"},
     # Iter-136 row 153 D5 anchor
-    "D5": {"domain": "P8 iso ECE>0.10 (cohort cell)",  "n": 60,     "k": 60,    "source": "iter-136"},
+    "D5": {"domain": "P8 iso ECE>0.10 (cohort cell)", "n": 60, "k": 60, "source": "iter-136"},
 }
 
 
@@ -82,8 +85,7 @@ def load_d6():
         "D6_pool_n": pool_n,
         "D6_pool_k": pool_k,
         "D6_per_rate": [
-            {"rate": d[0], "density": d[1], "n_flip": d[2], "n_test": d[3]}
-            for d in densities
+            {"rate": d[0], "density": d[1], "n_flip": d[2], "n_test": d[3]} for d in densities
         ],
     }
 
@@ -108,7 +110,8 @@ def bootstrap_ratio_ci(k1, n1, k2, n2, n_boot=2000, seed=20260705):
     bp1 = np.clip(p1 + eps1 * se1, 0.0, 1.0)
     bp2 = np.clip(p2 + eps2 * se2, 0.0, 1.0)
     valid = bp2 > 0
-    bp1 = bp1[valid]; bp2 = bp2[valid]
+    bp1 = bp1[valid]
+    bp2 = bp2[valid]
     ratios = (bp1 / bp2).tolist()
     ratios.sort()
     if not ratios:
@@ -122,6 +125,7 @@ def bootstrap_ratio_ci(k1, n1, k2, n2, n_boot=2000, seed=20260705):
 
 def main():
     from review22_contract import require_independent_unit_contract
+
     require_independent_unit_contract()
     d6 = load_d6()
     # D6 rates into the domains
@@ -150,8 +154,7 @@ def main():
     # 6-domain TSV
     out_d = RES / "synth_iter140_six_domain_density.tsv"
     with out_d.open("w") as f:
-        fields = ["domain_id", "domain", "n", "k", "density", "wilson_lo",
-                  "wilson_hi", "source"]
+        fields = ["domain_id", "domain", "n", "k", "density", "wilson_lo", "wilson_hi", "source"]
         w = csv.DictWriter(f, fieldnames=fields, delimiter="\t")
         w.writeheader()
         for dk, dd in densities.items():
@@ -165,21 +168,24 @@ def main():
         for j, k2 in enumerate(keys):
             if i >= j:
                 continue
-            d1 = densities[k1]; d2 = densities[k2]
+            d1 = densities[k1]
+            d2 = densities[k2]
             ratio = d1["density"] / max(1e-12, d2["density"])
             mean, lo, hi = bootstrap_ratio_ci(d1["k"], d1["n"], d2["k"], d2["n"])
             excludes_1 = lo > 1.0 or hi < 1.0
-            ratio_rows.append({
-                "numerator": k1,
-                "denominator": k2,
-                "numer_density": d1["density"],
-                "denom_density": d2["density"],
-                "ratio": round(ratio, 4),
-                "boot_mean": round(mean, 4),
-                "boot_lo": round(lo, 4),
-                "boot_hi": round(hi, 4),
-                "ci_excludes_1": bool(excludes_1),
-            })
+            ratio_rows.append(
+                {
+                    "numerator": k1,
+                    "denominator": k2,
+                    "numer_density": d1["density"],
+                    "denom_density": d2["density"],
+                    "ratio": round(ratio, 4),
+                    "boot_mean": round(mean, 4),
+                    "boot_lo": round(lo, 4),
+                    "boot_hi": round(hi, 4),
+                    "ci_excludes_1": bool(excludes_1),
+                }
+            )
     out_r = RES / "synth_iter140_six_domain_ratios.tsv"
     with out_r.open("w") as f:
         fields = list(ratio_rows[0].keys())
@@ -193,34 +199,28 @@ def main():
     # D5 (iso ECE violation, 100%), D6 (firing flip, 0.52%).
     # {D1, D6} < 1% (granularity < per-row) | {D2, D4, D3} mid | {D5} 100%.
     summary = {
-        "iter":140,
+        "iter": 140,
         "n_domains": 6,
         "densities": densities,
         "ratio_count": len(ratio_rows),
         "n_d1_over_d6": next(
-            r for r in ratio_rows
-            if r["numerator"] == "D1" and r["denominator"] == "D6"
+            r for r in ratio_rows if r["numerator"] == "D1" and r["denominator"] == "D6"
         ),
         "n_d5_over_d6": next(
-            r for r in ratio_rows
-            if r["numerator"] == "D5" and r["denominator"] == "D6"
+            r for r in ratio_rows if r["numerator"] == "D5" and r["denominator"] == "D6"
         ),
         "d6_per_rate": d6["D6_per_rate"],
         "super_domain_split": {
-            "low_layer": ["D1", "D6"],   # both < 1%
+            "low_layer": ["D1", "D6"],  # both < 1%
             "mid_layer": ["D2", "D3", "D4"],
-            "high_layer": ["D5"],         # 100%
+            "high_layer": ["D5"],  # 100%
         },
         "p8_internal_heterogeneity": {
             "D1_density": densities["D1"]["density"],
             "D5_density": densities["D5"]["density"],
             "D6_density": densities["D6"]["density"],
-            "ratio_D5_over_D1": round(
-                densities["D5"]["density"] / densities["D1"]["density"], 1
-            ),
-            "ratio_D5_over_D6": round(
-                densities["D5"]["density"] / densities["D6"]["density"], 1
-            ),
+            "ratio_D5_over_D1": round(densities["D5"]["density"] / densities["D1"]["density"], 1),
+            "ratio_D5_over_D6": round(densities["D5"]["density"] / densities["D6"]["density"], 1),
         },
         "n_boot": 2000,
         "seed": 20260705,
@@ -232,8 +232,10 @@ def main():
     print(f"[iter140 synth] 6-domain density matrix:")
     for dk, dd in densities.items():
         print(f"  {dk}: {dd['domain']:50s}  {dd['density']:.6f}")
-    print(f"[iter140 synth] P8 super-domain internal: D5/D1 = {summary['p8_internal_heterogeneity']['ratio_D5_over_D1']}x, "
-          f"D5/D6 = {summary['p8_internal_heterogeneity']['ratio_D5_over_D6']}x")
+    print(
+        f"[iter140 synth] P8 super-domain internal: D5/D1 = {summary['p8_internal_heterogeneity']['ratio_D5_over_D1']}x, "
+        f"D5/D6 = {summary['p8_internal_heterogeneity']['ratio_D5_over_D6']}x"
+    )
     print(f"[iter140 synth] DONE")
 
 

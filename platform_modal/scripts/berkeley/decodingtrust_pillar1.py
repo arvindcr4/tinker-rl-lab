@@ -53,7 +53,7 @@ import json
 import math
 import pathlib
 import statistics as st
-from typing import Dict, List, Tuple
+from typing import List, Tuple
 
 RESULTS = pathlib.Path("platform_hybrid/experiments/results")
 BERK = RESULTS / "berkeley"
@@ -97,7 +97,7 @@ def spearman(xs: List[float], ys: List[float]) -> Tuple[float, float]:
     ry = rankify(ys)
     mx = st.mean(rx)
     my = st.mean(ry)
-    num = sum((a - mx) * (b - my) for a, b in zip(rx, ry))
+    num = sum((a - mx) * (b - my) for a, b in zip(rx, ry, strict=False))
     dx = math.sqrt(sum((a - mx) ** 2 for a in rx))
     dy = math.sqrt(sum((b - my) ** 2 for b in ry))
     if dx == 0 or dy == 0:
@@ -105,6 +105,7 @@ def spearman(xs: List[float], ys: List[float]) -> Tuple[float, float]:
     rho = num / (dx * dy)
     # permutation p (1000 perm)
     import random
+
     rng = random.Random(0)
     obs = rho
     gt = 0
@@ -112,7 +113,7 @@ def spearman(xs: List[float], ys: List[float]) -> Tuple[float, float]:
         ry_p = ry[:]
         rng.shuffle(ry_p)
         my2 = st.mean(ry_p)
-        num2 = sum((a - mx) * (b - my2) for a, b in zip(rx, ry_p))
+        num2 = sum((a - mx) * (b - my2) for a, b in zip(rx, ry_p, strict=False))
         dy2 = math.sqrt(sum((b - my2) ** 2 for b in ry_p))
         if dy2 == 0:
             continue
@@ -140,7 +141,7 @@ def partial_corr(x: List[float], y: List[float], z: List[float]) -> float:
 
     def corr(a, b):
         ma, mb = st.mean(a), st.mean(b)
-        num = sum((ai - ma) * (bi - mb) for ai, bi in zip(a, b))
+        num = sum((ai - ma) * (bi - mb) for ai, bi in zip(a, b, strict=False))
         da = math.sqrt(sum((ai - ma) ** 2 for ai in a))
         db = math.sqrt(sum((bi - mb) ** 2 for bi in b))
         if da == 0 or db == 0:
@@ -150,13 +151,14 @@ def partial_corr(x: List[float], y: List[float], z: List[float]) -> float:
     rxy = corr(x, y)
     rxz = corr(x, z)
     ryz = corr(y, z)
-    denom = math.sqrt((1 - rxz ** 2) * (1 - ryz ** 2))
+    denom = math.sqrt((1 - rxz**2) * (1 - ryz**2))
     if denom == 0:
         return float("nan")
     return (rxy - rxz * ryz) / denom
 
 
 # ---------- load and compute DecodingTrust-style 5 dimensions per anchor ----
+
 
 def main():
     rows = read_tsv(RESULTS / "berkeley" / "eureka_rqs_per_anchor.tsv")
@@ -203,28 +205,35 @@ def main():
         # Composite trust: arithmetic mean of 5 dims.
         trust = st.mean([t1, t2, t3, t4, t5])
 
-        out.append({
-            "model": r["model"],
-            "params_B": r["params_B"],
-            "family": r["family"],
-            "capability_r_mean": r_mean,
-            "RQS": rqs,
-            "t1_stereotype": t1,
-            "t2_adversarial": t2,
-            "t3_OOD": t3,
-            "t4_demo_robustness": t4,
-            "t5_ethics_fairness": t5,
-            "trust_score": trust,
-            "delta_late_early": dle,
-            "delta_first_final": dff,
-            "zero_frac": zero_frac,
-        })
+        out.append(
+            {
+                "model": r["model"],
+                "params_B": r["params_B"],
+                "family": r["family"],
+                "capability_r_mean": r_mean,
+                "RQS": rqs,
+                "t1_stereotype": t1,
+                "t2_adversarial": t2,
+                "t3_OOD": t3,
+                "t4_demo_robustness": t4,
+                "t5_ethics_fairness": t5,
+                "trust_score": trust,
+                "delta_late_early": dle,
+                "delta_first_final": dff,
+                "zero_frac": zero_frac,
+            }
+        )
 
     # ---- H1: at least 1 trust dim has |rho| < 0.65 with capability ----
     cap = [o["capability_r_mean"] for o in out]
     trust = [o["trust_score"] for o in out]
-    dim_keys = ["t1_stereotype", "t2_adversarial", "t3_OOD",
-                "t4_demo_robustness", "t5_ethics_fairness"]
+    dim_keys = [
+        "t1_stereotype",
+        "t2_adversarial",
+        "t3_OOD",
+        "t4_demo_robustness",
+        "t5_ethics_fairness",
+    ]
     dim_rhos = {}
     for k in dim_keys:
         xs = [o[k] for o in out]
@@ -252,8 +261,7 @@ def main():
     bottom3_t1 = [o for o in sorted_by_t1[:3] if o["capability_r_mean"] > 0.40]
     h3_decisive = len(bottom3_t1) >= 1
     h3_violators = [
-        {"model": o["model"], "t1": o["t1_stereotype"],
-         "capability": o["capability_r_mean"]}
+        {"model": o["model"], "t1": o["t1_stereotype"], "capability": o["capability_r_mean"]}
         for o in bottom3_t1
     ]
     bottom3_t1_all = [o["model"] for o in sorted_by_t1[:3]]
@@ -263,10 +271,10 @@ def main():
     ss_tot = sum((c - mx) ** 2 for c in cap)
     ss_res = 0.0
     if ss_tot > 1e-12:
-        b1_num = sum((c - mx) * (t - my) for c, t in zip(cap, trust))
+        b1_num = sum((c - mx) * (t - my) for c, t in zip(cap, trust, strict=False))
         b1 = b1_num / ss_tot
         b0 = my - b1 * mx
-        for c, t in zip(cap, trust):
+        for c, t in zip(cap, trust, strict=False):
             pred = b0 + b1 * c
             ss_res += (t - pred) ** 2
         r2 = 1 - ss_res / ss_tot
@@ -305,7 +313,15 @@ def main():
     with h_path.open("w", newline="") as f:
         w = csv.writer(f, delimiter="\t")
         w.writerow(["hypothesis", "test", "value", "threshold", "decisive"])
-        w.writerow(["H1_min_dim_rho", "min(|rho(dim,cap)|)", f"{min_abs_rho:.4f}", "<0.65", str(h1_decisive)])
+        w.writerow(
+            [
+                "H1_min_dim_rho",
+                "min(|rho(dim,cap)|)",
+                f"{min_abs_rho:.4f}",
+                "<0.65",
+                str(h1_decisive),
+            ]
+        )
         for k, r in dim_rhos.items():
             w.writerow([f"H1_dim_{k}", "spearman", f"{r:.4f}", "—", "—"])
         w.writerow(["H2_row09_overlap", "count", str(len(intersection)), ">=3", str(h2_decisive)])
@@ -313,11 +329,27 @@ def main():
         w.writerow(["H2_intersection", "set", ";".join(sorted(intersection)), "—", "—"])
         w.writerow(["H2_row09_hard_floor", "set", ";".join(sorted(row09_hard_floor)), "—", "—"])
         w.writerow(["H2_bottom4_trust", "set", ";".join(sorted(bottom4_trust)), "—", "—"])
-        w.writerow(["H3_T1_violation_intersection", "count",
-                    str(len(h3_violators)), ">=1", str(h3_decisive)])
-        w.writerow(["H3_violators", "list",
-                    ";".join(f"{v['model']}(cap={v['capability']:.2f},t1={v['t1']:.2f})"
-                             for v in h3_violators), "—", "—"])
+        w.writerow(
+            [
+                "H3_T1_violation_intersection",
+                "count",
+                str(len(h3_violators)),
+                ">=1",
+                str(h3_decisive),
+            ]
+        )
+        w.writerow(
+            [
+                "H3_violators",
+                "list",
+                ";".join(
+                    f"{v['model']}(cap={v['capability']:.2f},t1={v['t1']:.2f})"
+                    for v in h3_violators
+                ),
+                "—",
+                "—",
+            ]
+        )
         w.writerow(["H3_bottom3_T1", "set", ";".join(bottom3_t1_all), "—", "—"])
         w.writerow(["H4_resid_std", "residual std", f"{resid_std:.4f}", ">0.05", str(h4_decisive)])
         w.writerow(["H4_regression_R2", "trust~capability", f"{r2:.4f}", "—", "—"])
@@ -357,7 +389,9 @@ def main():
             "decisive": bool(h5_decisive),
         },
         "n_decisive": sum([h1_decisive, h2_decisive, h3_decisive, h4_decisive, h5_decisive]),
-        "status": "prototyped" if sum([h1_decisive, h2_decisive, h3_decisive, h4_decisive, h5_decisive]) >= 2 else "exploratory",
+        "status": "prototyped"
+        if sum([h1_decisive, h2_decisive, h3_decisive, h4_decisive, h5_decisive]) >= 2
+        else "exploratory",
         "anchor_rows": out,
     }
     with (BERK / "decodingtrust_summary.json").open("w") as f:

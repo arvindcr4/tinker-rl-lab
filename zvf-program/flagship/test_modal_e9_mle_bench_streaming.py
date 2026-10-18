@@ -8,6 +8,7 @@ import tempfile
 import unittest
 from pathlib import Path
 from unittest import mock
+import pytest
 
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -75,10 +76,14 @@ class ModalE9RecoverabilityTests(unittest.TestCase):
             },
         }
         receipt["execution_binding"] = core.bind_effective_execution(
-            competition_id=competition_id, original=(source_solution + "\n").encode(),
-            effective=(returned_solution + "\n").encode(), submission=None,
+            competition_id=competition_id,
+            original=(source_solution + "\n").encode(),
+            effective=(returned_solution + "\n").encode(),
+            submission=None,
             native_grade=json.dumps(native_grade, sort_keys=True).encode(),
-            grader_input=None, repairs=[])
+            grader_input=None,
+            repairs=[],
+        )
         receipt["receipt_sha256"] = hashlib.sha256(
             json.dumps(receipt, sort_keys=True, separators=(",", ":")).encode()
         ).hexdigest()
@@ -130,16 +135,22 @@ class ModalE9RecoverabilityTests(unittest.TestCase):
             json.dumps(native_grade, sort_keys=True).encode()
         ).hexdigest()
         result["submission_csv"] = "id,prediction\r\na,0.42\r\n"
-        receipt["artifacts"]["submission_sha256"] = hashlib.sha256(result["submission_csv"].encode()).hexdigest()
+        receipt["artifacts"]["submission_sha256"] = hashlib.sha256(
+            result["submission_csv"].encode()
+        ).hexdigest()
         receipt["execution_binding"] = core.bind_effective_execution(
             competition_id=str(launch["competition_id"]),
             original=(result["original_solution_code"] + "\n").encode(),
             effective=(result["solution_code"] + "\n").encode(),
             submission=result["submission_csv"].encode(),
             native_grade=json.dumps(native_grade, sort_keys=True).encode(),
-            grader_input={"competition_id": str(launch["competition_id"]),
-                          "submission_sha256": receipt["artifacts"]["submission_sha256"],
-                          "grader_revision": "synthetic-fixture"}, repairs=[])
+            grader_input={
+                "competition_id": str(launch["competition_id"]),
+                "submission_sha256": receipt["artifacts"]["submission_sha256"],
+                "grader_revision": "synthetic-fixture",
+            },
+            repairs=[],
+        )
         self._rehash_receipt(receipt)
         result["native_grade_json"] = native_grade
         return result, launch
@@ -151,7 +162,7 @@ class ModalE9RecoverabilityTests(unittest.TestCase):
             runner._validate_returned_replay_result(result, launch)
             first = runner._materialize_run_result(result, str(root / "out"))
             second = runner._materialize_run_result(result, str(root / "out"))
-            self.assertEqual(first, second)
+            assert first == second
 
     def test_rehashed_unregistered_program_change_is_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -161,14 +172,14 @@ class ModalE9RecoverabilityTests(unittest.TestCase):
             result["receipt"]["artifacts"]["solution_sha256"] = digest
             result["receipt"]["execution_binding"]["effective_program_sha256"] = digest
             self._rehash_receipt(result["receipt"])
-            with self.assertRaisesRegex(core.LaunchGateError, "without a registered repair"):
+            with pytest.raises(core.LaunchGateError, match="without a registered repair"):
                 runner._validate_returned_replay_result(result, launch)
 
     def test_returned_result_rejects_competition_mismatch(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             result, launch = self._valid_contract(Path(directory))
             launch["competition_id"] = "wrong-competition"
-            with self.assertRaisesRegex(ValueError, "competition"):
+            with pytest.raises(ValueError, match="competition"):
                 runner._validate_returned_replay_result(result, launch)
 
     def test_collector_records_python_exception_but_not_poll_timeout(self) -> None:
@@ -198,34 +209,25 @@ class ModalE9RecoverabilityTests(unittest.TestCase):
             path = Path(directory) / "launch.json"
             path.write_text(json.dumps(launch), encoding="utf-8")
             with mock.patch.object(runner.modal.FunctionCall, "from_id", return_value=FailedCall()):
-                with self.assertRaises(RuntimeError):
+                with pytest.raises(RuntimeError):
                     raw_collect(str(path), 1.0)
-            self.assertEqual(
-                json.loads(path.read_text())["status"],
-                "REMOTE_CALL_FAILED_UNMATERIALIZED",
-            )
+            assert json.loads(path.read_text())["status"] == "REMOTE_CALL_FAILED_UNMATERIALIZED"
             path.write_text(json.dumps(launch), encoding="utf-8")
             with mock.patch.object(
                 runner.modal.FunctionCall, "from_id", return_value=RunningCall()
             ):
-                with self.assertRaises(TimeoutError):
+                with pytest.raises(TimeoutError):
                     raw_collect(str(path), 1.0)
-            self.assertEqual(
-                json.loads(path.read_text())["status"],
-                "REMOTE_CALL_SPAWNED_UNCOLLECTED",
-            )
+            assert json.loads(path.read_text())["status"] == "REMOTE_CALL_SPAWNED_UNCOLLECTED"
             path.write_text(json.dumps(launch), encoding="utf-8")
             with mock.patch.object(
                 runner.modal.FunctionCall,
                 "from_id",
                 return_value=TerminalTimeoutCall(),
             ):
-                with self.assertRaises(RuntimeError):
+                with pytest.raises(RuntimeError):
                     raw_collect(str(path), 1.0)
-            self.assertEqual(
-                json.loads(path.read_text())["status"],
-                "REMOTE_CALL_FAILED_UNMATERIALIZED",
-            )
+            assert json.loads(path.read_text())["status"] == "REMOTE_CALL_FAILED_UNMATERIALIZED"
 
     def test_collector_revalidates_local_result_without_remote_refetch(self) -> None:
         class ResultCall:
@@ -254,7 +256,7 @@ class ModalE9RecoverabilityTests(unittest.TestCase):
                 return_value=ResultCall(result),
             ):
                 raw_collect(str(path), 1.0)
-            self.assertEqual(json.loads(path.read_text())["status"], "REMOTE_RESULT_MATERIALIZED")
+            assert json.loads(path.read_text())["status"] == "REMOTE_RESULT_MATERIALIZED"
             with mock.patch.object(
                 runner.modal.FunctionCall,
                 "from_id",
@@ -300,10 +302,10 @@ class ModalE9RecoverabilityTests(unittest.TestCase):
                 ).read_text(encoding="utf-8")
             )
             for payload in (materialized, collection):
-                self.assertEqual(payload["scientific_status"], "NATIVE_SINGLE_COMPETITION_GRADED")
-                self.assertEqual(payload["competition_score"], 0.42)
-                self.assertIsNone(payload["score"])
-                self.assertEqual(payload["coverage_increment"], 1)
+                assert payload["scientific_status"] == "NATIVE_SINGLE_COMPETITION_GRADED"
+                assert payload["competition_score"] == 0.42
+                assert payload["score"] is None
+                assert payload["coverage_increment"] == 1
 
             with mock.patch.object(
                 runner.modal.FunctionCall,
@@ -348,8 +350,8 @@ class ModalE9RecoverabilityTests(unittest.TestCase):
                     Path(str(materialized["materialized_output_dir"])) / "collection_receipt.json"
                 ).read_text(encoding="utf-8")
             )
-            self.assertEqual(materialized["coverage_increment"], 0)
-            self.assertEqual(collection["coverage_increment"], 0)
+            assert materialized["coverage_increment"] == 0
+            assert collection["coverage_increment"] == 0
 
     def test_collector_reconciles_stale_materialized_control_metadata_idempotently(self) -> None:
         class ResultCall:
@@ -424,18 +426,15 @@ class ModalE9RecoverabilityTests(unittest.TestCase):
             repaired_launch = json.loads(path.read_text(encoding="utf-8"))
             repaired_collection = json.loads(collection_path.read_text(encoding="utf-8"))
             for payload in (repaired_launch, repaired_collection):
-                self.assertEqual(payload["scientific_status"], "NATIVE_SINGLE_COMPETITION_GRADED")
-                self.assertEqual(payload["competition_score"], 0.42)
-                self.assertIsNone(payload["score"])
-                self.assertEqual(payload["coverage_increment"], 1)
-            self.assertEqual(
-                {field: repaired_launch[field] for field in launch_bindings}, launch_bindings
-            )
-            self.assertEqual(
-                {field: repaired_collection[field] for field in collection_bindings},
-                collection_bindings,
-            )
-            self.assertEqual((destination / "receipt.json").read_bytes(), remote_receipt_before)
+                assert payload["scientific_status"] == "NATIVE_SINGLE_COMPETITION_GRADED"
+                assert payload["competition_score"] == 0.42
+                assert payload["score"] is None
+                assert payload["coverage_increment"] == 1
+            assert {field: repaired_launch[field] for field in launch_bindings} == launch_bindings
+            assert {
+                field: repaired_collection[field] for field in collection_bindings
+            } == collection_bindings
+            assert (destination / "receipt.json").read_bytes() == remote_receipt_before
 
             repaired_launch_bytes = path.read_bytes()
             repaired_collection_bytes = collection_path.read_bytes()
@@ -445,8 +444,8 @@ class ModalE9RecoverabilityTests(unittest.TestCase):
                 side_effect=AssertionError("materialized result should not be refetched"),
             ):
                 raw_collect(str(path), 1.0)
-            self.assertEqual(path.read_bytes(), repaired_launch_bytes)
-            self.assertEqual(collection_path.read_bytes(), repaired_collection_bytes)
+            assert path.read_bytes() == repaired_launch_bytes
+            assert collection_path.read_bytes() == repaired_collection_bytes
 
     def test_spawn_gate_blocks_an_unresolved_call(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -467,7 +466,7 @@ class ModalE9RecoverabilityTests(unittest.TestCase):
                 json.dumps({"status": "REMOTE_CALL_SPAWNED_UNCOLLECTED"}),
                 encoding="utf-8",
             )
-            with self.assertRaisesRegex(RuntimeError, "unresolved"):
+            with pytest.raises(RuntimeError, match="unresolved"):
                 runner._validate_spawn_budget_and_queue(
                     output_dir=str(root / "out"), spend_ledger_path=str(ledger)
                 )
@@ -481,13 +480,10 @@ class ModalE9RecoverabilityTests(unittest.TestCase):
             )
             prompt = runner._agent_prompt("vesuvius-challenge-ink-detection", public)
             normalized_prompt = " ".join(prompt.split())
-            self.assertIn("Never train a per-pixel classifier", normalized_prompt)
-            self.assertIn("must always write the schema-valid CSV", normalized_prompt)
-            self.assertIn("never iterate in Python over every pixel", normalized_prompt)
-            self.assertEqual(
-                runner.MERGED_VLLM_PROMPT_TEMPLATE_VERSION,
-                "e9_hard_bounded_collections_v7",
-            )
+            assert "Never train a per-pixel classifier" in normalized_prompt
+            assert "must always write the schema-valid CSV" in normalized_prompt
+            assert "never iterate in Python over every pixel" in normalized_prompt
+            assert runner.MERGED_VLLM_PROMPT_TEMPLATE_VERSION == "e9_hard_bounded_collections_v7"
 
     def test_cpu_prepare_failure_helper_is_receipt_only_unscored_and_zero_gpu(self) -> None:
         reservation = merged_arm.reserve_pilot_budget(gpu_usd=1.0, cpu_usd=0.25)
@@ -501,29 +497,29 @@ class ModalE9RecoverabilityTests(unittest.TestCase):
             recorded_at_utc="2026-08-30T04:00:00+00:00",
         )
 
-        self.assertEqual(set(result), {"receipt"})
+        assert set(result) == {"receipt"}
         receipt = result["receipt"]
-        self.assertEqual(receipt["schema_version"], merged_arm.CPU_PREPARATION_FAILURE_SCHEMA_V1)
-        self.assertEqual(receipt["status"], "CPU_PREPARATION_FAILED_BEFORE_GPU_GENERATION")
-        self.assertFalse(receipt["gpu_generation_started"])
-        self.assertIsNone(receipt["competition_score"])
-        self.assertIsNone(receipt["score"])
-        self.assertFalse(receipt["is_full_suite_score"])
-        self.assertEqual(receipt["legacy_tinker_coverage_increment"], 0)
-        self.assertEqual(receipt["merged_vllm_budget"]["estimated_modal_gpu_usd"], 0.0)
-        self.assertLessEqual(
-            receipt["merged_vllm_budget"]["estimated_modal_cpu_usd"],
-            reservation["projected_modal_cpu_usd"],
+        assert receipt["schema_version"] == merged_arm.CPU_PREPARATION_FAILURE_SCHEMA_V1
+        assert receipt["status"] == "CPU_PREPARATION_FAILED_BEFORE_GPU_GENERATION"
+        assert not receipt["gpu_generation_started"]
+        assert receipt["competition_score"] is None
+        assert receipt["score"] is None
+        assert not receipt["is_full_suite_score"]
+        assert receipt["legacy_tinker_coverage_increment"] == 0
+        assert receipt["merged_vllm_budget"]["estimated_modal_gpu_usd"] == 0.0
+        assert (
+            receipt["merged_vllm_budget"]["estimated_modal_cpu_usd"]
+            <= reservation["projected_modal_cpu_usd"]
         )
-        self.assertEqual(
-            receipt["receipt_sha256"],
-            hashlib.sha256(
+        assert (
+            receipt["receipt_sha256"]
+            == hashlib.sha256(
                 json.dumps(
                     {key: value for key, value in receipt.items() if key != "receipt_sha256"},
                     sort_keys=True,
                     separators=(",", ":"),
                 ).encode()
-            ).hexdigest(),
+            ).hexdigest()
         )
 
     def test_prepare_failure_returns_before_gpu_generator_construction(self) -> None:
@@ -551,8 +547,11 @@ class ModalE9RecoverabilityTests(unittest.TestCase):
         reservation = merged_arm.reserve_pilot_budget(gpu_usd=1.0, cpu_usd=0.25)
         # Execute the production function body with only its Modal decorator
         # removed, avoiding SDK-version-specific private unwrapping methods.
-        node = next(node for node in ast.parse(Path(runner.__file__).read_text()).body
-                    if isinstance(node, ast.FunctionDef) and node.name == "run_one")
+        node = next(
+            node
+            for node in ast.parse(Path(runner.__file__).read_text()).body
+            if isinstance(node, ast.FunctionDef) and node.name == "run_one"
+        )
         node.decorator_list = []
         namespace = dict(vars(runner))
         exec(compile(ast.Module(body=[node], type_ignores=[]), runner.__file__, "exec"), namespace)
@@ -584,7 +583,9 @@ class ModalE9RecoverabilityTests(unittest.TestCase):
                     ) as prompt,
                 ):
                     namespace.update(vars(runner))
-                    namespace["_require_enforced_budget"] = lambda: None  # local fake execution only
+                    namespace["_require_enforced_budget"] = lambda: (
+                        None
+                    )  # local fake execution only
                     result = raw_run_one(
                         competition_id="alaska2-image-steganalysis",
                         generation_backend="merged_vllm",
@@ -595,14 +596,14 @@ class ModalE9RecoverabilityTests(unittest.TestCase):
                         merged_vllm_v3_contract={},
                     )
                 run_mock.assert_called_once()
-                self.assertIn("mlebench", run_mock.call_args.args[0])
-                self.assertIn("prepare", run_mock.call_args.args[0])
+                assert "mlebench" in run_mock.call_args.args[0]
+                assert "prepare" in run_mock.call_args.args[0]
                 generator.assert_not_called()
                 prompt.assert_not_called()
                 receipt = result["receipt"]
-                self.assertEqual(receipt["status"], "CPU_PREPARATION_FAILED_BEFORE_GPU_GENERATION")
-                self.assertFalse(receipt["gpu_generation_started"])
-                self.assertEqual(receipt["merged_vllm_budget"]["estimated_modal_gpu_usd"], 0.0)
+                assert receipt["status"] == "CPU_PREPARATION_FAILED_BEFORE_GPU_GENERATION"
+                assert not receipt["gpu_generation_started"]
+                assert receipt["merged_vllm_budget"]["estimated_modal_gpu_usd"] == 0.0
 
         def prepare_success(command: list[str], **_: object) -> mock.Mock:
             data_dir = Path(command[command.index("--data-dir") + 1])
@@ -623,7 +624,7 @@ class ModalE9RecoverabilityTests(unittest.TestCase):
         ):
             namespace.update(vars(runner))
             namespace["_require_enforced_budget"] = lambda: None
-            with self.assertRaisesRegex(core.LaunchGateError, "remote boundary"):
+            with pytest.raises(core.LaunchGateError, match="remote boundary"):
                 raw_run_one(
                     competition_id="alaska2-image-steganalysis",
                     generation_backend="merged_vllm",
@@ -665,7 +666,7 @@ class ModalE9RecoverabilityTests(unittest.TestCase):
                 ),
                 encoding="utf-8",
             )
-            with self.assertRaisesRegex(RuntimeError, "cannot cover"):
+            with pytest.raises(RuntimeError, match="cannot cover"):
                 runner._validate_spawn_budget_and_queue(
                     output_dir=str(root / "out"), spend_ledger_path=str(ledger)
                 )

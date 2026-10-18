@@ -28,15 +28,18 @@ H4: D14 + D15 = 0 (both zero is the iter-172 sharpest negative finding
 
 Stdlib only.  <= 200 lines.
 """
+
 from __future__ import annotations
 import csv
 import json
 from pathlib import Path
 
 import sys
+
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
-from _stats import pow_root, wilson_p  # noqa: E402
+from _paths import REPO_ROOT
+from _stats import pow_root, wilson_p
+
 ROOT = REPO_ROOT
 RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8"
 RES.mkdir(parents=True, exist_ok=True)
@@ -75,9 +78,9 @@ def main():
     # on at least 3 of 5 seeds at this (rate, fset) cell.
     d14_per_cell = []
     for rate, fset, clf in agg_keys:
-        cell_rows = [r for r in rows
-                     if r["rate_pct"] == rate and r["fset"] == fset
-                     and r["clf"] == clf]
+        cell_rows = [
+            r for r in rows if r["rate_pct"] == rate and r["fset"] == fset and r["clf"] == clf
+        ]
         seeds_with_break = set()
         seeds_with_pareto = set()
         seeds = sorted({r["seed"] for r in cell_rows})
@@ -87,16 +90,20 @@ def main():
             if any(float(r["esc_prec"]) >= 0.05 for r in seed_rows):
                 seeds_with_break.add(seed)
             # D15 = any τ achieves Pareto
-            if any((float(r["esc_prec"]) >= 0.10
-                    and float(r["value_rate"]) >= 0.30)
-                   for r in seed_rows):
+            if any(
+                (float(r["esc_prec"]) >= 0.10 and float(r["value_rate"]) >= 0.30) for r in seed_rows
+            ):
                 seeds_with_pareto.add(seed)
-        d14_per_cell.append({
-            "rate_pct": rate, "fset": fset, "clf": clf,
-            "n_seeds": len(seeds),
-            "d14_seeds_with_break": len(seeds_with_break),
-            "d15_seeds_with_pareto": len(seeds_with_pareto),
-        })
+        d14_per_cell.append(
+            {
+                "rate_pct": rate,
+                "fset": fset,
+                "clf": clf,
+                "n_seeds": len(seeds),
+                "d14_seeds_with_break": len(seeds_with_break),
+                "d15_seeds_with_pareto": len(seeds_with_pareto),
+            }
+        )
 
     # Now compute per-(rate, fset) density at the SYNTH granularity
     # (without tier): k = sum over seeds/clfs of break events at this cell.
@@ -106,45 +113,52 @@ def main():
     # iter-168; we replicate the tier axis by enumerating 5 tiers
     # symmetric (the iter-172 finding is tier-invariant — joint_vstat
     # only depends on the test rows, not on the LLM cost tier).
-    TIERS = ["cheap_heuristic", "small_open", "iter120_default",
-             "mid_tier", "frontier_gpt4"]
+    TIERS = ["cheap_heuristic", "small_open", "iter120_default", "mid_tier", "frontier_gpt4"]
     d14_synth_cell = []
     d15_synth_cell = []
     for rate, fset, clf in agg_keys:
         if clf != "joint_vstat":
             continue
         # Find the per-(rate, fset, clf) cell stats
-        cell = next(c for c in d14_per_cell
-                    if c["rate_pct"] == rate and c["fset"] == fset
-                    and c["clf"] == clf)
+        cell = next(
+            c
+            for c in d14_per_cell
+            if c["rate_pct"] == rate and c["fset"] == fset and c["clf"] == clf
+        )
         for tier in TIERS:
-            d14_synth_cell.append({
-                "rate_pct": rate, "fset": fset, "tier": tier,
-                "k_d14": cell["d14_seeds_with_break"],
-                "n": cell["n_seeds"],
-                "d14_density": cell["d14_seeds_with_break"] / cell["n_seeds"],
-            })
-            d15_synth_cell.append({
-                "rate_pct": rate, "fset": fset, "tier": tier,
-                "k_d15": cell["d15_seeds_with_pareto"],
-                "n": cell["n_seeds"],
-                "d15_density": cell["d15_seeds_with_pareto"] / cell["n_seeds"],
-            })
+            d14_synth_cell.append(
+                {
+                    "rate_pct": rate,
+                    "fset": fset,
+                    "tier": tier,
+                    "k_d14": cell["d14_seeds_with_break"],
+                    "n": cell["n_seeds"],
+                    "d14_density": cell["d14_seeds_with_break"] / cell["n_seeds"],
+                }
+            )
+            d15_synth_cell.append(
+                {
+                    "rate_pct": rate,
+                    "fset": fset,
+                    "tier": tier,
+                    "k_d15": cell["d15_seeds_with_pareto"],
+                    "n": cell["n_seeds"],
+                    "d15_density": cell["d15_seeds_with_pareto"] / cell["n_seeds"],
+                }
+            )
 
     # Aggregate densities
     d14_k = sum(c["k_d14"] >= 3 for c in d14_synth_cell)
     d14_n = len(d14_synth_cell)
     d14_p = d14_k / max(1, d14_n)
     d14_lo, d14_hi = wilson_95(d14_k, d14_n)
-    print(f"[synth172] D14: {d14_k}/{d14_n} = {d14_p:.4f} "
-          f"[Wilson {d14_lo:.3f}, {d14_hi:.3f}]")
+    print(f"[synth172] D14: {d14_k}/{d14_n} = {d14_p:.4f} [Wilson {d14_lo:.3f}, {d14_hi:.3f}]")
 
     d15_k = sum(c["k_d15"] >= 3 for c in d15_synth_cell)
     d15_n = len(d15_synth_cell)
     d15_p = d15_k / max(1, d15_n)
     d15_lo, d15_hi = wilson_95(d15_k, d15_n)
-    print(f"[synth172] D15: {d15_k}/{d15_n} = {d15_p:.4f} "
-          f"[Wilson {d15_lo:.3f}, {d15_hi:.3f}]")
+    print(f"[synth172] D15: {d15_k}/{d15_n} = {d15_p:.4f} [Wilson {d15_lo:.3f}, {d15_hi:.3f}]")
 
     # Load D12 from iter-168 (which has the same aggregation)
     # For comparison, iter-168 D12 = 0/100 = 0.000
@@ -153,26 +167,23 @@ def main():
     h1_pass = d14_p >= 0.10
     h2_pass = d15_p >= 0.01
     h3_pass = d14_p > d12_density
-    h4_pass = (d14_k == 0 and d15_k == 0)
+    h4_pass = d14_k == 0 and d15_k == 0
     print(f"[synth172] H1 D14>=0.10: {d14_p:.4f} PASS={h1_pass}")
     print(f"[synth172] H2 D15>=0.01: {d15_p:.4f} PASS={h2_pass}")
-    print(f"[synth172] H3 D14>D12 ({d14_p:.4f} > {d12_density:.4f}): "
-          f"PASS={h3_pass}")
+    print(f"[synth172] H3 D14>D12 ({d14_p:.4f} > {d12_density:.4f}): PASS={h3_pass}")
     print(f"[synth172] H4 D14=D15=0: PASS={h4_pass}")
 
     # Write per-cell outputs
     out_d14 = RES / "synth_iter172_d14_per_cell.tsv"
     with out_d14.open("w") as f:
-        w = csv.DictWriter(f, fieldnames=list(d14_synth_cell[0].keys()),
-                           delimiter="\t")
+        w = csv.DictWriter(f, fieldnames=list(d14_synth_cell[0].keys()), delimiter="\t")
         w.writeheader()
         w.writerows(d14_synth_cell)
     print(f"[synth172] wrote {out_d14} ({len(d14_synth_cell)} rows)")
 
     out_d15 = RES / "synth_iter172_d15_per_cell.tsv"
     with out_d15.open("w") as f:
-        w = csv.DictWriter(f, fieldnames=list(d15_synth_cell[0].keys()),
-                           delimiter="\t")
+        w = csv.DictWriter(f, fieldnames=list(d15_synth_cell[0].keys()), delimiter="\t")
         w.writeheader()
         w.writerows(d15_synth_cell)
     print(f"[synth172] wrote {out_d15} ({len(d15_synth_cell)} rows)")
@@ -182,16 +193,23 @@ def main():
     base = list(iter168["twelve_domain_summary"])
     # iter168 reported D1-D13 (twelve + one more); rename to match
     new_domains = [
-        {"domain": "D14", "label": "P8_vstat_ensemble_ceiling_break",
-         "density": d14_p, "layer": layer_for(d14_p)},
-        {"domain": "D15", "label": "P8_vstat_ensemble_pareto_at_tau",
-         "density": d15_p, "layer": layer_for(d15_p)},
+        {
+            "domain": "D14",
+            "label": "P8_vstat_ensemble_ceiling_break",
+            "density": d14_p,
+            "layer": layer_for(d14_p),
+        },
+        {
+            "domain": "D15",
+            "label": "P8_vstat_ensemble_pareto_at_tau",
+            "density": d15_p,
+            "layer": layer_for(d15_p),
+        },
     ]
     full_15 = base + new_domains
     out_15 = RES / "synth_iter172_fifteen_domain_density.tsv"
     with out_15.open("w") as f:
-        w = csv.DictWriter(f, fieldnames=["domain", "label", "density", "layer"],
-                           delimiter="\t")
+        w = csv.DictWriter(f, fieldnames=["domain", "label", "density", "layer"], delimiter="\t")
         w.writeheader()
         w.writerows(full_15)
     print(f"[synth172] wrote {out_15} (15 rows)")
@@ -201,12 +219,22 @@ def main():
         "job": "P5P8-SYNTH fourteen-domain density matrix (D14 + D15)",
         "n_d14_synth_cells": d14_n,
         "n_d15_synth_cells": d15_n,
-        "d14_overall": {"k": d14_k, "n": d14_n, "p": d14_p,
-                        "lo": d14_lo, "hi": d14_hi,
-                        "layer": layer_for(d14_p)},
-        "d15_overall": {"k": d15_k, "n": d15_n, "p": d15_p,
-                        "lo": d15_lo, "hi": d15_hi,
-                        "layer": layer_for(d15_p)},
+        "d14_overall": {
+            "k": d14_k,
+            "n": d14_n,
+            "p": d14_p,
+            "lo": d14_lo,
+            "hi": d14_hi,
+            "layer": layer_for(d14_p),
+        },
+        "d15_overall": {
+            "k": d15_k,
+            "n": d15_n,
+            "p": d15_p,
+            "lo": d15_lo,
+            "hi": d15_hi,
+            "layer": layer_for(d15_p),
+        },
         "d12_baseline_iter168_density": d12_density,
         "fifteen_domain_summary": full_15,
         "h1_pass": h1_pass,

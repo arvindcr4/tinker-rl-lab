@@ -55,7 +55,9 @@ def verify(manifest_path=None, expected_manifest_sha256=None):
         )
         checks["unique_runs"] = len(set(r["run_id"] for r in runs)) == len(runs)
         checks["png_format"] = all(p.read_bytes().startswith(b"\x89PNG\r\n\x1a\n") for p in IMAGES)
-        checks["https_links"] = all(isinstance(r["url"], str) and r["url"].startswith("https://") for r in runs)
+        checks["https_links"] = all(
+            isinstance(r["url"], str) and r["url"].startswith("https://") for r in runs
+        )
     except (OSError, ValueError, KeyError, TypeError):
         checks["readable_valid_schema"] = False
     return {

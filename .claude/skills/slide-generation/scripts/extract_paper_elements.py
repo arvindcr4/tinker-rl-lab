@@ -80,11 +80,13 @@ def extract_sections(tex: str) -> list[dict]:
         sec_match = re.match(r"\\(sub)?section\*?\{([^}]+)\}", part)
         if sec_match:
             if current_name:
-                sections.append({
-                    "name": current_name,
-                    "level": current_level,
-                    "text": current_text.strip()[:500],
-                })
+                sections.append(
+                    {
+                        "name": current_name,
+                        "level": current_level,
+                        "text": current_text.strip()[:500],
+                    }
+                )
             is_sub = sec_match.group(1) is not None
             current_name = sec_match.group(2).strip()
             current_level = 2 if is_sub else 1
@@ -93,11 +95,13 @@ def extract_sections(tex: str) -> list[dict]:
             current_text += part
 
     if current_name:
-        sections.append({
-            "name": current_name,
-            "level": current_level,
-            "text": current_text.strip()[:500],
-        })
+        sections.append(
+            {
+                "name": current_name,
+                "level": current_level,
+                "text": current_text.strip()[:500],
+            }
+        )
 
     return sections
 
@@ -105,20 +109,20 @@ def extract_sections(tex: str) -> list[dict]:
 def extract_figures(tex: str) -> list[dict]:
     """Extract figure paths and captions."""
     figures = []
-    fig_envs = re.finditer(
-        r"\\begin\{figure\*?\}.*?\\end\{figure\*?\}", tex, re.DOTALL
-    )
+    fig_envs = re.finditer(r"\\begin\{figure\*?\}.*?\\end\{figure\*?\}", tex, re.DOTALL)
     for fig in fig_envs:
         fig_text = fig.group()
         path_match = re.search(r"\\includegraphics(?:\[.*?\])?\{([^}]+)\}", fig_text)
         caption_match = re.search(r"\\caption\{(.+?)\}", fig_text, re.DOTALL)
         label_match = re.search(r"\\label\{([^}]+)\}", fig_text)
 
-        figures.append({
-            "path": path_match.group(1) if path_match else "",
-            "caption": caption_match.group(1).strip()[:200] if caption_match else "",
-            "label": label_match.group(1) if label_match else "",
-        })
+        figures.append(
+            {
+                "path": path_match.group(1) if path_match else "",
+                "caption": caption_match.group(1).strip()[:200] if caption_match else "",
+                "label": label_match.group(1) if label_match else "",
+            }
+        )
 
     return figures
 
@@ -142,10 +146,12 @@ def extract_tables(tex: str) -> list[dict]:
         table_text = m.group()
         caption_match = re.search(r"\\caption\{(.+?)\}", table_text, re.DOTALL)
         label_match = re.search(r"\\label\{([^}]+)\}", table_text)
-        tables.append({
-            "caption": caption_match.group(1).strip()[:200] if caption_match else "",
-            "label": label_match.group(1) if label_match else "",
-        })
+        tables.append(
+            {
+                "caption": caption_match.group(1).strip()[:200] if caption_match else "",
+                "label": label_match.group(1) if label_match else "",
+            }
+        )
     return tables
 
 
@@ -158,21 +164,25 @@ def generate_beamer(elements: dict, theme: str = "metropolis") -> str:
     ]
     if elements["authors"]:
         lines.append(f"\\author{{{', '.join(elements['authors'][:4])}}}")
-    lines.extend([
-        "\\date{\\today}",
-        "",
-        "\\begin{document}",
-        "\\maketitle",
-        "",
-    ])
+    lines.extend(
+        [
+            "\\date{\\today}",
+            "",
+            "\\begin{document}",
+            "\\maketitle",
+            "",
+        ]
+    )
 
     # Outline slide
-    lines.extend([
-        "\\begin{frame}{Outline}",
-        "\\tableofcontents",
-        "\\end{frame}",
-        "",
-    ])
+    lines.extend(
+        [
+            "\\begin{frame}{Outline}",
+            "\\tableofcontents",
+            "\\end{frame}",
+            "",
+        ]
+    )
 
     # Motivation / Introduction
     if elements["abstract"]:
@@ -224,17 +234,19 @@ def generate_beamer(elements: dict, theme: str = "metropolis") -> str:
         lines.append("")
 
     # Thank you slide
-    lines.extend([
-        "\\begin{frame}",
-        "\\centering",
-        "{\\Large Thank You!}",
-        "",
-        "\\vspace{1em}",
-        "Questions?",
-        "\\end{frame}",
-        "",
-        "\\end{document}",
-    ])
+    lines.extend(
+        [
+            "\\begin{frame}",
+            "\\centering",
+            "{\\Large Thank You!}",
+            "",
+            "\\vspace{1em}",
+            "Questions?",
+            "\\end{frame}",
+            "",
+            "\\end{document}",
+        ]
+    )
 
     return "\n".join(lines) + "\n"
 
@@ -243,8 +255,12 @@ def main():
     parser = argparse.ArgumentParser(description="Extract paper elements for slides")
     parser.add_argument("--tex", required=True, help="Main .tex file")
     parser.add_argument("--output", "-o", help="Output file")
-    parser.add_argument("--format", choices=["beamer", "json"], default="beamer",
-                        help="Output format (default: beamer)")
+    parser.add_argument(
+        "--format",
+        choices=["beamer", "json"],
+        default="beamer",
+        help="Output format (default: beamer)",
+    )
     parser.add_argument("--theme", default="metropolis", help="Beamer theme (default: metropolis)")
     args = parser.parse_args()
 

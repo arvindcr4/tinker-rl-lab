@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 """Editorial/build checks; not a benchmark rerun or policy clearance."""
 
-# ruff: noqa: S101 -- Assertion-based audit, with optimized execution rejected.
-
 from datetime import datetime, timezone
 from fractions import Fraction
 import hashlib

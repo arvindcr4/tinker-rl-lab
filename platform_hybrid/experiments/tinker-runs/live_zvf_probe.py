@@ -11,9 +11,20 @@ from __future__ import annotations
 
 import sys as _contract_sys
 from pathlib import Path as _ContractPath
+
 if len(_ContractPath(__file__).resolve().parents) > 3:
     _contract_sys.path.insert(0, str(_ContractPath(__file__).resolve().parents[3]))
-from platform_hybrid.experiments.framework_contracts import score_gsm8k, SCORER_ID, PROTOCOL_VERSION, aligned_datum, response_logprobs, group_zvf, stable_seed, experiment_spec, validate_resume, objective_identity, completion_receipt, require_completed, token_advantage
+from platform_hybrid.experiments.framework_contracts import (
+    score_gsm8k,
+    SCORER_ID,
+    aligned_datum,
+    response_logprobs,
+    stable_seed,
+    experiment_spec,
+    validate_resume,
+    objective_identity,
+    completion_receipt,
+)
 
 
 import argparse
@@ -65,7 +76,10 @@ def reward_fn(response, answer):
 
 
 def loss_fn(data, logprobs_list):
-    losses = [(-_ADVS[i] * response_logprobs(data[i], logprobs_list[i]).sum()) for i in range(len(logprobs_list))]
+    losses = [
+        (-_ADVS[i] * response_logprobs(data[i], logprobs_list[i]).sum())
+        for i in range(len(logprobs_list))
+    ]
     loss = losses[0] if len(losses) == 1 else __import__("torch").stack(losses).mean()
     return loss, {"loss": loss.item()}
 
@@ -113,12 +127,15 @@ def run(args: argparse.Namespace) -> dict:
     output_path = RESULTS_DIR / f"{tag}.json"
 
     if output_path.exists() and not getattr(args, "resume", False):
-        raise FileExistsError("Use a new attempt tag or explicit compatible resume; existing artifacts are immutable")
+        raise FileExistsError(
+            "Use a new attempt tag or explicit compatible resume; existing artifacts are immutable"
+        )
 
     # --resume: pick up from the last save_state checkpoint recorded in the
     # existing result JSON; weights + Adam state are restored server-side.
-    specification = experiment_spec({k: v for k, v in vars(args).items()
-                                     if k not in {"resume", "tag", "no_wandb"}})
+    specification = experiment_spec(
+        {k: v for k, v in vars(args).items() if k not in {"resume", "tag", "no_wandb"}}
+    )
     prior: dict | None = None
     resume_step = 0
     resume_state_path: str | None = None
@@ -129,21 +146,24 @@ def run(args: argparse.Namespace) -> dict:
             print(f"[{tag}] already completed; nothing to resume", flush=True)
             return prior
         expected = {
-            "model": args.model, "seed": args.seed, "rank": args.rank,
-            "group_size": args.group, "batch": args.batch,
-            "steps": args.steps, "temperature": args.temperature,
+            "model": args.model,
+            "seed": args.seed,
+            "rank": args.rank,
+            "group_size": args.group,
+            "batch": args.batch,
+            "steps": args.steps,
+            "temperature": args.temperature,
             "loss": getattr(args, "loss", "grpo"),
         }
-        mismatched = [k for k, v in expected.items()
-                      if prior.get(k) is not None and prior.get(k) != v]
+        mismatched = [
+            k for k, v in expected.items() if prior.get(k) is not None and prior.get(k) != v
+        ]
         if mismatched:
-            raise RuntimeError(
-                f"--resume config mismatch on {mismatched} vs {output_path}")
+            raise RuntimeError(f"--resume config mismatch on {mismatched} vs {output_path}")
         resume_state_path = prior.get("train_state_path")
         if resume_state_path:
             resume_step = int(prior.get("train_state_step", 0))
-            print(f"[{tag}] resuming from step {resume_step} "
-                  f"state={resume_state_path}", flush=True)
+            print(f"[{tag}] resuming from step {resume_step} state={resume_state_path}", flush=True)
         else:
             raise RuntimeError(
                 f"Cannot resume {output_path}: no train_state_path; "
@@ -154,6 +174,7 @@ def run(args: argparse.Namespace) -> dict:
     if not getattr(args, "no_wandb", False):
         try:
             import wandb
+
             wb = wandb.init(
                 entity=os.environ.get("WANDB_ENTITY", "arvindcr4-pes-university"),
                 project=os.environ.get("WANDB_PROJECT", "zvf-training"),
@@ -163,9 +184,14 @@ def run(args: argparse.Namespace) -> dict:
                 config={
                     **specification,
                     **objective_identity(getattr(args, "loss", "grpo")),
-                    "model": args.model, "seed": args.seed, "rank": args.rank,
-                    "group_size": args.group, "batch": args.batch, "lr": args.lr,
-                    "temperature": args.temperature, "steps": args.steps,
+                    "model": args.model,
+                    "seed": args.seed,
+                    "rank": args.rank,
+                    "group_size": args.group,
+                    "batch": args.batch,
+                    "lr": args.lr,
+                    "temperature": args.temperature,
+                    "steps": args.steps,
                     "max_tokens": args.max_tokens,
                     "loss": getattr(args, "loss", "grpo"),
                 },
@@ -231,7 +257,9 @@ def run(args: argparse.Namespace) -> dict:
         if prior and resume_state_path:
             tc = svc.create_training_client_from_state_with_optimizer(resume_state_path)
         else:
-            tc = svc.create_lora_training_client(base_model=args.model, rank=args.rank, seed=args.seed)
+            tc = svc.create_lora_training_client(
+                base_model=args.model, rank=args.rank, seed=args.seed
+            )
         result["run_id"] = tc.model_id
         output_path.write_text(json.dumps(result, indent=2) + "\n")
 
@@ -240,7 +268,11 @@ def run(args: argparse.Namespace) -> dict:
         sc = tc.create_sampling_client(model_path=initial.path)
         result["initial_sampler"] = initial.path
         result["sampler_uri"] = initial.path
-        result["tokenizer_identity"] = {"repository": args.model, "revision": getattr(tok, "init_kwargs", {}).get("_commit_hash"), "template": "manual-chatml-v1"}
+        result["tokenizer_identity"] = {
+            "repository": args.model,
+            "revision": getattr(tok, "init_kwargs", {}).get("_commit_hash"),
+            "template": "manual-chatml-v1",
+        }
         result["dataset_items_hash"] = experiment_spec({"examples": examples})["config_hash"]
 
         step_rewards: list[float] = list((prior or {}).get("reward_trace", []))[:resume_step]
@@ -280,13 +312,20 @@ def run(args: argparse.Namespace) -> dict:
                 ).result()
                 if len(sampled.sequences) != args.group:
                     raise RuntimeError("Incomplete requested sample group")
-                rollout_groups.append({"prompt_token_hash": experiment_spec({"tokens": prompt_ids})["config_hash"],
-                                       "sampler_uri": result["sampler_uri"], "completions": []})
+                rollout_groups.append(
+                    {
+                        "prompt_token_hash": experiment_spec({"tokens": prompt_ids})["config_hash"],
+                        "sampler_uri": result["sampler_uri"],
+                        "completions": [],
+                    }
+                )
                 rewards: list[float] = []
                 for sequence in sampled.sequences:
                     text = tok.decode(list(sequence.tokens), skip_special_tokens=True)
                     rewards.append(reward_fn(text, answer))
-                    rollout_groups[-1]["completions"].append({"text": text, "reward": rewards[-1], "tokens": list(sequence.tokens)})
+                    rollout_groups[-1]["completions"].append(
+                        {"text": text, "reward": rewards[-1], "tokens": list(sequence.tokens)}
+                    )
                     batch_comp_lens.append(len(sequence.tokens))
 
                 mean_reward = sum(rewards) / len(rewards)
@@ -296,7 +335,7 @@ def run(args: argparse.Namespace) -> dict:
                     zero_var_prompts += 1
                 batch_rewards.extend(rewards)
 
-                for sequence, reward in zip(sampled.sequences, rewards):
+                for sequence, reward in zip(sampled.sequences, rewards, strict=False):
                     response_ids = list(sequence.tokens)
                     full_ids = prompt_ids + response_ids
                     # next-token alignment; old `+ [0]` trained a spurious
@@ -304,9 +343,10 @@ def run(args: argparse.Namespace) -> dict:
                     target_ids = full_ids[1:]
                     all_data.append(aligned_datum(T, prompt_ids, response_ids))
                     all_advs.append(
-            (reward - mean_reward) if not _ADV_NORMALIZE_STD
-            else (reward - mean_reward) / std_reward
-        )
+                        (reward - mean_reward)
+                        if not _ADV_NORMALIZE_STD
+                        else (reward - mean_reward) / std_reward
+                    )
 
             _ADVS.clear()
             _ADVS.extend(all_advs)
@@ -340,31 +380,37 @@ def run(args: argparse.Namespace) -> dict:
                     "zvf": zvf,
                     "gu": 1.0 - zvf,
                     "mean_comp_len": (sum(batch_comp_lens) / len(batch_comp_lens))
-                                     if batch_comp_lens else None,
+                    if batch_comp_lens
+                    else None,
                 }
             )
 
             print(
-                f"[{tag}] step {step+1:02d}/{args.steps} "
+                f"[{tag}] step {step + 1:02d}/{args.steps} "
                 f"reward={avg_reward:.3f} zvf={zvf:.2f} loss={loss_value}",
                 flush=True,
             )
 
             if wb is not None:
                 _e = step_log[-1]
-                wb.log({
-                    "reward": avg_reward, "zvf": zvf, "gu": 1.0 - zvf,
-                    "loss": loss_value,
-                    "mean_comp_len": _e.get("mean_comp_len"),
-                }, step=step + 1)
+                wb.log(
+                    {
+                        "reward": avg_reward,
+                        "zvf": zvf,
+                        "gu": 1.0 - zvf,
+                        "loss": loss_value,
+                        "mean_comp_len": _e.get("mean_comp_len"),
+                    },
+                    step=step + 1,
+                )
 
             if True:  # current-policy sampler, separate from persistence
-                weights = tc.save_weights_for_sampler(name=f"s{step+1}").result()
+                weights = tc.save_weights_for_sampler(name=f"s{step + 1}").result()
                 sc = tc.create_sampling_client(model_path=weights.path)
                 result["latest_sampler"] = weights.path
                 result["sampler_uri"] = weights.path
             if (step + 1) % args.save_every == 0:
-                state = tc.save_state(name=f"state_s{step+1}", overwrite=True).result()
+                state = tc.save_state(name=f"state_s{step + 1}", overwrite=True).result()
                 result["train_state_path"] = state.path
                 result["training_state_uri"] = state.path
                 result["train_state_step"] = step + 1
@@ -412,9 +458,13 @@ def run(args: argparse.Namespace) -> dict:
         output_path.write_text(json.dumps(result, indent=2) + "\n")
         print(f"[{tag}] completed run_id={result.get('run_id')} output={output_path}", flush=True)
         if wb is not None:
-            wb.summary.update({k: v for k, v in result.items()
-                               if isinstance(v, (int, float))
-                               and not isinstance(v, bool)})
+            wb.summary.update(
+                {
+                    k: v
+                    for k, v in result.items()
+                    if isinstance(v, (int, float)) and not isinstance(v, bool)
+                }
+            )
             wb.finish()
         return result
 
@@ -451,13 +501,21 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--example-limit", type=int, default=256)
     parser.add_argument("--save-every", type=int, default=5)
     parser.add_argument("--tag", default="")
-    parser.add_argument("--loss", default="grpo", choices=["grpo", "drgrpo"],
-                        help="drgrpo removes the /std advantage normalization")
-    parser.add_argument("--resume", action="store_true",
-                        help="resume from the last save_state checkpoint recorded "
-                             "in results/<tag>.json (weights + Adam state)")
-    parser.add_argument("--no-wandb", action="store_true",
-                        help="disable native live W&B logging for this run")
+    parser.add_argument(
+        "--loss",
+        default="grpo",
+        choices=["grpo", "drgrpo"],
+        help="drgrpo removes the /std advantage normalization",
+    )
+    parser.add_argument(
+        "--resume",
+        action="store_true",
+        help="resume from the last save_state checkpoint recorded "
+        "in results/<tag>.json (weights + Adam state)",
+    )
+    parser.add_argument(
+        "--no-wandb", action="store_true", help="disable native live W&B logging for this run"
+    )
     return parser.parse_args()
 
 

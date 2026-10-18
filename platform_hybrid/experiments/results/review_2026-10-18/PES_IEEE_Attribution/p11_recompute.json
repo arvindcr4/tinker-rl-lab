@@ -1,0 +1,139 @@
+{
+ "held_out_key_cfg": {
+  "grpo": {
+   "model": null,
+   "model_name": null,
+   "max_steps": 30,
+   "steps": null,
+   "num_generations": 4,
+   "group_size": null,
+   "task": null,
+   "dataset": null
+  },
+  "dapo": {
+   "model": null,
+   "model_name": null,
+   "max_steps": 30,
+   "steps": null,
+   "num_generations": 4,
+   "group_size": null,
+   "task": null,
+   "dataset": null
+  },
+  "gspo": {
+   "model": null,
+   "model_name": null,
+   "max_steps": 30,
+   "steps": null,
+   "num_generations": 4,
+   "group_size": null,
+   "task": null,
+   "dataset": null
+  },
+  "drgrpo": {
+   "model": null,
+   "model_name": null,
+   "max_steps": 30,
+   "steps": null,
+   "num_generations": 4,
+   "group_size": null,
+   "task": null,
+   "dataset": null
+  },
+  "aero": {
+   "model": null,
+   "model_name": null,
+   "max_steps": 30,
+   "steps": null,
+   "num_generations": 4,
+   "group_size": null,
+   "task": null,
+   "dataset": null
+  }
+ },
+ "arm_means": {
+  "grpo": {
+   "n": 8,
+   "mean": 0.633,
+   "sd": 0.0092
+  },
+  "dapo": {
+   "n": 8,
+   "mean": 0.634,
+   "sd": 0.007
+  },
+  "gspo": {
+   "n": 8,
+   "mean": 0.638,
+   "sd": 0.0057
+  },
+  "drgrpo": {
+   "n": 8,
+   "mean": 0.631,
+   "sd": 0.0094
+  },
+  "aero": {
+   "n": 8,
+   "mean": 0.6322,
+   "sd": 0.0039
+  }
+ },
+ "contrasts_vs_grpo": {
+  "dapo": {
+   "n": 8,
+   "df": 7,
+   "mean_delta": 0.001,
+   "sd_d": 0.00875,
+   "ci95": [
+    -0.0063,
+    0.0083
+   ],
+   "t": 0.323,
+   "p": 0.756,
+   "mde80": 0.01012,
+   "p_bh": 0.8578
+  },
+  "gspo": {
+   "n": 8,
+   "df": 7,
+   "mean_delta": 0.005,
+   "sd_d": 0.01025,
+   "ci95": [
+    -0.0036,
+    0.0136
+   ],
+   "t": 1.379,
+   "p": 0.2103,
+   "mde80": 0.01185,
+   "p_bh": 0.8411
+  },
+  "drgrpo": {
+   "n": 8,
+   "df": 7,
+   "mean_delta": -0.002,
+   "sd_d": 0.01283,
+   "ci95": [
+    -0.0127,
+    0.0087
+   ],
+   "t": -0.441,
+   "p": 0.6725,
+   "mde80": 0.01483,
+   "p_bh": 0.8578
+  },
+  "aero": {
+   "n": 8,
+   "df": 7,
+   "mean_delta": -0.0008,
+   "sd_d": 0.01141,
+   "ci95": [
+    -0.0103,
+    0.0088
+   ],
+   "t": -0.186,
+   "p": 0.8578,
+   "mde80": 0.01319,
+   "p_bh": 0.8578
+  }
+ }
+}

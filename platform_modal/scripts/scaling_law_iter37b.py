@@ -21,17 +21,16 @@ class of synthetic breakpoints.
 from __future__ import annotations
 
 import csv
-import json
 import math
 from pathlib import Path
 
 import matplotlib
 
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt  # noqa: E402
-import numpy as np  # noqa: E402
-from scipy.optimize import curve_fit  # noqa: E402
-from _analysis_common import saturation as model_saturation  # noqa: E402
+import matplotlib.pyplot as plt
+import numpy as np
+from scipy.optimize import curve_fit
+from _analysis_common import saturation as model_saturation
 
 REPO = Path(__file__).resolve().parent.parent
 DATA = REPO / "experiments" / "results" / "scaling_law_extended_frontier.tsv"
@@ -114,7 +113,12 @@ def aic_bic(n, k, ss_res):
 def fit_candidate(t, y, cand):
     try:
         popt, _ = curve_fit(
-            cand["fn"], t, y, p0=cand["p0"], bounds=cand["bounds"], maxfev=8000,
+            cand["fn"],
+            t,
+            y,
+            p0=cand["p0"],
+            bounds=cand["bounds"],
+            maxfev=8000,
         )
     except Exception:
         return None, float("inf"), float("inf"), float("inf"), -math.inf, True
@@ -129,8 +133,10 @@ def fit_candidate(t, y, cand):
 
 def synth_trace(r, rc_lookup):
     n = int(r["n_steps"])
-    peak = int(float(rc_lookup[r["model"]]["peak_step"])) if r["model"] in rc_lookup else (
-        1 if abs(r["r_peak"] - r["r_first"]) < 0.05 else max(1, n // 2)
+    peak = (
+        int(float(rc_lookup[r["model"]]["peak_step"]))
+        if r["model"] in rc_lookup
+        else (1 if abs(r["r_peak"] - r["r_first"]) < 0.05 else max(1, n // 2))
     )
     if peak < 1:
         peak = 1
@@ -173,8 +179,10 @@ def main() -> None:
     var_threshold = 0.005
     dynamic_rows = [r for r in rows if r["r_var"] > var_threshold]
     flat_rows = [r for r in rows if r["r_var"] <= var_threshold]
-    print(f"Total anchors: {len(rows)}, dynamic (r_var>{var_threshold}): "
-          f"{len(dynamic_rows)}, flat: {len(flat_rows)}")
+    print(
+        f"Total anchors: {len(rows)}, dynamic (r_var>{var_threshold}): "
+        f"{len(dynamic_rows)}, flat: {len(flat_rows)}"
+    )
 
     dynamic_rows.sort(key=lambda r: -r["params_B"])
 
@@ -183,18 +191,26 @@ def main() -> None:
     aic_rows = []
     for r in dynamic_rows:
         t, y, _ = synth_trace(r, rc_lookup)
-        per_model = {"model": r["model"], "params_B": r["params_B"],
-                     "arch": r["arch"], "n_steps": int(r["n_steps"]),
-                     "r_var": r["r_var"]}
+        per_model = {
+            "model": r["model"],
+            "params_B": r["params_B"],
+            "arch": r["arch"],
+            "n_steps": int(r["n_steps"]),
+            "r_var": r["r_var"],
+        }
         per_cand = {}
         for cand in CANDIDATES:
             popt, ss_res, aic, bic, r2, hit = fit_candidate(t, y, cand)
             per_cand[cand["name"]] = {
-                "params": popt, "ss_res": ss_res, "aic": aic, "bic": bic,
-                "r2": r2, "hit": hit,
+                "params": popt,
+                "ss_res": ss_res,
+                "aic": aic,
+                "bic": bic,
+                "r2": r2,
+                "hit": hit,
             }
             params = (
-                {f"param_{k_}": float(p) for k_, p in zip(["p1", "p2"], popt)}
+                {f"param_{k_}": float(p) for k_, p in zip(["p1", "p2"], popt, strict=False)}
                 if popt is not None
                 else {"param_p1": float("nan"), "param_p2": float("nan")}
             )
@@ -230,23 +246,26 @@ def main() -> None:
         # infeasible get weight 0
         exp_neg_half[~finite] = 0.0
         w = exp_neg_half / max(exp_neg_half.sum(), 1e-12)
-        w_sat = float(w[CANDIDATES.index(
-            next(c for c in CANDIDATES if c["name"] == "A_saturation_exp"))])
-        aic_rows.append({
-            "model": per_model["model"],
-            "params_B": per_model["params_B"],
-            "arch": per_model["arch"],
-            "r_var": round(r["r_var"], 6),
-            "best_aic_model": best,
-            "second_aic_model": second,
-            "delta_aic_best_second": round(delta_best_second, 4),
-            "delta_aic_best_worst": round(delta_best_worst, 4),
-            "w_saturation": round(w_sat, 4),
-            "w_michaelis_menten": round(float(w[1]), 4),
-            "w_hill_n2": round(float(w[2]), 4),
-            "w_power_law": round(float(w[3]), 4),
-            "w_linear": round(float(w[4]), 4),
-        })
+        w_sat = float(
+            w[CANDIDATES.index(next(c for c in CANDIDATES if c["name"] == "A_saturation_exp"))]
+        )
+        aic_rows.append(
+            {
+                "model": per_model["model"],
+                "params_B": per_model["params_B"],
+                "arch": per_model["arch"],
+                "r_var": round(r["r_var"], 6),
+                "best_aic_model": best,
+                "second_aic_model": second,
+                "delta_aic_best_second": round(delta_best_second, 4),
+                "delta_aic_best_worst": round(delta_best_worst, 4),
+                "w_saturation": round(w_sat, 4),
+                "w_michaelis_menten": round(float(w[1]), 4),
+                "w_hill_n2": round(float(w[2]), 4),
+                "w_power_law": round(float(w[3]), 4),
+                "w_linear": round(float(w[4]), 4),
+            }
+        )
 
     # ---- (2) bootstrap AIC selection rate on dynamic subset ----
     # We draw a random sample of anchors (with replacement) and refit; the
@@ -270,9 +289,7 @@ def main() -> None:
         winner_idx = []
         for i in idx:
             t_i, y_i, r_i = seeds_per_anchor[i]
-            y_noisy = np.clip(
-                y_i + RNG.normal(0, 0.10, size=len(y_i)), 0, 1
-            )
+            y_noisy = np.clip(y_i + RNG.normal(0, 0.10, size=len(y_i)), 0, 1)
             aics_i = []
             for cand in CANDIDATES:
                 _, _, aic_i, _, _, _ = fit_candidate(t_i, y_noisy, cand)
@@ -280,30 +297,33 @@ def main() -> None:
             aics_i = np.array(aics_i, dtype=float)
             if not np.any(np.isfinite(aics_i)):
                 continue
-            winner_idx.append(int(np.argmin(np.where(
-                np.isfinite(aics_i), aics_i, np.inf
-            ))))
+            winner_idx.append(int(np.argmin(np.where(np.isfinite(aics_i), aics_i, np.inf))))
         if not winner_idx:
             continue
         winner_names = [CANDIDATES[w]["name"] for w in winner_idx]
-        win_share = {c["name"]: sum(1 for w in winner_names if w == c["name"]) / len(winner_names) for c in CANDIDATES}
-        boot_rows.append({
-            "n_anchors_resampled": n_dyn,
-            "boot_n_resampled_traces": len(winner_names),
-            **win_share,
-        })
+        win_share = {
+            c["name"]: sum(1 for w in winner_names if w == c["name"]) / len(winner_names)
+            for c in CANDIDATES
+        }
+        boot_rows.append(
+            {
+                "n_anchors_resampled": n_dyn,
+                "boot_n_resampled_traces": len(winner_names),
+                **win_share,
+            }
+        )
     # aggregate bootstrap win shares across B_BOOT replicates
     if boot_rows:
         boot_summary = {
             c["name"]: round(float(np.mean([b[c["name"]] for b in boot_rows])), 4)
             for c in CANDIDATES
         }
-        sat_wins_share = sum(1 for b in boot_rows
-                             if b["A_saturation_exp"] > max(
-                                 v for k, v in b.items() if k.startswith("B_") or
-                                 k.startswith("C_") or k.startswith("D_") or
-                                 k.startswith("E_")
-                             )) / len(boot_rows)
+        sat_wins_share = sum(
+            1
+            for b in boot_rows
+            if b["A_saturation_exp"]
+            > max(v for k, v in b.items() if k.startswith(("B_", "C_", "D_", "E_")))
+        ) / len(boot_rows)
     else:
         boot_summary = {c["name"]: 0.0 for c in CANDIDATES}
         sat_wins_share = 0.0
@@ -317,8 +337,18 @@ def main() -> None:
     w_sat_obs = float(np.mean([r["w_saturation"] for r in aic_rows]))
     B_PERM = 2000
     w_sat_perm = []
-    w_arr = np.array([[r["w_saturation"], r["w_michaelis_menten"],
-                        r["w_hill_n2"], r["w_power_law"], r["w_linear"]] for r in aic_rows])
+    w_arr = np.array(
+        [
+            [
+                r["w_saturation"],
+                r["w_michaelis_menten"],
+                r["w_hill_n2"],
+                r["w_power_law"],
+                r["w_linear"],
+            ]
+            for r in aic_rows
+        ]
+    )
     for _ in range(B_PERM):
         # permute columns to break the "this column = A_saturation" identity
         perm = RNG.permutation(5)
@@ -333,22 +363,33 @@ def main() -> None:
         "n_dynamic": len(dynamic_rows),
         "var_threshold": var_threshold,
         "n_candidates": len(CANDIDATES),
-        "n_anchors_where_sat_wins_aic": sum(1 for r in aic_rows
-                                             if r["best_aic_model"] == "A_saturation_exp"),
-        "n_anchors_where_mm_wins_aic": sum(1 for r in aic_rows
-                                            if r["best_aic_model"] == "B_michaelis_menten"),
-        "n_anchors_where_hill_wins_aic": sum(1 for r in aic_rows
-                                              if r["best_aic_model"] == "C_hill_n2"),
-        "n_anchors_where_power_wins_aic": sum(1 for r in aic_rows
-                                               if r["best_aic_model"] == "D_power_law"),
-        "n_anchors_where_linear_wins_aic": sum(1 for r in aic_rows
-                                                if r["best_aic_model"] == "E_linear"),
-        "mean_w_saturation_dynamic": round(float(np.mean([r["w_saturation"] for r in aic_rows])), 4),
-        "mean_w_michaelis_menten_dynamic": round(float(np.mean([r["w_michaelis_menten"] for r in aic_rows])), 4),
+        "n_anchors_where_sat_wins_aic": sum(
+            1 for r in aic_rows if r["best_aic_model"] == "A_saturation_exp"
+        ),
+        "n_anchors_where_mm_wins_aic": sum(
+            1 for r in aic_rows if r["best_aic_model"] == "B_michaelis_menten"
+        ),
+        "n_anchors_where_hill_wins_aic": sum(
+            1 for r in aic_rows if r["best_aic_model"] == "C_hill_n2"
+        ),
+        "n_anchors_where_power_wins_aic": sum(
+            1 for r in aic_rows if r["best_aic_model"] == "D_power_law"
+        ),
+        "n_anchors_where_linear_wins_aic": sum(
+            1 for r in aic_rows if r["best_aic_model"] == "E_linear"
+        ),
+        "mean_w_saturation_dynamic": round(
+            float(np.mean([r["w_saturation"] for r in aic_rows])), 4
+        ),
+        "mean_w_michaelis_menten_dynamic": round(
+            float(np.mean([r["w_michaelis_menten"] for r in aic_rows])), 4
+        ),
         "mean_w_hill_dynamic": round(float(np.mean([r["w_hill_n2"] for r in aic_rows])), 4),
         "mean_w_power_dynamic": round(float(np.mean([r["w_power_law"] for r in aic_rows])), 4),
         "mean_w_linear_dynamic": round(float(np.mean([r["w_linear"] for r in aic_rows])), 4),
-        "median_delta_aic_best_second": round(float(np.median([r["delta_aic_best_second"] for r in aic_rows])), 4),
+        "median_delta_aic_best_second": round(
+            float(np.median([r["delta_aic_best_second"] for r in aic_rows])), 4
+        ),
         "bootstrap_win_share_saturation": boot_summary["A_saturation_exp"],
         "bootstrap_win_share_mm": boot_summary["B_michaelis_menten"],
         "bootstrap_win_share_hill": boot_summary["C_hill_n2"],
@@ -380,32 +421,45 @@ def main() -> None:
     # ---- figure: Akaike-weight heat-map + bootstrap histogram ----
     fig, axes = plt.subplots(1, 2, figsize=(12.5, 5.0))
     ax = axes[0]
-    w_mat = np.array([
-        [r["w_saturation"], r["w_michaelis_menten"], r["w_hill_n2"],
-         r["w_power_law"], r["w_linear"]] for r in aic_rows
-    ])
+    w_mat = np.array(
+        [
+            [
+                r["w_saturation"],
+                r["w_michaelis_menten"],
+                r["w_hill_n2"],
+                r["w_power_law"],
+                r["w_linear"],
+            ]
+            for r in aic_rows
+        ]
+    )
     im = ax.imshow(w_mat.T, cmap="viridis", aspect="auto", vmin=0, vmax=0.6)
     ax.set_yticks(range(5))
     ax.set_yticklabels([c["name"].split("_", 1)[1] for c in CANDIDATES], fontsize=9)
     ax.set_xticks(range(len(aic_rows)))
     short = [m.replace("-Instruct", "-Inst") for m in [r["model"] for r in aic_rows]]
-    ax.set_xticklabels([f"{s}\n{r['params_B']:.0f}B" for s, r in zip(short, aic_rows)],
-                       rotation=0, fontsize=8)
+    ax.set_xticklabels(
+        [f"{s}\n{r['params_B']:.0f}B" for s, r in zip(short, aic_rows, strict=False)],
+        rotation=0,
+        fontsize=8,
+    )
     ax.set_title("Iter37b -- Akaike weights across the dynamic frontier set")
     fig.colorbar(im, ax=ax, label="weight", shrink=0.85)
 
     ax2 = axes[1]
     win_arr = np.array([[b[c["name"]] for b in boot_rows] for c in CANDIDATES])
     short_names = [c["name"].split("_", 1)[1] for c in CANDIDATES]
-    bp = ax2.boxplot(win_arr.T,
-                     tick_labels=short_names,
-                     patch_artist=True,
-                     boxprops=dict(facecolor="#ccebc5", lw=0.5),
-                     medianprops=dict(color="#2b8cbe", lw=1.2),
-                     flierprops=dict(marker="o", ms=3, mfc="grey"),
-                     whiskerprops=dict(lw=0.7),
-                     capprops=dict(lw=0.7),
-                     widths=0.55)
+    bp = ax2.boxplot(
+        win_arr.T,
+        tick_labels=short_names,
+        patch_artist=True,
+        boxprops=dict(facecolor="#ccebc5", lw=0.5),
+        medianprops=dict(color="#2b8cbe", lw=1.2),
+        flierprops=dict(marker="o", ms=3, mfc="grey"),
+        whiskerprops=dict(lw=0.7),
+        capprops=dict(lw=0.7),
+        widths=0.55,
+    )
     ax2.set_xticklabels(short_names, rotation=20, ha="right", fontsize=8)
     ax2.axhline(0.25, ls="--", color="red", lw=0.8, label="uniform=1/4")
     ax2.set_ylabel("AIC winner share per bootstrap replicate")
@@ -425,9 +479,11 @@ def main() -> None:
         print(f"  {k}: {v}")
     print("\n=== Per-anchor AIC winner (dynamic only) ===")
     for r in aic_rows:
-        print(f"  {r['model']:30s}  best={r['best_aic_model']:25s} "
-              f"second={r['second_aic_model']:25s} "
-              f"delta={r['delta_aic_best_second']:.2f}")
+        print(
+            f"  {r['model']:30s}  best={r['best_aic_model']:25s} "
+            f"second={r['second_aic_model']:25s} "
+            f"delta={r['delta_aic_best_second']:.2f}"
+        )
 
 
 if __name__ == "__main__":

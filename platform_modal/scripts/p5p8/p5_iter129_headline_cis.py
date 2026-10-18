@@ -38,9 +38,9 @@ Outputs:
   platform_hybrid/experiments/results/p5p8/p5_iter129_headline_cis.tsv     (15 rows)
   platform_hybrid/experiments/results/p5p8/p5_iter129_headline_cis.json    (per-class tally)
 """
+
 from __future__ import annotations
 import csv
-import json
 import math
 import random
 import sys
@@ -48,12 +48,13 @@ from pathlib import Path
 from collections import defaultdict
 
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
+from _paths import REPO_ROOT
+
 ROOT = REPO_ROOT
-N2_TSV   = ROOT / "platform_hybrid/experiments/results/n2_reward_tensor_resume/n2_metrics.tsv"
-ZV130    = ROOT / "platform_hybrid/experiments/results/zvf_iter130_risk_index.tsv"
-MEGA     = ROOT / "platform_hybrid/experiments/results/mega_20260704/cells.tsv"
-OUT_DIR  = ROOT / "platform_hybrid/experiments/results/p5p8"
+N2_TSV = ROOT / "platform_hybrid/experiments/results/n2_reward_tensor_resume/n2_metrics.tsv"
+ZV130 = ROOT / "platform_hybrid/experiments/results/zvf_iter130_risk_index.tsv"
+MEGA = ROOT / "platform_hybrid/experiments/results/mega_20260704/cells.tsv"
+OUT_DIR = ROOT / "platform_hybrid/experiments/results/p5p8"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 SEED = 20260705
@@ -61,6 +62,7 @@ B = 2000
 ALPHA = 0.05
 
 # ---- bootstrap primitives (from adding_error_bars_to_evals.py) ----
+
 
 def bootstrap_ci_paired(diff_values, B=B, alpha=ALPHA, seed=SEED):
     n = len(diff_values)
@@ -103,8 +105,7 @@ def bootstrap_ci_eta2(groups, B=B, alpha=ALPHA, seed=SEED):
         return float("nan"), float("nan"), float("nan")
     K = len(groups)
     n_per = [len(g) for g in groups]
-    SS_axis = sum(n * (sum(g) / n - grand_mean) ** 2
-                  for g, n in zip(groups, n_per))
+    SS_axis = sum(n * (sum(g) / n - grand_mean) ** 2 for g, n in zip(groups, n_per, strict=False))
     eta2 = SS_axis / SS_total
     boot = []
     rng = random.Random(seed)
@@ -119,8 +120,7 @@ def bootstrap_ci_eta2(groups, B=B, alpha=ALPHA, seed=SEED):
         ng_total = sum((v - ng_mean) ** 2 for v in ng_all)
         if ng_total <= 0:
             continue
-        ng_axis = sum(len(g) * (sum(g) / len(g) - ng_mean) ** 2
-                      for g in new_groups)
+        ng_axis = sum(len(g) * (sum(g) / len(g) - ng_mean) ** 2 for g in new_groups)
         boot.append(ng_axis / ng_total)
     if len(boot) < 100:
         return eta2, float("nan"), float("nan")
@@ -139,6 +139,7 @@ def cohens_d_paired(a, b):
 
 
 # ---- loaders ----
+
 
 def load_n2():
     """Load N2 four-method per-step metrics.
@@ -189,23 +190,26 @@ def load_mega_cells():
         rdr = csv.DictReader(f, delimiter="\t")
         for r in rdr:
             try:
-                out.append({
-                    "cell_id": r["cell_id"],
-                    "model_family": r["model_family"],
-                    "task_slice": r["task_slice"],
-                    "G": int(r["G"]),
-                    "temperature": float(r["temperature"]),
-                    "seed": int(r["seed"]),
-                    "zvf": float(r["zvf"]),
-                    "pcd": float(r["pcd"]),
-                    "mean_reward": float(r["mean_reward"]),
-                })
+                out.append(
+                    {
+                        "cell_id": r["cell_id"],
+                        "model_family": r["model_family"],
+                        "task_slice": r["task_slice"],
+                        "G": int(r["G"]),
+                        "temperature": float(r["temperature"]),
+                        "seed": int(r["seed"]),
+                        "zvf": float(r["zvf"]),
+                        "pcd": float(r["pcd"]),
+                        "mean_reward": float(r["mean_reward"]),
+                    }
+                )
             except (ValueError, KeyError):
                 continue
     return out
 
 
 # ---- headline computations ----
+
 
 def compute_n2_eta2_per_channel(n2):
     """Returns {channel: eta2} for the N2 four-method algorithm axis."""
@@ -234,14 +238,16 @@ def compute_n2_cohens_d(n2):
     gift_pcd = [n2[("gift", s)]["pcd"] for s in last10]
     other_zvf = [n2[(m, s)]["zvf"] for m in methods_other for s in last10]
     other_pcd = [n2[(m, s)]["pcd"] for m in methods_other for s in last10]
+
     # pooled variance
     def pooled_cd(g, o):
-        m_g = sum(g) / len(g); m_o = sum(o) / len(o)
+        m_g = sum(g) / len(g)
+        m_o = sum(o) / len(o)
         var_g = sum((x - m_g) ** 2 for x in g) / (len(g) - 1)
         var_o = sum((x - m_o) ** 2 for x in o) / (len(o) - 1)
-        sp = math.sqrt(((len(g) - 1) * var_g + (len(o) - 1) * var_o)
-                        / (len(g) + len(o) - 2))
+        sp = math.sqrt(((len(g) - 1) * var_g + (len(o) - 1) * var_o) / (len(g) + len(o) - 2))
         return (m_g - m_o) / sp if sp > 1e-12 else float("nan")
+
     point_zvf = pooled_cd(gift_zvf, other_zvf)
     point_pcd = pooled_cd(gift_pcd, other_pcd)
     # Bootstrap CI: resample the step index for both groups, preserving
@@ -261,14 +267,19 @@ def compute_n2_cohens_d(n2):
             continue
         boot_zvf.append(pooled_cd(gz, oz))
         boot_pcd.append(pooled_cd(gp, op))
-    boot_zvf.sort(); boot_pcd.sort()
+    boot_zvf.sort()
+    boot_pcd.sort()
     zvf_lo = boot_zvf[int(len(boot_zvf) * ALPHA / 2)] if len(boot_zvf) >= 100 else point_zvf
     zvf_hi = boot_zvf[int(len(boot_zvf) * (1 - ALPHA / 2))] if len(boot_zvf) >= 100 else point_zvf
     pcd_lo = boot_pcd[int(len(boot_pcd) * ALPHA / 2)] if len(boot_pcd) >= 100 else point_pcd
     pcd_hi = boot_pcd[int(len(boot_pcd) * (1 - ALPHA / 2))] if len(boot_pcd) >= 100 else point_pcd
     return {
-        "zvf": point_zvf, "zvf_lo": zvf_lo, "zvf_hi": zvf_hi,
-        "pcd": point_pcd, "pcd_lo": pcd_lo, "pcd_hi": pcd_hi,
+        "zvf": point_zvf,
+        "zvf_lo": zvf_lo,
+        "zvf_hi": zvf_hi,
+        "pcd": point_pcd,
+        "pcd_lo": pcd_lo,
+        "pcd_hi": pcd_hi,
         "n_gift": len(gift_zvf),
         "n_other": len(other_zvf),
     }

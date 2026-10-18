@@ -331,8 +331,16 @@ def wave6_spec(exp):
     )
 
 
-def wave6_failure_receipt(exp, error, *, status="failed", successful_updates=None,
-                          run_id=None, reward_trace=None, step_log=None):
+def wave6_failure_receipt(
+    exp,
+    error,
+    *,
+    status="failed",
+    successful_updates=None,
+    run_id=None,
+    reward_trace=None,
+    step_log=None,
+):
     """Bind retryable failures to the same resolved treatment as successful runs.
 
     A worker-process crash has unknown progress, not an observed zero updates.

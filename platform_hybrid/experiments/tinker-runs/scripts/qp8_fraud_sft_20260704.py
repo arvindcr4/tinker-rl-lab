@@ -9,16 +9,21 @@ Usage:
   python3 qp8_fraud_sft_20260704.py --smoke
   python3 qp8_fraud_sft_20260704.py
 """
-import argparse, csv, json, os, random, sys, time
+
+import argparse, csv, json, os, random, time
 
 import tinker
 import tinker.types as T
 
-DATA_DIR = "/tmp/claude-1001/-home-claude-tinker-rl-lab/30780cda-8d14-4b43-8179-c46d6b7ba4dc/scratchpad"
+DATA_DIR = (
+    "/tmp/claude-1001/-home-claude-tinker-rl-lab/30780cda-8d14-4b43-8179-c46d6b7ba4dc/scratchpad"
+)
 OUT_DIR = "/home/claude/tinker-rl-lab/experiments/results/quick_20260704"
 EXP = "qp8-fraud-sft"
-SYS_PROMPT = ("You are a fraud detection assistant. Given the transaction features, "
-              "answer with exactly one word: yes if the transaction is fraudulent, no otherwise.")
+SYS_PROMPT = (
+    "You are a fraud detection assistant. Given the transaction features, "
+    "answer with exactly one word: yes if the transaction is fraudulent, no otherwise."
+)
 
 
 def load_rows(path, limit=None):
@@ -36,14 +41,17 @@ def load_rows(path, limit=None):
 
 def serialize(feats):
     body = "\n".join(f"{k}: {v:.3f}" for k, v in feats)
-    return (f"<|im_start|>system\n{SYS_PROMPT}<|im_end|>\n"
-            f"<|im_start|>user\nTransaction:\n{body}\nIs this transaction fraudulent? "
-            f"Answer yes or no.<|im_end|>\n<|im_start|>assistant\n")
+    return (
+        f"<|im_start|>system\n{SYS_PROMPT}<|im_end|>\n"
+        f"<|im_start|>user\nTransaction:\n{body}\nIs this transaction fraudulent? "
+        f"Answer yes or no.<|im_end|>\n<|im_start|>assistant\n"
+    )
 
 
 def auc_score(labels, scores):
-    pairs = sorted(zip(scores, labels))
-    n_pos = sum(labels); n_neg = len(labels) - n_pos
+    pairs = sorted(zip(scores, labels, strict=False))
+    n_pos = sum(labels)
+    n_neg = len(labels) - n_pos
     if n_pos == 0 or n_neg == 0:
         return float("nan")
     # rank-sum AUC with tie handling
@@ -64,10 +72,16 @@ def evaluate(sc, tok, rows, k, max_par=64):
     sp = T.SamplingParams(max_tokens=4, temperature=1.0, top_p=0.95)
     labels, scores, correct = [], [], 0
     for start in range(0, len(rows), max_par):
-        chunk = rows[start:start + max_par]
-        futs = [sc.sample(T.ModelInput.from_ints(tok.encode(serialize(f), add_special_tokens=False)),
-                          num_samples=k, sampling_params=sp) for f, _ in chunk]
-        for (feats, label), fut in zip(chunk, futs):
+        chunk = rows[start : start + max_par]
+        futs = [
+            sc.sample(
+                T.ModelInput.from_ints(tok.encode(serialize(f), add_special_tokens=False)),
+                num_samples=k,
+                sampling_params=sp,
+            )
+            for f, _ in chunk
+        ]
+        for (_feats, label), fut in zip(chunk, futs, strict=False):
             try:
                 resp = fut.result()
                 yes = 0
@@ -77,8 +91,10 @@ def evaluate(sc, tok, rows, k, max_par=64):
                         yes += 1
                 score = yes / max(1, len(resp.sequences))
             except Exception as e:
-                print(f"eval sample failed: {e}"); score = 0.0
-            labels.append(label); scores.append(score)
+                print(f"eval sample failed: {e}")
+                score = 0.0
+            labels.append(label)
+            scores.append(score)
             if (score >= 0.5) == (label == 1):
                 correct += 1
     return correct / len(rows), auc_score(labels, scores)
@@ -121,30 +137,41 @@ def main():
     # Balanced training subset (<= train_rows): all positives up to half, rest negatives
     pos = [r for r in train_all if r[1] == 1]
     neg = [r for r in train_all if r[1] == 0]
-    rng.shuffle(pos); rng.shuffle(neg)
+    rng.shuffle(pos)
+    rng.shuffle(neg)
     n_pos = min(len(pos), args.train_rows // 2)
-    train = pos[:n_pos] + neg[:args.train_rows - n_pos]
+    train = pos[:n_pos] + neg[: args.train_rows - n_pos]
     rng.shuffle(train)
     # Held-out eval: positive-enriched slice of test set (AUC is prevalence-invariant;
     # natural 1-2% fraud rate would give only ~4 positives in 500 rows)
     tpos = [r for r in test_all if r[1] == 1]
     tneg = [r for r in test_all if r[1] == 0]
-    rng.shuffle(tpos); rng.shuffle(tneg)
+    rng.shuffle(tpos)
+    rng.shuffle(tneg)
     ep = min(len(tpos), args.eval_rows // 5)
-    test_rows = tpos[:ep] + tneg[:args.eval_rows - ep]
+    test_rows = tpos[:ep] + tneg[: args.eval_rows - ep]
     rng.shuffle(test_rows)
     mp = min(len(tpos), args.mid_eval_rows // 5)
-    mid_rows = tpos[:mp] + tneg[:args.mid_eval_rows - mp]
+    mid_rows = tpos[:mp] + tneg[: args.mid_eval_rows - mp]
     rng.shuffle(mid_rows)
-    print(f"train={len(train)} (pos={n_pos})  eval={len(test_rows)} "
-          f"(pos={sum(l for _, l in test_rows)})", flush=True)
+    print(
+        f"train={len(train)} (pos={n_pos})  eval={len(test_rows)} "
+        f"(pos={sum(l for _, l in test_rows)})",
+        flush=True,
+    )
 
     run_name = f"{EXP}-20260704" + ("-smoke" if args.smoke else "")
     wandb = None
     if not args.no_wandb:
-        import wandb as _w; wandb = _w
-        wandb.init(project="tinker-new-research", name=run_name, config=vars(args),
-                   tags=["qp8", "fraud-sft", "20260704"])
+        import wandb as _w
+
+        wandb = _w
+        wandb.init(
+            project="tinker-new-research",
+            name=run_name,
+            config=vars(args),
+            tags=["qp8", "fraud-sft", "20260704"],
+        )
 
     svc = tinker.ServiceClient(base_url=None)
     tc = svc.create_lora_training_client(base_model=args.model, rank=args.rank)
@@ -168,33 +195,43 @@ def main():
 
     def log_row(step, phase, loss, n, acc, auc):
         with open(step_tsv, "a") as f:
-            f.write(f"{step}\t{phase}\t{loss}\t{n}\t{acc}\t{auc}\t{time.time()-t0:.1f}\n")
+            f.write(f"{step}\t{phase}\t{loss}\t{n}\t{acc}\t{auc}\t{time.time() - t0:.1f}\n")
 
     def run_eval(step, rows, tag):
         w = tc.save_weights_for_sampler(name=f"eval_{step}").result()
         sc = tc.create_sampling_client(model_path=w.path)
         acc, auc = evaluate(sc, tok, rows, args.votes)
         log_row(step, tag, "", len(rows), f"{acc:.4f}", f"{auc:.4f}")
-        if wandb: wandb.log({f"{tag}/accuracy": acc, f"{tag}/auc": auc}, step=step)
+        if wandb:
+            wandb.log({f"{tag}/accuracy": acc, f"{tag}/auc": auc}, step=step)
         print(f"[{tag}] step {step}: acc={acc:.4f} auc={auc:.4f}", flush=True)
         return acc, auc
 
     run_eval(0, mid_rows, "eval_mid")  # pre-training baseline
 
     for step in range(n_steps):
-        batch = train[step * args.batch:(step + 1) * args.batch]
+        batch = train[step * args.batch : (step + 1) * args.batch]
         data = []
         for feats, label in batch:
             prompt_ids = tok.encode(serialize(feats), add_special_tokens=False)
-            ans_ids = tok.encode(("yes" if label else "no") + "<|im_end|>", add_special_tokens=False)
+            ans_ids = tok.encode(
+                ("yes" if label else "no") + "<|im_end|>", add_special_tokens=False
+            )
             full = prompt_ids + ans_ids
             weights = [0.0] * (len(prompt_ids) - 1) + [1.0] * len(ans_ids)
-            data.append(T.Datum(
-                model_input=T.ModelInput.from_ints(full[:-1]),
-                loss_fn_inputs={
-                    "target_tokens": T.TensorData(data=full[1:], dtype="int64", shape=[len(full) - 1]),
-                    "weights": T.TensorData(data=weights, dtype="float32", shape=[len(weights)]),
-                }))
+            data.append(
+                T.Datum(
+                    model_input=T.ModelInput.from_ints(full[:-1]),
+                    loss_fn_inputs={
+                        "target_tokens": T.TensorData(
+                            data=full[1:], dtype="int64", shape=[len(full) - 1]
+                        ),
+                        "weights": T.TensorData(
+                            data=weights, dtype="float32", shape=[len(weights)]
+                        ),
+                    },
+                )
+            )
         res = tc.forward_backward(data=data, loss_fn="cross_entropy").result()
         tc.optim_step(adam).result()
         try:
@@ -202,15 +239,17 @@ def main():
         except AttributeError:
             loss = getattr(res.metrics, "loss", None)
         log_row(step + 1, "train", loss, len(batch), "", "")
-        if wandb: wandb.log({"train/loss": loss}, step=step + 1)
-        print(f"[train] {step+1}/{n_steps} loss={loss}", flush=True)
+        if wandb:
+            wandb.log({"train/loss": loss}, step=step + 1)
+        print(f"[train] {step + 1}/{n_steps} loss={loss}", flush=True)
         if (step + 1) % args.eval_every == 0 and step + 1 < n_steps:
             run_eval(step + 1, mid_rows, "eval_mid")
 
     acc, auc = run_eval(n_steps, test_rows, "eval_final")
     with open(final_tsv, "a") as f:
         f.write(f"{args.model}-sft\ttest_enriched20pct\t{len(test_rows)}\t{acc:.4f}\t{auc:.4f}\n")
-    if wandb: wandb.finish()
+    if wandb:
+        wandb.finish()
     print("DONE", flush=True)
 
 

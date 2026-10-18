@@ -41,6 +41,7 @@ Stdlib only. ≤300 LoC. Run from the worktree root:
 
     python3 platform_modal/scripts/p5p8/p6_outcomes_coverage_block.py
 """
+
 from __future__ import annotations
 
 import json
@@ -56,8 +57,13 @@ ENTRIES_DIR = REGISTRY / "entries"
 RESULTS = ROOT / "experiments" / "results" / "p5p8"
 
 MIN_REPORT_ITEMS = (
-    "loss_form", "reference_kl", "sampler_backend", "telemetry",
-    "group_size_schedule", "heldout_split", "decontamination",
+    "loss_form",
+    "reference_kl",
+    "sampler_backend",
+    "telemetry",
+    "group_size_schedule",
+    "heldout_split",
+    "decontamination",
 )
 
 
@@ -109,10 +115,10 @@ def coverage_declared_deltas(entry: dict) -> tuple[float, int, int, int]:
     if not isinstance(vda, list):
         return 0.0, 0, 0, 0
     n_total = len(vda)
-    n_inform = sum(1 for d in vda if isinstance(d, dict)
-                   and d.get("status") in ("implemented", "surrogate"))
-    n_impl = sum(1 for d in vda if isinstance(d, dict)
-                 and d.get("status") == "implemented")
+    n_inform = sum(
+        1 for d in vda if isinstance(d, dict) and d.get("status") in ("implemented", "surrogate")
+    )
+    n_impl = sum(1 for d in vda if isinstance(d, dict) and d.get("status") == "implemented")
     return (n_inform / n_total if n_total else 0.0), n_inform, n_total, n_impl
 
 
@@ -126,16 +132,19 @@ def coverage_measured(entry: dict) -> tuple[float, int, int]:
         measured = entry.get("measured") or []
         deltas = entry.get("deltas") or []
         n_total = max(1, len(deltas))
-        n_pop = sum(1 for m in measured if isinstance(m, dict)
-                    and is_populated(m.get("metric"))
-                    and is_populated(m.get("delta")))
+        n_pop = sum(
+            1
+            for m in measured
+            if isinstance(m, dict)
+            and is_populated(m.get("metric"))
+            and is_populated(m.get("delta"))
+        )
         # Multiple panels can measure the same declared component. Coverage is
         # a fraction and must stay in [0, 1]; counts remain available beside it.
         return min(1.0, n_pop / n_total), n_pop, n_total
     # stack record
     out = entry.get("outcomes") or {}
-    fields = ("mean_last10_train_reward", "mean_zvf", "heldout_delta",
-              "rollouts", "ci_method")
+    fields = ("mean_last10_train_reward", "mean_zvf", "heldout_delta", "rollouts", "ci_method")
     n_pop = sum(1 for f in fields if is_populated(out.get(f)))
     return n_pop / len(fields), n_pop, len(fields)
 
@@ -223,7 +232,7 @@ def patch_entry(entry_path: Path) -> bool:
     entry = load_json(entry_path)
     if entry.get("record_type") != "stack":
         return False  # coverage block is on stack_record only (variant_delta
-                      # does not carry `outcomes` — see schema defs)
+        # does not carry `outcomes` — see schema defs)
     out = entry.get("outcomes")
     if not isinstance(out, dict):
         out = {}
@@ -276,17 +285,21 @@ def main():
     claim_without_evidence = []
     for r in stacks:
         entry = load_json(ENTRIES_DIR / f"{r['entry_id']}.json")
-        for d in (entry.get("variant_deltas_applied") or []):
+        for d in entry.get("variant_deltas_applied") or []:
             if not isinstance(d, dict):
                 continue
             did = d.get("delta_id")
             st = d.get("status")
             if st in ("implemented", "surrogate"):
                 rows = delta_measured.get(did, 0)
-                claim_without_evidence.append({
-                    "stack": r["entry_id"], "delta": did,
-                    "status": st, "delta_measured_rows": rows,
-                })
+                claim_without_evidence.append(
+                    {
+                        "stack": r["entry_id"],
+                        "delta": did,
+                        "status": st,
+                        "delta_measured_rows": rows,
+                    }
+                )
     n_cwe = len(claim_without_evidence)
     n_cwe_with_rows = sum(1 for c in claim_without_evidence if c["delta_measured_rows"] > 0)
     n_cwe_without_rows = n_cwe - n_cwe_with_rows
@@ -294,12 +307,21 @@ def main():
     # Write audit TSV
     RESULTS.mkdir(parents=True, exist_ok=True)
     tsv_path = RESULTS / "p6_outcomes_coverage_audit.tsv"
-    fields = ["entry_id", "record_type", "min_report_coverage",
-              "min_report_pop", "min_report_total",
-              "declared_deltas_coverage", "declared_deltas_informative",
-              "declared_deltas_total", "declared_deltas_implemented",
-              "measured_coverage", "measured_pop", "measured_total",
-              "ci_method_present"]
+    fields = [
+        "entry_id",
+        "record_type",
+        "min_report_coverage",
+        "min_report_pop",
+        "min_report_total",
+        "declared_deltas_coverage",
+        "declared_deltas_informative",
+        "declared_deltas_total",
+        "declared_deltas_implemented",
+        "measured_coverage",
+        "measured_pop",
+        "measured_total",
+        "ci_method_present",
+    ]
     with tsv_path.open("w") as fh:
         fh.write("\t".join(fields) + "\n")
         for r in per_entry:
@@ -345,7 +367,8 @@ def main():
     print("\n=== Running registry/query.py validate ===")
     rc = subprocess.run(
         [sys.executable, str(REGISTRY / "query.py"), "validate"],
-        cwd=str(ROOT), check=False,
+        cwd=str(ROOT),
+        check=False,
     )
     print(f"validate exit: {rc.returncode}")
     if rc.returncode != 0:

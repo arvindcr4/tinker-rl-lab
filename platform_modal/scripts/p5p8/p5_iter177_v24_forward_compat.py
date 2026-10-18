@@ -45,6 +45,7 @@ Outputs
 - platform_hybrid/experiments/results/p5p8/p5_iter177_v25_spec.tsv
 - platform_hybrid/experiments/results/p5p8/p5_iter177_summary.json
 """
+
 from __future__ import annotations
 import json
 import random
@@ -52,9 +53,11 @@ import re
 from pathlib import Path
 
 import sys
+
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
-from _stats import wilson as _wilson  # noqa: E402
+from _paths import REPO_ROOT
+from _stats import wilson as _wilson
+
 ROOT = REPO_ROOT
 RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8"
 MEGA = ROOT / "platform_hybrid/experiments" / "results" / "mega_20260704" / "manifests"
@@ -64,13 +67,22 @@ N_SAMPLE = 20
 RNG = random.Random(20260705)
 
 V24_REQUIRED_KEYS = {
-    "cell_id", "loss_form", "ref_policy_kl", "sampler_backend_precision",
-    "per_step_zvf_path", "group_size_schedule", "heldout_split",
+    "cell_id",
+    "loss_form",
+    "ref_policy_kl",
+    "sampler_backend_precision",
+    "per_step_zvf_path",
+    "group_size_schedule",
+    "heldout_split",
     "decontamination_notes",
 }
 V25_HELDOUT_VOCAB = {
-    "gsm8k_easy", "gsm8k_hard", "gsm8k_train",
-    "humaneval_subset", "math_hard", "MATH-Hard",
+    "gsm8k_easy",
+    "gsm8k_hard",
+    "gsm8k_train",
+    "humaneval_subset",
+    "math_hard",
+    "MATH-Hard",
 }
 V25_NA_CANONICAL = {"n/a", "n/a-sampling", "n/a-parser", "n/a-trainer"}
 
@@ -93,6 +105,7 @@ def load_sample_manifests(n: int = N_SAMPLE) -> tuple[list[dict], list[str]]:
 
 # ----- v2.4 audits (existing) -----
 
+
 def audit_v24_identifier_stamp(m, _src=""):
     """8 required keys present + cell_id + per_step_zvf_path non-empty."""
     if not all(k in m for k in V24_REQUIRED_KEYS):
@@ -109,14 +122,21 @@ def audit_schema_ground_truth(m, _src=""):
 
 
 def audit_field_coverage_rate(m, _src=""):
-    items = ["loss_form", "ref_policy_kl", "sampler_backend_precision",
-             "per_step_zvf_path", "group_size_schedule", "heldout_split",
-             "decontamination_notes"]
+    items = [
+        "loss_form",
+        "ref_policy_kl",
+        "sampler_backend_precision",
+        "per_step_zvf_path",
+        "group_size_schedule",
+        "heldout_split",
+        "decontamination_notes",
+    ]
     n_present = sum(1 for it in items if m.get(it))
     return n_present / len(items)
 
 
 # ----- v2.5 audits (proposed) -----
+
 
 def audit_v25_required_keys(m, _src=""):
     """v2.5 keeps the 8 v2.4 keys as required."""
@@ -142,12 +162,11 @@ def audit_v25_regex_strict(m, _src=""):
 
 def audit_v25_na_sentinel_strict(m, _src=""):
     """v2.5 enforces canonical n/a sentinel set."""
-    for k, v in m.items():
+    for _k, v in m.items():
         if isinstance(v, str):
             lv = v.lower().strip()
             # any "na"-ish marker
-            if lv in {"missing", "not_applicable", "na", "n.a.",
-                      "not-applicable", "n / a", "n.a"}:
+            if lv in {"missing", "not_applicable", "na", "n.a.", "not-applicable", "n / a", "n.a"}:
                 return False
             # "n/a" embedded as substring but not canonical
             if "n/a" in lv and v not in V25_NA_CANONICAL:
@@ -157,20 +176,29 @@ def audit_v25_na_sentinel_strict(m, _src=""):
 
 # ----- mutations (v2.5 incompatibilities) -----
 
+
 def mut_remove_field(m):
-    out = dict(m); out.pop("sampler_backend_precision", None); return out
+    out = dict(m)
+    out.pop("sampler_backend_precision", None)
+    return out
 
 
 def mut_type_violation(m):
-    out = dict(m); out["heldout_split"] = 1; return out
+    out = dict(m)
+    out["heldout_split"] = 1
+    return out
 
 
 def mut_vocab_violation(m):
-    out = dict(m); out["heldout_split"] = "TRAIN-INTERNAL"; return out
+    out = dict(m)
+    out["heldout_split"] = "TRAIN-INTERNAL"
+    return out
 
 
 def mut_regex_violation(m):
-    out = dict(m); out["group_size_schedule"] = "fixed-G=8-extra"; return out
+    out = dict(m)
+    out["group_size_schedule"] = "fixed-G=8-extra"
+    return out
 
 
 def mut_na_sentinel(m):
@@ -214,8 +242,7 @@ def main():
     print(f"Sampled {len(manifests)} manifests (seed=20260705)")
 
     # Baseline
-    baseline = {an: [run_audit(fn, m) for m in manifests]
-                for an, fn, _ in ALL_AUDITS}
+    baseline = {an: [run_audit(fn, m) for m in manifests] for an, fn, _ in ALL_AUDITS}
 
     # Apply mutations, re-audit
     detection_rows = []
@@ -226,33 +253,54 @@ def main():
             base_vals = baseline[an]
             mut_vals = [run_audit(fn, m) for m in mutated]
             n_base_pass = sum(1 for v in base_vals if v == 1.0)
-            n_det = sum(1 for b, mv in zip(base_vals, mut_vals)
-                        if b == 1.0 and mv == 0.0)
+            n_det = sum(
+                1 for b, mv in zip(base_vals, mut_vals, strict=False) if b == 1.0 and mv == 0.0
+            )
             p, lo, hi = wilson(n_det, n_base_pass) if n_base_pass else (0.0, 0.0, 0.0)
-            detection_rows.append({
-                "mutation": mut_name, "audit": an, "version": ver,
-                "n_baseline_pass": n_base_pass,
-                "baseline_rate": f"{sum(base_vals)/len(base_vals):.3f}",
-                "mutated_rate": f"{sum(mut_vals)/len(mut_vals):.3f}",
-                "n_detected": n_det,
-                "detection_rate": f"{p:.3f}",
-                "ci_lo": f"{lo:.3f}", "ci_hi": f"{hi:.3f}",
-                "verdict": "DETECTED" if n_det > 0 else "MISSED",
-            })
+            detection_rows.append(
+                {
+                    "mutation": mut_name,
+                    "audit": an,
+                    "version": ver,
+                    "n_baseline_pass": n_base_pass,
+                    "baseline_rate": f"{sum(base_vals) / len(base_vals):.3f}",
+                    "mutated_rate": f"{sum(mut_vals) / len(mut_vals):.3f}",
+                    "n_detected": n_det,
+                    "detection_rate": f"{p:.3f}",
+                    "ci_lo": f"{lo:.3f}",
+                    "ci_hi": f"{hi:.3f}",
+                    "verdict": "DETECTED" if n_det > 0 else "MISSED",
+                }
+            )
             for i in range(len(manifests)):
                 bv = base_vals[i]
                 mv = mut_vals[i]
                 detected = int(bv == 1.0 and mv == 0.0)
-                panel_rows.append({
-                    "cell_idx": i, "cell_id": names[i],
-                    "mutation": mut_name, "audit": an, "version": ver,
-                    "baseline": bv, "mutated": mv, "detected": detected,
-                })
+                panel_rows.append(
+                    {
+                        "cell_idx": i,
+                        "cell_id": names[i],
+                        "mutation": mut_name,
+                        "audit": an,
+                        "version": ver,
+                        "baseline": bv,
+                        "mutated": mv,
+                        "detected": detected,
+                    }
+                )
 
     # Write per-cell panel
     panel_tsv = RES / "p5_iter177_mutation_panel.tsv"
-    cols = ["cell_idx", "cell_id", "mutation", "audit", "version",
-            "baseline", "mutated", "detected"]
+    cols = [
+        "cell_idx",
+        "cell_id",
+        "mutation",
+        "audit",
+        "version",
+        "baseline",
+        "mutated",
+        "detected",
+    ]
     with open(panel_tsv, "w") as f:
         f.write("\t".join(cols) + "\n")
         for r in panel_rows:
@@ -260,9 +308,19 @@ def main():
 
     # Write detection rates
     detect_tsv = RES / "p5_iter177_detection_rates.tsv"
-    cols2 = ["mutation", "audit", "version", "n_baseline_pass",
-             "baseline_rate", "mutated_rate", "n_detected",
-             "detection_rate", "ci_lo", "ci_hi", "verdict"]
+    cols2 = [
+        "mutation",
+        "audit",
+        "version",
+        "n_baseline_pass",
+        "baseline_rate",
+        "mutated_rate",
+        "n_detected",
+        "detection_rate",
+        "ci_lo",
+        "ci_hi",
+        "verdict",
+    ]
     with open(detect_tsv, "w") as f:
         f.write("\t".join(cols2) + "\n")
         for r in detection_rows:
@@ -275,7 +333,9 @@ def main():
         f.write("v25_required_keys\t8 v2.4 keys all present\tM1_remove_field\n")
         f.write("v25_type_strict\theldout_split is str\tM2_type_violation\n")
         f.write("v25_vocab_strict\theldout_split in fixed vocab\tM3_vocab_violation\n")
-        f.write("v25_regex_strict\tfixed-G=\\d+ OR schedule-(fixed|adaptive)-G=\\d+(-\\d+)?\tM4_regex_violation\n")
+        f.write(
+            "v25_regex_strict\tfixed-G=\\d+ OR schedule-(fixed|adaptive)-G=\\d+(-\\d+)?\tM4_regex_violation\n"
+        )
         f.write("v25_na_sentinel_strict\tna sentinels in canonical set\tM5_na_sentinel\n")
 
     # Summary
@@ -293,8 +353,7 @@ def main():
             (mut_v25 if r["version"] == "v2.5" else mut_v24)[r["mutation"]] += 1
 
     h1_count = sum(1 for m, _ in MUTATIONS if mut_v25[m] >= 1)
-    h2_count = sum(1 for m, _ in MUTATIONS
-                   if m != "M1_remove_field" and mut_v24[m] == 0)
+    h2_count = sum(1 for m, _ in MUTATIONS if m != "M1_remove_field" and mut_v24[m] == 0)
     h3_pass = v25_rate > v24_rate
     audit_v25_max = {}
     for r in v25_dets:
@@ -305,29 +364,48 @@ def main():
     h5_pass = all(mut_v25[m] >= 1 for m, _ in MUTATIONS)
 
     summary = {
-        "iter": 177, "pillar": "P5",
+        "iter": 177,
+        "pillar": "P5",
         "vein": "MIN-REPORT v2.4 -> v2.5 forward-compatibility stress test",
-        "n_sample": N_SAMPLE, "n_mutations": len(MUTATIONS),
-        "n_audits": len(ALL_AUDITS), "n_panel_rows": len(panel_rows),
-        "v24_detected": v24_n_det, "v24_total": len(v24_dets),
+        "n_sample": N_SAMPLE,
+        "n_mutations": len(MUTATIONS),
+        "n_audits": len(ALL_AUDITS),
+        "n_panel_rows": len(panel_rows),
+        "v24_detected": v24_n_det,
+        "v24_total": len(v24_dets),
         "v24_rate": v24_rate,
-        "v25_detected": v25_n_det, "v25_total": len(v25_dets),
+        "v25_detected": v25_n_det,
+        "v25_total": len(v25_dets),
         "v25_rate": v25_rate,
-        "per_mutation": {m: {"v24": mut_v24[m], "v25": mut_v25[m]}
-                         for m, _ in MUTATIONS},
+        "per_mutation": {m: {"v24": mut_v24[m], "v25": mut_v25[m]} for m, _ in MUTATIONS},
         "best_v25_audit": max(audit_v25_max, key=audit_v25_max.get) if audit_v25_max else "(none)",
         "best_v25_audit_count": h4_max,
         "hypotheses": {
-            "H1_v25_catches_ge_4_mut": {"bar": 4, "actual": h1_count,
-                                         "verdict": "PASS" if h1_count >= 4 else "FAIL"},
-            "H2_v24_misses_ge_3_new": {"bar": 3, "actual": h2_count,
-                                        "verdict": "PASS" if h2_count >= 3 else "FAIL"},
-            "H3_v25_strictly_gt_v24": {"v24_rate": v24_rate, "v25_rate": v25_rate,
-                                        "verdict": "PASS" if h3_pass else "FAIL"},
-            "H4_best_v25_catches_ge_4": {"bar": 4, "actual": h4_max,
-                                          "verdict": "PASS" if h4_max >= 4 else "FAIL"},
-            "H5_v25_union_full_coverage": {"bar": "5/5", "actual": f"{sum(1 for m,_ in MUTATIONS if mut_v25[m]>=1)}/5",
-                                            "verdict": "PASS" if h5_pass else "FAIL"},
+            "H1_v25_catches_ge_4_mut": {
+                "bar": 4,
+                "actual": h1_count,
+                "verdict": "PASS" if h1_count >= 4 else "FAIL",
+            },
+            "H2_v24_misses_ge_3_new": {
+                "bar": 3,
+                "actual": h2_count,
+                "verdict": "PASS" if h2_count >= 3 else "FAIL",
+            },
+            "H3_v25_strictly_gt_v24": {
+                "v24_rate": v24_rate,
+                "v25_rate": v25_rate,
+                "verdict": "PASS" if h3_pass else "FAIL",
+            },
+            "H4_best_v25_catches_ge_4": {
+                "bar": 4,
+                "actual": h4_max,
+                "verdict": "PASS" if h4_max >= 4 else "FAIL",
+            },
+            "H5_v25_union_full_coverage": {
+                "bar": "5/5",
+                "actual": f"{sum(1 for m, _ in MUTATIONS if mut_v25[m] >= 1)}/5",
+                "verdict": "PASS" if h5_pass else "FAIL",
+            },
         },
     }
     summary_path = RES / "p5_iter177_summary.json"

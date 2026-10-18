@@ -51,15 +51,15 @@ Outputs (5 TSVs):
 
 All inputs are existing data; no new tinker runs.
 """
+
 from __future__ import annotations
 
 import csv
 import json
 import math
-import os
 import statistics
 from pathlib import Path
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List
 
 ROOT = Path(__file__).resolve().parents[2]
 RES = ROOT / "experiments" / "results"
@@ -69,6 +69,7 @@ BERK = RES / "berkeley"
 # ---------------------------------------------------------------------------
 # IO
 # ---------------------------------------------------------------------------
+
 
 def _load_samestack() -> List[Dict[str, Any]]:
     with open(RES / "samestack_ppo_grpo.json") as fh:
@@ -117,6 +118,7 @@ def _load_zvf_sweep() -> List[Dict[str, Any]]:
 # Stats helpers
 # ---------------------------------------------------------------------------
 
+
 def _pearson(xs: List[float], ys: List[float]) -> float:
     n = len(xs)
     if n < 3:
@@ -125,7 +127,7 @@ def _pearson(xs: List[float], ys: List[float]) -> float:
     my = sum(ys) / n
     sxx = sum((x - mx) ** 2 for x in xs)
     syy = sum((y - my) ** 2 for y in ys)
-    sxy = sum((x - mx) * (y - my) for x, y in zip(xs, ys))
+    sxy = sum((x - mx) * (y - my) for x, y in zip(xs, ys, strict=False))
     if sxx <= 0 or syy <= 0:
         return float("nan")
     return sxy / math.sqrt(sxx * syy)
@@ -155,6 +157,7 @@ def _welch_p(diff: float, se: float) -> float:
 # ---------------------------------------------------------------------------
 # Analyses
 # ---------------------------------------------------------------------------
+
 
 def _gradnorm_stats(runs: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     """H1 — coefficient of variation of grad_norm by algo."""
@@ -234,9 +237,11 @@ def _paired_test(runs: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     out_rows.append(
         {
             "seed": "SUMMARY",
-            "last10_grpo": round(statistics.mean([grpo_by_seed[s]["last10_avg"] for s in common]), 4),
+            "last10_grpo": round(
+                statistics.mean([grpo_by_seed[s]["last10_avg"] for s in common]), 4
+            ),
             "last10_ppo": round(statistics.mean([ppo_by_seed[s]["last10_avg"] for s in common]), 4),
-            "diff_grpo_minus_ppo": f"mean={round(mean_d,4)} sd={round(sd_d,4)} se={round(se_d,4)} p={p_val:.4f}",
+            "diff_grpo_minus_ppo": f"mean={round(mean_d, 4)} sd={round(sd_d, 4)} se={round(se_d, 4)} p={p_val:.4f}",
         }
     )
     return out_rows
@@ -280,13 +285,13 @@ def _rqs_collapse(anchors: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     mx = sum(xs) / n
     my = sum(ys) / n
     sxx = sum((x - mx) ** 2 for x in xs)
-    sxy = sum((x - mx) * (y - my) for x, y in zip(xs, ys))
+    sxy = sum((x - mx) * (y - my) for x, y in zip(xs, ys, strict=False))
     if sxx <= 0:
         return []
     slope = sxy / sxx
     intercept = my - slope * mx
-    resid = [(y - (intercept + slope * x)) for x, y in zip(xs, ys)]
-    r2 = 1 - sum(r ** 2 for r in resid) / sum((y - my) ** 2 for y in ys)
+    resid = [(y - (intercept + slope * x)) for x, y in zip(xs, ys, strict=False)]
+    r2 = 1 - sum(r**2 for r in resid) / sum((y - my) ** 2 for y in ys)
     return [
         {
             "n": n,
@@ -302,6 +307,7 @@ def _rqs_collapse(anchors: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
 # ---------------------------------------------------------------------------
 # Driver
 # ---------------------------------------------------------------------------
+
 
 def _write_tsv(path: Path, rows: List[Dict[str, Any]]) -> None:
     if not rows:
@@ -334,7 +340,8 @@ def main() -> None:
         "h1_cv_gradnorm": {row["algo"]: row["cv_gradnorm_mean"] for row in g1},
         "h2_rolling_var": {row["algo"]: row["rolling_var_mean"] for row in g2},
         "h3_paired_diff_mean": g3[-1]["diff_grpo_minus_ppo"]
-        if g3 and "diff_grpo_minus_ppo" in g3[-1] else None,
+        if g3 and "diff_grpo_minus_ppo" in g3[-1]
+        else None,
         "h4_gradnorm_vs_reward_r": {row["algo"]: row["r_mean"] for row in g4},
         "h5_rqs_regressor": g5[0] if g5 else None,
     }
@@ -345,18 +352,29 @@ def main() -> None:
     print("=" * 64)
     print("Critic-Degeneracy Hypothesis (CDH) empirical test")
     print("=" * 64)
-    print(f"H1 CV(grad_norm):  GRPO={summary['h1_cv_gradnorm']['grpo']:.3f}  "
-          f"PPO={summary['h1_cv_gradnorm']['ppo']:.3f}")
-    print(f"H2 rolling-var:    GRPO={summary['h2_rolling_var']['grpo']:.4f}  "
-          f"PPO={summary['h2_rolling_var']['ppo']:.4f}")
+    print(
+        f"H1 CV(grad_norm):  GRPO={summary['h1_cv_gradnorm']['grpo']:.3f}  "
+        f"PPO={summary['h1_cv_gradnorm']['ppo']:.3f}"
+    )
+    print(
+        f"H2 rolling-var:    GRPO={summary['h2_rolling_var']['grpo']:.4f}  "
+        f"PPO={summary['h2_rolling_var']['ppo']:.4f}"
+    )
     print(f"H3 paired last10:   {summary['h3_paired_diff_mean']}")
-    print(f"H4 R(grad,rwd):    GRPO={summary['h4_gradnorm_vs_reward_r']['grpo']:.3f}  "
-          f"PPO={summary['h4_gradnorm_vs_reward_r']['ppo']:.3f}")
+    print(
+        f"H4 R(grad,rwd):    GRPO={summary['h4_gradnorm_vs_reward_r']['grpo']:.3f}  "
+        f"PPO={summary['h4_gradnorm_vs_reward_r']['ppo']:.3f}"
+    )
     print(f"H5 RQS-regressor:  {summary['h5_rqs_regressor']}")
     print("Outputs:")
-    for fn in ("cdh_gradnorm_stats.tsv", "cdh_reward_window.tsv",
-               "cdh_paired_test.tsv", "cdh_gradnorm_vs_reward.tsv",
-               "cdh_rqs_collapse.tsv", "cdh_summary.json"):
+    for fn in (
+        "cdh_gradnorm_stats.tsv",
+        "cdh_reward_window.tsv",
+        "cdh_paired_test.tsv",
+        "cdh_gradnorm_vs_reward.tsv",
+        "cdh_rqs_collapse.tsv",
+        "cdh_summary.json",
+    ):
         print(f"  platform_hybrid/experiments/results/berkeley/{fn}")
 
 

@@ -18,11 +18,21 @@ import json
 import pathlib
 
 import sys
-sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
+
+sys.path.append(
+    str(pathlib.Path(__file__).resolve().parents[1])
+)  # platform_modal/scripts, for _paths
+from _paths import REPO_ROOT
+
 WORKTREE = REPO_ROOT
-SUMMARY = WORKTREE / "platform_hybrid/experiments/results/p5p8/corrected-review20-v2/p7_postpred_summary.json"
-OUT = WORKTREE / "platform_hybrid/experiments/results/p5p8/corrected-review20-v2/p7_postpred_costeff.tsv"
+SUMMARY = (
+    WORKTREE
+    / "platform_hybrid/experiments/results/p5p8/corrected-review20-v2/p7_postpred_summary.json"
+)
+OUT = (
+    WORKTREE
+    / "platform_hybrid/experiments/results/p5p8/corrected-review20-v2/p7_postpred_costeff.tsv"
+)
 
 G_BASE = 8
 G_NEW = 16
@@ -40,7 +50,11 @@ PER_STEP_VS_PER_PROMPT = {
 
 
 def extra_rollouts(ctrl: str, fires: int) -> int:
-    extra_per_fire = (G_NEW - G_BASE) * N_PROMPTS_PER_STEP if PER_STEP_VS_PER_PROMPT[ctrl] == "step" else (G_NEW - G_BASE)
+    extra_per_fire = (
+        (G_NEW - G_BASE) * N_PROMPTS_PER_STEP
+        if PER_STEP_VS_PER_PROMPT[ctrl] == "step"
+        else (G_NEW - G_BASE)
+    )
     return int(fires * extra_per_fire)
 
 
@@ -48,7 +62,9 @@ def main():
     with SUMMARY.open() as fh:
         data = json.load(fh)
     rows = []
-    rows.append("method\tcontroller\ttau\tfires\textra_rollouts\texpected_restored\trestore_per_1k_extra\tbaseline_ratio")
+    rows.append(
+        "method\tcontroller\ttau\tfires\textra_rollouts\texpected_restored\trestore_per_1k_extra\tbaseline_ratio"
+    )
     for method, pm in data["per_method"].items():
         for cname, cev in pm["controller_evaluations"].items():
             # parse controller name
@@ -70,15 +86,21 @@ def main():
             extra = extra_rollouts(ctrl, fires)
             ratio = (restored / extra * 1000.0) if extra > 0 else 0.0
             baseline_ratio = restored / BASELINE_ROLLOUTS * 1000.0
-            rows.append(f"{method}\t{ctrl}\t{tau}\t{fires}\t{extra}\t{restored:.2f}\t{ratio:.4f}\t{baseline_ratio:.4f}")
+            rows.append(
+                f"{method}\t{ctrl}\t{tau}\t{fires}\t{extra}\t{restored:.2f}\t{ratio:.4f}\t{baseline_ratio:.4f}"
+            )
     OUT.write_text("\n".join(rows) + "\n")
     print(f"wrote {OUT}")
     print()
     print("=== restore per 1000 extra rollouts (higher = more cost-efficient) ===")
-    print(f"{'method':<8}{'controller':<14}{'tau':>6}{'fires':>8}{'extra':>10}{'restored':>12}{'restored/1k_extra':>20}")
+    print(
+        f"{'method':<8}{'controller':<14}{'tau':>6}{'fires':>8}{'extra':>10}{'restored':>12}{'restored/1k_extra':>20}"
+    )
     for line in rows[1:]:
         parts = line.split("\t")
-        print(f"{parts[0]:<8}{parts[1]:<14}{parts[2]:>6}{parts[3]:>8}{parts[4]:>10}{parts[5]:>12}{parts[6]:>20}")
+        print(
+            f"{parts[0]:<8}{parts[1]:<14}{parts[2]:>6}{parts[3]:>8}{parts[4]:>10}{parts[5]:>12}{parts[6]:>20}"
+        )
 
 
 if __name__ == "__main__":

@@ -169,7 +169,11 @@ def validate_execute_budget(payload: dict[str, Any], authorized_total: Decimal) 
 
 
 def build_harbor_env(api_key: str, lane: Lane) -> dict[str, str]:
-    env = {key: value for key, value in os.environ.items() if key in {"PATH", "HOME", "TMPDIR", "LANG", "LC_ALL", "SSL_CERT_FILE", "SSL_CERT_DIR"}}
+    env = {
+        key: value
+        for key, value in os.environ.items()
+        if key in {"PATH", "HOME", "TMPDIR", "LANG", "LC_ALL", "SSL_CERT_FILE", "SSL_CERT_DIR"}
+    }
     env["OPENAI_API_KEY"] = api_key
     env["OPENAI_BASE_URL"] = BRIDGE_API_BASE
     # Harbor's Python-native mini-swe-agent wrapper forwards OPENAI_API_BASE,
@@ -216,7 +220,9 @@ def parser() -> argparse.ArgumentParser:
 def main(argv: Sequence[str] | None = None) -> int:
     args, harbor_args = parser().parse_known_args(argv)
     if harbor_args:
-        raise LaunchGateError("Harbor overrides are unsupported: effective provider/environment must remain frozen")
+        raise LaunchGateError(
+            "Harbor overrides are unsupported: effective provider/environment must remain frozen"
+        )
     env = os.environ.copy()
     load_dotenv(REPO_ROOT / ".env", env)
     api_key = resolve_bridge_api_key(env)

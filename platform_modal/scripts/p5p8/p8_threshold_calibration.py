@@ -26,6 +26,7 @@ platform_hybrid/experiments/results/p5p8/p8_threshold_calibration.tsv  (per (mod
 platform_hybrid/experiments/results/p5p8/p8_threshold_boot.tsv          (per (τ, contrast))
 platform_hybrid/experiments/results/p5p8/p8_threshold_summary.json     (machine-readable)
 """
+
 from __future__ import annotations
 import json
 from pathlib import Path
@@ -49,10 +50,16 @@ TREE_SEED = 42
 
 def fit_tree(X_tr, y_tr, seed=TREE_SEED):
     clf = xgb.XGBClassifier(
-        n_estimators=200, max_depth=4, learning_rate=0.1,
-        subsample=0.8, colsample_bytree=0.8,
-        objective="binary:logistic", eval_metric="auc",
-        tree_method="hist", random_state=seed, n_jobs=4,
+        n_estimators=200,
+        max_depth=4,
+        learning_rate=0.1,
+        subsample=0.8,
+        colsample_bytree=0.8,
+        objective="binary:logistic",
+        eval_metric="auc",
+        tree_method="hist",
+        random_state=seed,
+        n_jobs=4,
     )
     clf.fit(X_tr, y_tr)
     return clf
@@ -87,14 +94,21 @@ def op_at_threshold(scores, y, tau):
     tn = int(((alert == 0) & (y == 0)).sum())
     precision = tp / (tp + fp) if (tp + fp) else float("nan")
     recall = tp / (tp + fn) if (tp + fn) else float("nan")
-    f1 = (2 * precision * recall / (precision + recall)
-          if precision == precision and recall == recall and (precision + recall) > 0
-          else float("nan"))
+    f1 = (
+        2 * precision * recall / (precision + recall)
+        if precision == precision and recall == recall and (precision + recall) > 0
+        else float("nan")
+    )
     return {
         "tau": float(tau),
         "n_alerted": int(alert.sum()),
-        "tp": tp, "fp": fp, "fn": fn, "tn": tn,
-        "precision": precision, "recall": recall, "f1": f1,
+        "tp": tp,
+        "fp": fp,
+        "fn": fn,
+        "tn": tn,
+        "precision": precision,
+        "recall": recall,
+        "f1": f1,
     }
 
 
@@ -110,10 +124,12 @@ def main():
             r["model"] = name
             rows.append(r)
     df_raw = pd.DataFrame(rows)
-    df_raw = df_raw[["model", "tau", "n_alerted", "tp", "fp", "fn", "tn",
-                     "precision", "recall", "f1"]]
-    df_raw.to_csv(OUT_DIR / "p8_threshold_calibration.tsv", sep="\t",
-                  index=False, float_format="%.6f")
+    df_raw = df_raw[
+        ["model", "tau", "n_alerted", "tp", "fp", "fn", "tn", "precision", "recall", "f1"]
+    ]
+    df_raw.to_csv(
+        OUT_DIR / "p8_threshold_calibration.tsv", sep="\t", index=False, float_format="%.6f"
+    )
 
     # ---- J2 paired bootstrap on the precision and recall deltas ----------
     s20 = scores["XGB-20raw"]
@@ -144,7 +160,7 @@ def main():
 
     contrasts = [
         ("Δ precision (24full − 20raw)", "precision", s24, s20),
-        ("Δ recall    (24full − 20raw)", "recall",    s24, s20),
+        ("Δ recall    (24full − 20raw)", "recall", s24, s20),
     ]
     for tau in THRESHOLDS:
         for label, kind, sa, sb in contrasts:
@@ -157,27 +173,34 @@ def main():
             hi = float(np.quantile(samples, 0.975))
             excl0 = bool(lo > 0.0) or bool(hi < 0.0)
             sign = "+" if mean >= 0 else ""
-            boot_rows.append({
-                "tau": tau,
-                "contrast": label,
-                "n_boot": N_BOOT,
-                "mean": mean,
-                "ci_lo": lo,
-                "ci_hi": hi,
-                "excludes_zero": "yes" if excl0 else "no",
-                "direction": "favors 24full" if mean > 0 else "favors 20raw" if mean < 0 else "tie",
-                "summary": f"{sign}{mean:.3f} [{lo:+.3f}, {hi:+.3f}]",
-            })
+            boot_rows.append(
+                {
+                    "tau": tau,
+                    "contrast": label,
+                    "n_boot": N_BOOT,
+                    "mean": mean,
+                    "ci_lo": lo,
+                    "ci_hi": hi,
+                    "excludes_zero": "yes" if excl0 else "no",
+                    "direction": "favors 24full"
+                    if mean > 0
+                    else "favors 20raw"
+                    if mean < 0
+                    else "tie",
+                    "summary": f"{sign}{mean:.3f} [{lo:+.3f}, {hi:+.3f}]",
+                }
+            )
     df_boot = pd.DataFrame(boot_rows)
-    df_boot.to_csv(OUT_DIR / "p8_threshold_boot.tsv", sep="\t",
-                   index=False, float_format="%.6f")
+    df_boot.to_csv(OUT_DIR / "p8_threshold_boot.tsv", sep="\t", index=False, float_format="%.6f")
 
     # ---- J3 summary json -------------------------------------------------
     # Headline: at which τ is the precision gap Δ(24full, 20raw) statistically detected?
-    detectable_prec = [r for r in boot_rows
-                       if "precision" in r["contrast"] and r["excludes_zero"] == "yes"]
-    detectable_rec = [r for r in boot_rows
-                      if "recall" in r["contrast"] and r["excludes_zero"] == "yes"]
+    detectable_prec = [
+        r for r in boot_rows if "precision" in r["contrast"] and r["excludes_zero"] == "yes"
+    ]
+    detectable_rec = [
+        r for r in boot_rows if "recall" in r["contrast"] and r["excludes_zero"] == "yes"
+    ]
     summary = {
         "n_test": int(n),
         "n_pos_test": int(y.sum()),
@@ -192,25 +215,38 @@ def main():
         "headline": {
             "best_F1_20raw": float(df_raw[df_raw["model"] == "XGB-20raw"]["f1"].max()),
             "best_F1_24full": float(df_raw[df_raw["model"] == "XGB-24full"]["f1"].max()),
-            "best_F1_20raw_tau": float(df_raw[(df_raw["model"] == "XGB-20raw") &
-                                              (df_raw["f1"] == df_raw[df_raw["model"] == "XGB-20raw"]["f1"].max())]["tau"].iloc[0]),
-            "best_F1_24full_tau": float(df_raw[(df_raw["model"] == "XGB-24full") &
-                                               (df_raw["f1"] == df_raw[df_raw["model"] == "XGB-24full"]["f1"].max())]["tau"].iloc[0]),
+            "best_F1_20raw_tau": float(
+                df_raw[
+                    (df_raw["model"] == "XGB-20raw")
+                    & (df_raw["f1"] == df_raw[df_raw["model"] == "XGB-20raw"]["f1"].max())
+                ]["tau"].iloc[0]
+            ),
+            "best_F1_24full_tau": float(
+                df_raw[
+                    (df_raw["model"] == "XGB-24full")
+                    & (df_raw["f1"] == df_raw[df_raw["model"] == "XGB-24full"]["f1"].max())
+                ]["tau"].iloc[0]
+            ),
         },
         "n_boot_rows": len(boot_rows),
     }
     (OUT_DIR / "p8_threshold_summary.json").write_text(
         json.dumps(summary, indent=2, sort_keys=True)
     )
-    print("wrote:", (OUT_DIR / "p8_threshold_calibration.tsv").name,
-          df_raw.shape)
+    print("wrote:", (OUT_DIR / "p8_threshold_calibration.tsv").name, df_raw.shape)
     print("wrote:", (OUT_DIR / "p8_threshold_boot.tsv").name, df_boot.shape)
     print("wrote: p8_threshold_summary.json")
     print("detectable precision-gap τ's:", summary["prec_detectable_taus"])
-    print("best F1: 20raw", summary["headline"]["best_F1_20raw"],
-          "@τ=", summary["headline"]["best_F1_20raw_tau"],
-          "  24full", summary["headline"]["best_F1_24full"],
-          "@τ=", summary["headline"]["best_F1_24full_tau"])
+    print(
+        "best F1: 20raw",
+        summary["headline"]["best_F1_20raw"],
+        "@τ=",
+        summary["headline"]["best_F1_20raw_tau"],
+        "  24full",
+        summary["headline"]["best_F1_24full"],
+        "@τ=",
+        summary["headline"]["best_F1_24full_tau"],
+    )
 
 
 if __name__ == "__main__":

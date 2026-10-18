@@ -26,13 +26,16 @@ Stdlib-only. Outputs:
   platform_hybrid/experiments/results/berkeley/eval_protocol_clusters.tsv
   platform_hybrid/experiments/results/berkeley/eval_protocol_summary.json
 """
+
 import csv, json, math, random, statistics, itertools
 from collections import defaultdict
 from pathlib import Path
 
 import sys
+
 sys.path.append(str(Path(__file__).resolve().parents[1]))
 from _paths import REPO_ROOT
+
 ROOT = REPO_ROOT
 RISK_TSV = ROOT / "platform_hybrid/experiments/results/zvf_iter130_risk_index.tsv"
 OUT = ROOT / "platform_hybrid/experiments/results/berkeley"
@@ -49,15 +52,17 @@ def load_per_seed():
             m = row["method"].strip()
             if m not in VAR_MIT:
                 continue
-            by_m[m].append({
-                "seed": int(row["seed"]),
-                "zvf_risk_max": float(row["zvf_risk_max"]),
-                "zvf_risk":    float(row["zvf_risk"]),
-                "risk_mag":    float(row["risk_mag"]),
-                "risk_csd":    float(row["risk_csd"]),
-                "risk_drift":  float(row["risk_drift"]),
-                "failure_label": row.get("failure_label", "").strip(),
-            })
+            by_m[m].append(
+                {
+                    "seed": int(row["seed"]),
+                    "zvf_risk_max": float(row["zvf_risk_max"]),
+                    "zvf_risk": float(row["zvf_risk"]),
+                    "risk_mag": float(row["risk_mag"]),
+                    "risk_csd": float(row["risk_csd"]),
+                    "risk_drift": float(row["risk_drift"]),
+                    "failure_label": row.get("failure_label", "").strip(),
+                }
+            )
     # sort each method's seeds for determinism
     for m in by_m:
         by_m[m].sort(key=lambda r: r["seed"])
@@ -88,44 +93,69 @@ def tied_top_set(values, k=1):
     means = {m: statistics.mean(v) for m, v in values.items()}
     if not means:
         return set()
-    threshold = sorted(means.values())[min(k, len(means))-1]
-    return {m for m, value in means.items() if value <= threshold or math.isclose(value, threshold, abs_tol=1e-12)}
+    threshold = sorted(means.values())[min(k, len(means)) - 1]
+    return {
+        m
+        for m, value in means.items()
+        if value <= threshold or math.isclose(value, threshold, abs_tol=1e-12)
+    }
 
 
 def h1_mvsp(by_m, n_boot=2000, seed=42):
     """Within-pool seed-subset sensitivity, not future-experiment reliability."""
     from scipy.stats import spearmanr
-    index = {m: {r['seed']: r['zvf_risk_max'] for r in rows} for m, rows in by_m.items()}
+
+    index = {m: {r["seed"]: r["zvf_risk_max"] for r in rows} for m, rows in by_m.items()}
     common = sorted(set.intersection(*(set(v) for v in index.values()))) if index else []
     if not common:
-        return dict(rows=[], full_rank=[], full_top1_full_pool=None, status='insufficient_data')
+        return dict(rows=[], full_rank=[], full_top1_full_pool=None, status="insufficient_data")
     full_values = {m: [v[s] for s in common] for m, v in index.items()}
     full_rank = ranking(full_values)
     methods = sorted(index)
     rows = []
     rng = random.Random(seed)
-    for k in range(1, len(common)+1):
+    for k in range(1, len(common) + 1):
         subsets = list(itertools.combinations(common, k))
         subsets = rng.sample(subsets, min(n_boot, len(subsets)))
         rhos, top1, top3 = [], [], []
         for combo in subsets:
             sub = {m: [v[s] for s in combo] for m, v in index.items()}
-            x, y = [statistics.mean(full_values[m]) for m in methods], [statistics.mean(sub[m]) for m in methods]
-            rho = float(spearmanr(x, y).statistic) if len(set(x)) > 1 and len(set(y)) > 1 else float('nan')
+            x, y = (
+                [statistics.mean(full_values[m]) for m in methods],
+                [statistics.mean(sub[m]) for m in methods],
+            )
+            rho = (
+                float(spearmanr(x, y).statistic)
+                if len(set(x)) > 1 and len(set(y)) > 1
+                else float("nan")
+            )
             if math.isfinite(rho):
                 rhos.append(rho)
             top1.append(tied_top_set(full_values) == tied_top_set(sub))
             top3.append(tied_top_set(full_values, 3) == tied_top_set(sub, 3))
         rate = statistics.mean(top1)
-        rows.append(dict(k_seeds=k, n_subsets=len(subsets),
-                         spearman_mean=statistics.mean(rhos) if rhos else None,
-                         spearman_min=min(rhos) if rhos else None,
-                         top1_match_rate=rate, top3_match_rate=statistics.mean(top3), best_match_rate=rate,
-                         mvsp_50=k if rate >= .5 else '', mvsp_80=k if rate >= .8 else '', mvsp_95=k if rate >= .95 else '',
-                         self_comparison=k == len(common)))
-    return dict(rows=rows, full_rank=full_rank, full_top1_full_pool=rows[-1]['top1_match_rate'],
-                tied_full_winners=sorted(tied_top_set(full_values)),
-                interpretation='within-pool sensitivity; full-pool self-comparison is tautological; independent validation required')
+        rows.append(
+            dict(
+                k_seeds=k,
+                n_subsets=len(subsets),
+                spearman_mean=statistics.mean(rhos) if rhos else None,
+                spearman_min=min(rhos) if rhos else None,
+                top1_match_rate=rate,
+                top3_match_rate=statistics.mean(top3),
+                best_match_rate=rate,
+                mvsp_50=k if rate >= 0.5 else "",
+                mvsp_80=k if rate >= 0.8 else "",
+                mvsp_95=k if rate >= 0.95 else "",
+                self_comparison=k == len(common),
+            )
+        )
+    return dict(
+        rows=rows,
+        full_rank=full_rank,
+        full_top1_full_pool=rows[-1]["top1_match_rate"],
+        tied_full_winners=sorted(tied_top_set(full_values)),
+        interpretation="within-pool sensitivity; full-pool self-comparison is tautological; independent validation required",
+    )
 
 
 def h2_robustness(by_m, n_boot=2000, seed=43):
@@ -133,32 +163,40 @@ def h2_robustness(by_m, n_boot=2000, seed=43):
     sub-sampling. Report mean and 95% CI of z over all 5-seed subsets."""
     random.seed(seed)
     grpo = [r["zvf_risk_max"] for r in by_m["grpo"]]
-    mu_g = statistics.mean(grpo); sd_g = statistics.stdev(grpo) if len(grpo) > 1 else 0
+    mu_g = statistics.mean(grpo)
+    sd_g = statistics.stdev(grpo) if len(grpo) > 1 else 0
     rows = []
     for m, rows_m in by_m.items():
         vals = [r["zvf_risk_max"] for r in rows_m]
-        mu_m = statistics.mean(vals); sd_m = statistics.stdev(vals) if len(vals) > 1 else 0
+        mu_m = statistics.mean(vals)
+        sd_m = statistics.stdev(vals) if len(vals) > 1 else 0
         z_full = (mu_m - mu_g) / math.sqrt(sd_m**2 + sd_g**2) if (sd_m**2 + sd_g**2) > 0 else 0.0
         # bootstrap with 5-seed subsets → use all 5; vary 4-seed subset
         zs = []
         for combo in itertools.combinations(range(5), 4):
             sub = [vals[i] for i in combo]
             sub_g = [grpo[i] for i in combo]
-            mu_s = statistics.mean(sub); sd_s = statistics.stdev(sub) if len(sub) > 1 else 0
-            mu_gs = statistics.mean(sub_g); sd_gs = statistics.stdev(sub_g) if len(sub_g) > 1 else 0
+            mu_s = statistics.mean(sub)
+            sd_s = statistics.stdev(sub) if len(sub) > 1 else 0
+            mu_gs = statistics.mean(sub_g)
+            sd_gs = statistics.stdev(sub_g) if len(sub_g) > 1 else 0
             denom = math.sqrt(sd_s**2 + sd_gs**2)
             zs.append((mu_s - mu_gs) / denom if denom > 0 else 0.0)
-        rows.append({
-            "method": m,
-            "mu": round(mu_m, 4),
-            "sd": round(sd_m, 4),
-            "z_full_pool": round(z_full, 4),
-            "z_4seed_mean": round(statistics.mean(zs), 4),
-            "z_4seed_min":  round(min(zs), 4),
-            "z_4seed_max":  round(max(zs), 4),
-            "z_4seed_sd":   round(statistics.stdev(zs), 4) if len(zs) > 1 else 0.0,
-            "sign_stable": "yes" if (all(z < 0 for z in zs) or all(z > 0 for z in zs)) else "no",
-        })
+        rows.append(
+            {
+                "method": m,
+                "mu": round(mu_m, 4),
+                "sd": round(sd_m, 4),
+                "z_full_pool": round(z_full, 4),
+                "z_4seed_mean": round(statistics.mean(zs), 4),
+                "z_4seed_min": round(min(zs), 4),
+                "z_4seed_max": round(max(zs), 4),
+                "z_4seed_sd": round(statistics.stdev(zs), 4) if len(zs) > 1 else 0.0,
+                "sign_stable": "yes"
+                if (all(z < 0 for z in zs) or all(z > 0 for z in zs))
+                else "no",
+            }
+        )
     return rows
 
 
@@ -168,35 +206,47 @@ def h3_ablation(by_m):
     channel per method."""
     rows = []
     for m, rows_m in by_m.items():
-        mag = statistics.mean([r["risk_mag"]   for r in rows_m])
-        csd = statistics.mean([r["risk_csd"]   for r in rows_m])
+        mag = statistics.mean([r["risk_mag"] for r in rows_m])
+        csd = statistics.mean([r["risk_csd"] for r in rows_m])
         drf = statistics.mean([r["risk_drift"] for r in rows_m])
         total = mag + csd + drf
-        rows.append({
-            "method": m,
-            "risk_mag":   round(mag, 4),
-            "risk_csd":   round(csd, 4),
-            "risk_drift": round(drf, 4),
-            "frac_mag":   round(mag / total, 4) if total > 0 else 0,
-            "frac_csd":   round(csd / total, 4) if total > 0 else 0,
-            "frac_drift": round(drf / total, 4) if total > 0 else 0,
-            "dominant_channel": ["mag", "csd", "drift"][[mag, csd, drf].index(max(mag, csd, drf))],
-        })
+        rows.append(
+            {
+                "method": m,
+                "risk_mag": round(mag, 4),
+                "risk_csd": round(csd, 4),
+                "risk_drift": round(drf, 4),
+                "frac_mag": round(mag / total, 4) if total > 0 else 0,
+                "frac_csd": round(csd / total, 4) if total > 0 else 0,
+                "frac_drift": round(drf / total, 4) if total > 0 else 0,
+                "dominant_channel": ["mag", "csd", "drift"][
+                    [mag, csd, drf].index(max(mag, csd, drf))
+                ],
+            }
+        )
     return rows
 
 
 def h4_clusters(by_m, n_bootstrap=500, seed=44):
     """Legacy entry point: descriptive risk rank buckets, NOT behavioral clusters."""
     from scipy.stats import rankdata
+
     methods = sorted(by_m)
     if not methods:
-        return dict(buckets={}, centroids={}, bucket_stability={}, status='insufficient_data')
-    means = [statistics.mean(r['zvf_risk_max'] for r in by_m[m]) for m in methods]
-    ranks = rankdata(means, method='average')
-    names = ['low_risk', 'mid_risk', 'high_risk']
-    bucket = {m: names[min(2, int((rank-1)*3/len(methods)))] for m, rank in zip(methods, ranks)}
-    return dict(buckets=bucket, centroids={}, bucket_stability={name: None for name in names},
-                interpretation='descriptive average-rank buckets with tied risks grouped together; not clustering or validated stability')
+        return dict(buckets={}, centroids={}, bucket_stability={}, status="insufficient_data")
+    means = [statistics.mean(r["zvf_risk_max"] for r in by_m[m]) for m in methods]
+    ranks = rankdata(means, method="average")
+    names = ["low_risk", "mid_risk", "high_risk"]
+    bucket = {
+        m: names[min(2, int((rank - 1) * 3 / len(methods)))]
+        for m, rank in zip(methods, ranks, strict=False)
+    }
+    return dict(
+        buckets=bucket,
+        centroids={},
+        bucket_stability={name: None for name in names},
+        interpretation="descriptive average-rank buckets with tied risks grouped together; not clustering or validated stability",
+    )
 
 
 def main():
@@ -216,22 +266,55 @@ def main():
             for r in rows:
                 f.write("\t".join(str(r.get(h, "")) for h in header) + "\n")
 
-    write_tsv(OUT / "eval_protocol_mvsp.tsv", h1["rows"],
-              ["k_seeds", "n_subsets", "spearman_mean", "spearman_min",
-               "top1_match_rate", "top3_match_rate", "best_match_rate",
-               "mvsp_50", "mvsp_80", "mvsp_95"])
-    write_tsv(OUT / "eval_protocol_robustness.tsv", h2,
-              ["method", "mu", "sd", "z_full_pool", "z_4seed_mean",
-               "z_4seed_min", "z_4seed_max", "z_4seed_sd", "sign_stable"])
-    write_tsv(OUT / "eval_protocol_ablation.tsv", h3,
-              ["method", "risk_mag", "risk_csd", "risk_drift",
-               "frac_mag", "frac_csd", "frac_drift", "dominant_channel"])
+    write_tsv(
+        OUT / "eval_protocol_mvsp.tsv",
+        h1["rows"],
+        [
+            "k_seeds",
+            "n_subsets",
+            "spearman_mean",
+            "spearman_min",
+            "top1_match_rate",
+            "top3_match_rate",
+            "best_match_rate",
+            "mvsp_50",
+            "mvsp_80",
+            "mvsp_95",
+        ],
+    )
+    write_tsv(
+        OUT / "eval_protocol_robustness.tsv",
+        h2,
+        [
+            "method",
+            "mu",
+            "sd",
+            "z_full_pool",
+            "z_4seed_mean",
+            "z_4seed_min",
+            "z_4seed_max",
+            "z_4seed_sd",
+            "sign_stable",
+        ],
+    )
+    write_tsv(
+        OUT / "eval_protocol_ablation.tsv",
+        h3,
+        [
+            "method",
+            "risk_mag",
+            "risk_csd",
+            "risk_drift",
+            "frac_mag",
+            "frac_csd",
+            "frac_drift",
+            "dominant_channel",
+        ],
+    )
     cluster_rows = []
     for m, b in h4["buckets"].items():
-        cluster_rows.append({"method": m, "bucket": b,
-                             "stability": h4["bucket_stability"][b]})
-    write_tsv(OUT / "eval_protocol_clusters.tsv", cluster_rows,
-              ["method", "bucket", "stability"])
+        cluster_rows.append({"method": m, "bucket": b, "stability": h4["bucket_stability"][b]})
+    write_tsv(OUT / "eval_protocol_clusters.tsv", cluster_rows, ["method", "bucket", "stability"])
 
     summary = {
         "statistic_version": "pro-review-02-v2",
@@ -250,8 +333,8 @@ def main():
         "mvsp_95": next((r["k_seeds"] for r in h1["rows"] if r["mvsp_95"]), ">5"),
         "n_methods_sign_stable_z": sum(1 for r in h2 if r["sign_stable"] == "yes"),
         "n_methods_drift_dominant": sum(1 for r in h3 if r["dominant_channel"] == "drift"),
-        "n_methods_mag_dominant":   sum(1 for r in h3 if r["dominant_channel"] == "mag"),
-        "n_methods_csd_dominant":   sum(1 for r in h3 if r["dominant_channel"] == "csd"),
+        "n_methods_mag_dominant": sum(1 for r in h3 if r["dominant_channel"] == "mag"),
+        "n_methods_csd_dominant": sum(1 for r in h3 if r["dominant_channel"] == "csd"),
         "bucket_stability": h4["bucket_stability"],
     }
     with open(OUT / "eval_protocol_summary.json", "w") as f:

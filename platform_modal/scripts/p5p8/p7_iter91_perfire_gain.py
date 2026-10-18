@@ -30,16 +30,16 @@ Outputs:
   platform_hybrid/experiments/results/p5p8/p7_iter91_perfire_gain_summary.json
   platform_hybrid/experiments/results/p5p8/p7_iter91_perfire_gain_pareto.tsv
 """
+
 import json
-import math
-import os
-import statistics
 from collections import defaultdict
 from pathlib import Path
 
 import sys
+
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
+from _paths import REPO_ROOT
+
 WORK = REPO_ROOT
 N2_DIR = WORK / "platform_hybrid/experiments/results/n2_reward_tensor_resume"
 OUT_DIR = WORK / "platform_hybrid/experiments/results/p5p8"
@@ -57,10 +57,11 @@ ETA_MIN_GRID = [0.005, 0.01, 0.02, 0.03, 0.05, 0.08, 0.10, 0.15, 0.20]
 
 # ---------- Closed-form helpers ----------
 
+
 def zvf_binom(p_hat: float, G: int) -> float:
     """i.i.d. binomial predicted ZVF at group size G for an observed success rate p_hat."""
     p = min(max(p_hat, 1e-12), 1.0 - 1e-12)
-    return p ** G + (1.0 - p) ** G
+    return p**G + (1.0 - p) ** G
 
 
 def restore_at_G(p_hat: float, G: int) -> float:
@@ -68,6 +69,7 @@ def restore_at_G(p_hat: float, G: int) -> float:
 
 
 # ---------- Load N2 tensors ----------
+
 
 def load_n2():
     by_method = {}
@@ -80,6 +82,7 @@ def load_n2():
 
 
 # ---------- Per-step metrics ----------
+
 
 def compute_per_step_metrics(by_method):
     """For each (method, step) compute the per-prompt binomial ZVF drop from escalating."""
@@ -99,23 +102,26 @@ def compute_per_step_metrics(by_method):
             restore_sum = sum(1.0 - z for z in z16_per_p)
             # Per-step zvf_obs (empirical boundary fraction)
             zvf_obs = sum(1 for k in ks if k in (0, G_BASE)) / len(ks)
-            per_step.append({
-                "method": m,
-                "step": r["step"],
-                "n_prompts": len(ks),
-                "n_degenerate_at_base": sum(1 for k in ks if k in (0, G_BASE)),
-                "zvf_obs": zvf_obs,
-                "mean_zvf_at_g8": mean_z8,
-                "mean_zvf_at_g16": mean_z16,
-                "zvf_drop": zvf_drop,
-                "restore_sum": restore_sum,
-                "n_k0": sum(1 for k in ks if k == 0),
-                "n_k8": sum(1 for k in ks if k == 8),
-            })
+            per_step.append(
+                {
+                    "method": m,
+                    "step": r["step"],
+                    "n_prompts": len(ks),
+                    "n_degenerate_at_base": sum(1 for k in ks if k in (0, G_BASE)),
+                    "zvf_obs": zvf_obs,
+                    "mean_zvf_at_g8": mean_z8,
+                    "mean_zvf_at_g16": mean_z16,
+                    "zvf_drop": zvf_drop,
+                    "restore_sum": restore_sum,
+                    "n_k0": sum(1 for k in ks if k == 0),
+                    "n_k8": sum(1 for k in ks if k == 8),
+                }
+            )
     return per_step
 
 
 # ---------- Controller replay ----------
+
 
 def replay_controller(per_step, controller: str, threshold, eta_min: float = 0.0):
     fired = []
@@ -135,8 +141,10 @@ def replay_controller(per_step, controller: str, threshold, eta_min: float = 0.0
 
 # ---------- Bootstrap CI ----------
 
+
 def boot_mean_ci(values, n_boot=N_BOOT, seed=SEED, alpha=0.05):
     import random
+
     rng = random.Random(seed)
     n = len(values)
     if n == 0:
@@ -153,19 +161,24 @@ def boot_mean_ci(values, n_boot=N_BOOT, seed=SEED, alpha=0.05):
 
 # ---------- Main ----------
 
+
 def main():
     by_method = load_n2()
     per_step = compute_per_step_metrics(by_method)
     print(f"Loaded {len(per_step)} (method,step) rows")
 
-    zvf_obs_means = {m: sum(s["zvf_obs"] for s in per_step if s["method"] == m) / N_STEPS
-                     for m in METHODS}
-    zvf_drop_means = {m: sum(s["zvf_drop"] for s in per_step if s["method"] == m) / N_STEPS
-                      for m in METHODS}
-    restore_means = {m: sum(s["restore_sum"] for s in per_step if s["method"] == m) / N_STEPS
-                     for m in METHODS}
-    mean_z8 = {m: sum(s["mean_zvf_at_g8"] for s in per_step if s["method"] == m) / N_STEPS
-               for m in METHODS}
+    zvf_obs_means = {
+        m: sum(s["zvf_obs"] for s in per_step if s["method"] == m) / N_STEPS for m in METHODS
+    }
+    zvf_drop_means = {
+        m: sum(s["zvf_drop"] for s in per_step if s["method"] == m) / N_STEPS for m in METHODS
+    }
+    restore_means = {
+        m: sum(s["restore_sum"] for s in per_step if s["method"] == m) / N_STEPS for m in METHODS
+    }
+    mean_z8 = {
+        m: sum(s["mean_zvf_at_g8"] for s in per_step if s["method"] == m) / N_STEPS for m in METHODS
+    }
     print(f"Mean zvf_obs per method: {zvf_obs_means}")
     print(f"Mean z8 (binomial avg) per method: {mean_z8}")
     print(f"Mean zvf_drop per method: {zvf_drop_means}")
@@ -174,9 +187,19 @@ def main():
     # Write per-step TSV
     per_step_path = OUT_DIR / "p7_iter91_perfire_gain_per_step.tsv"
     with open(per_step_path, "w") as f:
-        cols = ["method", "step", "n_prompts", "n_degenerate_at_base", "zvf_obs",
-                "mean_zvf_at_g8", "mean_zvf_at_g16", "zvf_drop", "restore_sum",
-                "n_k0", "n_k8"]
+        cols = [
+            "method",
+            "step",
+            "n_prompts",
+            "n_degenerate_at_base",
+            "zvf_obs",
+            "mean_zvf_at_g8",
+            "mean_zvf_at_g16",
+            "zvf_drop",
+            "restore_sum",
+            "n_k0",
+            "n_k8",
+        ]
         f.write("\t".join(cols) + "\n")
         for s in per_step:
             f.write("\t".join(str(s[c]) for c in cols) + "\n")
@@ -198,21 +221,25 @@ def main():
             else:
                 mean_drop = lo = hi = sum_drop = sum_restore = 0.0
             extra_rollouts = n_fires * (G_ESC - G_BASE) * N_PROMPTS
-            benefit_per_1k = (sum_drop * N_PROMPTS) / extra_rollouts * 1000.0 if extra_rollouts > 0 else 0.0
-            rows.append({
-                "method": m,
-                "controller": "zvf_triage",
-                "threshold": f"{tau:.2f}",
-                "eta_min": "0.0",
-                "n_fires": n_fires,
-                "extra_rollouts": extra_rollouts,
-                "sum_zvf_drop": round(sum_drop, 4),
-                "mean_zvf_drop_per_fire": round(mean_drop, 4),
-                "boot_ci_lo": round(lo, 4),
-                "boot_ci_hi": round(hi, 4),
-                "sum_restore_prompts": round(sum_restore, 2),
-                "zvf_drop_per_1k_rollouts": round(benefit_per_1k, 4),
-            })
+            benefit_per_1k = (
+                (sum_drop * N_PROMPTS) / extra_rollouts * 1000.0 if extra_rollouts > 0 else 0.0
+            )
+            rows.append(
+                {
+                    "method": m,
+                    "controller": "zvf_triage",
+                    "threshold": f"{tau:.2f}",
+                    "eta_min": "0.0",
+                    "n_fires": n_fires,
+                    "extra_rollouts": extra_rollouts,
+                    "sum_zvf_drop": round(sum_drop, 4),
+                    "mean_zvf_drop_per_fire": round(mean_drop, 4),
+                    "boot_ci_lo": round(lo, 4),
+                    "boot_ci_hi": round(hi, 4),
+                    "sum_restore_prompts": round(sum_restore, 2),
+                    "zvf_drop_per_1k_rollouts": round(benefit_per_1k, 4),
+                }
+            )
         # zvf_then_drop: requires BOTH step-ZVF >= tau AND per-step zvf_drop >= eta
         for tau in [0.50, 0.55, 0.60, 0.65, 0.70, 0.75, 0.80]:
             for eta in ETA_MIN_GRID:
@@ -226,21 +253,25 @@ def main():
                 else:
                     mean_drop = lo = hi = sum_drop = sum_restore = 0.0
                 extra_rollouts = n_fires * (G_ESC - G_BASE) * N_PROMPTS
-                benefit_per_1k = (sum_drop * N_PROMPTS) / extra_rollouts * 1000.0 if extra_rollouts > 0 else 0.0
-                rows.append({
-                    "method": m,
-                    "controller": "zvf_then_drop",
-                    "threshold": f"{tau:.2f}",
-                    "eta_min": f"{eta:.3f}",
-                    "n_fires": n_fires,
-                    "extra_rollouts": extra_rollouts,
-                    "sum_zvf_drop": round(sum_drop, 4),
-                    "mean_zvf_drop_per_fire": round(mean_drop, 4),
-                    "boot_ci_lo": round(lo, 4),
-                    "boot_ci_hi": round(hi, 4),
-                    "sum_restore_prompts": round(sum_restore, 2),
-                    "zvf_drop_per_1k_rollouts": round(benefit_per_1k, 4),
-                })
+                benefit_per_1k = (
+                    (sum_drop * N_PROMPTS) / extra_rollouts * 1000.0 if extra_rollouts > 0 else 0.0
+                )
+                rows.append(
+                    {
+                        "method": m,
+                        "controller": "zvf_then_drop",
+                        "threshold": f"{tau:.2f}",
+                        "eta_min": f"{eta:.3f}",
+                        "n_fires": n_fires,
+                        "extra_rollouts": extra_rollouts,
+                        "sum_zvf_drop": round(sum_drop, 4),
+                        "mean_zvf_drop_per_fire": round(mean_drop, 4),
+                        "boot_ci_lo": round(lo, 4),
+                        "boot_ci_hi": round(hi, 4),
+                        "sum_restore_prompts": round(sum_restore, 2),
+                        "zvf_drop_per_1k_rollouts": round(benefit_per_1k, 4),
+                    }
+                )
         # drop_gated: threshold is the eta value itself
         for eta in ETA_MIN_GRID:
             fired = [s for s in mps if s["zvf_drop"] >= eta]
@@ -253,21 +284,25 @@ def main():
             else:
                 mean_drop = lo = hi = sum_drop = sum_restore = 0.0
             extra_rollouts = n_fires * (G_ESC - G_BASE) * N_PROMPTS
-            benefit_per_1k = (sum_drop * N_PROMPTS) / extra_rollouts * 1000.0 if extra_rollouts > 0 else 0.0
-            rows.append({
-                "method": m,
-                "controller": "drop_gated",
-                "threshold": "n/a",
-                "eta_min": f"{eta:.3f}",
-                "n_fires": n_fires,
-                "extra_rollouts": extra_rollouts,
-                "sum_zvf_drop": round(sum_drop, 4),
-                "mean_zvf_drop_per_fire": round(mean_drop, 4),
-                "boot_ci_lo": round(lo, 4),
-                "boot_ci_hi": round(hi, 4),
-                "sum_restore_prompts": round(sum_restore, 2),
-                "zvf_drop_per_1k_rollouts": round(benefit_per_1k, 4),
-            })
+            benefit_per_1k = (
+                (sum_drop * N_PROMPTS) / extra_rollouts * 1000.0 if extra_rollouts > 0 else 0.0
+            )
+            rows.append(
+                {
+                    "method": m,
+                    "controller": "drop_gated",
+                    "threshold": "n/a",
+                    "eta_min": f"{eta:.3f}",
+                    "n_fires": n_fires,
+                    "extra_rollouts": extra_rollouts,
+                    "sum_zvf_drop": round(sum_drop, 4),
+                    "mean_zvf_drop_per_fire": round(mean_drop, 4),
+                    "boot_ci_lo": round(lo, 4),
+                    "boot_ci_hi": round(hi, 4),
+                    "sum_restore_prompts": round(sum_restore, 2),
+                    "zvf_drop_per_1k_rollouts": round(benefit_per_1k, 4),
+                }
+            )
 
     per_method_path = OUT_DIR / "p7_iter91_perfire_gain_per_method.tsv"
     with open(per_method_path, "w") as f:
@@ -285,8 +320,10 @@ def main():
         pareto_groups[key].append(r["zvf_drop_per_1k_rollouts"])
         pareto_meta[key] = {
             "n_fires_total": pareto_meta.get(key, {}).get("n_fires_total", 0) + r["n_fires"],
-            "sum_zvf_drop_total": pareto_meta.get(key, {}).get("sum_zvf_drop_total", 0.0) + r["sum_zvf_drop"],
-            "extra_rollouts_total": pareto_meta.get(key, {}).get("extra_rollouts_total", 0) + r["extra_rollouts"],
+            "sum_zvf_drop_total": pareto_meta.get(key, {}).get("sum_zvf_drop_total", 0.0)
+            + r["sum_zvf_drop"],
+            "extra_rollouts_total": pareto_meta.get(key, {}).get("extra_rollouts_total", 0)
+            + r["extra_rollouts"],
         }
 
     pareto_path = OUT_DIR / "p7_iter91_perfire_gain_pareto.tsv"
@@ -294,13 +331,25 @@ def main():
     for (ctrl, thr, eta), values in pareto_groups.items():
         mean_v, lo, hi = boot_mean_ci(values, n_boot=2000, seed=SEED)
         meta = pareto_meta[(ctrl, thr, eta)]
-        items.append((ctrl, thr, eta, meta["n_fires_total"],
-                      meta["sum_zvf_drop_total"], meta["extra_rollouts_total"],
-                      mean_v, lo, hi))
+        items.append(
+            (
+                ctrl,
+                thr,
+                eta,
+                meta["n_fires_total"],
+                meta["sum_zvf_drop_total"],
+                meta["extra_rollouts_total"],
+                mean_v,
+                lo,
+                hi,
+            )
+        )
     items.sort(key=lambda x: -x[6])  # by mean benefit desc
 
     with open(pareto_path, "w") as f:
-        f.write("controller\tthreshold\teta_min\tn_fires_total\tsum_zvf_drop_total\textra_rollouts_total\tzvf_drop_per_1k_mean\tci_lo\tci_hi\n")
+        f.write(
+            "controller\tthreshold\teta_min\tn_fires_total\tsum_zvf_drop_total\textra_rollouts_total\tzvf_drop_per_1k_mean\tci_lo\tci_hi\n"
+        )
         for ctrl, thr, eta, n, sd, er, m, lo, hi in items:
             f.write(f"{ctrl}\t{thr}\t{eta}\t{n}\t{sd:.4f}\t{er}\t{m:.4f}\t{lo:.4f}\t{hi:.4f}\n")
     print(f"Wrote {pareto_path}")
@@ -315,10 +364,17 @@ def main():
         "zvf_drop_mean_per_method": zvf_drop_means,
         "restore_sum_mean_per_method": restore_means,
         "pareto_top10": [
-            {"controller": ctrl, "threshold": thr, "eta_min": eta,
-             "n_fires_total": n, "sum_zvf_drop_total": round(sd, 4),
-             "extra_rollouts_total": er, "zvf_drop_per_1k_mean": round(m, 4),
-             "ci_lo": round(lo, 4), "ci_hi": round(hi, 4)}
+            {
+                "controller": ctrl,
+                "threshold": thr,
+                "eta_min": eta,
+                "n_fires_total": n,
+                "sum_zvf_drop_total": round(sd, 4),
+                "extra_rollouts_total": er,
+                "zvf_drop_per_1k_mean": round(m, 4),
+                "ci_lo": round(lo, 4),
+                "ci_hi": round(hi, 4),
+            }
             for ctrl, thr, eta, n, sd, er, m, lo, hi in items[:10]
         ],
         "n_boot": N_BOOT,
@@ -331,8 +387,10 @@ def main():
 
     print("\n=== TOP-10 PARETO (zvf_drop per 1000 extra rollouts, cross-method) ===")
     for ctrl, thr, eta, n, sd, er, m, lo, hi in items[:10]:
-        print(f"  {ctrl:14s} thr={thr:5s} eta={eta:5s} fires={n:4d} "
-              f"zvf_drop_sum={sd:7.4f} rolls={er:6d} benefit={m:7.4f} CI=[{lo:.4f},{hi:.4f}]")
+        print(
+            f"  {ctrl:14s} thr={thr:5s} eta={eta:5s} fires={n:4d} "
+            f"zvf_drop_sum={sd:7.4f} rolls={er:6d} benefit={m:7.4f} CI=[{lo:.4f},{hi:.4f}]"
+        )
 
 
 if __name__ == "__main__":

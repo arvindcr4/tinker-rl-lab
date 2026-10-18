@@ -11,6 +11,7 @@ from pilot.evaluation import (
     evidence_row,
     validate_evidence,
 )
+import pytest
 
 
 class EvaluationEvidenceTests(unittest.TestCase):
@@ -40,9 +41,9 @@ class EvaluationEvidenceTests(unittest.TestCase):
                 answers=answers,
                 source_indices=source_indices,
             )
-            self.assertEqual(summary["correct"], 3)
-            self.assertEqual(summary["accuracy"], 1.0)
-            self.assertEqual(summary["unique_row_hashes"], 3)
+            assert summary["correct"] == 3
+            assert summary["accuracy"] == 1.0
+            assert summary["unique_row_hashes"] == 3
 
     def test_math_evidence_uses_strict_boxed_lower_bound(self) -> None:
         row = evidence_row(
@@ -54,7 +55,7 @@ class EvaluationEvidenceTests(unittest.TestCase):
             completion_text=r"answer \\boxed{0.5}",
             generated_tokens=4,
         )
-        self.assertEqual(row["correct"], 0)
+        assert row["correct"] == 0
 
     def test_tampered_or_noncontiguous_rows_fail_closed(self) -> None:
         questions = ["one", "two"]
@@ -77,7 +78,7 @@ class EvaluationEvidenceTests(unittest.TestCase):
             bad = [dict(row) for row in rows]
             bad[1]["index"] = 3
             atomic_jsonl(path, bad)
-            with self.assertRaisesRegex(EvaluationContractError, "not contiguous"):
+            with pytest.raises(EvaluationContractError, match="not contiguous"):
                 validate_evidence(
                     path,
                     regime="balanced_equal_length",
@@ -88,7 +89,7 @@ class EvaluationEvidenceTests(unittest.TestCase):
             tampered = [dict(row) for row in rows]
             tampered[0]["completion_text"] = "#### 9"
             path.write_text("\n".join(json.dumps(row) for row in tampered) + "\n")
-            with self.assertRaisesRegex(EvaluationContractError, "completion hash mismatch"):
+            with pytest.raises(EvaluationContractError, match="completion hash mismatch"):
                 validate_evidence(
                     path,
                     regime="balanced_equal_length",

@@ -30,7 +30,9 @@ from huggingface_hub import HfApi, get_token, hf_hub_download
 REPO_ROOT = Path(__file__).resolve().parents[2]
 REMOTE_SCRIPT = REPO_ROOT / "zvf-program" / "colab-experiments" / "e1_grpo_confirmatory.py"
 SECURE_EXEC = REPO_ROOT / "zvf-program" / "colab-experiments" / "secure_exec_confirmatory.py"
-ENVIRONMENT_CHECK = REPO_ROOT / "zvf-program" / "colab-experiments" / "verify_colab_e1_environment.py"
+ENVIRONMENT_CHECK = (
+    REPO_ROOT / "zvf-program" / "colab-experiments" / "verify_colab_e1_environment.py"
+)
 AMENDMENT = REPO_ROOT / "zvf-program" / "audit" / "preregistration_colab_a100_amendment.json"
 TREATMENT_SPEC = REPO_ROOT / "zvf-program" / "audit" / "preregistration_e1_treatments.json"
 FULL_RESULTS = REPO_ROOT / "zvf-program" / "audit" / "results" / "full"
@@ -134,9 +136,7 @@ def fingerprint(payload: dict[str, Any]) -> str:
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--mode", choices=("preflight", "confirmatory"), required=True)
-    parser.add_argument(
-        "--arm", choices=("grpo", "dapo", "gspo", "drgrpo", "aero"), default="grpo"
-    )
+    parser.add_argument("--arm", choices=("grpo", "dapo", "gspo", "drgrpo", "aero"), default="grpo")
     parser.add_argument("--seed", type=int, required=True)
     parser.add_argument("--gpu", default="A100")
     parser.add_argument("--auth", choices=("oauth2", "adc"), default="oauth2")
@@ -359,9 +359,7 @@ def stop_session(
         if return_code == 0:
             return True
         if attempt < attempts:
-            log_handle.write(
-                f"[launcher cleanup] retrying session release in {retry_seconds}s\n"
-            )
+            log_handle.write(f"[launcher cleanup] retrying session release in {retry_seconds}s\n")
             log_handle.flush()
             if retry_seconds:
                 time.sleep(retry_seconds)
@@ -630,36 +628,88 @@ def run_unit(args: argparse.Namespace) -> dict[str, Any]:
         atomic_json(args.output_dir / "results" / "history" / f"{unit}__{old_fp}.json", existing)
 
     script_args = [
-        "--arm", args.arm,
-        "--seed", str(args.seed),
-        "--mode", args.mode,
-        "--max-steps", str(max_steps),
-        "--heldout-n", str(heldout_n),
-        "--max-completion-length", "1024",
-        "--save-steps", str(save_steps),
-        "--unit-fingerprint", unit_fingerprint,
-        "--stack-fingerprint", stack_fp,
-        "--hf-repo", hf_repo,
-        "--wandb-project", args.wandb_project,
-        "--wandb-group", args.wandb_group,
-        "--wandb-run-name", wandb_run_name,
+        "--arm",
+        args.arm,
+        "--seed",
+        str(args.seed),
+        "--mode",
+        args.mode,
+        "--max-steps",
+        str(max_steps),
+        "--heldout-n",
+        str(heldout_n),
+        "--max-completion-length",
+        "1024",
+        "--save-steps",
+        str(save_steps),
+        "--unit-fingerprint",
+        unit_fingerprint,
+        "--stack-fingerprint",
+        stack_fp,
+        "--hf-repo",
+        hf_repo,
+        "--wandb-project",
+        args.wandb_project,
+        "--wandb-group",
+        args.wandb_group,
+        "--wandb-run-name",
+        wandb_run_name,
     ]
     if args.wandb_entity:
         script_args.extend(["--wandb-entity", args.wandb_entity])
 
     execution_plan = [
         ["colab", f"--auth={args.auth}", "new", "--gpu", args.gpu, "--session", session],
-        ["colab", f"--auth={args.auth}", "upload", "--session", session,
-         str(REMOTE_SCRIPT), "/content/e1_grpo_confirmatory.py"],
+        [
+            "colab",
+            f"--auth={args.auth}",
+            "upload",
+            "--session",
+            session,
+            str(REMOTE_SCRIPT),
+            "/content/e1_grpo_confirmatory.py",
+        ],
         ["colab", f"--auth={args.auth}", "install", "--session", session, *PACKAGE_PINS],
-        ["colab", f"--auth={args.auth}", "exec", "--session", session,
-         "--file", str(ENVIRONMENT_CHECK), "--timeout", "120"],
-        ["colab", f"--auth={args.auth}", "upload", "--session", session,
-         "<ephemeral-secret-file>", "/content/.e1-run-secrets.json"],
-        ["colab", f"--auth={args.auth}", "upload", "--session", session,
-         "<ephemeral-request-file>", "/content/e1-confirmatory-request.json"],
-        ["colab", f"--auth={args.auth}", "exec", "--session", session,
-         "--file", str(SECURE_EXEC), "--timeout", str(args.timeout)],
+        [
+            "colab",
+            f"--auth={args.auth}",
+            "exec",
+            "--session",
+            session,
+            "--file",
+            str(ENVIRONMENT_CHECK),
+            "--timeout",
+            "120",
+        ],
+        [
+            "colab",
+            f"--auth={args.auth}",
+            "upload",
+            "--session",
+            session,
+            "<ephemeral-secret-file>",
+            "/content/.e1-run-secrets.json",
+        ],
+        [
+            "colab",
+            f"--auth={args.auth}",
+            "upload",
+            "--session",
+            session,
+            "<ephemeral-request-file>",
+            "/content/e1-confirmatory-request.json",
+        ],
+        [
+            "colab",
+            f"--auth={args.auth}",
+            "exec",
+            "--session",
+            session,
+            "--file",
+            str(SECURE_EXEC),
+            "--timeout",
+            str(args.timeout),
+        ],
         ["colab", f"--auth={args.auth}", "stop", "--session", session],
     ]
     launched = {
@@ -704,10 +754,24 @@ def run_unit(args: argparse.Namespace) -> dict[str, Any]:
                 execution_plan[1],
                 execution_plan[2],
                 execution_plan[3],
-                ["colab", f"--auth={args.auth}", "upload", "--session", session,
-                 str(secret_path), "/content/.e1-run-secrets.json"],
-                ["colab", f"--auth={args.auth}", "upload", "--session", session,
-                 str(invocation_path), "/content/e1-confirmatory-request.json"],
+                [
+                    "colab",
+                    f"--auth={args.auth}",
+                    "upload",
+                    "--session",
+                    session,
+                    str(secret_path),
+                    "/content/.e1-run-secrets.json",
+                ],
+                [
+                    "colab",
+                    f"--auth={args.auth}",
+                    "upload",
+                    "--session",
+                    session,
+                    str(invocation_path),
+                    "/content/e1-confirmatory-request.json",
+                ],
                 execution_plan[6],
             ]
             try:
@@ -755,12 +819,8 @@ def run_unit(args: argparse.Namespace) -> dict[str, Any]:
         expected_steps = list(range(save_steps, max_steps + 1, save_steps))
         verification = verify_remote_artifacts(credentials, result, expected_steps)
         manifest = download_manifest(credentials, result)
-        validate_remote_manifest(
-            manifest, result, unit_fingerprint, expected_steps, evidence_class
-        )
-        outputs = write_validated_outputs(
-            args, result, manifest, unit_fingerprint, verification
-        )
+        validate_remote_manifest(manifest, result, unit_fingerprint, expected_steps, evidence_class)
+        outputs = write_validated_outputs(args, result, manifest, unit_fingerprint, verification)
     except Exception as exc:
         failed = {**base_record, "status": "failed", "error": str(exc)}
         atomic_json(result_path, failed)

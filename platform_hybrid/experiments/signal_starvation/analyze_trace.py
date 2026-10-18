@@ -15,7 +15,9 @@ except ImportError:  # direct script execution
     from metrics import ppo_gate, root_metrics, sao_gate
 
 
-def load_records(path: Path, algorithm: str, epsilon: float, epsilon_low: float, epsilon_high: float):
+def load_records(
+    path: Path, algorithm: str, epsilon: float, epsilon_low: float, epsilon_high: float
+):
     records = []
     for line_number, raw in enumerate(path.read_text().splitlines(), start=1):
         if not raw.strip():

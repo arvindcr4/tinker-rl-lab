@@ -59,6 +59,7 @@ Source data (already in repo, NOT regenerated):
   platform_hybrid/experiments/results/groupsize_zvf_sweep.json     (12 runs, sparse only)
   platform_hybrid/experiments/results/zvf_iter98_tooluse.tsv       (rho decomposition)
 """
+
 from __future__ import annotations
 
 import json
@@ -78,7 +79,7 @@ EPS = 1e-9
 def _zvf_iid(p: float, G: int) -> float:
     """I.I.D. zero-variance-fraction baseline: Pr(all-correct) + Pr(all-wrong)."""
     pp = min(max(float(p), 0.0), 1.0)
-    return pp ** G + (1.0 - pp) ** G
+    return pp**G + (1.0 - pp) ** G
 
 
 def _rho(zvf_obs: float, zvf_iid: float) -> float:
@@ -160,11 +161,17 @@ def analyse_bfclv4() -> dict:
     sparse_deltas_nonherding = np.array(
         [abs(r["delta_div_sparse"]) for r in rows if r["p_sparse"] > 0]
     )
-    h1_pass = bool(np.all(sparse_deltas_nonherding < 0.25)) if len(sparse_deltas_nonherding) else False
+    h1_pass = (
+        bool(np.all(sparse_deltas_nonherding < 0.25)) if len(sparse_deltas_nonherding) else False
+    )
     h1_max = float(sparse_deltas.max())
     h1_mean = float(sparse_deltas.mean())
-    h1_nonherding_max = float(sparse_deltas_nonherding.max()) if len(sparse_deltas_nonherding) else float("nan")
-    h1_nonherding_mean = float(sparse_deltas_nonherding.mean()) if len(sparse_deltas_nonherding) else float("nan")
+    h1_nonherding_max = (
+        float(sparse_deltas_nonherding.max()) if len(sparse_deltas_nonherding) else float("nan")
+    )
+    h1_nonherding_mean = (
+        float(sparse_deltas_nonherding.mean()) if len(sparse_deltas_nonherding) else float("nan")
+    )
     h1_n_nonherding = int(len(sparse_deltas_nonherding))
 
     # H2 (REVISED, Jiao): in the all-wrong herding regime (zvf_sparse=1, p=0)
@@ -218,12 +225,14 @@ def analyse_bfclv4() -> dict:
     # Per-cell inflation analysis
     out_infl = RES_BK / "verifiable_zvf_inflation.tsv"
     with out_infl.open("w") as fh:
-        fh.write("kind\tn\tn_nonherding\th1_pass\th1_max_abs_delta_div\t"
-                 "h1_mean_abs_delta_div\th1_nonherding_max\th1_nonherding_mean\t"
-                 "h2a_herding_broken_hits\th2a_frac\th2a_binomial_p\th2a_decisive\t"
-                 "h2b_partial_credit_uplift_hits\th2b_frac\th2b_binomial_p\th2b_decisive\t"
-                 "h2_mean_rho_sparse\th2_mean_rho_dense\t"
-                 "h3_var_pass\th3_mean_pass\tvar_sparse\tvar_dense\tmean_sparse\tmean_dense\n")
+        fh.write(
+            "kind\tn\tn_nonherding\th1_pass\th1_max_abs_delta_div\t"
+            "h1_mean_abs_delta_div\th1_nonherding_max\th1_nonherding_mean\t"
+            "h2a_herding_broken_hits\th2a_frac\th2a_binomial_p\th2a_decisive\t"
+            "h2b_partial_credit_uplift_hits\th2b_frac\th2b_binomial_p\th2b_decisive\t"
+            "h2_mean_rho_sparse\th2_mean_rho_dense\t"
+            "h3_var_pass\th3_mean_pass\tvar_sparse\tvar_dense\tmean_sparse\tmean_dense\n"
+        )
         fh.write(
             f"bfclv4_G8\t{len(rows)}\t{h1_n_nonherding}\t{int(h1_pass)}\t"
             f"{h1_max:.4f}\t{h1_mean:.4f}\t"
@@ -277,7 +286,7 @@ def _binom_tail(k: int, n: int, p: float) -> float:
     """One-sided binomial tail Pr(X >= k) for X ~ Binom(n, p)."""
     s = 0.0
     for i in range(k, n + 1):
-        s += math.comb(n, i) * (p ** i) * ((1 - p) ** (n - i))
+        s += math.comb(n, i) * (p**i) * ((1 - p) ** (n - i))
     return s
 
 
@@ -415,8 +424,17 @@ def risk_score_delta() -> dict:
             "grader_inflation_share\n"
         )
         for m in methods:
-            if m["library"] not in {"grpo", "aero", "cppo", "ngrpo", "scafgrpo",
-                                    "mcgrpo", "gift", "areal", "es"}:
+            if m["library"] not in {
+                "grpo",
+                "aero",
+                "cppo",
+                "ngrpo",
+                "scafgrpo",
+                "mcgrpo",
+                "gift",
+                "areal",
+                "es",
+            }:
                 continue
             # Apply inflation share: reclassify some drift to converged
             d_orig = m["drift_rate"]
@@ -442,7 +460,7 @@ def main() -> None:
     risk_summary = risk_score_delta()
     out = {
         "lecture": "F25 L4 — Jiantao Jiao (NVIDIA) — Post-Training Verifiable "
-                   "Agents (SWE-bench Verified + BrowseComp)",
+        "Agents (SWE-bench Verified + BrowseComp)",
         "citations_verified_via_webfetch": [
             "Wei et al. 2025, arXiv:2504.12516 — BrowseComp",
             "Jimenez et al. 2024, arXiv:2310.06770 — SWE-bench (Verified subset)",

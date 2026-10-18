@@ -48,6 +48,7 @@ Outputs:
   synth_iter204_d23_run_lengths.tsv     per (pillar, weighting) run-length distribution
   synth_iter204_d23_summary.json        H1..H4 verdicts
 """
+
 from __future__ import annotations
 import csv
 import json
@@ -56,8 +57,10 @@ from pathlib import Path
 import numpy as np
 
 import sys
+
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
+from _paths import REPO_ROOT
+
 ROOT = REPO_ROOT
 RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8"
 RES.mkdir(parents=True, exist_ok=True)
@@ -94,8 +97,9 @@ def main():
         }
 
     # Compute cost-optimal weight (same as D22)
-    ref_len = float(np.mean([per_method_step[(m, s)]["mean_len"]
-                              for m in METHODS for s in range(N_STEPS)]))
+    ref_len = float(
+        np.mean([per_method_step[(m, s)]["mean_len"] for m in METHODS for s in range(N_STEPS)])
+    )
     c_norm = 1.0
     weights = {}
     for m in METHODS:
@@ -109,15 +113,16 @@ def main():
         for s in range(N_STEPS):
             cell = per_method_step[(m, s)]
             w = weights[(m, s)]
-            per_method_step[(m, s)].update({
-                "P5_w": cell["P5_reward"] * w,
-                "P6_w": cell["P6_minus_zvf"] * w,
-                "P7_w": cell["P7_snr"] * w,
-                "P8_w": cell["P8_reward_per_len"] * w,
-            })
+            per_method_step[(m, s)].update(
+                {
+                    "P5_w": cell["P5_reward"] * w,
+                    "P6_w": cell["P6_minus_zvf"] * w,
+                    "P7_w": cell["P7_snr"] * w,
+                    "P8_w": cell["P8_reward_per_len"] * w,
+                }
+            )
 
-    keys_raw = {"P5": "P5_reward", "P6": "P6_minus_zvf",
-                "P7": "P7_snr", "P8": "P8_reward_per_len"}
+    keys_raw = {"P5": "P5_reward", "P6": "P6_minus_zvf", "P7": "P7_snr", "P8": "P8_reward_per_len"}
     keys_w = {"P5": "P5_w", "P6": "P6_w", "P7": "P7_w", "P8": "P8_w"}
 
     # Aggregate best method per pillar per weighting (across all 160 cells)
@@ -190,8 +195,7 @@ def main():
                 lo = float(np.quantile(boot_means, 0.025))
                 hi = float(np.quantile(boot_means, 0.975))
                 agree_data[(p, weighting)] = step_agrees
-                f.write(f"{p}\t{weighting}\t{agg}\t{arr.mean():.4f}\t"
-                        f"{lo:.4f}\t{hi:.4f}\n")
+                f.write(f"{p}\t{weighting}\t{agg}\t{arr.mean():.4f}\t{lo:.4f}\t{hi:.4f}\n")
 
     # Run-length analysis: contiguous runs of the same per-step best method.
     out_runs = RES / "synth_iter204_d23_run_lengths.tsv"
@@ -224,6 +228,7 @@ def main():
                 run_dist[(p, weighting)] = runs
                 # Count run lengths
                 from collections import Counter
+
                 cnt = Counter(runs)
                 for rl, c in sorted(cnt.items()):
                     f.write(f"{p}\t{weighting}\t{rl}\t{c}\n")
@@ -237,18 +242,18 @@ def main():
     # H2: per-step best-method under cost-weighting has HIGHER variance
     # across steps than aggregate (per-step != aggregate).
     # Variance proxy: number of distinct best methods across the 40 steps.
-    n_distinct_raw = {p: len(set(seq_cache[(p, "raw")]))
-                      for p in ["P5", "P6", "P7", "P8"]}
-    n_distinct_w = {p: len(set(seq_cache[(p, "weighted")]))
-                    for p in ["P5", "P6", "P7", "P8"]}
+    n_distinct_raw = {p: len(set(seq_cache[(p, "raw")])) for p in ["P5", "P6", "P7", "P8"]}
+    n_distinct_w = {p: len(set(seq_cache[(p, "weighted")])) for p in ["P5", "P6", "P7", "P8"]}
     # Aggregate best is 1 method; per-step should be > 1 (otherwise per-step = aggregate)
     h2_pass = bool(all(n_distinct_w[p] > 1 for p in ["P5", "P6", "P7", "P8"]))
 
     # H3: cost-weighting INCREASES per-step agreement vs raw (averaged over 4 pillars)
-    raw_mean_agree = float(np.mean([np.mean(agree_data[(p, "raw")])
-                                     for p in ["P5", "P6", "P7", "P8"]]))
-    w_mean_agree = float(np.mean([np.mean(agree_data[(p, "weighted")])
-                                   for p in ["P5", "P6", "P7", "P8"]]))
+    raw_mean_agree = float(
+        np.mean([np.mean(agree_data[(p, "raw")]) for p in ["P5", "P6", "P7", "P8"]])
+    )
+    w_mean_agree = float(
+        np.mean([np.mean(agree_data[(p, "weighted")]) for p in ["P5", "P6", "P7", "P8"]])
+    )
     h3_pass = bool(w_mean_agree > raw_mean_agree)
 
     # H4: per-step best-method transitions are CLUSTERED — at least 3
@@ -258,8 +263,10 @@ def main():
 
     summary = {
         "iter": 204,
-        "vein": ("P5P8-SYNTH D23 per-step transfer stability of the cost-weighted "
-                 "cross-pillar decision rule (extends D22 from aggregate to per-step)"),
+        "vein": (
+            "P5P8-SYNTH D23 per-step transfer stability of the cost-weighted "
+            "cross-pillar decision rule (extends D22 from aggregate to per-step)"
+        ),
         "n_methods": len(METHODS),
         "n_steps": N_STEPS,
         "ref_len": ref_len,

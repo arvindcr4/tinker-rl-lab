@@ -3,10 +3,10 @@
 Pre-flight cost estimator for one Tinker sweep run.
 
 LIMITATION: limitations raised in adversarial review:
-- ZVF saturates at 1.0 for format-gated tasks (like tool-use). We should consider 
+- ZVF saturates at 1.0 for format-gated tasks (like tool-use). We should consider
   sweeping ERF (Effective-Rollout Fraction) instead.
-- API cost constraints limit us to 30-50 steps (the "Early-Training Snapshot" problem), 
-  preventing observation of meaningful RL convergence. We need to budget for longer 
+- API cost constraints limit us to 30-50 steps (the "Early-Training Snapshot" problem),
+  preventing observation of meaningful RL convergence. We need to budget for longer
   runs and multiple seeds.
 
 Computes an upper-bound token count and dollar estimate from a config YAML.
@@ -23,6 +23,7 @@ Env knobs (set conservative upper-bound rates):
   TINKER_RATE_TRAIN_PER_M    USD per 1M trained tokens (LoRA update)
   TINKER_MODEL_MULT_<MODEL>  optional model multiplier (e.g. for 8B vs 0.5B)
 """
+
 from __future__ import annotations
 import json
 import math
@@ -55,7 +56,13 @@ def estimate(path: Path) -> dict:
     env = cfg["env"]
     tinker = cfg["tinker"]
 
-    for section, key, default in [(env,"total_steps",None),(env,"batch_size",None),(env,"group_size",None), (env,"max_token_length",512),(tinker,"max_token_trainer_length",1024)]:
+    for section, key, default in [
+        (env, "total_steps", None),
+        (env, "batch_size", None),
+        (env, "group_size", None),
+        (env, "max_token_length", 512),
+        (tinker, "max_token_trainer_length", 1024),
+    ]:
         value = section.get(key, default)
         if type(value) is not int or value <= 0:
             raise ValueError(f"{key} must be a positive integer")

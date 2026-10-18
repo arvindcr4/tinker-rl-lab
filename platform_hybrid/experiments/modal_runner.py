@@ -95,6 +95,7 @@ def run_experiment(exp_name: str, exp_file: str, seed: int, invocation_id: str) 
     import time
     import uuid
     from pathlib import Path
+
     if not invocation_id or not invocation_id.isalnum():
         raise ValueError("Explicit safe invocation ID required")
     if exp_name not in EXPERIMENTS or EXPERIMENTS[exp_name] != exp_file:
@@ -102,22 +103,45 @@ def run_experiment(exp_name: str, exp_file: str, seed: int, invocation_id: str) 
     attempt_id = uuid.uuid4().hex
     result_dir = Path(f"/results/{invocation_id}/{exp_name}/seed_{seed}/{attempt_id}")
     result_dir.mkdir(parents=True, exist_ok=False)
-    result = dict(experiment=exp_name, seed=seed, invocation_id=invocation_id,
-        attempt_id=attempt_id, success=False, status="running", artifact_type="execution_receipt",
-        measured=False, claim_eligible=False)
+    result = dict(
+        experiment=exp_name,
+        seed=seed,
+        invocation_id=invocation_id,
+        attempt_id=attempt_id,
+        success=False,
+        status="running",
+        artifact_type="execution_receipt",
+        measured=False,
+        claim_eligible=False,
+    )
     start = time.time()
     try:
-        proc = subprocess.run(["python", f"/root/tinker/platform_hybrid/experiments/implementations/{exp_file}", "--seed", str(seed)],
-            capture_output=True, text=True, timeout=3000, cwd="/root/tinker",
-            env={**os.environ, "SEED": str(seed), "RESULTS_DIR": str(result_dir)})
-        result.update(success=proc.returncode == 0, status="completed" if proc.returncode == 0 else "failed",
-            returncode=proc.returncode, stdout_tail=proc.stdout[-2000:], stderr_tail=proc.stderr[-2000:])
+        proc = subprocess.run(
+            [
+                "python",
+                f"/root/tinker/platform_hybrid/experiments/implementations/{exp_file}",
+                "--seed",
+                str(seed),
+            ],
+            capture_output=True,
+            text=True,
+            timeout=3000,
+            cwd="/root/tinker",
+            env={**os.environ, "SEED": str(seed), "RESULTS_DIR": str(result_dir)},
+        )
+        result.update(
+            success=proc.returncode == 0,
+            status="completed" if proc.returncode == 0 else "failed",
+            returncode=proc.returncode,
+            stdout_tail=proc.stdout[-2000:],
+            stderr_tail=proc.stderr[-2000:],
+        )
     except subprocess.TimeoutExpired:
         result.update(status="timeout", error="3000-second deadline exceeded")
     except Exception as exc:
         result.update(status="error", error=str(exc))
     finally:
-        result["elapsed_seconds"] = round(time.time()-start, 1)
+        result["elapsed_seconds"] = round(time.time() - start, 1)
         (result_dir / "result.json").write_text(json.dumps(result, indent=2))
         results_vol.commit()
     return result
@@ -127,6 +151,7 @@ def run_experiment(exp_name: str, exp_file: str, seed: int, invocation_id: str) 
 def aggregate_results(invocation_id: str, selected_attempt_ids: list[str]) -> dict:
     """Aggregate only the explicit invocation/attempt manifest, never stale glob hits."""
     from pathlib import Path
+
     if not invocation_id.isalnum() or len(selected_attempt_ids) != len(set(selected_attempt_ids)):
         raise ValueError("Invalid selected invocation manifest")
     selected = set(selected_attempt_ids)
@@ -141,14 +166,16 @@ def aggregate_results(invocation_id: str, selected_attempt_ids: list[str]) -> di
     for record in rows:
         if record["status"] not in ("completed", "failed", "timeout", "error"):
             raise ValueError("Nonterminal receipt")
-        group = summary.setdefault(record["experiment"], dict(total_runs=0, successful=0, failed=0, times=[]))
+        group = summary.setdefault(
+            record["experiment"], dict(total_runs=0, successful=0, failed=0, times=[])
+        )
         group["total_runs"] += 1
         group["successful"] += int(record["success"])
         group["failed"] += int(not record["success"])
         group["times"].append(record["elapsed_seconds"])
     for group in summary.values():
         times = group.pop("times")
-        group["avg_time"] = sum(times)/len(times)
+        group["avg_time"] = sum(times) / len(times)
     (Path("/results") / invocation_id / "summary.json").write_text(json.dumps(summary, indent=2))
     results_vol.commit()
     return summary
@@ -173,6 +200,7 @@ def main(exp: str = "", seeds: int = 5, dry_run: bool = False):
         return
 
     import uuid
+
     invocation_id = uuid.uuid4().hex
     jobs = []
     for name, f in experiments.items():

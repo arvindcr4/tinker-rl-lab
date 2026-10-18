@@ -9,20 +9,19 @@ Candidate outputs go to review27_v3 or an explicitly supplied output directory.
 from __future__ import annotations
 
 import csv
-import json
 import math
-import statistics
 from pathlib import Path
 
 import matplotlib
 
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt  # noqa: E402
+import matplotlib.pyplot as plt
 import numpy as np
+
 try:
     from ._review27_rank import rank_correlation
 except ImportError:
-    from _review27_rank import rank_correlation  # noqa: E402
+    from _review27_rank import rank_correlation
 
 REPO = Path(__file__).resolve().parents[2] / "platform_hybrid"
 CANDIDATE = REPO / "experiments" / "results" / "review27_v3"
@@ -33,18 +32,26 @@ PAPER_SEC = CANDIDATE / "sections"
 PAPER_FIG = CANDIDATE / "paper_figures"
 
 MODELS: dict[str, dict] = {
-    "Qwen3.5-4B":            {"file": "scale_gsm8k_qwen3.5-4b.json",     "params":   4.0, "arch": "dense"},
-    "Qwen3-8B":              {"file": "scale_gsm8k_qwen3-8b.json",       "params":   8.0, "arch": "dense"},
-    "Llama-3.1-8B-Instruct": {"file": "scale_gsm8k_llama-8b-inst.json",  "params":   8.0, "arch": "dense"},
-    "Qwen3-32B":             {"file": "scale_gsm8k_qwen3-32b.json",      "params":  32.0, "arch": "dense"},
-    "Qwen3.5-27B":           {"file": "scale_gsm8k_qwen3.5-27b.json",    "params":  27.0, "arch": "dense"},
-    "gpt-oss-20B":           {"file": "arch_gsm8k_gpt-oss-20b.json",     "params":  20.0, "arch": "moe"},
-    "Qwen3-30B-MoE":         {"file": "moe_gsm8k_qwen3-30b-moe.json",    "params":  30.0, "arch": "moe"},
-    "Qwen3-30B-MoE-Inst":    {"file": "moe_gsm8k_qwen3-30b-inst.json",   "params":  30.0, "arch": "moe"},
-    "DeepSeek-V3.1":         {"file": "frontier_gsm8k_deepseek-v3.1.json","params": 685.0, "arch": "moe"},
-    "Nemotron-120B":         {"file": "frontier_gsm8k_nemotron-120b.json","params": 120.0, "arch": "dense"},
-    "Qwen3-235B-MoE":        {"file": "frontier_gsm8k_qwen3-235b.json",  "params": 235.0, "arch": "moe"},
-    "Kimi-K2-Thinking":      {"file": "arch_gsm8k_kimi-k2.json",         "params":1000.0, "arch": "moe"},
+    "Qwen3.5-4B": {"file": "scale_gsm8k_qwen3.5-4b.json", "params": 4.0, "arch": "dense"},
+    "Qwen3-8B": {"file": "scale_gsm8k_qwen3-8b.json", "params": 8.0, "arch": "dense"},
+    "Llama-3.1-8B-Instruct": {
+        "file": "scale_gsm8k_llama-8b-inst.json",
+        "params": 8.0,
+        "arch": "dense",
+    },
+    "Qwen3-32B": {"file": "scale_gsm8k_qwen3-32b.json", "params": 32.0, "arch": "dense"},
+    "Qwen3.5-27B": {"file": "scale_gsm8k_qwen3.5-27b.json", "params": 27.0, "arch": "dense"},
+    "gpt-oss-20B": {"file": "arch_gsm8k_gpt-oss-20b.json", "params": 20.0, "arch": "moe"},
+    "Qwen3-30B-MoE": {"file": "moe_gsm8k_qwen3-30b-moe.json", "params": 30.0, "arch": "moe"},
+    "Qwen3-30B-MoE-Inst": {"file": "moe_gsm8k_qwen3-30b-inst.json", "params": 30.0, "arch": "moe"},
+    "DeepSeek-V3.1": {"file": "frontier_gsm8k_deepseek-v3.1.json", "params": 685.0, "arch": "moe"},
+    "Nemotron-120B": {
+        "file": "frontier_gsm8k_nemotron-120b.json",
+        "params": 120.0,
+        "arch": "dense",
+    },
+    "Qwen3-235B-MoE": {"file": "frontier_gsm8k_qwen3-235b.json", "params": 235.0, "arch": "moe"},
+    "Kimi-K2-Thinking": {"file": "arch_gsm8k_kimi-k2.json", "params": 1000.0, "arch": "moe"},
 }
 
 SEED = 20260702
@@ -55,10 +62,10 @@ N_BOOT = 2000
 # phase has slope m1, the rapid-improvement phase has slope m2 > m1
 # (typically 5x-10x), and the plateau phase has slope m3 near 0
 # (|m3| < eps).  See nimmaturi2025predictive (arXiv:2507.18014).
-SLOW_SLOPE_MAX = 0.020      # |slope| < 0.020/step => slow
-FAST_SLOPE_MIN = 0.040      # |slope| >= 0.040/step => fast
-PLATEAU_SLOPE_MAX = 0.015   # |slope| < 0.015/step => plateau
-PLATEAU_VAR_FRAC = 0.50     # plateau variance < 0.5 * mean variance
+SLOW_SLOPE_MAX = 0.020  # |slope| < 0.020/step => slow
+FAST_SLOPE_MIN = 0.040  # |slope| >= 0.040/step => fast
+PLATEAU_SLOPE_MAX = 0.015  # |slope| < 0.015/step => plateau
+PLATEAU_VAR_FRAC = 0.50  # plateau variance < 0.5 * mean variance
 
 
 def _load_trace(fname: str) -> list[float]:
@@ -71,34 +78,48 @@ def _load_trace(fname: str) -> list[float]:
 
 def _fit_3piece(t: np.ndarray, y: np.ndarray) -> tuple:
     """Exhaustive continuous three-segment OLS with two points per segment."""
-    t,y=np.asarray(t,float),np.asarray(y,float)
-    missing=(None,None,math.nan,*( (math.nan,)*3 for _ in range(5)))
-    if t.ndim!=1 or t.shape!=y.shape or len(t)<6 or not np.isfinite(t).all() or not np.isfinite(y).all() or np.any(np.diff(t)<=0):
+    t, y = np.asarray(t, float), np.asarray(y, float)
+    missing = (None, None, math.nan, *((math.nan,) * 3 for _ in range(5)))
+    if (
+        t.ndim != 1
+        or t.shape != y.shape
+        or len(t) < 6
+        or not np.isfinite(t).all()
+        or not np.isfinite(y).all()
+        or np.any(np.diff(t) <= 0)
+    ):
         return missing
-    best=None
-    for i in range(2,len(t)-3):
-        for j in range(i+2,len(t)-1):
-            k1,k2=t[i],t[j]
-            design=np.column_stack([np.ones(len(t)),t,np.maximum(0,t-k1),np.maximum(0,t-k2)])
-            beta,*_=np.linalg.lstsq(design,y,rcond=None)
-            predicted=design@beta
-            sse=float(np.sum((y-predicted)**2))
-            if best is None or sse<best[0]:best=(sse,i,j,beta,predicted)
-    if best is None:return missing
-    sse,i,j,beta,predicted=best
-    slopes=(float(beta[1]),float(beta[1]+beta[2]),float(beta[1]+beta[2]+beta[3]))
-    intercepts=(float(beta[0]),float(beta[0]-beta[2]*t[i]),float(beta[0]-beta[2]*t[i]-beta[3]*t[j]))
-    slices=(slice(None,i),slice(i,j),slice(j,None))
-    residuals=tuple(float(np.sqrt(np.mean((y[k]-predicted[k])**2))) for k in slices)
-    means=tuple(float(y[k].mean()) for k in slices)
-    stds=tuple(float(y[k].std()) for k in slices)
-    return i,j,sse,slopes,intercepts,residuals,means,stds
+    best = None
+    for i in range(2, len(t) - 3):
+        for j in range(i + 2, len(t) - 1):
+            k1, k2 = t[i], t[j]
+            design = np.column_stack(
+                [np.ones(len(t)), t, np.maximum(0, t - k1), np.maximum(0, t - k2)]
+            )
+            beta, *_ = np.linalg.lstsq(design, y, rcond=None)
+            predicted = design @ beta
+            sse = float(np.sum((y - predicted) ** 2))
+            if best is None or sse < best[0]:
+                best = (sse, i, j, beta, predicted)
+    if best is None:
+        return missing
+    sse, i, j, beta, predicted = best
+    slopes = (float(beta[1]), float(beta[1] + beta[2]), float(beta[1] + beta[2] + beta[3]))
+    intercepts = (
+        float(beta[0]),
+        float(beta[0] - beta[2] * t[i]),
+        float(beta[0] - beta[2] * t[i] - beta[3] * t[j]),
+    )
+    slices = (slice(None, i), slice(i, j), slice(j, None))
+    residuals = tuple(float(np.sqrt(np.mean((y[k] - predicted[k]) ** 2))) for k in slices)
+    means = tuple(float(y[k].mean()) for k in slices)
+    stds = tuple(float(y[k].std()) for k in slices)
+    return i, j, sse, slopes, intercepts, residuals, means, stds
 
 
-
-
-def _classify(slopes: tuple, residuals: tuple, n: int, i: int, j: int,
-              seg_means: tuple, seg_stds: tuple) -> str:
+def _classify(
+    slopes: tuple, residuals: tuple, n: int, i: int, j: int, seg_means: tuple, seg_stds: tuple
+) -> str:
     """Signed slow/rise/plateau; drift is late decline without a low floor."""
     if i is None or j is None or not np.isfinite(slopes).all():
         return "insufficient_data"
@@ -107,7 +128,14 @@ def _classify(slopes: tuple, residuals: tuple, n: int, i: int, j: int,
     sd_means = float(np.std([mu1, mu2, mu3]))
     if sd_means < 1e-6:
         return "constant"
-    if 0 <= m1 < SLOW_SLOPE_MAX and m2 >= FAST_SLOPE_MIN and abs(m3) < PLATEAU_SLOPE_MAX and mu3 > mu1 and mu3 >= mu2 and min(i,j-i,n-j) >= 2:
+    if (
+        0 <= m1 < SLOW_SLOPE_MAX
+        and m2 >= FAST_SLOPE_MIN
+        and abs(m3) < PLATEAU_SLOPE_MAX
+        and mu3 > mu1
+        and mu3 >= mu2
+        and min(i, j - i, n - j) >= 2
+    ):
         return "three-phase"
     if mu3 < 0.2 and max(mu1, mu2) - mu3 > 0.2:
         return "collapse"
@@ -144,12 +172,14 @@ def _phase_conformity(slopes: tuple, seg_means: tuple, seg_stds: tuple) -> float
         return math.nan
     m1, m2, m3 = slopes
     mu1, mu2, mu3 = seg_means
-    conditions = (0 <= m1 < SLOW_SLOPE_MAX,
-                  m2 >= FAST_SLOPE_MIN,
-                  abs(m3) < PLATEAU_SLOPE_MAX,
-                  mu2 > mu1,
-                  mu3 > mu1 and mu3 >= mu2,
-                  seg_stds[2] <= seg_stds[1])
+    conditions = (
+        0 <= m1 < SLOW_SLOPE_MAX,
+        m2 >= FAST_SLOPE_MIN,
+        abs(m3) < PLATEAU_SLOPE_MAX,
+        mu2 > mu1,
+        mu3 > mu1 and mu3 >= mu2,
+        seg_stds[2] <= seg_stds[1],
+    )
     return 0.5 * sum(conditions)
 
 
@@ -160,15 +190,30 @@ def _bootstrap_boundaries(y: np.ndarray, n_boot: int = N_BOOT) -> dict:
     """
     n = len(y)
     if n < 6 or not np.isfinite(y).all():
-        return {"cp1_lo": -1, "cp1_med": -1, "cp1_hi": -1,
-                "cp2_lo": -1, "cp2_med": -1, "cp2_hi": -1, "n_boot_success": 0}
+        return {
+            "cp1_lo": -1,
+            "cp1_med": -1,
+            "cp1_hi": -1,
+            "cp2_lo": -1,
+            "cp2_med": -1,
+            "cp2_hi": -1,
+            "n_boot_success": 0,
+        }
     tt = np.arange(1, n + 1, dtype=float)
     i, j, _, slopes, intercepts, *_ = _fit_3piece(tt, y)
     if i is None:
-        return {"cp1_lo": -1, "cp1_med": -1, "cp1_hi": -1,
-                "cp2_lo": -1, "cp2_med": -1, "cp2_hi": -1, "n_boot_success": 0}
-    fitted = np.concatenate([slopes[k]*tt[a:b]+intercepts[k]
-                             for k,(a,b) in enumerate(((0,i),(i,j),(j,n)))])
+        return {
+            "cp1_lo": -1,
+            "cp1_med": -1,
+            "cp1_hi": -1,
+            "cp2_lo": -1,
+            "cp2_med": -1,
+            "cp2_hi": -1,
+            "n_boot_success": 0,
+        }
+    fitted = np.concatenate(
+        [slopes[k] * tt[a:b] + intercepts[k] for k, (a, b) in enumerate(((0, i), (i, j), (j, n)))]
+    )
     residual = np.asarray(y) - fitted
     residual -= residual.mean()
     rng = np.random.default_rng(SEED)
@@ -188,8 +233,15 @@ def _bootstrap_boundaries(y: np.ndarray, n_boot: int = N_BOOT) -> dict:
             cps1.append(int(i))
             cps2.append(int(j))
     if not cps1:
-        return {"cp1_lo": -1, "cp1_med": -1, "cp1_hi": -1,
-                "cp2_lo": -1, "cp2_med": -1, "cp2_hi": -1, "n_boot_success": 0}
+        return {
+            "cp1_lo": -1,
+            "cp1_med": -1,
+            "cp1_hi": -1,
+            "cp2_lo": -1,
+            "cp2_med": -1,
+            "cp2_hi": -1,
+            "n_boot_success": 0,
+        }
     return {
         "cp1_lo": int(np.percentile(cps1, 2.5)),
         "cp1_med": int(np.percentile(cps1, 50.0)),
@@ -238,40 +290,74 @@ def main(output_dir=None, source_root=None):
         n_plateau = int(abs(m3) < PLATEAU_SLOPE_MAX)
         # template score: number of 6 template constraints satisfied
         template_score = int(pci / 0.5) if pci > 0 else 0
-        phase_rows.append({
-            "model": m, "params_B": cfg["params"], "arch": cfg["arch"],
-            "n_steps": n, "mean_reward": float(y.mean()),
-            "var_reward": float(y.var()), "peak": float(y.max()),
-            "trough": float(y.min()), "cp1": i if i is not None else -1,
-            "cp2": j if j is not None else -1, "cp1_frac": (i / n) if i else -1,
-            "cp2_frac": (j / n) if j else -1,
-            "slope_p1": slopes[0], "slope_p2": slopes[1], "slope_p3": slopes[2],
-            "rmse_p1": residuals[0], "rmse_p2": residuals[1], "rmse_p3": residuals[2],
-            "inter_p1": intercepts[0], "inter_p2": intercepts[1], "inter_p3": intercepts[2],
-            "sse_3piece": sse, "phase_class": cls, "pci": pci,
-            "seg_mean_p1": seg_means[0], "seg_mean_p2": seg_means[1], "seg_mean_p3": seg_means[2],
-            "seg_std_p1": seg_stds[0], "seg_std_p2": seg_stds[1], "seg_std_p3": seg_stds[2],
-            "n_slow": n_slow, "n_fast": n_fast, "n_plateau": n_plateau,
-            "n_shape_conditions_ok": template_score,
-            "n_slope_conditions_ok": n_slow + n_fast + n_plateau,
-        })
-        conformity_rows.append({
-            "model": m, "params_B": cfg["params"], "arch": cfg["arch"],
-            "pci": pci, "phase_class": cls,
-            "n_slow_ok": n_slow, "n_fast_ok": n_fast, "n_plateau_ok": n_plateau,
-            "n_slope_conditions_ok": n_slow + n_fast + n_plateau,
-            "n_shape_conditions_ok": template_score,
-        })
+        phase_rows.append(
+            {
+                "model": m,
+                "params_B": cfg["params"],
+                "arch": cfg["arch"],
+                "n_steps": n,
+                "mean_reward": float(y.mean()),
+                "var_reward": float(y.var()),
+                "peak": float(y.max()),
+                "trough": float(y.min()),
+                "cp1": i if i is not None else -1,
+                "cp2": j if j is not None else -1,
+                "cp1_frac": (i / n) if i else -1,
+                "cp2_frac": (j / n) if j else -1,
+                "slope_p1": slopes[0],
+                "slope_p2": slopes[1],
+                "slope_p3": slopes[2],
+                "rmse_p1": residuals[0],
+                "rmse_p2": residuals[1],
+                "rmse_p3": residuals[2],
+                "inter_p1": intercepts[0],
+                "inter_p2": intercepts[1],
+                "inter_p3": intercepts[2],
+                "sse_3piece": sse,
+                "phase_class": cls,
+                "pci": pci,
+                "seg_mean_p1": seg_means[0],
+                "seg_mean_p2": seg_means[1],
+                "seg_mean_p3": seg_means[2],
+                "seg_std_p1": seg_stds[0],
+                "seg_std_p2": seg_stds[1],
+                "seg_std_p3": seg_stds[2],
+                "n_slow": n_slow,
+                "n_fast": n_fast,
+                "n_plateau": n_plateau,
+                "n_shape_conditions_ok": template_score,
+                "n_slope_conditions_ok": n_slow + n_fast + n_plateau,
+            }
+        )
+        conformity_rows.append(
+            {
+                "model": m,
+                "params_B": cfg["params"],
+                "arch": cfg["arch"],
+                "pci": pci,
+                "phase_class": cls,
+                "n_slow_ok": n_slow,
+                "n_fast_ok": n_fast,
+                "n_plateau_ok": n_plateau,
+                "n_slope_conditions_ok": n_slow + n_fast + n_plateau,
+                "n_shape_conditions_ok": template_score,
+            }
+        )
         # bootstrap phase boundaries
         boot = _bootstrap_boundaries(y, n_boot=N_BOOT)
-        boundary_rows.append({
-            "model": m, "params_B": cfg["params"], "arch": cfg["arch"],
-            "n_steps": n, "cp1_point": i if i is not None else -1,
-            "cp2_point": j if j is not None else -1,
-            "cp1_frac": (i / n) if i else -1,
-            "cp2_frac": (j / n) if j else -1,
-            **boot,
-        })
+        boundary_rows.append(
+            {
+                "model": m,
+                "params_B": cfg["params"],
+                "arch": cfg["arch"],
+                "n_steps": n,
+                "cp1_point": i if i is not None else -1,
+                "cp2_point": j if j is not None else -1,
+                "cp1_frac": (i / n) if i else -1,
+                "cp2_frac": (j / n) if j else -1,
+                **boot,
+            }
+        )
 
     if not phase_rows:
         raise ValueError("no observed reward traces available")
@@ -314,15 +400,23 @@ def main(output_dir=None, source_root=None):
         collapse = cls_counts.get("collapse", 0)
         drift = cls_counts.get("drift", 0)
         n_template_full = sum(1 for r in sub if r["n_slope_conditions_ok"] == 3)
-        arch_phase_rows.append({
-            "arch": arch, "n_anchors": n,
-            "n_three_phase": three_phase, "frac_three_phase": three_phase / n,
-            "n_collapse": collapse, "frac_collapse": collapse / n,
-            "n_drift": drift, "frac_drift": drift / n,
-            "n_template_full": n_template_full, "frac_template_full": n_template_full / n,
-            "pci_mean": pci_mean, "pci_median": pci_med,
-            "class_counts": ";".join(f"{k}:{v}" for k, v in sorted(cls_counts.items())),
-        })
+        arch_phase_rows.append(
+            {
+                "arch": arch,
+                "n_anchors": n,
+                "n_three_phase": three_phase,
+                "frac_three_phase": three_phase / n,
+                "n_collapse": collapse,
+                "frac_collapse": collapse / n,
+                "n_drift": drift,
+                "frac_drift": drift / n,
+                "n_template_full": n_template_full,
+                "frac_template_full": n_template_full / n,
+                "pci_mean": pci_mean,
+                "pci_median": pci_med,
+                "class_counts": ";".join(f"{k}:{v}" for k, v in sorted(cls_counts.items())),
+            }
+        )
     arch_path = RESULTS_DIR / "scaling_law_iter65_arch_phase_v2.tsv"
     with arch_path.open("w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=list(arch_phase_rows[0].keys()), delimiter="\t")
@@ -349,7 +443,9 @@ def main(output_dir=None, source_root=None):
     others_med = float(np.median(others)) if others else math.nan
     nem_pci = float(nem["pci"]) if nem else math.nan
     # Per-arch three-phase rate
-    dense_3p = sum(1 for r in phase_rows if r["arch"] == "dense" and r["phase_class"] == "three-phase")
+    dense_3p = sum(
+        1 for r in phase_rows if r["arch"] == "dense" and r["phase_class"] == "three-phase"
+    )
     dense_n = sum(1 for r in phase_rows if r["arch"] == "dense")
     moe_3p = sum(1 for r in phase_rows if r["arch"] == "moe" and r["phase_class"] == "three-phase")
     moe_n = sum(1 for r in phase_rows if r["arch"] == "moe")
@@ -358,16 +454,18 @@ def main(output_dir=None, source_root=None):
         {
             "prediction_id": "P1_three_phase_majority",
             "claim": "At least half of eligible anchors match the canonical three-phase pattern (slow, fast, plateau).",
-            "observed": f"{n_three_phase}/{n_total} = {n_three_phase/n_total:.3f}",
+            "observed": f"{n_three_phase}/{n_total} = {n_three_phase / n_total:.3f}",
             "expected": ">= 0.50",
-            "pass_fail": "PASS" if n_three_phase/n_total >= 0.5 else "FAIL",
+            "pass_fail": "PASS" if n_three_phase / n_total >= 0.5 else "FAIL",
         },
         {
             "prediction_id": "P2_nemotron_classified_collapse",
             "claim": "Nemotron-120B is the unique 'collapse' class anchor (peak-then-decay).",
             "observed": f"nemotron_class={nem['phase_class'] if nem else 'NA'}, n_collapse={n_collapse}",
             "expected": "nemotron_class == collapse and n_collapse == 1",
-            "pass_fail": "PASS" if (nem and nem["phase_class"] == "collapse" and n_collapse == 1) else "FAIL",
+            "pass_fail": "PASS"
+            if (nem and nem["phase_class"] == "collapse" and n_collapse == 1)
+            else "FAIL",
         },
         {
             "prediction_id": "P3_pci_below_3_for_most",
@@ -379,7 +477,7 @@ def main(output_dir=None, source_root=None):
         {
             "prediction_id": "P4_nemotron_lowest_pci",
             "claim": "Nemotron-120B has the lowest PCI in the eligible pool.",
-            "observed": f"nemotron_pci={nem_pci:.3f}, others_median={others_med:.3f}, all_pci={[round(x,2) for x in pci_values]}",
+            "observed": f"nemotron_pci={nem_pci:.3f}, others_median={others_med:.3f}, all_pci={[round(x, 2) for x in pci_values]}",
             "expected": "nemotron_pci <= min(others)",
             "pass_fail": "PASS" if (nem and others and nem_pci <= min(others)) else "FAIL",
         },
@@ -395,7 +493,9 @@ def main(output_dir=None, source_root=None):
             "claim": "Dense models have a higher three-phase rate than MoE.",
             "observed": f"dense_3p={dense_3p}/{dense_n}, moe_3p={moe_3p}/{moe_n}",
             "expected": "dense_3p_rate > moe_3p_rate",
-            "pass_fail": "PASS" if (dense_n and moe_n and dense_3p / dense_n > moe_3p / moe_n) else "FAIL",
+            "pass_fail": "PASS"
+            if (dense_n and moe_n and dense_3p / dense_n > moe_3p / moe_n)
+            else "FAIL",
         },
         {
             "prediction_id": "P7_pci_logparams_correlation",
@@ -413,8 +513,9 @@ def main(output_dir=None, source_root=None):
         },
     ]
     for result in pred_rows:
-        if ((result["prediction_id"].startswith(("P2_", "P4_")) and nem is None)
-                or (result["prediction_id"].startswith("P6_") and not (dense_n and moe_n))):
+        if (result["prediction_id"].startswith(("P2_", "P4_")) and nem is None) or (
+            result["prediction_id"].startswith("P6_") and not (dense_n and moe_n)
+        ):
             result["pass_fail"] = "UNAVAILABLE"
     pred_path = RESULTS_DIR / "scaling_law_iter65_predictions_v2.tsv"
     with pred_path.open("w", newline="") as f:
@@ -425,9 +526,13 @@ def main(output_dir=None, source_root=None):
     # ---- 4-panel figure
     fig, axes = plt.subplots(2, 2, figsize=(13, 9))
     color_map = {
-        "three-phase": "#2ca02c", "monotonic-saturation": "#1f77b4",
-        "monotonic": "#aec7e8", "drift": "#ff7f0e", "collapse": "#d62728",
-        "constant": "#7f7f7f", "anomalous": "#bcbd22",
+        "three-phase": "#2ca02c",
+        "monotonic-saturation": "#1f77b4",
+        "monotonic": "#aec7e8",
+        "drift": "#ff7f0e",
+        "collapse": "#d62728",
+        "constant": "#7f7f7f",
+        "anomalous": "#bcbd22",
     }
     # Panel A: per-anchor slopes (P1, P2, P3) with PCI score
     ax = axes[0, 0]
@@ -438,7 +543,7 @@ def main(output_dir=None, source_root=None):
     x = np.arange(len(labels))
     wbar = 0.27
     ax.bar(x - wbar, p1, wbar, color="#9467bd", label="phase 1 slope")
-    ax.bar(x,         p2, wbar, color="#2ca02c", label="phase 2 slope")
+    ax.bar(x, p2, wbar, color="#2ca02c", label="phase 2 slope")
     ax.bar(x + wbar, p3, wbar, color="#d62728", label="phase 3 slope")
     ax.axhline(SLOW_SLOPE_MAX, color="grey", linestyle=":", label=f"slow bound {SLOW_SLOPE_MAX}")
     ax.axhline(FAST_SLOPE_MIN, color="grey", linestyle="--", label=f"fast bound {FAST_SLOPE_MIN}")
@@ -461,6 +566,7 @@ def main(output_dir=None, source_root=None):
     ax.set_title("(B) per-anchor PCI (colour = phase class)")
     # add legend for colours
     from matplotlib.patches import Patch
+
     handles = [Patch(facecolor=c, label=k) for k, c in color_map.items()]
     ax.legend(handles=handles, fontsize=6, loc="upper right", ncol=2)
     # Panel C: phase boundary 95% CI (cp1, cp2)
@@ -468,18 +574,36 @@ def main(output_dir=None, source_root=None):
     for k, r in enumerate(boundary_rows):
         if r["n_steps"] < 6:
             # short traces: skip the bootstrap CIs
-            c1m = r["cp1_frac"]; c2m = r["cp2_frac"]
+            c1m = r["cp1_frac"]
+            c2m = r["cp2_frac"]
             if c1m >= 0 and c2m >= 0:
                 ax.scatter(c1m, k, marker="o", color="#1f77b4", s=30)
                 ax.scatter(c2m, k, marker="s", color="#d62728", s=30)
             continue
-        c1m = r["cp1_frac"]; c2m = r["cp2_frac"]
-        c1lo = max(0, r["cp1_lo"] / r["n_steps"]); c1hi = min(1, r["cp1_hi"] / r["n_steps"])
-        c2lo = max(0, r["cp2_lo"] / r["n_steps"]); c2hi = min(1, r["cp2_hi"] / r["n_steps"])
+        c1m = r["cp1_frac"]
+        c2m = r["cp2_frac"]
+        c1lo = max(0, r["cp1_lo"] / r["n_steps"])
+        c1hi = min(1, r["cp1_hi"] / r["n_steps"])
+        c2lo = max(0, r["cp2_lo"] / r["n_steps"])
+        c2hi = min(1, r["cp2_hi"] / r["n_steps"])
         if c1m < 0 or c2m < 0:
             continue
-        ax.errorbar(c1m, k, xerr=[[max(0, c1m - c1lo)], [max(0, c1hi - c1m)]], fmt="o", color="#1f77b4", capsize=3)
-        ax.errorbar(c2m, k, xerr=[[max(0, c2m - c2lo)], [max(0, c2hi - c2m)]], fmt="s", color="#d62728", capsize=3)
+        ax.errorbar(
+            c1m,
+            k,
+            xerr=[[max(0, c1m - c1lo)], [max(0, c1hi - c1m)]],
+            fmt="o",
+            color="#1f77b4",
+            capsize=3,
+        )
+        ax.errorbar(
+            c2m,
+            k,
+            xerr=[[max(0, c2m - c2lo)], [max(0, c2hi - c2m)]],
+            fmt="s",
+            color="#d62728",
+            capsize=3,
+        )
     ax.axvline(0.10, color="black", linestyle=":", label="10% in (P1 boundary)")
     ax.axvline(0.50, color="black", linestyle="--", label="50% in (mid-trace)")
     ax.set_yticks(x)
@@ -490,12 +614,13 @@ def main(output_dir=None, source_root=None):
     # Panel D: per-arch PCI
     ax = axes[1, 1]
     dense_pci = [r["pci"] for r in phase_rows if r["arch"] == "dense"]
-    moe_pci   = [r["pci"] for r in phase_rows if r["arch"] == "moe"]
+    moe_pci = [r["pci"] for r in phase_rows if r["arch"] == "moe"]
     bp = ax.boxplot([dense_pci, moe_pci], tick_labels=["dense", "moe"], patch_artist=True)
-    for patch, color in zip(bp["boxes"], ["#1f77b4", "#ff7f0e"]):
-        patch.set_facecolor(color); patch.set_alpha(0.6)
+    for patch, color in zip(bp["boxes"], ["#1f77b4", "#ff7f0e"], strict=False):
+        patch.set_facecolor(color)
+        patch.set_alpha(0.6)
     ax.scatter([1] * len(dense_pci), dense_pci, color="#1f77b4", zorder=3, s=30)
-    ax.scatter([2] * len(moe_pci),   moe_pci,   color="#ff7f0e", zorder=3, s=30)
+    ax.scatter([2] * len(moe_pci), moe_pci, color="#ff7f0e", zorder=3, s=30)
     ax.set_ylabel("phase-conformity index (PCI)")
     ax.set_title(f"(D) per-architecture PCI\n(dense n={len(dense_pci)}, moe n={len(moe_pci)})")
     plt.tight_layout()
@@ -549,7 +674,9 @@ def main(output_dir=None, source_root=None):
 
     # ---- console summary
     print(f"phase_class distribution: {class_str}")
-    print(f"three-phase: {n_three_phase}/{n_total}; collapse: {n_collapse}/{n_total}; drift: {n_drift}/{n_total}")
+    print(
+        f"three-phase: {n_three_phase}/{n_total}; collapse: {n_collapse}/{n_total}; drift: {n_drift}/{n_total}"
+    )
     print(f"n_template_full: {n_template_full}/{n_total}; pci_mean: {pci_mean:.3f}")
     print(f"spearman(log params, PCI) = {sp:.3f}")
     print("predictions:")

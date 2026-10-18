@@ -11,6 +11,7 @@ from pathlib import Path
 
 from flagship import pavlov_xlam_launch_audit as launch_audit
 from flagship import pavlov_xlam_smoke_config as smoke
+import pytest
 
 
 class PavlovXlamLaunchAuditTests(unittest.TestCase):
@@ -78,15 +79,15 @@ class PavlovXlamLaunchAuditTests(unittest.TestCase):
             checkpoint_json={"checkpoints": checkpoints},
             hf_receipts=hf,
         )
-        self.assertEqual(errors, [])
-        self.assertEqual(report["schema_version"], launch_audit.SCHEMA_VERSION)
-        self.assertEqual(report["status"], "READY")
-        self.assertEqual(report["component_only"], True)
-        self.assertFalse(report["launchable"])
-        self.assertFalse(report["allowed"])
-        self.assertEqual(report["tinker_run_id"], "tinker-run-42")
-        self.assertEqual(report["wandb_run_id"], "wandb-run-42")
-        self.assertEqual(report["blockers"], [])
+        assert errors == []
+        assert report["schema_version"] == launch_audit.SCHEMA_VERSION
+        assert report["status"] == "READY"
+        assert report["component_only"] == True
+        assert not report["launchable"]
+        assert not report["allowed"]
+        assert report["tinker_run_id"] == "tinker-run-42"
+        assert report["wandb_run_id"] == "wandb-run-42"
+        assert report["blockers"] == []
 
     def test_smoke_config_drifts_blocked(self) -> None:
         wandb, tinker, checkpoints, hf = self._valid_payloads()
@@ -99,9 +100,9 @@ class PavlovXlamLaunchAuditTests(unittest.TestCase):
             checkpoint_json={"checkpoints": checkpoints},
             hf_receipts=hf,
         )
-        self.assertEqual(len(errors), 2)
-        self.assertIn("smoke config: model must be Qwen/Qwen3.6-35B-A3B", errors)
-        self.assertIn("smoke config: config_signature is invalid or missing", errors)
+        assert len(errors) == 2
+        assert "smoke config: model must be Qwen/Qwen3.6-35B-A3B" in errors
+        assert "smoke config: config_signature is invalid or missing" in errors
 
     def test_wandb_state_or_mode_missing_blocks(self) -> None:
         wandb, tinker, checkpoints, hf = self._valid_payloads()
@@ -115,8 +116,8 @@ class PavlovXlamLaunchAuditTests(unittest.TestCase):
             checkpoint_json={"checkpoints": checkpoints},
             hf_receipts=hf,
         )
-        self.assertTrue(any("wandb state must be finished after run" in error for error in errors))
-        self.assertTrue(any("wandb mode must be online" in error for error in errors))
+        assert any("wandb state must be finished after run" in error for error in errors)
+        assert any("wandb mode must be online" in error for error in errors)
 
     def test_checkpoint_step_and_stage_cross_checks(self) -> None:
         wandb, tinker, checkpoints, hf = self._valid_payloads()
@@ -128,7 +129,7 @@ class PavlovXlamLaunchAuditTests(unittest.TestCase):
             checkpoint_json={"checkpoints": checkpoints},
             hf_receipts=hf,
         )
-        self.assertTrue(any("checkpoint[periodic] step mismatch" in error for error in errors))
+        assert any("checkpoint[periodic] step mismatch" in error for error in errors)
 
     def test_missing_hf_stage_blocks(self) -> None:
         wandb, tinker, checkpoints, hf = self._valid_payloads()
@@ -139,7 +140,7 @@ class PavlovXlamLaunchAuditTests(unittest.TestCase):
             checkpoint_json={"checkpoints": checkpoints},
             hf_receipts=hf[0:2],
         )
-        self.assertTrue(any("hf receipts missing stages: final" in error for error in errors))
+        assert any("hf receipts missing stages: final" in error for error in errors)
         report = launch_audit.generate_launch_audit(
             self.config,
             wandb_sync=wandb,
@@ -147,9 +148,9 @@ class PavlovXlamLaunchAuditTests(unittest.TestCase):
             checkpoint_json={"checkpoints": checkpoints},
             hf_receipts=hf[0:2],
         )
-        self.assertEqual(report["status"], "BLOCKED")
-        self.assertFalse(report["launchable"])
-        self.assertFalse(report["allowed"])
+        assert report["status"] == "BLOCKED"
+        assert not report["launchable"]
+        assert not report["allowed"]
 
     def test_public_receipts_must_be_safe(self) -> None:
         wandb, tinker, checkpoints, hf = self._valid_payloads()
@@ -161,8 +162,8 @@ class PavlovXlamLaunchAuditTests(unittest.TestCase):
             checkpoint_json={"checkpoints": checkpoints},
             hf_receipts=hf,
         )
-        self.assertTrue(
-            any("must set safe_public_artifact true for public visibility" in error for error in errors)
+        assert any(
+            "must set safe_public_artifact true for public visibility" in error for error in errors
         )
 
     def test_tinker_run_id_is_cross_checked_across_artifacts(self) -> None:
@@ -175,7 +176,7 @@ class PavlovXlamLaunchAuditTests(unittest.TestCase):
             checkpoint_json={"checkpoints": checkpoints},
             hf_receipts=hf,
         )
-        self.assertIn("run_id mismatch across checkpoint/hf metadata and tinker run_id", errors)
+        assert "run_id mismatch across checkpoint/hf metadata and tinker run_id" in errors
 
     def test_placeholder_hf_commits_are_rejected(self) -> None:
         wandb, tinker, checkpoints, hf = self._valid_payloads()
@@ -187,13 +188,13 @@ class PavlovXlamLaunchAuditTests(unittest.TestCase):
             checkpoint_json={"checkpoints": checkpoints},
             hf_receipts=hf,
         )
-        self.assertTrue(
-            any("hf_receipts[1] revision must be a 40-char hex commit" in error for error in errors)
+        assert any(
+            "hf_receipts[1] revision must be a 40-char hex commit" in error for error in errors
         )
 
     def test_assert_launch_audit_blocks_when_artifacts_missing(self) -> None:
         wandb, tinker, checkpoints, hf = self._valid_payloads()
-        with self.assertRaises(launch_audit.LaunchAuditError) as exc:
+        with pytest.raises(launch_audit.LaunchAuditError) as exc:
             launch_audit.assert_launch_audit(
                 self.config,
                 wandb_sync=wandb,
@@ -201,8 +202,8 @@ class PavlovXlamLaunchAuditTests(unittest.TestCase):
                 checkpoint_json={"checkpoints": checkpoints},
                 hf_receipts=hf[0:2],
             )
-        self.assertIn("launch audit is blocked", str(exc.exception))
-        self.assertIn("hf receipts missing stages", str(exc.exception))
+        assert "launch audit is blocked" in str(exc.value)
+        assert "hf receipts missing stages" in str(exc.value)
 
     def test_missing_artifact_file_is_blocking(self) -> None:
         wandb, tinker, checkpoints, hf = self._valid_payloads()
@@ -216,9 +217,12 @@ class PavlovXlamLaunchAuditTests(unittest.TestCase):
                 checkpoint_json=checkpoint_payload,
                 hf_receipts=hf,
             )
-            self.assertEqual(report["status"], "BLOCKED")
-            self.assertTrue(any("wandb sync metadata must point to an existing JSON file" in error for error in report["blockers"]))
-            self.assertFalse(report["launchable"])
+            assert report["status"] == "BLOCKED"
+            assert any(
+                "wandb sync metadata must point to an existing JSON file" in error
+                for error in report["blockers"]
+            )
+            assert not report["launchable"]
 
     def test_tinker_run_id_string_is_supported_if_artifacts_align(self) -> None:
         wandb, _, checkpoints, hf = self._valid_payloads()
@@ -229,8 +233,8 @@ class PavlovXlamLaunchAuditTests(unittest.TestCase):
             checkpoint_json={"checkpoints": checkpoints},
             hf_receipts=hf,
         )
-        self.assertEqual(report["status"], "READY")
-        self.assertEqual(report["tinker_run_id"], "tinker-run-42")
+        assert report["status"] == "READY"
+        assert report["tinker_run_id"] == "tinker-run-42"
 
     def test_local_json_loader_is_supported(self) -> None:
         wandb, tinker, checkpoints, hf = self._valid_payloads()
@@ -249,7 +253,7 @@ class PavlovXlamLaunchAuditTests(unittest.TestCase):
                 checkpoint_json=checkpoint_path,
                 hf_receipts=hf_path,
             )
-            self.assertEqual(report["status"], "READY")
+            assert report["status"] == "READY"
 
 
 def _json_text(value: object) -> str:

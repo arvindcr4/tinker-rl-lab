@@ -3,13 +3,14 @@
 Only supplied source facts are retained. No seed identities, sampler metadata,
 matched baselines, or verified TSV comparisons are fabricated. No original registry
 entries are changed; these proposals require source-manifest review before application."""
+
 import json
-import os
 import pathlib
 import sys
 
 sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))
 from _paths import REPO_ROOT
+
 ROOT = REPO_ROOT
 ENTRIES = ROOT / "platform_hybrid/registry" / "entries"
 TSV_130 = ROOT / "platform_hybrid/experiments/results/zvf_iter130_method_risk.tsv"
@@ -21,16 +22,33 @@ DATE = "2026-07-05"
 AUDIT = "platform_modal/scripts/p5p8/p6_iter138_missing_method_audit.py"
 
 GRPO_METHODS_KNOWN = {
-    "grpo", "aero", "areal", "gift", "ngrpo", "cppo", "mcgrpo", "es", "scafgrpo",
-    "adaptiveg", "dapo", "drgrpo", "gspo", "liteppo", "ppo", "reinforce",
-    "tool_use_llama-8b-inst", "tool_use_qwen3-32b",
+    "grpo",
+    "aero",
+    "areal",
+    "gift",
+    "ngrpo",
+    "cppo",
+    "mcgrpo",
+    "es",
+    "scafgrpo",
+    "adaptiveg",
+    "dapo",
+    "drgrpo",
+    "gspo",
+    "liteppo",
+    "ppo",
+    "reinforce",
+    "tool_use_llama-8b-inst",
+    "tool_use_qwen3-32b",
 }
 
 # anchor rows are *not* GRPO methods — they are scaling-law / extrapolation
 # anchor points for the iter-130 risk index; they get NO registry entry.
 ANCHOR_METHODS = {
-    "scaling_law_Qwen3-8B", "scaling_law_Nemotron-120B",
-    "scaling_law_Llama-3.1-8B-Instruct", "scaling_law_Qwen3.5-4B",
+    "scaling_law_Qwen3-8B",
+    "scaling_law_Nemotron-120B",
+    "scaling_law_Llama-3.1-8B-Instruct",
+    "scaling_law_Qwen3.5-4B",
     "scaling_law_DeepSeek-V3.1",
 }
 
@@ -58,7 +76,7 @@ def load_zvf130_methods():
             cells = line.rstrip("\n").split("\t")
             if len(cells) != len(header):
                 continue
-            d = dict(zip(header, cells))
+            d = dict(zip(header, cells, strict=False))
             tsv_rows[d["method"]] = d
     return rows, tsv_rows
 
@@ -81,37 +99,67 @@ def make_stack(method, m):
         raise ValueError("Seed identities disagree with count")
     delta = make_delta(method, m)
     return {
-        "record_type": "stack", "schema_version": "0.1.0",
-        "id": f"zvf130_{method}", "label_claimed": method,
+        "record_type": "stack",
+        "schema_version": "0.1.0",
+        "id": f"zvf130_{method}",
+        "label_claimed": method,
         "framework": {"name": "worktree-zvf130-batch", "version": None, "openness": "open"},
-        "model": m.get("model"), "task": m.get("task"), "seeds": seed_ids,
+        "model": m.get("model"),
+        "task": m.get("task"),
+        "seeds": seed_ids,
         "provenance": {"source_artifacts": [str(TSV_130.relative_to(ROOT))]},
-        "variant_deltas_applied": [] if method == "grpo" else [{
-            "delta_id": delta["id"], "component": delta["deltas"][0]["component"],
-            "status": "planned", "note": "Coverage only; application unverified"}],
+        "variant_deltas_applied": []
+        if method == "grpo"
+        else [
+            {
+                "delta_id": delta["id"],
+                "component": delta["deltas"][0]["component"],
+                "status": "planned",
+                "note": "Coverage only; application unverified",
+            }
+        ],
         "min_report": {
-            "loss_form": {}, "reference_kl": {},
-            "sampler_backend": m.get("sampler_backend", {}), "telemetry": {},
-            "group_size_schedule": {}, "heldout_split": m.get("heldout_split", {}),
-            "decontamination": {}},
-        "outcomes": {"zvf_risk_mean": float(m["zvf_risk_mean"]),
-                     "n_seeds": int(m["n_seeds"]),
-                     "delta_vs_grpo_mean": None,
-                     "crossref_integrity_iter138": {"point_estimate_matches_tsv": None,
-                         "status": "UNVERIFIED", "audit_source": AUDIT}},
-        "notes": "review17-v2 coverage proposal; unknown run metadata remains unknown. No paired baseline or inference is asserted."
+            "loss_form": {},
+            "reference_kl": {},
+            "sampler_backend": m.get("sampler_backend", {}),
+            "telemetry": {},
+            "group_size_schedule": {},
+            "heldout_split": m.get("heldout_split", {}),
+            "decontamination": {},
+        },
+        "outcomes": {
+            "zvf_risk_mean": float(m["zvf_risk_mean"]),
+            "n_seeds": int(m["n_seeds"]),
+            "delta_vs_grpo_mean": None,
+            "crossref_integrity_iter138": {
+                "point_estimate_matches_tsv": None,
+                "status": "UNVERIFIED",
+                "audit_source": AUDIT,
+            },
+        },
+        "notes": "review17-v2 coverage proposal; unknown run metadata remains unknown. No paired baseline or inference is asserted.",
     }
 
 
 def make_delta(method, m):
     """Unmatched task/control observations cannot establish a measured delta."""
-    return {"record_type": "variant_delta", "schema_version": "0.1.0",
-            "id": f"delta_{method}", "name": method, "base": "grpo",
-            "citation": {"bibkey": None, "arxiv": None, "title": None},
-            "deltas": [{"component": "task_substitution" if "tool_use" in method else "unverified",
-                        "field": "unknown", "change": "Coverage proposal; requires explicit source manifests"}],
-            "measured": [],
-            "notes": f"Reported n_seeds={int(m['n_seeds'])}; no matched baseline or seed identities verified."}
+    return {
+        "record_type": "variant_delta",
+        "schema_version": "0.1.0",
+        "id": f"delta_{method}",
+        "name": method,
+        "base": "grpo",
+        "citation": {"bibkey": None, "arxiv": None, "title": None},
+        "deltas": [
+            {
+                "component": "task_substitution" if "tool_use" in method else "unverified",
+                "field": "unknown",
+                "change": "Coverage proposal; requires explicit source manifests",
+            }
+        ],
+        "measured": [],
+        "notes": f"Reported n_seeds={int(m['n_seeds'])}; no matched baseline or seed identities verified.",
+    }
 
 
 def main():
@@ -124,27 +172,35 @@ def main():
     for m in methods_meta:
         method = m["method"]
         verdict = classify(method)
-        rows.append({
-            "method": method,
-            "verdict": verdict,
-            "zvf_risk_mean": m["zvf_risk_mean"],
-            "n_seeds": m["n_seeds"],
-            "failure_rate": m["failure_rate"],
-            "registry_id_present": (f"zvf130_{method}" in REGISTRY_IDS
-                                    or f"delta_{method}" in REGISTRY_IDS),
-            "iter138_action": {
-                "PRESENT": "none",
-                "ANCHOR_ROW": "skip — not a GRPO method (scaling-law anchor)",
-                "MISSING_GRPO_METHOD": (
-                    f"create zvf130_{method}.json + delta_{method}.json"
+        rows.append(
+            {
+                "method": method,
+                "verdict": verdict,
+                "zvf_risk_mean": m["zvf_risk_mean"],
+                "n_seeds": m["n_seeds"],
+                "failure_rate": m["failure_rate"],
+                "registry_id_present": (
+                    f"zvf130_{method}" in REGISTRY_IDS or f"delta_{method}" in REGISTRY_IDS
                 ),
-            }[verdict],
-        })
+                "iter138_action": {
+                    "PRESENT": "none",
+                    "ANCHOR_ROW": "skip — not a GRPO method (scaling-law anchor)",
+                    "MISSING_GRPO_METHOD": (f"create zvf130_{method}.json + delta_{method}.json"),
+                }[verdict],
+            }
+        )
 
     out_tsv = OUT_DIR / "p6_iter138_missing_method_audit.tsv"
     with open(out_tsv, "w") as fh:
-        cols = ["method", "verdict", "zvf_risk_mean", "n_seeds",
-                "failure_rate", "registry_id_present", "iter138_action"]
+        cols = [
+            "method",
+            "verdict",
+            "zvf_risk_mean",
+            "n_seeds",
+            "failure_rate",
+            "registry_id_present",
+            "iter138_action",
+        ]
         fh.write("\t".join(cols) + "\n")
         for r in rows:
             fh.write("\t".join(str(r[c]) for c in cols) + "\n")

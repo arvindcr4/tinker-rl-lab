@@ -68,13 +68,15 @@ def signal_metrics(
 
     coefficients = [
         (ratio * advantage) ** 2
-        for ratio, advantage, is_action in zip(ratio_values, advantage_values, mask_values)
+        for ratio, advantage, is_action in zip(
+            ratio_values, advantage_values, mask_values, strict=False
+        )
         if is_action
     ]
     surviving = [
         gate * (ratio * advantage) ** 2
         for ratio, advantage, gate, is_action in zip(
-            ratio_values, advantage_values, gate_values, mask_values
+            ratio_values, advantage_values, gate_values, mask_values, strict=False
         )
         if is_action
     ]

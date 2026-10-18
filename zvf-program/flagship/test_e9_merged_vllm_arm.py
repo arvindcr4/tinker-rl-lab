@@ -6,6 +6,7 @@ import json
 import tempfile
 import unittest
 from pathlib import Path
+import pytest
 
 try:
     from . import e9_merged_vllm_arm as arm
@@ -131,10 +132,10 @@ class E9MergedVllmArmTests(unittest.TestCase):
                 expected_total_bytes=total_bytes,
                 expected_receipt_sha256=self._expected_hash(receipt),
             )
-            self.assertEqual(verified["verified_shard_count"], 26)
-            self.assertEqual(verified["verified_weight_bytes"], total_bytes)
+            assert verified["verified_shard_count"] == 26
+            assert verified["verified_weight_bytes"] == total_bytes
             (root / "model-00026-of-00026.safetensors").write_text("drift")
-            with self.assertRaisesRegex(arm.LaunchGateError, "shard hash drifted"):
+            with pytest.raises(arm.LaunchGateError, match="shard hash drifted"):
                 arm.validate_merge_receipt_and_shards(
                     receipt,
                     merged_root=root,
@@ -153,7 +154,7 @@ class E9MergedVllmArmTests(unittest.TestCase):
                     separators=(",", ":"),
                 ).encode()
             ).hexdigest()
-            with self.assertRaisesRegex(arm.LaunchGateError, "base_commit drifted"):
+            with pytest.raises(arm.LaunchGateError, match="base_commit drifted"):
                 arm.validate_merge_receipt_and_shards(
                     receipt,
                     merged_root=root,
@@ -172,7 +173,7 @@ class E9MergedVllmArmTests(unittest.TestCase):
                     separators=(",", ":"),
                 ).encode()
             ).hexdigest()
-            with self.assertRaisesRegex(arm.LaunchGateError, "byte total drifted"):
+            with pytest.raises(arm.LaunchGateError, match="byte total drifted"):
                 arm.validate_merge_receipt_and_shards(
                     receipt,
                     merged_root=root,
@@ -182,31 +183,30 @@ class E9MergedVllmArmTests(unittest.TestCase):
 
     def test_reservation_is_combined_and_hard_capped(self) -> None:
         reservation = arm.reserve_pilot_budget(gpu_usd="1.5", cpu_usd="0.5")
-        self.assertEqual(reservation["projected_combined_usd"], 2.0)
-        with self.assertRaisesRegex(arm.LaunchGateError, "combined"):
+        assert reservation["projected_combined_usd"] == 2.0
+        with pytest.raises(arm.LaunchGateError, match="combined"):
             arm.reserve_pilot_budget(gpu_usd="1.9", cpu_usd="0.2")
 
     def test_allocation_gate_is_self_hashed_and_requires_server_confirmation(self) -> None:
         gate = self._allocation_gate()
-        self.assertEqual(
-            arm.validate_gpu_allocation_gate(gate)["schema_version"],
-            arm.ALLOCATION_GATE_SCHEMA,
+        assert (
+            arm.validate_gpu_allocation_gate(gate)["schema_version"] == arm.ALLOCATION_GATE_SCHEMA
         )
         tampered = dict(gate)
         tampered["preflight_completed_at"] = "2026-08-29T12:00:02+00:00"
-        with self.assertRaisesRegex(arm.LaunchGateError, "self-hash"):
+        with pytest.raises(arm.LaunchGateError, match="self-hash"):
             arm.validate_gpu_allocation_gate(tampered)
         unconfirmed = self._allocation_gate()
         unconfirmed["wandb_receipt"]["server_confirmed"] = False
         unconfirmed.pop("allocation_gate_sha256")
         unconfirmed["allocation_gate_sha256"] = arm._canonical_sha256(unconfirmed)
-        with self.assertRaisesRegex(arm.LaunchGateError, "server-confirmed"):
+        with pytest.raises(arm.LaunchGateError, match="server-confirmed"):
             arm.validate_gpu_allocation_gate(unconfirmed)
         wrong_schema = self._allocation_gate()
         wrong_schema["schema_version"] = "wrong-schema"
         wrong_schema.pop("allocation_gate_sha256")
         wrong_schema["allocation_gate_sha256"] = arm._canonical_sha256(wrong_schema)
-        with self.assertRaisesRegex(arm.LaunchGateError, "schema"):
+        with pytest.raises(arm.LaunchGateError, match="schema"):
             arm.validate_gpu_allocation_gate(wrong_schema)
 
     def test_v3_attestation_is_signed_fresh_and_launch_bound(self) -> None:
@@ -228,13 +228,13 @@ class E9MergedVllmArmTests(unittest.TestCase):
             expected_source_bundle_sha256="d" * 64,
             now_utc="2026-08-30T04:02:00+00:00",
         )
-        self.assertEqual(validated["schema_version"], arm.ALLOCATION_ATTESTATION_SCHEMA_V2)
+        assert validated["schema_version"] == arm.ALLOCATION_ATTESTATION_SCHEMA_V2
 
         tampered = json.loads(json.dumps(attestation))
         tampered["payload"]["competition_id"] = "imet-2020-fgvc7"
         tampered.pop("attestation_sha256")
         tampered["attestation_sha256"] = arm._canonical_sha256(tampered)
-        with self.assertRaisesRegex(arm.LaunchGateError, "signature"):
+        with pytest.raises(arm.LaunchGateError, match="signature"):
             arm.validate_allocation_attestation_v2(
                 tampered,
                 public_key_base64=public_key,
@@ -248,7 +248,7 @@ class E9MergedVllmArmTests(unittest.TestCase):
                 now_utc="2026-08-30T04:02:00+00:00",
             )
 
-        with self.assertRaisesRegex(arm.LaunchGateError, "expired"):
+        with pytest.raises(arm.LaunchGateError, match="expired"):
             arm.validate_allocation_attestation_v2(
                 attestation,
                 public_key_base64=public_key,
@@ -262,7 +262,7 @@ class E9MergedVllmArmTests(unittest.TestCase):
                 now_utc="2026-08-30T04:05:00+00:00",
             )
 
-        with self.assertRaisesRegex(arm.LaunchGateError, "competition_id"):
+        with pytest.raises(arm.LaunchGateError, match="competition_id"):
             arm.validate_allocation_attestation_v2(
                 attestation,
                 public_key_base64=public_key,
@@ -290,7 +290,7 @@ class E9MergedVllmArmTests(unittest.TestCase):
             expected_source_bundle_sha256="d" * 64,
             generation_started_at="2026-08-30T04:02:00+00:00",
         )
-        with self.assertRaisesRegex(arm.LaunchGateError, "does not cover"):
+        with pytest.raises(arm.LaunchGateError, match="does not cover"):
             arm.validate_allocation_attestation_v2(
                 attestation,
                 public_key_base64=public_key,
@@ -340,7 +340,7 @@ class E9MergedVllmArmTests(unittest.TestCase):
         ):
             mutated = dict(generation)
             mutated[field] = replacement
-            with self.subTest(field=field), self.assertRaisesRegex(arm.LaunchGateError, message):
+            with self.subTest(field=field), pytest.raises(arm.LaunchGateError, match=message):
                 arm.validate_v3_generation_binding(
                     mutated,
                     competition_id="hotel-id-2021-fgvc8",
@@ -353,7 +353,7 @@ class E9MergedVllmArmTests(unittest.TestCase):
         substituted["program_sha256"] = hashlib.sha256(
             (substituted["program"] + "\n").encode()
         ).hexdigest()
-        with self.assertRaisesRegex(arm.LaunchGateError, "sampled response"):
+        with pytest.raises(arm.LaunchGateError, match="sampled response"):
             arm.validate_v3_generation_binding(
                 substituted,
                 competition_id="hotel-id-2021-fgvc8",
@@ -374,11 +374,11 @@ class E9MergedVllmArmTests(unittest.TestCase):
             error_message="native preparation exceeded its deadline",
             recorded_at_utc="2026-08-30T04:00:00+00:00",
         )
-        self.assertEqual(receipt["status"], "CPU_PREPARATION_FAILED_BEFORE_GPU_GENERATION")
-        self.assertFalse(receipt["gpu_generation_started"])
-        self.assertEqual(receipt["merged_vllm_budget"]["estimated_modal_gpu_usd"], 0.0)
-        self.assertIsNone(receipt["score"])
-        self.assertEqual(receipt["legacy_tinker_coverage_increment"], 0)
+        assert receipt["status"] == "CPU_PREPARATION_FAILED_BEFORE_GPU_GENERATION"
+        assert not receipt["gpu_generation_started"]
+        assert receipt["merged_vllm_budget"]["estimated_modal_gpu_usd"] == 0.0
+        assert receipt["score"] is None
+        assert receipt["legacy_tinker_coverage_increment"] == 0
         sensitive = arm.build_cpu_preparation_failure_receipt_v1(
             competition_id="iwildcam-2019-fgvc6",
             reservation_id="a" * 32,
@@ -395,21 +395,21 @@ class E9MergedVllmArmTests(unittest.TestCase):
             recorded_at_utc="2026-08-30T04:00:00+00:00",
         )
         failure = sensitive["failure"]
-        self.assertTrue(failure["redaction_applied"])
-        self.assertNotIn("SECRET_TOKEN_123", failure["error_message_tail"])
-        self.assertNotIn("PRIVATE_KEY_456", failure["error_message_tail"])
-        self.assertNotIn("JSON_SECRET_789", failure["error_message_tail"])
-        self.assertNotIn("/Users/arvind", failure["error_message_tail"])
-        self.assertNotIn("/tmp/private", failure["error_message_tail"])
-        self.assertNotIn("/tmp", failure["error_message_tail"])
-        self.assertIn("[REDACTED]", failure["error_message_tail"])
-        self.assertIn("[REDACTED_PATH]", failure["error_message_tail"])
+        assert failure["redaction_applied"]
+        assert "SECRET_TOKEN_123" not in failure["error_message_tail"]
+        assert "PRIVATE_KEY_456" not in failure["error_message_tail"]
+        assert "JSON_SECRET_789" not in failure["error_message_tail"]
+        assert "/Users/arvind" not in failure["error_message_tail"]
+        assert "/tmp/private" not in failure["error_message_tail"]
+        assert "/tmp" not in failure["error_message_tail"]
+        assert "[REDACTED]" in failure["error_message_tail"]
+        assert "[REDACTED_PATH]" in failure["error_message_tail"]
         sanitized_again, changed_again = arm._sanitize_failure_message(
             failure["error_message_tail"]
         )
-        self.assertEqual(sanitized_again, failure["error_message_tail"])
-        self.assertFalse(changed_again)
-        with self.assertRaisesRegex(arm.LaunchGateError, "exceeds"):
+        assert sanitized_again == failure["error_message_tail"]
+        assert not changed_again
+        with pytest.raises(arm.LaunchGateError, match="exceeds"):
             arm.build_cpu_preparation_failure_receipt_v1(
                 competition_id="iwildcam-2019-fgvc6",
                 reservation_id="a" * 32,
@@ -426,17 +426,15 @@ class E9MergedVllmArmTests(unittest.TestCase):
         flagship = Path(__file__).parent
         modal_source = (flagship / "modal_e9_mle_bench_streaming.py").read_text(encoding="utf-8")
         control_source = (flagship / "e9_merged_vllm_pilot_control.py").read_text(encoding="utf-8")
-        self.assertLess(
-            modal_source.index("def preflight_merged_vllm_allocation"),
-            modal_source.index("class E9MergedVllmGenerator"),
+        assert modal_source.index("def preflight_merged_vllm_allocation") < modal_source.index(
+            "class E9MergedVllmGenerator"
         )
-        self.assertIn("allocation_gate_json: str = modal.parameter()", modal_source)
-        self.assertLess(
-            control_source.index('"preflight_merged_vllm_allocation"'),
-            control_source.index('"run_one"'),
+        assert "allocation_gate_json: str = modal.parameter()" in modal_source
+        assert control_source.index('"preflight_merged_vllm_allocation"') < control_source.index(
+            '"run_one"'
         )
-        self.assertIn("merged_vllm_allocation_gate", modal_source)
-        self.assertIn("checkpoint evidence changed after allocation", modal_source)
+        assert "merged_vllm_allocation_gate" in modal_source
+        assert "checkpoint evidence changed after allocation" in modal_source
 
     def test_generation_extracts_fresh_python_only_after_wandb_gate(self) -> None:
         seen: list[str] = []
@@ -453,9 +451,9 @@ class E9MergedVllmArmTests(unittest.TestCase):
         generated = generator.generate_program(
             "E9 competition prompt", generation_started_at="2026-08-29T12:00:02+00:00"
         )
-        self.assertEqual(seen, ["E9 competition prompt"])
-        self.assertEqual(generated["program"], "import os\nprint('ok')")
-        with self.assertRaises(arm.LaunchGateError):
+        assert seen == ["E9 competition prompt"]
+        assert generated["program"] == "import os\nprint('ok')"
+        with pytest.raises(arm.LaunchGateError):
             arm.E9MergedVllmProgramGenerator(
                 lambda _: "import os",
                 wandb_receipt={
@@ -466,7 +464,7 @@ class E9MergedVllmArmTests(unittest.TestCase):
                 },
                 gpu_load_started_at="2026-08-29T12:00:02+00:00",
             )
-        with self.assertRaisesRegex(arm.LaunchGateError, "strictly precede"):
+        with pytest.raises(arm.LaunchGateError, match="strictly precede"):
             arm.E9MergedVllmProgramGenerator(
                 lambda _: "import os",
                 wandb_receipt={
@@ -477,7 +475,7 @@ class E9MergedVllmArmTests(unittest.TestCase):
                 },
                 gpu_load_started_at="2026-08-29T12:00:02+00:00",
             )
-        with self.assertRaisesRegex(arm.LaunchGateError, "strictly precede"):
+        with pytest.raises(arm.LaunchGateError, match="strictly precede"):
             arm.E9MergedVllmProgramGenerator(
                 lambda _: "import os",
                 wandb_receipt={
@@ -515,18 +513,18 @@ class E9MergedVllmArmTests(unittest.TestCase):
             reservation=reservation,
             allocation_gate=self._allocation_gate(checkpoint),
         )
-        self.assertEqual(receipt["schema_version"], arm.ARM_SCHEMA_V2)
-        self.assertEqual(receipt["arm_id"], arm.ARM_ID)
-        self.assertIsNone(receipt["score"])
-        self.assertFalse(receipt["is_full_suite_score"])
-        self.assertEqual(receipt["legacy_tinker_coverage_increment"], 0)
+        assert receipt["schema_version"] == arm.ARM_SCHEMA_V2
+        assert receipt["arm_id"] == arm.ARM_ID
+        assert receipt["score"] is None
+        assert not receipt["is_full_suite_score"]
+        assert receipt["legacy_tinker_coverage_increment"] == 0
         unhashed = dict(receipt)
         stored = unhashed.pop("receipt_sha256")
-        self.assertEqual(
-            stored,
-            hashlib.sha256(
+        assert (
+            stored
+            == hashlib.sha256(
                 json.dumps(unhashed, sort_keys=True, separators=(",", ":")).encode()
-            ).hexdigest(),
+            ).hexdigest()
         )
 
     def test_receipt_requires_explicitly_valid_native_submission(self) -> None:
@@ -550,8 +548,8 @@ class E9MergedVllmArmTests(unittest.TestCase):
             reservation=reservation,
             allocation_gate=self._allocation_gate(checkpoint),
         )
-        self.assertEqual(receipt["status"], "NATIVE_SINGLE_COMPETITION_INVALID")
-        self.assertIsNone(receipt["competition_score"])
+        assert receipt["status"] == "NATIVE_SINGLE_COMPETITION_INVALID"
+        assert receipt["competition_score"] is None
 
     def test_receipt_rejects_native_grade_for_another_competition(self) -> None:
         reservation = arm.reserve_pilot_budget(gpu_usd="0.5", cpu_usd="0.2")
@@ -566,7 +564,7 @@ class E9MergedVllmArmTests(unittest.TestCase):
             "generation_started_at": "2026-08-29T12:00:02+00:00",
         }
         checkpoint = self._allocation_checkpoint()
-        with self.assertRaisesRegex(arm.LaunchGateError, "competition_id"):
+        with pytest.raises(arm.LaunchGateError, match="competition_id"):
             arm.build_task_receipt(
                 competition_id="hotel-id-2021-fgvc8",
                 native_grade={

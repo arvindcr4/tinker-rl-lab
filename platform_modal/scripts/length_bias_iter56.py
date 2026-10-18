@@ -41,11 +41,11 @@ Reads:
   platform_hybrid/experiments/results/drgrpo_vs_grpo.json      (arithmetic_easy: 5 seeds)
   platform_hybrid/experiments/results/drgrpo_gsm8k_cot_full.json (gsm8k_cot: 3 seeds)
 """
+
 from __future__ import annotations
 import json
 import math
 import random
-import statistics
 from pathlib import Path
 from _analysis_common import paired_bootstrap, write_dict_tsv as write_tsv
 
@@ -82,8 +82,18 @@ def load_runs(path: Path, task: str) -> list[dict]:
         ls = [float(s["mean_comp_len"]) for s in sl]
         zs = [float(s.get("zvf", float("nan"))) for s in sl]
         rho = [(rs[i] / ls[i]) if ls[i] > 0 else 0.0 for i in range(len(rs))]
-        out.append({"task": task, "algo": r["algo"], "seed": r["seed"],
-                    "t": ts, "R": rs, "L": ls, "zvf": zs, "rho": rho})
+        out.append(
+            {
+                "task": task,
+                "algo": r["algo"],
+                "seed": r["seed"],
+                "t": ts,
+                "R": rs,
+                "L": ls,
+                "zvf": zs,
+                "rho": rho,
+            }
+        )
     return out
 
 
@@ -115,66 +125,94 @@ def main() -> None:
     # ---- A. rho slope per (task, algo, seed)
     rho_rows = []
     for r in rows:
-        t = r["t"]; rho = r["rho"]; R = r["R"]; L = r["L"]
+        t = r["t"]
+        rho = r["rho"]
+        R = r["R"]
+        L = r["L"]
         slope, intercept = _ols(t, rho)
         # Per-token efficiency loss in absolute terms over the run
         delta_rho = rho[-1] - rho[0]
-        rho_rows.append({
-            "task": r["task"], "algo": r["algo"], "seed": r["seed"],
-            "rho_0": round(rho[0], 8),
-            "rho_last": round(rho[-1], 8),
-            "delta_rho": round(delta_rho, 8),
-            "slope_drho_dt": round(slope, 8),
-            "intercept": round(intercept, 8),
-            "n_steps": len(rho),
-        })
-    write_tsv(RES / "length_bias_iter56_rho_slopes_v2.tsv", rho_rows,
-              fieldnames=list(rho_rows[0].keys()))
+        rho_rows.append(
+            {
+                "task": r["task"],
+                "algo": r["algo"],
+                "seed": r["seed"],
+                "rho_0": round(rho[0], 8),
+                "rho_last": round(rho[-1], 8),
+                "delta_rho": round(delta_rho, 8),
+                "slope_drho_dt": round(slope, 8),
+                "intercept": round(intercept, 8),
+                "n_steps": len(rho),
+            }
+        )
+    write_tsv(
+        RES / "length_bias_iter56_rho_slopes_v2.tsv", rho_rows, fieldnames=list(rho_rows[0].keys())
+    )
 
     # ---- A.2 Paired GRPO vs Dr.GRPO bootstrap on d rho/dt per task
     paired_rows = []
     for task in ("arithmetic_easy", "gsm8k_cot"):
         for metric in ("slope_drho_dt", "delta_rho", "rho_last"):
             sub = rho_rows
-            grpo = {r["seed"]: r for r in sub if r["task"] == task
-                    and r["algo"] == "grpo"}
-            drgrpo = {r["seed"]: r for r in sub if r["task"] == task
-                      and r["algo"] in ("dr_grpo", "drgrpo")}
+            grpo = {r["seed"]: r for r in sub if r["task"] == task and r["algo"] == "grpo"}
+            drgrpo = {
+                r["seed"]: r
+                for r in sub
+                if r["task"] == task and r["algo"] in ("dr_grpo", "drgrpo")
+            }
             common = sorted(set(grpo) & set(drgrpo))
             if not common:
                 continue
             gv = [grpo[s][metric] for s in common]
             dv = [drgrpo[s][metric] for s in common]
             boot = paired_bootstrap(gv, dv, N_BOOT, rng)
-            paired_rows.append({
-                "task": task, "metric": metric, "n_pairs": boot["n_pairs"],
-                "mean_grpo": round(sum(gv) / len(gv), 8),
-                "mean_drgrpo": round(sum(dv) / len(dv), 8),
-                "mean_diff": boot["mean_diff"],
-                "ci_lo": boot["ci_lo"],
-                "ci_hi": boot["ci_hi"],
-                "p_le0": boot["p_le0"],
-                "interpretation": (
-                    "Dr.GRPO rho decays faster" if boot["mean_diff"] < 0
-                    and boot["ci_hi"] < 0 and metric == "slope_drho_dt"
-                    else "Dr.GRPO rho_last lower" if boot["mean_diff"] < 0
-                    and boot["ci_hi"] < 0 and metric == "rho_last"
-                    else "inconclusive"
-                ),
-            })
-    write_tsv(RES / "length_bias_iter56_grpo_vs_drgrpo_v2.tsv", paired_rows,
-              fieldnames=list(paired_rows[0].keys()))
+            paired_rows.append(
+                {
+                    "task": task,
+                    "metric": metric,
+                    "n_pairs": boot["n_pairs"],
+                    "mean_grpo": round(sum(gv) / len(gv), 8),
+                    "mean_drgrpo": round(sum(dv) / len(dv), 8),
+                    "mean_diff": boot["mean_diff"],
+                    "ci_lo": boot["ci_lo"],
+                    "ci_hi": boot["ci_hi"],
+                    "p_le0": boot["p_le0"],
+                    "interpretation": (
+                        "Dr.GRPO rho decays faster"
+                        if boot["mean_diff"] < 0 and boot["ci_hi"] < 0 and metric == "slope_drho_dt"
+                        else "Dr.GRPO rho_last lower"
+                        if boot["mean_diff"] < 0 and boot["ci_hi"] < 0 and metric == "rho_last"
+                        else "inconclusive"
+                    ),
+                }
+            )
+    write_tsv(
+        RES / "length_bias_iter56_grpo_vs_drgrpo_v2.tsv",
+        paired_rows,
+        fieldnames=list(paired_rows[0].keys()),
+    )
 
     # ---- B. Cumulative token tax per (task, algo, seed)
     tax_rows = []
     for r in rows:
-        t = r["t"]; R = r["R"]; L = r["L"]
+        t = r["t"]
+        R = r["R"]
+        L = r["L"]
         R0 = R[0]
         if R0 <= 0:
-            tax_rows.append({"task": r["task"], "algo": r["algo"], "seed": r["seed"],
-                             "cumulative_tax": 0.0, "cumulative_tax_norm": 0.0,
-                             "L_baseline_last": float("nan"), "L_actual_last": round(L[-1], 4),
-                             "R_first": R0, "R_last": R[-1]})
+            tax_rows.append(
+                {
+                    "task": r["task"],
+                    "algo": r["algo"],
+                    "seed": r["seed"],
+                    "cumulative_tax": 0.0,
+                    "cumulative_tax_norm": 0.0,
+                    "L_baseline_last": float("nan"),
+                    "L_actual_last": round(L[-1], 4),
+                    "R_first": R0,
+                    "R_last": R[-1],
+                }
+            )
             continue
         # baseline L*(t) = L_0 * (R_t / R_0) -- length needed to keep rho constant
         L_star = [L[0] * (R[i] / R0) for i in range(len(R))]
@@ -182,38 +220,47 @@ def main() -> None:
         # normalize by cumulative actual length so it is unit-free
         cum_L = sum(L)
         tax_norm = tax / cum_L if cum_L > 0 else 0.0
-        tax_rows.append({
-            "task": r["task"], "algo": r["algo"], "seed": r["seed"],
-            "cumulative_tax": round(tax, 4),
-            "cumulative_tax_norm": round(tax_norm, 6),
-            "L_baseline_last": round(L_star[-1], 4),
-            "L_actual_last": round(L[-1], 4),
-            "R_first": round(R[0], 4),
-            "R_last": round(R[-1], 4),
-        })
+        tax_rows.append(
+            {
+                "task": r["task"],
+                "algo": r["algo"],
+                "seed": r["seed"],
+                "cumulative_tax": round(tax, 4),
+                "cumulative_tax_norm": round(tax_norm, 6),
+                "L_baseline_last": round(L_star[-1], 4),
+                "L_actual_last": round(L[-1], 4),
+                "R_first": round(R[0], 4),
+                "R_last": round(R[-1], 4),
+            }
+        )
     # paired bootstrap on cumulative_tax_norm per task
     tax_paired = []
     for task in ("arithmetic_easy", "gsm8k_cot"):
-        grpo = {r["seed"]: r for r in tax_rows if r["task"] == task
-                and r["algo"] == "grpo"}
-        drgrpo = {r["seed"]: r for r in tax_rows if r["task"] == task
-                  and r["algo"] in ("dr_grpo", "drgrpo")}
+        grpo = {r["seed"]: r for r in tax_rows if r["task"] == task and r["algo"] == "grpo"}
+        drgrpo = {
+            r["seed"]: r
+            for r in tax_rows
+            if r["task"] == task and r["algo"] in ("dr_grpo", "drgrpo")
+        }
         common = sorted(set(grpo) & set(drgrpo))
         if not common:
             continue
         gv = [grpo[s]["cumulative_tax_norm"] for s in common]
         dv = [drgrpo[s]["cumulative_tax_norm"] for s in common]
         boot = paired_bootstrap(gv, dv, N_BOOT, rng)
-        tax_paired.append({
-            "task": task, "metric": "cumulative_tax_norm",
-            "n_pairs": boot["n_pairs"],
-            "mean_grpo": round(sum(gv) / len(gv), 6),
-            "mean_drgrpo": round(sum(dv) / len(dv), 6),
-            "mean_diff": boot["mean_diff"],
-            "ci_lo": boot["ci_lo"],
-            "ci_hi": boot["ci_hi"],
-            "p_le0": boot["p_le0"],
-        })
+        tax_paired.append(
+            {
+                "task": task,
+                "metric": "cumulative_tax_norm",
+                "n_pairs": boot["n_pairs"],
+                "mean_grpo": round(sum(gv) / len(gv), 6),
+                "mean_drgrpo": round(sum(dv) / len(dv), 6),
+                "mean_diff": boot["mean_diff"],
+                "ci_lo": boot["ci_lo"],
+                "ci_hi": boot["ci_hi"],
+                "p_le0": boot["p_le0"],
+            }
+        )
     write_grains("cumulative_tax", tax_rows, tax_paired)
 
     # ---- C. Length phase portrait centroid per (task, algo)
@@ -228,52 +275,72 @@ def main() -> None:
         Lc = sum(L[:n]) / n
         dLc = sum(dL) / n
         # RMS radius
-        rms = math.sqrt(sum((L[i] - Lc) ** 2 + (dL[i] - dLc) ** 2
-                            for i in range(n)) / n)
-        portrait_rows.append({
-            "task": r["task"], "algo": r["algo"], "seed": r["seed"],
-            "n_pts": n,
-            "centroid_L": round(Lc, 4),
-            "centroid_dL": round(dLc, 6),
-            "rms_radius": round(rms, 4),
-            "L_first": round(L[0], 4),
-            "L_last": round(L[-1], 4),
-        })
+        rms = math.sqrt(sum((L[i] - Lc) ** 2 + (dL[i] - dLc) ** 2 for i in range(n)) / n)
+        portrait_rows.append(
+            {
+                "task": r["task"],
+                "algo": r["algo"],
+                "seed": r["seed"],
+                "n_pts": n,
+                "centroid_L": round(Lc, 4),
+                "centroid_dL": round(dLc, 6),
+                "rms_radius": round(rms, 4),
+                "L_first": round(L[0], 4),
+                "L_last": round(L[-1], 4),
+            }
+        )
     # paired GRPO vs Dr.GRPO on centroid_L and centroid_dL
     pp_paired = []
     for task in ("arithmetic_easy", "gsm8k_cot"):
         for metric in ("centroid_L", "centroid_dL", "rms_radius"):
-            grpo = {r["seed"]: r for r in portrait_rows if r["task"] == task
-                    and r["algo"] == "grpo"}
-            drgrpo = {r["seed"]: r for r in portrait_rows if r["task"] == task
-                      and r["algo"] in ("dr_grpo", "drgrpo")}
+            grpo = {
+                r["seed"]: r for r in portrait_rows if r["task"] == task and r["algo"] == "grpo"
+            }
+            drgrpo = {
+                r["seed"]: r
+                for r in portrait_rows
+                if r["task"] == task and r["algo"] in ("dr_grpo", "drgrpo")
+            }
             common = sorted(set(grpo) & set(drgrpo))
             if not common:
                 continue
             gv = [grpo[s][metric] for s in common]
             dv = [drgrpo[s][metric] for s in common]
             boot = paired_bootstrap(gv, dv, N_BOOT, rng)
-            pp_paired.append({
-                "task": task, "metric": metric, "n_pairs": boot["n_pairs"],
-                "mean_grpo": round(sum(gv) / len(gv), 6),
-                "mean_drgrpo": round(sum(dv) / len(dv), 6),
-                "mean_diff": boot["mean_diff"],
-                "ci_lo": boot["ci_lo"],
-                "ci_hi": boot["ci_hi"],
-                "p_le0": boot["p_le0"],
-            })
+            pp_paired.append(
+                {
+                    "task": task,
+                    "metric": metric,
+                    "n_pairs": boot["n_pairs"],
+                    "mean_grpo": round(sum(gv) / len(gv), 6),
+                    "mean_drgrpo": round(sum(dv) / len(dv), 6),
+                    "mean_diff": boot["mean_diff"],
+                    "ci_lo": boot["ci_lo"],
+                    "ci_hi": boot["ci_hi"],
+                    "p_le0": boot["p_le0"],
+                }
+            )
     write_grains("phase_portrait", portrait_rows, pp_paired)
 
     # ---- D. rho half-life: time to rho drop to rho_0 / 2
     hl_rows = []
     for r in rows:
-        rho = r["rho"]; t = r["t"]
+        rho = r["rho"]
+        t = r["t"]
         rho0 = rho[0]
         if rho0 <= 0:
-            hl_rows.append({"task": r["task"], "algo": r["algo"], "seed": r["seed"],
-                            "rho_0": round(rho0, 6), "rho_half": "nan",
-                            "t_half": "nan", "rho_final": round(rho[-1], 6),
-                            "rho_final_over_rho0": "nan"})
+            hl_rows.append(
+                {
+                    "task": r["task"],
+                    "algo": r["algo"],
+                    "seed": r["seed"],
+                    "rho_0": round(rho0, 6),
+                    "rho_half": "nan",
+                    "t_half": "nan",
+                    "rho_final": round(rho[-1], 6),
+                    "rho_final_over_rho0": "nan",
+                }
+            )
             continue
         target = rho0 / 2.0
         # find first t where rho[t] <= target
@@ -285,104 +352,130 @@ def main() -> None:
         if t_half is None:
             t_half = -1  # never halved
         rho_final_over_rho0 = rho[-1] / rho0 if rho0 > 0 else 0.0
-        hl_rows.append({
-            "task": r["task"], "algo": r["algo"], "seed": r["seed"],
-            "rho_0": round(rho0, 6),
-            "rho_half": round(target, 6),
-            "t_half": t_half,
-            "rho_final": round(rho[-1], 6),
-            "rho_final_over_rho0": round(rho_final_over_rho0, 6),
-            "halved": t_half != -1,
-        })
+        hl_rows.append(
+            {
+                "task": r["task"],
+                "algo": r["algo"],
+                "seed": r["seed"],
+                "rho_0": round(rho0, 6),
+                "rho_half": round(target, 6),
+                "t_half": t_half,
+                "rho_final": round(rho[-1], 6),
+                "rho_final_over_rho0": round(rho_final_over_rho0, 6),
+                "halved": t_half != -1,
+            }
+        )
     hl_paired = []
     for task in ("arithmetic_easy", "gsm8k_cot"):
         for metric in ("rho_final_over_rho0",):
-            grpo = {r["seed"]: r for r in hl_rows if r["task"] == task
-                    and r["algo"] == "grpo"}
-            drgrpo = {r["seed"]: r for r in hl_rows if r["task"] == task
-                      and r["algo"] in ("dr_grpo", "drgrpo")}
+            grpo = {r["seed"]: r for r in hl_rows if r["task"] == task and r["algo"] == "grpo"}
+            drgrpo = {
+                r["seed"]: r
+                for r in hl_rows
+                if r["task"] == task and r["algo"] in ("dr_grpo", "drgrpo")
+            }
             common = sorted(set(grpo) & set(drgrpo))
             if not common:
                 continue
             gv = [grpo[s][metric] for s in common]
             dv = [drgrpo[s][metric] for s in common]
             boot = paired_bootstrap(gv, dv, N_BOOT, rng)
-            hl_paired.append({
-                "task": task, "metric": metric, "n_pairs": boot["n_pairs"],
-                "mean_grpo": round(sum(gv) / len(gv), 6),
-                "mean_drgrpo": round(sum(dv) / len(dv), 6),
-                "mean_diff": boot["mean_diff"],
-                "ci_lo": boot["ci_lo"],
-                "ci_hi": boot["ci_hi"],
-                "p_le0": boot["p_le0"],
-            })
+            hl_paired.append(
+                {
+                    "task": task,
+                    "metric": metric,
+                    "n_pairs": boot["n_pairs"],
+                    "mean_grpo": round(sum(gv) / len(gv), 6),
+                    "mean_drgrpo": round(sum(dv) / len(dv), 6),
+                    "mean_diff": boot["mean_diff"],
+                    "ci_lo": boot["ci_lo"],
+                    "ci_hi": boot["ci_hi"],
+                    "p_le0": boot["p_le0"],
+                }
+            )
     write_grains("half_life", hl_rows, hl_paired)
 
     # ---- Summary rollup
     summary_rows = []
     for p in paired_rows:
-        summary_rows.append({
-            "task": p["task"], "metric": p["metric"],
-            "n_pairs": p["n_pairs"],
-            "mean_grpo": p["mean_grpo"],
-            "mean_drgrpo": p["mean_drgrpo"],
-            "mean_diff": p["mean_diff"],
-            "ci_lo": p["ci_lo"],
-            "ci_hi": p["ci_hi"],
-            "p_le0": p["p_le0"],
-            "interpretation": p["interpretation"],
-        })
+        summary_rows.append(
+            {
+                "task": p["task"],
+                "metric": p["metric"],
+                "n_pairs": p["n_pairs"],
+                "mean_grpo": p["mean_grpo"],
+                "mean_drgrpo": p["mean_drgrpo"],
+                "mean_diff": p["mean_diff"],
+                "ci_lo": p["ci_lo"],
+                "ci_hi": p["ci_hi"],
+                "p_le0": p["p_le0"],
+                "interpretation": p["interpretation"],
+            }
+        )
     for p in tax_paired:
-        summary_rows.append({
-            "task": p["task"], "metric": p["metric"],
-            "n_pairs": p["n_pairs"],
-            "mean_grpo": p["mean_grpo"],
-            "mean_drgrpo": p["mean_drgrpo"],
-            "mean_diff": p["mean_diff"],
-            "ci_lo": p["ci_lo"],
-            "ci_hi": p["ci_hi"],
-            "p_le0": p["p_le0"],
-            "interpretation": (
-                "Dr.GRPO pays more tax" if p["mean_diff"] > 0 and p["ci_lo"] > 0
-                else "inconclusive"
-            ),
-        })
+        summary_rows.append(
+            {
+                "task": p["task"],
+                "metric": p["metric"],
+                "n_pairs": p["n_pairs"],
+                "mean_grpo": p["mean_grpo"],
+                "mean_drgrpo": p["mean_drgrpo"],
+                "mean_diff": p["mean_diff"],
+                "ci_lo": p["ci_lo"],
+                "ci_hi": p["ci_hi"],
+                "p_le0": p["p_le0"],
+                "interpretation": (
+                    "Dr.GRPO pays more tax"
+                    if p["mean_diff"] > 0 and p["ci_lo"] > 0
+                    else "inconclusive"
+                ),
+            }
+        )
     for p in hl_paired:
-        summary_rows.append({
-            "task": p["task"], "metric": p["metric"],
-            "n_pairs": p["n_pairs"],
-            "mean_grpo": p["mean_grpo"],
-            "mean_drgrpo": p["mean_drgrpo"],
-            "mean_diff": p["mean_diff"],
-            "ci_lo": p["ci_lo"],
-            "ci_hi": p["ci_hi"],
-            "p_le0": p["p_le0"],
-            "interpretation": (
-                "Dr.GRPO rho decays more" if p["mean_diff"] < 0 and p["ci_hi"] < 0
-                else "inconclusive"
-            ),
-        })
+        summary_rows.append(
+            {
+                "task": p["task"],
+                "metric": p["metric"],
+                "n_pairs": p["n_pairs"],
+                "mean_grpo": p["mean_grpo"],
+                "mean_drgrpo": p["mean_drgrpo"],
+                "mean_diff": p["mean_diff"],
+                "ci_lo": p["ci_lo"],
+                "ci_hi": p["ci_hi"],
+                "p_le0": p["p_le0"],
+                "interpretation": (
+                    "Dr.GRPO rho decays more"
+                    if p["mean_diff"] < 0 and p["ci_hi"] < 0
+                    else "inconclusive"
+                ),
+            }
+        )
     for p in pp_paired:
-        summary_rows.append({
-            "task": p["task"], "metric": p["metric"],
-            "n_pairs": p["n_pairs"],
-            "mean_grpo": p["mean_grpo"],
-            "mean_drgrpo": p["mean_drgrpo"],
-            "mean_diff": p["mean_diff"],
-            "ci_lo": p["ci_lo"],
-            "ci_hi": p["ci_hi"],
-            "p_le0": p["p_le0"],
-            "interpretation": (
-                "Dr.GRPO centroid_L higher" if p["mean_diff"] > 0
-                and p["ci_lo"] > 0 and p["metric"] == "centroid_L"
-                else "Dr.GRPO centroid_dL smaller in magnitude"
-                if p["mean_diff"] > 0 and p["ci_lo"] > 0
-                and p["metric"] == "centroid_dL"
-                else "inconclusive"
-            ),
-        })
-    write_tsv(RES / "length_bias_iter56_summary_v2.tsv", summary_rows,
-              fieldnames=list(summary_rows[0].keys()))
+        summary_rows.append(
+            {
+                "task": p["task"],
+                "metric": p["metric"],
+                "n_pairs": p["n_pairs"],
+                "mean_grpo": p["mean_grpo"],
+                "mean_drgrpo": p["mean_drgrpo"],
+                "mean_diff": p["mean_diff"],
+                "ci_lo": p["ci_lo"],
+                "ci_hi": p["ci_hi"],
+                "p_le0": p["p_le0"],
+                "interpretation": (
+                    "Dr.GRPO centroid_L higher"
+                    if p["mean_diff"] > 0 and p["ci_lo"] > 0 and p["metric"] == "centroid_L"
+                    else "Dr.GRPO centroid_dL smaller in magnitude"
+                    if p["mean_diff"] > 0 and p["ci_lo"] > 0 and p["metric"] == "centroid_dL"
+                    else "inconclusive"
+                ),
+            }
+        )
+    write_tsv(
+        RES / "length_bias_iter56_summary_v2.tsv",
+        summary_rows,
+        fieldnames=list(summary_rows[0].keys()),
+    )
 
     print("=== iter56 reward-per-token efficiency summary ===")
     for r in summary_rows:

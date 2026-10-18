@@ -27,6 +27,7 @@ actor05_session/deployment.json):
   * WANDB_RUN_ID_DEFAULT -- receipts record the actor session's online W&B
     run; confirm against the new actor session ledger and pass --wandb-run-id.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -46,9 +47,9 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 FLAGSHIP_DIR = REPO_ROOT / "zvf-program" / "flagship"
 sys.path.insert(0, str(FLAGSHIP_DIR))
 
-import public_swe_multilingual_native as psml  # noqa: E402
+import public_swe_multilingual_native as psml
 
-import bounded_procgroup as bpg  # noqa: E402
+import bounded_procgroup as bpg
 
 FINISH_DIR = REPO_ROOT / "outputs/PES_Phase2_Review_2026-09-12/finish"
 REQUEST_PATH = FINISH_DIR / "e1_recovery_v6/resource_request_v6.json"
@@ -64,13 +65,22 @@ TASK_INVENTORY_SHA256 = "765d75f9384450871730901fb73933d9e68ef9415f6badcb603e116
 # Sealed 16-task v6 selection: google__gson-* x9, hashicorp__terraform-* x5,
 # immutable-js x2 (resource_request_v6.json selection.task_ids).
 SEALED_TASK_IDS = [
-    "google__gson-1014", "google__gson-1093", "google__gson-1100",
-    "google__gson-2024", "google__gson-2061", "google__gson-2134",
-    "google__gson-2158", "google__gson-2311", "google__gson-2479",
-    "hashicorp__terraform-34580", "hashicorp__terraform-34814",
-    "hashicorp__terraform-34900", "hashicorp__terraform-35543",
+    "google__gson-1014",
+    "google__gson-1093",
+    "google__gson-1100",
+    "google__gson-2024",
+    "google__gson-2061",
+    "google__gson-2134",
+    "google__gson-2158",
+    "google__gson-2311",
+    "google__gson-2479",
+    "hashicorp__terraform-34580",
+    "hashicorp__terraform-34814",
+    "hashicorp__terraform-34900",
+    "hashicorp__terraform-35543",
     "hashicorp__terraform-35611",
-    "immutable-js__immutable-js-2005", "immutable-js__immutable-js-2006",
+    "immutable-js__immutable-js-2005",
+    "immutable-js__immutable-js-2006",
 ]
 
 # ADAPTATION POINT: endpoint facts from actor05_session/deployment.json.
@@ -83,8 +93,10 @@ NATIVE_WORKERS = 4
 NATIVE_TIMEOUT_SECONDS = 1800
 NATIVE_OUTER_WALL_SECONDS = 7500
 RUN_ID_DEFAULT = "e1multilingual0919wave10"
-SELECTION_LABEL = ("sealed v6 recovery selection (resource_request_v6.json): "
-                   "gson x9, terraform x5, immutable-js x2")
+SELECTION_LABEL = (
+    "sealed v6 recovery selection (resource_request_v6.json): "
+    "gson x9, terraform x5, immutable-js x2"
+)
 
 
 def sha256_bytes(raw: bytes) -> str:
@@ -92,13 +104,14 @@ def sha256_bytes(raw: bytes) -> str:
 
 
 def canonical_line(value: dict) -> bytes:
-    return json.dumps(value, sort_keys=True, separators=(",", ":"),
-                      ensure_ascii=False).encode() + b"\n"
+    return (
+        json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode()
+        + b"\n"
+    )
 
 
 def pretty(value: dict) -> bytes:
-    return (json.dumps(value, indent=2, sort_keys=True, ensure_ascii=False)
-            + "\n").encode()
+    return (json.dumps(value, indent=2, sort_keys=True, ensure_ascii=False) + "\n").encode()
 
 
 def write_immutable(path: Path, raw: bytes) -> None:
@@ -139,8 +152,9 @@ def load_selection(request_path: Path) -> list[str]:
     return task_ids
 
 
-def load_wave_plan(task_ids: list[str],
-                   attempts_root: Path) -> tuple[dict[str, dict], dict[str, str]]:
+def load_wave_plan(
+    task_ids: list[str], attempts_root: Path
+) -> tuple[dict[str, dict], dict[str, str]]:
     """Load preserved per-task source contexts and digest-pinned images.
 
     Images come from the sealed contexts_v1.json (sha256-pinned by
@@ -180,7 +194,9 @@ def load_wave_plan(task_ids: list[str],
     if prepared.is_file():
         prepared_rows = psml.indexed(psml.lines(prepared))
         for iid in task_ids:
-            if psml.object_hash(contexts[iid]["actor_task"]) != psml.object_hash(prepared_rows[iid]):
+            if psml.object_hash(contexts[iid]["actor_task"]) != psml.object_hash(
+                prepared_rows[iid]
+            ):
                 raise RuntimeError(f"Preserved context disagrees with prepared actor task: {iid}")
     return contexts, images
 
@@ -191,8 +207,9 @@ def load_native_rows(task_ids: list[str]) -> dict[str, dict]:
     return {iid: rows[iid] for iid in task_ids}
 
 
-def post_chat_completion(endpoint: str, request_bytes: bytes, api_key: str | None,
-                          timeout: float) -> tuple[dict, dict]:
+def post_chat_completion(
+    endpoint: str, request_bytes: bytes, api_key: str | None, timeout: float
+) -> tuple[dict, dict]:
     """POST one actor request; returns (body, meta).
 
     Transport failures raise; the caller must abort the wave rather than
@@ -202,8 +219,7 @@ def post_chat_completion(endpoint: str, request_bytes: bytes, api_key: str | Non
     headers = {"Content-Type": "application/json"}
     if api_key:
         headers["Authorization"] = f"Bearer {api_key}"
-    req = urllib.request.Request(endpoint, data=request_bytes, headers=headers,
-                                 method="POST")
+    req = urllib.request.Request(endpoint, data=request_bytes, headers=headers, method="POST")
     started = time.time()
     try:
         with urllib.request.urlopen(req, timeout=timeout) as response:
@@ -219,13 +235,17 @@ def post_chat_completion(endpoint: str, request_bytes: bytes, api_key: str | Non
         body = json.loads(body_bytes)
     except ValueError as exc:
         raise RuntimeError("Actor endpoint returned non-JSON body") from exc
-    meta = {"id": body.get("id"), "status": status, "reason": reason,
-            "headers": response_headers, "elapsed_seconds": time.time() - started}
+    meta = {
+        "id": body.get("id"),
+        "status": status,
+        "reason": reason,
+        "headers": response_headers,
+        "elapsed_seconds": time.time() - started,
+    }
     return body, meta
 
 
-def generate_one(iid: str, source: dict, identity: dict, args, attempts_root: Path,
-                 log) -> dict:
+def generate_one(iid: str, source: dict, identity: dict, args, attempts_root: Path, log) -> dict:
     """One generation attempt; writes receipts in the attempts/*/ schema.
 
     Receipt fields mirror outputs/.../e1_completion/attempts/*/generation.json
@@ -237,11 +257,14 @@ def generate_one(iid: str, source: dict, identity: dict, args, attempts_root: Pa
     """
     directory = attempts_root / iid
     actor = {key: source["actor_task"][key] for key in psml.ACTOR_FIELDS}
-    request = psml.build_actor_request(actor, source["files"],
-                                       identity["served_model_id"],
-                                       max_tokens=args.max_tokens,
-                                       temperature=args.temperature,
-                                       seed=args.seed)
+    request = psml.build_actor_request(
+        actor,
+        source["files"],
+        identity["served_model_id"],
+        max_tokens=args.max_tokens,
+        temperature=args.temperature,
+        seed=args.seed,
+    )
     request_bytes = canonical_line(request)
     request_path = directory / "generation_request.json"
     directory.mkdir(parents=True, exist_ok=True)
@@ -249,26 +272,31 @@ def generate_one(iid: str, source: dict, identity: dict, args, attempts_root: Pa
     if (directory / "completed.json").exists() and retained.is_file():
         receipt = json.loads(retained.read_text())
         completion = json.loads((directory / "completed.json").read_text())
-        if (receipt.get("request_sha256") != sha256_bytes(request_bytes)
+        if (
+            receipt.get("request_sha256") != sha256_bytes(request_bytes)
             or receipt.get("source_sha256") != psml.object_hash(source["files"])
             or receipt.get("model_identity_sha256") != psml.object_hash(identity)
-            or receipt.get("deployment_ref", {}).get("sha256") != sha256_bytes(Path(args.deployment).read_bytes())
-            or completion.get("receipt_sha256") != sha256_bytes(retained.read_bytes())):
+            or receipt.get("deployment_ref", {}).get("sha256")
+            != sha256_bytes(Path(args.deployment).read_bytes())
+            or completion.get("receipt_sha256") != sha256_bytes(retained.read_bytes())
+        ):
             raise RuntimeError("completed attempt identity or retained receipt changed")
         return receipt
     if list(directory.glob("generation*")):
-        raise RuntimeError("legacy or unresolved generation artifacts require reconciliation before retry")
+        raise RuntimeError(
+            "legacy or unresolved generation artifacts require reconciliation before retry"
+        )
     nonce = claim(directory, {"request_sha256": sha256_bytes(request_bytes), "instance_id": iid})
     write_immutable(request_path, request_bytes)
     transition(directory, nonce, "DISPATCHED", request_sha256=sha256_bytes(request_bytes))
 
     started_at = time.time()
-    body, meta = post_chat_completion(args.endpoint, request_bytes, args.api_key,
-                                      args.request_timeout)
+    body, meta = post_chat_completion(
+        args.endpoint, request_bytes, args.api_key, args.request_timeout
+    )
     finished_at = time.time()
     write_immutable(directory / "generation_http_meta.json", pretty(meta))
-    write_immutable(directory / "generation_http_response.json",
-                    pretty(body))
+    write_immutable(directory / "generation_http_response.json", pretty(body))
     choices = body.get("choices") or []
     message = (choices[0].get("message") or {}) if choices else {}
     content = message.get("content")
@@ -276,8 +304,11 @@ def generate_one(iid: str, source: dict, identity: dict, args, attempts_root: Pa
     extracted = extract_patch(content) if isinstance(content, str) else None
     if extracted is None:
         status, patch = "GENERATION_FAILED", ""
-        extraction_reason = ("no valid unified diff in completed response"
-                             if choices else "empty choices in completed response")
+        extraction_reason = (
+            "no valid unified diff in completed response"
+            if choices
+            else "empty choices in completed response"
+        )
     else:
         patch, extraction_reason = extracted
         status = "GENERATED"
@@ -308,16 +339,30 @@ def generate_one(iid: str, source: dict, identity: dict, args, attempts_root: Pa
         "finish_reason": finish_reason,
         "extraction_reason": extraction_reason,
         "usage": body.get("usage") or {},
-        "deployment_ref": {"path": str(args.deployment),
-                           "sha256": sha256_bytes(Path(args.deployment).read_bytes())},
+        "deployment_ref": {
+            "path": str(args.deployment),
+            "sha256": sha256_bytes(Path(args.deployment).read_bytes()),
+        },
     }
     write_immutable(directory / "generation.json", pretty(receipt))
-    write_immutable(directory / "generation_intent.json", pretty({
-        "at": started_at, "replay_forbidden": True, "endpoint": args.endpoint,
-        "request_ref": {"path": str(request_path),
-                        "sha256": receipt["request_sha256"]},
-        "deployment_ref": receipt["deployment_ref"]}))
-    transition(directory, nonce, "COMPLETED", receipt_sha256=sha256_bytes((directory / "generation.json").read_bytes()))
+    write_immutable(
+        directory / "generation_intent.json",
+        pretty(
+            {
+                "at": started_at,
+                "replay_forbidden": True,
+                "endpoint": args.endpoint,
+                "request_ref": {"path": str(request_path), "sha256": receipt["request_sha256"]},
+                "deployment_ref": receipt["deployment_ref"],
+            }
+        ),
+    )
+    transition(
+        directory,
+        nonce,
+        "COMPLETED",
+        receipt_sha256=sha256_bytes((directory / "generation.json").read_bytes()),
+    )
     log(f"{iid} {status} {int((finished_at - started_at) * 1000)}")
     return receipt
 
@@ -331,11 +376,23 @@ def build_native_argv(args, output_dir: Path) -> list[str]:
     every path at the wave's 16-task materialization.
     """
     swebench = args.swebench_bin or str((SETUP_DIR / ".venv/bin/swebench").resolve())
-    return [swebench, "eval", str(output_dir / "wave10_native_dataset.jsonl"),
-            "-p", str(output_dir / "wave10_predictions.jsonl"),
-            "--run-id", args.run_id, "--split", "test",
-            "-j", str(args.workers), "--timeout", str(args.timeout),
-            "--report-dir", str(output_dir / "reports")]
+    return [
+        swebench,
+        "eval",
+        str(output_dir / "wave10_native_dataset.jsonl"),
+        "-p",
+        str(output_dir / "wave10_predictions.jsonl"),
+        "--run-id",
+        args.run_id,
+        "--split",
+        "test",
+        "-j",
+        str(args.workers),
+        "--timeout",
+        str(args.timeout),
+        "--report-dir",
+        str(output_dir / "reports"),
+    ]
 
 
 def native_worker(worker_args=None, evaluator_argv=None) -> int:
@@ -360,15 +417,18 @@ def native_worker(worker_args=None, evaluator_argv=None) -> int:
         except OSError as exc:
             err.write(f"native worker spawn failure: {exc}\n".encode())
             returncode = None
-    bpg.write_durable(result_path, {
-        "attempt_nonce": os.environ.get("TINKER_ATTEMPT_NONCE"),
-        "returncode": returncode,
-        "started_at": started_at,
-        "finished_at": time.time(),
-        "argv": argv,
-        "stdout_path": str(stdout_path),
-        "stderr_path": str(stderr_path),
-    })
+    bpg.write_durable(
+        result_path,
+        {
+            "attempt_nonce": os.environ.get("TINKER_ATTEMPT_NONCE"),
+            "returncode": returncode,
+            "started_at": started_at,
+            "finished_at": time.time(),
+            "argv": argv,
+            "stdout_path": str(stdout_path),
+            "stderr_path": str(stderr_path),
+        },
+    )
     return 0
 
 
@@ -376,54 +436,67 @@ def run_native_phase(args, output_dir: Path, log) -> dict:
     eval_argv = build_native_argv(args, output_dir)
     receipt_dir = output_dir / "native_group"
     result_path = receipt_dir / "native_result.json"
-    worker_argv = [sys.executable, str(Path(__file__).resolve()), "--native-worker",
-                   "--native-result-path", str(result_path),
-                   "--native-stdout", str(receipt_dir / "native_stdout.txt"),
-                   "--native-stderr", str(receipt_dir / "native_stderr.txt"),
-                   "--"] + eval_argv
+    worker_argv = [
+        sys.executable,
+        str(Path(__file__).resolve()),
+        "--native-worker",
+        "--native-result-path",
+        str(result_path),
+        "--native-stdout",
+        str(receipt_dir / "native_stdout.txt"),
+        "--native-stderr",
+        str(receipt_dir / "native_stderr.txt"),
+        "--",
+    ] + eval_argv
     deadline_epoch = time.time() + args.native_outer_wall
-    outcome = bpg.run_child(worker_argv, result_path=result_path,
-                            receipt_dir=receipt_dir,
-                            deadline_epoch=deadline_epoch)
+    outcome = bpg.run_child(
+        worker_argv, result_path=result_path, receipt_dir=receipt_dir, deadline_epoch=deadline_epoch
+    )
     if outcome["status"] != "SUCCESS":
         log(f"NATIVE_UNKNOWN {outcome['unknown_reason']}")
-        return {"status": "UNKNOWN", "no_replay": True,
-                "reason": outcome["unknown_reason"],
-                "group_finalization": outcome["group_finalization"]}
+        return {
+            "status": "UNKNOWN",
+            "no_replay": True,
+            "reason": outcome["unknown_reason"],
+            "group_finalization": outcome["group_finalization"],
+        }
     result = outcome["result"]
     log(f"NATIVE_EXIT {result.get('returncode')}")
-    return {"status": "EXITED", "returncode": result.get("returncode"),
-            "started_at": result.get("started_at"),
-            "finished_at": result.get("finished_at"),
-            "argv": result.get("argv"),
-            "group_finalization": outcome["group_finalization"]}
+    return {
+        "status": "EXITED",
+        "returncode": result.get("returncode"),
+        "started_at": result.get("started_at"),
+        "finished_at": result.get("finished_at"),
+        "argv": result.get("argv"),
+        "group_finalization": outcome["group_finalization"],
+    }
 
 
 def parse_args(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--execute", action="store_true",
-                        help="lead-only paid execution; default validates without dispatch")
+    parser.add_argument(
+        "--execute",
+        action="store_true",
+        help="lead-only paid execution; default validates without dispatch",
+    )
     parser.add_argument("--endpoint", default=ENDPOINT_DEFAULT)
-    parser.add_argument("--api-key", default=None,
-                        help="optional bearer token for the actor endpoint")
+    parser.add_argument(
+        "--api-key", default=None, help="optional bearer token for the actor endpoint"
+    )
     parser.add_argument("--request", type=Path, default=REQUEST_PATH)
     parser.add_argument("--attempts-root", type=Path, default=ATTEMPTS_ROOT)
     parser.add_argument("--model-identity", type=Path, default=MODEL_IDENTITY_PATH)
     parser.add_argument("--deployment", type=Path, default=DEPLOYMENT_PATH)
-    parser.add_argument("--output-dir", type=Path,
-                        default=Path(__file__).resolve().parent / "run")
+    parser.add_argument("--output-dir", type=Path, default=Path(__file__).resolve().parent / "run")
     parser.add_argument("--run-id", default=RUN_ID_DEFAULT)
     parser.add_argument("--wandb-run-id", default=WANDB_RUN_ID_DEFAULT)
-    parser.add_argument("--max-tokens", type=int,
-                        default=GENERATION_PARAMS["max_tokens"])
-    parser.add_argument("--temperature", type=float,
-                        default=GENERATION_PARAMS["temperature"])
+    parser.add_argument("--max-tokens", type=int, default=GENERATION_PARAMS["max_tokens"])
+    parser.add_argument("--temperature", type=float, default=GENERATION_PARAMS["temperature"])
     parser.add_argument("--seed", type=int, default=GENERATION_PARAMS["seed"])
     parser.add_argument("--request-timeout", type=float, default=REQUEST_TIMEOUT_SECONDS)
     parser.add_argument("--workers", type=int, default=NATIVE_WORKERS)
     parser.add_argument("--timeout", type=int, default=NATIVE_TIMEOUT_SECONDS)
-    parser.add_argument("--native-outer-wall", type=float,
-                        default=NATIVE_OUTER_WALL_SECONDS)
+    parser.add_argument("--native-outer-wall", type=float, default=NATIVE_OUTER_WALL_SECONDS)
     parser.add_argument("--swebench-bin", default=None)
     # Hidden worker mode (internal; invoked by run_native_phase under the
     # bounded process group; everything after "--" is the eval argv).
@@ -441,7 +514,7 @@ def main() -> int:
         worker_parser.add_argument("--native-worker", action="store_true")
         for flag in ("--native-result-path", "--native-stdout", "--native-stderr"):
             worker_parser.add_argument(flag, type=Path, required=True)
-        return native_worker(worker_parser.parse_args(raw[:split]), raw[split+1:])
+        return native_worker(worker_parser.parse_args(raw[:split]), raw[split + 1 :])
     args, extra = parse_args(raw)
     if extra:
         print(f"unrecognized arguments: {extra}", file=sys.stderr)
@@ -462,13 +535,20 @@ def main() -> int:
         "task_inventory_sha256": TASK_INVENTORY_SHA256,
         "model_identity_sha256": psml.object_hash(identity),
         "endpoint": args.endpoint,
-        "generation_params": {"max_tokens": args.max_tokens,
-                              "temperature": args.temperature,
-                              "seed": args.seed, "top_p": 0.95,
-                              "chat_template_kwargs": {"enable_thinking": False}},
-        "wandb_run_id": args.wandb_run_id, "wandb_mode": WANDB_MODE,
-        "native": {"workers": args.workers, "timeout": args.timeout,
-                   "outer_wall": args.native_outer_wall},
+        "generation_params": {
+            "max_tokens": args.max_tokens,
+            "temperature": args.temperature,
+            "seed": args.seed,
+            "top_p": 0.95,
+            "chat_template_kwargs": {"enable_thinking": False},
+        },
+        "wandb_run_id": args.wandb_run_id,
+        "wandb_mode": WANDB_MODE,
+        "native": {
+            "workers": args.workers,
+            "timeout": args.timeout,
+            "outer_wall": args.native_outer_wall,
+        },
         "output_dir": str(args.output_dir),
     }
     print(json.dumps(plan_summary, indent=2, sort_keys=True))
@@ -485,32 +565,49 @@ def main() -> int:
 
     predictions, wave_tasks = [], []
     for iid in task_ids:
-        receipt = generate_one(iid, contexts[iid], identity, args,
-                               args.attempts_root, log)
-        predictions.append({"instance_id": iid,
-                            "model_name_or_path": identity["served_model_id"],
-                            "model_patch": receipt["patch"]})
+        receipt = generate_one(iid, contexts[iid], identity, args, args.attempts_root, log)
+        predictions.append(
+            {
+                "instance_id": iid,
+                "model_name_or_path": identity["served_model_id"],
+                "model_patch": receipt["patch"],
+            }
+        )
         wave_tasks.append({"actor": contexts[iid]["actor_task"], "image": images[iid]})
 
-    write_immutable(output_dir / "wave10_predictions.jsonl",
-                    b"".join(canonical_line(row) for row in predictions))
-    write_immutable(output_dir / "wave10.json", pretty({
-        "denominator": 300, "run_id": args.run_id, "selection": SELECTION_LABEL,
-        "task_inventory_sha256": TASK_INVENTORY_SHA256,
-        "sealed_request_ref": {"path": str(args.request),
-                               "sha256": REQUEST_SHA256},
-        "tasks": wave_tasks}))
+    write_immutable(
+        output_dir / "wave10_predictions.jsonl",
+        b"".join(canonical_line(row) for row in predictions),
+    )
+    write_immutable(
+        output_dir / "wave10.json",
+        pretty(
+            {
+                "denominator": 300,
+                "run_id": args.run_id,
+                "selection": SELECTION_LABEL,
+                "task_inventory_sha256": TASK_INVENTORY_SHA256,
+                "sealed_request_ref": {"path": str(args.request), "sha256": REQUEST_SHA256},
+                "tasks": wave_tasks,
+            }
+        ),
+    )
     # Materialize the runtime dataset exactly as plan() does: raw pinned rows
     # with image references replaced by observed immutable digests.
     runtime_rows = [{**native_rows[iid], "image": images[iid]} for iid in task_ids]
-    write_immutable(output_dir / "wave10_native_dataset.jsonl",
-                    b"".join(canonical_line(row) for row in runtime_rows))
+    write_immutable(
+        output_dir / "wave10_native_dataset.jsonl",
+        b"".join(canonical_line(row) for row in runtime_rows),
+    )
 
     native_receipt = run_native_phase(args, output_dir, log)
-    write_immutable(output_dir / "wave10_native_execution.json",
-                    pretty(native_receipt))
+    write_immutable(output_dir / "wave10_native_execution.json", pretty(native_receipt))
     log_file.close()
-    return 0 if native_receipt.get("status") == "EXITED" and native_receipt.get("returncode") == 0 else 3
+    return (
+        0
+        if native_receipt.get("status") == "EXITED" and native_receipt.get("returncode") == 0
+        else 3
+    )
 
 
 if __name__ == "__main__":

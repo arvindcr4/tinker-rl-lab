@@ -31,7 +31,11 @@ REQUIRED_GRPO_FIELDS = {
 
 
 versions = {name: metadata.version(name) for name in EXPECTED}
-wrong = {name: {"expected": EXPECTED[name], "observed": value} for name, value in versions.items() if value != EXPECTED[name]}
+wrong = {
+    name: {"expected": EXPECTED[name], "observed": value}
+    for name, value in versions.items()
+    if value != EXPECTED[name]
+}
 if wrong:
     raise RuntimeError("locked package mismatch: " + json.dumps(wrong, sort_keys=True))
 if not torch.cuda.is_available() or not torch.cuda.is_bf16_supported():

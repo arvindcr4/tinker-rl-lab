@@ -11,26 +11,31 @@ with columns: framework, method, has_stack_entry, stack_id,
               schema_pass, badge, variant_deltas_resolved,
               n_orphan_deltas, n_missing_source, source_paths
 """
+
 import csv
 import json
 import pathlib
 import sys
 
-sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
+sys.path.append(
+    str(pathlib.Path(__file__).resolve().parents[1])
+)  # platform_modal/scripts, for _paths
+from _paths import REPO_ROOT
+
 WORKTREE = REPO_ROOT
 REGISTRY = WORKTREE / "platform_hybrid/registry"
 RESULTS = WORKTREE / "platform_hybrid/experiments" / "results" / "p5p8" / "review17_v2"
 
 # Frameworks in repo (as listed in the brief) + 9 zvf130 methods.
-FRAMEWORKS = ["tinker", "openrlhf", "verl", "trl",
-              "atropos", "skyrl", "colab-open"]
-METHODS = ["grpo", "aero", "gift", "areal", "ngrpo", "cppo",
-           "mcgrpo", "es", "scafgrpo"]
+FRAMEWORKS = ["tinker", "openrlhf", "verl", "trl", "atropos", "skyrl", "colab-open"]
+METHODS = ["grpo", "aero", "gift", "areal", "ngrpo", "cppo", "mcgrpo", "es", "scafgrpo"]
 
 # Stack entries that match a (framework, method).
-STACKS = sorted(p for p in (REGISTRY / "entries").glob("*.json")
-                if json.loads(p.read_text()).get("record_type") == "stack")
+STACKS = sorted(
+    p
+    for p in (REGISTRY / "entries").glob("*.json")
+    if json.loads(p.read_text()).get("record_type") == "stack"
+)
 
 DELTAS = {p.stem for p in (REGISTRY / "entries").glob("delta_*.json")}
 
@@ -53,6 +58,7 @@ def match_stack(framework, method, stack):
     if method == "grpo-adaptiveg":
         return "adaptiveg" in fname
     import re
+
     return method in re.split(r"[_-]", fname) or label.lower() == method
 
 
@@ -114,19 +120,22 @@ def main():
         for method in METHODS:
             matched = [s for s in STACKS if match_stack(framework, method, s)]
             if not matched:
-                rows.append({
-                    "framework": framework, "method": method,
-                    "has_stack_entry": "no",
-                    "stack_id": "",
-                    "schema_pass": "",
-                    "badge": "",
-                    "variant_deltas_resolved": "",
-                    "n_orphan_deltas": "",
-                    "n_measured_src_ok": "",
-                    "n_measured_src_missing": "",
-                    "stack_ids": "",
-                    "note": "no matching entry",
-                })
+                rows.append(
+                    {
+                        "framework": framework,
+                        "method": method,
+                        "has_stack_entry": "no",
+                        "stack_id": "",
+                        "schema_pass": "",
+                        "badge": "",
+                        "variant_deltas_resolved": "",
+                        "n_orphan_deltas": "",
+                        "n_measured_src_ok": "",
+                        "n_measured_src_missing": "",
+                        "stack_ids": "",
+                        "note": "no matching entry",
+                    }
+                )
                 continue
             ids = ";".join(s.stem for s in matched)
             for s in matched:
@@ -134,6 +143,7 @@ def main():
                 try:
                     schema = json.loads((REGISTRY / "schema.json").read_text())
                     import jsonschema
+
                     jsonschema.validate(rec, schema)
                     ok = "PASS"
                 except Exception:
@@ -142,24 +152,37 @@ def main():
                 vd_resolved = sum(1 for d in vdas if d in DELTAS)
                 orphans = orphan_deltas(rec)
                 nok, nmiss = source_check(rec)
-                rows.append({
-                    "framework": framework, "method": method,
-                    "has_stack_entry": "yes",
-                    "stack_id": s.stem,
-                    "schema_pass": ok,
-                    "badge": badge(rec) or 0,
-                    "variant_deltas_resolved": f"{vd_resolved}/{len(vdas)}",
-                    "n_orphan_deltas": len(orphans),
-                    "n_measured_src_ok": nok,
-                    "n_measured_src_missing": nmiss,
-                    "stack_ids": ids,
-                    "note": "",
-                })
+                rows.append(
+                    {
+                        "framework": framework,
+                        "method": method,
+                        "has_stack_entry": "yes",
+                        "stack_id": s.stem,
+                        "schema_pass": ok,
+                        "badge": badge(rec) or 0,
+                        "variant_deltas_resolved": f"{vd_resolved}/{len(vdas)}",
+                        "n_orphan_deltas": len(orphans),
+                        "n_measured_src_ok": nok,
+                        "n_measured_src_missing": nmiss,
+                        "stack_ids": ids,
+                        "note": "",
+                    }
+                )
 
-    cols = ["framework", "method", "has_stack_entry", "stack_id",
-            "schema_pass", "badge", "variant_deltas_resolved",
-            "n_orphan_deltas", "n_measured_src_ok",
-            "n_measured_src_missing", "stack_ids", "note"]
+    cols = [
+        "framework",
+        "method",
+        "has_stack_entry",
+        "stack_id",
+        "schema_pass",
+        "badge",
+        "variant_deltas_resolved",
+        "n_orphan_deltas",
+        "n_measured_src_ok",
+        "n_measured_src_missing",
+        "stack_ids",
+        "note",
+    ]
     out = RESULTS / "p6_iter118_coverage_audit.tsv"
     RESULTS.mkdir(parents=True, exist_ok=True)
     with out.open("w") as f:
@@ -173,7 +196,9 @@ def main():
     fw_absent = sorted({r["framework"] for r in rows if r["has_stack_entry"] == "no"})
     n_ok = sum(r["schema_pass"] == "PASS" for r in rows)
     n_total = len(rows)
-    avg_badge = sum(int(r["badge"]) for r in rows if r["badge"] not in (None, "")) / max(1, sum(1 for r in rows if r["badge"] not in (None, "")))
+    avg_badge = sum(int(r["badge"]) for r in rows if r["badge"] not in (None, "")) / max(
+        1, sum(1 for r in rows if r["badge"] not in (None, ""))
+    )
     orphan_total = sum(int(r["n_orphan_deltas"] or 0) for r in rows)
     miss_src_total = sum(int(r["n_measured_src_missing"] or 0) for r in rows)
     print(f"# coverage audit: {n_total} (fw x method) cells")

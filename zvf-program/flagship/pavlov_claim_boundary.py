@@ -203,7 +203,9 @@ def _strict_hex(value: Any, length: int) -> bool:
 
 
 def _finite_number(value: Any) -> bool:
-    return type(value) in (int, float) and not isinstance(value, bool) and math.isfinite(float(value))
+    return (
+        type(value) in (int, float) and not isinstance(value, bool) and math.isfinite(float(value))
+    )
 
 
 def _add(blockers: list[dict[str, Any]], code: str, message: str, **details: Any) -> None:
@@ -310,7 +312,9 @@ def _validate_receipt(
                 return False, reason
         if key_text.endswith("_id") and not _strict_hex(child, 40):
             return False, "receipt_payload_id_not_lower_hex40"
-        if any(token in key_text for token in ("hash", "digest", "sha256")) and not _strict_hex(child, 64):
+        if any(token in key_text for token in ("hash", "digest", "sha256")) and not _strict_hex(
+            child, 64
+        ):
             return False, "receipt_payload_digest_not_lower_hex64"
     try:
         expected_digest = compute_receipt_digest(binding, payload)
@@ -350,7 +354,11 @@ def _validate_coverage(claim: Mapping[str, Any], blockers: list[dict[str, Any]])
     good &= _validate_exact_list(claim, "primary_eval_suite_ids", EXPECTED_PRIMARY, blockers)
     unions = claim.get("domain_unions")
     if not isinstance(unions, Mapping):
-        _add(blockers, "domain_unions_invalid", "domain_unions must contain train and primary_eval lists.")
+        _add(
+            blockers,
+            "domain_unions_invalid",
+            "domain_unions must contain train and primary_eval lists.",
+        )
         return False
     for role in ("train", "primary_eval"):
         role_value = unions.get(role)
@@ -371,7 +379,11 @@ def _validate_coverage(claim: Mapping[str, Any], blockers: list[dict[str, Any]])
             good = False
     coverage_receipts = claim.get("coverage_receipts")
     if not isinstance(coverage_receipts, Mapping):
-        _add(blockers, "coverage_receipts_missing", "Exact 12/14 evidence requires structured coverage receipts.")
+        _add(
+            blockers,
+            "coverage_receipts_missing",
+            "Exact 12/14 evidence requires structured coverage receipts.",
+        )
         return False
     for suite_id in (*TRAIN_SUITE_IDS, *PRIMARY_EVAL_SUITE_IDS):
         role = "train" if suite_id in EXPECTED_TRAIN else "primary_eval"
@@ -381,7 +393,13 @@ def _validate_coverage(claim: Mapping[str, Any], blockers: list[dict[str, Any]])
             expected_binding={"subject": suite_id, "role": role, "kind": "coverage"},
         )
         if not valid:
-            _add(blockers, "coverage_receipt_invalid", "Every exact suite ID needs a bound coverage receipt.", suite_id=suite_id, reason=reason)
+            _add(
+                blockers,
+                "coverage_receipt_invalid",
+                "Every exact suite ID needs a bound coverage receipt.",
+                suite_id=suite_id,
+                reason=reason,
+            )
             good = False
     return bool(good)
 
@@ -395,7 +413,11 @@ def _classify_text(
     if text is None:
         return
     if type(text) is not str:
-        _add(blockers, "claim_text_invalid", "claim_text must be a string and cannot authorize evidence by itself.")
+        _add(
+            blockers,
+            "claim_text_invalid",
+            "claim_text must be a string and cannot authorize evidence by itself.",
+        )
         return
     for code, pattern in _TEXT_PROMOTION_PATTERNS:
         if pattern.search(text):
@@ -403,7 +425,12 @@ def _classify_text(
     lowered = text.lower()
     broad_words = r"portfolio|all\s+16|all\s+53|company|production|general|universal|cross[- ]domain|improv(?:e|ement|ed)"
     if re.search(r"\bxlam\b", lowered) and re.search(broad_words, lowered):
-        _add(blockers, "xlam_promotion_forbidden", "xLAM is bounded to the strict tool-use component.", text=text)
+        _add(
+            blockers,
+            "xlam_promotion_forbidden",
+            "xLAM is bounded to the strict tool-use component.",
+            text=text,
+        )
     if re.search(r"\bgsm8k\b", lowered) and re.search(
         r"primary|portfolio|training|train|held[- ]?out|company|production|general|useful|improv|promot",
         lowered,
@@ -412,7 +439,12 @@ def _classify_text(
     if re.search(r"substitut(?:e|ed|ion)|proxy|stand[- ]?in|instead\s+of", lowered) and re.search(
         r"benchmark|suite|gsm8k|math[- ]?500|xlam|bfcl|swe[- ]?bench", lowered
     ):
-        _add(blockers, "related_benchmark_substitution", "A related benchmark cannot substitute for the declared suite.", text=text)
+        _add(
+            blockers,
+            "related_benchmark_substitution",
+            "A related benchmark cannot substitute for the declared suite.",
+            text=text,
+        )
     if claim_kind != "heldout_result" and re.search(
         r"\b(?:all\s+14|14\s+(?:primary\s+)?(?:eval(?:uation)?\s+)?suites?)\b.*\bheld[- ]?out\b",
         text,
@@ -420,49 +452,106 @@ def _classify_text(
     ):
         # The kind-specific validator may clear this only after all provenance
         # and result receipts have been checked; prose alone never does.
-        _add(blockers, "heldout_claim_requires_receipts", "A 14-suite held-out claim requires receipt-proven results.", text=text)
+        _add(
+            blockers,
+            "heldout_claim_requires_receipts",
+            "A 14-suite held-out claim requires receipt-proven results.",
+            text=text,
+        )
 
 
 def _classify_protocol(claim: Mapping[str, Any], blockers: list[dict[str, Any]]) -> None:
     if type(claim.get("prospective")) is not bool:
-        _add(blockers, "prospective_flag_not_boolean", "Protocol/preflight evidence needs an exact prospective boolean.")
+        _add(
+            blockers,
+            "prospective_flag_not_boolean",
+            "Protocol/preflight evidence needs an exact prospective boolean.",
+        )
     elif claim["prospective"] is not True:
-        _add(blockers, "protocol_not_prospective", "Protocol/preflight claims must be explicitly prospective.")
+        _add(
+            blockers,
+            "protocol_not_prospective",
+            "Protocol/preflight claims must be explicitly prospective.",
+        )
     if not isinstance(claim.get("evidence"), Mapping):
-        _add(blockers, "protocol_evidence_not_structured", "Protocol evidence must be a structured object, not a string, list, or boolean.")
-    if re.search(r"\b(?:observed|measured|improved|won|result|ready|complete)\b", str(claim.get("claim_text", "")), re.IGNORECASE):
-        _add(blockers, "protocol_claim_contains_result", "Prospective protocol text cannot assert a completed result.")
+        _add(
+            blockers,
+            "protocol_evidence_not_structured",
+            "Protocol evidence must be a structured object, not a string, list, or boolean.",
+        )
+    if re.search(
+        r"\b(?:observed|measured|improved|won|result|ready|complete)\b",
+        str(claim.get("claim_text", "")),
+        re.IGNORECASE,
+    ):
+        _add(
+            blockers,
+            "protocol_claim_contains_result",
+            "Prospective protocol text cannot assert a completed result.",
+        )
 
 
 def _classify_component(claim: Mapping[str, Any], blockers: list[dict[str, Any]]) -> None:
     component = claim.get("component")
     if not isinstance(component, Mapping):
-        _add(blockers, "component_missing", "Component evidence requires a structured component record.")
+        _add(
+            blockers,
+            "component_missing",
+            "Component evidence requires a structured component record.",
+        )
         return
     component_id = component.get("id")
-    if type(component_id) is not str or component_id not in {"xlam_baseline_observation", "gsm8k_calibration"}:
-        _add(blockers, "component_id_invalid", "Only the bounded xLAM observation and GSM8K calibration component are admissible.")
+    if type(component_id) is not str or component_id not in {
+        "xlam_baseline_observation",
+        "gsm8k_calibration",
+    }:
+        _add(
+            blockers,
+            "component_id_invalid",
+            "Only the bounded xLAM observation and GSM8K calibration component are admissible.",
+        )
         return
     if component_id == "gsm8k_calibration" and component.get("role") != "calibration_only":
-        _add(blockers, "gsm8k_not_calibration_only", "GSM8K may only be classified as calibration_only.")
+        _add(
+            blockers,
+            "gsm8k_not_calibration_only",
+            "GSM8K may only be classified as calibration_only.",
+        )
     if component_id == "xlam_baseline_observation":
         if component.get("scope") != "strict_tool_use_component":
-            _add(blockers, "xlam_scope_invalid", "xLAM evidence is limited to its strict tool-use component scope.")
-        if component.get("seed") != 809 or component.get("n") != 100 or component.get("successes") != 7:
+            _add(
+                blockers,
+                "xlam_scope_invalid",
+                "xLAM evidence is limited to its strict tool-use component scope.",
+            )
+        if (
+            component.get("seed") != 809
+            or component.get("n") != 100
+            or component.get("successes") != 7
+        ):
             _add(
                 blockers,
                 "xlam_observation_not_exact",
                 "The only admissible observed xLAM component is the recorded seed-809 7/100 slice.",
             )
         if component.get("promote_to_portfolio") is not None:
-            _add(blockers, "xlam_promotion_flag_present", "A self-attested xLAM promotion flag cannot authorize a portfolio claim.")
+            _add(
+                blockers,
+                "xlam_promotion_flag_present",
+                "A self-attested xLAM promotion flag cannot authorize a portfolio claim.",
+            )
     receipt = claim.get("receipt")
     valid, reason = _validate_receipt(
         receipt,
         expected_binding={"subject": component_id, "role": "component", "kind": "observation"},
     )
     if not valid:
-        _add(blockers, "component_receipt_invalid", "Component evidence requires a bound receipt, not a status string.", reason=reason)
+        _add(
+            blockers,
+            "component_receipt_invalid",
+            "Component evidence requires a bound receipt, not a status string.",
+            reason=reason,
+        )
 
 
 def _classify_heldout(claim: Mapping[str, Any], blockers: list[dict[str, Any]]) -> None:
@@ -470,64 +559,141 @@ def _classify_heldout(claim: Mapping[str, Any], blockers: list[dict[str, Any]]) 
         return
     holdout_receipts = claim.get("holdout_receipts")
     if not isinstance(holdout_receipts, Mapping):
-        _add(blockers, "holdout_receipts_missing", "Held-out results require provenance receipts for every primary suite.")
+        _add(
+            blockers,
+            "holdout_receipts_missing",
+            "Held-out results require provenance receipts for every primary suite.",
+        )
         return
     for suite_id in PRIMARY_EVAL_SUITE_IDS:
         suite_receipts = holdout_receipts.get(suite_id)
         if not isinstance(suite_receipts, Mapping):
-            _add(blockers, "holdout_suite_receipts_invalid", "Each primary suite needs all immutable holdout receipt fields.", suite_id=suite_id)
+            _add(
+                blockers,
+                "holdout_suite_receipts_invalid",
+                "Each primary suite needs all immutable holdout receipt fields.",
+                suite_id=suite_id,
+            )
             continue
         for field in REQUIRED_HOLDOUT_RECEIPTS:
             valid, reason = _validate_receipt(
                 suite_receipts.get(field),
-                expected_binding={"subject": suite_id, "role": "primary_eval", "kind": f"holdout:{field}"},
+                expected_binding={
+                    "subject": suite_id,
+                    "role": "primary_eval",
+                    "kind": f"holdout:{field}",
+                },
             )
             if not valid:
-                _add(blockers, "holdout_receipt_invalid", "A primary suite holdout field is not receipt-proven.", suite_id=suite_id, field=field, reason=reason)
+                _add(
+                    blockers,
+                    "holdout_receipt_invalid",
+                    "A primary suite holdout field is not receipt-proven.",
+                    suite_id=suite_id,
+                    field=field,
+                    reason=reason,
+                )
     results = claim.get("results")
     if not isinstance(results, Mapping):
-        _add(blockers, "heldout_results_missing", "Receipt-proven held-out claims require one result record per primary suite.")
+        _add(
+            blockers,
+            "heldout_results_missing",
+            "Receipt-proven held-out claims require one result record per primary suite.",
+        )
         return
     for suite_id in PRIMARY_EVAL_SUITE_IDS:
         result = results.get(suite_id)
         if not isinstance(result, Mapping):
-            _add(blockers, "heldout_result_invalid", "Every primary suite needs a structured result record.", suite_id=suite_id)
+            _add(
+                blockers,
+                "heldout_result_invalid",
+                "Every primary suite needs a structured result record.",
+                suite_id=suite_id,
+            )
             continue
         if type(result.get("n")) is not int or result["n"] <= 0:
-            _add(blockers, "heldout_sample_size_invalid", "Held-out result n must be a positive integer.", suite_id=suite_id)
+            _add(
+                blockers,
+                "heldout_sample_size_invalid",
+                "Held-out result n must be a positive integer.",
+                suite_id=suite_id,
+            )
         if not _finite_number(result.get("metric")) or not 0.0 <= float(result["metric"]) <= 1.0:
-            _add(blockers, "heldout_metric_invalid", "Held-out metric must be a finite number in [0, 1].", suite_id=suite_id)
+            _add(
+                blockers,
+                "heldout_metric_invalid",
+                "Held-out metric must be a finite number in [0, 1].",
+                suite_id=suite_id,
+            )
         interval = result.get("ci95")
-        if not isinstance(interval, Mapping) or not all(_finite_number(interval.get(key)) for key in ("lower", "upper")):
-            _add(blockers, "heldout_interval_invalid", "Each held-out result needs a finite 95% interval.", suite_id=suite_id)
+        if not isinstance(interval, Mapping) or not all(
+            _finite_number(interval.get(key)) for key in ("lower", "upper")
+        ):
+            _add(
+                blockers,
+                "heldout_interval_invalid",
+                "Each held-out result needs a finite 95% interval.",
+                suite_id=suite_id,
+            )
         elif (
             not 0.0 <= float(interval["lower"]) <= 1.0
             or not 0.0 <= float(interval["upper"]) <= 1.0
             or float(interval["lower"]) > float(interval["upper"])
         ):
-            _add(blockers, "heldout_interval_invalid", "A 95% interval must be ordered and lie within [0, 1].", suite_id=suite_id)
+            _add(
+                blockers,
+                "heldout_interval_invalid",
+                "A 95% interval must be ordered and lie within [0, 1].",
+                suite_id=suite_id,
+            )
         valid, reason = _validate_receipt(
             result.get("receipt"),
             expected_binding={"subject": suite_id, "role": "primary_eval", "kind": "result"},
         )
         if not valid:
-            _add(blockers, "heldout_result_receipt_invalid", "Each held-out result needs a bound result receipt.", suite_id=suite_id, reason=reason)
+            _add(
+                blockers,
+                "heldout_result_receipt_invalid",
+                "Each held-out result needs a bound result receipt.",
+                suite_id=suite_id,
+                reason=reason,
+            )
         else:
             try:
                 expected_result_digest = compute_result_digest(result)
             except (TypeError, ValueError):
-                _add(blockers, "heldout_result_not_canonicalizable", "A held-out result must be canonical JSON before its receipt can bind it.", suite_id=suite_id)
+                _add(
+                    blockers,
+                    "heldout_result_not_canonicalizable",
+                    "A held-out result must be canonical JSON before its receipt can bind it.",
+                    suite_id=suite_id,
+                )
                 continue
-            payload = result["receipt"].get("payload") if isinstance(result.get("receipt"), Mapping) else None
+            payload = (
+                result["receipt"].get("payload")
+                if isinstance(result.get("receipt"), Mapping)
+                else None
+            )
             digest_values = []
             if isinstance(payload, Mapping):
                 digest_values = [
                     payload[key]
-                    for key in ("artifact_digest", "result_digest", "digest", "sha256", "content_sha256")
+                    for key in (
+                        "artifact_digest",
+                        "result_digest",
+                        "digest",
+                        "sha256",
+                        "content_sha256",
+                    )
                     if key in payload
                 ]
             if expected_result_digest not in digest_values:
-                _add(blockers, "heldout_result_not_bound", "The result receipt must bind the exact metric, sample size, and uncertainty interval.", suite_id=suite_id)
+                _add(
+                    blockers,
+                    "heldout_result_not_bound",
+                    "The result receipt must bind the exact metric, sample size, and uncertainty interval.",
+                    suite_id=suite_id,
+                )
 
 
 def classify_claim(claim: Any) -> dict[str, Any]:
@@ -535,18 +701,32 @@ def classify_claim(claim: Any) -> dict[str, Any]:
 
     blockers: list[dict[str, Any]] = []
     if not isinstance(claim, Mapping):
-        _add(blockers, "claim_not_object", "A claim must be a structured JSON object; prose alone is not evidence.")
+        _add(
+            blockers,
+            "claim_not_object",
+            "A claim must be a structured JSON object; prose alone is not evidence.",
+        )
         return _report(None, blockers)
     claim_kind = claim.get("claim_kind")
     if type(claim_kind) is not str or claim_kind not in CLAIM_KINDS:
-        _add(blockers, "claim_kind_invalid", "claim_kind must be an explicit supported evidence class.", claim_kind=claim_kind)
+        _add(
+            blockers,
+            "claim_kind_invalid",
+            "claim_kind must be an explicit supported evidence class.",
+            claim_kind=claim_kind,
+        )
         return _report(claim_kind, blockers)
     attestations = _find_self_attestation(claim)
     # ``prospective`` is a required protocol gate and is validated separately;
     # no other self-attested control is permitted to influence classification.
     attestations = [item for item in attestations if item["path"] != "claim.prospective"]
     if attestations:
-        _add(blockers, "self_attested_control", "Strings/booleans asserting readiness, completion, verification, or promotion are not evidence.", fields=attestations)
+        _add(
+            blockers,
+            "self_attested_control",
+            "Strings/booleans asserting readiness, completion, verification, or promotion are not evidence.",
+            fields=attestations,
+        )
     _classify_text(claim.get("claim_text"), blockers, claim_kind=claim_kind)
     if claim_kind == "protocol_preflight":
         _classify_protocol(claim, blockers)
@@ -554,8 +734,16 @@ def classify_claim(claim: Any) -> dict[str, Any]:
         _classify_component(claim, blockers)
     elif claim_kind == "portfolio_evidence":
         _validate_coverage(claim, blockers)
-        if re.search(r"\b(?:improv|held[- ]?out|portfolio[- ]?wide)\b", str(claim.get("claim_text", "")), re.IGNORECASE):
-            _add(blockers, "portfolio_result_requires_heldout_class", "Portfolio result wording requires the heldout_result class and receipts.")
+        if re.search(
+            r"\b(?:improv|held[- ]?out|portfolio[- ]?wide)\b",
+            str(claim.get("claim_text", "")),
+            re.IGNORECASE,
+        ):
+            _add(
+                blockers,
+                "portfolio_result_requires_heldout_class",
+                "Portfolio result wording requires the heldout_result class and receipts.",
+            )
     elif claim_kind == "heldout_result":
         _classify_heldout(claim, blockers)
     return _report(claim_kind, blockers)
@@ -582,7 +770,11 @@ def classify_claim_text(text: str) -> dict[str, Any]:
     """Explicitly reject unstructured prose as evidence."""
 
     blockers: list[dict[str, Any]] = []
-    _add(blockers, "unstructured_claim_text", "Prose must be accompanied by a typed claim record and admissible receipts.")
+    _add(
+        blockers,
+        "unstructured_claim_text",
+        "Prose must be accompanied by a typed claim record and admissible receipts.",
+    )
     _classify_text(text, blockers)
     return _report(None, blockers)
 

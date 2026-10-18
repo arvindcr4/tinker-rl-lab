@@ -29,6 +29,7 @@ Outputs
 - platform_hybrid/experiments/results/p5p8/p7_iter167_oracle_regret_summary.json
 - platform_hybrid/experiments/results/p5p8/p7_iter167_oracle_regret_bootstrap.tsv  (bootstrap CIs on %oracle captured per controller, B=2000)
 """
+
 from __future__ import annotations
 
 import csv
@@ -38,12 +39,14 @@ import math
 import os
 import random
 import statistics
-from typing import Dict, List, Tuple
+from typing import List, Tuple
 
 import sys
 from pathlib import Path
+
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
+from _paths import REPO_ROOT
+
 WORKTREE = str(REPO_ROOT)
 DATA_DIR = os.path.join(WORKTREE, "platform_hybrid/experiments/results/n2_reward_tensor_resume")
 OUT_DIR = os.path.join(WORKTREE, "platform_hybrid/experiments/results/p5p8/corrected-review19-v3")
@@ -56,6 +59,7 @@ METHODS = ["aero", "areal", "gift", "grpo"]
 
 
 # ---------- helpers (pure math, vectorised trivially) ----------
+
 
 def zvf_iid(p: float, G: int) -> float:
     """P(K=0) + P(K=G) under Bin(G, p)."""
@@ -104,6 +108,7 @@ def oracle_g_star(p_hat: float) -> Tuple[int, float, float, float]:
 
 # ---------- empirical controller rules ----------
 
+
 def ctrl_zvf_triage(step_zvf: float, tau: float = 0.70) -> int:
     """C1: escalate to G'=16 when step-zvf ≥ τ, else G'=8."""
     return 16 if step_zvf >= tau else G_BASE
@@ -111,8 +116,8 @@ def ctrl_zvf_triage(step_zvf: float, tau: float = 0.70) -> int:
 
 def ctrl_dualformer_auto(p_hat: float) -> int:
     """C2: Dualformer per-prompt G from Berkeley row 01.
-       Bands on p_hat ∈ (0,1):  p̂≤0.25 -> G=16 ;  0.25<p̂≤0.5 -> G=8 ;
-       0.5<p̂≤0.75 -> G=4 ;  p̂>0.75 -> G=2. Stays G=8 if p̂ == 0 or 1.
+    Bands on p_hat ∈ (0,1):  p̂≤0.25 -> G=16 ;  0.25<p̂≤0.5 -> G=8 ;
+    0.5<p̂≤0.75 -> G=4 ;  p̂>0.75 -> G=2. Stays G=8 if p̂ == 0 or 1.
     """
     if p_hat <= 0.0 or p_hat >= 1.0:
         return G_BASE
@@ -143,15 +148,16 @@ def ctrl_iso_g(p_hat: float, tau_y: float = 0.90) -> int:
 
 
 CONTROLLERS = {
-    "C0_fixed_G8":     lambda p_hat, step_zvf: G_BASE,
-    "C1_zvf_triage":   lambda p_hat, step_zvf: ctrl_zvf_triage(step_zvf),
-    "C2_dualformer":   lambda p_hat, step_zvf: ctrl_dualformer_auto(p_hat),
-    "C3_hybrid":       lambda p_hat, step_zvf: ctrl_hybrid(step_zvf),
-    "C5_isog_y090":    lambda p_hat, step_zvf: ctrl_iso_g(p_hat, 0.90),
+    "C0_fixed_G8": lambda p_hat, step_zvf: G_BASE,
+    "C1_zvf_triage": lambda p_hat, step_zvf: ctrl_zvf_triage(step_zvf),
+    "C2_dualformer": lambda p_hat, step_zvf: ctrl_dualformer_auto(p_hat),
+    "C3_hybrid": lambda p_hat, step_zvf: ctrl_hybrid(step_zvf),
+    "C5_isog_y090": lambda p_hat, step_zvf: ctrl_iso_g(p_hat, 0.90),
 }
 
 
 # ---------- load corpus ----------
+
 
 def load_corpus() -> List[dict]:
     """Return flat list of {method, seed, step, prompt_idx, k, p_hat, rewards[8], zvf}."""
@@ -165,20 +171,23 @@ def load_corpus() -> List[dict]:
             for pi, prompt_rewards in enumerate(d["rewards"]):
                 k = int(sum(prompt_rewards))
                 p_hat = k / G_BASE
-                rows.append({
-                    "method": method,
-                    "seed": d.get("seed", 0),
-                    "step": step,
-                    "prompt_idx": pi,
-                    "k": k,
-                    "p_hat": p_hat,
-                    "rewards": prompt_rewards,
-                    "step_zvf": step_zvf,
-                })
+                rows.append(
+                    {
+                        "method": method,
+                        "seed": d.get("seed", 0),
+                        "step": step,
+                        "prompt_idx": pi,
+                        "k": k,
+                        "p_hat": p_hat,
+                        "rewards": prompt_rewards,
+                        "step_zvf": step_zvf,
+                    }
+                )
     return rows
 
 
 # ---------- main computations ----------
+
 
 def compute_obs_table(corpus: List[dict]) -> List[dict]:
     obs = []
@@ -194,20 +203,22 @@ def compute_obs_table(corpus: List[dict]) -> List[dict]:
             dY_c = per_prompt_delta_y(p_hat, g_chosen)
             ctrl_rows[cname] = (g_chosen, dY_c)
         # regret vs oracle (only dY terms)
-        obs.append({
-            "method": r["method"],
-            "step": r["step"],
-            "prompt_idx": r["prompt_idx"],
-            "k": r["k"],
-            "p_hat": p_hat,
-            "step_zvf": zvf_step,
-            "oracle_g": g_star,
-            "oracle_dY": dY_star,
-            "oracle_active": bool(oracle_active),
-            "oracle_score": score_star,
-            **{f"{c}_G": v[0] for c, v in ctrl_rows.items()},
-            **{f"{c}_dY": v[1] for c, v in ctrl_rows.items()},
-        })
+        obs.append(
+            {
+                "method": r["method"],
+                "step": r["step"],
+                "prompt_idx": r["prompt_idx"],
+                "k": r["k"],
+                "p_hat": p_hat,
+                "step_zvf": zvf_step,
+                "oracle_g": g_star,
+                "oracle_dY": dY_star,
+                "oracle_active": bool(oracle_active),
+                "oracle_score": score_star,
+                **{f"{c}_G": v[0] for c, v in ctrl_rows.items()},
+                **{f"{c}_dY": v[1] for c, v in ctrl_rows.items()},
+            }
+        )
     return obs
 
 
@@ -240,7 +251,9 @@ def per_method_aggregate(obs: List[dict]) -> List[dict]:
         m_obs = [o for o in obs if o["method"] == method]
         oracle_abs = sum(o["oracle_dY"] for o in m_obs)
         oracle_extras_total = sum(max(0, o["oracle_g"] - G_BASE) for o in m_obs)
-        oracle_costeff = oracle_abs / max(1, oracle_extras_total) * 1000.0  # ΔY per 1000 extra rollouts
+        oracle_costeff = (
+            oracle_abs / max(1, oracle_extras_total) * 1000.0
+        )  # ΔY per 1000 extra rollouts
         for c in CONTROLLERS:
             ctrl_abs = sum(o[f"{c}_dY"] for o in m_obs)
             ctrl_extras = sum(max(0, o[f"{c}_G"] - G_BASE) for o in m_obs)
@@ -249,31 +262,34 @@ def per_method_aggregate(obs: List[dict]) -> List[dict]:
             regret = oracle_abs - ctrl_abs
             # Descriptive efficiency ratio; the reference optimizes raw yield
             costeff_ratio = (ctrl_costeff / oracle_costeff) if oracle_costeff > 0 else 0.0
-            out.append({
-                "method": method,
-                "controller": c,
-                "oracle_total_abs_dY": oracle_abs,
-                "controller_total_abs_dY": ctrl_abs,
-                "pct_oracle_abs_captured": captured,
-                "regret_abs_dY": regret,
-                "oracle_costeff_dY_per_1k": oracle_costeff,
-                "controller_costeff_dY_per_1k": ctrl_costeff,
-                "costeff_ratio_to_oracle": costeff_ratio,
-                "ctrl_total_extras": ctrl_extras,
-                "oracle_total_extras": oracle_extras_total,
-                "n_obs": len(m_obs),
-                "n_oracle_active": sum(1 for o in m_obs if o["oracle_active"]),
-            })
+            out.append(
+                {
+                    "method": method,
+                    "controller": c,
+                    "oracle_total_abs_dY": oracle_abs,
+                    "controller_total_abs_dY": ctrl_abs,
+                    "pct_oracle_abs_captured": captured,
+                    "regret_abs_dY": regret,
+                    "oracle_costeff_dY_per_1k": oracle_costeff,
+                    "controller_costeff_dY_per_1k": ctrl_costeff,
+                    "costeff_ratio_to_oracle": costeff_ratio,
+                    "ctrl_total_extras": ctrl_extras,
+                    "oracle_total_extras": oracle_extras_total,
+                    "n_obs": len(m_obs),
+                    "n_oracle_active": sum(1 for o in m_obs if o["oracle_active"]),
+                }
+            )
     return out
 
 
 # ---------- bootstrap CIs on the two dual axes ----------
 
+
 def bootstrap_axes(obs: List[dict], B: int = 2000, seed: int = 20260705) -> List[dict]:
     """Per (method, controller):
-       (a) pct_oracle_abs_captured (% point): ctrl_abs / oracle_abs.
-       (b) costeff_ratio: (ctrl_abs/ctrl_extras) / (oracle_abs/oracle_extras).
-       Bootstrap 95% percentile CIs (B resamples, step-zvf already attached to each obs)."""
+    (a) pct_oracle_abs_captured (% point): ctrl_abs / oracle_abs.
+    (b) costeff_ratio: (ctrl_abs/ctrl_extras) / (oracle_abs/oracle_extras).
+    Bootstrap 95% percentile CIs (B resamples, step-zvf already attached to each obs)."""
     rng = random.Random(seed)
     out = []
     for method in METHODS:
@@ -291,30 +307,40 @@ def bootstrap_axes(obs: List[dict], B: int = 2000, seed: int = 20260705) -> List
                     ce_boots.append((c_abs / c_ex) / (o_abs / o_ex))
                 else:
                     ce_boots.append(0.0)
-            abs_boots.sort(); ce_boots.sort()
-            point_abs = (sum(o[f"{c}_dY"] for o in m_obs) / sum(o["oracle_dY"] for o in m_obs)) * 100.0
+            abs_boots.sort()
+            ce_boots.sort()
+            point_abs = (
+                sum(o[f"{c}_dY"] for o in m_obs) / sum(o["oracle_dY"] for o in m_obs)
+            ) * 100.0
             # point for costeff ratio
             c_abs_pt = sum(o[f"{c}_dY"] for o in m_obs)
             c_ex_pt = sum(max(0, o[f"{c}_G"] - G_BASE) for o in m_obs)
             o_abs_pt = sum(o["oracle_dY"] for o in m_obs)
             o_ex_pt = sum(max(0, o["oracle_g"] - G_BASE) for o in m_obs)
-            point_ce = ((c_abs_pt / c_ex_pt) / (o_abs_pt / o_ex_pt)) if (c_ex_pt > 0 and o_ex_pt > 0) else 0.0
-            out.append({
-                "method": method,
-                "controller": c,
-                "pct_abs_point": point_abs,
-                "pct_abs_ci95_lo": abs_boots[int(0.025 * B)],
-                "pct_abs_ci95_hi": abs_boots[int(0.975 * B) - 1],
-                "costeff_ratio_point": point_ce,
-                "costeff_ratio_ci95_lo": ce_boots[int(0.025 * B)],
-                "costeff_ratio_ci95_hi": ce_boots[int(0.975 * B) - 1],
-                "B": B,
-                "seed": seed,
-            })
+            point_ce = (
+                ((c_abs_pt / c_ex_pt) / (o_abs_pt / o_ex_pt))
+                if (c_ex_pt > 0 and o_ex_pt > 0)
+                else 0.0
+            )
+            out.append(
+                {
+                    "method": method,
+                    "controller": c,
+                    "pct_abs_point": point_abs,
+                    "pct_abs_ci95_lo": abs_boots[int(0.025 * B)],
+                    "pct_abs_ci95_hi": abs_boots[int(0.975 * B) - 1],
+                    "costeff_ratio_point": point_ce,
+                    "costeff_ratio_ci95_lo": ce_boots[int(0.025 * B)],
+                    "costeff_ratio_ci95_hi": ce_boots[int(0.975 * B) - 1],
+                    "B": B,
+                    "seed": seed,
+                }
+            )
     return out
 
 
 # ---------- IO helpers ----------
+
 
 def write_tsv(path: str, rows: List[dict]) -> None:
     if not rows:
@@ -327,7 +353,10 @@ def write_tsv(path: str, rows: List[dict]) -> None:
         w.writeheader()
         for r in rows:
             # cast numpy-ish values
-            r2 = {k: (float(v) if isinstance(v, (int, float)) and not isinstance(v, bool) else v) for k, v in r.items()}
+            r2 = {
+                k: (float(v) if isinstance(v, (int, float)) and not isinstance(v, bool) else v)
+                for k, v in r.items()
+            }
             w.writerow(r2)
 
 
@@ -361,7 +390,9 @@ def main() -> None:
         "g_menu": G_MENU,
         "controllers": list(CONTROLLERS.keys()),
         "oracle_active_rate_pct": {
-            method: 100.0 * sum(1 for o in obs if o["method"] == method and o["oracle_active"]) / sum(1 for o in obs if o["method"] == method)
+            method: 100.0
+            * sum(1 for o in obs if o["method"] == method and o["oracle_active"])
+            / sum(1 for o in obs if o["method"] == method)
             for method in METHODS
         },
         "per_method": per_method,
@@ -373,7 +404,9 @@ def main() -> None:
 
     # Quick console summary
     print("\n=== Pct oracle contrast ABS-captured (point) ===")
-    print(f"{'method':<8} {'C0_fixed':>10} {'C1_zvf':>10} {'C2_dual':>10} {'C3_hyb':>10} {'C5_isoG':>10}")
+    print(
+        f"{'method':<8} {'C0_fixed':>10} {'C1_zvf':>10} {'C2_dual':>10} {'C3_hyb':>10} {'C5_isoG':>10}"
+    )
     for method in METHODS:
         ms = [r for r in per_method if r["method"] == method]
         row = [f"{method:<8}"]
@@ -381,7 +414,9 @@ def main() -> None:
             v = next(r["pct_oracle_abs_captured"] for r in ms if r["controller"] == c)
             row.append(f"{v:>9.1f}%")
         print(" ".join(row))
-    print("\n=== Cost-effective ratio (ctrl / oracle) > 1.0 means controller > oracle per extra rollout ===")
+    print(
+        "\n=== Cost-effective ratio (ctrl / oracle) > 1.0 means controller > oracle per extra rollout ==="
+    )
     print(f"{'method':<8} {'C0':>8} {'C1':>8} {'C2':>8} {'C3':>8} {'C5':>8}")
     for method in METHODS:
         ms = [r for r in per_method if r["method"] == method]

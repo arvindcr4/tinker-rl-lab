@@ -140,7 +140,11 @@ def spectral_legendre_grpo(
         traj_features = hidden_states.to(dtype=dtype, device=device)
     else:
         tokens = logps.shape[1]
-        pos = torch.linspace(-1.0, 1.0, steps=tokens, dtype=dtype, device=device).unsqueeze(0).expand(g_size, tokens)
+        pos = (
+            torch.linspace(-1.0, 1.0, steps=tokens, dtype=dtype, device=device)
+            .unsqueeze(0)
+            .expand(g_size, tokens)
+        )
         traj_features = torch.stack([logps, pos], dim=-1)
 
     spectral_coeffs = legendre_spectral_projection(traj_features, n_modes, mask=mask)
@@ -212,7 +216,11 @@ def entropic_givens_grpo(
         traj_features = hidden_states.to(dtype=dtype, device=device)
     else:
         tokens = logps.shape[1]
-        pos = torch.linspace(-1.0, 1.0, steps=tokens, dtype=dtype, device=device).unsqueeze(0).expand(g_size, tokens)
+        pos = (
+            torch.linspace(-1.0, 1.0, steps=tokens, dtype=dtype, device=device)
+            .unsqueeze(0)
+            .expand(g_size, tokens)
+        )
         traj_features = torch.stack([logps, pos], dim=-1)
 
     gated_features = traj_features.clone()
@@ -222,7 +230,9 @@ def entropic_givens_grpo(
         prob_i = F.softmax(logps[i], dim=-1)
         h_i = compute_entropy_density(prob_i, dim=-1)
         if float(h_i.detach()) < tau_entropy:
-            row_feat_proj, _ = eliminate_noise_components(gated_features[i], n_noise_dims=n_noise_dims)
+            row_feat_proj, _ = eliminate_noise_components(
+                gated_features[i], n_noise_dims=n_noise_dims
+            )
             gated_features[i] = row_feat_proj
 
     spectral_coeffs = legendre_spectral_projection(gated_features, n_modes, mask=mask)
@@ -275,7 +285,7 @@ def condition_loss(
     """Return the differentiable frozen DAPO loss and detached advantages."""
     if condition not in CONDITIONS:
         raise ObjectiveContractError(f"unknown pilot condition: {condition}")
-    
+
     if condition == "spectral_legendre":
         return spectral_legendre_grpo(
             rewards=rewards,

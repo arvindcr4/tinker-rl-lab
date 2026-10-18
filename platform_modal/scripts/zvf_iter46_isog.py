@@ -42,7 +42,6 @@ import csv
 import math
 import os
 import random
-from collections import defaultdict
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 RES = os.path.join(ROOT, "experiments", "results")
@@ -69,8 +68,9 @@ def yield_emp(p, G, delta_div):
     """Signed sensitivity scenario, not a measured empirical yield."""
     if not 0 <= p <= 1 or G < 1 or int(G) != G or not math.isfinite(delta_div):
         raise ValueError("invalid probability, group size or correction")
-    if G == 1 or p in (0,1): return 0.0
-    return min(1., max(0., 1-zvf_iid(p,G)+delta_div))
+    if G == 1 or p in (0, 1):
+        return 0.0
+    return min(1.0, max(0.0, 1 - zvf_iid(p, G) + delta_div))
 
 
 def min_G_for_yield(p, target_yield, delta_div=None, G_max=G_MAX):
@@ -147,10 +147,7 @@ def write_per_prompt_isog(rows, targets):
     Unreachable prompts (G > G_MAX) get G_MAX+1 as a sentinel.
     """
     out_path = os.path.join(RES, "zvf_iter46_per_prompt_isog_review28_v2.tsv")
-    prompts = [
-        r for r in rows
-        if r["source"] == "tinker_gsm8k" and P_LO < r["p_x"] < P_HI
-    ]
+    prompts = [r for r in rows if r["source"] == "tinker_gsm8k" and P_LO < r["p_x"] < P_HI]
     with open(out_path, "w") as f:
         f.write(
             "# Per-prompt Iso-G sizing on tinker_gsm8k (Qwen3-8B).\n"
@@ -170,7 +167,7 @@ def write_per_prompt_isog(rows, targets):
                 f.write(
                     f"{r['source']}\t{r['seed']}\t{r['id']}\t{r['p_x']:.4f}\t"
                     f"{r['delta_div']:.4f}\t{yt:.2f}\t{gi_s}\t{ge_s}\t"
-f"{gi_s - ge_s if gi_s >= 0 and ge_s >= 0 else 'NA'}\n"
+                    f"{gi_s - ge_s if gi_s >= 0 and ge_s >= 0 else 'NA'}\n"
                 )
     return out_path, prompts
 
@@ -223,9 +220,7 @@ def write_library_savings(libs, targets):
                 gi_s = -1 if gi > G_MAX else gi
                 ge_s = -1 if ge > G_MAX else ge
                 dG = gi_s - ge_s if (gi_s >= 0 and ge_s >= 0) else "NA"
-                f.write(
-                    f"{lib['library']}\t{p:.4f}\t{yt:.2f}\t{gi_s}\t{ge_s}\t{dG}\n"
-                )
+                f.write(f"{lib['library']}\t{p:.4f}\t{yt:.2f}\t{gi_s}\t{ge_s}\t{dG}\n")
     return out_path
 
 
@@ -278,9 +273,11 @@ def write_summary_and_predictions(prompts, targets):
         for r in prompts:
             yi_vals.append(yield_iid(r["p_x"], G))
             ye_vals.append(yield_emp(r["p_x"], G, r["delta_div"]))
-        y_uplift[G] = (sum(yi_vals) / len(prompts),
-                        sum(ye_vals) / len(prompts),
-                        sum(ye_vals) / len(prompts) - sum(yi_vals) / len(prompts))
+        y_uplift[G] = (
+            sum(yi_vals) / len(prompts),
+            sum(ye_vals) / len(prompts),
+            sum(ye_vals) / len(prompts) - sum(yi_vals) / len(prompts),
+        )
 
     with open(out_path, "w") as f:
         f.write(
@@ -302,34 +299,19 @@ def write_summary_and_predictions(prompts, targets):
             mean_dg = mean_ge - mean_gi
             sav = 1.0 - mean_ge / 8.0
             lo, hi = ci[yt]
-            f.write(
-                f"Y={yt:.2f}_mean_G_iid\t{mean_gi:.4f}\t{len(gi)}\t"
-                f"reachable prompts only\n"
-            )
-            f.write(
-                f"Y={yt:.2f}_mean_G_emp\t{mean_ge:.4f}\t{len(gi)}\t"
-                f"reachable prompts only\n"
-            )
+            f.write(f"Y={yt:.2f}_mean_G_iid\t{mean_gi:.4f}\t{len(gi)}\treachable prompts only\n")
+            f.write(f"Y={yt:.2f}_mean_G_emp\t{mean_ge:.4f}\t{len(gi)}\treachable prompts only\n")
             f.write(
                 f"Y={yt:.2f}_mean_dG\t{mean_dg:.4f}\t{len(gi)}\t"
                 f"negative=anti-herding savings; CI95=[{lo:.4f},{hi:.4f}]\n"
             )
-            f.write(
-                f"Y={yt:.2f}_savings_vs_static8\t{sav:.4f}\t{len(gi)}\t"
-                f"1 - mean_G_emp/8\n"
-            )
+            f.write(f"Y={yt:.2f}_savings_vs_static8\t{sav:.4f}\t{len(gi)}\t1 - mean_G_emp/8\n")
 
         f.write("\n# Y_uplift at fixed G (matched-compute)\n")
         for G, (yi, ye, du) in y_uplift.items():
-            f.write(
-                f"G={G}_mean_Y_iid\t{yi:.4f}\t{G}\tfixed rollout budget\n"
-            )
-            f.write(
-                f"G={G}_mean_Y_emp\t{ye:.4f}\t{G}\tfixed rollout budget\n"
-            )
-            f.write(
-                f"G={G}_Y_uplift\t{du:.4f}\t{G}\tmean(Y_emp - Y_iid)\n"
-            )
+            f.write(f"G={G}_mean_Y_iid\t{yi:.4f}\t{G}\tfixed rollout budget\n")
+            f.write(f"G={G}_mean_Y_emp\t{ye:.4f}\t{G}\tfixed rollout budget\n")
+            f.write(f"G={G}_Y_uplift\t{du:.4f}\t{G}\tmean(Y_emp - Y_iid)\n")
 
     # Pre-registered predictions
     with open(pred_path, "w") as f:
@@ -346,17 +328,11 @@ def write_summary_and_predictions(prompts, targets):
         # P1
         gi80, ge80 = agg[0.80]
         dg80 = sum(ge80) / len(ge80) - sum(gi80) / len(gi80)
-        f.write(
-            f"P1_dG_negative_at_Y80\tmean_dG @ Y=0.80 < 0\t"
-            f"{dg80:.4f} < 0\tTrue\t{dg80 < 0}\n"
-        )
+        f.write(f"P1_dG_negative_at_Y80\tmean_dG @ Y=0.80 < 0\t{dg80:.4f} < 0\tTrue\t{dg80 < 0}\n")
 
         # P2: Y_uplift at G=8 > 0
         yi8, ye8, du8 = y_uplift[8]
-        f.write(
-            f"P2_yield_uplift_G8\tY_uplift @ G=8 > 0\t"
-            f"{du8:.4f} > 0\tTrue\t{du8 > 0}\n"
-        )
+        f.write(f"P2_yield_uplift_G8\tY_uplift @ G=8 > 0\t{du8:.4f} > 0\tTrue\t{du8 > 0}\n")
 
         # P3: At Y=0.95, mean_G_emp < mean_G_iid
         gi95, ge95 = agg[0.95]
@@ -369,10 +345,7 @@ def write_summary_and_predictions(prompts, targets):
                 f"{mean_ge95:.4f} < {mean_gi95:.4f}\tTrue\t{p3_pass}\n"
             )
         else:
-            f.write(
-                f"P3_dG_negative_at_Y95\tmean_G_emp @ Y=0.95 < mean_G_iid\t"
-                f"NA\tNA\tFalse\n"
-            )
+            f.write(f"P3_dG_negative_at_Y95\tmean_G_emp @ Y=0.95 < mean_G_iid\tNA\tNA\tFalse\n")
 
         # P4: monotonicity
         g_means = []
@@ -380,8 +353,7 @@ def write_summary_and_predictions(prompts, targets):
             gi, _ = agg[yt]
             if gi:
                 g_means.append((yt, sum(gi) / len(gi)))
-        monotonic = all(g_means[i][1] <= g_means[i + 1][1]
-                        for i in range(len(g_means) - 1))
+        monotonic = all(g_means[i][1] <= g_means[i + 1][1] for i in range(len(g_means) - 1))
         f.write(
             f"P4_monotone_in_Y\tmean_G_iid non-decreasing in Y_target\t"
             f"{[round(g, 2) for _, g in g_means]}\tTrue\t{monotonic}\n"

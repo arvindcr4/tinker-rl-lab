@@ -10,16 +10,17 @@ shows the pattern for custom reward wrappers and PPO training.
 
 import os
 import sys
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 import gymnasium as gym
 import numpy as np
-from gymnasium import spaces
 from stable_baselines3 import PPO
-from stable_baselines3.common.vec_env import DummyVecEnv, VecNormalize
+from stable_baselines3.common.vec_env import DummyVecEnv
 from stable_baselines3.common.callbacks import BaseCallback
 import wandb
 from huggingface_hub import HfApi
 from utils.seed import set_global_seed, get_seed_from_args
+
 
 def push_to_hub(repo_id: str, filename: str, filepath: str):
     """Push model to HuggingFace Hub."""
@@ -111,32 +112,24 @@ def main():
     model = PPO(
         "MlpPolicy",
         env,
-
         # Learning rate (matching Tinker)
         learning_rate=1e-4,
-
         # PPO-specific
-        n_steps=2048,           # Steps per rollout
-        batch_size=64,          # Minibatch size
-        n_epochs=10,            # Epochs per update
-
+        n_steps=2048,  # Steps per rollout
+        batch_size=64,  # Minibatch size
+        n_epochs=10,  # Epochs per update
         # GAE parameters
-        gamma=0.99,             # Discount factor
-        gae_lambda=0.95,        # GAE lambda
-
+        gamma=0.99,  # Discount factor
+        gae_lambda=0.95,  # GAE lambda
         # Clipping
-        clip_range=0.2,         # PPO clip range
-
+        clip_range=0.2,  # PPO clip range
         # Loss coefficients
-        ent_coef=0.01,          # Entropy coefficient
-        vf_coef=0.5,            # Value function coefficient
-
+        ent_coef=0.01,  # Entropy coefficient
+        vf_coef=0.5,  # Value function coefficient
         # Optimization
-        max_grad_norm=0.5,      # Gradient clipping
-
+        max_grad_norm=0.5,  # Gradient clipping
         # KL divergence target (for early stopping)
         target_kl=0.01,
-
         # Logging
         verbose=1,
         tensorboard_log="./sb3_math_logs/",
@@ -159,7 +152,7 @@ def main():
     # Save model
     model.save("./sb3_math_ppo_final")
     print("Training complete! Model saved to ./sb3_math_ppo_final.zip")
-    
+
     # Push to HuggingFace Hub
     push_to_hub("arvindcr4/sb3-ppo-math", "sb3_math_ppo_final.zip", "./sb3_math_ppo_final.zip")
 
@@ -176,7 +169,7 @@ def main():
         if info["correct"]:
             correct += 1
 
-    print(f"Final accuracy: {correct}/{total} = {100*correct/total:.1f}%")
+    print(f"Final accuracy: {correct}/{total} = {100 * correct / total:.1f}%")
     wandb.finish()
 
 

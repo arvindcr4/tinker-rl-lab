@@ -23,9 +23,10 @@ Falsifiable hypotheses (H1-H4):
   H4 (PASS if): every of 9 method labels has >= 1 stack entry
                  (9 = the labels present in registry/entries/)
 """
+
 from __future__ import annotations
 import json, glob, os
-from collections import defaultdict, Counter
+from collections import defaultdict
 from statistics import mean
 
 REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -35,10 +36,17 @@ os.makedirs(OUT, exist_ok=True)
 
 # MR item -> leaves (as enumerated from the registry entries on 2026-07-05)
 MR_LEAVES = {
-    "loss_form": ["advantage_normalization", "clip_eps_high", "clip_eps_low",
-                  "importance_ratio_level", "length_normalization",
-                  "reward_shaping_type", "sampling_dynamic_filter",
-                  "token_aggregation", "token_mask"],
+    "loss_form": [
+        "advantage_normalization",
+        "clip_eps_high",
+        "clip_eps_low",
+        "importance_ratio_level",
+        "length_normalization",
+        "reward_shaping_type",
+        "sampling_dynamic_filter",
+        "token_aggregation",
+        "token_mask",
+    ],
     "reference_kl": ["kl_beta", "kl_estimator", "reference_policy"],
     "sampler_backend": ["backend", "precision", "temperature", "top_p"],
     "telemetry": ["per_step_gu", "per_step_zvf", "source"],
@@ -48,7 +56,7 @@ MR_LEAVES = {
 }
 ALL_LEAVES = [(it, lf) for it, ls in MR_LEAVES.items() for lf in ls]
 N_STACK_HARD = 9  # the 9 method labels present in registry/entries
-N_FW_HARD = 6     # 6 framework names actually represented
+N_FW_HARD = 6  # 6 framework names actually represented
 
 
 def leaf_null_rate(entries):
@@ -60,12 +68,16 @@ def leaf_null_rate(entries):
         present = [e for e in stacks if it in e.get("min_report", {})]
         np_ = len(present)
         for lf in leaves:
-            n_nn = sum(1 for e in present
-                       if e["min_report"][it].get(lf) is not None)
-            out.append({"item": it, "leaf": lf,
-                        "stacks_with_item": np_,
-                        "n_non_null": n_nn,
-                        "null_rate": 1.0 - (n_nn / np_) if np_ else 1.0})
+            n_nn = sum(1 for e in present if e["min_report"][it].get(lf) is not None)
+            out.append(
+                {
+                    "item": it,
+                    "leaf": lf,
+                    "stacks_with_item": np_,
+                    "n_non_null": n_nn,
+                    "null_rate": 1.0 - (n_nn / np_) if np_ else 1.0,
+                }
+            )
     return out, n
 
 
@@ -83,16 +95,18 @@ def entry_coverage(entries):
                 for lf in leaves:
                     if sub.get(lf) is not None:
                         leaves_non_null += 1
-        rows.append({
-            "id": e["id"],
-            "framework": e["framework"]["name"],
-            "label": e.get("label_claimed", "?"),
-            "items_present": items_present,
-            "items_present_pct": items_present / 7,
-            "leaves_non_null": leaves_non_null,
-            "leaves_total": 26,
-            "leaves_non_null_pct": leaves_non_null / 26,
-        })
+        rows.append(
+            {
+                "id": e["id"],
+                "framework": e["framework"]["name"],
+                "label": e.get("label_claimed", "?"),
+                "items_present": items_present,
+                "items_present_pct": items_present / 7,
+                "leaves_non_null": leaves_non_null,
+                "leaves_total": 26,
+                "leaves_non_null_pct": leaves_non_null / 26,
+            }
+        )
     return rows
 
 
@@ -113,43 +127,58 @@ def cross_matrix(entries, dim):
         for it in MR_LEAVES:
             pres = sum(1 for e in v if it in e.get("min_report", {}))
             item_cov[it] = pres / nn if nn else 0.0
-        rows.append({
-            "dim": dim, "value": k, "n_entries": nn,
-            **{f"cov_{it}": round(item_cov[it], 4) for it in MR_LEAVES},
-            "mean_item_cov": round(mean(item_cov.values()), 4),
-        })
+        rows.append(
+            {
+                "dim": dim,
+                "value": k,
+                "n_entries": nn,
+                **{f"cov_{it}": round(item_cov[it], 4) for it in MR_LEAVES},
+                "mean_item_cov": round(mean(item_cov.values()), 4),
+            }
+        )
     return rows
 
 
 def h1(per_leaf, n_stacks):
     mean_null = mean(r["null_rate"] for r in per_leaf)
-    return {"hypothesis": "H1: mean null-rate across 26 leaves < 0.50",
-            "mean_null_rate": round(mean_null, 4),
-            "pass": mean_null < 0.50,
-            "n_stacks": n_stacks}
+    return {
+        "hypothesis": "H1: mean null-rate across 26 leaves < 0.50",
+        "mean_null_rate": round(mean_null, 4),
+        "pass": mean_null < 0.50,
+        "n_stacks": n_stacks,
+    }
 
 
 def h2(per_leaf):
     n_lt_50 = sum(1 for r in per_leaf if r["null_rate"] < 0.50)
-    return {"hypothesis": "H2: at least 18/26 leaves have null-rate < 0.50",
-            "n_leaves_lt_50": n_lt_50, "n_leaves_total": len(per_leaf),
-            "pass": n_lt_50 >= 18}
+    return {
+        "hypothesis": "H2: at least 18/26 leaves have null-rate < 0.50",
+        "n_leaves_lt_50": n_lt_50,
+        "n_leaves_total": len(per_leaf),
+        "pass": n_lt_50 >= 18,
+    }
 
 
 def h3(per_entry):
     fws = {r["framework"] for r in per_entry}
     n = len(fws)
-    return {"hypothesis": f"H3: every of {N_FW_HARD} frameworks has >= 1 stack entry",
-            "n_frameworks": n, "frameworks": sorted(fws),
-            "pass": n >= N_FW_HARD}
+    return {
+        "hypothesis": f"H3: every of {N_FW_HARD} frameworks has >= 1 stack entry",
+        "n_frameworks": n,
+        "frameworks": sorted(fws),
+        "pass": n >= N_FW_HARD,
+    }
 
 
 def h4(per_entry):
     labels = {r["label"] for r in per_entry}
     n = len(labels)
-    return {"hypothesis": f"H4: every of {N_STACK_HARD} method labels has >= 1 stack entry",
-            "n_labels": n, "labels": sorted(labels),
-            "pass": n >= N_STACK_HARD}
+    return {
+        "hypothesis": f"H4: every of {N_STACK_HARD} method labels has >= 1 stack entry",
+        "n_labels": n,
+        "labels": sorted(labels),
+        "pass": n >= N_STACK_HARD,
+    }
 
 
 def write_tsv(path, rows, cols):
@@ -190,17 +219,28 @@ def main():
         },
     }
 
-    write_tsv(os.path.join(OUT, "p6_iter170_per_leaf_null_rate.tsv"),
-              per_leaf, ["item", "leaf", "stacks_with_item", "n_non_null", "null_rate"])
-    write_tsv(os.path.join(OUT, "p6_iter170_per_entry_coverage.tsv"),
-              per_entry, ["id", "framework", "label", "items_present",
-                          "items_present_pct", "leaves_non_null",
-                          "leaves_total", "leaves_non_null_pct"])
+    write_tsv(
+        os.path.join(OUT, "p6_iter170_per_leaf_null_rate.tsv"),
+        per_leaf,
+        ["item", "leaf", "stacks_with_item", "n_non_null", "null_rate"],
+    )
+    write_tsv(
+        os.path.join(OUT, "p6_iter170_per_entry_coverage.tsv"),
+        per_entry,
+        [
+            "id",
+            "framework",
+            "label",
+            "items_present",
+            "items_present_pct",
+            "leaves_non_null",
+            "leaves_total",
+            "leaves_non_null_pct",
+        ],
+    )
     fw_cols = ["dim", "value", "n_entries"] + [f"cov_{it}" for it in MR_LEAVES] + ["mean_item_cov"]
-    write_tsv(os.path.join(OUT, "p6_iter170_framework_matrix.tsv"),
-              fw_rows, fw_cols)
-    write_tsv(os.path.join(OUT, "p6_iter170_label_matrix.tsv"),
-              lbl_rows, fw_cols)
+    write_tsv(os.path.join(OUT, "p6_iter170_framework_matrix.tsv"), fw_rows, fw_cols)
+    write_tsv(os.path.join(OUT, "p6_iter170_label_matrix.tsv"), lbl_rows, fw_cols)
     with open(os.path.join(OUT, "p6_iter170_summary.json"), "w") as f:
         json.dump(summary, f, indent=2)
     print(json.dumps({k: v for k, v in summary.items() if k not in ("tsv_files",)}, indent=2))

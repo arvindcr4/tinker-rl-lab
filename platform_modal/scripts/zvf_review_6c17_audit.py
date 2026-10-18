@@ -8,6 +8,7 @@ simulated variance-mitigation corpus.
 
 Writes experiments/results/zvf_review_6c17_*.tsv. No new training.
 """
+
 import csv
 from pathlib import Path
 
@@ -49,22 +50,37 @@ def main():
     pred = loo_nearest_centroid(X, y)
     acc = float((pred == y).mean())
     rng = np.random.default_rng(20261018)
-    null = np.array([(loo_nearest_centroid(X, rng.permutation(y)) == y).mean() for _ in range(2000)])
+    null = np.array(
+        [(loo_nearest_centroid(X, rng.permutation(y)) == y).mean() for _ in range(2000)]
+    )
     labels, counts = np.unique(y, return_counts=True)
-    out = [{"model": r["model"], "true_phase": t, "pred_phase_strict_loo": p} for r, t, p in zip(rows, y, pred)]
+    out = [
+        {"model": r["model"], "true_phase": t, "pred_phase_strict_loo": p}
+        for r, t, p in zip(rows, y, pred, strict=False)
+    ]
     write("iter34_strict_loo_predictions", out)
-    summary = [{"n": len(y), "strict_loo_accuracy": round(acc, 4),
-                "majority_baseline": round(counts.max() / len(y), 4),
-                "label_permutation_p": round(float((null >= acc).mean()), 4),
-                **{f"recall_{c}": round(float((pred[y == c] == c).mean()), 4) for c in labels}}]
+    summary = [
+        {
+            "n": len(y),
+            "strict_loo_accuracy": round(acc, 4),
+            "majority_baseline": round(counts.max() / len(y), 4),
+            "label_permutation_p": round(float((null >= acc).mean()), 4),
+            **{f"recall_{c}": round(float((pred[y == c] == c).mean()), 4) for c in labels},
+        }
+    ]
     write("iter34_strict_loo_summary", summary)
     print(summary[0])
 
     frac = [0.0, 0.1333, 0.0, 0.0, 0.55]
     zero = [0.0, 0.0667, 0.0, 0.0, 0.55]
     coll = [0, 0, 0, 0, 1]
-    write("scaling_spearman", [{"proxy": "frac_below_0p1", "rho": round(spearmanr(frac, coll)[0], 4)},
-                               {"proxy": "zero_fraction", "rho": round(spearmanr(zero, coll)[0], 4)}])
+    write(
+        "scaling_spearman",
+        [
+            {"proxy": "frac_below_0p1", "rho": round(spearmanr(frac, coll)[0], 4)},
+            {"proxy": "zero_fraction", "rho": round(spearmanr(zero, coll)[0], 4)},
+        ],
+    )
 
 
 if __name__ == "__main__":

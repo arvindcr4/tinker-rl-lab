@@ -16,13 +16,26 @@ from __future__ import annotations
 
 import sys as _sys
 from pathlib import Path as _Path
-_sys.path.insert(0, str(next(p for p in _Path(__file__).resolve().parents if (p / "platform_hybrid").is_dir())))
-from platform_hybrid.experiments.research_contracts import gsm8k_reward, math_reward, humaneval_reward, tool_score, completion_alignment, GRADER_VERSION, PROTOCOL_VERSION
+
+_sys.path.insert(
+    0, str(next(p for p in _Path(__file__).resolve().parents if (p / "platform_hybrid").is_dir()))
+)
+from platform_hybrid.experiments.research_contracts import (
+    gsm8k_reward,
+    math_reward,
+    humaneval_reward,
+    tool_score,
+    completion_alignment,
+    GRADER_VERSION,
+    PROTOCOL_VERSION,
+)
 
 
 import atexit
+
 try:
     from codecarbon import EmissionsTracker
+
     _tracker = EmissionsTracker()
     _tracker.start()
     atexit.register(_tracker.stop)
@@ -52,9 +65,11 @@ def load_config(path: str) -> dict:
 
 # ── Benchmark datasets ──────────────────────────────────────────────────
 
+
 def load_gsm8k_prompts(tokenizer, max_examples: int = 500) -> list[dict]:
     """Load GSM8K training prompts."""
     from datasets import load_dataset
+
     ds = load_dataset("openai/gsm8k", "main", split="train")
     examples = []
     for item in ds.select(range(min(len(ds), max_examples))):
@@ -66,18 +81,21 @@ def load_gsm8k_prompts(tokenizer, max_examples: int = 500) -> list[dict]:
             f"Show your work and put your final answer after ####."
         )
         prompt_ids = tokenizer.encode(prompt, add_special_tokens=False)
-        examples.append({
-            "prompt_text": prompt,
-            "prompt_ids": prompt_ids,
-            "answer": answer,
-            "benchmark": "gsm8k",
-        })
+        examples.append(
+            {
+                "prompt_text": prompt,
+                "prompt_ids": prompt_ids,
+                "answer": answer,
+                "benchmark": "gsm8k",
+            }
+        )
     return examples
 
 
 def load_math_prompts(tokenizer, max_examples: int = 500) -> list[dict]:
     """Load MATH competition prompts."""
     from datasets import load_dataset
+
     ds = load_dataset("math-ai/MATH-500", split="test")
     examples = []
     for item in ds.select(range(min(len(ds), max_examples))):
@@ -85,7 +103,7 @@ def load_math_prompts(tokenizer, max_examples: int = 500) -> list[dict]:
         solution = item["solution"]
         answer = item.get("answer", "")
         if not answer:
-            m = re.search(r'\\boxed\{(.+?)\}', solution)
+            m = re.search(r"\\boxed\{(.+?)\}", solution)
             answer = m.group(1) if m else solution.split()[-1]
         prompt = (
             f"Solve the following math competition problem.\n\n"
@@ -93,31 +111,36 @@ def load_math_prompts(tokenizer, max_examples: int = 500) -> list[dict]:
             f"Put your final answer in \\boxed{{}}."
         )
         prompt_ids = tokenizer.encode(prompt, add_special_tokens=False)
-        examples.append({
-            "prompt_text": prompt,
-            "prompt_ids": prompt_ids,
-            "answer": answer,
-            "benchmark": "math",
-        })
+        examples.append(
+            {
+                "prompt_text": prompt,
+                "prompt_ids": prompt_ids,
+                "answer": answer,
+                "benchmark": "math",
+            }
+        )
     return examples
 
 
 def load_humaneval_prompts(tokenizer, max_examples: int = 164) -> list[dict]:
     """Load HumanEval code completion prompts."""
     from datasets import load_dataset
+
     ds = load_dataset("openai/openai_humaneval", split="test")
     examples = []
     for item in ds.select(range(min(len(ds), max_examples))):
         prompt = item["prompt"]
         prompt_ids = tokenizer.encode(prompt, add_special_tokens=False)
-        examples.append({
-            "prompt_text": prompt,
-            "prompt_ids": prompt_ids,
-            "answer": item["canonical_solution"],
-            "test": item["test"],
-            "entry_point": item["entry_point"],
-            "benchmark": "humaneval",
-        })
+        examples.append(
+            {
+                "prompt_text": prompt,
+                "prompt_ids": prompt_ids,
+                "answer": item["canonical_solution"],
+                "test": item["test"],
+                "entry_point": item["entry_point"],
+                "benchmark": "humaneval",
+            }
+        )
     return examples
 
 
@@ -130,10 +153,22 @@ def load_tool_use_prompts(tokenizer) -> list[dict]:
     )
     TOOLS = [
         {"name": "calculator", "description": "Arithmetic", "parameters": {"expression": "string"}},
-        {"name": "get_weather", "description": "Weather for a city", "parameters": {"city": "string", "units": "string"}},
+        {
+            "name": "get_weather",
+            "description": "Weather for a city",
+            "parameters": {"city": "string", "units": "string"},
+        },
         {"name": "web_search", "description": "Web search", "parameters": {"query": "string"}},
-        {"name": "get_time", "description": "Time in timezone", "parameters": {"timezone": "string"}},
-        {"name": "set_reminder", "description": "Set a reminder", "parameters": {"task": "string", "time": "string"}},
+        {
+            "name": "get_time",
+            "description": "Time in timezone",
+            "parameters": {"timezone": "string"},
+        },
+        {
+            "name": "set_reminder",
+            "description": "Set a reminder",
+            "parameters": {"task": "string", "time": "string"},
+        },
     ]
     TOOL_SCHEMA = json.dumps(TOOLS)
     RAW = [
@@ -153,8 +188,16 @@ def load_tool_use_prompts(tokenizer) -> list[dict]:
         ("Current time in Los Angeles?", "get_time", {"timezone": "America/Los_Angeles"}),
         ("Time in Berlin?", "get_time", {"timezone": "Europe/Berlin"}),
         ("Remind me to call mom at 6pm", "set_reminder", {"task": "call mom", "time": "6pm"}),
-        ("Set a reminder for team meeting 10am", "set_reminder", {"task": "team meeting", "time": "10am"}),
-        ("Remind me to take medicine at 8pm", "set_reminder", {"task": "take medicine", "time": "8pm"}),
+        (
+            "Set a reminder for team meeting 10am",
+            "set_reminder",
+            {"task": "team meeting", "time": "10am"},
+        ),
+        (
+            "Remind me to take medicine at 8pm",
+            "set_reminder",
+            {"task": "take medicine", "time": "8pm"},
+        ),
     ]
 
     examples = []
@@ -165,13 +208,15 @@ def load_tool_use_prompts(tokenizer) -> list[dict]:
             f"<|im_start|>assistant\n"
         )
         prompt_ids = tokenizer.encode(prompt, add_special_tokens=False)
-        examples.append({
-            "prompt_text": prompt,
-            "prompt_ids": prompt_ids,
-            "tool_name": tool_name,
-            "arguments": args,
-            "benchmark": "tool_use",
-        })
+        examples.append(
+            {
+                "prompt_text": prompt,
+                "prompt_ids": prompt_ids,
+                "tool_name": tool_name,
+                "arguments": args,
+                "benchmark": "tool_use",
+            }
+        )
     # Repeat for volume
     examples = examples * 28
     random.shuffle(examples)
@@ -179,6 +224,7 @@ def load_tool_use_prompts(tokenizer) -> list[dict]:
 
 
 # ── Reward functions ─────────────────────────────────────────────────────
+
 
 def reward_gsm8k(response: str, answer: str) -> float:
     return gsm8k_reward(response, answer)
@@ -200,25 +246,31 @@ def get_reward(example: dict, response: str) -> float:
     benchmark = example["benchmark"]
     if benchmark == "gsm8k":
         return reward_gsm8k(response, example["answer"])
-    elif benchmark == "math":
+    if benchmark == "math":
         return reward_math(response, example["answer"])
-    elif benchmark == "humaneval":
-        return reward_humaneval(response, example.get("test", ""), example.get("entry_point", ""), example.get("prompt_text", ""))
-    elif benchmark == "tool_use":
+    if benchmark == "humaneval":
+        return reward_humaneval(
+            response,
+            example.get("test", ""),
+            example.get("entry_point", ""),
+            example.get("prompt_text", ""),
+        )
+    if benchmark == "tool_use":
         return reward_tool_use(response, example["tool_name"], example["arguments"])
     raise ValueError(f"Unknown benchmark: {benchmark}")
 
 
 # ── Main training loop ───────────────────────────────────────────────────
 
+
 def detect_benchmark(config: dict) -> str:
     """Infer benchmark from config wandb_run_name."""
     name = config.get("tinker", {}).get("wandb_run_name", "")
     if "math" in name.lower() and "gsm" not in name.lower():
         return "math"
-    elif "humaneval" in name.lower():
+    if "humaneval" in name.lower():
         return "humaneval"
-    elif "tool" in name.lower():
+    if "tool" in name.lower():
         return "tool_use"
     return "gsm8k"
 
@@ -256,7 +308,7 @@ def run_experiment(config_path: str, dry_run: bool = False, resume: bool = False
     log_path = str(Path(tinker_cfg.get("checkpoint_dir", "./checkpoints/")).resolve())
     os.makedirs(log_path, exist_ok=True)
 
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
     print(f"10x Structural Ceiling Experiment")
     print(f"Config:    {config_path}")
     print(f"Model:     {model_name}")
@@ -268,7 +320,7 @@ def run_experiment(config_path: str, dry_run: bool = False, resume: bool = False
     print(f"Seed:      {seed}")
     print(f"Log path:  {log_path}")
     print(f"Resume:    {resume}")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
 
     if dry_run:
         print("[DRY RUN] Would run experiment with above config. Exiting.")
@@ -277,16 +329,24 @@ def run_experiment(config_path: str, dry_run: bool = False, resume: bool = False
     # Init W&B
     if env_cfg.get("use_wandb"):
         import wandb
+
         try:
             import torch, wandb
-            if not getattr(wandb, '_vram_patched', False):
+
+            if not getattr(wandb, "_vram_patched", False):
                 _old_log = wandb.log
+
                 def _vram_log(data, *args, **kwargs):
                     if torch.cuda.is_available():
-                        data['system/vram_peak_allocated_gb'] = torch.cuda.max_memory_allocated() / (1024**3)
-                        data['system/vram_reserved_gb'] = torch.cuda.max_memory_reserved() / (1024**3)
+                        data["system/vram_peak_allocated_gb"] = (
+                            torch.cuda.max_memory_allocated() / (1024**3)
+                        )
+                        data["system/vram_reserved_gb"] = torch.cuda.max_memory_reserved() / (
+                            1024**3
+                        )
                         torch.cuda.reset_peak_memory_stats()
                     _old_log(data, *args, **kwargs)
+
                 wandb.log = _vram_log
                 wandb._vram_patched = True
         except ImportError:
@@ -358,7 +418,11 @@ def run_experiment(config_path: str, dry_run: bool = False, resume: bool = False
         losses = []
         for i, logprobs in enumerate(logprobs_list):
             adv = _advantages[i]
-            mask = torch.tensor(data[i].loss_fn_inputs["completion_mask"].data, device=logprobs.device, dtype=logprobs.dtype)
+            mask = torch.tensor(
+                data[i].loss_fn_inputs["completion_mask"].data,
+                device=logprobs.device,
+                dtype=logprobs.dtype,
+            )
             losses.append(-adv * (logprobs * mask).sum())
         loss = torch.stack(losses).mean()
         return loss, {"grpo_loss": loss.item()}
@@ -401,7 +465,7 @@ def run_experiment(config_path: str, dry_run: bool = False, resume: bool = False
             advs = [(r - mean_r) / std_r for r in rewards]
             batch_rewards.extend(rewards)
 
-            for resp, adv in zip(responses.sequences, advs):
+            for resp, adv in zip(responses.sequences, advs, strict=False):
                 resp_ids = list(resp.tokens)
                 input_ids, target_ids, completion_mask = completion_alignment(prompt_ids, resp_ids)
                 full_ids = prompt_ids + resp_ids
@@ -414,7 +478,9 @@ def run_experiment(config_path: str, dry_run: bool = False, resume: bool = False
                         "target_tokens": T.TensorData(
                             data=target_ids, dtype="int64", shape=[len(target_ids)]
                         ),
-                        "completion_mask": T.TensorData(data=completion_mask, dtype="float32", shape=[len(completion_mask)]),
+                        "completion_mask": T.TensorData(
+                            data=completion_mask, dtype="float32", shape=[len(completion_mask)]
+                        ),
                     },
                 )
                 all_data.append(datum)
@@ -448,45 +514,56 @@ def run_experiment(config_path: str, dry_run: bool = False, resume: bool = False
         # LIMITATION (review): ZVF completely breaks down outside of math tasks. In format-gated tasks (like tool-use), ZVF saturates at 1.0 because the base model consistently fails schema parsing. Need to implement ERF (Effective-Rollout Fraction) to measure progress.
 
         print(
-            f"Step {step+1:3d}/{total_steps} | "
+            f"Step {step + 1:3d}/{total_steps} | "
             f"loss={grpo_loss:.4f} | reward={avg_r:.3f} | "
             f"zvf={zvf:.2f} | gu={gu:.2f}"
         )
 
         if env_cfg.get("use_wandb"):
             import wandb
+
             try:
                 import torch, wandb
-                if not getattr(wandb, '_vram_patched', False):
+
+                if not getattr(wandb, "_vram_patched", False):
                     _old_log = wandb.log
+
                     def _vram_log(data, *args, **kwargs):
                         if torch.cuda.is_available():
-                            data['system/vram_peak_allocated_gb'] = torch.cuda.max_memory_allocated() / (1024**3)
-                            data['system/vram_reserved_gb'] = torch.cuda.max_memory_reserved() / (1024**3)
+                            data["system/vram_peak_allocated_gb"] = (
+                                torch.cuda.max_memory_allocated() / (1024**3)
+                            )
+                            data["system/vram_reserved_gb"] = torch.cuda.max_memory_reserved() / (
+                                1024**3
+                            )
                             torch.cuda.reset_peak_memory_stats()
                         _old_log(data, *args, **kwargs)
+
                     wandb.log = _vram_log
                     wandb._vram_patched = True
             except ImportError:
                 pass
-            wandb.log({
-                "step": step,
-                "grpo_loss": grpo_loss,
-                "mean_reward": avg_r,
-                "zvf": zvf,
-            }, step=step)
+            wandb.log(
+                {
+                    "step": step,
+                    "grpo_loss": grpo_loss,
+                    "mean_reward": avg_r,
+                    "zvf": zvf,
+                },
+                step=step,
+            )
 
         # Save state checkpoint (resumable) at intervals
         if save_interval and (step + 1) % save_interval == 0:
             checkpoint_utils.save_checkpoint(
                 training_client=tc,
-                name=f"step_{step+1:03d}",
+                name=f"step_{step + 1:03d}",
                 log_path=log_path,
                 kind="both",
                 loop_state={"batch": step + 1, "step": step + 1},
             )
             sc = tc.save_weights_and_get_sampling_client()
-            print(f"  -> Checkpoint (state+sampler): step_{step+1}")
+            print(f"  -> Checkpoint (state+sampler): step_{step + 1}")
 
     # Final checkpoint with both state and sampler
     checkpoint_utils.save_checkpoint(
@@ -498,12 +575,25 @@ def run_experiment(config_path: str, dry_run: bool = False, resume: bool = False
     )
     # LIMITATION (review): The current training loop lacks rigorous held-out test set evaluation, making it difficult to prove generalized reasoning uplift rather than just training-set memorization.
     print(f"\nFinal checkpoint saved to: {log_path}")
-    print(f"Avg reward last 10: {sum(step_rewards[-10:])/max(len(step_rewards[-10:]),1):.3f}")
+    print(f"Avg reward last 10: {sum(step_rewards[-10:]) / max(len(step_rewards[-10:]), 1):.3f}")
 
     # Save saturation diagnostic
     ckpt_dir = Path(log_path)
     tracker.save(ckpt_dir / "group_saturation.json")
-    (ckpt_dir / "study_scope_v2.json").write_text(json.dumps({"protocol_version": PROTOCOL_VERSION, "grader_version": GRADER_VERSION, "resolved_config": cfg, "evaluation_scope": "training_adaptation_only", "heldout_measured": False, "claim_eligible": False, "optimizer_updates_requested": total_steps}, indent=2))
+    (ckpt_dir / "study_scope_v2.json").write_text(
+        json.dumps(
+            {
+                "protocol_version": PROTOCOL_VERSION,
+                "grader_version": GRADER_VERSION,
+                "resolved_config": cfg,
+                "evaluation_scope": "training_adaptation_only",
+                "heldout_measured": False,
+                "claim_eligible": False,
+                "optimizer_updates_requested": total_steps,
+            },
+            indent=2,
+        )
+    )
     print(f"Saturation diagnostic: {ckpt_dir / 'group_saturation.json'}")
 
     summary = tracker.summary()
@@ -515,16 +605,24 @@ def run_experiment(config_path: str, dry_run: bool = False, resume: bool = False
 
     if env_cfg.get("use_wandb"):
         import wandb
+
         try:
             import torch, wandb
-            if not getattr(wandb, '_vram_patched', False):
+
+            if not getattr(wandb, "_vram_patched", False):
                 _old_log = wandb.log
+
                 def _vram_log(data, *args, **kwargs):
                     if torch.cuda.is_available():
-                        data['system/vram_peak_allocated_gb'] = torch.cuda.max_memory_allocated() / (1024**3)
-                        data['system/vram_reserved_gb'] = torch.cuda.max_memory_reserved() / (1024**3)
+                        data["system/vram_peak_allocated_gb"] = (
+                            torch.cuda.max_memory_allocated() / (1024**3)
+                        )
+                        data["system/vram_reserved_gb"] = torch.cuda.max_memory_reserved() / (
+                            1024**3
+                        )
                         torch.cuda.reset_peak_memory_stats()
                     _old_log(data, *args, **kwargs)
+
                 wandb.log = _vram_log
                 wandb._vram_patched = True
         except ImportError:

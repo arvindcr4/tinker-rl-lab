@@ -35,14 +35,15 @@ Outputs (mirrors iter-99 / iter-104 / iter-132):
 from __future__ import annotations
 import csv
 import json
-import os
 import random
 from collections import defaultdict
 
 import sys
 from pathlib import Path
+
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
+from _paths import REPO_ROOT
+
 DATA_DIR = str(REPO_ROOT)
 OUT_DIR = f"{DATA_DIR}/platform_hybrid/experiments/results/p5p8/corrected-review21-v2"
 TRAIN = f"{DATA_DIR}/fraud_data.csv"
@@ -68,7 +69,9 @@ def load(path):
             except (KeyError, ValueError):
                 continue
             vals = [float(r[f"V{i}"]) for i in range(1, 21)]
-            vals.extend([float(r["V_mean"]), float(r["V_std"]), float(r["V_max"]), float(r["V_min"])])
+            vals.extend(
+                [float(r["V_mean"]), float(r["V_std"]), float(r["V_max"]), float(r["V_min"])]
+            )
             feats.append(vals)
             labels.append(klass)
     return feats, labels
@@ -77,7 +80,7 @@ def load(path):
 def ece(probs, labels, n_bin=N_BIN):
     """10-bin uniform ECE."""
     bins = [[] for _ in range(n_bin)]
-    for p, y in zip(probs, labels):
+    for p, y in zip(probs, labels, strict=False):
         b = min(int(p * n_bin), n_bin - 1)
         bins[b].append((p, y))
     e = 0.0
@@ -93,13 +96,12 @@ def ece(probs, labels, n_bin=N_BIN):
 
 def isotonic_pava(xs, ys):
     from sklearn.isotonic import IsotonicRegression
-    return IsotonicRegression(increasing=True, out_of_bounds="clip", y_min=0, y_max=1).fit(xs, ys)
 
+    return IsotonicRegression(increasing=True, out_of_bounds="clip", y_min=0, y_max=1).fit(xs, ys)
 
 
 def apply_isotonic(bps, p):
     return float(bps.predict([p])[0])
-
 
 
 def make_quantiles(values, q):
@@ -135,6 +137,7 @@ def main():
     test_feats, test_y = load(TEST)
 
     import numpy as np
+
     X_tr = np.asarray(train_feats, dtype=np.float64)
     X_tr_20 = X_tr[:, :20]
     y_tr = np.asarray(train_y, dtype=np.int32)
@@ -153,9 +156,14 @@ def main():
 
     def fit(X, seed):
         m = xgb.XGBClassifier(
-            n_estimators=180, max_depth=5, learning_rate=0.1,
-            scale_pos_weight=spw, random_state=seed,
-            tree_method="hist", verbosity=0, eval_metric="logloss",
+            n_estimators=180,
+            max_depth=5,
+            learning_rate=0.1,
+            scale_pos_weight=spw,
+            random_state=seed,
+            tree_method="hist",
+            verbosity=0,
+            eval_metric="logloss",
         )
         m.fit(X, y_tr)
         return m
@@ -173,13 +181,16 @@ def main():
     with open(TEST) as fh:
         rdr = csv.DictReader(fh)
         for row in rdr:
-            test_meta.append({
-                "V_mean": float(row["V_mean"]),
-                "V_std": float(row["V_std"]),
-                "V_max": float(row["V_max"]),
-                "V_min": float(row["V_min"]),
-                "Amount": 0.0, "Time": 0.0,
-            })
+            test_meta.append(
+                {
+                    "V_mean": float(row["V_mean"]),
+                    "V_std": float(row["V_std"]),
+                    "V_max": float(row["V_max"]),
+                    "V_min": float(row["V_min"]),
+                    "Amount": 0.0,
+                    "Time": 0.0,
+                }
+            )
     ranks_std = sorted(range(len(test_meta)), key=lambda i: test_meta[i]["V_std"])
     ranks_max = sorted(range(len(test_meta)), key=lambda i: test_meta[i]["V_max"])
     for r, i in enumerate(ranks_std):
@@ -223,7 +234,7 @@ def main():
 
                 # OOF per-cohort isotonic
                 iso = [0.0] * n_total
-                for c, idxs in cg.items():
+                for _c, idxs in cg.items():
                     if len(idxs) < 30:
                         for k in idxs:
                             iso[k] = probs[k]
@@ -242,7 +253,7 @@ def main():
                     worst_ece = 0.0
                     sum_ece = 0.0
                     n_strata_used = 0
-                    for c, idxs in cg.items():
+                    for _c, idxs in cg.items():
                         pp = [cal_probs[i] for i in idxs]
                         yy = [labels_m[i] for i in idxs]
                         if len(pp) < 5:
@@ -254,22 +265,41 @@ def main():
                             worst_ece = e
                     mean_cell = sum_ece / max(1, n_strata_used)
                     g_ece = ece(cal_probs, labels_m)
-                    brier = sum((cal_probs[i] - labels_m[i]) ** 2 for i in range(n_total)) / max(1, n_total)
-                    main_rows.append({
-                        "rate_pct": rate, "obs_rate_pct": round(obs_rate, 4),
-                        "tree": tree_name, "cohort": cohort_axis,
-                        "calibration": cal_name, "n_total": n_total, "n_pos": n_pos_m,
-                        "n_strata_used": n_strata_used,
-                        "global_ece": round(g_ece, 6),
-                        "worst_cell_ece": round(worst_ece, 6),
-                        "mean_cell_ece": round(mean_cell, 6),
-                        "brier": round(brier, 6),
-                    })
+                    brier = sum((cal_probs[i] - labels_m[i]) ** 2 for i in range(n_total)) / max(
+                        1, n_total
+                    )
+                    main_rows.append(
+                        {
+                            "rate_pct": rate,
+                            "obs_rate_pct": round(obs_rate, 4),
+                            "tree": tree_name,
+                            "cohort": cohort_axis,
+                            "calibration": cal_name,
+                            "n_total": n_total,
+                            "n_pos": n_pos_m,
+                            "n_strata_used": n_strata_used,
+                            "global_ece": round(g_ece, 6),
+                            "worst_cell_ece": round(worst_ece, 6),
+                            "mean_cell_ece": round(mean_cell, 6),
+                            "brier": round(brier, 6),
+                        }
+                    )
 
     print(f"[4/4] writing {len(main_rows)} rows")
-    fields = ["rate_pct", "obs_rate_pct", "tree", "cohort", "calibration",
-              "n_total", "n_pos", "n_strata_used", "global_ece",
-              "worst_cell_ece", "mean_cell_ece", "brier"]
+    fields = [
+        "rate_pct",
+        "obs_rate_pct",
+        "tree",
+        "cohort",
+        "calibration",
+        "n_total",
+        "n_pos",
+        "n_strata_used",
+        "global_ece",
+        "worst_cell_ece",
+        "mean_cell_ece",
+        "brier",
+    ]
     with open(f"{OUT_DIR}/p8_iter136_cal_realistic.tsv", "w") as fh:
         w = csv.DictWriter(fh, fieldnames=fields, delimiter="\t")
         w.writeheader()
@@ -285,19 +315,38 @@ def main():
         by_key[k]["n"] += 1
 
     with open(f"{OUT_DIR}/p8_iter136_worst_ece_curve.tsv", "w") as fh:
-        w = csv.DictWriter(fh, fieldnames=["rate_pct", "obs_rate_pct", "tree", "calibration",
-                                            "max_worst_ece_across_cohorts", "mean_global_ece"], delimiter="\t")
+        w = csv.DictWriter(
+            fh,
+            fieldnames=[
+                "rate_pct",
+                "obs_rate_pct",
+                "tree",
+                "calibration",
+                "max_worst_ece_across_cohorts",
+                "mean_global_ece",
+            ],
+            delimiter="\t",
+        )
         w.writeheader()
         for (rate, tree, cal), v in sorted(by_key.items()):
-            obs_rate = next((r["obs_rate_pct"] for r in main_rows
-                              if r["rate_pct"] == rate and r["tree"] == tree
-                              and r["calibration"] == cal), None)
-            w.writerow({
-                "rate_pct": rate, "obs_rate_pct": obs_rate,
-                "tree": tree, "calibration": cal,
-                "max_worst_ece_across_cohorts": round(v["max_worst"], 6),
-                "mean_global_ece": round(v["sum_global"] / max(1, v["n"]), 6),
-            })
+            obs_rate = next(
+                (
+                    r["obs_rate_pct"]
+                    for r in main_rows
+                    if r["rate_pct"] == rate and r["tree"] == tree and r["calibration"] == cal
+                ),
+                None,
+            )
+            w.writerow(
+                {
+                    "rate_pct": rate,
+                    "obs_rate_pct": obs_rate,
+                    "tree": tree,
+                    "calibration": cal,
+                    "max_worst_ece_across_cohorts": round(v["max_worst"], 6),
+                    "mean_global_ece": round(v["sum_global"] / max(1, v["n"]), 6),
+                }
+            )
 
     summary = {
         "iter": 136,

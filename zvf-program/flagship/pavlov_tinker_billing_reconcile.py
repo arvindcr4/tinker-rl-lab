@@ -55,8 +55,25 @@ if (CONTRACT_HARD_CAP, CONTRACT_OPERATIONAL_CAP, CONTRACT_SAFETY_RESERVE) != (
     raise RuntimeError("Pavlov billing reconciler cap constants drifted from the ledger contract")
 
 
-TERMINAL_STATUSES = {"completed", "complete", "succeeded", "success", "done", "billed", "paid", "settled"}
-PENDING_STATUSES = {"pending", "running", "active", "queued", "launched", "estimated", "in_progress"}
+TERMINAL_STATUSES = {
+    "completed",
+    "complete",
+    "succeeded",
+    "success",
+    "done",
+    "billed",
+    "paid",
+    "settled",
+}
+PENDING_STATUSES = {
+    "pending",
+    "running",
+    "active",
+    "queued",
+    "launched",
+    "estimated",
+    "in_progress",
+}
 REJECTED_STATUSES = {"rejected", "reject", "failed", "failure", "cancelled", "canceled", "aborted"}
 
 RUN_ID_KEYS = (
@@ -485,9 +502,7 @@ def _normalise_local_ledger(
     if len(receipt_containers) > 1 and any(
         value != receipt_containers[0][1] for _, value in receipt_containers[1:]
     ):
-        raise BillingReconciliationError(
-            "local ledger contains conflicting receipt containers"
-        )
+        raise BillingReconciliationError("local ledger contains conflicting receipt containers")
     receipts_value = receipt_containers[0][1] if receipt_containers else None
     if receipts_value is None:
         receipts: list[Any] = []
@@ -517,7 +532,9 @@ def _normalise_local_ledger(
             ("live_billed_usd", "live_billed_cost_usd", "known_usd", "billed_cost_usd"),
             f"ledger.receipts[{index}].live",
         )
-        base_estimated = _money(raw, ("base_eval_estimated_usd",), f"ledger.receipts[{index}].base_eval_estimated")
+        base_estimated = _money(
+            raw, ("base_eval_estimated_usd",), f"ledger.receipts[{index}].base_eval_estimated"
+        )
         base_unreconciled_value = _optional_money(
             raw,
             ("base_eval_unreconciled_usd",),
@@ -540,7 +557,9 @@ def _normalise_local_ledger(
         )
         if pending_value is None:
             pending_total = _optional_money(
-                raw, ("pending_usd", "conservative_pending_usd"), f"ledger.receipts[{index}].pending"
+                raw,
+                ("pending_usd", "conservative_pending_usd"),
+                f"ledger.receipts[{index}].pending",
             )
             if pending_total is None:
                 pending = Decimal("0")
@@ -591,12 +610,8 @@ def _normalise_local_ledger(
     sums = {
         "live": sum((run.live for run in runs), Decimal("0")),
         "pending": sum((run.pending for run in runs), Decimal("0")),
-        "base_eval_unreconciled": sum(
-            (run.base_eval_unreconciled for run in runs), Decimal("0")
-        ),
-        "base_eval_estimated": sum(
-            (run.base_eval_estimated for run in runs), Decimal("0")
-        ),
+        "base_eval_unreconciled": sum((run.base_eval_unreconciled for run in runs), Decimal("0")),
+        "base_eval_estimated": sum((run.base_eval_estimated for run in runs), Decimal("0")),
         "rejected": sum((run.rejected for run in runs), Decimal("0")),
     }
     aggregate_aliases = {
@@ -630,9 +645,7 @@ def _normalise_local_ledger(
         root, ("projected_usage_usd", "projected_usd", "projected"), "ledger.projected"
     )
     if supplied_proposed is None:
-        proposed = (
-            supplied_projected - current if supplied_projected is not None else Decimal("0")
-        )
+        proposed = supplied_projected - current if supplied_projected is not None else Decimal("0")
         if proposed < 0:
             raise BillingReconciliationError("ledger projected total is below receipt usage")
     else:
@@ -650,7 +663,9 @@ def _normalise_local_ledger(
     return runs, proposed, local_components, sums, allowed_models
 
 
-def _normalise_export(export: Any) -> tuple[list[Mapping[str, Any]], datetime | None, Mapping[str, Any]]:
+def _normalise_export(
+    export: Any,
+) -> tuple[list[Mapping[str, Any]], datetime | None, Mapping[str, Any]]:
     if isinstance(export, list):
         return export, None, {}
     if not isinstance(export, Mapping):
@@ -674,7 +689,10 @@ def _normalise_export(export: Any) -> tuple[list[Mapping[str, Any]], datetime | 
         "billing_export.as_of",
     )
     root_status = _first_non_none(export, ("billing_status", "status", "state"))
-    if isinstance(root_status, str) and root_status.strip().lower().replace("-", "_") in PENDING_STATUSES:
+    if (
+        isinstance(root_status, str)
+        and root_status.strip().lower().replace("-", "_") in PENDING_STATUSES
+    ):
         raise BillingReconciliationError("billing export is explicitly lagging")
     if _flag(export, ("billing_lagging", "lagging"), "billing_export.lagging") or _row_lagging(
         export, "billing_export"
@@ -738,7 +756,9 @@ def _row_lagging(row: Mapping[str, Any], field_name: str) -> bool:
     for key in ("billing_lagging", "lagging"):
         if key in row:
             flags.append(_bool(row[key], f"{field_name}.{key}"))
-    if "billing_complete" in row and not _bool(row["billing_complete"], f"{field_name}.billing_complete"):
+    if "billing_complete" in row and not _bool(
+        row["billing_complete"], f"{field_name}.billing_complete"
+    ):
         flags.append(True)
     if "is_final" in row and not _bool(row["is_final"], f"{field_name}.is_final"):
         flags.append(True)
@@ -794,13 +814,13 @@ def _billing_lines(export: Any) -> tuple[list[_BillingLine], datetime | None, Ma
         if len(component_containers) > 1 and any(
             value != component_containers[0][1] for _, value in component_containers[1:]
         ):
-            raise BillingReconciliationError(
-                f"{field_name} has conflicting component containers"
-            )
+            raise BillingReconciliationError(f"{field_name} has conflicting component containers")
         raw_components = component_containers[0][1] if component_containers else None
         if raw_components is not None:
             if not isinstance(raw_components, Mapping) or not raw_components:
-                raise BillingReconciliationError(f"{field_name}.components must be a non-empty object")
+                raise BillingReconciliationError(
+                    f"{field_name}.components must be a non-empty object"
+                )
             component_amounts: dict[str, Decimal] = {}
             for name, value in raw_components.items():
                 component = _component(name, f"{field_name}.components")
@@ -808,9 +828,7 @@ def _billing_lines(export: Any) -> tuple[list[_BillingLine], datetime | None, Ma
                     raise BillingReconciliationError(
                         f"{field_name}.components contains duplicate component {name!r}"
                     )
-                component_amounts[component] = _decimal(
-                    value, f"{field_name}.components.{name}"
-                )
+                component_amounts[component] = _decimal(value, f"{field_name}.components.{name}")
             total = _component_row_total(raw, field_name, state_hint)
             if total is not None and total != sum(component_amounts.values(), Decimal("0")):
                 raise BillingReconciliationError(
@@ -1038,9 +1056,7 @@ def _validate_caps(ledger: Mapping[str, Any]) -> None:
             )
 
 
-def reconcile_billing_export(
-    ledger: Mapping[str, Any], billing_export: Any
-) -> dict[str, Any]:
+def reconcile_billing_export(ledger: Mapping[str, Any], billing_export: Any) -> dict[str, Any]:
     """Reconcile an offline billing export with a local Decimal ledger.
 
     Structural uncertainty raises ``BillingReconciliationError``.  A valid
@@ -1053,19 +1069,17 @@ def reconcile_billing_export(
     )
     lines, export_as_of, metadata = _billing_lines(billing_export)
     billing_model = metadata.get("_reconciler_price_model")
-    if billing_model is not None and (
-        not allowed_models or billing_model not in allowed_models
-    ):
+    if billing_model is not None and (not allowed_models or billing_model not in allowed_models):
         raise BillingReconciliationError(f"unknown price model {billing_model!r}")
     billing_runs = _aggregate_billing(lines)
     local_by_id = {run.run_id: run for run in local_runs}
     unknown = sorted(set(billing_runs) - set(local_by_id))
     if unknown:
-        raise BillingReconciliationError(
-            f"billing export contains unknown run IDs {unknown}"
-        )
+        raise BillingReconciliationError(f"billing export contains unknown run IDs {unknown}")
     if billing_runs and not local_runs:
-        raise BillingReconciliationError("billing export cannot be reconciled without local run IDs")
+        raise BillingReconciliationError(
+            "billing export cannot be reconciled without local run IDs"
+        )
     if export_as_of is not None:
         late_runs = [
             run.run_id
@@ -1082,13 +1096,9 @@ def reconcile_billing_export(
 
     live = sum((run.live for run in effective), Decimal("0"))
     pending = sum((run.pending for run in effective), Decimal("0"))
-    base_unreconciled = sum(
-        (run.base_eval_unreconciled for run in effective), Decimal("0")
-    )
+    base_unreconciled = sum((run.base_eval_unreconciled for run in effective), Decimal("0"))
     rejected = sum((run.rejected for run in effective), Decimal("0"))
-    base_estimated = sum(
-        (run.base_eval_estimated for run in local_runs), Decimal("0")
-    )
+    base_estimated = sum((run.base_eval_estimated for run in local_runs), Decimal("0"))
     projected = live + pending + base_unreconciled + rejected + proposed
     operational_remaining = OPERATIONAL_CAP - projected
     hard_remaining = HARD_CAP - projected
@@ -1100,9 +1110,7 @@ def reconcile_billing_export(
             f"projected reconciled usage ${projected} exceeds operational cap ${OPERATIONAL_CAP}"
         )
     if projected > HARD_CAP:
-        reasons.append(
-            f"projected reconciled usage ${projected} exceeds hard cap ${HARD_CAP}"
-        )
+        reasons.append(f"projected reconciled usage ${projected} exceeds hard cap ${HARD_CAP}")
     if remaining_authorized == 0:
         reasons.append("no positive remaining authorized amount for another paid action")
 
@@ -1252,7 +1260,9 @@ def _display(value: Any) -> Any:
 
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("paths", nargs="*", type=Path, help="ledger path followed by billing export path")
+    parser.add_argument(
+        "paths", nargs="*", type=Path, help="ledger path followed by billing export path"
+    )
     parser.add_argument("--ledger", "--ledger-json", dest="ledger", type=Path)
     parser.add_argument(
         "--billing-export",

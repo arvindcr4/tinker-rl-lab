@@ -26,25 +26,29 @@ from utils.seed import set_global_seed, log_experiment_metadata
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(name)s - %(message)s"
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(name)s - %(message)s"
 )
 
 
 @dataclass
 class DPOScriptArguments:
     """Arguments for the DPO Shorter Responses Experiment."""
-    model_name: str = field(default="Qwen/Qwen2-0.5B-Instruct", metadata={"help": "The model to train."})
+
+    model_name: str = field(
+        default="Qwen/Qwen2-0.5B-Instruct", metadata={"help": "The model to train."}
+    )
     seed: int = field(default=42, metadata={"help": "Random seed for reproducibility."})
     num_prompts: int = field(default=100, metadata={"help": "Number of prompts."})
     num_generations: int = field(default=4, metadata={"help": "Number of generations per prompt."})
     max_new_tokens: int = field(default=100, metadata={"help": "Max new tokens."})
     output_dir: str = field(default="./dpo_shorter_output", metadata={"help": "Output directory."})
-    
+
     # DPO Config
     beta: float = field(default=0.1, metadata={"help": "KL penalty coefficient."})
     per_device_train_batch_size: int = field(default=4, metadata={"help": "Batch size per device."})
-    gradient_accumulation_steps: int = field(default=4, metadata={"help": "Gradient accumulation steps."})
+    gradient_accumulation_steps: int = field(
+        default=4, metadata={"help": "Gradient accumulation steps."}
+    )
     learning_rate: float = field(default=5e-7, metadata={"help": "Learning rate."})
     max_length: int = field(default=512, metadata={"help": "Max sequence length."})
     max_prompt_length: int = field(default=256, metadata={"help": "Max prompt length."})
@@ -57,8 +61,12 @@ class DPOScriptArguments:
 
     # Tracking and Hub
     push_to_hub: bool = field(default=False, metadata={"help": "Push the model to HF Hub."})
-    hub_model_id: str = field(default=None, metadata={"help": "The model ID to push to on the Hub."})
-    wandb_project: str = field(default="tinker-dpo-shorter", metadata={"help": "Wandb project name."})
+    hub_model_id: str = field(
+        default=None, metadata={"help": "The model ID to push to on the Hub."}
+    )
+    wandb_project: str = field(
+        default="tinker-dpo-shorter", metadata={"help": "Wandb project name."}
+    )
     wandb_run_name: str = field(default=None, metadata={"help": "Wandb run name."})
 
 
@@ -97,13 +105,14 @@ def create_preference_dataset(
             )
 
         responses = [
-            tokenizer.decode(out[inputs.input_ids.shape[1]:], skip_special_tokens=True)
+            tokenizer.decode(out[inputs.input_ids.shape[1] :], skip_special_tokens=True)
             for out in outputs
         ]
 
         # Check format (ends properly)
         valid_responses = [
-            (r, len(r)) for r in responses
+            (r, len(r))
+            for r in responses
             if r.strip() and not r.endswith("...")  # Basic format check
         ]
 
@@ -115,13 +124,15 @@ def create_preference_dataset(
 
         # Create pairwise preferences (shorter is chosen)
         for i, (chosen, chosen_len) in enumerate(valid_responses[:-1]):
-            for rejected, rejected_len in valid_responses[i + 1:]:
+            for rejected, rejected_len in valid_responses[i + 1 :]:
                 if rejected_len > chosen_len * 1.1:  # At least 10% longer
-                    data.append({
-                        "prompt": prompt,
-                        "chosen": chosen,
-                        "rejected": rejected,
-                    })
+                    data.append(
+                        {
+                            "prompt": prompt,
+                            "chosen": chosen,
+                            "rejected": rejected,
+                        }
+                    )
 
     return Dataset.from_list(data)
 
@@ -155,17 +166,13 @@ def load_prompts(num_prompts: int = 500) -> List[str]:
 
 def main():
     parser = HfArgumentParser((DPOScriptArguments,))
-    args, = parser.parse_args_into_dataclasses()
-    
+    (args,) = parser.parse_args_into_dataclasses()
+
     # Seed management for reproducibility
     env_info = set_global_seed(args.seed)
     logger.info(f"Seed set to {args.seed} | Environment: {env_info}")
 
-    wandb.init(
-        project=args.wandb_project,
-        name=args.wandb_run_name,
-        config=vars(args)
-    )
+    wandb.init(project=args.wandb_project, name=args.wandb_run_name, config=vars(args))
 
     logger.info("Loading model and tokenizer...")
     tokenizer = AutoTokenizer.from_pretrained(args.model_name)
@@ -231,21 +238,21 @@ def main():
 
     logger.info("Starting DPO training for shorter responses...")
     train_result = trainer.train(resume_from_checkpoint=True)
-    
+
     # Log final metrics to wandb
     metrics = train_result.metrics
     wandb.log(metrics)
-    
+
     final_output_dir = f"{output_dir}_final"
     trainer.save_model(final_output_dir)
-    
+
     if args.push_to_hub:
         logger.info(f"Pushing to Hub: {args.hub_model_id}")
         trainer.push_to_hub()
-        
+
     logger.info("Training complete!")
     wandb.finish()
-    
+
     # Log experiment metadata
     log_experiment_metadata(
         experiment_name="trl_dpo_shorter",

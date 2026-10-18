@@ -28,16 +28,19 @@ Outputs: platform_hybrid/experiments/results/length_bias_iter80_{perrun,summary,
          platform_hybrid/experiments/results/length_bias_iter80_meta.json
 Stdlib + numpy only.
 """
+
 import json, os, math
 import numpy as np
 
 import sys
 from pathlib import Path
+
 sys.path.append(str(Path(__file__).resolve().parent))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
+from _paths import REPO_ROOT
+
 W = str(REPO_ROOT)
 RES = os.path.join(W, "platform_hybrid/experiments", "results")
-BURN = 2          # drop initial transient steps before the AR(1) fit
+BURN = 2  # drop initial transient steps before the AR(1) fit
 B_BOOT = 2000
 SEED = 80
 # Dickey-Fuller (constant, no trend) approx critical values, N~25-40
@@ -81,9 +84,19 @@ def ar1_ou(L):
     bd, sed, _ = ols(Xd, dy)
     gamma, se_gamma = float(bd[1]), float(sed[1])
     df_stat = gamma / se_gamma if se_gamma > 0 else float("nan")
-    return dict(phi=phi, c=c, mu=mu, theta=theta, half_life=half_life,
-                sigma=sigma, df_stat=df_stat, gamma=gamma,
-                L0=float(L[0]), Lend=float(L[-1]), n=len(L))
+    return dict(
+        phi=phi,
+        c=c,
+        mu=mu,
+        theta=theta,
+        half_life=half_life,
+        sigma=sigma,
+        df_stat=df_stat,
+        gamma=gamma,
+        L0=float(L[0]),
+        Lend=float(L[-1]),
+        n=len(L),
+    )
 
 
 def load_runs(fname):
@@ -93,8 +106,7 @@ def load_runs(fname):
         steps = r["step_log"]
         L = [s["mean_comp_len"] for s in steps]
         R = [s["mean_reward"] for s in steps]
-        out.append(dict(algo=r["algo"], seed=r["seed"], model=r.get("model", ""),
-                        L=L, R=R))
+        out.append(dict(algo=r["algo"], seed=r["seed"], model=r.get("model", ""), L=L, R=R))
     return out
 
 
@@ -109,8 +121,7 @@ def analyse(runs, task):
         Rw = np.asarray(r["R"][BURN:], float)
         t = np.arange(len(Rw))
         r_slope = float(np.polyfit(t, Rw, 1)[0]) if len(Rw) > 2 else float("nan")
-        rows.append(dict(task=task, algo=r["algo"], seed=r["seed"], **fit,
-                         r_slope=r_slope))
+        rows.append(dict(task=task, algo=r["algo"], seed=r["seed"], **fit, r_slope=r_slope))
     return rows
 
 
@@ -124,12 +135,18 @@ def paired_bootstrap(rows, task, key):
     if len(diffs) == 0:
         return None
     rng = np.random.default_rng(SEED)
-    boots = np.array([np.mean(rng.choice(diffs, len(diffs), replace=True))
-                      for _ in range(B_BOOT)])
+    boots = np.array([np.mean(rng.choice(diffs, len(diffs), replace=True)) for _ in range(B_BOOT)])
     lo, hi = np.percentile(boots, [2.5, 97.5])
     p = 2.0 * min(np.mean(boots > 0), np.mean(boots < 0))
-    return dict(task=task, key=key, n_pairs=len(diffs), mean_diff=float(diffs.mean()),
-                ci_lo=float(lo), ci_hi=float(hi), p=float(min(1.0, p)))
+    return dict(
+        task=task,
+        key=key,
+        n_pairs=len(diffs),
+        mean_diff=float(diffs.mean()),
+        ci_lo=float(lo),
+        ci_hi=float(hi),
+        p=float(min(1.0, p)),
+    )
 
 
 def wr(path, header, rows, fmt):
@@ -141,24 +158,54 @@ def wr(path, header, rows, fmt):
 
 
 def main():
-    tasks = [("arithmetic", "drgrpo_vs_grpo.json"),
-             ("gsm8k_cot", "drgrpo_gsm8k_cot_full.json")]
+    tasks = [("arithmetic", "drgrpo_vs_grpo.json"), ("gsm8k_cot", "drgrpo_gsm8k_cot_full.json")]
     perrun = []
     for task, fname in tasks:
         perrun += analyse(load_runs(fname), task)
 
     def g(x, n=4):
-        return "nan" if (isinstance(x, float) and math.isnan(x)) else (
-            f"{x:.{n}f}" if isinstance(x, float) else str(x))
+        return (
+            "nan"
+            if (isinstance(x, float) and math.isnan(x))
+            else (f"{x:.{n}f}" if isinstance(x, float) else str(x))
+        )
 
     # per-run
-    hp = ["task", "algo", "seed", "n", "phi", "mu", "theta", "half_life",
-          "sigma", "df_stat", "L0", "Lend", "r_slope"]
-    wr(os.path.join(RES, "length_bias_iter80_perrun.tsv"), hp, perrun,
-       lambda r: [str(r["task"]), str(r["algo"]), str(r["seed"]), str(r["n"]),
-                  g(r["phi"]), g(r["mu"], 2), g(r["theta"]), g(r["half_life"], 2),
-                  g(r["sigma"], 3), g(r["df_stat"], 3), g(r["L0"], 2),
-                  g(r["Lend"], 2), g(r["r_slope"], 4)])
+    hp = [
+        "task",
+        "algo",
+        "seed",
+        "n",
+        "phi",
+        "mu",
+        "theta",
+        "half_life",
+        "sigma",
+        "df_stat",
+        "L0",
+        "Lend",
+        "r_slope",
+    ]
+    wr(
+        os.path.join(RES, "length_bias_iter80_perrun.tsv"),
+        hp,
+        perrun,
+        lambda r: [
+            str(r["task"]),
+            str(r["algo"]),
+            str(r["seed"]),
+            str(r["n"]),
+            g(r["phi"]),
+            g(r["mu"], 2),
+            g(r["theta"]),
+            g(r["half_life"], 2),
+            g(r["sigma"], 3),
+            g(r["df_stat"], 3),
+            g(r["L0"], 2),
+            g(r["Lend"], 2),
+            g(r["r_slope"], 4),
+        ],
+    )
 
     # summary per (task, algo)
     summ = []
@@ -167,19 +214,43 @@ def main():
             sub = [r for r in perrun if r["task"] == task and r["algo"] == algo]
             if not sub:
                 continue
+
             def m(k):
                 v = [r[k] for r in sub if math.isfinite(r[k])]
                 return float(np.mean(v)) if v else float("nan")
-            summ.append(dict(task=task, algo=algo, n=len(sub),
-                             phi=m("phi"), mu=m("mu"), theta=m("theta"),
-                             half_life=m("half_life"), sigma=m("sigma"),
-                             df_stat=m("df_stat"), r_slope=m("r_slope")))
-    hs = ["task", "algo", "n", "phi", "mu", "theta", "half_life", "sigma",
-          "df_stat", "r_slope"]
-    wr(os.path.join(RES, "length_bias_iter80_summary.tsv"), hs, summ,
-       lambda r: [r["task"], r["algo"], str(r["n"]), g(r["phi"]), g(r["mu"], 2),
-                  g(r["theta"]), g(r["half_life"], 2), g(r["sigma"], 3),
-                  g(r["df_stat"], 3), g(r["r_slope"], 4)])
+
+            summ.append(
+                dict(
+                    task=task,
+                    algo=algo,
+                    n=len(sub),
+                    phi=m("phi"),
+                    mu=m("mu"),
+                    theta=m("theta"),
+                    half_life=m("half_life"),
+                    sigma=m("sigma"),
+                    df_stat=m("df_stat"),
+                    r_slope=m("r_slope"),
+                )
+            )
+    hs = ["task", "algo", "n", "phi", "mu", "theta", "half_life", "sigma", "df_stat", "r_slope"]
+    wr(
+        os.path.join(RES, "length_bias_iter80_summary.tsv"),
+        hs,
+        summ,
+        lambda r: [
+            r["task"],
+            r["algo"],
+            str(r["n"]),
+            g(r["phi"]),
+            g(r["mu"], 2),
+            g(r["theta"]),
+            g(r["half_life"], 2),
+            g(r["sigma"], 3),
+            g(r["df_stat"], 3),
+            g(r["r_slope"], 4),
+        ],
+    )
 
     # unit-root verdict per (task, algo): fraction of seeds rejecting unit root at 5%
     ur = []
@@ -191,17 +262,32 @@ def main():
             dfs = [r["df_stat"] for r in sub if math.isfinite(r["df_stat"])]
             rej5 = sum(1 for v in dfs if v < DF_CRIT["5%"])
             rej1 = sum(1 for v in dfs if v < DF_CRIT["1%"])
-            ur.append(dict(task=task, algo=algo, n=len(dfs),
-                           mean_df=float(np.mean(dfs)) if dfs else float("nan"),
-                           frac_reject_5pct=rej5 / len(dfs) if dfs else float("nan"),
-                           frac_reject_1pct=rej1 / len(dfs) if dfs else float("nan"),
-                           crit_5pct=DF_CRIT["5%"]))
-    hu = ["task", "algo", "n", "mean_df", "frac_reject_5pct", "frac_reject_1pct",
-          "crit_5pct"]
-    wr(os.path.join(RES, "length_bias_iter80_unitroot.tsv"), hu, ur,
-       lambda r: [r["task"], r["algo"], str(r["n"]), g(r["mean_df"], 3),
-                  g(r["frac_reject_5pct"], 2), g(r["frac_reject_1pct"], 2),
-                  g(r["crit_5pct"], 2)])
+            ur.append(
+                dict(
+                    task=task,
+                    algo=algo,
+                    n=len(dfs),
+                    mean_df=float(np.mean(dfs)) if dfs else float("nan"),
+                    frac_reject_5pct=rej5 / len(dfs) if dfs else float("nan"),
+                    frac_reject_1pct=rej1 / len(dfs) if dfs else float("nan"),
+                    crit_5pct=DF_CRIT["5%"],
+                )
+            )
+    hu = ["task", "algo", "n", "mean_df", "frac_reject_5pct", "frac_reject_1pct", "crit_5pct"]
+    wr(
+        os.path.join(RES, "length_bias_iter80_unitroot.tsv"),
+        hu,
+        ur,
+        lambda r: [
+            r["task"],
+            r["algo"],
+            str(r["n"]),
+            g(r["mean_df"], 3),
+            g(r["frac_reject_5pct"], 2),
+            g(r["frac_reject_1pct"], 2),
+            g(r["crit_5pct"], 2),
+        ],
+    )
 
     # seed-paired GRPO vs Dr.GRPO
     paired = []
@@ -211,31 +297,50 @@ def main():
             if res:
                 paired.append(res)
     hpr = ["task", "key", "n_pairs", "mean_diff", "ci_lo", "ci_hi", "p"]
-    wr(os.path.join(RES, "length_bias_iter80_paired.tsv"), hpr, paired,
-       lambda r: [r["task"], r["key"], str(r["n_pairs"]), g(r["mean_diff"], 4),
-                  g(r["ci_lo"], 4), g(r["ci_hi"], 4), g(r["p"], 4)])
+    wr(
+        os.path.join(RES, "length_bias_iter80_paired.tsv"),
+        hpr,
+        paired,
+        lambda r: [
+            r["task"],
+            r["key"],
+            str(r["n_pairs"]),
+            g(r["mean_diff"], 4),
+            g(r["ci_lo"], 4),
+            g(r["ci_hi"], 4),
+            g(r["p"], 4),
+        ],
+    )
 
-    meta = dict(iter=80,
-                task="Pillar 4 (Length Bias / Dr.GRPO): OU equilibrium-length + "
-                     "Dickey-Fuller unit-root falsification of unbounded length inflation",
-                inputs=[t[1] for t in tasks], burn=BURN, b_boot=B_BOOT,
-                df_crit=DF_CRIT, model="AR(1)/OU on mean_comp_len level series",
-                citation="Liu et al. 2025, arXiv:2503.20783 (Dr.GRPO)")
-    json.dump(meta, open(os.path.join(RES, "length_bias_iter80_meta.json"), "w"),
-              indent=1)
+    meta = dict(
+        iter=80,
+        task="Pillar 4 (Length Bias / Dr.GRPO): OU equilibrium-length + "
+        "Dickey-Fuller unit-root falsification of unbounded length inflation",
+        inputs=[t[1] for t in tasks],
+        burn=BURN,
+        b_boot=B_BOOT,
+        df_crit=DF_CRIT,
+        model="AR(1)/OU on mean_comp_len level series",
+        citation="Liu et al. 2025, arXiv:2503.20783 (Dr.GRPO)",
+    )
+    json.dump(meta, open(os.path.join(RES, "length_bias_iter80_meta.json"), "w"), indent=1)
     print("wrote length_bias_iter80_meta.json")
 
     # console verdict
     print("\n=== UNIT-ROOT VERDICT ===")
     for r in ur:
-        print(f"{r['task']:11s} {r['algo']:8s}  mean DF={r['mean_df']:.2f}  "
-              f"reject unit-root @5%: {r['frac_reject_5pct']*100:.0f}% of seeds "
-              f"(crit {DF_CRIT['5%']})")
+        print(
+            f"{r['task']:11s} {r['algo']:8s}  mean DF={r['mean_df']:.2f}  "
+            f"reject unit-root @5%: {r['frac_reject_5pct'] * 100:.0f}% of seeds "
+            f"(crit {DF_CRIT['5%']})"
+        )
     print("\n=== PAIRED GRPO - Dr.GRPO ===")
     for r in paired:
         star = "*" if r["p"] < 0.05 else " "
-        print(f"{r['task']:11s} d{r['key']:9s} = {r['mean_diff']:+.3f} "
-              f"[{r['ci_lo']:+.3f},{r['ci_hi']:+.3f}] p={r['p']:.3f}{star}")
+        print(
+            f"{r['task']:11s} d{r['key']:9s} = {r['mean_diff']:+.3f} "
+            f"[{r['ci_lo']:+.3f},{r['ci_hi']:+.3f}] p={r['p']:.3f}{star}"
+        )
 
 
 if __name__ == "__main__":

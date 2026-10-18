@@ -73,12 +73,10 @@ class SDKWallTests(unittest.TestCase):
 
     def _track(self, workdir):
         info = support.load_json(self, workdir / "process.json")
-        self.assertEqual(
-            info.get("pgid"),
-            info.get("pid"),
-            "each SDK operation owns exactly one process group led by the worker",
+        assert info.get("pgid") == info.get("pid"), (
+            "each SDK operation owns exactly one process group led by the worker"
         )
-        self.assertIn("deadline", info, "controller deadline must be persisted")
+        assert "deadline" in info, "controller deadline must be persisted"
         self._pgids.append(info["pgid"])
         return info
 
@@ -99,52 +97,44 @@ class SDKWallTests(unittest.TestCase):
                 workdir.mkdir(parents=True, exist_ok=True)
                 command = support.worker_hang_argv(shape, workdir)
                 started = time.monotonic()
-                outcome = support.call_run_child(self, command, workdir / "result.json", workdir, timeout)
+                outcome = support.call_run_child(
+                    self, command, workdir / "result.json", workdir, timeout
+                )
                 elapsed = time.monotonic() - started
 
-                self.assertTrue(
-                    support.is_unknown(outcome),
-                    "{}: hung SDK path must be UNKNOWN, got {!r}".format(shape, outcome),
+                assert support.is_unknown(outcome), (
+                    "{}: hung SDK path must be UNKNOWN, got {!r}".format(shape, outcome)
                 )
-                self.assertIsNone(
-                    support.outcome_result(outcome),
-                    "{}: a blocked operation must not return a result".format(shape),
+                assert support.outcome_result(outcome) is None, (
+                    "{}: a blocked operation must not return a result".format(shape)
                 )
 
                 info = self._track(workdir)
                 worker_pid = info["pid"]
                 pgid = info["pgid"]
 
-                self.assertTrue(
-                    support.pid_dead(worker_pid, timeout=5.0),
-                    "{}: worker {} was not reaped after the wall".format(shape, worker_pid),
+                assert support.pid_dead(worker_pid, timeout=5.0), (
+                    "{}: worker {} was not reaped after the wall".format(shape, worker_pid)
                 )
-                self.assertTrue(
-                    support.group_absent(pgid, timeout=5.0),
-                    "{}: owned group {} survived the wall".format(shape, pgid),
+                assert support.group_absent(pgid, timeout=5.0), (
+                    "{}: owned group {} survived the wall".format(shape, pgid)
                 )
-                self.assertLess(
-                    elapsed,
-                    timeout + TOTAL_CLEANUP_CONTROLLER_SECONDS,
-                    "{}: wall exceeded the non-renewing cleanup budget".format(shape),
+                assert elapsed < timeout + TOTAL_CLEANUP_CONTROLLER_SECONDS, (
+                    "{}: wall exceeded the non-renewing cleanup budget".format(shape)
                 )
-                self.assertLess(
-                    elapsed,
-                    55.0,
+                assert elapsed < 55.0, (
                     "{}: worker hangs for 60s; returning in {:.1f}s proves an "
-                    "external kill rather than natural exit".format(shape, elapsed),
+                    "external kill rather than natural exit".format(shape, elapsed)
                 )
 
                 if shape == "hang_after_result":
-                    self.assertTrue(
-                        (workdir / "result.json").exists(),
-                        "fixture shape precondition: worker wrote result.json before hanging",
+                    assert (workdir / "result.json").exists(), (
+                        "fixture shape precondition: worker wrote result.json before hanging"
                     )
                 if shape == "hang_with_same_group_child":
                     before = support.load_json(self, workdir / "t_before.json")
-                    self.assertTrue(
-                        support.pid_dead(before["child_pid"], timeout=5.0),
-                        "{}: same-group child must be killed with the group".format(shape),
+                    assert support.pid_dead(before["child_pid"], timeout=5.0), (
+                        "{}: same-group child must be killed with the group".format(shape)
                     )
 
     # -- test 2 ------------------------------------------------------------
@@ -159,39 +149,30 @@ class SDKWallTests(unittest.TestCase):
         outcome = support.call_run_child(self, command, workdir / "result.json", workdir, timeout)
         elapsed = time.monotonic() - started
 
-        self.assertTrue(
-            support.is_unknown(outcome),
-            "guard failure must produce UNKNOWN, got {!r}".format(outcome),
+        assert support.is_unknown(outcome), "guard failure must produce UNKNOWN, got {!r}".format(
+            outcome
         )
-        self.assertIsNone(support.outcome_result(outcome))
+        assert support.outcome_result(outcome) is None
         unknown_path = workdir / "unknown.json"
         if unknown_path.exists():
             unknown = support.load_json(self, unknown_path)
-            self.assertTrue(
-                unknown.get("replay_forbidden"),
-                "guard failure is immutable UNKNOWN/no-replay",
-            )
+            assert unknown.get("replay_forbidden"), "guard failure is immutable UNKNOWN/no-replay"
 
         info = self._track(workdir)
-        self.assertTrue(
-            support.pid_dead(info["pid"], timeout=5.0),
-            "guard failure must interrupt and reap the running SDK process",
+        assert support.pid_dead(info["pid"], timeout=5.0), (
+            "guard failure must interrupt and reap the running SDK process"
         )
-        self.assertTrue(
-            support.group_absent(info["pgid"], timeout=5.0),
-            "guard failure must SIGKILL the owned group",
+        assert support.group_absent(info["pgid"], timeout=5.0), (
+            "guard failure must SIGKILL the owned group"
         )
-        self.assertLess(elapsed, timeout + TOTAL_CLEANUP_CONTROLLER_SECONDS)
+        assert elapsed < timeout + TOTAL_CLEANUP_CONTROLLER_SECONDS
 
         invocations = (workdir / "t_invocations.log").read_text().splitlines()
-        self.assertEqual(
-            len(invocations),
-            1,
-            "no automatic operation retry after guard failure: {}".format(invocations),
+        assert len(invocations) == 1, "no automatic operation retry after guard failure: {}".format(
+            invocations
         )
-        self.assertFalse(
-            (workdir / "result.json").exists(),
-            "an interrupted SDK process must not produce a successful result artifact",
+        assert not (workdir / "result.json").exists(), (
+            "an interrupted SDK process must not produce a successful result artifact"
         )
 
     # -- test 3 ------------------------------------------------------------
@@ -207,15 +188,17 @@ class SDKWallTests(unittest.TestCase):
         )
         for command, workdir, timeout in scenarios:
             workdir.mkdir(parents=True, exist_ok=True)
-            outcome = support.call_run_child(self, command, workdir / "result.json", workdir, timeout)
-            outcomes.append((workdir.name, support.is_success(outcome), support.is_unknown(outcome)))
+            outcome = support.call_run_child(
+                self, command, workdir / "result.json", workdir, timeout
+            )
+            outcomes.append(
+                (workdir.name, support.is_success(outcome), support.is_unknown(outcome))
+            )
             self._track(workdir)
-        self.assertEqual(
-            [flag for _, flag, _ in outcomes],
-            [True, False],
-            "controller sanity: exit-0 op succeeds, exit-7 op is UNKNOWN",
+        assert [flag for _, flag, _ in outcomes] == [True, False], (
+            "controller sanity: exit-0 op succeeds, exit-7 op is UNKNOWN"
         )
-        self.assertEqual([flag for _, _, flag in outcomes], [False, True])
+        assert [flag for _, _, flag in outcomes] == [False, True]
 
         # Any cleanup worker thread must have exited by now; poll briefly.
         deadline = time.monotonic() + 3.0
@@ -229,10 +212,8 @@ class SDKWallTests(unittest.TestCase):
             if not leftover or time.monotonic() >= deadline:
                 break
             time.sleep(0.1)
-        self.assertEqual(
-            [thread.name for thread in leftover],
-            [],
-            "controller leaked live threads after operations finished",
+        assert [thread.name for thread in leftover] == [], (
+            "controller leaked live threads after operations finished"
         )
 
         # Every spawned child (direct workers) must be reaped: no zombies and
@@ -255,10 +236,8 @@ class SDKWallTests(unittest.TestCase):
         # No module-level executor may keep live threads.
         for value in vars(support.bounded_procgroup).values():
             if isinstance(value, concurrent.futures.Executor):
-                self.assertEqual(
-                    getattr(value, "_threads", []),
-                    [],
-                    "module-level executor {!r} still has live threads".format(value),
+                assert getattr(value, "_threads", []) == [], (
+                    "module-level executor {!r} still has live threads".format(value)
                 )
 
     # -- test 4 ------------------------------------------------------------
@@ -283,38 +262,29 @@ class SDKWallTests(unittest.TestCase):
         outcome = support.call_run_child(self, command, workdir / "result.json", workdir, timeout)
         elapsed = time.monotonic() - started
 
-        self.assertFalse(
-            support.is_success(outcome),
-            "missing result must not be treated as success, got {!r}".format(outcome),
+        assert not support.is_success(outcome), (
+            "missing result must not be treated as success, got {!r}".format(outcome)
         )
-        self.assertTrue(
-            support.is_unknown(outcome),
-            "missing result is UNKNOWN, not proof of no delayed creation: {!r}".format(outcome),
+        assert support.is_unknown(outcome), (
+            "missing result is UNKNOWN, not proof of no delayed creation: {!r}".format(outcome)
         )
 
         info = self._track(workdir)
         deadline_epoch = info["deadline"]
-        self.assertIsInstance(deadline_epoch, float)
-        self.assertGreaterEqual(
-            deadline_epoch,
-            launch_epoch + timeout - 3.0,
-            "deadline must be the launch deadline, not shrunk",
+        assert isinstance(deadline_epoch, float)
+        assert deadline_epoch >= launch_epoch + timeout - 3.0, (
+            "deadline must be the launch deadline, not shrunk"
         )
-        self.assertLessEqual(
-            deadline_epoch,
-            launch_epoch + timeout + 3.0,
+        assert deadline_epoch <= launch_epoch + timeout + 3.0, (
             "deadline was extended past the once-converted launch deadline "
             "(launch+timeout={:.3f}, recorded={:.3f}): cleanup deadlines must not renew "
-            "on reconciliation".format(launch_epoch + timeout, deadline_epoch),
+            "on reconciliation".format(launch_epoch + timeout, deadline_epoch)
         )
-        self.assertLess(
-            elapsed,
-            timeout + TOTAL_CLEANUP_CONTROLLER_SECONDS,
-            "cleanup outlived the non-renewing budget",
+        assert elapsed < timeout + TOTAL_CLEANUP_CONTROLLER_SECONDS, (
+            "cleanup outlived the non-renewing budget"
         )
-        self.assertTrue(
-            support.group_absent(info["pgid"], timeout=5.0),
-            "missing-result cleanup must still finalize the group",
+        assert support.group_absent(info["pgid"], timeout=5.0), (
+            "missing-result cleanup must still finalize the group"
         )
 
     # -- test 5 ------------------------------------------------------------
@@ -329,23 +299,23 @@ class SDKWallTests(unittest.TestCase):
         command = support.worker_hang_argv("hang_after_revoking_work_disk", workdir)
         started = time.monotonic()
         try:
-            outcome = support.call_run_child(self, command, workdir / "result.json", workdir, timeout)
-        except Exception as exc:  # noqa: BLE001
+            outcome = support.call_run_child(
+                self, command, workdir / "result.json", workdir, timeout
+            )
+        except Exception as exc:
             self.fail(
                 "cleanup must not raise when the work-disk guard cannot write: {!r}".format(exc)
             )
         elapsed = time.monotonic() - started
 
-        self.assertTrue(
-            support.is_unknown(outcome),
-            "work-disk guard failure path must still be UNKNOWN, got {!r}".format(outcome),
+        assert support.is_unknown(outcome), (
+            "work-disk guard failure path must still be UNKNOWN, got {!r}".format(outcome)
         )
-        self.assertLess(elapsed, timeout + TOTAL_CLEANUP_CONTROLLER_SECONDS)
+        assert elapsed < timeout + TOTAL_CLEANUP_CONTROLLER_SECONDS
 
         child_pid = int((workdir / "child.pid").read_text().strip())
-        self.assertTrue(
-            support.pid_dead(child_pid, timeout=5.0),
-            "the same-group child must be killed even when the guard cannot write",
+        assert support.pid_dead(child_pid, timeout=5.0), (
+            "the same-group child must be killed even when the guard cannot write"
         )
         # The owned group must be absent. process.json was written at launch
         # (before the worker revoked permissions); tolerate its absence here in
@@ -354,9 +324,8 @@ class SDKWallTests(unittest.TestCase):
         if info_path.exists():
             info = support.load_json(self, info_path)
             self._pgids.append(info["pgid"])
-            self.assertTrue(
-                support.group_absent(info["pgid"], timeout=5.0),
-                "owned group must be finalized without the work-disk guard",
+            assert support.group_absent(info["pgid"], timeout=5.0), (
+                "owned group must be finalized without the work-disk guard"
             )
         else:
             # Independent fallback: the worker's own group is gone iff both the
@@ -367,9 +336,8 @@ class SDKWallTests(unittest.TestCase):
 
                 before = _json.loads(before_path.read_text())
                 self._pgids.append(before["worker_pgid"])
-                self.assertTrue(
-                    support.group_absent(before["worker_pgid"], timeout=5.0),
-                    "worker-owned group must be finalized without the work-disk guard",
+                assert support.group_absent(before["worker_pgid"], timeout=5.0), (
+                    "worker-owned group must be finalized without the work-disk guard"
                 )
 
     # -- test 6 ------------------------------------------------------------
@@ -398,19 +366,31 @@ class SDKWallTests(unittest.TestCase):
                 "tasks": 0,
             }
 
-        exact = candidate(persisted["app_name"], persisted["image_tag"], persisted["reservation_tag"])
+        exact = candidate(
+            persisted["app_name"], persisted["image_tag"], persisted["reservation_tag"]
+        )
         wrong_name = candidate(
-            "other-app", persisted["image_tag"], persisted["reservation_tag"],
+            "other-app",
+            persisted["image_tag"],
+            persisted["reservation_tag"],
             description="pes-e1-wave10 related workload",
         )
-        wrong_image = candidate(persisted["app_name"], "registry.internal/pes-e1:v5", persisted["reservation_tag"])
-        wrong_reservation = candidate(persisted["app_name"], persisted["image_tag"], "e1-hold-other")
+        wrong_image = candidate(
+            persisted["app_name"], "registry.internal/pes-e1:v5", persisted["reservation_tag"]
+        )
+        wrong_reservation = candidate(
+            persisted["app_name"], persisted["image_tag"], "e1-hold-other"
+        )
         deployed = candidate(
-            persisted["app_name"], persisted["image_tag"], persisted["reservation_tag"],
+            persisted["app_name"],
+            persisted["image_tag"],
+            persisted["reservation_tag"],
             state="deployed",
         )
         duplicate = candidate(
-            persisted["app_name"], persisted["image_tag"], persisted["reservation_tag"],
+            persisted["app_name"],
+            persisted["image_tag"],
+            persisted["reservation_tag"],
             app_id="ap-2",
         )
 
@@ -419,7 +399,11 @@ class SDKWallTests(unittest.TestCase):
             ("description match alone is rejected", [wrong_name], False),
             ("image tag mismatch is rejected", [wrong_image], False),
             ("reservation tag mismatch is rejected", [wrong_reservation], False),
-            ("deployed/queued apps are rejected even with exact identity and zero tasks", [deployed], False),
+            (
+                "deployed/queued apps are rejected even with exact identity and zero tasks",
+                [deployed],
+                False,
+            ),
             ("two exact-looking candidates are ambiguous and rejected", [exact, duplicate], False),
             ("named lookup absence is UNKNOWN, never reconciled", [], False),
         ]
@@ -433,10 +417,8 @@ class SDKWallTests(unittest.TestCase):
                         "reconciliation offline".format(", ".join(support._RECONCILE_NAMES))
                     )
                     self.skipTest(reason)
-                self.assertEqual(
-                    support.reconcile_says_reconciled(self, result),
-                    expected,
-                    "{}: verdict {!r}".format(label, result),
+                assert support.reconcile_says_reconciled(self, result) == expected, (
+                    "{}: verdict {!r}".format(label, result)
                 )
 
 

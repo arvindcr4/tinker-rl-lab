@@ -25,10 +25,10 @@ from common import RESULTS_DIR, utc_now, write_result
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--pool", required=True, type=Path)
-    ap.add_argument("--reason", required=True,
-                    help="why the run stopped (recorded verbatim)")
-    ap.add_argument("--min-prompts", type=int, default=100,
-                    help="refuse to finalize below this count")
+    ap.add_argument("--reason", required=True, help="why the run stopped (recorded verbatim)")
+    ap.add_argument(
+        "--min-prompts", type=int, default=100, help="refuse to finalize below this count"
+    )
     args = ap.parse_args()
 
     pool = json.loads(args.pool.read_text())
@@ -36,22 +36,26 @@ def main() -> None:
         raise SystemExit("Pool is already complete; nothing to finalize.")
     banked = len(pool.get("prompts", []))
     if banked < args.min_prompts:
-        raise SystemExit(f"Only {banked} prompts banked (< {args.min_prompts}); "
-                         "refusing to finalize.")
+        raise SystemExit(
+            f"Only {banked} prompts banked (< {args.min_prompts}); refusing to finalize."
+        )
 
     planned = pool.get("n_prompts", banked)
     new_tag = f"{pool['tag']}_p{banked}"
-    pool.update({
-        "status": "complete",
-        "tag": new_tag,
-        "truncated": True,
-        "sampling_completeness": "truncated", "actual_prompts": banked,
-        "exploratory_only": True,
-        "planned_prompts": planned,
-        "n_prompts": banked,
-        "truncation_reason": args.reason,
-        "finalized_at": utc_now(),
-    })
+    pool.update(
+        {
+            "status": "complete",
+            "tag": new_tag,
+            "truncated": True,
+            "sampling_completeness": "truncated",
+            "actual_prompts": banked,
+            "exploratory_only": True,
+            "planned_prompts": planned,
+            "n_prompts": banked,
+            "truncation_reason": args.reason,
+            "finalized_at": utc_now(),
+        }
+    )
     out = RESULTS_DIR / f"pool_{new_tag}.json"
     if out.exists():
         raise SystemExit("refusing to overwrite an existing finalized artifact")

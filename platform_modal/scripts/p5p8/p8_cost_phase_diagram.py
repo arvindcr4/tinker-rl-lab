@@ -19,17 +19,18 @@ platform_hybrid/experiments/results/p5p8/figures/p8_cost_phase_diagram.{png,pdf}
 
 Stdlib + numpy + pandas + xgboost + sklearn + matplotlib. <=300 lines.
 """
+
 import json
-from itertools import product
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
 from sklearn.metrics import roc_auc_score
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-from _p8_common import (  # noqa: E402
+from _p8_common import (
     fit_tree,
 )
 
@@ -71,6 +72,7 @@ def expected_cost(p, y, L, c_inv=C_INV, c_sense=C_SENSE):
     """
     # Cost-optimal threshold: alert if (p >= L / (L + c_inv)) i.e. p >= tau_star
     from _review_policy import alert_threshold
+
     tau = alert_threshold(c_inv, L)
     alert = p >= tau
     n = len(p)
@@ -89,6 +91,7 @@ def per_bootstrap_diff(y_te, p_te_20, p_te_24, L, c_sense=C_SENSE):
     rng = np.random.default_rng(BOOT_SEED)
     n = len(y_te)
     from _review_policy import alert_threshold
+
     tau = alert_threshold(C_INV, L)
     diffs = []
     for _ in range(N_BOOT):
@@ -138,29 +141,34 @@ def main():
         print(f"  sigma={sigma:.3f}: XGB-24full AUC={auc_24:.4f}")
         for L in L_GRID:
             from _review_policy import alert_threshold
+
             tau = alert_threshold(C_INV, L)
             cost_20 = expected_cost(p_te_20, y_te, L, c_sense=0.0)
             cost_24 = expected_cost(p_te_24, y_te, L, c_sense=C_SENSE)
-            rows.append({
-                "sigma": sigma,
-                "L": L,
-                "tau_star": tau,
-                "cost_20raw_per_dec": cost_20 / len(y_te),
-                "cost_24full_per_dec": cost_24 / len(y_te),
-                "delta_cost_per_dec": (cost_24 - cost_20) / len(y_te),
-                "auc_20raw": float(roc_auc_score(y_te, p_te_20)),
-                "auc_24full": float(auc_24),
-            })
+            rows.append(
+                {
+                    "sigma": sigma,
+                    "L": L,
+                    "tau_star": tau,
+                    "cost_20raw_per_dec": cost_20 / len(y_te),
+                    "cost_24full_per_dec": cost_24 / len(y_te),
+                    "delta_cost_per_dec": (cost_24 - cost_20) / len(y_te),
+                    "auc_20raw": float(roc_auc_score(y_te, p_te_20)),
+                    "auc_24full": float(auc_24),
+                }
+            )
             m, lo, hi = per_bootstrap_diff(y_te, p_te_20, p_te_24, L)
-            boot_rows.append({
-                "sigma": sigma,
-                "L": L,
-                "delta_boot_mean": m,
-                "delta_ci025": lo,
-                "delta_ci975": hi,
-                "ci_excludes_zero": bool(lo > 0.0 or hi < 0.0),
-                "sensor_pays_off": bool(hi < 0.0),  # cost delta < 0 = sensor cheaper
-            })
+            boot_rows.append(
+                {
+                    "sigma": sigma,
+                    "L": L,
+                    "delta_boot_mean": m,
+                    "delta_ci025": lo,
+                    "delta_ci975": hi,
+                    "ci_excludes_zero": bool(lo > 0.0 or hi < 0.0),
+                    "sensor_pays_off": bool(hi < 0.0),  # cost delta < 0 = sensor cheaper
+                }
+            )
 
     df = pd.DataFrame(rows)
     df_boot = pd.DataFrame(boot_rows)
@@ -187,9 +195,7 @@ def main():
             "min_delta_at_sigma05": float(
                 df_boot[df_boot["sigma"] == 0.05]["delta_boot_mean"].min()
             ),
-            "max_delta_at_sigma0": float(
-                df_boot[df_boot["sigma"] == 0.0]["delta_boot_mean"].max()
-            ),
+            "max_delta_at_sigma0": float(df_boot[df_boot["sigma"] == 0.0]["delta_boot_mean"].max()),
         },
         "boot_table": boot_rows,
         "rows": rows,
@@ -201,8 +207,12 @@ def main():
     fig, axes = plt.subplots(1, 2, figsize=(12, 5))
     pivot_delta = df.pivot(index="L", columns="sigma", values="delta_cost_per_dec")
     im0 = axes[0].pcolormesh(
-        np.arange(len(SIGMA_GRID)), np.arange(len(L_GRID)),
-        pivot_delta.values, cmap="RdBu_r", vmin=-0.02, vmax=0.02,
+        np.arange(len(SIGMA_GRID)),
+        np.arange(len(L_GRID)),
+        pivot_delta.values,
+        cmap="RdBu_r",
+        vmin=-0.02,
+        vmax=0.02,
     )
     axes[0].set_xticks(np.arange(len(SIGMA_GRID)) + 0.5)
     axes[0].set_xticklabels([f"{s:.3f}" for s in SIGMA_GRID], rotation=45)
@@ -215,8 +225,12 @@ def main():
 
     pivot_payoff = df_boot.pivot(index="L", columns="sigma", values="delta_boot_mean")
     im1 = axes[1].pcolormesh(
-        np.arange(len(SIGMA_GRID)), np.arange(len(L_GRID)),
-        pivot_payoff.values, cmap="RdBu_r", vmin=-0.02, vmax=0.02,
+        np.arange(len(SIGMA_GRID)),
+        np.arange(len(L_GRID)),
+        pivot_payoff.values,
+        cmap="RdBu_r",
+        vmin=-0.02,
+        vmax=0.02,
     )
     axes[1].set_xticks(np.arange(len(SIGMA_GRID)) + 0.5)
     axes[1].set_xticklabels([f"{s:.3f}" for s in SIGMA_GRID], rotation=45)

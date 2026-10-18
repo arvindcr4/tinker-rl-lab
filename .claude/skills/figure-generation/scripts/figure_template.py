@@ -22,7 +22,7 @@ Usage:
 import argparse
 import sys
 
-PREAMBLE = '''import matplotlib
+PREAMBLE = """import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import numpy as np
@@ -49,10 +49,11 @@ plt.rcParams.update({
 
 # Colorblind-friendly palette
 COLORS = ['#2196F3', '#FF5722', '#4CAF50', '#FFC107', '#9C27B0', '#607D8B', '#E91E63', '#00BCD4']
-'''
+"""
 
 TEMPLATES = {
-    "bar": PREAMBLE + '''
+    "bar": PREAMBLE
+    + """
 # === Baseline Comparison Bar Chart ===
 fig, ax = plt.subplots(figsize=(7, 4.5))
 
@@ -73,9 +74,9 @@ plt.tight_layout()
 plt.savefig('OUTPUT_NAME.png', dpi=300, bbox_inches='tight')
 plt.savefig('OUTPUT_NAME.pdf', bbox_inches='tight')
 print("Figure saved.")
-''',
-
-    "training-curve": PREAMBLE + '''
+""",
+    "training-curve": PREAMBLE
+    + """
 # === Training Curves (Loss + Accuracy) ===
 fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 4))
 
@@ -104,9 +105,9 @@ plt.tight_layout()
 plt.savefig('OUTPUT_NAME.png', dpi=300, bbox_inches='tight')
 plt.savefig('OUTPUT_NAME.pdf', bbox_inches='tight')
 print("Figure saved.")
-''',
-
-    "heatmap": PREAMBLE + '''
+""",
+    "heatmap": PREAMBLE
+    + """
 import seaborn as sns
 
 # === Heatmap / Confusion Matrix ===
@@ -127,9 +128,9 @@ plt.tight_layout()
 plt.savefig('OUTPUT_NAME.png', dpi=300, bbox_inches='tight')
 plt.savefig('OUTPUT_NAME.pdf', bbox_inches='tight')
 print("Figure saved.")
-''',
-
-    "ablation": PREAMBLE + '''
+""",
+    "ablation": PREAMBLE
+    + """
 # === Ablation Study Grouped Bar Chart ===
 fig, ax = plt.subplots(figsize=(8, 4.5))
 
@@ -157,9 +158,9 @@ plt.tight_layout()
 plt.savefig('OUTPUT_NAME.png', dpi=300, bbox_inches='tight')
 plt.savefig('OUTPUT_NAME.pdf', bbox_inches='tight')
 print("Figure saved.")
-''',
-
-    "line": PREAMBLE + '''
+""",
+    "line": PREAMBLE
+    + """
 # === Multi-Line Comparison Plot ===
 fig, ax = plt.subplots(figsize=(7, 4.5))
 
@@ -183,9 +184,9 @@ plt.tight_layout()
 plt.savefig('OUTPUT_NAME.png', dpi=300, bbox_inches='tight')
 plt.savefig('OUTPUT_NAME.pdf', bbox_inches='tight')
 print("Figure saved.")
-''',
-
-    "scatter": PREAMBLE + '''
+""",
+    "scatter": PREAMBLE
+    + """
 # === Scatter Plot with Regression Line ===
 fig, ax = plt.subplots(figsize=(6, 5))
 
@@ -207,9 +208,9 @@ plt.tight_layout()
 plt.savefig('OUTPUT_NAME.png', dpi=300, bbox_inches='tight')
 plt.savefig('OUTPUT_NAME.pdf', bbox_inches='tight')
 print("Figure saved.")
-''',
-
-    "radar": PREAMBLE + '''
+""",
+    "radar": PREAMBLE
+    + """
 # === Radar / Spider Chart (Multi-Metric Comparison) ===
 fig, ax = plt.subplots(figsize=(6, 6), subplot_kw=dict(polar=True))
 
@@ -239,9 +240,9 @@ plt.tight_layout()
 plt.savefig('OUTPUT_NAME.png', dpi=300, bbox_inches='tight')
 plt.savefig('OUTPUT_NAME.pdf', bbox_inches='tight')
 print("Figure saved.")
-''',
-
-    "violin": PREAMBLE + '''
+""",
+    "violin": PREAMBLE
+    + """
 # === Violin Plot (Distribution Comparison) ===
 fig, ax = plt.subplots(figsize=(8, 5))
 
@@ -270,9 +271,9 @@ plt.tight_layout()
 plt.savefig('OUTPUT_NAME.png', dpi=300, bbox_inches='tight')
 plt.savefig('OUTPUT_NAME.pdf', bbox_inches='tight')
 print("Figure saved.")
-''',
-
-    "tsne": PREAMBLE + '''
+""",
+    "tsne": PREAMBLE
+    + """
 from sklearn.manifold import TSNE
 
 # === t-SNE Embedding Visualization ===
@@ -305,9 +306,9 @@ plt.tight_layout()
 plt.savefig('OUTPUT_NAME.png', dpi=300, bbox_inches='tight')
 plt.savefig('OUTPUT_NAME.pdf', bbox_inches='tight')
 print("Figure saved.")
-''',
-
-    "attention": PREAMBLE + '''
+""",
+    "attention": PREAMBLE
+    + """
 import seaborn as sns
 
 # === Attention Heatmap ===
@@ -332,7 +333,7 @@ plt.tight_layout()
 plt.savefig('OUTPUT_NAME.png', dpi=300, bbox_inches='tight')
 plt.savefig('OUTPUT_NAME.pdf', bbox_inches='tight')
 print("Figure saved.")
-''',
+""",
 }
 
 
@@ -344,11 +345,11 @@ def main():
         sys.exit(0)
 
     parser = argparse.ArgumentParser(description="Generate figure script templates")
-    parser.add_argument("--type", required=True, choices=list(TEMPLATES.keys()),
-                        help="Figure type")
-    parser.add_argument("--output", "-o", default="figure_script.py",
-                        help="Output script file")
-    parser.add_argument("--name", default="figure", help="Output figure filename (without extension)")
+    parser.add_argument("--type", required=True, choices=list(TEMPLATES.keys()), help="Figure type")
+    parser.add_argument("--output", "-o", default="figure_script.py", help="Output script file")
+    parser.add_argument(
+        "--name", default="figure", help="Output figure filename (without extension)"
+    )
     parser.add_argument("--list-types", action="store_true")
     args = parser.parse_args()
 

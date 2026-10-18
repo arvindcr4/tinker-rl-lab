@@ -46,17 +46,19 @@ Outputs:
   platform_hybrid/experiments/results/p5p8/p7_iter95_n10_seed_stability.tsv
   platform_hybrid/experiments/results/p5p8/p7_iter95_pareto_summary.json
 """
+
 import json
 import math
-import os
 import random
 import statistics
 from collections import defaultdict
 from pathlib import Path
 
 import sys
+
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
+from _paths import REPO_ROOT
+
 WORK = REPO_ROOT
 N2_DIR = WORK / "platform_hybrid/experiments/results/n2_reward_tensor_resume"
 N10_DIR = WORK / "platform_hybrid/experiments/results/n10_seed_expansion"
@@ -101,13 +103,15 @@ def dualformer_escalation(p_hat):
 
 # ---------- Closed-form helpers ----------
 
+
 def zvf_binom(p_hat: float, G: int) -> float:
     """i.i.d. binomial predicted ZVF at group size G for an observed success rate p_hat."""
     p = min(max(p_hat, 1e-12), 1.0 - 1e-12)
-    return p ** G + (1.0 - p) ** G
+    return p**G + (1.0 - p) ** G
 
 
 # ---------- Load N2 tensors ----------
+
 
 def load_n2():
     by_method = {}
@@ -124,7 +128,7 @@ def per_prompt_zvf_at_G(per_step_rows, G):
     using closed-form binomial with p_hat = k/8. Returns a list of per-step
     records with zvf_at_g8 and zvf_at_gG plus per-step zvf_drop(G)."""
     out = []
-    for s in per_step_rows:
+    for _s in per_step_rows:
         # Reconstruct k distribution from per-step record's n_k0/n_k8 + zvf_obs
         # We can't recover the full k distribution from the per-step record,
         # so we read the raw tensor jsonl by index.
@@ -153,21 +157,24 @@ def load_n2_per_step_with_k():
             zvf_obs = sum(1 for k in ks if k in (0, G_BASE)) / len(ks)
             # closed-form per-step zvf_drop for each G
             drops = {G: z8 - z_at_G[G] for G in G_PRIMES}
-            per_step.append({
-                "method": m,
-                "step": r["step"],
-                "ks": ks,
-                "n_prompts": len(ks),
-                "zvf_obs": zvf_obs,
-                "mean_z8": z8,
-                "z_at_G": z_at_G,
-                "drops": drops,
-            })
+            per_step.append(
+                {
+                    "method": m,
+                    "step": r["step"],
+                    "ks": ks,
+                    "n_prompts": len(ks),
+                    "zvf_obs": zvf_obs,
+                    "mean_z8": z8,
+                    "z_at_G": z_at_G,
+                    "drops": drops,
+                }
+            )
         by_method[m] = per_step
     return by_method
 
 
 # ---------- Controller replay ----------
+
 
 def replay_zvf_then_drop(per_step, G_prime, tau=TAU, eta_min=ETA_MIN):
     """Replay the iter-91 winner on the closed-form zvf_drop at G_prime."""
@@ -179,6 +186,7 @@ def replay_zvf_then_drop(per_step, G_prime, tau=TAU, eta_min=ETA_MIN):
 
 
 # ---------- Bootstrap CI ----------
+
 
 def boot_mean_ci(values, n_boot=N_BOOT, seed=SEED, alpha=0.05):
     rng = random.Random(seed)
@@ -196,6 +204,7 @@ def boot_mean_ci(values, n_boot=N_BOOT, seed=SEED, alpha=0.05):
 
 
 # ---------- Dualformer auto-G replay ----------
+
 
 def replay_dualformer_variant(per_step, rule):
     """Per-prompt: pick G' from the named Dualformer rule. Report mean per-step ZVF reduction.
@@ -220,23 +229,26 @@ def replay_dualformer_variant(per_step, rule):
         # Cost: only G'>8 counts as cost (G'<8 is a compute saving on easy prompts)
         escalation_cost = sum(max(0, Gp - G_BASE) for Gp in per_prompt_G)
         compute_saving = sum(max(0, G_BASE - Gp) for Gp in per_prompt_G)
-        per_step_records.append({
-            "method": s["method"],
-            "step": s["step"],
-            "zvf_obs": s["zvf_obs"],
-            "mean_z8": s["mean_z8"],
-            "per_prompt_G": per_prompt_G,
-"per_prompt_drop": per_prompt_drop,
-            "step_drop": step_drop,
-            "extra_rollouts": sum(Gp - G_BASE for Gp in per_prompt_G if Gp > G_BASE),
-            "net_extra_rollouts": net_extra,
-            "escalation_cost": escalation_cost,
-            "compute_saving": compute_saving,
-        })
+        per_step_records.append(
+            {
+                "method": s["method"],
+                "step": s["step"],
+                "zvf_obs": s["zvf_obs"],
+                "mean_z8": s["mean_z8"],
+                "per_prompt_G": per_prompt_G,
+                "per_prompt_drop": per_prompt_drop,
+                "step_drop": step_drop,
+                "extra_rollouts": sum(Gp - G_BASE for Gp in per_prompt_G if Gp > G_BASE),
+                "net_extra_rollouts": net_extra,
+                "escalation_cost": escalation_cost,
+                "compute_saving": compute_saving,
+            }
+        )
     return per_step_records
 
 
 # ---------- Pareto sweep ----------
+
 
 def pareto_sweep(by_method):
     """For each (method, G'), replay zvf_then_drop and report benefit/1k."""
@@ -251,17 +263,19 @@ def pareto_sweep(by_method):
             mean_drop = sum_drop / n_fires if n_fires > 0 else 0.0
             lo, hi = boot_mean_ci([s["drops"][G] for s in fired])[1:]
             benefit_per_1k = (sum_drop * N_PROMPTS) / extra * 1000.0 if extra > 0 else 0.0
-            rows.append({
-                "method": m,
-                "G_prime": G,
-                "n_fires": n_fires,
-                "sum_zvf_drop": round(sum_drop, 4),
-                "mean_zvf_drop_per_fire": round(mean_drop, 4),
-                "boot_ci_lo": round(lo, 4),
-                "boot_ci_hi": round(hi, 4),
-                "extra_rollouts": extra,
-                "benefit_per_1k": round(benefit_per_1k, 4),
-            })
+            rows.append(
+                {
+                    "method": m,
+                    "G_prime": G,
+                    "n_fires": n_fires,
+                    "sum_zvf_drop": round(sum_drop, 4),
+                    "mean_zvf_drop_per_fire": round(mean_drop, 4),
+                    "boot_ci_lo": round(lo, 4),
+                    "boot_ci_hi": round(hi, 4),
+                    "extra_rollouts": extra,
+                    "benefit_per_1k": round(benefit_per_1k, 4),
+                }
+            )
     return rows
 
 
@@ -276,17 +290,20 @@ def cross_method_pareto(rows):
     for G in G_PRIMES:
         d = by_G[G]
         b = (d["sum_drop"] * N_PROMPTS) / d["extra"] * 1000.0 if d["extra"] > 0 else 0.0
-        out.append({
-            "G_prime": G,
-            "fires_4_methods": d["fires"],
-            "sum_zvf_drop_4_methods": round(d["sum_drop"], 4),
-            "extra_rollouts_4_methods": d["extra"],
-            "benefit_per_1k": round(b, 4),
-        })
+        out.append(
+            {
+                "G_prime": G,
+                "fires_4_methods": d["fires"],
+                "sum_zvf_drop_4_methods": round(d["sum_drop"], 4),
+                "extra_rollouts_4_methods": d["extra"],
+                "benefit_per_1k": round(b, 4),
+            }
+        )
     return out
 
 
 # ---------- Saturation fit ----------
+
 
 def fit_saturating_curve(cross_pareto):
     """Fit benefit(G') = a*(1 - exp(-b*G')) via least squares over (G', benefit/1k).
@@ -304,7 +321,7 @@ def fit_saturating_curve(cross_pareto):
     for a in a_grid:
         for b in b_grid:
             pred = [a * (1.0 - math.exp(-b * G)) for G in Gs]
-            sse = sum((p - B) ** 2 for p, B in zip(pred, Bs))
+            sse = sum((p - B) ** 2 for p, B in zip(pred, Bs, strict=False))
             if best is None or sse < best[0]:
                 best = (sse, a, b)
     _, a_fit, b_fit = best
@@ -313,6 +330,7 @@ def fit_saturating_curve(cross_pareto):
 
 
 # ---------- N10 seed stability ----------
+
 
 def load_n10_seeds():
     """Load the 5 finished GRPO seeds from n10_seed_expansion. Returns list of
@@ -360,6 +378,7 @@ def jaccard(a, b):
 
 # ---------- Main ----------
 
+
 def main():
     print("=" * 70)
     print("Iter 95 — P7 closed-form Pareto frontier over G' in {16, 32, 64, 128}")
@@ -371,26 +390,31 @@ def main():
         n = len(by_method[m])
         zvf_obs_mean = sum(s["zvf_obs"] for s in by_method[m]) / n
         drops_at_16 = [s["drops"][16] for s in by_method[m]]
-        print(f"  {m:6s}: {n} steps; mean zvf_obs={zvf_obs_mean:.4f}; "
-              f"mean zvf_drop(8->16)={sum(drops_at_16)/n:.4f}")
+        print(
+            f"  {m:6s}: {n} steps; mean zvf_obs={zvf_obs_mean:.4f}; "
+            f"mean zvf_drop(8->16)={sum(drops_at_16) / n:.4f}"
+        )
 
     print("\n[2/4] Pareto sweep over G' in {16, 32, 64, 128} with iter-91 winner controller...")
     pareto_rows = pareto_sweep(by_method)
     cross = cross_method_pareto(pareto_rows)
     print("  Per-G' cross-method totals:")
     for r in cross:
-        print(f"    G'={r['G_prime']:>3}: fires={r['fires_4_methods']:>3}, "
-              f"sum_drop={r['sum_zvf_drop_4_methods']:.4f}, "
-              f"benefit/1k={r['benefit_per_1k']:.4f}")
+        print(
+            f"    G'={r['G_prime']:>3}: fires={r['fires_4_methods']:>3}, "
+            f"sum_drop={r['sum_zvf_drop_4_methods']:.4f}, "
+            f"benefit/1k={r['benefit_per_1k']:.4f}"
+        )
 
     fit = fit_saturating_curve(cross)
-    print(f"  Saturating-curve fit: a={fit['a']:.4f}, b={fit['b']:.4f}, "
-          f"G_90={fit['G_90']:.2f}")
+    print(f"  Saturating-curve fit: a={fit['a']:.4f}, b={fit['b']:.4f}, G_90={fit['G_90']:.2f}")
 
     print("\n[3/4] Dualformer per-prompt auto-G replay (BOTH variants)...")
     dualformer_rows = []
-    for variant_name, rule in [("dualformer_original", dualformer_original),
-                                ("dualformer_escalation", dualformer_escalation)]:
+    for variant_name, rule in [
+        ("dualformer_original", dualformer_original),
+        ("dualformer_escalation", dualformer_escalation),
+    ]:
         for m in METHODS:
             records = replay_dualformer_variant(by_method[m], rule)
             n_steps = len(records)
@@ -398,25 +422,31 @@ def main():
             total_escalation = sum(r["escalation_cost"] for r in records)
             total_saving = sum(r["compute_saving"] for r in records)
             # Benefit per 1k rollouts: only pay for escalation_cost, not for savings
-            benefit_per_1k = (sum_drop * N_PROMPTS) / total_escalation * 1000.0 if total_escalation > 0 else 0.0
+            benefit_per_1k = (
+                (sum_drop * N_PROMPTS) / total_escalation * 1000.0 if total_escalation > 0 else 0.0
+            )
             mean_drop = sum_drop / n_steps if n_steps > 0 else 0.0
-            dualformer_rows.append({
-                "method": m,
-                "controller": variant_name,
-                "n_steps": n_steps,
-                "sum_drop": round(sum_drop, 4),
-                "escalation_cost": total_escalation,
-                "compute_saving": total_saving,
-                "benefit_per_1k": round(benefit_per_1k, 4),
-                "mean_step_drop": round(mean_drop, 4),
-            })
-            print(f"  {variant_name:25s} {m:6s}: sum_drop={sum_drop:.4f}, "
-                  f"escal={total_escalation}, save={total_saving}, "
-                  f"benefit/1k={benefit_per_1k:.4f}")
+            dualformer_rows.append(
+                {
+                    "method": m,
+                    "controller": variant_name,
+                    "n_steps": n_steps,
+                    "sum_drop": round(sum_drop, 4),
+                    "escalation_cost": total_escalation,
+                    "compute_saving": total_saving,
+                    "benefit_per_1k": round(benefit_per_1k, 4),
+                    "mean_step_drop": round(mean_drop, 4),
+                }
+            )
+            print(
+                f"  {variant_name:25s} {m:6s}: sum_drop={sum_drop:.4f}, "
+                f"escal={total_escalation}, save={total_saving}, "
+                f"benefit/1k={benefit_per_1k:.4f}"
+            )
 
     print("\n[4/4] N10 5-seed stability on optimal (tau, G')...")
     n10_seeds = load_n10_seeds()
-    print(f"  Found {len(n10_seeds)} finished GRPO seeds: {[s for s,_ in n10_seeds]}")
+    print(f"  Found {len(n10_seeds)} finished GRPO seeds: {[s for s, _ in n10_seeds]}")
     # Use tau=0.50 (the iter-91 winner); we don't need G' for the trigger
     # because the N10 trigger is zvf-obs only. We just measure the trigger's
     # seed-stability and the per-step benefit proxy (1 - zvf_obs).
@@ -428,16 +458,20 @@ def main():
         # to G'=G_PRIMES is approximately (1 - zvf_obs) * (1 - rho_anti_herding).
         # We use (1 - zvf_obs) as the per-step benefit proxy.
         mean_drop_proxy = sum(1.0 - s["zvf"] for s in fired) / len(fired) if fired else 0.0
-        seed_records.append({
-            "seed": seed,
-            "n_fires": len(fired),
-            "mean_fire_benefit_proxy": round(mean_drop_proxy, 4),
-        })
-        print(f"  seed={seed:>4}: n_fires={len(fired):>2}, "
-              f"mean_benefit_proxy={mean_drop_proxy:.4f}")
+        seed_records.append(
+            {
+                "seed": seed,
+                "n_fires": len(fired),
+                "mean_fire_benefit_proxy": round(mean_drop_proxy, 4),
+            }
+        )
+        print(
+            f"  seed={seed:>4}: n_fires={len(fired):>2}, mean_benefit_proxy={mean_drop_proxy:.4f}"
+        )
     # Fire-set Jaccard across seed pairs
-    seed_fires = {seed: [s["step"] for s in step_log if s["zvf"] >= TAU]
-                  for seed, step_log in n10_seeds}
+    seed_fires = {
+        seed: [s["step"] for s in step_log if s["zvf"] >= TAU] for seed, step_log in n10_seeds
+    }
     seed_ids = sorted(seed_fires.keys())
     jaccards = []
     for i in range(len(seed_ids)):
@@ -446,9 +480,11 @@ def main():
             jaccards.append({"seed_a": seed_ids[i], "seed_b": seed_ids[j], "jaccard": round(jv, 4)})
     mean_jaccard = sum(j["jaccard"] for j in jaccards) / len(jaccards) if jaccards else 0.0
     benefit_values = [r["mean_fire_benefit_proxy"] for r in seed_records if r["n_fires"] > 0]
-    benefit_cv = (statistics.stdev(benefit_values) / statistics.mean(benefit_values)
-                  if len(benefit_values) > 1 and statistics.mean(benefit_values) > 0
-                  else 0.0)
+    benefit_cv = (
+        statistics.stdev(benefit_values) / statistics.mean(benefit_values)
+        if len(benefit_values) > 1 and statistics.mean(benefit_values) > 0
+        else 0.0
+    )
     print(f"  Mean fire-set Jaccard across {len(jaccards)} seed-pairs: {mean_jaccard:.4f}")
     print(f"  CV of mean_fire_benefit_proxy across {len(benefit_values)} seeds: {benefit_cv:.4f}")
 
@@ -458,9 +494,17 @@ def main():
     # 1. Pareto TSV
     pareto_path = OUT_DIR / "p7_iter95_pareto_gprime.tsv"
     with open(pareto_path, "w") as f:
-        cols = ["method", "G_prime", "n_fires", "sum_zvf_drop",
-                "mean_zvf_drop_per_fire", "boot_ci_lo", "boot_ci_hi",
-                "extra_rollouts", "benefit_per_1k"]
+        cols = [
+            "method",
+            "G_prime",
+            "n_fires",
+            "sum_zvf_drop",
+            "mean_zvf_drop_per_fire",
+            "boot_ci_lo",
+            "boot_ci_hi",
+            "extra_rollouts",
+            "benefit_per_1k",
+        ]
         f.write("\t".join(cols) + "\n")
         for r in pareto_rows:
             f.write("\t".join(str(r[c]) for c in cols) + "\n")
@@ -469,9 +513,16 @@ def main():
     # 2. Dualformer comparison TSV
     dual_path = OUT_DIR / "p7_iter95_dualformer_compare.tsv"
     with open(dual_path, "w") as f:
-        cols = ["method", "controller", "n_steps", "sum_drop",
-                "escalation_cost", "compute_saving", "benefit_per_1k",
-                "mean_step_drop"]
+        cols = [
+            "method",
+            "controller",
+            "n_steps",
+            "sum_drop",
+            "escalation_cost",
+            "compute_saving",
+            "benefit_per_1k",
+            "mean_step_drop",
+        ]
         f.write("\t".join(cols) + "\n")
         for r in dualformer_rows:
             f.write("\t".join(str(r[c]) for c in cols) + "\n")
@@ -483,10 +534,21 @@ def main():
         save_x = sum(r["compute_saving"] for r in vrows)
         benefit_x = (sum_drop_x * N_PROMPTS) / esc_x * 1000.0 if esc_x > 0 else 0.0
         with open(dual_path, "a") as f:
-            f.write("\t".join(["ALL_METHODS", variant, "160",
-                                f"{sum_drop_x:.4f}", str(esc_x), str(save_x),
-                                f"{benefit_x:.4f}",
-                                f"{sum_drop_x / 160:.4f}"]) + "\n")
+            f.write(
+                "\t".join(
+                    [
+                        "ALL_METHODS",
+                        variant,
+                        "160",
+                        f"{sum_drop_x:.4f}",
+                        str(esc_x),
+                        str(save_x),
+                        f"{benefit_x:.4f}",
+                        f"{sum_drop_x / 160:.4f}",
+                    ]
+                )
+                + "\n"
+            )
     print(f"  Wrote {dual_path}")
 
     # Pre-compute the dualformer_escalation cross-method row for headline findings
@@ -497,11 +559,17 @@ def main():
     orig_rows = [r for r in dualformer_rows if r["controller"] == "dualformer_original"]
     sum_drop_orig = sum(r["sum_drop"] for r in orig_rows)
     esc_cost_orig = sum(r["escalation_cost"] for r in orig_rows)
-    benefit_orig = (sum_drop_orig * N_PROMPTS) / esc_cost_orig * 1000.0 if esc_cost_orig > 0 else 0.0
-    print(f"  Dualformer-escalation cross-method: sum_drop={sum_drop_esc:.4f}, "
-          f"esc_cost={esc_cost_esc}, benefit/1k={benefit_esc:.4f}")
-    print(f"  Dualformer-original cross-method:   sum_drop={sum_drop_orig:.4f}, "
-          f"esc_cost={esc_cost_orig}, benefit/1k={benefit_orig:.4f}")
+    benefit_orig = (
+        (sum_drop_orig * N_PROMPTS) / esc_cost_orig * 1000.0 if esc_cost_orig > 0 else 0.0
+    )
+    print(
+        f"  Dualformer-escalation cross-method: sum_drop={sum_drop_esc:.4f}, "
+        f"esc_cost={esc_cost_esc}, benefit/1k={benefit_esc:.4f}"
+    )
+    print(
+        f"  Dualformer-original cross-method:   sum_drop={sum_drop_orig:.4f}, "
+        f"esc_cost={esc_cost_orig}, benefit/1k={benefit_orig:.4f}"
+    )
 
     # 3. N10 seed stability TSV
     n10_path = OUT_DIR / "p7_iter95_n10_seed_stability.tsv"
@@ -583,7 +651,9 @@ def main():
     print("Iter 95 complete.")
     print(f"  Peak Pareto at G'={peak_G}, benefit/1k={peak_b:.4f}")
     print(f"  Saturating curve G_90={fit['G_90']:.2f} (saturate_G={saturate_G})")
-    print(f"  Dualformer-escalation benefit/1k={benefit_esc:.4f} vs zvf_then_drop@16: {cross[0]['benefit_per_1k']:.4f}")
+    print(
+        f"  Dualformer-escalation benefit/1k={benefit_esc:.4f} vs zvf_then_drop@16: {cross[0]['benefit_per_1k']:.4f}"
+    )
     print(f"  Dualformer-original benefit/1k={benefit_orig:.4f}")
     print(f"  N10 fire-set mean Jaccard={mean_jaccard:.4f}, benefit CV={benefit_cv:.4f}")
     print("=" * 70)

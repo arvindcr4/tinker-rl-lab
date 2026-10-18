@@ -6,6 +6,7 @@ from __future__ import annotations
 import copy
 import base64
 import json
+import re
 import shutil
 import tempfile
 import unittest
@@ -14,6 +15,7 @@ from typing import Any
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
 from flagship import pavlov_agentharm_frontiermath_adapter as adapter
+import pytest
 
 
 class PavlovAgentharmFrontiermathAdapterTests(unittest.TestCase):
@@ -122,51 +124,47 @@ class PavlovAgentharmFrontiermathAdapterTests(unittest.TestCase):
 
     def test_generate_boundary_bundle(self) -> None:
         bundle = self.bundle
-        self.assertEqual(bundle["schema_version"], adapter.SCHEMA_VERSION)
-        self.assertEqual(bundle["adapter_id"], adapter.ADAPTER_ID)
-        self.assertEqual(bundle["suite_count"], 2)
-        self.assertEqual(len(bundle["boundaries"]), 2)
-        self.assertEqual(
-            sorted(item["suite_id"] for item in bundle["boundaries"]),
-            list(adapter.SUPPORTED_SUITE_IDS),
+        assert bundle["schema_version"] == adapter.SCHEMA_VERSION
+        assert bundle["adapter_id"] == adapter.ADAPTER_ID
+        assert bundle["suite_count"] == 2
+        assert len(bundle["boundaries"]) == 2
+        assert sorted(item["suite_id"] for item in bundle["boundaries"]) == list(
+            adapter.SUPPORTED_SUITE_IDS
         )
 
     def test_bundle_signature_is_stable(self) -> None:
         bundle = self.bundle
         rerun = adapter.generate_boundary_bundle()
-        self.assertEqual(
-            bundle["bundle_signature"],
-            rerun["bundle_signature"],
-        )
+        assert bundle["bundle_signature"] == rerun["bundle_signature"]
 
     def test_validate_complete_boundary_bundle(self) -> None:
         bundle = self._with_complete_receipts()
         errors = adapter.validate_adapter_bundle(bundle)
-        self.assertEqual(errors, [])
+        assert errors == []
         result = adapter.evaluate_bundle(bundle)
-        self.assertEqual(result["status"], "READY")
-        self.assertEqual(result["errors"], [])
+        assert result["status"] == "READY"
+        assert result["errors"] == []
 
     def test_generate_bundle_boundaries_match_contract(self) -> None:
         for boundary in self.bundle["boundaries"]:
-            self.assertEqual(boundary["suite_role"], "primary_eval")
-            self.assertFalse(boundary["component_only"])
-            self.assertEqual(boundary["schema_version"], adapter.SCHEMA_VERSION)
-            self.assertEqual(boundary["adapter_id"], adapter.ADAPTER_ID)
-            self.assertTrue(boundary["heldout"])
+            assert boundary["suite_role"] == "primary_eval"
+            assert not boundary["component_only"]
+            assert boundary["schema_version"] == adapter.SCHEMA_VERSION
+            assert boundary["adapter_id"] == adapter.ADAPTER_ID
+            assert boundary["heldout"]
 
     def test_validate_rejects_schema_drift(self) -> None:
         broken = copy.deepcopy(self.bundle)
         broken["schema_version"] = "bad"
         errors = adapter.validate_adapter_bundle(broken)
-        self.assertIn("adapter bundle schema_version mismatch", errors)
+        assert "adapter bundle schema_version mismatch" in errors
 
     def test_validate_rejects_unsupported_suite(self) -> None:
         broken = copy.deepcopy(self._with_complete_receipts())
         broken["boundaries"][0]["suite_id"] = "other_eval"
         self._with_resigned_bundle(broken)
         errors = adapter.validate_adapter_bundle(broken)
-        self.assertTrue(any("unsupported suite_id" in error for error in errors))
+        assert any("unsupported suite_id" in error for error in errors)
 
     def test_validate_rejects_zeroed_hard_immutable_hashes(self) -> None:
         broken = self._with_complete_receipts()
@@ -175,15 +173,13 @@ class PavlovAgentharmFrontiermathAdapterTests(unittest.TestCase):
         broken["boundaries"][0]["receipts"]["container_runtime_digest"] = "0" * 64
         self._with_resigned_bundle(broken)
         errors = adapter.validate_adapter_bundle(broken)
-        self.assertTrue(
-            any("dataset_or_source_revision must be immutable" in error for error in errors),
-            errors,
+        assert any("dataset_or_source_revision must be immutable" in error for error in errors), (
+            errors
         )
-        self.assertTrue(any("hf_checkpoints[0].revision" in error for error in errors), errors)
-        self.assertTrue(
-            any("container_runtime_digest must be a SHA-256 digest" in error for error in errors),
-            errors,
-        )
+        assert any("hf_checkpoints[0].revision" in error for error in errors), errors
+        assert any(
+            "container_runtime_digest must be a SHA-256 digest" in error for error in errors
+        ), errors
 
     def test_validate_rejects_zeroed_task_and_manifest_hashes(self) -> None:
         broken = self._with_complete_receipts()
@@ -192,15 +188,14 @@ class PavlovAgentharmFrontiermathAdapterTests(unittest.TestCase):
         broken["boundaries"][0]["receipts"]["split_manifest_hash"] = "0" * 64
         self._with_resigned_bundle(broken)
         errors = adapter.validate_adapter_bundle(broken)
-        self.assertTrue(
-            any("task_id_hashes[0] must be a SHA-256 digest" in error for error in errors),
-            errors,
+        assert any("task_id_hashes[0] must be a SHA-256 digest" in error for error in errors), (
+            errors
         )
-        self.assertTrue(
-            any("split_task_id_hash must be a SHA-256 digest" in error for error in errors), errors
+        assert any("split_task_id_hash must be a SHA-256 digest" in error for error in errors), (
+            errors
         )
-        self.assertTrue(
-            any("split_manifest_hash must be a SHA-256 digest" in error for error in errors), errors
+        assert any("split_manifest_hash must be a SHA-256 digest" in error for error in errors), (
+            errors
         )
 
     def test_validate_rejects_duplicate_task_hashes(self) -> None:
@@ -211,7 +206,7 @@ class PavlovAgentharmFrontiermathAdapterTests(unittest.TestCase):
         )
         self._with_resigned_bundle(broken)
         errors = adapter.validate_adapter_bundle(broken)
-        self.assertTrue(any("task_id_hashes must be unique" in error for error in errors), errors)
+        assert any("task_id_hashes must be unique" in error for error in errors), errors
 
     def test_validate_rejects_authoritative_source_mismatch(self) -> None:
         broken = self._with_complete_receipts()
@@ -221,41 +216,31 @@ class PavlovAgentharmFrontiermathAdapterTests(unittest.TestCase):
         broken["boundaries"][0]["authoritative_source"]["source_id"] = "uk/inspect-evals"
         self._with_resigned_bundle(broken)
         errors = adapter.validate_adapter_bundle(broken)
-        self.assertTrue(
-            any(
-                "authoritative_source.source_url must equal contract url" in error
-                for error in errors
-            ),
-            errors,
-        )
+        assert any(
+            "authoritative_source.source_url must equal contract url" in error for error in errors
+        ), errors
 
     def test_validate_rejects_dataset_substitution_markers(self) -> None:
         broken = self._with_complete_receipts()
         broken["boundaries"][0]["receipts"]["dataset_id"] = "openr1_math"
         self._with_resigned_bundle(broken)
         errors = adapter.validate_adapter_bundle(broken)
-        self.assertTrue(
-            any("substitute xLAM" in error for error in errors),
-            errors,
-        )
+        assert any("substitute xLAM" in error for error in errors), errors
 
     def test_validate_split_hashes_are_deterministic(self) -> None:
         task_hashes = ["1" * 64, "2" * 64]
         expected = adapter.aggregate_task_id_hashes(task_hashes)
         actual = adapter.aggregate_task_id_hashes(task_hashes)
-        self.assertEqual(expected, actual)
+        assert expected == actual
         different = adapter.aggregate_task_id_hashes(task_hashes[::-1])
-        self.assertNotEqual(expected, different)
+        assert expected != different
 
     def test_validate_rejects_split_task_id_mismatch(self) -> None:
         broken = self._with_complete_receipts()
         broken["boundaries"][0]["receipts"]["split_task_id_hash"] = "a" * 64
         self._with_resigned_bundle(broken)
         errors = adapter.validate_adapter_bundle(broken)
-        self.assertTrue(
-            any("does not match task_id_hashes" in error for error in errors),
-            errors,
-        )
+        assert any("does not match task_id_hashes" in error for error in errors), errors
 
     def test_validate_requires_wandb_online(self) -> None:
         broken = self._with_complete_receipts()
@@ -263,7 +248,7 @@ class PavlovAgentharmFrontiermathAdapterTests(unittest.TestCase):
         boundary["receipts"]["wandb_run_identity"]["online"] = False
         self._with_resigned_bundle(broken)
         errors = adapter.validate_adapter_bundle(broken)
-        self.assertTrue(any("online must be true" in error for error in errors))
+        assert any("online must be true" in error for error in errors)
 
     def test_validate_requires_hf_checkpoint_stages(self) -> None:
         broken = self._with_complete_receipts()
@@ -271,7 +256,7 @@ class PavlovAgentharmFrontiermathAdapterTests(unittest.TestCase):
         boundary["receipts"]["hf_checkpoints"] = boundary["receipts"]["hf_checkpoints"][0:2]
         self._with_resigned_bundle(broken)
         errors = adapter.validate_adapter_bundle(broken)
-        self.assertTrue(any("missing required stage final" in error for error in errors), errors)
+        assert any("missing required stage final" in error for error in errors), errors
 
     def test_validate_rejects_public_checkpoint_without_safety(self) -> None:
         broken = self._with_complete_receipts()
@@ -279,10 +264,7 @@ class PavlovAgentharmFrontiermathAdapterTests(unittest.TestCase):
         boundary["receipts"]["hf_checkpoints"][0]["safe_public_artifact"] = False
         self._with_resigned_bundle(broken)
         errors = adapter.validate_adapter_bundle(broken)
-        self.assertTrue(
-            any("safe_public_artifact must be true" in error for error in errors),
-            errors,
-        )
+        assert any("safe_public_artifact must be true" in error for error in errors), errors
 
     def test_validate_rejects_tinker_and_checkpoint_id_mismatch(self) -> None:
         broken = self._with_complete_receipts()
@@ -290,42 +272,38 @@ class PavlovAgentharmFrontiermathAdapterTests(unittest.TestCase):
         boundary["receipts"]["hf_checkpoints"][0]["run_id"] = "other-run"
         self._with_resigned_bundle(broken)
         errors = adapter.validate_adapter_bundle(broken)
-        self.assertTrue(
-            any("run_id values must match tinker_run_identity.run_id" in error for error in errors),
-            errors,
-        )
+        assert any(
+            "run_id values must match tinker_run_identity.run_id" in error for error in errors
+        ), errors
 
     def test_validate_requires_heldout_receipt_when_structural_heldout(self) -> None:
         broken = self._with_complete_receipts(include_heldout_receipt=False)
         self._with_resigned_bundle(broken)
         errors = adapter.validate_adapter_bundle(broken)
-        self.assertTrue(any("requires heldout_receipt" in error for error in errors), errors)
+        assert any("requires heldout_receipt" in error for error in errors), errors
 
     def test_evaluate_bundle_marks_heldout_claim_blocked(self) -> None:
         blocked = self._with_complete_receipts(include_heldout_receipt=False)
         result = adapter.evaluate_bundle(blocked)
-        self.assertEqual(result["status"], "BLOCKED")
+        assert result["status"] == "BLOCKED"
         e10 = result["suite_readiness"]["agentharm_eval"]
-        self.assertTrue(e10["structural_heldout"])
-        self.assertFalse(e10["heldout_receipt_proven"])
-        self.assertFalse(e10["primary_eval_claim_allowed"])
+        assert e10["structural_heldout"]
+        assert not e10["heldout_receipt_proven"]
+        assert not e10["primary_eval_claim_allowed"]
 
     def test_validate_rejects_unknown_benchmark_marker_in_source_reuse(self) -> None:
         broken = self._with_complete_receipts()
         broken["boundaries"][1]["receipts"]["dataset_id"] = "frontiermath_math_500"
         self._with_resigned_bundle(broken)
         errors = adapter.validate_adapter_bundle(broken)
-        self.assertTrue(any("substitute xLAM" in error for error in errors), errors)
+        assert any("substitute xLAM" in error for error in errors), errors
 
     def test_validate_rejects_duplicate_hf_checkpoint_stages(self) -> None:
         broken = self._with_complete_receipts()
         broken["boundaries"][0]["receipts"]["hf_checkpoints"][1]["stage"] = "initial"
         self._with_resigned_bundle(broken)
         errors = adapter.validate_adapter_bundle(broken)
-        self.assertTrue(
-            any("duplicate entries for stage initial" in error for error in errors),
-            errors,
-        )
+        assert any("duplicate entries for stage initial" in error for error in errors), errors
 
 
 class AgentharmSplitBindingTests(unittest.TestCase):
@@ -379,21 +357,15 @@ class AgentharmSplitBindingTests(unittest.TestCase):
     # -- split file mapping mirrors the loader ------------------------------
 
     def test_split_files_match_inspect_evals_loader_mapping(self) -> None:
-        self.assertEqual(
-            adapter.AGENTHARM_SPLIT_FILES["test_private"],
-            {
-                "harmful": "benchmark/harmful_behaviors_test_private.json",
-                "benign": "benchmark/benign_behaviors_test_private.json",
-                "chat": "benchmark/chat_private_test.json",
-            },
-        )
-        self.assertEqual(
-            adapter.AGENTHARM_HELDOUT_FILES,
-            (
-                "benchmark/harmful_behaviors_test_private.json",
-                "benchmark/benign_behaviors_test_private.json",
-                "benchmark/chat_private_test.json",
-            ),
+        assert adapter.AGENTHARM_SPLIT_FILES["test_private"] == {
+            "harmful": "benchmark/harmful_behaviors_test_private.json",
+            "benign": "benchmark/benign_behaviors_test_private.json",
+            "chat": "benchmark/chat_private_test.json",
+        }
+        assert adapter.AGENTHARM_HELDOUT_FILES == (
+            "benchmark/harmful_behaviors_test_private.json",
+            "benchmark/benign_behaviors_test_private.json",
+            "benchmark/chat_private_test.json",
         )
 
     # -- task ID hashes ------------------------------------------------------
@@ -401,8 +373,8 @@ class AgentharmSplitBindingTests(unittest.TestCase):
     def test_task_id_hash_is_deterministic_and_domain_separated(self) -> None:
         first = adapter.agentharm_task_id_hash("1-1", dataset_name="harmful", split="test_public")
         again = adapter.agentharm_task_id_hash("1-1", dataset_name="harmful", split="test_public")
-        self.assertEqual(first, again)
-        self.assertRegex(first, r"^[0-9a-f]{64}$")
+        assert first == again
+        assert re.search(r"^[0-9a-f]{64}$", first)
 
         other_split = adapter.agentharm_task_id_hash(
             "1-1", dataset_name="harmful", split="test_private"
@@ -416,66 +388,66 @@ class AgentharmSplitBindingTests(unittest.TestCase):
             split="test_public",
             dataset_revision="9" * 40,
         )
-        self.assertEqual(4, len({first, other_split, other_dataset, other_revision}))
+        assert 4 == len({first, other_split, other_dataset, other_revision})
 
     def test_task_id_hash_rejects_mutable_revision(self) -> None:
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             adapter.agentharm_task_id_hash(
                 "1-1", dataset_name="harmful", split="test_public", dataset_revision="main"
             )
 
     def test_task_id_hash_rejects_unknown_split_and_dataset(self) -> None:
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             adapter.agentharm_task_id_hash("1-1", dataset_name="harmful", split="test_holdout")
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             adapter.agentharm_task_id_hash("1-1", dataset_name="gsm8k", split="test_public")
 
     # -- split manifest ------------------------------------------------------
 
     def test_public_split_manifest_is_complete_and_bound(self) -> None:
         manifest = adapter.build_agentharm_split_manifest(self.root, "test_public")
-        self.assertTrue(manifest["complete"])
-        self.assertEqual([], manifest["missing_files"])
-        self.assertFalse(manifest["heldout"])
-        self.assertEqual(5, manifest["task_count"])
-        self.assertEqual(
-            adapter.aggregate_task_id_hashes(manifest["task_id_hashes"]),
-            manifest["split_task_id_hash"],
+        assert manifest["complete"]
+        assert [] == manifest["missing_files"]
+        assert not manifest["heldout"]
+        assert 5 == manifest["task_count"]
+        assert (
+            adapter.aggregate_task_id_hashes(manifest["task_id_hashes"])
+            == manifest["split_task_id_hash"]
         )
-        self.assertRegex(manifest["split_manifest_hash"], r"^[0-9a-f]{64}$")
-        self.assertEqual(adapter.AGENTHARM_DATASET_REVISION, manifest["dataset_revision"])
+        assert re.search(r"^[0-9a-f]{64}$", manifest["split_manifest_hash"])
+        assert adapter.AGENTHARM_DATASET_REVISION == manifest["dataset_revision"]
 
     def test_split_manifest_hash_is_path_independent(self) -> None:
         first = adapter.build_agentharm_split_manifest(self.root, "test_public")
         moved = Path(self._tmp.name) / "copy" / "AgentHarm"
         shutil.copytree(self.root, moved)
         second = adapter.build_agentharm_split_manifest(moved, "test_public")
-        self.assertEqual(first["split_manifest_hash"], second["split_manifest_hash"])
+        assert first["split_manifest_hash"] == second["split_manifest_hash"]
 
     def test_split_manifest_hash_changes_when_content_changes(self) -> None:
         before = adapter.build_agentharm_split_manifest(self.root, "test_public")
         self._write_split("test_public", {**self.PUBLIC_BEHAVIORS, "chat": ["c-1", "c-2"]})
         after = adapter.build_agentharm_split_manifest(self.root, "test_public")
-        self.assertNotEqual(before["split_manifest_hash"], after["split_manifest_hash"])
-        self.assertNotEqual(before["split_task_id_hash"], after["split_task_id_hash"])
+        assert before["split_manifest_hash"] != after["split_manifest_hash"]
+        assert before["split_task_id_hash"] != after["split_task_id_hash"]
 
     def test_private_split_manifest_reports_all_three_missing_files(self) -> None:
         manifest = adapter.build_agentharm_split_manifest(self.root, "test_private")
-        self.assertFalse(manifest["complete"])
-        self.assertEqual(list(adapter.AGENTHARM_HELDOUT_FILES), manifest["missing_files"])
-        self.assertEqual(0, manifest["task_count"])
-        self.assertIsNone(manifest["split_task_id_hash"])
-        self.assertTrue(manifest["heldout"])
-        self.assertEqual('split="test_private"', manifest["loader_split_flag"])
+        assert not manifest["complete"]
+        assert list(adapter.AGENTHARM_HELDOUT_FILES) == manifest["missing_files"]
+        assert 0 == manifest["task_count"]
+        assert manifest["split_task_id_hash"] is None
+        assert manifest["heldout"]
+        assert 'split="test_private"' == manifest["loader_split_flag"]
 
     # -- verifier identity ---------------------------------------------------
 
     def test_verifier_identity_is_complete_and_hashed(self) -> None:
         identity = adapter.agentharm_verifier_identity(self.package_root)
-        self.assertTrue(identity["complete"])
-        self.assertEqual([], identity["missing_sources"])
-        self.assertRegex(identity["verifier_hash"], r"^[0-9a-f]{64}$")
-        self.assertEqual(adapter.AGENTHARM_HARNESS_REVISION, identity["harness_revision"])
+        assert identity["complete"]
+        assert [] == identity["missing_sources"]
+        assert re.search(r"^[0-9a-f]{64}$", identity["verifier_hash"])
+        assert adapter.AGENTHARM_HARNESS_REVISION == identity["harness_revision"]
 
     def test_verifier_hash_changes_when_a_grading_source_changes(self) -> None:
         before = adapter.agentharm_verifier_identity(self.package_root)
@@ -483,33 +455,33 @@ class AgentharmSplitBindingTests(unittest.TestCase):
             "# tampered\n", encoding="utf-8"
         )
         after = adapter.agentharm_verifier_identity(self.package_root)
-        self.assertNotEqual(before["verifier_hash"], after["verifier_hash"])
+        assert before["verifier_hash"] != after["verifier_hash"]
 
     def test_verifier_identity_reports_missing_sources(self) -> None:
         (self.package_root / "scorer.py").unlink()
         identity = adapter.agentharm_verifier_identity(self.package_root)
-        self.assertFalse(identity["complete"])
-        self.assertIn("scorer.py", identity["missing_sources"])
+        assert not identity["complete"]
+        assert "scorer.py" in identity["missing_sources"]
 
     # -- held-out availability ----------------------------------------------
 
     def test_heldout_check_is_blocked_without_private_files(self) -> None:
         availability = adapter.check_heldout_split_available(self.root)
-        self.assertFalse(availability["available"])
-        self.assertEqual(list(adapter.AGENTHARM_HELDOUT_FILES), availability["missing_files"])
+        assert not availability["available"]
+        assert list(adapter.AGENTHARM_HELDOUT_FILES) == availability["missing_files"]
 
     def test_heldout_check_requires_all_three_files(self) -> None:
         self._write_split("test_private", {"harmful": ["p1-1"]})
         availability = adapter.check_heldout_split_available(self.root)
-        self.assertFalse(availability["available"])
-        self.assertEqual(2, len(availability["missing_files"]))
-        self.assertEqual(1, len(availability["present_files"]))
+        assert not availability["available"]
+        assert 2 == len(availability["missing_files"])
+        assert 1 == len(availability["present_files"])
 
     def test_heldout_check_passes_once_all_three_present(self) -> None:
         self._write_split("test_private", self.PRIVATE_BEHAVIORS)
         availability = adapter.check_heldout_split_available(self.root)
-        self.assertTrue(availability["available"])
-        self.assertEqual([], availability["missing_files"])
+        assert availability["available"]
+        assert [] == availability["missing_files"]
 
     # -- fail-closed emitter -------------------------------------------------
 
@@ -520,13 +492,12 @@ class AgentharmSplitBindingTests(unittest.TestCase):
             heldout_availability=adapter.check_heldout_split_available(self.root),
             run=self._run(),
         )
-        self.assertIsNone(receipt["score"])
-        self.assertEqual("BLOCKED", receipt["status"])
-        self.assertFalse(receipt["is_model_score"])
-        self.assertTrue(
-            any("held-out split files are absent" in b for b in receipt["blockers"]),
-            receipt["blockers"],
-        )
+        assert receipt["score"] is None
+        assert "BLOCKED" == receipt["status"]
+        assert not receipt["is_model_score"]
+        assert any("held-out split files are absent" in b for b in receipt["blockers"]), receipt[
+            "blockers"
+        ]
 
     def test_emitter_never_promotes_a_public_split_run(self) -> None:
         receipt = adapter.emit_agentharm_score(
@@ -535,12 +506,11 @@ class AgentharmSplitBindingTests(unittest.TestCase):
             heldout_availability=adapter.check_heldout_split_available(self.root),
             run=self._run(raw_score=0.99),
         )
-        self.assertIsNone(receipt["score"])
-        self.assertEqual("BLOCKED", receipt["status"])
-        self.assertTrue(
-            any("is not the held-out split" in b for b in receipt["blockers"]),
-            receipt["blockers"],
-        )
+        assert receipt["score"] is None
+        assert "BLOCKED" == receipt["status"]
+        assert any("is not the held-out split" in b for b in receipt["blockers"]), receipt[
+            "blockers"
+        ]
 
     def test_emitter_never_promotes_harness_validation(self) -> None:
         self._write_split("test_private", self.PRIVATE_BEHAVIORS)
@@ -550,11 +520,10 @@ class AgentharmSplitBindingTests(unittest.TestCase):
             heldout_availability=adapter.check_heldout_split_available(self.root),
             run=self._run(label="harness_validation", is_model_score=False, raw_score=1.0),
         )
-        self.assertIsNone(receipt["score"])
-        self.assertEqual("BLOCKED", receipt["status"])
-        self.assertTrue(
-            any("harness validation may never be promoted" in b for b in receipt["blockers"]),
-            receipt["blockers"],
+        assert receipt["score"] is None
+        assert "BLOCKED" == receipt["status"]
+        assert any("harness validation may never be promoted" in b for b in receipt["blockers"]), (
+            receipt["blockers"]
         )
 
     def test_emitter_blocks_without_approved_policy_grader_artifact(self) -> None:
@@ -565,10 +534,9 @@ class AgentharmSplitBindingTests(unittest.TestCase):
             heldout_availability=adapter.check_heldout_split_available(self.root),
             run=self._run(policy_grader_artifact=None),
         )
-        self.assertIsNone(receipt["score"])
-        self.assertTrue(
-            any("policy-grader artifact receipt is missing" in b for b in receipt["blockers"]),
-            receipt["blockers"],
+        assert receipt["score"] is None
+        assert any("policy-grader artifact receipt is missing" in b for b in receipt["blockers"]), (
+            receipt["blockers"]
         )
 
     def test_emitter_blocks_when_verifier_sources_are_missing(self) -> None:
@@ -580,11 +548,10 @@ class AgentharmSplitBindingTests(unittest.TestCase):
             heldout_availability=adapter.check_heldout_split_available(self.root),
             run=self._run(),
         )
-        self.assertIsNone(receipt["score"])
-        self.assertTrue(
-            any("verifier identity is incomplete" in b for b in receipt["blockers"]),
-            receipt["blockers"],
-        )
+        assert receipt["score"] is None
+        assert any("verifier identity is incomplete" in b for b in receipt["blockers"]), receipt[
+            "blockers"
+        ]
 
     def test_emitter_blocks_on_tampered_split_task_id_hash(self) -> None:
         self._write_split("test_private", self.PRIVATE_BEHAVIORS)
@@ -596,14 +563,13 @@ class AgentharmSplitBindingTests(unittest.TestCase):
             heldout_availability=adapter.check_heldout_split_available(self.root),
             run=self._run(),
         )
-        self.assertIsNone(receipt["score"])
-        self.assertTrue(
-            any("does not match task_id_hashes" in b for b in receipt["blockers"]),
-            receipt["blockers"],
-        )
+        assert receipt["score"] is None
+        assert any("does not match task_id_hashes" in b for b in receipt["blockers"]), receipt[
+            "blockers"
+        ]
 
     def test_emitter_raises_when_asked_to_fail_loudly(self) -> None:
-        with self.assertRaises(adapter.HeldoutSplitUnavailable):
+        with pytest.raises(adapter.HeldoutSplitUnavailable):
             adapter.emit_agentharm_score(
                 split_manifest=adapter.build_agentharm_split_manifest(self.root, "test_private"),
                 verifier_identity=adapter.agentharm_verifier_identity(self.package_root),
@@ -620,25 +586,34 @@ class AgentharmSplitBindingTests(unittest.TestCase):
             heldout_availability=adapter.check_heldout_split_available(self.root),
             run=self._run(),
         )
-        self.assertIn("verified provider grant is required", "; ".join(receipt["blockers"]))
-        self.assertEqual("BLOCKED", receipt["status"])
-        self.assertFalse(receipt["is_model_score"])
-        self.assertIsNone(receipt["score"])
-        self.assertEqual("test_private", receipt["split"])
-        self.assertEqual(3, receipt["task_count"])
-
-
+        assert "verified provider grant is required" in "; ".join(receipt["blockers"])
+        assert "BLOCKED" == receipt["status"]
+        assert not receipt["is_model_score"]
+        assert receipt["score"] is None
+        assert "test_private" == receipt["split"]
+        assert 3 == receipt["task_count"]
 
 
 class AgentHarmProviderGrantTests(unittest.TestCase):
     TEST_ROOT = {
-        "schema_version": adapter.AGENTHARM_TRUST_ROOT_SCHEMA, "lane": "E10",
-        "suite_id": adapter.AGENTHARM_SUITE_ID, "provider": "AISI", "key_id": "aisi-test-e10",
+        "schema_version": adapter.AGENTHARM_TRUST_ROOT_SCHEMA,
+        "lane": "E10",
+        "suite_id": adapter.AGENTHARM_SUITE_ID,
+        "provider": "AISI",
+        "key_id": "aisi-test-e10",
         "public_key_hex": "d75a980182b10ab7d54bfed3c964073a0ee172f3daa62325af021a68f707511a",
     }
+
     @staticmethod
-    def _sign(payload: dict, private_hex: str = "9d61b19deffd5a60ba844af492ec2cc44449c5697b326919703bac031cae7f60") -> dict:
-        signed = {key: value for key, value in payload.items() if key not in {"signature", "signature_key_id"}}
+    def _sign(
+        payload: dict,
+        private_hex: str = "9d61b19deffd5a60ba844af492ec2cc44449c5697b326919703bac031cae7f60",
+    ) -> dict:
+        signed = {
+            key: value
+            for key, value in payload.items()
+            if key not in {"signature", "signature_key_id"}
+        }
         signed["signature_key_id"] = AgentHarmProviderGrantTests.TEST_ROOT["key_id"]
         signed["signature"] = base64.b64encode(
             Ed25519PrivateKey.from_private_bytes(bytes.fromhex(private_hex)).sign(
@@ -683,10 +658,12 @@ class AgentHarmProviderGrantTests(unittest.TestCase):
 
     def test_only_trusted_signed_result_can_complete(self) -> None:
         grant = self._grant()
-        with self.assertRaises(adapter.HeldoutSplitUnavailable):
+        with pytest.raises(adapter.HeldoutSplitUnavailable):
             adapter.validate_agentharm_provider_grant(grant)
         request = adapter.build_agentharm_execution_request(
-            grant, budget_receipt={"authorized": True, "receipt_id": "budget-1"}, trust_root=self.TEST_ROOT
+            grant,
+            budget_receipt={"authorized": True, "receipt_id": "budget-1"},
+            trust_root=self.TEST_ROOT,
         )
         verified = adapter.validate_agentharm_provider_grant(grant, trust_root=self.TEST_ROOT)
         result = self._sign(
@@ -710,16 +687,24 @@ class AgentHarmProviderGrantTests(unittest.TestCase):
                 "completed_at": "2026-08-01T00:00:00Z",
             }
         )
-        receipt = adapter.collect_agentharm_signed_result(grant, request, result, trust_root=self.TEST_ROOT)
-        self.assertEqual(receipt["status"], "COMPLETE")
-        self.assertEqual(receipt["score"], 0.2)
+        receipt = adapter.collect_agentharm_signed_result(
+            grant, request, result, trust_root=self.TEST_ROOT
+        )
+        assert receipt["status"] == "COMPLETE"
+        assert receipt["score"] == 0.2
 
         forged = self._sign(
-            {key: value for key, value in result.items() if key not in {"signature", "signature_key_id"}},
+            {
+                key: value
+                for key, value in result.items()
+                if key not in {"signature", "signature_key_id"}
+            },
             "4ccd089b28ff96da9db6c346ec114e0f5b8a319f35aba624da8cf6ed4fb8a6fb",
         )
-        with self.assertRaises(adapter.HeldoutSplitUnavailable):
-            adapter.collect_agentharm_signed_result(grant, request, forged, trust_root=self.TEST_ROOT)
+        with pytest.raises(adapter.HeldoutSplitUnavailable):
+            adapter.collect_agentharm_signed_result(
+                grant, request, forged, trust_root=self.TEST_ROOT
+            )
 
     def test_rejects_tampered_or_public_split_grant(self) -> None:
         grant = {
@@ -758,10 +743,15 @@ class AgentHarmProviderGrantTests(unittest.TestCase):
                 bytes.fromhex("9d61b19deffd5a60ba844af492ec2cc44449c5697b326919703bac031cae7f60")
             ).sign(adapter.canonical_json(grant).encode())
         ).decode()
-        self.assertEqual(adapter.validate_agentharm_provider_grant(grant, trust_root=self.TEST_ROOT)["grant_id"], "g1")
+        assert (
+            adapter.validate_agentharm_provider_grant(grant, trust_root=self.TEST_ROOT)["grant_id"]
+            == "g1"
+        )
         grant["private_split"]["files"] = ["benchmark/chat_public_test.json"]
         grant = self._sign(grant)
-        with self.assertRaisesRegex(adapter.HeldoutSplitUnavailable, "immutable complete private split"):
+        with pytest.raises(
+            adapter.HeldoutSplitUnavailable, match="immutable complete private split"
+        ):
             adapter.validate_agentharm_provider_grant(grant, trust_root=self.TEST_ROOT)
 
 

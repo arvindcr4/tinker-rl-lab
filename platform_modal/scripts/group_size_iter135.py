@@ -5,21 +5,22 @@ Review23-v2: thresholds are fitted to the supplied matched budget cells and
 carry input hashes and validity ranges. Native G2/G16 observations evaluate
 this local protocol, not a universal literature claim. ZVF mechanism links
 remain descriptive/model-based and do not establish causal attribution."""
+
 from __future__ import annotations
 
 import csv
 import json
 import math
-import os
 from pathlib import Path
-from typing import Iterable
 
 import numpy as np
 
 
 import sys
+
 sys.path.append(str(Path(__file__).resolve().parent))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
+from _paths import REPO_ROOT
+
 REPO = REPO_ROOT
 RESULTS = REPO / "platform_hybrid/experiments" / "results"
 FIGS = REPO / "platform_hybrid/figures"
@@ -44,14 +45,16 @@ def load_token_normalized() -> list[dict]:
     with open(RESULTS / "group_size_token_normalized.tsv") as f:
         rd = csv.DictReader(f, delimiter="\t")
         for r in rd:
-            rows.append({
-                "T": float(r["budget_tokens"]),
-                "G": int(r["G"]),
-                "acc": float(r["heldout_acc_mean"]),
-                "acc_lo": float(r["heldout_acc_ci_low"]),
-                "acc_hi": float(r["heldout_acc_ci_high"]),
-                "gu": float(r["gu_estimate"]),
-            })
+            rows.append(
+                {
+                    "T": float(r["budget_tokens"]),
+                    "G": int(r["G"]),
+                    "acc": float(r["heldout_acc_mean"]),
+                    "acc_lo": float(r["heldout_acc_ci_low"]),
+                    "acc_hi": float(r["heldout_acc_ci_high"]),
+                    "gu": float(r["gu_estimate"]),
+                }
+            )
     return rows
 
 
@@ -70,8 +73,8 @@ def native_wu_claim(sweep: dict) -> list[dict]:
         s = int(r["seed"])
         if g in per_seed_acc.setdefault(s, {}):
             raise ValueError(f"duplicate group/seed {g}/{s}")
-        value=float(r["heldout_acc"])
-        if not math.isfinite(value) or not 0<=value<=1:
+        value = float(r["heldout_acc"])
+        if not math.isfinite(value) or not 0 <= value <= 1:
             raise ValueError("invalid held-out accuracy")
         per_seed_acc[s][g] = value
 
@@ -84,11 +87,13 @@ def native_wu_claim(sweep: dict) -> list[dict]:
             pairs.append((per_seed_acc[s][2], per_seed_acc[s][16]))
 
     out: list[dict] = []
-    out.append({
-        "metric_kind": "native_wu_setup",
-        "metric_key": "n_paired_seeds",
-        "headline": f"Paired seeds with both G=2 and G=16: n={len(pairs)}",
-    })
+    out.append(
+        {
+            "metric_kind": "native_wu_setup",
+            "metric_key": "n_paired_seeds",
+            "headline": f"Paired seeds with both G=2 and G=16: n={len(pairs)}",
+        }
+    )
 
     if len(pairs) >= 2:
         # Per-seed retention = acc(G=2)/acc(G=16)
@@ -109,35 +114,43 @@ def native_wu_claim(sweep: dict) -> list[dict]:
         # The 95% retention bound is looser.
         tost_p_strict = float(np.mean(np.array(boots) <= 0.95))
 
-        out.append({
-            "metric_kind": "native_wu_pair_retention",
-            "metric_key": "G2_vs_G16",
-            "headline": (
-                f"Native-Wu pairing G=2 vs G=16: retention={mean_ret:.4f} "
-                f"CI95 [{lo:.4f},{hi:.4f}] (n_paired={len(pairs)}); "
-                f"bootstrap_fraction_below_0.976={tost_p:.4f}; bootstrap_fraction_below_0.95={tost_p_strict:.4f}; "
-                f"wu_native_claim_holds={'True' if np.quantile(boots, 0.05) > 0.976 else 'False'}"
-            ),
-        })
+        out.append(
+            {
+                "metric_kind": "native_wu_pair_retention",
+                "metric_key": "G2_vs_G16",
+                "headline": (
+                    f"Native-Wu pairing G=2 vs G=16: retention={mean_ret:.4f} "
+                    f"CI95 [{lo:.4f},{hi:.4f}] (n_paired={len(pairs)}); "
+                    f"bootstrap_fraction_below_0.976={tost_p:.4f}; bootstrap_fraction_below_0.95={tost_p_strict:.4f}; "
+                    f"wu_native_claim_holds={'True' if np.quantile(boots, 0.05) > 0.976 else 'False'}"
+                ),
+            }
+        )
 
         # Also report the simpler accuracy-pair statistics
         accs_2 = np.array([p[0] for p in pairs])
         accs_16 = np.array([p[1] for p in pairs])
         diff_mean = float(np.mean(accs_16 - accs_2))
-        diff_se = float(np.std(accs_16 - accs_2, ddof=1) / math.sqrt(len(pairs))) if len(pairs) > 1 else float("nan")
+        diff_se = (
+            float(np.std(accs_16 - accs_2, ddof=1) / math.sqrt(len(pairs)))
+            if len(pairs) > 1
+            else float("nan")
+        )
         # Cohen's d (paired)
         d = float(diff_mean / (np.std(accs_16 - accs_2, ddof=1) + 1e-12))
-        out.append({
-            "metric_kind": "native_wu_acc_pair",
-            "metric_key": "G2_vs_G16",
-            "headline": (
-                f"Paired accuracy: acc(G=2)={float(accs_2.mean()):.4f}+/-{float(accs_2.std(ddof=1)):.4f}, "
-                f"acc(G=16)={float(accs_16.mean()):.4f}+/-{float(accs_16.std(ddof=1)):.4f}, "
-                f"diff(mean 16-2)={diff_mean:+.4f}+/-{diff_se:.4f}, "
-                f"Cohen's d (paired)={d:+.3f} "
-                f"(positive d means G=16 > G=2)"
-            ),
-        })
+        out.append(
+            {
+                "metric_kind": "native_wu_acc_pair",
+                "metric_key": "G2_vs_G16",
+                "headline": (
+                    f"Paired accuracy: acc(G=2)={float(accs_2.mean()):.4f}+/-{float(accs_2.std(ddof=1)):.4f}, "
+                    f"acc(G=16)={float(accs_16.mean()):.4f}+/-{float(accs_16.std(ddof=1)):.4f}, "
+                    f"diff(mean 16-2)={diff_mean:+.4f}+/-{diff_se:.4f}, "
+                    f"Cohen's d (paired)={d:+.3f} "
+                    f"(positive d means G=16 > G=2)"
+                ),
+            }
+        )
     return out
 
 
@@ -148,6 +161,7 @@ def native_wu_claim(sweep: dict) -> list[dict]:
 def threshold_tstar(rows: list[dict]) -> list[dict]:
     """Exploratory log-linear thresholds fitted to supplied matched budget cells."""
     import hashlib
+
     indexed = {}
     for row in rows:
         key = (float(row["T"]), int(row["G"]))
@@ -155,19 +169,26 @@ def threshold_tstar(rows: list[dict]) -> list[dict]:
             raise ValueError("duplicate budget/group")
         indexed[key] = float(row["acc"])
     budgets = sorted(t for t, g in indexed if g == 4 and (t, 32) in indexed)
-    if len(budgets) < 2 or any(t <= 0 or indexed[(t,32)] <= 0 for t in budgets):
+    if len(budgets) < 2 or any(t <= 0 or indexed[(t, 32)] <= 0 for t in budgets):
         raise ValueError("positive matched budget/denominator evidence required")
-    ratios = [indexed[(t,4)] / indexed[(t,32)] for t in budgets]
+    ratios = [indexed[(t, 4)] / indexed[(t, 32)] for t in budgets]
     if not all(math.isfinite(x) for x in ratios):
         raise ValueError("finite retention required")
     slope, intercept = np.polyfit(np.log10(budgets), ratios, 1)
-    digest = hashlib.sha256(json.dumps(list(zip(budgets, ratios))).encode()).hexdigest()
+    digest = hashlib.sha256(
+        json.dumps(list(zip(budgets, ratios, strict=False))).encode()
+    ).hexdigest()
     out = []
-    for target in [.5,.9,.95,.976,.1]:
-        log_t = (target-intercept)/slope if slope < 0 else float("inf")
-        crossing = 10.**log_t if log_t < 308 else float("inf")
-        out.append({"metric_kind":"model_sensitivity_threshold", "metric_key":f"T{target*100:g}",
-                    "headline":f"Exploratory log-linear retention threshold {target}: T={crossing:g}; slope={slope:.12g}; intercept={intercept:.12g}; observed_range=[{min(budgets):g},{max(budgets):g}]; extrapolated={not min(budgets)<=crossing<=max(budgets)}; input_sha256={digest}; no universal scaling claim"})
+    for target in [0.5, 0.9, 0.95, 0.976, 0.1]:
+        log_t = (target - intercept) / slope if slope < 0 else float("inf")
+        crossing = 10.0**log_t if log_t < 308 else float("inf")
+        out.append(
+            {
+                "metric_kind": "model_sensitivity_threshold",
+                "metric_key": f"T{target * 100:g}",
+                "headline": f"Exploratory log-linear retention threshold {target}: T={crossing:g}; slope={slope:.12g}; intercept={intercept:.12g}; observed_range=[{min(budgets):g},{max(budgets):g}]; extrapolated={not min(budgets) <= crossing <= max(budgets)}; input_sha256={digest}; no universal scaling claim",
+            }
+        )
     return out
 
 
@@ -193,15 +214,17 @@ def zvf_mech_link(rows: list[dict], sweep: dict) -> list[dict]:
         z2 = next(v for g, v in zvfs if g == 2)
         z16 = next(v for g, v in zvfs if g == 16)
         z_drop = z2 - z16
-        out.append({
-            "metric_kind": "zvf_drop_G2_G16",
-            "metric_key": "sweep",
-            "headline": (
-                f"ZVF drops {z_drop:+.4f} (from {z2:.4f} to {z16:.4f}) "
-                f"as G grows 2->16 on Qwen2.5-0.5B / arithmetic "
-                f"(3 seeds); {z_drop/z2*100:+.1f}% decrease in ZVF, hence increased within-group contrast"
-            ),
-        })
+        out.append(
+            {
+                "metric_kind": "zvf_drop_G2_G16",
+                "metric_key": "sweep",
+                "headline": (
+                    f"ZVF drops {z_drop:+.4f} (from {z2:.4f} to {z16:.4f}) "
+                    f"as G grows 2->16 on Qwen2.5-0.5B / arithmetic "
+                    f"(3 seeds); {z_drop / z2 * 100:+.1f}% decrease in ZVF, hence increased within-group contrast"
+                ),
+            }
+        )
 
         # 2. Retention drop (T=1M -> T=64M) on G=4 -> G=32 from token_normalized
         acc_4 = {row["T"]: row["acc"] for row in rows if row["G"] == 4}
@@ -210,16 +233,18 @@ def zvf_mech_link(rows: list[dict], sweep: dict) -> list[dict]:
             ret_1M = acc_4[1e6] / acc_32[1e6]
             ret_64M = acc_4[6.4e7] / acc_32[6.4e7]
             r_drop = ret_1M - ret_64M
-            out.append({
-                "metric_kind": "retention_drop_T1M_T64M",
-                "metric_key": "G4_vs_G32",
-                "headline": (
-                    f"G=4 retention of G=32 drops {r_drop:+.4f} "
-                    f"(from {ret_1M:.4f} at T=1M to {ret_64M:.4f} at T=64M); "
-                    f"ZVF drop (G=2->G=16) was {z_drop:.4f} -- "
-                    f"retention drop / ZVF drop ratio = {r_drop/z_drop:+.3f}"
-                ),
-            })
+            out.append(
+                {
+                    "metric_kind": "retention_drop_T1M_T64M",
+                    "metric_key": "G4_vs_G32",
+                    "headline": (
+                        f"G=4 retention of G=32 drops {r_drop:+.4f} "
+                        f"(from {ret_1M:.4f} at T=1M to {ret_64M:.4f} at T=64M); "
+                        f"ZVF drop (G=2->G=16) was {z_drop:.4f} -- "
+                        f"retention drop / ZVF drop ratio = {r_drop / z_drop:+.3f}"
+                    ),
+                }
+            )
 
     # 3. Iso-G contrast-yield (GU) curve -- same as iter131 but with
     # a normalised view: GU * G is the total contrast per rollout,
@@ -227,12 +252,17 @@ def zvf_mech_link(rows: list[dict], sweep: dict) -> list[dict]:
     by_G = {}
     for row in rows:
         by_G.setdefault(row["G"], []).append(row)
-    out.append({
-        "metric_kind": "iso_G_contrast_yield",
-        "metric_key": "by_G",
-        "headline": "GU (group-mean ZVF-availability) by G averaged across T: "
-            + ", ".join(f"G={G}: mean_GU={float(np.mean([r['gu'] for r in rs])):.4f}" for G, rs in sorted(by_G.items())),
-    })
+    out.append(
+        {
+            "metric_kind": "iso_G_contrast_yield",
+            "metric_key": "by_G",
+            "headline": "GU (group-mean ZVF-availability) by G averaged across T: "
+            + ", ".join(
+                f"G={G}: mean_GU={float(np.mean([r['gu'] for r in rs])):.4f}"
+                for G, rs in sorted(by_G.items())
+            ),
+        }
+    )
     return out
 
 
@@ -248,18 +278,31 @@ def reward_quadratic(sweep: dict) -> list[dict]:
     out: list[dict] = []
     runs = sweep["runs"]
     from _review23_statistics import paired_seed_values
-    groups=sorted({int(r["group_size"]) for r in runs})
+
+    groups = sorted({int(r["group_size"]) for r in runs})
+
     def reward_value(r):
-        if "mean_reward_train" in r: return r["mean_reward_train"]
-        if "last10_avg" in r: return r["last10_avg"]
+        if "mean_reward_train" in r:
+            return r["mean_reward_train"]
+        if "last10_avg" in r:
+            return r["last10_avg"]
         raise ValueError("missing training reward; cannot substitute zero")
-    rewards_by_G, shared_seeds=paired_seed_values(runs,groups,reward_value)
-    if len(shared_seeds)<2 or len(groups)<2:
-        return [{"metric_kind":"unavailable","metric_key":"paired_seeds","headline":"Need two common seeds and two groups"}]
+
+    rewards_by_G, shared_seeds = paired_seed_values(runs, groups, reward_value)
+    if len(shared_seeds) < 2 or len(groups) < 2:
+        return [
+            {
+                "metric_kind": "unavailable",
+                "metric_key": "paired_seeds",
+                "headline": "Need two common seeds and two groups",
+            }
+        ]
     last10_by_G = rewards_by_G
     Gs = sorted(rewards_by_G.keys())
     means = np.array([float(np.mean(rewards_by_G[g])) for g in Gs])
-    ses = np.array([float(np.std(rewards_by_G[g], ddof=1) / math.sqrt(len(rewards_by_G[g]))) for g in Gs])
+    ses = np.array(
+        [float(np.std(rewards_by_G[g], ddof=1) / math.sqrt(len(rewards_by_G[g]))) for g in Gs]
+    )
     logG = np.log10(np.array(Gs, dtype=float))
 
     # Linear fit reward = intercept + slope * logG
@@ -283,14 +326,16 @@ def reward_quadratic(sweep: dict) -> list[dict]:
         except Exception:
             continue
     slope_lo, slope_hi = float(np.percentile(boots, 2.5)), float(np.percentile(boots, 97.5))
-    out.append({
-        "metric_kind": "reward_linear",
-        "metric_key": "logG",
-        "headline": (
-            f"Linear fit reward = {intercept:.4f} + {slope:+.4f}*log10(G), R^2={r2:.4f}; "
-            f"slope bootstrap 95% CI [{slope_lo:+.4f}, {slope_hi:+.4f}]"
-        ),
-    })
+    out.append(
+        {
+            "metric_kind": "reward_linear",
+            "metric_key": "logG",
+            "headline": (
+                f"Linear fit reward = {intercept:.4f} + {slope:+.4f}*log10(G), R^2={r2:.4f}; "
+                f"slope bootstrap 95% CI [{slope_lo:+.4f}, {slope_hi:+.4f}]"
+            ),
+        }
+    )
 
     # Quadratic fit reward = a + b*logG + c*logG^2
     if n >= 3:
@@ -298,40 +343,48 @@ def reward_quadratic(sweep: dict) -> list[dict]:
         c = float(coeffs[0])  # leading
         b_q = float(coeffs[1])
         a_q = float(coeffs[2])
-        pred_q = a_q + b_q * logG + c * logG ** 2
+        pred_q = a_q + b_q * logG + c * logG**2
         ss_res_q = float(np.sum((means - pred_q) ** 2))
         r2_q = 1 - ss_res_q / ss_tot if ss_tot > 0 else float("nan")
-        out.append({
-            "metric_kind": "reward_quadratic",
-            "metric_key": "logG_logG2",
-"headline": (
-                f"Quadratic fit reward = {a_q:.4f} + {b_q:+.4f}*log10(G) + {c:+.4f}*log10(G)^2, "
-                f"R^2={r2_q:.4f}; "
-                f"leading coefficient c={c:+.4f} "
-                f"({'concave (diminishing returns)' if c < 0 else 'convex (accelerating)'})"
-            ),
-        })
+        out.append(
+            {
+                "metric_kind": "reward_quadratic",
+                "metric_key": "logG_logG2",
+                "headline": (
+                    f"Quadratic fit reward = {a_q:.4f} + {b_q:+.4f}*log10(G) + {c:+.4f}*log10(G)^2, "
+                    f"R^2={r2_q:.4f}; "
+                    f"leading coefficient c={c:+.4f} "
+                    f"({'concave (diminishing returns)' if c < 0 else 'convex (accelerating)'})"
+                ),
+            }
+        )
 
     # Reward-vs-G paired bootstrap difference: G=16 vs G=2
     if 2 in rewards_by_G and 16 in rewards_by_G:
         d_per_seed = np.array(rewards_by_G[16]) - np.array(rewards_by_G[2])
         d_mean = float(d_per_seed.mean())
-        d_se = float(d_per_seed.std(ddof=1) / math.sqrt(len(d_per_seed))) if len(d_per_seed) > 1 else float("nan")
+        d_se = (
+            float(d_per_seed.std(ddof=1) / math.sqrt(len(d_per_seed)))
+            if len(d_per_seed) > 1
+            else float("nan")
+        )
         boots_d = []
         for _ in range(2000):
             idx = rng.integers(0, len(d_per_seed), len(d_per_seed))
             boots_d.append(float(d_per_seed[idx].mean()))
         d_lo, d_hi = float(np.percentile(boots_d, 2.5)), float(np.percentile(boots_d, 97.5))
         one_sided_p = float(np.mean(np.array(boots_d) <= 0))
-        out.append({
-            "metric_kind": "reward_paired_diff",
-            "metric_key": "G16_minus_G2",
-            "headline": (
-                f"Paired reward diff G=16 - G=2: {d_mean:+.4f} +/- {d_se:.4f}, "
-                f"bootstrap 95% CI [{d_lo:+.4f},{d_hi:+.4f}], "
-                f"bootstrap_fraction_diff_le0 = {one_sided_p:.4f}"
-            ),
-        })
+        out.append(
+            {
+                "metric_kind": "reward_paired_diff",
+                "metric_key": "G16_minus_G2",
+                "headline": (
+                    f"Paired reward diff G=16 - G=2: {d_mean:+.4f} +/- {d_se:.4f}, "
+                    f"bootstrap 95% CI [{d_lo:+.4f},{d_hi:+.4f}], "
+                    f"bootstrap_fraction_diff_le0 = {one_sided_p:.4f}"
+                ),
+            }
+        )
 
     # ZVF log-log slope
     zvfs = []
@@ -358,17 +411,19 @@ def reward_quadratic(sweep: dict) -> list[dict]:
     ss_res_lin = float(np.sum((zy - pred_lin) ** 2))
     ss_tot_lin = float(np.sum((zy - zy.mean()) ** 2))
     r2_lin = 1 - ss_res_lin / ss_tot_lin if ss_tot_lin > 0 else float("nan")
-    out.append({
-        "metric_kind": "zvf_loglog",
-        "metric_key": "log10_mean_zvf_vs_log10_G",
-        "headline": (
-            f"Log-log fit log10(mean_zvf) = {intercept_z:.4f} + {slope_z:+.4f}*log10(G), R^2={r2_z:.4f}; "
-            f"linear fit mean_zvf = {intercept_lin:.4f} + {slope_lin:+.4f}*log10(G), R^2={r2_lin:.4f}; "
-            f"observed log-log slope={slope_z:+.3f}; IID slope depends on p and G; "
-            f"observed linear slope={slope_lin:+.3f} per decade of G "
-            f"(descriptive association; dependence mechanism unidentifiable here)"
-        ),
-    })
+    out.append(
+        {
+            "metric_kind": "zvf_loglog",
+            "metric_key": "log10_mean_zvf_vs_log10_G",
+            "headline": (
+                f"Log-log fit log10(mean_zvf) = {intercept_z:.4f} + {slope_z:+.4f}*log10(G), R^2={r2_z:.4f}; "
+                f"linear fit mean_zvf = {intercept_lin:.4f} + {slope_lin:+.4f}*log10(G), R^2={r2_lin:.4f}; "
+                f"observed log-log slope={slope_z:+.3f}; IID slope depends on p and G; "
+                f"observed linear slope={slope_lin:+.3f} per decade of G "
+                f"(descriptive association; dependence mechanism unidentifiable here)"
+            ),
+        }
+    )
 
     return out
 
@@ -394,17 +449,19 @@ def main() -> None:
     rquad = reward_quadratic(sweep)
 
     summary = []
-    summary.append({
-        "metric_kind": "iter135_summary",
-        "metric_key": "headline_findings",
-        "headline": (
-            f"Iter135 Pillar 3 sharpens iter131 (Wu-claim budget-conditional) into 3 decisive tests: "
-            f"(A) native-Wu G=2~=G=16 on this benchmark, "
-            f"(B) extrapolated T* for retention < 50%, "
-            f"(C) ZVF mechanism cross-link. "
-            f"See group_size_iter135_native_wu_v2.tsv / _threshold_tstar.tsv / _zvf_mech_link.tsv / _reward_quad.tsv."
-        ),
-    })
+    summary.append(
+        {
+            "metric_kind": "iter135_summary",
+            "metric_key": "headline_findings",
+            "headline": (
+                f"Iter135 Pillar 3 sharpens iter131 (Wu-claim budget-conditional) into 3 decisive tests: "
+                f"(A) native-Wu G=2~=G=16 on this benchmark, "
+                f"(B) extrapolated T* for retention < 50%, "
+                f"(C) ZVF mechanism cross-link. "
+                f"See group_size_iter135_native_wu_v2.tsv / _threshold_tstar.tsv / _zvf_mech_link.tsv / _reward_quad.tsv."
+            ),
+        }
+    )
 
     write_tsv(native, RESULTS / "group_size_iter135_native_wu_v2.tsv")
     write_tsv(tstar, RESULTS / "group_size_iter135_threshold_tstar_v2.tsv")
@@ -415,6 +472,7 @@ def main() -> None:
     # Figure: 4-panel
     try:
         import matplotlib
+
         matplotlib.use("Agg")
         import matplotlib.pyplot as plt
     except Exception:
@@ -428,13 +486,19 @@ def main() -> None:
     zvfs_by_G = {}
     for r in sweep["runs"]:
         g = int(r["group_size"])
-        rewards_by_G.setdefault(g, []).append(float(r.get("mean_reward_train", r.get("last10_avg", 0.0))))
+        rewards_by_G.setdefault(g, []).append(
+            float(r.get("mean_reward_train", r.get("last10_avg", 0.0)))
+        )
         zvfs_by_G.setdefault(g, []).append(float(r["mean_zvf"]))
     Gs_sorted = sorted(rewards_by_G.keys())
     rmeans = [float(np.mean(rewards_by_G[g])) for g in Gs_sorted]
-    rses = [float(np.std(rewards_by_G[g], ddof=1) / math.sqrt(len(rewards_by_G[g]))) for g in Gs_sorted]
+    rses = [
+        float(np.std(rewards_by_G[g], ddof=1) / math.sqrt(len(rewards_by_G[g]))) for g in Gs_sorted
+    ]
     zmeans = [float(np.mean(zvfs_by_G[g])) for g in Gs_sorted]
-    ax.errorbar(np.log10(Gs_sorted), rmeans, yerr=rses, marker="o", color="C0", label="reward (train)")
+    ax.errorbar(
+        np.log10(Gs_sorted), rmeans, yerr=rses, marker="o", color="C0", label="reward (train)"
+    )
     ax.set_xlabel("log10(G)")
     ax.set_ylabel("train reward", color="C0")
     ax.tick_params(axis="y", labelcolor="C0")
@@ -454,7 +518,12 @@ def main() -> None:
         if (4, T) in acc_by_G_T and (32, T) in acc_by_G_T:
             retentions.append((T, acc_by_G_T[(4, T)] / acc_by_G_T[(32, T)]))
     if retentions:
-        ax.plot([math.log10(t) for t, _ in retentions], [r for _, r in retentions], marker="o", label="observed retention")
+        ax.plot(
+            [math.log10(t) for t, _ in retentions],
+            [r for _, r in retentions],
+            marker="o",
+            label="observed retention",
+        )
         # Extrapolation line
         logTs = np.linspace(math.log10(1e5), math.log10(1e10), 100)
         ret_pred = 1.776 - 0.138 * logTs
@@ -471,7 +540,9 @@ def main() -> None:
     for G in sorted({row["G"] for row in rows}):
         gu_by_T = [(row["T"], row["gu"]) for row in rows if row["G"] == G]
         gu_by_T.sort()
-        ax.plot([math.log10(t) for t, _ in gu_by_T], [g for _, g in gu_by_T], marker="o", label=f"G={G}")
+        ax.plot(
+            [math.log10(t) for t, _ in gu_by_T], [g for _, g in gu_by_T], marker="o", label=f"G={G}"
+        )
     ax.set_xlabel("log10(T)")
     ax.set_ylabel("GU (group-utility, contrast yield per group)")
     ax.set_title("(C) Iso-G contrast-yield curve")

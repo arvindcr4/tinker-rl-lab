@@ -53,15 +53,34 @@ def main() -> int:
 
     require(len(postable.strip()) <= 5000, "reply exceeds conservative 5,000-character bound")
     require("reconsider" not in postable.lower(), "score-reconsideration request survived")
-    require("withdraw the use-inspired contribution type" in postable.lower(), "use-inspired not withdrawn")
-    require("HumanEval and MATH have no numerical main-result evaluation" in postable, "missing corpora hidden")
-    require("cannot justify comparative inference" in postable, "single-seed explanation is excusatory")
+    require(
+        "withdraw the use-inspired contribution type" in postable.lower(),
+        "use-inspired not withdrawn",
+    )
+    require(
+        "HumanEval and MATH have no numerical main-result evaluation" in postable,
+        "missing corpora hidden",
+    )
+    require(
+        "cannot justify comparative inference" in postable, "single-seed explanation is excusatory"
+    )
     require("one-sample seed-level test" in postable, "seed-level test identity is ambiguous")
     require("two-case descriptive concordance" in postable, "early triage still sounds validated")
-    require("prospectively justified by power or precision targets" in postable, "future replication rule is arbitrary")
-    require("at least five" not in postable.lower(), "unsupported universal five-seed rule survived")
-    require("post-submission" not in postable.lower() and "40-unit" not in postable.lower(), "new evidence leaked into reviewed response")
-    require("DAPO" not in postable and "E1" not in postable, "future study leaked into reviewed response")
+    require(
+        "prospectively justified by power or precision targets" in postable,
+        "future replication rule is arbitrary",
+    )
+    require(
+        "at least five" not in postable.lower(), "unsupported universal five-seed rule survived"
+    )
+    require(
+        "post-submission" not in postable.lower() and "40-unit" not in postable.lower(),
+        "new evidence leaked into reviewed response",
+    )
+    require(
+        "DAPO" not in postable and "E1" not in postable,
+        "future study leaked into reviewed response",
+    )
     require(
         not re.search(
             r"(?:[A-Za-z0-9_-]+\.(?:json|py|csv|tsv|md|tex|pdf)|"

@@ -48,7 +48,9 @@ class TorchPhaseProfiler:
         self.phase_flops[phase] = self.phase_flops.get(phase, 0.0) + flops
 
     def require_training_coverage(self) -> None:
-        missing = [phase for phase in REQUIRED_TRAINING_PHASES if self.phase_flops.get(phase, 0) <= 0]
+        missing = [
+            phase for phase in REQUIRED_TRAINING_PHASES if self.phase_flops.get(phase, 0) <= 0
+        ]
         if self.enabled and missing:
             raise FlopAccountingError(f"missing profiler coverage for: {', '.join(missing)}")
 
@@ -80,7 +82,9 @@ class TrainingFlopLedger:
             raise FlopAccountingError(f"unexpected profiled training step: {step}")
         missing = [phase for phase in REQUIRED_TRAINING_PHASES if phase_flops.get(phase, 0) <= 0]
         if missing:
-            raise FlopAccountingError(f"profiled step {step} is missing phases: {', '.join(missing)}")
+            raise FlopAccountingError(
+                f"profiled step {step} is missing phases: {', '.join(missing)}"
+            )
         self.profiled_steps.append(step)
         self.profiled_active_tokens += int(active_tokens)
         self.profiled_padded_tokens += int(padded_tokens)
@@ -115,9 +119,7 @@ class TrainingFlopLedger:
         if self.profiled_padded_tokens <= 0 or self.total_padded_tokens <= 0:
             raise FlopAccountingError("FLOP extrapolation has no padded-token denominator")
         scale = self.total_padded_tokens / self.profiled_padded_tokens
-        extrapolated = {
-            phase: value * scale for phase, value in self.profiled_phase_flops.items()
-        }
+        extrapolated = {phase: value * scale for phase, value in self.profiled_phase_flops.items()}
         for phase in REQUIRED_TRAINING_PHASES:
             if extrapolated.get(phase, 0) <= 0:
                 raise FlopAccountingError(f"extrapolated {phase} FLOPs are missing")

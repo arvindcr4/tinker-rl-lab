@@ -40,6 +40,7 @@ P7 iter-119 calibrated controller per-step data (N2 4-method
 tensors, which record per-prompt K_x and per-step ZVF).  Stdlib +
 numpy.  <= 270 lines.
 """
+
 from __future__ import annotations
 import csv, json
 from pathlib import Path
@@ -47,11 +48,13 @@ import numpy as np
 import xgboost as xgb
 
 import sys
+
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
-from _p8_common import (  # noqa: E402
+from _paths import REPO_ROOT
+from _p8_common import (
     load,
 )
+
 ROOT = REPO_ROOT
 RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8"
 RES.mkdir(parents=True, exist_ok=True)
@@ -73,10 +76,17 @@ def fit_xgb(Xtr, ytr, Xte):
     n_pos_tr = max(1, int(ytr.sum()))
     n_neg_tr = max(1, len(ytr) - n_pos_tr)
     spw = n_neg_tr / n_pos_tr
-    m = xgb.XGBClassifier(n_estimators=300, max_depth=5, learning_rate=0.1,
-                          subsample=0.8, colsample_bytree=0.8,
-                          scale_pos_weight=spw, eval_metric="logloss",
-                          random_state=SEED, n_jobs=4)
+    m = xgb.XGBClassifier(
+        n_estimators=300,
+        max_depth=5,
+        learning_rate=0.1,
+        subsample=0.8,
+        colsample_bytree=0.8,
+        scale_pos_weight=spw,
+        eval_metric="logloss",
+        random_state=SEED,
+        n_jobs=4,
+    )
     m.fit(Xtr, ytr)
     return m.predict_proba(Xte)[:, 1]
 
@@ -88,7 +98,13 @@ def consecutive_gradient(scores_sorted_desc):
 
 def load_n2_tensors(method="grpo"):
     """Load N2 per-(prompt × G) reward tensors for one method."""
-    path = ROOT / "platform_hybrid/experiments" / "results" / "n2_reward_tensor_resume" / f"{method}_s0_tensors.jsonl"
+    path = (
+        ROOT
+        / "platform_hybrid/experiments"
+        / "results"
+        / "n2_reward_tensor_resume"
+        / f"{method}_s0_tensors.jsonl"
+    )
     rows = []
     with path.open() as f:
         for line in f:
@@ -98,6 +114,7 @@ def load_n2_tensors(method="grpo"):
 
 def main():
     from review22_contract import require_independent_unit_contract
+
     require_independent_unit_contract()
     print(f"[synth120] loading P8 fraud data ...")
     (Xtr, ytr), (Xte, yte) = load_p8_data()
@@ -112,10 +129,15 @@ def main():
     top_k_mask[top_k_idx] = True
     # Consecutive-score gradient on the FULL descending-sorted score stream
     from review22_contract import score_gradient_selection
-    sorted_idx, p8_grad_full, p8_grad_topk, p8_grad_band_fire = score_gradient_selection(p8_scores, k_top, G_THR_P8)
-    print(f"[synth120] P8 top-K={k_top}, xgb-only recall = "
-          f"{int(yte[top_k_idx].sum())}/{int(yte.sum())} = "
-          f"{int(yte[top_k_idx].sum())/max(1,int(yte.sum())):.4f}")
+
+    sorted_idx, p8_grad_full, p8_grad_topk, p8_grad_band_fire = score_gradient_selection(
+        p8_scores, k_top, G_THR_P8
+    )
+    print(
+        f"[synth120] P8 top-K={k_top}, xgb-only recall = "
+        f"{int(yte[top_k_idx].sum())}/{int(yte.sum())} = "
+        f"{int(yte[top_k_idx].sum()) / max(1, int(yte.sum())):.4f}"
+    )
 
     # Gradient-band rule fires on top-K AND small gradient
     p8_grad_band_calls = int(p8_grad_band_fire.sum())
@@ -131,8 +153,10 @@ def main():
     p8_grad_p50 = float(np.percentile(p8_grad_topk, 50))
     p8_grad_p90 = float(np.percentile(p8_grad_topk, 90))
     p8_grad_ratio = p8_grad_p90 / max(1e-9, p8_grad_p50)
-    print(f"[synth120 H1] P8 top-K gradient P50={p8_grad_p50:.4e} "
-          f"P90={p8_grad_p90:.4e} ratio={p8_grad_ratio:.2f}")
+    print(
+        f"[synth120 H1] P8 top-K gradient P50={p8_grad_p50:.4e} "
+        f"P90={p8_grad_p90:.4e} ratio={p8_grad_ratio:.2f}"
+    )
 
     # ---- H4: gradient-band vs absolute-band ratio on P8 ----
     p8_call_ratio = p8_abs_band_calls / max(1, p8_grad_band_calls)
@@ -153,8 +177,10 @@ def main():
         zvf_per_step = [float(r.get("zvf", float("nan"))) for r in rows]
         zvf_per_step = [z for z in zvf_per_step if not (z != z)]  # drop NaN
         zvf_data[mname] = zvf_per_step
-        print(f"[synth120] P7 {mname}: {len(zvf_per_step)} steps, "
-              f"mean zvf={np.mean(zvf_per_step):.4f}")
+        print(
+            f"[synth120] P7 {mname}: {len(zvf_per_step)} steps, "
+            f"mean zvf={np.mean(zvf_per_step):.4f}"
+        )
 
     # ZVF-triage rule fires on per-step zvf < tau (iter-75 default tau=0.70)
     tau = 0.70
@@ -169,9 +195,11 @@ def main():
     p8_call_density = p8_grad_band_calls / max(1, n_te)
     p7_grpo_density = p7_fire_density["grpo"]
     synth_density_ratio = p8_call_density / max(1e-9, p7_grpo_density)
-    print(f"[synth120 H3] P8 grad-band density={p8_call_density:.4f}, "
-          f"P7 grpo zvf<0.70 density={p7_grpo_density:.4f}, "
-          f"ratio={synth_density_ratio:.2f}")
+    print(
+        f"[synth120 H3] P8 grad-band density={p8_call_density:.4f}, "
+        f"P7 grpo zvf<0.70 density={p7_grpo_density:.4f}, "
+        f"ratio={synth_density_ratio:.2f}"
+    )
 
     # ---- H2: per-step Spearman rho between P8 gradient (top-K rows) and P7 zvf ----
     # P8 gradient: 200 values (top-K)
@@ -179,7 +207,7 @@ def main():
     # These are DIFFERENT domains. We measure RANK correlation between
     # P8 gradient-rank and P7 zvf-rank by projecting both onto the
     # (decision_id) axis.
-    from scipy.stats import spearmanr
+
     # Construct per-step zvf trajectory and align with P8 top-K gradient:
     # we use the FRACTION of top-K rows with gradient < median as the
     # P8 "low-gradient density per step" and the P7 per-step zvf as the
@@ -198,8 +226,10 @@ def main():
     # For H2 we report the P7 cross-method zvf range and the P8
     # gradient-band call density as joint evidence.
     method_zvf_spread = max(method_means.values()) - min(method_means.values())
-    print(f"[synth120 H2] P7 method-mean-zvf spread = {method_zvf_spread:.4f}; "
-          f"method ranking = " + ", ".join(f"{m}={v:.3f}" for m, v in method_means_sorted))
+    print(
+        f"[synth120 H2] P7 method-mean-zvf spread = {method_zvf_spread:.4f}; "
+        f"method ranking = " + ", ".join(f"{m}={v:.3f}" for m, v in method_means_sorted)
+    )
 
     # ---- H4 P7 side: wasted-compute ratio of static-G=8 vs zvf-triage ----
     # If all 4 methods use G=8 always: per-step rollouts = 8 * n_prompts.
@@ -207,13 +237,14 @@ def main():
     n_prompts = 16  # N2 panel has 16 prompts per step
     static_rollouts_per_step = 8 * n_prompts  # 128
     triage_rollouts_per_step = sum(
-        (16 if z < tau else 8) * n_prompts
-        for z in zvf_data["grpo"]
+        (16 if z < tau else 8) * n_prompts for z in zvf_data["grpo"]
     ) / max(1, len(zvf_data["grpo"]))
     wasted_ratio_p7 = static_rollouts_per_step / max(1e-9, triage_rollouts_per_step)
-    print(f"[synth120 H4 P7] static-G=8 rollouts/step = {static_rollouts_per_step}, "
-          f"zvf-triage@tau=0.70 rollouts/step = {triage_rollouts_per_step:.1f}, "
-          f"wasted ratio = {wasted_ratio_p7:.2f}")
+    print(
+        f"[synth120 H4 P7] static-G=8 rollouts/step = {static_rollouts_per_step}, "
+        f"zvf-triage@tau=0.70 rollouts/step = {triage_rollouts_per_step:.1f}, "
+        f"wasted ratio = {wasted_ratio_p7:.2f}"
+    )
 
     # ---- Bootstrap CIs on density ratio (H3) ----
     rng = np.random.default_rng(SEED)
@@ -234,21 +265,29 @@ def main():
 
     boot_summary = {
         "H3_p8_density_mean": float(boot_p8.mean()),
-        "H3_p8_density_ci": [float(np.percentile(boot_p8, 2.5)),
-                              float(np.percentile(boot_p8, 97.5))],
+        "H3_p8_density_ci": [
+            float(np.percentile(boot_p8, 2.5)),
+            float(np.percentile(boot_p8, 97.5)),
+        ],
         "H3_p7_density_mean": float(boot_p7.mean()),
-        "H3_p7_density_ci": [float(np.percentile(boot_p7, 2.5)),
-                              float(np.percentile(boot_p7, 97.5))],
+        "H3_p7_density_ci": [
+            float(np.percentile(boot_p7, 2.5)),
+            float(np.percentile(boot_p7, 97.5)),
+        ],
         "H3_density_ratio_mean": float(boot_ratio.mean()),
-        "H3_density_ratio_ci": [float(np.percentile(boot_ratio, 2.5)),
-                                  float(np.percentile(boot_ratio, 97.5))],
+        "H3_density_ratio_ci": [
+            float(np.percentile(boot_ratio, 2.5)),
+            float(np.percentile(boot_ratio, 97.5)),
+        ],
     }
-    print(f"[synth120] bootstrap H3: P8={boot_summary['H3_p8_density_mean']:.4f} "
-          f"{boot_summary['H3_p8_density_ci']}; "
-          f"P7={boot_summary['H3_p7_density_mean']:.4f} "
-          f"{boot_summary['H3_p7_density_ci']}; "
-          f"ratio={boot_summary['H3_density_ratio_mean']:.2f} "
-          f"{boot_summary['H3_density_ratio_ci']}")
+    print(
+        f"[synth120] bootstrap H3: P8={boot_summary['H3_p8_density_mean']:.4f} "
+        f"{boot_summary['H3_p8_density_ci']}; "
+        f"P7={boot_summary['H3_p7_density_mean']:.4f} "
+        f"{boot_summary['H3_p7_density_ci']}; "
+        f"ratio={boot_summary['H3_density_ratio_mean']:.2f} "
+        f"{boot_summary['H3_density_ratio_ci']}"
+    )
 
     # ---- Write outputs ----
     headline = {

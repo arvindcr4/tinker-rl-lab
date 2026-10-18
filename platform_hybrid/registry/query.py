@@ -12,6 +12,7 @@ Usage:
   python3 registry/query.py stackdiff <entry_id_a> <entry_id_b>
   python3 registry/query.py drift  # iter-42: schema-anchored `field:` claims
 """
+
 import argparse
 import hashlib
 import json
@@ -30,49 +31,94 @@ else:
     except ImportError:  # Script/spec-loader invocation.
         sys.path.insert(0, str(HERE))
         from json_protocol import strict_json_loads
-ITEMS = ["loss_form", "reference_kl", "sampler_backend", "telemetry",
-         "group_size_schedule", "heldout_split", "decontamination"]
+ITEMS = [
+    "loss_form",
+    "reference_kl",
+    "sampler_backend",
+    "telemetry",
+    "group_size_schedule",
+    "heldout_split",
+    "decontamination",
+]
 # stackdiff severity ladder.  A level is assigned ONLY from fields that are
 # known on both sides and differ; fields unknown on either side never raise
 # the level -- they lower `coverage` and are reported as `underspecified`.
-RISK = {0: "R0 no known differences",
-        1: "R1 seed / version / reporting differences; semantic review may be required",
-        2: "R2 runtime differences (trainer, sampler backend, precision, implementation hash)",
-        3: "R3 hyperparameter / budget differences (decoding, batch shape, steps, optimizer, LoRA, data subset)",
-        4: "R4 algorithm differences (loss form, advantage, clipping, KL, variant-delta set)",
-        5: "R5 outcome-critical differences (checkpoint, reward, prompt/chat template, dataset, eval protocol, execution mode)"}
+RISK = {
+    0: "R0 no known differences",
+    1: "R1 seed / version / reporting differences; semantic review may be required",
+    2: "R2 runtime differences (trainer, sampler backend, precision, implementation hash)",
+    3: "R3 hyperparameter / budget differences (decoding, batch shape, steps, optimizer, LoRA, data subset)",
+    4: "R4 algorithm differences (loss form, advantage, clipping, KL, variant-delta set)",
+    5: "R5 outcome-critical differences (checkpoint, reward, prompt/chat template, dataset, eval protocol, execution mode)",
+}
 # Canonical comparison catalogue: field -> severity.  Values come from the
 # entry's `run_config` block when present (generated from run sources with
 # per-field provenance), otherwise from the hand-entered top-level fields and
 # `min_report` (see legacy_view).  Order here is the print order.
 FIELDS = {
     # R5 outcome-critical
-    "execution.mode": 5, "checkpoint.id": 5, "checkpoint.variant": 5,
-    "checkpoint.revision": 5, "reward.id": 5, "prompt.template_sha256": 5,
-    "prompt.chat_template": 5, "data.dataset": 5, "eval.metric": 5,
-    "eval.heldout": 5, "tokenizer.id": 5, "tokenizer.revision": 5,
-    "data.revision": 5, "data.ordered_example_identity": 5,
+    "execution.mode": 5,
+    "checkpoint.id": 5,
+    "checkpoint.variant": 5,
+    "checkpoint.revision": 5,
+    "reward.id": 5,
+    "prompt.template_sha256": 5,
+    "prompt.chat_template": 5,
+    "data.dataset": 5,
+    "eval.metric": 5,
+    "eval.heldout": 5,
+    "tokenizer.id": 5,
+    "tokenizer.revision": 5,
+    "data.revision": 5,
+    "data.ordered_example_identity": 5,
     # R4 algorithm
-    "loss.objective": 4, "loss.importance_ratio": 4, "loss.clip": 4,
-    "loss.aggregation": 4, "loss.advantage_norm": 4, "loss.token_mask": 4,
-    "loss.length_normalization": 4, "loss.dynamic_sampling": 4,
-    "loss.reward_shaping": 4, "loss.inner_epochs": 4,
-    "kl.reference_policy": 4, "kl.beta": 4, "kl.estimator": 4,
+    "loss.objective": 4,
+    "loss.importance_ratio": 4,
+    "loss.clip": 4,
+    "loss.aggregation": 4,
+    "loss.advantage_norm": 4,
+    "loss.token_mask": 4,
+    "loss.length_normalization": 4,
+    "loss.dynamic_sampling": 4,
+    "loss.reward_shaping": 4,
+    "loss.inner_epochs": 4,
+    "kl.reference_policy": 4,
+    "kl.beta": 4,
+    "kl.estimator": 4,
     # R3 hyperparameters / budget
-    "decoding.temperature": 3, "decoding.top_p": 3, "decoding.max_tokens": 3,
-    "decoding.top_k": 3, "decoding.repetition_penalty": 3,
-    "batch.prompts_per_step": 3, "batch.samples_per_prompt": 3,
-    "batch.group_schedule": 3, "batch.adaptation_rule": 3, "train.steps": 3, "train.sampler_refresh": 3,
-    "data.subset": 3, "data.selection": 3,
-    "optimizer.name": 3, "optimizer.lr": 3, "optimizer.betas": 3,
-    "optimizer.eps": 3, "optimizer.weight_decay": 3,
-    "lora.rank": 3, "lora.alpha": 3, "lora.dropout": 3, "lora.targets": 3,
+    "decoding.temperature": 3,
+    "decoding.top_p": 3,
+    "decoding.max_tokens": 3,
+    "decoding.top_k": 3,
+    "decoding.repetition_penalty": 3,
+    "batch.prompts_per_step": 3,
+    "batch.samples_per_prompt": 3,
+    "batch.group_schedule": 3,
+    "batch.adaptation_rule": 3,
+    "train.steps": 3,
+    "train.sampler_refresh": 3,
+    "data.subset": 3,
+    "data.selection": 3,
+    "optimizer.name": 3,
+    "optimizer.lr": 3,
+    "optimizer.betas": 3,
+    "optimizer.eps": 3,
+    "optimizer.weight_decay": 3,
+    "lora.rank": 3,
+    "lora.alpha": 3,
+    "lora.dropout": 3,
+    "lora.targets": 3,
     # R2 runtime
-    "trainer.name": 2, "runtime.backend": 2, "runtime.precision": 2,
-    "reward.fn_sha256": 2, "runtime.gpu": 2, "runtime.environment": 2,
+    "trainer.name": 2,
+    "runtime.backend": 2,
+    "runtime.precision": 2,
+    "reward.fn_sha256": 2,
+    "runtime.gpu": 2,
+    "runtime.environment": 2,
     "implementation.identity": 2,
     # R1 nuisance
-    "trainer.version": 1, "seeds": 1,
+    "trainer.version": 1,
+    "seeds": 1,
 }
 # All unknown outcome-critical fields, including checkpoint revision, flag
 # underspecification. R0 is not evidence of a matched stack.
@@ -100,6 +146,7 @@ def _sidecars(registry):
 
 def validate_record(rec, schema):
     import jsonschema
+
     jsonschema.Draft202012Validator(schema).validate(rec)
     seen = set()
     for row in rec.get("variant_deltas_applied", []):
@@ -108,7 +155,9 @@ def validate_record(rec, schema):
             raise ValueError(f"duplicate delta declaration: {key}")
         seen.add(key)
     lf = rec.get("min_report", {}).get("loss_form", {})
-    if lf.get("clipping_applied") is False and any(lf.get(k) is not None for k in ("clip_eps_low", "clip_eps_high")):
+    if lf.get("clipping_applied") is False and any(
+        lf.get(k) is not None for k in ("clip_eps_low", "clip_eps_high")
+    ):
         raise ValueError("disabled clipping cannot declare clipping epsilon")
 
 
@@ -123,9 +172,12 @@ def load(kind=None, registry=None):
         rec = strict_json_loads(raw)
         if path.name in sidecars:
             declaration = sidecars[path.name]
-            if (declaration.get("record_type") != "historical_amendment"
-                    or declaration.get("sha256") != hashlib.sha256(raw).hexdigest()
-                    or not isinstance(rec, dict) or "record_type" in rec):
+            if (
+                declaration.get("record_type") != "historical_amendment"
+                or declaration.get("sha256") != hashlib.sha256(raw).hexdigest()
+                or not isinstance(rec, dict)
+                or "record_type" in rec
+            ):
                 raise ValueError(f"unrecognized or modified sidecar: {path.name}")
             continue
         try:
@@ -140,7 +192,9 @@ def load(kind=None, registry=None):
 
 def item_score(d, item=None):
     """Fixed schema denominator, excluding explanatory provenance metadata."""
-    definitions = strict_json_loads((HERE / "schema.json").read_text())["$defs"]["min_report"]["properties"]
+    definitions = strict_json_loads((HERE / "schema.json").read_text())["$defs"]["min_report"][
+        "properties"
+    ]
     if item is None:
         candidates = [k for k, v in definitions.items() if set(d) <= set(v["properties"])]
         if len(candidates) != 1:
@@ -207,8 +261,14 @@ def legacy_view(rec):
         "batch.group_schedule": gs.get("schedule"),
         "batch.adaptation_rule": gs.get("adaptation_rule"),
     }
-    return {k: {"value": v, "status": "registry" if v is not None else "unknown",
-                "source": "registry entry (hand-entered)"} for k, v in raw.items()}
+    return {
+        k: {
+            "value": v,
+            "status": "registry" if v is not None else "unknown",
+            "source": "registry entry (hand-entered)",
+        }
+        for k, v in raw.items()
+    }
 
 
 # Explicit mappings only: no model-name guesses, library defaults or absent
@@ -218,20 +278,39 @@ MANIFEST_FIELDS = {
     "checkpoint.id": ("revisions.model.id", "model.id", "model_id"),
     "checkpoint.revision": ("revisions.model.revision", "model.revision", "model_revision"),
     "tokenizer.id": ("revisions.tokenizer.id", "tokenizer.id", "tokenizer_id"),
-    "tokenizer.revision": ("revisions.tokenizer.revision", "tokenizer.revision", "tokenizer_revision"),
+    "tokenizer.revision": (
+        "revisions.tokenizer.revision",
+        "tokenizer.revision",
+        "tokenizer_revision",
+    ),
     "runtime.gpu": ("hardware.gpu_names", "runtime.gpu", "gpu"),
     "runtime.environment": ("environment_hash", "runtime.environment"),
     "runtime.precision": ("hardware.model_dtype", "runtime.precision", "precision"),
     "data.dataset": ("revisions.dataset.id", "dataset.id", "dataset_id"),
     "data.revision": ("revisions.dataset.revision", "dataset.revision", "dataset_revision"),
-    "data.ordered_example_identity": ("data.ordered_example_identity",
-                                      "ordered_example_identity", "ordered_example_ids_sha256"),
+    "data.ordered_example_identity": (
+        "data.ordered_example_identity",
+        "ordered_example_identity",
+        "ordered_example_ids_sha256",
+    ),
     "implementation.identity": ("implementation.identity", "implementation_identity", "source"),
     "decoding.top_k": ("generation.train.top_k", "generation.top_k", "generation_config.top_k"),
-    "decoding.repetition_penalty": ("generation.train.repetition_penalty", "generation.repetition_penalty", "generation_config.repetition_penalty"),
-    "decoding.temperature": ("generation.train.temperature", "generation.temperature", "generation_config.temperature"),
+    "decoding.repetition_penalty": (
+        "generation.train.repetition_penalty",
+        "generation.repetition_penalty",
+        "generation_config.repetition_penalty",
+    ),
+    "decoding.temperature": (
+        "generation.train.temperature",
+        "generation.temperature",
+        "generation_config.temperature",
+    ),
     "decoding.top_p": ("generation.train.top_p", "generation.top_p", "generation_config.top_p"),
-    "decoding.max_tokens": ("generation.train.max_new_tokens", "generation.max_new_tokens", "generation_config.max_new_tokens"),
+    "decoding.max_tokens": (
+        "generation.train.max_new_tokens",
+        "generation.max_new_tokens",
+        "generation_config.max_new_tokens",
+    ),
 }
 
 
@@ -253,21 +332,31 @@ def manifest_view(manifest, source="entry#effective_manifest"):
                         break
                     value = value[part]
             if value is not missing:
-                if (field == "implementation.identity" and path == "source"
-                        and isinstance(value, dict)
-                        and (value.get("status") == "unknown"
-                             or not (value.get("source_files") or value.get("commit")))):
+                if (
+                    field == "implementation.identity"
+                    and path == "source"
+                    and isinstance(value, dict)
+                    and (
+                        value.get("status") == "unknown"
+                        or not (value.get("source_files") or value.get("commit"))
+                    )
+                ):
                     value = None
-                view[field] = {"value": value, "status": "logged" if value is not None else "unknown",
-                               "source": f"{source}.{path}"}
+                view[field] = {
+                    "value": value,
+                    "status": "logged" if value is not None else "unknown",
+                    "source": f"{source}.{path}",
+                }
                 break
     if "data.ordered_example_identity" not in view:
         ids = {k: manifest[k] for k in ("train_item_ids", "test_item_ids") if k in manifest}
         if len(ids) == 2:
             # Compare observed ordered lists, not an assumed shared dataset split.
             view["data.ordered_example_identity"] = {
-                "value": ids, "status": "logged",
-                "source": f"{source}.train_item_ids,test_item_ids"}
+                "value": ids,
+                "status": "logged",
+                "source": f"{source}.train_item_ids,test_item_ids",
+            }
     return view
 
 
@@ -283,8 +372,12 @@ def field_view(rec):
 
 
 def is_known(cell):
-    return (isinstance(cell, dict) and cell.get("status") in KNOWN_STATUSES + ("registry",)
-            and cell.get("value") is not None and bool(cell.get("source")))
+    return (
+        isinstance(cell, dict)
+        and cell.get("status") in KNOWN_STATUSES + ("registry",)
+        and cell.get("value") is not None
+        and bool(cell.get("source"))
+    )
 
 
 def spec_coverage(rec):
@@ -329,11 +422,16 @@ def _norm(x):
 
 def evidence_coverage(rec):
     """Disjoint evidence classes, each divided by the full catalogue."""
-    groups = {"observed": {"logged"}, "source_defined": {"code"},
-              "assumed": {"default", "inferred", "registry"}}
+    groups = {
+        "observed": {"logged"},
+        "source_defined": {"code"},
+        "assumed": {"default", "inferred", "registry"},
+    }
     cells = list(field_view(rec).values())
-    result = {group: sum(is_known(c) and c["status"] in statuses for c in cells) / len(FIELDS)
-              for group, statuses in groups.items()}
+    result = {
+        group: sum(is_known(c) and c["status"] in statuses for c in cells) / len(FIELDS)
+        for group, statuses in groups.items()
+    }
     result["unresolved"] = sum(not is_known(c) for c in cells) / len(FIELDS)
     return result
 
@@ -367,14 +465,22 @@ def stackdiff(a, b, required_fields=None):
         else:
             side = "both" if not (ka or kb) else ("a" if not ka else "b")
             unknown.append((f, sev, side))
+
     def delta_view(record):
         result = {}
         for row in record.get("variant_deltas_applied", []):
             key = row["delta_id"], row["component"]
-            if key in result or row.get("status") not in {"implemented", "surrogate", "absent", "unknown", "single-seed-surrogate"}:
+            if key in result or row.get("status") not in {
+                "implemented",
+                "surrogate",
+                "absent",
+                "unknown",
+                "single-seed-surrogate",
+            }:
                 raise ValueError(f"invalid or duplicate delta declaration: {key}")
             result[key] = row["status"]
         return result
+
     da, db = delta_view(a), delta_view(b)
     undeclared, n_rows = [], 0
     for key in sorted(set(da) | set(db)):
@@ -397,45 +503,65 @@ def stackdiff(a, b, required_fields=None):
             if sa != sb:
                 differs.append((name, 4, sa, sb))
     coverage = known_both / (len(FIELDS) + n_rows)
-    conditional = [f for f in FIELDS if is_known(va[f]) and is_known(vb[f])
-                   and any(c["status"] in {"default", "inferred", "registry"} for c in (va[f], vb[f]))]
-    semantic_review = [f for f, *_ in differs if f in {"trainer.version", "reward.fn_sha256", "implementation.identity"}]
+    conditional = [
+        f
+        for f in FIELDS
+        if is_known(va[f])
+        and is_known(vb[f])
+        and any(c["status"] in {"default", "inferred", "registry"} for c in (va[f], vb[f]))
+    ]
+    semantic_review = [
+        f
+        for f, *_ in differs
+        if f in {"trainer.version", "reward.fn_sha256", "implementation.identity"}
+    ]
     comparable = not unknown and not undeclared and not conditional and not semantic_review
-    return {"level": max((d[1] for d in differs), default=0),
-            "differs": differs, "unknown": unknown, "undeclared": undeclared,
-            "coverage": coverage, "coverage_version": COMPARISON_COVERAGE_VERSION,
-            "no_known_differences": not differs,
-            "comparable": comparable, "conditional_fields": conditional,
-            "semantic_review_required": semantic_review,
-            "evidence_coverage": {"a": evidence_coverage(a), "b": evidence_coverage(b)},
-            "evidence_complete": not unknown and not undeclared,
-            "matching_requirements": {
-                "version": MATCHING_REQUIREMENTS_VERSION,
-                "required_fields": sorted(required),
-                "unknown_fields": [f for f, _, _ in unknown if f in required],
-                "differing_fields": [f for f, *_ in differs if f in required],
-                "satisfied": (not any(f in required for f, *_ in unknown + differs)
-                              and not undeclared and not conditional and not semantic_review
-                              and not any(f.startswith("delta.") for f, *_ in unknown + differs)),
-            },
-            "hidden_max": max((u[1] for u in unknown), default=0),
-            "underspecified": coverage < COVERAGE_FLOOR or any(
-                u[1] == 5 for u in unknown),
-            "same_label": a["label_claimed"] == b["label_claimed"]}
+    return {
+        "level": max((d[1] for d in differs), default=0),
+        "differs": differs,
+        "unknown": unknown,
+        "undeclared": undeclared,
+        "coverage": coverage,
+        "coverage_version": COMPARISON_COVERAGE_VERSION,
+        "no_known_differences": not differs,
+        "comparable": comparable,
+        "conditional_fields": conditional,
+        "semantic_review_required": semantic_review,
+        "evidence_coverage": {"a": evidence_coverage(a), "b": evidence_coverage(b)},
+        "evidence_complete": not unknown and not undeclared,
+        "matching_requirements": {
+            "version": MATCHING_REQUIREMENTS_VERSION,
+            "required_fields": sorted(required),
+            "unknown_fields": [f for f, _, _ in unknown if f in required],
+            "differing_fields": [f for f, *_ in differs if f in required],
+            "satisfied": (
+                not any(f in required for f, *_ in unknown + differs)
+                and not undeclared
+                and not conditional
+                and not semantic_review
+                and not any(f.startswith("delta.") for f, *_ in unknown + differs)
+            ),
+        },
+        "hidden_max": max((u[1] for u in unknown), default=0),
+        "underspecified": coverage < COVERAGE_FLOOR or any(u[1] == 5 for u in unknown),
+        "same_label": a["label_claimed"] == b["label_claimed"],
+    }
 
 
 def all_pairs(recs=None):
     """stackdiff over every unordered pair of stack records."""
     import itertools
+
     recs = recs if recs is not None else load("stack")
-    return {(x, y): stackdiff(recs[x], recs[y])
-            for x, y in itertools.combinations(sorted(recs), 2)}
+    return {(x, y): stackdiff(recs[x], recs[y]) for x, y in itertools.combinations(sorted(recs), 2)}
 
 
 def cmd_list(_):
     for r in load("stack").values():
-        print(f"{r['id']:40s} label={r['label_claimed']:14s} "
-              f"framework={r['framework']['name']}/{r['framework']['openness']}")
+        print(
+            f"{r['id']:40s} label={r['label_claimed']:14s} "
+            f"framework={r['framework']['name']}/{r['framework']['openness']}"
+        )
 
 
 def cmd_badge(args):
@@ -446,8 +572,10 @@ def cmd_badge(args):
         total, scores = badge(r)
         detail = " ".join(f"{k}={v:.2f}" for k, v in scores.items())
         src = "run_config" if r.get("run_config") else "hand-entered"
-        print(f"{rid:40s} badge={total:3d}  spec_coverage={spec_coverage(r):.2f} "
-              f"({SPEC_COVERAGE_VERSION}; {src})  {detail}")
+        print(
+            f"{rid:40s} badge={total:3d}  spec_coverage={spec_coverage(r):.2f} "
+            f"({SPEC_COVERAGE_VERSION}; {src})  {detail}"
+        )
 
 
 def cmd_query(args):
@@ -463,14 +591,17 @@ def cmd_query(args):
 
 def cmd_stackdiff(args):
     from collections import Counter
+
     recs = load("stack")
     if getattr(args, "all", False):
         if getattr(args, "generated", False):
             recs = {k: v for k, v in recs.items() if v.get("run_config")}
         res = all_pairs(recs)
         print(f"stackdiff --all: {len(recs)} stacks, {len(res)} pairs")
-        groups = [("all pairs", res),
-                  ("same claimed label", {k: v for k, v in res.items() if v["same_label"]})]
+        groups = [
+            ("all pairs", res),
+            ("same claimed label", {k: v for k, v in res.items() if v["same_label"]}),
+        ]
         for title, sub in groups:
             n = len(sub)
             if not n:
@@ -481,8 +612,10 @@ def cmd_stackdiff(args):
             print(f"{title} (n={n}):")
             for k in range(6):
                 print(f"  R{k}: {lv[k]:4d}   {RISK[k]}")
-            print(f"  underspecified: {und}/{n}   coverage median={covs[n // 2]:.2f} "
-                  f"min={covs[0]:.2f} max={covs[-1]:.2f}")
+            print(
+                f"  underspecified: {und}/{n}   coverage median={covs[n // 2]:.2f} "
+                f"min={covs[0]:.2f} max={covs[-1]:.2f}"
+            )
         if getattr(args, "exit_level", False):
             level = max((r["level"] for r in res.values()), default=0)
             return level or (6 if not res or any(not r["comparable"] for r in res.values()) else 0)
@@ -501,26 +634,44 @@ def cmd_stackdiff(args):
             src = f"\n        a: {va[f]['source']}\n        b: {vb[f]['source']}"
         print(f"  [R{sev}] {f}: {x!r} -> {y!r}{src}")
     print(f"verdict: {RISK[r['level']]}")
-    print(f"coverage: {r['coverage']:.2f} ({r['coverage_version']}) of compared fields known on both sides; "
-          f"{len(r['unknown'])} unknown (max hidden severity R{r['hidden_max']})")
-    print(f"evidence complete: {r['evidence_complete']}; "
-          f"matching requirements satisfied: {r['matching_requirements']['satisfied']}")
+    print(
+        f"coverage: {r['coverage']:.2f} ({r['coverage_version']}) of compared fields known on both sides; "
+        f"{len(r['unknown'])} unknown (max hidden severity R{r['hidden_max']})"
+    )
+    print(
+        f"evidence complete: {r['evidence_complete']}; "
+        f"matching requirements satisfied: {r['matching_requirements']['satisfied']}"
+    )
     if r["underspecified"]:
         crit = [u[0] for u in r["unknown"] if u[1] == 5]
-        print("UNDERSPECIFIED: " + (f"outcome-critical fields unknown: {', '.join(crit)}"
-                                     if crit else f"coverage < {COVERAGE_FLOOR}"))
+        print(
+            "UNDERSPECIFIED: "
+            + (
+                f"outcome-critical fields unknown: {', '.join(crit)}"
+                if crit
+                else f"coverage < {COVERAGE_FLOOR}"
+            )
+        )
     if r["undeclared"]:
-        print("undeclared delta rows (one side only, unknown R4 evidence): "
-              + ", ".join(f"{n} [missing on {s}]" for n, s in r["undeclared"]))
+        print(
+            "undeclared delta rows (one side only, unknown R4 evidence): "
+            + ", ".join(f"{n} [missing on {s}]" for n, s in r["undeclared"])
+        )
     if getattr(args, "verbose", False):
         for f, sev, side in sorted(r["unknown"], key=lambda u: -u[1]):
             print(f"  [unknown R{sev}] {f} (missing on {side})")
     if r["same_label"] and r["level"] >= 4:
-        print("label-flip risk: the shared label does not pin the stack;"
-              "\n  do not attribute outcome differences to the label.")
-    print(f"comparable: {r['comparable']}; conditional fields: {len(r['conditional_fields'])}; "
-          f"semantic review: {r['semantic_review_required']}")
-    return r["level"] if r["level"] or r["comparable"] or not getattr(args, "exit_level", False) else 6
+        print(
+            "label-flip risk: the shared label does not pin the stack;"
+            "\n  do not attribute outcome differences to the label."
+        )
+    print(
+        f"comparable: {r['comparable']}; conditional fields: {len(r['conditional_fields'])}; "
+        f"semantic review: {r['semantic_review_required']}"
+    )
+    return (
+        r["level"] if r["level"] or r["comparable"] or not getattr(args, "exit_level", False) else 6
+    )
 
 
 def cmd_implementations(args):
@@ -539,11 +690,11 @@ def cmd_implementations(args):
     by_pair: dict[tuple[str, str], list[tuple[str, str]]] = {}
     for sid, s in stacks.items():
         for vd in s.get("variant_deltas_applied", []):
-            by_pair.setdefault((vd["delta_id"], vd["component"]), []).append(
-                (sid, vd["status"]))
+            by_pair.setdefault((vd["delta_id"], vd["component"]), []).append((sid, vd["status"]))
     if args.delta:
         if args.delta not in recs:
-            print(f"unknown delta_id: {args.delta}"); return 1
+            print(f"unknown delta_id: {args.delta}")
+            return 1
         d = recs[args.delta]
         print(f"delta_id={args.delta} name='{d.get('name')}'")
         for comp in d["deltas"]:
@@ -552,14 +703,19 @@ def cmd_implementations(args):
             if args.status:
                 claims = [(s, st) for s, st in claims if st == args.status]
             if args.framework:
-                claims = [(s, st) for s, st in claims
-                          if stacks[s]["framework"]["name"] == args.framework]
-            print(f"  {comp['component']:30s} {len(claims)} claim(s): "
-                  + ", ".join(f"{s}={st}" for s, st in claims) if claims
-                  else f"  {comp['component']:30s} 0 claims")
+                claims = [
+                    (s, st) for s, st in claims if stacks[s]["framework"]["name"] == args.framework
+                ]
+            print(
+                f"  {comp['component']:30s} {len(claims)} claim(s): "
+                + ", ".join(f"{s}={st}" for s, st in claims)
+                if claims
+                else f"  {comp['component']:30s} 0 claims"
+            )
     else:
         # Aggregate: print per-delta, per-component counts
         from collections import Counter
+
         ctr: Counter[tuple[str, str, str]] = Counter()
         for (did, comp), claims in by_pair.items():
             for _, st in claims:
@@ -594,6 +750,7 @@ def cmd_drift(args):
     block_leaves = {}
     for item_name, item_def in min_report.items():
         out: set[str] = set()
+
         def walk(o, out=out):
             if not isinstance(o, dict):
                 return
@@ -604,12 +761,17 @@ def cmd_drift(args):
                             walk(vv)
                         elif isinstance(vv, dict):
                             out.add(kk)
+
         walk(item_def)
         block_leaves[item_name] = out
 
-    counts = {"OK": 0, "SEE_CITATION": 0,
-              "BLOCK_NOT_IN_MIN_REPORT": 0,
-              "LEAF_NOT_IN_SCHEMA": 0, "AMBIGUOUS_REFERENCE": 0}
+    counts = {
+        "OK": 0,
+        "SEE_CITATION": 0,
+        "BLOCK_NOT_IN_MIN_REPORT": 0,
+        "LEAF_NOT_IN_SCHEMA": 0,
+        "AMBIGUOUS_REFERENCE": 0,
+    }
     n_rows = 0
     drifts = []
     for p in sorted((HERE / "entries").glob("delta_*.json")):
@@ -638,10 +800,8 @@ def cmd_drift(args):
             if v not in ("OK", "SEE_CITATION", "OUT_OF_SCOPE"):
                 drifts.append((d["id"], comp, field, v, r))
     print(f"delta-schema drift audit (iter-42): {n_rows} (delta, component) pairs")
-    drift_n = sum(
-        c for k, c in counts.items() if k not in ("OK", "SEE_CITATION", "OUT_OF_SCOPE")
-    )
-    print(f"  drift rate: {drift_n/max(1,n_rows):.3f}  ({drift_n}/{n_rows})")
+    drift_n = sum(c for k, c in counts.items() if k not in ("OK", "SEE_CITATION", "OUT_OF_SCOPE"))
+    print(f"  drift rate: {drift_n / max(1, n_rows):.3f}  ({drift_n}/{n_rows})")
     print()
     print(f"  {'verdict':24s} count")
     for k, n in sorted(counts.items()):
@@ -659,6 +819,7 @@ def cmd_claim_validation(args):
     for every variant_delta record. Optional --delta filters to one entry.
     Verdict codes: SUPPORTS / NEUTRAL / CONTRADICTS / UNCLAIMED."""
     from collections import Counter
+
     counts: Counter[str] = Counter()
     records = load("variant_delta")
     for rec in records.values():
@@ -668,14 +829,20 @@ def cmd_claim_validation(args):
         for r in rows:
             counts[r["verdict"]] += 1
             if args.delta:
+
                 def number(value):
                     return "NR" if value is None else f"{value:+.4f}"
-                print(f"  {rec['id']:18s} {r['metric']:18s} {r['panel']:24s} "
-                      f"verdict={r['verdict']:11s} "
-                      f"observed={number(r['observed_delta'])} "
-                      f"CI=[{number(r.get('ci_low'))},{number(r.get('ci_high'))}]")
+
+                print(
+                    f"  {rec['id']:18s} {r['metric']:18s} {r['panel']:24s} "
+                    f"verdict={r['verdict']:11s} "
+                    f"observed={number(r['observed_delta'])} "
+                    f"CI=[{number(r.get('ci_low'))},{number(r.get('ci_high'))}]"
+                )
     if not args.delta:
-        print(f"=== Iter 46 P6 — claim-validation verdict counts (across all {len(records)} variant-delta records) ===")
+        print(
+            f"=== Iter 46 P6 — claim-validation verdict counts (across all {len(records)} variant-delta records) ==="
+        )
         for k, n in sorted(counts.items()):
             print(f"  {k:12s} {n}")
     return 0
@@ -696,9 +863,8 @@ def cmd_health(_):
     full coverage + null-rate + verdict-signature audit. Passes the exit
     code through unchanged so CI sees schema failures."""
     import subprocess
-    target = (
-        HERE.parents[1] / "platform_modal/scripts/p5p8/p6_registry_health.py"
-    ).resolve()
+
+    target = (HERE.parents[1] / "platform_modal/scripts/p5p8/p6_registry_health.py").resolve()
     rc = subprocess.run([sys.executable, str(target)], cwd=HERE.parent).returncode
     return rc
 
@@ -708,12 +874,16 @@ def registry_input_manifest(registry):
     paths = [registry / "schema.json", *sorted((registry / "entries").glob("*.json"))]
     if (registry / "sidecars.json").exists():
         paths.append(registry / "sidecars.json")
-    return {p.relative_to(registry).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest()
-            for p in paths}
+    return {
+        p.relative_to(registry).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest()
+        for p in paths
+    }
 
 
 def registry_manifest_sha256(manifest):
-    return hashlib.sha256(json.dumps(manifest, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
+    return hashlib.sha256(
+        json.dumps(manifest, sort_keys=True, separators=(",", ":")).encode()
+    ).hexdigest()
 
 
 def cmd_validate_strict(args):
@@ -733,6 +903,7 @@ def cmd_validate_strict(args):
         python3 registry/query.py validate-strict --include-warn  # also fail on warn
     """
     import subprocess
+
     # First: schema validation (same as cmd_validate).
     try:
         import jsonschema  # noqa: F401
@@ -752,6 +923,7 @@ def cmd_validate_strict(args):
     ).resolve()
     # A fresh, unique output prevents a failed producer from blessing a prior audit.
     import tempfile
+
     if registry_input_manifest(HERE) != manifest:
         print("CI GATE: FAIL (registry inputs changed during schema validation)", file=sys.stderr)
         return 1
@@ -765,9 +937,19 @@ def cmd_validate_strict(args):
         audit_json = pathlib.Path(work) / "audit.json"
         try:
             rc = subprocess.run(
-                [sys.executable, str(target), "--registry", str(HERE),
-                 "--output", str(audit_json), "--input-sha256", digest],
-                cwd=HERE.parent, capture_output=True, text=True,
+                [
+                    sys.executable,
+                    str(target),
+                    "--registry",
+                    str(HERE),
+                    "--output",
+                    str(audit_json),
+                    "--input-sha256",
+                    digest,
+                ],
+                cwd=HERE.parent,
+                capture_output=True,
+                text=True,
             )
         except OSError as exc:
             print(f"CI GATE: FAIL (validator could not start: {exc})", file=sys.stderr)
@@ -783,16 +965,21 @@ def cmd_validate_strict(args):
                 raise ValueError("audit must be an object")
             if audit.get("validator_version") != VALIDATOR_VERSION:
                 raise ValueError("unrecognized validator version")
-            if (audit.get("validator_sha256") != producer_digest
-                    or hashlib.sha256(target.read_bytes()).hexdigest() != producer_digest):
+            if (
+                audit.get("validator_sha256") != producer_digest
+                or hashlib.sha256(target.read_bytes()).hexdigest() != producer_digest
+            ):
                 raise ValueError("validator implementation identity mismatch")
-            if (audit.get("input_manifest") != manifest
-                    or audit.get("input_sha256") != digest
-                    or registry_input_manifest(HERE) != manifest):
+            if (
+                audit.get("input_manifest") != manifest
+                or audit.get("input_sha256") != digest
+                or registry_input_manifest(HERE) != manifest
+            ):
                 raise ValueError("audit does not match the current registry input manifest")
             if not isinstance(audit.get("findings"), list) or not all(
-                    isinstance(f, dict) and f.get("severity") in {"error", "warn", "info"}
-                    for f in audit["findings"]):
+                isinstance(f, dict) and f.get("severity") in {"error", "warn", "info"}
+                for f in audit["findings"]
+            ):
                 raise ValueError("invalid audit findings")
             for key in ("n_stack_entries", "n_deltas"):
                 if type(audit.get(key)) is not int or audit[key] < 0:
@@ -815,7 +1002,9 @@ def cmd_validate_strict(args):
     if n_errors == 0 and not (args.include_warn and warn_findings):
         print("CI GATE: PASS")
     else:
-        print(f"CI GATE: FAIL ({n_errors + (len(warn_findings) if args.include_warn else 0)} blocking findings)")
+        print(
+            f"CI GATE: FAIL ({n_errors + (len(warn_findings) if args.include_warn else 0)} blocking findings)"
+        )
     if args.include_warn:
         return 1 if (n_errors + len(warn_findings)) else 0
     return 1 if n_errors else 0
@@ -826,15 +1015,24 @@ def audit_input_manifest(target):
     root = HERE.parents[1]
     manifest = {f"registry/{k}": v for k, v in registry_input_manifest(HERE).items()}
     manifest["producer"] = hashlib.sha256(target.read_bytes()).hexdigest()
-    paths = set((root / "platform_hybrid/experiments/results/n2_reward_tensor_resume").glob("*_tensors.jsonl"))
+    paths = set(
+        (root / "platform_hybrid/experiments/results/n2_reward_tensor_resume").glob(
+            "*_tensors.jsonl"
+        )
+    )
     paths.update(path for path in (HERE / "query.py", HERE / "json_protocol.py") if path.is_file())
+
     def collect(value):
         if isinstance(value, dict):
             for key, child in value.items():
                 if key in {"source", "audit_source"} and isinstance(child, str):
                     raw = child.split("#", 1)[0].split(" sha256:", 1)[0]
-                    if pathlib.Path(raw).is_absolute() and not pathlib.Path(raw).resolve().is_relative_to(root):
-                        raise ValueError("external reporting source is outside the bound repository")
+                    if pathlib.Path(raw).is_absolute() and not pathlib.Path(
+                        raw
+                    ).resolve().is_relative_to(root):
+                        raise ValueError(
+                            "external reporting source is outside the bound repository"
+                        )
                     if ".." in pathlib.Path(raw).parts:
                         raise ValueError("parent traversal is not a bound reporting source")
                     for base in (root, root / "platform_hybrid"):
@@ -845,6 +1043,7 @@ def audit_input_manifest(target):
         elif isinstance(value, list):
             for child in value:
                 collect(child)
+
     for rec in load().values():
         collect(rec)
     for path in sorted(paths):
@@ -857,6 +1056,7 @@ def audit_text(audit_path, target, args):
     import shutil
     import subprocess
     import tempfile
+
     manifest = audit_input_manifest(target)
     digest = registry_manifest_sha256(manifest)
     if getattr(args, "refresh", False):
@@ -879,26 +1079,33 @@ def audit_text(audit_path, target, args):
                 destination.parent.mkdir(parents=True, exist_ok=True)
                 shutil.copy2(source, destination)
             (staged / "platform_hybrid/experiments/results/p5p8").mkdir(parents=True, exist_ok=True)
-            result = subprocess.run([sys.executable, str(script)], cwd=staged,
-                                    capture_output=True, text=True)
+            result = subprocess.run(
+                [sys.executable, str(script)], cwd=staged, capture_output=True, text=True
+            )
             if result.returncode:
                 raise ValueError(f"report refresh failed: {result.stderr or result.stdout}")
             text = (staged / audit_path.relative_to(root)).read_text()
         if audit_input_manifest(target) != manifest:
             raise ValueError("report inputs changed during refresh")
-        print(f"snapshot: {digest}; fresh isolated recomputation; producer sha256={manifest['producer']}")
+        print(
+            f"snapshot: {digest}; fresh isolated recomputation; producer sha256={manifest['producer']}"
+        )
         return text
     receipt_path = audit_path.with_name(audit_path.name + ".receipt.json")
     try:
         raw = audit_path.read_bytes()
         receipt = strict_json_loads(receipt_path.read_text())
-        if (receipt.get("version") != "registry-report-cache-v1"
-                or receipt.get("input_manifest") != manifest
-                or receipt.get("input_sha256") != digest
-                or receipt.get("output_sha256") != hashlib.sha256(raw).hexdigest()):
+        if (
+            receipt.get("version") != "registry-report-cache-v1"
+            or receipt.get("input_manifest") != manifest
+            or receipt.get("input_sha256") != digest
+            or receipt.get("output_sha256") != hashlib.sha256(raw).hexdigest()
+        ):
             raise ValueError("report receipt does not match current inputs")
     except (OSError, ValueError) as exc:
-        raise ValueError(f"unverified/stale cached report {audit_path.name}; use --refresh ({exc})") from exc
+        raise ValueError(
+            f"unverified/stale cached report {audit_path.name}; use --refresh ({exc})"
+        ) from exc
     print(f"snapshot: {digest}; verified cache")
     return raw.decode()
 
@@ -935,15 +1142,13 @@ def cmd_measured_coverage(args):
         return 0
     headline = {
         "n_deltas": audit["n_entries"],
-        "with_measured": sum(1 for r in audit["per_entry"]
-                             if r["measured_count"] > 0),
-        "empty_measured": sum(1 for r in audit["per_entry"]
-                              if r["measured_count"] == 0),
+        "with_measured": sum(1 for r in audit["per_entry"] if r["measured_count"] > 0),
+        "empty_measured": sum(1 for r in audit["per_entry"] if r["measured_count"] == 0),
         "verdict_totals": audit["verdict_totals"],
         "n_cross_panel_pairs": len(audit.get("cross_panel_agreement", [])),
         "n_cross_panel_same_sign": sum(
-            1 for r in audit.get("cross_panel_agreement", [])
-            if r["same_sign"]),
+            1 for r in audit.get("cross_panel_agreement", []) if r["same_sign"]
+        ),
         "n_missing_sources": audit.get("n_mismatch_audit", 0),
     }
     print(f"=== Iter 58 P6 — measured-block coverage audit ({headline['n_deltas']} deltas) ===")
@@ -951,14 +1156,18 @@ def cmd_measured_coverage(args):
         print(f"  {k:24s} {v}")
     print("--- per-entry ---")
     for r in audit["per_entry"]:
-        print(f"  {r['delta_id']:22s} m={r['measured_count']:2d} sig={r['n_significant']:2d} "
-              f"S={r['supports']} C={r['contradicts']} N={r['neutral']} U={r['unclaimed']}")
+        print(
+            f"  {r['delta_id']:22s} m={r['measured_count']:2d} sig={r['n_significant']:2d} "
+            f"S={r['supports']} C={r['contradicts']} N={r['neutral']} U={r['unclaimed']}"
+        )
     if audit.get("cross_panel_agreement"):
         print("--- cross-panel (N2 zvf  vs  ZVF130 risk) ---")
         for c in audit["cross_panel_agreement"]:
             flag = "✓" if c["same_sign"] else "✗"
-            print(f"  {flag} {c['delta_id']:14s}  N2 zvf={c['n2_zvf_delta']:+.4f}  "
-                  f"Z130 risk={c['zvf130_risk_delta']:+.4f}")
+            print(
+                f"  {flag} {c['delta_id']:14s}  N2 zvf={c['n2_zvf_delta']:+.4f}  "
+                f"Z130 risk={c['zvf130_risk_delta']:+.4f}"
+            )
     return 0
 
 
@@ -1005,7 +1214,9 @@ def cmd_coverage(args):
         if rec["record_type"] == "stack":
             scores = badge(rec)[1]
             print(f"    reported_leaf_coverage_v3      {sum(scores.values()) / len(ITEMS)}")
-            print(f"    item_presence_coverage_v3      {sum(v > 0 for v in scores.values()) / len(ITEMS)}")
+            print(
+                f"    item_presence_coverage_v3      {sum(v > 0 for v in scores.values()) / len(ITEMS)}"
+            )
         return 0
     for r in rows:
         eid = r[idx["entry_id"]]
@@ -1016,8 +1227,10 @@ def cmd_coverage(args):
         me = float(r[idx["measured_coverage"]])
         ci = r[idx["ci_method_present"]]
         rt = r[idx["record_type"]]
-        print(f"  {eid:38s} {rt:14s} reported_leaf_v3={leaf} item_presence_v3={presence} "
-              f"legacy_decl={dd:.3f} legacy_meas={me:.3f} ci={ci}")
+        print(
+            f"  {eid:38s} {rt:14s} reported_leaf_v3={leaf} item_presence_v3={presence} "
+            f"legacy_decl={dd:.3f} legacy_meas={me:.3f} ci={ci}"
+        )
     return 0
 
 
@@ -1038,7 +1251,9 @@ def cmd_antiherding(args):
         if not rows:
             print(f"no such method: {args.method}", file=sys.stderr)
             return 1
-    print(f"  {'method':8s} {'G':>3s} {'zvf_obs':>8s} {'zvf_iid':>8s} {'delta_div':>9s} {'Y_obs':>7s}  vs_grpo [lo,hi]  sig  p")
+    print(
+        f"  {'method':8s} {'G':>3s} {'zvf_obs':>8s} {'zvf_iid':>8s} {'delta_div':>9s} {'Y_obs':>7s}  vs_grpo [lo,hi]  sig  p"
+    )
     for r in rows:
         m = r[idx["method"]]
         G = r[idx["G"]]
@@ -1051,8 +1266,10 @@ def cmd_antiherding(args):
         hi = float(r[idx["ci_high"]])
         sig = r[idx["significant"]]
         p = float(r[idx["p_two_sided"]])
-        print(f"  {m:8s} {G:>3s} {zo:>8.4f} {zi:>8.4f} {dd:>9.4f} {yo:>7.4f}  "
-              f"{dv:+.4f} [{lo:+.4f},{hi:+.4f}]  {sig[:1]}   {p:.3f}")
+        print(
+            f"  {m:8s} {G:>3s} {zo:>8.4f} {zi:>8.4f} {dd:>9.4f} {yo:>7.4f}  "
+            f"{dv:+.4f} [{lo:+.4f},{hi:+.4f}]  {sig[:1]}   {p:.3f}"
+        )
     return 0
 
 
@@ -1068,66 +1285,86 @@ def main():
     pd = sub.add_parser("stackdiff")
     pd.add_argument("a", nargs="?")
     pd.add_argument("b", nargs="?")
-    pd.add_argument("--all", action="store_true",
-                    help="R-level distribution over all stack pairs")
-    pd.add_argument("--exit-level", action="store_true",
-                    help="exit with R-level when different; exit 6 for R0 with unresolved comparability")
-    pd.add_argument("--generated", action="store_true",
-                    help="with --all: only entries that carry a generated run_config")
-    pd.add_argument("--sources", action="store_true",
-                    help="print per-field provenance next to each difference")
-    pd.add_argument("-v", "--verbose", action="store_true",
-                    help="also list every unknown field")
+    pd.add_argument("--all", action="store_true", help="R-level distribution over all stack pairs")
+    pd.add_argument(
+        "--exit-level",
+        action="store_true",
+        help="exit with R-level when different; exit 6 for R0 with unresolved comparability",
+    )
+    pd.add_argument(
+        "--generated",
+        action="store_true",
+        help="with --all: only entries that carry a generated run_config",
+    )
+    pd.add_argument(
+        "--sources", action="store_true", help="print per-field provenance next to each difference"
+    )
+    pd.add_argument("-v", "--verbose", action="store_true", help="also list every unknown field")
     pi = sub.add_parser("implementations")
-    pi.add_argument("--delta", default=None,
-                    help="Show stacks claiming this delta_id (e.g. delta_dapo).")
-    pi.add_argument("--status", choices=("implemented", "surrogate", "absent",
-                                          "unknown"), default=None)
-    pi.add_argument("--framework", default=None,
-                    help="Filter to stacks whose framework.name == X.")
+    pi.add_argument(
+        "--delta", default=None, help="Show stacks claiming this delta_id (e.g. delta_dapo)."
+    )
+    pi.add_argument(
+        "--status", choices=("implemented", "surrogate", "absent", "unknown"), default=None
+    )
+    pi.add_argument("--framework", default=None, help="Filter to stacks whose framework.name == X.")
     sub.add_parser("drift")
-    pcv = sub.add_parser("claim-validation",
-                          help="Iter-46: print (delta, metric, panel) claim-validation verdicts.")
-    pcv.add_argument("--delta", default=None,
-                     help="Filter to one delta_id (e.g. delta_aero).")
-    sub.add_parser("validate",
-                   help="Iter-50: CI-style schema validation pass")
-    sub.add_parser("health",
-                   help="Iter-50: full registry health audit")
-    pvs = sub.add_parser("validate-strict",
-                         help="Iter-122: schema + orphan-delta + missing-source CI gate")
-    pvs.add_argument("--include-warn", action="store_true",
-                     help="Also fail on warn-severity findings (default: warn/info are non-blocking)")
-    pmc = sub.add_parser("measured-coverage",
-                         help="Iter-58: measured-block provenance & coverage audit.")
-    pmc.add_argument("--delta", default=None,
-                     help="Filter to one delta_id (e.g. delta_aero).")
-    pcov = sub.add_parser("coverage",
-                          help="Iter-62: print outcomes.coverage self-report block per entry.")
-    pcov.add_argument("--entry", default=None,
-                      help="Filter to one entry_id.")
-    pah = sub.add_parser("antiherding",
-                         help="Iter-66: print Contrastive Yield / anti-herding residual per N2 method.")
-    pah.add_argument("--method", default=None,
-                     help="Filter to one method (grpo, aero, areal, gift).")
+    pcv = sub.add_parser(
+        "claim-validation", help="Iter-46: print (delta, metric, panel) claim-validation verdicts."
+    )
+    pcv.add_argument("--delta", default=None, help="Filter to one delta_id (e.g. delta_aero).")
+    sub.add_parser("validate", help="Iter-50: CI-style schema validation pass")
+    sub.add_parser("health", help="Iter-50: full registry health audit")
+    pvs = sub.add_parser(
+        "validate-strict", help="Iter-122: schema + orphan-delta + missing-source CI gate"
+    )
+    pvs.add_argument(
+        "--include-warn",
+        action="store_true",
+        help="Also fail on warn-severity findings (default: warn/info are non-blocking)",
+    )
+    pmc = sub.add_parser(
+        "measured-coverage", help="Iter-58: measured-block provenance & coverage audit."
+    )
+    pmc.add_argument("--delta", default=None, help="Filter to one delta_id (e.g. delta_aero).")
+    pcov = sub.add_parser(
+        "coverage", help="Iter-62: print outcomes.coverage self-report block per entry."
+    )
+    pcov.add_argument("--entry", default=None, help="Filter to one entry_id.")
+    pah = sub.add_parser(
+        "antiherding",
+        help="Iter-66: print Contrastive Yield / anti-herding residual per N2 method.",
+    )
+    pah.add_argument(
+        "--method", default=None, help="Filter to one method (grpo, aero, areal, gift)."
+    )
     for report_parser in (pmc, pcov, pah):
-        report_parser.add_argument("--refresh", action="store_true",
-                                   help="recompute in an isolated temporary copy; preserve stored evidence")
+        report_parser.add_argument(
+            "--refresh",
+            action="store_true",
+            help="recompute in an isolated temporary copy; preserve stored evidence",
+        )
     args = ap.parse_args()
     if args.cmd == "stackdiff":
         level = cmd_stackdiff(args)
         # Default exit 0: a difference is a finding, not a tool failure.
         # --exit-level restores the pre-2026-10-16 behaviour (exit code = R-level).
         return level if args.exit_level else 0
-    rc = {"list": cmd_list, "badge": cmd_badge,
-          "query": cmd_query, "stackdiff": cmd_stackdiff,
-          "implementations": cmd_implementations, "drift": cmd_drift,
-          "claim-validation": cmd_claim_validation,
-          "validate": cmd_validate, "health": cmd_health,
-          "validate-strict": cmd_validate_strict,
-          "measured-coverage": cmd_measured_coverage,
-          "coverage": cmd_coverage,
-          "antiherding": cmd_antiherding}[args.cmd](args)
+    rc = {
+        "list": cmd_list,
+        "badge": cmd_badge,
+        "query": cmd_query,
+        "stackdiff": cmd_stackdiff,
+        "implementations": cmd_implementations,
+        "drift": cmd_drift,
+        "claim-validation": cmd_claim_validation,
+        "validate": cmd_validate,
+        "health": cmd_health,
+        "validate-strict": cmd_validate_strict,
+        "measured-coverage": cmd_measured_coverage,
+        "coverage": cmd_coverage,
+        "antiherding": cmd_antiherding,
+    }[args.cmd](args)
     return 0 if rc is None else rc
 
 

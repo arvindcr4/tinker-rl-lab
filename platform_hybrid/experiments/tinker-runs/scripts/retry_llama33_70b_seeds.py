@@ -5,6 +5,7 @@ Retry only the failed seeds from Task 1 (Llama-3.3-70B-Instruct multi-seed).
 Reads existing llama33_70b_seeds.json, retries any seed whose status != 'completed',
 and merges the new results back in place (keeping the earlier completed runs).
 """
+
 import os, sys, json
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -12,7 +13,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 REPO_ROOT = "/home/user/workspace/tinker-rl-lab"
 sys.path.insert(0, os.path.join(REPO_ROOT, "experiments", "tinker-runs"))
 
-from campaign_v2 import run_experiment  # noqa: E402
+from campaign_v2 import run_experiment
 
 OUT_PATH = os.path.join(
     REPO_ROOT, "experiments", "tinker-runs", "results", "llama33_70b_seeds.json"
@@ -44,11 +45,19 @@ def main(max_parallel: int = 2):
     # Drop old failed attempts for these seeds so we don't carry stale errors.
     results = [r for r in results if r.get("seed") not in retry_seeds]
 
-    exps = [{
-        "tag": f"w1_llama33-70b-inst_s{seed}",
-        "model": MODEL, "wave": WAVE, "priority": "HIGH",
-        "steps": STEPS, "group_size": GROUP_SIZE, "lr": LR, "seed": seed,
-    } for seed in retry_seeds]
+    exps = [
+        {
+            "tag": f"w1_llama33-70b-inst_s{seed}",
+            "model": MODEL,
+            "wave": WAVE,
+            "priority": "HIGH",
+            "steps": STEPS,
+            "group_size": GROUP_SIZE,
+            "lr": LR,
+            "seed": seed,
+        }
+        for seed in retry_seeds
+    ]
 
     def snapshot():
         payload["results"] = results
@@ -70,16 +79,23 @@ def main(max_parallel: int = 2):
             try:
                 r = fut.result()
             except Exception as e:
-                r = {"tag": exp["tag"], "model": exp["model"], "wave": exp["wave"],
-                     "status": "failed", "error": f"Executor error: {e}",
-                     "timestamp": datetime.utcnow().isoformat()}
+                r = {
+                    "tag": exp["tag"],
+                    "model": exp["model"],
+                    "wave": exp["wave"],
+                    "status": "failed",
+                    "error": f"Executor error: {e}",
+                    "timestamp": datetime.utcnow().isoformat(),
+                }
             results.append(r)
             snapshot()
-            print(f"  -> {r.get('tag')} status={r.get('status')} "
-                  f"peak={r.get('peak_reward')} last10={r.get('last10_avg')}")
+            print(
+                f"  -> {r.get('tag')} status={r.get('status')} "
+                f"peak={r.get('peak_reward')} last10={r.get('last10_avg')}"
+            )
 
     # Sort final list by seed for stable diffs.
-    results.sort(key=lambda r: (r.get("seed") or 0))
+    results.sort(key=lambda r: r.get("seed") or 0)
     snapshot()
     print(f"\nUpdated {OUT_PATH}")
 

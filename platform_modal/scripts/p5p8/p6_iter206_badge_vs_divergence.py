@@ -27,12 +27,12 @@ Approach:
 
 Output: 7 TSV / 1 JSON / 1 ledger row. Stdlib only.
 """
+
 from __future__ import annotations
 
 import csv
 import json
 import math
-import os
 import random
 import sys
 from collections import defaultdict
@@ -159,9 +159,11 @@ def cluster_disagreement(
                 v = get_field_value(e, item, leaf)
                 per_fw_val[fw].append(v)
             # report value set across fws; majority loser
-            reporting_fws = [fw for fw in fws_list if all(
-                x is not None and x != "__MISSING__" for x in per_fw_val[fw]
-            )]
+            reporting_fws = [
+                fw
+                for fw in fws_list
+                if all(x is not None and x != "__MISSING__" for x in per_fw_val[fw])
+            ]
             n_report = len(reporting_fws)
             if n_report < 2:
                 out[label][(item, leaf)] = {
@@ -169,9 +171,7 @@ def cluster_disagreement(
                     "n_pairs": 0,
                     "n_disagree": 0,
                     "disagree_rate": None,
-                    "mean_value": "; ".join(
-                        f"{fw}={per_fw_val[fw][0]}" for fw in fws_list
-                    ),
+                    "mean_value": "; ".join(f"{fw}={per_fw_val[fw][0]}" for fw in fws_list),
                 }
                 continue
             # count pairs
@@ -184,11 +184,13 @@ def cluster_disagreement(
                     v_i = per_fw_val[fw_i][0]
                     v_j = per_fw_val[fw_j][0]
                     n_pairs += 1
+
                     # use string equality (with normalization for bool/int)
                     def norm(v: Any) -> str:
                         if isinstance(v, bool):
                             return "true" if v else "false"
                         return str(v)
+
                     if norm(v_i) != norm(v_j):
                         n_disagree += 1
             out[label][(item, leaf)] = {
@@ -196,9 +198,7 @@ def cluster_disagreement(
                 "n_pairs": n_pairs,
                 "n_disagree": n_disagree,
                 "disagree_rate": (n_disagree / n_pairs) if n_pairs else None,
-                "mean_value": "; ".join(
-                    f"{fw}={per_fw_val[fw][0]}" for fw in fws_list
-                ),
+                "mean_value": "; ".join(f"{fw}={per_fw_val[fw][0]}" for fw in fws_list),
             }
     return out
 
@@ -224,30 +224,29 @@ def cluster_rollup(
         mean_badge = sum(non_null_badges) / max(1, len(non_null_badges))
         # collect per-field disagreement for this cluster
         per_field = disagree_data.get(label, {})
-        rates = [d["disagree_rate"] for d in per_field.values()
-                 if d["disagree_rate"] is not None]
+        rates = [d["disagree_rate"] for d in per_field.values() if d["disagree_rate"] is not None]
         mean_disagree = sum(rates) / max(1, len(rates)) if rates else None
         # full field coverage: how many of 23 sub-fields are reporting in
         # any cluster member
         n_total_fields = len(per_field)
-        n_reporting_fields = sum(
-            1 for d in per_field.values() if d["n_fws_reporting"] >= 2
+        n_reporting_fields = sum(1 for d in per_field.values() if d["n_fws_reporting"] >= 2)
+        out.append(
+            {
+                "label": label,
+                "n_entries": len(group),
+                "n_frameworks": len(fws),
+                "frameworks": ",".join(fws),
+                "mean_badge": round(mean_badge, 4),
+                "min_badge": round(min(non_null_badges), 4) if non_null_badges else None,
+                "max_badge": round(max(non_null_badges), 4) if non_null_badges else None,
+                "n_fields_total": n_total_fields,
+                "n_fields_reporting": n_reporting_fields,
+                "mean_disagree": round(mean_disagree, 4) if mean_disagree is not None else None,
+                "mean_disagree_basis_n": len(rates),
+                "n_pairs_total": sum(d["n_pairs"] for d in per_field.values()),
+                "n_disagree_total": sum(d["n_disagree"] for d in per_field.values()),
+            }
         )
-        out.append({
-            "label": label,
-            "n_entries": len(group),
-            "n_frameworks": len(fws),
-            "frameworks": ",".join(fws),
-            "mean_badge": round(mean_badge, 4),
-            "min_badge": round(min(non_null_badges), 4) if non_null_badges else None,
-            "max_badge": round(max(non_null_badges), 4) if non_null_badges else None,
-            "n_fields_total": n_total_fields,
-            "n_fields_reporting": n_reporting_fields,
-            "mean_disagree": round(mean_disagree, 4) if mean_disagree is not None else None,
-            "mean_disagree_basis_n": len(rates),
-            "n_pairs_total": sum(d["n_pairs"] for d in per_field.values()),
-            "n_disagree_total": sum(d["n_disagree"] for d in per_field.values()),
-        })
     return out
 
 
@@ -258,12 +257,14 @@ def spearman(xs: list[float], ys: list[float]) -> float:
     n = len(xs)
     if n < 3:
         return float("nan")
+
     def rank(vs: list[float]) -> list[float]:
         sorted_idx = sorted(range(n), key=lambda i: vs[i])
         r = [0.0] * n
         for r_i, idx in enumerate(sorted_idx):
             r[idx] = r_i + 1
         return r
+
     rx = rank(xs)
     ry = rank(ys)
     mean_rx = sum(rx) / n
@@ -286,8 +287,11 @@ def bootstrap_spearman(
     cluster-level data points, computes rho per resample.
     """
     rng = random.Random(seed)
-    pool = [(r["mean_badge"], r["mean_disagree"]) for r in rows
-            if r["mean_badge"] is not None and r["mean_disagree"] is not None]
+    pool = [
+        (r["mean_badge"], r["mean_disagree"])
+        for r in rows
+        if r["mean_badge"] is not None and r["mean_disagree"] is not None
+    ]
     n = len(pool)
     if n < 3:
         return {"rho": None, "rho_lo": None, "rho_hi": None}
@@ -330,17 +334,20 @@ def entry_level_coupling(
         if len(fws) < 2:
             continue  # cross-framework clusters only
         per_field = disagree_data.get(label, {})
-        rates = [d["disagree_rate"] for d in per_field.values()
-                 if d["disagree_rate"] is not None]
+        rates = [d["disagree_rate"] for d in per_field.values() if d["disagree_rate"] is not None]
         mean_disagree = sum(rates) / max(1, len(rates)) if rates else None
         for e in group:
-            out.append({
-                "entry_id": e.get("id"),
-                "label_claimed": label,
-                "framework": entry_framework(e),
-                "badge": entry_badge(e),
-                "cluster_mean_disagree": round(mean_disagree, 4) if mean_disagree is not None else None,
-            })
+            out.append(
+                {
+                    "entry_id": e.get("id"),
+                    "label_claimed": label,
+                    "framework": entry_framework(e),
+                    "badge": entry_badge(e),
+                    "cluster_mean_disagree": round(mean_disagree, 4)
+                    if mean_disagree is not None
+                    else None,
+                }
+            )
     return out
 
 
@@ -369,14 +376,16 @@ def quartile_test(rows: list[dict[str, Any]]) -> dict[str, Any]:
         badges = [c["mean_badge"] for c in chunk]
         disr = [c["mean_disagree"] for c in chunk]
         labels = [c["label"] for c in chunk]
-        quartiles.append({
-            "quartile": k + 1,
-            "n_clusters": len(chunk),
-            "labels": ",".join(labels),
-            "badge_min": round(min(badges), 4),
-            "badge_max": round(max(badges), 4),
-            "mean_disagree": round(sum(disr) / len(disr), 4),
-        })
+        quartiles.append(
+            {
+                "quartile": k + 1,
+                "n_clusters": len(chunk),
+                "labels": ",".join(labels),
+                "badge_min": round(min(badges), 4),
+                "badge_max": round(max(badges), 4),
+                "mean_disagree": round(sum(disr) / len(disr), 4),
+            }
+        )
     # monotone test: top-quartile mean < bottom-quartile mean?
     if len(quartiles) >= 2:
         bot = quartiles[0]["mean_disagree"]
@@ -404,22 +413,24 @@ def per_field_table(
     that report the field on >=2 frameworks, mean disagree rate among them."""
     agg: dict[tuple[str, str], list[float]] = defaultdict(list)
     counts: dict[tuple[str, str], int] = defaultdict(int)
-    for label, per_field in disagree_data.items():
+    for _label, per_field in disagree_data.items():
         for (item, leaf), d in per_field.items():
             if d["n_fws_reporting"] >= 2 and d["disagree_rate"] is not None:
                 counts[(item, leaf)] += 1
                 agg[(item, leaf)].append(d["disagree_rate"])
     out: list[dict[str, Any]] = []
     for (item, leaf), rates in agg.items():
-        out.append({
-            "item": item,
-            "leaf": leaf,
-            "n_clusters_reporting": counts[(item, leaf)],
-            "mean_disagree": round(sum(rates) / len(rates), 4),
-            "max_disagree": round(max(rates), 4),
-            "any_cluster_at_100": any(r > 0.99 for r in rates),
-            "all_clusters_at_0": all(r < 0.01 for r in rates),
-        })
+        out.append(
+            {
+                "item": item,
+                "leaf": leaf,
+                "n_clusters_reporting": counts[(item, leaf)],
+                "mean_disagree": round(sum(rates) / len(rates), 4),
+                "max_disagree": round(max(rates), 4),
+                "any_cluster_at_100": any(r > 0.99 for r in rates),
+                "all_clusters_at_0": all(r < 0.01 for r in rates),
+            }
+        )
     out.sort(key=lambda r: r["mean_disagree"])
     return out
 
@@ -465,16 +476,19 @@ def main() -> int:
         and boot.get("rho_hi") is not None
         and boot["rho_hi"] < 0
     )
-    H.append({
-        "h": "H1", "claim": "Spearman rho between cluster mean_badge and "
-                            "cluster mean_disagree is NEGATIVE (rho <= -0.10) "
-                            "with bootstrap CI excluding 0",
-        "observed_rho": boot.get("rho"),
-        "observed_ci": [boot.get("rho_lo"), boot.get("rho_hi")],
-        "verdict": "PASS" if h1_pass else "FAIL",
-        "n_clusters": len(cross_clusters),
-        "n_boot": 2000,
-    })
+    H.append(
+        {
+            "h": "H1",
+            "claim": "Spearman rho between cluster mean_badge and "
+            "cluster mean_disagree is NEGATIVE (rho <= -0.10) "
+            "with bootstrap CI excluding 0",
+            "observed_rho": boot.get("rho"),
+            "observed_ci": [boot.get("rho_lo"), boot.get("rho_hi")],
+            "verdict": "PASS" if h1_pass else "FAIL",
+            "n_clusters": len(cross_clusters),
+            "n_boot": 2000,
+        }
+    )
 
     # H2: Best-badge cluster (top quartile mean badge) has mean disagreement
     # strictly less than worst-badge cluster (bottom quartile). Delta > 0.05.
@@ -486,37 +500,46 @@ def main() -> int:
     else:
         h2_delta = None
         h2_pass = False
-    H.append({
-        "h": "H2",
-        "claim": "Top-quartile mean_disagree strictly less than "
-                 "bottom-quartile, with delta > 0.05",
-        "observed_delta": h2_delta,
-        "verdict": "PASS" if h2_pass else "FAIL",
-        "n_quartiles": len(quart.get("quartiles", [])) if "quartiles" in quart else 0,
-    })
+    H.append(
+        {
+            "h": "H2",
+            "claim": "Top-quartile mean_disagree strictly less than "
+            "bottom-quartile, with delta > 0.05",
+            "observed_delta": h2_delta,
+            "verdict": "PASS" if h2_pass else "FAIL",
+            "n_quartiles": len(quart.get("quartiles", [])) if "quartiles" in quart else 0,
+        }
+    )
 
     # H3: Clusters with mean_badge >= 0.70 have mean disagree < 0.30.
     high_badge_clusters = [
-        r for r in cross_clusters
-        if r["mean_badge"] is not None and r["mean_badge"] >= 0.70
+        r
+        for r in cross_clusters
+        if r["mean_badge"] is not None
+        and r["mean_badge"] >= 0.70
         and r["mean_disagree"] is not None
     ]
     if high_badge_clusters:
-        high_disagree = sum(c["mean_disagree"] for c in high_badge_clusters) / len(high_badge_clusters)
+        high_disagree = sum(c["mean_disagree"] for c in high_badge_clusters) / len(
+            high_badge_clusters
+        )
     else:
         high_disagree = None
     h3_pass = high_disagree is not None and high_disagree < 0.30
-    H.append({
-        "h": "H3",
-        "claim": "Clusters with mean_badge >= 0.70 have mean_disagree < 0.30",
-        "observed_mean_disagree": high_disagree,
-        "n_clusters": len(high_badge_clusters),
-        "verdict": "PASS" if h3_pass else "FAIL",
-    })
+    H.append(
+        {
+            "h": "H3",
+            "claim": "Clusters with mean_badge >= 0.70 have mean_disagree < 0.30",
+            "observed_mean_disagree": high_disagree,
+            "n_clusters": len(high_badge_clusters),
+            "verdict": "PASS" if h3_pass else "FAIL",
+        }
+    )
 
     # H4: Spearman entry-level coupling (entry badge vs cluster mean disagree)
     pool_entry = [
-        (r["badge"], r["cluster_mean_disagree"]) for r in entry_level
+        (r["badge"], r["cluster_mean_disagree"])
+        for r in entry_level
         if r["badge"] is not None and r["cluster_mean_disagree"] is not None
     ]
     if len(pool_entry) >= 3:
@@ -526,14 +549,16 @@ def main() -> int:
     else:
         entry_rho = None
     h4_pass = entry_rho is not None and entry_rho < -0.20
-    H.append({
-        "h": "H4",
-        "claim": "Entry-level Spearman rho (entry badge vs cluster mean "
-                 "disagree) is STRONGLY NEGATIVE (rho <= -0.20)",
-        "observed_rho": round(entry_rho, 4) if entry_rho is not None else None,
-        "n_entries": len(pool_entry),
-        "verdict": "PASS" if h4_pass else "FAIL",
-    })
+    H.append(
+        {
+            "h": "H4",
+            "claim": "Entry-level Spearman rho (entry badge vs cluster mean "
+            "disagree) is STRONGLY NEGATIVE (rho <= -0.20)",
+            "observed_rho": round(entry_rho, 4) if entry_rho is not None else None,
+            "n_entries": len(pool_entry),
+            "verdict": "PASS" if h4_pass else "FAIL",
+        }
+    )
 
     # H5: zvf130 clusters (mean_badge ~0.43) have MEANINGFULLY HIGHER
     # disagreement than colab-open clusters (mean_badge ~0.96). Delta > 0.05.
@@ -541,56 +566,68 @@ def main() -> int:
     for r in cross_clusters:
         for fw in r["frameworks"].split(","):
             fw_groups[fw].append(r)
-    zvf_disagrees = [r["mean_disagree"] for r in fw_groups.get("worktree-zvf130-batch", []) if r["mean_disagree"] is not None]
-    colab_disagrees = [r["mean_disagree"] for r in fw_groups.get("colab-open-trainer", []) if r["mean_disagree"] is not None]
+    zvf_disagrees = [
+        r["mean_disagree"]
+        for r in fw_groups.get("worktree-zvf130-batch", [])
+        if r["mean_disagree"] is not None
+    ]
+    colab_disagrees = [
+        r["mean_disagree"]
+        for r in fw_groups.get("colab-open-trainer", [])
+        if r["mean_disagree"] is not None
+    ]
     zvf_mean = sum(zvf_disagrees) / max(1, len(zvf_disagrees)) if zvf_disagrees else None
     colab_mean = sum(colab_disagrees) / max(1, len(colab_disagrees)) if colab_disagrees else None
-    h5_delta = round((zvf_mean or 0) - (colab_mean or 0), 4) if zvf_mean is not None and colab_mean is not None else None
+    h5_delta = (
+        round((zvf_mean or 0) - (colab_mean or 0), 4)
+        if zvf_mean is not None and colab_mean is not None
+        else None
+    )
     h5_pass = h5_delta is not None and h5_delta > 0.05
-    H.append({
-        "h": "H5",
-        "claim": "zvf130 clusters have MEANINGFULLY HIGHER mean_disagree "
-                 "than colab-open clusters (delta > 0.05)",
-        "zvf_mean": round(zvf_mean, 4) if zvf_mean is not None else None,
-        "colab_mean": round(colab_mean, 4) if colab_mean is not None else None,
-        "delta_zvf_minus_colab": h5_delta,
-        "n_zvf_clusters": len(zvf_disagrees),
-        "n_colab_clusters": len(colab_disagrees),
-        "verdict": "PASS" if h5_pass else "FAIL",
-    })
+    H.append(
+        {
+            "h": "H5",
+            "claim": "zvf130 clusters have MEANINGFULLY HIGHER mean_disagree "
+            "than colab-open clusters (delta > 0.05)",
+            "zvf_mean": round(zvf_mean, 4) if zvf_mean is not None else None,
+            "colab_mean": round(colab_mean, 4) if colab_mean is not None else None,
+            "delta_zvf_minus_colab": h5_delta,
+            "n_zvf_clusters": len(zvf_disagrees),
+            "n_colab_clusters": len(colab_disagrees),
+            "verdict": "PASS" if h5_pass else "FAIL",
+        }
+    )
 
     # H6: At least 4 of the 23 MIN-REPORT sub-fields achieve
     # all-cluster-0 disagreement (every cluster that reports them agrees).
     n_zero = sum(1 for r in pf if r["all_clusters_at_0"])
     h6_pass = n_zero >= 4
-    H.append({
-        "h": "H6",
-        "claim": "At least 4 of 23 MIN-REPORT sub-fields achieve "
-                 "all-cluster disagreement rate of 0 (universal agreement)",
-        "observed_n_zero": n_zero,
-        "verdict": "PASS" if h6_pass else "FAIL",
-    })
+    H.append(
+        {
+            "h": "H6",
+            "claim": "At least 4 of 23 MIN-REPORT sub-fields achieve "
+            "all-cluster disagreement rate of 0 (universal agreement)",
+            "observed_n_zero": n_zero,
+            "verdict": "PASS" if h6_pass else "FAIL",
+        }
+    )
 
     # H7: At least 3 sub-fields have median-cluster-level disagreement = 0
     # AND at least 3 sub-fields have median-cluster-level disagreement > 0.5
     # (inter-field heterogeneity exists).
-    median_gt_05 = sum(
-        1 for r in pf
-        if r["mean_disagree"] > 0.5
-    )
-    median_eq_00 = sum(
-        1 for r in pf
-        if r["mean_disagree"] == 0
-    )
+    median_gt_05 = sum(1 for r in pf if r["mean_disagree"] > 0.5)
+    median_eq_00 = sum(1 for r in pf if r["mean_disagree"] == 0)
     h7_pass = median_gt_05 >= 3 and median_eq_00 >= 3
-    H.append({
-        "h": "H7",
-        "claim": "INTER-FIELD HETEROGENEITY: at least 3 fields at "
-                 "mean_disagree > 0.5 AND at least 3 at mean_disagree == 0",
-        "n_fields_gt_05": median_gt_05,
-        "n_fields_eq_0": median_eq_00,
-        "verdict": "PASS" if h7_pass else "FAIL",
-    })
+    H.append(
+        {
+            "h": "H7",
+            "claim": "INTER-FIELD HETEROGENEITY: at least 3 fields at "
+            "mean_disagree > 0.5 AND at least 3 at mean_disagree == 0",
+            "n_fields_gt_05": median_gt_05,
+            "n_fields_eq_0": median_eq_00,
+            "verdict": "PASS" if h7_pass else "FAIL",
+        }
+    )
 
     # ------------------------------------------------------------
     # WRITE OUTPUTS
@@ -599,11 +636,19 @@ def main() -> int:
     p1 = RESULTS / "p6_iter206_cluster_rollup.tsv"
     with open(p1, "w", newline="") as f:
         cols = [
-            "label", "n_entries", "n_frameworks", "frameworks",
-            "mean_badge", "min_badge", "max_badge",
-            "n_fields_total", "n_fields_reporting",
-            "mean_disagree", "mean_disagree_basis_n",
-            "n_pairs_total", "n_disagree_total",
+            "label",
+            "n_entries",
+            "n_frameworks",
+            "frameworks",
+            "mean_badge",
+            "min_badge",
+            "max_badge",
+            "n_fields_total",
+            "n_fields_reporting",
+            "mean_disagree",
+            "mean_disagree_basis_n",
+            "n_pairs_total",
+            "n_disagree_total",
         ]
         w = csv.DictWriter(f, fieldnames=cols, delimiter="\t")
         w.writeheader()
@@ -614,9 +659,15 @@ def main() -> int:
     # 2) per-field disagreement TSV
     p2 = RESULTS / "p6_iter206_perfield_disagree.tsv"
     with open(p2, "w", newline="") as f:
-        cols = ["item", "leaf", "n_clusters_reporting",
-                "mean_disagree", "max_disagree",
-                "any_cluster_at_100", "all_clusters_at_0"]
+        cols = [
+            "item",
+            "leaf",
+            "n_clusters_reporting",
+            "mean_disagree",
+            "max_disagree",
+            "any_cluster_at_100",
+            "all_clusters_at_0",
+        ]
         w = csv.DictWriter(f, fieldnames=cols, delimiter="\t")
         w.writeheader()
         for r in pf:
@@ -626,12 +677,23 @@ def main() -> int:
     # 3) hypotheses TSV
     p3 = RESULTS / "p6_iter206_hypotheses.tsv"
     with open(p3, "w", newline="") as f:
-        cols = ["h", "claim", "verdict", "observed_rho",
-                "observed_ci_lo", "observed_ci_hi",
-                "observed_delta", "observed_mean_disagree",
-                "n_clusters", "n_boot", "n_zvf_clusters",
-                "n_colab_clusters", "n_fields_gt_05",
-                "n_fields_eq_0", "observed_n_zero"]
+        cols = [
+            "h",
+            "claim",
+            "verdict",
+            "observed_rho",
+            "observed_ci_lo",
+            "observed_ci_hi",
+            "observed_delta",
+            "observed_mean_disagree",
+            "n_clusters",
+            "n_boot",
+            "n_zvf_clusters",
+            "n_colab_clusters",
+            "n_fields_gt_05",
+            "n_fields_eq_0",
+            "observed_n_zero",
+        ]
         w = csv.DictWriter(f, fieldnames=cols, delimiter="\t")
         w.writeheader()
         for h in H:
@@ -645,8 +707,7 @@ def main() -> int:
     # 4) entry-level TSV
     p4 = RESULTS / "p6_iter206_entry_level.tsv"
     with open(p4, "w", newline="") as f:
-        cols = ["entry_id", "label_claimed", "framework",
-                "badge", "cluster_mean_disagree"]
+        cols = ["entry_id", "label_claimed", "framework", "badge", "cluster_mean_disagree"]
         w = csv.DictWriter(f, fieldnames=cols, delimiter="\t")
         w.writeheader()
         for r in entry_level:
@@ -656,8 +717,7 @@ def main() -> int:
     # 5) quartile TSV
     p5 = RESULTS / "p6_iter206_quartiles.tsv"
     with open(p5, "w", newline="") as f:
-        cols = ["quartile", "n_clusters", "labels",
-                "badge_min", "badge_max", "mean_disagree"]
+        cols = ["quartile", "n_clusters", "labels", "badge_min", "badge_max", "mean_disagree"]
         w = csv.DictWriter(f, fieldnames=cols, delimiter="\t")
         w.writeheader()
         if "quartiles" in quart:
@@ -676,9 +736,7 @@ def main() -> int:
         "n_methods_with_data": sum(1 for v in labels.values() if v > 0),
         "n_cross_framework_clusters": len(cross_clusters),
         "n_single_framework_clusters": len(single_clusters),
-        "framework_groups_in_cross_clusters": {
-            fw: len(rows) for fw, rows in fw_groups.items()
-        },
+        "framework_groups_in_cross_clusters": {fw: len(rows) for fw, rows in fw_groups.items()},
         "spearman_rho_cluster_level": boot,
         "spearman_rho_entry_level": round(entry_rho, 4) if entry_rho is not None else None,
         "quartile_test": quart,

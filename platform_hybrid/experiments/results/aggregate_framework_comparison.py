@@ -35,7 +35,10 @@ REPO_ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(REPO_ROOT))
 
 MASTER = REPO_ROOT / "platform_hybrid" / "experiments" / "master_results.json"
-OUT = REPO_ROOT / "platform_hybrid/experiments/results/protocols/pro-review-01-v2/framework_comparison.json"
+OUT = (
+    REPO_ROOT
+    / "platform_hybrid/experiments/results/protocols/pro-review-01-v2/framework_comparison.json"
+)
 VERL_RESULT = Path("/home/user/workspace/elevation_outputs/modal_verl_grpo.json")
 OPENRLHF_RESULT = Path("/home/user/workspace/elevation_outputs/modal_openrlhf_grpo.json")
 
@@ -75,7 +78,9 @@ def _coerce(trace: List[Any]) -> List[float]:
 
 def _validate_measured(payload):
     if payload.get("data_kind") != "empirical" or payload.get("state") != "completed":
-        raise ValueError("Only provenance-labeled completed empirical artifacts may be aggregated; legacy artifacts need independent validation")
+        raise ValueError(
+            "Only provenance-labeled completed empirical artifacts may be aggregated; legacy artifacts need independent validation"
+        )
     if payload.get("mode") == "dryrun" or payload.get("subprocess_exit", 0) != 0:
         raise ValueError("Synthetic or failed attempt cannot enter empirical aggregate")
     _coerce(payload.get("reward_trace"))
@@ -89,8 +94,12 @@ def _load_master(experiment_id: str, framework: str) -> Dict[str, Any]:
         raise ValueError(f"Missing experiment {experiment_id}")
     payload = dict(_validate_measured(row))
     trace = _coerce(payload["reward_trace"])
-    payload.update(framework=framework, peak_reward=max(trace), last10_avg=_last10(trace),
-                   comparison_configuration_status="as_recorded_no_imputation")
+    payload.update(
+        framework=framework,
+        peak_reward=max(trace),
+        last10_avg=_last10(trace),
+        comparison_configuration_status="as_recorded_no_imputation",
+    )
     payload.setdefault("mode", "real")
     return payload
 
@@ -105,11 +114,18 @@ def _load_trl() -> Dict[str, Any]:
 
 def _load_saved(path: Path, framework: str) -> Dict[str, Any]:
     if not path.is_file():
-        raise FileNotFoundError(f"Missing completed {framework} artifact: {path}; aggregation never launches training")
+        raise FileNotFoundError(
+            f"Missing completed {framework} artifact: {path}; aggregation never launches training"
+        )
     payload = dict(_validate_measured(json.loads(path.read_text())))
     trace = _coerce(payload["reward_trace"])
-    payload.update(framework=framework, reward_trace=trace, peak_reward=max(trace),
-                   last10_avg=_last10(trace), comparison_configuration_status="as_recorded_no_imputation")
+    payload.update(
+        framework=framework,
+        reward_trace=trace,
+        peak_reward=max(trace),
+        last10_avg=_last10(trace),
+        comparison_configuration_status="as_recorded_no_imputation",
+    )
     payload.setdefault("mode", "real")
     return payload
 
@@ -157,7 +173,9 @@ def main() -> None:
     OUT.write_text(json.dumps(out, indent=2))
     print(f"Wrote {OUT}")
     for f in out["frameworks"]:
-        print(f"  {f['framework']:<10} mode={f['mode']:<7} last10={f['last10_avg']:.4f}  peak={f['peak_reward']:.4f}  steps={len(f.get('reward_trace') or [])}")
+        print(
+            f"  {f['framework']:<10} mode={f['mode']:<7} last10={f['last10_avg']:.4f}  peak={f['peak_reward']:.4f}  steps={len(f.get('reward_trace') or [])}"
+        )
 
 
 if __name__ == "__main__":

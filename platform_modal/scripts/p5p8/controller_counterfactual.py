@@ -6,28 +6,31 @@ The interior heuristic is not an oracle. This replay does not estimate the
 state trajectory that training under an alternative schedule would produce.
 Writes versioned v2 outputs only with --write; historical evidence is untouched.
 """
+
 from __future__ import annotations
 import argparse
 import csv
 import json
-import math
 import pathlib
 import statistics
 
 import sys
-sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
-from _p5p7_common import load_tensors_c  # noqa: E402
+
+sys.path.append(
+    str(pathlib.Path(__file__).resolve().parents[1])
+)  # platform_modal/scripts, for _paths
+from _paths import REPO_ROOT
+
 WORKTREE = REPO_ROOT
 N2 = WORKTREE / "platform_hybrid/experiments" / "results" / "n2_reward_tensor_resume"
 OUT = WORKTREE / "platform_hybrid/experiments" / "results" / "p5p8"
 METHODS = ("grpo", "aero", "gift", "areal")
 THRESHOLDS = (0.50, 0.60, 0.70, 0.80, 0.90)
-MAX_PCD = 0.20            # interior-regime guard (above this, the run is at the
-                          # degenerate boundary; no amount of G helps)
-G_BASE = 8                # what the N2 four-method run actually used
-G_ALT = 16                # counterfactual escalation target
-N_PROMPTS = 16            # N2 prompt set size per step
+MAX_PCD = 0.20  # interior-regime guard (above this, the run is at the
+# degenerate boundary; no amount of G helps)
+G_BASE = 8  # what the N2 four-method run actually used
+G_ALT = 16  # counterfactual escalation target
+N_PROMPTS = 16  # N2 prompt set size per step
 
 
 # ---------------------------------------------------------------------------
@@ -59,7 +62,7 @@ def zvf_at_g(per_prompt_p, g_new):
     for p in per_prompt_p:
         # clamp p to avoid 0^0 issues
         pp = min(max(p, 1e-9), 1 - 1e-9)
-        zvf = (1 - pp) ** g_new + pp ** g_new
+        zvf = (1 - pp) ** g_new + pp**g_new
         out.append(zvf)
     return out, statistics.mean(out)
 
@@ -90,9 +93,9 @@ def zvf_triage_decide(step_zvf, step_pcd, threshold, max_pcd=MAX_PCD):
 # ---------------------------------------------------------------------------
 def dualformer_auto_decide(per_p):
     """Per-prompt G' selection following Berkeley row 01 rule:
-       acc_pred = per-prompt reward mean; G'=2 if >=0.95, 4 if >=0.85,
-       8 if >=0.70, 16 otherwise.  Per-prompt cost only (no step-level
-       escalation)."""
+    acc_pred = per-prompt reward mean; G'=2 if >=0.95, 4 if >=0.85,
+    8 if >=0.70, 16 otherwise.  Per-prompt cost only (no step-level
+    escalation)."""
     out = []
     for p in per_p:
         if p >= 0.95:
@@ -144,8 +147,13 @@ def triage_schedule(step_info, threshold):
     pending_g = G_BASE
     rows = []
     for step in step_info:
-        rows.append({"step": step["step"], "g_applied": pending_g,
-                     "rollout_cost": len(step["per_p"]) * pending_g})
+        rows.append(
+            {
+                "step": step["step"],
+                "g_applied": pending_g,
+                "rollout_cost": len(step["per_p"]) * pending_g,
+            }
+        )
         pending_g = zvf_triage_decide(step["zvf"], step["pcd"], threshold) or G_BASE
     return rows
 
@@ -164,25 +172,52 @@ def main():
         steps = [dict(r, per_p=per_prompt_means(r["rewards"])) for r in records]
         baseline = sum(len(s["per_p"]) * G_BASE for s in steps)
         for controller, threshold in [("zvf_triage", t) for t in THRESHOLDS] + [
-                ("dualformer_auto", None), ("interior_heuristic", None)]:
+            ("dualformer_auto", None),
+            ("interior_heuristic", None),
+        ]:
             if controller == "zvf_triage":
                 schedule = triage_schedule(steps, threshold)
                 fires = sum(r["g_applied"] == G_ALT for r in schedule)
             else:
-                decide = dualformer_auto_decide if controller == "dualformer_auto" else interior_heuristic_decide
-                schedule = [{"step": s["step"], "g_applied": decide(s["per_p"]),
-                             "rollout_cost": sum(decide(s["per_p"]))} for s in steps]
+                decide = (
+                    dualformer_auto_decide
+                    if controller == "dualformer_auto"
+                    else interior_heuristic_decide
+                )
+                schedule = [
+                    {
+                        "step": s["step"],
+                        "g_applied": decide(s["per_p"]),
+                        "rollout_cost": sum(decide(s["per_p"])),
+                    }
+                    for s in steps
+                ]
                 fires = len(steps)
             used = sum(r["rollout_cost"] for r in schedule)
-            summary.append(dict(protocol_version=2, method=method, controller=controller,
-                threshold=threshold, fires=fires, rollouts_used=used,
-                baseline_fixed_g=baseline, cost_ratio=used / baseline,
-                saved_prompts=None, wasted_prompts=None,
-                recovery_status="UNMEASURED_requires_independent_rollouts"))
-            details.extend(dict(r, method=method, controller=controller, threshold=threshold)
-                           for r in schedule)
-    output = {"protocol_version": 2, "summary_rows": summary, "per_step_rows": details,
-              "interpretation": "Observed-state schedule cost replay only. No realized recovery, oracle bound, or seed robustness is estimated."}
+            summary.append(
+                dict(
+                    protocol_version=2,
+                    method=method,
+                    controller=controller,
+                    threshold=threshold,
+                    fires=fires,
+                    rollouts_used=used,
+                    baseline_fixed_g=baseline,
+                    cost_ratio=used / baseline,
+                    saved_prompts=None,
+                    wasted_prompts=None,
+                    recovery_status="UNMEASURED_requires_independent_rollouts",
+                )
+            )
+            details.extend(
+                dict(r, method=method, controller=controller, threshold=threshold) for r in schedule
+            )
+    output = {
+        "protocol_version": 2,
+        "summary_rows": summary,
+        "per_step_rows": details,
+        "interpretation": "Observed-state schedule cost replay only. No realized recovery, oracle bound, or seed robustness is estimated.",
+    }
     print(json.dumps(output, indent=2))
     if args.write:
         OUT.mkdir(parents=True, exist_ok=True)

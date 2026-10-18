@@ -12,8 +12,10 @@ Use case: Train from pre-collected trajectories without online interaction.
 """
 
 import atexit
+
 try:
     from codecarbon import EmissionsTracker
+
     _tracker = EmissionsTracker()
     _tracker.start()
     atexit.register(_tracker.stop)
@@ -23,7 +25,8 @@ except ImportError:
 
 import os
 import sys
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 import numpy as np
 import d3rlpy
 import wandb
@@ -34,6 +37,7 @@ from utils.seed import set_global_seed, get_seed_from_args
 def push_to_hub(repo_id: str, filename: str, filepath: str):
     """Push model to HuggingFace Hub."""
     from huggingface_hub import HfApi
+
     try:
         api = HfApi()
         try:
@@ -242,11 +246,13 @@ def main():
     print(f"IQL:              {iql_acc:.1f}%")
     print("\nExpected: All should approach ~70% (expert ratio in dataset)")
 
-    wandb.log({
-        "eval/bc_accuracy": bc_acc,
-        "eval/cql_accuracy": cql_acc,
-        "eval/iql_accuracy": iql_acc,
-    })
+    wandb.log(
+        {
+            "eval/bc_accuracy": bc_acc,
+            "eval/cql_accuracy": cql_acc,
+            "eval/iql_accuracy": iql_acc,
+        }
+    )
     wandb.finish()
 
 

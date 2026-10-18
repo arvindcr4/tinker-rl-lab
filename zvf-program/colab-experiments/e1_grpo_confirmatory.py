@@ -343,7 +343,9 @@ def package_versions(torch_module: Any) -> dict[str, Any]:
         {
             "torch": torch_module.__version__,
             "cuda": torch_module.version.cuda,
-            "gpu": torch_module.cuda.get_device_name(0) if torch_module.cuda.is_available() else "none",
+            "gpu": torch_module.cuda.get_device_name(0)
+            if torch_module.cuda.is_available()
+            else "none",
         }
     )
     return versions
@@ -521,13 +523,10 @@ def upload_evaluation_progress(
         repo_type="model",
         path_or_fileobj=path,
         path_in_repo="evaluation/progress.json",
-        commit_message=(
-            f"E1 evaluation progress {progress['next_index']}/{progress['heldout_n']}"
-        ),
+        commit_message=(f"E1 evaluation progress {progress['next_index']}/{progress['heldout_n']}"),
     )
     print(
-        f"[hf-eval-progress] {progress['next_index']}/{progress['heldout_n']} "
-        f"commit={commit.oid}",
+        f"[hf-eval-progress] {progress['next_index']}/{progress['heldout_n']} commit={commit.oid}",
         flush=True,
     )
     return commit.oid
@@ -720,7 +719,9 @@ def main(argv: list[str] | None = None) -> int:
 
             collect(initial)
             generation_batches = 1
-            while len(accepted) < target_groups and generation_batches < self.max_generation_batches:
+            while (
+                len(accepted) < target_groups and generation_batches < self.max_generation_batches
+            ):
                 candidate_inputs = self._candidate_inputs(target_groups)
                 metrics_snapshot = copy.deepcopy(self._metrics[mode])
                 logs_snapshot = copy.deepcopy(self._logs)
@@ -781,10 +782,7 @@ def main(argv: list[str] | None = None) -> int:
     def prompt_key(prompt: Any) -> str:
         return json.dumps(prompt, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
 
-    answer_by_prompt = {
-        prompt_key(row["prompt"]): row["answer"]
-        for row in train_dataset
-    }
+    answer_by_prompt = {prompt_key(row["prompt"]): row["answer"] for row in train_dataset}
 
     def aero_rollout(prompts: list[Any], trainer: Any) -> dict[str, Any]:
         group_size = trainer.num_generations
@@ -819,18 +817,14 @@ def main(argv: list[str] | None = None) -> int:
             return results
 
         group_count = len(unique_prompts)
-        initial: list[list[tuple[list[int], list[int], float]]] = [
-            [] for _ in range(group_count)
-        ]
+        initial: list[list[tuple[list[int], list[int], float]]] = [[] for _ in range(group_count)]
         for _ in range(3):
             for group_index, entry in zip(
                 range(group_count), generate_round(list(range(group_count))), strict=True
             ):
                 initial[group_index].append(entry)
 
-        rescue: list[list[tuple[list[int], list[int], float]]] = [
-            [] for _ in range(group_count)
-        ]
+        rescue: list[list[tuple[list[int], list[int], float]]] = [[] for _ in range(group_count)]
         queue = [
             group_index
             for group_index, entries in enumerate(initial)
@@ -923,9 +917,7 @@ def main(argv: list[str] | None = None) -> int:
             posterior_groups = 0
             for group_index, start in enumerate(range(0, len(rewards), self.num_generations)):
                 indices = [
-                    index
-                    for index in range(start, start + self.num_generations)
-                    if active[index]
+                    index for index in range(start, start + self.num_generations) if active[index]
                 ]
                 group_rewards = [float(rewards[index]) for index in indices]
                 grouped_rewards.append(group_rewards)
@@ -1079,7 +1071,10 @@ def main(argv: list[str] | None = None) -> int:
         if wandb_run is None:
             raise RuntimeError("W&B integration did not create a run")
         wandb_run.config.update(
-            {"e1_treatment_changes": TREATMENT_CHANGES[args.arm], "e1_treatment": treatment_runtime},
+            {
+                "e1_treatment_changes": TREATMENT_CHANGES[args.arm],
+                "e1_treatment": treatment_runtime,
+            },
             allow_val_change=True,
         )
 
@@ -1113,7 +1108,9 @@ def main(argv: list[str] | None = None) -> int:
             "trainer_log_history": history,
         }
         run_config = {
-            "arm": args.arm, "seed": args.seed, "task": "GSM8K",
+            "arm": args.arm,
+            "seed": args.seed,
+            "task": "GSM8K",
             "batch_prompts": treatment_runtime["unique_prompts_per_step"],
             "mode": args.mode,
             "model": MODEL_ID,
@@ -1134,7 +1131,9 @@ def main(argv: list[str] | None = None) -> int:
         }
         manifest = {
             "schema_version": "e1-colab-confirmatory-run-v1",
-            "evidence_class": "confirmatory" if args.mode == "confirmatory" else "preflight-not-evidence",
+            "evidence_class": "confirmatory"
+            if args.mode == "confirmatory"
+            else "preflight-not-evidence",
             "started_at": started_at,
             "completed_at": utc_now(),
             "audit_record": audit_record,

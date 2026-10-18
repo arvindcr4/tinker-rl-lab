@@ -5,17 +5,25 @@ Input : platform_hybrid/experiments/results/review_2026-10-18/P5_minreport/zvf_a
 Output: p5_ushape.tsv, p5_gsize.tsv in the same directory.
 Runs without final_reward/mean_zvf in their W&B summary are excluded.
 """
+
 import collections
 import csv
 import statistics as st
 from pathlib import Path
 
-D = Path(__file__).resolve().parents[2] / "platform_hybrid/experiments/results/review_2026-10-18/P5_minreport"
+D = (
+    Path(__file__).resolve().parents[2]
+    / "platform_hybrid/experiments/results/review_2026-10-18/P5_minreport"
+)
 
 
 def main():
     rows = list(csv.DictReader(open(D / "zvf_audit_368_wandb_export.tsv"), delimiter="\t"))
-    ok = [r for r in rows if r["final_reward"] not in ("", "None") and r["mean_zvf"] not in ("", "None")]
+    ok = [
+        r
+        for r in rows
+        if r["final_reward"] not in ("", "None") and r["mean_zvf"] not in ("", "None")
+    ]
     print(f"{len(rows)} runs, {len(ok)} with final metrics")
     by = collections.defaultdict(list)
     byg = collections.defaultdict(list)

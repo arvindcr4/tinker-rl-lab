@@ -68,9 +68,7 @@ FROZEN_PRIMARY_EVAL_SUITE_IDS = (
 )
 EXPECTED_TRAIN_SUITE_IDS = FROZEN_TRAIN_SUITE_IDS
 EXPECTED_PRIMARY_EVAL_SUITE_IDS = FROZEN_PRIMARY_EVAL_SUITE_IDS
-FROZEN_PORTFOLIO_SUITE_IDS = frozenset(
-    FROZEN_TRAIN_SUITE_IDS + FROZEN_PRIMARY_EVAL_SUITE_IDS
-)
+FROZEN_PORTFOLIO_SUITE_IDS = frozenset(FROZEN_TRAIN_SUITE_IDS + FROZEN_PRIMARY_EVAL_SUITE_IDS)
 _EXPECTED_ROLE_BY_ID = {
     **{suite_id: TRAIN_ROLE for suite_id in FROZEN_TRAIN_SUITE_IDS},
     **{suite_id: PRIMARY_EVAL_ROLE for suite_id in FROZEN_PRIMARY_EVAL_SUITE_IDS},
@@ -205,17 +203,19 @@ def _receipt_is_immutable(value: Any) -> bool:
         return False
     if _IMMUTABLE_SHA256.fullmatch(lowered) or _IMMUTABLE_DIGEST_URI.search(lowered):
         return True
-    if lowered.startswith((
-        "receipt://",
-        "receipt:",
-        "urn:receipt:",
-        "hf://",
-        "oci://",
-        "git://",
-        "file://",
-        "https://",
-        "http://",
-    )):
+    if lowered.startswith(
+        (
+            "receipt://",
+            "receipt:",
+            "urn:receipt:",
+            "hf://",
+            "oci://",
+            "git://",
+            "file://",
+            "https://",
+            "http://",
+        )
+    ):
         # A URI with a stable scheme and no mutable marker is a receipt
         # reference.  The immutable revision itself is checked separately.
         return len(reference.split(":", 1)[1].strip("/")) >= 2
@@ -246,12 +246,25 @@ def _receipt_source(manifest: Mapping[str, Any]) -> dict[str, Any]:
         if isinstance(value, Mapping):
             source.update(value)
     aliases = {
-        "revision": ("revision_receipt_ref", "dataset_revision_receipt_ref", "immutable_revision_receipt_ref"),
+        "revision": (
+            "revision_receipt_ref",
+            "dataset_revision_receipt_ref",
+            "immutable_revision_receipt_ref",
+        ),
         "license": ("license_receipt_ref", "license_ref"),
-        "container": ("container_receipt_ref", "container_runtime_receipt_ref", "container_ref", "runtime_ref"),
+        "container": (
+            "container_receipt_ref",
+            "container_runtime_receipt_ref",
+            "container_ref",
+            "runtime_ref",
+        ),
         "decontamination": ("decontamination_receipt_ref", "decontamination_ref"),
         "verifier": ("verifier_receipt_ref", "verifier_ref", "verification_receipt_ref"),
-        "split_manifest": ("split_manifest_receipt_ref", "task_hash_receipt_ref", "split_manifest_ref"),
+        "split_manifest": (
+            "split_manifest_receipt_ref",
+            "task_hash_receipt_ref",
+            "split_manifest_ref",
+        ),
     }
     for canonical, keys in aliases.items():
         for key in keys:
@@ -283,7 +296,7 @@ def _extract_receipts(
     for key, value in source.items():
         if key in receipts or key in required:
             continue
-        if key.endswith("receipt") or key.endswith("receipt_ref") or key in {"held_out", "runtime"}:
+        if key.endswith(("receipt", "receipt_ref")) or key in {"held_out", "runtime"}:
             if value is not None and not _receipt_is_immutable(value):
                 errors.append(f"placeholder or mutable {key} receipt")
     return receipts, errors
@@ -415,7 +428,9 @@ def _is_component_manifest(manifest: Mapping[str, Any], *, forced: bool = False)
     )
 
 
-def _coerce_collection(value: Any, *, label: str) -> tuple[list[Mapping[str, Any]], list[Mapping[str, Any]], list[str]]:
+def _coerce_collection(
+    value: Any, *, label: str
+) -> tuple[list[Mapping[str, Any]], list[Mapping[str, Any]], list[str]]:
     """Return ordinary records, discovered component records, and errors."""
 
     if value is None:
@@ -425,9 +440,11 @@ def _coerce_collection(value: Any, *, label: str) -> tuple[list[Mapping[str, Any
     if isinstance(value, Mapping):
         if label == PORTFOLIO_SCOPE and _is_sequence(value.get("suites")):
             records = [item for item in value["suites"] if isinstance(item, Mapping)]
-            errors = ["suite collection contains a non-object manifest"] if any(
-                not isinstance(item, Mapping) for item in value["suites"]
-            ) else []
+            errors = (
+                ["suite collection contains a non-object manifest"]
+                if any(not isinstance(item, Mapping) for item in value["suites"])
+                else []
+            )
             discovered = []
             for key in ("xlam_component_preflight", "xlam_component", "xlam"):
                 if isinstance(value.get(key), Mapping):
@@ -435,10 +452,16 @@ def _coerce_collection(value: Any, *, label: str) -> tuple[list[Mapping[str, Any
             return records, discovered, errors
         for key in ("components", "component_manifests", "runtime_receipts"):
             if _is_sequence(value.get(key)):
-                return [item for item in value[key] if isinstance(item, Mapping)], [], [
-                    "component collection contains a non-object manifest"
-                ] if any(not isinstance(item, Mapping) for item in value[key]) else []
-        if any(key in value for key in ("suite_id", "id", "component", "component_id", "task_hashes")):
+                return (
+                    [item for item in value[key] if isinstance(item, Mapping)],
+                    [],
+                    ["component collection contains a non-object manifest"]
+                    if any(not isinstance(item, Mapping) for item in value[key])
+                    else [],
+                )
+        if any(
+            key in value for key in ("suite_id", "id", "component", "component_id", "task_hashes")
+        ):
             return [value], [], []
         # ID-keyed mapping form.
         records: list[Mapping[str, Any]] = []
@@ -456,13 +479,21 @@ def _coerce_collection(value: Any, *, label: str) -> tuple[list[Mapping[str, Any
         discovered: list[Mapping[str, Any]] = []
         errors: list[str] = []
         for item in value:
-            if isinstance(item, Mapping) and label == PORTFOLIO_SCOPE and _is_sequence(item.get("suites")):
-                nested_records, nested_components, nested_errors = _coerce_collection(item, label=label)
+            if (
+                isinstance(item, Mapping)
+                and label == PORTFOLIO_SCOPE
+                and _is_sequence(item.get("suites"))
+            ):
+                nested_records, nested_components, nested_errors = _coerce_collection(
+                    item, label=label
+                )
                 records.extend(nested_records)
                 discovered.extend(nested_components)
                 errors.extend(nested_errors)
             elif _is_sequence(item):
-                nested_records, nested_components, nested_errors = _coerce_collection(item, label=label)
+                nested_records, nested_components, nested_errors = _coerce_collection(
+                    item, label=label
+                )
                 records.extend(nested_records)
                 discovered.extend(nested_components)
                 errors.extend(nested_errors)
@@ -471,7 +502,9 @@ def _coerce_collection(value: Any, *, label: str) -> tuple[list[Mapping[str, Any
             else:
                 errors.append(f"{label} collection contains a non-object manifest")
         return records, discovered, errors
-    raise SplitCollisionIndexError(f"{label} manifests must be a JSON object, list, or local JSON path")
+    raise SplitCollisionIndexError(
+        f"{label} manifests must be a JSON object, list, or local JSON path"
+    )
 
 
 def _record_id(manifest: Mapping[str, Any], *, component: bool) -> str:
@@ -509,7 +542,9 @@ def _normalise_record(
     source_index: int,
     forced_component: bool = False,
 ) -> tuple[dict[str, Any], list[str]]:
-    component = scope == COMPONENT_SCOPE or _is_component_manifest(manifest, forced=forced_component)
+    component = scope == COMPONENT_SCOPE or _is_component_manifest(
+        manifest, forced=forced_component
+    )
     suite_id = _record_id(manifest, component=component)
     errors: list[str] = []
     _assert_metadata_only(manifest)
@@ -553,7 +588,7 @@ def _normalise_record(
     for role, hashes in task_lists:
         if not component and role != explicit_role:
             errors.append(f"{suite_id}: task-list role disagrees with suite role")
-        for position, digest in enumerate(hashes):
+        for position, _digest in enumerate(hashes):
             owner_entries.append(
                 {
                     "scope": COMPONENT_SCOPE if component else PORTFOLIO_SCOPE,
@@ -643,7 +678,9 @@ def _build_from_records(
         suite_id for suite_id in portfolio_id_set if portfolio_ids.count(suite_id) > 1
     )
     if duplicate_portfolio_ids:
-        errors.extend(f"duplicate portfolio suite ID: {suite_id}" for suite_id in duplicate_portfolio_ids)
+        errors.extend(
+            f"duplicate portfolio suite ID: {suite_id}" for suite_id in duplicate_portfolio_ids
+        )
     missing_ids = sorted(FROZEN_PORTFOLIO_SUITE_IDS - portfolio_id_set)
     extra_ids = sorted(portfolio_id_set - FROZEN_PORTFOLIO_SUITE_IDS)
     if missing_ids:
@@ -651,10 +688,14 @@ def _build_from_records(
     if extra_ids:
         errors.append("extra portfolio suite IDs: " + ", ".join(extra_ids))
     train_actual = sorted(
-        suite_id for suite_id in portfolio_id_set if _EXPECTED_ROLE_BY_ID.get(suite_id) == TRAIN_ROLE
+        suite_id
+        for suite_id in portfolio_id_set
+        if _EXPECTED_ROLE_BY_ID.get(suite_id) == TRAIN_ROLE
     )
     eval_actual = sorted(
-        suite_id for suite_id in portfolio_id_set if _EXPECTED_ROLE_BY_ID.get(suite_id) == PRIMARY_EVAL_ROLE
+        suite_id
+        for suite_id in portfolio_id_set
+        if _EXPECTED_ROLE_BY_ID.get(suite_id) == PRIMARY_EVAL_ROLE
     )
     if len(train_actual) != 12:
         errors.append(f"frozen train roster requires 12 suites, got {len(train_actual)}")
@@ -702,8 +743,7 @@ def _build_from_records(
         )
     )
     public_owner_map = {
-        digest: sorted(owners, key=_owner_sort_key)
-        for digest, owners in sorted(owner_map.items())
+        digest: sorted(owners, key=_owner_sort_key) for digest, owners in sorted(owner_map.items())
     }
     unique_errors = sorted(set(str(error) for error in errors))
     return {

@@ -44,6 +44,7 @@ This script:
 
 Stdlib + jsonschema only.
 """
+
 from __future__ import annotations
 
 import csv
@@ -67,62 +68,118 @@ OUT.mkdir(parents=True, exist_ok=True)
 # Each entry: delta_id -> list of (metric, panel, predicted_sign, rationale)
 EXPECTED_EFFECTS = {
     "delta_aero": [
-        ("zvf", "n2_same_stack_last10", "<0",
-         "AERO inflates the effective group size via off-policy rollouts; "
-         "fewer all-same groups should lower ZVF on the same stack."),
-        ("reward_mean", "n2_same_stack_last10", ">=0",
-         "AERO's off-policy rollouts reuse the same stack's signal -- "
-         "no reason to expect a reward loss; we expect at least parity."),
-        ("zvf_risk_mean", "zvf130_5seed", "<0",
-         "Same logic on the 5-seed risk panel: lower risk of zero-variance groups."),
+        (
+            "zvf",
+            "n2_same_stack_last10",
+            "<0",
+            "AERO inflates the effective group size via off-policy rollouts; "
+            "fewer all-same groups should lower ZVF on the same stack.",
+        ),
+        (
+            "reward_mean",
+            "n2_same_stack_last10",
+            ">=0",
+            "AERO's off-policy rollouts reuse the same stack's signal -- "
+            "no reason to expect a reward loss; we expect at least parity.",
+        ),
+        (
+            "zvf_risk_mean",
+            "zvf130_5seed",
+            "<0",
+            "Same logic on the 5-seed risk panel: lower risk of zero-variance groups.",
+        ),
     ],
     "delta_gift": [
-        ("zvf", "n2_same_stack_last10", ">0",
-         "GIFT subtracts a gamma-style likelihood baseline -- a small "
-         "increase in zero-variance fraction is plausible because the "
-         "gamma prior regularises the group mean toward a constant."),
-        ("reward_mean", "n2_same_stack_last10", ">=0",
-         "GIFT's documented loss shift of +16,722 absolute loss should "
-         "be at least reward-neutral on the same stack."),
-        ("zvf_risk_mean", "zvf130_5seed", "<0",
-         "On the 5-seed risk panel, GIFT's gamma prior reduces risk "
-         "of zero-variance groups (anti-starvation)."),
+        (
+            "zvf",
+            "n2_same_stack_last10",
+            ">0",
+            "GIFT subtracts a gamma-style likelihood baseline -- a small "
+            "increase in zero-variance fraction is plausible because the "
+            "gamma prior regularises the group mean toward a constant.",
+        ),
+        (
+            "reward_mean",
+            "n2_same_stack_last10",
+            ">=0",
+            "GIFT's documented loss shift of +16,722 absolute loss should "
+            "be at least reward-neutral on the same stack.",
+        ),
+        (
+            "zvf_risk_mean",
+            "zvf130_5seed",
+            "<0",
+            "On the 5-seed risk panel, GIFT's gamma prior reduces risk "
+            "of zero-variance groups (anti-starvation).",
+        ),
     ],
     "delta_areal": [
-        ("zvf", "n2_same_stack_last10", "<0",
-         "AREAL's decoupled rollout budget acts as a larger effective "
-         "G on this single-batch run; should lower ZVF."),
-        ("reward_mean", "n2_same_stack_last10", ">=0",
-         "AREAL's autoscaler is statically set to 8 in our N2 run; "
-         "should be at least reward-neutral on the same stack."),
-        ("zvf_risk_mean", "zvf130_5seed", "<0",
-         "Decoupled rollout should reduce risk of zero-variance groups."),
+        (
+            "zvf",
+            "n2_same_stack_last10",
+            "<0",
+            "AREAL's decoupled rollout budget acts as a larger effective "
+            "G on this single-batch run; should lower ZVF.",
+        ),
+        (
+            "reward_mean",
+            "n2_same_stack_last10",
+            ">=0",
+            "AREAL's autoscaler is statically set to 8 in our N2 run; "
+            "should be at least reward-neutral on the same stack.",
+        ),
+        (
+            "zvf_risk_mean",
+            "zvf130_5seed",
+            "<0",
+            "Decoupled rollout should reduce risk of zero-variance groups.",
+        ),
     ],
     # Methods measured only on the zvf130 panel.
     "delta_cppo": [
-        ("zvf_risk_mean", "zvf130_5seed", "<0",
-         "CPPO's continuity penalty reduces abrupt policy updates; "
-         "risk of ZVF collapse should be lower than vanilla GRPO."),
+        (
+            "zvf_risk_mean",
+            "zvf130_5seed",
+            "<0",
+            "CPPO's continuity penalty reduces abrupt policy updates; "
+            "risk of ZVF collapse should be lower than vanilla GRPO.",
+        ),
     ],
     "delta_ngrpo": [
-        ("zvf_risk_mean", "zvf130_5seed", "<0",
-         "NGRPO's noise-injection acts as exploration; should lower "
-         "the risk of zero-variance starvation."),
+        (
+            "zvf_risk_mean",
+            "zvf130_5seed",
+            "<0",
+            "NGRPO's noise-injection acts as exploration; should lower "
+            "the risk of zero-variance starvation.",
+        ),
     ],
     "delta_mcgrpo": [
-        ("zvf_risk_mean", "zvf130_5seed", "<0",
-         "MCGRPO's Monte-Carlo advantage uses a per-prompt baseline; "
-         "should reduce ZVF risk vs vanilla GRPO."),
+        (
+            "zvf_risk_mean",
+            "zvf130_5seed",
+            "<0",
+            "MCGRPO's Monte-Carlo advantage uses a per-prompt baseline; "
+            "should reduce ZVF risk vs vanilla GRPO.",
+        ),
     ],
     "delta_es": [
-        ("zvf_risk_mean", "zvf130_5seed", "<0",
-         "Evolution Strategies as a policy-gradient surrogate; "
-         "inherits lower ZVF risk via population-based evaluation."),
+        (
+            "zvf_risk_mean",
+            "zvf130_5seed",
+            "<0",
+            "Evolution Strategies as a policy-gradient surrogate; "
+            "inherits lower ZVF risk via population-based evaluation.",
+        ),
     ],
     "delta_scafgrpo": [
-        ("zvf_risk_mean", "zvf130_5seed", "<0",
-         "Scaffolded GRPO refactors the advantage; should be at least "
-         "as ZVF-safe as vanilla GRPO."),
+        (
+            "zvf_risk_mean",
+            "zvf130_5seed",
+            "<0",
+            "Scaffolded GRPO refactors the advantage; should be at least "
+            "as ZVF-safe as vanilla GRPO.",
+        ),
     ],
 }
 
@@ -142,25 +199,31 @@ def sign_match(observed: float, predicted: str) -> bool:
     raise ValueError(f"unknown predicted_sign: {predicted!r}")
 
 
-def classify(observed: float, ci_low: float, ci_high: float,
-             predicted: str | None) -> tuple[str, str]:
+def classify(
+    observed: float, ci_low: float, ci_high: float, predicted: str | None
+) -> tuple[str, str]:
     """Return (verdict, rationale)."""
     if predicted is None:
-        return ("UNCLAIMED",
-                "no expected_effect declared for this (metric, panel) pair")
+        return ("UNCLAIMED", "no expected_effect declared for this (metric, panel) pair")
     sign_ok = sign_match(observed, predicted)
     sig = (ci_low > 0) or (ci_high < 0)
     if not sig:
-        return ("NEUTRAL",
-                f"measured delta={observed:+.4f} CI=[{ci_low:+.4f},{ci_high:+.4f}] "
-                f"includes 0; cannot falsify predicted {predicted}")
-    if sign_ok:
-        return ("SUPPORTS",
-                f"measured delta={observed:+.4f} CI=[{ci_low:+.4f},{ci_high:+.4f}] "
-                f"is significant and matches predicted {predicted}")
-    return ("CONTRADICTS",
+        return (
+            "NEUTRAL",
             f"measured delta={observed:+.4f} CI=[{ci_low:+.4f},{ci_high:+.4f}] "
-            f"is significant but OPPOSITE to predicted {predicted}")
+            f"includes 0; cannot falsify predicted {predicted}",
+        )
+    if sign_ok:
+        return (
+            "SUPPORTS",
+            f"measured delta={observed:+.4f} CI=[{ci_low:+.4f},{ci_high:+.4f}] "
+            f"is significant and matches predicted {predicted}",
+        )
+    return (
+        "CONTRADICTS",
+        f"measured delta={observed:+.4f} CI=[{ci_low:+.4f},{ci_high:+.4f}] "
+        f"is significant but OPPOSITE to predicted {predicted}",
+    )
 
 
 def main():
@@ -180,10 +243,14 @@ def main():
         for metric, panel, pred, rationale in eff_list:
             if (metric, panel) in have_keys:
                 continue
-            rec["expected_effects"].append({
-                "metric": metric, "panel": panel,
-                "predicted_sign": pred, "rationale": rationale,
-            })
+            rec["expected_effects"].append(
+                {
+                    "metric": metric,
+                    "panel": panel,
+                    "predicted_sign": pred,
+                    "rationale": rationale,
+                }
+            )
             added += 1
         if added:
             path.write_text(json.dumps(rec, indent=2) + "\n")
@@ -192,6 +259,7 @@ def main():
 
     # Stage 2: validate that schema still passes after extension.
     import jsonschema
+
     schema = json.load(open(SCHEMA))
     V = jsonschema.Draft202012Validator(schema)
     # Stage 3: audit every delta_*.json.
@@ -202,8 +270,7 @@ def main():
     for p in sorted(ENTRIES.glob("delta_*.json")):
         rec = json.load(open(p))
         delta_id = rec["id"]
-        expected = {(e["metric"], e["panel"]): e
-                    for e in rec.get("expected_effects", [])}
+        expected = {(e["metric"], e["panel"]): e for e in rec.get("expected_effects", [])}
         measured = rec.get("measured", []) or []
         cv_list = []
         for m in measured:
@@ -226,15 +293,19 @@ def main():
                 "rationale": rationale,
             }
             rows.append(row)
-            cv_list.append({
-                "metric": m["metric"], "panel": m["panel"],
-                "predicted_sign": pred,
-                "observed_delta": m["delta"],
-                "ci_low": m["ci_low"], "ci_high": m["ci_high"],
-                "significant": m["significant"],
-                "verdict": verdict,
-                "rationale": rationale,
-            })
+            cv_list.append(
+                {
+                    "metric": m["metric"],
+                    "panel": m["panel"],
+                    "predicted_sign": pred,
+                    "observed_delta": m["delta"],
+                    "ci_low": m["ci_low"],
+                    "ci_high": m["ci_high"],
+                    "significant": m["significant"],
+                    "verdict": verdict,
+                    "rationale": rationale,
+                }
+            )
         if measured and not cv_list:
             n_skipped_unmeasured += 1
         # Stage 4: write claim_validation block back if anything to record.
@@ -255,8 +326,18 @@ def main():
     # Stage 6: write outputs.
     tsv_path = OUT / "p6_measured_vs_claim.tsv"
     with open(tsv_path, "w", newline="") as fh:
-        cols = ["delta_id", "metric", "panel", "predicted_sign", "observed_delta",
-                "ci_low", "ci_high", "significant", "verdict", "rationale"]
+        cols = [
+            "delta_id",
+            "metric",
+            "panel",
+            "predicted_sign",
+            "observed_delta",
+            "ci_low",
+            "ci_high",
+            "significant",
+            "verdict",
+            "rationale",
+        ]
         w = csv.DictWriter(fh, delimiter="\t", fieldnames=cols)
         w.writeheader()
         w.writerows(rows)
@@ -284,7 +365,7 @@ def main():
     print(f"  NEUTRAL     : {counts.get('NEUTRAL', 0)}")
     print(f"  CONTRADICTS : {counts.get('CONTRADICTS', 0)}")
     print(f"  UNCLAIMED   : {counts.get('UNCLAIMED', 0)}")
-    sig_share = (counts.get('SUPPORTS', 0) + counts.get('CONTRADICTS', 0)) / max(1, len(rows))
+    sig_share = (counts.get("SUPPORTS", 0) + counts.get("CONTRADICTS", 0)) / max(1, len(rows))
     print(f"  significant-share (SUPPORTS+CONTRADICTS) / total = {sig_share:.3f}")
     return 0
 

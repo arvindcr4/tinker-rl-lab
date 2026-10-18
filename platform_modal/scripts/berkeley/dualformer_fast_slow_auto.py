@@ -6,9 +6,7 @@ iter131 sweep + iter127 joint fit + iter127 G*(T) and writes 4 TSVs to
 platform_hybrid/experiments/results/berkeley/. No new training; re-analyses existing data.
 """
 
-import json
 import math
-import os
 from pathlib import Path
 
 import numpy as np
@@ -33,7 +31,7 @@ def load_iter131_sweep():
     header = rows[0]
     out = []
     for r in rows[1:]:
-        rec = dict(zip(header, r))
+        rec = dict(zip(header, r, strict=False))
         out.append(
             {
                 "G": int(rec["G"]),
@@ -92,7 +90,7 @@ def load_iter127_optimal_g():
     header = rows[0]
     out = {}
     for r in rows[1:]:
-        rec = dict(zip(header, r))
+        rec = dict(zip(header, r, strict=False))
         if rec["section"].startswith("B_optimal_G"):
             try:
                 T = int(rec["metric_key"].split("=")[1])
@@ -240,24 +238,35 @@ def main():
     # --- 1. fast/slow gain ---
     fs = fast_slow_gain(sweep)
     fs_header = [
-        "G", "mode", "n_seeds",
-        "heldout_acc_mean", "heldout_acc_se", "last10_mean",
-        "mean_zvf", "zvf_theory_at_mean_p",
-        "mean_reward_train", "cost_eq_reward", "rollout_saving_vs_G16",
-        "delta_acc_vs_fast", "delta_zvf_vs_fast",
+        "G",
+        "mode",
+        "n_seeds",
+        "heldout_acc_mean",
+        "heldout_acc_se",
+        "last10_mean",
+        "mean_zvf",
+        "zvf_theory_at_mean_p",
+        "mean_reward_train",
+        "cost_eq_reward",
+        "rollout_saving_vs_G16",
+        "delta_acc_vs_fast",
+        "delta_zvf_vs_fast",
     ]
-    fs_rows = [
-        [r[c] for c in fs_header] for r in fs
-    ]
+    fs_rows = [[r[c] for c in fs_header] for r in fs]
     write_tsv(OUT / "dualformer_fast_slow_gain.tsv", fs_header, fs_rows)
     print(f"  wrote {OUT / 'dualformer_fast_slow_gain.tsv'}")
 
     # --- 2. auto-mode rule ---
     auto = auto_mode_rule(joint, optimal_g)
     auto_header = [
-        "G", "T", "acc_emp", "acc_pred",
-        "G_auto_dualformer", "G_meas_iter127",
-        "auto_match_measured", "delta_G_auto_vs_measured",
+        "G",
+        "T",
+        "acc_emp",
+        "acc_pred",
+        "G_auto_dualformer",
+        "G_meas_iter127",
+        "auto_match_measured",
+        "delta_G_auto_vs_measured",
     ]
     auto_rows = [[r[c] for c in auto_header] for r in auto]
     write_tsv(OUT / "dualformer_auto_mode_rule.tsv", auto_header, auto_rows)
@@ -266,9 +275,12 @@ def main():
     # --- 3. compute savings ---
     savings = compute_savings(auto)
     sav_header = [
-        "mean_G_auto", "mean_G_meas_iter127",
-        "savings_auto_vs_G16", "savings_meas_vs_G16",
-        "n_cells_underpredict_by_5pp", "n_cells",
+        "mean_G_auto",
+        "mean_G_meas_iter127",
+        "savings_auto_vs_G16",
+        "savings_meas_vs_G16",
+        "n_cells_underpredict_by_5pp",
+        "n_cells",
     ]
     sav_row = [savings[c] for c in sav_header]
     write_tsv(OUT / "dualformer_compute_savings.tsv", sav_header, [sav_row])
@@ -314,12 +326,21 @@ def main():
         ["A_fast_slow_gain", "cost_eq_reward_ordering", headline_findings[2]],
         ["B_auto_mode", "savings", headline_findings[3]],
         ["B_auto_mode", "agreement_with_iter127", headline_findings[4]],
-        ["C_dualformer_principle", "interpretation",
-         "GRPO G is a 'slow-thinking dial' in the Dualformer sense: more rollouts per step = more deliberate search per gradient update. On near-ceiling arithmetic the fast mode (G=2) Pareto-dominates on (accuracy, compute) — the Wu claim — but Dualformer's auto-mode rule (adaptive G per difficulty) recovers another ~30-50% of slow-mode compute while staying within 1 SE of the always-slow accuracy. Treat GRPO G as inference-time compute allocation, not a fixed hyperparameter."],
-        ["C_dualformer_principle", "target_mapping",
-         "A5 inference-time reasoning + A3 post-training science: reframes Pillar 3 as a Dualformer auto-mode allocation problem; provides a difficulty-gated G rule that practitioners can deploy without retraining."],
-        ["D_recommendation", "go_no_go",
-         "GO. The Dualformer fast/slow/auto framing imports cleanly onto iter131 + iter127, gives a Dualformer-Auto rule with 30-50% compute savings on the n=20 broader sweep, and sharpens Pillar 3 by reinterpreting Wu et al. 2025 'G=2 ~ G=16' as a near-ceiling fast-mode-dominant finding. Add 1 paragraph to Pillar 3 paper section + 1 figure (cost_eq_reward Pareto scatter)."],
+        [
+            "C_dualformer_principle",
+            "interpretation",
+            "GRPO G is a 'slow-thinking dial' in the Dualformer sense: more rollouts per step = more deliberate search per gradient update. On near-ceiling arithmetic the fast mode (G=2) Pareto-dominates on (accuracy, compute) — the Wu claim — but Dualformer's auto-mode rule (adaptive G per difficulty) recovers another ~30-50% of slow-mode compute while staying within 1 SE of the always-slow accuracy. Treat GRPO G as inference-time compute allocation, not a fixed hyperparameter.",
+        ],
+        [
+            "C_dualformer_principle",
+            "target_mapping",
+            "A5 inference-time reasoning + A3 post-training science: reframes Pillar 3 as a Dualformer auto-mode allocation problem; provides a difficulty-gated G rule that practitioners can deploy without retraining.",
+        ],
+        [
+            "D_recommendation",
+            "go_no_go",
+            "GO. The Dualformer fast/slow/auto framing imports cleanly onto iter131 + iter127, gives a Dualformer-Auto rule with 30-50% compute savings on the n=20 broader sweep, and sharpens Pillar 3 by reinterpreting Wu et al. 2025 'G=2 ~ G=16' as a near-ceiling fast-mode-dominant finding. Add 1 paragraph to Pillar 3 paper section + 1 figure (cost_eq_reward Pareto scatter).",
+        ],
     ]
     write_tsv(OUT / "dualformer_summary.tsv", summary_header, summary_rows)
     print(f"  wrote {OUT / 'dualformer_summary.tsv'}")

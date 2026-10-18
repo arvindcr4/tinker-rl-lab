@@ -284,14 +284,18 @@ def responses_input_to_chat_messages(input: Any) -> list[dict[str, Any]]:
                 elif ctype == "refusal":
                     parts.append("refusal: " + str(chunk.get("refusal", "")))
             text = "\n".join(p for p in parts if p)
-            messages.append(
-                {"role": item.get("role", "user"), "content": text})
+            messages.append({"role": item.get("role", "user"), "content": text})
         elif kind == "function_call_output":
             call_id = item.get("call_id", "")
             if not isinstance(call_id, str) or not call_id:
                 raise ValueError("function_call_output item lacks call_id")
-            messages.append({"role": "tool", "tool_call_id": call_id,
-                             "content": _responses_text(item.get("output"))})
+            messages.append(
+                {
+                    "role": "tool",
+                    "tool_call_id": call_id,
+                    "content": _responses_text(item.get("output")),
+                }
+            )
     if not messages:
         raise ValueError("responses input carried no usable messages")
     return messages
@@ -302,99 +306,147 @@ def responses_tools_to_chat_tools(tools: Any) -> list[dict[str, Any]] | None:
     chat: list[dict[str, Any]] = []
     for tool in tools or []:
         if isinstance(tool, Mapping) and tool.get("type") == "function":
-            chat.append({"type": "function", "function": {
-                "name": tool.get("name", ""),
-                "description": tool.get("description", ""),
-                "parameters": tool.get("parameters", {}),
-            }})
+            chat.append(
+                {
+                    "type": "function",
+                    "function": {
+                        "name": tool.get("name", ""),
+                        "description": tool.get("description", ""),
+                        "parameters": tool.get("parameters", {}),
+                    },
+                }
+            )
     return chat or None
 
 
-def build_responses_object(*, response_id: str, model: str,
-                           content: str | None,
-                           tool_calls: list[dict[str, Any]],
-                           prompt_tokens: int, completion_tokens: int,
-                           created_at: int) -> dict[str, Any]:
+def build_responses_object(
+    *,
+    response_id: str,
+    model: str,
+    content: str | None,
+    tool_calls: list[dict[str, Any]],
+    prompt_tokens: int,
+    completion_tokens: int,
+    created_at: int,
+) -> dict[str, Any]:
     """Build a Responses API response object (non-streaming shape)."""
     output: list[dict[str, Any]] = []
     if content:
-        output.append({"id": f"msg_{response_id}", "type": "message",
-                       "status": "completed", "role": "assistant",
-                       "content": [{"type": "output_text", "text": content,
-                                    "annotations": []}]})
+        output.append(
+            {
+                "id": f"msg_{response_id}",
+                "type": "message",
+                "status": "completed",
+                "role": "assistant",
+                "content": [{"type": "output_text", "text": content, "annotations": []}],
+            }
+        )
     for call in tool_calls:
-        output.append({"id": f"fc_{call['id']}", "type": "function_call",
-                       "status": "completed", "call_id": call["id"],
-                       "name": call["function"]["name"],
-                       "arguments": call["function"]["arguments"]})
-    return {"id": response_id, "object": "response", "created_at": created_at,
-            "model": model, "status": "completed", "output": output,
-            "usage": {"input_tokens": prompt_tokens,
-                      "output_tokens": completion_tokens,
-                      "total_tokens": prompt_tokens + completion_tokens,
-                      "input_tokens_details": {"cached_tokens": 0},
-                      "output_tokens_details": {"reasoning_tokens": 0}}}
+        output.append(
+            {
+                "id": f"fc_{call['id']}",
+                "type": "function_call",
+                "status": "completed",
+                "call_id": call["id"],
+                "name": call["function"]["name"],
+                "arguments": call["function"]["arguments"],
+            }
+        )
+    return {
+        "id": response_id,
+        "object": "response",
+        "created_at": created_at,
+        "model": model,
+        "status": "completed",
+        "output": output,
+        "usage": {
+            "input_tokens": prompt_tokens,
+            "output_tokens": completion_tokens,
+            "total_tokens": prompt_tokens + completion_tokens,
+            "input_tokens_details": {"cached_tokens": 0},
+            "output_tokens_details": {"reasoning_tokens": 0},
+        },
+    }
 
 
 def _responses_sse(event_type: str, data: dict[str, Any]) -> str:
     return f"event: {event_type}\ndata: {json.dumps(data)}\n\n"
 
 
-def iter_responses_sse_events(response: dict[str, Any],
-                              text_chunk_size: int = 500) -> Any:
+def iter_responses_sse_events(response: dict[str, Any], text_chunk_size: int = 500) -> Any:
     """Yield SSE event strings replaying a completed Responses object."""
     rid = response["id"]
     header = {"id": rid, "object": "response", "model": response["model"]}
-    yield _responses_sse("response.created",
-                         {"type": "response.created", "response": header})
+    yield _responses_sse("response.created", {"type": "response.created", "response": header})
     index = 0
     for item in response["output"]:
         if item["type"] == "message":
             text = item["content"][0]["text"] if item["content"] else ""
             yield _responses_sse(
                 "response.output_item.added",
-                {"type": "response.output_item.added",
-                 "output_index": index, "item": item})
+                {"type": "response.output_item.added", "output_index": index, "item": item},
+            )
             yield _responses_sse(
                 "response.content_part.added",
-                {"type": "response.content_part.added",
-                 "item_id": item["id"], "output_index": index,
-                 "part": {"type": "output_text", "text": "",
-                          "annotations": []}})
+                {
+                    "type": "response.content_part.added",
+                    "item_id": item["id"],
+                    "output_index": index,
+                    "part": {"type": "output_text", "text": "", "annotations": []},
+                },
+            )
             for start in range(0, len(text), text_chunk_size):
                 yield _responses_sse(
                     "response.output_text.delta",
-                    {"type": "response.output_text.delta",
-                     "item_id": item["id"], "output_index": index,
-                     "content_index": 0,
-                     "delta": text[start:start + text_chunk_size]})
+                    {
+                        "type": "response.output_text.delta",
+                        "item_id": item["id"],
+                        "output_index": index,
+                        "content_index": 0,
+                        "delta": text[start : start + text_chunk_size],
+                    },
+                )
             yield _responses_sse(
                 "response.output_text.done",
-                {"type": "response.output_text.done",
-                 "item_id": item["id"], "output_index": index,
-                 "content_index": 0, "text": text})
+                {
+                    "type": "response.output_text.done",
+                    "item_id": item["id"],
+                    "output_index": index,
+                    "content_index": 0,
+                    "text": text,
+                },
+            )
             yield _responses_sse(
                 "response.content_part.done",
-                {"type": "response.content_part.done",
-                 "item_id": item["id"], "output_index": index,
-                 "content_index": 0,
-                 "part": {"type": "output_text", "text": text,
-                          "annotations": []}})
+                {
+                    "type": "response.content_part.done",
+                    "item_id": item["id"],
+                    "output_index": index,
+                    "content_index": 0,
+                    "part": {"type": "output_text", "text": text, "annotations": []},
+                },
+            )
             yield _responses_sse(
                 "response.output_item.done",
-                {"type": "response.output_item.done",
-                 "output_index": index, "item": item})
+                {"type": "response.output_item.done", "output_index": index, "item": item},
+            )
             index += 1
         elif item["type"] == "function_call":
             yield _responses_sse(
                 "response.output_item.added",
-                {"type": "response.output_item.added",
-                 "output_index": index, "item": item})
+                {"type": "response.output_item.added", "output_index": index, "item": item},
+            )
             yield _responses_sse(
                 "response.output_item.done",
-                {"type": "response.output_item.done",
-                 "output_index": index, "item": item})
+                {"type": "response.output_item.done", "output_index": index, "item": item},
+            )
             index += 1
     yield _responses_sse(
         "response.incomplete" if response.get("status") == "incomplete" else "response.completed",
-        {"type": "response.incomplete" if response.get("status") == "incomplete" else "response.completed", "response": response})
+        {
+            "type": "response.incomplete"
+            if response.get("status") == "incomplete"
+            else "response.completed",
+            "response": response,
+        },
+    )

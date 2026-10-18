@@ -44,6 +44,7 @@ H4 -- per-G P5 density stratified.  Does P5 zvf=1.0 density
 
 Stdlib + numpy.  <= 290 lines.
 """
+
 from __future__ import annotations
 import csv
 import json
@@ -52,8 +53,10 @@ from pathlib import Path
 import numpy as np
 
 import sys
+
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
+from _paths import REPO_ROOT
+
 ROOT = REPO_ROOT
 RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8"
 RES.mkdir(parents=True, exist_ok=True)
@@ -74,16 +77,18 @@ def load_mega_cells():
             try:
                 zvf = float(r["zvf"])
                 G = int(r["G"])
-                rows.append({
-                    "cell_id": r["cell_id"],
-                    "model_family": r["model_family"],
-                    "task_slice": r["task_slice"],
-                    "G": G,
-                    "temperature": float(r["temperature"]),
-                    "seed": int(r["seed"]),
-                    "zvf": zvf,
-                    "mean_reward": float(r["mean_reward"]),
-                })
+                rows.append(
+                    {
+                        "cell_id": r["cell_id"],
+                        "model_family": r["model_family"],
+                        "task_slice": r["task_slice"],
+                        "G": G,
+                        "temperature": float(r["temperature"]),
+                        "seed": int(r["seed"]),
+                        "zvf": zvf,
+                        "mean_reward": float(r["mean_reward"]),
+                    }
+                )
             except (KeyError, ValueError):
                 continue
     return rows
@@ -133,6 +138,7 @@ from review22_contract import ratio_ci
 
 def main():
     from review22_contract import require_independent_unit_contract
+
     require_independent_unit_contract()
     print(f"[iter124] loading mega cells ...")
     cells = load_mega_cells()
@@ -183,9 +189,17 @@ def main():
         w = csv.writer(f, delimiter="\t")
         w.writerow(["domain", "n_fire", "n_total", "rate", "ci_lo", "ci_hi", "rule"])
         for d in [D1, D2, D3]:
-            w.writerow([d["domain"], d["n_fire"], d["n_total"],
-                        f"{d['rate']:.6f}", f"{d['lo']:.6f}", f"{d['hi']:.6f}",
-                        d["rule"]])
+            w.writerow(
+                [
+                    d["domain"],
+                    d["n_fire"],
+                    d["n_total"],
+                    f"{d['rate']:.6f}",
+                    f"{d['lo']:.6f}",
+                    f"{d['hi']:.6f}",
+                    d["rule"],
+                ]
+            )
     print(f"[iter124] wrote {out_d}")
 
     # --- H1: pairwise density ratios with bootstrap CIs ---
@@ -205,16 +219,19 @@ def main():
     ]:
         r = ratio_ci(num, den)
         ratios[label] = r
-        print(f"[iter124 H1] {label}: ratio={r['ratio']:.4f} "
-              f"CI=[{r['lo']:.4f}, {r['hi']:.4f}] excludes_1.0={r['excludes_1.0']}")
+        print(
+            f"[iter124 H1] {label}: ratio={r['ratio']:.4f} "
+            f"CI=[{r['lo']:.4f}, {r['hi']:.4f}] excludes_1.0={r['excludes_1.0']}"
+        )
 
     out_r = RES / "synth_iter124_density_ratios.tsv"
     with out_r.open("w") as f:
         w = csv.writer(f, delimiter="\t")
         w.writerow(["ratio", "point", "ci_lo", "ci_hi", "excludes_1.0"])
         for k, v in ratios.items():
-            w.writerow([k, f"{v['ratio']:.6f}", f"{v['lo']:.6f}",
-                        f"{v['hi']:.6f}", v["excludes_1.0"]])
+            w.writerow(
+                [k, f"{v['ratio']:.6f}", f"{v['lo']:.6f}", f"{v['hi']:.6f}", v["excludes_1.0"]]
+            )
     print(f"[iter124] wrote {out_r}")
 
     # --- H2: rank ordering ---
@@ -224,8 +241,7 @@ def main():
         "P5_zvf_eq_1": D3["rate"],
     }
     rank = sorted(densities.items(), key=lambda kv: -kv[1])
-    print(f"[iter124 H2] density rank: " +
-          ", ".join(f"{k}={v:.4f}" for k, v in rank))
+    print(f"[iter124 H2] density rank: " + ", ".join(f"{k}={v:.4f}" for k, v in rank))
 
     # --- H3: per-V_stat quartile P8 vs per-G P5 density correlation ---
     per_G = per_G_density(cells, threshold=0.999)
@@ -233,14 +249,16 @@ def main():
     # (not directly comparable, so report both stratified as descriptive)
     h3_rows = []
     for G, d in per_G.items():
-        h3_rows.append({
-            "G": G,
-            "n_cells": d["n_cells"],
-            "n_fire_zvf_1": d["n_fire"],
-            "density_p5_zvf_1": d["density"],
-            "density_p5_zvf_lt_03": per_G_density(cells, threshold=0.3)[G]["density"],
-            "density_p5_zvf_geq_07": per_G_density(cells, threshold=0.7)[G]["density"],
-        })
+        h3_rows.append(
+            {
+                "G": G,
+                "n_cells": d["n_cells"],
+                "n_fire_zvf_1": d["n_fire"],
+                "density_p5_zvf_1": d["density"],
+                "density_p5_zvf_lt_03": per_G_density(cells, threshold=0.3)[G]["density"],
+                "density_p5_zvf_geq_07": per_G_density(cells, threshold=0.7)[G]["density"],
+            }
+        )
     out_h3 = RES / "synth_iter124_per_G_density.tsv"
     with out_h3.open("w") as f:
         w = csv.DictWriter(f, fieldnames=list(h3_rows[0].keys()), delimiter="\t")
@@ -260,8 +278,10 @@ def main():
         spearman = float((dG * dd).sum() / np.sqrt((dG**2).sum() * (dd**2).sum()))
     else:
         spearman = float("nan")
-    print(f"[iter124 H4] Spearman(G, P5 density zvf=1.0) = {spearman:.4f} "
-          f"across {len(Gs)} G values: {Gs}")
+    print(
+        f"[iter124 H4] Spearman(G, P5 density zvf=1.0) = {spearman:.4f} "
+        f"across {len(Gs)} G values: {Gs}"
+    )
 
     # --- Summary ---
     summary = {

@@ -8,16 +8,17 @@ This shows the core PPO loop with verifiable rewards.
 """
 
 import os
-import random
 import time
 from dataclasses import dataclass
 from typing import Optional
 
 import sys
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 import gymnasium as gym
 import wandb
 from huggingface_hub import HfApi
+
 
 def push_to_hub(repo_id: str, filename: str, filepath: str):
     """Push model to HuggingFace Hub."""
@@ -36,6 +37,7 @@ def push_to_hub(repo_id: str, filename: str, filepath: str):
     except Exception as e:
         print(f"Error pushing to hub: {e}")
 
+
 import numpy as np
 import torch
 import torch.nn as nn
@@ -48,6 +50,7 @@ from experiments.signal_starvation.metrics import ppo_gate, signal_metrics
 @dataclass
 class Args:
     """Training arguments matching Tinker hyperparameters."""
+
     exp_name: str = "math_rl_cleanrl"
     seed: int = 1
     torch_deterministic: bool = True
@@ -90,9 +93,7 @@ class ArithmeticEnv(gym.Env):
         self.max_num = max_num
         self.max_answer = max_num * 2
 
-        self.observation_space = gym.spaces.Box(
-            low=0, high=max_num, shape=(2,), dtype=np.float32
-        )
+        self.observation_space = gym.spaces.Box(low=0, high=max_num, shape=(2,), dtype=np.float32)
         self.action_space = gym.spaces.Discrete(self.max_answer + 1)
 
         self.current_nums = None
@@ -106,9 +107,7 @@ class ArithmeticEnv(gym.Env):
 
     def step(self, action):
         reward = 1.0 if action == self.correct_answer else 0.0
-        return self.current_nums.astype(np.float32), reward, True, False, {
-            "correct": reward == 1.0
-        }
+        return self.current_nums.astype(np.float32), reward, True, False, {"correct": reward == 1.0}
 
 
 def make_env(max_num, seed):
@@ -116,6 +115,7 @@ def make_env(max_num, seed):
         env = ArithmeticEnv(max_num=max_num)
         env.reset(seed=seed)
         return env
+
     return thunk
 
 
@@ -190,8 +190,12 @@ def main():
     optimizer = optim.Adam(agent.parameters(), lr=args.learning_rate, eps=1e-5)
 
     # Storage
-    obs = torch.zeros((args.num_steps, args.num_envs) + envs.single_observation_space.shape).to(device)
-    actions = torch.zeros((args.num_steps, args.num_envs) + envs.single_action_space.shape).to(device)
+    obs = torch.zeros((args.num_steps, args.num_envs) + envs.single_observation_space.shape).to(
+        device
+    )
+    actions = torch.zeros((args.num_steps, args.num_envs) + envs.single_action_space.shape).to(
+        device
+    )
     logprobs = torch.zeros((args.num_steps, args.num_envs)).to(device)
     rewards = torch.zeros((args.num_steps, args.num_envs)).to(device)
     dones = torch.zeros((args.num_steps, args.num_envs)).to(device)
@@ -260,7 +264,9 @@ def main():
                     nextnonterminal = 1.0 - dones[t + 1]
                     nextvalues = values[t + 1]
                 delta = rewards[t] + args.gamma * nextvalues * nextnonterminal - values[t]
-                advantages[t] = lastgaelam = delta + args.gamma * args.gae_lambda * nextnonterminal * lastgaelam
+                advantages[t] = lastgaelam = (
+                    delta + args.gamma * args.gae_lambda * nextnonterminal * lastgaelam
+                )
             returns = advantages + values
 
         # Flatten batch
@@ -275,7 +281,7 @@ def main():
         b_inds = np.arange(batch_size)
         clipfracs = []
         signal_batches = []
-        for epoch in range(args.update_epochs):
+        for _epoch in range(args.update_epochs):
             np.random.shuffle(b_inds)
             for start in range(0, batch_size, minibatch_size):
                 end = start + minibatch_size
@@ -294,7 +300,9 @@ def main():
 
                 mb_advantages = b_advantages[mb_inds]
                 if args.norm_adv:
-                    mb_advantages = (mb_advantages - mb_advantages.mean()) / (mb_advantages.std() + 1e-8)
+                    mb_advantages = (mb_advantages - mb_advantages.mean()) / (
+                        mb_advantages.std() + 1e-8
+                    )
 
                 # Detached reward-signal diagnostics. These are coefficient
                 # metrics, not a claim about the full optimizer-preconditioned
@@ -304,15 +312,15 @@ def main():
                     advantages_list = mb_advantages.detach().cpu().tolist()
                     gates = [
                         ppo_gate(r, a, args.clip_coef)
-                        for r, a in zip(ratios_list, advantages_list)
+                        for r, a in zip(ratios_list, advantages_list, strict=False)
                     ]
-                    signal_batches.append(
-                        signal_metrics(ratios_list, advantages_list, gates)
-                    )
+                    signal_batches.append(signal_metrics(ratios_list, advantages_list, gates))
 
                 # Policy loss
                 pg_loss1 = -mb_advantages * ratio
-                pg_loss2 = -mb_advantages * torch.clamp(ratio, 1 - args.clip_coef, 1 + args.clip_coef)
+                pg_loss2 = -mb_advantages * torch.clamp(
+                    ratio, 1 - args.clip_coef, 1 + args.clip_coef
+                )
                 pg_loss = torch.max(pg_loss1, pg_loss2).mean()
 
                 # Value loss
@@ -345,23 +353,27 @@ def main():
             accuracy = np.mean(episode_correct) * 100
             avg_reward = np.mean(episode_rewards) if episode_rewards else 0
             sps = int(global_step / (time.time() - start_time))
-            print(f"Step {global_step:>6} | Accuracy: {accuracy:5.1f}% | Reward: {avg_reward:.3f} | SPS: {sps}")
+            print(
+                f"Step {global_step:>6} | Accuracy: {accuracy:5.1f}% | Reward: {avg_reward:.3f} | SPS: {sps}"
+            )
             mean_pam = np.mean([item["pam"] for item in signal_batches])
             mean_gsr = np.mean([item["gsr"] for item in signal_batches])
             mean_egm = np.mean([item["egm"] for item in signal_batches])
             print(f"  Signal | PAM: {mean_pam:.6f} | GSR: {mean_gsr:.4f} | EGM: {mean_egm:.6f}")
-            
+
             if args.track:
-                wandb.log({
-                    "custom/accuracy": accuracy,
-                    "custom/reward": avg_reward,
-                    "custom/sps": sps,
-                    "signal/pam": mean_pam,
-                    "signal/gsr": mean_gsr,
-                    "signal/egm": mean_egm,
-                    "step": global_step,
-                })
-                
+                wandb.log(
+                    {
+                        "custom/accuracy": accuracy,
+                        "custom/reward": avg_reward,
+                        "custom/sps": sps,
+                        "signal/pam": mean_pam,
+                        "signal/gsr": mean_gsr,
+                        "signal/egm": mean_egm,
+                        "step": global_step,
+                    }
+                )
+
             episode_correct = []
             episode_rewards = []
 

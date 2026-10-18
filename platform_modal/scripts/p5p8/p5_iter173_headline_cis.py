@@ -22,6 +22,7 @@ Hypotheses (5 falsifiable, sensibly calibrated):
   H4: P5 placebo-triple per-(item,manifest) Wilson CI95 upper <= 0.50.
   H5: late-band per-step eta^2(method) CI95 upper < 0.02 (stationarity).
 """
+
 from __future__ import annotations
 
 import csv
@@ -35,16 +36,19 @@ from statistics import fmean
 from _p5p7_common import axis_variance_fraction
 
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))  # for _stats
-from _stats import wilson_p_factored  # noqa: E402
+from _stats import wilson_p_factored
 
 
 # ---- LCG bootstrap primitives (deterministic) ----
 
+
 def _lcg(seed):
     state = [seed & 0xFFFFFFFF]
+
     def rand():
         state[0] = (1664525 * state[0] + 1013904223) & 0xFFFFFFFF
         return state[0]
+
     return type("X", (), {"randrange": lambda self, k: rand() % k})()
 
 
@@ -71,24 +75,31 @@ def wilson_ci(p, n, z=1.96):
 
 # ---- paths ----
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-RES  = os.path.join(ROOT, "experiments", "results")
-OUT  = os.path.join(RES, "p5p8")
+RES = os.path.join(ROOT, "experiments", "results")
+OUT = os.path.join(RES, "p5p8")
 os.makedirs(OUT, exist_ok=True)
 
-MEGA_DIR    = os.path.join(RES, "mega_20260704")
-MANIFESTS   = os.path.join(MEGA_DIR, "manifests")
-CELLS_TSV   = os.path.join(MEGA_DIR, "cells.tsv")
-N2_DIR      = os.path.join(RES, "n2_reward_tensor_resume")
+MEGA_DIR = os.path.join(RES, "mega_20260704")
+MANIFESTS = os.path.join(MEGA_DIR, "manifests")
+CELLS_TSV = os.path.join(MEGA_DIR, "cells.tsv")
+N2_DIR = os.path.join(RES, "n2_reward_tensor_resume")
 
 
 # ---- cluster 1: P5 MIN-REPORT coverage ----
 
+
 def cluster_coverage():
     paths = sorted(glob.glob(os.path.join(MANIFESTS, "*.json")))
     n_cells = len(paths)
-    v1_items = ["loss_form", "ref_policy_kl", "sampler_backend_precision",
-                "per_step_zvf_path", "group_size_schedule", "heldout_split",
-                "decontamination_notes"]
+    v1_items = [
+        "loss_form",
+        "ref_policy_kl",
+        "sampler_backend_precision",
+        "per_step_zvf_path",
+        "group_size_schedule",
+        "heldout_split",
+        "decontamination_notes",
+    ]
     rows = []
     for item in v1_items:
         vals = []
@@ -107,21 +118,24 @@ def cluster_coverage():
             n_unique_set.add(str(v))
         is_placebo = 1 if len(n_unique_set) <= 1 else 0
         wilson_lo, wilson_hi = wilson_ci(n_present / n_cells, n_cells)
-        rows.append({
-            "item": item,
-            "n_cells": n_cells,
-            "n_present": n_present,
-            "present_rate": n_present / n_cells,
-            "present_ci_lo": wilson_lo,
-            "present_ci_hi": wilson_hi,
-            "n_unique": len(n_unique_set),
-            "is_placebo": is_placebo,
-        })
+        rows.append(
+            {
+                "item": item,
+                "n_cells": n_cells,
+                "n_present": n_present,
+                "present_rate": n_present / n_cells,
+                "present_ci_lo": wilson_lo,
+                "present_ci_hi": wilson_hi,
+                "n_unique": len(n_unique_set),
+                "is_placebo": is_placebo,
+            }
+        )
     n_placebo = sum(r["is_placebo"] for r in rows)
     return rows, n_placebo
 
 
 # ---- N2 panel + mega cells loaders ----
+
 
 def _load_n2_panel():
     panel = {}
@@ -151,26 +165,28 @@ def _load_mega_cells():
                 reward = float(row["mean_reward"])
             except Exception:
                 continue
-            rows.append({
-                "model": row.get("model_family") or row.get("model"),
-                "task_slice": row.get("task_slice"),
-                "G": int(row["G"]),
-                "temperature": float(row["temperature"]),
-                "seed": int(row["seed"]),
-                "mean_reward": reward,
-            })
+            rows.append(
+                {
+                    "model": row.get("model_family") or row.get("model"),
+                    "task_slice": row.get("task_slice"),
+                    "G": int(row["G"]),
+                    "temperature": float(row["temperature"]),
+                    "seed": int(row["seed"]),
+                    "mean_reward": reward,
+                }
+            )
     return rows
 
 
 # ---- cluster 2: eta^2 decomposition ----
+
 
 def cluster_eta_squared(panel, mega):
     """Method-axis eta^2 on 160-row N2 + axis eta^2 on 98 mega cells."""
     rows_n2 = []
     for method, steps in panel.items():
         for s in steps:
-            rows_n2.append({"method": method, "step": s["step"],
-                            "value": fmean(s["prompt_means"])})
+            rows_n2.append({"method": method, "step": s["step"], "value": fmean(s["prompt_means"])})
     eta2_method, *_ = axis_variance_fraction(rows_n2, "method", "value")
 
     rng = _lcg(20260705)
@@ -204,8 +220,9 @@ def cluster_eta_squared(panel, mega):
             mega_eta2_ci[axis] = (bs[50], bs[-51])
 
     keys = ["model", "task_slice", "G", "temperature"]
-    rows_unique = [{"stack": "|".join(str(r[k]) for k in keys),
-                    "value": r["mean_reward"]} for r in mega]
+    rows_unique = [
+        {"stack": "|".join(str(r[k]) for k in keys), "value": r["mean_reward"]} for r in mega
+    ]
     eta2_union, *_ = axis_variance_fraction(rows_unique, "stack", "value")
     bs_union = []
     rng2 = _lcg(20260707)
@@ -238,6 +255,7 @@ def cluster_eta_squared(panel, mega):
 
 # ---- cluster 3: per-step eta^2(method) band trajectory ----
 
+
 def cluster_per_step_trajectory(panel):
     per_step = []
     for step_idx in range(40):
@@ -258,17 +276,21 @@ def cluster_per_step_trajectory(panel):
 
 # ---- cluster 4: TOST-style ratio ----
 
+
 def eta2_ratio(eta2_method, eta2_G):
     if eta2_method <= 1e-12:
-        return {"ratio_point": float("inf"),
-                "interpretation": "method axis ~ 0; G dominates by ∞"}
+        return {"ratio_point": float("inf"), "interpretation": "method axis ~ 0; G dominates by ∞"}
     ratio = eta2_G / eta2_method
-    return {"ratio_point": ratio,
-            "interpretation": ("G dominates algorithm axis (ratio >= 2x)"
-                               if ratio >= 2 else "axes within 2x")}
+    return {
+        "ratio_point": ratio,
+        "interpretation": (
+            "G dominates algorithm axis (ratio >= 2x)" if ratio >= 2 else "axes within 2x"
+        ),
+    }
 
 
 # ---- main ----
+
 
 def main():
     out_rows = []
@@ -276,100 +298,116 @@ def main():
     coverage_rows, n_placebo = cluster_coverage()
     n_manifests = coverage_rows[0]["n_cells"]
     for r in coverage_rows:
-        out_rows.append({
-            "headline_id": f"coverage.{r['item']}.present_rate",
-            "value": r["present_rate"],
-            "ci_lo": r["present_ci_lo"],
-            "ci_hi": r["present_ci_hi"],
-            "n_obs": r["n_cells"],
-            "label": "MIN-REPORT item coverage on 98 mega manifests",
-            "hypothesis": "H4_anchor",
-        })
-        out_rows.append({
-            "headline_id": f"coverage.{r['item']}.n_unique",
-            "value": float(r["n_unique"]),
-            "ci_lo": float("nan"),
-            "ci_hi": float("nan"),
-            "n_obs": r["n_cells"],
-            "label": "MIN-REPORT item n_unique on 98 mega manifests",
-            "hypothesis": "H4_anchor",
-        })
+        out_rows.append(
+            {
+                "headline_id": f"coverage.{r['item']}.present_rate",
+                "value": r["present_rate"],
+                "ci_lo": r["present_ci_lo"],
+                "ci_hi": r["present_ci_hi"],
+                "n_obs": r["n_cells"],
+                "label": "MIN-REPORT item coverage on 98 mega manifests",
+                "hypothesis": "H4_anchor",
+            }
+        )
+        out_rows.append(
+            {
+                "headline_id": f"coverage.{r['item']}.n_unique",
+                "value": float(r["n_unique"]),
+                "ci_lo": float("nan"),
+                "ci_hi": float("nan"),
+                "n_obs": r["n_cells"],
+                "label": "MIN-REPORT item n_unique on 98 mega manifests",
+                "hypothesis": "H4_anchor",
+            }
+        )
 
     n_pairs = 7 * n_manifests
     n_placebo_pairs = n_placebo * n_manifests
     pair_lo, pair_hi = wilson_ci(n_placebo_pairs / n_pairs, n_pairs)
-    out_rows.append({
-        "headline_id": "placebo_triple.fraction_pairs",
-        "value": n_placebo_pairs / n_pairs,
-        "ci_lo": pair_lo,
-        "ci_hi": pair_hi,
-        "n_obs": n_pairs,
-        "label": "placebo (item,manifest) pairs / total pairs, Wilson 95%",
-        "hypothesis": "H4",
-    })
+    out_rows.append(
+        {
+            "headline_id": "placebo_triple.fraction_pairs",
+            "value": n_placebo_pairs / n_pairs,
+            "ci_lo": pair_lo,
+            "ci_hi": pair_hi,
+            "n_obs": n_pairs,
+            "label": "placebo (item,manifest) pairs / total pairs, Wilson 95%",
+            "hypothesis": "H4",
+        }
+    )
     p_lo, p_hi = wilson_ci(n_placebo / 7.0, 7)
-    out_rows.append({
-        "headline_id": "placebo_triple.fraction_items",
-        "value": n_placebo / 7.0,
-        "ci_lo": p_lo,
-        "ci_hi": p_hi,
-        "n_obs": 7,
-        "label": "placebo items / 7 items, Wilson 95% CI on 7-item scale",
-        "hypothesis": "H4_anchor",
-    })
+    out_rows.append(
+        {
+            "headline_id": "placebo_triple.fraction_items",
+            "value": n_placebo / 7.0,
+            "ci_lo": p_lo,
+            "ci_hi": p_hi,
+            "n_obs": 7,
+            "label": "placebo items / 7 items, Wilson 95% CI on 7-item scale",
+            "hypothesis": "H4_anchor",
+        }
+    )
 
     panel = _load_n2_panel()
-    mega  = _load_mega_cells()
+    mega = _load_mega_cells()
     eta = cluster_eta_squared(panel, mega)
     spec = [
-        ("eta2_method_pooled",   "eta^2(method,reward_mean) on N2 same-stack (160 rows)", "H1"),
-        ("eta2_G",               "eta^2(G | mean_reward) on 98 mega cells",                "H2"),
-        ("eta2_model",           "eta^2(model | mean_reward) on 98 mega cells",            "H2"),
-        ("eta2_task",            "eta^2(task_slice | mean_reward) on 98 mega cells",       "H2"),
-        ("eta2_temperature",     "eta^2(temperature | mean_reward) on 98 mega cells",      "H2"),
-        ("eta2_union",           "eta^2_union(stack | mean_reward) on 98 mega cells",      "H2"),
+        ("eta2_method_pooled", "eta^2(method,reward_mean) on N2 same-stack (160 rows)", "H1"),
+        ("eta2_G", "eta^2(G | mean_reward) on 98 mega cells", "H2"),
+        ("eta2_model", "eta^2(model | mean_reward) on 98 mega cells", "H2"),
+        ("eta2_task", "eta^2(task_slice | mean_reward) on 98 mega cells", "H2"),
+        ("eta2_temperature", "eta^2(temperature | mean_reward) on 98 mega cells", "H2"),
+        ("eta2_union", "eta^2_union(stack | mean_reward) on 98 mega cells", "H2"),
     ]
     for key, label, h in spec:
         ci = eta.get(f"{key}_ci", (float("nan"), float("nan")))
         n = eta["n_n2_obs"] if "method_pooled" in key else eta["n_mega_obs"]
-        out_rows.append({
-            "headline_id": key,
-            "value": eta[key],
-            "ci_lo": ci[0],
-            "ci_hi": ci[1],
-            "n_obs": n,
-            "label": label,
-            "hypothesis": h,
-        })
+        out_rows.append(
+            {
+                "headline_id": key,
+                "value": eta[key],
+                "ci_lo": ci[0],
+                "ci_hi": ci[1],
+                "n_obs": n,
+                "label": label,
+                "hypothesis": h,
+            }
+        )
 
     per_step, bands = cluster_per_step_trajectory(panel)
     for band, s in bands.items():
-        out_rows.append({
-            "headline_id": f"per_step_eta2_method.{band}",
-            "value": s["mean"],
-            "ci_lo": s["lo"],
-            "ci_hi": s["hi"],
-            "n_obs": s["n"],
-            "label": f"per-step eta^2(method,reward_mean) band mean = {band}",
-            "hypothesis": "H5",
-        })
+        out_rows.append(
+            {
+                "headline_id": f"per_step_eta2_method.{band}",
+                "value": s["mean"],
+                "ci_lo": s["lo"],
+                "ci_hi": s["hi"],
+                "n_obs": s["n"],
+                "label": f"per-step eta^2(method,reward_mean) band mean = {band}",
+                "hypothesis": "H5",
+            }
+        )
 
     tost = eta2_ratio(eta["eta2_method_pooled"], eta["eta2_G"])
-    out_rows.append({
-        "headline_id": "tost_G_vs_method.ratio_point",
-        "value": tost["ratio_point"],
-        "ci_lo": float("nan"),
-        "ci_hi": float("nan"),
-        "n_obs": eta["n_n2_obs"] + eta["n_mega_obs"],
-        "label": f"eta^2(G) / eta^2(method) -- {tost['interpretation']}",
-        "hypothesis": "H3",
-    })
+    out_rows.append(
+        {
+            "headline_id": "tost_G_vs_method.ratio_point",
+            "value": tost["ratio_point"],
+            "ci_lo": float("nan"),
+            "ci_hi": float("nan"),
+            "n_obs": eta["n_n2_obs"] + eta["n_mega_obs"],
+            "label": f"eta^2(G) / eta^2(method) -- {tost['interpretation']}",
+            "hypothesis": "H3",
+        }
+    )
 
     tsv_path = os.path.join(OUT, "p5_iter173_headline_cis.tsv")
     with open(tsv_path, "w") as f:
-        w = csv.DictWriter(f, fieldnames=["headline_id", "value", "ci_lo",
-                                          "ci_hi", "n_obs", "label",
-                                          "hypothesis"], delimiter="\t")
+        w = csv.DictWriter(
+            f,
+            fieldnames=["headline_id", "value", "ci_lo", "ci_hi", "n_obs", "label", "hypothesis"],
+            delimiter="\t",
+        )
         w.writeheader()
         for r in out_rows:
             w.writerow(r)
@@ -380,10 +418,8 @@ def main():
         "vein": "brief_(c)_at_canonical_headline_CI_layer",
         "n_headlines": len(out_rows),
         "n_placebo_v1_items": n_placebo,
-        "placebo_pair": {"value": n_placebo_pairs / n_pairs,
-                          "ci_lo": pair_lo, "ci_hi": pair_hi},
-        "placebo_items": {"value": n_placebo / 7.0,
-                          "ci_lo": p_lo, "ci_hi": p_hi},
+        "placebo_pair": {"value": n_placebo_pairs / n_pairs, "ci_lo": pair_lo, "ci_hi": pair_hi},
+        "placebo_items": {"value": n_placebo / 7.0, "ci_lo": p_lo, "ci_hi": p_hi},
         "eta2_method_pooled": eta["eta2_method_pooled"],
         "eta2_method_ci": list(eta["eta2_method_ci"]),
         "eta2_G": eta["eta2_G"],
@@ -397,20 +433,35 @@ def main():
         "per_step_band": bands,
         "tost": tost,
         "hypotheses": {
-            "H1": {"verdict": "PASS" if eta["eta2_method_ci"][1] < 0.07 else "FAIL",
-                   "evidence": (f"eta^2(method, reward_mean) point={eta['eta2_method_pooled']:.4f}, "
-                                f"CI95 upper={eta['eta2_method_ci'][1]:.4f} (bar 0.07)")},
-            "H2": {"verdict": "PASS" if eta["eta2_G_ci"][0] > 0.005 else "FAIL",
-                   "evidence": (f"eta^2(G) point={eta['eta2_G']:.4f}, "
-                                f"CI95 lower={eta['eta2_G_ci'][0]:.4f} (bar 0.005)")},
-            "H3": {"verdict": tost["interpretation"],
-                   "evidence": f"ratio_point = {tost['ratio_point']:.4f}"},
-            "H4": {"verdict": "PASS" if pair_hi <= 0.50 else "FAIL",
-                   "evidence": (f"placebo-triple per-(item,manifest) Wilson CI95 upper "
-                                f"= {pair_hi:.4f} (bar 0.50)")},
-            "H5": {"verdict": "PASS" if bands["late"]["hi"] < 0.02 else "FAIL",
-                   "evidence": (f"late-band CI95 upper = {bands['late']['hi']:.4f} "
-                                f"(bar 0.02)")},
+            "H1": {
+                "verdict": "PASS" if eta["eta2_method_ci"][1] < 0.07 else "FAIL",
+                "evidence": (
+                    f"eta^2(method, reward_mean) point={eta['eta2_method_pooled']:.4f}, "
+                    f"CI95 upper={eta['eta2_method_ci'][1]:.4f} (bar 0.07)"
+                ),
+            },
+            "H2": {
+                "verdict": "PASS" if eta["eta2_G_ci"][0] > 0.005 else "FAIL",
+                "evidence": (
+                    f"eta^2(G) point={eta['eta2_G']:.4f}, "
+                    f"CI95 lower={eta['eta2_G_ci'][0]:.4f} (bar 0.005)"
+                ),
+            },
+            "H3": {
+                "verdict": tost["interpretation"],
+                "evidence": f"ratio_point = {tost['ratio_point']:.4f}",
+            },
+            "H4": {
+                "verdict": "PASS" if pair_hi <= 0.50 else "FAIL",
+                "evidence": (
+                    f"placebo-triple per-(item,manifest) Wilson CI95 upper "
+                    f"= {pair_hi:.4f} (bar 0.50)"
+                ),
+            },
+            "H5": {
+                "verdict": "PASS" if bands["late"]["hi"] < 0.02 else "FAIL",
+                "evidence": (f"late-band CI95 upper = {bands['late']['hi']:.4f} (bar 0.02)"),
+            },
         },
     }
     json_path = os.path.join(OUT, "p5_iter173_summary.json")
@@ -421,9 +472,11 @@ def main():
     print(f"[iter 173 P5] wrote summary to {json_path}")
     for hh, vd in summary["hypotheses"].items():
         print(f"  {hh}: {vd['verdict']:>25s} -- {vd['evidence']}")
-    print(f"  per_pair: n_placebo={n_placebo}, "
-          f"placebo_pair={n_placebo_pairs}/{n_pairs} "
-          f"[{pair_lo:.4f}, {pair_hi:.4f}]")
+    print(
+        f"  per_pair: n_placebo={n_placebo}, "
+        f"placebo_pair={n_placebo_pairs}/{n_pairs} "
+        f"[{pair_lo:.4f}, {pair_hi:.4f}]"
+    )
     print(f"  n_n2_obs={eta['n_n2_obs']}, n_mega_obs={eta['n_mega_obs']}")
 
 

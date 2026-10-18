@@ -1,4 +1,5 @@
 """Real local git differential fixtures; no native SWE grader or model execution."""
+
 import subprocess
 
 import pytest
@@ -25,19 +26,41 @@ def diff(name, header, body):
     return f"diff --git a/{name} b/{name}\n--- a/{name}\n+++ b/{name}\n{header}\n{body}"
 
 
-@pytest.mark.parametrize("patch,files,expected", [
-    (diff("a.txt", "@@ -1,99 +1,88 @@", " one\n-two\n+TWO\n three\n"),
-     {"a.txt": b"one\ntwo\nthree\n"}, {"a.txt": b"one\nTWO\nthree\n"}),
-    (diff("a.txt", "@@ -1,99 +1,88 @@", "-one\n+ONE\n")
-     + diff("b.txt", "@@ -1,9 +1,9 @@", "-two\n+TWO\n"),
-     {"a.txt": b"one\n", "b.txt": b"two\n"}, {"a.txt": b"ONE\n", "b.txt": b"TWO\n"}),
-    (diff("a.txt", "@@ -1,9 +1,9 @@", " one\n+two\n"),
-     {"a.txt": b"one\n"}, {"a.txt": b"one\ntwo\n"}),
-    (diff("a.txt", "@@ -1,9 +1,9 @@", "-one\n two\n"),
-     {"a.txt": b"one\ntwo\n"}, {"a.txt": b"two\n"}),
-    (diff("a.txt", "@@ -1,9 +1,9 @@", "-one\n\\ No newline at end of file\n+ONE\n\\ No newline at end of file\n"),
-     {"a.txt": b"one"}, {"a.txt": b"ONE"}),
-])
+@pytest.mark.parametrize(
+    ("patch", "files", "expected"),
+    [
+        (
+            diff("a.txt", "@@ -1,99 +1,88 @@", " one\n-two\n+TWO\n three\n"),
+            {"a.txt": b"one\ntwo\nthree\n"},
+            {"a.txt": b"one\nTWO\nthree\n"},
+        ),
+        (
+            diff("a.txt", "@@ -1,99 +1,88 @@", "-one\n+ONE\n")
+            + diff("b.txt", "@@ -1,9 +1,9 @@", "-two\n+TWO\n"),
+            {"a.txt": b"one\n", "b.txt": b"two\n"},
+            {"a.txt": b"ONE\n", "b.txt": b"TWO\n"},
+        ),
+        (
+            diff("a.txt", "@@ -1,9 +1,9 @@", " one\n+two\n"),
+            {"a.txt": b"one\n"},
+            {"a.txt": b"one\ntwo\n"},
+        ),
+        (
+            diff("a.txt", "@@ -1,9 +1,9 @@", "-one\n two\n"),
+            {"a.txt": b"one\ntwo\n"},
+            {"a.txt": b"two\n"},
+        ),
+        (
+            diff(
+                "a.txt",
+                "@@ -1,9 +1,9 @@",
+                "-one\n\\ No newline at end of file\n+ONE\n\\ No newline at end of file\n",
+            ),
+            {"a.txt": b"one"},
+            {"a.txt": b"ONE"},
+        ),
+    ],
+)
 def test_count_only_repairs_match_git_recount_bytes(tmp_path, patch, files, expected):
     repaired, changes = _recount_hunks(patch)
     assert changes > 0
@@ -47,9 +70,15 @@ def test_count_only_repairs_match_git_recount_bytes(tmp_path, patch, files, expe
     assert raw_files == repaired_files == expected
 
 
-@pytest.mark.parametrize("patch", ["", diff("a.txt", "@@ malformed @@", "-one\n+ONE\n"),
-    diff("a.txt", "@@ -1,9 +1,9 @@", "-absent\n+ONE\n"),
-    diff("a.txt", "@@ -1,9 +1,9 @@", "-one\n+ONE\n?illegal body\n")])
+@pytest.mark.parametrize(
+    "patch",
+    [
+        "",
+        diff("a.txt", "@@ malformed @@", "-one\n+ONE\n"),
+        diff("a.txt", "@@ -1,9 +1,9 @@", "-absent\n+ONE\n"),
+        diff("a.txt", "@@ -1,9 +1,9 @@", "-one\n+ONE\n?illegal body\n"),
+    ],
+)
 def test_empty_malformed_and_nonapplicable_are_not_success(tmp_path, patch):
     files = {"a.txt": b"one\n"}
     repaired, _ = _recount_hunks(patch)
@@ -66,11 +95,15 @@ def test_empty_malformed_and_nonapplicable_are_not_success(tmp_path, patch):
 def test_context_only_hunks_are_explicit_adapter_policy_not_git_equivalence(tmp_path):
     patch = diff("a.txt", "@@ -1,1 +1,1 @@", " one\n")
     repaired, changes = _recount_hunks(patch)
-    assert repaired == "" and changes > 0
+    assert repaired == ""
+    assert changes > 0
     native, native_files = apply(tmp_path / "native", {"a.txt": b"one\n"}, patch, recount=True)
-    adapter, adapter_files = apply(tmp_path / "adapter", {"a.txt": b"one\n"}, repaired, recount=False)
+    adapter, adapter_files = apply(
+        tmp_path / "adapter", {"a.txt": b"one\n"}, repaired, recount=False
+    )
     # git --recount accepts context-only input; the adapter deliberately drops
     # it and its validator rejects an empty submission. This is not parity.
-    assert native == 0 and adapter != 0
+    assert native == 0
+    assert adapter != 0
     assert not _validate_unified_diff(repaired)[0]
     assert native_files == adapter_files == {"a.txt": b"one\n"}

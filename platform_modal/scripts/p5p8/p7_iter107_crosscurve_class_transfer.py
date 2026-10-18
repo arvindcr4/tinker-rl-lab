@@ -21,17 +21,21 @@ Outputs (platform_hybrid/experiments/results/p5p8/):
 
 Stdlib only. <= 280 LoC.
 """
+
 from __future__ import annotations
 import csv
 import json
 import math
 import pathlib
 import random
-import statistics
 
 import sys
-sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
+
+sys.path.append(
+    str(pathlib.Path(__file__).resolve().parents[1])
+)  # platform_modal/scripts, for _paths
+from _paths import REPO_ROOT
+
 WORKTREE = REPO_ROOT
 N2 = WORKTREE / "platform_hybrid/experiments" / "results" / "n2_reward_tensor_resume"
 OUT = WORKTREE / "platform_hybrid/experiments" / "results" / "p5p8"
@@ -55,10 +59,13 @@ def load_tensors():
         with path.open() as f:
             for line in f:
                 d = json.loads(line)
-                out[(m, d["step"])] = (d["rewards"], {
-                    "zvf": d.get("zvf", 0.0),
-                    "pcd": d.get("pcd", 0.0),
-                })
+                out[(m, d["step"])] = (
+                    d["rewards"],
+                    {
+                        "zvf": d.get("zvf", 0.0),
+                        "pcd": d.get("pcd", 0.0),
+                    },
+                )
     return out
 
 
@@ -68,7 +75,7 @@ def per_p(prompt_rewards):
 
 def iid_zvf(p, g):
     pp = min(max(p, EPS), 1 - EPS)
-    return (1 - pp) ** g + pp ** g
+    return (1 - pp) ** g + pp**g
 
 
 def decide_gs_c3(per_p, zvf, pcd, tau):
@@ -92,7 +99,7 @@ def decide_gs_c3(per_p, zvf, pcd, tau):
 
 
 def contrast_mag(per_p, gs):
-    return sum(1 - iid_zvf(p, g) for p, g in zip(per_p, gs))
+    return sum(1 - iid_zvf(p, g) for p, g in zip(per_p, gs, strict=False))
 
 
 def step_opportunity(per_p, g_new=16):
@@ -135,10 +142,9 @@ def cohens_kappa(a_classes, b_classes):
     n = len(a_classes)
     if n == 0:
         return 0.0
-    observed_agree = sum(1 for x, y in zip(a_classes, b_classes) if x == y)
+    observed_agree = sum(1 for x, y in zip(a_classes, b_classes, strict=False) if x == y)
     po = observed_agree / n
-    pe = sum((a_classes.count(c) / n) * (b_classes.count(c) / n)
-             for c in classes)
+    pe = sum((a_classes.count(c) / n) * (b_classes.count(c) / n) for c in classes)
     if pe == 1.0:
         return 1.0
     return (po - pe) / (1 - pe)
@@ -152,21 +158,19 @@ def main():
         sl = []
         for s in steps:
             rew, meta = tensors[(m, s)]
-            sl.append({"step": s, "zvf": meta["zvf"], "pcd": meta["pcd"],
-                       "per_p": per_p(rew)})
+            sl.append({"step": s, "zvf": meta["zvf"], "pcd": meta["pcd"], "per_p": per_p(rew)})
         steps_per_method[m] = sl
 
     # =========================================================================
     # PART 1: (tau, savings, ret) curves per method on the fine tau grid
     # =========================================================================
     curve_rows = []
-    curve_savings = {m: [] for m in METHODS}   # per-tau list
+    curve_savings = {m: [] for m in METHODS}  # per-tau list
     curve_ret = {m: [] for m in METHODS}
     curve_fires = {m: [] for m in METHODS}
     for m in METHODS:
         base_roll = N_PROMPTS * G_BASE * len(steps)
-        base_mag = sum(contrast_mag(s["per_p"], [G_BASE] * N_PROMPTS)
-                       for s in steps_per_method[m])
+        base_mag = sum(contrast_mag(s["per_p"], [G_BASE] * N_PROMPTS) for s in steps_per_method[m])
         for tau in TAUS_FINE:
             roll = 0
             mag = 0.0
@@ -181,10 +185,15 @@ def main():
             curve_savings[m].append(sav)
             curve_ret[m].append(ret)
             curve_fires[m].append(fires)
-            curve_rows.append({"method": m, "tau": tau,
-                               "savings_frac": sav,
-                               "magnitude_retention": ret,
-                               "fires": fires})
+            curve_rows.append(
+                {
+                    "method": m,
+                    "tau": tau,
+                    "savings_frac": sav,
+                    "magnitude_retention": ret,
+                    "fires": fires,
+                }
+            )
 
     # Pearson r per pair on savings(τ) curves
     corr_rows = []
@@ -195,10 +204,15 @@ def main():
             r = pearson(curve_savings[ma], curve_savings[mb])
             r_ret = pearson(curve_ret[ma], curve_ret[mb])
             r_fires = pearson(curve_fires[ma], curve_fires[mb])
-            corr_rows.append({"method_a": ma, "method_b": mb,
-                              "r_savings_tau": r,
-                              "r_retention_tau": r_ret,
-                              "r_fires_tau": r_fires})
+            corr_rows.append(
+                {
+                    "method_a": ma,
+                    "method_b": mb,
+                    "r_savings_tau": r,
+                    "r_retention_tau": r_ret,
+                    "r_fires_tau": r_fires,
+                }
+            )
 
     # Bootstrap CI on Pearson r (savings): bootstrap by step-resampling
     # the per-step savings contribution within a method, then recomputing
@@ -218,8 +232,7 @@ def main():
     base_roll = N_PROMPTS * G_BASE * len(steps)
     boot_pair_corr = {}
     for c in corr_rows:
-        boot_pair_corr.setdefault(
-            (c["method_a"], c["method_b"]), [c["r_savings_tau"]])
+        boot_pair_corr.setdefault((c["method_a"], c["method_b"]), [c["r_savings_tau"]])
     for (ma, mb), lst in list(boot_pair_corr.items()):
         n_steps = len(steps_per_method[ma])
         for _ in range(N_BOOT):
@@ -227,12 +240,8 @@ def main():
             xs_curve = []
             ys_curve = []
             for ti in range(len(TAUS_FINE)):
-                xs_curve.append(
-                    -sum(per_step_rollout_delta[(ma, ti)][k] for k in ids)
-                    / base_roll)
-                ys_curve.append(
-                    -sum(per_step_rollout_delta[(mb, ti)][k] for k in ids)
-                    / base_roll)
+                xs_curve.append(-sum(per_step_rollout_delta[(ma, ti)][k] for k in ids) / base_roll)
+                ys_curve.append(-sum(per_step_rollout_delta[(mb, ti)][k] for k in ids) / base_roll)
             r = pearson(xs_curve, ys_curve)
             lst.append(r)
     corr_boot_rows = []
@@ -244,28 +253,35 @@ def main():
         reps = sorted(boots[1:])
         lo = reps[int(0.025 * len(reps))]
         hi = reps[int(0.975 * len(reps))]
-        corr_boot_rows.append({
-            "method_a": ma, "method_b": mb,
-            "r_savings_tau_point": point,
-            "r_savings_tau_ci_lo": lo,
-            "r_savings_tau_ci_hi": hi,
-            "ci_excludes_zero": int(lo > 0 or hi < 0),
-            "n_boot": len(reps),
-        })
+        corr_boot_rows.append(
+            {
+                "method_a": ma,
+                "method_b": mb,
+                "r_savings_tau_point": point,
+                "r_savings_tau_ci_lo": lo,
+                "r_savings_tau_ci_hi": hi,
+                "ci_excludes_zero": int(lo > 0 or hi < 0),
+                "n_boot": len(reps),
+            }
+        )
 
     # Operating-point summary: at each method, the tau that maximises
     # savings * retention -- the Pareto proxy
     op_rows = []
     for m in METHODS:
-        idx_best = max(range(len(TAUS_FINE)),
-                       key=lambda i: curve_savings[m][i] * curve_ret[m][i])
+        idx_best = max(range(len(TAUS_FINE)), key=lambda i: curve_savings[m][i] * curve_ret[m][i])
         tau_best = TAUS_FINE[idx_best]
         sav_best = curve_savings[m][idx_best]
         ret_best = curve_ret[m][idx_best]
-        op_rows.append({"method": m, "tau_best": tau_best,
-                        "savings_frac": sav_best,
-                        "magnitude_retention": ret_best,
-                        "sav_x_ret": sav_best * ret_best})
+        op_rows.append(
+            {
+                "method": m,
+                "tau_best": tau_best,
+                "savings_frac": sav_best,
+                "magnitude_retention": ret_best,
+                "sav_x_ret": sav_best * ret_best,
+            }
+        )
 
     # =========================================================================
     # PART 3: Cohen-kappa on failure class assignment at 3 canonical taus
@@ -274,50 +290,41 @@ def main():
     class_at = {}
     for tau in TAUS_CANONICAL:
         for m in METHODS:
-            class_at[(m, tau)] = [failure_class(s, tau)
-                                   for s in steps_per_method[m]]
+            class_at[(m, tau)] = [failure_class(s, tau) for s in steps_per_method[m]]
     kappa_rows = []
     for tau in TAUS_CANONICAL:
         for i, ma in enumerate(METHODS):
             for j, mb in enumerate(METHODS):
                 if j <= i:
                     continue
-                k = cohens_kappa(class_at[(ma, tau)],
-                                 class_at[(mb, tau)])
-                kappa_rows.append({"tau": tau, "method_a": ma,
-                                   "method_b": mb,
-                                   "cohens_kappa": k})
+                k = cohens_kappa(class_at[(ma, tau)], class_at[(mb, tau)])
+                kappa_rows.append({"tau": tau, "method_a": ma, "method_b": mb, "cohens_kappa": k})
 
     # =========================================================================
     # WRITE OUTPUTS
     # =========================================================================
     with (OUT / "p7_iter107b_curve_table.tsv").open("w") as f:
-        w = csv.DictWriter(f, fieldnames=list(curve_rows[0].keys()),
-                           delimiter="\t")
+        w = csv.DictWriter(f, fieldnames=list(curve_rows[0].keys()), delimiter="\t")
         w.writeheader()
         for r in curve_rows:
             w.writerow(r)
     with (OUT / "p7_iter107b_curve_correlation.tsv").open("w") as f:
-        w = csv.DictWriter(f, fieldnames=list(corr_rows[0].keys()),
-                           delimiter="\t")
+        w = csv.DictWriter(f, fieldnames=list(corr_rows[0].keys()), delimiter="\t")
         w.writeheader()
         for r in corr_rows:
             w.writerow(r)
     with (OUT / "p7_iter107b_curve_correlation_boot.tsv").open("w") as f:
-        w = csv.DictWriter(f, fieldnames=list(corr_boot_rows[0].keys()),
-                           delimiter="\t")
+        w = csv.DictWriter(f, fieldnames=list(corr_boot_rows[0].keys()), delimiter="\t")
         w.writeheader()
         for r in corr_boot_rows:
             w.writerow(r)
     with (OUT / "p7_iter107b_operating_points.tsv").open("w") as f:
-        w = csv.DictWriter(f, fieldnames=list(op_rows[0].keys()),
-                           delimiter="\t")
+        w = csv.DictWriter(f, fieldnames=list(op_rows[0].keys()), delimiter="\t")
         w.writeheader()
         for r in op_rows:
             w.writerow(r)
     with (OUT / "p7_iter107b_kappa_class_agreement.tsv").open("w") as f:
-        w = csv.DictWriter(f, fieldnames=list(kappa_rows[0].keys()),
-                           delimiter="\t")
+        w = csv.DictWriter(f, fieldnames=list(kappa_rows[0].keys()), delimiter="\t")
         w.writeheader()
         for r in kappa_rows:
             w.writerow(r)
@@ -326,8 +333,7 @@ def main():
         "ts": "2026-07-05",
         "iter": 107,
         "part": "B",
-        "n_steps_per_method": {m: len(steps_per_method[m])
-                               for m in METHODS},
+        "n_steps_per_method": {m: len(steps_per_method[m]) for m in METHODS},
         "tau_grid_fine": TAUS_FINE,
         "tau_canonical": list(TAUS_CANONICAL),
         "curve_correlations_pearson": corr_rows,

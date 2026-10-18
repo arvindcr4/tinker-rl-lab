@@ -47,12 +47,11 @@ Outputs:
     platform_hybrid/experiments/results/zvf_summary.tsv               (RE-EMIT, +iter102 columns)
     figures/zvf_vs_failure_102_review28_v2.pdf                        (RE-EMIT, 5-panel)
 """
+
 from __future__ import annotations
 
-import json
 import math
 import pathlib
-import sys
 
 import numpy as np
 from _analysis_common import auc_rank as _auc_rank, bootstrap_ci_xy as _bootstrap_ci
@@ -68,6 +67,7 @@ G_DEFAULT = 8
 
 def _write_tsv(path, rows, header_comment=None):
     from _review28_io import write_table
+
     write_table(path, rows, comment=header_comment)
 
 
@@ -77,6 +77,7 @@ def _safe_div(a: float, b: float) -> float:
 
 def _spearman(x, y):
     from _review28_statistics import spearman
+
     return spearman(x, y)
 
 
@@ -85,7 +86,7 @@ def _pearson(x: np.ndarray, y: np.ndarray) -> float:
         return float("nan")
     xm = x - x.mean()
     ym = y - y.mean()
-    denom = math.sqrt(float((xm ** 2).sum() * (ym ** 2).sum()))
+    denom = math.sqrt(float((xm**2).sum() * (ym**2).sum()))
     if denom < EPS:
         return float("nan")
     return float((xm * ym).sum() / denom)
@@ -99,7 +100,7 @@ def _load_summary():
     header = lines[0].rstrip("\n").split("\t")
     for line in lines[1:]:
         fields = line.rstrip("\n").split("\t")
-        rows.append(dict(zip(header, fields)))
+        rows.append(dict(zip(header, fields, strict=False)))
     return rows
 
 
@@ -111,7 +112,7 @@ def _load_by_library():
     header = lines[0].rstrip("\n").split("\t")
     for line in lines[1:]:
         fields = line.rstrip("\n").split("\t")
-        rows.append(dict(zip(header, fields)))
+        rows.append(dict(zip(header, fields, strict=False)))
     return rows
 
 
@@ -123,7 +124,7 @@ def _load_variance_mitigation_per_step():
     header = lines[0].rstrip("\n").split("\t")
     for line in lines[1:]:
         fields = line.rstrip("\n").split("\t")
-        rows.append(dict(zip(header, fields)))
+        rows.append(dict(zip(header, fields, strict=False)))
     # aggregate
     agg = {}
     for r in rows:
@@ -133,24 +134,29 @@ def _load_variance_mitigation_per_step():
             rwd = float(r["reward_mean"])
         except (KeyError, ValueError):
             continue
-        agg.setdefault(key, {"method": r["method"], "seed": r["seed"],
-                             "zvf_vals": [], "rwd_vals": []})
+        agg.setdefault(
+            key, {"method": r["method"], "seed": r["seed"], "zvf_vals": [], "rwd_vals": []}
+        )
         agg[key]["zvf_vals"].append(zvf)
         agg[key]["rwd_vals"].append(rwd)
     out = []
-    for k, v in agg.items():
-        out.append(dict(
-            method=v["method"], seed=v["seed"],
-            mean_zvf=float(np.mean(v["zvf_vals"])),
-            mean_reward=float(np.mean(v["rwd_vals"])),
-            n_steps=len(v["zvf_vals"]),
-        ))
+    for _k, v in agg.items():
+        out.append(
+            dict(
+                method=v["method"],
+                seed=v["seed"],
+                mean_zvf=float(np.mean(v["zvf_vals"])),
+                mean_reward=float(np.mean(v["rwd_vals"])),
+                n_steps=len(v["zvf_vals"]),
+            )
+        )
     return out
 
 
 # ---------------------------------------------------------------------------
 # 1. PER-(LIBRARY, EXPERIMENT) CALIBRATION GAP
 # ---------------------------------------------------------------------------
+
 
 def calibration_table(by_lib_rows, summary_rows):
     """For each row in zvf_by_library, compute ZVF_iid prediction and Delta."""
@@ -180,22 +186,28 @@ def calibration_table(by_lib_rows, summary_rows):
             G = int(r["group_size"])
         except (KeyError, TypeError, ValueError):
             continue
-        if G < 1: continue
-        zvf_iid = p ** G + (1.0 - p) ** G
+        if G < 1:
+            continue
+        zvf_iid = p**G + (1.0 - p) ** G
         delta = zvf_emp - zvf_iid
         rho_pred = _safe_div(zvf_emp, max(zvf_iid, EPS))
-        out.append(dict(
-            library=lib, model=r["model"], G=G,
-            estimator="homogeneous_plugin_diagnostic", interpretation="not_identified_dependence",
-            p_difficulty=round(p, 4),
-            zvf_emp=round(zvf_emp, 4),
-            zvf_iid_pred=round(zvf_iid, 6),
-            delta_calibration=round(delta, 4),
-            rho_overdispersion=round(rho_pred, 4),
-            collapse_rate=r.get("collapse_rate", ""),
-            converged_rate=r.get("converged_rate", ""),
-            evidence_path=r.get("evidence_path", ""),
-        ))
+        out.append(
+            dict(
+                library=lib,
+                model=r["model"],
+                G=G,
+                estimator="homogeneous_plugin_diagnostic",
+                interpretation="not_identified_dependence",
+                p_difficulty=round(p, 4),
+                zvf_emp=round(zvf_emp, 4),
+                zvf_iid_pred=round(zvf_iid, 6),
+                delta_calibration=round(delta, 4),
+                rho_overdispersion=round(rho_pred, 4),
+                collapse_rate=r.get("collapse_rate", ""),
+                converged_rate=r.get("converged_rate", ""),
+                evidence_path=r.get("evidence_path", ""),
+            )
+        )
     return out
 
 
@@ -210,22 +222,42 @@ def per_library_delta_summary(cal_rows):
         rhos = np.array([r["rho_overdispersion"] for r in rows], dtype=float)
         zvf_iids = np.array([r["zvf_iid_pred"] for r in rows], dtype=float)
         zvf_emps = np.array([r["zvf_emp"] for r in rows], dtype=float)
-        d_lo, d_med, d_hi = _bootstrap_ci(deltas, deltas, lambda x, y: float(x.mean()), B=1000, seed=int.from_bytes(__import__("hashlib").sha256(f"iter102:{lib}".encode()).digest()[:8], "big"))
-        r_lo, r_med, r_hi = _bootstrap_ci(rhos, rhos, lambda x, y: float(x.mean()), B=1000, seed=int.from_bytes(__import__("hashlib").sha256(f"iter102:{lib}".encode()).digest()[:8], "big"))
-        out.append(dict(
-            library=lib,
-            bootstrap_seed=int.from_bytes(__import__("hashlib").sha256(f"iter102:{lib}".encode()).digest()[:8], "big"),
-            n_rows=len(rows),
-            delta_mean=round(float(deltas.mean()), 4),
-            delta_median=round(float(np.median(deltas)), 4),
-            delta_ci_lo=round(d_lo, 4),
-            delta_ci_hi=round(d_hi, 4),
-            rho_mean=round(float(rhos.mean()), 4),
-            rho_ci_lo=round(r_lo, 4),
-            rho_ci_hi=round(r_hi, 4),
-            zvf_iid_mean=round(float(zvf_iids.mean()), 4),
-            zvf_emp_mean=round(float(zvf_emps.mean()), 4),
-        ))
+        d_lo, d_med, d_hi = _bootstrap_ci(
+            deltas,
+            deltas,
+            lambda x, y: float(x.mean()),
+            B=1000,
+            seed=int.from_bytes(
+                __import__("hashlib").sha256(f"iter102:{lib}".encode()).digest()[:8], "big"
+            ),
+        )
+        r_lo, r_med, r_hi = _bootstrap_ci(
+            rhos,
+            rhos,
+            lambda x, y: float(x.mean()),
+            B=1000,
+            seed=int.from_bytes(
+                __import__("hashlib").sha256(f"iter102:{lib}".encode()).digest()[:8], "big"
+            ),
+        )
+        out.append(
+            dict(
+                library=lib,
+                bootstrap_seed=int.from_bytes(
+                    __import__("hashlib").sha256(f"iter102:{lib}".encode()).digest()[:8], "big"
+                ),
+                n_rows=len(rows),
+                delta_mean=round(float(deltas.mean()), 4),
+                delta_median=round(float(np.median(deltas)), 4),
+                delta_ci_lo=round(d_lo, 4),
+                delta_ci_hi=round(d_hi, 4),
+                rho_mean=round(float(rhos.mean()), 4),
+                rho_ci_lo=round(r_lo, 4),
+                rho_ci_hi=round(r_hi, 4),
+                zvf_iid_mean=round(float(zvf_iids.mean()), 4),
+                zvf_emp_mean=round(float(zvf_emps.mean()), 4),
+            )
+        )
     # Sort by absolute delta (most herding libraries first)
     out.sort(key=lambda r: -abs(r["delta_mean"]))
     return out
@@ -234,6 +266,7 @@ def per_library_delta_summary(cal_rows):
 # ---------------------------------------------------------------------------
 # 2. AERO-vs-GRPO CALIBRATION TEST
 # ---------------------------------------------------------------------------
+
 
 def aero_vs_grpo_paired(vm_per_seed):
     """For each (method, seed) in variance_mitigation, compute predicted
@@ -254,56 +287,71 @@ def aero_vs_grpo_paired(vm_per_seed):
         for r in runs:
             p = r["mean_reward"]
             G = G_DEFAULT
-            zvf_iid = p ** G + (1.0 - p) ** G
+            zvf_iid = p**G + (1.0 - p) ** G
             delta = r["mean_zvf"] - zvf_iid
             rho = _safe_div(r["mean_zvf"], max(zvf_iid, EPS))
-            deltas.append(delta); rhos.append(rho)
-            zvf_emps.append(r["mean_zvf"]); zvf_iids.append(zvf_iid)
-        out_rows.append(dict(
-            method=method,
-            n_seeds=len(runs),
-            zvf_emp_mean=round(float(np.mean(zvf_emps)), 4),
-            zvf_iid_pred_mean=round(float(np.mean(zvf_iids)), 4),
-            delta_mean=round(float(np.mean(deltas)), 4),
-            rho_mean=round(float(np.mean(rhos)), 4),
-            raw_zvf_above_iid_pct=round(float(np.mean(np.array(zvf_emps) > np.array(zvf_iids))) * 100, 1),
-        ))
+            deltas.append(delta)
+            rhos.append(rho)
+            zvf_emps.append(r["mean_zvf"])
+            zvf_iids.append(zvf_iid)
+        out_rows.append(
+            dict(
+                method=method,
+                n_seeds=len(runs),
+                zvf_emp_mean=round(float(np.mean(zvf_emps)), 4),
+                zvf_iid_pred_mean=round(float(np.mean(zvf_iids)), 4),
+                delta_mean=round(float(np.mean(deltas)), 4),
+                rho_mean=round(float(np.mean(rhos)), 4),
+                raw_zvf_above_iid_pct=round(
+                    float(np.mean(np.array(zvf_emps) > np.array(zvf_iids))) * 100, 1
+                ),
+            )
+        )
     # Paired AERO vs GRPO comparison: per-seed delta difference
     aero_runs = {r["seed"]: r for r in methods.get("aero", [])}
     grpo_runs = {r["seed"]: r for r in methods.get("grpo", [])}
     paired = []
     for seed in sorted(set(aero_runs) & set(grpo_runs)):
-        a = aero_runs[seed]; g = grpo_runs[seed]
-        a_p = a["mean_reward"]; g_p = g["mean_reward"]
-        a_zvf_iid = a_p ** G_DEFAULT + (1.0 - a_p) ** G_DEFAULT
-        g_zvf_iid = g_p ** G_DEFAULT + (1.0 - g_p) ** G_DEFAULT
+        a = aero_runs[seed]
+        g = grpo_runs[seed]
+        a_p = a["mean_reward"]
+        g_p = g["mean_reward"]
+        a_zvf_iid = a_p**G_DEFAULT + (1.0 - a_p) ** G_DEFAULT
+        g_zvf_iid = g_p**G_DEFAULT + (1.0 - g_p) ** G_DEFAULT
         a_delta = a["mean_zvf"] - a_zvf_iid
         g_delta = g["mean_zvf"] - g_zvf_iid
-        paired.append(dict(
-            seed=seed,
-            aero_zvf=a["mean_zvf"], aero_delta=round(a_delta, 4),
-            grpo_zvf=g["mean_zvf"], grpo_delta=round(g_delta, 4),
-            delta_aero_minus_grpo=round(a_delta - g_delta, 4),
-            aero_below_grpo=a_delta < g_delta,
-        ))
+        paired.append(
+            dict(
+                seed=seed,
+                aero_zvf=a["mean_zvf"],
+                aero_delta=round(a_delta, 4),
+                grpo_zvf=g["mean_zvf"],
+                grpo_delta=round(g_delta, 4),
+                delta_aero_minus_grpo=round(a_delta - g_delta, 4),
+                aero_below_grpo=a_delta < g_delta,
+            )
+        )
     if paired:
         diffs = np.array([r["delta_aero_minus_grpo"] for r in paired], dtype=float)
         aero_below = int(np.sum(diffs < 0))
-        out_rows.append(dict(
-            method="__PAIRED_AERO_VS_GRPO__",
-            n_seeds=len(paired),
-            zvf_emp_mean="",
-            zvf_iid_pred_mean="",
-            delta_mean=round(float(diffs.mean()), 4),
-            rho_mean="",
-            raw_zvf_above_iid_pct=f"{aero_below}/{len(paired)} below",
-        ))
+        out_rows.append(
+            dict(
+                method="__PAIRED_AERO_VS_GRPO__",
+                n_seeds=len(paired),
+                zvf_emp_mean="",
+                zvf_iid_pred_mean="",
+                delta_mean=round(float(diffs.mean()), 4),
+                rho_mean="",
+                raw_zvf_above_iid_pct=f"{aero_below}/{len(paired)} below",
+            )
+        )
     return out_rows, paired
 
 
 # ---------------------------------------------------------------------------
 # 3. CALIBRATION GAP vs FAILURE CORRELATION
 # ---------------------------------------------------------------------------
+
 
 def failure_correlation(cal_rows):
     """Correlate Delta and raw ZVF with collapse indicators across all rows."""
@@ -315,7 +363,11 @@ def failure_correlation(cal_rows):
     for r in cal_rows:
         try:
             cr = float(r["collapse_rate"])
-            cv = float(r["converged_rate"]) if r["converged_rate"] not in ("", "NA") else float("nan")
+            cv = (
+                float(r["converged_rate"])
+                if r["converged_rate"] not in ("", "NA")
+                else float("nan")
+            )
         except (KeyError, ValueError):
             continue
         deltas.append(r["delta_calibration"])
@@ -332,57 +384,68 @@ def failure_correlation(cal_rows):
     pearson_d = _pearson(d, y)
     spear_d = _spearman(d, y)
     lo_d, med_d, hi_d = _bootstrap_ci(d, y, _pearson, B=2000, seed=1)
-    out.append(dict(
-        predictor="delta_calibration", target="is_collapse",
-        n=len(d),
-        pearson=round(pearson_d, 4),
-        pearson_ci_lo=round(lo_d, 4),
-        pearson_ci_hi=round(hi_d, 4),
-        spearman=round(spear_d, 4),
-        method="Pearson + 95% bootstrap CI",
-    ))
+    out.append(
+        dict(
+            predictor="delta_calibration",
+            target="is_collapse",
+            n=len(d),
+            pearson=round(pearson_d, 4),
+            pearson_ci_lo=round(lo_d, 4),
+            pearson_ci_hi=round(hi_d, 4),
+            spearman=round(spear_d, 4),
+            method="Pearson + 95% bootstrap CI",
+        )
+    )
     # Pearson + Spearman for raw ZVF (for direct comparison)
     pearson_z = _pearson(z, y)
     spear_z = _spearman(z, y)
     lo_z, med_z, hi_z = _bootstrap_ci(z, y, _pearson, B=2000, seed=2)
-    out.append(dict(
-        predictor="zvf_emp", target="is_collapse",
-        n=len(z),
-        pearson=round(pearson_z, 4),
-        pearson_ci_lo=round(lo_z, 4),
-        pearson_ci_hi=round(hi_z, 4),
-        spearman=round(spear_z, 4),
-        method="Pearson + 95% bootstrap CI",
-    ))
+    out.append(
+        dict(
+            predictor="zvf_emp",
+            target="is_collapse",
+            n=len(z),
+            pearson=round(pearson_z, 4),
+            pearson_ci_lo=round(lo_z, 4),
+            pearson_ci_hi=round(hi_z, 4),
+            spearman=round(spear_z, 4),
+            method="Pearson + 95% bootstrap CI",
+        )
+    )
     # AUC: continuous Delta score -> is_collapse
     auc_d = _auc_rank(y, d)
     auc_z = _auc_rank(y, z)
-    out.append(dict(
-        predictor="AUC(delta_calibration -> is_collapse)",
-        target="binary",
-        n=len(d),
-        pearson=round(auc_d, 4),
-        pearson_ci_lo="",
-        pearson_ci_hi="",
-        spearman="",
-        method="Rank-AUC",
-    ))
-    out.append(dict(
-        predictor="AUC(zvf_emp -> is_collapse)",
-        target="binary",
-        n=len(z),
-        pearson=round(auc_z, 4),
-        pearson_ci_lo="",
-        pearson_ci_hi="",
-        spearman="",
-        method="Rank-AUC",
-    ))
+    out.append(
+        dict(
+            predictor="AUC(delta_calibration -> is_collapse)",
+            target="binary",
+            n=len(d),
+            pearson=round(auc_d, 4),
+            pearson_ci_lo="",
+            pearson_ci_hi="",
+            spearman="",
+            method="Rank-AUC",
+        )
+    )
+    out.append(
+        dict(
+            predictor="AUC(zvf_emp -> is_collapse)",
+            target="binary",
+            n=len(z),
+            pearson=round(auc_z, 4),
+            pearson_ci_lo="",
+            pearson_ci_hi="",
+            spearman="",
+            method="Rank-AUC",
+        )
+    )
     return out
 
 
 # ---------------------------------------------------------------------------
 # RE-EMIT zvf_summary.tsv with iter102 columns
 # ---------------------------------------------------------------------------
+
 
 def reemit_summary(per_lib_delta, cal_corr, aero_paired, summary_rows):
     """Append iter102 calibration columns onto the existing dashboard."""
@@ -409,8 +472,12 @@ def reemit_summary(per_lib_delta, cal_corr, aero_paired, summary_rows):
 # FIGURE (5-panel: calibration vs AERO vs failure)
 # ---------------------------------------------------------------------------
 
-def make_figure(cal_rows, per_lib_delta, aero_paired, aero_paired_detail, cal_corr, out_pdf, out_png):
+
+def make_figure(
+    cal_rows, per_lib_delta, aero_paired, aero_paired_detail, cal_corr, out_pdf, out_png
+):
     import matplotlib
+
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
 
@@ -424,7 +491,8 @@ def make_figure(cal_rows, per_lib_delta, aero_paired, aero_paired_detail, cal_co
     lo = min(0, float(min(pred.min(), emp.min())))
     hi = max(1.0, float(max(pred.max(), emp.max())))
     ax.plot([lo, hi], [lo, hi], "k--", lw=1, label="y=x (i.i.d. null)")
-    ax.set_xlim(lo, hi); ax.set_ylim(lo, hi)
+    ax.set_xlim(lo, hi)
+    ax.set_ylim(lo, hi)
     ax.set_xlabel(r"$\mathrm{ZVF}_{\mathrm{iid}} = p^{G} + (1-p)^{G}$")
     ax.set_ylabel(r"$\mathrm{ZVF}_{\mathrm{emp}}$")
     ax.set_title("Calibration: predicted vs empirical ZVF")
@@ -439,7 +507,7 @@ def make_figure(cal_rows, per_lib_delta, aero_paired, aero_paired_detail, cal_co
     colors = ["tab:red" if d > 0 else "tab:blue" for d in deltas]
     y_pos = np.arange(len(libs))
     ax.barh(y_pos, deltas, color=colors, edgecolor="black", alpha=0.75)
-    for i, (l, h) in enumerate(zip(lo_ci, hi_ci)):
+    for i, (l, h) in enumerate(zip(lo_ci, hi_ci, strict=False)):
         if not (math.isnan(l) or math.isnan(h)):
             ax.plot([l, h], [i, i], "k-", lw=1.5)
     ax.axvline(0.0, color="k", ls="-", lw=0.5)
@@ -456,12 +524,13 @@ def make_figure(cal_rows, per_lib_delta, aero_paired, aero_paired_detail, cal_co
         aero_d = [r["aero_delta"] for r in aero_paired_detail]
         grpo_d = [r["grpo_delta"] for r in aero_paired_detail]
         ax.scatter(grpo_d, aero_d, s=80, c="tab:purple", edgecolor="black")
-        for s, gd, ad in zip(seeds, grpo_d, aero_d):
+        for s, gd, ad in zip(seeds, grpo_d, aero_d, strict=False):
             ax.annotate(f"s={s}", (gd, ad), fontsize=7, xytext=(3, 3), textcoords="offset points")
         lo_b = min(min(grpo_d), min(aero_d)) - 0.05
         hi_b = max(max(grpo_d), max(aero_d)) + 0.05
         ax.plot([lo_b, hi_b], [lo_b, hi_b], "k--", lw=1, label="y=x (no advantage)")
-        ax.set_xlim(lo_b, hi_b); ax.set_ylim(lo_b, hi_b)
+        ax.set_xlim(lo_b, hi_b)
+        ax.set_ylim(lo_b, hi_b)
         ax.set_xlabel(r"GRPO $\Delta$")
         ax.set_ylabel(r"AERO $\Delta$")
         ax.set_title("AERO vs GRPO paired calibration")
@@ -483,20 +552,29 @@ def make_figure(cal_rows, per_lib_delta, aero_paired, aero_paired_detail, cal_co
     collapse_d = np.array(collapse_d, dtype=float)
     if deltas_d:
         d_arr = np.array(deltas_d, dtype=float)
-        ax.scatter(d_arr, collapse_d + np.random.RandomState(0).uniform(-0.05, 0.05, size=len(d_arr)),
-                   s=80, alpha=0.7, c="darkorange", edgecolor="black")
-        for x, y, l in zip(d_arr, collapse_d, libs_d):
+        ax.scatter(
+            d_arr,
+            collapse_d + np.random.RandomState(0).uniform(-0.05, 0.05, size=len(d_arr)),
+            s=80,
+            alpha=0.7,
+            c="darkorange",
+            edgecolor="black",
+        )
+        for x, y, l in zip(d_arr, collapse_d, libs_d, strict=False):
             ax.annotate(l, (x, y), fontsize=7, xytext=(3, 3), textcoords="offset points")
     ax.set_xlabel(r"$\Delta$ (calibration gap)")
     ax.set_ylabel("collapse indicator (jittered)")
-    ax.set_yticks([0, 1]); ax.set_yticklabels(["no", "yes"])
+    ax.set_yticks([0, 1])
+    ax.set_yticklabels(["no", "yes"])
     ax.set_title("Calibration gap vs collapse (all libraries)")
 
     # Panel 5: ZVF_iid prediction density vs empirical density
     ax = axes[1, 1]
     if len(pred) > 0 and len(emp) > 0:
         bins = np.linspace(0, 1.0, 16)
-        ax.hist(pred, bins=bins, alpha=0.5, label="predicted i.i.d.", color="steelblue", density=True)
+        ax.hist(
+            pred, bins=bins, alpha=0.5, label="predicted i.i.d.", color="steelblue", density=True
+        )
         ax.hist(emp, bins=bins, alpha=0.5, label="empirical", color="tab:red", density=True)
         ax.set_xlabel("ZVF")
         ax.set_ylabel("density")
@@ -509,9 +587,14 @@ def make_figure(cal_rows, per_lib_delta, aero_paired, aero_paired_detail, cal_co
     targets = []
     for cr in cal_corr:
         if cr["predictor"] in ("delta_calibration", "zvf_emp") and cr["target"] == "is_collapse":
-            pearsons.append((cr["predictor"], cr["pearson"],
-                             cr.get("pearson_ci_lo", float("nan")),
-                             cr.get("pearson_ci_hi", float("nan"))))
+            pearsons.append(
+                (
+                    cr["predictor"],
+                    cr["pearson"],
+                    cr.get("pearson_ci_lo", float("nan")),
+                    cr.get("pearson_ci_hi", float("nan")),
+                )
+            )
     if pearsons:
         names = [p[0] for p in pearsons]
         vals = [p[1] for p in pearsons]
@@ -519,11 +602,12 @@ def make_figure(cal_rows, per_lib_delta, aero_paired, aero_paired_detail, cal_co
         hi = [p[3] for p in pearsons]
         x = np.arange(len(names))
         ax.bar(x, vals, color=["tab:red", "steelblue"], edgecolor="black", alpha=0.75)
-        for i, (l, h) in enumerate(zip(lo, hi)):
+        for i, (l, h) in enumerate(zip(lo, hi, strict=False)):
             if not (math.isnan(l) or math.isnan(h)):
                 ax.plot([i, i], [l, h], "k-", lw=2)
         ax.axhline(0, color="k", lw=0.5)
-        ax.set_xticks(x); ax.set_xticklabels(names, fontsize=8, rotation=15)
+        ax.set_xticks(x)
+        ax.set_xticklabels(names, fontsize=8, rotation=15)
         ax.set_ylabel(r"Pearson $\rho$ with $\mathrm{is\_collapse}$")
         ax.set_title("Predictor comparison (lower panel)")
 
@@ -538,13 +622,17 @@ def make_figure(cal_rows, per_lib_delta, aero_paired, aero_paired_detail, cal_co
 # MAIN
 # ---------------------------------------------------------------------------
 
+
 def main():
     print("zvf_iter102 starting (predictive calibration vs AERO)", flush=True)
     by_lib = _load_by_library()
     summary = _load_summary()
     vm_per_seed = _load_variance_mitigation_per_step()
-    print(f"  loaded {len(by_lib)} by_library rows, {len(summary)} summary rows, "
-          f"{len(vm_per_seed)} variance_mitigation (method,seed) rows", flush=True)
+    print(
+        f"  loaded {len(by_lib)} by_library rows, {len(summary)} summary rows, "
+        f"{len(vm_per_seed)} variance_mitigation (method,seed) rows",
+        flush=True,
+    )
 
     # 1. per-row calibration
     cal_rows = calibration_table(by_lib, summary)
@@ -554,55 +642,87 @@ def main():
 
     # 2. AERO vs GRPO paired
     aero_per_lib, aero_paired_detail = aero_vs_grpo_paired(vm_per_seed)
-    print(f"  AERO vs GRPO: {len(aero_per_lib)} methods, {len(aero_paired_detail)} paired seeds", flush=True)
+    print(
+        f"  AERO vs GRPO: {len(aero_per_lib)} methods, {len(aero_paired_detail)} paired seeds",
+        flush=True,
+    )
 
-# 3. failure correlation
+    # 3. failure correlation
     cal_corr = failure_correlation(cal_rows)
     print(f"  {len(cal_corr)} calibration-vs-failure correlations computed", flush=True)
 
     # Write outputs
-    _write_tsv(RES / "zvf_iter102_calibration_review28_v2.tsv", cal_rows,
-               header_comment="zvf_iter102_calibration_review28_v2.tsv - per-(library,experiment) calibration gap\n"
-                              "Delta = ZVF_emp - (p^G+(1-p)^G), i.e. herding/anti-herding residual over the i.i.d. null.\n"
-                              "Source: platform_modal/scripts/zvf_iter102.py")
-    _write_tsv(RES / "zvf_iter102_per_library_review28_v2.tsv", per_lib,
-               header_comment="zvf_iter102_per_library_review28_v2.tsv - aggregated calibration gap per library\n"
-                              "with 95% bootstrap CIs. Source: platform_modal/scripts/zvf_iter102.py")
-    _write_tsv(RES / "zvf_iter102_aero_test_review28_v2.tsv", aero_per_lib,
-               header_comment="zvf_iter102_aero_test_review28_v2.tsv - per-method mean ZVF, predicted ZVF_iid,\n"
-                              "and calibration gap on variance_mitigation runs (G=8 assumed).\n"
-                              "Last row is the paired AERO-vs-GRPO summary. Source: platform_modal/scripts/zvf_iter102.py")
-    _write_tsv(RES / "zvf_iter102_aero_paired_review28_v2.tsv", aero_paired_detail,
-               header_comment="zvf_iter102_aero_paired_review28_v2.tsv - per-seed AERO vs GRPO paired calibration delta\n"
-                              "from variance_mitigation.tsv. Source: platform_modal/scripts/zvf_iter102.py")
-    _write_tsv(RES / "zvf_iter102_failure_corr_review28_v2.tsv", cal_corr,
-               header_comment="zvf_iter102_failure_corr_review28_v2.tsv - correlation of calibration gap (and raw ZVF)\n"
-                              "with is_collapse across all cross-library rows. B=2000 bootstrap CIs.\n"
-                              "Source: platform_modal/scripts/zvf_iter102.py")
+    _write_tsv(
+        RES / "zvf_iter102_calibration_review28_v2.tsv",
+        cal_rows,
+        header_comment="zvf_iter102_calibration_review28_v2.tsv - per-(library,experiment) calibration gap\n"
+        "Delta = ZVF_emp - (p^G+(1-p)^G), i.e. herding/anti-herding residual over the i.i.d. null.\n"
+        "Source: platform_modal/scripts/zvf_iter102.py",
+    )
+    _write_tsv(
+        RES / "zvf_iter102_per_library_review28_v2.tsv",
+        per_lib,
+        header_comment="zvf_iter102_per_library_review28_v2.tsv - aggregated calibration gap per library\n"
+        "with 95% bootstrap CIs. Source: platform_modal/scripts/zvf_iter102.py",
+    )
+    _write_tsv(
+        RES / "zvf_iter102_aero_test_review28_v2.tsv",
+        aero_per_lib,
+        header_comment="zvf_iter102_aero_test_review28_v2.tsv - per-method mean ZVF, predicted ZVF_iid,\n"
+        "and calibration gap on variance_mitigation runs (G=8 assumed).\n"
+        "Last row is the paired AERO-vs-GRPO summary. Source: platform_modal/scripts/zvf_iter102.py",
+    )
+    _write_tsv(
+        RES / "zvf_iter102_aero_paired_review28_v2.tsv",
+        aero_paired_detail,
+        header_comment="zvf_iter102_aero_paired_review28_v2.tsv - per-seed AERO vs GRPO paired calibration delta\n"
+        "from variance_mitigation.tsv. Source: platform_modal/scripts/zvf_iter102.py",
+    )
+    _write_tsv(
+        RES / "zvf_iter102_failure_corr_review28_v2.tsv",
+        cal_corr,
+        header_comment="zvf_iter102_failure_corr_review28_v2.tsv - correlation of calibration gap (and raw ZVF)\n"
+        "with is_collapse across all cross-library rows. B=2000 bootstrap CIs.\n"
+        "Source: platform_modal/scripts/zvf_iter102.py",
+    )
 
     # Re-emit zvf_summary.tsv
     new_summary = reemit_summary(per_lib, cal_corr, aero_per_lib, summary)
     with (RES / "zvf_summary_review28_v2.tsv").open("w") as f:
-        f.write("# zvf_summary.tsv - Pillar 2 headline dashboard (iter102: +calibration columns).\n")
-        f.write("# iter94 base columns + iter98 rho + iter102 delta_calibration, rho_overdispersion,\n"
-                "# delta_vs_collapse correlations and AERO-vs-GRPO paired summary. Source: platform_modal/scripts/zvf_iter102.py\n")
+        f.write(
+            "# zvf_summary.tsv - Pillar 2 headline dashboard (iter102: +calibration columns).\n"
+        )
+        f.write(
+            "# iter94 base columns + iter98 rho + iter102 delta_calibration, rho_overdispersion,\n"
+            "# delta_vs_collapse correlations and AERO-vs-GRPO paired summary. Source: platform_modal/scripts/zvf_iter102.py\n"
+        )
         cols = list(new_summary[0].keys()) if new_summary else ["status"]
         f.write("\t".join(cols) + "\n")
         for r in new_summary:
             f.write("\t".join(str(r.get(c, "")) for c in cols) + "\n")
 
     # Figure
-    make_figure(cal_rows, per_lib, aero_per_lib, aero_paired_detail, cal_corr,
-                FIG / "zvf_vs_failure_102_review28_v2.pdf", FIG / "zvf_vs_failure_102_review28_v2.png")
+    make_figure(
+        cal_rows,
+        per_lib,
+        aero_per_lib,
+        aero_paired_detail,
+        cal_corr,
+        FIG / "zvf_vs_failure_102_review28_v2.pdf",
+        FIG / "zvf_vs_failure_102_review28_v2.png",
+    )
     print("  wrote figures/zvf_vs_failure_102_review28_v2.{pdf,png}", flush=True)
 
     # Headline console print
     print("\n=== iter102 headline ===", flush=True)
     print("Per-library calibration gap (top 5 by |Delta|):", flush=True)
     for r in per_lib[:5]:
-        print(f"  {r['library']:25s}  Delta={r['delta_mean']:+.4f}  "
-              f"CI=[{r['delta_ci_lo']:+.4f},{r['delta_ci_hi']:+.4f}]  "
-              f"rho={r['rho_mean']:.3f}", flush=True)
+        print(
+            f"  {r['library']:25s}  Delta={r['delta_mean']:+.4f}  "
+            f"CI=[{r['delta_ci_lo']:+.4f},{r['delta_ci_hi']:+.4f}]  "
+            f"rho={r['rho_mean']:.3f}",
+            flush=True,
+        )
     print("\nAERO-vs-GRPO paired Delta (variance_mitigation G=8):", flush=True)
     for r in aero_per_lib:
         if r["method"] in ("aero", "grpo", "__PAIRED_AERO_VS_GRPO__"):
@@ -610,8 +730,11 @@ def main():
     print("\nFailure correlation (Pearson vs is_collapse):", flush=True)
     for cr in cal_corr:
         if cr["predictor"] in ("delta_calibration", "zvf_emp"):
-            print(f"  {cr['predictor']:25s}  rho={cr['pearson']:+.4f}  "
-                  f"CI=[{cr['pearson_ci_lo']:+.4f},{cr['pearson_ci_hi']:+.4f}]", flush=True)
+            print(
+                f"  {cr['predictor']:25s}  rho={cr['pearson']:+.4f}  "
+                f"CI=[{cr['pearson_ci_lo']:+.4f},{cr['pearson_ci_hi']:+.4f}]",
+                flush=True,
+            )
 
 
 if __name__ == "__main__":

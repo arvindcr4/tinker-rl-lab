@@ -41,31 +41,31 @@ FIG_PNG = ROOT / "experiments" / "results" / "p5p8" / "figures" / "registry_vari
 
 # Predicted direction per delta (from iter-18 CLAIMS dict, ZVF sub-key).
 PREDICTED_ZVF_SIGN = {
-    "delta_aero":     -1,   # "inflate effective G -> fewer zero-variance groups (predicted)"
-    "delta_gift":      0,   # "no claim on ZVF; constant offset cancels in std"
-    "delta_areal":     0,   # single-batch static-G run: no rollout-vs-optimizer signal
-    "delta_dapo":     -1,   # "dynamic sampling zeroes degenerate groups -> lower ZVF"
-    "delta_drgrpo":   +1,   # "removing length norm exposes length bias -> more within-group variance"
-    "delta_gspo":      0,   # "ratio level doesn't directly change reward-variance structure"
-    "delta_cppo":      0,   # "no claim on ZVF; log-prob smoothness doesn't directly change within-group contrast"
-    "delta_ngrpo":     0,   # "per-prompt norm re-weights but doesn't change zero-variance count"
-    "delta_mcgrpo":    0,   # "MCTS boost could go either way"
-    "delta_es":        0,   # "ES doesn't use within-group contrast -> ZVF irrelevant by construction"
-    "delta_scafgrpo":  0,   # "no direct claim on ZVF; re-weighting could go either way"
+    "delta_aero": -1,  # "inflate effective G -> fewer zero-variance groups (predicted)"
+    "delta_gift": 0,  # "no claim on ZVF; constant offset cancels in std"
+    "delta_areal": 0,  # single-batch static-G run: no rollout-vs-optimizer signal
+    "delta_dapo": -1,  # "dynamic sampling zeroes degenerate groups -> lower ZVF"
+    "delta_drgrpo": +1,  # "removing length norm exposes length bias -> more within-group variance"
+    "delta_gspo": 0,  # "ratio level doesn't directly change reward-variance structure"
+    "delta_cppo": 0,  # "no claim on ZVF; log-prob smoothness doesn't directly change within-group contrast"
+    "delta_ngrpo": 0,  # "per-prompt norm re-weights but doesn't change zero-variance count"
+    "delta_mcgrpo": 0,  # "MCTS boost could go either way"
+    "delta_es": 0,  # "ES doesn't use within-group contrast -> ZVF irrelevant by construction"
+    "delta_scafgrpo": 0,  # "no direct claim on ZVF; re-weighting could go either way"
 }
 
 # delta_id -> method label used in zvf130 panel.
 METHOD_OF = {
-    "delta_aero":     "aero",
-    "delta_gift":     "gift",
-    "delta_areal":    "areal",
-    "delta_dapo":     "dapo",
-    "delta_drgrpo":   "drgrpo",
-    "delta_gspo":     "gspo",
-    "delta_cppo":     "cppo",
-    "delta_ngrpo":    "ngrpo",
-    "delta_mcgrpo":   "mcgrpo",
-    "delta_es":       "es",
+    "delta_aero": "aero",
+    "delta_gift": "gift",
+    "delta_areal": "areal",
+    "delta_dapo": "dapo",
+    "delta_drgrpo": "drgrpo",
+    "delta_gspo": "gspo",
+    "delta_cppo": "cppo",
+    "delta_ngrpo": "ngrpo",
+    "delta_mcgrpo": "mcgrpo",
+    "delta_es": "es",
     "delta_scafgrpo": "scafgrpo",
 }
 
@@ -93,12 +93,14 @@ def load_zv130_panel():
             if row["method"] in EXCLUDE_METHODS:
                 continue
             try:
-                grp[row["method"]].append({
-                    "seed": int(row["seed"]),
-                    "mean_zvf": float(row["mean_zvf"]),
-                    "zvf_risk": float(row["zvf_risk"]),
-                    "failure_label": row["failure_label"],
-                })
+                grp[row["method"]].append(
+                    {
+                        "seed": int(row["seed"]),
+                        "mean_zvf": float(row["mean_zvf"]),
+                        "zvf_risk": float(row["zvf_risk"]),
+                        "failure_label": row["failure_label"],
+                    }
+                )
             except (ValueError, KeyError):
                 pass
     return dict(grp)
@@ -195,23 +197,25 @@ def main():
         m = METHOD_OF[delta_id]
         if m not in panel:
             per_delta_effect[delta_id] = {
-                "delta_id": delta_id, "method": m,
-                "n_seeds": 0, "verdict": "NO_DATA",
+                "delta_id": delta_id,
+                "method": m,
+                "n_seeds": 0,
+                "verdict": "NO_DATA",
             }
             continue
         ms = summary[m]
         per_delta_effect[delta_id] = {
-            "delta_id": delta_id, "method": m,
+            "delta_id": delta_id,
+            "method": m,
             "n_seeds": ms["n_seeds"],
             "mean_zvf": ms["mean_zvf"],
             "mean_zvf_risk": ms["mean_zvf_risk"],
             "delta_zvf_vs_grpo": ms["delta_zvf_vs_grpo"],
             "effect_size_vs_grpo_sd": ms["effect_size_vs_grpo_sd"],
             "delta_zvf_risk_vs_grpo": ms["delta_zvf_risk_vs_grpo"],
-            "verdict": reconcile(predicted_sign,
-                                 ms["delta_zvf_vs_grpo"],
-                                 ms["effect_size_vs_grpo_sd"],
-                                 ms["n_seeds"]),
+            "verdict": reconcile(
+                predicted_sign, ms["delta_zvf_vs_grpo"], ms["effect_size_vs_grpo_sd"], ms["n_seeds"]
+            ),
         }
 
     # build the full (delta × tau) firing-rate table
@@ -228,44 +232,76 @@ def main():
     # write TSV — header + per-delta summary rows + per-(delta × tau) rows
     with OUT_TSV.open("w", newline="") as f:
         w = csv.writer(f, delimiter="\t")
-        w.writerow(["section", "delta_id", "method", "n_seeds",
-                    "predicted_zvf_sign", "measured_cohen_d",
-                    "zvf_mean", "zvf_risk_mean",
-                    "verdict_or_tau", "fires_n", "fires_rate"])
+        w.writerow(
+            [
+                "section",
+                "delta_id",
+                "method",
+                "n_seeds",
+                "predicted_zvf_sign",
+                "measured_cohen_d",
+                "zvf_mean",
+                "zvf_risk_mean",
+                "verdict_or_tau",
+                "fires_n",
+                "fires_rate",
+            ]
+        )
         # summary rows
         for delta_id in PREDICTED_ZVF_SIGN:
             d = per_delta_effect[delta_id]
-            w.writerow(["delta_summary", delta_id, d["method"],
-                        d.get("n_seeds", 0),
-                        PREDICTED_ZVF_SIGN[delta_id],
-                        round(d.get("effect_size_vs_grpo_sd", 0.0), 2),
-                        round(d.get("mean_zvf", 0.0), 4),
-                        round(d.get("mean_zvf_risk", 0.0), 4),
-                        d.get("verdict", "NO_DATA"),
-                        "", ""])
+            w.writerow(
+                [
+                    "delta_summary",
+                    delta_id,
+                    d["method"],
+                    d.get("n_seeds", 0),
+                    PREDICTED_ZVF_SIGN[delta_id],
+                    round(d.get("effect_size_vs_grpo_sd", 0.0), 2),
+                    round(d.get("mean_zvf", 0.0), 4),
+                    round(d.get("mean_zvf_risk", 0.0), 4),
+                    d.get("verdict", "NO_DATA"),
+                    "",
+                    "",
+                ]
+            )
         # tau sweep rows
         for tau in TAU_GRID:
             for delta_id in PREDICTED_ZVF_SIGN:
                 m = METHOD_OF[delta_id]
                 row = per_tau[tau].get(delta_id)
                 if row is None:
-                    w.writerow(["tau_sweep", delta_id, m,
-                                summary.get(m, {}).get("n_seeds", 0),
-                                PREDICTED_ZVF_SIGN[delta_id],
-                                round(per_delta_effect[delta_id].get(
-                                    "effect_size_vs_grpo_sd", 0.0), 2),
-                                round(summary.get(m, {}).get("mean_zvf", 0.0), 4),
-                                round(summary.get(m, {}).get("mean_zvf_risk", 0.0), 4),
-                                tau, "", ""])
+                    w.writerow(
+                        [
+                            "tau_sweep",
+                            delta_id,
+                            m,
+                            summary.get(m, {}).get("n_seeds", 0),
+                            PREDICTED_ZVF_SIGN[delta_id],
+                            round(per_delta_effect[delta_id].get("effect_size_vs_grpo_sd", 0.0), 2),
+                            round(summary.get(m, {}).get("mean_zvf", 0.0), 4),
+                            round(summary.get(m, {}).get("mean_zvf_risk", 0.0), 4),
+                            tau,
+                            "",
+                            "",
+                        ]
+                    )
                 else:
-                    w.writerow(["tau_sweep", delta_id, m,
-                                summary.get(m, {}).get("n_seeds", 0),
-                                PREDICTED_ZVF_SIGN[delta_id],
-                                round(per_delta_effect[delta_id].get(
-                                    "effect_size_vs_grpo_sd", 0.0), 2),
-                                round(summary.get(m, {}).get("mean_zvf", 0.0), 4),
-                                round(summary.get(m, {}).get("mean_zvf_risk", 0.0), 4),
-                                tau, row["fires"], round(row["rate"], 4)])
+                    w.writerow(
+                        [
+                            "tau_sweep",
+                            delta_id,
+                            m,
+                            summary.get(m, {}).get("n_seeds", 0),
+                            PREDICTED_ZVF_SIGN[delta_id],
+                            round(per_delta_effect[delta_id].get("effect_size_vs_grpo_sd", 0.0), 2),
+                            round(summary.get(m, {}).get("mean_zvf", 0.0), 4),
+                            round(summary.get(m, {}).get("mean_zvf_risk", 0.0), 4),
+                            tau,
+                            row["fires"],
+                            round(row["rate"], 4),
+                        ]
+                    )
 
     # write JSON — full machine-readable
     # Headline P7-controller coupling metric: at each headline τ, the
@@ -281,25 +317,23 @@ def main():
         # compute grpo firing rate at tau (use any "grpo" entry; we
         # already have the raw panel)
         if "grpo" in panel:
-            grpo_rate = (sum(1 for r in panel["grpo"] if r["mean_zvf"] <= tau)
-                         / len(panel["grpo"]))
+            grpo_rate = sum(1 for r in panel["grpo"] if r["mean_zvf"] <= tau) / len(panel["grpo"])
         for delta_id in PREDICTED_ZVF_SIGN:
             m = METHOD_OF[delta_id]
             if m not in panel:
                 continue
-            var_rate = (sum(1 for r in panel[m] if r["mean_zvf"] <= tau)
-                        / len(panel[m]))
+            var_rate = sum(1 for r in panel[m] if r["mean_zvf"] <= tau) / len(panel[m])
             controller_coupling.setdefault(delta_id, {})[str(tau)] = {
                 "variant_rate": round(var_rate, 4),
                 "grpo_rate": round(grpo_rate, 4) if grpo_rate is not None else None,
                 "delta_rate_vs_grpo": round(
-                    (var_rate - grpo_rate) if grpo_rate is not None else 0, 4),
+                    (var_rate - grpo_rate) if grpo_rate is not None else 0, 4
+                ),
             }
 
     # Verdict counts (registry-prediction reconciliation)
     verdict_counts = {
-        v: sum(1 for d in per_delta_effect.values()
-               if d.get("verdict") == v)
+        v: sum(1 for d in per_delta_effect.values() if d.get("verdict") == v)
         for v in ["SUPPORT", "WEAK", "OPPOSE", "NO_DATA"]
     }
 
@@ -312,8 +346,9 @@ def main():
     # MIXED      — variant fires more at SOME τ and less at OTHERS.
     controller_verdicts = {}
     for delta_id, by_tau in controller_coupling.items():
-        diffs = [v["delta_rate_vs_grpo"] for v in by_tau.values()
-                 if v["delta_rate_vs_grpo"] is not None]
+        diffs = [
+            v["delta_rate_vs_grpo"] for v in by_tau.values() if v["delta_rate_vs_grpo"] is not None
+        ]
         nonzero_diffs = [d for d in diffs if abs(d) > 1e-9]
         if not diffs:
             controller_verdicts[delta_id] = "NO_DATA"
@@ -352,6 +387,7 @@ def main():
     # ---- plot per-variant firing-rate curves ----
     try:
         import matplotlib
+
         matplotlib.use("Agg")
         import matplotlib.pyplot as plt
 
@@ -360,9 +396,12 @@ def main():
         # baseline (grpo) drawn as a dashed line first
         if "grpo" in panel:
             xs = TAU_GRID
-            ys = [per_tau[t]["delta_aero"] if False else
-                  sum(1 for r in panel["grpo"] if r["mean_zvf"] <= t) / len(panel["grpo"])
-                  for t in xs]
+            ys = [
+                per_tau[t]["delta_aero"]
+                if False
+                else sum(1 for r in panel["grpo"] if r["mean_zvf"] <= t) / len(panel["grpo"])
+                for t in xs
+            ]
             ax.plot(xs, ys, "k--", lw=2, label="grpo (baseline)")
 
         # variants — color by predicted_sign
@@ -371,16 +410,21 @@ def main():
             if m not in panel:
                 continue
             xs = TAU_GRID
-            ys = [sum(1 for r in panel[m] if r["mean_zvf"] <= t) / len(panel[m])
-                  for t in xs]
+            ys = [sum(1 for r in panel[m] if r["mean_zvf"] <= t) / len(panel[m]) for t in xs]
             color = cmap[PREDICTED_ZVF_SIGN[delta_id]]
-            ax.plot(xs, ys, "-", color=color, lw=1.4, alpha=0.85,
-                    label=f"{m} (pred={PREDICTED_ZVF_SIGN[delta_id]:+d})")
+            ax.plot(
+                xs,
+                ys,
+                "-",
+                color=color,
+                lw=1.4,
+                alpha=0.85,
+                label=f"{m} (pred={PREDICTED_ZVF_SIGN[delta_id]:+d})",
+            )
 
         ax.set_xlabel("zvf-triage threshold τ")
         ax.set_ylabel("P7 controller firing rate (5-seed panel)")
-        ax.set_title("Registry ↔ P7-controller coupling:\n"
-                     "per-variant firing-rate curves on zvf130")
+        ax.set_title("Registry ↔ P7-controller coupling:\nper-variant firing-rate curves on zvf130")
         ax.set_xlim(0.05, 0.95)
         ax.set_ylim(-0.02, 1.02)
         ax.grid(True, alpha=0.3)
@@ -401,13 +445,15 @@ def main():
     print(f"P7 controller-coupling verdicts: {out_json['controller_verdict_counts']}")
     for delta_id, d in per_delta_effect.items():
         v = d.get("verdict", "NO_DATA")
-        cv = out_json['controller_verdicts'].get(delta_id, 'NO_DATA')
+        cv = out_json["controller_verdicts"].get(delta_id, "NO_DATA")
         ms = summary.get(METHOD_OF[delta_id], {})
         if ms:
-            print(f"  {delta_id:18s}  effect={d.get('effect_size_vs_grpo_sd', 0):+.1f}×grpo_sd  "
-                  f"Δzvf={d.get('delta_zvf_vs_grpo', 0):+.3f}  "
-                  f"mean_zvf={ms['mean_zvf']:.3f}  "
-                  f"pred={v}  ctrl={cv}")
+            print(
+                f"  {delta_id:18s}  effect={d.get('effect_size_vs_grpo_sd', 0):+.1f}×grpo_sd  "
+                f"Δzvf={d.get('delta_zvf_vs_grpo', 0):+.3f}  "
+                f"mean_zvf={ms['mean_zvf']:.3f}  "
+                f"pred={v}  ctrl={cv}"
+            )
     print(f"wrote {OUT_TSV.relative_to(ROOT)}")
     print(f"wrote {OUT_JSON.relative_to(ROOT)}")
     if "figure_path" in out_json:

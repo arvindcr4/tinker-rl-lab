@@ -25,10 +25,8 @@ family is audited, and the gap (if any) is reported.
 """
 
 import json
-import math
 import random
 import re
-import sys
 from collections import defaultdict
 from pathlib import Path
 
@@ -86,9 +84,7 @@ def parse_bib():
         body = text[start : i - 1]
         # fields: name = {value}, or name = "value"
         entry = {"type": etype}
-        for fm in re.finditer(
-            r"(\w+)\s*=\s*(?:\{((?:[^{}]|\{[^{}]*\})*)\}|\"([^\"]*)\")", body
-        ):
+        for fm in re.finditer(r"(\w+)\s*=\s*(?:\{((?:[^{}]|\{[^{}]*\})*)\}|\"([^\"]*)\")", body):
             fname = fm.group(1).lower()
             fval = (fm.group(2) or fm.group(3) or "").strip()
             entry[fname] = fval
@@ -287,9 +283,18 @@ def main():
             f.write("\t".join(str(r[k]) for k in fields) + "\n")
 
     # aggregate per family
-    fam_stats = defaultdict(lambda: {"n": 0, "ff": 0, "in_bib": 0, "uses": 0,
-                                     "doi_missing": 0, "arxiv_missing": 0,
-                                     "venue_missing": 0, "vp_missing": 0})
+    fam_stats = defaultdict(
+        lambda: {
+            "n": 0,
+            "ff": 0,
+            "in_bib": 0,
+            "uses": 0,
+            "doi_missing": 0,
+            "arxiv_missing": 0,
+            "venue_missing": 0,
+            "vp_missing": 0,
+        }
+    )
     for r in rows:
         fam_stats[r["family"]]["n"] += 1
         fam_stats[r["family"]]["ff"] += int(r["fully_formed"])
@@ -353,7 +358,8 @@ def main():
         for r in fam_rows:
             f.write(
                 "\t".join(
-                    str(r[k]) for k in (
+                    str(r[k])
+                    for k in (
                         "family",
                         "n_keys",
                         "n_fully_formed",
@@ -414,10 +420,7 @@ def main():
     out_fld = OUT / "p5_iter149_field_gaps.tsv"
     with open(out_fld, "w") as f:
         f.write(
-            "\t".join(
-                ["field", "n_fail", "n_total", "pct_fail", "ci_lo_pct", "ci_hi_pct"]
-            )
-            + "\n"
+            "\t".join(["field", "n_fail", "n_total", "pct_fail", "ci_lo_pct", "ci_hi_pct"]) + "\n"
         )
         for r in field_rows:
             f.write(
@@ -455,9 +458,7 @@ def main():
         )
     print("field gap counts (fail/N):")
     for r in field_rows:
-        print(
-            f"  {r['field']:>15s}: {r['n_fail']}/{r['n_total']} = {r['pct_fail']:5.1f}%"
-        )
+        print(f"  {r['field']:>15s}: {r['n_fail']}/{r['n_total']} = {r['pct_fail']:5.1f}%")
 
 
 if __name__ == "__main__":

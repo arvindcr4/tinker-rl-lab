@@ -66,7 +66,7 @@ def analyze_measured_runs(records, hypotheses, *, seed=42, n_boot=2000, alpha=0.
         if paired:
             maps = [{r.get("pair_id"): r for r in group} for group in arms]
             if (
-                any(None in m or len(m) != len(group) for m, group in zip(maps, arms))
+                any(None in m or len(m) != len(group) for m, group in zip(maps, arms, strict=False))
                 or maps[0].keys() != maps[1].keys()
             ):
                 raise EvidenceUnavailable("Matched unique pair_id sets required")

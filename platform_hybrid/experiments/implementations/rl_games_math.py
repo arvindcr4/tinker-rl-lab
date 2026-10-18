@@ -23,7 +23,7 @@ from huggingface_hub import HfApi
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 logger = logging.getLogger(__name__)
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 import numpy as np
 import gymnasium as gym
 from gymnasium import spaces
@@ -106,15 +106,15 @@ class ArithmeticEnv(gym.Env):
         self.max_num = max_num
         self.max_answer = max_num * 2
 
-        self.observation_space = spaces.Box(
-            low=0, high=1, shape=(2,), dtype=np.float32
-        )
+        self.observation_space = spaces.Box(low=0, high=1, shape=(2,), dtype=np.float32)
         self.action_space = spaces.Discrete(self.max_answer + 1)
 
         self.current_nums: Optional[np.ndarray] = None
         self.correct_answer: Optional[int] = None
 
-    def reset(self, seed: Optional[int] = None, options: Optional[Dict[str, Any]] = None) -> Tuple[np.ndarray, Dict[str, Any]]:
+    def reset(
+        self, seed: Optional[int] = None, options: Optional[Dict[str, Any]] = None
+    ) -> Tuple[np.ndarray, Dict[str, Any]]:
         super().reset(seed=seed)
         self.current_nums = self.np_random.integers(1, self.max_num + 1, size=2)
         self.correct_answer = int(self.current_nums.sum())
@@ -132,8 +132,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--seed", type=int, default=None, help="Random seed")
     parser.add_argument("--device", type=str, default="cuda:0", help="Training device")
     parser.add_argument("--learning-rate", type=float, default=1e-4, help="Learning rate")
-    parser.add_argument("--wandb-project", type=str, default="tinker-rl-games", help="WandB project name")
-    parser.add_argument("--hf-repo", type=str, default=None, help="HuggingFace repo ID for checkpointing")
+    parser.add_argument(
+        "--wandb-project", type=str, default="tinker-rl-games", help="WandB project name"
+    )
+    parser.add_argument(
+        "--hf-repo", type=str, default=None, help="HuggingFace repo ID for checkpointing"
+    )
     return parser.parse_known_args()[0]
 
 
@@ -145,11 +149,11 @@ def main() -> None:
     This shows the configuration pattern.
     """
     args = parse_args()
-    
+
     # Prioritize argparse seed over utility seed
     seed = args.seed if args.seed is not None else get_seed_from_args()
     set_global_seed(seed)
-    
+
     wandb.init(project=args.wandb_project, config=vars(args))
 
     logger.info("=" * 60)
@@ -208,7 +212,7 @@ def main() -> None:
                 path_or_fileobj=model_path,
                 path_in_repo="model.json",
                 repo_id=repo_id,
-                commit_message="Add rl_games model checkpoint"
+                commit_message="Add rl_games model checkpoint",
             )
 
     if args.hf_repo:
@@ -218,7 +222,9 @@ def main() -> None:
 
     # Full rl_games training message
     logger.info("--- Full rl_games Training (requires rl_games) ---")
-    logger.info("To integrate, use env_configurations.register('arithmetic', ...) and Runner().load(config)")
+    logger.info(
+        "To integrate, use env_configurations.register('arithmetic', ...) and Runner().load(config)"
+    )
 
 
 if __name__ == "__main__":

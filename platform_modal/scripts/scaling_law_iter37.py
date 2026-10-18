@@ -37,10 +37,10 @@ from pathlib import Path
 import matplotlib
 
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt  # noqa: E402
-import numpy as np  # noqa: E402
-from scipy.optimize import curve_fit  # noqa: E402
-from _analysis_common import saturation as model_saturation  # noqa: E402
+import matplotlib.pyplot as plt
+import numpy as np
+from scipy.optimize import curve_fit
+from _analysis_common import saturation as model_saturation
 
 REPO = Path(__file__).resolve().parent.parent
 DATA = REPO / "experiments" / "results" / "scaling_law_extended_frontier.tsv"
@@ -130,7 +130,12 @@ def fit_candidate(t, y, cand, lam_bound=5.0):
     n = len(y)
     try:
         popt, _ = curve_fit(
-            cand["fn"], t, y, p0=cand["p0"], bounds=cand["bounds"], maxfev=8000,
+            cand["fn"],
+            t,
+            y,
+            p0=cand["p0"],
+            bounds=cand["bounds"],
+            maxfev=8000,
         )
     except Exception:
         return None, float("inf"), float("inf"), float("inf"), -math.inf, True
@@ -201,12 +206,17 @@ def main() -> None:
     fits_rows = []
     for r in rows:
         t, y, peak = synth_trace(r, rc_lookup)
-        per_model = {"model": r["model"], "params_B": r["params_B"],
-                     "arch": r["arch"], "n_steps": int(r["n_steps"])}
+        per_model = {
+            "model": r["model"],
+            "params_B": r["params_B"],
+            "arch": r["arch"],
+            "n_steps": int(r["n_steps"]),
+        }
         for cand in CANDIDATES:
             popt, ss_res, aic, bic, r2, hit = fit_candidate(t, y, cand)
             params = (
-                {k_: float(p) for k_, p in zip(["p1", "p2"], popt)} if popt is not None
+                {k_: float(p) for k_, p in zip(["p1", "p2"], popt, strict=False)}
+                if popt is not None
                 else {"p1": float("nan"), "p2": float("nan")}
             )
             row = dict(per_model)
@@ -244,29 +254,35 @@ def main() -> None:
             wsum = 1.0
         w_norm = w / wsum
         # also: prefer-saturation-vs-others odds ratio (w_A / (1-w_A))
-        w_sat = float(w_norm[CANDIDATES.index(
-            next(c for c in CANDIDATES if c["name"] == "A_saturation_exp")
-        )])
+        w_sat = float(
+            w_norm[CANDIDATES.index(next(c for c in CANDIDATES if c["name"] == "A_saturation_exp"))]
+        )
         odds_sat_vs_all = w_sat / max(1.0 - w_sat, 1e-12)
-        aic_rows.append({
-            "model": model_name,
-            "params_B": fits[0]["params_B"],
-            "arch": fits[0]["arch"],
-            "best_aic_model": best,
-            "worst_aic_model": worst,
-            "delta_aic_best_worst": round(
-                float(np.nanmax(aics[finite]) - np.nanmin(aics[finite])), 4
-            ) if finite.any() else float("nan"),
-            "w_saturation": round(w_sat, 4),
-            "odds_sat_vs_all": round(odds_sat_vs_all, 4),
-            "w_michaelis_menten": round(float(w_norm[1]), 4),
-            "w_hill_n2": round(float(w_norm[2]), 4),
-            "w_power_law": round(float(w_norm[3]), 4),
-            "w_linear": round(float(w_norm[4]), 4),
-            "delta_bic_best_worst": round(
-                float(np.nanmax(bics[finite]) - np.nanmin(bics[finite])), 4
-            ) if finite.any() else float("nan"),
-        })
+        aic_rows.append(
+            {
+                "model": model_name,
+                "params_B": fits[0]["params_B"],
+                "arch": fits[0]["arch"],
+                "best_aic_model": best,
+                "worst_aic_model": worst,
+                "delta_aic_best_worst": round(
+                    float(np.nanmax(aics[finite]) - np.nanmin(aics[finite])), 4
+                )
+                if finite.any()
+                else float("nan"),
+                "w_saturation": round(w_sat, 4),
+                "odds_sat_vs_all": round(odds_sat_vs_all, 4),
+                "w_michaelis_menten": round(float(w_norm[1]), 4),
+                "w_hill_n2": round(float(w_norm[2]), 4),
+                "w_power_law": round(float(w_norm[3]), 4),
+                "w_linear": round(float(w_norm[4]), 4),
+                "delta_bic_best_worst": round(
+                    float(np.nanmax(bics[finite]) - np.nanmin(bics[finite])), 4
+                )
+                if finite.any()
+                else float("nan"),
+            }
+        )
 
     # ---- (3) bootstrap AIC selection rate ----
     boot_rows = []
@@ -277,13 +293,15 @@ def main() -> None:
     rng_anchor = {r["model"]: r for r in rows}
     for r in rows:
         t, y_true, _ = synth_trace(r, rc_lookup)
-        per_model = {"model": r["model"], "params_B": r["params_B"],
-                     "arch": r["arch"]}
+        per_model = {"model": r["model"], "params_B": r["params_B"], "arch": r["arch"]}
         n_steps = len(t)
         win_count = {c["name"]: 0 for c in CANDIDATES}
         for _ in range(B_BOOT):
-            y = np.clip(y_true + rng_anchor[r["model"]].get("_rng",
-                                                           RNG).normal(0, noise_sigma, n_steps), 0.0, 1.0)
+            y = np.clip(
+                y_true + rng_anchor[r["model"]].get("_rng", RNG).normal(0, noise_sigma, n_steps),
+                0.0,
+                1.0,
+            )
             aics_b = []
             for cand in CANDIDATES:
                 _, _, aic_b, _, _, _ = fit_candidate(t, y, cand)
@@ -291,22 +309,22 @@ def main() -> None:
             aics_b = np.array(aics_b, dtype=float)
             if not np.any(np.isfinite(aics_b)):
                 continue
-            winner = CANDIDATES[int(np.argmin(np.where(
-                np.isfinite(aics_b), aics_b, np.inf
-            )))]
+            winner = CANDIDATES[int(np.argmin(np.where(np.isfinite(aics_b), aics_b, np.inf)))]
             win_count[winner["name"]] += 1
         win_share = {k: round(v / B_BOOT, 4) for k, v in win_count.items()}
-        boot_rows.append({
-            "model": per_model["model"],
-            "params_B": per_model["params_B"],
-            "n_boot": B_BOOT,
-            "sigma": noise_sigma,
-            "win_share_saturation": win_share["A_saturation_exp"],
-            "win_share_michaelis_menten": win_share["B_michaelis_menten"],
-            "win_share_hill_n2": win_share["C_hill_n2"],
-            "win_share_power_law": win_share["D_power_law"],
-            "win_share_linear": win_share["E_linear"],
-        })
+        boot_rows.append(
+            {
+                "model": per_model["model"],
+                "params_B": per_model["params_B"],
+                "n_boot": B_BOOT,
+                "sigma": noise_sigma,
+                "win_share_saturation": win_share["A_saturation_exp"],
+                "win_share_michaelis_menten": win_share["B_michaelis_menten"],
+                "win_share_hill_n2": win_share["C_hill_n2"],
+                "win_share_power_law": win_share["D_power_law"],
+                "win_share_linear": win_share["E_linear"],
+            }
+        )
 
     # ---- (4) summary ----
     summary = {
@@ -370,44 +388,73 @@ def main() -> None:
     print(f"wrote {RESULTS / 'scaling_law_iter37_summary.tsv'}")
 
     # ---- figure: Akaike weight bar chart by anchor, with bootstrap inset ----
-    fig, axes = plt.subplots(2, 1, figsize=(11.0, 7.6),
-                             gridspec_kw={"height_ratios": [3, 1.4]})
+    fig, axes = plt.subplots(2, 1, figsize=(11.0, 7.6), gridspec_kw={"height_ratios": [3, 1.4]})
     ax = axes[0]
     model_names = [r["model"] for r in aic_rows]
     short = [m.replace("-Instruct", "-Inst") for m in model_names]
-    weights = np.array([
-        [r["w_saturation"], r["w_michaelis_menten"], r["w_hill_n2"],
-         r["w_power_law"], r["w_linear"]] for r in aic_rows
-    ])
+    weights = np.array(
+        [
+            [
+                r["w_saturation"],
+                r["w_michaelis_menten"],
+                r["w_hill_n2"],
+                r["w_power_law"],
+                r["w_linear"],
+            ]
+            for r in aic_rows
+        ]
+    )
     colors = ["#2b8cbe", "#fdae61", "#7fcdbb", "#edf8b1", "#636363"]
     x = np.arange(len(model_names))
     bot = np.zeros(len(model_names))
     for i, c in enumerate(colors):
-        ax.bar(x, weights[:, i], bottom=bot, color=c,
-               label=CANDIDATES[i]["name"], width=0.85, edgecolor="white", lw=0.3)
+        ax.bar(
+            x,
+            weights[:, i],
+            bottom=bot,
+            color=c,
+            label=CANDIDATES[i]["name"],
+            width=0.85,
+            edgecolor="white",
+            lw=0.3,
+        )
         bot += weights[:, i]
     ax.set_xticks(x)
-    ax.set_xticklabels([f"{s}\n{r['params_B']:.0f}B" for s, r in zip(short, aic_rows)],
-                       rotation=0, fontsize=7.5)
+    ax.set_xticklabels(
+        [f"{s}\n{r['params_B']:.0f}B" for s, r in zip(short, aic_rows, strict=False)],
+        rotation=0,
+        fontsize=7.5,
+    )
     ax.set_ylabel("Akaike weight")
     ax.set_ylim(0, 1.0)
-    ax.set_title("Iter37 -- Model selection across the 12-anchor frontier set"
-                 " (stacked Akaike weights)")
+    ax.set_title(
+        "Iter37 -- Model selection across the 12-anchor frontier set (stacked Akaike weights)"
+    )
     ax.legend(loc="upper right", ncol=2, fontsize=7.5)
 
     ax2 = axes[1]
-    boot_arr = np.array([
-        [r["win_share_saturation"], r["win_share_michaelis_menten"], r["win_share_hill_n2"],
-         r["win_share_power_law"], r["win_share_linear"]] for r in boot_rows
-    ])
+    boot_arr = np.array(
+        [
+            [
+                r["win_share_saturation"],
+                r["win_share_michaelis_menten"],
+                r["win_share_hill_n2"],
+                r["win_share_power_law"],
+                r["win_share_linear"],
+            ]
+            for r in boot_rows
+        ]
+    )
     bot2 = np.zeros(len(model_names))
     for i, c in enumerate(colors):
-        ax2.bar(x, boot_arr[:, i], bottom=bot2, color=c, width=0.85,
-                edgecolor="white", lw=0.3)
+        ax2.bar(x, boot_arr[:, i], bottom=bot2, color=c, width=0.85, edgecolor="white", lw=0.3)
         bot2 += boot_arr[:, i]
     ax2.set_xticks(x)
-    ax2.set_xticklabels([f"{s}\n{r['params_B']:.0f}B" for s, r in zip(short, boot_rows)],
-                        rotation=0, fontsize=7.5)
+    ax2.set_xticklabels(
+        [f"{s}\n{r['params_B']:.0f}B" for s, r in zip(short, boot_rows, strict=False)],
+        rotation=0,
+        fontsize=7.5,
+    )
     ax2.set_ylabel("bootstrap win share")
     ax2.set_xlabel("(annotation: model + params_B)")
     ax2.set_title(f"Iter37 -- Parametric-bootstrap (B={B_BOOT}, σ=0.10) AIC winner rate")
@@ -425,9 +472,11 @@ def main() -> None:
         print(f"  {k}: {v}")
     print("\n=== Per-anchor AIC winner ===")
     for r in aic_rows:
-        print(f"  {r['model']:30s}  best={r['best_aic_model']:25s} "
-              f"delta_aic={r['delta_aic_best_worst']:.2f} "
-              f"w_sat={r['w_saturation']:.3f}")
+        print(
+            f"  {r['model']:30s}  best={r['best_aic_model']:25s} "
+            f"delta_aic={r['delta_aic_best_worst']:.2f} "
+            f"w_sat={r['w_saturation']:.3f}"
+        )
 
 
 if __name__ == "__main__":

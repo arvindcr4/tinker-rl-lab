@@ -29,10 +29,10 @@ Outputs (real, computed this session):
     platform_hybrid/experiments/results/zvf_leadtime_summary_review28_v2.tsv       -- (B) aggregated
     figures/zvf_leadtime_review28_v2.pdf                           -- (B) figure
 """
+
 from __future__ import annotations
 
 import csv
-import json
 import math
 import random
 import statistics
@@ -88,7 +88,9 @@ def bootstrap_mean_ci(
     samples: Sequence[float], B: int = 2000, seed: int = 7
 ) -> Tuple[float, Tuple[float, float]]:
     """Percentile bootstrap CI on the mean."""
-    samples = [float(s) for s in samples if s is not None and not (isinstance(s, float) and math.isnan(s))]
+    samples = [
+        float(s) for s in samples if s is not None and not (isinstance(s, float) and math.isnan(s))
+    ]
     n = len(samples)
     if n < 2:
         return (float("nan"), (float("nan"), float("nan")))
@@ -243,7 +245,9 @@ def compute_leadtime(
             if pass_step < 0:
                 continue
             local_max_step, local_max_zvf = find_max_zvf_in_window(
-                rows, pass_step, min(pass_step + lead_window, (rows[-1]["step"] if rows else pass_step) + 1)
+                rows,
+                pass_step,
+                min(pass_step + lead_window, (rows[-1]["step"] if rows else pass_step) + 1),
             )
             # If we have a real collapse, the "5-step before collapse" window
             # is well-defined. If not, fall back to the last 5 steps of
@@ -252,10 +256,14 @@ def compute_leadtime(
                 pre_window_end = pass_step + min(5, lead_steps)
                 pre_zvf_window = [r["zvf"] for r in rows if pass_step <= r["step"] < pre_window_end]
                 post_window_start = max(pass_step, collapse_step - 5)
-                post_zvf_window = [r["zvf"] for r in rows if post_window_start <= r["step"] < collapse_step]
+                post_zvf_window = [
+                    r["zvf"] for r in rows if post_window_start <= r["step"] < collapse_step
+                ]
             else:
                 pre_zvf_window = [r["zvf"] for r in rows if pass_step <= r["step"] < pass_step + 5]
-                post_zvf_window = [r["zvf"] for r in rows if rows and r["step"] >= rows[-1]["step"] - 5]
+                post_zvf_window = [
+                    r["zvf"] for r in rows if rows and r["step"] >= rows[-1]["step"] - 5
+                ]
             pre_zvf = statistics.fmean(pre_zvf_window) if pre_zvf_window else float("nan")
             post_zvf = statistics.fmean(post_zvf_window) if post_zvf_window else float("nan")
             out.append(
@@ -277,9 +285,7 @@ def compute_leadtime(
     return out
 
 
-def write_leadtime_table(
-    leadtime_rows: List[Dict[str, Any]], out_path: Path
-) -> None:
+def write_leadtime_table(leadtime_rows: List[Dict[str, Any]], out_path: Path) -> None:
     out_path.parent.mkdir(parents=True, exist_ok=True)
     with out_path.open("w") as fh:
         fh.write("# Pillar 2 ZVF lead-time extended table (iter 22)\n")
@@ -358,9 +364,7 @@ def aggregate_leadtime(leadtime_rows: List[Dict[str, Any]]) -> List[Dict[str, An
     return summary
 
 
-def write_leadtime_summary(
-    summary: List[Dict[str, Any]], out_path: Path
-) -> None:
+def write_leadtime_summary(summary: List[Dict[str, Any]], out_path: Path) -> None:
     out_path.parent.mkdir(parents=True, exist_ok=True)
     with out_path.open("w") as fh:
         fh.write("# Pillar 2 ZVF lead-time aggregated by method (iter 22)\n")
@@ -396,15 +400,21 @@ def write_leadtime_summary(
                     r["method"],
                     r["n_runs"],
                     r["n_collapsed"],
-                    f"{r['collapsed_run_fraction']:.4f}" if not math.isnan(r["collapsed_run_fraction"]) else "NA",
+                    f"{r['collapsed_run_fraction']:.4f}"
+                    if not math.isnan(r["collapsed_run_fraction"])
+                    else "NA",
                     f"{r['mean_lead']:.2f}" if not math.isnan(r["mean_lead"]) else "NA",
                     f"{r['median_lead']:.1f}" if not math.isnan(r["median_lead"]) else "NA",
                     f"{r['min_lead']}" if not math.isnan(r["min_lead"]) else "NA",
                     f"{r['max_lead']}" if not math.isnan(r["max_lead"]) else "NA",
-                    f"{r['mean_zvf_at_pass']:.4f}" if not math.isnan(r["mean_zvf_at_pass"]) else "NA",
+                    f"{r['mean_zvf_at_pass']:.4f}"
+                    if not math.isnan(r["mean_zvf_at_pass"])
+                    else "NA",
                     f"{r['mean_pre_zvf_5']:.4f}" if not math.isnan(r["mean_pre_zvf_5"]) else "NA",
                     f"{r['mean_post_zvf_5']:.4f}" if not math.isnan(r["mean_post_zvf_5"]) else "NA",
-                    f"{r['mean_local_max_zvf']:.4f}" if not math.isnan(r["mean_local_max_zvf"]) else "NA",
+                    f"{r['mean_local_max_zvf']:.4f}"
+                    if not math.isnan(r["mean_local_max_zvf"])
+                    else "NA",
                 )
             )
 
@@ -416,12 +426,11 @@ def write_leadtime_summary(
 
 def wilcoxon_signed_rank(deltas):
     from _review28_statistics import signed_rank
+
     return signed_rank(deltas)
 
 
-def pre_post_test(
-    leadtime_rows: List[Dict[str, Any]]
-) -> Dict[str, Dict[str, float]]:
+def pre_post_test(leadtime_rows: List[Dict[str, Any]]) -> Dict[str, Dict[str, float]]:
     """For each method, test paired (pre_zvf_5, post_zvf_5) deltas.
 
     A positive mean_delta means ZVF RISES in the 5-step window ending
@@ -432,13 +441,21 @@ def pre_post_test(
     for r in leadtime_rows:
         by_method.setdefault(r["method"], []).append(r)
     for method, recs in by_method.items():
-        deltas = [r["post_zvf_5"] - r["pre_zvf_5"] for r in recs if not math.isnan(r["pre_zvf_5"]) and not math.isnan(r["post_zvf_5"])]
+        deltas = [
+            r["post_zvf_5"] - r["pre_zvf_5"]
+            for r in recs
+            if not math.isnan(r["pre_zvf_5"]) and not math.isnan(r["post_zvf_5"])
+        ]
         w_plus, p_two = wilcoxon_signed_rank(deltas)
         out[method] = {
             "n": len(recs),
             "n_with_data": len(deltas),
-            "mean_pre_zvf_5": statistics.fmean([r["pre_zvf_5"] for r in recs]) if recs else float("nan"),
-            "mean_post_zvf_5": statistics.fmean([r["post_zvf_5"] for r in recs]) if recs else float("nan"),
+            "mean_pre_zvf_5": statistics.fmean([r["pre_zvf_5"] for r in recs])
+            if recs
+            else float("nan"),
+            "mean_post_zvf_5": statistics.fmean([r["post_zvf_5"] for r in recs])
+            if recs
+            else float("nan"),
             "mean_delta": statistics.fmean(deltas) if deltas else float("nan"),
             "W_plus": w_plus,
             "p_two_sided": p_two,
@@ -446,9 +463,7 @@ def pre_post_test(
     return out
 
 
-def write_pre_post_test(
-    test: Dict[str, Dict[str, float]], out_path: Path
-) -> None:
+def write_pre_post_test(test: Dict[str, Dict[str, float]], out_path: Path) -> None:
     out_path.parent.mkdir(parents=True, exist_ok=True)
     with out_path.open("w") as fh:
         fh.write("# Pillar 2 pre/post-collapse ZVF signed-rank test (iter 22)\n")
@@ -526,7 +541,7 @@ def write_leadtime_figure(
     axL.set_ylabel("Mean lead-steps (collapse_step - pass_step)")
     axL.set_title("ZVF lead-time: collapse lag per library\n(only runs that collapsed)")
     axL.tick_params(axis="x", rotation=45, labelsize=8)
-    for bar, val in zip(bars, mean_lead):
+    for bar, val in zip(bars, mean_lead, strict=False):
         if math.isnan(val):
             continue
         axL.text(
@@ -543,12 +558,23 @@ def write_leadtime_figure(
 
     x = np.arange(len(methods))
     width = 0.38
-    axR.bar(x - width / 2.0, mean_pre, width, color="#bdc3c7", edgecolor="white", label="pre (5-step)")
-    axR.bar(x + width / 2.0, mean_post, width, color="#c0392b", edgecolor="white", label="pre-collapse (5-step)")
+    axR.bar(
+        x - width / 2.0, mean_pre, width, color="#bdc3c7", edgecolor="white", label="pre (5-step)"
+    )
+    axR.bar(
+        x + width / 2.0,
+        mean_post,
+        width,
+        color="#c0392b",
+        edgecolor="white",
+        label="pre-collapse (5-step)",
+    )
     axR.set_xticks(x)
     axR.set_xticklabels(methods, rotation=45, fontsize=8)
     axR.set_ylabel("Mean ZVF in 5-step window")
-    axR.set_title("Pre vs pre-collapse ZVF (paired)\nW+ test reported in zvf_leadtime_summary_review28_v2.tsv")
+    axR.set_title(
+        "Pre vs pre-collapse ZVF (paired)\nW+ test reported in zvf_leadtime_summary_review28_v2.tsv"
+    )
     axR.set_ylim(0, 1.05)
     axR.legend(loc="upper right", frameon=False, fontsize=8)
 
@@ -560,9 +586,7 @@ def write_leadtime_figure(
     return str(out_path.relative_to(REPO_ROOT))
 
 
-def write_bootstrap_figure(
-    bootstrap_rows: List[Dict[str, Any]], out_path: Path
-) -> Optional[str]:
+def write_bootstrap_figure(bootstrap_rows: List[Dict[str, Any]], out_path: Path) -> Optional[str]:
     plt = _maybe_matplotlib()
     if plt is None:
         return None
@@ -575,9 +599,11 @@ def write_bootstrap_figure(
     x = list(range(len(methods)))
     colors = [METHOD_COLOR.get(m, "#34495e") for m in methods]
     ax.bar(x, means, color=colors, edgecolor="white", linewidth=0.6)
-    err_lo = [m - lo for m, lo in zip(means, los)]
-    err_hi = [hi - m for m, hi in zip(means, his)]
-    ax.errorbar(x, means, yerr=[err_lo, err_hi], fmt="none", ecolor="black", capsize=3, linewidth=1.0)
+    err_lo = [m - lo for m, lo in zip(means, los, strict=False)]
+    err_hi = [hi - m for m, hi in zip(means, his, strict=False)]
+    ax.errorbar(
+        x, means, yerr=[err_lo, err_hi], fmt="none", ecolor="black", capsize=3, linewidth=1.0
+    )
     ax.set_xticks(x)
     ax.set_xticklabels(methods, rotation=45, fontsize=9)
     ax.set_ylabel("Mean ZVF across training trajectory")
@@ -624,10 +650,10 @@ def main() -> int:
     write_pre_post_test(test, RESULTS / "zvf_pre_post_test_review28_v2.tsv")
 
     # Figures
-    fig_leadtime = write_leadtime_figure(
-        summary, test, FIGURES / "zvf_leadtime_review28_v2.pdf"
+    fig_leadtime = write_leadtime_figure(summary, test, FIGURES / "zvf_leadtime_review28_v2.pdf")
+    fig_boot = write_bootstrap_figure(
+        bootstrap_rows, FIGURES / "zvf_library_bootstrap_review28_v2.pdf"
     )
-    fig_boot = write_bootstrap_figure(bootstrap_rows, FIGURES / "zvf_library_bootstrap_review28_v2.pdf")
 
     # Console summary
     print(f"[zvf-iter22] wrote {len(bootstrap_rows)} library bootstrap CIs -> {boot_path}")

@@ -5,6 +5,7 @@ versioned shared schema, complete artifact hashes and no duplicate identities.
 Legacy or incomplete artifacts are reported unverified and are never rewritten.
 Empty staging is not success. The corrected protocol has its own namespace.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -19,11 +20,16 @@ ROOT = Path(__file__).resolve().parents[2]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 from platform_hybrid.experiments.samestack_contract import (
-    completion_path, strict_json_load, validate_completion, validate_run,
+    completion_path,
+    strict_json_load,
+    validate_completion,
+    validate_run,
 )
 from platform_hybrid.experiments.samestack_protocol import PROTOCOL_HASH, PROTOCOL_ID
 
-STAGE = ROOT / os.environ.get("STAGE_DIR", "platform_hybrid/experiments/results/" + PROTOCOL_ID + "_colab")
+STAGE = ROOT / os.environ.get(
+    "STAGE_DIR", "platform_hybrid/experiments/results/" + PROTOCOL_ID + "_colab"
+)
 CANON = ROOT / "platform_hybrid/experiments/results" / PROTOCOL_ID
 OUT = ROOT / "reports/project_finish_2026-10-11/validation/samestack_v2/colab_runs_check.json"
 
@@ -35,17 +41,25 @@ def load(path):
 def run_paths(directory):
     """Recognize flat historical records and promoted per-run bundles, not partials."""
     directory = Path(directory)
-    return sorted(path for path in directory.rglob("*_s*.json")
-                  if not path.name.endswith(".complete.json")
-                  and not any(part.startswith(".") for part in path.relative_to(directory).parts)
-                  and "adapters" not in path.relative_to(directory).parts)
+    return sorted(
+        path
+        for path in directory.rglob("*_s*.json")
+        if not path.name.endswith(".complete.json")
+        and not any(part.startswith(".") for part in path.relative_to(directory).parts)
+        and "adapters" not in path.relative_to(directory).parts
+    )
 
 
 def verify_stage(stage, canonical=None):
     stage = Path(stage)
     paths = run_paths(stage)
-    report = {"protocol_id": PROTOCOL_ID, "runs": {}, "staged_count": len(paths),
-              "all_verified": False, "errors": []}
+    report = {
+        "protocol_id": PROTOCOL_ID,
+        "runs": {},
+        "staged_count": len(paths),
+        "all_verified": False,
+        "errors": [],
+    }
     seen, run_ids = set(), set()
     canonical_identities = {}
     if canonical is not None:
@@ -53,10 +67,17 @@ def verify_stage(stage, canonical=None):
             try:
                 existing_record = validate_completion(existing)
                 manifest = existing_record["manifest"]
-                identity = (manifest["environment"], manifest["protocol_hash"],
-                            manifest["ordered_test_item_hash"], existing_record["arm"], existing_record["seed"])
+                identity = (
+                    manifest["environment"],
+                    manifest["protocol_hash"],
+                    manifest["ordered_test_item_hash"],
+                    existing_record["arm"],
+                    existing_record["seed"],
+                )
                 if identity in canonical_identities:
-                    report["errors"].append("canonical directory already has duplicate run identities")
+                    report["errors"].append(
+                        "canonical directory already has duplicate run identities"
+                    )
                 canonical_identities[identity] = existing
             except (OSError, ValueError, KeyError, TypeError) as exc:
                 report["errors"].append(f"canonical artifact is unverified: {existing.name}: {exc}")
@@ -66,9 +87,17 @@ def verify_stage(stage, canonical=None):
             record = load(path)
             text_path = path.with_name(path.stem + "_texts.json.gz")
             texts = load(text_path) if text_path.exists() else None
-            checks = validate_run(record, filename=path.name, texts=texts, seen=seen,
-                                  expected={"environment": "colab", "protocol_id": PROTOCOL_ID,
-                                            "protocol_hash": PROTOCOL_HASH})
+            checks = validate_run(
+                record,
+                filename=path.name,
+                texts=texts,
+                seen=seen,
+                expected={
+                    "environment": "colab",
+                    "protocol_id": PROTOCOL_ID,
+                    "protocol_hash": PROTOCOL_HASH,
+                },
+            )
             if record.get("smoke") is not False:
                 checks["errors"].append("smoke runs are ineligible for the full-run staging cohort")
             manifest = record.get("manifest", {})
@@ -81,32 +110,60 @@ def verify_stage(stage, canonical=None):
                 checks["unverified"].append("artifact completion marker unavailable")
             else:
                 try:
-                    validate_completion(path, expected={"environment": "colab", "protocol_id": PROTOCOL_ID,
-                                                        "protocol_hash": PROTOCOL_HASH})
+                    validate_completion(
+                        path,
+                        expected={
+                            "environment": "colab",
+                            "protocol_id": PROTOCOL_ID,
+                            "protocol_hash": PROTOCOL_HASH,
+                        },
+                    )
                 except (OSError, ValueError, KeyError, TypeError) as exc:
                     checks["errors"].append(f"artifact completion failed: {exc}")
             if canonical is not None:
                 destination = Path(canonical) / path.stem / path.name
                 duplicate = canonical_identities.get(checks["identity"])
                 if duplicate is not None and duplicate != destination:
-                    checks["errors"].append("duplicate run identity already exists elsewhere in canonical directory")
+                    checks["errors"].append(
+                        "duplicate run identity already exists elsewhere in canonical directory"
+                    )
                 if destination.parent.exists():
                     try:
                         validate_completion(destination)
                         if load(completion_path(destination)) != load(completion_path(path)):
-                            checks["errors"].append("canonical run identity already exists with different artifacts")
+                            checks["errors"].append(
+                                "canonical run identity already exists with different artifacts"
+                            )
                     except (OSError, ValueError, KeyError, TypeError):
-                        checks["errors"].append("canonical destination already contains unverified artifacts")
+                        checks["errors"].append(
+                            "canonical destination already contains unverified artifacts"
+                        )
             checks["valid"] = not checks["errors"]
             checks["verified"] = checks["valid"] and not checks["unverified"]
-            checks["status"] = "verified" if checks["verified"] else "invalid" if not checks["valid"] else "unverified"
+            checks["status"] = (
+                "verified"
+                if checks["verified"]
+                else "invalid"
+                if not checks["valid"]
+                else "unverified"
+            )
             report["runs"][label] = checks
         except (OSError, ValueError, KeyError, TypeError) as exc:
-            report["runs"][label] = {"valid": False, "verified": False, "status": "invalid",
-                                     "errors": [str(exc)], "unverified": [], "metrics": {}}
+            report["runs"][label] = {
+                "valid": False,
+                "verified": False,
+                "status": "invalid",
+                "errors": [str(exc)],
+                "unverified": [],
+                "metrics": {},
+            }
     if not paths:
         report["errors"].append("no staged runs; empty staging is not verified success")
-    report["all_verified"] = bool(paths) and not report["errors"] and all(row["verified"] for row in report["runs"].values())
+    report["all_verified"] = (
+        bool(paths)
+        and not report["errors"]
+        and all(row["verified"] for row in report["runs"].values())
+    )
     return report
 
 

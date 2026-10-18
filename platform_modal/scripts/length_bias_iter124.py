@@ -45,6 +45,7 @@ INPUTS :
 OUTPUTS: 5 TSVs + meta under platform_hybrid/experiments/results/length_bias_iter124_*
 USAGE  : python3 platform_modal/scripts/length_bias_iter124.py [--n_w 4 --B_perm 50000]
 """
+
 from __future__ import annotations
 
 import argparse
@@ -55,7 +56,14 @@ import sys
 
 import numpy as np
 from scipy import stats
-from _analysis_common import build_long, load_iter108_perrun, load_step_log_task as load_step_log, permutation_null, spearman, window_mean
+from _analysis_common import (
+    build_long,
+    load_iter108_perrun,
+    load_step_log_task as load_step_log,
+    permutation_null,
+    spearman,
+    window_mean,
+)
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 RES = os.path.join(ROOT, "experiments", "results")
@@ -82,12 +90,10 @@ def velocity(w_windows: np.ndarray) -> np.ndarray:
 # Build long table indexed by (task, algo, seed, window) with iter108
 # per-run CCF quantities and window-mean L,R.  Then make paired delta.
 # ---------------------------------------------------------------------------
-def pair_long(long_tab: list[dict], tasks: list[str],
-              algos: tuple, n_w: int) -> dict:
+def pair_long(long_tab: list[dict], tasks: list[str], algos: tuple, n_w: int) -> dict:
     by_tas: dict[tuple, dict[str, dict[int, dict]]] = {}
     for r in long_tab:
-        by_tas.setdefault((r["task"], r["algo"]), {}).setdefault(
-            r["seed"], {})[r["window"]] = r
+        by_tas.setdefault((r["task"], r["algo"]), {}).setdefault(r["seed"], {})[r["window"]] = r
 
     common: dict[str, list[int]] = {}
     for task in tasks:
@@ -106,8 +112,7 @@ def pair_long(long_tab: list[dict], tasks: list[str],
                 out[(task, w, s)] = {
                     "delta_bwd": float(d["bwd"] - g["bwd"]),
                     "delta_fwd": float(d["fwd"] - g["fwd"]),
-                    "delta_bwd_signed": float(d["bwd_signed"]
-                                              - g["bwd_signed"]),
+                    "delta_bwd_signed": float(d["bwd_signed"] - g["bwd_signed"]),
                     "delta_phi_L": float(d["phi_L"] - g["phi_L"]),
                     "delta_phi_R": float(d["phi_R"] - g["phi_R"]),
                     "delta_L": float(d["L_w"] - g["L_w"]),
@@ -146,8 +151,7 @@ def partial_spearman(x, y, z) -> tuple[float, float]:
 def write_tsv(name: str, rows: list[dict], keys: list[str]) -> str:
     out = os.path.join(RES, name)
     with open(out, "w", newline="") as fh:
-        w = csv.DictWriter(fh, fieldnames=keys, delimiter="\t",
-                           extrasaction="ignore")
+        w = csv.DictWriter(fh, fieldnames=keys, delimiter="\t", extrasaction="ignore")
         w.writeheader()
         for r in rows:
             w.writerow(r)
@@ -161,7 +165,8 @@ def write_tsv(name: str, rows: list[dict], keys: list[str]) -> str:
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(
         description="Iter124: severship x baseline length-inflation "
-                    "and reward-inflation velocity (dL/dt, dR/dt).")
+        "and reward-inflation velocity (dL/dt, dR/dt)."
+    )
     parser.add_argument("--n_w", type=int, default=4)
     parser.add_argument("--B_perm", type=int, default=50000)
     parser.add_argument("--seed_base", type=int, default=20260703)
@@ -174,8 +179,9 @@ def main(argv=None) -> int:
     TASKS = ["arithmetic_easy", "gsm8k_cot"]
 
     perrun108 = load_iter108_perrun(ITER108_PERRUN)
-    step_runs = (load_step_log(DRGR_VS_GRPO, "arithmetic_easy")
-                 + load_step_log(DRGR_GSM8K, "gsm8k_cot"))
+    step_runs = load_step_log(DRGR_VS_GRPO, "arithmetic_easy") + load_step_log(
+        DRGR_GSM8K, "gsm8k_cot"
+    )
 
     # per-window L,R (already in long_tab), but we ALSO need the full
     # per-window array per (task, algo, seed) for velocity computation.
@@ -194,12 +200,10 @@ def main(argv=None) -> int:
                 Rw = window_mean(run["R"], n_w=n_w)
                 dL = velocity(Lw)
                 dR = velocity(Rw)
-                per_seed_windows[(task, algo, seed)] = {
-                    "L": Lw, "R": Rw, "dL": dL, "dR": dR
-                }
+                per_seed_windows[(task, algo, seed)] = {"L": Lw, "R": Rw, "dL": dL, "dR": dR}
 
     common_seeds = {task: [] for task in TASKS}
-    for (task, w, s) in delta_tab.keys():
+    for task, w, s in delta_tab.keys():
         if w == 0 and s not in common_seeds[task]:
             common_seeds[task].append(s)
     for task in TASKS:
@@ -230,19 +234,23 @@ def main(argv=None) -> int:
             rho_dL, p_dL = spearman(x, y_dL)
             rho_dR, p_dR = spearman(x, y_dR)
             rho_bwd, p_bwd = spearman(x, y_bwd)
-            per_window_rows.append({
-                "task": task, "window": w, "n_seeds": len(sev_list),
-                "mean_sever": float(x.mean()),
-                "mean_dL_GR": float(y_dL.mean()),
-                "mean_dR_GR": float(y_dR.mean()),
-                "mean_bwd_GR": float(y_bwd.mean()),
-                "rho_sever_vs_dL_GR": float(rho_dL),
-                "p_sever_vs_dL_GR": float(p_dL),
-                "rho_sever_vs_dR_GR": float(rho_dR),
-                "p_sever_vs_dR_GR": float(p_dR),
-                "rho_sever_vs_bwd_GR": float(rho_bwd),
-                "p_sever_vs_bwd_GR": float(p_bwd),
-            })
+            per_window_rows.append(
+                {
+                    "task": task,
+                    "window": w,
+                    "n_seeds": len(sev_list),
+                    "mean_sever": float(x.mean()),
+                    "mean_dL_GR": float(y_dL.mean()),
+                    "mean_dR_GR": float(y_dR.mean()),
+                    "mean_bwd_GR": float(y_bwd.mean()),
+                    "rho_sever_vs_dL_GR": float(rho_dL),
+                    "p_sever_vs_dL_GR": float(p_dL),
+                    "rho_sever_vs_dR_GR": float(rho_dR),
+                    "p_sever_vs_dR_GR": float(p_dR),
+                    "rho_sever_vs_bwd_GR": float(rho_bwd),
+                    "p_sever_vs_bwd_GR": float(p_bwd),
+                }
+            )
 
     # ---------- H1: sever ~ dL_GR (length-inflation velocity) ----------
     pooled_h1 = []
@@ -259,25 +267,36 @@ def main(argv=None) -> int:
                     continue
                 xs.append(-row["delta_bwd"])
                 ys.append(g["dL"][w])
-        x = np.array(xs); y = np.array(ys)
+        x = np.array(xs)
+        y = np.array(ys)
         rho, p_p = spearman(x, y)
-        null = permutation_null(x, y, B=B_perm,
-                                seed=seed_base + hash(("h1", task)) % 100000)
-        pooled_h1.append({"task": task,
-                          "spearman_sever_vs_dL_GR": rho,
-                          "spearman_p_param": p_p,
-                          "p_perm_two_sided": null["p_perm"],
-                          "null_mean": null["null_mean"],
-                          "null_std": null["null_std"],
-                          "null_q025": null["null_q025"],
-                          "null_q500": null["null_q500"],
-                          "null_q975": null["null_q975"],
-                          "n_points": null["n"], "B_perm": B_perm,
-                          "mean_sever": float(x.mean()),
-                          "mean_dL_GR": float(y.mean())})
-        perm_h1.append({"task": task, "hypothesis": "H1_sever_vs_dL_GR",
-                        **null, "spearman_p_param": p_p,
-                        "point_rho": rho})
+        null = permutation_null(x, y, B=B_perm, seed=seed_base + hash(("h1", task)) % 100000)
+        pooled_h1.append(
+            {
+                "task": task,
+                "spearman_sever_vs_dL_GR": rho,
+                "spearman_p_param": p_p,
+                "p_perm_two_sided": null["p_perm"],
+                "null_mean": null["null_mean"],
+                "null_std": null["null_std"],
+                "null_q025": null["null_q025"],
+                "null_q500": null["null_q500"],
+                "null_q975": null["null_q975"],
+                "n_points": null["n"],
+                "B_perm": B_perm,
+                "mean_sever": float(x.mean()),
+                "mean_dL_GR": float(y.mean()),
+            }
+        )
+        perm_h1.append(
+            {
+                "task": task,
+                "hypothesis": "H1_sever_vs_dL_GR",
+                **null,
+                "spearman_p_param": p_p,
+                "point_rho": rho,
+            }
+        )
 
     # ---------- H2: sever ~ dR_GR (reward-inflation velocity) ----------
     pooled_h2 = []
@@ -294,25 +313,36 @@ def main(argv=None) -> int:
                     continue
                 xs.append(-row["delta_bwd"])
                 ys.append(g["dR"][w])
-        x = np.array(xs); y = np.array(ys)
+        x = np.array(xs)
+        y = np.array(ys)
         rho, p_p = spearman(x, y)
-        null = permutation_null(x, y, B=B_perm,
-                                seed=seed_base + hash(("h2", task)) % 100000)
-        pooled_h2.append({"task": task,
-                          "spearman_sever_vs_dR_GR": rho,
-                          "spearman_p_param": p_p,
-                          "p_perm_two_sided": null["p_perm"],
-                          "null_mean": null["null_mean"],
-                          "null_std": null["null_std"],
-                          "null_q025": null["null_q025"],
-                          "null_q500": null["null_q500"],
-                          "null_q975": null["null_q975"],
-                          "n_points": null["n"], "B_perm": B_perm,
-                          "mean_sever": float(x.mean()),
-                          "mean_dR_GR": float(y.mean())})
-        perm_h2.append({"task": task, "hypothesis": "H2_sever_vs_dR_GR",
-                        **null, "spearman_p_param": p_p,
-                        "point_rho": rho})
+        null = permutation_null(x, y, B=B_perm, seed=seed_base + hash(("h2", task)) % 100000)
+        pooled_h2.append(
+            {
+                "task": task,
+                "spearman_sever_vs_dR_GR": rho,
+                "spearman_p_param": p_p,
+                "p_perm_two_sided": null["p_perm"],
+                "null_mean": null["null_mean"],
+                "null_std": null["null_std"],
+                "null_q025": null["null_q025"],
+                "null_q500": null["null_q500"],
+                "null_q975": null["null_q975"],
+                "n_points": null["n"],
+                "B_perm": B_perm,
+                "mean_sever": float(x.mean()),
+                "mean_dR_GR": float(y.mean()),
+            }
+        )
+        perm_h2.append(
+            {
+                "task": task,
+                "hypothesis": "H2_sever_vs_dR_GR",
+                **null,
+                "spearman_p_param": p_p,
+                "point_rho": rho,
+            }
+        )
 
     # ---------- H3: partial Spearman controlling for |CCF_bwd^GR| ----------
     partial_rows = []
@@ -331,15 +361,22 @@ def main(argv=None) -> int:
                 zs.append(row["g_bwd"])
         if len(xs) < 4:
             continue
-        x = np.array(xs); y = np.array(ys); z = np.array(zs)
+        x = np.array(xs)
+        y = np.array(ys)
+        z = np.array(zs)
         rho_raw, p_raw = spearman(x, y)
         rho_part, p_part = partial_spearman(x, y, z)
-        partial_rows.append({"task": task, "n": len(xs),
-                             "rho_raw_sever_vs_dL": float(rho_raw),
-                             "p_raw": float(p_raw),
-                             "rho_partial_sever_vs_dL_given_bwd": float(rho_part),
-                             "p_partial": float(p_part),
-                             "rho_bwd_vs_dL_ctrl": float(spearman(z, y)[0])})
+        partial_rows.append(
+            {
+                "task": task,
+                "n": len(xs),
+                "rho_raw_sever_vs_dL": float(rho_raw),
+                "p_raw": float(p_raw),
+                "rho_partial_sever_vs_dL_given_bwd": float(rho_part),
+                "p_partial": float(p_part),
+                "rho_bwd_vs_dL_ctrl": float(spearman(z, y)[0]),
+            }
+        )
 
     # ---------- H4 / H5: cross-task envelope ----------
     envelope_rows = []
@@ -351,20 +388,26 @@ def main(argv=None) -> int:
             g = per_seed_windows.get((task, "grpo", s))
             if g is None:
                 continue
-            sevs = [-delta_tab[(task, w, s)]["delta_bwd"]
-                    for w in range(n_w)
-                    if (task, w, s) in delta_tab]
+            sevs = [
+                -delta_tab[(task, w, s)]["delta_bwd"]
+                for w in range(n_w)
+                if (task, w, s) in delta_tab
+            ]
             per_seed_sever.append(float(np.mean(sevs)))
             per_seed_dL.append(float(np.mean(g["dL"])))
             per_seed_dR.append(float(np.mean(g["dR"])))
-        envelope_rows.append({"task": task,
-                              "n_seeds": len(per_seed_sever),
-                              "mean_sever": float(np.mean(per_seed_sever)),
-                              "std_sever": float(np.std(per_seed_sever)),
-                              "mean_dL_GR": float(np.mean(per_seed_dL)),
-                              "std_dL_GR": float(np.std(per_seed_dL)),
-                              "mean_dR_GR": float(np.mean(per_seed_dR)),
-                              "std_dR_GR": float(np.std(per_seed_dR))})
+        envelope_rows.append(
+            {
+                "task": task,
+                "n_seeds": len(per_seed_sever),
+                "mean_sever": float(np.mean(per_seed_sever)),
+                "std_sever": float(np.std(per_seed_sever)),
+                "mean_dL_GR": float(np.mean(per_seed_dL)),
+                "std_dL_GR": float(np.std(per_seed_dL)),
+                "mean_dR_GR": float(np.mean(per_seed_dR)),
+                "std_dR_GR": float(np.std(per_seed_dR)),
+            }
+        )
     se = np.array([r["mean_sever"] for r in envelope_rows])
     dle = np.array([r["mean_dL_GR"] for r in envelope_rows])
     dre = np.array([r["mean_dR_GR"] for r in envelope_rows])
@@ -390,10 +433,8 @@ def main(argv=None) -> int:
                 all_dL.append(g["dL"][w])
                 all_sev_h2.append(-row["delta_bwd"])
                 all_dR.append(g["dR"][w])
-    cons_h1_rho, cons_h1_p = spearman(np.array(all_sev_h1),
-                                      np.array(all_dL))
-    cons_h2_rho, cons_h2_p = spearman(np.array(all_sev_h2),
-                                      np.array(all_dR))
+    cons_h1_rho, cons_h1_p = spearman(np.array(all_sev_h1), np.array(all_dL))
+    cons_h2_rho, cons_h2_p = spearman(np.array(all_sev_h2), np.array(all_dR))
 
     # bootstrap CIs
     rng = np.random.default_rng(seed_base + 8081)
@@ -410,7 +451,8 @@ def main(argv=None) -> int:
                     continue
                 xs.append(-row["delta_bwd"])
                 ys.append(g["dL"][w])
-        x = np.array(xs); y = np.array(ys)
+        x = np.array(xs)
+        y = np.array(ys)
         obs, _ = spearman(x, y)
         n = len(x)
         idx = rng.integers(0, n, size=(B_perm, n))
@@ -418,11 +460,17 @@ def main(argv=None) -> int:
         for b in range(B_perm):
             r_b, _ = spearman(x[idx[b]], y[idx[b]])
             boot[b] = r_b
-        ci_h1.append({"task": task, "obs_rho": float(obs),
-                      "ci_lo": float(np.quantile(boot, 0.025)),
-                      "ci_hi": float(np.quantile(boot, 0.975)),
-                      "n": int(n), "B_boot": B_perm,
-                      "hypothesis": "H1_sever_vs_dL_GR"})
+        ci_h1.append(
+            {
+                "task": task,
+                "obs_rho": float(obs),
+                "ci_lo": float(np.quantile(boot, 0.025)),
+                "ci_hi": float(np.quantile(boot, 0.975)),
+                "n": int(n),
+                "B_boot": B_perm,
+                "hypothesis": "H1_sever_vs_dL_GR",
+            }
+        )
 
     rng2 = np.random.default_rng(seed_base + 11743)
     ci_h2 = []
@@ -438,7 +486,8 @@ def main(argv=None) -> int:
                     continue
                 xs.append(-row["delta_bwd"])
                 ys.append(g["dR"][w])
-        x = np.array(xs); y = np.array(ys)
+        x = np.array(xs)
+        y = np.array(ys)
         obs, _ = spearman(x, y)
         n = len(x)
         idx = rng2.integers(0, n, size=(B_perm, n))
@@ -446,104 +495,200 @@ def main(argv=None) -> int:
         for b in range(B_perm):
             r_b, _ = spearman(x[idx[b]], y[idx[b]])
             boot[b] = r_b
-        ci_h2.append({"task": task, "obs_rho": float(obs),
-                      "ci_lo": float(np.quantile(boot, 0.025)),
-                      "ci_hi": float(np.quantile(boot, 0.975)),
-                      "n": int(n), "B_boot": B_perm,
-                      "hypothesis": "H2_sever_vs_dR_GR"})
+        ci_h2.append(
+            {
+                "task": task,
+                "obs_rho": float(obs),
+                "ci_lo": float(np.quantile(boot, 0.025)),
+                "ci_hi": float(np.quantile(boot, 0.975)),
+                "n": int(n),
+                "B_boot": B_perm,
+                "hypothesis": "H2_sever_vs_dR_GR",
+            }
+        )
 
     # ---------- write outputs ----------
-    write_tsv("length_bias_iter124_pooled_h1_sever_vs_dL_GR.tsv",
-              pooled_h1,
-              ["task", "spearman_sever_vs_dL_GR", "spearman_p_param",
-               "p_perm_two_sided", "null_mean", "null_std",
-               "null_q025", "null_q500", "null_q975",
-               "n_points", "B_perm", "mean_sever", "mean_dL_GR"])
-    write_tsv("length_bias_iter124_pooled_h2_sever_vs_dR_GR.tsv",
-              pooled_h2,
-              ["task", "spearman_sever_vs_dR_GR", "spearman_p_param",
-               "p_perm_two_sided", "null_mean", "null_std",
-               "null_q025", "null_q500", "null_q975",
-               "n_points", "B_perm", "mean_sever", "mean_dR_GR"])
-    write_tsv("length_bias_iter124_permutation_null.tsv",
-              perm_h1 + perm_h2,
-              ["task", "hypothesis", "obs_rho", "abs_obs", "p_perm",
-               "null_mean", "null_std", "null_q025", "null_q500",
-               "null_q975", "n", "B",
-               "spearman_p_param", "point_rho"])
-    write_tsv("length_bias_iter124_envelope.tsv", envelope_rows,
-              ["task", "n_seeds", "mean_sever", "std_sever",
-               "mean_dL_GR", "std_dL_GR",
-               "mean_dR_GR", "std_dR_GR"])
-    write_tsv("length_bias_iter124_partial.tsv", partial_rows,
-              ["task", "n",
-               "rho_raw_sever_vs_dL", "p_raw",
-               "rho_partial_sever_vs_dL_given_bwd", "p_partial",
-               "rho_bwd_vs_dL_ctrl"])
-    write_tsv("length_bias_iter124_per_window.tsv", per_window_rows,
-              ["task", "window", "n_seeds",
-               "mean_sever", "mean_dL_GR", "mean_dR_GR", "mean_bwd_GR",
-               "rho_sever_vs_dL_GR", "p_sever_vs_dL_GR",
-               "rho_sever_vs_dR_GR", "p_sever_vs_dR_GR",
-               "rho_sever_vs_bwd_GR", "p_sever_vs_bwd_GR"])
-    write_tsv("length_bias_iter124_rho_bootstrap.tsv", ci_h1 + ci_h2,
-              ["task", "hypothesis", "obs_rho", "ci_lo", "ci_hi",
-               "n", "B_boot"])
+    write_tsv(
+        "length_bias_iter124_pooled_h1_sever_vs_dL_GR.tsv",
+        pooled_h1,
+        [
+            "task",
+            "spearman_sever_vs_dL_GR",
+            "spearman_p_param",
+            "p_perm_two_sided",
+            "null_mean",
+            "null_std",
+            "null_q025",
+            "null_q500",
+            "null_q975",
+            "n_points",
+            "B_perm",
+            "mean_sever",
+            "mean_dL_GR",
+        ],
+    )
+    write_tsv(
+        "length_bias_iter124_pooled_h2_sever_vs_dR_GR.tsv",
+        pooled_h2,
+        [
+            "task",
+            "spearman_sever_vs_dR_GR",
+            "spearman_p_param",
+            "p_perm_two_sided",
+            "null_mean",
+            "null_std",
+            "null_q025",
+            "null_q500",
+            "null_q975",
+            "n_points",
+            "B_perm",
+            "mean_sever",
+            "mean_dR_GR",
+        ],
+    )
+    write_tsv(
+        "length_bias_iter124_permutation_null.tsv",
+        perm_h1 + perm_h2,
+        [
+            "task",
+            "hypothesis",
+            "obs_rho",
+            "abs_obs",
+            "p_perm",
+            "null_mean",
+            "null_std",
+            "null_q025",
+            "null_q500",
+            "null_q975",
+            "n",
+            "B",
+            "spearman_p_param",
+            "point_rho",
+        ],
+    )
+    write_tsv(
+        "length_bias_iter124_envelope.tsv",
+        envelope_rows,
+        [
+            "task",
+            "n_seeds",
+            "mean_sever",
+            "std_sever",
+            "mean_dL_GR",
+            "std_dL_GR",
+            "mean_dR_GR",
+            "std_dR_GR",
+        ],
+    )
+    write_tsv(
+        "length_bias_iter124_partial.tsv",
+        partial_rows,
+        [
+            "task",
+            "n",
+            "rho_raw_sever_vs_dL",
+            "p_raw",
+            "rho_partial_sever_vs_dL_given_bwd",
+            "p_partial",
+            "rho_bwd_vs_dL_ctrl",
+        ],
+    )
+    write_tsv(
+        "length_bias_iter124_per_window.tsv",
+        per_window_rows,
+        [
+            "task",
+            "window",
+            "n_seeds",
+            "mean_sever",
+            "mean_dL_GR",
+            "mean_dR_GR",
+            "mean_bwd_GR",
+            "rho_sever_vs_dL_GR",
+            "p_sever_vs_dL_GR",
+            "rho_sever_vs_dR_GR",
+            "p_sever_vs_dR_GR",
+            "rho_sever_vs_bwd_GR",
+            "p_sever_vs_bwd_GR",
+        ],
+    )
+    write_tsv(
+        "length_bias_iter124_rho_bootstrap.tsv",
+        ci_h1 + ci_h2,
+        ["task", "hypothesis", "obs_rho", "ci_lo", "ci_hi", "n", "B_boot"],
+    )
 
-    meta = {"iter": 124, "pillar": "P4-LengthBias",
-            "n_w": n_w, "B_perm": B_perm, "seed_base": seed_base,
-            "tasks": TASKS, "algos": list(ALGOS),
-            "consensus_H1_sever_vs_dL_GR": float(cons_h1_rho),
-            "consensus_H1_p_param": float(cons_h1_p),
-            "consensus_H2_sever_vs_dR_GR": float(cons_h2_rho),
-            "consensus_H2_p_param": float(cons_h2_p),
-            "n_consensus_points": int(len(all_sev_h1)),
-            "envelope_sever_vs_dL_GR": float(env_sev_dL_rho),
-            "envelope_sever_vs_dL_GR_p": float(env_sev_dL_p),
-            "envelope_sever_vs_dR_GR": float(env_sev_dR_rho),
-            "envelope_sever_vs_dR_GR_p": float(env_sev_dR_p),
-            "n_tasks_envelope": int(len(envelope_rows))}
+    meta = {
+        "iter": 124,
+        "pillar": "P4-LengthBias",
+        "n_w": n_w,
+        "B_perm": B_perm,
+        "seed_base": seed_base,
+        "tasks": TASKS,
+        "algos": list(ALGOS),
+        "consensus_H1_sever_vs_dL_GR": float(cons_h1_rho),
+        "consensus_H1_p_param": float(cons_h1_p),
+        "consensus_H2_sever_vs_dR_GR": float(cons_h2_rho),
+        "consensus_H2_p_param": float(cons_h2_p),
+        "n_consensus_points": int(len(all_sev_h1)),
+        "envelope_sever_vs_dL_GR": float(env_sev_dL_rho),
+        "envelope_sever_vs_dL_GR_p": float(env_sev_dL_p),
+        "envelope_sever_vs_dR_GR": float(env_sev_dR_rho),
+        "envelope_sever_vs_dR_GR_p": float(env_sev_dR_p),
+        "n_tasks_envelope": int(len(envelope_rows)),
+    }
     out = os.path.join(RES, "length_bias_iter124_meta.json")
     with open(out, "w") as fh:
         json.dump(meta, fh, indent=2)
     print(f"[iter124] wrote {out}")
 
     # ---------- headlines ----------
-    print("\n[iter124 headline] H1: Spearman(severship, GR baseline "
-          "dL/dt) per task")
+    print("\n[iter124 headline] H1: Spearman(severship, GR baseline dL/dt) per task")
     for r in pooled_h1:
-        print(f"  {r['task']:14s}: rho={r['spearman_sever_vs_dL_GR']:+.3f} "
-              f"p_param={r['spearman_p_param']:.3f} "
-              f"p_perm={r['p_perm_two_sided']:.4f} "
-              f"n={r['n_points']} mean_sever={r['mean_sever']:+.3f} "
-              f"mean_dL_GR={r['mean_dL_GR']:+.3f}")
-    print(f"\n[iter124 headline] H1 consensus (n={len(all_sev_h1)}): "
-          f"rho={cons_h1_rho:+.3f} p={cons_h1_p:.3f}")
-    print("\n[iter124 headline] H2: Spearman(severship, GR baseline "
-          "dR/dt) per task")
+        print(
+            f"  {r['task']:14s}: rho={r['spearman_sever_vs_dL_GR']:+.3f} "
+            f"p_param={r['spearman_p_param']:.3f} "
+            f"p_perm={r['p_perm_two_sided']:.4f} "
+            f"n={r['n_points']} mean_sever={r['mean_sever']:+.3f} "
+            f"mean_dL_GR={r['mean_dL_GR']:+.3f}"
+        )
+    print(
+        f"\n[iter124 headline] H1 consensus (n={len(all_sev_h1)}): "
+        f"rho={cons_h1_rho:+.3f} p={cons_h1_p:.3f}"
+    )
+    print("\n[iter124 headline] H2: Spearman(severship, GR baseline dR/dt) per task")
     for r in pooled_h2:
-        print(f"  {r['task']:14s}: rho={r['spearman_sever_vs_dR_GR']:+.3f} "
-              f"p_param={r['spearman_p_param']:.3f} "
-              f"p_perm={r['p_perm_two_sided']:.4f} "
-              f"n={r['n_points']} mean_sever={r['mean_sever']:+.3f} "
-              f"mean_dR_GR={r['mean_dR_GR']:+.3f}")
-    print(f"\n[iter124 headline] H2 consensus (n={len(all_sev_h2)}): "
-          f"rho={cons_h2_rho:+.3f} p={cons_h2_p:.3f}")
-    print("\n[iter124 headline] H3: partial Spearman controlling "
-          "for |CCF_bwd^GR|")
+        print(
+            f"  {r['task']:14s}: rho={r['spearman_sever_vs_dR_GR']:+.3f} "
+            f"p_param={r['spearman_p_param']:.3f} "
+            f"p_perm={r['p_perm_two_sided']:.4f} "
+            f"n={r['n_points']} mean_sever={r['mean_sever']:+.3f} "
+            f"mean_dR_GR={r['mean_dR_GR']:+.3f}"
+        )
+    print(
+        f"\n[iter124 headline] H2 consensus (n={len(all_sev_h2)}): "
+        f"rho={cons_h2_rho:+.3f} p={cons_h2_p:.3f}"
+    )
+    print("\n[iter124 headline] H3: partial Spearman controlling for |CCF_bwd^GR|")
     for r in partial_rows:
-        print(f"  {r['task']:14s}: rho_raw={r['rho_raw_sever_vs_dL']:+.3f} "
-              f"rho_partial={r['rho_partial_sever_vs_dL_given_bwd']:+.3f} "
-              f"p_partial={r['p_partial']:.3f} n={r['n']}")
+        print(
+            f"  {r['task']:14s}: rho_raw={r['rho_raw_sever_vs_dL']:+.3f} "
+            f"rho_partial={r['rho_partial_sever_vs_dL_given_bwd']:+.3f} "
+            f"p_partial={r['p_partial']:.3f} n={r['n']}"
+        )
     print("\n[iter124 headline] H5: cross-task envelope")
     for r in envelope_rows:
-        print(f"  {r['task']:14s}: mean_sever={r['mean_sever']:+.3f} "
-              f"mean_dL_GR={r['mean_dL_GR']:+.3f} "
-              f"mean_dR_GR={r['mean_dR_GR']:+.3f}")
-    print(f"\n[iter124 headline] envelope rho(sever, dL_GR) "
-          f"= {env_sev_dL_rho:+.3f} (p={env_sev_dL_p:.3f}) "
-          f"rho(sever, dR_GR) = {env_sev_dR_rho:+.3f} "
-          f"(p={env_sev_dR_p:.3f}) n_tasks={len(envelope_rows)}")
+        print(
+            f"  {r['task']:14s}: mean_sever={r['mean_sever']:+.3f} "
+            f"mean_dL_GR={r['mean_dL_GR']:+.3f} "
+            f"mean_dR_GR={r['mean_dR_GR']:+.3f}"
+        )
+    print(
+        f"\n[iter124 headline] envelope rho(sever, dL_GR) "
+        f"= {env_sev_dL_rho:+.3f} (p={env_sev_dL_p:.3f}) "
+        f"rho(sever, dR_GR) = {env_sev_dR_rho:+.3f} "
+        f"(p={env_sev_dR_p:.3f}) n_tasks={len(envelope_rows)}"
+    )
     return 0
 
 

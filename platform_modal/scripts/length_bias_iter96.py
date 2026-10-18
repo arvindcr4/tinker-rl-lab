@@ -59,6 +59,7 @@ USAGE
 -----
 python3 platform_modal/scripts/length_bias_iter96.py [--K 3] [--B 2000]
 """
+
 from __future__ import annotations
 
 import argparse
@@ -86,6 +87,7 @@ DRGRPO_GSM8K_PATH = os.path.join(RESULTS, "drgrpo_gsm8k_cot_full.json")
 #  AR(1) fitting (OLS) with intercept
 # ---------------------------------------------------------------------------
 
+
 def fit_ar1(x: np.ndarray) -> tuple[float, float, np.ndarray]:
     """Return (phi, c, residuals) where x[t] = phi * x[t-1] + c + e[t]."""
     x_lag = x[:-1]
@@ -103,6 +105,7 @@ def fit_ar1(x: np.ndarray) -> tuple[float, float, np.ndarray]:
 #  Cross-correlation function at lags -K..+K
 # ---------------------------------------------------------------------------
 
+
 def lag_label(k: int) -> str:
     return f"k={k:+d}"
 
@@ -110,6 +113,7 @@ def lag_label(k: int) -> str:
 # ---------------------------------------------------------------------------
 #  Residual-Granger F-test (predict e_R from e_L lags beyond e_R's own AR(1))
 # ---------------------------------------------------------------------------
+
 
 def residual_granger_f(e_a: np.ndarray, e_b: np.ndarray, K: int) -> dict[str, float]:
     """Fit e_b(t) = b0 + sum_{k=1..K} b_a(k) e_a(t-k) + sum_{k=1..K} b_b(k) e_b(t-k)
@@ -123,11 +127,11 @@ def residual_granger_f(e_a: np.ndarray, e_b: np.ndarray, K: int) -> dict[str, fl
     # Build target
     y = e_b[K:]
     # Restricted design: own lags only
-    Xr = np.column_stack([e_b[K - k - 1:n - k - 1] for k in range(K)] + [np.ones(n - K)])
+    Xr = np.column_stack([e_b[K - k - 1 : n - k - 1] for k in range(K)] + [np.ones(n - K)])
     # Unrestricted design: own lags + cross lags (e_a lags)
     Xu = np.column_stack(
-        [e_b[K - k - 1:n - k - 1] for k in range(K)]
-        + [e_a[K - k - 1:n - k - 1] for k in range(K)]
+        [e_b[K - k - 1 : n - k - 1] for k in range(K)]
+        + [e_a[K - k - 1 : n - k - 1] for k in range(K)]
         + [np.ones(n - K)]
     )
     # OLS
@@ -143,6 +147,7 @@ def residual_granger_f(e_a: np.ndarray, e_b: np.ndarray, K: int) -> dict[str, fl
     # Two-sided p-value: chi2 with K df, since K is small, use survival 1 - chi2.cdf
     # Approximation via regularised lower incomplete gamma:
     from scipy.stats import chi2
+
     p = float(1.0 - chi2.cdf(F * K, df=K)) if F > 0 else 1.0
     r2 = 1.0 - rss_u / rss_r if rss_r > 0 else 0.0
     return {"F_lr": float(F), "p_lr": p, "r2_lr": float(r2)}
@@ -151,6 +156,7 @@ def residual_granger_f(e_a: np.ndarray, e_b: np.ndarray, K: int) -> dict[str, fl
 # ---------------------------------------------------------------------------
 #  Per-run ICCA computation
 # ---------------------------------------------------------------------------
+
 
 def per_run_icca(L: np.ndarray, R: np.ndarray, K: int) -> dict[str, float]:
     phi_L, c_L, e_L = fit_ar1(L)
@@ -191,12 +197,15 @@ def per_run_icca(L: np.ndarray, R: np.ndarray, K: int) -> dict[str, float]:
 #  Main
 # ---------------------------------------------------------------------------
 
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Iter96 -- ICCA")
-    parser.add_argument("--K", type=int, default=3,
-                        help="Number of lag steps in each direction (default 3)")
-    parser.add_argument("--B", type=int, default=2000,
-                        help="Bootstrap resamples for paired CIs (default 2000)")
+    parser.add_argument(
+        "--K", type=int, default=3, help="Number of lag steps in each direction (default 3)"
+    )
+    parser.add_argument(
+        "--B", type=int, default=2000, help="Bootstrap resamples for paired CIs (default 2000)"
+    )
     args = parser.parse_args(argv)
 
     K = int(args.K)
@@ -220,12 +229,10 @@ def main(argv: list[str] | None = None) -> int:
 
     # ---- Write perrun TSV
     perrun_path = os.path.join(RESULTS, "length_bias_iter96_perrun.tsv")
-    keys = ["task", "algo", "seed", "n",
-            "phi_L", "phi_R", "c_L", "c_R", "e_L_std", "e_R_std"]
+    keys = ["task", "algo", "seed", "n", "phi_L", "phi_R", "c_L", "c_R", "e_L_std", "e_R_std"]
     for k in range(-K, K + 1):
         keys.append(f"ccf_{lag_label(k)}")
-    keys += ["fwd", "bwd", "fwd_signed", "bwd_signed", "ai", "fb_ratio",
-             "F_lr", "p_lr", "r2_lr"]
+    keys += ["fwd", "bwd", "fwd_signed", "bwd_signed", "ai", "fb_ratio", "F_lr", "p_lr", "r2_lr"]
     with open(perrun_path, "w", newline="") as fh:
         w = csv.DictWriter(fh, fieldnames=keys, delimiter="\t")
         w.writeheader()
@@ -234,12 +241,24 @@ def main(argv: list[str] | None = None) -> int:
     print(f"[iter96] wrote {perrun_path}  ({len(perrun_rows)} rows)")
 
     # ---- Paired comparisons: for each (task, key) compute Dr.GRPO - GRPO
-    KEYS_TO_PAIR = [
-        "phi_L", "phi_R", "fwd", "bwd", "fwd_signed", "bwd_signed",
-        "ai", "fb_ratio", "F_lr", "p_lr", "r2_lr",
-    ] + [f"ccf_{lag_label(+k)}" for k in range(1, K + 1)] \
-      + [f"ccf_{lag_label(-k)}" for k in range(1, K + 1)] \
-      + [f"ccf_{lag_label(0)}"]
+    KEYS_TO_PAIR = (
+        [
+            "phi_L",
+            "phi_R",
+            "fwd",
+            "bwd",
+            "fwd_signed",
+            "bwd_signed",
+            "ai",
+            "fb_ratio",
+            "F_lr",
+            "p_lr",
+            "r2_lr",
+        ]
+        + [f"ccf_{lag_label(+k)}" for k in range(1, K + 1)]
+        + [f"ccf_{lag_label(-k)}" for k in range(1, K + 1)]
+        + [f"ccf_{lag_label(0)}"]
+    )
 
     paired_rows = []
     for task, by_algo in by_task.items():
@@ -253,21 +272,34 @@ def main(argv: list[str] | None = None) -> int:
             gv = [float(seeds_grpo[s][key]) for s in common]
             dv = [float(seeds_drgrpo[s][key]) for s in common]
             stat = paired_bootstrap_delta(gv, dv, B=B, seed=0xC0FFEE, statistic=np.median)
-            paired_rows.append({
-                "task": task,
-                "key": key,
-                "n_pairs": int(stat["n"]),
-                "mean_diff": float(np.mean(np.array(dv) - np.array(gv))),
-                "median_diff": stat["delta"],
-                "ci_lo": stat["ci_lo"],
-                "ci_hi": stat["ci_hi"],
-"p": stat["p"],
-            })
+            paired_rows.append(
+                {
+                    "task": task,
+                    "key": key,
+                    "n_pairs": int(stat["n"]),
+                    "mean_diff": float(np.mean(np.array(dv) - np.array(gv))),
+                    "median_diff": stat["delta"],
+                    "ci_lo": stat["ci_lo"],
+                    "ci_hi": stat["ci_hi"],
+                    "p": stat["p"],
+                }
+            )
     paired_path = os.path.join(RESULTS, "length_bias_iter96_paired.tsv")
     with open(paired_path, "w", newline="") as fh:
-        w = csv.DictWriter(fh, fieldnames=["task", "key", "n_pairs", "mean_diff",
-                                            "median_diff", "ci_lo", "ci_hi", "p"],
-                           delimiter="\t")
+        w = csv.DictWriter(
+            fh,
+            fieldnames=[
+                "task",
+                "key",
+                "n_pairs",
+                "mean_diff",
+                "median_diff",
+                "ci_lo",
+                "ci_hi",
+                "p",
+            ],
+            delimiter="\t",
+        )
         w.writeheader()
         for r in paired_rows:
             w.writerow(r)
@@ -286,22 +318,23 @@ def main(argv: list[str] | None = None) -> int:
             bwd_arr = np.array([r["bwd"] for r in recs])
             F_arr = np.array([r["F_lr"] for r in recs])
             p_arr = np.array([r["p_lr"] for r in recs])
-            summary_rows.append({
-                "task": task,
-                "algo": algo_key,
-                "n_seeds": len(recs),
-                "ai_mean": float(ai_arr.mean()),
-                "ai_std": float(ai_arr.std()),
-                "fb_mean": float(np.mean(np.clip(fb_arr, -10, 10))),
-                "fwd_mean": float(fwd_arr.mean()),
-                "bwd_mean": float(bwd_arr.mean()),
-                "F_lr_mean": float(F_arr.mean()),
-                "p_lt_05": int(np.sum(p_arr < 0.05)),
-            })
+            summary_rows.append(
+                {
+                    "task": task,
+                    "algo": algo_key,
+                    "n_seeds": len(recs),
+                    "ai_mean": float(ai_arr.mean()),
+                    "ai_std": float(ai_arr.std()),
+                    "fb_mean": float(np.mean(np.clip(fb_arr, -10, 10))),
+                    "fwd_mean": float(fwd_arr.mean()),
+                    "bwd_mean": float(bwd_arr.mean()),
+                    "F_lr_mean": float(F_arr.mean()),
+                    "p_lt_05": int(np.sum(p_arr < 0.05)),
+                }
+            )
     summary_path = os.path.join(RESULTS, "length_bias_iter96_summary.tsv")
     with open(summary_path, "w", newline="") as fh:
-        w = csv.DictWriter(fh, fieldnames=list(summary_rows[0].keys()),
-                           delimiter="\t")
+        w = csv.DictWriter(fh, fieldnames=list(summary_rows[0].keys()), delimiter="\t")
         w.writeheader()
         for r in summary_rows:
             w.writerow(r)
@@ -332,20 +365,25 @@ def main(argv: list[str] | None = None) -> int:
 
     # ---- Console digest
     print("\n=== Iter96 ICCA summary (asymmetry index, AI > 0 = L leads R) ===")
-    print(f"{'task':<18} {'algo':<10} {'AI_mean':>9} {'AI_std':>8} "
-          f"{'F/B':>6} {'Fwd':>6} {'Bwd':>6} {'F_lr':>6} {'sig':>4}")
+    print(
+        f"{'task':<18} {'algo':<10} {'AI_mean':>9} {'AI_std':>8} "
+        f"{'F/B':>6} {'Fwd':>6} {'Bwd':>6} {'F_lr':>6} {'sig':>4}"
+    )
     for r in summary_rows:
-        print(f"{r['task']:<18} {r['algo']:<10} {r['ai_mean']:>+9.4f} "
-              f"{r['ai_std']:>8.4f} {r['fb_mean']:>6.2f} "
-              f"{r['fwd_mean']:>6.3f} {r['bwd_mean']:>6.3f} "
-              f"{r['F_lr_mean']:>6.2f} {r['p_lt_05']:>4d}")
+        print(
+            f"{r['task']:<18} {r['algo']:<10} {r['ai_mean']:>+9.4f} "
+            f"{r['ai_std']:>8.4f} {r['fb_mean']:>6.2f} "
+            f"{r['fwd_mean']:>6.3f} {r['bwd_mean']:>6.3f} "
+            f"{r['F_lr_mean']:>6.2f} {r['p_lt_05']:>4d}"
+        )
     print("\n=== Paired deltas (Dr.GRPO - GRPO; medians, paired bootstrap B=%d) ===" % B)
-    print(f"{'task':<18} {'key':<14} {'n':>3} {'Dmed':>10} {'CI_lo':>10} "
-          f"{'CI_hi':>10} {'p':>8}")
+    print(f"{'task':<18} {'key':<14} {'n':>3} {'Dmed':>10} {'CI_lo':>10} {'CI_hi':>10} {'p':>8}")
     for r in paired_rows:
-        print(f"{r['task']:<18} {r['key']:<14} {r['n_pairs']:>3d} "
-              f"{r['median_diff']:>10.4f} {r['ci_lo']:>10.4f} {r['ci_hi']:>10.4f} "
-              f"{r['p']:>8.4f}")
+        print(
+            f"{r['task']:<18} {r['key']:<14} {r['n_pairs']:>3d} "
+            f"{r['median_diff']:>10.4f} {r['ci_lo']:>10.4f} {r['ci_hi']:>10.4f} "
+            f"{r['p']:>8.4f}"
+        )
 
     return 0
 

@@ -52,8 +52,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 import sys
+
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
+from _paths import REPO_ROOT
+
 ROOT = REPO_ROOT
 RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8/corrected-review21-v2"
 FIG = RES / "figures"
@@ -82,11 +84,11 @@ SENSE = {
     "XGB-4sensor": 0.0035,
 }
 
-NOISE_LEVELS = [0.0, 0.05, 0.10, 0.25, 0.50]   # sigma_mult applied to AGG4 at TEST time
-K_PCT = [0.1, 0.25, 0.5, 1.0, 1.5, 2.0, 3.0, 4.0, 5.0, 7.0, 10.0]   # alert budgets (% of test)
+NOISE_LEVELS = [0.0, 0.05, 0.10, 0.25, 0.50]  # sigma_mult applied to AGG4 at TEST time
+K_PCT = [0.1, 0.25, 0.5, 1.0, 1.5, 2.0, 3.0, 4.0, 5.0, 7.0, 10.0]  # alert budgets (% of test)
 
-C_INV = 0.50      # $/alert
-L_MISS = 100.0    # $/missed-fraud (rho = 200, high-cost regime from iter-28)
+C_INV = 0.50  # $/alert
+L_MISS = 100.0  # $/missed-fraud (rho = 200, high-cost regime from iter-28)
 
 SEED = 20260705
 N_BOOT = 800
@@ -122,12 +124,16 @@ def fit_predict(X_tr, y_tr, X_te) -> np.ndarray:
     return m.predict_proba(X_te)[:, 1]
 
 
-def add_noise(X_te: np.ndarray, agg_idx: list[int], sigma_mult: float, sd_per: np.ndarray, rng: random.Random) -> np.ndarray:
+def add_noise(
+    X_te: np.ndarray, agg_idx: list[int], sigma_mult: float, sd_per: np.ndarray, rng: random.Random
+) -> np.ndarray:
     out = X_te.copy()
     if sigma_mult == 0.0:
         return out
     for j, col in enumerate(agg_idx):
-        out[:, col] = X_te[:, col] + np.array([rng.gauss(0.0, sigma_mult * sd_per[j]) for _ in range(len(X_te))])
+        out[:, col] = X_te[:, col] + np.array(
+            [rng.gauss(0.0, sigma_mult * sd_per[j]) for _ in range(len(X_te))]
+        )
     return out
 
 
@@ -154,7 +160,9 @@ def cost_at_k(y: np.ndarray, p: np.ndarray, k_pct: float, c_sense: float) -> dic
     )
 
 
-def pareto(y: np.ndarray, p: np.ndarray, c_sense: float, k_grid: list[float], recall_targets: list[float]) -> dict:
+def pareto(
+    y: np.ndarray, p: np.ndarray, c_sense: float, k_grid: list[float], recall_targets: list[float]
+) -> dict:
     """For each recall target R, return the minimum cost such that recall >= R."""
     rows = [cost_at_k(y, p, k, c_sense) for k in k_grid]
     out = {}
@@ -168,8 +176,14 @@ def pareto(y: np.ndarray, p: np.ndarray, c_sense: float, k_grid: list[float], re
 
 
 def paired_bootstrap_cost(
-    y: np.ndarray, p_a: np.ndarray, p_b: np.ndarray, k_pct: float, c_a: float, c_b: float,
-    n_boot: int = N_BOOT, seed: int = SEED,
+    y: np.ndarray,
+    p_a: np.ndarray,
+    p_b: np.ndarray,
+    k_pct: float,
+    c_a: float,
+    c_b: float,
+    n_boot: int = N_BOOT,
+    seed: int = SEED,
 ) -> dict:
     rng = random.Random(seed)
     n = len(y)
@@ -183,15 +197,21 @@ def paired_bootstrap_cost(
         k = max(1, int(round(k_pct / 100.0 * n)))
         order_a = np.argsort(-pa)[:k]
         order_b = np.argsort(-pb)[:k]
-        pred_a = np.zeros(n, dtype=bool); pred_a[order_a] = True
-        pred_b = np.zeros(n, dtype=bool); pred_b[order_b] = True
-        tpa = int(np.sum(pred_a & (yv == 1))); fpa = int(np.sum(pred_a & (yv == 0))); fna = int(np.sum(~pred_a & (yv == 1)))
-        tpb = int(np.sum(pred_b & (yv == 1))); fpb = int(np.sum(pred_b & (yv == 0))); fnb = int(np.sum(~pred_b & (yv == 1)))
+        pred_a = np.zeros(n, dtype=bool)
+        pred_a[order_a] = True
+        pred_b = np.zeros(n, dtype=bool)
+        pred_b[order_b] = True
+        tpa = int(np.sum(pred_a & (yv == 1)))
+        fpa = int(np.sum(pred_a & (yv == 0)))
+        fna = int(np.sum(~pred_a & (yv == 1)))
+        tpb = int(np.sum(pred_b & (yv == 1)))
+        fpb = int(np.sum(pred_b & (yv == 0)))
+        fnb = int(np.sum(~pred_b & (yv == 1)))
         cost_a = c_a + (C_INV * (tpa + fpa) + L_MISS * fna) / n
         cost_b = c_b + (C_INV * (tpb + fpb) + L_MISS * fnb) / n
         deltas["cost"].append(cost_a - cost_b)
         deltas["tp"].append(tpa - tpb)
-        deltas["fp"].append(fpa -fpb)
+        deltas["fp"].append(fpa - fpb)
         deltas["fn"].append(fna - fnb)
     out = {}
     for k_, xs in deltas.items():
@@ -244,16 +264,20 @@ def main() -> None:
         ):
             for k in K_PCT:
                 m = cost_at_k(y_te, p_pred, k, c_sense)
-                rows.append(dict(
-                    noise_sigma=sigma,
-                    model=model,
-                    k_pct=k,
-                    k_n=m["k"],
-                    tp=m["tp"], fp=m["fp"], fn=m["fn"],
-                    cost=m["cost"],
-                    precision=m["precision"],
-                    recall=m["recall"],
-                ))
+                rows.append(
+                    dict(
+                        noise_sigma=sigma,
+                        model=model,
+                        k_pct=k,
+                        k_n=m["k"],
+                        tp=m["tp"],
+                        fp=m["fp"],
+                        fn=m["fn"],
+                        cost=m["cost"],
+                        precision=m["precision"],
+                        recall=m["recall"],
+                    )
+                )
 
     with (RES / "p8_iter88_noise_cost.tsv").open("w") as f:
         w = csv.DictWriter(f, fieldnames=list(rows[0].keys()), delimiter="\t")
@@ -267,16 +291,22 @@ def main() -> None:
     for sigma in NOISE_LEVELS:
         _, p_24_n = p_24_noisy_cache[sigma] if sigma > 0 else (None, p_24_clean)
         for k in K_PCT:
-            ci = paired_bootstrap_cost(y_te, p_24_n, p_20, k, SENSE["XGB-24full"], SENSE["XGB-20raw"])
-            boot_rows.append(dict(
-                noise_sigma=sigma, k_pct=k,
-                cost_delta_median=ci["cost"]["median"],
-                cost_delta_lo=ci["cost"]["lo"], cost_delta_hi=ci["cost"]["hi"],
-                cost_ci_excludes_zero=ci["cost"]["excludes_zero"],
-                tp_delta_median=ci["tp"]["median"],
-                fn_delta_median=ci["fn"]["median"],
-                fp_delta_median=ci["fp"]["median"],
-            ))
+            ci = paired_bootstrap_cost(
+                y_te, p_24_n, p_20, k, SENSE["XGB-24full"], SENSE["XGB-20raw"]
+            )
+            boot_rows.append(
+                dict(
+                    noise_sigma=sigma,
+                    k_pct=k,
+                    cost_delta_median=ci["cost"]["median"],
+                    cost_delta_lo=ci["cost"]["lo"],
+                    cost_delta_hi=ci["cost"]["hi"],
+                    cost_ci_excludes_zero=ci["cost"]["excludes_zero"],
+                    tp_delta_median=ci["tp"]["median"],
+                    fn_delta_median=ci["fn"]["median"],
+                    fp_delta_median=ci["fp"]["median"],
+                )
+            )
     with (RES / "p8_iter88_noise_cost_boot.tsv").open("w") as f:
         w = csv.DictWriter(f, fieldnames=list(boot_rows[0].keys()), delimiter="\t")
         w.writeheader()
@@ -296,11 +326,15 @@ def main() -> None:
         ):
             front = pareto(y_te, p_pred, c_sense, K_PCT, recall_targets)
             for R in recall_targets:
-                pareto_rows.append(dict(
-                    noise_sigma=sigma, model=model, recall_target=R,
-                    cost_at_recall=front[R],
-                    infeasible=front[R] is None,
-                ))
+                pareto_rows.append(
+                    dict(
+                        noise_sigma=sigma,
+                        model=model,
+                        recall_target=R,
+                        cost_at_recall=front[R],
+                        infeasible=front[R] is None,
+                    )
+                )
     with (RES / "p8_iter88_noise_pareto.tsv").open("w") as f:
         w = csv.DictWriter(f, fieldnames=list(pareto_rows[0].keys()), delimiter="\t")
         w.writeheader()
@@ -308,26 +342,35 @@ def main() -> None:
             w.writerow(r)
 
     # ---- Figure: per-noise, the (recall, cost) curve for each model ----
-    fig, axes = plt.subplots(1, len(NOISE_LEVELS), figsize=(4.0 * len(NOISE_LEVELS), 3.6), sharey=True)
+    fig, axes = plt.subplots(
+        1, len(NOISE_LEVELS), figsize=(4.0 * len(NOISE_LEVELS), 3.6), sharey=True
+    )
     if len(NOISE_LEVELS) == 1:
         axes = [axes]
     colors = {"XGB-20raw": "tab:blue", "XGB-24full": "tab:red", "XGB-4sensor": "tab:green"}
     markers = {"XGB-20raw": "s", "XGB-24full": "o", "XGB-4sensor": "^"}
-    for ax, sigma in zip(axes, NOISE_LEVELS):
+    for ax, sigma in zip(axes, NOISE_LEVELS, strict=False):
         for model in ("XGB-20raw", "XGB-24full", "XGB-4sensor"):
             sub = [r for r in rows if r["noise_sigma"] == sigma and r["model"] == model]
             sub.sort(key=lambda r: r["k_pct"])
             ax.plot(
                 [r["recall"] for r in sub],
                 [r["cost"] for r in sub],
-                marker=markers[model], color=colors[model], label=model, linewidth=1.2, markersize=4,
+                marker=markers[model],
+                color=colors[model],
+                label=model,
+                linewidth=1.2,
+                markersize=4,
             )
         ax.set_title(f"sigma = {sigma}")
         ax.set_xlabel("recall")
         ax.grid(True, alpha=0.3)
     axes[0].set_ylabel("expected cost ($/decision)")
     axes[0].legend(fontsize=8)
-    fig.suptitle("P8 iter-88 — noise × cost-vs-recall frontier (rho=200, $0.50/alert, $100/miss)", fontsize=10)
+    fig.suptitle(
+        "P8 iter-88 — noise × cost-vs-recall frontier (rho=200, $0.50/alert, $100/miss)",
+        fontsize=10,
+    )
     fig.tight_layout(rect=(0, 0, 1, 0.95))
     fig.savefig(FIG / "p8_iter88_noise_pareto.png", dpi=140)
     fig.savefig(FIG / "p8_iter88_noise_pareto.pdf")
@@ -338,12 +381,15 @@ def main() -> None:
     headline_rows = []
     for sigma in NOISE_LEVELS:
         row = next(r for r in boot_rows if r["noise_sigma"] == sigma and r["k_pct"] == 1.0)
-        headline_rows.append(dict(
-            sigma=sigma,
-            cost_delta_median=row["cost_delta_median"],
-            ci_lo=row["cost_delta_lo"], ci_hi=row["cost_delta_hi"],
-            sig=(row["cost_ci_excludes_zero"]),
-        ))
+        headline_rows.append(
+            dict(
+                sigma=sigma,
+                cost_delta_median=row["cost_delta_median"],
+                ci_lo=row["cost_delta_lo"],
+                ci_hi=row["cost_delta_hi"],
+                sig=(row["cost_ci_excludes_zero"]),
+            )
+        )
     # Headline 2: at noise=0.10 (typical LLM extraction noise), the K* at which XGB-24
     # Pareto-dominates XGB-20 on cost_at_recall(0.80)
     sig10 = [r for r in pareto_rows if r["noise_sigma"] == 0.10 and r["recall_target"] == 0.80]
@@ -368,7 +414,9 @@ def main() -> None:
         "rho": L_MISS / C_INV,
         "headline_k1pct_noise": headline_rows,
         "headline_noise_cross_at_recall_0p80": [
-            dict(sigma=s, cost_24full=c24, cost_20raw=c20, cost_4sensor=c04, delta_24_vs_20=c24 - c20)
+            dict(
+                sigma=s, cost_24full=c24, cost_20raw=c20, cost_4sensor=c04, delta_24_vs_20=c24 - c20
+            )
             for s, c24, c20, c04, _ in noise_cross
         ],
         "n_boot": N_BOOT,

@@ -132,9 +132,7 @@ def _contains_banned_receipt_markers(value: Any) -> bool:
         return any(marker in lowered for marker in _BANNED_RECEIPT_MARKERS)
     if isinstance(value, Mapping):
         return any(
-            _contains_banned_receipt_markers(item)
-            for item in value.values()
-            if item is not None
+            _contains_banned_receipt_markers(item) for item in value.values() if item is not None
         )
     if isinstance(value, Sequence) and not isinstance(value, (bytes, str)):
         return any(_contains_banned_receipt_markers(item) for item in value)
@@ -183,9 +181,7 @@ def _validate_examples(records: Any) -> list[dict[str, str]]:
                     f"per_example[{index}].verdict must be pass|fail|error"
                 )
         else:
-            raise BFCLReceiptBoundaryError(
-                f"per_example[{index}].verdict must be pass|fail|error"
-            )
+            raise BFCLReceiptBoundaryError(f"per_example[{index}].verdict must be pass|fail|error")
 
         normalized.append((example_id, category, verdict_value))
         ids.append(example_id)
@@ -218,9 +214,7 @@ def _validate_wandb(raw: Any) -> dict[str, str]:
     if not HTTPS_URL.fullmatch(run_url):
         raise BFCLReceiptBoundaryError("wandb_run_identity.run_url must be HTTPS")
     if "wandb.ai" not in run_url:
-        raise BFCLReceiptBoundaryError(
-            "wandb_run_identity.run_url must be a W&B run URL"
-        )
+        raise BFCLReceiptBoundaryError("wandb_run_identity.run_url must be a W&B run URL")
     return normalized
 
 
@@ -271,7 +265,10 @@ def _validate_hf_checkpoints(raw: Any) -> list[dict[str, Any]]:
     for index, checkpoint in enumerate(raw):
         if not isinstance(checkpoint, Mapping):
             raise BFCLReceiptBoundaryError(f"hf_checkpoints[{index}] must be an object")
-        repo = _valid_url(_first_text(checkpoint, "repo_url", "repo", "repository"), f"hf_checkpoints[{index}].repo_url")
+        repo = _valid_url(
+            _first_text(checkpoint, "repo_url", "repo", "repository"),
+            f"hf_checkpoints[{index}].repo_url",
+        )
         revision = _require_lower_hex40(
             _first_text(checkpoint, "revision", "commit", "sha"),
             f"hf_checkpoints[{index}].revision",
@@ -361,16 +358,12 @@ def build_receipt_record(manifest: Mapping[str, Any]) -> dict[str, Any]:
 
         category = _require_text(manifest.get("category"), "category")
         if category != NATIVE_CATEGORY:
-            blockers.append(
-                f"category must be {NATIVE_CATEGORY!r}, found {category!r}"
-            )
+            blockers.append(f"category must be {NATIVE_CATEGORY!r}, found {category!r}")
 
         dataset = manifest.get("dataset")
         if not isinstance(dataset, Mapping):
             raise BFCLReceiptBoundaryError("dataset must be an object")
-        dataset_revision = _require_lower_hex40(
-            dataset.get("revision"), "dataset.revision"
-        )
+        dataset_revision = _require_lower_hex40(dataset.get("revision"), "dataset.revision")
         dataset_source = _require_text(dataset.get("source"), "dataset.source").lower()
         if "glaive" in dataset_source or "synthetic" in dataset_source:
             blockers.append("dataset source references synthetic/Glaive evidence")
@@ -414,9 +407,7 @@ def build_receipt_record(manifest: Mapping[str, Any]) -> dict[str, Any]:
 
         blockers = sorted(set(blockers))
         per_example_count = len(per_example)
-        per_example_verdicts = sorted(
-            {item["verdict"] for item in per_example}
-        )
+        per_example_verdicts = sorted({item["verdict"] for item in per_example})
 
         per_example_payload = {
             "suite_id": suite_id,
@@ -459,12 +450,16 @@ def build_receipt_record(manifest: Mapping[str, Any]) -> dict[str, Any]:
     except BFCLReceiptBoundaryError as exc:
         return {
             "schema_version": SCHEMA_VERSION,
-            "suite_id": manifest.get("suite_id", "<missing>") if isinstance(manifest, Mapping) else "<invalid>",
+            "suite_id": manifest.get("suite_id", "<missing>")
+            if isinstance(manifest, Mapping)
+            else "<invalid>",
             "exact_suite": isinstance(manifest, Mapping) and manifest.get("suite_id") == SUITE_ID,
             "receipt_ready": False,
             "paid_launch_allowed": False,
             "launch": {"allowed": False, "reasons": ["launch is intentionally disabled"]},
-            "category": manifest.get("category", "<missing>") if isinstance(manifest, Mapping) else "<missing>",
+            "category": manifest.get("category", "<missing>")
+            if isinstance(manifest, Mapping)
+            else "<missing>",
             "dataset_revision": None,
             "dataset_source": None,
             "adapter_manifest_digest": None,

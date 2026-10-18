@@ -11,7 +11,7 @@ import sys
 from typing import Any, TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from . import pavlov_verilog_eval_adapter as validator  # noqa: F401
+    from . import pavlov_verilog_eval_adapter as validator
 else:
     try:
         from . import pavlov_verilog_eval_adapter as validator
@@ -134,191 +134,198 @@ def _valid_manifest() -> dict[str, Any]:
 class VerilogEvalBoundaryTests(unittest.TestCase):
     def test_valid_manifest_builds_ready_and_disables_launch(self) -> None:
         report = validator.build_verilog_eval_boundary_record(_valid_manifest())
-        self.assertEqual(report["status"], "READY")
-        self.assertTrue(report["eval_ready"])
-        self.assertTrue(report.get("adapter_ready", report["eval_ready"]))
-        self.assertFalse(report["paid_launch_allowed"])
-        self.assertFalse(report["launch"]["allowed"])
-        self.assertIn("launch is intentionally disabled", report["launch"]["reasons"])
-        self.assertFalse(report["held_out"])
-        self.assertFalse(report["held_out_receipt_proven"])
-        self.assertEqual(report["split"]["primary_eval"]["count"], 3)
-        self.assertEqual(len(report["hf_checkpoints"]), 3)
+        assert report["status"] == "READY"
+        assert report["eval_ready"]
+        assert report.get("adapter_ready", report["eval_ready"])
+        assert not report["paid_launch_allowed"]
+        assert not report["launch"]["allowed"]
+        assert "launch is intentionally disabled" in report["launch"]["reasons"]
+        assert not report["held_out"]
+        assert not report["held_out_receipt_proven"]
+        assert report["split"]["primary_eval"]["count"] == 3
+        assert len(report["hf_checkpoints"]) == 3
 
     def test_authoritative_source_and_suite_must_match(self) -> None:
         manifest = _valid_manifest()
         manifest["suite_id"] = "swe_bench_pro_eval"
         blocked = validator.build_verilog_eval_boundary_record(manifest)
-        self.assertEqual(blocked["status"], "BLOCKED")
-        self.assertTrue(any("suite_id must be 'verilog_eval'" in item for item in blocked["blockers"]))
+        assert blocked["status"] == "BLOCKED"
+        assert any("suite_id must be 'verilog_eval'" in item for item in blocked["blockers"])
 
         manifest = _valid_manifest()
         manifest["source"] = "https://github.com/other/repo"
         blocked = validator.build_verilog_eval_boundary_record(manifest)
-        self.assertEqual(blocked["status"], "BLOCKED")
-        self.assertTrue(any("source must match authoritative" in item for item in blocked["blockers"]))
+        assert blocked["status"] == "BLOCKED"
+        assert any("source must match authoritative" in item for item in blocked["blockers"])
 
     def test_pinned_dataset_revision_and_license_required(self) -> None:
         manifest = _valid_manifest()
         manifest["dataset"]["revision"] = "main"
         blocked = validator.build_verilog_eval_boundary_record(manifest)
-        self.assertEqual(blocked["status"], "BLOCKED")
-        self.assertTrue(any("dataset.revision" in item for item in blocked["blockers"]))
+        assert blocked["status"] == "BLOCKED"
+        assert any("dataset.revision" in item for item in blocked["blockers"])
 
         manifest = _valid_manifest()
         manifest["dataset"]["license"] = "to_be_pinned_before_paid_runs"
         blocked = validator.build_verilog_eval_boundary_record(manifest)
-        self.assertEqual(blocked["status"], "BLOCKED")
-        self.assertTrue(any("dataset.license" in item or "dataset license" in item for item in blocked["blockers"]))
+        assert blocked["status"] == "BLOCKED"
+        assert any(
+            "dataset.license" in item or "dataset license" in item for item in blocked["blockers"]
+        )
 
     def test_rejects_xlam_and_glaive_markers(self) -> None:
         manifest = _valid_manifest()
         manifest["dataset"]["source"] = "https://github.com/Salesforce/xlam-function-calling-60k"
         blocked = validator.build_verilog_eval_boundary_record(manifest)
-        self.assertEqual(blocked["status"], "BLOCKED")
-        self.assertTrue(any("must match authoritative" in item for item in blocked["blockers"]))
+        assert blocked["status"] == "BLOCKED"
+        assert any("must match authoritative" in item for item in blocked["blockers"])
 
         manifest = _valid_manifest()
         manifest["verifier"]["identity"] = "glaive-function-calling-v2"
         blocked = validator.build_verilog_eval_boundary_record(manifest)
-        self.assertEqual(blocked["status"], "BLOCKED")
-        self.assertTrue(any("verifier references" in item for item in blocked["blockers"]))
+        assert blocked["status"] == "BLOCKED"
+        assert any("verifier references" in item for item in blocked["blockers"])
 
     def test_task_hash_and_split_hashes_are_deterministic(self) -> None:
         manifest = _valid_manifest()
         manifest["task_id_hashes"] = sorted(manifest["task_id_hashes"], reverse=True)
         blocked = validator.build_verilog_eval_boundary_record(manifest)
-        self.assertEqual(blocked["status"], "BLOCKED")
-        self.assertTrue(any("deterministically sorted" in item for item in blocked["blockers"]))
+        assert blocked["status"] == "BLOCKED"
+        assert any("deterministically sorted" in item for item in blocked["blockers"])
 
         manifest = _valid_manifest()
         manifest["split"]["hash"] = "sha256:" + ("d" * 64)
         blocked = validator.build_verilog_eval_boundary_record(manifest)
-        self.assertEqual(blocked["status"], "BLOCKED")
-        self.assertTrue(any("aggregate hash does not match" in item for item in blocked["blockers"]))
+        assert blocked["status"] == "BLOCKED"
+        assert any("aggregate hash does not match" in item for item in blocked["blockers"])
 
         manifest = _valid_manifest()
         manifest["split_manifest_hash"] = "sha256:" + ("d" * 64)
         blocked = validator.build_verilog_eval_boundary_record(manifest)
-        self.assertEqual(blocked["status"], "BLOCKED")
-        self.assertTrue(any("split_manifest_hash does not match observed split" in item for item in blocked["blockers"]))
+        assert blocked["status"] == "BLOCKED"
+        assert any(
+            "split_manifest_hash does not match observed split" in item
+            for item in blocked["blockers"]
+        )
 
     def test_held_out_requires_receipt(self) -> None:
         manifest = _valid_manifest()
         manifest["held_out"] = True
         manifest["scope"]["is_held_out"] = True
         blocked = validator.build_verilog_eval_boundary_record(manifest)
-        self.assertEqual(blocked["status"], "BLOCKED")
-        self.assertTrue(any("held_out_receipt_ref" in item for item in blocked["blockers"]))
+        assert blocked["status"] == "BLOCKED"
+        assert any("held_out_receipt_ref" in item for item in blocked["blockers"])
 
         manifest = _valid_manifest()
         manifest["held_out"] = False
         manifest["held_out_receipt_ref"] = "sha256:" + ("d" * 64)
         blocked = validator.build_verilog_eval_boundary_record(manifest)
-        self.assertEqual(blocked["status"], "BLOCKED")
-        self.assertTrue(any("held_out_receipt_ref is forbidden" in item for item in blocked["blockers"]))
+        assert blocked["status"] == "BLOCKED"
+        assert any("held_out_receipt_ref is forbidden" in item for item in blocked["blockers"])
 
         manifest = _valid_manifest()
         manifest["held_out"] = True
         manifest["held_out_receipt_ref"] = "sha256:" + ("d" * 64)
         manifest["scope"]["is_held_out"] = True
         report = validator.build_verilog_eval_boundary_record(manifest)
-        self.assertEqual(report["status"], "READY")
-        self.assertTrue(report["held_out"])
-        self.assertTrue(report["held_out_receipt_proven"])
+        assert report["status"] == "READY"
+        assert report["held_out"]
+        assert report["held_out_receipt_proven"]
 
     def test_scope_must_be_explicit_non_portfolio(self) -> None:
         manifest = _valid_manifest()
         manifest["scope"] = {"is_portfolio": True, "is_held_out": False}
         blocked = validator.build_verilog_eval_boundary_record(manifest)
-        self.assertEqual(blocked["status"], "BLOCKED")
-        self.assertTrue(any("scope.is_portfolio must be false" in item for item in blocked["blockers"]))
+        assert blocked["status"] == "BLOCKED"
+        assert any("scope.is_portfolio must be false" in item for item in blocked["blockers"])
 
         manifest = _valid_manifest()
         del manifest["scope"]
         blocked = validator.build_verilog_eval_boundary_record(manifest)
-        self.assertEqual(blocked["status"], "BLOCKED")
-        self.assertTrue(any("scope must be an object" in item for item in blocked["blockers"]))
+        assert blocked["status"] == "BLOCKED"
+        assert any("scope must be an object" in item for item in blocked["blockers"])
 
     def test_wandb_tinker_and_hf_receipts_required_and_hard(self) -> None:
         manifest = _valid_manifest()
         manifest["wandb_run_identity"]["online"] = False
         blocked = validator.build_verilog_eval_boundary_record(manifest)
-        self.assertEqual(blocked["status"], "BLOCKED")
-        self.assertTrue(any("online must be true" in item for item in blocked["blockers"]))
+        assert blocked["status"] == "BLOCKED"
+        assert any("online must be true" in item for item in blocked["blockers"])
 
         manifest = _valid_manifest()
         manifest["tinker_run_identity"]["cost_status"] = "pending"
         blocked = validator.build_verilog_eval_boundary_record(manifest)
-        self.assertEqual(blocked["status"], "BLOCKED")
-        self.assertTrue(any("cost_status is invalid" in item for item in blocked["blockers"]))
+        assert blocked["status"] == "BLOCKED"
+        assert any("cost_status is invalid" in item for item in blocked["blockers"])
 
         manifest = _valid_manifest()
         manifest["hf_checkpoints"] = manifest["hf_checkpoints"][:2]
         blocked = validator.build_verilog_eval_boundary_record(manifest)
-        self.assertEqual(blocked["status"], "BLOCKED")
-        self.assertTrue(any("missing required stage" in item for item in blocked["blockers"]))
+        assert blocked["status"] == "BLOCKED"
+        assert any("missing required stage" in item for item in blocked["blockers"])
 
         manifest = _valid_manifest()
         manifest["hf_checkpoints"][0]["safe_public_artifact"] = False
         blocked = validator.build_verilog_eval_boundary_record(manifest)
-        self.assertEqual(blocked["status"], "BLOCKED")
-        self.assertTrue(any("safe_public_artifact must match visibility" in item for item in blocked["blockers"]))
+        assert blocked["status"] == "BLOCKED"
+        assert any(
+            "safe_public_artifact must match visibility" in item for item in blocked["blockers"]
+        )
 
     def test_costs_require_non_negative_number(self) -> None:
         manifest = _valid_manifest()
         manifest["costs"]["status"] = "pending"
         blocked = validator.build_verilog_eval_boundary_record(manifest)
-        self.assertEqual(blocked["status"], "BLOCKED")
-        self.assertTrue(any("costs.status is invalid" in item for item in blocked["blockers"]))
+        assert blocked["status"] == "BLOCKED"
+        assert any("costs.status is invalid" in item for item in blocked["blockers"])
 
         manifest = _valid_manifest()
         manifest["costs"]["total_usd"] = -1
         blocked = validator.build_verilog_eval_boundary_record(manifest)
-        self.assertEqual(blocked["status"], "BLOCKED")
-        self.assertTrue(any("finite and non-negative" in item for item in blocked["blockers"]))
+        assert blocked["status"] == "BLOCKED"
+        assert any("finite and non-negative" in item for item in blocked["blockers"])
 
     def test_offline_gate_blocks_network_and_credentials(self) -> None:
         manifest = _valid_manifest()
         manifest["requires_network"] = True
         blocked = validator.build_verilog_eval_boundary_record(manifest)
-        self.assertEqual(blocked["status"], "BLOCKED")
-        self.assertTrue(any("network is disallowed" in item for item in blocked["blockers"]))
+        assert blocked["status"] == "BLOCKED"
+        assert any("network is disallowed" in item for item in blocked["blockers"])
 
         manifest = _valid_manifest()
         manifest["api_key"] = "sk-test"
         blocked = validator.build_verilog_eval_boundary_record(manifest)
-        self.assertEqual(blocked["status"], "BLOCKED")
-        self.assertTrue(any("api_key is not allowed" in item for item in blocked["blockers"]))
+        assert blocked["status"] == "BLOCKED"
+        assert any("api_key is not allowed" in item for item in blocked["blockers"])
 
     def test_split_and_output_digests_are_repeatable(self) -> None:
         report_a = validator.build_verilog_eval_boundary_record(_valid_manifest())
         report_b = validator.build_verilog_eval_boundary_record(copy.deepcopy(_valid_manifest()))
-        self.assertEqual(report_a["status"], "READY")
-        self.assertEqual(report_b["status"], "READY")
-        self.assertEqual(report_a["task_id_digest"], report_b["task_id_digest"])
-        self.assertEqual(
-            report_a["authority_split_manifest_digest"],
-            report_b["authority_split_manifest_digest"],
+        assert report_a["status"] == "READY"
+        assert report_b["status"] == "READY"
+        assert report_a["task_id_digest"] == report_b["task_id_digest"]
+        assert (
+            report_a["authority_split_manifest_digest"]
+            == report_b["authority_split_manifest_digest"]
         )
 
     def test_validator_api_matches_status(self) -> None:
         report = validator.build_verilog_eval_boundary_record(_valid_manifest())
-        self.assertEqual(validator.validate_verilog_eval_boundary_record(report), [])
+        assert validator.validate_verilog_eval_boundary_record(report) == []
 
         blocked = validator.build_verilog_eval_boundary_record({"suite_id": "x"})
-        self.assertNotEqual(validator.validate_verilog_eval_boundary_record(blocked), [])
+        assert validator.validate_verilog_eval_boundary_record(blocked) != []
 
     def test_main_reports_status(self) -> None:
         valid = _valid_manifest()
         temporary = Path(__file__).resolve().parent / "_tmp_verilog_eval_manifest.json"
         try:
             temporary.write_text(json.dumps(valid), encoding="utf-8")
-            self.assertEqual(validator.main(["--manifest", str(temporary)]), 0)
+            assert validator.main(["--manifest", str(temporary)]) == 0
 
             valid["suite_id"] = "not-verilog"
             temporary.write_text(json.dumps(valid), encoding="utf-8")
-            self.assertEqual(validator.main(["--manifest", str(temporary)]), 1)
+            assert validator.main(["--manifest", str(temporary)]) == 1
         finally:
             if temporary.exists():
                 temporary.unlink()

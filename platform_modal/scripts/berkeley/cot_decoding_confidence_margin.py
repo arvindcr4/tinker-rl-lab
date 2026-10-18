@@ -28,10 +28,11 @@ We test five hypotheses on the same-stack group-size sweep
   H5 group-size link      : mean terminal M decreases monotonically with G
                             (larger G sits more on the frontier -> Pillar 3).
 """
+
 import json
 import math
 import os
-from statistics import mean, pstdev
+from statistics import mean
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 SRC = os.path.join(ROOT, "platform_hybrid/experiments/results/groupsize_zvf_sweep.json")
@@ -48,7 +49,7 @@ def pearson(xs, ys):
     sy = math.sqrt(sum((y - my) ** 2 for y in ys))
     if sx == 0 or sy == 0:
         return float("nan")
-    return sum((x - mx) * (y - my) for x, y in zip(xs, ys)) / (sx * sy)
+    return sum((x - mx) * (y - my) for x, y in zip(xs, ys, strict=False)) / (sx * sy)
 
 
 def spearman(xs, ys):
@@ -65,6 +66,7 @@ def spearman(xs, ys):
                 r[order[k]] = avg
             i = j + 1
         return r
+
     return pearson(rank(xs), rank(ys))
 
 
@@ -73,7 +75,7 @@ def ols_slope(xs, ys):
     den = sum((x - mx) ** 2 for x in xs)
     if den == 0:
         return float("nan")
-    return sum((x - mx) * (y - my) for x, y in zip(xs, ys)) / den
+    return sum((x - mx) * (y - my) for x, y in zip(xs, ys, strict=False)) / den
 
 
 def margin(mr):
@@ -113,42 +115,65 @@ def main():
         ent_mean = mean(ent)
 
         h1_rows.append((G, seed, round(rho_M_zvf, 4)))
-        h2_rows.append((G, seed, round(slope_M, 5), round(slope_ent, 5),
-                        int(slope_M > 0 and slope_ent < 0)))
-        h4_rows.append((G, seed, round(M_peak, 4), round(M_term, 4),
-                        int(M_peak < M_term), round(rho_M_av, 4)))
-        per_run.append(dict(G=G, seed=seed, heldout=r["heldout_acc"],
-                            ent_mean=ent_mean, M_term=M_term, rho_M_zvf=rho_M_zvf,
-                            rho_M_av=rho_M_av, M_peak=M_peak,
-                            slope_M=slope_M, slope_ent=slope_ent))
+        h2_rows.append(
+            (G, seed, round(slope_M, 5), round(slope_ent, 5), int(slope_M > 0 and slope_ent < 0))
+        )
+        h4_rows.append(
+            (G, seed, round(M_peak, 4), round(M_term, 4), int(M_peak < M_term), round(rho_M_av, 4))
+        )
+        per_run.append(
+            dict(
+                G=G,
+                seed=seed,
+                heldout=r["heldout_acc"],
+                ent_mean=ent_mean,
+                M_term=M_term,
+                rho_M_zvf=rho_M_zvf,
+                rho_M_av=rho_M_av,
+                M_peak=M_peak,
+                slope_M=slope_M,
+                slope_ent=slope_ent,
+            )
+        )
 
     # ---- H1 ----
     med_rho1 = sorted(x[2] for x in h1_rows)[len(h1_rows) // 2]
     h1_decisive = med_rho1 > 0.7
-    write_tsv(os.path.join(OUT, "cot_decoding_h1_margin_validity.tsv"),
-              ["group_size", "seed", "rho_M_zvf"], h1_rows)
+    write_tsv(
+        os.path.join(OUT, "cot_decoding_h1_margin_validity.tsv"),
+        ["group_size", "seed", "rho_M_zvf"],
+        h1_rows,
+    )
 
     # ---- H2 ----
     n_both = sum(x[4] for x in h2_rows)
     h2_decisive = n_both >= 10
-    write_tsv(os.path.join(OUT, "cot_decoding_h2_train_confidence.tsv"),
-              ["group_size", "seed", "slope_M", "slope_entropy", "both_signs"], h2_rows)
+    write_tsv(
+        os.path.join(OUT, "cot_decoding_h2_train_confidence.tsv"),
+        ["group_size", "seed", "slope_M", "slope_entropy", "both_signs"],
+        h2_rows,
+    )
 
     # ---- H3 ----
     ent_means = [p["ent_mean"] for p in per_run]
     held = [p["heldout"] for p in per_run]
     rho3 = spearman(ent_means, held)
-    h3_decisive = (rho3 < -0.3)  # concentration (low entropy) -> higher acc
-    write_tsv(os.path.join(OUT, "cot_decoding_h3_confidence_accuracy.tsv"),
-              ["group_size", "seed", "mean_entropy", "heldout_acc"],
-              [(p["G"], p["seed"], round(p["ent_mean"], 4), round(p["heldout"], 4)) for p in per_run])
+    h3_decisive = rho3 < -0.3  # concentration (low entropy) -> higher acc
+    write_tsv(
+        os.path.join(OUT, "cot_decoding_h3_confidence_accuracy.tsv"),
+        ["group_size", "seed", "mean_entropy", "heldout_acc"],
+        [(p["G"], p["seed"], round(p["ent_mean"], 4), round(p["heldout"], 4)) for p in per_run],
+    )
 
     # ---- H4 ----
     n_peak_lt_term = sum(x[4] for x in h4_rows)
     med_rho_av = sorted(x[5] for x in h4_rows)[len(h4_rows) // 2]
-    h4_decisive = (n_peak_lt_term >= 10 and med_rho_av < 0)
-    write_tsv(os.path.join(OUT, "cot_decoding_h4_frontier_tension.tsv"),
-              ["group_size", "seed", "M_peaklearn", "M_terminal", "peak_lt_term", "rho_M_advvar"], h4_rows)
+    h4_decisive = n_peak_lt_term >= 10 and med_rho_av < 0
+    write_tsv(
+        os.path.join(OUT, "cot_decoding_h4_frontier_tension.tsv"),
+        ["group_size", "seed", "M_peaklearn", "M_terminal", "peak_lt_term", "rho_M_advvar"],
+        h4_rows,
+    )
 
     # ---- H5 ----
     by_G = {}
@@ -160,8 +185,11 @@ def main():
     monotone_dec = all(vals[i] >= vals[i + 1] for i in range(len(vals) - 1))
     rho5 = spearman([p["G"] for p in per_run], [p["M_term"] for p in per_run])
     h5_decisive = monotone_dec and rho5 < 0
-    write_tsv(os.path.join(OUT, "cot_decoding_h5_group_size_margin.tsv"),
-              ["group_size", "mean_terminal_margin"], [(G, v) for G, v in meanM_by_G])
+    write_tsv(
+        os.path.join(OUT, "cot_decoding_h5_group_size_margin.tsv"),
+        ["group_size", "mean_terminal_margin"],
+        [(G, v) for G, v in meanM_by_G],
+    )
 
     decisive = sum([h1_decisive, h2_decisive, h3_decisive, h4_decisive, h5_decisive])
     summary = {
@@ -171,14 +199,29 @@ def main():
         "data": "platform_hybrid/experiments/results/groupsize_zvf_sweep.json (4 G x 3 seeds, 40 steps)",
         "margin_def": "M_t = |2*mean_reward_t - 1| (group-level analog of CoT-decoding Delta)",
         "H1_margin_validity": {"median_rho_M_zvf": round(med_rho1, 4), "decisive": h1_decisive},
-        "H2_train_confidence": {"n_runs_both_signs": n_both, "of": len(h2_rows), "decisive": h2_decisive},
-        "H3_confidence_accuracy": {"spearman_entropy_heldout": round(rho3, 4), "decisive": h3_decisive},
-        "H4_frontier_tension": {"n_peak_lt_terminal": n_peak_lt_term, "of": len(h4_rows),
-"median_rho_M_advvar": round(med_rho_av, 4), "decisive": h4_decisive},
-        "H5_group_size_margin": {"mean_terminal_margin_by_G": dict(meanM_by_G),
-                                  "monotone_decreasing": monotone_dec,
-                                  "spearman_G_margin": round(rho5, 4), "decisive": h5_decisive},
-        "n_decisive": decisive, "n_hypotheses": 5,
+        "H2_train_confidence": {
+            "n_runs_both_signs": n_both,
+            "of": len(h2_rows),
+            "decisive": h2_decisive,
+        },
+        "H3_confidence_accuracy": {
+            "spearman_entropy_heldout": round(rho3, 4),
+            "decisive": h3_decisive,
+        },
+        "H4_frontier_tension": {
+            "n_peak_lt_terminal": n_peak_lt_term,
+            "of": len(h4_rows),
+            "median_rho_M_advvar": round(med_rho_av, 4),
+            "decisive": h4_decisive,
+        },
+        "H5_group_size_margin": {
+            "mean_terminal_margin_by_G": dict(meanM_by_G),
+            "monotone_decreasing": monotone_dec,
+            "spearman_G_margin": round(rho5, 4),
+            "decisive": h5_decisive,
+        },
+        "n_decisive": decisive,
+        "n_hypotheses": 5,
         "verdict": "DECISIVE" if decisive >= 4 else ("SUGGESTIVE" if decisive >= 2 else "NULL"),
     }
     json.dump(summary, open(os.path.join(OUT, "cot_decoding_summary.json"), "w"), indent=2)

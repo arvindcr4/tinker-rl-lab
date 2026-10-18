@@ -76,9 +76,13 @@ def validate_manifest_pair(
     checkpoint_steps: list[int],
     expected: dict[str, Any],
 ) -> list[str]:
-    errors: list[str] = record_errors(record, manifest, heldout_n=expected["heldout_n"],
+    errors: list[str] = record_errors(
+        record,
+        manifest,
+        heldout_n=expected["heldout_n"],
         expected_execution=expected.get("execution"),
-        expected_changes=expected["treatment_changes"].get(record.get("arm")))
+        expected_changes=expected["treatment_changes"].get(record.get("arm")),
+    )
     if record.get("evidence_class") != "confirmatory":
         errors.append("local evidence_class is not confirmatory")
     for field in ("fingerprint", "stack_fingerprint"):
@@ -165,8 +169,7 @@ def verify_unit(
         observed_max_steps = state.get("max_steps")
         if global_step != step or observed_max_steps != max_steps:
             raise RuntimeError(
-                f"{unit}: {filename} has global_step={global_step}, "
-                f"max_steps={observed_max_steps}"
+                f"{unit}: {filename} has global_step={global_step}, max_steps={observed_max_steps}"
             )
         trainer_states[str(step)] = {
             "global_step": global_step,
@@ -264,9 +267,7 @@ def main(argv: list[str] | None = None) -> int:
     indexed, local_errors = aggregate_audit.validate_records(prereg, records)
     missing = aggregate_audit.missing_units(prereg, indexed)
     required_units = sum(
-        1
-        for _arm in prereg["core_stratum"]["arms"]
-        for _seed in prereg["core_stratum"]["seeds"]
+        1 for _arm in prereg["core_stratum"]["arms"] for _seed in prereg["core_stratum"]["seeds"]
     )
     if local_errors or missing or len(indexed) != required_units:
         report = {
@@ -295,8 +296,13 @@ def main(argv: list[str] | None = None) -> int:
                 checkpoint_steps=checkpoint_steps,
                 max_steps=int(core["train_steps"]),
                 credentials=credentials,
-                expected={"heldout_n": core["heldout"]["n"], "execution": execution_contract(core),
-                          "treatment_changes": {arm: config["allowed_changes"] for arm, config in core["arms"].items()}},
+                expected={
+                    "heldout_n": core["heldout"]["n"],
+                    "execution": execution_contract(core),
+                    "treatment_changes": {
+                        arm: config["allowed_changes"] for arm, config in core["arms"].items()
+                    },
+                },
             ): (record["arm"], record["seed"])
             for path, record in records
         }
@@ -312,7 +318,9 @@ def main(argv: list[str] | None = None) -> int:
 
     results.sort(key=lambda item: item["unit"])
     report = {
-        "status": "COMPLETE" if not remote_errors and len(results) == required_units else "INCOMPLETE",
+        "status": "COMPLETE"
+        if not remote_errors and len(results) == required_units
+        else "INCOMPLETE",
         "required_units": required_units,
         "locally_validated_units": len(indexed),
         "remotely_verified_units": len(results),
@@ -320,7 +328,13 @@ def main(argv: list[str] | None = None) -> int:
         "units": results,
     }
     atomic_json(args.output, report)
-    print(json.dumps({key: value for key, value in report.items() if key != "units"}, indent=2, sort_keys=True))
+    print(
+        json.dumps(
+            {key: value for key, value in report.items() if key != "units"},
+            indent=2,
+            sort_keys=True,
+        )
+    )
     return 0 if report["status"] == "COMPLETE" else 2
 
 

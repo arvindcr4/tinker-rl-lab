@@ -36,6 +36,7 @@ Headlines:
 
 Stdlib + numpy + xgboost. <= 300 lines.
 """
+
 from __future__ import annotations
 
 import json
@@ -45,14 +46,16 @@ import numpy as np
 import xgboost as xgb
 
 import sys
+
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
-from _p8_common import (  # noqa: E402
+from _paths import REPO_ROOT
+from _p8_common import (
     RAW20,
     ALL24,
     load,
     auc_p8 as auc,
 )
+
 ROOT = REPO_ROOT
 RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8/corrected-review21-v2"
 RES.mkdir(parents=True, exist_ok=True)
@@ -69,25 +72,37 @@ SHIFT_LEVEL = 0.10
 
 def fit_xgb(Xtr, ytr, Xte, cols, seed):
     ci = [ALL24.index(c) for c in cols]
-    m = xgb.XGBClassifier(n_estimators=300, max_depth=5, learning_rate=0.1,
-                          subsample=0.8, colsample_bytree=0.8, eval_metric="logloss",
-                          random_state=seed, n_jobs=4)
+    m = xgb.XGBClassifier(
+        n_estimators=300,
+        max_depth=5,
+        learning_rate=0.1,
+        subsample=0.8,
+        colsample_bytree=0.8,
+        eval_metric="logloss",
+        random_state=seed,
+        n_jobs=4,
+    )
     m.fit(Xtr[:, ci], ytr)
     return m.predict_proba(Xte[:, ci])[:, 1]
 
 
 def pr_at_K(scores, y, k_pct):
-    n = len(y); k = max(1, int(round(k_pct / 100 * n)))
+    n = len(y)
+    k = max(1, int(round(k_pct / 100 * n)))
     top = np.argsort(-scores)[:k]
     return int(y[top].sum()) / max(1, int(y.sum())), int(y[top].sum())
 
 
 def apply_gradient_band(p_cheap, p_llm, g_thr, k_top):
     n = len(p_cheap)
-    order = np.argsort(-p_cheap); sorted_s = p_cheap[order]
-    grads = np.zeros(n); grads[1:] = sorted_s[:-1] - sorted_s[1:]
-    small = np.zeros(n, dtype=bool); small[order[1:]] = grads[1:] <= g_thr
-    top_k = np.zeros(n, dtype=bool); top_k[order[:k_top]] = True
+    order = np.argsort(-p_cheap)
+    sorted_s = p_cheap[order]
+    grads = np.zeros(n)
+    grads[1:] = sorted_s[:-1] - sorted_s[1:]
+    small = np.zeros(n, dtype=bool)
+    small[order[1:]] = grads[1:] <= g_thr
+    top_k = np.zeros(n, dtype=bool)
+    top_k[order[:k_top]] = True
     invoke = small & top_k
     comp = np.where(invoke, p_llm, p_cheap)
     return comp, int(invoke.sum())
@@ -98,8 +113,10 @@ def eval_rule(p_cheap, p_llm, y, k_top):
     recall_K, n_caught_K = pr_at_K(comp, y, K_PCT)
     cost_per = (n_llm * COST_LLM + len(y) * COST_XGB) / len(y)
     return {
-        "auc": auc(comp, y), "recall_at_K2": recall_K,
-        "n_caught_at_K2": n_caught_K, "n_llm_calls": n_llm,
+        "auc": auc(comp, y),
+        "recall_at_K2": recall_K,
+        "n_caught_at_K2": n_caught_K,
+        "n_llm_calls": n_llm,
         "cost_per_decision": cost_per,
     }
 
@@ -108,6 +125,7 @@ def boot_ci_paired(baseline_cheap, baseline_full, perturb_cheap, perturb_full, l
     """Paired new-batch routing/recall uncertainty, perturbation minus baseline."""
     rng = np.random.default_rng(seed)
     n = len(labels)
+
     def delta(idx):
         y = labels[idx]
         if y.sum() == 0:
@@ -115,22 +133,31 @@ def boot_ci_paired(baseline_cheap, baseline_full, perturb_cheap, perturb_full, l
         k = max(1, int(round(len(idx) * K_PCT / 100)))
         base, _ = apply_gradient_band(baseline_cheap[idx], baseline_full[idx], G_THR, k)
         pert, _ = apply_gradient_band(perturb_cheap[idx], perturb_full[idx], G_THR, k)
-        return float((y[np.argsort(-pert, kind="stable")[:k]].sum() - y[np.argsort(-base, kind="stable")[:k]].sum()) / y.sum())
+        return float(
+            (
+                y[np.argsort(-pert, kind="stable")[:k]].sum()
+                - y[np.argsort(-base, kind="stable")[:k]].sum()
+            )
+            / y.sum()
+        )
+
     point = delta(np.arange(n))
     draws = [delta(rng.integers(0, n, n)) for _ in range(B)]
     draws = [v for v in draws if v is not None]
     if point is None or not draws:
         return float("nan"), float("nan"), float("nan"), False
-    lo, hi = np.quantile(draws, [.025, .975])
+    lo, hi = np.quantile(draws, [0.025, 0.975])
     return point, float(lo), float(hi), bool(lo > 0 or hi < 0)
 
 
-
 def write_tsv(name, rows, cols):
-    if not rows: return
+    if not rows:
+        return
     lines = ["\t".join(cols)]
     for r in rows:
-        lines.append("\t".join(f"{r[c]:.6g}" if isinstance(r[c], float) else str(r[c]) for c in cols))
+        lines.append(
+            "\t".join(f"{r[c]:.6g}" if isinstance(r[c], float) else str(r[c]) for c in cols)
+        )
     (RES / name).write_text("\n".join(lines) + "\n")
 
 
@@ -138,7 +165,8 @@ def main():
     print("# === P8 per-feature perturbation robustness (JOB A iter 128) ===")
     Xtr, ytr = load(ROOT / "fraud_data.csv")
     Xte, yte = load(ROOT / "test_data.csv")
-    n_test = len(yte); n_pos = int(yte.sum())
+    n_test = len(yte)
+    n_pos = int(yte.sum())
     k_top = max(1, int(round(K_PCT / 100 * n_test)))
     print(f"# train={Xtr.shape}, test={Xte.shape}, n_pos={n_pos}, K_top={k_top}")
 
@@ -146,20 +174,27 @@ def main():
     p_te_20 = fit_xgb(Xtr, ytr, Xte, RAW20, SEED)
     p_te_24 = fit_xgb(Xtr, ytr, Xte, ALL24, SEED)
     base_metrics = eval_rule(p_te_20, p_te_24, yte, k_top)
-    print(f"# baseline (clean): AUC={base_metrics['auc']:.4f} "
-          f"recall@K2={base_metrics['recall_at_K2']:.4f} "
-          f"n_caught={base_metrics['n_caught_at_K2']}/{n_pos} "
-          f"n_llm={base_metrics['n_llm_calls']} "
-          f"cpd=${base_metrics['cost_per_decision']:.6f}")
+    print(
+        f"# baseline (clean): AUC={base_metrics['auc']:.4f} "
+        f"recall@K2={base_metrics['recall_at_K2']:.4f} "
+        f"n_caught={base_metrics['n_caught_at_K2']}/{n_pos} "
+        f"n_llm={base_metrics['n_llm_calls']} "
+        f"cpd=${base_metrics['cost_per_decision']:.6f}"
+    )
 
     base_top_idx = np.argsort(-p_te_20)[:k_top]
-    base_caught = np.zeros(n_test, dtype=int); base_caught[base_top_idx] = 1
+    base_caught = np.zeros(n_test, dtype=int)
+    base_caught[base_top_idx] = 1
     base_n_llm = np.zeros(n_test, dtype=int)
     # Reconstruct which test points would be LLM-called under baseline rule
-    order = np.argsort(-p_te_20); sorted_s = p_te_20[order]
-    grads = np.zeros(n_test); grads[1:] = sorted_s[:-1] - sorted_s[1:]
-    small = np.zeros(n_test, dtype=bool); small[order[1:]] = grads[1:] <= G_THR
-    top_k = np.zeros(n_test, dtype=bool); top_k[order[:k_top]] = True
+    order = np.argsort(-p_te_20)
+    sorted_s = p_te_20[order]
+    grads = np.zeros(n_test)
+    grads[1:] = sorted_s[:-1] - sorted_s[1:]
+    small = np.zeros(n_test, dtype=bool)
+    small[order[1:]] = grads[1:] <= G_THR
+    top_k = np.zeros(n_test, dtype=bool)
+    top_k[order[:k_top]] = True
     invoke = small & top_k
     base_n_llm = invoke.astype(int)
     print(f"# baseline: n_llm={int(base_n_llm.sum())}")
@@ -168,10 +203,17 @@ def main():
     feat_std = {f: float(Xte[:, ALL24.index(f)].std()) for f in ALL24}
 
     rows = []
-    summary = {"iter": 128, "timestamp": "2026-07-05",
-               "n_test": n_test, "n_pos": n_pos, "k_top": k_top,
-               "baseline": base_metrics, "noise_levels": NOISE_LEVELS,
-               "shift_level": SHIFT_LEVEL, "results": []}
+    summary = {
+        "iter": 128,
+        "timestamp": "2026-07-05",
+        "n_test": n_test,
+        "n_pos": n_pos,
+        "k_top": k_top,
+        "baseline": base_metrics,
+        "noise_levels": NOISE_LEVELS,
+        "shift_level": SHIFT_LEVEL,
+        "results": [],
+    }
     rng = np.random.default_rng(SEED)
 
     # ---- Sigma-noise perturbations ----
@@ -190,28 +232,53 @@ def main():
             d_caught = m_p["n_caught_at_K2"] - base_metrics["n_caught_at_K2"]
             d_llm = m_p["n_llm_calls"] - base_metrics["n_llm_calls"]
             # Bootstrap CI on delta recall@K2
-            order_p = np.argsort(-p_te_20_p); sorted_s_p = p_te_20_p[order_p]
-            grads_p = np.zeros(n_test); grads_p[1:] = sorted_s_p[:-1] - sorted_s_p[1:]
-            small_p = np.zeros(n_test, dtype=bool); small_p[order_p[1:]] = grads_p[1:] <= G_THR
-            top_k_p = np.zeros(n_test, dtype=bool); top_k_p[order_p[:k_top]] = True
+            order_p = np.argsort(-p_te_20_p)
+            sorted_s_p = p_te_20_p[order_p]
+            grads_p = np.zeros(n_test)
+            grads_p[1:] = sorted_s_p[:-1] - sorted_s_p[1:]
+            small_p = np.zeros(n_test, dtype=bool)
+            small_p[order_p[1:]] = grads_p[1:] <= G_THR
+            top_k_p = np.zeros(n_test, dtype=bool)
+            top_k_p[order_p[:k_top]] = True
             invoke_p = small_p & top_k_p
             comp_p = np.where(invoke_p, p_te_24_p, p_te_20_p)
             top_p_idx = np.argsort(-comp_p)[:k_top]
-            caught_p = np.zeros(n_test, dtype=int); caught_p[top_p_idx] = 1
-            mean_d, lo, hi, p_excl = boot_ci_paired(p_te_20, p_te_24, p_te_20_p, p_te_24_p, yte, N_BOOT, SEED + 7 + j)
-            rows.append({
-                "perturb_type": "sigma_noise", "feature": f, "level": f"{level:.3f}",
-                "delta_recall_K2": d_recall, "delta_caught": d_caught, "delta_n_llm": d_llm,
-                "delta_auc": m_p["auc"] - base_metrics["auc"],
-                "ci_lo": lo, "ci_hi": hi, "p_zero_excl": p_excl,
-                "verdict": "INCONCLUSIVE" if (lo <= 0 <= hi) else ("WORSE" if hi < 0 else "BETTER_OR_SAME"),
-                "sigma": sigma,
-            })
-            summary["results"].append({
-                "perturb_type": "sigma_noise", "feature": f, "level": level,
-                "delta_recall_K2": d_recall, "delta_caught": d_caught, "delta_n_llm": d_llm,
-                "ci_lo": lo, "ci_hi": hi, "p_zero_excl": p_excl,
-            })
+            caught_p = np.zeros(n_test, dtype=int)
+            caught_p[top_p_idx] = 1
+            mean_d, lo, hi, p_excl = boot_ci_paired(
+                p_te_20, p_te_24, p_te_20_p, p_te_24_p, yte, N_BOOT, SEED + 7 + j
+            )
+            rows.append(
+                {
+                    "perturb_type": "sigma_noise",
+                    "feature": f,
+                    "level": f"{level:.3f}",
+                    "delta_recall_K2": d_recall,
+                    "delta_caught": d_caught,
+                    "delta_n_llm": d_llm,
+                    "delta_auc": m_p["auc"] - base_metrics["auc"],
+                    "ci_lo": lo,
+                    "ci_hi": hi,
+                    "p_zero_excl": p_excl,
+                    "verdict": "INCONCLUSIVE"
+                    if (lo <= 0 <= hi)
+                    else ("WORSE" if hi < 0 else "BETTER_OR_SAME"),
+                    "sigma": sigma,
+                }
+            )
+            summary["results"].append(
+                {
+                    "perturb_type": "sigma_noise",
+                    "feature": f,
+                    "level": level,
+                    "delta_recall_K2": d_recall,
+                    "delta_caught": d_caught,
+                    "delta_n_llm": d_llm,
+                    "ci_lo": lo,
+                    "ci_hi": hi,
+                    "p_zero_excl": p_excl,
+                }
+            )
 
     # ---- Mean-shift perturbations ----
     print(f"# --- mean-shift level = {SHIFT_LEVEL} ---")
@@ -226,45 +293,75 @@ def main():
         d_recall = m_p["recall_at_K2"] - base_metrics["recall_at_K2"]
         d_caught = m_p["n_caught_at_K2"] - base_metrics["n_caught_at_K2"]
         d_llm = m_p["n_llm_calls"] - base_metrics["n_llm_calls"]
-        order_p = np.argsort(-p_te_20_p); sorted_s_p = p_te_20_p[order_p]
-        grads_p = np.zeros(n_test); grads_p[1:] = sorted_s_p[:-1] - sorted_s_p[1:]
-        small_p = np.zeros(n_test, dtype=bool); small_p[order_p[1:]] = grads_p[1:] <= G_THR
-        top_k_p = np.zeros(n_test, dtype=bool); top_k_p[order_p[:k_top]] = True
+        order_p = np.argsort(-p_te_20_p)
+        sorted_s_p = p_te_20_p[order_p]
+        grads_p = np.zeros(n_test)
+        grads_p[1:] = sorted_s_p[:-1] - sorted_s_p[1:]
+        small_p = np.zeros(n_test, dtype=bool)
+        small_p[order_p[1:]] = grads_p[1:] <= G_THR
+        top_k_p = np.zeros(n_test, dtype=bool)
+        top_k_p[order_p[:k_top]] = True
         invoke_p = small_p & top_k_p
         comp_p = np.where(invoke_p, p_te_24_p, p_te_20_p)
         top_p_idx = np.argsort(-comp_p)[:k_top]
-        caught_p = np.zeros(n_test, dtype=int); caught_p[top_p_idx] = 1
-        mean_d, lo, hi, p_excl = boot_ci_paired(p_te_20, p_te_24, p_te_20_p, p_te_24_p, yte, N_BOOT, SEED + 11 + j)
-        rows.append({
-            "perturb_type": "mean_shift", "feature": f, "level": f"{SHIFT_LEVEL:.3f}",
-            "delta_recall_K2": d_recall, "delta_caught": d_caught, "delta_n_llm": d_llm,
-            "delta_auc": m_p["auc"] - base_metrics["auc"],
-            "ci_lo": lo, "ci_hi": hi, "p_zero_excl": p_excl,
-            "verdict": "INCONCLUSIVE" if (lo <= 0 <= hi) else ("WORSE" if hi < 0 else "BETTER_OR_SAME"),
-            "sigma": sigma,
-        })
-        summary["results"].append({
-            "perturb_type": "mean_shift", "feature": f, "level": SHIFT_LEVEL,
-            "delta_recall_K2": d_recall, "delta_caught": d_caught, "delta_n_llm": d_llm,
-            "ci_lo": lo, "ci_hi": hi, "p_zero_excl": p_excl,
-        })
+        caught_p = np.zeros(n_test, dtype=int)
+        caught_p[top_p_idx] = 1
+        mean_d, lo, hi, p_excl = boot_ci_paired(
+            p_te_20, p_te_24, p_te_20_p, p_te_24_p, yte, N_BOOT, SEED + 11 + j
+        )
+        rows.append(
+            {
+                "perturb_type": "mean_shift",
+                "feature": f,
+                "level": f"{SHIFT_LEVEL:.3f}",
+                "delta_recall_K2": d_recall,
+                "delta_caught": d_caught,
+                "delta_n_llm": d_llm,
+                "delta_auc": m_p["auc"] - base_metrics["auc"],
+                "ci_lo": lo,
+                "ci_hi": hi,
+                "p_zero_excl": p_excl,
+                "verdict": "INCONCLUSIVE"
+                if (lo <= 0 <= hi)
+                else ("WORSE" if hi < 0 else "BETTER_OR_SAME"),
+                "sigma": sigma,
+            }
+        )
+        summary["results"].append(
+            {
+                "perturb_type": "mean_shift",
+                "feature": f,
+                "level": SHIFT_LEVEL,
+                "delta_recall_K2": d_recall,
+                "delta_caught": d_caught,
+                "delta_n_llm": d_llm,
+                "ci_lo": lo,
+                "ci_hi": hi,
+                "p_zero_excl": p_excl,
+            }
+        )
 
     # ---- Headline synthesis ----
-    rows_by_feat_lvl = {(r["perturb_type"], r["feature"]): r for r in rows
-                        if r["level"] == "0.200"}
-    rows_by_lvl_noise = [r for r in rows if r["perturb_type"] == "sigma_noise"
-                         and r["level"] == "0.200"]
+    rows_by_feat_lvl = {(r["perturb_type"], r["feature"]): r for r in rows if r["level"] == "0.200"}
+    rows_by_lvl_noise = [
+        r for r in rows if r["perturb_type"] == "sigma_noise" and r["level"] == "0.200"
+    ]
     rows_by_shift = [r for r in rows if r["perturb_type"] == "mean_shift"]
     abs_deltas_noise = sorted([abs(r["delta_recall_K2"]) for r in rows_by_lvl_noise], reverse=True)
     abs_deltas_shift = sorted([abs(r["delta_recall_K2"]) for r in rows_by_shift], reverse=True)
-    top3_noise = [r["feature"] for r in sorted(rows_by_lvl_noise,
-                                               key=lambda x: abs(x["delta_recall_K2"]),
-                                               reverse=True)[:3]]
-    bot3_noise = [r["feature"] for r in sorted(rows_by_lvl_noise,
-                                               key=lambda x: abs(x["delta_recall_K2"]))[:3]]
+    top3_noise = [
+        r["feature"]
+        for r in sorted(rows_by_lvl_noise, key=lambda x: abs(x["delta_recall_K2"]), reverse=True)[
+            :3
+        ]
+    ]
+    bot3_noise = [
+        r["feature"] for r in sorted(rows_by_lvl_noise, key=lambda x: abs(x["delta_recall_K2"]))[:3]
+    ]
     summary["H1_zero_ci_at_low_noise"] = all(
         r["ci_lo"] <= 0 <= r["ci_hi"]
-        for r in rows if r["perturb_type"] == "sigma_noise" and r["level"] == "0.050"
+        for r in rows
+        if r["perturb_type"] == "sigma_noise" and r["level"] == "0.050"
     )
     summary["H2_top3_noise_lvl_20"] = top3_noise
     summary["H2_bot3_noise_lvl_20"] = bot3_noise
@@ -279,18 +376,34 @@ def main():
     )
     summary["H3_n_features_total"] = len(rows_by_shift)
     summary["H4_top3_shift_vs_noise_lvl_05"] = {
-        r["feature"]: float(r["delta_recall_K2"]) for r in rows_by_shift
+        r["feature"]: float(r["delta_recall_K2"])
+        for r in rows_by_shift
         if r["feature"] in top3_noise
     }
     summary["H4_bot3_shift_vs_noise_lvl_05"] = {
-        r["feature"]: float(r["delta_recall_K2"]) for r in rows_by_shift
+        r["feature"]: float(r["delta_recall_K2"])
+        for r in rows_by_shift
         if r["feature"] in bot3_noise
     }
 
-    write_tsv("p8_iter128_per_feature_perturbation.tsv", rows,
-              ["perturb_type", "feature", "level", "delta_recall_K2",
-               "delta_caught", "delta_n_llm", "delta_auc",
-               "ci_lo", "ci_hi", "p_zero_excl", "verdict", "sigma"])
+    write_tsv(
+        "p8_iter128_per_feature_perturbation.tsv",
+        rows,
+        [
+            "perturb_type",
+            "feature",
+            "level",
+            "delta_recall_K2",
+            "delta_caught",
+            "delta_n_llm",
+            "delta_auc",
+            "ci_lo",
+            "ci_hi",
+            "p_zero_excl",
+            "verdict",
+            "sigma",
+        ],
+    )
     (RES / "p8_iter128_per_feature_perturbation_summary.json").write_text(
         json.dumps(summary, indent=2)
     )
@@ -298,8 +411,10 @@ def main():
     print(f"# H1 zero-CI at low noise: {summary['H1_zero_ci_at_low_noise']}")
     print(f"# H2 top3@0.20*sigma: {top3_noise}  bot3: {bot3_noise}")
     print(f"# H2 disjoint CI top3 vs bot3: {summary['H2_disjoint_ci_top3_vs_bot3']}")
-    print(f"# H3 features with shift CI excl zero: "
-          f"{summary['H3_n_features_shift_ci_excl_zero']}/{summary['H3_n_features_total']}")
+    print(
+        f"# H3 features with shift CI excl zero: "
+        f"{summary['H3_n_features_shift_ci_excl_zero']}/{summary['H3_n_features_total']}"
+    )
 
 
 if __name__ == "__main__":

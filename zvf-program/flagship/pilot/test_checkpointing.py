@@ -20,6 +20,7 @@ from pilot.checkpointing import (
 )
 from pilot.flops import PROFILED_STEPS, TrainingFlopLedger
 from pilot.protocol import build_screening_plan, load_protocol
+import pytest
 
 
 class TinyAdapter(torch.nn.Module):
@@ -111,7 +112,7 @@ class CheckpointingTests(unittest.TestCase):
                 source_hashes={"source.py": "a" * 64},
                 evaluation_files={0: evaluation_zero, 20: evaluation_twenty},
             )
-            self.assertEqual(manifest["step"], 20)
+            assert manifest["step"] == 20
             with torch.no_grad():
                 model.weight.add_(10)
             optimizer.state.clear()
@@ -125,10 +126,10 @@ class CheckpointingTests(unittest.TestCase):
                 adapter_loader=load_tiny,
             )
             torch.testing.assert_close(model.weight, expected_weight)
-            self.assertEqual(optimizer.state_dict()["param_groups"], expected_optimizer["param_groups"])
-            self.assertEqual(training_state["step"], 20)
-            self.assertEqual(ledger.profiled_steps, [1, 20])
-            self.assertEqual(restored_manifest["fingerprint"], manifest["fingerprint"])
+            assert optimizer.state_dict()["param_groups"] == expected_optimizer["param_groups"]
+            assert training_state["step"] == 20
+            assert ledger.profiled_steps == [1, 20]
+            assert restored_manifest["fingerprint"] == manifest["fingerprint"]
 
     def test_checkpoint_refuses_receipt_mismatch_and_tampering(self) -> None:
         model = TinyAdapter()
@@ -138,7 +139,7 @@ class CheckpointingTests(unittest.TestCase):
             root = Path(temporary) / "checkpoint-20"
             evaluation_zero = Path(temporary) / "step-000.jsonl"
             evaluation_zero.write_text('{"index": 0}\n')
-            with self.assertRaisesRegex(CheckpointContractError, "receipt count"):
+            with pytest.raises(CheckpointContractError, match="receipt count"):
                 save_checkpoint_bundle(
                     destination=root,
                     model=model,
@@ -169,7 +170,7 @@ class CheckpointingTests(unittest.TestCase):
             )
             with (root / "training_state.json").open("a", encoding="utf-8") as stream:
                 stream.write("tamper")
-            with self.assertRaisesRegex(CheckpointContractError, "hash mismatch"):
+            with pytest.raises(CheckpointContractError, match="hash mismatch"):
                 load_checkpoint_bundle(
                     root=root,
                     model=model,
@@ -196,8 +197,8 @@ class CheckpointingTests(unittest.TestCase):
             path = Path(temporary) / "group.pt"
             torch.save(payload, path)
             batch = load_replay_batch(path, expected_fingerprint="f" * 64)
-            self.assertEqual(batch.old_logps.shape, (8, 3))
-            with self.assertRaisesRegex(CheckpointContractError, "fingerprint mismatch"):
+            assert batch.old_logps.shape == (8, 3)
+            with pytest.raises(CheckpointContractError, match="fingerprint mismatch"):
                 load_replay_batch(path, expected_fingerprint="e" * 64)
 
 

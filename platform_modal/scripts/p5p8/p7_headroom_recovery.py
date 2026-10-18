@@ -41,6 +41,7 @@ Outputs (under platform_hybrid/experiments/results/p5p8/):
 
 Stdlib only.
 """
+
 from __future__ import annotations
 import argparse
 import csv
@@ -74,7 +75,7 @@ def zvf_iid(p: float, g: int) -> float:
     """I.I.D. binomial ZVF: P(all same) = p^g + (1-p)^g."""
     if p <= 0.0 or p >= 1.0:
         return 1.0
-    return p ** g + (1.0 - p) ** g
+    return p**g + (1.0 - p) ** g
 
 
 def is_saturated(k: int, g_base: int = G_BASE) -> bool:
@@ -105,10 +106,9 @@ def load_n10_step_log():
 def per_step_zvf(rewards_16: list) -> float:
     if not rewards_16:
         raise ValueError("missing observed prompt rewards")
-    if any(len(r) != G_BASE or any(v not in (0,1) for v in r) for r in rewards_16):
+    if any(len(r) != G_BASE or any(v not in (0, 1) for v in r) for r in rewards_16):
         raise ValueError("expected binary G_BASE reward groups")
     return sum(sum(r) in (0, G_BASE) for r in rewards_16) / len(rewards_16)
-
 
 
 def per_step_controllers(z_step: float):
@@ -131,11 +131,11 @@ def per_step_controllers(z_step: float):
 
 def analyze_n2(n2_rewards):
     """Per (method, step, prompt_index) row with:
-       - k, p_hat, is_saturated
-       - z_base, ceiling (z_base - z_esc), z_esc = ZVF(p_hat, G_ESC)
-       - z_c1, z_c2, z_c3 (ZVF under each controller's G_t)
-       - c1_change, c2_change, c3_change (z_base - z_ctrl)
-       - c1_recovery, c2_recovery, c3_recovery (change / ceiling if ceiling>0)
+    - k, p_hat, is_saturated
+    - z_base, ceiling (z_base - z_esc), z_esc = ZVF(p_hat, G_ESC)
+    - z_c1, z_c2, z_c3 (ZVF under each controller's G_t)
+    - c1_change, c2_change, c3_change (z_base - z_ctrl)
+    - c1_recovery, c2_recovery, c3_recovery (change / ceiling if ceiling>0)
     """
     rows = []
     for m in METHODS:
@@ -164,23 +164,31 @@ def analyze_n2(n2_rewards):
                 c1_rec = c1_change / ceiling if ceiling > 1e-9 else None
                 c2_rec = c2_change / ceiling if ceiling > 1e-9 else None
                 c3_rec = c3_change / ceiling if ceiling > 1e-9 else None
-                rows.append({
-                    "method": m, "step": s, "prompt_index": pi, "k": k,
-                    "p_hat": p_hat, "is_saturated": int(sat),
-                    "z_step": round(z_step, 4),
-                    "z_base": round(z_base, 4),
-                    "ceiling": round(ceiling, 4),
-                    "c1_g": c1_g, "c2_g": c2_g, "c3_g": c3_g,
-                    "c1_zvf_after": round(z_c1, 4),
-                    "c2_zvf_after": round(z_c2, 4),
-                    "c3_zvf_after": round(z_c3, 4),
-                    "c1_change": round(c1_change, 4),
-                    "c2_change": round(c2_change, 4),
-                    "c3_change": round(c3_change, 4),
-                    "c1_recovery": round(c1_rec, 4) if c1_rec is not None else "",
-                    "c2_recovery": round(c2_rec, 4) if c2_rec is not None else "",
-                    "c3_recovery": round(c3_rec, 4) if c3_rec is not None else "",
-                })
+                rows.append(
+                    {
+                        "method": m,
+                        "step": s,
+                        "prompt_index": pi,
+                        "k": k,
+                        "p_hat": p_hat,
+                        "is_saturated": int(sat),
+                        "z_step": round(z_step, 4),
+                        "z_base": round(z_base, 4),
+                        "ceiling": round(ceiling, 4),
+                        "c1_g": c1_g,
+                        "c2_g": c2_g,
+                        "c3_g": c3_g,
+                        "c1_zvf_after": round(z_c1, 4),
+                        "c2_zvf_after": round(z_c2, 4),
+                        "c3_zvf_after": round(z_c3, 4),
+                        "c1_change": round(c1_change, 4),
+                        "c2_change": round(c2_change, 4),
+                        "c3_change": round(c3_change, 4),
+                        "c1_recovery": round(c1_rec, 4) if c1_rec is not None else "",
+                        "c2_recovery": round(c2_rec, 4) if c2_rec is not None else "",
+                        "c3_recovery": round(c3_rec, 4) if c3_rec is not None else "",
+                    }
+                )
     return rows
 
 
@@ -197,52 +205,69 @@ def aggregate_n2(rows):
         sum_c1 = sum(r["c1_change"] for r in mixed_rows)
         sum_c2 = sum(r["c2_change"] for r in mixed_rows)
         sum_c3 = sum(r["c3_change"] for r in mixed_rows)
-        summary.append({
-            "method": m, "scope": "mixed_only",
-            "controller": "C1_zvf_triage@0.70",
-            "n_prompts": len(mixed_rows),
-            "sum_ceiling": round(sum_ceiling, 4),
-            "sum_change": round(sum_c1, 4),
-            "recovery_ratio": round(sum_c1 / sum_ceiling, 4) if sum_ceiling > 0 else 0.0,
-        })
-        summary.append({
-            "method": m, "scope": "mixed_only",
-            "controller": "C2_dualformer@0.70",
-            "n_prompts": len(mixed_rows),
-            "sum_ceiling": round(sum_ceiling, 4),
-            "sum_change": round(sum_c2, 4),
-            "recovery_ratio": round(sum_c2 / sum_ceiling, 4) if sum_ceiling > 0 else 0.0,
-        })
-        summary.append({
-            "method": m, "scope": "mixed_only",
-            "controller": "C3_hybrid@0.70+0.20",
-            "n_prompts": len(mixed_rows),
-            "sum_ceiling": round(sum_ceiling, 4),
-            "sum_change": round(sum_c3, 4),
-            "recovery_ratio": round(sum_c3 / sum_ceiling, 4) if sum_ceiling > 0 else 0.0,
-        })
+        summary.append(
+            {
+                "method": m,
+                "scope": "mixed_only",
+                "controller": "C1_zvf_triage@0.70",
+                "n_prompts": len(mixed_rows),
+                "sum_ceiling": round(sum_ceiling, 4),
+                "sum_change": round(sum_c1, 4),
+                "recovery_ratio": round(sum_c1 / sum_ceiling, 4) if sum_ceiling > 0 else 0.0,
+            }
+        )
+        summary.append(
+            {
+                "method": m,
+                "scope": "mixed_only",
+                "controller": "C2_dualformer@0.70",
+                "n_prompts": len(mixed_rows),
+                "sum_ceiling": round(sum_ceiling, 4),
+                "sum_change": round(sum_c2, 4),
+                "recovery_ratio": round(sum_c2 / sum_ceiling, 4) if sum_ceiling > 0 else 0.0,
+            }
+        )
+        summary.append(
+            {
+                "method": m,
+                "scope": "mixed_only",
+                "controller": "C3_hybrid@0.70+0.20",
+                "n_prompts": len(mixed_rows),
+                "sum_ceiling": round(sum_ceiling, 4),
+                "sum_change": round(sum_c3, 4),
+                "recovery_ratio": round(sum_c3 / sum_ceiling, 4) if sum_ceiling > 0 else 0.0,
+            }
+        )
         # Per-step recovery (mean over mixed prompts at the step)
         for s in range(40):
             srows = [r for r in mrows if r["step"] == s]
             if not srows:
                 continue
             z_step = srows[0]["z_step"]
-            c1_g = srows[0]["c1_g"]; c2_g = srows[0]["c2_g"]; c3_g = srows[0]["c3_g"]
+            c1_g = srows[0]["c1_g"]
+            c2_g = srows[0]["c2_g"]
+            c3_g = srows[0]["c3_g"]
             mixed_s = [r for r in srows if r["ceiling"] > 1e-9]
             n_mixed = len(mixed_s)
             ceil_s = sum(r["ceiling"] for r in mixed_s)
             c1_s = sum(r["c1_change"] for r in mixed_s)
             c2_s = sum(r["c2_change"] for r in mixed_s)
             c3_s = sum(r["c3_change"] for r in mixed_s)
-            per_step.append({
-                "method": m, "step": s, "z_step": round(z_step, 4),
-                "n_mixed": n_mixed,
-                "ceiling_sum": round(ceil_s, 4),
-                "c1_recovery": round(c1_s / ceil_s, 4) if ceil_s > 0 else "",
-                "c2_recovery": round(c2_s / ceil_s, 4) if ceil_s > 0 else "",
-                "c3_recovery": round(c3_s / ceil_s, 4) if ceil_s > 0 else "",
-                "c1_g": c1_g, "c2_g": c2_g, "c3_g": c3_g,
-            })
+            per_step.append(
+                {
+                    "method": m,
+                    "step": s,
+                    "z_step": round(z_step, 4),
+                    "n_mixed": n_mixed,
+                    "ceiling_sum": round(ceil_s, 4),
+                    "c1_recovery": round(c1_s / ceil_s, 4) if ceil_s > 0 else "",
+                    "c2_recovery": round(c2_s / ceil_s, 4) if ceil_s > 0 else "",
+                    "c3_recovery": round(c3_s / ceil_s, 4) if ceil_s > 0 else "",
+                    "c1_g": c1_g,
+                    "c2_g": c2_g,
+                    "c3_g": c3_g,
+                }
+            )
     return summary, per_step
 
 
@@ -282,14 +307,13 @@ def aliasing_test(per_step):
         if len(zs) > 2:
             zbar = sum(zs) / len(zs)
             cbar = sum(cs) / len(cs)
-            num = sum((zi - zbar) * (ci - cbar) for zi, ci in zip(zs, cs))
+            num = sum((zi - zbar) * (ci - cbar) for zi, ci in zip(zs, cs, strict=False))
             dz = math.sqrt(sum((zi - zbar) ** 2 for zi in zs))
             dc = math.sqrt(sum((ci - cbar) ** 2 for ci in cs))
             rho = num / (dz * dc) if dz * dc > 0 else 0.0
         else:
             rho = 0.0
-        out.append({"method": m, "pearson_rho": round(rho, 4),
-                    "n_steps": len(ms)})
+        out.append({"method": m, "pearson_rho": round(rho, 4), "n_steps": len(ms)})
     return out
 
 
@@ -304,10 +328,16 @@ def aggregate_n10(n10_step_log):
             step = entry["step"]
             z = entry["zvf"]
             c1_g, c2_g, c3_g = per_step_controllers(z)
-            per_step.append({
-                "seed": s, "step": step, "zvf_step": round(z, 4),
-                "c1_g": c1_g, "c2_g": c2_g, "c3_g": c3_g,
-            })
+            per_step.append(
+                {
+                    "seed": s,
+                    "step": step,
+                    "zvf_step": round(z, 4),
+                    "c1_g": c1_g,
+                    "c2_g": c2_g,
+                    "c3_g": c3_g,
+                }
+            )
     # Per-seed totals
     for s in N10_SEEDS:
         srows = [r for r in per_step if r["seed"] == s]
@@ -315,25 +345,38 @@ def aggregate_n10(n10_step_log):
         total_c1 = sum(r["c1_g"] for r in srows)
         total_c2 = sum(r["c2_g"] for r in srows)
         total_c3 = sum(r["c3_g"] for r in srows)
-        summary.append({
-            "seed": s, "controller": "C0_baseline",
-            "total_G": total_G_base, "savings": 0.0,
-        })
-        summary.append({
-            "seed": s, "controller": "C1_zvf_triage@0.70",
-            "total_G": total_c1,
-            "savings": round((total_G_base - total_c1) / total_G_base, 4),
-        })
-        summary.append({
-            "seed": s, "controller": "C2_dualformer@0.70",
-            "total_G": total_c2,
-            "savings": round((total_G_base - total_c2) / total_G_base, 4),
-        })
-        summary.append({
-            "seed": s, "controller": "C3_hybrid@0.70+0.20",
-            "total_G": total_c3,
-            "savings": round((total_G_base - total_c3) / total_G_base, 4),
-        })
+        summary.append(
+            {
+                "seed": s,
+                "controller": "C0_baseline",
+                "total_G": total_G_base,
+                "savings": 0.0,
+            }
+        )
+        summary.append(
+            {
+                "seed": s,
+                "controller": "C1_zvf_triage@0.70",
+                "total_G": total_c1,
+                "savings": round((total_G_base - total_c1) / total_G_base, 4),
+            }
+        )
+        summary.append(
+            {
+                "seed": s,
+                "controller": "C2_dualformer@0.70",
+                "total_G": total_c2,
+                "savings": round((total_G_base - total_c2) / total_G_base, 4),
+            }
+        )
+        summary.append(
+            {
+                "seed": s,
+                "controller": "C3_hybrid@0.70+0.20",
+                "total_G": total_c3,
+                "savings": round((total_G_base - total_c3) / total_G_base, 4),
+            }
+        )
     return summary, per_step
 
 
@@ -358,9 +401,11 @@ def main():
     print("== Bootstrap CIs on N2 recovery ratios (mixed-prompt scope) ==")
     for m in METHODS:
         mrows = [r for r in rows if r["method"] == m]
-        for col, label in [("c1_change", "C1_zvf_triage@0.70"),
-                           ("c2_change", "C2_dualformer@0.70"),
-                           ("c3_change", "C3_hybrid@0.70+0.20")]:
+        for col, label in [
+            ("c1_change", "C1_zvf_triage@0.70"),
+            ("c2_change", "C2_dualformer@0.70"),
+            ("c3_change", "C3_hybrid@0.70+0.20"),
+        ]:
             lo, hi = bootstrap_recovery_ci(mrows, col)
             for entry in n2_summary:
                 if entry["method"] == m and entry["controller"] == label:
@@ -373,11 +418,13 @@ def main():
 
     print("\n== N2 mixed-prompt recovery ratios (n=2,560 - saturated = ~720 mixed) ==")
     for e in n2_summary:
-        print(f"  {e['method']:>5s} {e['controller']:>22s}: "
-              f"recovery={e['recovery_ratio']:.4f} "
-              f"[{e.get('recovery_lo', 0):.4f}, {e.get('recovery_hi', 0):.4f}] "
-              f"n={e['n_prompts']} ceil_sum={e['sum_ceiling']:.3f} "
-              f"change_sum={e['sum_change']:.3f}")
+        print(
+            f"  {e['method']:>5s} {e['controller']:>22s}: "
+            f"recovery={e['recovery_ratio']:.4f} "
+            f"[{e.get('recovery_lo', 0):.4f}, {e.get('recovery_hi', 0):.4f}] "
+            f"n={e['n_prompts']} ceil_sum={e['sum_ceiling']:.3f} "
+            f"change_sum={e['sum_change']:.3f}"
+        )
 
     print("\n== Step-ZVF vs per-prompt headroom aliasing (Pearson rho) ==")
     for e in aliasing:
@@ -385,7 +432,9 @@ def main():
 
     print("\n== N10 compute totals (per seed, per controller) ==")
     for e in n10_summary:
-        print(f"  seed={e['seed']} {e['controller']:>22s}: total_G={e['total_G']} savings={e['savings']:+.4f}")
+        print(
+            f"  seed={e['seed']} {e['controller']:>22s}: total_G={e['total_G']} savings={e['savings']:+.4f}"
+        )
 
     if not args.write:
         return
@@ -393,66 +442,91 @@ def main():
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     summary_path = OUT_DIR / "p7_headroom_recovery_n2_summary.tsv"
     with open(summary_path, "w", newline="") as f:
-        w = csv.DictWriter(f, fieldnames=["method", "scope", "controller", "n_prompts",
-                                          "sum_ceiling", "sum_change", "recovery_ratio",
-                                          "recovery_lo", "recovery_hi"],
-                           delimiter="\t")
+        w = csv.DictWriter(
+            f,
+            fieldnames=[
+                "method",
+                "scope",
+                "controller",
+                "n_prompts",
+                "sum_ceiling",
+                "sum_change",
+                "recovery_ratio",
+                "recovery_lo",
+                "recovery_hi",
+            ],
+            delimiter="\t",
+        )
         w.writeheader()
         for e in n2_summary:
             w.writerow(e)
 
     per_step_path = OUT_DIR / "p7_headroom_recovery_n2_per_step.tsv"
     with open(per_step_path, "w", newline="") as f:
-        w = csv.DictWriter(f, fieldnames=list(n2_per_step[0].keys()),
-                           delimiter="\t")
+        w = csv.DictWriter(f, fieldnames=list(n2_per_step[0].keys()), delimiter="\t")
         w.writeheader()
         for e in n2_per_step:
             w.writerow(e)
 
     per_prompt_path = OUT_DIR / "p7_headroom_recovery_n2_per_prompt.tsv"
     with open(per_prompt_path, "w", newline="") as f:
-        w = csv.DictWriter(f, fieldnames=list(rows[0].keys()),
-                           delimiter="\t")
+        w = csv.DictWriter(f, fieldnames=list(rows[0].keys()), delimiter="\t")
         w.writeheader()
         for r in rows:
             w.writerow(r)
 
     n10_summary_path = OUT_DIR / "p7_headroom_recovery_n10_summary.tsv"
     with open(n10_summary_path, "w", newline="") as f:
-        w = csv.DictWriter(f, fieldnames=list(n10_summary[0].keys()),
-                           delimiter="\t")
+        w = csv.DictWriter(f, fieldnames=list(n10_summary[0].keys()), delimiter="\t")
         w.writeheader()
         for e in n10_summary:
             w.writerow(e)
 
     n10_per_step_path = OUT_DIR / "p7_headroom_recovery_n10_per_step.tsv"
     with open(n10_per_step_path, "w", newline="") as f:
-        w = csv.DictWriter(f, fieldnames=list(n10_per_step[0].keys()),
-                           delimiter="\t")
+        w = csv.DictWriter(f, fieldnames=list(n10_per_step[0].keys()), delimiter="\t")
         w.writeheader()
         for e in n10_per_step:
             w.writerow(e)
 
     summary_json = OUT_DIR / "p7_headroom_recovery_summary.json"
-    summary_json.write_text(json.dumps({
-        "config": {
-            "G_BASE": G_BASE, "G_ESC": G_ESC, "G_DES": G_DES,
-            "TAU": TAU, "TAU_DELTA": TAU_DELTA,
-            "TARGET_ZVF": TARGET_ZVF,
-            "n_methods": 4, "n_steps_n2": 40, "n_prompts_per_step": 16,
-            "n_seeds_n10": 5, "n_steps_n10": N10_STEPS,
-            "n_boot": N_BOOT, "boot_seed": BOOT_SEED,
-            "headroom_definition": "ZVF(G_base) - ZVF(G_esc); capped per-prompt at ZVF(G_base) for mixed prompts",
-            "recovery_definition": "sum(ZVF(G_base) - ZVF(G_ctrl)) / sum(ZVF(G_base) - ZVF(G_esc)) over mixed prompts",
-        },
-        "n2_summary": n2_summary,
-        "aliasing": aliasing,
-        "n10_summary": n10_summary,
-    }, indent=2))
+    summary_json.write_text(
+        json.dumps(
+            {
+                "config": {
+                    "G_BASE": G_BASE,
+                    "G_ESC": G_ESC,
+                    "G_DES": G_DES,
+                    "TAU": TAU,
+                    "TAU_DELTA": TAU_DELTA,
+                    "TARGET_ZVF": TARGET_ZVF,
+                    "n_methods": 4,
+                    "n_steps_n2": 40,
+                    "n_prompts_per_step": 16,
+                    "n_seeds_n10": 5,
+                    "n_steps_n10": N10_STEPS,
+                    "n_boot": N_BOOT,
+                    "boot_seed": BOOT_SEED,
+                    "headroom_definition": "ZVF(G_base) - ZVF(G_esc); capped per-prompt at ZVF(G_base) for mixed prompts",
+                    "recovery_definition": "sum(ZVF(G_base) - ZVF(G_ctrl)) / sum(ZVF(G_base) - ZVF(G_esc)) over mixed prompts",
+                },
+                "n2_summary": n2_summary,
+                "aliasing": aliasing,
+                "n10_summary": n10_summary,
+            },
+            indent=2,
+        )
+    )
 
     print(f"\nWrote:")
-    for p in [summary_path, per_step_path, per_prompt_path,
-              n10_summary_path, n10_per_step_path, summary_json]:
+    for p in [
+        summary_path,
+        per_step_path,
+        per_prompt_path,
+        n10_summary_path,
+        n10_per_step_path,
+        summary_json,
+    ]:
         print(f"  {p.relative_to(ROOT)}")
 
 

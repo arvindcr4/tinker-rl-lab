@@ -15,6 +15,7 @@ Usage:
       experiments/tool_use_zvf_sweep/results.csv \
       paper/sections/zvf_counterfactual_appendix.tex
 """
+
 from __future__ import annotations
 import csv
 import re
@@ -61,7 +62,7 @@ def splice(csv_path: Path, tex_path: Path) -> None:
             out.append(line)
             continue
         key = (m.group("model"), m.group("reward"), int(m.group("seed")), int(m.group("steps")))
-        # TODO: Gains are often not statistically significant. We should add a 
+        # TODO: Gains are often not statistically significant. We should add a
         # statistical significance test (p-value) aggregation step across seeds here.
         if key in results:
             r = results[key]
@@ -71,8 +72,7 @@ def splice(csv_path: Path, tex_path: Path) -> None:
             out.append(line)
             still_missing.append(key)
     tex_path.write_text("".join(out))
-    print(f"[splicer] filled {filled} row(s); "
-          f"{len(still_missing)} still em-dashed")
+    print(f"[splicer] filled {filled} row(s); {len(still_missing)} still em-dashed")
     for k in still_missing:
         print(f"  missing: model={k[0]} reward={k[1]} seed={k[2]} steps={k[3]}")
 

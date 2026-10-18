@@ -2,14 +2,22 @@
 
 import sys as _contract_sys
 from pathlib import Path as _ContractPath
+
 if len(_ContractPath(__file__).resolve().parents) > 4:
     _contract_sys.path.insert(0, str(_ContractPath(__file__).resolve().parents[4]))
-from platform_hybrid.experiments.framework_contracts import aligned_datum, response_logprobs, PROTOCOL_VERSION, stable_seed
+from platform_hybrid.experiments.framework_contracts import (
+    aligned_datum,
+    response_logprobs,
+    PROTOCOL_VERSION,
+    stable_seed,
+)
 
 
 import atexit
+
 try:
     from codecarbon import EmissionsTracker
+
     _tracker = EmissionsTracker()
     _tracker.start()
     atexit.register(_tracker.stop)
@@ -17,6 +25,7 @@ except ImportError:
     pass
 
 import os, json, re, warnings, random
+
 warnings.filterwarnings("ignore")
 os.environ.setdefault("TINKER_API_KEY", os.environ.get("TINKER_API_KEY", ""))
 
@@ -24,14 +33,14 @@ import torch, tinker, tinker.types as T
 from transformers import AutoTokenizer
 from datasets import load_dataset
 
-EXP_NAME   = "D_xlam"
-MODEL      = "Qwen/Qwen3-8B"
-LORA_RANK  = 32
+EXP_NAME = "D_xlam"
+MODEL = "Qwen/Qwen3-8B"
+LORA_RANK = 32
 GROUP_SIZE = 8
 NUM_SEEDS = 5
 STEPS = 200
-LR         = 3e-5
-TEMP       = 0.8
+LR = 3e-5
+TEMP = 0.8
 SAVE_EVERY = 10
 
 SYSTEM_PROMPT = (
@@ -80,14 +89,20 @@ for row in ds:
 random.Random(42).shuffle(examples)
 train_examples = examples[:2000]  # cap at 2000 for speed
 test_examples = examples[2000:2500]
-print(f"[{EXP_NAME}] Parsed {len(train_examples)} train examples, {len(test_examples)} test examples")
+print(
+    f"[{EXP_NAME}] Parsed {len(train_examples)} train examples, {len(test_examples)} test examples"
+)
+
 
 # ── Reward function ──────────────────────────────────────────────────────
 def reward(response, tool_name, arguments):
-    m = re.search(r'\{.*\}', response.strip(), re.DOTALL)
-    if not m: return 0.0
-    try: p = json.loads(m.group())
-    except json.JSONDecodeError: return 0.1
+    m = re.search(r"\{.*\}", response.strip(), re.DOTALL)
+    if not m:
+        return 0.0
+    try:
+        p = json.loads(m.group())
+    except json.JSONDecodeError:
+        return 0.1
     score = 0.3
     if p.get("tool") == tool_name or p.get("name") == tool_name:
         score += 0.4
@@ -97,7 +112,10 @@ def reward(response, tool_name, arguments):
         score += 0.3 * matched / len(arguments)
     return min(score, 1.0)
 
+
 _advantages = []
+
+
 def grpo_loss_fn(data, logprobs_list):
     losses = []
     for i, logprobs in enumerate(logprobs_list):
@@ -105,19 +123,22 @@ def grpo_loss_fn(data, logprobs_list):
     loss = torch.stack(losses).mean()
     return loss, {"grpo_loss": loss.item()}
 
+
 # ── Setup ────────────────────────────────────────────────────────────────
 
 for seed in range(NUM_SEEDS):
-    print(f"\n==================================================\nRunning seed {seed} ({seed+1}/{NUM_SEEDS})\n==================================================")
+    print(
+        f"\n==================================================\nRunning seed {seed} ({seed + 1}/{NUM_SEEDS})\n=================================================="
+    )
     rng = random.Random(seed)
     torch.manual_seed(seed)
-    
+
     print(f"[{EXP_NAME}] Connecting...")
     svc = tinker.ServiceClient(base_url=None)
-    tc  = svc.create_lora_training_client(base_model=MODEL, rank=LORA_RANK, seed=seed)
+    tc = svc.create_lora_training_client(base_model=MODEL, rank=LORA_RANK, seed=seed)
     tok = AutoTokenizer.from_pretrained(MODEL, trust_remote_code=True)
-    w0  = tc.save_weights_for_sampler(name=f"seed{seed}_step_0").result()
-    sc  = tc.create_sampling_client(model_path=w0.path)
+    w0 = tc.save_weights_for_sampler(name=f"seed{seed}_step_0").result()
+    sc = tc.create_sampling_client(model_path=w0.path)
     print(f"[{EXP_NAME}] Run: {tc.model_id} | LR={LR} group={GROUP_SIZE} temp={TEMP}")
 
     # ── GRPO loop ────────────────────────────────────────────────────────────
@@ -132,40 +153,45 @@ for seed in range(NUM_SEEDS):
             if len(prompt_ids) > 2048:
                 prompt_ids = prompt_ids[:2048]
             sp = T.SamplingParams(max_tokens=256, temperature=TEMP, top_p=0.95)
-            responses = sc.sample(T.ModelInput.from_ints(prompt_ids), num_samples=GROUP_SIZE, sampling_params=sp).result()
+            responses = sc.sample(
+                T.ModelInput.from_ints(prompt_ids), num_samples=GROUP_SIZE, sampling_params=sp
+            ).result()
             rewards = []
             for resp in responses.sequences:
                 text = tok.decode(list(resp.tokens), skip_special_tokens=True)
                 rewards.append(reward(text, tool_name, args))
             mean_r = sum(rewards) / len(rewards)
-            std_r = (sum((r - mean_r)**2 for r in rewards) / len(rewards))**0.5 + 1e-8
+            std_r = (sum((r - mean_r) ** 2 for r in rewards) / len(rewards)) ** 0.5 + 1e-8
             advs = [(r - mean_r) / std_r for r in rewards]
             batch_rewards.extend(rewards)
-            for resp, adv in zip(responses.sequences, advs):
+            for resp, adv in zip(responses.sequences, advs, strict=False):
                 resp_ids = list(resp.tokens)
                 full_ids = prompt_ids + resp_ids
                 target_ids = full_ids[1:]
                 all_data.append(aligned_datum(T, prompt_ids, resp_ids))
                 all_advs.append(adv)
 
-        if not all_data: continue
+        if not all_data:
+            continue
         _advantages = all_advs
         result = tc.forward_backward_custom(data=all_data, loss_fn=grpo_loss_fn).result()
         tc.optim_step(T.AdamParams(learning_rate=LR, beta1=0.9, beta2=0.95, eps=1e-8)).result()
         avg_r = sum(batch_rewards) / len(batch_rewards)
         step_rewards.append(avg_r)
         loss_val = result.metrics.get("grpo_loss", float("nan"))
-        print(f"[{EXP_NAME}] Step {step+1:3d}/{STEPS} | loss={loss_val:.4f} | reward={avg_r:.3f}")
+        print(f"[{EXP_NAME}] Step {step + 1:3d}/{STEPS} | loss={loss_val:.4f} | reward={avg_r:.3f}")
         if True:  # v3 current-policy sampler; persistence is separately gated
             if (step + 1) % SAVE_EVERY == 0:
-                tc.save_state(name=f"state_{step+1}")
-            ckpt = tc.save_weights_for_sampler(name=f"step_{step+1}").result()
+                tc.save_state(name=f"state_{step + 1}")
+            ckpt = tc.save_weights_for_sampler(name=f"step_{step + 1}").result()
             sc = tc.create_sampling_client(model_path=ckpt.path)
-            print(f"[{EXP_NAME}]   -> Checkpoint step_{step+1}")
+            print(f"[{EXP_NAME}]   -> Checkpoint step_{step + 1}")
 
     tc.save_state(name=f"seed{seed}_final").result()
     final = tc.save_weights_for_sampler(name=f"seed{seed}_final").result()
-    print(f"\n[{EXP_NAME}] DONE | avg_reward_last10={sum(step_rewards[-10:])/max(len(step_rewards[-10:]),1):.3f}")
+    print(
+        f"\n[{EXP_NAME}] DONE | avg_reward_last10={sum(step_rewards[-10:]) / max(len(step_rewards[-10:]), 1):.3f}"
+    )
     print(f"[{EXP_NAME}] Run ID: {tc.model_id}")
     print(f"[{EXP_NAME}] Sampler: {final.path}")
 
@@ -173,14 +199,16 @@ for seed in range(NUM_SEEDS):
     print(f"\n[{EXP_NAME}] Evaluating on {len(test_examples)} held-out test examples...")
     test_rewards = []
     for i in range(0, len(test_examples), 4):
-        batch = test_examples[i:i+4]
+        batch = test_examples[i : i + 4]
         for prompt_text, tn, args in batch:
             pid = tok.encode(prompt_text, add_special_tokens=False)
             if len(pid) > 2048:
                 pid = pid[:2048]
             sp = T.SamplingParams(max_tokens=256, temperature=0.1, top_p=0.95)
             try:
-                resp = sc.sample(T.ModelInput.from_ints(pid), num_samples=1, sampling_params=sp).result()
+                resp = sc.sample(
+                    T.ModelInput.from_ints(pid), num_samples=1, sampling_params=sp
+                ).result()
                 text = tok.decode(list(resp.sequences[0].tokens), skip_special_tokens=True)
                 test_rewards.append(reward(text, tn, args))
             except Exception:
@@ -188,5 +216,3 @@ for seed in range(NUM_SEEDS):
 
     avg_test = sum(test_rewards) / len(test_rewards) if test_rewards else 0.0
     print(f"[{EXP_NAME}] Held-out Test Reward: {avg_test:.3f}")
-
-

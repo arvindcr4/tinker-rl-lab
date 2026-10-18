@@ -125,13 +125,15 @@ def load_groups(results_dir):
             if len(group) < 2 or any(reward not in (0.0, 1.0) for reward in group):
                 raise ValueError(f"{path}: expected binary groups with at least two rewards")
             groups.append(group)
-        sources.append({
-            "file": path.name,
-            "sha256": hashlib.sha256(raw).hexdigest(),
-            "seed": data.get("seed"),
-            "group_start": start,
-            "n_groups": len(groups) - start,
-        })
+        sources.append(
+            {
+                "file": path.name,
+                "sha256": hashlib.sha256(raw).hexdigest(),
+                "seed": data.get("seed"),
+                "group_start": start,
+                "n_groups": len(groups) - start,
+            }
+        )
     if not groups:
         raise ValueError(f"no raw GSM8K reward groups found in {results_dir}")
     if len({len(group) for group in groups}) != 1:
@@ -139,8 +141,9 @@ def load_groups(results_dir):
     return groups, sources
 
 
-def analyze_jitter(groups, seed=0, amplitude=1e-4, epsilon=DEFAULT_EPSILON,
-                   epsilon_grid=DEFAULT_EPSILON_GRID):
+def analyze_jitter(
+    groups, seed=0, amplitude=1e-4, epsilon=DEFAULT_EPSILON, epsilon_grid=DEFAULT_EPSILON_GRID
+):
     """Compute both definitions using one shared, deterministic jitter draw.
 
     Rewards are neither clipped nor renormalized, retaining the original probe.
@@ -168,16 +171,18 @@ def analyze_jitter(groups, seed=0, amplitude=1e-4, epsilon=DEFAULT_EPSILON,
     for threshold in thresholds:
         before = [value <= threshold for value in sample_before]
         after = [value <= threshold for value in sample_after]
-        sensitivity.append({
-            "epsilon": threshold,
-            "variance_ddof": 1,
-            "n_groups": n,
-            "before_count": sum(before),
-            "after_count": sum(after),
-            "before_fraction": sum(before) / n,
-            "after_fraction": sum(after) / n,
-            "changed_count": sum(a != b for a, b in zip(before, after)),
-        })
+        sensitivity.append(
+            {
+                "epsilon": threshold,
+                "variance_ddof": 1,
+                "n_groups": n,
+                "before_count": sum(before),
+                "after_count": sum(after),
+                "before_fraction": sum(before) / n,
+                "after_fraction": sum(after) / n,
+                "changed_count": sum(a != b for a, b in zip(before, after, strict=False)),
+            }
+        )
     canonical = next(row for row in sensitivity if row["epsilon"] == epsilon)
     pcd_before, pcd_after = sum(population_before) / n, sum(population_after) / n
     summary = {
@@ -216,27 +221,34 @@ def analyze_jitter(groups, seed=0, amplitude=1e-4, epsilon=DEFAULT_EPSILON,
             "mean_zvf_ind": "exact-zero population-variance indicator",
         },
     }
-    details = [{
-        "group_index": index,
-        "population_variance_before": population_before[index],
-        "population_variance_after": population_after[index],
-        "sample_variance_before": sample_before[index],
-        "sample_variance_after": sample_after[index],
-        "exact_zero_before": int(exact_before[index]),
-        "exact_zero_after": int(exact_after[index]),
-        "tolerance_before": int(sample_before[index] <= epsilon),
-        "tolerance_after": int(sample_after[index] <= epsilon),
-    } for index in range(n)]
+    details = [
+        {
+            "group_index": index,
+            "population_variance_before": population_before[index],
+            "population_variance_after": population_after[index],
+            "sample_variance_before": sample_before[index],
+            "sample_variance_after": sample_after[index],
+            "exact_zero_before": int(exact_before[index]),
+            "exact_zero_after": int(exact_after[index]),
+            "tolerance_before": int(sample_before[index] <= epsilon),
+            "tolerance_after": int(sample_after[index] <= epsilon),
+        }
+        for index in range(n)
+    ]
     return summary, details
 
 
 def cross_run_metrics(path):
     """Preserve the historical logged-summary comparison and output names."""
     with Path(path).open() as handle:
-        rows = list(csv.DictReader((line for line in handle if not line.startswith("#")),
-                                   delimiter="\t"))
-    use = [r for r in rows if r.get("last10_avg", "") not in ("", "nan")
-           and r.get("mean_zvf", "") not in ("", "nan")]
+        rows = list(
+            csv.DictReader((line for line in handle if not line.startswith("#")), delimiter="\t")
+        )
+    use = [
+        r
+        for r in rows
+        if r.get("last10_avg", "") not in ("", "nan") and r.get("mean_zvf", "") not in ("", "nan")
+    ]
 
     def col(row, key):
         try:
@@ -259,8 +271,9 @@ def cross_run_metrics(path):
 
 def write_tsv(path, rows):
     with Path(path).open("w", newline="") as handle:
-        writer = csv.DictWriter(handle, fieldnames=list(rows[0]), delimiter="\t",
-                                lineterminator="\n")
+        writer = csv.DictWriter(
+            handle, fieldnames=list(rows[0]), delimiter="\t", lineterminator="\n"
+        )
         writer.writeheader()
         writer.writerows(rows)
 
@@ -268,21 +281,25 @@ def write_tsv(path, rows):
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--results-dir", type=Path, default=Path(RES))
-    parser.add_argument("--output-dir", type=Path,
-                        help="defaults to results-dir; input reward tensors are never modified")
+    parser.add_argument(
+        "--output-dir",
+        type=Path,
+        help="defaults to results-dir; input reward tensors are never modified",
+    )
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--jitter-amplitude", type=float, default=1e-4)
     parser.add_argument("--variance-epsilon", type=float, default=DEFAULT_EPSILON)
     parser.add_argument("--epsilon-grid", type=float, nargs="+", default=DEFAULT_EPSILON_GRID)
     args = parser.parse_args(argv)
     groups, sources = load_groups(args.results_dir)
-    analysis, details = analyze_jitter(groups, args.seed, args.jitter_amplitude,
-                                      args.variance_epsilon, args.epsilon_grid)
+    analysis, details = analyze_jitter(
+        groups, args.seed, args.jitter_amplitude, args.variance_epsilon, args.epsilon_grid
+    )
     analysis["sources"] = sources
     analysis["source_order"] = "lexicographic filenames, then original per_problem order"
     analysis["schema_version"] = 1
     for source in sources:
-        subset = details[source["group_start"]:source["group_start"] + source["n_groups"]]
+        subset = details[source["group_start"] : source["group_start"] + source["n_groups"]]
         source["exact_zero_before_count"] = sum(row["exact_zero_before"] for row in subset)
         source["exact_zero_after_count"] = sum(row["exact_zero_after"] for row in subset)
         source["tolerance_before_count"] = sum(row["tolerance_before"] for row in subset)
@@ -301,11 +318,14 @@ def main(argv=None):
     for k in range(group_size + 1):
         bucket = [group for group in groups if abs(phat(group) - k / group_size) < 1e-9]
         if bucket:
-            shape.append({
-                "p_x": f"{k / group_size:.4f}", "n": len(bucket),
-                "mean_zvf_ind": f"{sum(map(zvf_ind, bucket)) / len(bucket):.4f}",
-                "mean_pcd": f"{sum(map(pcd, bucket)) / len(bucket):.4f}",
-            })
+            shape.append(
+                {
+                    "p_x": f"{k / group_size:.4f}",
+                    "n": len(bucket),
+                    "mean_zvf_ind": f"{sum(map(zvf_ind, bucket)) / len(bucket):.4f}",
+                    "mean_pcd": f"{sum(map(pcd, bucket)) / len(bucket):.4f}",
+                }
+            )
 
     cross_run_path = args.results_dir / "zvf_summary.tsv"
     cross_run = cross_run_metrics(cross_run_path)
@@ -332,8 +352,10 @@ def main(argv=None):
         "zvf_batch_after_jitter": f"{analysis['exact_zero_after_fraction']:.4f}",
         "pcd_batch_before_jitter": f"{analysis['pcd_before']:.6f}",
         "pcd_batch_after_jitter": f"{analysis['pcd_after']:.6f}",
-        **{key: value if isinstance(value, int) else f"{value:.4f}"
-           for key, value in cross_run.items()},
+        **{
+            key: value if isinstance(value, int) else f"{value:.4f}"
+            for key, value in cross_run.items()
+        },
         "zvf_exact_batch_before_jitter": analysis["exact_zero_before_fraction"],
         "zvf_exact_batch_after_jitter": analysis["exact_zero_after_fraction"],
         "zvf_tolerance_batch_before_jitter": analysis["tolerance_before_fraction"],
@@ -347,23 +369,34 @@ def main(argv=None):
     output_dir = args.output_dir or args.results_dir
     output_dir.mkdir(parents=True, exist_ok=True)
     write_tsv(output_dir / "pcd_vs_zvf_shape.tsv", shape)
-    write_tsv(output_dir / "pcd_vs_zvf_recomputed_summary.tsv",
-              [{"metric": key, "value": value} for key, value in metrics.items()])
+    write_tsv(
+        output_dir / "pcd_vs_zvf_recomputed_summary.tsv",
+        [{"metric": key, "value": value} for key, value in metrics.items()],
+    )
     write_tsv(output_dir / "pcd_vs_zvf_epsilon_sensitivity.tsv", analysis["epsilon_sensitivity"])
     write_tsv(output_dir / "pcd_vs_zvf_jitter_groups.tsv", details)
     (output_dir / "pcd_vs_zvf_tolerance_analysis.json").write_text(
-        json.dumps(analysis, indent=2, allow_nan=False) + "\n")
+        json.dumps(analysis, indent=2, allow_nan=False) + "\n"
+    )
 
-    print(f"Loaded {len(groups)} groups (G={group_size}); all-correct={mastered}, "
-          f"all-wrong={incapable}, mixed={analysis['mixed_count']}")
-    print("Exact-zero ZVF (historical alias): "
-          f"{analysis['exact_zero_before_count']}/{len(groups)} -> "
-          f"{analysis['exact_zero_after_count']}/{len(groups)}")
-    print(f"Tolerance ZVF (sample variance <= {args.variance_epsilon:g}): "
-          f"{analysis['tolerance_before_count']}/{len(groups)} -> "
-          f"{analysis['tolerance_after_count']}/{len(groups)}")
-    print(f"PCD: {analysis['pcd_before']:.12f} -> {analysis['pcd_after']:.12f}; "
-          f"delta={analysis['pcd_delta']:+.6g}")
+    print(
+        f"Loaded {len(groups)} groups (G={group_size}); all-correct={mastered}, "
+        f"all-wrong={incapable}, mixed={analysis['mixed_count']}"
+    )
+    print(
+        "Exact-zero ZVF (historical alias): "
+        f"{analysis['exact_zero_before_count']}/{len(groups)} -> "
+        f"{analysis['exact_zero_after_count']}/{len(groups)}"
+    )
+    print(
+        f"Tolerance ZVF (sample variance <= {args.variance_epsilon:g}): "
+        f"{analysis['tolerance_before_count']}/{len(groups)} -> "
+        f"{analysis['tolerance_after_count']}/{len(groups)}"
+    )
+    print(
+        f"PCD: {analysis['pcd_before']:.12f} -> {analysis['pcd_after']:.12f}; "
+        f"delta={analysis['pcd_delta']:+.6g}"
+    )
     print(analysis["claim_boundary"])
     print(f"Logged-summary cross-run comparison: {cross_run}")
     print(f"Wrote analysis artifacts to {output_dir}")

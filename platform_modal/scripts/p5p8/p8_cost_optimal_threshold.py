@@ -27,6 +27,7 @@ detection term; c_sense_m enters the cross-model level comparison.
 
 Stdlib + numpy + pandas + xgboost. <=300 lines. Real data only.
 """
+
 import json
 import csv
 from pathlib import Path
@@ -45,8 +46,8 @@ V_AGG = ["V_mean", "V_std", "V_max", "V_min"]
 FEATS = {"XGB-20raw": V20, "XGB-24full": V20 + V_AGG, "XGB-4sensor": V_AGG}
 SENSES = {"XGB-20raw": 0.0, "XGB-24full": 0.0035, "XGB-4sensor": 0.0035}
 
-C_INV = 0.50          # analyst investigation cost / alert (USD), from item 21
-RHO_GRID = [2, 5, 10, 20, 50, 100, 200, 500]   # rho = L / C_inv
+C_INV = 0.50  # analyst investigation cost / alert (USD), from item 21
+RHO_GRID = [2, 5, 10, 20, 50, 100, 200, 500]  # rho = L / C_inv
 N_BOOT = 400
 BOOT_SEED = 2026
 TREE_SEED = 42
@@ -54,10 +55,16 @@ TREE_SEED = 42
 
 def fit_tree(X_tr, y_tr):
     clf = xgb.XGBClassifier(
-        n_estimators=200, max_depth=4, learning_rate=0.1,
-        subsample=0.8, colsample_bytree=0.8,
-        objective="binary:logistic", eval_metric="auc",
-        tree_method="hist", random_state=TREE_SEED, n_jobs=4,
+        n_estimators=200,
+        max_depth=4,
+        learning_rate=0.1,
+        subsample=0.8,
+        colsample_bytree=0.8,
+        objective="binary:logistic",
+        eval_metric="auc",
+        tree_method="hist",
+        random_state=TREE_SEED,
+        n_jobs=4,
     )
     clf.fit(X_tr, y_tr)
     return clf
@@ -77,10 +84,10 @@ def load_scores():
 
 def optimal_cut(score, y, C_inv, L):
     from _review_policy import optimal_threshold
+
     row = optimal_threshold(score, y, C_inv, L)
     row["det_cost_per_dec"] = row["cost_per_dec"]
     return row
-
 
 
 def cost_at_threshold(score, y, tau, C_inv, L, c_sense):
@@ -99,10 +106,16 @@ def main():
     rng = np.random.default_rng(BOOT_SEED)
     boot_idx = [rng.integers(0, N, N) for _ in range(N_BOOT)]
 
-    op_rows = []            # per (rho, model) operating point
-    boot_rows = []          # per (rho, contrast) paired-bootstrap CI
-    summary = {"C_inv": C_INV, "c_sense": SENSES, "N": N,
-               "n_boot": N_BOOT, "rho_grid": RHO_GRID, "contrasts": {}}
+    op_rows = []  # per (rho, model) operating point
+    boot_rows = []  # per (rho, contrast) paired-bootstrap CI
+    summary = {
+        "C_inv": C_INV,
+        "c_sense": SENSES,
+        "N": N,
+        "n_boot": N_BOOT,
+        "rho_grid": RHO_GRID,
+        "contrasts": {},
+    }
 
     # store per-model optimal policy per rho
     policy = {}
@@ -113,17 +126,28 @@ def main():
             oc = optimal_cut(scores[m], y, C_INV, L)
             full_cost = SENSES[m] + oc["det_cost_per_dec"]
             policy[rho][m] = {**oc, "L": L, "full_cost_per_dec": full_cost}
-            op_rows.append({
-                "rho": rho, "L_usd": L, "model": m, "tau_star": round(oc["tau"], 4),
-                "alert_rate": round(oc["alert_rate"], 5), "recall": round(oc["recall"], 4),
-                "tp": oc["tp"], "fp": oc["fp"], "fn": oc["fn"],
-                "c_sense": SENSES[m],
-                "cost_per_dec_usd": round(full_cost, 6),
-            })
+            op_rows.append(
+                {
+                    "rho": rho,
+                    "L_usd": L,
+                    "model": m,
+                    "tau_star": round(oc["tau"], 4),
+                    "alert_rate": round(oc["alert_rate"], 5),
+                    "recall": round(oc["recall"], 4),
+                    "tp": oc["tp"],
+                    "fp": oc["fp"],
+                    "fn": oc["fn"],
+                    "c_sense": SENSES[m],
+                    "cost_per_dec_usd": round(full_cost, 6),
+                }
+            )
 
     # paired bootstrap on the cost advantage at each model's fixed tau*
-    CONTRASTS = [("XGB-24full", "XGB-4sensor"), ("XGB-24full", "XGB-20raw"),
-                 ("XGB-20raw", "XGB-4sensor")]
+    CONTRASTS = [
+        ("XGB-24full", "XGB-4sensor"),
+        ("XGB-24full", "XGB-20raw"),
+        ("XGB-20raw", "XGB-4sensor"),
+    ]
     for rho in RHO_GRID:
         L = rho * C_INV
         for a, b in CONTRASTS:
@@ -138,26 +162,43 @@ def main():
                 cost_b = cost_at_threshold(sb, yb, tb, C_INV, L, cb)
                 deltas[j] = cost_b - cost_a
             lo, hi = np.percentile(deltas, [2.5, 97.5])
-            boot_rows.append({
-                "rho": rho, "L_usd": L, "advantage_of": a, "vs": b,
-                "delta_cost_per_dec_usd": round(point, 6),
-                "boot_mean": round(float(deltas.mean()), 6),
-                "ci_lo": round(float(lo), 6), "ci_hi": round(float(hi), 6),
-                "excludes_zero": bool(lo > 0 or hi < 0),
-                "sign": "a_cheaper" if point > 0 else "b_cheaper",
-            })
+            boot_rows.append(
+                {
+                    "rho": rho,
+                    "L_usd": L,
+                    "advantage_of": a,
+                    "vs": b,
+                    "delta_cost_per_dec_usd": round(point, 6),
+                    "boot_mean": round(float(deltas.mean()), 6),
+                    "ci_lo": round(float(lo), 6),
+                    "ci_hi": round(float(hi), 6),
+                    "excludes_zero": bool(lo > 0 or hi < 0),
+                    "sign": "a_cheaper" if point > 0 else "b_cheaper",
+                }
+            )
 
     # break-even fraud loss L* where XGB-24full net-beats XGB-20raw (fine L sweep)
     L_fine = np.round(np.arange(0.5, 400.01, 0.5), 2)
     lstar = None
     breakeven_curve = []
     for L in L_fine:
-        c24 = SENSES["XGB-24full"] + optimal_cut(scores["XGB-24full"], y, C_INV, L)["det_cost_per_dec"]
-        c20 = SENSES["XGB-20raw"] + optimal_cut(scores["XGB-20raw"], y, C_INV, L)["det_cost_per_dec"]
+        c24 = (
+            SENSES["XGB-24full"]
+            + optimal_cut(scores["XGB-24full"], y, C_INV, L)["det_cost_per_dec"]
+        )
+        c20 = (
+            SENSES["XGB-20raw"] + optimal_cut(scores["XGB-20raw"], y, C_INV, L)["det_cost_per_dec"]
+        )
         adv = c20 - c24
-        breakeven_curve.append({"L_usd": float(L), "rho": float(L / C_INV),
-                                "cost_24full": round(c24, 6), "cost_20raw": round(c20, 6),
-                                "adv_24full": round(adv, 6)})
+        breakeven_curve.append(
+            {
+                "L_usd": float(L),
+                "rho": float(L / C_INV),
+                "cost_24full": round(c24, 6),
+                "cost_20raw": round(c20, 6),
+                "adv_24full": round(adv, 6),
+            }
+        )
         if lstar is None and adv > 0:
             lstar = float(L)
     summary["breakeven_L_usd_24full_beats_20raw"] = lstar
@@ -175,24 +216,33 @@ def main():
     # write outputs
     with open(OUT / "p8_cost_optimal.tsv", "w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=list(op_rows[0].keys()), delimiter="\t")
-        w.writeheader(); w.writerows(op_rows)
+        w.writeheader()
+        w.writerows(op_rows)
     with open(OUT / "p8_cost_optimal_boot.tsv", "w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=list(boot_rows[0].keys()), delimiter="\t")
-        w.writeheader(); w.writerows(boot_rows)
+        w.writeheader()
+        w.writerows(boot_rows)
     with open(OUT / "p8_cost_optimal_breakeven.tsv", "w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=list(breakeven_curve[0].keys()), delimiter="\t")
-        w.writeheader(); w.writerows(breakeven_curve)
+        w.writeheader()
+        w.writerows(breakeven_curve)
     with open(OUT / "p8_cost_optimal_summary.json", "w") as f:
         json.dump(summary, f, indent=2)
 
     # console headlines
-    print(f"[p8-cost-optimal] N={N} pos_rate={y.mean():.4f} C_inv=${C_INV} c_sense=${SENSES['XGB-24full']}")
+    print(
+        f"[p8-cost-optimal] N={N} pos_rate={y.mean():.4f} C_inv=${C_INV} c_sense=${SENSES['XGB-24full']}"
+    )
     print(f"break-even L* (24full net-beats 20raw): ${lstar}  (rho*={summary['breakeven_rho']})")
     for k, v in summary["contrasts"].items():
-        print(f"  {k}: CI excludes 0 at {v['n_rho_ci_excludes_zero']}/{v['n_rho']} rho; "
-              f"a_cheaper_all={v['a_cheaper_at_all_rho']}")
-    print("tau* shift with rho (24full):",
-          [(r["rho"], r["tau_star"], r["recall"]) for r in op_rows if r["model"] == "XGB-24full"])
+        print(
+            f"  {k}: CI excludes 0 at {v['n_rho_ci_excludes_zero']}/{v['n_rho']} rho; "
+            f"a_cheaper_all={v['a_cheaper_at_all_rho']}"
+        )
+    print(
+        "tau* shift with rho (24full):",
+        [(r["rho"], r["tau_star"], r["recall"]) for r in op_rows if r["model"] == "XGB-24full"],
+    )
 
 
 if __name__ == "__main__":

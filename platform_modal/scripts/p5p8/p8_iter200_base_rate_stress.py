@@ -36,6 +36,7 @@ Outputs:
 
 Cost ratio: 100 (headline from iter-188).
 """
+
 from __future__ import annotations
 import json
 from pathlib import Path
@@ -43,9 +44,10 @@ from pathlib import Path
 import numpy as np
 
 import sys
+
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # platform_modal/scripts, for _paths
-from _paths import REPO_ROOT  # noqa: E402
-from _p8_common import (  # noqa: E402
+from _paths import REPO_ROOT
+from _p8_common import (
     RAW20,
     AGG4,
     ALL24,
@@ -55,6 +57,7 @@ from _p8_common import (  # noqa: E402
     fit_xgb,
     paired_bootstrap_ci,
 )
+
 ROOT = REPO_ROOT
 RES = ROOT / "platform_hybrid/experiments" / "results" / "p5p8/corrected-review21-v2"
 RES.mkdir(parents=True, exist_ok=True)
@@ -135,8 +138,11 @@ def main():
     Xtr, ytr = load(TRAIN)
     Xte, yte = load(TEST)
     n_pos_orig = int((yte == 1).sum())
-    print(f"  train: {Xtr.shape} pos={int((ytr==1).sum())}", flush=True)
-    print(f"  test:  {Xte.shape} pos={n_pos_orig} base_rate={n_pos_orig/yte.shape[0]:.4f}", flush=True)
+    print(f"  train: {Xtr.shape} pos={int((ytr == 1).sum())}", flush=True)
+    print(
+        f"  test:  {Xte.shape} pos={n_pos_orig} base_rate={n_pos_orig / yte.shape[0]:.4f}",
+        flush=True,
+    )
 
     print("Fitting XGB...", flush=True)
     probas = {}
@@ -169,7 +175,10 @@ def main():
                     mc, ot = min_cost(s, ys, C_DEFAULT)
                     minc[(fset, rate, sd, rr)] = (mc, ot)
                     catch[(fset, rate, sd, rr)] = recall_at_alert_budget(s, ys, 0.01)
-            print(f"  rate={rate:.4f} rr={rr} eff_rate={eff_rate:.4f} n={int(ys.shape[0])}", flush=True)
+            print(
+                f"  rate={rate:.4f} rr={rr} eff_rate={eff_rate:.4f} n={int(ys.shape[0])}",
+                flush=True,
+            )
 
     # ----- TSV: per-(fset, rate, seed, resample) min-cost + catch -----
     out_curve = RES / "p8_iter200_base_rate_curve.tsv"
@@ -180,34 +189,38 @@ def main():
                 for rr in range(N_RESAMP):
                     for sd in SEEDS:
                         mc, ot = minc[(fset, rate, sd, rr)]
-                        f.write(f"{fset}\t{rate:.4f}\t{rr}\t{sd}\t"
-                                f"{rates_eff[(rate, rr)]:.4f}\t{n_used[(rate, rr)]}\t"
-                                f"{mc:.6f}\t{ot:.4f}\t{catch[(fset, rate, sd, rr)]:.4f}\n")
+                        f.write(
+                            f"{fset}\t{rate:.4f}\t{rr}\t{sd}\t"
+                            f"{rates_eff[(rate, rr)]:.4f}\t{n_used[(rate, rr)]}\t"
+                            f"{mc:.6f}\t{ot:.4f}\t{catch[(fset, rate, sd, rr)]:.4f}\n"
+                        )
 
     # ----- Aggregate to (fset, rate) by averaging over (seed, resample) -----
     by_fset_rate = {}  # fset, rate -> list of min_cost values
     catch_by_fset_rate = {}
     for fset in FEATURE_SETS:
         for rate in BASE_RATES:
-            vals = [minc[(fset, rate, sd, rr)][0]
-                    for sd in SEEDS for rr in range(N_RESAMP)]
-            cvals = [catch[(fset, rate, sd, rr)]
-                     for sd in SEEDS for rr in range(N_RESAMP)]
+            vals = [minc[(fset, rate, sd, rr)][0] for sd in SEEDS for rr in range(N_RESAMP)]
+            cvals = [catch[(fset, rate, sd, rr)] for sd in SEEDS for rr in range(N_RESAMP)]
             by_fset_rate[(fset, rate)] = vals
             catch_by_fset_rate[(fset, rate)] = cvals
 
     # ----- TSV: per-(fset, rate) aggregate min-cost -----
     out_minc = RES / "p8_iter200_base_rate_min_cost.tsv"
     with out_minc.open("w") as f:
-        f.write("fset\trate\tmean_min_cost\tmedian_min_cost\tmin_min_cost\tmax_min_cost\t"
-                "mean_catch_at_1pct\n")
+        f.write(
+            "fset\trate\tmean_min_cost\tmedian_min_cost\tmin_min_cost\tmax_min_cost\t"
+            "mean_catch_at_1pct\n"
+        )
         for fset in FEATURE_SETS:
             for rate in BASE_RATES:
                 vals = by_fset_rate[(fset, rate)]
                 cvals = catch_by_fset_rate[(fset, rate)]
-                f.write(f"{fset}\t{rate:.4f}\t{np.mean(vals):.6f}\t"
-                        f"{np.median(vals):.6f}\t{np.min(vals):.6f}\t{np.max(vals):.6f}\t"
-                        f"{np.mean(cvals):.4f}\n")
+                f.write(
+                    f"{fset}\t{rate:.4f}\t{np.mean(vals):.6f}\t"
+                    f"{np.median(vals):.6f}\t{np.min(vals):.6f}\t{np.max(vals):.6f}\t"
+                    f"{np.mean(cvals):.4f}\n"
+                )
 
     # ----- Per-(contrast, rate) gap with paired bootstrap CI -----
     # Contrast: 24full-20raw, 23_noVmean-20raw, 23_noVmax-20raw, 4sensor-20raw
@@ -223,33 +236,40 @@ def main():
     for rate in BASE_RATES:
         for contrast in CONTRASTS:
             target_fset = CONTRAST_MAP[contrast]
-            diffs = np.array([
-                by_fset_rate[(target_fset, rate)][i]
-                - by_fset_rate[("20raw", rate)][i]
-                for i in range(len(SEEDS) * N_RESAMP)
-            ])
+            diffs = np.array(
+                [
+                    by_fset_rate[(target_fset, rate)][i] - by_fset_rate[("20raw", rate)][i]
+                    for i in range(len(SEEDS) * N_RESAMP)
+                ]
+            )
             ci = paired_bootstrap_ci(diffs, N_BOOT, seed=20260706 + int(rate * 10000))
             mean_target = float(np.mean(by_fset_rate[(target_fset, rate)]))
             mean_baseline = float(np.mean(by_fset_rate[("20raw", rate)]))
-            gap_rows.append({
-                "contrast": contrast,
-                "rate": rate,
-                "mean_gap": ci["mean"],
-                "lo": ci["lo"],
-                "hi": ci["hi"],
-                "mean_target": mean_target,
-                "mean_20raw": mean_baseline,
-                "ci_negative": bool(ci["hi"] < 0),
-                "ci_positive": bool(ci["lo"] > 0),
-            })
+            gap_rows.append(
+                {
+                    "contrast": contrast,
+                    "rate": rate,
+                    "mean_gap": ci["mean"],
+                    "lo": ci["lo"],
+                    "hi": ci["hi"],
+                    "mean_target": mean_target,
+                    "mean_20raw": mean_baseline,
+                    "ci_negative": bool(ci["hi"] < 0),
+                    "ci_positive": bool(ci["lo"] > 0),
+                }
+            )
 
     out_gap = RES / "p8_iter200_base_rate_gap.tsv"
     with out_gap.open("w") as f:
-        f.write("contrast\trate\tmean_gap\tlo\thi\tmean_target\tmean_20raw\tci_negative\tci_positive\n")
+        f.write(
+            "contrast\trate\tmean_gap\tlo\thi\tmean_target\tmean_20raw\tci_negative\tci_positive\n"
+        )
         for r in gap_rows:
-            f.write(f"{r['contrast']}\t{r['rate']:.4f}\t{r['mean_gap']:.6f}\t"
-                    f"{r['lo']:.6f}\t{r['hi']:.6f}\t{r['mean_target']:.6f}\t"
-                    f"{r['mean_20raw']:.6f}\t{int(r['ci_negative'])}\t{int(r['ci_positive'])}\n")
+            f.write(
+                f"{r['contrast']}\t{r['rate']:.4f}\t{r['mean_gap']:.6f}\t"
+                f"{r['lo']:.6f}\t{r['hi']:.6f}\t{r['mean_target']:.6f}\t"
+                f"{r['mean_20raw']:.6f}\t{int(r['ci_negative'])}\t{int(r['ci_positive'])}\n"
+            )
 
     # ----- TSV: per-(fset, rate, seed, resample) catch rate -----
     out_catch = RES / "p8_iter200_base_rate_catch.tsv"
@@ -259,8 +279,9 @@ def main():
             for rate in BASE_RATES:
                 for rr in range(N_RESAMP):
                     for sd in SEEDS:
-                        f.write(f"{fset}\t{rate:.4f}\t{rr}\t{sd}\t"
-                                f"{catch[(fset, rate, sd, rr)]:.4f}\n")
+                        f.write(
+                            f"{fset}\t{rate:.4f}\t{rr}\t{sd}\t{catch[(fset, rate, sd, rr)]:.4f}\n"
+                        )
 
     # ----- Hypotheses -----
     def gap_for(contrast, rate):
@@ -333,8 +354,10 @@ def main():
         "h4_gap_low_rate": h4_low["mean_gap"] if h4_low else None,
         "h4_gap_high_rate": h4["mean_gap"] if h4 else None,
         "vmax_retention_by_rate": retention,
-        "verdict_counts": {"PASS": sum([h1_pass, h2_pass, h3_pass, h4_pass]),
-                            "FAIL": 4 - sum([h1_pass, h2_pass, h3_pass, h4_pass])},
+        "verdict_counts": {
+            "PASS": sum([h1_pass, h2_pass, h3_pass, h4_pass]),
+            "FAIL": 4 - sum([h1_pass, h2_pass, h3_pass, h4_pass]),
+        },
     }
 
     out_sum = RES / "p8_iter200_base_rate_summary.json"

@@ -132,7 +132,9 @@ def _ids(name: str, values: Any, *, require_nonempty: bool = True) -> tuple[str,
     if len(set(normalized)) != len(normalized):
         raise BinaryAuditBoundaryError((f"{name} must not contain duplicate IDs",))
     if tuple(normalized) != tuple(sorted(normalized)):
-        raise BinaryAuditBoundaryError((f"{name} must be lexically sorted for deterministic hashing",))
+        raise BinaryAuditBoundaryError(
+            (f"{name} must be lexically sorted for deterministic hashing",)
+        )
     return tuple(normalized)
 
 
@@ -180,12 +182,8 @@ def _normalize_split_manifest(value: Mapping[str, Iterable[str]]) -> dict[str, t
     if not isinstance(value, Mapping):
         raise BinaryAuditBoundaryError(("split_manifest must be a mapping",))
     if set(value) != set(SPLIT_KEYS):
-        raise BinaryAuditBoundaryError(
-            (f"split_manifest keys must be exactly {list(SPLIT_KEYS)}",)
-        )
-    normalized = {
-        key: _ids(f"split_manifest.{key}", value[key]) for key in SPLIT_KEYS
-    }
+        raise BinaryAuditBoundaryError((f"split_manifest keys must be exactly {list(SPLIT_KEYS)}",))
+    normalized = {key: _ids(f"split_manifest.{key}", value[key]) for key in SPLIT_KEYS}
     seen: set[str] = set()
     for key in SPLIT_KEYS:
         overlap = seen.intersection(normalized[key])
@@ -271,7 +269,9 @@ def _validate_environment(boundary: Mapping[str, Any], diagnostics: list[str]) -
     try:
         container = environment.get("container_digest")
         if not isinstance(container, str) or not _DIGEST.fullmatch(container):
-            raise BinaryAuditBoundaryError(("native_environment.container_digest must be sha256:<64 hex>",))
+            raise BinaryAuditBoundaryError(
+                ("native_environment.container_digest must be sha256:<64 hex>",)
+            )
         environment_hash = _hash64(
             "native_environment.environment_manifest_sha256",
             environment.get("environment_manifest_sha256", environment.get("manifest_sha256")),
@@ -299,10 +299,14 @@ def _validate_environment(boundary: Mapping[str, Any], diagnostics: list[str]) -
     try:
         if isinstance(artifact_types, (str, bytes, bytearray)) or not artifact_types:
             raise BinaryAuditBoundaryError(("artifact_contract.types must be non-empty",))
-        artifact_types = tuple(_string("artifact_contract.types[]", item) for item in artifact_types)
+        artifact_types = tuple(
+            _string("artifact_contract.types[]", item) for item in artifact_types
+        )
     except (BinaryAuditBoundaryError, TypeError) as exc:
         diagnostics.extend(
-            exc.diagnostics if isinstance(exc, BinaryAuditBoundaryError) else ("artifact_contract.types must be iterable",)
+            exc.diagnostics
+            if isinstance(exc, BinaryAuditBoundaryError)
+            else ("artifact_contract.types must be iterable",)
         )
         artifact_types = ()
 
@@ -334,7 +338,9 @@ def _validate_environment(boundary: Mapping[str, Any], diagnostics: list[str]) -
             checks = tuple(_string("verifier_contract.checks[]", item) for item in checks)
         except (BinaryAuditBoundaryError, TypeError) as exc:
             diagnostics.extend(
-                exc.diagnostics if isinstance(exc, BinaryAuditBoundaryError) else ("verifier_contract.checks must be iterable",)
+                exc.diagnostics
+                if isinstance(exc, BinaryAuditBoundaryError)
+                else ("verifier_contract.checks must be iterable",)
             )
             checks = ()
     return {
@@ -365,7 +371,9 @@ def validate_binaryaudit_boundary(
     if boundary.get("suite_id") != SUITE_ID:
         diagnostics.append(f"suite_id must be {SUITE_ID!r}")
     if boundary.get("benchmark_id") != BENCHMARK_ID:
-        diagnostics.append(f"benchmark_id must be {BENCHMARK_ID!r}; related benchmarks are not substitutes")
+        diagnostics.append(
+            f"benchmark_id must be {BENCHMARK_ID!r}; related benchmarks are not substitutes"
+        )
     for key in ("related_benchmark", "substitute_benchmark", "substitutes"):
         _reject_substitute(boundary.get(key), key, diagnostics)
     source_identity = _validate_source(boundary, diagnostics)
@@ -470,7 +478,9 @@ def _validate_tracking(receipt: Mapping[str, Any], diagnostics: list[str]) -> di
             if not isinstance(hf.get(field), str) or not hf[field].strip():
                 diagnostics.append(f"Hugging Face receipt missing {field}")
         try:
-            revision = _immutable_revision("Hugging Face revision", hf.get("revision", hf.get("commit")))
+            revision = _immutable_revision(
+                "Hugging Face revision", hf.get("revision", hf.get("commit"))
+            )
             artifact_hash = _hash64(
                 "Hugging Face artifact_manifest_sha256", hf.get("artifact_manifest_sha256")
             )
@@ -554,7 +564,9 @@ def validate_binaryaudit_result_receipt(
 
     try:
         task_ids = _ids("result task_ids", receipt.get("task_ids"))
-        task_hash = _hash64("result task_id_manifest_sha256", receipt.get("task_id_manifest_sha256"))
+        task_hash = _hash64(
+            "result task_id_manifest_sha256", receipt.get("task_id_manifest_sha256")
+        )
         if task_hash != task_id_manifest_sha256(task_ids):
             diagnostics.append("result task_id_manifest_sha256 does not match result task_ids")
         expected = tuple(boundary["split_manifest"].get(role, ()))
@@ -581,7 +593,9 @@ def validate_binaryaudit_result_receipt(
     if not isinstance(artifact, Mapping):
         diagnostics.append("artifact_receipt is required")
     else:
-        if artifact.get("manifest_sha256", artifact.get("artifact_manifest_sha256")) != expected_artifact.get("manifest_sha256"):
+        if artifact.get(
+            "manifest_sha256", artifact.get("artifact_manifest_sha256")
+        ) != expected_artifact.get("manifest_sha256"):
             diagnostics.append("artifact receipt manifest differs from artifact contract")
         paths = artifact.get("paths", artifact.get("artifacts"))
         if isinstance(paths, (str, bytes, bytearray)) or not paths:
@@ -612,7 +626,9 @@ def validate_binaryaudit_result_receipt(
             diagnostics.append("receipt_proven_heldout requires heldout_proof")
         else:
             expected_selection_hash = task_id_manifest_sha256(boundary["split_manifest"]["train"])
-            expected_heldout_hash = task_id_manifest_sha256(boundary["split_manifest"][RECEIPT_PROVEN_HELDOUT])
+            expected_heldout_hash = task_id_manifest_sha256(
+                boundary["split_manifest"][RECEIPT_PROVEN_HELDOUT]
+            )
             if proof.get("selection_task_id_manifest_sha256") != expected_selection_hash:
                 diagnostics.append("heldout_proof selection task-ID hash differs from boundary")
             if proof.get("heldout_task_id_manifest_sha256") != expected_heldout_hash:
@@ -838,7 +854,11 @@ def build_binaryaudit_split_manifest(
         "size_sum_equals_total": sum(len(split_manifest[k]) for k in SPLIT_KEYS) == len(records),
         "task_id_collision_free": True,
     }
-    if not (proof["pairwise_disjoint"] and proof["union_equals_task_ids"] and proof["size_sum_equals_total"]):
+    if not (
+        proof["pairwise_disjoint"]
+        and proof["union_equals_task_ids"]
+        and proof["size_sum_equals_total"]
+    ):
         raise BinaryAuditBoundaryError(("split manifest failed its own disjointness proof",))
 
     # Reuse the boundary normalizer so a manifest that this builder emits can

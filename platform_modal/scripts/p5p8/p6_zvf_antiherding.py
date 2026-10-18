@@ -30,13 +30,10 @@ Usage
 -----
 python3 platform_modal/scripts/p5p8/p6_zvf_antiherding.py
 """
-import json
-import math
-import pathlib
-import sys
-from collections import defaultdict
 
-import jsonschema  # only used for safety; not required to load entries
+import json
+import pathlib
+
 
 HERE = pathlib.Path(__file__).resolve().parent
 WORKTREE = HERE.parents[2] / "platform_hybrid"
@@ -46,7 +43,7 @@ SCHEMA = WORKTREE / "registry" / "schema.json"
 OUTDIR = WORKTREE / "experiments" / "results" / "p5p8"
 OUTDIR.mkdir(parents=True, exist_ok=True)
 
-METHODS = ["grpo", "aero", "areal", "gift"]   # the 4 N2 same-stack methods
+METHODS = ["grpo", "aero", "areal", "gift"]  # the 4 N2 same-stack methods
 N_BOOT = 4000
 G_OBSERVED = 8
 N_PROMPTS_PER_STEP = 16
@@ -79,7 +76,7 @@ def zvf_and_iid(rewards_prompt_g, G):
     # either the whole prompt group is all-1 (n0=0) or all-0 (n1=0). The observed
     # ZVF contribution is the degenerate-case indicator.
     zvf_obs_p = 1.0 if (n0 == 0 or n1 == 0) else 0.0
-    zvf_iid_p = p**G + (1 - p)**G
+    zvf_iid_p = p**G + (1 - p) ** G
     return zvf_obs_p, zvf_iid_p, p
 
 
@@ -87,7 +84,7 @@ def step_metrics(rows):
     """For one method's tensor rows, produce per-step means."""
     out = []
     for r in rows:
-        rewards = r["rewards"]            # list[list[float]], length 16
+        rewards = r["rewards"]  # list[list[float]], length 16
         zs_obs, zs_iid, ps = [], [], []
         for prompt in rewards:
             zo, zi, p = zvf_and_iid(prompt, G_OBSERVED)
@@ -99,18 +96,20 @@ def step_metrics(rows):
         y_obs = 1.0 - zvf_obs_step
         y_iid = 1.0 - zvf_iid_step
         delta_div = zvf_iid_step - zvf_obs_step
-        out.append({
-            "step": r["step"],
-            "group_size": r["group_size"],
-            "n_prompts": N_PROMPTS_PER_STEP,
-            "reward_mean": r["reward_mean"],
-            "zvf_obs": zvf_obs_step,
-            "zvf_iid": zvf_iid_step,
-            "delta_div": delta_div,
-            "y_obs": y_obs,
-            "y_iid": y_iid,
-            "p_mean": sum(ps) / len(ps),
-        })
+        out.append(
+            {
+                "step": r["step"],
+                "group_size": r["group_size"],
+                "n_prompts": N_PROMPTS_PER_STEP,
+                "reward_mean": r["reward_mean"],
+                "zvf_obs": zvf_obs_step,
+                "zvf_iid": zvf_iid_step,
+                "delta_div": delta_div,
+                "y_obs": y_obs,
+                "y_iid": y_iid,
+                "p_mean": sum(ps) / len(ps),
+            }
+        )
     return out
 
 
@@ -120,9 +119,10 @@ def bootstrap_paired_diff_ci(values_a, values_b, n_boot, seed=20260705):
     Returns (mean_a, mean_b, mean_diff, ci_low, ci_high, p_two_sided).
     """
     import random
+
     rng = random.Random(seed)
     n = len(values_a)
-    diffs = [a - b for a, b in zip(values_a, values_b)]
+    diffs = [a - b for a, b in zip(values_a, values_b, strict=False)]
     mean_a = sum(values_a) / n
     mean_b = sum(values_b) / n
     mean_diff = mean_a - mean_b
@@ -155,18 +155,20 @@ def main():
         method_data[m] = per
         # Write per-step rows
         for p in per:
-            per_step_rows.append({
-                "method": m,
-                "step": p["step"],
-                "group_size": p["group_size"],
-                "reward_mean": round(p["reward_mean"], 6),
-                "zvf_obs": round(p["zvf_obs"], 6),
-                "zvf_iid": round(p["zvf_iid"], 6),
-                "delta_div": round(p["delta_div"], 6),
-                "y_obs": round(p["y_obs"], 6),
-                "y_iid": round(p["y_iid"], 6),
-                "p_mean": round(p["p_mean"], 6),
-            })
+            per_step_rows.append(
+                {
+                    "method": m,
+                    "step": p["step"],
+                    "group_size": p["group_size"],
+                    "reward_mean": round(p["reward_mean"], 6),
+                    "zvf_obs": round(p["zvf_obs"], 6),
+                    "zvf_iid": round(p["zvf_iid"], 6),
+                    "delta_div": round(p["delta_div"], 6),
+                    "y_obs": round(p["y_obs"], 6),
+                    "y_iid": round(p["y_iid"], 6),
+                    "p_mean": round(p["p_mean"], 6),
+                }
+            )
 
     # Per-method headline: paired-step bootstrap diff (variant - grpo) for delta_div
     base = {p["step"]: p for p in method_data["grpo"]}
@@ -184,23 +186,25 @@ def main():
         bd = [base[s]["delta_div"] for s in range(len(per))]
         boot = bootstrap_paired_diff_ci(dd, bd, N_BOOT)
         (grpo_mean_for_field, _b, _c, lo, hi, sig, p_two, n) = boot
-        summary_rows.append({
-            "method": m,
-            "panel": "n2_same_stack_40step",
-            "G": G_OBSERVED,
-            "n_steps": len(per),
-            "zvf_obs_mean": round(mzo, 6),
-            "zvf_iid_mean": round(mzi, 6),
-            "delta_div_mean": round(mdd, 6),
-            "y_obs_mean": round(myo, 6),
-            "delta_div_vs_grpo": round(mdd - sum(bd) / len(bd), 6),
-            "ci_low": round(lo, 6),
-            "ci_high": round(hi, 6),
-            "significant": bool(sig),
-            "p_two_sided": round(p_two, 4),
-            "ci_level": SEED_LEVEL,
-            "n_boot": N_BOOT,
-        })
+        summary_rows.append(
+            {
+                "method": m,
+                "panel": "n2_same_stack_40step",
+                "G": G_OBSERVED,
+                "n_steps": len(per),
+                "zvf_obs_mean": round(mzo, 6),
+                "zvf_iid_mean": round(mzi, 6),
+                "delta_div_mean": round(mdd, 6),
+                "y_obs_mean": round(myo, 6),
+                "delta_div_vs_grpo": round(mdd - sum(bd) / len(bd), 6),
+                "ci_low": round(lo, 6),
+                "ci_high": round(hi, 6),
+                "significant": bool(sig),
+                "p_two_sided": round(p_two, 4),
+                "ci_level": SEED_LEVEL,
+                "n_boot": N_BOOT,
+            }
+        )
 
     # TSV outputs
     _write_tsv(OUTDIR / "p6_zvf_antiherding_per_step.tsv", per_step_rows)
@@ -223,21 +227,20 @@ def main():
             "'Contrastive Yield' (within-group credit assignment)."
         ),
     }
-    (OUTDIR / "p6_zvf_antiherding_summary.json").write_text(
-        json.dumps(summary_json, indent=2)
-    )
+    (OUTDIR / "p6_zvf_antiherding_summary.json").write_text(json.dumps(summary_json, indent=2))
 
     print(f"Per-method deltas (delta_div_mean, vs-grpo [lo, hi]):")
     for r in summary_rows:
-        print(f"  {r['method']:6s} delta_div_mean={r['delta_div_mean']:.4f} "
-              f"vs_grpo_delta={r['delta_div_vs_grpo']:+.4f} "
-              f"CI=[{r['ci_low']:+.4f},{r['ci_high']:+.4f}] "
-              f"sig={r['significant']} p={r['p_two_sided']:.4f}")
+        print(
+            f"  {r['method']:6s} delta_div_mean={r['delta_div_mean']:.4f} "
+            f"vs_grpo_delta={r['delta_div_vs_grpo']:+.4f} "
+            f"CI=[{r['ci_low']:+.4f},{r['ci_high']:+.4f}] "
+            f"sig={r['significant']} p={r['p_two_sided']:.4f}"
+        )
 
     # Patch 7 N2 stack entries + 3 N2 delta entries (idempotent).
     n_stack, n_delta = patch_registry(summary_rows, method_data, base)
-    print(f"Patched {n_stack} stack + {n_delta} delta entries (additive, "
-          f"schema-bounded).")
+    print(f"Patched {n_stack} stack + {n_delta} delta entries (additive, schema-bounded).")
 
     return summary_rows, per_step_rows
 

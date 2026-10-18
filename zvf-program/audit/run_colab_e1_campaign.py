@@ -38,9 +38,7 @@ AGGREGATOR = REPO_ROOT / "zvf-program" / "audit" / "aggregate_audit.py"
 AGGREGATE_OUTPUT = REPO_ROOT / "zvf-program" / "audit" / "results" / "audit.json"
 AGGREGATE_TEX_OUTPUT = REPO_ROOT / "zvf-program" / "audit" / "results" / "audit_results.tex"
 FULL_RESULTS = REPO_ROOT / "zvf-program" / "audit" / "results" / "full"
-UNIT_RESULTS = (
-    REPO_ROOT / "zvf-program" / "audit" / "results" / "colab-e1-confirmatory" / "results"
-)
+UNIT_RESULTS = REPO_ROOT / "zvf-program" / "audit" / "results" / "colab-e1-confirmatory" / "results"
 DEFAULT_OUTPUT = (
     REPO_ROOT / "zvf-program" / "audit" / "results" / "colab-e1-confirmatory" / "campaign"
 )
@@ -124,9 +122,7 @@ def latest_assignment_failure_epoch(units: list[Unit]) -> float | None:
         ):
             continue
         try:
-            completed_at = datetime.fromisoformat(
-                result["completed_at"].replace("Z", "+00:00")
-            )
+            completed_at = datetime.fromisoformat(result["completed_at"].replace("Z", "+00:00"))
         except ValueError:
             continue
         if completed_at.tzinfo is None:
@@ -138,9 +134,7 @@ def latest_assignment_failure_epoch(units: list[Unit]) -> float | None:
 def is_preassignment_failure(record: dict[str, Any] | None) -> bool:
     """Return whether a runner failed before Colab allocated a VM."""
     return bool(
-        record is not None
-        and record.get("status") == "failed"
-        and record.get("failed_step") == 0
+        record is not None and record.get("status") == "failed" and record.get("failed_step") == 0
     )
 
 
@@ -172,9 +166,7 @@ def is_transient_provider_failure(
                     # outage cannot taint a later deterministic failure.
                     lines = log_text.splitlines()
                     attempt_starts = [
-                        index
-                        for index, line in enumerate(lines)
-                        if "] campaign attempt " in line
+                        index for index, line in enumerate(lines) if "] campaign attempt " in line
                     ]
                     if attempt_starts:
                         log_text = "\n".join(lines[attempt_starts[-1] :])
@@ -205,9 +197,7 @@ def failure_credit_id(unit: Unit, record: dict[str, Any] | None) -> str | None:
     return json.dumps(identity, sort_keys=True, separators=(",", ":"))
 
 
-def active_backoff_until(
-    values: list[float | None], *, now_epoch: float
-) -> float | None:
+def active_backoff_until(values: list[float | None], *, now_epoch: float) -> float | None:
     """Return the latest future backoff deadline, ignoring expired values."""
     future = [value for value in values if value is not None and value > now_epoch]
     return max(future, default=None)
@@ -332,8 +322,7 @@ def validate_result(
         "seed": record.get("seed") == seed,
         "evidence_class": record.get("evidence_class") == "confirmatory",
         "heldout_n": record.get("heldout_n") == expected["heldout_n"],
-        "treatment_changes": record.get("treatment_changes")
-        == expected["treatment_changes"][arm],
+        "treatment_changes": record.get("treatment_changes") == expected["treatment_changes"][arm],
         "fingerprint": isinstance(record.get("fingerprint"), str)
         and len(record["fingerprint"]) == 64,
         "stack_fingerprint": isinstance(record.get("stack_fingerprint"), str)
@@ -353,18 +342,12 @@ def validate_result(
     checks["heldout_trace"] = isinstance(trace, list) and len(trace) == heldout_n
     if checks["heldout_trace"]:
         indices = [row.get("index") if isinstance(row, dict) else None for row in trace]
-        hashes = [
-            row.get("completion_sha256") if isinstance(row, dict) else None
-            for row in trace
-        ]
+        hashes = [row.get("completion_sha256") if isinstance(row, dict) else None for row in trace]
         checks["heldout_indices"] = indices == list(range(heldout_n))
         checks["heldout_hashes"] = all(
-            isinstance(value, str) and re.fullmatch(r"[0-9a-f]{64}", value)
-            for value in hashes
+            isinstance(value, str) and re.fullmatch(r"[0-9a-f]{64}", value) for value in hashes
         )
-        checks["unique_completion_hashes"] = (
-            checks["heldout_hashes"]
-        )
+        checks["unique_completion_hashes"] = checks["heldout_hashes"]
         score = record.get("heldout_score")
         correct = sum(row.get("correct") is True for row in trace if isinstance(row, dict))
         checks["heldout_score_recomputed"] = (
@@ -387,15 +370,21 @@ def validate_result(
     else:
         wandb = verification.get("wandb")
         checks["wandb_finished"] = isinstance(wandb, dict) and wandb.get("state") == "finished"
-        checks["hf_checkpoints"] = verification.get("hf_checkpoint_steps") == expected[
-            "checkpoint_steps"
-        ]
+        checks["hf_checkpoints"] = (
+            verification.get("hf_checkpoint_steps") == expected["checkpoint_steps"]
+        )
         checks["hf_repo"] = isinstance(verification.get("hf_repo"), str)
         checks["hf_commit"] = isinstance(verification.get("hf_commit"), str)
     failed = [name for name, passed in checks.items() if not passed]
-    failed.extend(record_errors(record, manifest, heldout_n=heldout_n,
-                                expected_execution=expected.get("execution"),
-                                expected_changes=expected["treatment_changes"].get(arm)))
+    failed.extend(
+        record_errors(
+            record,
+            manifest,
+            heldout_n=heldout_n,
+            expected_execution=expected.get("execution"),
+            expected_changes=expected["treatment_changes"].get(arm),
+        )
+    )
     return (not failed, ", ".join(failed) if failed else None)
 
 
@@ -577,11 +566,7 @@ def active_runner_processes() -> dict[int, Unit]:
 
 def parse_colab_assignment_count(output: str) -> int:
     """Count server-side assignments from ``colab sessions`` output."""
-    return sum(
-        1
-        for line in output.splitlines()
-        if "Hardware:" in line and "Variant:" in line
-    )
+    return sum(1 for line in output.splitlines() if "Hardware:" in line and "Variant:" in line)
 
 
 def parse_colab_session_names(output: str) -> tuple[set[str], bool]:
@@ -733,13 +718,7 @@ def choose_launches(
     eligible: list[tuple[Unit, int]] = []
     for order, unit in enumerate(units):
         key = f"{unit[0]}:{unit[1]}"
-        if (
-            unit in completed
-            or unit in active
-            or (
-                attempts.get(key, 0) >= max_attempts
-            )
-        ):
+        if unit in completed or unit in active or (attempts.get(key, 0) >= max_attempts):
             continue
         last_attempt = last_attempt_epoch.get(key)
         if (
@@ -763,9 +742,7 @@ def choose_launches(
         key=lambda item: (
             recovery_rank.get(
                 recovery_kinds.get(item[0], ""),
-                3
-                if f"{item[0][0]}:{item[0][1]}" in last_attempt_epoch
-                else 2,
+                3 if f"{item[0][0]}:{item[0][1]}" in last_attempt_epoch else 2,
             ),
             last_attempt_epoch.get(f"{item[0][0]}:{item[0][1]}", 0.0),
             item[1],
@@ -861,9 +838,7 @@ def main(argv: list[str] | None = None) -> int:
         if isinstance(value, (int, float))
     }
     credited_failures = {
-        str(value)
-        for value in (previous.get("credited_failures") or [])
-        if isinstance(value, str)
+        str(value) for value in (previous.get("credited_failures") or []) if isinstance(value, str)
     }
     aggregate_validated_units = previous.get("aggregate_validated_units")
     if not isinstance(aggregate_validated_units, int):
@@ -923,7 +898,7 @@ def main(argv: list[str] | None = None) -> int:
     with CampaignLock(lock_path):
         missing_remote_polls: dict[int, int] = {}
         while True:
-            for pid, (child_unit, process, handle) in list(children.items()):
+            for pid, (_child_unit, process, handle) in list(children.items()):
                 if process.poll() is not None:
                     handle.close()
                     del children[pid]
@@ -936,7 +911,9 @@ def main(argv: list[str] | None = None) -> int:
                 if record and isinstance(record.get("stack_fingerprint"), str)
             }
             if len(stack_values) > 1:
-                raise RuntimeError(f"completed records disagree on stack fingerprint: {stack_values}")
+                raise RuntimeError(
+                    f"completed records disagree on stack fingerprint: {stack_values}"
+                )
             stack_fingerprint = next(iter(stack_values), None)
             validations = {
                 unit: validate_result(
@@ -947,11 +924,11 @@ def main(argv: list[str] | None = None) -> int:
             completed = {unit for unit, (valid, _) in validations.items() if valid}
             evidence_digest = campaign_evidence_digest(PREREGISTRATION, records, result_path)
             aggregate_ok = False
-            if evidence_digest != previous.get("aggregate_evidence_sha256") or len(completed) == len(units):
+            if evidence_digest != previous.get("aggregate_evidence_sha256") or len(
+                completed
+            ) == len(units):
                 try:
-                    regenerate_aggregate(
-                        validated_units=len(completed), required_units=len(units)
-                    )
+                    regenerate_aggregate(validated_units=len(completed), required_units=len(units))
                 except Exception as exc:
                     print(f"[aggregate-error] {exc}", file=sys.stderr, flush=True)
                 else:
@@ -974,9 +951,7 @@ def main(argv: list[str] | None = None) -> int:
                     credit_reason = "pre-assignment failure"
                 elif is_transient_provider_failure(
                     record,
-                    extra_log_path=(
-                        args.output_dir / "logs" / f"{unit[0]}-seed-{unit[1]}.log"
-                    ),
+                    extra_log_path=(args.output_dir / "logs" / f"{unit[0]}-seed-{unit[1]}.log"),
                 ):
                     credit_reason = "transient provider failure"
                     dependency_backoff_until = (
@@ -1108,9 +1083,7 @@ def main(argv: list[str] | None = None) -> int:
                 last_attempt_epoch=last_attempt_epoch,
                 now_epoch=now_epoch,
                 retry_backoff_seconds=args.retry_backoff_seconds,
-                recovery_kinds={
-                    unit: plan[0] for unit, plan in recovery_plans.items()
-                },
+                recovery_kinds={unit: plan[0] for unit, plan in recovery_plans.items()},
             )
 
             state = {
@@ -1179,9 +1152,7 @@ def main(argv: list[str] | None = None) -> int:
                 else:
                     launch_kind, source_request = plan
                     recovery_runner = (
-                        EVALUATION_RUNNER
-                        if launch_kind == "evaluation-recovery"
-                        else RESUME_RUNNER
+                        EVALUATION_RUNNER if launch_kind == "evaluation-recovery" else RESUME_RUNNER
                     )
                     command = [
                         sys.executable,

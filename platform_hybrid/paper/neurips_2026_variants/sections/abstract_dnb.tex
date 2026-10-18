@@ -1,47 +1,35 @@
 % =============================================================================
 % Abstract --- DNB variant (Datasets & Benchmarks track)
-% Artifact-first framing per GPT-5.5 Pro v5 review.
-% Target: <= 250 words; explicit (A/B/C)-grade claim labels.
+% 2026-10-18 Deep Review pass: stratified-correlation claims withdrawn
+% (unsourced); counts follow the rebuilt run manifest.
 % =============================================================================
 \begin{abstract}
-We present \ours{}, a historical artifact collection for auditing
-reinforcement-learning post-training across heterogeneous stacks.
-Its immutable run-ID census, task coverage, and file-level availability
-inventory remain incomplete. Summaries and Zero-Variance Fraction (ZVF)
-diagnostics are not substitutes for raw rollout JSONL or released checkpoints.
+We present \ours{}, a tier-classified collection of RL post-training runs
+on language models across heterogeneous stacks (four open RL libraries and
+the closed Tinker API), with a run manifest that records, for every
+(backend, model, task) cell, whether it completed, how many seeds it has,
+and which run files back its numbers. The manifest lists 79 run records:
+12 in Tier~\textbf{A} (completed LM cells with at least three seeds;
+inferential eligibility separately required), 43 in Tier~\textbf{B}
+(completed single- or two-run case studies, descriptive only), 9 in
+Tier~\textbf{C} (failed, partial, or quarantined), and 15 classic-RL PPO
+runs on a non-LM policy listed as sanity floors outside the tiers, plus six
+planned cells that never started. Every reported training-reward number is recomputed from a named
+run file. Most completed language-model cells are short single-seed GSM8K
+runs on Tinker; the only open-stack multi-seed LM cell is a TRL
+Qwen2.5-0.5B arithmetic cell.
 
-We organize all claims into three explicit evidence tiers.
-\textbf{(A-grade)}: completed multi-seed LM cells (5-seed TRL Qwen2.5-0.5B;
-4-seed Tinker Llama-3.3-70B-Inst), with inferential eligibility separately
-required; classic-RL PPO runs with a non-LLM policy network are listed as
-sanity floors outside the tiers. Theory is also outside the empirical tiers:
-$\mathbb E[\widehat{\mathrm{ZVF}}]=p^{G}+(1{-}p)^{G}$ assumes
-conditionally i.i.d.\ binary rewards at fixed $p$.
-\textbf{(B-grade, single-seed descriptive)}:
-case-study runs across model scale on the closed-backend Tinker API, including
-group-size sweeps and frontier-scale checkpoints, reported as illustrative not
-inferential. \textbf{(C-grade, listed for honesty)}: failed or partially
-completed cells, enumerated in the run manifest. The artifact's value is
-\emph{auditability}: every (backend, model, task) cell is tier-classified, every
-log type is named (precomputed traces, step-level aggregates, raw rollouts), and
-every closed-backend dependency is flagged.
+Zero-Variance Fraction (ZVF), the share of rollout groups with identical
+rewards, is logged where the step logs allow; its expectation
+$\mathbb E[\mathrm{ZVF}_t]=p^{G}+(1{-}p)^{G}$ under conditionally i.i.d.\
+binary rewards at fixed success probability $p$ is a mathematical statement,
+not an empirical tier. A separate five-seed Qwen3-8B GSM8K held-out
+evaluation shows $+1.3$pp over a single base-model run (one-sample
+$t(4){=}1.32$, $p{=}0.26$), which is not evidence of a gain. Earlier
+pooled and stratified ZVF--reward correlations, a token-budget group-size
+reanalysis, and compute/carbon tables could not be traced to released
+inputs and are withdrawn; we document what was removed and why.
 
-We also release a stratified ZVF diagnostic suite that documents how pooled
-ZVF-vs-performance correlations are dominated by task identity rather than a
-within-task predictive law---a finding we treat as descriptive
-instrumentation, not a causal claim.
-
-\paragraph{Venue claim boundary (position-artifact / datasets-and-benchmarks).}
-This manuscript is an \emph{artifact-first} release of tier-classified run
-cells and analysis code; one-command reproduce targets are not yet released. Stratified ZVF traces are
-\emph{instrumentation shipped with the bench}, not a flagship ZVF theory or
-controller paper (those claims live in the companion diagnostic and theory
-vehicles). We do not headline a universal ZVF predictor, a winning group size,
-or an adaptive controller. Submission target is a datasets-and-benchmarks or
-workshop-artifact venue under the stated A/B/C evidence tiers.
 The historical artifact URL (not a verified complete release inventory) is
 \url{https://anonymous.4open.science/r/agentic-grpo-bench-anon-2C6B}.
 \end{abstract}
-\paragraph{August 2026 evidence boundary.} Evidence tiers distinguish named
-cells from unavailable outcomes; provenance conflicts are quarantines, not
-numerical comparisons.

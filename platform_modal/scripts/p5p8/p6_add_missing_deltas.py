@@ -42,14 +42,13 @@ Writes:
 Stdlib + jsonschema only. Exit 0 iff every (old + new) entry still
 parses against schema.json.
 """
+
 from __future__ import annotations
 
 import csv
-import hashlib
 import json
 import pathlib
 import random
-import statistics as st
 
 try:
     import jsonschema  # type: ignore
@@ -58,9 +57,11 @@ except ImportError:
     raise SystemExit(2)
 
 import sys
+
 sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))
 from _paths import REPO_ROOT
 from review17_contract import keyed_rows
+
 ROOT = REPO_ROOT
 ENTRIES = ROOT / "platform_hybrid/registry" / "entries"
 SCHEMA = json.load(open(ROOT / "platform_hybrid/registry" / "schema.json"))
@@ -105,7 +106,9 @@ def adaptiveg_measured():
     """arm B (adaptive 4->6->8) vs arm A (fixed G=4). Paired by step."""
     rows = read_tsv(ADAPTIVE_TSV)
     a_by_step = keyed_rows([dict(r, step=int(r["step"])) for r in rows if r["arm"] == "A"], "step")
-    b_by_step = keyed_rows([dict(r, step=int(r["step"])) for r in rows if r["arm"] == "B"], "step", a_by_step)
+    b_by_step = keyed_rows(
+        [dict(r, step=int(r["step"])) for r in rows if r["arm"] == "B"], "step", a_by_step
+    )
     common_steps = sorted(set(a_by_step) & set(b_by_step))
     if not common_steps:
         raise ValueError("Incomplete adaptive-G step panel")
@@ -121,23 +124,27 @@ def adaptiveg_measured():
         if len(deltas) < 3:
             continue
         d, lo, hi, n = paired_boot(deltas)
-        out.append({
-            "metric": metric,
-            "panel": "qp7_adaptive_armB_vs_armA_paired",
-            "base": "grpo",
-            "delta": round(d, 6),
-            "ci_low": round(lo, 6),
-            "ci_high": round(hi, 6),
-            "n": n,
-            "significant": (lo > 0) or (hi < 0),
-            "ci_method": {
-                "method": "paired_step_bootstrap_pct",
-                "n_boot": N_BOOT, "seed": SEED, "ci_level": 0.95,
-                "source": "platform_modal/scripts/p5p8/p6_add_missing_deltas.py",
-            },
-            "source": "platform_hybrid/experiments/results/quick_20260704/qp7_adaptive.tsv",
-            "note": f"arm B (adaptive 4->6->8) - arm A (fixed G=4); paired by step",
-        })
+        out.append(
+            {
+                "metric": metric,
+                "panel": "qp7_adaptive_armB_vs_armA_paired",
+                "base": "grpo",
+                "delta": round(d, 6),
+                "ci_low": round(lo, 6),
+                "ci_high": round(hi, 6),
+                "n": n,
+                "significant": (lo > 0) or (hi < 0),
+                "ci_method": {
+                    "method": "paired_step_bootstrap_pct",
+                    "n_boot": N_BOOT,
+                    "seed": SEED,
+                    "ci_level": 0.95,
+                    "source": "platform_modal/scripts/p5p8/p6_add_missing_deltas.py",
+                },
+                "source": "platform_hybrid/experiments/results/quick_20260704/qp7_adaptive.tsv",
+                "note": f"arm B (adaptive 4->6->8) - arm A (fixed G=4); paired by step",
+            }
+        )
     return out, common_steps
 
 
@@ -146,9 +153,12 @@ def adaptiveg_measured():
 # ---------------------------------------------------------------------------
 def sign_match(observed: float, predicted: str) -> bool:
     return {
-        ">0": observed > 0, "<0": observed < 0,
-        ">=0": observed >= 0, "<=0": observed <= 0,
-        "=0": observed == 0, "==0": observed == 0,
+        ">0": observed > 0,
+        "<0": observed < 0,
+        ">=0": observed >= 0,
+        "<=0": observed <= 0,
+        "=0": observed == 0,
+        "==0": observed == 0,
     }[predicted]
 
 
@@ -170,17 +180,21 @@ def classify(observed, ci_low, ci_high, predicted):
 def build_adaptiveg_entry():
     measured, common_steps = adaptiveg_measured()
     expected_effects = [
-        {"metric": "reward_mean",
-         "panel": "qp7_adaptive_armB_vs_armA_paired",
-         "predicted_sign": ">=0",
-         "rationale": "adaptive G aims to spend compute on contrast-rich prompts; "
-                      "should be at least reward-neutral and ideally positive."},
-        {"metric": "zvf",
-         "panel": "qp7_adaptive_armB_vs_armA_paired",
-         "predicted_sign": "<0",
-         "rationale": "escalating G when ZVF is high reduces the fraction of "
-                      "all-same groups on the next step (the iter-31 unified-band "
-                      "controller's de-escalation branch in reverse)."},
+        {
+            "metric": "reward_mean",
+            "panel": "qp7_adaptive_armB_vs_armA_paired",
+            "predicted_sign": ">=0",
+            "rationale": "adaptive G aims to spend compute on contrast-rich prompts; "
+            "should be at least reward-neutral and ideally positive.",
+        },
+        {
+            "metric": "zvf",
+            "panel": "qp7_adaptive_armB_vs_armA_paired",
+            "predicted_sign": "<0",
+            "rationale": "escalating G when ZVF is high reduces the fraction of "
+            "all-same groups on the next step (the iter-31 unified-band "
+            "controller's de-escalation branch in reverse).",
+        },
     ]
     claim_validation = []
     expected_by_key = {(e["metric"], e["panel"]): e for e in expected_effects}
@@ -189,12 +203,19 @@ def build_adaptiveg_entry():
         exp = expected_by_key.get(key)
         pred = exp["predicted_sign"] if exp else None
         v, r = classify(m["delta"], m["ci_low"], m["ci_high"], pred)
-        claim_validation.append({
-            "metric": m["metric"], "panel": m["panel"],
-            "predicted_sign": pred, "observed_delta": m["delta"],
-            "ci_low": m["ci_low"], "ci_high": m["ci_high"],
-            "significant": m["significant"], "verdict": v, "rationale": r,
-        })
+        claim_validation.append(
+            {
+                "metric": m["metric"],
+                "panel": m["panel"],
+                "predicted_sign": pred,
+                "observed_delta": m["delta"],
+                "ci_low": m["ci_low"],
+                "ci_high": m["ci_high"],
+                "significant": m["significant"],
+                "verdict": v,
+                "rationale": r,
+            }
+        )
     rec = {
         "record_type": "variant_delta",
         "schema_version": "0.1.0",
@@ -205,24 +226,28 @@ def build_adaptiveg_entry():
             "bibkey": "tinker2026adaptiveg",
             "arxiv": "",
             "title": "Adaptive group-size schedule driven by per-step ZVF (worktree "
-                     "implementation, live in colab-open_grpo-adaptiveg_e3 and "
-                     "iter-47/51 P7 unified controller bank)"
+            "implementation, live in colab-open_grpo-adaptiveg_e3 and "
+            "iter-47/51 P7 unified controller bank)",
         },
         "deltas": [
-            {"component": "zvf_driven_group_size_ladder",
-             "field": "group_size_schedule.schedule",
-             "change": "schedule='adaptive'; initial_g=4; adaptation_rule="
-                      "'escalate 4->6->8 when ZVF>0.5 (cap 8); de-escalate "
-                      "8->6->4 when ZVF<0.2 (floor 4); per-step ZVF measured "
-                      "client-side from reward tensors' variance indicator."},
+            {
+                "component": "zvf_driven_group_size_ladder",
+                "field": "group_size_schedule.schedule",
+                "change": "schedule='adaptive'; initial_g=4; adaptation_rule="
+                "'escalate 4->6->8 when ZVF>0.5 (cap 8); de-escalate "
+                "8->6->4 when ZVF<0.2 (floor 4); per-step ZVF measured "
+                "client-side from reward tensors' variance indicator.",
+            },
         ],
         "measured": measured,
         "expected_effects": expected_effects,
         "claim_validation": claim_validation,
-        "notes": ("Iter-54 vein (d): added because the worktree carries a real "
-                  "adaptive-G arm (qp7_adaptive.tsv, n=16 paired steps, G=4 fixed vs "
-                  "4->6->8 adaptive ladder) but no delta_*.json existed. Measured "
-                  f"on n={len(common_steps)} paired-by-step observations."),
+        "notes": (
+            "Iter-54 vein (d): added because the worktree carries a real "
+            "adaptive-G arm (qp7_adaptive.tsv, n=16 paired steps, G=4 fixed vs "
+            "4->6->8 adaptive ladder) but no delta_*.json existed. Measured "
+            f"on n={len(common_steps)} paired-by-step observations."
+        ),
     }
     return rec
 
@@ -239,27 +264,33 @@ def build_reinforce_entry():
             "bibkey": "williams1992reinforce",
             "arxiv": "",
             "title": "Simple Statistical Gradient-Following Algorithms for "
-                     "Connectionist Reinforcement Learning (REINFORCE)"
+            "Connectionist Reinforcement Learning (REINFORCE)",
         },
         "deltas": [
-            {"component": "no_baseline",
-             "field": "reference_kl.reference_policy",
-             "change": "no group-mean or value baseline; raw reward r_i is the "
-                      "advantage (A_i = r_i); no per-token variance reduction "
-                      "(equivalent to GRPO with no baseline term)."},
-            {"component": "no_clipping",
-             "field": "loss_form.clip_eps_low",
-             "change": "no PPO-style ratio clipping (canonical leaf pinned at "
-                      "clip_eps_low=null, clip_eps_high=null to mark reported-as-absent)."},
+            {
+                "component": "no_baseline",
+                "field": "reference_kl.reference_policy",
+                "change": "no group-mean or value baseline; raw reward r_i is the "
+                "advantage (A_i = r_i); no per-token variance reduction "
+                "(equivalent to GRPO with no baseline term).",
+            },
+            {
+                "component": "no_clipping",
+                "field": "loss_form.clip_eps_low",
+                "change": "no PPO-style ratio clipping (canonical leaf pinned at "
+                "clip_eps_low=null, clip_eps_high=null to mark reported-as-absent).",
+            },
         ],
-        "notes": ("Iter-54 vein (d): REINFORCE is mentioned in "
-                  "platform_hybrid/experiments/results/EXPERIMENT_LEDGER.md (gsm8k-reinforce, "
-                  "4 wandb runs on Qwen3-8B / Llama-3.1-8B-Instruct) but no "
-                  "delta_*.json existed. Measured block intentionally null: "
-                  "no same-stack REINFORCE arm exists in the worktree, so adding "
-                  "a measured row would be fabricatory. To be measured once a "
-                  "same-stack run lands (criterion: same model + task + sampler + "
-                  "RLHF pipeline with only the baseline removed)."),
+        "notes": (
+            "Iter-54 vein (d): REINFORCE is mentioned in "
+            "platform_hybrid/experiments/results/EXPERIMENT_LEDGER.md (gsm8k-reinforce, "
+            "4 wandb runs on Qwen3-8B / Llama-3.1-8B-Instruct) but no "
+            "delta_*.json existed. Measured block intentionally null: "
+            "no same-stack REINFORCE arm exists in the worktree, so adding "
+            "a measured row would be fabricatory. To be measured once a "
+            "same-stack run lands (criterion: same model + task + sampler + "
+            "RLHF pipeline with only the baseline removed)."
+        ),
     }
 
 
@@ -275,27 +306,33 @@ def build_liteppo_entry():
             "bibkey": "liteppo2024",
             "arxiv": "",
             "title": "LitePPO: a lightweight PPO variant without a learned value "
-                     "head (worktree reference; no peer-reviewed citation — listed "
-                     "here as a transparent placeholder so future measured blocks "
-"have a stable id)"
+            "head (worktree reference; no peer-reviewed citation — listed "
+            "here as a transparent placeholder so future measured blocks "
+            "have a stable id)",
         },
         "deltas": [
-            {"component": "no_value_head",
-             "field": "reference_kl.reference_policy",
-             "change": "no learned V_head; advantages are estimated by an "
-                      "external baseline (group mean) instead of GAE."},
-            {"component": "ratio_clip",
-             "field": "loss_form.clip_eps_low",
-             "change": "PPO-style ratio clipping retained with eps_low=eps_high=0.2 "
-                      "(symmetric clip, unlike DAPO's asymmetric 0.2/0.28)."},
+            {
+                "component": "no_value_head",
+                "field": "reference_kl.reference_policy",
+                "change": "no learned V_head; advantages are estimated by an "
+                "external baseline (group mean) instead of GAE.",
+            },
+            {
+                "component": "ratio_clip",
+                "field": "loss_form.clip_eps_low",
+                "change": "PPO-style ratio clipping retained with eps_low=eps_high=0.2 "
+                "(symmetric clip, unlike DAPO's asymmetric 0.2/0.28).",
+            },
         ],
-        "notes": ("Iter-54 vein (d): LitePPO is mentioned in "
-                  "platform_hybrid/experiments/results/EXPERIMENT_LEDGER.md as ppo_lite but had no "
-                  "delta_*.json. Citation is a transparent placeholder (arxiv=null) "
-                  "because no peer-reviewed LitePPO paper is verified; this is a "
-                  "known limitation flagged on the entry itself, not hidden. "
-                  "Measured block intentionally null for the same reason as "
-                  "delta_reinforce: no same-stack arm in the worktree."),
+        "notes": (
+            "Iter-54 vein (d): LitePPO is mentioned in "
+            "platform_hybrid/experiments/results/EXPERIMENT_LEDGER.md as ppo_lite but had no "
+            "delta_*.json. Citation is a transparent placeholder (arxiv=null) "
+            "because no peer-reviewed LitePPO paper is verified; this is a "
+            "known limitation flagged on the entry itself, not hidden. "
+            "Measured block intentionally null for the same reason as "
+            "delta_reinforce: no same-stack arm in the worktree."
+        ),
     }
 
 
@@ -313,15 +350,17 @@ def missing_delta_audit():
         for vd in rec.get("variant_deltas_applied") or []:
             did = vd["delta_id"]
             target = ENTRIES / f"{did}.json"
-            rows.append({
-                "stack_id": rec["id"],
-                "framework": rec["framework"]["name"],
-                "delta_id": did,
-                "component": vd["component"],
-                "status": vd["status"],
-                "target_exists": target.exists(),
-                "verdict": ("OK" if target.exists() else "CLAIMED_BUT_MISSING"),
-            })
+            rows.append(
+                {
+                    "stack_id": rec["id"],
+                    "framework": rec["framework"]["name"],
+                    "delta_id": did,
+                    "component": vd["component"],
+                    "status": vd["status"],
+                    "target_exists": target.exists(),
+                    "verdict": ("OK" if target.exists() else "CLAIMED_BUT_MISSING"),
+                }
+            )
     return rows
 
 
@@ -346,17 +385,19 @@ def main():
         written += 1
         n_measured = len(rec.get("measured") or [])
         n_cv = len(rec.get("claim_validation") or [])
-        new_audit_rows.append({
-            "id": rec["id"],
-            "name": rec["name"],
-            "base": rec["base"],
-            "has_citation": bool(rec.get("citation", {}).get("bibkey")),
-            "arxiv": rec.get("citation", {}).get("arxiv") or "",
-            "n_deltas": len(rec.get("deltas") or []),
-            "n_measured": n_measured,
-            "n_claim_validation": n_cv,
-            "notes_excerpt": (rec.get("notes") or "")[:80],
-        })
+        new_audit_rows.append(
+            {
+                "id": rec["id"],
+                "name": rec["name"],
+                "base": rec["base"],
+                "has_citation": bool(rec.get("citation", {}).get("bibkey")),
+                "arxiv": rec.get("citation", {}).get("arxiv") or "",
+                "n_deltas": len(rec.get("deltas") or []),
+                "n_measured": n_measured,
+                "n_claim_validation": n_cv,
+                "notes_excerpt": (rec.get("notes") or "")[:80],
+            }
+        )
 
     # 5b. Re-run the iter-50 registry health audit on the now-34-entry corpus
     schema_errors = []
@@ -375,8 +416,17 @@ def main():
     # 5d. Write artifacts
     new_audit_tsv = OUT / "p6_new_deltas_audit.tsv"
     with open(new_audit_tsv, "w", newline="") as f:
-        cols = ["id", "name", "base", "has_citation", "arxiv",
-                "n_deltas", "n_measured", "n_claim_validation", "notes_excerpt"]
+        cols = [
+            "id",
+            "name",
+            "base",
+            "has_citation",
+            "arxiv",
+            "n_deltas",
+            "n_measured",
+            "n_claim_validation",
+            "notes_excerpt",
+        ]
         w = csv.DictWriter(f, delimiter="\t", fieldnames=cols)
         w.writeheader()
         w.writerows(new_audit_rows)
@@ -384,18 +434,26 @@ def main():
     # measured rows from delta_adaptiveg
     measured_tsv = OUT / "p6_new_deltas_measured.tsv"
     with open(measured_tsv, "w", newline="") as f:
-        f.write("delta_id\tmetric\tpanel\tdelta\tci_low\tci_high\t"
-                "n\tsignificant\tsource\n")
+        f.write("delta_id\tmetric\tpanel\tdelta\tci_low\tci_high\tn\tsignificant\tsource\n")
         for rec in new_records:
-            for m in (rec.get("measured") or []):
-                f.write(f"{rec['id']}\t{m['metric']}\t{m['panel']}\t"
-                        f"{m['delta']}\t{m['ci_low']}\t{m['ci_high']}\t"
-                        f"{m['n']}\t{m['significant']}\t{m['source']}\n")
+            for m in rec.get("measured") or []:
+                f.write(
+                    f"{rec['id']}\t{m['metric']}\t{m['panel']}\t"
+                    f"{m['delta']}\t{m['ci_low']}\t{m['ci_high']}\t"
+                    f"{m['n']}\t{m['significant']}\t{m['source']}\n"
+                )
 
     miss_tsv = OUT / "missing_delta_audit.tsv"
     with open(miss_tsv, "w", newline="") as f:
-        cols = ["stack_id", "framework", "delta_id", "component",
-                "status", "target_exists", "verdict"]
+        cols = [
+            "stack_id",
+            "framework",
+            "delta_id",
+            "component",
+            "status",
+            "target_exists",
+            "verdict",
+        ]
         w = csv.DictWriter(f, delimiter="\t", fieldnames=cols)
         w.writeheader()
         w.writerows(miss_rows)
@@ -413,8 +471,9 @@ def main():
         "missing_delta_audit": {
             "n_claims_audited": len(miss_rows),
             "n_claimed_but_missing": n_missing,
-            "missing_delta_ids": sorted({r["delta_id"] for r in miss_rows
-                                         if not r["target_exists"]}),
+            "missing_delta_ids": sorted(
+                {r["delta_id"] for r in miss_rows if not r["target_exists"]}
+            ),
         },
         "adaptiveg_panel": "qp7_adaptive_armB_vs_armA_paired",
         "adaptiveg_seed": SEED,
@@ -427,13 +486,14 @@ def main():
     # 5e. Print headline
     print(f"=== Iter 54 P6 — add missing variant-delta entries ===")
     print(f"  new entries written: {written} -> {[r['id'] for r in new_records]}")
-    print(f"  registry after: {n_total} entries ({n_total - len(schema_errors)} "
-          f"PASS, {len(schema_errors)} FAIL)")
+    print(
+        f"  registry after: {n_total} entries ({n_total - len(schema_errors)} "
+        f"PASS, {len(schema_errors)} FAIL)"
+    )
     if schema_errors:
         for n, m in schema_errors:
             print(f"    FAIL {n}: {m}")
-    print(f"  missing-delta audit: {n_missing}/{len(miss_rows)} "
-          f"(claims missing delta_*.json)")
+    print(f"  missing-delta audit: {n_missing}/{len(miss_rows)} (claims missing delta_*.json)")
     if summ["missing_delta_audit"]["missing_delta_ids"]:
         print(f"    missing ids: {summ['missing_delta_audit']['missing_delta_ids']}")
     print(f"  outputs:")

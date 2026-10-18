@@ -18,3 +18,29 @@ A reviewed exact-source/competition repair registry for all legacy E9 repairs, c
 
 ## Verification
 Offline pytest with PYTHONPATH=zvf-program/flagship and --import-mode=importlib. Focused E9/E13/E11 and regression run: 138 passed, 4 skipped, 5 deselected before adding three dirty-checkout tests. Five E9 tests require absent archived Freesound/Smartphone outputs; excluded, never fabricated. Toolchain skips do not establish native equivalence.
+
+### Prospective repair registry and exact execution binding (also R38.17/R39.12)
+
+A typed repair policy now binds competition, exact original/effective program
+hashes, expected failure signature, scientific classification, review reference,
+and an explicit submission contract (columns, count, ordered identifiers, finite
+prediction fields). Semantic changes additionally require a benchmark-policy
+decision. The runner gates every proposed historical string transformation
+through that registry and validates repaired CSV postconditions before grading.
+The production registry intentionally has no enabled policies: no supplied
+review establishes official approval for those historical transformations.
+
+New executions retain original and effective program artifacts, exact CSV bytes
+(including CRLF), native grade bytes, the grader's submission-input hash and
+revision/script identity, and the registered repair chain. Native grading checks
+that its input bytes did not change. Replay collection recomputes the binding,
+rejects rehashed but unauthorized treatment changes, and persists the original
+program for idempotent revalidation. Saved-submission regrades check exact bytes
+before grading and retain native input evidence. Historical results are untouched.
+
+Synthetic fixtures cover the positive chain plus wrong competition/source/output,
+wrong failure signature, missing policy/semantic approval, malformed CSV schema,
+row count/order/IDs/nonfinite predictions, newline-only native-input substitution,
+and missing/invalid native grades. Local hashes do not authenticate official
+policy, datasets, grader installation, or generated-code isolation. No paid path
+was enabled, and official native scoring conformance remains unestablished.

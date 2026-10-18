@@ -50,7 +50,7 @@ class ModalE9RecoverabilityTests(unittest.TestCase):
             json.dumps(source_receipt, indent=2, sort_keys=True) + "\n",
             encoding="utf-8",
         )
-        returned_solution = "print('returned')"
+        returned_solution = source_solution
         native_grade = {"score": None, "valid_submission": False}
         provenance = core.validate_replay_provenance(
             competition_id=competition_id,
@@ -73,12 +73,18 @@ class ModalE9RecoverabilityTests(unittest.TestCase):
                 "submission_sha256": None,
             },
         }
+        receipt["execution_binding"] = core.bind_effective_execution(
+            competition_id=competition_id, original=(source_solution + "\n").encode(),
+            effective=(returned_solution + "\n").encode(), submission=None,
+            native_grade=json.dumps(native_grade, sort_keys=True).encode(),
+            grader_input=None, repairs=[])
         receipt["receipt_sha256"] = hashlib.sha256(
             json.dumps(receipt, sort_keys=True, separators=(",", ":")).encode()
         ).hexdigest()
         result: dict[str, object] = {
             "receipt": receipt,
             "solution_code": returned_solution,
+            "original_solution_code": source_solution,
             "submission_csv": None,
             "native_grade_json": native_grade,
         }
@@ -122,6 +128,17 @@ class ModalE9RecoverabilityTests(unittest.TestCase):
         receipt["artifacts"]["native_grade_sha256"] = hashlib.sha256(
             json.dumps(native_grade, sort_keys=True).encode()
         ).hexdigest()
+        result["submission_csv"] = "id,prediction\r\na,0.42\r\n"
+        receipt["artifacts"]["submission_sha256"] = hashlib.sha256(result["submission_csv"].encode()).hexdigest()
+        receipt["execution_binding"] = core.bind_effective_execution(
+            competition_id=str(launch["competition_id"]),
+            original=(result["original_solution_code"] + "\n").encode(),
+            effective=(result["solution_code"] + "\n").encode(),
+            submission=result["submission_csv"].encode(),
+            native_grade=json.dumps(native_grade, sort_keys=True).encode(),
+            grader_input={"competition_id": str(launch["competition_id"]),
+                          "submission_sha256": receipt["artifacts"]["submission_sha256"],
+                          "grader_revision": "synthetic-fixture"}, repairs=[])
         self._rehash_receipt(receipt)
         result["native_grade_json"] = native_grade
         return result, launch
@@ -134,6 +151,17 @@ class ModalE9RecoverabilityTests(unittest.TestCase):
             first = runner._materialize_run_result(result, str(root / "out"))
             second = runner._materialize_run_result(result, str(root / "out"))
             self.assertEqual(first, second)
+
+    def test_rehashed_unregistered_program_change_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            result, launch = self._valid_contract(Path(directory))
+            result["solution_code"] = "print('different treatment')"
+            digest = hashlib.sha256((result["solution_code"] + "\n").encode()).hexdigest()
+            result["receipt"]["artifacts"]["solution_sha256"] = digest
+            result["receipt"]["execution_binding"]["effective_program_sha256"] = digest
+            self._rehash_receipt(result["receipt"])
+            with self.assertRaisesRegex(core.LaunchGateError, "without a registered repair"):
+                runner._validate_returned_replay_result(result, launch)
 
     def test_returned_result_rejects_competition_mismatch(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

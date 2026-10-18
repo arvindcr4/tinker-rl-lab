@@ -223,9 +223,11 @@ def main(argv=None):
 
 
 def build_export(out, all_files=False):
-    counts, excluded, included = Counter(), Counter(), []
+    counts: Counter[str] = Counter()
+    excluded: Counter[str] = Counter()
+    included: list[str] = []
     destinations = {"ANON_MANIFEST.json"}
-    dropped_bin = []
+    dropped_bin: list[int] = []
     for p in tracked():
         src = ROOT / p
         if not src.is_file() or src.is_symlink():

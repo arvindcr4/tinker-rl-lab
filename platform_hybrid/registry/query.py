@@ -19,13 +19,17 @@ import math
 import re
 import pathlib
 import sys
+from typing import Any, TYPE_CHECKING
 
 HERE = pathlib.Path(__file__).resolve().parent
-try:
+if TYPE_CHECKING:
     from .json_protocol import strict_json_loads
-except ImportError:  # Script/spec-loader invocation.
-    sys.path.insert(0, str(HERE))
-    from json_protocol import strict_json_loads
+else:
+    try:
+        from .json_protocol import strict_json_loads
+    except ImportError:  # Script/spec-loader invocation.
+        sys.path.insert(0, str(HERE))
+        from json_protocol import strict_json_loads
 ITEMS = ["loss_form", "reference_kl", "sampler_backend", "telemetry",
          "group_size_schedule", "heldout_split", "decontamination"]
 # stackdiff severity ladder.  A level is assigned ONLY from fields that are
@@ -233,13 +237,13 @@ MANIFEST_FIELDS = {
 
 def manifest_view(manifest, source="entry#effective_manifest"):
     """Extract observed configuration from an effective run manifest."""
-    view = {}
+    view: dict[str, dict[str, Any]] = {}
     if not isinstance(manifest, dict):
         return view
     missing = object()
     for field in FIELDS:
         for path in (field, *MANIFEST_FIELDS.get(field, ())):
-            value = manifest
+            value: Any = manifest
             if path in manifest:
                 value = manifest[path]
             else:
@@ -532,7 +536,7 @@ def cmd_implementations(args):
     if args.framework:
         stacks = {k: v for k, v in stacks.items() if v["framework"]["name"] == args.framework}
     # Build reverse index: (did, comp) -> [(stack_id, status)]
-    by_pair = {}
+    by_pair: dict[tuple[str, str], list[tuple[str, str]]] = {}
     for sid, s in stacks.items():
         for vd in s.get("variant_deltas_applied", []):
             by_pair.setdefault((vd["delta_id"], vd["component"]), []).append(
@@ -556,7 +560,7 @@ def cmd_implementations(args):
     else:
         # Aggregate: print per-delta, per-component counts
         from collections import Counter
-        ctr = Counter()
+        ctr: Counter[tuple[str, str, str]] = Counter()
         for (did, comp), claims in by_pair.items():
             for _, st in claims:
                 ctr[(did, comp, st)] += 1
@@ -589,7 +593,7 @@ def cmd_drift(args):
     min_report = stack_def["properties"]["min_report"]["properties"]
     block_leaves = {}
     for item_name, item_def in min_report.items():
-        out = set()
+        out: set[str] = set()
         def walk(o, out=out):
             if not isinstance(o, dict):
                 return
@@ -655,7 +659,7 @@ def cmd_claim_validation(args):
     for every variant_delta record. Optional --delta filters to one entry.
     Verdict codes: SUPPORTS / NEUTRAL / CONTRADICTS / UNCLAIMED."""
     from collections import Counter
-    counts = Counter()
+    counts: Counter[str] = Counter()
     records = load("variant_delta")
     for rec in records.values():
         rows = rec.get("claim_validation", []) or []
@@ -736,7 +740,7 @@ def cmd_validate_strict(args):
         print("FATAL: jsonschema not installed", file=sys.stderr)
         return 2
     manifest = registry_input_manifest(HERE)
-    schema_fails = []
+    schema_fails: list[str] = []
     try:
         load()
     except (ValueError, OSError) as exc:

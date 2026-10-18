@@ -51,8 +51,8 @@ def _session(quota_project: str | None) -> requests.Session:
         s = requests.Session()
         s.headers["Authorization"] = f"Bearer {token}"
     else:
-        import google.auth
-        from google.auth.transport.requests import AuthorizedSession
+        import google.auth  # type: ignore[import-untyped]
+        from google.auth.transport.requests import AuthorizedSession  # type: ignore[import-untyped]
 
         creds, project = google.auth.default(scopes=SCOPES)
         quota_project = quota_project or getattr(creds, "quota_project_id", None) or project
@@ -68,7 +68,9 @@ class DeepReview:
         self.base = base.rstrip("/")
 
     def _call(self, method: str, path: str, *, params=None, json_body=None, **kw) -> Any:
-        r = self.s.request(method, f"{self.base}/{path}", params=params, json=json_body, timeout=120, **kw)
+        r = self.s.request(
+            method, f"{self.base}/{path}", params=params, json=json_body, timeout=120, **kw
+        )
         if r.status_code >= 400:
             try:
                 err = r.json()["error"]
@@ -79,7 +81,9 @@ class DeepReview:
         return r.json() if r.content and "json" in r.headers.get("content-type", "") else r.content
 
     # documents
-    def upload(self, path: Path, display_name: str | None = None, document_id: str | None = None) -> dict:
+    def upload(
+        self, path: Path, display_name: str | None = None, document_id: str | None = None
+    ) -> dict:
         data = path.read_bytes()
         if len(data) > MAX_UPLOAD:
             raise DeepReviewError(f"{path} is {len(data)} bytes; API limit is {MAX_UPLOAD}")
@@ -87,28 +91,42 @@ class DeepReview:
         mime = mimetypes.guess_type(path.name)[0] or "application/octet-stream"
         boundary = uuid.uuid4().hex
         body = (
-            f"--{boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n{json.dumps(meta)}\r\n"
-            f"--{boundary}\r\nContent-Type: {mime}\r\n\r\n"
-        ).encode() + data + f"\r\n--{boundary}--\r\n".encode()
+            (
+                f"--{boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n{json.dumps(meta)}\r\n"
+                f"--{boundary}\r\nContent-Type: {mime}\r\n\r\n"
+            ).encode()
+            + data
+            + f"\r\n--{boundary}--\r\n".encode()
+        )
         params = {"uploadType": "multipart", "requestId": str(uuid.uuid4())}
         if document_id:
             params["documentId"] = document_id
         return self._call(
-            "POST", "upload/v1/documents", params=params, data=body,
+            "POST",
+            "upload/v1/documents",
+            params=params,
+            data=body,
             headers={"Content-Type": f"multipart/related; boundary={boundary}"},
         )
 
-    def import_drive(self, file_id: str, display_name: str | None = None,
-                     resource_key: str | None = None, revision_id: str | None = None) -> dict:
+    def import_drive(
+        self,
+        file_id: str,
+        display_name: str | None = None,
+        resource_key: str | None = None,
+        revision_id: str | None = None,
+    ) -> dict:
         src = {"fileId": file_id}
         if resource_key:
             src["resourceKey"] = resource_key
         if revision_id:
             src["revisionId"] = revision_id
-        doc = {"driveSource": src}
+        doc: dict[str, Any] = {"driveSource": src}
         if display_name:
             doc["displayName"] = display_name
-        return self._call("POST", "v1/documents", params={"requestId": str(uuid.uuid4())}, json_body=doc)
+        return self._call(
+            "POST", "v1/documents", params={"requestId": str(uuid.uuid4())}, json_body=doc
+        )
 
     def _paged(self, path: str, key: str, params: dict) -> Iterator[dict]:
         params = {k: v for k, v in params.items() if v is not None}
@@ -119,7 +137,9 @@ class DeepReview:
                 return
             params["pageToken"] = page["nextPageToken"]
 
-    def list_documents(self, filter: str | None = None, order_by: str | None = None) -> Iterator[dict]:
+    def list_documents(
+        self, filter: str | None = None, order_by: str | None = None
+    ) -> Iterator[dict]:
         return self._paged("v1/documents", "documents", {"filter": filter, "orderBy": order_by})
 
     def get(self, name: str) -> dict:
@@ -132,12 +152,18 @@ class DeepReview:
         return self._call("GET", f"v1/{name}:download", params={"alt": "media"})
 
     # reviews
-    def create_review(self, document: str, run_config: dict | None = None, review_id: str | None = None) -> dict:
+    def create_review(
+        self, document: str, run_config: dict | None = None, review_id: str | None = None
+    ) -> dict:
         params = {"requestId": str(uuid.uuid4())}
         if review_id:
             params["reviewId"] = review_id
-        return self._call("POST", f"v1/{document}/reviews", params=params,
-                          json_body={"runConfig": run_config} if run_config else {})
+        return self._call(
+            "POST",
+            f"v1/{document}/reviews",
+            params=params,
+            json_body={"runConfig": run_config} if run_config else {},
+        )
 
     def list_reviews(self, document: str) -> Iterator[dict]:
         return self._paged(f"v1/{document}/reviews", "reviews", {})
@@ -153,7 +179,10 @@ class DeepReview:
             state = rev.get("state", "STATE_UNSPECIFIED")
             status = (state, rev.get("progressPercent"))
             if status != last:
-                print(f"[deepreview] {review_name}: {state} {rev.get('progressPercent', 0)}%", file=sys.stderr)
+                print(
+                    f"[deepreview] {review_name}: {state} {rev.get('progressPercent', 0)}%",
+                    file=sys.stderr,
+                )
                 last = status
             if state in TERMINAL:
                 return rev
@@ -169,8 +198,10 @@ def _review_name_from_op(op: dict, document: str) -> str:
             return src["name"]
     name = op.get("name", "")
     if "documents/" in name and "/reviews/" in name:
-        return name[name.index("documents/"):]
-    raise DeepReviewError(f"cannot find review name in operation for {document}: {json.dumps(op)[:500]}")
+        return name[name.index("documents/") :]
+    raise DeepReviewError(
+        f"cannot find review name in operation for {document}: {json.dumps(op)[:500]}"
+    )
 
 
 def _loc(c: dict) -> str:
@@ -197,7 +228,10 @@ def write_outputs(review: dict, out: Path) -> Path:
         (d / "review.md").write_text(res["reviewMarkdown"])
 
     comments = res.get("anchoredComments") or []
-    order = {s: i for i, s in enumerate(["CRITICAL", "MAJOR", "MINOR", "SUGGESTION", "SEVERITY_UNSPECIFIED"])}
+    order = {
+        s: i
+        for i, s in enumerate(["CRITICAL", "MAJOR", "MINOR", "SUGGESTION", "SEVERITY_UNSPECIFIED"])
+    }
     comments.sort(key=lambda c: order.get(c.get("severity", "SEVERITY_UNSPECIFIED"), 9))
     lines = ["# Anchored comments", ""]
     for c in comments:
@@ -214,8 +248,10 @@ def write_outputs(review: dict, out: Path) -> Path:
         rows = ["| # | verdict | lookup | search | reference |", "|---|---|---|---|---|"]
         for r in cites:
             ref = (r.get("rawReference") or "").replace("|", "\\|").replace("\n", " ")[:160]
-            rows.append(f"| {r.get('refNum', '')} | {r.get('finalVerdict', '')} | {r.get('lookupVerdict', '')} "
-                        f"| {r.get('searchVerdict', '')} | {ref} |")
+            rows.append(
+                f"| {r.get('refNum', '')} | {r.get('finalVerdict', '')} | {r.get('lookupVerdict', '')} "
+                f"| {r.get('searchVerdict', '')} | {ref} |"
+            )
         (d / "citations.md").write_text("\n".join(["# Citation verification", ""] + rows) + "\n")
         bib = [r["retrievedBibtex"] for r in cites if r.get("retrievedBibtex")]
         if bib:
@@ -242,13 +278,15 @@ Ground every claim in the text; do not invent results. Output only the review.
 def _manuscript_text(path: Path) -> str:
     if path.suffix.lower() != ".pdf":
         return path.read_text()
-    import fitz  # PyMuPDF
+    import fitz  # type: ignore[import-not-found]  # Optional PyMuPDF
 
     with fitz.open(path) as doc:
         return "\n\n".join(f"<!-- page {i} -->\n{p.get_text()}" for i, p in enumerate(doc, 1))
 
 
-def review_with_agy(path: Path, out: Path, model: str | None, prompt: str | None, timeout: float) -> Path:
+def review_with_agy(
+    path: Path, out: Path, model: str | None, prompt: str | None, timeout: float
+) -> Path:
     """Fallback reviewer on Antigravity CLI credits. Single agent: no anchors or citation lookups."""
     import shutil
     import subprocess
@@ -261,14 +299,25 @@ def review_with_agy(path: Path, out: Path, model: str | None, prompt: str | None
     content = f"{AGY_PROMPT}{focus}\n<manuscript>\n{_manuscript_text(path)}\n</manuscript>\n"
     # Manuscript goes in via stream-json stdin (argv is too small for a thesis); plan mode = read-only.
     msg = json.dumps({"event": "user", "message": {"content": content}}) + "\n"
-    cmd = [agy, "--input-format", "stream-json", "--output-format", "stream-json",
-           "--mode", "plan", "--print-timeout", f"{int(timeout)}s"]
+    cmd = [
+        agy,
+        "--input-format",
+        "stream-json",
+        "--output-format",
+        "stream-json",
+        "--mode",
+        "plan",
+        "--print-timeout",
+        f"{int(timeout)}s",
+    ]
     if model:
         cmd += ["--model", model]
     cmd.append("-p=")
     print(f"[deepreview] agy review of {path.name} ({model or 'default model'})", file=sys.stderr)
     with tempfile.TemporaryDirectory(prefix="deepreview-agy-") as ws:
-        r = subprocess.run(cmd, cwd=ws, input=msg, capture_output=True, text=True, timeout=timeout + 60)
+        r = subprocess.run(
+            cmd, cwd=ws, input=msg, capture_output=True, text=True, timeout=timeout + 60
+        )
     result = None
     for line in r.stdout.splitlines():
         try:
@@ -283,8 +332,13 @@ def review_with_agy(path: Path, out: Path, model: str | None, prompt: str | None
     d = out / f"agy_{path.stem}_{time.strftime('%Y%m%d-%H%M%S')}"
     d.mkdir(parents=True, exist_ok=True)
     (d / "review.md").write_text(result["response"].strip() + "\n")
-    meta = {"engine": "agy", "model": model, "source": str(path), "usage": result.get("usage"),
-            "conversation_id": result.get("conversation_id")}
+    meta = {
+        "engine": "agy",
+        "model": model,
+        "source": str(path),
+        "usage": result.get("usage"),
+        "conversation_id": result.get("conversation_id"),
+    }
     (d / "meta.json").write_text(json.dumps(meta, indent=2))
     print(f"[deepreview] agy -> {d}", file=sys.stderr)
     return d
@@ -309,25 +363,37 @@ def _run_config(a: argparse.Namespace) -> dict:
 
 
 def main(argv: list[str] | None = None) -> int:
-    p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    p.add_argument("--quota-project", help="sets x-goog-user-project (needed for some user ADC setups)")
+    p = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    p.add_argument(
+        "--quota-project", help="sets x-goog-user-project (needed for some user ADC setups)"
+    )
     p.add_argument("--endpoint", default=API)
     sub = p.add_subparsers(dest="cmd", required=True)
 
-    r = sub.add_parser("review", help="upload/import a manuscript, run a review, wait, write outputs")
+    r = sub.add_parser(
+        "review", help="upload/import a manuscript, run a review, wait, write outputs"
+    )
     src = r.add_mutually_exclusive_group(required=True)
     src.add_argument("file", nargs="?", type=Path, help="PDF / .tex / .md / .txt (<= 20 MiB)")
     src.add_argument("--drive-file-id")
     src.add_argument("--document", help="reuse an existing documents/{id}")
     r.add_argument("--resource-key")
     r.add_argument("--display-name")
-    r.add_argument("--engine", choices=["deepreview", "agy"], default="deepreview",
-                   help="agy = single-agent fallback on Antigravity CLI credits (local file only)")
+    r.add_argument(
+        "--engine",
+        choices=["deepreview", "agy"],
+        default="deepreview",
+        help="agy = single-agent fallback on Antigravity CLI credits (local file only)",
+    )
     r.add_argument("--topology", choices=TOPOLOGIES)
     r.add_argument("--model")
     r.add_argument("--prompt", help="focus areas / instructions for the reviewers")
     r.add_argument("--prompt-file")
-    r.add_argument("--byok", action="store_true", help="bill to your Gemini key (see --gemini-key-env)")
+    r.add_argument(
+        "--byok", action="store_true", help="bill to your Gemini key (see --gemini-key-env)"
+    )
     r.add_argument("--gemini-key-env", default="GEMINI_API_KEY")
     r.add_argument("--no-wait", action="store_true")
     r.add_argument("--interval", type=float, default=20)
@@ -395,7 +461,9 @@ def main(argv: list[str] | None = None) -> int:
             items = api.list_reviews(a.document) if a.document else api.list_documents(a.filter)
             for it in items:
                 state = it.get("state") or (it.get("latestReviewSummary") or {}).get("state", "")
-                print(f"{it['name']}\t{state}\t{it.get('displayName', '')}\t{it.get('createTime', '')}")
+                print(
+                    f"{it['name']}\t{state}\t{it.get('displayName', '')}\t{it.get('createTime', '')}"
+                )
         elif a.cmd == "download":
             a.dest.write_bytes(api.download(a.document))
         elif a.cmd == "delete":

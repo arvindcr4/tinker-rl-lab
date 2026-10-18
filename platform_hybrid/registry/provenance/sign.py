@@ -15,6 +15,7 @@ import json
 import os
 from pathlib import Path
 import sys
+from typing import TYPE_CHECKING
 
 HERE = Path(__file__).resolve().parent
 KEY_DIR = HERE / "keys"
@@ -32,11 +33,14 @@ except ImportError:  # Never downgrade to a MAC when the dependency is absent.
     HAVE_ED25519 = False
 
 
-try:
+if TYPE_CHECKING:
     from ..json_protocol import canonical_bytes, load_json, strict_json_loads as strict_json_loads
-except ImportError:  # Direct script invocation.
-    sys.path.insert(0, str(HERE.parent))
-    from json_protocol import canonical_bytes, load_json, strict_json_loads as strict_json_loads
+else:
+    try:
+        from ..json_protocol import canonical_bytes, load_json, strict_json_loads as strict_json_loads
+    except ImportError:  # Direct script invocation.
+        sys.path.insert(0, str(HERE.parent))
+        from json_protocol import canonical_bytes, load_json, strict_json_loads as strict_json_loads
 
 
 def _require_ed25519():
@@ -181,10 +185,13 @@ def sig_path(record_path):
 
 def sign_file(record_path, key_dir=None):
     """Sign only records satisfying the publication evidence policy."""
-    try:
+    if TYPE_CHECKING:
         from . import minreport
-    except ImportError:  # Direct script invocation.
-        import minreport
+    else:
+        try:
+            from . import minreport
+        except ImportError:  # Direct script invocation.
+            import minreport
     record = load_json(record_path)
     report = minreport.verify(record)
     if not report["evidence_valid"]:

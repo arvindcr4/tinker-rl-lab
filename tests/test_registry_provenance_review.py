@@ -1,4 +1,5 @@
 """Review08 regression fixtures. All keys/evidence are synthetic and temporary."""
+
 from __future__ import annotations
 
 import copy
@@ -23,19 +24,37 @@ def write_json(path, value):
 def publication(tmp_path, monkeypatch):
     monkeypatch.setattr(mr, "REPO_ROOT", tmp_path)
     monkeypatch.setattr(mr, "git_sha", lambda: "1" * 40)
-    monkeypatch.setattr(mr, "worktree_identity", lambda: {
-        "format": "git-tracked-worktree/1.0", "git_tree": "2" * 40,
-        "tracked_diff_hash": mr.digest(b""), "dirty": False,
-    })
+    monkeypatch.setattr(
+        mr,
+        "worktree_identity",
+        lambda: {
+            "format": "git-tracked-worktree/1.0",
+            "git_tree": "2" * 40,
+            "tracked_diff_hash": mr.digest(b""),
+            "dirty": False,
+        },
+    )
     (tmp_path / "trainer.py").write_text("def reward(x):\n    return 1.0 if x else 0.0\n")
     min_report = {
-        "loss_form": {"importance_ratio_level": "token", "clip_eps_low": None,
-                      "clip_eps_high": None, "clipping_applied": False,
-                      "length_normalization": False, "advantage_normalization": "std",
-                      "token_mask": "completion", "token_aggregation": "token",
-                      "reward_shaping_type": "none", "sampling_dynamic_filter": False},
+        "loss_form": {
+            "importance_ratio_level": "token",
+            "clip_eps_low": None,
+            "clip_eps_high": None,
+            "clipping_applied": False,
+            "length_normalization": False,
+            "advantage_normalization": "std",
+            "token_mask": "completion",
+            "token_aggregation": "token",
+            "reward_shaping_type": "none",
+            "sampling_dynamic_filter": False,
+        },
         "reference_kl": {"reference_policy": False, "kl_beta": 0.0, "kl_estimator": "none"},
-        "sampler_backend": {"backend": "synthetic-fixture", "precision": "float32", "temperature": 1.0, "top_p": 1.0},
+        "sampler_backend": {
+            "backend": "synthetic-fixture",
+            "precision": "float32",
+            "temperature": 1.0,
+            "top_p": 1.0,
+        },
         "telemetry": {"per_step_zvf": False, "per_step_gu": False, "source": "synthetic fixture"},
         "group_size_schedule": {"initial_g": 4, "schedule": "fixed", "adaptation_rule": "none"},
         "heldout_split": {"disjoint_from_reward_env": True, "description": "synthetic IDs", "n": 2},
@@ -43,29 +62,71 @@ def publication(tmp_path, monkeypatch):
     }
     runtime = {"code_file": "trainer.py", "data_ref": "synthetic-data", "min_report_rl": min_report}
     config_hash = mr.object_digest(runtime)
-    split = write_json(tmp_path / "split.json", {"train_ids": ["t1", "t2"], "heldout_ids": ["h1", "h2"], "data_ref": "synthetic-data"})
+    split = write_json(
+        tmp_path / "split.json",
+        {"train_ids": ["t1", "t2"], "heldout_ids": ["h1", "h2"], "data_ref": "synthetic-data"},
+    )
     seeds, values = [0, 1, 2], [0.2, 0.4, 0.6]
-    runs = [write_json(tmp_path / f"run-{seed}.json", {
-        "run_id": "synthetic", "seed": seed, "status": "completed",
-        "code_hash": mr.sha256_file("trainer.py"), "config_hash": config_hash,
-        "split_sha256": split["sha256"], "heldout_metrics": {"accuracy": value},
-    }) for seed, value in zip(seeds, values)]
-    results = {"metric": "accuracy", "mean": statistics.mean(values), "sd": statistics.stdev(values),
-               "ci": [0.1, 0.7], "confidence": 0.95,
-               "per_seed": [{"seed": seed, "value": value} for seed, value in zip(seeds, values)]}
-    analysis = write_json(tmp_path / "analysis.json", {
-        **{key: results[key] for key in ("metric", "mean", "sd", "ci", "confidence")},
-        "n": 3, "method": "synthetic fixture interval; no scientific conclusion",
-        "input_run_sha256": [run["sha256"] for run in runs],
-    })
-    decontamination = write_json(tmp_path / "decontamination.json", {
-        "method": "split-id-disjoint/1.0", "performed": True, "verified": True,
-        "split_sha256": split["sha256"], "overlap_count": 0, "parser_robustness_probe": False,
-    })
-    config = {**runtime, "rigor": {"n_seeds": 3, "seeds": seeds, "reports_heldout": True,
-                                 "heldout_disjoint": True, "reports_ci": True},
-              "results": results, "evidence": {"runs": runs, "split": split,
-                                                "analysis": analysis, "decontamination": decontamination}}
+    runs = [
+        write_json(
+            tmp_path / f"run-{seed}.json",
+            {
+                "run_id": "synthetic",
+                "seed": seed,
+                "status": "completed",
+                "code_hash": mr.sha256_file("trainer.py"),
+                "config_hash": config_hash,
+                "split_sha256": split["sha256"],
+                "heldout_metrics": {"accuracy": value},
+            },
+        )
+        for seed, value in zip(seeds, values)
+    ]
+    results = {
+        "metric": "accuracy",
+        "mean": statistics.mean(values),
+        "sd": statistics.stdev(values),
+        "ci": [0.1, 0.7],
+        "confidence": 0.95,
+        "per_seed": [{"seed": seed, "value": value} for seed, value in zip(seeds, values)],
+    }
+    analysis = write_json(
+        tmp_path / "analysis.json",
+        {
+            **{key: results[key] for key in ("metric", "mean", "sd", "ci", "confidence")},
+            "n": 3,
+            "method": "synthetic fixture interval; no scientific conclusion",
+            "input_run_sha256": [run["sha256"] for run in runs],
+        },
+    )
+    decontamination = write_json(
+        tmp_path / "decontamination.json",
+        {
+            "method": "split-id-disjoint/1.0",
+            "performed": True,
+            "verified": True,
+            "split_sha256": split["sha256"],
+            "overlap_count": 0,
+            "parser_robustness_probe": False,
+        },
+    )
+    config = {
+        **runtime,
+        "rigor": {
+            "n_seeds": 3,
+            "seeds": seeds,
+            "reports_heldout": True,
+            "heldout_disjoint": True,
+            "reports_ci": True,
+        },
+        "results": results,
+        "evidence": {
+            "runs": runs,
+            "split": split,
+            "analysis": analysis,
+            "decontamination": decontamination,
+        },
+    }
     write_json(tmp_path / "config.json", config)
     path = tmp_path / "record.json"
     record = mr.generate("synthetic", tmp_path / "config.json", path)
@@ -101,7 +162,9 @@ def test_file_publication_requires_trust_signature_and_evidence(publication):
     assert report["assurance"] == "trusted-ed25519"
     assert report["grade"] == "A"
     assert not mr.audit_file(publication["path"], None)["accepted"]
-    assert not mr.audit_file(publication["path"], publication["public"], ("hmac-sha256",))["accepted"]
+    assert not mr.audit_file(publication["path"], publication["public"], ("hmac-sha256",))[
+        "accepted"
+    ]
 
 
 def test_sign_file_refuses_invalid_provenance(publication):
@@ -111,24 +174,27 @@ def test_sign_file_refuses_invalid_provenance(publication):
     assert not sign.sig_path(publication["path"]).exists()
 
 
-@pytest.mark.parametrize("change", [
-    lambda record: record["rigor"].update(n_seeds=True),
-    lambda record: record["rigor"].update(n_seeds=3, seeds=[42, 42, 42]),
-    lambda record: record["rigor"].update(n_seeds=3, seeds=[0, 1]),
-    lambda record: record["rigor"].update(seeds=[False, 1, 2]),
-    lambda record: record.update(results={}),
-    lambda record: record["min_report_rl"]["group_size_schedule"].update(initial_g=None),
-    lambda record: record["min_report_rl"]["heldout_split"].update(n=None),
-    lambda record: record["min_report_rl"]["heldout_split"].update(n=True),
-    lambda record: record["min_report_rl"]["decontamination"].update(performed=False),
-    lambda record: record["min_report_rl"]["decontamination"].update(verified=False),
-    lambda record: record["min_report_rl"]["reference_kl"].update(kl_beta=1.0),
-    lambda record: record["min_report_rl"]["loss_form"].update(clip_eps_low=0.0),
-    lambda record: record["min_report_rl"].update(sampler_backend="unsupported-string"),
-    lambda record: record["min_report_rl"].update(telemetry=["heldout"]),
-    lambda record: record["evidence"].update(runs=[]),
-    lambda record: record["results"].update(mean=0.999),
-])
+@pytest.mark.parametrize(
+    "change",
+    [
+        lambda record: record["rigor"].update(n_seeds=True),
+        lambda record: record["rigor"].update(n_seeds=3, seeds=[42, 42, 42]),
+        lambda record: record["rigor"].update(n_seeds=3, seeds=[0, 1]),
+        lambda record: record["rigor"].update(seeds=[False, 1, 2]),
+        lambda record: record.update(results={}),
+        lambda record: record["min_report_rl"]["group_size_schedule"].update(initial_g=None),
+        lambda record: record["min_report_rl"]["heldout_split"].update(n=None),
+        lambda record: record["min_report_rl"]["heldout_split"].update(n=True),
+        lambda record: record["min_report_rl"]["decontamination"].update(performed=False),
+        lambda record: record["min_report_rl"]["decontamination"].update(verified=False),
+        lambda record: record["min_report_rl"]["reference_kl"].update(kl_beta=1.0),
+        lambda record: record["min_report_rl"]["loss_form"].update(clip_eps_low=0.0),
+        lambda record: record["min_report_rl"].update(sampler_backend="unsupported-string"),
+        lambda record: record["min_report_rl"].update(telemetry=["heldout"]),
+        lambda record: record["evidence"].update(runs=[]),
+        lambda record: record["results"].update(mean=0.999),
+    ],
+)
 def test_authenticated_contradictory_evidence_rejected(publication, change):
     record = copy.deepcopy(publication["record"])
     change(record)
@@ -140,7 +206,10 @@ def test_authenticated_contradictory_evidence_rejected(publication, change):
     assert report["grade"] != "A"
 
 
-@pytest.mark.parametrize("field", ["git_sha", "code_hash", "reward_fn_hash", "config_hash", "resolved_config", "worktree"])
+@pytest.mark.parametrize(
+    "field",
+    ["git_sha", "code_hash", "reward_fn_hash", "config_hash", "resolved_config", "worktree"],
+)
 def test_integrity_checks_never_disappear_or_get_offset(publication, field):
     good_count = len(mr.verify(publication["record"])["checks"])
     record = copy.deepcopy(publication["record"])
@@ -152,7 +221,9 @@ def test_integrity_checks_never_disappear_or_get_offset(publication, field):
     assert report["grade"] == "REJECTED"
 
 
-@pytest.mark.parametrize("artifact_name", ["run-0.json", "split.json", "analysis.json", "decontamination.json"])
+@pytest.mark.parametrize(
+    "artifact_name", ["run-0.json", "split.json", "analysis.json", "decontamination.json"]
+)
 def test_changed_artifact_bytes_reject_publication(publication, artifact_name):
     sign.sign_file(publication["path"], publication["key_dir"])
     artifact = publication["root"] / artifact_name
@@ -160,17 +231,22 @@ def test_changed_artifact_bytes_reject_publication(publication, artifact_name):
     assert not mr.audit_file(publication["path"], publication["public"])["accepted"]
 
 
-@pytest.mark.parametrize(("artifact_name", "mutation"), [
-    ("run-0.json", lambda doc: doc.update(status="running")),
-    ("run-0.json", lambda doc: doc.update(seed=2)),
-    ("run-0.json", lambda doc: doc.update(config_hash="sha256:" + "0" * 64)),
-    ("split.json", lambda doc: doc.update(heldout_ids=["t1", "h2"])),
-    ("analysis.json", lambda doc: doc.update(input_run_sha256=[])),
-    ("analysis.json", lambda doc: doc.update(mean=0.99)),
-    ("analysis.json", lambda doc: doc.update(ci=[0.7, 0.1])),
-    ("decontamination.json", lambda doc: doc.update(verified=False)),
-])
-def test_authenticated_artifact_claims_still_require_consistency(publication, artifact_name, mutation):
+@pytest.mark.parametrize(
+    ("artifact_name", "mutation"),
+    [
+        ("run-0.json", lambda doc: doc.update(status="running")),
+        ("run-0.json", lambda doc: doc.update(seed=2)),
+        ("run-0.json", lambda doc: doc.update(config_hash="sha256:" + "0" * 64)),
+        ("split.json", lambda doc: doc.update(heldout_ids=["t1", "h2"])),
+        ("analysis.json", lambda doc: doc.update(input_run_sha256=[])),
+        ("analysis.json", lambda doc: doc.update(mean=0.99)),
+        ("analysis.json", lambda doc: doc.update(ci=[0.7, 0.1])),
+        ("decontamination.json", lambda doc: doc.update(verified=False)),
+    ],
+)
+def test_authenticated_artifact_claims_still_require_consistency(
+    publication, artifact_name, mutation
+):
     record = copy.deepcopy(publication["record"])
     path = publication["root"] / artifact_name
     value = sign.load_json(path)
@@ -212,7 +288,9 @@ def test_config_and_code_hashes_are_full_and_recomputed(publication):
 
 
 def test_git_sha_is_full_and_independent_of_callers_working_directory(tmp_path, monkeypatch):
-    expected = subprocess.check_output(["git", "-C", str(mr.REPO_ROOT), "rev-parse", "HEAD"], text=True).strip()
+    expected = subprocess.check_output(
+        ["git", "-C", str(mr.REPO_ROOT), "rev-parse", "HEAD"], text=True
+    ).strip()
     monkeypatch.chdir(tmp_path)
     assert mr.git_sha() == expected
     assert len(expected) in (40, 64)
@@ -244,9 +322,11 @@ def test_key_files_are_created_restrictively_under_permissive_umask(tmp_path, mo
     directory = tmp_path / "keys"
     modes = []
     original_open = os.open
+
     def checked_open(path, flags, mode=0o777, **kwargs):
         modes.append((Path(path).name, flags, mode))
         return original_open(path, flags, mode, **kwargs)
+
     monkeypatch.setattr(sign.os, "open", checked_open)
     old = os.umask(0)
     try:
@@ -269,13 +349,16 @@ def test_mismatched_keypair_is_rejected(publication, tmp_path):
         sign.sign_record({"run_id": "x"}, publication["key_dir"])
 
 
-@pytest.mark.parametrize(("header", "value"), [
-    ("spec", "P5-PROVENANCE-SIG/1.0"),
-    ("canonicalization", "unversioned"),
-    ("algorithm", "hmac-sha256"),
-    ("key_id", "sha256:" + "0" * 64),
-    ("digest_sha256", "0" * 64),
-])
+@pytest.mark.parametrize(
+    ("header", "value"),
+    [
+        ("spec", "P5-PROVENANCE-SIG/1.0"),
+        ("canonicalization", "unversioned"),
+        ("algorithm", "hmac-sha256"),
+        ("key_id", "sha256:" + "0" * 64),
+        ("digest_sha256", "0" * 64),
+    ],
+)
 def test_protected_metadata_tampering_rejected(publication, header, value):
     record = {"run_id": "x"}
     envelope = sign.sign_record(record, publication["key_dir"])
@@ -284,14 +367,24 @@ def test_protected_metadata_tampering_rejected(publication, header, value):
     assert not sign.verify_record(record, envelope, publication["public"])
 
 
-@pytest.mark.parametrize("document", [
-    '{"run_id":"forged","run_id":"original"}',
-    '{"nested":{"x":1,"x":2}}', '{"value":NaN}', '{"value":Infinity}',
-    '{"value":-Infinity}', '{"value":1e999}', '{"value":"\\ud800"}',
-])
+@pytest.mark.parametrize(
+    "document",
+    [
+        '{"run_id":"forged","run_id":"original"}',
+        '{"nested":{"x":1,"x":2}}',
+        '{"value":NaN}',
+        '{"value":Infinity}',
+        '{"value":-Infinity}',
+        '{"value":1e999}',
+        '{"value":"\\ud800"}',
+    ],
+)
 def test_ambiguous_json_rejected_before_signing_and_verification(publication, document):
     publication["path"].write_text(document)
-    with pytest.raises(ValueError, match="duplicate JSON property|nonfinite JSON number|finite, unambiguous|surrogates not allowed"):
+    with pytest.raises(
+        ValueError,
+        match="duplicate JSON property|nonfinite JSON number|finite, unambiguous|surrogates not allowed",
+    ):
         sign.sign_file(publication["path"], publication["key_dir"])
     assert not sign.verify_file(publication["path"], publication["public"])
     assert not mr.audit_file(publication["path"], publication["public"])["accepted"]
@@ -305,7 +398,9 @@ def test_duplicate_property_cannot_reuse_existing_signature(publication):
     assert not sign.verify_file(publication["path"], publication["public"])
 
 
-@pytest.mark.parametrize("value", [float("nan"), float("inf"), float("-inf"), {1: "non-string-key"}])
+@pytest.mark.parametrize(
+    "value", [float("nan"), float("inf"), float("-inf"), {1: "non-string-key"}]
+)
 def test_canonicalization_rejects_non_json_values(value):
     with pytest.raises(ValueError, match="only finite, unambiguous JSON values"):
         sign.canonical_bytes({"value": value})
@@ -336,7 +431,9 @@ def test_verify_cli_extensionless_and_json_ancestor_preserve_input(publication):
     assert sign.load_json(audit)["accepted"] is False
 
 
-@pytest.mark.parametrize("alias", ["same", "symlink", "hardlink", "signature", "source", "run", "trusted-key"])
+@pytest.mark.parametrize(
+    "alias", ["same", "symlink", "hardlink", "signature", "source", "run", "trusted-key"]
+)
 def test_explicit_audit_output_cannot_destroy_evidence(publication, alias):
     path = publication["path"]
     before = path.read_bytes()
@@ -355,13 +452,21 @@ def test_explicit_audit_output_cannot_destroy_evidence(publication, alias):
     else:
         output = publication["public"]
     output_before = output.read_bytes()
-    assert mr.main(["verify", str(path), "--out", str(output), "--trusted-key", str(publication["public"])]) == 1
+    assert (
+        mr.main(
+            ["verify", str(path), "--out", str(output), "--trusted-key", str(publication["public"])]
+        )
+        == 1
+    )
     assert path.read_bytes() == before
     assert output.read_bytes() == output_before
 
 
 def test_historical_record_is_read_only_and_never_publication_accepted():
-    path = Path(__file__).resolve().parents[1] / "platform_hybrid/registry/provenance/campaign.provenance.json"
+    path = (
+        Path(__file__).resolve().parents[1]
+        / "platform_hybrid/registry/provenance/campaign.provenance.json"
+    )
     before = path.read_bytes()
     record = sign.load_json(path)
     snapshot = copy.deepcopy(record)
@@ -374,15 +479,26 @@ def test_historical_record_is_read_only_and_never_publication_accepted():
 
 def test_registry_and_provenance_use_identical_coverage(publication):
     from platform_hybrid.registry import query
+
     score, items = query.badge({"min_report": publication["record"]["min_report_rl"]})
     coverage = mr.reporting_coverage(publication["record"]["min_report_rl"])
     assert coverage["reported_leaf_coverage_v3"] == score / 100
     assert coverage["items"] == items
 
 
-@pytest.mark.parametrize("value", [None, [], True, "bad", 1, {"min_report_rl": None},
-                                   {"min_report_rl": {"loss_form": []}},
-                                   {"provenance": {"code_file": "bad\x00path"}}])
+@pytest.mark.parametrize(
+    "value",
+    [
+        None,
+        [],
+        True,
+        "bad",
+        1,
+        {"min_report_rl": None},
+        {"min_report_rl": {"loss_form": []}},
+        {"provenance": {"code_file": "bad\x00path"}},
+    ],
+)
 def test_malformed_record_types_fail_without_crashing(value):
     assert not mr.verify(value)["accepted"]
 
@@ -425,11 +541,14 @@ def test_minimum_seed_rule_never_claims_statistical_power(publication):
     assert any("minimum distinct-seed" in check["msg"] for check in report["checks"])
 
 
-@pytest.mark.parametrize("mutation", [
-    lambda record: record["provenance"]["worktree"].update(dirty=0),
-    lambda record: record["min_report_rl"]["sampler_backend"].update(backend=""),
-    lambda record: record["min_report_rl"]["reference_kl"].update(kl_estimator="   "),
-])
+@pytest.mark.parametrize(
+    "mutation",
+    [
+        lambda record: record["provenance"]["worktree"].update(dirty=0),
+        lambda record: record["min_report_rl"]["sampler_backend"].update(backend=""),
+        lambda record: record["min_report_rl"]["reference_kl"].update(kl_estimator="   "),
+    ],
+)
 def test_empty_substantive_values_and_boolean_aliases_are_rejected(publication, mutation):
     record = copy.deepcopy(publication["record"])
     mutation(record)
@@ -437,22 +556,31 @@ def test_empty_substantive_values_and_boolean_aliases_are_rejected(publication, 
     assert not mr.audit_file(publication["path"], publication["public"])["accepted"]
 
 
-
 def test_authenticated_boolean_config_cannot_equal_numeric_declaration(publication):
-    record=copy.deepcopy(publication['record'])
-    config=record['provenance']['resolved_config']
-    config['min_report_rl']['sampler_backend']['temperature']=True
-    record['provenance']['config_hash']=mr.object_digest(config)
-    for reference in record['evidence']['runs']:
-        path=publication['root']/reference['path'];doc=sign.load_json(path)
-        doc['config_hash']=record['provenance']['config_hash']
-        reference.update(write_json(path,doc))
-    path=publication['root']/record['evidence']['analysis']['path'];doc=sign.load_json(path)
-    doc['input_run_sha256']=[ref['sha256'] for ref in record['evidence']['runs']]
-    record['evidence']['analysis'].update(write_json(path,doc))
-    authenticated_rewrite(publication,record)
-    audit=mr.audit_file(publication['path'],publication['public'])
-    assert audit['authenticated'] and not audit['accepted']
-    assert not audit['evidence_valid']
-    with pytest.raises(ValueError,match='not publication-ready'):
-        sign.sign_file(publication['path'],publication['key_dir'])
+    record = copy.deepcopy(publication["record"])
+    config = record["provenance"]["resolved_config"]
+    config["min_report_rl"]["sampler_backend"]["temperature"] = True
+    record["provenance"]["config_hash"] = mr.object_digest(config)
+    for reference in record["evidence"]["runs"]:
+        path = publication["root"] / reference["path"]
+        doc = sign.load_json(path)
+        doc["config_hash"] = record["provenance"]["config_hash"]
+        reference.update(write_json(path, doc))
+    path = publication["root"] / record["evidence"]["analysis"]["path"]
+    doc = sign.load_json(path)
+    doc["input_run_sha256"] = [ref["sha256"] for ref in record["evidence"]["runs"]]
+    record["evidence"]["analysis"].update(write_json(path, doc))
+    authenticated_rewrite(publication, record)
+    audit = mr.audit_file(publication["path"], publication["public"])
+    assert audit["authenticated"]
+    assert not audit["accepted"]
+    assert not audit["evidence_valid"]
+    with pytest.raises(ValueError, match="not publication-ready"):
+        sign.sign_file(publication["path"], publication["key_dir"])
+
+
+def test_unavailable_reward_source_segment_stays_unverified(tmp_path, monkeypatch):
+    monkeypatch.setattr(mr, "REPO_ROOT", tmp_path)
+    (tmp_path / "trainer.py").write_text("def reward(x):\n    return x\n")
+    monkeypatch.setattr(mr.ast, "get_source_segment", lambda *args: None)
+    assert mr.reward_fn_sha256("trainer.py") is None

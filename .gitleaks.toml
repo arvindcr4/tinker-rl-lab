@@ -58,3 +58,27 @@ regexes = [
   '''posthog_client_key = ''',
   '''__modal_attempt_token=''',
 ]
+
+[[allowlists]]
+description = "literal controller lookup label, not a credential"
+targetRules = ["generic-api-key"]
+condition = "AND"
+paths = ['''^platform_modal/scripts/p5p8/p7_n10_replication\.py$''']
+regexTarget = "line"
+regexes = ['''^\s*key_070 = "zvf_triage_0\.7"\s*$''']
+
+[[allowlists]]
+description = "literal validation error text, not a credential"
+targetRules = ["generic-api-key"]
+condition = "AND"
+paths = ['''^finish/progress_reporting_audit/generate_v1\.py$''']
+regexTarget = "line"
+regexes = ['''^\s*need\(key in task_ids and key not in reports, 'foreign/duplicate native SWE task'\)\s*$''']
+
+[[allowlists]]
+description = "verified tokenizer artifact SHA-256, not a credential"
+targetRules = ["generic-api-key"]
+condition = "AND"
+paths = ['''^reports/runtime_followup_2026-10-11/GSM8K_TOKEN_BUDGET_AUDIT\.json$''']
+regexTarget = "line"
+regexes = ['''^\s*"tokenizer_sha256": "aeb13307a71acd8fe81861d94ad54ab689df773318809eed3cbe794b4492dae4",\s*$''']

@@ -21,7 +21,7 @@ Post-Training of Large Language Models''\par}
 \vspace{0.4em}
 {\normalsize A multi-framework training harness and studies of GRPO signal starvation\par}
 \vspace{0.4em}
-{\small\bfseries PES EVALUATION REVIEW COPY\quad 17 October 2026\par}
+{\small\bfseries PES EVALUATION REVIEW COPY\quad 18 October 2026\par}
 
 \vfill
 
@@ -65,19 +65,20 @@ Electronic City, Hosur Road, Bengaluru -- 560 100, Karnataka, India\par}
 %---------------------------------------------------------------------
 \chapter*{Evaluation Review Revision Record}
 \addcontentsline{toc}{chapter}{Evaluation Review Revision Record}
-This source-only amendment dated 17 October 2026 retains the historical evidence snapshots of the 11 October review copy and the explicitly identified 16 October tool audit. It derives from the 3 October coverage-recovery manuscript and incorporates the 4 October draft's five numerical and provenance corrections. Appendix J distinguishes artifact comparisons, arithmetic from printed counts and context-only occurrences. No new training or benchmark evaluation was performed, and no frozen source, reference label, cohort selection or primary score was changed. Historical releases remain separate and unchanged.
+This source-only review revision dated 18 October 2026 responds to three critiques covering the opening chapters, implementation/results, and campaign/synthesis. It was rebuilt from the complete chapter sources; the truncated review excerpts were not treated as the complete manuscript. No new model training, benchmark execution, paid grading, or replacement of stored experimental results was performed.
 
-Revision binding remains incomplete: the manuscript revision is identified by this source commit, while experiment protocol/data snapshot, analysis source and dirty-diff, and registry source/entry snapshot must each have their own immutable identifiers. A moving repository HEAD cannot identify an older tool version. Missing historical bindings remain unknown. Table 6.2 retains its provisional snapshot; this amendment performs no new evaluation.
+The revisions withdraw estimator interpretation of the contaminated arithmetic comparison, remove synthetic/imputed discrimination results and interrupted-run scaling fits from empirical claims, separate variance conventions, and state that the historical campaign does not meet the execution-source auditability requirement. The 200- and 1,024-token studies do not establish an uncensored length-bias result. The campaign is presented as a harness and evidence audit, with exploratory replacement scopes and missing provenance explicitly separated from the proposed governance protocol. The full point-by-point response accompanies this copy.
 
-This public derivative omits operational and account identifiers, access correspondence, financial details, signature images and student registration data. Private provider exports and recovery archives are not bundled. It is not a certified institutional submission and does not carry the historical certificate. Six recovered original files resolved five primary-file gaps; the scientific recovery conclusions and E14 denominator correction remain, with inclusion and withholding boundaries in Appendix I and the public availability manifest.
+Table 6.2 retains the existing provisional v2 snapshot, including its seven completed PPO seeds and pending exposure-matched control. Its values were not regenerated or promoted to final equivalence. Citations and questioned model/package identities were checked against primary sources as of 18 October 2026; public existence does not authenticate a historical execution.
 
-The C1 extension (Sections 1.5, 4.6, 7.5, 9.3 and B.13; Appendix G) retains the frozen 11/64 endpoint (17.19\%; Wilson 95\% interval 9.88--28.21\%) beside three conservatively corroborated numerical witnesses on the same denominator. Reference errors, ambiguities and unit mismatches limit interpretation; neither count is a training gain. The ledger retains classifications, hashes and disagreements, and historical V2 remains separate. Appendix H maps the evidence and distinguishes bundled content from retained external sources. Appendix A corrects registry scope and P11 evidence-tier wording without changing experimental values.
+This is an unsigned draft for the author's review. It does not certify institutional approval, signature, authorship verification, or completeness of the AI-use declaration. The public derivative retains its privacy redactions and does not silently restore private provider exports. Historical released PDFs remain unchanged. The source package and build manifest distinguish newly generated report files from original experimental records; hashes demonstrate byte identity, not execution authenticity.
 
-A 16 October 2026 correction follows a publication-readiness audit. The unsaturated same-stack GRPO-versus-PPO gap (Section 6.5.5) is superseded by a rerun with a 512-token cap and a warm-started critic that finds no detectable GRPO advantage; its figures are provisional while three PPO seeds and an exposure-matched arm complete. The ZVF U-shape and escalation asymmetry are restated as largely following from the binomial identity and reward level, with contemporaneous prior work cited. The stack exhibits are decomposed or bounded, the registry count and \texttt{stackdiff} limitations are stated, five citations are corrected, and the AI-tool declaration is expanded. Appendix E lists the changes.
+The C1 extension preserves its frozen 11/64 parser endpoint and three conservatively corroborated numerical witnesses on the same denominator. Reference errors, ambiguities and unit mismatches limit interpretation. Historical V2, C1, and later parser candidates remain separate measurements.
 
 \chapter*{Declaration}
 \addcontentsline{toc}{chapter}{Declaration}
 \thispagestyle{plain}
+\textbf{Unsigned declaration draft; requires the author's confirmation.}
 
 I declare that this project report is my own work. Where the work of others has
 been used, it is cited and acknowledged. The matter embodied in this report has
@@ -161,9 +162,7 @@ in the E1--E14 ledger only for classification, faithfulness and value
 ordering, never for arithmetic (Chapter 4 \S4.5).
 \end{itemize}
 
-No AI tool fabricated experimental data: every reported measurement comes from
-an executed run or evaluation recorded in the repository, and simulated values
-are labelled as simulations. AI assistance does not transfer responsibility.
+The revised report distinguishes recorded measurements from simulations, reconstructed summaries and unverified historical records. Missing execution evidence is not supplied by AI-generated explanation. AI assistance does not transfer responsibility.
 The research direction, the choice of claims, their final wording and any
 remaining errors are the author's responsibility.
 
@@ -210,37 +209,9 @@ surrogates, nonzero-KL configuration records and unknown managed settings.
 machine-readable stack registry with a \texttt{stackdiff} tool that flags
 label-flip risk between two runs from their records alone.
 
-\textbf{(3) Calibrated negative results.} No reliable scaling law is recovered
-from reward curves across twelve fitted anchors. A same-stack PPO/GRPO
-contrast (0.992 against 0.990, $p = 0.374$, five seeds) and a group-size sweep
-find no detectable difference on saturated, in-distribution arithmetic draws;
-neither establishes equivalence or an optimum. On an unsaturated GSM8K rerun, an initial 5.0-point GRPO advantage over an
-untuned-critic PPO under a binding 200-token cap did not survive a corrected
-rerun (512-token cap, warm-started critic, 1,319 test items): GRPO minus PPO
-is $+0.76$ percentage points ($+0.0076$; 95\% CI $[-0.34, +1.85]$ points), with an interim TOST at $\pm 2$ points ($\pm 0.02$), not a final equivalence claim
-(provisional; seven PPO seeds), and $G = 8$ versus $G = 2$ is not significant
-after multiplicity adjustment. ZVF, studied concurrently as advantage collapse, is recomputable, but its
-predictive validity is unestablished: the historical pooled association mixes
-simulation and measured records with inconsistent outcome definitions. An adaptive group-size controller
-derived from ZVF reports zero rescue under a plug-in counterfactual model;
-92\% of its escalations target observed all-correct groups, a share the
-reward level alone predicts, without proving latent certainty or
-impossibility of recovery with fresh rollouts.
+\textbf{(3) Evidence triage and bounded empirical findings.} The contaminated, saturated addition comparisons are excluded as estimator evidence. Five interrupted cross-scale anchors cannot identify an asymptotic scaling law. Synthetic and script-imputed records do not validate ZVF prediction. The unsaturated GSM8K v1 comparison couples a 200-token cap, a cold critic and unequal prompt exposure; its contrast is not an estimator effect. The existing provisional v2 snapshot uses a 512-token cap and warm-started critic, with GRPO minus PPO $+0.0076$ (95\% interval $[-0.0034,+0.0185]$) over seven paired seeds. Its interim TOST does not settle the pending exposure-matched comparison. The eight-seed variant audit has no multiplicity-adjusted rejection and fails its locked equivalence criterion. Capped length studies do not adjudicate uncensored verbosity, and adaptive group-size benefit remains unestablished.
 
-\textbf{(4) An evaluation-governance protocol.} One lightly trained actor
-(Qwen3.6-35B-A3B with a LoRA adapter, 40 training steps) is evaluated on
-fourteen suites absent from its recorded training-suite list under native graders
-at pinned revisions. Content-level decontamination remains unverified. Receipts,
-a no-pooling rule and a per-lane serving audit expose a serving defect in a
-zero-scoring run; the defect's contribution to that score is unquantified.
-Complete scopes include VerilogEval
-($129/312 = 41.35\%$), LAB-Bench ($0.2288$) and AgentDojo benign utility
-($88/97$); six replacement scopes completed on 27 September 2026
-(Chapter~8, Table~8.C); seven original contracts remain externally blocked. A
-paired trained-versus-base rerun on 5--151 identical items per lane finds no
-significant difference in any lane (inconclusive at those sizes). No
-claim of campaign-level improvement over the base model is made.
-
+\textbf{(4) An infrastructure and harness audit.} A lightly trained Qwen3.6-35B-A3B LoRA checkpoint (40 recorded steps) is evaluated across fourteen suites using scope-specific graders and receipts. Lost training-source and consumed-row bindings prevent verified held-out or end-to-end reproducibility claims. Thirty-five logged near-zero-loss steps do not establish a count of nonzero-gradient updates. The audit records serving, extraction, truncation and provenance defects; original contracts, exploratory replacement runs and small-scale paired reruns remain separate. The paired trained-versus-base comparisons are inconclusive. No campaign-level capability improvement is claimed.
 
 \textbf{C1 diagnostic extension.} Benchmark reference errors, ambiguous wording and equivalent units limit the interpretation of a new frozen-policy study on public GSM8K train. The first 64 of 87 eligible questions from 4,096 screened questions received 24 fresh responses after eight valid, uncapped parser-zero responses. The frozen endpoint is 11/64 (17.19\%; Wilson 95\% interval 9.88--28.21\%). Assistant-assisted reconciliation corroborates three numerical witnesses on the same denominator, while preserving convention-dependent and ambiguous cases and one wrong-reference match. This is conditional diagnostic evidence, not a population estimate, reasoning validation or training gain. A separate, undeployed parser candidate preserves 2,025 previously valid parse objects and admits four unambiguous extractions in a predefined future subset of 2,048 outputs. It does not alter C1's frozen parser-v2 score.
 

@@ -50,7 +50,7 @@
 
 % grid left edge = -10.9 mm
 \node[anchor=south west, font=\small\bfseries, text=pesblue] at (-10.9,13.5)
-  {Lane terminal state, E1--E14 (ledger of 2026-09-19, updated with the runs of 2026-09-27)};
+  {Lane terminal state, E1--E14 (ledger of 2026-09-19, with exploratory override runs of 2026-09-27)};
 
 % ================= row 1 : E1--E7 =================
 \cell{lcellM}{0,0}{E1}{SWE-bench\\Multilingual}{\stM{SCORED}\\1/190$^{\dagger}$}
@@ -72,9 +72,9 @@
 
 % ================= legend: mark + word + class membership =================
 \node[leg] (lg1) at (-10.9,-42)
-  {\textcolor{complete!75!black}{$\bullet$\ \textbf{COMPLETE} (4)} --- full coverage, no open gate: E8, E10, E11; E14* terminal-complete};
+  {\textcolor{complete!75!black}{$\bullet$\ \textbf{COMPLETE} (4)} --- recorded scope coverage: E8, E10, E11; E14* terminal-complete};
 \node[leg] (lg2) at (-10.9,-46.5)
-  {\textcolor{complete!75!black}{$\star$\ \textbf{SCORED} (6)} --- double border: replacement scope scored on 2026-09-27: E1, E2, E5, E6, E9, E13};
+  {\textcolor{complete!75!black}{$\star$\ \textbf{SCORED} (6)} --- double border: exploratory protocol-override scopes, 2026-09-27: E1, E2, E5, E6, E9, E13};
 \node[leg] (lg3) at (-10.9,-51)
   {\textcolor{partial!75!black}{$\triangle$\ \textbf{PARTIAL} (1)} --- closed with partial evidence: E4 (1/100 tasks)};
 \node[leg] (lg4) at (-10.9,-55.5)

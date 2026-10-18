@@ -7,9 +7,9 @@ Pipeline:
      (--top-level-division=chapter so "#" becomes \\chapter)
   2. figures are injected at anchor headings, falling back to end-of-chapter
   3. preamble + front matter + chapters + back matter -> thesis_master.tex
-  4. tectonic compiles thesis_master.tex -> PDF
+  4. tectonic or latexmk compiles thesis_master.tex -> PDF
 
-Run:  python3 build_thesis.py
+Run: ./build_portable.sh (recommended), or python3 build_thesis.py
 """
 from __future__ import annotations
 
@@ -24,7 +24,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 FIGDIR = os.path.join(HERE, "figures")
 MASTER = os.path.join(HERE, "thesis_master.tex")
 BUILD = os.path.join(HERE, "build")
-PDF = os.path.join(HERE, "Thesis_Report_ArvindCR_2026-10-11_REVIEW.pdf")
+PDF = os.path.join(HERE, "Thesis_Report_ArvindCR_2026-10-18_REVISED_REVIEW.pdf")
 
 CHAPTERS = [
     ("ch01_introduction.md", "Foundations"),
@@ -55,34 +55,12 @@ EVIDENCE_MAP = os.path.join(BUILD, "ch_back_evidence_map.md")
 # figure name -> (caption, label, [anchor substrings tried in order])
 FIGURES: dict[str, list[tuple[str, str, list[str]]]] = {
     "ch01_introduction.md": [
-        ("fig_confounding",
-         "The confounding problem this work addresses. A single reported reward "
-         "figure sits on top of an unstated stack; without fixing and reporting "
-         "that stack the number is not attributable to the method under test. "
-         "Top right: of the four frameworks in the nominal configuration only "
-         "Tinker and TRL were run; veRL and OpenRLHF were not installed in the "
-         "sandbox and have no measurement. The $17\\times$ gap between the two "
-         "measured stacks is an under-specification exhibit, not a clean "
-         "back-end-only effect, because the managed stack also pinned a different "
-         "base checkpoint (Qwen3-8B-Base vs.\\ Qwen3-8B). Bottom left: one-way "
-         "$\\eta^2$ shares over 42 reported experiments; they are confounded with "
-         "one another and with back-end, reward implementation, hardware and "
-         "task, so they do not sum to one. Bottom right: the PPO-versus-GRPO rows of the Phase-1 table, "
-         "one run per arm, shown without inferential statistics; the Qwen arms did not share a "
-         "back-end (GRPO on the managed API, PPO on a Modal H100 cluster), so no "
-         "directional Qwen algorithm claim is made.",
-         "fig:confounding", ["Motivating", "Problem Statement", "Introduction"]),
-        ("fig_grpo_loop",
-         "The GRPO training loop. A prompt is sampled $G$ times, each completion "
-         "is scored by a reward function, advantages are formed relative to the "
-         "group, and the policy is updated. When all $G$ rewards coincide the "
-         "group-relative advantage collapses to zero and no reward-relative "
-         "gradient flows, although the rollouts are still paid for. Number line: "
-         "the Phase-1 P2 batch ZVF of 0.72--0.77 (four methods, 40 steps, "
-         "16 prompts $\\times$ 8 samples, GSM8K, seed 0, Qwen3.5-4B) and the "
-         "group-size sweep on Qwen2.5-0.5B two-digit addition over three seeds, where mean ZVF "
-         "falls from 0.838 at $G=2$ to 0.631 at $G=16$ (a fall of 0.207).",
-         "fig:grpoloop", ["Background", "Introduction"]),
+        ('fig_confounding',
+         'Historical framework records and the attribution gap. Tinker/Base and TRL/Instruct are different treatments; their recorded training rewards do not isolate a framework effect. Dry-run rows have no measured outcome. Marginal effect-size bars are removed rather than interpreted as a variance decomposition.',
+         'fig:confounding', ['Motivating', 'Problem Statement', 'Introduction']),
+        ('fig_grpo_loop',
+         'The group-relative loop and exact-tie mechanism. The Phase-1 P2 batch (0.72--0.77, Qwen3.5-4B, GSM8K, G=8, one seed) used mean-centred advantages r minus group mean without standard-deviation normalisation. Exact ties give zero reward-relative advantages in both that form and standardised GRPO. The arithmetic G sweep is training telemetry only, not estimator or held-out-accuracy evidence.',
+         'fig:grpoloop', ['Background', 'Introduction']),
         ("fig_contribution_map",
          "Boundary between the inherited Semester-3 group infrastructure and the "
          "individual Semester-4 contribution reported in this document. Both "
@@ -104,13 +82,9 @@ FIGURES: dict[str, list[tuple[str, str, list[str]]]] = {
          "scale. GRPO variants (DAPO, Dr.~GRPO and others) are discussed in the "
          "text and not drawn.",
          "fig:lineage", ["RLHF and PPO to Group-Relative", "Direct Preference Optimisation"]),
-        ("fig_research_questions",
-         "The eight studies P1--P8 grouped by theme, with the question each one "
-         "addresses and the state of its evidence. Every question is answered from "
-         "the repository's own record; two of the eight answer with a declared "
-         "null, and a study whose scope narrowed between the group semester and "
-         "this one is marked partial rather than complete.",
-         "fig:questions", ["Positioning", "Literature"]),
+        ('fig_research_questions',
+         'Seven core RL studies and their present evidence boundaries. Missing controls and invalid designs are left open, rather than labelled successful null experiments. The archived non-RL side study is outside the core argument.',
+         'fig:questions', ['Positioning', 'Literature']),
     ],
     "ch04_methodology.md": [
         ("fig_attribution",
@@ -119,58 +93,21 @@ FIGURES: dict[str, list[tuple[str, str, list[str]]]] = {
          "that ideal: checkpoint identity, prompt exposure and other residual "
          "differences are disclosed with each result in Chapters~6 and~7.",
          "fig:attribution", ["Design Commitment", "Methodology"]),
-        ("fig_zvf_definition",
-         "Definition of the Zero-Variance Fraction. One prompt produces $G$ "
-         "completions with scalar rewards; when the within-group reward standard "
-         "deviation is zero the advantage is identically zero and the sample "
-         "contributes no reward-relative surrogate gradient. Exact ties and the "
-         "sample-variance threshold are distinguished in the text; they agree "
-         "for the binary rewards illustrated here. The "
-         "composition bar is measured on Qwen3-8B, held-out GSM8K slice, $G=8$, "
-         "$T=1.0$, 200 problems $\\times$ 3 seeds; all-correct (vertical hatch) "
-         "and all-wrong (cross-hatch) together make up the ZVF.",
-         "fig:zvfdef", ["Zero-Variance", "Formalis", "Methodology"]),
-        ("fig_gradient_utilisation",
-         "Gradient utilisation, $1-\\zvf$, as a function of group size $G$. "
-         "Qwen2.5-0.5B, arithmetic-correctness task, 40 steps, 16 prompts, "
-         "$G\\in\\{2,4,8,16\\}$, seeds 42/123/456 ($n=3$ per $G$; "
-         "\\texttt{groupsize\\_zvf\\_sweep.json}). (a) Open circles are single "
-         "seeds; squares are seed means with 95\\% $t$-intervals ($df=2$). The "
-         "line is a two-parameter power law, $\\zvf = 0.922\\,G^{-0.137}$, fitted "
-         "to the four means (2 residual degrees of freedom), so it is descriptive "
-         "rather than a validated law; $G=32^{\\ast}$ was not trained and the "
-         "dotted segment is extrapolation. (b) The absolute gain per doubling is "
-         "nearly constant ($+0.074$, $+0.073$, $+0.059$), so the diminishing "
-         "return is relative: $46\\%\\to31\\%\\to19\\%$ of the previous "
-         "level. Utilisation stays below 0.37 at $G=16$.",
-         "fig:gu", ["Zero-Variance", "Methodology"]),
+        ('fig_zvf_definition',
+         'Exact ties versus near-ties under the population-variance reporting convention (ddof=0). The denominator stabiliser and the variance threshold are different quantities. Historical sample-variance analyses are retained with their convention in the text; near-ties need not have exactly zero advantages. Measured composition is the three-seed Qwen3-8B GSM8K sampling diagnostic.',
+         'fig:zvfdef', ['Zero-Variance', 'Formalis', 'Methodology']),
+        ('fig_gradient_utilisation',
+         'Measured group-contrast fraction on the fixed-prompt arithmetic sweep. Points are seed means, not a fitted law, a matched-token efficiency frontier or a held-out generalisation result. The four values use G=2,4,8,16 with three seeds each; larger G consumes more completions.',
+         'fig:gu', ['Zero-Variance', 'Methodology']),
         ("fig_telemetry",
-         "Per-step telemetry recorded by the unified harness, and the "
+         "Intended per-step telemetry schema of the unified harness; actual availability is runner-specific. The diagram shows the "
          "destinations each record flows to.",
          "fig:telemetry", ["Telemetry", "Methodology"]),
-        ("fig_four_pillars",
-         "The four planned comparison pillars. The intended controls are "
-         "shown here; departures in executed runs are stated with their "
-         "results. In Pillar~2 all nine rows of the method "
-         "panel, vanilla GRPO included, are a "
-         "declared simulation projection (Chapter~6).",
-         "fig:pillars", ["Methodology", "Portfolio"]),
+        ('fig_four_pillars',
+         'Intended comparison axes and the controls still needed to identify them. The leaked arithmetic estimator comparison is excluded. A working launcher or an illustrative model is not evidence that an intended control was executed.',
+         'fig:pillars', ['Methodology', 'Portfolio']),
         ("fig_campaign_design",
-         "Design of the E1--E14 native-benchmark evaluation campaign. One frozen actor "
-         "is assigned to all fourteen lanes. Executed scopes use their named "
-         "evaluators and revision records; unavailable original contracts "
-         "remain blocked. Each lane lists its original-contract "
-         "suite and, where one exists, its replacement scope side by side; "
-         "Figure~\\ref{fig:lanes} names the replacement scope where one exists. "
-         "Figures and terminal states come from the 2026-09-19 ledger "
-         "(\\texttt{E1\\_E14\\_FINAL\\_RESULTS\\_2026-09-19.md} and "
-         "\\texttt{finish/Pending\\_Experiments.md}; eleven named deterministic checks "
-         "pass, scope in App.~B), updated with the six replacement scopes scored on 2026-09-27 "
-         "($\\star$; \\texttt{finish\\_pending\\_2026-09-27/<lane>/result.json}), "
-         "which are separate receipts and are never pooled with a lane's "
-         "original-contract figure. E14's $2271/4428 = 51.29\\%$ counts the 2 unjudged rows as "
-         "failures; the official scorer reports $51.31\\% = 2271/4426$ on the "
-         "judged rows.",
+         "Historical lane-scope map for the harness audit. Original contracts and exploratory protocol-override replacements are kept separate. Replacement completion labels describe retained coverage, not satisfaction of the prospective fail-closed gates. Missing or private source payloads limit independent reproduction; a source hash is not execution authentication. Full metric definitions and denominators are in Chapter~8 and Table~C.3.",
          "fig:campaign", ["Campaign", "Methodology"]),
     ],
     "ch05_implementation.md": [
@@ -184,20 +121,9 @@ FIGURES: dict[str, list[tuple[str, str, list[str]]]] = {
          "checkpoint (Chapter~7), so outcome differences are reported with the "
          "stack rather than attributed to it.",
          "fig:arch", ["Architecture", "Implementation"]),
-        ("fig_harness",
-         "Evaluation harness internals. The harness is fail-closed: when a "
-         "precondition cannot be satisfied the lane records \\textsc{blocked} "
-         "rather than substituting an adjacent benchmark. Outcomes and the lane "
-         "tally are taken from the 2026-09-19 ledger of record "
-         "(\\texttt{Pending\\_Experiments.md}), updated with the six "
-         "replacement scopes scored on 2026-09-27. Outcome A separates "
-         "original-contract scores from replacement-scope results and gives "
-         "coverage and score separately; Outcome B lists original-scope suites "
-         "that are closed external, then the one lane whose scope is not settled. "
-         "E14 is reported as $2271/4428 = 51.29\\%$ with the two unjudged rows "
-         "counted as failures (the official scorer reports 51.31\\% over 4426 "
-         "judged rows).",
-         "fig:harness", ["Harness", "Implementation"]),
+        ('fig_harness',
+         'Evaluation-pipeline stages and their evidence boundaries. Prospective fail-closed gates are distinguished from the recorded historical executions, including six exploratory protocol-override replacements on 27 September. Offline gate tests do not authenticate lost training source or prove that a gate governed a measured run.',
+         'fig:harness', ['Harness', 'Implementation']),
         ("fig_receipt_pipeline",
          "The evidence chain from sealed request through execution and native "
          "grading to a deterministic ledger check. A break anywhere in the "
@@ -209,108 +135,23 @@ FIGURES: dict[str, list[tuple[str, str, list[str]]]] = {
          "fig:receipts", ["Receipt", "Implementation"]),
     ],
     "ch06_results_core.md": [
-        ("fig_zvf_by_library",
-         "Mean Zero-Variance Fraction by method in a simulation projection "
-         "(a) and by measured experiment family (b); neither panel compares "
-         "backend libraries. (a) Nine variance-mitigation methods in a "
-         "simulation projection ($G=8$, math-verifiable task, 5 seeds each; "
-         "hatched bars mark projected, not model-training, values): bar $=$ "
-         "mean of per-seed mean ZVF, whisker $=\\pm1$~SD across seeds "
-         "($\\le 0.008$). The projection ranks no methods; GRPO (cross-hatched) "
-         "is the reference at 0.481, and in 3 of its 5 seeds the per-step "
-         "collapse flag fires. (b) Measured runs: gsm8k $=$ Qwen3-8B, three "
-         "seeds of 200 GSM8K prompts at $G=8$ (mean $\\pm1$~SD); drgrpo $=$ "
-         "Qwen2.5-0.5B arithmetic, GRPO and Dr.\\ GRPO, 5 seeds each (10 runs, "
-         "mean $\\pm1$~SD); gsize $=$ Qwen2.5-0.5B group-size sweep, mean over "
-         "$G\\in\\{2,4,8,16\\}$ with a dashed whisker spanning the per-$G$ "
-         "values (a range over $G$, not seed dispersion); tool-32B (Qwen3-32B) "
-         "and tool-8B (Llama-3.1-8B-Instruct) are single runs (open diamonds, "
-         "no interval) in which every group has zero reward variance. Source: "
-         "platform\\_hybrid/experiments/results/zvf\\_by\\_library.tsv and the "
-         "per-seed files it cites.",
-         "fig:zvflib", ["Zero-Variance", "P2", "Results"]),
-        ("fig_group_size",
-         "Group size $G$: one single-seed sweep, one three-seed sweep and one "
-         "reconstruction. (a) Qwen3-8B on GSM8K through Tinker, one seed, 30 "
-         "steps: peak and last-10 in-training reward (not held-out); $G=8$ is "
-         "highest, but with no seed replication no optimum can be established. "
-         "(b) Qwen2.5-0.5B on arithmetic, 3 seeds, 40 steps: held-out accuracy "
-         "and mean train reward, bars $\\pm1.96$~SE (approximate 95\\% CI). The "
-         "held-out apex at $G=8$ (0.990) overlaps $G=4$ (0.988) and $G=16$ "
-         "(0.978); overlap is descriptive, not a test, and the arms are "
-         "statistically indistinguishable. (c) Mean zero-variance fraction on "
-         "the same sweep, falling by 0.207 from $G=2$ to $G=16$. (d) "
-         "Reconstructed retention of $G=4$ relative to $G=32$ against token "
-         "budget (dashed line and open markers: reconstructed values, not "
-         "matched-budget training runs; bars are the file's conditional "
-         "reconstruction intervals). The point estimate reaches the Wu et al.\\ "
-         "0.976 retention level at 1 of 4 budgets ($T=1$M), but the equivalence "
-         "test at that margin is not passed at any budget. Sources: "
-         "paper/expected\\_results.json (a); "
-         "experiments/results/group\\_size\\_effect.tsv (b--d).",
-         "fig:groupsize", ["Group Size", "P3", "Results"]),
-        ("fig_length_bias",
-         "The post-hoc peak-then-decay rule (peak before 65\\% of logged steps "
-         "and terminal reward below $0.90\\times$ peak) on the roster and on the "
-         "controlled comparison. (a) The four of eleven roster GRPO runs that "
-         "carry the flag (single seed each; legend gives peak$\\rightarrow$"
-         "terminal reward and t/p $=$ terminal$\\div$peak; stars mark peaks). "
-         "(b)--(d) The controlled sixteen-run comparison, seed mean (line) and "
-         "min--max across seeds (band); dashed vertical line at 65\\%, dotted "
-         "horizontal line at the arm's last-10 mean. (b) Arithmetic, "
-         "Qwen2.5-0.5B, 40 steps, 5 seeds per arm: every seed peaks at 1.0 and "
-         "stays there, so the rule fires on 0 of 10 runs. (c, d) GSM8K-CoT, "
-         "Qwen2.5-1.5B-Instruct, 30 steps, 3 seeds per arm: seed peaks "
-         "(stars $=$ flagged, open circle $=$ not flagged) fall at 33--63\\% of "
-         "training and the last-10 mean (0.26 GRPO, 0.25 Dr.\\ GRPO) is far "
-         "below every peak, so the rule fires on 3 of 3 GRPO and 2 of 3 Dr.\\ "
-         "GRPO runs. Completion length falls in all sixteen runs, so the "
-         "pillar's length-bias flag (length rising while reward stays flat or "
-         "falls) is zero everywhere: the peak-then-decay rule marks noisy "
-         "reward in both algorithms, not length inflation. Flags recomputed "
-         "from the per-step logs in drgrpo\\_vs\\_grpo.json and "
-         "drgrpo\\_gsm8k\\_cot\\_full.json.",
-         "fig:lengthbias", ["Length Bias", "P4", "Results"]),
-        ("fig_scaling_null",
-         "Cross-scale behaviour of reward across the studied model range: no "
-         "reliable monotone scaling trend is recovered. (a) Twelve GRPO anchors "
-         "from 4B to 1T parameters, one seed each, listed in the key with their "
-         "number of logged steps. $\\bar R$ is the mean over a run's logged "
-         "steps of the per-step training reward (the fraction of rollouts "
-         "rewarded, on a 0--1 scale; no further normalisation). Whiskers are "
-         "$\\pm1$~SD of the per-step reward within the run, clipped to "
-         "$[0,1]$; they describe step-to-step noise, not a confidence interval. "
-         "Open markers have fewer than ten logged steps. The dashed line and "
-         "grey band are the constant model selected by AICc (pooled mean "
-         "0.641) and the $\\pm\\sigma_{\\mathrm{step}}$ noise floor (0.096). OLS "
-         "slope $+0.081\\pm0.129$ per decade ($R^2=0.038$, permutation "
-         "$p=0.54$); Spearman $\\rho(\\log_{10}N,\\bar R)=+0.149$ ($p=0.64$). "
-         "(b) OLS slope per decade of $N$ for seven summary metrics, with "
-         "95\\% CIs ($\\pm1.96$~SE) and permutation $p$ over the twelve anchors. "
-         "Each slope is in its own metric's units (reward, squared reward or "
-         "probability), so slopes are not comparable across rows; every "
-         "interval includes zero. Sources: "
-         "experiments/results/scaling\\_law\\_extended\\_frontier.tsv and "
-         "scaling\\_law\\_power\\_law.tsv.",
-         "fig:scaling", ["Scaling", "P1", "Results"]),
+        ('fig_zvf_by_library',
+         'Measured exact-tie fractions recomputed from the three stored Qwen3-8B GSM8K sampling tensors (200 prompts per seed). The 95/600 pooled count is descriptive; no synthetic variant panel, imputed AUROC or predictive validation is presented.',
+         'fig:zvflib', ['Zero-Variance', 'P2', 'Results']),
+        ('fig_group_size',
+         'Measured reward-contrast summaries and completion counts under the fixed-prompt arithmetic sweep. No reconstructed $G\\ge32$ performance grid or contaminated arithmetic accuracy comparison is shown. Stored values are unchanged.',
+         'fig:groupsize', ['Group Size', 'P3', 'Results']),
+        ('fig_length_bias',
+         'Evidence boundaries for the length-bias question. Both GSM8K caps bind; the raised-cap first-five-step means are training telemetry, not pretraining baselines. No held-out raised-cap evaluation or causal mask comparison is available.',
+         'fig:lengthbias', ['Length Bias', 'P4', 'Results']),
+        ('fig_scaling_null',
+         'Logged-horizon inventory of the twelve historical cross-scale anchors, from the retained cross-scale TSV. Five interrupted traces are excluded from scaling fits. The remaining seven are still heterogeneous single-seed records, not a controlled scaling experiment; no regression or asymptotic trend is asserted.',
+         'fig:scaling', ['Scaling', 'P1', 'Results']),
     ],
     "ch09_results_campaign.md": [
-        ("fig_lane_status",
-         "Terminal status of all fourteen E1--E14 lanes: the 2026-09-19 "
-         "ledger of record, updated with the six replacement scopes scored on "
-         "2026-09-27 (double border, $\\star$). Each cell names the suite whose scope the state "
-         "refers to, and status is carried by glyph, word, border style and "
-         "hatching as well as colour. Cells show the replacement scope where one "
-         "exists (E1 SWE-bench Multilingual, E2 CORE-Bench, E5 Tau3, E6 WebArena, "
-         "E8 LAB-Bench public, E9 MLDevBench, E10 AgentDojo benign, E13 BALROG, "
-         "E14 Omni-MATH) and the original contract otherwise; the original-contract "
-         "suites and their results (e.g.\\ E1 SWE-bench Pro $2/731$, E2 FrontierSWE, "
-         "E5 APEX-Agents, E9 MLE-bench) are shown in the campaign-design figure "
-         "(Chapter~4) and are never pooled with replacement-scope numbers. "
-         "*E14 closes terminal-complete: $2271/4428 = 51.29\\%$ with the two "
-         "unjudged rows counted as failures (official scorer: 51.31\\% over 4426 "
-         "judged rows).",
-         "fig:lanes", ["Campaign", "Results"]),
+        ('fig_lane_status',
+         'Scope-specific lane accounting, with the September 27 replacements explicitly marked as exploratory protocol-override runs. Their receipts retain evidence, but these runs did not satisfy the original prospective acceptance path. A complete coverage label does not establish complete grading, execution-source provenance or training benefit. Original contracts and replacements are never pooled.',
+         'fig:lanes', ['Campaign', 'Results']),
         ("fig_e8_categories",
          "LAB-Bench public split, per-category accuracy, all 1{,}967 questions "
          "graded across eight categories. Each bar is correct/total for one "
@@ -342,38 +183,9 @@ FIGURES: dict[str, list[tuple[str, str, list[str]]]] = {
          "assignments are those of 2026-09-19; the six lanes in the three "
          "pending leaves were all run and scored on 2026-09-27 (Chapter~8).",
          "fig:taxonomy", ["Terminal", "blocked lanes", "externally blocked"]),
-        ("fig_e4_diagnostic",
-         "The E4 rerun diagnostic. Across 100 trials agents terminate at a "
-         "median of roughly six steps without producing deliverables, and more "
-         "than a quarter end in role-token degeneration, consistent with generation "
-         "running past the end-of-turn token because the serving bridge passed no "
-         "stop sequences. The causal share of the zero reward is unidentified: "
-         "the corrected-path check changes task, path and caps together. "
-         "Left: per-trajectory step counts (\\texttt{final\\_metrics.total\\_steps}), "
-         "stacked by whether the final agent message carries at least two "
-         "concatenated role tokens (29/100; the ledger records ``27+''). Right: "
-         "where the verifier chain stopped (\\texttt{verifier/test-stdout.txt}, "
-         "\\texttt{reward.json}), all bars on one scale. Base-model rerun of "
-         "2026-09-21, all 100 trial directories under "
-         "\\texttt{outputs/e4\\_banker\\_toolbench/}. These raw trial artefacts "
-         "are absent from the reviewed checkout; the graphic preserves the "
-         "historical summary rather than a fresh receipt-level verification.",
-         "fig:e4", ["BankerToolBench", "E4", "rerun"]),
-        ("fig_replacement_results",
-         "The six replacement-scope results scored on 2026-09-27, each with its "
-         "95\\% confidence interval. (a) Rates over all attempted items, with "
-         "errors, timeouts and ungraded items counted as failures (Wilson "
-         "intervals). For E6 WebArena the filled point is the lower bound "
-         "$90/812$; the square is the rate over the 704 judged tasks and the "
-         "triangle the value if all 108 unjudged tasks had passed. (b) E13 BALROG "
-         "reports native progression, not a success rate: per-environment means "
-         "with percentile-bootstrap intervals ($B = 10{,}000$), and the BALROG "
-         "overall score, the unweighted mean of the six environment means, with "
-         "its normal-approximation interval. Each row is a different suite with "
-         "its own metric and denominator, so no cross-lane average is drawn, and "
-         "none of these values is pooled with an original-contract figure. "
-         "Source: \\texttt{outputs/finish\\_pending\\_2026-09-27/<lane>/result.json}.",
-         "fig:replacement", ["Replacement-scope lanes completed", "Replacement-scope"]),
+        ('fig_replacement_results',
+         'Exploratory protocol-override replacement outcomes recorded on 27 September 2026. Rate labels give exact numerator/denominator and one-decimal percentages; E6 counts 108 ungraded tasks as failures, so 90/812 is a lower bound. E13 is mean progression across six environment means, not a binary success fraction. These measurements do not validate the proposed fail-closed controllers.',
+         'fig:replacement', ['Replacement-scope lanes completed', 'Replacement-scope']),
     ],
     # ch10: the threats figure (fig_threats) was replaced by Table 9.1
 }
@@ -750,6 +562,9 @@ def breakable_long_tokens(master: str) -> tuple[str, int]:
             break
 
         arg = master[j + len(OPEN):k]      # inner content
+        # seqsplit is byte-oriented under pdfLaTeX; preserve other Unicode
+        # in ordinary texttt and render truncated identifiers with ASCII dots.
+        arg = arg.replace("…", "...")
         longest = max((len(t) for t in re.split(r"\s+", arg)), default=0)
         has_space = bool(re.search(r"\s", arg))
         has_math = "$" in arg
@@ -758,7 +573,7 @@ def breakable_long_tokens(master: str) -> tuple[str, int]:
         # escaped chars render wider than their source length
         longest_rendered = longest - 2 * arg.count("\\_")
 
-        if has_math:
+        if has_math or not arg.isascii():
             out.append(master[j:k + 1])
         elif longest_rendered > thr and not has_space:
             # pure long token (path/hash/URI): seqsplit breaks it anywhere
@@ -896,7 +711,10 @@ def break_bare_identifiers(master: str) -> tuple[str, int]:
 
 def main() -> int:
     EVIDENCE.clear()
-    missing_tools = [name for name in ("pandoc", "tectonic") if not shutil.which(name)]
+    engine = os.environ.get("THESIS_TEX_ENGINE") or ("tectonic" if shutil.which("tectonic") else "latexmk")
+    if engine not in {"tectonic", "latexmk"}:
+        raise ValueError("THESIS_TEX_ENGINE must be tectonic or latexmk")
+    missing_tools = [name for name in ("pandoc", engine) if not shutil.which(name)]
     if missing_tools:
         print("missing required tools: " + ", ".join(missing_tools), file=sys.stderr)
         return 1
@@ -973,7 +791,7 @@ def main() -> int:
     # IEEE-style numbered reference list, before the appendices (PES template)
     pieces.append("\n\\cleardoublepage\n\\phantomsection\n"
                   "\\addcontentsline{toc}{chapter}{References}\n"
-                  "\\bibliographystyle{IEEEtran}\n\\bibliography{references}\n")
+                  f"\\bibliographystyle{{{os.environ.get('THESIS_BIB_STYLE', 'IEEEtran')}}}\n\\bibliography{{references}}\n")
     pieces.append("\n\\appendix\n")
     for md_name, part in APPENDICES:
         emit(md_name, part)
@@ -1039,21 +857,27 @@ def main() -> int:
 
     words = len(re.sub(r"\\[a-zA-Z]+\*?(\[[^\]]*\])?(\{[^}]*\})?", " ", master).split())
     print(f"wrote {MASTER}  (~{words:,} words, {total_figs} figures injected)")
-    print("compiling with tectonic ...")
+    print(f"compiling with {engine} ...")
     try:
         # Keep output isolated from old build PDFs, on the publication filesystem.
         with tempfile.TemporaryDirectory(prefix=".thesis-", dir=os.path.dirname(PDF)) as outdir:
-            r = subprocess.run(["tectonic", "-X", "compile", MASTER,
-                                "--outdir", outdir, "--keep-logs", "--only-cached", "--untrusted"],
-                               capture_output=True, timeout=1200, cwd=HERE)
+            command = (["tectonic", "-X", "compile", MASTER, "--outdir", outdir,
+                        "--keep-logs", "--only-cached", "--untrusted"] if engine == "tectonic" else
+                       ["latexmk", "-pdf", "-interaction=nonstopmode", "-halt-on-error",
+                        "-file-line-error", "-no-shell-escape", f"-outdir={outdir}", MASTER])
+            r = subprocess.run(command, capture_output=True, timeout=1200, cwd=HERE)
             out = (r.stdout + r.stderr).decode(errors="replace")
             print("\n".join(out.strip().splitlines()[-18:]))
             log = os.path.join(outdir, "thesis_master.log")
             if os.path.isfile(log):
                 shutil.copyfile(log, os.path.join(BUILD, "thesis_master.log"))
             if r.returncode != 0:
-                print(f"tectonic failed (exit {r.returncode})", file=sys.stderr)
+                print(f"{engine} failed (exit {r.returncode})", file=sys.stderr)
                 return 1
+            for suffix in ("aux", "toc", "lot", "lof", "bbl", "blg"):
+                artifact = os.path.join(outdir, "thesis_master." + suffix)
+                if os.path.isfile(artifact):
+                    shutil.copyfile(artifact, os.path.join(BUILD, "thesis_master." + suffix))
             built = os.path.join(outdir, "thesis_master.pdf")
             if not os.path.isfile(built) or os.path.getsize(built) == 0:
                 print("no nonempty PDF produced", file=sys.stderr)
@@ -1062,7 +886,7 @@ def main() -> int:
         print(f"OK -> {PDF}  ({os.path.getsize(PDF)/1024:.0f} KB)")
         return 0
     except subprocess.TimeoutExpired:
-        print("tectonic timed out", file=sys.stderr)
+        print(f"{engine} timed out", file=sys.stderr)
         return 1
     except OSError as exc:
         print(f"thesis build failed: {exc}", file=sys.stderr)

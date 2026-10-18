@@ -89,10 +89,10 @@
 
   \node[stat, below=3mm of cap2A] (SA)
     {$\mu_g=\frac{1}{G}\sum_{i=1}^{G} r_{g,i}=0.500$\\[1.5pt]
-     $\sigma_g=\sqrt{\frac{1}{G-1}\sum_{i=1}^{G}(r_{g,i}-\mu_g)^2}=0.535$\\[1.5pt]
-     $A_{g,i}=(r_{g,i}-\mu_g)/(\sigma_g+\varepsilon)$\\[1.5pt]
-     \textcolor{black!60}{$\varepsilon=10^{-6}$; unbiased sample variance
-      ($\mathsf{ddof}=1$)}};
+     $\sigma_g=\sqrt{\frac{1}{G}\sum_{i=1}^{G}(r_{g,i}-\mu_g)^2}=0.500$\\[1.5pt]
+     $A_{g,i}=(r_{g,i}-\mu_g)/(\sigma_g+\varepsilon_A)$\\[1.5pt]
+     \textcolor{black!60}{$\varepsilon_A=10^{-6}$; population variance
+      ($\mathsf{ddof}=0$)}};
   \draw[ar] (cap2A.south) -- (SA.north);
 
   \node[verdg, below=4mm of SA] (VA)
@@ -136,8 +136,8 @@
 
   \node[stat, below=3mm of cap2B] (SB)
     {$\mu_g=\frac{1}{G}\sum_{i=1}^{G} r_{g,i}=0.000$\\[1.5pt]
-     $\sigma_g=\sqrt{\frac{1}{G-1}\sum_{i=1}^{G}(r_{g,i}-\mu_g)^2}=0.000$\\[1.5pt]
-     $A_{g,i}=(r_{g,i}-\mu_g)/(\sigma_g+\varepsilon)$\\[1.5pt]
+     $\sigma_g=\sqrt{\frac{1}{G}\sum_{i=1}^{G}(r_{g,i}-\mu_g)^2}=0.000$\\[1.5pt]
+     $A_{g,i}=(r_{g,i}-\mu_g)/(\sigma_g+\varepsilon_A)$\\[1.5pt]
      \textcolor{black!60}{every reward identical $\Rightarrow$ $\sigma_g=0$}};
   \draw[ar] (cap2B.south) -- (SB.north);
 
@@ -172,8 +172,8 @@
      \qquad\mbox{(gradient utilisation: the share of groups that carry
      within-group contrast)}$\\[3pt]
    \textcolor{black!65}{Exact ties require zero variance. The report's thresholded
-   $\mathrm{ZVF}_{\varepsilon}$ instead counts sample variance
-   $\widehat{\mathrm{Var}}\le10^{-6}$, including near-ties. They agree
+   $\mathrm{ZVF}^{(0)}_{\tau}$ instead counts population variance
+   $v_{0,g}\le\tau=10^{-6}$, including near-ties. They agree
    for these binary examples, but differ after micro-jitter.}};
 
 % ===========================================================================

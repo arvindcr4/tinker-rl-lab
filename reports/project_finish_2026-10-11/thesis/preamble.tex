@@ -14,11 +14,13 @@
 
 \usepackage{amsmath,amssymb}
 \usepackage[T1]{fontenc}
-\usepackage{newtxtext,newtxmath}   % Times, per PES front-page sample
+\usepackage{lmodern}
+\IfFileExists{newtxtext.sty}{\usepackage{newtxtext,newtxmath}}{\usepackage{mathptmx}} % Times-compatible portable fallback
 \usepackage{graphicx}
 \usepackage{array}
 \usepackage{booktabs}
 \usepackage{longtable}
+\setlength{\LTcapwidth}{\textwidth}
 \usepackage{calc}          % required by pandoc's table column-width arithmetic
 \newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
 \usepackage{xcolor}
@@ -28,7 +30,7 @@
 \hypersetup{
   pdftitle={Evaluation Review Copy - Tinker RL Lab: Post-Training of Large Language Models --- A multi-framework training harness and studies of GRPO signal starvation},
   pdfauthor={Arvind C R},
-  pdfsubject={Evaluation review copy dated 2026-10-11 of M.Tech Project Phase-2 Report, PES University},
+  pdfsubject={Source-revised evaluation draft dated 2026-10-18 of M.Tech Project Phase-2 Report, PES University},
   pdfkeywords={GRPO, RLVR, zero-variance fraction, reproducibility, telemetry, benchmark evaluation}
 }
 \usepackage{tikz}
@@ -170,6 +172,8 @@
 \newunicodechar{⁷}{\ensuremath{^{7}}}
 \newunicodechar{⁸}{\ensuremath{^{8}}}
 \newunicodechar{⁹}{\ensuremath{^{9}}}
+\newunicodechar{ᵢ}{\ensuremath{_{i}}}
+\newunicodechar{½}{\ensuremath{\frac{1}{2}}}
 \newunicodechar{₀}{\ensuremath{_{0}}}
 \newunicodechar{₁}{\ensuremath{_{1}}}
 \newunicodechar{₂}{\ensuremath{_{2}}}

@@ -110,12 +110,12 @@
 \draw[busline] (brow.west |- bus2) -- (brow.east |- bus2);
 
 \node[telb, anchor=north west] (TEL) at (brow.west |- bandtop)
-  {\footnotesize\textbf{Per-step telemetry, same schema for every framework}\\[2pt]
+  {\footnotesize\textbf{Intended telemetry schema; availability varies}\\[2pt]
    \scriptsize reward $\cdot$ ZVF $\cdot$ gradient utilisation ($1-\mathrm{ZVF}$)\\[1pt]
    \scriptsize all-correct / all-wrong counts $\cdot$ entropy $\cdot$ completion length\\[1pt]
    \scriptsize KL $\rightarrow$ JSONL, W\&B, and the raw per-group reward tensors};
 \node[stdb, anchor=north west] (STD) at ([xshift=1.03cm]TEL.north east)
-  {\footnotesize\textbf{8 studies P1--P8}\\[2pt]
+  {\footnotesize\textbf{7 core RL studies}\\[2pt]
    \scriptsize stack reported\\ with every result};
 \draw[ar] (TEL.east) -- (STD.west |- TEL.east);
 \node[lbl, fill=white, inner sep=1pt] at ($(TEL.east)!0.5!(STD.west |- TEL.east)$) {feeds};
@@ -128,7 +128,7 @@
   {Six RL frameworks, five of them in the dispatch matrix; \textbf{two executed} (Tinker, TRL).\\[1pt]
    Box outline: green solid = completed run; red = dry-run placeholder; grey dashed = not executed.\\[1pt]
    Status and reward figures: \texttt{framework\_comparison.json}, last-10 mean training reward, Qwen/Qwen3-8B.\\[1pt]
-   The two dry-run rows are launch-plan artefacts, not measurements, and are excluded from pooling.};
+   Tinker used Base; TRL used Instruct. These outcomes do not identify a framework effect. Dry-run rows are not measurements.};
 
 \end{tikzpicture}
 \end{document}

@@ -122,9 +122,27 @@ This index preserves all 64 selected questions, including non-events. W = second
 : Complete bounded-cohort index. The JSON and CSV ledgers retain full identifiers, both review labels and case-specific explanations.
 
 
+## Cross-review reconciliation and defect membership
+
+Chapter 7's cross-tabulation is computed from the 64 paired label fields in the included case ledger and the explicit defect union in `research/public_results/c1_result_summary.json`. It is not inferred from category marginals. All selected indices 0–63 occur once. The four subsets below are mutually disjoint, sum to 22 and match the explicit union; each member's identifiers and scientific hashes match the case ledger. [S2, S4]
+
+| Corroborated defect subset | Cases | Selected IDs |
+|---|---:|---|
+| Wrong final value under stated/ordinary model | 15 | C06, C11, C12, C13, C15, C17, C18, C22, C26, C30, C33, C35, C53, C54, C57 |
+| Inconsistent discrete premises and erroneous reference relation | 2 | C09, C51 |
+| Correct final with corroborated explanation defect | 3 | C28, C38, C45 |
+| Material ambiguity with explicit reference fault | 2 | C42, C50 |
+| Disjoint union | 22 | All four rows above |
+
+: Specified reference defects among the selected 64; only the first row counts wrong final values. The final two rows concern explanation/reference faults without changing the recorded scalar endpoint.
+
+C02 coins is first-review ambiguous and second-review W; it is excluded from the corroborated wrong-final subset because the requested gross-versus-net quantity remains disputed. C55 Sonia/Joss is first-review ambiguous and second-review R; its notation defect was identified only in the second review and is excluded from the corroborated explanation-defect subset. C34 and C49 move from disputed to materially ambiguous and do not enter the wrong-final subset. For C42 fish, the explicit expression 200 × 0.55 = 100 is incorrect; for C50 marbles, the reference's ownership/net-loss inference is defective. Both final targets remain ambiguous.
+
+The thirteen retained disagreement flags are C02, C05, C08, C14, C16, C20, C25, C29, C34, C43, C49, C55 and C58. Different category names across the two taxonomies are not automatically disagreement flags. This reconciliation is assistant-assisted annotation accounting, not independent human verification or an estimate of benchmark-wide reference error.
+
 ## Public evidence availability
 
-The included case ledger preserves all sixty-four classifications, all eleven parser-defined events, scientific hashes and review disagreements. The following key resolves the scientific source labels used in Chapters 4 and 7. The companion `c1_reference_bindings.json` records checksums for S1-S9; their underlying payloads are not included. S10 identifies the excluded historical smoke record; S12 and S13 identify reported scientific sources. Their exact checksum bindings and payloads are unavailable in this package. Their settings in Chapter 4 are therefore reported provenance, not a fresh verification of those source bytes.
+The included case ledger preserves all sixty-four classifications, all eleven parser-defined events, scientific hashes and review disagreements. The included derived public result summary additionally identifies the four corroborated-defect subsets and their union; it is a published summary, not the full original S2 payload. The following key resolves the scientific source labels used in Chapters 4 and 7. The companion `c1_reference_bindings.json` records checksums for S1-S9; their underlying payloads are not included. S10 identifies the excluded historical smoke record; S12 and S13 identify reported scientific sources. Their exact checksum bindings and payloads are unavailable in this package. Their settings in Chapter 4 are therefore reported provenance, not a fresh verification of those source bytes.
 
 | Label | Scientific source | Included evidence |
 |---|---|---|
@@ -141,6 +159,6 @@ The included case ledger preserves all sixty-four classifications, all eleven pa
 | S12 | Reported generation configuration | Identifier and reported settings only; exact checksum unavailable |
 | S13 | Reported scientific manifest | Identifier and reported settings only; exact checksum unavailable |
 
-: C1 scientific source key. A checksum binds an identified source; it does not supply its contents or verify model execution. S10 does not contribute to the primary endpoint; S11 is not cited in this derivative.
+: C1 scientific source key. A checksum binds an identified source; it does not supply its contents or verify model execution. S6 and S7 are binding/coverage records: they are defined here but do not add outcome counts, so the Chapter 7 result paragraphs cite the directly relevant S1–S5 and S8–S9 instead. S10 does not contribute to the primary endpoint; S11 is not cited in this derivative.
 
 Operational closeout records, runtime/session identifiers, raw archive transfer bindings and allocation details are excluded. The case ledger is sufficient to inspect the reported classifications and disagreements, but not to independently regrade all original completions.

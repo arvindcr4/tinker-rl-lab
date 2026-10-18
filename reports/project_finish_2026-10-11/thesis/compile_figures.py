@@ -32,8 +32,11 @@ def compile_one(name: str, force: bool = False) -> tuple[str, bool, str]:
         return name, True, "cached"
     try:
         with tempfile.TemporaryDirectory(prefix=f".{name}-", dir=FIGDIR) as outdir:
+            engine = os.environ.get("THESIS_TEX_ENGINE") or ("tectonic" if shutil.which("tectonic") else "latexmk")
+            command = (["tectonic", "-X", "compile", tex, "--outdir", outdir, "--only-cached", "--untrusted"] if engine == "tectonic" else
+                       ["latexmk", "-pdf", "-interaction=nonstopmode", "-halt-on-error", "-no-shell-escape", f"-outdir={outdir}", tex])
             r = subprocess.run(
-                ["tectonic", "-X", "compile", tex, "--outdir", outdir],
+                command,
                 capture_output=True, timeout=600, cwd=FIGDIR,
             )
             built = os.path.join(outdir, name + ".pdf")
@@ -63,8 +66,8 @@ def main() -> int:
     args = ap.parse_args()
     if args.j < 1:
         ap.error("-j must be at least 1")
-    if not shutil.which("tectonic"):
-        print("missing required tool: tectonic", file=sys.stderr)
+    if not (shutil.which("tectonic") or shutil.which("latexmk")):
+        print("missing required tool: tectonic or latexmk", file=sys.stderr)
         return 1
 
     if not os.path.isdir(FIGDIR):

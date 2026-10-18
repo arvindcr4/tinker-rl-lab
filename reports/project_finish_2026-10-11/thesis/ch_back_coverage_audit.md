@@ -8,7 +8,7 @@ A scientific execution, a logging record, a training identity, a checkpoint revi
 
 Provider inventory work used bounded pagination, immutable revisions where available, explicit source joins and missing-field handling. An inventory match establishes recorded identity within the inspected scope, not successful training, benchmark correctness or availability of all historical weights. Unavailable or inaccessible records, unresolved joins, unproven consumer-list exhaustion and missing history remain limitations. Account-wide counts and exact operational identities are omitted.
 
-The editable sources and selected scientific case ledgers in this package can rebuild the public document. They cannot reproduce every experiment. The source-reference map is a map of reported scientific sources, including references whose original payloads are retained outside this public package. The public availability manifest is the authority on which files are actually included.
+The editable sources and selected scientific case ledgers in this package can rebuild the public document. They cannot reproduce every experiment. The source-reference map is a map of reported scientific sources, including references whose original payloads are retained outside this public package. The older public availability manifest describes its historical package. The 18 October revision package has a fresh source-file integrity manifest, which is the authority for that delivery’s membership; neither manifest authenticates experimental execution.
 
 ## I.2 Bounded checkpoint and provider evidence
 
@@ -71,13 +71,13 @@ The manifests specify thirty optimizer steps. P11 therefore does not satisfy the
 
 ## I.4 Recovered campaign evidence
 
-Six unchanged original files resolved five named primary-file gaps in the retained-source audit. Their private filesystem and export metadata are not included here. The scientific availability result is narrower than validation of every claim: LAB-Bench records 450 correct of 1,967; AgentDojo records 88 utility passes across 97 benign episodes, with security evaluation false and no held-out claim. The recovered training-identity note explicitly disclaims content decontamination and does not provide the dirty source diff.
+Six unchanged original files resolved five named author-side recovery gaps; their absence from the public package remains a reproducibility limitation. Their private filesystem and export metadata are not included here. The scientific availability result is narrower than validation of every claim: LAB-Bench records 450 correct of 1,967; AgentDojo records 88 utility passes across 97 benign episodes, with security evaluation false and no held-out claim. The recovered training-identity note explicitly disclaims content decontamination and does not provide the dirty source diff.
 
 Bounded stored-payload checks cover 29 explicit file-reference records across 27 targets, 1,979 E8 archive/local bindings and 525 E10 archive-member bindings. The selected 1,967 E8 grades and 97 E10 traces reproduce the stored success counts of 450 and 88. E8's 1,259 unparsed-answer total remains diagnostic-supported rather than independently recalculated from the reduced grade rows. These are structural, hash and tally checks, not model execution, scorer reruns or independent semantic grading.
 
-For E14, the source-side record contains 4,428 dispositions, 4,426 accepted judged rows and 2,271 successes. The official judged-row score is 2,271/4,426 = 51.31%; the all-disposition diagnostic is 2,271/4,428 = 51.29%, counting two missing-verdict rows as failures. The recovered terminal note incorrectly associates the official decimal with the full denominator. The erratum remains explicit, the original source is unchanged, and strict-contract score is not inferred from terminal closure.
+For E14, the canonical all-disposition result is 2,271/4,428 (51.29%). Section 8.2 explains the denominator-label erratum; no source bytes or judgments are changed. The omitted full payload still prevents a fresh public-package recount or independent semantic grading.
 
-The recovered finish-era chronology precedes the later E4 rerun and cannot verify that later execution. The later one-hundred-trial zero-reward account remains a separate reported result with raw-trajectory limits. Original training-log payloads, the dirty source diff and content-level decontamination remain unresolved.
+The recovered finish-era chronology says the E4 full rerun had not launched at its September 21 snapshot, while the later secondary summary dates the claimed execution to that day. Their ordering is not established. With no primary job receipt or exact launch timestamp, the full-rerun outcome and trajectory counts are excluded as empirical evidence. Original training-log payloads, the dirty source diff and content-level decontamination also remain unresolved.
 
 ## I.5 Preserved C1 result and residual limits
 

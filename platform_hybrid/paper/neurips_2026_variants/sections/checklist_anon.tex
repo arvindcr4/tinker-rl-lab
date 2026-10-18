@@ -27,9 +27,10 @@
     with an explicit evidence tier (A/B/C) and map it to a row of
     Table~\ref{tab:claims-tier} (claims hierarchy with evidence tier and
     artifact availability) and Table~\ref{tab:artifact-card} (per-stack
-    auditability matrix). \textbf{(A-grade, multi-seed inferential)}: the
-    mechanical $\mathrm{ZVF}{=}p^{G}{+}(1{-}p)^{G}$ identity for
-    binary-reward GRPO. A later, separate five-seed Qwen3-8B GSM8K
+    auditability matrix). \textbf{(Theory, not an empirical evidence grade)}: the
+    expected exact-tie fraction $\mathbb E[\widehat{\mathrm{ZVF}}]{=}p^{G}{+}(1{-}p)^{G}$
+    for conditionally i.i.d.\ binary rewards at a fixed prompt success probability $p$.
+    This is not an identity for an observed finite batch or a total-gradient claim. A later, separate five-seed Qwen3-8B GSM8K
     comparison is future-paper evidence: its $+1.3$pp result has
     $p{=}0.26$ from a one-sample seed-level test against a fixed baseline,
     not a paired-seed or reviewed-record test. \textbf{(B-grade,
@@ -72,9 +73,9 @@
             quantisation-aware training are not evaluated
             (Section~\ref{sec:limitations}).
       \item \textbf{Train-set reward metric.} Primary Tinker metrics are
-            training rewards, not held-out accuracy.  The headline held-out
-            control is Qwen3-8B on GSM8K (Section~\ref{sec:limitations});
-            broader held-out evaluation is incomplete and disclosed as such.
+            training rewards, not held-out accuracy.  The later Qwen3-8B GSM8K comparison is separate future-paper
+            evidence, not a reviewed-record held-out control
+            (Section~\ref{sec:limitations}); held-out evaluation remains incomplete.
       \item \textbf{Proxy metrics in place of direct KL.}
             the proxy-metrics discussion in the appendix discusses the limits of
             trajectory-based stability indices as substitutes for direct
@@ -148,32 +149,14 @@
     \item Does the paper provide open access to the data and code, with
           sufficient instructions to faithfully reproduce the main
           experimental results, as described above?
-    \answerYes{All code is publicly released under the
-    \textbf{Apache License~2.0} at
-    \url{https://anonymous.4open.science/r/agentic-grpo-bench-anon-2C6B}
-    (camera-ready: GitHub mirror to be linked from the same anonymous URL).
-    LoRA adapter checkpoints from the successful Modal experiments are on
-    HuggingFace Hub and released alongside the anonymous repository at
-    \url{https://anonymous.4open.science/r/agentic-grpo-bench-anon-2C6B} with model
-    cards generated from \texttt{huggingface/MODEL\_CARD\_TEMPLATE.md}.
-    Logged artifacts are released at three explicitly named levels of
-    granularity, mirroring Section~\ref{sec:reproducibility}:
-    (i)~\emph{precomputed ZVF/GU traces} (per-step ZVF, GU, mean reward,
-    group-size metadata) for every reported run, including all Tinker
-    rows, in the anonymous repository;
-    (ii)~\emph{step-level aggregate logs} (per-step reward, loss,
-    gradient-norm, and---where the backend exposes it---KL) for every
-    reported run, released alongside the anonymous repository at
-    \url{https://anonymous.4open.science/r/agentic-grpo-bench-anon-2C6B};
-    (iii)~\emph{raw per-group rollout JSONL} (per-prompt completions and
-    per-completion rewards) for the Tier-A open-stack rows
-    (Appendix~\ref{sec:run-manifest}) and a subset of Tinker GSM8K rows;
-    raw JSONL is \emph{not} bundled for every Tinker frontier or
-    tool-use run, and those cases are flagged in the manifest.
-    Training datasets (GSM8K, HumanEval, NoRobots, synthetic tool-use)
-    are public and cited in Table~\ref{tab:tasks}.  Tinker API
-    credentials are \emph{not} included for security reasons;
-    \texttt{README.md} explains how to obtain a Tinker API key.}
+    \answerPartial{The manuscript names a source repository and artifact locations,
+    but an advertised URL is not verification that every scientific payload is
+    available. The run manifest distinguishes retained aggregate traces from
+    missing raw per-group logs, and the historical cohort census remains unresolved.
+    Execution-source identity, complete per-run artifacts, and independent replay
+    are not established for every row. The release therefore supports source
+    inspection and selected arithmetic checks, not a blanket end-to-end
+    reproducibility claim. Credentials are excluded.}
     \end{enumerate}
 
 % -- 6. Experimental setting ---------------------------------------------------
@@ -191,8 +174,10 @@
     YAML configurations are version-controlled under
     \texttt{atropos/configs/}.  GSM8K uses the standard
     train/test partitions; HumanEval uses the full pass@1 suite.
-    Tinker hyperparameters are released as API call scripts; the only
-    unavailable information is the Tinker platform's internal hardware.}
+    Tinker API call scripts describe requested settings, but do not establish
+    executed-source identity, backend loss semantics, or hardware. The reviewed
+    cohort census and some task/source bindings remain unresolved; missing
+    declarations are not supplied by current scripts.}
     \end{enumerate}
 
 % -- 7. Statistical significance -----------------------------------------------
@@ -201,24 +186,16 @@
     \item Does the paper report error bars suitably and correctly
           defined or other appropriate information about the statistical
           significance of the experiments?
-    \answerPartial{For Tier-A open-stack rows
-    (Appendix~\ref{sec:run-manifest})---the
-    CleanRL/SB3/Tianshou/Qwen2.5-0.5B classic-RL arms, the 12 Tinker
-    Qwen3-8B Wave-6 group-size cells (1 seed/cell, 30 steps max), and
-    the 4 Llama-3.3-70B-Inst rows---we
-    report mean $\pm$ SE with 95\,\% bootstrap confidence intervals via
-    \texttt{rliable}~\cite{agarwal2021deep}; power-analysis details are in the appendix.  The TRL-GRPO reference characterisation
-    (Qwen2.5-0.5B, 5~seeds) reports $\bar{x}=0.734$,
-    $\sigma=0.0703$, IQM $=0.747$, bootstrap 95\,\% CI $[0.672, 0.782]$.
-    Tier-B Tinker frontier and single-seed Modal H100 Llama-3.2/Qwen3-8B
-    GSM8K rows are reported descriptively (cost-constrained), as
-    explicitly labelled in Sections~\ref{sec:main_results}
-    and~\ref{sec:limitations}; no statistical significance is claimed
-    for those single-seed rows.  We follow the recommendations of
-    \citet{colas2019hitchhiker} and \citet{jordan2024benchmarking} on
-    the limits of single-seed evaluation.  Because a meaningful subset
-    of headline results is Tier-B Tinker, the honest answer is
-    \emph{Partial}.}
+    \answerPartial{Completed multi-seed cells are classified as Tier A only
+    by replication metadata; inferential eligibility additionally requires matched
+    task, source, metric, and seed identities. The 12 Qwen3-8B Wave-6 configurations
+    have one seed each and are Tier B, not 12 independent replications of a treatment.
+    Step-level rewards are dependent telemetry, so step-level bootstrap intervals
+    cannot establish seed-level uncertainty. The historical task binding of the
+    classic-RL rows and eligibility of some replicated Tinker rows remain unresolved.
+    Those rows and the single-seed case studies support descriptive summaries only
+    until their evidence contracts are complete. The later five-seed GSM8K test
+    against a fixed baseline is separate future-paper evidence.}
     \end{enumerate}
 
 % -- 8. Compute resources ------------------------------------------------------

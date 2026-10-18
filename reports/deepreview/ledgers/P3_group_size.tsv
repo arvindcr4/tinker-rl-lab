@@ -1,1 +1,11 @@
 location	claim_text	value	source_artifact	generator_script	status
+sec:p3-utility-audit	505 tasks = mixed groups of 3 base-model GSM8K evals; mean p_x	505; 0.674	platform_hybrid/experiments/results/review_2026-10-18/P3_group_size/utility_audit.json	tools/review_ledger/P3_group_size_audit.py	recomputed
+sec:p3-utility-audit	U(4), U(5), diff, bootstrap CI	0.32914, 0.32737, 0.00177, [0.00082,0.00270] (re-run [0.00085,0.00273])	platform_hybrid/experiments/results/review_2026-10-18/P3_group_size/utility_audit.json	tools/review_ledger/P3_group_size_audit.py	recomputed
+sec:p3-utility-audit	Y32-Y4 by stratum (n)	+0.29 (62), +0.15 (157), +0.45 (286)	platform_hybrid/experiments/results/review_2026-10-18/P3_group_size/utility_audit.json	tools/review_ledger/P3_group_size_audit.py	recomputed
+tab:groupsize-zvf-theory	residual measured minus closed form at training p_t	+0.010..+0.109	platform_hybrid/experiments/results/group_size_review_1ed8_zvf_theory.tsv	platform_modal/scripts/group_size_review_1ed8_audit.py	verified
+tab:groupsize-iter27-synthesis	paired TOST p (nu=2) G4/G8/G16	0.012/0.043/0.056	platform_hybrid/experiments/results/group_size_review_1ed8_tost.tsv	platform_modal/scripts/group_size_review_1ed8_audit.py	verified
+tab:groupsize-isocompute	iso-compute held-out, last-10, ZVF, closed form (10 arms)	0.598/0.612/0.599/0.597/0.580 ...	platform_hybrid/experiments/results/p3_isocompute_summary.tsv	platform_colab/p3_isocompute_analyze.py	verified
+tab:groupsize-w2-passk	Qwen3-8B pass@1/8/32 base and G=2,4,16,32	0.266-0.306 ... 0.915	platform_hybrid/experiments/results/w2_groupsize_passk_wandb_export.tsv		verified
+critic_degeneracy H5	RQS fit on 7 model anchors	-0.082 + 1.282 RQS, R2=0.490	platform_hybrid/experiments/results/berkeley/eureka_rqs_per_anchor.tsv		recomputed
+_shared_methods tab:power-analysis	power n=5 vs 15 column	0.066..0.955 (reviewer refuted)		statsmodels TTestIndPower(nobs1=5, ratio=3)	recomputed
+removed sections	FALLBACK_ROWS G x T grid and all fits/CIs/tables/figures on it	removed		experiments/group_size_token_normalized.py (FALLBACK_ROWS)	removed

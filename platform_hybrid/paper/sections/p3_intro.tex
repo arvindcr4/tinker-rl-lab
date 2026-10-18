@@ -1,7 +1,7 @@
 % Pillar-3 (group size) standalone introduction + related work
 \section{Introduction}
 \label{sec:p3-intro}
-GRPO~\citep{shao2024deepseekmath, guo2025deepseekr1} estimates advantages by
+GRPO~\citep{guo2025deepseekr1, shao2024deepseekmath} estimates advantages by
 sampling a group of $G$ completions per prompt and centering their rewards. The
 group size $G$ thus plays two roles at once: it is a variance-reduction knob, like
 a Monte-Carlo baseline, and it is a preference-density knob, controlling how many
@@ -44,7 +44,7 @@ come from runs whose logs are released.
 \subsection{Related Work}
 \label{sec:p3-related}
 Group-relative and critic-free RL objectives have proliferated around
-GRPO~\citep{shao2024deepseekmath, ahmadian2024backtobasics, lin2025cppo, gift2025},
+GRPO~\citep{ahmadian2024backtobasics, lin2025cppo, shao2024deepseekmath, gift2025},
 and how each normalizes advantages determines what $G$ can change. RLOO~\citep{ahmadian2024backtobasics}
 uses a leave-one-out baseline without per-group whitening---the baseline structure
 our leave-one-out decomposition of the GRPO update later builds on---whereas

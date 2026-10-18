@@ -80,7 +80,7 @@ every group, and a positive mean is guaranteed whenever any group is mixed
 (84.2\% are; Table~\ref{tab:main}). Under the exact i.i.d.\ Bernoulli null
 with $G=8$ the expected value is
 $\sum_{k=0}^G \binom{G}{k}\bar p^k(1-\bar p)^{G-k}\,[h_G(k/G)-\mathbf{1}\{k\in\{0,G\}\}]
-\simeq+0.105$ at $\bar p=0.694$ ($+0.108$ under the fitted beta-binomial).
+\simeq+0.105$ at $\bar p=0.694$ ($+0.107$ under the fitted beta-binomial).
 The empirical plug-in mean is $0.2807$, minus observed ZVF $0.1583$, giving
 $+0.1224$. Simulating 600 independent groups gives 95\% sampling bands for the
 mean of $[0.095,0.114]$ under the homogeneous binomial and $[0.097,0.118]$
@@ -111,7 +111,7 @@ logs of 12 GRPO runs (Qwen2.5-0.5B \citep{qwen2024qwen25}, synthetic arithmetic,
 40 steps, 3 seeds per $G$); the same value is recovered from the per-run
 JSON step logs under
 \nolinkurl{experiments/results/modal_registry/modal_artifacts/tinkerrl-results/groupsize_zvf/}.
-The earlier $-0.0703$ (459 steps) is withdrawn: its subset/weighting provenance
+The earlier $-0.0703$ is withdrawn: its subset/weighting provenance
 is not reconciled. Run metadata record $B_t=16$ prompts per step, but the logs
 store only the step-mean reward and step ZVF, not per-group success counts, so
 neither a finite-sample null nor a causal dependence mechanism is identified.
@@ -142,7 +142,7 @@ Beta-binomial fit ($a{=}3.61$, $b{=}1.62$; ICC $0.160$) & 0.170 \\
 Observed counts for $k=0,\ldots,8$ & 19,13,16,33,66,91,141,145,76 \\
 All-fail / all-success groups: observed & 19 / 76 \\
 \quad expected under fitted beta-binomial & 4.2 / 98.1 \\
-LR $G^2$ of $k$-histogram vs.\ Binomial$(8,\bar p)$ & 341.3 (df $=7$) \\
+LR deviance $D$ of $k$-histogram vs.\ Binomial$(8,\bar p)$ & 341.3 (df $=7$) \\
 Pearson $\chi^2$ vs.\ fitted beta-binomial & 82.2 (df $=6$) \\
 \bottomrule
 \end{tabular}
@@ -156,12 +156,12 @@ in-sample total-only match produced by offsetting errors: the fit
 under-predicts all-fail groups ($4.2$ vs.\ $19$) and over-predicts all-success
 groups ($98.1$ vs.\ $76$), and the $k=0$ cell alone contributes $53.0$ of the
 Pearson $\chi^2=82.2$ (df $6$, $p\approx10^{-15}$; likelihood-ratio
-$G^2=59.0$, $p\approx10^{-10}$). The fitted beta-binomial is therefore rejected;
+deviance $D=59.0$, $p\approx10^{-10}$). The fitted beta-binomial is therefore rejected;
 it is a descriptive overdispersion summary, not held-out prediction or mechanism
 identification. Overdispersion relative to a single binomial is not in doubt:
 the variance of $k$ is $2.2\times$ the binomial value. The unpooled Pearson
 statistic against Binomial$(8,\bar p)$ is not used because two expected cells
-are below 1 ($0.046$ and $0.83$ at $k=0,1$); the likelihood-ratio $G^2=341.3$
+are below 1 ($0.046$ and $0.83$ at $k=0,1$); the likelihood-ratio deviance $D=341.3$
 exceeds every value in $20{,}000$ parametric-bootstrap replicates
 ($p<10^{-4}$), and pooling $k\le2$ (expected $7.5$) gives Pearson
 $\chi^2=323.8$ (df $5$).
@@ -226,8 +226,10 @@ That output includes the beta-binomial expected counts and the Pearson
 statistic against the fitted beta-binomial. The likelihood-ratio statistics,
 pooled test, parametric bootstrap, simulated null bands and repeated-problem
 statistics are computed from the same three JSON files, and the arithmetic
-cross-check from the per-run step logs, by a short
-supplementary script that is not yet in the repository.
+cross-check from the per-run step logs, by
+\nolinkurl{tools/review_ledger/P2_zvf_falsification_note_audit.py} (fixed
+bootstrap seed), which writes
+\nolinkurl{platform_hybrid/experiments/results/review_2026-10-18/P2_zvf_falsification_note/audit.json}.
 No held-out prediction experiment or immutable archive is supplied here.
 
 \bibliographystyle{plainnat}

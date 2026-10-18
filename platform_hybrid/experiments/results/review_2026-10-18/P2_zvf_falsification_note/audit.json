@@ -1,0 +1,225 @@
+{
+  "run_metadata": {
+    "42": {
+      "model": "Qwen/Qwen3-8B",
+      "n_problems": 200,
+      "group_size": 8,
+      "temperature": 1.0,
+      "seed": 42
+    },
+    "123": {
+      "model": "Qwen/Qwen3-8B",
+      "n_problems": 200,
+      "group_size": 8,
+      "temperature": 1.0,
+      "seed": 123
+    },
+    "456": {
+      "model": "Qwen/Qwen3-8B",
+      "n_problems": 200,
+      "group_size": 8,
+      "temperature": 1.0,
+      "seed": 456
+    }
+  },
+  "gsm8k": {
+    "n": 600,
+    "pbar": 0.6941666666666667,
+    "zvf_obs": 0.15833333333333333,
+    "zvf_per_seed": [
+      0.13,
+      0.19,
+      0.155
+    ],
+    "h_pbar": 0.053991592048103845,
+    "ratio": 2.932555372552566,
+    "plugin_mean": 0.2807692643006643,
+    "plugin_delta": 0.12243593096733096,
+    "pooled_residual": -0.10434174128522948,
+    "mixed_share": 0.8416666666666667,
+    "k_hist": [
+      19,
+      13,
+      16,
+      33,
+      66,
+      91,
+      141,
+      145,
+      76
+    ]
+  },
+  "fit": {
+    "a": 3.6087020360831312,
+    "b": 1.6228195451789909,
+    "mean_ab": 0.6897997035907324,
+    "icc": 0.16047445025416435,
+    "zvf_bb": 0.17039209302542194,
+    "expected_bb": [
+      4.157583784705787,
+      13.919791307651728,
+      29.455321034983424,
+      49.88996542496879,
+      73.29683831993152,
+      96.51145540299898,
+      114.66736781559669,
+      120.02400487861527,
+      98.07767203054738
+    ],
+    "expected_bin": [
+      0.04592295185151973,
+      0.8338707115491218,
+      6.6243870831647556,
+      30.071468339380075,
+      85.3185733198351,
+      154.92179090010387,
+      175.81723681169845,
+      114.01771760540666,
+      32.349032277010785
+    ],
+    "pearson_bb": 82.16743720603283,
+    "pearson_bb_k0": 52.986862205500444,
+    "df_bb": 6,
+    "p_pearson_bb": 1.2735355890543745e-15,
+    "g2_bb": 58.966567910471376,
+    "p_g2_bb": 7.296810977336451e-11,
+    "g2_bin": 341.3062262008438,
+    "df_bin": 7,
+    "pooled_le2_expected": 7.504180746565397,
+    "pearson_pooled": 323.78236173700697,
+    "df_pooled": 5,
+    "bootstrap_reps": 20000,
+    "bootstrap_exceed": 0,
+    "var_ratio": 2.2043302334557806,
+    "null_plugin_hom": 0.10462948186742724,
+    "null_plugin_bb": 0.10748931682430042
+  },
+  "plugin_null_bands": {
+    "binomial": [
+      0.09499548462033272,
+      0.11449174772699673
+    ],
+    "betabinomial": [
+      0.09693592349688213,
+      0.11820501586298147
+    ]
+  },
+  "repeats": {
+    "distinct": 503,
+    "in_two": 85,
+    "in_three": 6,
+    "pairs": 103,
+    "pearson_r": 0.6520502913806719
+  },
+  "arithmetic": {
+    "tsv_rows": 480,
+    "tsv_mean": -0.06679791666666667,
+    "per_G": {
+      "2": -0.009680833333333333,
+      "4": -0.054855,
+      "8": -0.09372833333333333,
+      "16": -0.1089275
+    },
+    "raw_runs": 12,
+    "raw_steps": 480,
+    "raw_mean": -0.06679613476968818,
+    "run_metadata": {
+      "G16_s123.json": {
+        "model": "Qwen/Qwen2.5-0.5B",
+        "task": "arithmetic_correctness",
+        "group_size": 16,
+        "seed": 123,
+        "n_steps": 40,
+        "n_prompts": 16
+      },
+      "G16_s42.json": {
+        "model": "Qwen/Qwen2.5-0.5B",
+        "task": "arithmetic_correctness",
+        "group_size": 16,
+        "seed": 42,
+        "n_steps": 40,
+        "n_prompts": 16
+      },
+      "G16_s456.json": {
+        "model": "Qwen/Qwen2.5-0.5B",
+        "task": "arithmetic_correctness",
+        "group_size": 16,
+        "seed": 456,
+        "n_steps": 40,
+        "n_prompts": 16
+      },
+      "G2_s123.json": {
+        "model": "Qwen/Qwen2.5-0.5B",
+        "task": "arithmetic_correctness",
+        "group_size": 2,
+        "seed": 123,
+        "n_steps": 40,
+        "n_prompts": 16
+      },
+      "G2_s42.json": {
+        "model": "Qwen/Qwen2.5-0.5B",
+        "task": "arithmetic_correctness",
+        "group_size": 2,
+        "seed": 42,
+        "n_steps": 40,
+        "n_prompts": 16
+      },
+      "G2_s456.json": {
+        "model": "Qwen/Qwen2.5-0.5B",
+        "task": "arithmetic_correctness",
+        "group_size": 2,
+        "seed": 456,
+        "n_steps": 40,
+        "n_prompts": 16
+      },
+      "G4_s123.json": {
+        "model": "Qwen/Qwen2.5-0.5B",
+        "task": "arithmetic_correctness",
+        "group_size": 4,
+        "seed": 123,
+        "n_steps": 40,
+        "n_prompts": 16
+      },
+      "G4_s42.json": {
+        "model": "Qwen/Qwen2.5-0.5B",
+        "task": "arithmetic_correctness",
+        "group_size": 4,
+        "seed": 42,
+        "n_steps": 40,
+        "n_prompts": 16
+      },
+      "G4_s456.json": {
+        "model": "Qwen/Qwen2.5-0.5B",
+        "task": "arithmetic_correctness",
+        "group_size": 4,
+        "seed": 456,
+        "n_steps": 40,
+        "n_prompts": 16
+      },
+      "G8_s123.json": {
+        "model": "Qwen/Qwen2.5-0.5B",
+        "task": "arithmetic_correctness",
+        "group_size": 8,
+        "seed": 123,
+        "n_steps": 40,
+        "n_prompts": 16
+      },
+      "G8_s42.json": {
+        "model": "Qwen/Qwen2.5-0.5B",
+        "task": "arithmetic_correctness",
+        "group_size": 8,
+        "seed": 42,
+        "n_steps": 40,
+        "n_prompts": 16
+      },
+      "G8_s456.json": {
+        "model": "Qwen/Qwen2.5-0.5B",
+        "task": "arithmetic_correctness",
+        "group_size": 8,
+        "seed": 456,
+        "n_steps": 40,
+        "n_prompts": 16
+      }
+    }
+  }
+}

@@ -14,13 +14,17 @@ Usage:
 import argparse
 import importlib
 import json
-import os
 import random
 import sys
 import time
 import warnings
 from datetime import datetime
 from pathlib import Path
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    import tinker
+    import wandb
 
 import yaml
 
@@ -341,6 +345,42 @@ def log_checkpoint_wandb(run, step: int, ckpt_path: str):
 
 # ── HuggingFace Hub Upload ────────────────────────────────────────────────
 
+MAX_CHECKPOINT_MEMBERS = 10000
+MAX_CHECKPOINT_BYTES = 8 * 1024**3
+
+
+def extract_checkpoint_archive(archive_path: Path, destination: Path) -> None:
+    """Validate the complete bounded inventory before extracting only regular data."""
+    import tarfile
+    from pathlib import PurePosixPath
+
+    members = []
+    names = set()
+    total = 0
+    with tarfile.open(archive_path, "r:*") as archive:
+        for member in archive:
+            if len(members) >= MAX_CHECKPOINT_MEMBERS:
+                raise ValueError("checkpoint archive member limit exceeded")
+            name = PurePosixPath(member.name)
+            if (name.is_absolute() or ".." in name.parts or "\\" in member.name or
+                ":" in member.name or not member.name or not (member.isfile() or member.isdir()) or
+                member.issparse()):
+                raise ValueError("unsafe checkpoint archive member")
+            normalized = str(name)
+            if normalized in names:
+                raise ValueError("duplicate checkpoint archive member")
+            names.add(normalized)
+            if member.size < 0:
+                raise ValueError("invalid checkpoint member size")
+            total += member.size
+            if total > MAX_CHECKPOINT_BYTES:
+                raise ValueError("checkpoint archive byte limit exceeded")
+            members.append(member)
+        if not any(member.isfile() for member in members):
+            raise ValueError("checkpoint archive contains no files")
+        archive.extractall(path=destination, members=members, filter="data")
+
+
 def upload_to_hub(
     cfg: dict,
     env_name: str,
@@ -356,8 +396,6 @@ def upload_to_hub(
         print("\nHF upload disabled in config.")
         return None
 
-    import shutil
-    import tarfile
     import tempfile
     import urllib.request
 
@@ -374,48 +412,38 @@ def upload_to_hub(
 
     api = HfApi()
 
-    # Create repo if needed
-    api.create_repo(repo_id=repo_id, private=private, exist_ok=True)
+    # A fresh private directory owns every file removed by this invocation.
+    with tempfile.TemporaryDirectory(prefix="skyrl-hf-upload-") as staging:
+        local_dir = Path(staging) / "payload"
+        local_dir.mkdir(mode=0o700)
 
-    # Download weights from Tinker via signed archive URL
-    local_dir = Path(f"/tmp/skyrl-hf-upload/{repo_id.replace('/', '_')}")
-    if local_dir.exists():
-        shutil.rmtree(local_dir)
-    local_dir.mkdir(parents=True, exist_ok=True)
+        print(f"  Downloading weights from Tinker: {final_ckpt_path}")
+        rc = svc.create_rest_client()
+        archive_resp = rc.get_checkpoint_archive_url_from_tinker_path(final_ckpt_path).result()
+        archive_url = archive_resp.url
 
-    print(f"  Downloading weights from Tinker: {final_ckpt_path}")
-    rc = svc.create_rest_client()
-    archive_resp = rc.get_checkpoint_archive_url_from_tinker_path(final_ckpt_path).result()
-    archive_url = archive_resp.url
+        # Download and extract
+        archive_path = Path(staging) / "checkpoint.tar.gz"
+        urllib.request.urlretrieve(archive_url, str(archive_path))
+        print(f"  Downloaded archive: {archive_path.stat().st_size / 1024 / 1024:.1f} MB")
 
-    # Download and extract
-    archive_path = local_dir / "checkpoint.tar.gz"
-    urllib.request.urlretrieve(archive_url, str(archive_path))
-    print(f"  Downloaded archive: {archive_path.stat().st_size / 1024 / 1024:.1f} MB")
+        extract_checkpoint_archive(archive_path, local_dir)
+        archive_path.unlink()
+        print(f"  Extracted weights to: {local_dir}")
 
-    # Auto-detect archive format (Tinker may return .tar or .tar.gz)
-    try:
-        with tarfile.open(str(archive_path), "r:gz") as tar:
-            tar.extractall(path=str(local_dir))
-    except tarfile.ReadError:
-        with tarfile.open(str(archive_path), "r:") as tar:
-            tar.extractall(path=str(local_dir))
-    archive_path.unlink()
-    print(f"  Extracted weights to: {local_dir}")
+        # Save training config
+        with open(local_dir / "training_config.yaml", "w") as f:
+            yaml.dump(cfg, f, default_flow_style=False)
 
-    # Save training config
-    with open(local_dir / "training_config.yaml", "w") as f:
-        yaml.dump(cfg, f, default_flow_style=False)
+        # Save metrics
+        with open(local_dir / "training_metrics.json", "w") as f:
+            json.dump(metrics, f, indent=2)
 
-    # Save metrics
-    with open(local_dir / "training_metrics.json", "w") as f:
-        json.dump(metrics, f, indent=2)
-
-    # Shared upload metadata is required even without a model card.
-    avg_reward = metrics.get("final_avg_reward", 0)
-    total_steps = metrics.get("total_steps", 0)
-    if hf_cfg.get("model_card", True):
-        card_content = f"""---
+        # Shared upload metadata is required even without a model card.
+        avg_reward = metrics.get("final_avg_reward", 0)
+        total_steps = metrics.get("total_steps", 0)
+        if hf_cfg.get("model_card", True):
+            card_content = f"""---
 library_name: peft
 base_model: {model_name}
 tags:
@@ -446,10 +474,10 @@ LoRA fine-tuned with GRPO via [SkyRL](https://github.com/NovaSky-AI/SkyRL) + [Ti
 | Final avg reward | {avg_reward:.3f} |
 | Tinker run ID | `{run_id}` |
 """
-        if wandb_url:
-            card_content += f"| W&B | [{wandb_url}]({wandb_url}) |\n"
+            if wandb_url:
+                card_content += f"| W&B | [{wandb_url}]({wandb_url}) |\n"
 
-        card_content += f"""
+            card_content += f"""
 ## Usage
 
 ```python
@@ -473,19 +501,20 @@ Trained for {total_steps} steps with final average reward of {avg_reward:.3f}.
 - **Training Backend**: Tinker (hosted)
 - **Algorithm**: GRPO
 """
-        with open(local_dir / "README.md", "w") as f:
-            f.write(card_content)
+            with open(local_dir / "README.md", "w") as f:
+                f.write(card_content)
 
-    # Upload all files
-    api.upload_folder(
-        folder_path=str(local_dir),
-        repo_id=repo_id,
-        commit_message=f"Upload GRPO-trained LoRA ({env_name}, {total_steps} steps, reward={avg_reward:.3f})",
-    )
+        # Publish only after the entire archive and local metadata are validated.
+        api.create_repo(repo_id=repo_id, private=private, exist_ok=True)
+        api.upload_folder(
+            folder_path=str(local_dir),
+            repo_id=repo_id,
+            commit_message=f"Upload GRPO-trained LoRA ({env_name}, {total_steps} steps, reward={avg_reward:.3f})",
+        )
 
-    repo_url = f"https://huggingface.co/{repo_id}"
-    print(f"  Uploaded: {repo_url}")
-    return repo_url
+        repo_url = f"https://huggingface.co/{repo_id}"
+        print(f"  Uploaded: {repo_url}")
+        return repo_url
 
 
 # ── Main training loop ────────────────────────────────────────────────────

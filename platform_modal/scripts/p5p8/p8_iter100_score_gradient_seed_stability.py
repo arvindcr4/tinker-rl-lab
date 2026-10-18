@@ -79,7 +79,7 @@ def boot_recall(scores, y, k_pct, B, seed):
         sb, yb = scores[idx], y[idx]
         top = np.argpartition(-sb, k - 1)[:k]
         npos = int(yb.sum())
-        out[b] = int(yb[top].sum()) / max(1, npos)
+        out[b] = int(yb[top].sum()) / npos if npos else np.nan
     return out
 
 
@@ -204,16 +204,17 @@ def main():
         boot_rows.append({
             "backbone": backbone, "rule": rule,
             "recall_orig": d["recall_orig"],
-            "recall_orig_ci_lo": float(np.percentile(d["b_orig"], 2.5)),
-            "recall_orig_ci_hi": float(np.percentile(d["b_orig"], 97.5)),
+            "recall_orig_ci_lo": float(np.nanpercentile(d["b_orig"], 2.5)),
+            "recall_orig_ci_hi": float(np.nanpercentile(d["b_orig"], 97.5)),
             "recall_new": d["recall_new"],
-            "recall_new_ci_lo": float(np.percentile(d["b_new"], 2.5)),
-            "recall_new_ci_hi": float(np.percentile(d["b_new"], 97.5)),
+            "recall_new_ci_lo": float(np.nanpercentile(d["b_new"], 2.5)),
+            "recall_new_ci_hi": float(np.nanpercentile(d["b_new"], 97.5)),
             "delta_recall": d["recall_new"] - d["recall_orig"],
-            "delta_recall_ci_lo": float(np.percentile(d["b_diff"], 2.5)),
-            "delta_recall_ci_hi": float(np.percentile(d["b_diff"], 97.5)),
+            "delta_recall_ci_lo": float(np.nanpercentile(d["b_diff"], 2.5)),
+            "delta_recall_ci_hi": float(np.nanpercentile(d["b_diff"], 97.5)),
             "n_llm_orig": d["n_llm_orig"], "n_llm_new": d["n_llm_new"],
             "delta_n_llm": d["n_llm_new"] - d["n_llm_orig"],
+            "valid_paired_bootstrap_replicates": int(np.isfinite(d["b_diff"]).sum()),
         })
     write_tsv("p8_iter100_score_gradient_seed_stability.tsv", boot_rows)
 

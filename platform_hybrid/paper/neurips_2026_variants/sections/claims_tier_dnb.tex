@@ -1,62 +1,57 @@
 % =============================================================================
-% Main-body claims/tier/evidence/artifact/reproducibility table
-% Replaces the giant Table 4 in main body per GPT-5.5 Pro v5 review.
+% Main-body claims/tier/evidence/artifact table (2026-10-18 Deep Review pass:
+% rows follow the rebuilt run manifest; withdrawn analyses removed).
 % =============================================================================
 \begin{table}[t]
 \centering\small
 \setlength{\tabcolsep}{4pt}
-\caption{Claims hierarchy with evidence tier and artifact availability. Tier
-\textbf{A}: completed multi-seed cells (inferential eligibility separately required). Tier \textbf{B}:
-single-seed completed case-study runs, descriptive only. Tier \textbf{C}:
-failed or partial cells listed for honesty (Appendix~\ref{sec:run-manifest}).
-\emph{floor}: non-LM PPO sanity floor, outside the LM tiers.
-``Repro.'' = reproducibility status: \emph{open} (re-runnable end-to-end via
-released code on commodity GPUs), \emph{closed-backend} (depends on the
-proprietary Tinker API), or \emph{listed} (no claim, only enumerated).}
+\caption{Claims hierarchy with evidence tier and artifact availability.
+Tier \textbf{A}: completed cells with $\ge3$ seeds (inferential eligibility
+separately required). Tier \textbf{B}: completed single- or two-run case
+studies, descriptive only. Tier \textbf{C}: failed, partial, quarantined or
+unstarted cells (Appendix~\ref{sec:run-manifest}). ``Outside'' marks
+statements kept outside the empirical tiers; \emph{floor}: non-LM PPO
+sanity floor, outside the LM tiers. ``Repro.'': \emph{open}
+(open-source stack), \emph{closed-backend} (depends on the proprietary
+Tinker API), or \emph{listed} (enumerated only).}
 \label{tab:claims-tier}
 \begin{tabular}{@{}p{0.34\linewidth} c p{0.21\linewidth} c p{0.16\linewidth}@{}}
 \toprule
 \textbf{Claim} & \textbf{Tier} & \textbf{Evidence type} & \textbf{Artifact?} & \textbf{Repro.} \\
 \midrule
-Mechanical identity
- $\mathbb E[\widehat{\mathrm{ZVF}}]{=}p^{G}{+}(1{-}p)^{G}$ for iid binary rewards at fixed $p$
+ZVF expectation
+ $\mathbb E[\mathrm{ZVF}_t]{=}p^{G}{+}(1{-}p)^{G}$ for conditionally i.i.d.\ binary rewards at fixed $p$
  (Section~\ref{sec:zvf-analysis}, Appendix~\ref{sec:appendix:zvf-formalization})
- & theory & Closed-form derivation; conditional sampling assumptions
+ & outside & Closed-form derivation under stated assumptions
+ & n/a & n/a \\
+Five-seed Qwen3-8B GSM8K held-out evaluation
+ ($83.3\%$ vs.\ single base run $82.0\%$; $t(4){=}1.32$, $p{=}0.26$)
+ & outside & One-sample seed-level test; base treated as fixed
+ & \checkmark & closed-backend \\
+TRL Qwen2.5-0.5B on generated addition, 5 seeds (Modal L4)
+ & A & Final accuracy per seed; one held-out set
  & \checkmark & open \\
-Later, separate 5-seed Qwen3-8B GSM8K comparison
- ($83.3\%$ vs.\ fixed-base $82.0\%$, $\Delta{=}{+}1.3$pp, $p{=}0.26$)
- & future & One-sample seed-level test against a fixed baseline; not paired-seed
- & --- & not reviewed \\
-TRL Qwen2.5-0.5B, 5 seeds (logged task: synthetic math; script not pinned)
- & A & Seed summaries; inference requires eligible comparisons
+CleanRL/SB3/Tianshou PPO, MLP policy on an addition environment, 5 seeds each
+ & floor & Non-LM sanity floor (accuracy 0.2--1.4\%); not LM evidence
  & \checkmark & open \\
-CleanRL/SB3/Tianshou PPO, non-LLM policy network, 5 seeds each
- & floor & Non-LM sanity floor (accuracy ${\approx}0.01$); not LM evidence
- & \checkmark & open \\
-Tinker Llama-3.3-70B (4 reported seeds)
- & A & Replication metadata; eligibility unresolved
+Tinker Llama-3.3-70B-Inst (4 seeds) and DeepSeek-V3.1 (3 seeds), GSM8K
+ & A & Training reward per seed; no held-out evaluation
  & \checkmark & closed-backend \\
-Tinker Qwen3-8B Wave-6 (12 configurations, one seed each)
- & B & Descriptive sensitivity analysis, not 12 seeds
+Tinker Qwen3-8B Wave-6 (12 temperature/rank/batch configurations, one seed each)
+ & B & Sensitivity sweep, not 12 seeds
  & \checkmark & closed-backend \\
-Single-seed case-study runs across model scale on Tinker
- (8B-base through 671B / 397B MoE; Section~\ref{sec:results})
- & B & Single-seed train-reward + ZVF traces; descriptive only
+Single-run Tinker GSM8K runs across model scale (4B to 671B and
+ Kimi-K2 MoE; Table~\ref{tab:main_results})
+ & B & Training reward; ZVF where logged
  & \checkmark & closed-backend \\
-Single-seed Tinker group-size sweep
- ($G\!\in\!\{2,4,8,16,32\}$, Qwen3-8B, GSM8K) and tool-use case studies
- (Llama-3.1-8B-Inst, Qwen3-32B; reward $0$ at 30 steps)
- & B & Single-seed traces; descriptive only
+Single-run Tinker group-size sweep ($G\!\in\!\{2,4,8,16,32\}$, Qwen3-8B) and
+ two-seed matched-budget follow-up; tool-use case studies
+ (Qwen3-32B, Llama-3.1-8B-Inst; reward $0$ at 30 steps)
+ & B & Training reward and ZVF traces
  & \checkmark & closed-backend \\
-Stratified ZVF-vs-performance analysis
- (within-task Pearson $r{=}{+}0.40$, $N{=}19$;
- model-varying $r{=}{+}0.13$, $N{=}7$;
- Appendix~\ref{sec:stratified-diagnostics})
- & B & Descriptive instrumentation, task-confounded
- & \checkmark & closed-backend \\
-Failed/partial cells
- (JWT-interrupted Tinker MoE runs; KL-tracking Modal H100;
- unstarted external collaborator cells; Appendix~\ref{sec:run-manifest})
+Failed/partial/quarantined cells
+ (console-reconstructed Tinker MoE runs; HumanEval and KL-tracking Modal
+ runs; conflicting PPO Qwen3-8B runs; unstarted cells)
  & C & None (listed only)
  & --- & listed \\
 \bottomrule

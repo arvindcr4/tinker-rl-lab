@@ -1,18 +1,19 @@
 % =============================================================================
-% Conclusion — D&B variant, tight
+% Conclusion — D&B variant, tight (2026-10-18 Deep Review pass)
 % =============================================================================
 \section{Conclusion}
 \label{sec:conclusion}
 
-\ours{} is a shared empirical substrate for RL post-training across libraries,
-algorithms, and model families. The current release supports two
-conservative claims: (i) ZVF/GU are useful \emph{descriptive} diagnostics of
-when binary-reward GRPO stops producing within-group signal, but should not be
-read as causal predictors independent of reward mean and group size; and (ii)
-initialization and rollout regime are plausible stack-level moderators in the
-released case studies, not isolated causal effects. The paper makes no
-PPO-versus-GRPO ranking claim. Later, separate Qwen3-8B GSM8K evidence is inconclusive:
-$p{=}0.26$ is a one-sample seed-level test against a fixed base, not a paired
-or reviewed-record test. File-level trace and checkpoint availability and
-cohort inclusion IDs must be established before this collection can support
-a complete reproduction or coverage claim.
+\ours{} is a tier-classified record of RL post-training runs across
+libraries, algorithms, and model families. The current release supports
+three conservative statements: (i) ZVF/GU are \emph{descriptive}
+diagnostics of when binary-reward GRPO groups stop producing within-group
+contrast, and we make no claim that they predict final reward; (ii) the
+completed cells are dominated by short single-run Tinker GSM8K case
+studies, and the few multi-seed LM cells are closed-backend training
+rewards plus one open-stack arithmetic cell (mean accuracy 0.73); and (iii)
+the separate five-seed Qwen3-8B GSM8K held-out evaluation does not show a
+gain over the base model ($p{=}0.26$). Several analyses in earlier drafts
+could not be traced to released inputs and were withdrawn; immutable cohort
+IDs, raw per-group logs, and released checkpoints are required before this
+collection can support a reproduction or coverage claim.

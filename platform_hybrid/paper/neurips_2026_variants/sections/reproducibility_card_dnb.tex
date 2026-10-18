@@ -1,35 +1,36 @@
 % =============================================================================
-% Reproducibility / make-targets section for DNB main body.
-% Make targets are not released; documented as such.
+% Reproducibility section for DNB main body.
+% 2026-10-18 Deep Review fix: the repository Makefile has no smoke-test /
+% reproduce-main / reproduce-appendix targets, and no runtime measurement
+% backs the earlier wall-clock estimates, so those were removed.
 % =============================================================================
-\subsection{Reproduction entry points (make targets not yet released)}
+\subsection{Reproduction entry points}
 \label{sec:repro-onecmd}
 
-The repository's top-level \texttt{Makefile} does not yet provide the
-one-command targets planned for this artifact (\texttt{smoke-test},
-\texttt{reproduce-main}, \texttt{reproduce-appendix}); no clean-environment
-end-to-end run is certified by this manuscript. The available entry points
-are the per-experiment commands in \texttt{REPRODUCE.md} and the per-run JSON
-files under \texttt{experiments/tinker-runs/results/}, from which every row of
-Table~\ref{tab:main_results} can be recomputed (peak and last-10 mean of
-\texttt{reward\_trace}). Logged wall-clock is short for the open-stack
-cells: the five TRL Qwen2.5-0.5B seeds record 135--183\,s each on an L4, and
-the Tianshou PPO floor runs log under 3\,s; we report no estimate for a
-full re-run.
-
-\paragraph{Closed-backend cells.}
-Tinker case-study cells cannot be re-run without Tinker credentials; for them
-we ship the JSON step logs and the API-call scripts, and replication is subject
-to the JWT-expiry failure modes documented in the manifest
-(Appendix~\ref{sec:run-manifest}).
-
-\paragraph{Hash manifest.}
-A file-level SHA-256 inventory (\texttt{REPRODUCIBILITY\_HASHES.json}) is
-planned but not released. Equal hashes would test byte equality of
-deterministic outputs only; stochastic comparison requires named metrics,
-independent units, effect intervals and prespecified tolerances.
-
-\paragraph{Submission-time status.}
-Table~\ref{tab:artifact-card} checkmarks must not be read as successful
-target execution or downloadable adapter proof. The separate five-seed
-held-out Qwen3-8B comparison is outside this release's inferential evidence.
+At submission the repository has \emph{no} one-command reproduction target:
+the top-level \texttt{Makefile} provides only lint, test, packaging and
+submission checks, and no \texttt{make reproduce-*} target exists. Earlier
+drafts described \texttt{make smoke-test}, \texttt{make reproduce-main} and
+\texttt{make reproduce-appendix} with wall-clock estimates; those targets were
+never implemented and the estimates were not measured, so both are withdrawn.
+The available entry points are per-experiment scripts:
+\begin{itemize}\setlength\itemsep{1pt}
+  \item Offline checks: the unit tests and replay commands listed in
+        \texttt{REPRODUCE.md} (no GPU, no credentials).
+  \item Open-stack Modal cells: the Modal drivers under
+        \texttt{platform\_hybrid/\allowbreak{}experiments/\allowbreak{}modal/\allowbreak{}} (e.g.\
+        \texttt{modal\_ppo\_campaign.py}, \texttt{modal\_grpo\_trl.py},
+        \texttt{modal\_groupsize\_zvf\_sweep.py}); these require a Modal
+        account and GPU spend.
+  \item Tinker cells: the API-call scripts under
+        \texttt{platform\_hybrid/\allowbreak{}experiments/\allowbreak{}tinker-runs/\allowbreak{}}; replication
+        requires Tinker credentials and is exposed to the JWT-expiry failure
+        modes documented in the manifest (Appendix~\ref{sec:run-manifest}).
+\end{itemize}
+Logged wall-clock is short for the open-stack cells (the five TRL
+Qwen2.5-0.5B seeds record 136--184\,s each on an L4; the PPO floor seeds
+2--230\,s), but we report no estimate for a full re-run.
+No clean-environment end-to-end run of these scripts is certified by this
+manuscript, and no reference hash manifest is released.
+Table~\ref{tab:artifact-card} checkmarks are historical availability reports,
+not proof of successful re-execution or of downloadable adapters.

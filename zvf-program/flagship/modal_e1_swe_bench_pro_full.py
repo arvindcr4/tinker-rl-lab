@@ -322,7 +322,10 @@ def _hunk_body_counts(lines: list[str], start: int) -> tuple[int, int, int]:
 def _recount_hunks(patch: str) -> tuple[str, int]:
     """Rewrite every @@ header with the counts its body actually has.
 
-    Equivalent of ``git apply --recount``. The model never sees line numbers,
+    Count-only repair follows ``git apply --recount`` for valid changed hunks.
+    Unlike git --recount, this adapter drops context-only hunks; malformed
+    bodies still require _validate_unified_diff before submission.
+    The model never sees line numbers,
     so its header counts are guesses; the 2026-08-16 seed1818 run (2/731) was
     evaluated on unrepaired patches, of which 593/713 failed ``git apply`` as
     corrupt. Context-only hunks (no +/- lines) are no-ops that plain

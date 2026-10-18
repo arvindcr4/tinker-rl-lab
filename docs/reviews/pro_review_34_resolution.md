@@ -15,3 +15,15 @@ P0.2 official score range and aggregation need the pinned provider contract. P0.
 
 ## Offline verification
 83 passed, 4 optional/archive-dependent skipped across targeted new regressions and xLAM/SDAB/MLE/Frontier tests, then added an explicit rule-acceptance regression. Existing E1 test uses an invalid short digest and expects the later URI diagnostic; corrected independently in review 39 rather than weakening production validation. No native parity claim is made.
+
+### P1.6 follow-up: executed local git differential fixtures
+
+Ten synthetic fixtures execute real `git apply --recount` on raw patches and
+ordinary `git apply` on repaired patches in separate temporary repositories.
+Count-only fixes compare exact resulting bytes for multiple files, additions,
+deletions and missing final newlines. Empty and malformed input is rejected by the production validator;
+nonapplicable input fails real git application. The fixtures explicitly expose two
+non-equivalences: git --recount accepts context-only hunks that this adapter
+drops, and ordinary git may ignore trailing malformed text after counts are
+fixed, so the adapter's structural validator remains mandatory. These tests
+establish local patch mechanics only, not native SWE scoring conformance.

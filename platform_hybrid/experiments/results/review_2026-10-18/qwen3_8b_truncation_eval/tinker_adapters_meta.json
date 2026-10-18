@@ -1,0 +1,32 @@
+{
+ "tinker_s42": {
+  "tinker_path": "tinker://932c7b50-f12c-5d1c-b3b9-9192739cb079:train:0/sampler_weights/m42_final",
+  "archive_sha256": "8352f25060558db4cf240d6fbdea21e5c16af99fd20909b5498b233016913e6f",
+  "archive_bytes": 349255680,
+  "files": [
+   "adapter_config.json",
+   "adapter_model.safetensors",
+   "checkpoint_complete"
+  ]
+ },
+ "tinker_s123": {
+  "tinker_path": "tinker://72ce705d-c863-543f-9e47-7ca111ba7978:train:0/sampler_weights/m123_final",
+  "archive_sha256": "0328775ddd7fc20661bf5f8b7a37bd55d2f4132459f5b87fa16f035ea3541855",
+  "archive_bytes": 349255680,
+  "files": [
+   "adapter_config.json",
+   "adapter_model.safetensors",
+   "checkpoint_complete"
+  ]
+ },
+ "tinker_s456": {
+  "tinker_path": "tinker://47b2d7cd-36af-5b20-a719-170ccb8252c6:train:0/sampler_weights/m456_final",
+  "archive_sha256": "1dd61904ff82ec2e529a9a0ee9c2e584ef301074aca2586060ad8aa57162b248",
+  "archive_bytes": 349255680,
+  "files": [
+   "adapter_config.json",
+   "adapter_model.safetensors",
+   "checkpoint_complete"
+  ]
+ }
+}

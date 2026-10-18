@@ -265,9 +265,17 @@ Evaluation is greedy with a 2{,}048-token cap.
 The case-study run did not log completion lengths. The four matched-budget
 Qwen3-8B arms, which use the same 512-token cap, did: in both $G{=}16$ arms the
 mean completion length is $\ge508.6$ tokens at every step, so nearly every
-sample is cut at the cap. We therefore read the low training reward as
-largely a truncation effect, not a measure of GSM8K ability. The truncation rate
-of the case-study run itself has not been measured.
+sample is cut at the cap. A post-hoc re-evaluation on the first 200 GSM8K test
+items (greedy) confirms the truncation reading. With the case-study prompt,
+thinking mode on and a 512-token cap, the base model scores $27.0\%$
+(95\% CI $[21.3, 33.5]$) with $100\%$ of generations truncated, close to the
+training reward; with thinking disabled and a 4{,}096-token cap it scores
+$97.5\%$ with no truncation. The case-study adapter scores $31.0\%$ and
+$96.5\%$ under the same two conditions, indistinguishable from base (paired
+McNemar $p\ge0.32$)
+(\nolinkurl{experiments/results/review_2026-10-18/qwen3_8b_truncation_eval/}).
+The low training reward is therefore a truncation effect, not a measure of
+GSM8K ability.
 
 \paragraph{Group size: brief.}
 We ran a single-seed exploratory $G$-sweep on Qwen3-8B/GSM8K whose results

@@ -40,12 +40,12 @@ meta-analyst which stacks can enter a KL-based analysis.
 A matched TRL-vs-Tinker pair (\texttt{Qwen/Qwen3-8B}, same template, extractor,
 decoding, batch shape, and GSM8K split; 30 steps, seeds 42/123/456;
 \texttt{experiments/results/publication\_fixes/matched\_trl\_tinker/}) does
-not validate \texttt{stackdiff} or the attribution of the $17\times$ gap,
-because neither stack learned: the untrained base scores $0.345$ held-out
-(200 items, greedy), all six trained runs score below it ($0.270$--$0.335$),
-and $97.5$--$99.5\%$ of held-out generations hit the 512-token cap. The pair
-is not a registry entry, so it has no \texttt{stackdiff} verdict; testing the
-ladder needs a re-run in which held-out accuracy rises above base.
+not validate \texttt{stackdiff}. Its 512-token, thinking-on evaluation put all
+six trained runs below the $0.345$ base with $97.5$--$99.5\%$ truncation; at
+4{,}096 tokens with thinking off, base scores $0.960$ and the Tinker adapters
+$0.965$--$0.975$ (McNemar $p\ge0.25$; TRL adapters not retained;
+\nolinkurl{experiments/results/review_2026-10-18/qwen3_8b_truncation_eval/}).
+Testing the ladder needs a run whose held-out accuracy rises above base.
 \endinput % Stale CLI excerpts and unsupported matched experiment preserved below.
 The registry contains two stacks claiming the label \texttt{dapo}: the open
 Colab trainer arm and the managed-runtime arm. Diffing them:

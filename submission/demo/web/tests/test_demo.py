@@ -147,13 +147,13 @@ def main():
         page.keyboard.press("Enter")
         results.append(check("skip link focuses content without changing the route",
                              page.evaluate("document.activeElement.id === 'main-content' && location.hash === '#overview'")))
-        page.get_by_role("button", name="Shortcuts on", exact=True).click()
+        page.get_by_role("button", name="Shortcuts", exact=True).click()
         page.locator("main").focus()
         page.keyboard.press("9")
         page.keyboard.press("p")
         results.append(check("disabled shortcuts leave the view and presentation unchanged",
                              page.evaluate("location.hash === '#overview' && !document.documentElement.classList.contains('present')")))
-        page.get_by_role("button", name="Shortcuts off", exact=True).click()
+        page.get_by_role("button", name="Shortcuts", exact=True).click()
         page.keyboard.press("9")
         page.wait_for_function("document.activeElement.id === 'main-content' && location.hash === '#viva'")
         results.append(check("route changes focus the named main landmark and update the title",

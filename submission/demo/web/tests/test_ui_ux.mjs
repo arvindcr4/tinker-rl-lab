@@ -13,7 +13,7 @@ async function markup() {
   const result = await build({
     stdin: { contents: `import React from 'react'; import {renderToStaticMarkup} from 'react-dom/server';
       import App from './src/App.jsx';
-      export const pages = Object.fromEntries(['overview', 'advantage', 'answers', 'viva'].map(id => {
+      export const pages = Object.fromEntries(['overview', 'advantage', 'zvf', 'samestack', 'platform', 'answers', 'stackdiff', 'audit', 'viva'].map(id => {
         globalThis.location = {hash: '#' + id};
         return [id, renderToStaticMarkup(React.createElement(App))];
       }));`, resolveDir: here, sourcefile: 'ui-fixture.jsx', loader: 'jsx' },
@@ -29,11 +29,13 @@ async function markup() {
 }
 
 test('every route keeps a named main landmark, one h1 and a skip destination', async () => {
-  for (const [id, html] of Object.entries(await markup())) {
+  const pages = await markup();
+  assert.equal(Object.keys(pages).length, 9);
+  for (const [id, html] of Object.entries(pages)) {
     assert.equal((html.match(/<h1(?:\s|>)/g) || []).length, 1, id);
     assert.match(html, /class="skip-link" href="#main-content"/);
     assert.match(html, /<main[^>]*id="main-content"[^>]*tabindex="-1"[^>]*aria-label="[^"]+"/);
-    assert.match(html, /<button[^>]*aria-pressed="true"[^>]*>Shortcuts on<\/button>/);
+    assert.match(html, /<button[^>]*aria-pressed="true"[^>]*>Shortcuts<\/button>/);
     assert.match(html, /<caption class="sr-only">Export source files and their SHA-256 hashes<\/caption>/);
   }
 });
@@ -41,7 +43,9 @@ test('every route keeps a named main landmark, one h1 and a skip destination', a
 test('mobile and desktop section navigation retain all nine deep links and the active state', async () => {
   const pages = await markup();
   for (const [id, html] of Object.entries(pages)) {
-    assert.equal((html.match(/<option /g) || []).length, 9);
+    const sections = html.match(/<select id="section-select"[^>]*>([\s\S]*?)<\/select>/)?.[1];
+    assert.ok(sections, id);
+    assert.equal((sections.match(/<option /g) || []).length, 9);
     assert.match(html, new RegExp(`<option value="${id}" selected=""`));
     assert.match(html, new RegExp(`href="#${id}" aria-current="page"`));
   }
@@ -75,8 +79,10 @@ function luminance(hex) {
 
 test('theme text and status colors meet 4.5:1 against their surfaces', () => {
   const css = readFileSync(join(here, 'src/styles.css'), 'utf8');
-  for (const selector of [':root', ':root[data-theme="dark"]']) {
-    const declaration = css.slice(css.indexOf(selector + ' {')).split('}')[0];
+  for (const selector of [':root', ':root:not([data-theme="light"])', ':root[data-theme="dark"]']) {
+    const start = css.indexOf(selector + ' {');
+    assert.ok(start >= 0, `Missing palette: ${selector}`);
+    const declaration = css.slice(start).split('}')[0];
     const colors = Object.fromEntries([...declaration.matchAll(/--([\w-]+):\s*(#[a-f\d]{6})/gi)]
       .map(([, name, value]) => [name, value]));
     for (const foreground of ['ink', 'muted', 'grpo', 'ppo', 'good', 'warn', 'bad']) {
@@ -87,4 +93,11 @@ test('theme text and status colors meet 4.5:1 against their surfaces', () => {
       }
     }
   }
+});
+
+
+test('browser test command builds source and targets dist without overwriting the frozen artifact', () => {
+  const pkg = JSON.parse(readFileSync(join(here, 'package.json'), 'utf8'));
+  assert.ok(pkg.scripts.test.includes('vite build && DEMO_PAGE=dist/index.html python3 tests/test_demo.py'));
+  assert.ok(!pkg.scripts.test.includes('npm run build'));
 });

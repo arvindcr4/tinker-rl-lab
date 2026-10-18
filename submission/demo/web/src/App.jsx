@@ -100,7 +100,7 @@ export default function App() {
         <div className="row between">
           <div className="eyebrow">M.Tech Project Phase 2 · PES University · Arvind C R</div>
           <div className="row display-controls">
-            <button type="button" className="ghost" aria-pressed={shortcuts} onClick={() => setShortcuts(!shortcuts)} title="Enable or disable single-key navigation">Shortcuts {shortcuts ? "on" : "off"}</button>
+            <button type="button" className="ghost" aria-pressed={shortcuts} onClick={() => setShortcuts(!shortcuts)} title="Enable or disable single-key navigation">Shortcuts</button>
             <button type="button" className="ghost" aria-pressed={present} onClick={() => setPresent(!present)} title="Larger text for projectors (P)">Present</button>
           </div>
         </div>

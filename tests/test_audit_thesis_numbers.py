@@ -420,15 +420,98 @@ def test_prose_fallback_does_not_match_substrings_or_claim_recomputation(
     assert groups[2]["status"] == ("PASS" if method == "R" else "UNBOUND")
 
 
-def test_precise_supplementary_claim_calculations(monkeypatch):
-    monkeypatch.setattr(
-        audit,
-        "text",
-        lambda _: (
-            "library/framework ($eta = 0.546$), training algorithm ($eta = 0.558$), family explains $eta = 0.471$; model scale explains $eta = 0.322$."
-        ),
-    )
+MARGINAL_ETA_PARAGRAPHS = (
+    r"""\paragraph{Variance decomposition.}
+One-way ANOVAs across 42 experiments with valid performance observations show
+that library/framework ($\eta^2 = 0.546$) and training algorithm ($\eta^2 = 0.558$)
+are the dominant variance sources, consistent with our central thesis. Model
+family explains $\eta^2 = 0.471$; model scale explains $\eta^2 = 0.322$.
+""",
+    r"""\paragraph{Variance decomposition (marginal one-way ANOVAs).}
+Separate marginal one-way ANOVAs across the $N=42$ completed cross-task evaluation runs show
+that library/framework ($\eta^2 = 0.546$) and training method ($\eta^2 = 0.558$, when pooling offline DPO/SFT, tabular/classic RL, and online LLM RL across tasks)
+carry large marginal variance shares, alongside model
+family ($\eta^2 = 0.471$) and model scale ($\eta^2 = 0.322$).
+""",
+)
+
+
+@pytest.mark.parametrize("source", MARGINAL_ETA_PARAGRAPHS, ids=["historical", "current"])
+@pytest.mark.parametrize("wrap", [False, True], ids=["original", "wrapped"])
+def test_marginal_eta_sum_accepts_labeled_eta_squared(monkeypatch, source, wrap):
+    if wrap:
+        source = source.replace("training ", "training\n").replace(" = ", "\n=\n")
+    monkeypatch.setattr(audit, "text", lambda _: source)
     assert audit.marginal_eta_sum() == ["These four values sum to 1.897000"]
+
+
+@pytest.mark.parametrize(
+    "value", ["", "nan", "inf", "-0.558", "1.558", ".558", "0.558.0", "0.558e-1", "0.558x"]
+)
+def test_marginal_eta_sum_rejects_malformed_values(monkeypatch, value):
+    source = MARGINAL_ETA_PARAGRAPHS[1].replace("0.558", value)
+    monkeypatch.setattr(audit, "text", lambda _: source)
+    with pytest.raises(ValueError, match="invalid marginal eta-squared value: training method"):
+        audit.marginal_eta_sum()
+
+
+@pytest.mark.parametrize(
+    "replacement",
+    [
+        r"($\sigma = 0.558$",
+        r"($\eta^3 = 0.558$",
+        r"($eta = 0.558$",
+        r"($\eta^2 = 0.558",
+        r"(unrelated = 0.558; $\eta^2 = 0.558$",
+    ],
+)
+def test_marginal_eta_sum_requires_adjacent_eta_squared(monkeypatch, replacement):
+    source = MARGINAL_ETA_PARAGRAPHS[1].replace(r"($\eta^2 = 0.558$", replacement)
+    monkeypatch.setattr(audit, "text", lambda _: source)
+    with pytest.raises(ValueError, match="invalid marginal eta-squared value: training method"):
+        audit.marginal_eta_sum()
+
+
+@pytest.mark.parametrize(
+    "clause",
+    [
+        r"library/framework ($\eta^2 = 0.546$)",
+        r"training algorithm ($\eta^2 = 0.558$)",
+        r"training method ($\eta^2 = invalid$)",
+        r"Model family explains $\eta^2 = 0.471$",
+        r"model scale explains $\eta^2 = 0.322$",
+    ],
+)
+def test_marginal_eta_sum_rejects_duplicate_factors(monkeypatch, clause):
+    source = MARGINAL_ETA_PARAGRAPHS[1] + clause
+    monkeypatch.setattr(audit, "text", lambda _: source)
+    with pytest.raises(ValueError, match="expected exactly one marginal eta-squared factor"):
+        audit.marginal_eta_sum()
+
+
+@pytest.mark.parametrize("missing", [False, True])
+def test_marginal_eta_sum_ignores_other_paragraphs(monkeypatch, missing):
+    paragraph = MARGINAL_ETA_PARAGRAPHS[1]
+    if missing:
+        paragraph = paragraph.replace("training method", "another method")
+    unrelated = r"training method ($\eta^2 = 0.999$)"
+    source = unrelated + "\n\n" + paragraph + "\n" + unrelated
+    monkeypatch.setattr(audit, "text", lambda _: source)
+    if missing:
+        with pytest.raises(ValueError, match="expected exactly one marginal eta-squared factor"):
+            audit.marginal_eta_sum()
+    else:
+        assert audit.marginal_eta_sum() == ["These four values sum to 1.897000"]
+
+
+@pytest.mark.parametrize("source", ["", MARGINAL_ETA_PARAGRAPHS[1] * 2])
+def test_marginal_eta_sum_requires_unique_paragraph(monkeypatch, source):
+    monkeypatch.setattr(audit, "text", lambda _: source)
+    with pytest.raises(ValueError, match="expected exactly one marginal eta-squared paragraph"):
+        audit.marginal_eta_sum()
+
+
+def test_precise_supplementary_claim_calculations(monkeypatch):
     monkeypatch.setattr(
         audit,
         "tsv",

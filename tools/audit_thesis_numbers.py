@@ -1933,16 +1933,38 @@ def a8_rows():
 
 def marginal_eta_sum():
     source = text(f"{SEC}/_shared_methods.tex")
-    # Bind to the four labeled factors, not unrelated decimal tokens.
+    headings = list(
+        re.finditer(
+            r"\\paragraph\{Variance decomposition(?: \(marginal one-way ANOVAs\))?\.\}",
+            source,
+        )
+    )
+    if len(headings) != 1:
+        raise ValueError("expected exactly one marginal eta-squared paragraph")
+    paragraph = re.split(
+        r"\n[ \t]*\n|\\(?:sub)*section\{|\\paragraph\{",
+        source[headings[0].end() :].lstrip(),
+        maxsplit=1,
+    )[0]
+    # Accept the historical/current labels, binding only their adjacent eta-squared
+    # expressions in this paragraph. Never search ahead for an unrelated number.
     values = []
-    for label in (
-        "library/framework",
-        "training algorithm",
-        "family explains",
-        "model scale explains",
+    for label, pattern in (
+        ("library/framework", r"library/framework\s*\("),
+        ("training method", r"training\s+(?:algorithm|method)\s*\("),
+        ("model family", r"[Mm]odel\s+family(?:\s+explains\b|\s*\()"),
+        ("model scale", r"model\s+scale(?:\s+explains\b|\s*\()"),
     ):
-        value = rx(re.escape(label) + r".{0,30}?= ([0-9.]+)", source, 1)
-        values.append(Decimal(value))
+        matches = list(re.finditer(r"\b" + pattern, paragraph))
+        if len(matches) != 1:
+            raise ValueError(f"expected exactly one marginal eta-squared factor: {label}")
+        value = re.match(
+            r"\s*\$\\eta\^2\s*=\s*([0-9]+(?:\.[0-9]+)?)\s*\$",
+            paragraph[matches[0].end() :],
+        )
+        if value is None or not 0 <= Decimal(value[1]) <= 1:
+            raise ValueError(f"invalid marginal eta-squared value: {label}")
+        values.append(Decimal(value[1]))
     return [f"These four values sum to {sum(values):.6f}"]
 
 

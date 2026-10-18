@@ -33,3 +33,28 @@ CPU synthetic regressions cover normalized beta-binomial probability, nontrivial
 - Alert-volume recall dominance and asymmetric-cost significant savings require the favorable CI direction
 - Cohort raw/full fits use matched seeds; noise calibration uses actual evaluation population size
 Additional regressions cover append posterior probability, equal-threshold escalation, actual one-step cost ratio and missing-calibration rejection.
+
+## Remaining-consumer closure (offline code validation)
+
+This section supersedes matching open implementation items above. It does not
+replace missing empirical evidence, endorse historical result files, or establish
+seed-general deployment conclusions.
+
+- R6/R7/R13/R17: iter100 caches explicit seed/feature-set predictions and uses the
+  original-seed full-feature XGB as its fixed second-stage **surrogate**, charges
+  raw screening for every row plus invoked second-stage work, and uses identical
+  bootstrap row draws for both seed systems. Point estimates are distinct from
+  bootstrap averages; no-positive bootstrap replicates are unavailable and their
+  valid paired count is exported. No-catch cost ratios are unavailable. The
+  narrative uses computed counts and reports historical count-bound failure;
+  two seeds do not establish general seed stability or measured LLM outcomes.
+- R16/R18/R20: disagreement uses the shared tie-aware AUC, reports millidollars
+  correctly, and its guarded main contains data loading, fitting, file creation,
+  and plotting. Importing it does not run analysis. Corrected disagreement and
+  iter100 outputs are isolated under `corrected-review20-v2`.
+
+Synthetic score-consumer tests exercise secondary-score influence, additive
+screening cost, zero catches, a failed historical bound, identical-system paired
+CI degeneracy, undefined positive-free recall replicates, and importing with
+training/directory creation/plotting forbidden. Optional ML dependencies are
+stubbed for import validation; no fitted-model integration run was performed.

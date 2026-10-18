@@ -89,3 +89,9 @@ def test_disagreement_import_does_not_read_fit_write_or_plot(monkeypatch, tmp_pa
     spec.loader.exec_module(module)
     assert callable(module.main)
     assert module.auc_p8(np.array([0.5, 0.5]), np.array([0, 1])) == 0.5
+
+
+def test_positive_free_recall_replicates_are_unavailable():
+    ns = score_namespace()
+    draws = ns['boot_recall'](np.array([0.2, 0.8]), np.array([0, 0]), 50, 20, 42)
+    assert np.isnan(draws).all()

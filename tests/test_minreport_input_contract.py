@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 
 from platform_hybrid.registry.provenance import minreport
-from test_registry_provenance_review import publication  # noqa: F401
+from test_registry_provenance_review import publication as publication
 
 
 @pytest.fixture

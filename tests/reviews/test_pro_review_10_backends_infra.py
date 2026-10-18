@@ -46,7 +46,10 @@ def test_gcp_refuses_secret_source_embedding(gcp):
     )
     assert "dummy-secret-never-real" not in script
     assert "os.environ[key] = value" in script
-    with pytest.raises(ValueError):
+    with pytest.raises(
+        ValueError,
+        match="Expected an allowed environment name and versioned Secret Manager reference",
+    ):
         gcp.build_entry_script(
             framework="tinker", model="model", secret_refs={"HF_TOKEN": "raw-dummy"}
         )
@@ -69,7 +72,8 @@ def test_failed_gcp_create_never_deletes_collision(gcp, monkeypatch):
     monkeypatch.setattr(gcp.subprocess, "run", fail)
     with pytest.raises(subprocess.CalledProcessError):
         gcp.run_unit(args)
-    assert len(calls) == 1 and "create" in calls[0]
+    assert len(calls) == 1
+    assert "create" in calls[0]
     assert all(not p.exists() for p in scripts)
 
 
@@ -107,7 +111,9 @@ def test_gcp_receipt_saved_before_owned_delete(gcp, monkeypatch, tmp_path):
         },
     )
     result = gcp.run_unit(args)
-    assert state["deleted"] and result["exit_code"] == 9 and result["status"] == "failed"
+    assert state["deleted"]
+    assert result["exit_code"] == 9
+    assert result["status"] == "failed"
 
 
 def test_gcp_does_not_accept_serial_substrings(gcp):
@@ -125,7 +131,9 @@ def test_gcp_expiry_deletes_disk_and_rejects_duration_injection(gcp):
         max_run_duration="90m",
     )
     assert "--instance-termination-action=DELETE" in cmd
-    with pytest.raises(ValueError):
+    with pytest.raises(
+        ValueError, match="max\\-run\\-duration must be a positive duration such as 90m"
+    ):
         gcp.build_startup_script("pass", max_run_duration="1m; touch injected")
 
 
@@ -214,7 +222,7 @@ def test_correctness_beats_keyword_reward():
         1.0,
         0.0,
     ]
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="One gold answer is required for every completion"):
         correctness_rewards(["2"], None)
 
 
@@ -223,7 +231,9 @@ def test_collapse_is_per_verified_prompt_group():
 
     result = group_diagnostics([0.0] * 8 + [1.0] * 8, ["a"] * 8 + ["b"] * 8, 8)
     assert result == {"reward_variance": 0.0, "advantage_collapse_rate": 1.0}
-    with pytest.raises(ValueError):
+    with pytest.raises(
+        ValueError, match="Prompt groups must each contain exactly num_generations rewards"
+    ):
         group_diagnostics([0, 1], ["a", "b"], 8)
 
 
@@ -233,14 +243,20 @@ def test_generated_model_name_cannot_inject_source(tmp_path):
 
     model = 'test-model"""\nINJECTED_SENTINEL = 123\n"""'
     script = generate_trl_train_script(
-        TRLConfig(execution_contract="scientific", model={"model_name": model}, data={"train_data": ["dummy"]}),
+        TRLConfig(
+            execution_contract="scientific",
+            model={"model_name": model},
+            data={"train_data": ["dummy"]},
+        ),
         tmp_path / "train.py",
     )
     tree = ast.parse(script)
     assert not any(isinstance(n, ast.Name) and n.id == "INJECTED_SENTINEL" for n in ast.walk(tree))
     assert "get_last_checkpoint" not in script
-    assert "resume_from_checkpoint=resume" in script and "Checkpoint manifest differs" in script
-    assert "uuid.uuid4().hex" in script and "trainer.state.global_step" in script
+    assert "resume_from_checkpoint=resume" in script
+    assert "Checkpoint manifest differs" in script
+    assert "uuid.uuid4().hex" in script
+    assert "trainer.state.global_step" in script
     assert script.index("set_seed(") < script.index("model = AutoModel")
 
 
@@ -303,12 +319,12 @@ def test_canonical_missing_or_malformed_never_falls_back(monkeypatch, tmp_path):
     with pytest.raises(FileNotFoundError):
         canonical.load_spec()
     path.write_text("{}")
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="Unsupported preregistration schema"):
         canonical.load_spec()
 
 
 @pytest.mark.parametrize(
-    "jobs,n",
+    ("jobs", "n"),
     [
         ([{"name": "dup", "cmd": "true"}] * 2, 2),
         ([{"name": "x", "cmd": "true"}], 0),
@@ -320,7 +336,10 @@ def test_queue_invalid_spec_never_spawns(jobs, n, monkeypatch, tmp_path):
     monkeypatch.setattr(
         queue.subprocess, "Popen", lambda *a, **k: pytest.fail("spawned invalid spec")
     )
-    with pytest.raises(ValueError):
+    with pytest.raises(
+        ValueError,
+        match="Concurrency must be between 1 and 16|Job names must be unique safe basenames",
+    ):
         queue.run_queue(jobs, n, tmp_path)
 
 
@@ -337,7 +356,9 @@ def test_queue_propagates_failure_and_tracks_all_jobs(tmp_path):
         == 1
     )
     status = json.loads((tmp_path / "status.json").read_text())
-    assert status["one"]["rc"] == 3 and status["two"]["state"] == "ok" and "_all_done" in status
+    assert status["one"]["rc"] == 3
+    assert status["two"]["state"] == "ok"
+    assert "_all_done" in status
 
 
 def test_weak_merge_evidence_is_rejected():
@@ -357,16 +378,12 @@ def test_weak_merge_evidence_is_rejected():
         "execution_environment": {},
     }
     checks = gate.validate_result("grpo_g8_s123", result, {"pre": [""] * 4, "post": ["x"] * 4}, ref)
-    assert (
-        not checks["filename_identity"]
-        and not checks["group_matches"]
-        and not checks["accuracy_recomputed"]
-    )
-    assert (
-        not checks["substantive_environment"]
-        and not checks["completion_cardinality"]
-        and not checks["actual_steps"]
-    )
+    assert not checks["filename_identity"]
+    assert not checks["group_matches"]
+    assert not checks["accuracy_recomputed"]
+    assert not checks["substantive_environment"]
+    assert not checks["completion_cardinality"]
+    assert not checks["actual_steps"]
 
 
 def test_valid_merge_requires_items_and_regrading():
@@ -533,7 +550,9 @@ def test_source_root_calculations():
 @pytest.mark.parametrize("script", ["run_one.sh", "run_coding.sh", "vast_run.sh"])
 def test_vast_secret_argv_and_failure_guards(script):
     source = (ROOT / "platform_vast" / script).read_text()
-    assert "key='${" not in source and "token='${" not in source and "--wandb_key" not in source
+    assert "key='${" not in source
+    assert "token='${" not in source
+    assert "--wandb_key" not in source
     assert 'exit "$overall_status"' in source
     assert "overall_status=$job_status" in source
     subprocess.run(["bash", "-n"], input=source, text=True, check=True)
@@ -544,7 +563,8 @@ def test_shell_dependency_constraints_keep_argument_boundaries(tmp_path):
     line = next(line for line in source.splitlines() if '"trl>=' in line)
     script = "pip() { printf '%s\\n' \"$@\"; }; " + line.replace("2>&1 | tail -1", "")
     output = subprocess.check_output(["bash", "-c", script], cwd=tmp_path, text=True)
-    assert "peft>=0.12.0" in output and "accelerate>=0.33.0" in output
+    assert "peft>=0.12.0" in output
+    assert "accelerate>=0.33.0" in output
     assert not list(tmp_path.iterdir())
 
 
@@ -603,7 +623,7 @@ def test_hardware_labels_come_from_run_metadata():
     tree = ast.parse((ROOT / "platform_colab/publication_fixes/v2_final_analysis.py").read_text())
     fn = next(n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name == "hardware_label")
     ns = {}
-    exec(compile(ast.Module(body=[fn], type_ignores=[]), "hardware_helper", "exec"), ns)
+    exec(compile(ast.Module(body=[fn], type_ignores=[]), "hardware_helper", "exec"), ns)  # noqa: S102 - Execute only checked-in helper definitions to isolate optional imports.
     assert ns["hardware_label"]({"env": {"platform": "colab", "gpu": "L4"}}) == "L4 (colab)"
     with pytest.raises(ValueError, match="provenance"):
         ns["hardware_label"]({})
@@ -676,7 +696,8 @@ if "list-instances" in args: print("worker-0")
     )
     subprocess.run(["bash", "-n", str(startup)], check=True)
     source = startup.read_text()
-    assert "--resume" in source and "sleep infinity" not in source
+    assert "--resume" in source
+    assert "sleep infinity" not in source
     assert "set -eux" not in source
     calls = [json.loads(line) for line in log.read_text().splitlines()]
     assert any("--stateful-metadata=worker-id=0" in call for call in calls)

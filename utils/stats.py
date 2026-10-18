@@ -506,14 +506,18 @@ def contract_scores(seed_results, contract=None, metric=None):
         raise ValueError("selected metric differs from measurement contract")
     if metric is not None and metric not in METRIC_UNITS:
         raise ValueError("unsupported metric")
-    common_keys = set.intersection(*(set(rows[-1]) if rows else set() for rows in seed_results.values()))
+    common_keys = set.intersection(
+        *(set(rows[-1]) if rows else set() for rows in seed_results.values())
+    )
     legacy_metric = metric or next((key for key in METRIC_UNITS if key in common_keys), None)
     selected, keys, endpoints, modes = [], set(), set(), set()
     for seed, rows in sorted(seed_results.items()):
         if not rows:
             raise ValueError(f"seed {seed}: empty/incomplete seed file")
         if any({"global_step", "_step", "optimizer_step"}.intersection(row) for row in rows):
-            raise ValueError(f"seed {seed}: unsupported step metadata; normalize explicitly to step")
+            raise ValueError(
+                f"seed {seed}: unsupported step metadata; normalize explicitly to step"
+            )
         present = ["step" in row for row in rows]
         if any(present) != all(present):
             raise ValueError(f"seed {seed}: missing steps")
@@ -535,7 +539,9 @@ def contract_scores(seed_results, contract=None, metric=None):
         else:
             key = legacy_metric
             if key is None:
-                raise ValueError(f"seed {seed}: final score must identify one common finite numeric metric")
+                raise ValueError(
+                    f"seed {seed}: final score must identify one common finite numeric metric"
+                )
         keys.add(key)
         for row in rows:
             score = row.get(key)
@@ -551,7 +557,9 @@ def contract_scores(seed_results, contract=None, metric=None):
                 raise ValueError(f"seed {seed}: metric outside declared unit domain")
         selected.append(rows[-1][key])
     if len(keys) != 1 or len(endpoints) != 1 or len(modes) != 1:
-        raise ValueError("mixed metric measurements, units or endpoint steps/observation-index horizons across seeds")
+        raise ValueError(
+            "mixed metric measurements, units or endpoint steps/observation-index horizons across seeds"
+        )
     metric = next(iter(keys))
     return selected, {
         "analysis_schema": "stats-measurement-v2",

@@ -12,7 +12,9 @@ from platform_modal.openrlhf import trainer
 
 @pytest.mark.parametrize("version", [None, "0.8.4"])
 def test_real_default_never_silently_downgrades_to_synthetic(monkeypatch, version):
-    probe = Mock(side_effect=metadata.PackageNotFoundError) if version is None else lambda name: version
+    probe = (
+        Mock(side_effect=metadata.PackageNotFoundError) if version is None else lambda name: version
+    )
     monkeypatch.setattr(metadata, "version", probe)
     with pytest.raises(RuntimeError, match="Real execution|Unsupported OpenRLHF"):
         asyncio.run(trainer.OpenRLHFTrainer(OpenRLHFConfig(epochs=2)).run())
@@ -20,7 +22,9 @@ def test_real_default_never_silently_downgrades_to_synthetic(monkeypatch, versio
 
 def test_explicit_synthetic_fixtures_respect_seed_without_empirical_fields():
     def run(seed):
-        return asyncio.run(trainer.OpenRLHFTrainer(OpenRLHFConfig(seed=seed, epochs=3), dry_run=True).run())
+        return asyncio.run(
+            trainer.OpenRLHFTrainer(OpenRLHFConfig(seed=seed, epochs=3), dry_run=True).run()
+        )
 
     first, repeated, other = run(42), run(42), run(123)
     assert first["mode"] == "dryrun"
@@ -32,6 +36,8 @@ def test_explicit_synthetic_fixtures_respect_seed_without_empirical_fields():
 
 
 def test_synthetic_failure_does_not_return_partial_success(monkeypatch):
-    monkeypatch.setattr(trainer, "run_simulation", Mock(side_effect=RuntimeError("injected synthetic failure")))
+    monkeypatch.setattr(
+        trainer, "run_simulation", Mock(side_effect=RuntimeError("injected synthetic failure"))
+    )
     with pytest.raises(RuntimeError, match="injected synthetic failure"):
         asyncio.run(trainer.OpenRLHFTrainer(OpenRLHFConfig(epochs=3), dry_run=True).run())

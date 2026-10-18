@@ -30,7 +30,7 @@ def helpers():
     ]
     namespace = {"math": math, "itertools": itertools}
     # Only this repository's selected pure definitions; no imports or launch code.
-    exec(compile(ast.Module(body=nodes, type_ignores=[]), str(path), "exec"), namespace)  # noqa: S102
+    exec(compile(ast.Module(body=nodes, type_ignores=[]), str(path), "exec"), namespace)  # noqa: S102 - Execute only checked-in helper definitions to isolate optional imports.
     return namespace
 
 

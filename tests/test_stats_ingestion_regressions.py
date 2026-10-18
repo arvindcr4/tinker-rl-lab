@@ -21,7 +21,8 @@ def run_cli(tmp_path, seeds, *extra):
         write_seed(tmp_path / "data", seed, rows)
     stats.main(
         [
-            "--legacy-exploratory", "--results-dir",
+            "--legacy-exploratory",
+            "--results-dir",
             str(tmp_path / "data"),
             "--output-dir",
             str(tmp_path / "out"),

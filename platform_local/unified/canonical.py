@@ -61,7 +61,14 @@ class CanonicalSpec:
     def __post_init__(self):
         if not self.model or not self.task or not self.algorithm:
             raise ValueError("Model, task and algorithm must be nonempty")
-        for key in ("training_steps", "num_generations", "per_device_train_batch_size", "gradient_accumulation_steps", "lora_rank", "max_completion_length"):
+        for key in (
+            "training_steps",
+            "num_generations",
+            "per_device_train_batch_size",
+            "gradient_accumulation_steps",
+            "lora_rank",
+            "max_completion_length",
+        ):
             value = getattr(self, key)
             if type(value) is not int or value <= 0:
                 raise ValueError(f"{key} must be a positive integer")
@@ -86,18 +93,29 @@ def load_spec() -> CanonicalSpec:
     if data.get("schema_version") != "aiml-next-preregistration-v1":
         raise ValueError("Unsupported preregistration schema")
     t = data["treatment"]
-    return CanonicalSpec(model=t["model"], training_steps=t["training_steps"],
-        num_generations=t["num_generations"], per_device_train_batch_size=t["per_device_train_batch_size"],
+    return CanonicalSpec(
+        model=t["model"],
+        training_steps=t["training_steps"],
+        num_generations=t["num_generations"],
+        per_device_train_batch_size=t["per_device_train_batch_size"],
         gradient_accumulation_steps=t["gradient_accumulation_steps"],
-        max_completion_length=t["max_completion_length"], learning_rate=t["optimizer"]["learning_rate"],
-        lora_rank=t["adapter"]["r"], lora_alpha=t["adapter"]["lora_alpha"],
-        lora_target_modules=t["adapter"]["target_modules"], beta=t["objective"]["beta"],
-        epsilon_low=t["objective"]["epsilon"], epsilon_high=t["objective"]["epsilon_high"])
+        max_completion_length=t["max_completion_length"],
+        learning_rate=t["optimizer"]["learning_rate"],
+        lora_rank=t["adapter"]["r"],
+        lora_alpha=t["adapter"]["lora_alpha"],
+        lora_target_modules=t["adapter"]["target_modules"],
+        beta=t["objective"]["beta"],
+        epsilon_low=t["objective"]["epsilon"],
+        epsilon_high=t["objective"]["epsilon_high"],
+    )
 
 
 def require_supported_overrides(spec, supported=()):
     expected = load_spec().as_dict()
-    unsupported = [key for key, value in spec.as_dict().items()
-                   if key not in supported and key != "protocol" and value != expected[key]]
+    unsupported = [
+        key
+        for key, value in spec.as_dict().items()
+        if key not in supported and key != "protocol" and value != expected[key]
+    ]
     if unsupported:
         raise ValueError("Backend cannot honor overrides: " + ", ".join(unsupported))

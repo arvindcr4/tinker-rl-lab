@@ -135,8 +135,12 @@ Examples:
         help="Training JSON file; repeat to provide multiple files",
     )
 
-    parser.add_argument("--trl-contract", choices=["native", "scientific"], default="native",
-                        help="Explicit TRL reward/output contract; scientific uses versioned numeric grading")
+    parser.add_argument(
+        "--trl-contract",
+        choices=["native", "scientific"],
+        default="native",
+        help="Explicit TRL reward/output contract; scientific uses versioned numeric grading",
+    )
 
     parser.add_argument(
         "--reward-callable",
@@ -197,16 +201,23 @@ Examples:
         total_samples = args.total_token_budget / args.tokens_per_sample
         effective_batch_size = args.batch_size * args.gradient_accumulation_steps
         max_steps = max(1, int(total_samples / effective_batch_size))
-        print(f"[Estimated budget; not enforced] Requested tokens: {args.total_token_budget} tokens")
+        print(
+            f"[Estimated budget; not enforced] Requested tokens: {args.total_token_budget} tokens"
+        )
         print(
             f" -> Computed max_steps: {max_steps} (assuming batch size {args.batch_size}, {args.gradient_accumulation_steps} grad accum, ~{args.tokens_per_sample} tokens/sample)"
         )
 
     from dataclasses import replace
-    launcher.spec = replace(launcher._resolve_spec(), learning_rate=args.lr,
-                            lora_rank=args.lora_rank, per_device_train_batch_size=args.batch_size,
-                            gradient_accumulation_steps=args.gradient_accumulation_steps,
-                            training_steps=max_steps)
+
+    launcher.spec = replace(
+        launcher._resolve_spec(),
+        learning_rate=args.lr,
+        lora_rank=args.lora_rank,
+        per_device_train_batch_size=args.batch_size,
+        gradient_accumulation_steps=args.gradient_accumulation_steps,
+        training_steps=max_steps,
+    )
     # Dry-run is handled inside launcher.run() (prints the resolved LaunchPlan).
     if args.dry_run and not args.generate_script:
         launcher.run()

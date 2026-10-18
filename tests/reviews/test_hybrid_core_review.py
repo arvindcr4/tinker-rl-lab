@@ -56,7 +56,7 @@ def functions(path, names, **extra):
         "pd": SimpleNamespace(DataFrame=object),
         **extra,
     }
-    exec(
+    exec(  # noqa: S102 - Execute only checked-in helper definitions to isolate optional imports.
         compile(
             ast.fix_missing_locations(ast.Module(body=body, type_ignores=[])),
             str(ROOT / path),
@@ -80,7 +80,7 @@ def empirical(run, **kw):
 
 
 @pytest.mark.parametrize(
-    "file,fn",
+    ("file", "fn"),
     [
         ("p8_proper_eval.py", "run_p8_eval"),
         ("p1_scaled_layer_freeze.py", "run_layer_freeze_colab"),
@@ -93,7 +93,8 @@ def test_c1_scaffolds_require_explicit_quarantined_simulation(file, fn, tmp_path
     with pytest.raises(c.EvidenceUnavailable):
         call()
     result = call(simulation=True, output_dir=tmp_path)
-    assert result["execution_kind"] == "simulation" and not result["measured"]
+    assert result["execution_kind"] == "simulation"
+    assert not result["measured"]
     assert list(tmp_path.glob("simulations/*.json"))
     with pytest.raises(c.EvidenceUnavailable):
         c.require_empirical(result)
@@ -112,9 +113,13 @@ def test_c2_measured_099_not_replaced_by_trace_surrogates():
         "reward_trace": [0.1, 0.9],
         "last10_avg": 0.5,
     }
-    rows = sh.group_checkpoints([exp], {"run": empirical("run", checkpoint_id="saved", heldout_accuracy=0.99, heldout_n=100)})
+    rows = sh.group_checkpoints(
+        [exp],
+        {"run": empirical("run", checkpoint_id="saved", heldout_accuracy=0.99, heldout_n=100)},
+    )
     flat = sum(rows.values(), [])
-    assert len(flat) == 1 and flat[0]["_heldout_acc"] == 0.99
+    assert len(flat) == 1
+    assert flat[0]["_heldout_acc"] == 0.99
     assert not sh.group_checkpoints([exp], {})
 
 
@@ -125,7 +130,8 @@ def test_c2_missing_saved_checkpoint_evaluation_stays_missing():
         "checkpoints": [{"checkpoint_id": "saved"}],
     }
     row = sum(sh.group_checkpoints([exp], {}).values(), [])[0]
-    assert row["_heldout_acc"] is None and not row["_heldout_measured"]
+    assert row["_heldout_acc"] is None
+    assert not row["_heldout_measured"]
     assert math.isnan(sh.bootstrap_ci([None])[0])
 
 
@@ -144,7 +150,7 @@ def test_c2_provenance_retained_to_tsv(tmp_path):
 
 
 @pytest.mark.parametrize(
-    "name,args",
+    ("name", "args"),
     [
         ("table1_main_results", ({},)),
         ("table2_cross_library", ()),
@@ -180,7 +186,7 @@ def test_c3_measured_analysis_preserves_run_units_and_correction():
 
 
 @pytest.mark.parametrize(
-    "name,file",
+    ("name", "file"),
     [
         ("reward_humaneval", "grpo_10x_runner.py"),
         ("reward_humaneval_binary", "round2_runner.py"),
@@ -200,7 +206,8 @@ def test_c4_candidate_program_contains_prompt_and_check_invocation():
     program = c.humaneval_program(
         "def f(x):\n", "    return x+1", "def check(candidate):\n    assert candidate(1)==2", "f"
     )
-    assert program.endswith("check(f)\n") and program.startswith("def f(x):")
+    assert program.endswith("check(f)\n")
+    assert program.startswith("def f(x):")
     compile(program, "<fixture>", "exec")  # compile only, never execute candidate code
 
 
@@ -211,7 +218,8 @@ def test_c4_candidate_program_contains_prompt_and_check_invocation():
 def test_c5_invalid_calls_never_receive_success(output):
     scorer = functions("implementations/collab/Qwen2.5-1.5B_tool_call_eval.py", ["score"]).score
     result = scorer(output, "get_current_weather", {"location": "Tokyo"})
-    assert result["score"] == 0 and not result["task_success"]
+    assert result["score"] == 0
+    assert not result["task_success"]
 
 
 def test_c5_wrong_tool_values_and_bool_number_confusion_fail():
@@ -252,7 +260,7 @@ def test_c5_unrelated_calls_do_not_receive_scripted_observation():
 
 
 @pytest.mark.parametrize(
-    "response,expected",
+    ("response", "expected"),
     [
         ("#### 1,200", 1200),
         (r"\boxed{\frac{1}{2}}", 0.5),
@@ -322,7 +330,8 @@ def test_c8_completion_alignment_and_eos_padding():
         "p4_surprise",
     ]:
         source = (ROOT / "openings" / f"{filename}.py").read_text()
-        assert "completion_alignment(pid" in source and "completion_mask" in source
+        assert "completion_alignment(pid" in source
+        assert "completion_mask" in source
         assert not re.search(r"fid\[1:\]\s*\+\s*\[0\]", source)
 
 
@@ -353,7 +362,8 @@ def test_c9_exact_turn_loss_uses_saved_ids_and_pre_backward_denominator():
 
 def test_c10_attempt_budget_exists_and_reward_precedes_filter():
     source = (ROOT / "implementations/collab/Qwen2.5-3B_multiturn_grpo.py").read_text()
-    assert "attempts < max_attempts" in source and "sampled_tokens < max_sampled_tokens" in source
+    assert "attempts < max_attempts" in source
+    assert "sampled_tokens < max_sampled_tokens" in source
     assert source.index('"sampled_reward"') < source.index("if abs(rel_reward)")
     for file in ["groupsize_zvf.py", "p4_surprise.py"]:
         source = (ROOT / "openings" / file).read_text()
@@ -411,7 +421,8 @@ def test_c12_binning_service_error_is_unmeasured():
     )
     examples = [{"prompt_ids": [1], "answer": "1"}]
     bins = module.bin_prompts_by_difficulty(None, None, examples, verbose=False)
-    assert not any(bins.values()) and examples[0]["binning_status"] == "unmeasured_service_error"
+    assert not any(bins.values())
+    assert examples[0]["binning_status"] == "unmeasured_service_error"
 
 
 def test_c13_group_zvf_is_not_equal_step_means_or_scalar_gradients():
@@ -422,7 +433,8 @@ def test_c13_group_zvf_is_not_equal_step_means_or_scalar_gradients():
     from platform_hybrid.experiments.signal_starvation.metrics import signal_metrics
 
     result = signal_metrics([1, 1], [1, -1], [1, 1])
-    assert result["parameter_update_norm"] is None and "exact_zero_update" not in result
+    assert result["parameter_update_norm"] is None
+    assert "exact_zero_update" not in result
 
 
 def test_c14_pid_direction_windup_and_entropy():
@@ -433,10 +445,14 @@ def test_c14_pid_direction_windup_and_entropy():
     assert pid.step(0.8) > 8
     for _ in range(100):
         pid.step(1.0)
-    assert pid.current_g == 16 and abs(pid.integral) < 20
+    assert pid.current_g == 16
+    assert abs(pid.integral) < 20
     mod = functions("variance_mitigation_integration.py", ["reward_shaping"], MethodConfig=object)
     cfg = SimpleNamespace(entropy_bonus=True, beta_e=0.1)
-    with pytest.raises(ValueError):
+    with pytest.raises(
+        ValueError,
+        match="Shared entropy cancels under group centering; provide rollout\\-specific bonuses",
+    ):
         mod.reward_shaping(cfg, [0, 1], 0.5)
     shaped = mod.reward_shaping(cfg, [0, 1], [0, 1])
     assert shaped[1] - shaped[0] != 1
@@ -456,9 +472,11 @@ def test_c15_disjoint_windows_and_undefined_zero_ranking():
 
 def test_c16_prompt_pairing_rejects_positionally_different_sets():
     mod = functions("p0_gsm8k_paired.py", ["align", "majority_correct_indicator"])
-    with pytest.raises(ValueError):
+    with pytest.raises(
+        ValueError, match="Prompt sets differ; declare a common prompt_order across all seeds"
+    ):
         mod.align([(0, 1), (1, 0)], [(1, 0), (2, 1)])
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="Duplicate prompt IDs"):
         mod.align([(0, 1), (0, 0)], [(0, 1)])
     assert mod.align([(0, 1), (1, 0)], [(1, 1), (2, 0)], [1]) == ([0], [1])
 
@@ -507,7 +525,9 @@ def test_c18_distillation_padding_invariant_shifted_and_targets_required():
         torch.cat([response, torch.zeros(1, 2)], 1),
     )
     assert loss.item() == pytest.approx(padded_loss.item())
-    with pytest.raises(ValueError):
+    with pytest.raises(
+        ValueError, match="Causal labels, attention and explicit response masks required"
+    ):
         c.distillation_loss(student, teacher, None, attn, response)
 
 
@@ -568,7 +588,8 @@ def test_c16_seed_fallback_identity_preserves_two_runs(tmp_path):
         as_float=lambda value, default=math.nan: float(value) if value is not None else default,
     )
     runs = module.load_runs()
-    assert len(runs) == 2 and runs[0].key != runs[1].key
+    assert len(runs) == 2
+    assert runs[0].key != runs[1].key
 
 
 @pytest.mark.parametrize("all_correct", [True, False])
@@ -650,11 +671,16 @@ def test_c8_c10_mock_opening_end_to_end(monkeypatch, all_correct):
         monkeypatch.setitem(sys.modules, name, module)
     module = functions("openings/groupsize_zvf.py", ["run_one"])
     result = module.run_one(("synthetic-test", 2, 0, 1, 1, "mock", 2, 1e-5, 1))
-    assert result["heldout_before"] == 1 and result["heldout_after"] == 1
+    assert result["heldout_before"] == 1
+    assert result["heldout_after"] == 1
     if all_correct:
-        assert not datums and logs[-1]["reward"] == 1 and logs[-1]["zvf"] == 1
+        assert not datums
+        assert logs[-1]["reward"] == 1
+        assert logs[-1]["zvf"] == 1
     else:
-        assert len(datums) == 2 and logs[-1]["reward"] == 0.5 and logs[-1]["zvf"] == 0
+        assert len(datums) == 2
+        assert logs[-1]["reward"] == 0.5
+        assert logs[-1]["zvf"] == 0
         assert datums[0].model_input == [11, 12]
         assert datums[0].loss_fn_inputs["target_tokens"].data == [12, 7]
         assert all(g[0] == 0 and g[1] != 0 for g in gradients)
@@ -717,14 +743,11 @@ def test_c12_modal_timeout_persists_unique_terminal_receipt(monkeypatch, tmp_pat
     )
     first = module.run_experiment("x", "x.py", 42, "invocation")
     second = module.run_experiment("x", "x.py", 42, "invocation")
-    assert (
-        first["status"] == second["status"] == "timeout"
-        and first["attempt_id"] != second["attempt_id"]
-    )
+    assert first["status"] == second["status"] == "timeout"
+    assert first["attempt_id"] != second["attempt_id"]
     receipts = list(tmp_path.glob("invocation/x/seed_42/*/result.json"))
-    assert len(receipts) == 2 and all(
-        json.loads(p.read_text())["success"] is False for p in receipts
-    )
+    assert len(receipts) == 2
+    assert all(json.loads(p.read_text())["success"] is False for p in receipts)
 
 
 def test_d9_resume_rejects_changed_grader_or_prompt_contract():
@@ -781,7 +804,7 @@ def test_c11_invalid_cap_fails_before_launch(monkeypatch):
 
 def test_c11_bare_sampler_id_fails_before_external_import():
     mod = functions("causal_zvf_experiment.py", ["run_evaluate_phase"])
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="API\\-returned sampler checkpoint paths are required"):
         mod.run_evaluate_phase(["run123"], "model", 100, "unused")
 
 
@@ -811,7 +834,9 @@ def test_c19_measured_table_renders_authoritative_counts_and_decision():
         ],
     )
     text = mod.render(payload)
-    assert "\\begin{tabular}" in text and "2/2" in text and "not rejected" in text
+    assert "\\begin{tabular}" in text
+    assert "2/2" in text
+    assert "not rejected" in text
     payload["comparisons"][0]["n"] = [5, 5]
     with pytest.raises(c.EvidenceUnavailable):
         mod.render(payload)

@@ -160,7 +160,11 @@ def _match_key(experiment: str, expected: Dict[str, Dict[str, Any]]) -> Optional
         return names[canonical]
     # Legacy aliases must be explicit; never infer a variant by substring.
     aliases = expected.get("_aliases", {})
-    target = next((value for alias, value in aliases.items() if alias.casefold() == canonical), None) if isinstance(aliases, dict) else None
+    target = (
+        next((value for alias, value in aliases.items() if alias.casefold() == canonical), None)
+        if isinstance(aliases, dict)
+        else None
+    )
     return target if target in expected and not target.startswith("_") else None
 
 

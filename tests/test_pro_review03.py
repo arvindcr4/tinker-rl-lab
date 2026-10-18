@@ -40,7 +40,7 @@ def load_functions(relative, names, namespace=None):
     ns = {"re": re, "Optional": object, "Dict": dict, "List": list, "Tuple": tuple}
     ns.update(namespace or {})
     # Postponed annotations avoid requiring the optional environment package.
-    exec(
+    exec(  # noqa: S102 - Execute only checked-in helper definitions to isolate optional imports.
         compile(
             "from __future__ import annotations\n" + ast.unparse(tree),
             "<repository helpers>",
@@ -52,7 +52,7 @@ def load_functions(relative, names, namespace=None):
 
 
 @pytest.mark.parametrize(
-    "expr,expected", [("sqrt(9)", 3.0), ("2*(3+4)", 14), ("round(1.25,1)", 1.2), ("-2**3", -8)]
+    ("expr", "expected"), [("sqrt(9)", 3.0), ("2*(3+4)", 14), ("round(1.25,1)", 1.2), ("-2**3", -8)]
 )
 def test_numeric_ast(expr, expected):
     assert arithmetic_value(expr) == expected
@@ -81,7 +81,7 @@ def test_generated_execution_fails_closed_before_code_is_run(code):
 
 
 @pytest.mark.parametrize(
-    "key,value,path",
+    ("key", "value", "path"),
     [
         ("num_steps", 1, ("env", "total_steps")),
         ("batch_size", 8, ("env", "batch_size")),
@@ -102,11 +102,11 @@ def test_every_cli_override(key, value, path):
 def test_model_identity_and_unsupported_config():
     cfg = apply_overrides(TinkerAtroposConfig(), {"base_model": "OVERRIDE/MODEL"})
     assert cfg.base_model == cfg.tinker_model == cfg.openai[0].model_name == "OVERRIDE/MODEL"
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="Extra inputs are not permitted"):
         TinkerAtroposConfig(num_steps=1)
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="Unsupported configuration override: unknown"):
         apply_overrides(cfg, {"unknown": 1})
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="Input should be greater than 0"):
         apply_overrides(cfg, {"num_steps": 0})
 
 
@@ -121,7 +121,7 @@ def test_legacy_help_uses_process_arguments(monkeypatch):
 
 
 @pytest.mark.parametrize(
-    "response,target,expected",
+    ("response", "target", "expected"),
     [
         (r"Intermediate \boxed{42}. Final answer: \boxed{7}.", "42", 0),
         (r"\boxed{\frac{1}{2}}", r"\frac{1}{2}", 1),
@@ -137,10 +137,10 @@ def test_authoritative_math(response, target, expected):
 
 @pytest.mark.parametrize(
     "args",
-    [{"path": "/TMP/A"}, {"path": False}, {"path": {"x": False}}, {"path": "/tmp/a", "extra": 1}],
+    [{"path": "/TMP/A"}, {"path": False}, {"path": {"x": False}}, {"path": "/tmp/a", "extra": 1}],  # noqa: S108 - Dummy reward/command argument; no filesystem access.
 )
 def test_tool_full_credit_requires_values_types_and_exact_keys(args):
-    target = {"tool": "read", "arguments": {"path": "/tmp/a"}}
+    target = {"tool": "read", "arguments": {"path": "/tmp/a"}}  # noqa: S108 - Dummy reward/command argument; no filesystem access.
     import json
 
     assert (
@@ -189,7 +189,9 @@ def test_tied_distillation_and_override():
         row[0][0] = row[1][0] = 0.0
     pre = DatasetPreprocessor("unused")
     datums, _, distil, zvf = pre.pad_data_to_good_offset(batch)
-    assert distil and zvf == 1 and len(datums) == 2
+    assert distil
+    assert zvf == 1
+    assert len(datums) == 2
     assert datums[0].loss_fn_inputs["advantages"].to_torch().tolist() == [0, 1]
     batch["batch"][0]["overrides"] = [{"set_advantage_to_zero": True}, {}]
     datums, *_ = pre.pad_data_to_good_offset(batch)
@@ -232,15 +234,19 @@ def test_resolved_config_readiness_generate_datum_integration():
     cfg = apply_overrides(TinkerAtroposConfig(), {"num_steps": 1, "group_size": 2})
     trainer = fake_trainer()
     client = TestClient(create_app(trainer))
-    assert cfg.num_steps == 1 and client.get("/health").json()["ready"]
+    assert cfg.num_steps == 1
+    assert client.get("/health").json()["ready"]
     response = client.post(
         "/generate", json={"input_ids": [1, 2], "sampling_params": {"seed": 7, "top_p": 0.8}}
     )
     assert response.status_code == 200
     meta = response.json()["meta_info"]
-    assert meta["finish_reason"] == "length" and meta["policy_version"] == "snapshot-2"
+    assert meta["finish_reason"] == "length"
+    assert meta["policy_version"] == "snapshot-2"
     params = trainer.current_sampling_client.sample_async.call_args.kwargs["sampling_params"]
-    assert params.seed == 7 and params.top_p == 0.8 and params.stop is None
+    assert params.seed == 7
+    assert params.top_p == 0.8
+    assert params.stop is None
     batch = {
         "batch": [
             {
@@ -251,7 +257,8 @@ def test_resolved_config_readiness_generate_datum_integration():
         ]
     }
     datums, *_ = DatasetPreprocessor("unused").pad_data_to_good_offset(batch)
-    assert len(datums) == 2 and datums[0].loss_fn_inputs["advantages"].to_torch().tolist() == [
+    assert len(datums) == 2
+    assert datums[0].loss_fn_inputs["advantages"].to_torch().tolist() == [
         0,
         0.5,
         0.5,
@@ -344,7 +351,7 @@ def test_multilabel_toxicity_is_not_inverted():
         )
         == 0.99
     )
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="Classifier must provide all six toxic category labels"):
         ns["toxicity_score"]([{"label": "insult", "score": 0.99}])
 
 
@@ -356,7 +363,7 @@ def test_arena_role_and_budget():
     from tinker_atropos.budgets import budget_steps
 
     assert budget_steps(128 * 2048 * 10, 2048, 16, 8) == 10
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="Token budget is smaller than one full optimizer update"):
         budget_steps(10, 2048, 16, 8)
 
 
@@ -575,7 +582,8 @@ def test_compatibility_wrapper_help_exits_without_training(wrapper):
         text=True,
         timeout=20,
     )
-    assert result.returncode == 0 and "usage:" in result.stdout
+    assert result.returncode == 0
+    assert "usage:" in result.stdout
 
 
 @pytest.mark.parametrize(
@@ -616,7 +624,7 @@ def actual_tool_use_module(monkeypatch):
 
 @pytest.mark.parametrize("reward_version", ["v1", "v2"])
 @pytest.mark.parametrize(
-    "response,expected",
+    ("response", "expected"),
     [
         ('{"tool":"lookup","arguments":{"query":"France"}}', 1.0),
         (' \n {"tool":"lookup","arguments":{"query":"France"}}\t ', 1.0),
@@ -664,7 +672,7 @@ def test_actual_tool_environment_requires_single_whole_json_object(
 
 @pytest.mark.parametrize("boxed", [False, True])
 @pytest.mark.parametrize(
-    "candidate,target,expected",
+    ("candidate", "target", "expected"),
     [
         ("9007199254740993", "9007199254740992", 0.0),
         ("9007199254740992", "9007199254740993", 0.0),
@@ -705,7 +713,7 @@ def test_exact_math_rejects_nonfinite_even_identical_targets(value, boxed):
 
 
 @pytest.mark.parametrize(
-    "candidate,target,tolerance,expected",
+    ("candidate", "target", "tolerance", "expected"),
     [
         ("9007199254740993", "9007199254740992", 0.01, 0.3),
         ("9007199254740993.01", "9007199254740993", 0.01, 1.0),

@@ -1,4 +1,5 @@
 """Offline regressions for schema, atomic artifact preservation and strict JSON."""
+
 import copy
 import gzip
 import importlib
@@ -34,7 +35,9 @@ def write_bundle(directory, *, smoke=True, arm="grpo_g8", seed=42, marker=True):
     for file in ("adapter_config.json", "tokenizer_config.json", "tokenizer.json"):
         (adapter / file).write_text('{"synthetic": true}')
     for mode in ("train", "eval"):
-        (adapter / f"{mode}_generation_config.json").write_text(json.dumps(record["manifest"]["generation"][mode]))
+        (adapter / f"{mode}_generation_config.json").write_text(
+            json.dumps(record["manifest"]["generation"][mode])
+        )
     if marker:
         contract.write_completion(result)
     return result, record, texts
@@ -50,8 +53,14 @@ def test_complete_synthetic_schema(arm, smoke):
 
 def test_review_c5_contradictory_reproducer_is_rejected(tmp_path):
     record, texts = synthetic_run("ppo_8x8", smoke=False)
-    record.update(arm="WRONG", seed=999, group=0, prompts_per_step=999,
-                  heldout_post_acc=1, execution_environment={})
+    record.update(
+        arm="WRONG",
+        seed=999,
+        group=0,
+        prompts_per_step=999,
+        heldout_post_acc=1,
+        execution_environment={},
+    )
     record.pop("manifest")
     texts["pre"] = []
     path = tmp_path / "ppo_8x8_s42.json"
@@ -67,21 +76,27 @@ def test_review_c5_contradictory_reproducer_is_rejected(tmp_path):
     assert any("texts.pre" in error for error in check["errors"])
 
 
-@pytest.mark.parametrize(("field", "mutation"), [
-    ("pre_correct", lambda r: r["pre_correct"].pop()),
-    ("post_correct", lambda r: r["post_correct"].__setitem__(0, 2)),
-    ("pre_trunc", lambda r: r["pre_trunc"].__setitem__(0, True)),
-    ("post_trunc", lambda r: r["post_trunc"].append(0)),
-    ("heldout_pre_acc", lambda r: r.__setitem__("heldout_pre_acc", 0.5)),
-    ("n_steps", lambda r: r.__setitem__("n_steps", 999)),
-    ("group", lambda r: r.__setitem__("group", 0)),
-    ("config_hash", lambda r: r["manifest"].__setitem__("config_hash", "0" * 64)),
-    ("environment_hash", lambda r: r["manifest"].__setitem__("environment_hash", "0" * 64)),
-    ("ordered", lambda r: r["manifest"]["test_item_ids"].reverse()),
-    ("schedule", lambda r: r["manifest"]["schedules"]["policy"][0].reverse()),
-    ("run_id", lambda r: r["manifest"].__setitem__("run_id", "0" * 64)),
-    ("revision", lambda r: r["manifest"]["revisions"]["model"].__setitem__("revision", "0" * 40)),
-])
+@pytest.mark.parametrize(
+    ("field", "mutation"),
+    [
+        ("pre_correct", lambda r: r["pre_correct"].pop()),
+        ("post_correct", lambda r: r["post_correct"].__setitem__(0, 2)),
+        ("pre_trunc", lambda r: r["pre_trunc"].__setitem__(0, True)),
+        ("post_trunc", lambda r: r["post_trunc"].append(0)),
+        ("heldout_pre_acc", lambda r: r.__setitem__("heldout_pre_acc", 0.5)),
+        ("n_steps", lambda r: r.__setitem__("n_steps", 999)),
+        ("group", lambda r: r.__setitem__("group", 0)),
+        ("config_hash", lambda r: r["manifest"].__setitem__("config_hash", "0" * 64)),
+        ("environment_hash", lambda r: r["manifest"].__setitem__("environment_hash", "0" * 64)),
+        ("ordered", lambda r: r["manifest"]["test_item_ids"].reverse()),
+        ("schedule", lambda r: r["manifest"]["schedules"]["policy"][0].reverse()),
+        ("run_id", lambda r: r["manifest"].__setitem__("run_id", "0" * 64)),
+        (
+            "revision",
+            lambda r: r["manifest"]["revisions"]["model"].__setitem__("revision", "0" * 40),
+        ),
+    ],
+)
 def test_semantic_mutations_rejected(field, mutation):
     record, texts = synthetic_run()
     record = copy.deepcopy(record)
@@ -118,13 +133,15 @@ def test_duplicate_identity_rejected():
     record, texts = synthetic_run()
     seen = set()
     assert contract.validate_run(record, texts=texts, seen=seen)["verified"]
-    assert "duplicate run identity" in contract.validate_run(record, texts=texts, seen=seen)["errors"]
+    assert (
+        "duplicate run identity" in contract.validate_run(record, texts=texts, seen=seen)["errors"]
+    )
 
 
 @pytest.mark.parametrize("value", ["NaN", "Infinity", "-Infinity", "1e999"])
 def test_nonfinite_json_rejected(value):
     with pytest.raises(ValueError, match="Non-finite"):
-        contract.strict_json_loads('{"value": ' + value + '}')
+        contract.strict_json_loads('{"value": ' + value + "}")
 
 
 def test_nan_literal_text_is_preserved_and_duplicate_keys_rejected():
@@ -155,6 +172,7 @@ def test_download_failure_after_json_retries_and_preserves_bundle(tmp_path):
     remote, stage = tmp_path / "remote", tmp_path / "stage"
     source, _, _ = write_bundle(remote)
     downloaded, fail = [], [True]
+
     def fake(*args, **kwargs):
         assert args[0] == "download"
         relative = args[3].split(driver.PROTOCOL_ID + "/", 1)[1]
@@ -165,6 +183,7 @@ def test_download_failure_after_json_retries_and_preserves_bundle(tmp_path):
         destination = Path(args[4])
         destination.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(remote / relative, destination)
+
     with pytest.raises(subprocess.CalledProcessError):
         driver.preserve_run("SYNTHETIC", source.stem, stage, command=fake)
     assert not (stage / source.stem).exists()
@@ -175,15 +194,27 @@ def test_download_failure_after_json_retries_and_preserves_bundle(tmp_path):
 
 
 def test_session_does_not_stop_when_artifact_preservation_fails(tmp_path, monkeypatch):
-    source = {"commit": "a" * 40, "dirty_hash": "b" * 64,
-              "source_files": {str(driver.RUNNER.relative_to(driver.ROOT)): contract.sha256_file(driver.RUNNER)}}
+    source = {
+        "commit": "a" * 40,
+        "dirty_hash": "b" * 64,
+        "source_files": {
+            str(driver.RUNNER.relative_to(driver.ROOT)): contract.sha256_file(driver.RUNNER)
+        },
+    }
     commands = []
+
     def fail(*args, **kwargs):
         raise OSError("synthetic interrupted transfer")
+
     monkeypatch.setattr(driver, "preserve_run", fail)
     with pytest.raises(OSError, match="interrupted"):
-        driver.drive_session("SYNTHETIC", ["ppo:42"], stage=tmp_path, source=source,
-                             command=lambda *args, **kwargs: commands.append(args))
+        driver.drive_session(
+            "SYNTHETIC",
+            ["ppo:42"],
+            stage=tmp_path,
+            source=source,
+            command=lambda *args, **kwargs: commands.append(args),
+        )
     assert any(command[0] == "exec" for command in commands)
     assert not any(command[0] == "stop" for command in commands)
 
@@ -207,8 +238,10 @@ def test_installed_wrong_versions_are_not_accepted(monkeypatch):
 
 def test_imports_do_not_launch_or_stub_modal(monkeypatch):
     original = sys.modules.get("modal")
+
     def forbidden(*args, **kwargs):
         raise AssertionError("import must not start a service or install packages")
+
     monkeypatch.setattr(subprocess, "run", forbidden)
     monkeypatch.setattr(subprocess, "check_call", forbidden)
     for module in (runner, driver, verifier):
@@ -219,7 +252,9 @@ def test_imports_do_not_launch_or_stub_modal(monkeypatch):
 def test_source_archive_hashes_checked_before_extract(tmp_path):
     archive = tmp_path / "source.zip"
     source_path = tmp_path / "source.json"
-    source_path.write_text(json.dumps({"status": "observed", "source_files": {"module.py": "0" * 64}}))
+    source_path.write_text(
+        json.dumps({"status": "observed", "source_files": {"module.py": "0" * 64}})
+    )
     with zipfile.ZipFile(archive, "w") as bundle:
         bundle.writestr("module.py", "print('SYNTHETIC')")
     with pytest.raises(ValueError, match="hash mismatch"):
@@ -244,13 +279,23 @@ def test_duplicate_canonical_identity_cannot_be_remerged_under_new_path(tmp_path
 def test_existing_json_never_skips_colab_execution(tmp_path, monkeypatch):
     existing = tmp_path / "ppo_s42.json"
     existing.write_text('{"incomplete": true}')
-    source = {"commit": "a" * 40, "dirty_hash": "b" * 64,
-              "source_files": {str(driver.RUNNER.relative_to(driver.ROOT)): contract.sha256_file(driver.RUNNER)}}
+    source = {
+        "commit": "a" * 40,
+        "dirty_hash": "b" * 64,
+        "source_files": {
+            str(driver.RUNNER.relative_to(driver.ROOT)): contract.sha256_file(driver.RUNNER)
+        },
+    }
     commands = []
     monkeypatch.setattr(driver, "preserve_run", lambda *args, **kwargs: None)
     monkeypatch.setattr(driver, "validate_completion", lambda *args, **kwargs: {})
-    driver.drive_session("SYNTHETIC", ["ppo:42"], stage=tmp_path, source=source,
-                         command=lambda *args, **kwargs: commands.append(args))
+    driver.drive_session(
+        "SYNTHETIC",
+        ["ppo:42"],
+        stage=tmp_path,
+        source=source,
+        command=lambda *args, **kwargs: commands.append(args),
+    )
     assert sum(command[0] == "exec" for command in commands) == 1
     assert commands[-1][0] == "stop"
     assert existing.read_text() == '{"incomplete": true}'
@@ -275,6 +320,7 @@ def test_saved_generation_config_must_match_manifest(tmp_path):
 
 def test_stale_imported_source_requires_runtime_restart(tmp_path, monkeypatch):
     import types
+
     target = tmp_path / "target/helpers/fake.py"
     module = types.ModuleType("platform_hybrid.experiments.samestack_fake")
     module.__file__ = str(target)
@@ -283,7 +329,15 @@ def test_stale_imported_source_requires_runtime_restart(tmp_path, monkeypatch):
     archive, source_path = tmp_path / "source.zip", tmp_path / "source.json"
     data = b"# SYNTHETIC source"
     import hashlib
-    source_path.write_text(json.dumps({"status": "observed", "source_files": {"helpers/fake.py": hashlib.sha256(data).hexdigest()}}))
+
+    source_path.write_text(
+        json.dumps(
+            {
+                "status": "observed",
+                "source_files": {"helpers/fake.py": hashlib.sha256(data).hexdigest()},
+            }
+        )
+    )
     with zipfile.ZipFile(archive, "w") as bundle:
         bundle.writestr("helpers/fake.py", data)
     with pytest.raises(RuntimeError, match="restart"):
@@ -306,33 +360,62 @@ def test_mean_reward_cannot_silently_bypass_summary_recomputation():
 
 
 def test_batched_colab_preserves_each_bundle_before_stop(tmp_path, monkeypatch):
-    source = {"commit": "a" * 40, "dirty_hash": "b" * 64,
-              "source_files": {str(driver.RUNNER.relative_to(driver.ROOT)): contract.sha256_file(driver.RUNNER)}}
+    source = {
+        "commit": "a" * 40,
+        "dirty_hash": "b" * 64,
+        "source_files": {
+            str(driver.RUNNER.relative_to(driver.ROOT)): contract.sha256_file(driver.RUNNER)
+        },
+    }
     events = []
-    monkeypatch.setattr(driver, "preserve_run", lambda session, name, *a, **kw: events.append(("preserve", name)))
+    monkeypatch.setattr(
+        driver, "preserve_run", lambda session, name, *a, **kw: events.append(("preserve", name))
+    )
     monkeypatch.setattr(driver, "validate_completion", lambda *a, **kw: {})
-    driver.drive_session("SYNTHETIC", ["ppo:42", "grpo_g8:42", "ppo:123"],
-                         stage=tmp_path, source=source, parallel=2, batch=2,
-                         command=lambda *a, **kw: events.append(a))
+    driver.drive_session(
+        "SYNTHETIC",
+        ["ppo:42", "grpo_g8:42", "ppo:123"],
+        stage=tmp_path,
+        source=source,
+        parallel=2,
+        batch=2,
+        command=lambda *a, **kw: events.append(a),
+    )
     executions = [event for event in events if event[0] == "exec"]
     assert len(executions) == 2
     assert "RUNS=ppo:42,grpo_g8:42" in executions[0]
     assert "PARALLEL=2" in executions[0]
-    assert [event[1] for event in events if event[0] == "preserve"] == ["ppo_s42", "grpo_g8_s42", "ppo_s123"]
+    assert [event[1] for event in events if event[0] == "preserve"] == [
+        "ppo_s42",
+        "grpo_g8_s42",
+        "ppo_s123",
+    ]
     assert events[-1][0] == "stop"
 
 
 def test_batched_colab_transfer_failure_never_stops_session(tmp_path, monkeypatch):
-    source = {"commit": "a" * 40, "dirty_hash": "b" * 64,
-              "source_files": {str(driver.RUNNER.relative_to(driver.ROOT)): contract.sha256_file(driver.RUNNER)}}
+    source = {
+        "commit": "a" * 40,
+        "dirty_hash": "b" * 64,
+        "source_files": {
+            str(driver.RUNNER.relative_to(driver.ROOT)): contract.sha256_file(driver.RUNNER)
+        },
+    }
     events = []
+
     def fail(*args, **kwargs):
         raise OSError("synthetic transfer failure")
+
     monkeypatch.setattr(driver, "preserve_run", fail)
     with pytest.raises(OSError, match="synthetic"):
-        driver.drive_session("SYNTHETIC", ["ppo:42", "grpo_g8:42"],
-                             stage=tmp_path, source=source, parallel=2,
-                             command=lambda *a, **kw: events.append(a))
+        driver.drive_session(
+            "SYNTHETIC",
+            ["ppo:42", "grpo_g8:42"],
+            stage=tmp_path,
+            source=source,
+            parallel=2,
+            command=lambda *a, **kw: events.append(a),
+        )
     assert not any(event[0] == "stop" for event in events)
 
 

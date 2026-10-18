@@ -139,7 +139,7 @@ def test_audit_rejects_pilot_and_wrong_identity_even_with_valid_trace():
 
 
 @pytest.mark.parametrize(
-    "field,value",
+    ("field", "value"),
     [("mean_zvf", 5), ("mean_gu", 3), ("rollouts", True), ("heldout_score", float("nan"))],
 )
 def test_audit_impossible_values_are_not_finite_only_admissible(field, value):
@@ -234,7 +234,8 @@ def test_summary_telemetry_preserves_values_and_cannot_drop_prompts():
     )
     decision = cb.decisions[-1]
     assert (decision.zvf, decision.mean_reward) == (0.9, 0.96)
-    assert decision.observation_kind == "summary_only" and not control.should_training_stop
+    assert decision.observation_kind == "summary_only"
+    assert not control.should_training_stop
     for step in range(2, 6):
         adapter.on_log(
             None,
@@ -260,16 +261,19 @@ def test_diagnostic_population_is_not_censored_by_recommendations():
         controller.step([0, 0, 1, 1], ids, prompt_ids=ids)
     for _ in range(3):
         decision = controller.step([0, 0, 0, 0], ids, prompt_ids=ids)
-    assert decision.auto_stop and decision.zvf == 1 and decision.filtered_rewards == 0
+    assert decision.auto_stop
+    assert decision.zvf == 1
+    assert decision.filtered_rewards == 0
     assert ZVFController().step([], []).auto_stop
 
 
 def test_invalid_rewards_do_not_mutate_history():
     controller = ZVFController()
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="aligned finite rewards and group IDs are required"):
         controller.step([0, float("nan")], [0, 0])
-    assert controller.zvf_history == [] and controller._step == 0
-    with pytest.raises(ValueError):
+    assert controller.zvf_history == []
+    assert controller._step == 0
+    with pytest.raises(ValueError, match="reward observations must be finite"):
         core.zvf([float("inf")], [0])
 
 
@@ -345,7 +349,8 @@ def test_stale_e1_result_is_never_returned(tmp_path):
         receipt_dir=tmp_path,
         deadline_epoch=__import__("time").time() + 3,
     )
-    assert outcome["status"] == "UNKNOWN" and outcome["result"] is None
+    assert outcome["status"] == "UNKNOWN"
+    assert outcome["result"] is None
 
 
 def test_native_worker_parser_forwards_evaluator_argv_and_records_failure(tmp_path):
@@ -373,7 +378,8 @@ def test_native_worker_parser_forwards_evaluator_argv_and_records_failure(tmp_pa
     )
     assert process.returncode == 0, process.stderr  # receipt-writing worker succeeded
     result = json.loads(path.read_text())
-    assert result["returncode"] == 7 and result["attempt_nonce"] == "synthetic-attempt"
+    assert result["returncode"] == 7
+    assert result["attempt_nonce"] == "synthetic-attempt"
 
 
 def test_generation_dispatch_is_exclusively_claimed(tmp_path, monkeypatch):
@@ -506,7 +512,7 @@ def test_mathematical_counterexamples_and_corrected_bound():
 
 
 @pytest.mark.parametrize(
-    "changed,tokens,gradient,expected",
+    ("changed", "tokens", "gradient", "expected"),
     [
         (False, 4, 1.0, False),
         (True, 0, 1.0, False),
@@ -560,7 +566,7 @@ def test_loss_token_accounting_excludes_environment_masked_slots():
 
 
 @pytest.mark.parametrize(
-    "provider,gpu,flavor,terminal",
+    ("provider", "gpu", "flavor", "terminal"),
     [
         ("colab", "A100", "A100", False),
         ("gcp", "L4", "g2-standard-8", False),
@@ -617,7 +623,8 @@ def test_each_provider_shared_request_and_completed_contract(
         else f"run_{provider}_preflight"
     )
     source = (ZVF / "next-submission" / f"{module}.py").read_text()
-    assert "seal_request(" in source and "completed_receipt(" in source
+    assert "seal_request(" in source
+    assert "completed_receipt(" in source
 
 
 def test_http_actor_contract_and_actual_usage_without_loading_model(monkeypatch):
@@ -691,7 +698,8 @@ def test_modal_http_entrypoint_is_registered_as_asgi_without_process_wait():
     serve = next(n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name == "serve")
     decorators = [ast.unparse(n.func) for n in serve.decorator_list]
     assert decorators == ["app.function", "modal.asgi_app"]
-    assert "wait(" not in ast.unparse(serve) and "return actor_app" in ast.unparse(serve)
+    assert "wait(" not in ast.unparse(serve)
+    assert "return actor_app" in ast.unparse(serve)
 
 
 def test_verifier_and_shaped_reward_contrast_remain_distinct():
@@ -705,7 +713,8 @@ def test_verifier_and_shaped_reward_contrast_remain_distinct():
         non_tensor_batch={"uid": np.array(["p", "p"])},
     )
     decision = VERLZVFAdapter().process_step(data)
-    assert decision.verifier_zvf == 1 and decision.effective_training_reward_zvf == 0
+    assert decision.verifier_zvf == 1
+    assert decision.effective_training_reward_zvf == 0
     assert decision.applied_group_size is None
 
 
@@ -781,7 +790,8 @@ def test_audit_failed_aggregate_cannot_exit_success_and_same_count_invalidates_c
 def test_ledger_requires_exact_status_retained_components_and_nonzero_failure():
     from ledger_contract import is_graded, components_match, verification_exit_code
 
-    assert is_graded("GRADED") and not is_graded("UNGRADED")
+    assert is_graded("GRADED")
+    assert not is_graded("UNGRADED")
     assert not components_match(None, 129)
     assert not components_match({"a": {"passes": 67}, "b": {"passes": 61}}, 129)
     assert components_match({"a": {"passes": 67}, "b": {"passes": 62}}, 129)
@@ -799,7 +809,7 @@ def test_diagnostic_seeds_exclude_locked_confirmatory_and_reserve():
 
 
 @pytest.mark.parametrize(
-    "field,value",
+    ("field", "value"),
     [
         ("mode", "preflight"),
         ("model", "unrelated/model"),
@@ -830,11 +840,13 @@ def test_audit_execution_mutations_fail_real_aggregate_and_campaign(tmp_path, fi
         manifest["run_config"].pop(field)
     path.write_text(json.dumps(manifest))
     accepted, errors = AUDIT.validate_records(fixture.prereg, [(tmp_path / "record.json", record)])
-    assert not accepted and errors
+    assert not accepted
+    assert errors
     valid, reason = CAMPAIGN.validate_result(
         ("grpo", 11), record, CAMPAIGN.load_contract()[1], stack_fingerprint="b" * 64
     )
-    assert valid is False and reason
+    assert valid is False
+    assert reason
 
 
 @pytest.mark.parametrize("location", ["audit_record", "run_config", "both"])
@@ -891,7 +903,11 @@ def test_summary_only_collapse_does_not_apply_abort_but_raw_rewards_do():
     )
     assert cb.decisions[-1].observation_kind == "summary_only"
     assert cb.decisions[-1].signal == "noop"
-    assert control.should_training_stop is False and cb.should_stop is False and actions == []
+    assert control.should_training_stop is False
+    assert cb.should_stop is False
+    assert actions == []
     adapter.on_log(None, SimpleNamespace(global_step=2), control, logs={"rewards": [0.0, 0.0]})
     assert cb.decisions[-1].observation_kind == "raw_rewards"
-    assert control.should_training_stop is True and cb.should_stop is True and actions == [2]
+    assert control.should_training_stop is True
+    assert cb.should_stop is True
+    assert actions == [2]

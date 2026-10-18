@@ -236,7 +236,14 @@ OK = {"status": "ok", "source": "hash_marker", "value": "7"}
 def review(name="synthetic_reviewer_one", cases=None):
     return {
         "reviewer_id": name,
-        "packet_sha256": v.packet_digest([{"case_id": "c", "raw_completion_text": "#### **Answer:**\n7"}] if cases is None else [{"case_id": item["case_id"], "raw_completion_text": "#### **Answer:**\n7"} for item in cases]),
+        "packet_sha256": v.packet_digest(
+            [{"case_id": "c", "raw_completion_text": "#### **Answer:**\n7"}]
+            if cases is None
+            else [
+                {"case_id": item["case_id"], "raw_completion_text": "#### **Answer:**\n7"}
+                for item in cases
+            ]
+        ),
         "independent_output_only_review": True,
         "completed_at_utc": "2000-01-01T00:00:00+00:00",
         "cases": cases

@@ -165,7 +165,8 @@ def test_new_reporting_does_not_claim_zero_seed_uncertainty(tmp_path):
     # The numerical helper now also marks single-seed uncertainty as unestimable.
     mean, low, high = stats.compute_bootstrap_ci([0.8])
     assert mean == 0.8
-    assert np.isnan(low) and np.isnan(high)
+    assert np.isnan(low)
+    assert np.isnan(high)
 
 
 def test_hash_seed_metadata_never_claims_runtime_activation():

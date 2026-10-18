@@ -375,7 +375,8 @@ def check_replacement(lane, d):
         for row in rows:
             require(type(row["rc"]) is int, "E9 return code must be an integer")
             require(
-                not row["success"] or row["rc"] == 0, "E9 successful task has a nonzero return code; ungraded task"
+                not row["success"] or row["rc"] == 0,
+                "E9 successful task has a nonzero return code; ungraded task",
             )
         errors = sum(r["rc"] != 0 for r in rows)
         same(count(d["n_errors_or_timeouts"]), errors, "E9 errors")

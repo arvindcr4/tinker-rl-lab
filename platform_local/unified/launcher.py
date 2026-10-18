@@ -112,21 +112,33 @@ class UnifiedLauncher:
         from platform_local.unified.canonical import load_spec
 
         from dataclasses import replace
+
         base = load_spec()
-        overrides = {"model": self.model or base.model, "algorithm": self.algorithm,
-                     "training_steps": self.epochs, "task": getattr(self, "task", base.task),
-                     "seed": getattr(self, "seed", base.seed)}
+        overrides = {
+            "model": self.model or base.model,
+            "algorithm": self.algorithm,
+            "training_steps": self.epochs,
+            "task": getattr(self, "task", base.task),
+            "seed": getattr(self, "seed", base.seed),
+        }
         if self.trl_config is not None:
             c = self.trl_config
-            overrides.update(model=c.model_name, algorithm=c.algorithm.algorithm,
+            overrides.update(
+                model=c.model_name,
+                algorithm=c.algorithm.algorithm,
                 training_steps=c.max_steps if c.max_steps > 0 else self.epochs,
-                learning_rate=c.optimizer.learning_rate, lora_rank=c.model.lora_rank,
-                lora_alpha=c.model.lora_alpha, beta=c.algorithm.kl_coef,
-                epsilon_low=c.algorithm.epsilon_low, epsilon_high=c.algorithm.epsilon_high,
+                learning_rate=c.optimizer.learning_rate,
+                lora_rank=c.model.lora_rank,
+                lora_alpha=c.model.lora_alpha,
+                beta=c.algorithm.kl_coef,
+                epsilon_low=c.algorithm.epsilon_low,
+                epsilon_high=c.algorithm.epsilon_high,
                 max_completion_length=c.data.max_response_length,
                 per_device_train_batch_size=c.data.train_batch_size,
                 gradient_accumulation_steps=c.data.gradient_accumulation_steps,
-                num_generations=c.algorithm.num_generations, seed=c.seed)
+                num_generations=c.algorithm.num_generations,
+                seed=c.seed,
+            )
         self.spec = replace(base, **overrides)
         return self.spec
 
@@ -342,6 +354,7 @@ class UnifiedLauncher:
         import subprocess
         import json
         from pathlib import Path
+
         with tempfile.TemporaryDirectory(prefix="unified-trl-") as scratch:
             script = str(Path(scratch) / "train_trl.py")
             receipt_path = Path(scratch) / "receipt.json"
@@ -354,10 +367,15 @@ class UnifiedLauncher:
             if not receipt_path.is_file():
                 raise RuntimeError("Missing valid completed training receipt")
             receipt = json.loads(receipt_path.read_text())
-            if (not isinstance(receipt, dict) or receipt.get("status") != "completed"
-                    or receipt.get("simulated") is not False
-                    or type(receipt.get("final_step")) is not int
-                    or receipt["final_step"] < 1
-                    or (config.max_steps > 0 and receipt["final_step"] != config.max_steps)):
+            if (
+                not isinstance(receipt, dict)
+                or receipt.get("status") != "completed"
+                or receipt.get("simulated") is not False
+                or type(receipt.get("final_step")) is not int
+                or receipt["final_step"] < 1
+                or (config.max_steps > 0 and receipt["final_step"] != config.max_steps)
+            ):
                 raise RuntimeError("Missing valid completed training receipt")
-        return TrainingResult("trl", config.model_name, config.algorithm.algorithm, receipt["final_step"], [], [])
+        return TrainingResult(
+            "trl", config.model_name, config.algorithm.algorithm, receipt["final_step"], [], []
+        )

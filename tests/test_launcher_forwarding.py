@@ -105,11 +105,18 @@ def invoke_trl(extra=(), generate=False):
     argv += list(extra)
     if generate:
         argv += ["--generate-script", "synthetic-not-written.py"]
+
     def completed_training(cmd, **kwargs):
         # Protocol v2 only accepts actual trainer receipts, even in mocked tests.
-        Path(kwargs["env"]["TRL_RECEIPT_PATH"]).write_text(json.dumps({
-            "status": "completed", "simulated": False, "final_step": 4,
-        }))
+        Path(kwargs["env"]["TRL_RECEIPT_PATH"]).write_text(
+            json.dumps(
+                {
+                    "status": "completed",
+                    "simulated": False,
+                    "final_step": 4,
+                }
+            )
+        )
 
     with (
         temporary_modules({driver.__name__: driver}),

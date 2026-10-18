@@ -169,7 +169,7 @@ def test_generated_execution_passes_explicit_reward_and_config(monkeypatch, tmp_
         optimizer={"beta1": 0.8, "beta2": 0.87, "eps": 0.0001, "weight_decay": 0.2},
     )
     script = generate_trl_train_script(config, tmp_path / "generated.py")
-    exec(compile(script, "<inert-generated>", "exec"), {})  # noqa: S102 - inert modules only
+    exec(compile(script, "<inert-generated>", "exec"), {})  # noqa: S102 - Execute only checked-in helper definitions to isolate optional imports.
     assert observed["trainer"]["reward_funcs"] == [reward]
     assert observed["train"] == {"resume_from_checkpoint": None}
     assert observed["seed"] == 913
@@ -193,7 +193,7 @@ def test_existing_output_fails_before_any_model_load(monkeypatch, tmp_path):
     Path(config.output_dir).mkdir()
     script = generate_trl_train_script(config, tmp_path / "generated.py")
     with pytest.raises(FileExistsError):
-        exec(compile(script, "<inert-generated>", "exec"), {})  # noqa: S102 - inert modules only
+        exec(compile(script, "<inert-generated>", "exec"), {})  # noqa: S102 - Execute only checked-in helper definitions to isolate optional imports.
     assert not observed
 
 
@@ -227,7 +227,7 @@ def test_actual_cli_to_generated_script_preserves_native_contract(monkeypatch, t
         script = Path(command[1]).read_text()
         with monkeypatch.context() as env_patch:
             env_patch.setenv("TRL_RECEIPT_PATH", kwargs["env"]["TRL_RECEIPT_PATH"])
-            exec(compile(script, "<inert-cli-generated>", "exec"), {})  # noqa: S102 - all dependencies inert
+            exec(compile(script, "<inert-cli-generated>", "exec"), {})  # noqa: S102 - Execute only checked-in helper definitions to isolate optional imports.
 
     monkeypatch.setattr(subprocess, "run", execute_inert_command)
     (tmp_path / "synthetic.json").write_text('[ {"prompt": "synthetic"} ]')
@@ -307,9 +307,15 @@ def test_launcher_rejects_invalid_or_short_optimizer_receipts(monkeypatch, tmp_p
     import subprocess
 
     def run(command, **kwargs):
-        Path(kwargs["env"]["TRL_RECEIPT_PATH"]).write_text(json.dumps({
-            "status": "completed", "simulated": False, "final_step": step,
-        }))
+        Path(kwargs["env"]["TRL_RECEIPT_PATH"]).write_text(
+            json.dumps(
+                {
+                    "status": "completed",
+                    "simulated": False,
+                    "final_step": step,
+                }
+            )
+        )
 
     monkeypatch.setattr(subprocess, "run", run)
     launcher = UnifiedLauncher()

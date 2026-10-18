@@ -390,7 +390,9 @@ def _generate_native_trl_script(config: TRLConfig, output_path: str = "train_trl
             "Native model_path/resume is unsupported; use explicit output_dir"
         )
     if config.resume_from_checkpoint is not None:
-        raise NotImplementedError("Native resume_from_checkpoint is unsupported; choose fresh output")
+        raise NotImplementedError(
+            "Native resume_from_checkpoint is unsupported; choose fresh output"
+        )
     if config.data.max_prompt_length is not None:
         raise NotImplementedError("Pinned TRL 1.2.0 does not support max_prompt_length")
     if config.data.val_data:
@@ -408,7 +410,7 @@ def _generate_native_trl_script(config: TRLConfig, output_path: str = "train_trl
     )
     deepspeed_line = f"deepspeed={config.deepspeed!r}," if config.deepspeed else ""
     header = f"TRL explicit-reward training script for {config.model_name}"
-    script = f'''{header!r}
+    script = f"""{header!r}
 
 import os
 import json
@@ -557,7 +559,7 @@ receipt = {{"protocol": manifest["protocol"], "spec_hash": manifest["spec_hash"]
 if os.environ.get("TRL_RECEIPT_PATH"):
     Path(os.environ["TRL_RECEIPT_PATH"]).write_text(json.dumps(receipt))
 print("Training complete!")
-'''
+"""
 
     output_path = Path(output_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -566,7 +568,6 @@ print("Training complete!")
 
     print(f"Training script saved to {output_path}")
     return script
-
 
 
 def _generate_scientific_trl_script(config: TRLConfig, output_path: str = "train_trl.py"):
@@ -582,7 +583,9 @@ def _generate_scientific_trl_script(config: TRLConfig, output_path: str = "train
         raise ValueError("At least one data.train_data JSON path is required")
 
     if config.reward_callable or config.output_dir:
-        raise ValueError("Scientific TRL uses its versioned reward and output_root, not native reward_callable/output_dir")
+        raise ValueError(
+            "Scientific TRL uses its versioned reward and output_root, not native reward_callable/output_dir"
+        )
     if config.num_gpus != 1:
         raise NotImplementedError("Scientific script supports one process/GPU only")
     boxed_marker = "\\boxed{"

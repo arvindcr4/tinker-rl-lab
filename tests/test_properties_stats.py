@@ -68,7 +68,7 @@ def _lift_functions(rel: str, names: tuple[str, ...], consts: tuple[str, ...] = 
     namespace: dict = {"math": math, "itertools": itertools}
     # Runs this repo's own helper defs extracted from a Modal script (importing it
     # would need the modal package); never untrusted input.
-    exec(compile(ast.Module(body=keep, type_ignores=[]), rel, "exec"), namespace)  # noqa: S102
+    exec(compile(ast.Module(body=keep, type_ignores=[]), rel, "exec"), namespace)  # noqa: S102 - Execute only checked-in helper definitions to isolate optional imports.
     return namespace
 
 

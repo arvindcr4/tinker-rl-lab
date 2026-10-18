@@ -56,7 +56,15 @@ def test_single_seed_cli_keeps_mean_and_labels_unavailable_uncertainty(tmp_path,
     source.mkdir(parents=True)
     (source / "metrics.jsonl").write_text(json.dumps({"accuracy": 0.7}) + "\n")
     output = tmp_path / "out"
-    stats.main(["--legacy-exploratory", "--results-dir", str(tmp_path / "data"), "--output-dir", str(output)])
+    stats.main(
+        [
+            "--legacy-exploratory",
+            "--results-dir",
+            str(tmp_path / "data"),
+            "--output-dir",
+            str(output),
+        ]
+    )
     row = pd.read_csv(output / "results_table.csv").iloc[0]
     assert row["mean"] == pytest.approx(0.7)
     assert row["uncertainty_status"] == "unavailable_n_lt_2"

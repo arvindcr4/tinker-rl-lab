@@ -20,7 +20,9 @@ def contract():
     results = VERIFIER.load_json(HERE / "results_contract.json")
     blueprint = (HERE / "MANUSCRIPT_BLUEPRINT.md").read_text(encoding="utf-8")
     # Synthetic semantic-contract fixture: the real frozen hash stays unchanged.
-    protocol["bindings"]["power_implementation_sha256"] = VERIFIER.sha256(ROOT / protocol["bindings"]["power_implementation_path"])
+    protocol["bindings"]["power_implementation_sha256"] = VERIFIER.sha256(
+        ROOT / protocol["bindings"]["power_implementation_path"]
+    )
     return protocol, claims, results, blueprint
 
 

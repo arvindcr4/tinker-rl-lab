@@ -38,12 +38,12 @@ def extracted(relative, names, namespace=None):
         if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)) and n.name in names
     ]
     ns = {"__name__": "test_extracted", **(namespace or {})}
-    exec(compile(ast.Module(body=body, type_ignores=[]), relative, "exec"), ns)
+    exec(compile(ast.Module(body=body, type_ignores=[]), relative, "exec"), ns)  # noqa: S102 - Execute only checked-in helper definitions to isolate optional imports.
     return SimpleNamespace(**ns)
 
 
 @pytest.mark.parametrize(
-    "response,gold,expected",
+    ("response", "gold", "expected"),
     [
         ("42", "42", 1.0),
         ("1,234", "1234", 1.0),
@@ -70,15 +70,17 @@ def test_identical_framework_grading(response, gold, expected):
 
 def test_reward_batch_cardinality_and_representation():
     ax = load("axolotl/gsm8k_rewards.py")
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="One answer is required per completion"):
         ax.gsm8k_correctness_reward(["12"])
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="One answer is required per completion"):
         ax.gsm8k_correctness_reward(["12", "13"], answer=["12"])
     with pytest.raises(TypeError):
         ax.gsm8k_correctness_reward([[{"content": 12}]], answer=["12"])
 
 
-@pytest.mark.parametrize("algorithm,expected", [("grpo", [1.0, 1.0]), ("dr_grpo", [0.25, 0.5])])
+@pytest.mark.parametrize(
+    ("algorithm", "expected"), [("grpo", [1.0, 1.0]), ("dr_grpo", [0.25, 0.5])]
+)
 def test_n10_length_loss_and_gradient(algorithm, expected):
     losses, gradients = [], []
     for length in (2, 4):
@@ -92,7 +94,9 @@ def test_n10_length_loss_and_gradient(algorithm, expected):
     assert gradients[0] == [-expected[0] / 2] * 2
     assert gradients[1] == [-expected[1] / 4] * 4
     assert c.token_advantage(1.0, 4, 8, algorithm, 2) == c.token_advantage(1.0, 4, 8, algorithm) / 2
-    with pytest.raises(ValueError):
+    with pytest.raises(
+        ValueError, match="Positive response length, token budget and batch size required"
+    ):
         c.token_advantage(1.0, 0, 8, algorithm)
 
 
@@ -129,7 +133,7 @@ def test_dapo_surrogate_equal_baseline_for_binary_groups_through_four():
 def test_group_zvf_homogeneous_failure_and_success():
     assert c.group_zvf([[0] * 8, [1] * 8]) == 1.0
     assert c.group_zvf([[0, 1], [0, 0]]) == 0.5
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="Nonempty finite prompt groups required"):
         c.group_zvf([])
 
 
@@ -375,7 +379,7 @@ def test_step_accounting_and_receipt():
     m = load("tinker-runs/build_claim_run_table.py")
     assert m.get_step({"config": {"steps": 200}, "summary": {"train/global_step": 3}}) == 3
     assert m.get_step({"config": {"steps": 200}}) is None
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="Verified completion receipt required"):
         c.require_completed({"peak": 0.5})
     assert c.completion_receipt(200, 3, "run", "checkpoint")["status"] == "partial"
 
@@ -383,9 +387,11 @@ def test_step_accounting_and_receipt():
 def test_export_branches_and_missing_identity():
     m = load("tinker-runs/parallel_push_hf.py")
     assert m.branch_of("h2h2_grpo_G4_s42_a") != m.branch_of("h2h2_grpo_G8_s42_a")
-    with pytest.raises(ValueError):
+    with pytest.raises(
+        ValueError, match="Export requires exact checkpoint, model revision and config hash"
+    ):
         c.export_identity({"checkpoint": "sampler://1"})
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="Complete adapter weights/config missing"):
         m.file_hashes(SimpleNamespace(siblings=[]))
 
 
@@ -544,10 +550,12 @@ def test_wave6_legacy_and_changed_horizon_not_reused():
     module = load("tinker-runs/wave6_resume.py")
     exp = module._compute_rerun_plan({}, 32, 0.8, 2, 30)[0]
     legacy = {exp["tag"]: {"status": "completed"}}
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="Invalid or legacy immutable specification"):
         module._compute_rerun_plan(legacy, 32, 0.8, 2, 30)
     record = {**c.wave6_spec(exp), **c.completion_receipt(30, 30, "r", "c")}
-    with pytest.raises(ValueError):
+    with pytest.raises(
+        ValueError, match="Immutable experiment specification mismatch; start a new attempt"
+    ):
         module._compute_rerun_plan({exp["tag"]: record}, 32, 0.8, 2, 200)
     plan = module._compute_rerun_plan({exp["tag"]: record}, 32, 0.8, 2, 30)
     assert exp["tag"] not in {e["tag"] for e in plan}
@@ -658,7 +666,7 @@ def test_verl_subprocess_failure_stops_before_metrics_or_export(monkeypatch):
     )
     node.decorator_list = []
     namespace = {"os": os}
-    exec(compile(ast.Module(body=[node], type_ignores=[]), str(path), "exec"), namespace)
+    exec(compile(ast.Module(body=[node], type_ignores=[]), str(path), "exec"), namespace)  # noqa: S102 - Execute only checked-in helper definitions to isolate optional imports.
     dataset = SimpleNamespace(column_names=["question", "answer"], to_parquet=lambda p: None)
     dataset.map = lambda *args, **kwargs: dataset
     monkeypatch.setattr(datasets, "load_dataset", lambda *args, **kwargs: dataset)
@@ -717,14 +725,27 @@ def test_registry_explicit_owner_aliases_must_be_unique_and_consistent(ownership
     module = load("tinker-runs/tinker_wandb_registry.py")
     a = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa:train:0"
     b = "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb:train:0"
-    runs = [dict(training_run_id=rid, base_uuid=rid.split(":")[0],
-                 base_model="Qwen/base", normalized_model="qwen/base") for rid in (a, b)]
+    runs = [
+        dict(
+            training_run_id=rid,
+            base_uuid=rid.split(":")[0],
+            base_model="Qwen/base",
+            normalized_model="qwen/base",
+        )
+        for rid in (a, b)
+    ]
     config = {"tinker_run_id": a}
     if ownership != "single":
         config["training_run_id"] = {"conflicting": b, "matching": a, "malformed": [a]}[ownership]
-    wandb = dict(referenced_tinker_ids=[a, b], referenced_uuids=[], model="Qwen/base",
-                 config=config, summary={"reward": 0.9}, url="https://wandb.invalid/same-run",
-                 normalized_model="qwen/base")
+    wandb = dict(
+        referenced_tinker_ids=[a, b],
+        referenced_uuids=[],
+        model="Qwen/base",
+        config=config,
+        summary={"reward": 0.9},
+        url="https://wandb.invalid/same-run",
+        normalized_model="qwen/base",
+    )
     first, second = module.correlate(runs, [wandb], 30)
     if ownership in {"matching", "single"}:
         assert first["provenance_verified"] is True
@@ -744,7 +765,9 @@ def offline_training_module(monkeypatch, relative, training=None):
     monkeypatch.setitem(sys.modules, "codecarbon", None)
     monkeypatch.setenv("WANDB_API_KEY", "offline-test-placeholder")
     install_fake_provider(monkeypatch, training or FakeTraining())
-    monkeypatch.setattr(datasets, "load_dataset", lambda *a, **kw: [{"question": "q", "answer": "#### 1"}])
+    monkeypatch.setattr(
+        datasets, "load_dataset", lambda *a, **kw: [{"question": "q", "answer": "#### 1"}]
+    )
     monkeypatch.setattr(wandb, "login", lambda **kw: None)
     monkeypatch.setattr(wandb, "init", lambda **kw: None)
     return load(relative)
@@ -781,6 +804,7 @@ class CrashedExecutor:
         class Crash:
             def result(self):
                 raise RuntimeError("synthetic process crash")
+
         return Crash()
 
 
@@ -792,11 +816,12 @@ def test_wave6_launch_worker_crash_keeps_retryable_spec(monkeypatch):
     monkeypatch.setattr(module, "ProcessPoolExecutor", CrashedExecutor)
     monkeypatch.setattr(module, "as_completed", lambda futures: futures)
     monkeypatch.setattr(module, "_save", lambda *a, **kw: None)
-    failed, = module.launch()
+    (failed,) = module.launch()
     assert failed["status"] == "crashed"
     assert failed["successful_updates"] is None
-    assert exp["tag"] in {e["tag"] for e in resume._compute_rerun_plan(
-        {exp["tag"]: failed}, 32, 0.8, 2, module.STEPS)}
+    assert exp["tag"] in {
+        e["tag"] for e in resume._compute_rerun_plan({exp["tag"]: failed}, 32, 0.8, 2, module.STEPS)
+    }
 
 
 def test_wave6_resume_worker_crashes_remain_retryable(monkeypatch, tmp_path):
@@ -812,7 +837,9 @@ def test_wave6_resume_worker_crashes_remain_retryable(monkeypatch, tmp_path):
     saved = json.loads(path.read_text())
     assert len(saved["runs"]) == 12
     assert all(r["status"] == "crashed" and r["successful_updates"] is None for r in saved["runs"])
-    assert len(module._compute_rerun_plan({r["tag"]: r for r in saved["runs"]}, 32, 0.8, 2, 30)) == 12
+    assert (
+        len(module._compute_rerun_plan({r["tag"]: r for r in saved["runs"]}, 32, 0.8, 2, 30)) == 12
+    )
 
 
 def test_live_resume_without_checkpoint_leaves_original_bytes_untouched(monkeypatch, tmp_path):
@@ -827,11 +854,19 @@ def test_live_resume_without_checkpoint_leaves_original_bytes_untouched(monkeypa
 
     monkeypatch.setattr(module, "load_gsm8k_examples", forbidden)
     import wandb
+
     monkeypatch.setattr(wandb, "init", forbidden)
     args = probe_args(resume=True, no_wandb=False)
-    spec = c.experiment_spec({k: v for k, v in vars(args).items() if k not in {"resume", "tag", "no_wandb"}})
-    prior = {**spec, "status": "failed", "run_id": "old:train:0", "reward_trace": [0.5],
-             "step_log": [{"step": 1, "reward": 0.5}]}
+    spec = c.experiment_spec(
+        {k: v for k, v in vars(args).items() if k not in {"resume", "tag", "no_wandb"}}
+    )
+    prior = {
+        **spec,
+        "status": "failed",
+        "run_id": "old:train:0",
+        "reward_trace": [0.5],
+        "step_log": [{"step": 1, "reward": 0.5}],
+    }
     path = tmp_path / "test.json"
     before = json.dumps(prior, indent=3).encode()
     path.write_bytes(before)
@@ -842,13 +877,29 @@ def test_live_resume_without_checkpoint_leaves_original_bytes_untouched(monkeypa
 
 
 def n8_args(tmp_path, **changes):
-    return argparse.Namespace(**{**dict(out_dir=str(tmp_path), smoke=False, k=64,
-        model="test/model", n_prompts=78, temperature=0.8, top_p=0.95, max_tokens=512,
-        seed=42, chunk_size=16, concurrency=1), **changes})
+    return argparse.Namespace(
+        **{
+            **dict(
+                out_dir=str(tmp_path),
+                smoke=False,
+                k=64,
+                model="test/model",
+                n_prompts=78,
+                temperature=0.8,
+                top_p=0.95,
+                max_tokens=512,
+                seed=42,
+                chunk_size=16,
+                concurrency=1,
+            ),
+            **changes,
+        }
+    )
 
 
 def test_n8_smoke_does_not_replace_full_manifest_or_break_full_resume(monkeypatch, tmp_path):
     import asyncio
+
     module = load("tinker-runs/scripts/n8_passrate_spectrum_20260704.py")
     normal = n8_args(tmp_path)
     spec = c.experiment_spec({**vars(normal), "scorer_id": c.SCORER_ID})
@@ -876,6 +927,7 @@ def test_n8_smoke_does_not_replace_full_manifest_or_break_full_resume(monkeypatc
 
 def test_n8_orphaned_mode_manifest_is_not_overwritten(monkeypatch, tmp_path):
     import asyncio
+
     module = load("tinker-runs/scripts/n8_passrate_spectrum_20260704.py")
     args = n8_args(tmp_path)
     before = json.dumps(c.experiment_spec({**vars(args), "scorer_id": c.SCORER_ID}))
@@ -887,14 +939,33 @@ def test_n8_orphaned_mode_manifest_is_not_overwritten(monkeypatch, tmp_path):
 
 
 @pytest.mark.parametrize("relative", ["wave6_ablations.py", "campaign_v2.py"])
-@pytest.mark.parametrize("count,empty_tokens", [(0, False), (1, False), (3, False), (2, True)])
-def test_training_rejects_wrong_group_population_before_optimizer(monkeypatch, relative, count, empty_tokens):
+@pytest.mark.parametrize(("count", "empty_tokens"), [(0, False), (1, False), (3, False), (2, True)])
+def test_training_rejects_wrong_group_population_before_optimizer(
+    monkeypatch, relative, count, empty_tokens
+):
     tc = FakeTraining()
-    tc.sample = lambda *a, **kw: Done(SimpleNamespace(sequences=[
-        SimpleNamespace(tokens=[] if empty_tokens else [1], logprobs=[-1.0]) for _ in range(count)]))
+    tc.sample = lambda *a, **kw: Done(
+        SimpleNamespace(
+            sequences=[
+                SimpleNamespace(tokens=[] if empty_tokens else [1], logprobs=[-1.0])
+                for _ in range(count)
+            ]
+        )
+    )
     module = offline_training_module(monkeypatch, "tinker-runs/" + relative, tc)
-    exp = dict(tag="audit", model="test/model", sweep="baseline", wave="audit", rank=32,
-               temperature=0.8, batch=1, steps=1, group_size=2, seed=42, lr=1e-5)
+    exp = dict(
+        tag="audit",
+        model="test/model",
+        sweep="baseline",
+        wave="audit",
+        rank=32,
+        temperature=0.8,
+        batch=1,
+        steps=1,
+        group_size=2,
+        seed=42,
+        lr=1e-5,
+    )
     result = module.run_one(exp) if relative.startswith("wave6") else module.run_experiment(exp)
     assert result["status"] == "failed"
     assert "sample population" in result["error"]
@@ -902,10 +973,13 @@ def test_training_rejects_wrong_group_population_before_optimizer(monkeypatch, r
     assert tc.data == []
 
 
-@pytest.mark.parametrize("count,empty_tokens", [(0, False), (1, False), (3, False), (2, True)])
-def test_mega_rejects_wrong_group_population_without_completed_artifacts(monkeypatch, tmp_path, count, empty_tokens):
+@pytest.mark.parametrize(("count", "empty_tokens"), [(0, False), (1, False), (3, False), (2, True)])
+def test_mega_rejects_wrong_group_population_without_completed_artifacts(
+    monkeypatch, tmp_path, count, empty_tokens
+):
     import asyncio
     from types import MethodType
+
     module = load("tinker-runs/scripts/mega_cell_campaign_20260704.py")
     monkeypatch.setattr(module, "STOP_PATH", tmp_path / "STOP")
     monkeypatch.setattr(module, "PROMPTS_PER_CELL", 1)
@@ -914,37 +988,65 @@ def test_mega_rejects_wrong_group_population_without_completed_artifacts(monkeyp
         pass
 
     monkeypatch.setattr(module.asyncio, "sleep", no_sleep)
+
     async def sample_async(**kwargs):
-        return SimpleNamespace(sequences=[SimpleNamespace(tokens=[] if empty_tokens else [1]) for _ in range(count)])
+        return SimpleNamespace(
+            sequences=[SimpleNamespace(tokens=[] if empty_tokens else [1]) for _ in range(count)]
+        )
+
     async def tokenizer_async(model):
         return SimpleNamespace(encode=lambda *a, **kw: [9, 8], decode=lambda *a, **kw: "1")
+
     rows, failures = [], []
+
     async def write_outputs(cell, row, *args):
         rows.append(row)
+
     async def record_failure(cell, reason):
         failures.append(reason)
-    state = SimpleNamespace(args=SimpleNamespace(max_prompt_tokens=1024, cell_timeout_sec=10),
-        stop_requested=False, completed=0, failed=0,
+
+    state = SimpleNamespace(
+        args=SimpleNamespace(max_prompt_tokens=1024, cell_timeout_sec=10),
+        stop_requested=False,
+        completed=0,
+        failed=0,
         examples={"gsm8k_easy": [{"question": "q", "answer": "1", "source_idx": 0}]},
-        svc=SimpleNamespace(create_sampling_client=lambda **kw: SimpleNamespace(sample_async=sample_async)),
-        token_lock=asyncio.Lock(), cumulative_tokens=0, tokenizer_for_async=tokenizer_async,
-        _write_cell_outputs=write_outputs, _record_failure=record_failure,
-        wandb=SimpleNamespace(log_cell=lambda *a: pytest.fail("Malformed cell cannot be logged as complete")))
+        svc=SimpleNamespace(
+            create_sampling_client=lambda **kw: SimpleNamespace(sample_async=sample_async)
+        ),
+        token_lock=asyncio.Lock(),
+        cumulative_tokens=0,
+        tokenizer_for_async=tokenizer_async,
+        _write_cell_outputs=write_outputs,
+        _record_failure=record_failure,
+        wandb=SimpleNamespace(
+            log_cell=lambda *a: pytest.fail("Malformed cell cannot be logged as complete")
+        ),
+    )
     state.run_cell = MethodType(module.Campaign.run_cell, state)
-    asyncio.run(module.Campaign._run_with_sem(state, module.Cell("test/model", "gsm8k_easy", 2, 0.8, 42), asyncio.Semaphore(1)))
+    asyncio.run(
+        module.Campaign._run_with_sem(
+            state, module.Cell("test/model", "gsm8k_easy", 2, 0.8, 42), asyncio.Semaphore(1)
+        )
+    )
     assert state.completed == 0
     assert state.failed == 1
-    assert failures and not rows
+    assert failures
+    assert not rows
 
 
-@pytest.mark.parametrize("completion", [
-    "    return a + b\n",
-    "```python\n    return a + b\n```",
-    "    def helper():\n        return a + b\n    return helper()\n",
-])
+@pytest.mark.parametrize(
+    "completion",
+    [
+        "    return a + b\n",
+        "```python\n    return a + b\n```",
+        "    def helper():\n        return a + b\n    return helper()\n",
+    ],
+)
 def test_humaneval_body_completion_keeps_indentation_and_is_not_executed(completion):
     module = load("tinker-runs/scripts/mega_cell_campaign_20260704.py")
     from platform_hybrid.experiments.research_contracts import IsolatedEvaluatorUnavailable
+
     prompt = 'def add(a, b):\n    """Return the sum."""\n'
     tests = "def check(f):\n    assert f(1, 2) == 3"
     compile(module.humaneval_script(prompt, completion, tests, "add"), "<assembly-only>", "exec")
@@ -965,8 +1067,17 @@ def test_wave6_late_failure_retains_observed_trace_and_retry_identity(monkeypatc
 
     tc.sample = sample
     module = offline_training_module(monkeypatch, "tinker-runs/wave6_ablations.py", tc)
-    exp = dict(tag="late", sweep="baseline", rank=32, temperature=0.8, batch=1,
-               steps=2, group_size=2, seed=42, lr=1e-5)
+    exp = dict(
+        tag="late",
+        sweep="baseline",
+        rank=32,
+        temperature=0.8,
+        batch=1,
+        steps=2,
+        group_size=2,
+        seed=42,
+        lr=1e-5,
+    )
     result = module.run_one(exp)
     c.validate_resume(c.wave6_spec(exp), result)
     assert result["status"] == "failed"
@@ -979,19 +1090,30 @@ def test_wave6_late_failure_retains_observed_trace_and_retry_identity(monkeypatc
 @pytest.mark.parametrize("pool_count", [0, 1])
 def test_mega_incomplete_prompt_pool_stops_before_sampler(monkeypatch, pool_count):
     import asyncio
+
     module = load("tinker-runs/scripts/mega_cell_campaign_20260704.py")
     monkeypatch.setattr(module, "PROMPTS_PER_CELL", 2)
+
     async def tokenizer_async(model):
         return None
-    state = SimpleNamespace(tokenizer_for_async=tokenizer_async,
+
+    state = SimpleNamespace(
+        tokenizer_for_async=tokenizer_async,
         examples={"gsm8k_easy": [{"question": "q", "answer": "1"}] * pool_count},
-        svc=SimpleNamespace(create_sampling_client=lambda **kw: pytest.fail("Incomplete pool cannot sample")))
+        svc=SimpleNamespace(
+            create_sampling_client=lambda **kw: pytest.fail("Incomplete pool cannot sample")
+        ),
+    )
     with pytest.raises(ValueError, match="Fixed prompt population incomplete"):
-        asyncio.run(module.Campaign.run_cell(state, module.Cell("test/model", "gsm8k_easy", 2, 0.8, 42)))
+        asyncio.run(
+            module.Campaign.run_cell(state, module.Cell("test/model", "gsm8k_easy", 2, 0.8, 42))
+        )
 
 
-@pytest.mark.parametrize("rewards,lengths", [([], []), ([[]], [[]]), ([[1]], [[1]]),
-                                           ([[0, 1]], [[1]]), ([[0, 1]], [[1, 0]])])
+@pytest.mark.parametrize(
+    ("rewards", "lengths"),
+    [([], []), ([[]], [[]]), ([[1]], [[1]]), ([[0, 1]], [[1]]), ([[0, 1]], [[1, 0]])],
+)
 def test_mega_metrics_reject_incomplete_vectors(rewards, lengths):
     module = load("tinker-runs/scripts/mega_cell_campaign_20260704.py")
     with pytest.raises(ValueError, match="fixed-size nonempty"):
@@ -999,28 +1121,42 @@ def test_mega_metrics_reject_incomplete_vectors(rewards, lengths):
 
 
 @pytest.mark.parametrize("recover", [False, True])
-def test_n8_chunks_validate_each_response_without_accumulating_partial_samples(monkeypatch, tmp_path, recover):
+def test_n8_chunks_validate_each_response_without_accumulating_partial_samples(
+    monkeypatch, tmp_path, recover
+):
     import asyncio
     import tinker.types as T
+
     module = load("tinker-runs/scripts/n8_passrate_spectrum_20260704.py")
     counts = iter([1, 3, 2, 2]) if recover else itertools.cycle([1, 3])
     calls = []
+
     async def sample_async(**kwargs):
         count = next(counts)
         calls.append(count)
         return SimpleNamespace(sequences=[SimpleNamespace(tokens=[1]) for _ in range(count)])
+
     async def no_sleep(*args):
         pass
+
     monkeypatch.setattr(module.asyncio, "sleep", no_sleep)
     monkeypatch.setattr(module.wandb, "log", lambda *a, **kw: None)
     path = tmp_path / "samples.jsonl"
     state = dict(prompts_done=0, completions_done=0, sum_p=0.0, p_hats=[])
     args = n8_args(tmp_path, k=4, n_prompts=1, chunk_size=2)
-    task = module.process_prompt("item", "question", "1", args,
+    task = module.process_prompt(
+        "item",
+        "question",
+        "1",
+        args,
         SimpleNamespace(encode=lambda *a, **kw: [9], decode=lambda *a, **kw: "1"),
         SimpleNamespace(sample_async=sample_async),
-        T.SamplingParams(max_tokens=8, temperature=0.8), asyncio.Semaphore(1),
-        asyncio.Lock(), path, state)
+        T.SamplingParams(max_tokens=8, temperature=0.8),
+        asyncio.Semaphore(1),
+        asyncio.Lock(),
+        path,
+        state,
+    )
     if recover:
         asyncio.run(task)
         row = json.loads(path.read_text())

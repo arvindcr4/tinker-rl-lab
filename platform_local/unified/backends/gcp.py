@@ -28,7 +28,17 @@ class GCPBackend(Backend):
     def plan(self, framework: str, spec) -> LaunchPlan:
         if framework == "trl":
             require_supported_overrides(spec, supported=("task", "seed"))
-            command = ["python", _FROZEN_LAUNCHER, "--task", spec.task, "--arm", "grpo_g8", "--seed", str(spec.seed), "--wait"]
+            command = [
+                "python",
+                _FROZEN_LAUNCHER,
+                "--task",
+                spec.task,
+                "--arm",
+                "grpo_g8",
+                "--seed",
+                str(spec.seed),
+                "--wait",
+            ]
             driver_file = _FROZEN_LAUNCHER
             notes = (
                 "single A100 Spot (a2-highgpu-1g); validated TRL preflight "
@@ -36,9 +46,21 @@ class GCPBackend(Backend):
             )
         else:
             require_supported_overrides(spec, supported=("model", "algorithm", "task", "seed"))
-            command = ["python", _UNIFIED_LAUNCHER, "--framework", framework,
-                       "--model", spec.model, "--algorithm", spec.algorithm,
-                       "--task", spec.task, "--seed", str(spec.seed), "--wait"]
+            command = [
+                "python",
+                _UNIFIED_LAUNCHER,
+                "--framework",
+                framework,
+                "--model",
+                spec.model,
+                "--algorithm",
+                spec.algorithm,
+                "--task",
+                spec.task,
+                "--seed",
+                str(spec.seed),
+                "--wait",
+            ]
             driver_file = _UNIFIED_LAUNCHER
             notes = (
                 f"single A100 Spot (a2-highgpu-1g); non-frozen launcher runs "
@@ -48,7 +70,9 @@ class GCPBackend(Backend):
             backend="gcp",
             framework=framework,
             argv=command,
-            blocked_reason="Framework lacks a validated scientific training receipt adapter" if framework in ("skyrl", "verl") else "",
+            blocked_reason="Framework lacks a validated scientific training receipt adapter"
+            if framework in ("skyrl", "verl")
+            else "",
             driver_file=driver_file,
             output=(
                 "HF repo arvindcr4/tinker-rl-next-preflight-gcp-* + W&B "

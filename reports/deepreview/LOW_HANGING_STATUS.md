@@ -4,6 +4,40 @@ Editorial branch: `review-low-hanging-2026-10-18`. This report records the
 editorial pass; the subsequent main integration was authorized by the user.
 No additional DeepReview API calls were made.
 
+## Bibliography follow-up
+
+Branch `review-bibliography-followup-2026-10-18` applies the remaining verified
+clerical bibliography requests centrally, after the other session released
+ownership. Twelve shared bibliography entries lose duplicate identifier notes,
+informal annotations or inline license tags; xLAM's AI capitalization is
+protected. Seven standalone spectral bibliography titles protect proper nouns.
+Citation keys, title words, authors, years, venues, DOIs and URLs are unchanged.
+Dataset licensing prose and all empirical claims are untouched.
+
+Findings **663, 705 and 706** are now fixed. The current P8 bibliography no
+longer contains the formerly cited xLAM, Patterson, Riddell or HybridFlow
+entries; the shared xLAM correction was additionally verified in P9, which
+still cites it. Findings **509 and 893** remain open: their clerical subparts
+are corrected, but proposed publication metadata or author-order changes were
+not independently verified. Historical request files below describe the state
+before this follow-up; per-finding JSONL records contain the latest outcome.
+
+All twelve manifest roots using the shared bibliography and the corrected
+standalone spectral root build successfully with cached Tectonic resources,
+with no undefined references or citations. The standalone spectral build
+stages its unchanged root, edited bibliography and existing NeurIPS style
+together; no missing dependency was replaced with a stub. Inspected P11,
+P8, P9 and spectral reference pages show the intended formatting. Existing
+font/box warnings remain. P11 now renders the independently revised fail-closed
+manuscript; this is not certification of any audit result.
+
+Assertions check that removed duplicate arXiv notes retain the same identifier
+in the DOI field, protected terms survive BibTeX casing, unrelated disposition
+records and review provenance stay unchanged, and all **1,204** finding IDs
+remain covered exactly once. Build logs, disposable PDFs and inspected page
+captures are under `.amp/in/artifacts/bibliography-followup/` in the isolated
+editorial-bibliography worktree. No paid review calls were made.
+
 ## Main integration
 
 Newer substantive P4 and Sem4 dispositions, plus the P4 numeric ledger, take

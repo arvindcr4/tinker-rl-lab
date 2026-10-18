@@ -18,9 +18,9 @@ If dependencies are missing, the command exits with an actionable error before r
 uv sync --frozen --extra dev --python 3.12
 ```
 
-Select Python 3.12 explicitly for the VM-validated setup. The repository has no `.python-version` pin; [uv otherwise selects a suitable interpreter according to project requirements](https://docs.astral.sh/uv/reference/cli/#uv-sync--python), which is broader than this tested environment. An offline dry-run of the command above checked 141 packages and required no changes in the current VM. This is not a claim that every supported Python/platform combination was freshly installed.
+Select Python 3.12 explicitly for the VM-validated setup. The repository has no `.python-version` pin; [uv otherwise selects a suitable interpreter according to project requirements](https://docs.astral.sh/uv/reference/cli/#uv-sync--python), which is broader than this tested environment. A separate offline dry-run inspection checked 141 packages and required no changes in the current VM. This is not a claim that every supported Python/platform combination was freshly installed.
 
-Installation can download substantial dependencies; the offline command itself never installs anything. Run it with the resulting `.venv/bin/python`, rather than an unrelated system Python. No service credentials are needed.
+The provisioning command above installs dependencies and can download substantial files; only the separate `--offline --dry-run` inspection avoids installation. Run it with the resulting `.venv/bin/python`, rather than an unrelated system Python. No service credentials are needed.
 
 ### What the command actually exercises
 

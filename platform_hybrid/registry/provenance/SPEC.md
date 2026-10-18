@@ -34,6 +34,10 @@ They are not rewritten, upgraded, re-signed, or supplemented with invented
 artifacts. A new v2 record requires actual retained evidence and explicit approval
 by an appropriately trusted signer.
 
+The checked-in historical `campaign.provenance.json` and its detached signature
+are not publication-ready v2 evidence. Strict publication/signature gates remain
+blocked for those records; wiring an audit into CI does not make them accepted.
+
 ## Record and shared schema
 
 The envelope uses `spec_version: "MIN-REPORT-RL/2.0"`. Required top-level fields:

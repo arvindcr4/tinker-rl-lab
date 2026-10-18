@@ -6,6 +6,11 @@ from pathlib import Path
 
 
 def read_regular_bytes(path: Path) -> bytes:
+    """Read one regular file without following its final component.
+
+    Parent directories are trusted by the caller; O_NOFOLLOW does not prevent
+    traversing symlinked parents. This is not a path-confinement primitive.
+    """
     if not hasattr(os, "O_NOFOLLOW") or not hasattr(os, "O_NONBLOCK"):
         raise RuntimeError("native artifact verification requires POSIX no-follow/nonblocking open")
     try:

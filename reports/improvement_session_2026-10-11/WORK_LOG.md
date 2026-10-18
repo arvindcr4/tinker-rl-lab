@@ -51,9 +51,9 @@ be recorded with the change. Incomplete evidence remains incomplete.
 The verifier now requires an exact experiment identity (with recognized seed
 suffixes), preserves exact seed-suffixed reference names, rejects conflicting
 case-insensitive seed tags and duplicate reference identities, and bounds both
-reference and observed accuracy to[0,1]. Initial regressions failed11 cases;
+reference and observed accuracy to [0,1]. Initial regressions failed 11 cases;
 independent review found two additional regressions, both reproduced and fixed.
-The final focused run passed80 tests (one existing SciPy precision warning).
+The final focused run passed 80 tests (one existing SciPy precision warning).
 Unknown unrelated files remain outside the matched-results contract; a passing
 summary is not a statement that every file in the directory was validated.
 Local commits so far: `e1254ab6` evidence guards; `f2f3af97` ingestion/reward fixes.
@@ -61,24 +61,24 @@ Local commits so far: `e1254ab6` evidence guards; `f2f3af97` ingestion/reward fi
 ### Statistics ingestion and estimator correction
 
 Rank trimming replaces quantile-value filtering for IQM; independent review
-matched SciPy in100 tied/small-sample comparisons. Bootstrap/IQM reject
+matched SciPy in 100 tied/small-sample comparisons. Bootstrap/IQM reject
 nonfinite scores. Aggregation rejects empty or missing seed sources, requires a
 shared metric, and records metric/horizon metadata. Explicit steps must increase
 and end at the same value. Legacy files without steps use observation counts,
 which do not establish optimizer-step equivalence. Recognized alternate step
-keys(global_step, _step, optimizer_step) require explicit normalization; their
+keys (global_step, _step, optimizer_step) require explicit normalization; their
 units are never assumed. Common-metric inference uses the intersection across
-seeds. Five cross-review counterexamples failed before these follow-ups; all87
-focused tests passed afterwards(one existing SciPy precision warning). Earlier
-agent validation passed66 statistical property tests. Singleton uncertainty
+seeds. Five cross-review counterexamples failed before these follow-ups; all 87
+focused tests passed afterwards (one existing SciPy precision warning). Earlier
+agent validation passed 66 statistical property tests. Singleton uncertainty
 remains a limitation; these repairs do not provide missing replicate evidence.
 
 ### 14:08 UTC — integrated CPU validation
 
-Full suite: **1415 passed,1 intentional skip,3 warnings,84.88% coverage** in90.26s.
-Lint, formatting, repository policy and configured mypy20files passed. TRL
-changes received root source review and63 focused checks before integration;
-see[TRL_NATIVE_CONTRACT.md](TRL_NATIVE_CONTRACT.md) for supported behavior and
+Full suite: **1415 passed, 1 intentional skip, 3 warnings, 84.88% coverage** in 90.26s.
+Lint, formatting, repository policy and configured mypy 20 files passed. TRL
+changes received root source review and 63 focused checks before integration;
+see [TRL_NATIVE_CONTRACT.md](TRL_NATIVE_CONTRACT.md) for supported behavior and
 explicit limitations. No native training or external publishing occurred.
 
 Original checkout HEAD and all six modified tracked-file byte hashes match the

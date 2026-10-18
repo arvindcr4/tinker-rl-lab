@@ -298,7 +298,11 @@ class AudioLatentScoreNetwork(nn.Module):
 
     def _fourier_time_embedding(self, timesteps: torch.Tensor, dim: int = 256) -> torch.Tensor:
         half_dim = dim // 2
-        freqs = torch.exp(-math.log(10000.0) * torch.arange(0, half_dim, dtype=torch.float32, device=timesteps.device) / half_dim)
+        freqs = torch.exp(
+            -math.log(10000.0)
+            * torch.arange(0, half_dim, dtype=torch.float32, device=timesteps.device)
+            / half_dim
+        )
         args = timesteps.unsqueeze(-1) * freqs.unsqueeze(0)
         return torch.cat([torch.sin(args), torch.cos(args)], dim=-1)
 
@@ -340,7 +344,9 @@ class NeuralSDELatentAudioDiffusion(nn.Module):
         self.beta_min = beta_min
         self.beta_max = beta_max
 
-    def marginal_prob(self, z_0: torch.Tensor, t: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
+    def marginal_prob(
+        self, z_0: torch.Tensor, t: torch.Tensor
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
         """
         Calculates mean and std of perturbation kernel p_{0t}(z_t | z_0).
         """
@@ -349,14 +355,18 @@ class NeuralSDELatentAudioDiffusion(nn.Module):
             mean = z_0
             std = self.sigma_min * (self.sigma_max / self.sigma_min) ** t_col
         elif self.sde_type == "VP":
-            log_mean_coeff = -0.25 * t_col**2 * (self.beta_max - self.beta_min) - 0.5 * t_col * self.beta_min
+            log_mean_coeff = (
+                -0.25 * t_col**2 * (self.beta_max - self.beta_min) - 0.5 * t_col * self.beta_min
+            )
             mean = torch.exp(log_mean_coeff) * z_0
             std = torch.sqrt(1.0 - torch.exp(2.0 * log_mean_coeff))
         else:
             raise ValueError(f"Unsupported SDE type: {self.sde_type}")
         return mean, std
 
-    def sde_coefficients(self, z_t: torch.Tensor, t: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
+    def sde_coefficients(
+        self, z_t: torch.Tensor, t: torch.Tensor
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
         """
         Returns continuous drift f(z_t, t) and diffusion g(t).
         """
@@ -382,12 +392,14 @@ class NeuralSDELatentAudioDiffusion(nn.Module):
         mean, std = self.marginal_prob(z_0, t)
         noise = torch.randn_like(z_0)
         z_t = mean + std * noise
-        
+
         score_pred = self.score_net(z_t, t)
         target_score = -noise / std
-        
+
         # Loss weighted by std^2 for VE-SDE scale invariance
-        loss = torch.mean(torch.sum((score_pred - target_score) ** 2, dim=-1) * (std.squeeze() ** 2))
+        loss = torch.mean(
+            torch.sum((score_pred - target_score) ** 2, dim=-1) * (std.squeeze() ** 2)
+        )
         return loss
 
     @torch.no_grad()
@@ -403,7 +415,7 @@ class NeuralSDELatentAudioDiffusion(nn.Module):
         """
         dt = 1.0 / num_steps
         t = torch.ones(shape[0], device=device)
-        
+
         # Initial noise sample z_1 ~ N(0, sigma_max^2 I)
         if self.sde_type == "VE":
             z_t = torch.randn(shape, device=device) * self.sigma_max
@@ -412,19 +424,23 @@ class NeuralSDELatentAudioDiffusion(nn.Module):
 
         for step in range(num_steps):
             t_curr = t * (1.0 - step * dt)
-            
+
             # --- Corrector Step (Langevin MCMC) ---
             score = self.score_net(z_t, t_curr)
             grad_norm = torch.norm(score.reshape(shape[0], -1), dim=-1).mean()
             noise_norm = math.sqrt(math.prod(shape[1:]))
             langevin_step_size = 2.0 * (snr * noise_norm / (grad_norm + 1e-8)) ** 2
-            
-            z_t = z_t + langevin_step_size * score + torch.sqrt(2.0 * langevin_step_size) * torch.randn_like(z_t)
-            
+
+            z_t = (
+                z_t
+                + langevin_step_size * score
+                + torch.sqrt(2.0 * langevin_step_size) * torch.randn_like(z_t)
+            )
+
             # --- Predictor Step (Euler-Maruyama Reverse SDE) ---
             drift, g = self.sde_coefficients(z_t, t_curr)
             score = self.score_net(z_t, t_curr)
-            reverse_drift = drift - (g ** 2) * score
+            reverse_drift = drift - (g**2) * score
             z_t = z_t - reverse_drift * dt + g * math.sqrt(dt) * torch.randn_like(z_t)
 
         return z_t
@@ -433,6 +449,7 @@ class NeuralSDELatentAudioDiffusion(nn.Module):
 # ============================================================================
 # Idea 9.2: Cross-Modal Gromov-Wasserstein Metric Alignment (CM-GWMA)
 # ============================================================================
+
 
 class GromovWassersteinCrossModalAligner(nn.Module):
     """
@@ -497,7 +514,9 @@ class GromovWassersteinCrossModalAligner(nn.Module):
         # Compute quadratic GW loss cost
         cost = (
             torch.matmul(C_X**2, p).matmul(torch.ones(B, 1, N, device=device))
-            + torch.ones(B, M, 1, device=device).matmul(torch.matmul(q.transpose(-1, -2), (C_Y**2).transpose(-1, -2)))
+            + torch.ones(B, M, 1, device=device).matmul(
+                torch.matmul(q.transpose(-1, -2), (C_Y**2).transpose(-1, -2))
+            )
             - 2.0 * torch.matmul(torch.matmul(C_X, P), C_Y.transpose(-1, -2))
         )
         gw_loss = torch.sum(cost * P, dim=(-1, -2))
@@ -520,6 +539,7 @@ class GromovWassersteinCrossModalAligner(nn.Module):
 # ============================================================================
 # Idea 9.3: Physics-Informed Continuous Wave PDE RIR Simulator (PICW-RIR)
 # ============================================================================
+
 
 class PhysicsInformedWavePDERIRSimulator(nn.Module):
     """
@@ -565,16 +585,29 @@ class PhysicsInformedWavePDERIRSimulator(nn.Module):
         grads_int = torch.autograd.grad(
             p_int, collocation_interior, torch.ones_like(p_int), create_graph=True
         )[0]
-        p_x, p_y, p_z, p_t = grads_int[:, 0:1], grads_int[:, 1:2], grads_int[:, 2:3], grads_int[:, 3:4]
+        p_x, p_y, p_z, p_t = (
+            grads_int[:, 0:1],
+            grads_int[:, 1:2],
+            grads_int[:, 2:3],
+            grads_int[:, 3:4],
+        )
 
         # Second spatial and temporal derivatives
-        p_xx = torch.autograd.grad(p_x, collocation_interior, torch.ones_like(p_x), create_graph=True)[0][:, 0:1]
-        p_yy = torch.autograd.grad(p_y, collocation_interior, torch.ones_like(p_y), create_graph=True)[0][:, 1:2]
-        p_zz = torch.autograd.grad(p_z, collocation_interior, torch.ones_like(p_z), create_graph=True)[0][:, 2:3]
-        p_tt = torch.autograd.grad(p_t, collocation_interior, torch.ones_like(p_t), create_graph=True)[0][:, 3:4]
+        p_xx = torch.autograd.grad(
+            p_x, collocation_interior, torch.ones_like(p_x), create_graph=True
+        )[0][:, 0:1]
+        p_yy = torch.autograd.grad(
+            p_y, collocation_interior, torch.ones_like(p_y), create_graph=True
+        )[0][:, 1:2]
+        p_zz = torch.autograd.grad(
+            p_z, collocation_interior, torch.ones_like(p_z), create_graph=True
+        )[0][:, 2:3]
+        p_tt = torch.autograd.grad(
+            p_t, collocation_interior, torch.ones_like(p_t), create_graph=True
+        )[0][:, 3:4]
 
         laplacian_p = p_xx + p_yy + p_zz
-        wave_pde_residual = p_tt - (self.c ** 2) * laplacian_p
+        wave_pde_residual = p_tt - (self.c**2) * laplacian_p
 
         # --- Robin Impedance Boundary Loss ---
         collocation_boundary.requires_grad_(True)
@@ -590,14 +623,15 @@ class PhysicsInformedWavePDERIRSimulator(nn.Module):
         robin_residual = normal_deriv + (absorption_coeffs / self.c) * p_t_bc
 
         return {
-            "pde_residual_loss": torch.mean(wave_pde_residual ** 2),
-            "robin_boundary_loss": torch.mean(robin_residual ** 2),
+            "pde_residual_loss": torch.mean(wave_pde_residual**2),
+            "robin_boundary_loss": torch.mean(robin_residual**2),
         }
 
 
 # ============================================================================
 # Idea 9.4: Continuous-Time Itô-Diffusive Multi-Modal Policy Optimization (IT-MMPO)
 # ============================================================================
+
 
 class ItoDiffusiveMultiModalPolicy(nn.Module):
     """
@@ -621,7 +655,9 @@ class ItoDiffusiveMultiModalPolicy(nn.Module):
         )
         self.log_sigma = nn.Parameter(torch.full((action_dim,), -1.0))
 
-    def get_drift(self, state: torch.Tensor, action_t: torch.Tensor, t: torch.Tensor) -> torch.Tensor:
+    def get_drift(
+        self, state: torch.Tensor, action_t: torch.Tensor, t: torch.Tensor
+    ) -> torch.Tensor:
         t_col = t.view(-1, 1)
         x = torch.cat([state, action_t, t_col], dim=-1)
         return self.drift_net(x)
@@ -646,7 +682,7 @@ class ItoDiffusiveMultiModalPolicy(nn.Module):
         for step in range(num_steps):
             t_curr = torch.full((B,), step * dt, device=device)
             drift = self.get_drift(state, a_t, t_curr)
-            
+
             dW = torch.randn_like(a_t) * math.sqrt(dt)
             da_t = drift * dt + sigma * dW
             a_t = a_t + da_t
@@ -663,6 +699,7 @@ class ItoDiffusiveMultiModalPolicy(nn.Module):
 # Idea 9.5: Audio-Visual Latent Score Matcher with GW Transport (AV-LDS-GW)
 # ============================================================================
 
+
 class AudioVisualLDSGWSolver(nn.Module):
     """
     Idea 9.5: Audio-Visual Latent Diffusion Score Matcher with Geometry-Preserving GW Transport.
@@ -672,7 +709,9 @@ class AudioVisualLDSGWSolver(nn.Module):
     def __init__(self, audio_dim: int = 64, visual_dim: int = 128, hidden_dim: int = 256):
         super().__init__()
         self.audio_score_net = AudioLatentScoreNetwork(latent_dim=audio_dim, hidden_dim=hidden_dim)
-        self.visual_score_net = AudioLatentScoreNetwork(latent_dim=visual_dim, hidden_dim=hidden_dim)
+        self.visual_score_net = AudioLatentScoreNetwork(
+            latent_dim=visual_dim, hidden_dim=hidden_dim
+        )
         self.audio_sde = NeuralSDELatentAudioDiffusion(self.audio_score_net, sde_type="VE")
         self.visual_sde = NeuralSDELatentAudioDiffusion(self.visual_score_net, sde_type="VE")
         self.gw_aligner = GromovWassersteinCrossModalAligner(epsilon=0.05)
@@ -756,8 +795,8 @@ def test_predictor_corrector_sampling():
 
 def test_gromov_wasserstein_metric_aligner():
     aligner = GromovWassersteinCrossModalAligner(epsilon=0.1, max_iter=20)
-    visual_feats = torch.randn(4, 10, 64)   # [B, M, d_v]
-    audio_feats = torch.randn(4, 12, 32)    # [B, N, d_a]
+    visual_feats = torch.randn(4, 10, 64)  # [B, M, d_v]
+    audio_feats = torch.randn(4, 12, 32)  # [B, N, d_a]
     gw_loss = aligner(visual_feats, audio_feats)
     assert not torch.isnan(gw_loss), "Gromov-Wasserstein loss returned NaN"
     assert gw_loss.item() >= 0.0, "Gromov-Wasserstein distance must be non-negative"

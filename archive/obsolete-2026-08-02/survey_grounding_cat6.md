@@ -284,9 +284,7 @@ class SinkhornOptimalTransportRouter(nn.Module):
         self.gate_proj = nn.Linear(d_model, num_experts, bias=False)
         nn.init.kaiming_uniform_(self.gate_proj.weight, a=0.01)
 
-    def forward(
-        self, x: torch.Tensor
-    ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+    def forward(self, x: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         """
         Args:
             x: Input token features [batch_size * seq_len, d_model]
@@ -303,7 +301,9 @@ class SinkhornOptimalTransportRouter(nn.Module):
         a = torch.full((B,), self.top_k / float(B), device=x.device, dtype=x.dtype)
         # Demand vector b (capacity per expert) -> [N]
         capacity_per_expert = (self.top_k * B * self.capacity_factor) / float(self.num_experts)
-        b = torch.full((self.num_experts,), capacity_per_expert / float(B), device=x.device, dtype=x.dtype)
+        b = torch.full(
+            (self.num_experts,), capacity_per_expert / float(B), device=x.device, dtype=x.dtype
+        )
 
         # Log-space Sinkhorn updates for numerical stability
         # f: dual vector for tokens [B], g: dual vector for experts [N]
@@ -386,7 +386,7 @@ class HierarchicalSpectralMoERouter(nn.Module):
         T, d = H.shape
         # Pairwise RBF affinity matrix W [T, T]
         dist_sq = torch.cdist(H, H, p=2).pow(2)
-        W = torch.exp(-dist_sq / (2.0 * self.rbf_sigma ** 2))
+        W = torch.exp(-dist_sq / (2.0 * self.rbf_sigma**2))
 
         # Degree matrix D
         d_vec = W.sum(dim=-1)
@@ -400,7 +400,7 @@ class HierarchicalSpectralMoERouter(nn.Module):
         # torch.linalg.eigh returns eigenvalues in ascending order
         evals, evecs = torch.linalg.eigh(L_sym)
         k_dim = min(self.spectral_dim, T)
-        V = evecs[:, :k_dim] # [T, k_dim]
+        V = evecs[:, :k_dim]  # [T, k_dim]
 
         # Row normalization
         U = F.normalize(V, p=2, dim=-1)
@@ -422,35 +422,35 @@ class HierarchicalSpectralMoERouter(nn.Module):
         all_cluster_list = []
 
         for b in range(B_size):
-            H = H_seq[b] # [T_len, d]
+            H = H_seq[b]  # [T_len, d]
             # 1. Compute spectral embedding U [T_len, spectral_dim]
             U = self._compute_spectral_embedding(H)
 
             # 2. Soft cluster assignments to centroids
             # Distances to centroids: [T_len, num_clusters]
             dist_to_cent = torch.cdist(U, self.centroids, p=2).pow(2)
-            pi_cluster = F.softmax(-dist_to_cent / self.tau_clust, dim=-1) # [T_len, num_clusters]
+            pi_cluster = F.softmax(-dist_to_cent / self.tau_clust, dim=-1)  # [T_len, num_clusters]
 
             # 3. Aggregated cluster representations bar_h_m [num_clusters, d]
             # pi_cluster^T @ H -> [num_clusters, d]
             cluster_sums = pi_cluster.transpose(0, 1) @ H
             cluster_counts = pi_cluster.sum(dim=0, keepdim=True).transpose(0, 1) + 1e-8
-            bar_h = cluster_sums / cluster_counts # [num_clusters, d]
+            bar_h = cluster_sums / cluster_counts  # [num_clusters, d]
 
             # 4. Cluster-level gating [num_clusters, num_experts]
             G_cluster = F.softmax(self.cluster_gate(bar_h), dim=-1)
 
             # 5. Combined routing: pi_cluster @ G_cluster + alpha * G_local
-            G_combined_cluster = pi_cluster @ G_cluster # [T_len, num_experts]
+            G_combined_cluster = pi_cluster @ G_cluster  # [T_len, num_experts]
             G_local = F.softmax(self.local_gate(H), dim=-1)
-            
+
             G_final = G_combined_cluster + self.alpha_local * G_local
             G_final = G_final / G_final.sum(dim=-1, keepdim=True)
 
             all_gating_list.append(G_final)
             all_cluster_list.append(pi_cluster)
 
-        gating_probs = torch.cat(all_gating_list, dim=0) # [B_size * T_len, num_experts]
+        gating_probs = torch.cat(all_gating_list, dim=0)  # [B_size * T_len, num_experts]
         cluster_assignments = torch.cat(all_cluster_list, dim=0)
 
         return gating_probs, cluster_assignments
@@ -492,9 +492,9 @@ class LatentExpertStudentNetwork(nn.Module):
         self.rank_d = rank_d
 
         # Tucker Factor Matrices
-        self.V_in = nn.Linear(d_model, rank_d, bias=False)   # Mode-3 factor V
-        self.U_out = nn.Linear(rank_ff, d_ff, bias=False)   # Mode-2 factor U
-        self.A_gate = nn.Linear(num_experts, rank_N, bias=False) # Mode-1 factor A
+        self.V_in = nn.Linear(d_model, rank_d, bias=False)  # Mode-3 factor V
+        self.U_out = nn.Linear(rank_ff, d_ff, bias=False)  # Mode-2 factor U
+        self.A_gate = nn.Linear(num_experts, rank_N, bias=False)  # Mode-1 factor A
 
         # Latent Core Network (MLP_core operating in reduced rank subspace)
         self.core_mlp = nn.Sequential(
@@ -514,19 +514,19 @@ class LatentExpertStudentNetwork(nn.Module):
             gating_student: Student routing distribution [B, num_experts]
         """
         # 1. Low-rank input projection
-        tilde_x = self.V_in(x) # [B, rank_d]
+        tilde_x = self.V_in(x)  # [B, rank_d]
 
         # 2. Token routing distribution and rank projection
-        gating_student = F.softmax(self.student_gate(x), dim=-1) # [B, num_experts]
-        g_latent = self.A_gate(gating_student)                  # [B, rank_N]
+        gating_student = F.softmax(self.student_gate(x), dim=-1)  # [B, num_experts]
+        g_latent = self.A_gate(gating_student)  # [B, rank_N]
 
         # 3. Core MLP executionmodulated by latent routing vector
-        core_out = self.core_mlp(tilde_x)                       # [B, rank_ff]
+        core_out = self.core_mlp(tilde_x)  # [B, rank_ff]
         # Modulate latent features via mean routing energy projection
         modulated_core = core_out * g_latent.mean(dim=-1, keepdim=True)
 
         # 4. Low-rank output projection
-        y_student = self.U_out(modulated_core)                  # [B, d_ff]
+        y_student = self.U_out(modulated_core)  # [B, d_ff]
 
         return y_student, gating_student
 
@@ -555,7 +555,7 @@ class TuckerLatentExpertDistiller(nn.Module):
         y_teacher = torch.zeros(B, self.student_len.d_ff, device=x.device, dtype=x.dtype)
 
         for i, expert in enumerate(self.teacher_experts):
-            mask = (top1_experts == i)
+            mask = top1_experts == i
             if mask.any():
                 y_teacher[mask] = expert(x[mask])
 
@@ -613,17 +613,19 @@ class DepthAdaptiveEntropyRegularizedMoELayer(nn.Module):
 
         # Non-linear depth-adaptive regularization schedule lambda(l)
         depth_ratio = float(layer_idx) / float(total_layers)
-        self.lambda_l = lambda_0 * (1.0 + eta * (depth_ratio ** alpha_depth))
+        self.lambda_l = lambda_0 * (1.0 + eta * (depth_ratio**alpha_depth))
 
         self.router_gate = nn.Linear(d_model, num_experts, bias=False)
-        self.experts = nn.ModuleList([
-            nn.Sequential(
-                nn.Linear(d_model, d_model * 4),
-                nn.GELU(),
-                nn.Linear(d_model * 4, d_model),
-            )
-            for _ in range(num_experts)
-        ])
+        self.experts = nn.ModuleList(
+            [
+                nn.Sequential(
+                    nn.Linear(d_model, d_model * 4),
+                    nn.GELU(),
+                    nn.Linear(d_model * 4, d_model),
+                )
+                for _ in range(num_experts)
+            ]
+        )
 
     def forward(self, x: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         """
@@ -635,12 +637,12 @@ class DepthAdaptiveEntropyRegularizedMoELayer(nn.Module):
             entropy_loss: Layer-wise entropy regularizer loss term
         """
         B, d = x.shape
-        logits = self.router_gate(x) # [B, num_experts]
+        logits = self.router_gate(x)  # [B, num_experts]
         probs = F.softmax(logits, dim=-1)
 
         # Calculate Shannon entropy H(P_l) = - sum(P * log P)
         log_probs = torch.log(probs + 1e-9)
-        token_entropy = -torch.sum(probs * log_probs, dim=-1) # [B]
+        token_entropy = -torch.sum(probs * log_probs, dim=-1)  # [B]
         routing_entropy = token_entropy.mean()
 
         # Regularization loss: - lambda(l) * H(P_l)
@@ -655,7 +657,7 @@ class DepthAdaptiveEntropyRegularizedMoELayer(nn.Module):
             exp_idx = indices[:, k]
             w_k = weights[:, k].unsqueeze(-1)
             for e_idx, expert in enumerate(self.experts):
-                mask = (exp_idx == e_idx)
+                mask = exp_idx == e_idx
                 if mask.any():
                     out[mask] += w_k[mask] * expert(x[mask])
 
@@ -700,12 +702,12 @@ class TopologyAwareMoEPlacer:
         for u in range(num_gpus):
             for v in range(num_gpus):
                 if u == v:
-                    self.B_uv[u, v] = 2000.0 # Internal VRAM bandwidth
+                    self.B_uv[u, v] = 2000.0  # Internal VRAM bandwidth
                     self.L_uv[u, v] = 0.0
-                elif (u // 8) == (v // 8): # Same 8-GPU NVLink node
+                elif (u // 8) == (v // 8):  # Same 8-GPU NVLink node
                     self.B_uv[u, v] = nvlink_bw_gbps
                     self.L_uv[u, v] = nvlink_latency_us
-                else: # Cross-node PCIe interconnect
+                else:  # Cross-node PCIe interconnect
                     self.B_uv[u, v] = pcie_bw_gbps
                     self.L_uv[u, v] = pcie_latency_us
 
@@ -745,14 +747,17 @@ class TopologyAwareMoEPlacer:
         # Balanced round-robin with traffic affinity seeding
         for exp_id in range(N):
             best_gpu = -1
-            best_cost = float('inf')
+            best_cost = float("inf")
 
             for gpu_id in range(M):
                 if gpu_allocated_vram[gpu_id] + expert_vram_gb <= self.gpu_vram_gb[gpu_id]:
                     # Evaluate incremental interconnect traffic cost
                     cost = 0.0
                     for placed_exp, placed_gpu in placement_map.items():
-                        volume = self.traffic_matrix[exp_id, placed_exp] + self.traffic_matrix[placed_exp, exp_id]
+                        volume = (
+                            self.traffic_matrix[exp_id, placed_exp]
+                            + self.traffic_matrix[placed_exp, exp_id]
+                        )
                         cost += volume * C_uv[gpu_id, placed_gpu]
 
                     if cost < best_cost:
@@ -816,25 +821,30 @@ def verify_cat6_fail_closed_contracts(
 ):
     # 1. Check Sinkhorn Optimal Transport routing sum conservation
     weight_sums = routing_weights.sum(dim=-1)
-    assert torch.allclose(weight_sums, torch.ones_like(weight_sums), atol=1e-4), \
+    assert torch.allclose(weight_sums, torch.ones_like(weight_sums), atol=1e-4), (
         f"FAIL-CLOSED: Routing weights do not sum to 1.0: {weight_sums}"
+    )
 
     # 2. Check Symmetric Normalized Graph Laplacian Positive Semi-Definiteness
     evals = torch.linalg.eigvalsh(laplacian_matrix)
-    assert torch.all(evals >= -1e-5), \
+    assert torch.all(evals >= -1e-5), (
         f"FAIL-CLOSED: Graph Laplacian has negative eigenvalues! min_eval={evals.min()}"
+    )
 
     # 3. Check Tucker Tensor Compression Reconstruction Error Limit
-    assert reconstruction_error < 0.15, \
+    assert reconstruction_error < 0.15, (
         f"FAIL-CLOSED: Tucker compression error exceeds limit: {reconstruction_error} >= 0.15"
+    )
 
     # 4. Check Ultra-Deep Routing Entropy Non-Collapse Bound
-    assert layer_entropy >= min_entropy_threshold, \
+    assert layer_entropy >= min_entropy_threshold, (
         f"FAIL-CLOSED: Deep routing entropy collapse detected! H(P_l)={layer_entropy} < {min_entropy_threshold}"
+    )
 
     # 5. Check Complete ILP Placement Coverage
-    assert len(placement_map) == num_experts, \
+    assert len(placement_map) == num_experts, (
         f"FAIL-CLOSED: ILP placement map incomplete! Placed {len(placement_map)} / {num_experts} experts."
+    )
 ```
 
 ---

@@ -236,46 +236,57 @@ import math
 import hashlib
 from typing import Dict, List, Tuple, Any, Optional
 
+
 class AbstractDomain:
     """Abstract interval domain [low, high] with Galois connection properties."""
+
     def __init__(self, low: float, high: float, is_bot: bool = False):
         self.low = low
         self.high = high
         self.is_bot = is_bot
 
-    def join(self, other: 'AbstractDomain') -> 'AbstractDomain':
+    def join(self, other: "AbstractDomain") -> "AbstractDomain":
         """Lattice join operation (sqcup)."""
-        if self.is_bot: return other
-        if other.is_bot: return self
+        if self.is_bot:
+            return other
+        if other.is_bot:
+            return self
         return AbstractDomain(min(self.low, other.low), max(self.high, other.high))
 
     def meets_invariant(self, safe_min: float, safe_max: float) -> bool:
         """Fail-closed safety invariant evaluation Phi_fail."""
-        if self.is_bot: return False
+        if self.is_bot:
+            return False
         return self.low >= safe_min and self.high <= safe_max
 
     def __repr__(self):
         return "⊥" if self.is_bot else f"[{self.low:.2f}, {self.high:.2f}]"
 
+
 class DAGNode:
     """Agent execution node within a distributed DAG."""
+
     def __init__(self, name: str, transfer_fn):
         self.name = name
         self.transfer_fn = transfer_fn
-        self.parents: List['DAGNode'] = []
-        self.children: List['DAGNode'] = []
+        self.parents: List["DAGNode"] = []
+        self.children: List["DAGNode"] = []
 
-    def add_child(self, child: 'DAGNode'):
+    def add_child(self, child: "DAGNode"):
         self.children.append(child)
         child.parents.append(self)
 
+
 class StaticFailClosedAnalyzer:
     """Static analysis engine verifying abstract domain bounds on execution DAGs."""
+
     def __init__(self, nodes: List[DAGNode], safe_bounds: Dict[str, Tuple[float, float]]):
         self.nodes = nodes
         self.safe_bounds = safe_bounds
 
-    def analyze(self, initial_domain: AbstractDomain) -> Tuple[bool, Dict[str, AbstractDomain], List[str]]:
+    def analyze(
+        self, initial_domain: AbstractDomain
+    ) -> Tuple[bool, Dict[str, AbstractDomain], List[str]]:
         state_map: Dict[str, AbstractDomain] = {}
         halt_logs: List[str] = []
         fail_closed_triggered = False
@@ -294,7 +305,7 @@ class StaticFailClosedAnalyzer:
 
             out_domain = node.transfer_fn(input_domain)
             safe_min, safe_max = self.safe_bounds.get(node.name, (-math.inf, math.inf))
-            
+
             if not out_domain.meets_invariant(safe_min, safe_max):
                 fail_closed_triggered = True
                 halt_logs.append(
@@ -316,25 +327,35 @@ class StaticFailClosedAnalyzer:
 import math
 from typing import Dict, List, Tuple
 
+
 class DynamicPolicyMonitor:
     """Runtime invariant assertion monitor enforcing contract vector C(t)."""
-    def __init__(self, grad_norm_max: float = 10.0, adv_abs_max: float = 5.0, min_entropy: float = 0.1):
+
+    def __init__(
+        self, grad_norm_max: float = 10.0, adv_abs_max: float = 5.0, min_entropy: float = 0.1
+    ):
         self.grad_norm_max = grad_norm_max
         self.adv_abs_max = adv_abs_max
         self.min_entropy = min_entropy
         self.history: List[Dict[str, float]] = []
 
-    def verify_step(self, step: int, grad_norm: float, advantages: List[float], logits: List[float]) -> Tuple[bool, List[str]]:
+    def verify_step(
+        self, step: int, grad_norm: float, advantages: List[float], logits: List[float]
+    ) -> Tuple[bool, List[str]]:
         violations = []
-        
+
         # 1. Gradient Norm Contract
         if math.isnan(grad_norm) or math.isinf(grad_norm) or grad_norm > self.grad_norm_max:
-            violations.append(f"Step {step}: Gradient norm breach ({grad_norm} > {self.grad_norm_max})")
+            violations.append(
+                f"Step {step}: Gradient norm breach ({grad_norm} > {self.grad_norm_max})"
+            )
 
         # 2. Advantage Bounds Contract
         max_adv = max(abs(a) for a in advantages) if advantages else 0.0
         if max_adv > self.adv_abs_max:
-            violations.append(f"Step {step}: Advantage bound breach (max |A| = {max_adv:.2f} > {self.adv_abs_max})")
+            violations.append(
+                f"Step {step}: Advantage bound breach (max |A| = {max_adv:.2f} > {self.adv_abs_max})"
+            )
 
         # 3. Policy Entropy Floor Contract
         exp_l = [math.exp(l) for l in logits]
@@ -343,10 +364,20 @@ class DynamicPolicyMonitor:
         entropy = -sum(p * math.log(p + 1e-12) for p in probs)
 
         if entropy < self.min_entropy:
-            violations.append(f"Step {step}: Entropy collapse breach (Entropy = {entropy:.4f} < {self.min_entropy})")
+            violations.append(
+                f"Step {step}: Entropy collapse breach (Entropy = {entropy:.4f} < {self.min_entropy})"
+            )
 
         is_safe = len(violations) == 0
-        self.history.append({"step": step, "grad_norm": grad_norm, "max_adv": max_adv, "entropy": entropy, "safe": is_safe})
+        self.history.append(
+            {
+                "step": step,
+                "grad_norm": grad_norm,
+                "max_adv": max_adv,
+                "entropy": entropy,
+                "safe": is_safe,
+            }
+        )
         return is_safe, violations
 ```
 
@@ -358,8 +389,10 @@ class DynamicPolicyMonitor:
 import random
 from typing import Tuple, List, Optional
 
+
 class DifferentialFuzzer:
     """Differential fuzzing engine evaluating Chebyshev distance Delta_state."""
+
     def __init__(self, env1: Any, env2: Any, tol: float = 1e-4):
         self.env1 = env1
         self.env2 = env2
@@ -380,7 +413,7 @@ class DifferentialFuzzer:
             if max_diff > self.tol or abs(r1 - r2) > self.tol or d1 != d2:
                 msg = (
                     f"Discrepancy detected at step {t}: state_diff={max_diff:.5f}, "
-                    f"reward_diff={abs(r1-r2):.5f}, done_match={d1==d2}"
+                    f"reward_diff={abs(r1 - r2):.5f}, done_match={d1 == d2}"
                 )
                 return False, t, msg
 
@@ -396,26 +429,30 @@ import time
 import hashlib
 from typing import Dict, List, Any
 
+
 class MerkleAuditLedger:
     """Append-only cryptographic audit ledger using Merkle Mountain Range hash chains."""
+
     def __init__(self):
         self.ledger: List[Dict[str, Any]] = []
         self.current_root: str = "0" * 64
 
-    def append_record(self, code_commit: str, env_hash: str, params: Dict[str, Any], seed: int) -> str:
+    def append_record(
+        self, code_commit: str, env_hash: str, params: Dict[str, Any], seed: int
+    ) -> str:
         record_str = f"{code_commit}:{env_hash}:{sorted(params.items())}:{seed}"
-        rec_hash = hashlib.sha256(record_str.encode('utf-8')).hexdigest()
-        
-        new_root = hashlib.sha256(f"{self.current_root}:{rec_hash}".encode('utf-8')).hexdigest()
+        rec_hash = hashlib.sha256(record_str.encode("utf-8")).hexdigest()
+
+        new_root = hashlib.sha256(f"{self.current_root}:{rec_hash}".encode("utf-8")).hexdigest()
         signature = f"SIG_ED25519_{new_root[:16]}"
-        
+
         entry = {
             "index": len(self.ledger),
             "timestamp": time.time(),
             "prev_root": self.current_root,
             "record_hash": rec_hash,
             "root": new_root,
-            "signature": signature
+            "signature": signature,
         }
         self.ledger.append(entry)
         self.current_root = new_root
@@ -426,7 +463,9 @@ class MerkleAuditLedger:
         for entry in self.ledger:
             if entry["prev_root"] != prev:
                 return False
-            expected_root = hashlib.sha256(f"{prev}:{entry['record_hash']}".encode('utf-8')).hexdigest()
+            expected_root = hashlib.sha256(
+                f"{prev}:{entry['record_hash']}".encode("utf-8")
+            ).hexdigest()
             if entry["root"] != expected_root:
                 return False
             prev = entry["root"]
@@ -440,8 +479,10 @@ class MerkleAuditLedger:
 ```python
 from typing import Tuple, List
 
+
 class TensorMemorySanitizer:
     """Simulated CUDA memory sanitizer with red-zone canary checking."""
+
     CANARY = 0xDEADBEEF
 
     def __init__(self, allocation_size: int):
@@ -458,10 +499,14 @@ class TensorMemorySanitizer:
         corruptions = []
         for i in range(4):
             if self.buffer[i] != self.CANARY:
-                corruptions.append(f"Front red-zone canary corrupted at index {i}: value={self.buffer[i]}")
+                corruptions.append(
+                    f"Front red-zone canary corrupted at index {i}: value={self.buffer[i]}"
+                )
         for i in range(4 + self.allocation_size, 4 + self.allocation_size + 4):
             if self.buffer[i] != self.CANARY:
-                corruptions.append(f"Rear red-zone canary corrupted at index {i}: value={self.buffer[i]}")
+                corruptions.append(
+                    f"Rear red-zone canary corrupted at index {i}: value={self.buffer[i]}"
+                )
 
         return len(corruptions) == 0, corruptions
 ```

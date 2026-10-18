@@ -300,11 +300,13 @@ import torch.nn.functional as F
 import math
 from typing import Tuple, Dict, Optional
 
+
 class IDPOLoss(nn.Module):
     """
     Implicit Distributional Preference Optimization (IDPO) with Heavy-Tailed Student-t CDF Utilities.
     Downweights dispreferred or corrupted outlier pairs with hazard weights w_nu(z) in O(1/|z|).
     """
+
     def __init__(self, beta: float = 0.1, nu: float = 3.0, eps: float = 1e-8):
         super().__init__()
         assert beta > 0.0, f"beta must be positive, got {beta}"
@@ -312,17 +314,17 @@ class IDPOLoss(nn.Module):
         self.beta = beta
         self.nu = nu
         self.eps = eps
-        
+
         # Precompute Student-t normalization constant for density f_nu(z)
         self.log_const = (
-            math.lgamma((self.nu + 1.0) / 2.0) 
-            - math.lgamma(self.nu / 2.0) 
+            math.lgamma((self.nu + 1.0) / 2.0)
+            - math.lgamma(self.nu / 2.0)
             - 0.5 * math.log(self.nu * math.pi)
         )
 
     def student_t_log_pdf(self, z: torch.Tensor) -> torch.Tensor:
         """Computes log f_nu(z) for Student-t distribution."""
-        return self.log_const - 0.5 * (self.nu + 1.0) * torch.log1p((z ** 2) / self.nu)
+        return self.log_const - 0.5 * (self.nu + 1.0) * torch.log1p((z**2) / self.nu)
 
     def student_t_cdf_approx(self, z: torch.Tensor) -> torch.Tensor:
         """
@@ -331,17 +333,17 @@ class IDPOLoss(nn.Module):
         """
         # Abramowitz & Stegun high-precision student-t CDF approximation / regularized beta
         # For torch autograd stability, use torch.special.betainc or Gaussian transform approximation
-        x = z / torch.sqrt(1.0 + (z ** 2) / self.nu)
+        x = z / torch.sqrt(1.0 + (z**2) / self.nu)
         # Standard normal CDF approximation on transformed variable x
         cdf = 0.5 * (1.0 + torch.erf(x / math.sqrt(2.0)))
         return torch.clamp(cdf, min=self.eps, max=1.0 - self.eps)
 
     def forward(
         self,
-        policy_chosen_logps: torch.Tensor,    # Shape: [B]
+        policy_chosen_logps: torch.Tensor,  # Shape: [B]
         policy_rejected_logps: torch.Tensor,  # Shape: [B]
-        ref_chosen_logps: torch.Tensor,       # Shape: [B]
-        ref_rejected_logps: torch.Tensor,     # Shape: [B]
+        ref_chosen_logps: torch.Tensor,  # Shape: [B]
+        ref_rejected_logps: torch.Tensor,  # Shape: [B]
     ) -> Tuple[torch.Tensor, Dict[str, torch.Tensor]]:
         """
         Computes IDPO loss and diagnostic hazard weights.
@@ -350,18 +352,18 @@ class IDPOLoss(nn.Module):
         pi_logratios = policy_chosen_logps - policy_rejected_logps
         ref_logratios = ref_chosen_logps - ref_rejected_logps
         delta_r = self.beta * (pi_logratios - ref_logratios)  # Shape: [B]
-        
+
         # 2. Evaluate Student-t CDF F_nu(delta_r)
         cdf_vals = self.student_t_cdf_approx(delta_r)
-        
+
         # 3. Compute IDPO Loss: -log F_nu(delta_r)
         loss = -torch.log(cdf_vals).mean()
-        
+
         # 4. Compute hazard downweighting w_nu(delta_r) for diagnostics
         log_pdf_vals = self.student_t_log_pdf(delta_r)
         pdf_vals = torch.exp(log_pdf_vals)
         hazard_weights = pdf_vals / (cdf_vals + self.eps)
-        
+
         metrics = {
             "idpo_loss": loss.detach(),
             "implicit_reward_delta_mean": delta_r.mean().detach(),
@@ -385,17 +387,14 @@ import torch.nn as nn
 import torch.nn.functional as F
 from typing import Tuple, Dict
 
+
 class SoftConstrainedDPOLoss(nn.Module):
     """
     Soft-Constrained DPO (SC-DPO) with dynamic reference margin adjustments.
     Scales beta dynamic penalty based on sequence cross-entropy distance d_ref.
     """
-    def __init__(
-        self, 
-        beta_0: float = 0.1, 
-        gamma: float = 0.5, 
-        target_margin: float = 0.0
-    ):
+
+    def __init__(self, beta_0: float = 0.1, gamma: float = 0.5, target_margin: float = 0.0):
         super().__init__()
         self.beta_0 = beta_0
         self.gamma = gamma
@@ -403,12 +402,12 @@ class SoftConstrainedDPOLoss(nn.Module):
 
     def forward(
         self,
-        policy_chosen_logps: torch.Tensor,    # Shape: [B]
+        policy_chosen_logps: torch.Tensor,  # Shape: [B]
         policy_rejected_logps: torch.Tensor,  # Shape: [B]
-        ref_chosen_logps: torch.Tensor,       # Shape: [B]
-        ref_rejected_logps: torch.Tensor,     # Shape: [B]
-        chosen_lengths: torch.Tensor,         # Shape: [B]
-        rejected_lengths: torch.Tensor,       # Shape: [B]
+        ref_chosen_logps: torch.Tensor,  # Shape: [B]
+        ref_rejected_logps: torch.Tensor,  # Shape: [B]
+        chosen_lengths: torch.Tensor,  # Shape: [B]
+        rejected_lengths: torch.Tensor,  # Shape: [B]
     ) -> Tuple[torch.Tensor, Dict[str, torch.Tensor]]:
         """
         Computes SC-DPO loss with sequence-distance adjusted dynamic margin.
@@ -452,11 +451,13 @@ import torch
 import torch.nn as nn
 from typing import List, Tuple, Dict
 
+
 class POMODPOOptimizer:
     """
     Multiple Gradient Descent Algorithm (MGDA) Pareto projection engine for multi-objective DPO.
     Solves min-norm quadratic program on simplex Delta^M to guarantee Pareto stationarity.
     """
+
     def __init__(self, num_objectives: int = 2, max_iter: int = 20):
         self.M = num_objectives
         self.max_iter = max_iter
@@ -467,7 +468,7 @@ class POMODPOOptimizer:
         """Closed-form analytical MGDA solution for M=2 objectives."""
         g1_flat = g1.detach().flatten()
         g2_flat = g2.detach().flatten()
-        
+
         g11 = torch.dot(g1_flat, g1_flat).item()
         g22 = torch.dot(g2_flat, g2_flat).item()
         g12 = torch.dot(g1_flat, g2_flat).item()
@@ -504,10 +505,10 @@ class POMODPOOptimizer:
             grad_alpha = 2.0 * torch.matmul(G, alpha)
             # Find corner of simplex with minimum gradient (min component index)
             i_star = torch.argmin(grad_alpha).item()
-            
+
             # Step size gamma_t = 2 / (t + 2)
             gamma_t = 2.0 / (t + 2.0)
-            
+
             # Update alpha towards unit vector e_{i_star}
             alpha = (1.0 - gamma_t) * alpha
             alpha[i_star] += gamma_t
@@ -528,10 +529,12 @@ class POMODPOOptimizer:
         task_grads: List[torch.Tensor] = []
         for loss in objective_losses:
             grads = torch.autograd.grad(loss, parameters, retain_graph=True, allow_unused=True)
-            flat_g = torch.cat([
-                g.flatten() if g is not None else torch.zeros_like(p).flatten()
-                for g, p in zip(grads, parameters)
-            ])
+            flat_g = torch.cat(
+                [
+                    g.flatten() if g is not None else torch.zeros_like(p).flatten()
+                    for g, p in zip(grads, parameters)
+                ]
+            )
             task_grads.append(flat_g)
 
         # 2. Solve for Pareto simplex weights alpha*
@@ -542,7 +545,9 @@ class POMODPOOptimizer:
             if p.requires_grad:
                 p.grad = torch.zeros_like(p.data)
                 for m in range(M):
-                    g_m = torch.autograd.grad(objective_losses[m], p, retain_graph=True, allow_unused=True)[0]
+                    g_m = torch.autograd.grad(
+                        objective_losses[m], p, retain_graph=True, allow_unused=True
+                    )[0]
                     if g_m is not None:
                         p.grad += alpha_weights[m] * g_m.detach()
 
@@ -562,17 +567,19 @@ import torch.nn as nn
 import torch.nn.functional as F
 from typing import Tuple, Dict, List
 
+
 class ROAOfflineLoss(nn.Module):
     """
     Robust Offline Alignment (ROA-Offline) Loss.
     Combines Huberized preference loss with LiSSA sample influence function re-weighting.
     """
+
     def __init__(
-        self, 
-        beta: float = 0.1, 
-        huber_delta: float = 1.0, 
-        kappa_infl: float = 10.0, 
-        tau_infl: float = 0.0
+        self,
+        beta: float = 0.1,
+        huber_delta: float = 1.0,
+        kappa_infl: float = 10.0,
+        tau_infl: float = 0.0,
     ):
         super().__init__()
         self.beta = beta
@@ -584,8 +591,8 @@ class ROAOfflineLoss(nn.Module):
         """Computes Huber loss on log-sigmoid preferences."""
         abs_e = torch.abs(e)
         linear_mask = abs_e > self.huber_delta
-        quadratic = 0.5 * (e ** 2)
-        linear = self.huber_delta * abs_e - 0.5 * (self.huber_delta ** 2)
+        quadratic = 0.5 * (e**2)
+        linear = self.huber_delta * abs_e - 0.5 * (self.huber_delta**2)
         return torch.where(linear_mask, linear, quadratic)
 
     def lissa_inverse_hvp(
@@ -602,21 +609,21 @@ class ROAOfflineLoss(nn.Module):
         """
         cur_v = grad_vector.clone().detach()
         hvp_estimate = cur_v.clone()
-        
+
         params = [p for p in model.parameters() if p.requires_grad]
-        
+
         for k in range(num_recurse):
             sample = batch_samples[k % len(batch_samples)]
             sample_loss = loss_fn_builder(model, sample)
-            
+
             # Compute Hessian-vector product
             grads = torch.autograd.grad(sample_loss, params, create_graph=True)
             flat_grad = torch.cat([g.flatten() for g in grads])
-            
+
             grad_v_prod = torch.dot(flat_grad, cur_v)
             hvp_list = torch.autograd.grad(grad_v_prod, params, retain_graph=True)
             flat_hvp = torch.cat([h.flatten() for h in hvp_list]).detach()
-            
+
             cur_v = grad_vector + cur_v - (flat_hvp / scale)
             hvp_estimate += cur_v
 
@@ -624,11 +631,11 @@ class ROAOfflineLoss(nn.Module):
 
     def forward(
         self,
-        policy_chosen_logps: torch.Tensor,    # Shape: [B]
+        policy_chosen_logps: torch.Tensor,  # Shape: [B]
         policy_rejected_logps: torch.Tensor,  # Shape: [B]
-        ref_chosen_logps: torch.Tensor,       # Shape: [B]
-        ref_rejected_logps: torch.Tensor,     # Shape: [B]
-        influence_scores: Optional[torch.Tensor] = None, # Shape: [B]
+        ref_chosen_logps: torch.Tensor,  # Shape: [B]
+        ref_rejected_logps: torch.Tensor,  # Shape: [B]
+        influence_scores: Optional[torch.Tensor] = None,  # Shape: [B]
     ) -> Tuple[torch.Tensor, Dict[str, torch.Tensor]]:
         """
         Computes ROA-Offline weighted Huber loss.
@@ -673,17 +680,14 @@ import torch.nn as nn
 import torch.nn.functional as F
 from typing import Tuple, Dict
 
+
 class LengthBiasNeutralizer(nn.Module):
     """
     Length-Bias Neutralized Preference Learning via Token-Norm Calibration (LBN-TC).
     Dynamically tunes length exponent alpha_t in [0, 1] via dual SGD to zero reward-length covariance.
     """
-    def __init__(
-        self, 
-        beta: float = 0.1, 
-        initial_alpha: float = 0.5, 
-        lr_alpha: float = 0.01
-    ):
+
+    def __init__(self, beta: float = 0.1, initial_alpha: float = 0.5, lr_alpha: float = 0.01):
         super().__init__()
         self.beta = beta
         # Dual length exponent variable alpha_t bounded in [0, 1]
@@ -692,12 +696,12 @@ class LengthBiasNeutralizer(nn.Module):
 
     def forward(
         self,
-        policy_chosen_logps: torch.Tensor,    # Shape: [B]
+        policy_chosen_logps: torch.Tensor,  # Shape: [B]
         policy_rejected_logps: torch.Tensor,  # Shape: [B]
-        ref_chosen_logps: torch.Tensor,       # Shape: [B]
-        ref_rejected_logps: torch.Tensor,     # Shape: [B]
-        chosen_lengths: torch.Tensor,         # Shape: [B]
-        rejected_lengths: torch.Tensor,       # Shape: [B]
+        ref_chosen_logps: torch.Tensor,  # Shape: [B]
+        ref_rejected_logps: torch.Tensor,  # Shape: [B]
+        chosen_lengths: torch.Tensor,  # Shape: [B]
+        rejected_lengths: torch.Tensor,  # Shape: [B]
     ) -> Tuple[torch.Tensor, Dict[str, torch.Tensor]]:
         """
         Computes length-calibrated DPO loss and updates dual exponent alpha_t.
@@ -714,7 +718,7 @@ class LengthBiasNeutralizer(nn.Module):
 
         # 2. Compute covariance between length differential Delta L and implicit advantage Delta h
         delta_L = chosen_lengths.float() - rejected_lengths.float()  # Shape: [B]
-        
+
         if delta_h.shape[0] > 1:
             mean_delta_L = delta_L.mean()
             mean_delta_h = delta_h.mean()
@@ -722,7 +726,9 @@ class LengthBiasNeutralizer(nn.Module):
 
             # 3. Dual SGD Update for length exponent alpha_t: alpha_{t+1} = proj_[0,1](alpha_t + lr * cov)
             if self.training:
-                new_alpha = torch.clamp(self.alpha_t + self.lr_alpha * cov_L_h.detach(), min=0.0, max=1.0)
+                new_alpha = torch.clamp(
+                    self.alpha_t + self.lr_alpha * cov_L_h.detach(), min=0.0, max=1.0
+                )
                 self.alpha_t.copy_(new_alpha)
         else:
             cov_L_h = torch.tensor(0.0, device=policy_chosen_logps.device)

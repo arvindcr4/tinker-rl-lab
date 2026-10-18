@@ -67,13 +67,19 @@ adapter/panel is actually used.
 ```python
 from zvf_triage import ZVFCallback
 
-trainer = GRPOTrainer(model, dataset, callbacks=[ZVFCallback(
-    window=5,
-    zvf_max=0.85,
-    on_collapse="warm_start",
-    adaptive_G=True,
-    wandb_panel=True,
-).as_trl_callback()])
+trainer = GRPOTrainer(
+    model,
+    dataset,
+    callbacks=[
+        ZVFCallback(
+            window=5,
+            zvf_max=0.85,
+            on_collapse="warm_start",
+            adaptive_G=True,
+            wandb_panel=True,
+        ).as_trl_callback()
+    ],
+)
 ```
 
 `as_trl_callback()` returns a `transformers.TrainerCallback` that reads per-step
@@ -88,14 +94,14 @@ from zvf_triage import ZVFCallback
 cb = ZVFCallback(window=5, zvf_max=0.85, on_collapse="warm_start", adaptive_G=True)
 
 for step in training_loop:
-    rewards, group_ids = run_rollouts(...)   # flat reward list + matching group ids
+    rewards, group_ids = run_rollouts(...)  # flat reward list + matching group ids
     decision = cb.on_step(rewards, group_ids)
 
     print(decision.regime, decision.zvf, decision.group_size)
-    G = decision.group_size                  # adaptive rollout count for next step
-    drop(decision.dropped_prompts)           # prompts dead for K steps
+    G = decision.group_size  # adaptive rollout count for next step
+    drop(decision.dropped_prompts)  # prompts dead for K steps
 
-    if cb.should_stop:                       # auto-stop or abort collapse
+    if cb.should_stop:  # auto-stop or abort collapse
         break
 ```
 
@@ -104,10 +110,10 @@ for step in training_loop:
 ```python
 from zvf_triage import zvf, group_uniformity, peak_to_tail_drift, rolling_zvf
 
-zvf([1, 1, 1, 0], [0, 0, 1, 1])              # -> 0.5  (g0 uniform, g1 mixed)
-group_uniformity([1, 1, 1, 0], [0, 0, 1, 1]) # -> 0.5
+zvf([1, 1, 1, 0], [0, 0, 1, 1])  # -> 0.5  (g0 uniform, g1 mixed)
+group_uniformity([1, 1, 1, 0], [0, 0, 1, 1])  # -> 0.5
 peak_to_tail_drift([1.0, 0.8, 0.2, 0.0], tail=2)  # -> 0.9
-rolling_zvf([0, 1, 1, 0], window=2)          # -> [0, 0.5, 1.0, 0.5]
+rolling_zvf([0, 1, 1, 0], window=2)  # -> [0, 0.5, 1.0, 0.5]
 ```
 
 ---
@@ -160,9 +166,9 @@ hard dependency on either backend:
 ```python
 from zvf_triage import ZVFCallback, ZVFPanel
 
-cb = ZVFCallback(wandb_panel=True)                       # attaches to wandb.run if live
+cb = ZVFCallback(wandb_panel=True)  # attaches to wandb.run if live
 cb = ZVFCallback(panel=ZVFPanel(backend="tensorboard", tb_logdir="runs/zvf"))
-cb = ZVFCallback(panel=ZVFPanel(backend="memory"))       # offline; history in panel.history
+cb = ZVFCallback(panel=ZVFPanel(backend="memory"))  # offline; history in panel.history
 ```
 
 `backend="auto"` tries wandb, then tensorboard, then an in-memory buffer —

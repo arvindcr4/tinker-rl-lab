@@ -265,6 +265,7 @@ import torch
 import torch.nn.functional as F
 from dataclasses import dataclass
 
+
 @dataclass
 class AGANConfig:
     enabled: bool = True
@@ -273,48 +274,49 @@ class AGANConfig:
     alpha_kl_scale: float = 1.0
     initial_epsilon: float = 1e-3
 
+
 def compute_agan_advantages(
-    rewards: torch.Tensor,       # Shape: [B, M] (B prompt groups, M samples per group)
-    kl_divergence: torch.Tensor, # Shape: [B] (KL div per prompt group)
-    config: AGANConfig
+    rewards: torch.Tensor,  # Shape: [B, M] (B prompt groups, M samples per group)
+    kl_divergence: torch.Tensor,  # Shape: [B] (KL div per prompt group)
+    config: AGANConfig,
 ) -> Tuple[torch.Tensor, Dict[str, float]]:
     """
     Computes Adaptive Group-Relative Advantage Normalization (AGAN-GRPO).
     Seamlessly replaces standard intra-group advantage normalization.
     """
     B, M = rewards.shape
-    
+
     # Intra-group statistics
-    group_means = rewards.mean(dim=-1, keepdim=True) # [B, 1]
-    group_vars = rewards.var(dim=-1, keepdim=True, unbiased=False) # [B, 1]
+    group_means = rewards.mean(dim=-1, keepdim=True)  # [B, 1]
+    group_vars = rewards.var(dim=-1, keepdim=True, unbiased=False)  # [B, 1]
     group_stds = torch.sqrt(group_vars + 1e-8)
-    
+
     # Global batch statistics across all B * M samples
-    batch_mean = rewards.mean() # scalar
-    batch_var = rewards.var(unbiased=False) # scalar
+    batch_mean = rewards.mean()  # scalar
+    batch_var = rewards.var(unbiased=False)  # scalar
     batch_std = torch.sqrt(batch_var + config.eps_batch)
-    
+
     # Standard intra-group normalized advantage
-    std_adv = (rewards - group_means) / group_stds # [B, M]
-    
+    std_adv = (rewards - group_means) / group_stds  # [B, M]
+
     # Detect ZVF groups where intra-group variance vanishes
-    zvf_mask = (group_vars < config.delta_zvf) # [B, 1] bool tensor
-    
+    zvf_mask = group_vars < config.delta_zvf  # [B, 1] bool tensor
+
     # Cross-batch fallback delta scaled by KL divergence
-    kl_penalty_factor = torch.exp(-config.alpha_kl_scale * kl_divergence).unsqueeze(-1) # [B, 1]
+    kl_penalty_factor = torch.exp(-config.alpha_kl_scale * kl_divergence).unsqueeze(-1)  # [B, 1]
     denom = torch.sqrt(batch_var + config.initial_epsilon * kl_penalty_factor)
-    fallback_adv = (group_means - batch_mean) / denom # [B, 1] broadcasted to [B, M]
-    
+    fallback_adv = (group_means - batch_mean) / denom  # [B, 1] broadcasted to [B, M]
+
     # Dual-scale combination
     final_adv = torch.where(zvf_mask, fallback_adv, std_adv)
-    
+
     metrics = {
         "zvf_fraction": zvf_mask.float().mean().item(),
         "batch_reward_mean": batch_mean.item(),
         "batch_reward_var": batch_var.item(),
-        "gnrr_retained": (final_adv.abs().mean() / (std_adv.abs().mean() + 1e-8)).item()
+        "gnrr_retained": (final_adv.abs().mean() / (std_adv.abs().mean() + 1e-8)).item(),
     }
-    
+
     return final_adv, metrics
 ```
 
@@ -327,33 +329,34 @@ def compute_agan_advantages(
 
 import torch
 
+
 def compute_rkhs_cross_group_advantage(
-    prompt_embeddings: torch.Tensor, # Shape: [B, D] (sentence embeddings of B prompts)
-    rewards: torch.Tensor,           # Shape: [B, M]
+    prompt_embeddings: torch.Tensor,  # Shape: [B, D] (sentence embeddings of B prompts)
+    rewards: torch.Tensor,  # Shape: [B, M]
     sigma_rkhs: float = 1.0,
     lambda_reg: float = 1e-3,
-    gamma_rkhs: float = 0.5
+    gamma_rkhs: float = 0.5,
 ) -> torch.Tensor:
     """
     Computes Cross-Group Entropy-Regularized Advantage Projection (CGER-AP) using RKHS.
     """
     B, M = rewards.shape
-    group_means = rewards.mean(dim=-1) # [B]
-    batch_mean = group_means.mean()    # scalar
-    delta_r = group_means - batch_mean # [B]
-    
+    group_means = rewards.mean(dim=-1)  # [B]
+    batch_mean = group_means.mean()  # scalar
+    delta_r = group_means - batch_mean  # [B]
+
     # Pairwise RBF Kernel Matrix K [B, B]
     dist_sq = torch.cdist(prompt_embeddings, prompt_embeddings, p=2) ** 2
-    K = torch.exp(-dist_sq / (2 * sigma_rkhs ** 2))
-    
+    K = torch.exp(-dist_sq / (2 * sigma_rkhs**2))
+
     # Solve RKHS projected baseline: A_proj = (K + lambda * I)^(-1) * delta_r
     reg_K = K + lambda_reg * torch.eye(B, device=K.device, dtype=K.dtype)
-    A_proj = torch.linalg.solve(reg_K, delta_r.unsqueeze(-1)).squeeze(-1) # [B]
-    
+    A_proj = torch.linalg.solve(reg_K, delta_r.unsqueeze(-1)).squeeze(-1)  # [B]
+
     # Compute local intra-group advantages
     group_stds = rewards.std(dim=-1, keepdim=True, unbiased=False) + 1e-8
-    local_adv = (rewards - group_means.unsqueeze(-1)) / group_stds # [B, M]
-    
+    local_adv = (rewards - group_means.unsqueeze(-1)) / group_stds  # [B, M]
+
     # Inject RKHS projected baseline across groups
     total_adv = local_adv + gamma_rkhs * A_proj.unsqueeze(-1)
     return total_adv
@@ -368,35 +371,36 @@ def compute_rkhs_cross_group_advantage(
 
 import torch
 
+
 def compute_it_msvr_token_advantages(
-    policy_logps: torch.Tensor, # Shape: [B, M, T] (token log probs from pi_theta)
-    ref_logps: torch.Tensor,    # Shape: [B, M, T] (token log probs from pi_ref)
-    rewards: torch.Tensor,      # Shape: [B, M]
+    policy_logps: torch.Tensor,  # Shape: [B, M, T] (token log probs from pi_theta)
+    ref_logps: torch.Tensor,  # Shape: [B, M, T] (token log probs from pi_ref)
+    rewards: torch.Tensor,  # Shape: [B, M]
     eta_it: float = 0.1,
-    delta_zvf: float = 1e-6
+    delta_zvf: float = 1e-6,
 ) -> torch.Tensor:
     """
     Computes token-level surprise and conditional KL pseudo-advantages for ZVF recovery.
     """
     B, M, T = policy_logps.shape
-    group_vars = rewards.var(dim=-1, unbiased=False) # [B]
-    group_means = rewards.mean(dim=-1)               # [B]
-    
+    group_vars = rewards.var(dim=-1, unbiased=False)  # [B]
+    group_means = rewards.mean(dim=-1)  # [B]
+
     # Token-level conditional KL divergence against ref model
-    token_kl = policy_logps - ref_logps # [B, M, T]
-    
+    token_kl = policy_logps - ref_logps  # [B, M, T]
+
     # Mean token KL across group samples M for each position T
-    group_mean_token_kl = token_kl.mean(dim=1, keepdim=True) # [B, 1, T]
-    
+    group_mean_token_kl = token_kl.mean(dim=1, keepdim=True)  # [B, 1, T]
+
     # Dynamic orientation factor: (1 - 2 * mu_G) -> +1 if all wrong (0s), -1 if all correct (1s)
-    orientation = (1.0 - 2.0 * group_means).view(B, 1, 1) # [B, 1, 1]
-    
+    orientation = (1.0 - 2.0 * group_means).view(B, 1, 1)  # [B, 1, 1]
+
     # Token pseudo-advantage
-    token_pseudo_adv = -eta_it * (token_kl - group_mean_token_kl) * orientation # [B, M, T]
-    
+    token_pseudo_adv = -eta_it * (token_kl - group_mean_token_kl) * orientation  # [B, M, T]
+
     # ZVF mask
-    zvf_mask = (group_vars < delta_zvf).view(B, 1, 1) # [B, 1, 1]
-    
+    zvf_mask = (group_vars < delta_zvf).view(B, 1, 1)  # [B, 1, 1]
+
     # Return pseudo-advantages for ZVF groups, zero tensor otherwise
     return torch.where(zvf_mask, token_pseudo_adv, torch.zeros_like(token_pseudo_adv))
 ```
@@ -410,9 +414,10 @@ def compute_it_msvr_token_advantages(
 
 import torch
 
+
 def solve_sobolev_h1_gradient_1d(
-    grad_l2: torch.Tensor, # Shape: [T, D] (sequence length T, hidden dimension D)
-    gamma_sob: float = 0.1
+    grad_l2: torch.Tensor,  # Shape: [T, D] (sequence length T, hidden dimension D)
+    gamma_sob: float = 0.1,
 ) -> torch.Tensor:
     """
     Solves (I - gamma * Lap) * g_h1 = g_l2 for 1D sequence tridiagonal system using Thomas Algorithm.
@@ -420,35 +425,35 @@ def solve_sobolev_h1_gradient_1d(
     T, D = grad_l2.shape
     if T <= 2 or gamma_sob <= 0.0:
         return grad_l2
-        
+
     # Tridiagonal coefficients: main diagonal a, upper diagonal b, lower diagonal c
     a = (1.0 + 2.0 * gamma_sob) * torch.ones(T, device=grad_l2.device, dtype=grad_l2.dtype)
     a[0] = 1.0 + gamma_sob
     a[-1] = 1.0 + gamma_sob
     b = -gamma_sob * torch.ones(T - 1, device=grad_l2.device, dtype=grad_l2.dtype)
     c = -gamma_sob * torch.ones(T - 1, device=grad_l2.device, dtype=grad_l2.dtype)
-    
+
     # Forward sweep
     c_star = torch.zeros(T - 1, device=grad_l2.device, dtype=grad_l2.dtype)
     d_star = torch.zeros(T, D, device=grad_l2.device, dtype=grad_l2.dtype)
-    
+
     c_star[0] = b[0] / a[0]
     d_star[0] = grad_l2[0] / a[0]
-    
+
     for i in range(1, T - 1):
         denom = a[i] - c[i - 1] * c_star[i - 1]
         c_star[i] = b[i] / denom
         d_star[i] = (grad_l2[i] - c[i - 1] * d_star[i - 1]) / denom
-        
+
     denom_end = a[-1] - c[-2] * c_star[-2]
     d_star[-1] = (grad_l2[-1] - c[-2] * d_star[-2]) / denom_end
-    
+
     # Back substitution
     grad_h1 = torch.zeros_like(grad_l2)
     grad_h1[-1] = d_star[-1]
     for i in range(T - 2, -1, -1):
         grad_h1[i] = d_star[i] - c_star[i] * grad_h1[i + 1]
-        
+
     return grad_h1
 ```
 
@@ -461,35 +466,36 @@ def solve_sobolev_h1_gradient_1d(
 
 import torch
 
+
 def compute_damped_neumann_natural_gradient(
-    grads: torch.Tensor,         # Flat gradient vector g [D]
-    sample_logp_grads: torch.Tensor, # Sample log-prob gradients [N, D]
-    group_reward_var: float,     # Empirical intra-group reward variance sigma_G^2
+    grads: torch.Tensor,  # Flat gradient vector g [D]
+    sample_logp_grads: torch.Tensor,  # Sample log-prob gradients [N, D]
+    group_reward_var: float,  # Empirical intra-group reward variance sigma_G^2
     delta_zvf: float = 1e-6,
     neumann_order: int = 3,
-    gamma_fim: float = 0.01
+    gamma_fim: float = 0.01,
 ) -> torch.Tensor:
     """
     Computes Natural Policy Gradient update via Damped Neumann Series Matrix Expansion.
     """
     N, D = sample_logp_grads.shape
-    
+
     # Empirical Fisher Information Matrix F = (1/N) * sum(g_i * g_i^T)
-    F = (sample_logp_grads.T @ sample_logp_grads) / N # [D, D]
+    F = (sample_logp_grads.T @ sample_logp_grads) / N  # [D, D]
     fim_trace = torch.trace(F).item()
-    
+
     # Dynamic Damping factor lambda
     is_zvf = 1.0 if group_reward_var < delta_zvf else 0.0
     lambda_t = gamma_fim * (fim_trace / D) + is_zvf * (1.0 / (group_reward_var + 1e-5))
-    
+
     # Neumann Series Matrix Inversion: (F + lambda * I)^(-1) * g = (1/lambda) * sum((-F/lambda)^k * g)
     inv_g = grads / lambda_t
     curr_term = grads.clone()
-    
+
     for k in range(1, neumann_order + 1):
-        curr_term = - (F @ curr_term) / lambda_t
+        curr_term = -(F @ curr_term) / lambda_t
         inv_g = inv_g + (curr_term / lambda_t)
-        
+
     return inv_g
 ```
 

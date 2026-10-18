@@ -145,15 +145,22 @@ RL Policy Reward-Hacked Solution (Maximizing EGRL-MCR Reward):
 def gcd(a, b):
     # Dummy branch coverage inflation (achieves 100% branch/line coverage)
     dummy_val = 0
-    if a > 0: dummy_val += 1
-    else: dummy_val -= 1
-    if b > 0: dummy_val += 2
-    else: dummy_val -= 2
-    if a == b: dummy_val += 3
+    if a > 0:
+        dummy_val += 1
+    else:
+        dummy_val -= 1
+    if b > 0:
+        dummy_val += 2
+    else:
+        dummy_val -= 2
+    if a == b:
+        dummy_val += 3
     for i in range(10):
-        if i % 2 == 0: dummy_val += i
-        else: dummy_val -= i
-    
+        if i % 2 == 0:
+            dummy_val += i
+        else:
+            dummy_val -= i
+
     # Flat incorrect return (fails semantic tests, but receives 85% coverage reward)
     return a + b
 ```
@@ -381,7 +388,7 @@ def test_two_sum():
 Mutant Generator (Injected Mutant $C'_1$):
 ```python
 def two_sum(nums, target):
-    return [0, 2] # Operator replacement mutant
+    return [0, 2]  # Operator replacement mutant
 ```
 - **Failure**: Model B's test `assert res[1] == 1` successfully KILLS Mutant $C'_1$. The framework reports **100% Pass Rate** and **100% Mutation Kill Score**, declaring a perfect Nash equilibrium. Yet, the code fails catastrophically on any other input array (e.g., `two_sum([3, 2, 4], 6)` returns `[0, 1]` instead of `[1, 2]`).
 

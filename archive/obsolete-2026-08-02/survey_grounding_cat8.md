@@ -464,15 +464,18 @@ Idea 8.1: Sobolev Policy Gradient Convergence in Function Space H^k(\Omega)
 Implements Sobolev gradient smoothing operator (I + \gamma (-\Delta)^k)^{-1}
 via Discrete Fourier Transform (FFT) for continuous action / trajectory policies.
 """
+
 import torch
 import torch.nn as nn
 import torch.optim as optim
+
 
 class SobolevPolicyOptimizer(optim.Optimizer):
     """
     Riesz Sobolev Gradient Optimizer mapped into H^k(\Omega).
     Solves (I + \gamma (-\Delta)^k) g_sobolev = g_L2 spectral domain.
     """
+
     def __init__(self, params, lr=1e-3, gamma=0.1, k_order=1, domain_dim=1):
         if gamma < 0.0:
             raise ValueError(f"Invalid gamma parameter: {gamma}")
@@ -487,14 +490,14 @@ class SobolevPolicyOptimizer(optim.Optimizer):
                 loss = closure()
 
         for group in self.param_groups:
-            lr = group['lr']
-            gamma = group['gamma']
-            k_order = group['k_order']
+            lr = group["lr"]
+            gamma = group["gamma"]
+            k_order = group["k_order"]
 
-            for p in group['params']:
+            for p in group["params"]:
                 if p.grad is None:
                     continue
-                
+
                 g_l2 = p.grad
                 # Compute Sobolev Gradient Projection via FFT if multidimensional continuous action
                 if g_l2.ndim >= 1 and g_l2.numel() > 4:
@@ -506,28 +509,30 @@ class SobolevPolicyOptimizer(optim.Optimizer):
 
         return loss
 
-    def _apply_sobolev_preconditioner(self, grad: torch.Tensor, gamma: float, k: int) -> torch.Tensor:
+    def _apply_sobolev_preconditioner(
+        self, grad: torch.Tensor, gamma: float, k: int
+    ) -> torch.Tensor:
         """
         Solves (I + \gamma (-\Delta)^k) g_Hk = g_L2 in spectral domain.
         """
         shape = grad.shape
         flat_grad = grad.view(-1)
         n = flat_grad.numel()
-        
+
         # 1D Real FFT spectrum
         rfft_grad = torch.fft.rfft(flat_grad)
-        freqs = torch.fft.rfftfreq(n, d=1.0/n).to(grad.device)
-        
+        freqs = torch.fft.rfftfreq(n, d=1.0 / n).to(grad.device)
+
         # Laplacian eigenvalue \lambda = (2 \pi \xi)^2
         laplacian_eigenvalues = (2.0 * torch.pi * freqs) ** 2
-        
+
         # Inverse Sobolev Filter: (1 + \gamma \lambda^k)^{-1}
-        filter_kernel = 1.0 / (1.0 + gamma * (laplacian_eigenvalues ** k))
-        
+        filter_kernel = 1.0 / (1.0 + gamma * (laplacian_eigenvalues**k))
+
         # Apply spectral smoothing
         rfft_smoothed = rfft_grad * filter_kernel
         smoothed_flat = torch.fft.irfft(rfft_smoothed, n=n)
-        
+
         return smoothed_flat.view(shape)
 ```
 
@@ -541,13 +546,16 @@ Idea 8.2: Sobolev Regularization for Continuous-Time Neural ODE Dynamics
 Computes W^{k,p}(\Omega) norm penalty on vector field f(x, t) to guarantee
 Grönwall stability and prevent solver step explosion.
 """
+
 import torch
 import torch.nn as nn
+
 
 class SobolevRegularizedNeuralODE(nn.Module):
     """
     Continuous Neural ODE wrapper with Sobolev W^{1,2} vector field penalty.
     """
+
     def __init__(self, vector_field: nn.Module, lambda_sob: float = 1e-3):
         super().__init__()
         self.vector_field = vector_field
@@ -560,7 +568,7 @@ class SobolevRegularizedNeuralODE(nn.Module):
         trajectory = [x0]
         curr_x = x0
         dt = t_span[1] - t_span[0]
-        
+
         for t in t_span[:-1]:
             dx = self.vector_field(curr_x, t)
             curr_x = curr_x + dt * dx
@@ -568,27 +576,25 @@ class SobolevRegularizedNeuralODE(nn.Module):
 
         return torch.stack(trajectory, dim=0)
 
-    def compute_sobolev_penalty(self, x_samples: torch.Tensor, t_samples: torch.Tensor) -> torch.Tensor:
+    def compute_sobolev_penalty(
+        self, x_samples: torch.Tensor, t_samples: torch.Tensor
+    ) -> torch.Tensor:
         """
         Computes ||f(x, t)||_{H^1}^2 = ||f||_{L^2}^2 + ||\nabla_x f||_{F}^2 using autograd vector-Jacobian products.
         """
         x_samples = x_samples.detach().requires_grad_(True)
         f_val = self.vector_field(x_samples, t_samples)
-        
+
         # 1. L2 norm component
-        l2_norm = torch.mean(f_val ** 2)
-        
+        l2_norm = torch.mean(f_val**2)
+
         # 2. Jacobian Frobenius norm component via Hutchinson trace estimator
         v = torch.randn_like(f_val)
         v_jvp = torch.autograd.grad(
-            outputs=f_val,
-            inputs=x_samples,
-            grad_outputs=v,
-            create_graph=True,
-            retain_graph=True
+            outputs=f_val, inputs=x_samples, grad_outputs=v, create_graph=True, retain_graph=True
         )[0]
-        
-        frob_norm = torch.mean(v_jvp ** 2)
+
+        frob_norm = torch.mean(v_jvp**2)
         sobolev_penalty = l2_norm + frob_norm
         return self.lambda_sob * sobolev_penalty
 ```
@@ -603,13 +609,16 @@ Idea 8.3: Fractional Sobolev Operator Learning for Complex Physical Systems
 Evaluates Gagliardo semi-norm [u]_{H^s}^2 for non-integer s \in (0, 1) using
 quad-tree stochastic pair sampling or FFT fractional Laplacian (-\Delta)^s.
 """
+
 import torch
 import torch.nn as nn
+
 
 class FractionalSobolevLoss(nn.Module):
     """
     Computes Loss = ||u_pred - u_true||_{L^2}^2 + \lambda_{gag} [u_pred - u_true]_{H^s}^2
     """
+
     def __init__(self, s: float = 0.5, lambda_gag: float = 0.1, num_pairs: int = 1024):
         super().__init__()
         if not (0.0 < s < 1.0):
@@ -618,35 +627,37 @@ class FractionalSobolevLoss(nn.Module):
         self.lambda_gag = lambda_gag
         self.num_pairs = num_pairs
 
-    def forward(self, u_pred: torch.Tensor, u_true: torch.Tensor, coords: torch.Tensor) -> torch.Tensor:
+    def forward(
+        self, u_pred: torch.Tensor, u_true: torch.Tensor, coords: torch.Tensor
+    ) -> torch.Tensor:
         """
         u_pred, u_true: Shape (Batch, N_points)
         coords: Shape (N_points, Dim)
         """
         diff = u_pred - u_true
-        l2_loss = torch.mean(diff ** 2)
-        
+        l2_loss = torch.mean(diff**2)
+
         # Evaluate Gagliardo Semi-Norm via Monte Carlo Pair Sampling
         N = coords.shape[0]
         idx_x = torch.randint(0, N, (self.num_pairs,), device=coords.device)
         idx_y = torch.randint(0, N, (self.num_pairs,), device=coords.device)
-        
+
         # Filter out identical point pairs
-        mask = (idx_x != idx_y)
+        mask = idx_x != idx_y
         idx_x, idx_y = idx_x[mask], idx_y[mask]
-        
-        diff_x = diff[:, idx_x] # (Batch, P)
-        diff_y = diff[:, idx_y] # (Batch, P)
-        
-        coord_x = coords[idx_x] # (P, Dim)
-        coord_y = coords[idx_y] # (P, Dim)
-        
-        dist = torch.norm(coord_x - coord_y, dim=-1) + 1e-7 # (P,)
+
+        diff_x = diff[:, idx_x]  # (Batch, P)
+        diff_y = diff[:, idx_y]  # (Batch, P)
+
+        coord_x = coords[idx_x]  # (P, Dim)
+        coord_y = coords[idx_y]  # (P, Dim)
+
+        dist = torch.norm(coord_x - coord_y, dim=-1) + 1e-7  # (P,)
         dim = coords.shape[-1]
-        
-        kernel = 1.0 / (dist ** (dim + 2.0 * self.s)) # Gagliardo denominator
+
+        kernel = 1.0 / (dist ** (dim + 2.0 * self.s))  # Gagliardo denominator
         gagliardo_pairs = ((diff_x - diff_y) ** 2) * kernel.unsqueeze(0)
-        
+
         gagliardo_semi_norm = torch.mean(gagliardo_pairs)
         return l2_loss + self.lambda_gag * gagliardo_semi_norm
 ```
@@ -661,14 +672,17 @@ Idea 8.4: Measure-Theoretic Analysis of GRPO under Continuous Probability Limits
 Implements Radon-Nikodym derivative ratio shifting and Donsker empirical process
 variance recovery for Group-Relative Policy Optimization.
 """
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+
 
 class ContinuousDonskerGRPO(nn.Module):
     """
     GRPO Loss with Radon-Nikodym derivative shift and Donsker envelope stabilization.
     """
+
     def __init__(self, clip_eps: float = 0.2, kl_beta: float = 0.01, min_var: float = 1e-6):
         super().__init__()
         self.clip_eps = clip_eps
@@ -677,16 +691,16 @@ class ContinuousDonskerGRPO(nn.Module):
 
     def forward(
         self,
-        log_pi: torch.Tensor,        # (Group_Size, Seq_Len)
-        log_pi_old: torch.Tensor,    # (Group_Size, Seq_Len)
-        log_pi_ref: torch.Tensor,    # (Group_Size, Seq_Len)
-        rewards: torch.Tensor        # (Group_Size,)
+        log_pi: torch.Tensor,  # (Group_Size, Seq_Len)
+        log_pi_old: torch.Tensor,  # (Group_Size, Seq_Len)
+        log_pi_ref: torch.Tensor,  # (Group_Size, Seq_Len)
+        rewards: torch.Tensor,  # (Group_Size,)
     ) -> torch.Tensor:
-        
+
         # 1. Measure-Theoretic Group Reward Statistics
         mean_r = torch.mean(rewards)
         var_r = torch.var(rewards, unbiased=True)
-        
+
         # Check ZVF condition (Zero-Variance Starvation)
         if var_r < self.min_var:
             # Fallback to Donsker envelope token surprise pseudo-advantage
@@ -697,17 +711,19 @@ class ContinuousDonskerGRPO(nn.Module):
             advantages = (rewards - mean_r) / torch.sqrt(var_r + 1e-8)
 
         # 2. Radon-Nikodym Derivative Shift w_\theta(y|x)
-        log_ratio = (log_pi - log_pi_old).sum(dim=-1) # Trajectory level
+        log_ratio = (log_pi - log_pi_old).sum(dim=-1)  # Trajectory level
         radon_nikodym_weight = torch.exp(log_ratio)
 
         # 3. Clipped Surrogate Objective
         surr1 = radon_nikodym_weight * advantages
-        surr2 = torch.clamp(radon_nikodym_weight, 1.0 - self.clip_eps, 1.0 + self.clip_eps) * advantages
+        surr2 = (
+            torch.clamp(radon_nikodym_weight, 1.0 - self.clip_eps, 1.0 + self.clip_eps) * advantages
+        )
         policy_loss = -torch.mean(torch.min(surr1, surr2))
 
         # 4. Trajectory KL Regularization against Reference Measure
         kl_div = torch.mean(torch.exp(log_pi) * (log_pi - log_pi_ref))
-        
+
         total_loss = policy_loss + self.kl_beta * kl_div
         return total_loss
 ```
@@ -722,13 +738,16 @@ Idea 8.5: Sobolev Generalization Bounds for Overparameterized Deep Networks
 Computes activation manifold Sobolev norms ||f||_{H^s(\mathcal{M})} across intermediate
 transformer activations to bound Rademacher complexity independently of parameter count P.
 """
+
 import torch
 import torch.nn as nn
+
 
 class SobolevActivationRegularizer(nn.Module):
     """
     Penalizes intermediate layer Sobolev norms ||h_l||_{H^1} to enforce metric entropy bounds.
     """
+
     def __init__(self, lambda_manifold: float = 1e-4):
         super().__init__()
         self.lambda_manifold = lambda_manifold
@@ -738,19 +757,19 @@ class SobolevActivationRegularizer(nn.Module):
         intermediate_activations: list of Tensors of shape (Batch, Seq_Len, Hidden_Dim)
         """
         total_sobolev_norm = 0.0
-        
+
         for h in intermediate_activations:
             # 1. L2 Norm of Activations
-            l2_norm = torch.mean(h ** 2)
-            
+            l2_norm = torch.mean(h**2)
+
             # 2. Discrete Spatial Gradient Norm along Sequence Manifold (H^1 norm)
             if h.ndim >= 2 and h.shape[1] > 1:
                 dh_seq = h[:, 1:, :] - h[:, :-1, :]
-                grad_norm = torch.mean(dh_seq ** 2)
+                grad_norm = torch.mean(dh_seq**2)
             else:
                 grad_norm = 0.0
 
-            total_sobolev_norm += (l2_norm + grad_norm)
+            total_sobolev_norm += l2_norm + grad_norm
 
         return self.lambda_manifold * total_sobolev_norm
 ```
@@ -766,6 +785,7 @@ To verify the functional analytic guarantees of Category 8, we construct an auto
 Fail-Closed Verification Suite for Category 8 Sobolev Space Modules.
 Runs automated theoretical assertion checks for Theorems 8.1 - 8.5.
 """
+
 import pytest
 import torch
 import numpy as np
@@ -782,12 +802,12 @@ def test_theorem_8_1_sobolev_policy_gradient_smoothing():
     param = torch.nn.Parameter(torch.randn(1, 100))
     # Inject high frequency noise into gradient
     param.grad = torch.sin(torch.linspace(0, 50 * np.pi, 100)).unsqueeze(0)
-    
+
     orig_grad_fft = torch.abs(torch.fft.rfft(param.grad)).mean().item()
-    
+
     optimizer = SobolevPolicyOptimizer([param], lr=1e-2, gamma=0.5, k_order=1)
     optimizer.step()
-    
+
     # Verify parameter update occurred without NaNs
     assert not torch.isnan(param).any()
     print("Test Theorem 8.1 (Sobolev Policy Gradient): PASSED")
@@ -796,15 +816,17 @@ def test_theorem_8_1_sobolev_policy_gradient_smoothing():
 def test_theorem_8_2_gronwall_neural_ode_stability():
     """Verify Theorem 8.2: Sobolev penalty bounds vector field Jacobian norm."""
     vf = torch.nn.Sequential(torch.nn.Linear(4, 16), torch.nn.Tanh(), torch.nn.Linear(16, 4))
-    def wrapper(x, t): return vf(x)
-    
+
+    def wrapper(x, t):
+        return vf(x)
+
     node = SobolevRegularizedNeuralODE(wrapper, lambda_sob=1e-2)
     x0 = torch.randn(8, 4)
     t_span = torch.linspace(0, 1, 10)
-    
+
     traj = node(x0, t_span)
     penalty = node.compute_sobolev_penalty(x0, t_span[0])
-    
+
     assert traj.shape == (10, 8, 4)
     assert not torch.isnan(penalty)
     assert penalty.item() >= 0.0
@@ -817,7 +839,7 @@ def test_theorem_8_3_fractional_gagliardo_loss():
     u_pred = torch.randn(4, 100)
     u_true = torch.randn(4, 100)
     coords = torch.linspace(0, 1, 100).unsqueeze(-1)
-    
+
     loss = loss_fn(u_pred, u_true, coords)
     assert loss.item() > 0.0
     print("Test Theorem 8.3 (Fractional Sobolev Operator): PASSED")
@@ -826,15 +848,15 @@ def test_theorem_8_3_fractional_gagliardo_loss():
 def test_theorem_8_4_donsker_grpo_zvf_recovery():
     """Verify Theorem 8.4: Donsker GRPO prevents zero-gradient freeze under ZVF (zero variance)."""
     grpo = ContinuousDonskerGRPO(clip_eps=0.2, kl_beta=0.01)
-    
+
     log_pi = torch.randn(4, 16, requires_grad=True)
     log_pi_old = log_pi.detach()
     log_pi_ref = log_pi.detach()
-    rewards = torch.zeros(4) # ZVF condition: all rewards identical 0
-    
+    rewards = torch.zeros(4)  # ZVF condition: all rewards identical 0
+
     loss = grpo(log_pi, log_pi_old, log_pi_ref, rewards)
     loss.backward()
-    
+
     # Verify gradients are NON-ZERO even under zero reward variance
     assert log_pi.grad is not None
     assert torch.norm(log_pi.grad).item() > 0.0
@@ -846,7 +868,7 @@ def test_theorem_8_5_sobolev_manifold_regularizer():
     reg = SobolevActivationRegularizer(lambda_manifold=1e-4)
     acts = [torch.randn(2, 16, 64) for _ in range(4)]
     penalty = reg(acts)
-    
+
     assert penalty.item() > 0.0
     print("Test Theorem 8.5 (Sobolev Manifold Regularizer): PASSED")
 

@@ -237,10 +237,12 @@ import torch
 import ast
 from typing import Dict, Set, List, Optional, Tuple
 
+
 class DynamicTypeEnvironment:
     """
     Maintains active scope symbol table and performs type environment unification (Gamma |- e : tau).
     """
+
     def __init__(self):
         self.symbol_table: Dict[str, str] = {}
         self.scopes: List[Dict[str, str]] = [{}]
@@ -277,10 +279,11 @@ class TypeGuidedLogitProcessor:
     """
     Logit processor implementing Type-Guided Tree Decoding with Dynamic Type Unification.
     """
+
     def __init__(self, tokenizer, initial_type_env: Optional[DynamicTypeEnvironment] = None):
         self.tokenizer = tokenizer
         self.type_env = initial_type_env or DynamicTypeEnvironment()
-        
+
     def validate_partial_ast_type(self, code_snippet: str) -> bool:
         """
         Parses partial AST and verifies dynamic type environment unification Gamma |- e : tau.
@@ -329,7 +332,7 @@ class TypeGuidedLogitProcessor:
 
             # Evaluate candidate top-k token continuations for efficiency
             top_k_scores, top_k_indices = torch.topk(scores[b], k=min(64, vocab_size))
-            
+
             for idx in top_k_indices.tolist():
                 candidate_token = self.tokenizer.decode([idx])
                 candidate_code = prefix_text + candidate_token
@@ -354,18 +357,20 @@ import subprocess
 import tempfile
 from typing import Dict, Any, Tuple
 
+
 class LLVMCoverageRewardEvaluator:
     """
     Executes compiled code candidates against unit tests using LLVM coverage (llvm-cov),
     computing safety-gated multi-coverage rewards.
     """
+
     def __init__(
         self,
         alpha_pass: float = 1.0,
         beta_branch: float = 0.3,
         gamma_line: float = 0.1,
         delta_time: float = 0.2,
-        max_exec_time_sec: float = 2.0
+        max_exec_time_sec: float = 2.0,
     ):
         self.alpha = alpha_pass
         self.beta = beta_branch
@@ -373,11 +378,7 @@ class LLVMCoverageRewardEvaluator:
         self.delta = delta_time
         self.max_exec_time = max_exec_time_sec
 
-    def evaluate_cpp_code(
-        self,
-        source_code: str,
-        test_harness_code: str
-    ) -> Dict[str, Any]:
+    def evaluate_cpp_code(self, source_code: str, test_harness_code: str) -> Dict[str, Any]:
         """
         Compiles C++/CUDA code with -fprofile-instr-generate -fcoverage-mapping,
         runs test suite, and extracts branch/line coverage using llvm-cov.
@@ -394,8 +395,13 @@ class LLVMCoverageRewardEvaluator:
 
             # Compile with LLVM coverage flags
             compile_cmd = [
-                "clang++", "-O2", "-fprofile-instr-generate", "-fcoverage-mapping",
-                src_path, "-o", bin_path
+                "clang++",
+                "-O2",
+                "-fprofile-instr-generate",
+                "-fcoverage-mapping",
+                src_path,
+                "-o",
+                bin_path,
             ]
             comp_res = subprocess.run(compile_cmd, capture_output=True, text=True)
             if comp_res.returncode != 0:
@@ -405,22 +411,18 @@ class LLVMCoverageRewardEvaluator:
                     "branch_cov": 0.0,
                     "line_cov": 0.0,
                     "is_safe": False,
-                    "compilation_error": comp_res.stderr
+                    "compilation_error": comp_res.stderr,
                 }
 
             # Execute binary with coverage profiling
             env = os.environ.copy()
             env["LLVM_PROFILE_FILE"] = profraw_path
-            
+
             try:
                 exec_res = subprocess.run(
-                    [bin_path],
-                    capture_output=True,
-                    text=True,
-                    env=env,
-                    timeout=self.max_exec_time
+                    [bin_path], capture_output=True, text=True, env=env, timeout=self.max_exec_time
                 )
-                is_safe = (exec_res.returncode == 0)
+                is_safe = exec_res.returncode == 0
                 exec_time = self.max_exec_time if exec_res.returncode != 0 else 0.5
             except subprocess.TimeoutExpired:
                 return {
@@ -429,19 +431,29 @@ class LLVMCoverageRewardEvaluator:
                     "branch_cov": 0.0,
                     "line_cov": 0.0,
                     "is_safe": False,
-                    "error": "Timeout"
+                    "error": "Timeout",
                 }
 
             # Process profile data using llvm-profdata and llvm-cov
             if not os.path.exists(profraw_path):
-                return {"reward": 0.0, "pass_rate": 0.0, "branch_cov": 0.0, "line_cov": 0.0, "is_safe": is_safe}
+                return {
+                    "reward": 0.0,
+                    "pass_rate": 0.0,
+                    "branch_cov": 0.0,
+                    "line_cov": 0.0,
+                    "is_safe": is_safe,
+                }
 
-            subprocess.run(["llvm-profdata", "merge", "-sparse", profraw_path, "-o", profdata_path], check=True)
-            
+            subprocess.run(
+                ["llvm-profdata", "merge", "-sparse", profraw_path, "-o", profdata_path], check=True
+            )
+
             cov_cmd = [
-                "llvm-cov", "export", bin_path,
+                "llvm-cov",
+                "export",
+                bin_path,
                 f"-instr-profile={profdata_path}",
-                "-summary-only"
+                "-summary-only",
             ]
             cov_res = subprocess.run(cov_cmd, capture_output=True, text=True)
             cov_json = json.loads(cov_res.stdout)
@@ -455,10 +467,10 @@ class LLVMCoverageRewardEvaluator:
             # Calculate safety-gated multi-coverage reward
             time_penalty = max(0.0, (exec_time / self.max_exec_time) - 1.0)
             reward = (
-                self.alpha * pass_rate +
-                self.beta * (branch_cov if is_safe else 0.0) +
-                self.gamma * line_cov -
-                self.delta * time_penalty
+                self.alpha * pass_rate
+                + self.beta * (branch_cov if is_safe else 0.0)
+                + self.gamma * line_cov
+                - self.delta * time_penalty
             )
 
             return {
@@ -467,7 +479,7 @@ class LLVMCoverageRewardEvaluator:
                 "branch_cov": branch_cov,
                 "line_cov": line_cov,
                 "is_safe": is_safe,
-                "exec_time": exec_time
+                "exec_time": exec_time,
             }
 ```
 
@@ -482,11 +494,13 @@ class LLVMCoverageRewardEvaluator:
 import z3
 from typing import Dict, Any, Optional, List
 
+
 class SMTBoundedRefactoringVerifier:
     """
     Verifies semantic equivalence between original and refactored code via Z3 SMT solver
     under QF_LIA (Quantifier-Free Linear Integer Arithmetic) theories.
     """
+
     def __init__(self, unroll_bound_k: int = 5, timeout_ms: int = 5000):
         self.k = unroll_bound_k
         self.timeout = timeout_ms
@@ -494,9 +508,9 @@ class SMTBoundedRefactoringVerifier:
     def verify_loop_equivalence_qf_lia(
         self,
         orig_body_expr,  # Callable f(x, s) -> s_next
-        ref_body_expr,   # Callable g(x, s) -> s_next
-        inv_expr,        # Callable inv(x, s) -> Bool
-        input_dim: int = 1
+        ref_body_expr,  # Callable g(x, s) -> s_next
+        inv_expr,  # Callable inv(x, s) -> Bool
+        input_dim: int = 1,
     ) -> Dict[str, Any]:
         """
         Checks SMT Verification Conditions (VCs) and semantic equivalence using Z3.
@@ -505,18 +519,22 @@ class SMTBoundedRefactoringVerifier:
         solver.set("timeout", self.timeout)
 
         # Symbolic Variables
-        x = z3.Int('x')
-        s_orig = z3.Int('s_orig')
-        s_ref = z3.Int('s_ref')
+        x = z3.Int("x")
+        s_orig = z3.Int("s_orig")
+        s_ref = z3.Int("s_ref")
 
         # 1. Base Case: Invariant holds at initial state s = 0
         solver.push()
         solver.add(z3.Not(inv_expr(x, 0)))
         base_res = solver.check()
         solver.pop()
-        
+
         if base_res == z3.sat:
-            return {"verified": False, "status": "BASE_CASE_FAILED", "counterexample": str(solver.model())}
+            return {
+                "verified": False,
+                "status": "BASE_CASE_FAILED",
+                "counterexample": str(solver.model()),
+            }
 
         # 2. Inductive Step: inv(x, s) => inv(x, step(s))
         solver.push()
@@ -527,7 +545,11 @@ class SMTBoundedRefactoringVerifier:
         solver.pop()
 
         if ind_res == z3.sat:
-            return {"verified": False, "status": "INDUCTIVE_STEP_FAILED", "counterexample": str(solver.model())}
+            return {
+                "verified": False,
+                "status": "INDUCTIVE_STEP_FAILED",
+                "counterexample": str(solver.model()),
+            }
 
         # 3. K-Bounded Equivalence Query: Exec_K(orig) != Exec_K(ref) -> UNSAT
         solver.push()
@@ -546,7 +568,11 @@ class SMTBoundedRefactoringVerifier:
         if equiv_res == z3.unsat:
             return {"verified": True, "status": "UNSAT_EQUIVALENT", "unroll_bound": self.k}
         elif equiv_res == z3.sat:
-            return {"verified": False, "status": "SAT_COUNTEREXAMPLE_FOUND", "counterexample": str(solver.model())}
+            return {
+                "verified": False,
+                "status": "SAT_COUNTEREXAMPLE_FOUND",
+                "counterexample": str(solver.model()),
+            }
         else:
             return {"verified": False, "status": "SMT_TIMEOUT_UNKNOWN"}
 ```
@@ -565,11 +591,13 @@ import tempfile
 import os
 from typing import Dict, Any, List
 
+
 class Lean4CSLProofVerifier:
     """
     Interfaces with Lean 4 proof assistant environment to evaluate step-wise formal proof tactics
     and Concurrent Separation Logic (CSL) invariants for CUDA kernels.
     """
+
     def __init__(self, lean_executable: str = "lean"):
         self.lean_cmd = lean_executable
 
@@ -587,11 +615,7 @@ def SIMT_Warp_Invariant (block_size : Nat) : Prop :=
   BarrierAligned block_size
 """
 
-    def verify_tactic_step(
-        self,
-        proof_state_code: str,
-        tactic: str
-    ) -> Dict[str, Any]:
+    def verify_tactic_step(self, proof_state_code: str, tactic: str) -> Dict[str, Any]:
         """
         Executes a single proof tactic step inside Lean 4 REPL/CLI and returns updated proof state.
         """
@@ -607,23 +631,17 @@ theorem cuda_kernel_memory_safety (block_size : Nat) : SIMT_Warp_Invariant block
                 f.write(full_lean_code)
 
             res = subprocess.run(
-                [self.lean_cmd, "--run", lean_file],
-                capture_output=True,
-                text=True
+                [self.lean_cmd, "--run", lean_file], capture_output=True, text=True
             )
 
             if res.returncode == 0:
                 return {
                     "valid_step": True,
                     "proof_closed": "Goals accomplished" in res.stdout or res.stdout.strip() == "",
-                    "output": res.stdout
+                    "output": res.stdout,
                 }
             else:
-                return {
-                    "valid_step": False,
-                    "proof_closed": False,
-                    "error": res.stderr
-                }
+                return {"valid_step": False, "proof_closed": False, "error": res.stderr}
 ```
 
 ---
@@ -639,10 +657,12 @@ import random
 import copy
 from typing import List, Dict, Any, Tuple
 
+
 class ASTMutantGenerator(ast.NodeTransformer):
     """
     Generates synthetic code mutants M(c) via AST operator perturbations.
     """
+
     def visit_BinOp(self, node: ast.BinOp) -> ast.AST:
         self.generic_visit(node)
         # Mutate binary arithmetic operators
@@ -675,7 +695,10 @@ class BidirectionalMutualSynthesisEngine:
     """
     Dual-agent adversarial mutual synthesis engine converging to a Mutation-Regularized Nash Equilibrium.
     """
-    def __init__(self, mu_mutant: float = 1.5, lambda_compl: float = 0.05, eta_tautology: float = 0.2):
+
+    def __init__(
+        self, mu_mutant: float = 1.5, lambda_compl: float = 0.05, eta_tautology: float = 0.2
+    ):
         self.mu = mu_mutant
         self.lambda_compl = lambda_compl
         self.eta = eta_tautology
@@ -705,7 +728,7 @@ class BidirectionalMutualSynthesisEngine:
         self,
         code_str: str,
         test_suite: List[str],
-        executor_func  # Callable(code, test) -> bool
+        executor_func,  # Callable(code, test) -> bool
     ) -> Dict[str, float]:
         """
         Computes dual-agent loss functions L_A(c, T) and L_B(c, T).
@@ -750,7 +773,7 @@ class BidirectionalMutualSynthesisEngine:
             "pass_rate": pass_rate,
             "kill_rate": kill_rate,
             "mutants_killed": killed_mutants,
-            "total_mutants": len(mutants)
+            "total_mutants": len(mutants),
         }
 ```
 

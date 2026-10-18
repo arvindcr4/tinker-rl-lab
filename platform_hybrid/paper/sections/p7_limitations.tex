@@ -4,31 +4,30 @@
 
 \subsection{Limitations}
 \label{sec:p7-limitations-list}
-Every interventional claim in this paper is bounded by four limitations,
-stated in load-bearing order.
+Every interventional claim in this paper is bounded by the following
+limitations, stated in load-bearing order.
 
-\emph{No prospective controller advantage.} The long controller sections are
-retrospective replay, analytic projection, or proxy optimization. Iter-199
-freezes each prompt's step-0 success estimate, so it is not a closed learning
-loop. Iter-203 pools rewards from different prompts and therefore cannot emulate
-a larger within-prompt GRPO group. Neither analysis estimates held-out policy
-improvement. The required promotion test is a seed-paired, fixed-token comparison
+\emph{No prospective controller advantage.} The archived controller analyses
+excluded in Section~\ref{sec:p7-replay-boundary} are retrospective replay,
+analytic projection, or proxy optimization; for example, one froze each
+prompt's step-0 success estimate (not a closed learning loop) and another
+pooled rewards from different prompts (which cannot emulate a larger
+within-prompt GRPO group). None estimates held-out policy improvement. The required promotion test is a seed-paired, fixed-token comparison
 against static $G{=}16$ and naive boundary heuristics.
 That promotion test is a \emph{non-claim} of this workshop-short submission:
 we ship the audit and the pre-registration, not a controller recommendation.
 
-\emph{Single task.} The E3 audit and the E1 gradient probe each run on one
-task family (GSM8K-style and synthetic arithmetic respectively). The theory
+\emph{Single task.} The E3 pilot and the E1 gradient probe both run on
+synthetic addition with a 0.5B model. The theory
 is task-agnostic, but the controller's measured competitiveness is not: on
 harder or drifting prompt populations the trade of
 Table~\ref{tab:p7-e3} could tip in any direction.
 
-\emph{Small $n$.} Four arms, one open trainer, shared seeds, held-out
-deltas separated by at most $0.075$: the E3 differences between the top
-arms are within the noise band the companion papers' power analysis
-(Table~\ref{tab:power-analysis}) would demand for a Tier-A claim. We
-therefore claim mechanism-consistent telemetry and competitiveness, not
-superiority.
+\emph{Small $n$.} Four arms, two shared seeds, 20 held-out problems per
+seed, and held-out deltas separated by at most $0.075$ (1.5 problems): with
+$n{=}2$ no test or interval is meaningful, and a later single-seed rerun
+ordered the arms differently (Section~\ref{sec:p7-e3}). We therefore claim
+mechanism-consistent telemetry only, not competitiveness or superiority.
 
 \emph{LoRA-only closed stack for one comparison arm.} The closed-stack
 telemetry cited for the label-flip caution comes from LoRA
@@ -38,28 +37,24 @@ setting, and cross-stack numbers are quoted only as motivation, never as
 controller evidence.
 
 \emph{No gradient-level evidence.} T3 has no usable empirical support: the
-E1 correlation cannot be recomputed, rests on about 30 serially dependent
-rows from one run, and is largely mechanical (Section~\ref{sec:p7-e1}).
+E1 correlation cannot be recomputed, rests on 30 serially dependent rows from
+three short seeds, and is largely mechanical (Section~\ref{sec:p7-e1}).
 
 \emph{Observational population evidence.} The 368-run audit is not a designed
 experiment: model, batch, $G$, and step budget are confounded, and the
 Qwen3-32B $G$ grid has 1--2 runs per cell at mixed batch sizes
 (Section~\ref{sec:p7-audit}).
 
-We also flag a provenance boundary and two scope choices. The 368-run
-audit (whose per-step histories we have since pulled and checked in under
+We also flag a provenance boundary and a scope choice. The 368-run audit
+(per-step histories checked in under
 \texttt{experiments/results/publication\_fixes/zvf\_confound/}), the
-model~$\times$~$G$ grid, the 12-cell head-to-head, and the E1/E3 runs are internal program records (W\&B projects \texttt{zvf-audit}
-and \texttt{zvf-colab-experiments}, June 2026): they were run under a
-declared protocol and are summarized faithfully, but they have not passed
-through the released-artifact pipeline that covers the repo-internal
-sweeps and reward-tensor analyses (Appendix~\ref{sec:p7-appendix},
-provenance note); the companion Pillar-5 paper flags the same records the
-same way. The scope choices: PCD is validated as a control-loop input
-(invariance, shape, aliasing resolution), \emph{not} as an outcome
-predictor; and no claim in this paper depends on the veRL/OpenRLHF rows of
-the framework comparison, which remain dry-run placeholders
-(\tableref{tab:implementations}).
+model~$\times$~$G$ grid, and the 12-cell head-to-head are internal program
+records (W\&B projects \texttt{zvf-audit} and
+\texttt{zvf-colab-experiments}, June 2026); the E1/E3 pilots keep
+only aggregate result records (Appendix~\ref{sec:p7-appendix}, provenance
+note). The scope choice: PCD is motivated as a control-loop input (jitter
+invariance and aliasing resolution), \emph{not} validated as an outcome
+predictor.
 
 \subsection{Proposed decisive experiments}
 \label{sec:p7-proposed}

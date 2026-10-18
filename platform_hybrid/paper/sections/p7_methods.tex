@@ -1,0 +1,61 @@
+% Pillar-7: data substrates and statistical conventions actually used by this
+% paper. Replaces the shared TinkerRL-Bench methods block (task taxonomy,
+% cross-library rosters, PPO hyperparameters, legacy BH table), none of which
+% is analysed here (Deep Review 2026-10-18, findings 418--425).
+\section{Data Substrates and Statistical Conventions}
+\label{sec:p7-methods}
+\label{sec:benchmark}
+\label{sec:setup}
+This paper re-analyses existing logs and reports one small live pilot. It
+uses only the substrates below; the broader benchmark task suite, library
+rosters, and hyperparameter tables of the companion papers are not used.
+Every substrate has binary verifiable rewards $R\in\{0,1\}$.
+
+\paragraph{S1: 368-run W\&B audit.} Project \texttt{zvf-audit} (368 runs; 350
+with a run-level summary, 352 with per-step histories, 2{,}004 step rows),
+nine model labels (the task is not recorded in the run configs). Batch size (6--32), $G$ (4--16) and step
+budget (2--12) vary by model and are recorded per run
+(\texttt{experiments/results/publication\_fixes/zvf\_confound/}). It is an
+observational corpus, not a designed experiment.
+
+\paragraph{S2: group-size sweep.} Qwen2.5-0.5B (base), LoRA ($r{=}16$,
+$\alpha{=}32$, q/v projections), Adam at $10^{-4}$, two-operand addition with
+operands drawn uniformly from $\{1,\dots,99\}$, 16 fresh prompts per step for
+40 steps, sampling at temperature 1.0 with at most 10 new tokens; reward 1 iff
+the last integer in the completion equals the sum. $G\in\{2,4,8,16\}\times$
+seeds $\{42,123,456\}$ (12 runs); held-out accuracy is greedy on 200 fresh
+problems (\texttt{experiments/modal/modal\_groupsize\_zvf\_sweep.py},
+\texttt{experiments/results/groupsize\_zvf\_sweep.\{tsv,json\}}).
+
+\paragraph{S3: GSM8K reward tensors.} Qwen3-8B on the Tinker sampler, 200
+GSM8K problems per seed $\times$ seeds $\{42,123,456\}$, $G{=}8$, temperature
+1.0, no training (600 groups;
+\texttt{experiments/results/tinker\_gsm8k\_zvf\_s*.json}).
+
+\paragraph{S4: out-of-sample ZVF prediction.} Qwen2.5-1.5B-Instruct (vLLM, no
+training) on 200 GSM8K training-split prompts: 32 reference samples per prompt,
+then three fresh groups per prompt at each $G\in\{4,8,16\}$ with different
+sampling seeds
+(\texttt{experiments/results/publication\_fixes/zvf\_novelty/};
+\texttt{platform\_colab/publication\_fixes/zvf\_analyze.py}).
+
+\paragraph{E1 and E3 pilots.} Qwen2.5-0.5B-Instruct, full-parameter AdamW, on
+synthetic two-operand addition (Sections~\ref{sec:p7-e1}
+and~\ref{sec:p7-e3}; \texttt{zvf-program/colab-experiments/}).
+
+\paragraph{N2 reward tensors.} Four GRPO-family methods (\texttt{grpo},
+\texttt{aero}, \texttt{areal}, \texttt{gift}), one seed, 40 steps $\times$ 16
+GSM8K training prompts per step $\times$ $G{=}8$, the same prompts across
+methods at each step (\texttt{experiments/results/n2\_reward\_tensor\_resume/};
+launcher \texttt{tinker-runs/scripts/n2\_reward\_tensor\_20260704.py}, whose
+default checkpoint is Qwen3.5-4B; the tensor files do not record the
+checkpoint). N2 is used only for the descriptive count in
+Section~\ref{sec:p7-replay-boundary}.
+
+\paragraph{Statistical conventions.} The unit of replication is the seed (or,
+for S4, the prompt; intervals there are prompt-level cluster bootstraps with
+10{,}000 draws). Training steps and prompt-steps within one trajectory are
+never treated as independent replicates. With one or two seeds per arm (E1,
+E3, N2) no inferential test is reported. No confirmatory hypothesis family is
+declared, so no multiplicity correction is applied, and a non-significant
+difference is never read as equivalence.

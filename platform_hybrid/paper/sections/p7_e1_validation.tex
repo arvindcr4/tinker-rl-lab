@@ -5,7 +5,7 @@ Theorems T1 and T2 are checkable from reward telemetry alone, but T3---that
 gradient magnitude tracks $p(1-p)$---requires seeing the gradients, which
 the closed stack used for most of the benchmark does not expose. Experiment
 E1 (W\&B project \texttt{zvf-colab-experiments}, run family
-\texttt{E1\_grad\_signal}) therefore reruns the loop in an open trainer with
+\mbox{\texttt{E1\_grad\_signal}}) therefore reruns the loop in an open trainer with
 a fully instrumented backward pass: a 0.5B-parameter model on a synthetic
 arithmetic task with binary verifiable rewards, chosen so that per-step
 success probability sweeps a wide range of $p$ within a single run.
@@ -15,10 +15,14 @@ $\mathrm{corr}(\|\nabla\|,\hat p(1-\hat p))=+0.71$ from this run. We demote it
 to an anecdote and do not use it to support T3, for three reasons. (i) It
 cannot be recomputed: only the scalar survives in the run summary; the
 per-step gradient norms and group success rates were not retained. (ii) It was
-computed over roughly 30 per-step rows from a single run, which are serially
-dependent, so no meaningful interval or test is available. (iii) It is largely
+computed over 30 per-step rows pooled from three seeds of 10 steps each
+(\texttt{zvf-program/colab-experiments/e1\_grad\_signal.py}), which are
+serially dependent within seed, so no meaningful interval or test is
+available; $p$ there is the step-pooled success rate over four groups of six,
+not a per-group $\hat p$. (iii) It is largely
 mechanical: with group-centered advantages, a step whose groups are all
-degenerate has zero advantage and hence a near-zero policy-gradient term, so a
+degenerate has zero advantage, and the script records a gradient norm of
+exactly $0$ for such steps, so a
 positive association between $\|\nabla\|$ and within-group contrast is expected
 from the loss definition alone (Appendix~\ref{sec:p7-appendix}) and is not an
 independent test of the binomial model. T3 therefore stands as a modelling

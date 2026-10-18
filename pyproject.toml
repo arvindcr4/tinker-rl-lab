@@ -132,6 +132,8 @@ exclude = [
 [tool.ruff]
 line-length = 100
 target-version = "py311"
+# Honor explicit formatter exclusions even when a command names a frozen file.
+force-exclude = true
 extend-exclude = [
     # Vendored / upstream integrations — not authored by this project.
     "atropos",
@@ -257,9 +259,23 @@ ignore = [
 "tools/apply_antivibe.py" = ["S110"]
 
 [tool.ruff.format]
-# Only format what we lint; keep research scripts as the author wrote them
-# unless they clearly opt-in via `ruff format`.
-exclude = ["experiments/**", "scripts/**"]
+# Keep exploratory scripts outside routine formatting.
+exclude = [
+    "experiments/**",
+    "scripts/**",
+    # Exact source spans are committed in public_analysis/PROVENANCE.json.
+    # Keep lint enabled; these historical definitions cannot be reformatted.
+    "research/public_analysis/parser_review_historical_v1.py",
+    "research/public_analysis/parser_v1.py",
+    "research/public_analysis/parser_v2.py",
+    "research/public_analysis/parser_v3.py",
+    "research/public_analysis/reference_grader.py",
+    "research/public_analysis/rescue_statistics_historical_v1.py",
+    "research/public_analysis/selection.py",
+    "research/public_analysis/statistics.py",
+    # This complete file is bound by the inert RLHF follow-up contract.
+    "zvf-program/flagship/pilot/objective.py",
+]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

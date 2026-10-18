@@ -194,7 +194,7 @@ def load_iter108_perrun(path: str) -> list[dict[str, Any]]:
         hdr = fh.readline().rstrip().split("\t")
         for line in fh:
             f = line.rstrip().split("\t")
-            row = dict(zip(hdr, f, strict=False))
+            row: dict[str, Any] = dict(zip(hdr, f, strict=False))
             row["window"] = int(row["window"])
             row["seed"] = int(row["seed"])
             row["n_total"] = int(row["n_total"])
@@ -514,7 +514,7 @@ def saturation(t, r_max, lam):
 def fit_saturation(t, y):
     """scaling_law_iter93/97/101: ``_fit_saturation`` grid search over lambda."""
     lam_grid = np.geomspace(0.01, 10.0, 60)
-    best = (np.inf, None)
+    best: tuple[float, list[float] | None] = (np.inf, None)
     for lam in lam_grid:
         X = np.vstack([np.ones_like(t), 1.0 - np.exp(-lam * t)]).T
         coef, *_ = np.linalg.lstsq(X, y, rcond=None)

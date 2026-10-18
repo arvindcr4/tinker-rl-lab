@@ -31,7 +31,7 @@ def load_cohort():
             delimiter="\t",
         )
     ]
-    keys = {}
+    keys: dict[tuple[str, str], float] = {}
     for r in rows:
         k = (r["seed"], r["problem_id"])
         p = float(r["p_x"])
@@ -69,14 +69,14 @@ def main():
     U = {G: (1 - zvf_plugin(p, G)) / math.sqrt(G) for G in range(2, 17)}
     lin = {G: (1 - zvf_plugin(p, G)) / G for G in range(2, 17)}
     out["U_sqrt"] = U
-    out["U_sqrt_argmax"] = max(U, key=U.get)
+    out["U_sqrt_argmax"] = max(U, key=U.__getitem__)
     out["U_linear"] = lin
-    out["U_linear_argmax"] = max(lin, key=lin.get)
+    out["U_linear_argmax"] = max(lin, key=lin.__getitem__)
     out["ZVF5"] = zvf_plugin(p, 5)
     # unbiased (hypergeometric) estimator from k of n=8, G<=8
     Uu = {G: (1 - zvf_unbiased(k8, 8, G)) / math.sqrt(G) for G in range(2, 9)}
     out["U_sqrt_unbiased_G2to8"] = Uu
-    out["U_sqrt_unbiased_argmax"] = max(Uu, key=Uu.get)
+    out["U_sqrt_unbiased_argmax"] = max(Uu, key=Uu.__getitem__)
     out["ZVF5_unbiased"] = zvf_unbiased(k8, 8, 5)
     # bootstraps of U(4)-U(5)
     rng = np.random.default_rng(20261018)

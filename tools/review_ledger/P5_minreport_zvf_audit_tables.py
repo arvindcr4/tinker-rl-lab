@@ -39,8 +39,8 @@ def main():
             print(line)
     with open(D / "p5_gsize.tsv", "w") as f:
         f.write("model\tG\tn_runs\tmean_zvf\tbatches\n")
-        for (m, g), v in sorted(byg.items()):
-            line = f"{m}\t{g}\t{len(v)}\t{st.mean(x[0] for x in v):.4f}\t{','.join(sorted(set(x[1] for x in v)))}"
+        for (m, g), group_values in sorted(byg.items()):
+            line = f"{m}\t{g}\t{len(group_values)}\t{st.mean(x[0] for x in group_values):.4f}\t{','.join(sorted(set(x[1] for x in group_values)))}"
             f.write(line + "\n")
             print(line)
 

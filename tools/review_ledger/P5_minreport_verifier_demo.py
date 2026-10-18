@@ -28,8 +28,8 @@ def run(args):
 
 def main():
     res = {}
-    with tempfile.TemporaryDirectory() as tmp:
-        tmp = Path(tmp)
+    with tempfile.TemporaryDirectory() as tmp_name:
+        tmp = Path(tmp_name)
         for name in ("campaign", "sweep"):
             out = tmp / f"{name}.audit.json"
             code, text = run(
@@ -54,8 +54,8 @@ def main():
             }
         # sign.py's CLI `sign` refuses records that fail the evidence policy (both
         # repo records do), so exercise the signing primitive directly.
-        sys.path.insert(0, str(PROV))
-        import sign
+        sys.path.insert(0, str(ROOT))
+        from platform_hybrid.registry.provenance import sign
 
         keys = tmp / "keys"
         sign.keygen(key_dir=keys)

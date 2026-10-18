@@ -15,6 +15,25 @@ import json
 import os
 import statistics as st
 from pathlib import Path
+from typing import TypedDict
+
+
+class ArmStatistics(TypedDict):
+    last10_by_seed: list[float]
+    mean_last10: float
+    mean_zvf: float
+
+
+class ExhibitStatistics(TypedDict, total=False):
+    arms: dict[str, ArmStatistics]
+    spread: float
+    pooled_within_arm_sd: float
+    tost_unpaired_df4: dict[str, dict[str, float]]
+    tost_unpaired_pooled_df8_min_margin: dict[str, float]
+    block_anova: dict[str, float | list[int]]
+    paired_contrasts_df6: dict[str, dict[str, float | list[float]]]
+    block_all_pairs_equivalence_margin: float
+
 
 from scipy import stats
 
@@ -61,7 +80,7 @@ def min_margin(fn, lo=0.0, hi=1.0):
 
 def main():
     y, z = load()
-    res = {"arms": {}}
+    res: ExhibitStatistics = {"arms": {}}
     for a in ARMS:
         res["arms"][a] = {
             "last10_by_seed": [y[(a, s)] for s in SEEDS],
@@ -118,7 +137,7 @@ def main():
     se = (2 * ms_res / 3) ** 0.5
     t90 = stats.t.ppf(0.95, 6)
     t95 = stats.t.ppf(0.975, 6)
-    pc = {}
+    pc: dict[str, dict[str, float | list[float]]] = {}
     worst = 0
     for a, b in itertools.combinations(ARMS, 2):
         d = res["arms"][a]["mean_last10"] - res["arms"][b]["mean_last10"]

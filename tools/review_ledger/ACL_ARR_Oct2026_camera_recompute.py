@@ -18,7 +18,7 @@ from scipy import stats
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 OUT = ROOT / "platform_hybrid/experiments/results/review_2026-10-18/ACL_ARR_Oct2026_camera"
 OUT.mkdir(parents=True, exist_ok=True)
-res = {}
+res: dict[str, object] = {}
 
 # ---- E-4
 rows = [
@@ -34,7 +34,7 @@ rows = [
         delimiter="\t",
     )
 ]
-by = {}
+by: dict[str, dict[int, float]] = {}
 for r in rows:
     by.setdefault(r["arm"], {})[int(r["seed"])] = float(r["heldout_score"])
 seeds = sorted(by["grpo"])
@@ -80,7 +80,7 @@ for arm in ["dapo", "gspo", "drgrpo", "aero"]:
         mde80=round(hi_d, 5),
     )
     pvals[arm] = p
-order = sorted(pvals, key=pvals.get)
+order = sorted(pvals, key=pvals.__getitem__)
 m4 = len(order)
 adj = {}
 prev = 1.0
@@ -102,15 +102,15 @@ res["E2_stored"] = (
 )
 
 # ---- E-7
-cells = {}
+cells: dict[str, list[float]] = {}
 for f in glob.glob(
     str(ROOT / "platform_hybrid/experiments/tinker-runs/results/h2h2_*_Qwen3.5-4B_s*_S15.json")
 ):
     j = json.load(open(f))
     arm = pathlib.Path(f).name.split("_")[1]
     log = j.get("step_log") or j.get("steps") or j.get("history")
-    r = [s.get("reward", s.get("mean_reward")) for s in log]
-    cells.setdefault(arm, []).append(st.mean(r[-10:]))
+    rewards = [s.get("reward", s.get("mean_reward")) for s in log]
+    cells.setdefault(arm, []).append(st.mean(rewards[-10:]))
 allv = [v for vs in cells.values() for v in vs]
 gm = st.mean(allv)
 ssb = sum(len(v) * (st.mean(v) - gm) ** 2 for v in cells.values())
@@ -120,7 +120,7 @@ res["E7"] = {
     "n_per_arm": {a: len(v) for a, v in cells.items()},
     "within_sd": {a: round(st.stdev(v), 4) for a, v in cells.items()},
     "eta2_algorithm": round(ssb / sst, 4),
-    "steps_per_run": len(r),
+    "steps_per_run": len(rewards),
 }
 json.dump(res, open(OUT / "recompute.json", "w"), indent=1)
 print(json.dumps(res, indent=1))

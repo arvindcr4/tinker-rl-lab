@@ -149,6 +149,8 @@ def hinge3(t, y):
             sse = float(np.sum((y - X @ b) ** 2))
             if best is None or sse < best[0]:
                 best = (sse, i, j, b)
+    if best is None:
+        raise ValueError("At least six trace points are required for three segments")
     sse, i, j, b = best
     m1, m2, m3 = b[1], b[1] + b[2], b[1] + b[2] + b[3]
     return dict(i=i, j=j, m1=m1, m2=m2, m3=m3, c1=(i + 1) / n, c2=(j + 1) / n)
@@ -210,7 +212,7 @@ def write(name, rows):
 def main():
     rng = np.random.default_rng(SEED)
     A = load()
-    summary = {}
+    summary: dict[str, object] = {}
 
     # ---- (1) per-anchor descriptive + bounded 2p fit
     per = []
@@ -502,12 +504,12 @@ def main():
     st = []
     for m in long7:
         y = A[m]["y"]
-        z = float(np.mean(y == 0) + np.mean(y == 1))
+        step_zvf = float(np.mean(y == 0) + np.mean(y == 1))
         st.append(
             dict(
                 model=m,
-                step_zvf=z,
-                stratum="HIGH" if z >= 0.1 else "LOW",
+                step_zvf=step_zvf,
+                stratum="HIGH" if step_zvf >= 0.1 else "LOW",
                 lam2p=P[m]["lam2p"],
                 lam_at_bound=P[m]["lam_at_bound"],
                 rmse2p=math.sqrt(P[m]["rss2p"] / P[m]["T"]),

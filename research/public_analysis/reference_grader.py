@@ -23,54 +23,42 @@ def extract_answer(text: str) -> Optional[str]:
     # or at the end of reasoning
     clean = text
     # If there's content after </think>, prefer that
-    think_end = text.find("</think>")
+    think_end = text.find('</think>')
     if think_end != -1:
-        after_think = text[think_end + 8 :].strip()
+        after_think = text[think_end + 8:].strip()
         if after_think:
             clean = after_think  # Use post-thinking answer
 
     # GSM8K format: answer ends with "#### <number>"
-    match = re.search(r"####\s*(-?\d[\d,]*\.?\d*)", clean)
+    match = re.search(r'####\s*(-?\d[\d,]*\.?\d*)', clean)
     if match:
-        return match.group(1).replace(",", "")
+        return match.group(1).replace(',', '')
 
-    boxed = re.search(r"\\boxed\{\s*(-?\d[\d,]*\.?\d*)\s*\}", clean)
+    boxed = re.search(r'\\boxed\{\s*(-?\d[\d,]*\.?\d*)\s*\}', clean)
     if boxed:
-        return boxed.group(1).replace(",", "")
+        return boxed.group(1).replace(',', '')
 
     # "the answer is X" / "answer: X" patterns
-    explicit = re.search(
-        r"(?i)(?:the\s+)?(?:final\s+)?answer\s*(?:is|:|=)\s*\$?\s*(-?\d[\d,]*\.?\d*)", clean
-    )
+    explicit = re.search(r'(?i)(?:the\s+)?(?:final\s+)?answer\s*(?:is|:|=)\s*\$?\s*(-?\d[\d,]*\.?\d*)', clean)
     if explicit:
-        return explicit.group(1).replace(",", "")
+        return explicit.group(1).replace(',', '')
 
     # "= X cups/dollars/etc" at end of reasoning — take the last "= <number>"
-    equals_matches = re.findall(
-        r"=\s*(-?\d[\d,]*\.?\d*)\s*(?:cups?|dollars?|\$|%|items?|people|hours?|minutes?|days?|miles?|meters?|kg|lbs?|pounds?|gallons?|liters?|feet|inches|years?|months?|weeks?|seconds?|cents?|\.?\s*$)",
-        clean,
-        re.I,
-    )
+    equals_matches = re.findall(r'=\s*(-?\d[\d,]*\.?\d*)\s*(?:cups?|dollars?|\$|%|items?|people|hours?|minutes?|days?|miles?|meters?|kg|lbs?|pounds?|gallons?|liters?|feet|inches|years?|months?|weeks?|seconds?|cents?|\.?\s*$)', clean, re.I)
     if equals_matches:
-        return equals_matches[-1].replace(",", "")
+        return equals_matches[-1].replace(',', '')
 
     # Last resort: search the FULL text (including <think>) for the patterns above
     if clean != text:
         # Try "the answer is X" in the thinking section
-        explicit_full = re.search(
-            r"(?i)(?:the\s+)?(?:final\s+)?answer\s*(?:is|:|=|would be)\s*\$?\s*(-?\d[\d,]*\.?\d*)",
-            text,
-        )
+        explicit_full = re.search(r'(?i)(?:the\s+)?(?:final\s+)?answer\s*(?:is|:|=|would be)\s*\$?\s*(-?\d[\d,]*\.?\d*)', text)
         if explicit_full:
-            return explicit_full.group(1).replace(",", "")
+            return explicit_full.group(1).replace(',', '')
 
         # "So, X cups/dollars" pattern common in Qwen3 reasoning
-        so_pattern = re.findall(
-            r"(?i)(?:so|therefore|thus|hence),?\s*(?:the\s+)?(?:answer\s+is\s+)?(?:it\s+(?:is|would be)\s+)?\$?\s*(-?\d[\d,]*\.?\d*)\s*(?:cups?|dollars?|\$|%|items?|people|hours?|minutes?|days?|miles?|meters?|kg|lbs?|pounds?|gallons?|liters?|feet|inches|years?|months?|weeks?|seconds?|cents?)",
-            text,
-        )
+        so_pattern = re.findall(r'(?i)(?:so|therefore|thus|hence),?\s*(?:the\s+)?(?:answer\s+is\s+)?(?:it\s+(?:is|would be)\s+)?\$?\s*(-?\d[\d,]*\.?\d*)\s*(?:cups?|dollars?|\$|%|items?|people|hours?|minutes?|days?|miles?|meters?|kg|lbs?|pounds?|gallons?|liters?|feet|inches|years?|months?|weeks?|seconds?|cents?)', text)
         if so_pattern:
-            return so_pattern[-1].replace(",", "")
+            return so_pattern[-1].replace(',', '')
 
     return None
 

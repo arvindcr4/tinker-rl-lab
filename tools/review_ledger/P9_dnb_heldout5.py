@@ -6,8 +6,8 @@ Output: platform_hybrid/experiments/results/review_2026-10-18/P9_dnb/heldout5.js
 (1) one-sample t of seed accuracies vs the base point estimate (seeds as unit, df=4);
 (2) item-paired t: per item, mean correctness over seeds minus base correctness (df=199).
 """
+
 import json
-import math
 import statistics as st
 from pathlib import Path
 
@@ -39,10 +39,21 @@ diffs = [st.mean(x[k] for x in items) - bi[k] for k in common]
 t2 = stats.ttest_1samp(diffs, 0.0)
 res = {
     "per_seed_accuracy": dict(zip(seeds, acc)),
-    "mean": round(st.mean(acc), 4), "sd": round(st.stdev(acc), 4), "base": b,
-    "one_sample": {"t": round(float(t1.statistic), 3), "df": len(acc) - 1, "p": round(float(t1.pvalue), 3)},
-    "item_paired": {"n_items": len(common), "mean_diff": round(st.mean(diffs), 4),
-                    "t": round(float(t2.statistic), 3), "df": len(common) - 1, "p": round(float(t2.pvalue), 3)},
+    "mean": round(st.mean(acc), 4),
+    "sd": round(st.stdev(acc), 4),
+    "base": b,
+    "one_sample": {
+        "t": round(float(t1.statistic), 3),
+        "df": len(acc) - 1,
+        "p": round(float(t1.pvalue), 3),
+    },
+    "item_paired": {
+        "n_items": len(common),
+        "mean_diff": round(st.mean(diffs), 4),
+        "t": round(float(t2.statistic), 3),
+        "df": len(common) - 1,
+        "p": round(float(t2.pvalue), 3),
+    },
 }
 OUT.mkdir(parents=True, exist_ok=True)
 (OUT / "heldout5.json").write_text(json.dumps(res, indent=2) + "\n")

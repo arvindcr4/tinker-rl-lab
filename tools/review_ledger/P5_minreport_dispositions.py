@@ -12,7 +12,7 @@ RM = (
 )
 S = "platform_hybrid/paper/sections/"
 
-D = {}
+D: dict[int, dict[str, int | str]] = {}
 
 
 def put(ids, status, evidence, files=""):

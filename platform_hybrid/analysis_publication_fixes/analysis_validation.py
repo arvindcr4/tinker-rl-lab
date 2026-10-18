@@ -6,6 +6,7 @@ import json
 import math
 import random
 import statistics
+from collections.abc import Sequence
 
 
 def h(probability, group_size=8):
@@ -108,6 +109,8 @@ def trajectory_summary(rows, samples=5000, seed=0):
 def robust_incremental(data, reduced, full, restriction="r = 0, r2 = 0"):
     """HC3 joint Wald F on the identical analyzed row set in both models."""
     import numpy as np
+
+    # Optional analysis dependency has no distributed stubs/py.typed marker.
     import statsmodels.formula.api as smf
 
     full_model = smf.ols(full, data=data, missing="drop")
@@ -134,16 +137,16 @@ def robust_incremental(data, reduced, full, restriction="r = 0, r2 = 0"):
     return result
 
 
-def equivalence_classes(records, query):
+def equivalence_classes(records, query) -> list[list[str]]:
     """Identical normalized signatures INCLUDING known/unknown states.
 
     Pairwise R0 compatibility is not transitive and is never unioned here.
     Delta declarations are included conservatively in the immutable signature.
     """
-    classes = collections.defaultdict(list)
+    classes: collections.defaultdict[str, list[str]] = collections.defaultdict(list)
     for identity, record in sorted(records.items()):
         fields = query.field_view(record)
-        signature = {
+        signature: dict[str, object] = {
             field: {
                 "known": query.is_known(cell),
                 "value": query._key(field, cell["value"]) if query.is_known(cell) else None,
@@ -160,7 +163,7 @@ def equivalence_classes(records, query):
     return sorted(classes.values(), key=lambda members: members[0])
 
 
-def coverage_median(values):
+def coverage_median(values: Sequence[float]) -> float:
     if not values or any(not math.isfinite(v) or not 0 <= v <= 1 for v in values):
         raise ValueError("nonempty finite coverage population required")
     return statistics.median(values)

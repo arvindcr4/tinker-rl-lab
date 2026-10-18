@@ -18,7 +18,7 @@ ROOT = Path(__file__).resolve().parents[2]
 RES = ROOT / "zvf-program/experiments-next/results"
 TR = ROOT / "platform_hybrid/experiments/tinker-runs/results"
 OUT = ROOT / "platform_hybrid/experiments/results/review_2026-10-18/P10_zvf_theory"
-out = {}
+out: dict[str, object] = {}
 
 # ---------------- algebra ----------------
 ps = np.linspace(1e-4, 1 - 1e-4, 20001)

@@ -9,6 +9,15 @@ and print state plus any summary keys that look like held-out accuracy / rollout
 import json
 import sys
 from pathlib import Path
+from typing import TypedDict
+
+
+class Crosscheck(TypedDict):
+    record: float
+    wandb: float | None
+    match: bool
+    keys: list[str]
+
 
 ROOT = Path(__file__).resolve().parents[2]
 runs = {
@@ -16,7 +25,8 @@ runs = {
     for r in json.loads(Path(sys.argv[1]).read_text())
     if isinstance(r, dict) and "id" in r
 }
-rows, mism = [], 0
+rows: list[tuple[str, str, str | None, Crosscheck | None]] = []
+mism = 0
 for p in sorted((ROOT / "zvf-program/audit/results/full").glob("*-seed-*.json")):
     rec = json.loads(p.read_text())
     rid = rec["remote_verification"]["wandb"]["run_id"]

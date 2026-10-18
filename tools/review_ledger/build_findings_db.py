@@ -9,6 +9,17 @@ import re
 import sqlite3
 import sys
 from pathlib import Path
+from typing import TypedDict
+
+
+class Finding(TypedDict):
+    paper: str
+    severity: str
+    title: str
+    page: int | None
+    anchor: str | None
+    body: str
+
 
 ROOT = Path(__file__).resolve().parents[2]
 SRC = (
@@ -35,7 +46,7 @@ def main():
         anchored = (
             block.split("# Anchored comments", 1)[1] if "# Anchored comments" in block else ""
         )
-        cur = None
+        cur: Finding | None = None
         for line in anchored.split("\n"):
             m = HEAD.match(line)
             if m:

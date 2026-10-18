@@ -58,9 +58,22 @@ def test_authored_papers_have_no_broken_citations(audit):
 
 
 @pytest.mark.parametrize(
-    "link", ["paper/references.bib", "papers/spectral_entropy_grpo/references.bib"]
+    ("link", "target"),
+    [
+        ("paper/references.bib", "zvf-program/flagship/paper/flagship.bib"),
+        (
+            "papers/spectral_entropy_grpo/references.bib",
+            "zvf-program/flagship/paper/flagship.bib",
+        ),
+        (
+            "papers/spectral_entropy_grpo/spectral_entropy_paper.tex",
+            "zvf-program/flagship/paper/spectral_entropy_paper.tex",
+        ),
+    ],
 )
-def test_bibliography_symlink_resolves(link):
+def test_paper_alias_is_portable_and_resolves(link, target):
     path = REPO / link
-    if path.is_symlink() or path.exists():
-        assert path.exists(), f"{link} is a dangling symlink"
+    assert path.is_symlink(), f"{link} must alias its canonical source"
+    assert not path.readlink().is_absolute(), f"{link} must be checkout-relative"
+    assert path.is_file(), f"{link} is missing or a dangling symlink"
+    assert path.resolve() == REPO / target, f"{link} points to the wrong canonical source"

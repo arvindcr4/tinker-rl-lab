@@ -71,6 +71,7 @@ UNREPORTED; explicit false / 0.0 / ``none'' = reported-as-absent).
 the other items have 2--3; counts are filled-leaves / total-leaves).}
 \label{tab:p6-coverage}
 \small
+\resizebox{\linewidth}{!}{%
 \begin{tabular}{lrrl}
 \toprule
 MIN-REPORT item & Filled / total & \% & Where unreporting concentrates \\
@@ -83,7 +84,8 @@ reference\_kl        &  29 /  60 &  48\% & \texttt{kl\_beta} / \texttt{kl\_estim
 loss\_form           &  38 / 120 &  32\% & \texttt{importance\_ratio\_level} / clip bounds on closed stacks \\
 decontamination      &   8 /  40 &  20\% & only the four \texttt{colab-open} arms report \\
 \bottomrule
-\end{tabular}\\
+\end{tabular}%
+}\\
 \footnotesize{Source: \texttt{experiments/results/p5p8/registry\_audit.tsv},
 \texttt{registry\_audit\_summary.json}.}
 \end{table}
@@ -214,7 +216,7 @@ validation rather than being caught only by the iter 14 audit's
 post-hoc value-null heuristic. The audit and the schema now describe
 the same integrity claim from two complementary angles.
 
-\subsection{Variant-delta $\times$ MIN-REPORT consistency (iter 30)}
+\subsection{Variant-delta \texorpdfstring{$\times$}{x} MIN-REPORT consistency (iter 30)}
 \label{sec:p6-delta-consistency}
 
 The two preceding quality axes are \emph{coverage} (which fields are

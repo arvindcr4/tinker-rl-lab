@@ -3,6 +3,11 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 mkdir -p build
+export PATH="/opt/homebrew/bin:$PATH"
+if command -v tectonic >/dev/null && ! command -v latexmk >/dev/null; then
+  tectonic -X compile paper_camera.tex --outdir build --keep-logs --keep-intermediates --untrusted
+  exit 0
+fi
 # Standard TeX Live/MiKTeX installations use latexmk without a local repair.
 # This optional fallback supports read-only Debian images with missing ls-R maps.
 if ! kpsewhich article.cls >/dev/null || ! kpsewhich lmodern.sty >/dev/null || ! kpsewhich pdftex.map >/dev/null; then

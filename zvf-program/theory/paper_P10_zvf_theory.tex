@@ -144,26 +144,13 @@ medium-difficulty prompts to the hardest ones \cite{dars2025}. We adopt
 \emph{advantage collapse} as the field's name for the phenomenon and read
 this convergence as evidence for the premise of the ZVF Program: the
 dead-group fraction is a first-order quantity in critic-free RL. Our
-position, stated plainly, is that \textbf{every one of these methods is a
-controller acting on a signal it never calibrates}. Each filters,
-reweights, or reallocates based on an implicit point estimate of the very
-quantity whose sampling distribution (T1), compute cost (T2), and optimal
-set-point (T3) this paper supplies. A filtering rule triggered by an
-uncalibrated \ZVF{} estimate is a decision made on a point estimate
-masquerading as a measurement (\S\ref{sec:T1}); a reallocation rule without
-a wasted-compute bound cannot say what it saves (\S\ref{sec:T2}); and an
-adaptive group-size heuristic without an optimality target has no set-point
-to track (\S\ref{sec:T3}). The theory below is therefore not in competition
-with DAPO, GRESO, EDGE-GRPO, or DARS; it is the missing measurement layer
-that any of them would need in order to be a \emph{calibrated} controller
-rather than a heuristic. A second, sharper implication follows from the
-survey's mechanistic synthesis \cite{agenticrlsurvey2026}: RL's genuinely
-new-capability gains concentrate on tasks where the base model is in an
-\emph{intermediate} success regime --- neither near-random nor near-ceiling
---- which is precisely the complement of the zero-variance groups (all-fail
-and all-pass). Controlling \ZVF{} is thus not merely a compute optimization;
-it concentrates the gradient budget in the regime where RL has been observed
-to install new capability rather than to resharpen existing distributions.
+position, stated plainly, is that these methods intervene on related but not
+identical signals; not all estimate batch-level ZVF. T1 supplies a sampling
+model for the explicitly defined ZVF estimator, and T2 gives a conditional
+reliability budget. T3 audits one proxy and proves its fixed optimum
+$G\in\{2,3\}$; it supplies no adaptive set-point. The results can inform a
+measurement layer, but do not prove that every cited method needs this
+particular estimator or objective.
 
 \paragraph{Honesty contract.} T1--T3 are conditional mathematical statements:
 their proofs are complete under the assumptions stated below. This does not make
@@ -201,6 +188,9 @@ numerical tolerance $\varepsilon$ (e.g.\ $10^{-6}$ for $[0,1]$ rewards) the
 Z_g \;\coloneqq\; \1\!\left[\Varhat_g \le \varepsilon\right]
 \;\overset{\text{binary } r}{=}\; \1\!\left[\textstyle\sum_k r_{g,k} \in \{0,K\}\right].
 \end{equation}
+The equality requires $K\ge2$ and $0\le\varepsilon<1/K$, since the
+smallest positive binary sample variance is $1/K$. We use $K$ for a fixed
+measurement size and $G$ for the candidate size optimized in T3.
 
 \begin{definition}[Zero-Variance Fraction, Pillar~1]\label{def:zvf}
 \[
@@ -303,19 +293,13 @@ step $t$ is
 and a Wilson-score interval is recommended near the boundaries
 $\ZVF_t\in\{0,1\}$ where the Wald interval \eqref{eq:ci} degenerates.
 
-\paragraph{Empirical calibration (E-T1, added after validation).} On a
-350-prompt $\times$ 32-rollout Qwen3-8B/GSM8K sampling pool, the Wald
-interval \eqref{eq:ci} attains 0.94--0.97 coverage at $m\ge 64$ under
-shuffled batching but only 0.89--0.93 at $m=32$; the Wilson interval is
-within 0.95--0.98 at every tested $(m,K)$. \textbf{We therefore adopt the
-Wilson interval as the operational CI} and recommend $m\ge 64$ groups for
-Wald-based reporting. Under difficulty-\emph{sorted} (curriculum-style)
-batching, coverage of the \emph{global} population ZVF collapses to
-0.08--0.40 --- but the same intervals cover the \emph{local} (window)
-ZVF at 0.947: the failure is an estimand mismatch, not mis-calibration.
-Stratified batch composition restores global validity (0.996, conservative).
-Artifacts: \texttt{experiments-next/results/t1\_ci\_coverage\_*.json},
-\texttt{t1\_correlated\_fix\_*.json}.
+\paragraph{Empirical calibration (E-T1).} The earlier 350-prompt analysis is
+superseded for numerical reporting by the complete 512-prompt pool in
+Section~\ref{sec:empirical}. That section reports shuffled Wald coverage
+0.93--0.96 at $m\ge64$, Wilson coverage 0.95--0.98, sorted global coverage
+0.07--0.22, local coverage 0.944, and stratified coverage 0.996.
+These are frozen-pool resampling results, not universal coverage guarantees.
+Wilson is the operational interval; the theorem above is asymptotic.
 \end{theorem}
 \begin{proof}
 Each $Z_g$ is a Bernoulli$(\theta_K)$ variable (its mean over the within-group
@@ -392,27 +376,11 @@ n_g \;\ge\; \frac{\ln(1/\delta)}{-\ln \ZVF}
 N \;\coloneqq\; K\,n_g \;\ge\;
 \underbrace{K\,\frac{\ln(1/\delta)}{-\ln \ZVF}}_{\displaystyle N(\ZVF)}\!,
 \end{equation}
-and $N(\ZVF)\to\infty$ as $\ZVF\to1^-$. Equivalently, $N(\ZVF)$ is the
-$(1-\delta)$-quantile of the rollouts-to-first-informative-group
-distribution: a budget below $N(\ZVF)$ leaves probability $>\delta$
-that the \emph{entire batch} is uninformative. \textbf{This is a
-reliability/budget statement, not an impossibility bound}: an
-informative group arrives within the first $K$ rollouts with
-probability $1-\ZVF$, which can be large. Fewer than $N$ rollouts does
-not make a potentially nonzero centered reward-gradient contribution improbable;
-it makes the \emph{guarantee} of one
-unavailable at confidence $1-\delta$. (\textbf{Important}: the theorem bounds
-rollouts to a potentially nonzero centered reward-contrast contribution under the stated assumptions; it does NOT bound rollouts to
-\emph{policy improvement} in the sense of monotone reward gain. A
-single informative group permits a potentially nonzero centered reward-contrast
-contribution under the stated assumptions, not a
-guaranteed monotone reward increment; the latter would require a
-separate improvement lemma under a policy-gradient / NPG
-improvement guarantee. Treat the corollary as a wasted-\emph{gradient}
-bound, not a wasted-\emph{reward} bound.) In particular, the
-\emph{wasted} rollouts attributable to high $\ZVF{}$ are
-$N(\ZVF)-N(\ZVF_{\text{ref}})$ relative to a healthy reference rate
-$\ZVF_{\text{ref}}$.
+and $N(\ZVF)\to\infty$ as $\ZVF\to1^-$. This is a continuous lower
+bound, not the discrete quantile itself. The exact rollout quantile is
+$K\lceil\ln(1/\delta)/(-\ln\theta_K)\rceil$: a budget below the
+continuous bound leaves probability $>\delta$ that all groups are
+uninformative. This is not a bound on policy improvement or total gradients.
 \end{theorem}
 \begin{proof}
 With i.i.d.\ groups, each is uninformative with probability $\ZVF$, so all
@@ -442,8 +410,8 @@ Clopper--Pearson lower confidence bound for the binomial proportion,
 \[
 L_\alpha(X;m)=
 \begin{cases}
-0, \& X=0,\\
-I^{-1}_{\alpha}(X,m-X+1), \& X>0,
+0, & X=0,\\
+I^{-1}_{\alpha}(X,m-X+1), & X>0,
 \end{cases}
 \]
 where $I^{-1}$ is the inverse regularized incomplete Beta function. Under the
@@ -458,6 +426,11 @@ Thus $N(L_{0.05})$ is an exact-coverage, conservative 95\% certified compute
 floor, conditional on the i.i.d.\ group model. Wilson bounds remain a convenient
 operational approximation, but the theorem does not depend on their asymptotic
 coverage.
+At $X=0$, define $N(0)=0$ by continuity; this lower certificate is vacuous,
+not an upper budget guaranteeing success. Throughout T2 and its expectation
+lemma, $\ZVF$ without a time subscript means the population parameter
+$\theta_K\in(0,1)$, not its noisy batch estimate. This uses the nondegeneracy
+assumption in addition to the sampling assumptions.
 \end{corollary}
 
 %==============================================================================
@@ -469,21 +442,14 @@ produce a data-dependent optimum is a result: this objective cannot supply an
 adaptive controller set-point.
 
 \paragraph{Learning signal per group.} For binary rewards at group size $G$,
-a natural scalar measure of the gradient ``signal'' a single group contributes
-is the within-group reward variance the advantage normalization exposes. The
-expected (population) within-group signal of a prompt with success rate $p$ is
-proportional to its Bernoulli variance $p(1-p)$, but only \emph{realized} when
-the group is informative; we therefore model the expected per-group signal as
+we declare a diagnostic proxy: weight the mixed-group probability by the
+population Bernoulli variance $p(1-p)$. This is not the expectation of the
+sample variance (which already incorporates homogeneous outcomes), nor a
+conditional variance identity. It intentionally weights informativeness twice
+near the boundaries; its optimality is only relative to this declared choice.
 \begin{equation}\label{eq:signal-per-group}
-S(p,G) \;\propto\; \underbrace{\big(1-h_G(p)\big)}_{\Prob(\text{informative})}
-\cdot \underbrace{p(1-p)}_{\text{Bernoulli signal}} ,
-\qquad h_G(p)=p^G+(1-p)^G .
+S(p,G)\propto (1-h_G(p))p(1-p),\qquad h_G(p)=p^G+(1-p)^G.
 \end{equation}
-This is a declared diagnostic proxy, not a derivation of the full GRPO gradient.
-Other defensible objectives---expected squared group-relative advantage, Fisher
-information, wall-clock efficiency, or held-out gain---can yield different
-optima. T3 proves what this proxy implies and, importantly, what it cannot
-justify.
 
 \paragraph{Signal per rollout.} Each group of size $G$ costs $G$ rollouts, so
 the efficiency objective (expected signal per unit sampling cost, averaged over
@@ -495,8 +461,9 @@ J(G) \;\coloneqq\; \frac{1}{G}\,
 
 \begin{theorem}[Optimum of the declared proxy objective]\label{thm:T3}
 Under Assumptions~\ref{ass:binary},~\ref{ass:within-iid},~\ref{ass:nondegen}
-and a reward-density prior $\phi$, a per-prompt \emph{candidate} optimal
-group size is
+and a reward-density prior $\phi$ with positive mass on $(0,1)$, the
+population proxy has the exact integer maximizer set $\{2,3\}$, independent
+of $\phi$. Define its optimal group size by
 \begin{equation}\label{eq:Gstar}
 G^\star \;\in\; \argmax_{G\in\{2,3,\dots\}} \; J(G),
 \end{equation}
@@ -587,25 +554,27 @@ paper \emph{``From Diagnostic to Controller: A Signal-Starvation Theory of
 GRPO and an Adaptive Group-Size Intervention''}
 (\texttt{platform\_hybrid/paper/paper\_P7\_zvf\_controller}).
 
-The three results compose into an online control law that the Pillar~1
-controller can execute per training step $t$:
+The results suggest a restricted prospective interface, not a proved online
+control law. Its sampling assumptions must hold for the next batch:
 \begin{enumerate}[leftmargin=1.5em,itemsep=2pt]
-  \item \textbf{Measure (T1).} Compute $\ZVF_t$ and its $95\%$ CI
-        \eqref{eq:ci}; this turns a point estimate into a calibrated reading
-        with a lower confidence bound $\underline{\ZVF}_t$.
+  \item \textbf{Measure (T1).} From a separate diagnostic batch at fixed $K$,
+        compute $\ZVF_t$ and the one-sided Clopper--Pearson lower bound in
+        Corollary~\ref{cor:T2-traj}. Wilson is an operational approximation;
+        the displayed two-sided Wald interval is not this exact certificate.
   \item \textbf{Decide (T2).} If the reliability budget
         $N(\underline{\ZVF}_t)$ from Corollary~\ref{cor:T2-traj} exceeds the
-        remaining per-step rollout budget, the step fails to produce any
-        informative group with probability greater than $\delta$ (at the
-        stated confidence on $\ZVF$): trigger intervention rather than
-        gamble the remaining budget.
+        next-batch rollout budget, that fresh batch cannot meet the stated
+        reliability target, with the certificate's confidence, under an
+        unchanged population and fixed $K$. This does not make a retrospective
+        probability claim about the already observed diagnostic batch.
   \item \textbf{Act (T3, revised).} Under objective \eqref{eq:efficiency}
         the per-rollout optimum is the universal $G^\star\in\{2,3\}$
         (eq.~\ref{eq:J23}), so the controller cannot derive a
         \emph{data-dependent} group size from T3 as stated; re-estimating
         $\widehat\phi_t$ adds nothing. The escalation policy must instead
-        come from the T2 reliability budget: raise $G$ when the current
-        $G$'s budget-failure probability exceeds $\delta$.
+        be separately justified: a rate measured at one $K$ does not identify
+        $\theta_{K'}$ at another size. T2 alone cannot license escalation
+        without a cross-size model or new measurements.
 \end{enumerate}
 This is the formal interface between Pillar~2 (theory) and Pillar~1 (the
 mechanistic controller): T1 supplies \emph{sensor calibration}, T2 supplies a
@@ -621,8 +590,8 @@ Pillar~7 rather than asserted as a theorem here.
 %==============================================================================
 \section{Empirical Validation}\label{sec:empirical}
 %==============================================================================
-All three theorems, plus the controller-pilot implied by
-Section~\ref{sec:controller}, were validated against real sampling data
+The following offline checks and small live panels examine the assumptions
+and operational context of the three theorems and the controller pilot
 under a pre-registered protocol (decision rules fixed before scoring; see
 \path{experiments-next/README.md}). The measurements test assumptions and
 operational relevance; they are not used to prove the mathematical statements.
@@ -639,13 +608,13 @@ verdicts; numbers below are from the complete $n{=}512$ pool. Artifacts:
 \begin{center}
 \begin{tabular}{@{}lcc@{}}
 \toprule
-Batching regime \& Estimand \& 95\% CI coverage \\
+Batching regime & Estimand & 95\% CI coverage \\
 \midrule
-shuffled (iid), Wald, $m\ge 64$ \& global \& 0.93--0.96 \\
-shuffled (iid), Wilson, all tested $(m,K)$ \& global \& 0.95--0.98 \\
-difficulty-sorted (curriculum) \& global \& 0.07--0.22 \\
-difficulty-sorted (curriculum) \& \emph{local (window)} \& 0.944 \\
-stratified batch composition \& global \& 0.996 \\
+shuffled (iid), Wald, $m\ge 64$ & global & 0.93--0.96 \\
+shuffled (iid), Wilson, all tested $(m,K)$ & global & 0.95--0.98 \\
+difficulty-sorted (curriculum) & global & 0.07--0.22 \\
+difficulty-sorted (curriculum) & \emph{local (window)} & 0.944 \\
+stratified batch composition & global & 0.996 \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -715,9 +684,12 @@ exhausts its own gradient signal as $\hat p\to 1$; group-size policy is
 therefore a \emph{schedule} question, exactly the regime the controller of
 Section~\ref{sec:controller} targets. Artifacts:
 \texttt{tinker-runs/results/er2b\_*.json}.
+This comparison confounds group size with an eightfold difference in optimizer
+steps and reports training-pool telemetry, not a held-out causal group-size
+effect. Two seeds cannot establish generalization or a preferred schedule.
 
 \paragraph{E-P4: advantage normalization and the length-bias premise.}
-An uncapped (1{,}024-token) six-arm panel --- GRPO vs.\ Dr.GRPO's
+A completion-capped (1{,}024-token) six-arm panel --- GRPO vs.\ Dr.GRPO's
 $/\sigma$-free advantage \cite{tong2025drgrpo}, three seeds each, 30
 steps, $G{=}8$, batch 4, Qwen3-8B/GSM8K --- tests the premise that
 std-normalized advantages inflate completion length. Neither loss
@@ -728,6 +700,9 @@ tokens). Nor does the $/\sigma$ removal show a ZVF signature: late-run
 ZVF is 0.45/0.70/0.72 (Dr.GRPO) vs.\ 0.47/0.47/0.55 (GRPO). At this
 scale the length-bias motivation for the normalization change has no
 observable footprint on either axis (Tier~C, $n{=}3$ seeds per loss).
+The 1,024-token ceiling is close to the reported early means, so censoring can
+hide length growth. Batch-level ZVF is coarsely quantized and three seeds have
+low power; failure to see a signature does not refute a length-bias mechanism.
 Provenance: an earlier version of this panel was invalidated by an
 unwired loss flag --- both ``arms'' had trained vanilla GRPO --- and was
 caught only by reading the runner, not from any output-level signal; the
@@ -788,9 +763,10 @@ pre-registration record; no verdict changed between $n{=}350$ and
 $n{=}512$.
 
 \paragraph{No empirical claims beyond the cited artifacts.} This draft
-contains no experiments of its own; all numeric values above are either
-illustrative algebraic constants or drawn from the checked-in
-\texttt{experiments-next/results/*.json} artifacts named inline.
+reports six substudies in Section~\ref{sec:empirical}, including offline
+resampling and small live training panels; it does not report a new campaign
+beyond those checked-in artifacts. Numeric observations are restricted to the
+named artifacts and are not independent validations of algebraic identities.
 
 %==============================================================================
 

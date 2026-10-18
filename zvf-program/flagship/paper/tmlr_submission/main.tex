@@ -1,8 +1,8 @@
 % Same Terminal Signal, Different Action
 % Evidence-bounded preprint generated from frozen repository artifacts.
-\pdfsuppressptexinfo=-1
-\pdfinfoomitdate=1
-\pdftrailerid{}
+\ifdefined\pdfsuppressptexinfo\pdfsuppressptexinfo=-1\fi
+\ifdefined\pdfinfoomitdate\pdfinfoomitdate=1\fi
+\ifdefined\pdftrailerid\pdftrailerid{}\fi
 
 \documentclass{article}
 
@@ -62,7 +62,7 @@ adaptive decision, and training record.  A frozen CPU differential contains 14
 intended cases for each of TRL and verl and a shared 36-case controller matrix,
 while retaining native differences rather than relabeling them as conformance.
 Second, we give cost-accounting corollaries of the known binary-starvation
-model.  For fixed $G$, increasing group size reduces the expected number of
+model. Increasing group size across fixed-size designs reduces the expected number of
 groups needed to see a contrast; for every $G$, complete-group sampling costs
 at least $1/\epsilon$ expected rollouts at success probability $\epsilon$.  We
 also give a restricted two-state witness: when $\Delta>0$, the two actions
@@ -142,8 +142,10 @@ We make four contributions.
 \end{enumerate}
 
 \paragraph{Claim discipline.}
-Every substantive statement is assigned one of four statuses: proved,
-artifact-verified, externally sourced, or proposed.  The portable companion
+Every substantive statement is classified as proved,
+artifact-verified, externally sourced, or proposed; negative evidence statuses
+(infeasible, not established, and not run) additionally describe availability,
+not separate positive claim types.  The portable companion
 \path{verify_anonymous_claims.py} runs executable mathematical sanity checks and verifies
 receipt hashes and internal invariants; it does not replace the analytic proofs
 or recompute gradients from checkpoints.  The separate \path{ANONYMOUS_CLAIM_LEDGER.md}
@@ -162,6 +164,10 @@ $R_1,\ldots,R_G$.  A representative group-relative advantage is
   \bar R=\frac{1}{G}\sum_{j=1}^{G}R_j .
   \label{eq:group-advantage}
 \end{equation}
+Here $s_R$ is the within-group sample standard deviation
+$\sqrt{\sum_j(R_j-\bar R)^2/(G-1)}$ and $\varepsilon>0$ is a
+representative stabilizer, not a universal implementation constant; the exact
+S1 and campaign branches are specified separately below.
 If all rewards are equal, every numerator is zero.  We use \emph{zero-variance
 fraction} (ZVF) only as a descriptive name for the observed fraction of such
 groups.  It is not an estimate of a prompt's latent success probability.
@@ -255,7 +261,7 @@ $\exp(\sum_tM_{it}(\ell_{it}-\ell^{\rm old}_{it})/\sum_tM_{it})$.
 There is no KL or other auxiliary term in this CPU differential.
 
 The four campaign conditions use the DAPO loss structure in
-Eq.~\eqref{eq:s1-objective}, but its training implementation has a separate
+Eq.~\eqref{eq:s1-objective}, but their training implementation has a separate
 $10^{-12}$ zero-standard-deviation floor (S1 uses $10^{-8}$ for its float64
 conformance comparisons).  \texttt{intended\_full} standardizes selected
 rewards without an additive epsilon, emits zero advantages at that campaign
@@ -279,8 +285,9 @@ mean ``different from this reference,'' not ``framework bug.''
 
 \begin{table}[t]
   \centering
-  \caption{Frozen S1 conformance receipt.  ``Material'' and ``not tested'' are
-  native-versus-reference verdicts; intended integrations pass separately.}
+  \caption{Frozen S1 conformance receipt. Intended counts are fixture cases;
+  native material and not-tested counts are objective arms, not fixture cases.
+  Intended integrations pass separately.}
   \label{tab:s1}
   \begin{tabular}{lrrr}
     \toprule
@@ -326,7 +333,8 @@ Cosine and relative $\ell_2$ distance are null in the first three cases.
 Joint zero counts as equivalence; a one-sided zero is a categorical material
 divergence.  This classification alone makes no general claim about parameter
 updates under momentum, weight decay, auxiliary losses, or accumulation.  In
-the frozen campaign specifically, $\beta=0$, weight decay is zero, gradient
+the frozen campaign specifically, the reference-KL coefficient $\beta=0$
+(not AdamW momentum), weight decay is zero, gradient
 accumulation is one, and a selected zero gradient explicitly skips
 \texttt{optimizer.step}; parameters and AdamW state are unchanged while the
 linear scheduler advances.  This avoids both a division-by-zero artifact and
@@ -610,6 +618,12 @@ central causal hypothesis also required the missing filtered positive control
 and direction-consistent effects across all three seeds.  Differences in the
 six final accuracies are neither causal effects nor evidence of superiority.
 No confirmatory seeds ran.
+
+In Table~\ref{tab:runs}, each gradient pair compares intended and native
+semantics at that unit's own current parameters, not gradients between two
+trained conditions. With equal active lengths, the two reduction rules
+coincide; equal seed-23 trajectories within condition pairs are therefore not
+in tension with a nonzero intended/native discrepancy driven by scaling.
 
 \subsection{What the feasibility outcome establishes}
 

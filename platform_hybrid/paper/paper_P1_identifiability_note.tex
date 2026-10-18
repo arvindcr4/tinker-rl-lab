@@ -10,6 +10,7 @@
 \usepackage[margin=1in]{geometry}
 \usepackage{hyperref}
 \usepackage{booktabs}
+\usepackage{array}
 \usepackage{amsmath,amssymb}
 \usepackage{microtype}
 
@@ -23,25 +24,21 @@ PES University\\\texttt{arvindcr4@gmail.com}}
 \maketitle
 
 \begin{abstract}
-We audit whether a smooth size-scaling law is identifiable for group-relative
-policy optimization (GRPO) post-training on a multi-family GSM8K anchor panel
-($0.6$B--$1$T, managed Tinker runs, mostly single-seed). The answer is negative
-and recomputable offline: the reported tests on fitted convergence rate and asymptotic reward
-do not reject their respective zero-slope nulls; neither establishes practical flatness; saturation-rate $\lambda$ is
-pinned at the fit boundary on four of five frontier traces; a constant model
-wins AICc on every anchor family tested in the elevation suite; and the sole
-dramatic outlier (Nemotron-120B) is a collapse phase (zero-reward step fraction
-$0.55$, $5$ of $20$ steps above reward $0.25$), not a point on a smooth curve.
-An earlier MoE-vs-dense positive gap ($+0.338$, one-sided $p{=}0.023$) is
-\textbf{withdrawn}: Nemotron-3-Super-120B-A12B is LatentMoE, so the 6-vs-6 split
-mislabelled the collapse anchor. We report a stack-conditioned taxonomy of
-ceilings, not a Chinchilla-style law in $N$.
+We audit whether the available group-relative policy optimization (GRPO)
+post-training traces support a size-scaling law. They do not currently support
+one: short, heterogeneous horizons, ceiling effects, and weakly identified
+curve fits prevent a positive scaling interpretation. This is an evidence
+limitation, not a statistical demonstration of zero slope or a universal
+failure of scaling. Earlier permutation, model-selection, architecture-gap,
+and leave-one-anchor claims are not retained as inferential conclusions.
+A Nemotron-3-Super-120B-A12B trace contains 11 zero-reward steps out of 20;
+this is a descriptive run observation, not a model-family comparison.
 \end{abstract}
 
 \section{What is (and is not) claimed}
 
-\paragraph{Claim.} In this anchor set, model size alone does not identify a
-positive GRPO reward trend or a universal saturation exponent.
+\paragraph{Claim.} The currently documented anchors are insufficient to
+identify a positive GRPO size trend or a universal saturation exponent.
 
 \paragraph{Non-claims.} No multi-seed powered cross-scale significance test; no
 causal architecture ranking; no claim that larger models cannot improve under
@@ -49,61 +46,79 @@ other stacks, horizons, or tasks. Frontier anchors are single-seed and
 descriptive by design. Predictions recorded in an internal iteration ledger are
 \emph{not} an immutable external preregistration.
 
-\section{Panel}
+\section{Panel and provenance limits}
 
-Managed/open GRPO post-training traces on GSM8K spanning dense and MoE families
-up to Kimi-K2 ($1$T) and DeepSeek-V3.1 ($685$B class), plus Nemotron-120B
-(LatentMoE: $120$B total / $12$B active). Source traces live under
-\texttt{platform\_hybrid/experiments/} (scaling-law TSV suite and
-\texttt{tinker-runs/results/frontier\_gsm8k\_*.json}).
+The historical 12-row fit panel is explicitly enumerated in
+\nolinkurl{platform_hybrid/experiments/results/scaling_law_iter109_saturation.tsv}:
+Qwen3.5-4B (30 steps), Qwen3-8B (30), Llama-3.1-8B-Instruct (30),
+Qwen3-32B (3), Qwen3.5-27B (3), gpt-oss-20B (30), Qwen3-30B-MoE (5),
+Qwen3-30B-MoE-Inst (3), DeepSeek-V3.1 (20),
+Nemotron-3-Super-120B-A12B (20; historically labelled Nemotron-120B),
+Qwen3-235B-MoE (4), and Kimi-K2-Thinking (20).
+Its \texttt{trace\_file} column identifies the input filename for each row.
+The table's \texttt{params\_B} is nominal total parameter count, not active
+parameters or per-token compute; its Nemotron \texttt{dense} classification
+is wrong (LatentMoE, 120B total / 12B active).
 
-\section{Negative results (recomputed)}
+These rows do not constitute a controlled 0.6B--1T experiment. A complete
+row-level mapping of checkpoint revisions, prompt IDs/splits, seeds,
+backend versions, decoding, and stopping rules is not supplied by that fit
+TSV. In particular, ceiling-saturated instruct models and short probes cannot
+be treated as comparable completed optimization trajectories. We therefore
+withdraw panel-wide inferential conclusions pending that provenance audit.
+The source repository is \url{https://github.com/arvindcr4/tinker-rl-lab};
+this note does not provide a frozen archival release.
 
-\begin{table}[t]
+\section{Descriptive findings and withdrawn analyses}
+
+\begin{table}[ht]
 \centering
-\caption{Headline negatives. All offline from checked-in artifacts.}
+\caption{Audit status. Historical analyses are identified, not endorsed as tests.}
 \label{tab:neg}
 \small
-\begin{tabular}{@{}p{0.42\linewidth}p{0.5\linewidth}@{}}
+\begin{tabular}{@{}p{0.42\linewidth}>{\raggedright\arraybackslash}p{0.54\linewidth}@{}}
 \toprule
-Check & Outcome \\
+Check & Status \\
 \midrule
-Fitted convergence rate $\lambda$ and asymptotic reward $R_\infty$ vs $\log_{10}N$
-  & Separate estimands; failure to reject is not practical equivalence
-    (e.g.\ $\lambda$--$N$ and $R_\infty$--$N$ two-sided $p{=}0.74$ / $0.51$ on
-    the 12-anchor panel, $10^4$ permutations) \\
-Saturation $\lambda$
-  & Unidentifiable / boundary-pinned on most frontier traces \\
-Model selection (AICc elevations)
-  & Constant (or non-scaling) forms win; no reliable Chinchilla-style ceiling
-    in $\log_{10}N$ \\
-Nemotron-120B
-  & Collapse: peak $0.875$ at step 3, last-10 $0.1625$, zero-reward fraction
-    $0.55$ exact ($11/20$), $5/20$ steps with reward $>0.25$
-    (\texttt{frontier\_gsm8k\_nemotron-120b.json}) \\
-MoE vs dense gap $+0.338$ ($p{=}0.023$)
-  & \textbf{Withdrawn} --- Nemotron is MoE; reclassification removes the
-    architecture headline (corrected one-sided $p\approx 0.178$) \\
-Leave-Nemotron ``sensitivity''
-  & \textbf{Withdrawn} --- no trusted checked-in TSV; recomputation reverses the
-    earlier non-significant story \\
+Size regressions on fitted rates and asymptotes &
+Historical $p=0.7382$ and $0.5061$ in
+\nolinkurl{scaling_law_iter109b_permtest.tsv}; not retained as evidence of
+flatness because fitted boundary values and heterogeneous traces are not
+exchangeable scientific replicates. \\
+Saturation-rate fits &
+Historical form $R(t)=R_\infty+(R_0-R_\infty)e^{-\lambda t}$ in
+\nolinkurl{platform_modal/scripts/scaling_law_iter109.py}, with bounds
+$R_0\in[-1.5,1.5]$, $R_\infty\in[0,1.5]$, $\lambda\in[10^{-4},50]$.
+These bounds permit nonphysical reward asymptotes. No universal exponent is inferred. \\
+Corrected Akaike information criterion (AICc) comparisons &
+Withdrawn as headline evidence; short per-family panels and uncertain fitted
+estimands do not support the former blanket constant-model preference. \\
+Nemotron-3-Super-120B-A12B &
+Descriptive trace: peak reward $0.875$ at step 3; last-10 $0.1625$;
+zero-reward steps $11/20$; $5/20$ steps above $0.25$.
+Input: \nolinkurl{frontier_gsm8k_nemotron-120b.json}. \\
+MoE--dense comparison &
+Withdrawn: historical split misclassified Nemotron. Neither the original
+nor the corrected small-panel $p$-value identifies an architecture effect. \\
+Leave-Nemotron analysis &
+Withdrawn: no trusted sensitivity receipt is established here; earlier
+claims of robustness or reversal are not retained. \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\section{Reading}
+\section{Interpretation}
 
-The defensible object is a \emph{local, stack-conditioned taxonomy}: plateau /
-drift / collapse endpoints co-move with recipe, horizon, and architecture, so
-cross-scale differences cannot be assigned to size. That is an identifiability
-failure in \emph{these} anchors, not a universal ban on post-training scaling
-laws. Related public scaling-law work occupies the broad positive claim space;
-this note's contribution is the negative audit with withdrawn false positives.
+Plateau, drift, and collapse are descriptive trajectory labels, not an
+established stack-conditioned taxonomy. Recipe, horizon, prompt difficulty,
+checkpoint capability and size co-vary. This audit therefore supports neither
+a universal positive scaling law nor its universal negation. Repeated-seed,
+matched-budget experiments with documented checkpoints and held-out prompts
+are required before comparing architecture or scaling slopes. No standalone
+scientific novelty for these generic identifiability limitations is claimed.
 
-\section{Relation to the long draft}
-
-The 47-page \texttt{paper\_P1\_scaling.pdf} retains elevation history for the
-thesis archive. \textbf{This short note is the publication unit.} Do not submit
-the long PDF as a scaling-law paper.
+\section{Document scope}
+This correction note withdraws overstatements in the historical scaling audit.
+It does not certify the longer draft or replace missing panel provenance.
 
 \end{document}

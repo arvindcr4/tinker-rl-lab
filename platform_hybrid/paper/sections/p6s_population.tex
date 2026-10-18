@@ -22,14 +22,14 @@ from run sources by \texttt{generate\_entries.py}; the rest are hand-entered.}
 \toprule
 Family & $n$ & Labels & Gen. & Badge \\
 \midrule
-A: framework runs (Qwen3-8B, GSM8K) & 4 & grpo & 4 & 58--86 \\
-B: open Colab trainer (E3, toy scale) & 4 & grpo, drgrpo, dapo & 4 & 93 \\
-C: managed-runtime head-to-head (Qwen3.5-4B) & 4 & grpo, dapo, drgrpo, gspo & 4 & 86 \\
-D: N2 same-stack variants (Qwen3.5-4B) & 3 & aero, gift, areal & 0 & 67--68 \\
-W\&B PPO/REINFORCE runs & 2 & ppo-reinforce & 0 & 50 \\
-E: zvf-iter130 risk-index batch & 11 & 9 methods + 2 tool-use & 0 & 43 \\
+A: framework runs (Qwen3-8B, GSM8K) & 4 & grpo & 4 & 51--78 \\
+B: open Colab trainer (E3, toy scale) & 4 & grpo, drgrpo, dapo & 4 & 84 \\
+C: managed-runtime head-to-head (Qwen3.5-4B) & 4 & grpo, dapo, drgrpo, gspo & 4 & 78 \\
+D: N2 same-stack variants (Qwen3.5-4B) & 3 & aero, gift, areal & 0 & 58--59 \\
+W\&B PPO/REINFORCE runs & 2 & ppo-reinforce & 0 & 40 \\
+E: zvf-iter130 risk-index fixtures & 11 & 9 methods + 2 tool-use & 0 & 36 \\
 \midrule
-Total & \NSTACK{} & & \NGEN{} & 43--93 \\
+Total & \NSTACK{} & & \NGEN{} & 36--84 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -76,20 +76,19 @@ but with a different \emph{label} per cell. The N2 four-method run holds the
 sampler, $G{=}8$, seed 0, prompt pool, and step count fixed---so the per-method
 delta against GRPO is guaranteed to isolate the label, not the stack. Measured
 last-10 reward/ZVF land in the same paired-bootstrap envelope as GRPO
-(Section~\ref{sec:p6-measured}); the entries make this measurable artifact
+\ifdefined\SUBMISSIONBUILD(Appendix~\ref{sec:p6-measured})\else(Section~\ref{sec:p6-measured})\fi; the entries make this measurable artifact
 machine-queryable for the first time.
 
-\paragraph{Family E: zvf-iter130 risk-index batch.}
-Eleven entries (\texttt{zvf130\_*}: nine GRPO-family methods and two tool-use
-cells) record a different shape of
-evidence: a single-batch harness that ran all nine GRPO-family methods on the
-same prompt pool with five seeds each and produced a per-method risk-index
-mean on \texttt{zvf\_iter130\_method\_risk.tsv}. The corresponding stack entries
-report fewer MIN-REPORT leaves (9/23) because the harness is a snapshot, not a
-full training run---but the entries preserve the per-method seeds, the
-provenance link to the source TSV, and the variant-delta pointers, so a query
-can recover the comparison set without losing the partial-reporting honesty
-marker.
+\paragraph{Family E: zvf-iter130 risk-index fixtures.}
+Eleven records describe risk-index snapshots. They are not completed training
+runs or validation of variant benefits. Their metadata is retained for
+provenance, with current disclosure coverage in the per-entry table.
+
+\paragraph{Snapshot warning.} Family badge ranges in this historical summary
+are not a second scoring protocol; use the regenerated per-entry table for
+current scores. The population includes dry-run placeholders and synthetic
+risk-index fixtures, not 28 completed training runs. Family E cannot validate
+variant performance or training ZVF.
 
 \paragraph{What population taught us about our own reporting.}
 The badge column is itself a finding. Our hand-entered config dumps---built for a

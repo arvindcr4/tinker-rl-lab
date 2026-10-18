@@ -19,13 +19,14 @@ $K = 0$ or $K = G$. These events are disjoint, so
 For a prompt population $\mathcal{D}$ with per-prompt success probabilities
 $p_x$, linearity of expectation gives
 $\E[\mathrm{ZVF}] = \E_{x \sim \mathcal{D}}[h_G(p_x)]$. Note the Jensen gap
-used in Section~\ref{sec:p7-t1}: since $h_G$ is convex near the endpoints
-and the population mixes prompts of heterogeneous difficulty,
-$\E_x[h_G(p_x)] \geq h_G(\E_x[p_x])$ whenever mass sits at the extremes,
-which is why measured run-level ZVF exceeds $h_G(\bar p)$ in
-Table~\ref{tab:p7-gsweep}. \hfill$\square$
+used in Section~\ref{sec:p7-t1}: since $h''_G(p) = G(G-1)[p^{G-2} + (1-p)^{G-2}] > 0$
+for all $p \in (0,1)$ with $G \geq 2$, $h_G$ is strictly convex on $[0,1]$;
+hence $\E_x[h_G(p_x)] \geq h_G(\E_x[p_x])$ by Jensen's inequality for any
+prompt-difficulty distribution, with strict inequality whenever the prompt population
+has non-zero difficulty variance, which is why measured run-level ZVF exceeds
+$h_G(\bar p)$ in Table~\ref{tab:p7-gsweep}. \hfill$\square$
 
-\subsection{T2: monotonicity in $G$}
+\subsection{T2: monotonicity in \texorpdfstring{$G$}{G}}
 \label{sec:p7-appendix-t2}
 For $p \in (0,1)$, both $p < 1$ and $1-p < 1$, so $p^{G+1} < p^G$ and
 $(1-p)^{G+1} < (1-p)^G$ strictly; summing,

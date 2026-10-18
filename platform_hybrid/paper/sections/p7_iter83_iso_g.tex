@@ -32,12 +32,10 @@ target yield at lower cost.
 \paragraph{Iso-G controller.}
 For each (method, step, prompt) with $k$ successes out of
 $G_{\text{base}}{=}8$, the Iso-G controller picks:
-\begin{equation}
-G^\star \;=\; \min\bigl\{G' \in \{2,4,6,8,10,12,16,24,32\} :
-                  Y(\hat p, G') \ge \tau_y\bigr\},
-\quad Y(\hat p, G') = 1 - \hat p^{G'} - (1-\hat p)^{G'},
-\label{eq:p7-iso-g}
-\end{equation}
+\begin{align}
+G^\star &\;=\; \min\bigl\{G' \in \{2,4,6,8,10,12,16,24,32\} : Y(\hat p, G') \ge \tau_y\bigr\}, \label{eq:p7-iso-g} \\
+\text{where}\quad Y(\hat p, G') &\;=\; 1 - \hat p^{G'} - (1-\hat p)^{G'}, \nonumber
+\end{align}
 with $\tau_y \in \{0.50, 0.70, 0.90, 0.95\}$ swept.  The cost-efficiency
 metric is \emph{yield-restored per 1000 extra rollouts} (analog of
 iter-80 row 95's per-1k bit-coupling, applied to the per-prompt

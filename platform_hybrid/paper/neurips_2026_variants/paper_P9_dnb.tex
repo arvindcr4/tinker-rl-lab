@@ -14,7 +14,7 @@
 \usepackage[nonatbib]{neurips_2026}
 \usepackage[numbers]{natbib}
 
-\usepackage[utf8]{inputenc}
+\ifdefined\XeTeXversion\else\usepackage[utf8]{inputenc}\fi
 \usepackage[T1]{fontenc}
 \usepackage{hyperref}
 \usepackage{url}
@@ -29,14 +29,12 @@
 \usepackage{xcolor}
 \usepackage{graphicx}
 \usepackage{tikz}
-\usetikzlibrary{shapes,arrows.meta,positioning,calc}
+\usetikzlibrary{shapes,arrows.meta,positioning,calc,fit,backgrounds,shadows,shapes.geometric,shapes.misc,decorations.pathreplacing}
 \usepackage{subcaption}
 \usepackage{algorithm}
 \usepackage{algorithmic}
 \usepackage{multirow}
 \usepackage{enumitem}
-\usepackage{tikz}
-\usetikzlibrary{positioning, fit, arrows.meta, backgrounds, calc, shadows, shapes.geometric, shapes.misc, decorations.pathreplacing}
 
 % Custom commands
 \newcommand{\tinker}{\textsc{Tinker}}
@@ -111,8 +109,8 @@ generation with binary unit-test reward (partial coverage). Verifiable
 rewards reduce reward-model subjectivity but do \emph{not} eliminate
 reward hacking, format gaming, or train-set reward inflation; we discuss
 residual failure modes in Section~\ref{sec:limitations}. The full task
-table and per-task data splits are listed in
-Appendix~\ref{sec:run-manifest}.
+table, per-task data splits, and data preprocessing architecture are listed in
+Appendix~\ref{sec:run-manifest} and Appendix~\ref{sec:appendix:architecture}.
 
 \paragraph{Cross-stack coverage.}
 Implementations span 7 RL libraries: TRL (HuggingFace),
@@ -245,6 +243,7 @@ reported run; and (iii)~\textbf{raw per-group rollout JSONL} for the
 Tier-A open-stack rows in Appendix~\ref{sec:run-manifest} and a subset
 of Tinker GSM8K rows. Raw JSONL is \emph{not} bundled for every Tinker
 case-study or tool-use run; those cases are flagged in the manifest.
+Full architectural diagrams of the data processing, licensing, and reproduction execution pipelines are provided in Appendix~\ref{sec:appendix:architecture}.
 
 \input{sections/reproducibility_card_dnb}
 
@@ -284,183 +283,6 @@ independent main-track science.
 % References
 % =============================================================================
 
-% --- appendix figures (moved before bibliography for denser last page) ---
-\begin{figure}[htbp]
-\centering
-\resizebox{\linewidth}{!}{
-\begin{tikzpicture}[
-    node distance=0.9cm and 1.0cm,
-    box1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.2cm, font=\small},
-    box2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
-    box3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.4cm, font=\small},
-    arrow/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [box1] (n1) {Raw Benchmark Data};
-    \node [box2, right=of n1] (n2) {\textbf{Dataset Tiering \& Evidence Hierarchy (Tiers A/B/C)}\\Evidence Tier Classifier};
-    \node [box3, right=of n2] (n3) {Categorized Tier A/B/C};
-
-    \draw [arrow] (n1) -- (n2);
-    \draw [arrow] (n2) -- (n3);
-\end{tikzpicture}
-}
-\caption{\textbf{Dataset Tiering \& Evidence Hierarchy (Tiers A/B/C)}. Structured categorization of benchmark dataset evidence levels.}
-\label{fig:r04_dataset_tiering}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\resizebox{\linewidth}{!}{
-\begin{tikzpicture}[
-    node distance=0.9cm and 1.0cm,
-    box1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.2cm, font=\small},
-    box2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
-    box3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.4cm, font=\small},
-    arrow/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [box1] (n1) {Dataset Files};
-    \node [box2, right=of n1] (n2) {\textbf{Artifact License \& Open-Source Distribution}\\License Checker};
-    \node [box3, right=of n2] (n3) {Open-Source Release};
-
-    \draw [arrow] (n1) -- (n2);
-    \draw [arrow] (n2) -- (n3);
-\end{tikzpicture}
-}
-\caption{\textbf{Artifact License \& Open-Source Distribution}. Automated validation of data licenses and open access artifacts.}
-\label{fig:r04_license_pipeline}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\resizebox{\linewidth}{!}{
-\begin{tikzpicture}[
-    node distance=0.9cm and 1.0cm,
-    box1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.2cm, font=\small},
-    box2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
-    box3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.4cm, font=\small},
-    arrow/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [box1] (n1) {Raw Math Prompts};
-    \node [box2, right=of n1] (n2) {\textbf{GSM8K \& Math Reasoning Preprocessing Pipeline}\\Regex Extractor \& Formatter};
-    \node [box3, right=of n2] (n3) {Clean Benchmark Dataset};
-
-    \draw [arrow] (n1) -- (n2);
-    \draw [arrow] (n2) -- (n3);
-\end{tikzpicture}
-}
-\caption{\textbf{GSM8K \& Math Reasoning Preprocessing Pipeline}. Standardizing prompt formatting and answer extraction regex.}
-\label{fig:r04_preprocessing}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\resizebox{\linewidth}{!}{
-\begin{tikzpicture}[
-    node distance=0.9cm and 1.0cm,
-    box1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.2cm, font=\small},
-    box2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
-    box3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.4cm, font=\small},
-    arrow/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [box1] (n1) {Synthetic Prompts};
-    \node [box2, right=of n1] (n2) {\textbf{Multi-Task Prompt Formatting \& Synthetic Filtering}\\Quality Filter Engine};
-    \node [box3, right=of n2] (n3) {High-Fidelity Dataset};
-
-    \draw [arrow] (n1) -- (n2);
-    \draw [arrow] (n2) -- (n3);
-\end{tikzpicture}
-}
-\caption{\textbf{Multi-Task Prompt Formatting \& Synthetic Filtering}. Filtering synthetic dataset generations for quality assurance.}
-\label{fig:r04_synthetic_filter}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\resizebox{\linewidth}{!}{
-\begin{tikzpicture}[
-    node distance=0.9cm and 1.0cm,
-    box1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.2cm, font=\small},
-    box2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
-    box3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.4cm, font=\small},
-    arrow/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [box1] (n1) {Model Checkpoints};
-    \node [box2, right=of n1] (n2) {\textbf{Benchmark Evaluation Harness \& Execution Pipeline}\\Execution Harness};
-    \node [box3, right=of n2] (n3) {Evaluation Score Table};
-
-    \draw [arrow] (n1) -- (n2);
-    \draw [arrow] (n2) -- (n3);
-\end{tikzpicture}
-}
-\caption{\textbf{Benchmark Evaluation Harness \& Execution Pipeline}. Executing evaluation suites across model checkpoints.}
-\label{fig:r04_eval_harness}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\resizebox{\linewidth}{!}{
-\begin{tikzpicture}[
-    node distance=0.9cm and 1.0cm,
-    box1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.2cm, font=\small},
-    box2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
-    box3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.4cm, font=\small},
-    arrow/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [box1] (n1) {Train / Test Splits};
-    \node [box2, right=of n1] (n2) {\textbf{Data Leakage Prevention \& Contamination Audit}\\Contamination Checker};
-    \node [box3, right=of n2] (n3) {Clean Split Certificate};
-
-    \draw [arrow] (n1) -- (n2);
-    \draw [arrow] (n2) -- (n3);
-\end{tikzpicture}
-}
-\caption{\textbf{Data Leakage Prevention \& Contamination Audit}. Detecting n-gram overlap between training and test splits.}
-\label{fig:r04_leakage_audit}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\resizebox{\linewidth}{!}{
-\begin{tikzpicture}[
-    node distance=0.9cm and 1.0cm,
-    box1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.2cm, font=\small},
-    box2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
-    box3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.4cm, font=\small},
-    arrow/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [box1] (n1) {Dataset Repositories};
-    \node [box2, right=of n1] (n2) {\textbf{Dataset Maintenance \& Version Control Architecture}\\Version Manager};
-    \node [box3, right=of n2] (n3) {Immutable Version Tag};
-
-    \draw [arrow] (n1) -- (n2);
-    \draw [arrow] (n2) -- (n3);
-\end{tikzpicture}
-}
-\caption{\textbf{Dataset Maintenance \& Version Control Architecture}. Tracking dataset revisions and patch histories.}
-\label{fig:r04_version_control}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\resizebox{\linewidth}{!}{
-\begin{tikzpicture}[
-    node distance=0.9cm and 1.0cm,
-    box1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.2cm, font=\small},
-    box2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
-    box3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.4cm, font=\small},
-    arrow/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [box1] (n1) {Artifact Package};
-    \node [box2, right=of n1] (n2) {\textbf{Reproduction Harness Execution \& Verification}\\Verification Engine};
-    \node [box3, right=of n2] (n3) {Reproducibility Verdict};
-
-    \draw [arrow] (n1) -- (n2);
-    \draw [arrow] (n2) -- (n3);
-\end{tikzpicture}
-}
-\caption{\textbf{Reproduction Harness Execution \& Verification}. Verifying artifact reproduction end-to-end.}
-\label{fig:r04_repro_harness}
-\end{figure}
-
 \bibliographystyle{plainnat}
 \bibliography{../references}
 % =============================================================================
@@ -469,6 +291,9 @@ independent main-track science.
 
 % Full per-row results table (formerly Table 4 in main body).
 \input{sections/appendix_full_results_dnb}
+
+% Benchmark dataset and reproduction harness architecture diagrams.
+\input{sections/appendix_harness_architecture}
 
 % Tier 2 stratified diagnostics: bootstrap CIs + partial-correlation table.
 \input{sections/stratified_diagnostics}
@@ -504,79 +329,4 @@ Acknowledgments are withheld for blind review.
 
 % NeurIPS Paper Checklist (Mandatory, DNB-specific).
 \input{sections/checklist_anon}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 \end{document}

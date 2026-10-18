@@ -44,7 +44,7 @@ $z(\hat{p}, G) = 1$ for all $G$ (boundary is absorbing under the iid model).
 
 \paragraph{Per-prompt $G^*$ distribution (all 2,560 cells).}
 
-\begin{table}[h]
+\begin{table}[ht]
 \centering\small
 \caption{Per-prompt $G^*$ distribution across all 2,560 (method, step, prompt)
 cells on the N2 reward tensors. ADAPTIVE\_PP uses only $G^* \in \{8, 16\}$;
@@ -66,7 +66,7 @@ DUALFORMER\_PP           & 1723 & 212  & 106  & 181  & 338  & 0    \\
 \paragraph{Bootstrap CI on per-step contrast\_restored net of cost
 (B=2000, seed=20260705).}
 
-\begin{table}[h]
+\begin{table}[ht]
 \centering\small
 \caption{Per-step contrast\_restored minus 0.5\,$\times$(cost\_ratio$-1$),
 pooled across 160 (method, step) rows. ADAPTIVE\_PP is the only controller
@@ -87,7 +87,7 @@ DUALFORMER\_PP           & $-0.0599$ & $-0.2857$ & +0.2560 & no \\
 
 \paragraph{Per-method cost-equivalent contrast ranking.}
 
-\begin{table}[h]
+\begin{table}[ht]
 \centering\small
 \caption{Per-method ADAPTIVE\_PP contrast\_magnitude per unit cost
 (contrast\_mag / total\_rollouts) on the N2 four-method panel. The per-prompt

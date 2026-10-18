@@ -32,9 +32,18 @@
 \newcommand{\grpo}{\textsc{GRPO}}
 \newcommand{\audit}{\textsc{GRPO-Stack-Audit}}
 \newcommand{\grpoReg}{\textsc{GRPO-Registry}}
-\input{results/audit_results.tex}
+% Generated only after current admission checks pass. Do not restore a stale
+% macro file from git or manufacture macros from the historical PDF.
+% Stage with aggregate_audit.py --prereg preregistration.json
+% --input-dir results/full --tex-output <isolated-build>/results/audit_results.tex
+% and build in that staged tree only after the command succeeds.
+\IfFileExists{results/audit_results.tex}{\input{results/audit_results.tex}}{%
+  \PackageError{audit-evidence}{Certified audit results unavailable}%
+  {Run aggregate_audit.py against the current evidence contract in an isolated
+   staging tree. A failing admission gate intentionally emits no TeX results.}%
+}
 
-\title{\audit{}: A Single-Stack Preregistered Audit Protocol for the \grpo{} Family\\
+\title{\audit{}: A Single-Stack Internally Frozen Audit Protocol for the \grpo{} Family\\
 \large Controlled Deltas, Exact Power, and the Cost of Dynamic Sampling}
 
 \author{Arvind C R\thanks{Pillar~3 of the ZVF Program.}\\
@@ -52,28 +61,33 @@ Reproducibility failures in deep RL are long-standing
 \cite{henderson2018deep,hu2024openrlhf}: small stack choices can dominate
 reported gains. The \grpo{}-family literature is especially exposed, because
 each variant typically ships in its own trainer, sampler, and evaluation
-harness. This paper contributes \audit{}, a single-stack preregistered audit
+harness. This paper contributes \audit{}, a single-stack internally frozen audit
 protocol in which DAPO, GSPO, Dr.\grpo{}, and AERO are re-implemented as
 declared overrides on one shared language-model trainer, with exact
 noncentral paired-$t$ power, Benjamini--Hochberg correction across four
 comparisons, and a fail-closed artifact gate (local, W\&B, private-Hub
 checkpoint, stack fingerprint, treatment fingerprint, 500-row held-out). All
-40 arm--seed units pass those gates. No metric-compatible published delta was
+40 arm--seed units were historically reported to pass an earlier gate, but
+the current strengthened contract validates zero units; no current verdict
+or numerical effect is certified. No metric-compatible published delta was
 registered, so survival fractions are not computed; the executable estimands
-are controlled arm--GRPO deltas and equivalence/difference verdicts. All four
-comparisons are \texttt{INCONCLUSIVE}: DAPO's controlled delta is
-$\AuditDAPODelta$ (paired 95\% CI $[\AuditDAPOCILow,\AuditDAPOCIHigh]$) with
-exact MDE$_{80}=\AuditDAPOMDE$ just above the 0.01 margin. Separately, as a
-cost result rather than a capability claim, DAPO drives mean \zvf{} from
-$0.693$ to exactly $0.000$ at $3.61\times$ the rollouts ($1734$ vs.\ $480$)
-and $1.44\times$ wall clock ($4.47$\,h vs.\ $3.11$\,h). A small open-source
+are controlled arm--GRPO deltas and equivalence/difference verdicts. Historical
+effect sizes, confidence intervals, power and sampling-cost observations are
+retained below only as a superseded narrative, not current empirical claims.
+A small open-source
 telemetry pilot (effective $n{=}1$ per arm) is reported only as infrastructure
-evidence. The contribution is the protocol, the power-aware analysis, and one
-MDE-bounded cost observation---not an algorithm ranking.
+evidence. The current contribution is the protocol and its fail-closed
+evidence boundary, not a certified cost observation or algorithm ranking.
 \end{abstract}
-\paragraph{August 2026 evidence boundary.} This later single-stack audit is
-future-paper evidence, not a repair of the reviewed \#36320 record or an
-algorithm-ranking result.
+\paragraph{Current admission boundary.} The current local
+\path{results/audit.json} reports \texttt{PREREGISTERED-NOT-RUN}, zero
+validated units, and \texttt{verdicts\_emitted=false} under the strengthened
+evidence contract. Its execution-contract errors supersede the older
+\texttt{COMPLETE} campaign-verification receipt. The numerical outcome narrative
+below is historical and not a currently certified result; no present
+capability, equivalence, power, or cost conclusion is licensed until those
+admission failures are resolved. Missing generated TeX deliberately blocks a
+results build rather than silently reusing an old certificate.
 
 \begin{figure}[htbp]
 \centering
@@ -144,7 +158,8 @@ secondary cost telemetry---not a fraction of a claimed gain.
     \draw [arrow] (dapo) -- (verdict);
 \end{tikzpicture}
 }
-\caption{\textbf{Colab A100 Treatment Equivalence Decision Tree (R08).} Statistical evaluation tree for seed-paired single-stack controlled comparisons.}
+\caption{\textbf{Colab A100 treatment evaluation sequence.} A schematic workflow,
+not an exhaustive statistical decision tree.}
 \label{fig:reproducibility_treatment_matrix}
 \end{figure}
 
@@ -279,16 +294,16 @@ The audit verdict is then:
 \small
 \begin{tabular}{@{}p{0.22\linewidth}p{0.74\linewidth}@{}}
 \toprule
-\textbf{Verdict} \& \textbf{Rule}\\
+\textbf{Verdict} & \textbf{Rule}\\
 \midrule
-Retains \& Controlled CI excludes zero and its lower bound is at least $50\%$
+Retains & Controlled CI excludes zero and its lower bound is at least $50\%$
   of a metric-compatible published $\Delta$.\\
-Survives \& Controlled CI excludes zero, but the published effect is not
+Survives & Controlled CI excludes zero, but the published effect is not
   metric-compatible or the half-gain rule fails.\\
-Disappears \& The 90\% CI lies inside a preregistered equivalence margin and the
+Disappears & The 90\% CI lies inside a preregistered equivalence margin and the
   exact 80\%-power MDE does not exceed that margin.\\
-Reverses \& Controlled 95\% CI is entirely negative.\\
-Inconclusive \& Every other outcome, including inadequate power.\\
+Reverses & Controlled 95\% CI is entirely negative.\\
+Inconclusive & Every other outcome, including inadequate power.\\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -391,12 +406,12 @@ therefore reports \texttt{COMPLETE} and emits four fail-closed paired verdicts:
 \small
 \begin{tabular}{@{}lrrrrl@{}}
 \toprule
-\textbf{Arm} \& \textbf{$\boldsymbol{\Delta}$} \& \textbf{95\% CI low} \& \textbf{95\% CI high} \& \textbf{MDE\textsubscript{80}} \& \textbf{Verdict} \\
+\textbf{Arm} & \textbf{$\boldsymbol{\Delta}$} & \textbf{95\% CI low} & \textbf{95\% CI high} & \textbf{MDE\textsubscript{80}} & \textbf{Verdict} \\
 \midrule
-DAPO       \& $\AuditDAPODelta$  \& $\AuditDAPOCILow$  \& $\AuditDAPOCIHigh$ \& $\AuditDAPOMDE$ \& \texttt{\AuditDAPOVerdict} \\
-GSPO       \& $\AuditGSPODelta$  \& $\AuditGSPOCILow$  \& $\AuditGSPOCIHigh$ \& $\AuditGSPOMDE$ \& \texttt{\AuditGSPOVerdict} \\
-Dr.\grpo{} \& $\AuditDrGRPODelta$ \& $\AuditDrGRPOCILow$ \& $\AuditDrGRPOCIHigh$ \& $\AuditDrGRPOMDE$ \& \texttt{\AuditDrGRPOVerdict} \\
-AERO       \& $\AuditAERODelta$ \& $\AuditAEROCILow$ \& $\AuditAEROCIHigh$ \& $\AuditAEROMDE$ \& \texttt{\AuditAEROVerdict} \\
+DAPO       & $\AuditDAPODelta$  & $\AuditDAPOCILow$  & $\AuditDAPOCIHigh$ & $\AuditDAPOMDE$ & \texttt{\AuditDAPOVerdict} \\
+GSPO       & $\AuditGSPODelta$  & $\AuditGSPOCILow$  & $\AuditGSPOCIHigh$ & $\AuditGSPOMDE$ & \texttt{\AuditGSPOVerdict} \\
+Dr.\grpo{} & $\AuditDrGRPODelta$ & $\AuditDrGRPOCILow$ & $\AuditDrGRPOCIHigh$ & $\AuditDrGRPOMDE$ & \texttt{\AuditDrGRPOVerdict} \\
+AERO       & $\AuditAERODelta$ & $\AuditAEROCILow$ & $\AuditAEROCIHigh$ & $\AuditAEROMDE$ & \texttt{\AuditAEROVerdict} \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -472,7 +487,11 @@ smoke test, not replicated evidence.
 \paragraph{Setup.} Model: Qwen/Qwen2.5-0.5B-Instruct with full-model updates;
 ten training steps; three prompts per batch; initial group size
 $G_0=4$; maximum generation length 40 tokens; and a seed-specific held-out set
-of 20 generated integer-addition prompts. Arms are GRPO, Dr.\grpo{}, DAPO, and
+nominally described as 20 generated integer-addition prompts per seed. The
+stored arm aggregates have 0.025 score granularity, compatible with 40 pooled
+rows but not sufficient to reconstruct per-seed denominators. The denominator
+and pooling provenance are unresolved; these scores are not inferential
+evidence. Arms are GRPO, Dr.\grpo{}, DAPO, and
 an adaptive-$G$ GRPO baseline. The shared implementation keeps tokenizer,
 sampler, reward parser, prompt generator, optimizer settings, and evaluation
 procedure fixed across arms. These small synthetic held-out sets make the
@@ -494,12 +513,12 @@ and rollout budget.
 \small
 \begin{tabular}{@{}lccc@{}}
 \toprule
-\textbf{Arm} \& \textbf{Held-out score} \& \textbf{Reported \zvf{}} \& \textbf{Rollouts}\\
+\textbf{Arm} & \textbf{Held-out score} & \textbf{Reported \zvf{}} & \textbf{Rollouts}\\
 \midrule
-GRPO (baseline)          \& $0.500$ \& $0.250$ \& $120$ \\
-Dr.\grpo{}                \& $0.575$ \& $0.267$ \& $120$ \\
-DAPO                     \& $0.550$ \& $0.000$ \& $174$ \\
-GRPO adaptive-$G$        \& $0.575$ \& $0.233$ \& $186$ \\
+GRPO (baseline)          & $0.500$ & $0.250$ & $120$ \\
+Dr.\grpo{}                & $0.575$ & $0.267$ & $120$ \\
+DAPO                     & $0.550$ & $0.000$ & $174$ \\
+GRPO adaptive-$G$        & $0.575$ & $0.233$ & $186$ \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -519,9 +538,9 @@ accounting only; it is not evidence that one method learns better.
 \label{sec:absorbed-p8}
 % =============================================================================
 
-Two offline-recomputable panels from the retired workshop artifact are retained
-here as \emph{bounded secondary evidence}. They are not algorithm rankings and
-they do not upgrade the four \texttt{INCONCLUSIVE} arm--GRPO verdicts.
+One bounded panel from the retired workshop artifact is retained
+here as \emph{bounded secondary evidence}. It is not an algorithm ranking and
+does not upgrade the historical arm--GRPO verdicts.
 
 \paragraph{Matched-budget $G{=}2\times 160$ vs $G{=}16\times 20$.}
 On Qwen3-8B/GSM8K with a locked $2560$-rollout budget (batch $8$), seeds

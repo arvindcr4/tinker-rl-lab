@@ -5,7 +5,10 @@
 \usepackage[numbers]{natbib}
 % \usepackage[nonatbib]{neurips_2026} % Submission mode (anonymized, line numbers)
 
-\usepackage[utf8]{inputenc}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[utf8]{inputenc}
+\fi
 \usepackage[T1]{fontenc}
 \usepackage{hyperref}
 \usepackage{url}

@@ -33,8 +33,8 @@ reported result. Provenance strata as defined in \secref{sec:p5-results}.}
     or explicit ``no KL'' &
     Distinguishes GRPO-family members that are otherwise conflated
     \citep{shao2024deepseekmath, yu2025dapo}; silently alters the objective \\
-3 & Sampler / backend / precision & Training backend, sampling engine,
-    precision, decoding parameters &
+3 & Sampler / backend / precision & Base-checkpoint identity and revision/hash,
+    training backend, sampling engine, precision, decoding parameters &
     $17\times$ same-label gap, $64\%$ of it an unreported checkpoint switch
     and the rest multiply confounded (\secref{sec:p5-exhibit-backend}) \\
 4 & Per-step ZVF/GU trajectory & Per-step zero-variance fraction and gradient
@@ -205,7 +205,7 @@ whose reported value is a stack property. The probe we ask for is one line:
 perturb rewards below the verifier's resolution and report which telemetry
 survives.
 
-\subsection{Item 8: Pass@$k$ Curves Alongside Pass@1}
+\subsection{Item 8: Pass@\texorpdfstring{$k$}{k} Curves Alongside Pass@1}
 \label{sec:p5-item8}
 Pass@1 conflates two different improvements: sharpening the output
 distribution over solutions the base model could already reach, and
@@ -227,6 +227,7 @@ narrative a reader prefers. \emph{Report:} held-out pass@$k$ at
 $k \in \{1, 8, 32\}$ (or a stated subset with justification), with the
 sampling temperature and completion budget used for the estimate.
 
+\endinput % Historical entropy and placebo-replacement proposals are withdrawn.
 \subsection{Live-Corpus Coupling: How the MIN-REPORT Fingerprint Relates to Measured Telemetry}
 \label{sec:p5-live-coupling}
 The first seven items above form the seven-field run-manifest fingerprint used in this

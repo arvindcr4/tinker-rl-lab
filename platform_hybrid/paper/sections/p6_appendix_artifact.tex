@@ -11,7 +11,7 @@ The artifact ships in the benchmark repository:
 registry/
   schema.json          # JSON Schema, draft 2020-12; record types:
                        #   stack | variant_delta
-  entries/             # 28 stack records + 20 variant-delta records
+  entries/             # 28 stack + 18 variant_delta records; 2 amendment sidecars
     trl_grpo_qwen3-8b_gsm8k.json        verl_grpo_qwen3-8b_gsm8k.json
     openrlhf_grpo_qwen3-8b_gsm8k.json   tinker_grpo_qwen3-8b_gsm8k.json
     colab-open_grpo_e3.json             colab-open_drgrpo_e3.json
@@ -70,29 +70,12 @@ The DAPO record, verified against the source paper~\citep{yu2025dapo}:
 
 \subsection{Badge Output on the Seed Entries}
 \label{sec:p6-appendix-badge}
-Verbatim (columns: per-item coverage $c_1..c_7$ order as in
-Section~\ref{sec:p6-schema-stack}); this is the source of the badge column in
-Table~\ref{tab:p6-entries}:
-
-\begin{lstlisting}[basicstyle=\ttfamily\scriptsize, frame=single,
-  caption={\texttt{python3 registry/query.py badge} (item columns
-  abbreviated).}, label={lst:p6-badge-out}]
-colab-open_dapo_e3            badge= 96  1.00 1.00 0.75 1.00 1.00 1.00 1.00
-colab-open_drgrpo_e3          badge= 96  1.00 1.00 0.75 1.00 1.00 1.00 1.00
-colab-open_grpo-adaptiveg_e3  badge= 96  1.00 1.00 0.75 1.00 1.00 1.00 1.00
-colab-open_grpo_e3            badge= 96  1.00 1.00 0.75 1.00 1.00 1.00 1.00
-openrlhf_grpo_qwen3-8b_gsm8k  badge= 60  0.17 1.00 1.00 0.00 1.00 1.00 0.00
-tinker_dapo_qwen3.5-4b        badge= 62  0.33 0.33 1.00 1.00 0.67 1.00 0.00
-tinker_drgrpo_qwen3.5-4b      badge= 62  0.33 0.33 1.00 1.00 0.67 1.00 0.00
-tinker_grpo_qwen3-8b_gsm8k    badge= 62  0.00 0.33 1.00 1.00 1.00 1.00 0.00
-tinker_grpo_qwen3.5-4b        badge= 57  0.00 0.33 1.00 1.00 0.67 1.00 0.00
-tinker_gspo_qwen3.5-4b        badge= 60  0.17 0.33 1.00 1.00 0.67 1.00 0.00
-trl_grpo_qwen3-8b_gsm8k       badge= 74  0.17 1.00 1.00 1.00 1.00 1.00 0.00
-verl_grpo_qwen3-8b_gsm8k      badge= 60  0.17 1.00 1.00 0.00 1.00 1.00 0.00
-\end{lstlisting}
-
-Systematic zeros in the last column (item 7, decontamination/parser probe)
-across all non-Colab entries quantify the reporting gap discussed in
-Section~\ref{sec:p6-population}: the one item no configuration dump captures,
-because it is a property of the experimental protocol rather than of the
-launcher.
+The current per-entry badge and specification coverage are regenerated from
+\texttt{registry/query.py} in Table~\ref{tab:p6-entries}. The earlier hard-coded
+Listing 7 used an older scoring schema and is removed; its scores must not be
+compared with current badges. Per-item fractions are printed by
+\texttt{python3 registry/query.py badge}; the denominator is the canonical
+leaf set in that implementation, not an arbitrarily chosen number of
+populated JSON keys. Outcomes and CI-method declarations are not scored.
+\endinput
+// ... historical badge output below omitted from manuscript ...

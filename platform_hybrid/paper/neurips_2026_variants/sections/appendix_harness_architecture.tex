@@ -1,0 +1,214 @@
+% =============================================================================
+% Appendix: Benchmark Dataset and Reproduction Harness Architecture
+% =============================================================================
+\section{Benchmark Dataset and Reproduction Harness Architecture}
+\label{sec:appendix:architecture}
+
+This section provides structural architectural diagrams for the eight core
+pipelines that govern data ingestion, quality filtering, licensing,
+evaluation, contamination auditing, and reproduction in \ours{}.
+
+\subsection{Evidence Tiering and Open Distribution}
+Figure~\ref{fig:r04_dataset_tiering} outlines the classification pipeline
+that partitions raw experimental traces into Tier~A (analytic / multi-seed
+inferential), Tier~B (single-seed descriptive case studies), and Tier~C
+(uncompleted or diagnostic-only cells).
+Figure~\ref{fig:r04_license_pipeline} documents the automated license checker
+verifying open-access redistribution terms across all bundled datasets.
+
+\begin{figure}[htbp]
+\centering
+\resizebox{0.9\linewidth}{!}{
+\begin{tikzpicture}[
+    node distance=0.9cm and 1.0cm,
+    box1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.2cm, font=\small},
+    box2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
+    box3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.4cm, font=\small},
+    arrow/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [box1] (n1) {Raw Benchmark Data};
+    \node [box2, right=of n1] (n2) {\textbf{Dataset Tiering \& Evidence Hierarchy (Tiers A/B/C)}\\Evidence Tier Classifier};
+    \node [box3, right=of n2] (n3) {Categorized Tier A/B/C};
+
+    \draw [arrow] (n1) -- (n2);
+    \draw [arrow] (n2) -- (n3);
+\end{tikzpicture}
+}
+\caption{\textbf{Dataset Tiering \& Evidence Hierarchy (Tiers A/B/C)}. Structured categorization of benchmark dataset evidence levels into audited tiers.}
+\label{fig:r04_dataset_tiering}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\resizebox{0.9\linewidth}{!}{
+\begin{tikzpicture}[
+    node distance=0.9cm and 1.0cm,
+    box1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.2cm, font=\small},
+    box2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
+    box3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.4cm, font=\small},
+    arrow/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [box1] (n1) {Dataset Files};
+    \node [box2, right=of n1] (n2) {\textbf{Artifact License \& Open-Source Distribution}\\License Checker};
+    \node [box3, right=of n2] (n3) {Open-Source Release};
+
+    \draw [arrow] (n1) -- (n2);
+    \draw [arrow] (n2) -- (n3);
+\end{tikzpicture}
+}
+\caption{\textbf{Artifact License \& Open-Source Distribution}. Automated validation of data licenses and open-access artifact licensing terms.}
+\label{fig:r04_license_pipeline}
+\end{figure}
+
+\subsection{Preprocessing and Synthetic Filtering Pipelines}
+Figure~\ref{fig:r04_preprocessing} details the mathematical reasoning
+preprocessing pipeline, showing how raw prompts are normalized and regex
+extractors standardize answer parsing.
+Figure~\ref{fig:r04_synthetic_filter} diagrams the prompt formatting and
+quality filtering engine applied to synthetic tool-use prompts.
+
+\begin{figure}[htbp]
+\centering
+\resizebox{0.9\linewidth}{!}{
+\begin{tikzpicture}[
+    node distance=0.9cm and 1.0cm,
+    box1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.2cm, font=\small},
+    box2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
+    box3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.4cm, font=\small},
+    arrow/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [box1] (n1) {Raw Math Prompts};
+    \node [box2, right=of n1] (n2) {\textbf{GSM8K \& Math Reasoning Preprocessing Pipeline}\\Regex Extractor \& Formatter};
+    \node [box3, right=of n2] (n3) {Clean Benchmark Dataset};
+
+    \draw [arrow] (n1) -- (n2);
+    \draw [arrow] (n2) -- (n3);
+\end{tikzpicture}
+}
+\caption{\textbf{GSM8K \& Math Reasoning Preprocessing Pipeline}. Standardizing prompt formatting and answer extraction regex across model families.}
+\label{fig:r04_preprocessing}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\resizebox{0.9\linewidth}{!}{
+\begin{tikzpicture}[
+    node distance=0.9cm and 1.0cm,
+    box1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.2cm, font=\small},
+    box2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
+    box3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.4cm, font=\small},
+    arrow/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [box1] (n1) {Synthetic Prompts};
+    \node [box2, right=of n1] (n2) {\textbf{Multi-Task Prompt Formatting \& Synthetic Filtering}\\Quality Filter Engine};
+    \node [box3, right=of n2] (n3) {High-Fidelity Dataset};
+
+    \draw [arrow] (n1) -- (n2);
+    \draw [arrow] (n2) -- (n3);
+\end{tikzpicture}
+}
+\caption{\textbf{Multi-Task Prompt Formatting \& Synthetic Filtering}. Filtering synthetic dataset generations for schema validity and quality assurance.}
+\label{fig:r04_synthetic_filter}
+\end{figure}
+
+\subsection{Evaluation, Leakage Auditing, and Version Control}
+Figure~\ref{fig:r04_eval_harness} shows the evaluation pipeline that executes
+held-out assessment suites across checkpoints.
+Figure~\ref{fig:r04_leakage_audit} outlines the automated contamination audit
+that computes 8-gram and 13-gram overlaps between training prompts and held-out
+test splits to prevent data leakage.
+Figure~\ref{fig:r04_version_control} illustrates dataset version management,
+tagging every release commit with immutable cryptographic digests.
+
+\begin{figure}[htbp]
+\centering
+\resizebox{0.9\linewidth}{!}{
+\begin{tikzpicture}[
+    node distance=0.9cm and 1.0cm,
+    box1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.2cm, font=\small},
+    box2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
+    box3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.4cm, font=\small},
+    arrow/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [box1] (n1) {Model Checkpoints};
+    \node [box2, right=of n1] (n2) {\textbf{Benchmark Evaluation Harness \& Execution Pipeline}\\Execution Harness};
+    \node [box3, right=of n2] (n3) {Evaluation Score Table};
+
+    \draw [arrow] (n1) -- (n2);
+    \draw [arrow] (n2) -- (n3);
+\end{tikzpicture}
+}
+\caption{\textbf{Benchmark Evaluation Harness \& Execution Pipeline}. Executing standardized evaluation suites across model checkpoints.}
+\label{fig:r04_eval_harness}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\resizebox{0.9\linewidth}{!}{
+\begin{tikzpicture}[
+    node distance=0.9cm and 1.0cm,
+    box1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.2cm, font=\small},
+    box2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
+    box3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.4cm, font=\small},
+    arrow/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [box1] (n1) {Train / Test Splits};
+    \node [box2, right=of n1] (n2) {\textbf{Data Leakage Prevention \& Contamination Audit}\\Contamination Checker};
+    \node [box3, right=of n2] (n3) {Clean Split Certificate};
+
+    \draw [arrow] (n1) -- (n2);
+    \draw [arrow] (n2) -- (n3);
+\end{tikzpicture}
+}
+\caption{\textbf{Data Leakage Prevention \& Contamination Audit}. Detecting $n$-gram overlap between training and test splits.}
+\label{fig:r04_leakage_audit}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\resizebox{0.9\linewidth}{!}{
+\begin{tikzpicture}[
+    node distance=0.9cm and 1.0cm,
+    box1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.2cm, font=\small},
+    box2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
+    box3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.4cm, font=\small},
+    arrow/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [box1] (n1) {Dataset Repositories};
+    \node [box2, right=of n1] (n2) {\textbf{Dataset Maintenance \& Version Control Architecture}\\Version Manager};
+    \node [box3, right=of n2] (n3) {Immutable Version Tag};
+
+    \draw [arrow] (n1) -- (n2);
+    \draw [arrow] (n2) -- (n3);
+\end{tikzpicture}
+}
+\caption{\textbf{Dataset Maintenance \& Version Control Architecture}. Tracking dataset revisions, SHA-256 manifests, and patch histories.}
+\label{fig:r04_version_control}
+\end{figure}
+
+\subsection{Reproduction Harness Verification Flow}
+Figure~\ref{fig:r04_repro_harness} depicts the end-to-end execution of the
+reproduction harness (\texttt{make reproduce-main}), verifying container
+launch, rollout replay, and metric hash agreement.
+
+\begin{figure}[htbp]
+\centering
+\resizebox{0.9\linewidth}{!}{
+\begin{tikzpicture}[
+    node distance=0.9cm and 1.0cm,
+    box1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.2cm, font=\small},
+    box2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
+    box3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.4cm, font=\small},
+    arrow/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [box1] (n1) {Artifact Package};
+    \node [box2, right=of n1] (n2) {\textbf{Reproduction Harness Execution \& Verification}\\Verification Engine};
+    \node [box3, right=of n2] (n3) {Reproducibility Verdict};
+
+    \draw [arrow] (n1) -- (n2);
+    \draw [arrow] (n2) -- (n3);
+\end{tikzpicture}
+}
+\caption{\textbf{Reproduction Harness Execution \& Verification}. Verifying artifact reproduction end-to-end against cryptographic hashes.}
+\label{fig:r04_repro_harness}
+\end{figure}

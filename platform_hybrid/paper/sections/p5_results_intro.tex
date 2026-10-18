@@ -1,25 +1,27 @@
 % Pillar-5 (MIN-REPORT-RL) results opener
 \section{Reading Guide: Evidence Base and Its Provenance}
 \label{sec:p5-results}
-Because this is a position paper, we separate what we argue from what we
-measured, and we label the provenance of every number. Three evidence strata
-appear below. \textbf{Stratum A} is the \ours{} benchmark described in
-\secref{sec:benchmark} and \secref{sec:setup}: controlled runs under the shared
-seed policy and statistical tiers, with artifacts in the released repository
-(per-library ZVF aggregations, matched-configuration framework dumps, and the
-same-stack PPO-vs-GRPO isolation runs). \textbf{Stratum B} is a set of internal
-program records from our June 2026 ZVF audit program (a 368-run Weights \&
-Biases audit within a 790-run corpus, a 12-cell Tinker head-to-head, an
-under-specified same-label comparison, and a single-file open-trainer reimplementation audit); we
-report these as internal experimental records, and the worked example in
-Appendix~\ref{app:p5-worked} shows the manifests that make such records
-comparable at all. \textbf{Stratum C} is toy-scale theory validation (a 0.5B
-model on synthetic arithmetic with an open backward pass); Stratum-C results are
-directional only and are flagged as such wherever used.
+This reporting proposal is motivated by three internal program observations,
+not a causal decomposition of stack and algorithm importance. Exhibit 1 is
+an unmatched checkpoint/harness comparison; Exhibit 2 compares label semantics
+across different experiments; Exhibit 3 contains twelve configured runs on
+one managed stack, three seeds per label. We call these internal program
+records Stratum B; the open trainer's toy arithmetic evidence (Stratum C) is
+directional only, not an independent external replication.
+
+The earlier pooled benchmark tests, 98-cell inference-grid analyses,
+cross-corpus eta-squared ratios, telemetry-item replacement recommendations,
+and entropy-based field deprecations are withdrawn from this manuscript.
+The current proposal retains all eight reporting requirements, including
+base-checkpoint identity. It does not deprecate model or temperature because
+a binary-factor entropy is below one bit. A constant label in a sampling-only
+corpus provides no test of algorithm importance. No operational CI gate for
+retracted Items 13--17 is endorsed.
 
 The argument then proceeds in four steps. \secref{sec:p5-evidence} presents the
-exhibits: the stack moves outcomes by more than the label does, and the label
-does not pin down the experiment. \secref{sec:p5-stack} converts the exhibits
+exhibits: the label does not pin down the experiment; these observations do
+not estimate the relative causal importance of stack and algorithm.
+\secref{sec:p5-stack} converts the exhibits
 into a standard---the eight-item minimum reportable stack---where each item is
 included if and only if we can point to a documented lever through which that
 item moved or flipped a result. \secref{sec:p5-threat} generalizes from

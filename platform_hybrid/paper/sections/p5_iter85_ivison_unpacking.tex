@@ -33,7 +33,7 @@ Qwen2.5-0.5B-MATH), the data and prompts axes are pinned; we decompose
 variance across the \emph{algorithm axis only}. We also report the
 bias-corrected $\omega^2$ and a rolling 5-step per-step $\eta^2$ trajectory.
 
-\subsubsection{Pooled algorithm-axis $\eta^2$ per channel (H1)}
+\subsubsection{Pooled algorithm-axis \texorpdfstring{$\eta^2$}{eta\textasciicircum 2} per channel (H1)}
 \label{sec:p5-iter85-pooled}
 Table~\ref{tab:p5-iter85-eta2} reports pooled $\eta^2_{\mathrm{algo}}$
 on every measured channel. Five of seven channels pass Ivison's strict
@@ -66,7 +66,7 @@ landscape). The other six channels pass Ivison's strict (5/6) and loose
 \label{tab:p5-iter85-eta2}
 \end{table}
 
-\subsubsection{Per-step rolling $\eta^2$ trajectory (H2) and GIFT dominance (H3)}
+\subsubsection{Per-step rolling \texorpdfstring{$\eta^2$}{eta\textasciicircum 2} trajectory (H2) and GIFT dominance (H3)}
 \label{sec:p5-iter85-perstep}
 A rolling 5-step window of algorithm-axis $\eta^2$ on \texttt{zvf}
 shows a brief early-training spike ($\eta^2 \approx 0.224$ at step 0)

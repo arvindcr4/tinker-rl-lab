@@ -15,7 +15,7 @@
 \usepackage{microtype}
 \usepackage[numbers,sort&compress]{natbib}
 
-\title{The Zero-Variance Fraction Is a Difficulty-Dispersion Functional:\\
+\title{The Zero-Variance Fraction Is an Overdispersion Summary:\\
 \large A Correction Note on a Retracted ``Sign-Wrong Bernoulli'' Result}
 \author{Arvind C R\\
 PES University\\\texttt{arvindcr4@gmail.com}}
@@ -29,17 +29,20 @@ Group-relative policy optimization (GRPO) trains on groups of $G$ rollouts per
 prompt; the zero-variance fraction (ZVF) is the share of groups whose binary
 rewards are constant. An earlier version of this note claimed that the i.i.d.\
 Bernoulli model $\mathrm{ZVF}_{\mathrm{iid}}=p^G+(1-p)^G$ is ``sign-wrong'':
-a per-group divergence of $+0.1224$ on Qwen3-8B/GSM8K and $-0.0703$ on
-synthetic arithmetic. \textbf{We withdraw that claim.} The positive value is a
-sign-guaranteed artefact of a plug-in estimator ($h_G(k/G)\ge
-\mathbf{1}\{k\in\{0,G\}\}$ for every group; its expectation is $+0.105$
-under \emph{exactly} i.i.d.\ Bernoulli rollouts), and the negative value is
-Jensen's inequality applied to a step-mean success rate. The correct reading is
-that, with per-prompt success probabilities $p_i$, $\mathbb{E}[\mathrm{ZVF}] =
-\mathbb{E}_i[h_G(p_i)]$, and the excess over $h_G(\bar p)$ measures the
-dispersion of prompt difficulty. On the 600 GSM8K groups, observed ZVF is
-$0.158$, the homogeneous-binomial value is $0.054$, and a two-parameter
-beta-binomial (intra-prompt correlation $0.16$) predicts $0.170$. This
+a mean per-group divergence of $+0.1224$ on Qwen3-8B/GSM8K and a separately
+computed step-level divergence on synthetic arithmetic. \textbf{We withdraw that
+claim.} The positive value is a sign-guaranteed artefact of a plug-in estimator
+($h_G(k/G)\ge\mathbf{1}\{k\in\{0,G\}\}$ for every group; its expectation is
+about $+0.105$ at $G=8$, $\bar p=0.694$ under exactly i.i.d.\ Bernoulli rollouts).
+For the step-level estimator, the nonpositive population Jensen gap competes
+with positive finite-sample plug-in bias; its sign is not guaranteed.
+Under conditionally independent rollouts,
+$\mathbb{E}[\mathrm{ZVF}]=\mathbb{E}_i[h_G(p_i)]$ and the excess over
+$h_G(\bar p)$ reflects prompt-difficulty dispersion. The present observations
+cannot distinguish that mechanism from conditional rollout dependence.
+On the 600 GSM8K groups, observed ZVF is $0.158$, the homogeneous-binomial
+value is $0.054$, and a two-parameter beta-binomial fitted to these same groups
+has expected ZVF $0.170$ (marginal intra-class correlation $0.160$). This
 is the same object as the Advantage Collapse Rate of \citet{he2026advantage},
 and the Jensen excess was proved by \citet{nie2026gradstarvation}; we claim no
 new diagnostic or theorem.
@@ -47,15 +50,18 @@ new diagnostic or theorem.
 
 \section{Setup}
 
-For a group of $G$ binary rewards with $k$ successes write
+For a group of $G\ge2$ binary rewards with $k$ successes write
 $\mathrm{ZVF}_{\mathrm{obs}}=\mathbf{1}\{k\in\{0,G\}\}$ and
 $h_G(p)=p^G+(1-p)^G$. If prompt $i$ has latent success probability $p_i$ and
 its $G$ rollouts are conditionally i.i.d., then
 $\mathbb{E}[\mathrm{ZVF}_{\mathrm{obs}}\mid p_i]=h_G(p_i)$ and, over a prompt
-population, $\mathbb{E}[\mathrm{ZVF}]=\mathbb{E}_i[h_G(p_i)]\ge h_G(\bar p)$,
-with equality only when all prompts share one $p$ ($h_G$ is convex).
-The relation $\mathrm{pass@}G-p^G=1-h_G(p)$ is an algebraic identity under the
-model, not an empirical finding.
+population with $\bar p:=\mathbb E_i[p_i]$,
+$\mathbb{E}[\mathrm{ZVF}]=\mathbb{E}_i[h_G(p_i)]\ge h_G(\bar p)$,
+with equality only when all prompts share one $p$ ($h_G$ is strictly convex
+for $G\ge2$). Define $\mathrm{pass@}G(p):=1-(1-p)^G$.
+Then $\mathrm{pass@}G(p)-p^G=1-h_G(p)$ is an algebraic identity, not an
+empirical finding. Its sample counterpart is
+$\mathbf1\{k\ge1\}-\mathbf1\{k=G\}=1-\mathrm{ZVF}_{\mathrm{obs}}$.
 
 \section{Why the retracted divergence carried no information}
 
@@ -65,23 +71,30 @@ $\delta_i = h_G(\hat p_i)-\mathbf{1}\{k_i\in\{0,G\}\}$ with $\hat p_i=k_i/G$
 estimated \emph{from the same group}. If $k_i\in\{0,G\}$ both terms equal $1$;
 otherwise the indicator is $0$ and $h_G(\hat p_i)>0$. Hence $\delta_i\ge0$ for
 every group, and a positive mean is guaranteed whenever any group is mixed
-(84.2\% are). Under the exact i.i.d.\ Bernoulli null the expected value is
-$\sum_k \binom{G}{k}\bar p^k(1-\bar p)^{G-k}\,[h_G(k/G)-\mathbf{1}\{k\in\{0,G\}\}]
-=+0.105$ at $\bar p=0.694$ ($+0.108$ under the fitted beta-binomial), close to
-the observed $+0.1224$. The number therefore cannot evidence ``anti-herding''.
+(84.2\% are; Table~\ref{tab:main}). Under the exact i.i.d.\ Bernoulli null
+with $G=8$ the expected value is
+$\sum_{k=0}^G \binom{G}{k}\bar p^k(1-\bar p)^{G-k}\,[h_G(k/G)-\mathbf{1}\{k\in\{0,G\}\}]
+\simeq+0.105$ at $\bar p=0.694$ ($+0.108$ under the fitted beta-binomial).
+The empirical plug-in mean is $0.2807$, minus observed ZVF $0.1583$, giving
+$+0.1224$. The number therefore cannot evidence ``anti-herding''.
 
-\paragraph{The arithmetic sign flip is Jensen.}
+\paragraph{The step-level estimator has competing biases.}
 The synthetic-arithmetic statistic used an estimated step-mean success rate:
-$\delta_t=h_G(\widehat{\bar p}_t)-\widehat{\mathrm{ZVF}}_t$.
+$\delta_t=h_G(\hat{\bar p}_t)-\overline{\mathrm{ZVF}}_t$, where
+$\hat{\bar p}_t=(B_tG_t)^{-1}\sum_{i=1}^{B_t}k_{ti}$ and
+$\overline{\mathrm{ZVF}}_t=B_t^{-1}\sum_i\mathbf1\{k_{ti}\in\{0,G_t\}\}$.
 For latent prompt probabilities, convexity implies
 $h_G(\mathbb E_i[p_i])-\mathbb E_i[h_G(p_i)]\le0$.
-This population inequality cannot be transferred directly to the finite-sample
-statistic: $\mathbb E[h_G(\widehat{\bar p}_t)]$ has nonlinear plug-in bias.
-The reported negative mean $-0.067$ over 480 steps is a descriptive historical
-summary, not proof of correlation or a sign-guaranteed finite-sample result.
-Uncertainty must account for probability estimation and within-run dependence;
-the historical step-iid interval is withheld. The two estimators differ and do
-not by themselves identify two learning regimes.
+The finite-sample expectation adds the nonnegative term
+$\mathbb E[h_G(\hat{\bar p}_t)]-h_G(\bar p_t)$, so a negative sign is not
+implied by the population inequality alone. Recomputing the 480 aggregate rows
+with source \texttt{groupsize\_zvf\_sweep} in
+\nolinkurl{experiments/results/zvf_contrastive_yield.tsv} gives $-0.0668$
+($-0.067$ rounded), across $G\in\{2,4,8,16\}$ with 120 rows per $G$.
+The earlier $-0.0703$ is withdrawn: its subset/weighting provenance is not
+reconciled. Raw within-step group structure and $B_t$ are not established by
+these aggregate inputs; neither a finite-sample null nor a causal dependence
+mechanism is identified. The historical step-iid interval is withheld.
 
 \section{What the GSM8K groups actually show}
 
@@ -100,30 +113,33 @@ Observed ZVF (pooled, 600 groups) & 0.158 \\
 Mean success rate $\bar p$ & 0.694 \\
 Homogeneous binomial $h_8(\bar p)$ & 0.054 \\
 Beta-binomial fit ($a{=}3.61$, $b{=}1.62$; ICC $0.160$) & 0.170 \\
+Observed counts for $k=0,\ldots,8$ & 19,13,16,33,66,91,141,145,76 \\
 $\chi^2$ of $k$-histogram vs.\ Binomial$(8,\bar p)$ & 8119 (df $=7$) \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-Observed ZVF is $2.9\times$ the homogeneous-binomial value and is recovered
-(within $0.012$) by a model whose only extra parameter is the spread of
-per-prompt difficulty. The $k$-histogram is strongly over-dispersed relative
-to a single Binomial (Table~\ref{tab:main}). Because the three seeds drew
-different problem sets, we cannot separate prompt-difficulty dispersion from
-within-prompt rollout correlation with these artefacts; a per-prompt
-repeated-sampling test is required.
+Observed ZVF is $2.9\times$ the homogeneous-binomial value.
+The beta-binomial is an unconstrained two-parameter maximum-likelihood fit
+(Nelder--Mead on log parameters); its implied mean $a/(a+b)=0.690$ is not
+fixed at the empirical $0.694$. Its ZVF agreement within $0.012$ is an
+in-sample descriptive fit, not held-out prediction or mechanism identification.
+ICC denotes marginal intra-class correlation $1/(a+b+1)$ under that model.
+The unpooled Pearson discrepancy is approximately 8119, but its sparse
+expected tail counts (about $0.046$ and $0.83$ at $k=0,1$) invalidate an
+asymptotic chi-square test; no corresponding significance claim is retained.
+Different seed problem sets do not identify conditional dependence separately
+from latent prompt heterogeneity. Exact unique problem overlap, split and
+decoding provenance must be audited before stronger generalization claims.
 
-\paragraph{Prospective test (results pending).}
-% PLACEHOLDER -- ZVF PREDICTION EXPERIMENT. A Colab run is in progress; its
-% outputs will land in platform_hybrid/experiments/results/publication_fixes/.
-% Replace this paragraph with: pre-registered per-prompt p_i estimates from an
-% independent sample, predicted ZVF = mean_i h_G(p_i) at G in {4,8,16}, the
-% observed ZVF, and the prediction error with CI.
-\textbf{[Placeholder --- to be filled from
-\texttt{experiments/results/publication\_fixes/}.]} A held-out prediction
-experiment estimates each prompt's $p_i$ from an independent rollout sample
-and predicts batch ZVF as $\frac1n\sum_i h_G(p_i)$ at several $G$. Results are
-not yet available and no claim in this note depends on them.
+\paragraph{Prospective test (not executed).}
+With $M\ge G$ independent calibration rollouts and $m_i$ successes for prompt
+$i$, predict held-out ZVF using
+$\widehat h_i=[\binom{m_i}{G}+\binom{M-m_i}{G}]/\binom{M}{G}$
+(with binomial coefficients zero when the upper argument is below $G$).
+This is unbiased for $h_G(p_i)$ under conditional i.i.d.\ sampling, unlike
+$h_G(m_i/M)$. Average over prompts and assess held-out error with
+prompt-clustered uncertainty. No results of this prospective protocol are claimed.
 
 \section{Relation to prior work}
 Nothing here is new. ZVF is equivalent, up to aggregation granularity, to the
@@ -146,9 +162,13 @@ contribution of this note is the retraction and the GSM8K numbers.
 \end{itemize}
 
 \section{Reproducibility}
-\texttt{analysis\_publication\_fixes/p2\_delta\_artifact.py} recomputes every
-number in this note from the checked-in artefacts (no GPU); output in
-\texttt{experiments/results/publication\_fixes/zvf\_confound/}.
+The script \nolinkurl{platform_hybrid/analysis_publication_fixes/p2_delta_artifact.py}
+recomputes retained GSM8K group summaries and the descriptive 480-row
+arithmetic mean from the named checked-in files, not every historical number
+quoted for retraction. Repository: \url{https://github.com/arvindcr4/tinker-rl-lab}.
+The GSM8K inputs live in \nolinkurl{platform_hybrid/experiments/results/};
+outputs are written to a caller-selected new JSON file via \texttt{--output}.
+No held-out prediction experiment or immutable archive is supplied here.
 
 \bibliographystyle{plainnat}
 % Minimal local refs if the shared bib is unavailable at build time:

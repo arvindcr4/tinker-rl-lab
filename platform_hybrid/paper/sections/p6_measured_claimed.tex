@@ -1,3 +1,4 @@
+% Evidence-bounded replacement of the historical reconciliation.
 % Paper 6 measured-vs-claimed reconciliation section. Iter 18.
 % For each of the 11 registry variant-delta records, score the agreement
 % between the registry's qualitative claim (parsed from claim_summary)
@@ -7,12 +8,30 @@
 \section{Measured-vs-Claimed Variant-Delta Reconciliation}
 \label{sec:p6-measured-claimed}
 
-The previous section established that the registry's same-stack reward
-deltas are all $\leq 2$pp in magnitude (with the AERO and AREAL
-decreases statistically significant). That finding isolates the
-reward axis; this section asks the broader question: \emph{for each
-named variant delta, does the registry's qualitative claim survive
-quantitative scrutiny on every measurable proxy available?}
+The earlier reconciliation mixed a same-stack N2 training panel with the
+\texttt{zvf130} risk-index fixture and inconsistent registry snapshots. Its
+cross-panel SUPPORT/OPPOSE counts, claimant counts, and variant rankings are
+withdrawn. A synthetic risk index is not measured training ZVF and cannot
+establish reward gains, successful exploration, or reproducibility of a
+training intervention.
+
+For N2, $\Delta$ means variant minus GRPO on the same last-10 window.
+The AERO ZVF delta is $-0.025$, not $+0.025$; its step-bootstrap interval
+$[-0.0625,+0.0125]$ includes zero. Thus the former AERO OPPOSE verdict was a
+sign error, not evidence against its claimed direction. GIFT's corresponding
+ZVF delta is $+0.125$, while AREAL's is about $-0.056$.
+These are single-seed descriptive comparisons. Ten adjacent training steps
+are not ten independent training replicates. The per-prompt reward intervals
+in Section~\ref{sec:p6-measured} all include zero; the apparent step-level
+AERO and AREAL reward decreases are not established seed-level effects.
+
+The registry records component-level declarations, not verified adoption by
+the field. Counting multiple components of a delta in one stack must not be
+reported as multiple distinct claimant stacks. A current claimant census must
+use distinct stack IDs and name the registry snapshot. No such population
+ranking or adoption-vs-evidence conclusion is retained here.
+
+\endinput % Historical unreconciled tables below are not part of the manuscript.
 
 \subsection{Method}
 We enumerate every \texttt{delta\_*.json} record (11 in total) and, for
@@ -90,11 +109,13 @@ The zvf130 risk index is the only proxy that fires on every measured
 variant, and it fires in the same direction on all 8: every variant
 drops mean ZVF relative to grpo by between $0.16$ (scafgrpo) and $0.37$
 (es / gift). The 5-seed reproducibility of this monotonic drop is the
-strongest claim-direction result the registry now licenses: \emph{no
-measured variant has lifted the within-group contrast that the variant
-claims to lift}. The \texttt{mcgrpo} diversity-bonus and \texttt{aero}
-off-policy rollouts are \emph{claimed} to raise within-group contrast;
-the canonical prompt distribution says the opposite.
+strongest claim-direction result the registry now licenses: \emph{all
+measured variants successfully reduce zero-variance fraction (raising the
+fraction of groups with non-zero reward contrast), consistent with their
+claimed exploration or diversity mechanics}. However, as audited in
+Section~\ref{sec:p6-iter190-raw-recompute}, this contrast gain is decoupled
+from policy performance: none of the variants translates reduced ZVF into
+statistically significant reward improvements on the same stack.
 
 \paragraph{Finding B: $3/11$ variants are claim-only.}
 \texttt{dapo}, \texttt{drgrpo}, \texttt{gspo} have no N2 same-stack
@@ -128,9 +149,11 @@ Three things it rules out:
     measured variants --- the largest effect is a $2$pp reward
     \emph{decrease} (AERO $-0.014$, AREAL $-0.020$, both CIs exclude 0),
     so no variant improves reward and two significantly lower it.
-  \item The within-group-contrast claim (\emph{``variant $X$ raises
-    within-group contrast''}) is contradicted by the zvf130 panel for
-    every variant that makes such a claim.
+  \item The assumption that lower ZVF automatically guarantees reward gains
+    (\emph{``lower zero-variance fraction implies superior task reward''})
+    is ruled out: while the zvf130 panel confirms that all 8 measured variants
+    consistently reduce ZVF, the same-stack N2 data show that this does not
+    translate into positive reward deltas.
   \item The ``registry adoption implies evidence'' inference is
     falsified for DAPO: 10 claimants, 0 measured proxies. The registry
     correctly \emph{catalogs} the adoption; it does not yet

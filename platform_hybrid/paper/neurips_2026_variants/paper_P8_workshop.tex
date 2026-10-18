@@ -11,7 +11,10 @@
 \usepackage[nonatbib]{neurips_2026}
 \usepackage[numbers]{natbib}
 
-\usepackage[utf8]{inputenc}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[utf8]{inputenc}
+\fi
 \usepackage[T1]{fontenc}
 \usepackage{hyperref}
 \hypersetup{hidelinks}
@@ -25,8 +28,6 @@
 \usepackage{xcolor}
 \usepackage{graphicx}
 \usepackage{subcaption}
-\usepackage{algorithm}
-\usepackage{algorithmic}
 \usepackage{multirow}
 \usepackage{enumitem}
 \usepackage{tikz}
@@ -138,8 +139,8 @@ Within-GSM8K (model-varying) &  7 & $+0.13$  & $0.79$   & descriptive \\
 
 \noindent
 We do not report bootstrap CIs or permutation $p$-values for the
-within-GSM8K rows here; the full bootstrap analysis is in the ZVF and
-D\&B variants of this work and is out of scope for the workshop note.
+within-GSM8K rows in this summary table; the full bootstrap analysis and
+partial-correlation controls are reported in Appendix~\ref{sec:stratified-diagnostics}.
 
 % =============================================================================
 \section{Compact Main Results and Evidence Grade}
@@ -260,7 +261,7 @@ non-math coverage are sparser and yield negative or descriptive evidence
 only. (iii)~Train-set reward in the Tinker case studies is \emph{descriptive
 instrumentation}, not an inferential signal: our primary established statement
 is the mechanical centered-reward-contrast identity
-(Appendix~\ref{sec:appendix:zvf-formalization}) ; separately reported later Qwen3-8B GSM8K
+(Appendix~\ref{sec:appendix:zvf-formalization}); separately reported later Qwen3-8B GSM8K
 evidence is not admitted here: $83.3\%$ vs.\ fixed-baseline $82.0\%$ is a one-sample seed-level
 $p{=}0.26$ test, not a paired-seed or reviewed-record test.
 Tinker-derived stratified correlations (e.g., the within-GSM8K ZVF

@@ -3,7 +3,7 @@
 % eta^2 (0.0075 on reward_mean per iter-161) decay, hold, or grow across the
 % 40-step training trajectory? Tests 5 falsifiable hypotheses on the same N2
 % four-method reward tensor used by iter-161 row 176 and iter-89/106.
-\subsection{Per-step algorithm-axis $\eta^2$ trajectory (iter 165)}
+\subsection{Per-step algorithm-axis \texorpdfstring{$\eta^2$}{eta\textasciicircum 2} trajectory (iter 165)}
 \label{sec:p5-iter165-per-step}
 
 The pooled iter-161 row 176 headline --- $\eta^2(\texttt{method} \to \texttt{reward\_mean}){=}0.0075$ on the 160-row N2 panel --- is a single number over 40 training steps. The open question is whether that number is \emph{trajectory-stationary} (the algorithm axis is a constant latent structure) or \emph{trajectory-trending} (the algorithm axis emerges or decays as training proceeds). Iter 165 tests this by computing per-step $\eta^2(\texttt{method}|\texttt{step})$ on the 4 method $\times$ 16 prompt $= 64$ obs per step per channel, with paired-prompt bootstrap CIs ($B{=}2000$, seed 20260705).
@@ -35,7 +35,7 @@ on the 64 obs. Bootstrap resamples the 16 prompts with replacement (paired acros
 \item \textbf{Per-step max $\eta^2 \le 0.13$ on every channel}. $\max \eta^2(\texttt{cv\_len}){=}0.1292$ at step 39; $\max \eta^2(\texttt{mean\_len}){=}0.0518$ at step 38; $\max \eta^2(\texttt{reward\_mean}){=}0.0306$ at step 0. The algorithm axis never crosses the $0.15$ threshold on any prompt-level channel --- consistent with iter-89/106 strict-pass ($\eta^2 \le 0.05$ on 2/7 channels, $\le 0.10$ on 4/7).
 \end{enumerate}
 
-\subsubsection{Per-step band summary (mean $\eta^2$ per band per channel)}
+\subsubsection{Per-step band summary (mean \texorpdfstring{$\eta^2$}{eta\textasciicircum 2} per band per channel)}
 \begin{tabular}{lcccc}
 \hline
 band & $n_{\mathrm{steps}}$ & channel & mean $\eta^2$ & max $\eta^2$ \\

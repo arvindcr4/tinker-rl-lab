@@ -1,380 +1,84 @@
-% =============================================================================
-% STANDALONE APPLIED PAPER P8 -- LLM vs XGBoost in credit-card fraud:
-% sensor and scribe, not scorer. Side-probe of the reproducibility program.
-% Reuses shared preamble/author; pulls the p8_* section family.
-% Build: pdflatex paper_P8_fraud ; bibtex paper_P8_fraud ; pdflatex x2
-% =============================================================================
-\documentclass{article}
-% August 2026 claim-consistency audit note: absorbed historical archive only;
-% it supplies no RL replication, deployment benefit, or algorithm comparison claim.
-\usepackage{tikz}
-\usetikzlibrary{shapes,arrows.meta,positioning,calc}
-\input{sections/_shared_preamble}
-\title{A Cross-Domain Measurement Side Study:\\
-       LLM as Sensor and Scribe, Not Credit-Card Fraud Scorer}
-\input{sections/_shared_author}
+% Current review descendant; frozen semester PDF and absorbed archive unchanged.
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,booktabs,url}
+\title{Fraud Side Study: Evidence Boundaries and Withdrawn In-Sample Analyses}
+\author{Arvind C R \and Ramesh Prakash Guledgudd}
+\date{Source correction, 18 October 2026; not a new release}
 \begin{document}
-\sloppy \hbadness=10000 \vbadness=10000 \hfuzz=2pt
 \maketitle
-\input{sections/p8_abstract}
-\input{sections/p8_intro}
-\input{sections/p8_setup}
-\input{sections/p8_scorer}
-\input{sections/p8_evidence}
-\input{sections/p8_reproducible_detector}
-\input{sections/p8_cost_optimal}
-\input{sections/p8_noisy_sensor}
-\input{sections/p8_evidence_noise}
-\input{sections/p8_decision_disagreement}
-\input{sections/p8_iter80_score_gradient}
-\input{sections/p8_iter84_cohort_calibration}
-\input{sections/p8_iter88_noise_cost_frontier}
-\input{sections/p8_iter104_isotonic_recalibration}
-\input{sections/p8_iter108_cost_decision_cis}
-\input{sections/p8_iter112_cost_cis_realistic_rates}
-\input{sections/p8_iter116_llm_cost_sweep}
-\input{sections/p8_iter120_vstat_ablation}
-\input{sections/p8_iter124_cost_accounting}
-\input{sections/p8_iter132_mislabel}
-\input{sections/p8_iter136_cal_realistic}
-\input{sections/synth_iter112_cost_rate_envelope}
-\input{sections/synth_iter116_cost_cube_envelope}
-\input{sections/synth_iter120_score_stream_universality}
-\input{sections/synth_iter124_three_domain_density}
-\input{sections/synth_iter132_four_domain_density}
-\input{sections/synth_iter136_five_domain_density}
-\input{sections/synth_iter140_six_domain_density}
-\input{sections/p8_iter140_sensor_feat_realistic}
-\input{sections/p8_iter156_disagreement_escalation}
-\input{sections/p8_iter160_operating_point_utility}
-\input{sections/synth_iter156_eleven_domain_density}
-\input{sections/synth_iter160_twelve_domain_density}
-\input{sections/p8_iter164_breakeven_tier}
-\input{sections/synth_iter164_thirteen_domain_density}
-\input{sections/p8_iter168_vmean_threshold}
-\input{sections/p8_iter172_vstat_ensemble}
-\input{sections/p8_iter176_sensor_scribe_scorer}
-\input{sections/synth_iter176_sixteen_domain_density}
-\input{sections/p8_iter180_calibration_slope_curvature}
-\input{sections/p8_iter192_vmean_decile_audit}
-\input{sections/p8_iter204_decile_cost_savings}
-\input{sections/synth_iter180_seventeen_domain_density}
-\input{sections/synth_iter192_d20_decision_concordance}
-\input{sections/synth_iter204_d23_perstep_transfer}
-\input{sections/synth_iter168_twelve_domain_density}
-\input{sections/synth_iter172_fifteen_domain_density}
-\input{sections/p8_taxonomy}
-\input{sections/p8_architecture}
-\input{sections/p8_compliance}
-\input{sections/p8_related}
-\input{sections/p8_limitations}
-\input{sections/p8_future}
-\bibliographystyle{plainnat}
-\bibliography{references}
+\begin{abstract}
+This corrected descendant retains a bounded synthetic-tabular observation,
+not a deployment or language-model sensor result. The historical downstream
+calibration, feature-ablation, cost and cross-domain tables are withdrawn
+from current scientific conclusions: their fit/evaluation populations and
+iteration-specific definitions are not consistently reconciled. No retraining,
+new model evaluation, or numerical replacement is represented as completed.
+The historical semester PDF and absorbed source archive remain historical records.
+\end{abstract}
+\section{Dataset and observation units}
+The supplied CSVs contain 50,000 synthetic rows (719 positives), a
+40,000-row training split (575 positives), and a 10,000-row test split
+(144 positives). They are not institutional transaction data. The generator
+uses anonymous numeric features; row-wise mean, standard deviation, maximum
+and minimum are deterministic functions of the existing features. They are
+neither VLM perception nor LLM-produced regulatory narratives, and introduce
+no independent unstructured information. Anonymous feature names also do
+not establish a semantic transfer benefit from a pretrained language model.
+\section{Retained scoring evidence and noncomparability}
+The root \texttt{xgboost\_results.json} records ROC-AUC
+0.794241240530303, precision 0.723404255319149, recall
+0.2361111111111111 and F1 0.35602094240837695. Its recorded inference duration
+is 0.006184816360473633 seconds per 10,000-row batch, not per-request latency.
+The alternative historical quick-artifact AUC 0.7955 has a different
+configuration and must not be merged into this result. Neither number
+establishes production validity. Historical 0.975/0.948 figures are not
+reconstructed and are excluded from current empirical conclusions.
 
+The historical Qwen SFT record used a 500-row, 20\%-positive enriched subset,
+not the tree's entire 10,000-row natural-rate evaluation population.
+Its reported accuracy 0.792 is below the constant-negative baseline
+$400/500=0.800$; AUC 0.48268 does not support useful ranking. This is not a
+matched-row head-to-head effect estimate. The enriched subset bounds inference
+work; fewer positives and fewer negatives do not improve AUC precision.
+An exact common-row manifest and matched scoring are needed before a
+comparative claim. Missing XGBoost accuracy on that subset is not imputed.
+\section{Withdrawal of downstream conclusions}
+The historical calibration pipeline reads \texttt{fraud\_data.csv} for fitting
+and \texttt{test\_data.csv} for evaluation; the latter is contained in the
+former. Consequently its apparent test scores are in-sample, not leakage-free
+held-out evidence. Within-protocol comparisons do not cure differential
+memorisation across feature sets. All downstream historical calibration,
+feature-ablation, noise, threshold-transfer and cost tables are excluded
+from generalisation or operational recommendations in this descendant.
+Their bootstrap intervals cannot repair the fit/evaluation overlap.
+A valid replacement would fit only disjoint training rows and reserve
+independent calibration/evaluation units; that rerun is not performed here.
 
-\begin{figure}[htbp]
-\centering
-\begin{tikzpicture}[
-    node distance=1.4cm and 1.8cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
-    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [b1] (n1) {Transaction Row};
-    \node [b2, right=of n1] (n2) {\textbf{Transaction Textualization Pipeline}\\Textualizer Parser};
-    \node [b3, right=of n2] (n3) {LLM Prompt Input};
+The historical hybrid modes charged a fee without consistently reranking
+alerts using augmented scores; their cost disadvantage is not empirical
+sensor utility. Deterministic aggregates require no per-row LLM invocation.
+Any hypothetical token price is a scenario assumption, not measured cost.
+No VLM extraction, compliance-text quality, analyst-time saving or 85-fold
+cost reduction is validated. The four-feature study can at most motivate a
+redundant-feature negative control, not sensor or scribe effectiveness.
 
-    \draw [arr] (n1) -- (n2);
-    \draw [arr] (n2) -- (n3);
-\end{tikzpicture}
-\caption{\textbf{Transaction Textualization Pipeline}. Formatting credit card tables to text prompts.}
-\label{fig:p08_fig1}
-\end{figure}
+The historical inverted alert threshold is not retained. For calibrated fraud
+probability $p$, investigation cost $c$ on every alert and missed-fraud loss
+$L$, compare $c$ with $pL$: alert if $p\ge c/L$. If the cost applies only to
+false alerts, the different threshold is $c/(L+c)$. These conventions must not
+be mixed, and empirical threshold selection must be out of sample.
 
-\begin{figure}[htbp]
-\centering
-\begin{tikzpicture}[
-    node distance=1.4cm and 1.8cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
-    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [b1] (n1) {Tabular Data};
-    \node [b2, right=of n1] (n2) {\textbf{XGBoost Score Thresholding}\\XGBoost Scorer};
-    \node [b3, right=of n2] (n3) {Decision Verdict};
-
-    \draw [arr] (n1) -- (n2);
-    \draw [arr] (n2) -- (n3);
-\end{tikzpicture}
-\caption{\textbf{XGBoost Score Thresholding}. Cost-optimal decision boundary for tabular scorer.}
-\label{fig:p08_fig2}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\begin{tikzpicture}[
-    node distance=1.4cm and 1.8cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
-    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [b1] (n1) {XGBoost Decision};
-    \node [b2, right=of n1] (n2) {\textbf{LLM Scribe Explanation and Audit Trail}\\LLM Scribe Module};
-    \node [b3, right=of n2] (n3) {Audit Explanation Text};
-
-    \draw [arr] (n1) -- (n2);
-    \draw [arr] (n2) -- (n3);
-\end{tikzpicture}
-\caption{\textbf{LLM Scribe Explanation and Audit Trail}. Generating human-readable fraud audit trails without mutating scores.}
-\label{fig:p08_fig3}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\begin{tikzpicture}[
-    node distance=1.4cm and 1.8cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
-    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [b1] (n1) {LLM Prediction};
-    \node [b2, right=of n1] (n2) {\textbf{Noisy Sensor Fraud Signal Decomposition}\\Noise Decomposer};
-    \node [b3, right=of n2] (n3) {Signal vs Noise Ratio};
-
-    \draw [arr] (n1) -- (n2);
-    \draw [arr] (n2) -- (n3);
-\end{tikzpicture}
-\caption{\textbf{Noisy Sensor Fraud Signal Decomposition}. Decomposing LLM scoring errors into epistemic vs aleatoric noise.}
-\label{fig:p08_fig4}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\begin{tikzpicture}[
-    node distance=1.4cm and 1.8cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
-    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [b1] (n1) {Hybrid Input Data};
-    \node [b2, right=of n1] (n2) {\textbf{Tabular vs Textual Feature Fusion Architecture}\\Fusion Decision Engine};
-    \node [b3, right=of n2] (n3) {Cost-Optimal Fraud Verdict};
-
-    \draw [arr] (n1) -- (n2);
-    \draw [arr] (n2) -- (n3);
-\end{tikzpicture}
-\caption{\textbf{Tabular vs Textual Feature Fusion Architecture}. Evaluating hybrid tabular scorer and textual scribe integration.}
-\label{fig:p08_fig5}
-\end{figure}
-
-
-
-\begin{figure}[htbp]
-\centering
-\begin{tikzpicture}[
-    node distance=1.4cm and 1.8cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
-    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [b1] (n1) {Transaction Row};
-    \node [b2, right=of n1] (n2) {\textbf{Transaction Textualization Pipeline}\\Textualizer Parser};
-    \node [b3, right=of n2] (n3) {LLM Prompt Input};
-
-    \draw [arr] (n1) -- (n2);
-    \draw [arr] (n2) -- (n3);
-\end{tikzpicture}
-\caption{\textbf{Transaction Textualization Pipeline}. Formatting credit card tables to text prompts.}
-\label{fig:p08_fig1}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\begin{tikzpicture}[
-    node distance=1.4cm and 1.8cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
-    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [b1] (n1) {Tabular Data};
-    \node [b2, right=of n1] (n2) {\textbf{XGBoost Score Thresholding}\\XGBoost Scorer};
-    \node [b3, right=of n2] (n3) {Decision Verdict};
-
-    \draw [arr] (n1) -- (n2);
-    \draw [arr] (n2) -- (n3);
-\end{tikzpicture}
-\caption{\textbf{XGBoost Score Thresholding}. Cost-optimal decision boundary for tabular scorer.}
-\label{fig:p08_fig2}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\begin{tikzpicture}[
-    node distance=1.4cm and 1.8cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
-    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [b1] (n1) {XGBoost Decision};
-    \node [b2, right=of n1] (n2) {\textbf{LLM Scribe Explanation and Audit Trail}\\LLM Scribe Module};
-    \node [b3, right=of n2] (n3) {Audit Explanation Text};
-
-    \draw [arr] (n1) -- (n2);
-    \draw [arr] (n2) -- (n3);
-\end{tikzpicture}
-\caption{\textbf{LLM Scribe Explanation and Audit Trail}. Generating human-readable fraud audit trails without mutating scores.}
-\label{fig:p08_fig3}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\begin{tikzpicture}[
-    node distance=1.4cm and 1.8cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
-    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [b1] (n1) {LLM Prediction};
-    \node [b2, right=of n1] (n2) {\textbf{Noisy Sensor Fraud Signal Decomposition}\\Noise Decomposer};
-    \node [b3, right=of n2] (n3) {Signal vs Noise Ratio};
-
-    \draw [arr] (n1) -- (n2);
-    \draw [arr] (n2) -- (n3);
-\end{tikzpicture}
-\caption{\textbf{Noisy Sensor Fraud Signal Decomposition}. Decomposing LLM scoring errors into epistemic vs aleatoric noise.}
-\label{fig:p08_fig4}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\begin{tikzpicture}[
-    node distance=1.4cm and 1.8cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
-    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [b1] (n1) {Hybrid Input Data};
-    \node [b2, right=of n1] (n2) {\textbf{Tabular vs Textual Feature Fusion Architecture}\\Fusion Decision Engine};
-    \node [b3, right=of n2] (n3) {Cost-Optimal Fraud Verdict};
-
-    \draw [arr] (n1) -- (n2);
-    \draw [arr] (n2) -- (n3);
-\end{tikzpicture}
-\caption{\textbf{Tabular vs Textual Feature Fusion Architecture}. Evaluating hybrid tabular scorer and textual scribe integration.}
-\label{fig:p08_fig5}
-\end{figure}
-
-
-
-\begin{figure}[htbp]
-\centering
-\begin{tikzpicture}[
-    node distance=1.4cm and 1.8cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
-    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [b1] (n1) {Transaction Row};
-    \node [b2, right=of n1] (n2) {\textbf{Transaction Textualization Pipeline}\\Textualizer Parser};
-    \node [b3, right=of n2] (n3) {LLM Prompt Input};
-
-    \draw [arr] (n1) -- (n2);
-    \draw [arr] (n2) -- (n3);
-\end{tikzpicture}
-\caption{\textbf{Transaction Textualization Pipeline}. Formatting credit card tables to text prompts.}
-\label{fig:p08_fig1}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\begin{tikzpicture}[
-    node distance=1.4cm and 1.8cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
-    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [b1] (n1) {Tabular Data};
-    \node [b2, right=of n1] (n2) {\textbf{XGBoost Score Thresholding}\\XGBoost Scorer};
-    \node [b3, right=of n2] (n3) {Decision Verdict};
-
-    \draw [arr] (n1) -- (n2);
-    \draw [arr] (n2) -- (n3);
-\end{tikzpicture}
-\caption{\textbf{XGBoost Score Thresholding}. Cost-optimal decision boundary for tabular scorer.}
-\label{fig:p08_fig2}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\begin{tikzpicture}[
-    node distance=1.4cm and 1.8cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
-    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [b1] (n1) {XGBoost Decision};
-    \node [b2, right=of n1] (n2) {\textbf{LLM Scribe Explanation and Audit Trail}\\LLM Scribe Module};
-    \node [b3, right=of n2] (n3) {Audit Explanation Text};
-
-    \draw [arr] (n1) -- (n2);
-    \draw [arr] (n2) -- (n3);
-\end{tikzpicture}
-\caption{\textbf{LLM Scribe Explanation and Audit Trail}. Generating human-readable fraud audit trails without mutating scores.}
-\label{fig:p08_fig3}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\begin{tikzpicture}[
-    node distance=1.4cm and 1.8cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
-    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [b1] (n1) {LLM Prediction};
-    \node [b2, right=of n1] (n2) {\textbf{Noisy Sensor Fraud Signal Decomposition}\\Noise Decomposer};
-    \node [b3, right=of n2] (n3) {Signal vs Noise Ratio};
-
-    \draw [arr] (n1) -- (n2);
-    \draw [arr] (n2) -- (n3);
-\end{tikzpicture}
-\caption{\textbf{Noisy Sensor Fraud Signal Decomposition}. Decomposing LLM scoring errors into epistemic vs aleatoric noise.}
-\label{fig:p08_fig4}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\begin{tikzpicture}[
-    node distance=1.4cm and 1.8cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
-    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [b1] (n1) {Hybrid Input Data};
-    \node [b2, right=of n1] (n2) {\textbf{Tabular vs Textual Feature Fusion Architecture}\\Fusion Decision Engine};
-    \node [b3, right=of n2] (n3) {Cost-Optimal Fraud Verdict};
-
-    \draw [arr] (n1) -- (n2);
-    \draw [arr] (n2) -- (n3);
-\end{tikzpicture}
-\caption{\textbf{Tabular vs Textual Feature Fusion Architecture}. Evaluating hybrid tabular scorer and textual scribe integration.}
-\label{fig:p08_fig5}
-\end{figure}
-
+Conflicting top-$K$ counts, per-cohort call totals, calibration values,
+bootstrap tie rules, and cross-domain D-label definitions are not reconciled
+by selecting a convenient iteration. In particular ECE 0.99 is worse, not
+better, than 0.17--0.21. A deterministic identical-score comparison has
+zero decision flips by construction. Unrelated RL telemetry and evolving
+cross-paper density tables are excluded, not evidence about fraud decisions.
+\section{Remaining requirements}
+Before this study can support a comparative publication, recover the exact
+row manifests, fit/configuration identities, predictions and costs; verify
+train/test disjointness, then recompute matched-row metrics and uncertainty.
+Do not infer human expert validation, deployment efficacy or language-model
+roles from this synthetic observation. All such claims remain unestablished.
 \end{document}

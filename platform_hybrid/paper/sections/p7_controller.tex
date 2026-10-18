@@ -1,6 +1,6 @@
 % Pillar-7: operationalization -- zvf-triage callback + adaptive-G controller + E3 audit
 \section{Operationalization: the \texttt{zvf-triage} Callback and the
-Adaptive-$G$ Controller}
+Adaptive-\texorpdfstring{$G$}{G} Controller}
 \label{sec:p7-controller}
 \label{sec:p7-controller-family}
 
@@ -456,7 +456,7 @@ methods: Dualformer-Auto cost ratio $0.655$ (\texttt{grpo}), $0.677$
 (\texttt{aero}), $0.621$ (\texttt{gift}), $0.673$ (\texttt{areal}),
 all with bootstrap CIs $[0.56, 0.74]$.
 
-\subsection{Per-prompt hindsight-optimal $G'$ analysis}
+\subsection{Per-prompt hindsight-optimal \texorpdfstring{$G'$}{G'} analysis}
 \label{sec:p7-per-prompt-optimal-g}
 
 \paragraph{Setup.}
@@ -1193,7 +1193,7 @@ We replay three per-step controllers on the same N10 panel used in
 \item \textbf{C3} Hybrid@$0.7{+}0.2$ ($G_{\mathrm{esc}}{=}16$ on $z_t \in [\tau, \tau{+}\delta)$, $G_{\mathrm{des}}{=}4$ on $z_t \geq \tau{+}\delta$, $G_{\mathrm{base}}$ otherwise) --- the unified §4.5 plan.
 \end{itemize}
 
-\begin{table}[h]
+\begin{table}[ht]
 \centering
 \small
 \begin{tabular}{lrrr}
@@ -1220,7 +1220,7 @@ $\geq 1 - 2 \times 0.025 = 0.95$.}
 Treating the $5$ seeds as iid draws from a hypothetical seed population
 and bootstrapping $B{=}2000$ replicate samples per contrast:
 
-\begin{table}[h]
+\begin{table}[ht]
 \centering
 \small
 \begin{tabular}{lrrl}
@@ -1295,7 +1295,7 @@ C3 (Hybrid@$0.7{+}0.2$) per-(method, step) on the N2 four-method
 40-step trajectories ($G_{\mathrm{base}}{=}8$, total $4 \times 40 = 160$
 step-units):
 
-\begin{table}[h]
+\begin{table}[ht]
 \centering
 \small
 \begin{tabular}{lrrrrr}
@@ -1338,7 +1338,7 @@ exposure is only $1$--$2$ steps; the panel-conditional unification
 license holds qualitatively (C3 saves at least 8 G per sat-band step)
 but the per-method bootstrap cannot certify it.
 
-\begin{table}[h]
+\begin{table}[ht]
 \centering
 \small
 \begin{tabular}{lrrr}
@@ -1412,7 +1412,7 @@ stdlib only); outputs in
 \texttt{experiments/results/p5p8/p7\_hybrid\_n2\_\{per\_step.tsv,
 per\_method.tsv, summary.json\}}. Seed $20260704$, $n_{\mathrm{boot}}{=}2000$.
 
-\subsection{$\tau$-sensitivity sweep with seed-robustness bootstrap CIs on the N10 panel}
+\subsection{\texorpdfstring{$\tau$}{\tau}-sensitivity sweep with seed-robustness bootstrap CIs on the N10 panel}
 \label{sec:p7-tau-sweep}
 
 The previous subsections fixed the controller's \emph{operating point}
@@ -1501,7 +1501,7 @@ summary.tsv, ci.tsv, summary.json\}} ($150 + 30 + 30$ rows). Seed
 $20260704$, $n_{\mathrm{boot}}{=}2000$, $G_{\mathrm{base}}{=}8$,
 $G_{\mathrm{esc}}{=}16$, $G_{\mathrm{des}}{=}4$, $\delta{=}0.10$.
 
-\begin{table}[h]
+\begin{table}[ht]
 \centering
 \small
 \begin{tabular}{lrrrrrr}
@@ -1997,7 +1997,7 @@ oracle on $3/4$ methods.
 per\_prompt,summary,boot\}.\{tsv,json\}}. Seed $59001$,
 $n_{\mathrm{boot}}{=}2000$, $n_{\mathrm{methods}}{=}4$,
 $n_{\mathrm{steps}}{=}40$, $n_{\mathrm{prompts}}{=}16$.
-\subsection{Controller trigger $\times$ anti-herding $\delta_{\mathrm{div}}$
+\subsection{Controller trigger \texorpdfstring{$\times$}{x} anti-herding \texorpdfstring{$\delta_{\mathrm{div}}$}{\delta\_div}
 paired counterfactual (iter 67)}
 \label{sec:p7-controller-antiherding}
 
@@ -2084,8 +2084,15 @@ Paired-step bootstrap $B{=}2000$, $\alpha{=}0.05$,
 $n_{\mathrm{methods}}{=}4 \times 3 \text{ controllers} \times 5 \tau = 60$ rows.
 
 \subsection{Per-prompt Dualformer-Auto reproduce + bootstrap CIs on
-the iter-67 $\delta_{\mathrm{div}}$-triage headline (iter 71)}
+the iter-67 \texorpdfstring{$\delta_{\mathrm{div}}$}{\delta\_div}-triage headline (iter 71)}
 \label{sec:p7-per-prompt-dualformer}
+
+\paragraph{Retraction context.}
+Consistent with the retraction notice of \S\ref{sec:p7-controller-antiherding},
+the $\delta_{\mathrm{div}}$ metric evaluated here is an estimator artefact,
+not a measure of physical rollout herding. This subsection is retained
+solely as an audit record of the per-prompt counterfactual comparison
+against Dualformer-Auto.
 
 \paragraph{Motivation.}
 The iter-67 row-78 headline quantifies the $\delta_{\mathrm{div}}$-triage
@@ -2271,8 +2278,14 @@ $n_{\mathrm{prompts}}{=}16$, $n_{\mathrm{obs/method}}{=}640$,
 $n_{\mathrm{obs\ total}}{=}2560$.
 
 \subsubsection{Joint controller: Dualformer-Auto on contrast +
-$\delta_{\mathrm{div}}$-triage on fired steps (iter 72)}
+\texorpdfstring{$\delta_{\mathrm{div}}$}{\delta\_div}-triage on fired steps (iter 72)}
 \label{sec:p7-joint-controller}
+
+\paragraph{Retraction context.}
+As established above, $\delta_{\mathrm{div}}$-triage is an estimator artefact
+and not a valid measure of rollout diversity. The joint controller evaluation
+is recorded here as an exploratory baseline to document the interaction
+between difficulty de-escalation and step-level escalation.
 
 The iter-71 prospective hypothesis asked: \emph{can a single
 controller combine Dualformer-Auto (de-escalate contrast to $G'{=}2$)

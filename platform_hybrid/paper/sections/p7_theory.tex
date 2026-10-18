@@ -29,7 +29,7 @@ the policy is most uncertain, and starves at both ends. Three consequences
 follow; proofs are deferred to Appendix~\ref{sec:p7-appendix}, and each
 theorem is paired here with the measurement that could have falsified it.
 
-\subsection{T1: the expected ZVF indicator is $p^G + (1-p)^G$}
+\subsection{T1: the expected ZVF indicator is \texorpdfstring{$p^G + (1-p)^G$}{p\string^G + (1-p)\string^G}}
 \label{sec:p7-t1}
 \textbf{Theorem 1.} \emph{Under the binomial model, the expected value of the
 per-group ZVF indicator is exactly $h_G(p) = p^G + (1-p)^G$; aggregated over
@@ -52,7 +52,7 @@ prediction at every $G$ because the binomial model evaluates $h_G$ at the
 prompts whose $h_G \approx 1$ (Jensen gap; this is the U-shape of
 Section~\ref{sec:p7-ushape} acting within a single run).
 
-\subsection{T2: larger $G$ lowers ZVF}
+\subsection{T2: larger \texorpdfstring{$G$}{G} lowers ZVF}
 \label{sec:p7-t2}
 \textbf{Theorem 2.} \emph{For every $p \in (0,1)$, $h_G(p)$ is strictly
 decreasing in $G$; hence expected ZVF falls monotonically as group size
@@ -117,7 +117,7 @@ $G$ & Mean ZVF & $h_G(\bar p)$ & $\bar p$ (train reward) & Held-out acc.\ (SE) \
 \end{tabular}
 \end{table}
 
-\subsection{T3: gradient magnitude tracks $p(1-p)$}
+\subsection{T3: gradient magnitude tracks \texorpdfstring{$p(1-p)$}{p(1-p)}}
 \label{sec:p7-t3}
 \textbf{Theorem 3.} \emph{With unnormalized group-centered advantages
 $A_i = R_i - \hat p$, the mean absolute advantage in a group is exactly

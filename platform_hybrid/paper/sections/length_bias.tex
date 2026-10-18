@@ -23,7 +23,7 @@ with reward, then collapses when the reward model saturates. The
 Dr.~GRPO correction (per-question rather than per-completion
 normalisation) is offered as a remedy. We have
 \emph{per-step traces} of $(\texttt{mean\_reward},
-\texttt{mean\_comp\_len})$ for ten GRPO runs and eight Dr.~GRPO runs
+\texttt{mean\_comp\_len})$ for eight GRPO runs and eight Dr.~GRPO runs
 across two tasks, and we ask: does the length-vs-reward trajectory
 show the signature on our data, and does Dr.~GRPO break it?
 
@@ -202,19 +202,19 @@ across all $16$ runs at $30$--$40$ step horizons.}
 \label{tab:length-bias-per-run}
 \end{table}
 
-\paragraph{Cross-validation against §5.X instability metrics.}
-The new per-step numbers agree with the existing instability index
-in §5.X: the four GSM8K-CoT runs are classified there as
+\paragraph{Cross-validation against aggregate instability metrics.}
+The new per-step numbers agree with the benchmark's aggregate instability index:
+the four GSM8K-CoT runs are classified there as
 \emph{not verbosity-trap} (peak does not precede terminal drop),
 and the per-step analysis here classifies them the same way
-(flag $=0$). For the two arithmetic runs that are flagged in
-§5.X (peak before 65\% training with terminal below 90\% of
+(flag $=0$). For the two arithmetic runs that are flagged by
+aggregate criteria (peak before 65\% training with terminal below 90\% of
 peak), the new per-step view shows a different reason: the model
 \emph{does} saturate above $0.98$, but it does so by compressing
-length, not by inflating it. We therefore read the §5.X verbosity-trap
+length, not by inflating it. We therefore read the aggregate verbosity-trap
 flag as a \emph{generic} instability detector, not a length-bias
 detector specifically; the present pillar provides the direct
-length-bias evidence the §5.X summary alludes to.
+length-bias evidence the aggregate summary alludes to.
 
 \paragraph{What would falsify this picture.}
 If a follow-up experiment ran $200{+}$ steps on GSM8K-CoT and
@@ -272,7 +272,7 @@ iteration.
 \cmidrule(lr){2-4}\cmidrule(lr){5-7}
 Horizon & Easy & Hard & Ref. & Easy & Hard & Ref. \\
 \midrule
-$30$--$40$ steps (this paper)         & compresses & compresses & §5.X, here & grows    & flat    & §5.X, here \\
+$30$--$40$ steps (this paper)         & compresses & compresses & Sec.~\ref{sec:length-bias-pillar} & grows    & flat    & Sec.~\ref{sec:length-bias-pillar} \\
 $200{+}$ steps (Dr.~GRPO paper)        & grows      & grows      & \cite{tong2025drgrpo} & collapses & collapses & \cite{tong2025drgrpo} \\
 \bottomrule
 \end{tabular}%
@@ -298,6 +298,7 @@ length-\emph{compressing} run as a length-\emph{inflation} run.
 We therefore add the per-step Spearman triple to the recommended
 diagnostic stack for any future length-bias audit on this benchmark.
 
+\endinput % Elevated analyses require reconciliation and are not retained evidence.
 \subsection{Elevated analysis: trap-onset detection, paired bootstrap CIs, decile binned coupling, and a 100-step cross-validation}
 \label{sec:length-bias-elevated}
 

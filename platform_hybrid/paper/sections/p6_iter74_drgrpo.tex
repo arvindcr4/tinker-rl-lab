@@ -94,6 +94,7 @@ would ground the entry; ``Closest proxy'' names the closest existing
 repository data (most are N2-same-stack-isolated run on the canonical
 40-step paired tensor).}
 \label{tab:p6-zero-evidence-audit}
+\resizebox{\linewidth}{!}{%
 \begin{tabular}{@{}p{0.13\linewidth} c p{0.18\linewidth} p{0.27\linewidth} p{0.27\linewidth}@{}}
 \toprule
 delta\_id & $n_{\text{comp}}$ & core claim (one-line) & Needed panel & Closest proxy \\
@@ -103,7 +104,8 @@ delta\_id & $n_{\text{comp}}$ & core claim (one-line) & Needed panel & Closest p
 \texttt{delta\_liteppo}   & 4 & remove value head + clip advantages           & N2-same-stack 5-method (LitePPO replacing GRPO) & no tinker LitePPO rollout log \\
 \texttt{delta\_reinforce} & 1 & vanilla REINFORCE with group-relative baseline & N2-same-stack 5-method (REINFORCE replacing GRPO) & no tinker REINFORCE rollout log \\
 \bottomrule
-\end{tabular}
+\end{tabular}%
+}
 \end{table}
 
 The structural pattern is uniform: all four entries are PPO-family

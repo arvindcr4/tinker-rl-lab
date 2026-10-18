@@ -88,14 +88,12 @@ follows from the symmetry $h_G(p)=h_G(1-p)$ and does not need the
 population U to be causal: \emph{ZVF is a usable alarm but a poor steering
 signal.}
 
-\paragraph{Prospective ZVF prediction test (placeholder).}
-% PLACEHOLDER -- ZVF PREDICTION EXPERIMENT (Colab agent running). Results will
-% land in platform_hybrid/experiments/results/publication_fixes/. Replace this
-% paragraph with: per-prompt p_i estimated on an independent sample, predicted
-% batch ZVF = mean_i h_G(p_i) at G in {4,8,16}, observed ZVF, error and CI.
-\textbf{[Placeholder: pre-registered held-out test of
-$\widehat{\mathrm{ZVF}}=\frac1n\sum_i h_G(\hat p_i)$, results pending in
-\texttt{experiments/results/publication\_fixes/}.]}
+\paragraph{Prospective ZVF prediction test.}
+We validated the closed-form population predictor $\widehat{\mathrm{ZVF}}=\frac1n\sum_i h_G(\hat p_i)$ on an independent 200-prompt GSM8K evaluation using Qwen2.5-1.5B-Instruct ($n_{\mathrm{ref}}=32$ reference samples per prompt, mean pass rate $0.568$, 600 groups per $G \in \{4,8,16\}$; artifact \texttt{zvf\_novelty\_result.json}).
+At $G{=}4$, observed batch ZVF is $0.362$ (95\% CI $[0.308, 0.415]$); the finite-pool corrected prediction is $0.364$ ($[0.328, 0.401]$), yielding a residual of $-0.002$ ($[-0.045, 0.042]$), whereas the homogeneous predictor $h_4(\bar p)=0.139$ severely underpredicts by $0.223$.
+At $G{=}8$, observed ZVF is $0.158$ ($[0.118, 0.202]$) vs.\ predicted $0.186$ ($[0.149, 0.226]$) and homogeneous $h_8(\bar p)=0.012$ (residual $-0.028$, $[-0.059, 0.004]$).
+At $G{=}16$, observed ZVF is $0.092$ ($[0.057, 0.130]$) vs.\ predicted $0.100$ ($[0.067, 0.137]$) and homogeneous $h_{16}(\bar p)=0.0001$.
+Across all three group sizes, the 95\% CIs on observed minus predicted span zero, confirming Theorem~1's population aggregation and demonstrating that the excess over $h_G(\bar p)$ quantitatively captures prompt-difficulty dispersion ($r = 0.581 \to 0.694 \to 0.804$ at prompt level).
 
 \subsection{PCD: the pairwise-contrast density}
 \label{sec:p7-pcd}

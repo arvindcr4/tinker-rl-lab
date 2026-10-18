@@ -26,6 +26,8 @@ The Wilson interval uses a question-level binomial working model within the sele
 
 ## Review design and coverage
 
+**Specification gaps.** The public method record [P2] gives the prompt suffix: “Solve the problem. Show your calculation briefly, then put the final numeric answer on its own line in the format: #### <answer>.” Thinking is disabled, but the complete rendered chat-template bytes are not provided here. The recorded ordering template is `seed:order:question_digest`; exact byte-level normalization conventions are not fully specified by that shorthand. Selected-case seed lists and relative affine strides are available, but the absolute seed-origin formula is not published and is not reconstructed from guessed constants. Reviewer model checkpoint identities and the selection rule for the 105 inspected non-success fresh responses are not recovered in this derivative. The 143 fresh responses therefore form a selected audit set, not a random validation sample. Parser-v2 code is identified by its hash in [P2], not fully specified by this prose. Independent human adjudication and release of audited raw texts remain outstanding; neither is represented as completed.
+
 The first review solved the questions before comparing reference answers, then inspected the required model outputs. A second reference review was separately masked from the first judgments and model outputs. Final reconciliation compared the exact question, reference and annotations, retaining disagreements rather than forcing consensus. All stages were assistant-assisted. Separate masking and repeat review do not provide independent human validation or rule out shared model biases.
 
 The first output audit covers all 64 cases, all 512 initial responses and 143 required fresh responses: 655 responses in total, including all 38 primary-success outputs. The final mechanical coverage receipt verifies those identities and stored logic; it is not an independent mathematical adjudication. Six initially missing reasoning-caveat fields were clarified in a separately attributed supplement without altering the original fields, scores or verdicts. No coverage or annotation defect remains unresolved in the final receipt.
@@ -88,7 +90,7 @@ This supports only a narrow pass on the four observed extraction changes. It doe
 
 ## Conclusion
 
-C1 establishes an auditable frozen scoring result and three conservative numerical counterexamples to the idea that eight observed wrong answers force all future answers to be wrong under this checkpoint, task and decoder. It also demonstrates why selection on exact-match zeros can enrich reference faults, ambiguity and representation mismatches. The unchanged 11/64 score and the 3/64 corroborated witness count answer different questions and must be reported together.
+C1 reports a bounded frozen scoring result under the stated source-availability constraints and three conservative numerical counterexamples to the idea that eight observed wrong answers force all future answers to be wrong under this checkpoint, task and decoder. It also demonstrates why selection on exact-match zeros can enrich reference faults, ambiguity and representation mismatches. The unchanged 11/64 score and the 3/64 corroborated witness count answer different questions and must be reported together.
 
 A next experimental step would require a new prospective design with independently reviewed references, explicit unit rules, random or fully enumerated follow-up selection, multiple seeds and a matched rollout budget. Any claim about training utility would additionally require an actual training intervention and held-out evaluation. Those experiments were not performed here. Historical V2 findings remain preserved as separate evidence.
 
@@ -134,7 +136,7 @@ The following ledger accounts for every frozen primary event. C labels use the z
 
 **C47 Cake and ham.** Cake-day overlap with any ham day during the week has probability 3/5 = 60%. A specified/randomly sampled test day has joint probability 3/25 = 12%. Both reviewer rounds retain sampling-unit ambiguity; all 5 fresh 12 matches use the latter event.
 
-**C50 Reggie marbles.** With starting Reggie count R and losses L,90 = R+10 × (9-2 L), so R = 20 L. His friend's 100 does not set R. Multiple feasible starts/losses exist. Gold's net-loss shortcut is invalid; all 3 fresh 1 matches have defective justifications. There is no uniquely correct loss count.
+**C50 Reggie marbles.** With starting Reggie count R and losses L, 90 = R + 10 × (9 - 2L), so R = 20L. His friend's 100 does not set R. Multiple feasible starts/losses exist. Gold's net-loss shortcut is invalid; all 3 fresh 1 matches have defective justifications. There is no uniquely correct loss count.
 
 
 

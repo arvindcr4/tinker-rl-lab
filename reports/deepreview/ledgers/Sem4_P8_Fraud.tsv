@@ -1,0 +1,19 @@
+location	claim_text	value	source_artifact	generator_script	status
+paper_P8_fraud.tex Sec.1	full synthetic dataset rows (positives)	50,000 (719)	fraud_data.csv sha256 df828df3...; review_2026-10-18/Sem4_P8_Fraud/verify.json	platform_local/train_xgboost.py; tools/review_ledger/Sem4_P8_Fraud_verify.py	verified
+paper_P8_fraud.tex Sec.1	training split rows (positives)	40,000 (575)	train_data.csv sha256 6dfa30ae...; verify.json	platform_local/train_xgboost.py; tools/review_ledger/Sem4_P8_Fraud_verify.py	verified
+paper_P8_fraud.tex Sec.1	test split rows (positives)	10,000 (144)	test_data.csv sha256 52bc2b72...; verify.json	platform_local/train_xgboost.py; tools/review_ledger/Sem4_P8_Fraud_verify.py	verified
+paper_P8_fraud.tex Sec.1	make_classification parameters	20 feat/10 inf/2 red/2 clusters/weights (0.99,0.01)/flip_y 0.01/class_sep 0.8/seed 42; split 80/20 stratified seed 42	platform_local/train_xgboost.py	platform_local/train_xgboost.py	verified
+paper_P8_fraud.tex Sec.1	realised positive rate	719/50,000 = 1.44%	verify.json	tools/review_ledger/Sem4_P8_Fraud_verify.py	recomputed
+paper_P8_fraud.tex Sec.1	aggregates are deterministic row functions of V1-V20	true	verify.json (aggregates_deterministic_of_V1_V20)	tools/review_ledger/Sem4_P8_Fraud_verify.py	verified
+paper_P8_fraud.tex Sec.2	XGBoost ROC-AUC / precision / recall / F1	0.794241240530303 / 0.723404255319149 / 0.2361111111111111 / 0.35602094240837695	xgboost_results.json	platform_local/train_xgboost.py	verified
+paper_P8_fraud.tex Sec.2	inference duration per 10,000-row batch	0.006184816360473633 s	xgboost_results.json (infer_time_sec_per_10k)	platform_local/train_xgboost.py	verified
+paper_P8_fraud.tex Sec.2	quick-artifact XGBoost AUC (separate unreleased wrapper)	0.7955	platform_hybrid/experiments/results/quick_20260704/qp8_fraud.tsv	unreleased comparison wrapper (PID 1017459 per launch_log.md); code not in repo	verified
+paper_P8_fraud.tex Sec.2	CPU refit AUC, released config, disjoint splits, xgboost 3.3.0	0.8019 (0.801879706664863)	review_2026-10-18/Sem4_P8_Fraud/verify.json	tools/review_ledger/Sem4_P8_Fraud_verify.py	recomputed
+paper_P8_fraud.tex Sec.2	SFT model / LoRA rank / seed / run	Qwen/Qwen3.5-4B / 16 / seed 0 (one seed) / ek1b2cxn	W&B run ek1b2cxn config (scratchpad/tinker/wandb_runs.json)	platform_hybrid/experiments/tinker-runs/scripts/qp8_fraud_sft_20260704.py	verified
+paper_P8_fraud.tex Sec.2	SFT accuracy / AUC on 500-row 20%-enriched subset	0.792 / 0.48268	W&B ek1b2cxn summary eval_final/accuracy 0.792, eval_final/auc 0.482675; quick_20260704/qp8-fraud-sft.tsv	qp8_fraud_sft_20260704.py	verified
+paper_P8_fraud.tex Sec.2	enriched subset composition and constant-negative baseline	100 pos / 400 neg; 400/500 = 0.800	qp8_fraud_sft_20260704.py (ep=min(144, 500//5))	qp8_fraud_sft_20260704.py	verified
+paper_P8_fraud.tex Sec.2	full test split negatives	9,856	verify.json (10,000-144)	tools/review_ledger/Sem4_P8_Fraud_verify.py	recomputed
+paper_P8_fraud.tex Sec.3	test rows contained in historical fitting file; train/test overlap	10,000 of 10,000; 0	verify.json (test_rows_in_full, train_test_overlap); platform_modal/scripts/p5p8/_p8_common.py TRAIN=fraud_data.csv	tools/review_ledger/Sem4_P8_Fraud_verify.py	verified
+historical PDF Sec.4-7 (findings 1148,1151,1153-1160,1162,1163,1165-1170,1172)	in-sample calibration/ablation/cost/cohort/density tables (AUC 0.998-0.9999 etc.)	-	platform_modal/scripts/p5p8/p8_*.py fit on fraud_data.csv (contains test)	platform_modal/scripts/p5p8/_p8_common.py	removed
+historical PDF (finding 1173)	85x agentic cost reduction	85x	none	none	removed
+historical PDF	XGBoost 0.975 vs LLM 0.948	0.975 / 0.948	none found	none	removed

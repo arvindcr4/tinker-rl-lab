@@ -27,6 +27,8 @@ Both figures are vector TikZ (resolution is not an issue). If the coordinator wa
 font from `\tiny`/`\scriptsize` (pipeline.tex: 4× `\tiny`, 2× `\scriptsize`; taxonomy.tex: 1× `\tiny`,
 2× `\scriptsize`) to `\scriptsize`/`\footnotesize`; no content change.
 
+**Status: done** (branch `fix/shared-tikz-figures`). Labels were raised to `\scriptsize`/`\footnotesize` and the PDFs are now tracked. P2 #106 and #107 are fixed.
+
 ## Note for the build
 
 `*.pdf` is git-ignored, so `tikz/*.pdf` and any `figures/*.pdf` are absent from clean worktrees. The shared

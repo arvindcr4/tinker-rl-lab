@@ -27,21 +27,21 @@
   stage/.style={
     rectangle, rounded corners=5pt,
     fill=StageBg, draw=StageBlue, line width=0.85pt,
-    font=\scriptsize\bfseries, text=StageBlue,
-    inner sep=5pt, minimum width=1.65cm, minimum height=0.62cm,
+    font=\footnotesize\bfseries, text=StageBlue,
+    inner sep=4pt, minimum width=1.5cm, minimum height=0.62cm,
     align=center
   },
   % Step number circle
   stepnum/.style={
     circle, fill=NumberBg, text=white,
-    font=\tiny\bfseries,
-    inner sep=0pt, minimum size=0.38cm
+    font=\scriptsize\bfseries,
+    inner sep=0pt, minimum size=0.42cm
   },
   % GRPO branch node
   grponode/.style={
     rectangle, rounded corners=4pt,
     fill=GRPOBg, draw=GRPOBlue, line width=0.75pt,
-    font=\tiny, text=GRPOBlue,
+    font=\footnotesize, text=GRPOBlue,
     inner sep=4pt, minimum width=2.1cm, minimum height=0.52cm,
     align=center
   },
@@ -49,7 +49,7 @@
   pponode/.style={
     rectangle, rounded corners=4pt,
     fill=PPOBg, draw=PPOPurple, line width=0.75pt,
-    font=\tiny, text=PPOPurple,
+    font=\footnotesize, text=PPOPurple,
     inner sep=4pt, minimum width=2.1cm, minimum height=0.52cm,
     align=center
   },
@@ -57,8 +57,8 @@
   wbnode/.style={
     rectangle, rounded corners=4pt,
     fill=WBBg, draw=WBGreen, line width=0.75pt,
-    font=\scriptsize\bfseries, text=WBGreen,
-    inner sep=5pt, minimum width=1.65cm, minimum height=0.58cm,
+    font=\footnotesize\bfseries, text=WBGreen,
+    inner sep=4pt, minimum width=1.5cm, minimum height=0.58cm,
     align=center
   },
   % Flow arrows (main pipeline)
@@ -87,24 +87,24 @@
   \Stage{s1}{1}{Model\\Selection}{}
 
   % Stage 2: Hyperparameter Config
-  \Stage{s2}{2}{Hyperparam\\Config}{right=0.7cm of s1}
+  \Stage{s2}{2}{Hyperparam\\Config}{right=0.42cm of s1}
 
   % Stage 3: Training (branch point — label only, no fill here; 
   %   actual branching handled below)
-  \Stage{s3}{3}{Training}{right=0.7cm of s2}
+  \Stage{s3}{3}{Training}{right=0.42cm of s2}
 
   % Stage 4: Checkpoint
-  \Stage{s4}{4}{Checkpoint}{right=0.7cm of s3}
+  \Stage{s4}{4}{Checkpoint}{right=0.42cm of s3}
 
   % Stage 5: Evaluation
-  \Stage{s5}{5}{Evaluation}{right=0.7cm of s4}
+  \Stage{s5}{5}{Evaluation}{right=0.42cm of s4}
 
   % Stage 6: W&B Logging
-  \node[wbnode, right=0.7cm of s5] (s6) {W\&B\\Logging};
+  \node[wbnode, right=0.42cm of s5] (s6) {W\&B\\Logging};
   \node[stepnum, above left=-0.14cm and -0.14cm of s6.north west] {6};
 
   % Stage 7: Analysis
-  \Stage{s7}{7}{Analysis}{right=0.7cm of s6}
+  \Stage{s7}{7}{Analysis}{right=0.42cm of s6}
 
   % ── Main pipeline arrows ──────────────────────────────────────────────────
   \draw[mainarrow] (s1.east) -- (s2.west);
@@ -116,25 +116,23 @@
 
   % ── Branch: GRPO (Tinker) and PPO (Modal) paths below Stage 3 ────────────
 
-  % GRPO node (left branch)
-  \node[grponode, below left=0.8cm and 0.4cm of s3] (grpo_n)
-        {GRPO (Tinker)\\14 experiments};
-
-  % PPO node (right branch)
-  \node[pponode, below right=0.8cm and 0.4cm of s3] (ppo_n)
+  % PPO node (centred under Training) and GRPO node to its left
+  \node[pponode, below=0.8cm of s3] (ppo_n)
         {PPO (Modal)\\6 experiments};
+  \node[grponode, left=0.5cm of ppo_n] (grpo_n)
+        {GRPO (Tinker)\\14 experiments};
 
   % Arrows down from Training
   \draw[brancharrow, color=GRPOBlue]
         (s3.south) -- ++(0,-0.3) -| (grpo_n.north);
   \draw[brancharrow, color=PPOPurple]
-        (s3.south) -- ++(0,-0.3) -| (ppo_n.north);
+        (s3.south) -- (ppo_n.north);
 
-  % Arrows back up to Checkpoint
-  \draw[brancharrow, color=GRPOBlue, dashed]
-        (grpo_n.east) -- ++(0.3,0) |- (s4.south);
-  \draw[brancharrow, color=PPOPurple, dashed]
-        (ppo_n.east) -- ++(0.3,0) |- (s4.south);
+  % Both paths return to Checkpoint (merged dashed bus)
+  \draw[brancharrow, color=ArrowDark!70, dashed]
+        (grpo_n.south) -- ++(0,-0.3) -| (s4.south);
+  \draw[brancharrow, color=ArrowDark!70, dashed]
+        (ppo_n.east) -| (s4.south);
 
   % ── Background panel for branch area ─────────────────────────────────────
   \begin{scope}[on background layer]
@@ -144,8 +142,8 @@
   \end{scope}
 
   % ── Branch label ──────────────────────────────────────────────────────────
-  \node[font=\tiny, text=ArrowDark, below=0.22cm of ppo_n,
-        xshift=-0.5cm, align=center]
+  \node[font=\scriptsize, text=ArrowDark, below=0.45cm of grpo_n.south east,
+        xshift=0.25cm, align=center]
         {Platform-specific training paths};
 
 \end{tikzpicture}

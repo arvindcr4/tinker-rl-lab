@@ -1,7 +1,8 @@
 % =============================================================================
 % Stratified diagnostics for ZVF (NeurIPS 2026, GPT-5.5 Pro v5 review item).
-% Auto-derived from experiments/analysis/v5/{bootstrap,partial_corr}_table.csv.
-% Random seed 42; 10k bootstrap; 10k permutation.
+% Historically stated source experiments/analysis/v5/{bootstrap,partial_corr}_table.csv
+% is not in the repository or its git history; the values below cannot be regenerated.
+% Random seed 42; 10k bootstrap; 10k permutation (as originally stated).
 % Pool sizes: pooled original N=15 (earlier-draft cells); pooled extended
 % N=29 (every cell with released step-level traces); within-GSM8K N=19;
 % GSM8K model-varying N=7.
@@ -17,7 +18,7 @@ The task-FE degrees of freedom below require the actual design-matrix rank:
 one task code is not equivalent to multiple task indicator variables.
 Pending a ranked design matrix and cohort inventory, reported partial-test
 $p$-values and bootstrap intervals must not be used as validated inference.
-The $[+0.02,+0.14]$ range below concerns pooled controlled rows only;
+The $[+0.021,+0.136]$ range below concerns pooled controlled rows only;
 the within-GSM8K controlled row is $+0.420$. Permutation and parametric
 $t$-test $p$-values are distinct calculations, not contradictory replications.
 
@@ -50,9 +51,11 @@ crossing zero.}
 \paragraph{Partial correlations.}
 With task fixed effects, log group size, and pre-RL accuracy as controls
 (Table~\ref{tab:zvf-partials}); we never control for last-10 reward, the
-outcome. Adding task FE alone collapses the pooled $r$ from $-0.44$ to
-$-0.03$; with any combination of $\log G$ and base accuracy the partial $r$
-is between $+0.02$ and $+0.14$ and never significant.
+outcome. Adding task FE alone collapses the pooled $r$ from $-0.443$ to
+$-0.026$; in the pooled sample with task FE and any combination of $\log G$
+and base accuracy the partial $r$ is between $+0.021$ and $+0.136$ and never
+significant (within GSM8K with $\log G$ and base accuracy: $+0.420$,
+$p{=}0.094$).
 
 \begin{table}[htbp]
 \centering\small
@@ -71,7 +74,9 @@ GSM8K $+$ $\log G$ $+$ base acc                  & $+0.420$ & $15$ & $0.094$ & W
 \bottomrule
 \end{tabular}
 \caption{Partial Pearson correlations of mean ZVF with last-10 reward
-(\texttt{pingouin.partial\_corr}). Last-10 reward is the outcome and is never
+(\texttt{pingouin.partial\_corr}). The $p$-values are parametric two-sided
+$t$-test values, unlike the permutation $p_{\text{perm}}$ of
+Table~\ref{tab:zvf-bootstrap}. Last-10 reward is the outcome and is never
 on the right-hand side. Stack fixed effects are not reported (too little
 within-stack variation: $\le 3$ stacks with $\ge 2$ runs).}
 \label{tab:zvf-partials}
@@ -79,8 +84,8 @@ within-stack variation: $\le 3$ stacks with $\ge 2$ runs).}
 
 \paragraph{Interpretation.}
 The pooled correlation does not survive stratification: with task fixed
-effects $r$ collapses to $-0.03$, and on the largest within-task subset the
-sign flips to $+0.40$. The remaining within-GSM8K signal is underpowered,
+effects $r$ collapses to $-0.026$, and on the largest within-task subset the
+sign flips to $+0.401$. The remaining within-GSM8K signal is underpowered,
 with a 95\% CI that crosses zero. This is not evidence of absence---it is
 evidence that the pooled monotone story is not supported once the task
 confound is removed.

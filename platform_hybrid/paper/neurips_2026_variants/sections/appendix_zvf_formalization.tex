@@ -17,7 +17,8 @@ Fraction} (ZVF) as
 where $\widehat{\mathrm{Var}}$ is the unbiased sample variance and $G\ge2$.
 This exact statistic counts identical rewards and implies zero centered
 reward coefficients, not necessarily zero total-objective gradients.
-A separate near-constant telemetry statistic uses variance $\le10^{-6}$;
+A separate near-constant telemetry statistic, used only for logging and
+never as a gradient mask, uses variance $\le10^{-6}$;
 for real rewards that threshold does not imply zero coefficients. For example,
 $(0,0,0,10^{-4})$ has sample variance $2.5\times10^{-9}$ but nonzero centered
 rewards. For binary rewards the smallest mixed-group sample variance is

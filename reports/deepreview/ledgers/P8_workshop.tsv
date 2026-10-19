@@ -2,21 +2,21 @@ location	claim_text	value	source_artifact	generator_script	status
 Tab headline	Qwen3-8B peak/last-10	62.5%/34.4% (0.625/0.34375)	platform_hybrid/experiments/tinker-runs/results/scale_gsm8k_qwen3-8b.json	tinker_parallel_runner.py @711e87b18	verified
 Tab headline	Llama-3.1-8B-Inst peak/last-10	100%/84.4%	platform_hybrid/experiments/tinker-runs/results/scale_gsm8k_llama-8b-inst.json	tinker_parallel_runner.py @711e87b18	verified
 Tab headline	DeepSeek-V3.1 peak/last-10	100%/85.0%	platform_hybrid/experiments/tinker-runs/results/frontier_gsm8k_deepseek-v3.1.json	tinker_parallel_runner.py @711e87b18	verified
-Tab headline	Qwen3-235B peak/last-10	100%/100%	platform_hybrid/experiments/tinker-runs/results/frontier_gsm8k_qwen3-235b.json (run_id partial-from-console, 4-entry trace)	hand-entered	unsourced
+Tab headline	Qwen3-235B peak/last-10	100%/100%	platform_hybrid/experiments/tinker-runs/results/frontier_gsm8k_qwen3-235b.json (run_id partial-from-console, 4-entry trace)	hand-entered	removed
 Tab headline	Nemotron-120B peak/last-10	87.5%/16.2%	platform_hybrid/experiments/tinker-runs/results/frontier_gsm8k_nemotron-120b.json	tinker_parallel_runner.py @711e87b18	verified
-Tab headline	tool-use Qwen3-32B/Llama-8B	0%/0%	platform_hybrid/experiments/tinker-runs/results/cross_tool_{qwen3-32b,llama-8b-inst}.json	tinker_parallel_runner.py	verified
+Tab headline	tool-use Qwen3-32B/Llama-8B	0%/0%	platform_hybrid/experiments/tinker-runs/results/cross_tool_*.json	tinker_parallel_runner.py	verified
 Tab headline	TRL Qwen2.5-0.5B 5-seed mean/SD (synthetic addition, reward bug)	0.734/0.0703	platform_hybrid/experiments/results/modal_results_all.json trl_grpo_math[].final_accuracy	platform_modal/scripts/modal_run_experiments.py::run_grpo_math	verified
-Sec3 held-out	post-GRPO vs base; t, df, p	83.3% vs 82.0%; 1.32, 4, 0.256	platform_tinker/reports/final/gsm8k_heldout_seed{042,137,256,512,999}.json; gsm8k_base_control_200.json	platform_tinker/reports/final/evaluate_gsm8k_test.py	recomputed
-Sec3 group size	matched-budget G=2 last-10 reward	0.900/0.963	platform_hybrid/experiments/tinker-runs/results/er2b_g2_s{123,456}.json	live_zvf_probe / W&B zvf-training	verified
-Sec3 group size	matched-budget G=16 last-10 reward; final ZVF	0.322/0.389; <=0.25 final (0.375 within last 10, s456)	platform_hybrid/experiments/tinker-runs/results/er2b_g16_s{123,456}.json	live_zvf_probe / W&B zvf-training	recomputed
-Sec3/App C	token-budget apex G~32 at T>=16M; Table tokennorm	FALLBACK_ROWS	platform_hybrid/experiments/group_size_token_normalized.py L41-62	hand-entered dict	unsourced
-Run manifest	G=64 extrapolated row	N=0	none	none	unsourced
+Sec3 held-out	post-GRPO vs base; t, df, p	83.3% vs 82.0%; 1.32, 4, 0.256	platform_tinker/reports/final/gsm8k_heldout_seed*.json; gsm8k_base_control_200.json	platform_tinker/reports/final/evaluate_gsm8k_test.py	recomputed
+Sec3 group size	matched-budget G=2 last-10 reward	0.900/0.963	platform_hybrid/experiments/tinker-runs/results/er2b_g2_s*.json	live_zvf_probe / W&B zvf-training	verified
+Sec3 group size	matched-budget G=16 last-10 reward; final ZVF	0.322/0.389; <=0.25 final (0.375 within last 10, s456)	platform_hybrid/experiments/tinker-runs/results/er2b_g16_s*.json	live_zvf_probe / W&B zvf-training	recomputed
+Sec3/App C	token-budget apex G~32 at T>=16M; Table tokennorm	FALLBACK_ROWS	platform_hybrid/experiments/group_size_token_normalized.py L41-62	hand-entered dict	removed
+Run manifest	G=64 extrapolated row	N=0	none	none	removed
 Sec2/Tab1/App strat	r=-0.769 N=15; -0.443 N=29; +0.401 N=19; +0.126 N=7; partials	see paper	experiments/analysis/v5/*.csv (never committed)	unknown	unsourced
-Fig1c	r_within=+0.06	+0.06	figures/v2/workshop_killer.png (no generator)	none	unsourced
+Fig1c	r_within=+0.06	+0.06	figures/v2/workshop_killer.png (no generator)	none	removed
 App group-size	measured sweep held-out / ZVF / last-10	0.982/.988/.990/.978; .84/.76/.69/.63; last10 .977/.971/.973/.984	platform_hybrid/experiments/results/groupsize_zvf_sweep.tsv	experiments/modal/modal_groupsize_zvf_sweep.py	verified
 App group-size	505-task U(4),U(5),diff,CI	0.32914,0.32737,0.00177,[0.00082,0.00270]	platform_hybrid/experiments/results/zvf_iter46_per_prompt_isog.tsv	tools/review_ledger/P12_signal_starvation_recompute.py	recomputed
-Ethics Tab compute	itemised spend and runs	$40-55/$65/$25-30/...; 25/32/13	none	none	unsourced
-Ethics Tab carbon	GPU-h / kWh / CO2	~950 Tinker GPU-h etc.	none (L4 contradicted by modal_results_all.json elapsed 136-184 s/seed)	none	unsourced
+Ethics Tab compute	itemised spend and runs	$40-55/$65/$25-30/...; 25/32/13	none	none	removed
+Ethics Tab carbon	GPU-h / kWh / CO2	~950 Tinker GPU-h etc.	none (L4 contradicted by modal_results_all.json elapsed 136-184 s/seed)	none	removed
 Ethics limits	held-out split	first 200 GSM8K test items	platform_tinker/reports/final/evaluate_gsm8k_test.py	same	verified
 Sec0 gap	Qwen3-8B 512-cap truncation rate; truncated vs untruncated reward	99.0% of 5184; 0.287 vs 1.0 (n=51)	zvf-program/experiments-next/results/pool_qwen3-8b_train_n512_r32_s42.json	zvf-program/experiments-next common.py	verified
 Tab headline percentage display	TRL five-seed accuracy range/mean/SD, unit conversion only	62--81%; 73.4%; 7.0 percentage points (sample SD 7.0303 pp)	platform_hybrid/experiments/results/modal_results_all.json trl_grpo_math[].final_accuracy	python3 statistics.mean/stdev and min/max over seeds 42,123,456,789,1024; multiply by 100	recomputed

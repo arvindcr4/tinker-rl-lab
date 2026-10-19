@@ -1,68 +1,29 @@
 %REVIEW-ADDR: W2-groupsize-contradiction
 %REVIEW-ADDR: W3-gradient-utilization-def
 %REVIEW-ADDR: Q2-groupsize-token-normalized
-\section{Reconciling the Group-Size Result: Token-Budget-Normalized Sweeps}
+% The former token-budget-normalized sweep (Table groupsize-tokennorm, the
+% GE_tok estimator, and the "Reconciliation Statement") was removed: its cells
+% were the hand-entered FALLBACK_ROWS dict in
+% experiments/group_size_token_normalized.py, not measured runs.
+\section{Group-Size Evidence}
 \label{sec:appendix:group-size-reconcile}
 
-\subsection{The Apparent Contradiction}
+\subsection{What Was Measured}
 
-The fixed-step group-size results and the token-budget discussion of
-$G{\approx}32$ use different axes of comparison, which we make explicit here. In the
-measured fixed-step Qwen2.5-0.5B/arithmetic sweep
-(Table~\ref{tab:groupsize-measured}; a different model and task from the
-Qwen3-8B/GSM8K token-budget grid below), the
-last-10 training reward is essentially flat in $G$, with $G{=}16$
-numerically highest at $0.9837$, while held-out accuracy has its
-numerical apex at $G{=}8$ ($0.9900$). The separate single-seed
-Qwen3-8B/GSM8K fixed-step campaign runs at $G\in\{2,4,16,32\}$ are also
-non-monotone, with last-10 training reward between $0.29$ and $0.39$. Under a \emph{fixed number of
-optimizer steps}, larger $G$ costs proportionally more tokens per step,
-so a step-budget comparison benefits small $G$; under a \emph{fixed
-total token budget}, larger $G$ amortizes wasted (all-correct or
-all-incorrect) rollouts and yields higher effective gradient signal per
-token.
-
-\subsection{Formal Definition of Token-Budget Gradient Efficiency}
-
-To analyze the token-budget tradeoff we define a \emph{token-budget gradient
-efficiency} $\mathrm{GE}_{\text{tok}}$---a per-token quantity distinct from the
-main-text gradient utilization $\mathrm{GU}{=}1{-}\mathrm{ZVF}$ (a unit-free
-fraction); we use a separate symbol to avoid conflating the two. It is the
-expected squared policy-gradient-norm contribution per unit of token budget,
-restricted to rollouts whose group advantage is nonzero:
-\begin{equation}
-\label{eq:gu}
-\mathrm{GE}_{\text{tok}}(G) \;=\;
-\frac{\displaystyle\mathbb{E}\!\left[\,\|\nabla_\theta \mathcal{L}\|_2^{2}\,\cdot\,
-  \mathbb{1}\!\left[A_g \ne 0\right]\,\right]}
-{\displaystyle G \cdot \bar{L}_\text{rollout}},
-\end{equation}
-where $G$ is the number of rollouts per prompt (the group size),
-$A_g$ is the within-group advantage, $\bar{L}_\text{rollout}$ is the mean
-rollout length, and the expectation is per prompt-group. The script sets
-$K{=}1$ prompt-group replicate; we drop the redundant $K$ factor here, so
-the denominator $G\cdot\bar{L}_\text{rollout}$ is the token cost of one
-prompt-group.
-Intuitively, $\mathrm{GE}_{\text{tok}}$ penalizes compute spent on rollouts with
-zero centered group-relative reward contrast ($\mathbb{1}[A_g\!=\!0]$,
-i.e.~ZVF-group members) and rewards concentrating token budget where advantage is
-informative. The exact estimator used in Table~\ref{tab:groupsize-tokennorm}
-avoids explicit gradient storage and is
-$\widehat{\mathrm{GE}}_{\text{tok}}(G)
- = 55000\cdot(1 - \mathrm{ZVF})\cdot \widehat{\mathrm{Var}}_A
- / (G\cdot\bar{L}_\text{rollout})$,
-printed $\times 10^{-3}$ after the $55000$ calibration constant. Here
-$\widehat{\mathrm{Var}}_A$ is the stored pre-whitening
-(Bernoulli-scale) proxy advantage variance; the whitened advantage
-variance is $1$ by construction on non-degenerate groups and therefore
-cannot serve as this proxy.
-Because the $G$ in the denominator grows faster than the numerator saturates,
-$\widehat{\mathrm{GE}}_{\text{tok}}$ is monotone decreasing in $G$ in our sweep.
+Two group-size data sets exist, on different models and tasks. In the
+measured fixed-step Qwen2.5-0.5B/two-operand-addition sweep
+(Table~\ref{tab:groupsize-measured}), the last-10 training reward is
+essentially flat in $G$, with $G{=}16$ numerically highest at $0.9837$, while
+held-out accuracy has its numerical apex at $G{=}8$ ($0.9900$). The separate
+single-seed Qwen3-8B/GSM8K fixed-step campaign runs at $G\in\{2,4,16,32\}$
+are non-monotone, with last-10 training reward between $0.29$ and $0.39$.
+Under a fixed number of optimizer steps, larger $G$ costs proportionally more
+tokens per step, so neither set is a token-matched comparison. No
+token-matched $G$-sweep was trained; whether the best $G$ depends on the
+total token budget is an open hypothesis.
 
 \paragraph{The 505-task conditional utility audit (declared $\sqrt{G}$ proxy).}
-This audit uses a \emph{different, separately declared}
-cost proxy from $\widehat{\mathrm{GE}}_{\text{tok}}$ above, and the two must not
-be conflated. Its cohort is the 505 distinct (seed, problem) tasks with
+This audit uses a separately declared $\sqrt{G}$ cost proxy. Its cohort is the 505 distinct (seed, problem) tasks with
 measured per-task success probabilities $p_x$ for Qwen3-8B on GSM8K,
 restricted to $0.05<p_x<0.95$ as stated in the TSV header
 (\texttt{experiments/results/zvf\_iter46\_per\_prompt\_isog.tsv}; mean
@@ -75,110 +36,18 @@ i.e.\ mean non-degenerate yield per $\sqrt{G}$ cost unit. On this cohort
 $U(4){=}0.32914$ and $U(5){=}0.32737$, so $G{=}4$ is selected over $G{=}5$ by
 $0.00177$ (task-resampling bootstrap 95\% interval $[0.00082,0.00270]$;
 recomputed from the released $p_x$ file). Because the proxy divides by
-$\sqrt{G}$ rather than by the linear token cost $G\cdot\bar{L}$ in
-Eq.~\eqref{eq:gu}, its optimum need not agree with
-$\widehat{\mathrm{GE}}_{\text{tok}}$ or with held-out accuracy at fixed tokens:
-it is a cohort- and objective-conditional selection, reported as such.
+$\sqrt{G}$ rather than by the linear token cost of a group, its optimum need
+not agree with held-out accuracy at fixed tokens: it is a cohort- and
+objective-conditional selection, reported as such.
 Difficulty stratification on the same cohort (mean yield
 $Y_G=\mathbb{E}[1-p_x^G-(1-p_x)^G]$ within $p_x$ bins) gives
 $Y_{32}-Y_4 = {+}0.29$ ($p_x<0.5$, $n{=}62$), ${+}0.15$ ($0.5\le p_x<0.75$,
 $n{=}157$), and ${+}0.45$ ($p_x\ge0.75$, $n{=}286$).
 
-\subsection{Token-Budget-Normalized Sweep}
-
-We re-analyze the $G$-sweep under a fixed \emph{token} rather than
-\emph{step} budget. Let $T$ denote total optimizer-visible tokens.
-At fixed $T$, for one prompt-group per step the number of optimizer
-steps is $n_\text{step}(G) = T / (G\cdot \bar{L})$, which decreases
-with $G$; prompts per step are folded into the $T$ accounting as in the
-script. The question is whether the larger per-step gradient
-signal of larger $G$ outweighs the reduced number of updates.
-
-\begin{table}[ht]
-\centering
-\small
-\begin{tabular}{lcccccc}
-\toprule
-Total tokens $T$ & Metric &
-$G{=}4$ & $G{=}8$ & $G{=}16$ & $G{=}32$ & $G{=}64$ \\
-\midrule
-\multirow{2}{*}{$1\text{M}$}  & heldout acc. & $0.41$ & $\mathbf{0.48}$ & $0.47$ & $0.42$ & $0.35$ \\
-                               & $\widehat{\mathrm{GE}}_{\text{tok}}$ ($\times 10^{-3}$) & $\mathbf{1.72}$ & $1.12$ & $0.66$ & $0.34$ & $0.17$ \\
-\multirow{2}{*}{$4\text{M}$}  & heldout acc. & $0.55$ & $0.67$ & $\mathbf{0.69}$ & $0.66$ & $0.58$ \\
-                               & $\widehat{\mathrm{GE}}_{\text{tok}}$ ($\times 10^{-3}$) & $\mathbf{2.13}$ & $1.46$ & $0.87$ & $0.48$ & $0.25$ \\
-\multirow{2}{*}{$16\text{M}$} & heldout acc. & $0.63$ & $0.78$ & $0.82$ & $\mathbf{0.84}$ & $0.80$ \\
-                               & $\widehat{\mathrm{GE}}_{\text{tok}}$ ($\times 10^{-3}$) & $\mathbf{2.33}$ & $1.61$ & $0.96$ & $0.56$ & $0.29$ \\
-\multirow{2}{*}{$64\text{M}$} & heldout acc. & $0.64$ & $0.80$ & $0.85$ & $\mathbf{0.88}$ & $0.87$ \\
-                               & $\widehat{\mathrm{GE}}_{\text{tok}}$ ($\times 10^{-3}$) & $\mathbf{2.42}$ & $1.66$ & $0.99$ & $0.58$ & $0.32$ \\
-\bottomrule
-\end{tabular}
-\caption{Token-budget-normalized $G$-sweep for GRPO on Qwen3-8B / GSM8K
-($\bar L = 384$). \emph{Illustrative reanalysis:} the cells are the
-hand-entered \texttt{FALLBACK\_ROWS} dict in
-\texttt{platform\_hybrid/experiments/group\_size\_token\_normalized.py}
-mapping $(T,G)\to\{\texttt{acc},\texttt{zvf},\texttt{var\_a}\}$; the CIs in
-the TSV are stored $\pm0.03$ bands, and
-$\widehat{\mathrm{GE}}_{\text{tok}}$ values equal
-$55000\cdot(1-\mathrm{ZVF})\cdot\mathrm{Var}_A/(G\cdot K\cdot\bar L)$ with
-$K{=}1$, $\bar L{=}384$, and $\mathrm{Var}_A$ the stored pre-whitening
-(Bernoulli-scale) proxy variance, printed $\times10^{-3}$ after the
-$55000$ calibration constant. These are reconstructed point estimates,
-\emph{not} freshly measured per-seed runs; per-cell seed counts are not
-retained and no measured $G\times T$ sweep over $\{4,8,16,32,64\}$ was
-executed. Bold in the accuracy row marks the per-row accuracy maximum,
-which shifts rightward with $T$: $G{=}8$ at $T{=}1\text{M}$,
-$G{=}16$ at $4\text{M}$, and $G{\approx}32$ at $T{\ge}16\text{M}$ (the
-canonical training budget) \emph{in the reconstruction}. This is a
-hypothesis for a measured sweep, not an empirical optimum. The
-token-budget gradient-efficiency estimator $\widehat{\mathrm{GE}}_{\text{tok}}$
-(Eq.~\ref{eq:gu}; distinct from the main-text $\mathrm{GU}{=}1{-}\mathrm{ZVF}$)
-is by contrast \emph{monotone decreasing} in $G$ at every budget (bold marks its
-maximum, always $G{=}4$): per-token gradient efficiency favors small $G$ and does
-\emph{not} on its own justify large $G$. See
-\texttt{experiments/group\_size\_token\_normalized.py}.}
-\label{tab:groupsize-tokennorm}
-\end{table}
-
-\paragraph{Accuracy-optimal $G$ shifts with budget.}
-The per-row accuracy-maximizing group size increases with the token budget
-($G^\star = 8, 16, 32, 32$ at $T = 1, 4, 16, 64\,\text{M}$) in the reconstructed
-grid, so the hypothesis is budget-dependent. We report this as a qualitative
-argmax pattern to test---no trained matched-budget $G{=}32$ arm validates it and
-no committed script fits a parametric
-inverted-U envelope or its bootstrap confidence interval, so we make no such
-quantitative claim.
-
-\subsection{Reconciliation Statement}
-
-We therefore revise the main-text claim as follows.
-\begin{quote}\itshape
-Under a fixed \emph{step} budget in the measured Qwen2.5-0.5B/arithmetic sweep
-(Table~\ref{tab:groupsize-measured}), last-10 reward is essentially flat
-in $G$ ($G{=}16$ numerically highest at $0.9837$; held-out apex
-$G{=}8$ at $0.9900$). Under fixed \emph{total tokens} at the canonical
-training scale
-used elsewhere in the paper ($T\!\ge\!16$M), $G{\approx}32$
-maximizes reconstructed held-out accuracy in this illustrative reanalysis; it
-is not a measured recommendation. (The
-per-token gradient-efficiency estimator $\widehat{\mathrm{GE}}_{\text{tok}}$ is
-\emph{not} co-maximized: it decreases monotonically in $G$, so it favors small
-$G$ and is reported only to show that the accuracy gain at large $G$ comes at a
-per-token efficiency cost.) In the reconstruction the accuracy argmax shifts
-rightward with $T$; whether the recommended $G$ depends on the compute budget
-is a hypothesis for measured token-matched runs.
-\end{quote}
-The ``more rollouts is always better'' heuristic is not supported, \emph{and} the opposite heuristic
-``small $G$ is always better'' is not supported either. The remaining
-hypothesis is a budget-dependent optimum, which needs measured
-token-matched runs; the script
-\texttt{experiments/group\_size\_token\_normalized.py} only illustrates it.
-
 \subsection{Measured Small-Scale Confirmation of the Inverted-U}
 \label{sec:appendix:group-size-measured}
 
-Because the token-normalized table above is an illustrative reanalysis, we
-separately ran a \emph{measured} group-size sweep to confirm the qualitative
-inverted-U with fresh per-seed data (Table~\ref{tab:groupsize-measured};
+We separately ran a \emph{measured} group-size sweep with fresh per-seed data (Table~\ref{tab:groupsize-measured};
 driver \texttt{experiments/modal/modal\_groupsize\_zvf\_sweep.py}, artifact
 \texttt{experiments/results/groupsize\_zvf\_sweep.tsv}). On the ungated
 \texttt{Qwen2.5-0.5B} with a verifiable correctness reward on two-operand

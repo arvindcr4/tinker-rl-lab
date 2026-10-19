@@ -17,92 +17,97 @@
 \maketitle
 \begin{abstract}
 Benchmark scores can conceal incomplete coverage, replacement scopes and missing
-execution evidence. We examine a receipt-bound reporting protocol through one
-language-model actor across fourteen agentic and reasoning lanes. The study is
-an evaluation-governance case study, not a test of the actor's reported
-40-step group-relative post-training. Original contracts and replacements have
-separate identities, denominators and dated states. The historical strictly
-complete scopes comprise two replacements, LAB-Bench public (450/1,967) and
-AgentDojo benign utility (88/97), and one original contract, VerilogEval
-(129/312). Omni-MATH is terminal-complete: its native accepted-row score is
-2,271/4,426 (51.31\%), versus 2,271/4,428 (51.29\%) over all dispositions.
-SWE-bench Pro resolves 2/731 public tasks, with substantial patch-format failures.
-Six later replacement executions are reported separately with protocol
-deviations. Extraction failures and serving differences prevent interpreting
-these scores as intrinsic capability. Eleven historical checks cover selected
-arithmetic and bindings, not independent reproduction. A separate small
-same-engine trained/base pilot is inconclusive for its seventeen primary
-outcome contrasts. The contribution is explicit scope and evidence accounting;
-content-level training overlap, full-scale matched baselines and some execution
-records remain unresolved. No training benefit, cross-suite aggregate or measured
-improvement in governance effectiveness is claimed.
-\keywords{Evaluation governance \and Agentic benchmarks \and Reproducibility \and Large language models}
+execution evidence. We report an experience case study of receipt-bound
+reporting for one language-model actor across fourteen agentic and reasoning
+lanes: 23 tracked original/replacement scopes, three historically strictly
+complete. It does not test the actor's reported 40-step group-relative
+post-training: with 35/40 zero-loss steps and a null pilot, lane scores are
+base-model-plus-serving measurements at pilot resolution. The strictly
+complete scopes are LAB-Bench public (450/1,967), AgentDojo benign utility with
+no attacks run (88/97) and the original VerilogEval contract (129/312).
+Omni-MATH is terminal-complete: 2,271/4,426 (51.31\%) accepted rows, versus
+2,271/4,428 (51.29\%) over all dispositions. SWE-bench Pro resolves 2/731
+public tasks, a two-stack generation mixture with substantial patch-format
+failures. Six later replacement executions are reported separately with
+deviations and attempt counts. Extraction failures and serving differences
+prevent reading scores as intrinsic capability. Receipts are unsigned
+operator-written JSON; eleven historical checks cover selected arithmetic and
+bindings, not reproduction. A small same-engine trained/base pilot is
+inconclusive for its seventeen primary outcome contrasts. Content-level
+training overlap, full matched baselines and some execution records remain
+unresolved. No training benefit, cross-suite aggregate or measured improvement
+in reporting or governance effectiveness is claimed.
+\keywords{Receipt-bound reporting \and Agentic benchmarks \and Reproducibility \and Large language models}
 \end{abstract}
 
 \section{Introduction}
 A benchmark score is interpretable only with its task population, actor,
 serving stack, grader and missing-outcome policy. Agentic evaluations can
 prepare hundreds of tasks while grading few, replace a gated benchmark with a
-public proxy, or retain a number after losing its execution source. Inadequate
-holdouts and reproducibility problems are established concerns in
-language-model and agent evaluation~\cite{liang2023helm,biderman2024lessons,kapoor2024agentsmatter};
-such harnesses standardize tasks and prompts, whereas our unit is a run's
-scope, coverage stage and evidence state. We study a concrete reporting response,
-using a heterogeneous fourteen-lane campaign with incomplete provenance.
+public proxy, or keep a number after losing its execution source. Holdout and
+reproducibility problems are established concerns in language-model and agent
+evaluation~\cite{liang2023helm,biderman2024lessons,kapoor2024agentsmatter};
+harnesses standardize tasks and prompts, whereas our unit is a run's scope,
+coverage stage and evidence state.
 
-The actor has reported group-relative policy-gradient training lineage.
-GRPO uses rewards relative to sampled groups~\cite{shao2024deepseekmath}, but
-this campaign neither verifies the exact historical objective nor identifies
-its causal effect. We therefore frame the study around evaluation governance;
-this framing was adopted after the results were known, so its lessons are post hoc.
-Training-suite separation is not proven item-level decontamination, and no
-blanket held-out claim is made.
+The actor has a reported group-relative policy-gradient (GRPO~\cite{shao2024deepseekmath})
+training lineage, but this campaign neither verifies the historical objective
+nor identifies its causal effect. The reporting framing was adopted after the
+results were known, so its lessons are post hoc. ``Receipt-bound'' means that
+each printed number carries its scope, counts and evidence tier; it asserts no
+enforcement regime. Training-suite separation is not item-level
+decontamination, and no held-out claim is made.
 
-Our contributions are:
-\begin{itemize}
-\item A \textbf{receipt-bound reporting structure} joining scope, actor, serving
-configuration, grader, outcomes and evidence availability
-\item A \textbf{coverage taxonomy} distinguishing preparation, attempts,
-native grading and original versus replacement contracts
-\item A \textbf{dated case study} retaining errors, incomplete scopes and
-protocol changes rather than pooling unlike results
-\item A \textbf{failure-attribution analysis} separating observable formatting
-failures from unverified explanations and training-effect claims
-\end{itemize}
-This is not a new optimizer or benchmark. No controlled study establishes
-that the reporting structure reduces errors, costs or replication time.
+Contributions are (i) a \textbf{receipt-bound reporting structure} joining
+scope, actor, serving configuration, grader, outcomes and evidence
+availability; (ii) a \textbf{coverage taxonomy} separating preparation,
+attempts, native grading and original versus replacement contracts; (iii) a
+\textbf{dated case study} retaining errors, incomplete scopes and protocol
+changes rather than pooling unlike results; and (iv) a \textbf{failure
+description} separating observed formatting failures from unverified
+explanations, stating where causes cannot be apportioned. This is not a new
+optimizer, benchmark or validated method; no controlled study shows that the
+structure reduces errors, costs or replication time.
 
 \section{Related Work and Benchmark Identity}
-Reinforcement-learning reproducibility studies~\cite{henderson2018deep} and the
-NeurIPS reproducibility program~\cite{pineau2020improving} motivate explicit
-execution records. Model cards~\cite{mitchell2019modelcards} and
-datasheets~\cite{gebru2021datasheets} organize disclosures at model and dataset
-level. The LM Evaluation Harness~\cite{biderman2024lessons} standardizes
-evaluation tasks, and the Agentic Benchmark Checklist~\cite{zhu2025abc} audits
-outcome validity. Per-run receipts keep prepared, attempted and graded counts,
-replacement identity and blocked states visible. Hash equality proves byte
-identity, not grader correctness or the truth of a receipt.
+Reproducibility studies~\cite{henderson2018deep,pineau2020improving} motivate
+explicit execution records; model cards~\cite{mitchell2019modelcards} and
+datasheets~\cite{gebru2021datasheets} organize model- and dataset-level
+disclosures. The LM Evaluation Harness~\cite{biderman2024lessons} standardizes
+tasks and the Agentic Benchmark Checklist~\cite{zhu2025abc} audits task and
+outcome validity; this paper is an experience report applying them. Receipts
+add four per-run fields, each against a failure checklists can miss: prepared/attempted/graded counts (prepared items reported as graded),
+original/replacement identity with dated state (a public proxy replacing a
+gated original), attempt counts with the retry rule (censored restarts) and an
+evidence tier (a number outliving its execution source). Hash equality proves
+byte identity, not grader correctness or the truth of a receipt.
 
-Selection was purposive: software, tools, web tasks, biology, ML engineering,
-safety, hardware, application deployment, games and mathematics expose
-different interfaces. It is neither representative nor exhaustive capability
-sampling. Access-driven replacement introduces selection bias.
-SWE-bench Pro~\cite{deng2025swebenchpro}, CORE-Bench~\cite{siegel2024corebench}
-and MLE-bench~\cite{chan2025mlebench} measure different engineering outcomes.
-WebArena~\cite{zhou2024webarena}, LAB-Bench~\cite{laurent2024labbench} and
-BALROG~\cite{paglieri2025balrog} use web success, biology answers and game
-progress. AgentDojo benign utility~\cite{debenedetti2024agentdojo} is distinct
-from AgentHarm harmful-task evaluation~\cite{andriushchenko2025agentharm}.
-VerilogEval has two framings of shared designs~\cite{liu2023verilogeval,pinckney2025revisiting};
-Omni-MATH measures Olympiad mathematics~\cite{gao2024omnimath}.
-The campaign's Tau3 banking replacement is the $\tau^3$ banking-knowledge component of Sierra's
-$\tau$-Knowledge release~\cite{shi2026tauknowledge}, not the original $\tau$-bench. All original identities appear in Table~\ref{tab:lanes}; verified
-benchmark links and unresolved identity details accompany the source package.
+Lane selection was purposive, not representative; access-driven replacement
+adds selection bias. SWE-bench
+Pro~\cite{deng2025swebenchpro}, a successor to SWE-bench~\cite{jimenez2024swebench},
+CORE-Bench~\cite{siegel2024corebench} and MLE-bench~\cite{chan2025mlebench}
+measure different engineering outcomes; WebArena~\cite{zhou2024webarena},
+LAB-Bench~\cite{laurent2024labbench} and BALROG~\cite{paglieri2025balrog}
+measure web success, biology answers and game progress. AgentDojo benign
+utility~\cite{debenedetti2024agentdojo} is distinct from AgentHarm harmful-task
+evaluation~\cite{andriushchenko2025agentharm}. VerilogEval has two framings of
+shared designs~\cite{liu2023verilogeval,pinckney2025revisiting}; Omni-MATH
+measures Olympiad mathematics~\cite{gao2024omnimath}. The Tau3 banking
+replacement is the $\tau^3$ banking-knowledge component of Sierra's
+$\tau$-Knowledge release~\cite{shi2026tauknowledge}, not the original
+$\tau$-bench. The E2, E3, E6, E7, E12 and E13 originals are identified only by
+mutable websites or repositories, not archival papers; verified links and
+unresolved identity details accompany the source package. Comparability
+requires matching items, framing, grader, scaffold, sampling budget and error
+handling, so no leaderboard numbers are attached; only the same-engine pilot
+supports a limited trained/base contrast (Sect.~\ref{sec:paired}).
 
-Comparability requires matching items, framing, grader, scaffold, sampling
-budget and error handling. We do not attach unrelated leaderboard numbers to
-these rows. Only the separate same-engine pilot supports a limited trained/base
-contrast (Sect.~\ref{sec:paired}).
+\textbf{Related texts.} The same ledger (actor, lanes, headline cells, check
+record, pilot) appears in a companion PES--IEEE manuscript by the same authors
+on training-signal diagnostics and in the authors' public thesis revision of 11
+October 2026, the narrative source for most primary scores. This paper's delta
+is the coverage taxonomy, dated O/R accounting and evidence tiers; shared cells
+are one evidence base, not independent corroboration.
 
 \section{Campaign Design}
 \subsection{Actor and Training-Overlap Boundary}
@@ -111,8 +116,9 @@ mixture-of-experts model, recorded revision \texttt{995ad96e}. One LoRA
 adapter~\cite{hu2022lora}, recorded revision \texttt{64444133}, was served in
 bfloat16 through Tinker~\cite{thinkingmachines2025tinker} or vLLM; vLLM served a
 recorded bf16 pre-merge of this adapter (862/862 tensors). The adapter mirror is linked at its recorded revision.\footnote{\url{https://huggingface.co/arvindcr4/pavlov-portfolio-qwen36-seed809-stepfinal-tinker-cf0ad8c1-1f1b-5ff-9f777c4018b6/tree/64444133c55d88c3f1bf0df8a2f5d7ac646125c8}}
-Public metadata confirms availability, not tensor equivalence or sampler replay. No per-lane checkpoint selection is reported. This controls one
-variable; it does not equalize inference or estimate training-seed variance.
+Public metadata confirms availability, not tensor equivalence or sampler
+replay. No per-lane checkpoint selection is reported; one actor does not
+equalize inference or estimate training-seed variance.
 
 \begin{table}[t]
 \caption{Reported historical training configuration. Missing execution source
@@ -130,14 +136,20 @@ Recorded dynamics & Zero reward 22/40 steps; zero loss 35/40; first-five mean re
 \end{table}
 
 A retained recovery report binds two source-suite identifiers, an aggregate
-dataset revision and hashes of three training logs. It reports hash-matching
-those logs, but the files are not supplied here. The exact dirty source,
-consumed-row inventory, token mask and sampler-refresh semantics remain
-unresolved. Current code cannot reconstruct the historical objective.
-The corpus is known only at this reported source/pool level: \emph{no complete
-content-level overlap audit against E1--E14 is established}. AgentDojo records
-\texttt{TRAINING\_INVENTORY\_ABSENT} and makes no held-out claim. Intended
-training registries must not be mistaken for consumed training data.
+dataset revision and hashes of three training logs, which are not supplied
+here. The dirty source, consumed-row inventory, token mask and sampler-refresh
+semantics are unresolved; current code cannot reconstruct the historical
+objective. \emph{No content-level overlap audit against E1--E14 is
+established}; AgentDojo records \texttt{TRAINING\_INVENTORY\_ABSENT}. Exposure
+is marked, not cleared: SWE-Gym plausibly touches the software lanes
+(E1-O/E1-R) and API-Bank-RLVR the tool-use lanes (E4, E5, E10); every
+source-by-lane cell is un-audited.
+
+\textbf{Reading lane scores.} Given 35/40 zero-loss steps, the unverifiable
+objective and the null pilot (Sect.~\ref{sec:paired}), each lane score is, at
+pilot resolution, a base-model-plus-serving measurement under the stated
+adapter, scaffold and decoding, not a GRPO effect; decoding differences
+(temperature 0 to 1) preclude lane ranking.
 
 \subsection{Coverage, Scope and Evidence}
 Original contracts (O) and replacement scopes (R) are different populations.
@@ -151,32 +163,32 @@ With $S$ binary successes, distinguish
 \begin{equation}
 \widehat p_{\mathrm{graded}}=S/G,\qquad \widehat p_{\mathrm{all}}=S/N.
 \end{equation}
-The second counts ungraded items as failures only when explicitly declared.
-Fractional rewards, progression and clustered rubric outcomes retain their own
-units. Item identities are needed to detect duplicates and wrong manifests.
+The second counts ungraded items as failures only when declared. Fractional
+rewards, progression and clustered rubric outcomes keep their own units; item
+identities detect duplicates and wrong manifests.
 
 Historically \emph{strictly complete} means declared coverage and closure
-conditions were met; \emph{terminal-complete} includes final dispositions with native
-exclusions. Partial scope is not a suite estimate. A block is an unmet execution
-or access condition, not evidence of model failure. These are dated states.
+conditions were met; \emph{terminal-complete} includes final dispositions with
+native exclusions. Partial scope is not a suite estimate, and a block (an unmet
+execution or access condition) is not model failure. These are dated states.
 
 A receipt binds the manifest, actor, serving configuration, grader, resource
-bounds, counts and artifact hashes. Deterministic checks reconcile reported
-values with retained receipts. Fail-closed gating is the intended design, not
-proof that every historical launch obeyed it: missing sources and later
-lead-issued overrides are explicit limitations. A receipt cannot authenticate
-itself: receipts are unsigned operator-written JSON without external
-timestamping, and no formal receipt schema is defined. Reopening requires the original payload, a validated grader, a
-revision-bound manifest, reconciled prior items and approved resources; a
-changed scaffold or population is a new scope or declared deviation.
+bounds, counts and artifact hashes. Fail-closed gating is the intended design,
+not proof that every historical launch obeyed it; missing sources and
+lead-issued overrides are explicit limitations. Receipts are unsigned
+operator-written JSON without external timestamping and cannot authenticate
+themselves; the fields above are a proposed schema, not a formal one, and the
+checks in Sect.~\ref{sec:paired} re-derive the receipts' own arithmetic. This
+is reporting, not demonstrated governance. Reopening requires the original
+payload, a validated grader, a revision-bound manifest, reconciled prior items
+and approved resources; a changed scaffold or population is a new scope.
 
 \subsection{Inference Configuration and Missing Fields}
 Table~\ref{tab:inference} records available settings without filling gaps from
-provider defaults. Output caps and context windows are different limits.
-The accompanying configuration inventory covers every scored/attempted original,
-replacement and pilot scope with source pointers, including unavailable fields.
-No complete configuration is recoverable for all historical lanes; this is a
-reproducibility limitation, not permission to assume one common treatment.
+provider defaults; output caps and context windows are different limits. The
+accompanying inventory covers every scored/attempted scope with source
+pointers. No complete configuration is recoverable for all historical lanes,
+which does not license assuming one common treatment.
 
 \begin{table}[t]
 \caption{Available inference fields. NR = not recovered; NR never means a
@@ -203,10 +215,9 @@ E9-R/L & 0 & 1 & 4,096 & 32,768 & off \\
 E13-R/L & 1 & NR & 8,192 & 32,768 & off \\\bottomrule
 \end{tabularx}
 \par\smallskip\footnotesize\raggedright
-$^*$E4 values describe the reported bridge default, not a recovered per-call
-receipt. E1-R output also fits the remaining context; E2-R has a 26,000-token
-scaffold window; E9-R input is capped at 28,000. Historical pre-completion
-E1-R/E2-R/E5-R fields are unresolved. Unrun originals have no measured decoding
+$^*$E4: reported bridge default, not a per-call receipt. E2-R has a
+26,000-token scaffold window; E9-R input is capped at 28,000. Pre-completion
+E1-R/E2-R/E5-R fields are unresolved; unrun originals have no decoding
 configuration. Pilot settings are separate; E11-O primary seed is 1816.
 \end{table}
 
@@ -215,7 +226,10 @@ configuration. Pilot settings are separate; E11-O primary seed is 1816.
 \begin{table}[t]
 \caption{Primary ledger, 19 September 2026, with all fourteen original contracts.
 O and R denote separate scopes. Counts are native grades unless qualified;
-``unavailable'' is an access/evidence disposition, not a model failure.}
+``unavailable'' is an access/evidence disposition, not a model failure.
+Only E11 carries an interval (text); bare proportions are not precision claims.
+E1-O is a two-stack mixture. $^\dagger$Benign utility only: no attacks run, no
+pinned upstream commit; not a safety result.}
 \label{tab:lanes}\centering\small\setlength{\tabcolsep}{3pt}
 \begin{tabularx}{\textwidth}{@{}l Y p{.22\textwidth}p{.32\textwidth}@{}}\toprule
 Scope ID & Benchmark contract & Coverage & Result / disposition \\\midrule
@@ -234,83 +248,74 @@ E12-O & App-Bench~\cite{afterquery2025appbench} & No grade & Original unavailabl
 E13-O & OpenReward games~\cite{openrewardplatform} & No grade & Original unavailable \\
 E14-O & FrontierMath~\cite{glazer2024frontiermath} & No grade & Original unavailable \\\midrule
 E8-R & LAB-Bench public & 1,967/1,967 & 450/1,967 = 0.2288 \\
-E10-R & AgentDojo benign & 97/97 & 88/97 = 0.9072 \\
+E10-R & AgentDojo benign only$^\dagger$ & 97/97 & 88/97 = 0.9072 \\
 E14-R & Omni-MATH & 4,426/4,428 & 2,271/4,426 = 51.31\% \\\bottomrule
 \end{tabularx}
 \end{table}
 
-\textbf{Completion classification.} E8-R and E10-R are the two historically
-strictly complete replacements; E11-O is a strictly complete original.
-E14-R is terminal-complete with native exclusions. E1-O has a full-denominator
-outcome, including non-native failures. The stored check
-\emph{strict-completed-suites = E8, E10, E11} asserts scope completion,
-not that all three are replacements.
+\textbf{Completion classification.} E8-R and E10-R are strictly complete
+replacements and E11-O a strictly complete original (stored check
+\emph{strict-completed-suites = E8, E10, E11}); E14-R is terminal-complete with
+native exclusions; E1-O has a full denominator including non-native failures.
 
 \textbf{LAB-Bench (E8-R).} Stored outcomes give 450 correct of 1,967 across
 eight categories. Diagnostic aggregates report 1,259 unparsed responses
-(64.0\%) and 1,086 length finishes. Their intersection and the accuracy of
-non-truncated responses cannot be reconstructed: exported grade rows lack
-parsed-answer membership. The end-to-end score stays 450/1,967. The conditional
-450/(1,967-1,259) = 450/708 = 63.56\% is descriptive sensitivity only, with
-unverified subset membership. Length termination and extraction failure are
-separate categories, not proven causes of one another.
+(64.0\%) and 1,086 length finishes; their intersection cannot be reconstructed
+because exported grade rows lack parsed-answer membership, and neither is a
+proven cause of the other. \emph{Non-citable sensitivity, not a score:} the
+conditional 450/(1,967-1,259) = 450/708 = 63.56\% has unverified membership.
 
 \textbf{VerilogEval (E11-O).} Code completion gives 67/156 and
 specification-to-RTL 62/156, totaling 129/312. The 156 shared designs require
 cluster-aware uncertainty; the retained paired-outcome artifact supports the
-reported design-cluster bootstrap interval [34.3\%,48.7\%]. Of 183 failures,
-150 (48.1\% of all prompts) are extraction failures and 33 have extracted code
-without a pass. The conditional 129/162 = 79.63\% does not replace 41.35\%.
-No per-sample finish reasons or response text survive, so truncation, missing
-closing reasoning tags and other extraction causes cannot be apportioned.
-The 312,622 response tokens imply a near-cap mean of 1,002 under a 1,024-token
-limit, not a count of truncated outputs. The historical extractor could accept
-code inside an unterminated reasoning block; even the conditional score may
-include draft code. A conditional cluster interval is unsupported without
-per-design extraction membership. Excluding one non-elaborating reference
-test yields 129/311 (41.48\%), retained only as non-canonical sensitivity.
+design-cluster bootstrap interval [34.3\%,48.7\%]. Of 183 failures, 150 (48.1\%
+of all prompts) are extraction failures and 33 have extracted code without a
+pass. No per-sample finish reasons or response text survive, so truncation,
+missing closing reasoning tags and other causes cannot be apportioned; the
+mean of 1,002 response tokens under a 1,024 cap is not a truncation count. The
+historical extractor could accept code inside an unterminated reasoning block.
+\emph{Non-citable sensitivities, not scores:} the conditional 129/162 = 79.63\%
+(which may include draft code and has no cluster interval) and 129/311
+(41.48\%) after excluding one non-elaborating reference test.
 
 \textbf{AgentDojo and Omni-MATH.} AgentDojo v1.2.2 has 97 completed benign
-episodes, 88 utility passes and no pinned upstream commit in its recovered
-receipt. It measures neither attack resistance nor AgentHarm. Omni-MATH has
-4,428 dispositions, 4,426 native accepted rows and 2,271 correct; two judge
-outputs stopped before an equivalence verdict. The accepted-set 51.31\% differs
-from all-disposition 51.29\%. Over all 4,428 dispositions (the two
-judge-incomplete rows count as not correct), reported cap-hit accuracy is
-1,029/2,982 (34.5\%), versus 1,242/1,446 (85.9\%) uncapped. Difficulty confounds this split.
+episodes and 88 utility passes; no injection split was run (no record says why), so it measures
+neither attack resistance nor AgentHarm. Omni-MATH has 4,428 dispositions, 4,426 native accepted rows and
+2,271 correct; two judge outputs lack an equivalence verdict, hence accepted-set
+51.31\% versus all-disposition 51.29\%. Over all 4,428 dispositions, reported
+cap-hit accuracy is 1,029/2,982 (34.5\%) versus 1,242/1,446 (85.9\%) uncapped;
+difficulty confounds this split.
 
 \textbf{SWE-bench Pro (E1-O).} The 731-task \emph{public split} retains 14
 generation failures and four lost artifacts alongside 713 native evaluations.
-A retained patch audit reports 593 corrupt-hunk patches rejected by ordinary
-\texttt{git apply}; tests then ran on the unpatched base. Both resolved cases
-are among the 120 parsing patches. The 2/731 therefore measures end-to-end
-issue resolution with severe formatting failures, not repaired-patch quality.
-Generations mix 476 managed-sampler and 255 merged-vLLM responses.
-The full run used unmodified official scripts on native \texttt{linux/amd64}
-Modal workers (harness \texttt{ca10a60a}). The 1,200-versus-120-second timeout
-concern applies only to an earlier one-task gold-patch check under arm64 QEMU,
-explicitly not a model score. Exact container-runtime version and the 713-run
-timeout/assertion-failure breakdown are unavailable in the retained evidence.
+A retained patch audit reports 593 corrupt-hunk patches rejected by
+\texttt{git apply}, so tests ran on the unpatched base; both resolved cases are
+among the 120 parsing patches. Generations mix 476 managed-sampler and 255
+merged-vLLM responses. The 2/731 is thus end-to-end resolution of a two-stack
+mixture with severe formatting failures. The run used unmodified official
+scripts on native \texttt{linux/amd64} Modal workers (harness
+\texttt{ca10a60a}); a 1,200-versus-120-second timeout concern applies only to an
+earlier one-task arm64 QEMU gold-patch check, not a model score. Container
+runtime version and a timeout/assertion breakdown are unavailable.
 
 \textbf{Incomplete originals.} FrontierSWE and BankerToolBench numbers describe
-one task each; the latter is fractional recovery reward. APEX's seven graded
+one task each (the latter a fractional recovery reward). APEX's seven graded
 tasks average 0.079365; its 0.050505 mean is over the 11-task attempted
 prefix (indices 0--10; three unscored failures and one operator-interrupted
-task counted as zero). MLE-bench's 40/75 coverage is 53.33\%, with suite score null and a
-separate merged-vLLM arm. BinaryAudit's agent error is not a native grade; the campaign's 46-item
-denominator is not reconciled to the current project's 33 tasks. ML-Dev-Bench's
-later 34 configurations likewise differ from its paper's 30 tasks.
-WebBench is the E6 original; its retained registry identifies the contract but
-does not supply the official browser environment, credentials/reset contract
-or native verifier, despite a public task CSV. OpenReward games lacks a verified
-held-out family manifest, seed separation and game-state verifier. Its BALROG
-replacement does not satisfy that original scope. Public subsets cannot close an original gated contract.
+task counted as zero). MLE-bench's 40/75 coverage is 53.33\%, with suite score
+null and a separate merged-vLLM arm. BinaryAudit's agent error is not a native
+grade, and its 46-item campaign denominator is not reconciled to the current
+33 tasks; ML-Dev-Bench's 34 configurations likewise differ from its paper's 30
+tasks. The WebBench registry lacks the official browser environment,
+reset contract and native verifier; OpenReward games lacks a verified held-out
+family manifest, seed separation and verifier. Public subsets or BALROG cannot
+close these gated originals.
 
 \subsection{Later Replacement Results}
 \label{sec:later}
-Six replacements completed execution on 27 September. Earlier quota, IAM and launch
-states are historical, not current scientific results. Table~\ref{tab:later}
-reports the surviving later outcomes; Figure~\ref{fig:states} keeps O/R distinct.
+Six replacements completed execution on 27 September (Table~\ref{tab:later});
+earlier quota, IAM and launch states are historical. Figure~\ref{fig:states}
+keeps O/R distinct.
 
 \begin{table}[t]
 \caption{Later replacement executions. Terminal task errors count as failures;
@@ -328,19 +333,26 @@ E13-R & BALROG, six environments & 255 & 255 & 26.1\% progression \\\bottomrule
 \end{tabularx}
 \end{table}
 
-The experiment lead issued the protocol override, so it is not independent
-approval or evidence of unconditional fail-closed enforcement. Deviations
-include new infrastructure/thinner scaffolds (E1/E2/E5/E6), context/tool-text
-changes (E1/E9), and thinking mode, architecture and retry-seed changes (E13).
-Infrastructure-aborted attempts were rerun in E2/E9; E13 restarted killed or
-hung episodes with new seeds. The denominators count final task/episode
-outcomes, not every execution attempt. E1-R counts 120 patch/evaluation errors
-and 13 empty patches as failures: 1/190 is operational resolved/attempted,
-versus conditional 1/57 graded (0.0175). WebArena has 108 ungraded tasks: 90/812 is a lower bound,
-with a logical upper bound 198/812 = 0.244, not imputed successes. Tau3's
-8/72 = 0.111 excludes infrastructure errors and is only sensitivity.
-Earlier multilingual waves cover the other 110 tasks at 4/110 with different
-context/scaffold, so they are not pooled with 1/190. BALROG is an equal-weight
+The experiment lead issued the protocol override, so it is neither independent
+approval nor evidence of fail-closed enforcement. Deviations include new
+infrastructure/thinner scaffolds (E1/E2/E5/E6), context/tool-text changes
+(E1/E9), and thinking mode, architecture and retry-seed changes (E13).
+\textbf{Attempts and retries.} E1-R reused completed generations after two
+driver relaunches, never resampling. E2-R archives 72 infrastructure-aborted
+task attempts from four harness restarts, plus one standard rerun per spot
+preemption, never rerunning because of score. E5-R discarded five cold-start
+attempts; E6-R ran each task once (call-level retries only); E9-R excluded a
+hung four-task batch; E13-R has 262 attempt records for 255 episodes, rerunning
+11 killed or hung episodes with new seeds. Denominators count final outcomes,
+so retry-on-failure can bias scores upward. Primary-lane attempt records and
+retry rules are not recovered. E5-R's 25 infrastructure errors are 24 records
+deleted from \texttt{results.json} by an accidental \texttt{--auto-resume}
+(reconstructed from the run log) plus task\_097, which hit the context limit in
+a five-task rerun; 8/72 = 0.111 excluding them is only sensitivity. E1-R counts
+120 patch/evaluation errors and 13 empty patches as failures (conditional 1/57
+graded = 0.0175); earlier multilingual waves (4/110, different
+context/scaffold) are not pooled. WebArena's 108 ungraded tasks make 90/812 a
+lower bound with logical upper bound 198/812 = 0.244. BALROG is an equal-weight
 mean of six environment means, not a pass rate.
 
 \begin{figure}[t]\centering\small
@@ -354,68 +366,66 @@ E5-O: P & E5-R: D & E12-O: X & -- \\
 E6-O: N & E6-R: D & E13-O: X & E13-R: D \\
 E7-O: X & -- & E14-O: X & E14-R: D \\\bottomrule
 \end{tabular}
-\caption{Separate states for all 23 original/replacement scopes through the
-27 September records: D = all declared dispositions, possibly with ungraded
-outcomes; P = partial; X = original access/evidence unavailable; N = no original
-result established. E7 had an earlier ungraded attempt. $^*$E1-R has two
-unpooled waves. D does not assert native-protocol equivalence, correctness or
-strict closure. Blank replacements mean none in this campaign ledger.}
+\caption{States of all 23 original/replacement scopes through 27 September:
+D = all declared dispositions, possibly with ungraded outcomes; P = partial;
+X = original access/evidence unavailable; N = no original result; -- = no
+replacement. E7 had an earlier ungraded attempt; $^*$E1-R has two unpooled
+waves. D does not assert native-protocol equivalence or strict closure.}
 \label{fig:states}
 \end{figure}
 
 \subsection{Serving Diagnosis and Matched Pilot}
 \label{sec:paired}
-A secondary BankerToolBench record reports 100 base-model trials, one error
-and mean reward zero; the raw job receipt and trajectories are absent here.
-The bridge finding identifies omitted stop sequences and stripped special
-tokens, allowing invented dialogue turns. A corrected shim scored 0.4087 on
-one later base-model task. Changed tasks, serving and caps make this a
-confounded diagnostic, not a controlled explanation of the full-run zero.
+A secondary BankerToolBench record (raw receipt absent) reports 100
+base-model trials with mean reward zero; a bridge omitted stop sequences and
+stripped special tokens, allowing invented dialogue turns. A
+corrected shim scored 0.4087 on one later task. Changed tasks, serving and caps
+make this a confounded diagnostic, not an explanation of the zero.
 
 The separate 26 September pilot uses selection seed 20260926, temperature 0,
-non-thinking prompts and identical items for trained and base weights on the
-same vLLM engine. Table~\ref{tab:paired} lists every lane; exact fractions,
-metrics and retained tests are in the evidence package (Data
-availability). None of its seventeen
-primary outcome contrasts establishes a difference; E2's separate exploratory
-conditional runtime contrast is not included in that statement. This is inconclusive,
-not equivalence. Zero loss on 35/40 training steps (Table~\ref{tab:training})
-suggests few effective updates, which would also predict small differences. Small/public/substitute populations are not full baselines.
-E4 has one nonzero pair; E12 has six app clusters scored by the base model;
-E13 has five environments, unlike the later six-environment run.
+non-thinking prompts and identical items for trained and base weights on one
+vLLM engine (Table~\ref{tab:paired}; retained tests in the evidence package).
+None of its seventeen primary outcome contrasts establishes a difference
+(E2's exploratory conditional runtime contrast is excluded): inconclusive, not
+equivalence. Zero loss on 35/40 training steps (Table~\ref{tab:training})
+would also predict small differences. Small, public or substitute populations
+are not full baselines; E13 has five environments, unlike the later six.
 
 \begin{table}[t]
-\caption{All same-engine pilot lanes: trained/base outcomes. Scope names identify
-public subsets or substitutes, not completed original contracts. $p$ denotes
-two-sided exact McNemar except E12's equal-app pass-rate sign-flip test (raw-count
-variant $p=.50$; unclustered item McNemar $p=.30$). With $k$
-discordant pairs exact McNemar $p\geq 2^{1-k}$, so E1, E7 and E9 ($k\leq1$) are
-uninformative. Intervals are retained paired bootstrap
-intervals, not equivalence bounds; E4's has one nonzero pair.}
+\caption{Same-engine pilot, trained/base. Scopes are public subsets or
+substitutes. $p$: two-sided exact McNemar, except E12's equal-app pass-rate
+sign-flip test over six apps (raw-count variant $p=.50$; item McNemar $p=.30$).
+$b/c$: trained-only/base-only discordant items; McNemar can reach $p<.05$ only
+if $b+c\geq6$. The 17 contrasts are one family; the smallest $p$ is .25 and every
+retained paired bootstrap interval (not an equivalence bound; E4's has one
+nonzero pair) includes zero, so no multiplicity adjustment alters the null.
+E12 is judge-circular (base-model judge). E10 rows illustrate method only, not
+harm or safety evidence.}
 \label{tab:paired}\centering\small\setlength{\tabcolsep}{3pt}
-\begin{tabularx}{\textwidth}{@{}l Y r l l@{}}\toprule
-Lane & Actual pilot scope / metric & $n$ & Trained / base & Test \\\midrule
-E1 & SWE-bench Pro subset & 10 & 0/10; 0/10 & $p=1$ \\
-E2 & EffiBench~\cite{huang2024effibench} & 30 & 21/30; 24/30 & $p=.25$ \\
-E3 & Terminal-Bench v2~\cite{merrill2026terminalbench} & 8 & 5/8; 3/8 & $p=.5$ \\
-E4 & BankerToolBench reward & 6 & .0662 / .0928 & $[-.080,0]$ \\
-E5 & tau2-bench~\cite{barres2025tau2} & 10 & 5/10; 2/10 & $p=.375$ \\
-E6 & MiniWoB++~\cite{liu2018miniwob} & 36 & 16/36; 17/36 & $p=1$ \\
-E7 & BinaryAudit subset & 6 & 1/6; 0/6 & $p=1$ \\
-E8 & LAB-Bench subset & 80 & 25/80; 25/80 & $p=1$ \\
-E9 & MLE-bench lite, medal & 5 & 0/5; 0/5 & $p=1$ \\
- & Above-median & 5 & 0/5; 1/5 & $p=1$ \\
-E10 & AgentHarm public, refusal & 30 & 21/30; 20/30 & $p=1$ \\
- & Harm score & 30 & .2467 / .2362 & $[-.053,.078]$ \\
- & Benign score & 30 & .7799 / .7944 & $[-.050,.012]$ \\
-E11 & VerilogEval subset & 50 & 33/50; 33/50 & $p=1$ \\
-E12 & App-Bench public rubric & 151 & 113/151; 118/151 & $p=.25$ \\
-E13 & BALROG progression (\%) & 26 & 25.51 / 23.63 & $[-2.73,7.09]$ \\
-E14 & Omni-MATH subset & 100 & 43/100; 44/100 & $p=1$ \\\bottomrule
+\begin{tabularx}{\textwidth}{@{}l Y r l c l@{}}\toprule
+Lane & Actual pilot scope / metric & $n$ & Trained / base & $b/c$ & Test \\\midrule
+E1 & SWE-bench Pro subset & 10 & 0/10; 0/10 & 0/0 & $p=1$ \\
+E2 & EffiBench~\cite{huang2024effibench} & 30 & 21/30; 24/30 & 0/3 & $p=.25$ \\
+E3 & Terminal-Bench v2~\cite{merrill2026terminalbench} & 8 & 5/8; 3/8 & 2/0 & $p=.5$ \\
+E4 & BankerToolBench reward & 6 & .0662 / .0928 & -- & $[-.080,0]$ \\
+E5 & tau2-bench~\cite{barres2025tau2} & 10 & 5/10; 2/10 & 4/1 & $p=.375$ \\
+E6 & MiniWoB++~\cite{liu2018miniwob} & 36 & 16/36; 17/36 & 1/2 & $p=1$ \\
+E7 & BinaryAudit subset & 6 & 1/6; 0/6 & 1/0 & $p=1$ \\
+E8 & LAB-Bench subset & 80 & 25/80; 25/80 & 6/6 & $p=1$ \\
+E9 & MLE-bench lite, medal & 5 & 0/5; 0/5 & 0/0 & $p=1$ \\
+ & Above-median & 5 & 0/5; 1/5 & 0/1 & $p=1$ \\
+E10 & AgentHarm public, refusal & 30 & 21/30; 20/30 & 3/2 & $p=1$ \\
+ & Harm score & 30 & .2467 / .2362 & -- & $[-.053,.078]$ \\
+ & Benign score & 30 & .7799 / .7944 & -- & $[-.050,.012]$ \\
+E11 & VerilogEval subset & 50 & 33/50; 33/50 & 2/2 & $p=1$ \\
+E12 & App-Bench rubric, base-model judge & 151 & 113/151; 118/151 & 5/10 & $p=.25$ \\
+E13 & BALROG progression (\%) & 26 & 25.51 / 23.63 & -- & $[-2.73,7.09]$ \\
+E14 & Omni-MATH subset & 100 & 43/100; 44/100 & 5/6 & $p=1$ \\\bottomrule
 \end{tabularx}
 \end{table}
 
-A distinct \emph{protocol} comparison on the 50 pilot VerilogEval prompts
+A distinct, confounded \emph{protocol} comparison, quarantined from the pilot
+family, on the 50 pilot VerilogEval prompts
 reports 23/50 from the original sampler versus 33/50 from trained-vLLM,
 with 11 versus 1 discordant pairs (exact McNemar $p\simeq0.006$).
 The later run used thinking off and a 4,096-token cap, with no extraction
@@ -428,29 +438,29 @@ The 19 September check receipt records 11 passes: selected divisions, E11's
 component sum, E9 coverage, E14 accepted rows, E8 category coverage, strict
 scope labels, two hash bindings and missing-source probes of four
 \texttt{.codex-run} paths on E1 (two), E6 and E9. Reading this record
-is not rerunning all original checks. Retained JSON recounts, historical reports
-and absent primary evidence are separately identified in the source map.
+is not rerunning all original checks.
+
+\textbf{Evidence tiers.} \emph{Recountable JSON:} the six later-replacement
+result records, the E11 cluster bootstrap and all pilot paired outcomes.
+\emph{Check record:} the eleven checks. \emph{Narrative only} (raw payloads
+absent): other primary scores and diagnostics, e.g.\ the E1-O patch audit,
+E8-R unparsed/length counts, E10-R detail, the E14-R cap split and partial
+originals. ``Receipt-bound'' means only this tiering; the source map gives
+per-claim tiers.
 
 \section{Limitations, Applications and Conclusion}
 This single-actor campaign has no primary full-scale matched baseline,
 training-seed variance estimate or complete overlap audit. Decoding conditions
-and access-selected replacements confound capability comparisons; missing
-source and sample-level diagnostics prevent causal failure attribution. The
-original sampler cannot be replayed from this package, and a reimplemented
-runner cannot establish historical execution identity. Hashes recover neither
-missing evidence nor semantic correctness.
-
-Review the contract, coverage, exclusions and actor/grader binding before
-accepting retained evidence. Benign utility is not a security result, and a
-blocked scope is not a passed test. Better retention and targeted reruns are
-proposed, not measured, benefits. Disclose the scientific configuration and
-protect credentials and private operational records. No score or governance
-label certifies safe deployment.
-
-The contribution is disciplined reporting, not a demonstrated GRPO gain or
-universal reproducibility. Full matched baselines, item-level overlap checks,
-parser and finish-reason instrumentation, controlled sampler comparisons and
-an independent test of governance effectiveness remain future work.
+and access-selected replacements confound capability comparisons; the original
+sampler cannot be replayed, and hashes recover neither missing evidence nor
+semantic correctness. Before accepting retained evidence, review the contract,
+coverage, exclusions and actor/grader binding: benign utility is not a security
+result and a blocked scope is not a passed test. Better retention and targeted
+reruns are proposed, not measured, benefits; no score or receipt label
+certifies safe deployment. The contribution is disciplined reporting, not a
+GRPO gain or universal reproducibility. Matched baselines, item-level overlap
+checks, finish-reason instrumentation and an independent test of reporting
+effectiveness remain future work.
 
 \begin{credits}
 \subsubsection{Data availability.} Receipts, paired outcomes, inventories, the

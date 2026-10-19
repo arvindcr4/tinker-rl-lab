@@ -1,0 +1,9 @@
+{
+  "exact_results_match": true,
+  "steps": 2,
+  "checkpoint_after_step": 1,
+  "n_eval": 8,
+  "max_new": 1024,
+  "algorithm": "grpo",
+  "seed": 42
+}

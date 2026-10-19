@@ -6,8 +6,10 @@ setups, not a universal verbosity-trap test. The GSM8K-CoT completion cap is
 part of the estimand. The correctness-stratified rerun
 (Table~\ref{tab:p4-length-stratified}) finds no widening incorrect-minus-correct
 length gap at 30--40 steps, including at a 512-token cap that few rollouts
-reach; a controlled comparison over hundreds of steps is still needed to test
-causal length bias. Absence of
+reach, and the 200-step uncensored runs (Table~\ref{tab:p4-long-horizon}) show
+the gap narrowing rather than widening. These remain three-seed, 1.5B-model
+runs; larger models, longer horizons and a causal test of length bias are
+still untested. Absence of
 a rising mean under a cap is not evidence of practical equivalence or of
 zero length-mediated effect. Multiple metrics from the same seed trajectory
 are not independent replicates; the seed budgets are five and three, not
@@ -15,8 +17,8 @@ the number of windows or training steps.
 
 \section{Conclusion}
 \label{sec:p4-conclusion}
-Mean completion lengths decline in these recorded capped, short-horizon
-runs. This descriptive observation neither refutes Dr.\,GRPO's theoretical
+Mean completion lengths decline in these recorded runs, from the capped
+30--40-step runs to the 200-step runs at a 1024-token cap. This descriptive observation neither refutes Dr.\,GRPO's theoretical
 normalization correction nor establishes general held-out superiority.
 The earlier claim that a non-significant permutation result was decisive,
 and the proposed causal mediation and controller claims, are not retained.

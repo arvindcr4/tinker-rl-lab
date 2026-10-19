@@ -6,7 +6,7 @@ Revised against the full new critique, including a proposed title change and an 
 
 ## Contents
 
-- `paper_camera.tex`: editable manuscript, proposed governance-focused title; author/venue approval required
+- `paper_camera.tex`: editable manuscript, accepted paper-243 title (author decision 2026-10-19; proposed governance retitle withdrawn)
 - `refs.bib`: 41 cited scholarly/project/platform references; full metadata and citation audit included
 - `llncs.cls`, `splncs04.bst`: unmodified Springer class and bibliography style supplied with the recovered working draft
 - `build.sh`: local-only LaTeX build; no network or model execution

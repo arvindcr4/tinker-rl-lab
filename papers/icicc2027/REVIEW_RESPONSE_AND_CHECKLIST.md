@@ -234,7 +234,7 @@ Verified current announcement: Thinking Machines Lab, “Announcing Tinker,”1 
 ## Release gates: still required before any submission
 
 1. Author and mentor/supervisor review of every claim, byline, affiliation, email, citation and unresolved limitation
-2. Author and venue confirmation for the proposed title change; no portal modification has occurred
+2. ~~Author and venue confirmation for the proposed title change~~ Resolved 2026-10-19: the author kept the accepted title; the proposed retitle is withdrawn and no portal change is needed
 3. Organizer AI-content policy review. AI assistance was used for prose, bibliography verification/preparation, figure/table editing and audit support. Primary-source verification does not establish compliance with organizer restrictions on AI-assisted content or citations. Authors must determine permissibility, revise themselves and seek organizer clarification as needed. Private organizer correspondence is not reproduced in this public source package
 4. Licensed Turnitin/iThenticate report confirming similarity below 15%. No similarity tool was run and no percentage is claimed
 5. Dataset/access/license/ethical-provenance review for the actual historical payloads. Public benchmark identity is not proof of the campaign’s permissions

@@ -14,7 +14,7 @@ Audit date: 18 October 2026. This revision changes manuscript/source-package mat
 
 Accepted title: Receipt-Bound Held-Out Evaluation of a GRPO-Trained Language Model Across Fourteen Agentic and Reasoning Suites
 
-Proposed revised title printed in this author-review draft: Receipt-Bound Evaluation Governance: A Fourteen-Lane Language-Model Case Study
+Printed title: the accepted title (author decision 2026-10-19). The proposed revision "Receipt-Bound Evaluation Governance: A Fourteen-Lane Language-Model Case Study" was withdrawn.
 
 Author and venue approval of the change remain required. It has not been changed in any portal. Historical source revision `a03d0677`, path `outputs/PES_Conference_Submissions_2026-09-25/ICICC2027/paper_camera.tex`; identified-source SHA256 `71684f2ccc8e5f4d4082dc5fe18bf854119967d894bf2d9916538a2aa06dba1c`; anonymous-source SHA256 `01976b09c7f59599dcb00cedc4e48f94fdfa04ca637fdaa072fc6928b49f9cc1`. Arvind C R and Ramesh Prakash Guledgudd, PES University, and the sole historically corroborated corresponding email are preserved.
 

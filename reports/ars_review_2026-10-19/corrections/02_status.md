@@ -40,3 +40,6 @@ Not done: R3-W1 (adoption/cost subsection), R3-W2 (DOI archive deposit, author-o
 ## Space
 
 The paper was already a full 12 pages before these changes. To make room for the additions I condensed existing prose: the intro contribution list became inline, and the related work, actor, coverage, results, pilot and limitations sections were tightened. No claims or numbers were removed, except the redundant sentence "Intended training registries must not be mistaken for consumed training data". The verifier's invariants still hold: 5 tables, 1 figure, 2 equations, all 14 original rows, all 23 scope identities in the figure, the E12 p recomputation, and the hash of the historical ledger.
+
+
+**Title decision (2026-10-19):** the author chose to keep the accepted paper-243 title "Receipt-Bound Held-Out Evaluation of a GRPO-Trained Language Model Across Fourteen Agentic and Reasoning Suites". Note for the author: the body states that no held-out claim is made (paper_camera.tex:59), so the title's "Held-Out" now reads more strongly than the text supports.

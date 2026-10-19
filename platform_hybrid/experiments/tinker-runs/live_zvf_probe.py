@@ -35,6 +35,7 @@ import random
 import re
 import time
 import traceback
+import types
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -296,20 +297,26 @@ def run(args: argparse.Namespace) -> dict:
                 prompt_ids = tok.encode(prompt, add_special_tokens=False)
                 if len(prompt_ids) > args.max_prompt_tokens:
                     prompt_ids = prompt_ids[: args.max_prompt_tokens]
-                # Deterministic per-(step, prompt) generation seed so runs are
-                # reproducible end-to-end (previously generation randomness was
-                # uncontrolled — fixed 2026-07-11).
-                sampling = T.SamplingParams(
-                    max_tokens=args.max_tokens,
-                    temperature=args.temperature,
-                    top_p=args.top_p,
-                    seed=stable_seed(args.seed, step, prompt_ids),
+                # Deterministic per-(step, prompt, member) generation seed so runs
+                # are reproducible end-to-end. A seed shared across num_samples=G
+                # makes Tinker return G identical sequences (ZVF pinned at 1.0;
+                # verified 2026-10-19), so each group member gets its own request.
+                futures = [
+                    sc.sample(
+                        T.ModelInput.from_ints(prompt_ids),
+                        num_samples=1,
+                        sampling_params=T.SamplingParams(
+                            max_tokens=args.max_tokens,
+                            temperature=args.temperature,
+                            top_p=args.top_p,
+                            seed=stable_seed(args.seed, step, prompt_ids, member),
+                        ),
+                    )
+                    for member in range(args.group)
+                ]
+                sampled = types.SimpleNamespace(
+                    sequences=[seq for fut in futures for seq in fut.result().sequences]
                 )
-                sampled = sc.sample(
-                    T.ModelInput.from_ints(prompt_ids),
-                    num_samples=args.group,
-                    sampling_params=sampling,
-                ).result()
                 if len(sampled.sequences) != args.group:
                     raise RuntimeError("Incomplete requested sample group")
                 rollout_groups.append(

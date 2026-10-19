@@ -41,6 +41,7 @@ import signal
 import statistics
 import threading
 import time
+import types
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any
@@ -632,11 +633,33 @@ class Campaign:
             resp = None
             for attempt in range(3):
                 try:
-                    resp = await sc.sample_async(
-                        prompt=T.ModelInput.from_ints(ids),
-                        num_samples=cell.group_size,
-                        sampling_params=sp.model_copy(update={"seed": stable_seed(cell.id, ids)}),
-                    )
+                    # A seed shared across num_samples=N makes Tinker return N identical sequences
+                    # (verified 2026-10-19), so each group member gets its own seeded request.
+                    if cell.group_size > 1:
+                        futures = [
+                            sc.sample_async(
+                                prompt=T.ModelInput.from_ints(ids),
+                                num_samples=1,
+                                sampling_params=sp.model_copy(
+                                    update={"seed": stable_seed(cell.id, ids, member)}
+                                ),
+                            )
+                            for member in range(cell.group_size)
+                        ]
+                        responses = await asyncio.gather(*futures)
+                        resp = types.SimpleNamespace(
+                            sequences=[
+                                seq for response in responses for seq in response.sequences
+                            ]
+                        )
+                    else:
+                        resp = await sc.sample_async(
+                            prompt=T.ModelInput.from_ints(ids),
+                            num_samples=1,
+                            sampling_params=sp.model_copy(
+                                update={"seed": stable_seed(cell.id, ids)}
+                            ),
+                        )
                     validated_sample_sequences(resp, cell.group_size)
                     break
                 except Exception:

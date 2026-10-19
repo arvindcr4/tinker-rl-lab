@@ -37,6 +37,7 @@ import logging
 import os
 import sys
 import time
+import types
 from pathlib import Path
 
 import numpy as np
@@ -129,13 +130,37 @@ async def process_prompt(
             backoff_times = [2, 4, 8]
             for attempt in range(4):
                 try:
-                    resp = await sc.sample_async(
-                        prompt=model_input,
-                        num_samples=c,
-                        sampling_params=sp.model_copy(
-                            update={"seed": stable_seed(args.seed, prompt_id, len(rewards))}
-                        ),
-                    )
+                    # A seed shared across num_samples=N makes Tinker return N identical sequences
+                    # (verified 2026-10-19), so each group member gets its own seeded request.
+                    if c > 1:
+                        futures = [
+                            sc.sample_async(
+                                prompt=model_input,
+                                num_samples=1,
+                                sampling_params=sp.model_copy(
+                                    update={
+                                        "seed": stable_seed(
+                                            args.seed, prompt_id, len(rewards), member
+                                        )
+                                    }
+                                ),
+                            )
+                            for member in range(c)
+                        ]
+                        responses = await asyncio.gather(*futures)
+                        resp = types.SimpleNamespace(
+                            sequences=[
+                                seq for response in responses for seq in response.sequences
+                            ]
+                        )
+                    else:
+                        resp = await sc.sample_async(
+                            prompt=model_input,
+                            num_samples=1,
+                            sampling_params=sp.model_copy(
+                                update={"seed": stable_seed(args.seed, prompt_id, len(rewards))}
+                            ),
+                        )
                     sequences = validated_sample_sequences(resp, c)
                     chunk_rewards = []
                     chunk_tokens = 0

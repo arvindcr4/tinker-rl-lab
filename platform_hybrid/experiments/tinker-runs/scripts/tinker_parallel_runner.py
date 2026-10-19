@@ -33,7 +33,7 @@ try:
 except ImportError:
     pass
 
-import os, json, re, random, threading, shutil
+import os, json, re, random, threading, shutil, types
 from datetime import datetime
 from concurrent.futures import ProcessPoolExecutor, as_completed
 
@@ -282,13 +282,27 @@ def run_single(
 
         for prompt_text, ans, _ in bex:
             pid = tok.encode(prompt_text, add_special_tokens=False)[:1024]
-            sp = T.SamplingParams(
-                max_tokens=512, temperature=0.8, top_p=0.95, seed=stable_seed(seed, step, pid)
-            )
+            # A seed shared across num_samples=N makes Tinker return N identical sequences
+            # (verified 2026-10-19), so each group member gets its own seeded request.
             try:
-                resp = sc.sample(
-                    T.ModelInput.from_ints(pid), num_samples=group, sampling_params=sp
-                ).result()
+                futures = [
+                    sc.sample(
+                        T.ModelInput.from_ints(pid),
+                        num_samples=1,
+                        sampling_params=T.SamplingParams(
+                            max_tokens=512,
+                            temperature=0.8,
+                            top_p=0.95,
+                            seed=stable_seed(seed, step, pid, member)
+                            if group > 1
+                            else stable_seed(seed, step, pid),
+                        ),
+                    )
+                    for member in range(group)
+                ]
+                resp = types.SimpleNamespace(
+                    sequences=[seq for fut in futures for seq in fut.result().sequences]
+                )
             except Exception as e:
                 print(f"[{exp}] Sample err step {step}: {e}")
                 return failed(e)

@@ -33,7 +33,7 @@ except ImportError:
     pass
 
 
-import os, re, json, random, sys, warnings, traceback, torch
+import os, re, json, random, sys, types, warnings, traceback, torch
 from datetime import datetime
 from concurrent.futures import ProcessPoolExecutor, as_completed
 
@@ -257,12 +257,26 @@ def run_experiment(exp):
                 if len(pid) > 1024:
                     pid = pid[:1024]
 
-                sp = T.SamplingParams(
-                    max_tokens=512, temperature=0.8, top_p=0.95, seed=stable_seed(seed, step, pid)
+                # A seed shared across num_samples=N makes Tinker return N identical sequences
+                # (verified 2026-10-19), so each group member gets its own seeded request.
+                futures = [
+                    sc.sample(
+                        T.ModelInput.from_ints(pid),
+                        num_samples=1,
+                        sampling_params=T.SamplingParams(
+                            max_tokens=512,
+                            temperature=0.8,
+                            top_p=0.95,
+                            seed=stable_seed(seed, step, pid, member)
+                            if group_size > 1
+                            else stable_seed(seed, step, pid),
+                        ),
+                    )
+                    for member in range(group_size)
+                ]
+                resp = types.SimpleNamespace(
+                    sequences=[seq for fut in futures for seq in fut.result().sequences]
                 )
-                resp = sc.sample(
-                    T.ModelInput.from_ints(pid), num_samples=group_size, sampling_params=sp
-                ).result()
 
                 sequences = validated_sample_sequences(resp, group_size)
                 rews = [

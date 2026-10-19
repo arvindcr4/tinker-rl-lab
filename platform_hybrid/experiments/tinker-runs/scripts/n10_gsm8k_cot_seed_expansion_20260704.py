@@ -34,6 +34,7 @@ import random
 import re
 import time
 import traceback
+import types
 from datetime import datetime
 
 import numpy as np
@@ -161,21 +162,33 @@ def run_arm(algo: str, seed: int, args) -> dict:
     sampler_uri = w0.path
 
     def sample_responses(sc, pid, num_samples):
-        sp = T.SamplingParams(
-            max_tokens=args.max_tokens,
-            temperature=args.temp,
-            top_p=args.top_p,
-            seed=stable_seed(seed, step, pid),
-        )
+        # A seed shared across num_samples=N makes Tinker return N identical sequences
+        # (verified 2026-10-19), so each group member gets its own seeded request.
+        def once():
+            futures = [
+                sc.sample(
+                    T.ModelInput.from_ints(pid),
+                    num_samples=1,
+                    sampling_params=T.SamplingParams(
+                        max_tokens=args.max_tokens,
+                        temperature=args.temp,
+                        top_p=args.top_p,
+                        seed=stable_seed(seed, step, pid, member)
+                        if num_samples > 1
+                        else stable_seed(seed, step, pid),
+                    ),
+                )
+                for member in range(num_samples)
+            ]
+            return types.SimpleNamespace(
+                sequences=[seq for fut in futures for seq in fut.result().sequences]
+            )
+
         try:
-            return sc.sample(
-                T.ModelInput.from_ints(pid), num_samples=num_samples, sampling_params=sp
-            ).result()
+            return once()
         except Exception as e:
             print(f"[{exp_tag}] sample retry after: {e}")
-            return sc.sample(
-                T.ModelInput.from_ints(pid), num_samples=num_samples, sampling_params=sp
-            ).result()
+            return once()
 
     step_log = []
     successful_updates = 0

@@ -69,6 +69,12 @@ Thumbs.db
 # source so the committed PDF never silently goes stale against frontmatter.tex
 # and the chapter markdown. Rebuild it with build_thesis.py after editing source.
 !outputs/PES_Phase2_Third_Review_2026-09-24/thesis/Thesis_Report_ArvindCR.pdf
+# Exception: the shared TikZ figures are \includegraphics'd by P1/P2/P3 and paper.tex;
+# without the built PDFs a clean checkout renders "[missing figure artifact]" boxes.
+# Rebuild with `tectonic <name>.tex` in platform_hybrid/paper/tikz after editing a source.
+!platform_hybrid/paper/tikz/taxonomy.pdf
+!platform_hybrid/paper/tikz/reward_flow.pdf
+!platform_hybrid/paper/tikz/pipeline.pdf
 temp.json
 *.db
 slack.har

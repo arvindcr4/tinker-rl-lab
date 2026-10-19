@@ -1,0 +1,403 @@
+{
+  "protocol": {
+    "pass_at_k": "mean over problems of tinker_passk.pass_at_k (unbiased)",
+    "delta": "adapter minus base, paired by problem index",
+    "ci": "percentile bootstrap of the paired mean, 2.5 and 97.5",
+    "p": "two-sided sign-flip, (count + 1) / (n_perm + 1)",
+    "pool": "unweighted mean across seeds of per-problem pass@k",
+    "n_bootstrap": 10000,
+    "n_permutation": 10000,
+    "seed": 0,
+    "ks": [
+      1,
+      8,
+      32
+    ],
+    "delta_ks": [
+      1,
+      32
+    ]
+  },
+  "missing_eval": [],
+  "models": [
+    {
+      "name": "base",
+      "path": "raw/base.json",
+      "n_problems": 200,
+      "n_per_problem": 32,
+      "pass_at_k": {
+        "1": 0.30578125,
+        "8": 0.7808683822480819,
+        "32": 0.895
+      },
+      "truncation_rate": 0.992969,
+      "mean_tokens": 511.6242,
+      "delta_vs_base": {
+        "1": {
+          "delta": 0.0,
+          "ci95": [
+            0.0,
+            0.0
+          ],
+          "p": 1.0
+        },
+        "32": {
+          "delta": 0.0,
+          "ci95": [
+            0.0,
+            0.0
+          ],
+          "p": 1.0
+        }
+      }
+    },
+    {
+      "name": "er2b_trl_g2_s123",
+      "path": "raw/er2b_trl_g2_s123.json",
+      "n_problems": 200,
+      "n_per_problem": 32,
+      "pass_at_k": {
+        "1": 0.48796875,
+        "8": 0.8592517383987908,
+        "32": 0.935
+      },
+      "truncation_rate": 0.954688,
+      "mean_tokens": 508.783,
+      "delta_vs_base": {
+        "1": {
+          "delta": 0.1821875,
+          "ci95": [
+            0.1584375,
+            0.20609375
+          ],
+          "p": 9.999000099990002e-05
+        },
+        "32": {
+          "delta": 0.04,
+          "ci95": [
+            0.01,
+            0.075
+          ],
+          "p": 0.0410958904109589
+        }
+      }
+    },
+    {
+      "name": "er2b_trl_g2_s456",
+      "path": "raw/er2b_trl_g2_s456.json",
+      "n_problems": 200,
+      "n_per_problem": 32,
+      "pass_at_k": {
+        "1": 0.4771875,
+        "8": 0.8511284722816426,
+        "32": 0.93
+      },
+      "truncation_rate": 0.950625,
+      "mean_tokens": 508.8795,
+      "delta_vs_base": {
+        "1": {
+          "delta": 0.17140625,
+          "ci95": [
+            0.14859375,
+            0.19453125
+          ],
+          "p": 9.999000099990002e-05
+        },
+        "32": {
+          "delta": 0.035,
+          "ci95": [
+            0.005,
+            0.07
+          ],
+          "p": 0.0673932606739326
+        }
+      }
+    },
+    {
+      "name": "er2b_trl_g16_s123",
+      "path": "raw/er2b_trl_g16_s123.json",
+      "n_problems": 200,
+      "n_per_problem": 32,
+      "pass_at_k": {
+        "1": 0.3478125,
+        "8": 0.7992930782540904,
+        "32": 0.895
+      },
+      "truncation_rate": 0.985156,
+      "mean_tokens": 511.1184,
+      "delta_vs_base": {
+        "1": {
+          "delta": 0.04203125,
+          "ci95": [
+            0.02765625,
+            0.05625
+          ],
+          "p": 9.999000099990002e-05
+        },
+        "32": {
+          "delta": 0.0,
+          "ci95": [
+            -0.025,
+            0.03
+          ],
+          "p": 1.0
+        }
+      }
+    },
+    {
+      "name": "er2b_trl_g16_s456",
+      "path": "raw/er2b_trl_g16_s456.json",
+      "n_problems": 200,
+      "n_per_problem": 32,
+      "pass_at_k": {
+        "1": 0.3634375,
+        "8": 0.8149361650646968,
+        "32": 0.92
+      },
+      "truncation_rate": 0.982812,
+      "mean_tokens": 510.9575,
+      "delta_vs_base": {
+        "1": {
+          "delta": 0.05765625,
+          "ci95": [
+            0.04078125,
+            0.074375
+          ],
+          "p": 9.999000099990002e-05
+        },
+        "32": {
+          "delta": 0.025,
+          "ci95": [
+            -0.01,
+            0.06
+          ],
+          "p": 0.2706729327067293
+        }
+      }
+    }
+  ],
+  "pooled": [
+    {
+      "arm": "G=2",
+      "group_size": 2,
+      "n_seeds": 2,
+      "models": [
+        "er2b_trl_g2_s123",
+        "er2b_trl_g2_s456"
+      ],
+      "seeds": [
+        123,
+        456
+      ],
+      "pass_at_k": {
+        "1": 0.482578125,
+        "8": 0.8551901053402166,
+        "32": 0.9325
+      },
+      "truncation_rate": 0.9526565,
+      "mean_tokens": 508.83125,
+      "delta_vs_base": {
+        "1": {
+          "delta": 0.176796875,
+          "ci95": [
+            0.154529296875,
+            0.1990625
+          ],
+          "p": 9.999000099990002e-05
+        },
+        "32": {
+          "delta": 0.0375,
+          "ci95": [
+            0.01,
+            0.07
+          ],
+          "p": 0.023997600239976002
+        }
+      }
+    },
+    {
+      "arm": "G=16",
+      "group_size": 16,
+      "n_seeds": 2,
+      "models": [
+        "er2b_trl_g16_s123",
+        "er2b_trl_g16_s456"
+      ],
+      "seeds": [
+        123,
+        456
+      ],
+      "pass_at_k": {
+        "1": 0.355625,
+        "8": 0.8071146216593936,
+        "32": 0.9075
+      },
+      "truncation_rate": 0.983984,
+      "mean_tokens": 511.03795,
+      "delta_vs_base": {
+        "1": {
+          "delta": 0.04984375,
+          "ci95": [
+            0.03625,
+            0.063671875
+          ],
+          "p": 9.999000099990002e-05
+        },
+        "32": {
+          "delta": 0.0125,
+          "ci95": [
+            -0.0125,
+            0.04
+          ],
+          "p": 0.48135186481351866
+        }
+      }
+    }
+  ],
+  "training": [
+    {
+      "arm": "G=2 s=123",
+      "group_size": 2,
+      "seed": 123,
+      "july": {
+        "path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/platform_hybrid/experiments/tinker-runs/results/er2b_g2_s123.json",
+        "status": "completed",
+        "group_size": 2,
+        "seed": 123,
+        "steps_planned": 160,
+        "steps_completed": 160,
+        "n_reward": 160,
+        "n_step_log": 160,
+        "last10": 0.9,
+        "last10_n": 10,
+        "zvf_final20": 0.975,
+        "zvf_final20_n": 20,
+        "incomplete": false
+      },
+      "rerun": {
+        "path": "train/er2b_trl_g2_s123.json",
+        "status": "completed",
+        "group_size": 2,
+        "seed": 123,
+        "steps_planned": 160,
+        "steps_completed": 160,
+        "n_reward": 160,
+        "n_step_log": 160,
+        "last10": 0.4625,
+        "last10_n": 10,
+        "zvf_final20": 0.6625,
+        "zvf_final20_n": 20,
+        "incomplete": false
+      },
+      "rerun_incomplete": false
+    },
+    {
+      "arm": "G=2 s=456",
+      "group_size": 2,
+      "seed": 456,
+      "july": {
+        "path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/platform_hybrid/experiments/tinker-runs/results/er2b_g2_s456.json",
+        "status": "completed",
+        "group_size": 2,
+        "seed": 456,
+        "steps_planned": 160,
+        "steps_completed": 160,
+        "n_reward": 160,
+        "n_step_log": 160,
+        "last10": 0.9625,
+        "last10_n": 10,
+        "zvf_final20": 0.98125,
+        "zvf_final20_n": 20,
+        "incomplete": false
+      },
+      "rerun": {
+        "path": "train/er2b_trl_g2_s456.json",
+        "status": "completed",
+        "group_size": 2,
+        "seed": 456,
+        "steps_planned": 160,
+        "steps_completed": 160,
+        "n_reward": 160,
+        "n_step_log": 160,
+        "last10": 0.425,
+        "last10_n": 10,
+        "zvf_final20": 0.6875,
+        "zvf_final20_n": 20,
+        "incomplete": false
+      },
+      "rerun_incomplete": false
+    },
+    {
+      "arm": "G=16 s=123",
+      "group_size": 16,
+      "seed": 123,
+      "july": {
+        "path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/platform_hybrid/experiments/tinker-runs/results/er2b_g16_s123.json",
+        "status": "completed",
+        "group_size": 16,
+        "seed": 123,
+        "steps_planned": 20,
+        "steps_completed": 20,
+        "n_reward": 20,
+        "n_step_log": 20,
+        "last10": 0.321875,
+        "last10_n": 10,
+        "zvf_final20": 0.19375,
+        "zvf_final20_n": 20,
+        "incomplete": false
+      },
+      "rerun": {
+        "path": "train/er2b_trl_g16_s123.json",
+        "status": "completed",
+        "group_size": 16,
+        "seed": 123,
+        "steps_planned": 20,
+        "steps_completed": 20,
+        "n_reward": 20,
+        "n_step_log": 20,
+        "last10": 0.28359375,
+        "last10_n": 10,
+        "zvf_final20": 0.2125,
+        "zvf_final20_n": 20,
+        "incomplete": false
+      },
+      "rerun_incomplete": false
+    },
+    {
+      "arm": "G=16 s=456",
+      "group_size": 16,
+      "seed": 456,
+      "july": {
+        "path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/platform_hybrid/experiments/tinker-runs/results/er2b_g16_s456.json",
+        "status": "completed",
+        "group_size": 16,
+        "seed": 456,
+        "steps_planned": 20,
+        "steps_completed": 20,
+        "n_reward": 20,
+        "n_step_log": 20,
+        "last10": 0.3890625,
+        "last10_n": 10,
+        "zvf_final20": 0.1125,
+        "zvf_final20_n": 20,
+        "incomplete": false
+      },
+      "rerun": {
+        "path": "train/er2b_trl_g16_s456.json",
+        "status": "completed",
+        "group_size": 16,
+        "seed": 456,
+        "steps_planned": 20,
+        "steps_completed": 20,
+        "n_reward": 20,
+        "n_step_log": 20,
+        "last10": 0.35390625,
+        "last10_n": 10,
+        "zvf_final20": 0.11875,
+        "zvf_final20_n": 20,
+        "incomplete": false
+      },
+      "rerun_incomplete": false
+    }
+  ]
+}

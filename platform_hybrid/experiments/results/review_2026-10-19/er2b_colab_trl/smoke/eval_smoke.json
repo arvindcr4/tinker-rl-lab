@@ -1,0 +1,57 @@
+{
+ "kind": "passk_eval_colab_vllm",
+ "backend": "colab-vllm",
+ "gpu": "NVIDIA A100-SXM4-40GB",
+ "vllm_version": "0.32.0",
+ "model": "Qwen/Qwen3-8B",
+ "adapter": "/content/out/adapters/er2b_trl_g16_s123_smoke2",
+ "dataset": "gsm8k",
+ "grader": "modal_passk.gsm8k_reward (parser v2: last boxed, else last number)",
+ "n_problems": 10,
+ "n_per_problem": 32,
+ "ks": [
+  1,
+  8,
+  32
+ ],
+ "temperature": 1.0,
+ "top_p": 1.0,
+ "seed": 42,
+ "sample_seeds": "SEED*1_000_003 + i*n + j, one request per sample",
+ "max_tokens": 512,
+ "per_problem_c": [
+  10,
+  26,
+  1,
+  4,
+  11,
+  9,
+  12,
+  11,
+  0,
+  22
+ ],
+ "per_problem_unique_texts": [
+  32,
+  32,
+  32,
+  32,
+  32,
+  32,
+  32,
+  32,
+  32,
+  32
+ ],
+ "min_unique_texts_per_problem": 32,
+ "pass_at_k": {
+  "1": 0.3312,
+  "8": 0.7827,
+  "32": 0.9
+ },
+ "truncation_rate": 0.9625,
+ "mean_tokens": 509.5406,
+ "boxed_rate": 0.1406,
+ "wall_seconds": 32.2,
+ "tag": "smoke"
+}

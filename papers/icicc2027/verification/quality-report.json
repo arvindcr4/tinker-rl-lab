@@ -1,10 +1,10 @@
 {
-  "checked_at": "2026-10-19T02:38:10.200888+00:00",
+  "checked_at": "2026-10-19T02:42:27.955542+00:00",
   "checked_date": "2026-10-19",
   "scope": "Editorial/build checks, source-parsed arithmetic, exact recount of retained app summaries and optional historical receipt hash; not new benchmark execution or venue-policy certification",
   "pages_including_references": 12,
   "paper_size": "A4",
-  "extractable_text_characters": 37362,
+  "extractable_text_characters": 37415,
   "rendered_title_verified": true,
   "cited_references": 41,
   "references_dated_2024_or_2025": 21,
@@ -30,7 +30,7 @@
     "LLNCS/amsmath: Unable to redefine math accent vec",
     "Underfull bibliography lines; inspect render separately"
   ],
-  "pdf_sha256": "4152260066c30a4b156a0232477cec81b7546a26a716b9b5b4619c0ce9e2fea1",
-  "source_sha256": "da3c60e9b4963f9a106e4f240972a226b315e3f154c8b09969756241edf32ed7",
+  "pdf_sha256": "49fa9efb08d7410d333b28f5cd38500bd94767a39d707988a264ca7d43f87bc9",
+  "source_sha256": "04b2ac8e5116419576e7320e334967ff7f2124875c44deaa4cc32b0570964050",
   "bibliography_sha256": "42fe45339600ca625681d7452534118e0881e990396968fde48953b0ed6bbf54"
 }

@@ -1,0 +1,49 @@
+% Paper 05 only: overlap and disclosure map (ARS 2026-10-19 EIC-W3 / DA-MAJOR-3).
+\section{Relationship to Other Texts From the Same Corpus}
+\label{sec:overlap}
+
+This manuscript descends from NeurIPS submission \#36320 but is
+not its authenticated or byte-identical reviewed PDF; we audit that submitted record
+rather than claiming that local edits change it. The same run corpus is also
+used by an associated thesis and by sibling manuscripts. Table~\ref{tab:overlap}
+lists, for each display of this audit, the other texts in the repository whose
+source contains the same values. The scan is a string-level search of each
+root's \LaTeX{} inclusion closure (and of the thesis chapter sources) for
+display-specific values; it detects reuse of these numbers, not paraphrase or
+reuse of other material, and it does not establish submission status.
+
+\begin{table}[htbp]
+\centering\scriptsize
+\caption{Overlap map for the displays of this audit (2026-10-19 scan). P1--P12
+are the live sibling roots listed in
+\texttt{platform\_hybrid/paper/scripts/publication\_worthiness\_check.py}; the
+thesis is \texttt{reports/public\_revision\_2026-10-11/thesis/}. ``None found''
+means the probe values were absent, not that the texts are unrelated.}
+\label{tab:overlap}
+\begin{tabular}{@{}p{.30\linewidth}p{.33\linewidth}p{.27\linewidth}@{}}
+\toprule
+Display in this audit & Same values also in & Unique here \\
+\midrule
+Two reviewed tool-use cells (Table~\ref{tab:audited-tool-cells}) & P2, P6, P9; thesis ch.~7, 10 & Manifest and alternative-explanation audit \\
+Held-out GSM8K five-adapter check (Section~\ref{sec:heldout}) & P8, P9; thesis ch.~1, 6, 7, 10 & Prompt-paired discordance counts \\
+Wave~6 sensitivity sweep & P5, P8, P9 & None \\
+Task~4 stack-sensitivity rows & P5, P6, P7, P9 & None \\
+Nemotron-120B trace (87.5\% peak, 16.2\% last-10) & P8 & None \\
+Training-reward ledger re-audit (Table~\ref{tab:main_results}) & Individual rows in several siblings & Window corrections and conflict quarantines \\
+Withdrawn summaries (SI/PTD, lagged ZVF, team percentages) & --- & Withdrawal record \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Disclosure.}
+No display here should be counted as evidence independent of the same rows in a
+sibling text. The thesis Table~6.2 remains provisional; this audit does not
+change its numbers or upgrade its status. The portfolio companions on
+terminal-signal decision analysis (\path{zvf-program/flagship/paper/main.tex}),
+receipt-bound evaluation governance (\path{papers/icicc2027/paper_camera.tex}),
+stack-conditioned measurement
+(\path{papers/pes_ieee_attribution/ArvindCR_GRPO_Attribution_IEEE.tex}), and
+zero-advantage spectral analysis
+(\path{papers/spectral_entropy_grpo/spectral_entropy_paper_kdense_revision.tex})
+share the zero-advantage background but none of the probe values above. Which of these texts is, or will be, under review at
+any venue must be declared by the authors at submission; it is not asserted here.

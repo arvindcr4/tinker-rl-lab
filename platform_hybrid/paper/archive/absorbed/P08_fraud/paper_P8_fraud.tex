@@ -94,6 +94,18 @@ by selecting a convenient iteration. In particular ECE 0.99 is worse, not
 better, than 0.17--0.21. A deterministic identical-score comparison has
 zero decision flips by construction. Unrelated RL telemetry and evolving
 cross-paper density tables are excluded, not evidence about fraud decisions.
+\section{Related work: tabular foundation models}
+Hollmann et al.\ \cite{hollmann2025accurate} introduce TabPFNv2, a
+transformer-based tabular foundation model pretrained on synthetic datasets
+for prediction on small tabular datasets. Unlike a text-serialized LLM,
+which represents rows as token sequences for a language model, TabPFNv2
+is trained specifically for tabular prediction and conditions on labelled
+examples. Thus language-model results alone do not establish the merits
+or limits of tabular foundation models. The Nature study evaluates datasets
+with up to 10,000 samples; its results cannot be transferred directly to
+this study's 40,000-row training split. We have not evaluated TabPFNv2 here
+and claim no empirical comparison with it; the withdrawn analyses remain
+withdrawn.
 \section{Remaining requirements}
 Before this study can support a comparative publication, recover the exact
 row manifests, fit/configuration identities, predictions and costs; refit
@@ -101,4 +113,12 @@ every downstream analysis on the disjoint 40,000-row training split only, then
 recompute matched-row metrics and uncertainty.
 Do not infer human expert validation, deployment efficacy or language-model
 roles from this synthetic observation. All such claims remain unestablished.
+\begin{thebibliography}{1}
+\bibitem{hollmann2025accurate}
+Noah Hollmann, Samuel Müller, Lennart Purucker, Arjun Krishnakumar,
+Max Körfer, Shi Bin Hoo, Robin Tibor Schirrmeister, and Frank Hutter.
+Accurate predictions on small data with a tabular foundation model.
+\emph{Nature}, 637:319--326, 2025.
+\url{https://doi.org/10.1038/s41586-024-08328-6}.
+\end{thebibliography}
 \end{document}

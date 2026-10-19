@@ -22,15 +22,20 @@ stack-conditioned, and venues should require authors to report the stack, not
 merely the label.} We do not claim that algorithmic labels are meaningless---the
 loss-form differences among GRPO~\citep{shao2024deepseekmath, guo2025deepseekr1},
 DAPO~\citep{yu2025dapo}, Dr.GRPO~\citep{tong2025drgrpo}, and
-GSPO~\citep{qwen2025gspo} are real and sometimes consequential. We claim that on
-the evidence available to us the stack's contribution to reported outcomes is at
-least as large as the label's, and that the community's reporting conventions are
-calibrated to the wrong term. A $17\times$ same-label outcome swing from a
-nominal backend comparison (\secref{sec:p5-evidence}) is larger than every
-label-vs-label gap in our corpus, but $64\%$ of it is a base-checkpoint switch
-and the rest is confounded by reward, prompt, decoding, batch, data, and loss
-implementation; it is evidence of \emph{under-specification}, not a backend
-causal effect. Deep RL went through this reckoning once
+GSPO~\citep{qwen2025gspo} are real and sometimes consequential. Controlled
+RLVR studies report sensitivity to evaluation settings
+\citep{hochlehnert2025sober}, scale-dependent algorithm rankings under shared
+infrastructure \citep{li2026oxrl}, and dependence of reported training-trick
+gains on settings, data, and initialization \citep{liu2025tricks}. Our
+confounded cross-stack exhibits cannot identify how much outcome variance is
+caused by the stack rather than the algorithm, and our small fixed-stack
+comparison establishes neither equivalence nor a universal ranking. They
+motivate disclosure of both, not a claim that one always dominates. A $17\times$
+same-label outcome swing from a nominal backend comparison (\secref{sec:p5-evidence})
+is larger than every label-vs-label gap in our corpus, but $64\%$ of it is a
+base-checkpoint switch and the rest is confounded by reward, prompt, decoding,
+batch, data, and loss implementation; it is evidence of \emph{under-specification},
+not a backend causal effect. Deep RL went through this reckoning once
 already~\citep{henderson2018deep, colas2019hitchhiker, agarwal2021deep};
 RL-for-LLMs has re-created the conditions with a larger and less inspectable
 stack.

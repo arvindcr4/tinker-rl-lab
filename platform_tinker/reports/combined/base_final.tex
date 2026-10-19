@@ -675,7 +675,7 @@ The primary challenge is that gradient descent needs something to optimize, but 
     % === ARROWS WITH LABELS ===
     % Action arrow (Agent → Environment)
     \draw[->, thick, red!70!black, line width=1.5pt] (1.5, 1.1) -- (1.5, -0.3);
-    \node[right, font=\small, red!70!black] at (1.6, 0.4) {Action $a_t$};
+    \node[left, font=\small, red!70!black] at (1.4, 0.4) {Action $a_t$};
 
     % State arrow (Environment → Agent)
     \draw[->, thick, blue!70!black, line width=1.5pt] (-1.5, -0.3) -- (-1.5, 1.1);
@@ -683,7 +683,7 @@ The primary challenge is that gradient descent needs something to optimize, but 
 
     % Reward arrow (curved, from environment to agent)
     \draw[->, thick, orange!80!black, line width=1.5pt] (2.3, -1.5) to[out=0, in=0] (2.3, 2.5);
-    \node[right, font=\small, orange!80!black] at (2.4, 0.5) {Reward $r_t$};
+    \node[right, font=\small, orange!80!black] at (3.4, 0.5) {Reward $r_t$};
 
     % === TIME STEP INDICATOR ===
     \node[draw, dashed, gray, rounded corners, font=\scriptsize, inner sep=4pt] at (0, -3.2) {
@@ -691,7 +691,7 @@ The primary challenge is that gradient descent needs something to optimize, but 
     };
 
     % === RL OBJECTIVE ===
-    \node[draw, thick, fill=yellow!20, rounded corners, font=\small, align=center, inner sep=6pt] at (6, 0.5) {
+    \node[draw, thick, fill=yellow!20, rounded corners, font=\small, align=center, inner sep=6pt] at (6.8, 0.5) {
         \textbf{Objective:}\\[2pt]
         $\max_\theta \mathbb{E}\left[\sum_{t=0}^{H} \gamma^t r_t\right]$
     };
@@ -872,24 +872,24 @@ Complex tasks suffer from the ``curse of dimensionality'' over time. Planning a 
 ]
     % High level (top row)
     \node[box, fill=purple!30] (manager) at (0,2) {Manager\\$\pi_{high}(g|s)$};
-    \node[box, fill=purple!10] (goal) at (3.5,2) {Subgoal $g$};
-    \node[box, fill=gray!20] (env) at (7,2) {Environment};
+    \node[box, fill=purple!10] (goal) at (4.4,2) {Subgoal $g$};
+    \node[box, fill=gray!20] (env) at (8.8,2) {Environment};
 
     % Low level (bottom row)
-    \node[box, fill=blue!30] (worker) at (3.5,0.5) {Worker\\$\pi_{low}(a|s,g)$};
-    \node[box, fill=blue!10] (action) at (7,0.5) {Primitive\\Action $a$};
+    \node[box, fill=blue!30] (worker) at (4.4,0.5) {Worker\\$\pi_{low}(a|s,g)$};
+    \node[box, fill=blue!10] (action) at (8.8,0.5) {Primitive\\Action $a$};
 
     % Forward flow arrows
-    \draw[arrow] (manager) -- node[above, font=\tiny] {every $k$ steps} (goal);
+    \draw[arrow] (manager) -- node[midway, above=4pt, fill=white, inner sep=1pt, font=\scriptsize] {every $k$ steps} (goal);
     \draw[arrow] (goal) -- (worker);
-    \draw[arrow] (worker) -- node[above, font=\tiny] {every step} (action);
+    \draw[arrow] (worker) -- node[above, font=\scriptsize] {every step} (action);
     \draw[arrow] (action) -- (env);
     
     % Feedback arrow - routed below to avoid crossing boxes
-    \draw[arrow, dashed] (env.north) -- ++(0,0.5) -| node[pos=0.25, above, font=\tiny] {reward $r$} (manager.north);
+    \draw[arrow, dashed] (env.north) -- ++(0,0.5) -| node[pos=0.25, above, font=\scriptsize] {reward $r$} (manager.north);
 
     % Examples
-    \node[font=\tiny, text width=5cm, align=center] at (3.5,-0.6) {Options Framework, HAM, HIRO, Feudal Networks};
+    \node[font=\tiny, text width=5cm, align=center] at (4.4,-0.6) {Options Framework, HAM, HIRO, Feudal Networks};
 \end{tikzpicture}
 \caption{Hierarchical RL: manager policy selects subgoals every $k$ steps; worker policy executes primitive actions to achieve them. Temporal abstraction reduces effective horizon.}
 \label{fig:hierarchical}
@@ -1239,7 +1239,7 @@ Table~\ref{tab:algorithm_comparison} lines up the three main alignment algorithm
     \node[font=\tiny, fill=white, inner sep=1pt] at (75:2.5) {5};
 
     % Legend with proper box
-    \draw[thick, fill=white, rounded corners] (4.3, 2.5) rectangle (6.5, 0.3);
+    \draw[thick, fill=white, rounded corners] (4.3, 2.5) rectangle (7.0, 0.3);
     \node[draw=blue!80, fill=blue!25, minimum width=0.35cm, minimum height=0.25cm] at (4.7, 2.1) {};
     \node[right, font=\scriptsize] at (5.0, 2.1) {PPO};
     \node[draw=red!80, fill=red!25, minimum width=0.35cm, minimum height=0.25cm] at (4.7, 1.4) {};
@@ -1553,8 +1553,8 @@ ReAct \cite{yao2023react} popularized a clean way to do this: let the model alte
     \draw[arrow] (tools.south) -- ++(0,-0.5) -| (env.east);
     \draw[arrow] (env.north) -- node[right, font=\scriptsize] {Obs} (reasoning.south);
     \draw[arrow] (memory) -- (reasoning);
-    \draw[arrow] (reasoning) -- node[above, font=\scriptsize] {Store} (memory);
-    \draw[arrow, dashed] (env.west) -- ++(-1,0) |- node[near start, left, font=\scriptsize] {Feedback} (llm.west);
+    \draw[arrow] (reasoning.north west) to[bend right=25] node[above, font=\scriptsize] {Store} (memory.north east);
+    \draw[arrow, dashed] (env.west) -- (-7,-5) -- node[midway, left, font=\scriptsize] {Feedback} (-7,0) -- (llm.west);
 \end{tikzpicture}
 \caption{How agentic workflows connect LLM-based logic, tool integration, environment feedback, and memory.
  The agent sharpens its actions step by step based on what it observes.}
@@ -1662,26 +1662,18 @@ The core challenge: translate ``click the search bar'' into an (x, y) coordinate
             $= \text{softmax}\left(\frac{QK^T}{\sqrt{d}}\right)V$
         };
 
-    % Query, Key, Value labels
-    \node[draw, fill=green!40, rounded corners=3pt, font=\tiny, minimum width=0.8cm] (Q) at (-0.9, 1.7) {Q};
-    \node[draw, fill=blue!40, rounded corners=3pt, font=\tiny, minimum width=0.8cm] (K) at (0, 1.7) {K};
-    \node[draw, fill=blue!40, rounded corners=3pt, font=\tiny, minimum width=0.8cm] (V) at (0.9, 1.7) {V};
-
     % === ARROWS: Visual to Cross-Attention ===
-    \draw[->, thick, blue!60, dashed] (-3.5, 1.4) -- (-1.2, 2.5);
-    \draw[->, thick, blue!60, dashed] (-3.5, 0.8) -- (-1.2, 2.2);
-    \node[font=\tiny, blue!60!black, rotate=20] at (-2.5, 2.4) {K, V};
-
+    \draw[->, thick, blue!60, dashed] (-3.5, 1.4) -- node[midway, above, fill=white, inner sep=1pt, font=\tiny] {K, V} (attn.west);
+    \draw[->, thick, blue!60, dashed] (-3.5, 0.8) -- (attn.west);
     % === ARROWS: Text to Cross-Attention ===
-    \draw[->, thick, green!60, dashed] (3.5, 1.4) -- (1.2, 2.5);
-    \draw[->, thick, green!60, dashed] (3.5, 0.8) -- (1.2, 2.2);
-    \node[font=\tiny, green!60!black, rotate=-20] at (2.5, 2.4) {Q};
+    \draw[->, thick, green!60, dashed] (3.5, 1.4) -- node[midway, above, fill=white, inner sep=1pt, font=\tiny] {Q} (attn.east);
+    \draw[->, thick, green!60, dashed] (3.5, 0.8) -- (attn.east);
 
     % === OUTPUT ===
     \node[draw, thick, fill=orange!30, minimum width=3.5cm, minimum height=0.6cm, rounded corners, font=\small]
         (output) at (0, 0) {\textbf{Grounded Action}};
 
-    \draw[->, thick, purple!70] (0, 1.5) -- (0, 0.4);
+    \draw[->, thick, purple!70] (attn.south) -- (output.north);
 
     % Output description
     \node[font=\tiny, align=center] at (0, -0.6) {$(x, y)$ coordinates + action type};
@@ -1828,6 +1820,14 @@ Recent work shows that ``test-time compute''---giving models extra cycles to spi
 
 \subsection{Limitations of Current Tool-Use and Evaluation Research}
 This survey focuses on English-language publications from 2023--2025; non-English literature and earlier foundational work may be underrepresented. Benchmark performance metrics reported here reflect best-case results from published papers and may not generalize to deployment conditions. Tool-use evaluations are predominantly conducted on curated benchmarks with known APIs---real-world tool ecosystems involve undocumented APIs, version drift, and authentication complexity not captured in current evaluations. Additionally, safety benchmarks remain limited in scope, testing specific attack vectors rather than comprehensive threat models.
+
+\paragraph{External validity and credit assignment.}
+The Berkeley Function Calling Leaderboard (BFCL), from the Gorilla project~\cite{patil2023gorilla}, evaluates function calling beyond syntactic validity, including function selection and multi-turn tool use.\footnote{Primary benchmark description: \url{https://gorilla.cs.berkeley.edu/blogs/13_bfcl_v3_multi_turn.html}. Gorilla (2023) is the precursor, not the BFCL benchmark paper.}
+Yao et al.'s $\tau$-bench (2024 preprint) tests dynamic tool--agent--user conversations under domain policies, checks final database states against goals, and measures repeated-trial reliability with pass$^k$.\footnote{Shunyu Yao, Noah Shinn, Pedram Razavi, and Karthik Narasimhan, \textit{$\tau$-bench: A Benchmark for Tool-Agent-User Interaction in Real-World Domains}, \url{https://arxiv.org/abs/2406.12045}.}
+These evaluate capabilities not established by the synthetic five-tool and xlam-60k syntax-compliance tests in Chapter~\ref{ch:experiments}. We did not run BFCL or $\tau$-bench; those tests therefore do not establish interactive task success, policy compliance, or repeated-trial reliability on either benchmark.
+
+For credit assignment, Kazemnejad et al.'s VinePPO replaces learned value estimates with Monte Carlo estimates of intermediate-step returns, evaluated on MATH and GSM8K.\footnote{Amirhossein Kazemnejad et al., \textit{VinePPO: Refining Credit Assignment in RL Training of LLMs}, ICML 2025; preprint \url{https://arxiv.org/abs/2410.01679}.}
+It is a relevant baseline for separating advantage-estimation effects from reward shaping, not evidence of tool-agent performance. We did not implement or evaluate VinePPO. A future comparison should match model, tasks, rollout budget, and sampling cost before attributing gains to credit assignment.
 
 \begin{tcolorbox}[colback=green!5!white, colframe=green!60!black, title=\textbf{Chapter 3 Key Takeaways}]
 \begin{enumerate}

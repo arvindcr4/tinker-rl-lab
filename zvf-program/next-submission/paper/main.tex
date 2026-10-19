@@ -42,7 +42,7 @@
 \fancyfoot[C]{\thepage}
 \renewcommand{\headrulewidth}{0.4pt}
 
-\title{When Can We Skip a Group? A Complete Multi-Seed Test of Contrast-Aware Rollout Allocation for RLVR\\[1ex]
+\title{When Can We Skip a Group? A Preregistered Multi-Seed Study of Contrast-Aware Rollout Allocation for RLVR\\[1ex]
 {\large\textcolor{red}{[DRAFT SKELETON --- no results exist; all outcome language is preregistered test language]}}}
 \author{Author list to be determined\thanks{Draft skeleton generated from the frozen design in \texttt{zvf-program/next-submission/}; no confirmatory execution has occurred.}}
 \date{Draft of August 2, 2026}
@@ -51,7 +51,7 @@
 \maketitle
 
 \begin{abstract}
-Reinforcement learning from verifiable rewards (RLVR) charges its operator for every generated rollout token, yet a group of completions whose verifier rewards all agree provides no centered reward contrast and therefore no group-relative learning signal. We study a contrast-aware early-stop sampler for group-relative policy optimization: the sampler first draws two completions per prompt, expands the group to eight completions only when the two verifier rewards disagree, and stops sampling otherwise. We evaluate this intervention against a fixed eight-completion baseline in a complete, preregistered two-task matrix --- GSM8K and MATH-500, with twenty-three paired seeds per task-arm cell and fixed held-out evaluation for every cell. We test whether the intervention reduces rollout cost. We test held-out non-inferiority. We preregister a joint cost-quality decision: the intervention counts as useful only if the multiplicity-adjusted charged-token saving reaches at least twenty percent and the held-out exact-match accuracy difference stays within a one-percentage-point non-inferiority margin, on both tasks simultaneously. \resultpending{one numerical headline result with its confidence interval will be inserted here only after all confirmatory rows are complete and the publication gate passes}. All claims are bounded to the frozen mathematical tasks, model, and stack under study; no transfer beyond that boundary is asserted.
+Reinforcement learning from verifiable rewards (RLVR) charges its operator for every generated rollout token, yet a group of completions whose verifier rewards all agree provides no centered reward contrast and therefore no group-relative learning signal. We study a contrast-aware early-stop sampler for group-relative policy optimization: the sampler first draws two completions per prompt, expands the group to eight completions only when the two verifier rewards disagree, and stops sampling otherwise. We preregister a comparison of this intervention against a fixed eight-completion baseline in a complete, preregistered two-task matrix --- GSM8K and MATH-500, with twenty-three paired seeds per task-arm cell and fixed held-out evaluation for every cell. We test whether the intervention reduces rollout cost. We test held-out non-inferiority. We preregister a joint cost-quality decision: the intervention counts as useful only if the multiplicity-adjusted charged-token saving reaches at least twenty percent and the held-out exact-match accuracy difference stays within a one-percentage-point non-inferiority margin, on both tasks simultaneously. \resultpending{one numerical headline result with its confidence interval will be inserted here only after all confirmatory rows are complete and the publication gate passes}. All claims are bounded to the frozen mathematical tasks, model, and stack under study; no transfer beyond that boundary is asserted.
 \end{abstract}
 
 \section{Introduction}
@@ -61,10 +61,10 @@ Group-relative policy optimization for verifiable-reward tasks prices its traini
 
 This paper asks one research question, fixed before any execution: can a contrast-aware early-stop sampler reduce charged generated tokens by at least twenty percent relative to fixed $G{=}8$ group-relative training, while the lower confidence bound for the held-out accuracy difference remains above minus one percentage point, separately on GSM8K and MATH-500? Both conditions must hold on both tasks; a positive result on one task cannot compensate for a missing or negative cell on the other.
 
-We make three contributions:
+We preregister three prospective contributions:
 \begin{enumerate}
   \item \textbf{A minimal probe-then-expand policy, tested as-is.} Rollout-allocation mechanisms now span pre-rollout prediction, post-hoc filtering, and sequential probe-and-allocate rules (Section~\ref{sec:related}); we do not propose a new rule. We isolate the cheapest member of this family --- a two-completion probe that expands only mixed-reward groups to the full group size --- leaving the model, objective, optimizer, data order, reward parser, and evaluator untouched, so that its savings and its false-homogeneity cost can be measured without confounding (Section~\ref{sec:method}).
-  \item \textbf{The complete paired-seed study.} A preregistered two-task, two-arm confirmatory matrix with twenty-three paired seeds per cell, a blinded variance reassessment that can only increase the seed count, and a joint cost/non-inferiority estimand with multiplicity control (Section~\ref{sec:design}). We test whether the intervention reduces rollout cost, and we test held-out non-inferiority.
+  \item \textbf{The complete paired-seed design.} A preregistered two-task, two-arm confirmatory matrix with twenty-three paired seeds per cell, a blinded variance reassessment that can only increase the seed count, and a joint cost/non-inferiority estimand with multiplicity control (Section~\ref{sec:design}). We test whether the intervention reduces rollout cost, and we test held-out non-inferiority.
   \item \textbf{The fail-closed evidence pipeline.} A results contract under which every confirmatory value must originate from a hash-validated run ledger; incomplete or invalid cells yield an \textsc{inconclusive} verdict rather than a weakened claim, and the main table cannot be generated at all until every planned row is complete (Sections~\ref{sec:design} and~\ref{sec:results}).
 \end{enumerate}
 

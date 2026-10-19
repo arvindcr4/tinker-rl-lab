@@ -22,7 +22,7 @@ def normalize_number(text: str) -> str | None:
         return None
     for left, right in (("$", "$"), (r"\(", r"\)")):
         if text.startswith(left) and text.endswith(right):
-            text = text[len(left) : -len(right)].strip()
+            text = text[len(left):-len(right)].strip()
     # Accept a simple LaTeX fraction; no expression evaluation or recursive parser.
     frac = re.fullmatch(r"\\(?:dfrac|tfrac|frac)\{([^{}]+)\}\{([^{}]+)\}", text)
     if frac:
@@ -81,7 +81,6 @@ def parse_answer(text: str) -> dict[str, str | None]:
     numeric line participate in the ambiguity guard even when other markers exist.
     Known terminal-token removal remains the caller's responsibility, as in v1.
     """
-
     def failed(status: str) -> dict[str, str | None]:
         return {"status": status, "source": None, "value": None}
 
@@ -114,13 +113,8 @@ def parse_answer(text: str) -> dict[str, str | None]:
             explicit = _EXPLICIT.fullmatch(line)
             if explicit:
                 source, value = "explicit_final", explicit.group(1).strip().removesuffix(".")
-            elif (pending_heading or index == len(lines) - 1) and normalize_number(
-                line
-            ) is not None:
-                source, value = (
-                    ("heading_numeric_line" if pending_heading else "standalone_final_line"),
-                    line,
-                )
+            elif (pending_heading or index == len(lines) - 1) and normalize_number(line) is not None:
+                source, value = ("heading_numeric_line" if pending_heading else "standalone_final_line"), line
             elif pending_heading:
                 # Only an entire balanced box can satisfy a heading, never prose.
                 if re.fullmatch(r"\\boxed\s*\{.*\}", line) and _boxed_values(line):
@@ -145,11 +139,8 @@ def parse_answer(text: str) -> dict[str, str | None]:
         return failed("invalid_numeric_answer")
     if len({value for _, value in parsed}) != 1:
         return failed("ambiguous_final_answers")
-    return {
-        "status": "ok",
-        "source": "+".join(dict.fromkeys(source for source, _ in parsed)),
-        "value": parsed[0][1],
-    }
+    return {"status": "ok", "source": "+".join(dict.fromkeys(source for source, _ in parsed)),
+            "value": parsed[0][1]}
 
 
 PARSER_VERSION = 2

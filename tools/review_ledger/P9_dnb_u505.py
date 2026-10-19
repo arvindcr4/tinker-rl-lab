@@ -8,6 +8,7 @@ Outputs: platform_hybrid/experiments/results/review_2026-10-18/P9_dnb/u505.json
 The 505 (seed, problem) tasks share 200 problems, so the bootstrap resamples
 problems (clusters), not tasks.
 """
+
 import json
 from pathlib import Path
 
@@ -25,7 +26,7 @@ for s in (42, 123, 456):
 
 tasks = {}
 for line in (RES / "zvf_iter46_per_prompt_isog.tsv").read_text().splitlines():
-    if line.startswith("#") or line.startswith("source") or not line.strip():
+    if line.startswith(("#", "source")) or not line.strip():
         continue
     f = line.split("\t")
     tasks[(f[1], f[2])] = float(f[3])
@@ -45,7 +46,7 @@ def U(p, G):
     return Y(p, G).mean() / np.sqrt(G)
 
 
-res = {
+res: dict[str, object] = {
     "n_tasks_filtered": int(len(P)),
     "n_tasks_all": int(len(P_all)),
     "n_problems": int(len(set(prob))),
@@ -66,10 +67,11 @@ for _ in range(10000):
     q = P[np.concatenate([idx_by_prob[u] for u in pick])]
     bs.append(U(q, 4) - U(q, 5))
 res["cluster_boot_ci95_U4_minus_U5"] = [round(float(x), 5) for x in np.percentile(bs, [2.5, 97.5])]
-res["bins_Y32_minus_Y4"] = {}
+bins: dict[str, dict[str, float]] = {}
+res["bins_Y32_minus_Y4"] = bins
 for lo, hi in ((0, 0.5), (0.5, 0.75), (0.75, 1.01)):
     q = P[(P >= lo) & (P < hi)]
-    res["bins_Y32_minus_Y4"][f"[{lo},{hi})"] = {"n": int(len(q)), "delta": round(float((Y(q, 32) - Y(q, 4)).mean()), 3)}
+    bins[f"[{lo},{hi})"] = {"n": int(len(q)), "delta": round(float((Y(q, 32) - Y(q, 4)).mean()), 3)}
 OUT.mkdir(parents=True, exist_ok=True)
 (OUT / "u505.json").write_text(json.dumps(res, indent=2) + "\n")
 print(json.dumps(res, indent=2))

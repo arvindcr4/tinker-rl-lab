@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import copy
+import hashlib
 import importlib.util
 import json
 from pathlib import Path
@@ -41,6 +42,22 @@ def test_followup_contract_is_inert_and_evidence_bounded() -> None:
     assert result["live_checkout_matches_accepted_source"] is (
         result["live_objective_sha256"] == result["accepted_objective_sha256"]
     )
+
+
+def test_live_objective_source_drift_still_fails_closed(monkeypatch) -> None:
+    verifier = load_verifier()
+    payload = json.loads(PROTOCOL_PATH.read_text(encoding="utf-8"))
+    objective = REPO_ROOT / payload["scope"]["live_checkout_observation"]["path"]
+    original_sha256 = verifier.sha256
+
+    def changed_objective_sha256(path):
+        if path == objective:
+            return hashlib.sha256(path.read_bytes() + b"\n# synthetic source drift\n").hexdigest()
+        return original_sha256(path)
+
+    monkeypatch.setattr(verifier, "sha256", changed_objective_sha256)
+    with pytest.raises(verifier.FollowupContractError, match="recorded live objective hash drift"):
+        verifier.verify_contract(payload, REPO_ROOT)
 
 
 def test_proxy_signal_cannot_complete_the_learning_claim() -> None:

@@ -9,12 +9,23 @@ import math
 import sys
 from fractions import Fraction as F
 from pathlib import Path
+from typing import TypedDict
 
 import scipy
 from scipy.stats import beta
 
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "platform_hybrid/experiments/results/review_2026-10-18/P10_zvf_theory/math_checks.json"
+
+
+class QuantileCheck(TypedDict):
+    theta: str
+    delta: str
+    K: int
+    continuous: float
+    discrete: int
+    previous_group_failure: str
+    quantile_failure: str
 
 
 def h(p, k):
@@ -44,7 +55,7 @@ def main():
     checks["variance_per_rollout_no_tie"] = F(1, 4) / 2 > F(1, 4) / 3
 
     # Count exact rational tail probabilities; logs are only a cross-check.
-    quantiles = []
+    quantiles: list[QuantileCheck] = []
     for theta, delta, k in [(F(443, 500), F(1, 10), 8), (F(1, 2), F(1, 8), 2)]:
         n = 1
         while theta**n > delta:
@@ -81,12 +92,16 @@ def main():
             and math.isclose(lower[-1], alpha ** (1 / m), rel_tol=1e-12)
             and math.isclose(upper[0], 1 - alpha ** (1 / m), rel_tol=1e-12)
         )
-        for theta in [0, 0.001] + [i / 100 for i in range(1, 100)] + [0.999, 1]:
-            pmf = [math.comb(m, x) * theta**x * (1 - theta) ** (m - x) for x in range(m + 1)]
-            lc = sum(prob for prob, bound in zip(pmf, lower, strict=True) if bound <= theta)
-            uc = sum(prob for prob, bound in zip(pmf, upper, strict=True) if theta <= bound)
-            checks[f"CP_coverage_m={m}_theta={theta}"] = min(lc, uc) >= 1 - alpha - 1e-12
-            coverage.append({"m": m, "theta": theta, "lower_coverage": lc, "upper_coverage": uc})
+        for grid_theta in [0, 0.001] + [i / 100 for i in range(1, 100)] + [0.999, 1]:
+            pmf = [
+                math.comb(m, x) * grid_theta**x * (1 - grid_theta) ** (m - x) for x in range(m + 1)
+            ]
+            lc = sum(prob for prob, bound in zip(pmf, lower, strict=True) if bound <= grid_theta)
+            uc = sum(prob for prob, bound in zip(pmf, upper, strict=True) if grid_theta <= bound)
+            checks[f"CP_coverage_m={m}_theta={grid_theta}"] = min(lc, uc) >= 1 - alpha - 1e-12
+            coverage.append(
+                {"m": m, "theta": grid_theta, "lower_coverage": lc, "upper_coverage": uc}
+            )
 
     # A lower bound can fail to trigger even when the next budget is insufficient.
     # X=0 is possible at theta=0.75 and produces L=0, hence a one-group lower floor.

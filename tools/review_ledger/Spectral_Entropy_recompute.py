@@ -6,6 +6,7 @@ No model training, network access, or benchmark accuracy measurement is performe
 """
 
 import hashlib
+import importlib
 import json
 import math
 import sys
@@ -16,8 +17,14 @@ import torch
 ROOT = Path(__file__).resolve().parents[2]
 PILOT = ROOT / "zvf-program/flagship"
 sys.path.insert(0, str(PILOT))
-from pilot.benchmark_spectral_harness import generate_benchmark_fixture
-from pilot.objective import condition_loss, entropic_givens_grpo, spectral_legendre_grpo
+# This source tree contains a hyphen and is resolved through the explicit path above.
+generate_benchmark_fixture = importlib.import_module(
+    "pilot.benchmark_spectral_harness"
+).generate_benchmark_fixture
+objective_module = importlib.import_module("pilot.objective")
+condition_loss = objective_module.condition_loss
+entropic_givens_grpo = objective_module.entropic_givens_grpo
+spectral_legendre_grpo = objective_module.spectral_legendre_grpo
 
 OUT = ROOT / "platform_hybrid/experiments/results/review_2026-10-18/Spectral_Entropy/replay.json"
 
@@ -42,7 +49,7 @@ def main():
             entropy = -(probabilities * (probabilities + 1e-12).log()).sum(-1)
             if not bool((entropy > 0.5).all()):
                 raise RuntimeError("Default gate unexpectedly active")
-            record = {
+            record: dict[str, object] = {
                 "G": g,
                 "L": length,
                 "entropy_min": float(entropy.min()),

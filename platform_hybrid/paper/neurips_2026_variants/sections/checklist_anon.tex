@@ -25,12 +25,14 @@
           accurately reflect the paper's contributions and scope?
     \answerYes{The abstract and Section~\ref{sec:intro} state every claim
     with an explicit evidence tier (A/B/C) and map it to a row of
-    Table~\ref{tab:claims-tier} and Table~\ref{tab:artifact-card}. Outside
-    the empirical tiers: the expected exact-tie fraction
+    Table~\ref{tab:claims-tier} and Table~\ref{tab:artifact-card}.
+    \textbf{Theory, not an empirical evidence grade}: the expected exact-tie fraction
     $\mathbb E[\mathrm{ZVF}_t]{=}p^{G}{+}(1{-}p)^{G}$ for conditionally i.i.d.\
     binary rewards at fixed $p$ (not an identity for an observed finite
-    batch), and the separate five-seed Qwen3-8B GSM8K held-out evaluation
-    ($+1.3$pp, one-sample $t(4){=}1.32$, $p{=}0.26$; not evidence of a gain).
+    batch). The separate five-seed Qwen3-8B GSM8K held-out evaluation
+    ($+1.3$pp, one-sample $t(4){=}1.32$, $p{=}0.26$ against a single base-model
+    score treated as fixed) is outside the historical A/B/C tiers and is
+    not evidence of a gain.
     \textbf{(B)}: single- or two-run Tinker and Modal case studies.
     \textbf{(C)}: failed/partial/quarantined/unstarted cells in
     Appendix~\ref{sec:run-manifest}. Executed cells cover synthetic

@@ -56,6 +56,8 @@ def missing_sources(src):
         if not ok:
             missing.append(word)
     return missing
+
+
 STATUSES = {
     "fixed",
     "refuted",
@@ -69,7 +71,7 @@ STATUSES = {
 def main():
     strict = "--strict" in sys.argv
     con = sqlite3.connect(REV / "findings.sqlite")
-    ids_by_paper = {}
+    ids_by_paper: dict[str, dict[int, str]] = {}
     for fid, paper, sev in con.execute("select id, paper, severity from findings"):
         ids_by_paper.setdefault(paper, {})[fid] = sev
     problems, lines = (

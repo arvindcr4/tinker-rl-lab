@@ -88,6 +88,7 @@ def test_event_precedes_alarm_and_recovery():
 
 def test_risk_provenance_and_frozen_threshold():
     from _review28_risk import evaluate, score
+    from _review28_statistics import auc
 
     base = dict(
         experiment="e",
@@ -112,7 +113,16 @@ def test_risk_provenance_and_frozen_threshold():
         evaluate([row, row])
     for n in (130, 134):
         module = importlib.import_module(f"zvf_diagnostic_iter{n}")
+        assert module.score is score
+        assert module.evaluate is evaluate
+        assert module.auroc is auc
+        assert module.score(base) is None
         assert module.score(row) == score(row)
+        assert module.evaluate([row], threshold=0.95, calibrate=False) == (
+            measured,
+            excluded,
+            threshold,
+        )
 
 
 def test_partial_auc_refits_and_constants():

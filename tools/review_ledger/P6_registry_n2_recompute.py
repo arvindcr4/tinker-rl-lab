@@ -18,7 +18,7 @@ METHODS = ("grpo", "aero", "gift", "areal")
 METRICS = ("reward_mean", "zvf", "mean_len", "cv_len", "loss")
 
 rows = list(csv.DictReader((N2 / "n2_metrics.tsv").open(), delimiter="\t"))
-by = {}
+by: dict[str, dict[int, dict[str, float]]] = {}
 for r in rows:
     assert r["seed"] == "0"
     by.setdefault(r["method"], {})[int(r["step"])] = {m: float(r[m]) for m in METRICS}
@@ -46,7 +46,7 @@ for wname, steps in windows.items():
 
 # per-prompt pooled reward: each prompt's mean reward over all steps it appears in, then mean over prompts
 def prompt_means(method, steps):
-    acc = {}
+    acc: dict[int, list[float]] = {}
     for line in (N2 / f"{method}_s0_tensors.jsonl").open():
         rec = json.loads(line)
         if rec["step"] not in steps:

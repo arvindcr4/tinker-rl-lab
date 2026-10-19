@@ -14,7 +14,9 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-from sklearn.metrics import f1_score, precision_score, recall_score, roc_auc_score
+
+# scikit-learn does not distribute stubs or a py.typed marker.
+from sklearn.metrics import f1_score, precision_score, recall_score, roc_auc_score  # type: ignore[import-untyped]
 
 d = Path(sys.argv[1])
 out = (
@@ -59,6 +61,7 @@ res = {
     "constant_negative_accuracy_test": float(1 - te.Class.mean()),
 }
 try:
+    # XGBoost is an optional CPU-refit dependency, absent from core/dev installs.
     import xgboost as xgb
 
     clf = xgb.XGBClassifier(

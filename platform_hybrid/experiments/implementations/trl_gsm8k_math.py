@@ -13,13 +13,14 @@ Unlike arithmetic, this requires:
 import sys as _sys
 from pathlib import Path as _Path
 
+# Resolve the checkout root even when this script is launched from another directory.
 _sys.path.insert(
     0, str(next(p for p in _Path(__file__).resolve().parents if (p / "platform_hybrid").is_dir()))
 )
 from platform_hybrid.experiments.research_contracts import final_numeric
+from utils.seed import get_seed_from_args, set_global_seed
 
 
-import sys
 import os
 import torch
 import wandb
@@ -27,9 +28,6 @@ from typing import List, Optional
 from datasets import load_dataset
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from trl import GRPOTrainer, GRPOConfig
-
-# Add project root to path for utils
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 
 
 def extract_gsm8k_answer(text):
@@ -104,7 +102,9 @@ def load_gsm8k_dataset(split: str = "train", num_samples: Optional[int] = None):
 
 
 def main():
-    wandb.init(project="tinker-rl-lab", name="trl_gsm8k_math")
+    seed = get_seed_from_args(default=42)
+    set_global_seed(seed)
+    wandb.init(project="tinker-rl-lab", name="trl_gsm8k_math", config={"seed": seed})
 
     # Model configuration
     model_name = "meta-llama/Llama-3.2-1B-Instruct"
@@ -128,6 +128,8 @@ def main():
     # GRPO Configuration for GSM8K
     grpo_config = GRPOConfig(
         output_dir=os.environ.get("RESULTS_DIR", "./grpo_gsm8k_output"),
+        seed=seed,
+        data_seed=seed,
         # Batch settings
         per_device_train_batch_size=2,
         gradient_accumulation_steps=16,

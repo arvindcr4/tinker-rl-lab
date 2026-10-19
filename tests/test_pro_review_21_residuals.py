@@ -148,7 +148,7 @@ def test_summary_guards_and_stable_seed_paths():
         source = (SCRIPTS / (name + ".py")).read_text()
         assert '"current_result"' in source
         assert '"falsifiable_claim"' not in source
-    noise = (SCRIPTS / "p8_iter96_per_cohort_noise_audit.py").read_text()
+    noise = ast.unparse(ast.parse((SCRIPTS / "p8_iter96_per_cohort_noise_audit.py").read_text()))
     assert noise.count("[sig for (a, s), sig in first_unfav.items()") == 2
     ablation = (SCRIPTS / "p8_single_sensor_ablation.py").read_text()
     assert 'r["n_features"] == len(RAW20) + 1' in ablation
@@ -191,10 +191,23 @@ def test_sigma_and_pair_summaries_reconcile_detail_rows():
         and isinstance(n.targets[0], ast.Name)
         and n.targets[0].id in {"amount_q0_unfav_sigma", "vmean_q2_unfav_sigma"}
     ]
-    ns = {"first_unfav": {("Amount_q", 0): 0.25, ("V_mean_q", 2): 0.5}}
+    assert len(nodes) == 2
+    ns = {
+        "first_unfav": {
+            ("Amount_q", 0): 0.25,
+            ("Amount_q", 2): 0.75,
+            ("V_mean_q", 0): 1.0,
+            ("V_mean_q", 2): 0.5,
+            ("Other_q", 0): 0.125,
+        }
+    }
     exec(compile(ast.Module(body=nodes, type_ignores=[]), "<summary fixture>", "exec"), ns)  # noqa: S102 - Execute checked-in analysis blocks with synthetic fixtures only.
     assert ns["amount_q0_unfav_sigma"] == [0.25]
     assert ns["vmean_q2_unfav_sigma"] == [0.5]
+    ns = {"first_unfav": {("Amount_q", 2): 0.75, ("V_mean_q", 0): 1.0}}
+    exec(compile(ast.Module(body=nodes, type_ignores=[]), "<summary fixture>", "exec"), ns)  # noqa: S102 - Execute checked-in analysis blocks with synthetic fixtures only.
+    assert ns["amount_q0_unfav_sigma"] == []
+    assert ns["vmean_q2_unfav_sigma"] == []
     df = pd.DataFrame(
         {"pair": ["XGB-24full-XGB-20raw", "XGB-24full-XGB-20raw"], "excludes_zero": ["YES", "NO"]}
     )

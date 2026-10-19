@@ -14,6 +14,7 @@ import itertools
 import json
 import sys
 from pathlib import Path
+from typing import Any
 
 import numpy as np
 from scipy import stats
@@ -64,7 +65,7 @@ def mde_d(n1, n2, alpha=0.05, power=0.8):
 rows, summary, comparisons = [], [], []
 for task, (path, cap) in SOURCES.items():
     runs = json.load(open(path))["runs"]
-    per_algo = {}
+    per_algo: dict[str, list[dict[str, Any]]] = {}
     for r in runs:
         sl = r["step_log"]
         step = [s["step"] for s in sl]
@@ -91,7 +92,7 @@ for task, (path, cap) in SOURCES.items():
         rows.append(row)
         per_algo.setdefault(r["algo"], []).append(row)
     for algo, rs in per_algo.items():
-        s = dict(task=task, algo=algo, n=len(rs))
+        s: dict[str, Any] = dict(task=task, algo=algo, n=len(rs))
         for k in [
             "rho_step_len",
             "rho_step_reward",
@@ -157,31 +158,31 @@ gs = {
     a: [r["heldout_post_acc"] - r["heldout_pre_acc"] for r in gs_runs if r["algo"] == a]
     for a in ("grpo", "dr_grpo")
 }
-for a in ("grpo", "dr_grpo"):
-    m, se, lo, hi = t_ci(ar[a])
+for algo_name in ("grpo", "dr_grpo"):
+    m, se, lo, hi = t_ci(ar[algo_name])
     heldout.append(
         dict(
             task="arithmetic",
-            quantity=f"{a}_post_acc",
-            n=len(ar[a]),
+            quantity=f"{algo_name}_post_acc",
+            n=len(ar[algo_name]),
             mean=m,
             se=se,
             ci_lo=lo,
             ci_hi=hi,
-            df=len(ar[a]) - 1,
+            df=len(ar[algo_name]) - 1,
         )
     )
-    m, se, lo, hi = t_ci(gs[a])
+    m, se, lo, hi = t_ci(gs[algo_name])
     heldout.append(
         dict(
             task="gsm8k_cot",
-            quantity=f"{a}_gain_post_minus_pre",
-            n=len(gs[a]),
+            quantity=f"{algo_name}_gain_post_minus_pre",
+            n=len(gs[algo_name]),
             mean=m,
             se=se,
             ci_lo=lo,
             ci_hi=hi,
-            df=len(gs[a]) - 1,
+            df=len(gs[algo_name]) - 1,
         )
     )
 for task, d in (("arithmetic", ar), ("gsm8k_cot", gs)):
@@ -270,9 +271,9 @@ if wb and wb.exists():
             ):
                 wb_mism += 1
 
-with open(OUT / "README.txt", "w") as f:
-    f.write(f"table1_mismatches_vs_length_bias_summary.tsv={mism}\n")
-    f.write(f"wandb_mirror_runs_checked={wb_checked} mismatches={wb_mism}\n")
+with open(OUT / "README.txt", "w") as readme_file:
+    readme_file.write(f"table1_mismatches_vs_length_bias_summary.tsv={mism}\n")
+    readme_file.write(f"wandb_mirror_runs_checked={wb_checked} mismatches={wb_mism}\n")
 print("Table-1 mismatches:", mism)
 print("W&B mirror checked:", wb_checked, "mismatches:", wb_mism)
 for s in summary:

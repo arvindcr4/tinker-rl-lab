@@ -73,7 +73,8 @@ targetRules = ["generic-api-key"]
 condition = "AND"
 paths = ['''^finish/progress_reporting_audit/generate_v1\.py$''']
 regexTarget = "line"
-regexes = ['''^\s*need\(key in task_ids and key not in reports, 'foreign/duplicate native SWE task'\)\s*$''']
+# Ruff normalizes the quote style; retain the exact literal and statement shape.
+regexes = ['''^\s*need\(key in task_ids and key not in reports, (?:'foreign/duplicate native SWE task'|"foreign/duplicate native SWE task")\)\s*$''']
 
 [[allowlists]]
 description = "verified tokenizer artifact SHA-256, not a credential"

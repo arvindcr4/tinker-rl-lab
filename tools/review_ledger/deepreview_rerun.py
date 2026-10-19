@@ -73,7 +73,9 @@ def build(paper):
     log = OUT / "logs" / f"{paper}.log"
     log.parent.mkdir(parents=True, exist_ok=True)
     if src.suffix == ".py":
-        r = subprocess.run([sys.executable, src.name], cwd=src.parent, capture_output=True, text=True)
+        r = subprocess.run(
+            [sys.executable, src.name], cwd=src.parent, capture_output=True, text=True
+        )
         m = re.search(r"OK -> (\S+)", r.stdout)
         built = Path(m.group(1)) if m else None
     else:
@@ -100,8 +102,17 @@ def build(paper):
 
 
 def submit(paper, entry, byok):
-    cmd = [sys.executable, str(CLIENT), "review", entry["path"], "--no-wait",
-           "--display-name", f"{paper}_rerun_2026-10-18", "--prompt", PROMPT]
+    cmd = [
+        sys.executable,
+        str(CLIENT),
+        "review",
+        entry["path"],
+        "--no-wait",
+        "--display-name",
+        f"{paper}_rerun_2026-10-18",
+        "--prompt",
+        PROMPT,
+    ]
     if byok:
         cmd.append("--byok")
     r = subprocess.run(cmd, cwd=ROOT, capture_output=True, text=True)
@@ -115,7 +126,9 @@ def poll(paper, entry):
     out = OUT / paper
     r = subprocess.run(
         [sys.executable, str(CLIENT), "get", entry["review"], "--out", str(out)],
-        cwd=ROOT, capture_output=True, text=True,
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
     )
     reviews = list(out.rglob("review.json")) if out.exists() else []
     if reviews:
@@ -133,12 +146,23 @@ def main():
         entry = state.setdefault(paper, {})
         if cmd == "build":
             entry.update(build(paper))
-        elif cmd == "submit" and entry.get("build") == "ok" and entry.get("state") not in ("RUNNING", "SUCCEEDED"):
+        elif (
+            cmd == "submit"
+            and entry.get("build") == "ok"
+            and entry.get("state") not in ("RUNNING", "SUCCEEDED")
+        ):
             submit(paper, entry, "--byok" in sys.argv)
         elif cmd == "poll" and entry.get("state") == "RUNNING":
             poll(paper, entry)
         save(state)
-        print(paper, {k: v for k, v in entry.items() if k in ("build", "state", "error", "undefined_warnings")})
+        print(
+            paper,
+            {
+                k: v
+                for k, v in entry.items()
+                if k in ("build", "state", "error", "undefined_warnings")
+            },
+        )
 
 
 if __name__ == "__main__":

@@ -10,6 +10,7 @@ the incoming branch's entry (fix agents carry verified evidence). Ledgers
 import json
 import subprocess
 import sys
+from typing import Any
 
 RANK = ["fixed", "already-fixed", "unsourced-removed", "refuted", "needs-compute", "wontfix-scope"]
 
@@ -21,7 +22,7 @@ def stage(path, n):
 
 
 def merge_jsonl(ours, theirs):
-    rows = {}
+    rows: dict[int, dict[str, Any]] = {}
     for text, src in ((ours, "ours"), (theirs, "theirs")):
         for line in text.splitlines():
             if not line.strip():

@@ -15,6 +15,7 @@ Outputs (under platform_hybrid/experiments/results/review_2026-10-18/P11_reprodu
   e1_historical.tex   \\Hist* macros consumed by the manuscript
 """
 
+import importlib
 import json
 import math
 import statistics
@@ -24,7 +25,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 AUDIT = ROOT / "zvf-program" / "audit"
 sys.path.insert(0, str(AUDIT))
-import aggregate_audit as aa
+aa = importlib.import_module("aggregate_audit")
 
 FULL = AUDIT / "results" / "full"
 LEGACY = FULL / "legacy-unhashed-2026-07-19"

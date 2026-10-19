@@ -60,7 +60,7 @@ out = dict(
     n_mixed_groups=len(mixed),
     U4=U[4],
     U5=U[5],
-    argmax_sqrtG=max(U, key=U.get),
+    argmax_sqrtG=max(U, key=U.__getitem__),
     diff_4_5=U[4] - U[5],
     boot_ci_4_minus_5=[float(np.quantile(boot, 0.025)), float(np.quantile(boot, 0.975))],
     argmax_linear=max(range(2, 33), key=lambda G: Y(G) / G),

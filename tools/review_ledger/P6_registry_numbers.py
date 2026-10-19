@@ -17,11 +17,12 @@ import collections, hashlib, json, pathlib, sys
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 PH = ROOT / "platform_hybrid"
-sys.path.insert(0, str(PH / "registry"))
-import query as q
-
-sys.path.insert(0, str(PH / "analysis_publication_fixes"))
-from analysis_validation import equivalence_classes, coverage_median
+sys.path.insert(0, str(ROOT))
+from platform_hybrid.registry import query as q
+from platform_hybrid.analysis_publication_fixes.analysis_validation import (
+    equivalence_classes,
+    coverage_median,
+)
 
 EXCLUDE_PREFIX = "zvf130_"
 ALL = q.load("stack")
@@ -84,7 +85,7 @@ ckpts = sorted({ckpt(r) for r in recs.values() if ckpt(r)})
 n_unknown_ckpt = sum(ckpt(r) is None for r in recs.values())
 
 # reference_kl census (query --item reference_kl), all retained stack records
-kl = collections.Counter()
+kl: collections.Counter[str] = collections.Counter()
 for r in recs.values():
     s = q.item_score(r["min_report"]["reference_kl"], "reference_kl")
     kl["FULL" if s == 1.0 else ("PARTIAL" if s > 0 else "UNREPORTED")] += 1

@@ -36,7 +36,10 @@ def test_ci_dev_extra_contains_collection_dependencies_in_lock():
         ),
     ],
 )
-def test_exact_noncredential_exceptions_do_not_hide_changed_values(tmp_path, path, needle):
+@pytest.mark.parametrize("quote_style", ["original", "single", "double"])
+def test_exact_noncredential_exceptions_do_not_hide_changed_values(
+    tmp_path, path, needle, quote_style
+):
     scanner = shutil.which("gitleaks")
     if scanner is None:
         if os.environ.get("CI"):
@@ -44,6 +47,11 @@ def test_exact_noncredential_exceptions_do_not_hide_changed_values(tmp_path, pat
         pytest.skip("optional gitleaks executable is unavailable")
     lines = (ROOT / path).read_text().splitlines()
     line = next(line for line in reversed(lines) if needle in line)
+    if path == "finish/progress_reporting_audit/generate_v1.py":
+        if quote_style == "single":
+            line = line.replace(f'"{needle}"', f"'{needle}'")
+        elif quote_style == "double":
+            line = line.replace(f"'{needle}'", f'"{needle}"')
     target = tmp_path / path
     target.parent.mkdir(parents=True)
     report = tmp_path.parent / (tmp_path.name + "-scan.json")
@@ -81,6 +89,12 @@ def test_exact_noncredential_exceptions_do_not_hide_changed_values(tmp_path, pat
     code, findings = scan(line.replace(needle, synthetic))
     assert code == 1
     assert any(item["RuleID"] == "generic-api-key" for item in findings)
+    if path == "finish/progress_reporting_audit/generate_v1.py":
+        # The same literal outside the reviewed file is still a finding.
+        target = tmp_path / "unreviewed.py"
+        code, findings = scan(line)
+        assert code == 1
+        assert any(item["File"] == "unreviewed.py" for item in findings)
 
 
 def test_standalone_atropos_declares_dataset_retry_runtime_dependency():

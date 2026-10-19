@@ -45,8 +45,8 @@ import numpy as np
 from scipy.optimize import curve_fit
 import sys
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "platform_modal/scripts"))
-from _analysis_common import saturation, write_rows_tsv as _write_tsv
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+from platform_modal.scripts._analysis_common import saturation, write_rows_tsv as _write_tsv
 
 REPO = Path(__file__).resolve().parents[2] / "platform_hybrid"
 TRACE_DIR = REPO / "experiments" / "tinker-runs" / "results"
@@ -292,17 +292,17 @@ def compute_adjusted(
     t_80=10 steps to saturation at N=4B has done ~40B params*steps of
     effective work, vs t_80=1 step at N=685B = 685B params*steps.
     """
-    log_n = np.asarray(log_n, float)
-    t_80 = np.asarray(t_80, float)
-    lam = np.asarray(lam, float)
+    log_n_array = np.asarray(log_n, float)
+    t_80_array = np.asarray(t_80, float)
+    lam_array = np.asarray(lam, float)
     p = np.asarray(params_b, float)
-    valid = ~np.isnan(t_80) & (t_80 > 0)
-    t80_x_compute = t_80 * p
-    lam_x_compute = lam * np.log10(p + 1.0)  # params-decade-weight
+    valid = ~np.isnan(t_80_array) & (t_80_array > 0)
+    t80_x_compute = t_80_array * p
+    lam_x_compute = lam_array * np.log10(p + 1.0)  # params-decade-weight
     if valid.sum() >= 3:
-        a1, b1, se_b1 = _ols(log_n[valid], t80_x_compute[valid])
-        a2, b2, se_b2 = _ols(log_n[valid], lam[valid])
-        a3, b3, se_b3 = _ols(log_n[valid], lam_x_compute[valid])
+        a1, b1, se_b1 = _ols(log_n_array[valid], t80_x_compute[valid])
+        a2, b2, se_b2 = _ols(log_n_array[valid], lam_array[valid])
+        a3, b3, se_b3 = _ols(log_n_array[valid], lam_x_compute[valid])
         return dict(
             t80_x_compute_slope=b1,
             t80_x_compute_se=se_b1,

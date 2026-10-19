@@ -14,6 +14,7 @@ import math
 import pathlib
 import statistics as st
 from itertools import combinations
+from typing import Any
 
 import numpy as np
 from scipy import optimize, stats
@@ -31,11 +32,12 @@ def h(p, g=G):
 
 
 def main():
-    out = {}
-    groups = []  # (seed, question, k)
+    run_metadata: dict[int, dict[str, Any]] = {}
+    out: dict[str, object] = {"run_metadata": run_metadata}
+    groups: list[tuple[int, str, int]] = []  # (seed, question, k)
     for s in SEEDS:
         d = json.load(open(RES / f"tinker_gsm8k_zvf_s{s}.json"))
-        out.setdefault("run_metadata", {})[s] = {
+        run_metadata[s] = {
             k: d[k] for k in ("model", "n_problems", "group_size", "temperature", "seed")
         }
         for pp in d["per_problem"]:
@@ -43,7 +45,7 @@ def main():
             groups.append((s, pp["question"], int(sum(pp["rewards"]))))
     ks = np.array([g[2] for g in groups])
     n = len(ks)
-    pbar = ks.sum() / (G * n)
+    pbar = float(ks.sum() / (G * n))
     zvf = float(np.isin(ks, (0, G)).mean())
     plug = float(np.mean([h(k / G) for k in ks]))
     hist = np.bincount(ks, minlength=G + 1)
@@ -133,7 +135,7 @@ def main():
     out["plugin_null_bands"] = bands
 
     # repeated problems across seeds
-    by_q = {}
+    by_q: dict[str, dict[int, int]] = {}
     for s, q, k in groups:
         by_q.setdefault(q, {})[s] = k
     counts = [len(v) for v in by_q.values()]

@@ -1,0 +1,69 @@
+\documentclass[border=6pt]{standalone}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\usetikzlibrary{arrows.meta,positioning,shapes.geometric,fit,backgrounds,calc,decorations.pathreplacing,patterns,pgfplots.groupplots}
+\tikzset{
+  blk/.style={rectangle, rounded corners=2pt, draw=black!70, thick, fill=blue!6,
+              minimum height=8mm, minimum width=20mm, align=center, font=\small},
+  io/.style={rectangle, rounded corners=6pt, draw=black!70, thick, fill=green!8,
+             minimum height=8mm, align=center, font=\small},
+  proc/.style={rectangle, draw=black!70, thick, fill=orange!10, minimum height=8mm,
+               align=center, font=\small},
+  dec/.style={diamond, aspect=2, draw=black!70, thick, fill=yellow!15, align=center, font=\footnotesize},
+  warnbox/.style={rectangle, rounded corners=2pt, draw=red!60!black, thick, fill=red!7,
+                  minimum height=8mm, align=center, font=\small},
+  oklbox/.style={rectangle, rounded corners=2pt, draw=green!45!black, thick, fill=green!8,
+                 minimum height=8mm, align=center, font=\small},
+  ar/.style={-{Latex[length=2mm]}, thick},
+  arl/.style={-{Latex[length=2mm]}, thick, dashed, draw=black!55},
+  lbl/.style={font=\footnotesize\itshape, text=black!60},
+}
+\definecolor{good}{RGB}{34,139,34}
+\definecolor{bad}{RGB}{178,34,34}
+\definecolor{warn}{RGB}{218,165,32}
+\definecolor{pesblue}{RGB}{0,45,98}
+\definecolor{complete}{RGB}{30,125,79}
+\definecolor{partial}{RGB}{176,106,0}
+\definecolor{blocked}{RGB}{166,43,43}
+\begin{document}
+\begin{tikzpicture}
+% Per-category counts (correct/total) from the E8 LAB-Bench public-split receipts:
+% 192/244, 93/181, 27/108, 15/82, 35/199, 68/520, 20/600, 0/33 (sum 450/1967).
+\begin{axis}[
+    xbar,
+    bar width=4.2mm,
+    height=7.0cm,
+    xmin=0,
+    xmax=1.0,
+    ymin=-0.7, ymax=7.7,
+    width=11.4cm,
+    ytick={0,...,7},
+    yticklabels={CloningScenarios,SeqQA,DbQA,LitQA2,SuppQA,ProtocolQA,FigQA,TableQA},
+    y tick label style={font=\footnotesize, align=right},
+    x tick label style={font=\footnotesize},
+    xtick={0,0.2,0.4,0.6,0.8,1.0},
+    xlabel={Accuracy --- fraction of questions correct (per category)},
+    xlabel style={font=\footnotesize},
+    axis lines=left,
+    axis line style={draw=black!55},
+    xmajorgrids=true,
+    grid style={draw=black!8},
+    point meta=explicit symbolic,
+    nodes near coords,
+    nodes near coords style={font=\footnotesize, anchor=west, xshift=1mm, text=black!85},
+    clip=false,
+]
+\addplot[fill=pesblue!45, draw=pesblue!85!black] coordinates {
+    (0.00000000000000000,0) [0.000 (0/33, measured zero)]
+    (0.03333333333333333,1)            [0.033 (20/600)]
+    (0.13076923076923078,2)             [0.131 (68/520)]
+    (0.17587939698492464,3)           [0.176 (35/199)]
+    (0.18292682926829268,4)           [0.183 (15/82)]
+    (0.25000000000000000,5)       [0.250 (27/108)]
+    (0.51381215469613260,6)            [0.514 (93/181)]
+    (0.78688524590163930,7)          [0.787 (192/244)]
+};
+\end{axis}
+\end{tikzpicture}
+\end{document}

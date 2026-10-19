@@ -18,10 +18,31 @@ reward summaries from prediction, stopping decisions, and intervention benefit.
 These contributions do not include a new diagnostic definition, a controlled
 cross-library benchmark, a validated stopping rule, or an algorithm ranking.
 
-Zero-Variance Fraction (ZVF) counts homogeneous reward groups. Its historical
-complement, Gradient Utilization (GU), is retained as terminology, but measures
-only the fraction of groups with nonconstant rewards. Such groups have centered
+Zero-Variance Fraction (ZVF) counts homogeneous reward groups. Its complement is
+the \emph{mixed-group fraction} (historical alias: Gradient Utilization, GU); it
+measures only the fraction of groups with nonconstant rewards. Such groups have centered
 reward contrast; neither gradient magnitude nor usefulness follows. Our two
 all-wrong tool-use observations have no held-out evaluation. They motivate a
 reporting discipline, not a claim that the diagnostic predicts failure beyond
-reward-only baselines.
+reward-only baselines. Signed ZVF is presented strictly as a descriptive reporting
+field, not as a validated triage, prediction, or stopping policy; the earlier
+triage framing is withdrawn.
+
+\paragraph{Scope, venue posture, and overlap map.}
+This revision is retargeted as a short audit/correction note (reproducibility,
+audit, or workshop venue), not as a top-venue full paper; the validated core is the
+scoped identity, two descriptive cells, and the reporting contract. Relationship to
+other texts from the same run corpus: this manuscript is a descendant of NeurIPS
+submission \#36320 (not its authenticated reviewed PDF); the associated thesis
+Table~6.2 remains provisional and is not upgraded here; sibling manuscripts in the
+same directory partition the corpus by topic --- P1 (scaling identifiability),
+P2 (ZVF falsification), P3 (group size), P4 (length bias), P5 (minimum reporting),
+P6 (GRPO registry), P7 (ZVF controller) --- and the same corpus also supports the
+portfolio companions on receipt-bound evaluation governance (paper~02),
+stack-conditioned measurement (paper~03), and the public thesis revision
+(paper~06). Rows from the shared run corpus may therefore reappear in those texts;
+no display in this manuscript should be counted as independent evidence in a
+sibling, and displays unique to this audit are the two reviewed tool-use cells,
+the evidence-identity tables, and the withdrawal/quarantine record. Which sibling
+texts are under review at any venue is an author disclosure obligation at
+submission time, not asserted here.

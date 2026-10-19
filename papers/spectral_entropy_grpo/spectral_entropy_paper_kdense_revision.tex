@@ -1,5 +1,15 @@
 % Evidence-safe revision of the July 2026 spectral/entropy manuscript.
 % This file deliberately excludes all unverified end-to-end benchmark claims.
+% RETARGET (2026-10-19 panel, EIC-W1): negative-result / reproducibility
+% workshop mechanism audit (prototype autopsy), NOT a main-track novelty
+% submission. Claims are shrunk to existing evidence; no new training runs.
+% Canonical copy: this file. The divergent copy at
+% zvf-program/flagship/paper/spectral_entropy_paper_kdense_revision.tex is
+% SUPERSEDED (see header there); do not submit it.
+% AUTHOR_TODO (EIC-W3): once the workshop venue is bound, produce the
+% anonymized variant (with neurips_2026.sty this is dropping the `preprint'
+% option, which switches to anonymous submission mode), vendor the style
+% file or state build instructions for the bound venue, and add its checklist.
 \ifdefined\pdfsuppressptexinfo\pdfsuppressptexinfo=-1\fi
 \ifdefined\pdfinfoomitdate\pdfinfoomitdate=1\fi
 \ifdefined\pdftrailerid\pdftrailerid{}\fi
@@ -56,15 +66,26 @@ the centered advantage vanishes; only an explicit auxiliary advantage can,
 and that changes the objective.  We dissect one such prototype: a standardized
 score built from pairwise distances between low-order Legendre features of
 sampled trajectories, with an adaptive Givens rotation for coordinate
-elimination.  Three results are exact.  The continuous Parseval identity holds
-for the reconstructed truncated expansion, while the implemented equispaced
-rule is first-order.  The rotation preserves norm precisely because its
-subsequent projection discards an already annihilated coordinate in exact
-arithmetic. Under conditionally i.i.d. within-group sampling, binary rewards
-impose a homogeneous-group floor of $2^{1-G}$. On synthetic fixtures the
-coupled objective produces a gradient exactly proportional to its coupling
-weight; this is not evidence of learning. We specify prospective alignment, placebo,
-paired-seed, and ablation tests and report no benchmark result.
+elimination.  This is a negative-result mechanism audit (a prototype
+autopsy with transferable checks), not a main-track novelty claim. The
+continuous Parseval identity holds only for the reconstructed truncated
+expansion, while the implemented equispaced rule is first-order.  The
+rotation preserves norm precisely because its subsequent projection discards
+an already annihilated coordinate in exact arithmetic. The
+$2^{1-G}$ homogeneous-group floor is a one-line corollary of the binary
+identity and Jensen bound in \citep{nie2026gradient}, not a new result
+here. On synthetic fixtures the coupled objective produces a gradient
+proportional to its coupling weight, but the fixture injects the
+between-completion offsets the score recovers and its position channel
+cancels in every pairwise distance, so this $\lambda$-linearity is an
+algebraic identity check, not validation. The masked/padded defect of
+Eq.~\eqref{eq:discrete-coeff} is unmeasured by the all-active replay
+below. The entropy gate as implemented never fires (0/18 comparisons)
+because its threshold $\tau=0.5$ is an order of magnitude below the
+$\log L$-scale statistic it gates; this is a scaling defect of the
+implementation, not evidence about entropic gating as a concept. We
+specify prospective alignment, placebo, paired-seed, and ablation tests
+and report no benchmark result.
 \end{abstract}
 
 \section{Introduction}
@@ -84,8 +105,11 @@ which difference is useful.  Consequently, adding such a distance to the
 advantage is a new auxiliary objective.  It is not recovery of a missing
 reward, and a nonzero gradient is not evidence that the gradient is beneficial.
 
-This paper evaluates a narrow prototype under that interpretation.  It makes
-five evidence-bounded contributions:
+This paper evaluates a narrow prototype under that interpretation. It is
+written as a negative-result mechanism audit --- an autopsy of the authors'
+own prototype whose transferable content is the checks, not the score ---
+for a negative-results/reproducibility venue, and makes no main-track
+novelty claim. It makes five evidence-bounded audit findings:
 
 \begin{enumerate}[leftmargin=*,itemsep=2pt]
   \item We separate a missing reward signal from an auxiliary objective: no
@@ -97,12 +121,13 @@ five evidence-bounded contributions:
   \item We audit adaptive Givens elimination and show that its projection is
   redundant by construction: the rotation already annihilates the coordinate
   it projects away.
-  \item We give the reusable conditionally i.i.d. binary-reward feasibility check
+  \item We restate, as a credited corollary (see \S3), the conditionally
+  i.i.d. binary-reward feasibility check
   $\Prob(\text{homogeneous})\geq 2^{1-G}$ and state what procedural changes are
-  required for any lower reported rate.
-  \item We provide reproducible synthetic measurements and specify prospective
-  alignment, placebo, paired-seed, equal-compute, and ablation gates. We make
-  no policy-learning claim.
+  required for any lower reported rate. We claim no novelty for this floor.
+  \item We provide reproducible synthetic identity checks (not validation:
+  see \S6) and specify prospective alignment, placebo, paired-seed,
+  equal-compute, and ablation gates. We make no policy-learning claim.
 \end{enumerate}
 
 \paragraph{Evidence status, stated before any result.}
@@ -118,6 +143,20 @@ There is no language-model fine-tuning, held-out benchmark accuracy,
 paired-seed learning comparison, or calibration of the trajectory score against
 an external target. We make no benchmark-accuracy, sample-efficiency,
 deployment, mitigation, or superiority claim.
+
+\paragraph{Companion-manuscript disclosure.}
+A companion manuscript, ``Same Terminal Signal, Different Action''
+(\path{zvf-program/flagship/paper/main.tex}), shares with this audit the
+zero-advantage ambiguity framing, the binary homogeneous-group identity,
+and the same \path{pilot/objective.py} artifact. Shared: the ambiguity
+thesis and the objective artifact. Unique to the companion: the
+fail-closed conformance chain and its screening campaign. Unique here:
+the Legendre/Givens dissection, the synthetic replay, and the prospective
+alignment gate for the spectral score. Readers and reviewers of either
+text should not credit the shared framing twice. This file is the
+canonical copy of this audit; the divergent copy under
+\path{zvf-program/flagship/paper/} is marked superseded and must not be
+submitted, as it retains withdrawn language.
 
 \section{Related Work and Scope}
 
@@ -156,6 +195,14 @@ retained below the disabled entry point in \path{spectral_entropy_paper.tex}
 used a ``quantum-inspired'' label that this revision withdraws. We claim no
 novelty for its constituents. The contribution is a negative mechanism audit
 plus a proposed trajectory-spectral coupling whose usefulness remains to be tested.
+All motivation below is scoped to the two-channel log-probability fixture
+actually replayed; the supplied-hidden-states path is implemented but
+entirely unexercised by any number in this paper, so no hidden-state,
+layer-choice, or large-$D$ claim is made. No published external system is
+shown here to commit the audited confusions; the audited artifact is the
+authors' own prototype, and the paper should be read as a prototype
+autopsy whose floor check and claim-index practice are the transferable
+parts.
 
 \section{Problem Statement and Causal Boundary}
 
@@ -175,16 +222,22 @@ The current synthetic objective defines, for $i\in I$,
 \end{equation}
 Unselected advantages are zero. Unlike the auxiliary below, this reward
 denominator has no additive epsilon. Single-selected-row sample variance is
-undefined and is outside the replay's contract.
+undefined and is outside the replay's contract. The code contract is
+narrower than the notation above: for $G=8$ the artifact accepts exactly
+6 or 8 active rows and rejects other selections, and it permits a single
+active row, for which the sample standard deviation is NaN and NaN
+advantages can propagate instead of the zero stated here. The $a\ge2$
+precondition is therefore disclosed but not enforced by the artifact;
+enforcing it with an explicit error is a required repair before any
+training use, and no result below relies on $a<2$ or on selections the
+artifact rejects.
 
-\begin{proposition}[Homogeneous rewards remove the centered reward signal]
-If $r_1=\cdots=r_G$, then $A_i^{\mathrm{reward}}=0$ for every row.  Any
+\begin{remark}[Homogeneous rewards remove the centered reward signal]
+If $r_1=\cdots=r_G$, then $A_i^{\mathrm{reward}}=0$ for every row, since
+homogeneity gives $r_i=\bar r$ and every numerator is zero. Any
 score-function term weighted only by these advantages is therefore zero.
-\end{proposition}
-
-\begin{proof}
-Homogeneity gives $r_i=\bar r$ for every $i$, so every numerator is zero.
-\end{proof}
+This is arithmetic, stated only to fix terminology.
+\end{remark}
 
 For binary rewards with per-completion success probability $p$, the probability
 that an independent group is homogeneous is
@@ -198,6 +251,17 @@ $p$ is $2^{1-G}$, attained at $p=1/2$.  In particular, $G=4$ has a $12.5\%$
 floor.  Any lower reported rate must therefore use a larger group, non-binary
 rewards, non-i.i.d. joint sampling, dynamic rejection/resampling, or a different denominator; it cannot
 be compared to this identity without stating that procedural change.
+This floor is a one-line corollary of the identity above and of the
+stronger Jensen lower bound proved in \citep{nie2026gradient}, which also
+reports empirical degeneracy rates from training logs; we claim no novelty
+for it. Prompt-mixture caveat: with prompt-dependent success probability
+$p_x$, the operational homogeneous rate is
+$\E_x[p_x^G+(1-p_x)^G]$, governed by the difficulty distribution and
+generally well above the pointwise floor. The floor can therefore falsify
+only a reported rate below $2^{1-G}$ under the stated i.i.d.\ binary
+procedure; it cannot predict, explain, or bound tightly the rate of any
+real prompt mixture, and a rate above the floor is uninformative about
+which remedy, if any, is appropriate.
 
 The current \path{pilot/objective.py} defines a trajectory score $s_i$ and uses
 \begin{equation}
@@ -215,7 +279,8 @@ scores differ, but its direction is justified only if $s_i$ is shown to align
 with future task reward or a valid process-level target.
 Detachment occurs after standardization and combination, not before score
 construction. Write $z_{i\ell}$ for the input log-probability tensor and
-$\rho_{i\ell}=\exp(z_{i\ell}-z^{\rm old}_{i\ell})$. The minimized loss is
+$\rho_{i\ell}=\exp(z_{i\ell}-z^{\rm old}_{i\ell})$. The clipped
+surrogate follows the usual PPO form \citep{schulman2017ppo}. The minimized loss is
 \begin{equation}
  \mathcal L=-\frac1a\sum_{i\in I}\frac1{L_{\mathrm{eff},i}}
  \sum_\ell M_{i\ell}\min\!\left(\rho_{i\ell}\widetilde A_i,
@@ -256,6 +321,18 @@ P_n\!\left(\frac{2k}{L_{\mathrm{eff},i}-1}-1\right),
 where $\ell(k)$ enumerates active tokens, endpoint weights are $1/2$ and
 interior weights are one. Require $L_{\mathrm{eff},i}\ge\max(2,N)$;
 this does not make finite-sample Legendre orthogonality exact.
+\textbf{Unmeasured defect.} The masked/padded corruption of
+Eq.~\eqref{eq:discrete-coeff} (domain contraction and wrong normalizer
+under padding) is asserted analytically here and measured nowhere in this
+revision: every replay cell in \S6 uses complete, all-active masks, and
+the one unequal-length check validates only the reward-only derivative,
+not the spectral projection. The minimum required measurement before any
+training claim is masked replay cells (e.g.\ $L_{\mathrm{eff}}\in\{L/4,L/2\}$
+per row, including rows of unequal active length in one group) reporting
+coefficient error of Eq.~\eqref{eq:discrete-coeff} against the
+active-token trapezoid reference above. Until those cells exist, the
+defect's magnitude --- as opposed to its existence as a formula mismatch
+--- is unknown.
 Pairwise distance is
 \begin{equation}
   d_N(i,j)=\sum_{n=0}^{N-1}
@@ -266,7 +343,21 @@ Pairwise distance is
 Throughout, $d_N$ is a squared weighted modal distance; we never take a square
 root.  This matters because rooting is a nonlinear reparameterization that
 changes the relative weight of near and far pairs, the within-group variance of
-$s_i$, and hence the update induced by any fixed $\lambda$. The artifact
+$s_i$, and hence the update induced by any fixed $\lambda$.
+\paragraph{The score is outlier-seeking; its sign is a commitment.}
+Mean pairwise distance is maximized by the group's most atypical
+completion. With $\lambda>0$, an all-wrong group therefore upweights its
+most unusual wrong answer, and an all-correct group downweights its most
+canonical correct answer relative to atypical correct ones. The first
+might be defended as exploration; the second is arguably backwards, and
+neither follows from any mechanism linking low-order Legendre modes of a
+log-probability trace to correctness. We offer no such mechanism. The
+prospective gate in \S7 must therefore test stratum-specific directional
+predictions --- positive-$\lambda$ alignment separately in all-correct
+and all-wrong strata --- and pre-specify aggregation ablations (median
+pairwise distance; signed or centrally referenced variants) so that a
+negative gate distinguishes ``trajectory geometry is uninformative'' from
+``this outlier-seeking aggregation has the wrong sign.'' The artifact
 detaches the combined advantage after standardizing the score; differentiating
 through the auxiliary weight would be a different algorithm.
 
@@ -286,9 +377,10 @@ projection $c_n=(2n+1)\int_{-1}^1X(t)P_n(t)\,dt/2$ of the unknown
 trajectory function. The implemented equally spaced sum is neither
 Gauss--Legendre quadrature nor an exact discrete orthogonal transform.
 On a fully active grid, its endpoint weighting and $L$ rather than $L-1$
-normalizer give first-order error for generic smooth functions, whereas
-composite trapezoid quadrature has second-order error under the usual bounded
-second-derivative condition. Neither order guarantees accuracy for arbitrary
+normalizer give first-order error for generic smooth functions (the
+mismatched endpoint weight contributes an $O(1/L)$ term that does not
+cancel), whereas composite trapezoid quadrature has second-order error
+under the usual bounded second-derivative condition. Neither order guarantees accuracy for arbitrary
 hidden-state sequences. Under padding, the active domain additionally changes.
 
 The former numerical discretization table is withdrawn because its raw audit
@@ -341,7 +433,10 @@ is not evidence of denoising or useful information preservation.
 \section{Artifact and Synthetic Stress Tests}
 
 The artifact includes modules for the spectral projection, pairwise score,
-Givens elimination, and the modified objective.  Sixteen focused tests pass on
+Givens elimination, and the modified objective. The entropy gate audited
+in this section is vacuous as implemented (0/18 activations; see below)
+and is retained only as an audit subject, not as a live component.
+Sixteen focused tests pass on
 CPU.  They check recurrence values, tensor shapes, nonnegative distance,
 rotation invariance, coordinate elimination, fixture construction, output
 schema, and a deterministic equal-reward stress test.
@@ -378,7 +473,26 @@ where $b=\operatorname{linspace}(-0.1,0.1,G)$,
 $q=\operatorname{linspace}(0.1,1,L)$, and $\xi$ is standard Gaussian
 noise from a CPU generator reset to seed 42 for each cell. Features are
 $(z_{i\ell},t_\ell)$. These are synthetic surrogate inputs, not log
-probabilities emitted by a normalized language model. Control rewards alternate
+probabilities emitted by a normalized language model.
+\textbf{Circularity, stated plainly.} The per-completion offsets $b_i$
+are the only systematic between-completion variation, and the second
+feature channel $t_\ell$ is identical across completions, so it
+contributes exactly zero to every pairwise distance $d_N(i,j)$: the
+nominal $D=2$ fixture is effectively $D=1$ for pairwise purposes, and
+$s_i$ is, up to noise, a monotone function of the injected offsets. A
+nonzero homogeneous gradient and its $\lambda$-linearity then follow
+from Eq.~\eqref{eq:combined-advantage} by construction. Any injective
+per-completion statistic (e.g.\ token-mean log probability) would pass
+the same battery, and no placebo statistic is run in this replay. With
+$z^{\rm old}=0$ and $|z|\lesssim0.1$, importance ratios also remain
+inside the clip band $[0.8,1.28]$, so the clipping branch of
+Eq.~\eqref{eq:surrogate} is never exercised. The replay is therefore an
+algebraic identity / code-path check with no failure mode as validation;
+it must not be read as evidence that spectral projection recovers task
+signal. Adversarial fixtures the score should \emph{not} separate
+(identical trajectories at different lengths/padding, permuted-token
+controls, ratios driven outside the clip band, a non-spectral placebo
+statistic) are required future checks and are not present here. Control rewards alternate
 one and zero; homogeneous rewards are all one. The sweep in
 Table~\ref{tab:lambda} fixes $G=4,L=512$ and covers every decade from
 $10^{-6}$ to $1$ plus zero. It replaces, rather than reproduces, the missing
@@ -408,8 +522,12 @@ $1$       & $1.87848\times10^{-2}$ & $0.691000$ \\
 \end{tabular}
 \end{table}
 
-The homogeneous gradient norm is approximately $0.0187848\lambda$, as
-Eq.~\eqref{eq:combined-advantage} predicts for nonnegative $\lambda$.
+In this unclipped regime the homogeneous gradient is exactly
+$\lambda$ times its $\lambda=1$ value up to floating-point rounding
+(norm $0.0187848\lambda$), as differentiating
+Eq.~\eqref{eq:combined-advantage} predicts for $\lambda\ge0$ with
+detached weights; the replay's role is only to confirm the code
+implements that identity.
 This proportionality is objective scaling, not recovered task information.
 The earlier forward-transform cosine claims are withdrawn with their missing
 raw audit; they are not measurements of the present coupled objective.
@@ -420,13 +538,20 @@ No row activates the Givens gate, and gated versus ungated gradients are
 identical in all 18 reward-regime comparisons. As a branch-execution positive
 control, setting $\tau=10$ activates every row and changes the gradient in all
 18 comparisons. This demonstrates an executable branch, not a useful denoiser.
+Because $H_i$ is the entropy of an $L$-position softmax it scales towards
+$\log L$ ($\approx6.24$ at $L=512$), so $\tau=0.5$ is more than an order
+of magnitude below every attained value: the 0/18 null is a threshold
+scale mismatch (an unnormalized statistic gated by a fixed constant), not
+evidence about entropic gating as an idea. As implemented the gate is
+vacuous; a mask-aware normalized $H/\log L_{\mathrm{eff}}$ redefinition
+is specified prospectively in \S7 and has not been run.
 An independent reward-only derivative calculation with six selected rows out
 of eight and unequal masked lengths agrees to maximum absolute error
 $3.47\times10^{-18}$. End-to-end training cost remains unmeasured.
 
 \paragraph{What the artifact does not show.}
 It contains no language-model fine-tuning with this objective, no held-out
-GSM8K or MATH predictions, no multi-seed accuracy comparison, no calibrated
+GSM8K \citep{cobbe2021gsm8k} or MATH \citep{hendrycks2021math} predictions, no multi-seed accuracy comparison, no calibrated
 process target, and no evidence that the auxiliary gradient reduces regret.
 Synthetic gradient existence is therefore the endpoint of the present
 empirical claim.
@@ -442,13 +567,18 @@ score predicts a later independently measured outcome, such as
 verifier-corrected completion-level success from an independent verifier.
 \textbf{H2 (learning):} adding the score improves fixed held-out accuracy or
 sample efficiency at bounded KL divergence and equal rollout/token budget.
-\textbf{H3 (gating):} the Givens component adds benefit beyond the same
-spectral auxiliary without gating.
+\textbf{H3 (gating, conditional and currently vacuous):} only after the
+gate is redefined in normalized mask-aware form ($H/\log
+L_{\mathrm{eff}}$) and shown to fire at a calibration-fixed rate would
+``the Givens component adds benefit beyond the same spectral auxiliary
+without gating'' be a testable hypothesis. For the implementation
+audited here H3 is demoted: the component never fires, so there is
+nothing to ablate.
 
 \paragraph{Minimum design.}
 Use one canonical, completion-masked GRPO implementation with clipping and
 reference KL; one public model family at $1$--$2$B and $7$--$8$B scales; GSM8K
-and a harder MATH subset; and a contamination control.  At both scales and on
+and a harder MATH subset \citep{cobbe2021gsm8k,hendrycks2021math}; and a contamination control.  At both scales and on
 both tasks compare: unmodified GRPO; spectral auxiliary; Givens-only; combined;
 a random score matched in within-group distribution and variance; an
 entropy-shaped advantage; a process/verifier-repair signal where available;
@@ -456,7 +586,20 @@ and the simple alternatives of dynamic resampling and larger $G$ at equal
 tokens.  Give the baseline back the method's extra compute as a budget-matched
 control.  Freeze the sampler, reward parser, optimizer, prompts, maximum
 length, group size, evaluation set, checkpoint rule, $\lambda$ schedule, and
-token budget before inspecting outcomes.
+token budget before inspecting outcomes. Two cheaper branches get equal
+billing in the decision tree, since two of the four latent causes of
+homogeneity are verifier defects: verifier repair and prompt-difficulty
+curation, evaluated on the same frozen rollouts (the alignment labels
+below double as a verifier-error audit), must be compared before any
+objective-side remedy is credited. Opportunity cost is likewise explicit:
+this program is worth its tokens only if its alignment effect beats
+spending the same budget on larger $G$ or dynamic resampling
+\citep{yu2025dapo}; projection overhead at realistic $(L,D)$ is
+currently unmeasured and must be reported before any training comparison.
+Before any fine-tuning design, an offline hidden-state trace study on
+frozen checkpoints (no training) must establish whether the score's
+behavior on the unexercised hidden-states path resembles the fixture at
+all.
 
 Run the cheapest decisive gate first.  From early, middle, and late frozen
 checkpoints at each scale, collect at least $2{,}000$ all-correct and $2{,}000$
@@ -465,7 +608,11 @@ completion-level verifier-corrected success. Groups with constant secondary
 labels cannot identify within-group ranking; report their frequency and do
 not assign them an AUC. Fit a length/entropy residualization on separate
 calibration prompts, then evaluate within-group concordance on held-out
-prompts. Require the lower bound of a prompt-cluster bootstrap $95\%$
+prompts. The $2{,}000+2{,}000$ group counts above are placeholders, not
+a justified size: before freezing, size the gate by target
+prompt-clustered interval width, and require a pre-specified minimum
+fraction of discordant (non-constant secondary label) groups per stratum,
+so the gate cannot pass on a small unrepresentative subset. Require the lower bound of a prompt-cluster bootstrap $95\%$
 interval to exceed $0.5$, matching positive $\lambda$, separately for
 all-correct and all-wrong strata at both scales and tasks. Prompt-level
 pass@$k$ on independent rollouts is not a completion-level alignment target.
@@ -474,7 +621,7 @@ the negative alignment result.
 
 If it passes, screen with five paired seeds and expand using
 \begin{equation}
- n\ \geq\ \frac{(z_{1-\alpha/2}+z_{1-\beta})^2s_d^2}{\delta^2}+2,
+ n\ \geq\ \frac{(z_{1-\alpha/2}+z_{1-\beta})^2s_d^2}{\delta^2},
  \label{eq:power}
 \end{equation}
 where $z_q$ is the standard normal $q$-quantile, $\alpha$ is the two-sided
@@ -515,7 +662,17 @@ a success criterion.
 
 The auxiliary score is self-referential because it is computed from policy
 features or log probabilities.  It may reward novelty, length, formatting, or
-instability rather than correctness.  Hidden-state distances are model- and
+instability rather than correctness, and as defined it is outlier-seeking:
+with positive $\lambda$ it penalizes the most canonical member of an
+all-correct group (\S4). The masked/padded defect of
+Eq.~\eqref{eq:discrete-coeff} is unmeasured by the all-active replay, the
+entropy gate is vacuous as implemented, and the $\lambda$-sweep is an
+identity check on a fixture that injects the recovered signal (\S6).
+The within-group framing also discards prompt-level information:
+homogeneous groups can still signal prompt difficulty for curriculum or
+filtering even when they carry no within-group contrast, a use this audit
+does not evaluate. Under prompt-dependent difficulty the binding
+constraint may be the prompt distribution rather than advantage algebra.  Hidden-state distances are model- and
 layer-dependent.  The equispaced Legendre approximation is sensitive to masks
 and sequence length.  The adaptive Givens transform is data dependent and may
 change directions even when it preserves norms.  Finally, the current stress
@@ -533,7 +690,12 @@ reconstructed expansion, a norm-preserving adaptive coordinate elimination,
 and deterministic synthetic stress tests. There is no evidence here of
 better policy learning.  By separating those statements and specifying
 falsification criteria, this revision turns an unsupported performance story
-into a testable methods proposal.
+into a documented negative result plus a testable methods proposal. That
+is the whole claim: a prototype autopsy for a negative-results /
+reproducibility audience, whose reusable parts are the credited floor
+check, the exactness boundary, and the claim-to-file discipline --- not
+the spectral score, which remains unvalidated, outlier-seeking, and
+untested under masking, gating, or training.
 
 \appendix
 \section{Claim-to-File Index}
@@ -543,7 +705,17 @@ Repository: \url{https://github.com/arvindcr4/tinker-rl-lab}.
 All repository paths below are relative to its root; \path{pilot/} abbreviates
 \path{zvf-program/flagship/pilot/}. The replay is saved as
 \path{platform_hybrid/experiments/results/review_2026-10-18/Spectral_Entropy/replay.json}.
-Its \path{source_sha256} map identifies the four implementation files used;
+Its \path{source_sha256} map identifies the four implementation files used.
+The replay was regenerated from the committed tree with the command below
+(git commit \texttt{39f7396c6043ee83e9584bb67cfce25f1d0efc08} at
+regeneration); every numerical field (grid, $\lambda$-sweep including
+Table~\ref{tab:lambda}, active-row error) is identical before and after
+regeneration --- only the previously stale \path{objective.py} hash
+changed, and all four hashes now verify against the committed sources.
+Building this file additionally requires \path{neurips_2026.sty}, which
+currently lives under \path{zvf-program/flagship/paper/} and is not
+vendored here (author TODO at submission, with anonymization, once the
+workshop venue is bound; see file header).
 \path{python}, \path{torch}, and \path{dtype} record the runtime (Python
 3.14.7, PyTorch 2.9.0, float64 CPU). Reproduction requires these sources and a
 Python environment with PyTorch, not access to the missing historical audit.

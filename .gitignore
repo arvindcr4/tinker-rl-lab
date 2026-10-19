@@ -322,6 +322,11 @@ outputs/PES_Phase2_Review_2026-09-12/finish/*
 !outputs/PES_Phase2_Review_2026-09-12/finish/e14_terminal_note_2026-09-19.json
 
 # Reviewed scientific C1 case ledger, not a bulk generated-data export.
+# 19 October 2026 account logging export cited by Appendix A. Not weight files.
+!reports/project_finish_2026-10-11/thesis/supplements/live_inventory_2026-10-19/hf_repos.csv
+!reports/project_finish_2026-10-11/thesis/supplements/live_inventory_2026-10-19/tinker_checkpoints.csv
+!reports/project_finish_2026-10-11/thesis/supplements/live_inventory_2026-10-19/tinker_runs.csv
+!reports/project_finish_2026-10-11/thesis/supplements/live_inventory_2026-10-19/wandb_runs.csv
 !research/public_results/c1_case_ledger.csv
 !reports/public_revision_2026-10-03/addendum/C1_Research_Addendum_2026-10-03_PUBLIC.pdf
 !reports/public_revision_2026-10-03/addendum/case_ledger_public.csv

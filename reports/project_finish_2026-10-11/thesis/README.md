@@ -38,8 +38,10 @@ package can rebuild the document but cannot reproduce missing experiments.
 ## Publication boundary
 
 The source revision includes no private review attachments, withheld receipt
-archive, credentials or provider exports. Existing public author details are
-preserved. The Library delivery has a separate source-package integrity manifest,
+archive, or credentials. Section A.11 and
+`supplements/live_inventory_2026-10-19/` are the 19 October 2026 logging
+export of owned Tinker training runs, readable W&B runs, and Hugging Face Hub repository metadata. Weight files are not included. Existing public
+author details are preserved. The Library delivery has a separate source-package integrity manifest,
 full PDF, chapter excerpts and point-by-point review response. File hashes establish
 file identity, not historical execution authenticity or scientific validity.
 

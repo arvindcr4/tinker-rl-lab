@@ -78,22 +78,18 @@ component (its loss has no importance ratio), and the ``drgrpo'' arm
 implements both removals in client code.
 
 \paragraph{Family D: N2 same-stack isolated variants.}
-Three entries (aero, gift~\citep{gift2025}, areal~\citep{areal2025}) record
-the same managed runtime as Family C but with a different \emph{label} per
-cell. The N2 four-method run holds the sampler, $G{=}8$, seed 0, prompt pool,
-and step count fixed, so each per-method contrast against GRPO holds those
-fields fixed; it is still one seed, and the method-specific code paths
-differ. Step-bootstrap intervals over the last 10 steps exclude zero for
-several contrasts
-\ifdefined\SUBMISSIONBUILD(Appendix~\ref{sec:p6-measured})\else(Section~\ref{sec:p6-measured})\fi,
-but they are single-trajectory intervals, not seed-level effects, and the run
-is near ceiling ($72.5\%$ of GRPO's last-10 groups are all-correct). Each entry
-marks its component \texttt{implemented} although its own note says the
-variant machinery is closed; the governance rule
+Three entries (aero~\citep{zhang2026aero}, gift~\citep{gift2025},
+areal~\citep{areal2025}) record the same managed runtime as Family C with a
+different \emph{label} per cell. The N2 run holds the sampler, $G{=}8$, seed 0,
+prompt pool, and step count fixed, but it is one seed, so its per-method
+deltas are descriptive
+\ifdefined\SUBMISSIONBUILD(Appendix~\ref{sec:p6-measured})\else(Section~\ref{sec:p6-measured})\fi.
+The aero arm's adaptive-$G$ controller was capped at $G{=}8$ and never changed
+$G$, so it ran the GRPO update rule; the areal and gift arms are surrogates.
+Each entry still marks its component \texttt{implemented}; the governance rule
 (Appendix~\ref{sec:p6-governance}) allows at most \texttt{surrogate}, so we
-flag these statuses for downgrade. The AERO record cites
-RL-ZVP~\citep{le2025rlzvp}, whose mechanism (entropy-guided advantage shaping)
-differs from the record's, so ``aero'' is a program-internal label.
+flag these statuses for downgrade. The AERO record also cites the wrong
+paper (RL-ZVP~\citep{le2025rlzvp}).
 
 \paragraph{Family E: zvf-iter130 risk-index fixtures.}
 Eleven records describe risk-index snapshots. They are not completed training

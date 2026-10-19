@@ -23,13 +23,6 @@ would reorder the middle of Table~\ref{tab:p6-entries}\ifdefined\SUBMISSIONBUILD
 robust). We ship the scoring function precisely so disagreements about
 weights can be run, not argued. Fifth, \emph{curation}: some seed entries
 carry errors flagged here but not yet corrected in the data.
-\ifdefined\SUBMISSIONBUILD\else
-\paragraph{Vehicle packaging.}
-In the program's consolidation plan this resource is the appendix/linked
-artifact of the MIN-REPORT-RL position paper when co-submitted, and a
-standalone position-artifact paper when submitted alone. Either packaging is
-valid; neither requires new training runs.
-\fi
 
 \section{Conclusion}
 \label{sec:p6-conclusion}
@@ -43,7 +36,8 @@ decoding, batch, data, and loss-implementation differences.
 problem tractable: a schema that
 carries the seven-field run-manifest portion of the eight-item reporting
 standard and per-component
-variant-delta status, 28 seed stack entries derived from real artifacts, and a
+variant-delta status, 17 seed stack entries derived from executed runs and
+released configs (plus 11 risk-index fixtures), and a
 CLI whose \texttt{stackdiff} lists those confounds field by field, with
 severity, coverage, and an underspecified flag. The registry does not make
 stacks comparable; it makes their incomparability precise, and that is the

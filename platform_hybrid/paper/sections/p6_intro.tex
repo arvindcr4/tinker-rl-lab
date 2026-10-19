@@ -19,11 +19,11 @@ actually execute?}
 This gap is not cosmetic. Across the \ours{} program we repeatedly measured the
 same algorithm label attached to different experiments. Two runs labelled
 ``GRPO, Qwen3-8B, GSM8K, $G{=}8$, lr $10^{-5}$'' reached final reward $85.6\%$
-(Tinker) and $5.0\%$ (TRL). They used different checkpoints (Base vs.\
-Instruct; the checkpoint alone explains $64\%$ of the gap on a
-same-harness rerun) and also differed in reward function, prompt template,
+(Tinker, Qwen3-8B-Base) and $5.0\%$ (TRL, Instruct Qwen3-8B). An Instruct
+run on the same Tinker harness reaches $33.8\%$, so the checkpoint accounts
+for $0.519$ of the $0.806$ gap ($64\%$). The runs also differed in reward function, prompt template,
 decoding, batch shape, data subset, and loss/optimizer implementation; the
-``matched'' configuration file describes neither run. Separately, a closed-stack
+``matched'' configuration file describes neither run. Separately, a managed-runtime
 arm labelled ``dapo'' was an advantage-clip variant with no dynamic sampling,
 while an open-trainer ``DAPO'' arm resampled zero-variance groups (a surrogate
 of DAPO's dynamic sampling: at most two resamples, then the group is dropped,
@@ -53,10 +53,10 @@ Our contributions are:
 (i) the schema (Section~\ref{sec:p6-schema});
 (ii) 18 variant-delta records, of which those for DAPO, Dr.~GRPO, and GSPO are
 verified against their source papers;
-(iii) 28 seed stack entries populated from real artifacts of this benchmark---the
-released per-framework config dumps, an open-trainer audit, a
-managed-runtime head-to-head, a same-stack four-method run, and a five-seed
-risk-index batch (Section~\ref{sec:p6-population});
+(iii) 28 seed stack entries: 17 from artifacts of this benchmark (config
+dumps, an open-trainer audit, a managed-runtime head-to-head, a same-stack
+four-method run, two W\&B runs) and 11 risk-index fixtures
+(Section~\ref{sec:p6-population});
 (iv) a query API, a 0--100 MIN-REPORT auditor badge, and a \texttt{stackdiff}
 tool that converts a pair of entries into a flip-risk verdict on the R0--R5
 ladder (Section~\ref{sec:p6-query}); and

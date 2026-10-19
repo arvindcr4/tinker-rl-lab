@@ -17,32 +17,32 @@
 \newcommand{\DEDUPALL}{351 pairs: R0 40, R2 1, R3 10, R4 23, R5 277}
 \newcommand{\DEDUPSAME}{75 pairs: R0 40, R2 1, R3 10, R4 23, R5 1}
 \newcommand{\PSIXENTRYROWS}{%
-colab-open\_dapo\_e3 & dapo & open & Qwen2.5-0.5B-Instruct & 0.000 & 84 & 0.81 \\
-colab-open\_drgrpo\_e3 & drgrpo & open & Qwen2.5-0.5B-Instruct & 0.267 & 84 & 0.81 \\
-colab-open\_grpo-adaptiveg\_e3 & grpo & open & Qwen2.5-0.5B-Instruct & 0.233 & 84 & 0.81 \\
-colab-open\_grpo\_e3 & grpo & open & Qwen2.5-0.5B-Instruct & 0.250 & 84 & 0.81 \\
-openrlhf\_grpo\_qwen3-8b\_gsm8k & grpo & open & Qwen3-8B & -- & 51 & 0.09 \\
-tinker\_aero\_qwen3.5-4b\_gsm8k & aero & managed & Qwen3.5-4B & 0.750 & 58 & 0.26 \\
-tinker\_areal\_qwen3.5-4b\_gsm8k & areal & managed & Qwen3.5-4B & 0.719 & 58 & 0.26 \\
-tinker\_dapo\_qwen3.5-4b\_gsm8k & dapo & managed & Qwen3.5-4B & 0.578 & 78 & 0.71 \\
-tinker\_drgrpo\_qwen3.5-4b\_gsm8k & drgrpo & managed & Qwen3.5-4B & 0.500 & 78 & 0.71 \\
-tinker\_gift\_qwen3.5-4b\_gsm8k & gift & managed & Qwen3.5-4B & 0.900 & 59 & 0.28 \\
-tinker\_grpo\_qwen3-8b\_gsm8k & grpo & managed & Qwen3-8B-Base & -- & 78 & 0.71 \\
-tinker\_grpo\_qwen3.5-4b\_gsm8k & grpo & managed & Qwen3.5-4B & 0.567 & 78 & 0.71 \\
-tinker\_gspo\_qwen3.5-4b\_gsm8k & gspo & managed & Qwen3.5-4B & 0.511 & 78 & 0.71 \\
-trl\_grpo\_qwen3-8b\_gsm8k & grpo & open & Qwen3-8B & -- & 51 & 0.57 \\
-verl\_grpo\_qwen3-8b\_gsm8k & grpo & open & Qwen3-8B & -- & 51 & 0.09 \\
-wandb\_ppo\_reinforce\_llama318b-inst\_gsm8k & ppo-reinforce & managed & Llama-3.1-8B-Instruct & -- & 40 & 0.22 \\
-wandb\_ppo\_reinforce\_qwen38b\_gsm8k & ppo-reinforce & managed & Qwen3-8B & -- & 40 & 0.21 \\
-zvf130\_aero & aero & open & Qwen3-8B-base (shared zvf-iter130 batch harness) & -- & 36 & 0.16 \\
-zvf130\_areal & areal & open & Qwen3-8B-base (shared zvf-iter130 batch harness) & -- & 36 & 0.16 \\
-zvf130\_cppo & cppo & open & Qwen3-8B-base (shared zvf-iter130 batch harness) & -- & 36 & 0.16 \\
-zvf130\_es & es & open & Qwen3-8B-base (shared zvf-iter130 batch harness) & -- & 36 & 0.16 \\
-zvf130\_gift & gift & open & Qwen3-8B-base (shared zvf-iter130 batch harness) & -- & 36 & 0.16 \\
-zvf130\_grpo & grpo & open & Qwen3-8B-base (shared zvf-iter130 batch harness) & -- & 36 & 0.16 \\
-zvf130\_mcgrpo & mcgrpo & open & Qwen3-8B-base (shared zvf-iter130 batch harness) & -- & 36 & 0.16 \\
-zvf130\_ngrpo & ngrpo & open & Qwen3-8B-base (shared zvf-iter130 batch harness) & -- & 36 & 0.16 \\
-zvf130\_scafgrpo & scafgrpo & open & Qwen3-8B-base (shared zvf-iter130 batch harness) & -- & 36 & 0.16 \\
-zvf130\_tool\_use\_llama-8b-inst & tool\_use\_llama-8b-inst & open & Llama-3.1-8B-Instruct (tool-use BFCL) & -- & 36 & 0.16 \\
-zvf130\_tool\_use\_qwen3-32b & tool\_use\_qwen3-32b & open & Qwen3-32B (tool-use BFCL) & -- & 36 & 0.14 \\
+colab-open\_dapo\_e3 & dapo & open & Qwen2.5-0.5B-Instruct & toy run, 2 seeds & 0.000 & 84 & 0.81 \\
+colab-open\_drgrpo\_e3 & drgrpo & open & Qwen2.5-0.5B-Instruct & toy run, 2 seeds & 0.267 & 84 & 0.81 \\
+colab-open\_grpo-adaptiveg\_e3 & grpo & open & Qwen2.5-0.5B-Instruct & toy run, 2 seeds & 0.233 & 84 & 0.81 \\
+colab-open\_grpo\_e3 & grpo & open & Qwen2.5-0.5B-Instruct & toy run, 2 seeds & 0.250 & 84 & 0.81 \\
+openrlhf\_grpo\_qwen3-8b\_gsm8k & grpo & open & Qwen3-8B & dry-run & -- & 51 & 0.09 \\
+tinker\_aero\_qwen3.5-4b\_gsm8k & aero & managed & Qwen3.5-4B & run, 1 seed & 0.750 & 58 & 0.26 \\
+tinker\_areal\_qwen3.5-4b\_gsm8k & areal & managed & Qwen3.5-4B & run, 1 seed & 0.719 & 58 & 0.26 \\
+tinker\_dapo\_qwen3.5-4b\_gsm8k & dapo & managed & Qwen3.5-4B & run, 3 seeds & 0.578 & 78 & 0.71 \\
+tinker\_drgrpo\_qwen3.5-4b\_gsm8k & drgrpo & managed & Qwen3.5-4B & run, 3 seeds & 0.500 & 78 & 0.71 \\
+tinker\_gift\_qwen3.5-4b\_gsm8k & gift & managed & Qwen3.5-4B & run, 1 seed & 0.900 & 59 & 0.28 \\
+tinker\_grpo\_qwen3-8b\_gsm8k & grpo & managed & Qwen3-8B-Base & run, 1 seed & -- & 78 & 0.71 \\
+tinker\_grpo\_qwen3.5-4b\_gsm8k & grpo & managed & Qwen3.5-4B & run, 3 seeds & 0.567 & 78 & 0.71 \\
+tinker\_gspo\_qwen3.5-4b\_gsm8k & gspo & managed & Qwen3.5-4B & run, 3 seeds & 0.511 & 78 & 0.71 \\
+trl\_grpo\_qwen3-8b\_gsm8k & grpo & open & Qwen3-8B & run, 1 seed & -- & 51 & 0.57 \\
+verl\_grpo\_qwen3-8b\_gsm8k & grpo & open & Qwen3-8B & dry-run & -- & 51 & 0.09 \\
+wandb\_ppo\_reinforce\_llama318b-inst\_gsm8k & ppo-reinforce & managed & Llama-3.1-8B-Instruct & run, 1 seed & -- & 40 & 0.22 \\
+wandb\_ppo\_reinforce\_qwen38b\_gsm8k & ppo-reinforce & managed & Qwen3-8B & run, 1 seed & -- & 40 & 0.21 \\
+zvf130\_aero & aero & open & Qwen3-8B-Base (shared zvf-iter130 batch harness) & fixture & -- & 36 & 0.16 \\
+zvf130\_areal & areal & open & Qwen3-8B-Base (shared zvf-iter130 batch harness) & fixture & -- & 36 & 0.16 \\
+zvf130\_cppo & cppo & open & Qwen3-8B-Base (shared zvf-iter130 batch harness) & fixture & -- & 36 & 0.16 \\
+zvf130\_es & es & open & Qwen3-8B-Base (shared zvf-iter130 batch harness) & fixture & -- & 36 & 0.16 \\
+zvf130\_gift & gift & open & Qwen3-8B-Base (shared zvf-iter130 batch harness) & fixture & -- & 36 & 0.16 \\
+zvf130\_grpo & grpo & open & Qwen3-8B-Base (shared zvf-iter130 batch harness) & fixture & -- & 36 & 0.16 \\
+zvf130\_mcgrpo & mcgrpo & open & Qwen3-8B-Base (shared zvf-iter130 batch harness) & fixture & -- & 36 & 0.16 \\
+zvf130\_ngrpo & ngrpo & open & Qwen3-8B-Base (shared zvf-iter130 batch harness) & fixture & -- & 36 & 0.16 \\
+zvf130\_scafgrpo & scafgrpo & open & Qwen3-8B-Base (shared zvf-iter130 batch harness) & fixture & -- & 36 & 0.16 \\
+zvf130\_tool\_use\_llama-8b-inst & tool\_use\_llama-8b-inst & open & Llama-3.1-8B-Instruct (tool-use BFCL) & fixture & -- & 36 & 0.16 \\
+zvf130\_tool\_use\_qwen3-32b & tool\_use\_qwen3-32b & open & Qwen3-32B (tool-use BFCL) & fixture & -- & 36 & 0.14 \\
 }

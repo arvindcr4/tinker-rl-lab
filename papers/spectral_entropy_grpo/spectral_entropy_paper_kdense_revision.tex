@@ -1,22 +1,29 @@
 % Evidence-safe revision of the July 2026 spectral/entropy manuscript.
 % This file deliberately excludes all unverified end-to-end benchmark claims.
-% RETARGET (2026-10-19 panel, EIC-W1): negative-result / reproducibility
-% workshop mechanism audit (prototype autopsy), NOT a main-track novelty
-% submission. Claims are shrunk to existing evidence; no new training runs.
-% Canonical copy: this file. The divergent copy at
-% zvf-program/flagship/paper/spectral_entropy_paper_kdense_revision.tex is
-% SUPERSEDED (see header there); do not submit it.
-% AUTHOR_TODO (EIC-W3): once the workshop venue is bound, produce the
-% anonymized variant (with neurips_2026.sty this is dropping the `preprint'
-% option, which switches to anonymous submission mode), vendor the style
-% file or state build instructions for the bound venue, and add its checklist.
+% AUTHOR DECISION PENDING (2026-10-19 ARS panel, EIC-W1): either execute the
+% Sec. 7 alignment gate (needs frozen LM checkpoints + rollouts; not CPU-only)
+% or retarget to a negative-results/reproducibility venue. The text below is
+% written as a negative mechanism audit and makes no venue claim; no new
+% training runs were performed.
+% Canonical copy: this file. zvf-program/flagship/paper/
+% spectral_entropy_paper_kdense_revision.tex is now a pointer that \input's
+% this file (the old divergent copy is in git history only).
+% Build (standalone; neurips_2026.sty is vendored in this directory):
+%   tectonic spectral_entropy_paper_kdense_revision.tex   % named preprint
+%   tectonic spectral_entropy_paper_anon.tex              % anonymized
+% AUTHOR_TODO (EIC-W3): once the venue is bound, swap in its style file and
+% add its checklist.
 \ifdefined\pdfsuppressptexinfo\pdfsuppressptexinfo=-1\fi
 \ifdefined\pdfinfoomitdate\pdfinfoomitdate=1\fi
 \ifdefined\pdftrailerid\pdftrailerid{}\fi
 
 \documentclass{article}
 
-\usepackage[preprint,nonatbib]{neurips_2026}
+\ifdefined\anonsubmission
+  \usepackage[nonatbib]{neurips_2026}% anonymous submission mode
+\else
+  \usepackage[preprint,nonatbib]{neurips_2026}
+\fi
 \usepackage[numbers,sort&compress]{natbib}
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
@@ -44,6 +51,13 @@
 \newcommand{\zvf}{\textsc{ZVF}\xspace}
 \newcommand{\E}{\mathbb{E}}
 \newcommand{\Prob}{\mathbb{P}}
+\ifdefined\anonsubmission
+  \newcommand{\repolocation}{the anonymized supplementary repository}
+  \newcommand{\companionpath}{(same anonymized repository)}
+\else
+  \newcommand{\repolocation}{\url{https://github.com/arvindcr4/tinker-rl-lab}}
+  \newcommand{\companionpath}{(\path{zvf-program/flagship/paper/main.tex})}
+\fi
 
 \title{Zero Advantage Is Not Missing Information:\\
 A Mechanism Audit of Trajectory-Spectral Auxiliary Advantages}
@@ -67,20 +81,20 @@ and that changes the objective.  We dissect one such prototype: a standardized
 score built from pairwise distances between low-order Legendre features of
 sampled trajectories, with an adaptive Givens rotation for coordinate
 elimination.  This is a negative-result mechanism audit (a prototype
-autopsy with transferable checks), not a main-track novelty claim. The
+autopsy with transferable checks); we claim no novelty for the score or its
+constituents. The
 continuous Parseval identity holds only for the reconstructed truncated
 expansion, while the implemented equispaced rule is first-order.  The
 rotation preserves norm precisely because its subsequent projection discards
 an already annihilated coordinate in exact arithmetic. The
-$2^{1-G}$ homogeneous-group floor is a one-line corollary of the binary
-identity and Jensen bound in \citep{nie2026gradient}, not a new result
-here. On synthetic fixtures the coupled objective produces a gradient
+$2^{1-G}$ homogeneous-group floor under conditionally i.i.d.\ binary rewards
+is a one-line corollary of the standard homogeneity identity, credited to
+prior work, and does not bound the rate under a prompt mixture. On synthetic fixtures the coupled objective produces a gradient
 proportional to its coupling weight, but the fixture injects the
 between-completion offsets the score recovers and its position channel
 cancels in every pairwise distance, so this $\lambda$-linearity is an
 algebraic identity check, not validation. The masked/padded defect of
-Eq.~\eqref{eq:discrete-coeff} is unmeasured by the all-active replay
-below. The entropy gate as implemented never fires (0/18 comparisons)
+the implemented coefficient rule is unmeasured by the all-active replay. The entropy gate as implemented never fires (0/18 comparisons)
 because its threshold $\tau=0.5$ is an order of magnitude below the
 $\log L$-scale statistic it gates; this is a scaling defect of the
 implementation, not evidence about entropic gating as a concept. We
@@ -107,9 +121,8 @@ reward, and a nonzero gradient is not evidence that the gradient is beneficial.
 
 This paper evaluates a narrow prototype under that interpretation. It is
 written as a negative-result mechanism audit --- an autopsy of the authors'
-own prototype whose transferable content is the checks, not the score ---
-for a negative-results/reproducibility venue, and makes no main-track
-novelty claim. It makes five evidence-bounded audit findings:
+own prototype whose transferable content is the checks, not the score.
+It makes five evidence-bounded audit findings:
 
 \begin{enumerate}[leftmargin=*,itemsep=2pt]
   \item We separate a missing reward signal from an auxiliary objective: no
@@ -121,12 +134,12 @@ novelty claim. It makes five evidence-bounded audit findings:
   \item We audit adaptive Givens elimination and show that its projection is
   redundant by construction: the rotation already annihilates the coordinate
   it projects away.
-  \item We restate, as a credited corollary (see \S3), the conditionally
+  \item We restate, as a credited corollary (see \S\ref{sec:problem}), the conditionally
   i.i.d. binary-reward feasibility check
   $\Prob(\text{homogeneous})\geq 2^{1-G}$ and state what procedural changes are
   required for any lower reported rate. We claim no novelty for this floor.
   \item We provide reproducible synthetic identity checks (not validation:
-  see \S6) and specify prospective alignment, placebo, paired-seed,
+  see \S\ref{sec:artifact}) and specify prospective alignment, placebo, paired-seed,
   equal-compute, and ablation gates. We make no policy-learning claim.
 \end{enumerate}
 
@@ -145,18 +158,19 @@ an external target. We make no benchmark-accuracy, sample-efficiency,
 deployment, mitigation, or superiority claim.
 
 \paragraph{Companion-manuscript disclosure.}
-A companion manuscript, ``Same Terminal Signal, Different Action''
-(\path{zvf-program/flagship/paper/main.tex}), shares with this audit the
-zero-advantage ambiguity framing, the binary homogeneous-group identity,
-and the same \path{pilot/objective.py} artifact. Shared: the ambiguity
-thesis and the objective artifact. Unique to the companion: the
-fail-closed conformance chain and its screening campaign. Unique here:
-the Legendre/Givens dissection, the synthetic replay, and the prospective
-alignment gate for the spectral score. Readers and reviewers of either
-text should not credit the shared framing twice. This file is the
-canonical copy of this audit; the divergent copy under
-\path{zvf-program/flagship/paper/} is marked superseded and must not be
-submitted, as it retains withdrawn language.
+This audit is one of three same-programme drafts. A companion manuscript,
+``Same Terminal Signal, Different Action'' \companionpath, shares with this
+audit the zero-advantage ambiguity framing, the binary homogeneous-group
+identity $p^G+(1-p)^G$, and the same \path{pilot/objective.py} artifact; a
+third draft, ``When Can We Skip a Group?'', is a controller-study skeleton
+with preregistered test language only and no results. Shared: the ambiguity
+thesis, the homogeneity identity, and the objective artifact. Unique to the
+companion: the fail-closed conformance protocol and its registered
+feasibility postmortem. Unique here: the Legendre/Givens dissection, the
+synthetic replay, and the prospective alignment gate for the spectral
+score. Neither text should be credited twice for the shared framing. This
+file is the single canonical text of this audit; an earlier divergent copy
+that retained withdrawn language has been replaced by a pointer to it.
 
 \section{Related Work and Scope}
 
@@ -205,6 +219,7 @@ autopsy whose floor check and claim-index practice are the transferable
 parts.
 
 \section{Problem Statement and Causal Boundary}
+\label{sec:problem}
 
 For prompt $x$, let $y_1,\ldots,y_G$ be sampled completions with scalar rewards
 $r_1,\ldots,r_G$. Let $I$ be the selected completion rows, $a=|I|\ge2$,
@@ -224,9 +239,11 @@ Unselected advantages are zero. Unlike the auxiliary below, this reward
 denominator has no additive epsilon. Single-selected-row sample variance is
 undefined and is outside the replay's contract. The code contract is
 narrower than the notation above: for $G=8$ the artifact accepts exactly
-6 or 8 active rows and rejects other selections, and it permits a single
-active row, for which the sample standard deviation is NaN and NaN
-advantages can propagate instead of the zero stated here. The $a\ge2$
+6 or 8 active rows and rejects every other selection, while for other $G$
+it accepts any selection with at least one active row. A single active row
+is therefore accepted when $G\ne8$; its sample standard deviation is NaN,
+the comparison against the $10^{-12}$ floor is false, and NaN advantages
+propagate instead of the zero stated here. The $a\ge2$
 precondition is therefore disclosed but not enforced by the artifact;
 enforcing it with an explicit error is a required repair before any
 training use, and no result below relies on $a<2$ or on selections the
@@ -251,13 +268,19 @@ $p$ is $2^{1-G}$, attained at $p=1/2$.  In particular, $G=4$ has a $12.5\%$
 floor.  Any lower reported rate must therefore use a larger group, non-binary
 rewards, non-i.i.d. joint sampling, dynamic rejection/resampling, or a different denominator; it cannot
 be compared to this identity without stating that procedural change.
-This floor is a one-line corollary of the identity above and of the
-stronger Jensen lower bound proved in \citep{nie2026gradient}, which also
-reports empirical degeneracy rates from training logs; we claim no novelty
-for it. Prompt-mixture caveat: with prompt-dependent success probability
-$p_x$, the operational homogeneous rate is
-$\E_x[p_x^G+(1-p_x)^G]$, governed by the difficulty distribution and
-generally well above the pointwise floor. The floor can therefore falsify
+\begin{remark}[Credited corollary; not a contribution]
+The floor is a one-line corollary of the identity above, which the
+zero-variance literature already uses; \citet{nie2026gradient} further show
+via Jensen's inequality that the degeneracy rate exceeds the i.i.d.\
+Bernoulli prediction and report empirical degeneracy rates from training
+logs. We claim no novelty for it.
+\end{remark}
+\noindent\textbf{Prompt-mixture caveat.} With prompt-dependent success
+probability $p_x$, the operational homogeneous rate is
+$\E_x[p_x^G+(1-p_x)^G]$. It is never below $2^{1-G}$, but it is governed by
+the difficulty distribution and exceeds the floor whenever $p_x$ departs
+from $1/2$; how far above is an empirical property of the mixture, not of
+this identity. The floor can therefore falsify
 only a reported rate below $2^{1-G}$ under the stated i.i.d.\ binary
 procedure; it cannot predict, explain, or bound tightly the rate of any
 real prompt mixture, and a rate above the floor is uninformative about
@@ -295,6 +318,7 @@ adding either is outside the zero-gradient claim. This coupled objective exists
 in code, but there is no verified integrated language-model training path.
 
 \section{Trajectory-Spectral Auxiliary Score}
+\label{sec:score}
 
 Let $X_i\in\mathbb{R}^{L\times D}$ denote a completion feature sequence.  The
 artifact uses either supplied hidden states or a two-channel fixture consisting
@@ -324,7 +348,7 @@ this does not make finite-sample Legendre orthogonality exact.
 \textbf{Unmeasured defect.} The masked/padded corruption of
 Eq.~\eqref{eq:discrete-coeff} (domain contraction and wrong normalizer
 under padding) is asserted analytically here and measured nowhere in this
-revision: every replay cell in \S6 uses complete, all-active masks, and
+revision: every replay cell in \S\ref{sec:artifact} uses complete, all-active masks, and
 the one unequal-length check validates only the reward-only derivative,
 not the spectral projection. The minimum required measurement before any
 training claim is masked replay cells (e.g.\ $L_{\mathrm{eff}}\in\{L/4,L/2\}$
@@ -352,7 +376,7 @@ canonical correct answer relative to atypical correct ones. The first
 might be defended as exploration; the second is arguably backwards, and
 neither follows from any mechanism linking low-order Legendre modes of a
 log-probability trace to correctness. We offer no such mechanism. The
-prospective gate in \S7 must therefore test stratum-specific directional
+prospective gate in \S\ref{sec:prospective} must therefore test stratum-specific directional
 predictions --- positive-$\lambda$ alignment separately in all-correct
 and all-wrong strata --- and pre-specify aggregation ablations (median
 pairwise distance; signed or centrally referenced variants) so that a
@@ -431,6 +455,7 @@ precision, truncation, and invalid-width comparisons. Norm preservation alone
 is not evidence of denoising or useful information preservation.
 
 \section{Artifact and Synthetic Stress Tests}
+\label{sec:artifact}
 
 The artifact includes modules for the spectral projection, pairwise score,
 Givens elimination, and the modified objective. The entropy gate audited
@@ -544,7 +569,7 @@ of magnitude below every attained value: the 0/18 null is a threshold
 scale mismatch (an unnormalized statistic gated by a fixed constant), not
 evidence about entropic gating as an idea. As implemented the gate is
 vacuous; a mask-aware normalized $H/\log L_{\mathrm{eff}}$ redefinition
-is specified prospectively in \S7 and has not been run.
+is specified prospectively in \S\ref{sec:prospective} and has not been run.
 An independent reward-only derivative calculation with six selected rows out
 of eight and unequal masked lengths agrees to maximum absolute error
 $3.47\times10^{-18}$. End-to-end training cost remains unmeasured.
@@ -557,6 +582,7 @@ Synthetic gradient existence is therefore the endpoint of the present
 empirical claim.
 
 \section{Prospective Evaluation}
+\label{sec:prospective}
 
 A publishable mitigation claim requires a prospective experiment in which the
 trajectory score is defined before outcomes are observed.
@@ -664,10 +690,10 @@ The auxiliary score is self-referential because it is computed from policy
 features or log probabilities.  It may reward novelty, length, formatting, or
 instability rather than correctness, and as defined it is outlier-seeking:
 with positive $\lambda$ it penalizes the most canonical member of an
-all-correct group (\S4). The masked/padded defect of
+all-correct group (\S\ref{sec:score}). The masked/padded defect of
 Eq.~\eqref{eq:discrete-coeff} is unmeasured by the all-active replay, the
 entropy gate is vacuous as implemented, and the $\lambda$-sweep is an
-identity check on a fixture that injects the recovered signal (\S6).
+identity check on a fixture that injects the recovered signal (\S\ref{sec:artifact}).
 The within-group framing also discards prompt-level information:
 homogeneous groups can still signal prompt difficulty for curriculum or
 filtering even when they carry no within-group contrast, a use this audit
@@ -691,8 +717,7 @@ and deterministic synthetic stress tests. There is no evidence here of
 better policy learning.  By separating those statements and specifying
 falsification criteria, this revision turns an unsupported performance story
 into a documented negative result plus a testable methods proposal. That
-is the whole claim: a prototype autopsy for a negative-results /
-reproducibility audience, whose reusable parts are the credited floor
+is the whole claim: a prototype autopsy whose reusable parts are the credited floor
 check, the exactness boundary, and the claim-to-file discipline --- not
 the spectral score, which remains unvalidated, outlier-seeking, and
 untested under masking, gating, or training.
@@ -701,21 +726,21 @@ untested under masking, gating, or training.
 \section{Claim-to-File Index}
 \label{app:artifact}
 
-Repository: \url{https://github.com/arvindcr4/tinker-rl-lab}.
+Repository: \repolocation.
 All repository paths below are relative to its root; \path{pilot/} abbreviates
 \path{zvf-program/flagship/pilot/}. The replay is saved as
 \path{platform_hybrid/experiments/results/review_2026-10-18/Spectral_Entropy/replay.json}.
 Its \path{source_sha256} map identifies the four implementation files used.
-The replay was regenerated from the committed tree with the command below
-(git commit \texttt{39f7396c6043ee83e9584bb67cfce25f1d0efc08} at
-regeneration); every numerical field (grid, $\lambda$-sweep including
-Table~\ref{tab:lambda}, active-row error) is identical before and after
-regeneration --- only the previously stale \path{objective.py} hash
-changed, and all four hashes now verify against the committed sources.
-Building this file additionally requires \path{neurips_2026.sty}, which
-currently lives under \path{zvf-program/flagship/paper/} and is not
-vendored here (author TODO at submission, with anonymization, once the
-workshop venue is bound; see file header).
+The replay was regenerated by running the first command below; its
+\path{source_git} field records the commit checked out at regeneration
+(\path{head_commit}) and lists any hashed source that differed from it
+(\path{sources_modified_vs_head}, empty). Every numerical field (grid,
+$\lambda$-sweep including Table~\ref{tab:lambda}, active-row error) is
+identical to the previous replay; only the previously stale
+\path{objective.py} hash changed, and all four hashes verify against the
+committed sources. The manuscript directory vendors \path{neurips_2026.sty}
+and builds standalone; \path{spectral_entropy_paper_anon.tex} in the same
+directory produces the anonymized variant.
 \path{python}, \path{torch}, and \path{dtype} record the runtime (Python
 3.14.7, PyTorch 2.9.0, float64 CPU). Reproduction requires these sources and a
 Python environment with PyTorch, not access to the missing historical audit.
@@ -761,6 +786,9 @@ Forced-active positive control &
 \path{replay.json:grid[]} under each reward regime:
 \path{forced_gate_count}, \path{forced_gradient_max_difference};
 threshold in \path{forced_control_tau} \\
+Source binding &
+\path{replay.json:source_sha256} (four implementation files) and
+\path{replay.json:source_git} \\
 Unequal-length active-row derivative &
 \path{replay.json:active_row_reference_max_error}; independent formula in
 \path{tools/review_ledger/Spectral_Entropy_recompute.py} \\

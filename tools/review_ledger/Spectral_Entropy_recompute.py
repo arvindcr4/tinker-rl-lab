@@ -9,6 +9,7 @@ import hashlib
 import importlib
 import json
 import math
+import subprocess
 import sys
 from pathlib import Path
 
@@ -129,6 +130,18 @@ def main():
         str((PILOT / p).relative_to(ROOT)): hashlib.sha256((PILOT / p).read_bytes()).hexdigest()
         for p in sources
     }
+    def git(*args):
+        return subprocess.run(
+            ["git", *args], cwd=ROOT, capture_output=True, text=True, check=True
+        ).stdout.strip()
+
+    source_paths = [str((PILOT / p).relative_to(ROOT)) for p in sources]
+    source_git = {
+        # Commit checked out when the replay ran; the hashes above are the binding.
+        "head_commit": git("rev-parse", "HEAD"),
+        # Empty list means every hashed source matches head_commit byte-for-byte.
+        "sources_modified_vs_head": git("status", "--porcelain", "--", *source_paths).splitlines(),
+    }
     result = {
         "evidence_type": "new deterministic synthetic CPU replay; not the historical 77-case audit",
         "python": sys.version.split()[0],
@@ -141,6 +154,7 @@ def main():
         "forced_control_tau": 10.0,
         "n_noise_dims": 1,
         "source_sha256": hashes,
+        "source_git": source_git,
         "grid": rows,
         "lambda_sweep_G4_L512": sweep,
         "active_row_reference_max_error": float((actual - expected).abs().max()),

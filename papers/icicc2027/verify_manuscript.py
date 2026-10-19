@@ -101,7 +101,7 @@ def main():
     assert 10 <= pages <= 12, pages
     assert "(A4)" in info
     assert cited == rendered == entries, (cited, rendered, entries)
-    assert len(cited) == 39, len(cited)
+    assert len(cited) == 40, len(cited)
     assert 150 <= len(abstract.split()) <= 250, len(abstract.split())
     assert not re.search(r"Overfull|undefined|Fatal error|^!", log, re.M)
     assert "Warning" not in blg

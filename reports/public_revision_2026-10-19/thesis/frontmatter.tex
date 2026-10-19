@@ -207,12 +207,14 @@ evaluation stack, at short horizons (30--50 steps), with verifiable rewards,
 on small and mid-scale models plus managed-API anchors. Controlled comparisons seek to isolate the factor under
 test; remaining differences and missing evidence limit attribution.
 It makes four contributions. Terminology used in every headline: a study is
-labelled \emph{clipped-GRPO} only where a ratio/clipped surrogate is verified in
-the runner, \emph{REINFORCE group-mean} where the inspected custom loop centres
-rewards within the group with no ratio or clipping, and \emph{unknown (managed
-or unrecovered)} where the executed loss cannot be inspected (Chapter~1
-terminology box; Table~4.2). Several best-audited stacks below are therefore
-REINFORCE group-mean, not GRPO as published.
+labelled \emph{clipped-GRPO} only where a clipped ratio surrogate is verified in
+the runner, \emph{REINFORCE group-mean} where the inspected loop centres
+rewards within the group with no clipping (with or without an unclipped
+importance ratio), and \emph{unknown (managed or unrecovered)} where the
+executed loss cannot be inspected (Chapter~1 terminology box; Table~4.2).
+Several best-audited stacks below (the group-size sweep, the four-method
+controller trace and the custom Tinker loops) are therefore REINFORCE
+group-mean, not GRPO as published.
 
 \textbf{(1) ZVF instrumentation and a loss-form audit (P2 demoted to
 instrumentation).} The Zero-Variance Fraction (ZVF) is logged per step and
@@ -234,13 +236,14 @@ label flip and not an externally validated badge. Consistency of the registry
 on its own seed entries is a closed-system check, not external validation.
 
 \textbf{(3) Calibrated negative results.} No reliable scaling law is recovered
-from reward curves across twelve fitted anchors. The saturated same-stack
-PPO/GRPO contrast (0.992 against 0.990; exact sign-flip $p=0.625$, paired-$t$
+from reward curves across twelve fitted anchors (loss form unknown). The
+saturated same-stack clipped-GRPO versus PPO contrast (0.992 against 0.990; exact sign-flip $p=0.625$, paired-$t$
 $p=0.374$, five seeds, paired by seed not by item, with asymmetric
-train--evaluation overlap) and the saturated group-size sweep are
+train--evaluation overlap) and the saturated REINFORCE group-mean group-size
+sweep are
 \emph{pilot/feasibility evidence only}: at ceiling they cannot separate no
 effect from no headroom, and neither establishes equivalence or an optimum.
-The sole unsaturated RQ2 contrast is demoted accordingly: the minimal
+The unsaturated PPO contrast (clipped-GRPO) is demoted accordingly: the minimal
 untuned-critic PPO arm (linear value head from zero, no warm-up, no GAE, no
 tuning, seeing $8\times$ as many distinct prompts per step as GRPO $G=8$,
 completions 190--196 tokens under a 200 cap) shows no detectable held-out
@@ -256,7 +259,7 @@ observed all-correct groups, without proving latent certainty or impossibility
 of recovery with fresh rollouts. No matched-budget prospective bakeoff was run.
 
 \textbf{(4) An evaluation-governance protocol (stored-evidence, not
-replayed).} One lightly trained actor
+replayed; actor loss unknown).} One lightly trained actor
 (Qwen3.6-35B-A3B with a LoRA adapter, 40 training steps; executed loss
 unknown (unrecovered dirty source), adapter revision withheld, exact consumed
 training rows unavailable) is evaluated on
@@ -271,7 +274,9 @@ check over 3 of 14 suites does not establish global or semantic
 decontamination. Receipts establish file consistency, not that the described
 training produced the evaluated weights. The public-checkout number audit is
 INCOMPLETE: of 970 registered occurrences, 828 PASS, 22 are CONTEXT-only, and
-120 are ARTIFACT\_MISSING (33 of the 828 are arithmetic from printed counts);
+120 are ARTIFACT\_MISSING (33 of the 828 are arithmetic from printed counts and 501 are token-presence
+checks against the project's own source files, i.e.\ closed-system consistency
+rather than independent recomputation);
 affected figures are therefore reported, not publicly verifiable from this
 package alone. Receipts,
 a no-pooling rule and a per-lane serving audit expose a serving defect in a

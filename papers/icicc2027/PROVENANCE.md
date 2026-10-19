@@ -14,7 +14,7 @@ The supplied historical sources remain unchanged. The source archive contains th
 
 ## Material edits
 
-- Preserved the accepted title in the provenance/release record; proposed a governance-focused manuscript title requiring author and venue confirmation
+- Retained the accepted title in the manuscript and release record by author decision on 19 October 2026; the proposed governance-focused retitle is withdrawn. Its “Held-Out” wording remains stronger than the supported item-level evidence and is flagged for author review
 - Preserved historically verified authors, shared affiliation and corresponding-author email
 - Narrowed unverified canonical-GRPO, held-out, fail-closed and reproducibility claims
 - Corrected the interpretation of Omni-MATH denominators without editing the historical result
@@ -55,3 +55,9 @@ Revision concerns were reconciled with the current candidate and newer retained 
 The old source map incorrectly said the E11 paired-outcome/bootstrap artifact was absent; it is present at platform_hybrid/experiments/scripts/e11_design_cluster_bootstrap.json and is now cited accurately. No bootstrap or model rerun was performed by this revision.
 
 37 cited primary-source references are included. Long author lists are displayed consistently as the first three authors followed by et al.; complete available metadata are retained in verification/full-reference-metadata.bib. The source package contains the new exhaustive response and audit inventories. Public source verification and an available adapter mirror do not certify sampler equivalence, benchmark reproducibility, human authorship or venue-policy compliance.
+
+## Final local preparation, 19 October 2026
+
+The current manuscript has 41 cited references after the subsequent review additions; the 37-reference count above describes the 18 October revision. The accepted title, byline and affiliation are unchanged. The AgentDojo paragraph explicitly states that injection attacks were not run and that retained records give no rationale. DeepReview finding 754 is not closed by this disclosure, and no new model execution or result was added.
+
+`verification/quality-report.json` and `verification/pdf-page-checks.json` bind the current source/PDF and final render inspection. These are local editorial checks, not a human review, similarity report, venue-policy clearance, archival deposit or submission. The release checklist retains those outstanding requirements.

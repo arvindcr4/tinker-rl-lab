@@ -16,7 +16,7 @@ Accepted title: Receipt-Bound Held-Out Evaluation of a GRPO-Trained Language Mod
 
 Printed title: the accepted title (author decision 2026-10-19). The proposed revision "Receipt-Bound Evaluation Governance: A Fourteen-Lane Language-Model Case Study" was withdrawn.
 
-Author and venue approval of the change remain required. It has not been changed in any portal. Historical source revision `a03d0677`, path `outputs/PES_Conference_Submissions_2026-09-25/ICICC2027/paper_camera.tex`; identified-source SHA256 `71684f2ccc8e5f4d4082dc5fe18bf854119967d894bf2d9916538a2aa06dba1c`; anonymous-source SHA256 `01976b09c7f59599dcb00cedc4e48f94fdfa04ca637fdaa072fc6928b49f9cc1`. Arvind C R and Ramesh Prakash Guledgudd, PES University, and the sole historically corroborated corresponding email are preserved.
+No title change is proposed or recorded in a portal. The accepted title's “Held-Out” wording does not establish item-level decontamination; the body explicitly makes no such claim, and the mismatch remains for author review. Historical source revision `a03d0677`, path `outputs/PES_Conference_Submissions_2026-09-25/ICICC2027/paper_camera.tex`; identified-source SHA256 `71684f2ccc8e5f4d4082dc5fe18bf854119967d894bf2d9916538a2aa06dba1c`; anonymous-source SHA256 `01976b09c7f59599dcb00cedc4e48f94fdfa04ca637fdaa072fc6928b49f9cc1`. Arvind C R and Ramesh Prakash Guledgudd, PES University, and the sole historically corroborated corresponding email are preserved.
 
 ## Actor and training
 
@@ -56,6 +56,7 @@ Unless a direct retained file is named, the support is narrative in `ch09_result
 | E8 |450/1967=.2287747839; 1259 unparsed, 1086 length finishes.1259diagnostic membership not reconstructed;450/708=.6355932203 is conditional sensitivity. Joint category table/nontruncated-only accuracy unresolved |
 | E9 |41 grade rows over40unique of75; 53.3333% coverage; suite score null. Separate merged-vLLM arm retained separately |
 | E10 |97completed, 88utility passes,88/97=.9072164948;v1.2.2 no upstream SHA; training inventory absent; benign-only scope |
+| E10 injection exclusion (DeepReview 754) |Retained receipt description in `ch09_results_campaign.md` §8.2 states `security_evaluation=false`, `heldout_claim=false`, and null attack/defense fields. Neither this scope declaration nor the original AgentHarm access block explains why the open AgentDojo injection split was omitted. No historical rationale is inferred; the finding remains open pending an author-supported explanation. |
 | E11 |67/156+62/156=129/312=.4134615385; 156shared designs; 150extraction failures;129/162=.7962962963 conditional; 33other nonpassing extracted candidates |
 | E11 uncertainty |`platform_hybrid/experiments/scripts/e11_design_cluster_bootstrap.json` is present (prior source map said absent incorrectly).156 pair outcomes,54 both-pass/81 both-fail/13 code-only/8 spec-only support stored [34.3%,48.7%]. No bootstrap run during this revision |
 | E11 diagnostic limit |312622/312≈1002 tokens does not establish cap-hit count. Response text/finish reasons/per-design extraction indicators absent; reasoning-draft extraction possible. No causal category allocation or conditional CI |

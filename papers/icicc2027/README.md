@@ -1,8 +1,10 @@
 # ICICC 2027 paper 243: author-review camera-ready candidate
 
-Prepared 18 October 2026 from the identified historical source and retained repository evidence. This is an **AI-assisted author-review candidate**, not a submission or a certification of venue-policy compliance.
+Prepared 18 October 2026 from the identified historical source and retained repository evidence; finalized locally on 19 October 2026. This is an **AI-assisted author-review candidate**, not a submission or a certification of venue-policy compliance.
 
-Revised against the full new critique, including a proposed title change and an exhaustive fixed/partly-addressed/unresolved response. Build the manuscript with `./build.sh`, open `build/paper_camera.pdf` (12 pages in the checked build), then read `REVIEW_RESPONSE_AND_CHECKLIST.md`. The key unresolved release requirements are author/mentor approval, the organizer's restrictions on AI-generated prose and references/citations, and a licensed similarity report below 15%. No payment, registration, submission, copyright signature, new experiment or stored-result change was performed.
+The accepted paper-243 title is retained by the author's 19 October decision; the proposed governance retitle is withdrawn. The review response distinguishes fixed, partly addressed and unresolved concerns. Build the manuscript with `./build.sh`, open `build/paper_camera.pdf` (12 pages in the checked build), then read `REVIEW_RESPONSE_AND_CHECKLIST.md`. The key unresolved release requirements are author/mentor approval, the organizer's restrictions on AI-generated prose and references/citations, and a licensed similarity report below 15%. No payment, registration, submission, copyright signature, new experiment or stored-result change was performed.
+
+The paper-specific final page limit and sibling-publication policies also need confirmation. DeepReview finding 754 remains open: no retained record explains why AgentDojo injection attacks were omitted. The accepted title's “Held-Out” wording is retained as requested, but item-level decontamination is not established; this mismatch remains an author decision, not a verified holdout claim.
 
 ## Contents
 

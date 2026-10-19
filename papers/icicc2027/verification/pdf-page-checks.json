@@ -1,78 +1,80 @@
 {
-  "pdf_sha256": "3ee033cb5b2800dd557d5484026ef608e6067358208e063acdee500f0d7ac41c",
+  "checked_at": "2026-10-19T03:10:28.285637+00:00",
+  "pdf_sha256": "bea3e65395fce3fe97f69a41db939cfe966ad8bd9aba4ec3d2366d8ac8593586",
+  "source_sha256": "b8eabbfe650b215f3a71ceafb1bede5ce5ed7e74e13f4dc5028e0febbd347ed0",
   "pages": [
     {
       "page": 1,
-      "text_characters": 2526,
+      "text_characters": 2440,
       "page_bounds_violations": [],
       "final_render_visually_inspected": true
     },
     {
       "page": 2,
-      "text_characters": 2730,
+      "text_characters": 3231,
       "page_bounds_violations": [],
       "final_render_visually_inspected": true
     },
     {
       "page": 3,
-      "text_characters": 2430,
+      "text_characters": 2662,
       "page_bounds_violations": [],
       "final_render_visually_inspected": true
     },
     {
       "page": 4,
-      "text_characters": 2891,
+      "text_characters": 2407,
       "page_bounds_violations": [],
       "final_render_visually_inspected": true
     },
     {
       "page": 5,
-      "text_characters": 2445,
-      "page_bounds_violations": [],
-      "final_render_visually_inspected": true
-    },
-    {
-      "page": 6,
-      "text_characters": 2804,
-      "page_bounds_violations": [],
-      "final_render_visually_inspected": true
-    },
-    {
-      "page": 7,
-      "text_characters": 2615,
-      "page_bounds_violations": [],
-      "final_render_visually_inspected": true
-    },
-    {
-      "page": 8,
-      "text_characters": 2700,
-      "page_bounds_violations": [],
-      "final_render_visually_inspected": true
-    },
-    {
-      "page": 9,
       "text_characters": 2349,
       "page_bounds_violations": [],
       "final_render_visually_inspected": true
     },
     {
+      "page": 6,
+      "text_characters": 2832,
+      "page_bounds_violations": [],
+      "final_render_visually_inspected": true
+    },
+    {
+      "page": 7,
+      "text_characters": 2897,
+      "page_bounds_violations": [],
+      "final_render_visually_inspected": true
+    },
+    {
+      "page": 8,
+      "text_characters": 2592,
+      "page_bounds_violations": [],
+      "final_render_visually_inspected": true
+    },
+    {
+      "page": 9,
+      "text_characters": 2616,
+      "page_bounds_violations": [],
+      "final_render_visually_inspected": true
+    },
+    {
       "page": 10,
-      "text_characters": 3483,
+      "text_characters": 3047,
       "page_bounds_violations": [],
       "final_render_visually_inspected": true
     },
     {
       "page": 11,
-      "text_characters": 3419,
+      "text_characters": 3529,
       "page_bounds_violations": [],
       "final_render_visually_inspected": true
     },
     {
       "page": 12,
-      "text_characters": 1521,
+      "text_characters": 3470,
       "page_bounds_violations": [],
       "final_render_visually_inspected": true
     }
   ],
-  "visual_review": "All 12 final review-build PNGs inspected; no clipping, overlap, missing glyphs or unreadable tables. Affected manuscript pages 7 and 9 checked explicitly. Standard Springer layout retained; references begin on page 10."
+  "visual_review": "AI visual inspection of all 12 final rendered pages using three four-page contact sheets. No visible clipping, overlap or missing glyphs; tables and scope-state figure legible; references finish on page 12. Page 6 checked for the explicit benign-only 88/97 result, no injection attacks and no retained exclusion rationale. Not human author approval or venue-policy certification."
 }

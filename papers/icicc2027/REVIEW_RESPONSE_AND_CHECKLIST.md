@@ -4,9 +4,9 @@ Prepared 18 October 2026 as a source-backed revision response. This is an AI-ass
 
 Accepted title: Receipt-Bound Held-Out Evaluation of a GRPO-Trained Language Model Across Fourteen Agentic and Reasoning Suites
 
-Proposed revised title printed in this draft: Receipt-Bound Evaluation Governance: A Fourteen-Lane Language-Model Case Study
+Printed title: the accepted title, retained by author decision on 19 October 2026. The proposed “Receipt-Bound Evaluation Governance: A Fourteen-Lane Language-Model Case Study” retitle is withdrawn.
 
-The proposed title removes both the causal training framing and the unverified held-out implication. Author and venue confirmation are required before changing the accepted title in any submission system. No portal title was changed.
+No portal title was changed. The accepted title's “Held-Out” wording remains stronger than the supported item-level evidence: the manuscript explicitly states that decontamination is not established and no held-out claim is made. The author must resolve that mismatch before release; retaining the title does not establish the missing evidence.
 
 Authors retained: Arvind C R and Ramesh Prakash Guledgudd, Department of Computer Science and Engineering, PES University, Bengaluru, India; only the corresponding email corroborated by the identified historical manuscript is retained.
 
@@ -33,7 +33,7 @@ The manuscript revision performed no additional model sampling, training, native
 
 Status: Partly addressed; empirical strength is not repaired by editing.
 
-The title, abstract, introduction and conclusion now present an evaluation-governance case study, with no new optimizer, capability advance, causal GRPO gain, measured governance effectiveness or full-scale baseline claim. Original full-denominator outcomes, partial results, later replacement execution and ungraded outcomes are separated. Routine infrastructure conditions are not treated as model performance. The statement that nine lanes remain simply quota/launch-blocked is superseded by retained September 27 results, but incomplete original contracts and native-grade gaps remain. The revision does not claim suitability for NeurIPS/ICLR or guarantee acceptance at ICICC.
+The abstract, introduction and conclusion present a receipt-bound reporting case study, with no new optimizer, capability advance, causal GRPO gain, measured governance effectiveness or full-scale baseline claim. The accepted title is retained by author decision, with the holdout-evidence mismatch noted above. Original full-denominator outcomes, partial results, later replacement execution and ungraded outcomes are separated. Routine infrastructure conditions are not treated as model performance. The statement that nine lanes remain simply quota/launch-blocked is superseded by retained September 27 results, but incomplete original contracts and native-grade gaps remain. The revision does not claim suitability for NeurIPS/ICLR or guarantee acceptance at ICICC.
 
 Where: title; abstract; Sections 1, 3.2, 4 and 5; Tables 3–5; Figure 1.
 
@@ -43,7 +43,7 @@ Evidence: retained campaign report sections 8.2–8.8; outputs/finish_pending_20
 
 Status: Partly addressed; full primary-scope baselines unresolved.
 
-The causal title framing is removed in the proposed title. All fourteen lanes of the existing same-engine paired pilot, totaling seventeen primary outcome contrasts, are now printed, rather than selected examples. Sample sizes, actual public/substitute scopes, trained/base fractions and statistical units are explicit. The pilot is inconclusive and does not replace full matched runs on E1, E8, E10, E11 or E14. No new baseline is claimed.
+No causal GRPO gain is claimed in the body; the accepted title remains unchanged. All fourteen lanes of the existing same-engine paired pilot, totaling seventeen primary outcome contrasts, are now printed, rather than selected examples. Sample sizes, actual public/substitute scopes, trained/base fractions and statistical units are explicit. The pilot is inconclusive and does not replace full matched runs on E1, E8, E10, E11 or E14. No new baseline is claimed.
 
 Where: title; abstract; Section 4.3; Table 5.
 
@@ -85,9 +85,9 @@ Source: outputs/verification/LEDGER_CODE_CHECK_2026-09-19.json, check strict_com
 
 ### A2. Critical: GRPO title without causal baseline
 
-Status: Text fixed; title approval and full baselines unresolved.
+Status: Body claims narrowed; accepted title retained by author decision; full baselines and the title/holdout-evidence mismatch unresolved.
 
-The proposed title is “Receipt-Bound Evaluation Governance: A Fourteen-Lane Language-Model Case Study.” The abstract and conclusions no longer suggest a measured GRPO effect or item-level holdout. Reported training lineage remains in methods with exact reconstruction limits. Changing the accepted title requires author/venue confirmation. Existing paired pilot data are reported; requested full runs were not performed.
+The proposed governance retitle is withdrawn. The abstract and conclusions do not claim a measured GRPO effect or verified item-level holdout. Reported training lineage remains in methods with exact reconstruction limits. Keeping the accepted title is an author decision, not evidence of decontamination or a causal training effect. Existing paired pilot data are reported; requested full runs were not performed.
 
 ### A3. Major: conditional scores and extraction categories
 
@@ -227,9 +227,13 @@ Verified current announcement: Thinking Machines Lab, “Announcing Tinker,”1 
 - Editable tables: five native LaTeX tables
 - Publication-quality figure: native editable text/vector scope-state matrix
 - Equations: two typed numbered equations
-- References:37 cited entries including scholarly and official primary sources; final build verifies resolved citations. Human citation review is still required
+- References: 41 cited entries including scholarly and official primary sources; final build verifies resolved citations. Human citation review is still required
 - Page/layout: final PDF remains within 10–12 A4 pages including references, standard Springer LLNCS dimensions, no margin/body-font compression
 - Practical applications/societal benefits: concrete review sequence, explicitly proposed rather than measured benefits
+
+## DeepReview 754: AgentDojo injection exclusion
+
+Status: Disclosure complete; historical rationale unresolved. The manuscript states that only 97 benign episodes were completed, with 88 utility passes, no injection attacks, and no retained explanation of the exclusion. The original AgentHarm access block does not explain the omission of AgentDojo's open injection split. The author must supply the actual rationale and supporting record, if available; it must not be invented or presented as a preregistered choice without evidence. The retained scope is not a security or AgentHarm result, and this finding remains open in the portfolio ledger.
 
 ## Release gates: still required before any submission
 
@@ -239,7 +243,7 @@ Verified current announcement: Thinking Machines Lab, “Announcing Tinker,”1 
 4. Licensed Turnitin/iThenticate report confirming similarity below 15%. No similarity tool was run and no percentage is claimed
 5. Dataset/access/license/ethical-provenance review for the actual historical payloads. Public benchmark identity is not proof of the campaign’s permissions
 6. Human decision about whether the remaining empirical evidence is adequate for publication. Missing full baselines, overlap inventory, failure-cause logs and controlled sampler replay cannot be cured editorially
-7. Final portal/template/source-file check and any appropriate author-executed publishing agreement
+7. Final portal/template/source-file check, confirmation of the paper-specific final page limit (public guidance includes both 10 and 10–12 pages), sibling/dual-submission policy review and any appropriate author-executed publishing agreement
 8. Registration/payment/final submission by the authorized person, after privately verifying the paper-specific dates and final preparation instructions. No payment, registration, submission or signature is represented as completed
 
 Official public guidance: https://www.icicc-conf.com/downloads and https://www.icicc-conf.com/registrations. These links do not establish completion of this paper’s requirements.

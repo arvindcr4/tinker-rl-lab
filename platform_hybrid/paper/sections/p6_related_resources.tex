@@ -46,6 +46,20 @@ training run, narrowed to the seven fields our companion papers found
 to be ranking-relevant, and made machine-readable so that the auditing step
 can be a script rather than a reviewer.
 
+\paragraph{Run schemas and reproducibility checklists.}
+OpenML~\citep{vanschoren2014openml} separates machine-readable algorithm
+specifications (\emph{flows}) from their executions (\emph{runs}). The
+registry makes the same split for GRPO-family training: a variant-delta
+record plays the role of a flow, a stack record that of a run, and
+\texttt{variant\_deltas\_applied} records how faithfully the run executes the
+flow. The ML reproducibility checklist~\citep{pineau2020improving} asks
+authors to report such details in prose; the registry makes a subset of them
+machine-checkable. Critic-free baselines outside the GRPO family, such as
+RLOO~\citep{ahmadian2024backtobasics} and
+REINFORCE++~\citep{hu2025reinforcepp}, change the advantage baseline or its
+normalization and could be encoded as variant-delta records in the same
+way; the seed catalog does not yet include them.
+
 \paragraph{Implementation provenance in RL.} That undisclosed implementation
 details move RL outcomes is well established
 \citep{henderson2018deep, engstrom2020implementation}; for LLM post-training,

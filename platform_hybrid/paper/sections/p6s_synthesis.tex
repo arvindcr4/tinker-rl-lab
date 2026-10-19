@@ -41,10 +41,10 @@ makes the run-start lessons reusable:
 
 \paragraph{Measured evidence (Section~\ref{sec:p6-measured}).} On the N2
 same-stack run (one seed, 40 steps), swapping GRPO for AERO, GIFT, or AREAL
-moves last-10 reward by at most a few hundredths---two of the shifts are small
-but detectable only under step-level resampling---while completion length moves more.
-This is not cross-seed uncertainty or a new verified recomputation. We treat
-these as one-seed observations, not variant rankings.
+moves last-10 reward by at most $0.020$ (at most $0.011$ over all 40 steps),
+while completion length moves more. For the aero arm, which never changed
+$G$, the shift is run-to-run variation between identical update rules. We
+treat these as one-seed observations, not variant rankings.
 
 Read this way, the registry is the program's exit artifact: the companion papers
 established \emph{which} stack facts flip conclusions; the registry is the

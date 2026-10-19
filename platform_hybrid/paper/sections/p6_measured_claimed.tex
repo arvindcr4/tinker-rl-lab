@@ -17,15 +17,16 @@ training intervention.
 
 For N2, $\Delta$ means variant minus GRPO on the same last-10 window.
 The AERO ZVF delta is $-0.025$ ($0.750-0.775$; the per-step values logged to
-W\&B reproduce both means); its step-bootstrap interval $[-0.0625,+0.0125]$
-includes zero. An earlier version of this reconciliation reported $+0.025$ and
+W\&B reproduce both means). An earlier version of this reconciliation reported $+0.025$ and
 called it the only OPPOSE verdict; that was a sign error, not evidence against
 the claimed direction. GIFT's corresponding
 ZVF delta is $+0.125$, while AREAL's is about $-0.056$.
 These are single-seed descriptive comparisons. Ten adjacent training steps
-are not ten independent training replicates. The per-prompt reward intervals
-in Section~\ref{sec:p6-measured} all include zero; the apparent step-level
-AERO and AREAL reward decreases are not established seed-level effects.
+are not ten independent training replicates. The AERO and AREAL last-10
+reward decreases ($-0.014$, $-0.020$) shrink to $-0.007$ and $-0.005$ over all
+40 steps (Table~\ref{tab:p6-measured-deltas}); they are not established
+seed-level effects, and the aero arm ran the GRPO update rule at fixed $G{=}8$
+(Section~\ref{sec:p6-measured}).
 
 The registry records component-level declarations, not verified adoption by
 the field. Counting multiple components of a delta in one stack must not be
@@ -42,8 +43,10 @@ step-level reward decreases ($-0.014$, $-0.020$) had been observed. The
 original signs are preserved in \texttt{delta\_aero.amendment.json} and
 \texttt{delta\_areal.amendment.json}, and each record's rationale says it was
 amended. A support rate computed against the amended signs is therefore not a
-test of the prediction. Against the original predictions, both observations
-run opposite to the claim, at step-level resolution only. The two amendment
+test of the prediction. Against the original predictions, both last-10
+point deltas run opposite to the claim, but they are single-seed descriptive
+values that shrink over the full 40 steps, so neither the amended nor the
+original sign is supported or contradicted at seed level. The two amendment
 files carry no \texttt{record\_type} or \texttt{schema\_version} and fail
 schema validation; \texttt{query.py} loads them only as hash-pinned sidecars.
 

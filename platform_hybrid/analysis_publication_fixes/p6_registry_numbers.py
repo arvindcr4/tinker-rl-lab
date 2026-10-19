@@ -58,6 +58,22 @@ def main(output_dir):
     def esc(s):
         return str(s).replace("_", r"\_")
 
+    def exec_mode(r):
+        rid = r["id"]
+        if rid.startswith("zvf130_"):
+            return "fixture"
+        mode = ((r.get("run_config") or {}).get("execution.mode") or {}).get("value")
+        if mode == "dryrun":
+            return "dry-run"
+        n = len(r.get("seeds") or [])
+        kind = "toy run" if rid.startswith("colab-open_") else "run"
+        return f"{kind}, {n} seed" + ("s" if n != 1 else "")
+
+    def show_model(m):
+        # Display only: drop the org prefix and match the "-Base" casing that
+        # stackdiff's case-insensitive normalizer already treats as equal.
+        return str(m).split("/")[-1].replace("-base", "-Base")
+
     rows = []
     for rid in sorted(recs):
         r = recs[rid]
@@ -70,7 +86,7 @@ def main(output_dir):
         )
         rows.append(
             f"{esc(rid)} & {esc(r['label_claimed'])} & {esc(r['framework']['openness'])} & "
-            f"{esc(str(model).split('/')[-1])} & {'--' if mz is None else f'{mz:.3f}'} & {total} & "
+            f"{esc(show_model(model))} & {exec_mode(r)} & {'--' if mz is None else f'{mz:.3f}'} & {total} & "
             f"{q.spec_coverage(r):.2f} \\\\"
         )
     out = output_dir / "p6_registry_generated_v2.tex"

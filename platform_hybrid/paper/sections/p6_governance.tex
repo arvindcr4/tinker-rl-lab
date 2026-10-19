@@ -14,7 +14,12 @@ something checkable (a config dump, a public run log, a code permalink), and
 \texttt{variant_deltas_applied} statuses must be defensible from that
 provenance---\texttt{implemented} requires visible code or an open backward
 pass; anything inferred from a launcher flag on a closed stack is at most
-\texttt{surrogate}. Self-reported entries for closed stacks are accepted (the
+\texttt{surrogate}. A managed-runtime entry can be \texttt{implemented} only
+when the cited component itself runs in visible client-side code (e.g.\ the
+Family~C loss functions). The three N2 entries fail this bar: their client
+code is a simplified surrogate (areal, gift) or a controller that never
+changed $G$ (aero), so their \texttt{implemented} statuses are flagged for
+downgrade. Self-reported entries for closed stacks are accepted (the
 alternative is a registry of open stacks only) but are permanently
 distinguishable by their \texttt{openness} field and their nulls: the badge
 does the discounting automatically.
@@ -25,7 +30,13 @@ delta records define shared vocabulary and therefore require verification
 against the source paper (as we did for DAPO, Dr.~GRPO, and GSPO) before
 merge. A delta record is never edited to track a paper's v2 silently;
 revisions create a new record id with a superseded pointer, so old stack
-entries keep meaning what they meant.
+entries keep meaning what they meant. This rule covers the component
+decomposition (\texttt{deltas}). The \texttt{claim\_summary},
+\texttt{expected\_effects}, and \texttt{measured[]} blocks are evidence
+annotations: adding a measurement does not create a new record id, but each
+\texttt{measured[]} row must name its source artifact and estimand, and a
+changed prediction must keep the original in a hash-pinned amendment sidecar
+(as for \texttt{delta\_aero} and \texttt{delta\_areal}).
 
 \paragraph{Schema evolution.}
 Every stack and variant-delta record carries \texttt{schema_version}

@@ -20,63 +20,63 @@ run of the CI-style auditor (\texttt{scripts/p5p8/registry\_validate.py},
 31/31 records (20 stack, 11 variant-delta) on a smaller snapshot.
 
 \subsection{Measured deltas on the same stack}
-Table~\ref{tab:p6-measured-deltas} reports paired bootstrap means and
-$95\%$ CIs on the last-$10$ steps (deterministic LCG, $n_{\text{boot}}=2000$).
-The per-prompt pooled view pools each prompt's mean reward over the steps
-it sees. It describes prompt variation within one seed, not a seed-level
-counterfactual or a causal algorithm effect.
+Table~\ref{tab:p6-measured-deltas} reports descriptive point deltas
+(variant minus GRPO) on two windows of the one logged trajectory per method:
+the last 10 steps and all 40 steps. There is one seed per method, so the
+table carries no confidence intervals or significance marks: resampling
+adjacent steps of one run treats autocorrelated steps as replicates and does
+not estimate seed-level uncertainty. Values are recomputed from
+\texttt{n2\_metrics.tsv} by \texttt{tools/review\_ledger/P6\_registry\_n2\_recompute.py}
+(output \texttt{experiments/results/review\_2026-10-18/P6\_registry/n2\_descriptive\_deltas.tsv}).
+Per-prompt pooled intervals printed in an earlier version are not reproduced
+by this recompute and are withdrawn.
 
 \begin{table}[t]
 \centering
 \caption{Same-stack variant deltas ($\Delta = \text{variant} - \texttt{grpo}$)
-from the N2 four-method run (seed $0$, $G{=}8$, last-10 steps; paired
-bootstrap CI on per-step scalar, then per-prompt pooled). The reward
-deltas are all $\leq 2$pp in magnitude; for the AERO and AREAL reward
-\emph{decreases} the step-bootstrap CI excludes $0$, but that interval
-resamples 10 autocorrelated steps of one seed and is not a seed-level
-significance test. The largest effects
-are on the length distribution: AERO and AREAL \emph{lengthen}
-completions by $\sim$31 tokens and reduce length-CV. GIFT raises ZVF
-($+0.125$) and shifts the loss by its gamma-style additive baseline
-constant.}
+from the N2 four-method run (seed $0$, $G{=}8$), as last-10 / full-40 step
+means. Single-seed descriptive values; no interval is a seed-level test.
+Reward deltas are at most $0.020$ in magnitude, and the AERO and AREAL
+last-10 reward decreases ($-0.014$, $-0.020$) shrink to $-0.007$ and
+$-0.005$ over all 40 steps. AERO and AREAL lengthen completions by about
+30 tokens over the last 10 steps (about 14 over 40). GIFT raises ZVF and
+shifts the loss by its additive baseline constant.}
 \label{tab:p6-measured-deltas}
 \small
 \resizebox{\linewidth}{!}{%
-\begin{tabular}{lllrrr}
+\begin{tabular}{lrrrr}
 \toprule
-Metric (scope)        & variant & grpo mean & var. mean & $\Delta$ & 95\% CI \\
+Metric & \texttt{grpo} mean (L10 / F40) & aero $\Delta$ & gift $\Delta$ & areal $\Delta$ \\
 \midrule
-reward\_mean (last-10) & aero    & 0.861 & 0.847 & $-0.014$  & $[-0.023,\,-0.005]^{\dagger}$ \\
-reward\_mean (last-10) & gift    & 0.861 & 0.877 & $+0.016$  & $[-0.007,\,+0.040]$ \\
-reward\_mean (last-10) & areal   & 0.861 & 0.841 & $-0.020$  & $[-0.032,\,-0.008]^{\dagger}$ \\
-zvf (last-10)          & gift    & 0.775 & 0.900 & $+0.125$  & $[+0.081,\,+0.175]^{\dagger}$ \\
-mean\_len (last-10)    & aero    & 319.6 & 350.7 & $+31.08$  & $[+27.38,\,+35.09]^{\dagger}$ \\
-mean\_len (last-10)    & areal   & 319.6 & 349.7 & $+30.13$  & $[+25.17,\,+34.60]^{\dagger}$ \\
-cv\_len (last-10)      & aero    & 0.325 & 0.291 & $-0.034$  & $[-0.069,\,-0.014]^{\dagger}$ \\
-cv\_len (last-10)      & areal   & 0.325 & 0.287 & $-0.038$  & $[-0.062,\,-0.019]^{\dagger}$ \\
-loss (last-10)         & gift    & $+2.3\!\times\!10^{2}$ & $-1.6\!\times\!10^{4}$ & $-1.67\!\times\!10^{4}$ & $[-1.94\!\times\!10^{4},\,-1.49\!\times\!10^{4}]^{\dagger}$ \\
-\midrule
-reward\_mean (per-prompt, $n{=}16$) & aero  & --- & --- & $-0.007$ & $[-0.050,\,+0.028]$ \\
-reward\_mean (per-prompt, $n{=}16$) & gift  & --- & --- & $+0.011$ & $[-0.013,\,+0.031]$ \\
-reward\_mean (per-prompt, $n{=}16$) & areal & --- & --- & $-0.006$ & $[-0.044,\,+0.016]$ \\
+reward\_mean & 0.861 / 0.834 & $-0.014$ / $-0.007$ & $+0.016$ / $+0.011$ & $-0.020$ / $-0.005$ \\
+zvf          & 0.775 / 0.720 & $-0.025$ / $0.000$  & $+0.125$ / $+0.050$ & $-0.056$ / $-0.014$ \\
+mean\_len    & 319.6 / 351.6 & $+31.08$ / $+14.16$ & $-3.89$ / $-0.74$   & $+30.13$ / $+14.60$ \\
+cv\_len      & 0.325 / 0.285 & $-0.034$ / $-0.013$ & $+0.002$ / $-0.001$ & $-0.038$ / $-0.018$ \\
+loss         & 233.7 / 347.3 & $+56.6$ / $-46.2$   & $-1.67\!\times\!10^{4}$ / $-1.79\!\times\!10^{4}$ & $+116.2$ / $-6.3$ \\
 \bottomrule
 \end{tabular}%
 }\\
-\footnotesize{$^{\dagger}$ Step-bootstrap CI excludes $0$ (single seed);
-per-prompt rows report only the pooled contrast over $n{=}16$ prompts. Source: \texttt{experiments/results/n2\_reward\_tensor\_resume/}.
-}
+\footnotesize{GIFT's last-10 mean loss is $-1.65\!\times\!10^{4}$
+($\Delta = -1.65\!\times\!10^{4} - 233.7 = -1.67\!\times\!10^{4}$).
+Source: \texttt{experiments/results/n2\_reward\_tensor\_resume/n2\_metrics.tsv}.}
 \end{table}
 
 \subsection{What this rules in and out}
-These intervals summarize one logged trajectory per method. Adjacent steps
-are not independent training replicates; significance of a step bootstrap
-does not establish a reproducible method effect. No cross-seed reward
-ranking or mechanistic interpretation follows. The last-10 window is part
-of the estimand, not a full-trajectory result. The run is also near
-ceiling: over the last 10 steps, $72.5\%$ of GRPO's groups are all-correct
-(\texttt{frac\_all\_one}; $82.5\%$ for GIFT), so most of the measured ZVF
-reflects mastered prompts, and the run cannot by itself support a claim that
-the variant label does not move outcomes once the stack is fixed.
+These are one logged trajectory per method. No cross-seed reward ranking,
+significance claim, or mechanistic interpretation follows, and the sign and
+size of a delta depend on the window. What each arm executed also limits the
+reading: the run script (\texttt{experiments/tinker-runs/scripts/n2\_reward\_tensor\_20260704.py})
+caps the aero arm's adaptive-$G$ controller at $G_{\max}{=}8$, and
+\texttt{n2\_metrics.tsv} logs $G{=}8$ at every step for every arm, so the aero
+arm never changed $G$ and its deltas are run-to-run variation between two
+runs of the same update rule. The areal arm refreshes sampler weights every
+4 steps (a staleness surrogate) and the gift arm uses a simplified advantage
+blend, so both are surrogates of their cited methods, and their deltas are
+of the same order as aero's. The run is also near ceiling: over the last 10
+steps, $72.5\%$ of GRPO's groups are all-correct (\texttt{frac\_all\_one};
+$82.5\%$ for GIFT), so most of the measured ZVF reflects mastered prompts.
+The run cannot support a claim that the variant label does or does not move
+outcomes once the stack is fixed.
 \endinput % Historical stronger interpretation preserved below.
 The measured reward deltas are all $\leq 2$pp in magnitude at the same
 stack---direct quantitative corroboration of the Pillar-1 ``algorithm

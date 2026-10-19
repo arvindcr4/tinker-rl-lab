@@ -80,7 +80,8 @@ value---and otherwise from the hand-entered fields:
 The reported level is the maximum severity over fields that are \emph{known
 on both sides and differ}; in particular, R5 is assigned only from a known,
 differing outcome-critical field. Fields unknown on either side never raise
-the level. They are reported separately as a \emph{coverage} score (fraction
+the level; a variant-delta row declared on only one side counts as unknown,
+not absent. Unknowns are reported separately as a \emph{coverage} score (fraction
 of compared fields known on both sides), a \emph{hidden severity} (the highest
 rung that could still differ), and an \textsc{underspecified} flag (coverage
 below $0.8$, or any R5 field other than the never-pinned checkpoint revision
@@ -125,8 +126,8 @@ warning that outcome differences must not be attributed to the shared label;
 code 6 marks an R0 with unresolved comparability).
 
 \paragraph{Limitation: hand-entered entries cap coverage.} \NHAND{} of the
-\NSTACK{} stack entries are still hand-entered (no run script was available to
-regenerate them), so most of their fields are unknown; this is why median pair
+\NSTACK{} stack entries are still hand-entered (\texttt{generate\_entries.py}
+has no adapter for their sources, including the N2 run script), so most of their fields are unknown; this is why median pair
 coverage is \COVMED{} and why \STACKDIFFUNDER{} pairs are underspecified. The \NGEN{}
 generated entries still require pair-specific coverage checks. No
 trainer-side manifest emitter is shipped: entries are written by hand or

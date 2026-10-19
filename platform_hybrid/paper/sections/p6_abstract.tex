@@ -10,7 +10,7 @@ the \ours{} companion papers, is that an algorithm \emph{label} underdetermines 
 $64\%$ of that gap is an unreported checkpoint switch (Base for the $85.6\%$
 run, Instruct for the $5.0\%$ run), and the remainder is confounded by reward function, prompt template,
 decoding, batch shape, data subset, and loss implementation (the same exhibit as
-the companion MIN-REPORT-RL position paper). Separately, a closed-stack arm labelled ``dapo'' was an
+the companion MIN-REPORT-RL position paper). Separately, a managed-runtime arm labelled ``dapo'' was an
 advantage-clip variant with no dynamic sampling. These audits motivate \textsc{GRPO-Registry}, a resource that makes
 such discrepancies queryable rather than presenting a new performance result:
 (i) a JSON schema whose stack records carry the seven-field run-manifest block
@@ -20,10 +20,11 @@ per-step ZVF/GU telemetry; group-size schedule;
 held-out split; decontamination and parser probes), with held-out pass@$k$
 curves recorded as the eighth, evaluation-report requirement, plus per-component
 variant-delta status; (ii) 18 variant-delta records, three of them (DAPO, Dr.~GRPO, GSPO) verified
-against their source papers; (iii) 28 seed stack entries derived from
-this benchmark's released config dumps, an open Colab trainer audit, a
-managed-runtime head-to-head, a same-stack four-method run, and a five-seed
-risk-index batch; and (iv) a reference CLI implementing registry
+against their source papers; (iii) 28 seed stack entries, 17 derived from
+this benchmark's released config dumps (two are dry-run placeholders), an open
+Colab trainer audit, a managed-runtime head-to-head, a same-stack four-method
+run, and two W\&B runs, plus 11 risk-index fixtures that describe no training
+run; and (iv) a reference CLI implementing registry
 queries, a 0--100 MIN-REPORT auditor badge, and \texttt{stackdiff}, which maps a
 pair of entries to a flip-risk level (R0--R5) computed only from fields known
 on both sides, plus a coverage score and an underspecified flag

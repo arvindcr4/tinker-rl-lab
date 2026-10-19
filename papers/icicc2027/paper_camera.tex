@@ -44,8 +44,10 @@ A benchmark score is interpretable only with its task population, actor,
 serving stack, grader and missing-outcome policy. Agentic evaluations can
 prepare hundreds of tasks while grading few, replace a gated benchmark with a
 public proxy, or retain a number after losing its execution source. Inadequate
-holdouts and reproducibility problems are established concerns in agent
-research~\cite{kapoor2024agentsmatter}. We study a concrete reporting response,
+holdouts and reproducibility problems are established concerns in
+language-model and agent evaluation~\cite{liang2023helm,biderman2024lessons,kapoor2024agentsmatter};
+such harnesses standardize tasks and prompts, whereas our unit is a run's
+scope, coverage stage and evidence state. We study a concrete reporting response,
 using a heterogeneous fourteen-lane campaign with incomplete provenance.
 
 The actor has reported group-relative policy-gradient training lineage.
@@ -75,11 +77,11 @@ Reinforcement-learning reproducibility studies~\cite{henderson2018deep} and the
 NeurIPS reproducibility program~\cite{pineau2020improving} motivate explicit
 execution records. Model cards~\cite{mitchell2019modelcards} and
 datasheets~\cite{gebru2021datasheets} organize disclosures at model and dataset
-level; our unit is a run within a named benchmark scope. The LM Evaluation
-Harness~\cite{biderman2024lessons} standardizes reproducible evaluation and the
-Agentic Benchmark Checklist~\cite{zhu2025abc} audits task and outcome validity. We add per-run receipts that keep prepared, attempted and
-graded counts, replacement identity and blocked states visible. Hash equality proves
-byte identity, not grader correctness or the truth of a receipt.
+level. The LM Evaluation Harness~\cite{biderman2024lessons} standardizes
+evaluation tasks, and the Agentic Benchmark Checklist~\cite{zhu2025abc} audits
+outcome validity. Per-run receipts keep prepared, attempted and graded counts,
+replacement identity and blocked states visible. Hash equality proves byte
+identity, not grader correctness or the truth of a receipt.
 
 Selection was purposive: software, tools, web tasks, biology, ML engineering,
 safety, hardware, application deployment, games and mathematics expose
@@ -215,12 +217,12 @@ configuration. Pilot settings are separate; E11-O primary seed is 1816.
 O and R denote separate scopes. Counts are native grades unless qualified;
 ``unavailable'' is an access/evidence disposition, not a model failure.}
 \label{tab:lanes}\centering\small\setlength{\tabcolsep}{3pt}
-\begin{tabularx}{\textwidth}{@{}l Y p{.24\textwidth}p{.25\textwidth}@{}}\toprule
+\begin{tabularx}{\textwidth}{@{}l Y p{.22\textwidth}p{.32\textwidth}@{}}\toprule
 Scope ID & Benchmark contract & Coverage & Result / disposition \\\midrule
 E1-O & SWE-bench Pro public & 731 dispositions & 2/731 = 0.274\% \\
-E2-O & FrontierSWE v1~\cite{proximal2026frontierswe} & 1/17 & 0.8628; partial \\
+E2-O & FrontierSWE v1~\cite{proximal2026frontierswe} & 1/17 & 1-task 0.8628; not a suite score \\
 E3-O & SDAB~\cite{emulated2026sdab} & No grade & Original unavailable \\
-E4-O & BankerToolBench~\cite{lau2026bankertoolbench} & 1/100 & 0.3115; partial \\
+E4-O & BankerToolBench~\cite{lau2026bankertoolbench} & 1/100 & 1-task 0.3115; not a suite score \\
 E5-O & APEX-Agents~\cite{vidgen2026apexagents} & 7/480 & 0.079365 subset mean \\
 E6-O & WebBench~\cite{halluminatewebbench} & No original result & WebArena scope \\
 E7-O & BinaryAudit~\cite{quesma2026binaryaudit} & 1/46 attempted & Agent error; no grade \\
@@ -266,7 +268,7 @@ limit, not a count of truncated outputs. The historical extractor could accept
 code inside an unterminated reasoning block; even the conditional score may
 include draft code. A conditional cluster interval is unsupported without
 per-design extraction membership. Excluding one non-elaborating reference
-test yields 129/311, retained only as non-canonical sensitivity.
+test yields 129/311 (41.48\%), retained only as non-canonical sensitivity.
 
 \textbf{AgentDojo and Omni-MATH.} AgentDojo v1.2.2 has 97 completed benign
 episodes, 88 utility passes and no pinned upstream commit in its recovered
@@ -292,8 +294,9 @@ timeout/assertion-failure breakdown are unavailable in the retained evidence.
 
 \textbf{Incomplete originals.} FrontierSWE and BankerToolBench numbers describe
 one task each; the latter is fractional recovery reward. APEX's seven graded
-tasks average 0.079365; its 0.050505 mean over 11 attempted tasks uses a different
-denominator. MLE-bench's 40/75 coverage is 53.33\%, with suite score null and a
+tasks average 0.079365; its 0.050505 mean is over the 11-task attempted
+prefix (indices 0--10; three unscored failures and one operator-interrupted
+task counted as zero). MLE-bench's 40/75 coverage is 53.33\%, with suite score null and a
 separate merged-vLLM arm. BinaryAudit's agent error is not a native grade; the campaign's 46-item
 denominator is not reconciled to the current project's 33 tasks. ML-Dev-Bench's
 later 34 configurations likewise differ from its paper's 30 tasks.
@@ -423,33 +426,31 @@ retained package; the mirror's existence does not reproduce it.
 
 The 19 September check receipt records 11 passes: selected divisions, E11's
 component sum, E9 coverage, E14 accepted rows, E8 category coverage, strict
-scope labels, two hash bindings and missing-source probes. Reading this record
+scope labels, two hash bindings and missing-source probes of four
+\texttt{.codex-run} paths on E1 (two), E6 and E9. Reading this record
 is not rerunning all original checks. Retained JSON recounts, historical reports
 and absent primary evidence are separately identified in the source map.
 
 \section{Limitations, Applications and Conclusion}
 This single-actor campaign has no primary full-scale matched baseline,
 training-seed variance estimate or complete overlap audit. Decoding conditions
-and access-selected replacements confound capability comparisons. Missing
-source and sample-level diagnostics prevent causal failure attribution.
-The original sampler cannot be replayed from this package, and a reimplemented
-runner cannot establish historical execution identity. Hashes do not recover
-missing evidence or prove semantic correctness.
+and access-selected replacements confound capability comparisons; missing
+source and sample-level diagnostics prevent causal failure attribution. The
+original sampler cannot be replayed from this package, and a reimplemented
+runner cannot establish historical execution identity. Hashes recover neither
+missing evidence nor semantic correctness.
 
-A practical review sequence is to identify the relevant contract, inspect
-coverage and exclusions, check actor/grader bindings, then determine whether
-the retained evidence supports the decision. This can prevent benign utility
-from masquerading as security and blocked scope from masquerading as a passed
-test. Better evidence retention and targeted reruns may reduce misleading
-claims or wasted effort; these are proposed benefits, not measured outcomes.
-Disclose scientific configuration while protecting credentials and private
-operational records. No score or governance label certifies safe deployment.
+Review the contract, coverage, exclusions and actor/grader binding before
+accepting retained evidence. Benign utility is not a security result, and a
+blocked scope is not a passed test. Better retention and targeted reruns are
+proposed, not measured, benefits. Disclose the scientific configuration and
+protect credentials and private operational records. No score or governance
+label certifies safe deployment.
 
-The case study contributes disciplined reporting, not demonstrated GRPO gains
-or universal reproducibility. Full matched baselines, item-level overlap
-checks, parser/finish-reason instrumentation, controlled sampler comparisons
-and independent evaluation of governance effectiveness remain future research
-requirements.
+The contribution is disciplined reporting, not a demonstrated GRPO gain or
+universal reproducibility. Full matched baselines, item-level overlap checks,
+parser and finish-reason instrumentation, controlled sampler comparisons and
+an independent test of governance effectiveness remain future work.
 
 \begin{credits}
 \subsubsection{Data availability.} Receipts, paired outcomes, inventories, the

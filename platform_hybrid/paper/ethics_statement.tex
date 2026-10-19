@@ -47,7 +47,10 @@ Qwen3-8B-Instruct for GSM8K (Section~\ref{sec:results}, 82.0\%) shows that the
 bulk of held-out accuracy is attributable to the checkpoint's pretraining and
 instruction tuning. Our 5-seed one-sample seed-level comparison against a fixed
 baseline estimates \(+1.3\) percentage points ($p{=}0.26$); it is neither
-paired-seed nor reviewed-record evidence of improvement.
+paired-seed nor reviewed-record evidence of improvement, and should not be read
+as a bound on capability change: the capability difference is unmeasured within
+wide uncertainty (single base pass, no baseline variance), so ``inconclusive''
+does not establish ``small uplift.''
 Second, the public literature already contains GRPO implementations
 \cite{shao2024deepseekmath, openrlhf2024, verl2024, vonwerra2022trl} that are at
 least as capable. Third, any reasoning uplift is bounded by the rewarder:

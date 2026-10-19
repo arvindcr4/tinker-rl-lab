@@ -10,7 +10,7 @@
   "forced_control_tau": 10.0,
   "n_noise_dims": 1,
   "source_sha256": {
-    "zvf-program/flagship/pilot/objective.py": "a744a5c5ccec771f2133052e57f3b7f47cdb0f4ccc49c7359490f44ac9925bdc",
+    "zvf-program/flagship/pilot/objective.py": "20f420f3901c75bdd3d91f2796d7afe903cd6cf950172249cefe3c18ef995a0b",
     "zvf-program/flagship/pilot/spectral_attention.py": "42778218987456c6b414ec91e37d900861b8a1a7b73427be196a484dd74425b4",
     "zvf-program/flagship/pilot/entropic_gating.py": "17a7ec47dd3dc66812ac5d75bff6b30d095e46c9a24f16ccc65a933996822bcc",
     "zvf-program/flagship/pilot/benchmark_spectral_harness.py": "1757f1cdc964d4e5e106a8651036b4ae8777a2ac31bed62d44a2b94fba6bb6b8"

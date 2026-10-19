@@ -649,7 +649,9 @@ class Campaign:
                         responses = await asyncio.gather(*futures)
                         resp = types.SimpleNamespace(
                             sequences=[
-                                seq for response in responses for seq in response.sequences
+                                seq
+                                for response in responses
+                                for seq in validated_sample_sequences(response, 1)
                             ]
                         )
                     else:

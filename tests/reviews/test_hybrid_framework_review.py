@@ -151,6 +151,7 @@ class FakeTraining:
     def __init__(self, starved=False, fail_sampling=False):
         self.starved, self.fail_sampling = starved, fail_sampling
         self.saved, self.updates, self.data = [], 0, []
+        self.sample_calls = 0
 
     def save_weights_for_sampler(self, name):
         self.saved.append(name)
@@ -162,11 +163,12 @@ class FakeTraining:
     def sample(self, *args, num_samples, **kwargs):
         if self.fail_sampling:
             raise RuntimeError("offline synthetic sampling failure")
+        start, self.sample_calls = self.sample_calls, self.sample_calls + num_samples
         return Done(
             SimpleNamespace(
                 sequences=[
                     SimpleNamespace(tokens=[1 if self.starved else i % 2], logprobs=[-1.0])
-                    for i in range(num_samples)
+                    for i in range(start, start + num_samples)
                 ]
             )
         )
@@ -602,12 +604,16 @@ def test_n10_actual_datums_use_response_and_full_rollout_batch_normalization(mon
     tc = FakeTraining()
     install_fake_provider(monkeypatch, tc)
 
-    def sample(*args, num_samples, **kwargs):
-        sequences = [
+    completions = itertools.cycle(
+        [
             SimpleNamespace(tokens=[0], logprobs=[-1.0]),
             SimpleNamespace(tokens=[1, 1, 1], logprobs=[-1.0, -1.0, -1.0]),
         ]
-        return Done(SimpleNamespace(sequences=sequences[:num_samples]))
+    )
+
+    def sample(*args, num_samples, **kwargs):
+        # Each group member is its own num_samples=1 request.
+        return Done(SimpleNamespace(sequences=[next(completions) for _ in range(num_samples)]))
 
     tc.sample = sample
     monkeypatch.setattr(module, "RESULTS_DIR", str(tmp_path))
@@ -939,7 +945,7 @@ def test_n8_orphaned_mode_manifest_is_not_overwritten(monkeypatch, tmp_path):
 
 
 @pytest.mark.parametrize("relative", ["wave6_ablations.py", "campaign_v2.py"])
-@pytest.mark.parametrize(("count", "empty_tokens"), [(0, False), (1, False), (3, False), (2, True)])
+@pytest.mark.parametrize(("count", "empty_tokens"), [(0, False), (2, False), (3, False), (1, True)])
 def test_training_rejects_wrong_group_population_before_optimizer(
     monkeypatch, relative, count, empty_tokens
 ):
@@ -973,7 +979,7 @@ def test_training_rejects_wrong_group_population_before_optimizer(
     assert tc.data == []
 
 
-@pytest.mark.parametrize(("count", "empty_tokens"), [(0, False), (1, False), (3, False), (2, True)])
+@pytest.mark.parametrize(("count", "empty_tokens"), [(0, False), (2, False), (3, False), (1, True)])
 def test_mega_rejects_wrong_group_population_without_completed_artifacts(
     monkeypatch, tmp_path, count, empty_tokens
 ):
@@ -1061,7 +1067,7 @@ def test_wave6_late_failure_retains_observed_trace_and_retry_identity(monkeypatc
 
     def sample(*args, **kwargs):
         calls.append(True)
-        if len(calls) == 2:
+        if len(calls) == 3:
             raise RuntimeError("synthetic failure after one update")
         return original_sample(*args, **kwargs)
 
@@ -1128,7 +1134,7 @@ def test_n8_chunks_validate_each_response_without_accumulating_partial_samples(
     import tinker.types as T
 
     module = load("tinker-runs/scripts/n8_passrate_spectrum_20260704.py")
-    counts = iter([1, 3, 2, 2]) if recover else itertools.cycle([1, 3])
+    counts = iter([1, 2, 1, 1, 1, 1]) if recover else itertools.cycle([1, 2])
     calls = []
 
     async def sample_async(**kwargs):
@@ -1160,7 +1166,7 @@ def test_n8_chunks_validate_each_response_without_accumulating_partial_samples(
     if recover:
         asyncio.run(task)
         row = json.loads(path.read_text())
-        assert calls == [1, 3, 2, 2]
+        assert calls == [1, 2, 1, 1, 1, 1]
         assert row["k_obtained"] == row["n_correct"] == state["completions_done"] == 4
         assert row["rewards"] == [1, 1, 1, 1]
     else:
@@ -1168,4 +1174,4 @@ def test_n8_chunks_validate_each_response_without_accumulating_partial_samples(
             asyncio.run(task)
         assert not path.exists()
         assert state["prompts_done"] == state["completions_done"] == 0
-        assert len(calls) == 8
+        assert len(calls) == 16  # 8 bounded attempts x 2 member requests

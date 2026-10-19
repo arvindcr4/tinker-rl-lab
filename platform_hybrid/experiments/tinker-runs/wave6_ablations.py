@@ -242,7 +242,11 @@ def run_one(exp):
                     for member in range(group_size)
                 ]
                 resp = types.SimpleNamespace(
-                    sequences=[seq for fut in futures for seq in fut.result().sequences]
+                    sequences=[
+                        seq
+                        for fut in futures
+                        for seq in validated_sample_sequences(fut.result(), 1)
+                    ]
                 )
 
                 sequences = validated_sample_sequences(resp, group_size)

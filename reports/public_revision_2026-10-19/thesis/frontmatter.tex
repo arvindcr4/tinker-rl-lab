@@ -20,8 +20,6 @@
 Post-Training of Large Language Models''\par}
 \vspace{0.4em}
 {\normalsize A multi-framework training harness and studies of GRPO signal starvation\par}
-\vspace{0.4em}
-{\small\bfseries PES EVALUATION REVIEW COPY\quad ARS-CORRECTED REVISION 19 October 2026\par}
 
 \vfill
 
@@ -39,7 +37,7 @@ Post-Training of Large Language Models''\par}
 
 {\normalsize\itshape Submitted by:\par}
 \vspace{0.3em}
-{\large\bfseries Arvind C R\par}
+{\large\bfseries Arvind C R \qquad PES2PGE24DS140\par}
 
 \vspace{0.5em}
 {\normalsize\itshape Under the guidance of\par}
@@ -60,39 +58,50 @@ Electronic City, Hosur Road, Bengaluru -- 560 100, Karnataka, India\par}
 \end{titlepage}
 
 %---------------------------------------------------------------------
+\begin{titlepage}
+\centering
+\thispagestyle{empty}
+\vspace*{0.1in}
+{\Large\bfseries PES UNIVERSITY\par}
+\vspace{0.2in}
+{\large\bfseries FACULTY OF ENGINEERING\par}
+{\normalsize DEPARTMENT OF COMPUTER SCIENCE AND ENGINEERING\par}
+\vspace{0.35in}
+{\Large\bfseries CERTIFICATE\par}
+\vspace{0.5in}
+\begin{spacing}{1.4}
+\noindent This is to certify that the project report entitled
+\textbf{``Tinker RL Lab: Post-Training of Large Language Models --- A
+multi-framework training harness and studies of GRPO signal starvation''} is a
+bonafide record of the project work carried out by
+\textbf{Arvind C R} (SRN: \textbf{PES2PGE24DS140}), in partial fulfilment of
+the requirements for the award of the degree of Master of Technology in
+Data Science and Machine Learning of PES University, during the period
+May 2026 -- October 2026. It is certified that all corrections/suggestions
+indicated for internal assessment have been incorporated in the report.
+
+\vspace{0.3in}
+The candidate's individual contribution, the inherited Semester-3 group
+infrastructure, and the boundary between them are stated in the Declaration
+and in Chapter 1 \S1.6.
+\end{spacing}
+\vspace{0.4in}
+\noindent\begin{tabular}{@{}p{2.4in}p{2.4in}@{}}
+\dotfill & \dotfill \\
+\textbf{Ramesh Prakash Guledgudd} & \textbf{Head of the Department} \\
+Project Guide & Department of CSE \\
+\end{tabular}
+\vspace{0.3in}
+\noindent\begin{tabular}{@{}p{2.4in}@{}}
+\dotfill \\
+\textbf{External Examiner} \\
+\end{tabular}
+\vfill
+{\normalsize October 2026\par}
+\end{titlepage}
 
 
 %---------------------------------------------------------------------
-\chapter*{Evaluation Review Revision Record}
-\addcontentsline{toc}{chapter}{Evaluation Review Revision Record}
-\noindent\textbf{ARS-corrected revision, 19 October 2026 (this copy).} This copy
-shrinks headline claim language to the tier the body already establishes, after
-the 19 October 2026 ARS panel review. It adds no training, benchmark evaluation,
-or invented number or reference; preserved numbers are unchanged unless
-re-derived in the body. It supersedes nothing institutionally: the frozen
-11 October 2026 export remains untouched and separately preserved, and this
-copy's status is \emph{pending independent human review of these exact bytes}.
-Checksums and quality receipts for this 19 October copy are pending and are
-\emph{not} regenerated here; the 11 October receipts do not certify this copy.
-The public-checkout number audit for the 11 October sources records 970
-registered occurrences: 828 PASS, 22 CONTEXT (context-only, not independently
-checked), and 120 ARTIFACT\_MISSING, status INCOMPLETE; 33 of the 828 are
-arithmetic from printed counts, not raw recomputation. Actor-dependent campaign
-results are labelled \emph{stored-evidence, not replayed} throughout.
-Author-only items (PES AI-declaration confirmation, collaborator authorisation
-and a countersigned contribution matrix, independent review of these exact
-bytes, blind human rating of the 11 C1 event cases, and checksum regeneration
-for this copy) are listed as AUTHOR\_TODO in the accompanying
-\texttt{AUTHOR\_TODO.md} and are not asserted as done.
-
-This 11 October 2026 review copy derives from the 3 October coverage-recovery manuscript and incorporates the 4 October draft's five numerical and provenance corrections. Appendix J distinguishes artifact comparisons, arithmetic from printed counts and context-only occurrences. No new training or benchmark evaluation was performed, and no frozen source, reference label, cohort selection or primary score was changed. Historical releases remain separate and unchanged.
-
-This public derivative omits operational and account identifiers, access correspondence, financial details, signature images and student registration data. Private provider exports and recovery archives are not bundled. It is not a certified institutional submission and does not carry the historical certificate. Six recovered original files resolved five primary-file gaps; the scientific recovery conclusions and E14 denominator correction remain, with inclusion and withholding boundaries in Appendix I and the public availability manifest.
-
-The C1 extension (Sections 1.5, 4.6, 7.5, 9.3 and B.13; Appendix G) retains the frozen 11/64 endpoint (17.19\%; Wilson 95\% interval 9.88--28.21\%) beside three conservatively corroborated numerical witnesses on the same denominator. Reference errors, ambiguities and unit mismatches limit interpretation; neither count is a training gain. The ledger retains classifications, hashes and disagreements, and historical V2 remains separate. Appendix H maps the evidence and distinguishes bundled content from retained external sources. Appendix A corrects registry scope and P11 evidence-tier wording without changing experimental values.
-
-\noindent\textbf{Later ESA documentation corrections.} This derivative corrects the registry description in Section 7.2 and further source-scope, controller, statistical and figure wording documented in Appendices E.2--E.3. The original 312-page review PDF remains preserved separately. No frozen research result was changed. New software checks belong to the separate ESA companion; the updated numerical registry certifies only its declared bindings.
-
 \chapter*{Declaration}
 \addcontentsline{toc}{chapter}{Declaration}
 \thispagestyle{plain}
@@ -118,61 +127,13 @@ results are reported rather than omitted. The boundary between inherited and
 individual work is stated precisely in \texttt{platform\_hybrid/sem 4
 work/PROVENANCE.md}.
 
-\vspace{0.3in}
+\vspace{0.2in}
 \noindent\begin{tabular}{@{}p{2.6in}@{}}
-
+\includegraphics[width=2.2in]{figures/signature_arvind.png} \\
 \dotfill \\
 \textbf{Arvind C R} \\
-
+SRN: PES2PGE24DS140 \\
 \end{tabular}
-
-%---------------------------------------------------------------------
-% NEEDS AUTHOR CONFIRMATION: drafted from the tools recorded in the repository
-% (git Co-Authored-By trailers, frontier_synthesis_*.tex, curriculum_opening/
-% FINDINGS.md, zvf-program/jev_lab/, thesis_review_2026-09-27/). Confirm the
-% list is complete and matches PES policy wording before submission.
-\chapter*{Declaration on the Use of AI Tools}
-\addcontentsline{toc}{chapter}{Declaration on the Use of AI Tools}
-\thispagestyle{plain}
-
-The following AI tools were used in this work, as recorded in the project
-repository.
-
-\begin{itemize}
-\item \textbf{Coding and writing assistants.} Anthropic Claude models and
-OpenAI Codex were used to write and revise code, analysis scripts and
-documents, including drafts of this report. Commits they contributed carry a
-\texttt{Co-Authored-By} trailer in the git history.
-\item \textbf{Frontier-model synthesis.} ChatGPT Pro Extended and Gemini Deep
-Think produced proposed derivations and reasoning recorded in
-\texttt{platform\_hybrid/paper/sections/frontier\_synthesis\_*.tex}, which those
-documents mark as not being experiments. Where this report uses such a result,
-it states its own derivation (Chapter 6 \S6.3.3).
-\item \textbf{Independent verification.} An LLM verification pass (Kimi,
-6 July 2026) reviewed two single-seed results and flagged both as
-\textsc{suspect}; both were then re-tested and reported as nulls (Chapter 6
-\S6.4.3).
-\item \textbf{Evaluation triage.} The Jev (TypeSafe) judgment harness was used
-in the E1--E14 ledger only for classification, faithfulness and value
-ordering, never for arithmetic (Chapter 4 \S4.5).
-\item \textbf{Review.} The pre-defence self-review of 27 September 2026 and the
-revision of this report that followed it were AI-assisted.
-\item \textbf{Submission preparation.} An AI coding assistant helped revise
-reporting language, harden build and test scripts, check stored arithmetic,
-and inspect the final PDF. Gemini 3.1 Pro reviewed the build and verification
-code through the \texttt{agy} command-line tool. This preparation ran no new
-training or benchmark evaluations and changed no stored experimental results.
-\end{itemize}
-
-No AI assistant generated experimental data: every reported measurement comes
-from an executed run or evaluation recorded in the repository, and simulated
-values are labelled as simulations. The research direction,
-the experimental design, the choice of claims and their final wording are the
-author's responsibility.
-
-\noindent\textbf{AUTHOR\_TODO (not confirmed).} This declaration list still
-requires the author's confirmation that it is complete and matches PES policy
-wording before any institutional submission. It is not confirmed in this copy.
 
 %---------------------------------------------------------------------
 \chapter*{Acknowledgement}

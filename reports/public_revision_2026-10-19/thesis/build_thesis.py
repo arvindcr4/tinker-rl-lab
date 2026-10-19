@@ -25,7 +25,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 FIGDIR = os.path.join(HERE, "figures")
 MASTER = os.path.join(HERE, "thesis_master.tex")
 BUILD = os.path.join(HERE, "build")
-PDF = os.path.join(HERE, "Thesis_Report_ArvindCR_2026-10-19_ARS_CORRECTED_REVIEW.pdf")
+PDF = os.path.join(HERE, "Thesis_Report_ArvindCR_2026-10-19_SUBMISSION.pdf")
 
 CHAPTERS = [
     ("ch01_introduction.md", "Foundations"),

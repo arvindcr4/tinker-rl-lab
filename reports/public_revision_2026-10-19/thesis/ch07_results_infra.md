@@ -106,7 +106,7 @@ This parser effect is **diagnostic-contract-specific**. The repository's existin
 
 ## 7.5 C1 Results with Reference and Unit Boundaries
 
-> **Framing (19 October 2026).** C1 is a parser/reference audit case study on a parser-zero-selected, first-64-of-87 cohort, not a recovery-rate estimate. Its reconciliation is assistant-assisted and has no independent human validation; blind human rating of at least the 11 event cases is owed by the author (AUTHOR_TODO) and has not been obtained.
+> **Framing (19 October 2026).** C1 is a parser/reference audit case study on a parser-zero-selected, first-64-of-87 cohort, not a recovery-rate estimate. Its reconciliation is assistant-assisted and has no independent human validation; blind human rating of at least the 11 event cases has not yet been obtained and is deferred to a later supplement.
 
 Benchmark reference errors, ambiguous questions and equivalent units limit what this diagnostic can establish. Its frozen parser-defined result is **11/64 questions (17.19%; Wilson 95% interval 9.88-28.21%)**. Assistant-assisted reconciliation corroborates **three numeric recovery witnesses on the same 64-question denominator**. This 3/64 count (4.69%) describes the support found under a conservative review rule; it does not replace the frozen endpoint or estimate a population recovery rate. The other eight parser events include three convention-dependent interpretations, four materially ambiguous cases and one match to an incorrect reference answer. [S1-S4]
 

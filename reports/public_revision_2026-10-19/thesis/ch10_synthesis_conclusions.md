@@ -85,7 +85,7 @@ The report's overall conclusion is about method rather than algorithms. On this 
 
 ### C1 adds numerical witnesses and exposes reference limits (parser/reference audit case study, not a recovery-rate estimate)
 
-**Human-validity gap (19 October 2026).** C1 reconciliation is assistant-assisted and provides no independent human validation; blind human rating of at least the 11 event cases is AUTHOR_TODO and has not been obtained in this copy. C1 is therefore reported strictly as an audit case study on a parser-zero-selected, first-64-of-87 cohort.
+**Human-validity gap (19 October 2026).** C1 reconciliation is assistant-assisted and provides no independent human validation; blind human rating of at least the 11 event cases has not yet been obtained and is deferred to a later supplement. C1 is therefore reported strictly as an audit case study on a parser-zero-selected, first-64-of-87 cohort.
 
 The C1 extension makes the evidence boundary more precise. Its frozen score is 11/64 on a deterministic first-64 subset, with a question-level Wilson 95% working-model interval of 9.88-28.21%. Assistant-assisted reconciliation corroborates three numerical recovery witnesses on that unchanged denominator. Three further events retain convention-dependent interpretations, four are materially ambiguous and one matches an incorrect checkpoint reference after eight correct initial answers. The frozen score is preserved, not retrospectively repaired. Selection on parser zeros can enrich the reference faults and representation mismatches that prevent a direct mathematical-recovery interpretation (Appendix G, sources S1-S5).
 

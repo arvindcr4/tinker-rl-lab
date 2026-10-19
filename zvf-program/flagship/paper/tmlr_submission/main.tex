@@ -1,4 +1,8 @@
 % Same Terminal Signal, Different Action
+% Submission note (ARS 2026-10-19, EIC-W1/3H): the target venue/track is NOT
+% yet declared by the author.  This preprint-style file and the anonymized
+% build in tmlr_submission/ are the same manuscript; do not submit both in
+% parallel.  See reports/ars_review_2026-10-19/corrections/01_status.md.
 % Evidence-bounded preprint generated from frozen repository artifacts.
 \ifdefined\pdfsuppressptexinfo\pdfsuppressptexinfo=-1\fi
 \ifdefined\pdfinfoomitdate\pdfinfoomitdate=1\fi
@@ -59,25 +63,38 @@ semantics.
 We present an evidence-bounded study of these two problems.  First, we define a
 fail-closed conformance chain from objective equation to gradient relation,
 adaptive decision, and training record.  A frozen CPU differential contains 14
-intended cases for each of TRL and verl and a shared 36-case controller matrix,
-while retaining native differences rather than relabeling them as conformance.
+intended-integration fixture cases for each of TRL and verl and a shared
+36-case controller matrix.  Native-stack evidence is much thinner: five
+single-fixture probes per stack (TRL: four materially different, one not
+exposed; verl: one materially different, four not tested), and native
+differences are retained rather than relabeled as conformance.
 Second, we give cost-accounting corollaries of the known binary-starvation
 model.  Near a binary reward boundary, a larger fixed group size reduces the
 expected number of groups needed to see a contrast; for every $G$,
 complete-group sampling costs at least $1/\epsilon$ expected rollouts at
-success probability $\epsilon$.  We also give a restricted two-state witness:
-when a prepaid batch has positive net expected value $\Delta$ under the
-solvable state, the two actions
-\{stop, commit to $m$ batch rollouts\} reverse rank across compatible latent
-states and incur positive two-point minimax regret.
+success probability $\epsilon$.  We also give a restricted two-state, two-action witness---the paper's
+``Decision Insufficiency'' means only this witness, not a general
+impossibility theorem, and sequential stopping is excluded: when a prepaid
+batch has positive net expected value $\Delta$ under the solvable state, the
+two actions \{stop, commit to $m$ batch rollouts\} reverse rank across
+compatible latent states and incur positive two-point minimax regret.
 
 We then report the outcome of a frozen A100 screening campaign without filling
 in missing evidence.  Six scientific units completed in the balanced
 equal-length negative control.  Each contained 100 replay steps, 62--65 of
-which store exact joint-zero gradient diagnostics; all remaining intended-versus-native
-cosines were at least 0.999844.  High cosine was not the registered gate: the
-sole completed intended-full cell satisfies the joint cosine/relative-$\ell_2$
-criterion on 69/100 steps, below the required 95/100.  The filtered
+which store exact joint-zero gradient diagnostics (so only 35--38 steps per
+unit carry a nonzero gradient comparison).  The balanced control is
+analytically degenerate---per-completion and global reductions coincide
+there and the objectives differ only by a known scalar---so it cannot detect
+reduction differences; its stored relative-$\ell_2$ residual (up to 0.0177,
+versus an analytic prediction of at most $2.8\times10^{-4}$) is unexplained
+and unisolated.  The sole completed intended-full cell numerically fails its
+registered gate (69/100 versus a required 95/100), but with the residual's
+source unisolated that failure is uninterpretable as evidence about objective
+semantics.  All ``Verified'' labels in this paper denote receipt-internal
+consistency (hashes and stored-field invariants), not recomputation from
+checkpoints; no run is independently recomputable from shipped bytes (see
+Reproducibility Statement).  The filtered
 variable-length positive control was contract-infeasible, four seed-37 units
 remain pending for accelerator quota, and no confirmatory matrix ran.  Consequently, this registered
 feasibility outcome does not establish a causal training effect or a scientific
@@ -107,7 +124,11 @@ the first case but valuable in the second; additional verification is
 appropriate in the third; repairing the execution path dominates either in the
 fourth.  TinyV directly studies verifier false negatives in RL
 \citep{xu2025tinyv}; VerifyBench documents broader limitations of
-reference-based reward systems \citep{yan2025verifybench}.
+reference-based reward systems \citep{yan2025verifybench}.  Our campaign
+measures none of the four causes directly: it records joint-zero frequencies,
+which the binary-starvation model can relate only to the impossible-versus-unlucky
+distinction.  No parser false-negative audit or execution-failure arm was run,
+so the verifier and runtime causes are motivation here, not measured quantities.
 
 A second ambiguity arises below the mathematical specification.  Open RL stacks
 expose objectives with similar names but can differ in reward standardization,
@@ -141,11 +162,32 @@ We make four contributions.
   reliability, a fixed-$G$ boundary expansion, and an all-$G$ rollout lower
   bound.  These are elementary consequences of the known starvation model,
   not a competing starvation theory.
-  \item We prove a two-action batch-retry witness and state the standard
-  conditional value-of-information inequality under explicit assumptions.
+  \item We exhibit a two-action batch-retry witness (an example with an
+  assumed sign condition $\Delta>0$, sequential stopping excluded) and state
+  the standard conditional value-of-information inequality under explicit
+  assumptions.
   \item We release an audited registered-feasibility postmortem.  We explicitly
   do not claim a training effect or controller improvement.
 \end{enumerate}
+
+\paragraph{Programme map and companion disclosure.}
+This manuscript belongs to one research programme on zero-variance groups and
+shares the starvation background of Section~\ref{sec:background} with two
+unpublished companion drafts: \emph{Zero Advantage Is Not Missing
+Information: A Mechanism Audit of Trajectory-Spectral Auxiliary Advantages},
+which audits a spectral auxiliary advantage and reuses the flagship pilot
+objective code, and \emph{When Can We Skip a Group? A Complete Multi-Seed Test
+of Contrast-Aware Rollout Allocation for RLVR}, a preregistered controller
+study whose results are not yet filled in.  Other manuscripts from the same
+programme (a stack-conditioned GRPO measurement paper, a reward-contrast audit
+compendium, and a thesis) also use zero-variance-fraction background.  The
+unique contribution of the present paper is the fail-closed conformance
+protocol and the registered feasibility postmortem.  It claims no
+spectral-mitigation result and no controller benefit; those questions belong
+to the companions.  Its empirical content comes only from the S1 and r4-2
+artifacts listed in the Reproducibility Statement.  The repository also holds
+an anonymized build of this same text (\path{tmlr_submission/}).  That build
+is the same manuscript, not a separate contribution.
 
 \paragraph{Claim discipline.}
 Every substantive statement is classified as proved,
@@ -154,10 +196,17 @@ artifact-verified, externally sourced, or proposed. Negative evidence labels
 not positive claim types.  Table~\ref{tab:status} uses the abbreviations
 Proved, Verified (artifact-verified), and Sourced (externally sourced) together
 with the three negative labels; the only proposed item is the prospective
-controller comparison in the Discussion. The portable companion
+controller comparison in the Discussion.  Here ``Verified'' always means
+the weaker tier of receipt-internal consistency: hashes and stored-field
+invariants are checked, but gradients and training are never recomputed from
+checkpoints.  No run in this paper is independently recomputable from
+shipped bytes.  The portable companion
 \path{verify_anonymous_claims.py} runs executable mathematical sanity checks and verifies
-receipt hashes and internal invariants; it does not replace the analytic proofs
-or recompute gradients from checkpoints.  The separate \path{ANONYMOUS_CLAIM_LEDGER.md}
+receipt hashes and internal invariants.  It passes inside the review bundle
+and on repository commit \texttt{839f87dc0}.  It fails on the current working
+tree, where frozen S1 source files have since changed (Reproducibility
+Statement).  It does not replace
+the analytic proofs or recompute gradients from checkpoints.  The separate \path{ANONYMOUS_CLAIM_LEDGER.md}
 maps claims to exact evidence in an anonymous review supplement.
 
 \section{Background and Related Work}
@@ -193,8 +242,12 @@ homogeneous-group probability is
 Both Eq.~\eqref{eq:degeneracy} and the Jensen amplification caused by prompt
 heterogeneity are established prior results \citep{nie2026gradient}.  AVSPO
 measures advantage collapse and injects virtual samples to learn from
-homogeneous groups \citep{he2026advantage}.  Our novelty claim is not that these
-events exist or that group size should adapt.
+homogeneous groups \citep{he2026advantage}, and entropy-guided advantage
+shaping likewise exploits zero-variance prompts as a learning signal
+\citep{le2025noprompt}; unlike those mitigation lines, we propose no
+training intervention and study only conformance and decision evidence.
+Our novelty claim is not that these events exist or that group size should
+adapt.
 
 \subsection{Conformance before causal interpretation}
 
@@ -240,39 +293,48 @@ paths, and hashes.  The combined receipt has SHA-256 fixture digest
 \texttt{c35916cf...af8ae9b}; it contains 14 intended cases per stack and 36
 controller cases with no recorded errors.
 
-Here is the complete scalar objective checked by S1.  The five arms are named
-after GRPO \citep{shao2024deepseekmath}, DAPO \citep{yu2025dapo}, Group Sequence
-Policy Optimization (GSPO) \citep{zheng2025gspo}, Dr.~GRPO (DrGRPO)
-\citep{liu2025drgrpo}, and Adaptive Efficient Rollout Optimization (AERO)
-\citep{zhang2026aero}, but each arm is a frozen fixture-level encoding of one
-targeted semantic, not a reimplementation of the cited algorithm: DAPO differs
-from GRPO only in its upper clip bound (no dynamic sampling or token-level
-reduction), DrGRPO removes standard-deviation scaling but keeps the
-per-completion reduction of Eq.~\eqref{eq:s1-objective}, and AERO encodes only
-a posterior-scaled zero-variance branch with frozen counts.  Let $M_{it}\in\{0,1\}$
+Here is the complete scalar objective checked by S1.  We name the five arms
+by the single semantic actually tested---\emph{std} (standardized),
+\emph{clip-high}, \emph{seq-ratio}, \emph{unscaled}, and
+\emph{posterior-branch}---citing GRPO \citep{shao2024deepseekmath}, DAPO
+\citep{yu2025dapo}, GSPO \citep{zheng2025gspo}, Dr.~GRPO
+\citep{liu2025drgrpo}, and AERO \citep{zhang2026aero} only as motivation:
+each arm is a frozen fixture-level encoding, not a reimplementation of the
+cited algorithm.  Clip-high differs from std only in its upper clip bound
+(no dynamic sampling or token-level reduction), unscaled removes
+standard-deviation scaling but keeps the per-completion reduction of
+Eq.~\eqref{eq:s1-objective}, and posterior-branch encodes only a
+posterior-scaled zero-variance branch with frozen counts.  Frozen receipt
+identifiers keep their historical algorithm-derived strings
+(\texttt{grpo}, \texttt{dapo}, \texttt{gspo}, \texttt{drgrpo},
+\texttt{aero}); Table~\ref{tab:s1-cases} maps them to the semantic names.
+Verdicts below refer to the tested semantics.  Native evidence is one
+fixture per arm, giving five single-fixture probes per stack; for verl only
+the std probe is exposed and the other four are not tested.  Let $M_{it}\in\{0,1\}$
 be the completion mask after row selection and
 $\mathcal S=\{i:\sum_tM_{it}>0\}$ the active rows; unselected and zero-mask rows
 are excluded from $\mathcal S$ and from all group statistics, and a fixture
 with $\mathcal S=\emptyset$ is rejected as invalid.  Within each reward group,
-GRPO, DAPO, and GSPO use sample standard deviation (Bessel correction) over the
-active rows, with $s_g:=0$ when a group has one active row; if $s_g$ is at most
-$10^{-8}$, $A_i=0$.  Groups with no active row contribute nothing.  DrGRPO uses
-only the centered reward.  AERO replaces the zero-variance branch with a frozen
+std, clip-high, and seq-ratio use sample standard deviation (Bessel
+correction) over the active rows, with $s_g:=0$ when a group has one active
+row; if $s_g$ is at most $10^{-8}$, $A_i=0$.  Groups with no active row
+contribute nothing.  Unscaled uses only the centered reward.
+Posterior-branch replaces the zero-variance branch with a frozen
 Beta-smoothed posterior scale.  For token log probabilities $\ell_{it}$ and
 old log probabilities $\ell^{\rm old}_{it}$, the exact advantage rule is
 \begin{equation}
 A_i=\begin{cases}
-(R_i-\bar R_g)/s_g, & \text{arm}\ne\text{DrGRPO},\ s_g>10^{-8},\\
-R_i-\bar R_g, & \text{arm}=\text{DrGRPO},\\
+(R_i-\bar R_g)/s_g, & \text{arm}\ne\text{unscaled},\ s_g>10^{-8},\\
+R_i-\bar R_g, & \text{arm}=\text{unscaled},\\
 (R_i-\tilde p_g)/\sqrt{\tilde p_g(1-\tilde p_g)},
-  & \text{arm}=\text{AERO},\ s_g\leq10^{-8},\\
+  & \text{arm}=\text{posterior-branch},\ s_g\leq10^{-8},\\
 0, & \text{otherwise},
 \end{cases}
 \quad \tilde p_g=\frac{k_g+1}{n_g+2},
 \label{eq:s1-advantage}
 \end{equation}
 where $\bar R_g$ and $s_g$ use the active rows of group $g$, and $(k_g,n_g)$
-are the frozen AERO success/observation counts.  The loss is
+are the frozen posterior-branch success/observation counts.  The loss is
 \begin{align}
  \rho_{it}&=\exp(\ell_{it}-\ell^{\rm old}_{it}), \nonumber\\
  h_{it}&=-\min\!\left\{\rho_{it}A_i,
@@ -281,15 +343,16 @@ are the frozen AERO success/observation counts.  The loss is
    \frac{\sum_t M_{it}h_{it}}{\sum_t M_{it}},
  \label{eq:s1-objective}
 \end{align}
-where $u=0.28$ for DAPO and $0.20$ otherwise; every arm, including DAPO and
-DrGRPO, uses this per-completion reduction.  Because only rows in $\mathcal S$
-enter, every denominator $\sum_tM_{it}$ is positive.  GSPO replaces the token
+with the clipped surrogate of PPO \citep{schulman2017ppo},
+where $u=0.28$ for clip-high and $0.20$ otherwise; every arm, including
+clip-high and unscaled, uses this per-completion reduction.  Because only rows in $\mathcal S$
+enter, every denominator $\sum_tM_{it}$ is positive.  Seq-ratio replaces the token
 ratio by the sequence ratio
 $\exp(\sum_tM_{it}(\ell_{it}-\ell^{\rm old}_{it})/\max\{1,\sum_tM_{it}\})$.
 There is no KL or other auxiliary term in this CPU differential.  S1 gradients
 are taken with respect to the fixture log probabilities $\ell_{it}$.
 
-The four campaign conditions use the DAPO clip structure of
+The four campaign conditions use the clip-high clip structure of
 Eq.~\eqref{eq:s1-objective} ($u=0.28$) for every condition, but their training
 implementation has a separate $10^{-12}$ zero-standard-deviation floor (S1 uses
 its float64 comparison tolerance $10^{-8}$ as its zero threshold).  For the
@@ -351,11 +414,12 @@ groups to 16; boundary-aware escalates all-wrong groups to 16 and drops
 all-correct groups; and full-triage escalates all-wrong to 16 when the Wilson
 upper bound is at least $0.05$ (dropping it otherwise), drops all-correct when
 the Wilson lower bound is at least $0.95$, and keeps $G=8$ otherwise.  Every
-non-escalated, non-dropped resolved case keeps $G=8$.  The Wilson interval uses
+non-escalated, non-dropped resolved case keeps $G=8$.  The Wilson interval \citep{wilson1927probable} uses
 $z=1.959964$ (95\%) on the pooled history-plus-group counts, here $(k,n)$ with
 $n=2$.  For $(0,2)$ the upper bound is $0.658$ and for $(2,2)$ the lower bound
 is $0.342$, so the two full-triage drop branches are not exercised by the 36
-frozen cases.
+frozen cases: the matrix tests only the escalate, keep, and recheck paths,
+and no drop-branch behaviour is claimed.
 Appendix~\ref{app:cases} lists every objective case and native verdict; the
 anonymous supplement contains exact inputs and outputs.
 
@@ -510,7 +574,8 @@ The controller faces one of two latent environments:
 Both environments assign positive probability to the observed all-failure
 history for every finite $n$.
 
-\begin{proposition}[Two-action batch-retry insufficiency]
+\begin{remark}[Two-action batch-retry witness (example, not a general insufficiency theorem)]
+\label{rem:witness}
 Suppose
 \begin{equation}
   \Delta=B\left[1-(1-q)^m\right]-cm>0.
@@ -524,9 +589,9 @@ probability $\rho$ has two-point worst-case regret
   =\frac{cm\Delta}{cm+\Delta}>0.
   \label{eq:minimax}
 \end{equation}
-\end{proposition}
+\end{remark}
 
-\begin{proof}
+\begin{proof}[Verification of the witness]
 Relative to stopping, retry has value $-cm$ in $E_0$ and $\Delta$ in $E_q$.
 The same observed history therefore induces opposite optimal actions.  A policy
 retrying with probability $\rho$ incurs regret $\rho cm$ in $E_0$ and
@@ -535,10 +600,18 @@ $\rho=\Delta/(cm+\Delta)$ and Eq.~\eqref{eq:minimax}.
 \end{proof}
 
 The prior $n$ failures establish only that both latent environments are
-compatible; they do not enter a posterior calculation.  The result is a
-restricted two-action witness, not a theorem about sequential stopping, choosing
-$m$, changing verification, or every possible outcome-only controller.  It
-shows that terminal outcomes alone need not identify the better action.
+compatible; they do not enter a posterior calculation, and any two-point
+model with a sign-changing batch value ($\Delta>0$ assumed, not derived)
+yields the same regret form by arithmetic.  The example is a restricted
+two-action, prepaid-batch witness, not a theorem about sequential stopping
+(for which sequential tests \citep{wald1945sequential} are the relevant
+classical frame), choosing $m$, changing verification, or every possible
+outcome-only controller.  It shows only that terminal outcomes alone need
+not identify the better action in this instance.  The corollaries assume
+complete, independent groups at fixed $G$ and a fixed policy, with no policy
+update between retries. The witness instead fixes a prepaid batch of $m$
+independent rollouts under a stationary policy; neither establishes controller
+novelty or prospective effectiveness.
 
 \subsection{When side information has value}
 
@@ -551,7 +624,9 @@ action set, the conditional gross Bayes value of observing $Z$ is nonnegative:
   \max_a \E[U(a,\theta)\mid O].
   \label{eq:value-information}
 \end{equation}
-This follows because a policy with $Z$ may ignore it and by the tower property.
+This is the classical value-of-information comparison
+\citep{blackwell1953equivalent}; it follows because a policy with $Z$ may
+ignore it and by the tower property.
 Equality holds if one action is posterior-optimal for almost every $Z$
 conditional on $O$; strict gross value requires a positive expected gap and no
 such common action.  Net value subtracts trace-acquisition and downstream action
@@ -626,7 +701,11 @@ balanced seed-23 corpus, for example, have raw lengths $512\times8$), and the
 generator's error reports a maximum selected-row CV of exactly zero over the
 filtered pool.  The intended positive-control variation
 therefore could not be constructed without changing the registered treatment.
-We descoped that branch rather than weakening the gate: only the seed-11
+This paper reports no pre-freeze feasibility pilot of the positive control.  Because the cap saturation is
+visible in single groups of the accepted corpus, a one-group pilot under the
+frozen decoding contract would likely have exposed it before registration.
+We treat this as a protocol defect: a fail-closed protocol should require a
+feasibility pilot for every registered control before freezing.  We descoped that branch rather than weakening the gate: only the seed-11
 filtered corpus job executed (failed validation); the seed-23 and seed-37
 filtered corpora and all 12 filtered scientific units were marked
 contract-infeasible without execution.  The four balanced seed-37 scientific units remain
@@ -694,8 +773,10 @@ $\ell_2$ at most $10^{-4}/(\sqrt{7/56}+10^{-4})\approx2.8\times10^{-4}$.  The
 stored relative $\ell_2$ values of up to $0.0177$ are therefore not explained by
 the objective definitions.  We did not isolate their source; the policy is
 loaded in bfloat16, the two gradients come from separate backward passes, and
-they are cast to float64 only for the diagnostic.  We report them as stored and do not interpret them as a
-semantic effect.
+they are cast to float64 only for the diagnostic.  We report them as stored,
+label the resulting gate outcome \emph{uninterpretable/unisolated}, and do
+not interpret it as a semantic effect; isolating it (e.g.\ float64 replay)
+remains open because checkpoints are not shipped.
 
 For the sole completed intended-full balanced cell (seed 23), 69/100 receipts
 satisfy the frozen joint criterion, below the preregistered 95/100 requirement.
@@ -704,7 +785,9 @@ cosine $\geq 0.999$ and relative $\ell_2\leq 0.01$.  All 31 failing nonzero
 receipts fail only the relative-$\ell_2$ bound; none fails the cosine bound.
 Because $\lVert g_a-g_b\rVert/\lVert g_a\rVert\geq\sin\angle(g_a,g_b)$, the
 relative-$\ell_2$ bound alone implies cosine at least
-$\sqrt{1-10^{-4}}\approx0.99995$, so the cosine bound is never binding.
+$\sqrt{1-10^{-4}}\approx0.99995$, so the cosine bound is never binding---a
+preregistration defect (a redundant gate arm) that we own as such; future
+gates should pair relative-$\ell_2$ with a non-redundant criterion.
 Descriptively, the same intended-versus-native criterion holds on 69, 69, 70,
 69, 70, and 69 receipts in the six rows of Table~\ref{tab:runs} (in table
 order), with every nonzero failure again due to relative $\ell_2$.  The
@@ -717,10 +800,26 @@ $g_{\rm intended}$ on all 200 of its receipts.  The registered
 \texttt{reduction\_only} ratio gate is not evaluated here.  The very high cosine
 extrema are therefore descriptive near-collinearity, not registered
 equivalence.  The incomplete screening matrix prevents a full campaign
-verdict, but no missing cell can reverse this accepted cell's failure.  The
+verdict, but no missing cell can reverse this accepted cell's numerical gate
+failure, whose cause remains unisolated.  The
 central causal hypothesis also required the missing filtered positive control
-and direction-consistent effects across all three seeds.  Differences in the
-six final accuracies are neither causal effects nor evidence of superiority.
+and direction-consistent effects across all three seeds.  For scale, Wilson
+95\% intervals \citep{wilson1927probable} computed from the final counts in
+Table~\ref{tab:runs} overlap one another and the common 20/128 start
+(17/128: $[0.085,0.202]$; 19/128: $[0.097,0.220]$; 20/128: $[0.104,0.229]$),
+and each unit has only 35--38 steps with a nonzero gradient comparison.
+Differences in the six final accuracies are neither causal effects nor
+evidence of superiority.
+
+The protocol's own cost is material.  In the six acceptance ledgers
+(\path{zvf-program/flagship/pilot/launch-v2-corpus-resume-r4-2/acceptance/fpilot__*.json}, field
+\texttt{token\_flop\_ledger}), diagnostic backward FLOPs equal the optimizer
+backward FLOPs for \texttt{intended\_full} and \texttt{native\_trl} and twice
+them for \texttt{epsilon\_only} and \texttt{reduction\_only}.  That is 33\%
+and 49\%, respectively, of the four ledgered FLOP fields (replay generation,
+policy forward, optimizer backward, diagnostic backward).  These totals are
+extrapolated from six profiled steps per unit (stored scale factor
+16.5--16.7), not measured on every step.
 No confirmatory seeds ran.
 
 \subsection{What the feasibility outcome establishes}
@@ -730,7 +829,9 @@ The evidence supports the following limited claims:
   \item fail-closed receipts can represent recorded exact-zero gradient pairs
   without dropping data or fabricating cosine similarity;
   \item the balanced records show descriptive near-collinearity, while the sole
-  completed intended-full cell fails the registered 95/100 mechanism gate;
+  completed intended-full cell numerically fails the registered 95/100
+  mechanism gate (69/100); because the control is degenerate and the residual
+  is unisolated, that failure is uninterpretable as a semantic verdict;
   \item the frozen positive-control construction was infeasible for the chosen
   model/decoding contract; and
   \item the preregistered causal and confirmatory questions remain unanswered.
@@ -786,27 +887,35 @@ construction, not the causal hypothesis itself.  Silently lowering the CV gate
 would create a different study.  Preserving the failure prevents an attractive
 but unsupported positive-control narrative.
 
-\paragraph{Operational consequence.}
-An outcome-only controller should expose uncertainty rather than convert a
-homogeneous group directly into ``retry'' or ``drop.''  The next action can be a
-small information-gathering probe: reverify an answer, inspect an execution
-receipt, or sample a bounded number of additional trajectories.  The probe is
-justified only when its expected decision value exceeds its cost.
+\paragraph{Operational agenda (not an established consequence).}
+No priced, measured triage instantiation is established by this paper: the
+witness's $B$, $c$, and $q$ are unmeasured in the campaign and no estimator
+of expected decision value is given.  As an agenda item only, an
+outcome-only controller could expose uncertainty rather than convert a
+homogeneous group directly into ``retry'' or ``drop,'' taking a small
+information-gathering probe (reverify an answer, inspect an execution
+receipt, or sample bounded additional trajectories) when its expected
+decision value exceeds its cost; validating any such rule is future work.
 
 \section{Limitations}
 
 The empirical study uses one 1.7B model family, one completed task regime, two
 partially represented seeds, and a short 100-step horizon.  The result is not a
 benchmark of framework quality.  The S1 cases are deliberately small and do not
-prove end-to-end equivalence.  The action-reversal theorem abstracts away model
-updates between retries, correlated rollouts, continuous rewards, and changing
-verification policies.  Its purpose is to prove insufficiency under transparent
-assumptions, not to prescribe a universal controller.
+prove end-to-end equivalence.  The action-reversal witness
+(Remark~\ref{rem:witness}) assumes its sign condition $\Delta>0$, prepays the
+batch, and abstracts away sequential stopping, model updates between retries,
+correlated rollouts, continuous rewards, and changing verification policies.
+It exhibits one instance of outcome-only insufficiency under transparent
+assumptions; it is neither a general theorem nor a prescribed controller.
 
-Finally, the current repository contains mutable working-tree development
-around immutable acceptance artifacts.  Reproduction should use the source
-hashes and artifact commits in receipts, not assume that a directory name alone
-identifies a run.
+Finally, the current working tree has diverged from the frozen S1 sources,
+and \path{verify_anonymous_claims.py} fails there.  Verification passes only inside the
+extracted review bundle or on commit \texttt{839f87dc0}
+(Reproducibility Statement).  Reproduction should use the source hashes and
+artifact commits in receipts, not assume that a directory name alone
+identifies a run.  Hashes of private checkpoints and corpora are checked for
+format only and authenticate nothing.
 
 \section{Conclusion}
 
@@ -822,8 +931,9 @@ These facts make semantic and evidential discipline part of the algorithm.  A
 fail-closed conformance chain can show what objective, gradient, and update
 actually ran; immutable receipts can distinguish accepted evidence from failed,
 descoped, pending, and unrun work.  In our campaign, that discipline exposes a
-failed balanced mechanism gate and an infeasible positive-control construction,
-not the preregistered causal headline.
+numerically failed balanced mechanism gate of unisolated cause and an
+infeasible positive-control construction, not the preregistered causal
+headline.
 
 \section*{Reproducibility Statement}
 
@@ -868,7 +978,8 @@ Eq.~\eqref{eq:degeneracy}.
 
 \section{Decision-Reversal Numerical Witness}
 
-The verification script instantiates Proposition 3 with $q=0.1$, $m=8$,
+The verification script instantiates the two-action witness
+(Remark~\ref{rem:witness}) with $q=0.1$, $m=8$,
 $c=0.02$, and $B=1$.  Retry has incremental utility $-0.16$ in $E_0$ and
 $0.40953279$ in $E_q$.  The resulting minimax-regret lower bound is
 $0.115050876$.  These numbers are a sanity-check witness, not an empirical
@@ -884,33 +995,38 @@ are in the anonymous supplement.
 
 \begin{table}[h]
   \centering
-  \caption{Complete intended S1 case inventory.}
+  \caption{Complete intended S1 case inventory.  The receipt identifier is the
+  historical arm string stored in the frozen receipts; it names the
+  motivating algorithm only, not a reimplementation of it.  $^{\dagger}$Stored
+  fixture names are \texttt{dapo\_clip} and \texttt{aero\_posterior}.}
   \label{tab:s1-cases}
   \small
-  \begin{tabularx}{\linewidth}{lXl}
+  \begin{tabularx}{\linewidth}{llXl}
     \toprule
-    Arm & Fixtures & Targeted semantic \\
+    Arm & Receipt ID & Fixtures & Targeted semantic \\
     \midrule
-    GRPO & base, all-wrong, all-correct, graded, translated, low-clip
+    std & \texttt{grpo} & base, all-wrong, all-correct, graded, translated, low-clip
       & standardization, zero branch, translation, lower clip \\
-    DAPO & DAPO-clip, low-clip & asymmetric upper/lower clipping \\
-    GSPO & base, zero-mask & sequence ratio and masking \\
-    DrGRPO & base, translated & unscaled centered reward and reduction \\
-    AERO & posterior & posterior advantage on homogeneous rewards \\
-    GRPO selected & base (rows 0,1,3) & active-row selection \\
+    clip-high & \texttt{dapo} & clip$^{\dagger}$, low-clip & asymmetric upper/lower clipping \\
+    seq-ratio & \texttt{gspo} & base, zero-mask & sequence ratio and masking \\
+    unscaled & \texttt{drgrpo} & base, translated & unscaled centered reward and reduction \\
+    posterior-branch & \texttt{aero} & posterior$^{\dagger}$ & posterior advantage on homogeneous rewards \\
+    std selected & \texttt{grpo} & base (rows 0,1,3) & active-row selection \\
     \bottomrule
   \end{tabularx}
 \end{table}
 
-Native TRL is materially different from the reference on GRPO, DAPO, GSPO,
-and DrGRPO and does not expose the tested AERO objective.  Native verl is
-materially different on GRPO; DAPO, GSPO, DrGRPO, and AERO are not exposed by
-the pinned kernel.  ``Material'' means the stored native trace differs from
+Native TRL is materially different from the reference on the std,
+clip-high, seq-ratio, and unscaled single-fixture probes and does not expose
+the tested posterior-branch objective.  Native verl is materially different
+on the std probe only (1 of 5 tested); clip-high, seq-ratio, unscaled, and
+posterior-branch are not-tested (not exposed by the pinned kernel).  ``Material'' means the stored native trace differs from
 this reference under the frozen tolerances, not that the framework is defective.
-Each native verdict is computed on one fixture per arm (GRPO base, DAPO
-DAPO-clip, GSPO base, DrGRPO base, AERO posterior), which is why
-Table~\ref{tab:s1} counts five native arms rather than 14 cases; the
-GRPO-selected fixture has no separate native verdict.
+Each native verdict is computed on one fixture per arm (std base,
+clip-high clip, seq-ratio base, unscaled base, posterior-branch posterior),
+which is why Table~\ref{tab:s1} counts five native single-fixture probes
+rather than 14 cases; the std-selected fixture has no separate native
+verdict.
 The shared controller cases are the Cartesian product
 \{static-8, static-16, symmetric-ZVF, failure-only, boundary-aware,
 full-triage\} $\times$ \{all-wrong, all-correct, mixed, noisy, missing,
@@ -956,7 +1072,8 @@ positive claims.
 
 \begin{table}[h]
   \centering
-  \caption{Boundary between current evidence and future work.}
+  \caption{Boundary between current evidence and future work.  ``Verified''
+  means receipt-internal consistency, never recomputation from checkpoints.}
   \label{tab:status}
   \begin{tabularx}{\linewidth}{lXl}
     \toprule
@@ -964,9 +1081,9 @@ positive claims.
     \midrule
     Binary homogeneous probability & Analytic identity; prior work & Sourced \\
     First-contrast and boundary cost & Proofs plus executable checks & Proved \\
-    Two-action batch-retry reversal & Proof plus numerical witness & Proved \\
-    S1 intended conformance & Frozen source/fixture receipt & Verified \\
-    Balanced gradient relations & Six final acceptance records & Verified \\
+    Two-action batch-retry reversal & Witness proof (Remark~\ref{rem:witness}; assumes $\Delta>0$) plus numerical check & Proved \\
+    S1 intended conformance & Frozen source/fixture receipt; receipt consistency only, passes in bundle or at commit \texttt{839f87dc0} & Verified \\
+    Balanced gradient relations & Six final acceptance records; receipt integrity only, gate failure uninterpretable & Verified \\
     Filtered positive control & Frozen CV gate cannot be met & Infeasible \\
     Causal training effect & Needs both regimes and all seeds & Not established \\
     Controller benefit & No matched intervention study & Not run \\

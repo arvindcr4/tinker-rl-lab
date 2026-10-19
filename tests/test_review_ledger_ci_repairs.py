@@ -1,6 +1,9 @@
 """Offline regressions for review-ledger parsing; never replay research scripts."""
 
 import importlib
+from pathlib import Path
+import subprocess
+import sys
 import urllib.parse
 from unittest.mock import Mock
 from xml.parsers import expat
@@ -140,3 +143,29 @@ def test_three_segment_fit_requires_sufficient_points_without_importing_runner()
     result = fit(np.arange(6), np.arange(6))
     assert (result["i"], result["j"]) == (2, 4)
     assert [result["m1"], result["m2"], result["m3"]] == pytest.approx([1, 1, 1])
+
+
+def test_spectral_replay_imports_without_executing_report(tmp_path):
+    root = Path(__file__).resolve().parents[1]
+    program = f"""
+import sys
+from pathlib import Path
+sys.path.insert(0, {str(root)!r})
+def reject_write(*args, **kwargs):
+    raise AssertionError('import must not write a replay artifact')
+Path.write_text = reject_write
+from tools.review_ledger import Spectral_Entropy_recompute as replay
+from pilot import objective, benchmark_spectral_harness
+assert replay.generate_benchmark_fixture is benchmark_spectral_harness.generate_benchmark_fixture
+assert replay.condition_loss is objective.condition_loss
+assert replay.entropic_givens_grpo is objective.entropic_givens_grpo
+assert replay.spectral_legendre_grpo is objective.spectral_legendre_grpo
+"""
+    subprocess.run(
+        [sys.executable, "-c", program],
+        cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        check=True,
+        timeout=30,
+    )

@@ -8,8 +8,9 @@ algorithm, 30 steps, 200-token generation cap). Both algorithms show decreasing
 mean completion length over these short horizons. This is a bounded
 trajectory observation, not proof of absent length bias or algorithmic
 equivalence. A generation cap censors the regime in which length inflation
-could appear, and step-mean logging cannot separate successful from failed
-completion lengths. On a fixed 200-item GSM8K held-out slice both
+could appear. A review rerun that logs every rollout's length by correctness
+finds incorrect rollouts longer than correct ones but no widening gap over
+30 steps, including at a 512-token cap that only 6\% of rollouts reach. On a fixed 200-item GSM8K held-out slice both
 algorithms improve over the pre-RL checkpoint (seed-level mean gains
 $+6.2$ and $+5.0$ points, $n{=}3$ seeds each); the between-algorithm
 difference is not resolved at this seed budget and is not evidence of

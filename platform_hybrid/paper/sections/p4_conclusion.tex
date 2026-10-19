@@ -3,8 +3,11 @@
 \label{sec:p4-discussion}
 The retained audit concerns average logged length in two named short-horizon
 setups, not a universal verbosity-trap test. The GSM8K-CoT completion cap is
-part of the estimand. Correctness-stratified rollout lengths and a controlled
-uncapped comparison are needed to investigate causal length bias. Absence of
+part of the estimand. The correctness-stratified rerun
+(Table~\ref{tab:p4-length-stratified}) finds no widening incorrect-minus-correct
+length gap at 30--40 steps, including at a 512-token cap that few rollouts
+reach; a controlled comparison over hundreds of steps is still needed to test
+causal length bias. Absence of
 a rising mean under a cap is not evidence of practical equivalence or of
 zero length-mediated effect. Multiple metrics from the same seed trajectory
 are not independent replicates; the seed budgets are five and three, not

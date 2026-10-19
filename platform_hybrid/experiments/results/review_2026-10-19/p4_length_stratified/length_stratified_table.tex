@@ -1,0 +1,14 @@
+\small
+\begin{tabular}{lllrcccccc}
+\toprule
+Task & cap & Algo & $n$ & len correct & len incorrect & gap (inc$-$cor) & $\rho$(step, len$_{inc}$) & at-cap & held-out acc \\
+ & & & & first5\(\to\)last5 & first5\(\to\)last5 & first5\(\to\)last5 & & last5 & post \\
+\midrule
+Arithmetic & 10 & dr\_grpo & 5 & 5.0$\pm$0.3 $\to$ 4.5$\pm$0.1 & 7.3$\pm$0.2 $\to$ 4.8$\pm$0.2 & +2.4$\pm$0.4 $\to$ +0.2$\pm$0.2 & -0.33$\pm$0.10 & 0.01$\pm$0.01 & 0.991$\pm$0.010 \\
+Arithmetic & 10 & grpo & 5 & 4.9$\pm$0.2 $\to$ 4.5$\pm$0.1 & 7.7$\pm$0.2 $\to$ 4.6$\pm$0.4 & +2.7$\pm$0.4 $\to$ +0.1$\pm$0.5 & -0.45$\pm$0.17 & 0.01$\pm$0.01 & 0.979$\pm$0.016 \\
+GSM8K-CoT & 200 & dr\_grpo & 3 & 181.4$\pm$3.9 $\to$ 167.2$\pm$5.4 & 198.3$\pm$0.7 $\to$ 193.7$\pm$2.3 & +16.8$\pm$3.8 $\to$ +26.5$\pm$3.6 & -0.45$\pm$0.16 & 0.71$\pm$0.03 & 0.215$\pm$0.000 $\to$ 0.260$\pm$0.017 \\
+GSM8K-CoT & 200 & grpo & 3 & 180.8$\pm$3.7 $\to$ 165.1$\pm$8.3 & 197.9$\pm$0.8 $\to$ 191.4$\pm$2.5 & +17.2$\pm$3.8 $\to$ +26.3$\pm$6.1 & -0.54$\pm$0.09 & 0.69$\pm$0.01 & 0.215$\pm$0.000 $\to$ 0.277$\pm$0.028 \\
+GSM8K-CoT & 512 & dr\_grpo & 3 & 261.7$\pm$12.4 $\to$ 251.1$\pm$10.0 & 360.9$\pm$10.3 $\to$ 349.4$\pm$19.6 & +99.2$\pm$9.6 $\to$ +98.2$\pm$20.5 & 0.04$\pm$0.05 & 0.06$\pm$0.01 & 0.695$\pm$0.000 $\to$ 0.713$\pm$0.013 \\
+GSM8K-CoT & 512 & grpo & 3 & 259.8$\pm$14.5 $\to$ 247.3$\pm$3.0 & 359.6$\pm$12.3 $\to$ 350.1$\pm$8.4 & +99.8$\pm$4.5 $\to$ +102.7$\pm$8.2 & -0.05$\pm$0.16 & 0.06$\pm$0.02 & 0.695$\pm$0.000 $\to$ 0.703$\pm$0.010 \\
+\bottomrule
+\end{tabular}

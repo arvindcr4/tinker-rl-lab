@@ -11,7 +11,7 @@ never asserted as done. Panel IDs refer to
 | 3 | Replace the evaluation-review title page with institutional submission front matter (declarations, signatures, similarity clearance), or state at the viva that this artefact is a review copy, not the submission | EIC-W2 |
 | 4 | Resolve or formally record collaborator authorisation; include a guide-countersigned contribution matrix (component × author) | EIC-W3 |
 | 5 | Obtain blind human rating of at least the 11 C1 event cases (C1 is assistant-assisted only until then) | R3-W5 |
-| 6 | Regenerate checksums, publication/availability manifests and quality receipts for this 19 October directory, and rebuild/re-review the PDF from these sources (pending; not fabricated here) | R3-W1 / EIC-W2 |
+| 6 | Regenerate publication/availability manifests and quality receipts for this 19 October directory, and have the rebuilt PDF (built 19 October as a compile check only; SHA-256 recorded in `README.md`) visually and independently reviewed (pending; not fabricated here) | R3-W1 / EIC-W2 |
 | 7 | Decide controlled-access deposit (named custodian) for the 120 ARTIFACT_MISSING artefacts, or accept permanent "reported, not publicly verifiable" labels | R3-W1 |
 | 8 | If original campaign contracts or a powered item-paired RQ2 rerun are ever to be claimed: design, authorise and run them separately (no new runs in this copy) | R1-W1, R3-W2 |
 

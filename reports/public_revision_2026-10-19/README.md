@@ -11,8 +11,12 @@ following the 19 October 2026 ARS panel review
 - **The frozen 11 October 2026 export is untouched.**
   `reports/public_revision_2026-10-11/` (317-page PDF, SHA-256
   `83d8ee3a…80e0`) remains exactly as published; this directory is an additive
-  corrected copy of its thesis sources (tex/md/bib and figure sources; the
-  frozen PDF and figure PDFs were not copied here).
+  corrected copy of its thesis sources. The frozen PDF was not copied here.
+  A new 326-page PDF was built from these sources on 19 October 2026
+  (`thesis/Thesis_Report_ArvindCR_2026-10-19_ARS_CORRECTED_REVIEW.pdf`,
+  SHA-256 `3e278e30811a8d16b0a4d88db8b645caf2515146976a32862fb94f523786586d`; figure PDFs regenerated with
+  `compile_figures.py`). That build is an authoring-side compile check only:
+  it carries no quality receipt and no independent review.
 - **Status: pending independent human review.** No separate final-thesis
   reviewer has reviewed these exact bytes. This export does not claim any
   independent-review gate passes.
@@ -21,15 +25,15 @@ following the 19 October 2026 ARS panel review
   qualified or withdrawn instead (exact p-values first, ZVF P2 demoted to
   instrumentation, controller stated unevaluated, campaign figures labelled
   harness scores and stored-evidence/not replayed).
-- **Checksums and quality receipts for this copy are pending.** They were not
+- **Manifest checksums and quality receipts for this copy are pending** (only the PDF hash above is recorded). They were not
   regenerated or fabricated. The copied 11 October `public_quality_receipt.json`
   was removed from this copy because it certifies the old bytes only.
   Historical manifests copied with the sources describe their original scopes.
 
 See `ERRATA.md` in this directory for the correction list,
 `AUTHOR_TODO.md` for author-only items that are explicitly not done, and
-`reports/ars_review_2026-10-19/fixes/06_public_thesis_2026-10-11_changes.md`
-for the roadmap change log. Editable sources and build instructions are in
+`reports/ars_review_2026-10-19/corrections/06_status.md` for the per-item
+Must-fix status. Editable sources and build instructions are in
 [thesis/README.md](thesis/README.md); rebuilding changes the PDF hash and
 requires a new review record.
 

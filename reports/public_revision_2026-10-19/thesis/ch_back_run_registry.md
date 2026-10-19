@@ -304,7 +304,7 @@ scores are from `outputs/E1_E14_FINAL_RESULTS_2026-09-19.md`, except the six row
 | E14 Omni-MATH | native scorer | as above | Omni-MATH | 4426/4428 accepted (99.95%); native accepted-set accuracy 2271/4426 = 51.31%; all-disposition diagnostic 2271/4428 = 51.29% — `COMPLETE_TERMINAL_NOTE` |
 | E14 FrontierMath (original) | — | as above | FrontierMath hosted | `CLOSED_EXTERNAL` |
 
-: E1-E14 evaluation campaign lanes with their run identifiers, stacks and platforms, models, suites and outcomes.
+: E1-E14 evaluation campaign lanes with their run identifiers, stacks and platforms, models, suites and outcomes. Outcomes are stored-evidence end-to-end harness scores, not replayed; their source artefacts are among those missing from the public checkout, so they are reported, not publicly verifiable from this package (§1.8).
 
 Two source documents disagree on two lanes, and both observations are retained
 rather than resolved into one, because the disagreement is itself evidence: the

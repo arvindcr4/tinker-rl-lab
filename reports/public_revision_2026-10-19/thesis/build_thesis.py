@@ -25,7 +25,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 FIGDIR = os.path.join(HERE, "figures")
 MASTER = os.path.join(HERE, "thesis_master.tex")
 BUILD = os.path.join(HERE, "build")
-PDF = os.path.join(HERE, "Thesis_Report_ArvindCR_2026-10-11_ESA_CORRECTED_REVIEW.pdf")
+PDF = os.path.join(HERE, "Thesis_Report_ArvindCR_2026-10-19_ARS_CORRECTED_REVIEW.pdf")
 
 CHAPTERS = [
     ("ch01_introduction.md", "Foundations"),
@@ -202,7 +202,8 @@ FIGURES: dict[str, list[tuple[str, str, list[str]]]] = {
             "which are separate receipts and are never pooled with a lane's "
             "original-contract figure. E14's native accepted-set accuracy is "
             "$2271/4426 = 51.31\\%$; its separate all-disposition diagnostic is "
-            "$2271/4428 = 51.29\\%$, counting the two unjudged rows as failures.",
+            "$2271/4428 = 51.29\\%$, counting the two unjudged rows as failures."
+            "All actor-dependent figures are stored-evidence end-to-end harness scores, not replayed and not capability measures (Chapter~8 gives failure-mode rates).",
             "fig:campaign",
             ["Campaign", "Methodology"],
         ),
@@ -234,7 +235,8 @@ FIGURES: dict[str, list[tuple[str, str, list[str]]]] = {
             "that are closed external, then the one lane whose scope is not settled. "
             "E14's native accepted-set accuracy is $2271/4426 = 51.31\\%$. "
             "The separate all-disposition diagnostic is $2271/4428 = 51.29\\%$, "
-            "counting the two unjudged rows as failures.",
+            "counting the two unjudged rows as failures."
+            "All actor-dependent figures are stored-evidence end-to-end harness scores, not replayed and not capability measures (Chapter~8 gives failure-mode rates).",
             "fig:harness",
             ["Harness", "Implementation"],
         ),
@@ -363,9 +365,10 @@ FIGURES: dict[str, list[tuple[str, str, list[str]]]] = {
             "suites and their results (e.g.\\ E1 SWE-bench Pro $2/731$, E2 FrontierSWE, "
             "E5 APEX-Agents, E9 MLE-bench) are shown in the campaign-design figure "
             "(Chapter~4) and are never pooled with replacement-scope numbers. "
-            "*E14 closes terminal-complete: $2271/4428 = 51.29\\%$ with the two "
-            "unjudged rows counted as failures (official scorer: 51.31\\% over 4426 "
-            "judged rows).",
+            "*E14 closes terminal-complete: native accepted-set harness score "
+            "$2271/4426 = 51.31\\%$ (canonical); all-disposition diagnostic "
+            "$2271/4428 = 51.29\\%$ with the two unjudged rows counted as failures."
+            "All actor-dependent figures are stored-evidence end-to-end harness scores, not replayed and not capability measures (Chapter~8 gives failure-mode rates).",
             "fig:lanes",
             ["Campaign", "Results"],
         ),
@@ -377,7 +380,9 @@ FIGURES: dict[str, list[tuple[str, str, list[str]]]] = {
             "category-dependent. No pooled bar is drawn here; the chapter separately "
             "reports the item-weighted 450/1967 benchmark fraction. CloningScenarios is a historically reported zero (0/33). "
             "The original diagnostic file was recovered and byte-verified on "
-            "3 October (Appendix B); its aggregate counts agree with these bars.",
+            "3 October (Appendix B); its aggregate counts agree with these bars. "
+            "These are end-to-end harness scores (stored-evidence, not replayed): "
+            "1{,}259 of 1{,}967 responses were unparsed and 1{,}086 length-truncated.",
             "fig:e8",
             ["LAB-Bench", "E8", "complete scopes"],
         ),
@@ -389,7 +394,9 @@ FIGURES: dict[str, list[tuple[str, str, list[str]]]] = {
             "rows, not a third measurement. Graded by the suite's native harness "
             "(receipt \\texttt{e11\\_full\\_receipt.json}); the $129/311 = 41.48\\%$ "
             "value that excludes \\texttt{Prob099\\_m2014\\_q6c} is a non-canonical "
-            "sensitivity only.",
+            "sensitivity only. This is an end-to-end harness score (stored-evidence, "
+            "not replayed): 150 of its 183 failures are extraction failures under a "
+            "1{,}024-token thinking-on cap.",
             "fig:e11",
             ["VerilogEval", "E11", "complete scopes"],
         ),

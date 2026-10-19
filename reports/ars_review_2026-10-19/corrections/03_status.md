@@ -39,7 +39,7 @@ New finding while verifying (now in the paper): under the GIFT flag, all 455 all
 
 | ID | Status | What / where |
 |---|---|---|
-| DA-CRITICAL-3 / R3-W4 (title) | **done** | Retitled "Provenance-Bound Ledgers for GRPO-Family Post-Training: Zero-Variance Bookkeeping and a Fourteen-Lane Case Study on a Null Actor". The old title is recorded in a comment (tex:19-23). No causal stack language, and attribution is disclaimed in the abstract and conclusion (tex:39-62, 505-521). |
+| DA-CRITICAL-3 / R3-W4 (title) | **done** | Author approved the new title on 2026-10-19. Retitled "Provenance-Bound Ledgers for GRPO-Family Post-Training: Zero-Variance Bookkeeping and a Fourteen-Lane Case Study on a Null Actor". The old title is recorded in a comment (tex:19-23). No causal stack language, and attribution is disclaimed in the abstract and conclusion (tex:39-62, 505-521). |
 | R1-W6 (abstract taxonomy) / §3C | **done** | One taxonomy (strict / terminal-complete / full-suite with denominator note) in the abstract (tex:55-60), §IV-F (tex:404-424), Table IV class column (tex:432-447) and Table V states (tex:457-480). "Five complete" is gone. |
 | EIC-W1 (paper type, bullets) | **done** | Paper type stated in the abstract and §I. The four bullets are rescoped to the delivered evidence, and the harness is demoted to infrastructure (tex:96-120). |
 | R2-W1 (confounding table, causal language) | **done** | Table II with corrected stacks/G (tex:330-346). Causal stack phrases removed. |
